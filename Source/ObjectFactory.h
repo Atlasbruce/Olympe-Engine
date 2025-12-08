@@ -28,7 +28,7 @@ public:
 
     ObjectFactory()
     {
-		name = "ObjectFactory";
+		//name = "ObjectFactory";
 		SYSTEM_LOG << "ObjectFactory created and Initialized\n";
 		// register to event manager to receive object events
 		EventManager::Get().Register(this, EventType::Olympe_EventType_Object_Create);

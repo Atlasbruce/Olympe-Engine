@@ -46,7 +46,7 @@ using namespace std;
  /* We will use this renderer to draw into this window every frame. */
 static SDL_Window* window = NULL;
 static SDL_Renderer* renderer = NULL;
-const int TARGET_FPS = 60;
+const int TARGET_FPS = 100;
 const Uint32 FRAME_TARGET_TIME_MS = 1000 / TARGET_FPS;
 
 /* This function runs once at startup. */

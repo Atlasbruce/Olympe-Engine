@@ -77,6 +77,7 @@
     <ClInclude Include="Source\OptionsManager.h" />
     <ClInclude Include="Source\PanelManager.h" />
     <ClInclude Include="Source\Player.h" />
+    <ClInclude Include="source\prefabfactory.h" />
     <ClInclude Include="Source\Quest.h" />
     <ClInclude Include="Source\QuestManager.h" />
     <ClInclude Include="source\resource.h" />

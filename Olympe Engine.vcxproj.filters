@@ -302,6 +302,9 @@
     <ClInclude Include="Source\engine_utils.h">
       <Filter>Fichiers d%27en-tête\Engine Systems\System Helpers</Filter>
     </ClInclude>
+    <ClInclude Include="source\prefabfactory.h">
+      <Filter>Fichiers d%27en-tête\ECS</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc">
