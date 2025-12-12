@@ -44,12 +44,7 @@ public:
        return instance;
     }
     static VideoGame& Get() { return GetInstance(); }
-    inline World& GetWorld() { return world; }
-    inline GameRules& GetRules() { return gamerules; }
-    inline QuestManager& GetQuestManager() { return questmanager; }
-    inline GameMenu& GetMenu() { return gamemenu; }
-    inline CameraManager& GetCameraSsytem() { return cameramanager; }
-	inline ViewportManager& GetViewport() { return viewport; }
+
 
      // Game state helpers (front-end to GameStateManager)
      void SetState(GameState s)
@@ -74,6 +69,20 @@ public:
      // Save / Load game state (slot optional)
      bool SaveGame(int slot = 0) const;
      bool LoadGame(int slot = 0);
+
+     virtual void RegisterPrefabItems();
+     //{
+         // Example prefab registration
+         /*
+         PrefabFactory::Get().RegisterPrefab("MiliceGuard", [](EntityID id) {
+             World& world = World::Get();
+             world.AddComponent<TransformComponent>(id, Vector(0, 0, 0), 100.0f, 150.0f);
+             world.AddComponent<SpriteComponent>(id, "milice_guard_sprite.png");
+             world.AddComponent<AIComponent>(id, AIType::Guard);
+             // Add other components as needed
+         });
+         /**/
+	//}
 
 public:
 	World& world = World::GetInstance();

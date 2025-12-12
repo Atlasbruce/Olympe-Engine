@@ -20,7 +20,7 @@ Object* Player::Create()
 	Player *player = new Player();
 	player->name = "Player";
 	ObjectFactory::Get().AddComponent("AI_Player", player);
-	Sprite* sprite = (Sprite*)ObjectFactory::Get().AddComponent("Sprite", player);
+	_Sprite* sprite = (_Sprite*)ObjectFactory::Get().AddComponent("_Sprite", player);
 	if (SDL_rand(2) == 0)
 		sprite->SetSprite("player_entity_male", "Resources/entity_male.png");
 	else

@@ -9,6 +9,7 @@ Purpose: Implementation of the VideoGame class, which represents a video game wi
 #include <sstream>
 #include <string>
 #include "InputsManager.h"
+#include "prefabfactory.h"
 
 short VideoGame::m_playerIdCounter = 0;
 using namespace std;
@@ -44,10 +45,10 @@ VideoGame::VideoGame()
 	testGao->name = "OlympeSystem";
 	ObjectFactory::Get().AddComponent("OlympeSystem", testGao);
 
-    // Create default player 0
-    //AddPlayer();
-    //AddPlayer();
-    //AddPlayer();
+	// Register all prefab items for the game
+    RegisterPrefabItems();
+
+	EntityID eID = PrefabFactory::Get().CreateEntity("silhouette-90");
 
 	SYSTEM_LOG << "VideoGame created\n";
 }
@@ -440,4 +441,24 @@ bool VideoGame::LoadGame(int slot)
 
     SYSTEM_LOG << "VideoGame: LoadGame completed for slot '" << slotName << "'\n";
     return true;
+}
+//-------------------------------------------------------------
+void VideoGame::RegisterPrefabItems()
+{
+	// Example prefab registration
+    PrefabFactory::Get().RegisterPrefab("silhouette-90", [](EntityID id) {
+        World& world = World::Get();
+        world.AddComponent<Position_data>(id, Vector(0, 0, 0));
+
+        VisualSprite_data *st_vsprite_ptr = DataManager::Get().GetSprite_data("silhouette-90","Resources/silhouette-90.png");
+        if (!st_vsprite_ptr)
+        {
+            SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for 'silhouette-90' \n";
+            return;
+		}
+		VisualSprite_data st_vsprite = *st_vsprite_ptr;
+        world.AddComponent<VisualSprite_data>(id, st_vsprite.srcRect, st_vsprite.sprite, st_vsprite.hotSpot);
+		world.AddComponent<BoundingBox_data>(id, SDL_FRect{ 0.f, 0.f, st_vsprite.srcRect.w, st_vsprite.srcRect.h });
+        // Add other components as needed
+		});
 }

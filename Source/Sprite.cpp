@@ -5,22 +5,22 @@
 #include <SDL3/SDL_render.h>
 #include "DataManager.h"
 
-bool Sprite::FactoryRegistered = ObjectFactory::Get().Register("Sprite", Sprite::Create);
-ObjectComponent* Sprite::Create()
+bool _Sprite::FactoryRegistered = ObjectFactory::Get().Register("_Sprite", _Sprite::Create);
+ObjectComponent* _Sprite::Create()
 {
-	return new Sprite();
+	return new _Sprite();
 }
 //-----------------------------------------------------
-void Sprite::Initialize()
+void _Sprite::Initialize()
 {
 
 }
 
-void Sprite::Uninitialize()
+void _Sprite::Uninitialize()
 {
 }
 
-void Sprite::RenderDebug()
+void _Sprite::RenderDebug()
 {
 	/*
 	SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
@@ -28,7 +28,7 @@ void Sprite::RenderDebug()
 	/**/
 }
 
-void Sprite::Render()
+void _Sprite::Render()
 {
 	Vector vRenderPos = gao->GetPosition() - CameraManager::Get().GetCameraPositionForActivePlayer();
 	float _w, _h;
@@ -43,7 +43,7 @@ void Sprite::Render()
 	}
 }
 
-void Sprite::SetSprite(SDL_Texture* texture)
+void _Sprite::SetSprite(SDL_Texture* texture)
 {
 	m_SpriteTexture = texture;
 	gao->SetSize((float)m_SpriteTexture->w, (float)m_SpriteTexture->h);
@@ -51,12 +51,12 @@ void Sprite::SetSprite(SDL_Texture* texture)
 	//gao->height = gao->boundingBox.w = (float)m_SpriteTexture->w;
 }
 
-void Sprite::SetSprite(const std::string& resourceName,const std::string& filePath)
+void _Sprite::SetSprite(const std::string& resourceName,const std::string& filePath)
 {
 	SetSprite((SDL_Texture*)DataManager::Get().GetSprite(resourceName, filePath));
 }
 
-bool Sprite::Preload(const std::string& resourceName, const std::string& filePath)
+bool _Sprite::Preload(const std::string& resourceName, const std::string& filePath)
 {
 	return DataManager::Get().PreloadSprite(resourceName, filePath, ResourceCategory::GameObject);
 }

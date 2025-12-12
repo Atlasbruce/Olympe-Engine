@@ -34,24 +34,8 @@ World purpose: Manage the overall game world, including object management, level
 class World : public Object
 {
 public:
-    World()
-    {
-        SYSTEM_LOG << "World Initialized\n";
-    }
-    virtual ~World()
-    {
-        // Clean up all objects
-        /*DEPRECATED OBJECT MANAGEMENT*/
-        {
-            for (auto obj : m_objectlist)
-            {
-                delete obj;
-            }
-            m_objectlist.clear();
-        }
-		SYSTEM_LOG << "World Destroyed\n";
-    }
-
+    World();
+    virtual ~World();
     virtual ObjectType GetObjectType() const { return ObjectType::Singleton; }
 
     static World& GetInstance()
@@ -61,7 +45,14 @@ public:
     }
     static World& Get() { return GetInstance(); }
 
-    //---------------------------------------------------------------------------------------------
+    //---------------------------------------------------------------
+	// ECS Systems
+	void Initialize_ECS_Systems();
+    void Add_ECS_System(std::unique_ptr<ECS_System> system);
+    void Process_ECS_Systems();
+    void Render_ECS_Systems();
+
+    //---------------------------------------------------------------
     // Main processing loop called each frame: events are processed first (async), then stages in order
     void Process()
     {
@@ -72,10 +63,7 @@ public:
         GameState state = GameStateManager::GetState();
         bool paused = (state == GameState::GameState_Paused);
 
-        for (const auto& system : m_systems)
-        {
-            system->Process();
-        }
+        Process_ECS_Systems();
 
         /*DEPRECATED OBJECT MANAGEMENT*/
         {
@@ -119,8 +107,6 @@ public:
     //---------------------------------------------------------------------------------------------
     void Render()
     {
-
-
         /*DEPRECATED OBJECT MANAGEMENT*/
         {
 
@@ -142,6 +128,9 @@ public:
                 }
             }
         }
+
+		// ECS Rendering Systems
+        Render_ECS_Systems();
 	}
 
 	//---------------------------------------------------------------------------------------------
@@ -282,11 +271,6 @@ public:
         }
         return false;
     }
-
-    // -------------------------------------------------------------
-    // System Management
-    void Add_ECS_System(std::unique_ptr<ECS_System> system);
-    void Process_ESC_Systems(float fDt);
 
     // Public for inspection/debug
     std::unordered_map<EntityID, ComponentSignature> m_entitySignatures;

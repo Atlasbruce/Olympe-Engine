@@ -61,6 +61,15 @@
     <Filter Include="Fichiers d%27en-tête\Engine Systems\Data &amp; Resources">
       <UniqueIdentifier>{4affccaa-0dff-45a8-a975-528c87ffd116}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers d%27en-tête\ECS\Entity">
+      <UniqueIdentifier>{d4e74054-56ec-4bdf-bdef-6b868fe6c968}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers d%27en-tête\ECS\Components">
+      <UniqueIdentifier>{6c09fc85-1a65-4e02-b138-33965a6fc688}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers d%27en-tête\ECS\Systems">
+      <UniqueIdentifier>{2158b1dc-24a7-43b3-b02d-330d72a35fed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\GameEngine.cpp">
@@ -135,12 +144,6 @@
     <ClCompile Include="Source\InputsManager.cpp">
       <Filter>Fichiers d%27en-tête\Engine Systems\Inputs</Filter>
     </ClCompile>
-    <ClCompile Include="source\ECS_Register.h">
-      <Filter>Fichiers d%27en-tête\ECS</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\ECS_Systems.cpp">
-      <Filter>Fichiers d%27en-tête\ECS</Filter>
-    </ClCompile>
     <ClCompile Include="Source\InputsInspectorPanel.cpp">
       <Filter>Fichiers d%27en-tête\Engine Rendering\Panels</Filter>
     </ClCompile>
@@ -155,6 +158,12 @@
     </ClCompile>
     <ClCompile Include="Source\World.cpp">
       <Filter>Fichiers d%27en-tête\Engine Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ECS_Systems.cpp">
+      <Filter>Fichiers d%27en-tête\ECS\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ECS_Register.h">
+      <Filter>Fichiers d%27en-tête\ECS\Components</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -287,15 +296,6 @@
     <ClInclude Include="Source\ObjectComponent.h">
       <Filter>Deprecated\Components\System</Filter>
     </ClInclude>
-    <ClInclude Include="source\ECS_Entity.h">
-      <Filter>Fichiers d%27en-tête\ECS</Filter>
-    </ClInclude>
-    <ClInclude Include="source\ECS_Components.h">
-      <Filter>Fichiers d%27en-tête\ECS</Filter>
-    </ClInclude>
-    <ClInclude Include="source\ECS_Systems.h">
-      <Filter>Fichiers d%27en-tête\ECS</Filter>
-    </ClInclude>
     <ClInclude Include="Source\vector.h">
       <Filter>Fichiers d%27en-tête\Engine Systems\System Helpers</Filter>
     </ClInclude>
@@ -304,6 +304,15 @@
     </ClInclude>
     <ClInclude Include="source\prefabfactory.h">
       <Filter>Fichiers d%27en-tête\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ECS_Components.h">
+      <Filter>Fichiers d%27en-tête\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ECS_Entity.h">
+      <Filter>Fichiers d%27en-tête\ECS\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="source\ECS_Systems.h">
+      <Filter>Fichiers d%27en-tête\ECS\Systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

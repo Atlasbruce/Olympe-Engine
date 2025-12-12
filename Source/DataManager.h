@@ -33,6 +33,10 @@ Notes:
 #include <vector>
 #include "third_party/nlohmann/json.hpp"
 
+using Sprite = SDL_Texture;
+
+struct VisualSprite_data;
+
 // Catégories et types de ressources
 enum class ResourceType : uint32_t
 {
@@ -66,7 +70,7 @@ struct Resource
     std::string path; // filesystem path
 
     // data payloads depending on the resource type
-    SDL_Texture* texture = nullptr; // for texture/sprite resources
+    Sprite* sprite_texture = nullptr; // for texture/sprite resources
     void* data = nullptr;           // generic pointer for deferred objects
 
     Resource() = default;
@@ -91,8 +95,9 @@ public:
     // Texture loading / retrieval / release
     bool PreloadTexture(const std::string& id, const std::string& path, ResourceCategory category = ResourceCategory::System);
 	bool PreloadSprite(const std::string& id, const std::string& path, ResourceCategory category = ResourceCategory::GameObject);
-    SDL_Texture* GetTexture(const std::string& id) const;
-	SDL_Texture* GetSprite(const std::string& id, const std::string& path, ResourceCategory category = ResourceCategory::GameObject);
+    Sprite* GetTexture(const std::string& id) const;
+    Sprite* GetSprite(const std::string& id, const std::string& path, ResourceCategory category = ResourceCategory::GameObject);
+    VisualSprite_data* GetSprite_data(const std::string& id, const std::string& path);
     bool ReleaseResource(const std::string& id);
 
 

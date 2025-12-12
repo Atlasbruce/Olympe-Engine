@@ -27,6 +27,7 @@ Notes:
 #include <algorithm>
 #include <cerrno>
 #include "sdl3_image/sdl_image.h"
+#include "ECS_Components.h"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -108,7 +109,7 @@ bool DataManager::PreloadTexture(const std::string& id, const std::string& path,
     res->category = category;
     res->id = id;
     res->path = path;
-    res->texture = tex;
+    res->sprite_texture = tex;
     if (!tex)
     {
         // store surface pointer for deferred texture creation
@@ -136,7 +137,7 @@ SDL_Texture* DataManager::GetTexture(const std::string& id) const
     auto it = m_resources_.find(id);
     if (it == m_resources_.end()) return nullptr;
     auto res = it->second;
-    if (res->texture) return res->texture;
+    if (res->sprite_texture) return res->sprite_texture;
 
     // If texture not created yet but we have a surface stored, try to create it now
     if (res->data)
@@ -148,11 +149,11 @@ SDL_Texture* DataManager::GetTexture(const std::string& id) const
             SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
             if (tex)
             {
-                res->texture = tex;
+                res->sprite_texture = tex;
                 // we can free the surface now
                 SDL_DestroySurface(surf);
                 res->data = nullptr;
-                return res->texture;
+                return res->sprite_texture;
             }
             else
             {
@@ -164,14 +165,14 @@ SDL_Texture* DataManager::GetTexture(const std::string& id) const
     return nullptr;
 }
 //-------------------------------------------------------------
-SDL_Texture* DataManager::GetSprite(const std::string& id, const std::string& path, ResourceCategory category)
+Sprite* DataManager::GetSprite(const std::string& id, const std::string& path, ResourceCategory category)
 {
     // Optimized: Check existence without locking twice
     {
         std::lock_guard<std::mutex> lock(m_mutex_);
         auto it = m_resources_.find(id);
-        if (it != m_resources_.end() && it->second->texture) {
-            return it->second->texture;
+        if (it != m_resources_.end() && it->second->sprite_texture) {
+            return it->second->sprite_texture;
         }
     }
     
@@ -183,6 +184,22 @@ SDL_Texture* DataManager::GetSprite(const std::string& id, const std::string& pa
     return nullptr;
 }
 //-------------------------------------------------------------
+VisualSprite_data* DataManager::GetSprite_data(const std::string& id, const std::string& path)
+{
+    VisualSprite_data vsprite;
+	vsprite.sprite = GetSprite(id, path, ResourceCategory::GameObject);
+	// set srcRect based on texture size
+	if (vsprite.sprite)
+	{
+		int w = ((SDL_Texture*)vsprite.sprite)->h, h = ((SDL_Texture*)vsprite.sprite)->h;
+		vsprite.srcRect = { 0.0f, 0.0f, static_cast<float>(w), static_cast<float>(h) };
+		vsprite.hotSpot = Vector(w / 2.0f, h / 2.0f, 0.0f);
+		return &vsprite;
+	}
+
+    return nullptr;
+}
+//-------------------------------------------------------------
 bool DataManager::ReleaseResource(const std::string& id)
 {
     std::lock_guard<std::mutex> lock(m_mutex_);
@@ -190,10 +207,10 @@ bool DataManager::ReleaseResource(const std::string& id)
     if (it == m_resources_.end()) return false;
     auto res = it->second;
 
-    if (res->texture)
+    if (res->sprite_texture)
     {
-        SDL_DestroyTexture(res->texture);
-        res->texture = nullptr;
+        SDL_DestroyTexture(res->sprite_texture);
+        res->sprite_texture = nullptr;
     }
     if (res->data)
     {
@@ -214,10 +231,10 @@ void DataManager::UnloadAll()
     for (auto& kv : m_resources_)
     {
         auto res = kv.second;
-        if (res->texture)
+        if (res->sprite_texture)
         {
-            SDL_DestroyTexture(res->texture);
-            res->texture = nullptr;
+            SDL_DestroyTexture(res->sprite_texture);
+            res->sprite_texture = nullptr;
         }
         if (res->data)
         {

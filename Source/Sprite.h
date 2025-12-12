@@ -2,11 +2,11 @@
 #include "ObjectComponent.h"
 #include <SDL3/SDL.h>
 
-class Sprite : public VisualComponent
+class _Sprite : public VisualComponent
 {
 	public:
-		explicit Sprite() { Initialize(); }
-		virtual ~Sprite() override { Uninitialize(); }
+		explicit _Sprite() { Initialize(); }
+		virtual ~_Sprite() override { Uninitialize(); }
 
 	static bool FactoryRegistered;
 	static ObjectComponent* Create();
