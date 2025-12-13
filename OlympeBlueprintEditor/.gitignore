@@ -9,3 +9,5 @@
 *.vcxproj.user
 bin/
 build/
+OlympeBlueprintEditor
+blueprint_test
