@@ -1,25 +1,27 @@
-// Minimal entry for Olympe Blueprint Editor
+/*
+ * Olympe Blueprint Editor - Main Entry Point
+ * 
+ * Functional editor for entity blueprints
+ * Phase 1: Component property editing
+ */
+
+#include "../include/BlueprintEditor.h"
 #include <iostream>
-#include <fstream>
-#include "../include/Graph.h"
-#include "../include/imnodes_stub.h"
 
 int main(int argc, char** argv)
 {
-    std::cout << "Olympe Blueprint Editor (stub)" << std::endl;
-    imnodes_stub::Initialize();
-
-    Graph g;
-    g.nodes.push_back({1, "Start", 100.0f, 100.0f});
-    g.nodes.push_back({2, "Print", 300.0f, 100.0f});
-
-    // save example
+    std::cout << "Starting Olympe Blueprint Editor...\n\n";
+    
+    try
     {
-        auto j = g.ToJson();
-        std::ofstream ofs("example_graph.json");
-        if (ofs) ofs << j.dump(4);
+        Olympe::BlueprintEditor editor;
+        editor.Run();
     }
-
-    imnodes_stub::Shutdown();
+    catch (const std::exception& e)
+    {
+        std::cerr << "Fatal error: " << e.what() << std::endl;
+        return 1;
+    }
+    
     return 0;
-}/**/
+}
