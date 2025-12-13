@@ -109,6 +109,12 @@ struct PlayerController_data
 	bool isInteracting = false; // Is the player interacting?
 	bool isUsingItem = false; // Is the player using an item?
 };
+// --- Component Player Binding Controller --- JoystickID, KeyboardID, etc.
+struct PlayerBinding_data
+{
+	int playerIndex = 0; // Index of the player (e.g., Player 1, Player 2)
+	short joystickID = -1; // ID of the joystick/controller
+};
 // --- Component Camera Data ---
 struct Camera_data
 {
