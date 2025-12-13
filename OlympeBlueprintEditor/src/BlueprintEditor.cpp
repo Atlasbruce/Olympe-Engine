@@ -30,11 +30,16 @@ namespace Olympe
     // Helper functions for console I/O
     void ClearScreen()
     {
+        // Simple screen clear - using ANSI escape codes for portability
+        // Alternative to system() calls which can pose security risks
         #ifdef _WIN32
-            system("cls");
+            // On Windows, try ANSI codes first (works on Windows 10+)
+            std::cout << "\033[2J\033[1;1H";
         #else
-            system("clear");
+            // On Unix-like systems, use ANSI escape codes
+            std::cout << "\033[2J\033[1;1H";
         #endif
+        std::cout.flush();
     }
 
     void Pause()
@@ -307,7 +312,8 @@ namespace Olympe
             {
                 std::string key = GetStringInput("Enter property key (e.g., 'position', 'x'): ");
                 
-                // Check if property exists and what type it is
+                // Check if property exists and edit based on its JSON type
+                // Supports: numbers, strings, booleans, and nested objects
                 try
                 {
                     if (comp->properties.contains(key))
@@ -338,8 +344,7 @@ namespace Olympe
                         }
                         else if (prop.is_object())
                         {
-                            std::cout << "\nNested object detected. Enter sub-key (e.g., 'x'): ";
-                            std::string subkey = GetStringInput("");
+                            std::string subkey = GetStringInput("\nNested object detected. Enter sub-key (e.g., 'x'): ");
                             
                             if (prop.contains(subkey))
                             {

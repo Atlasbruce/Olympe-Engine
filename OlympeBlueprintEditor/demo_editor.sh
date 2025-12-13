@@ -17,10 +17,24 @@ echo ""
 echo "--- Running automated tests ---"
 echo ""
 
-cd /home/runner/work/Olympe-Engine/Olympe-Engine
+# Get the script directory and navigate to project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+cd "$PROJECT_ROOT"
+
+# Build the test if not already built
+if [ ! -f "./OlympeBlueprintEditor/build/blueprint_test" ]; then
+    echo "Building test suite..."
+    cd OlympeBlueprintEditor && make test > /dev/null 2>&1 && cd ..
+fi
 
 # Run the blueprint test to show functionality
-./OlympeBlueprintEditor/build/blueprint_test
+if [ -f "./OlympeBlueprintEditor/build/blueprint_test" ]; then
+    ./OlympeBlueprintEditor/build/blueprint_test
+else
+    echo "Note: Test suite not available. Run 'make test' in OlympeBlueprintEditor directory."
+fi
 
 echo ""
 echo "========================================="
