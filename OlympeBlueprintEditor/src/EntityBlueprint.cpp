@@ -135,8 +135,9 @@ bool EntityBlueprint::SaveToFile(const std::string& filepath) const
         file << ToJson().dump(4);  // Pretty print with 4 spaces
         return true;
     }
-    catch (...)
+    catch (const std::exception& e)
     {
+        // Log error in production: e.what()
         return false;
     }
 }
@@ -155,8 +156,9 @@ EntityBlueprint EntityBlueprint::LoadFromFile(const std::string& filepath)
         json j = json::parse(buffer.str());
         return FromJson(j);
     }
-    catch (...)
+    catch (const std::exception& e)
     {
+        // Log error in production: e.what()
         return EntityBlueprint();
     }
 }
