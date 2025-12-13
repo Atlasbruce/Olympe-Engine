@@ -32,13 +32,8 @@ namespace Olympe
     {
         // Simple screen clear - using ANSI escape codes for portability
         // Alternative to system() calls which can pose security risks
-        #ifdef _WIN32
-            // On Windows, try ANSI codes first (works on Windows 10+)
-            std::cout << "\033[2J\033[1;1H";
-        #else
-            // On Unix-like systems, use ANSI escape codes
-            std::cout << "\033[2J\033[1;1H";
-        #endif
+        // ANSI codes work on Windows 10+ and all Unix-like systems
+        std::cout << "\033[2J\033[1;1H";
         std::cout.flush();
     }
 
@@ -442,7 +437,8 @@ namespace Olympe
             std::string path = GetStringInput("Enter sprite path: ");
             float w = GetFloatInput("Enter sprite width: ");
             float h = GetFloatInput("Enter sprite height: ");
-            newComp = CreateVisualSpriteComponent(path, 0, 0, w, h);
+            // Source rect starts at (0,0) - top-left corner of sprite sheet
+            newComp = CreateVisualSpriteComponent(path, 0.0f, 0.0f, w, h);
             break;
         }
         case 4:
