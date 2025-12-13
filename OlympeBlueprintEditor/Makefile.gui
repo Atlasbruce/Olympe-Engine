@@ -1,0 +1,70 @@
+# Olympe Blueprint Editor - Phase 2 GUI Makefile
+
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -I../Source -I../Source/third_party -Iinclude \
+           -Ithird_party/imgui -Ithird_party/imgui/backends -Ithird_party/imnodes \
+           $(SDL_CFLAGS)
+
+# Use SDL2
+SDL_CFLAGS = $(shell pkg-config --cflags sdl2)
+SDL_LDFLAGS = $(shell pkg-config --libs sdl2)
+LDFLAGS = $(SDL_LDFLAGS)
+
+# ImGui sources
+IMGUI_DIR = third_party/imgui
+IMGUI_SRC = $(IMGUI_DIR)/imgui.cpp \
+            $(IMGUI_DIR)/imgui_draw.cpp \
+            $(IMGUI_DIR)/imgui_widgets.cpp \
+            $(IMGUI_DIR)/imgui_tables.cpp \
+            $(IMGUI_DIR)/imgui_demo.cpp \
+            $(IMGUI_DIR)/backends/imgui_impl_sdl2.cpp \
+            $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer2.cpp
+
+# ImNodes sources
+IMNODES_DIR = third_party/imnodes
+IMNODES_SRC = $(IMNODES_DIR)/imnodes.cpp
+
+# Editor sources
+EDITOR_SRC = src/main_gui.cpp \
+             src/BlueprintEditorGUI.cpp \
+             src/EntityBlueprint.cpp
+
+# All sources
+SOURCES = $(IMGUI_SRC) $(IMNODES_SRC) $(EDITOR_SRC)
+
+# Output
+TARGET_GUI = OlympeBlueprintEditorGUI
+BUILDDIR = build
+
+# Objects
+OBJECTS = $(SOURCES:%.cpp=$(BUILDDIR)/%.o)
+
+.PHONY: all clean run
+
+all: $(TARGET_GUI)
+
+$(TARGET_GUI): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $(TARGET_GUI) $(LDFLAGS)
+	@echo "Build complete: $(TARGET_GUI)"
+
+$(BUILDDIR)/%.o: %.cpp | $(BUILDDIR)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
+	mkdir -p $(BUILDDIR)/src
+	mkdir -p $(BUILDDIR)/$(IMGUI_DIR)
+	mkdir -p $(BUILDDIR)/$(IMGUI_DIR)/backends
+	mkdir -p $(BUILDDIR)/$(IMNODES_DIR)
+
+clean:
+	rm -rf $(BUILDDIR) $(TARGET_GUI)
+	@echo "Cleaned build artifacts"
+
+run: $(TARGET_GUI)
+	cd .. && ./OlympeBlueprintEditor/$(TARGET_GUI)
+
+# Console editor (Phase 1) - keep original
+console:
+	$(MAKE) -f Makefile

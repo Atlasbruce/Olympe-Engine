@@ -10,5 +10,6 @@ namespace Olympe
 
         void Initialize();
         void Shutdown();
+        void Run();  // Main editor loop
     };
 }
