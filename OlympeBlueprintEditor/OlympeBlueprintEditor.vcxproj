@@ -71,7 +71,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="include\EntityBlueprint.h" />
     <Content Include="olympe.ico" />
+    <Content Include="src\blueprint_test.cpp" />
+    <Content Include="src\EntityBlueprint.cpp" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ClCompile>
