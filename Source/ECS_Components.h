@@ -94,7 +94,7 @@ struct AudioSource_data
 // --- Component Controller Data ---
 struct Controller_data
 {
-	short controllerIndex = -1; // Index of the controller
+	short controllerID = -1; // Index of the controller
 	bool isConnected = false; // Is the controller connected?
 	bool isVibrating = false; // Is the controller vibrating?
 	bool buttonStates[30]; // States of buttons
@@ -112,8 +112,8 @@ struct PlayerController_data
 // --- Component Player Binding Controller --- JoystickID, KeyboardID, etc.
 struct PlayerBinding_data
 {
-	int playerIndex = 0; // Index of the player (e.g., Player 1, Player 2)
-	short joystickID = -1; // ID of the joystick/controller
+	short playerIndex = 0; // Index of the player (e.g., Player 1, Player 2)
+	short controllerID = -1; // ID of the joystick/controller
 };
 // --- Component Camera Data ---
 struct Camera_data

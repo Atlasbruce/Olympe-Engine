@@ -14,6 +14,7 @@
     <ProjectGuid>{9B4C9E2A-0000-0000-0000-000000000001}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>OlympeBlueprintEditor</RootNamespace>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -26,7 +27,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -53,14 +53,6 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ItemGroup>
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\Graph.cpp" />
-    <ClCompile Include="src\serialize_example.cpp" />
-    <ClInclude Include="include\BlueprintEditor.h" />
-    <ClInclude Include="include\Graph.h" />
-    <ClInclude Include="include\imnodes_stub.h" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
@@ -71,10 +63,11 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="include\EntityBlueprint.h" />
     <Content Include="olympe.ico" />
-    <Content Include="src\blueprint_test.cpp" />
-    <Content Include="src\EntityBlueprint.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="include\" />
+    <Folder Include="src\" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ClCompile>

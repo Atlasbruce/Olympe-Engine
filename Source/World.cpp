@@ -50,6 +50,7 @@ void World::Initialize_ECS_Systems()
     - RenderingSystem
     */
 	Add_ECS_System(std::make_unique<InputSystem>());
+	Add_ECS_System(std::make_unique<PlayerControlSystem>());
     Add_ECS_System(std::make_unique<AISystem>());
     Add_ECS_System(std::make_unique<DetectionSystem>());
     Add_ECS_System(std::make_unique<PhysicsSystem>());

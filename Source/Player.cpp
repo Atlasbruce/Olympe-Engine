@@ -13,6 +13,8 @@ Purpose:
 #include "Player.h"
 #include "ObjectFactory.h"
 #include "Sprite.h"
+#include "engine_utils.h"
+
 bool Player::FactoryRegistered = ObjectFactory::Get().Register("Player", Player::Create);
 Object* Player::Create()
 {
@@ -21,10 +23,10 @@ Object* Player::Create()
 	player->name = "Player";
 	ObjectFactory::Get().AddComponent("AI_Player", player);
 	_Sprite* sprite = (_Sprite*)ObjectFactory::Get().AddComponent("_Sprite", player);
-	if (SDL_rand(2) == 0)
-		sprite->SetSprite("player_entity_male", "Resources/entity_male.png");
+	/*if (SDL_rand(2) == 0)
+		sprite->SetSprite("player_entity_male", "Resources/SpriteEntities/entity_15.png");
 	else
-		sprite->SetSprite("player_entity_female", "Resources/entity_female.png");
-
+		sprite->SetSprite("player_entity_female", "Resources/SpriteEntities/entity_14.png");/**/
+	sprite->SetSprite("player_entity", "Resources/SpriteEntities/entity_"+to_string( Random_Int(1, 15) ) + ".png");
 	return player;
 }

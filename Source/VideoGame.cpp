@@ -10,6 +10,7 @@ Purpose: Implementation of the VideoGame class, which represents a video game wi
 #include <string>
 #include "InputsManager.h"
 #include "prefabfactory.h"
+#include "engine_utils.h"
 
 short VideoGame::m_playerIdCounter = 0;
 using namespace std;
@@ -48,7 +49,7 @@ VideoGame::VideoGame()
 	// Register all prefab items for the game
     RegisterPrefabItems();
 
-	EntityID eID = PrefabFactory::Get().CreateEntity("silhouette-90");
+	EntityID eID = PrefabFactory::Get().CreateEntity("PlayerEntity");
 
 	SYSTEM_LOG << "VideoGame created\n";
 }
@@ -445,20 +446,41 @@ bool VideoGame::LoadGame(int slot)
 //-------------------------------------------------------------
 void VideoGame::RegisterPrefabItems()
 {
-	// Example prefab registration
-    PrefabFactory::Get().RegisterPrefab("silhouette-90", [](EntityID id) {
+	// PLAYER PREFAB
+    PrefabFactory::Get().RegisterPrefab("PlayerEntity", [](EntityID id) {
         World& world = World::Get();
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
-
-        VisualSprite_data *st_vsprite_ptr = DataManager::Get().GetSprite_data("silhouette-90","Resources/silhouette-90.png");
+        string prefabName = "PlayerEntity";
+        VisualSprite_data* st_vsprite_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/entity_" + to_string(Random_Int(1, 15)) + ".png");
         if (!st_vsprite_ptr)
         {
-            SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for 'silhouette-90' \n";
+            SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
             return;
-		}
-		VisualSprite_data st_vsprite = *st_vsprite_ptr;
+        }
+        VisualSprite_data st_vsprite = *st_vsprite_ptr;
         world.AddComponent<VisualSprite_data>(id, st_vsprite.srcRect, st_vsprite.sprite, st_vsprite.hotSpot);
-		world.AddComponent<BoundingBox_data>(id, SDL_FRect{ 0.f, 0.f, st_vsprite.srcRect.w, st_vsprite.srcRect.h });
+        world.AddComponent<BoundingBox_data>(id, SDL_FRect{ 0.f, 0.f, st_vsprite.srcRect.w, st_vsprite.srcRect.h });
+        world.AddComponent<PlayerBinding_data>(id);// , (short)++m_playerIdCounter, (short)-1); // default to keyboard
+        world.AddComponent<Controller_data>(id);// , (short)-1/*controller index*/, false, false);
+        world.AddComponent<PlayerController_data>(id);// , Vector(), false, false, false, false, false);
         // Add other components as needed
 		});
+
+	//TRIGGER PREFAB
+    PrefabFactory::Get().RegisterPrefab("TriggerEntity", [](EntityID id) {
+        World& world = World::Get();
+        world.AddComponent<Position_data>(id, Vector(0, 0, 0));
+        string prefabName = "TriggerEntity";
+        VisualSprite_data* st_vsprite_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/trigger.png");
+        if (!st_vsprite_ptr)
+        {
+            SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
+            return;
+        }
+        VisualSprite_data st_vsprite = *st_vsprite_ptr;
+        world.AddComponent<VisualSprite_data>(id, st_vsprite.srcRect, st_vsprite.sprite, st_vsprite.hotSpot);
+        world.AddComponent<BoundingBox_data>(id, SDL_FRect{ 0.f, 0.f, st_vsprite.srcRect.w, st_vsprite.srcRect.h });
+        // Add other components as needed
+		});
+    
 }

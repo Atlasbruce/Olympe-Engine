@@ -92,3 +92,10 @@ public:
     RenderingSystem();
 	virtual void Render() override;
 };
+// Player Control System: processes entities with PlayerBinding_data and Controller_data
+class PlayerControlSystem : public ECS_System
+{
+    public:
+    PlayerControlSystem();
+    virtual void Process() override;
+};

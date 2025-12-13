@@ -9,8 +9,9 @@
 #include "../third_party/imgui/backends/imgui_impl_sdlrenderer2.h"
 #include "../include/BlueprintEditorGUI.h"
 #include <iostream>
+#include <Windows.h>
 
-int main(int, char**)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) < 0)

@@ -129,7 +129,7 @@ void RenderingSystem::Render()
                 box.y = vRenderPos.y;
 				SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
                 SDL_RenderTexture(GameEngine::renderer, visual.sprite, nullptr, &box);
-				Draw_Circle(GameEngine::renderer, box.x + box.w / 2.0 , box.y + box.h / 2.0, 35.f);
+				Draw_Circle(GameEngine::renderer, (int)( box.x + box.w / 2.f) , (int) (box.y + box.h / 2.f), 35);
             }
         }
         catch (const std::exception& e)
@@ -138,4 +138,39 @@ void RenderingSystem::Render()
         }
     }
 }
+//-------------------------------------------------------------
+PlayerControlSystem::PlayerControlSystem()
+{
+    requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
+	requiredSignature.set(GetComponentTypeID_Static<PlayerController_data>(), true);
+	requiredSignature.set(GetComponentTypeID_Static<PlayerBinding_data>(), true);
+	requiredSignature.set(GetComponentTypeID_Static<Controller_data>(), true);
 
+}
+void PlayerControlSystem::Process()
+{
+    // Iterate ONLY over the relevant entities stored in m_entities
+    for (EntityID entity : m_entities)
+    {
+        try
+        {
+            // Direct and fast access to Component data from the Pools
+            Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+			PlayerController_data& controller = World::Get().GetComponent<PlayerController_data>(entity);
+			PlayerBinding_data& binding = World::Get().GetComponent<PlayerBinding_data>(entity);
+			Controller_data& ctrlData = World::Get().GetComponent<Controller_data>(entity);
+
+            // check if the controller is bound with right player id
+			if (binding.controllerID != ctrlData.controllerID )
+				continue; // skip if not bound
+
+			// Game logic: simple movement based on joystick direction and delta time
+            pos.position += controller.Joydirection * 100.f/*speed*/ * GameEngine::fDt;
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "MovementSystem Error for Entity " << entity << ": " << e.what() << "\n";
+        }
+    }
+}
+//-------------------------------------------------------------

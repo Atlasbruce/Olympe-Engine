@@ -36,15 +36,16 @@ void UpdateECSInputFromMessage(const Message& msg)
                     PlayerBinding_data &binding = World::Get().GetComponent<PlayerBinding_data>(entity);
 
                     // Match device id: for keyboard, joystickID may be -1
-                    if (binding.joystickID != msg.deviceId) continue;
+                    if (binding.controllerID != msg.deviceId) continue;
 
                     // Ensure Controller_data exists
                     if (!World::Get().HasComponent<Controller_data>(entity))
                     {
-                        World::Get().AddComponent<Controller_data>(entity);
+                        continue;
+                        //World::Get().AddComponent<Controller_data>(entity);
                     }
                     Controller_data &ctrl = World::Get().GetComponent<Controller_data>(entity);
-                    ctrl.controllerIndex = static_cast<short>(msg.deviceId);
+                    ctrl.controllerID = static_cast<short>(msg.deviceId);
 
                     // Update connection state
                     if (msg.msg_type == EventType::Olympe_EventType_Joystick_Connected || msg.msg_type == EventType::Olympe_EventType_Keyboard_Connected)
@@ -64,7 +65,8 @@ void UpdateECSInputFromMessage(const Message& msg)
                     {
                         if (!World::Get().HasComponent<PlayerController_data>(entity))
                         {
-                            World::Get().AddComponent<PlayerController_data>(entity);
+                            continue;
+                            //World::Get().AddComponent<PlayerController_data>(entity);
                         }
                         PlayerController_data &pctrl = World::Get().GetComponent<PlayerController_data>(entity);
                         int axis = msg.controlId;
@@ -79,18 +81,67 @@ void UpdateECSInputFromMessage(const Message& msg)
                     {
                         if (!World::Get().HasComponent<PlayerController_data>(entity))
                         {
-                            World::Get().AddComponent<PlayerController_data>(entity);
+                            continue;
+                            //World::Get().AddComponent<PlayerController_data>(entity);
                         }
                         PlayerController_data &pctrl = World::Get().GetComponent<PlayerController_data>(entity);
-                        if (msg.controlId == 32) // space -> jump
-                            pctrl.isJumping = (msg.msg_type == EventType::Olympe_EventType_Keyboard_KeyDown);
+
+                        switch(msg.msg_type)
+						{
+                            case EventType::Olympe_EventType_Keyboard_KeyDown:
+                            {
+                                // msg.controlId contains SDL_Scancode
+                                switch (static_cast<SDL_Scancode>(msg.controlId))
+                                {
+                                case SDL_SCANCODE_Z:
+                                case SDL_SCANCODE_UP:
+                                    pctrl.Joydirection.y = -1.f; break;
+                                case SDL_SCANCODE_S:
+                                case SDL_SCANCODE_DOWN:
+                                    pctrl.Joydirection.y = 1.f; break;
+                                case SDL_SCANCODE_Q:
+                                case SDL_SCANCODE_LEFT:
+                                    pctrl.Joydirection.x = -1.f; break;
+                                case SDL_SCANCODE_D:
+                                case SDL_SCANCODE_RIGHT:
+                                    pctrl.Joydirection.x = 1.f; break;
+                                default:
+                                    break;
+                                }
+                                break;
+                            }
+                            case EventType::Olympe_EventType_Keyboard_KeyUp:
+                            {
+                                switch (static_cast<SDL_Scancode>(msg.controlId))
+                                {
+                                case SDL_SCANCODE_W:
+                                case SDL_SCANCODE_UP:
+                                case SDL_SCANCODE_S:
+                                case SDL_SCANCODE_DOWN:
+                                    pctrl.Joydirection.y = 0.f; break;
+                                case SDL_SCANCODE_A:
+                                case SDL_SCANCODE_LEFT:
+                                case SDL_SCANCODE_D:
+                                case SDL_SCANCODE_RIGHT:
+                                    pctrl.Joydirection.x = 0.f; break;
+                                default:
+                                    break;
+                                }
+                                break;
+                            }
+                        }
+
+                        //if (msg.controlId == 32) // space -> jump
+                        //    pctrl.isJumping = (msg.msg_type == EventType::Olympe_EventType_Keyboard_KeyDown);
                     }
 
-                    // After updating components, notify the entity/player by dispatching a targeted message
-                    Message targeted = msg;
-                    targeted.targetUid = entity;
-                    // Immediate dispatch so players can read up-to-date component data
-                    EventManager::Get().DispatchImmediate(targeted);
+					// DEPRECATED MESSAGE HERE THE COMPONENTS WILL PRCOESS THEMSELVES AND RETRIEVE DATA AS NEEDED
+                    // 
+                    //// After updating components, notify the entity/player by dispatching a targeted message
+                    //Message targeted = msg;
+                    //targeted.targetUid = entity;
+                    //// Immediate dispatch so players can read up-to-date component data
+                    //EventManager::Get().DispatchImmediate(targeted);
                 }
                 catch (const std::exception&)
                 {
