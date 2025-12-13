@@ -1,0 +1,58 @@
+{
+    "components": [
+        {
+            "properties": {
+                "position": {
+                    "x": 500,
+                    "y": 600,
+                    "z": 0
+                }
+            },
+            "type": "Position"
+        },
+        {
+            "properties": {
+                "boundingBox": {
+                    "h": 32,
+                    "w": 32,
+                    "x": 0,
+                    "y": 0
+                }
+            },
+            "type": "BoundingBox"
+        },
+        {
+            "properties": {
+                "hotSpot": {
+                    "x": 16,
+                    "y": 16
+                },
+                "spritePath": "Resources/entity_male.png",
+                "srcRect": {
+                    "h": 32,
+                    "w": 32,
+                    "x": 0,
+                    "y": 0
+                }
+            },
+            "type": "VisualSprite"
+        },
+        {
+            "properties": {
+                "direction": {
+                    "x": 1,
+                    "y": 0
+                },
+                "velocity": {
+                    "x": 0,
+                    "y": 0
+                }
+            },
+            "type": "Movement"
+        }
+    ],
+    "description": "A basic character entity with position, bounding box, and sprite",
+    "name": "SimpleCharacter",
+    "schema_version": 1,
+    "type": "EntityBlueprint"
+}
