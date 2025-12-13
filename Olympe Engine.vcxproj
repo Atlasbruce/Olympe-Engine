@@ -40,6 +40,7 @@
     <ClCompile Include="source\Player.cpp" />
     <ClCompile Include="Source\Sprite.cpp" />
     <ClCompile Include="Source\system\CameraManager.cpp" />
+    <ClCompile Include="Source\system\EventManager_ECS.cpp" />
     <ClCompile Include="Source\system\GameMenu.cpp" />
     <ClCompile Include="Source\system\JoystickManager.cpp" />
     <ClCompile Include="Source\system\KeyboardManager.cpp" />

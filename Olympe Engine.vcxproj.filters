@@ -165,6 +165,9 @@
     <ClCompile Include="source\ECS_Register.h">
       <Filter>Fichiers d%27en-tête\ECS\Components</Filter>
     </ClCompile>
+    <ClCompile Include="Source\system\EventManager_ECS.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">

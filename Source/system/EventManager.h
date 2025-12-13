@@ -10,6 +10,9 @@
 #include <algorithm>
 #include "system_utils.h"
 
+// Forward declaration of helper implemented in EventManager_ECS.cpp
+void UpdateECSInputFromMessage(const Message& msg);
+
 // EventManager: central dispatcher for engine messages.
 // Inline (header-only) implementation placed in Source/system.
 
@@ -77,6 +80,16 @@ public:
                 toDispatch.push_back(m_queue.front());
                 m_queue.pop();
             }
+        }
+
+        // Update ECS input-related components from messages before dispatching
+        for (const auto& msg : toDispatch)
+        {
+            try
+            {
+                UpdateECSInputFromMessage(msg);
+            }
+            catch (...) { /* avoid throwing from the event loop */ }
         }
 
         for (const auto& msg : toDispatch)
