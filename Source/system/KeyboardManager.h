@@ -32,9 +32,9 @@ public:
 
     // Pull API for reading keyboard state
     void BeginFrame();
-    bool IsKeyHeld(SDL_Scancode sc) const;
-    bool IsKeyPressed(SDL_Scancode sc) const;
-    bool IsKeyReleased(SDL_Scancode sc) const;
+    bool IsKeyHeld(SDL_Scancode sc) ;
+    bool IsKeyPressed(SDL_Scancode sc) ;
+    bool IsKeyReleased(SDL_Scancode sc) ;
 
 private:
     std::mutex m_mutex;

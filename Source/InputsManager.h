@@ -203,9 +203,9 @@ private:
 	std::unordered_map<short, SDL_JoystickID> m_playerDisconnected;
 	std::unordered_map<short, Player*> m_playerIndex;
     bool m_keyboardAssigned = false;
-	JoystickManager& joystickmanager = JoystickManager::GetInstance();
-	KeyboardManager& keyboardmanager = KeyboardManager::GetInstance();
-	MouseManager& mousemanager = MouseManager::GetInstance();
+	//JoystickManager& joystickmanager = JoystickManager::GetInstance();
+	//KeyboardManager& keyboardmanager = KeyboardManager::GetInstance();
+	//MouseManager& mousemanager = MouseManager::GetInstance();
 	std::ostringstream m_devicesStatus;
 
     // Context stack for input handling (Gameplay, UI, Editor)

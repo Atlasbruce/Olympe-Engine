@@ -32,21 +32,21 @@ void KeyboardManager::BeginFrame()
     std::memset(m_keysReleasedThisFrame, 0, sizeof(m_keysReleasedThisFrame));
 }
 
-bool KeyboardManager::IsKeyHeld(SDL_Scancode sc) const
+bool KeyboardManager::IsKeyHeld(SDL_Scancode sc) 
 {
     if (sc < 0 || sc >= SDL_SCANCODE_COUNT) return false;
     std::lock_guard<std::mutex> lock(m_mutex);
     return m_keyStates[sc];
 }
 
-bool KeyboardManager::IsKeyPressed(SDL_Scancode sc) const
+bool KeyboardManager::IsKeyPressed(SDL_Scancode sc) 
 {
     if (sc < 0 || sc >= SDL_SCANCODE_COUNT) return false;
     std::lock_guard<std::mutex> lock(m_mutex);
     return m_keysPressedThisFrame[sc];
 }
 
-bool KeyboardManager::IsKeyReleased(SDL_Scancode sc) const
+bool KeyboardManager::IsKeyReleased(SDL_Scancode sc) 
 {
     if (sc < 0 || sc >= SDL_SCANCODE_COUNT) return false;
     std::lock_guard<std::mutex> lock(m_mutex);

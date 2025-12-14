@@ -12,8 +12,8 @@ using EM = ::EventManager;
 //---------------------------------------------------------------------------------------------
 JoystickManager& JoystickManager::GetInstance()
 {
-    static JoystickManager instance;
-    return instance;
+	static JoystickManager* instance = new JoystickManager();
+    return *instance;
 }
 //---------------------------------------------------------------------------------------------
 void JoystickManager::BeginFrame()
@@ -27,7 +27,7 @@ void JoystickManager::BeginFrame()
     }
 }
 //---------------------------------------------------------------------------------------------
-bool JoystickManager::GetButton(SDL_JoystickID id, int button) const
+bool JoystickManager::GetButton(SDL_JoystickID id, int button) 
 {
     if (button < 0 || button >= MAX_BUTTONS) return false;
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -36,7 +36,7 @@ bool JoystickManager::GetButton(SDL_JoystickID id, int button) const
     return it->second.buttons[button];
 }
 //---------------------------------------------------------------------------------------------
-bool JoystickManager::IsButtonPressed(SDL_JoystickID id, int button) const
+bool JoystickManager::IsButtonPressed(SDL_JoystickID id, int button) 
 {
     if (button < 0 || button >= MAX_BUTTONS) return false;
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -45,7 +45,7 @@ bool JoystickManager::IsButtonPressed(SDL_JoystickID id, int button) const
     return it->second.buttonsPressed[button];
 }
 //---------------------------------------------------------------------------------------------
-bool JoystickManager::IsButtonReleased(SDL_JoystickID id, int button) const
+bool JoystickManager::IsButtonReleased(SDL_JoystickID id, int button) 
 {
     if (button < 0 || button >= MAX_BUTTONS) return false;
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -54,7 +54,7 @@ bool JoystickManager::IsButtonReleased(SDL_JoystickID id, int button) const
     return it->second.buttonsReleased[button];
 }
 //---------------------------------------------------------------------------------------------
-float JoystickManager::GetAxis(SDL_JoystickID id, int axis) const
+float JoystickManager::GetAxis(SDL_JoystickID id, int axis) 
 {
     if (axis < 0 || axis >= MAX_AXES) return 0.0f;
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -91,7 +91,7 @@ void JoystickManager::Scan_Joysticks()
 //---------------------------------------------------------------------------------------------
 void JoystickManager::Shutdown()
 {
-    //std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
     for (auto &kv : m_joysticks)
     {
         if (kv.second.joystick)
@@ -291,7 +291,7 @@ void JoystickManager::HandleEvent(const SDL_Event* ev)
 //---------------------------------------------------------------------------------------------
 std::vector<SDL_JoystickID> JoystickManager::GetConnectedJoysticks()
 {
-   // std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
     std::vector<SDL_JoystickID> res;
     res.reserve(m_joysticks.size());
     for (auto &kv : m_joysticks) res.push_back(kv.first);
@@ -300,13 +300,13 @@ std::vector<SDL_JoystickID> JoystickManager::GetConnectedJoysticks()
 //---------------------------------------------------------------------------------------------
 bool JoystickManager::IsJoystickConnected(SDL_JoystickID id)
 {
-   // std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
     return m_joysticks.find(id) != m_joysticks.end();
 }
 //---------------------------------------------------------------------------------------------
 void JoystickManager::OpenJoystick(SDL_JoystickID instance_id)
 {
-   // std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
     if (m_joysticks.find(instance_id) != m_joysticks.end()) return; // already open
 
     SDL_Joystick* js = SDL_OpenJoystick(instance_id);
@@ -328,33 +328,22 @@ void JoystickManager::OpenJoystick(SDL_JoystickID instance_id)
 
     // read initial states
     for (int a =0; a < info.numAxes; ++a)
+    {
         info.axes[a] = SDL_GetJoystickAxis(js, a);
+        float normalized = (info.axes[a] >= 0) ? (info.axes[a] / 32767.0f) : (info.axes[a] / 32768.0f);
+        info.axes[a] = normalized;
+    }
     for (int b =0; b < info.numButtons; ++b)
+    {
         info.buttons[b] = SDL_GetJoystickButton(js, b);
+    }
 
     m_joysticks[info.id] = std::move(info);
-
-    // Initialize pull API state for this joystick
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        auto& state = m_joyStates[info.id];
-        state.connected = true;
-        // Initialize axes and buttons from current state
-        for (int a = 0; a < info.numAxes && a < MAX_AXES; ++a)
-        {
-            float normalized = (info.axes[a] >= 0) ? (info.axes[a] / 32767.0f) : (info.axes[a] / 32768.0f);
-            state.axes[a] = normalized;
-        }
-        for (int b = 0; b < info.numButtons && b < MAX_BUTTONS; ++b)
-        {
-            state.buttons[b] = info.buttons[b];
-        }
-    }
 }
 //---------------------------------------------------------------------------------------------
 void JoystickManager::CloseJoystick(SDL_JoystickID instance_id)
 {
-  //  std::lock_guard<std::mutex> lock(m_mutex);
+    std::lock_guard<std::mutex> lock(m_mutex);
     auto it = m_joysticks.find(instance_id);
     if (it == m_joysticks.end()) return;
 

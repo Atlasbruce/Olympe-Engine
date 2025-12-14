@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../object.h"
 #include "EventManager.h"
 #include "message.h"
 #include <SDL3/SDL.h>
@@ -12,7 +11,7 @@
 // Forward declare to access constant
 struct Controller_data;
 
-class JoystickManager : public Object
+class JoystickManager 
 {
 public:
     static constexpr int MAX_BUTTONS = 16; // Must match Controller_data::MAX_BUTTONS
@@ -50,12 +49,14 @@ public:
 
     // Pull API for reading joystick state
     void BeginFrame();
-    bool GetButton(SDL_JoystickID id, int button) const;
-    bool IsButtonPressed(SDL_JoystickID id, int button) const;
-    bool IsButtonReleased(SDL_JoystickID id, int button) const;
-    float GetAxis(SDL_JoystickID id, int axis) const;
+    bool GetButton(SDL_JoystickID id, int button) ;
+    bool IsButtonPressed(SDL_JoystickID id, int button) ;
+    bool IsButtonReleased(SDL_JoystickID id, int button) ;
+    float GetAxis(SDL_JoystickID id, int axis) ;
 
 private:
+	string name;
+
     struct JoystickInfo
     {
         SDL_Joystick* joystick = nullptr;
