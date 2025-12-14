@@ -152,6 +152,7 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
 	{
         binding.controllerID = IM::Get().AutoBindControllerToPlayer(binding.playerIndex);
 		controller.controllerID = binding.controllerID;
+		IM::Get().AddPlayerEntityIndex(binding.playerIndex, eID);
 		SYSTEM_LOG << "VideoGame::AddPlayerEntity: Player " << binding.playerIndex << " bound to controller " << binding.controllerID << "\n";
 	}
     else

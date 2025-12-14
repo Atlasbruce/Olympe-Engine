@@ -111,6 +111,13 @@ public:
         return true;
     }
 	//--------------------------------------------------------------
+    bool AddPlayerEntityIndex(short playerID, EntityID eID)
+    {
+        if (m_playerEntityIndex.find(playerID) != m_playerEntityIndex.end()) return false;
+        m_playerEntityIndex[playerID] = eID;
+        return true;
+	}
+	//--------------------------------------------------------------
     // Bind a controller (joystick id) or keyboard (-1) to a player
     bool BindControllerToPlayer(short playerID, SDL_JoystickID controller)
     {
@@ -128,18 +135,39 @@ public:
         // ensure not already used
         for (auto &kv : m_playerBindings) if (kv.second == controller) return false;
         m_playerBindings[playerID] = controller;
-        //m_playerObjectIndex[playerID]->m_ControllerID = controller;
-		//SYSTEM_LOG << "Player " << playerID << " named "+ ((Player*)m_playerIndex[playerID])->name +" bound to joystick " << controller << "\n";
+
+        auto entityPlayer = m_playerEntityIndex.find(playerID);
+        if (entityPlayer != m_playerEntityIndex.end())
+        {
+            // Access to entity controllerdata to remove controllerID binding
+            EntityID eID = entityPlayer->second;
+            Controller_data& ctrl = World::Get().GetComponent<Controller_data>(eID);
+            PlayerBinding_data& binding = World::Get().GetComponent<PlayerBinding_data>(eID);
+			ctrl.controllerID = controller; // set new controller ID
+			binding.controllerID = controller; // set new controller ID
+        }
         SYSTEM_LOG << "Player " << playerID << " bound to joystick " << controller << "\n";
         return true;
     }
-
+	//---------------------------------------------------------------------------------------------
     bool UnbindControllerFromPlayer(short playerID)
     {
         auto it = m_playerBindings.find(playerID);
         if (it == m_playerBindings.end()) return false;
         if (it->second == SDL_JoystickID(-1)) m_keyboardAssigned = false;
         m_playerBindings.erase(it);
+
+		auto entityPlayer =  m_playerEntityIndex.find(playerID);
+        if ( entityPlayer != m_playerEntityIndex.end() )
+        {
+			// Access to entity controllerdata to remove controllerID binding
+			EntityID eID = entityPlayer->second;
+			Controller_data& controller = World::Get().GetComponent<Controller_data>(eID);
+			PlayerBinding_data& binding = World::Get().GetComponent<PlayerBinding_data>(eID);
+			controller.controllerID = -2; // unbound
+			binding.controllerID = -2; // unbound
+            m_playerEntityIndex.erase(entityPlayer);
+		}
 		SYSTEM_LOG << "Player " << playerID << " unbound from controller\n";
         return true;
     }
@@ -204,7 +232,7 @@ private:
     std::unordered_map<short, SDL_JoystickID> m_playerBindings;
 	std::unordered_map<short, SDL_JoystickID> m_playerDisconnected;
 	std::unordered_map<short, Player*> m_playerObjectIndex;
-	//std::unordered_map<short, EntityID> m_playerEntityIndex;
+	std::unordered_map<short, EntityID> m_playerEntityIndex;
     bool m_keyboardAssigned = false;
 	//JoystickManager& joystickmanager = JoystickManager::GetInstance();
 	//KeyboardManager& keyboardmanager = KeyboardManager::GetInstance();

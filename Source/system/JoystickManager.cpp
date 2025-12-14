@@ -355,7 +355,6 @@ void JoystickManager::CloseJoystick(SDL_JoystickID instance_id)
 
     // Remove pull API state for this joystick
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
         m_joyStates.erase(instance_id);
     }
 }
