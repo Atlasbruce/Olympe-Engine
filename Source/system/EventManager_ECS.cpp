@@ -57,7 +57,7 @@ void UpdateECSInputFromMessage(const Message& msg)
                     if (msg.msg_type == EventType::Olympe_EventType_Joystick_ButtonDown || msg.msg_type == EventType::Olympe_EventType_Joystick_ButtonUp)
                     {
                         int button = msg.controlId;
-                        if (button >=0 && button < 16) ctrl.buttons[button] = (msg.state != 0);
+                        if (button >=0 && button < Controller_data::MAX_BUTTONS) ctrl.buttons[button] = (msg.state != 0);
                     }
 
                     // Axis motion: update Controller_data axes

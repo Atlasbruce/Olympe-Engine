@@ -9,8 +9,14 @@
 #include <string>
 #include <mutex>
 
+// Forward declare to access constant
+struct Controller_data;
+
 class JoystickManager : public Object
 {
+public:
+    static constexpr int MAX_BUTTONS = 16; // Must match Controller_data::MAX_BUTTONS
+    static constexpr int MAX_AXES = 6;
 public:
     JoystickManager()
     {
@@ -65,10 +71,10 @@ private:
     struct JoystickState
     {
         bool connected = false;
-        float axes[6] = {0};
-        bool buttons[16] = {false};
-        bool buttonsPressed[16] = {false};
-        bool buttonsReleased[16] = {false};
+        float axes[MAX_AXES] = {0};
+        bool buttons[MAX_BUTTONS] = {false};
+        bool buttonsPressed[MAX_BUTTONS] = {false};
+        bool buttonsReleased[MAX_BUTTONS] = {false};
     };
 
     std::unordered_map<SDL_JoystickID, JoystickInfo> m_joysticks;

@@ -29,7 +29,7 @@ void JoystickManager::BeginFrame()
 //---------------------------------------------------------------------------------------------
 bool JoystickManager::GetButton(SDL_JoystickID id, int button) const
 {
-    if (button < 0 || button >= 16) return false;
+    if (button < 0 || button >= MAX_BUTTONS) return false;
     std::lock_guard<std::mutex> lock(m_mutex);
     auto it = m_joyStates.find(id);
     if (it == m_joyStates.end()) return false;
@@ -38,7 +38,7 @@ bool JoystickManager::GetButton(SDL_JoystickID id, int button) const
 //---------------------------------------------------------------------------------------------
 bool JoystickManager::IsButtonPressed(SDL_JoystickID id, int button) const
 {
-    if (button < 0 || button >= 16) return false;
+    if (button < 0 || button >= MAX_BUTTONS) return false;
     std::lock_guard<std::mutex> lock(m_mutex);
     auto it = m_joyStates.find(id);
     if (it == m_joyStates.end()) return false;
@@ -47,7 +47,7 @@ bool JoystickManager::IsButtonPressed(SDL_JoystickID id, int button) const
 //---------------------------------------------------------------------------------------------
 bool JoystickManager::IsButtonReleased(SDL_JoystickID id, int button) const
 {
-    if (button < 0 || button >= 16) return false;
+    if (button < 0 || button >= MAX_BUTTONS) return false;
     std::lock_guard<std::mutex> lock(m_mutex);
     auto it = m_joyStates.find(id);
     if (it == m_joyStates.end()) return false;
@@ -56,7 +56,7 @@ bool JoystickManager::IsButtonReleased(SDL_JoystickID id, int button) const
 //---------------------------------------------------------------------------------------------
 float JoystickManager::GetAxis(SDL_JoystickID id, int axis) const
 {
-    if (axis < 0 || axis >= 6) return 0.0f;
+    if (axis < 0 || axis >= MAX_AXES) return 0.0f;
     std::lock_guard<std::mutex> lock(m_mutex);
     auto it = m_joyStates.find(id);
     if (it == m_joyStates.end()) return 0.0f;
@@ -188,7 +188,7 @@ void JoystickManager::HandleEvent(const SDL_Event* ev)
             bool down = ev->jbutton.down;
             
             // Update state for pull API
-            if (button >= 0 && button < 16)
+            if (button >= 0 && button < MAX_BUTTONS)
             {
                 std::lock_guard<std::mutex> lock(m_mutex);
                 auto& state = m_joyStates[which];
@@ -210,7 +210,7 @@ void JoystickManager::HandleEvent(const SDL_Event* ev)
             bool down = ev->gbutton.down;
             
             // Update state for pull API
-            if (button >= 0 && button < 16)
+            if (button >= 0 && button < MAX_BUTTONS)
             {
                 std::lock_guard<std::mutex> lock(m_mutex);
                 auto& state = m_joyStates[which];
@@ -232,7 +232,7 @@ void JoystickManager::HandleEvent(const SDL_Event* ev)
             bool down = ev->jbutton.down;
             
             // Update state for pull API
-            if (button >= 0 && button < 16)
+            if (button >= 0 && button < MAX_BUTTONS)
             {
                 std::lock_guard<std::mutex> lock(m_mutex);
                 auto& state = m_joyStates[which];
@@ -254,7 +254,7 @@ void JoystickManager::HandleEvent(const SDL_Event* ev)
             Sint16 value = ev->gaxis.value;
             
             // Update state for pull API (normalize to -1..1)
-            if (axis >= 0 && axis < 6)
+            if (axis >= 0 && axis < MAX_AXES)
             {
                 std::lock_guard<std::mutex> lock(m_mutex);
                 auto& state = m_joyStates[which];
@@ -272,7 +272,7 @@ void JoystickManager::HandleEvent(const SDL_Event* ev)
             Sint16 value = ev->jaxis.value;
             
             // Update state for pull API (normalize to -1..1)
-            if (axis >= 0 && axis < 6)
+            if (axis >= 0 && axis < MAX_AXES)
             {
                 std::lock_guard<std::mutex> lock(m_mutex);
                 auto& state = m_joyStates[which];
@@ -340,12 +340,12 @@ void JoystickManager::OpenJoystick(SDL_JoystickID instance_id)
         auto& state = m_joyStates[info.id];
         state.connected = true;
         // Initialize axes and buttons from current state
-        for (int a = 0; a < info.numAxes && a < 6; ++a)
+        for (int a = 0; a < info.numAxes && a < MAX_AXES; ++a)
         {
             float normalized = (info.axes[a] >= 0) ? (info.axes[a] / 32767.0f) : (info.axes[a] / 32768.0f);
             state.axes[a] = normalized;
         }
-        for (int b = 0; b < info.numButtons && b < 16; ++b)
+        for (int b = 0; b < info.numButtons && b < MAX_BUTTONS; ++b)
         {
             state.buttons[b] = info.buttons[b];
         }

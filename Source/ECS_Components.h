@@ -95,19 +95,21 @@ struct AudioSource_data
 // --- Component Controller Data ---
 struct Controller_data
 {
+	static constexpr int MAX_BUTTONS = 16;
+	
 	short controllerID = -1; // Index of the controller (-1 = keyboard)
 	bool isConnected = false; // Is the controller connected?
 	
-	// Axes normalisés (deadzone appliquée)
+	// Normalized axes (deadzone applied)
 	Vector leftStick;   // -1..1
 	Vector rightStick;  // -1..1
 	float leftTrigger = 0.f;  // 0..1
 	float rightTrigger = 0.f; // 0..1
 	
-	// Boutons
-	bool buttons[16] = {false};
+	// Buttons
+	bool buttons[MAX_BUTTONS] = {false};
 	
-	// Haptics (optionnel)
+	// Haptics (optional)
 	bool isVibrating = false;
 	float vibrateStrength = 0.f;
 };
