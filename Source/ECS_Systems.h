@@ -108,10 +108,6 @@ class InputMappingSystem : public ECS_System
 };
 
 //-------------------------------------------------------------
-// Forward declaration for GlowOrb structure
-struct GlowOrb;
-
-//-------------------------------------------------------------
 // Olympe Effect System: Plasma bloom background with glowing orbs
 // No entity required - autonomous visual effect system
 class OlympeEffectSystem : public ECS_System

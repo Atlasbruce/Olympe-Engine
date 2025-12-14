@@ -26,6 +26,20 @@ Autonomous visual effect system (no entity required)
 #define ORB_SPEED_MIN 15.0f
 #define ORB_SPEED_MAX 35.0f
 
+// Mathematical constants
+#ifndef M_PI
+#define M_PI 3.14159265358979323846f
+#endif
+
+// Blur effect constants
+#define BLUR_ALPHA_CENTER 100
+#define BLUR_ALPHA_OFFSET 50
+
+// Bloom effect constants
+#define BLOOM_ALPHA_BLUR 180
+#define BLOOM_ALPHA_PLASMA 120
+#define BLOOM_ALPHA_LOGO 200
+
 // Structure for glowing orbs
 struct GlowOrb
 {
@@ -142,7 +156,7 @@ void OlympeEffectSystem::Initialize()
         
         // Random velocity
         float speed = ORB_SPEED_MIN + SDL_randf() * (ORB_SPEED_MAX - ORB_SPEED_MIN);
-        float angle = SDL_randf() * 2.0f * 3.14159265f;
+        float angle = SDL_randf() * 2.0f * M_PI;
         pImpl->orbs[i].velocity.x = cosf(angle) * speed;
         pImpl->orbs[i].velocity.y = sinf(angle) * speed;
         
@@ -151,7 +165,7 @@ void OlympeEffectSystem::Initialize()
         
         // Pulse parameters
         pImpl->orbs[i].radius = ORB_BASE_RADIUS;
-        pImpl->orbs[i].pulsePhase = SDL_randf() * 2.0f * 3.14159265f;
+        pImpl->orbs[i].pulsePhase = SDL_randf() * 2.0f * M_PI;
         pImpl->orbs[i].pulseSpeed = 0.5f + SDL_randf() * 0.5f; // 0.5-1.0 Hz
         pImpl->orbs[i].pulseAmplitude = 0.15f + SDL_randf() * 0.10f; // 15-25%
     }
@@ -184,7 +198,7 @@ void OlympeEffectSystem::Implementation::UpdateOrbs(float deltaTime)
         orb.position.y += orb.velocity.y * deltaTime;
         
         // Update pulse
-        orb.pulsePhase += orb.pulseSpeed * 2.0f * 3.14159265f * deltaTime;
+        orb.pulsePhase += orb.pulseSpeed * 2.0f * M_PI * deltaTime;
         float pulseFactor = 1.0f + orb.pulseAmplitude * sinf(orb.pulsePhase);
         orb.radius = ORB_BASE_RADIUS * pulseFactor;
         
@@ -291,14 +305,14 @@ void OlympeEffectSystem::Implementation::ApplyGaussianBlur()
         SDL_RenderClear(GameEngine::renderer);
         
         SDL_SetTextureBlendMode(plasmaTexture, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(plasmaTexture, 100); // Center
+        SDL_SetTextureAlphaMod(plasmaTexture, BLUR_ALPHA_CENTER); // Center
         SDL_RenderTexture(GameEngine::renderer, plasmaTexture, nullptr, nullptr);
         
-        SDL_SetTextureAlphaMod(plasmaTexture, 50); // Left offset
+        SDL_SetTextureAlphaMod(plasmaTexture, BLUR_ALPHA_OFFSET); // Left offset
         SDL_FRect leftRect = {-static_cast<float>(offset), 0, static_cast<float>(width), static_cast<float>(height)};
         SDL_RenderTexture(GameEngine::renderer, plasmaTexture, nullptr, &leftRect);
         
-        SDL_SetTextureAlphaMod(plasmaTexture, 50); // Right offset
+        SDL_SetTextureAlphaMod(plasmaTexture, BLUR_ALPHA_OFFSET); // Right offset
         SDL_FRect rightRect = {static_cast<float>(offset), 0, static_cast<float>(width), static_cast<float>(height)};
         SDL_RenderTexture(GameEngine::renderer, plasmaTexture, nullptr, &rightRect);
         
@@ -308,14 +322,14 @@ void OlympeEffectSystem::Implementation::ApplyGaussianBlur()
         SDL_RenderClear(GameEngine::renderer);
         
         SDL_SetTextureBlendMode(blurTexture1, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(blurTexture1, 100); // Center
+        SDL_SetTextureAlphaMod(blurTexture1, BLUR_ALPHA_CENTER); // Center
         SDL_RenderTexture(GameEngine::renderer, blurTexture1, nullptr, nullptr);
         
-        SDL_SetTextureAlphaMod(blurTexture1, 50); // Top offset
+        SDL_SetTextureAlphaMod(blurTexture1, BLUR_ALPHA_OFFSET); // Top offset
         SDL_FRect topRect = {0, -static_cast<float>(offset), static_cast<float>(width), static_cast<float>(height)};
         SDL_RenderTexture(GameEngine::renderer, blurTexture1, nullptr, &topRect);
         
-        SDL_SetTextureAlphaMod(blurTexture1, 50); // Bottom offset
+        SDL_SetTextureAlphaMod(blurTexture1, BLUR_ALPHA_OFFSET); // Bottom offset
         SDL_FRect bottomRect = {0, static_cast<float>(offset), static_cast<float>(width), static_cast<float>(height)};
         SDL_RenderTexture(GameEngine::renderer, blurTexture1, nullptr, &bottomRect);
         
@@ -340,19 +354,19 @@ void OlympeEffectSystem::Implementation::ApplyBloom()
     
     // Step 2: Add blurred glow (additive blending)
     SDL_SetTextureBlendMode(blurTexture2, SDL_BLENDMODE_ADD);
-    SDL_SetTextureAlphaMod(blurTexture2, 180);
+    SDL_SetTextureAlphaMod(blurTexture2, BLOOM_ALPHA_BLUR);
     SDL_RenderTexture(GameEngine::renderer, blurTexture2, nullptr, nullptr);
     
     // Step 3: Add original plasma orbs (additive blending)
     SDL_SetTextureBlendMode(plasmaTexture, SDL_BLENDMODE_ADD);
-    SDL_SetTextureAlphaMod(plasmaTexture, 120);
+    SDL_SetTextureAlphaMod(plasmaTexture, BLOOM_ALPHA_PLASMA);
     SDL_RenderTexture(GameEngine::renderer, plasmaTexture, nullptr, nullptr);
     
     // Step 4: Render logo (optional)
     if (logoTexture)
     {
         SDL_SetTextureBlendMode(logoTexture, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureAlphaMod(logoTexture, 200);
+        SDL_SetTextureAlphaMod(logoTexture, BLOOM_ALPHA_LOGO);
         SDL_FRect logoRect = {(width - 300.0f) / 2.0f, (height - 121.0f) / 2.0f, 300.0f, 121.0f};
         SDL_RenderTexture(GameEngine::renderer, logoTexture, nullptr, &logoRect);
     }
