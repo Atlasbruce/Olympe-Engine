@@ -68,6 +68,11 @@ void World::Initialize_ECS_Systems()
 	Add_ECS_System(std::make_unique<TriggerSystem>());
 	Add_ECS_System(std::make_unique<MovementSystem>());
     Add_ECS_System(std::make_unique<RenderingSystem>());
+    
+    // Olympe Effect System (background plasma bloom)
+    auto olympeEffect = std::make_unique<OlympeEffectSystem>();
+    olympeEffect->Initialize();
+    Add_ECS_System(std::move(olympeEffect));
 }
 //---------------------------------------------------------------------------------------------
 void World::Add_ECS_System(std::unique_ptr<ECS_System> system)

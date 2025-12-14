@@ -26,7 +26,7 @@
     <ClCompile Include="Source\engine_utils.cpp" />
     <ClCompile Include="Source\InputsInspectorPanel.cpp" />
     <ClCompile Include="Source\InputsManager.cpp" />
-    <ClCompile Include="Source\OlympeSystem.cpp" />
+    <ClCompile Include="Source\OlympeEffectSystem.cpp" />
     <ClCompile Include="Source\DataManager.cpp" />
     <ClCompile Include="Source\drawing.cpp" />
     <ClCompile Include="source\drawing.h" />
@@ -61,7 +61,6 @@
     <ClInclude Include="source\ECS_Entity.h" />
     <ClInclude Include="source\ECS_Systems.h" />
     <ClInclude Include="Source\engine_utils.h" />
-    <ClInclude Include="Source\OlympeSystem.h" />
     <ClInclude Include="Source\DataManager.h" />
     <ClInclude Include="Source\Factory.h" />
     <ClInclude Include="Source\GameEngine.h" />

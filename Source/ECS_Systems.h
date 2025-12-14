@@ -106,3 +106,23 @@ class InputMappingSystem : public ECS_System
     InputMappingSystem();
     virtual void Process() override;
 };
+
+//-------------------------------------------------------------
+// Olympe Effect System: Plasma bloom background with glowing orbs
+// No entity required - autonomous visual effect system
+class OlympeEffectSystem : public ECS_System
+{
+public:
+    OlympeEffectSystem();
+    virtual ~OlympeEffectSystem();
+    
+    virtual void Process() override;
+    virtual void Render() override;
+    
+    void Initialize();
+
+private:
+    // Implementation details hidden - defined in OlympeEffectSystem.cpp
+    struct Implementation;
+    Implementation* pImpl;
+};

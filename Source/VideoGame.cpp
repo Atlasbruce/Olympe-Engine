@@ -42,10 +42,10 @@ VideoGame::VideoGame()
 	// Ensure default state is running
 	GameStateManager::SetState(GameState::GameState_Running);
 	
-	// OLD GameObject Legacy - - TO BE MIGRATED AND REMOVED
-	testGao = (GameObject*)ObjectFactory::Get().CreateObject("GameObject");
-	testGao->name = "OlympeSystem";
-	ObjectFactory::Get().AddComponent("OlympeSystem", testGao);
+	// DEPRECATED: OlympeSystem migrated to OlympeEffectSystem ECS
+	// testGao = (GameObject*)ObjectFactory::Get().CreateObject("GameObject");
+	// testGao->name = "OlympeSystem";
+	// ObjectFactory::Get().AddComponent("OlympeSystem", testGao);
 
 	// Register all prefab items for the game
     RegisterPrefabItems();
