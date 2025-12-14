@@ -46,7 +46,7 @@ struct Movement_data
 struct PhysicsBody_data
 {
 	float mass = 1.0f;		// Mass of the body
-	float speed = 50.0f;	// Movement speed in pixels/second
+	float speed = 150.0f;	// Movement speed in pixels/second
 };
 // --- Component Health Data ---
 struct Health_data
@@ -70,6 +70,7 @@ struct VisualSprite_data
 	SDL_FRect srcRect = { 0, 0, 25, 25 }; // Source rectangle for texture atlas
 	Sprite* sprite = nullptr; // Pointer to the sprite/texture
 	Vector hotSpot;        // Hotspot offset for rendering
+	SDL_Color color = { 0, 0, 0, 255 }; // Color (RGBA)
 };
 // --- Component Animation Data ---
 struct Animation_data

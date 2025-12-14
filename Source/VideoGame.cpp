@@ -317,18 +317,21 @@ void VideoGame::RegisterPrefabItems()
         World& world = World::Get();
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "PlayerEntity";
-        VisualSprite_data* st_vsprite_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/entity_" + to_string(Random_Int(1, 15)) + ".png");
-        if (!st_vsprite_ptr)
+        VisualSprite_data st_vsprite_ptr = *DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/entity_" + to_string(Random_Int(1, 15)) + ".png");
+        if (!st_vsprite_ptr.sprite)
         {
             SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
             return;
         }
-        VisualSprite_data st_vsprite = *st_vsprite_ptr;
+        st_vsprite_ptr.color = Random_Color(50, 255);
+        VisualSprite_data st_vsprite = st_vsprite_ptr;
         world.AddComponent<VisualSprite_data>(id, st_vsprite.srcRect, st_vsprite.sprite, st_vsprite.hotSpot);
         world.AddComponent<BoundingBox_data>(id, SDL_FRect{ 0.f, 0.f, st_vsprite.srcRect.w, st_vsprite.srcRect.h });
         world.AddComponent<PlayerBinding_data>(id);// , (short)++m_playerIdCounter, (short)-1); // default to keyboard
         world.AddComponent<Controller_data>(id);// , (short)-1/*controller index*/, false, false);
         world.AddComponent<PlayerController_data>(id);// , Vector(), false, false, false, false, false);
+		world.AddComponent<Health_data>(id, 100, 100);
+        world.AddComponent<PhysicsBody_data>(id);// , Vector(), Vector(), false, 0.f, 0.f,
         // Add other components as needed
 		});
 

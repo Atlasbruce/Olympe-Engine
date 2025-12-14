@@ -38,7 +38,7 @@ Autonomous visual effect system (no entity required)
 // Bloom effect constants
 #define BLOOM_ALPHA_BLUR 180
 #define BLOOM_ALPHA_PLASMA 120
-#define BLOOM_ALPHA_LOGO 200
+#define BLOOM_ALPHA_LOGO 255
 
 // Structure for glowing orbs
 struct GlowOrb
@@ -80,8 +80,8 @@ struct OlympeEffectSystem::Implementation
         , blurTexture2(nullptr)
         , bloomTexture(nullptr)
         , logoTexture(nullptr)
-        , width(800)
-        , height(600)
+        , width(640)
+        , height(320)
     {}
     
     // Helper methods
@@ -243,7 +243,7 @@ void OlympeEffectSystem::Implementation::RenderBackground()
     SDL_SetRenderTarget(GameEngine::renderer, backgroundTexture);
     
     // Dark gradient background (black → night blue)
-    for (int y = 0; y < height; ++y)
+   /* for (int y = 0; y < height; ++y)
     {
         float t = static_cast<float>(y) / static_cast<float>(height);
         Uint8 r = static_cast<Uint8>(0 + t * 10);
@@ -252,8 +252,10 @@ void OlympeEffectSystem::Implementation::RenderBackground()
         
         SDL_SetRenderDrawColor(GameEngine::renderer, r, g, b, 255);
         SDL_RenderLine(GameEngine::renderer, 0, y, width, y);
-    }
-    
+    }/**/
+    SDL_SetRenderDrawColor(GameEngine::renderer, 230, 255, 230, 255);
+	SDL_RenderFillRect(GameEngine::renderer, nullptr);
+
     SDL_SetRenderTarget(GameEngine::renderer, nullptr);
 }
 
@@ -261,7 +263,7 @@ void OlympeEffectSystem::Implementation::RenderBackground()
 void OlympeEffectSystem::Implementation::RenderPlasmaOrbs()
 {
     SDL_SetRenderTarget(GameEngine::renderer, plasmaTexture);
-    SDL_SetRenderDrawColor(GameEngine::renderer, 0, 0, 0, 0);
+    SDL_SetRenderDrawColor(GameEngine::renderer, 0, 0, 0, 255);
     SDL_RenderClear(GameEngine::renderer);
     
     // Render each orb as concentric circles with fading alpha
@@ -272,7 +274,7 @@ void OlympeEffectSystem::Implementation::RenderPlasmaOrbs()
         int cy = static_cast<int>(orb.position.y);
         
         // Draw 30 concentric circles with decreasing alpha
-        const int numCircles = 30;
+        /*const int numCircles = 4;
         for (int j = 0; j < numCircles; ++j)
         {
             float t = static_cast<float>(j) / static_cast<float>(numCircles - 1);
@@ -285,7 +287,11 @@ void OlympeEffectSystem::Implementation::RenderPlasmaOrbs()
             
             SDL_SetRenderDrawColor(GameEngine::renderer, orb.color.r, orb.color.g, orb.color.b, alpha);
             Draw_FilledCircle(GameEngine::renderer, cx, cy, currentRadius);
-        }
+        }/**/
+        // debug to disply the circles outline
+        
+        SDL_SetRenderDrawColor(GameEngine::renderer, 0, 255, 0, 255);
+        Draw_Circle(GameEngine::renderer, cx, cy, orb.radius);
     }
     
     SDL_SetRenderTarget(GameEngine::renderer, nullptr);
@@ -347,11 +353,11 @@ void OlympeEffectSystem::Implementation::ApplyGaussianBlur()
 void OlympeEffectSystem::Implementation::ApplyBloom()
 {
     SDL_SetRenderTarget(GameEngine::renderer, bloomTexture);
-    
+ 
     // Step 1: Draw background (no blending)
     SDL_SetTextureBlendMode(backgroundTexture, SDL_BLENDMODE_NONE);
     SDL_RenderTexture(GameEngine::renderer, backgroundTexture, nullptr, nullptr);
-    
+   /* 
     // Step 2: Add blurred glow (additive blending)
     SDL_SetTextureBlendMode(blurTexture2, SDL_BLENDMODE_ADD);
     SDL_SetTextureAlphaMod(blurTexture2, BLOOM_ALPHA_BLUR);
@@ -361,7 +367,7 @@ void OlympeEffectSystem::Implementation::ApplyBloom()
     SDL_SetTextureBlendMode(plasmaTexture, SDL_BLENDMODE_ADD);
     SDL_SetTextureAlphaMod(plasmaTexture, BLOOM_ALPHA_PLASMA);
     SDL_RenderTexture(GameEngine::renderer, plasmaTexture, nullptr, nullptr);
-    
+    /**/
     // Step 4: Render logo (optional)
     if (logoTexture)
     {
@@ -384,10 +390,10 @@ void OlympeEffectSystem::Process()
     pImpl->RenderBackground();
     
     // Render plasma orbs
-    pImpl->RenderPlasmaOrbs();
+ //   pImpl->RenderPlasmaOrbs();
     
     // Apply gaussian blur
-    pImpl->ApplyGaussianBlur();
+ //   pImpl->ApplyGaussianBlur();
     
     // Compose final bloom effect
     pImpl->ApplyBloom();

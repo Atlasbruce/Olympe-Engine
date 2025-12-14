@@ -131,8 +131,12 @@ void RenderingSystem::Render()
                 SDL_FRect box = boxComp.boundingBox;
                 box.x = vRenderPos.x;
                 box.y = vRenderPos.y;
-				SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
+				
+				SDL_SetTextureColorMod(visual.sprite, visual.color.r, visual.color.g, visual.color.b);
                 SDL_RenderTexture(GameEngine::renderer, visual.sprite, nullptr, &box);
+
+				// Debug: draw bounding box
+				SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 0, 255);
 				Draw_Circle(GameEngine::renderer, (int)( box.x + box.w / 2.f) , (int) (box.y + box.h / 2.f), 35);
             }
         }
@@ -149,6 +153,7 @@ PlayerControlSystem::PlayerControlSystem()
 	requiredSignature.set(GetComponentTypeID_Static<PlayerController_data>(), true);
 	requiredSignature.set(GetComponentTypeID_Static<PlayerBinding_data>(), true);
 	requiredSignature.set(GetComponentTypeID_Static<Controller_data>(), true);
+	requiredSignature.set(GetComponentTypeID_Static<PhysicsBody_data>(), false); // optional
 
 }
 void PlayerControlSystem::Process()
@@ -163,13 +168,14 @@ void PlayerControlSystem::Process()
 			PlayerController_data& controller = World::Get().GetComponent<PlayerController_data>(entity);
 			PlayerBinding_data& binding = World::Get().GetComponent<PlayerBinding_data>(entity);
 			Controller_data& ctrlData = World::Get().GetComponent<Controller_data>(entity);
+			PhysicsBody_data& physBody = World::Get().GetComponent<PhysicsBody_data>(entity);
 
             // check if the controller is bound with right player id
 			if (binding.controllerID != ctrlData.controllerID )
 				continue; // skip if not bound
 
 			// Game logic: simple movement based on joystick direction and delta time
-            pos.position += controller.Joydirection * 100.f/*speed*/ * GameEngine::fDt;
+            pos.position += controller.Joydirection * physBody.speed * GameEngine::fDt;
         }
         catch (const std::exception& e)
         {
