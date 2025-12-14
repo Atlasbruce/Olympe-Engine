@@ -39,20 +39,10 @@ struct GlowOrb
 };
 
 //-------------------------------------------------------------
-// OlympeEffectSystem Class Definition
+// Implementation structure (pimpl pattern)
 //-------------------------------------------------------------
-class OlympeEffectSystem : public ECS_System
+struct OlympeEffectSystem::Implementation
 {
-public:
-    OlympeEffectSystem();
-    virtual ~OlympeEffectSystem();
-    
-    virtual void Process() override;
-    virtual void Render() override;
-    
-    void Initialize();
-
-private:
     // Textures
     SDL_Texture* backgroundTexture;
     SDL_Texture* plasmaTexture;
@@ -68,6 +58,18 @@ private:
     int width;
     int height;
     
+    // Constructor
+    Implementation()
+        : backgroundTexture(nullptr)
+        , plasmaTexture(nullptr)
+        , blurTexture1(nullptr)
+        , blurTexture2(nullptr)
+        , bloomTexture(nullptr)
+        , logoTexture(nullptr)
+        , width(800)
+        , height(600)
+    {}
+    
     // Helper methods
     void UpdateOrbs(float deltaTime);
     void RenderBackground();
@@ -80,14 +82,7 @@ private:
 
 //-------------------------------------------------------------
 OlympeEffectSystem::OlympeEffectSystem()
-    : backgroundTexture(nullptr)
-    , plasmaTexture(nullptr)
-    , blurTexture1(nullptr)
-    , blurTexture2(nullptr)
-    , bloomTexture(nullptr)
-    , logoTexture(nullptr)
-    , width(800)
-    , height(600)
+    : pImpl(new Implementation())
 {
     // No required signature - autonomous system
 }
@@ -96,41 +91,45 @@ OlympeEffectSystem::OlympeEffectSystem()
 OlympeEffectSystem::~OlympeEffectSystem()
 {
     // Clean up all textures
-    if (backgroundTexture) SDL_DestroyTexture(backgroundTexture);
-    if (plasmaTexture) SDL_DestroyTexture(plasmaTexture);
-    if (blurTexture1) SDL_DestroyTexture(blurTexture1);
-    if (blurTexture2) SDL_DestroyTexture(blurTexture2);
-    if (bloomTexture) SDL_DestroyTexture(bloomTexture);
-    // Don't destroy logoTexture - managed by DataManager
+    if (pImpl)
+    {
+        if (pImpl->backgroundTexture) SDL_DestroyTexture(pImpl->backgroundTexture);
+        if (pImpl->plasmaTexture) SDL_DestroyTexture(pImpl->plasmaTexture);
+        if (pImpl->blurTexture1) SDL_DestroyTexture(pImpl->blurTexture1);
+        if (pImpl->blurTexture2) SDL_DestroyTexture(pImpl->blurTexture2);
+        if (pImpl->bloomTexture) SDL_DestroyTexture(pImpl->bloomTexture);
+        // Don't destroy logoTexture - managed by DataManager
+        delete pImpl;
+    }
 }
 
 //-------------------------------------------------------------
 void OlympeEffectSystem::Initialize()
 {
-    width = GameEngine::screenWidth;
-    height = GameEngine::screenHeight;
+    pImpl->width = GameEngine::screenWidth;
+    pImpl->height = GameEngine::screenHeight;
     
     // Create render target textures
-    backgroundTexture = SDL_CreateTexture(GameEngine::renderer, SDL_PIXELFORMAT_RGBA8888, 
-                                         SDL_TEXTUREACCESS_TARGET, width, height);
-    plasmaTexture = SDL_CreateTexture(GameEngine::renderer, SDL_PIXELFORMAT_RGBA8888, 
-                                     SDL_TEXTUREACCESS_TARGET, width, height);
-    blurTexture1 = SDL_CreateTexture(GameEngine::renderer, SDL_PIXELFORMAT_RGBA8888, 
-                                    SDL_TEXTUREACCESS_TARGET, width, height);
-    blurTexture2 = SDL_CreateTexture(GameEngine::renderer, SDL_PIXELFORMAT_RGBA8888, 
-                                    SDL_TEXTUREACCESS_TARGET, width, height);
-    bloomTexture = SDL_CreateTexture(GameEngine::renderer, SDL_PIXELFORMAT_RGBA8888, 
-                                    SDL_TEXTUREACCESS_TARGET, width, height);
+    pImpl->backgroundTexture = SDL_CreateTexture(GameEngine::renderer, SDL_PIXELFORMAT_RGBA8888, 
+                                         SDL_TEXTUREACCESS_TARGET, pImpl->width, pImpl->height);
+    pImpl->plasmaTexture = SDL_CreateTexture(GameEngine::renderer, SDL_PIXELFORMAT_RGBA8888, 
+                                     SDL_TEXTUREACCESS_TARGET, pImpl->width, pImpl->height);
+    pImpl->blurTexture1 = SDL_CreateTexture(GameEngine::renderer, SDL_PIXELFORMAT_RGBA8888, 
+                                    SDL_TEXTUREACCESS_TARGET, pImpl->width, pImpl->height);
+    pImpl->blurTexture2 = SDL_CreateTexture(GameEngine::renderer, SDL_PIXELFORMAT_RGBA8888, 
+                                    SDL_TEXTUREACCESS_TARGET, pImpl->width, pImpl->height);
+    pImpl->bloomTexture = SDL_CreateTexture(GameEngine::renderer, SDL_PIXELFORMAT_RGBA8888, 
+                                    SDL_TEXTUREACCESS_TARGET, pImpl->width, pImpl->height);
     
     // Set blend modes
-    SDL_SetTextureBlendMode(plasmaTexture, SDL_BLENDMODE_BLEND);
-    SDL_SetTextureBlendMode(blurTexture1, SDL_BLENDMODE_BLEND);
-    SDL_SetTextureBlendMode(blurTexture2, SDL_BLENDMODE_BLEND);
-    SDL_SetTextureBlendMode(bloomTexture, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureBlendMode(pImpl->plasmaTexture, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureBlendMode(pImpl->blurTexture1, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureBlendMode(pImpl->blurTexture2, SDL_BLENDMODE_BLEND);
+    SDL_SetTextureBlendMode(pImpl->bloomTexture, SDL_BLENDMODE_BLEND);
     
     // Load logo texture
-    logoTexture = DataManager::Get().GetSprite("Olympe_Logo", "Resources/olympe_logo.png", ResourceCategory::GameObject);
-    if (!logoTexture)
+    pImpl->logoTexture = DataManager::Get().GetSprite("Olympe_Logo", "Resources/olympe_logo.png", ResourceCategory::GameObject);
+    if (!pImpl->logoTexture)
     {
         SYSTEM_LOG << "OlympeEffectSystem: Failed to load logo texture\n";
     }
@@ -138,30 +137,30 @@ void OlympeEffectSystem::Initialize()
     // Initialize orbs with random positions and velocities
     for (int i = 0; i < NUM_ORBS; ++i)
     {
-        orbs[i].position.x = SDL_randf() * static_cast<float>(width);
-        orbs[i].position.y = SDL_randf() * static_cast<float>(height);
+        pImpl->orbs[i].position.x = SDL_randf() * static_cast<float>(pImpl->width);
+        pImpl->orbs[i].position.y = SDL_randf() * static_cast<float>(pImpl->height);
         
         // Random velocity
         float speed = ORB_SPEED_MIN + SDL_randf() * (ORB_SPEED_MAX - ORB_SPEED_MIN);
         float angle = SDL_randf() * 2.0f * 3.14159265f;
-        orbs[i].velocity.x = cosf(angle) * speed;
-        orbs[i].velocity.y = sinf(angle) * speed;
+        pImpl->orbs[i].velocity.x = cosf(angle) * speed;
+        pImpl->orbs[i].velocity.y = sinf(angle) * speed;
         
         // Generate plasma color
-        orbs[i].color = GeneratePlasmaColor(i);
+        pImpl->orbs[i].color = pImpl->GeneratePlasmaColor(i);
         
         // Pulse parameters
-        orbs[i].radius = ORB_BASE_RADIUS;
-        orbs[i].pulsePhase = SDL_randf() * 2.0f * 3.14159265f;
-        orbs[i].pulseSpeed = 0.5f + SDL_randf() * 0.5f; // 0.5-1.0 Hz
-        orbs[i].pulseAmplitude = 0.15f + SDL_randf() * 0.10f; // 15-25%
+        pImpl->orbs[i].radius = ORB_BASE_RADIUS;
+        pImpl->orbs[i].pulsePhase = SDL_randf() * 2.0f * 3.14159265f;
+        pImpl->orbs[i].pulseSpeed = 0.5f + SDL_randf() * 0.5f; // 0.5-1.0 Hz
+        pImpl->orbs[i].pulseAmplitude = 0.15f + SDL_randf() * 0.10f; // 15-25%
     }
     
     SYSTEM_LOG << "OlympeEffectSystem initialized\n";
 }
 
 //-------------------------------------------------------------
-SDL_Color OlympeEffectSystem::GeneratePlasmaColor(int index)
+SDL_Color OlympeEffectSystem::Implementation::GeneratePlasmaColor(int index)
 {
     // Harmonious plasma colors: blue, violet, cyan, pink
     SDL_Color colors[NUM_ORBS] = {
@@ -174,7 +173,7 @@ SDL_Color OlympeEffectSystem::GeneratePlasmaColor(int index)
 }
 
 //-------------------------------------------------------------
-void OlympeEffectSystem::UpdateOrbs(float deltaTime)
+void OlympeEffectSystem::Implementation::UpdateOrbs(float deltaTime)
 {
     for (int i = 0; i < NUM_ORBS; ++i)
     {
@@ -195,7 +194,7 @@ void OlympeEffectSystem::UpdateOrbs(float deltaTime)
 }
 
 //-------------------------------------------------------------
-void OlympeEffectSystem::BounceOffEdges(GlowOrb& orb)
+void OlympeEffectSystem::Implementation::BounceOffEdges(GlowOrb& orb)
 {
     const float margin = orb.radius;
     
@@ -225,7 +224,7 @@ void OlympeEffectSystem::BounceOffEdges(GlowOrb& orb)
 }
 
 //-------------------------------------------------------------
-void OlympeEffectSystem::RenderBackground()
+void OlympeEffectSystem::Implementation::RenderBackground()
 {
     SDL_SetRenderTarget(GameEngine::renderer, backgroundTexture);
     
@@ -245,7 +244,7 @@ void OlympeEffectSystem::RenderBackground()
 }
 
 //-------------------------------------------------------------
-void OlympeEffectSystem::RenderPlasmaOrbs()
+void OlympeEffectSystem::Implementation::RenderPlasmaOrbs()
 {
     SDL_SetRenderTarget(GameEngine::renderer, plasmaTexture);
     SDL_SetRenderDrawColor(GameEngine::renderer, 0, 0, 0, 0);
@@ -279,7 +278,7 @@ void OlympeEffectSystem::RenderPlasmaOrbs()
 }
 
 //-------------------------------------------------------------
-void OlympeEffectSystem::ApplyGaussianBlur()
+void OlympeEffectSystem::Implementation::ApplyGaussianBlur()
 {
     // Multi-pass gaussian blur
     for (int pass = 0; pass < BLUR_PASSES; ++pass)
@@ -331,7 +330,7 @@ void OlympeEffectSystem::ApplyGaussianBlur()
 }
 
 //-------------------------------------------------------------
-void OlympeEffectSystem::ApplyBloom()
+void OlympeEffectSystem::Implementation::ApplyBloom()
 {
     SDL_SetRenderTarget(GameEngine::renderer, bloomTexture);
     
@@ -365,19 +364,19 @@ void OlympeEffectSystem::ApplyBloom()
 void OlympeEffectSystem::Process()
 {
     // Update orbs
-    UpdateOrbs(GameEngine::fDt);
+    pImpl->UpdateOrbs(GameEngine::fDt);
     
     // Render background gradient
-    RenderBackground();
+    pImpl->RenderBackground();
     
     // Render plasma orbs
-    RenderPlasmaOrbs();
+    pImpl->RenderPlasmaOrbs();
     
     // Apply gaussian blur
-    ApplyGaussianBlur();
+    pImpl->ApplyGaussianBlur();
     
     // Compose final bloom effect
-    ApplyBloom();
+    pImpl->ApplyBloom();
 }
 
 //-------------------------------------------------------------
@@ -385,8 +384,8 @@ void OlympeEffectSystem::Render()
 {
     // Get camera offset for rendering
     Vector vPos = -CameraManager::Get().GetCameraPositionForActivePlayer();
-    SDL_FRect destRect = {vPos.x, vPos.y, static_cast<float>(width), static_cast<float>(height)};
+    SDL_FRect destRect = {vPos.x, vPos.y, static_cast<float>(pImpl->width), static_cast<float>(pImpl->height)};
     
     // Render the final bloom composite to screen
-    SDL_RenderTexture(GameEngine::renderer, bloomTexture, nullptr, &destRect);
+    SDL_RenderTexture(GameEngine::renderer, pImpl->bloomTexture, nullptr, &destRect);
 }
