@@ -224,12 +224,7 @@ public:
         Notify_ECS_Systems(entity, m_entitySignatures[entity]);
 
         // 5. Special handling: Register input entities with InputsManager
-        if constexpr (std::is_same_v<T, PlayerBinding_data>)
-        {
-            // Forward declare to avoid circular dependency
-            extern void RegisterInputEntityWithManager(EntityID e);
-            RegisterInputEntityWithManager(entity);
-        }
+        HandleSpecialComponentRegistration<T>(entity);
 
         return pool->GetComponent(entity);
     }
@@ -296,6 +291,21 @@ private:
 
     // Notifies systems when an Entity's signature changes
     void Notify_ECS_Systems(EntityID entity, ComponentSignature signature);
+
+    // Helper functions for SFINAE-based special component registration (C++14 compatible)
+    // Helper function pour le traitement spécial de PlayerBinding_data
+    template <typename T>
+    void HandleSpecialComponentRegistration(EntityID entity, typename std::enable_if<std::is_same<T, PlayerBinding_data>::value>::type* = nullptr)
+    {
+        extern void RegisterInputEntityWithManager(EntityID e);
+        RegisterInputEntityWithManager(entity);
+    }
+
+    template <typename T>
+    void HandleSpecialComponentRegistration(EntityID entity, typename std::enable_if<!std::is_same<T, PlayerBinding_data>::value>::type* = nullptr)
+    {
+        // Ne fait rien pour les autres types
+    }
 
 private:
 
