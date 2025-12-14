@@ -150,9 +150,9 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
 	// assign controller (if available)
 	if (IM::Get().GetAvailableJoystickCount() > 0)
 	{
+        IM::Get().AddPlayerEntityIndex(binding.playerIndex, eID);
         binding.controllerID = IM::Get().AutoBindControllerToPlayer(binding.playerIndex);
-		controller.controllerID = binding.controllerID;
-		IM::Get().AddPlayerEntityIndex(binding.playerIndex, eID);
+		controller.controllerID = binding.controllerID;		
 		SYSTEM_LOG << "VideoGame::AddPlayerEntity: Player " << binding.playerIndex << " bound to controller " << binding.controllerID << "\n";
 	}
     else

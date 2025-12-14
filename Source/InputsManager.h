@@ -128,13 +128,16 @@ public:
             m_keyboardAssigned = true;
             m_playerBindings[playerID] = controller;
             //m_playerObjectIndex[playerID]->m_ControllerID = controller;
-            return true;
+            //return true;
         }
-        // ensure joystick exists
-        if (!JoystickManager::Get().IsJoystickConnected(controller)) return false;
-        // ensure not already used
-        for (auto &kv : m_playerBindings) if (kv.second == controller) return false;
-        m_playerBindings[playerID] = controller;
+        else
+            {
+                // ensure joystick exists
+                if (!JoystickManager::Get().IsJoystickConnected(controller)) return false;
+                // ensure not already used
+                for (auto& kv : m_playerBindings) if (kv.second == controller) return false;
+                m_playerBindings[playerID] = controller;
+            }
 
         auto entityPlayer = m_playerEntityIndex.find(playerID);
         if (entityPlayer != m_playerEntityIndex.end())
@@ -143,11 +146,17 @@ public:
             EntityID eID = entityPlayer->second;
             Controller_data& ctrl = World::Get().GetComponent<Controller_data>(eID);
             PlayerBinding_data& binding = World::Get().GetComponent<PlayerBinding_data>(eID);
-			ctrl.controllerID = controller; // set new controller ID
-			binding.controllerID = controller; // set new controller ID
+            ctrl.controllerID = controller; // set new controller ID
+            binding.controllerID = controller; // set new controller ID
+
+            SYSTEM_LOG << "Player " << playerID << " bound to joystick " << controller << "\n";
+            return true;
         }
-        SYSTEM_LOG << "Player " << playerID << " bound to joystick " << controller << "\n";
-        return true;
+        else
+            {
+                SYSTEM_LOG << "Player " << playerID << " bound to joystick " << controller << " but no entity found to update controllerID\n";
+                return true;
+		    }
     }
 	//---------------------------------------------------------------------------------------------
     bool UnbindControllerFromPlayer(short playerID)
@@ -166,7 +175,7 @@ public:
 			PlayerBinding_data& binding = World::Get().GetComponent<PlayerBinding_data>(eID);
 			controller.controllerID = -2; // unbound
 			binding.controllerID = -2; // unbound
-            m_playerEntityIndex.erase(entityPlayer);
+            //m_playerEntityIndex.erase(entityPlayer);
 		}
 		SYSTEM_LOG << "Player " << playerID << " unbound from controller\n";
         return true;
