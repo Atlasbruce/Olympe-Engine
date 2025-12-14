@@ -1,6 +1,7 @@
 #include "EventManager.h"
 #include "../../source/ECS_Components.h"
 #include "../World.h"
+#include "../InputsManager.h"
 
 // NOTE: This translation unit implements the helper that updates ECS components
 // based on input messages. It is separated to avoid circular includes.
@@ -25,11 +26,10 @@ void UpdateECSInputFromMessage(const Message& msg)
         case EventType::Olympe_EventType_Mouse_Motion:
         case EventType::Olympe_EventType_Mouse_Wheel:
         {
-            // Iterate over all entities that have PlayerBinding_data
-            auto &signatures = World::Get().m_entitySignatures;
-            for (const auto &kv : signatures)
+            // Use optimized input entity cache instead of iterating all entities
+            const auto& inputEntities = InputsManager::Get().GetInputEntities();
+            for (EntityID entity : inputEntities)
             {
-                EntityID entity = kv.first;
                 try
                 {
                     if (!World::Get().HasComponent<PlayerBinding_data>(entity)) continue;

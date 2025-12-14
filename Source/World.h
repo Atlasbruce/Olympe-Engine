@@ -223,6 +223,14 @@ public:
         // 4. Notify Systems about the signature change
         Notify_ECS_Systems(entity, m_entitySignatures[entity]);
 
+        // 5. Special handling: Register input entities with InputsManager
+        if constexpr (std::is_same_v<T, PlayerBinding_data>)
+        {
+            // Forward declare to avoid circular dependency
+            extern void RegisterInputEntityWithManager(EntityID e);
+            RegisterInputEntityWithManager(entity);
+        }
+
         return pool->GetComponent(entity);
     }
 

@@ -10,7 +10,14 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 */
 #pragma once
 #include "World.h"
+#include "InputsManager.h"
 
+//---------------------------------------------------------------------------------------------
+// Helper function to register input entities with InputsManager
+void RegisterInputEntityWithManager(EntityID e)
+{
+    InputsManager::Get().RegisterInputEntity(e);
+}
 //---------------------------------------------------------------------------------------------
 World::World()
 {
