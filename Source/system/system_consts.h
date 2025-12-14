@@ -82,9 +82,6 @@ enum class EventType
 	Olympe_EventType_Camera_Mode_Isometric, // set camera to isometric mode
 	Olympe_EventType_Camera_Target_Follow, // follow an object (given by UID or object pointer or object name)
 	Olympe_EventType_Camera_Target_Unfollow, // stop following object, return to free mode
-	Olympe_EventType_Camera_Viewport_Add, // add a camera viewport according to the number of renderer textures on screen
-	Olympe_EventType_Camera_Viewport_Remove, // remove a camera viewport from renderers texture list on screen
-	Olympe_EventType_Camera_Viewport_Clear, // clear camera viewport (return to full renderer size)
 
 	// -------- GAME EVENTS ----------
 	Olympe_EventType_Game_Pause, // pause the game from GameMenu

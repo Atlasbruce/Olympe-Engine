@@ -3,21 +3,21 @@
   <Class Name="AI_Player" Collapsed="true">
     <Position X="7.25" Y="7.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AABAABAIAAQAAAAEAkAAAAAAAACAEUAAAAEAAAIoAAA=</HashCode>
+      <HashCode>AABAABAIAAQABQAEAkAAAAAAAACAE0AIAAEAAAIoAAA=</HashCode>
       <FileName>Source\AI_Player.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="ObjectComponent" Collapsed="true">
     <Position X="3.75" Y="4.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AABAAAAIAIAAgAAAAkABEQABIAAAAAAIAJAAAAAAAAA=</HashCode>
+      <HashCode>AABAAAAIAIAAgQAAAkABEQABIAAAAAAIAJAAAAAAAAA=</HashCode>
       <FileName>Source\ObjectComponent.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Player" Collapsed="true">
     <Position X="2.5" Y="5.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAEAAAAAAAAAAAEAAAAAAAQAgABA=</HashCode>
+      <HashCode>AAAQAAAAAAAAAAAAAEAEAABAAAAAAEAAAAAAAQAgABA=</HashCode>
       <FileName>Source\Player.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -32,7 +32,7 @@
       </Path>
     </InheritanceLine>
     <TypeIdentifier>
-      <HashCode>ABACAAAAAAAAAAQAQEAAIAAAAAAAAEAgABAAAAIgAAA=</HashCode>
+      <HashCode>ADACgIAABCAAAASAQEAIIAIgAAAACkAgABAQAAIgAAA=</HashCode>
       <FileName>Source\GameObject.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -52,22 +52,27 @@
   </Class>
   <Class Name="InputsManager" Collapsed="true">
     <Position X="11" Y="4.5" Width="1.5" />
+    <InheritanceLine Type="Object">
+      <InheritanceModifierLabel ManuallyPlaced="true">
+        <Position X="0.146" Y="0.019" />
+      </InheritanceModifierLabel>
+    </InheritanceLine>
     <TypeIdentifier>
-      <HashCode>SAACAQACBAAAAABAAAAAgQAABAAAgABAAAAAAAAEABA=</HashCode>
+      <HashCode>QICCRAkDRAUAgABBAMBQgQAAhAAABgBAARAAFAAEBFA=</HashCode>
       <FileName>Source\InputsManager.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="JoystickManager" Collapsed="true">
     <Position X="13.25" Y="5.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAgCEAAAAAAAAQFAAhAQAQCABAAAAAQAAIgAAAAIAAA=</HashCode>
+      <HashCode>AQgCEAAIEAAAAQFAAhAYAQCABAAEAEQAAIgAAAAIRAA=</HashCode>
       <FileName>Source\system\JoystickManager.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="KeyboardManager" Collapsed="true">
     <Position X="13" Y="7.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAAAgAAAQBAAAAQAQAIBAAAAAAAAAEAAAAIAAA=</HashCode>
+      <HashCode>AAACEAAAAgAAAQBAAAAQAQAIDAiAAAAAACECAAAIAAA=</HashCode>
       <FileName>Source\system\KeyboardManager.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -102,21 +107,14 @@
   <Class Name="EventManager" Collapsed="true">
     <Position X="13.25" Y="4.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACgBAAAABAIEBAKgAAAAAABAEBAAEAAAAgAAAAEAA=</HashCode>
+      <HashCode>AAECgBAAAABAIABAKgAAAAAABAEBAAEAAAAgAAAAEAA=</HashCode>
       <FileName>Source\system\EventManager.h</FileName>
-    </TypeIdentifier>
-  </Class>
-  <Class Name="Factory" Collapsed="true">
-    <Position X="9.25" Y="4.5" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAACAAAgAgAIAABAIEABAIAABAABAgAAAAAAAAAAAAA=</HashCode>
-      <FileName>Source\Factory.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="GameEngine" Collapsed="true">
     <Position X="7.5" Y="4.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAAABAQAABgAgAAAQAgBAAAgAAAAIAAAAAAgAQ=</HashCode>
+      <HashCode>AAACAAAAABBYIQDgAgIAASAgBAACgAgAAYAAQAAAgAQ=</HashCode>
       <FileName>Source\GameEngine.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -130,7 +128,7 @@
   <Class Name="MouseManager" Collapsed="true">
     <Position X="13" Y="6.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AgACAAAAAAAAgQBAAACQAQAABAAAAAAAAAAAAAAIAgA=</HashCode>
+      <HashCode>AgACEAAAAAAAgQBAAACQAQAABAAAAAAAAAAAAAAIAgA=</HashCode>
       <FileName>Source\system\MouseManager.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -179,7 +177,7 @@
   <Class Name="VideoGame" Collapsed="true">
     <Position X="16.25" Y="5.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>QQAqFGBEAgABAAlBBlAEIAAQBAAAAIAAAQghAAgAAAA=</HashCode>
+      <HashCode>QYAiFEAECAAZAAFABsBAIAAQHAAAAJAAAAAgCAwAAAE=</HashCode>
       <FileName>Source\VideoGame.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -193,7 +191,7 @@
   <Class Name="World" Collapsed="true">
     <Position X="17.5" Y="6.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAAABAAAiBCAgAAEAABDAACAAABABAAgAAAAAA=</HashCode>
+      <HashCode>AACSBAABABBIAyJCAiAAFBABDAACAQAFEDAAgABgAAA=</HashCode>
       <FileName>Source\World.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -207,28 +205,28 @@
   <Class Name="AIComponent" Collapsed="true">
     <Position X="5.25" Y="7.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAIAAACAAAAAoAAAAARAAAAAgAAAAACAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAIAAACAAAAAkAAAAABAAAAAAAAAAACAAAAAAA=</HashCode>
       <FileName>Source\ObjectComponent.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="AudioComponent" Collapsed="true">
     <Position X="5.25" Y="5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAgAAAAABAAAACAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAAAAAAAAAAAkAAAAABAAAACAAAAAAAAAAAAAA=</HashCode>
       <FileName>Source\ObjectComponent.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="PhysicsComponent" Collapsed="true">
     <Position X="5.25" Y="6.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAEgAAAAAAAAAAAgAAAAABAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAEgAAAAAAAAAAAkAAAAABAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Source\ObjectComponent.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="VisualComponent" Collapsed="true">
     <Position X="5.25" Y="5.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAAAAAAgBAAAAAAAAABAAAAIAAAA=</HashCode>
+      <HashCode>AAAAAAAAAAAAAAAAAEAAAAgBAAAAAAAAABAAAAIAAAA=</HashCode>
       <FileName>Source\ObjectComponent.h</FileName>
     </TypeIdentifier>
   </Class>

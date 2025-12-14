@@ -122,6 +122,7 @@ struct PlayerController_data
 	bool isRunning = false; // Is the player running?
 	bool isInteracting = false; // Is the player interacting?
 	bool isUsingItem = false; // Is the player using an item?
+	bool isMenuOpen = false; // Is the game menu open?
 };
 // --- Component Player Binding Controller --- JoystickID, KeyboardID, etc.
 struct PlayerBinding_data
@@ -156,21 +157,23 @@ struct InputMapping_data
 	void InitializeDefaults()
 	{
 		// Keyboard default bindings (WASD + Arrows)
-		keyboardBindings["up"] = SDL_SCANCODE_W;
-		keyboardBindings["down"] = SDL_SCANCODE_S;
-		keyboardBindings["left"] = SDL_SCANCODE_A;
-		keyboardBindings["right"] = SDL_SCANCODE_D;
-		keyboardBindings["up_alt"] = SDL_SCANCODE_UP;
-		keyboardBindings["down_alt"] = SDL_SCANCODE_DOWN;
-		keyboardBindings["left_alt"] = SDL_SCANCODE_LEFT;
-		keyboardBindings["right_alt"] = SDL_SCANCODE_RIGHT;
+		keyboardBindings["up_alt"] = SDL_SCANCODE_W;
+		keyboardBindings["down_alt"] = SDL_SCANCODE_S;
+		keyboardBindings["left_alt"] = SDL_SCANCODE_A;
+		keyboardBindings["right_alt"] = SDL_SCANCODE_D;
+		keyboardBindings["up"] = SDL_SCANCODE_UP;
+		keyboardBindings["down"] = SDL_SCANCODE_DOWN;
+		keyboardBindings["left"] = SDL_SCANCODE_LEFT;
+		keyboardBindings["right"] = SDL_SCANCODE_RIGHT;
 		keyboardBindings["jump"] = SDL_SCANCODE_SPACE;
 		keyboardBindings["shoot"] = SDL_SCANCODE_LCTRL;
 		keyboardBindings["interact"] = SDL_SCANCODE_E;
+		keyboardBindings["menu"] = SDL_SCANCODE_TAB;
 		
 		// Gamepad default bindings
 		gamepadBindings["jump"] = 0;  // A button
 		gamepadBindings["shoot"] = 1; // B button
 		gamepadBindings["interact"] = 2; // X button
+		gamepadBindings["menu"] = 7; // Start button
 	}
 };

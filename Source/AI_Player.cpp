@@ -38,7 +38,7 @@ AI_Player::AI_Player()
 void AI_Player::Initialize()
 {
 	((Player*)gao)->m_PlayerID = ++VideoGame::m_playerIdCounter;
-	IM::Get().AddPlayerIndex(((Player*)gao)->m_PlayerID, (Player*)gao);
+	IM::Get().AddPlayerObjectIndex(((Player*)gao)->m_PlayerID, (Player*)gao);
 
     IM::Get().AutoBindControllerToPlayer(((Player*)gao)->m_PlayerID); // ensure inputs are bound
 

@@ -331,7 +331,7 @@ void JoystickManager::OpenJoystick(SDL_JoystickID instance_id)
     {
         info.axes[a] = SDL_GetJoystickAxis(js, a);
         float normalized = (info.axes[a] >= 0) ? (info.axes[a] / 32767.0f) : (info.axes[a] / 32768.0f);
-        info.axes[a] = normalized;
+        info.axes[a] = (Sint16) normalized;
     }
     for (int b =0; b < info.numButtons; ++b)
     {

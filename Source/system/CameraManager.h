@@ -16,6 +16,7 @@
 #include "../vector.h"
 #include "../GameEngine.h"
 
+
 class GameObject;
 
 
@@ -39,15 +40,17 @@ enum class CameraMode
 class CameraManager : public Object
 {
 public:
-    struct CameraInstance
+    struct CameraInstance // To be changed into component data
     {
         short playerId = 0;
         Vector position;
         Vector offset = { -GameEngine::screenWidth / 2.f, -GameEngine::screenHeight / 2.f, 0.0f };
         float zoom = 1.0f;
         SDL_Rect bounds{INT_MIN, INT_MIN, INT_MAX, INT_MAX};
-        bool followTarget = false;
+        bool followTargetObject = false;
+		bool followTargetEntity = false;
 		GameObject* targetObject = nullptr; // optional follow target pointer
+		uint64_t targetEntity = 0; // optional follow target EntityID
 		CameraMode mode = CameraMode::CameraMode_Standard_Fixed;
 		CameraType type = CameraType::CameraType_2D;
     };

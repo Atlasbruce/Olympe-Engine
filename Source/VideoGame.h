@@ -60,15 +60,18 @@ public:
      void RequestQuit() { SetState(GameState::GameState_Quit); }
 
      // Player management
-     short AddPlayer(string _playerclassname = "");
-     bool RemovePlayer(const short PlayerID);
+     short AddPlayerObject(string _playerclassname = "");
+     void SetViewportLayout(short playerID);
+     bool RemovePlayerObject(const short PlayerID);
+     EntityID AddPlayerEntity(string _playerPrefabName = "PlayerEntity");
+	 bool RemovePlayerEntity(const EntityID eid);
 
      // Event handler for EventManager messages registered in ctor
      void OnEvent(const Message& msg);
 
      // Save / Load game state (slot optional)
-     bool SaveGame(int slot = 0) const;
-     bool LoadGame(int slot = 0);
+     bool SaveGame(int slot = 0) { return false; }
+     bool LoadGame(int slot = 0) { return false; }
 
      virtual void RegisterPrefabItems();
      //{
@@ -93,7 +96,8 @@ public:
     ViewportManager& viewport = ViewportManager::GetInstance();
 
     // Players
-    std::vector<GameObject*> m_players;
+    std::vector<GameObject*> m_playersObject;
+	std::vector<EntityID> m_playersEntity;
     static short m_playerIdCounter;
 
 private:

@@ -32,7 +32,7 @@ public:
         KeyboardManager::Get().Shutdown();
         MouseManager::Get().Shutdown();
         m_playerBindings.clear();
-		m_playerIndex.clear();
+        m_playerObjectIndex.clear();
         m_keyboardAssigned = false;
     }
 
@@ -78,13 +78,14 @@ public:
     }
 	//--------------------------------------------------------------
 	// Automatically bind first available controller (joystick or keyboard) to a player
-    bool AutoBindControllerToPlayer(short playerID)
+    short AutoBindControllerToPlayer(short playerID)
     {
         // try to bind first available joystick
         auto joysticks = JoystickManager::Get().GetConnectedJoysticks();
         for (auto jid : joysticks)
         {
-            if (BindControllerToPlayer(playerID, jid)) return true;
+            if (BindControllerToPlayer(playerID, jid)) 
+                return jid;
         }
 
 		// Failled to bind joystick,
@@ -94,19 +95,19 @@ public:
         if (BindControllerToPlayer(playerID, SDL_JoystickID(-1))) 
         {
 			SYSTEM_LOG << "Player " << playerID << " bound to keyboard\n";
-            return true;
+            return -1;
         }
         else
         {
-			SYSTEM_LOG << "Failed to bind keyboard to player " << playerID << " (already assigned?)\n";
-            return false;
+            SYSTEM_LOG << "Failed to bind keyboard to player " << playerID << " keyboard already assigned to playerID :" << GetPlayerForController( SDL_JoystickID(- 1) ) << "\n";
+            return -2;
         }
 	}
 	//--------------------------------------------------------------
-    bool AddPlayerIndex(short playerID, Player* playerPtr)
+    bool AddPlayerObjectIndex(short playerID, Player* playerPtr)
     {
-        if (m_playerIndex.find(playerID) != m_playerIndex.end()) return false;
-        m_playerIndex[playerID] = playerPtr;
+        if (m_playerObjectIndex.find(playerID) != m_playerObjectIndex.end()) return false;
+        m_playerObjectIndex[playerID] = playerPtr;
         return true;
     }
 	//--------------------------------------------------------------
@@ -119,7 +120,7 @@ public:
             if (m_keyboardAssigned) return false;
             m_keyboardAssigned = true;
             m_playerBindings[playerID] = controller;
-            m_playerIndex[playerID]->m_ControllerID = controller;
+            //m_playerObjectIndex[playerID]->m_ControllerID = controller;
             return true;
         }
         // ensure joystick exists
@@ -127,8 +128,9 @@ public:
         // ensure not already used
         for (auto &kv : m_playerBindings) if (kv.second == controller) return false;
         m_playerBindings[playerID] = controller;
-        m_playerIndex[playerID]->m_ControllerID = controller;
-		SYSTEM_LOG << "Player " << playerID << " named "+ ((Player*)m_playerIndex[playerID])->name +" bound to joystick " << controller << "\n";
+        //m_playerObjectIndex[playerID]->m_ControllerID = controller;
+		//SYSTEM_LOG << "Player " << playerID << " named "+ ((Player*)m_playerIndex[playerID])->name +" bound to joystick " << controller << "\n";
+        SYSTEM_LOG << "Player " << playerID << " bound to joystick " << controller << "\n";
         return true;
     }
 
@@ -201,7 +203,8 @@ public:
 private:
     std::unordered_map<short, SDL_JoystickID> m_playerBindings;
 	std::unordered_map<short, SDL_JoystickID> m_playerDisconnected;
-	std::unordered_map<short, Player*> m_playerIndex;
+	std::unordered_map<short, Player*> m_playerObjectIndex;
+	//std::unordered_map<short, EntityID> m_playerEntityIndex;
     bool m_keyboardAssigned = false;
 	//JoystickManager& joystickmanager = JoystickManager::GetInstance();
 	//KeyboardManager& keyboardmanager = KeyboardManager::GetInstance();

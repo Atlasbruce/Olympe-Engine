@@ -195,7 +195,10 @@ public:
     // ECS Entity Management
     EntityID CreateEntity();
     void DestroyEntity(EntityID entity);
-
+    bool IsEntityValid(EntityID entity) const
+    {
+        return m_entitySignatures.find(entity) != m_entitySignatures.end();
+	}
     // -------------------------------------------------------------
     // Component Management (Pool Facade)
 
