@@ -21,6 +21,8 @@ Notes:
 #include "ObjectFactory.h"
 #include "World.h"
 #include "system/JoystickManager.h"
+#include "system/KeyboardManager.h"
+#include "system/MouseManager.h"
 #include "InputsManager.h"
 #include "GameState.h"
 //#include "system/Camerasytem.h"
@@ -174,6 +176,11 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 	// PROCESSING PHASE -------------------------------------------------
     //-------------------------------------------------------------------
     
+    // 1. Reset frame state for input managers (Pull API)
+    KeyboardManager::Get().BeginFrame();
+    JoystickManager::Get().BeginFrame();
+    MouseManager::Get().BeginFrame();
+
     #ifdef _WIN32
         // Poll and dispatch Win32 messages here and forward to EventManager
         {
@@ -194,9 +201,13 @@ SDL_AppResult SDL_AppIterate(void* appstate)
         }
     #endif
 
+    // 2. SDL events are polled by SDL_AppEvent callback before this function
+    // 3. Calculate delta time
 	GameEngine::Get().Process(); // update fDt here for all managers
-	World::Get().Process(); // process all world objects/components
+    // 4. Process event bus
 	EventManager::Get().Process(); // ensure queued events are dispatched to all registered listeners
+    // 5. Process ECS systems (including InputMappingSystem)
+	World::Get().Process(); // process all world objects/components
 
     // If game state requests quit, end the application loop
     if (GameStateManager::GetState() == GameState::GameState_Quit) { return SDL_APP_SUCCESS; }
@@ -250,7 +261,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     static Uint64 frameStartTime = 0;
     if (frameStartTime > 0)
     {
-        // Temps écoulé depuis le début de la frame précédente
+        // Temps ï¿½coulï¿½ depuis le dï¿½but de la frame prï¿½cï¿½dente
         Uint64 timeTakenForFrame = SDL_GetTicks() - frameStartTime;
 
         // Si la frame a pris moins de temps que le temps cible (16.666 ms)...
@@ -259,7 +270,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
             // ... alors nous "dormons" (bloquons) le thread pour le temps restant.
             Uint32 timeToWait = FRAME_TARGET_TIME_MS - (Uint32)timeTakenForFrame;
             SDL_Delay(timeToWait);
-            // Ce SDL_Delay garantit que chaque frame ne sera pas traitée plus vite que TARGET_FPS.
+            // Ce SDL_Delay garantit que chaque frame ne sera pas traitï¿½e plus vite que TARGET_FPS.
         }
     }
     frameStartTime = SDL_GetTicks();

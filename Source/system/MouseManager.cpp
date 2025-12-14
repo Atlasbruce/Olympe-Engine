@@ -19,6 +19,12 @@ void MouseManager::Shutdown()
 	SYSTEM_LOG << "MouseManager Shutdown\n";
 }
 
+void MouseManager::BeginFrame()
+{
+    // Reset per-frame mouse state if needed in future
+    // For now, no per-frame state to reset
+}
+
 void MouseManager::HandleEvent(const SDL_Event* ev)
 {
     // if (!ev) return; // useless because it is tested before function call

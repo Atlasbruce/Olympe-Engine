@@ -15,8 +15,12 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #include "ECS_Entity.h"
 #include "World.h" 
 #include "GameEngine.h" // For delta time (fDt)
+#include "InputsManager.h"
+#include "system/KeyboardManager.h"
+#include "system/JoystickManager.h"
 #include <iostream>
 #include <bitset>
+#include <cmath>
 #include "drawing.h"
 
 //-------------------------------------------------------------
@@ -170,6 +174,137 @@ void PlayerControlSystem::Process()
         catch (const std::exception& e)
         {
             std::cerr << "MovementSystem Error for Entity " << entity << ": " << e.what() << "\n";
+        }
+    }
+}
+//-------------------------------------------------------------
+InputMappingSystem::InputMappingSystem()
+{
+    // Required components: PlayerBinding_data + PlayerController_data + Controller_data
+	requiredSignature.set(GetComponentTypeID_Static<PlayerBinding_data>(), true);
+	requiredSignature.set(GetComponentTypeID_Static<PlayerController_data>(), true);
+	requiredSignature.set(GetComponentTypeID_Static<Controller_data>(), true);
+}
+
+void InputMappingSystem::Process()
+{
+    // Check if we should process gameplay input
+    InputContext activeContext = InputsManager::Get().GetActiveContext();
+    if (activeContext != InputContext::Gameplay)
+    {
+        // Don't process gameplay input when in UI or Editor context
+        return;
+    }
+
+    // Iterate over all entities with input components
+    for (EntityID entity : m_entities)
+    {
+        try
+        {
+            PlayerBinding_data& binding = World::Get().GetComponent<PlayerBinding_data>(entity);
+            PlayerController_data& pctrl = World::Get().GetComponent<PlayerController_data>(entity);
+            Controller_data& ctrl = World::Get().GetComponent<Controller_data>(entity);
+
+            // Reset direction each frame
+            pctrl.Joydirection.x = 0.0f;
+            pctrl.Joydirection.y = 0.0f;
+
+            // Get or create InputMapping_data (optional component)
+            InputMapping_data* mapping = nullptr;
+            if (World::Get().HasComponent<InputMapping_data>(entity))
+            {
+                mapping = &World::Get().GetComponent<InputMapping_data>(entity);
+            }
+
+            // Keyboard input (controllerID == -1)
+            if (binding.controllerID == -1)
+            {
+                // Use Pull API to read keyboard state
+                KeyboardManager& km = KeyboardManager::Get();
+
+                if (mapping)
+                {
+                    // Use custom bindings
+                    if (km.IsKeyHeld(mapping->keyboardBindings["up"]) || km.IsKeyHeld(mapping->keyboardBindings["up_alt"]))
+                        pctrl.Joydirection.y = -1.0f;
+                    if (km.IsKeyHeld(mapping->keyboardBindings["down"]) || km.IsKeyHeld(mapping->keyboardBindings["down_alt"]))
+                        pctrl.Joydirection.y = 1.0f;
+                    if (km.IsKeyHeld(mapping->keyboardBindings["left"]) || km.IsKeyHeld(mapping->keyboardBindings["left_alt"]))
+                        pctrl.Joydirection.x = -1.0f;
+                    if (km.IsKeyHeld(mapping->keyboardBindings["right"]) || km.IsKeyHeld(mapping->keyboardBindings["right_alt"]))
+                        pctrl.Joydirection.x = 1.0f;
+
+                    // Action buttons
+                    pctrl.isJumping = km.IsKeyHeld(mapping->keyboardBindings["jump"]);
+                    pctrl.isShooting = km.IsKeyHeld(mapping->keyboardBindings["shoot"]);
+                    pctrl.isInteracting = km.IsKeyPressed(mapping->keyboardBindings["interact"]);
+                }
+                else
+                {
+                    // Default WASD + Arrows bindings
+                    if (km.IsKeyHeld(SDL_SCANCODE_W) || km.IsKeyHeld(SDL_SCANCODE_UP))
+                        pctrl.Joydirection.y = -1.0f;
+                    if (km.IsKeyHeld(SDL_SCANCODE_S) || km.IsKeyHeld(SDL_SCANCODE_DOWN))
+                        pctrl.Joydirection.y = 1.0f;
+                    if (km.IsKeyHeld(SDL_SCANCODE_A) || km.IsKeyHeld(SDL_SCANCODE_LEFT))
+                        pctrl.Joydirection.x = -1.0f;
+                    if (km.IsKeyHeld(SDL_SCANCODE_D) || km.IsKeyHeld(SDL_SCANCODE_RIGHT))
+                        pctrl.Joydirection.x = 1.0f;
+
+                    // Default action buttons
+                    pctrl.isJumping = km.IsKeyHeld(SDL_SCANCODE_SPACE);
+                    pctrl.isShooting = km.IsKeyHeld(SDL_SCANCODE_LCTRL);
+                    pctrl.isInteracting = km.IsKeyPressed(SDL_SCANCODE_E);
+                }
+            }
+            // Gamepad input
+            else if (binding.controllerID >= 0)
+            {
+                SDL_JoystickID joyID = static_cast<SDL_JoystickID>(binding.controllerID);
+                JoystickManager& jm = JoystickManager::Get();
+
+                // Read left stick from Controller_data (already populated by event system)
+                pctrl.Joydirection.x = ctrl.leftStick.x;
+                pctrl.Joydirection.y = ctrl.leftStick.y;
+
+                // Apply deadzone
+                float deadzone = mapping ? mapping->deadzone : 0.15f;
+                float magnitude = std::sqrt(pctrl.Joydirection.x * pctrl.Joydirection.x + 
+                                           pctrl.Joydirection.y * pctrl.Joydirection.y);
+                if (magnitude < deadzone)
+                {
+                    pctrl.Joydirection.x = 0.0f;
+                    pctrl.Joydirection.y = 0.0f;
+                }
+
+                // Read action buttons
+                if (mapping)
+                {
+                    pctrl.isJumping = jm.GetButton(joyID, mapping->gamepadBindings["jump"]);
+                    pctrl.isShooting = jm.GetButton(joyID, mapping->gamepadBindings["shoot"]);
+                    pctrl.isInteracting = jm.IsButtonPressed(joyID, mapping->gamepadBindings["interact"]);
+                }
+                else
+                {
+                    // Default gamepad buttons
+                    pctrl.isJumping = jm.GetButton(joyID, 0);  // A button
+                    pctrl.isShooting = jm.GetButton(joyID, 1); // B button
+                    pctrl.isInteracting = jm.IsButtonPressed(joyID, 2); // X button
+                }
+            }
+
+            // Normalize diagonal movement
+            float magnitude = std::sqrt(pctrl.Joydirection.x * pctrl.Joydirection.x + 
+                                       pctrl.Joydirection.y * pctrl.Joydirection.y);
+            if (magnitude > 1.0f)
+            {
+                pctrl.Joydirection.x /= magnitude;
+                pctrl.Joydirection.y /= magnitude;
+            }
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "InputMappingSystem Error for Entity " << entity << ": " << e.what() << "\n";
         }
     }
 }

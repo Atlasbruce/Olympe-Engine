@@ -57,83 +57,28 @@ void UpdateECSInputFromMessage(const Message& msg)
                     if (msg.msg_type == EventType::Olympe_EventType_Joystick_ButtonDown || msg.msg_type == EventType::Olympe_EventType_Joystick_ButtonUp)
                     {
                         int button = msg.controlId;
-                        if (button >=0 && button < 30) ctrl.buttonStates[button] = (msg.state != 0);
+                        if (button >=0 && button < 16) ctrl.buttons[button] = (msg.state != 0);
                     }
 
-                    // Axis motion: update PlayerController_data Joydirection
+                    // Axis motion: update Controller_data axes
                     if (msg.msg_type == EventType::Olympe_EventType_Joystick_AxisMotion)
                     {
-                        if (!World::Get().HasComponent<PlayerController_data>(entity))
-                        {
-                            continue;
-                            //World::Get().AddComponent<PlayerController_data>(entity);
-                        }
-                        PlayerController_data &pctrl = World::Get().GetComponent<PlayerController_data>(entity);
                         int axis = msg.controlId;
                         float value = msg.param1; // normalized [-1,1]
-                        // Simple mapping: axis 0 -> x, axis 1 -> y
-                        if (axis == 0) pctrl.Joydirection.x = value;
-                        else if (axis == 1) pctrl.Joydirection.y = value;
+                        // Map axes to Controller_data structure
+                        // axis 0 -> leftStick.x, axis 1 -> leftStick.y
+                        // axis 2 -> rightStick.x, axis 3 -> rightStick.y
+                        // axis 4 -> leftTrigger, axis 5 -> rightTrigger
+                        if (axis == 0) ctrl.leftStick.x = value;
+                        else if (axis == 1) ctrl.leftStick.y = value;
+                        else if (axis == 2) ctrl.rightStick.x = value;
+                        else if (axis == 3) ctrl.rightStick.y = value;
+                        else if (axis == 4) ctrl.leftTrigger = (value + 1.0f) * 0.5f; // normalize -1..1 to 0..1
+                        else if (axis == 5) ctrl.rightTrigger = (value + 1.0f) * 0.5f;
                     }
 
-                    // Keyboard example mapping
-                    if (msg.msg_type == EventType::Olympe_EventType_Keyboard_KeyDown || msg.msg_type == EventType::Olympe_EventType_Keyboard_KeyUp)
-                    {
-                        if (!World::Get().HasComponent<PlayerController_data>(entity))
-                        {
-                            continue;
-                            //World::Get().AddComponent<PlayerController_data>(entity);
-                        }
-                        PlayerController_data &pctrl = World::Get().GetComponent<PlayerController_data>(entity);
-
-                        switch(msg.msg_type)
-						{
-                            case EventType::Olympe_EventType_Keyboard_KeyDown:
-                            {
-                                // msg.controlId contains SDL_Scancode
-                                switch (static_cast<SDL_Scancode>(msg.controlId))
-                                {
-                                case SDL_SCANCODE_Z:
-                                case SDL_SCANCODE_UP:
-                                    pctrl.Joydirection.y = -1.f; break;
-                                case SDL_SCANCODE_S:
-                                case SDL_SCANCODE_DOWN:
-                                    pctrl.Joydirection.y = 1.f; break;
-                                case SDL_SCANCODE_Q:
-                                case SDL_SCANCODE_LEFT:
-                                    pctrl.Joydirection.x = -1.f; break;
-                                case SDL_SCANCODE_D:
-                                case SDL_SCANCODE_RIGHT:
-                                    pctrl.Joydirection.x = 1.f; break;
-                                default:
-                                    break;
-                                }
-                                break;
-                            }
-                            case EventType::Olympe_EventType_Keyboard_KeyUp:
-                            {
-                                switch (static_cast<SDL_Scancode>(msg.controlId))
-                                {
-                                case SDL_SCANCODE_W:
-                                case SDL_SCANCODE_UP:
-                                case SDL_SCANCODE_S:
-                                case SDL_SCANCODE_DOWN:
-                                    pctrl.Joydirection.y = 0.f; break;
-                                case SDL_SCANCODE_A:
-                                case SDL_SCANCODE_LEFT:
-                                case SDL_SCANCODE_D:
-                                case SDL_SCANCODE_RIGHT:
-                                    pctrl.Joydirection.x = 0.f; break;
-                                default:
-                                    break;
-                                }
-                                break;
-                            }
-                        }
-
-                        //if (msg.controlId == 32) // space -> jump
-                        //    pctrl.isJumping = (msg.msg_type == EventType::Olympe_EventType_Keyboard_KeyDown);
-                    }
+                    // Keyboard events are now handled by InputMappingSystem via Pull API
+                    // No longer need to process keyboard events here
 
 					// DEPRECATED MESSAGE HERE THE COMPONENTS WILL PRCOESS THEMSELVES AND RETRIEVE DATA AS NEEDED
                     // 

@@ -40,6 +40,8 @@ void World::Initialize_ECS_Systems()
     /*
 	Order of processing systems:
 	- InputSystem
+	- InputMappingSystem (NEW: maps hardware input to gameplay actions)
+	- PlayerControlSystem
 	- AI MovementSystem
 	- DetectionSystem
 	- PhysicsSystem
@@ -50,6 +52,7 @@ void World::Initialize_ECS_Systems()
     - RenderingSystem
     */
 	Add_ECS_System(std::make_unique<InputSystem>());
+	Add_ECS_System(std::make_unique<InputMappingSystem>());
 	Add_ECS_System(std::make_unique<PlayerControlSystem>());
     Add_ECS_System(std::make_unique<AISystem>());
     Add_ECS_System(std::make_unique<DetectionSystem>());
@@ -62,7 +65,7 @@ void World::Initialize_ECS_Systems()
 //---------------------------------------------------------------------------------------------
 void World::Add_ECS_System(std::unique_ptr<ECS_System> system)
 {
-    // Enregistrement d'un système
+    // Enregistrement d'un systï¿½me
     m_systems.push_back(std::move(system));
 }
 //---------------------------------------------------------------------------------------------
@@ -70,7 +73,7 @@ void World::Process_ECS_Systems()
 {
 	static bool firstCall = true;
 
-    // Mise à jour de tous les systèmes enregistrés dans l'ordre
+    // Mise ï¿½ jour de tous les systï¿½mes enregistrï¿½s dans l'ordre
     for (const auto& system : m_systems)
     {
         system->Process();
@@ -87,7 +90,7 @@ void World::Render_ECS_Systems()
 {
     static bool firstCall = true;
 
-    // Mise à jour de tous les systèmes enregistrés dans l'ordre
+    // Mise ï¿½ jour de tous les systï¿½mes enregistrï¿½s dans l'ordre
     for (const auto& system : m_systems)
     {
         system->Render();
@@ -102,18 +105,18 @@ void World::Render_ECS_Systems()
 //---------------------------------------------------------------------------------------------
 void World::Notify_ECS_Systems(EntityID entity, ComponentSignature signature)
 {
-    // Vérifie si l'Entité correspond maintenant aux exigences d'un Système
+    // Vï¿½rifie si l'Entitï¿½ correspond maintenant aux exigences d'un Systï¿½me
     for (const auto& system : m_systems)
     {
-        // Utilisation de l'opération de bits AND pour la comparaison (très rapide)
+        // Utilisation de l'opï¿½ration de bits AND pour la comparaison (trï¿½s rapide)
         if ((signature & system->requiredSignature) == system->requiredSignature)
         {
-            // L'Entité correspond : l'ajouter au Système
+            // L'Entitï¿½ correspond : l'ajouter au Systï¿½me
             system->AddEntity(entity);
         }
         else
         {
-            // L'Entité ne correspond plus : la retirer du Système
+            // L'Entitï¿½ ne correspond plus : la retirer du Systï¿½me
             system->RemoveEntity(entity);
         }
     }
@@ -149,19 +152,19 @@ void World::DestroyEntity(EntityID entity)
         return;
     }
 
-    // 1. Supprimer les composants de tous les Pools où l'Entité existe
+    // 1. Supprimer les composants de tous les Pools oï¿½ l'Entitï¿½ existe
     ComponentSignature signature = m_entitySignatures[entity];
     for (const auto& pair : m_componentPools)
     {
         ComponentTypeID typeID = pair.first;
         if (signature.test(typeID))
         {
-            // Utilise la méthode virtuelle RemoveComponent (Phase 1.2)
+            // Utilise la mï¿½thode virtuelle RemoveComponent (Phase 1.2)
             pair.second->RemoveComponent(entity);
         }
     }
 
-    // 2. Notifier les systèmes (pour la retirer de leurs listes)
+    // 2. Notifier les systï¿½mes (pour la retirer de leurs listes)
     Notify_ECS_Systems(entity, ComponentSignature{}); // Signature vide pour forcer la suppression
 
     // 3. Nettoyer les maps
@@ -169,5 +172,5 @@ void World::DestroyEntity(EntityID entity)
 
     // 4. Recycler l'ID (gestion de l'information)
     m_freeEntityIDs.push(entity);
-    std::cout << "Entité " << entity << " détruite et ID recyclé.\n";
+    std::cout << "Entitï¿½ " << entity << " dï¿½truite et ID recyclï¿½.\n";
 }
