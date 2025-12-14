@@ -852,7 +852,7 @@ private:
         
         Movement_data projMove;
         projMove.direction = direction.Normalized();
-        projMove.velocity = Vector{500.f, 0.f, 0.f}; // Fast projectile
+        projMove.velocity = direction.Normalized() * 500.f; // Fast projectile in direction
         World::Get().AddComponent<Movement_data>(projectile, projMove);
         
         // Add visual, collision, etc.

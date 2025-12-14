@@ -61,7 +61,9 @@ while (SDL_PollEvent(&event))
 // Ajouter un log temporaire dans InputsManager::HandleEvent()
 void InputsManager::HandleEvent(const SDL_Event* ev)
 {
-    std::cout << "Event type: " << ev->type << std::endl; // DEBUG
+#ifdef DEBUG_INPUT
+    SYSTEM_LOG << "Event type: " << ev->type << std::endl;
+#endif
     // ...
 }
 ```

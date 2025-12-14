@@ -65,8 +65,8 @@ World::Get().AddComponent<PlayerBinding_data>(player, binding);
 World::Get().AddComponent<Controller_data>(player);
 World::Get().AddComponent<PlayerController_data>(player);
 
-// Bind keyboard to player 0
-InputsManager::Get().BindControllerToPlayer(0, SDL_JoystickID(-1));
+// Bind keyboard to player 0 (-1 = keyboard)
+InputsManager::Get().BindControllerToPlayer(0, -1);
 ```
 
 See [Input Quick Start](Documentation/Input/INPUT_QUICK_START.md) for more details.
