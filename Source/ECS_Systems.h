@@ -99,3 +99,10 @@ class PlayerControlSystem : public ECS_System
     PlayerControlSystem();
     virtual void Process() override;
 };
+// Input Mapping System: maps hardware input to gameplay actions
+class InputMappingSystem : public ECS_System
+{
+    public:
+    InputMappingSystem();
+    virtual void Process() override;
+};

@@ -30,7 +30,18 @@ public:
 
     void HandleEvent(const SDL_Event* ev);
 
+    // Pull API for reading keyboard state
+    void BeginFrame();
+    bool IsKeyHeld(SDL_Scancode sc) const;
+    bool IsKeyPressed(SDL_Scancode sc) const;
+    bool IsKeyReleased(SDL_Scancode sc) const;
+
 private:
     std::mutex m_mutex;
     void PostKeyEvent(SDL_KeyboardEvent const& ke);
+
+    // State tracking for pull API
+    bool m_keyStates[SDL_SCANCODE_COUNT] = {false};
+    bool m_keysPressedThisFrame[SDL_SCANCODE_COUNT] = {false};
+    bool m_keysReleasedThisFrame[SDL_SCANCODE_COUNT] = {false};
 };

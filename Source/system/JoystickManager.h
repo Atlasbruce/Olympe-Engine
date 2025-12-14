@@ -9,8 +9,14 @@
 #include <string>
 #include <mutex>
 
+// Forward declare to access constant
+struct Controller_data;
+
 class JoystickManager : public Object
 {
+public:
+    static constexpr int MAX_BUTTONS = 16; // Must match Controller_data::MAX_BUTTONS
+    static constexpr int MAX_AXES = 6;
 public:
     JoystickManager()
     {
@@ -42,6 +48,13 @@ public:
     std::vector<SDL_JoystickID> GetConnectedJoysticks();
     bool IsJoystickConnected(SDL_JoystickID id);
 
+    // Pull API for reading joystick state
+    void BeginFrame();
+    bool GetButton(SDL_JoystickID id, int button) const;
+    bool IsButtonPressed(SDL_JoystickID id, int button) const;
+    bool IsButtonReleased(SDL_JoystickID id, int button) const;
+    float GetAxis(SDL_JoystickID id, int axis) const;
+
 private:
     struct JoystickInfo
     {
@@ -54,7 +67,18 @@ private:
         std::vector<bool> buttons;
     };
 
+    // State tracking for pull API
+    struct JoystickState
+    {
+        bool connected = false;
+        float axes[MAX_AXES] = {0};
+        bool buttons[MAX_BUTTONS] = {false};
+        bool buttonsPressed[MAX_BUTTONS] = {false};
+        bool buttonsReleased[MAX_BUTTONS] = {false};
+    };
+
     std::unordered_map<SDL_JoystickID, JoystickInfo> m_joysticks;
+    std::unordered_map<SDL_JoystickID, JoystickState> m_joyStates;
     std::mutex m_mutex;
 
     void OpenJoystick(SDL_JoystickID instance_id);

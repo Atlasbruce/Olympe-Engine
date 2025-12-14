@@ -4,7 +4,12 @@
 #include "system/KeyboardManager.h"
 #include "system/MouseManager.h"
 #include <unordered_map>
+#include <vector>
 #include "Player.h"
+#include "Ecs_Entity.h"
+
+// Input context types for context stack
+enum class InputContext { Gameplay, UI, Editor };
 
 class InputsManager : public Object
 {
@@ -183,6 +188,16 @@ public:
         return -1;
 	}
 
+    // Input Context Stack
+    void PushContext(InputContext ctx);
+    void PopContext();
+    InputContext GetActiveContext() const;
+
+    // Input Entity Cache
+    void RegisterInputEntity(EntityID e);
+    void UnregisterInputEntity(EntityID e);
+    const std::vector<EntityID>& GetInputEntities() const;
+
 private:
     std::unordered_map<short, SDL_JoystickID> m_playerBindings;
 	std::unordered_map<short, SDL_JoystickID> m_playerDisconnected;
@@ -192,5 +207,11 @@ private:
 	KeyboardManager& keyboardmanager = KeyboardManager::GetInstance();
 	MouseManager& mousemanager = MouseManager::GetInstance();
 	std::ostringstream m_devicesStatus;
+
+    // Context stack for input handling (Gameplay, UI, Editor)
+    std::vector<InputContext> m_contextStack = { InputContext::Gameplay };
+
+    // Cache of entities with input components for optimized iteration
+    std::vector<EntityID> m_inputEntities;
 };
 

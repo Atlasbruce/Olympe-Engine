@@ -1,6 +1,7 @@
 #include "InputsManager.h"
 #include "system/message.h"
 #include "system/eventmanager.h"
+#include <algorithm>
 
 using EM = ::EventManager;
 
@@ -109,4 +110,56 @@ string InputsManager::GetDevicesStatusUpdate()
     // Mouse
     m_devicesStatus << "Mouse: Connected\r\n"; // assume always connected for now
     return m_devicesStatus.str();
+}
+//-------------------------------------------------------------
+// Input Context Stack
+void InputsManager::PushContext(InputContext ctx)
+{
+    m_contextStack.push_back(ctx);
+    SYSTEM_LOG << "InputsManager: Pushed context " << static_cast<int>(ctx) << ", stack size: " << m_contextStack.size() << "\n";
+}
+
+void InputsManager::PopContext()
+{
+    if (m_contextStack.size() > 1) // Keep at least one context
+    {
+        m_contextStack.pop_back();
+        SYSTEM_LOG << "InputsManager: Popped context, stack size: " << m_contextStack.size() << "\n";
+    }
+    else
+    {
+        SYSTEM_LOG << "InputsManager: Cannot pop last context (stack would be empty)\n";
+    }
+}
+
+InputContext InputsManager::GetActiveContext() const
+{
+    return m_contextStack.back();
+}
+//-------------------------------------------------------------
+// Input Entity Cache
+void InputsManager::RegisterInputEntity(EntityID e)
+{
+    // Check if already registered
+    for (EntityID existing : m_inputEntities)
+    {
+        if (existing == e) return;
+    }
+    m_inputEntities.push_back(e);
+    SYSTEM_LOG << "InputsManager: Registered input entity " << e << "\n";
+}
+
+void InputsManager::UnregisterInputEntity(EntityID e)
+{
+    auto it = std::find(m_inputEntities.begin(), m_inputEntities.end(), e);
+    if (it != m_inputEntities.end())
+    {
+        m_inputEntities.erase(it);
+        SYSTEM_LOG << "InputsManager: Unregistered input entity " << e << "\n";
+    }
+}
+
+const std::vector<EntityID>& InputsManager::GetInputEntities() const
+{
+    return m_inputEntities;
 }

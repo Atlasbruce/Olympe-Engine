@@ -26,6 +26,7 @@ public:
     void Shutdown();
 
     void HandleEvent(const SDL_Event* ev);
+    void BeginFrame(); // Reset per-frame state
 
 private:
     std::mutex m_mutex;

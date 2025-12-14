@@ -13,6 +13,7 @@ Components purpose: Include all component definitions used in the ECS architectu
 
 #include "Ecs_Entity.h"
 #include <string>
+#include <unordered_map>
 #include "vector.h"
 #include <SDL3/SDL.h>
 #include "DataManager.h"
@@ -94,10 +95,23 @@ struct AudioSource_data
 // --- Component Controller Data ---
 struct Controller_data
 {
-	short controllerID = -1; // Index of the controller
+	static constexpr int MAX_BUTTONS = 16;
+	
+	short controllerID = -1; // Index of the controller (-1 = keyboard)
 	bool isConnected = false; // Is the controller connected?
-	bool isVibrating = false; // Is the controller vibrating?
-	bool buttonStates[30]; // States of buttons
+	
+	// Normalized axes (deadzone applied)
+	Vector leftStick;   // -1..1
+	Vector rightStick;  // -1..1
+	float leftTrigger = 0.f;  // 0..1
+	float rightTrigger = 0.f; // 0..1
+	
+	// Buttons
+	bool buttons[MAX_BUTTONS] = {false};
+	
+	// Haptics (optional)
+	bool isVibrating = false;
+	float vibrateStrength = 0.f;
 };
 // --- Component PlayerConroller Data ---
 struct PlayerController_data
@@ -127,4 +141,36 @@ struct Camera_data
 struct NPC_data
 {
 	std::string npcType; // Type of NPC (e.g., "vendor", "quest_giver")
+};
+
+// --- Component Input Mapping Data ---
+struct InputMapping_data
+{
+	// Map action name → scancode/button
+	std::unordered_map<std::string, SDL_Scancode> keyboardBindings;
+	std::unordered_map<std::string, int> gamepadBindings;
+	float deadzone = 0.15f;
+	float sensitivity = 1.0f;
+	
+	// Helper to initialize default bindings
+	void InitializeDefaults()
+	{
+		// Keyboard default bindings (WASD + Arrows)
+		keyboardBindings["up"] = SDL_SCANCODE_W;
+		keyboardBindings["down"] = SDL_SCANCODE_S;
+		keyboardBindings["left"] = SDL_SCANCODE_A;
+		keyboardBindings["right"] = SDL_SCANCODE_D;
+		keyboardBindings["up_alt"] = SDL_SCANCODE_UP;
+		keyboardBindings["down_alt"] = SDL_SCANCODE_DOWN;
+		keyboardBindings["left_alt"] = SDL_SCANCODE_LEFT;
+		keyboardBindings["right_alt"] = SDL_SCANCODE_RIGHT;
+		keyboardBindings["jump"] = SDL_SCANCODE_SPACE;
+		keyboardBindings["shoot"] = SDL_SCANCODE_LCTRL;
+		keyboardBindings["interact"] = SDL_SCANCODE_E;
+		
+		// Gamepad default bindings
+		gamepadBindings["jump"] = 0;  // A button
+		gamepadBindings["shoot"] = 1; // B button
+		gamepadBindings["interact"] = 2; // X button
+	}
 };

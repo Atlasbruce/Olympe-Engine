@@ -2,6 +2,7 @@
 #include "EventManager.h"
 #include <iostream>
 #include "system_utils.h"
+#include <cstring>
 
 KeyboardManager& KeyboardManager::GetInstance()
 {
@@ -11,7 +12,10 @@ KeyboardManager& KeyboardManager::GetInstance()
 
 void KeyboardManager::Initialize()
 {
-    // nothing special for now - SDL keyboard events are delivered automatically
+    // Initialize state arrays
+    std::memset(m_keyStates, 0, sizeof(m_keyStates));
+    std::memset(m_keysPressedThisFrame, 0, sizeof(m_keysPressedThisFrame));
+    std::memset(m_keysReleasedThisFrame, 0, sizeof(m_keysReleasedThisFrame));
 	SYSTEM_LOG << "KeyboardManager created and Initialized\n";
 }
 
@@ -20,15 +24,62 @@ void KeyboardManager::Shutdown()
     SYSTEM_LOG << "KeyboardManager deleted\n";
 }
 
+void KeyboardManager::BeginFrame()
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    // Reset per-frame edge detection arrays
+    std::memset(m_keysPressedThisFrame, 0, sizeof(m_keysPressedThisFrame));
+    std::memset(m_keysReleasedThisFrame, 0, sizeof(m_keysReleasedThisFrame));
+}
+
+bool KeyboardManager::IsKeyHeld(SDL_Scancode sc) const
+{
+    if (sc < 0 || sc >= SDL_SCANCODE_COUNT) return false;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_keyStates[sc];
+}
+
+bool KeyboardManager::IsKeyPressed(SDL_Scancode sc) const
+{
+    if (sc < 0 || sc >= SDL_SCANCODE_COUNT) return false;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_keysPressedThisFrame[sc];
+}
+
+bool KeyboardManager::IsKeyReleased(SDL_Scancode sc) const
+{
+    if (sc < 0 || sc >= SDL_SCANCODE_COUNT) return false;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_keysReleasedThisFrame[sc];
+}
+
 void KeyboardManager::HandleEvent(const SDL_Event* ev)
 {
-   // if (!ev) return; // useless because it is tested before function call
     switch (ev->type)
     {
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP:
+        {
+            // Update state tracking for pull API
+            SDL_Scancode sc = ev->key.scancode;
+            if (sc >= 0 && sc < SDL_SCANCODE_COUNT)
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                bool wasDown = m_keyStates[sc];
+                bool isDown = ev->key.down;
+                
+                m_keyStates[sc] = isDown;
+                
+                // Detect edges
+                if (isDown && !wasDown)
+                    m_keysPressedThisFrame[sc] = true;
+                else if (!isDown && wasDown)
+                    m_keysReleasedThisFrame[sc] = true;
+            }
+            
             PostKeyEvent(ev->key);
             break;
+        }
         default:
             break;
     }
