@@ -49,6 +49,8 @@ public:
     void Render_ECS_Systems();
     
     // Get a system by type (returns nullptr if not found)
+    // NOTE: Uses linear search with dynamic_cast. Cache the result if called frequently.
+    // Consider storing system references during initialization for performance-critical paths.
     template <typename T>
     T* GetSystem()
     {

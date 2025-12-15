@@ -118,10 +118,12 @@ void RenderBackendSystem::Render()
         else
         {
             // Sort viewports by render order
+            // Pre-fetch World reference for efficiency
+            World& world = World::Get();
             std::sort(viewports.begin(), viewports.end(), 
-                [](EntityID a, EntityID b) {
-                    const Viewport_data& va = World::Get().GetComponent<Viewport_data>(a);
-                    const Viewport_data& vb = World::Get().GetComponent<Viewport_data>(b);
+                [&world](EntityID a, EntityID b) {
+                    const Viewport_data& va = world.GetComponent<Viewport_data>(a);
+                    const Viewport_data& vb = world.GetComponent<Viewport_data>(b);
                     return va.renderOrder < vb.renderOrder;
                 });
             
@@ -150,19 +152,22 @@ void RenderBackendSystem::Implementation::RebuildCaches()
 //-------------------------------------------------------------
 void RenderBackendSystem::Implementation::RenderViewport(EntityID viewportEntity)
 {
-    if (!World::Get().IsEntityValid(viewportEntity))
+    // Cache World reference for efficiency
+    World& world = World::Get();
+    
+    if (!world.IsEntityValid(viewportEntity))
         return;
         
-    const Viewport_data& viewport = World::Get().GetComponent<Viewport_data>(viewportEntity);
+    const Viewport_data& viewport = world.GetComponent<Viewport_data>(viewportEntity);
     
     if (!viewport.isActive)
         return;
     
     // Get the render target for this viewport
-    if (!World::Get().IsEntityValid(viewport.renderTargetEntity))
+    if (!world.IsEntityValid(viewport.renderTargetEntity))
         return;
         
-    const RenderTarget_data& target = World::Get().GetComponent<RenderTarget_data>(viewport.renderTargetEntity);
+    const RenderTarget_data& target = world.GetComponent<RenderTarget_data>(viewport.renderTargetEntity);
     
     if (!target.renderer)
         return;
@@ -171,7 +176,7 @@ void RenderBackendSystem::Implementation::RenderViewport(EntityID viewportEntity
     SetupViewportForRendering(viewport, target);
     
     // Setup camera if specified
-    if (World::Get().IsEntityValid(viewport.cameraEntity))
+    if (world.IsEntityValid(viewport.cameraEntity))
     {
         // Apply camera transform for this viewport
         // For now, use legacy CameraManager with player index
@@ -180,8 +185,9 @@ void RenderBackendSystem::Implementation::RenderViewport(EntityID viewportEntity
     }
     
     // Render all ECS systems for this viewport
-    // Note: This calls the existing render systems which will use the active viewport
-    World::Get().Render_ECS_Systems();
+    // TODO: Make render systems viewport-aware by passing viewport context
+    // For now, systems use CameraManager's active player to determine camera
+    world.Render_ECS_Systems();
 }
 
 //-------------------------------------------------------------
@@ -232,7 +238,9 @@ EntityID RenderBackendSystem::CreateSecondaryRenderTarget(
     if (!SDL_CreateWindowAndRenderer(title, width, height, 
         SDL_WINDOW_RESIZABLE, &window, &renderer))
     {
-        SYSTEM_LOG << "Failed to create secondary window: " << SDL_GetError() << "\n";
+        SYSTEM_LOG << "Failed to create secondary window '" << title 
+                   << "' (" << width << "x" << height << "): " 
+                   << SDL_GetError() << "\n";
         return INVALID_ENTITY_ID;
     }
     
@@ -425,10 +433,11 @@ std::vector<std::pair<EntityID, EntityID>> RenderBackendSystem::SetupMultiWindow
     }
     
     // Create a separate window for each player
+    const int TITLE_BUFFER_SIZE = 64;
     for (int i = 0; i < numPlayers; ++i)
     {
-        char title[64];
-        snprintf(title, sizeof(title), "Player %d - Olympe Engine", i + 1);
+        char title[TITLE_BUFFER_SIZE];
+        snprintf(title, TITLE_BUFFER_SIZE, "Player %d - Olympe Engine", i + 1);
         
         EntityID rtEntity = CreateSecondaryRenderTarget(title, width, height, i + 1);
         
