@@ -21,6 +21,7 @@ World purpose: Manage the overall game world, including object management, level
 #include "Level.h" // add Level management
 #include "GameState.h"
 #include "system/CameraManager.h"
+#include "Resources.h" // Centralized resource registry
 
 // Include ECS related headers
 #include "Ecs_Entity.h"
@@ -169,7 +170,14 @@ public:
     // Public for inspection/debug
     std::unordered_map<EntityID, ComponentSignature> m_entitySignatures;
 
+    // Get Resources registry (for external access if needed)
+    Resources& GetResources() { return m_resources; }
+    const Resources& GetResources() const { return m_resources; }
+
 private:
+    // Centralized resource registry
+    Resources m_resources;
+
     // Mapping: TypeID -> Component Pool
     std::unordered_map<ComponentTypeID, std::unique_ptr<IComponentPool>> m_componentPools;
 

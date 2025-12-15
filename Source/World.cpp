@@ -11,6 +11,13 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #pragma once
 #include "World.h"
 #include "InputsManager.h"
+#include "GameEngine.h"
+#include "DataManager.h"
+#include "system/KeyboardManager.h"
+#include "system/JoystickManager.h"
+#include "system/MouseManager.h"
+#include "system/CameraManager.h"
+#include "system/EventManager.h"
 
 //---------------------------------------------------------------------------------------------
 // Helper function to register input entities with InputsManager
@@ -21,6 +28,21 @@ void RegisterInputEntityWithManager(EntityID e)
 //---------------------------------------------------------------------------------------------
 World::World()
 {
+    // Initialize Resources with singleton references
+    // Note: Singletons still exist but are now accessed through Resources
+    m_resources.renderer = GameEngine::renderer;
+    m_resources.deltaTime = GameEngine::fDt;
+    m_resources.screenWidth = GameEngine::screenWidth;
+    m_resources.screenHeight = GameEngine::screenHeight;
+    m_resources.eventManager = &EventManager::Get();
+    m_resources.inputsManager = &InputsManager::Get();
+    m_resources.cameraManager = &CameraManager::Get();
+    m_resources.keyboardManager = &KeyboardManager::Get();
+    m_resources.joystickManager = &JoystickManager::Get();
+    m_resources.mouseManager = &MouseManager::Get();
+    m_resources.dataManager = &DataManager::Get();
+    m_resources.world = this;
+    
     Initialize_ECS_Systems();
     SYSTEM_LOG << "World Initialized\n";
 }
@@ -70,6 +92,9 @@ void World::Initialize_ECS_Systems()
 //---------------------------------------------------------------------------------------------
 void World::Add_ECS_System(std::unique_ptr<ECS_System> system)
 {
+    // Set resources for the system
+    system->SetResources(&m_resources);
+    
     // Enregistrement d'un syst�me
     m_systems.push_back(std::move(system));
 }
@@ -77,6 +102,12 @@ void World::Add_ECS_System(std::unique_ptr<ECS_System> system)
 void World::Process_ECS_Systems()
 {
 	//static bool firstCall = true;
+
+    // Update Resources with latest values from singletons
+    m_resources.deltaTime = GameEngine::fDt;
+    m_resources.renderer = GameEngine::renderer;
+    m_resources.screenWidth = GameEngine::screenWidth;
+    m_resources.screenHeight = GameEngine::screenHeight;
 
 	// update all registered systems in order
     for (const auto& system : m_systems)

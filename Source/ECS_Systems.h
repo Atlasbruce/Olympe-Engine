@@ -12,8 +12,11 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #pragma once
 
 #include "Ecs_Entity.h"
+#include "Resources.h"
 #include <set>
 
+// Forward declaration
+struct Resources;
 
 // The System class handles game logic over entities with specific components.
 class ECS_System
@@ -25,7 +28,13 @@ public:
     // The set of Entities this System processes in its Update loop
     std::set<EntityID> m_entities;
 
-    ECS_System() : requiredSignature() {}
+    ECS_System() : requiredSignature(), m_resources(nullptr) {}
+
+    // Set the resources for this system (called by World during initialization)
+    void SetResources(Resources* resources) { m_resources = resources; }
+    
+    // Get the resources (protected for derived classes)
+    Resources* GetResources() const { return m_resources; }
 
     // The core logic of the System
     virtual void Process() {}
@@ -33,6 +42,10 @@ public:
 
     void AddEntity(EntityID entity) { m_entities.insert(entity); }
     void RemoveEntity(EntityID entity) { m_entities.erase(entity); }
+
+protected:
+    // Pointer to global resources (non-owning)
+    Resources* m_resources;
 };
 
 

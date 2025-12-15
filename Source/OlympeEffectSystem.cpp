@@ -86,10 +86,10 @@ struct OlympeEffectSystem::Implementation
     
     // Helper methods
     void UpdateOrbs(float deltaTime);
-    void RenderBackground();
-    void RenderPlasmaOrbs();
-    void ApplyGaussianBlur();
-    void ApplyBloom();
+    void RenderBackground(SDL_Renderer* renderer);
+    void RenderPlasmaOrbs(SDL_Renderer* renderer);
+    void ApplyGaussianBlur(SDL_Renderer* renderer);
+    void ApplyBloom(SDL_Renderer* renderer);
     void BounceOffEdges(GlowOrb& orb);
     SDL_Color GeneratePlasmaColor(int index);
 };
@@ -120,19 +120,26 @@ OlympeEffectSystem::~OlympeEffectSystem()
 //-------------------------------------------------------------
 void OlympeEffectSystem::Initialize()
 {
-    pImpl->width = GameEngine::screenWidth;
-    pImpl->height = GameEngine::screenHeight;
+    // Check if resources are available
+    if (!m_resources || !m_resources->renderer || !m_resources->dataManager)
+    {
+        SYSTEM_LOG << "OlympeEffectSystem: Resources not available for initialization\n";
+        return;
+    }
+    
+    pImpl->width = m_resources->screenWidth;
+    pImpl->height = m_resources->screenHeight;
     
     // Create render target textures
-    pImpl->backgroundTexture = SDL_CreateTexture(GameEngine::renderer, SDL_PIXELFORMAT_RGBA8888, 
+    pImpl->backgroundTexture = SDL_CreateTexture(m_resources->renderer, SDL_PIXELFORMAT_RGBA8888, 
                                          SDL_TEXTUREACCESS_TARGET, pImpl->width, pImpl->height);
-    pImpl->plasmaTexture = SDL_CreateTexture(GameEngine::renderer, SDL_PIXELFORMAT_RGBA8888, 
+    pImpl->plasmaTexture = SDL_CreateTexture(m_resources->renderer, SDL_PIXELFORMAT_RGBA8888, 
                                      SDL_TEXTUREACCESS_TARGET, pImpl->width, pImpl->height);
-    pImpl->blurTexture1 = SDL_CreateTexture(GameEngine::renderer, SDL_PIXELFORMAT_RGBA8888, 
+    pImpl->blurTexture1 = SDL_CreateTexture(m_resources->renderer, SDL_PIXELFORMAT_RGBA8888, 
                                     SDL_TEXTUREACCESS_TARGET, pImpl->width, pImpl->height);
-    pImpl->blurTexture2 = SDL_CreateTexture(GameEngine::renderer, SDL_PIXELFORMAT_RGBA8888, 
+    pImpl->blurTexture2 = SDL_CreateTexture(m_resources->renderer, SDL_PIXELFORMAT_RGBA8888, 
                                     SDL_TEXTUREACCESS_TARGET, pImpl->width, pImpl->height);
-    pImpl->bloomTexture = SDL_CreateTexture(GameEngine::renderer, SDL_PIXELFORMAT_RGBA8888, 
+    pImpl->bloomTexture = SDL_CreateTexture(m_resources->renderer, SDL_PIXELFORMAT_RGBA8888, 
                                     SDL_TEXTUREACCESS_TARGET, pImpl->width, pImpl->height);
     
     // Set blend modes
@@ -142,7 +149,7 @@ void OlympeEffectSystem::Initialize()
     SDL_SetTextureBlendMode(pImpl->bloomTexture, SDL_BLENDMODE_BLEND);
     
     // Load logo texture
-    pImpl->logoTexture = DataManager::Get().GetSprite("Olympe_Logo", "Resources/olympe_logo.png", ResourceCategory::GameEntity);
+    pImpl->logoTexture = m_resources->dataManager->GetSprite("Olympe_Logo", "Resources/olympe_logo.png", ResourceCategory::GameEntity);
     if (!pImpl->logoTexture)
     {
         SYSTEM_LOG << "OlympeEffectSystem: Failed to load logo texture\n";
@@ -238,9 +245,9 @@ void OlympeEffectSystem::Implementation::BounceOffEdges(GlowOrb& orb)
 }
 
 //-------------------------------------------------------------
-void OlympeEffectSystem::Implementation::RenderBackground()
+void OlympeEffectSystem::Implementation::RenderBackground(SDL_Renderer* renderer)
 {
-    SDL_SetRenderTarget(GameEngine::renderer, backgroundTexture);
+    SDL_SetRenderTarget(renderer, backgroundTexture);
     
     // Dark gradient background (black → night blue)
    /* for (int y = 0; y < height; ++y)
@@ -250,21 +257,21 @@ void OlympeEffectSystem::Implementation::RenderBackground()
         Uint8 g = static_cast<Uint8>(0 + t * 15);
         Uint8 b = static_cast<Uint8>(0 + t * 30);
         
-        SDL_SetRenderDrawColor(GameEngine::renderer, r, g, b, 255);
-        SDL_RenderLine(GameEngine::renderer, 0, y, width, y);
+        SDL_SetRenderDrawColor(renderer, r, g, b, 255);
+        SDL_RenderLine(renderer, 0, y, width, y);
     }/**/
-    SDL_SetRenderDrawColor(GameEngine::renderer, 230, 255, 230, 255);
-	SDL_RenderFillRect(GameEngine::renderer, nullptr);
+    SDL_SetRenderDrawColor(renderer, 230, 255, 230, 255);
+	SDL_RenderFillRect(renderer, nullptr);
 
-    SDL_SetRenderTarget(GameEngine::renderer, nullptr);
+    SDL_SetRenderTarget(renderer, nullptr);
 }
 
 //-------------------------------------------------------------
-void OlympeEffectSystem::Implementation::RenderPlasmaOrbs()
+void OlympeEffectSystem::Implementation::RenderPlasmaOrbs(SDL_Renderer* renderer)
 {
-    SDL_SetRenderTarget(GameEngine::renderer, plasmaTexture);
-    SDL_SetRenderDrawColor(GameEngine::renderer, 0, 0, 0, 255);
-    SDL_RenderClear(GameEngine::renderer);
+    SDL_SetRenderTarget(renderer, plasmaTexture);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
     
     // Render each orb as concentric circles with fading alpha
     for (int i = 0; i < NUM_ORBS; ++i)
@@ -285,20 +292,20 @@ void OlympeEffectSystem::Implementation::RenderPlasmaOrbs()
             float alphaFactor = radiusFactor * radiusFactor;
             Uint8 alpha = static_cast<Uint8>(180.0f * alphaFactor);
             
-            SDL_SetRenderDrawColor(GameEngine::renderer, orb.color.r, orb.color.g, orb.color.b, alpha);
-            Draw_FilledCircle(GameEngine::renderer, cx, cy, currentRadius);
+            SDL_SetRenderDrawColor(renderer, orb.color.r, orb.color.g, orb.color.b, alpha);
+            Draw_FilledCircle(renderer, cx, cy, currentRadius);
         }/**/
         // debug to disply the circles outline
         
-        SDL_SetRenderDrawColor(GameEngine::renderer, 0, 255, 0, 255);
-        Draw_Circle(GameEngine::renderer, cx, cy, (int)orb.radius);
+        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+        Draw_Circle(renderer, cx, cy, (int)orb.radius);
     }
     
-    SDL_SetRenderTarget(GameEngine::renderer, nullptr);
+    SDL_SetRenderTarget(renderer, nullptr);
 }
 
 //-------------------------------------------------------------
-void OlympeEffectSystem::Implementation::ApplyGaussianBlur()
+void OlympeEffectSystem::Implementation::ApplyGaussianBlur(SDL_Renderer* renderer)
 {
     // Multi-pass gaussian blur
     for (int pass = 0; pass < BLUR_PASSES; ++pass)
@@ -306,67 +313,67 @@ void OlympeEffectSystem::Implementation::ApplyGaussianBlur()
         int offset = (pass + 1) * 2; // 2, 4, 6 pixels
         
         // Horizontal blur pass: plasmaTexture → blurTexture1
-        SDL_SetRenderTarget(GameEngine::renderer, blurTexture1);
-        SDL_SetRenderDrawColor(GameEngine::renderer, 0, 0, 0, 0);
-        SDL_RenderClear(GameEngine::renderer);
+        SDL_SetRenderTarget(renderer, blurTexture1);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+        SDL_RenderClear(renderer);
         
         SDL_SetTextureBlendMode(plasmaTexture, SDL_BLENDMODE_BLEND);
         SDL_SetTextureAlphaMod(plasmaTexture, BLUR_ALPHA_CENTER); // Center
-        SDL_RenderTexture(GameEngine::renderer, plasmaTexture, nullptr, nullptr);
+        SDL_RenderTexture(renderer, plasmaTexture, nullptr, nullptr);
         
         SDL_SetTextureAlphaMod(plasmaTexture, BLUR_ALPHA_OFFSET); // Left offset
         SDL_FRect leftRect = {-static_cast<float>(offset), 0, static_cast<float>(width), static_cast<float>(height)};
-        SDL_RenderTexture(GameEngine::renderer, plasmaTexture, nullptr, &leftRect);
+        SDL_RenderTexture(renderer, plasmaTexture, nullptr, &leftRect);
         
         SDL_SetTextureAlphaMod(plasmaTexture, BLUR_ALPHA_OFFSET); // Right offset
         SDL_FRect rightRect = {static_cast<float>(offset), 0, static_cast<float>(width), static_cast<float>(height)};
-        SDL_RenderTexture(GameEngine::renderer, plasmaTexture, nullptr, &rightRect);
+        SDL_RenderTexture(renderer, plasmaTexture, nullptr, &rightRect);
         
         // Vertical blur pass: blurTexture1 → blurTexture2
-        SDL_SetRenderTarget(GameEngine::renderer, blurTexture2);
-        SDL_SetRenderDrawColor(GameEngine::renderer, 0, 0, 0, 0);
-        SDL_RenderClear(GameEngine::renderer);
+        SDL_SetRenderTarget(renderer, blurTexture2);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+        SDL_RenderClear(renderer);
         
         SDL_SetTextureBlendMode(blurTexture1, SDL_BLENDMODE_BLEND);
         SDL_SetTextureAlphaMod(blurTexture1, BLUR_ALPHA_CENTER); // Center
-        SDL_RenderTexture(GameEngine::renderer, blurTexture1, nullptr, nullptr);
+        SDL_RenderTexture(renderer, blurTexture1, nullptr, nullptr);
         
         SDL_SetTextureAlphaMod(blurTexture1, BLUR_ALPHA_OFFSET); // Top offset
         SDL_FRect topRect = {0, -static_cast<float>(offset), static_cast<float>(width), static_cast<float>(height)};
-        SDL_RenderTexture(GameEngine::renderer, blurTexture1, nullptr, &topRect);
+        SDL_RenderTexture(renderer, blurTexture1, nullptr, &topRect);
         
         SDL_SetTextureAlphaMod(blurTexture1, BLUR_ALPHA_OFFSET); // Bottom offset
         SDL_FRect bottomRect = {0, static_cast<float>(offset), static_cast<float>(width), static_cast<float>(height)};
-        SDL_RenderTexture(GameEngine::renderer, blurTexture1, nullptr, &bottomRect);
+        SDL_RenderTexture(renderer, blurTexture1, nullptr, &bottomRect);
         
         // Copy back to plasmaTexture for next pass
-        SDL_SetRenderTarget(GameEngine::renderer, plasmaTexture);
+        SDL_SetRenderTarget(renderer, plasmaTexture);
         SDL_SetTextureAlphaMod(blurTexture2, 255);
         SDL_SetTextureBlendMode(blurTexture2, SDL_BLENDMODE_NONE);
-        SDL_RenderTexture(GameEngine::renderer, blurTexture2, nullptr, nullptr);
+        SDL_RenderTexture(renderer, blurTexture2, nullptr, nullptr);
     }
     
-    SDL_SetRenderTarget(GameEngine::renderer, nullptr);
+    SDL_SetRenderTarget(renderer, nullptr);
 }
 
 //-------------------------------------------------------------
-void OlympeEffectSystem::Implementation::ApplyBloom()
+void OlympeEffectSystem::Implementation::ApplyBloom(SDL_Renderer* renderer)
 {
-    SDL_SetRenderTarget(GameEngine::renderer, bloomTexture);
+    SDL_SetRenderTarget(renderer, bloomTexture);
  
     // Step 1: Draw background (no blending)
     SDL_SetTextureBlendMode(backgroundTexture, SDL_BLENDMODE_NONE);
-    SDL_RenderTexture(GameEngine::renderer, backgroundTexture, nullptr, nullptr);
+    SDL_RenderTexture(renderer, backgroundTexture, nullptr, nullptr);
    /* 
     // Step 2: Add blurred glow (additive blending)
     SDL_SetTextureBlendMode(blurTexture2, SDL_BLENDMODE_ADD);
     SDL_SetTextureAlphaMod(blurTexture2, BLOOM_ALPHA_BLUR);
-    SDL_RenderTexture(GameEngine::renderer, blurTexture2, nullptr, nullptr);
+    SDL_RenderTexture(renderer, blurTexture2, nullptr, nullptr);
     
     // Step 3: Add original plasma orbs (additive blending)
     SDL_SetTextureBlendMode(plasmaTexture, SDL_BLENDMODE_ADD);
     SDL_SetTextureAlphaMod(plasmaTexture, BLOOM_ALPHA_PLASMA);
-    SDL_RenderTexture(GameEngine::renderer, plasmaTexture, nullptr, nullptr);
+    SDL_RenderTexture(renderer, plasmaTexture, nullptr, nullptr);
     /**/
     // Step 4: Render logo (optional)
     if (logoTexture)
@@ -374,38 +381,46 @@ void OlympeEffectSystem::Implementation::ApplyBloom()
         SDL_SetTextureBlendMode(logoTexture, SDL_BLENDMODE_BLEND);
         SDL_SetTextureAlphaMod(logoTexture, BLOOM_ALPHA_LOGO);
         SDL_FRect logoRect = {(width - 300.0f) / 2.0f, (height - 121.0f) / 2.0f, 300.0f, 121.0f};
-        SDL_RenderTexture(GameEngine::renderer, logoTexture, nullptr, &logoRect);
+        SDL_RenderTexture(renderer, logoTexture, nullptr, &logoRect);
     }
     
-    SDL_SetRenderTarget(GameEngine::renderer, nullptr);
+    SDL_SetRenderTarget(renderer, nullptr);
 }
 
 //-------------------------------------------------------------
 void OlympeEffectSystem::Process()
 {
+    // Check if resources are available
+    if (!m_resources || !m_resources->renderer)
+        return;
+    
     // Update orbs
-    pImpl->UpdateOrbs(GameEngine::fDt);
+    pImpl->UpdateOrbs(m_resources->deltaTime);
     
     // Render background gradient
-    pImpl->RenderBackground();
+    pImpl->RenderBackground(m_resources->renderer);
     
     // Render plasma orbs
- //   pImpl->RenderPlasmaOrbs();
+ //   pImpl->RenderPlasmaOrbs(m_resources->renderer);
     
     // Apply gaussian blur
- //   pImpl->ApplyGaussianBlur();
+ //   pImpl->ApplyGaussianBlur(m_resources->renderer);
     
     // Compose final bloom effect
-    pImpl->ApplyBloom();
+    pImpl->ApplyBloom(m_resources->renderer);
 }
 
 //-------------------------------------------------------------
 void OlympeEffectSystem::Render()
 {
+    // Check if resources are available
+    if (!m_resources || !m_resources->renderer || !m_resources->cameraManager)
+        return;
+    
     // Get camera offset for rendering
-    Vector vPos = -CameraManager::Get().GetCameraPositionForActivePlayer();
+    Vector vPos = -m_resources->cameraManager->GetCameraPositionForActivePlayer();
     SDL_FRect destRect = {vPos.x, vPos.y, static_cast<float>(pImpl->width), static_cast<float>(pImpl->height)};
     
     // Render the final bloom composite to screen
-    SDL_RenderTexture(GameEngine::renderer, pImpl->bloomTexture, nullptr, &destRect);
+    SDL_RenderTexture(m_resources->renderer, pImpl->bloomTexture, nullptr, &destRect);
 }

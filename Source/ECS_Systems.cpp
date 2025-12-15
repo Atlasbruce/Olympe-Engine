@@ -85,16 +85,20 @@ MovementSystem::MovementSystem()
 
 void MovementSystem::Process()
 {
+    // Check if resources are available
+    if (!m_resources || !m_resources->world)
+        return;
+    
     // Iterate ONLY over the relevant entities stored in m_entities
     for (EntityID entity : m_entities)
     {
         try
         {
             // Direct and fast access to Component data from the Pools
-            Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-            Movement_data& move = World::Get().GetComponent<Movement_data>(entity);
+            Position_data& pos = m_resources->world->GetComponent<Position_data>(entity);
+            Movement_data& move = m_resources->world->GetComponent<Movement_data>(entity);
             // Game logic: simple movement based on speed and delta time
-            pos.position += move.direction * GameEngine::fDt;
+            pos.position += move.direction * m_resources->deltaTime;
         }
         catch (const std::exception& e)
         {
@@ -112,8 +116,9 @@ RenderingSystem::RenderingSystem()
 }
 void RenderingSystem::Render()
 {
-    SDL_Renderer* renderer = GameEngine::renderer;
-    if (!renderer) return;
+    // Check if resources are available
+    if (!m_resources || !m_resources->renderer || !m_resources->world || !m_resources->cameraManager)
+        return;
 
     // Iterate ONLY over the relevant entities stored in m_entities
     for (EntityID entity : m_entities)
@@ -121,23 +126,23 @@ void RenderingSystem::Render()
         try
         {
             // Direct and fast access to Component data from the Pools
-            Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-            VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
-            BoundingBox_data& boxComp = World::Get().GetComponent<BoundingBox_data>(entity);
+            Position_data& pos = m_resources->world->GetComponent<Position_data>(entity);
+            VisualSprite_data& visual = m_resources->world->GetComponent<VisualSprite_data>(entity);
+            BoundingBox_data& boxComp = m_resources->world->GetComponent<BoundingBox_data>(entity);
 
             if (visual.sprite)
             {
-                Vector vRenderPos = pos.position - visual.hotSpot - CameraManager::Get().GetCameraPositionForActivePlayer();
+                Vector vRenderPos = pos.position - visual.hotSpot - m_resources->cameraManager->GetCameraPositionForActivePlayer();
                 SDL_FRect box = boxComp.boundingBox;
                 box.x = vRenderPos.x;
                 box.y = vRenderPos.y;
 				
 				SDL_SetTextureColorMod(visual.sprite, visual.color.r, visual.color.g, visual.color.b);
-                SDL_RenderTexture(GameEngine::renderer, visual.sprite, nullptr, &box);
+                SDL_RenderTexture(m_resources->renderer, visual.sprite, nullptr, &box);
 
 				// Debug: draw bounding box
-				SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 0, 255);
-				Draw_Circle(GameEngine::renderer, (int)( box.x + box.w / 2.f) , (int) (box.y + box.h / 2.f), 35);
+				SDL_SetRenderDrawColor(m_resources->renderer, 255, 0, 0, 255);
+				Draw_Circle(m_resources->renderer, (int)( box.x + box.w / 2.f) , (int) (box.y + box.h / 2.f), 35);
             }
         }
         catch (const std::exception& e)
@@ -158,24 +163,28 @@ PlayerControlSystem::PlayerControlSystem()
 }
 void PlayerControlSystem::Process()
 {
+    // Check if resources are available
+    if (!m_resources || !m_resources->world)
+        return;
+    
     // Iterate ONLY over the relevant entities stored in m_entities
     for (EntityID entity : m_entities)
     {
         try
         {
             // Direct and fast access to Component data from the Pools
-            Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-			PlayerController_data& controller = World::Get().GetComponent<PlayerController_data>(entity);
-			PlayerBinding_data& binding = World::Get().GetComponent<PlayerBinding_data>(entity);
-			Controller_data& ctrlData = World::Get().GetComponent<Controller_data>(entity);
-			PhysicsBody_data& physBody = World::Get().GetComponent<PhysicsBody_data>(entity);
+            Position_data& pos = m_resources->world->GetComponent<Position_data>(entity);
+			PlayerController_data& controller = m_resources->world->GetComponent<PlayerController_data>(entity);
+			PlayerBinding_data& binding = m_resources->world->GetComponent<PlayerBinding_data>(entity);
+			Controller_data& ctrlData = m_resources->world->GetComponent<Controller_data>(entity);
+			PhysicsBody_data& physBody = m_resources->world->GetComponent<PhysicsBody_data>(entity);
 
             // check if the controller is bound with right player id
 			if (binding.controllerID != ctrlData.controllerID )
 				continue; // skip if not bound
 
 			// Game logic: simple movement based on joystick direction and delta time
-            pos.position += controller.Joydirection * physBody.speed * GameEngine::fDt;
+            pos.position += controller.Joydirection * physBody.speed * m_resources->deltaTime;
         }
         catch (const std::exception& e)
         {
@@ -194,8 +203,13 @@ InputMappingSystem::InputMappingSystem()
 
 void InputMappingSystem::Process()
 {
+    // Check if resources are available
+    if (!m_resources || !m_resources->world || !m_resources->inputsManager || 
+        !m_resources->keyboardManager || !m_resources->joystickManager)
+        return;
+    
     // Check if we should process gameplay input
-    InputContext activeContext = InputsManager::Get().GetActiveContext();
+    InputContext activeContext = m_resources->inputsManager->GetActiveContext();
     if (activeContext != InputContext::Gameplay)
     {
         // Don't process gameplay input when in UI or Editor context
@@ -207,9 +221,9 @@ void InputMappingSystem::Process()
     {
         try
         {
-            PlayerBinding_data& binding = World::Get().GetComponent<PlayerBinding_data>(entity);
-            PlayerController_data& pctrl = World::Get().GetComponent<PlayerController_data>(entity);
-            Controller_data& ctrl = World::Get().GetComponent<Controller_data>(entity);
+            PlayerBinding_data& binding = m_resources->world->GetComponent<PlayerBinding_data>(entity);
+            PlayerController_data& pctrl = m_resources->world->GetComponent<PlayerController_data>(entity);
+            Controller_data& ctrl = m_resources->world->GetComponent<Controller_data>(entity);
 
             // Reset direction each frame
             pctrl.Joydirection.x = 0.0f;
@@ -217,16 +231,16 @@ void InputMappingSystem::Process()
 
             // Get or create InputMapping_data (optional component)
             InputMapping_data* mapping = nullptr;
-            if (World::Get().HasComponent<InputMapping_data>(entity))
+            if (m_resources->world->HasComponent<InputMapping_data>(entity))
             {
-                mapping = &World::Get().GetComponent<InputMapping_data>(entity);
+                mapping = &m_resources->world->GetComponent<InputMapping_data>(entity);
             }
 
             // Keyboard input (controllerID == -1)
             if (binding.controllerID == -1)
             {
                 // Use Pull API to read keyboard state
-                KeyboardManager& km = KeyboardManager::Get();
+                KeyboardManager& km = *m_resources->keyboardManager;
 
                 if (mapping)
                 {
@@ -267,7 +281,7 @@ void InputMappingSystem::Process()
             else if (binding.controllerID >= 0)
             {
                 SDL_JoystickID joyID = static_cast<SDL_JoystickID>(binding.controllerID);
-                JoystickManager& jm = JoystickManager::Get();
+                JoystickManager& jm = *m_resources->joystickManager;
 
                 // Read left stick from Controller_data (already populated by event system)
                 pctrl.Joydirection.x = ctrl.leftStick.x;
