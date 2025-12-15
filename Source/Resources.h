@@ -62,6 +62,7 @@ struct Resources
                cameraManager != nullptr &&
                keyboardManager != nullptr &&
                joystickManager != nullptr &&
+               mouseManager != nullptr &&
                dataManager != nullptr &&
                world != nullptr;
     }
