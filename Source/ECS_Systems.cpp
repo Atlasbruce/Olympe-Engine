@@ -21,6 +21,7 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #include <iostream>
 #include <bitset>
 #include <cmath>
+#include <SDL3/SDL.h>
 #include "drawing.h"
 
 //-------------------------------------------------------------
@@ -46,10 +47,40 @@ void AISystem::Process()
 //-------------------------------------------------------------
 DetectionSystem::DetectionSystem()
 {
+    // This system consumes trigger events to react to entity detection
+    // No specific component signature required - autonomous system
 }
+
 void DetectionSystem::Process()
 {
-    // Detection processing logic here
+    // Get event queue system for consuming trigger events
+    EventQueueSystem* eventQueue = World::Get().GetEventQueueSystem();
+    if (!eventQueue) return;
+    
+    // Consume all trigger entered events
+    eventQueue->ConsumeEvents(ECSEventType::TriggerEntered,
+        [this](const Event& evt) {
+            const TriggerEvent& trigger = evt.data.trigger;
+            
+            // Log detection for debugging
+            std::cout << "DetectionSystem: Entity " << trigger.other 
+                     << " entered trigger zone " << trigger.trigger << std::endl;
+            
+            // Here you could add more sophisticated detection logic:
+            // - Update AI awareness
+            // - Trigger dialog systems
+            // - Activate quest objectives
+            // - etc.
+        });
+    
+    // Consume all trigger exited events
+    eventQueue->ConsumeEvents(ECSEventType::TriggerExited,
+        [this](const Event& evt) {
+            const TriggerEvent& trigger = evt.data.trigger;
+            
+            std::cout << "DetectionSystem: Entity " << trigger.other 
+                     << " exited trigger zone " << trigger.trigger << std::endl;
+        });
 }
 //-------------------------------------------------------------
 PhysicsSystem::PhysicsSystem()
@@ -70,10 +101,85 @@ void CollisionSystem::Process()
 //-------------------------------------------------------------
 TriggerSystem::TriggerSystem()
 {
+    // Required components: Position + TriggerZone
+    requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
+    requiredSignature.set(GetComponentTypeID_Static<TriggerZone_data>(), true);
 }
+
 void TriggerSystem::Process()
 {
-    // Trigger processing logic here
+    // Get event queue system for posting trigger events
+    EventQueueSystem* eventQueue = World::Get().GetEventQueueSystem();
+    if (!eventQueue) return;
+    
+    // Track all entities with position for trigger detection
+    std::set<EntityID> allEntities;
+    for (const auto& pair : World::Get().m_entitySignatures)
+    {
+        if (World::Get().HasComponent<Position_data>(pair.first))
+        {
+            allEntities.insert(pair.first);
+        }
+    }
+    
+    // Process each trigger zone
+    for (EntityID trigger : m_entities)
+    {
+        try
+        {
+            TriggerZone_data& zone = World::Get().GetComponent<TriggerZone_data>(trigger);
+            Position_data& triggerPos = World::Get().GetComponent<Position_data>(trigger);
+            
+            // Check all entities against this trigger
+            for (EntityID other : allEntities)
+            {
+                if (other == trigger) continue;
+                
+                Position_data& otherPos = World::Get().GetComponent<Position_data>(other);
+                
+                // Calculate distance
+                float dx = otherPos.position.x - triggerPos.position.x;
+                float dy = otherPos.position.y - triggerPos.position.y;
+                float distance = std::sqrt(dx * dx + dy * dy);
+                
+                bool isInside = (distance <= zone.radius);
+                bool wasTriggered = zone.triggered;
+                
+                // Trigger entered
+                if (!wasTriggered && isInside)
+                {
+                    TriggerEvent triggerEvt;
+                    triggerEvt.trigger = trigger;
+                    triggerEvt.other = other;
+                    triggerEvt.entered = true;
+                    triggerEvt.timestamp = SDL_GetTicks() / 1000.0f;
+                    
+                    Event evt = Event::CreateTrigger(triggerEvt);
+                    eventQueue->PostEvent(ECSEventType::TriggerEntered, evt);
+                    
+                    zone.triggered = true;
+                }
+                // Trigger exited
+                else if (wasTriggered && !isInside)
+                {
+                    TriggerEvent triggerEvt;
+                    triggerEvt.trigger = trigger;
+                    triggerEvt.other = other;
+                    triggerEvt.entered = false;
+                    triggerEvt.timestamp = SDL_GetTicks() / 1000.0f;
+                    
+                    Event evt = Event::CreateTrigger(triggerEvt);
+                    eventQueue->PostEvent(ECSEventType::TriggerExited, evt);
+                    
+                    zone.triggered = false;
+                }
+            }
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "TriggerSystem Error for Entity " << trigger << ": " << e.what() << "\n";
+        }
+    }
 }
 //-------------------------------------------------------------
 MovementSystem::MovementSystem()
