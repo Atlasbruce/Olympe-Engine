@@ -115,9 +115,20 @@ void RenderingSystem::Render()
     SDL_Renderer* renderer = GameEngine::renderer;
     if (!renderer) return;
 
-    // Get the active camera position for current viewport
-    // This is set by the main render loop when iterating viewports
-    Vector cameraPosition = CameraManager::Get().GetCameraPositionForActivePlayer();
+    // Get the active camera position from ECS (if set)
+    Vector cameraPosition;
+    if (m_activeCameraEntity != INVALID_ENTITY_ID && 
+        World::Get().IsEntityValid(m_activeCameraEntity) &&
+        World::Get().HasComponent<Camera_data>(m_activeCameraEntity))
+    {
+        Camera_data& camera = World::Get().GetComponent<Camera_data>(m_activeCameraEntity);
+        cameraPosition = camera.position;
+    }
+    else
+    {
+        // Fallback to legacy CameraManager if no ECS camera is set
+        cameraPosition = CameraManager::Get().GetCameraPositionForActivePlayer();
+    }
     
     // Iterate ONLY over the relevant entities stored in m_entities
     for (EntityID entity : m_entities)

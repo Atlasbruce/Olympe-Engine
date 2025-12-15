@@ -91,6 +91,12 @@ class RenderingSystem : public ECS_System
 public:
     RenderingSystem();
 	virtual void Render() override;
+    
+    // Set the active camera entity for the current render pass
+    void SetActiveCameraEntity(EntityID cameraEntity) { m_activeCameraEntity = cameraEntity; }
+
+private:
+    EntityID m_activeCameraEntity = INVALID_ENTITY_ID;
 };
 // Player Control System: processes entities with PlayerBinding_data and Controller_data
 class PlayerControlSystem : public ECS_System

@@ -19,6 +19,8 @@ Notes:
 #include <SDL3/SDL_messagebox.h>
 #include "gameengine.h"
 #include "World.h"
+#include "ECS_Systems.h"
+#include "ECS_Components.h"
 #include "system/JoystickManager.h"
 #include "system/KeyboardManager.h"
 #include "system/MouseManager.h"
@@ -261,6 +263,9 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     else
     {
         // Use ECS camera and viewport data
+        // Get RenderingSystem to set active camera for each viewport
+        RenderingSystem* renderSys = World::Get().GetSystem<RenderingSystem>();
+        
         for (EntityID cameraEntity : cameraEntities)
         {
             Viewport_data& viewport = World::Get().GetComponent<Viewport_data>(cameraEntity);
@@ -277,8 +282,16 @@ SDL_AppResult SDL_AppIterate(void* appstate)
             };
             SDL_SetRenderViewport(renderer, &r);
 
-            // Sync ECS camera data to CameraManager (for backward compatibility with RenderingSystem)
-            CameraManager::Get().SetActiveCameraFromECS(camera, viewport.viewportIndex);
+            // Set active camera entity for RenderingSystem (ECS-based rendering)
+            if (renderSys)
+            {
+                renderSys->SetActiveCameraEntity(cameraEntity);
+            }
+            else
+            {
+                // Fallback: sync ECS camera data to CameraManager for backward compatibility
+                CameraManager::Get().SetActiveCameraFromECS(camera, viewport.viewportIndex);
+            }
             
             // Render the world for this viewport
             World::Get().Render();
