@@ -158,6 +158,26 @@ public:
     
     // Get all viewports for a specific render target
     std::vector<EntityID> GetViewportsForRenderTarget(EntityID renderTargetEntity) const;
+    
+    // ============ High-level Configuration Helpers ============
+    
+    // Setup split-screen mode: creates viewports within the primary render target
+    // numPlayers: number of players (1-8)
+    // Returns vector of viewport entities (one per player)
+    std::vector<EntityID> SetupSplitScreen(int numPlayers);
+    
+    // Setup multi-window mode: creates separate windows for each player
+    // numPlayers: number of players (1-4 recommended)
+    // width, height: dimensions for each window
+    // Returns vector of pairs (renderTarget entity, viewport entity) for each player
+    std::vector<std::pair<EntityID, EntityID>> SetupMultiWindow(int numPlayers, int width, int height);
+    
+    // Clear all viewports and render targets (except primary)
+    void ClearAllViewportsAndTargets();
+    
+    // Switch between split-screen and multi-window modes
+    void SwitchToSplitScreen(int numPlayers);
+    void SwitchToMultiWindow(int numPlayers, int width, int height);
 
 private:
     // Implementation details hidden

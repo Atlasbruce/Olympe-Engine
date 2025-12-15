@@ -90,6 +90,15 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     // Attach panels/menu to main SDL window (Windows only)
     PanelManager::Get().AttachToSDLWindow(window);
 
+    // Initialize the new ECS-based rendering system with the primary render target
+    // This allows the system to be used for multi-pass, multi-window rendering
+    RenderBackendSystem* renderBackend = World::Get().GetSystem<RenderBackendSystem>();
+    if (renderBackend)
+    {
+        renderBackend->CreatePrimaryRenderTarget(window, renderer);
+        SYSTEM_LOG << "Primary render target created for ECS-based rendering\n";
+    }
+
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
 
@@ -219,40 +228,52 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);  /* black, full alpha */
     SDL_RenderClear(renderer);  /* start with a blank canvas. */
 
-    // Render world once per viewport/player so each viewport gets its own draw pass
-    const auto& rects = ViewportManager::Get().GetViewRects();
-    const auto& players = ViewportManager::Get().GetPlayers();
-
-    if (rects.empty())
+    // Check if we have a RenderBackendSystem (new ECS-based multi-pass rendering)
+    RenderBackendSystem* renderBackend = World::Get().GetSystem<RenderBackendSystem>();
+    
+    if (renderBackend && !renderBackend->GetActiveRenderTargets().empty())
     {
-        // fallback to previous single-render behavior
-        World::Get().Render();
+        // New ECS-based rendering: RenderBackendSystem manages all render targets and viewports
+        // This enables data-driven split-screen and multi-window support
+        renderBackend->Render();
     }
     else
     {
-        // save current viewport to restore later
-        SDL_Rect prev = { 0, 0, GameEngine::screenHeight, GameEngine::screenHeight };
-        //SDL_RenderGetViewport(renderer, &prev);
+        // Legacy rendering path: Use ViewportManager (backwards compatible)
+        const auto& rects = ViewportManager::Get().GetViewRects();
+        const auto& players = ViewportManager::Get().GetPlayers();
 
-        for (size_t i = 0; i < rects.size(); ++i)
+        if (rects.empty())
         {
-            const auto& rf = rects[i];
-            SDL_Rect r = { (int)rf.x, (int)rf.y, (int)rf.w, (int)rf.h };
-            SDL_SetRenderViewport(renderer, &r);
-
-            // Optionally you can set camera state here using player id:
-            short playerId = (i < players.size()) ? players[i] : 0;
-            CameraManager::Get().Apply(renderer, playerId);
-
-            // Draw world for this viewport. World::Render should use CameraManager to determine camera.
+            // fallback to previous single-render behavior
             World::Get().Render();
         }
+        else
+        {
+            // save current viewport to restore later
+            SDL_Rect prev = { 0, 0, GameEngine::screenHeight, GameEngine::screenHeight };
+            //SDL_RenderGetViewport(renderer, &prev);
 
-        // restore previous viewport
-        SDL_SetRenderViewport(renderer, &prev);
+            for (size_t i = 0; i < rects.size(); ++i)
+            {
+                const auto& rf = rects[i];
+                SDL_Rect r = { (int)rf.x, (int)rf.y, (int)rf.w, (int)rf.h };
+                SDL_SetRenderViewport(renderer, &r);
+
+                // Optionally you can set camera state here using player id:
+                short playerId = (i < players.size()) ? players[i] : 0;
+                CameraManager::Get().Apply(renderer, playerId);
+
+                // Draw world for this viewport. World::Render should use CameraManager to determine camera.
+                World::Get().Render();
+            }
+
+            // restore previous viewport
+            SDL_SetRenderViewport(renderer, &prev);
+        }
+
+        SDL_RenderPresent(renderer);  /* put it all on the screen! */
     }
-
-    SDL_RenderPresent(renderer);  /* put it all on the screen! */
 
     // Update FPS counter and set window title once per second
     static int frameCount = 0;

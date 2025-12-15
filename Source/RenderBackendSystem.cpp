@@ -17,6 +17,8 @@ Data-driven approach for split-screen and multi-window support
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <vector>
+#include <cstdio>
+#include <utility>
 
 //-------------------------------------------------------------
 // Implementation structure (pimpl pattern)
@@ -322,4 +324,182 @@ std::vector<EntityID> RenderBackendSystem::GetViewportsForRenderTarget(
     }
     
     return result;
+}
+
+//-------------------------------------------------------------
+// High-level configuration helpers
+//-------------------------------------------------------------
+
+std::vector<EntityID> RenderBackendSystem::SetupSplitScreen(int numPlayers)
+{
+    std::vector<EntityID> viewports;
+    
+    if (numPlayers < 1 || numPlayers > 8)
+    {
+        SYSTEM_LOG << "SetupSplitScreen: Invalid number of players (" << numPlayers << "). Must be 1-8.\n";
+        return viewports;
+    }
+    
+    // Get the primary render target
+    auto renderTargets = GetActiveRenderTargets();
+    if (renderTargets.empty())
+    {
+        SYSTEM_LOG << "SetupSplitScreen: No active render target found.\n";
+        return viewports;
+    }
+    
+    EntityID primaryTarget = renderTargets[0];
+    const RenderTarget_data& target = World::Get().GetComponent<RenderTarget_data>(primaryTarget);
+    
+    float w = static_cast<float>(target.width);
+    float h = static_cast<float>(target.height);
+    
+    // Calculate viewport rectangles based on number of players
+    // Layout logic similar to ViewportManager
+    std::vector<SDL_FRect> rects;
+    
+    switch (numPlayers)
+    {
+        case 1:
+            rects.push_back({0.f, 0.f, w, h});
+            break;
+        case 2:
+            rects.push_back({0.f, 0.f, w/2.f, h});
+            rects.push_back({w/2.f, 0.f, w/2.f, h});
+            break;
+        case 3:
+            rects.push_back({0.f, 0.f, w/3.f, h});
+            rects.push_back({w/3.f, 0.f, w/3.f, h});
+            rects.push_back({2.f*w/3.f, 0.f, w/3.f, h});
+            break;
+        case 4:
+            rects.push_back({0.f, 0.f, w/2.f, h/2.f});
+            rects.push_back({w/2.f, 0.f, w/2.f, h/2.f});
+            rects.push_back({0.f, h/2.f, w/2.f, h/2.f});
+            rects.push_back({w/2.f, h/2.f, w/2.f, h/2.f});
+            break;
+        case 5:
+        case 6:
+            // 3x2 grid
+            for (int i = 0; i < numPlayers; ++i)
+            {
+                int col = i % 3;
+                int row = i / 3;
+                rects.push_back({col*w/3.f, row*h/2.f, w/3.f, h/2.f});
+            }
+            break;
+        case 7:
+        case 8:
+            // 4x2 grid
+            for (int i = 0; i < numPlayers; ++i)
+            {
+                int col = i % 4;
+                int row = i / 4;
+                rects.push_back({col*w/4.f, row*h/2.f, w/4.f, h/2.f});
+            }
+            break;
+    }
+    
+    // Create viewport entities
+    for (int i = 0; i < numPlayers && i < static_cast<int>(rects.size()); ++i)
+    {
+        EntityID vp = CreateViewport(static_cast<short>(i), rects[i], primaryTarget);
+        viewports.push_back(vp);
+    }
+    
+    SYSTEM_LOG << "SetupSplitScreen: Created " << viewports.size() << " viewports for " << numPlayers << " players\n";
+    
+    return viewports;
+}
+
+//-------------------------------------------------------------
+std::vector<std::pair<EntityID, EntityID>> RenderBackendSystem::SetupMultiWindow(
+    int numPlayers, int width, int height)
+{
+    std::vector<std::pair<EntityID, EntityID>> result;
+    
+    if (numPlayers < 1 || numPlayers > 4)
+    {
+        SYSTEM_LOG << "SetupMultiWindow: Invalid number of players (" << numPlayers << "). Must be 1-4.\n";
+        return result;
+    }
+    
+    // Create a separate window for each player
+    for (int i = 0; i < numPlayers; ++i)
+    {
+        char title[64];
+        snprintf(title, sizeof(title), "Player %d - Olympe Engine", i + 1);
+        
+        EntityID rtEntity = CreateSecondaryRenderTarget(title, width, height, i + 1);
+        
+        if (rtEntity == INVALID_ENTITY_ID)
+        {
+            SYSTEM_LOG << "SetupMultiWindow: Failed to create window for player " << i << "\n";
+            continue;
+        }
+        
+        // Create a full-screen viewport for this window
+        SDL_FRect fullRect = {0.f, 0.f, static_cast<float>(width), static_cast<float>(height)};
+        EntityID vpEntity = CreateViewport(static_cast<short>(i), fullRect, rtEntity);
+        
+        result.push_back(std::make_pair(rtEntity, vpEntity));
+    }
+    
+    SYSTEM_LOG << "SetupMultiWindow: Created " << result.size() << " windows for " << numPlayers << " players\n";
+    
+    return result;
+}
+
+//-------------------------------------------------------------
+void RenderBackendSystem::ClearAllViewportsAndTargets()
+{
+    // Get all render targets except primary
+    auto renderTargets = World::Get().GetEntitiesWithComponent<RenderTarget_data>();
+    
+    for (EntityID entity : renderTargets)
+    {
+        const RenderTarget_data& rt = World::Get().GetComponent<RenderTarget_data>(entity);
+        
+        // Skip primary render target
+        if (rt.type == RenderTargetType::Primary)
+            continue;
+        
+        // Clean up secondary windows
+        if (rt.window)
+        {
+            SDL_DestroyWindow(rt.window);
+        }
+        
+        // Destroy the entity
+        World::Get().DestroyEntity(entity);
+    }
+    
+    // Destroy all viewport entities
+    auto viewports = World::Get().GetEntitiesWithComponent<Viewport_data>();
+    for (EntityID entity : viewports)
+    {
+        World::Get().DestroyEntity(entity);
+    }
+    
+    pImpl->needsRebuild = true;
+    
+    SYSTEM_LOG << "ClearAllViewportsAndTargets: Cleaned up all non-primary render targets and viewports\n";
+}
+
+//-------------------------------------------------------------
+void RenderBackendSystem::SwitchToSplitScreen(int numPlayers)
+{
+    SYSTEM_LOG << "Switching to split-screen mode with " << numPlayers << " players\n";
+    
+    ClearAllViewportsAndTargets();
+    SetupSplitScreen(numPlayers);
+}
+
+//-------------------------------------------------------------
+void RenderBackendSystem::SwitchToMultiWindow(int numPlayers, int width, int height)
+{
+    SYSTEM_LOG << "Switching to multi-window mode with " << numPlayers << " players\n";
+    
+    ClearAllViewportsAndTargets();
+    SetupMultiWindow(numPlayers, width, height);
 }
