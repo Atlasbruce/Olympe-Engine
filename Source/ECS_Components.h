@@ -134,9 +134,31 @@ struct PlayerBinding_data
 // --- Component Camera Data ---
 struct Camera_data
 {
+	Vector position;        // Camera position in world space
+	Vector offset;          // Offset from target (or screen center)
 	float zoomLevel = 1.0f; // Zoom level of the camera
 	float rotation = 0.0f;  // Rotation angle of the camera in radians
+	SDL_Rect bounds = {INT_MIN, INT_MIN, INT_MAX, INT_MAX}; // Camera bounds
 	EntityID targetEntity = INVALID_ENTITY_ID; // Entity the camera is following
+	bool followTarget = false; // Whether to follow the target entity
+	float followSpeed = 0.75f; // Smooth follow speed (0-1, higher = faster)
+	
+	// Camera type and mode (from CameraManager)
+	enum class Type { Type_2D = 0, Type_2_5D, Type_Isometric } type = Type::Type_2D;
+	enum class Mode { 
+		Standard_Fixed = 0,  // camera fixed at position on main renderer
+		Standard_Follow,     // camera follows an entity on main renderer
+		Viewport_Fixed,      // camera fixed at position on a viewport
+		Viewport_Follow      // camera follows an entity on a viewport
+	} mode = Mode::Standard_Follow;
+};
+
+// --- Component Viewport Data ---
+struct Viewport_data
+{
+	SDL_FRect viewRect = {0.f, 0.f, 0.f, 0.f}; // Viewport rectangle on screen
+	int viewportIndex = 0; // Index of this viewport (0-7 for up to 8 players)
+	bool enabled = true;   // Whether this viewport is active
 };
 
 // --- Component NPC Data ---

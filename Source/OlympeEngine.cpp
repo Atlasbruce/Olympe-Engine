@@ -219,37 +219,70 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);  /* black, full alpha */
     SDL_RenderClear(renderer);  /* start with a blank canvas. */
 
-    // Render world once per viewport/player so each viewport gets its own draw pass
-    const auto& rects = ViewportManager::Get().GetViewRects();
-    const auto& players = ViewportManager::Get().GetPlayers();
-
-    if (rects.empty())
+    // Render world once per viewport/player using ECS camera data
+    // Find all entities with Camera_data and Viewport_data
+    std::vector<EntityID> cameraEntities;
+    for (const auto& pair : World::Get().m_entitySignatures)
     {
-        // fallback to previous single-render behavior
-        World::Get().Render();
+        EntityID entity = pair.first;
+        if (World::Get().HasComponent<Camera_data>(entity) && 
+            World::Get().HasComponent<Viewport_data>(entity))
+        {
+            cameraEntities.push_back(entity);
+        }
+    }
+
+    if (cameraEntities.empty())
+    {
+        // Fallback to legacy behavior if no ECS cameras found
+        const auto& rects = ViewportManager::Get().GetViewRects();
+        const auto& players = ViewportManager::Get().GetPlayers();
+
+        if (rects.empty())
+        {
+            // Single viewport fallback
+            World::Get().Render();
+        }
+        else
+        {
+            for (size_t i = 0; i < rects.size(); ++i)
+            {
+                const auto& rf = rects[i];
+                SDL_Rect r = { (int)rf.x, (int)rf.y, (int)rf.w, (int)rf.h };
+                SDL_SetRenderViewport(renderer, &r);
+
+                short playerId = (i < players.size()) ? players[i] : 0;
+                CameraManager::Get().Apply(renderer, playerId);
+
+                World::Get().Render();
+            }
+        }
     }
     else
     {
-        // save current viewport to restore later
-        SDL_Rect prev = { 0, 0, GameEngine::screenHeight, GameEngine::screenHeight };
-        //SDL_RenderGetViewport(renderer, &prev);
-
-        for (size_t i = 0; i < rects.size(); ++i)
+        // Use ECS camera and viewport data
+        for (EntityID cameraEntity : cameraEntities)
         {
-            const auto& rf = rects[i];
-            SDL_Rect r = { (int)rf.x, (int)rf.y, (int)rf.w, (int)rf.h };
+            Viewport_data& viewport = World::Get().GetComponent<Viewport_data>(cameraEntity);
+            Camera_data& camera = World::Get().GetComponent<Camera_data>(cameraEntity);
+
+            if (!viewport.enabled) continue;
+
+            // Set viewport for rendering
+            SDL_Rect r = {
+                (int)viewport.viewRect.x,
+                (int)viewport.viewRect.y,
+                (int)viewport.viewRect.w,
+                (int)viewport.viewRect.h
+            };
             SDL_SetRenderViewport(renderer, &r);
 
-            // Optionally you can set camera state here using player id:
-            short playerId = (i < players.size()) ? players[i] : 0;
-            CameraManager::Get().Apply(renderer, playerId);
-
-            // Draw world for this viewport. World::Render should use CameraManager to determine camera.
+            // Sync ECS camera data to CameraManager (for backward compatibility with RenderingSystem)
+            CameraManager::Get().SetActiveCameraFromECS(camera, viewport.viewportIndex);
+            
+            // Render the world for this viewport
             World::Get().Render();
         }
-
-        // restore previous viewport
-        SDL_SetRenderViewport(renderer, &prev);
     }
 
     SDL_RenderPresent(renderer);  /* put it all on the screen! */

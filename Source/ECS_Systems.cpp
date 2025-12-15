@@ -115,6 +115,10 @@ void RenderingSystem::Render()
     SDL_Renderer* renderer = GameEngine::renderer;
     if (!renderer) return;
 
+    // Get the active camera position for current viewport
+    // This is set by the main render loop when iterating viewports
+    Vector cameraPosition = CameraManager::Get().GetCameraPositionForActivePlayer();
+    
     // Iterate ONLY over the relevant entities stored in m_entities
     for (EntityID entity : m_entities)
     {
@@ -127,7 +131,7 @@ void RenderingSystem::Render()
 
             if (visual.sprite)
             {
-                Vector vRenderPos = pos.position - visual.hotSpot - CameraManager::Get().GetCameraPositionForActivePlayer();
+                Vector vRenderPos = pos.position - visual.hotSpot - cameraPosition;
                 SDL_FRect box = boxComp.boundingBox;
                 box.x = vRenderPos.x;
                 box.y = vRenderPos.y;
@@ -311,6 +315,66 @@ void InputMappingSystem::Process()
         catch (const std::exception& e)
         {
             std::cerr << "InputMappingSystem Error for Entity " << entity << ": " << e.what() << "\n";
+        }
+    }
+}
+//-------------------------------------------------------------
+CameraSystem::CameraSystem()
+{
+    // Required components: Camera_data
+    requiredSignature.set(GetComponentTypeID_Static<Camera_data>(), true);
+}
+
+void CameraSystem::Process()
+{
+    // Iterate over all entities with Camera_data
+    for (EntityID entity : m_entities)
+    {
+        try
+        {
+            Camera_data& camera = World::Get().GetComponent<Camera_data>(entity);
+            
+            // Update camera position if following a target
+            if (camera.followTarget && camera.targetEntity != INVALID_ENTITY_ID)
+            {
+                // Check if target entity is valid
+                if (World::Get().IsEntityValid(camera.targetEntity))
+                {
+                    // Get target entity position
+                    Position_data& targetPos = World::Get().GetComponent<Position_data>(camera.targetEntity);
+                    
+                    // Calculate desired camera position (target + offset)
+                    Vector desiredPos = targetPos.position + camera.offset;
+                    
+                    // Smooth follow using blend
+                    camera.position.x = camera.position.x + (desiredPos.x - camera.position.x) * camera.followSpeed;
+                    camera.position.y = camera.position.y + (desiredPos.y - camera.position.y) * camera.followSpeed;
+                    camera.position.z = camera.position.z + (desiredPos.z - camera.position.z) * camera.followSpeed;
+                    
+                    // Apply camera bounds if set
+                    if (camera.bounds.w != INT_MAX && camera.bounds.h != INT_MAX)
+                    {
+                        if (camera.position.x < camera.bounds.x)
+                            camera.position.x = static_cast<float>(camera.bounds.x);
+                        if (camera.position.y < camera.bounds.y)
+                            camera.position.y = static_cast<float>(camera.bounds.y);
+                        if (camera.position.x > camera.bounds.x + camera.bounds.w)
+                            camera.position.x = static_cast<float>(camera.bounds.x + camera.bounds.w);
+                        if (camera.position.y > camera.bounds.y + camera.bounds.h)
+                            camera.position.y = static_cast<float>(camera.bounds.y + camera.bounds.h);
+                    }
+                }
+                else
+                {
+                    // Target entity no longer valid, disable following
+                    camera.followTarget = false;
+                    camera.targetEntity = INVALID_ENTITY_ID;
+                }
+            }
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "CameraSystem Error for Entity " << entity << ": " << e.what() << "\n";
         }
     }
 }

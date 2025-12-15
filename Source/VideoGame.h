@@ -52,6 +52,7 @@ public:
 
      // Player management
      void SetViewportLayout(short playerID);
+     void UpdateAllPlayerViewports(); // Update viewport rectangles for all players
      EntityID AddPlayerEntity(string _playerPrefabName = "PlayerEntity");
 	 bool RemovePlayerEntity(const EntityID eid);
 

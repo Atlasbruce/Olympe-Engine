@@ -78,7 +78,27 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
         SYSTEM_LOG << "VideoGame::AddPlayerEntity: No available controllers to bind to player " << binding.playerIndex << "\n";
 	}
 
-    //Send message to ViewportManager to add a new player viewport
+    // Add Camera_data component - camera follows this player entity
+    Camera_data camera;
+    camera.targetEntity = eID; // Camera follows itself (the player)
+    camera.followTarget = true;
+    camera.offset = Vector(-GameEngine::screenWidth / 2.f, -GameEngine::screenHeight / 2.f, 0.0f);
+    camera.mode = Camera_data::Mode::Viewport_Follow;
+    world.AddComponent<Camera_data>(eID, camera);
+
+    // Add Viewport_data component
+    Viewport_data viewport;
+    viewport.viewportIndex = binding.playerIndex - 1; // 0-based index
+    viewport.enabled = true;
+    world.AddComponent<Viewport_data>(eID, viewport);
+
+    // Update viewport layout and compute viewport rectangles
+    SetViewportLayout(binding.playerIndex);
+    
+    // Update viewport rectangles for all players
+    UpdateAllPlayerViewports();
+
+    //Send message to ViewportManager to add a new player viewport (for backward compatibility)
     Message msg;
     msg.targetUid = eID;
     msg.param1 = binding.playerIndex;
@@ -86,8 +106,6 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
 
     msg.msg_type = EventType::Olympe_EventType_Camera_Target_Follow;
     EventManager::Get().AddMessage(msg);
-
-    SetViewportLayout(binding.playerIndex);
 
     return eID;
 }
@@ -126,6 +144,85 @@ void VideoGame::SetViewportLayout(short playerID)
 
     default:
         break;
+    }
+}
+//-------------------------------------------------------------
+void VideoGame::UpdateAllPlayerViewports()
+{
+    // Calculate viewport rectangles based on number of players
+    int numPlayers = static_cast<int>(m_playersEntity.size());
+    if (numPlayers == 0) return;
+
+    int screenWidth = GameEngine::screenWidth;
+    int screenHeight = GameEngine::screenHeight;
+
+    // Calculate viewport layout based on player count
+    std::vector<SDL_FRect> viewportRects;
+    
+    switch (numPlayers)
+    {
+    case 1:
+        viewportRects.push_back({0.f, 0.f, static_cast<float>(screenWidth), static_cast<float>(screenHeight)});
+        break;
+    case 2:
+        {
+            float w = screenWidth / 2.f;
+            viewportRects.push_back({0.f, 0.f, w, static_cast<float>(screenHeight)});
+            viewportRects.push_back({w, 0.f, static_cast<float>(screenWidth) - w, static_cast<float>(screenHeight)});
+        }
+        break;
+    case 3:
+        {
+            float w = screenWidth / 3.f;
+            viewportRects.push_back({0.f, 0.f, w, static_cast<float>(screenHeight)});
+            viewportRects.push_back({w, 0.f, w, static_cast<float>(screenHeight)});
+            viewportRects.push_back({2.f * w, 0.f, static_cast<float>(screenWidth) - 2.f * w, static_cast<float>(screenHeight)});
+        }
+        break;
+    case 4:
+        {
+            float w = screenWidth / 2.f;
+            float h = screenHeight / 2.f;
+            viewportRects.push_back({0.f, 0.f, w, h});
+            viewportRects.push_back({w, 0.f, static_cast<float>(screenWidth) - w, h});
+            viewportRects.push_back({0.f, h, w, static_cast<float>(screenHeight) - h});
+            viewportRects.push_back({w, h, static_cast<float>(screenWidth) - w, static_cast<float>(screenHeight) - h});
+        }
+        break;
+    default:
+        // 5-8 players: 3x2 or 4x2 grid
+        {
+            int cols = (numPlayers <= 6) ? 3 : 4;
+            int rows = 2;
+            float w = screenWidth / static_cast<float>(cols);
+            float h = screenHeight / static_cast<float>(rows);
+            for (int i = 0; i < numPlayers; ++i)
+            {
+                int col = i % cols;
+                int row = i / cols;
+                viewportRects.push_back({col * w, row * h, w, h});
+            }
+        }
+        break;
+    }
+
+    // Update Viewport_data for each player entity
+    for (size_t i = 0; i < m_playersEntity.size() && i < viewportRects.size(); ++i)
+    {
+        EntityID playerEntity = m_playersEntity[i];
+        if (world.HasComponent<Viewport_data>(playerEntity))
+        {
+            Viewport_data& viewport = world.GetComponent<Viewport_data>(playerEntity);
+            viewport.viewRect = viewportRects[i];
+            viewport.viewportIndex = static_cast<int>(i);
+        }
+
+        // Update camera offset based on viewport size
+        if (world.HasComponent<Camera_data>(playerEntity))
+        {
+            Camera_data& camera = world.GetComponent<Camera_data>(playerEntity);
+            camera.offset = Vector(-viewportRects[i].w / 2.f, -viewportRects[i].h / 2.f, 0.0f);
+        }
     }
 }
 //-------------------------------------------------------------

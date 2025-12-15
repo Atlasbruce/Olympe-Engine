@@ -45,6 +45,7 @@ void World::Initialize_ECS_Systems()
 	- PhysicsSystem
 	- CollisionSystem
 	- TriggerSystem
+	- CameraSystem (NEW: updates camera positions and follows targets)
 	- AudioSystem
 
     - RenderingSystem
@@ -58,6 +59,7 @@ void World::Initialize_ECS_Systems()
     Add_ECS_System(std::make_unique<CollisionSystem>());
 	Add_ECS_System(std::make_unique<TriggerSystem>());
 	Add_ECS_System(std::make_unique<MovementSystem>());
+	Add_ECS_System(std::make_unique<CameraSystem>());
     
     
     // Olympe Effect System (background plasma bloom)

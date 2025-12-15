@@ -85,11 +85,17 @@ public:
 	//update the camera rectangles according to the viewports
 	void UpdateCameraRectsInstances();
 
-    // Définit quel joueur est "actif" pour le rendu actuel
+    // Dï¿½finit quel joueur est "actif" pour le rendu actuel
     void SetActivePlayerID(short playerID) { m_activePlayerID = playerID; }
 	short GetActivePlayerID() const { return m_activePlayerID; }
 
-    // Récupère l'offset de la caméra active (à utiliser dans VisualComponent::Render)
+    // Set active camera from ECS Camera_data (for ECS-based rendering)
+    void SetActiveCameraFromECS(const Camera_data& camera, short playerID);
+    
+    // Get camera position for a specific camera (from ECS or legacy)
+    Vector GetCameraPosition(short playerID) const;
+
+    // Rï¿½cupï¿½re l'offset de la camï¿½ra active (ï¿½ utiliser dans VisualComponent::Render)
     Vector GetActiveCameraOffset() const
     {
         if (m_cameraInstances.find(m_activePlayerID) != m_cameraInstances.end()) 
@@ -98,7 +104,7 @@ public:
             _v -= m_cameraInstances.at(m_activePlayerID).position;
             return _v;
         }
-        // Fallback sur la caméra 0 ou identité si introuvable
+        // Fallback sur la camï¿½ra 0 ou identitï¿½ si introuvable
         return m_cameraInstances.count(0) ? m_cameraInstances.at(0).offset : Vector(0, 0, 0);
     }
 

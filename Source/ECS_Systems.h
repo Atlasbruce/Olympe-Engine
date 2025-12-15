@@ -108,6 +108,16 @@ class InputMappingSystem : public ECS_System
 };
 
 //-------------------------------------------------------------
+// Camera System: processes entities with Camera_data
+// Updates camera positions, follows targets, applies bounds
+class CameraSystem : public ECS_System
+{
+public:
+    CameraSystem();
+    virtual void Process() override;
+};
+
+//-------------------------------------------------------------
 // Olympe Effect System: Plasma bloom background with glowing orbs
 // No entity required - autonomous visual effect system
 class OlympeEffectSystem : public ECS_System

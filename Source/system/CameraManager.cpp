@@ -254,3 +254,38 @@ void CameraManager::UpdateCameraRectsInstances()
         index++;
 	}
 }
+
+void CameraManager::SetActiveCameraFromECS(const Camera_data& camera, short playerID)
+{
+    // Update or create camera instance from ECS data
+    m_activePlayerID = playerID;
+    
+    auto it = m_cameraInstances.find(playerID);
+    if (it == m_cameraInstances.end())
+    {
+        // Create new instance if not exists
+        CreateCameraForPlayer(playerID);
+        it = m_cameraInstances.find(playerID);
+    }
+    
+    if (it != m_cameraInstances.end())
+    {
+        CameraInstance& instance = it->second;
+        instance.position = camera.position;
+        instance.offset = camera.offset;
+        instance.zoom = camera.zoomLevel;
+        instance.bounds = camera.bounds;
+        instance.followTargetEntity = camera.followTarget;
+        instance.targetEntity = camera.targetEntity;
+    }
+}
+
+Vector CameraManager::GetCameraPosition(short playerID) const
+{
+    auto it = m_cameraInstances.find(playerID);
+    if (it != m_cameraInstances.end())
+    {
+        return it->second.position;
+    }
+    return Vector(0, 0, 0);
+}
