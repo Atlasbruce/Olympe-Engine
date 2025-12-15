@@ -668,6 +668,7 @@ public:
 - 🔧 [API Reference](INPUT_API_REFERENCE.md) - Documentation complète de l'API
 - 💡 [Examples](INPUT_EXAMPLES.md) - Exemples pratiques et cas d'usage
 - 🏗️ [Architecture](INPUT_ARCHITECTURE.md) - Architecture détaillée et décisions de design
+- ⚡ [Edge Detection Guide](INPUT_EDGE_DETECTION.md) - Détection pressed/released/held
 - 🔄 [Migration Guide](INPUT_MIGRATION.md) - Migrer du code existant
 - 🐛 [Troubleshooting](INPUT_TROUBLESHOOTING.md) - Résolution de problèmes courants
 
