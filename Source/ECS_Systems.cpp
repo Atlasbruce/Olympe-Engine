@@ -246,20 +246,26 @@ void InputMappingSystem::Process()
 
                 if (mapping)
                 {
+                    // Safely get keyboard bindings with fallback to defaults
+                    auto getKey = [&mapping](const std::string& key, SDL_Scancode defaultKey) {
+                        auto it = mapping->keyboardBindings.find(key);
+                        return (it != mapping->keyboardBindings.end()) ? it->second : defaultKey;
+                    };
+                    
                     // Use custom bindings
-                    if (km.IsKeyHeld(mapping->keyboardBindings["up"]) || km.IsKeyHeld(mapping->keyboardBindings["up_alt"]))
+                    if (km.IsKeyHeld(getKey("up", SDL_SCANCODE_UP)) || km.IsKeyHeld(getKey("up_alt", SDL_SCANCODE_W)))
                         pctrl.Joydirection.y = -1.0f;
-                    if (km.IsKeyHeld(mapping->keyboardBindings["down"]) || km.IsKeyHeld(mapping->keyboardBindings["down_alt"]))
+                    if (km.IsKeyHeld(getKey("down", SDL_SCANCODE_DOWN)) || km.IsKeyHeld(getKey("down_alt", SDL_SCANCODE_S)))
                         pctrl.Joydirection.y = 1.0f;
-                    if (km.IsKeyHeld(mapping->keyboardBindings["left"]) || km.IsKeyHeld(mapping->keyboardBindings["left_alt"]))
+                    if (km.IsKeyHeld(getKey("left", SDL_SCANCODE_LEFT)) || km.IsKeyHeld(getKey("left_alt", SDL_SCANCODE_A)))
                         pctrl.Joydirection.x = -1.0f;
-                    if (km.IsKeyHeld(mapping->keyboardBindings["right"]) || km.IsKeyHeld(mapping->keyboardBindings["right_alt"]))
+                    if (km.IsKeyHeld(getKey("right", SDL_SCANCODE_RIGHT)) || km.IsKeyHeld(getKey("right_alt", SDL_SCANCODE_D)))
                         pctrl.Joydirection.x = 1.0f;
 
                     // Action buttons
-                    pctrl.isJumping = km.IsKeyHeld(mapping->keyboardBindings["jump"]);
-                    pctrl.isShooting = km.IsKeyHeld(mapping->keyboardBindings["shoot"]);
-                    pctrl.isInteracting = km.IsKeyPressed(mapping->keyboardBindings["interact"]);
+                    pctrl.isJumping = km.IsKeyHeld(getKey("jump", SDL_SCANCODE_SPACE));
+                    pctrl.isShooting = km.IsKeyHeld(getKey("shoot", SDL_SCANCODE_LCTRL));
+                    pctrl.isInteracting = km.IsKeyPressed(getKey("interact", SDL_SCANCODE_E));
                 }
                 else
                 {
@@ -302,10 +308,14 @@ void InputMappingSystem::Process()
                 // Read action buttons from Controller_data (uses edge detection)
                 if (mapping)
                 {
-                    // Use mapping to get button indices
-                    int jumpBtn = mapping->gamepadBindings["jump"];
-                    int shootBtn = mapping->gamepadBindings["shoot"];
-                    int interactBtn = mapping->gamepadBindings["interact"];
+                    // Safely get button indices with fallback to defaults if not found
+                    auto jumpIt = mapping->gamepadBindings.find("jump");
+                    auto shootIt = mapping->gamepadBindings.find("shoot");
+                    auto interactIt = mapping->gamepadBindings.find("interact");
+                    
+                    int jumpBtn = (jumpIt != mapping->gamepadBindings.end()) ? jumpIt->second : 0;
+                    int shootBtn = (shootIt != mapping->gamepadBindings.end()) ? shootIt->second : 1;
+                    int interactBtn = (interactIt != mapping->gamepadBindings.end()) ? interactIt->second : 2;
                     
                     pctrl.isJumping = ctrl.IsButtonHeld(jumpBtn);
                     pctrl.isShooting = ctrl.IsButtonHeld(shootBtn);
