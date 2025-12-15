@@ -82,6 +82,7 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
     Camera_data camera;
     camera.targetEntity = eID; // Camera tracks this player entity's position
     camera.followTarget = true;
+    // Initial offset will be updated by UpdateAllPlayerViewports() based on viewport size
     camera.offset = Vector(-GameEngine::screenWidth / 2.f, -GameEngine::screenHeight / 2.f, 0.0f);
     camera.mode = Camera_data::Mode::Viewport_Follow;
     world.AddComponent<Camera_data>(eID, camera);

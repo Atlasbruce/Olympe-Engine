@@ -290,7 +290,14 @@ SDL_AppResult SDL_AppIterate(void* appstate)
             else
             {
                 // Fallback: sync ECS camera data to CameraManager for backward compatibility
-                CameraManager::Get().SetActiveCameraFromECS(camera, viewport.viewportIndex);
+                // Get player ID from PlayerBinding_data if available, otherwise use viewport index
+                short playerID = viewport.viewportIndex;
+                if (World::Get().HasComponent<PlayerBinding_data>(cameraEntity))
+                {
+                    PlayerBinding_data& binding = World::Get().GetComponent<PlayerBinding_data>(cameraEntity);
+                    playerID = binding.playerIndex;
+                }
+                CameraManager::Get().SetActiveCameraFromECS(camera, playerID);
             }
             
             // Render the world for this viewport

@@ -358,7 +358,9 @@ void CameraSystem::Process()
                     // Calculate desired camera position (target + offset)
                     Vector desiredPos = targetPos.position + camera.offset;
                     
-                    // Smooth follow using vBlend (requires non-const references)
+                    // Smooth follow using vBlend
+                    // Note: vBlend requires non-const references but doesn't modify them,
+                    // it returns a new blended Vector based on frame time (fDt)
                     Vector currentPos = camera.position;
                     camera.position = vBlend(currentPos, desiredPos, camera.followSpeed);
                     
