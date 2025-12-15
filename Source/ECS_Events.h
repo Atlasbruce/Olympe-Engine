@@ -263,7 +263,7 @@ struct Event
     static Event CreateCollision(const CollisionEvent& evt)
     {
         Event e;
-        e.type = ECSEventType::CollisionStarted;
+        e.type = evt.started ? ECSEventType::CollisionStarted : ECSEventType::CollisionEnded;
         e.data.collision = evt;
         return e;
     }
@@ -271,7 +271,7 @@ struct Event
     static Event CreateTrigger(const TriggerEvent& evt)
     {
         Event e;
-        e.type = ECSEventType::TriggerEntered;
+        e.type = evt.entered ? ECSEventType::TriggerEntered : ECSEventType::TriggerExited;
         e.data.trigger = evt;
         return e;
     }

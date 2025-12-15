@@ -112,6 +112,12 @@ void TriggerSystem::Process()
     EventQueueSystem* eventQueue = World::Get().GetEventQueueSystem();
     if (!eventQueue) return;
     
+    // NOTE: This is a simplified trigger system for demonstration purposes.
+    // Production systems should:
+    // 1. Track multiple entities per trigger (not just a single 'triggered' boolean)
+    // 2. Use spatial partitioning for better performance (quadtree/grid)
+    // 3. Cache entities with Position_data instead of iterating all entities
+    
     // Track all entities with position for trigger detection
     std::set<EntityID> allEntities;
     for (const auto& pair : World::Get().m_entitySignatures)

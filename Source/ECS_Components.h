@@ -35,7 +35,8 @@ struct BoundingBox_data
 struct TriggerZone_data
 {
 	float radius = 15.f;  // Detection radius
-	bool triggered = false; // Is something detected?
+	bool triggered = false; // Is something detected? (Note: simplified, only tracks one entity)
+	// TODO: For production, track set of entities currently in trigger: std::set<EntityID> entitiesInside;
 };
 // --- Component Movement Data ---
 struct Movement_data
