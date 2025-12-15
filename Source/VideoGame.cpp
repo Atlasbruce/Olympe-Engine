@@ -78,9 +78,9 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
         SYSTEM_LOG << "VideoGame::AddPlayerEntity: No available controllers to bind to player " << binding.playerIndex << "\n";
 	}
 
-    // Add Camera_data component - camera follows this player entity
+    // Add Camera_data component - each player has a camera that follows its position
     Camera_data camera;
-    camera.targetEntity = eID; // Camera follows itself (the player)
+    camera.targetEntity = eID; // Camera tracks this player entity's position
     camera.followTarget = true;
     camera.offset = Vector(-GameEngine::screenWidth / 2.f, -GameEngine::screenHeight / 2.f, 0.0f);
     camera.mode = Camera_data::Mode::Viewport_Follow;

@@ -348,8 +348,9 @@ void CameraSystem::Process()
             // Update camera position if following a target
             if (camera.followTarget && camera.targetEntity != INVALID_ENTITY_ID)
             {
-                // Check if target entity is valid
-                if (World::Get().IsEntityValid(camera.targetEntity))
+                // Check if target entity is valid and has Position_data
+                if (World::Get().IsEntityValid(camera.targetEntity) &&
+                    World::Get().HasComponent<Position_data>(camera.targetEntity))
                 {
                     // Get target entity position
                     Position_data& targetPos = World::Get().GetComponent<Position_data>(camera.targetEntity);
@@ -357,8 +358,9 @@ void CameraSystem::Process()
                     // Calculate desired camera position (target + offset)
                     Vector desiredPos = targetPos.position + camera.offset;
                     
-                    // Smooth follow using vBlend (consistent with CameraManager)
-                    camera.position = vBlend(camera.position, desiredPos, camera.followSpeed);
+                    // Smooth follow using vBlend (requires non-const references)
+                    Vector currentPos = camera.position;
+                    camera.position = vBlend(currentPos, desiredPos, camera.followSpeed);
                     
                     // Apply camera bounds if set
                     if (camera.bounds.w != INT_MAX && camera.bounds.h != INT_MAX)
