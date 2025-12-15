@@ -8,6 +8,7 @@
 #include <mutex>
 #include <queue>
 #include <algorithm>
+#include <type_traits>
 #include "system_utils.h"
 
 // Forward declaration of helper implemented in EventManager_ECS.cpp
@@ -112,6 +113,21 @@ public:
     {
         if (!obj) return;
         Register(static_cast<void*>(obj), type, [obj](const Message& msg) { obj->OnEvent(msg); });
+    }
+
+    // Template générique pour n'importe quelle classe avec OnEvent
+    // Utilise SFINAE pour éviter les conflits avec Object*
+    template<typename T>
+    typename std::enable_if<!std::is_base_of<Object, T>::value, void>::type
+    Register(T* owner, EventType type)
+    {
+        // Vérification à la compilation que T possède une méthode OnEvent
+        static_assert(std::is_member_function_pointer<decltype(&T::OnEvent)>::value,
+                      "Type T must have a member function OnEvent(const Message&)");
+        
+        if (!owner) return;
+        Register(static_cast<void*>(owner), type, 
+                 [owner](const Message& msg) { owner->OnEvent(msg); });
     }
 
     //// Convenience overload: register an Object* using its virtual OnEvent method
