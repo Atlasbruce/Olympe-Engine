@@ -8,7 +8,7 @@ Purpose:
   releasing game resources (textures, sprites, animations, sounds,
   level data, navigation/collision maps, game object data, etc.).
 - It provides simple file-based JSON save/load helpers used by
-  VideoGame/GameObject and related systems to persist runtime data.
+  VideoGame/GameEntity and related systems to persist runtime data.
 - Resources are categorized by type and category so calling code can
   list and query resources by semantic groups.
 
@@ -51,13 +51,13 @@ enum class ResourceType : uint32_t
     Sector,
     NavMap,
     CollisionMap,
-    GameObjectData
+    GameEntityData
 };
 
 enum class ResourceCategory : uint32_t
 {
     System = 0,   // engine-level data
-    GameObject,   // data related to interactive objects
+    GameEntity,   // data related to interactive objects
     Level         // level / map data
 };
 
@@ -77,13 +77,11 @@ struct Resource
     ~Resource() = default;
 };
 
-class DataManager : public Object
+class DataManager 
 {
 public:
     DataManager();
     virtual ~DataManager();
-
-    virtual ObjectType GetObjectType() const override { return ObjectType::Singleton; }
 
     // Singleton access
     static DataManager& GetInstance();
@@ -94,9 +92,9 @@ public:
 
     // Texture loading / retrieval / release
     bool PreloadTexture(const std::string& id, const std::string& path, ResourceCategory category = ResourceCategory::System);
-	bool PreloadSprite(const std::string& id, const std::string& path, ResourceCategory category = ResourceCategory::GameObject);
+	bool PreloadSprite(const std::string& id, const std::string& path, ResourceCategory category = ResourceCategory::GameEntity);
     Sprite* GetTexture(const std::string& id) const;
-    Sprite* GetSprite(const std::string& id, const std::string& path, ResourceCategory category = ResourceCategory::GameObject);
+    Sprite* GetSprite(const std::string& id, const std::string& path, ResourceCategory category = ResourceCategory::GameEntity);
     VisualSprite_data* GetSprite_data(const std::string& id, const std::string& path);
     bool ReleaseResource(const std::string& id);
 
@@ -130,6 +128,7 @@ public:
     bool PreloadSystemResources(const std::string& configFilePath);
 
 private:
+    string name;
     mutable std::mutex m_mutex_;
     std::unordered_map<std::string, std::shared_ptr<Resource>> m_resources_;
 };

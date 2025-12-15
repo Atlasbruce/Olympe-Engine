@@ -11,13 +11,11 @@
 // Input context types for context stack
 enum class InputContext { Gameplay, UI, Editor };
 
-class InputsManager : public Object
+class InputsManager 
 {
 public:
     InputsManager();
     virtual ~InputsManager();
-
-    virtual ObjectType GetObjectType() const { return ObjectType::Singleton; }
 
     static InputsManager& GetInstance()
     {
@@ -37,7 +35,7 @@ public:
     }
 
     virtual void HandleEvent(const SDL_Event* ev);
-    virtual void OnEvent(const Message& msg) override;
+    virtual void OnEvent(const Message& msg) ;
 
 	bool IsKeyboardAssigned() const { return m_keyboardAssigned; }
 
@@ -238,6 +236,7 @@ public:
     const std::vector<EntityID>& GetInputEntities() const;
 
 private:
+    string name;
     std::unordered_map<short, SDL_JoystickID> m_playerBindings;
 	std::unordered_map<short, SDL_JoystickID> m_playerDisconnected;
 	std::unordered_map<short, Player*> m_playerObjectIndex;

@@ -19,8 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\AI_Npc.cpp" />
-    <ClCompile Include="Source\AI_Player.cpp" />
     <ClCompile Include="source\ECS_Register.h" />
     <ClCompile Include="Source\ECS_Systems.cpp" />
     <ClCompile Include="Source\engine_utils.cpp" />
@@ -31,14 +29,9 @@
     <ClCompile Include="Source\drawing.cpp" />
     <ClCompile Include="source\drawing.h" />
     <ClCompile Include="Source\GameEngine.cpp" />
-    <ClCompile Include="source\GameObject.cpp" />
-    <ClCompile Include="source\Npc.cpp" />
-    <ClCompile Include="Source\ObjectComponent.cpp" />
     <ClCompile Include="Source\GameState.cpp" />
     <ClCompile Include="Source\OlympeEngine.cpp" />
     <ClCompile Include="Source\PanelManager.cpp" />
-    <ClCompile Include="source\Player.cpp" />
-    <ClCompile Include="Source\Sprite.cpp" />
     <ClCompile Include="Source\system\CameraManager.cpp" />
     <ClCompile Include="Source\system\EventManager_ECS.cpp" />
     <ClCompile Include="Source\system\GameMenu.cpp" />
@@ -54,36 +47,27 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="source\AI_Npc.h" />
-    <ClInclude Include="Source\AI_Player.h" />
     <ClInclude Include="Source\CollisionMap.h" />
     <ClInclude Include="source\ECS_Components.h" />
     <ClInclude Include="source\ECS_Entity.h" />
     <ClInclude Include="source\ECS_Systems.h" />
     <ClInclude Include="Source\engine_utils.h" />
     <ClInclude Include="Source\DataManager.h" />
-    <ClInclude Include="Source\Factory.h" />
     <ClInclude Include="Source\GameEngine.h" />
-    <ClInclude Include="Source\GameObject.h" />
-    <ClInclude Include="Source\ObjectComponent.h" />
     <ClInclude Include="Source\GameRules.h" />
     <ClInclude Include="Source\GameState.h" />
     <ClInclude Include="Source\GraphicMap.h" />
     <ClInclude Include="Source\InputsManager.h" />
     <ClInclude Include="Source\Level.h" />
-    <ClInclude Include="Source\Npc.h" />
-    <ClInclude Include="Source\Object.h" />
     <ClInclude Include="Source\Objective.h" />
     <ClInclude Include="Source\OptionsManager.h" />
     <ClInclude Include="Source\PanelManager.h" />
-    <ClInclude Include="Source\Player.h" />
     <ClInclude Include="source\prefabfactory.h" />
     <ClInclude Include="Source\Quest.h" />
     <ClInclude Include="Source\QuestManager.h" />
     <ClInclude Include="source\resource.h" />
     <ClInclude Include="Source\Sector.h" />
     <ClInclude Include="Source\Serialization.h" />
-    <ClInclude Include="Source\Sprite.h" />
     <ClInclude Include="Source\system\CameraManager.h" />
     <ClInclude Include="Source\system\EventManager.h" />
     <ClInclude Include="Source\system\GameMenu.h" />

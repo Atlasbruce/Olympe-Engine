@@ -4,8 +4,6 @@ Purpose: Implementation of the VideoGame class, which represents a video game wi
 
 #include "VideoGame.h"
 #include "DataManager.h"
-#include "GameObject.h"
-#include "Player.h"
 #include <sstream>
 #include <string>
 #include "InputsManager.h"
@@ -22,15 +20,6 @@ VideoGame::VideoGame()
 
 	// Register to EventManager for game events
 	using EM = EventManager;
-	/*EM::Get().Register(this, EventType::Olympe_EventType_Game_Pause, [this](const Message& m) { this->OnEvent(m); });
-	EM::Get().Register(this, EventType::Olympe_EventType_Game_Resume, [this](const Message& m){ this->OnEvent(m); });
-	EM::Get().Register(this, EventType::Olympe_EventType_Game_Quit, [this](const Message& m){ this->OnEvent(m); });
-	EM::Get().Register(this, EventType::Olympe_EventType_Game_Restart, [this](const Message& m){ this->OnEvent(m); });
-	EM::Get().Register(this, EventType::Olympe_EventType_Game_AddPlayer, [this](const Message& m){ this->OnEvent(m); });
-	EM::Get().Register(this, EventType::Olympe_EventType_Game_RemovePlayer, [this](const Message& m){ this->OnEvent(m); });
-	EM::Get().Register(this, EventType::Olympe_EventType_Game_TakeScreenshot, [this](const Message& m){ this->OnEvent(m); });
-	EM::Get().Register(this, EventType::Olympe_EventType_Game_SaveState, [this](const Message& m){ this->OnEvent(m); });
-	EM::Get().Register(this, EventType::Olympe_EventType_Game_LoadState, [this](const Message& m){ this->OnEvent(m); });/**/
 	EM::Get().Register(this, EventType::Olympe_EventType_Game_AddPlayer);
 	EM::Get().Register(this, EventType::Olympe_EventType_Game_RemovePlayer);
 	EM::Get().Register(this, EventType::Olympe_EventType_Keyboard_KeyDown);
@@ -42,11 +31,6 @@ VideoGame::VideoGame()
 	// Ensure default state is running
 	GameStateManager::SetState(GameState::GameState_Running);
 	
-	// DEPRECATED: OlympeSystem migrated to OlympeEffectSystem ECS
-	// testGao = (GameObject*)ObjectFactory::Get().CreateObject("GameObject");
-	// testGao->name = "OlympeSystem";
-	// ObjectFactory::Get().AddComponent("OlympeSystem", testGao);
-
 	// Register all prefab items for the game
     RegisterPrefabItems();
 
@@ -60,74 +44,8 @@ VideoGame::~VideoGame()
 	EventManager::Get().UnregisterAll(this);
 }
 //-------------------------------------------------------------
-// Player management: supports up to 4 players
+// Player management: supports up to 8 players
 // Returns assigned player ID  -1 on failure
-short VideoGame::AddPlayerObject(string _playerclassname)
-{
-	// check if there is some input devices available
-    if (IM::Get().GetAvailableJoystickCount() <= 0)
-    {
-        if (! IM::Get().IsKeyboardAssigned())
-        {
-            SYSTEM_LOG << "VideoGame::AddPlayer: No joysticks available, but keyboard is free to use\n";
-        }
-		else
-            {
-                SYSTEM_LOG << "VideoGame::AddPlayer: No input devices available to add a new player\n";
-                return -1;
-            }
-	}
-
-
-	// check if class name is valid and registered in Factory
-    if (_playerclassname.empty() || ! ObjectFactory::Get().IsRegistered(_playerclassname))
-    {
-        SYSTEM_LOG << "VideoGame::AddPlayer: Player class name '" << _playerclassname << "' not found in Factory, using default 'Player'\n";
-        _playerclassname = "Player";
-    }
-
-    GameObject* player = (GameObject*)ObjectFactory::Get().CreateObject(_playerclassname);
-	player->name = "Player_" + std::to_string(m_playerIdCounter);
-	m_playersObject.push_back(player);
-
-	//Send message to ViewportManager to add a new player viewport
-	Message msg;
-	msg.sender = this;
-	msg.targetUid = player->GetUID();
-	msg.objectParamPtr = player;
-	msg.param1 = ((Player*)player)->m_PlayerID; // new player ID
-	msg.struct_type = EventStructType::EventStructType_Olympe;
-
-	msg.msg_type = EventType::Olympe_EventType_Camera_Target_Follow;
-	EventManager::Get().AddMessage(msg);
-
-	// Vieport mode enabled? 
-
-    SetViewportLayout(((Player*)player)->m_PlayerID);
-
-
-	return m_playerIdCounter; // return the new player ID
-
-}
-//-------------------------------------------------------------
-bool VideoGame::RemovePlayerObject(const short PlayerID)
-{
-	return false;
-	/*auto it = std::find(m_players.begin(), m_players.end(), PlayerID);
-    if (it == m_players.end()) return false;
-    // free controller mapping
-    auto pit = m_playerToJoystick.find(PlayerID);
-    if (pit != m_playerToJoystick.end())
-    {
-        if (pit->second == SDL_JoystickID(-1)) m_keyboardAssigned = false;
-        m_playerToJoystick.erase(pit);
-    }
-    m_players.erase(it);
-    Viewport::Get().RemovePlayer(PlayerID);
-    Camera::Get().RemoveCameraForPlayer(PlayerID);
-    SYSTEM_LOG << "VideoGame: Removed player " << PlayerID << "\n";
-    return true;/**/
-}
 //-------------------------------------------------------------
 EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
 {
@@ -232,22 +150,6 @@ void VideoGame::OnEvent(const Message& msg)
         // Placeholder: restart current level (not implemented fully)
         SYSTEM_LOG << "VideoGame: Restart requested via event (not implemented)\n";
         break;
-    case EventType::Olympe_EventType_Game_AddPlayer:
-    {
-        bool ok = (AddPlayerObject() != -2);
-        SYSTEM_LOG << "VideoGame: AddPlayer event -> " << (ok ? "success" : "failed") << "\n";
-        break;
-    }
-    case EventType::Olympe_EventType_Game_RemovePlayer:
-    {
-        if (msg.controlId >= 0)
-        {
-            short pid = static_cast<short>(msg.controlId);
-            bool ok = RemovePlayerObject(pid);
-            SYSTEM_LOG << "VideoGame: RemovePlayer event for " << pid << " -> " << (ok ? "removed" : "not found") << "\n";
-        }
-        break;
-    }
     case EventType::Olympe_EventType_Game_TakeScreenshot:
         // Not implemented: placeholder
         SYSTEM_LOG << "VideoGame: TakeScreenshot event (not implemented)\n";
@@ -266,6 +168,7 @@ void VideoGame::OnEvent(const Message& msg)
         LoadGame(slot);
         break;
     }
+	// FOR TESTS : Add/Remove player with Numpad +/- keys -----------------------------
     case EventType::Olympe_EventType_Keyboard_KeyDown:
     {
         // msg.controlId contains SDL_Scancode
@@ -276,7 +179,7 @@ void VideoGame::OnEvent(const Message& msg)
             if (!m_kpPlusPressed && msg.state == 1)
             {
                 m_kpPlusPressed = true;
-                short added = AddPlayerEntity(); //AddPlayerObject();
+                EntityID added = AddPlayerEntity(); //AddPlayerObject();
                 SYSTEM_LOG << "VideoGame: Numpad + pressed -> add viewport (AddPlayer returned " << added << ")\n";
             }
         }

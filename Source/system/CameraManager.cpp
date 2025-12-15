@@ -4,7 +4,6 @@
 #include "../World.h"
 #include "../vector.h"
 #include "system_utils.h"
-#include "../GameObject.h"
 #include "../GameEngine.h"
 
 using EM = EventManager;
@@ -111,13 +110,6 @@ void CameraManager::Process()
             Vector v2 = pos.position + cam.offset;
             cam.position = vBlend(cam.position, v2, 0.75f);
         }
-        else
-            if (cam.followTargetObject && cam.targetObject)
-            {
-                // Simple follow logic (could be smoothed)
-			    Vector v2 = cam.targetObject->GetPosition() + cam.offset;
-                cam.position = vBlend(cam.position, v2 , 0.75f);
-		    }
     }
 }
 
@@ -195,9 +187,14 @@ void CameraManager::OnEvent(const Message& msg)
             cam.zoom = msg.param1;
             break;
         }
+        case EventType::Olympe_EventType_Camera_RotateTo:
+        {
+
+            break;
+        }
         case EventType::Olympe_EventType_Camera_Reset:
         {
-			cam.position.x = 0; cam.position.y = 0; cam.zoom = 1.0f; cam.followTargetObject = false; cam.targetObject = nullptr; cam.followTargetEntity = false; cam.targetEntity = INVALID_ENTITY_ID;
+			cam.position.x = 0; cam.position.y = 0; cam.zoom = 1.0f; cam.followTargetEntity = false; cam.targetEntity = INVALID_ENTITY_ID;
             break;
         }
         case EventType::Olympe_EventType_Camera_Mode_2D:
@@ -211,8 +208,7 @@ void CameraManager::OnEvent(const Message& msg)
             break;
         case EventType::Olympe_EventType_Camera_Target_Follow:
         {
-            // follow target specified by msg.controlId as UID or payload pointer to Object*
-            cam.followTargetObject = false;
+            // follow target specified by msg.controlId as UID
 			cam.followTargetEntity = false;
 
 			//Camera follows an Entity specified by its EntityID
@@ -229,30 +225,12 @@ void CameraManager::OnEvent(const Message& msg)
                         SYSTEM_LOG << "CameraManager::OnEvent: Cannot follow entity with invalid EntityID " << msg.targetUid << "\n";
 				    }
             }
-            else
-			    // Camera follows a GameObject specified either by pointer or by UID
-                if (msg.objectParamPtr != nullptr)
-                {
-                    cam.targetObject = (GameObject*)msg.objectParamPtr;
-                    cam.followTargetObject = true;
-                }
-				else
-                    {
-                        // try to get gameobject by UID
-                        cam.targetObject = (GameObject*)World::Get().GetObjectByUID(msg.targetUid);
-						if (cam.targetObject)
-                            cam.followTargetObject = true;
-						else
-							SYSTEM_LOG << "CameraManager::OnEvent: Cannot follow object with invalid UID " << msg.targetUid << "\n";
-                    }
 
             UpdateCameraRectsInstances();
             break;
         }
         case EventType::Olympe_EventType_Camera_Target_Unfollow:
         {
-            cam.followTargetObject = false; 
-            cam.targetObject = nullptr;
 			cam.followTargetEntity = false;
             break;
         }

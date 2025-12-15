@@ -10,19 +10,16 @@ World purpose: Manage the overall game world, including object management, level
 */
 #pragma once
 
-#include "object.h"
-#include "ObjectComponent.h"
 #include "system/EventManager.h"
 #include <vector>
 #include <memory>
 #include <unordered_map>
-#include <array>
-#include <algorithm>
+//#include <array>
+//#include <algorithm>
 #include <type_traits>
 
 #include "Level.h" // add Level management
 #include "GameState.h"
-#include "OptionsManager.h"
 #include "system/CameraManager.h"
 
 // Include ECS related headers
@@ -31,12 +28,11 @@ World purpose: Manage the overall game world, including object management, level
 #include "ECS_Systems.h"
 #include "ECS_Register.h" // Include the implementation of ComponentPool
 
-class World : public Object
+class World 
 {
 public:
     World();
     virtual ~World();
-    virtual ObjectType GetObjectType() const { return ObjectType::Singleton; }
 
     static World& GetInstance()
     {
@@ -63,43 +59,8 @@ public:
         GameState state = GameStateManager::GetState();
         bool paused = (state == GameState::GameState_Paused);
 
+		// ECS Processing Systems
         Process_ECS_Systems();
-
-        /*DEPRECATED OBJECT MANAGEMENT*/
-        {
-            //1) Physics
-            if (!paused)
-            {
-                for (auto* prop : array_component_lists_bytypes[static_cast<size_t>(ComponentType::Physics)])
-                {
-                    if (prop) prop->Process();
-                }
-            }
-
-            //2) AI
-            if (!paused)
-            {
-                for (auto* prop : array_component_lists_bytypes[static_cast<size_t>(ComponentType::AI)])
-                {
-                    if (prop) prop->Process();
-                }
-            }
-
-            //3) Visual
-            for (auto* prop : array_component_lists_bytypes[static_cast<size_t>(ComponentType::Visual)])
-            {
-                if (prop) prop->Process();
-            }
-
-            //4) Audio
-            if (!paused)
-            {
-                for (auto* prop : array_component_lists_bytypes[static_cast<size_t>(ComponentType::Audio)])
-                {
-                    if (prop) prop->Process();
-                }
-            }
-        }
 
 		// Update Camera positions if needed after all objects have been processed
         CameraManager::Get().Process();
@@ -107,82 +68,10 @@ public:
     //---------------------------------------------------------------------------------------------
     void Render()
     {
-        /*DEPRECATED OBJECT MANAGEMENT*/
-        {
-
-            // Render stage (note: actual drawing may require renderer context)
-            for (auto* prop : array_component_lists_bytypes[static_cast<size_t>(ComponentType::Visual)])
-            {
-                if (prop) prop->Render();
-            }
-            if (OptionsManager::Get().IsSet(OptionFlags::ShowDebugInfo))
-            {
-                // Render debug for Visual components
-                for (auto* prop : array_component_lists_bytypes[static_cast<size_t>(ComponentType::Visual)])
-                {
-                    if (prop) prop->RenderDebug();
-                }
-                for (auto* prop : array_component_lists_bytypes[static_cast<size_t>(ComponentType::AI)])
-                {
-                    if (prop) prop->RenderDebug();
-                }
-            }
-        }
-
-		// ECS Rendering Systems
+  		// ECS Rendering Systems
         Render_ECS_Systems();
 	}
-
 	//---------------------------------------------------------------------------------------------
-	// Objects & Entities management
-    /*DEPRECATED OBJECT MANAGEMENT*/void StoreObject(Object* obj)
-    {
-        // Implementation to add object to the game engine
-        m_objectlist.push_back(obj);
-		SYSTEM_LOG << "World: Added object " + obj->name + " to World\n";
-    }
-	//---------------------------------------------------------------------------------------------
-    Object*& GetObjectByUID(uint64_t uid)
-    {
-        static Object* ObjPtr = nullptr;
-        for (auto* obj : m_objectlist)
-        {
-            if (obj && obj->GetUID() == uid)
-            {
-				ObjPtr = obj;
-                return ObjPtr;
-            }
-        }
-        ObjPtr = nullptr;
-		return ObjPtr;
-   	}
-    // provide access to object list for other systems (Factory)
-    /*DEPRECATED OBJECT MANAGEMENT*/std::vector<Object*>& GetObjectList() { return m_objectlist; }
-    /*DEPRECATED OBJECT MANAGEMENT*/const std::vector<Object*>& GetObjectList() const { return m_objectlist; }
-
-    //---------------------------------------------------------------------------------------------
-    // Objects' Components management
-    /*DEPRECATED OBJECT MANAGEMENT*/void StoreComponent(ObjectComponent* objectComponent)
-    {
-        if (!objectComponent)
-        {
-            SYSTEM_LOG << "Error: World::AddComponent called with null component!\n";
-            return;
-        }
-
-        try
-        {
-            //add Component to the right type list in the array
-            array_component_lists_bytypes[static_cast<size_t>(objectComponent->GetComponentType())].push_back(objectComponent);
-            SYSTEM_LOG << "World: Added component " + objectComponent->name + " of type " << static_cast<int>(objectComponent->GetComponentType()) << " to World\n";
-        }
-        catch (const std::exception&)
-        {
-			SYSTEM_LOG << "Error: World::AddComponent failed to add component of type " << static_cast<int>(objectComponent->GetComponentType()) << "\n";
-        }
-    }
-
-    //---------------------------------------------------------------------------------------------
     // Level management
     void AddLevel(std::unique_ptr<Level> level)
     {
@@ -190,7 +79,6 @@ public:
     }
 
     const std::vector<std::unique_ptr<Level>>& GetLevels() const { return m_levels; }
-
     // -------------------------------------------------------------
     // ECS Entity Management
     EntityID CreateEntity();
@@ -296,7 +184,7 @@ private:
     void Notify_ECS_Systems(EntityID entity, ComponentSignature signature);
 
     // Helper functions for SFINAE-based special component registration (C++14 compatible)
-    // Helper function pour le traitement spécial de PlayerBinding_data
+	// Helper function for SFINAE-based special component registration
     template <typename T>
     void HandleSpecialComponentRegistration(EntityID entity, typename std::enable_if<std::is_same<T, PlayerBinding_data>::value>::type* = nullptr)
     {
@@ -307,14 +195,10 @@ private:
     template <typename T>
     void HandleSpecialComponentRegistration(EntityID entity, typename std::enable_if<!std::is_same<T, PlayerBinding_data>::value>::type* = nullptr)
     {
-        // Ne fait rien pour les autres types
+		// Do nothing for other types
     }
 
 private:
-
-    /*DEPRECATED OBJECT MANAGEMENT*/std::vector<Object*> m_objectlist;
-    /*DEPRECATED OBJECT MANAGEMENT*/std::array<std::vector<ObjectComponent*>, static_cast<size_t>(ComponentType::Count)> array_component_lists_bytypes;
-
 
     std::vector<std::unique_ptr<Level>> m_levels;
 };

@@ -142,7 +142,7 @@ void OlympeEffectSystem::Initialize()
     SDL_SetTextureBlendMode(pImpl->bloomTexture, SDL_BLENDMODE_BLEND);
     
     // Load logo texture
-    pImpl->logoTexture = DataManager::Get().GetSprite("Olympe_Logo", "Resources/olympe_logo.png", ResourceCategory::GameObject);
+    pImpl->logoTexture = DataManager::Get().GetSprite("Olympe_Logo", "Resources/olympe_logo.png", ResourceCategory::GameEntity);
     if (!pImpl->logoTexture)
     {
         SYSTEM_LOG << "OlympeEffectSystem: Failed to load logo texture\n";
@@ -291,7 +291,7 @@ void OlympeEffectSystem::Implementation::RenderPlasmaOrbs()
         // debug to disply the circles outline
         
         SDL_SetRenderDrawColor(GameEngine::renderer, 0, 255, 0, 255);
-        Draw_Circle(GameEngine::renderer, cx, cy, orb.radius);
+        Draw_Circle(GameEngine::renderer, cx, cy, (int)orb.radius);
     }
     
     SDL_SetRenderTarget(GameEngine::renderer, nullptr);

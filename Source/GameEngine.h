@@ -9,11 +9,12 @@ Purpose:
 
 */
 #pragma once
-#include "object.h"
 #include <vector>
 #include <memory>
 #include "system/system_utils.h"
 #include <SDL3/SDL.h>
+
+using namespace std;
 
 // Forward declarations to avoid circular includes
 class EventManager;
@@ -23,7 +24,7 @@ class VideoGame;
 class OptionsManager;
 class DataManager;
 
-class GameEngine: public Object
+class GameEngine
 {
 	public:
 		//GameEngine properties and methods
@@ -37,8 +38,6 @@ class GameEngine: public Object
 			SYSTEM_LOG << "GameEngine destroyed\n";
 		}
 
-		virtual ObjectType GetObjectType() const { return ObjectType::Singleton; }
-
 		//-------------------------------------------------------------
 		// Per-class singleton accessors
 		static GameEngine& GetInstance()
@@ -51,11 +50,11 @@ class GameEngine: public Object
 		void Initialize();
 
 		//-------------------------------------------------------------
-		void Process() override;
+		void Process();
 
 		//-------------------------------------------------------------
 	public:
-
+		string name = "";
 		EventManager* ptr_eventmanager = nullptr;
 		InputsManager* ptr_inputsmanager = nullptr;
 		SystemMenu* ptr_systemmenu = nullptr;

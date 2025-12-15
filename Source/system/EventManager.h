@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../object.h"
+//#include "../object.h"
 #include "message.h"
 #include <unordered_map>
 #include <vector>
@@ -14,10 +14,7 @@
 // Forward declaration of helper implemented in EventManager_ECS.cpp
 void UpdateECSInputFromMessage(const Message& msg);
 
-// EventManager: central dispatcher for engine messages.
-// Inline (header-only) implementation placed in Source/system.
-
-class EventManager : public Object
+class EventManager 
 {
 public:
     using Message = ::Message;
@@ -35,8 +32,6 @@ public:
     {
         SYSTEM_LOG << "EventManager destroyed\n";
 	}
-
-    virtual ObjectType GetObjectType() const { return ObjectType::Singleton; }
 
     // Per-class singleton accessors
     static EventManager& GetInstance()
@@ -108,20 +103,11 @@ public:
         vec.emplace_back(owner, std::move(callback));
     }
 
-    // Convenience overload: register an Object* using its virtual OnEvent method
-    void Register(Object* obj, EventType type)
-    {
-        if (!obj) return;
-        Register(static_cast<void*>(obj), type, [obj](const Message& msg) { obj->OnEvent(msg); });
-    }
-
-    // Template générique pour n'importe quelle classe avec OnEvent
-    // Utilise SFINAE pour éviter les conflits avec Object*
+	// Generic template overload to register an object with an OnEvent method
     template<typename T>
-    typename std::enable_if<!std::is_base_of<Object, T>::value, void>::type
-    Register(T* owner, EventType type)
+    void Register(T* owner, EventType type)
     {
-        // Vérification à la compilation que T possède une méthode OnEvent
+		// Check that T has a member function OnEvent(const Message&)
         static_assert(std::is_member_function_pointer<decltype(&T::OnEvent)>::value,
                       "Type T must have a member function OnEvent(const Message&)");
         
@@ -129,13 +115,6 @@ public:
         Register(static_cast<void*>(owner), type, 
                  [owner](const Message& msg) { owner->OnEvent(msg); });
     }
-
-    //// Convenience overload: register an Object* using its virtual OnEvent method
-    //void Register(Singleton* singleton, EventType type)
-    //{
-    //    if (!singleton) return;
-    //    Register(static_cast<void*>(singleton), type, [singleton](const Message& msg) { singleton->OnEvent(msg); });
-    //}
 
     // Unregister a specific owner from a specific event type
     void Unregister(void* owner, EventType type)
@@ -161,14 +140,8 @@ public:
         }
     }
 
-    // Send a message to a single target directly (convenience forwarding to target's OnEvent)
-    void SendMessageTo(Object* target, const Message& msg)
-    {
-        if (!target) return;
-        target->OnEvent(msg);
-    }
-
 private:
+	std::string name;
     std::unordered_map<EventType, std::vector<ListenerEntry>> m_listeners;
     std::mutex m_listenersMutex;
 

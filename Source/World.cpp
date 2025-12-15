@@ -27,15 +27,6 @@ World::World()
 //---------------------------------------------------------------------------------------------
 World::~World()
 {
-    // Clean up all objects
-    /*DEPRECATED OBJECT MANAGEMENT*/
-    {
-        for (auto obj : m_objectlist)
-        {
-            delete obj;
-        }
-        m_objectlist.clear();
-    }
     SYSTEM_LOG << "World Destroyed\n";
 }
 //---------------------------------------------------------------------------------------------
@@ -85,36 +76,36 @@ void World::Add_ECS_System(std::unique_ptr<ECS_System> system)
 //---------------------------------------------------------------------------------------------
 void World::Process_ECS_Systems()
 {
-	static bool firstCall = true;
+	//static bool firstCall = true;
 
-    // Mise � jour de tous les syst�mes enregistr�s dans l'ordre
+	// update all registered systems in order
     for (const auto& system : m_systems)
     {
         system->Process();
-		if (firstCall)
-        {
-            SYSTEM_LOG << "ECS System processed: " << typeid(*system).name() << "\n";
-        }
+		//if (firstCall)
+  //      {
+  //          SYSTEM_LOG << "ECS System processed: " << typeid(*system).name() << "\n";
+  //      }
     }
 
-	firstCall = false;
+	//firstCall = false;
 }
 //---------------------------------------------------------------------------------------------
 void World::Render_ECS_Systems()
 {
-    static bool firstCall = true;
+    //static bool firstCall = true;
 
-    // Mise � jour de tous les syst�mes enregistr�s dans l'ordre
+	// Render all registered systems in order
     for (const auto& system : m_systems)
     {
         system->Render();
-        if (firstCall)
-        {
-            SYSTEM_LOG << "ECS System Rendered: " << typeid(*system).name() << "\n";
-        }
+        //if (firstCall)
+        //{
+        //    SYSTEM_LOG << "ECS System Rendered: " << typeid(*system).name() << "\n";
+        //}
     }
 
-    firstCall = false;
+    //firstCall = false;
 }
 //---------------------------------------------------------------------------------------------
 void World::Notify_ECS_Systems(EntityID entity, ComponentSignature signature)

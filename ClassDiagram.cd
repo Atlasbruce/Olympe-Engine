@@ -1,167 +1,105 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Class Name="AI_Player" Collapsed="true">
-    <Position X="7.25" Y="7.25" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AABAABAIAAQABQAEAkAAAAAAAACAE0AIAAEAAAIoAAA=</HashCode>
-      <FileName>Source\AI_Player.h</FileName>
-    </TypeIdentifier>
-  </Class>
-  <Class Name="ObjectComponent" Collapsed="true">
-    <Position X="3.75" Y="4.25" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AABAAAAIAIAAgQAAAkABEQABIAAAAAAIAJAAAAAAAAA=</HashCode>
-      <FileName>Source\ObjectComponent.h</FileName>
-    </TypeIdentifier>
-  </Class>
-  <Class Name="Player" Collapsed="true">
-    <Position X="2.5" Y="5.75" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAAQAAAAAAAAAAAAAEAEAABAAAAAAEAAAAAAAQAgABA=</HashCode>
-      <FileName>Source\Player.h</FileName>
-    </TypeIdentifier>
-  </Class>
-  <Class Name="GameObject" Collapsed="true">
-    <Position X="1.75" Y="4.25" Width="1.5" />
-    <InheritanceLine Type="Object" FixedToPoint="true">
-      <Path>
-        <Point X="3.5" Y="3.562" />
-        <Point X="3.5" Y="3.875" />
-        <Point X="2.5" Y="3.875" />
-        <Point X="2.5" Y="4.25" />
-      </Path>
-    </InheritanceLine>
-    <TypeIdentifier>
-      <HashCode>ADACgIAABCAAAASAQEAIIAIgAAAACkAgABAQAAIgAAA=</HashCode>
-      <FileName>Source\GameObject.h</FileName>
-    </TypeIdentifier>
-  </Class>
-  <Class Name="Object" Collapsed="true">
-    <Position X="2.75" Y="3" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAACAAAAAQAAEAAgAkAAABAAAAAEAAAAABAAAAAAAAA=</HashCode>
-      <FileName>Source\Object.h</FileName>
-    </TypeIdentifier>
-  </Class>
   <Class Name="GraphicMap" Collapsed="true">
-    <Position X="20" Y="9.75" Width="1.5" />
+    <Position X="17" Y="8.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAACAAAAAAABAAAACAAAAAAAAAAAAAAAAAAABAAAA=</HashCode>
       <FileName>Source\GraphicMap.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="InputsManager" Collapsed="true">
-    <Position X="11" Y="4.5" Width="1.5" />
-    <InheritanceLine Type="Object">
-      <InheritanceModifierLabel ManuallyPlaced="true">
-        <Position X="0.146" Y="0.019" />
-      </InheritanceModifierLabel>
-    </InheritanceLine>
+    <Position X="12.5" Y="4.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>QICCRAkDRAUAgABBAMBQgQAAhAAABgBAARAAFAAEBFA=</HashCode>
+      <HashCode>QIACRAkLRAQAgABBAOBQgUAAhAAEBgBAARAAlAAEBFA=</HashCode>
       <FileName>Source\InputsManager.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="JoystickManager" Collapsed="true">
-    <Position X="13.25" Y="5.5" Width="1.5" />
+    <Position X="12.5" Y="5.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AQgCEAAIEAAAAQFAAhAYAQCABAAEAEQAAIgAAAAIRAA=</HashCode>
+      <HashCode>AQgAEAAIEAAAAQFAAhAYAQCABAAEAEQAAIgAAAAIRAA=</HashCode>
       <FileName>Source\system\JoystickManager.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="KeyboardManager" Collapsed="true">
-    <Position X="13" Y="7.5" Width="1.5" />
+    <Position X="12.5" Y="6.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACEAAAAgAAAQBAAAAQAQAIDAiAAAAAACECAAAIAAA=</HashCode>
+      <HashCode>AAAAEAAAAgAAAQBAAAAQAQAIDAiEAAAAACECAAAIAAA=</HashCode>
       <FileName>Source\system\KeyboardManager.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Level" Collapsed="true">
-    <Position X="18.25" Y="7.5" Width="1.5" />
+    <Position X="16.25" Y="6.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AACAAAAAAAAAAAAQAAAAAAAAAAQEAAABAAAAAAAAAAA=</HashCode>
       <FileName>Source\Level.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="GameRules" Collapsed="true">
-    <Position X="20.75" Y="5.5" Width="1.5" />
+    <Position X="19.25" Y="5.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AABCAAAAAACAAABAAAAAAAAABAAEAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AABAAAAAAACAAABAAAAAAAAABAAEAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Source\GameRules.h</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="Camera" Collapsed="true">
-    <Position X="19.75" Y="6.5" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAACAAAAABAAAYBAQEAAAQEABAAAABAAEAAAAAAIAAA=</HashCode>
-      <FileName>Source\system\Camera.h</FileName>
-    </TypeIdentifier>
-  </Class>
   <Class Name="CollisionMap" Collapsed="true">
-    <Position X="20" Y="9" Width="1.5" />
+    <Position X="15.25" Y="8.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAACAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAQAABAAAA=</HashCode>
       <FileName>Source\CollisionMap.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="EventManager" Collapsed="true">
-    <Position X="13.25" Y="4.5" Width="1.5" />
+    <Position X="10" Y="4.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAECgBAAAABAIABAKgAAAAAABAEBAAEAAAAgAAAAEAA=</HashCode>
+      <HashCode>AAEAgBAAAABAIABAKgAAAAAABAEFAAAAAAAgAAAAEAA=</HashCode>
       <FileName>Source\system\EventManager.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="GameEngine" Collapsed="true">
-    <Position X="7.5" Y="4.5" Width="1.5" />
+    <Position X="12.5" Y="3.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAAABBYIQDgAgIAASAgBAACgAgAAYAAQAAAgAQ=</HashCode>
+      <HashCode>AAAAAAAAABBYIQDgAgIAASAgBAAGgAgAAYAAQAAAgAQ=</HashCode>
       <FileName>Source\GameEngine.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="GameMenu" Collapsed="true">
-    <Position X="15" Y="6.25" Width="1.5" />
+    <Position X="17" Y="4.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAgAAAAABBAABAEEgAAAAABAAAABAAABAAAAAAAAA=</HashCode>
+      <HashCode>AAAAgAAAAABBAABAEEgAAAAABAAEABAAABAAAAAAAAA=</HashCode>
       <FileName>Source\system\GameMenu.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="MouseManager" Collapsed="true">
-    <Position X="13" Y="6.5" Width="1.5" />
+    <Position X="12.5" Y="6" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AgACEAAAAAAAgQBAAACQAQAABAAAAAAAAAAAAAAIAgA=</HashCode>
+      <HashCode>AgAAEAAAAAAAgQBAAACQAQAABAAEAAAAAAAAAAAIAgA=</HashCode>
       <FileName>Source\system\MouseManager.h</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="Npc" Collapsed="true">
-    <Position X="0.75" Y="5.75" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AIAAAAAAAAAAAAAAAEAAAAAAAAAAAEAAAAAAAAAgEAA=</HashCode>
-      <FileName>Source\Npc.h</FileName>
-    </TypeIdentifier>
-  </Class>
   <Class Name="Objective" Collapsed="true">
-    <Position X="22.5" Y="6.25" Width="1.5" />
+    <Position X="21" Y="6.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AQAAACAAQAAAAABAAAAAAAAAAAAAAAgAAAAAAAAAAAA=</HashCode>
       <FileName>Source\Objective.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Quest" Collapsed="true">
-    <Position X="22.5" Y="5.5" Width="1.5" />
+    <Position X="21" Y="5.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AQAAAAIIAAAggAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Source\Quest.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="QuestManager" Collapsed="true">
-    <Position X="21.5" Y="4.5" Width="1.5" />
+    <Position X="20" Y="4.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACACAAAAAAAABAABAABAAABAggAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAACAAAAAAAABAABAABAAABAgkAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Source\QuestManager.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Sector" Collapsed="true">
-    <Position X="19" Y="8.25" Width="1.5" />
+    <Position X="16.25" Y="7.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAgAAACAAAAAAAAAAAAAAAAAAEABgAAAAAAAAAAAA=</HashCode>
       <FileName>Source\Sector.h</FileName>
@@ -170,65 +108,282 @@
   <Class Name="SystemMenu" Collapsed="true">
     <Position X="15.25" Y="4.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAACAAAgQABACABAEAAAAAAAhAAAABAEAAAAAAAAAAQ=</HashCode>
+      <HashCode>AAAAAAAgQABACABAEAAAAAAAhAAEABAEAAAAAAAAAAQ=</HashCode>
       <FileName>Source\system\SystemMenu.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="VideoGame" Collapsed="true">
     <Position X="16.25" Y="5.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>QYAiFEAECAAZAAFABsBAIAAQHAAAAJAAAAAgCAwAAAE=</HashCode>
+      <HashCode>QYAgFEAEAAAZAAFABkBAIAAQDAAEAJAAAAAgCAwAAAE=</HashCode>
       <FileName>Source\VideoGame.h</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="Viewport" Collapsed="true">
-    <Position X="18.75" Y="4.5" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAACACIAAAAEAQBBABAMAQAQBAAAAADAAQgAAIAIAAA=</HashCode>
-      <FileName>Source\system\Viewport.h</FileName>
-    </TypeIdentifier>
-  </Class>
   <Class Name="World" Collapsed="true">
-    <Position X="17.5" Y="6.5" Width="1.5" />
+    <Position X="16.25" Y="6" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AACSBAABABBIAyJCAiAAFBABDAACAQAFEDAAgABgAAA=</HashCode>
+      <HashCode>AACQBAABABBIASBAAiAAFBABBAACAQAEEDAAAABgAAA=</HashCode>
       <FileName>Source\World.h</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Task" Collapsed="true">
-    <Position X="22.5" Y="7" Width="1.5" />
+    <Position X="21" Y="7" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAgAAAAIAIAQAAAAAAAAAAAAAAEAAAAAAAAA=</HashCode>
       <FileName>Source\Task.h</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="AIComponent" Collapsed="true">
-    <Position X="5.25" Y="7.25" Width="1.5" />
+  <Class Name="DataManager" Collapsed="true">
+    <Position X="10" Y="5.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAIAAACAAAAAkAAAAABAAAAAAAAAAACAAAAAAA=</HashCode>
-      <FileName>Source\ObjectComponent.h</FileName>
+      <HashCode>AAAAAAEDBAQAEQBAQAVACSAwBAAEDAAAAAAEAECBABA=</HashCode>
+      <FileName>Source\DataManager.h</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="AudioComponent" Collapsed="true">
-    <Position X="5.25" Y="5" Width="1.5" />
+  <Class Name="CameraManager" Collapsed="true">
+    <Position X="7.75" Y="4.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAkAAAAABAAAACAAAAAAAAAAAAAA=</HashCode>
-      <FileName>Source\ObjectComponent.h</FileName>
+      <HashCode>AAAAAAABAFAAAQhAAkAAAQEABAAABBAAEACAAAAiAgA=</HashCode>
+      <FileName>Source\system\CameraManager.h</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="PhysicsComponent" Collapsed="true">
-    <Position X="5.25" Y="6.5" Width="1.5" />
+  <Class Name="ViewportManager" Collapsed="true">
+    <Position X="7.75" Y="5.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAEgAAAAAAAAAAAkAAAAABAAAAAAAAAAAAAAAAAAA=</HashCode>
-      <FileName>Source\ObjectComponent.h</FileName>
+      <HashCode>AAAAACIAAAAAAQBBABAMAQAQBAAAACDAARgAAIIIAAA=</HashCode>
+      <FileName>Source\system\ViewportManager.h</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="VisualComponent" Collapsed="true">
-    <Position X="5.25" Y="5.75" Width="1.5" />
+  <Class Name="PrefabFactory" Collapsed="true">
+    <Position X="5.75" Y="4.5" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAEAAAAgBAAAAAAAAABAAAAIAAAA=</HashCode>
-      <FileName>Source\ObjectComponent.h</FileName>
+      <HashCode>AAAAAAAAAQAAAABAAAAAAAAAAABAARAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\prefabfactory.h</FileName>
     </TypeIdentifier>
   </Class>
+  <Class Name="ECS_System" Collapsed="true">
+    <Position X="12.5" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAAAAAQAAAAAAgABAAAAAAAAAAAAEJAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Systems.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="InputSystem" Collapsed="true">
+    <Position X="5.75" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAEAAAgAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Systems.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AISystem" Collapsed="true">
+    <Position X="12.5" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAgAEAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Systems.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DetectionSystem" Collapsed="true">
+    <Position X="19.25" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Systems.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PhysicsSystem" Collapsed="true">
+    <Position X="1.25" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAgAAAAAAAAQAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Systems.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CollisionSystem" Collapsed="true">
+    <Position X="8" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAgAAAAAAAAAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Systems.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TriggerSystem" Collapsed="true">
+    <Position X="14.75" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAgAIAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Systems.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MovementSystem" Collapsed="true">
+    <Position X="21.5" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>source\ECS_Systems.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RenderingSystem" Collapsed="true">
+    <Position X="3.5" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABABAAAAAAA=</HashCode>
+      <FileName>source\ECS_Systems.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PlayerControlSystem" Collapsed="true">
+    <Position X="10.25" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAACAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Systems.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="InputMappingSystem" Collapsed="true">
+    <Position X="17" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAgAAAIAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Systems.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="OlympeEffectSystem" Collapsed="true">
+    <Position X="23.75" Y="10" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAAAEAAAAAAQAAAgAAAAAIAAAAAAAAABAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Systems.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IComponentPool" Collapsed="true">
+    <Position X="1.25" Y="11.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAQAAAA=</HashCode>
+      <FileName>source\ECS_Entity.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ComponentPool&lt;T&gt;" Collapsed="true">
+    <Position X="1.25" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAQAAAAAAIAAAAAIAABAEAAAAAAAAECCAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Register.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="Position_data" Collapsed="true">
+    <Position X="3.5" Y="14.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="BoundingBox_data" Collapsed="true">
+    <Position X="8.75" Y="11.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="TriggerZone_data" Collapsed="true">
+    <Position X="5.25" Y="14.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAACAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Movement_data" Collapsed="true">
+    <Position X="3.5" Y="13.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAQAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="PhysicsBody_data" Collapsed="true">
+    <Position X="7" Y="13.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Health_data" Collapsed="true">
+    <Position X="7" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="AIBehavior_data" Collapsed="true">
+    <Position X="3.5" Y="11.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Inventory_data" Collapsed="true">
+    <Position X="10.5" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="VisualSprite_data" Collapsed="true">
+    <Position X="7" Y="14.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAABAAEACAAAAAAAAAQAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Animation_data" Collapsed="true">
+    <Position X="5.25" Y="11.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAgQAAAAAAAEAAAABAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="FX_data" Collapsed="true">
+    <Position X="5.25" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAKAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="AudioSource_data" Collapsed="true">
+    <Position X="7" Y="11.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAACAAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Controller_data" Collapsed="true">
+    <Position X="3.5" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAEABAAQAAAAAAAKAAAQAAAAAAAAAAAAAgAABAgBAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="PlayerController_data" Collapsed="true">
+    <Position X="10.5" Y="13.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAAAgAAAAAAAAFAEAAAAAAAAAAAAAAAAAgAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="PlayerBinding_data" Collapsed="true">
+    <Position X="8.75" Y="13.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAEA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Camera_data" Collapsed="true">
+    <Position X="10.5" Y="11.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAACIAAAAAAACAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="NPC_data" Collapsed="true">
+    <Position X="5.25" Y="13.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="InputMapping_data" Collapsed="true">
+    <Position X="8.75" Y="12.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QBAAAAAEAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAA=</HashCode>
+      <FileName>source\ECS_Components.h</FileName>
+    </TypeIdentifier>
+  </Struct>
   <Font Name="Segoe UI" Size="9" />
 </ClassDiagram>

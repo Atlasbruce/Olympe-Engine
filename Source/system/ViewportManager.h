@@ -20,13 +20,11 @@ enum class ViewportLayout
 	ViewportLayout_Grid4x2
 };
 
-class ViewportManager : public Object
+class ViewportManager 
 {
 public:
     ViewportManager();
     ~ViewportManager();
-
-    virtual ObjectType GetObjectType() const { return ObjectType::Singleton; }
 
     static ViewportManager& GetInstance()
     {
@@ -35,7 +33,7 @@ public:
     }
     static ViewportManager& Get() { return GetInstance(); }
 
-	virtual void Render() override; // Render viewports (for debug purposes)
+	virtual void Render() ; // Render viewports (for debug purposes)
 
     void Initialize(int w, int h);
     void Shutdown();

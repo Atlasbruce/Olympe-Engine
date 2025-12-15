@@ -17,14 +17,7 @@ struct Message
 	MSG *msg = nullptr; // optional Win32 MSG structure
 	SDL_Event* sdlEvent = nullptr; // optional SDL_Event structure
 
-    // Additional convenience fields for engine-level messages
-    void* sender = nullptr; // optional sender pointer
-	void* objectParamPtr = nullptr; // target object pointer for operations (create/destroy/add property)
     uint64_t targetUid = 0; // target object UID for operations (create/destroy/add property)
-    std::string className; // class to create (for object creation)
-    std::string objectName; // desired object name
-    std::string ComponentType; // property type identifier (for property add/remove)
-    std::string propertyParams; // optional params serialized as string
 
     // Generic integer / float payload fields. For input events these are used as:
     //  - deviceId : joystick instance id, keyboard id, mouse id
@@ -41,22 +34,17 @@ struct Message
 	static Message Create(
 		EventStructType _st_ev_t,
 		EventType _ev_t,
-		void* _sender,
 		int _d_id,
 		int _c_id, 
-		uint64_t _t_uid = 0,
-		void* _obj_ptr = nullptr
-
+		uint64_t _t_uid = 0
 	)
 	{
 		Message msg;
 		msg.struct_type = _st_ev_t;
 		msg.msg_type = _ev_t;
-		msg.sender = _sender;
 		msg.deviceId = _d_id;
 		msg.controlId = _c_id;
 		msg.targetUid = _t_uid;
-		msg.objectParamPtr = _obj_ptr;
 		return msg;
 	}
 };

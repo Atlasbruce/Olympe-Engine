@@ -43,7 +43,7 @@ public:
 public:
 
 	std::string name = "unnamed_object";
-	virtual ObjectType GetObjectType() const { return ObjectType::None; }
+	// virtual ObjectType GetObjectType() const { return ObjectType::None; }
 
 	virtual void Process() {};
 	virtual void Render() {};

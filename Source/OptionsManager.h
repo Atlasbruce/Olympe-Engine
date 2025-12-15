@@ -23,7 +23,7 @@ inline OptionFlags& operator|=(OptionFlags& a, OptionFlags b) { a = a | b; retur
 inline OptionFlags& operator&=(OptionFlags& a, OptionFlags b) { a = static_cast<OptionFlags>(static_cast<uint64_t>(a) & static_cast<uint64_t>(b)); return a; }
 
 
-class OptionsManager : public Object
+class OptionsManager 
 {
 public:
     OptionsManager()
@@ -36,8 +36,6 @@ public:
     {
         SYSTEM_LOG << "OptionsManager destroyed\n";
 	}
-
-	virtual ObjectType GetObjectType() const { return ObjectType::Singleton; }
 
     static OptionsManager& GetInstance()
     {
@@ -62,5 +60,6 @@ public:
 
 
 private:
+    string name;
     OptionFlags flags_ = OptionFlags::None;
 };

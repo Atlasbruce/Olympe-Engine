@@ -31,13 +31,11 @@ Notes:
 
 #include <SDL3/SDL.h>
 
-class PanelManager : public Object
+class PanelManager 
 {
 public:
     PanelManager();
     virtual ~PanelManager();
-
-    virtual ObjectType GetObjectType() const override { return ObjectType::Singleton; }
 
     static PanelManager& GetInstance();
     static PanelManager& Get() { return GetInstance(); }
@@ -68,7 +66,7 @@ public:
     void HandleEvent(const SDL_Event* ev);
 
     //OnEvent
-	virtual void OnEvent(const Message& msg) override;
+	virtual void OnEvent(const Message& msg) ;
 
 	static int LogPanelWidth;
 	static int LogPanelHeight;
@@ -86,6 +84,8 @@ public:
     static int TreeViewPanelPosY;
 
     private:
+        string name;
+
     struct Panel
     {
         std::string id;

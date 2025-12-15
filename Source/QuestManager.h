@@ -11,7 +11,7 @@
 #include <iostream>
 #include "system/system_utils.h"
 
-class QuestManager : public Object
+class QuestManager 
 {
 public:
 	QuestManager()
@@ -23,8 +23,6 @@ public:
 	{
 		SYSTEM_LOG << "QuestManager Shutdown\n";
 	}
-
-	virtual ObjectType GetObjectType() const { return ObjectType::Singleton; }
 
 	static QuestManager& GetInstance()
 	{
@@ -41,5 +39,6 @@ public:
 	const std::vector<std::unique_ptr<Quest>>& GetQuests() const { return quests; }
 
 private:
+	string name;
 	std::vector<std::unique_ptr<Quest>> quests;
 };

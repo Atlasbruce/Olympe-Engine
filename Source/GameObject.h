@@ -39,7 +39,7 @@ public:
         name = "unnamed GameObject";
 	}
     virtual ~GameObject() override = default;
-	virtual ObjectType GetObjectType() const override { return ObjectType::Entity; }
+	virtual ObjectType GetObjectType() const { return ObjectType::Entity; }
 	virtual EntityType GetEntityType() const { return EntityType::None; }
 
 //---------------------------------------------------------------------------------------------

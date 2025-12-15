@@ -76,6 +76,7 @@ enum class EventType
 	Olympe_EventType_Camera_Teleport, // instantly move camera to position of the renderer scene
 	Olympe_EventType_Camera_MoveToPosition, // smoothly move camera to position over time using blending (velocity)
 	Olympe_EventType_Camera_ZoomTo, // smoothly zoom camera to level over time using blending (velocity)
+	Olympe_EventType_Camera_RotateTo, // smoothly rotate camera to angle over time using blending (velocity)
 	Olympe_EventType_Camera_Reset, // reset camera to default position/zoom
 	Olympe_EventType_Camera_Mode_2D, // set camera to free 2D mode
 	Olympe_EventType_Camera_Mode_2_5D, // set camera to 2.5D mode (follow target on X axis only)

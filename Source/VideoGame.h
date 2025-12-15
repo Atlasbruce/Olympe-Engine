@@ -19,23 +19,14 @@
 #include <vector>
 #include <unordered_map>
 #include "system/system_utils.h"
-#include "ObjectFactory.h"
 #include "GameEngine.h"
 
-//for tests
-#include "GameObject.h"
-#include "AI_Player.h"
-
-static GameObject* testGao = nullptr;
-
-class VideoGame : public Object
+class VideoGame 
 {
 public:
     VideoGame();
 
     virtual ~VideoGame();
-
-    virtual ObjectType GetObjectType() const { return ObjectType::Singleton; }
 
     // Per-class singleton accessors
     static VideoGame& GetInstance()
@@ -60,9 +51,7 @@ public:
      void RequestQuit() { SetState(GameState::GameState_Quit); }
 
      // Player management
-     short AddPlayerObject(string _playerclassname = "");
      void SetViewportLayout(short playerID);
-     bool RemovePlayerObject(const short PlayerID);
      EntityID AddPlayerEntity(string _playerPrefabName = "PlayerEntity");
 	 bool RemovePlayerEntity(const EntityID eid);
 
@@ -95,12 +84,12 @@ public:
 	CameraManager& cameramanager = CameraManager::GetInstance();
     ViewportManager& viewport = ViewportManager::GetInstance();
 
-    // Players
-    std::vector<GameObject*> m_playersObject;
+    // Players & Entities
 	std::vector<EntityID> m_playersEntity;
     static short m_playerIdCounter;
 
 private:
+    string name;
      // cached state for quick local reads (authoritative value lives in GameStateManager)
      GameState m_state = GameState::GameState_Running;
 

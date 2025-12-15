@@ -7,7 +7,7 @@
 #include <mutex>
 #include "system_utils.h"
 
-class KeyboardManager : public Object
+class KeyboardManager 
 {
 public:
     KeyboardManager()
@@ -19,8 +19,6 @@ public:
     {
 		Shutdown();
 	}
-
-    virtual ObjectType GetObjectType() const { return ObjectType::Singleton; }
 
     static KeyboardManager& GetInstance();
     static KeyboardManager& Get() { return GetInstance(); }
@@ -37,6 +35,7 @@ public:
     bool IsKeyReleased(SDL_Scancode sc) ;
 
 private:
+    string name;
     std::mutex m_mutex;
     void PostKeyEvent(SDL_KeyboardEvent const& ke);
 

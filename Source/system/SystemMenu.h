@@ -10,7 +10,7 @@
 // This implementation is intentionally minimal and independent from the
 // event system so it can be activated simply by calling SystemMenu::Get().
 
-class SystemMenu : public Object
+class SystemMenu 
 {
 public:
     SystemMenu()
@@ -27,8 +27,6 @@ public:
         SYSTEM_LOG << "SystemMenu Shutdown\n";
 	}
 
-    virtual ObjectType GetObjectType() const { return ObjectType::Singleton; }
-
     static SystemMenu& GetInstance();
     static SystemMenu& Get() { return GetInstance(); }
 
@@ -43,6 +41,7 @@ public:
     const std::vector<std::string>& Items() const { return m_items; }
 
 private:
+    string name;
     bool m_active = false;
     std::vector<std::string> m_items;
 };

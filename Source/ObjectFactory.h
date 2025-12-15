@@ -20,6 +20,8 @@ Purpose:
 #include "system/EventManager.h"
 #include "ObjectComponent.h"
 
+//DEPRECATED: use PrefabFactory instead for more advanced prefab management
+
 class ObjectFactory: public Object
 {
 public:
@@ -134,7 +136,7 @@ public:
         {
         case EventType::Olympe_EventType_Object_Create:
             {
-                if (!msg.className.empty())
+              /*  if (!msg.className.empty())
                 {
                     Object* o = CreateObject(msg.className);
                     if (o)
@@ -150,7 +152,7 @@ public:
                         EventManager::Get().AddMessage(res);
                         SYSTEM_LOG << "Factory created object '" << o->name << "' uid=" << o->GetUID() << "\n";
                     }
-                }
+                }/**/
                 break;
             }
         case EventType::Olympe_EventType_Object_Destroy:
@@ -179,14 +181,14 @@ public:
         case EventType::Olympe_EventType_Property_Add:
             {
                 uint64_t uid = msg.targetUid;
-                if (uid !=0 && !msg.ComponentType.empty())
+             /*   if (uid != 0 && !msg.ComponentType.empty())
                 {
                     Object* o = FindObjectByUID(uid);
                     if (o)
                     {
                         SYSTEM_LOG << "Factory added property '" << msg.ComponentType << "' to object uid=" << uid << "\n";
                     }
-                }
+                }/**/
                 break;
             }
         case EventType::Olympe_EventType_Property_Remove:

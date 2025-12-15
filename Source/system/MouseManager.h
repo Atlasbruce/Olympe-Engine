@@ -5,7 +5,7 @@
 #include <mutex>
 
 
-class MouseManager : public Object
+class MouseManager 
 {
 public:
     MouseManager()
@@ -17,8 +17,6 @@ public:
         Shutdown();
     }
 
-    virtual ObjectType GetObjectType() const { return ObjectType::Singleton; }
-
     static MouseManager& GetInstance();
     static MouseManager& Get() { return GetInstance(); }
 
@@ -29,6 +27,7 @@ public:
     void BeginFrame(); // Reset per-frame state
 
 private:
+    string name;
     std::mutex m_mutex;
     void PostButtonEvent(const SDL_MouseButtonEvent& be);
     void PostMotionEvent(const SDL_MouseMotionEvent& me);

@@ -6,10 +6,10 @@
 
 // GameMenu is an instance-based menu attached to a VideoGame object.
 // It receives events (via OnEvent(Message& msg) forwarding) and can be used
-// to navigate a set of menu entries. It is also a GameObject-like
+// to navigate a set of menu entries. It is also a GameEntity-like
 // entity so it can be added to the engine's object list if desired.
 
-class GameMenu : public Object
+class GameMenu 
 {
 public:
     GameMenu()
@@ -37,12 +37,13 @@ public:
     void AddEntry(const std::string& e) { m_entries.push_back(e); }
 
     // Called by EventManager when messages arrive (overrides Object::OnEvent)
-    virtual void OnEvent(const Message& msg) override;
+    virtual void OnEvent(const Message& msg) ;
 
     // Render simplified text-based menu (placeholder)
-    virtual void Render() override;
+    virtual void Render() ;
 
 private:
+    string name;
     bool m_active = false;
     std::vector<std::string> m_entries;
     int m_selected = 0;

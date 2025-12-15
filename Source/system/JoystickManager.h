@@ -27,8 +27,6 @@ public:
 		Shutdown();
 	}
 
-    virtual ObjectType GetObjectType() const { return ObjectType::Singleton; }
-
     static JoystickManager& GetInstance();
     static JoystickManager& Get() { return GetInstance(); }
 
@@ -55,7 +53,7 @@ public:
     float GetAxis(SDL_JoystickID id, int axis) ;
 
 private:
-	string name;
+	std::string name;
 
     struct JoystickInfo
     {

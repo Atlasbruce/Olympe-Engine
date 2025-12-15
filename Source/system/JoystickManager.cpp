@@ -135,7 +135,6 @@ void JoystickManager::HandleEvent(const SDL_Event* ev)
             (
                 EventStructType::EventStructType_Olympe,
                 EventType::Olympe_EventType_Joystick_Connected,
-                this,
                 static_cast<int>(id),
                 -1
             )
@@ -166,7 +165,6 @@ void JoystickManager::HandleEvent(const SDL_Event* ev)
                 (
                 EventStructType::EventStructType_Olympe,
                 EventType::Olympe_EventType_Joystick_Disconnected,
-                this,
                 static_cast<int>(id),
                 -1
 			    )
@@ -364,7 +362,6 @@ void JoystickManager::PostJoystickButtonEvent(SDL_JoystickID which, int button, 
     Message msg;
 	msg.struct_type = EventStructType::EventStructType_Olympe;
     msg.msg_type = down ? EventType::Olympe_EventType_Joystick_ButtonDown : EventType::Olympe_EventType_Joystick_ButtonUp;
-    msg.sender = this;
     msg.deviceId = static_cast<int>(which);
     msg.controlId = button;
     msg.state = down ?1 :0;
@@ -378,7 +375,6 @@ void JoystickManager::PostJoystickAxisEvent(SDL_JoystickID which, int axis, Sint
     Message msg;
     msg.struct_type = EventStructType::EventStructType_Olympe;
     msg.msg_type = EventType::Olympe_EventType_Joystick_AxisMotion;
-    msg.sender = this;
     msg.deviceId = static_cast<int>(which);
     msg.controlId = axis;
     msg.state =0;
@@ -396,7 +392,6 @@ void JoystickManager::PostJoystickConnectedEvent(SDL_JoystickID which, bool bcon
 	Message msg;
     msg.struct_type = EventStructType::EventStructType_Olympe;
     msg.msg_type = bconnected ? EventType::Olympe_EventType_Joystick_Connected : EventType::Olympe_EventType_Joystick_Disconnected;
-    msg.sender = this;
     msg.deviceId = static_cast<int>(which);
 	EventManager::Get().AddMessage(msg);
 }
