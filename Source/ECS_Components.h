@@ -129,14 +129,15 @@ struct Controller_data
 	bool isVibrating = false;
 	float vibrateStrength = 0.f;
 	
-	// Update edge detection state - call at beginning of each frame BEFORE updating current state
+	// Update edge detection state - call AFTER current state has been updated by events
+	// Compares current buttons[] with previous frame's buttons_prev[]
 	void UpdateEdgeDetection()
 	{
-		// Update button edges
+		// Update button edges by comparing current vs previous
 		for (int i = 0; i < MAX_BUTTONS; ++i)
 		{
-			buttonsPressed[i] = buttons[i] && !buttons_prev[i];
-			buttonsReleased[i] = !buttons[i] && buttons_prev[i];
+			buttonsPressed[i] = buttons[i] && !buttons_prev[i];   // Transition: false->true
+			buttonsReleased[i] = !buttons[i] && buttons_prev[i];  // Transition: true->false
 		}
 	}
 	

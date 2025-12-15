@@ -127,6 +127,9 @@ public:
         const ComponentTypeID typeID = GetComponentTypeID_Static<T>();
         if (m_componentPools.find(typeID) == m_componentPools.end()) return;
 
+        // Special cleanup for PlayerBinding_data
+        HandleSpecialComponentCleanup<T>(entity);
+
         // 1. Remove from the pool
         m_componentPools[typeID]->RemoveComponent(entity);
 
@@ -180,6 +183,9 @@ private:
 
     // System management
     std::vector<std::unique_ptr<ECS_System>> m_systems;
+    
+    // PlayerBinding_data validation - track used player indices for O(1) duplicate detection
+    std::unordered_map<short, EntityID> m_usedPlayerIndices;
 
     // Notifies systems when an Entity's signature changes
     void Notify_ECS_Systems(EntityID entity, ComponentSignature signature);
@@ -189,31 +195,23 @@ private:
     template <typename T>
     void HandleSpecialComponentRegistration(EntityID entity, typename std::enable_if<std::is_same<T, PlayerBinding_data>::value>::type* = nullptr)
     {
-        // Validate PlayerBinding_data to prevent duplicate player indices
+        // Validate PlayerBinding_data to prevent duplicate player indices (O(1) check)
         const PlayerBinding_data& newBinding = GetComponent<PlayerBinding_data>(entity);
         
-        // Check for duplicate playerIndex across all entities
-        const ComponentTypeID typeID = GetComponentTypeID_Static<PlayerBinding_data>();
-        if (m_componentPools.find(typeID) != m_componentPools.end())
+        auto it = m_usedPlayerIndices.find(newBinding.playerIndex);
+        if (it != m_usedPlayerIndices.end())
         {
-            auto* pool = static_cast<ComponentPool<PlayerBinding_data>*>(m_componentPools[typeID].get());
-            for (const auto& kv : m_entitySignatures)
-            {
-                EntityID otherEntity = kv.first;
-                if (otherEntity != entity && kv.second.test(typeID))
-                {
-                    const PlayerBinding_data& otherBinding = pool->GetComponent(otherEntity);
-                    if (otherBinding.playerIndex == newBinding.playerIndex)
-                    {
-                        SYSTEM_LOG << "WARNING: Duplicate playerIndex " << newBinding.playerIndex 
-                                   << " detected. Entity " << entity << " conflicts with entity " 
-                                   << otherEntity << ". This may cause input routing issues.\n";
-                        // Note: We log a warning but don't prevent creation to maintain backward compatibility
-                        // In future versions, this could throw an exception
-                        break;
-                    }
-                }
-            }
+            // Duplicate found
+            SYSTEM_LOG << "WARNING: Duplicate playerIndex " << newBinding.playerIndex 
+                       << " detected. Entity " << entity << " conflicts with entity " 
+                       << it->second << ". This may cause input routing issues.\n";
+            // Note: We log a warning but don't prevent creation to maintain backward compatibility
+            // In future versions, this could throw an exception
+        }
+        else
+        {
+            // Register this player index as used
+            m_usedPlayerIndices[newBinding.playerIndex] = entity;
         }
         
         extern void RegisterInputEntityWithManager(EntityID e);
@@ -224,6 +222,25 @@ private:
     void HandleSpecialComponentRegistration(EntityID entity, typename std::enable_if<!std::is_same<T, PlayerBinding_data>::value>::type* = nullptr)
     {
 		// Do nothing for other types
+    }
+
+    // Helper functions for SFINAE-based component cleanup (C++14 compatible)
+    template <typename T>
+    void HandleSpecialComponentCleanup(EntityID entity, typename std::enable_if<std::is_same<T, PlayerBinding_data>::value>::type* = nullptr)
+    {
+        // Clean up player index tracking when PlayerBinding_data is removed
+        const PlayerBinding_data& binding = GetComponent<PlayerBinding_data>(entity);
+        auto it = m_usedPlayerIndices.find(binding.playerIndex);
+        if (it != m_usedPlayerIndices.end() && it->second == entity)
+        {
+            m_usedPlayerIndices.erase(it);
+        }
+    }
+
+    template <typename T>
+    void HandleSpecialComponentCleanup(EntityID entity, typename std::enable_if<!std::is_same<T, PlayerBinding_data>::value>::type* = nullptr)
+    {
+        // Do nothing for other types
     }
 
 private:

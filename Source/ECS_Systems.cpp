@@ -302,9 +302,14 @@ void InputMappingSystem::Process()
                 // Read action buttons from Controller_data (uses edge detection)
                 if (mapping)
                 {
-                    pctrl.isJumping = ctrl.IsButtonHeld(mapping->gamepadBindings["jump"]);
-                    pctrl.isShooting = ctrl.IsButtonHeld(mapping->gamepadBindings["shoot"]);
-                    pctrl.isInteracting = ctrl.IsButtonPressed(mapping->gamepadBindings["interact"]);
+                    // Use mapping to get button indices
+                    int jumpBtn = mapping->gamepadBindings["jump"];
+                    int shootBtn = mapping->gamepadBindings["shoot"];
+                    int interactBtn = mapping->gamepadBindings["interact"];
+                    
+                    pctrl.isJumping = ctrl.IsButtonHeld(jumpBtn);
+                    pctrl.isShooting = ctrl.IsButtonHeld(shootBtn);
+                    pctrl.isInteracting = ctrl.IsButtonPressed(interactBtn);
                 }
                 else
                 {
