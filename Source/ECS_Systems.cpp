@@ -346,10 +346,8 @@ void CameraSystem::Process()
                     // Calculate desired camera position (target + offset)
                     Vector desiredPos = targetPos.position + camera.offset;
                     
-                    // Smooth follow using blend
-                    camera.position.x = camera.position.x + (desiredPos.x - camera.position.x) * camera.followSpeed;
-                    camera.position.y = camera.position.y + (desiredPos.y - camera.position.y) * camera.followSpeed;
-                    camera.position.z = camera.position.z + (desiredPos.z - camera.position.z) * camera.followSpeed;
+                    // Smooth follow using vBlend (consistent with CameraManager)
+                    camera.position = vBlend(camera.position, desiredPos, camera.followSpeed);
                     
                     // Apply camera bounds if set
                     if (camera.bounds.w != INT_MAX && camera.bounds.h != INT_MAX)
