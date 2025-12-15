@@ -26,11 +26,27 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 //-------------------------------------------------------------
 InputSystem::InputSystem()
 {
-    requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
+    // Process entities with Controller_data for input edge detection
+    requiredSignature.set(GetComponentTypeID_Static<Controller_data>(), true);
 }
 void InputSystem::Process()
 {
-    // Input processing logic here
+    // Update edge detection for all Controller_data components
+    // This should be called BEFORE InputMappingSystem processes input
+    for (EntityID entity : m_entities)
+    {
+        try
+        {
+            Controller_data& ctrl = World::Get().GetComponent<Controller_data>(entity);
+            
+            // Update edge detection based on previous and current state
+            ctrl.UpdateEdgeDetection();
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "InputSystem Error for Entity " << entity << ": " << e.what() << "\n";
+        }
+    }
 }
 //-------------------------------------------------------------
 AISystem::AISystem()
@@ -283,19 +299,19 @@ void InputMappingSystem::Process()
                     pctrl.Joydirection.y = 0.0f;
                 }
 
-                // Read action buttons
+                // Read action buttons from Controller_data (uses edge detection)
                 if (mapping)
                 {
-                    pctrl.isJumping = jm.GetButton(joyID, mapping->gamepadBindings["jump"]);
-                    pctrl.isShooting = jm.GetButton(joyID, mapping->gamepadBindings["shoot"]);
-                    pctrl.isInteracting = jm.IsButtonPressed(joyID, mapping->gamepadBindings["interact"]);
+                    pctrl.isJumping = ctrl.IsButtonHeld(mapping->gamepadBindings["jump"]);
+                    pctrl.isShooting = ctrl.IsButtonHeld(mapping->gamepadBindings["shoot"]);
+                    pctrl.isInteracting = ctrl.IsButtonPressed(mapping->gamepadBindings["interact"]);
                 }
                 else
                 {
                     // Default gamepad buttons
-                    pctrl.isJumping = jm.GetButton(joyID, 0);  // A button
-                    pctrl.isShooting = jm.GetButton(joyID, 1); // B button
-                    pctrl.isInteracting = jm.IsButtonPressed(joyID, 2); // X button
+                    pctrl.isJumping = ctrl.IsButtonHeld(0);  // A button
+                    pctrl.isShooting = ctrl.IsButtonHeld(1); // B button
+                    pctrl.isInteracting = ctrl.IsButtonPressed(2); // X button
                 }
             }
 
@@ -311,6 +327,20 @@ void InputMappingSystem::Process()
         catch (const std::exception& e)
         {
             std::cerr << "InputMappingSystem Error for Entity " << entity << ": " << e.what() << "\n";
+        }
+    }
+    
+    // Commit current state to previous state for edge detection next frame
+    for (EntityID entity : m_entities)
+    {
+        try
+        {
+            Controller_data& ctrl = World::Get().GetComponent<Controller_data>(entity);
+            ctrl.CommitState();
+        }
+        catch (const std::exception&)
+        {
+            // Ignore errors during state commit
         }
     }
 }

@@ -94,25 +94,83 @@ struct AudioSource_data
 	float volume = 1.0f;       // Volume level (0.0 to 1.0)
 };
 // --- Component Controller Data ---
+// Canonical ECS input state with edge detection for pressed/released/held
+// Network-serializable structure for future multiplayer support
 struct Controller_data
 {
 	static constexpr int MAX_BUTTONS = 16;
 	
-	short controllerID = -1; // Index of the controller (-1 = keyboard)
+	short controllerID = -1; // Index of the controller (-1 = keyboard, -2 = unbound)
 	bool isConnected = false; // Is the controller connected?
 	
-	// Normalized axes (deadzone applied)
+	// Current frame state - Normalized axes (deadzone applied)
 	Vector leftStick;   // -1..1
 	Vector rightStick;  // -1..1
 	float leftTrigger = 0.f;  // 0..1
 	float rightTrigger = 0.f; // 0..1
 	
-	// Buttons
+	// Previous frame state for axes (for edge detection on analog inputs)
+	Vector leftStick_prev;
+	Vector rightStick_prev;
+	float leftTrigger_prev = 0.f;
+	float rightTrigger_prev = 0.f;
+	
+	// Buttons - current frame state
 	bool buttons[MAX_BUTTONS] = {false};
+	
+	// Buttons - previous frame state
+	bool buttons_prev[MAX_BUTTONS] = {false};
+	
+	// Edge detection state (computed each frame)
+	bool buttonsPressed[MAX_BUTTONS] = {false};  // Pressed this frame (transition false->true)
+	bool buttonsReleased[MAX_BUTTONS] = {false}; // Released this frame (transition true->false)
 	
 	// Haptics (optional)
 	bool isVibrating = false;
 	float vibrateStrength = 0.f;
+	
+	// Update edge detection state - call at beginning of each frame BEFORE updating current state
+	void UpdateEdgeDetection()
+	{
+		// Update button edges
+		for (int i = 0; i < MAX_BUTTONS; ++i)
+		{
+			buttonsPressed[i] = buttons[i] && !buttons_prev[i];
+			buttonsReleased[i] = !buttons[i] && buttons_prev[i];
+		}
+	}
+	
+	// Commit current state to previous state - call at END of frame after all input processing
+	void CommitState()
+	{
+		// Commit button states
+		for (int i = 0; i < MAX_BUTTONS; ++i)
+		{
+			buttons_prev[i] = buttons[i];
+		}
+		
+		// Commit axis states
+		leftStick_prev = leftStick;
+		rightStick_prev = rightStick;
+		leftTrigger_prev = leftTrigger;
+		rightTrigger_prev = rightTrigger;
+	}
+	
+	// Query helpers for edge detection
+	bool IsButtonPressed(int buttonIndex) const
+	{
+		return (buttonIndex >= 0 && buttonIndex < MAX_BUTTONS) ? buttonsPressed[buttonIndex] : false;
+	}
+	
+	bool IsButtonReleased(int buttonIndex) const
+	{
+		return (buttonIndex >= 0 && buttonIndex < MAX_BUTTONS) ? buttonsReleased[buttonIndex] : false;
+	}
+	
+	bool IsButtonHeld(int buttonIndex) const
+	{
+		return (buttonIndex >= 0 && buttonIndex < MAX_BUTTONS) ? buttons[buttonIndex] : false;
+	}
 };
 // --- Component PlayerConroller Data ---
 struct PlayerController_data

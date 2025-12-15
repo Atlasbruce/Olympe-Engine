@@ -11,6 +11,7 @@ World purpose: Manage the overall game world, including object management, level
 #pragma once
 
 #include "system/EventManager.h"
+#include "system/system_utils.h"
 #include <vector>
 #include <memory>
 #include <unordered_map>
@@ -188,6 +189,33 @@ private:
     template <typename T>
     void HandleSpecialComponentRegistration(EntityID entity, typename std::enable_if<std::is_same<T, PlayerBinding_data>::value>::type* = nullptr)
     {
+        // Validate PlayerBinding_data to prevent duplicate player indices
+        const PlayerBinding_data& newBinding = GetComponent<PlayerBinding_data>(entity);
+        
+        // Check for duplicate playerIndex across all entities
+        const ComponentTypeID typeID = GetComponentTypeID_Static<PlayerBinding_data>();
+        if (m_componentPools.find(typeID) != m_componentPools.end())
+        {
+            auto* pool = static_cast<ComponentPool<PlayerBinding_data>*>(m_componentPools[typeID].get());
+            for (const auto& kv : m_entitySignatures)
+            {
+                EntityID otherEntity = kv.first;
+                if (otherEntity != entity && kv.second.test(typeID))
+                {
+                    const PlayerBinding_data& otherBinding = pool->GetComponent(otherEntity);
+                    if (otherBinding.playerIndex == newBinding.playerIndex)
+                    {
+                        SYSTEM_LOG << "WARNING: Duplicate playerIndex " << newBinding.playerIndex 
+                                   << " detected. Entity " << entity << " conflicts with entity " 
+                                   << otherEntity << ". This may cause input routing issues.\n";
+                        // Note: We log a warning but don't prevent creation to maintain backward compatibility
+                        // In future versions, this could throw an exception
+                        break;
+                    }
+                }
+            }
+        }
+        
         extern void RegisterInputEntityWithManager(EntityID e);
         RegisterInputEntityWithManager(entity);
     }
