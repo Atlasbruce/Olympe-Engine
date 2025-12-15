@@ -29,9 +29,6 @@ public:
 
     // Set the resources for this system (called by World during initialization)
     void SetResources(Resources* resources) { m_resources = resources; }
-    
-    // Get the resources (protected for derived classes)
-    Resources* GetResources() const { return m_resources; }
 
     // The core logic of the System
     virtual void Process() {}
@@ -41,6 +38,9 @@ public:
     void RemoveEntity(EntityID entity) { m_entities.erase(entity); }
 
 protected:
+    // Get the resources (protected for derived classes)
+    Resources* GetResources() const { return m_resources; }
+    
     // Pointer to global resources (non-owning)
     Resources* m_resources;
 };

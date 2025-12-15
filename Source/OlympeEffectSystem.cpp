@@ -133,14 +133,43 @@ void OlympeEffectSystem::Initialize()
     // Create render target textures
     pImpl->backgroundTexture = SDL_CreateTexture(m_resources->renderer, SDL_PIXELFORMAT_RGBA8888, 
                                          SDL_TEXTUREACCESS_TARGET, pImpl->width, pImpl->height);
+    if (!pImpl->backgroundTexture)
+    {
+        SYSTEM_LOG << "OlympeEffectSystem: Failed to create background texture: " << SDL_GetError() << "\n";
+        return;
+    }
+    
     pImpl->plasmaTexture = SDL_CreateTexture(m_resources->renderer, SDL_PIXELFORMAT_RGBA8888, 
                                      SDL_TEXTUREACCESS_TARGET, pImpl->width, pImpl->height);
+    if (!pImpl->plasmaTexture)
+    {
+        SYSTEM_LOG << "OlympeEffectSystem: Failed to create plasma texture: " << SDL_GetError() << "\n";
+        return;
+    }
+    
     pImpl->blurTexture1 = SDL_CreateTexture(m_resources->renderer, SDL_PIXELFORMAT_RGBA8888, 
                                     SDL_TEXTUREACCESS_TARGET, pImpl->width, pImpl->height);
+    if (!pImpl->blurTexture1)
+    {
+        SYSTEM_LOG << "OlympeEffectSystem: Failed to create blur texture 1: " << SDL_GetError() << "\n";
+        return;
+    }
+    
     pImpl->blurTexture2 = SDL_CreateTexture(m_resources->renderer, SDL_PIXELFORMAT_RGBA8888, 
                                     SDL_TEXTUREACCESS_TARGET, pImpl->width, pImpl->height);
+    if (!pImpl->blurTexture2)
+    {
+        SYSTEM_LOG << "OlympeEffectSystem: Failed to create blur texture 2: " << SDL_GetError() << "\n";
+        return;
+    }
+    
     pImpl->bloomTexture = SDL_CreateTexture(m_resources->renderer, SDL_PIXELFORMAT_RGBA8888, 
                                     SDL_TEXTUREACCESS_TARGET, pImpl->width, pImpl->height);
+    if (!pImpl->bloomTexture)
+    {
+        SYSTEM_LOG << "OlympeEffectSystem: Failed to create bloom texture: " << SDL_GetError() << "\n";
+        return;
+    }
     
     // Set blend modes
     SDL_SetTextureBlendMode(pImpl->plasmaTexture, SDL_BLENDMODE_BLEND);

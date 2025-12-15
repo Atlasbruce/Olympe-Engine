@@ -84,6 +84,7 @@ void World::Initialize_ECS_Systems()
     
     // Olympe Effect System (background plasma bloom)
     auto olympeEffect = std::make_unique<OlympeEffectSystem>();
+    olympeEffect->SetResources(&m_resources);  // Set resources before Initialize
     olympeEffect->Initialize();
     Add_ECS_System(std::move(olympeEffect));
 
