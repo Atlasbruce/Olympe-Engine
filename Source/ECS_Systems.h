@@ -11,9 +11,36 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 
 #pragma once
 
-#include "Ecs_Entity.h"
+#include "ECS_Entity.h"
 #include <set>
 
+// Execution phases for ECS systems
+// Systems are executed in the order defined here to ensure consistent and predictable behavior
+enum class ECS_ExecutionPhase
+{
+    // Input collection phase: Raw input from hardware devices
+    InputCollect = 0,
+    
+    // Input mapping phase: Map hardware input to gameplay actions
+    InputMap = 1,
+    
+    // Gameplay phase: Player control, AI behaviors, game logic
+    Gameplay = 2,
+    
+    // Physics phase: Movement, collision detection, physics simulation
+    Physics = 3,
+    
+    // Camera update phase: Update camera positions based on targets
+    CameraUpdate = 4,
+    
+    // Render phase: Visual effects and rendering
+    Render = 5,
+    
+    // Future phases (hooks for extensibility):
+    // Network = 6,      // Network synchronization
+    // Debug = 7,        // Debug visualization and tools
+    // Resources = 8     // Resource loading and management
+};
 
 // The System class handles game logic over entities with specific components.
 class ECS_System
@@ -25,7 +52,10 @@ public:
     // The set of Entities this System processes in its Update loop
     std::set<EntityID> m_entities;
 
-    ECS_System() : requiredSignature() {}
+    // Execution phase for this system (determines order of execution)
+    ECS_ExecutionPhase executionPhase;
+
+    ECS_System() : requiredSignature(), executionPhase(ECS_ExecutionPhase::Gameplay) {}
 
     // The core logic of the System
     virtual void Process() {}

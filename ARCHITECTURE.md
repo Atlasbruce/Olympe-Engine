@@ -1,4 +1,125 @@
-# Olympe Blueprint Editor - Architecture
+# Olympe Engine - Architecture
+
+## ECS Core Loop and System Scheduling
+
+The Olympe Engine uses a phase-based ECS (Entity Component System) architecture that ensures predictable and maintainable execution order.
+
+### Execution Phases
+
+Systems are organized into explicit execution phases that run in the following order each frame:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      FRAME EXECUTION PIPELINE                    │
+└─────────────────────────────────────────────────────────────────┘
+
+Phase 0: InputCollect
+├─ InputSystem
+│  └─ Collects raw hardware input from devices
+│     (Keyboard, Mouse, Gamepad)
+
+Phase 1: InputMap
+├─ InputMappingSystem
+│  └─ Maps hardware input to gameplay actions
+│     (WASD → Movement, Space → Jump, etc.)
+
+Phase 2: Gameplay
+├─ PlayerControlSystem
+│  └─ Processes player movement and actions
+├─ AISystem
+│  └─ Processes AI behaviors and decisions
+└─ DetectionSystem
+   └─ Detects trigger zones and interactions
+
+Phase 3: Physics
+├─ PhysicsSystem
+│  └─ Applies physics simulation
+├─ MovementSystem
+│  └─ Updates entity positions based on velocity
+├─ CollisionSystem
+│  └─ Detects and resolves collisions
+└─ TriggerSystem
+   └─ Processes trigger zone events
+
+Phase 4: CameraUpdate
+└─ CameraManager (external to ECS)
+   └─ Updates camera positions to follow targets
+
+Phase 5: Render
+├─ OlympeEffectSystem
+│  └─ Renders background effects (plasma bloom)
+└─ RenderingSystem
+   └─ Renders all visual entities
+
+Future Phases (Extensibility Hooks):
+- Phase 6: Network (planned)
+- Phase 7: Debug (planned)
+- Phase 8: Resources (planned)
+```
+
+### System Scheduling Architecture
+
+```cpp
+// Each system declares its execution phase
+class MySystem : public ECS_System {
+public:
+    MySystem() {
+        executionPhase = ECS_ExecutionPhase::Gameplay;
+        // Set required component signature...
+    }
+};
+
+// World automatically sorts systems by phase
+void World::Initialize_ECS_Systems() {
+    Add_ECS_System(std::make_unique<InputSystem>());
+    Add_ECS_System(std::make_unique<PlayerControlSystem>());
+    // ... add all systems ...
+    
+    SortSystemsByPhase(); // Ensures correct execution order
+}
+```
+
+### Benefits of Phase-Based Architecture
+
+1. **Predictable Execution**: Systems always run in a defined order
+2. **Easy to Extend**: Add new systems by simply assigning them a phase
+3. **No Side Effects**: Clear data flow prevents race conditions
+4. **Maintainable**: System dependencies are explicit and documented
+5. **Future-Proof**: Reserved phases for networking, debugging, and resources
+
+### Adding a New System
+
+To add a new system to the engine:
+
+```cpp
+// 1. Declare system in ECS_Systems.h
+class MyNewSystem : public ECS_System {
+public:
+    MyNewSystem();
+    virtual void Process() override;
+};
+
+// 2. Implement in ECS_Systems.cpp
+MyNewSystem::MyNewSystem() {
+    executionPhase = ECS_ExecutionPhase::Gameplay; // Choose appropriate phase
+    requiredSignature.set(GetComponentTypeID_Static<MyComponent>(), true);
+}
+
+void MyNewSystem::Process() {
+    for (EntityID entity : m_entities) {
+        // Process entity logic
+    }
+}
+
+// 3. Register in World::Initialize_ECS_Systems()
+Add_ECS_System(std::make_unique<MyNewSystem>());
+```
+
+The system will automatically be sorted into the correct position based on its phase.
+
+---
+
+## Blueprint System Architecture
 
 ## System Overview
 

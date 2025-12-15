@@ -26,6 +26,7 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 //-------------------------------------------------------------
 InputSystem::InputSystem()
 {
+    executionPhase = ECS_ExecutionPhase::InputCollect;
     requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
 }
 void InputSystem::Process()
@@ -35,6 +36,7 @@ void InputSystem::Process()
 //-------------------------------------------------------------
 AISystem::AISystem()
 {
+    executionPhase = ECS_ExecutionPhase::Gameplay;
     requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
     requiredSignature.set(GetComponentTypeID_Static<AIBehavior_data>(), true);
 	requiredSignature.set(GetComponentTypeID_Static<Movement_data>(), true);
@@ -46,6 +48,7 @@ void AISystem::Process()
 //-------------------------------------------------------------
 DetectionSystem::DetectionSystem()
 {
+    executionPhase = ECS_ExecutionPhase::Gameplay;
 }
 void DetectionSystem::Process()
 {
@@ -54,6 +57,7 @@ void DetectionSystem::Process()
 //-------------------------------------------------------------
 PhysicsSystem::PhysicsSystem()
 {
+    executionPhase = ECS_ExecutionPhase::Physics;
 }
 void PhysicsSystem::Process()
 {
@@ -62,6 +66,7 @@ void PhysicsSystem::Process()
 //-------------------------------------------------------------
 CollisionSystem::CollisionSystem()
 {
+    executionPhase = ECS_ExecutionPhase::Physics;
 }
 void CollisionSystem::Process()
 {
@@ -70,6 +75,7 @@ void CollisionSystem::Process()
 //-------------------------------------------------------------
 TriggerSystem::TriggerSystem()
 {
+    executionPhase = ECS_ExecutionPhase::Physics;
 }
 void TriggerSystem::Process()
 {
@@ -78,6 +84,7 @@ void TriggerSystem::Process()
 //-------------------------------------------------------------
 MovementSystem::MovementSystem()
 {
+    executionPhase = ECS_ExecutionPhase::Physics;
     // Define the required components: Position AND AI_Player
     requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
     requiredSignature.set(GetComponentTypeID_Static<Movement_data>(), true);
@@ -105,6 +112,7 @@ void MovementSystem::Process()
 //-------------------------------------------------------------
 RenderingSystem::RenderingSystem()
 {
+    executionPhase = ECS_ExecutionPhase::Render;
     // Define the required components: Position AND VisualSprite
     requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
     requiredSignature.set(GetComponentTypeID_Static<VisualSprite_data>(), true);
@@ -149,6 +157,7 @@ void RenderingSystem::Render()
 //-------------------------------------------------------------
 PlayerControlSystem::PlayerControlSystem()
 {
+    executionPhase = ECS_ExecutionPhase::Gameplay;
     requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
 	requiredSignature.set(GetComponentTypeID_Static<PlayerController_data>(), true);
 	requiredSignature.set(GetComponentTypeID_Static<PlayerBinding_data>(), true);
@@ -186,6 +195,7 @@ void PlayerControlSystem::Process()
 //-------------------------------------------------------------
 InputMappingSystem::InputMappingSystem()
 {
+    executionPhase = ECS_ExecutionPhase::InputMap;
     // Required components: PlayerBinding_data + PlayerController_data + Controller_data
 	requiredSignature.set(GetComponentTypeID_Static<PlayerBinding_data>(), true);
 	requiredSignature.set(GetComponentTypeID_Static<PlayerController_data>(), true);

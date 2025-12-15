@@ -8,9 +8,9 @@ This file is part of Olympe Engine V2.
 World purpose: Manage the lifecycle of Entities and their interaction with ECS Systems.
 
 */
-#pragma once
 #include "World.h"
 #include "InputsManager.h"
+#include <algorithm>
 
 //---------------------------------------------------------------------------------------------
 // Helper function to register input entities with InputsManager
@@ -33,79 +33,74 @@ World::~World()
 void World::Initialize_ECS_Systems()
 {
 	// Initialization of ECS Systems
-	// WARNING THE ORDER OF SYSTEMS MATTERS!
-
-    /*
-	Order of processing systems:
-	- InputSystem
-	- InputMappingSystem (NEW: maps hardware input to gameplay actions)
-	- PlayerControlSystem
-	- AI MovementSystem
-	- DetectionSystem
-	- PhysicsSystem
-	- CollisionSystem
-	- TriggerSystem
-	- AudioSystem
-
-    - RenderingSystem
-    */
+	// Systems are organized by execution phases for clear, predictable pipeline
+    // See ECS_ExecutionPhase enum for phase definitions
+    
+    // Phase 0: InputCollect - Raw hardware input collection
 	Add_ECS_System(std::make_unique<InputSystem>());
+    
+    // Phase 1: InputMap - Map hardware input to gameplay actions
 	Add_ECS_System(std::make_unique<InputMappingSystem>());
+    
+    // Phase 2: Gameplay - Player control, AI, game logic
 	Add_ECS_System(std::make_unique<PlayerControlSystem>());
     Add_ECS_System(std::make_unique<AISystem>());
     Add_ECS_System(std::make_unique<DetectionSystem>());
+    
+    // Phase 3: Physics - Movement, collision, physics simulation
     Add_ECS_System(std::make_unique<PhysicsSystem>());
     Add_ECS_System(std::make_unique<CollisionSystem>());
 	Add_ECS_System(std::make_unique<TriggerSystem>());
 	Add_ECS_System(std::make_unique<MovementSystem>());
     
+    // Phase 4: CameraUpdate - Update camera positions (handled by CameraManager outside ECS currently)
+    // Future: CameraSystem could be added here
     
+    // Phase 5: Render - Visual effects and rendering
     // Olympe Effect System (background plasma bloom)
     auto olympeEffect = std::make_unique<OlympeEffectSystem>();
     olympeEffect->Initialize();
     Add_ECS_System(std::move(olympeEffect));
-
     Add_ECS_System(std::make_unique<RenderingSystem>());
+    
+    // Sort systems by their execution phase to ensure proper order
+    SortSystemsByPhase();
 }
 //---------------------------------------------------------------------------------------------
 void World::Add_ECS_System(std::unique_ptr<ECS_System> system)
 {
-    // Enregistrement d'un syst�me
+    // Register a system - it will be sorted by phase later
     m_systems.push_back(std::move(system));
+}
+//---------------------------------------------------------------------------------------------
+void World::SortSystemsByPhase()
+{
+    // Sort systems by their execution phase to ensure correct order
+    std::sort(m_systems.begin(), m_systems.end(),
+        [](const std::unique_ptr<ECS_System>& a, const std::unique_ptr<ECS_System>& b) {
+            return static_cast<int>(a->executionPhase) < static_cast<int>(b->executionPhase);
+        });
 }
 //---------------------------------------------------------------------------------------------
 void World::Process_ECS_Systems()
 {
-	//static bool firstCall = true;
-
-	// update all registered systems in order
+    // Process all registered systems in phase order
+    // Systems are already sorted by execution phase in Initialize_ECS_Systems()
+    // This ensures consistent execution: InputCollect -> InputMap -> Gameplay -> Physics -> CameraUpdate
     for (const auto& system : m_systems)
     {
         system->Process();
-		//if (firstCall)
-  //      {
-  //          SYSTEM_LOG << "ECS System processed: " << typeid(*system).name() << "\n";
-  //      }
     }
-
-	//firstCall = false;
 }
 //---------------------------------------------------------------------------------------------
 void World::Render_ECS_Systems()
 {
-    //static bool firstCall = true;
-
-	// Render all registered systems in order
+    // Render all registered systems
+    // Only systems in the Render phase (and some others) implement Render()
     for (const auto& system : m_systems)
     {
         system->Render();
-        //if (firstCall)
-        //{
-        //    SYSTEM_LOG << "ECS System Rendered: " << typeid(*system).name() << "\n";
-        //}
     }
-
-    //firstCall = false;
 }
 //---------------------------------------------------------------------------------------------
 void World::Notify_ECS_Systems(EntityID entity, ComponentSignature signature)

@@ -98,6 +98,7 @@ struct OlympeEffectSystem::Implementation
 OlympeEffectSystem::OlympeEffectSystem()
     : pImpl(new Implementation())
 {
+    executionPhase = ECS_ExecutionPhase::Render;
     // No required signature - autonomous system
 }
 

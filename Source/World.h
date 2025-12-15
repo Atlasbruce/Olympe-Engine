@@ -177,8 +177,11 @@ private:
     EntityID m_nextEntityID = 1;
     std::queue<EntityID> m_freeEntityIDs;
 
-    // System management
+    // System management - organized by execution phase
     std::vector<std::unique_ptr<ECS_System>> m_systems;
+    
+    // Helper to sort systems by execution phase
+    void SortSystemsByPhase();
 
     // Notifies systems when an Entity's signature changes
     void Notify_ECS_Systems(EntityID entity, ComponentSignature signature);
