@@ -11,7 +11,9 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 
 #pragma once
 
-#include "Ecs_Entity.h"
+#include "ECS_Entity.h"
+#include "ECS_Events.h"
+#include "ECS_Components.h"
 #include <set>
 
 
@@ -106,6 +108,80 @@ class InputMappingSystem : public ECS_System
     InputMappingSystem();
     virtual void Process() override;
 };
+
+//-------------------------------------------------------------
+// EventQueue System: manages global event queues for decoupled event handling
+// This system provides typed event queues for different event categories
+// No entity required - autonomous event management system
+class EventQueueSystem : public ECS_System
+{
+public:
+    EventQueueSystem();
+    virtual void Process() override;
+    
+    // Post an event to a specific queue
+    bool PostEvent(ECSEventType type, const Event& event);
+    
+    // Consume events of a specific type (calls callback for each event)
+    template<typename Func>
+    void ConsumeEvents(ECSEventType type, Func callback);
+    
+    // Peek at events without consuming them
+    template<typename Func>
+    void PeekEvents(ECSEventType type, Func callback) const;
+    
+    // Clear all events of a specific type
+    void ClearEvents(ECSEventType type);
+    
+    // Clear all events in all queues
+    void ClearAllEvents();
+    
+    // Get number of events in a specific queue
+    size_t GetEventCount(ECSEventType type) const;
+
+private:
+    // Separate event queues for different event types
+    EventQueue_data m_eventQueues[static_cast<size_t>(ECSEventType::MAX_EVENT_TYPES)];
+};
+
+// Template method implementations (must be in header)
+template<typename Func>
+void EventQueueSystem::ConsumeEvents(ECSEventType type, Func callback)
+{
+    size_t queueIndex = static_cast<size_t>(type);
+    if (queueIndex >= static_cast<size_t>(ECSEventType::MAX_EVENT_TYPES))
+        return;
+    
+    EventQueue_data& queue = m_eventQueues[queueIndex];
+    Event evt;
+    
+    // Process all events in the queue
+    while (queue.PopEvent(evt))
+    {
+        callback(evt);
+    }
+}
+
+template<typename Func>
+void EventQueueSystem::PeekEvents(ECSEventType type, Func callback) const
+{
+    size_t queueIndex = static_cast<size_t>(type);
+    if (queueIndex >= static_cast<size_t>(ECSEventType::MAX_EVENT_TYPES))
+        return;
+    
+    const EventQueue_data& queue = m_eventQueues[queueIndex];
+    
+    // Peek at all events without removing them
+    size_t currentRead = queue.readIndex;
+    size_t remaining = queue.count;
+    
+    while (remaining > 0)
+    {
+        callback(queue.events[currentRead]);
+        currentRead = (currentRead + 1) % EventQueue_data::QUEUE_CAPACITY;
+        --remaining;
+    }
+}
 
 //-------------------------------------------------------------
 // Olympe Effect System: Plasma bloom background with glowing orbs

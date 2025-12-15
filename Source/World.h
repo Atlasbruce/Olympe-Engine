@@ -47,6 +47,9 @@ public:
     void Add_ECS_System(std::unique_ptr<ECS_System> system);
     void Process_ECS_Systems();
     void Render_ECS_Systems();
+    
+    // Get the EventQueue system for posting events
+    EventQueueSystem* GetEventQueueSystem();
 
     //---------------------------------------------------------------
     // Main processing loop called each frame: events are processed first (async), then stages in order
@@ -179,6 +182,7 @@ private:
 
     // System management
     std::vector<std::unique_ptr<ECS_System>> m_systems;
+    EventQueueSystem* m_eventQueueSystem = nullptr;  // Cached pointer for quick access
 
     // Notifies systems when an Entity's signature changes
     void Notify_ECS_Systems(EntityID entity, ComponentSignature signature);

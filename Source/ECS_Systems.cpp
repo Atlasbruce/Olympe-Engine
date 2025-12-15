@@ -314,4 +314,56 @@ void InputMappingSystem::Process()
         }
     }
 }
+
+//-------------------------------------------------------------
+// EventQueue System Implementation
+//-------------------------------------------------------------
+
+EventQueueSystem::EventQueueSystem()
+{
+    // Autonomous system - no required components
+    requiredSignature = ComponentSignature();
+}
+
+void EventQueueSystem::Process()
+{
+    // Event processing happens via ConsumeEvents calls from other systems
+    // This method can be used for maintenance tasks like event expiration
+}
+
+bool EventQueueSystem::PostEvent(ECSEventType type, const Event& event)
+{
+    size_t queueIndex = static_cast<size_t>(type);
+    if (queueIndex >= static_cast<size_t>(ECSEventType::MAX_EVENT_TYPES))
+        return false;
+    
+    return m_eventQueues[queueIndex].PushEvent(event);
+}
+
+void EventQueueSystem::ClearEvents(ECSEventType type)
+{
+    size_t queueIndex = static_cast<size_t>(type);
+    if (queueIndex < static_cast<size_t>(ECSEventType::MAX_EVENT_TYPES))
+    {
+        m_eventQueues[queueIndex].Clear();
+    }
+}
+
+void EventQueueSystem::ClearAllEvents()
+{
+    for (size_t i = 0; i < static_cast<size_t>(ECSEventType::MAX_EVENT_TYPES); ++i)
+    {
+        m_eventQueues[i].Clear();
+    }
+}
+
+size_t EventQueueSystem::GetEventCount(ECSEventType type) const
+{
+    size_t queueIndex = static_cast<size_t>(type);
+    if (queueIndex >= static_cast<size_t>(ECSEventType::MAX_EVENT_TYPES))
+        return 0;
+    
+    return m_eventQueues[queueIndex].GetCount();
+}
+
 //-------------------------------------------------------------

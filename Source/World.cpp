@@ -37,6 +37,7 @@ void World::Initialize_ECS_Systems()
 
     /*
 	Order of processing systems:
+	- EventQueueSystem (NEW: manages typed event queues for decoupled event handling)
 	- InputSystem
 	- InputMappingSystem (NEW: maps hardware input to gameplay actions)
 	- PlayerControlSystem
@@ -49,6 +50,11 @@ void World::Initialize_ECS_Systems()
 
     - RenderingSystem
     */
+    // EventQueue System - must be first so other systems can post events
+    auto eventQueueSystem = std::make_unique<EventQueueSystem>();
+    m_eventQueueSystem = eventQueueSystem.get();  // Cache pointer for quick access
+    Add_ECS_System(std::move(eventQueueSystem));
+    
 	Add_ECS_System(std::make_unique<InputSystem>());
 	Add_ECS_System(std::make_unique<InputMappingSystem>());
 	Add_ECS_System(std::make_unique<PlayerControlSystem>());
@@ -70,8 +76,13 @@ void World::Initialize_ECS_Systems()
 //---------------------------------------------------------------------------------------------
 void World::Add_ECS_System(std::unique_ptr<ECS_System> system)
 {
-    // Enregistrement d'un syst�me
+    // Enregistrement d'un système
     m_systems.push_back(std::move(system));
+}
+//---------------------------------------------------------------------------------------------
+EventQueueSystem* World::GetEventQueueSystem()
+{
+    return m_eventQueueSystem;
 }
 //---------------------------------------------------------------------------------------------
 void World::Process_ECS_Systems()

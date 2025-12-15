@@ -11,12 +11,13 @@ Components purpose: Include all component definitions used in the ECS architectu
 
 #pragma once
 
-#include "Ecs_Entity.h"
+#include "ECS_Entity.h"
 #include <string>
 #include <unordered_map>
 #include "vector.h"
 #include <SDL3/SDL.h>
 #include "DataManager.h"
+#include "ECS_Events.h"
 
 using namespace ::std;
 
@@ -176,5 +177,75 @@ struct InputMapping_data
 		gamepadBindings["shoot"] = 1; // B button
 		gamepadBindings["interact"] = 2; // X button
 		gamepadBindings["menu"] = 7; // Start button
+	}
+};
+
+// --- Component EventQueue Data ---
+// Ring buffer for storing typed events for entity-specific or global event queues
+struct EventQueue_data
+{
+	static constexpr size_t QUEUE_CAPACITY = 64;
+	
+	// Ring buffer storage
+	std::vector<Event> events;
+	size_t readIndex = 0;
+	size_t writeIndex = 0;
+	size_t count = 0;
+	
+	// Constructor to pre-allocate ring buffer
+	EventQueue_data()
+	{
+		events.resize(QUEUE_CAPACITY);
+	}
+	
+	// Push an event to the queue (returns false if queue is full)
+	bool PushEvent(const Event& evt)
+	{
+		if (count >= QUEUE_CAPACITY)
+			return false;  // Queue is full
+		
+		events[writeIndex] = evt;
+		writeIndex = (writeIndex + 1) % QUEUE_CAPACITY;
+		++count;
+		return true;
+	}
+	
+	// Pop an event from the queue (returns false if queue is empty)
+	bool PopEvent(Event& outEvt)
+	{
+		if (count == 0)
+			return false;  // Queue is empty
+		
+		outEvt = events[readIndex];
+		readIndex = (readIndex + 1) % QUEUE_CAPACITY;
+		--count;
+		return true;
+	}
+	
+	// Peek at the next event without removing it
+	bool PeekEvent(Event& outEvt) const
+	{
+		if (count == 0)
+			return false;
+		
+		outEvt = events[readIndex];
+		return true;
+	}
+	
+	// Check if queue is empty
+	bool IsEmpty() const { return count == 0; }
+	
+	// Check if queue is full
+	bool IsFull() const { return count >= QUEUE_CAPACITY; }
+	
+	// Get number of events in queue
+	size_t GetCount() const { return count; }
+	
+	// Clear all events
+	void Clear()
+	{
+		readIndex = 0;
+		writeIndex = 0;
+		count = 0;
 	}
 };
