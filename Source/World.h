@@ -24,7 +24,7 @@ World purpose: Manage the overall game world, including object management, level
 #include "Resources.h" // Centralized resource registry
 
 // Include ECS related headers
-#include "Ecs_Entity.h"
+#include "ECS_Entity.h"
 #include "ECS_Components.h"
 #include "ECS_Systems.h"
 #include "ECS_Register.h" // Include the implementation of ComponentPool

@@ -11,12 +11,9 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 
 #pragma once
 
-#include "Ecs_Entity.h"
+#include "ECS_Entity.h"
 #include "Resources.h"
 #include <set>
-
-// Forward declaration
-struct Resources;
 
 // The System class handles game logic over entities with specific components.
 class ECS_System
