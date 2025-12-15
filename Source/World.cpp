@@ -65,6 +65,11 @@ void World::Initialize_ECS_Systems()
     olympeEffect->Initialize();
     Add_ECS_System(std::move(olympeEffect));
 
+    // RenderBackend System (manages render targets and viewports)
+    auto renderBackend = std::make_unique<RenderBackendSystem>();
+    renderBackend->Initialize();
+    Add_ECS_System(std::move(renderBackend));
+
     Add_ECS_System(std::make_unique<RenderingSystem>());
 }
 //---------------------------------------------------------------------------------------------

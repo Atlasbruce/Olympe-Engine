@@ -11,7 +11,7 @@ Components purpose: Include all component definitions used in the ECS architectu
 
 #pragma once
 
-#include "Ecs_Entity.h"
+#include "ECS_Entity.h"
 #include <string>
 #include <unordered_map>
 #include "vector.h"
@@ -137,6 +137,9 @@ struct Camera_data
 	float zoomLevel = 1.0f; // Zoom level of the camera
 	float rotation = 0.0f;  // Rotation angle of the camera in radians
 	EntityID targetEntity = INVALID_ENTITY_ID; // Entity the camera is following
+	EntityID viewportEntity = INVALID_ENTITY_ID; // Viewport entity this camera renders to (optional)
+	Vector offset = { 0.f, 0.f, 0.f }; // Camera offset from target position
+	SDL_Rect bounds = {INT_MIN, INT_MIN, INT_MAX, INT_MAX}; // Optional bounds for camera movement
 };
 
 // --- Component NPC Data ---
@@ -177,4 +180,37 @@ struct InputMapping_data
 		gamepadBindings["interact"] = 2; // X button
 		gamepadBindings["menu"] = 7; // Start button
 	}
+};
+
+// --- Component RenderTarget Data ---
+// Represents a render target (window + renderer pair)
+enum class RenderTargetType
+{
+	Primary = 0,      // Main window/renderer
+	Secondary,        // Additional window for multi-window mode
+	Offscreen,        // Offscreen texture target
+	Count
+};
+
+struct RenderTarget_data
+{
+	SDL_Window* window = nullptr;     // Window handle (can be null for offscreen targets)
+	SDL_Renderer* renderer = nullptr; // Renderer handle
+	RenderTargetType type = RenderTargetType::Primary; // Type of render target
+	int index = 0;                    // Index for ordering/identification
+	bool isActive = true;             // Whether this target is currently active
+	int width = 0;                    // Target width
+	int height = 0;                   // Target height
+};
+
+// --- Component Viewport Data ---
+// Represents a viewport (portion of a render target to render to)
+struct Viewport_data
+{
+	SDL_FRect rect = {0.f, 0.f, 0.f, 0.f}; // Viewport rectangle (position and size)
+	short playerIndex = 0;                  // Which player this viewport belongs to
+	EntityID renderTargetEntity = INVALID_ENTITY_ID; // RenderTarget entity to render to
+	EntityID cameraEntity = INVALID_ENTITY_ID;       // Camera entity for this viewport
+	bool isActive = true;                   // Whether this viewport is currently active
+	int renderOrder = 0;                    // Order in which viewports are rendered
 };

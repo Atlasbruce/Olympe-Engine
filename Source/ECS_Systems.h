@@ -11,7 +11,7 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 
 #pragma once
 
-#include "Ecs_Entity.h"
+#include "ECS_Entity.h"
 #include <set>
 
 
@@ -123,6 +123,44 @@ public:
 
 private:
     // Implementation details hidden - defined in OlympeEffectSystem.cpp
+    struct Implementation;
+    Implementation* pImpl;
+};
+
+//-------------------------------------------------------------
+// RenderBackend System: Manages RenderTarget entities (windows/renderers)
+// Coordinates multi-pass rendering through viewports
+class RenderBackendSystem : public ECS_System
+{
+public:
+    RenderBackendSystem();
+    virtual ~RenderBackendSystem();
+    
+    virtual void Process() override;
+    virtual void Render() override;
+    
+    void Initialize();
+    
+    // Create a primary render target from existing window/renderer
+    EntityID CreatePrimaryRenderTarget(SDL_Window* window, SDL_Renderer* renderer);
+    
+    // Create a secondary window and its render target
+    EntityID CreateSecondaryRenderTarget(const char* title, int width, int height, int index);
+    
+    // Create a viewport for a player
+    EntityID CreateViewport(short playerIndex, const SDL_FRect& rect, EntityID renderTargetEntity);
+    
+    // Update viewport layouts (for split-screen)
+    void UpdateViewportLayouts();
+    
+    // Get all active render targets
+    std::vector<EntityID> GetActiveRenderTargets() const;
+    
+    // Get all viewports for a specific render target
+    std::vector<EntityID> GetViewportsForRenderTarget(EntityID renderTargetEntity) const;
+
+private:
+    // Implementation details hidden
     struct Implementation;
     Implementation* pImpl;
 };

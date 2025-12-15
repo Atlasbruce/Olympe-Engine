@@ -47,6 +47,18 @@ public:
     void Add_ECS_System(std::unique_ptr<ECS_System> system);
     void Process_ECS_Systems();
     void Render_ECS_Systems();
+    
+    // Get a system by type (returns nullptr if not found)
+    template <typename T>
+    T* GetSystem()
+    {
+        for (const auto& system : m_systems)
+        {
+            T* ptr = dynamic_cast<T*>(system.get());
+            if (ptr) return ptr;
+        }
+        return nullptr;
+    }
 
     //---------------------------------------------------------------
     // Main processing loop called each frame: events are processed first (async), then stages in order
@@ -164,6 +176,24 @@ public:
             }
         }
         return false;
+    }
+
+    // Get all entities that have a specific component type
+    template <typename T>
+    std::vector<EntityID> GetEntitiesWithComponent() const
+    {
+        std::vector<EntityID> result;
+        const ComponentTypeID typeID = GetComponentTypeID_Static<T>();
+        
+        for (const auto& pair : m_entitySignatures)
+        {
+            if (pair.second.test(typeID))
+            {
+                result.push_back(pair.first);
+            }
+        }
+        
+        return result;
     }
 
     // Public for inspection/debug
