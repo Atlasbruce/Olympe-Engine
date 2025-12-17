@@ -47,6 +47,19 @@ public:
     void Add_ECS_System(std::unique_ptr<ECS_System> system);
     void Process_ECS_Systems();
     void Render_ECS_Systems();
+    
+    // Get a specific system by type
+    template <typename T>
+    T* GetSystem()
+    {
+        for (auto& system : m_systems)
+        {
+            T* castedSystem = dynamic_cast<T*>(system.get());
+            if (castedSystem)
+                return castedSystem;
+        }
+        return nullptr;
+    }
 
     //---------------------------------------------------------------
     // Main processing loop called each frame: events are processed first (async), then stages in order

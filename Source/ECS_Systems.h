@@ -126,3 +126,6 @@ private:
     struct Implementation;
     Implementation* pImpl;
 };
+
+// Include camera system
+#include "ECS_Systems_Camera.h"

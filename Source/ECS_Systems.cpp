@@ -11,6 +11,7 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 
 #include "ECS_Systems.h"
 #include "ECS_Components.h"
+#include "ECS_Components_Camera.h"
 #include "ECS_Register.h"
 #include "ECS_Entity.h"
 #include "World.h" 
@@ -18,10 +19,18 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #include "InputsManager.h"
 #include "system/KeyboardManager.h"
 #include "system/JoystickManager.h"
+#include "system/ViewportManager.h"
+#include "system/system_consts.h"
 #include <iostream>
 #include <bitset>
 #include <cmath>
 #include "drawing.h"
+
+// Include the camera rendering integration code
+#include "ECS_Systems_Rendering_Camera.cpp"
+
+// Forward declaration for camera rendering helper
+void RenderEntitiesForCamera(const CameraTransform& cam);
 
 //-------------------------------------------------------------
 InputSystem::InputSystem()
@@ -115,34 +124,155 @@ void RenderingSystem::Render()
     SDL_Renderer* renderer = GameEngine::renderer;
     if (!renderer) return;
 
-    // Iterate ONLY over the relevant entities stored in m_entities
-    for (EntityID entity : m_entities)
+    // Get player count from ViewportManager
+    int playerCount = ViewportManager::Get().GetPlayerCount();
+    
+    // Check if we have any ECS cameras active
+    bool hasECSCameras = false;
+    for (short playerID = 0; playerID < playerCount; playerID++)
+    {
+        CameraTransform camTransform = GetActiveCameraTransform(playerID);
+        if (camTransform.isActive)
+        {
+            hasECSCameras = true;
+            break;
+        }
+    }
+    
+    // Use ECS camera system if available, otherwise fall back to legacy
+    if (hasECSCameras)
+    {
+        // Multi-camera rendering with ECS camera system
+        for (short playerID = 0; playerID < playerCount; playerID++)
+        {
+            CameraTransform camTransform = GetActiveCameraTransform(playerID);
+            
+            if (!camTransform.isActive)
+                continue;
+            
+            // Set viewport and clip rect
+            SDL_Rect viewportRect = {
+                (int)camTransform.viewport.x,
+                (int)camTransform.viewport.y,
+                (int)camTransform.viewport.w,
+                (int)camTransform.viewport.h
+            };
+            SDL_SetRenderViewport(renderer, &viewportRect);
+            SDL_SetRenderClipRect(renderer, &viewportRect);
+            
+            // Render entities for this camera
+            RenderEntitiesForCamera(camTransform);
+            
+            // Clear clip rect
+            SDL_SetRenderClipRect(renderer, nullptr);
+        }
+        
+        // Reset viewport
+        SDL_SetRenderViewport(renderer, nullptr);
+    }
+    else
+    {
+        // Legacy rendering path using CameraManager
+        for (EntityID entity : m_entities)
+        {
+            try
+            {
+                Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+                VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
+                BoundingBox_data& boxComp = World::Get().GetComponent<BoundingBox_data>(entity);
+
+                if (visual.sprite)
+                {
+                    Vector vRenderPos = pos.position - visual.hotSpot - CameraManager::Get().GetCameraPositionForActivePlayer();
+                    SDL_FRect box = boxComp.boundingBox;
+                    box.x = vRenderPos.x;
+                    box.y = vRenderPos.y;
+                    
+                    SDL_SetTextureColorMod(visual.sprite, visual.color.r, visual.color.g, visual.color.b);
+                    SDL_RenderTexture(GameEngine::renderer, visual.sprite, nullptr, &box);
+
+                    // Debug: draw bounding box
+                    SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 0, 255);
+                    Draw_Circle(GameEngine::renderer, (int)( box.x + box.w / 2.f) , (int) (box.y + box.h / 2.f), 35);
+                }
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "RenderingSystem Error for Entity " << entity << ": " << e.what() << "\n";
+            }
+        }
+    }
+}
+
+// Render entities for a specific camera with frustum culling
+void RenderEntitiesForCamera(const CameraTransform& cam)
+{
+    SDL_Renderer* renderer = GameEngine::renderer;
+    if (!renderer) return;
+    
+    // Get all entities with Position, VisualSprite, and BoundingBox
+    for (EntityID entity : World::Get().GetSystem<RenderingSystem>()->m_entities)
     {
         try
         {
-            // Direct and fast access to Component data from the Pools
             Position_data& pos = World::Get().GetComponent<Position_data>(entity);
             VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
             BoundingBox_data& boxComp = World::Get().GetComponent<BoundingBox_data>(entity);
-
+            
+            // Create world bounds for frustum culling
+            SDL_FRect worldBounds = {
+                pos.position.x - visual.hotSpot.x,
+                pos.position.y - visual.hotSpot.y,
+                boxComp.boundingBox.w,
+                boxComp.boundingBox.h
+            };
+            
+            // Frustum culling - skip if not visible
+            if (!cam.IsVisible(worldBounds))
+                continue;
+            
+            // Transform position to screen space
+            Vector screenPos = cam.WorldToScreen(pos.position - visual.hotSpot);
+            
+            // Transform size to screen space
+            Vector screenSize = cam.WorldSizeToScreenSize(
+                Vector(boxComp.boundingBox.w, boxComp.boundingBox.h, 0.f)
+            );
+            
+            // Create destination rectangle
+            SDL_FRect destRect = {
+                screenPos.x,
+                screenPos.y,
+                screenSize.x,
+                screenSize.y
+            };
+            
+            // Render based on sprite type
             if (visual.sprite)
             {
-                Vector vRenderPos = pos.position - visual.hotSpot - CameraManager::Get().GetCameraPositionForActivePlayer();
-                SDL_FRect box = boxComp.boundingBox;
-                box.x = vRenderPos.x;
-                box.y = vRenderPos.y;
-				
-				SDL_SetTextureColorMod(visual.sprite, visual.color.r, visual.color.g, visual.color.b);
-                SDL_RenderTexture(GameEngine::renderer, visual.sprite, nullptr, &box);
-
-				// Debug: draw bounding box
-				SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 0, 255);
-				Draw_Circle(GameEngine::renderer, (int)( box.x + box.w / 2.f) , (int) (box.y + box.h / 2.f), 35);
+                // Apply color modulation
+                SDL_SetTextureColorMod(visual.sprite, visual.color.r, visual.color.g, visual.color.b);
+                
+                // Render with rotation if camera is rotated
+                if (cam.rotation != 0.0f)
+                {
+                    SDL_RenderTextureRotated(renderer, visual.sprite, nullptr, &destRect, 
+                                            cam.rotation, nullptr, SDL_FLIP_NONE);
+                }
+                else
+                {
+                    SDL_RenderTexture(renderer, visual.sprite, nullptr, &destRect);
+                }
+                
+                // Debug: draw bounding box
+                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+                Draw_Circle(renderer, (int)(destRect.x + destRect.w / 2.f), 
+                          (int)(destRect.y + destRect.h / 2.f), 5);
             }
         }
         catch (const std::exception& e)
         {
-            std::cerr << "RenderingSystem Error for Entity " << entity << ": " << e.what() << "\n";
+            std::cerr << "RenderEntitiesForCamera Error for Entity " << entity << ": " << e.what() << "\n";
         }
     }
 }

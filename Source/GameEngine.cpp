@@ -6,6 +6,9 @@
 #include "OptionsManager.h"
 #include "DataManager.h"
 #include "PanelManager.h"
+#include "World.h"
+#include "ECS_Systems_Camera.h"
+#include "system/CameraEventHandler.h"
 
 float GameEngine::fDt = 0.0f;
 SDL_Renderer* GameEngine::renderer = nullptr;
@@ -32,6 +35,17 @@ void GameEngine::Initialize()
 	//PanelManager::Get().CreateTreeViewWindow();	
 	//PanelManager::Get().CreateInputsInspectorWindow();
 	// By default keep them hidden; can be shown by the UI later
+	
+	// Initialize camera event handler
+	CameraEventHandler::Get().Initialize();
+	
+	// Create default camera for player 0 with keyboard controls
+	CameraSystem* camSys = World::Get().GetSystem<CameraSystem>();
+	if (camSys)
+	{
+		EntityID defaultCamera = camSys->CreateCameraForPlayer(0, true); // true = bind to keyboard
+		SYSTEM_LOG << "Created default ECS camera for player 0 (Entity " << defaultCamera << ")\n";
+	}
 }
 //-------------------------------------------------------------
 void GameEngine::Process()
