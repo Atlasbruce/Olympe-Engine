@@ -168,26 +168,26 @@ void VideoGame::OnEvent(const Message& msg)
         LoadGame(slot);
         break;
     }
-	// FOR TESTS : Add/Remove player with Numpad +/- keys -----------------------------
+	// FOR TESTS : Add/Remove player with Enter and Backspace keys -----------------------------
     case EventType::Olympe_EventType_Keyboard_KeyDown:
     {
         // msg.controlId contains SDL_Scancode
         auto sc = static_cast<SDL_Scancode>(msg.controlId);
-        if (sc == SDL_SCANCODE_KP_PLUS)
+        if (sc == SDL_SCANCODE_RETURN)
         {
             // debounce: only act on initial press
-            if (!m_kpPlusPressed && msg.state == 1)
+            if (!m_key_AddPlayerPressed && msg.state == 1)
             {
-                m_kpPlusPressed = true;
-                EntityID added = AddPlayerEntity(); //AddPlayerObject();
-                SYSTEM_LOG << "VideoGame: Numpad + pressed -> add viewport (AddPlayer returned " << added << ")\n";
+                m_key_AddPlayerPressed = true;
+                EntityID added = AddPlayerEntity(); 
+                SYSTEM_LOG << "VideoGame: Enter + pressed -> add viewport (AddPlayer returned " << added << ")\n";
             }
         }
-        else if (sc == SDL_SCANCODE_KP_MINUS)
+        else if (sc == SDL_SCANCODE_BACKSPACE)
         {
-            if (!m_kpMinusPressed && msg.state == 1)
+            if (!m_key_RemovePlayerPressed && msg.state == 1)
             {
-                m_kpMinusPressed = true;
+                m_key_RemovePlayerPressed = true;
                 if (!m_playersEntity.empty())
                 {
                     //short pid = ((Player*)(m_playersObject.back()))->m_PlayerID;
@@ -204,8 +204,8 @@ void VideoGame::OnEvent(const Message& msg)
     case EventType::Olympe_EventType_Keyboard_KeyUp:
     {
         auto sc = static_cast<SDL_Scancode>(msg.controlId);
-        if (sc == SDL_SCANCODE_KP_PLUS) m_kpPlusPressed = false;
-        if (sc == SDL_SCANCODE_KP_MINUS) m_kpMinusPressed = false;
+        if (sc == SDL_SCANCODE_RETURN) m_key_AddPlayerPressed = false;
+        if (sc == SDL_SCANCODE_BACKSPACE) m_key_RemovePlayerPressed = false;
         break;
     }
     default:

@@ -95,7 +95,7 @@ private:
 
      bool m_keyboardAssigned = false;
 
-     // key debounce flags for numpad +/-
-     bool m_kpPlusPressed = false;
-     bool m_kpMinusPressed = false;
+	 // key debounce flags for numpad +/- - FOR DEBUG TESTS ONLY - to be removed later
+     bool m_key_AddPlayerPressed = false;
+     bool m_key_RemovePlayerPressed = false;
 };
