@@ -20,6 +20,7 @@ input processing, target following, smooth zoom/rotation, and camera effects.
 #include "system/JoystickManager.h"
 #include "system/ViewportManager.h"
 #include "system/system_utils.h"
+#include "system/system_consts.h"
 #include <cmath>
 #include <random>
 

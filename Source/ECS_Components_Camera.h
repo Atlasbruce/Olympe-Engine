@@ -13,7 +13,7 @@ and various camera effects.
 
 #pragma once
 
-#include "Ecs_Entity.h"
+#include "ECS_Entity.h"
 #include "vector.h"
 #include <SDL3/SDL.h>
 

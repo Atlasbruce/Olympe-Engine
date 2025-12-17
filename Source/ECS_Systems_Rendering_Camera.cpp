@@ -137,10 +137,6 @@ CameraTransform GetActiveCameraTransform(short playerID)
         if (!signature.test(camTypeID))
             continue;
         
-        // Check if this is the camera we're looking for
-        if (!world.HasComponent<Camera_data>(entity))
-            continue;
-        
         Camera_data& cam = world.GetComponent<Camera_data>(entity);
         
         if (cam.playerId == playerID && cam.isActive)
