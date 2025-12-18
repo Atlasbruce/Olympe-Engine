@@ -132,8 +132,20 @@
     <ClCompile Include="Source\ECS_Systems_Camera.cpp">
       <Filter>Fichiers d%27en-tête\ECS</Filter>
     </ClCompile>
+    <ClCompile Include="Source\ECS_Systems_Grid.cpp">
+      <Filter>Fichiers d%27en-tête\ECS\Systems</Filter>
+    </ClCompile>
     <ClCompile Include="Source\system\CameraEventHandler.cpp">
       <Filter>Fichiers d%27en-tête\Engine Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Editor\GridPanel.cpp">
+      <Filter>Fichiers d%27en-tête\Engine Rendering\Panels</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ImGuiManager.cpp">
+      <Filter>Fichiers d%27en-tête\Engine Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ImGuiOverlayRuntime.cpp">
+      <Filter>Fichiers sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -263,8 +275,23 @@
     <ClInclude Include="Source\ECS_Systems_Rendering_Camera.h">
       <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
+    <ClInclude Include="Source\ECS_Grid.h">
+      <Filter>Fichiers d%27en-tête\ECS\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ECS_Systems_Grid.h">
+      <Filter>Fichiers d%27en-tête\ECS\Systems</Filter>
+    </ClInclude>
     <ClInclude Include="Source\system\CameraEventHandler.h">
       <Filter>Fichiers d%27en-tête\Engine Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Editor\GridPanel.h">
+      <Filter>Fichiers d%27en-tête\Engine Rendering\Panels</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ImGuiManager.h">
+      <Filter>Fichiers d%27en-tête\Engine Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ImGuiOverlayRuntime.h">
+      <Filter>Fichiers d%27en-tête</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

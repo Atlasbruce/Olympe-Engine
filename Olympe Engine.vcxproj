@@ -22,7 +22,11 @@
     <ClCompile Include="source\ECS_Register.h" />
     <ClCompile Include="Source\ECS_Systems.cpp" />
     <ClCompile Include="Source\ECS_Systems_Camera.cpp" />
+    <ClCompile Include="Source\ECS_Systems_Grid.cpp" />
     <ClCompile Include="Source\ECS_Systems_Rendering_Camera.cpp" />
+    <ClCompile Include="Source\Editor\GridPanel.cpp" />
+    <ClCompile Include="Source\ImGuiManager.cpp" />
+    <ClCompile Include="Source\ImGuiOverlayRuntime.cpp" />
     <ClCompile Include="Source\engine_utils.cpp" />
     <ClCompile Include="Source\InputsInspectorPanel.cpp" />
     <ClCompile Include="Source\InputsManager.cpp" />
@@ -54,9 +58,14 @@
     <ClInclude Include="source\ECS_Components.h" />
     <ClInclude Include="Source\ECS_Components_Camera.h" />
     <ClInclude Include="source\ECS_Entity.h" />
+    <ClInclude Include="Source\ECS_Grid.h" />
     <ClInclude Include="source\ECS_Systems.h" />
     <ClInclude Include="Source\ECS_Systems_Camera.h" />
+    <ClInclude Include="Source\ECS_Systems_Grid.h" />
     <ClInclude Include="Source\ECS_Systems_Rendering_Camera.h" />
+    <ClInclude Include="Source\Editor\GridPanel.h" />
+    <ClInclude Include="Source\ImGuiManager.h" />
+    <ClInclude Include="Source\ImGuiOverlayRuntime.h" />
     <ClInclude Include="Source\engine_utils.h" />
     <ClInclude Include="Source\DataManager.h" />
     <ClInclude Include="Source\GameEngine.h" />
