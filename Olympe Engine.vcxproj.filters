@@ -126,6 +126,15 @@
     <ClCompile Include="Source\system\EventManager_ECS.cpp">
       <Filter>Fichiers d%27en-tête\Engine Systems\Messages</Filter>
     </ClCompile>
+    <ClCompile Include="Source\ECS_Systems_Rendering_Camera.cpp">
+      <Filter>Fichiers d%27en-tête\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ECS_Systems_Camera.cpp">
+      <Filter>Fichiers d%27en-tête\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\system\CameraEventHandler.cpp">
+      <Filter>Fichiers d%27en-tête\Engine Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -244,6 +253,18 @@
     </ClInclude>
     <ClInclude Include="source\ECS_Systems.h">
       <Filter>Fichiers d%27en-tête\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ECS_Systems_Camera.h">
+      <Filter>Fichiers d%27en-tête\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ECS_Components_Camera.h">
+      <Filter>Fichiers d%27en-tête\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ECS_Systems_Rendering_Camera.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\system\CameraEventHandler.h">
+      <Filter>Fichiers d%27en-tête\Engine Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -16,8 +16,8 @@ target following, smooth zoom/rotation, and applies camera transformations.
 #include "ECS_Components_Camera.h"
 #include <unordered_map>
 #include <SDL3/SDL.h>
-
-class GameObject; // Forward declaration
+#include <SDL3/SDL_render.h>
+#include "system/message.h"
 
 // CameraSystem - Manages all camera entities in the ECS
 class CameraSystem : public ECS_System
@@ -38,9 +38,8 @@ public:
     void BindCameraToKeyboard(EntityID cameraEntity);
     void BindCameraToJoystick(EntityID cameraEntity, short playerID, SDL_JoystickID joystickId);
     
-    // Target setting (ECS and legacy GameObject)
+    // Target setting
     void SetCameraTarget_ECS(EntityID cameraEntity, EntityID targetEntity);
-    void SetCameraTarget_Legacy(EntityID cameraEntity, GameObject* targetObj);
     void ClearCameraTarget(EntityID cameraEntity);
     
     // Rendering support

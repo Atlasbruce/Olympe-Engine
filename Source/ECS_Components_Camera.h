@@ -17,9 +17,6 @@ and various camera effects.
 #include "vector.h"
 #include <SDL3/SDL.h>
 
-// Forward declaration for legacy GameObject support
-class GameObject;
-
 // Camera type enumeration
 enum class CameraType : uint8_t {
     CameraType_2D = 0,        // Standard 2D camera
@@ -75,7 +72,6 @@ struct Camera_data
 struct CameraTarget_data
 {
     EntityID targetEntityID = INVALID_ENTITY_ID; // ECS entity to follow
-    GameObject* targetObject = nullptr;      // Legacy GameObject to follow
     
     bool followTarget = false;               // Enable/disable target following
     float smoothFactor = 5.0f;               // Smoothing factor for following (0-10, higher = smoother)

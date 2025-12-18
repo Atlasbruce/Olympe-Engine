@@ -131,13 +131,6 @@ struct PlayerBinding_data
 	short playerIndex = 0; // Index of the player (e.g., Player 1, Player 2)
 	short controllerID = -1; // ID of the joystick/controller
 };
-// --- Component Camera Data ---
-struct Camera_data
-{
-	float zoomLevel = 1.0f; // Zoom level of the camera
-	float rotation = 0.0f;  // Rotation angle of the camera in radians
-	EntityID targetEntity = INVALID_ENTITY_ID; // Entity the camera is following
-};
 
 // --- Component NPC Data ---
 struct NPC_data

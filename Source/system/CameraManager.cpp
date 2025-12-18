@@ -198,13 +198,13 @@ void CameraManager::OnEvent(const Message& msg)
             break;
         }
         case EventType::Olympe_EventType_Camera_Mode_2D:
-            cam.type = CameraType::CameraType_2D;
+            //cam.type = CameraType::CameraType_2D;
             break;
         case EventType::Olympe_EventType_Camera_Mode_2_5D:
-            cam.type = CameraType::CameraType_2_5D;
+            //cam.type = CameraType::CameraType_2_5D;
             break;
         case EventType::Olympe_EventType_Camera_Mode_Isometric:
-            cam.type = CameraType::CameraType_Isometric;
+            //cam.type = CameraType::CameraType_Isometric;
             break;
         case EventType::Olympe_EventType_Camera_Target_Follow:
         {

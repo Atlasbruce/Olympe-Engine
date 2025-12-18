@@ -16,22 +16,22 @@
 #include "../vector.h"
 #include "../GameEngine.h"
 
-enum class CameraType
-{
-    CameraType_2D = 0,
-    CameraType_2_5D,
-    CameraType_Isometric,
-	CameraType_Count
-};
+//enum class CameraType
+//{
+//    CameraType_2D = 0,
+//    CameraType_2_5D,
+//    CameraType_Isometric,
+//	CameraType_Count
+//};
 
-enum class CameraMode
-{
-    CameraMode_Standard_Fixed = 0, // camera fixed at position on main renderer
-	CameraMode_Standard_Follow,    // camera follows an entity (player or other) on main renderer
-	CameraMode_Viewport_Fixed,      // camera fixed at position on a viewport
-	CameraMode_Viewport_Follow,     // camera follows an entity (player or other) on a viewport
-    CameraMode_Count
-};
+//enum class CameraMode
+//{
+//    CameraMode_Standard_Fixed = 0, // camera fixed at position on main renderer
+//	CameraMode_Standard_Follow,    // camera follows an entity (player or other) on main renderer
+//	CameraMode_Viewport_Fixed,      // camera fixed at position on a viewport
+//	CameraMode_Viewport_Follow,     // camera follows an entity (player or other) on a viewport
+//    CameraMode_Count
+//};
 
 class CameraManager 
 {
@@ -45,8 +45,8 @@ public:
         SDL_Rect bounds{INT_MIN, INT_MIN, INT_MAX, INT_MAX};
 		bool followTargetEntity = false;
 		uint64_t targetEntity = 0; // optional follow target EntityID
-		CameraMode mode = CameraMode::CameraMode_Standard_Fixed;
-		CameraType type = CameraType::CameraType_2D;
+		//CameraMode mode = CameraMode::CameraMode_Standard_Fixed;
+		//CameraType type = CameraType::CameraType_2D;
     };
 
 public:

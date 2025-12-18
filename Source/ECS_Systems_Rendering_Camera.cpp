@@ -18,6 +18,13 @@ RenderingSystem, including world-to-screen coordinate conversion and frustum cul
 #include "system/system_consts.h"
 #include <cmath>
 #include <SDL3/SDL.h>
+#include "ECS_Systems_Rendering_Camera.h"
+
+
+// Forward declaration
+struct CameraTransform;
+
+static CameraTransform GetActiveCameraTransform(short playerID);
 
 // Structure that holds camera transformation data for rendering
 struct CameraTransform
@@ -36,7 +43,8 @@ struct CameraTransform
             return worldPos;
         
         // 1. Calculate position relative to camera
-        Vector relative = worldPos - worldPosition;
+        Vector relative = worldPos;
+        relative = relative - worldPosition;
         
         // 2. Apply rotation (convert degrees to radians)
         if (rotation != 0.0f)
@@ -70,7 +78,8 @@ struct CameraTransform
     // Transform a world size to screen size
     Vector WorldSizeToScreenSize(const Vector& worldSize) const
     {
-        return worldSize * zoom;
+		Vector size = worldSize;
+        return size * zoom;
     }
     
     // Check if a world-space bounding box is visible in this camera

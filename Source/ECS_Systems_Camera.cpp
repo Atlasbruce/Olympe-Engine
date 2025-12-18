@@ -24,6 +24,9 @@ input processing, target following, smooth zoom/rotation, and camera effects.
 #include <cmath>
 #include <random>
 
+#undef min
+#undef max
+
 // Random number generator for shake effect
 static std::random_device rd;
 static std::mt19937 gen(rd());
@@ -210,7 +213,6 @@ void CameraSystem::SetCameraTarget_ECS(EntityID cameraEntity, EntityID targetEnt
     
     CameraTarget_data& target = World::Get().GetComponent<CameraTarget_data>(cameraEntity);
     target.targetEntityID = targetEntity;
-    target.targetObject = nullptr;
     target.followTarget = true;
     
     // Switch to follow mode
@@ -224,27 +226,6 @@ void CameraSystem::SetCameraTarget_ECS(EntityID cameraEntity, EntityID targetEnt
 }
 
 //-------------------------------------------------------------
-void CameraSystem::SetCameraTarget_Legacy(EntityID cameraEntity, GameObject* targetObj)
-{
-    if (!World::Get().HasComponent<CameraTarget_data>(cameraEntity))
-        return;
-    
-    CameraTarget_data& target = World::Get().GetComponent<CameraTarget_data>(cameraEntity);
-    target.targetEntityID = INVALID_ENTITY_ID;
-    target.targetObject = targetObj;
-    target.followTarget = true;
-    
-    // Switch to follow mode
-    if (World::Get().HasComponent<Camera_data>(cameraEntity))
-    {
-        Camera_data& cam = World::Get().GetComponent<Camera_data>(cameraEntity);
-        cam.controlMode = CameraControlMode::Mode_FollowWithControl;
-    }
-    
-    SYSTEM_LOG << "Camera " << cameraEntity << " now following legacy GameObject\n";
-}
-
-//-------------------------------------------------------------
 void CameraSystem::ClearCameraTarget(EntityID cameraEntity)
 {
     if (!World::Get().HasComponent<CameraTarget_data>(cameraEntity))
@@ -252,7 +233,6 @@ void CameraSystem::ClearCameraTarget(EntityID cameraEntity)
     
     CameraTarget_data& target = World::Get().GetComponent<CameraTarget_data>(cameraEntity);
     target.targetEntityID = INVALID_ENTITY_ID;
-    target.targetObject = nullptr;
     target.followTarget = false;
     
     // Switch to free mode
@@ -444,12 +424,6 @@ void CameraSystem::UpdateCameraFollow(EntityID entity, float dt)
             hasValidTarget = true;
         }
     }
-    // Try legacy GameObject
-    else if (target.targetObject != nullptr)
-    {
-        targetPos = target.targetObject->GetPosition();
-        hasValidTarget = true;
-    }
     
     if (!hasValidTarget)
         return;
@@ -474,7 +448,8 @@ void CameraSystem::UpdateCameraFollow(EntityID entity, float dt)
         // Decay manual control offset back towards zero if allowed
         if (target.allowManualControl && target.manualControlDecay > 0.0f)
         {
-            cam.controlOffset = vBlend(Vector(0.f, 0.f, 0.f), cam.controlOffset, target.manualControlDecay);
+			Vector desiredOffset = Vector(0.f, 0.f, 0.f);
+            cam.controlOffset = vBlend(desiredOffset, cam.controlOffset, target.manualControlDecay);
             
             // Snap to zero when very close
             if (cam.controlOffset.Length() < 0.1f)
@@ -646,8 +621,15 @@ void CameraSystem::ApplyCameraToRenderer(SDL_Renderer* renderer, short playerID)
     
     Camera_data& cam = World::Get().GetComponent<Camera_data>(cameraEntity);
     
+    SDL_Rect viewportRect = {
+        static_cast<int>(cam.viewportRect.x),
+        static_cast<int>(cam.viewportRect.y),
+        static_cast<int>(cam.viewportRect.w),
+        static_cast<int>(cam.viewportRect.h)
+	};
+
     // Set viewport
-    SDL_SetRenderViewport(renderer, &cam.viewportRect);
+    SDL_SetRenderViewport(renderer, &viewportRect);
 }
 
 //-------------------------------------------------------------

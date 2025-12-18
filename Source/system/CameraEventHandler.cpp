@@ -219,20 +219,6 @@ void CameraEventHandler::FollowTarget(short playerID, EntityID targetEntity)
 }
 
 //-------------------------------------------------------------
-void CameraEventHandler::FollowTarget_Legacy(short playerID, GameObject* targetObject)
-{
-    CameraSystem* camSys = World::Get().GetSystem<CameraSystem>();
-    if (!camSys)
-        return;
-    
-    EntityID cameraEntity = camSys->GetCameraEntityForPlayer(playerID);
-    if (cameraEntity == INVALID_ENTITY_ID)
-        return;
-    
-    camSys->SetCameraTarget_Legacy(cameraEntity, targetObject);
-}
-
-//-------------------------------------------------------------
 void CameraEventHandler::UnfollowTarget(short playerID)
 {
     Message msg;
