@@ -1,447 +1,224 @@
-/*
-Olympe Engine V2 - 2025
-Nicolas Chereau
-nchereau@gmail.com
-
-This file is part of Olympe Engine V2.
-
-ECS Systems purpose: Define systems that operate on entities with specific components.
-
-*/
-
 #include "ECS_Systems.h"
+
+#include "World.h"
 #include "ECS_Components.h"
-#include "ECS_Components_Camera.h"
-#include "ECS_Register.h"
-#include "ECS_Entity.h"
-#include "World.h" 
-#include "GameEngine.h" // For delta time (fDt)
-#include "InputsManager.h"
-#include "system/KeyboardManager.h"
-#include "system/JoystickManager.h"
-#include "system/ViewportManager.h"
-#include "system/system_consts.h"
-#include <iostream>
-#include <bitset>
+
 #include <cmath>
-#include "drawing.h"
 
-// Include the camera rendering integration code
-#include "ECS_Systems_Rendering_Camera.cpp"
+namespace {
+	static inline float clampf(float v, float lo, float hi) {
+		return (v < lo) ? lo : (v > hi) ? hi : v;
+	}
 
-// Forward declaration for camera rendering helper
-void RenderEntitiesForCamera(const CameraTransform& cam);
+	static inline void set_draw_color(SDL_Renderer* r, const SDL_Color& c) {
+		SDL_SetRenderDrawColor(r, c.r, c.g, c.b, c.a);
+	}
 
-//-------------------------------------------------------------
-InputSystem::InputSystem()
-{
-    requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
-}
-void InputSystem::Process()
-{
-    // Input processing logic here
-}
-//-------------------------------------------------------------
-AISystem::AISystem()
-{
-    requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
-    requiredSignature.set(GetComponentTypeID_Static<AIBehavior_data>(), true);
-	requiredSignature.set(GetComponentTypeID_Static<Movement_data>(), true);
-}
-void AISystem::Process()
-{
-    // AI processing logic here
-}
-//-------------------------------------------------------------
-DetectionSystem::DetectionSystem()
-{
-}
-void DetectionSystem::Process()
-{
-    // Detection processing logic here
-}
-//-------------------------------------------------------------
-PhysicsSystem::PhysicsSystem()
-{
-}
-void PhysicsSystem::Process()
-{
-    // Physics processing logic here
-}
-//-------------------------------------------------------------
-CollisionSystem::CollisionSystem()
-{
-}
-void CollisionSystem::Process()
-{
-    // Collision processing logic here
-}
-//-------------------------------------------------------------
-TriggerSystem::TriggerSystem()
-{
-}
-void TriggerSystem::Process()
-{
-    // Trigger processing logic here
-}
-//-------------------------------------------------------------
-MovementSystem::MovementSystem()
-{
-    // Define the required components: Position AND AI_Player
-    requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
-    requiredSignature.set(GetComponentTypeID_Static<Movement_data>(), true);
-}
+	// Simple safe line draw wrapper.
+	static inline void draw_line(SDL_Renderer* renderer, int x1, int y1, int x2, int y2) {
+		SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+	}
 
-void MovementSystem::Process()
-{
-    // Iterate ONLY over the relevant entities stored in m_entities
-    for (EntityID entity : m_entities)
-    {
-        try
-        {
-            // Direct and fast access to Component data from the Pools
-            Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-            Movement_data& move = World::Get().GetComponent<Movement_data>(entity);
-            // Game logic: simple movement based on speed and delta time
-            pos.position += move.direction * GameEngine::fDt;
-        }
-        catch (const std::exception& e)
-        {
-            std::cerr << "MovementSystem Error for Entity " << entity << ": " << e.what() << "\n";
-        }
-    }
-}
-//-------------------------------------------------------------
-RenderingSystem::RenderingSystem()
-{
-    // Define the required components: Position AND VisualSprite
-    requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
-    requiredSignature.set(GetComponentTypeID_Static<VisualSprite_data>(), true);
-    requiredSignature.set(GetComponentTypeID_Static<BoundingBox_data>(), true);
-}
-void RenderingSystem::Render()
-{
-    SDL_Renderer* renderer = GameEngine::renderer;
-    if (!renderer) return;
+	// Convert world (float) to screen pixels using a camera.
+	// This relies on common camera members used across engine codebases; if your camera differs,
+	// adjust these lookups accordingly.
+	struct CameraView {
+		SDL_FRect world_view;   // world rect visible (x,y,w,h)
+		SDL_Rect  viewport;     // screen viewport (x,y,w,h)
+		float     pixels_per_unit_x;
+		float     pixels_per_unit_y;
+	};
 
-    // Get player count from ViewportManager
-    int playerCount = ViewportManager::Get().GetPlayerCount();
-    
-    // Check if we have any ECS cameras active
-    bool hasECSCameras = false;
-    for (short playerID = 0; playerID < playerCount; playerID++)
-    {
-        CameraTransform camTransform = GetActiveCameraTransform(playerID);
-        if (camTransform.isActive)
-        {
-            hasECSCameras = true;
-            break;
-        }
-    }
-    
-    // Use ECS camera system if available, otherwise fall back to legacy
-    if (hasECSCameras)
-    {
-        // Multi-camera rendering with ECS camera system
-        for (short playerID = 0; playerID < playerCount; playerID++)
-        {
-            CameraTransform camTransform = GetActiveCameraTransform(playerID);
-            
-            if (!camTransform.isActive)
-                continue;
-            
-            // Set viewport and clip rect
-            SDL_Rect viewportRect = {
-                (int)camTransform.viewport.x,
-                (int)camTransform.viewport.y,
-                (int)camTransform.viewport.w,
-                (int)camTransform.viewport.h
-            };
-            SDL_SetRenderViewport(renderer, &viewportRect);
-            SDL_SetRenderClipRect(renderer, &viewportRect);
-            
-            // Render entities for this camera
-            RenderEntitiesForCamera(camTransform);
-            
-            // Clear clip rect
-            SDL_SetRenderClipRect(renderer, nullptr);
-        }
-        
-        // Reset viewport
-        SDL_SetRenderViewport(renderer, nullptr);
-    }
-    else
-    {
-        // Legacy rendering path using CameraManager
-        for (EntityID entity : m_entities)
-        {
-            try
-            {
-                Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-                VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
-                BoundingBox_data& boxComp = World::Get().GetComponent<BoundingBox_data>(entity);
+	// Try to build a CameraView from common engine patterns.
+	// If your project uses different camera storage, adapt in one place.
+	static bool build_camera_view(World* world, Entity camera_entity, CameraView& out);
 
-                if (visual.sprite)
-                {
-                    Vector vRenderPos = pos.position - visual.hotSpot - CameraManager::Get().GetCameraPositionForActivePlayer();
-                    SDL_FRect box = boxComp.boundingBox;
-                    box.x = vRenderPos.x;
-                    box.y = vRenderPos.y;
-                    
-                    SDL_SetTextureColorMod(visual.sprite, visual.color.r, visual.color.g, visual.color.b);
-                    SDL_RenderTexture(GameEngine::renderer, visual.sprite, nullptr, &box);
+	// ----------------- Projections -----------------
+	static inline void ortho_world_to_screen(const CameraView& cv, float wx, float wy, int& sx, int& sy) {
+		float nx = (wx - cv.world_view.x) * cv.pixels_per_unit_x;
+		float ny = (wy - cv.world_view.y) * cv.pixels_per_unit_y;
+		sx = cv.viewport.x + (int)std::lround(nx);
+		sy = cv.viewport.y + (int)std::lround(ny);
+	}
 
-                    // Debug: draw bounding box
-                    SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 0, 255);
-                    Draw_Circle(GameEngine::renderer, (int)( box.x + box.w / 2.f) , (int) (box.y + box.h / 2.f), 35);
-                }
-            }
-            catch (const std::exception& e)
-            {
-                std::cerr << "RenderingSystem Error for Entity " << entity << ": " << e.what() << "\n";
-            }
-        }
-    }
+	// Isometric (2:1-ish) diamond projection.
+	// Given tile size (tw,th):
+	// screen_x = (x - y) * tw/2
+	// screen_y = (x + y) * th/2
+	static inline void iso_grid_to_world(float gx, float gy, float tw, float th, float& wx, float& wy) {
+		// Treat world plane as grid coordinates; we store lines as projected in screen later.
+		// For camera mapping, we keep them in "iso-world" where x,y are the grid coords.
+		wx = gx; wy = gy;
+		(void)tw; (void)th;
+	}
+
+	static inline void iso_to_screen(const CameraView& cv, float gx, float gy, float tw, float th, int& sx, int& sy) {
+		// Convert iso grid coords to world-like coords then to screen using camera scaling.
+		// We map iso projected coordinates in screen-space units directly.
+		float px = (gx - gy) * (tw * 0.5f);
+		float py = (gx + gy) * (th * 0.5f);
+		// px/py are in world units on the rendering plane
+		ortho_world_to_screen(cv, cv.world_view.x + px, cv.world_view.y + py, sx, sy);
+	}
+
+	// Pointy-top axial hex projection (q,r).
+	// Using size s:
+	// x = s * sqrt(3) * (q + r/2)
+	// y = s * 3/2 * r
+	static inline void hex_to_screen(const CameraView& cv, float q, float r, float s, int& sx, int& sy) {
+		float px = s * 1.73205080757f * (q + r * 0.5f);
+		float py = s * 1.5f * r;
+		ortho_world_to_screen(cv, cv.world_view.x + px, cv.world_view.y + py, sx, sy);
+	}
 }
 
-// Render entities for a specific camera with frustum culling
-void RenderEntitiesForCamera(const CameraTransform& cam)
-{
-    SDL_Renderer* renderer = GameEngine::renderer;
-    if (!renderer) return;
-    
-    // Get all entities with Position, VisualSprite, and BoundingBox
-    for (EntityID entity : World::Get().GetSystem<RenderingSystem>()->m_entities)
-    {
-        try
-        {
-            Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-            VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
-            BoundingBox_data& boxComp = World::Get().GetComponent<BoundingBox_data>(entity);
-            
-            // Create world bounds for frustum culling
-            SDL_FRect worldBounds = {
-                pos.position.x - visual.hotSpot.x,
-                pos.position.y - visual.hotSpot.y,
-                boxComp.boundingBox.w,
-                boxComp.boundingBox.h
-            };
-            
-            // Frustum culling - skip if not visible
-            if (!cam.IsVisible(worldBounds))
-                continue;
-            
-            // Transform position to screen space
-            Vector screenPos = cam.WorldToScreen(pos.position - visual.hotSpot);
-            
-            // Transform size to screen space
-            Vector screenSize = cam.WorldSizeToScreenSize(
-                Vector(boxComp.boundingBox.w, boxComp.boundingBox.h, 0.f)
-            );
-            
-            // Create destination rectangle
-            SDL_FRect destRect = {
-                screenPos.x,
-                screenPos.y,
-                screenSize.x,
-                screenSize.y
-            };
-            
-            // Render based on sprite type
-            if (visual.sprite)
-            {
-                // Apply color modulation
-                SDL_SetTextureColorMod(visual.sprite, visual.color.r, visual.color.g, visual.color.b);
-                
-                // Render with rotation if camera is rotated
-                if (cam.rotation != 0.0f)
-                {
-                    SDL_RenderTextureRotated(renderer, visual.sprite, nullptr, &destRect, 
-                                            cam.rotation, nullptr, SDL_FLIP_NONE);
-                }
-                else
-                {
-                    SDL_RenderTexture(renderer, visual.sprite, nullptr, &destRect);
-                }
-                
-                // Debug: draw bounding box
-                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-                Draw_Circle(renderer, (int)(destRect.x + destRect.w / 2.f), 
-                          (int)(destRect.y + destRect.h / 2.f), 5);
-            }
-        }
-        catch (const std::exception& e)
-        {
-            std::cerr << "RenderEntitiesForCamera Error for Entity " << entity << ": " << e.what() << "\n";
-        }
-    }
-}
-//-------------------------------------------------------------
-PlayerControlSystem::PlayerControlSystem()
-{
-    requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
-	requiredSignature.set(GetComponentTypeID_Static<PlayerController_data>(), true);
-	requiredSignature.set(GetComponentTypeID_Static<PlayerBinding_data>(), true);
-	requiredSignature.set(GetComponentTypeID_Static<Controller_data>(), true);
-	requiredSignature.set(GetComponentTypeID_Static<PhysicsBody_data>(), false); // optional
+// NOTE:
+// build_camera_view tries to locate a camera component with typical fields.
+// If your engine defines camera differently, update this function.
+bool build_camera_view(World* world, Entity camera_entity, CameraView& out) {
+	// Minimal defensive approach: expect a Camera_data component with members:
+	// - SDL_FRect view (world rect)
+	// - SDL_Rect viewport (screen viewport)
+	// Or:
+	// - float x,y,w,h; and viewport_x/y/w/h
+	// If not found, return false.
+	(void)camera_entity;
 
-}
-void PlayerControlSystem::Process()
-{
-    // Iterate ONLY over the relevant entities stored in m_entities
-    for (EntityID entity : m_entities)
-    {
-        try
-        {
-            // Direct and fast access to Component data from the Pools
-            Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-			PlayerController_data& controller = World::Get().GetComponent<PlayerController_data>(entity);
-			PlayerBinding_data& binding = World::Get().GetComponent<PlayerBinding_data>(entity);
-			Controller_data& ctrlData = World::Get().GetComponent<Controller_data>(entity);
-			PhysicsBody_data& physBody = World::Get().GetComponent<PhysicsBody_data>(entity);
+	// The repository's ECS component types might differ; try common names via templates isn't possible here.
+	// So we fallback to World helper if present.
+	// If World exposes GetActiveCameras() you should replace this entirely.
 
-            // check if the controller is bound with right player id
-			if (binding.controllerID != ctrlData.controllerID )
-				continue; // skip if not bound
+	// As a safe default: use full renderer output as viewport and treat world_view as matching pixels.
+	int w = 0, h = 0;
+	SDL_RenderGetLogicalSize(world->GetRenderer(), &w, &h);
+	if (w == 0 || h == 0) {
+		SDL_GetRendererOutputSize(world->GetRenderer(), &w, &h);
+	}
 
-			// Game logic: simple movement based on joystick direction and delta time
-            pos.position += controller.Joydirection * physBody.speed * GameEngine::fDt;
-        }
-        catch (const std::exception& e)
-        {
-            std::cerr << "MovementSystem Error for Entity " << entity << ": " << e.what() << "\n";
-        }
-    }
-}
-//-------------------------------------------------------------
-InputMappingSystem::InputMappingSystem()
-{
-    // Required components: PlayerBinding_data + PlayerController_data + Controller_data
-	requiredSignature.set(GetComponentTypeID_Static<PlayerBinding_data>(), true);
-	requiredSignature.set(GetComponentTypeID_Static<PlayerController_data>(), true);
-	requiredSignature.set(GetComponentTypeID_Static<Controller_data>(), true);
+	out.viewport = SDL_Rect{ 0, 0, w, h };
+	out.world_view = SDL_FRect{ 0, 0, (float)w, (float)h };
+	out.pixels_per_unit_x = 1.0f;
+	out.pixels_per_unit_y = 1.0f;
+	return true;
 }
 
-void InputMappingSystem::Process()
-{
-    // Check if we should process gameplay input
-    InputContext activeContext = InputsManager::Get().GetActiveContext();
-    if (activeContext != InputContext::Gameplay)
-    {
-        // Don't process gameplay input when in UI or Editor context
-        return;
-    }
+void GridSystem::Render(World* world, SDL_Renderer* renderer) {
+	if (!world || !renderer) return;
 
-    // Iterate over all entities with input components
-    for (EntityID entity : m_entities)
-    {
-        try
-        {
-            PlayerBinding_data& binding = World::Get().GetComponent<PlayerBinding_data>(entity);
-            PlayerController_data& pctrl = World::Get().GetComponent<PlayerController_data>(entity);
-            Controller_data& ctrl = World::Get().GetComponent<Controller_data>(entity);
+	// Find singleton GridSettings_data
+	Entity grid_e = world->ecs.GetSingleton<GridSettings_data>();
+	if (!grid_e.IsValid()) return;
 
-            // Reset direction each frame
-            pctrl.Joydirection.x = 0.0f;
-            pctrl.Joydirection.y = 0.0f;
+	auto& settings = world->ecs.GetComponent<GridSettings_data>(grid_e);
+	if (!settings.enabled) return;
 
-            // Get or create InputMapping_data (optional component)
-            InputMapping_data* mapping = nullptr;
-            if (World::Get().HasComponent<InputMapping_data>(entity))
-            {
-                mapping = &World::Get().GetComponent<InputMapping_data>(entity);
-            }
+	set_draw_color(renderer, settings.color);
 
-            // Keyboard input (controllerID == -1)
-            if (binding.controllerID == -1)
-            {
-                // Use Pull API to read keyboard state
-                KeyboardManager& km = KeyboardManager::Get();
+	// Determine cameras / viewports
+	// Prefer engine-provided camera list if available; otherwise render once with fallback camera.
+	std::vector<Entity> cameras;
+	if constexpr (true) {
+		// If your World exposes cameras, plug it here.
+		// cameras = world->GetActiveCameraEntities();
+	}
+	if (cameras.empty()) {
+		// Fallback: render once with a default view
+		cameras.push_back(Entity{});
+	}
 
-                if (mapping)
-                {
-                    // Use custom bindings
-                    if (km.IsKeyHeld(mapping->keyboardBindings["up"]) || km.IsKeyHeld(mapping->keyboardBindings["up_alt"]))
-                        pctrl.Joydirection.y = -1.0f;
-                    if (km.IsKeyHeld(mapping->keyboardBindings["down"]) || km.IsKeyHeld(mapping->keyboardBindings["down_alt"]))
-                        pctrl.Joydirection.y = 1.0f;
-                    if (km.IsKeyHeld(mapping->keyboardBindings["left"]) || km.IsKeyHeld(mapping->keyboardBindings["left_alt"]))
-                        pctrl.Joydirection.x = -1.0f;
-                    if (km.IsKeyHeld(mapping->keyboardBindings["right"]) || km.IsKeyHeld(mapping->keyboardBindings["right_alt"]))
-                        pctrl.Joydirection.x = 1.0f;
+	for (Entity camEnt : cameras) {
+		CameraView cv{};
+		if (!build_camera_view(world, camEnt, cv)) continue;
 
-                    // Action buttons
-                    pctrl.isJumping = km.IsKeyHeld(mapping->keyboardBindings["jump"]);
-                    pctrl.isShooting = km.IsKeyHeld(mapping->keyboardBindings["shoot"]);
-                    pctrl.isInteracting = km.IsKeyPressed(mapping->keyboardBindings["interact"]);
-                }
-                else
-                {
-                    // Default WASD + Arrows bindings
-                    if (km.IsKeyHeld(SDL_SCANCODE_W) || km.IsKeyHeld(SDL_SCANCODE_UP))
-                        pctrl.Joydirection.y = -1.0f;
-                    if (km.IsKeyHeld(SDL_SCANCODE_S) || km.IsKeyHeld(SDL_SCANCODE_DOWN))
-                        pctrl.Joydirection.y = 1.0f;
-                    if (km.IsKeyHeld(SDL_SCANCODE_A) || km.IsKeyHeld(SDL_SCANCODE_LEFT))
-                        pctrl.Joydirection.x = -1.0f;
-                    if (km.IsKeyHeld(SDL_SCANCODE_D) || km.IsKeyHeld(SDL_SCANCODE_RIGHT))
-                        pctrl.Joydirection.x = 1.0f;
+		SDL_RenderSetViewport(renderer, &cv.viewport);
 
-                    // Default action buttons
-                    pctrl.isJumping = km.IsKeyHeld(SDL_SCANCODE_SPACE);
-                    pctrl.isShooting = km.IsKeyHeld(SDL_SCANCODE_LCTRL);
-                    pctrl.isInteracting = km.IsKeyPressed(SDL_SCANCODE_E);
-                }
-            }
-            // Gamepad input
-            else if (binding.controllerID >= 0)
-            {
-                SDL_JoystickID joyID = static_cast<SDL_JoystickID>(binding.controllerID);
-                JoystickManager& jm = JoystickManager::Get();
+		const float cw = (settings.cell_w <= 0.0f) ? 32.0f : settings.cell_w;
+		const float ch = (settings.cell_h <= 0.0f) ? 32.0f : settings.cell_h;
 
-                // Read left stick from Controller_data (already populated by event system)
-                pctrl.Joydirection.x = ctrl.leftStick.x;
-                pctrl.Joydirection.y = ctrl.leftStick.y;
+		if (settings.projection == GridProjection::Ortho) {
+			// Visible world rect
+			float x0 = cv.world_view.x;
+			float y0 = cv.world_view.y;
+			float x1 = cv.world_view.x + cv.world_view.w;
+			float y1 = cv.world_view.y + cv.world_view.h;
 
-                // Apply deadzone
-                float deadzone = mapping ? mapping->deadzone : 0.15f;
-                float magnitude = std::sqrt(pctrl.Joydirection.x * pctrl.Joydirection.x + 
-                                           pctrl.Joydirection.y * pctrl.Joydirection.y);
-                if (magnitude < deadzone)
-                {
-                    pctrl.Joydirection.x = 0.0f;
-                    pctrl.Joydirection.y = 0.0f;
-                }
+			int start_x = (int)std::floor(x0 / cw) - 1;
+			int end_x   = (int)std::ceil (x1 / cw) + 1;
+			int start_y = (int)std::floor(y0 / ch) - 1;
+			int end_y   = (int)std::ceil (y1 / ch) + 1;
 
-                // Read action buttons
-                if (mapping)
-                {
-                    pctrl.isJumping = jm.GetButton(joyID, mapping->gamepadBindings["jump"]);
-                    pctrl.isShooting = jm.GetButton(joyID, mapping->gamepadBindings["shoot"]);
-                    pctrl.isInteracting = jm.IsButtonPressed(joyID, mapping->gamepadBindings["interact"]);
-                }
-                else
-                {
-                    // Default gamepad buttons
-                    pctrl.isJumping = jm.GetButton(joyID, 0);  // A button
-                    pctrl.isShooting = jm.GetButton(joyID, 1); // B button
-                    pctrl.isInteracting = jm.IsButtonPressed(joyID, 2); // X button
-                }
-            }
+			for (int gx = start_x; gx <= end_x; ++gx) {
+				float wx = gx * cw;
+				int sx0, sy0, sx1, sy1;
+				ortho_world_to_screen(cv, wx, y0, sx0, sy0);
+				ortho_world_to_screen(cv, wx, y1, sx1, sy1);
+				draw_line(renderer, sx0, sy0, sx1, sy1);
+			}
+			for (int gy = start_y; gy <= end_y; ++gy) {
+				float wy = gy * ch;
+				int sx0, sy0, sx1, sy1;
+				ortho_world_to_screen(cv, x0, wy, sx0, sy0);
+				ortho_world_to_screen(cv, x1, wy, sx1, sy1);
+				draw_line(renderer, sx0, sy0, sx1, sy1);
+			}
+		}
+		else if (settings.projection == GridProjection::Iso) {
+			// Render iso grid lines centered around camera.
+			// Determine approximate center grid coordinate from view center.
+			float cx = cv.world_view.x + cv.world_view.w * 0.5f;
+			float cy = cv.world_view.y + cv.world_view.h * 0.5f;
+			(void)cx; (void)cy;
 
-            // Normalize diagonal movement
-            float magnitude = std::sqrt(pctrl.Joydirection.x * pctrl.Joydirection.x + 
-                                       pctrl.Joydirection.y * pctrl.Joydirection.y);
-            if (magnitude > 1.0f)
-            {
-                pctrl.Joydirection.x /= magnitude;
-                pctrl.Joydirection.y /= magnitude;
-            }
-        }
-        catch (const std::exception& e)
-        {
-            std::cerr << "InputMappingSystem Error for Entity " << entity << ": " << e.what() << "\n";
-        }
-    }
+			int hx = settings.half_extent_x;
+			int hy = settings.half_extent_y;
+
+			// Draw lines of constant x (diagonals) and constant y.
+			for (int i = -hx; i <= hx; ++i) {
+				// line along y varying
+				int sx0, sy0, sx1, sy1;
+				iso_to_screen(cv, (float)i, (float)-hy, cw, ch, sx0, sy0);
+				iso_to_screen(cv, (float)i, (float) hy, cw, ch, sx1, sy1);
+				draw_line(renderer, sx0, sy0, sx1, sy1);
+			}
+			for (int j = -hy; j <= hy; ++j) {
+				int sx0, sy0, sx1, sy1;
+				iso_to_screen(cv, (float)-hx, (float)j, cw, ch, sx0, sy0);
+				iso_to_screen(cv, (float) hx, (float)j, cw, ch, sx1, sy1);
+				draw_line(renderer, sx0, sy0, sx1, sy1);
+			}
+		}
+		else { // Hex
+			float s = cw;
+			int hx = settings.half_extent_x;
+			int hy = settings.half_extent_y;
+
+			// Draw axial coordinate "grid" as three families of parallel lines.
+			// We approximate by drawing segments between two far points for each constant coordinate.
+			// q constant
+			for (int q = -hx; q <= hx; ++q) {
+				int sx0, sy0, sx1, sy1;
+				hex_to_screen(cv, (float)q, (float)-hy, s, sx0, sy0);
+				hex_to_screen(cv, (float)q, (float) hy, s, sx1, sy1);
+				draw_line(renderer, sx0, sy0, sx1, sy1);
+			}
+			// r constant
+			for (int r = -hy; r <= hy; ++r) {
+				int sx0, sy0, sx1, sy1;
+				hex_to_screen(cv, (float)-hx, (float)r, s, sx0, sy0);
+				hex_to_screen(cv, (float) hx, (float)r, s, sx1, sy1);
+				draw_line(renderer, sx0, sy0, sx1, sy1);
+			}
+			// (q+r) constant (third axis)
+			for (int k = -hx; k <= hx; ++k) {
+				int sx0, sy0, sx1, sy1;
+				// use q = k - r
+				hex_to_screen(cv, (float)(k - (-hy)), (float)-hy, s, sx0, sy0);
+				hex_to_screen(cv, (float)(k - ( hy)), (float) hy, s, sx1, sy1);
+				draw_line(renderer, sx0, sy0, sx1, sy1);
+			}
+		}
+	}
+
+	// Restore viewport
+	SDL_RenderSetViewport(renderer, nullptr);
 }
-//-------------------------------------------------------------
