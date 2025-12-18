@@ -47,6 +47,7 @@ public:
     void Add_ECS_System(std::unique_ptr<ECS_System> system);
     void Process_ECS_Systems();
     void Render_ECS_Systems();
+    void RenderDebug_ECS_Systems();
     
     // Get a specific system by type
     template <typename T>
@@ -83,6 +84,7 @@ public:
     {
   		// ECS Rendering Systems
         Render_ECS_Systems();
+        RenderDebug_ECS_Systems();
 	}
 	//---------------------------------------------------------------------------------------------
     // Level management

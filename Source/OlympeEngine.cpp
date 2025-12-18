@@ -216,7 +216,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 	//-------------------------------------------------------------------
 
     /* as you can see from this, rendering draws over whatever was drawn before it. */
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);  /* black, full alpha */
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);  /* white, full alpha */
     SDL_RenderClear(renderer);  /* start with a blank canvas. */
 
     // Render world once per viewport/player so each viewport gets its own draw pass

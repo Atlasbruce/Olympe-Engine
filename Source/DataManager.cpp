@@ -197,6 +197,8 @@ VisualSprite_data* DataManager::GetSprite_data(const std::string& id, const std:
 		return &vsprite;
 	}
 
+	SYSTEM_LOG << "DataManager: GetSprite_data failed for '" << id << "' file/path '" << path << "' does not exists or is incorrect\n";
+
     return nullptr;
 }
 //-------------------------------------------------------------

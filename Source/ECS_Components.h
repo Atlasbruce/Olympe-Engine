@@ -70,7 +70,7 @@ struct VisualSprite_data
 	SDL_FRect srcRect = { 0, 0, 25, 25 }; // Source rectangle for texture atlas
 	Sprite* sprite = nullptr; // Pointer to the sprite/texture
 	Vector hotSpot;        // Hotspot offset for rendering
-	SDL_Color color = { 0, 0, 0, 255 }; // Color (RGBA)
+	SDL_Color color = { 255, 255, 255, 255 }; // Color (RGBA)
 };
 // --- Component Animation Data ---
 struct Animation_data

@@ -34,6 +34,8 @@ VideoGame::VideoGame()
 	// Register all prefab items for the game
     RegisterPrefabItems();
 
+    PrefabFactory::Get().CreateEntity("OlympeIdentity");
+
 	SYSTEM_LOG << "VideoGame created\n";
 }
 //-------------------------------------------------------------
@@ -220,14 +222,14 @@ void VideoGame::RegisterPrefabItems()
         World& world = World::Get();
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "PlayerEntity";
-        VisualSprite_data st_vsprite_ptr = *DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/entity_" + to_string(Random_Int(1, 15)) + ".png");
-        if (!st_vsprite_ptr.sprite)
+        static VisualSprite_data *st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/entity_" + to_string(Random_Int(1, 15)) + ".png");
+        if (!st_vspriteData_ptr)
         {
             SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
             return;
         }
-        st_vsprite_ptr.color = Random_Color(50, 255);
-        VisualSprite_data st_vsprite = st_vsprite_ptr;
+        st_vspriteData_ptr->color = Random_Color(50, 255);
+        VisualSprite_data st_vsprite = *st_vspriteData_ptr;
         world.AddComponent<VisualSprite_data>(id, st_vsprite.srcRect, st_vsprite.sprite, st_vsprite.hotSpot);
         world.AddComponent<BoundingBox_data>(id, SDL_FRect{ 0.f, 0.f, st_vsprite.srcRect.w, st_vsprite.srcRect.h });
         world.AddComponent<PlayerBinding_data>(id);// , (short)++m_playerIdCounter, (short)-1); // default to keyboard
@@ -243,16 +245,51 @@ void VideoGame::RegisterPrefabItems()
         World& world = World::Get();
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "TriggerEntity";
-        VisualSprite_data* st_vsprite_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/trigger.png");
-        if (!st_vsprite_ptr)
+        static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/trigger.png");
+        if (!st_vspriteData_ptr)
         {
             SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
             return;
         }
-        VisualSprite_data st_vsprite = *st_vsprite_ptr;
+        VisualSprite_data st_vsprite = *st_vspriteData_ptr;
         world.AddComponent<VisualSprite_data>(id, st_vsprite.srcRect, st_vsprite.sprite, st_vsprite.hotSpot);
         world.AddComponent<BoundingBox_data>(id, SDL_FRect{ 0.f, 0.f, st_vsprite.srcRect.w, st_vsprite.srcRect.h });
         // Add other components as needed
 		});
+
+	//NPC PREFAB
+    PrefabFactory::Get().RegisterPrefab("NPCEntity", [](EntityID id) {
+        World& world = World::Get();
+        world.AddComponent<Position_data>(id, Vector(0, 0, 0));
+        string prefabName = "NPCEntity";
+        static VisualSprite_data * st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/npc_" + to_string(Random_Int(1, 10)) + ".png");
+        if (!st_vspriteData_ptr)
+        {
+            SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
+            return;
+        }
+        st_vspriteData_ptr->color = Random_Color(50, 255);
+        VisualSprite_data st_vsprite = *st_vspriteData_ptr;
+        world.AddComponent<VisualSprite_data>(id, st_vsprite.srcRect, st_vsprite.sprite, st_vsprite.hotSpot);
+        world.AddComponent<BoundingBox_data>(id, SDL_FRect{ 0.f, 0.f, st_vsprite.srcRect.w, st_vsprite.srcRect.h });
+        world.AddComponent<Health_data>(id, 100, 100);
+        // Add other components as needed
+		});
     
+	//OLYMPE LOGO PREFAB
+    PrefabFactory::Get().RegisterPrefab("OlympeIdentity", [](EntityID id) {
+        World& world = World::Get();
+        world.AddComponent<Position_data>(id, Vector(0, 0, 0));
+        string prefabName = "OlympeIdentity";
+        static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/olympe_logo.png");
+        if (!st_vspriteData_ptr)
+        {
+            SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
+            return;
+        }
+        VisualSprite_data st_vsprite = *st_vspriteData_ptr;
+        world.AddComponent<VisualSprite_data>(id, st_vsprite.srcRect, st_vsprite.sprite, st_vsprite.hotSpot);
+        world.AddComponent<BoundingBox_data>(id, SDL_FRect{ 0.f, 0.f, st_vsprite.srcRect.w, st_vsprite.srcRect.h });
+        // Add other components as needed
+		});
 }

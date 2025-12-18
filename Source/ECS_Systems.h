@@ -30,6 +30,7 @@ public:
     // The core logic of the System
     virtual void Process() {}
 	virtual void Render() {}
+    virtual void RenderDebug() {}
 
     void AddEntity(EntityID entity) { m_entities.insert(entity); }
     void RemoveEntity(EntityID entity) { m_entities.erase(entity); }
