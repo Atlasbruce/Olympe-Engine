@@ -7,7 +7,6 @@
 #include "DataManager.h"
 #include "PanelManager.h"
 #include "World.h"
-#include "ECS_Systems_Camera.h"
 #include "system/CameraEventHandler.h"
 
 float GameEngine::fDt = 0.0f;

@@ -10,12 +10,11 @@ input processing, target following, smooth zoom/rotation, and camera effects.
 
 */
 
-#include "ECS_Systems_Camera.h"
+#include "ECS_Systems.h"
 #include "ECS_Components.h"
 #include "ECS_Register.h"
 #include "World.h"
 #include "GameEngine.h"
-#include "GameObject.h"
 #include "system/KeyboardManager.h"
 #include "system/JoystickManager.h"
 #include "system/ViewportManager.h"
@@ -363,8 +362,8 @@ void CameraSystem::ProcessJoystickInput(EntityID entity, CameraInputBinding_data
     float axisY = joy.GetAxis(binding.joystickId, binding.axis_vertical);
     
     // Apply deadzone
-    axisX = ApplyDeadzone(axisX, binding.deadzone);
-    axisY = ApplyDeadzone(axisY, binding.deadzone);
+    axisX = this->ApplyDeadzone(axisX, binding.deadzone);
+    axisY = this->ApplyDeadzone(axisY, binding.deadzone);
     
     binding.inputDirection = Vector(axisX, axisY, 0.f);
     
@@ -574,16 +573,14 @@ void CameraSystem::ApplyCameraBounds(EntityID entity)
         float minY = bounds.boundingBox.y + halfViewH;
         float maxY = bounds.boundingBox.y + bounds.boundingBox.h - halfViewH;
         
-        effectivePos.x = std::max(minX, std::min(maxX, effectivePos.x));
-        effectivePos.y = std::max(minY, std::min(maxY, effectivePos.y));
+        effectivePos.x = max(minX, std::min(maxX, effectivePos.x));
+        effectivePos.y = max(minY, std::min(maxY, effectivePos.y));
     }
     else
     {
         // Simple clamping of camera center
-        effectivePos.x = std::max(bounds.boundingBox.x, 
-                                   std::min(bounds.boundingBox.x + bounds.boundingBox.w, effectivePos.x));
-        effectivePos.y = std::max(bounds.boundingBox.y, 
-                                   std::min(bounds.boundingBox.y + bounds.boundingBox.h, effectivePos.y));
+        effectivePos.x = max(bounds.boundingBox.x, min(bounds.boundingBox.x + bounds.boundingBox.w, effectivePos.x));
+        effectivePos.y = std::max(bounds.boundingBox.y, min(bounds.boundingBox.y + bounds.boundingBox.h, effectivePos.y));
     }
     
     // Update control offset to reflect clamped position

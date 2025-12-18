@@ -11,8 +11,6 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 
 #include "ECS_Systems.h"
 #include "ECS_Components.h"
-#include "ECS_Components_Camera.h"
-#include "ECS_Register.h"
 #include "ECS_Entity.h"
 #include "World.h" 
 #include "GameEngine.h" // For delta time (fDt)
@@ -20,17 +18,11 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #include "system/KeyboardManager.h"
 #include "system/JoystickManager.h"
 #include "system/ViewportManager.h"
-#include "system/system_consts.h"
 #include <iostream>
 #include <bitset>
 #include <cmath>
 #include "drawing.h"
 
-// Include the camera rendering integration code
-#include "ECS_Systems_Rendering_Camera.cpp"
-
-// Forward declaration for camera rendering helper
-void RenderEntitiesForCamera(const CameraTransform& cam);
 
 //-------------------------------------------------------------
 InputSystem::InputSystem()
@@ -192,8 +184,9 @@ void RenderingSystem::Render()
                     SDL_RenderTexture(GameEngine::renderer, visual.sprite, nullptr, &box);
 
                     // Debug: draw bounding box
-                    SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 0, 255);
+                    SDL_SetRenderDrawColor(GameEngine::renderer, 0, 255, 255, 255);
                     Draw_Circle(GameEngine::renderer, (int)( box.x + box.w / 2.f) , (int) (box.y + box.h / 2.f), 35);
+					SDL_RenderRect(GameEngine::renderer, &boxComp.boundingBox);
                 }
             }
             catch (const std::exception& e)
@@ -445,3 +438,185 @@ void InputMappingSystem::Process()
     }
 }
 //-------------------------------------------------------------
+GridSystem::GridSystem() {}
+
+const GridSettings_data* GridSystem::FindSettings() const
+{
+    // Singleton simple: on prend la 1ère entité qui a GridSettings_data
+    for (const auto& kv : World::Get().m_entitySignatures)
+    {
+        EntityID e = kv.first;
+        if (World::Get().HasComponent<GridSettings_data>(e))
+            return &World::Get().GetComponent<GridSettings_data>(e);
+    }
+    return nullptr;
+}
+
+void GridSystem::DrawLineWorld(const CameraTransform& cam, const Vector& aWorld, const Vector& bWorld, const SDL_Color& c)
+{
+    SDL_Renderer* renderer = GameEngine::renderer;
+    if (!renderer) return;
+
+    Vector a = cam.WorldToScreen(aWorld);
+    Vector b = cam.WorldToScreen(bWorld);
+
+    SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
+    SDL_RenderLine(renderer, a.x, a.y, b.x, b.y);
+}
+
+void GridSystem::Render()
+{
+    SDL_Renderer* renderer = GameEngine::renderer;
+    if (!renderer) return;
+
+    const GridSettings_data* s = FindSettings();
+    if (!s || !s->enabled) return;
+
+    int playerCount = ViewportManager::Get().GetPlayerCount();
+    for (short playerID = 0; playerID < playerCount; playerID++)
+    {
+        CameraTransform cam = GetActiveCameraTransform(playerID);
+        if (!cam.isActive) continue;
+
+        SDL_Rect viewportRect = {
+            (int)cam.viewport.x,
+            (int)cam.viewport.y,
+            (int)cam.viewport.w,
+            (int)cam.viewport.h
+        };
+        SDL_SetRenderViewport(renderer, &viewportRect);
+        SDL_SetRenderClipRect(renderer, &viewportRect);
+
+        switch (s->projection)
+        {
+        case GridProjection::Ortho:    RenderOrtho(cam, *s); break;
+        case GridProjection::Iso:      RenderIso(cam, *s); break;
+        case GridProjection::HexAxial: RenderHex(cam, *s); break;
+        default: RenderOrtho(cam, *s); break;
+        }
+
+        SDL_SetRenderClipRect(renderer, nullptr);
+    }
+
+    SDL_SetRenderViewport(renderer, nullptr);
+}
+
+void GridSystem::RenderOrtho(const CameraTransform& cam, const GridSettings_data& s)
+{
+    const float csx = max(1.f, s.cellSize.x);
+    const float csy = max(1.f, s.cellSize.y);
+
+    // Approx bounds around camera based on viewport size (simple & stable)
+    float halfW = cam.viewport.w * 0.5f;
+    float halfH = cam.viewport.h * 0.5f;
+
+    float minX = cam.worldPosition.x - halfW;
+    float maxX = cam.worldPosition.x + halfW;
+    float minY = cam.worldPosition.y - halfH;
+    float maxY = cam.worldPosition.y + halfH;
+
+    int lines = 0;
+
+    float startX = std::floor(minX / csx) * csx;
+    float endX = std::ceil(maxX / csx) * csx;
+    for (float x = startX; x <= endX && lines < s.maxLines; x += csx)
+    {
+        DrawLineWorld(cam, Vector(x, minY, 0.f), Vector(x, maxY, 0.f), s.color);
+        ++lines;
+    }
+
+    float startY = std::floor(minY / csy) * csy;
+    float endY = std::ceil(maxY / csy) * csy;
+    for (float y = startY; y <= endY && lines < s.maxLines; y += csy)
+    {
+        DrawLineWorld(cam, Vector(minX, y, 0.f), Vector(maxX, y, 0.f), s.color);
+        ++lines;
+    }
+}
+
+void GridSystem::RenderIso(const CameraTransform& cam, const GridSettings_data& s)
+{
+    const float w = max(1.f, s.cellSize.x);
+    const float h = max(1.f, s.cellSize.y);
+
+    Vector u(w * 0.5f, -h * 0.5f, 0.f);
+    Vector v(w * 0.5f, h * 0.5f, 0.f);
+
+    float span = max(cam.viewport.w, cam.viewport.h);
+    int range = (int)std::ceil((span / min(w, h))) + 8;
+
+    int lines = 0;
+    Vector origin(cam.worldPosition.x, cam.worldPosition.y, 0.f);
+
+    for (int i = -range; i <= range && lines < s.maxLines; ++i)
+    {
+        Vector p0 = origin + v * (float)i - u * (float)range;
+        Vector p1 = origin + v * (float)i + u * (float)range;
+        DrawLineWorld(cam, p0, p1, s.color);
+        ++lines;
+
+        if (lines >= s.maxLines) break;
+
+        p0 = origin + u * (float)i - v * (float)range;
+        p1 = origin + u * (float)i + v * (float)range;
+        DrawLineWorld(cam, p0, p1, s.color);
+        ++lines;
+    }
+}
+
+void GridSystem::RenderHex(const CameraTransform& cam, const GridSettings_data& s)
+{
+    const float r = max(1.f, s.hexRadius);
+
+    // pointy-top axial layout
+    const float dx = 1.5f * r;
+    const float dy = 1.73205080757f * r; // sqrt(3) * r
+
+    float halfW = cam.viewport.w * 0.5f;
+    float halfH = cam.viewport.h * 0.5f;
+
+    float minX = cam.worldPosition.x - halfW;
+    float maxX = cam.worldPosition.x + halfW;
+    float minY = cam.worldPosition.y - halfH;
+    float maxY = cam.worldPosition.y + halfH;
+
+    int qMin = (int)std::floor(minX / dx) - 2;
+    int qMax = (int)std::ceil(maxX / dx) + 2;
+    int rMin = (int)std::floor(minY / dy) - 2;
+    int rMax = (int)std::ceil(maxY / dy) + 2;
+
+    auto hexCenter = [&](int q, int rr) -> Vector
+        {
+            float x = dx * (float)q;
+            float y = dy * ((float)rr + 0.5f * (float)(q & 1));
+            return Vector(x, y, 0.f);
+        };
+
+    auto drawHex = [&](const Vector& c)
+        {
+            Vector pts[6];
+            for (int i = 0; i < 6; ++i)
+            {
+                float a = (60.f * (float)i + 30.f) * 3.1415926535f / 180.f;
+                pts[i] = Vector(c.x + std::cos(a) * r, c.y + std::sin(a) * r, 0.f);
+            }
+            for (int i = 0; i < 6; ++i)
+                DrawLineWorld(cam, pts[i], pts[(i + 1) % 6], s.color);
+        };
+
+    int lines = 0;
+    for (int q = qMin; q <= qMax && lines < s.maxLines; ++q)
+    {
+        for (int rr = rMin; rr <= rMax && lines < s.maxLines; ++rr)
+        {
+            Vector c = hexCenter(q, rr);
+
+            // simple cull
+            if (c.x + r < minX || c.x - r > maxX || c.y + r < minY || c.y - r > maxY)
+                continue;
+
+            drawHex(c);
+            lines += 6;
+        }
+    }
+}

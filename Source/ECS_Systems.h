@@ -12,8 +12,21 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #pragma once
 
 #include "Ecs_Entity.h"
+#include "Ecs_Components.h"
 #include <set>
+#include <SDL3/SDL.h>
+#include "vector.h"
+#include <unordered_map>
+#include "system/message.h"
 
+// Forward declaration
+struct CameraTransform;
+struct GridSettings_data;
+
+// Prototype function to render entities for a given camera
+void RenderEntitiesForCamera(const CameraTransform& cam);
+// Get the active camera transform for a specific player
+CameraTransform GetActiveCameraTransform(short playerID);
 
 // The System class handles game logic over entities with specific components.
 class ECS_System
@@ -93,6 +106,22 @@ public:
     RenderingSystem();
 	virtual void Render() override;
 };
+//-------------------------------------------------------------
+class GridSystem : public ECS_System
+{
+public:
+    GridSystem();
+    virtual void Render() override;
+
+private:
+    const GridSettings_data* FindSettings() const;
+
+    void DrawLineWorld(const CameraTransform& cam, const Vector& aWorld, const Vector& bWorld, const SDL_Color& c);
+
+    void RenderOrtho(const CameraTransform& cam, const GridSettings_data& s);
+    void RenderIso(const CameraTransform& cam, const GridSettings_data& s);
+    void RenderHex(const CameraTransform& cam, const GridSettings_data& s);
+};
 // Player Control System: processes entities with PlayerBinding_data and Controller_data
 class PlayerControlSystem : public ECS_System
 {
@@ -127,6 +156,156 @@ private:
     struct Implementation;
     Implementation* pImpl;
 };
+//-------------------------------------------------------------
+// CameraSystem - Manages all camera entities in the ECS
+class CameraSystem : public ECS_System
+{
+public:
+    CameraSystem();
 
-// Include camera system
-#include "ECS_Systems_Camera.h"
+    // Core ECS system methods
+    virtual void Process() override;  // Update cameras each frame
+    virtual void Render() override;   // Update viewport settings
+
+    // Camera creation and management
+    EntityID CreateCameraForPlayer(short playerID, bool bindToKeyboard = false);
+    void RemoveCameraForPlayer(short playerID);
+    EntityID GetCameraEntityForPlayer(short playerID);
+
+    // Input binding
+    void BindCameraToKeyboard(EntityID cameraEntity);
+    void BindCameraToJoystick(EntityID cameraEntity, short playerID, SDL_JoystickID joystickId);
+
+    // Target setting
+    void SetCameraTarget_ECS(EntityID cameraEntity, EntityID targetEntity);
+    void ClearCameraTarget(EntityID cameraEntity);
+
+    // Rendering support
+    void ApplyCameraToRenderer(SDL_Renderer* renderer, short playerID);
+
+    // Event handling
+    void OnEvent(const Message& msg);
+
+private:
+    // Update methods called during Process()
+    void UpdateCameraInput(EntityID entity, float dt);
+    void UpdateCameraFollow(EntityID entity, float dt);
+    void UpdateCameraZoom(EntityID entity, float dt);
+    void UpdateCameraRotation(EntityID entity, float dt);
+    void UpdateCameraShake(EntityID entity, float dt);
+    void ApplyCameraBounds(EntityID entity);
+
+    // Input processing
+    void ProcessKeyboardInput(EntityID entity, CameraInputBinding_data& binding);
+    void ProcessJoystickInput(EntityID entity, CameraInputBinding_data& binding);
+    float ApplyDeadzone(float value, float deadzone);
+
+    // Camera control
+    void ResetCameraControls(EntityID entity);
+
+    // Player camera mapping
+    std::unordered_map<short, EntityID> m_playerCameras; // Map player ID to camera entity
+    EntityID m_defaultKeyboardCamera = INVALID_ENTITY_ID; // Default keyboard-controlled camera
+};
+//-------------------------------------------------------------
+
+// Structure that holds camera transformation data for rendering
+struct CameraTransform
+{
+    Vector worldPosition;        // Camera position in world space
+    Vector screenOffset;         // Screen offset (control + shake)
+    float zoom;                  // Zoom level
+    float rotation;              // Rotation angle in degrees
+    SDL_FRect viewport;          // Viewport rectangle
+    bool isActive;               // Is this camera active
+
+    // Transform a world position to screen coordinates
+    Vector WorldToScreen(const Vector& worldPos) const
+    {
+        if (!isActive)
+            return worldPos;
+
+        // 1. Calculate position relative to camera
+        Vector relative = worldPos;
+        relative = relative - worldPosition;
+
+        // 2. Apply rotation (convert degrees to radians)
+        if (rotation != 0.0f)
+        {
+            float rotRad = rotation * (float)(k_PI / 180.0);
+            float cosRot = std::cos(rotRad);
+            float sinRot = std::sin(rotRad);
+
+            float rotatedX = relative.x * cosRot - relative.y * sinRot;
+            float rotatedY = relative.x * sinRot + relative.y * cosRot;
+
+            relative.x = rotatedX;
+            relative.y = rotatedY;
+        }
+
+        // 3. Apply zoom
+        relative.x *= zoom;
+        relative.y *= zoom;
+
+        // 4. Apply screen offset (control offset + shake)
+        relative.x -= screenOffset.x;
+        relative.y -= screenOffset.y;
+
+        // 5. Center in viewport
+        relative.x += viewport.x + viewport.w / 2.0f;
+        relative.y += viewport.y + viewport.h / 2.0f;
+
+        return relative;
+    }
+
+    // Transform a world size to screen size
+    Vector WorldSizeToScreenSize(const Vector& worldSize) const
+    {
+        Vector size = worldSize;
+        return size * zoom;
+    }
+
+    // Check if a world-space bounding box is visible in this camera
+    bool IsVisible(const SDL_FRect& worldBounds) const
+    {
+        if (!isActive)
+            return false;
+
+        // Transform all four corners of the bounding box
+        Vector corners[4] = {
+            Vector(worldBounds.x, worldBounds.y, 0.f),
+            Vector(worldBounds.x + worldBounds.w, worldBounds.y, 0.f),
+            Vector(worldBounds.x, worldBounds.y + worldBounds.h, 0.f),
+            Vector(worldBounds.x + worldBounds.w, worldBounds.y + worldBounds.h, 0.f)
+        };
+
+        // Transform all corners to screen space
+        Vector screenCorners[4];
+        for (int i = 0; i < 4; i++)
+        {
+            screenCorners[i] = WorldToScreen(corners[i]);
+        }
+
+        // Calculate screen bounding box
+        float minX = screenCorners[0].x;
+        float maxX = screenCorners[0].x;
+        float minY = screenCorners[0].y;
+        float maxY = screenCorners[0].y;
+
+        for (int i = 1; i < 4; i++)
+        {
+            if (screenCorners[i].x < minX) minX = screenCorners[i].x;
+            if (screenCorners[i].x > maxX) maxX = screenCorners[i].x;
+            if (screenCorners[i].y < minY) minY = screenCorners[i].y;
+            if (screenCorners[i].y > maxY) maxY = screenCorners[i].y;
+        }
+
+        // Check if screen bounding box intersects viewport
+        bool intersects = !(maxX < viewport.x ||
+            minX > viewport.x + viewport.w ||
+            maxY < viewport.y ||
+            minY > viewport.y + viewport.h);
+
+        return intersects;
+    }
+};

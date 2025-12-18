@@ -14,9 +14,7 @@ convenient API for camera control.
 #include "EventManager.h"
 #include "system_utils.h"
 #include "../World.h"
-#include "../GameObject.h"
-#include "../ECS_Components_Camera.h"
-#include "../ECS_Systems_Camera.h"
+
 
 //-------------------------------------------------------------
 void CameraEventHandler::Initialize()

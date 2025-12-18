@@ -22,6 +22,24 @@ void RegisterInputEntityWithManager(EntityID e)
 World::World()
 {
     Initialize_ECS_Systems();
+
+    // Auto-create singleton GridSettings entity if missing
+    bool hasGridSettings = false;
+    for (const auto& kv : m_entitySignatures)
+    {
+        EntityID e = kv.first;
+        if (HasComponent<GridSettings_data>(e))
+        {
+            hasGridSettings = true;
+            break;
+        }
+    }
+    if (!hasGridSettings)
+    {
+        EntityID e = CreateEntity();
+        AddComponent<GridSettings_data>(e); // enabled=true by default
+    }
+
     SYSTEM_LOG << "World Initialized\n";
 }
 //---------------------------------------------------------------------------------------------
@@ -62,6 +80,7 @@ void World::Initialize_ECS_Systems()
     
     // Camera System (manages ECS cameras - added before rendering)
     Add_ECS_System(std::make_unique<CameraSystem>());
+	Add_ECS_System(std::make_unique<GridSystem>()); 
     Add_ECS_System(std::make_unique<RenderingSystem>());
 
     

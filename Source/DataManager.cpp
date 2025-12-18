@@ -191,7 +191,7 @@ VisualSprite_data* DataManager::GetSprite_data(const std::string& id, const std:
 	// set srcRect based on texture size
 	if (vsprite.sprite)
 	{
-		int w = ((SDL_Texture*)vsprite.sprite)->h, h = ((SDL_Texture*)vsprite.sprite)->h;
+		int w = ((SDL_Texture*)vsprite.sprite)->w, h = ((SDL_Texture*)vsprite.sprite)->h;
 		vsprite.srcRect = { 0.0f, 0.0f, static_cast<float>(w), static_cast<float>(h) };
 		vsprite.hotSpot = Vector(w / 2.0f, h / 2.0f, 0.0f);
 		return &vsprite;
