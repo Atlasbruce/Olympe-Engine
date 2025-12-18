@@ -135,7 +135,12 @@ namespace Olympe
         // ImGui::End();
 
         // Optional: Show a simple overlay toggle hint
-        ImGui::Begin("Overlay Info", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
+        constexpr ImGuiWindowFlags overlayInfoFlags = 
+            ImGuiWindowFlags_NoTitleBar | 
+            ImGuiWindowFlags_NoResize | 
+            ImGuiWindowFlags_AlwaysAutoResize;
+        
+        ImGui::Begin("Overlay Info", nullptr, overlayInfoFlags);
         ImGui::Text("Press F10 to toggle overlay");
         ImGui::End();
     }

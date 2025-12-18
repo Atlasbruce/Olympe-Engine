@@ -94,7 +94,7 @@ namespace Olympe
         bool m_initialized;
         bool m_visible; // Toggle overlay visibility (default: true)
 
-        // Owned objects
+        // Owned objects (using raw pointers for compatibility with existing codebase style)
         ImGuiManager*      m_imguiManager;
         GridPanel*         m_gridPanel;
         GridSettings_data* m_gridSettings;
