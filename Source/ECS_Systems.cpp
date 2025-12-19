@@ -507,6 +507,24 @@ void GridSystem::DrawLineWorld(const CameraTransform& cam, const Vector& aWorld,
     SDL_RenderLine(renderer, a.x, a.y, b.x, b.y);
 }
 
+// Calculate world-space AABB visible in camera viewport
+SDL_FRect GridSystem::GetWorldVisibleBounds(const CameraTransform& cam) const
+{
+    // Get viewport corners in screen space
+    Vector topLeft     = cam.ScreenToWorld(Vector(cam.viewport.x, cam.viewport.y, 0.f));
+    Vector topRight    = cam.ScreenToWorld(Vector(cam.viewport.x + cam.viewport.w, cam.viewport.y, 0.f));
+    Vector bottomLeft  = cam.ScreenToWorld(Vector(cam.viewport.x, cam.viewport.y + cam.viewport.h, 0.f));
+    Vector bottomRight = cam.ScreenToWorld(Vector(cam.viewport.x + cam.viewport.w, cam.viewport.y + cam.viewport.h, 0.f));
+
+    // Compute AABB (min/max) in world space
+    float minX = std::min({topLeft.x, topRight.x, bottomLeft.x, bottomRight.x});
+    float maxX = std::max({topLeft.x, topRight.x, bottomLeft.x, bottomRight.x});
+    float minY = std::min({topLeft.y, topRight.y, bottomLeft.y, bottomRight.y});
+    float maxY = std::max({topLeft.y, topRight.y, bottomLeft.y, bottomRight.y});
+
+    return SDL_FRect{minX, minY, maxX - minX, maxY - minY};
+}
+
 void GridSystem::Render()
 {
     SDL_Renderer* renderer = GameEngine::renderer;
@@ -584,30 +602,30 @@ void GridSystem::Render()
 
 void GridSystem::RenderOrtho(const CameraTransform& cam, const GridSettings_data& s)
 {
-    const float csx = max(1.f, s.cellSize.x);
-    const float csy = max(1.f, s.cellSize.y);
+    const float csx = std::max(1.f, s.cellSize.x);
+    const float csy = std::max(1.f, s.cellSize.y);
 
-    // Approx bounds around camera based on viewport size (simple & stable)
-    float halfW = cam.viewport.w * 0.5f;
-    float halfH = cam.viewport.h * 0.5f;
-
-    float minX = cam.worldPosition.x - halfW;
-    float maxX = cam.worldPosition.x + halfW;
-    float minY = cam.worldPosition.y - halfH;
-    float maxY = cam.worldPosition.y + halfH;
+    // Get actual world bounds visible in viewport
+    SDL_FRect bounds = GetWorldVisibleBounds(cam);
+    float minX = bounds.x;
+    float maxX = bounds.x + bounds.w;
+    float minY = bounds.y;
+    float maxY = bounds.y + bounds.h;
 
     int lines = 0;
 
+    // Vertical lines (constant X)
     float startX = std::floor(minX / csx) * csx;
-    float endX = std::ceil(maxX / csx) * csx;
+    float endX   = std::ceil(maxX / csx) * csx;
     for (float x = startX; x <= endX && lines < s.maxLines; x += csx)
     {
         DrawLineWorld(cam, Vector(x, minY, 0.f), Vector(x, maxY, 0.f), s.color);
         ++lines;
     }
 
+    // Horizontal lines (constant Y)
     float startY = std::floor(minY / csy) * csy;
-    float endY = std::ceil(maxY / csy) * csy;
+    float endY   = std::ceil(maxY / csy) * csy;
     for (float y = startY; y <= endY && lines < s.maxLines; y += csy)
     {
         DrawLineWorld(cam, Vector(minX, y, 0.f), Vector(maxX, y, 0.f), s.color);
@@ -617,29 +635,39 @@ void GridSystem::RenderOrtho(const CameraTransform& cam, const GridSettings_data
 
 void GridSystem::RenderIso(const CameraTransform& cam, const GridSettings_data& s)
 {
-    const float w = max(1.f, s.cellSize.x);
-    const float h = max(1.f, s.cellSize.y);
+    const float w = std::max(1.f, s.cellSize.x);
+    const float h = std::max(1.f, s.cellSize.y);
 
+    // Iso basis vectors (diamond)
     Vector u(w * 0.5f, -h * 0.5f, 0.f);
-    Vector v(w * 0.5f, h * 0.5f, 0.f);
+    Vector v(w * 0.5f,  h * 0.5f, 0.f);
 
-    float span = max(cam.viewport.w, cam.viewport.h);
-    int range = (int)std::ceil((span / min(w, h))) + 8;
-
+    // Get world bounds
+    SDL_FRect bounds = GetWorldVisibleBounds(cam);
+    
+    // Estimate range in "grid units" based on bounds diagonal
+    Vector center(bounds.x + bounds.w * 0.5f, bounds.y + bounds.h * 0.5f, 0.f);
+    float diagonal = std::sqrt(bounds.w * bounds.w + bounds.h * bounds.h);
+    int range = (int)std::ceil(diagonal / std::min(w, h)) + 2;
+    
     int lines = 0;
-    Vector origin(cam.worldPosition.x, cam.worldPosition.y, 0.f);
+    Vector origin = center; // center grid around visible area
 
+    // Lines parallel to u
     for (int i = -range; i <= range && lines < s.maxLines; ++i)
     {
         Vector p0 = origin + v * (float)i - u * (float)range;
         Vector p1 = origin + v * (float)i + u * (float)range;
         DrawLineWorld(cam, p0, p1, s.color);
         ++lines;
-
         if (lines >= s.maxLines) break;
+    }
 
-        p0 = origin + u * (float)i - v * (float)range;
-        p1 = origin + u * (float)i + v * (float)range;
+    // Lines parallel to v
+    for (int i = -range; i <= range && lines < s.maxLines; ++i)
+    {
+        Vector p0 = origin + u * (float)i - v * (float)range;
+        Vector p1 = origin + u * (float)i + v * (float)range;
         DrawLineWorld(cam, p0, p1, s.color);
         ++lines;
     }
@@ -647,43 +675,43 @@ void GridSystem::RenderIso(const CameraTransform& cam, const GridSettings_data& 
 
 void GridSystem::RenderHex(const CameraTransform& cam, const GridSettings_data& s)
 {
-    const float r = max(1.f, s.hexRadius);
+    const float r = std::max(1.f, s.hexRadius);
 
-    // pointy-top axial layout
+    // Pointy-top axial layout
     const float dx = 1.5f * r;
-    const float dy = 1.73205080757f * r; // sqrt(3) * r
+    const float dy = std::sqrt(3.0f) * r; // sqrt(3) * r
 
-    float halfW = cam.viewport.w * 0.5f;
-    float halfH = cam.viewport.h * 0.5f;
+    // Get world bounds
+    SDL_FRect bounds = GetWorldVisibleBounds(cam);
+    float minX = bounds.x;
+    float maxX = bounds.x + bounds.w;
+    float minY = bounds.y;
+    float maxY = bounds.y + bounds.h;
 
-    float minX = cam.worldPosition.x - halfW;
-    float maxX = cam.worldPosition.x + halfW;
-    float minY = cam.worldPosition.y - halfH;
-    float maxY = cam.worldPosition.y + halfH;
-
-    int qMin = (int)std::floor(minX / dx) - 2;
-    int qMax = (int)std::ceil(maxX / dx) + 2;
-    int rMin = (int)std::floor(minY / dy) - 2;
-    int rMax = (int)std::ceil(maxY / dy) + 2;
+    // Convert bounds to axial hex coords (q, r)
+    int qMin = (int)std::floor((minX / dx) - 2);
+    int qMax = (int)std::ceil((maxX / dx) + 2);
+    int rMin = (int)std::floor((minY / dy) - 2);
+    int rMax = (int)std::ceil((maxY / dy) + 2);
 
     auto hexCenter = [&](int q, int rr) -> Vector
-        {
-            float x = dx * (float)q;
-            float y = dy * ((float)rr + 0.5f * (float)(q & 1));
-            return Vector(x, y, 0.f);
-        };
+    {
+        float x = dx * (float)q;
+        float y = dy * ((float)rr + 0.5f * (float)(q & 1));
+        return Vector(x, y, 0.f);
+    };
 
     auto drawHex = [&](const Vector& c)
+    {
+        Vector pts[6];
+        for (int i = 0; i < 6; ++i)
         {
-            Vector pts[6];
-            for (int i = 0; i < 6; ++i)
-            {
-                float a = (60.f * (float)i + 30.f) * 3.1415926535f / 180.f;
-                pts[i] = Vector(c.x + std::cos(a) * r, c.y + std::sin(a) * r, 0.f);
-            }
-            for (int i = 0; i < 6; ++i)
-                DrawLineWorld(cam, pts[i], pts[(i + 1) % 6], s.color);
-        };
+            float a = (60.f * (float)i + 30.f) * (float)k_PI / 180.f;
+            pts[i] = Vector(c.x + std::cos(a) * r, c.y + std::sin(a) * r, 0.f);
+        }
+        for (int i = 0; i < 6; ++i)
+            DrawLineWorld(cam, pts[i], pts[(i + 1) % 6], s.color);
+    };
 
     int lines = 0;
     for (int q = qMin; q <= qMax && lines < s.maxLines; ++q)
@@ -692,7 +720,7 @@ void GridSystem::RenderHex(const CameraTransform& cam, const GridSettings_data& 
         {
             Vector c = hexCenter(q, rr);
 
-            // simple cull
+            // Simple AABB culling (hex center ± radius)
             if (c.x + r < minX || c.x - r > maxX || c.y + r < minY || c.y - r > maxY)
                 continue;
 

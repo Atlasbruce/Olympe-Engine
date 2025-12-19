@@ -118,6 +118,8 @@ private:
 
     void DrawLineWorld(const CameraTransform& cam, const Vector& aWorld, const Vector& bWorld, const SDL_Color& c);
 
+    SDL_FRect GetWorldVisibleBounds(const CameraTransform& cam) const;
+
     void RenderOrtho(const CameraTransform& cam, const GridSettings_data& s);
     void RenderIso(const CameraTransform& cam, const GridSettings_data& s);
     void RenderHex(const CameraTransform& cam, const GridSettings_data& s);
@@ -263,6 +265,46 @@ struct CameraTransform
     {
         Vector size = worldSize;
         return size * zoom;
+    }
+
+    // Transform a screen position to world coordinates (inverse of WorldToScreen)
+    Vector ScreenToWorld(const Vector& screenPos) const
+    {
+        if (!isActive)
+            return screenPos;
+
+        // 1. Remove viewport offset
+        Vector relative;
+        relative.x = screenPos.x - viewport.x - viewport.w / 2.0f;
+        relative.y = screenPos.y - viewport.y - viewport.h / 2.0f;
+
+        // 2. Remove screen offset (shake + control)
+        relative.x += screenOffset.x;
+        relative.y += screenOffset.y;
+
+        // 3. Inverse zoom
+        relative.x /= zoom;
+        relative.y /= zoom;
+
+        // 4. Inverse rotation (if any)
+        if (rotation != 0.0f)
+        {
+            float rotRad = -rotation * (float)(k_PI / 180.0);
+            float cosRot = std::cos(rotRad);
+            float sinRot = std::sin(rotRad);
+
+            float rotatedX = relative.x * cosRot - relative.y * sinRot;
+            float rotatedY = relative.x * sinRot + relative.y * cosRot;
+
+            relative.x = rotatedX;
+            relative.y = rotatedY;
+        }
+
+        // 5. Add world position
+        relative.x += worldPosition.x;
+        relative.y += worldPosition.y;
+
+        return relative;
     }
 
     // Check if a world-space bounding box is visible in this camera
