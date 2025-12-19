@@ -90,7 +90,14 @@ void ViewportManager::UpdateViewports()
 {
     m_viewRects.clear();
     int n = static_cast<int>(m_players.size());
-    if (n == 0) n = 1; // default single view
+    
+    // If no players, create a single full-screen viewport but don't treat it as a player
+    if (n == 0)
+    {
+        SDL_FRect r{ 0,0,static_cast<float>(m_width),static_cast<float>(m_height) };
+        m_viewRects.push_back(r);
+        return; // Exit early - no player mapping needed
+    }
 
     switch (n)
 	{
@@ -215,8 +222,7 @@ void ViewportManager::UpdateViewports()
 	}
 
 
-    // if we have fewer players than rects (e.g. no players defined) we still keep rects sized to n
-    // rebuild playerIndexMap if sizes mismatch
+    // Rebuild playerIndexMap to match players to their viewport indices
     m_playerIndexMap.clear();
     for (size_t i = 0; i < m_players.size() && i < m_viewRects.size(); ++i)
         m_playerIndexMap[m_players[i]] = static_cast<int>(i);

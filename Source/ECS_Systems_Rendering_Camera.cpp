@@ -42,29 +42,62 @@ CameraTransform GetActiveCameraTransform(short playerID)
         
         Camera_data& cam = world.GetComponent<Camera_data>(entity);
         
-        if (cam.playerId == playerID && cam.isActive)
+        // For player cameras (playerID >= 0), only consider cameras with matching playerID
+        // Never fall back to default camera (playerId=-1) for player rendering
+        if (playerID >= 0)
         {
-            // Found the active camera for this player
-            transform.worldPosition = cam.position;
-            transform.zoom = cam.zoom;
-            transform.rotation = cam.rotation;
-            transform.viewport = cam.viewportRect;
-            transform.isActive = true;
-            
-            // Calculate screen offset (control + base + shake)
-            transform.screenOffset = cam.controlOffset + cam.baseOffset;
-            
-            // Add shake offset if present
-            if (world.HasComponent<CameraEffects_data>(entity))
+            if (cam.playerId == playerID && cam.isActive)
             {
-                CameraEffects_data& effects = world.GetComponent<CameraEffects_data>(entity);
-                if (effects.isShaking)
+                // Found the active camera for this player
+                transform.worldPosition = cam.position;
+                transform.zoom = cam.zoom;
+                transform.rotation = cam.rotation;
+                transform.viewport = cam.viewportRect;
+                transform.isActive = true;
+                
+                // Calculate screen offset (control + base + shake)
+                transform.screenOffset = cam.controlOffset + cam.baseOffset;
+                
+                // Add shake offset if present
+                if (world.HasComponent<CameraEffects_data>(entity))
                 {
-                    transform.screenOffset += effects.shakeOffset;
+                    CameraEffects_data& effects = world.GetComponent<CameraEffects_data>(entity);
+                    if (effects.isShaking)
+                    {
+                        transform.screenOffset += effects.shakeOffset;
+                    }
                 }
+                
+                break;
             }
-            
-            break;
+        }
+        else
+        {
+            // For single-view/no-players case, allow default camera (playerId=-1)
+            if (cam.playerId == -1 && cam.isActive)
+            {
+                // Found the default camera
+                transform.worldPosition = cam.position;
+                transform.zoom = cam.zoom;
+                transform.rotation = cam.rotation;
+                transform.viewport = cam.viewportRect;
+                transform.isActive = true;
+                
+                // Calculate screen offset (control + base + shake)
+                transform.screenOffset = cam.controlOffset + cam.baseOffset;
+                
+                // Add shake offset if present
+                if (world.HasComponent<CameraEffects_data>(entity))
+                {
+                    CameraEffects_data& effects = world.GetComponent<CameraEffects_data>(entity);
+                    if (effects.isShaking)
+                    {
+                        transform.screenOffset += effects.shakeOffset;
+                    }
+                }
+                
+                break;
+            }
         }
     }
     

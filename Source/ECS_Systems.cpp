@@ -116,62 +116,94 @@ void RenderingSystem::Render()
     SDL_Renderer* renderer = GameEngine::renderer;
     if (!renderer) return;
 
-    // Get player count from ViewportManager
-    int playerCount = ViewportManager::Get().GetPlayerCount();
+    // Get actual players from ViewportManager
+    const auto& players = ViewportManager::Get().GetPlayers();
     
     // Check if we have any ECS cameras active
+    // For multi-player: check player cameras
+    // For no-players: check default camera (playerId=-1)
     bool hasECSCameras = false;
-    for (short playerID = 0; playerID < playerCount; playerID++)
+    if (!players.empty())
     {
-        CameraTransform camTransform = GetActiveCameraTransform(playerID);
-        if (camTransform.isActive)
+        // Multi-player case: check if any player has an active camera
+        for (short playerID : players)
         {
-            hasECSCameras = true;
-            break;
+            CameraTransform camTransform = GetActiveCameraTransform(playerID);
+            if (camTransform.isActive)
+            {
+                hasECSCameras = true;
+                break;
+            }
         }
+    }
+    else
+    {
+        // No-players case: check if default camera exists
+        CameraTransform defaultCam = GetActiveCameraTransform(-1);
+        hasECSCameras = defaultCam.isActive;
     }
     
     // Use ECS camera system if available, otherwise fall back to legacy
     if (hasECSCameras)
     {
-        // Multi-camera rendering with ECS camera system
-        for (short playerID = 0; playerID < playerCount; playerID++)
+        if (!players.empty())
         {
-            CameraTransform camTransform = GetActiveCameraTransform(playerID);
-            
+            // Multi-camera rendering with ECS camera system
+            for (short playerID : players)
+            {
+                CameraTransform camTransform = GetActiveCameraTransform(playerID);
+                
+                if (!camTransform.isActive)
+                    continue;
+                
+                // Set viewport and clip rect
+                SDL_Rect viewportRect = {
+                    (int)camTransform.viewport.x,
+                    (int)camTransform.viewport.y,
+                    (int)camTransform.viewport.w,
+                    (int)camTransform.viewport.h
+                };
 
-            SYSTEM_LOG << "P" << playerID << " / nb" << playerCount
-                << " active=" << camTransform.isActive
-                << " cam.vp=("
-                << camTransform.viewport.x << ","
-                << camTransform.viewport.y << ","
-                << camTransform.viewport.w << ","
-				<< camTransform.viewport.h << "'" << ")\n";
+                SDL_SetRenderViewport(renderer, &viewportRect);
+                SDL_SetRenderClipRect(renderer, &viewportRect);
+                
+                // Render entities for this camera
+                RenderEntitiesForCamera(camTransform);
 
-            if (!camTransform.isActive)
-                continue;
-            
-            // Set viewport and clip rect
-            SDL_Rect viewportRect = {
-                (int)camTransform.viewport.x,
-                (int)camTransform.viewport.y,
-                (int)camTransform.viewport.w,
-                (int)camTransform.viewport.h
-            };
+                // Reset viewport and clip rect after each viewport
+                SDL_SetRenderViewport(renderer, nullptr);
+                SDL_SetRenderClipRect(renderer, nullptr);
+            }
+        }
+        else
+        {
+            // Single-view rendering with default camera (playerId=-1)
+            CameraTransform camTransform = GetActiveCameraTransform(-1);
+            if (camTransform.isActive)
+            {
+                // Set viewport and clip rect
+                SDL_Rect viewportRect = {
+                    (int)camTransform.viewport.x,
+                    (int)camTransform.viewport.y,
+                    (int)camTransform.viewport.w,
+                    (int)camTransform.viewport.h
+                };
 
-            SDL_SetRenderViewport(renderer, &viewportRect);
-            SDL_SetRenderClipRect(renderer, &viewportRect);
-            
-            // Render entities for this camera
-            RenderEntitiesForCamera(camTransform);
+                SDL_SetRenderViewport(renderer, &viewportRect);
+                SDL_SetRenderClipRect(renderer, &viewportRect);
+                
+                // Render entities for this camera
+                RenderEntitiesForCamera(camTransform);
 
-            // Clear clip rect
-            SDL_SetRenderViewport(renderer, nullptr);
-            SDL_SetRenderClipRect(renderer, nullptr);
+                // Reset viewport and clip rect
+                SDL_SetRenderViewport(renderer, nullptr);
+                SDL_SetRenderClipRect(renderer, nullptr);
+            }
         }
         
-        // Reset viewport
+        // Final reset
         SDL_SetRenderViewport(renderer, nullptr);
+        SDL_SetRenderClipRect(renderer, nullptr);
     }
 	else // Legacy single-camera rendering TO BE REMOVED LATER
     {
@@ -453,7 +485,7 @@ GridSystem::GridSystem() {}
 
 const GridSettings_data* GridSystem::FindSettings() const
 {
-    // Singleton simple: on prend la 1ère entité qui a GridSettings_data
+    // Singleton simple: on prend la 1ï¿½re entitï¿½ qui a GridSettings_data
     for (const auto& kv : World::Get().m_entitySignatures)
     {
         EntityID e = kv.first;
@@ -483,33 +515,71 @@ void GridSystem::Render()
     const GridSettings_data* s = FindSettings();
     if (!s || !s->enabled) return;
 
-    int playerCount = ViewportManager::Get().GetPlayerCount();
-    for (short playerID = 0; playerID < playerCount; playerID++)
+    // Get actual players from ViewportManager
+    const auto& players = ViewportManager::Get().GetPlayers();
+    
+    if (!players.empty())
     {
-        CameraTransform cam = GetActiveCameraTransform(playerID);
-        if (!cam.isActive) continue;
-
-        SDL_Rect viewportRect = {
-            (int)cam.viewport.x,
-            (int)cam.viewport.y,
-            (int)cam.viewport.w,
-            (int)cam.viewport.h
-        };
-        SDL_SetRenderViewport(renderer, &viewportRect);
-        SDL_SetRenderClipRect(renderer, &viewportRect);
-
-        switch (s->projection)
+        // Multi-player case: render grid for each player's camera
+        for (short playerID : players)
         {
-        case GridProjection::Ortho:    RenderOrtho(cam, *s); break;
-        case GridProjection::Iso:      RenderIso(cam, *s); break;
-        case GridProjection::HexAxial: RenderHex(cam, *s); break;
-        default: RenderOrtho(cam, *s); break;
-        }
+            CameraTransform cam = GetActiveCameraTransform(playerID);
+            if (!cam.isActive) continue;
 
-        SDL_SetRenderClipRect(renderer, nullptr);
+            SDL_Rect viewportRect = {
+                (int)cam.viewport.x,
+                (int)cam.viewport.y,
+                (int)cam.viewport.w,
+                (int)cam.viewport.h
+            };
+            SDL_SetRenderViewport(renderer, &viewportRect);
+            SDL_SetRenderClipRect(renderer, &viewportRect);
+
+            switch (s->projection)
+            {
+            case GridProjection::Ortho:    RenderOrtho(cam, *s); break;
+            case GridProjection::Iso:      RenderIso(cam, *s); break;
+            case GridProjection::HexAxial: RenderHex(cam, *s); break;
+            default: RenderOrtho(cam, *s); break;
+            }
+
+            // Reset viewport and clip rect after each viewport
+            SDL_SetRenderViewport(renderer, nullptr);
+            SDL_SetRenderClipRect(renderer, nullptr);
+        }
+    }
+    else
+    {
+        // No-players case: render grid with default camera (playerId=-1)
+        CameraTransform cam = GetActiveCameraTransform(-1);
+        if (cam.isActive)
+        {
+            SDL_Rect viewportRect = {
+                (int)cam.viewport.x,
+                (int)cam.viewport.y,
+                (int)cam.viewport.w,
+                (int)cam.viewport.h
+            };
+            SDL_SetRenderViewport(renderer, &viewportRect);
+            SDL_SetRenderClipRect(renderer, &viewportRect);
+
+            switch (s->projection)
+            {
+            case GridProjection::Ortho:    RenderOrtho(cam, *s); break;
+            case GridProjection::Iso:      RenderIso(cam, *s); break;
+            case GridProjection::HexAxial: RenderHex(cam, *s); break;
+            default: RenderOrtho(cam, *s); break;
+            }
+
+            // Reset viewport and clip rect
+            SDL_SetRenderViewport(renderer, nullptr);
+            SDL_SetRenderClipRect(renderer, nullptr);
+        }
     }
 
+    // Final reset
     SDL_SetRenderViewport(renderer, nullptr);
+    SDL_SetRenderClipRect(renderer, nullptr);
 }
 
 void GridSystem::RenderOrtho(const CameraTransform& cam, const GridSettings_data& s)
