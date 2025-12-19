@@ -16,6 +16,7 @@ RenderingSystem, including world-to-screen coordinate conversion and frustum cul
 #include "World.h"
 #include "vector.h"
 #include "system/system_consts.h"
+#include "system/ViewportManager.h"
 #include <cmath>
 #include <SDL3/SDL.h>
 #include "ECS_Systems_Rendering_Camera.h"
@@ -52,7 +53,19 @@ CameraTransform GetActiveCameraTransform(short playerID)
                 transform.worldPosition = cam.position;
                 transform.zoom = cam.zoom;
                 transform.rotation = cam.rotation;
-                transform.viewport = cam.viewportRect;
+                
+                // Get the actual current viewport for this player from ViewportManager
+                SDL_FRect playerViewport;
+                if (ViewportManager::Get().GetViewRectForPlayer(playerID, playerViewport))
+                {
+                    transform.viewport = playerViewport;
+                }
+                else
+                {
+                    // Fallback: use stored viewport if player not found (shouldn't happen for active players)
+                    transform.viewport = cam.viewportRect;
+                }
+                
                 transform.isActive = true;
                 
                 // Calculate screen offset (control + base + shake)
