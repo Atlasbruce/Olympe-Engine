@@ -116,12 +116,12 @@ void RenderingSystem::Render()
     SDL_Renderer* renderer = GameEngine::renderer;
     if (!renderer) return;
 
-    // Get player count from ViewportManager
-    int playerCount = ViewportManager::Get().GetPlayerCount();
+    // Get actual players from ViewportManager
+    const auto& players = ViewportManager::Get().GetPlayers();
     
     // Check if we have any ECS cameras active
     bool hasECSCameras = false;
-    for (short playerID = 0; playerID < playerCount; playerID++)
+    for (short playerID : players)
     {
         CameraTransform camTransform = GetActiveCameraTransform(playerID);
         if (camTransform.isActive)
@@ -135,19 +135,10 @@ void RenderingSystem::Render()
     if (hasECSCameras)
     {
         // Multi-camera rendering with ECS camera system
-        for (short playerID = 0; playerID < playerCount; playerID++)
+        for (short playerID : players)
         {
             CameraTransform camTransform = GetActiveCameraTransform(playerID);
             
-
-            SYSTEM_LOG << "P" << playerID << " / nb" << playerCount
-                << " active=" << camTransform.isActive
-                << " cam.vp=("
-                << camTransform.viewport.x << ","
-                << camTransform.viewport.y << ","
-                << camTransform.viewport.w << ","
-				<< camTransform.viewport.h << "'" << ")\n";
-
             if (!camTransform.isActive)
                 continue;
             
@@ -165,13 +156,14 @@ void RenderingSystem::Render()
             // Render entities for this camera
             RenderEntitiesForCamera(camTransform);
 
-            // Clear clip rect
+            // Reset viewport and clip rect after each viewport
             SDL_SetRenderViewport(renderer, nullptr);
             SDL_SetRenderClipRect(renderer, nullptr);
         }
         
-        // Reset viewport
+        // Final reset
         SDL_SetRenderViewport(renderer, nullptr);
+        SDL_SetRenderClipRect(renderer, nullptr);
     }
 	else // Legacy single-camera rendering TO BE REMOVED LATER
     {
@@ -453,7 +445,7 @@ GridSystem::GridSystem() {}
 
 const GridSettings_data* GridSystem::FindSettings() const
 {
-    // Singleton simple: on prend la 1ère entité qui a GridSettings_data
+    // Singleton simple: on prend la 1ï¿½re entitï¿½ qui a GridSettings_data
     for (const auto& kv : World::Get().m_entitySignatures)
     {
         EntityID e = kv.first;
@@ -483,8 +475,9 @@ void GridSystem::Render()
     const GridSettings_data* s = FindSettings();
     if (!s || !s->enabled) return;
 
-    int playerCount = ViewportManager::Get().GetPlayerCount();
-    for (short playerID = 0; playerID < playerCount; playerID++)
+    // Get actual players from ViewportManager
+    const auto& players = ViewportManager::Get().GetPlayers();
+    for (short playerID : players)
     {
         CameraTransform cam = GetActiveCameraTransform(playerID);
         if (!cam.isActive) continue;
@@ -506,10 +499,14 @@ void GridSystem::Render()
         default: RenderOrtho(cam, *s); break;
         }
 
+        // Reset viewport and clip rect after each viewport
+        SDL_SetRenderViewport(renderer, nullptr);
         SDL_SetRenderClipRect(renderer, nullptr);
     }
 
+    // Final reset
     SDL_SetRenderViewport(renderer, nullptr);
+    SDL_SetRenderClipRect(renderer, nullptr);
 }
 
 void GridSystem::RenderOrtho(const CameraTransform& cam, const GridSettings_data& s)
