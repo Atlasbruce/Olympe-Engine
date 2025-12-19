@@ -42,8 +42,8 @@ void GameEngine::Initialize()
 	CameraSystem* camSys = World::Get().GetSystem<CameraSystem>();
 	if (camSys)
 	{
-		EntityID defaultCamera = camSys->CreateCameraForPlayer(0, true); // true = bind to keyboard
-		SYSTEM_LOG << "Created default ECS camera for player 0 (Entity " << defaultCamera << ")\n";
+		EntityID defaultCamera = camSys->CreateCameraForPlayer(-1, true); // true = bind to keyboard
+		SYSTEM_LOG << "Created default ECS camera for player -1 (Entity " << defaultCamera << ")\n";
 	}
 }
 //-------------------------------------------------------------

@@ -6,6 +6,8 @@ constexpr double k_PI = 3.14159265358979323846;
 static const int DEFAULT_WINDOW_WIDTH = 800;
 static const int DEFAULT_WINDOW_HEIGHT = 600;
 
+static const short MAX_PLAYERS = 8;
+
 // Event structure types
 // Used to identify the source/type of event messages
 enum class EventStructType

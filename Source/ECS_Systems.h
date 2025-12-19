@@ -214,10 +214,10 @@ struct CameraTransform
 {
     Vector worldPosition;        // Camera position in world space
     Vector screenOffset;         // Screen offset (control + shake)
-    float zoom;                  // Zoom level
-    float rotation;              // Rotation angle in degrees
-    SDL_FRect viewport;          // Viewport rectangle
-    bool isActive;               // Is this camera active
+    float zoom = 0.f;                  // Zoom level
+    float rotation = 0.f;              // Rotation angle in degrees
+    SDL_FRect viewport = {0.f, 0.f, 0.f, 0.f};          // Viewport rectangle
+    bool isActive = false;               // Is this camera active
 
     // Transform a world position to screen coordinates
     Vector WorldToScreen(const Vector& worldPos) const

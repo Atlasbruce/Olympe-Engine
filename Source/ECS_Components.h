@@ -213,7 +213,8 @@ enum class CameraControlMode : uint8_t {
 // Contains all core camera properties including position, zoom, rotation, and control settings
 struct Camera_data
 {
-	short playerId = 0;                      // ID of the player who owns this camera
+	short playerId = -1;                      // ID of the player who owns this camera
+	//EntityID playerEntityID = INVALID_ENTITY_ID;	// EntityID of the player entity
 	CameraType type = CameraType::CameraType_2D; // Type of camera projection
 
 	// Position and offset

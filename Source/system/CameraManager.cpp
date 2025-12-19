@@ -132,15 +132,19 @@ void CameraManager::Apply(SDL_Renderer* renderer)
 void CameraManager::Apply(SDL_Renderer* renderer, short playerID)
 {
     if (!renderer) return;
-    
-    SetActivePlayerID(playerID);
 
-    SDL_FRect rectf;
-    if (ViewportManager::Get().GetViewRectForPlayer(playerID, rectf))
+	if (playerID >= 0)
     {
-        const SDL_Rect r = { (int)rectf.x, (int)rectf.y, (int)rectf.w, (int)rectf.h };
-        SDL_SetRenderViewport(renderer, &r);
-    }
+           
+        SetActivePlayerID(playerID);
+
+        SDL_FRect rectf;
+        if (ViewportManager::Get().GetViewRectForPlayer(playerID, rectf))
+        {
+            const SDL_Rect r = { (int)rectf.x, (int)rectf.y, (int)rectf.w, (int)rectf.h };
+            SDL_SetRenderViewport(renderer, &r);
+        }
+	}
     else
     {
         // fallback to default behaviour if player not found

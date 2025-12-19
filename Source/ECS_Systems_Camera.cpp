@@ -98,6 +98,7 @@ EntityID CameraSystem::CreateCameraForPlayer(short playerID, bool bindToKeyboard
     // Add Camera_data with default values
     Camera_data& cam = World::Get().AddComponent<Camera_data>(cameraEntity);
     cam.playerId = playerID;
+	//cam.playerEntityID = 
     cam.type = CameraType::CameraType_2D;
     cam.position = Vector(0.f, 0.f, 0.f);
     cam.zoom = 1.0f;
@@ -106,13 +107,18 @@ EntityID CameraSystem::CreateCameraForPlayer(short playerID, bool bindToKeyboard
     cam.targetRotation = 0.0f;
     cam.controlMode = CameraControlMode::Mode_Free;
     cam.isActive = true;
-    
+	    
     // Get viewport for this player
     SDL_FRect viewportRect;
     if (ViewportManager::Get().GetViewRectForPlayer(playerID, viewportRect))
     {
         cam.viewportRect = viewportRect;
     }
+    else
+        {
+            // Default to full screen if no specific viewport
+            cam.viewportRect = { 0.f, 0.f, (float)GameEngine::screenWidth, (float)GameEngine::screenHeight }; // default full screen
+	    }
     
     // Add CameraTarget_data
     CameraTarget_data& target = World::Get().AddComponent<CameraTarget_data>(cameraEntity);

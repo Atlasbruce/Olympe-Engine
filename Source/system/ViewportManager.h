@@ -40,7 +40,7 @@ public:
     bool AddPlayer(short playerID, ViewportLayout viewportLayout);
     bool RemovePlayer(short playerID);
     void SetSize(int w, int h);
-    int GetPlayerCount() const { return static_cast<int>(m_players.size() == 0 ? 1 : m_players.size()); }
+    int GetPlayerCount() const { return static_cast<int>(m_players.size() == 0 ? 0 : m_players.size()); }
 
     // Return view rects in the same order as m_players (if no players defined returns single full-screen rect)
     const std::vector<SDL_FRect>& GetViewRects() const { return m_viewRects; }

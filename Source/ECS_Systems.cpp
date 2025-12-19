@@ -139,6 +139,15 @@ void RenderingSystem::Render()
         {
             CameraTransform camTransform = GetActiveCameraTransform(playerID);
             
+
+            SYSTEM_LOG << "P" << playerID << " / nb" << playerCount
+                << " active=" << camTransform.isActive
+                << " cam.vp=("
+                << camTransform.viewport.x << ","
+                << camTransform.viewport.y << ","
+                << camTransform.viewport.w << ","
+				<< camTransform.viewport.h << "'" << ")\n";
+
             if (!camTransform.isActive)
                 continue;
             
@@ -149,20 +158,22 @@ void RenderingSystem::Render()
                 (int)camTransform.viewport.w,
                 (int)camTransform.viewport.h
             };
+
             SDL_SetRenderViewport(renderer, &viewportRect);
             SDL_SetRenderClipRect(renderer, &viewportRect);
             
             // Render entities for this camera
             RenderEntitiesForCamera(camTransform);
-            
+
             // Clear clip rect
+            SDL_SetRenderViewport(renderer, nullptr);
             SDL_SetRenderClipRect(renderer, nullptr);
         }
         
         // Reset viewport
         SDL_SetRenderViewport(renderer, nullptr);
     }
-    else
+	else // Legacy single-camera rendering TO BE REMOVED LATER
     {
         // Legacy rendering path using CameraManager
         for (EntityID entity : m_entities)
@@ -193,7 +204,7 @@ void RenderingSystem::Render()
             {
                 std::cerr << "RenderingSystem Error for Entity " << entity << ": " << e.what() << "\n";
             }
-        }
+        }/**/
     }
 }
 
