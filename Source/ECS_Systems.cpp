@@ -616,7 +616,7 @@ void GridSystem::RenderOrtho(const CameraTransform& cam, const GridSettings_data
 
     // Vertical lines (constant X)
     float startX = std::floor(minX / csx) * csx;
-    float endX   = std::ceil (maxX / csx) * csx;
+    float endX   = std::ceil(maxX / csx) * csx;
     for (float x = startX; x <= endX && lines < s.maxLines; x += csx)
     {
         DrawLineWorld(cam, Vector(x, minY, 0.f), Vector(x, maxY, 0.f), s.color);
@@ -625,7 +625,7 @@ void GridSystem::RenderOrtho(const CameraTransform& cam, const GridSettings_data
 
     // Horizontal lines (constant Y)
     float startY = std::floor(minY / csy) * csy;
-    float endY   = std::ceil (maxY / csy) * csy;
+    float endY   = std::ceil(maxY / csy) * csy;
     for (float y = startY; y <= endY && lines < s.maxLines; y += csy)
     {
         DrawLineWorld(cam, Vector(minX, y, 0.f), Vector(maxX, y, 0.f), s.color);
@@ -679,7 +679,7 @@ void GridSystem::RenderHex(const CameraTransform& cam, const GridSettings_data& 
 
     // Pointy-top axial layout
     const float dx = 1.5f * r;
-    const float dy = 1.73205080757f * r; // sqrt(3) * r
+    const float dy = std::sqrt(3.0f) * r; // sqrt(3) * r
 
     // Get world bounds
     SDL_FRect bounds = GetWorldVisibleBounds(cam);
@@ -690,9 +690,9 @@ void GridSystem::RenderHex(const CameraTransform& cam, const GridSettings_data& 
 
     // Convert bounds to axial hex coords (q, r)
     int qMin = (int)std::floor((minX / dx) - 2);
-    int qMax = (int)std::ceil ((maxX / dx) + 2);
+    int qMax = (int)std::ceil((maxX / dx) + 2);
     int rMin = (int)std::floor((minY / dy) - 2);
-    int rMax = (int)std::ceil ((maxY / dy) + 2);
+    int rMax = (int)std::ceil((maxY / dy) + 2);
 
     auto hexCenter = [&](int q, int rr) -> Vector
     {
@@ -706,7 +706,7 @@ void GridSystem::RenderHex(const CameraTransform& cam, const GridSettings_data& 
         Vector pts[6];
         for (int i = 0; i < 6; ++i)
         {
-            float a = (60.f * (float)i + 30.f) * 3.14159265f / 180.f;
+            float a = (60.f * (float)i + 30.f) * (float)k_PI / 180.f;
             pts[i] = Vector(c.x + std::cos(a) * r, c.y + std::sin(a) * r, 0.f);
         }
         for (int i = 0; i < 6; ++i)
