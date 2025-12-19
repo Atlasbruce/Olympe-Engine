@@ -118,7 +118,7 @@ private:
 
     void DrawLineWorld(const CameraTransform& cam, const Vector& aWorld, const Vector& bWorld, const SDL_Color& c);
 
-    SDL_FRect GetWorldVisibleBounds(const CameraTransform& cam) const;
+    SDL_FRect GetWorldVisibleBounds(const CameraTransform& cam) ;
 
     void RenderOrtho(const CameraTransform& cam, const GridSettings_data& s);
     void RenderIso(const CameraTransform& cam, const GridSettings_data& s);

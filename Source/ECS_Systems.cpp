@@ -23,6 +23,9 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #include <cmath>
 #include "drawing.h"
 
+#undef min
+#undef max
+
 
 //-------------------------------------------------------------
 InputSystem::InputSystem()
@@ -508,7 +511,7 @@ void GridSystem::DrawLineWorld(const CameraTransform& cam, const Vector& aWorld,
 }
 
 // Calculate world-space AABB visible in camera viewport
-SDL_FRect GridSystem::GetWorldVisibleBounds(const CameraTransform& cam) const
+SDL_FRect GridSystem::GetWorldVisibleBounds(const CameraTransform& cam)
 {
     // Get viewport corners in screen space
     Vector topLeft     = cam.ScreenToWorld(Vector(cam.viewport.x, cam.viewport.y, 0.f));
