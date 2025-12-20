@@ -293,16 +293,16 @@ struct CameraInputBinding_data
 	SDL_JoystickID joystickId = 0;           // Joystick device ID
 	bool useKeyboard = false;                // Use keyboard controls
 
-	// Keyboard bindings (using numpad by default)
-	SDL_Keycode key_up = SDLK_KP_8;          // Move camera up
-	SDL_Keycode key_down = SDLK_KP_2;        // Move camera down
-	SDL_Keycode key_left = SDLK_KP_4;        // Move camera left
-	SDL_Keycode key_right = SDLK_KP_6;       // Move camera right
-	SDL_Keycode key_reset = SDLK_KP_5;       // Reset camera controls
-	SDL_Keycode key_rotate_left = SDLK_KP_DIVIDE;   // Rotate camera left
-	SDL_Keycode key_rotate_right = SDLK_KP_MULTIPLY; // Rotate camera right
-	SDL_Keycode key_zoom_in = SDLK_KP_PLUS;  // Zoom in
-	SDL_Keycode key_zoom_out = SDLK_KP_MINUS; // Zoom out
+	// Keyboard bindings (using numpad scancodes - hardware-based, layout-independent)
+	SDL_Scancode key_up = SDL_SCANCODE_KP_8;          // Move camera up
+	SDL_Scancode key_down = SDL_SCANCODE_KP_2;        // Move camera down
+	SDL_Scancode key_left = SDL_SCANCODE_KP_4;        // Move camera left
+	SDL_Scancode key_right = SDL_SCANCODE_KP_6;       // Move camera right
+	SDL_Scancode key_reset = SDL_SCANCODE_KP_5;       // Reset camera controls
+	SDL_Scancode key_rotate_left = SDL_SCANCODE_KP_DIVIDE;   // Rotate camera left
+	SDL_Scancode key_rotate_right = SDL_SCANCODE_KP_MULTIPLY; // Rotate camera right
+	SDL_Scancode key_zoom_in = SDL_SCANCODE_KP_PLUS;  // Zoom in
+	SDL_Scancode key_zoom_out = SDL_SCANCODE_KP_MINUS; // Zoom out
 
 	// Joystick bindings
 	int axis_horizontal = 2;                 // Right stick horizontal axis
