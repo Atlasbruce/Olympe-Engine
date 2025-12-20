@@ -3,6 +3,8 @@
 // This file is kept for legacy compatibility during migration phase
 // All functionality has been moved to CameraSystem
 
+#include "../vector.h"
+
 class CameraManager
 {
 public:
@@ -13,4 +15,7 @@ public:
     void Initialize() {} // Use CameraSystem event registration
     void Shutdown() {}
     void Process() {} // Now handled by CameraSystem::Process()
+    
+    // Legacy compatibility stubs
+    Vector GetCameraPositionForActivePlayer(short playerID = 0) const { return Vector(); }
 };

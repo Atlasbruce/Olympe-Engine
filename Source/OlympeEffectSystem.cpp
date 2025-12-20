@@ -12,7 +12,7 @@ Autonomous visual effect system (no entity required)
 #include "ECS_Systems.h"
 #include "GameEngine.h"
 #include "DataManager.h"
-#include "system/CameraManager.h"
+#include "ECS_Systems_Rendering_Camera.h"
 #include "drawing.h"
 #include "vector.h"
 #include <SDL3/SDL.h>
@@ -402,8 +402,9 @@ void OlympeEffectSystem::Process()
 //-------------------------------------------------------------
 void OlympeEffectSystem::Render()
 {
-    // Get camera offset for rendering
-    Vector vPos = -CameraManager::Get().GetCameraPositionForActivePlayer();
+    // Get camera offset for rendering using ECS camera system
+    CameraTransform cam = GetActiveCameraTransform(-1); // Get default camera
+    Vector vPos = -cam.worldPosition;
     SDL_FRect destRect = {vPos.x, vPos.y, static_cast<float>(pImpl->width), static_cast<float>(pImpl->height)};
     
     // Render the final bloom composite to screen

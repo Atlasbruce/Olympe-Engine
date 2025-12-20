@@ -8,7 +8,6 @@
 #include "GameRules.h"
 #include "QuestManager.h"
 #include "system/GameMenu.h"
-#include "system/CameraManager.h"
 #include "system/ViewportManager.h"
 #include "system/JoystickManager.h"
 #include "system/EventManager.h"
