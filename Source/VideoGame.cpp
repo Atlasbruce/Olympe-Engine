@@ -114,10 +114,9 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
             
             // Disable keyboard binding on default camera (player -1) if it exists
             EntityID defaultCamera = camSys->GetCameraEntityForPlayer(-1);
-            if (defaultCamera != INVALID_ENTITY_ID && World::Get().HasComponent<CameraInputBinding_data>(defaultCamera))
+            if (defaultCamera != INVALID_ENTITY_ID)
             {
-                CameraInputBinding_data& defaultBinding = World::Get().GetComponent<CameraInputBinding_data>(defaultCamera);
-                defaultBinding.useKeyboard = false;
+                camSys->UnbindCameraKeyboard(defaultCamera);
                 SYSTEM_LOG << "VideoGame::AddPlayerEntity: Disabled keyboard binding on default camera\n";
             }
         }

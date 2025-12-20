@@ -178,6 +178,7 @@ public:
     // Input binding
     void BindCameraToKeyboard(EntityID cameraEntity);
     void BindCameraToJoystick(EntityID cameraEntity, short playerID, SDL_JoystickID joystickId);
+    void UnbindCameraKeyboard(EntityID cameraEntity);
 
     // Target setting
     void SetCameraTarget_ECS(EntityID cameraEntity, EntityID targetEntity);

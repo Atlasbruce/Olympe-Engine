@@ -210,7 +210,7 @@ void CameraSystem::BindCameraToKeyboard(EntityID cameraEntity)
     
     CameraInputBinding_data& binding = World::Get().GetComponent<CameraInputBinding_data>(cameraEntity);
     binding.useKeyboard = true;
-    binding.playerId = -1; // -1 indicates keyboard
+    // Note: playerId is preserved from camera creation; not overwritten here
     
     m_defaultKeyboardCamera = cameraEntity;
     
@@ -229,6 +229,18 @@ void CameraSystem::BindCameraToJoystick(EntityID cameraEntity, short playerID, S
     binding.joystickId = joystickId;
     
     SYSTEM_LOG << "Bound camera " << cameraEntity << " to joystick " << joystickId << " (Player " << playerID << ")\n";
+}
+
+//-------------------------------------------------------------
+void CameraSystem::UnbindCameraKeyboard(EntityID cameraEntity)
+{
+    if (!World::Get().HasComponent<CameraInputBinding_data>(cameraEntity))
+        return;
+    
+    CameraInputBinding_data& binding = World::Get().GetComponent<CameraInputBinding_data>(cameraEntity);
+    binding.useKeyboard = false;
+    
+    SYSTEM_LOG << "Unbound keyboard from camera " << cameraEntity << "\n";
 }
 
 //-------------------------------------------------------------
