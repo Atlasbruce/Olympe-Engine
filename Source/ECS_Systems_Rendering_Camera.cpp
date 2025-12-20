@@ -87,6 +87,7 @@ CameraTransform GetActiveCameraTransform(short playerID)
         else
         {
             // For single-view/no-players case, allow default camera (playerId=-1)
+
             if (cam.playerId == -1 && cam.isActive)
             {
                 // Found the default camera

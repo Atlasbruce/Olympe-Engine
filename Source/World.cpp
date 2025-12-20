@@ -11,6 +11,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #pragma once
 #include "World.h"
 #include "InputsManager.h"
+#include "system/ViewportManager.h"
 
 //---------------------------------------------------------------------------------------------
 // Helper function to register input entities with InputsManager
@@ -110,6 +111,7 @@ void World::Render_ECS_Systems()
         system->Render();
 
     }
+    ViewportManager::Get().Render();
 }
 //---------------------------------------------------------------------------------------------
 void World::RenderDebug_ECS_Systems()

@@ -35,7 +35,6 @@
     <ClCompile Include="Source\OlympeEngine.cpp" />
     <ClCompile Include="Source\PanelManager.cpp" />
     <ClCompile Include="Source\system\CameraEventHandler.cpp" />
-    <ClCompile Include="Source\system\CameraManager.cpp" />
     <ClCompile Include="Source\system\EventManager_ECS.cpp" />
     <ClCompile Include="Source\system\GameMenu.cpp" />
     <ClCompile Include="Source\system\JoystickManager.cpp" />
@@ -75,7 +74,6 @@
     <ClInclude Include="Source\Sector.h" />
     <ClInclude Include="Source\Serialization.h" />
     <ClInclude Include="Source\system\CameraEventHandler.h" />
-    <ClInclude Include="Source\system\CameraManager.h" />
     <ClInclude Include="Source\system\EventManager.h" />
     <ClInclude Include="Source\system\GameMenu.h" />
     <ClInclude Include="Source\system\JoystickManager.h" />
