@@ -81,7 +81,6 @@ public:
 	GameRules& gamerules = GameRules::GetInstance();
 	GameMenu& gamemenu = GameMenu::GetInstance();
 	QuestManager& questmanager = QuestManager::GetInstance();
-	CameraManager& cameramanager = CameraManager::GetInstance();
     ViewportManager& viewport = ViewportManager::GetInstance();
 
     // Players & Entities

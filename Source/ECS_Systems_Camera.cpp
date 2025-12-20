@@ -36,7 +36,28 @@ CameraSystem::CameraSystem()
 {
     // Camera system requires at minimum the Camera_data component
     requiredSignature.set(GetComponentTypeID_Static<Camera_data>(), true);
+    
+    // Register for camera events
+    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Shake);
+    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Teleport);
+    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_MoveToPosition);
+    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_ZoomTo);
+    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_RotateTo);
+    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Reset);
+    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Mode_2D);
+    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Mode_2_5D);
+    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Mode_Isometric);
+    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Target_Follow);
+    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Target_Unfollow);
+    
     SYSTEM_LOG << "CameraSystem initialized\n";
+}
+
+//-------------------------------------------------------------
+CameraSystem::~CameraSystem()
+{
+    EventManager::Get().UnregisterAll(this);
+    SYSTEM_LOG << "CameraSystem destroyed\n";
 }
 
 //-------------------------------------------------------------
@@ -638,6 +659,88 @@ void CameraSystem::ApplyCameraToRenderer(SDL_Renderer* renderer, short playerID)
 //-------------------------------------------------------------
 void CameraSystem::OnEvent(const Message& msg)
 {
-    // Event handling will be implemented when CameraEventHandler is created
-    // For now, this is a placeholder
+    if (msg.struct_type != EventStructType::EventStructType_Olympe)
+        return;
+
+    // Extract playerID from message
+    short playerID = -1;
+    if (msg.param1 >= 0)
+        playerID = static_cast<short>(msg.param1);
+
+    // Find or create camera for this player
+    EntityID camEntity = GetCameraEntityForPlayer(playerID);
+    if (camEntity == INVALID_ENTITY_ID)
+    {
+        // Auto-create ECS camera if event targets a player without one
+        camEntity = CreateCameraForPlayer(playerID, (playerID == -1)); // keyboard if -1
+        SYSTEM_LOG << "Auto-created ECS camera for player " << playerID << " (event-driven)\n";
+    }
+
+    if (!World::Get().HasComponent<Camera_data>(camEntity))
+        return;
+
+    Camera_data& cam = World::Get().GetComponent<Camera_data>(camEntity);
+
+    switch (msg.msg_type)
+    {
+        case EventType::Olympe_EventType_Camera_Teleport:
+        case EventType::Olympe_EventType_Camera_MoveToPosition:
+        {
+            cam.position.x = msg.param1;
+            cam.position.y = msg.param2;
+            break;
+        }
+        case EventType::Olympe_EventType_Camera_ZoomTo:
+        {
+            cam.targetZoom = msg.param1;
+            cam.targetZoom = std::max(cam.minZoom, std::min(cam.maxZoom, cam.targetZoom));
+            break;
+        }
+        case EventType::Olympe_EventType_Camera_RotateTo:
+        {
+            cam.targetRotation = msg.param1;
+            break;
+        }
+        case EventType::Olympe_EventType_Camera_Reset:
+        {
+            ResetCameraControls(camEntity);
+            break;
+        }
+        case EventType::Olympe_EventType_Camera_Mode_2D:
+            cam.type = CameraType::CameraType_2D;
+            break;
+        case EventType::Olympe_EventType_Camera_Mode_2_5D:
+            cam.type = CameraType::CameraType_2_5D;
+            break;
+        case EventType::Olympe_EventType_Camera_Mode_Isometric:
+            cam.type = CameraType::CameraType_Isometric;
+            break;
+        case EventType::Olympe_EventType_Camera_Target_Follow:
+        {
+            if (msg.targetUid != INVALID_ENTITY_ID && World::Get().IsEntityValid(msg.targetUid))
+            {
+                SetCameraTarget_ECS(camEntity, msg.targetUid);
+            }
+            break;
+        }
+        case EventType::Olympe_EventType_Camera_Target_Unfollow:
+        {
+            ClearCameraTarget(camEntity);
+            break;
+        }
+        case EventType::Olympe_EventType_Camera_Shake:
+        {
+            if (World::Get().HasComponent<CameraEffects_data>(camEntity))
+            {
+                CameraEffects_data& effects = World::Get().GetComponent<CameraEffects_data>(camEntity);
+                effects.isShaking = true;
+                effects.shakeIntensity = msg.param1; // intensity
+                effects.shakeDuration = msg.param2;  // duration
+                effects.shakeTimeRemaining = msg.param2;
+            }
+            break;
+        }
+        default:
+            break;
+    }
 }

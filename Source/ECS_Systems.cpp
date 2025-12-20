@@ -208,39 +208,6 @@ void RenderingSystem::Render()
         SDL_SetRenderViewport(renderer, nullptr);
         SDL_SetRenderClipRect(renderer, nullptr);
     }
-	else // Legacy single-camera rendering TO BE REMOVED LATER
-    {
-        // Legacy rendering path using CameraManager
-        for (EntityID entity : m_entities)
-        {
-            try
-            {
-                Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-                VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
-                BoundingBox_data& boxComp = World::Get().GetComponent<BoundingBox_data>(entity);
-
-                if (visual.sprite)
-                {
-                    Vector vRenderPos = pos.position - visual.hotSpot - CameraManager::Get().GetCameraPositionForActivePlayer();
-                    SDL_FRect box = boxComp.boundingBox;
-                    box.x = vRenderPos.x;
-                    box.y = vRenderPos.y;
-                    
-                    SDL_SetTextureColorMod(visual.sprite, visual.color.r, visual.color.g, visual.color.b);
-                    SDL_RenderTexture(GameEngine::renderer, visual.sprite, nullptr, &box);
-
-                    // Debug: draw bounding box
-                    SDL_SetRenderDrawColor(GameEngine::renderer, 0, 255, 255, 255);
-                    Draw_Circle(GameEngine::renderer, (int)( box.x + box.w / 2.f) , (int) (box.y + box.h / 2.f), 35);
-					SDL_RenderRect(GameEngine::renderer, &boxComp.boundingBox);
-                }
-            }
-            catch (const std::exception& e)
-            {
-                std::cerr << "RenderingSystem Error for Entity " << entity << ": " << e.what() << "\n";
-            }
-        }/**/
-    }
 }
 
 // Render entities for a specific camera with frustum culling
@@ -615,21 +582,31 @@ void GridSystem::RenderOrtho(const CameraTransform& cam, const GridSettings_data
     float minY = bounds.y;
     float maxY = bounds.y + bounds.h;
 
+    // LOD: if zoomed out, skip lines to avoid visual clutter
+    int skipFactor = 1;
+    if (cam.zoom < s.lodZoomThreshold)
+    {
+        skipFactor = s.lodSkipFactor;
+    }
+    
+    float stepX = csx * skipFactor;
+    float stepY = csy * skipFactor;
+
     int lines = 0;
 
     // Vertical lines (constant X)
-    float startX = std::floor(minX / csx) * csx;
-    float endX   = std::ceil(maxX / csx) * csx;
-    for (float x = startX; x <= endX && lines < s.maxLines; x += csx)
+    float startX = std::floor(minX / stepX) * stepX;
+    float endX   = std::ceil(maxX / stepX) * stepX;
+    for (float x = startX; x <= endX && lines < s.maxLines; x += stepX)
     {
         DrawLineWorld(cam, Vector(x, minY, 0.f), Vector(x, maxY, 0.f), s.color);
         ++lines;
     }
 
     // Horizontal lines (constant Y)
-    float startY = std::floor(minY / csy) * csy;
-    float endY   = std::ceil(maxY / csy) * csy;
-    for (float y = startY; y <= endY && lines < s.maxLines; y += csy)
+    float startY = std::floor(minY / stepY) * stepY;
+    float endY   = std::ceil(maxY / stepY) * stepY;
+    for (float y = startY; y <= endY && lines < s.maxLines; y += stepY)
     {
         DrawLineWorld(cam, Vector(minX, y, 0.f), Vector(maxX, y, 0.f), s.color);
         ++lines;
@@ -653,11 +630,18 @@ void GridSystem::RenderIso(const CameraTransform& cam, const GridSettings_data& 
     float diagonal = std::sqrt(bounds.w * bounds.w + bounds.h * bounds.h);
     int range = (int)std::ceil(diagonal / std::min(w, h)) + 2;
     
+    // LOD: reduce range when zoomed out
+    int skipFactor = 1;
+    if (cam.zoom < s.lodZoomThreshold)
+    {
+        skipFactor = s.lodSkipFactor;
+    }
+    
     int lines = 0;
     Vector origin = center; // center grid around visible area
 
-    // Lines parallel to u
-    for (int i = -range; i <= range && lines < s.maxLines; ++i)
+    // Lines parallel to u (skip every N lines)
+    for (int i = -range; i <= range && lines < s.maxLines; i += skipFactor)
     {
         Vector p0 = origin + v * (float)i - u * (float)range;
         Vector p1 = origin + v * (float)i + u * (float)range;
@@ -666,8 +650,8 @@ void GridSystem::RenderIso(const CameraTransform& cam, const GridSettings_data& 
         if (lines >= s.maxLines) break;
     }
 
-    // Lines parallel to v
-    for (int i = -range; i <= range && lines < s.maxLines; ++i)
+    // Lines parallel to v (skip every N lines)
+    for (int i = -range; i <= range && lines < s.maxLines; i += skipFactor)
     {
         Vector p0 = origin + u * (float)i - v * (float)range;
         Vector p1 = origin + u * (float)i + v * (float)range;
@@ -697,6 +681,13 @@ void GridSystem::RenderHex(const CameraTransform& cam, const GridSettings_data& 
     int rMin = (int)std::floor((minY / dy) - 2);
     int rMax = (int)std::ceil((maxY / dy) + 2);
 
+    // LOD: skip hexes when zoomed out
+    int skipFactor = 1;
+    if (cam.zoom < s.lodZoomThreshold)
+    {
+        skipFactor = s.lodSkipFactor;
+    }
+
     auto hexCenter = [&](int q, int rr) -> Vector
     {
         float x = dx * (float)q;
@@ -717,9 +708,9 @@ void GridSystem::RenderHex(const CameraTransform& cam, const GridSettings_data& 
     };
 
     int lines = 0;
-    for (int q = qMin; q <= qMax && lines < s.maxLines; ++q)
+    for (int q = qMin; q <= qMax && lines < s.maxLines; q += skipFactor)
     {
-        for (int rr = rMin; rr <= rMax && lines < s.maxLines; ++rr)
+        for (int rr = rMin; rr <= rMax && lines < s.maxLines; rr += skipFactor)
         {
             Vector c = hexCenter(q, rr);
 
