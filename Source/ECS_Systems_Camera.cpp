@@ -327,32 +327,35 @@ void CameraSystem::ProcessKeyboardInput(EntityID entity, CameraInputBinding_data
     // Directional input
     Vector direction(0.f, 0.f, 0.f);
     
-    if (kb.IsKeyHeld((SDL_Scancode)SDL_GetScancodeFromKey(binding.key_up, nullptr)))
+    if (kb.IsKeyHeld(binding.key_up))
         direction.y -= 1.0f;
-    if (kb.IsKeyHeld((SDL_Scancode)SDL_GetScancodeFromKey(binding.key_down, nullptr)))
+    if (kb.IsKeyHeld(binding.key_down))
         direction.y += 1.0f;
-    if (kb.IsKeyHeld((SDL_Scancode)SDL_GetScancodeFromKey(binding.key_left, nullptr)))
+    if (kb.IsKeyHeld(binding.key_left))
         direction.x -= 1.0f;
-    if (kb.IsKeyHeld((SDL_Scancode)SDL_GetScancodeFromKey(binding.key_right, nullptr)))
+    if (kb.IsKeyHeld(binding.key_right))
         direction.x += 1.0f;
     
     binding.inputDirection = direction;
     
     // Rotation input
-    if (kb.IsKeyHeld((SDL_Scancode)SDL_GetScancodeFromKey(binding.key_rotate_left, nullptr)))
+    if (kb.IsKeyHeld(binding.key_rotate_left))
         binding.rotationInput = -1.0f;
-    if (kb.IsKeyHeld((SDL_Scancode)SDL_GetScancodeFromKey(binding.key_rotate_right, nullptr)))
+    if (kb.IsKeyHeld(binding.key_rotate_right))
         binding.rotationInput = 1.0f;
     
     // Zoom input
-    if (kb.IsKeyHeld((SDL_Scancode)SDL_GetScancodeFromKey(binding.key_zoom_in, nullptr)))
+    if (kb.IsKeyHeld(binding.key_zoom_in))
         binding.zoomInput = 1.0f;
-    if (kb.IsKeyHeld((SDL_Scancode)SDL_GetScancodeFromKey(binding.key_zoom_out, nullptr)))
+    if (kb.IsKeyHeld(binding.key_zoom_out))
         binding.zoomInput = -1.0f;
     
     // Reset input
-    if (kb.IsKeyPressed((SDL_Scancode)SDL_GetScancodeFromKey(binding.key_reset, nullptr)))
+    if (kb.IsKeyPressed(binding.key_reset))
+    {
         binding.resetRequested = true;
+        SYSTEM_LOG << "Camera reset requested (numpad 5)\n";
+    }
 }
 
 //-------------------------------------------------------------
@@ -384,7 +387,10 @@ void CameraSystem::ProcessJoystickInput(EntityID entity, CameraInputBinding_data
     
     // Reset button
     if (joy.IsButtonPressed(binding.joystickId, binding.button_reset))
+    {
         binding.resetRequested = true;
+        SYSTEM_LOG << "Camera reset requested (joystick button " << binding.button_reset << ")\n";
+    }
 }
 
 //-------------------------------------------------------------
@@ -603,10 +609,29 @@ void CameraSystem::ResetCameraControls(EntityID entity)
     
     // Reset all manual controls
     cam.controlOffset = Vector(0.f, 0.f, 0.f);
+    
+    // Immediate reset zoom & rotation (no smooth interpolation)
+    cam.zoom = 1.0f;
     cam.targetZoom = 1.0f;
+    cam.rotation = 0.0f;
     cam.targetRotation = 0.0f;
     
-    SYSTEM_LOG << "Camera " << entity << " controls reset\n";
+    // If in free mode, also reset position to origin
+    if (cam.controlMode == CameraControlMode::Mode_Free)
+    {
+        cam.position = Vector(0.f, 0.f, 0.f);
+    }
+    
+    // Clear camera shake if active
+    if (World::Get().HasComponent<CameraEffects_data>(entity))
+    {
+        CameraEffects_data& effects = World::Get().GetComponent<CameraEffects_data>(entity);
+        effects.isShaking = false;
+        effects.shakeOffset = Vector(0.f, 0.f, 0.f);
+        effects.shakeTimeRemaining = 0.0f;
+    }
+    
+    SYSTEM_LOG << "Camera " << entity << " controls reset (immediate)\n";
 }
 
 //-------------------------------------------------------------
