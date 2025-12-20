@@ -349,10 +349,12 @@ struct CameraTransform
         }
 
         // Check if screen bounding box intersects viewport
-        bool intersects = !(maxX < viewport.x ||
-            minX > viewport.x + viewport.w ||
-            maxY < viewport.y ||
-            minY > viewport.y + viewport.h);
+        // WorldToScreen returns viewport-local coordinates (since SDL_SetRenderViewport is used)
+        // So we check against viewport-local bounds [0, viewport.w] x [0, viewport.h]
+        bool intersects = !(maxX < 0.f ||
+            minX > viewport.w ||
+            maxY < 0.f ||
+            minY > viewport.h);
 
         return intersects;
     }
