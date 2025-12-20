@@ -9,6 +9,7 @@ Purpose: Implementation of the VideoGame class, which represents a video game wi
 #include "InputsManager.h"
 #include "prefabfactory.h"
 #include "engine_utils.h"
+#include "ECS_Systems.h"
 
 short VideoGame::m_playerIdCounter = 0;
 using namespace std;
@@ -90,6 +91,47 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
     EventManager::Get().AddMessage(msg);
 
     SetViewportLayout(binding.playerIndex);
+
+    // Bind camera input to the same device as the player
+    CameraSystem* camSys = World::Get().GetSystem<CameraSystem>();
+    if (camSys)
+    {
+        // Get or create camera for this player
+        EntityID cameraEntity = camSys->GetCameraEntityForPlayer(binding.playerIndex);
+        if (cameraEntity == INVALID_ENTITY_ID)
+        {
+            // Camera doesn't exist yet, create it
+            cameraEntity = camSys->CreateCameraForPlayer(binding.playerIndex, false);
+            SYSTEM_LOG << "VideoGame::AddPlayerEntity: Created camera " << cameraEntity << " for player " << binding.playerIndex << "\n";
+        }
+        
+        // Bind camera to the same input device as the player
+        if (binding.controllerID == -1)
+        {
+            // Keyboard-bound player: bind camera to keyboard
+            camSys->BindCameraToKeyboard(cameraEntity);
+            SYSTEM_LOG << "VideoGame::AddPlayerEntity: Bound camera to keyboard for player " << binding.playerIndex << "\n";
+            
+            // Disable keyboard binding on default camera (player -1) if it exists
+            EntityID defaultCamera = camSys->GetCameraEntityForPlayer(-1);
+            if (defaultCamera != INVALID_ENTITY_ID)
+            {
+                camSys->UnbindCameraKeyboard(defaultCamera);
+                SYSTEM_LOG << "VideoGame::AddPlayerEntity: Disabled keyboard binding on default camera\n";
+            }
+        }
+        else if (binding.controllerID >= 0)
+        {
+            // Joystick-bound player: bind camera to joystick
+            // Safe cast: controllerID validated as >= 0, matches SDL_JoystickID range
+            camSys->BindCameraToJoystick(cameraEntity, binding.playerIndex, (SDL_JoystickID)binding.controllerID);
+            SYSTEM_LOG << "VideoGame::AddPlayerEntity: Bound camera to joystick " << binding.controllerID << " for player " << binding.playerIndex << "\n";
+        }
+        else
+        {
+            SYSTEM_LOG << "VideoGame::AddPlayerEntity: Invalid controllerID " << binding.controllerID << " for player " << binding.playerIndex << "\n";
+        }
+    }
 
     return eID;
 }
