@@ -480,11 +480,11 @@ void GridSystem::DrawLineWorld(const CameraTransform& cam, const Vector& aWorld,
 // Calculate world-space AABB visible in camera viewport
 SDL_FRect GridSystem::GetWorldVisibleBounds(const CameraTransform& cam)
 {
-    // Get viewport corners in screen space
-    Vector topLeft     = cam.ScreenToWorld(Vector(cam.viewport.x, cam.viewport.y, 0.f));
-    Vector topRight    = cam.ScreenToWorld(Vector(cam.viewport.x + cam.viewport.w, cam.viewport.y, 0.f));
-    Vector bottomLeft  = cam.ScreenToWorld(Vector(cam.viewport.x, cam.viewport.y + cam.viewport.h, 0.f));
-    Vector bottomRight = cam.ScreenToWorld(Vector(cam.viewport.x + cam.viewport.w, cam.viewport.y + cam.viewport.h, 0.f));
+    // Get viewport corners in screen space (viewport-local coordinates)
+    Vector topLeft     = cam.ScreenToWorld(Vector(0.f, 0.f, 0.f));
+    Vector topRight    = cam.ScreenToWorld(Vector(cam.viewport.w, 0.f, 0.f));
+    Vector bottomLeft  = cam.ScreenToWorld(Vector(0.f, cam.viewport.h, 0.f));
+    Vector bottomRight = cam.ScreenToWorld(Vector(cam.viewport.w, cam.viewport.h, 0.f));
 
     // Compute AABB (min/max) in world space
     float minX = std::min({topLeft.x, topRight.x, bottomLeft.x, bottomRight.x});

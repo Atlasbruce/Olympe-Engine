@@ -255,8 +255,9 @@ struct CameraTransform
         relative.y -= screenOffset.y;
 
         // 5. Center in viewport
-        relative.x += viewport.x + viewport.w / 2.0f;
-        relative.y += viewport.y + viewport.h / 2.0f;
+        // SDL viewport is already set; coordinates are viewport-local
+        relative.x += viewport.w / 2.0f;
+        relative.y += viewport.h / 2.0f;
 
         return relative;
     }
@@ -275,9 +276,10 @@ struct CameraTransform
             return screenPos;
 
         // 1. Remove viewport offset
+        // screenPos is viewport-local when SDL viewport is set
         Vector relative;
-        relative.x = screenPos.x - viewport.x - viewport.w / 2.0f;
-        relative.y = screenPos.y - viewport.y - viewport.h / 2.0f;
+        relative.x = screenPos.x - viewport.w / 2.0f;
+        relative.y = screenPos.y - viewport.h / 2.0f;
 
         // 2. Remove screen offset (shake + control)
         relative.x += screenOffset.x;
