@@ -257,6 +257,7 @@ struct CameraTransform
 
         // 5. Center in viewport
         // SDL viewport is already set; coordinates are viewport-local
+        // Add half viewport dimensions to center within viewport bounds
         relative.x += viewport.w / 2.0f;
         relative.y += viewport.h / 2.0f;
 
@@ -278,6 +279,7 @@ struct CameraTransform
 
         // 1. Remove viewport offset
         // screenPos is viewport-local when SDL viewport is set
+        // Coordinates are relative to viewport's top-left corner (0,0)
         Vector relative;
         relative.x = screenPos.x - viewport.w / 2.0f;
         relative.y = screenPos.y - viewport.h / 2.0f;

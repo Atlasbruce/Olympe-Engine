@@ -123,6 +123,7 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
         else if (binding.controllerID >= 0)
         {
             // Joystick-bound player: bind camera to joystick
+            // Safe cast: controllerID validated as >= 0, matches SDL_JoystickID range
             camSys->BindCameraToJoystick(cameraEntity, binding.playerIndex, (SDL_JoystickID)binding.controllerID);
             SYSTEM_LOG << "VideoGame::AddPlayerEntity: Bound camera to joystick " << binding.controllerID << " for player " << binding.playerIndex << "\n";
         }
