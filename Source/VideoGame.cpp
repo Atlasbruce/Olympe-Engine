@@ -264,7 +264,8 @@ void VideoGame::RegisterPrefabItems()
         World& world = World::Get();
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "PlayerEntity";
-        static VisualSprite_data *st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/entity_" + to_string(Random_Int(1, 15)) + ".png");
+        static VisualSprite_data* st_vspriteData_ptr = nullptr;
+        st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/entity_" + to_string(Random_Int(1, 15)) + ".png");
         if (!st_vspriteData_ptr)
         {
             SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";

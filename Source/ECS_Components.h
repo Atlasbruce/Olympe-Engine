@@ -191,7 +191,7 @@ struct GridSettings_data
 	float hexRadius = 16.f;
 
 	// Render
-	SDL_Color color = { 60, 200, 60, 255 };
+	SDL_Color color = { 180, 180, 180, 255 };
 	int maxLines = 1200; // budget perf
 	
 	// LOD: skip lines based on zoom to avoid visual clutter

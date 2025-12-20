@@ -16,9 +16,9 @@ ViewportManager::~ViewportManager()
 //-------------------------------------------------------------
 void ViewportManager::Render()
 {
-    // For debug purposes, render viewport rectangles
+    // render viewport rectangles
 
-    SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 0, SDL_ALPHA_OPAQUE); // red
+    SDL_SetRenderDrawColor(GameEngine::renderer, 0, 0, 0, SDL_ALPHA_OPAQUE); // black
     for (const auto &rect : m_viewRects)
     {
 		SDL_RenderRect(GameEngine::renderer, &rect);
