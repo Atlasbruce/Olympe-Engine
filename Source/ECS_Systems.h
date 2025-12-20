@@ -164,6 +164,7 @@ class CameraSystem : public ECS_System
 {
 public:
     CameraSystem();
+    virtual ~CameraSystem();
 
     // Core ECS system methods
     virtual void Process() override;  // Update cameras each frame

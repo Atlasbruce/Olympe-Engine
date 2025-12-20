@@ -8,7 +8,6 @@
 #include "GameRules.h"
 #include "QuestManager.h"
 #include "system/GameMenu.h"
-#include "system/CameraManager.h"
 #include "system/ViewportManager.h"
 #include "system/JoystickManager.h"
 #include "system/EventManager.h"
@@ -81,7 +80,6 @@ public:
 	GameRules& gamerules = GameRules::GetInstance();
 	GameMenu& gamemenu = GameMenu::GetInstance();
 	QuestManager& questmanager = QuestManager::GetInstance();
-	CameraManager& cameramanager = CameraManager::GetInstance();
     ViewportManager& viewport = ViewportManager::GetInstance();
 
     // Players & Entities

@@ -193,6 +193,10 @@ struct GridSettings_data
 	// Render
 	SDL_Color color = { 60, 200, 60, 255 };
 	int maxLines = 1200; // budget perf
+	
+	// LOD: skip lines based on zoom to avoid visual clutter
+	float lodZoomThreshold = 0.5f;  // Below this zoom, apply LOD
+	int lodSkipFactor = 10;          // Draw 1 line every N when LOD active
 };
 
 // Camera type enumeration
