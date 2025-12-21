@@ -12,6 +12,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "World.h"
 #include "InputsManager.h"
 #include "system/ViewportManager.h"
+#include "ECS_Systems_AI.h"
 
 //---------------------------------------------------------------------------------------------
 // Helper function to register input entities with InputsManager
@@ -63,11 +64,17 @@ void World::Initialize_ECS_Systems()
 	- InputSystem
 	- InputMappingSystem (maps hardware input to gameplay actions)
 	- PlayerControlSystem
-	- AI MovementSystem
+	- AIStimuliSystem (consumes Gameplay/Detection/Collision events, writes to blackboard)
+	- AIPerceptionSystem (timesliced perception updates)
+	- AIStateTransitionSystem (HFSM state transitions)
+	- BehaviorTreeSystem (tick behavior trees, write intents)
+	- AIMotionSystem (convert intents to Movement_data)
+	- AISystem (legacy)
 	- DetectionSystem
 	- PhysicsSystem
 	- CollisionSystem
 	- TriggerSystem
+	- MovementSystem
 	- AudioSystem
 	- CameraSystem (manages ECS cameras)
 
@@ -80,6 +87,14 @@ void World::Initialize_ECS_Systems()
 	Add_ECS_System(std::make_unique<InputSystem>());
 	Add_ECS_System(std::make_unique<InputMappingSystem>());
 	Add_ECS_System(std::make_unique<PlayerControlSystem>());
+	
+	// AI Systems (ECS-friendly NPC AI architecture)
+	Add_ECS_System(std::make_unique<AIStimuliSystem>());
+	Add_ECS_System(std::make_unique<AIPerceptionSystem>());
+	Add_ECS_System(std::make_unique<AIStateTransitionSystem>());
+	Add_ECS_System(std::make_unique<BehaviorTreeSystem>());
+	Add_ECS_System(std::make_unique<AIMotionSystem>());
+	
     Add_ECS_System(std::make_unique<AISystem>());
     Add_ECS_System(std::make_unique<DetectionSystem>());
     Add_ECS_System(std::make_unique<PhysicsSystem>());
