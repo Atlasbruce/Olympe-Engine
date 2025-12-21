@@ -11,6 +11,7 @@ World purpose: Manage the overall game world, including object management, level
 #pragma once
 
 #include "system/EventManager.h"
+#include "system/EventQueue.h"
 #include <vector>
 #include <memory>
 #include <unordered_map>
@@ -65,8 +66,9 @@ public:
     // Main processing loop called each frame: events are processed first (async), then stages in order
     void Process()
     {
-        //0) Ensure queued events are dispatched before the update stages
-        EventManager::Get().Process();
+        //0) Swap EventQueue buffers to make previous frame's events readable
+        // This is the single point per frame where write buffer becomes read buffer
+        EventQueue::Get().BeginFrame();
 
         // check global game state
         GameState state = GameStateManager::GetState();

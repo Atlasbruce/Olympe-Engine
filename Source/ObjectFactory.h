@@ -58,10 +58,10 @@ public:
     static ObjectFactory& Get() { return GetInstance(); }
 
     /**
-     * @brief Enregistre une fonction de création pour un nom de classe donné.
-     * @param className Le nom de la classe (clé).
-     * @param creator La fonction de création (std::function retournant BaseObject*).
-     * @return true si l'enregistrement a réussi, false sinon (déjà enregistré).
+     * @brief Enregistre une fonction de crï¿½ation pour un nom de classe donnï¿½.
+     * @param className Le nom de la classe (clï¿½).
+     * @param creator La fonction de crï¿½ation (std::function retournant BaseObject*).
+     * @return true si l'enregistrement a rï¿½ussi, false sinon (dï¿½jï¿½ enregistrï¿½).
      */
     bool Register(const std::string& className, CreatorFunction creator)
     {
@@ -88,9 +88,9 @@ public:
 	}
 	//-------------------------------------------------------------
     /**
-     * @brief Crée une nouvelle instance de l'objet spécifié par son nom de classe.
-     * @param className Le nom de la classe à créer.
-     * @return Un pointeur vers le nouvel objet BaseObject, ou nullptr si non trouvé.
+     * @brief Crï¿½e une nouvelle instance de l'objet spï¿½cifiï¿½ par son nom de classe.
+     * @param className Le nom de la classe ï¿½ crï¿½er.
+     * @return Un pointeur vers le nouvel objet BaseObject, ou nullptr si non trouvï¿½.
      */
     Object* CreateObject(const std::string& className)
     {
@@ -126,12 +126,7 @@ public:
     // Event handling: respond to create/destroy/property messages
     virtual void OnEvent(const Message& msg) override
     {
-        if (msg.struct_type != EventStructType::EventStructType_Olympe)
-        {
-			SYSTEM_LOG << "Error ObjectFactory::OnEvent: received non-Olympe event, ignoring.\n";
-            return;
-        }
-
+        // All factory events are now Olympe events
         switch (msg.msg_type)
         {
         case EventType::Olympe_EventType_Object_Create:
@@ -221,21 +216,21 @@ private:
 };
 
 
-// --- Mécanisme d'Enregistrement Automatique ---
+// --- Mï¿½canisme d'Enregistrement Automatique ---
 
-// Fonction générique pour créer une instance de classe T
+// Fonction gï¿½nï¿½rique pour crï¿½er une instance de classe T
 template <typename T>
 Object* createT()
 {
-    // C++ moderne: retourne T* casté en BaseObject*
+    // C++ moderne: retourne T* castï¿½ en BaseObject*
     return new T();
 }
 
 /**
  * @brief Classe utilitaire qui enregistre la classe T dans la fabrique
  * lors de son initialisation statique.
- * @note Le mécanisme d'enregistrement se fait dans le constructeur de ce helper,
- * qui est appelé statiquement au démarrage du programme.
+ * @note Le mï¿½canisme d'enregistrement se fait dans le constructeur de ce helper,
+ * qui est appelï¿½ statiquement au dï¿½marrage du programme.
  */
 template <typename T>
 class AutoRegister
@@ -248,8 +243,8 @@ public:
 };
 
 /**
- * @brief Macro pour enregistrer automatiquement une classe dérivée.
- * Doit être placé dans le fichier .cpp de la classe.
+ * @brief Macro pour enregistrer automatiquement une classe dï¿½rivï¿½e.
+ * Doit ï¿½tre placï¿½ dans le fichier .cpp de la classe.
  */
 #define REGISTER_OBJECT(ClassName) \
     namespace { \

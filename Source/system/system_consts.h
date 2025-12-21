@@ -8,6 +8,20 @@ static const int DEFAULT_WINDOW_HEIGHT = 600;
 
 static const short MAX_PLAYERS = 8;
 
+// Event domain types for routing events to appropriate systems
+enum class EventDomain
+{
+	Input = 0,
+	UI,
+	Gameplay,
+	System,
+	Camera,
+	Viewport,
+	Detection,
+	Collision,
+	All
+};
+
 // Event structure types
 // Used to identify the source/type of event messages
 enum class EventStructType

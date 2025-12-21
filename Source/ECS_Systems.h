@@ -57,6 +57,17 @@ class InputSystem : public ECS_System
     InputSystem();
 	virtual void Process() override;
  };
+
+// InputEventConsumeSystem: Consumes Input domain events from EventQueue
+// and updates ECS components (Controller_data, PlayerBinding_data)
+// Replaces the old UpdateECSInputFromMessage callback-based approach
+class InputEventConsumeSystem : public ECS_System
+{
+public:
+    InputEventConsumeSystem();
+    virtual void Process() override;
+};
+
 // AI System: processes entities with AIBehavior_data and Movement_data
 class AISystem : public ECS_System
 {

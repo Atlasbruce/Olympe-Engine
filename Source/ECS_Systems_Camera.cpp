@@ -696,9 +696,7 @@ void CameraSystem::ApplyCameraToRenderer(SDL_Renderer* renderer, short playerID)
 //-------------------------------------------------------------
 void CameraSystem::OnEvent(const Message& msg)
 {
-    if (msg.struct_type != EventStructType::EventStructType_Olympe)
-        return;
-
+    // All camera events are now in the Camera domain
     // Extract playerID from message
     short playerID = -1;
     if (msg.param1 >= 0)

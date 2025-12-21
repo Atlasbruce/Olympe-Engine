@@ -56,8 +56,9 @@ void World::Initialize_ECS_Systems()
 
     /*
 	Order of processing systems:
+	- InputEventConsumeSystem (NEW: consumes Input domain events from EventQueue, updates Controller_data)
 	- InputSystem
-	- InputMappingSystem (NEW: maps hardware input to gameplay actions)
+	- InputMappingSystem (maps hardware input to gameplay actions)
 	- PlayerControlSystem
 	- AI MovementSystem
 	- DetectionSystem
@@ -65,10 +66,11 @@ void World::Initialize_ECS_Systems()
 	- CollisionSystem
 	- TriggerSystem
 	- AudioSystem
-	- CameraSystem (NEW: manages ECS cameras)
+	- CameraSystem (manages ECS cameras)
 
     - RenderingSystem
     */
+	Add_ECS_System(std::make_unique<InputEventConsumeSystem>());
 	Add_ECS_System(std::make_unique<InputSystem>());
 	Add_ECS_System(std::make_unique<InputMappingSystem>());
 	Add_ECS_System(std::make_unique<PlayerControlSystem>());

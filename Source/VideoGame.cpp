@@ -10,6 +10,7 @@ Purpose: Implementation of the VideoGame class, which represents a video game wi
 #include "prefabfactory.h"
 #include "engine_utils.h"
 #include "ECS_Systems.h"
+#include "system/EventQueue.h"
 
 short VideoGame::m_playerIdCounter = 0;
 using namespace std;
@@ -82,13 +83,16 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
 	}
 
     //Send message to ViewportManager to add a new player viewport
-    Message msg;
-    msg.targetUid = eID;
+    Message msg = Message::Create(
+        EventType::Olympe_EventType_Camera_Target_Follow,
+        EventDomain::Camera,
+        -1,
+        -1,
+        eID
+    );
     msg.param1 = binding.playerIndex;
-    msg.struct_type = EventStructType::EventStructType_Olympe;
 
-    msg.msg_type = EventType::Olympe_EventType_Camera_Target_Follow;
-    EventManager::Get().AddMessage(msg);
+    EventQueue::Get().Push(msg);
 
     SetViewportLayout(binding.playerIndex);
 

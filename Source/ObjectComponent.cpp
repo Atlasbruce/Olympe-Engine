@@ -21,11 +21,7 @@ void AIComponent::SetOwner(Object* _owner)
 //-------------------------------------------------------------
 void ObjectComponent::OnEvent(const Message& msg)
 {
-    if (msg.struct_type == EventStructType::EventStructType_System_Windows)
-    {
-        SYSTEM_LOG << "Warning ObjectComponent::OnEvent: received Windows event for GameObject: " << name << endl;
-        return;
-    }
+    // Default ObjectComponent OnEvent - override in derived classes for specific handling
 }
 //-------------------------------------------------------------
 void PhysicsComponent::OnEvent(const Message& msg)
