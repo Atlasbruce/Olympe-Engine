@@ -148,26 +148,78 @@ InputEventConsumeSystem::Process() → Components Updated
     - Removed `struct_type` switch statements
     - Simplified event handling to only check `msg_type`
 
-## Migration Notes
+## Phase 2: Complete EventManager Removal (December 2025)
 
-### EventStructType Removed
+### New Event Consumer Systems
 
-The `EventStructType` enum still exists in `system_consts.h` but is no longer used. It can be removed in a future cleanup pass if no legacy code depends on it.
+14. **Source/ECS_Systems.h** and **Source/ECS_Systems.cpp**
+    - Added `GameEventConsumeSystem` to handle VideoGame events (pause/resume/quit, player add/remove)
+    - Added `UIEventConsumeSystem` to handle GameMenu events (menu enter/exit/validate)
+    - Added `CameraEventConsumeSystem` to forward Camera domain events to CameraSystem
+    - Enhanced `InputEventConsumeSystem` to handle joystick connect/disconnect for auto-rebind
 
-### EventManager Still Exists
+### EventManager Removed
 
-The old `EventManager` class remains in the codebase for systems that haven't been migrated yet:
-- Old GameObject/ObjectComponent callback registrations
-- CameraSystem event listener registration (can be migrated to consume Camera domain)
-- VideoGame event listener registration
+15. **Source/system/EventManager.h** - **DELETED**
+    - Old callback-based EventManager completely removed
 
-These can be migrated incrementally to the new EventQueue system.
+16. **Source/system/EventManager_ECS.cpp** - **DELETED**
+    - Legacy helper function `UpdateECSInputFromMessage` removed (replaced by InputEventConsumeSystem)
+
+17. **Source/VideoGame.cpp**
+    - Removed EventManager::Register calls for game events
+    - Removed OnEvent callback method (logic moved to GameEventConsumeSystem)
+    - Removed debounce flags (moved to GameEventConsumeSystem)
+
+18. **Source/InputsManager.cpp**
+    - Removed EventManager::Register calls for joystick connect/disconnect
+    - Removed OnEvent callback method (logic moved to InputEventConsumeSystem)
+
+19. **Source/system/GameMenu.cpp**
+    - Removed EventManager::Register calls for menu events
+    - Removed OnEvent callback method (logic moved to UIEventConsumeSystem)
+
+20. **Source/ECS_Systems_Camera.cpp**
+    - Removed EventManager::Register calls for camera events
+    - CameraSystem::OnEvent still exists but is called by CameraEventConsumeSystem
+
+21. **Source/World.h**
+    - Removed `#include "system/EventManager.h"`
+    - World now only uses EventQueue
+
+### System Initialization Order
+
+22. **Source/World.cpp**
+    - Updated system initialization order:
+      1. InputEventConsumeSystem
+      2. GameEventConsumeSystem
+      3. UIEventConsumeSystem
+      4. CameraEventConsumeSystem
+      5. InputSystem
+      6. InputMappingSystem
+      7. PlayerControlSystem
+      8. (other systems...)
+
+## Migration Complete
+
+### EventManager Removed
+
+EventManager has been **completely removed** from critical gameplay systems:
+- VideoGame no longer uses EventManager callbacks
+- InputsManager no longer uses EventManager callbacks
+- GameMenu no longer uses EventManager callbacks
+- CameraSystem no longer registers with EventManager
+- World.h no longer includes EventManager.h
+
+### Legacy Code Note
+
+Some legacy GameObject-based code (AI_Player, ObjectFactory, PanelManager) may still reference EventManager but these are not critical to gameplay and are being phased out in favor of the ECS architecture.
 
 ### Backward Compatibility
 
-- `EventType` enum is preserved for transition period
-- Systems can still register with EventManager during migration
-- Both systems can coexist temporarily
+- `EventType` enum is preserved for all event types
+- Event domains enable efficient filtering by system type
+- Legacy systems can coexist during gradual migration
 
 ## Frame Timing
 
@@ -231,15 +283,10 @@ Since the project is Windows-only and requires MSVC to build, testing should ver
 3. **No events are dropped** - all pushed events are consumed
 4. **Camera events work** - shake, zoom, follow, etc.
 5. **Multiple domains can coexist** - Input and Camera events don't interfere
+6. **Keyboard RETURN key creates new player entity**
+7. **Joystick connect/disconnect triggers auto-rebind logic**
 
 ## Future Work
-
-### Phase 2: Complete EventManager Removal
-
-1. Migrate remaining EventManager listeners to EventQueue consumers
-2. Convert CameraSystem to consume Camera domain directly
-3. Remove EventManager class entirely
-4. Remove EventStructType enum
 
 ### Phase 3: Event Replay & Recording
 
@@ -252,6 +299,16 @@ With double-buffering in place, event replay for debugging/testing is straightfo
 Current implementation supports single domain per event. Future enhancement:
 - Events can target multiple domains
 - Useful for events that affect both UI and Gameplay
+
+### Phase 5: Legacy Code Cleanup
+
+Remove EventManager references from non-critical legacy code:
+- AI_Player (legacy GameObject)
+- ObjectFactory (legacy object creation)
+- PanelManager (debug UI)
+- CameraEventHandler (legacy camera wrapper)
+
+These systems are not critical to gameplay and are being phased out in favor of ECS.
 
 ## Performance Characteristics
 
