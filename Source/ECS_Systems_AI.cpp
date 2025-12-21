@@ -31,7 +31,7 @@ AIStimuliSystem::AIStimuliSystem()
 void AIStimuliSystem::Process()
 {
     const EventQueue& queue = EventQueue::Get();
-    float currentTime = GameEngine::fTime;
+    float currentTime = GameEngine::fDt;
     
     // Process Gameplay domain events for AI stimuli
     queue.ForEachDomainEvent(EventDomain::Gameplay, [&](const Message& msg) {
@@ -92,11 +92,11 @@ void AIStimuliSystem::Process()
                     if (!World::Get().HasComponent<Position_data>(entity)) continue;
                     if (!World::Get().HasComponent<AISenses_data>(entity)) continue;
                     
-                    const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-                    const AISenses_data& senses = World::Get().GetComponent<AISenses_data>(entity);
+                    Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+                    AISenses_data& senses = World::Get().GetComponent<AISenses_data>(entity);
                     AIBlackboard_data& blackboard = World::Get().GetComponent<AIBlackboard_data>(entity);
                     
-                    float distance = (pos.position - noisePos).magnitude();
+                    float distance = (pos.position - noisePos).Magnitude();
                     if (distance <= senses.hearingRadius)
                     {
                         blackboard.heardNoise = true;
@@ -147,7 +147,7 @@ AIPerceptionSystem::AIPerceptionSystem()
 
 void AIPerceptionSystem::Process()
 {
-    float currentTime = GameEngine::fTime;
+    float currentTime = GameEngine::fDt;
     
     for (EntityID entity : m_entities)
     {
@@ -186,12 +186,12 @@ void AIPerceptionSystem::Process()
                     // Update last known position
                     if (World::Get().HasComponent<Position_data>(blackboard.targetEntity))
                     {
-                        const Position_data& targetPos = World::Get().GetComponent<Position_data>(blackboard.targetEntity);
+                        Position_data& targetPos = World::Get().GetComponent<Position_data>(blackboard.targetEntity);
                         blackboard.lastKnownTargetPosition = targetPos.position;
                         blackboard.timeSinceTargetSeen = 0.0f;
                         
                         // Update distance
-                        blackboard.distanceToTarget = (targetPos.position - pos.position).magnitude();
+                        blackboard.distanceToTarget = Vector(targetPos.position - pos.position).Magnitude();
                     }
                 }
                 else
@@ -229,9 +229,9 @@ void AIPerceptionSystem::Process()
                         
                         if (World::Get().HasComponent<Position_data>(potentialTarget))
                         {
-                            const Position_data& targetPos = World::Get().GetComponent<Position_data>(potentialTarget);
+                            Position_data& targetPos = World::Get().GetComponent<Position_data>(potentialTarget);
                             blackboard.lastKnownTargetPosition = targetPos.position;
-                            blackboard.distanceToTarget = (targetPos.position - pos.position).magnitude();
+                            blackboard.distanceToTarget = (targetPos.position - pos.position).Magnitude();
                         }
                         
                         break; // Only acquire one target at a time
@@ -251,12 +251,12 @@ bool AIPerceptionSystem::IsTargetVisible(EntityID entity, EntityID target, float
     if (!World::Get().HasComponent<Position_data>(entity)) return false;
     if (!World::Get().HasComponent<Position_data>(target)) return false;
     
-    const Position_data& entityPos = World::Get().GetComponent<Position_data>(entity);
-    const Position_data& targetPos = World::Get().GetComponent<Position_data>(target);
+    Position_data& entityPos = World::Get().GetComponent<Position_data>(entity);
+    Position_data& targetPos = World::Get().GetComponent<Position_data>(target);
     
     // Check distance
     Vector toTarget = targetPos.position - entityPos.position;
-    float distance = toTarget.magnitude();
+    float distance = toTarget.Magnitude();
     
     if (distance > visionRadius)
         return false;
@@ -432,7 +432,7 @@ BehaviorTreeSystem::BehaviorTreeSystem()
 
 void BehaviorTreeSystem::Process()
 {
-    float currentTime = GameEngine::fTime;
+    float currentTime = GameEngine::fDt;
     
     for (EntityID entity : m_entities)
     {
@@ -515,8 +515,8 @@ void AIMotionSystem::Process()
     {
         try
         {
-            const MoveIntent_data& intent = World::Get().GetComponent<MoveIntent_data>(entity);
-            const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+            MoveIntent_data& intent = World::Get().GetComponent<MoveIntent_data>(entity);
+            Position_data& pos = World::Get().GetComponent<Position_data>(entity);
             Movement_data& movement = World::Get().GetComponent<Movement_data>(entity);
             
             if (!intent.hasIntent)
@@ -529,7 +529,7 @@ void AIMotionSystem::Process()
             
             // Calculate direction to target
             Vector toTarget = intent.targetPosition - pos.position;
-            float distance = toTarget.magnitude();
+            float distance = toTarget.Magnitude();
             
             if (distance < 0.001f)
             {

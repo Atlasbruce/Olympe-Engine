@@ -35,25 +35,35 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
         }
         
         json j;
-        file >> j;
+        std::string jsonStr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        j = json::parse(jsonStr);
         file.close();
         
         // Parse behavior tree
         BehaviorTreeAsset tree;
         tree.id = treeId;
-        tree.name = j.value("name", "Unnamed Tree");
-        tree.rootNodeId = j.value("rootNodeId", 0);
+        tree.name = j.contains("name") && j["name"].is_string() ? j["name"].get<std::string>() : "Unnamed Tree";
+        
+        if (j.contains("rootNodeId") && j["rootNodeId"].is_number())
+            tree.rootNodeId = static_cast<uint32_t>(j["rootNodeId"].get<int>());
+        else
+            tree.rootNodeId = 0;
         
         // Parse nodes
         if (j.contains("nodes") && j["nodes"].is_array())
         {
-            for (const auto& nodeJson : j["nodes"])
+            for (size_t i = 0; i < j["nodes"].size(); ++i)
             {
+                const auto& nodeJson = j["nodes"][i];
                 BTNode node;
-                node.id = nodeJson.value("id", 0);
-                node.name = nodeJson.value("name", "");
+                node.id = nodeJson.contains("id") ? nodeJson["id"].get<int>() : 0;
                 
-                std::string typeStr = nodeJson.value("type", "Action");
+                if (nodeJson.contains("name") && nodeJson["name"].is_string())
+                    node.name = nodeJson["name"].get<std::string>();
+                else
+                    node.name = "";
+                
+                std::string typeStr = nodeJson.contains("type") && nodeJson["type"].is_string() ? nodeJson["type"].get<std::string>() : "Action";
                 if (typeStr == "Selector") node.type = BTNodeType::Selector;
                 else if (typeStr == "Sequence") node.type = BTNodeType::Sequence;
                 else if (typeStr == "Condition") node.type = BTNodeType::Condition;
@@ -64,8 +74,10 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                 // Parse child IDs for composite nodes
                 if (nodeJson.contains("children") && nodeJson["children"].is_array())
                 {
-                    for (const auto& childId : nodeJson["children"])
+                    size_t childCount = nodeJson["children"].size();
+                    for (size_t j = 0; j < childCount; ++j)
                     {
+                        const auto& childId = nodeJson["children"][j];
                         node.childIds.push_back(childId.get<uint32_t>());
                     }
                 }
@@ -73,7 +85,7 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                 // Parse condition type
                 if (node.type == BTNodeType::Condition && nodeJson.contains("conditionType"))
                 {
-                    std::string condStr = nodeJson["conditionType"];
+                    std::string condStr = nodeJson["conditionType"].get<std::string>();
                     if (condStr == "TargetVisible") node.conditionType = BTConditionType::TargetVisible;
                     else if (condStr == "TargetInRange") node.conditionType = BTConditionType::TargetInRange;
                     else if (condStr == "HealthBelow") node.conditionType = BTConditionType::HealthBelow;
@@ -81,13 +93,16 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     else if (condStr == "CanAttack") node.conditionType = BTConditionType::CanAttack;
                     else if (condStr == "HeardNoise") node.conditionType = BTConditionType::HeardNoise;
                     
-                    node.conditionParam = nodeJson.value("param", 0.0f);
+                    if (nodeJson.contains("param") && nodeJson["param"].is_number())
+                        node.conditionParam = static_cast<float>(nodeJson["param"].get<double>());
+                    else
+                        node.conditionParam = 0.0f;
                 }
                 
                 // Parse action type
                 if (node.type == BTNodeType::Action && nodeJson.contains("actionType"))
                 {
-                    std::string actStr = nodeJson["actionType"];
+                    std::string actStr = nodeJson["actionType"].get<std::string>();
                     if (actStr == "SetMoveGoalToLastKnownTargetPos") 
                         node.actionType = BTActionType::SetMoveGoalToLastKnownTargetPos;
                     else if (actStr == "SetMoveGoalToTarget") 
@@ -105,15 +120,20 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     else if (actStr == "Idle") 
                         node.actionType = BTActionType::Idle;
                     
-                    node.actionParam1 = nodeJson.value("param1", 0.0f);
-                    node.actionParam2 = nodeJson.value("param2", 0.0f);
+                    node.actionParam1 = (nodeJson.contains("param1") && nodeJson["param1"].is_number())
+                        ? static_cast<float>(nodeJson["param1"].get<double>()): 0.0f;
+                    
+                    if (nodeJson.contains("param2") && nodeJson["param2"].is_number())
+                        node.actionParam2 = static_cast<float>(nodeJson["param2"].get<double>());
+                    else
+                        node.actionParam2 = 0.0f;
                 }
                 
                 // Parse decorator child
                 if ((node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater) && 
                     nodeJson.contains("child"))
                 {
-                    node.decoratorChildId = nodeJson["child"].get<uint32_t>();
+                    node.decoratorChildId = nodeJson["child"].get<int>();
                 }
                 
                 if (node.type == BTNodeType::Repeater && nodeJson.contains("repeatCount"))
@@ -313,8 +333,8 @@ BTStatus ExecuteBTAction(BTActionType actionType, float param1, float param2, En
                 // Check if we've arrived
                 if (World::Get().HasComponent<Position_data>(entity))
                 {
-                    const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-                    float dist = (pos.position - blackboard.moveGoal).magnitude();
+                    Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+                    float dist = (pos.position - blackboard.moveGoal).Magnitude();
                     if (dist < intent.arrivalThreshold)
                     {
                         blackboard.hasMoveGoal = false;

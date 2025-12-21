@@ -1,8 +1,7 @@
 #include "drawing.h"
-#include <SDL3/SDL.h>
 #include <SDL3/SDL_render.h>
 #include <cmath>
-#include "vector.h"
+
 
 // Portable pi definition for C++14 (avoids M_PI reliance)
 static const float PI = static_cast<float>(std::acos(-1.0));

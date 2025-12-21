@@ -306,6 +306,13 @@ inline int json::get<int>() const
 }
 
 template<>
+inline unsigned int json::get<unsigned int>() const
+{
+    if (!is_number()) throw std::runtime_error("not a number");
+    return static_cast<unsigned int>(number_value);
+}
+
+template<>
 inline double json::get<double>() const
 {
  if (!is_number()) throw std::runtime_error("not a number");

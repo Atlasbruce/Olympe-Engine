@@ -64,6 +64,7 @@ public:
 
 	inline Vector&	Normalize() { float rc=1/Norm(); x*=rc; y*=rc; z*=rc; return *this; }
 	inline float		Length() const { return Norm(); }
+	inline float Magnitude() const { return Norm(); }
 
 	inline bool bIsNull (void) { return ((x+y+z) == 0.0f);}
 	inline float Dist (Vector&);
