@@ -12,7 +12,6 @@ and provides a public API for camera operations.
 
 #pragma once
 
-#include "EventManager.h"
 #include "message.h"
 #include "../ECS_Entity.h"
 #include <SDL3/SDL.h>

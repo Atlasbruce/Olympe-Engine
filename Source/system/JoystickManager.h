@@ -1,6 +1,5 @@
 #pragma once
 
-#include "EventManager.h"
 #include "message.h"
 #include <SDL3/SDL.h>
 #include <unordered_map>

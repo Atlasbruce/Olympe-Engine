@@ -11,7 +11,6 @@ convenient API for camera control.
 */
 
 #include "CameraEventHandler.h"
-#include "EventManager.h"
 #include "EventQueue.h"
 #include "system_utils.h"
 #include "../World.h"
@@ -23,22 +22,10 @@ void CameraEventHandler::Initialize()
     if (m_initialized)
         return;
     
-    // Register for camera events
-    EventManager& em = EventManager::Get();
-    
-    em.Register(this, EventType::Olympe_EventType_Camera_Shake);
-    em.Register(this, EventType::Olympe_EventType_Camera_Shake_Stop);
-    em.Register(this, EventType::Olympe_EventType_Camera_Teleport);
-    em.Register(this, EventType::Olympe_EventType_Camera_ZoomTo);
-    em.Register(this, EventType::Olympe_EventType_Camera_RotateTo);
-    em.Register(this, EventType::Olympe_EventType_Camera_Reset);
-    em.Register(this, EventType::Olympe_EventType_Camera_SetBounds);
-    em.Register(this, EventType::Olympe_EventType_Camera_ClearBounds);
-    em.Register(this, EventType::Olympe_EventType_Camera_Target_Follow);
-    em.Register(this, EventType::Olympe_EventType_Camera_Target_Unfollow);
+    // Note: EventManager removed - camera events now handled by CameraEventConsumeSystem
     
     m_initialized = true;
-    SYSTEM_LOG << "CameraEventHandler initialized\n";
+    SYSTEM_LOG << "CameraEventHandler initialized (legacy)\n";
 }
 
 //-------------------------------------------------------------
@@ -47,8 +34,7 @@ void CameraEventHandler::Shutdown()
     if (!m_initialized)
         return;
     
-    // Unregister from all events
-    EventManager::Get().UnregisterAll(this);
+    // Unregister from all events (legacy - no longer needed)
     
     m_initialized = false;
     SYSTEM_LOG << "CameraEventHandler shut down\n";
