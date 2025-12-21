@@ -116,6 +116,11 @@ enum class EventType
 
 	// -------- SYSTEM EVENTS ----------
 	Olympe_EventType_System_Any, // Any system event registration
+
+	// -------- AI STIMULUS EVENTS ----------
+	Olympe_EventType_AI_Explosion, // Explosion at position (param1=x, param2=y, state=radius)
+	Olympe_EventType_AI_Noise, // Noise/sound at position (param1=x, param2=y, state=intensity)
+	Olympe_EventType_AI_DamageDealt, // Damage dealt to entity (targetUid=victim, deviceId=attacker, param1=damage)
 	
     Olympe_EventType_Any,
     Olympe_EventType_MAX

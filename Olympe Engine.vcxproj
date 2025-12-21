@@ -20,7 +20,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\ECS_Register.h" />
+    <ClCompile Include="Source\AI\BehaviorTree.cpp" />
     <ClCompile Include="Source\ECS_Systems.cpp" />
+    <ClCompile Include="Source\ECS_Systems_AI.cpp" />
     <ClCompile Include="Source\ECS_Systems_Camera.cpp" />
     <ClCompile Include="Source\ECS_Systems_Rendering_Camera.cpp" />
     <ClCompile Include="Source\engine_utils.cpp" />
@@ -48,11 +50,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Source\AI\AIEvents.h" />
+    <ClInclude Include="Source\AI\BehaviorTree.h" />
     <ClInclude Include="Source\CollisionMap.h" />
     <ClInclude Include="source\ECS_Components.h" />
+    <ClInclude Include="Source\ECS_Components_AI.h" />
     <ClInclude Include="Source\ECS_Components_Camera.h" />
     <ClInclude Include="source\ECS_Entity.h" />
     <ClInclude Include="source\ECS_Systems.h" />
+    <ClInclude Include="Source\ECS_Systems_AI.h" />
     <ClInclude Include="Source\ECS_Systems_Camera.h" />
     <ClInclude Include="Source\ECS_Systems_Rendering_Camera.h" />
     <ClInclude Include="Source\engine_utils.h" />

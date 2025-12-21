@@ -1,0 +1,25 @@
+{
+    "name": "InvestigateTree",
+    "rootNodeId": 1,
+    "nodes": [
+        {
+            "id": 1,
+            "name": "Root Sequence",
+            "type": "Sequence",
+            "children": [2, 3]
+        },
+        {
+            "id": 2,
+            "name": "Heard Noise?",
+            "type": "Condition",
+            "conditionType": "HeardNoise"
+        },
+        {
+            "id": 3,
+            "name": "Move to Last Known Position",
+            "type": "Action",
+            "actionType": "MoveToGoal",
+            "param1": 0.8
+        }
+    ]
+}
