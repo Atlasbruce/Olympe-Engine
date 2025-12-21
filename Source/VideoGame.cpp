@@ -19,13 +19,6 @@ using IM = InputsManager;
 VideoGame::VideoGame()
 {
 	name = "VideoGame";
-
-	// Register to EventManager for game events
-	using EM = EventManager;
-	EM::Get().Register(this, EventType::Olympe_EventType_Game_AddPlayer);
-	EM::Get().Register(this, EventType::Olympe_EventType_Game_RemovePlayer);
-	EM::Get().Register(this, EventType::Olympe_EventType_Keyboard_KeyDown);
-	EM::Get().Register(this, EventType::Olympe_EventType_Keyboard_KeyUp);
         
 	// Initialize viewport manager
 	viewport.Initialize(GameEngine::screenWidth, GameEngine::screenHeight);
@@ -44,8 +37,6 @@ VideoGame::VideoGame()
 VideoGame::~VideoGame()
 {
 	SYSTEM_LOG << "VideoGame destroyed\n";
-	// Unregister from EventManager
-	EventManager::Get().UnregisterAll(this);
 }
 //-------------------------------------------------------------
 // Player management: supports up to 8 players
@@ -172,90 +163,6 @@ void VideoGame::SetViewportLayout(short playerID)
         viewport.AddPlayer(playerID, ViewportLayout::ViewportLayout_Grid4x2);
         break;
 
-    default:
-        break;
-    }
-}
-//-------------------------------------------------------------
-// Event handler for EventManager messages registered in ctor
-void VideoGame::OnEvent(const Message& msg)
-{
-    switch (msg.msg_type)
-    {
-    case EventType::Olympe_EventType_Game_Pause:
-        Pause();
-        SYSTEM_LOG << "VideoGame: Paused via event\n";
-        break;
-    case EventType::Olympe_EventType_Game_Resume:
-        Resume();
-        SYSTEM_LOG << "VideoGame: Resumed via event\n";
-        break;
-    case EventType::Olympe_EventType_Game_Quit:
-        RequestQuit();
-        SYSTEM_LOG << "VideoGame: Quit requested via event\n";
-        break;
-    case EventType::Olympe_EventType_Game_Restart:
-        // Placeholder: restart current level (not implemented fully)
-        SYSTEM_LOG << "VideoGame: Restart requested via event (not implemented)\n";
-        break;
-    case EventType::Olympe_EventType_Game_TakeScreenshot:
-        // Not implemented: placeholder
-        SYSTEM_LOG << "VideoGame: TakeScreenshot event (not implemented)\n";
-        break;
-    case EventType::Olympe_EventType_Game_SaveState:
-    {
-        int slot = msg.controlId;
-        SYSTEM_LOG << "VideoGame: SaveState event slot=" << slot << "\n";
-        SaveGame(slot);
-        break;
-    }
-    case EventType::Olympe_EventType_Game_LoadState:
-    {
-        int slot = msg.controlId;
-        SYSTEM_LOG << "VideoGame: LoadState event slot=" << slot << "\n";
-        LoadGame(slot);
-        break;
-    }
-	// FOR TESTS : Add/Remove player with Enter and Backspace keys -----------------------------
-    case EventType::Olympe_EventType_Keyboard_KeyDown:
-    {
-        // msg.controlId contains SDL_Scancode
-        auto sc = static_cast<SDL_Scancode>(msg.controlId);
-        if (sc == SDL_SCANCODE_RETURN)
-        {
-            // debounce: only act on initial press
-            if (!m_key_AddPlayerPressed && msg.state == 1)
-            {
-                m_key_AddPlayerPressed = true;
-                EntityID added = AddPlayerEntity(); 
-                SYSTEM_LOG << "VideoGame: Enter + pressed -> add viewport (AddPlayer returned " << added << ")\n";
-            }
-        }
-        else if (sc == SDL_SCANCODE_BACKSPACE)
-        {
-            if (!m_key_RemovePlayerPressed && msg.state == 1)
-            {
-                m_key_RemovePlayerPressed = true;
-                if (!m_playersEntity.empty())
-                {
-                    //short pid = ((Player*)(m_playersObject.back()))->m_PlayerID;
-                    //bool ok = RemovePlayerObject(pid);
-
-                    EntityID pid = m_playersEntity.back();
-					bool ok = RemovePlayerEntity(pid);
-                    SYSTEM_LOG << "VideoGame: Numpad - pressed -> remove viewport/player " << pid << " -> " << (ok ? "removed" : "failed") << "\n";
-                }
-            }
-        }
-        break;
-    }
-    case EventType::Olympe_EventType_Keyboard_KeyUp:
-    {
-        auto sc = static_cast<SDL_Scancode>(msg.controlId);
-        if (sc == SDL_SCANCODE_RETURN) m_key_AddPlayerPressed = false;
-        if (sc == SDL_SCANCODE_BACKSPACE) m_key_RemovePlayerPressed = false;
-        break;
-    }
     default:
         break;
     }

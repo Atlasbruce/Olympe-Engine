@@ -35,7 +35,6 @@ public:
     }
 
     virtual void HandleEvent(const SDL_Event* ev);
-    virtual void OnEvent(const Message& msg) ;
 
 	bool IsKeyboardAssigned() const { return m_keyboardAssigned; }
 

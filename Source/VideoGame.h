@@ -10,7 +10,6 @@
 #include "system/GameMenu.h"
 #include "system/ViewportManager.h"
 #include "system/JoystickManager.h"
-#include "system/EventManager.h"
 #include "system/message.h"
 #include "GameState.h"
 #include <memory>
@@ -54,9 +53,6 @@ public:
      EntityID AddPlayerEntity(string _playerPrefabName = "PlayerEntity");
 	 bool RemovePlayerEntity(const EntityID eid);
 
-     // Event handler for EventManager messages registered in ctor
-     void OnEvent(const Message& msg);
-
      // Save / Load game state (slot optional)
      bool SaveGame(int slot = 0) { return false; }
      bool LoadGame(int slot = 0) { return false; }
@@ -92,8 +88,4 @@ private:
      GameState m_state = GameState::GameState_Running;
 
      bool m_keyboardAssigned = false;
-
-	 // key debounce flags for numpad +/- - FOR DEBUG TESTS ONLY - to be removed later
-     bool m_key_AddPlayerPressed = false;
-     bool m_key_RemovePlayerPressed = false;
 };
