@@ -2,6 +2,7 @@
 #include "../object.h"
 #include <vector>
 #include <unordered_map>
+#include <SDL3/SDL.h>
 
 
 // Simple Viewport manager singleton that computes up to 4 view rectangles

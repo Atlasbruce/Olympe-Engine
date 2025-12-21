@@ -130,7 +130,7 @@
       <Filter>Fichiers d%27en-tête\Engine Rendering</Filter>
     </ClCompile>
     <ClCompile Include="Source\OlympeEffectSystem.cpp">
-      <Filter>Fichiers d%27en-tête</Filter>
+      <Filter>Fichiers d%27en-tête\Game Systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -254,11 +254,14 @@
     <ClInclude Include="Source\ECS_Components_Camera.h">
       <Filter>Fichiers d%27en-tête\ECS</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ECS_Systems_Rendering_Camera.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
     <ClInclude Include="Source\system\CameraEventHandler.h">
       <Filter>Fichiers d%27en-tête\Engine Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ECS_Systems_Rendering_Camera.h">
+      <Filter>Fichiers d%27en-tête\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\system\EventQueue.h">
+      <Filter>Fichiers d%27en-tête\Engine Systems\Messages</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -11,6 +11,7 @@
 #include <iostream>
 #include "world.h"
 #include <fstream>
+#include <windows.h>
 
 //////////////////////////////////////////////////////////
 void MsgBox(string& stitle, string& smsg, bool _berror)

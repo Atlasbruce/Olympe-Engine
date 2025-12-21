@@ -75,6 +75,7 @@
     <ClInclude Include="Source\Serialization.h" />
     <ClInclude Include="Source\system\CameraEventHandler.h" />
     <ClInclude Include="Source\system\EventManager.h" />
+    <ClInclude Include="Source\system\EventQueue.h" />
     <ClInclude Include="Source\system\GameMenu.h" />
     <ClInclude Include="Source\system\JoystickManager.h" />
     <ClInclude Include="Source\system\KeyboardManager.h" />
