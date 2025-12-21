@@ -1,5 +1,5 @@
 #include "JoystickManager.h"
-#include "EventManager.h"
+#include "EventQueue.h"
 #include "system_utils.h"
 #include <SDL3/SDL.h>
 #include <iostream>
@@ -7,7 +7,6 @@
 #include "../InputsManager.h"
 #include "message.h"
 using IM = ::InputsManager;
-using EM = ::EventManager;
 
 //---------------------------------------------------------------------------------------------
 JoystickManager& JoystickManager::GetInstance()
@@ -129,16 +128,13 @@ void JoystickManager::HandleEvent(const SDL_Event* ev)
             OpenJoystick(id);
             SYSTEM_LOG << "Joystick added id=" << id << "\n";
 
-            //Notify players that their controller has been disconnected
-            EM::Get().DispatchImmediate
-            (Message::Create
-            (
-                EventStructType::EventStructType_Olympe,
+            //Notify players that their controller has been connected
+            EventQueue::Get().Push(Message::Create(
                 EventType::Olympe_EventType_Joystick_Connected,
+                EventDomain::Input,
                 static_cast<int>(id),
                 -1
-            )
-            );
+            ));
             break;
         }
         case SDL_EVENT_GAMEPAD_REMOVED:
@@ -160,15 +156,12 @@ void JoystickManager::HandleEvent(const SDL_Event* ev)
             IM::Get().AddDisconnectedPlayer(playerID, SDL_JoystickID(id));
 
 			//Notify players that their controller has been disconnected
-            EM::Get().DispatchImmediate
-            (Message::Create
-                (
-                EventStructType::EventStructType_Olympe,
+            EventQueue::Get().Push(Message::Create(
                 EventType::Olympe_EventType_Joystick_Disconnected,
+                EventDomain::Input,
                 static_cast<int>(id),
                 -1
-			    )
-            );
+            ));
             break;
         }
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
@@ -359,39 +352,44 @@ void JoystickManager::CloseJoystick(SDL_JoystickID instance_id)
 //---------------------------------------------------------------------------------------------
 void JoystickManager::PostJoystickButtonEvent(SDL_JoystickID which, int button, bool down)
 {
-    Message msg;
-	msg.struct_type = EventStructType::EventStructType_Olympe;
-    msg.msg_type = down ? EventType::Olympe_EventType_Joystick_ButtonDown : EventType::Olympe_EventType_Joystick_ButtonUp;
-    msg.deviceId = static_cast<int>(which);
-    msg.controlId = button;
-    msg.state = down ?1 :0;
-    msg.param1 = down ?1.0f :0.0f;
+    Message msg = Message::Create(
+        down ? EventType::Olympe_EventType_Joystick_ButtonDown : EventType::Olympe_EventType_Joystick_ButtonUp,
+        EventDomain::Input,
+        static_cast<int>(which),
+        button
+    );
+    msg.state = down ? 1 : 0;
+    msg.param1 = down ? 1.0f : 0.0f;
 
-    EventManager::Get().AddMessage(msg);
+    EventQueue::Get().Push(msg);
 }
 //---------------------------------------------------------------------------------------------
 void JoystickManager::PostJoystickAxisEvent(SDL_JoystickID which, int axis, Sint16 value)
 {
-    Message msg;
-    msg.struct_type = EventStructType::EventStructType_Olympe;
-    msg.msg_type = EventType::Olympe_EventType_Joystick_AxisMotion;
-    msg.deviceId = static_cast<int>(which);
-    msg.controlId = axis;
-    msg.state =0;
     // normalize Sint16 (-32768..32767) to [-1.0,1.0]
-    float normalized =0.0f;
-    if (value >=0) normalized = (value /32767.0f);
-    else normalized = (value /32768.0f);
+    float normalized = 0.0f;
+    if (value >= 0) normalized = (value / 32767.0f);
+    else normalized = (value / 32768.0f);
+    
+    Message msg = Message::Create(
+        EventType::Olympe_EventType_Joystick_AxisMotion,
+        EventDomain::Input,
+        static_cast<int>(which),
+        axis
+    );
+    msg.state = 0;
     msg.param1 = normalized;
 
-    EventManager::Get().AddMessage(msg);
+    EventQueue::Get().Push(msg);
 }
 //---------------------------------------------------------------------------------------------
 void JoystickManager::PostJoystickConnectedEvent(SDL_JoystickID which, bool bconnected)
 {
-	Message msg;
-    msg.struct_type = EventStructType::EventStructType_Olympe;
-    msg.msg_type = bconnected ? EventType::Olympe_EventType_Joystick_Connected : EventType::Olympe_EventType_Joystick_Disconnected;
-    msg.deviceId = static_cast<int>(which);
-	EventManager::Get().AddMessage(msg);
+	Message msg = Message::Create(
+        bconnected ? EventType::Olympe_EventType_Joystick_Connected : EventType::Olympe_EventType_Joystick_Disconnected,
+        EventDomain::Input,
+        static_cast<int>(which),
+        -1
+    );
+	EventQueue::Get().Push(msg);
 }

@@ -12,6 +12,7 @@ convenient API for camera control.
 
 #include "CameraEventHandler.h"
 #include "EventManager.h"
+#include "EventQueue.h"
 #include "system_utils.h"
 #include "../World.h"
 
@@ -99,75 +100,87 @@ void CameraEventHandler::OnEvent(const Message& msg)
 
 void CameraEventHandler::TriggerCameraShake(short playerID, float intensity, float duration)
 {
-    Message msg;
-    msg.struct_type = EventStructType::EventStructType_Olympe;
-    msg.msg_type = EventType::Olympe_EventType_Camera_Shake;
-    msg.deviceId = playerID;
+    Message msg = Message::Create(
+        EventType::Olympe_EventType_Camera_Shake,
+        EventDomain::Camera,
+        playerID,
+        -1
+    );
     msg.param1 = intensity;
     msg.param2 = duration;
     
-    EventManager::Get().AddMessage(msg);
+    EventQueue::Get().Push(msg);
 }
 
 //-------------------------------------------------------------
 void CameraEventHandler::StopCameraShake(short playerID)
 {
-    Message msg;
-    msg.struct_type = EventStructType::EventStructType_Olympe;
-    msg.msg_type = EventType::Olympe_EventType_Camera_Shake_Stop;
-    msg.deviceId = playerID;
+    Message msg = Message::Create(
+        EventType::Olympe_EventType_Camera_Shake_Stop,
+        EventDomain::Camera,
+        playerID,
+        -1
+    );
     
-    EventManager::Get().AddMessage(msg);
+    EventQueue::Get().Push(msg);
 }
 
 //-------------------------------------------------------------
 void CameraEventHandler::TeleportCamera(short playerID, float x, float y)
 {
-    Message msg;
-    msg.struct_type = EventStructType::EventStructType_Olympe;
-    msg.msg_type = EventType::Olympe_EventType_Camera_Teleport;
-    msg.deviceId = playerID;
+    Message msg = Message::Create(
+        EventType::Olympe_EventType_Camera_Teleport,
+        EventDomain::Camera,
+        playerID,
+        -1
+    );
     msg.param1 = x;
     msg.param2 = y;
     
-    EventManager::Get().AddMessage(msg);
+    EventQueue::Get().Push(msg);
 }
 
 //-------------------------------------------------------------
 void CameraEventHandler::ZoomCameraTo(short playerID, float targetZoom, float speed)
 {
-    Message msg;
-    msg.struct_type = EventStructType::EventStructType_Olympe;
-    msg.msg_type = EventType::Olympe_EventType_Camera_ZoomTo;
-    msg.deviceId = playerID;
+    Message msg = Message::Create(
+        EventType::Olympe_EventType_Camera_ZoomTo,
+        EventDomain::Camera,
+        playerID,
+        -1
+    );
     msg.param1 = targetZoom;
     msg.param2 = speed;
     
-    EventManager::Get().AddMessage(msg);
+    EventQueue::Get().Push(msg);
 }
 
 //-------------------------------------------------------------
 void CameraEventHandler::RotateCameraTo(short playerID, float targetRotation, float speed)
 {
-    Message msg;
-    msg.struct_type = EventStructType::EventStructType_Olympe;
-    msg.msg_type = EventType::Olympe_EventType_Camera_RotateTo;
-    msg.deviceId = playerID;
+    Message msg = Message::Create(
+        EventType::Olympe_EventType_Camera_RotateTo,
+        EventDomain::Camera,
+        playerID,
+        -1
+    );
     msg.param1 = targetRotation;
     msg.param2 = speed;
     
-    EventManager::Get().AddMessage(msg);
+    EventQueue::Get().Push(msg);
 }
 
 //-------------------------------------------------------------
 void CameraEventHandler::ResetCamera(short playerID)
 {
-    Message msg;
-    msg.struct_type = EventStructType::EventStructType_Olympe;
-    msg.msg_type = EventType::Olympe_EventType_Camera_Reset;
-    msg.deviceId = playerID;
+    Message msg = Message::Create(
+        EventType::Olympe_EventType_Camera_Reset,
+        EventDomain::Camera,
+        playerID,
+        -1
+    );
     
-    EventManager::Get().AddMessage(msg);
+    EventQueue::Get().Push(msg);
 }
 
 //-------------------------------------------------------------
@@ -194,12 +207,14 @@ void CameraEventHandler::SetCameraBounds(short playerID, const SDL_FRect& bounds
 //-------------------------------------------------------------
 void CameraEventHandler::ClearCameraBounds(short playerID)
 {
-    Message msg;
-    msg.struct_type = EventStructType::EventStructType_Olympe;
-    msg.msg_type = EventType::Olympe_EventType_Camera_ClearBounds;
-    msg.deviceId = playerID;
+    Message msg = Message::Create(
+        EventType::Olympe_EventType_Camera_ClearBounds,
+        EventDomain::Camera,
+        playerID,
+        -1
+    );
     
-    EventManager::Get().AddMessage(msg);
+    EventQueue::Get().Push(msg);
 }
 
 //-------------------------------------------------------------
@@ -219,12 +234,14 @@ void CameraEventHandler::FollowTarget(short playerID, EntityID targetEntity)
 //-------------------------------------------------------------
 void CameraEventHandler::UnfollowTarget(short playerID)
 {
-    Message msg;
-    msg.struct_type = EventStructType::EventStructType_Olympe;
-    msg.msg_type = EventType::Olympe_EventType_Camera_Target_Unfollow;
-    msg.deviceId = playerID;
+    Message msg = Message::Create(
+        EventType::Olympe_EventType_Camera_Target_Unfollow,
+        EventDomain::Camera,
+        playerID,
+        -1
+    );
     
-    EventManager::Get().AddMessage(msg);
+    EventQueue::Get().Push(msg);
 }
 
 //-------------------------------------------------------------
