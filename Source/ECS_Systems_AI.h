@@ -11,7 +11,7 @@ AI Systems purpose: Define ECS systems for NPC AI behavior.
 
 #pragma once
 
-#include "Ecs_Entity.h"
+#include "ECS_Entity.h"
 #include "ECS_Systems.h"
 #include <set>
 

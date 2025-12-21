@@ -49,6 +49,9 @@
     <Filter Include="Fichiers d%27en-tête\ECS\Systems">
       <UniqueIdentifier>{2158b1dc-24a7-43b3-b02d-330d72a35fed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers d%27en-tête\AI">
+      <UniqueIdentifier>{8a9c5e7f-1d3e-4b2a-9f6c-3d8a7b9c5e7f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\GameEngine.cpp">
@@ -114,8 +117,14 @@
     <ClCompile Include="Source\ECS_Systems.cpp">
       <Filter>Fichiers d%27en-tête\ECS\Systems</Filter>
     </ClCompile>
+    <ClCompile Include="Source\ECS_Systems_AI.cpp">
+      <Filter>Fichiers d%27en-tête\ECS\Systems</Filter>
+    </ClCompile>
     <ClCompile Include="source\ECS_Register.h">
       <Filter>Fichiers d%27en-tête\ECS\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\BehaviorTree.cpp">
+      <Filter>Fichiers d%27en-tête\AI</Filter>
     </ClCompile>
     <ClCompile Include="Source\ECS_Systems_Rendering_Camera.cpp">
       <Filter>Fichiers d%27en-tête\ECS</Filter>
@@ -239,11 +248,23 @@
     <ClInclude Include="source\ECS_Components.h">
       <Filter>Fichiers d%27en-tête\ECS\Components</Filter>
     </ClInclude>
+    <ClInclude Include="Source\ECS_Components_AI.h">
+      <Filter>Fichiers d%27en-tête\ECS\Components</Filter>
+    </ClInclude>
     <ClInclude Include="source\ECS_Entity.h">
       <Filter>Fichiers d%27en-tête\ECS\Entity</Filter>
     </ClInclude>
     <ClInclude Include="source\ECS_Systems.h">
       <Filter>Fichiers d%27en-tête\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ECS_Systems_AI.h">
+      <Filter>Fichiers d%27en-tête\ECS\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\BehaviorTree.h">
+      <Filter>Fichiers d%27en-tête\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\AIEvents.h">
+      <Filter>Fichiers d%27en-tête\AI</Filter>
     </ClInclude>
     <ClInclude Include="Source\ECS_Systems_Camera.h">
       <Filter>Fichiers d%27en-tête\ECS</Filter>

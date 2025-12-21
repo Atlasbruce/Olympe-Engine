@@ -15,7 +15,7 @@ AI Events purpose: Helper functions for emitting AI-related gameplay events via 
 #include "../system/message.h"
 #include "../system/system_consts.h"
 #include "../vector.h"
-#include "../Ecs_Entity.h"
+#include "../ECS_Entity.h"
 
 namespace AIEvents
 {

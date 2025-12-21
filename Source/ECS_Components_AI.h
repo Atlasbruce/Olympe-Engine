@@ -11,7 +11,7 @@ AI Components purpose: Define all AI-related components for the ECS architecture
 
 #pragma once
 
-#include "Ecs_Entity.h"
+#include "ECS_Entity.h"
 #include "vector.h"
 #include <cstdint>
 

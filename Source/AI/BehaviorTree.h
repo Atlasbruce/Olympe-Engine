@@ -11,7 +11,7 @@ Behavior Tree purpose: Data-driven behavior tree system for AI decision making.
 
 #pragma once
 
-#include "../Ecs_Entity.h"
+#include "../ECS_Entity.h"
 #include "../vector.h"
 #include <vector>
 #include <string>
