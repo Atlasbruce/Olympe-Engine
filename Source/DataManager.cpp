@@ -186,7 +186,7 @@ Sprite* DataManager::GetSprite(const std::string& id, const std::string& path, R
 //-------------------------------------------------------------
 VisualSprite_data* DataManager::GetSprite_data(const std::string& id, const std::string& path)
 {
-    static VisualSprite_data vsprite;
+    VisualSprite_data vsprite;
 	vsprite.sprite = GetSprite(id, path, ResourceCategory::GameEntity);
 	// set srcRect based on texture size
 	if (vsprite.sprite)
