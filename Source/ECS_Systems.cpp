@@ -19,6 +19,8 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #include "system/JoystickManager.h"
 #include "system/ViewportManager.h"
 #include "system/EventQueue.h"
+#include "VideoGame.h"
+#include "system/GameMenu.h"
 #include <iostream>
 #include <bitset>
 #include <cmath>
@@ -51,6 +53,29 @@ void InputEventConsumeSystem::Process()
     
     // Process each input event
     queue.ForEachDomainEvent(EventDomain::Input, [](const Message& msg) {
+        
+        // Handle joystick connect/disconnect for InputsManager auto-rebind logic
+        if (msg.msg_type == EventType::Olympe_EventType_Joystick_Connected)
+        {
+            // Auto reconnect joystick to any player that was disconnected if any
+            if (InputsManager::Get().GetDisconnectedPlayersCount() > 0)
+            {
+                // get 1st Disconnected player
+                short disconnectedPlayerID = InputsManager::Get().GetFirstDisconnectedPlayerID();
+                if (disconnectedPlayerID >= 0)
+                {
+                    SYSTEM_LOG << "InputEventConsumeSystem: try rebinding joystick ID=" << msg.deviceId << " to disconnected player " << disconnectedPlayerID << "\n";
+                    if (InputsManager::Get().AutoBindControllerToPlayer(disconnectedPlayerID))
+                    {
+                        // we can remove the disconnected player now, since he is rebound
+                        InputsManager::Get().RemoveDisconnectedPlayer(disconnectedPlayerID);
+                        SYSTEM_LOG << "InputEventConsumeSystem: Joystick ID=" << msg.deviceId << " rebound to player " << disconnectedPlayerID << "\n";
+                    }
+                    else
+                        SYSTEM_LOG << "InputEventConsumeSystem: Failed to rebind joystick ID=" << msg.deviceId << " to disconnected player " << disconnectedPlayerID << "\n";
+                }
+            }
+        }
         
         // Use optimized input entity cache instead of iterating all entities
         const auto& inputEntities = InputsManager::Get().GetInputEntities();
@@ -115,6 +140,171 @@ void InputEventConsumeSystem::Process()
                 // ignore per-entity errors
             }
         }
+    });
+}
+//-------------------------------------------------------------
+// GameEventConsumeSystem: Consumes Gameplay domain events
+GameEventConsumeSystem::GameEventConsumeSystem()
+{
+    // No specific component signature required - operates on global game state
+}
+
+void GameEventConsumeSystem::Process()
+{
+    // Get all Gameplay domain events from the EventQueue
+    const EventQueue& queue = EventQueue::Get();
+    
+    // Forward declaration to access VideoGame
+    extern class VideoGame;
+    
+    // Process each gameplay event
+    queue.ForEachDomainEvent(EventDomain::Gameplay, [](const Message& msg) {
+        
+        switch (msg.msg_type)
+        {
+            case EventType::Olympe_EventType_Game_Pause:
+                VideoGame::Get().Pause();
+                SYSTEM_LOG << "GameEventConsumeSystem: Paused via event\n";
+                break;
+            case EventType::Olympe_EventType_Game_Resume:
+                VideoGame::Get().Resume();
+                SYSTEM_LOG << "GameEventConsumeSystem: Resumed via event\n";
+                break;
+            case EventType::Olympe_EventType_Game_Quit:
+                VideoGame::Get().RequestQuit();
+                SYSTEM_LOG << "GameEventConsumeSystem: Quit requested via event\n";
+                break;
+            case EventType::Olympe_EventType_Game_Restart:
+                SYSTEM_LOG << "GameEventConsumeSystem: Restart requested via event (not implemented)\n";
+                break;
+            case EventType::Olympe_EventType_Game_TakeScreenshot:
+                SYSTEM_LOG << "GameEventConsumeSystem: TakeScreenshot event (not implemented)\n";
+                break;
+            case EventType::Olympe_EventType_Game_SaveState:
+            {
+                int slot = msg.controlId;
+                SYSTEM_LOG << "GameEventConsumeSystem: SaveState event slot=" << slot << "\n";
+                VideoGame::Get().SaveGame(slot);
+                break;
+            }
+            case EventType::Olympe_EventType_Game_LoadState:
+            {
+                int slot = msg.controlId;
+                SYSTEM_LOG << "GameEventConsumeSystem: LoadState event slot=" << slot << "\n";
+                VideoGame::Get().LoadGame(slot);
+                break;
+            }
+            default:
+                break;
+        }
+    });
+    
+    // Also process keyboard events for add/remove player (Input domain, but game-related)
+    // Static state for debouncing
+    static bool s_key_AddPlayerPressed = false;
+    static bool s_key_RemovePlayerPressed = false;
+    
+    queue.ForEachDomainEvent(EventDomain::Input, [](const Message& msg) {
+        
+        if (msg.msg_type == EventType::Olympe_EventType_Keyboard_KeyDown)
+        {
+            auto sc = static_cast<SDL_Scancode>(msg.controlId);
+            if (sc == SDL_SCANCODE_RETURN)
+            {
+                // debounce: only act on initial press
+                if (!s_key_AddPlayerPressed && msg.state == 1)
+                {
+                    s_key_AddPlayerPressed = true;
+                    EntityID added = VideoGame::Get().AddPlayerEntity();
+                    SYSTEM_LOG << "GameEventConsumeSystem: Enter pressed -> add player (returned " << added << ")\n";
+                }
+            }
+            else if (sc == SDL_SCANCODE_BACKSPACE)
+            {
+                if (!s_key_RemovePlayerPressed && msg.state == 1)
+                {
+                    s_key_RemovePlayerPressed = true;
+                    auto& players = VideoGame::Get().m_playersEntity;
+                    if (!players.empty())
+                    {
+                        EntityID pid = players.back();
+                        bool ok = VideoGame::Get().RemovePlayerEntity(pid);
+                        SYSTEM_LOG << "GameEventConsumeSystem: Backspace pressed -> remove player " << pid << " -> " << (ok ? "removed" : "failed") << "\n";
+                    }
+                }
+            }
+        }
+        else if (msg.msg_type == EventType::Olympe_EventType_Keyboard_KeyUp)
+        {
+            auto sc = static_cast<SDL_Scancode>(msg.controlId);
+            if (sc == SDL_SCANCODE_RETURN) s_key_AddPlayerPressed = false;
+            if (sc == SDL_SCANCODE_BACKSPACE) s_key_RemovePlayerPressed = false;
+        }
+    });
+}
+//-------------------------------------------------------------
+// UIEventConsumeSystem: Consumes UI domain events
+UIEventConsumeSystem::UIEventConsumeSystem()
+{
+    // No specific component signature required - operates on UI state
+}
+
+void UIEventConsumeSystem::Process()
+{
+    // Get all UI domain events from the EventQueue
+    const EventQueue& queue = EventQueue::Get();
+    
+    // Forward declaration to access GameMenu
+    extern class GameMenu;
+    
+    // Process each UI event
+    queue.ForEachDomainEvent(EventDomain::UI, [](const Message& msg) {
+        
+        switch (msg.msg_type)
+        {
+            case EventType::Olympe_EventType_Menu_Enter:
+                GameMenu::Get().Activate();
+                SYSTEM_LOG << "UIEventConsumeSystem: Menu Enter event - activated\n";
+                break;
+            case EventType::Olympe_EventType_Menu_Exit:
+                GameMenu::Get().Deactivate();
+                SYSTEM_LOG << "UIEventConsumeSystem: Menu Exit event - deactivated\n";
+                break;
+            case EventType::Olympe_EventType_Menu_Validate:
+                if (GameMenu::Get().IsActive())
+                {
+                    SYSTEM_LOG << "UIEventConsumeSystem: Menu Validate event\n";
+                    // GameMenu will handle the validation internally
+                    // For now, we'll emit a message that GameMenu's OnEvent can handle
+                    // But since we're migrating away from OnEvent, we need to handle it here
+                    // This is a placeholder - full implementation depends on menu structure
+                }
+                break;
+            default:
+                break;
+        }
+    });
+}
+//-------------------------------------------------------------
+// CameraEventConsumeSystem: Consumes Camera domain events
+CameraEventConsumeSystem::CameraEventConsumeSystem()
+{
+    // No specific component signature required - operates on camera entities
+}
+
+void CameraEventConsumeSystem::Process()
+{
+    // Get all Camera domain events from the EventQueue
+    const EventQueue& queue = EventQueue::Get();
+    
+    // Get the CameraSystem instance
+    CameraSystem* camSys = World::Get().GetSystem<CameraSystem>();
+    if (!camSys) return;
+    
+    // Process each camera event by forwarding to CameraSystem::OnEvent
+    // This is a transitional approach - eventually CameraSystem should consume events directly
+    queue.ForEachDomainEvent(EventDomain::Camera, [camSys](const Message& msg) {
+        camSys->OnEvent(msg);
     });
 }
 //-------------------------------------------------------------

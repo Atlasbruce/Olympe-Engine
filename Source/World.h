@@ -10,7 +10,6 @@ World purpose: Manage the overall game world, including object management, level
 */
 #pragma once
 
-#include "system/EventManager.h"
 #include "system/EventQueue.h"
 #include <vector>
 #include <memory>

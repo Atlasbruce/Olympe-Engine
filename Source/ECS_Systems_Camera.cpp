@@ -37,26 +37,12 @@ CameraSystem::CameraSystem()
     // Camera system requires at minimum the Camera_data component
     requiredSignature.set(GetComponentTypeID_Static<Camera_data>(), true);
     
-    // Register for camera events
-    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Shake);
-    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Teleport);
-    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_MoveToPosition);
-    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_ZoomTo);
-    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_RotateTo);
-    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Reset);
-    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Mode_2D);
-    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Mode_2_5D);
-    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Mode_Isometric);
-    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Target_Follow);
-    EventManager::Get().Register(this, EventType::Olympe_EventType_Camera_Target_Unfollow);
-    
     SYSTEM_LOG << "CameraSystem initialized\n";
 }
 
 //-------------------------------------------------------------
 CameraSystem::~CameraSystem()
 {
-    EventManager::Get().UnregisterAll(this);
     SYSTEM_LOG << "CameraSystem destroyed\n";
 }
 

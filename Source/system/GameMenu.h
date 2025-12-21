@@ -36,9 +36,6 @@ public:
 
     void AddEntry(const std::string& e) { m_entries.push_back(e); }
 
-    // Called by EventManager when messages arrive (overrides Object::OnEvent)
-    virtual void OnEvent(const Message& msg) ;
-
     // Render simplified text-based menu (placeholder)
     virtual void Render() ;
 

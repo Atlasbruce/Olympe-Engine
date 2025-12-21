@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../object.h"
-#include "EventManager.h"
 #include "message.h"
 #include <SDL3/SDL.h>
 #include <mutex>
