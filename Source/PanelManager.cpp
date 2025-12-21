@@ -349,69 +349,26 @@ void PanelManager::HandleEvent(const SDL_Event* ev)
 //----------------------------------------------------------------------
 void PanelManager::OnEvent(const Message& msg)
 {
-    switch (msg.struct_type)
+    switch (msg.msg_type)
     {
-        case EventStructType::EventStructType_System_Windows:
+        case EventType::Olympe_EventType_Keyboard_Connected:
+        case EventType::Olympe_EventType_Keyboard_Disconnected:
+        case EventType::Olympe_EventType_Mouse_Connected:
+        case EventType::Olympe_EventType_Mouse_Disconnected:
+        case EventType::Olympe_EventType_Joystick_Connected:
+        case EventType::Olympe_EventType_Joystick_Disconnected:
         {
-            switch (msg.msg_type)
+            if (IsPanelVisible("inputs_inspector"))
             {
-                case (EventType)IDM_PANEL_LOG:
-                case (EventType)IDM_WINDOW_LOG:
-                    if (IsPanelVisible("log_window")) HidePanel("log_window"); else ShowPanel("log_window");
-                    if (m_mainMenu) CheckMenuItem(m_mainMenu, IDM_WINDOW_LOG, MF_BYCOMMAND | (IsPanelVisible("log_window") ? MF_CHECKED : MF_UNCHECKED));
-                    break;
-                default:
-                    break;
+                auto pit = m_panels_.find("inputs_inspector");
+                if (pit != m_panels_.end() && pit->second.hwndChild)
+                {
+                    UpdateInputsInspectorList();
+                }
             }
             break;
-		}
-        case EventStructType::EventStructType_SDL:
-        {
-            switch (msg.msg_type)
-            {
-                case (EventType) SDL_EVENT_JOYSTICK_REMOVED:
-                case (EventType)SDL_EVENT_JOYSTICK_ADDED:
-                {
-                    if (IsPanelVisible("inputs_inspector"))
-                    {
-                        auto pit = m_panels_.find("inputs_inspector");
-                        if (pit != m_panels_.end() && pit->second.hwndChild)
-                        {
-							UpdateInputsInspectorList();
-                        }
-                    }
-                    break;
-                }
-            default:
-                break;
-            }
-		}
-		case EventStructType::EventStructType_Olympe:
-        {
-            switch (msg.msg_type)
-            {
-			case EventType::Olympe_EventType_Keyboard_Connected:
-			case EventType::Olympe_EventType_Keyboard_Disconnected:
-			case EventType::Olympe_EventType_Mouse_Connected:
-			case EventType::Olympe_EventType_Mouse_Disconnected:
-			case EventType::Olympe_EventType_Joystick_Connected:
-            case EventType::Olympe_EventType_Joystick_Disconnected:
-            {
-                if (IsPanelVisible("inputs_inspector"))
-                {
-                    auto pit = m_panels_.find("inputs_inspector");
-                    if (pit != m_panels_.end() && pit->second.hwndChild)
-                    {
-                        UpdateInputsInspectorList();
-                    }
-                }
-                break;
-				}
-            default:
-                break;
-            }
         }
-	    default:
+        default:
             break;
     }
 }

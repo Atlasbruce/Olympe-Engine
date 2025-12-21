@@ -19,11 +19,7 @@ Object* GameObject::Create()
 //-------------------------------------------------------------
 void GameObject::OnEvent(const Message& msg)
 {
-    if (msg.struct_type == EventStructType::EventStructType_System_Windows)
-    {
-		SYSTEM_LOG << "Warning GameObject::OnEvent: received Windows event for GameObject: " << name << endl;
-        return;
-    }
+    // Default GameObject OnEvent - override in derived classes for specific handling
 }
 //-------------------------------------------------------------
 std::string GameObject::Save() const
