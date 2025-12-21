@@ -68,6 +68,36 @@ public:
     virtual void Process() override;
 };
 
+// GameEventConsumeSystem: Consumes Gameplay domain events from EventQueue
+// Handles game state changes (pause/resume/quit), player add/remove via keyboard
+// Replaces VideoGame::OnEvent callback-based approach
+class GameEventConsumeSystem : public ECS_System
+{
+public:
+    GameEventConsumeSystem();
+    virtual void Process() override;
+};
+
+// UIEventConsumeSystem: Consumes UI domain events from EventQueue
+// Handles menu activation/deactivation and validation
+// Replaces GameMenu::OnEvent callback-based approach
+class UIEventConsumeSystem : public ECS_System
+{
+public:
+    UIEventConsumeSystem();
+    virtual void Process() override;
+};
+
+// CameraEventConsumeSystem: Consumes Camera domain events from EventQueue
+// Handles camera control events (shake, zoom, follow, etc.)
+// Replaces CameraSystem::OnEvent callback-based approach
+class CameraEventConsumeSystem : public ECS_System
+{
+public:
+    CameraEventConsumeSystem();
+    virtual void Process() override;
+};
+
 // AI System: processes entities with AIBehavior_data and Movement_data
 class AISystem : public ECS_System
 {

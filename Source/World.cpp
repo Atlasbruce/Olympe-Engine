@@ -56,7 +56,10 @@ void World::Initialize_ECS_Systems()
 
     /*
 	Order of processing systems:
-	- InputEventConsumeSystem (NEW: consumes Input domain events from EventQueue, updates Controller_data)
+	- InputEventConsumeSystem (consumes Input domain events from EventQueue, updates Controller_data)
+	- GameEventConsumeSystem (consumes Gameplay domain events, handles game state and player add/remove)
+	- UIEventConsumeSystem (consumes UI domain events, handles menu activation)
+	- CameraEventConsumeSystem (consumes Camera domain events, forwards to CameraSystem)
 	- InputSystem
 	- InputMappingSystem (maps hardware input to gameplay actions)
 	- PlayerControlSystem
@@ -71,6 +74,9 @@ void World::Initialize_ECS_Systems()
     - RenderingSystem
     */
 	Add_ECS_System(std::make_unique<InputEventConsumeSystem>());
+	Add_ECS_System(std::make_unique<GameEventConsumeSystem>());
+	Add_ECS_System(std::make_unique<UIEventConsumeSystem>());
+	Add_ECS_System(std::make_unique<CameraEventConsumeSystem>());
 	Add_ECS_System(std::make_unique<InputSystem>());
 	Add_ECS_System(std::make_unique<InputMappingSystem>());
 	Add_ECS_System(std::make_unique<PlayerControlSystem>());
