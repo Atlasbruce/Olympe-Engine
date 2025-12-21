@@ -180,32 +180,10 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     JoystickManager::Get().BeginFrame();
     MouseManager::Get().BeginFrame();
 
-    #ifdef _WIN32
-        // Poll and dispatch Win32 messages here and forward to EventManager
-        {
-            MSG msg;
-            while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-            {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-
-                Message m;
-                m.struct_type= EventStructType::EventStructType_System_Windows;
-                m.msg_type = (EventType) msg.message;
-                m.msg = &msg;
-
-				EventManager::Get().DispatchImmediate(m); // forward Win32 message to EventManager immediately because we are in a loop
-      
-            }
-        }
-    #endif
-
-    // 2. SDL events are polled by SDL_AppEvent callback before this function
-    // 3. Calculate delta time
+    // Calculate delta time
 	GameEngine::Get().Process(); // update fDt here for all managers
-    // 4. Process event bus
-	EventManager::Get().Process(); // ensure queued events are dispatched to all registered listeners
-    // 5. Process ECS systems (including InputMappingSystem)
+
+    // Process ECS systems 
 	World::Get().Process(); // process all world objects/components
 
     // If game state requests quit, end the application loop
