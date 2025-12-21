@@ -117,9 +117,6 @@
     <ClCompile Include="source\ECS_Register.h">
       <Filter>Fichiers d%27en-tête\ECS\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Source\system\EventManager_ECS.cpp">
-      <Filter>Fichiers d%27en-tête\Engine Systems\Messages</Filter>
-    </ClCompile>
     <ClCompile Include="Source\ECS_Systems_Rendering_Camera.cpp">
       <Filter>Fichiers d%27en-tête\ECS</Filter>
     </ClCompile>

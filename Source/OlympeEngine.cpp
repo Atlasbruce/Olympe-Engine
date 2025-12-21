@@ -24,9 +24,7 @@ Notes:
 #include "system/MouseManager.h"
 #include "InputsManager.h"
 #include "GameState.h"
-//#include "system/Camerasytem.h"
 #include "system/ViewportManager.h"
-#include "videogame.h"
 #include "DataManager.h"
 #include "system/system_utils.h"
 #include "PanelManager.h"
@@ -35,12 +33,6 @@ Notes:
 #ifdef PostMessage
 #undef PostMessage
 #endif
-
-#include <fstream>
-#include <string>
-#include <iterator>
-#include <cctype>
-#include <sstream>
 
 using namespace std;
 
@@ -97,18 +89,6 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 {
     if (!event) return SDL_APP_CONTINUE;
-
-    // Forward to input submanagers (they will post EventManager messages)
-    //JoystickManager::Get().HandleEvent(event);
-    //KeyboardManager::Get().HandleEvent(event);
-    //MouseManager::Get().HandleEvent(event);
-    //EventManager::Get().AddMessage (EventManager::Message(static_cast<EventStructType>(event->type)));
-
-   /* Message m;
-    m.struct_type = EventStructType::EventStructType_SDL;
-    m.msg_type = (EventType) event->type;
-    m.sdlEvent = event;
-	EventManager::Get().AddMessage(m); // forward SDL event to EventManager/**/
 
     InputsManager::Get().HandleEvent(event); //facto
 

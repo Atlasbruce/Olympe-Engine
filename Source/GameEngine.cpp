@@ -16,7 +16,6 @@ int GameEngine::screenHeight = 720;
 //-------------------------------------------------------------
 void GameEngine::Initialize()
 {
-	ptr_eventmanager = &EventManager::GetInstance();
 	ptr_inputsmanager = &InputsManager::GetInstance();
 	ptr_systemmenu = &SystemMenu::GetInstance();
 	ptr_videogame = &VideoGame::GetInstance();

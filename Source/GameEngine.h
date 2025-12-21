@@ -17,7 +17,6 @@ Purpose:
 using namespace std;
 
 // Forward declarations to avoid circular includes
-class EventManager;
 class InputsManager;
 class SystemMenu;
 class VideoGame;
@@ -55,14 +54,12 @@ class GameEngine
 		//-------------------------------------------------------------
 	public:
 		string name = "";
-		EventManager* ptr_eventmanager = nullptr;
 		InputsManager* ptr_inputsmanager = nullptr;
 		SystemMenu* ptr_systemmenu = nullptr;
 		VideoGame* ptr_videogame = nullptr;
 		OptionsManager* ptr_optionsmanager = nullptr;
 		DataManager* ptr_datamanager = nullptr;
 
-		EventManager& eventmanager = *ptr_eventmanager;
 		InputsManager & inputsmanager = *ptr_inputsmanager;
 		SystemMenu& systemmenu = *ptr_systemmenu;
 		VideoGame& videogame = *ptr_videogame;

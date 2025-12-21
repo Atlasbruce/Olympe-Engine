@@ -35,7 +35,6 @@
     <ClCompile Include="Source\OlympeEngine.cpp" />
     <ClCompile Include="Source\PanelManager.cpp" />
     <ClCompile Include="Source\system\CameraEventHandler.cpp" />
-    <ClCompile Include="Source\system\EventManager_ECS.cpp" />
     <ClCompile Include="Source\system\GameMenu.cpp" />
     <ClCompile Include="Source\system\JoystickManager.cpp" />
     <ClCompile Include="Source\system\KeyboardManager.cpp" />
