@@ -1,0 +1,12 @@
+{
+    "name": "IdleTree",
+    "rootNodeId": 1,
+    "nodes": [
+        {
+            "id": 1,
+            "name": "Idle Action",
+            "type": "Action",
+            "actionType": "Idle"
+        }
+    ]
+}
