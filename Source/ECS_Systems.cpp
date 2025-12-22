@@ -441,6 +441,10 @@ void RenderingSystem::Render()
                 SDL_SetRenderViewport(renderer, &viewportRect);
                 //SDL_SetRenderClipRect(renderer, &viewportRect);
                 
+                GridSystem* grid = World::Get().GetSystem<GridSystem>();
+                if (grid)
+                    grid->RenderForCamera(camTransform);
+
                 // Render entities for this camera
                 RenderEntitiesForCamera(camTransform);
                 
@@ -837,6 +841,24 @@ void GridSystem::Render()
     // Final reset
     SDL_SetRenderClipRect(renderer, nullptr);
     SDL_SetRenderViewport(renderer, nullptr);
+}
+
+void GridSystem::RenderForCamera(const CameraTransform& cam)
+{
+    SDL_Renderer* renderer = GameEngine::renderer;
+    if (!renderer) return;
+
+    const GridSettings_data* s = FindSettings();
+    if (!s || !s->enabled) return;
+
+    // on n'utilise PLUS de boucle sur les players ici !
+    switch (s->projection)
+    {
+        case GridProjection::Ortho:    RenderOrtho(cam, *s); break;
+        case GridProjection::Iso:      RenderIso(cam, *s); break;
+        case GridProjection::HexAxial: RenderHex(cam, *s); break;
+        default: RenderOrtho(cam, *s); break;
+    }
 }
 
 void GridSystem::RenderOrtho(const CameraTransform& cam, const GridSettings_data& s)

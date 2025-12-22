@@ -153,6 +153,7 @@ class GridSystem : public ECS_System
 public:
     GridSystem();
     virtual void Render() override;
+    void RenderForCamera(const CameraTransform& cam);
 
 private:
     const GridSettings_data* FindSettings() const;
