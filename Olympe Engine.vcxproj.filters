@@ -281,6 +281,9 @@
     <ClInclude Include="Source\system\EventQueue.h">
       <Filter>Fichiers d%27en-tête\Engine Systems\Messages</Filter>
     </ClInclude>
+    <ClInclude Include="Source\json_helper.h">
+      <Filter>Fichiers d%27en-tête\Engine Systems\System Helpers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc">

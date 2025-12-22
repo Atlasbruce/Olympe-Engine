@@ -68,6 +68,7 @@
     <ClInclude Include="Source\GameState.h" />
     <ClInclude Include="Source\GraphicMap.h" />
     <ClInclude Include="Source\InputsManager.h" />
+    <ClInclude Include="Source\json_helper.h" />
     <ClInclude Include="Source\Level.h" />
     <ClInclude Include="Source\Objective.h" />
     <ClInclude Include="Source\OptionsManager.h" />
