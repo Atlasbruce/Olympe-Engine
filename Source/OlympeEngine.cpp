@@ -206,7 +206,8 @@ SDL_AppResult SDL_AppIterate(void* appstate)
             SDL_SetRenderClipRect(renderer, nullptr);
         }
 
-        // restore previous viewport
+        // restore previous viewport and ensure clip rect is cleared
+        SDL_SetRenderClipRect(renderer, nullptr);
         SDL_SetRenderViewport(renderer, &prev);
     }
 
