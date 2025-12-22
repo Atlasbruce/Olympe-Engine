@@ -65,8 +65,8 @@ public:
     // Process internal tasks (on Windows: pump messages for tool windows)
     void HandleEvent(const SDL_Event* ev);
 
-    //OnEvent
-	virtual void OnEvent(const Message& msg) ;
+    // Refresh inputs inspector panel if visible (called by ECS consumer system)
+    void RefreshInputsInspectorIfVisible();
 
 	static int LogPanelWidth;
 	static int LogPanelHeight;

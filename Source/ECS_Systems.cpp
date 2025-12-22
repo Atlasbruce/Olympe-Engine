@@ -21,6 +21,7 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #include "system/EventQueue.h"
 #include "VideoGame.h"
 #include "system/GameMenu.h"
+#include "PanelManager.h"
 #include <iostream>
 #include <bitset>
 #include <cmath>
@@ -306,6 +307,44 @@ void CameraEventConsumeSystem::Process()
     queue.ForEachDomainEvent(EventDomain::Camera, [camSys](const Message& msg) {
         camSys->OnEvent(msg);
     });
+}
+//-------------------------------------------------------------
+// PanelEventConsumeSystem: Consumes Input domain events for panel management
+PanelEventConsumeSystem::PanelEventConsumeSystem()
+{
+    // No specific component signature required - operates on PanelManager singleton
+}
+
+void PanelEventConsumeSystem::Process()
+{
+    // Get all Input domain events from the EventQueue
+    const EventQueue& queue = EventQueue::Get();
+    
+    // Track if we need to refresh the inputs inspector
+    bool needsRefresh = false;
+    
+    // Process each input event to detect device connect/disconnect
+    queue.ForEachDomainEvent(EventDomain::Input, [&needsRefresh](const Message& msg) {
+        switch (msg.msg_type)
+        {
+            case EventType::Olympe_EventType_Keyboard_Connected:
+            case EventType::Olympe_EventType_Keyboard_Disconnected:
+            case EventType::Olympe_EventType_Mouse_Connected:
+            case EventType::Olympe_EventType_Mouse_Disconnected:
+            case EventType::Olympe_EventType_Joystick_Connected:
+            case EventType::Olympe_EventType_Joystick_Disconnected:
+                needsRefresh = true;
+                break;
+            default:
+                break;
+        }
+    });
+    
+    // Refresh the panel if any relevant events were detected
+    if (needsRefresh)
+    {
+        PanelManager::Get().RefreshInputsInspectorIfVisible();
+    }
 }
 //-------------------------------------------------------------
 AISystem::AISystem()

@@ -1,12 +1,3 @@
-/*
-Olympe Engine V2 2025
-Nicolas Chereau
-nchereau@gmail.com
-
-Purpose:
-- Class that enables the creation of various game objects.
-
-*/
 #pragma once
 #include "Object.h"
 #include <map>
@@ -17,7 +8,6 @@ Purpose:
 #include <iostream>
 #include "World.h"
 #include "system/system_utils.h"
-#include "system/EventManager.h"
 #include "ObjectComponent.h"
 
 //DEPRECATED: use PrefabFactory instead for more advanced prefab management
@@ -32,19 +22,10 @@ public:
     {
 		//name = "ObjectFactory";
 		SYSTEM_LOG << "ObjectFactory created and Initialized\n";
-		// register to event manager to receive object events
-		EventManager::Get().Register(this, EventType::Olympe_EventType_Object_Create);
-		EventManager::Get().Register(this, EventType::Olympe_EventType_Object_Destroy);
-		EventManager::Get().Register(this, EventType::Olympe_EventType_Property_Add);
-		EventManager::Get().Register(this, EventType::Olympe_EventType_Property_Remove);
     };
     virtual ~ObjectFactory()
     {
         SYSTEM_LOG << "ObjectFactory destroyed\n";
-		EventManager::Get().Unregister(this, EventType::Olympe_EventType_Object_Create);
-		EventManager::Get().Unregister(this, EventType::Olympe_EventType_Object_Destroy);
-		EventManager::Get().Unregister(this, EventType::Olympe_EventType_Property_Add);
-		EventManager::Get().Unregister(this, EventType::Olympe_EventType_Property_Remove);
 	}
 
     virtual ObjectType GetObjectType() const { return ObjectType::Singleton; }
