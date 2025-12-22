@@ -61,6 +61,7 @@ void World::Initialize_ECS_Systems()
 	- GameEventConsumeSystem (consumes Gameplay domain events, handles game state and player add/remove)
 	- UIEventConsumeSystem (consumes UI domain events, handles menu activation)
 	- CameraEventConsumeSystem (consumes Camera domain events, forwards to CameraSystem)
+	- PanelEventConsumeSystem (consumes Input domain hotplug events, refreshes inputs inspector panel)
 	- InputSystem
 	- InputMappingSystem (maps hardware input to gameplay actions)
 	- PlayerControlSystem
