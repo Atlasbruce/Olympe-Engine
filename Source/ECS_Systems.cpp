@@ -317,6 +317,11 @@ PanelEventConsumeSystem::PanelEventConsumeSystem()
 
 void PanelEventConsumeSystem::Process()
 {
+    // Early exit if inputs_inspector panel is not visible
+    // This avoids unnecessary event processing when the panel isn't shown
+    if (!PanelManager::Get().IsPanelVisible("inputs_inspector"))
+        return;
+    
     // Get all Input domain events from the EventQueue
     const EventQueue& queue = EventQueue::Get();
     

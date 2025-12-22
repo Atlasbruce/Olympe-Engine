@@ -113,6 +113,9 @@ public:
         return component;
     }
 
+    // DEPRECATED: Event handling stub for legacy compatibility
+    // This method no longer receives events since EventManager was removed.
+    // ObjectFactory is deprecated - use PrefabFactory instead.
     // Event handling: respond to create/destroy/property messages
     virtual void OnEvent(const Message& msg) override
     {
