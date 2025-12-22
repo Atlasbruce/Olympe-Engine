@@ -106,8 +106,7 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                 }
                 
                 // Parse decorator child
-                if ((node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater) && 
-                    nodeJson.contains("child"))
+                if (node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater)
                 {
                     node.decoratorChildId = JsonHelper::GetInt(nodeJson, "child", 0);
                 }

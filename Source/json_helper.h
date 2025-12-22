@@ -134,7 +134,13 @@ inline int GetInt(const json& j, const std::string& key, int defaultValue = 0)
 inline uint32_t GetUInt(const json& j, const std::string& key, uint32_t defaultValue = 0)
 {
     if (j.contains(key) && j[key].is_number())
-        return static_cast<uint32_t>(j[key].get<int>());
+    {
+        int value = j[key].get<int>();
+        // Protect against negative values
+        if (value < 0)
+            return defaultValue;
+        return static_cast<uint32_t>(value);
+    }
     return defaultValue;
 }
 
