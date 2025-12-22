@@ -3,8 +3,7 @@
  */
 
 #include "../include/EntityBlueprint.h"
-#include <fstream>
-#include <sstream>
+#include "../../Source/json_helper.h"
 #include <algorithm>
 
 namespace Olympe {
@@ -90,35 +89,21 @@ EntityBlueprint EntityBlueprint::FromJson(const json& j)
 {
     EntityBlueprint blueprint;
     
-    try
+    blueprint.name = JsonHelper::GetString(j, "name", "");
+    blueprint.description = JsonHelper::GetString(j, "description", "");
+    
+    if (JsonHelper::IsArray(j, "components"))
     {
-        if (j.contains("name"))
-            blueprint.name = j["name"].get<std::string>();
-        
-        if (j.contains("description"))
-            blueprint.description = j["description"].get<std::string>();
-        
-        if (j.contains("components") && j["components"].is_array())
+        JsonHelper::ForEachInArray(j, "components", [&blueprint](const json& compJson, size_t i)
         {
-            size_t count = j["components"].size();
-            for (size_t i = 0; i < count; ++i)
-            {
-                const json& compJson = j["components"][i];
-                ComponentData comp;
-                if (compJson.contains("type"))
-                    comp.type = compJson["type"].get<std::string>();
-                
-                if (compJson.contains("properties"))
-                    comp.properties = compJson["properties"];
-                
-                blueprint.components.push_back(comp);
-            }
-        }
-    }
-    catch (const std::exception& e)
-    {
-        // Return empty blueprint on error
-        // In production, you might want to log the error
+            ComponentData comp;
+            comp.type = JsonHelper::GetString(compJson, "type", "");
+            
+            if (compJson.contains("properties"))
+                comp.properties = compJson["properties"];
+            
+            blueprint.components.push_back(comp);
+        });
     }
     
     return blueprint;
@@ -126,41 +111,18 @@ EntityBlueprint EntityBlueprint::FromJson(const json& j)
 
 bool EntityBlueprint::SaveToFile(const std::string& filepath) const
 {
-    try
-    {
-        std::ofstream file(filepath);
-        if (!file.is_open())
-            return false;
-        
-        file << ToJson().dump(4);  // Pretty print with 4 spaces
-        return true;
-    }
-    catch (const std::exception& e)
-    {
-        // Log error in production: e.what()
-        return false;
-    }
+    return JsonHelper::SaveJsonToFile(filepath, ToJson(), 4);
 }
 
 EntityBlueprint EntityBlueprint::LoadFromFile(const std::string& filepath)
 {
-    try
+    json j;
+    if (!JsonHelper::LoadJsonFromFile(filepath, j))
     {
-        std::ifstream file(filepath);
-        if (!file.is_open())
-            return EntityBlueprint();
-        
-        std::stringstream buffer;
-        buffer << file.rdbuf();
-        
-        json j = json::parse(buffer.str());
-        return FromJson(j);
-    }
-    catch (const std::exception& e)
-    {
-        // Log error in production: e.what()
         return EntityBlueprint();
     }
+    
+    return FromJson(j);
 }
 
 // Helper functions for creating component data

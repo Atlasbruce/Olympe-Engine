@@ -14,8 +14,7 @@ Behavior Tree implementation: JSON loading and built-in node execution.
 #include "../ECS_Components.h"
 #include "../World.h"
 #include "../system/system_utils.h"
-#include "../third_party/nlohmann/json.hpp"
-#include <fstream>
+#include "../json_helper.h"
 #include <cmath>
 
 using json = nlohmann::json;
@@ -27,43 +26,30 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
     try
     {
         // Read JSON file
-        std::ifstream file(filepath);
-        if (!file.is_open())
+        json j;
+        if (!JsonHelper::LoadJsonFromFile(filepath, j))
         {
-            SYSTEM_LOG << "BehaviorTreeManager: Failed to open file: " << filepath << "\n";
+            SYSTEM_LOG << "BehaviorTreeManager: Failed to load file: " << filepath << "\n";
             return false;
         }
-        
-        json j;
-        std::string jsonStr((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        j = json::parse(jsonStr);
-        file.close();
         
         // Parse behavior tree
         BehaviorTreeAsset tree;
         tree.id = treeId;
-        tree.name = j.contains("name") && j["name"].is_string() ? j["name"].get<std::string>() : "Unnamed Tree";
+        tree.name = JsonHelper::GetString(j, "name", "Unnamed Tree");
         
-        if (j.contains("rootNodeId") && j["rootNodeId"].is_number())
-            tree.rootNodeId = static_cast<uint32_t>(j["rootNodeId"].get<int>());
-        else
-            tree.rootNodeId = 0;
+        tree.rootNodeId = JsonHelper::GetUInt(j, "rootNodeId", 0);
         
         // Parse nodes
-        if (j.contains("nodes") && j["nodes"].is_array())
+        if (JsonHelper::IsArray(j, "nodes"))
         {
-            for (size_t i = 0; i < j["nodes"].size(); ++i)
+            JsonHelper::ForEachInArray(j, "nodes", [&tree](const json& nodeJson, size_t i)
             {
-                const auto& nodeJson = j["nodes"][i];
                 BTNode node;
-                node.id = nodeJson.contains("id") ? nodeJson["id"].get<int>() : 0;
+                node.id = JsonHelper::GetInt(nodeJson, "id", 0);
+                node.name = JsonHelper::GetString(nodeJson, "name", "");
                 
-                if (nodeJson.contains("name") && nodeJson["name"].is_string())
-                    node.name = nodeJson["name"].get<std::string>();
-                else
-                    node.name = "";
-                
-                std::string typeStr = nodeJson.contains("type") && nodeJson["type"].is_string() ? nodeJson["type"].get<std::string>() : "Action";
+                std::string typeStr = JsonHelper::GetString(nodeJson, "type", "Action");
                 if (typeStr == "Selector") node.type = BTNodeType::Selector;
                 else if (typeStr == "Sequence") node.type = BTNodeType::Sequence;
                 else if (typeStr == "Condition") node.type = BTNodeType::Condition;
@@ -72,20 +58,18 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                 else if (typeStr == "Repeater") node.type = BTNodeType::Repeater;
                 
                 // Parse child IDs for composite nodes
-                if (nodeJson.contains("children") && nodeJson["children"].is_array())
+                if (JsonHelper::IsArray(nodeJson, "children"))
                 {
-                    size_t childCount = nodeJson["children"].size();
-                    for (size_t j = 0; j < childCount; ++j)
+                    JsonHelper::ForEachInArray(nodeJson, "children", [&node](const json& childId, size_t j)
                     {
-                        const auto& childId = nodeJson["children"][j];
                         node.childIds.push_back(childId.get<uint32_t>());
-                    }
+                    });
                 }
                 
                 // Parse condition type
                 if (node.type == BTNodeType::Condition && nodeJson.contains("conditionType"))
                 {
-                    std::string condStr = nodeJson["conditionType"].get<std::string>();
+                    std::string condStr = JsonHelper::GetString(nodeJson, "conditionType", "");
                     if (condStr == "TargetVisible") node.conditionType = BTConditionType::TargetVisible;
                     else if (condStr == "TargetInRange") node.conditionType = BTConditionType::TargetInRange;
                     else if (condStr == "HealthBelow") node.conditionType = BTConditionType::HealthBelow;
@@ -93,16 +77,13 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     else if (condStr == "CanAttack") node.conditionType = BTConditionType::CanAttack;
                     else if (condStr == "HeardNoise") node.conditionType = BTConditionType::HeardNoise;
                     
-                    if (nodeJson.contains("param") && nodeJson["param"].is_number())
-                        node.conditionParam = static_cast<float>(nodeJson["param"].get<double>());
-                    else
-                        node.conditionParam = 0.0f;
+                    node.conditionParam = JsonHelper::GetFloat(nodeJson, "param", 0.0f);
                 }
                 
                 // Parse action type
                 if (node.type == BTNodeType::Action && nodeJson.contains("actionType"))
                 {
-                    std::string actStr = nodeJson["actionType"].get<std::string>();
+                    std::string actStr = JsonHelper::GetString(nodeJson, "actionType", "");
                     if (actStr == "SetMoveGoalToLastKnownTargetPos") 
                         node.actionType = BTActionType::SetMoveGoalToLastKnownTargetPos;
                     else if (actStr == "SetMoveGoalToTarget") 
@@ -120,29 +101,23 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     else if (actStr == "Idle") 
                         node.actionType = BTActionType::Idle;
                     
-                    node.actionParam1 = (nodeJson.contains("param1") && nodeJson["param1"].is_number())
-                        ? static_cast<float>(nodeJson["param1"].get<double>()): 0.0f;
-                    
-                    if (nodeJson.contains("param2") && nodeJson["param2"].is_number())
-                        node.actionParam2 = static_cast<float>(nodeJson["param2"].get<double>());
-                    else
-                        node.actionParam2 = 0.0f;
+                    node.actionParam1 = JsonHelper::GetFloat(nodeJson, "param1", 0.0f);
+                    node.actionParam2 = JsonHelper::GetFloat(nodeJson, "param2", 0.0f);
                 }
                 
                 // Parse decorator child
-                if ((node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater) && 
-                    nodeJson.contains("child"))
+                if (node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater)
                 {
-                    node.decoratorChildId = nodeJson["child"].get<int>();
+                    node.decoratorChildId = JsonHelper::GetInt(nodeJson, "child", 0);
                 }
                 
-                if (node.type == BTNodeType::Repeater && nodeJson.contains("repeatCount"))
+                if (node.type == BTNodeType::Repeater)
                 {
-                    node.repeatCount = nodeJson["repeatCount"].get<int>();
+                    node.repeatCount = JsonHelper::GetInt(nodeJson, "repeatCount", 0);
                 }
                 
                 tree.nodes.push_back(node);
-            }
+            });
         }
         
         // Store the tree
