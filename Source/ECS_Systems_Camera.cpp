@@ -675,8 +675,10 @@ void CameraSystem::ApplyCameraToRenderer(SDL_Renderer* renderer, short playerID)
         static_cast<int>(cam.viewportRect.h)
 	};
 
-    // Set viewport
+    // Set viewport and clip rect for this camera
+    // NOTE: Caller is responsible for resetting clip rect with SDL_SetRenderClipRect(renderer, nullptr)
     SDL_SetRenderViewport(renderer, &viewportRect);
+    SDL_SetRenderClipRect(renderer, &viewportRect);
 }
 
 //-------------------------------------------------------------

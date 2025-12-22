@@ -439,9 +439,13 @@ void RenderingSystem::Render()
                 };
 
                 SDL_SetRenderViewport(renderer, &viewportRect);
+                SDL_SetRenderClipRect(renderer, &viewportRect);
                 
                 // Render entities for this camera
                 RenderEntitiesForCamera(camTransform);
+                
+                // Reset viewport-specific state
+                SDL_SetRenderClipRect(renderer, nullptr);
 
             }
         }
@@ -460,13 +464,18 @@ void RenderingSystem::Render()
                 };
 
                 SDL_SetRenderViewport(renderer, &viewportRect);
+                SDL_SetRenderClipRect(renderer, &viewportRect);
                 
                 // Render entities for this camera
                 RenderEntitiesForCamera(camTransform);
+                
+                // Reset viewport-specific state
+                SDL_SetRenderClipRect(renderer, nullptr);
             }
         }
         
         // Final reset
+        SDL_SetRenderClipRect(renderer, nullptr);
         SDL_SetRenderViewport(renderer, nullptr);
     }
 }
@@ -775,6 +784,7 @@ void GridSystem::Render()
                 (int)cam.viewport.h
             };
             SDL_SetRenderViewport(renderer, &viewportRect);
+            SDL_SetRenderClipRect(renderer, &viewportRect);
 
             switch (s->projection)
             {
@@ -785,6 +795,7 @@ void GridSystem::Render()
             }
 
             // Reset viewport and clip rect after each viewport
+            SDL_SetRenderClipRect(renderer, nullptr);
             SDL_SetRenderViewport(renderer, nullptr);
         }
     }
@@ -801,6 +812,7 @@ void GridSystem::Render()
                 (int)cam.viewport.h
             };
             SDL_SetRenderViewport(renderer, &viewportRect);
+            SDL_SetRenderClipRect(renderer, &viewportRect);
 
             switch (s->projection)
             {
@@ -811,11 +823,13 @@ void GridSystem::Render()
             }
 
             // Reset viewport and clip rect
+            SDL_SetRenderClipRect(renderer, nullptr);
             SDL_SetRenderViewport(renderer, nullptr);
         }
     }
 
     // Final reset
+    SDL_SetRenderClipRect(renderer, nullptr);
     SDL_SetRenderViewport(renderer, nullptr);
 }
 

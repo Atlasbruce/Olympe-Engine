@@ -197,12 +197,17 @@ SDL_AppResult SDL_AppIterate(void* appstate)
             const auto& rf = rects[i];
             SDL_Rect r = { (int)rf.x, (int)rf.y, (int)rf.w, (int)rf.h };
             SDL_SetRenderViewport(renderer, &r);
+            SDL_SetRenderClipRect(renderer, &r);
 
             // Draw world for this viewport
             World::Get().Render();
+            
+            // Reset clip rect after each viewport
+            SDL_SetRenderClipRect(renderer, nullptr);
         }
 
-        // restore previous viewport
+        // restore previous viewport and ensure clip rect is cleared
+        SDL_SetRenderClipRect(renderer, nullptr);
         SDL_SetRenderViewport(renderer, &prev);
     }
 
