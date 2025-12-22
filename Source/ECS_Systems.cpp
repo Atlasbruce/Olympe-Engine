@@ -439,13 +439,13 @@ void RenderingSystem::Render()
                 };
 
                 SDL_SetRenderViewport(renderer, &viewportRect);
-                SDL_SetRenderClipRect(renderer, &viewportRect);
+                //SDL_SetRenderClipRect(renderer, &viewportRect);
                 
                 // Render entities for this camera
                 RenderEntitiesForCamera(camTransform);
                 
                 // Reset viewport-specific state
-                SDL_SetRenderClipRect(renderer, nullptr);
+                //SDL_SetRenderClipRect(renderer, nullptr);
 
             }
         }
@@ -464,18 +464,18 @@ void RenderingSystem::Render()
                 };
 
                 SDL_SetRenderViewport(renderer, &viewportRect);
-                SDL_SetRenderClipRect(renderer, &viewportRect);
+                //SDL_SetRenderClipRect(renderer, &viewportRect);
                 
                 // Render entities for this camera
                 RenderEntitiesForCamera(camTransform);
                 
                 // Reset viewport-specific state
-                SDL_SetRenderClipRect(renderer, nullptr);
+                //SDL_SetRenderClipRect(renderer, nullptr);
             }
         }
         
         // Final reset
-        SDL_SetRenderClipRect(renderer, nullptr);
+        //SDL_SetRenderClipRect(renderer, nullptr);
         SDL_SetRenderViewport(renderer, nullptr);
     }
 }
