@@ -475,6 +475,7 @@ void RenderingSystem::Render()
         }
         
         // Final reset
+        SDL_SetRenderClipRect(renderer, nullptr);
         SDL_SetRenderViewport(renderer, nullptr);
     }
 }
@@ -828,6 +829,7 @@ void GridSystem::Render()
     }
 
     // Final reset
+    SDL_SetRenderClipRect(renderer, nullptr);
     SDL_SetRenderViewport(renderer, nullptr);
 }
 
