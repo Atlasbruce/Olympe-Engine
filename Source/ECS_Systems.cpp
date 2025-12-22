@@ -520,16 +520,9 @@ void RenderEntitiesForCamera(const CameraTransform& cam)
                 // Apply color modulation
                 SDL_SetTextureColorMod(visual.sprite, visual.color.r, visual.color.g, visual.color.b);
                 
-                // Render with rotation if camera is rotated
-                if (cam.rotation != 0.0f)
-                {
-                    SDL_RenderTextureRotated(renderer, visual.sprite, nullptr, &destRect, 
-                                            cam.rotation, nullptr, SDL_FLIP_NONE);
-                }
-                else
-                {
-                    SDL_RenderTexture(renderer, visual.sprite, nullptr, &destRect);
-                }
+                // Render sprite WITHOUT rotation - camera rotation is already applied via WorldToScreen
+                // The "paper" (viewport) rotates, but sprites stay upright like stamps
+                SDL_RenderTexture(renderer, visual.sprite, nullptr, &destRect);
                 
                 // Debug: draw bounding box
                 SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
