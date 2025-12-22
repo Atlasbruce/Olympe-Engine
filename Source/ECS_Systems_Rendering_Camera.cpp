@@ -50,7 +50,19 @@ CameraTransform GetActiveCameraTransform(short playerID)
             if (cam.playerId == playerID && cam.isActive)
             {
                 // Found the active camera for this player
-                transform.worldPosition = cam.position;
+                // Apply all world-space offsets to worldPosition (control + base + shake)
+                transform.worldPosition = cam.position + cam.controlOffset + cam.baseOffset;
+                
+                // Add shake offset if present
+                if (world.HasComponent<CameraEffects_data>(entity))
+                {
+                    CameraEffects_data& effects = world.GetComponent<CameraEffects_data>(entity);
+                    if (effects.isShaking)
+                    {
+                        transform.worldPosition += effects.shakeOffset;
+                    }
+                }
+                
                 transform.zoom = cam.zoom;
                 transform.rotation = cam.rotation;
                 
@@ -68,18 +80,8 @@ CameraTransform GetActiveCameraTransform(short playerID)
                 
                 transform.isActive = true;
                 
-                // Calculate screen offset (control + base + shake)
-                transform.screenOffset = cam.controlOffset + cam.baseOffset;
-                
-                // Add shake offset if present
-                if (world.HasComponent<CameraEffects_data>(entity))
-                {
-                    CameraEffects_data& effects = world.GetComponent<CameraEffects_data>(entity);
-                    if (effects.isShaking)
-                    {
-                        transform.screenOffset += effects.shakeOffset;
-                    }
-                }
+                // Screen offset is zero for world rendering (offsets are applied in world space)
+                transform.screenOffset = Vector(0.f, 0.f, 0.f);
                 
                 break;
             }
@@ -91,14 +93,8 @@ CameraTransform GetActiveCameraTransform(short playerID)
             if (cam.playerId == -1 && cam.isActive)
             {
                 // Found the default camera
-                transform.worldPosition = cam.position;
-                transform.zoom = cam.zoom;
-                transform.rotation = cam.rotation;
-                transform.viewport = cam.viewportRect;
-                transform.isActive = true;
-                
-                // Calculate screen offset (control + base + shake)
-                transform.screenOffset = cam.controlOffset + cam.baseOffset;
+                // Apply all world-space offsets to worldPosition (control + base + shake)
+                transform.worldPosition = cam.position + cam.controlOffset + cam.baseOffset;
                 
                 // Add shake offset if present
                 if (world.HasComponent<CameraEffects_data>(entity))
@@ -106,9 +102,17 @@ CameraTransform GetActiveCameraTransform(short playerID)
                     CameraEffects_data& effects = world.GetComponent<CameraEffects_data>(entity);
                     if (effects.isShaking)
                     {
-                        transform.screenOffset += effects.shakeOffset;
+                        transform.worldPosition += effects.shakeOffset;
                     }
                 }
+                
+                transform.zoom = cam.zoom;
+                transform.rotation = cam.rotation;
+                transform.viewport = cam.viewportRect;
+                transform.isActive = true;
+                
+                // Screen offset is zero for world rendering (offsets are applied in world space)
+                transform.screenOffset = Vector(0.f, 0.f, 0.f);
                 
                 break;
             }
