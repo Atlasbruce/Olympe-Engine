@@ -15,7 +15,6 @@ Notes:
 
 #include "PanelManager.h"
 #include "GameEngine.h"
-#include "system/EventManager.h"
 #include <mutex>
 #include "inputsmanager.h"
 
@@ -64,15 +63,6 @@ PanelManager& PanelManager::GetInstance()
 
 void PanelManager::Initialize()
 {
-    EventManager::Get().Register(this, EventType::Olympe_EventType_Joystick_Connected);
-	EventManager::Get().Register(this, EventType::Olympe_EventType_Joystick_Disconnected);
-	EventManager::Get().Register(this, EventType::Olympe_EventType_Keyboard_Connected);
-	EventManager::Get().Register(this, EventType::Olympe_EventType_Keyboard_Disconnected);
-	EventManager::Get().Register(this, EventType::Olympe_EventType_Mouse_Connected);
-	EventManager::Get().Register(this, EventType::Olympe_EventType_Mouse_Disconnected);
-
-	EventManager::Get().Register(this, (EventType) IDM_PANEL_LOG);
-
 #ifdef _WIN32
     // Register a small window class for panels
     WNDCLASSEX wc = {};
@@ -347,29 +337,15 @@ void PanelManager::HandleEvent(const SDL_Event* ev)
 
 }
 //----------------------------------------------------------------------
-void PanelManager::OnEvent(const Message& msg)
+void PanelManager::RefreshInputsInspectorIfVisible()
 {
-    switch (msg.msg_type)
+    if (IsPanelVisible("inputs_inspector"))
     {
-        case EventType::Olympe_EventType_Keyboard_Connected:
-        case EventType::Olympe_EventType_Keyboard_Disconnected:
-        case EventType::Olympe_EventType_Mouse_Connected:
-        case EventType::Olympe_EventType_Mouse_Disconnected:
-        case EventType::Olympe_EventType_Joystick_Connected:
-        case EventType::Olympe_EventType_Joystick_Disconnected:
+        auto pit = m_panels_.find("inputs_inspector");
+        if (pit != m_panels_.end() && pit->second.hwndChild)
         {
-            if (IsPanelVisible("inputs_inspector"))
-            {
-                auto pit = m_panels_.find("inputs_inspector");
-                if (pit != m_panels_.end() && pit->second.hwndChild)
-                {
-                    UpdateInputsInspectorList();
-                }
-            }
-            break;
+            UpdateInputsInspectorList();
         }
-        default:
-            break;
     }
 }
 #ifdef _WIN32

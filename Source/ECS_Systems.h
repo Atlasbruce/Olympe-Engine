@@ -98,6 +98,16 @@ public:
     virtual void Process() override;
 };
 
+// PanelEventConsumeSystem: Consumes Input domain events from EventQueue
+// Handles device hotplug events (connect/disconnect) to refresh inputs inspector panel
+// Replaces PanelManager::OnEvent callback-based approach
+class PanelEventConsumeSystem : public ECS_System
+{
+public:
+    PanelEventConsumeSystem();
+    virtual void Process() override;
+};
+
 // AI System: processes entities with AIBehavior_data and Movement_data
 class AISystem : public ECS_System
 {

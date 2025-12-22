@@ -84,6 +84,7 @@ void World::Initialize_ECS_Systems()
 	Add_ECS_System(std::make_unique<GameEventConsumeSystem>());
 	Add_ECS_System(std::make_unique<UIEventConsumeSystem>());
 	Add_ECS_System(std::make_unique<CameraEventConsumeSystem>());
+	Add_ECS_System(std::make_unique<PanelEventConsumeSystem>());
 	Add_ECS_System(std::make_unique<InputSystem>());
 	Add_ECS_System(std::make_unique<InputMappingSystem>());
 	Add_ECS_System(std::make_unique<PlayerControlSystem>());

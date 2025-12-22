@@ -21,6 +21,7 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #include "system/EventQueue.h"
 #include "VideoGame.h"
 #include "system/GameMenu.h"
+#include "PanelManager.h"
 #include <iostream>
 #include <bitset>
 #include <cmath>
@@ -305,6 +306,40 @@ void CameraEventConsumeSystem::Process()
     // This is a transitional approach - eventually CameraSystem should consume events directly
     queue.ForEachDomainEvent(EventDomain::Camera, [camSys](const Message& msg) {
         camSys->OnEvent(msg);
+    });
+}
+//-------------------------------------------------------------
+// PanelEventConsumeSystem: Consumes Input domain hotplug events
+PanelEventConsumeSystem::PanelEventConsumeSystem()
+{
+    // No specific component signature required - operates on PanelManager singleton
+}
+
+void PanelEventConsumeSystem::Process()
+{
+    // Get all Input domain events from the EventQueue
+    const EventQueue& queue = EventQueue::Get();
+    
+    // Process hotplug events for inputs inspector panel refresh
+    queue.ForEachDomainEvent(EventDomain::Input, [](const Message& msg) {
+        
+        // Check if this is a device connect/disconnect event
+        switch (msg.msg_type)
+        {
+            case EventType::Olympe_EventType_Keyboard_Connected:
+            case EventType::Olympe_EventType_Keyboard_Disconnected:
+            case EventType::Olympe_EventType_Mouse_Connected:
+            case EventType::Olympe_EventType_Mouse_Disconnected:
+            case EventType::Olympe_EventType_Joystick_Connected:
+            case EventType::Olympe_EventType_Joystick_Disconnected:
+            {
+                // Refresh inputs inspector if visible
+                PanelManager::Get().RefreshInputsInspectorIfVisible();
+                break;
+            }
+            default:
+                break;
+        }
     });
 }
 //-------------------------------------------------------------
