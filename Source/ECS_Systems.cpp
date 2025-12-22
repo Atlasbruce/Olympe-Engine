@@ -321,6 +321,8 @@ void PanelEventConsumeSystem::Process()
     const EventQueue& queue = EventQueue::Get();
     
     // Track if we need to refresh the inputs inspector
+    // Note: We process all events even after finding one because ForEachDomainEvent
+    // doesn't support early termination, and the overhead is negligible
     bool needsRefresh = false;
     
     // Process each input event to detect device connect/disconnect
@@ -340,7 +342,7 @@ void PanelEventConsumeSystem::Process()
         }
     });
     
-    // Refresh the panel if any relevant events were detected
+    // Refresh the panel once if any relevant events were detected
     if (needsRefresh)
     {
         PanelManager::Get().RefreshInputsInspectorIfVisible();

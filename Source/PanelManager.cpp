@@ -339,16 +339,17 @@ void PanelManager::HandleEvent(const SDL_Event* ev)
 //----------------------------------------------------------------------
 void PanelManager::RefreshInputsInspectorIfVisible()
 {
+    std::lock_guard<std::mutex> lock(m_mutex_);
+    
     if (IsPanelVisible("inputs_inspector"))
     {
 #ifdef _WIN32
-        std::lock_guard<std::mutex> lock(m_mutex_);
-#endif
         auto pit = m_panels_.find("inputs_inspector");
         if (pit != m_panels_.end() && pit->second.hwndChild)
         {
             UpdateInputsInspectorList();
         }
+#endif
     }
 }
 //----------------------------------------------------------------------
