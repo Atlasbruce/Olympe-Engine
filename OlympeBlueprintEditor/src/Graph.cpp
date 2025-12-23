@@ -1,5 +1,5 @@
 #include "../include/Graph.h"
-#include "../../Source/third_party/nlohmann/json.hpp"
+#include "../../Source/json_helper.h"
 
 using json = nlohmann::json;
 
@@ -23,21 +23,19 @@ nlohmann::json Graph::ToJson() const
 Graph Graph::FromJson(const nlohmann::json& j)
 {
     Graph g;
-    try {
-        const json nodes = j["nodes"];
-        if (nodes.is_array()) {
-            for (size_t idx = 0; idx < nodes.size(); ++idx) {
-                const json& nj = nodes[idx];
-                Node n;
-                try { n.id = nj["id"].get<int>(); } catch(...) { n.id = 0; }
-                try { n.type = nj["type"].get<std::string>(); } catch(...) { n.type = std::string(); }
-                try { n.x = static_cast<float>(nj["x"].get<double>()); } catch(...) { n.x = 0.0f; }
-                try { n.y = static_cast<float>(nj["y"].get<double>()); } catch(...) { n.y = 0.0f; }
-                g.nodes.push_back(n);
-            }
-        }
-    } catch(...) {
-        // parsing failed or structure not present - return empty graph
+    
+    if (JsonHelper::IsArray(j, "nodes"))
+    {
+        JsonHelper::ForEachInArray(j, "nodes", [&g](const json& nj, size_t idx)
+        {
+            Node n;
+            n.id = JsonHelper::GetInt(nj, "id", 0);
+            n.type = JsonHelper::GetString(nj, "type", "");
+            n.x = JsonHelper::GetFloat(nj, "x", 0.0f);
+            n.y = JsonHelper::GetFloat(nj, "y", 0.0f);
+            g.nodes.push_back(n);
+        });
     }
+    
     return g;
 }
