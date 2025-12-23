@@ -51,8 +51,8 @@ inline ComponentTypeID GetComponentTypeID()
     return nextID++;
 }
 
-// Templated function to get the ID of a component type
-template <typename T>
+// Added templated GetComponentTypeID_Static to ensure a unique static typeID per component type
+template<typename T>
 ComponentTypeID GetComponentTypeID_Static()
 {
     static ComponentTypeID typeID = GetComponentTypeID();
