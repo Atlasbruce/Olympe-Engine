@@ -135,7 +135,7 @@ public:
     {
         if (!JsonHelper::LoadJsonFromFile(filepath, outJson))
         {
-            std::cerr << "AssetLoader: Failed to load asset from " << filepath << std::endl;
+            // JsonHelper already logs the error, just return false
             return false;
         }
         
@@ -182,13 +182,8 @@ public:
             return false;
         }
         
-        if (!JsonHelper::SaveJsonToFile(filepath, assetJson, indent))
-        {
-            std::cerr << "AssetLoader: Failed to save asset to " << filepath << std::endl;
-            return false;
-        }
-        
-        return true;
+        // JsonHelper logs on failure
+        return JsonHelper::SaveJsonToFile(filepath, assetJson, indent);
     }
     
     /**

@@ -29,7 +29,7 @@ void TestEntityBlueprint()
     blueprint["components"].push_back(component);
     
     // Save it
-    std::string filepath = "/tmp/test_entity.json";
+    std::string filepath = "test_entity.json";
     bool saved = EntityBlueprintLoader::SaveEntityBlueprint(filepath, blueprint);
     assert(saved && "Failed to save entity blueprint");
     std::cout << "  ✓ Entity blueprint saved" << std::endl;
@@ -118,7 +118,7 @@ void TestBehaviorTree()
     bt["nodes"].push_back(node);
     
     // Save it
-    std::string filepath = "/tmp/test_bt.json";
+    std::string filepath = "test_bt.json";
     bool saved = BehaviorTreeLoader::SaveBehaviorTree(filepath, bt);
     assert(saved && "Failed to save behavior tree");
     std::cout << "  ✓ Behavior tree saved" << std::endl;
@@ -155,7 +155,7 @@ void TestHFSM()
     hfsm["states"].push_back(state);
     
     // Save it
-    std::string filepath = "/tmp/test_hfsm.json";
+    std::string filepath = "test_hfsm.json";
     bool saved = HFSMLoader::SaveHFSM(filepath, hfsm);
     assert(saved && "Failed to save HFSM");
     std::cout << "  ✓ HFSM saved" << std::endl;
