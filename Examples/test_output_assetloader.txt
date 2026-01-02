@@ -1,0 +1,34 @@
+=== Olympe Engine - Asset Loader Test ===
+
+[Test AssetType Conversion]
+  ✓ AssetType to string conversion
+  ✓ String to AssetType conversion
+
+[Test AssetInfo]
+  ✓ AssetInfo serialized
+  ✓ AssetInfo deserialized
+
+[Test EntityBlueprint]
+  ✓ Entity blueprint saved
+  ✓ Entity blueprint loaded
+  ✓ Entity blueprint data verified
+
+[Test BehaviorTree]
+  ✓ Behavior tree saved
+  ✓ Behavior tree loaded
+  ✓ Behavior tree data verified
+
+[Test HFSM]
+  ✓ HFSM saved
+  ✓ HFSM loaded
+  ✓ HFSM data verified
+
+[Test Asset Validation]
+  ✓ Valid asset passes validation
+JsonHelper: Missing required key: type
+  ✓ Asset without 'type' fails validation
+JsonHelper: Missing required key: name
+  ✓ Asset without 'name' fails validation
+
+=== All Tests Passed! ===
+Asset Loader API is working correctly.
