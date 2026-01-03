@@ -1,34 +1,18 @@
 /*
  * Olympe Blueprint Editor - Asset Info Panel
- * Displays metadata and information about selected assets
+ * Frontend component that uses BlueprintEditor backend for asset metadata
  */
 
 #pragma once
 
 #include <string>
 #include <vector>
-#include "../../Source/third_party/nlohmann/json.hpp"
 
 namespace Olympe
 {
-    using json = nlohmann::json;
-
-    // Asset metadata structure
-    struct AssetInfo
-    {
-        std::string filepath;
-        std::string name;
-        std::string type;
-        std::string description;
-        int componentCount;     // For EntityBlueprint
-        int nodeCount;          // For BehaviorTree/HFSM
-        std::vector<std::string> components;  // Component types for Entity
-        std::vector<std::string> nodes;       // Node types for BT
-        bool isValid;           // False if JSON is malformed
-        std::string errorMessage;
-        
-        AssetInfo() : componentCount(0), nodeCount(0), isValid(false) {}
-    };
+    // Forward declarations
+    class BlueprintEditor;
+    struct AssetMetadata;
 
     class AssetInfoPanel
     {
@@ -36,7 +20,7 @@ namespace Olympe
         AssetInfoPanel();
         ~AssetInfoPanel();
 
-        // Load asset information from file
+        // Load asset information from file (delegates to backend)
         void LoadAsset(const std::string& filepath);
         
         // Clear current asset info
@@ -48,15 +32,10 @@ namespace Olympe
         // Check if panel has valid asset loaded
         bool HasAsset() const;
         
-        // Get current asset info
-        const AssetInfo& GetAssetInfo() const { return m_CurrentAsset; }
+        // Get current asset info (from cached backend data)
+        const AssetMetadata& GetAssetInfo() const { return *m_CurrentAsset; }
 
     private:
-        // Parse different asset types
-        void ParseEntityBlueprint(const json& j);
-        void ParseBehaviorTree(const json& j);
-        void ParseGenericAsset(const json& j);
-        
         // Render different asset type details
         void RenderEntityBlueprintInfo();
         void RenderBehaviorTreeInfo();
@@ -64,6 +43,7 @@ namespace Olympe
         void RenderErrorInfo();
 
     private:
-        AssetInfo m_CurrentAsset;
+        AssetMetadata* m_CurrentAsset;  // Points to cached backend data
+        std::string m_LoadedFilepath;    // Track which file is loaded
     };
 }
