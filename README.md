@@ -34,12 +34,31 @@
 
 ### Tools
 
-- **[Blueprint Editor](OlympeBlueprintEditor/README.md)** - Visual entity editor with SDL3
-  - [Asset Browser Guide](OlympeBlueprintEditor/ASSET_BROWSER_README.md) - Navigate and manage game assets
+- **Blueprint Editor** - Integrated visual entity editor
+  - **Press F2 in-game** to toggle the Blueprint Editor
+  - Edit entity blueprints visually with node-based interface
+  - Asset Browser to navigate and manage game assets
+  - Separated backend/frontend architecture for maintainability
+  - [Blueprint System Documentation](Blueprints/README.md)
 
 ---
 
 ## 🚀 Quick Start
+
+### Blueprint Editor
+
+The Blueprint Editor is integrated into the game engine and can be toggled at runtime:
+
+1. **Launch the game engine**
+2. **Press F2** to open/close the Blueprint Editor
+3. **Use File menu** to create, load, or save blueprints
+4. **Edit components** visually through the node editor
+5. **Browse assets** using the integrated Asset Browser
+
+The editor features:
+- **Backend (BlueprintEditor)**: Singleton managing all data, state, and business logic
+- **Frontend (BlueprintEditorGUI)**: ImGui-based visual interface
+- Complete separation ensures scalability and maintainability
 
 ### Input System Example
 

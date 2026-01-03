@@ -1,22 +1,26 @@
 /*
- * Olympe Blueprint Editor GUI - Phase 2
- * Visual node-based editor interface
+ * Olympe Blueprint Editor GUI - Frontend (User Interface)
+ * 
+ * Visual node-based editor interface using ImGui
+ * All data is retrieved from and modified through BlueprintEditor backend
  */
 
 #pragma once
 
-#include "EntityBlueprint.h"
-#include "AssetBrowser.h"
-#include "AssetInfoPanel.h"
 #include <string>
 #include <vector>
 #include <map>
+#include "AssetBrowser.h"
+#include "AssetInfoPanel.h"
 
 // Forward declare ImVec2
 struct ImVec2;
 
 namespace Olympe
 {
+    // Forward declaration of backend
+    class BlueprintEditor;
+
     struct NodeConnection
     {
         int from_node;
@@ -25,6 +29,11 @@ namespace Olympe
         int to_attr;
     };
 
+    /**
+     * BlueprintEditorGUI - Frontend UI for Blueprint Editor
+     * Renders ImGui interface and interacts with BlueprintEditor backend
+     * Contains NO business logic - all data operations go through backend
+     */
     class BlueprintEditorGUI
     {
     public:
@@ -33,7 +42,10 @@ namespace Olympe
 
         void Initialize();
         void Shutdown();
-        bool Render();  // Returns false if should exit
+        
+        // Render the editor UI
+        // Only renders if BlueprintEditor backend is active
+        void Render();
 
     private:
         void RenderMenuBar();
@@ -43,37 +55,33 @@ namespace Olympe
         void RenderStatusBar();
         void RenderComponentAddDialog();
 
-        // File operations
+        // File operations (delegate to backend)
         void NewBlueprint();
         void LoadBlueprint(const std::string& filepath);
         void SaveBlueprint();
         void SaveBlueprintAs();
 
-        // Component operations
+        // Component operations (delegate to backend)
         void AddComponent(const std::string& type);
         void RemoveComponent(int index);
 
-        // State
-        Blueprint::EntityBlueprint m_CurrentBlueprint;
-        std::string m_CurrentFilepath;
-        bool m_HasUnsavedChanges;
+        // UI state (not business logic)
         int m_SelectedComponentIndex;
         
-        // Node editor state
+        // Node editor state (UI-only)
         std::map<int, ImVec2> m_NodePositions;
         std::vector<NodeConnection> m_Connections;
         int m_NextNodeId;
 
-        // UI state
+        // UI dialog state
         bool m_ShowDemoWindow;
         bool m_ShowAddComponentDialog;
         bool m_ShowAboutDialog;
-        bool m_RequestExit;
         char m_NewBlueprintNameBuffer[256];
         char m_FilepathBuffer[512];
         int m_SelectedComponentType;
         
-        // Asset management
+        // Asset management UI (uses backend for data)
         AssetBrowser m_AssetBrowser;
         AssetInfoPanel m_AssetInfoPanel;
     };
