@@ -1,14 +1,14 @@
-# Olympe Blueprint Editor - Phase 2 GUI Makefile
+# Olympe Blueprint Editor - Phase 2 GUI Makefile (SDL3)
 
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -I../Source -I../Source/third_party -Iinclude \
            -Ithird_party/imgui -Ithird_party/imgui/backends -Ithird_party/imnodes \
-           $(SDL_CFLAGS)
+           -I../SDL/include $(SDL_CFLAGS)
 
-# Use SDL2
-SDL_CFLAGS = $(shell pkg-config --cflags sdl2)
-SDL_LDFLAGS = $(shell pkg-config --libs sdl2)
-LDFLAGS = $(SDL_LDFLAGS)
+# Use SDL3
+SDL_CFLAGS = -I../SDL/include
+SDL_LDFLAGS = -L../SDL/lib -lSDL3
+LDFLAGS = $(SDL_LDFLAGS) -lstdc++fs
 
 # ImGui sources
 IMGUI_DIR = third_party/imgui
@@ -17,8 +17,8 @@ IMGUI_SRC = $(IMGUI_DIR)/imgui.cpp \
             $(IMGUI_DIR)/imgui_widgets.cpp \
             $(IMGUI_DIR)/imgui_tables.cpp \
             $(IMGUI_DIR)/imgui_demo.cpp \
-            $(IMGUI_DIR)/backends/imgui_impl_sdl2.cpp \
-            $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer2.cpp
+            $(IMGUI_DIR)/backends/imgui_impl_sdl3.cpp \
+            $(IMGUI_DIR)/backends/imgui_impl_sdlrenderer3.cpp
 
 # ImNodes sources
 IMNODES_DIR = third_party/imnodes
@@ -27,7 +27,9 @@ IMNODES_SRC = $(IMNODES_DIR)/imnodes.cpp
 # Editor sources
 EDITOR_SRC = src/main_gui.cpp \
              src/BlueprintEditorGUI.cpp \
-             src/EntityBlueprint.cpp
+             src/EntityBlueprint.cpp \
+             src/AssetBrowser.cpp \
+             src/AssetInfoPanel.cpp
 
 # All sources
 SOURCES = $(IMGUI_SRC) $(IMNODES_SRC) $(EDITOR_SRC)

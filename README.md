@@ -12,6 +12,7 @@
 - ✅ **Blueprint System** - JSON-based entity templates
 - ✅ **SDL3 Integration** - Cross-platform hardware abstraction
 - ✅ **Visual Blueprint Editor** - Create entities without coding
+- ✅ **Asset Browser** - Navigate and manage all game assets (SDL3)
 
 ---
 
@@ -33,7 +34,8 @@
 
 ### Tools
 
-- **[Blueprint Editor](OlympeBlueprintEditor/README.md)** - Visual entity editor
+- **[Blueprint Editor](OlympeBlueprintEditor/README.md)** - Visual entity editor with SDL3
+  - [Asset Browser Guide](OlympeBlueprintEditor/ASSET_BROWSER_README.md) - Navigate and manage game assets
 
 ---
 
@@ -115,7 +117,9 @@ Olympe Engine uses a modern **Entity Component System (ECS)** architecture:
 ### Blueprint System
 
 - **JSON-based** - Human-readable entity definitions
-- **Visual Editor** - Create and edit entities visually
+- **Visual Editor** - Create and edit entities visually (SDL3)
+- **Asset Browser** - Navigate blueprints, AI trees, and all assets
+- **Search & Filter** - Quick asset discovery by name or type
 - **Component Library** - Pre-built component templates
 - **Hot-reload** - Runtime entity reloading (planned)
 
@@ -138,12 +142,20 @@ start "Olympe Engine.sln"
 # Build in Visual Studio (Ctrl+Shift+B)
 ```
 
-### Blueprint Editor
+### Blueprint Editor (SDL3)
 
 ```bash
 cd OlympeBlueprintEditor
-make
-./OlympeBlueprintEditor
+
+# Setup dependencies (first time only)
+./setup_phase2.sh
+
+# Build GUI editor with Asset Browser
+make -f Makefile.gui
+
+# Run from project root
+cd ..
+./OlympeBlueprintEditor/OlympeBlueprintEditorGUI
 ```
 
 ---

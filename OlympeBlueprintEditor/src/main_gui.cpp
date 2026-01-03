@@ -1,31 +1,34 @@
 /*
- * Olympe Blueprint Editor - GUI Entry Point (Phase 2)
- * Visual node-based editor using ImGui and ImNodes
+ * Olympe Blueprint Editor - GUI Entry Point (SDL3 Only)
+ * Visual node-based editor using ImGui and ImNodes with SDL3
  */
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include "../third_party/imgui/imgui.h"
-#include "../third_party/imgui/backends/imgui_impl_sdl2.h"
-#include "../third_party/imgui/backends/imgui_impl_sdlrenderer2.h"
+#include "../third_party/imgui/backends/imgui_impl_sdl3.h"
+#include "../third_party/imgui/backends/imgui_impl_sdlrenderer3.h"
 #include "../include/BlueprintEditorGUI.h"
 #include <iostream>
-#include <Windows.h>
 
+#ifdef _WIN32
+#include <Windows.h>
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+#else
+int main(int argc, char* argv[])
+#endif
 {
-    // Initialize SDL
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    // Initialize SDL3
+    if (!SDL_Init(SDL_INIT_VIDEO))
     {
-        std::cerr << "SDL initialization failed: " << SDL_GetError() << std::endl;
+        std::cerr << "SDL3 initialization failed: " << SDL_GetError() << std::endl;
         return 1;
     }
 
-    // Create window
+    // Create window with SDL3
     SDL_Window* window = SDL_CreateWindow(
-        "Olympe Blueprint Editor - Phase 2",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        "Olympe Blueprint Editor - SDL3",
         1280, 720,
-        SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN
+        SDL_WINDOW_RESIZABLE
     );
     
     if (!window)
@@ -35,9 +38,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 1;
     }
 
-    // Create renderer
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, 
-        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    // Create renderer with SDL3
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, nullptr);
     if (!renderer)
     {
         std::cerr << "Renderer creation failed: " << SDL_GetError() << std::endl;
@@ -51,6 +53,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    
     // Enable docking if available
     #ifdef IMGUI_HAS_DOCK
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -59,15 +62,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // Setup ImGui style
     ImGui::StyleColorsDark();
 
-    // Setup Platform/Renderer backends
-    ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
-    ImGui_ImplSDLRenderer2_Init(renderer);
+    // Setup Platform/Renderer backends for SDL3
+    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer3_Init(renderer);
 
     // Create editor instance
     Olympe::BlueprintEditorGUI editor;
     editor.Initialize();
 
-    std::cout << "Olympe Blueprint Editor - Phase 2 (Visual Editor)" << std::endl;
+    std::cout << "Olympe Blueprint Editor - SDL3 with Asset Browser" << std::endl;
     std::cout << "Press Ctrl+Q or close window to quit" << std::endl;
 
     // Main loop
@@ -78,27 +81,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            ImGui_ImplSDL2_ProcessEvent(&event);
+            ImGui_ImplSDL3_ProcessEvent(&event);
             
-            if (event.type == SDL_QUIT)
+            if (event.type == SDL_EVENT_QUIT)
                 running = false;
             
-            if (event.type == SDL_WINDOWEVENT && 
-                event.window.event == SDL_WINDOWEVENT_CLOSE &&
-                event.window.windowID == SDL_GetWindowID(window))
+            if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
                 running = false;
 
-            // Keyboard shortcut to quit
-            if (event.type == SDL_KEYDOWN)
+            // Keyboard shortcut to quit (Ctrl+Q)
+            if (event.type == SDL_EVENT_KEY_DOWN)
             {
-                if ((event.key.keysym.mod & KMOD_CTRL) && event.key.keysym.sym == SDLK_q)
+                if ((event.key.mod & SDL_KMOD_CTRL) && event.key.key == SDLK_Q)
                     running = false;
             }
         }
 
         // Start ImGui frame
-        ImGui_ImplSDLRenderer2_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
+        ImGui_ImplSDLRenderer3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
 
         // Render editor
@@ -109,14 +110,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         ImGui::Render();
         SDL_SetRenderDrawColor(renderer, 45, 45, 48, 255);
         SDL_RenderClear(renderer);
-        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderPresent(renderer);
     }
 
     // Cleanup
     editor.Shutdown();
-    ImGui_ImplSDLRenderer2_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
+    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
 
     SDL_DestroyRenderer(renderer);

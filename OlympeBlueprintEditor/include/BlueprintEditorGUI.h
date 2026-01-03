@@ -6,6 +6,8 @@
 #pragma once
 
 #include "EntityBlueprint.h"
+#include "AssetBrowser.h"
+#include "AssetInfoPanel.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -70,5 +72,9 @@ namespace Olympe
         char m_NewBlueprintNameBuffer[256];
         char m_FilepathBuffer[512];
         int m_SelectedComponentType;
+        
+        // Asset management
+        AssetBrowser m_AssetBrowser;
+        AssetInfoPanel m_AssetInfoPanel;
     };
 }

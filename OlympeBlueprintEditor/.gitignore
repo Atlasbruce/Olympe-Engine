@@ -16,3 +16,7 @@ blueprint_test
 # Third party libraries (downloaded at build time)
 third_party/imgui/
 third_party/imnodes/
+
+# Backup files
+*_backup.cpp
+*_backup.h
