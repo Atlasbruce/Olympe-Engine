@@ -131,11 +131,7 @@ namespace Olympe
         {
             std::string selectedPath = m_AssetBrowser.GetSelectedAssetPath();
             // Only reload if selection changed
-            if (m_AssetInfoPanel.HasAsset() && m_AssetInfoPanel.GetAssetInfo().filepath != selectedPath)
-            {
-                m_AssetInfoPanel.LoadAsset(selectedPath);
-            }
-            else if (!m_AssetInfoPanel.HasAsset())
+            if (!m_AssetInfoPanel.HasAsset() || m_AssetInfoPanel.GetLoadedFilepath() != selectedPath)
             {
                 m_AssetInfoPanel.LoadAsset(selectedPath);
             }

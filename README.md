@@ -37,9 +37,11 @@
 - **Blueprint Editor** - Integrated visual entity editor
   - **Press F2 in-game** to toggle the Blueprint Editor
   - Edit entity blueprints visually with node-based interface
-  - Asset Browser to navigate and manage game assets
-  - Separated backend/frontend architecture for maintainability
+  - **Asset Explorer** - Multi-folder asset browser with search and filtering
+  - **Asset Info Panel** - Detailed metadata for each asset
+  - Clean backend/frontend architecture for maintainability
   - [Blueprint System Documentation](Blueprints/README.md)
+  - [Asset Explorer Architecture](ASSET_EXPLORER_ARCHITECTURE.md)
 
 ---
 
@@ -57,7 +59,16 @@ The Blueprint Editor is integrated into the game engine and can be toggled at ru
 
 The editor features:
 - **Backend (BlueprintEditor)**: Singleton managing all data, state, and business logic
+  - Recursive asset scanning across all subdirectories
+  - Asset type detection (EntityBlueprint, BehaviorTree, etc.)
+  - Search and filtering API
+  - Metadata extraction and caching
+  - Robust error handling
 - **Frontend (BlueprintEditorGUI)**: ImGui-based visual interface
+  - Asset Browser with tree view
+  - Asset Info Panel with type-specific displays
+  - Search by name and filter by type
+  - No direct file access - all through backend API
 - Complete separation ensures scalability and maintainability
 
 ### Input System Example
