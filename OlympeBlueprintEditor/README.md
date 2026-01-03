@@ -2,7 +2,7 @@
 
 A functional, interactive editor for creating and editing entity blueprints for the Olympe Engine.
 
-## Status: Phase 1 Complete ✅
+## Status: Phase 1 Complete ✅ | Phase 2 Step 2 Complete ✅
 
 **Component Property Editor** - Fully functional console-based editor that allows:
 - Loading entity blueprints from JSON files
@@ -10,6 +10,13 @@ A functional, interactive editor for creating and editing entity blueprints for 
 - Adding/removing components visually
 - Editing component properties (numbers, strings, nested objects)
 - Saving blueprints to JSON files
+
+**Enum Catalog System (Step 2)** - Dynamic loading and validation:
+- JSON-based catalogues for Actions, Conditions, and Decorators
+- EnumCatalogManager for centralized type management
+- NodeValidator for blueprint validation
+- Hot reload support for catalogues
+- 52+ predefined types across 3 catalogues
 
 ## Quick Start
 
@@ -32,7 +39,7 @@ make
 
 ## Features
 
-### Current (Phase 1)
+### Current (Phase 1 & Step 2)
 - ✅ Console-based interactive menu interface
 - ✅ Load/Save JSON blueprints
 - ✅ Add components: Position, BoundingBox, VisualSprite, Movement, PhysicsBody, Health, AIBehavior
@@ -40,6 +47,15 @@ make
 - ✅ Remove components
 - ✅ View blueprint details and JSON representation
 - ✅ Unsaved changes warning
+- ✅ **Enum Catalog System**:
+  - Dynamic loading of Action/Condition/Decorator catalogues
+  - 18 Action types (Movement, Combat, Timing, etc.)
+  - 17 Condition types (Target, Health, Perception, etc.)
+  - 17 Decorator types (Logic, Flow, Timing, etc.)
+  - Validation with detailed error messages
+  - Hot reload without restart
+  - Category-based organization
+  - UI helper functions for ImGui integration
 
 ### Future (Phase 2)
 - 📋 Visual node-based interface with ImGui
@@ -52,6 +68,7 @@ make
 
 - **[EDITOR_USAGE.md](EDITOR_USAGE.md)** - Complete usage guide with examples
 - **[Blueprints/README.md](../Blueprints/README.md)** - Blueprint system documentation
+- **[Blueprints/Catalogues/README.md](../Blueprints/Catalogues/README.md)** - Enum catalogue system guide
 - **[DEVELOPMENT_PLAN.md](../DEVELOPMENT_PLAN.md)** - Full development roadmap (12 weeks)
 - **[PHASE1_SUMMARY.md](../PHASE1_SUMMARY.md)** - Phase 1 completion summary
 
@@ -66,16 +83,23 @@ make
 ```
 OlympeBlueprintEditor/
 ├── src/
-│   ├── main.cpp              - Entry point
-│   ├── BlueprintEditor.cpp   - Editor implementation
-│   ├── EntityBlueprint.cpp   - Blueprint data structures
-│   └── blueprint_test.cpp    - Test suite
+│   ├── main.cpp                - Entry point
+│   ├── BlueprintEditor.cpp     - Editor implementation
+│   ├── EntityBlueprint.cpp     - Blueprint data structures
+│   ├── EnumCatalogManager.cpp  - Catalog manager (Step 2)
+│   ├── NodeValidator.cpp       - Node validation (Step 2)
+│   ├── UIHelpers.cpp           - ImGui helpers (Step 2)
+│   ├── catalog_test.cpp        - Catalog test suite
+│   └── blueprint_test.cpp      - Test suite
 ├── include/
-│   ├── BlueprintEditor.h     - Editor interface
-│   └── EntityBlueprint.h     - Blueprint API
-├── Makefile                  - Build system
-├── README.md                 - This file
-└── EDITOR_USAGE.md          - Usage guide
+│   ├── BlueprintEditor.h       - Editor interface
+│   ├── EntityBlueprint.h       - Blueprint API
+│   ├── EnumCatalogManager.h    - Catalog manager (Step 2)
+│   ├── NodeValidator.h         - Validator (Step 2)
+│   └── UIHelpers.h             - UI helpers (Step 2)
+├── Makefile                    - Build system
+├── README.md                   - This file
+└── EDITOR_USAGE.md            - Usage guide
 ```
 
 ## Example Blueprints
@@ -89,12 +113,16 @@ Located in `Blueprints/`:
 ## Testing
 
 ```bash
-# Build and run tests
+# Build and run blueprint tests
 cd OlympeBlueprintEditor
 make test
 
+# Build and run catalog tests (Step 2)
+make catalog_test
+
 # Or from root:
 ./OlympeBlueprintEditor/build/blueprint_test
+./OlympeBlueprintEditor/build/catalog_test
 ```
 
 All tests pass successfully! ✅
