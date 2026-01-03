@@ -364,10 +364,3 @@ FodyWeavers.xsd
 # Blueprint test binaries
 blueprint_test
 Blueprints/test_*.json
-
-# Examples test binaries
-Examples/imgui_imnodes_test
-Examples/asset_loader_test
-Examples/*.o
-Examples/test_*.json
-Examples/test_output_*.txt

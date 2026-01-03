@@ -129,18 +129,6 @@ Olympe Engine uses a modern **Entity Component System (ECS)** architecture:
 - SDL3 library
 - CMake or Visual Studio
 
-**See [BUILD.md](BUILD.md) for detailed build instructions including ImGui/ImNodes setup.**
-
-### Quick Test - Technical Prerequisites
-
-Verify ImGui & ImNodes integration:
-```bash
-cd Examples
-./imgui_imnodes_test  # After building - see BUILD.md
-```
-
-See [TECHNICAL_PREREQUISITES.md](TECHNICAL_PREREQUISITES.md) for complete testing guide.
-
 ### Windows (Visual Studio)
 
 ```bash
