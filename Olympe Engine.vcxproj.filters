@@ -61,6 +61,9 @@
     <Filter Include="Blueprint Editor">
       <UniqueIdentifier>{1ec5b006-a25a-4ac8-8b82-0866c5cbec44}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers d%27en-tête\Engine Systems\System Helpers\Json">
+      <UniqueIdentifier>{46cf309b-682a-4e95-b594-f42fbd3eb6d8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\GameEngine.cpp">
@@ -224,9 +227,6 @@
     <ClInclude Include="Source\VideoGame.h">
       <Filter>Fichiers d%27en-tête\Engine Systems</Filter>
     </ClInclude>
-    <ClInclude Include="Source\third_party\nlohmann\json.hpp">
-      <Filter>Fichiers d%27en-tête\Engine Systems\System Helpers</Filter>
-    </ClInclude>
     <ClInclude Include="Source\system\system_utils.h">
       <Filter>Fichiers d%27en-tête\Engine Systems\System Helpers</Filter>
     </ClInclude>
@@ -311,9 +311,6 @@
     <ClInclude Include="Source\system\EventQueue.h">
       <Filter>Fichiers d%27en-tête\Engine Systems\Messages</Filter>
     </ClInclude>
-    <ClInclude Include="Source\json_helper.h">
-      <Filter>Fichiers d%27en-tête\Engine Systems\System Helpers</Filter>
-    </ClInclude>
     <ClInclude Include="Source\third_party\imgui\imgui.h">
       <Filter>ImGui</Filter>
     </ClInclude>
@@ -331,6 +328,12 @@
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\blueprinteditor.h">
       <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\third_party\nlohmann\json.hpp">
+      <Filter>Fichiers d%27en-tête\Engine Systems\System Helpers\Json</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\json_helper.h">
+      <Filter>Fichiers d%27en-tête\Engine Systems\System Helpers\Json</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -350,7 +353,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="olympe.log" />
     <Text Include="credits.txt" />
   </ItemGroup>
 </Project>
