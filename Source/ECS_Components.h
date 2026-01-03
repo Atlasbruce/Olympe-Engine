@@ -18,8 +18,6 @@ Components purpose: Include all component definitions used in the ECS architectu
 #include <SDL3/SDL.h>
 #include "DataManager.h"
 
-using namespace ::std;
-
 // --- Component Position Data ---
 struct Position_data
 {

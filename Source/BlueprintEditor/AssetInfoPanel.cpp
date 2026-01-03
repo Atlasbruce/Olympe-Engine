@@ -2,9 +2,9 @@
  * Olympe Blueprint Editor - Asset Info Panel Implementation
  */
 
-#include "../include/AssetInfoPanel.h"
+#include "AssetInfoPanel.h"
 #include "../third_party/imgui/imgui.h"
-#include "../../Source/json_helper.h"
+#include "../json_helper.h"
 #include <iostream>
 #include <fstream>
 

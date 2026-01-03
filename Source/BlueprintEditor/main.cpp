@@ -5,7 +5,7 @@
  * Phase 1: Component property editing
  */
 
-#include "../include/BlueprintEditor.h"
+#include "BlueprintEditor.h"
 #include <iostream>
 
 int main(int argc, char** argv)

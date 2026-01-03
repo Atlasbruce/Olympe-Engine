@@ -81,12 +81,6 @@
     <ClCompile Include="source\VideoGame.cpp">
       <Filter>Fichiers d%27en-tête\Engine Systems</Filter>
     </ClCompile>
-    <ClCompile Include="source\drawing.h">
-      <Filter>Fichiers d%27en-tête\Engine Systems\System Helpers</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\drawing.cpp">
-      <Filter>Fichiers d%27en-tête\Engine Systems\System Helpers</Filter>
-    </ClCompile>
     <ClCompile Include="Source\system\SystemMenu.cpp">
       <Filter>Fichiers d%27en-tête\Engine Rendering</Filter>
     </ClCompile>
@@ -147,9 +141,6 @@
     <ClCompile Include="Source\system\CameraEventHandler.cpp">
       <Filter>Fichiers d%27en-tête\Engine Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="Source\OlympeEffectSystem.cpp">
-      <Filter>Fichiers d%27en-tête\Game Systems</Filter>
-    </ClCompile>
     <ClCompile Include="Source\third_party\imgui\imgui_widgets.cpp">
       <Filter>ImGui</Filter>
     </ClCompile>
@@ -168,8 +159,32 @@
     <ClCompile Include="Source\third_party\imgui\backends\imgui_impl_sdl3.cpp">
       <Filter>ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="Source\BlueprintEditor\blueprinteditor.cpp">
+    <ClCompile Include="Source\BlueprintEditor\AssetInfoPanel.cpp">
       <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\BlueprintEditorGUI.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\EntityBlueprint.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\Graph.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\serialize_example.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\BlueprintEditor.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\AssetBrowser.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\third_party\imgui\imgui_demo.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\drawing.cpp">
+      <Filter>Fichiers d%27en-tête\Engine Rendering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -326,14 +341,38 @@
     <ClInclude Include="Source\third_party\imgui\backends\imgui_impl_sdl3.h">
       <Filter>ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="Source\BlueprintEditor\blueprinteditor.h">
-      <Filter>Blueprint Editor</Filter>
-    </ClInclude>
     <ClInclude Include="Source\third_party\nlohmann\json.hpp">
       <Filter>Fichiers d%27en-tête\Engine Systems\System Helpers\Json</Filter>
     </ClInclude>
     <ClInclude Include="Source\json_helper.h">
       <Filter>Fichiers d%27en-tête\Engine Systems\System Helpers\Json</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\AssetBrowser.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\AssetInfoPanel.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\BlueprintEditorGUI.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\EntityBlueprint.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\Graph.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\imnodes_stub.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\BlueprintEditor.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\third_party\imgui\imconfig.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\drawing.h">
+      <Filter>Fichiers d%27en-tête\Engine Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

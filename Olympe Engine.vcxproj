@@ -19,7 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source\BlueprintEditor\blueprinteditor.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\AssetBrowser.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\AssetInfoPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\BlueprintEditor.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\BlueprintEditorGUI.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityBlueprint.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Graph.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\serialize_example.cpp" />
+    <ClCompile Include="Source\drawing.cpp" />
     <ClCompile Include="source\ECS_Register.h" />
     <ClCompile Include="Source\AI\BehaviorTree.cpp" />
     <ClCompile Include="Source\ECS_Systems.cpp" />
@@ -29,10 +36,7 @@
     <ClCompile Include="Source\engine_utils.cpp" />
     <ClCompile Include="Source\InputsInspectorPanel.cpp" />
     <ClCompile Include="Source\InputsManager.cpp" />
-    <ClCompile Include="Source\OlympeEffectSystem.cpp" />
     <ClCompile Include="Source\DataManager.cpp" />
-    <ClCompile Include="Source\drawing.cpp" />
-    <ClCompile Include="source\drawing.h" />
     <ClCompile Include="Source\GameEngine.cpp" />
     <ClCompile Include="Source\GameState.cpp" />
     <ClCompile Include="Source\OlympeEngine.cpp" />
@@ -47,6 +51,7 @@
     <ClCompile Include="Source\system\ViewportManager.cpp" />
     <ClCompile Include="Source\third_party\imgui\backends\imgui_impl_sdl3.cpp" />
     <ClCompile Include="Source\third_party\imgui\imgui.cpp" />
+    <ClCompile Include="Source\third_party\imgui\imgui_demo.cpp" />
     <ClCompile Include="Source\third_party\imgui\imgui_draw.cpp" />
     <ClCompile Include="Source\third_party\imgui\imgui_tables.cpp" />
     <ClCompile Include="Source\third_party\imgui\imgui_widgets.cpp" />
@@ -59,8 +64,15 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="Source\AI\AIEvents.h" />
     <ClInclude Include="Source\AI\BehaviorTree.h" />
-    <ClInclude Include="Source\BlueprintEditor\blueprinteditor.h" />
+    <ClInclude Include="Source\BlueprintEditor\AssetBrowser.h" />
+    <ClInclude Include="Source\BlueprintEditor\AssetInfoPanel.h" />
+    <ClInclude Include="Source\BlueprintEditor\BlueprintEditor.h" />
+    <ClInclude Include="Source\BlueprintEditor\BlueprintEditorGUI.h" />
+    <ClInclude Include="Source\BlueprintEditor\EntityBlueprint.h" />
+    <ClInclude Include="Source\BlueprintEditor\Graph.h" />
+    <ClInclude Include="Source\BlueprintEditor\imnodes_stub.h" />
     <ClInclude Include="Source\CollisionMap.h" />
+    <ClInclude Include="Source\drawing.h" />
     <ClInclude Include="source\ECS_Components.h" />
     <ClInclude Include="Source\ECS_Components_AI.h" />
     <ClInclude Include="Source\ECS_Components_Camera.h" />
@@ -102,6 +114,7 @@
     <ClInclude Include="Source\system\ViewportManager.h" />
     <ClInclude Include="Source\Task.h" />
     <ClInclude Include="Source\third_party\imgui\backends\imgui_impl_sdl3.h" />
+    <ClInclude Include="Source\third_party\imgui\imconfig.h" />
     <ClInclude Include="Source\third_party\imgui\imgui.h" />
     <ClInclude Include="Source\third_party\imgui\imgui_internal.h" />
     <ClInclude Include="Source\third_party\imnodes\imnodes.h" />
@@ -219,6 +232,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>SDL\include\SDL3_image;SDL\include\SDL3;SDL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

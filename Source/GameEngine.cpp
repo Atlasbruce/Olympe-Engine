@@ -1,5 +1,18 @@
+/*
+Olympe Engine V2 2025
+Nicolas Chereau
+nchereau@gmail.com
+
+Purpose:
+- Class representing the core game engine
+- Gamengine stores the list of all game objects
+- Initializes core subsystems
+- Manages the main game loop timing (delta time)
+
+*/
+#pragma once
+
 #include "GameEngine.h"
-#include "system/EventManager.h"
 #include "InputsManager.h"
 #include "system/SystemMenu.h"
 #include "VideoGame.h"

@@ -8,7 +8,7 @@
  * 4. Access and modify component properties
  */
 
-#include "../include/EntityBlueprint.h"
+#include "EntityBlueprint.h"
 #include <iostream>
 
 using namespace Olympe::Blueprint;

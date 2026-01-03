@@ -9,10 +9,9 @@ Purpose:
 
 */
 #pragma once
-#include <vector>
-#include <memory>
-#include "system/system_utils.h"
 #include <SDL3/SDL.h>
+#include "system/system_utils.h"
+#include <string>
 
 using namespace std;
 

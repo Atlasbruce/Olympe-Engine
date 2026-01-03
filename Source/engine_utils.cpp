@@ -7,19 +7,20 @@
 #pragma once
 
 #include "engine_utils.h"
+//#include <windows.h>
 #include "gameengine.h" //used as reference
 #include <iostream>
 #include "world.h"
 #include <fstream>
-#include <windows.h>
+
 
 //////////////////////////////////////////////////////////
 void MsgBox(string& stitle, string& smsg, bool _berror)
 {
-	if (_berror)
+	/*if (_berror)
 		MessageBoxA(NULL, smsg.c_str(), stitle.c_str(), MB_OK | MB_ICONERROR | MB_APPLMODAL);
 	else
-		MessageBoxA(NULL, smsg.c_str(), stitle.c_str(), MB_OK | MB_ICONWARNING | MB_APPLMODAL);
+		MessageBoxA(NULL, smsg.c_str(), stitle.c_str(), MB_OK | MB_ICONWARNING | MB_APPLMODAL);/**/
 }
 //////////////////////////////////////////////////////////
 // Clamp a float into a range

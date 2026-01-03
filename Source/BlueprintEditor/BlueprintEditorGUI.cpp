@@ -2,11 +2,9 @@
  * Olympe Blueprint Editor GUI - Implementation
  */
 
-#include "../include/BlueprintEditorGUI.h"
+#include "BlueprintEditorGUI.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
-#include <fstream>
-#include <cstring>
 
 using namespace Olympe::Blueprint;
 
@@ -174,6 +172,10 @@ namespace Olympe
     }
 
     // Menu bar is now integrated in the main Render() function
+
+    void BlueprintEditorGUI::RenderMenuBar()
+    {
+    }
 
     void BlueprintEditorGUI::RenderEntityPanel()
     {

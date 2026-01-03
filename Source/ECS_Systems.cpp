@@ -487,8 +487,8 @@ void RenderingSystem::Render()
 // Render entities for a specific camera with frustum culling
 void RenderEntitiesForCamera(const CameraTransform& cam)
 {
-    SDL_Renderer* renderer = GameEngine::renderer;
-    if (!renderer) return;
+    //SDL_Renderer* renderer = GameEngine::renderer;
+    //if (!renderer) return;
     
     // Get all entities with Position, VisualSprite, and BoundingBox
     for (EntityID entity : World::Get().GetSystem<RenderingSystem>()->m_entities)
@@ -540,13 +540,13 @@ void RenderEntitiesForCamera(const CameraTransform& cam)
                 // The "paper" (viewport) rotates, but sprites stay upright like stamps
                 //SDL_RenderTexture(renderer, visual.sprite, nullptr, &destRect);
                 SDL_FPoint fpoint = { visual.hotSpot.x * cam.zoom, visual.hotSpot.y * cam.zoom };
-                SDL_RenderTextureRotated(renderer, visual.sprite, nullptr, &destRect, cam.rotation,
+                SDL_RenderTextureRotated(GameEngine::renderer, visual.sprite, nullptr, &destRect, cam.rotation,
                     &fpoint, SDL_FLIP_NONE);
                 
                 // Debug: draw bounding box
-                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-                //Draw_Circle(renderer, (int)(destRect.x + destRect.w / 2.f), (int)(destRect.y + destRect.h / 2.f), 5);
-                Draw_Circle(renderer, (int)(centerScreen.x), (int)(centerScreen.y), 5); // draw pivot/centre
+                SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 0, 255);
+
+                Draw_FilledCircle((int)(centerScreen.x), (int)(centerScreen.y), 5); // draw pivot/centre
             }
         }
         catch (const std::exception& e)

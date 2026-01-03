@@ -2,16 +2,18 @@
  * Olympe Blueprint Editor - Asset Browser Implementation
  */
 
-#include "../include/AssetBrowser.h"
+#include "AssetBrowser.h"
 #include "../third_party/imgui/imgui.h"
-#include "../../Source/third_party/nlohmann/json.hpp"
-#include "../../Source/json_helper.h"
-#include <iostream>
-#include <fstream>
+#include "../third_party/nlohmann/json.hpp"
+#include "../json_helper.h"
 #include <algorithm>
-#include <filesystem>
+#include <iostream>
+#ifndef _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+#endif
+#include <experimental/filesystem>
 
-namespace fs = std::filesystem;
+namespace fs = std::experimental::filesystem;
 using json = nlohmann::json;
 
 namespace Olympe
@@ -79,13 +81,13 @@ namespace Olympe
                 if (filename[0] == '.')
                     continue;
 
-                if (entry.is_directory())
+                if (fs::is_directory(entry.path()))
                 {
                     // Recursively scan subdirectories
                     auto childNode = ScanDirectory(entryPath);
                     node->children.push_back(childNode);
                 }
-                else if (entry.is_regular_file())
+                else if (fs::is_regular_file(entry.path()))
                 {
                     // Check if it's a JSON file
                     if (entry.path().extension() == ".json")

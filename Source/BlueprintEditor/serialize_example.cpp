@@ -1,5 +1,5 @@
 #include <fstream>
-#include "../include/Graph.h"
+#include "Graph.h"
 #include "../../Source/third_party/nlohmann/json.hpp"
 
 void SaveGraphToFile(const Graph& g, const std::string& path)

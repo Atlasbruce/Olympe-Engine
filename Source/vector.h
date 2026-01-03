@@ -9,7 +9,8 @@
 
 #include "math.h"
 #include <ostream>
-#include <SDL3/SDL.h>
+#include <SDL_rect.h>
+
 using namespace std;
 
 class Vector;
@@ -65,7 +66,7 @@ public:
 	inline float		Length() const { return Norm(); }
 	inline float Magnitude() const { return Norm(); }
 
-	inline bool bIsNull (void) { return ((x+y+z) == 0.0f);}
+	inline bool bIsNull(void){ return ((x + y + z) == 0.0f); }
 	inline float Dist (Vector&);
 	inline float sqrDist(Vector&);
 

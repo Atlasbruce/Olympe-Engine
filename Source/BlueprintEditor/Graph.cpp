@@ -1,5 +1,5 @@
-#include "../include/Graph.h"
-#include "../../Source/json_helper.h"
+#include "Graph.h"
+#include "../json_helper.h"
 
 using json = nlohmann::json;
 

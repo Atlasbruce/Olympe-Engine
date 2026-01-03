@@ -1,6 +1,18 @@
+/*
+    Olype Engine - 2025
+	Nicolas Chereau
+    ncherau@gmail.com
+
+	This file is part of Olympe Engine.
+	Purpose: This file contains functions related to drawing shapes and images on the screen.
+
+
+*/
+#pragma once
 #include "drawing.h"
 #include <SDL3/SDL_render.h>
 #include <cmath>
+#include "GameEngine.h"
 
 
 // Portable pi definition for C++14 (avoids M_PI reliance)
@@ -53,7 +65,7 @@ static inline SDL_Color ToColor(const SDL_FColor& f)
 }
 //----------------------------------------------------------
 // Draws a circle using the Midpoint Circle Algorithm
-void Draw_Circle(SDL_Renderer* renderer, int cx, int cy, int radius)
+void Draw_Circle(int cx, int cy, int radius)
 {
     int x = radius;
     int y = 0;
@@ -61,14 +73,14 @@ void Draw_Circle(SDL_Renderer* renderer, int cx, int cy, int radius)
 
     while (x >= y)
     {
-        SDL_RenderPoint(renderer, (float)cx + x, (float)cy + y);
-        SDL_RenderPoint(renderer, (float)cx + y, (float)cy + x);
-        SDL_RenderPoint(renderer, (float)cx - y, (float)cy + x);
-        SDL_RenderPoint(renderer, (float)cx - x, (float)cy + y);
-        SDL_RenderPoint(renderer, (float)cx - x, (float)cy - y);
-        SDL_RenderPoint(renderer, (float)cx - y, (float)cy - x);
-        SDL_RenderPoint(renderer, (float)cx + y, (float)cy - x);
-        SDL_RenderPoint(renderer, (float)cx + x, (float)cy - y);
+        SDL_RenderPoint(GameEngine::renderer, (float)cx + x, (float)cy + y);
+        SDL_RenderPoint(GameEngine::renderer, (float)cx + y, (float)cy + x);
+        SDL_RenderPoint(GameEngine::renderer, (float)cx - y, (float)cy + x);
+        SDL_RenderPoint(GameEngine::renderer, (float)cx - x, (float)cy + y);
+        SDL_RenderPoint(GameEngine::renderer, (float)cx - x, (float)cy - y);
+        SDL_RenderPoint(GameEngine::renderer, (float)cx - y, (float)cy - x);
+        SDL_RenderPoint(GameEngine::renderer, (float)cx + y, (float)cy - x);
+        SDL_RenderPoint(GameEngine::renderer, (float)cx + x, (float)cy - y);
 
         if (err <= 0)
         {
@@ -85,7 +97,7 @@ void Draw_Circle(SDL_Renderer* renderer, int cx, int cy, int radius)
 //----------------------------------------------------------
 // Draws a filled circle using horizontal scanlines
 // Optimized: use integer arithmetic to avoid sqrt in loop
-void Draw_FilledCircle(SDL_Renderer* renderer, int cx, int cy, int radius)
+void Draw_FilledCircle(int cx, int cy, int radius)
 {
     int r2 = radius * radius;
     for (int dy = -radius; dy <= radius; ++dy)
@@ -97,20 +109,20 @@ void Draw_FilledCircle(SDL_Renderer* renderer, int cx, int cy, int radius)
         int dx = static_cast<int>(std::sqrt(static_cast<float>(dx2)));
         int x1 = cx - dx;
         int x2 = cx + dx;
-        SDL_RenderLine(renderer, (float)x1, (float)cy + dy, (float)x2, (float)cy + dy);
+        SDL_RenderLine(GameEngine::renderer, (float)x1, (float)cy + dy, (float)x2, (float)cy + dy);
     }
 }
 //----------------------------------------------------------
 // Draws the outline of a triangle
-void Draw_Triangle(SDL_Renderer* renderer, Vector p1, Vector p2, Vector p3)
+void Draw_Triangle(Vector p1, Vector p2, Vector p3)
 {
-    SDL_RenderLine(renderer, p1.x, p1.y, p2.x, p2.y);
-    SDL_RenderLine(renderer, p2.x, p2.y, p3.x, p3.y);
-    SDL_RenderLine(renderer, p3.x, p3.y, p1.x, p1.y);
+    SDL_RenderLine(GameEngine::renderer, p1.x, p1.y, p2.x, p2.y);
+    SDL_RenderLine(GameEngine::renderer, p2.x, p2.y, p3.x, p3.y);
+    SDL_RenderLine(GameEngine::renderer, p3.x, p3.y, p1.x, p1.y);
 }
 //----------------------------------------------------------
 // Draws a filled triangle using SDL_RenderGeometry
-void Draw_FilledTriangle(SDL_Renderer* renderer,
+void Draw_FilledTriangle(
     const Vector& p1,
     const Vector& p2,
     const Vector& p3,
@@ -130,11 +142,11 @@ void Draw_FilledTriangle(SDL_Renderer* renderer,
     vertices[1].tex_coord = { 0, 0 };
     vertices[2].tex_coord = { 0, 0 };
 
-    SDL_RenderGeometry(renderer, nullptr, vertices, 3, nullptr, 0);
+    SDL_RenderGeometry(GameEngine::renderer, nullptr, vertices, 3, nullptr, 0);
 }
 //----------------------------------------------------------
 // Draws a filled hexagon using SDL_RenderGeometry
-void Draw_FilledHexagon(SDL_Renderer* renderer,
+void Draw_FilledHexagon(
     Vector center,
     float radius,
     SDL_FColor color)
@@ -167,11 +179,11 @@ void Draw_FilledHexagon(SDL_Renderer* renderer,
     }
 
     // Rendu de la g�om�trie
-    SDL_RenderGeometry(renderer, nullptr, vertices, numSides + 1, indices, numSides * 3);
+    SDL_RenderGeometry(GameEngine::renderer, nullptr, vertices, numSides + 1, indices, numSides * 3);
 }
 //----------------------------------------------------------
 // Draw hexagon outline
-void Draw_Hexagon(SDL_Renderer* renderer, Vector center, float radius, SDL_Color color)
+void Draw_Hexagon(Vector center, float radius, SDL_Color color)
 {
     const int numSides = 6;
     Vector verts[numSides];
@@ -182,11 +194,11 @@ void Draw_Hexagon(SDL_Renderer* renderer, Vector center, float radius, SDL_Color
     }
 
     // Apply color
-    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+    SDL_SetRenderDrawColor(GameEngine::renderer, color.r, color.g, color.b, color.a);
 
     // Draw lines between consecutive vertices
     for (int i = 0; i < numSides; ++i) {
         int next = (i + 1) % numSides;
-        SDL_RenderLine(renderer, verts[i].x, verts[i].y, verts[next].x, verts[next].y);
+        SDL_RenderLine(GameEngine::renderer, verts[i].x, verts[i].y, verts[next].x, verts[next].y);
     }
 }

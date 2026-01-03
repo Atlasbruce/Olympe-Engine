@@ -8,7 +8,6 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <map>
 #include "../../Source/third_party/nlohmann/json.hpp"
 
 namespace Olympe {

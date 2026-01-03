@@ -2,8 +2,8 @@
  * Olympe Blueprint Editor - Entity Blueprint Implementation
  */
 
-#include "../include/EntityBlueprint.h"
-#include "../../Source/json_helper.h"
+#include "EntityBlueprint.h"
+#include "../json_helper.h"
 #include <algorithm>
 
 namespace Olympe {

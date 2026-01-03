@@ -7,7 +7,7 @@
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imgui/backends/imgui_impl_sdl3.h"
 #include "../third_party/imgui/backends/imgui_impl_sdlrenderer3.h"
-#include "../include/BlueprintEditorGUI.h"
+#include "BlueprintEditorGUI.h"
 #include <iostream>
 
 #ifdef _WIN32
