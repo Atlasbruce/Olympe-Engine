@@ -12,7 +12,6 @@
 #include <SDL3/SDL.h>
 using namespace std;
 
-
 class Vector;
 	Vector vBlend ( Vector& , Vector& , float );
 	float fDist ( Vector& , Vector&);
