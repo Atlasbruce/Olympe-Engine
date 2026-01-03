@@ -34,6 +34,9 @@ namespace Olympe
         
         // Get current asset info (from cached backend data)
         const AssetMetadata& GetAssetInfo() const { return *m_CurrentAsset; }
+        
+        // Get the filepath of the currently loaded asset
+        const std::string& GetLoadedFilepath() const { return m_LoadedFilepath; }
 
     private:
         // Render different asset type details
