@@ -64,6 +64,9 @@
     <Filter Include="Fichiers d%27en-tête\Engine Systems\System Helpers\Json">
       <UniqueIdentifier>{46cf309b-682a-4e95-b594-f42fbd3eb6d8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers d%27en-tête\Engine Rendering\SDL3">
+      <UniqueIdentifier>{e56c9465-90fe-4575-b9a0-6de136b72f41}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\GameEngine.cpp">
@@ -185,6 +188,9 @@
     </ClCompile>
     <ClCompile Include="Source\drawing.cpp">
       <Filter>Fichiers d%27en-tête\Engine Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.cpp">
+      <Filter>Fichiers d%27en-tête\Engine Rendering\SDL3</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -373,6 +379,9 @@
     </ClInclude>
     <ClInclude Include="Source\drawing.h">
       <Filter>Fichiers d%27en-tête\Engine Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.h">
+      <Filter>Fichiers d%27en-tête\Engine Rendering\SDL3</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

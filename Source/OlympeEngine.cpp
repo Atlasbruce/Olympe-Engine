@@ -30,6 +30,9 @@ Notes:
 #include "PanelManager.h"
 #include "BlueprintEditor/BlueprintEditor.h"
 #include "BlueprintEditor/BlueprintEditorGUI.h"
+#include "third_party/imgui/imgui.h"
+#include "third_party/imgui/backends/imgui_impl_sdl3.h"
+#include "third_party/imgui/backends/imgui_impl_sdlrenderer3.h"
 
 // Avoid Win32 macro collisions: PostMessage is a Win32 macro expanding to PostMessageW/A
 #ifdef PostMessage
@@ -93,6 +96,14 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     blueprintEditorGUI->Initialize();
     
     SYSTEM_LOG << "BlueprintEditor initialized (toggle with F2)" << endl;
+
+    // Initialisation (à l'initialisation de l'application)
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::StyleColorsDark();
+    // Initialiser vos implémentations (ex. SDL + renderer)
+    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer3_Init(renderer);
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
@@ -244,10 +255,14 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     // TODO: Add ImGui initialization in SDL_AppInit and ImGui NewFrame/Render calls here
     if (Olympe::BlueprintEditor::Get().IsActive() && blueprintEditorGUI)
     {
-        // ImGui::NewFrame();  // TODO: Add when ImGui is integrated
-        blueprintEditorGUI->Render();
-        // ImGui::Render();    // TODO: Add when ImGui is integrated
-        // ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData());  // TODO: Add when ImGui is integrated
+        ImGui_ImplSDL3_NewFrame();
+        ImGui_ImplSDLRenderer3_NewFrame();
+        ImGui::NewFrame();
+
+        blueprintEditorGUI->Render(); // BeginMainMenuBar() est maintenant sûr
+
+        ImGui::Render();
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
     }
 
     SDL_RenderPresent(renderer);  /* put it all on the screen! */

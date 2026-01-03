@@ -50,6 +50,7 @@
     <ClCompile Include="source\system\system_utils.cpp" />
     <ClCompile Include="Source\system\ViewportManager.cpp" />
     <ClCompile Include="Source\third_party\imgui\backends\imgui_impl_sdl3.cpp" />
+    <ClCompile Include="Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.cpp" />
     <ClCompile Include="Source\third_party\imgui\imgui.cpp" />
     <ClCompile Include="Source\third_party\imgui\imgui_demo.cpp" />
     <ClCompile Include="Source\third_party\imgui\imgui_draw.cpp" />
@@ -114,6 +115,7 @@
     <ClInclude Include="Source\system\ViewportManager.h" />
     <ClInclude Include="Source\Task.h" />
     <ClInclude Include="Source\third_party\imgui\backends\imgui_impl_sdl3.h" />
+    <ClInclude Include="Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.h" />
     <ClInclude Include="Source\third_party\imgui\imconfig.h" />
     <ClInclude Include="Source\third_party\imgui\imgui.h" />
     <ClInclude Include="Source\third_party\imgui\imgui_internal.h" />
