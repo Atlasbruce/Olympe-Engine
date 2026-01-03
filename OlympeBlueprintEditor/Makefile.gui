@@ -27,7 +27,9 @@ IMNODES_SRC = $(IMNODES_DIR)/imnodes.cpp
 # Editor sources
 EDITOR_SRC = src/main_gui.cpp \
              src/BlueprintEditorGUI.cpp \
-             src/EntityBlueprint.cpp
+             src/EntityBlueprint.cpp \
+             src/AssetBrowser.cpp \
+             src/AssetInfoPanel.cpp
 
 # All sources
 SOURCES = $(IMGUI_SRC) $(IMNODES_SRC) $(EDITOR_SRC)

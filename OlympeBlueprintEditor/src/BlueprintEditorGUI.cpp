@@ -39,6 +39,9 @@ namespace Olympe
         // Configure ImNodes style
         ImNodesStyle& style = ImNodes::GetStyle();
         style.Flags |= ImNodesStyleFlags_GridLines;
+
+        // Initialize Asset Browser with Blueprints root path
+        m_AssetBrowser.Init("../Blueprints");
     }
 
     void BlueprintEditorGUI::Shutdown()
@@ -108,6 +111,8 @@ namespace Olympe
         }
 
         // Render components as separate windows
+        RenderAssetBrowser();
+        RenderAssetInfoPanel();
         RenderEntityPanel();
         RenderNodeEditor();
         RenderPropertyPanel();
@@ -486,6 +491,40 @@ namespace Olympe
             );
             m_SelectedComponentIndex = -1;
             m_HasUnsavedChanges = true;
+        }
+    }
+
+    void BlueprintEditorGUI::RenderAssetBrowser()
+    {
+        m_AssetBrowser.Render();
+
+        // Check if an asset was double-clicked to load it
+        if (m_AssetBrowser.WasAssetDoubleClicked())
+        {
+            AssetItem* asset = m_AssetBrowser.GetSelectedAsset();
+            if (asset && !asset->isDirectory)
+            {
+                // Load the asset based on its type
+                if (asset->type == "Entity" || asset->type == "EntityBlueprint")
+                {
+                    LoadBlueprint(asset->path);
+                }
+                // Other asset types could be loaded differently in the future
+            }
+        }
+    }
+
+    void BlueprintEditorGUI::RenderAssetInfoPanel()
+    {
+        AssetItem* selectedAsset = m_AssetBrowser.GetSelectedAsset();
+        
+        if (selectedAsset && !selectedAsset->isDirectory)
+        {
+            m_AssetInfoPanel.Render(selectedAsset->path, selectedAsset->type);
+        }
+        else
+        {
+            m_AssetInfoPanel.Render("", "");
         }
     }
 }
