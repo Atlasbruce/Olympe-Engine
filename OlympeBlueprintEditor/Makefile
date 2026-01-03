@@ -12,7 +12,8 @@ BUILDDIR = build
 
 SOURCES = $(SRCDIR)/main.cpp \
           $(SRCDIR)/BlueprintEditor.cpp \
-          $(SRCDIR)/EntityBlueprint.cpp
+          $(SRCDIR)/EntityBlueprint.cpp \
+          $(SRCDIR)/EnumCatalogManager.cpp
 
 OBJECTS = $(SOURCES:$(SRCDIR)/%.cpp=$(BUILDDIR)/%.o)
 

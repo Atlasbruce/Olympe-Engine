@@ -7,6 +7,7 @@
 
 #include "../include/BlueprintEditor.h"
 #include "../include/EntityBlueprint.h"
+#include "../include/EnumCatalogManager.h"
 #include <iostream>
 #include <string>
 #include <limits>
@@ -588,6 +589,27 @@ namespace Olympe
     void BlueprintEditor::Initialize()
     {
         s_EditorState = EditorState();
+        
+        // Load enum catalogues for behavior tree validation
+        std::cout << "Initializing Olympe Blueprint Editor...\n";
+        std::cout << "Loading enum catalogues...\n";
+        
+        if (!EnumCatalogManager::Instance().LoadCatalogues("Blueprints/Catalogues/"))
+        {
+            std::cerr << "WARNING: Failed to load enum catalogues.\n";
+            std::cerr << "Error: " << EnumCatalogManager::Instance().GetLastError() << "\n";
+            std::cerr << "Behavior tree validation will be limited.\n";
+            Pause();
+        }
+        else
+        {
+            std::cout << "✓ Catalogues loaded successfully:\n";
+            std::cout << "  - Actions: " << EnumCatalogManager::Instance().GetActionTypes().size() << "\n";
+            std::cout << "  - Conditions: " << EnumCatalogManager::Instance().GetConditionTypes().size() << "\n";
+            std::cout << "  - Decorators: " << EnumCatalogManager::Instance().GetDecoratorTypes().size() << "\n";
+            std::cout << "\nPress Enter to continue...";
+            std::cin.get();
+        }
     }
 
     void BlueprintEditor::Shutdown()
