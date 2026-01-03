@@ -1,8 +1,10 @@
 /*
- * Olympe Blueprint Editor GUI - Implementation
+ * Olympe Blueprint Editor GUI - Frontend Implementation
+ * All data operations delegate to BlueprintEditor backend
  */
 
 #include "BlueprintEditorGUI.h"
+#include "BlueprintEditor.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
 
@@ -11,13 +13,11 @@ using namespace Olympe::Blueprint;
 namespace Olympe
 {
     BlueprintEditorGUI::BlueprintEditorGUI()
-        : m_HasUnsavedChanges(false)
-        , m_SelectedComponentIndex(-1)
+        : m_SelectedComponentIndex(-1)
         , m_NextNodeId(0)
         , m_ShowDemoWindow(false)
         , m_ShowAddComponentDialog(false)
         , m_ShowAboutDialog(false)
-        , m_RequestExit(false)
         , m_SelectedComponentType(0)
     {
         m_NewBlueprintNameBuffer[0] = '\0';
@@ -52,8 +52,18 @@ namespace Olympe
         ImNodes::DestroyContext();
     }
 
-    bool BlueprintEditorGUI::Render()
+    void BlueprintEditorGUI::Render()
     {
+        // Only render if the backend is active
+        if (!BlueprintEditor::Get().IsActive())
+        {
+            return;
+        }
+
+        // Get backend reference for data access
+        auto& backend = BlueprintEditor::Get();
+        const auto& blueprint = backend.GetCurrentBlueprint();
+        
         // Render menu bar in main viewport
         if (ImGui::BeginMainMenuBar())
         {
@@ -69,23 +79,23 @@ namespace Olympe
                 
                 ImGui::Separator();
                 
-                if (ImGui::MenuItem("Save", "Ctrl+S", false, !m_CurrentBlueprint.name.empty()))
+                if (ImGui::MenuItem("Save", "Ctrl+S", false, backend.HasBlueprint()))
                     SaveBlueprint();
                 
-                if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false, !m_CurrentBlueprint.name.empty()))
+                if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false, backend.HasBlueprint()))
                     SaveBlueprintAs();
                 
                 ImGui::Separator();
                 
-                if (ImGui::MenuItem("Exit", "Ctrl+Q"))
-                    m_RequestExit = true;
+                if (ImGui::MenuItem("Close Editor", "F2"))
+                    backend.SetActive(false);
                 
                 ImGui::EndMenu();
             }
 
             if (ImGui::BeginMenu("Edit"))
             {
-                if (ImGui::MenuItem("Add Component", "Insert", false, !m_CurrentBlueprint.name.empty()))
+                if (ImGui::MenuItem("Add Component", "Insert", false, backend.HasBlueprint()))
                     m_ShowAddComponentDialog = true;
                 
                 if (ImGui::MenuItem("Remove Component", "Delete", false, 
@@ -167,8 +177,6 @@ namespace Olympe
         // Demo window for testing
         if (m_ShowDemoWindow)
             ImGui::ShowDemoWindow(&m_ShowDemoWindow);
-
-        return !m_RequestExit;
     }
 
     // Menu bar is now integrated in the main Render() function
@@ -179,12 +187,16 @@ namespace Olympe
 
     void BlueprintEditorGUI::RenderEntityPanel()
     {
+        // Get backend reference
+        auto& backend = BlueprintEditor::Get();
+        const auto& blueprint = backend.GetCurrentBlueprint();
+        
         ImGui::Begin("Entity Properties");
 
-        if (!m_CurrentBlueprint.name.empty())
+        if (backend.HasBlueprint())
         {
-            ImGui::Text("Blueprint: %s", m_CurrentBlueprint.name.c_str());
-            if (m_HasUnsavedChanges)
+            ImGui::Text("Blueprint: %s", blueprint.name.c_str());
+            if (backend.HasUnsavedChanges())
             {
                 ImGui::SameLine();
                 ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.0f, 1.0f), "*");
@@ -194,16 +206,16 @@ namespace Olympe
 
             // Description
             ImGui::Text("Description:");
-            ImGui::TextWrapped("%s", m_CurrentBlueprint.description.c_str());
+            ImGui::TextWrapped("%s", blueprint.description.c_str());
             
             ImGui::Separator();
 
             // Component list
-            ImGui::Text("Components (%zu)", m_CurrentBlueprint.components.size());
+            ImGui::Text("Components (%zu)", blueprint.components.size());
             
-            for (size_t i = 0; i < m_CurrentBlueprint.components.size(); ++i)
+            for (size_t i = 0; i < blueprint.components.size(); ++i)
             {
-                const auto& comp = m_CurrentBlueprint.components[i];
+                const auto& comp = blueprint.components[i];
                 bool selected = (m_SelectedComponentIndex == (int)i);
                 
                 if (ImGui::Selectable(comp.type.c_str(), selected))
@@ -249,16 +261,20 @@ namespace Olympe
 
     void BlueprintEditorGUI::RenderNodeEditor()
     {
+        // Get backend reference
+        auto& backend = BlueprintEditor::Get();
+        const auto& blueprint = backend.GetCurrentBlueprint();
+        
         ImGui::Begin("Component Graph");
 
-        if (!m_CurrentBlueprint.name.empty())
+        if (backend.HasBlueprint())
         {
             ImNodes::BeginNodeEditor();
 
             // Render each component as a node
-            for (size_t i = 0; i < m_CurrentBlueprint.components.size(); ++i)
+            for (size_t i = 0; i < blueprint.components.size(); ++i)
             {
-                const auto& comp = m_CurrentBlueprint.components[i];
+                const auto& comp = blueprint.components[i];
                 int node_id = (int)i;
                 
                 ImNodes::BeginNode(node_id);
@@ -313,12 +329,16 @@ namespace Olympe
 
     void BlueprintEditorGUI::RenderPropertyPanel()
     {
+        // Get backend reference
+        auto& backend = BlueprintEditor::Get();
+        const auto& blueprint = backend.GetCurrentBlueprint();
+        
         ImGui::Begin("Properties");
 
         if (m_SelectedComponentIndex >= 0 && 
-            m_SelectedComponentIndex < (int)m_CurrentBlueprint.components.size())
+            m_SelectedComponentIndex < (int)blueprint.components.size())
         {
-            auto& comp = m_CurrentBlueprint.components[m_SelectedComponentIndex];
+            const auto& comp = blueprint.components[m_SelectedComponentIndex];
             
             ImGui::Text("Component: %s", comp.type.c_str());
             ImGui::Separator();
@@ -344,27 +364,32 @@ namespace Olympe
 
     void BlueprintEditorGUI::RenderStatusBar()
     {
+        // Get backend reference
+        auto& backend = BlueprintEditor::Get();
+        const auto& blueprint = backend.GetCurrentBlueprint();
+        
         ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(0, 0));
         ImGui::Begin("##StatusBar", nullptr, 
             ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | 
             ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
         
-        if (!m_CurrentBlueprint.name.empty())
+        if (backend.HasBlueprint())
         {
-            ImGui::Text("Blueprint: %s", m_CurrentBlueprint.name.c_str());
+            ImGui::Text("Blueprint: %s", blueprint.name.c_str());
             ImGui::SameLine();
-            ImGui::Text(" | Components: %zu", m_CurrentBlueprint.components.size());
+            ImGui::Text(" | Components: %zu", blueprint.components.size());
             
-            if (m_HasUnsavedChanges)
+            if (backend.HasUnsavedChanges())
             {
                 ImGui::SameLine();
                 ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.0f, 1.0f), "| Modified");
             }
             
-            if (!m_CurrentFilepath.empty())
+            const std::string& filepath = backend.GetCurrentFilepath();
+            if (!filepath.empty())
             {
                 ImGui::SameLine();
-                ImGui::TextDisabled("| %s", m_CurrentFilepath.c_str());
+                ImGui::TextDisabled("| %s", filepath.c_str());
             }
         }
         else
@@ -419,23 +444,20 @@ namespace Olympe
 
     void BlueprintEditorGUI::NewBlueprint()
     {
-        // Simple new blueprint creation
-        m_CurrentBlueprint = EntityBlueprint("NewBlueprint");
-        m_CurrentBlueprint.description = "A new entity blueprint";
-        m_CurrentFilepath.clear();
-        m_HasUnsavedChanges = true;
+        // Delegate to backend
+        BlueprintEditor::Get().NewBlueprint("NewBlueprint", "A new entity blueprint");
+        
+        // Reset UI state
         m_SelectedComponentIndex = -1;
         m_NodePositions.clear();
     }
 
     void BlueprintEditorGUI::LoadBlueprint(const std::string& filepath)
     {
-        auto loaded = EntityBlueprint::LoadFromFile(filepath);
-        if (!loaded.name.empty())
+        // Delegate to backend
+        if (BlueprintEditor::Get().LoadBlueprint(filepath))
         {
-            m_CurrentBlueprint = loaded;
-            m_CurrentFilepath = filepath;
-            m_HasUnsavedChanges = false;
+            // Reset UI state on successful load
             m_SelectedComponentIndex = -1;
             m_NodePositions.clear();
         }
@@ -443,27 +465,36 @@ namespace Olympe
 
     void BlueprintEditorGUI::SaveBlueprint()
     {
-        if (m_CurrentFilepath.empty())
+        auto& backend = BlueprintEditor::Get();
+        
+        if (backend.GetCurrentFilepath().empty())
         {
-            // Default save location
-            m_CurrentFilepath = "../Blueprints/" + m_CurrentBlueprint.name + ".json";
+            // Default save location if no filepath set
+            const std::string& name = backend.GetCurrentBlueprint().name;
+            std::string filepath = "../Blueprints/" + name + ".json";
+            backend.SaveBlueprintAs(filepath);
         }
-
-        if (m_CurrentBlueprint.SaveToFile(m_CurrentFilepath))
+        else
         {
-            m_HasUnsavedChanges = false;
+            backend.SaveBlueprint();
         }
     }
 
     void BlueprintEditorGUI::SaveBlueprintAs()
     {
-        // For now, use a default pattern
-        m_CurrentFilepath = "../Blueprints/" + m_CurrentBlueprint.name + "_copy.json";
-        SaveBlueprint();
+        auto& backend = BlueprintEditor::Get();
+        
+        // For now, use a default pattern (in real implementation, would show file dialog)
+        const std::string& name = backend.GetCurrentBlueprint().name;
+        std::string filepath = "../Blueprints/" + name + "_copy.json";
+        backend.SaveBlueprintAs(filepath);
     }
 
     void BlueprintEditorGUI::AddComponent(const std::string& type)
     {
+        // Get mutable blueprint from backend
+        auto& blueprint = BlueprintEditor::Get().GetCurrentBlueprintMutable();
+        
         ComponentData newComp;
         newComp.type = type;
         
@@ -503,19 +534,27 @@ namespace Olympe
             newComp.properties = json::object();
         }
         
-        m_CurrentBlueprint.AddComponent(newComp.type, newComp.properties);
-        m_HasUnsavedChanges = true;
+        // Add to backend blueprint
+        blueprint.AddComponent(newComp.type, newComp.properties);
+        
+        // Mark as modified in backend
+        BlueprintEditor::Get().MarkAsModified();
     }
 
     void BlueprintEditorGUI::RemoveComponent(int index)
     {
-        if (index >= 0 && index < (int)m_CurrentBlueprint.components.size())
+        // Get mutable blueprint from backend
+        auto& blueprint = BlueprintEditor::Get().GetCurrentBlueprintMutable();
+        
+        if (index >= 0 && index < (int)blueprint.components.size())
         {
-            m_CurrentBlueprint.components.erase(
-                m_CurrentBlueprint.components.begin() + index
+            blueprint.components.erase(
+                blueprint.components.begin() + index
             );
             m_SelectedComponentIndex = -1;
-            m_HasUnsavedChanges = true;
+            
+            // Mark as modified in backend
+            BlueprintEditor::Get().MarkAsModified();
         }
     }
 }
