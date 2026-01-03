@@ -485,6 +485,46 @@ void BehaviorTreeSystem::Process()
                 BTStatus status = ExecuteBTNode(*node, entity, blackboard, *tree);
                 btRuntime.lastStatus = static_cast<uint8_t>(status);
                 
+                // Debug logging (every 2 seconds to avoid spam)
+                static float lastLogTime = 0.0f;
+                if (currentTime - lastLogTime > 2.0f)
+                {
+                    if (World::Get().HasComponent<AIState_data>(entity))
+                    {
+                        const AIState_data& state = World::Get().GetComponent<AIState_data>(entity);
+                        const char* modeName = "Unknown";
+                        switch (state.currentMode)
+                        {
+                            case AIMode::Idle: modeName = "Idle"; break;
+                            case AIMode::Patrol: modeName = "Patrol"; break;
+                            case AIMode::Combat: modeName = "Combat"; break;
+                            case AIMode::Flee: modeName = "Flee"; break;
+                            case AIMode::Investigate: modeName = "Investigate"; break;
+                            case AIMode::Dead: modeName = "Dead"; break;
+                        }
+                        
+                        const char* statusName = "Unknown";
+                        switch (status)
+                        {
+                            case BTStatus::Running: statusName = "Running"; break;
+                            case BTStatus::Success: statusName = "Success"; break;
+                            case BTStatus::Failure: statusName = "Failure"; break;
+                        }
+                        
+                        SYSTEM_LOG << "BT[Entity " << entity << "]: Mode=" << modeName 
+                                   << ", Tree=" << btRuntime.treeAssetId
+                                   << ", Node=" << node->name 
+                                   << ", Status=" << statusName;
+                        
+                        if (blackboard.hasTarget)
+                            SYSTEM_LOG << ", Target=" << blackboard.targetEntity 
+                                       << ", Dist=" << blackboard.distanceToTarget;
+                        
+                        SYSTEM_LOG << "\n";
+                    }
+                    lastLogTime = currentTime;
+                }
+                
                 // If node completed (success or failure), restart tree next frame
                 if (status != BTStatus::Running)
                 {

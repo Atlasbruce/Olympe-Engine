@@ -47,7 +47,10 @@ enum class BTConditionType : uint8_t
     HealthBelow,
     HasMoveGoal,
     CanAttack,
-    HeardNoise
+    HeardNoise,
+    // Catalog aliases for better readability
+    HasTarget = TargetVisible,          // Alias for HasTarget condition
+    IsTargetInAttackRange = TargetInRange  // Alias for range check
 };
 
 // --- Built-in Action Types ---
@@ -60,7 +63,10 @@ enum class BTActionType : uint8_t
     AttackIfClose,
     PatrolPickNextPoint,
     ClearTarget,
-    Idle
+    Idle,
+    // Catalog aliases for better readability
+    MoveTo = MoveToGoal,                // Alias for MoveTo action
+    AttackMelee = AttackIfClose         // Alias for melee attack
 };
 
 // --- Behavior Tree Node ---
@@ -132,6 +138,12 @@ public:
     
     // Load a behavior tree from JSON file
     bool LoadTreeFromFile(const std::string& filepath, uint32_t treeId);
+    
+    // Reload a behavior tree from JSON file (hot-reload support)
+    bool ReloadTree(uint32_t treeId);
+    
+    // Validate a behavior tree structure
+    bool ValidateTree(const BehaviorTreeAsset& tree, std::string& errorMessage) const;
     
     // Get a loaded tree by ID
     const BehaviorTreeAsset* GetTree(uint32_t treeId) const;

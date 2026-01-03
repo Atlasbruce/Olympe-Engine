@@ -11,6 +11,7 @@ Purpose: Implementation of the VideoGame class, which represents a video game wi
 #include "engine_utils.h"
 #include "ECS_Systems.h"
 #include "system/EventQueue.h"
+#include "ECS_Components_AI.h"
 
 short VideoGame::m_playerIdCounter = 0;
 using namespace std;
@@ -30,6 +31,9 @@ VideoGame::VideoGame()
     RegisterPrefabItems();
 
     PrefabFactory::Get().CreateEntity("OlympeIdentity");
+    
+    // Initialize AI test scene (NPC "garde" with patrol)
+    InitializeAITestScene();
 
 	SYSTEM_LOG << "VideoGame created\n";
 }
@@ -231,6 +235,51 @@ void VideoGame::RegisterPrefabItems()
         // Add other components as needed
 		});
     
+	//GUARD NPC PREFAB (AI-enabled)
+    PrefabFactory::Get().RegisterPrefab("GuardNPC", [](EntityID id) {
+        World& world = World::Get();
+        world.AddComponent<Position_data>(id, Vector(0, 0, 0));
+        string prefabName = "GuardNPC";
+        static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/npc_" + to_string(Random_Int(1, 10)) + ".png");
+        if (!st_vspriteData_ptr)
+        {
+            SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
+            return;
+        }
+        st_vspriteData_ptr->color = SDL_Color{255, 0, 0, 255}; // Red color for guards
+        VisualSprite_data st_vsprite = *st_vspriteData_ptr;
+        world.AddComponent<VisualSprite_data>(id, st_vsprite.srcRect, st_vsprite.sprite, st_vsprite.hotSpot);
+        world.AddComponent<BoundingBox_data>(id, SDL_FRect{ 0.f, 0.f, st_vsprite.srcRect.w, st_vsprite.srcRect.h });
+        world.AddComponent<Health_data>(id, 100, 100);
+        world.AddComponent<Movement_data>(id);
+        world.AddComponent<PhysicsBody_data>(id, 1.0f, 120.0f);
+        
+        // AI components
+        world.AddComponent<AIBlackboard_data>(id);
+        world.AddComponent<AISenses_data>(id);
+        world.AddComponent<AIState_data>(id);
+        world.AddComponent<BehaviorTreeRuntime_data>(id);
+        world.AddComponent<MoveIntent_data>(id);
+        world.AddComponent<AttackIntent_data>(id);
+        
+        // Configure AI senses
+        AISenses_data& senses = world.GetComponent<AISenses_data>(id);
+        senses.visionRadius = 200.0f; // 2m detection range (assuming 100 units = 1m)
+        senses.hearingRadius = 600.0f;
+        senses.perceptionHz = 5.0f;
+        senses.thinkHz = 10.0f;
+        
+        // Start in patrol mode
+        AIState_data& state = world.GetComponent<AIState_data>(id);
+        state.currentMode = AIMode::Patrol;
+        state.combatEngageDistance = 200.0f; // 2m
+        
+        // Activate behavior tree (Patrol tree = ID 2)
+        BehaviorTreeRuntime_data& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(id);
+        btRuntime.treeAssetId = 2; // Patrol tree
+        btRuntime.isActive = true;
+		});
+    
 	//OLYMPE LOGO PREFAB
     PrefabFactory::Get().RegisterPrefab("OlympeIdentity", [](EntityID id) {
         World& world = World::Get();
@@ -248,3 +297,37 @@ void VideoGame::RegisterPrefabItems()
         // Add other components as needed
 		});
 }
+//-------------------------------------------------------------
+void VideoGame::InitializeAITestScene()
+{
+    SYSTEM_LOG << "VideoGame: Initializing AI Test Scene...\n";
+    
+    // Create a guard NPC "garde" at position (400, 300)
+    EntityID garde = PrefabFactory::Get().CreateEntity("GuardNPC");
+    
+    if (garde != INVALID_ENTITY_ID)
+    {
+        // Set initial position
+        Position_data& pos = world.GetComponent<Position_data>(garde);
+        pos.position = Vector(400.0f, 300.0f, 0.0f);
+        
+        // Configure patrol waypoints (square patrol pattern)
+        AIBlackboard_data& blackboard = world.GetComponent<AIBlackboard_data>(garde);
+        blackboard.patrolPoints[0] = Vector(300.0f, 200.0f, 0.0f);
+        blackboard.patrolPoints[1] = Vector(500.0f, 200.0f, 0.0f);
+        blackboard.patrolPoints[2] = Vector(500.0f, 400.0f, 0.0f);
+        blackboard.patrolPoints[3] = Vector(300.0f, 400.0f, 0.0f);
+        blackboard.patrolPointCount = 4;
+        blackboard.currentPatrolPoint = 0;
+        
+        SYSTEM_LOG << "VideoGame: Created guard NPC 'garde' (Entity " << garde << ") with 4 waypoints\n";
+        SYSTEM_LOG << "  - Patrol waypoints: (300,200), (500,200), (500,400), (300,400)\n";
+        SYSTEM_LOG << "  - Detection range: 200 units (~2m)\n";
+        SYSTEM_LOG << "  - Will attack player if within 2m, otherwise patrol\n";
+    }
+    else
+    {
+        SYSTEM_LOG << "VideoGame: ERROR - Failed to create guard NPC\n";
+    }
+}
+
