@@ -1,0 +1,182 @@
+{
+  "version": "1.0",
+  "types": [
+    {
+      "id": "MoveTo",
+      "name": "Move To",
+      "description": "Déplace l'acteur vers une position/acteur cible",
+      "category": "Movement",
+      "parameters": [
+        {"name": "target_blackboard_key", "type": "string", "required": true},
+        {"name": "acceptance_radius", "type": "float", "default": 100.0},
+        {"name": "speed", "type": "float", "default": 300.0}
+      ],
+      "tooltip": "Déplace le NPC vers la cible spécifiée dans le blackboard"
+    },
+    {
+      "id": "MoveToLocation",
+      "name": "Move To Location",
+      "description": "Déplace l'acteur vers une position spécifique",
+      "category": "Movement",
+      "parameters": [
+        {"name": "x", "type": "float", "required": true},
+        {"name": "y", "type": "float", "required": true},
+        {"name": "acceptance_radius", "type": "float", "default": 50.0}
+      ],
+      "tooltip": "Déplace le NPC vers une position (x,y) absolue"
+    },
+    {
+      "id": "MoveToGoal",
+      "name": "Move To Goal",
+      "description": "Déplace l'acteur vers l'objectif de mouvement actuel",
+      "category": "Movement",
+      "parameters": [
+        {"name": "param1", "type": "float", "default": 0.5}
+      ],
+      "tooltip": "Utilise le goal position du blackboard pour se déplacer"
+    },
+    {
+      "id": "SetMoveGoalToTarget",
+      "name": "Set Move Goal To Target",
+      "description": "Définit l'objectif de mouvement sur la position de la cible",
+      "category": "Movement",
+      "parameters": [],
+      "tooltip": "Configure le goal position vers la cible actuelle"
+    },
+    {
+      "id": "SetMoveGoalToLastKnownTargetPos",
+      "name": "Set Move Goal To Last Known Position",
+      "description": "Définit l'objectif vers la dernière position connue de la cible",
+      "category": "Movement",
+      "parameters": [],
+      "tooltip": "Utile pour poursuivre une cible qui a disparu"
+    },
+    {
+      "id": "SetMoveGoalToPatrolPoint",
+      "name": "Set Move Goal To Patrol Point",
+      "description": "Définit l'objectif vers le point de patrouille actuel",
+      "category": "Movement",
+      "parameters": [],
+      "tooltip": "Configure le goal vers le patrol point courant"
+    },
+    {
+      "id": "AttackMelee",
+      "name": "Attack Melee",
+      "description": "Effectue une attaque de mêlée",
+      "category": "Combat",
+      "parameters": [
+        {"name": "damage", "type": "float", "default": 10.0},
+        {"name": "range", "type": "float", "default": 50.0}
+      ],
+      "tooltip": "Attaque au corps à corps sur la cible"
+    },
+    {
+      "id": "AttackRanged",
+      "name": "Attack Ranged",
+      "description": "Effectue une attaque à distance",
+      "category": "Combat",
+      "parameters": [
+        {"name": "damage", "type": "float", "default": 15.0},
+        {"name": "range", "type": "float", "default": 300.0},
+        {"name": "projectile_speed", "type": "float", "default": 500.0}
+      ],
+      "tooltip": "Tire un projectile vers la cible"
+    },
+    {
+      "id": "AttackIfClose",
+      "name": "Attack If Close",
+      "description": "Attaque si la cible est à portée",
+      "category": "Combat",
+      "parameters": [],
+      "tooltip": "Attaque automatiquement si proche de la cible"
+    },
+    {
+      "id": "Patrol",
+      "name": "Patrol",
+      "description": "Patrouille entre différents points",
+      "category": "Movement",
+      "parameters": [
+        {"name": "patrol_route", "type": "string", "required": true},
+        {"name": "loop", "type": "bool", "default": true}
+      ],
+      "tooltip": "Fait patrouiller le NPC le long d'une route définie"
+    },
+    {
+      "id": "PatrolPickNextPoint",
+      "name": "Pick Next Patrol Point",
+      "description": "Sélectionne le prochain point de patrouille",
+      "category": "Movement",
+      "parameters": [],
+      "tooltip": "Avance vers le prochain point dans la route de patrouille"
+    },
+    {
+      "id": "Wait",
+      "name": "Wait",
+      "description": "Attend pendant une durée spécifiée",
+      "category": "Timing",
+      "parameters": [
+        {"name": "duration", "type": "float", "required": true}
+      ],
+      "tooltip": "Met en pause l'AI pendant X secondes"
+    },
+    {
+      "id": "PlayAnimation",
+      "name": "Play Animation",
+      "description": "Joue une animation spécifique",
+      "category": "Animation",
+      "parameters": [
+        {"name": "animation_name", "type": "string", "required": true},
+        {"name": "loop", "type": "bool", "default": false}
+      ],
+      "tooltip": "Lance l'animation spécifiée sur l'acteur"
+    },
+    {
+      "id": "Idle",
+      "name": "Idle",
+      "description": "Ne fait rien (action vide)",
+      "category": "Basic",
+      "parameters": [],
+      "tooltip": "Action neutre sans effet"
+    },
+    {
+      "id": "ClearTarget",
+      "name": "Clear Target",
+      "description": "Efface la cible actuelle du blackboard",
+      "category": "Blackboard",
+      "parameters": [],
+      "tooltip": "Supprime la référence à la cible"
+    },
+    {
+      "id": "SetBlackboardValue",
+      "name": "Set Blackboard Value",
+      "description": "Définit une valeur dans le blackboard",
+      "category": "Blackboard",
+      "parameters": [
+        {"name": "key", "type": "string", "required": true},
+        {"name": "value", "type": "string", "required": true}
+      ],
+      "tooltip": "Écrit une valeur dans le blackboard de l'AI"
+    },
+    {
+      "id": "LookAt",
+      "name": "Look At",
+      "description": "Oriente l'acteur vers une cible",
+      "category": "Movement",
+      "parameters": [
+        {"name": "target_key", "type": "string", "required": true}
+      ],
+      "tooltip": "Fait regarder le NPC vers la cible"
+    },
+    {
+      "id": "EmitSound",
+      "name": "Emit Sound",
+      "description": "Émet un son depuis l'acteur",
+      "category": "Audio",
+      "parameters": [
+        {"name": "sound_id", "type": "string", "required": true},
+        {"name": "volume", "type": "float", "default": 1.0}
+      ],
+      "tooltip": "Joue un effet sonore"
+    }
+  ]
+}

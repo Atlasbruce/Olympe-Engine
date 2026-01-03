@@ -43,3 +43,10 @@ test: $(BUILDDIR)/blueprint_test
 
 $(BUILDDIR)/blueprint_test: $(SRCDIR)/blueprint_test.cpp $(SRCDIR)/EntityBlueprint.cpp | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) $^ -o $@
+
+# Build and run catalog test
+catalog_test: $(BUILDDIR)/catalog_test
+	cd .. && ./OlympeBlueprintEditor/$(BUILDDIR)/catalog_test
+
+$(BUILDDIR)/catalog_test: $(SRCDIR)/catalog_test.cpp $(SRCDIR)/EnumCatalogManager.cpp | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) $^ -o $@

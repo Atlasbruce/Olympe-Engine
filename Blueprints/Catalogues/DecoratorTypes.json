@@ -1,0 +1,158 @@
+{
+  "version": "1.0",
+  "types": [
+    {
+      "id": "Inverter",
+      "name": "Inverter",
+      "description": "Inverse le résultat du nœud enfant",
+      "category": "Logic",
+      "parameters": [],
+      "tooltip": "SUCCESS devient FAILURE et vice-versa"
+    },
+    {
+      "id": "Succeeder",
+      "name": "Succeeder",
+      "description": "Force toujours un succès",
+      "category": "Logic",
+      "parameters": [],
+      "tooltip": "Retourne toujours SUCCESS quel que soit le résultat de l'enfant"
+    },
+    {
+      "id": "Failer",
+      "name": "Failer",
+      "description": "Force toujours un échec",
+      "category": "Logic",
+      "parameters": [],
+      "tooltip": "Retourne toujours FAILURE quel que soit le résultat de l'enfant"
+    },
+    {
+      "id": "Repeater",
+      "name": "Repeater",
+      "description": "Répète le nœud enfant N fois",
+      "category": "Flow",
+      "parameters": [
+        {"name": "count", "type": "int", "required": true}
+      ],
+      "tooltip": "Exécute l'enfant count fois avant de réussir"
+    },
+    {
+      "id": "RepeatUntilFail",
+      "name": "Repeat Until Fail",
+      "description": "Répète jusqu'à ce que l'enfant échoue",
+      "category": "Flow",
+      "parameters": [],
+      "tooltip": "Continue à exécuter tant que l'enfant retourne SUCCESS"
+    },
+    {
+      "id": "RepeatUntilSuccess",
+      "name": "Repeat Until Success",
+      "description": "Répète jusqu'à ce que l'enfant réussisse",
+      "category": "Flow",
+      "parameters": [],
+      "tooltip": "Continue à exécuter tant que l'enfant retourne FAILURE"
+    },
+    {
+      "id": "Cooldown",
+      "name": "Cooldown",
+      "description": "Limite la fréquence d'exécution",
+      "category": "Timing",
+      "parameters": [
+        {"name": "duration", "type": "float", "required": true}
+      ],
+      "tooltip": "Empêche l'exécution avant duration secondes après la dernière"
+    },
+    {
+      "id": "Timeout",
+      "name": "Timeout",
+      "description": "Limite le temps d'exécution",
+      "category": "Timing",
+      "parameters": [
+        {"name": "duration", "type": "float", "required": true}
+      ],
+      "tooltip": "Force FAILURE si l'enfant prend plus de duration secondes"
+    },
+    {
+      "id": "Delay",
+      "name": "Delay",
+      "description": "Retarde l'exécution du nœud enfant",
+      "category": "Timing",
+      "parameters": [
+        {"name": "duration", "type": "float", "required": true}
+      ],
+      "tooltip": "Attend duration secondes avant d'exécuter l'enfant"
+    },
+    {
+      "id": "BlackboardCondition",
+      "name": "Blackboard Condition",
+      "description": "Vérifie une condition sur le blackboard avant d'exécuter",
+      "category": "Blackboard",
+      "parameters": [
+        {"name": "key", "type": "string", "required": true},
+        {"name": "value", "type": "string", "required": true}
+      ],
+      "tooltip": "N'exécute l'enfant que si blackboard[key] == value"
+    },
+    {
+      "id": "ForceSuccess",
+      "name": "Force Success",
+      "description": "Garantit que le nœud retourne succès",
+      "category": "Logic",
+      "parameters": [],
+      "tooltip": "Convertit tout résultat en SUCCESS (alias de Succeeder)"
+    },
+    {
+      "id": "ForceFailure",
+      "name": "Force Failure",
+      "description": "Garantit que le nœud retourne échec",
+      "category": "Logic",
+      "parameters": [],
+      "tooltip": "Convertit tout résultat en FAILURE (alias de Failer)"
+    },
+    {
+      "id": "RetryUntilSuccess",
+      "name": "Retry Until Success",
+      "description": "Réessaie jusqu'au succès avec limite",
+      "category": "Flow",
+      "parameters": [
+        {"name": "max_attempts", "type": "int", "default": 3}
+      ],
+      "tooltip": "Tente max_attempts fois avant d'échouer définitivement"
+    },
+    {
+      "id": "IgnoreFailure",
+      "name": "Ignore Failure",
+      "description": "Ignore les échecs de l'enfant",
+      "category": "Logic",
+      "parameters": [],
+      "tooltip": "Convertit FAILURE en RUNNING pour continuer l'exécution"
+    },
+    {
+      "id": "ConditionalDecorator",
+      "name": "Conditional Decorator",
+      "description": "Exécute l'enfant seulement si une condition est vraie",
+      "category": "Logic",
+      "parameters": [
+        {"name": "condition_type", "type": "string", "required": true}
+      ],
+      "tooltip": "Enveloppe l'enfant avec une vérification conditionnelle"
+    },
+    {
+      "id": "RandomDecorator",
+      "name": "Random Decorator",
+      "description": "Exécute l'enfant avec une probabilité",
+      "category": "Utility",
+      "parameters": [
+        {"name": "probability", "type": "float", "default": 0.5}
+      ],
+      "tooltip": "N'exécute l'enfant qu'avec probability chance (0.0 à 1.0)"
+    },
+    {
+      "id": "AlwaysRunning",
+      "name": "Always Running",
+      "description": "Force le statut RUNNING",
+      "category": "Logic",
+      "parameters": [],
+      "tooltip": "Retourne toujours RUNNING, utile pour les boucles infinies"
+    }
+  ]
+}

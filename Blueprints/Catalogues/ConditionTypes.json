@@ -1,0 +1,166 @@
+{
+  "version": "1.0",
+  "types": [
+    {
+      "id": "HasTarget",
+      "name": "Has Target",
+      "description": "Vérifie si l'acteur a une cible active",
+      "category": "Target",
+      "parameters": [],
+      "tooltip": "Retourne true si une cible est définie dans le blackboard"
+    },
+    {
+      "id": "IsLowHealth",
+      "name": "Is Low Health",
+      "description": "Vérifie si la santé est en dessous d'un seuil",
+      "category": "Health",
+      "parameters": [
+        {"name": "threshold", "type": "float", "default": 30.0}
+      ],
+      "tooltip": "True si HP < threshold (en pourcentage)"
+    },
+    {
+      "id": "IsTargetInRange",
+      "name": "Is Target In Range",
+      "description": "Vérifie si la cible est à portée",
+      "category": "Target",
+      "parameters": [
+        {"name": "range", "type": "float", "required": true}
+      ],
+      "tooltip": "True si distance vers la cible <= range"
+    },
+    {
+      "id": "HasLineOfSight",
+      "name": "Has Line Of Sight",
+      "description": "Vérifie si l'acteur a une ligne de vue vers la cible",
+      "category": "Perception",
+      "parameters": [
+        {"name": "target_key", "type": "string", "default": "target"}
+      ],
+      "tooltip": "True si pas d'obstacle entre l'acteur et la cible"
+    },
+    {
+      "id": "TargetVisible",
+      "name": "Target Visible",
+      "description": "Vérifie si la cible est visible",
+      "category": "Perception",
+      "parameters": [
+        {"name": "param", "type": "float", "default": 0.0}
+      ],
+      "tooltip": "True si la cible est dans le champ de vision"
+    },
+    {
+      "id": "TargetInRange",
+      "name": "Target In Range",
+      "description": "Vérifie la distance à la cible",
+      "category": "Target",
+      "parameters": [
+        {"name": "param", "type": "float", "default": 0.0}
+      ],
+      "tooltip": "True si la cible est assez proche"
+    },
+    {
+      "id": "HealthBelow",
+      "name": "Health Below",
+      "description": "Vérifie si la santé est sous un seuil",
+      "category": "Health",
+      "parameters": [
+        {"name": "param", "type": "float", "default": 0.0}
+      ],
+      "tooltip": "True si la santé est inférieure au paramètre"
+    },
+    {
+      "id": "HasMoveGoal",
+      "name": "Has Move Goal",
+      "description": "Vérifie si un objectif de mouvement est défini",
+      "category": "Movement",
+      "parameters": [],
+      "tooltip": "True si un goal position existe dans le blackboard"
+    },
+    {
+      "id": "CanAttack",
+      "name": "Can Attack",
+      "description": "Vérifie si l'acteur peut attaquer",
+      "category": "Combat",
+      "parameters": [],
+      "tooltip": "True si cooldown terminé et cible à portée"
+    },
+    {
+      "id": "HeardNoise",
+      "name": "Heard Noise",
+      "description": "Vérifie si un bruit a été entendu",
+      "category": "Perception",
+      "parameters": [],
+      "tooltip": "True si un événement sonore a été perçu"
+    },
+    {
+      "id": "IsPatrolling",
+      "name": "Is Patrolling",
+      "description": "Vérifie si l'acteur est en mode patrouille",
+      "category": "State",
+      "parameters": [],
+      "tooltip": "True si l'état actuel est PATROL"
+    },
+    {
+      "id": "IsInCombat",
+      "name": "Is In Combat",
+      "description": "Vérifie si l'acteur est en combat",
+      "category": "Combat",
+      "parameters": [],
+      "tooltip": "True si engagé dans un combat actif"
+    },
+    {
+      "id": "BlackboardValueEquals",
+      "name": "Blackboard Value Equals",
+      "description": "Compare une valeur du blackboard",
+      "category": "Blackboard",
+      "parameters": [
+        {"name": "key", "type": "string", "required": true},
+        {"name": "value", "type": "string", "required": true}
+      ],
+      "tooltip": "True si la valeur du blackboard correspond"
+    },
+    {
+      "id": "HasItem",
+      "name": "Has Item",
+      "description": "Vérifie si l'acteur possède un objet",
+      "category": "Inventory",
+      "parameters": [
+        {"name": "item_id", "type": "string", "required": true}
+      ],
+      "tooltip": "True si l'objet est dans l'inventaire"
+    },
+    {
+      "id": "IsNearLocation",
+      "name": "Is Near Location",
+      "description": "Vérifie si l'acteur est proche d'une position",
+      "category": "Movement",
+      "parameters": [
+        {"name": "x", "type": "float", "required": true},
+        {"name": "y", "type": "float", "required": true},
+        {"name": "radius", "type": "float", "default": 100.0}
+      ],
+      "tooltip": "True si distance à (x,y) <= radius"
+    },
+    {
+      "id": "IsFacingTarget",
+      "name": "Is Facing Target",
+      "description": "Vérifie si l'acteur fait face à la cible",
+      "category": "Target",
+      "parameters": [
+        {"name": "angle_tolerance", "type": "float", "default": 45.0}
+      ],
+      "tooltip": "True si l'orientation est vers la cible (±tolérance)"
+    },
+    {
+      "id": "RandomChance",
+      "name": "Random Chance",
+      "description": "Condition aléatoire avec probabilité",
+      "category": "Utility",
+      "parameters": [
+        {"name": "probability", "type": "float", "default": 0.5}
+      ],
+      "tooltip": "True avec une probabilité donnée (0.0 à 1.0)"
+    }
+  ]
+}
