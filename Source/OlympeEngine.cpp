@@ -28,6 +28,8 @@ Notes:
 #include "DataManager.h"
 #include "system/system_utils.h"
 #include "PanelManager.h"
+#include "BlueprintEditor/BlueprintEditor.h"
+#include "BlueprintEditor/BlueprintEditorGUI.h"
 
 // Avoid Win32 macro collisions: PostMessage is a Win32 macro expanding to PostMessageW/A
 #ifdef PostMessage
@@ -39,6 +41,9 @@ static SDL_Window* window = NULL;
 static SDL_Renderer* renderer = NULL;
 const int TARGET_FPS = 100;
 const Uint32 FRAME_TARGET_TIME_MS = 1000 / TARGET_FPS;
+
+// BlueprintEditor GUI instance
+static Olympe::BlueprintEditorGUI* blueprintEditorGUI = nullptr;
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
@@ -80,6 +85,15 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     // Attach panels/menu to main SDL window (Windows only)
     PanelManager::Get().AttachToSDLWindow(window);
 
+    // Initialize Blueprint Editor Backend
+    Olympe::BlueprintEditor::Get().Initialize();
+    
+    // Create Blueprint Editor GUI
+    blueprintEditorGUI = new Olympe::BlueprintEditorGUI();
+    blueprintEditorGUI->Initialize();
+    
+    SYSTEM_LOG << "BlueprintEditor initialized (toggle with F2)" << endl;
+
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
 
@@ -93,6 +107,16 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
     switch (event->type)
     {
         case SDL_EVENT_KEY_DOWN:
+        
+        // F2 toggles Blueprint Editor
+        if (event->key.key == SDLK_F2)
+        {
+            Olympe::BlueprintEditor::Get().ToggleActive();
+            SYSTEM_LOG << "BlueprintEditor " 
+                      << (Olympe::BlueprintEditor::Get().IsActive() ? "activated" : "deactivated") 
+                      << endl;
+        }
+        
         if (event->key.key == SDLK_ESCAPE)
         {
             const SDL_MessageBoxButtonData buttons[] =
@@ -161,6 +185,12 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     // Calculate delta time
 	GameEngine::Get().Process(); // update fDt here for all managers
 
+    // Update Blueprint Editor backend if active
+    if (Olympe::BlueprintEditor::Get().IsActive())
+    {
+        Olympe::BlueprintEditor::Get().Update(GameEngine::fDt);
+    }
+
     // Process ECS systems 
 	World::Get().Process(); // process all world objects/components
 
@@ -209,6 +239,17 @@ SDL_AppResult SDL_AppIterate(void* appstate)
         SDL_SetRenderViewport(renderer, &prev);
     }
 
+    // Render Blueprint Editor GUI if active
+    // NOTE: Requires ImGui to be initialized and integrated into main engine
+    // TODO: Add ImGui initialization in SDL_AppInit and ImGui NewFrame/Render calls here
+    if (Olympe::BlueprintEditor::Get().IsActive() && blueprintEditorGUI)
+    {
+        // ImGui::NewFrame();  // TODO: Add when ImGui is integrated
+        blueprintEditorGUI->Render();
+        // ImGui::Render();    // TODO: Add when ImGui is integrated
+        // ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData());  // TODO: Add when ImGui is integrated
+    }
+
     SDL_RenderPresent(renderer);  /* put it all on the screen! */
 
     // Update FPS counter and set window title once per second
@@ -252,6 +293,15 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
     /* SDL will clean up the window/renderer for us. */
+
+    // Shutdown Blueprint Editor
+    if (blueprintEditorGUI)
+    {
+        blueprintEditorGUI->Shutdown();
+        delete blueprintEditorGUI;
+        blueprintEditorGUI = nullptr;
+    }
+    Olympe::BlueprintEditor::Get().Shutdown();
 
     // Shutdown datamanager to ensure resources freed
     DataManager::Get().Shutdown();
