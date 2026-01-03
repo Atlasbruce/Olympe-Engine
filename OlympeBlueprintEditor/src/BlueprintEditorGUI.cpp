@@ -39,6 +39,14 @@ namespace Olympe
         // Configure ImNodes style
         ImNodesStyle& style = ImNodes::GetStyle();
         style.Flags |= ImNodesStyleFlags_GridLines;
+        
+        // Initialize Asset Browser with Blueprints directory
+        m_AssetBrowser.Initialize("../Blueprints");
+        
+        // Set up callback for asset selection
+        m_AssetBrowser.SetAssetOpenCallback([this](const std::string& path) {
+            LoadBlueprint(path);
+        });
     }
 
     void BlueprintEditorGUI::Shutdown()
@@ -107,6 +115,26 @@ namespace Olympe
             ImGui::EndMainMenuBar();
         }
 
+        // Render asset management panels
+        m_AssetBrowser.Render();
+        
+        // Update asset info panel when selection changes
+        if (m_AssetBrowser.HasSelection())
+        {
+            std::string selectedPath = m_AssetBrowser.GetSelectedAssetPath();
+            // Only reload if selection changed
+            if (m_AssetInfoPanel.HasAsset() && m_AssetInfoPanel.GetAssetInfo().filepath != selectedPath)
+            {
+                m_AssetInfoPanel.LoadAsset(selectedPath);
+            }
+            else if (!m_AssetInfoPanel.HasAsset())
+            {
+                m_AssetInfoPanel.LoadAsset(selectedPath);
+            }
+        }
+        
+        m_AssetInfoPanel.Render();
+
         // Render components as separate windows
         RenderEntityPanel();
         RenderNodeEditor();
@@ -127,11 +155,11 @@ namespace Olympe
                 ImGui::Separator();
                 ImGui::Text("Visual node-based editor for entity blueprints");
                 ImGui::Text("Version: 2.0");
-                ImGui::Text("Phase: Complete Visual Editor");
+                ImGui::Text("Phase: Complete Visual Editor with Asset Browser");
                 ImGui::Text("Libraries:");
                 ImGui::BulletText("ImGui for UI");
                 ImGui::BulletText("ImNodes for node editing");
-                ImGui::BulletText("SDL2 for window/rendering");
+                ImGui::BulletText("SDL3 for window/rendering");
                 if (ImGui::Button("Close", ImVec2(120, 0)))
                     m_ShowAboutDialog = false;
                 ImGui::EndPopup();
