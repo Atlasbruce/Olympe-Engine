@@ -11,6 +11,7 @@
 #pragma once
 
 #include "EntityBlueprint.h"
+#include "../../Source/third_party/nlohmann/json.hpp"
 #include <string>
 #include <memory>
 #include <vector>
@@ -20,6 +21,9 @@ namespace Olympe
 {
     // Forward declaration
     class BlueprintEditorGUI;
+    
+    // Use nlohmann json
+    using json = nlohmann::json;
 
     // Asset metadata structure for backend
     struct AssetMetadata
