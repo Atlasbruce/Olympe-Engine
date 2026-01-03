@@ -3,25 +3,10 @@
  */
 
 #include "../include/AssetInfoPanel.h"
+#include "../third_party/imgui/imgui.h"
 #include "../../Source/json_helper.h"
 #include <iostream>
 #include <fstream>
-
-// Forward declare ImGui functions
-namespace ImGui
-{
-    bool Begin(const char* name, bool* p_open = nullptr, int flags = 0);
-    void End();
-    void Text(const char* fmt, ...);
-    void TextColored(const struct ImVec4& col, const char* fmt, ...);
-    void TextWrapped(const char* fmt, ...);
-    void Separator();
-    bool CollapsingHeader(const char* label, int flags = 0);
-    void BulletText(const char* fmt, ...);
-    void Spacing();
-}
-
-struct ImVec4 { float x, y, z, w; ImVec4(float _x = 0, float _y = 0, float _z = 0, float _w = 0) : x(_x), y(_y), z(_z), w(_w) {} };
 
 namespace Olympe
 {
@@ -100,14 +85,16 @@ namespace Olympe
 
         if (j.contains("components") && j["components"].is_array())
         {
-            m_CurrentAsset.componentCount = (int)j["components"].size();
+            const auto& components = j["components"];
+            m_CurrentAsset.componentCount = (int)components.size();
             
             // Extract component types
-            for (const auto& comp : j["components"])
+            for (size_t i = 0; i < components.size(); ++i)
             {
-                if (comp.contains("type"))
+                const auto& comp = components[i];
+                if (comp.contains("type") && comp["type"].is_string())
                 {
-                    std::string compType = comp["type"].get<std::string>();
+                    std::string compType = JsonHelper::GetString(comp, "type", "Unknown");
                     m_CurrentAsset.components.push_back(compType);
                 }
             }
@@ -121,17 +108,19 @@ namespace Olympe
 
         if (j.contains("nodes") && j["nodes"].is_array())
         {
-            m_CurrentAsset.nodeCount = (int)j["nodes"].size();
+            const auto& nodes = j["nodes"];
+            m_CurrentAsset.nodeCount = (int)nodes.size();
             
             // Extract node types
-            for (const auto& node : j["nodes"])
+            for (size_t i = 0; i < nodes.size(); ++i)
             {
-                if (node.contains("type"))
+                const auto& node = nodes[i];
+                if (node.contains("type") && node["type"].is_string())
                 {
-                    std::string nodeType = node["type"].get<std::string>();
-                    if (node.contains("name"))
+                    std::string nodeType = JsonHelper::GetString(node, "type", "Unknown");
+                    if (node.contains("name") && node["name"].is_string())
                     {
-                        std::string nodeName = node["name"].get<std::string>();
+                        std::string nodeName = JsonHelper::GetString(node, "name", "");
                         m_CurrentAsset.nodes.push_back(nodeName + " (" + nodeType + ")");
                     }
                     else

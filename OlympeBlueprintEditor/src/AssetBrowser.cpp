@@ -3,52 +3,13 @@
  */
 
 #include "../include/AssetBrowser.h"
+#include "../third_party/imgui/imgui.h"
 #include "../../Source/third_party/nlohmann/json.hpp"
 #include "../../Source/json_helper.h"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
 #include <filesystem>
-
-// Forward declare ImGui functions (will be available when ImGui is linked)
-namespace ImGui
-{
-    bool Begin(const char* name, bool* p_open = nullptr, int flags = 0);
-    void End();
-    bool TreeNodeEx(const void* ptr_id, int flags, const char* fmt, ...);
-    void TreePop();
-    bool IsItemClicked(int mouse_button = 0);
-    bool IsItemHovered();
-    bool IsMouseDoubleClicked(int button);
-    bool InputText(const char* label, char* buf, size_t buf_size, int flags = 0);
-    bool BeginCombo(const char* label, const char* preview_value, int flags = 0);
-    bool Selectable(const char* label, bool selected = false, int flags = 0, const struct ImVec2& size = ImVec2());
-    void EndCombo();
-    void SameLine(float offset_from_start_x = 0.0f, float spacing = -1.0f);
-    void Text(const char* fmt, ...);
-    void TextColored(const struct ImVec4& col, const char* fmt, ...);
-    void Separator();
-    bool Button(const char* label, const struct ImVec2& size = ImVec2());
-    void SetNextItemWidth(float item_width);
-    void PushStyleColor(int idx, unsigned int col);
-    void PopStyleColor(int count = 1);
-}
-
-struct ImVec2 { float x, y; ImVec2(float _x = 0, float _y = 0) : x(_x), y(_y) {} };
-struct ImVec4 { float x, y, z, w; ImVec4(float _x = 0, float _y = 0, float _z = 0, float _w = 0) : x(_x), y(_y), z(_z), w(_w) {} };
-
-// ImGui flags
-enum ImGuiTreeNodeFlags_
-{
-    ImGuiTreeNodeFlags_None = 0,
-    ImGuiTreeNodeFlags_Selected = 1 << 0,
-    ImGuiTreeNodeFlags_OpenOnArrow = 1 << 2,
-    ImGuiTreeNodeFlags_OpenOnDoubleClick = 1 << 3,
-    ImGuiTreeNodeFlags_Leaf = 1 << 8,
-    ImGuiTreeNodeFlags_DefaultOpen = 1 << 5,
-};
-
-enum ImGuiCol_ { ImGuiCol_Text = 0 };
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -275,13 +236,13 @@ namespace Olympe
             return;
         }
 
-        ImGuiTreeNodeFlags_ flags = ImGuiTreeNodeFlags_OpenOnArrow;
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
         
         if (node->fullPath == m_SelectedAssetPath)
-            flags = (ImGuiTreeNodeFlags_)(flags | ImGuiTreeNodeFlags_Selected);
+            flags |= ImGuiTreeNodeFlags_Selected;
 
         if (!node->isDirectory)
-            flags = (ImGuiTreeNodeFlags_)(flags | ImGuiTreeNodeFlags_Leaf);
+            flags |= ImGuiTreeNodeFlags_Leaf;
 
         std::string label = node->name;
         if (!node->isDirectory && !node->type.empty())
