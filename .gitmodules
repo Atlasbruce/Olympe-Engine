@@ -1,6 +1,0 @@
-[submodule "Source/third_party/imgui"]
-	path = Source/third_party/imgui
-	url = https://github.com/ocornut/imgui.git
-[submodule "Source/third_party/imnodes"]
-	path = Source/third_party/imnodes
-	url = https://github.com/Nelarius/imnodes.git
