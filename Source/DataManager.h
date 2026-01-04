@@ -23,15 +23,12 @@ Notes:
 
 #pragma once
 
-#include "object.h"
-#include "system/system_utils.h"
 #include <SDL3/SDL.h>
 #include <string>
 #include <unordered_map>
 #include <memory>
 #include <mutex>
 #include <vector>
-#include "third_party/nlohmann/json.hpp"
 
 using Sprite = SDL_Texture;
 
@@ -128,7 +125,7 @@ public:
     bool PreloadSystemResources(const std::string& configFilePath);
 
 private:
-    string name;
+    std::string name;
     mutable std::mutex m_mutex_;
     std::unordered_map<std::string, std::shared_ptr<Resource>> m_resources_;
 };

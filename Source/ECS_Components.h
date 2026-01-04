@@ -18,6 +18,31 @@ Components purpose: Include all component definitions used in the ECS architectu
 #include <SDL3/SDL.h>
 #include "DataManager.h"
 
+// Entity types
+enum class EntityType : uint8_t
+{
+	Generic = 0,
+	Background,
+	Decoration,
+	Player,
+	NPC,
+	Enemy,
+	Projectile,
+	Item,
+	Environment,
+	Trigger,
+	Waypoint,
+	UIElement
+};
+
+// Component type definitions
+struct Identity_data
+{
+	std::string name = "Entity"; // Entity name
+	std::string tag = "Untagged"; // Entity tag/category
+	EntityType type = EntityType::Generic; // Entity type
+};
+
 // --- Component Position Data ---
 struct Position_data
 {

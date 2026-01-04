@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../object.h"
 #include <vector>
 #include <string>
 #include "system_utils.h"
@@ -41,7 +40,7 @@ public:
     const std::vector<std::string>& Items() const { return m_items; }
 
 private:
-    string name;
+    std::string name;
     bool m_active = false;
     std::vector<std::string> m_items;
 };

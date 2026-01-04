@@ -380,7 +380,8 @@ void MovementSystem::Process()
 //-------------------------------------------------------------
 RenderingSystem::RenderingSystem()
 {
-    // Define the required components: Position AND VisualSprite
+	// Define the required components: Identity, Position, VisualSprite and BoundingBox
+	requiredSignature.set(GetComponentTypeID_Static<Identity_data>(), true);
     requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
     requiredSignature.set(GetComponentTypeID_Static<VisualSprite_data>(), true);
     requiredSignature.set(GetComponentTypeID_Static<BoundingBox_data>(), true);
@@ -495,6 +496,7 @@ void RenderEntitiesForCamera(const CameraTransform& cam)
     {
         try
         {
+			Identity_data& id = World::Get().GetComponent<Identity_data>(entity);
             Position_data& pos = World::Get().GetComponent<Position_data>(entity);
             VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
             BoundingBox_data& boxComp = World::Get().GetComponent<BoundingBox_data>(entity);
@@ -544,7 +546,25 @@ void RenderEntitiesForCamera(const CameraTransform& cam)
                     &fpoint, SDL_FLIP_NONE);
                 
                 // Debug: draw bounding box
-                SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 0, 255);
+                switch (id.type)
+                {
+                    case EntityType::UIElement:
+					case EntityType::Background:
+
+                        SDL_SetRenderDrawColor(GameEngine::renderer, 0, 0, 255, 255); // blue
+						break;
+                    case EntityType::Player:
+					    SDL_SetRenderDrawColor(GameEngine::renderer, 0, 255, 0, 255); // green
+                        break;
+                    case EntityType::Enemy:
+                    case EntityType::NPC:
+                        SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 0, 255); // red
+                        break;
+                    default:
+                        SDL_SetRenderDrawColor(GameEngine::renderer, 255, 255, 0, 255); // yellow
+						break;
+
+                }
 
                 Draw_FilledCircle((int)(centerScreen.x), (int)(centerScreen.y), 5); // draw pivot/centre
             }

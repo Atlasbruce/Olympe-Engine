@@ -117,7 +117,7 @@ struct BehaviorTreeRuntime_data
 struct MoveIntent_data
 {
     Vector targetPosition;               // Where to move
-    float desiredSpeed = 1.0f;          // Speed multiplier (0.0 to 1.0, can exceed 1.0 for sprint)
+    float desiredSpeed = 100.0f;          // Speed multiplier (0.0 to 1.0, can exceed 1.0 for sprint)
     bool hasIntent = false;              // Whether this intent is active
     float arrivalThreshold = 5.0f;       // Distance at which we consider arrived
     

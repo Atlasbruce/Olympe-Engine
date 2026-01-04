@@ -177,6 +177,8 @@ void VideoGame::RegisterPrefabItems()
 	// PLAYER PREFAB
     PrefabFactory::Get().RegisterPrefab("PlayerEntity", [](EntityID id) {
         World& world = World::Get();
+		world.AddComponent<Identity_data>(id, string("Player_" + to_string(id)), "Player", EntityType::Player);
+
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "PlayerEntity";
         static VisualSprite_data* st_vspriteData_ptr = nullptr;
@@ -200,11 +202,12 @@ void VideoGame::RegisterPrefabItems()
 		});
 
 	//TRIGGER PREFAB
-    PrefabFactory::Get().RegisterPrefab("TriggerEntity", [](EntityID id) {
+    PrefabFactory::Get().RegisterPrefab("Trigger", [](EntityID id) {
         World& world = World::Get();
+		world.AddComponent<Identity_data>(id, string("Trigger_" + to_string(id)), "Trigger", EntityType::Trigger);
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
-        string prefabName = "TriggerEntity";
-        static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/trigger.png");
+        string prefabName = "Trigger";
+        static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/trigger-50.png");
         if (!st_vspriteData_ptr)
         {
             SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
@@ -213,15 +216,32 @@ void VideoGame::RegisterPrefabItems()
         VisualSprite_data st_vsprite = *st_vspriteData_ptr;
         world.AddComponent<VisualSprite_data>(id, st_vsprite.srcRect, st_vsprite.sprite, st_vsprite.hotSpot);
         world.AddComponent<BoundingBox_data>(id, SDL_FRect{ 0.f, 0.f, st_vsprite.srcRect.w, st_vsprite.srcRect.h });
-        // Add other components as needed
+		});
+
+	// WAYPOINT PREFAB
+    PrefabFactory::Get().RegisterPrefab("Waypoint", [](EntityID id) {
+        World& world = World::Get();
+		world.AddComponent<Identity_data>(id, string("Waypoint_" + to_string(id)), "Waypoint", EntityType::Waypoint);
+        world.AddComponent<Position_data>(id, Vector(0, 0, 0));
+        string prefabName = "Waypoint";
+        static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/waypoint-64.png");
+        if (!st_vspriteData_ptr)
+        {
+            SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
+            return;
+        }
+        VisualSprite_data st_vsprite = *st_vspriteData_ptr;
+        world.AddComponent<VisualSprite_data>(id, st_vsprite.srcRect, st_vsprite.sprite, st_vsprite.hotSpot);
+		world.AddComponent<BoundingBox_data>(id, SDL_FRect{ 0.f, 0.f, st_vsprite.srcRect.w, st_vsprite.srcRect.h });
 		});
 
 	//NPC PREFAB
     PrefabFactory::Get().RegisterPrefab("NPCEntity", [](EntityID id) {
         World& world = World::Get();
+		world.AddComponent<Identity_data>(id, string("Npc_" + to_string(id)), "Npc", EntityType::NPC);
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "NPCEntity";
-        static VisualSprite_data * st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/npc_" + to_string(Random_Int(1, 10)) + ".png");
+        static VisualSprite_data * st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/entity_" + to_string(Random_Int(1, 15)) + ".png");
         if (!st_vspriteData_ptr)
         {
             SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
@@ -238,9 +258,10 @@ void VideoGame::RegisterPrefabItems()
 	//GUARD NPC PREFAB (AI-enabled)
     PrefabFactory::Get().RegisterPrefab("GuardNPC", [](EntityID id) {
         World& world = World::Get();
+		world.AddComponent<Identity_data>(id, string("GuardNPC_" + to_string(id)), "GuardNPC", EntityType::NPC);
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "GuardNPC";
-        static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/npc_" + to_string(Random_Int(1, 10)) + ".png");
+        static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/entity_4.png");
         if (!st_vspriteData_ptr)
         {
             SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
@@ -283,6 +304,7 @@ void VideoGame::RegisterPrefabItems()
 	//OLYMPE LOGO PREFAB
     PrefabFactory::Get().RegisterPrefab("OlympeIdentity", [](EntityID id) {
         World& world = World::Get();
+        world.AddComponent<Identity_data>(id, string("OlympeIdentity_" + to_string(id)), "Logo", EntityType::UIElement);
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "OlympeIdentity";
         static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/olympe_logo.png");
@@ -319,7 +341,19 @@ void VideoGame::InitializeAITestScene()
         blackboard.patrolPoints[3] = Vector(300.0f, 400.0f, 0.0f);
         blackboard.patrolPointCount = 4;
         blackboard.currentPatrolPoint = 0;
-        
+
+		//create waypoints entities for visualization
+		for (int i = 0; i < blackboard.patrolPointCount; ++i)
+		{
+			EntityID waypoint = PrefabFactory::Get().CreateEntity("Waypoint");
+
+			if (waypoint != INVALID_ENTITY_ID)
+			{
+				Position_data& wpPos = world.GetComponent<Position_data>(waypoint);
+				wpPos.position = blackboard.patrolPoints[i];
+			}
+		}
+
         SYSTEM_LOG << "VideoGame: Created guard NPC 'garde' (Entity " << garde << ") with 4 waypoints\n";
         SYSTEM_LOG << "  - Patrol waypoints: (300,200), (500,200), (500,400), (300,400)\n";
         SYSTEM_LOG << "  - Detection range: 200 units (~2m)\n";

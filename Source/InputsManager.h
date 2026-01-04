@@ -1,12 +1,12 @@
 #pragma once
-#include "object.h"
 #include "system/JoystickManager.h"
 #include "system/KeyboardManager.h"
 #include "system/MouseManager.h"
 #include <unordered_map>
 #include <vector>
-#include "Player.h"
 #include "Ecs_Entity.h"
+#include "ECS_Components.h"
+#include "World.h"
 
 // Input context types for context stack
 enum class InputContext { Gameplay, UI, Editor };
@@ -30,7 +30,7 @@ public:
         KeyboardManager::Get().Shutdown();
         MouseManager::Get().Shutdown();
         m_playerBindings.clear();
-        m_playerObjectIndex.clear();
+        //m_playerObjectIndex.clear();
         m_keyboardAssigned = false;
     }
 
@@ -100,13 +100,13 @@ public:
             return -2;
         }
 	}
-	//--------------------------------------------------------------
-    bool AddPlayerObjectIndex(short playerID, Player* playerPtr)
-    {
-        if (m_playerObjectIndex.find(playerID) != m_playerObjectIndex.end()) return false;
-        m_playerObjectIndex[playerID] = playerPtr;
-        return true;
-    }
+	////--------------------------------------------------------------
+ //   bool AddPlayerObjectIndex(short playerID, Player* playerPtr)
+ //   {
+ //       if (m_playerObjectIndex.find(playerID) != m_playerObjectIndex.end()) return false;
+ //       m_playerObjectIndex[playerID] = playerPtr;
+ //       return true;
+ //   }
 	//--------------------------------------------------------------
     bool AddPlayerEntityIndex(short playerID, EntityID eID)
     {
@@ -235,10 +235,10 @@ public:
     const std::vector<EntityID>& GetInputEntities() const;
 
 private:
-    string name;
+    std::string name;
     std::unordered_map<short, SDL_JoystickID> m_playerBindings;
 	std::unordered_map<short, SDL_JoystickID> m_playerDisconnected;
-	std::unordered_map<short, Player*> m_playerObjectIndex;
+	//std::unordered_map<short, Player*> m_playerObjectIndex;
 	std::unordered_map<short, EntityID> m_playerEntityIndex;
     bool m_keyboardAssigned = false;
 	//JoystickManager& joystickmanager = JoystickManager::GetInstance();

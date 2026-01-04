@@ -1,6 +1,7 @@
 #include "InputsManager.h"
 #include "system/message.h"
 #include <algorithm>
+#include <string>
 
 InputsManager::InputsManager()
 {
@@ -28,7 +29,7 @@ void InputsManager::HandleEvent(const SDL_Event* ev)
 // the returned string is stored internally and updated at each call and will be use by the PanelManager InputsInspector panel
 string InputsManager::GetDevicesStatusUpdate()
 {
-    m_devicesStatus.str(std::string());
+    m_devicesStatus.str(string());
     m_devicesStatus << "---- InputsManager Devices Status ----\r\n";
     // Joysticks
     auto joysticks = JoystickManager::Get().GetConnectedJoysticks();

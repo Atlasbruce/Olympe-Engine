@@ -1,5 +1,4 @@
 #pragma once
-#include "object.h"
 #include "system/system_utils.h"
 
 // use plain enum with bit ops (C++14)

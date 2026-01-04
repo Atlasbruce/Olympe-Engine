@@ -1,5 +1,4 @@
 #pragma once
-#include "../object.h"
 #include <vector>
 #include <unordered_map>
 #include <SDL3/SDL.h>

@@ -174,9 +174,6 @@
     <ClCompile Include="Source\BlueprintEditor\Graph.cpp">
       <Filter>Blueprint Editor</Filter>
     </ClCompile>
-    <ClCompile Include="Source\BlueprintEditor\serialize_example.cpp">
-      <Filter>Blueprint Editor</Filter>
-    </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\BlueprintEditor.cpp">
       <Filter>Blueprint Editor</Filter>
     </ClCompile>
@@ -366,9 +363,6 @@
       <Filter>Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\Graph.h">
-      <Filter>Blueprint Editor</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\BlueprintEditor\imnodes_stub.h">
       <Filter>Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\BlueprintEditor.h">

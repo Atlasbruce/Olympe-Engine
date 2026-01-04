@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../object.h"
 #include <SDL3/SDL.h>
 #include <mutex>
+#include <string>
 
 
 class MouseManager 
@@ -27,7 +27,7 @@ public:
     void BeginFrame(); // Reset per-frame state
 
 private:
-    string name;
+    std::string name;
     std::mutex m_mutex;
     void PostButtonEvent(const SDL_MouseButtonEvent& be);
     void PostMotionEvent(const SDL_MouseMotionEvent& me);

@@ -13,6 +13,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "InputsManager.h"
 #include "system/ViewportManager.h"
 #include "ECS_Systems_AI.h"
+#include <chrono>
 
 //---------------------------------------------------------------------------------------------
 // Helper function to register input entities with InputsManager

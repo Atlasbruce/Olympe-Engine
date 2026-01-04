@@ -3,7 +3,6 @@
 */
 #pragma once
 
-#include "object.h"
 #include "World.h"
 #include "GameRules.h"
 #include "QuestManager.h"

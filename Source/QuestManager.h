@@ -3,7 +3,6 @@
 */
 #pragma once
 
-#include "object.h"
 #include "Quest.h"
 #include <vector>
 #include <memory>

@@ -28,6 +28,7 @@ Notes:
 #include <cerrno>
 #include "sdl3_image/sdl_image.h"
 #include "ECS_Components.h"
+#include "third_party/nlohmann/json.hpp"
 
 #ifdef _WIN32
 #include <direct.h>

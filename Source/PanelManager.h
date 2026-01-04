@@ -17,19 +17,19 @@ Notes:
 
 #pragma once
 
-#include "object.h"
-//#include "system/system_utils.h"
 #include <string>
 #include <unordered_map>
 #include <mutex>
 #include <vector>
 #include <SDL3/SDL.h>
+#include "system/message.h"
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
 #include <SDL3/SDL.h>
+
 
 class PanelManager 
 {
@@ -84,7 +84,7 @@ public:
     static int TreeViewPanelPosY;
 
     private:
-        string name;
+        std::string name;
 
     struct Panel
     {

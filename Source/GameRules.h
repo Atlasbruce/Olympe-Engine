@@ -5,7 +5,6 @@
 
 #include <string>
 #include <iostream>
-#include "object.h"
 #include "system/system_utils.h"
 
 class GameRules 

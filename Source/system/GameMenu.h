@@ -2,7 +2,6 @@
 #include <vector>
 #include <string>
 #include "system_utils.h"
-#include "../object.h"
 
 // GameMenu is an instance-based menu attached to a VideoGame object.
 // It receives events (via OnEvent(Message& msg) forwarding) and can be used
@@ -40,7 +39,7 @@ public:
     virtual void Render() ;
 
 private:
-    string name;
+    std::string name;
     bool m_active = false;
     std::vector<std::string> m_entries;
     int m_selected = 0;

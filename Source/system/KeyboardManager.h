@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../object.h"
 #include "message.h"
 #include <SDL3/SDL.h>
 #include <mutex>
 #include "system_utils.h"
+#include <string>
 
 class KeyboardManager 
 {
@@ -34,7 +34,7 @@ public:
     bool IsKeyReleased(SDL_Scancode sc) ;
 
 private:
-    string name;
+    std::string name;
     std::mutex m_mutex;
     void PostKeyEvent(SDL_KeyboardEvent const& ke);
 
