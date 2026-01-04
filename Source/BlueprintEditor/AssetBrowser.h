@@ -1,6 +1,6 @@
 /*
  * Olympe Blueprint Editor - Asset Browser
- * SDL3-compatible asset explorer for navigating Blueprint directories
+ * Frontend component that uses BlueprintEditor backend for asset data
  */
 
 #pragma once
@@ -12,18 +12,9 @@
 
 namespace Olympe
 {
-    // Represents a file or folder in the asset tree
-    struct AssetTreeNode
-    {
-        std::string name;           // Display name (filename without path)
-        std::string fullPath;       // Complete file path
-        std::string type;           // Asset type (EntityBlueprint, BehaviorTree, etc.)
-        bool isDirectory;
-        std::vector<std::shared_ptr<AssetTreeNode>> children;
-        
-        AssetTreeNode(const std::string& n, const std::string& path, bool isDir)
-            : name(n), fullPath(path), isDirectory(isDir) {}
-    };
+    // Forward declarations
+    class BlueprintEditor;
+    struct AssetNode;
 
     // Asset filter options
     struct AssetFilter
@@ -40,10 +31,10 @@ namespace Olympe
         AssetBrowser();
         ~AssetBrowser();
 
-        // Initialize and scan the assets directory
+        // Initialize the asset browser (sets up UI state)
         void Initialize(const std::string& assetsRootPath);
         
-        // Refresh asset tree (rescan directories)
+        // Refresh asset tree from backend
         void Refresh();
         
         // Render the asset browser panel with ImGui
@@ -59,24 +50,16 @@ namespace Olympe
         void SetAssetOpenCallback(std::function<void(const std::string&)> callback);
 
     private:
-        // Recursively scan directory and build tree
-        std::shared_ptr<AssetTreeNode> ScanDirectory(const std::string& path);
-        
-        // Render tree node recursively
-        void RenderTreeNode(const std::shared_ptr<AssetTreeNode>& node);
+        // Render tree node recursively (uses backend data)
+        void RenderTreeNode(const std::shared_ptr<AssetNode>& node);
         
         // Apply filters to determine if node should be visible
-        bool PassesFilter(const std::shared_ptr<AssetTreeNode>& node) const;
-        
-        // Detect asset type from JSON content
-        std::string DetectAssetType(const std::string& filepath);
+        bool PassesFilter(const std::shared_ptr<AssetNode>& node) const;
         
         // Render search and filter UI
         void RenderFilterUI();
 
     private:
-        std::string m_RootPath;
-        std::shared_ptr<AssetTreeNode> m_RootNode;
         std::string m_SelectedAssetPath;
         AssetFilter m_Filter;
         std::function<void(const std::string&)> m_OnAssetOpen;

@@ -11,13 +11,50 @@
 #pragma once
 
 #include "EntityBlueprint.h"
+#include "../../Source/third_party/nlohmann/json.hpp"
 #include <string>
 #include <memory>
+#include <vector>
+#include <map>
 
 namespace Olympe
 {
     // Forward declaration
     class BlueprintEditorGUI;
+    
+    // Use nlohmann json
+    using json = nlohmann::json;
+
+    // Asset metadata structure for backend
+    struct AssetMetadata
+    {
+        std::string filepath;       // Full path to asset file
+        std::string name;           // Asset name (from JSON or filename)
+        std::string type;           // Asset type (EntityBlueprint, BehaviorTree, etc.)
+        std::string description;    // Asset description
+        bool isDirectory;           // True if this is a directory
+        int componentCount;         // For EntityBlueprint
+        int nodeCount;              // For BehaviorTree
+        std::vector<std::string> components;  // Component types
+        std::vector<std::string> nodes;       // Node types
+        bool isValid;               // False if JSON is malformed
+        std::string errorMessage;   // Error message if not valid
+        
+        AssetMetadata() : isDirectory(false), componentCount(0), nodeCount(0), isValid(false) {}
+    };
+
+    // Asset tree node structure for backend
+    struct AssetNode
+    {
+        std::string name;           // Display name (filename without path)
+        std::string fullPath;       // Complete file path
+        std::string type;           // Asset type
+        bool isDirectory;
+        std::vector<std::shared_ptr<AssetNode>> children;
+        
+        AssetNode(const std::string& n, const std::string& path, bool isDir)
+            : name(n), fullPath(path), isDirectory(isDir) {}
+    };
 
     /**
      * BlueprintEditor Singleton Backend
@@ -62,7 +99,28 @@ namespace Olympe
         
         // Asset management
         std::string GetAssetRootPath() const { return m_AssetRootPath; }
-        void SetAssetRootPath(const std::string& path) { m_AssetRootPath = path; }
+        void SetAssetRootPath(const std::string& path);
+        
+        // Asset scanning and retrieval
+        void RefreshAssets();  // Rescan asset directory
+        std::shared_ptr<AssetNode> GetAssetTree() const { return m_AssetTreeRoot; }
+        
+        // Asset queries
+        std::vector<AssetMetadata> GetAllAssets() const;
+        std::vector<AssetMetadata> GetAssetsByType(const std::string& type) const;
+        std::vector<AssetMetadata> SearchAssets(const std::string& query) const;
+        
+        // Asset metadata
+        AssetMetadata GetAssetMetadata(const std::string& filepath);
+        bool IsAssetValid(const std::string& filepath) const;
+        
+        // Asset type detection
+        std::string DetectAssetType(const std::string& filepath);
+        
+        // Error handling
+        std::string GetLastError() const { return m_LastError; }
+        bool HasError() const { return !m_LastError.empty(); }
+        void ClearError() { m_LastError.clear(); }
 
     private:
         // Private constructor/destructor for singleton
@@ -72,6 +130,13 @@ namespace Olympe
         // Disable copy and assignment
         BlueprintEditor(const BlueprintEditor&) = delete;
         BlueprintEditor& operator=(const BlueprintEditor&) = delete;
+        
+        // Asset management helpers
+        std::shared_ptr<AssetNode> ScanDirectory(const std::string& path);
+        void ParseAssetMetadata(const std::string& filepath, AssetMetadata& metadata);
+        void ParseEntityBlueprint(const json& j, AssetMetadata& metadata);
+        void ParseBehaviorTree(const json& j, AssetMetadata& metadata);
+        void CollectAllAssets(const std::shared_ptr<AssetNode>& node, std::vector<AssetMetadata>& assets) const;
 
     private:
         // Editor state
@@ -82,7 +147,11 @@ namespace Olympe
         Blueprint::EntityBlueprint m_CurrentBlueprint;
         std::string m_CurrentFilepath;
         
-        // Asset paths
+        // Asset paths and tree
         std::string m_AssetRootPath;
+        std::shared_ptr<AssetNode> m_AssetTreeRoot;
+        
+        // Error handling
+        std::string m_LastError;
     };
 }

@@ -1,20 +1,13 @@
 /*
  * Olympe Blueprint Editor - Asset Browser Implementation
+ * Frontend component that uses BlueprintEditor backend for asset data
  */
 
 #include "AssetBrowser.h"
+#include "BlueprintEditor.h"
 #include "../third_party/imgui/imgui.h"
-#include "../third_party/nlohmann/json.hpp"
-#include "../json_helper.h"
 #include <algorithm>
 #include <iostream>
-#ifndef _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#endif
-#include <experimental/filesystem>
-
-namespace fs = std::experimental::filesystem;
-using json = nlohmann::json;
 
 namespace Olympe
 {
@@ -31,131 +24,21 @@ namespace Olympe
 
     void AssetBrowser::Initialize(const std::string& assetsRootPath)
     {
-        m_RootPath = assetsRootPath;
-        Refresh();
+        // Set the root path in the backend
+        BlueprintEditor::Get().SetAssetRootPath(assetsRootPath);
+        
+        std::cout << "AssetBrowser: Initialized with root path: " << assetsRootPath << std::endl;
     }
 
     void AssetBrowser::Refresh()
     {
-        if (m_RootPath.empty())
-            return;
-
-        std::cout << "Scanning assets directory: " << m_RootPath << std::endl;
+        // Delegate to backend
+        BlueprintEditor::Get().RefreshAssets();
         
-        try
-        {
-            if (fs::exists(m_RootPath) && fs::is_directory(m_RootPath))
-            {
-                m_RootNode = ScanDirectory(m_RootPath);
-                std::cout << "Asset scan complete" << std::endl;
-            }
-            else
-            {
-                std::cerr << "Asset directory not found: " << m_RootPath << std::endl;
-                m_RootNode = nullptr;
-            }
-        }
-        catch (const std::exception& e)
-        {
-            std::cerr << "Error scanning assets: " << e.what() << std::endl;
-            m_RootNode = nullptr;
-        }
+        std::cout << "AssetBrowser: Refreshed asset tree from backend" << std::endl;
     }
 
-    std::shared_ptr<AssetTreeNode> AssetBrowser::ScanDirectory(const std::string& path)
-    {
-        auto node = std::make_shared<AssetTreeNode>(
-            fs::path(path).filename().string(),
-            path,
-            true
-        );
-
-        try
-        {
-            for (const auto& entry : fs::directory_iterator(path))
-            {
-                std::string entryPath = entry.path().string();
-                std::string filename = entry.path().filename().string();
-                
-                // Skip hidden files and directories
-                if (filename[0] == '.')
-                    continue;
-
-                if (fs::is_directory(entry.path()))
-                {
-                    // Recursively scan subdirectories
-                    auto childNode = ScanDirectory(entryPath);
-                    node->children.push_back(childNode);
-                }
-                else if (fs::is_regular_file(entry.path()))
-                {
-                    // Check if it's a JSON file
-                    if (entry.path().extension() == ".json")
-                    {
-                        auto fileNode = std::make_shared<AssetTreeNode>(
-                            filename,
-                            entryPath,
-                            false
-                        );
-                        
-                        // Detect asset type
-                        fileNode->type = DetectAssetType(entryPath);
-                        
-                        node->children.push_back(fileNode);
-                    }
-                }
-            }
-
-            // Sort children: directories first, then files alphabetically
-            std::sort(node->children.begin(), node->children.end(),
-                [](const std::shared_ptr<AssetTreeNode>& a, const std::shared_ptr<AssetTreeNode>& b)
-                {
-                    if (a->isDirectory != b->isDirectory)
-                        return a->isDirectory > b->isDirectory;
-                    return a->name < b->name;
-                });
-        }
-        catch (const std::exception& e)
-        {
-            std::cerr << "Error scanning directory " << path << ": " << e.what() << std::endl;
-        }
-
-        return node;
-    }
-
-    std::string AssetBrowser::DetectAssetType(const std::string& filepath)
-    {
-        try
-        {
-            json j;
-            if (!JsonHelper::LoadJsonFromFile(filepath, j))
-                return "Unknown";
-
-            // Check for common type indicators
-            if (j.contains("type"))
-            {
-                std::string type = j["type"].get<std::string>();
-                if (type == "EntityBlueprint")
-                    return "EntityBlueprint";
-            }
-
-            // Check for behavior tree structure
-            if (j.contains("rootNodeId") && j.contains("nodes"))
-                return "BehaviorTree";
-
-            // Check for components (entity blueprint without explicit type)
-            if (j.contains("components"))
-                return "EntityBlueprint";
-
-            return "Generic";
-        }
-        catch (const std::exception&)
-        {
-            return "Unknown";
-        }
-    }
-
-    bool AssetBrowser::PassesFilter(const std::shared_ptr<AssetTreeNode>& node) const
+    bool AssetBrowser::PassesFilter(const std::shared_ptr<AssetNode>& node) const
     {
         // Directories always pass
         if (node->isDirectory)
@@ -221,7 +104,7 @@ namespace Olympe
         ImGui::Separator();
     }
 
-    void AssetBrowser::RenderTreeNode(const std::shared_ptr<AssetTreeNode>& node)
+    void AssetBrowser::RenderTreeNode(const std::shared_ptr<AssetNode>& node)
     {
         if (!node)
             return;
@@ -258,7 +141,7 @@ namespace Olympe
             if (!node->isDirectory)
             {
                 m_SelectedAssetPath = node->fullPath;
-                std::cout << "Selected asset: " << m_SelectedAssetPath << std::endl;
+                std::cout << "AssetBrowser: Selected asset: " << m_SelectedAssetPath << std::endl;
             }
         }
 
@@ -267,7 +150,7 @@ namespace Olympe
         {
             if (!node->isDirectory && m_OnAssetOpen)
             {
-                std::cout << "Opening asset: " << node->fullPath << std::endl;
+                std::cout << "AssetBrowser: Opening asset: " << node->fullPath << std::endl;
                 m_OnAssetOpen(node->fullPath);
             }
         }
@@ -289,15 +172,28 @@ namespace Olympe
         {
             RenderFilterUI();
 
-            if (m_RootNode)
+            // Get asset tree from backend
+            auto rootNode = BlueprintEditor::Get().GetAssetTree();
+            
+            if (rootNode)
             {
                 // Render the tree starting from children (skip root "Blueprints" node)
-                for (const auto& child : m_RootNode->children)
+                for (const auto& child : rootNode->children)
                     RenderTreeNode(child);
             }
             else
             {
-                ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "No assets found. Click Refresh.");
+                // Check if backend has an error
+                if (BlueprintEditor::Get().HasError())
+                {
+                    ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), 
+                        "Error: %s", BlueprintEditor::Get().GetLastError().c_str());
+                }
+                else
+                {
+                    ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), 
+                        "No assets found. Click Refresh.");
+                }
             }
         }
         ImGui::End();
