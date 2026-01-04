@@ -542,10 +542,9 @@ void RenderEntitiesForCamera(const CameraTransform& cam)
                 // The "paper" (viewport) rotates, but sprites stay upright like stamps
                 //SDL_RenderTexture(renderer, visual.sprite, nullptr, &destRect);
                 SDL_FPoint fpoint = { visual.hotSpot.x * cam.zoom, visual.hotSpot.y * cam.zoom };
-                SDL_RenderTextureRotated(GameEngine::renderer, visual.sprite, nullptr, &destRect, cam.rotation,
-                    &fpoint, SDL_FLIP_NONE);
+                SDL_RenderTextureRotated(GameEngine::renderer, visual.sprite, nullptr, &destRect, cam.rotation, &fpoint, SDL_FLIP_NONE);
                 
-                // Debug: draw bounding box
+                // Debug: draw position & bounding box
                 switch (id.type)
                 {
                     case EntityType::UIElement:
@@ -566,7 +565,7 @@ void RenderEntitiesForCamera(const CameraTransform& cam)
 
                 }
 
-                Draw_FilledCircle((int)(centerScreen.x), (int)(centerScreen.y), 5); // draw pivot/centre
+                Draw_FilledCircle((int)(centerScreen.x), (int)(centerScreen.y), 3); // draw pivot/centre
             }
         }
         catch (const std::exception& e)
