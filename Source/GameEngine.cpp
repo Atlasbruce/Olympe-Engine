@@ -21,6 +21,7 @@ Purpose:
 #include "PanelManager.h"
 #include "World.h"
 #include "system/CameraEventHandler.h"
+#include "AI/BehaviorTree.h"
 
 float GameEngine::fDt = 0.0f;
 SDL_Renderer* GameEngine::renderer = nullptr;
@@ -49,6 +50,14 @@ void GameEngine::Initialize()
 	
 	// Initialize camera event handler
 	CameraEventHandler::Get().Initialize();
+	
+	// Load AI Behavior Trees
+	SYSTEM_LOG << "Loading AI Behavior Trees...\n";
+	BehaviorTreeManager::Get().LoadTreeFromFile("Blueprints/AI/idle.json", 1);
+	BehaviorTreeManager::Get().LoadTreeFromFile("Blueprints/AI/guard_patrol.json", 2);
+	BehaviorTreeManager::Get().LoadTreeFromFile("Blueprints/AI/guard_combat.json", 3);
+	BehaviorTreeManager::Get().LoadTreeFromFile("Blueprints/AI/investigate.json", 5);
+	SYSTEM_LOG << "AI Behavior Trees loaded.\n";
 	
 	// Create default camera for player 0 with keyboard controls
 	CameraSystem* camSys = World::Get().GetSystem<CameraSystem>();

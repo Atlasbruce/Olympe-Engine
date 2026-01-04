@@ -58,6 +58,9 @@ public:
      bool LoadGame(int slot = 0) { return false; }
 
      virtual void RegisterPrefabItems();
+     
+     // Initialize test scene with AI guard NPC
+     void InitializeAITestScene();
      //{
          // Example prefab registration
          /*

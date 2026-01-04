@@ -70,12 +70,18 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                 if (node.type == BTNodeType::Condition && nodeJson.contains("conditionType"))
                 {
                     std::string condStr = JsonHelper::GetString(nodeJson, "conditionType", "");
-                    if (condStr == "TargetVisible") node.conditionType = BTConditionType::TargetVisible;
-                    else if (condStr == "TargetInRange") node.conditionType = BTConditionType::TargetInRange;
-                    else if (condStr == "HealthBelow") node.conditionType = BTConditionType::HealthBelow;
-                    else if (condStr == "HasMoveGoal") node.conditionType = BTConditionType::HasMoveGoal;
-                    else if (condStr == "CanAttack") node.conditionType = BTConditionType::CanAttack;
-                    else if (condStr == "HeardNoise") node.conditionType = BTConditionType::HeardNoise;
+                    if (condStr == "TargetVisible" || condStr == "HasTarget") 
+                        node.conditionType = BTConditionType::TargetVisible;
+                    else if (condStr == "TargetInRange" || condStr == "IsTargetInAttackRange") 
+                        node.conditionType = BTConditionType::TargetInRange;
+                    else if (condStr == "HealthBelow") 
+                        node.conditionType = BTConditionType::HealthBelow;
+                    else if (condStr == "HasMoveGoal") 
+                        node.conditionType = BTConditionType::HasMoveGoal;
+                    else if (condStr == "CanAttack") 
+                        node.conditionType = BTConditionType::CanAttack;
+                    else if (condStr == "HeardNoise") 
+                        node.conditionType = BTConditionType::HeardNoise;
                     
                     node.conditionParam = JsonHelper::GetFloat(nodeJson, "param", 0.0f);
                 }
@@ -90,9 +96,9 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                         node.actionType = BTActionType::SetMoveGoalToTarget;
                     else if (actStr == "SetMoveGoalToPatrolPoint") 
                         node.actionType = BTActionType::SetMoveGoalToPatrolPoint;
-                    else if (actStr == "MoveToGoal") 
+                    else if (actStr == "MoveToGoal" || actStr == "MoveTo") 
                         node.actionType = BTActionType::MoveToGoal;
-                    else if (actStr == "AttackIfClose") 
+                    else if (actStr == "AttackIfClose" || actStr == "AttackMelee") 
                         node.actionType = BTActionType::AttackIfClose;
                     else if (actStr == "PatrolPickNextPoint") 
                         node.actionType = BTActionType::PatrolPickNextPoint;
@@ -123,6 +129,15 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
         // Store the tree
         m_trees.push_back(tree);
         
+        // Validate the tree structure
+        std::string validationError;
+        if (!ValidateTree(tree, validationError))
+        {
+            SYSTEM_LOG << "BehaviorTreeManager: WARNING - Tree validation failed for '" << tree.name 
+                       << "': " << validationError << "\n";
+            // Don't fail loading - allow hot-reload to fix issues
+        }
+        
         SYSTEM_LOG << "BehaviorTreeManager: Loaded tree '" << tree.name << "' (ID=" << treeId 
                    << ") with " << tree.nodes.size() << " nodes\n";
         
@@ -148,6 +163,105 @@ const BehaviorTreeAsset* BehaviorTreeManager::GetTree(uint32_t treeId) const
 void BehaviorTreeManager::Clear()
 {
     m_trees.clear();
+}
+
+bool BehaviorTreeManager::ReloadTree(uint32_t treeId)
+{
+    // Find the tree
+    for (auto& tree : m_trees)
+    {
+        if (tree.id == treeId)
+        {
+            // Get the original filepath (we need to store it)
+            // For now, reconstruct it from tree name
+            std::string filepath = "Blueprints/AI/" + tree.name + ".json";
+            
+            // Remove old tree
+            m_trees.erase(std::remove_if(m_trees.begin(), m_trees.end(),
+                [treeId](const BehaviorTreeAsset& t) { return t.id == treeId; }), 
+                m_trees.end());
+            
+            // Load new version
+            bool success = LoadTreeFromFile(filepath, treeId);
+            if (success)
+            {
+                SYSTEM_LOG << "BehaviorTreeManager: Hot-reloaded tree ID=" << treeId << "\n";
+            }
+            return success;
+        }
+    }
+    
+    SYSTEM_LOG << "BehaviorTreeManager: Cannot reload tree ID=" << treeId << " (not found)\n";
+    return false;
+}
+
+bool BehaviorTreeManager::ValidateTree(const BehaviorTreeAsset& tree, std::string& errorMessage) const
+{
+    errorMessage.clear();
+    
+    // Check if tree has nodes
+    if (tree.nodes.empty())
+    {
+        errorMessage = "Tree has no nodes";
+        return false;
+    }
+    
+    // Check if root node exists
+    const BTNode* root = tree.GetNode(tree.rootNodeId);
+    if (!root)
+    {
+        errorMessage = "Root node ID " + std::to_string(tree.rootNodeId) + " not found";
+        return false;
+    }
+    
+    // Validate each node
+    for (const auto& node : tree.nodes)
+    {
+        // Check composite nodes have children
+        if (node.type == BTNodeType::Selector || node.type == BTNodeType::Sequence)
+        {
+            if (node.childIds.empty())
+            {
+                errorMessage = "Composite node '" + node.name + "' (ID=" + std::to_string(node.id) + ") has no children";
+                return false;
+            }
+            
+            // Validate all children exist
+            for (uint32_t childId : node.childIds)
+            {
+                if (!tree.GetNode(childId))
+                {
+                    errorMessage = "Node '" + node.name + "' references missing child ID " + std::to_string(childId);
+                    return false;
+                }
+            }
+        }
+        
+        // Check decorator nodes have a child
+        if (node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater)
+        {
+            if (!tree.GetNode(node.decoratorChildId))
+            {
+                errorMessage = "Decorator node '" + node.name + "' references missing child ID " + std::to_string(node.decoratorChildId);
+                return false;
+            }
+        }
+        
+        // Check for duplicate node IDs
+        int count = 0;
+        for (const auto& other : tree.nodes)
+        {
+            if (other.id == node.id)
+                count++;
+        }
+        if (count > 1)
+        {
+            errorMessage = "Duplicate node ID " + std::to_string(node.id);
+            return false;
+        }
+    }
+    
+    return true;
 }
 
 // --- Behavior Tree Execution ---
