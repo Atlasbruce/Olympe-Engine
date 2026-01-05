@@ -12,6 +12,9 @@
 #include <map>
 #include "AssetBrowser.h"
 #include "AssetInfoPanel.h"
+#include "NodeGraphPanel.h"
+#include "EntitiesPanel.h"
+#include "InspectorPanel.h"
 
 // Forward declare ImVec2
 struct ImVec2;
@@ -84,5 +87,10 @@ namespace Olympe
         // Asset management UI (uses backend for data)
         AssetBrowser m_AssetBrowser;
         AssetInfoPanel m_AssetInfoPanel;
+        
+        // New panels for Phase 2, 3, 4
+        NodeGraphPanel m_NodeGraphPanel;
+        EntitiesPanel m_EntitiesPanel;
+        InspectorPanel m_InspectorPanel;
     };
 }
