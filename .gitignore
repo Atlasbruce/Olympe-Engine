@@ -364,3 +364,11 @@ FodyWeavers.xsd
 # Blueprint test binaries
 blueprint_test
 Blueprints/test_*.json
+
+# Allow tracking of bundled third-party ImGui sources
+!/Source/third_party/imgui/
+!/Source/third_party/imgui/**
+
+# Allow imnodes (used alongside imgui)
+!/Source/third_party/imnodes/
+!/Source/third_party/imnodes/**
