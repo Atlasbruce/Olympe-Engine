@@ -187,6 +187,10 @@ EntityID World::CreateEntity()
     }
     // Initialize the Entity's signature as empty
     m_entitySignatures[newID] = ComponentSignature{};
+    
+    // Notify Blueprint Editor (if active)
+    NotifyBlueprintEditorEntityCreated(newID);
+    
     return newID;
 }
 //---------------------------------------------------------------------------------------------
@@ -196,6 +200,9 @@ void World::DestroyEntity(EntityID entity)
     {
         return;
     }
+
+    // Notify Blueprint Editor BEFORE destruction (if active)
+    NotifyBlueprintEditorEntityDestroyed(entity);
 
     // 1. Supprimer les composants de tous les Pools o� l'Entit� existe
     ComponentSignature signature = m_entitySignatures[entity];
@@ -218,4 +225,26 @@ void World::DestroyEntity(EntityID entity)
     // 4. Recycler l'ID (gestion de l'information)
     m_freeEntityIDs.push(entity);
     std::cout << "Entit� " << entity << " d�truite et ID recycl�.\n";
+}
+//---------------------------------------------------------------------------------------------
+// Blueprint Editor notification hooks
+//---------------------------------------------------------------------------------------------
+void World::NotifyBlueprintEditorEntityCreated(EntityID entity)
+{
+    // Forward declaration to avoid circular dependency
+    namespace Olympe { class EntityInspectorManager; }
+    
+    // Only notify if BlueprintEditor is active (avoid linking issues when editor is not included)
+    #ifdef OLYMPE_BLUEPRINT_EDITOR_ENABLED
+    extern void NotifyEditorEntityCreated(EntityID entity);
+    NotifyEditorEntityCreated(entity);
+    #endif
+}
+//---------------------------------------------------------------------------------------------
+void World::NotifyBlueprintEditorEntityDestroyed(EntityID entity)
+{
+    #ifdef OLYMPE_BLUEPRINT_EDITOR_ENABLED
+    extern void NotifyEditorEntityDestroyed(EntityID entity);
+    NotifyEditorEntityDestroyed(entity);
+    #endif
 }

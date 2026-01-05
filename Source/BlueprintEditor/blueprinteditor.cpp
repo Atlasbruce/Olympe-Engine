@@ -7,6 +7,9 @@
 
 #include "BlueprintEditor.h"
 #include "EntityBlueprint.h"
+#include "EnumCatalogManager.h"
+#include "NodeGraphManager.h"
+#include "EntityInspectorManager.h"
 #include "../json_helper.h"
 #include <algorithm>
 #include <iostream>
@@ -54,12 +57,26 @@ namespace Olympe
         m_AssetTreeRoot = nullptr;
         m_LastError.clear();
         
+        // Initialize catalog manager
+        EnumCatalogManager::Get().Initialize();
+        
+        // Initialize node graph manager
+        NodeGraphManager::Get().Initialize();
+        
+        // Initialize entity inspector manager
+        EntityInspectorManager::Get().Initialize();
+        
         // Scan assets on initialization
         RefreshAssets();
     }
 
     void BlueprintEditor::Shutdown()
     {
+        // Shutdown managers in reverse order
+        EntityInspectorManager::Get().Shutdown();
+        NodeGraphManager::Get().Shutdown();
+        EnumCatalogManager::Get().Shutdown();
+        
         // Clean up backend resources
         m_CurrentBlueprint = Blueprint::EntityBlueprint();
         m_CurrentFilepath = "";
@@ -70,8 +87,11 @@ namespace Olympe
     {
         // Backend update logic (non-UI)
         // This is called by GameEngine when the editor is active
-        // Can be used for background tasks, auto-save, etc.
         
+        // Update entity inspector (sync with World)
+        EntityInspectorManager::Get().Update();
+        
+        // Can be used for background tasks, auto-save, etc.
         // For now, this is a placeholder for future backend logic
         // such as:
         // - Auto-save timer

@@ -209,6 +209,10 @@ private:
     {
 		// Do nothing for other types
     }
+    
+    // Blueprint Editor notification hooks
+    void NotifyBlueprintEditorEntityCreated(EntityID entity);
+    void NotifyBlueprintEditorEntityDestroyed(EntityID entity);
 
 private:
 
