@@ -18,30 +18,32 @@
 
 ## 📚 Documentation
 
-### Core Systems
+**Complete documentation is now organized in themed sections:**
 
-- **[Input System](Documentation/Input/INPUT_SYSTEM_GUIDE.md)** - Complete input management documentation
-  - [Quick Start Guide](Documentation/Input/INPUT_QUICK_START.md) - Get started in 5 minutes
-  - [API Reference](Documentation/Input/INPUT_API_REFERENCE.md) - Detailed API documentation
-  - [Examples](Documentation/Input/INPUT_EXAMPLES.md) - Practical code examples
-  - [Architecture](Documentation/Input/INPUT_ARCHITECTURE.md) - System design details
-  - [Migration Guide](Documentation/Input/INPUT_MIGRATION.md) - Migrate from old code
-  - [Troubleshooting](Documentation/Input/INPUT_TROUBLESHOOTING.md) - Problem solving
+### 🚀 Start Here
+- **[Documentation Hub](Documentation/README.md)** - Central documentation portal
+- **[Getting Started](Documentation/01-Getting-Started/README.md)** - Your first steps
+- **[Installation Guide](Documentation/01-Getting-Started/INSTALLATION.md)** - Setup instructions
+- **[Guide Français](Documentation/01-Getting-Started/GUIDE_FRANCAIS.md)** - Documentation en français
 
-- **[Architecture](ARCHITECTURE.md)** - Overall engine architecture
-- **[Blueprint System](Blueprints/README.md)** - Entity blueprint documentation
-- **[French Guide](GUIDE_FRANCAIS.md)** - Guide en français
+### 📖 Documentation Sections
 
-### Tools
+| Section | Description | Link |
+|---------|-------------|------|
+| **01 - Getting Started** | Quick start, installation, basics | [→](Documentation/01-Getting-Started/) |
+| **02 - Architecture** | System design and structure | [→](Documentation/02-Architecture/) |
+| **03 - Core Systems** | Input, Blueprint, ECS systems | [→](Documentation/03-Core-Systems/) |
+| **04 - AI Systems** | Behavior Trees, NPC AI | [→](Documentation/04-AI-Systems/) |
+| **05 - Tools** | Blueprint Editor, Asset Browser | [→](Documentation/05-Tools/) |
+| **06 - Development** | Contributing, roadmap | [→](Documentation/06-Development/) |
+| **07 - Reference** | API reference, credits | [→](Documentation/07-Reference/) |
 
-- **Blueprint Editor** - Integrated visual entity editor
-  - **Press F2 in-game** to toggle the Blueprint Editor
-  - Edit entity blueprints visually with node-based interface
-  - **Asset Explorer** - Multi-folder asset browser with search and filtering
-  - **Asset Info Panel** - Detailed metadata for each asset
-  - Clean backend/frontend architecture for maintainability
-  - [Blueprint System Documentation](Blueprints/README.md)
-  - [Asset Explorer Architecture](ASSET_EXPLORER_ARCHITECTURE.md)
+### 🎯 Quick Links by Topic
+
+- **Input System** - [Guide](Documentation/03-Core-Systems/Input/INPUT_SYSTEM_GUIDE.md) | [Quick Start](Documentation/03-Core-Systems/Input/INPUT_QUICK_START.md) | [Examples](Documentation/03-Core-Systems/Input/INPUT_EXAMPLES.md)
+- **Blueprint System** - [Guide](Documentation/03-Core-Systems/Blueprint/README.md) | [Editor](Documentation/05-Tools/BLUEPRINT_EDITOR.md)
+- **AI Systems** - [Overview](Documentation/04-AI-Systems/README.md) | [Behavior Trees](Documentation/04-AI-Systems/BEHAVIOR_TREES.md)
+- **ECS** - [Guide](Documentation/03-Core-Systems/ECS/README.md) | [Architecture](Documentation/02-Architecture/README.md)
 
 ---
 
@@ -190,17 +192,24 @@ cd ..
 
 ---
 
-## 📖 More Documentation
+## 📖 More Information
 
-- [Development Plan](DEVELOPMENT_PLAN.md) - Roadmap and phases
-- [Phase 1 Summary](PHASE1_SUMMARY.md) - Blueprint system phase 1
-- [ClickUp Tasks](CLICKUP_TASKS.md) - Task tracking
+- **[Complete Documentation](Documentation/README.md)** - Full documentation hub
+- **[Development Plan](Documentation/06-Development/DEVELOPMENT_PLAN.md)** - Roadmap and phases
+- **[Contributing Guide](Documentation/06-Development/CONTRIBUTING.md)** - How to contribute
+- **[Changelog](Documentation/06-Development/CHANGELOG.md)** - Version history
+- **[Credits](Documentation/07-Reference/CREDITS.md)** - Contributors and acknowledgments
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read the documentation before submitting PRs.
+Contributions are welcome! 
+
+- 📖 Read the [Contributing Guide](Documentation/06-Development/CONTRIBUTING.md)
+- 📋 Check the [Development Plan](Documentation/06-Development/DEVELOPMENT_PLAN.md)
+- 🏗️ Study the [Architecture](Documentation/02-Architecture/README.md)
+- 💬 Join discussions on GitHub
 
 ---
 
@@ -210,9 +219,11 @@ See LICENSE file in the repository.
 
 ---
 
-## 👨‍💻 Author
+## 👨‍💻 Credits
 
-**Nicolas Chereau**  
+**Nicolas Chereau** - Engine architect & lead developer  
 📧 nchereau@gmail.com
+
+See [full credits](Documentation/07-Reference/CREDITS.md) for all contributors and acknowledgments.
 
 **Olympe Engine Team - 2025**
