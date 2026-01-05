@@ -8,6 +8,8 @@
 #include "EnumCatalogManager.h"
 #include "../third_party/imgui/imgui.h"
 #include <iostream>
+#include <string>
+#include <cstring>
 
 namespace Olympe
 {

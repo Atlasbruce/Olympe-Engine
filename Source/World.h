@@ -14,6 +14,7 @@ World purpose: Manage the overall game world, including object management, level
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include <queue>
 //#include <array>
 //#include <algorithm>
 #include <type_traits>
