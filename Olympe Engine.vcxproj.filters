@@ -189,6 +189,27 @@
     <ClCompile Include="Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.cpp">
       <Filter>Fichiers d%27en-tête\Engine Rendering\SDL3</Filter>
     </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\EntitiesPanel.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\EntityInspectorManager.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\EnumCatalogManager.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\InspectorPanel.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\NodeGraphManager.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\NodeGraphPanel.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\WorldBridge.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -376,6 +397,27 @@
     </ClInclude>
     <ClInclude Include="Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.h">
       <Filter>Fichiers d%27en-tête\Engine Rendering\SDL3</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\EntitiesPanel.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\EntityInspectorManager.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\EnumCatalogManager.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\InspectorPanel.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\NodeGraphManager.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\NodeGraphPanel.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\WorldBridge.h">
+      <Filter>Blueprint Editor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

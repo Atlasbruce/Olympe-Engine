@@ -83,6 +83,7 @@
     <ClInclude Include="Source\BlueprintEditor\NodeGraphPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\EntitiesPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\InspectorPanel.h" />
+    <ClInclude Include="Source\BlueprintEditor\WorldBridge.h" />
     <ClInclude Include="Source\CollisionMap.h" />
     <ClInclude Include="Source\drawing.h" />
     <ClInclude Include="source\ECS_Components.h" />
@@ -205,7 +206,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>$(ProjectName)_d</TargetName>
     <OutDir>$(SolutionDir)\</OutDir>
-    <PublicIncludeDirectories>C:\Users\ncher\source\repos\OlympeEngine\Source\third_party\imnodes;C:\Users\ncher\source\repos\OlympeEngine\Source\third_party\imgui;Source;SDL\include;Source\system;SDL\Include\SDL3_image;SDL\include\SDL3;$(PublicIncludeDirectories)</PublicIncludeDirectories>
+    <PublicIncludeDirectories>Source\third_party\nlohmann\detail;Source\third_party\nlohmann\thirdparty;Source\third_party\nlohmann;Source\third_party\imnodes;Source\third_party\imgui;Source;SDL\include;Source\system;SDL\Include\SDL3_image;SDL\include\SDL3;$(PublicIncludeDirectories)</PublicIncludeDirectories>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>$(ProjectName)_r</TargetName>
@@ -251,7 +252,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL\lib\SDL3.lib;SDL\lib\SDL3_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\ncher\source\repos\OlympeEngine\Source\third_party\imnodes;C:\Users\ncher\source\repos\OlympeEngine\Source\third_party\imgui;C:\Users\Nicolas Chereau\Documents\Programming\Olympe Engine\SDL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>Source\third_party\nlohmann\;C:\Users\ncher\source\repos\OlympeEngine\Source\third_party\imnodes;C:\Users\ncher\source\repos\OlympeEngine\Source\third_party\imgui;C:\Users\Nicolas Chereau\Documents\Programming\Olympe Engine\SDL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

@@ -101,13 +101,13 @@ namespace Olympe
             m_LastError = "Failed to open file: " + filepath;
             return false;
         }
-
         json j;
+        std::string jsonText((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
         try
         {
-            file >> j;
+            j = json::parse(jsonText);
         }
-        catch (const json::exception& e)
+        catch (const std::exception& e)
         {
             m_LastError = "JSON parse error: " + std::string(e.what());
             return false;

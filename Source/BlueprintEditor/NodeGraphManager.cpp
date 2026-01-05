@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include <string>
 
 using json = nlohmann::json;
 
@@ -222,8 +223,10 @@ namespace Olympe
                 nj["parameters"] = params;
             }
 
-            if (!node.childIds.empty())
-                nj["children"] = node.childIds;
+            nlohmann::json childrenJson = nlohmann::json::array();
+            for (int childId : node.childIds)
+                childrenJson.push_back(childId);
+            nj["children"] = childrenJson;
 
             if (node.decoratorChildId >= 0)
                 nj["decoratorChild"] = node.decoratorChildId;
@@ -262,12 +265,12 @@ namespace Olympe
                 // Load parameters
                 if (nj.contains("parameters") && nj["parameters"].is_object())
                 {
-                    for (auto it = nj["parameters"].begin(); it != nj["parameters"].end(); ++it)
+                    const json& params = nj["parameters"];
+                    for (auto it = params.begin(); it != params.end(); ++it)
                     {
-                        if (it.value().is_string())
-                            node.parameters[it.key()] = it.value().get<std::string>();
-                        else
-                            node.parameters[it.key()] = it.value().dump();
+                        node.parameters[it->first] = it->second.is_string() 
+                            ? it->second.get<std::string>() 
+                            : it->second.dump();
                     }
                 }
 
@@ -276,7 +279,7 @@ namespace Olympe
                 {
                     JsonHelper::ForEachInArray(nj, "children", [&](const json& childJson, size_t childIdx)
                     {
-                        if (childJson.is_number_integer())
+                        if (childJson.is_number())
                             node.childIds.push_back(childJson.get<int>());
                     });
                 }
@@ -481,11 +484,12 @@ namespace Olympe
             return -1;
 
         json j;
+        std::string jsonText((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
         try
         {
-            file >> j;
+            j = json::parse(jsonText);
         }
-        catch (const json::exception& e)
+        catch (const std::exception& e)
         {
             std::cerr << "[NodeGraphManager] JSON parse error: " << e.what() << "\n";
             return -1;

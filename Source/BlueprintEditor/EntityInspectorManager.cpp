@@ -217,9 +217,9 @@ namespace Olympe
         }
         else if (componentType == "Velocity_data")
         {
-            if (world.HasComponent<Velocity_data>(entity))
+            if (world.HasComponent<Movement_data>(entity))
             {
-                auto& comp = world.GetComponent<Velocity_data>(entity);
+                auto& comp = world.GetComponent<Movement_data>(entity);
                 
                 ComponentPropertyInfo prop;
                 prop.name = "dx";
@@ -279,12 +279,12 @@ namespace Olympe
                 return false;
             }
         }
-        else if (componentType == "Velocity_data" && world.HasComponent<Velocity_data>(entity))
-        {
-            auto& comp = world.GetComponent<Velocity_data>(entity);
-            
+        else if (componentType == "Movement_data" && world.HasComponent<Movement_data>(entity))
+        {            
             try
             {
+                auto& comp = world.GetComponent<Movement_data>(entity);
+
                 float floatValue = std::stof(value);
                 
                 if (propertyName == "dx")
@@ -375,9 +375,9 @@ namespace Olympe
             // This is a simplified approach - ideally you'd have a component type registry
             if (sig.test(GetComponentTypeID_Static<Position_data>()))
                 info.componentTypes.push_back("Position_data");
-            if (sig.test(GetComponentTypeID_Static<Velocity_data>()))
+            if (sig.test(GetComponentTypeID_Static<Movement_data>()))
                 info.componentTypes.push_back("Velocity_data");
-            if (sig.test(GetComponentTypeID_Static<Sprite_data>()))
+            if (sig.test(GetComponentTypeID_Static<VisualSprite_data>()))
                 info.componentTypes.push_back("Sprite_data");
             if (sig.test(GetComponentTypeID_Static<Health_data>()))
                 info.componentTypes.push_back("Health_data");

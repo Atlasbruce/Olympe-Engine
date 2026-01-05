@@ -13,6 +13,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "InputsManager.h"
 #include "system/ViewportManager.h"
 #include "ECS_Systems_AI.h"
+#include "BlueprintEditor/WorldBridge.h"
 #include <chrono>
 
 //---------------------------------------------------------------------------------------------
@@ -231,20 +232,15 @@ void World::DestroyEntity(EntityID entity)
 //---------------------------------------------------------------------------------------------
 void World::NotifyBlueprintEditorEntityCreated(EntityID entity)
 {
-    // Forward declaration to avoid circular dependency
-    namespace Olympe { class EntityInspectorManager; }
-    
     // Only notify if BlueprintEditor is active (avoid linking issues when editor is not included)
     #ifdef OLYMPE_BLUEPRINT_EDITOR_ENABLED
-    extern void NotifyEditorEntityCreated(EntityID entity);
-    NotifyEditorEntityCreated(entity);
+    NotifyEditorEntityCreated((uint64_t)entity);
     #endif
 }
 //---------------------------------------------------------------------------------------------
 void World::NotifyBlueprintEditorEntityDestroyed(EntityID entity)
 {
     #ifdef OLYMPE_BLUEPRINT_EDITOR_ENABLED
-    extern void NotifyEditorEntityDestroyed(EntityID entity);
-    NotifyEditorEntityDestroyed(entity);
+    NotifyEditorEntityDestroyed((uint64_t)entity);
     #endif
 }

@@ -167,7 +167,7 @@ namespace Olympe
             else if (prop.type == "string")
             {
                 char buffer[256];
-                strncpy(buffer, prop.value.c_str(), sizeof(buffer) - 1);
+                strncpy_s(buffer, prop.value.c_str(), sizeof(buffer) - 1);
                 buffer[sizeof(buffer) - 1] = '\0';
 
                 if (ImGui::InputText(prop.name.c_str(), buffer, sizeof(buffer)))
