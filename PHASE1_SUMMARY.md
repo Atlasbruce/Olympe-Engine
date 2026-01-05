@@ -1,5 +1,14 @@
 # Olympe Blueprint Editor - Phase 1 Summary
 
+> **⚠️ DOCUMENTATION MOVED**  
+> This file has been reorganized. Please see the new documentation structure at:
+> - **New Location**: [Documentation/06-Development/PHASE1_SUMMARY.md](Documentation/06-Development/PHASE1_SUMMARY.md)
+> - **Documentation Hub**: [Documentation/README.md](Documentation/README.md)
+>
+> This file is kept for backwards compatibility but may not be updated.
+
+---
+
 ## ✅ Phase 1 Complete - December 2025
 
 ### Mission Accomplie

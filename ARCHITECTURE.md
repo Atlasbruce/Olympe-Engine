@@ -1,5 +1,14 @@
 # Olympe Blueprint Editor - Architecture
 
+> **⚠️ DOCUMENTATION MOVED**  
+> This file has been reorganized. Please see the new documentation structure at:
+> - **New Location**: [Documentation/02-Architecture/BLUEPRINT_ARCHITECTURE.md](Documentation/02-Architecture/BLUEPRINT_ARCHITECTURE.md)
+> - **Documentation Hub**: [Documentation/README.md](Documentation/README.md)
+>
+> This file is kept for backwards compatibility but may not be updated.
+
+---
+
 ## System Overview
 
 ```

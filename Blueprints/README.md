@@ -1,5 +1,15 @@
 # Olympe Blueprint System
 
+> **⚠️ DOCUMENTATION MOVED**  
+> This documentation has been reorganized. Please see the new documentation structure at:
+> - **New Location**: [Documentation/03-Core-Systems/Blueprint/BLUEPRINT_SYSTEM.md](../Documentation/03-Core-Systems/Blueprint/BLUEPRINT_SYSTEM.md)
+> - **Blueprint Hub**: [Documentation/03-Core-Systems/Blueprint/README.md](../Documentation/03-Core-Systems/Blueprint/README.md)
+> - **Documentation Hub**: [Documentation/README.md](../Documentation/README.md)
+>
+> This file is kept for backwards compatibility but may not be updated.
+
+---
+
 ## Overview
 
 The Olympe Blueprint system provides a JSON-based entity definition format that allows game designers to create and edit entities without modifying C++ code. This document describes the blueprint schema, component properties, and development roadmap.

@@ -1,5 +1,14 @@
 // CREDITS
 
+⚠️ DOCUMENTATION MOVED
+This file has been converted to Markdown and moved to:
+- New Location: Documentation/07-Reference/CREDITS.md
+- Documentation Hub: Documentation/README.md
+
+This file is kept for backwards compatibility but may not be updated.
+
+---
+
 Nicolas Chereau - Original Author, Maintainer, Developer, Designer, Tester, Documenter, Support, Promoter
 
 Icons by Icon8 https://icons8.com

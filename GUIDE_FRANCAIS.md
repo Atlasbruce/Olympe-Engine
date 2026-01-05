@@ -1,5 +1,14 @@
 # Guide Olympe Blueprint Editor - Français
 
+> **⚠️ DOCUMENTATION DÉPLACÉE**  
+> Ce fichier a été réorganisé. Veuillez consulter la nouvelle structure de documentation à:
+> - **Nouvel emplacement**: [Documentation/01-Getting-Started/GUIDE_FRANCAIS.md](Documentation/01-Getting-Started/GUIDE_FRANCAIS.md)
+> - **Hub de documentation**: [Documentation/README.md](Documentation/README.md)
+>
+> Ce fichier est conservé pour la compatibilité mais peut ne pas être mis à jour.
+
+---
+
 ## Vue d'ensemble du Projet
 
 Le système Olympe Blueprint Editor permet de créer et éditer des entités de jeu en JSON, sans modifier le code C++. Ce système facilite grandement le travail des game designers et accélère le prototypage.

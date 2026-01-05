@@ -1,5 +1,14 @@
 # Olympe Blueprint Editor - Plan de Développement
 
+> **⚠️ DOCUMENTATION MOVED**  
+> This file has been reorganized. Please see the new documentation structure at:
+> - **New Location**: [Documentation/06-Development/DEVELOPMENT_PLAN.md](Documentation/06-Development/DEVELOPMENT_PLAN.md)
+> - **Documentation Hub**: [Documentation/README.md](Documentation/README.md)
+>
+> This file is kept for backwards compatibility but may not be updated.
+
+---
+
 ## Vue d'ensemble
 
 Ce document détaille le plan de développement pour l'éditeur Olympe Blueprint, organisé en sprints et tâches pour ClickUp. L'objectif est de créer un éditeur basé sur JSON permettant de définir et éditer des entités avec leurs composants et comportements.

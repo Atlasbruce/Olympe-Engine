@@ -1,5 +1,15 @@
 # Pull Request: Implement Robust ECS-Friendly NPC AI Architecture
 
+> **⚠️ DOCUMENTATION MOVED**  
+> This file has been reorganized. Please see the new documentation structure at:
+> - **New Location**: [Documentation/04-AI-Systems/NPC_AI_SYSTEM.md](Documentation/04-AI-Systems/NPC_AI_SYSTEM.md)
+> - **AI Systems Hub**: [Documentation/04-AI-Systems/README.md](Documentation/04-AI-Systems/README.md)
+> - **Documentation Hub**: [Documentation/README.md](Documentation/README.md)
+>
+> This file is kept for backwards compatibility but may not be updated.
+
+---
+
 ## Overview
 
 This PR implements a complete, production-ready ECS-friendly NPC AI architecture for Olympe Engine. The system is data-oriented, scalable, and integrates seamlessly with the existing EventQueue system.
