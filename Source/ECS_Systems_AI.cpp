@@ -70,7 +70,7 @@ void AIStimuliSystem::Process()
                         }
                     }
                 }
-                catch (const std::exception& e)
+                catch (...)
                 {
                     // Entity may have been destroyed
                 }
@@ -104,7 +104,7 @@ void AIStimuliSystem::Process()
                         blackboard.noiseCooldown = 3.0f; // Hear noise for 3 seconds
                     }
                 }
-                catch (const std::exception& e)
+                catch (...)
                 {
                     // Entity may have been destroyed
                 }
@@ -128,7 +128,7 @@ void AIStimuliSystem::Process()
                 }
             }
         }
-        catch (const std::exception& e)
+        catch (...)
         {
             // Entity may have been destroyed
         }
@@ -576,6 +576,8 @@ void AIMotionSystem::Process()
                 // Already at target
                 movement.direction = Vector(0.0f, 0.0f, 0.0f);
                 movement.velocity = Vector(0.0f, 0.0f, 0.0f);
+
+
                 continue;
             }
             
@@ -602,4 +604,10 @@ void AIMotionSystem::Process()
             SYSTEM_LOG << "AIMotionSystem Error for Entity " << entity << ": " << e.what() << "\n";
         }
     }
+}
+
+void AIMotionSystem::RenderDebug()
+{
+	// Optional: render debug info for AI motion (e.g., target positions)
+
 }

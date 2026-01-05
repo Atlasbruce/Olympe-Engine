@@ -369,7 +369,7 @@ void MovementSystem::Process()
             Position_data& pos = World::Get().GetComponent<Position_data>(entity);
             Movement_data& move = World::Get().GetComponent<Movement_data>(entity);
             // Game logic: simple movement based on speed and delta time
-            pos.position += move.direction * GameEngine::fDt;
+            pos.position += move.velocity * GameEngine::fDt;
         }
         catch (const std::exception& e)
         {

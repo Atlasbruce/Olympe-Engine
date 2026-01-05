@@ -126,9 +126,6 @@
     <ClCompile Include="Source\ECS_Systems.cpp">
       <Filter>Fichiers d%27en-tête\ECS\Systems</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ECS_Systems_AI.cpp">
-      <Filter>Fichiers d%27en-tête\ECS\Systems</Filter>
-    </ClCompile>
     <ClCompile Include="source\ECS_Register.h">
       <Filter>Fichiers d%27en-tête\ECS\Components</Filter>
     </ClCompile>
@@ -209,6 +206,9 @@
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\WorldBridge.cpp">
       <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ECS_Systems_AI.cpp">
+      <Filter>Fichiers d%27en-tête\AI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -317,16 +317,10 @@
     <ClInclude Include="source\ECS_Components.h">
       <Filter>Fichiers d%27en-tête\ECS\Components</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ECS_Components_AI.h">
-      <Filter>Fichiers d%27en-tête\ECS\Components</Filter>
-    </ClInclude>
     <ClInclude Include="source\ECS_Entity.h">
       <Filter>Fichiers d%27en-tête\ECS\Entity</Filter>
     </ClInclude>
     <ClInclude Include="source\ECS_Systems.h">
-      <Filter>Fichiers d%27en-tête\ECS\Systems</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\ECS_Systems_AI.h">
       <Filter>Fichiers d%27en-tête\ECS\Systems</Filter>
     </ClInclude>
     <ClInclude Include="Source\AI\BehaviorTree.h">
@@ -418,6 +412,12 @@
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\WorldBridge.h">
       <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ECS_Components_AI.h">
+      <Filter>Fichiers d%27en-tête\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ECS_Systems_AI.h">
+      <Filter>Fichiers d%27en-tête\AI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

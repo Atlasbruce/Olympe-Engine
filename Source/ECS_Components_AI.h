@@ -14,6 +14,7 @@ AI Components purpose: Define all AI-related components for the ECS architecture
 #include "ECS_Entity.h"
 #include "vector.h"
 #include <cstdint>
+#include "ECS_Systems_AI.h"
 
 // --- AI Blackboard Component ---
 // Typed blackboard with explicit fields for performance (no std::map/std::string keys in hot path)

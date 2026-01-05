@@ -69,4 +69,5 @@ class AIMotionSystem : public ECS_System
 public:
     AIMotionSystem();
     virtual void Process() override;
+	virtual void RenderDebug() override;
 };
