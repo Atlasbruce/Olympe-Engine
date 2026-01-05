@@ -45,10 +45,20 @@ namespace Olympe
         m_AssetBrowser.SetAssetOpenCallback([this](const std::string& path) {
             LoadBlueprint(path);
         });
+        
+        // Initialize new panels
+        m_NodeGraphPanel.Initialize();
+        m_EntitiesPanel.Initialize();
+        m_InspectorPanel.Initialize();
     }
 
     void BlueprintEditorGUI::Shutdown()
     {
+        // Shutdown panels
+        m_InspectorPanel.Shutdown();
+        m_EntitiesPanel.Shutdown();
+        m_NodeGraphPanel.Shutdown();
+        
         ImNodes::DestroyContext();
     }
 
@@ -138,6 +148,13 @@ namespace Olympe
         }
         
         m_AssetInfoPanel.Render();
+        
+        // === Phase 3: Node Graph Editor ===
+        m_NodeGraphPanel.Render();
+        
+        // === Phase 4: Runtime Entities and Inspector ===
+        m_EntitiesPanel.Render();
+        m_InspectorPanel.Render();
 
         // Render components as separate windows
         RenderEntityPanel();

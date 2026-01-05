@@ -25,6 +25,13 @@
     <ClCompile Include="Source\BlueprintEditor\BlueprintEditorGUI.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityBlueprint.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Graph.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EnumCatalogManager.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\NodeGraphManager.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityInspectorManager.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\WorldBridge.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\NodeGraphPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntitiesPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\InspectorPanel.cpp" />
     <ClCompile Include="Source\drawing.cpp" />
     <ClCompile Include="source\ECS_Register.h" />
     <ClCompile Include="Source\AI\BehaviorTree.cpp" />
@@ -70,6 +77,12 @@
     <ClInclude Include="Source\BlueprintEditor\BlueprintEditorGUI.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityBlueprint.h" />
     <ClInclude Include="Source\BlueprintEditor\Graph.h" />
+    <ClInclude Include="Source\BlueprintEditor\EnumCatalogManager.h" />
+    <ClInclude Include="Source\BlueprintEditor\NodeGraphManager.h" />
+    <ClInclude Include="Source\BlueprintEditor\EntityInspectorManager.h" />
+    <ClInclude Include="Source\BlueprintEditor\NodeGraphPanel.h" />
+    <ClInclude Include="Source\BlueprintEditor\EntitiesPanel.h" />
+    <ClInclude Include="Source\BlueprintEditor\InspectorPanel.h" />
     <ClInclude Include="Source\CollisionMap.h" />
     <ClInclude Include="Source\drawing.h" />
     <ClInclude Include="source\ECS_Components.h" />
@@ -203,7 +216,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;OLYMPE_BLUEPRINT_EDITOR_ENABLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -217,7 +230,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;OLYMPE_BLUEPRINT_EDITOR_ENABLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -229,7 +242,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;OLYMPE_BLUEPRINT_EDITOR_ENABLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>SDL\include\SDL3_image;SDL\include\SDL3;SDL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>Default</LanguageStandard>
@@ -247,7 +260,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;OLYMPE_BLUEPRINT_EDITOR_ENABLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>

@@ -1,0 +1,132 @@
+{
+  "version": "1.0",
+  "catalogType": "Actions",
+  "types": [
+    {
+      "id": "MoveTo",
+      "name": "Move To",
+      "description": "Déplace l'acteur vers une cible",
+      "category": "Movement",
+      "parameters": [
+        {"name": "target", "type": "string", "required": true},
+        {"name": "speed", "type": "float", "default": 300.0}
+      ],
+      "tooltip": "Déplace le NPC vers la cible spécifiée"
+    },
+    {
+      "id": "Attack",
+      "name": "Attack",
+      "description": "Attaque la cible actuelle",
+      "category": "Combat",
+      "parameters": [
+        {"name": "damage", "type": "float", "default": 10.0},
+        {"name": "range", "type": "float", "default": 50.0}
+      ],
+      "tooltip": "Effectue une attaque sur la cible en portée"
+    },
+    {
+      "id": "Patrol",
+      "name": "Patrol",
+      "description": "Patrouille entre des points définis",
+      "category": "Movement",
+      "parameters": [
+        {"name": "patrolPoints", "type": "array", "required": true},
+        {"name": "looping", "type": "bool", "default": true}
+      ],
+      "tooltip": "Patrouille le long d'un chemin défini"
+    },
+    {
+      "id": "Wait",
+      "name": "Wait",
+      "description": "Attend pendant une durée spécifiée",
+      "category": "Timing",
+      "parameters": [
+        {"name": "duration", "type": "float", "required": true}
+      ],
+      "tooltip": "Met en pause l'exécution pendant N secondes"
+    },
+    {
+      "id": "PlayAnimation",
+      "name": "Play Animation",
+      "description": "Joue une animation spécifique",
+      "category": "Animation",
+      "parameters": [
+        {"name": "animationName", "type": "string", "required": true},
+        {"name": "loop", "type": "bool", "default": false}
+      ],
+      "tooltip": "Lance l'animation spécifiée"
+    },
+    {
+      "id": "Flee",
+      "name": "Flee",
+      "description": "Fuit loin d'une cible",
+      "category": "Movement",
+      "parameters": [
+        {"name": "target", "type": "string", "required": true},
+        {"name": "distance", "type": "float", "default": 200.0}
+      ],
+      "tooltip": "S'éloigne de la cible jusqu'à une distance de sécurité"
+    },
+    {
+      "id": "PickupItem",
+      "name": "Pickup Item",
+      "description": "Ramasse un objet",
+      "category": "Interaction",
+      "parameters": [
+        {"name": "itemId", "type": "string", "required": true}
+      ],
+      "tooltip": "Ramasse l'objet spécifié"
+    },
+    {
+      "id": "UseItem",
+      "name": "Use Item",
+      "description": "Utilise un objet de l'inventaire",
+      "category": "Interaction",
+      "parameters": [
+        {"name": "itemId", "type": "string", "required": true}
+      ],
+      "tooltip": "Active l'objet spécifié depuis l'inventaire"
+    },
+    {
+      "id": "Heal",
+      "name": "Heal",
+      "description": "Soigne l'acteur ou une cible",
+      "category": "Combat",
+      "parameters": [
+        {"name": "amount", "type": "float", "default": 20.0},
+        {"name": "target", "type": "string", "default": "self"}
+      ],
+      "tooltip": "Restaure des points de vie"
+    },
+    {
+      "id": "SetVariable",
+      "name": "Set Variable",
+      "description": "Modifie une variable du blackboard",
+      "category": "Logic",
+      "parameters": [
+        {"name": "variableName", "type": "string", "required": true},
+        {"name": "value", "type": "string", "required": true}
+      ],
+      "tooltip": "Change la valeur d'une variable"
+    },
+    {
+      "id": "SendMessage",
+      "name": "Send Message",
+      "description": "Envoie un message à une autre entité",
+      "category": "Communication",
+      "parameters": [
+        {"name": "target", "type": "string", "required": true},
+        {"name": "message", "type": "string", "required": true}
+      ],
+      "tooltip": "Communique avec une autre entité"
+    },
+    {
+      "id": "Idle",
+      "name": "Idle",
+      "description": "Ne fait rien (état inactif)",
+      "category": "Basic",
+      "parameters": [],
+      "tooltip": "Reste immobile sans effectuer d'action"
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "version": "1.0",
+  "catalogType": "Conditions",
+  "types": [
+    {
+      "id": "HasTarget",
+      "name": "Has Target",
+      "description": "Vérifie si l'acteur a une cible",
+      "category": "Targeting",
+      "parameters": [],
+      "tooltip": "Retourne vrai si une cible est assignée"
+    },
+    {
+      "id": "IsLowHealth",
+      "name": "Is Low Health",
+      "description": "Vérifie si la santé est basse",
+      "category": "Status",
+      "parameters": [
+        {"name": "threshold", "type": "float", "default": 30.0}
+      ],
+      "tooltip": "Vrai si la santé est inférieure au seuil"
+    },
+    {
+      "id": "IsTargetInRange",
+      "name": "Is Target In Range",
+      "description": "Vérifie si la cible est à portée",
+      "category": "Targeting",
+      "parameters": [
+        {"name": "range", "type": "float", "default": 100.0}
+      ],
+      "tooltip": "Vrai si la distance à la cible est inférieure à la portée"
+    },
+    {
+      "id": "HasLineOfSight",
+      "name": "Has Line Of Sight",
+      "description": "Vérifie si l'acteur voit la cible",
+      "category": "Perception",
+      "parameters": [
+        {"name": "target", "type": "string", "required": true}
+      ],
+      "tooltip": "Vrai si aucun obstacle ne bloque la vision"
+    },
+    {
+      "id": "IsAlive",
+      "name": "Is Alive",
+      "description": "Vérifie si l'acteur est vivant",
+      "category": "Status",
+      "parameters": [],
+      "tooltip": "Vrai si les points de vie sont supérieurs à zéro"
+    },
+    {
+      "id": "HasItem",
+      "name": "Has Item",
+      "description": "Vérifie si l'acteur possède un objet",
+      "category": "Inventory",
+      "parameters": [
+        {"name": "itemId", "type": "string", "required": true}
+      ],
+      "tooltip": "Vrai si l'objet est dans l'inventaire"
+    },
+    {
+      "id": "IsVariableTrue",
+      "name": "Is Variable True",
+      "description": "Vérifie la valeur d'une variable booléenne",
+      "category": "Logic",
+      "parameters": [
+        {"name": "variableName", "type": "string", "required": true}
+      ],
+      "tooltip": "Vrai si la variable spécifiée est vraie"
+    },
+    {
+      "id": "IsInCombat",
+      "name": "Is In Combat",
+      "description": "Vérifie si l'acteur est en combat",
+      "category": "Combat",
+      "parameters": [],
+      "tooltip": "Vrai si l'acteur a été attaqué récemment"
+    },
+    {
+      "id": "HeardNoise",
+      "name": "Heard Noise",
+      "description": "Vérifie si un bruit a été détecté",
+      "category": "Perception",
+      "parameters": [
+        {"name": "radius", "type": "float", "default": 200.0}
+      ],
+      "tooltip": "Vrai si un son a été perçu dans le rayon"
+    },
+    {
+      "id": "IsPlayerNearby",
+      "name": "Is Player Nearby",
+      "description": "Vérifie si un joueur est proche",
+      "category": "Detection",
+      "parameters": [
+        {"name": "distance", "type": "float", "default": 150.0}
+      ],
+      "tooltip": "Vrai si un joueur est dans le rayon de détection"
+    },
+    {
+      "id": "CanAttack",
+      "name": "Can Attack",
+      "description": "Vérifie si l'acteur peut attaquer",
+      "category": "Combat",
+      "parameters": [],
+      "tooltip": "Vrai si le cooldown d'attaque est terminé"
+    },
+    {
+      "id": "HasReachedGoal",
+      "name": "Has Reached Goal",
+      "description": "Vérifie si la destination est atteinte",
+      "category": "Movement",
+      "parameters": [
+        {"name": "tolerance", "type": "float", "default": 10.0}
+      ],
+      "tooltip": "Vrai si l'acteur est arrivé à destination"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "version": "1.0",
+  "catalogType": "Decorators",
+  "types": [
+    {
+      "id": "Inverter",
+      "name": "Inverter",
+      "description": "Inverse le résultat du nœud enfant",
+      "category": "Logic",
+      "parameters": [],
+      "tooltip": "Success devient Failure et vice versa"
+    },
+    {
+      "id": "Succeeder",
+      "name": "Succeeder",
+      "description": "Retourne toujours Success",
+      "category": "Logic",
+      "parameters": [],
+      "tooltip": "Force le résultat à Success peu importe l'enfant"
+    },
+    {
+      "id": "Failer",
+      "name": "Failer",
+      "description": "Retourne toujours Failure",
+      "category": "Logic",
+      "parameters": [],
+      "tooltip": "Force le résultat à Failure peu importe l'enfant"
+    },
+    {
+      "id": "Repeater",
+      "name": "Repeater",
+      "description": "Répète le nœud enfant N fois",
+      "category": "Flow",
+      "parameters": [
+        {"name": "count", "type": "int", "default": 3}
+      ],
+      "tooltip": "Exécute l'enfant plusieurs fois"
+    },
+    {
+      "id": "RepeatUntilFail",
+      "name": "Repeat Until Fail",
+      "description": "Répète jusqu'à échec",
+      "category": "Flow",
+      "parameters": [],
+      "tooltip": "Continue d'exécuter tant que l'enfant réussit"
+    },
+    {
+      "id": "RepeatUntilSuccess",
+      "name": "Repeat Until Success",
+      "description": "Répète jusqu'à succès",
+      "category": "Flow",
+      "parameters": [],
+      "tooltip": "Continue d'exécuter tant que l'enfant échoue"
+    },
+    {
+      "id": "Cooldown",
+      "name": "Cooldown",
+      "description": "Ajoute un délai de récupération",
+      "category": "Timing",
+      "parameters": [
+        {"name": "seconds", "type": "float", "required": true}
+      ],
+      "tooltip": "Empêche la ré-exécution pendant N secondes"
+    },
+    {
+      "id": "TimeLimit",
+      "name": "Time Limit",
+      "description": "Limite le temps d'exécution",
+      "category": "Timing",
+      "parameters": [
+        {"name": "maxSeconds", "type": "float", "required": true}
+      ],
+      "tooltip": "Abandonne si l'exécution dépasse le temps limite"
+    },
+    {
+      "id": "RetryUntilSuccess",
+      "name": "Retry Until Success",
+      "description": "Réessaie jusqu'au succès",
+      "category": "Flow",
+      "parameters": [
+        {"name": "maxAttempts", "type": "int", "default": 3}
+      ],
+      "tooltip": "Répète en cas d'échec, max N tentatives"
+    },
+    {
+      "id": "ForceSuccess",
+      "name": "Force Success",
+      "description": "Convertit Running en Success",
+      "category": "Logic",
+      "parameters": [],
+      "tooltip": "Interrompt l'enfant et retourne Success"
+    },
+    {
+      "id": "ForceFailure",
+      "name": "Force Failure",
+      "description": "Convertit Running en Failure",
+      "category": "Logic",
+      "parameters": [],
+      "tooltip": "Interrompt l'enfant et retourne Failure"
+    },
+    {
+      "id": "AlwaysRunning",
+      "name": "Always Running",
+      "description": "Retourne toujours Running",
+      "category": "Logic",
+      "parameters": [],
+      "tooltip": "Continue indéfiniment (pour boucles infinies)"
+    }
+  ]
+}
