@@ -113,19 +113,57 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 {
     if (!event) return SDL_APP_CONTINUE;
 
-    InputsManager::Get().HandleEvent(event); //facto
+    // ===== A) ImGui Event Processing - MUST BE FIRST =====
+    // Process ImGui events before game logic to enable panel interactivity
+    ImGui_ImplSDL3_ProcessEvent(event);
+    
+    // Get ImGui IO to check if ImGui wants to capture input
+    ImGuiIO& io = ImGui::GetIO();
+    
+    // Skip event propagation to game if ImGui wants to capture it
+    bool skipEventForGame = false;
+    
+    // Check if ImGui wants to capture mouse events
+    if (io.WantCaptureMouse)
+    {
+        if (event->type == SDL_EVENT_MOUSE_BUTTON_DOWN ||
+            event->type == SDL_EVENT_MOUSE_BUTTON_UP ||
+            event->type == SDL_EVENT_MOUSE_MOTION ||
+            event->type == SDL_EVENT_MOUSE_WHEEL)
+        {
+            skipEventForGame = true;
+        }
+    }
+    
+    // Check if ImGui wants to capture keyboard events
+    if (io.WantCaptureKeyboard)
+    {
+        if (event->type == SDL_EVENT_KEY_DOWN ||
+            event->type == SDL_EVENT_KEY_UP ||
+            event->type == SDL_EVENT_TEXT_INPUT)
+        {
+            skipEventForGame = true;
+        }
+    }
+    
+    // Only propagate to game systems if ImGui doesn't want the event
+    if (!skipEventForGame)
+    {
+        InputsManager::Get().HandleEvent(event); //facto
+    }
 
     switch (event->type)
     {
         case SDL_EVENT_KEY_DOWN:
         
-        // F2 toggles Blueprint Editor
+        // F2 toggles Blueprint Editor (always process, even if ImGui is capturing)
         if (event->key.key == SDLK_F2)
         {
             Olympe::BlueprintEditor::Get().ToggleActive();
             SYSTEM_LOG << "BlueprintEditor " 
                       << (Olympe::BlueprintEditor::Get().IsActive() ? "activated" : "deactivated") 
                       << endl;
+            return SDL_APP_CONTINUE; // Early return to avoid ESC dialog below
         }
         
         if (event->key.key == SDLK_ESCAPE)

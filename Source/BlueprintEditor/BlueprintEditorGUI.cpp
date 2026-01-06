@@ -19,6 +19,16 @@ namespace Olympe
         , m_ShowAddComponentDialog(false)
         , m_ShowAboutDialog(false)
         , m_SelectedComponentType(0)
+        , m_ShowAssetBrowser(true)
+        , m_ShowAssetInfo(true)
+        , m_ShowInspector(true)
+        , m_ShowNodeGraph(true)
+        , m_ShowEntities(true)
+        , m_ShowEntityProperties(true)
+        , m_ShowComponentGraph(true)
+        , m_ShowPropertyPanel(true)
+        , m_ShowPreferences(false)
+        , m_ShowShortcuts(false)
     {
         m_NewBlueprintNameBuffer[0] = '\0';
         m_FilepathBuffer[0] = '\0';
@@ -77,13 +87,15 @@ namespace Olympe
         // Render menu bar in main viewport
         if (ImGui::BeginMainMenuBar())
         {
+            // ===== D) FILE MENU =====
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("New", "Ctrl+N"))
+                if (ImGui::MenuItem("New Blueprint", "Ctrl+N"))
                     NewBlueprint();
                 
-                if (ImGui::MenuItem("Open...", "Ctrl+O"))
+                if (ImGui::MenuItem("Open Blueprint...", "Ctrl+O"))
                 {
+                    // TODO: File dialog - for now use example
                     LoadBlueprint("../Blueprints/example_entity_simple.json");
                 }
                 
@@ -97,14 +109,35 @@ namespace Olympe
                 
                 ImGui::Separator();
                 
-                if (ImGui::MenuItem("Close Editor", "F2"))
+                if (ImGui::MenuItem("Reload Assets"))
+                {
+                    backend.RefreshAssets();
+                }
+                
+                ImGui::Separator();
+                
+                if (ImGui::MenuItem("Exit Editor", "F2"))
                     backend.SetActive(false);
                 
                 ImGui::EndMenu();
             }
 
+            // ===== D) EDIT MENU =====
             if (ImGui::BeginMenu("Edit"))
             {
+                // Undo/Redo (stubs for now)
+                if (ImGui::MenuItem("Undo", "Ctrl+Z", false, false))
+                {
+                    // TODO: Implement undo
+                }
+                if (ImGui::MenuItem("Redo", "Ctrl+Y", false, false))
+                {
+                    // TODO: Implement redo
+                }
+                
+                ImGui::Separator();
+                
+                // Component operations
                 if (ImGui::MenuItem("Add Component", "Insert", false, backend.HasBlueprint()))
                     m_ShowAddComponentDialog = true;
                 
@@ -114,57 +147,131 @@ namespace Olympe
                     RemoveComponent(m_SelectedComponentIndex);
                 }
                 
+                ImGui::Separator();
+                
+                if (ImGui::MenuItem("Preferences..."))
+                {
+                    m_ShowPreferences = true;
+                }
+                
                 ImGui::EndMenu();
             }
 
+            // ===== D) VIEW MENU =====
             if (ImGui::BeginMenu("View"))
             {
+                ImGui::Text("Panels:");
+                ImGui::Separator();
+                
+                ImGui::MenuItem("Asset Browser", nullptr, &m_ShowAssetBrowser);
+                ImGui::MenuItem("Asset Info", nullptr, &m_ShowAssetInfo);
+                ImGui::MenuItem("Runtime Entities", nullptr, &m_ShowEntities);
+                ImGui::MenuItem("Inspector", nullptr, &m_ShowInspector);
+                ImGui::MenuItem("Node Graph", nullptr, &m_ShowNodeGraph);
+                ImGui::MenuItem("Entity Properties", nullptr, &m_ShowEntityProperties);
+                ImGui::MenuItem("Component Graph", nullptr, &m_ShowComponentGraph);
+                ImGui::MenuItem("Property Panel", nullptr, &m_ShowPropertyPanel);
+                
+                ImGui::Separator();
+                
+                ImGui::Text("Debug:");
+                ImGui::Separator();
                 ImGui::MenuItem("ImGui Demo", nullptr, &m_ShowDemoWindow);
+                
+                ImGui::Separator();
+                
+                if (ImGui::MenuItem("Reset Layout"))
+                {
+                    // Reset all panels to visible
+                    m_ShowAssetBrowser = true;
+                    m_ShowAssetInfo = true;
+                    m_ShowInspector = true;
+                    m_ShowNodeGraph = true;
+                    m_ShowEntities = true;
+                    m_ShowEntityProperties = true;
+                    m_ShowComponentGraph = true;
+                    m_ShowPropertyPanel = true;
+                }
+                
                 ImGui::EndMenu();
             }
 
+            // ===== D) HELP MENU =====
             if (ImGui::BeginMenu("Help"))
             {
-                if (ImGui::MenuItem("About"))
+                if (ImGui::MenuItem("Documentation"))
+                {
+                    // TODO: Open documentation URL or local help
+                    std::cout << "Opening documentation..." << std::endl;
+                }
+                
+                if (ImGui::MenuItem("Keyboard Shortcuts"))
+                {
+                    m_ShowShortcuts = true;
+                }
+                
+                ImGui::Separator();
+                
+                if (ImGui::MenuItem("About Olympe Engine"))
                     m_ShowAboutDialog = true;
+                
                 ImGui::EndMenu();
             }
 
             ImGui::EndMainMenuBar();
         }
 
-        // Render asset management panels
-        m_AssetBrowser.Render();
+        // D) Render panels conditionally based on visibility flags
+        if (m_ShowAssetBrowser)
+            m_AssetBrowser.Render();
         
         // Update asset info panel when selection changes
-        if (m_AssetBrowser.HasSelection())
+        if (m_ShowAssetInfo)
         {
-            std::string selectedPath = m_AssetBrowser.GetSelectedAssetPath();
-            // Only reload if selection changed
-            if (!m_AssetInfoPanel.HasAsset() || m_AssetInfoPanel.GetLoadedFilepath() != selectedPath)
+            if (m_AssetBrowser.HasSelection())
             {
-                m_AssetInfoPanel.LoadAsset(selectedPath);
+                std::string selectedPath = m_AssetBrowser.GetSelectedAssetPath();
+                // Only reload if selection changed
+                if (!m_AssetInfoPanel.HasAsset() || m_AssetInfoPanel.GetLoadedFilepath() != selectedPath)
+                {
+                    m_AssetInfoPanel.LoadAsset(selectedPath);
+                }
             }
+            m_AssetInfoPanel.Render();
         }
         
-        m_AssetInfoPanel.Render();
-        
         // === Phase 3: Node Graph Editor ===
-        m_NodeGraphPanel.Render();
+        if (m_ShowNodeGraph)
+            m_NodeGraphPanel.Render();
         
         // === Phase 4: Runtime Entities and Inspector ===
-        m_EntitiesPanel.Render();
-        m_InspectorPanel.Render();
+        if (m_ShowEntities)
+            m_EntitiesPanel.Render();
+            
+        if (m_ShowInspector)
+            m_InspectorPanel.Render();
 
         // Render components as separate windows
-        RenderEntityPanel();
-        RenderNodeEditor();
-        RenderPropertyPanel();
+        if (m_ShowEntityProperties)
+            RenderEntityPanel();
+            
+        if (m_ShowComponentGraph)
+            RenderNodeEditor();
+            
+        if (m_ShowPropertyPanel)
+            RenderPropertyPanel();
+            
         RenderStatusBar();
 
         // Dialogs
         if (m_ShowAddComponentDialog)
             RenderComponentAddDialog();
+            
+        if (m_ShowPreferences)
+            RenderPreferencesDialog();
+            
+        if (m_ShowShortcuts)
+            RenderShortcutsDialog();
 
         // About dialog
         if (m_ShowAboutDialog)
@@ -172,15 +279,22 @@ namespace Olympe
             ImGui::OpenPopup("About");
             if (ImGui::BeginPopupModal("About", &m_ShowAboutDialog, ImGuiWindowFlags_AlwaysAutoResize))
             {
-                ImGui::Text("Olympe Blueprint Editor - Phase 2");
+                ImGui::Text("Olympe Blueprint Editor");
                 ImGui::Separator();
                 ImGui::Text("Visual node-based editor for entity blueprints");
                 ImGui::Text("Version: 2.0");
-                ImGui::Text("Phase: Complete Visual Editor with Asset Browser");
+                ImGui::Text("Status: Interactive panels, entity synchronization, full menus");
+                ImGui::Separator();
                 ImGui::Text("Libraries:");
                 ImGui::BulletText("ImGui for UI");
                 ImGui::BulletText("ImNodes for node editing");
                 ImGui::BulletText("SDL3 for window/rendering");
+                ImGui::Separator();
+                ImGui::Text("Features:");
+                ImGui::BulletText("Interactive, dockable panels");
+                ImGui::BulletText("Runtime entity tracking");
+                ImGui::BulletText("Synchronized panel selection");
+                ImGui::BulletText("Full menu system");
                 if (ImGui::Button("Close", ImVec2(120, 0)))
                     m_ShowAboutDialog = false;
                 ImGui::EndPopup();
@@ -568,6 +682,89 @@ namespace Olympe
             
             // Mark as modified in backend
             BlueprintEditor::Get().MarkAsModified();
+        }
+    }
+    
+    // D) Additional dialog implementations
+    void BlueprintEditorGUI::RenderPreferencesDialog()
+    {
+        ImGui::OpenPopup("Preferences");
+        
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(400, 300), ImGuiCond_Appearing);
+        
+        if (ImGui::BeginPopupModal("Preferences", &m_ShowPreferences))
+        {
+            ImGui::Text("Editor Preferences");
+            ImGui::Separator();
+            
+            ImGui::TextWrapped("Preferences coming soon...");
+            ImGui::Spacing();
+            
+            ImGui::Text("Planned settings:");
+            ImGui::BulletText("Auto-save interval");
+            ImGui::BulletText("Theme selection");
+            ImGui::BulletText("Grid snap settings");
+            ImGui::BulletText("Default component properties");
+            
+            ImGui::Separator();
+            
+            if (ImGui::Button("Close", ImVec2(120, 0)))
+            {
+                m_ShowPreferences = false;
+            }
+            
+            ImGui::EndPopup();
+        }
+    }
+    
+    void BlueprintEditorGUI::RenderShortcutsDialog()
+    {
+        ImGui::OpenPopup("Keyboard Shortcuts");
+        
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(450, 400), ImGuiCond_Appearing);
+        
+        if (ImGui::BeginPopupModal("Keyboard Shortcuts", &m_ShowShortcuts))
+        {
+            ImGui::Text("Keyboard Shortcuts");
+            ImGui::Separator();
+            
+            ImGui::Columns(2, "shortcuts");
+            ImGui::SetColumnWidth(0, 200);
+            
+            ImGui::Text("Editor Control:");
+            ImGui::Separator();
+            ImGui::Text("F2"); ImGui::NextColumn(); ImGui::Text("Toggle Blueprint Editor"); ImGui::NextColumn();
+            ImGui::Text("Escape"); ImGui::NextColumn(); ImGui::Text("Exit Application"); ImGui::NextColumn();
+            
+            ImGui::Spacing();
+            ImGui::Text("File Operations:");
+            ImGui::Separator();
+            ImGui::Text("Ctrl+N"); ImGui::NextColumn(); ImGui::Text("New Blueprint"); ImGui::NextColumn();
+            ImGui::Text("Ctrl+O"); ImGui::NextColumn(); ImGui::Text("Open Blueprint"); ImGui::NextColumn();
+            ImGui::Text("Ctrl+S"); ImGui::NextColumn(); ImGui::Text("Save"); ImGui::NextColumn();
+            ImGui::Text("Ctrl+Shift+S"); ImGui::NextColumn(); ImGui::Text("Save As"); ImGui::NextColumn();
+            
+            ImGui::Spacing();
+            ImGui::Text("Edit Operations:");
+            ImGui::Separator();
+            ImGui::Text("Ctrl+Z"); ImGui::NextColumn(); ImGui::Text("Undo (coming soon)"); ImGui::NextColumn();
+            ImGui::Text("Ctrl+Y"); ImGui::NextColumn(); ImGui::Text("Redo (coming soon)"); ImGui::NextColumn();
+            ImGui::Text("Insert"); ImGui::NextColumn(); ImGui::Text("Add Component"); ImGui::NextColumn();
+            ImGui::Text("Delete"); ImGui::NextColumn(); ImGui::Text("Remove Component"); ImGui::NextColumn();
+            
+            ImGui::Columns(1);
+            ImGui::Separator();
+            
+            if (ImGui::Button("Close", ImVec2(120, 0)))
+            {
+                m_ShowShortcuts = false;
+            }
+            
+            ImGui::EndPopup();
         }
     }
 }

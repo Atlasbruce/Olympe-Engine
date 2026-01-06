@@ -6,6 +6,7 @@
  */
 
 #include "WorldBridge.h"
+#include "BlueprintEditor.h"
 #include "EntityInspectorManager.h"
 #include "../ECS_Entity.h"
 #include <cstdint>  // Pour uint64_t
@@ -15,6 +16,10 @@
 
 extern "C" void NotifyEditorEntityCreated(uint64_t entity)
 {
+    // Notify BlueprintEditor backend (for Asset Browser runtime entities)
+    Olympe::BlueprintEditor::Get().NotifyEntityCreated(entity);
+    
+    // Also notify EntityInspectorManager (for Inspector panel)
     if (Olympe::EntityInspectorManager::Get().IsInitialized())
     {
         Olympe::EntityInspectorManager::Get().OnEntityCreated(static_cast<EntityID>(entity));
@@ -23,6 +28,10 @@ extern "C" void NotifyEditorEntityCreated(uint64_t entity)
 
 extern "C" void NotifyEditorEntityDestroyed(uint64_t entity)
 {
+    // Notify BlueprintEditor backend
+    Olympe::BlueprintEditor::Get().NotifyEntityDestroyed(entity);
+    
+    // Also notify EntityInspectorManager
     if (Olympe::EntityInspectorManager::Get().IsInitialized())
     {
         Olympe::EntityInspectorManager::Get().OnEntityDestroyed(static_cast<EntityID>(entity));

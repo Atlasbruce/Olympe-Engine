@@ -3,6 +3,8 @@
  */
 
 #include "NodeGraphPanel.h"
+#include "BlueprintEditor.h"
+#include "EntityInspectorManager.h"
 #include "NodeGraphManager.h"
 #include "EnumCatalogManager.h"
 #include "../third_party/imgui/imgui.h"
@@ -33,6 +35,22 @@ namespace Olympe
     void NodeGraphPanel::Render()
     {
         ImGui::Begin("Node Graph Editor");
+
+        // C) Show currently selected entity at the top
+        uint64_t selectedEntity = BlueprintEditor::Get().GetSelectedEntity();
+        if (selectedEntity != 0)
+        {
+            EntityInfo info = EntityInspectorManager::Get().GetEntityInfo(selectedEntity);
+            ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), 
+                "Selected Entity: %s (ID: %llu)", info.name.c_str(), selectedEntity);
+            ImGui::Separator();
+        }
+        else
+        {
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
+                "No entity selected. Select an entity to view its Behavior Tree / HFSM.");
+            ImGui::Separator();
+        }
 
         // Render graph tabs
         RenderGraphTabs();

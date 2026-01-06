@@ -121,6 +121,20 @@ namespace Olympe
         std::string GetLastError() const { return m_LastError; }
         bool HasError() const { return !m_LastError.empty(); }
         void ClearError() { m_LastError.clear(); }
+        
+        // ===== B) Runtime Entity Management =====
+        // World bridge: notification hooks for entity lifecycle
+        void NotifyEntityCreated(uint64_t entityId);
+        void NotifyEntityDestroyed(uint64_t entityId);
+        
+        // Runtime entity queries
+        const std::vector<uint64_t>& GetRuntimeEntities() const { return m_RuntimeEntities; }
+        size_t GetRuntimeEntityCount() const { return m_RuntimeEntities.size(); }
+        
+        // ===== C) Entity Selection for Panel Synchronization =====
+        void SetSelectedEntity(uint64_t entityId);
+        uint64_t GetSelectedEntity() const { return m_SelectedEntity; }
+        bool HasSelectedEntity() const { return m_SelectedEntity != 0; } // 0 = INVALID_ENTITY_ID
 
     private:
         // Private constructor/destructor for singleton
@@ -153,5 +167,11 @@ namespace Olympe
         
         // Error handling
         std::string m_LastError;
+        
+        // ===== B) Runtime Entity Tracking =====
+        std::vector<uint64_t> m_RuntimeEntities;  // List of all runtime entities from World
+        
+        // ===== C) Entity Selection =====
+        uint64_t m_SelectedEntity; // Currently selected entity (0 = none)
     };
 }

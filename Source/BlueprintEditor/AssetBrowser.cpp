@@ -5,6 +5,7 @@
 
 #include "AssetBrowser.h"
 #include "BlueprintEditor.h"
+#include "EntityInspectorManager.h"
 #include "../third_party/imgui/imgui.h"
 #include <algorithm>
 #include <iostream>
@@ -172,6 +173,10 @@ namespace Olympe
         {
             RenderFilterUI();
 
+            // ===== SECTION 1: Blueprint Assets (Files) =====
+            ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f), "Blueprint Assets:");
+            ImGui::Separator();
+            
             // Get asset tree from backend
             auto rootNode = BlueprintEditor::Get().GetAssetTree();
             
@@ -191,12 +196,91 @@ namespace Olympe
                 }
                 else
                 {
-                    ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), 
-                        "No assets found. Click Refresh.");
+                    ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
+                        "No blueprint files found.");
                 }
             }
+            
+            ImGui::Spacing();
+            ImGui::Spacing();
+            
+            // ===== SECTION 2: Runtime Entities from World =====
+            ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "Runtime Entities:");
+            ImGui::Text("(%zu active)", BlueprintEditor::Get().GetRuntimeEntityCount());
+            ImGui::Separator();
+            
+            RenderRuntimeEntities();
         }
         ImGui::End();
+    }
+    
+    void AssetBrowser::RenderRuntimeEntities()
+    {
+        // Get runtime entities from BlueprintEditor backend
+        const auto& entities = BlueprintEditor::Get().GetRuntimeEntities();
+        
+        if (entities.empty())
+        {
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No runtime entities.");
+            ImGui::TextWrapped("Create entities with World::CreateEntity() to see them here.");
+            return;
+        }
+        
+        // Use EntityInspectorManager to get entity names and info
+        const auto& inspector = Olympe::EntityInspectorManager::Get();
+        if (!inspector.IsInitialized())
+        {
+            ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.0f, 1.0f), 
+                "Inspector not initialized.");
+            return;
+        }
+        
+        // Get current selection
+        uint64_t selectedEntity = BlueprintEditor::Get().GetSelectedEntity();
+        
+        // Render each entity as a selectable item
+        ImGui::BeginChild("RuntimeEntitiesScroll", ImVec2(0, 200), true);
+        
+        for (uint64_t entityId : entities)
+        {
+            bool isSelected = (selectedEntity == entityId);
+            
+            // Get entity info from inspector
+            EntityInfo info = inspector.GetEntityInfo(entityId);
+            std::string displayName = info.name;
+            if (displayName.empty())
+            {
+                displayName = "Entity_" + std::to_string(entityId);
+            }
+            
+            // Add component count badge
+            displayName += " (" + std::to_string(info.componentTypes.size()) + " comp)";
+            
+            // Selectable item
+            if (ImGui::Selectable(displayName.c_str(), isSelected))
+            {
+                BlueprintEditor::Get().SetSelectedEntity(entityId);
+            }
+            
+            // Tooltip on hover
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::BeginTooltip();
+                ImGui::Text("Entity ID: %llu", entityId);
+                ImGui::Text("Components: %zu", info.componentTypes.size());
+                if (!info.componentTypes.empty())
+                {
+                    ImGui::Separator();
+                    for (const auto& compType : info.componentTypes)
+                    {
+                        ImGui::BulletText("%s", compType.c_str());
+                    }
+                }
+                ImGui::EndTooltip();
+            }
+        }
+        
+        ImGui::EndChild();
     }
 
     std::string AssetBrowser::GetSelectedAssetPath() const
