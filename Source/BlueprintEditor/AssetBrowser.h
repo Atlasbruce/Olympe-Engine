@@ -53,6 +53,9 @@ namespace Olympe
         // Render tree node recursively (uses backend data)
         void RenderTreeNode(const std::shared_ptr<AssetNode>& node);
         
+        // Render runtime entities section (B)
+        void RenderRuntimeEntities();
+        
         // Apply filters to determine if node should be visible
         bool PassesFilter(const std::shared_ptr<AssetNode>& node) const;
         

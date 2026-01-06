@@ -3,6 +3,7 @@
  */
 
 #include "EntitiesPanel.h"
+#include "BlueprintEditor.h"
 #include "EntityInspectorManager.h"
 #include "../third_party/imgui/imgui.h"
 #include <iostream>
@@ -81,12 +82,14 @@ namespace Olympe
 
     void EntitiesPanel::RenderEntityItem(uint64_t entityId, const std::string& entityName)
     {
-        bool isSelected = (EntityInspectorManager::Get().GetSelectedEntity() == entityId);
+        // C) Use BlueprintEditor backend for selection state
+        bool isSelected = (BlueprintEditor::Get().GetSelectedEntity() == entityId);
 
         // Selectable entity item
         if (ImGui::Selectable(entityName.c_str(), isSelected))
         {
-            EntityInspectorManager::Get().SetSelectedEntity(entityId);
+            // C) Set selection in BlueprintEditor backend - this will synchronize all panels
+            BlueprintEditor::Get().SetSelectedEntity(entityId);
         }
 
         // Context menu
@@ -97,7 +100,7 @@ namespace Olympe
 
             if (ImGui::MenuItem("Select"))
             {
-                EntityInspectorManager::Get().SetSelectedEntity(entityId);
+                BlueprintEditor::Get().SetSelectedEntity(entityId);
             }
 
             // Note: Destroy would require access to World

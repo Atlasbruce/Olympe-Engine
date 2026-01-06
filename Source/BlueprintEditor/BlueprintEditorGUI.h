@@ -57,6 +57,10 @@ namespace Olympe
         void RenderPropertyPanel();
         void RenderStatusBar();
         void RenderComponentAddDialog();
+        
+        // D) Additional dialog methods
+        void RenderPreferencesDialog();
+        void RenderShortcutsDialog();
 
         // File operations (delegate to backend)
         void NewBlueprint();
@@ -83,6 +87,20 @@ namespace Olympe
         char m_NewBlueprintNameBuffer[256];
         char m_FilepathBuffer[512];
         int m_SelectedComponentType;
+        
+        // D) Panel visibility flags for View menu
+        bool m_ShowAssetBrowser;
+        bool m_ShowAssetInfo;
+        bool m_ShowInspector;
+        bool m_ShowNodeGraph;
+        bool m_ShowEntities;
+        bool m_ShowEntityProperties;
+        bool m_ShowComponentGraph;
+        bool m_ShowPropertyPanel;
+        
+        // D) Additional dialog flags
+        bool m_ShowPreferences;
+        bool m_ShowShortcuts;
         
         // Asset management UI (uses backend for data)
         AssetBrowser m_AssetBrowser;

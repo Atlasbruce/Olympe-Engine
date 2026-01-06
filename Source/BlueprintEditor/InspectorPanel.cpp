@@ -3,6 +3,7 @@
  */
 
 #include "InspectorPanel.h"
+#include "BlueprintEditor.h"
 #include "EntityInspectorManager.h"
 #include "NodeGraphManager.h"
 #include "EnumCatalogManager.h"
@@ -59,8 +60,8 @@ namespace Olympe
 
     InspectorContext InspectorPanel::DetermineContext()
     {
-        // Priority: Entity selection over node selection
-        if (EntityInspectorManager::Get().HasSelection())
+        // C) Priority: Entity selection from BlueprintEditor backend
+        if (BlueprintEditor::Get().HasSelectedEntity())
         {
             return InspectorContext::RuntimeEntity;
         }
@@ -84,11 +85,13 @@ namespace Olympe
 
     void InspectorPanel::RenderEntityInspector()
     {
-        uint64_t selectedEntity = EntityInspectorManager::Get().GetSelectedEntity();
+        // C) Get selected entity from BlueprintEditor backend
+        uint64_t selectedEntity = BlueprintEditor::Get().GetSelectedEntity();
 
         if (selectedEntity == 0)  // INVALID_ENTITY_ID
         {
             ImGui::Text("No entity selected");
+            ImGui::TextWrapped("Select an entity from the Asset Browser or Entities panel to inspect its properties.");
             return;
         }
 

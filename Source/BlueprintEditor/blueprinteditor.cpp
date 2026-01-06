@@ -38,6 +38,7 @@ namespace Olympe
         : m_IsActive(false)
         , m_HasUnsavedChanges(false)
         , m_AssetRootPath("Blueprints")
+        , m_SelectedEntity(0)  // 0 = INVALID_ENTITY_ID
     {
     }
 
@@ -536,6 +537,56 @@ namespace Olympe
         catch (const std::exception&)
         {
             return false;
+        }
+    }
+
+    // ========================================================================
+    // B) Runtime Entity Management Implementation
+    // ========================================================================
+    
+    void BlueprintEditor::NotifyEntityCreated(uint64_t entityId)
+    {
+        // Add to runtime entities list if not already present
+        auto it = std::find(m_RuntimeEntities.begin(), m_RuntimeEntities.end(), entityId);
+        if (it == m_RuntimeEntities.end())
+        {
+            m_RuntimeEntities.push_back(entityId);
+            std::cout << "BlueprintEditor: Entity " << entityId << " created (total: " 
+                     << m_RuntimeEntities.size() << ")" << std::endl;
+        }
+    }
+    
+    void BlueprintEditor::NotifyEntityDestroyed(uint64_t entityId)
+    {
+        // Remove from runtime entities list
+        auto it = std::find(m_RuntimeEntities.begin(), m_RuntimeEntities.end(), entityId);
+        if (it != m_RuntimeEntities.end())
+        {
+            m_RuntimeEntities.erase(it);
+            std::cout << "BlueprintEditor: Entity " << entityId << " destroyed (total: " 
+                     << m_RuntimeEntities.size() << ")" << std::endl;
+            
+            // If this was the selected entity, clear selection
+            if (m_SelectedEntity == entityId)
+            {
+                m_SelectedEntity = 0; // INVALID_ENTITY_ID
+            }
+        }
+    }
+
+    // ========================================================================
+    // C) Entity Selection Implementation
+    // ========================================================================
+    
+    void BlueprintEditor::SetSelectedEntity(uint64_t entityId)
+    {
+        if (m_SelectedEntity != entityId)
+        {
+            m_SelectedEntity = entityId;
+            std::cout << "BlueprintEditor: Selected entity " << entityId << std::endl;
+            
+            // All panels will automatically read this selection on next Render()
+            // No explicit notification needed - reactive update pattern
         }
     }
 
