@@ -5,6 +5,7 @@
 
 #include "BlueprintEditorGUI.h"
 #include "BlueprintEditor.h"
+#include "TemplateBrowserPanel.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
 
@@ -27,8 +28,10 @@ namespace Olympe
         , m_ShowEntityProperties(true)
         , m_ShowComponentGraph(true)
         , m_ShowPropertyPanel(true)
+        , m_ShowTemplateBrowser(false)
         , m_ShowPreferences(false)
         , m_ShowShortcuts(false)
+        , m_TemplateBrowserPanel(nullptr)
     {
         m_NewBlueprintNameBuffer[0] = '\0';
         m_FilepathBuffer[0] = '\0';
@@ -36,6 +39,11 @@ namespace Olympe
 
     BlueprintEditorGUI::~BlueprintEditorGUI()
     {
+        if (m_TemplateBrowserPanel)
+        {
+            delete m_TemplateBrowserPanel;
+            m_TemplateBrowserPanel = nullptr;
+        }
     }
 
     void BlueprintEditorGUI::Initialize()
@@ -60,11 +68,22 @@ namespace Olympe
         m_NodeGraphPanel.Initialize();
         m_EntitiesPanel.Initialize();
         m_InspectorPanel.Initialize();
+        
+        // Initialize template browser panel
+        m_TemplateBrowserPanel = new TemplateBrowserPanel();
+        m_TemplateBrowserPanel->Initialize();
     }
 
     void BlueprintEditorGUI::Shutdown()
     {
         // Shutdown panels
+        if (m_TemplateBrowserPanel)
+        {
+            m_TemplateBrowserPanel->Shutdown();
+            delete m_TemplateBrowserPanel;
+            m_TemplateBrowserPanel = nullptr;
+        }
+        
         m_InspectorPanel.Shutdown();
         m_EntitiesPanel.Shutdown();
         m_NodeGraphPanel.Shutdown();
@@ -106,6 +125,23 @@ namespace Olympe
                 
                 if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false, backend.HasBlueprint()))
                     SaveBlueprintAs();
+                
+                ImGui::Separator();
+                
+                // Phase 5: Template menu items
+                if (ImGui::MenuItem("Save as Template...", "Ctrl+Shift+T", false, backend.HasBlueprint()))
+                {
+                    if (m_TemplateBrowserPanel)
+                    {
+                        m_ShowTemplateBrowser = true;
+                        // Trigger the modal by accessing the panel
+                    }
+                }
+                
+                if (ImGui::MenuItem("Template Browser", nullptr, &m_ShowTemplateBrowser))
+                {
+                    // Toggle template browser visibility
+                }
                 
                 ImGui::Separator();
                 
@@ -171,6 +207,7 @@ namespace Olympe
                 ImGui::MenuItem("Entity Properties", nullptr, &m_ShowEntityProperties);
                 ImGui::MenuItem("Component Graph", nullptr, &m_ShowComponentGraph);
                 ImGui::MenuItem("Property Panel", nullptr, &m_ShowPropertyPanel);
+                ImGui::MenuItem("Template Browser", nullptr, &m_ShowTemplateBrowser);  // Phase 5
                 
                 ImGui::Separator();
                 
@@ -250,6 +287,10 @@ namespace Olympe
             
         if (m_ShowInspector)
             m_InspectorPanel.Render();
+        
+        // === Phase 5: Template Browser ===
+        if (m_ShowTemplateBrowser && m_TemplateBrowserPanel)
+            m_TemplateBrowserPanel->Render();
 
         // Render components as separate windows
         if (m_ShowEntityProperties)

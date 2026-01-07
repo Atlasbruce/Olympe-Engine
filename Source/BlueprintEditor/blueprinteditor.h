@@ -135,6 +135,19 @@ namespace Olympe
         void SetSelectedEntity(uint64_t entityId);
         uint64_t GetSelectedEntity() const { return m_SelectedEntity; }
         bool HasSelectedEntity() const { return m_SelectedEntity != 0; } // 0 = INVALID_ENTITY_ID
+        
+        // ===== Phase 5: Template Management =====
+        // Save current blueprint as template
+        bool SaveCurrentAsTemplate(const std::string& name, const std::string& description, const std::string& category);
+        
+        // Apply template to current blueprint
+        bool ApplyTemplate(const std::string& templateId);
+        
+        // Delete a template
+        bool DeleteTemplate(const std::string& templateId);
+        
+        // Reload templates from disk
+        void ReloadTemplates();
 
     private:
         // Private constructor/destructor for singleton

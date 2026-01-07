@@ -10,6 +10,7 @@
 #include "EnumCatalogManager.h"
 #include "NodeGraphManager.h"
 #include "EntityInspectorManager.h"
+#include "TemplateManager.h"
 #include "../json_helper.h"
 #include <algorithm>
 #include <iostream>
@@ -67,6 +68,9 @@ namespace Olympe
         // Initialize entity inspector manager
         EntityInspectorManager::Get().Initialize();
         
+        // Initialize template manager
+        TemplateManager::Get().Initialize();
+        
         // Scan assets on initialization
         RefreshAssets();
     }
@@ -74,6 +78,7 @@ namespace Olympe
     void BlueprintEditor::Shutdown()
     {
         // Shutdown managers in reverse order
+        TemplateManager::Get().Shutdown();
         EntityInspectorManager::Get().Shutdown();
         NodeGraphManager::Get().Shutdown();
         EnumCatalogManager::Get().Shutdown();
@@ -588,6 +593,80 @@ namespace Olympe
             // All panels will automatically read this selection on next Render()
             // No explicit notification needed - reactive update pattern
         }
+    }
+
+    // ========================================================================
+    // Phase 5: Template Management Implementation
+    // ========================================================================
+    
+    bool BlueprintEditor::SaveCurrentAsTemplate(const std::string& name, 
+                                                const std::string& description, 
+                                                const std::string& category)
+    {
+        if (!HasBlueprint())
+        {
+            m_LastError = "No blueprint loaded to save as template";
+            return false;
+        }
+
+        // Convert current blueprint to JSON
+        json blueprintJson = m_CurrentBlueprint.ToJson();
+
+        // Create template from current blueprint
+        BlueprintTemplate tpl = TemplateManager::Get().CreateTemplateFromBlueprint(
+            blueprintJson,
+            name,
+            description,
+            category,
+            "User"
+        );
+
+        // Save template
+        if (!TemplateManager::Get().SaveTemplate(tpl))
+        {
+            m_LastError = "Failed to save template: " + TemplateManager::Get().GetLastError();
+            return false;
+        }
+
+        std::cout << "Template saved: " << name << " (" << tpl.id << ")" << std::endl;
+        return true;
+    }
+
+    bool BlueprintEditor::ApplyTemplate(const std::string& templateId)
+    {
+        json blueprintJson;
+        
+        if (!TemplateManager::Get().ApplyTemplateToBlueprint(templateId, blueprintJson))
+        {
+            m_LastError = "Failed to apply template: " + TemplateManager::Get().GetLastError();
+            return false;
+        }
+
+        // Load the blueprint from JSON
+        m_CurrentBlueprint = Blueprint::EntityBlueprint::FromJson(blueprintJson);
+        m_CurrentFilepath = ""; // Clear filepath since this is a new blueprint from template
+        m_HasUnsavedChanges = true;
+
+        std::cout << "Template applied: " << templateId << std::endl;
+        return true;
+    }
+
+    bool BlueprintEditor::DeleteTemplate(const std::string& templateId)
+    {
+        if (!TemplateManager::Get().DeleteTemplate(templateId))
+        {
+            m_LastError = "Failed to delete template: " + TemplateManager::Get().GetLastError();
+            return false;
+        }
+
+        std::cout << "Template deleted: " << templateId << std::endl;
+        return true;
+    }
+
+    void BlueprintEditor::ReloadTemplates()
+    {
+        TemplateManager::Get().RefreshTemplates();
+        std::cout << "Templates reloaded" << std::endl;
     }
 
 } // namespace Olympe
