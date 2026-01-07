@@ -61,6 +61,9 @@ namespace Olympe
         // D) Additional dialog methods
         void RenderPreferencesDialog();
         void RenderShortcutsDialog();
+        
+        // Phase 6: Keyboard shortcuts
+        void HandleKeyboardShortcuts();
 
         // File operations (delegate to backend)
         void NewBlueprint();
@@ -97,6 +100,8 @@ namespace Olympe
         bool m_ShowEntityProperties;
         bool m_ShowComponentGraph;
         bool m_ShowPropertyPanel;
+        bool m_ShowTemplateBrowser;  // Phase 5
+        bool m_ShowHistory;          // Phase 6
         
         // D) Additional dialog flags
         bool m_ShowPreferences;
@@ -110,5 +115,11 @@ namespace Olympe
         NodeGraphPanel m_NodeGraphPanel;
         EntitiesPanel m_EntitiesPanel;
         InspectorPanel m_InspectorPanel;
+        
+        // Phase 5: Template management UI
+        class TemplateBrowserPanel* m_TemplateBrowserPanel;
+        
+        // Phase 6: History panel UI
+        class HistoryPanel* m_HistoryPanel;
     };
 }

@@ -135,6 +135,30 @@ namespace Olympe
         void SetSelectedEntity(uint64_t entityId);
         uint64_t GetSelectedEntity() const { return m_SelectedEntity; }
         bool HasSelectedEntity() const { return m_SelectedEntity != 0; } // 0 = INVALID_ENTITY_ID
+        
+        // ===== Phase 5: Template Management =====
+        // Save current blueprint as template
+        bool SaveCurrentAsTemplate(const std::string& name, const std::string& description, const std::string& category);
+        
+        // Apply template to current blueprint
+        bool ApplyTemplate(const std::string& templateId);
+        
+        // Delete a template
+        bool DeleteTemplate(const std::string& templateId);
+        
+        // Reload templates from disk
+        void ReloadTemplates();
+        
+        // ===== Phase 6: Undo/Redo System =====
+        void Undo();
+        void Redo();
+        bool CanUndo() const;
+        bool CanRedo() const;
+        std::string GetLastCommandDescription() const;
+        std::string GetNextRedoDescription() const;
+        
+        // Command stack access for history panel
+        class CommandStack* GetCommandStack();
 
     private:
         // Private constructor/destructor for singleton
@@ -173,5 +197,8 @@ namespace Olympe
         
         // ===== C) Entity Selection =====
         uint64_t m_SelectedEntity; // Currently selected entity (0 = none)
+        
+        // ===== Phase 6: Command System =====
+        class CommandStack* m_CommandStack;  // Undo/redo command stack
     };
 }

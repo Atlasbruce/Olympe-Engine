@@ -5,6 +5,8 @@
 
 #include "BlueprintEditorGUI.h"
 #include "BlueprintEditor.h"
+#include "TemplateBrowserPanel.h"
+#include "HistoryPanel.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
 #include <iostream>
@@ -28,8 +30,12 @@ namespace Olympe
         , m_ShowEntityProperties(true)
         , m_ShowComponentGraph(true)
         , m_ShowPropertyPanel(true)
+        , m_ShowTemplateBrowser(false)
+        , m_ShowHistory(false)
         , m_ShowPreferences(false)
         , m_ShowShortcuts(false)
+        , m_TemplateBrowserPanel(nullptr)
+        , m_HistoryPanel(nullptr)
     {
         m_NewBlueprintNameBuffer[0] = '\0';
         m_FilepathBuffer[0] = '\0';
@@ -37,6 +43,17 @@ namespace Olympe
 
     BlueprintEditorGUI::~BlueprintEditorGUI()
     {
+        if (m_HistoryPanel)
+        {
+            delete m_HistoryPanel;
+            m_HistoryPanel = nullptr;
+        }
+        
+        if (m_TemplateBrowserPanel)
+        {
+            delete m_TemplateBrowserPanel;
+            m_TemplateBrowserPanel = nullptr;
+        }
     }
 
     void BlueprintEditorGUI::Initialize()
@@ -61,11 +78,33 @@ namespace Olympe
         m_NodeGraphPanel.Initialize();
         m_EntitiesPanel.Initialize();
         m_InspectorPanel.Initialize();
+        
+        // Initialize template browser panel
+        m_TemplateBrowserPanel = new TemplateBrowserPanel();
+        m_TemplateBrowserPanel->Initialize();
+        
+        // Initialize history panel
+        m_HistoryPanel = new HistoryPanel();
+        m_HistoryPanel->Initialize();
     }
 
     void BlueprintEditorGUI::Shutdown()
     {
         // Shutdown panels
+        if (m_HistoryPanel)
+        {
+            m_HistoryPanel->Shutdown();
+            delete m_HistoryPanel;
+            m_HistoryPanel = nullptr;
+        }
+        
+        if (m_TemplateBrowserPanel)
+        {
+            m_TemplateBrowserPanel->Shutdown();
+            delete m_TemplateBrowserPanel;
+            m_TemplateBrowserPanel = nullptr;
+        }
+        
         m_InspectorPanel.Shutdown();
         m_EntitiesPanel.Shutdown();
         m_NodeGraphPanel.Shutdown();
@@ -80,6 +119,9 @@ namespace Olympe
         {
             return;
         }
+        
+        // Handle keyboard shortcuts
+        HandleKeyboardShortcuts();
 
         // Get backend reference for data access
         auto& backend = BlueprintEditor::Get();
@@ -110,6 +152,23 @@ namespace Olympe
                 
                 ImGui::Separator();
                 
+                // Phase 5: Template menu items
+                if (ImGui::MenuItem("Save as Template...", "Ctrl+Shift+T", false, backend.HasBlueprint()))
+                {
+                    if (m_TemplateBrowserPanel)
+                    {
+                        m_ShowTemplateBrowser = true;
+                        // Trigger the modal by accessing the panel
+                    }
+                }
+                
+                if (ImGui::MenuItem("Template Browser", nullptr, &m_ShowTemplateBrowser))
+                {
+                    // Toggle template browser visibility
+                }
+                
+                ImGui::Separator();
+                
                 if (ImGui::MenuItem("Reload Assets"))
                 {
                     backend.RefreshAssets();
@@ -126,14 +185,30 @@ namespace Olympe
             // ===== D) EDIT MENU =====
             if (ImGui::BeginMenu("Edit"))
             {
-                // Undo/Redo (stubs for now)
-                if (ImGui::MenuItem("Undo", "Ctrl+Z", false, false))
+                // Phase 6: Undo/Redo
+                bool canUndo = backend.CanUndo();
+                bool canRedo = backend.CanRedo();
+                
+                std::string undoLabel = "Undo";
+                if (canUndo)
                 {
-                    // TODO: Implement undo
+                    undoLabel += ": " + backend.GetLastCommandDescription();
                 }
-                if (ImGui::MenuItem("Redo", "Ctrl+Y", false, false))
+                
+                if (ImGui::MenuItem(undoLabel.c_str(), "Ctrl+Z", false, canUndo))
                 {
-                    // TODO: Implement redo
+                    backend.Undo();
+                }
+                
+                std::string redoLabel = "Redo";
+                if (canRedo)
+                {
+                    redoLabel += ": " + backend.GetNextRedoDescription();
+                }
+                
+                if (ImGui::MenuItem(redoLabel.c_str(), "Ctrl+Y", false, canRedo))
+                {
+                    backend.Redo();
                 }
                 
                 ImGui::Separator();
@@ -172,6 +247,8 @@ namespace Olympe
                 ImGui::MenuItem("Entity Properties", nullptr, &m_ShowEntityProperties);
                 ImGui::MenuItem("Component Graph", nullptr, &m_ShowComponentGraph);
                 ImGui::MenuItem("Property Panel", nullptr, &m_ShowPropertyPanel);
+                ImGui::MenuItem("Template Browser", nullptr, &m_ShowTemplateBrowser);  // Phase 5
+                ImGui::MenuItem("History", nullptr, &m_ShowHistory);  // Phase 6
                 
                 ImGui::Separator();
                 
@@ -251,6 +328,14 @@ namespace Olympe
             
         if (m_ShowInspector)
             m_InspectorPanel.Render();
+        
+        // === Phase 5: Template Browser ===
+        if (m_ShowTemplateBrowser && m_TemplateBrowserPanel)
+            m_TemplateBrowserPanel->Render();
+        
+        // === Phase 6: History Panel ===
+        if (m_ShowHistory && m_HistoryPanel)
+            m_HistoryPanel->Render();
 
         // Render components as separate windows
         if (m_ShowEntityProperties)
@@ -752,8 +837,8 @@ namespace Olympe
             ImGui::Spacing();
             ImGui::Text("Edit Operations:");
             ImGui::Separator();
-            ImGui::Text("Ctrl+Z"); ImGui::NextColumn(); ImGui::Text("Undo (coming soon)"); ImGui::NextColumn();
-            ImGui::Text("Ctrl+Y"); ImGui::NextColumn(); ImGui::Text("Redo (coming soon)"); ImGui::NextColumn();
+            ImGui::Text("Ctrl+Z"); ImGui::NextColumn(); ImGui::Text("Undo"); ImGui::NextColumn();
+            ImGui::Text("Ctrl+Y"); ImGui::NextColumn(); ImGui::Text("Redo"); ImGui::NextColumn();
             ImGui::Text("Insert"); ImGui::NextColumn(); ImGui::Text("Add Component"); ImGui::NextColumn();
             ImGui::Text("Delete"); ImGui::NextColumn(); ImGui::Text("Remove Component"); ImGui::NextColumn();
             
@@ -766,6 +851,78 @@ namespace Olympe
             }
             
             ImGui::EndPopup();
+        }
+    }
+    
+    // Phase 6: Keyboard shortcuts handler
+    void BlueprintEditorGUI::HandleKeyboardShortcuts()
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        auto& backend = BlueprintEditor::Get();
+        
+        // Don't process shortcuts if typing in a text field
+        if (io.WantTextInput)
+        {
+            return;
+        }
+        
+        // Ctrl+Z : Undo
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z) && !io.KeyShift)
+        {
+            if (backend.CanUndo())
+            {
+                backend.Undo();
+            }
+        }
+        
+        // Ctrl+Y or Ctrl+Shift+Z : Redo
+        if ((io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y)) ||
+            (io.KeyCtrl && io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_Z)))
+        {
+            if (backend.CanRedo())
+            {
+                backend.Redo();
+            }
+        }
+        
+        // Ctrl+S : Save
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S) && !io.KeyShift)
+        {
+            if (backend.HasBlueprint())
+            {
+                SaveBlueprint();
+            }
+        }
+        
+        // Ctrl+Shift+S : Save As
+        if (io.KeyCtrl && io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_S))
+        {
+            if (backend.HasBlueprint())
+            {
+                SaveBlueprintAs();
+            }
+        }
+        
+        // Ctrl+N : New Blueprint
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_N))
+        {
+            NewBlueprint();
+        }
+        
+        // Ctrl+O : Open Blueprint
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_O))
+        {
+            // TODO: File dialog
+            LoadBlueprint("../Blueprints/example_entity_simple.json");
+        }
+        
+        // Ctrl+Shift+T : Save as Template
+        if (io.KeyCtrl && io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_T))
+        {
+            if (backend.HasBlueprint())
+            {
+                m_ShowTemplateBrowser = true;
+            }
         }
     }
 }
