@@ -20,7 +20,7 @@
 
 ## 🎨 Blueprint Editor (NEW!)
 
-The Blueprint Editor is now fully interactive and production-ready!
+The Blueprint Editor is now fully interactive and production-ready with an optimized 3-panel UI!
 
 ### Quick Access
 - Press **F2** in-game to toggle the editor
@@ -28,7 +28,29 @@ The Blueprint Editor is now fully interactive and production-ready!
 - See **[TESTING_GUIDE.md](TESTING_GUIDE.md)** for testing procedures
 - See **[ARCHITECTURE.md](ARCHITECTURE.md)** for technical details
 
+### Editor Panels (Optimized 3-Panel Layout)
+
+The editor now features a streamlined 3-panel architecture:
+
+1. **Asset Browser** (Left) - Tabbed interface for:
+   - **Blueprint Files** - Browse and open BehaviorTree, HFSM, EntityBlueprint files
+   - **Runtime Entities** - View and select active entities from the World
+   - Double-click BT/HFSM files to open in Node Graph Editor
+
+2. **Node Graph Editor** (Center) - Visual graph editing:
+   - Multi-tab support for multiple graphs
+   - Edit Behavior Trees and HFSM visually
+   - Auto-loads from Asset Browser double-click
+
+3. **Inspector** (Right) - Context-sensitive properties:
+   - Shows entity components when entity selected
+   - Shows asset metadata when blueprint file selected
+   - "Open in Node Graph" button for BT/HFSM assets
+
 ### Features
+- ✅ **Optimized UI** - Clean 3-panel layout, no redundant panels
+- ✅ **Fullscreen Support** - Fixed mouse coordinates in fullscreen mode
+- ✅ **Graph Loading** - Double-click BT/HFSM files to open in editor
 - ✅ **Interactive Panels** - Drag, resize, dock all panels freely
 - ✅ **Runtime Entities** - View all active entities from World in Asset Browser
 - ✅ **Panel Synchronization** - Select entity once, all panels update
