@@ -16,7 +16,8 @@ namespace Olympe
     {
         None,
         GraphNode,
-        RuntimeEntity
+        RuntimeEntity,
+        AssetFile  // New context for asset file metadata
     };
 
     /**
@@ -36,6 +37,7 @@ namespace Olympe
     private:
         void RenderNodeInspector();
         void RenderEntityInspector();
+        void RenderAssetFileInspector();  // New method for asset metadata
         void RenderComponentProperties(uint64_t entityId, const std::string& componentType);
         
         InspectorContext DetermineContext();

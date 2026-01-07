@@ -612,6 +612,53 @@ namespace Olympe
     }
 
     // ========================================================================
+    // Asset Selection Implementation
+    // ========================================================================
+    
+    void BlueprintEditor::SelectAsset(const std::string& assetPath)
+    {
+        if (m_SelectedAssetPath != assetPath)
+        {
+            m_SelectedAssetPath = assetPath;
+            std::cout << "BlueprintEditor: Selected asset " << assetPath << std::endl;
+        }
+    }
+
+    // ========================================================================
+    // Graph Loading in Node Graph Editor
+    // ========================================================================
+    
+    void BlueprintEditor::OpenGraphInEditor(const std::string& assetPath)
+    {
+        std::cout << "BlueprintEditor: Opening graph " << assetPath << " in Node Graph Editor" << std::endl;
+        
+        // Detect asset type
+        std::string assetType = DetectAssetType(assetPath);
+        
+        // Only open BehaviorTree and HFSM types
+        if (assetType != "BehaviorTree" && assetType != "HFSM")
+        {
+            std::cerr << "BlueprintEditor: Cannot open asset type '" << assetType 
+                     << "' in Node Graph Editor (only BehaviorTree and HFSM supported)" << std::endl;
+            m_LastError = "Asset type '" + assetType + "' cannot be opened in Node Graph Editor";
+            return;
+        }
+        
+        // Use NodeGraphManager to load the graph
+        int graphId = NodeGraphManager::Get().LoadGraph(assetPath);
+        
+        if (graphId < 0)
+        {
+            std::cerr << "BlueprintEditor: Failed to load graph from " << assetPath << std::endl;
+            m_LastError = "Failed to load graph file: " + assetPath;
+            return;
+        }
+        
+        // Graph is now loaded and active in NodeGraphManager
+        std::cout << "BlueprintEditor: Graph loaded with ID " << graphId << std::endl;
+    }
+
+    // ========================================================================
     // Phase 5: Template Management Implementation
     // ========================================================================
     

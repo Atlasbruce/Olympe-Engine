@@ -293,6 +293,31 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     // TODO: Add ImGui initialization in SDL_AppInit and ImGui NewFrame/Render calls here
     if (Olympe::BlueprintEditor::Get().IsActive() && blueprintEditorGUI)
     {
+        // ===== FIX: Synchronize ImGui DisplaySize with window size =====
+        // This fixes mouse coordinates in fullscreen mode
+        int windowWidth, windowHeight;
+        SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+        
+        ImGuiIO& io = ImGui::GetIO();
+        
+        // Update DisplaySize if window size changed
+        if (io.DisplaySize.x != (float)windowWidth || io.DisplaySize.y != (float)windowHeight)
+        {
+            io.DisplaySize = ImVec2((float)windowWidth, (float)windowHeight);
+            
+            // Update framebuffer scale for High DPI support
+            int displayWidth, displayHeight;
+            SDL_GetWindowSizeInPixels(window, &displayWidth, &displayHeight);
+            
+            if (windowWidth > 0 && windowHeight > 0)
+            {
+                io.DisplayFramebufferScale = ImVec2(
+                    (float)displayWidth / windowWidth,
+                    (float)displayHeight / windowHeight
+                );
+            }
+        }
+        
         ImGui_ImplSDL3_NewFrame();
         ImGui_ImplSDLRenderer3_NewFrame();
         ImGui::NewFrame();

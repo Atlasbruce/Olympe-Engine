@@ -136,12 +136,13 @@ namespace Olympe
 
         bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)node.get(), flags, "%s", label.c_str());
 
-        // Handle selection
+        // Handle selection (single click)
         if (ImGui::IsItemClicked())
         {
             if (!node->isDirectory)
             {
                 m_SelectedAssetPath = node->fullPath;
+                BlueprintEditor::Get().SelectAsset(node->fullPath);
                 std::cout << "AssetBrowser: Selected asset: " << m_SelectedAssetPath << std::endl;
             }
         }
@@ -149,10 +150,35 @@ namespace Olympe
         // Handle double-click to open
         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
         {
-            if (!node->isDirectory && m_OnAssetOpen)
+            if (!node->isDirectory)
             {
-                std::cout << "AssetBrowser: Opening asset: " << node->fullPath << std::endl;
-                m_OnAssetOpen(node->fullPath);
+                std::cout << "AssetBrowser: Double-clicked asset: " << node->fullPath << std::endl;
+                
+                // Check if this is a BehaviorTree or HFSM - open in Node Graph Editor
+                if (node->type == "BehaviorTree" || node->type == "HFSM")
+                {
+                    std::cout << "AssetBrowser: Opening " << node->type << " in Node Graph Editor" << std::endl;
+                    BlueprintEditor::Get().OpenGraphInEditor(node->fullPath);
+                }
+                // Otherwise, use the legacy callback if set (for EntityBlueprint, etc.)
+                else if (m_OnAssetOpen)
+                {
+                    std::cout << "AssetBrowser: Opening asset via callback" << std::endl;
+                    m_OnAssetOpen(node->fullPath);
+                }
+            }
+        }
+        
+        // Tooltip for double-click action
+        if (ImGui::IsItemHovered())
+        {
+            if (node->type == "BehaviorTree" || node->type == "HFSM")
+            {
+                ImGui::SetTooltip("Double-click to open in Node Graph Editor");
+            }
+            else if (!node->isDirectory)
+            {
+                ImGui::SetTooltip("Double-click to open");
             }
         }
 
@@ -171,45 +197,56 @@ namespace Olympe
     {
         if (ImGui::Begin("Asset Browser"))
         {
-            RenderFilterUI();
-
-            // ===== SECTION 1: Blueprint Assets (Files) =====
-            ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f), "Blueprint Assets:");
-            ImGui::Separator();
-            
-            // Get asset tree from backend
-            auto rootNode = BlueprintEditor::Get().GetAssetTree();
-            
-            if (rootNode)
+            // ===== USE TABS TO SEPARATE FILES AND RUNTIME ENTITIES =====
+            if (ImGui::BeginTabBar("AssetBrowserTabs"))
             {
-                // Render the tree starting from children (skip root "Blueprints" node)
-                for (const auto& child : rootNode->children)
-                    RenderTreeNode(child);
-            }
-            else
-            {
-                // Check if backend has an error
-                if (BlueprintEditor::Get().HasError())
+                // ===== TAB 1: Blueprint Files =====
+                if (ImGui::BeginTabItem("Blueprint Files"))
                 {
-                    ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), 
-                        "Error: %s", BlueprintEditor::Get().GetLastError().c_str());
+                    RenderFilterUI();
+                    
+                    ImGui::Separator();
+                    
+                    // Get asset tree from backend
+                    auto rootNode = BlueprintEditor::Get().GetAssetTree();
+                    
+                    if (rootNode)
+                    {
+                        // Render the tree starting from children (skip root "Blueprints" node)
+                        for (const auto& child : rootNode->children)
+                            RenderTreeNode(child);
+                    }
+                    else
+                    {
+                        // Check if backend has an error
+                        if (BlueprintEditor::Get().HasError())
+                        {
+                            ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), 
+                                "Error: %s", BlueprintEditor::Get().GetLastError().c_str());
+                        }
+                        else
+                        {
+                            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
+                                "No blueprint files found.");
+                        }
+                    }
+                    
+                    ImGui::EndTabItem();
                 }
-                else
+                
+                // ===== TAB 2: Runtime Entities =====
+                if (ImGui::BeginTabItem("Runtime Entities"))
                 {
-                    ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
-                        "No blueprint files found.");
+                    ImGui::Text("Active Entities: %zu", BlueprintEditor::Get().GetRuntimeEntityCount());
+                    ImGui::Separator();
+                    
+                    RenderRuntimeEntities();
+                    
+                    ImGui::EndTabItem();
                 }
+                
+                ImGui::EndTabBar();
             }
-            
-            ImGui::Spacing();
-            ImGui::Spacing();
-            
-            // ===== SECTION 2: Runtime Entities from World =====
-            ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "Runtime Entities:");
-            ImGui::Text("(%zu active)", BlueprintEditor::Get().GetRuntimeEntityCount());
-            ImGui::Separator();
-            
-            RenderRuntimeEntities();
         }
         ImGui::End();
     }

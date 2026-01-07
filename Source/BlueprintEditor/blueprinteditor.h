@@ -136,6 +136,15 @@ namespace Olympe
         uint64_t GetSelectedEntity() const { return m_SelectedEntity; }
         bool HasSelectedEntity() const { return m_SelectedEntity != 0; } // 0 = INVALID_ENTITY_ID
         
+        // ===== Asset Selection for Panel Synchronization =====
+        void SelectAsset(const std::string& assetPath);
+        std::string GetSelectedAssetPath() const { return m_SelectedAssetPath; }
+        bool HasSelectedAsset() const { return !m_SelectedAssetPath.empty(); }
+        
+        // ===== Graph Loading in Node Graph Editor =====
+        // Opens a BehaviorTree or HFSM asset in the Node Graph Editor
+        void OpenGraphInEditor(const std::string& assetPath);
+        
         // ===== Phase 5: Template Management =====
         // Save current blueprint as template
         bool SaveCurrentAsTemplate(const std::string& name, const std::string& description, const std::string& category);
@@ -197,6 +206,9 @@ namespace Olympe
         
         // ===== C) Entity Selection =====
         uint64_t m_SelectedEntity; // Currently selected entity (0 = none)
+        
+        // ===== Asset Selection =====
+        std::string m_SelectedAssetPath; // Currently selected asset file path
         
         // ===== Phase 6: Command System =====
         class CommandStack* m_CommandStack;  // Undo/redo command stack
