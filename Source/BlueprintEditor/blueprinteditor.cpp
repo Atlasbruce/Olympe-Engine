@@ -11,6 +11,7 @@
 #include "NodeGraphManager.h"
 #include "EntityInspectorManager.h"
 #include "TemplateManager.h"
+#include "CommandSystem.h"
 #include "../json_helper.h"
 #include <algorithm>
 #include <iostream>
@@ -40,11 +41,17 @@ namespace Olympe
         , m_HasUnsavedChanges(false)
         , m_AssetRootPath("Blueprints")
         , m_SelectedEntity(0)  // 0 = INVALID_ENTITY_ID
+        , m_CommandStack(nullptr)
     {
     }
 
     BlueprintEditor::~BlueprintEditor()
     {
+        if (m_CommandStack)
+        {
+            delete m_CommandStack;
+            m_CommandStack = nullptr;
+        }
     }
 
     void BlueprintEditor::Initialize()
@@ -71,6 +78,9 @@ namespace Olympe
         // Initialize template manager
         TemplateManager::Get().Initialize();
         
+        // Initialize command stack
+        m_CommandStack = new CommandStack();
+        
         // Scan assets on initialization
         RefreshAssets();
     }
@@ -78,6 +88,12 @@ namespace Olympe
     void BlueprintEditor::Shutdown()
     {
         // Shutdown managers in reverse order
+        if (m_CommandStack)
+        {
+            delete m_CommandStack;
+            m_CommandStack = nullptr;
+        }
+        
         TemplateManager::Get().Shutdown();
         EntityInspectorManager::Get().Shutdown();
         NodeGraphManager::Get().Shutdown();
@@ -667,6 +683,61 @@ namespace Olympe
     {
         TemplateManager::Get().RefreshTemplates();
         std::cout << "Templates reloaded" << std::endl;
+    }
+
+    // ========================================================================
+    // Phase 6: Undo/Redo System Implementation
+    // ========================================================================
+    
+    void BlueprintEditor::Undo()
+    {
+        if (m_CommandStack)
+        {
+            m_CommandStack->Undo();
+            m_HasUnsavedChanges = true;
+        }
+    }
+
+    void BlueprintEditor::Redo()
+    {
+        if (m_CommandStack)
+        {
+            m_CommandStack->Redo();
+            m_HasUnsavedChanges = true;
+        }
+    }
+
+    bool BlueprintEditor::CanUndo() const
+    {
+        return m_CommandStack && m_CommandStack->CanUndo();
+    }
+
+    bool BlueprintEditor::CanRedo() const
+    {
+        return m_CommandStack && m_CommandStack->CanRedo();
+    }
+
+    std::string BlueprintEditor::GetLastCommandDescription() const
+    {
+        if (m_CommandStack)
+        {
+            return m_CommandStack->GetLastCommandDescription();
+        }
+        return "";
+    }
+
+    std::string BlueprintEditor::GetNextRedoDescription() const
+    {
+        if (m_CommandStack)
+        {
+            return m_CommandStack->GetNextRedoDescription();
+        }
+        return "";
+    }
+
+    CommandStack* BlueprintEditor::GetCommandStack()
+    {
+        return m_CommandStack;
     }
 
 } // namespace Olympe
