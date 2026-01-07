@@ -48,10 +48,14 @@ namespace Olympe
             RenderEntityInspector();
             break;
 
+        case InspectorContext::AssetFile:
+            RenderAssetFileInspector();
+            break;
+
         case InspectorContext::None:
         default:
             ImGui::Text("No selection");
-            ImGui::TextWrapped("Select a node in the graph editor or an entity in the entities panel to inspect its properties.");
+            ImGui::TextWrapped("Select an entity or asset file to inspect its properties.");
             break;
         }
 
@@ -60,10 +64,16 @@ namespace Olympe
 
     InspectorContext InspectorPanel::DetermineContext()
     {
-        // C) Priority: Entity selection from BlueprintEditor backend
+        // C) Priority 1: Entity selection from BlueprintEditor backend
         if (BlueprintEditor::Get().HasSelectedEntity())
         {
             return InspectorContext::RuntimeEntity;
+        }
+
+        // Priority 2: Asset file selection from BlueprintEditor backend
+        if (BlueprintEditor::Get().HasSelectedAsset())
+        {
+            return InspectorContext::AssetFile;
         }
 
         // Check if a graph node is selected
@@ -188,5 +198,96 @@ namespace Olympe
 
             ImGui::PopID();
         }
+    }
+
+    void InspectorPanel::RenderAssetFileInspector()
+    {
+        // Get selected asset path from BlueprintEditor backend
+        std::string selectedAssetPath = BlueprintEditor::Get().GetSelectedAssetPath();
+        
+        if (selectedAssetPath.empty())
+        {
+            ImGui::Text("No asset selected");
+            return;
+        }
+        
+        // Get asset metadata from backend
+        AssetMetadata metadata = BlueprintEditor::Get().GetAssetMetadata(selectedAssetPath);
+        
+        // Extract filename from path
+        size_t lastSlash = selectedAssetPath.find_last_of("/\\");
+        std::string filename = (lastSlash != std::string::npos) 
+            ? selectedAssetPath.substr(lastSlash + 1) 
+            : selectedAssetPath;
+        
+        ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f), "Asset: %s", filename.c_str());
+        ImGui::Separator();
+        
+        if (!metadata.isValid)
+        {
+            ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Invalid or malformed asset");
+            if (!metadata.errorMessage.empty())
+            {
+                ImGui::TextWrapped("Error: %s", metadata.errorMessage.c_str());
+            }
+            return;
+        }
+        
+        // Display asset type
+        ImGui::Text("Type: %s", metadata.type.c_str());
+        
+        // Display name and description if available
+        if (!metadata.name.empty())
+        {
+            ImGui::Text("Name: %s", metadata.name.c_str());
+        }
+        
+        if (!metadata.description.empty())
+        {
+            ImGui::Separator();
+            ImGui::TextWrapped("Description: %s", metadata.description.c_str());
+        }
+        
+        ImGui::Separator();
+        
+        // Type-specific information
+        if (metadata.type == "BehaviorTree" || metadata.type == "HFSM")
+        {
+            ImGui::Text("Nodes: %d", metadata.nodeCount);
+            
+            if (!metadata.nodes.empty() && ImGui::CollapsingHeader("Node List"))
+            {
+                ImGui::Indent();
+                for (const auto& node : metadata.nodes)
+                {
+                    ImGui::BulletText("%s", node.c_str());
+                }
+                ImGui::Unindent();
+            }
+            
+            ImGui::Separator();
+            if (ImGui::Button("Open in Node Graph Editor"))
+            {
+                BlueprintEditor::Get().OpenGraphInEditor(selectedAssetPath);
+            }
+        }
+        else if (metadata.type == "EntityBlueprint")
+        {
+            ImGui::Text("Components: %d", metadata.componentCount);
+            
+            if (!metadata.components.empty() && ImGui::CollapsingHeader("Component List"))
+            {
+                ImGui::Indent();
+                for (const auto& comp : metadata.components)
+                {
+                    ImGui::BulletText("%s", comp.c_str());
+                }
+                ImGui::Unindent();
+            }
+        }
+        
+        // Full file path at the bottom
+        ImGui::Separator();
+        ImGui::TextDisabled("Path: %s", selectedAssetPath.c_str());
     }
 }

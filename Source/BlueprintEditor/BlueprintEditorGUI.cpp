@@ -22,14 +22,14 @@ namespace Olympe
         , m_ShowAddComponentDialog(false)
         , m_ShowAboutDialog(false)
         , m_SelectedComponentType(0)
-        , m_ShowAssetBrowser(true)
-        , m_ShowAssetInfo(true)
-        , m_ShowInspector(true)
-        , m_ShowNodeGraph(true)
-        , m_ShowEntities(true)
-        , m_ShowEntityProperties(true)
-        , m_ShowComponentGraph(true)
-        , m_ShowPropertyPanel(true)
+        , m_ShowAssetBrowser(true)    // Main panel 1
+        , m_ShowAssetInfo(false)       // Deprecated - merged into Inspector
+        , m_ShowInspector(true)        // Main panel 3
+        , m_ShowNodeGraph(true)        // Main panel 2
+        , m_ShowEntities(false)        // Deprecated - merged into Asset Browser tab
+        , m_ShowEntityProperties(false) // Deprecated - merged into Inspector
+        , m_ShowComponentGraph(false)  // Deprecated
+        , m_ShowPropertyPanel(false)   // Deprecated - merged into Inspector
         , m_ShowTemplateBrowser(false)
         , m_ShowHistory(false)
         , m_ShowPreferences(false)
@@ -236,17 +236,18 @@ namespace Olympe
             // ===== D) VIEW MENU =====
             if (ImGui::BeginMenu("View"))
             {
-                ImGui::Text("Panels:");
+                ImGui::Text("Main Panels:");
                 ImGui::Separator();
                 
+                // Three main panels only
                 ImGui::MenuItem("Asset Browser", nullptr, &m_ShowAssetBrowser);
-                ImGui::MenuItem("Asset Info", nullptr, &m_ShowAssetInfo);
-                ImGui::MenuItem("Runtime Entities", nullptr, &m_ShowEntities);
+                ImGui::MenuItem("Node Graph Editor", nullptr, &m_ShowNodeGraph);
                 ImGui::MenuItem("Inspector", nullptr, &m_ShowInspector);
-                ImGui::MenuItem("Node Graph", nullptr, &m_ShowNodeGraph);
-                ImGui::MenuItem("Entity Properties", nullptr, &m_ShowEntityProperties);
-                ImGui::MenuItem("Component Graph", nullptr, &m_ShowComponentGraph);
-                ImGui::MenuItem("Property Panel", nullptr, &m_ShowPropertyPanel);
+                
+                ImGui::Separator();
+                
+                ImGui::Text("Additional:");
+                ImGui::Separator();
                 ImGui::MenuItem("Template Browser", nullptr, &m_ShowTemplateBrowser);  // Phase 5
                 ImGui::MenuItem("History", nullptr, &m_ShowHistory);  // Phase 6
                 
@@ -260,15 +261,11 @@ namespace Olympe
                 
                 if (ImGui::MenuItem("Reset Layout"))
                 {
-                    // Reset all panels to visible
+                    // Reset main panels to visible
                     m_ShowAssetBrowser = true;
-                    m_ShowAssetInfo = true;
-                    m_ShowInspector = true;
                     m_ShowNodeGraph = true;
-                    m_ShowEntities = true;
-                    m_ShowEntityProperties = true;
-                    m_ShowComponentGraph = true;
-                    m_ShowPropertyPanel = true;
+                    m_ShowInspector = true;
+                    // Keep optional panels in their current state
                 }
                 
                 ImGui::EndMenu();
@@ -300,53 +297,28 @@ namespace Olympe
         }
 
         // D) Render panels conditionally based on visibility flags
+        
+        // === Main Panel 1: Asset Browser (with tabs for files + runtime entities) ===
         if (m_ShowAssetBrowser)
             m_AssetBrowser.Render();
         
-        // Update asset info panel when selection changes
-        if (m_ShowAssetInfo)
-        {
-            if (m_AssetBrowser.HasSelection())
-            {
-                std::string selectedPath = m_AssetBrowser.GetSelectedAssetPath();
-                // Only reload if selection changed
-                if (!m_AssetInfoPanel.HasAsset() || m_AssetInfoPanel.GetLoadedFilepath() != selectedPath)
-                {
-                    m_AssetInfoPanel.LoadAsset(selectedPath);
-                }
-            }
-            m_AssetInfoPanel.Render();
-        }
-        
-        // === Phase 3: Node Graph Editor ===
+        // === Main Panel 2: Node Graph Editor ===
         if (m_ShowNodeGraph)
             m_NodeGraphPanel.Render();
         
-        // === Phase 4: Runtime Entities and Inspector ===
-        if (m_ShowEntities)
-            m_EntitiesPanel.Render();
-            
+        // === Main Panel 3: Inspector (contextual - entity OR asset) ===
         if (m_ShowInspector)
             m_InspectorPanel.Render();
         
-        // === Phase 5: Template Browser ===
+        // === Phase 5: Template Browser (optional) ===
         if (m_ShowTemplateBrowser && m_TemplateBrowserPanel)
             m_TemplateBrowserPanel->Render();
         
-        // === Phase 6: History Panel ===
+        // === Phase 6: History Panel (optional) ===
         if (m_ShowHistory && m_HistoryPanel)
             m_HistoryPanel->Render();
 
-        // Render components as separate windows
-        if (m_ShowEntityProperties)
-            RenderEntityPanel();
-            
-        if (m_ShowComponentGraph)
-            RenderNodeEditor();
-            
-        if (m_ShowPropertyPanel)
-            RenderPropertyPanel();
-            
+        // Status bar at bottom
         RenderStatusBar();
 
         // Dialogs
