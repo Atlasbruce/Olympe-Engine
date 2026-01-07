@@ -308,11 +308,19 @@ namespace Olympe
                 std::string type = j["type"].get<std::string>();
                 if (type == "EntityBlueprint")
                     return "EntityBlueprint";
+                if (type == "BehaviorTree")
+                    return "BehaviorTree";
+                if (type == "HFSM")
+                    return "HFSM";
             }
 
-            // Check for behavior tree structure
+            // Check for behavior tree structure (rootNodeId + nodes)
             if (j.contains("rootNodeId") && j.contains("nodes"))
                 return "BehaviorTree";
+
+            // Check for HFSM structure (states + transitions or initialState)
+            if (j.contains("states") || j.contains("initialState"))
+                return "HFSM";
 
             // Check for components (entity blueprint without explicit type)
             if (j.contains("components"))
@@ -465,6 +473,12 @@ namespace Olympe
                 metadata.type = "BehaviorTree";
                 ParseBehaviorTree(j, metadata);
             }
+            else if (j.contains("states") || j.contains("initialState"))
+            {
+                // HFSM (Hierarchical Finite State Machine)
+                metadata.type = "HFSM";
+                ParseHFSM(j, metadata);
+            }
             else if (j.contains("components"))
             {
                 // Entity Blueprint without explicit type
@@ -545,6 +559,41 @@ namespace Olympe
         {
             int rootId = j["rootNodeId"].get<int>();
             metadata.description += " - Root Node ID: " + std::to_string(rootId);
+        }
+    }
+    
+    void BlueprintEditor::ParseHFSM(const json& j, AssetMetadata& metadata)
+    {
+        metadata.name = JsonHelper::GetString(j, "name", "Unnamed HFSM");
+        metadata.description = "Hierarchical Finite State Machine";
+
+        // Count states
+        if (j.contains("states") && j["states"].is_array())
+        {
+            const auto& states = j["states"];
+            metadata.nodeCount = (int)states.size();
+            
+            // Extract state names
+            for (size_t i = 0; i < states.size(); ++i)
+            {
+                const auto& state = states[i];
+                if (state.contains("name") && state["name"].is_string())
+                {
+                    std::string stateName = JsonHelper::GetString(state, "name", "");
+                    std::string stateType = JsonHelper::GetString(state, "type", "State");
+                    metadata.nodes.push_back(stateName + " (" + stateType + ")");
+                }
+            }
+        }
+
+        // Add initial state info
+        if (j.contains("initialState"))
+        {
+            std::string initialState = JsonHelper::GetString(j, "initialState", "");
+            if (!initialState.empty())
+            {
+                metadata.description += " - Initial State: " + initialState;
+            }
         }
     }
     

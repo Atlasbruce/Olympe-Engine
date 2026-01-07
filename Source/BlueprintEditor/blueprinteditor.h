@@ -183,6 +183,7 @@ namespace Olympe
         void ParseAssetMetadata(const std::string& filepath, AssetMetadata& metadata);
         void ParseEntityBlueprint(const json& j, AssetMetadata& metadata);
         void ParseBehaviorTree(const json& j, AssetMetadata& metadata);
+        void ParseHFSM(const json& j, AssetMetadata& metadata);
         void CollectAllAssets(const std::shared_ptr<AssetNode>& node, std::vector<AssetMetadata>& assets) const;
 
     private:
