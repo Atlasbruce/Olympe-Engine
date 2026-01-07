@@ -571,7 +571,7 @@ void AIMotionSystem::Process()
             Vector toTarget = intent.targetPosition - pos.position;
             float distance = toTarget.Magnitude();
             
-            if (distance < 0.001f)
+            if (distance < 1.f)
             {
                 // Already at target
                 movement.direction = Vector(0.0f, 0.0f, 0.0f);

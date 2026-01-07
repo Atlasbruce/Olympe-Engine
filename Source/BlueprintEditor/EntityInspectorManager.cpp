@@ -4,6 +4,7 @@
 
 #include "EntityInspectorManager.h"
 #include "../World.h"
+#include "../ECS_Components.h"
 #include <iostream>
 #include <algorithm>
 
@@ -73,8 +74,15 @@ namespace Olympe
 
         m_EntityList.push_back(entity);
 
+        string name = "Entity_" + std::to_string(entity);
+        if (World::Get().HasComponent<Identity_data>(entity))
+        {
+            Identity_data& identity = World::Get().GetComponent<Identity_data>(entity);
+			name = identity.name;
+        }
+
         EntityInfo info(entity);
-        info.name = "Entity_" + std::to_string(entity);
+        info.name = name;
         info.isActive = true;
         m_EntityInfoCache[entity] = info;
 

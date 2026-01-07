@@ -7,6 +7,7 @@
 #include "BlueprintEditor.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
+#include <iostream>
 
 using namespace Olympe::Blueprint;
 
@@ -49,7 +50,7 @@ namespace Olympe
         style.Flags |= ImNodesStyleFlags_GridLines;
         
         // Initialize Asset Browser with Blueprints directory
-        m_AssetBrowser.Initialize("../Blueprints");
+        m_AssetBrowser.Initialize("Blueprints");
         
         // Set up callback for asset selection
         m_AssetBrowser.SetAssetOpenCallback([this](const std::string& path) {
@@ -96,7 +97,7 @@ namespace Olympe
                 if (ImGui::MenuItem("Open Blueprint...", "Ctrl+O"))
                 {
                     // TODO: File dialog - for now use example
-                    LoadBlueprint("../Blueprints/example_entity_simple.json");
+                    LoadBlueprint("Blueprints/AI/guard_patrol.json");
                 }
                 
                 ImGui::Separator();
@@ -432,6 +433,8 @@ namespace Olympe
                 }
             }
 
+            ImNodes::EndNodeEditor();
+
             // Handle node selection
             int num_selected = ImNodes::NumSelectedNodes();
             if (num_selected > 0)
@@ -441,8 +444,6 @@ namespace Olympe
                 m_SelectedComponentIndex = selected_nodes[0];
                 delete[] selected_nodes;
             }
-
-            ImNodes::EndNodeEditor();
         }
         else
         {
