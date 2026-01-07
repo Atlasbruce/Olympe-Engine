@@ -6,6 +6,7 @@
 #include "BlueprintEditorGUI.h"
 #include "BlueprintEditor.h"
 #include "TemplateBrowserPanel.h"
+#include "HistoryPanel.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
 
@@ -29,9 +30,11 @@ namespace Olympe
         , m_ShowComponentGraph(true)
         , m_ShowPropertyPanel(true)
         , m_ShowTemplateBrowser(false)
+        , m_ShowHistory(false)
         , m_ShowPreferences(false)
         , m_ShowShortcuts(false)
         , m_TemplateBrowserPanel(nullptr)
+        , m_HistoryPanel(nullptr)
     {
         m_NewBlueprintNameBuffer[0] = '\0';
         m_FilepathBuffer[0] = '\0';
@@ -39,6 +42,12 @@ namespace Olympe
 
     BlueprintEditorGUI::~BlueprintEditorGUI()
     {
+        if (m_HistoryPanel)
+        {
+            delete m_HistoryPanel;
+            m_HistoryPanel = nullptr;
+        }
+        
         if (m_TemplateBrowserPanel)
         {
             delete m_TemplateBrowserPanel;
@@ -72,11 +81,22 @@ namespace Olympe
         // Initialize template browser panel
         m_TemplateBrowserPanel = new TemplateBrowserPanel();
         m_TemplateBrowserPanel->Initialize();
+        
+        // Initialize history panel
+        m_HistoryPanel = new HistoryPanel();
+        m_HistoryPanel->Initialize();
     }
 
     void BlueprintEditorGUI::Shutdown()
     {
         // Shutdown panels
+        if (m_HistoryPanel)
+        {
+            m_HistoryPanel->Shutdown();
+            delete m_HistoryPanel;
+            m_HistoryPanel = nullptr;
+        }
+        
         if (m_TemplateBrowserPanel)
         {
             m_TemplateBrowserPanel->Shutdown();
@@ -227,6 +247,7 @@ namespace Olympe
                 ImGui::MenuItem("Component Graph", nullptr, &m_ShowComponentGraph);
                 ImGui::MenuItem("Property Panel", nullptr, &m_ShowPropertyPanel);
                 ImGui::MenuItem("Template Browser", nullptr, &m_ShowTemplateBrowser);  // Phase 5
+                ImGui::MenuItem("History", nullptr, &m_ShowHistory);  // Phase 6
                 
                 ImGui::Separator();
                 
@@ -310,6 +331,10 @@ namespace Olympe
         // === Phase 5: Template Browser ===
         if (m_ShowTemplateBrowser && m_TemplateBrowserPanel)
             m_TemplateBrowserPanel->Render();
+        
+        // === Phase 6: History Panel ===
+        if (m_ShowHistory && m_HistoryPanel)
+            m_HistoryPanel->Render();
 
         // Render components as separate windows
         if (m_ShowEntityProperties)

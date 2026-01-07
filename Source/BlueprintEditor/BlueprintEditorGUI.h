@@ -101,6 +101,7 @@ namespace Olympe
         bool m_ShowComponentGraph;
         bool m_ShowPropertyPanel;
         bool m_ShowTemplateBrowser;  // Phase 5
+        bool m_ShowHistory;          // Phase 6
         
         // D) Additional dialog flags
         bool m_ShowPreferences;
@@ -117,5 +118,8 @@ namespace Olympe
         
         // Phase 5: Template management UI
         class TemplateBrowserPanel* m_TemplateBrowserPanel;
+        
+        // Phase 6: History panel UI
+        class HistoryPanel* m_HistoryPanel;
     };
 }
