@@ -37,8 +37,8 @@ namespace Olympe
         j["author"] = author;
         j["version"] = version;
         j["thumbnailPath"] = thumbnailPath;
-        j["createdDate"] = static_cast<int64_t>(createdDate);
-        j["modifiedDate"] = static_cast<int64_t>(modifiedDate);
+        j["createdDate"] = static_cast<double>(createdDate);
+        j["modifiedDate"] = static_cast<double>(modifiedDate);
         j["blueprintData"] = blueprintData;
         
         return j;
@@ -55,8 +55,8 @@ namespace Olympe
         if (j.contains("author")) tpl.author = j["author"].get<std::string>();
         if (j.contains("version")) tpl.version = j["version"].get<std::string>();
         if (j.contains("thumbnailPath")) tpl.thumbnailPath = j["thumbnailPath"].get<std::string>();
-        if (j.contains("createdDate")) tpl.createdDate = static_cast<time_t>(j["createdDate"].get<int64_t>());
-        if (j.contains("modifiedDate")) tpl.modifiedDate = static_cast<time_t>(j["modifiedDate"].get<int64_t>());
+        if (j.contains("createdDate")) tpl.createdDate = static_cast<time_t>(j["createdDate"].get<double>());
+        if (j.contains("modifiedDate")) tpl.modifiedDate = static_cast<time_t>(j["modifiedDate"].get<double>());
         if (j.contains("blueprintData")) tpl.blueprintData = j["blueprintData"];
         
         return tpl;
@@ -98,8 +98,9 @@ namespace Olympe
             }
 
             json j;
-            file >> j;
-            file.close();
+            std::stringstream buffer;
+            buffer << file.rdbuf();
+            j = json::parse(buffer.str());
 
             return FromJson(j);
         }
@@ -376,7 +377,8 @@ namespace Olympe
         {
             for (const auto& entry : fs::directory_iterator(m_TemplatesPath))
             {
-                if (entry.is_regular_file() && entry.path().extension() == ".json")
+                // Correction : utiliser fs::is_regular_file(entry.path()) au lieu de entry.is_regular_file()
+                if (fs::is_regular_file(entry.path()) && entry.path().extension() == ".json")
                 {
                     BlueprintTemplate tpl = BlueprintTemplate::LoadFromFile(entry.path().string());
                     

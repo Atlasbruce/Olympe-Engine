@@ -348,4 +348,11 @@ namespace nlohmann {
         return number_value;
     }
 
+    template<>
+    inline float json::get<float>() const
+    {
+        if (!is_number()) throw std::runtime_error("not a number");
+        return static_cast<float>(number_value);
+    }
+
 } // namespace nlohmann

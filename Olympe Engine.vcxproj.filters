@@ -210,6 +210,18 @@
     <ClCompile Include="Source\ECS_Systems_AI.cpp">
       <Filter>Fichiers d%27en-tête\AI</Filter>
     </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\TemplateBrowserPanel.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\TemplateManager.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\CommandSystem.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\HistoryPanel.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -418,6 +430,18 @@
     </ClInclude>
     <ClInclude Include="Source\ECS_Systems_AI.h">
       <Filter>Fichiers d%27en-tête\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\TemplateBrowserPanel.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\TemplateManager.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\CommandSystem.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\HistoryPanel.h">
+      <Filter>Blueprint Editor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -8,6 +8,10 @@
 #include "../third_party/imgui/imgui.h"
 #include <iostream>
 #include <cstring>
+#include "../third_party/nlohmann/json.hpp"
+
+// Si vous utilisez using namespace
+using json = nlohmann::json;
 
 namespace Olympe
 {
@@ -19,7 +23,7 @@ namespace Olympe
         m_SearchBuffer[0] = '\0';
         m_TemplateNameBuffer[0] = '\0';
         m_TemplateDescriptionBuffer[0] = '\0';
-        std::strcpy(m_TemplateCategoryBuffer, "General");
+        strcpy_s(m_TemplateCategoryBuffer, "General");
     }
 
     TemplateBrowserPanel::~TemplateBrowserPanel()
@@ -247,11 +251,14 @@ namespace Olympe
                         // Clear buffers
                         m_TemplateNameBuffer[0] = '\0';
                         m_TemplateDescriptionBuffer[0] = '\0';
-                        std::strcpy(m_TemplateCategoryBuffer, "General");
+                        strcpy_s(m_TemplateCategoryBuffer, "General");
                         
                         m_ShowSaveAsTemplateModal = false;
                     }
                     else
+                    {
+
+                    }
                     {
                         std::cerr << "Failed to save template: " 
                                  << BlueprintEditor::Get().GetLastError() << std::endl;

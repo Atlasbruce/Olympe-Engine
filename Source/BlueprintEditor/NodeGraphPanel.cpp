@@ -178,7 +178,7 @@ namespace Olympe
         for (size_t i = 0; i < links.size(); ++i)
         {
             const GraphLink& link = links[i];
-            int linkId = i + 1;  // Link IDs start from 1
+            int linkId = (int)i + 1;  // Link IDs start from 1
             ImNodes::Link(linkId, link.fromNode * 100 + 2, link.toNode * 100 + 1);
         }
 
