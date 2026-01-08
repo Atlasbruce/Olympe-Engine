@@ -233,10 +233,12 @@ When no entity or asset is selected:
 - **Ctrl+Shift+T** - Save as Template
 
 ### Edit Operations
-- **Ctrl+Z** - Undo
-- **Ctrl+Y** - Redo
+- **Ctrl+Z** - Undo last operation
+- **Ctrl+Y** or **Ctrl+Shift+Z** - Redo last undone operation
+- **Ctrl+D** - Duplicate selected node
+- **Delete** - Delete selected node or link
 - **Insert** - Add Component (when editing entity)
-- **Delete** - Remove Component (when component selected)
+- **Double-click node** - Open edit modal for node parameters
 
 ### View
 - Use View menu to toggle panels on/off
@@ -353,6 +355,310 @@ When no entity or asset is selected:
 | HFSM | 🔄 | ✅ Yes | Opens in Node Graph Editor |
 | EntityBlueprint | 🧩 | ❌ No | No action (view in Inspector) |
 | Prefab | 🔧 | ❌ No | No action (view in Inspector) |
+
+---
+
+## 🎨 Advanced Node Graph Editing
+
+### Complete CRUD Operations
+
+The Node Graph Editor now supports full Create, Read, Update, Delete operations with undo/redo.
+
+#### Creating Nodes
+
+**Method 1: Context Menu**
+```
+1. Right-click on empty canvas
+2. Select node type from menu:
+   - Composite → Sequence / Selector
+   - Action → Choose from catalog
+   - Condition → Choose from catalog
+   - Decorator → Choose from catalog
+3. Node appears at cursor position
+```
+
+**Method 2: Node Palette (Drag & Drop)**
+```
+1. Open Asset Browser
+2. Switch to "Nodes" tab
+3. Browse node categories:
+   - Composites
+   - Actions (from catalog)
+   - Conditions (from catalog)
+   - Decorators (from catalog)
+4. Drag node from palette
+5. Drop onto graph canvas
+```
+
+**Features:**
+- 🎯 **Tooltips** - Hover over nodes in palette to see descriptions and parameters
+- 📋 **Catalog Integration** - All action/condition/decorator types loaded from JSON catalogs
+- 🎨 **Visual Feedback** - Drag preview shows what you're adding
+
+#### Editing Nodes
+
+**Double-click any node to open edit modal:**
+
+**Action Node:**
+- ✏️ Edit node name
+- 🎯 Change action type (dropdown)
+- 🔧 Edit parameters with type-specific widgets:
+  - `float` - Drag slider
+  - `string` - Text input
+  - `bool` - Checkbox
+  - Required parameters marked
+
+**Condition Node:**
+- ✏️ Edit node name
+- 🎯 Change condition type
+- 🔧 Edit condition-specific parameters
+
+**Decorator Node:**
+- ✏️ Edit node name
+- 🎯 Change decorator type
+- 🔧 Edit decorator-specific parameters
+
+**Composite Node (Sequence/Selector):**
+- ✏️ Edit node name only
+- Children managed through links
+
+**Features:**
+- 💾 **Auto-save** - Changes saved automatically on OK
+- ❌ **Cancel** - Discard changes
+- 📝 **Validation** - Required parameters highlighted
+
+#### Deleting Nodes & Links
+
+**Delete Node:**
+- Select node → Press `Delete` key
+- OR right-click node → "Delete"
+- ⚠️ Automatically removes all incoming/outgoing links
+- 🔄 Fully undoable
+
+**Delete Link:**
+- Select link → Press `Delete` key
+- OR right-click link → "Delete Link"
+- 🔄 Fully undoable
+
+#### Duplicating Nodes
+
+**Duplicate a node with all its properties:**
+```
+1. Select node
+2. Press Ctrl+D
+3. OR right-click → "Duplicate"
+4. New node appears offset from original
+5. All parameters copied
+```
+
+**Note:** Links are NOT duplicated (prevents invalid graphs)
+
+#### Context Menus
+
+**Right-click on Node:**
+- ✏️ **Edit** - Open edit modal (same as double-click)
+- 📋 **Duplicate** - Create copy with offset position
+- 🗑️ **Delete** - Remove node and its links
+
+**Right-click on Empty Canvas:**
+- ➕ **Create Node** - Menu with all available node types
+- 🎨 **Auto Layout** - (Coming soon)
+
+### Undo/Redo System
+
+All editing operations support full undo/redo:
+
+**Undoable Operations:**
+- ✅ Create node
+- ✅ Delete node (with links)
+- ✅ Move node
+- ✅ Edit node properties
+- ✅ Create link
+- ✅ Delete link
+- ✅ Duplicate node
+
+**Keyboard Shortcuts:**
+- `Ctrl+Z` - Undo last operation
+- `Ctrl+Y` or `Ctrl+Shift+Z` - Redo
+- `Delete` - Delete selected node/link
+- `Ctrl+D` - Duplicate selected node
+
+**Features:**
+- 📜 **Command History** - See History panel for command list
+- 🔄 **Stack Limit** - Last 100 commands kept in memory
+- 💾 **State Preservation** - Node positions, parameters, all preserved
+
+### Using the Node Palette
+
+The Node Palette provides a drag & drop interface for adding nodes quickly.
+
+**Access:**
+```
+Asset Browser → "Nodes" tab
+```
+
+**Categories:**
+
+**1. Composites** (always available)
+- Sequence - Execute children until one fails
+- Selector - Execute children until one succeeds
+
+**2. Actions** (loaded from `Catalogues/ActionTypes.json`)
+- MoveTo - Move entity to target
+- Attack - Attack target entity
+- Patrol - Follow patrol route
+- Wait - Delay execution
+- PlayAnimation - Trigger animation
+- Heal - Restore health
+- SetVariable - Modify blackboard
+- ...and more
+
+**3. Conditions** (loaded from `Catalogues/ConditionTypes.json`)
+- TargetVisible - Check line of sight
+- HealthBelow - Check health threshold
+- DistanceLess - Check distance to target
+- HasItem - Check inventory
+- ...and more
+
+**4. Decorators** (loaded from `Catalogues/DecoratorTypes.json`)
+- Repeat - Execute child N times
+- Inverter - Invert child result
+- Cooldown - Add delay between executions
+- ...and more
+
+**Usage:**
+```
+1. Open Nodes tab
+2. Browse categories (collapsible headers)
+3. Hover over node type to see tooltip with:
+   - Description
+   - Parameter list
+   - Required parameters marked
+4. Click & drag node type
+5. Drop onto graph canvas
+6. Node created at drop position
+7. Double-click to edit parameters
+```
+
+**Tips:**
+- 💡 Use tooltips to understand what each node does before adding
+- 🎯 Required parameters shown in tooltip
+- 📋 Catalog updates automatically when JSON files change
+- 🔍 Quickly scan available actions/conditions/decorators
+
+### Validation & Error Checking
+
+The Validation system ensures your behavior trees are correct and complete.
+
+**Validation Panel:**
+```
+View → Validation (if not visible)
+```
+
+**What it Validates:**
+
+**1. Node Type Validation**
+- ✅ Action/Condition/Decorator types exist in catalogs
+- ❌ Detects invalid or deprecated types
+- 🔄 Suggests fixes when catalog changes
+
+**2. Parameter Validation**
+- ✅ All required parameters present
+- ❌ Detects missing required values
+- 💡 Shows which parameters need attention
+
+**3. Link Validation**
+- ✅ Composite nodes have children
+- ✅ Decorator nodes have exactly one child
+- ❌ Detects broken links (missing nodes)
+- 💡 Suggests structural improvements
+
+**4. Graph Validation**
+- ✅ Root node defined
+- ⚠️ Warns about orphaned nodes
+- 💡 Suggests best practices
+
+**Error Severity Levels:**
+- 🔴 **Critical** - Blocks execution
+- 🟠 **Error** - Should be fixed
+- 🟡 **Warning** - May cause issues
+- 🔵 **Info** - Suggestions
+
+**Using Validation:**
+
+**Auto-Validate Mode:**
+```
+1. Enable "Auto-validate" checkbox
+2. Validation runs every 2 seconds
+3. Errors appear in real-time
+```
+
+**Manual Validate:**
+```
+1. Click "Validate Now" button
+2. Results appear immediately
+```
+
+**Reviewing Errors:**
+```
+1. Error Summary shows count by severity
+2. Error List shows all issues
+3. Click error to jump to node (coming soon)
+4. Hover for detailed tooltip
+```
+
+**Example Validation Errors:**
+```
+[Error] MoveToGoal: Missing required parameter: speed
+[Warning] Root Selector: Composite node has no children
+[Error] AttackAction: Invalid ActionType: OldAttackType
+```
+
+**Best Practices:**
+- ✅ Validate before saving
+- ✅ Fix Critical and Error level issues
+- ✅ Consider fixing Warnings
+- ✅ Run validation after catalog updates
+
+### Position & Metadata Persistence
+
+Node positions and editor state are now saved with your graphs.
+
+**What's Saved:**
+- 📍 **Node Positions** - X, Y coordinates
+- 🔍 **Editor Zoom** - Zoom level
+- 📜 **Scroll Offset** - Canvas pan position
+- 🕐 **Last Modified** - Timestamp
+
+**JSON Format:**
+```json
+{
+  "nodes": [
+    {
+      "id": 1,
+      "type": "Action",
+      "name": "Move to Goal",
+      "position": {"x": 100, "y": 200},
+      "actionType": "MoveTo",
+      "parameters": {
+        "speed": "300.0",
+        "target": "player"
+      }
+    }
+  ],
+  "editorMetadata": {
+    "zoom": 1.0,
+    "scrollOffset": {"x": 0, "y": 0},
+    "lastModified": "2026-01-08T15:30:00Z"
+  }
+}
+```
+
+**Benefits:**
+- 💾 Positions preserved between sessions
+- 🎨 Consistent layout across team
+- 🔄 Undo/redo preserves positions
+- 📋 Easy to review in version control
 
 ---
 

@@ -423,4 +423,156 @@ namespace Olympe
     {
         return "Set " + m_ParamName + " = " + m_NewValue;
     }
+
+    // ========================================================================
+    // DuplicateNodeCommand Implementation
+    // ========================================================================
+
+    DuplicateNodeCommand::DuplicateNodeCommand(const std::string& graphId, int sourceNodeId)
+        : m_GraphId(graphId)
+        , m_SourceNodeId(sourceNodeId)
+        , m_CreatedNodeId(-1)
+    {
+    }
+
+    void DuplicateNodeCommand::Execute()
+    {
+        NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
+        if (!graph)
+        {
+            std::cerr << "DuplicateNodeCommand: Graph not found: " << m_GraphId << std::endl;
+            return;
+        }
+
+        // Get source node
+        const GraphNode* sourceNode = graph->GetNode(m_SourceNodeId);
+        if (!sourceNode)
+        {
+            std::cerr << "DuplicateNodeCommand: Source node not found: " << m_SourceNodeId << std::endl;
+            return;
+        }
+
+        // Create a duplicate node at an offset position
+        m_CreatedNodeId = graph->CreateNode(sourceNode->type, 
+                                           sourceNode->posX + 50.0f, 
+                                           sourceNode->posY + 50.0f,
+                                           sourceNode->name + " Copy");
+
+        GraphNode* newNode = graph->GetNode(m_CreatedNodeId);
+        if (newNode)
+        {
+            // Copy all properties
+            newNode->actionType = sourceNode->actionType;
+            newNode->conditionType = sourceNode->conditionType;
+            newNode->decoratorType = sourceNode->decoratorType;
+            newNode->parameters = sourceNode->parameters;
+            
+            // Save node data for undo
+            m_NodeData = json::object();
+            m_NodeData["id"] = newNode->id;
+            m_NodeData["type"] = NodeTypeToString(newNode->type);
+            m_NodeData["name"] = newNode->name;
+        }
+
+        std::cout << "Duplicated node " << m_SourceNodeId << " to " << m_CreatedNodeId << std::endl;
+    }
+
+    void DuplicateNodeCommand::Undo()
+    {
+        NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
+        if (!graph)
+        {
+            return;
+        }
+
+        // Delete the created node
+        if (m_CreatedNodeId >= 0)
+        {
+            graph->DeleteNode(m_CreatedNodeId);
+        }
+    }
+
+    std::string DuplicateNodeCommand::GetDescription() const
+    {
+        return "Duplicate Node " + std::to_string(m_SourceNodeId);
+    }
+
+    // ========================================================================
+    // EditNodeCommand Implementation
+    // ========================================================================
+
+    EditNodeCommand::EditNodeCommand(const std::string& graphId, int nodeId,
+                                   const std::string& oldName, const std::string& newName,
+                                   const std::string& oldSubtype, const std::string& newSubtype)
+        : m_GraphId(graphId)
+        , m_NodeId(nodeId)
+        , m_OldName(oldName)
+        , m_NewName(newName)
+        , m_OldSubtype(oldSubtype)
+        , m_NewSubtype(newSubtype)
+    {
+    }
+
+    void EditNodeCommand::Execute()
+    {
+        NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
+        if (!graph)
+        {
+            return;
+        }
+
+        GraphNode* node = graph->GetNode(m_NodeId);
+        if (node)
+        {
+            node->name = m_NewName;
+            
+            // Update subtype based on node type
+            if (node->type == NodeType::BT_Action)
+            {
+                node->actionType = m_NewSubtype;
+            }
+            else if (node->type == NodeType::BT_Condition)
+            {
+                node->conditionType = m_NewSubtype;
+            }
+            else if (node->type == NodeType::BT_Decorator)
+            {
+                node->decoratorType = m_NewSubtype;
+            }
+        }
+    }
+
+    void EditNodeCommand::Undo()
+    {
+        NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
+        if (!graph)
+        {
+            return;
+        }
+
+        GraphNode* node = graph->GetNode(m_NodeId);
+        if (node)
+        {
+            node->name = m_OldName;
+            
+            // Restore old subtype
+            if (node->type == NodeType::BT_Action)
+            {
+                node->actionType = m_OldSubtype;
+            }
+            else if (node->type == NodeType::BT_Condition)
+            {
+                node->conditionType = m_OldSubtype;
+            }
+            else if (node->type == NodeType::BT_Decorator)
+            {
+                node->decoratorType = m_OldSubtype;
+            }
+        }
+    }
+
+    std::string EditNodeCommand::GetDescription() const
+    {
+        return "Edit Node " + std::to_string(m_NodeId);
+    }
 }

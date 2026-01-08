@@ -56,6 +56,9 @@ namespace Olympe
         // Render runtime entities section (B)
         void RenderRuntimeEntities();
         
+        // Render node palette tab (F)
+        void RenderNodePalette();
+        
         // Apply filters to determine if node should be visible
         bool PassesFilter(const std::shared_ptr<AssetNode>& node) const;
         

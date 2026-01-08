@@ -7,10 +7,12 @@
 #include "EntityInspectorManager.h"
 #include "NodeGraphManager.h"
 #include "EnumCatalogManager.h"
+#include "CommandSystem.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
 #include <iostream>
 #include <vector>
+#include <cstring>
 
 namespace Olympe
 {
@@ -35,6 +37,9 @@ namespace Olympe
     void NodeGraphPanel::Render()
     {
         ImGui::Begin("Node Graph Editor");
+
+        // Handle keyboard shortcuts
+        HandleKeyboardShortcuts();
 
         // C) Show currently selected entity at the top
         uint64_t selectedEntity = BlueprintEditor::Get().GetSelectedEntity();
@@ -76,6 +81,9 @@ namespace Olympe
                 NodeGraphManager::Get().CreateGraph("New HFSM", "HFSM");
             }
         }
+
+        // Render node edit modal
+        RenderNodeEditModal();
 
         ImGui::End();
     }
@@ -184,13 +192,74 @@ namespace Olympe
 
         ImNodes::EndNodeEditor();
 
-        // Handle node creation (right-click on canvas)
-        if (ImGui::IsMouseReleased(1) && ImNodes::IsEditorHovered())
+        // Check for double-click on node to open edit modal
+        int hoveredNodeId = -1;
+        if (ImNodes::IsNodeHovered(&hoveredNodeId))
+        {
+            if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            {
+                m_EditingNodeId = hoveredNodeId;
+                GraphNode* node = graph->GetNode(hoveredNodeId);
+                if (node)
+                {
+                    strncpy(m_NodeNameBuffer, node->name.c_str(), sizeof(m_NodeNameBuffer) - 1);
+                    m_NodeNameBuffer[sizeof(m_NodeNameBuffer) - 1] = '\0';
+                    m_ShowNodeEditModal = true;
+                }
+            }
+            
+            // Right-click context menu on node
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+            {
+                m_SelectedNodeId = hoveredNodeId;
+                ImGui::OpenPopup("NodeContextMenu");
+            }
+        }
+
+        // Handle right-click on canvas for node creation menu
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImNodes::IsEditorHovered() && !ImNodes::IsNodeHovered(&hoveredNodeId))
         {
             ImGui::OpenPopup("NodeCreationMenu");
             ImVec2 mousePos = ImGui::GetMousePos();
             m_ContextMenuPosX = mousePos.x;
             m_ContextMenuPosY = mousePos.y;
+        }
+
+        // Context menu on node
+        if (ImGui::BeginPopup("NodeContextMenu"))
+        {
+            ImGui::Text("Node: %d", m_SelectedNodeId);
+            ImGui::Separator();
+            
+            if (ImGui::MenuItem("Edit", "Double-click"))
+            {
+                m_EditingNodeId = m_SelectedNodeId;
+                GraphNode* node = graph->GetNode(m_SelectedNodeId);
+                if (node)
+                {
+                    strncpy(m_NodeNameBuffer, node->name.c_str(), sizeof(m_NodeNameBuffer) - 1);
+                    m_NodeNameBuffer[sizeof(m_NodeNameBuffer) - 1] = '\0';
+                    m_ShowNodeEditModal = true;
+                }
+            }
+            
+            if (ImGui::MenuItem("Duplicate", "Ctrl+D"))
+            {
+                std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+                auto cmd = std::make_unique<DuplicateNodeCommand>(graphId, m_SelectedNodeId);
+                BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+            }
+            
+            ImGui::Separator();
+            
+            if (ImGui::MenuItem("Delete", "Del"))
+            {
+                std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+                auto cmd = std::make_unique<DeleteNodeCommand>(graphId, m_SelectedNodeId);
+                BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+            }
+            
+            ImGui::EndPopup();
         }
 
         RenderContextMenu();
@@ -211,7 +280,62 @@ namespace Olympe
         {
             int fromNode = startAttr / 100;
             int toNode = endAttr / 100;
-            graph->LinkNodes(fromNode, toNode);
+            
+            std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+            auto cmd = std::make_unique<LinkNodesCommand>(graphId, fromNode, toNode);
+            BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+        }
+
+        // Handle drag & drop from node palette
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("NODE_TYPE"))
+            {
+                std::string nodeTypeData((const char*)payload->Data);
+                ImVec2 mousePos = ImGui::GetMousePos();
+                
+                // Parse the type and create appropriate node
+                if (nodeTypeData.find("Action:") == 0)
+                {
+                    std::string actionType = nodeTypeData.substr(7);
+                    int nodeId = graph->CreateNode(NodeType::BT_Action, mousePos.x, mousePos.y, actionType);
+                    GraphNode* node = graph->GetNode(nodeId);
+                    if (node)
+                    {
+                        node->actionType = actionType;
+                        std::cout << "Created Action node: " << actionType << std::endl;
+                    }
+                }
+                else if (nodeTypeData.find("Condition:") == 0)
+                {
+                    std::string conditionType = nodeTypeData.substr(10);
+                    int nodeId = graph->CreateNode(NodeType::BT_Condition, mousePos.x, mousePos.y, conditionType);
+                    GraphNode* node = graph->GetNode(nodeId);
+                    if (node)
+                    {
+                        node->conditionType = conditionType;
+                        std::cout << "Created Condition node: " << conditionType << std::endl;
+                    }
+                }
+                else if (nodeTypeData.find("Decorator:") == 0)
+                {
+                    std::string decoratorType = nodeTypeData.substr(10);
+                    int nodeId = graph->CreateNode(NodeType::BT_Decorator, mousePos.x, mousePos.y, decoratorType);
+                    GraphNode* node = graph->GetNode(nodeId);
+                    if (node)
+                    {
+                        node->decoratorType = decoratorType;
+                        std::cout << "Created Decorator node: " << decoratorType << std::endl;
+                    }
+                }
+                else if (nodeTypeData == "Sequence" || nodeTypeData == "Selector")
+                {
+                    NodeType type = (nodeTypeData == "Sequence") ? NodeType::BT_Sequence : NodeType::BT_Selector;
+                    graph->CreateNode(type, mousePos.x, mousePos.y, nodeTypeData);
+                    std::cout << "Created " << nodeTypeData << " node" << std::endl;
+                }
+            }
+            ImGui::EndDragDropTarget();
         }
 
         // Update node positions
@@ -328,5 +452,271 @@ namespace Olympe
     {
         // This would show properties of the selected node
         // Can be integrated into inspector panel
+    }
+
+    void NodeGraphPanel::HandleKeyboardShortcuts()
+    {
+        NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
+        if (!graph)
+            return;
+
+        ImGuiIO& io = ImGui::GetIO();
+        
+        // Ctrl+Z: Undo
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z) && !io.KeyShift)
+        {
+            BlueprintEditor::Get().Undo();
+        }
+        
+        // Ctrl+Y or Ctrl+Shift+Z: Redo
+        if ((io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y)) ||
+            (io.KeyCtrl && io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_Z)))
+        {
+            BlueprintEditor::Get().Redo();
+        }
+        
+        // Delete: Delete selected node or link
+        if (ImGui::IsKeyPressed(ImGuiKey_Delete))
+        {
+            int selectedNodeCount = ImNodes::NumSelectedNodes();
+            if (selectedNodeCount > 0)
+            {
+                std::vector<int> selectedNodes(selectedNodeCount);
+                ImNodes::GetSelectedNodes(selectedNodes.data());
+                if (selectedNodes.size() > 0)
+                {
+                    int nodeId = selectedNodes[0];
+                    std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+                    auto cmd = std::make_unique<DeleteNodeCommand>(graphId, nodeId);
+                    BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+                }
+            }
+            
+            int selectedLinkCount = ImNodes::NumSelectedLinks();
+            if (selectedLinkCount > 0)
+            {
+                std::vector<int> selectedLinks(selectedLinkCount);
+                ImNodes::GetSelectedLinks(selectedLinks.data());
+                if (selectedLinks.size() > 0)
+                {
+                    // Find the link and delete it
+                    auto links = graph->GetAllLinks();
+                    if (selectedLinks[0] > 0 && selectedLinks[0] <= (int)links.size())
+                    {
+                        const GraphLink& link = links[selectedLinks[0] - 1];
+                        std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+                        auto cmd = std::make_unique<UnlinkNodesCommand>(graphId, link.fromNode, link.toNode);
+                        BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+                    }
+                }
+            }
+        }
+        
+        // Ctrl+D: Duplicate selected node
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_D))
+        {
+            int selectedNodeCount = ImNodes::NumSelectedNodes();
+            if (selectedNodeCount > 0)
+            {
+                std::vector<int> selectedNodes(selectedNodeCount);
+                ImNodes::GetSelectedNodes(selectedNodes.data());
+                if (selectedNodes.size() > 0)
+                {
+                    int nodeId = selectedNodes[0];
+                    std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+                    auto cmd = std::make_unique<DuplicateNodeCommand>(graphId, nodeId);
+                    BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+                }
+            }
+        }
+    }
+
+    void NodeGraphPanel::RenderNodeEditModal()
+    {
+        if (!m_ShowNodeEditModal || m_EditingNodeId < 0)
+            return;
+
+        NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
+        if (!graph)
+        {
+            m_ShowNodeEditModal = false;
+            return;
+        }
+
+        GraphNode* node = graph->GetNode(m_EditingNodeId);
+        if (!node)
+        {
+            m_ShowNodeEditModal = false;
+            return;
+        }
+
+        ImGui::OpenPopup("Edit Node");
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        
+        if (ImGui::BeginPopupModal("Edit Node", &m_ShowNodeEditModal, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            // Node name
+            if (ImGui::InputText("Name", m_NodeNameBuffer, sizeof(m_NodeNameBuffer)))
+            {
+                // Name will be saved on OK
+            }
+            
+            ImGui::Text("Type: %s", NodeTypeToString(node->type));
+            ImGui::Text("ID: %d", node->id);
+            ImGui::Separator();
+            
+            std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+            
+            // Type-specific parameters
+            if (node->type == NodeType::BT_Action)
+            {
+                // Action type dropdown
+                ImGui::Text("Action Type:");
+                auto actionTypes = EnumCatalogManager::Get().GetActionTypes();
+                if (ImGui::BeginCombo("##actiontype", node->actionType.c_str()))
+                {
+                    for (const auto& actionType : actionTypes)
+                    {
+                        bool isSelected = (node->actionType == actionType);
+                        if (ImGui::Selectable(actionType.c_str(), isSelected))
+                        {
+                            std::string oldType = node->actionType;
+                            node->actionType = actionType;
+                            // Could create EditNodeCommand here
+                        }
+                        if (isSelected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+                
+                // Show and edit parameters
+                ImGui::Separator();
+                ImGui::Text("Parameters:");
+                
+                // Get parameter definitions from catalog
+                const CatalogType* actionDef = EnumCatalogManager::Get().FindActionType(node->actionType);
+                if (actionDef)
+                {
+                    for (const auto& paramDef : actionDef->parameters)
+                    {
+                        std::string currentValue = node->parameters[paramDef.name];
+                        if (currentValue.empty())
+                            currentValue = paramDef.defaultValue;
+                        
+                        char buffer[256];
+                        strncpy(buffer, currentValue.c_str(), sizeof(buffer) - 1);
+                        buffer[sizeof(buffer) - 1] = '\0';
+                        
+                        if (ImGui::InputText(paramDef.name.c_str(), buffer, sizeof(buffer)))
+                        {
+                            std::string oldValue = node->parameters[paramDef.name];
+                            node->parameters[paramDef.name] = buffer;
+                            // Could create SetParameterCommand here for undo support
+                        }
+                        
+                        if (!paramDef.tooltip.empty() && ImGui::IsItemHovered())
+                        {
+                            ImGui::SetTooltip("%s", paramDef.tooltip.c_str());
+                        }
+                    }
+                }
+            }
+            else if (node->type == NodeType::BT_Condition)
+            {
+                // Condition type dropdown
+                ImGui::Text("Condition Type:");
+                auto conditionTypes = EnumCatalogManager::Get().GetConditionTypes();
+                if (ImGui::BeginCombo("##conditiontype", node->conditionType.c_str()))
+                {
+                    for (const auto& conditionType : conditionTypes)
+                    {
+                        bool isSelected = (node->conditionType == conditionType);
+                        if (ImGui::Selectable(conditionType.c_str(), isSelected))
+                        {
+                            node->conditionType = conditionType;
+                        }
+                        if (isSelected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+                
+                // Show and edit parameters
+                ImGui::Separator();
+                ImGui::Text("Parameters:");
+                
+                const CatalogType* conditionDef = EnumCatalogManager::Get().FindConditionType(node->conditionType);
+                if (conditionDef)
+                {
+                    for (const auto& paramDef : conditionDef->parameters)
+                    {
+                        std::string currentValue = node->parameters[paramDef.name];
+                        if (currentValue.empty())
+                            currentValue = paramDef.defaultValue;
+                        
+                        char buffer[256];
+                        strncpy(buffer, currentValue.c_str(), sizeof(buffer) - 1);
+                        buffer[sizeof(buffer) - 1] = '\0';
+                        
+                        if (ImGui::InputText(paramDef.name.c_str(), buffer, sizeof(buffer)))
+                        {
+                            node->parameters[paramDef.name] = buffer;
+                        }
+                    }
+                }
+            }
+            else if (node->type == NodeType::BT_Decorator)
+            {
+                // Decorator type dropdown
+                ImGui::Text("Decorator Type:");
+                auto decoratorTypes = EnumCatalogManager::Get().GetDecoratorTypes();
+                if (ImGui::BeginCombo("##decoratortype", node->decoratorType.c_str()))
+                {
+                    for (const auto& decoratorType : decoratorTypes)
+                    {
+                        bool isSelected = (node->decoratorType == decoratorType);
+                        if (ImGui::Selectable(decoratorType.c_str(), isSelected))
+                        {
+                            node->decoratorType = decoratorType;
+                        }
+                        if (isSelected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+            }
+            
+            ImGui::Separator();
+            
+            if (ImGui::Button("OK", ImVec2(120, 0)))
+            {
+                // Apply name change if different
+                std::string newName(m_NodeNameBuffer);
+                if (newName != node->name)
+                {
+                    node->name = newName;
+                }
+                
+                m_ShowNodeEditModal = false;
+                m_EditingNodeId = -1;
+                
+                // Auto-save the graph
+                int graphId = NodeGraphManager::Get().GetActiveGraphId();
+                std::string filename = "graph_" + std::to_string(graphId) + ".json";
+                NodeGraphManager::Get().SaveGraph(graphId, filename);
+            }
+            
+            ImGui::SameLine();
+            
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
+            {
+                m_ShowNodeEditModal = false;
+                m_EditingNodeId = -1;
+            }
+            
+            ImGui::EndPopup();
+        }
     }
 }
