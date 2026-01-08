@@ -11,6 +11,7 @@
 #pragma once
 
 #include "EntityBlueprint.h"
+#include "BlueprintEditorPlugin.h"
 #include "../../Source/third_party/nlohmann/json.hpp"
 #include <string>
 #include <memory>
@@ -168,6 +169,18 @@ namespace Olympe
         
         // Command stack access for history panel
         class CommandStack* GetCommandStack();
+        
+        // ===== Plugin System =====
+        void InitializePlugins();
+        void RegisterPlugin(std::unique_ptr<class BlueprintEditorPlugin> plugin);
+        class BlueprintEditorPlugin* GetPlugin(const std::string& type);
+        class BlueprintEditorPlugin* DetectPlugin(const json& blueprint);
+        
+        // ===== Migration System =====
+        void MigrateAllBlueprints();
+        std::vector<std::string> ScanBlueprintFiles(const std::string& directory);
+        bool ShowMigrationDialog() const { return m_ShowMigrationDialog; }
+        void SetShowMigrationDialog(bool show) { m_ShowMigrationDialog = show; }
 
     private:
         // Private constructor/destructor for singleton
@@ -213,5 +226,12 @@ namespace Olympe
         
         // ===== Phase 6: Command System =====
         class CommandStack* m_CommandStack;  // Undo/redo command stack
+        
+        // ===== Plugin System =====
+        std::map<std::string, std::unique_ptr<class BlueprintEditorPlugin>> m_Plugins;
+        
+        // ===== Migration System =====
+        bool m_ShowMigrationDialog;
+        std::vector<std::string> m_BlueprintsToMigrate;
     };
 }

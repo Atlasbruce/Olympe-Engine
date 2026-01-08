@@ -1,25 +1,65 @@
 {
-    "name": "InvestigateTree",
+  "schema_version": 2,
+  "blueprintType": "BehaviorTree",
+  "name": "InvestigateTree",
+  "description": "",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-01-08T16:13:49",
+    "lastModified": "2026-01-08T16:13:49",
+    "tags": [
+      "AI",
+      "BehaviorTree"
+    ]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "data": {
     "rootNodeId": 1,
     "nodes": [
-        {
-            "id": 1,
-            "name": "Root Sequence",
-            "type": "Sequence",
-            "children": [2, 3]
+      {
+        "id": 1,
+        "name": "Root Sequence",
+        "type": "Sequence",
+        "position": {
+          "x": 200.0,
+          "y": 300.0
         },
-        {
-            "id": 2,
-            "name": "Heard Noise?",
-            "type": "Condition",
-            "conditionType": "HeardNoise"
+        "children": [
+          2,
+          3
+        ],
+        "parameters": {}
+      },
+      {
+        "id": 2,
+        "name": "Heard Noise?",
+        "type": "Condition",
+        "position": {
+          "x": 550.0,
+          "y": 300.0
         },
-        {
-            "id": 3,
-            "name": "Move to Last Known Position",
-            "type": "Action",
-            "actionType": "MoveToGoal",
-            "param1": 0.8
+        "conditionType": "HeardNoise",
+        "parameters": {}
+      },
+      {
+        "id": 3,
+        "name": "Move to Last Known Position",
+        "type": "Action",
+        "position": {
+          "x": 550.0,
+          "y": 550.0
+        },
+        "actionType": "MoveToGoal",
+        "parameters": {
+          "param1": 0.8
         }
+      }
     ]
+  }
 }

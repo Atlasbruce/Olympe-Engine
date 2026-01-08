@@ -1,0 +1,98 @@
+{
+  "schema_version": 2,
+  "blueprintType": "LevelDefinition",
+  "name": "TutorialLevel",
+  "description": "Tutorial level with basic mechanics introduction",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-01-08T10:00:00Z",
+    "lastModified": "2026-01-08T10:00:00Z",
+    "tags": ["Level", "Tutorial", "Intro"]
+  },
+  "editorState": {
+    "zoom": 0.5,
+    "scrollOffset": {"x": 0, "y": 0}
+  },
+  "data": {
+    "levelName": "Tutorial",
+    "worldSize": {
+      "width": 2048,
+      "height": 1536
+    },
+    "backgroundMusic": "Resources/Audio/tutorial_theme.ogg",
+    "ambientColor": {"r": 200, "g": 220, "b": 255},
+    "playerSpawnPoint": {"x": 100, "y": 768},
+    "entities": [
+      {
+        "prefabPath": "Blueprints/EntityPrefab/waypoint.json",
+        "position": {"x": 300, "y": 768},
+        "name": "Waypoint_Start"
+      },
+      {
+        "prefabPath": "Blueprints/EntityPrefab/npc_entity.json",
+        "position": {"x": 500, "y": 768},
+        "name": "TutorialGuide",
+        "overrides": {
+          "Identity_data": {
+            "name": "Tutorial Guide"
+          },
+          "VisualSprite_data": {
+            "spritePath": "Resources/Sprites/guide.png"
+          }
+        }
+      },
+      {
+        "prefabPath": "Blueprints/EntityPrefab/trigger.json",
+        "position": {"x": 800, "y": 768},
+        "name": "Tutorial_Trigger_1",
+        "overrides": {
+          "BoundingBox_data": {
+            "width": 128,
+            "height": 128
+          }
+        }
+      },
+      {
+        "prefabPath": "Blueprints/EntityPrefab/waypoint.json",
+        "position": {"x": 1200, "y": 768},
+        "name": "Waypoint_End"
+      }
+    ],
+    "objectives": [
+      {
+        "id": "move_tutorial",
+        "description": "Learn to move using WASD keys",
+        "type": "ReachWaypoint",
+        "targetWaypoint": "Waypoint_Start",
+        "required": true
+      },
+      {
+        "id": "npc_interaction",
+        "description": "Talk to the Tutorial Guide",
+        "type": "InteractWithNPC",
+        "targetNPC": "TutorialGuide",
+        "required": true
+      },
+      {
+        "id": "trigger_tutorial",
+        "description": "Enter the marked zone",
+        "type": "EnterTrigger",
+        "targetTrigger": "Tutorial_Trigger_1",
+        "required": true
+      },
+      {
+        "id": "complete_tutorial",
+        "description": "Reach the end waypoint",
+        "type": "ReachWaypoint",
+        "targetWaypoint": "Waypoint_End",
+        "required": true
+      }
+    ],
+    "scriptedEvents": [
+      {
+        "eventPath": "Blueprints/ScriptedEvents/guards_ambush.json",
+        "triggerOnObjective": "trigger_tutorial"
+      }
+    ]
+  }
+}

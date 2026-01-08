@@ -61,6 +61,7 @@ namespace Olympe
         // D) Additional dialog methods
         void RenderPreferencesDialog();
         void RenderShortcutsDialog();
+        void RenderMigrationDialog();
         
         // Phase 6: Keyboard shortcuts
         void HandleKeyboardShortcuts();
