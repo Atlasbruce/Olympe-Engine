@@ -207,10 +207,10 @@ namespace Olympe
             nj["name"] = node.name;
             
             // Save position in a structured format
-            nj["position"] = {
-                {"x", node.posX},
-                {"y", node.posY}
-            };
+            nlohmann::json posJson = nlohmann::json::object();
+            posJson["x"] = node.posX;
+            posJson["y"] = node.posY;
+            nj["position"] = posJson;
 
             if (!node.actionType.empty())
                 nj["actionType"] = node.actionType;
@@ -239,14 +239,14 @@ namespace Olympe
         }
 
         // Add editor metadata
-        j["editorMetadata"] = {
-            {"zoom", editorMetadata.zoom},
-            {"scrollOffset", {
-                {"x", editorMetadata.scrollOffsetX},
-                {"y", editorMetadata.scrollOffsetY}
-            }},
-            {"lastModified", editorMetadata.lastModified}
-        };
+        nlohmann::json editorMeta = nlohmann::json::object();
+        editorMeta["zoom"] = editorMetadata.zoom;
+        nlohmann::json scrollOffset = nlohmann::json::object();
+        scrollOffset["x"] = editorMetadata.scrollOffsetX;
+        scrollOffset["y"] = editorMetadata.scrollOffsetY;
+        editorMeta["scrollOffset"] = scrollOffset;
+        editorMeta["lastModified"] = editorMetadata.lastModified;
+        j["editorMetadata"] = editorMeta;
 
         return j;
     }

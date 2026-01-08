@@ -202,7 +202,7 @@ namespace Olympe
                 GraphNode* node = graph->GetNode(hoveredNodeId);
                 if (node)
                 {
-                    strncpy(m_NodeNameBuffer, node->name.c_str(), sizeof(m_NodeNameBuffer) - 1);
+                    strncpy_s(m_NodeNameBuffer, node->name.c_str(), sizeof(m_NodeNameBuffer) - 1);
                     m_NodeNameBuffer[sizeof(m_NodeNameBuffer) - 1] = '\0';
                     m_ShowNodeEditModal = true;
                 }
@@ -237,7 +237,7 @@ namespace Olympe
                 GraphNode* node = graph->GetNode(m_SelectedNodeId);
                 if (node)
                 {
-                    strncpy(m_NodeNameBuffer, node->name.c_str(), sizeof(m_NodeNameBuffer) - 1);
+                    strncpy_s(m_NodeNameBuffer, node->name.c_str(), sizeof(m_NodeNameBuffer) - 1);
                     m_NodeNameBuffer[sizeof(m_NodeNameBuffer) - 1] = '\0';
                     m_ShowNodeEditModal = true;
                 }
@@ -606,7 +606,7 @@ namespace Olympe
                             currentValue = paramDef.defaultValue;
                         
                         char buffer[256];
-                        strncpy(buffer, currentValue.c_str(), sizeof(buffer) - 1);
+                        strncpy_s(buffer, currentValue.c_str(), sizeof(buffer) - 1);
                         buffer[sizeof(buffer) - 1] = '\0';
                         
                         if (ImGui::InputText(paramDef.name.c_str(), buffer, sizeof(buffer)))
@@ -616,9 +616,9 @@ namespace Olympe
                             // Could create SetParameterCommand here for undo support
                         }
                         
-                        if (!paramDef.tooltip.empty() && ImGui::IsItemHovered())
+                        if (!actionDef->tooltip.empty() && ImGui::IsItemHovered())
                         {
-                            ImGui::SetTooltip("%s", paramDef.tooltip.c_str());
+                            ImGui::SetTooltip("%s", actionDef->tooltip.c_str());
                         }
                     }
                 }
@@ -657,7 +657,7 @@ namespace Olympe
                             currentValue = paramDef.defaultValue;
                         
                         char buffer[256];
-                        strncpy(buffer, currentValue.c_str(), sizeof(buffer) - 1);
+                        strncpy_s(buffer, currentValue.c_str(), sizeof(buffer) - 1);
                         buffer[sizeof(buffer) - 1] = '\0';
                         
                         if (ImGui::InputText(paramDef.name.c_str(), buffer, sizeof(buffer)))

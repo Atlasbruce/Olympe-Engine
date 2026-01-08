@@ -1,0 +1,53 @@
+{
+  "editorMetadata": {
+    "lastModified": "",
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
+  "name": "InvestigateTree",
+  "nodes": [
+    {
+      "children": [
+        2,
+        3
+      ],
+      "id": 1,
+      "name": "Root Sequence",
+      "position": {
+        "x": 105,
+        "y": 71
+      },
+      "type": "Sequence"
+    },
+    {
+      "children": [],
+      "conditionType": "HeardNoise",
+      "id": 2,
+      "name": "Heard Noise?",
+      "parameters": {
+        "radius": ""
+      },
+      "position": {
+        "x": 304.25,
+        "y": 186.677
+      },
+      "type": "Condition"
+    },
+    {
+      "actionType": "MoveToGoal",
+      "children": [],
+      "id": 3,
+      "name": "Move to Last Known Position",
+      "position": {
+        "x": 295.84,
+        "y": -63.1558
+      },
+      "type": "Action"
+    }
+  ],
+  "rootNodeId": 1,
+  "type": "BehaviorTree"
+}

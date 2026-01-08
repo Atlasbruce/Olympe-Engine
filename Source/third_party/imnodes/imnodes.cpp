@@ -1880,6 +1880,7 @@ static void MiniMapUpdate()
     // Create a child window bellow mini-map, so it blocks all mouse interaction on canvas.
     int flags = ImGuiWindowFlags_NoBackground;
     ImGui::SetCursorScreenPos(editor.MiniMapRectScreenSpace.Min);
+    ImGui::Dummy(ImVec2(0, 0)); // Ajouter un item pour valider la position
     ImGui::BeginChild("minimap", editor.MiniMapRectScreenSpace.GetSize(), false, flags);
 
     const ImRect& mini_map_rect = editor.MiniMapRectScreenSpace;
