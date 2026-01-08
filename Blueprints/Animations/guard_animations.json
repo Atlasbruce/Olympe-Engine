@@ -1,0 +1,103 @@
+{
+  "schema_version": 2,
+  "blueprintType": "AnimationGraph",
+  "name": "GuardAnimations",
+  "description": "Animation state machine for guard character",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-01-08T10:00:00Z",
+    "lastModified": "2026-01-08T10:00:00Z",
+    "tags": ["Animation", "Guard", "StateMachine"]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": {"x": 0, "y": 0}
+  },
+  "data": {
+    "initialState": "Idle",
+    "states": [
+      {
+        "name": "Idle",
+        "position": {"x": 200, "y": 300},
+        "animationClip": "guard_idle",
+        "looping": true,
+        "blendTime": 0.2
+      },
+      {
+        "name": "Walk",
+        "position": {"x": 550, "y": 200},
+        "animationClip": "guard_walk",
+        "looping": true,
+        "blendTime": 0.15
+      },
+      {
+        "name": "Run",
+        "position": {"x": 550, "y": 400},
+        "animationClip": "guard_run",
+        "looping": true,
+        "blendTime": 0.2
+      },
+      {
+        "name": "Attack",
+        "position": {"x": 900, "y": 300},
+        "animationClip": "guard_attack",
+        "looping": false,
+        "blendTime": 0.1
+      }
+    ],
+    "transitions": [
+      {
+        "from": "Idle",
+        "to": "Walk",
+        "condition": "velocity > 0.1",
+        "duration": 0.15
+      },
+      {
+        "from": "Walk",
+        "to": "Idle",
+        "condition": "velocity < 0.1",
+        "duration": 0.2
+      },
+      {
+        "from": "Walk",
+        "to": "Run",
+        "condition": "velocity > 100.0",
+        "duration": 0.15
+      },
+      {
+        "from": "Run",
+        "to": "Walk",
+        "condition": "velocity < 100.0",
+        "duration": 0.2
+      },
+      {
+        "from": "Idle",
+        "to": "Attack",
+        "condition": "attackTriggered",
+        "duration": 0.1
+      },
+      {
+        "from": "Walk",
+        "to": "Attack",
+        "condition": "attackTriggered",
+        "duration": 0.1
+      },
+      {
+        "from": "Attack",
+        "to": "Idle",
+        "condition": "animationComplete",
+        "duration": 0.2
+      }
+    ],
+    "parameters": {
+      "velocity": {
+        "type": "float",
+        "default": 0.0
+      },
+      "attackTriggered": {
+        "type": "bool",
+        "default": false
+      }
+    }
+  }
+}

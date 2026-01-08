@@ -1,0 +1,93 @@
+{
+  "schema_version": 2,
+  "blueprintType": "ScriptedEvent",
+  "name": "GuardsAmbush",
+  "description": "Scripted event where guards ambush the player",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-01-08T10:00:00Z",
+    "lastModified": "2026-01-08T10:00:00Z",
+    "tags": ["Event", "Combat", "Guards", "Ambush"]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": {"x": 0, "y": 0}
+  },
+  "data": {
+    "triggerType": "PlayerEnterZone",
+    "triggerZone": {
+      "x": 500,
+      "y": 300,
+      "width": 100,
+      "height": 100
+    },
+    "oneShot": true,
+    "sequence": [
+      {
+        "step": 1,
+        "type": "Wait",
+        "duration": 0.5,
+        "description": "Brief pause before ambush"
+      },
+      {
+        "step": 2,
+        "type": "SpawnEntity",
+        "prefabPath": "Blueprints/EntityPrefab/guard_npc.json",
+        "position": {"x": 450, "y": 250},
+        "assignToVariable": "guard1"
+      },
+      {
+        "step": 3,
+        "type": "SpawnEntity",
+        "prefabPath": "Blueprints/EntityPrefab/guard_npc.json",
+        "position": {"x": 550, "y": 250},
+        "assignToVariable": "guard2"
+      },
+      {
+        "step": 4,
+        "type": "PlaySound",
+        "soundPath": "Resources/Audio/ambush_alert.wav",
+        "volume": 0.8
+      },
+      {
+        "step": 5,
+        "type": "SetAIState",
+        "targetEntity": "guard1",
+        "state": "Combat",
+        "targetPlayer": true
+      },
+      {
+        "step": 6,
+        "type": "SetAIState",
+        "targetEntity": "guard2",
+        "state": "Combat",
+        "targetPlayer": true
+      },
+      {
+        "step": 7,
+        "type": "ShowMessage",
+        "message": "Guards detected you!",
+        "duration": 2.0,
+        "color": {"r": 255, "g": 0, "b": 0}
+      },
+      {
+        "step": 8,
+        "type": "WaitForCondition",
+        "condition": "AllGuardsDefeated",
+        "timeout": 60.0
+      },
+      {
+        "step": 9,
+        "type": "ShowMessage",
+        "message": "Area cleared!",
+        "duration": 2.0,
+        "color": {"r": 0, "g": 255, "b": 0}
+      },
+      {
+        "step": 10,
+        "type": "Complete",
+        "rewardExperience": 150
+      }
+    ]
+  }
+}

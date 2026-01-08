@@ -1,0 +1,104 @@
+{
+  "schema_version": 2,
+  "blueprintType": "UIMenu",
+  "name": "InGameMenu",
+  "description": "In-game pause menu UI",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-01-08T10:00:00Z",
+    "lastModified": "2026-01-08T10:00:00Z",
+    "tags": ["UI", "Menu", "InGame", "Pause"]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": {"x": 0, "y": 0}
+  },
+  "data": {
+    "menuName": "InGameMenu",
+    "overlay": true,
+    "pauseGame": true,
+    "backgroundOverlay": {
+      "enabled": true,
+      "color": {"r": 0, "g": 0, "b": 0, "a": 128},
+      "blur": 5.0
+    },
+    "elements": [
+      {
+        "id": "panel_main",
+        "type": "Panel",
+        "position": {"x": 400, "y": 300},
+        "anchor": "Center",
+        "size": {"width": 400, "height": 500},
+        "backgroundColor": {"r": 40, "g": 40, "b": 50, "a": 240},
+        "borderColor": {"r": 100, "g": 100, "b": 120, "a": 255},
+        "borderWidth": 2
+      },
+      {
+        "id": "title",
+        "type": "Text",
+        "position": {"x": 400, "y": 100},
+        "anchor": "TopCenter",
+        "text": "PAUSED",
+        "fontSize": 36,
+        "color": {"r": 255, "g": 255, "b": 255, "a": 255}
+      },
+      {
+        "id": "btn_resume",
+        "type": "Button",
+        "position": {"x": 400, "y": 250},
+        "anchor": "Center",
+        "size": {"width": 250, "height": 50},
+        "text": "Resume",
+        "action": "ResumeGame",
+        "style": "primary",
+        "shortcut": "ESC"
+      },
+      {
+        "id": "btn_save",
+        "type": "Button",
+        "position": {"x": 400, "y": 320},
+        "anchor": "Center",
+        "size": {"width": 250, "height": 50},
+        "text": "Save Game",
+        "action": "SaveGame",
+        "style": "secondary"
+      },
+      {
+        "id": "btn_options",
+        "type": "Button",
+        "position": {"x": 400, "y": 390},
+        "anchor": "Center",
+        "size": {"width": 250, "height": 50},
+        "text": "Options",
+        "action": "OpenOptionsMenu",
+        "style": "secondary"
+      },
+      {
+        "id": "btn_mainmenu",
+        "type": "Button",
+        "position": {"x": 400, "y": 460},
+        "anchor": "Center",
+        "size": {"width": 250, "height": 50},
+        "text": "Main Menu",
+        "action": "ReturnToMainMenu",
+        "style": "warning",
+        "confirmDialog": "Are you sure? Unsaved progress will be lost."
+      },
+      {
+        "id": "btn_quit",
+        "type": "Button",
+        "position": {"x": 400, "y": 530},
+        "anchor": "Center",
+        "size": {"width": 250, "height": 50},
+        "text": "Quit Game",
+        "action": "QuitGame",
+        "style": "danger",
+        "confirmDialog": "Are you sure you want to quit?"
+      }
+    ],
+    "navigation": {
+      "default": "btn_resume",
+      "order": ["btn_resume", "btn_save", "btn_options", "btn_mainmenu", "btn_quit"]
+    }
+  }
+}

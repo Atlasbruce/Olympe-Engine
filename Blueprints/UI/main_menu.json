@@ -1,0 +1,95 @@
+{
+  "schema_version": 2,
+  "blueprintType": "UIMenu",
+  "name": "MainMenu",
+  "description": "Main menu UI layout and navigation",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-01-08T10:00:00Z",
+    "lastModified": "2026-01-08T10:00:00Z",
+    "tags": ["UI", "Menu", "MainMenu"]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": {"x": 0, "y": 0}
+  },
+  "data": {
+    "menuName": "MainMenu",
+    "backgroundImage": "Resources/UI/main_menu_bg.png",
+    "backgroundMusic": "Resources/Audio/main_theme.ogg",
+    "elements": [
+      {
+        "id": "logo",
+        "type": "Image",
+        "position": {"x": 400, "y": 100},
+        "anchor": "TopCenter",
+        "size": {"width": 256, "height": 128},
+        "imagePath": "Resources/Sprites/olympe_logo.png"
+      },
+      {
+        "id": "title",
+        "type": "Text",
+        "position": {"x": 400, "y": 250},
+        "anchor": "TopCenter",
+        "text": "OLYMPE ENGINE",
+        "fontSize": 48,
+        "color": {"r": 255, "g": 255, "b": 255, "a": 255},
+        "fontPath": "Resources/Fonts/title.ttf"
+      },
+      {
+        "id": "btn_newgame",
+        "type": "Button",
+        "position": {"x": 400, "y": 400},
+        "anchor": "Center",
+        "size": {"width": 200, "height": 50},
+        "text": "New Game",
+        "action": "StartNewGame",
+        "style": "primary"
+      },
+      {
+        "id": "btn_continue",
+        "type": "Button",
+        "position": {"x": 400, "y": 470},
+        "anchor": "Center",
+        "size": {"width": 200, "height": 50},
+        "text": "Continue",
+        "action": "LoadGame",
+        "style": "primary",
+        "enabled": false
+      },
+      {
+        "id": "btn_options",
+        "type": "Button",
+        "position": {"x": 400, "y": 540},
+        "anchor": "Center",
+        "size": {"width": 200, "height": 50},
+        "text": "Options",
+        "action": "OpenOptionsMenu",
+        "style": "secondary"
+      },
+      {
+        "id": "btn_quit",
+        "type": "Button",
+        "position": {"x": 400, "y": 610},
+        "anchor": "Center",
+        "size": {"width": 200, "height": 50},
+        "text": "Quit",
+        "action": "QuitGame",
+        "style": "danger"
+      },
+      {
+        "id": "version",
+        "type": "Text",
+        "position": {"x": 10, "y": 590},
+        "anchor": "BottomLeft",
+        "text": "v2.0.0",
+        "fontSize": 14,
+        "color": {"r": 180, "g": 180, "b": 180, "a": 255}
+      }
+    ],
+    "navigation": {
+      "default": "btn_newgame",
+      "order": ["btn_newgame", "btn_continue", "btn_options", "btn_quit"]
+    }
+  }
+}

@@ -12,9 +12,13 @@
 #include "EntityInspectorManager.h"
 #include "TemplateManager.h"
 #include "CommandSystem.h"
+#include "BlueprintMigrator.h"
+#include "BehaviorTreeEditorPlugin.h"
+#include "EntityPrefabEditorPlugin.h"
 #include "../json_helper.h"
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 #ifndef _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #endif
@@ -42,6 +46,7 @@ namespace Olympe
         , m_AssetRootPath("Blueprints")
         , m_SelectedEntity(0)  // 0 = INVALID_ENTITY_ID
         , m_CommandStack(nullptr)
+        , m_ShowMigrationDialog(false)
     {
     }
 
@@ -80,6 +85,9 @@ namespace Olympe
         
         // Initialize command stack
         m_CommandStack = new CommandStack();
+        
+        // Initialize plugin system
+        InitializePlugins();
         
         // Scan assets on initialization
         RefreshAssets();
@@ -834,6 +842,167 @@ namespace Olympe
     CommandStack* BlueprintEditor::GetCommandStack()
     {
         return m_CommandStack;
+    }
+
+    // ========================================================================
+    // Plugin System Implementation
+    // ========================================================================
+    
+    void BlueprintEditor::InitializePlugins()
+    {
+        std::cout << "BlueprintEditor: Initializing plugins..." << std::endl;
+        
+        // Register all plugins
+        RegisterPlugin(std::make_unique<BehaviorTreeEditorPlugin>());
+        RegisterPlugin(std::make_unique<EntityPrefabEditorPlugin>());
+        
+        std::cout << "BlueprintEditor: " << m_Plugins.size() << " plugins registered" << std::endl;
+    }
+    
+    void BlueprintEditor::RegisterPlugin(std::unique_ptr<BlueprintEditorPlugin> plugin)
+    {
+        std::string type = plugin->GetBlueprintType();
+        m_Plugins[type] = std::move(plugin);
+        std::cout << "BlueprintEditor: Registered plugin: " << type << std::endl;
+    }
+    
+    BlueprintEditorPlugin* BlueprintEditor::GetPlugin(const std::string& type)
+    {
+        auto it = m_Plugins.find(type);
+        if (it != m_Plugins.end())
+        {
+            return it->second.get();
+        }
+        return nullptr;
+    }
+    
+    BlueprintEditorPlugin* BlueprintEditor::DetectPlugin(const json& blueprint)
+    {
+        // V2 format: read blueprintType directly
+        if (blueprint.contains("blueprintType"))
+        {
+            std::string type = blueprint["blueprintType"].get<std::string>();
+            return GetPlugin(type);
+        }
+        
+        // V1 format: use heuristic detection
+        for (auto& [type, plugin] : m_Plugins)
+        {
+            if (plugin->CanHandle(blueprint))
+            {
+                return plugin.get();
+            }
+        }
+        
+        return nullptr;
+    }
+
+    // ========================================================================
+    // Migration System Implementation
+    // ========================================================================
+    
+    std::vector<std::string> BlueprintEditor::ScanBlueprintFiles(const std::string& directory)
+    {
+        std::vector<std::string> blueprintFiles;
+        
+        try
+        {
+            if (!fs::exists(directory) || !fs::is_directory(directory))
+            {
+                std::cerr << "BlueprintEditor: Directory not found: " << directory << std::endl;
+                return blueprintFiles;
+            }
+            
+            for (const auto& entry : fs::recursive_directory_iterator(directory))
+            {
+                if (fs::is_regular_file(entry.path()) && entry.path().extension() == ".json")
+                {
+                    blueprintFiles.push_back(entry.path().string());
+                }
+            }
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "BlueprintEditor: Error scanning directory: " << e.what() << std::endl;
+        }
+        
+        return blueprintFiles;
+    }
+    
+    void BlueprintEditor::MigrateAllBlueprints()
+    {
+        std::cout << "BlueprintEditor: Starting migration..." << std::endl;
+        
+        BlueprintMigrator migrator;
+        int successCount = 0;
+        int failCount = 0;
+        int skippedCount = 0;
+        
+        std::vector<std::string> files = ScanBlueprintFiles(m_AssetRootPath);
+        
+        for (const auto& path : files)
+        {
+            try
+            {
+                json v1;
+                if (!JsonHelper::LoadJsonFromFile(path, v1))
+                {
+                    std::cerr << "Failed to load: " << path << std::endl;
+                    failCount++;
+                    continue;
+                }
+                
+                // Check if already v2
+                if (migrator.IsV2(v1))
+                {
+                    std::cout << "Skipping (already v2): " << path << std::endl;
+                    skippedCount++;
+                    continue;
+                }
+                
+                // Create backup
+                std::string backupPath = path + ".v1.backup";
+                try
+                {
+                    fs::copy_file(path, backupPath, fs::copy_options::overwrite_existing);
+                }
+                catch (const std::exception& e)
+                {
+                    std::cerr << "Failed to create backup for " << path << ": " << e.what() << std::endl;
+                    failCount++;
+                    continue;
+                }
+                
+                // Migrate
+                json v2 = migrator.MigrateToV2(v1);
+                
+                // Save
+                std::ofstream file(path);
+                if (!file.is_open())
+                {
+                    std::cerr << "Failed to open file for writing: " << path << std::endl;
+                    failCount++;
+                    continue;
+                }
+                
+                file << v2.dump(2);
+                file.close();
+                
+                std::cout << "Migrated: " << path << std::endl;
+                successCount++;
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "Migration failed for " << path << ": " << e.what() << std::endl;
+                failCount++;
+            }
+        }
+        
+        std::cout << "Migration complete: " << successCount << " success, " 
+                  << skippedCount << " skipped, " << failCount << " failed" << std::endl;
+        
+        // Refresh assets after migration
+        RefreshAssets();
     }
 
 } // namespace Olympe
