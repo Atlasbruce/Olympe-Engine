@@ -9,6 +9,7 @@
 
 #include <string>
 #include <vector>
+#include "NodeGraphManager.h"
 
 namespace Olympe
 {
@@ -31,6 +32,8 @@ namespace Olympe
         void RenderGraph();
         void RenderContextMenu();
         void RenderNodeProperties();
+        void RenderNodeEditModal();
+        void HandleKeyboardShortcuts();
 
         // Node creation helpers
         void CreateNewNode(const char* nodeType, float x, float y);
@@ -41,5 +44,17 @@ namespace Olympe
         bool m_ShowContextMenu = false;
         float m_ContextMenuPosX = 0.0f;
         float m_ContextMenuPosY = 0.0f;
+        
+        // Node editing modal
+        bool m_ShowNodeEditModal = false;
+        GraphNode* m_EditingNode = nullptr;
+        int m_EditingNodeId = -1;
+        char m_NodeNameBuffer[256];
+        
+        // For tracking node movement (undo/redo)
+        bool m_NodeDragStarted = false;
+        int m_DraggedNodeId = -1;
+        float m_DragStartX = 0.0f;
+        float m_DragStartY = 0.0f;
     };
 }

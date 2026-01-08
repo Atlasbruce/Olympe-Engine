@@ -108,6 +108,17 @@ namespace Olympe
         GraphLink(int from, int to) : fromNode(from), toNode(to) {}
     };
 
+    // Editor metadata for graph
+    struct EditorMetadata
+    {
+        float zoom = 1.0f;
+        float scrollOffsetX = 0.0f;
+        float scrollOffsetY = 0.0f;
+        std::string lastModified;
+        
+        EditorMetadata() = default;
+    };
+
     // Node graph (Behavior Tree or HFSM)
     class NodeGraph
     {
@@ -119,6 +130,7 @@ namespace Olympe
         std::string name;
         std::string type;  // "BehaviorTree" or "HFSM"
         int rootNodeId = -1;
+        EditorMetadata editorMetadata;
 
         // Node CRUD
         int CreateNode(NodeType type, float x, float y, const std::string& name = "");

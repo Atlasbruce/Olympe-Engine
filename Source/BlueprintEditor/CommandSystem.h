@@ -205,4 +205,46 @@ namespace Olympe
         std::string m_OldValue;
         std::string m_NewValue;
     };
+
+    /**
+     * DuplicateNodeCommand - Command to duplicate a node
+     */
+    class DuplicateNodeCommand : public EditorCommand
+    {
+    public:
+        DuplicateNodeCommand(const std::string& graphId, int sourceNodeId);
+        
+        void Execute() override;
+        void Undo() override;
+        std::string GetDescription() const override;
+
+    private:
+        std::string m_GraphId;
+        int m_SourceNodeId;
+        int m_CreatedNodeId;  // Set during Execute
+        json m_NodeData;      // Backup for undo
+    };
+
+    /**
+     * EditNodeCommand - Command to edit node properties (name, type-specific fields)
+     */
+    class EditNodeCommand : public EditorCommand
+    {
+    public:
+        EditNodeCommand(const std::string& graphId, int nodeId,
+                       const std::string& oldName, const std::string& newName,
+                       const std::string& oldSubtype, const std::string& newSubtype);
+        
+        void Execute() override;
+        void Undo() override;
+        std::string GetDescription() const override;
+
+    private:
+        std::string m_GraphId;
+        int m_NodeId;
+        std::string m_OldName;
+        std::string m_NewName;
+        std::string m_OldSubtype;  // actionType, conditionType, or decoratorType
+        std::string m_NewSubtype;
+    };
 }

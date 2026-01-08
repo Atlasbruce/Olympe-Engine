@@ -205,8 +205,12 @@ namespace Olympe
             nj["id"] = node.id;
             nj["type"] = NodeTypeToString(node.type);
             nj["name"] = node.name;
-            nj["posX"] = node.posX;
-            nj["posY"] = node.posY;
+            
+            // Save position in a structured format
+            nj["position"] = {
+                {"x", node.posX},
+                {"y", node.posY}
+            };
 
             if (!node.actionType.empty())
                 nj["actionType"] = node.actionType;
@@ -234,6 +238,16 @@ namespace Olympe
             j["nodes"].push_back(nj);
         }
 
+        // Add editor metadata
+        j["editorMetadata"] = {
+            {"zoom", editorMetadata.zoom},
+            {"scrollOffset", {
+                {"x", editorMetadata.scrollOffsetX},
+                {"y", editorMetadata.scrollOffsetY}
+            }},
+            {"lastModified", editorMetadata.lastModified}
+        };
+
         return j;
     }
 
@@ -255,8 +269,19 @@ namespace Olympe
                 node.id = JsonHelper::GetInt(nj, "id", 0);
                 node.type = StringToNodeType(JsonHelper::GetString(nj, "type", "Action"));
                 node.name = JsonHelper::GetString(nj, "name", "");
-                node.posX = JsonHelper::GetFloat(nj, "posX", 0.0f);
-                node.posY = JsonHelper::GetFloat(nj, "posY", 0.0f);
+                
+                // Load position - try new format first, fallback to old format
+                if (nj.contains("position") && nj["position"].is_object())
+                {
+                    node.posX = JsonHelper::GetFloat(nj["position"], "x", 0.0f);
+                    node.posY = JsonHelper::GetFloat(nj["position"], "y", 0.0f);
+                }
+                else
+                {
+                    // Fallback to old format
+                    node.posX = JsonHelper::GetFloat(nj, "posX", 0.0f);
+                    node.posY = JsonHelper::GetFloat(nj, "posY", 0.0f);
+                }
 
                 node.actionType = JsonHelper::GetString(nj, "actionType", "");
                 node.conditionType = JsonHelper::GetString(nj, "conditionType", "");
@@ -293,6 +318,21 @@ namespace Olympe
             });
 
             graph.m_NextNodeId = maxId + 1;
+        }
+
+        // Load editor metadata if present
+        if (j.contains("editorMetadata") && j["editorMetadata"].is_object())
+        {
+            const json& meta = j["editorMetadata"];
+            graph.editorMetadata.zoom = JsonHelper::GetFloat(meta, "zoom", 1.0f);
+            
+            if (meta.contains("scrollOffset") && meta["scrollOffset"].is_object())
+            {
+                graph.editorMetadata.scrollOffsetX = JsonHelper::GetFloat(meta["scrollOffset"], "x", 0.0f);
+                graph.editorMetadata.scrollOffsetY = JsonHelper::GetFloat(meta["scrollOffset"], "y", 0.0f);
+            }
+            
+            graph.editorMetadata.lastModified = JsonHelper::GetString(meta, "lastModified", "");
         }
 
         return graph;
