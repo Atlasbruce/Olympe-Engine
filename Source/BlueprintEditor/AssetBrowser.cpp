@@ -6,6 +6,7 @@
 #include "AssetBrowser.h"
 #include "BlueprintEditor.h"
 #include "EntityInspectorManager.h"
+#include "EnumCatalogManager.h"
 #include "../third_party/imgui/imgui.h"
 #include <algorithm>
 #include <iostream>
@@ -245,6 +246,13 @@ namespace Olympe
                     ImGui::EndTabItem();
                 }
                 
+                // ===== TAB 3: Node Palette =====
+                if (ImGui::BeginTabItem("Nodes"))
+                {
+                    RenderNodePalette();
+                    ImGui::EndTabItem();
+                }
+                
                 ImGui::EndTabBar();
             }
         }
@@ -318,6 +326,173 @@ namespace Olympe
         }
         
         ImGui::EndChild();
+    }
+
+    void AssetBrowser::RenderNodePalette()
+    {
+        ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), 
+            "Drag nodes to the graph to add them");
+        ImGui::Separator();
+        
+        // ===== Composite Nodes =====
+        if (ImGui::CollapsingHeader("Composites", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            const char* compositeNodes[] = {"Sequence", "Selector"};
+            const char* compositeTooltips[] = {
+                "Executes children in order until one fails",
+                "Executes children in order until one succeeds"
+            };
+            
+            for (int i = 0; i < 2; i++)
+            {
+                ImGui::Selectable(compositeNodes[i]);
+                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+                {
+                    const char* nodeType = compositeNodes[i];
+                    ImGui::SetDragDropPayload("NODE_TYPE", nodeType, strlen(nodeType) + 1);
+                    ImGui::Text("%s", compositeNodes[i]);
+                    ImGui::EndDragDropSource();
+                }
+                
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("%s", compositeTooltips[i]);
+                }
+            }
+        }
+        
+        // ===== Action Nodes =====
+        if (ImGui::CollapsingHeader("Actions", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            auto actionTypes = EnumCatalogManager::Get().GetActionTypes();
+            
+            if (actionTypes.empty())
+            {
+                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
+                    "No actions available");
+            }
+            else
+            {
+                for (const auto& actionType : actionTypes)
+                {
+                    ImGui::Selectable(actionType.c_str());
+                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+                    {
+                        std::string payload = "Action:" + actionType;
+                        ImGui::SetDragDropPayload("NODE_TYPE", payload.c_str(), payload.size() + 1);
+                        ImGui::Text("%s", actionType.c_str());
+                        ImGui::EndDragDropSource();
+                    }
+                    
+                    // Show tooltip with action info
+                    const CatalogType* actionDef = EnumCatalogManager::Get().FindActionType(actionType);
+                    if (actionDef && ImGui::IsItemHovered())
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "%s", actionDef->name.c_str());
+                        if (!actionDef->description.empty())
+                        {
+                            ImGui::TextWrapped("%s", actionDef->description.c_str());
+                        }
+                        if (!actionDef->parameters.empty())
+                        {
+                            ImGui::Separator();
+                            ImGui::Text("Parameters:");
+                            for (const auto& param : actionDef->parameters)
+                            {
+                                ImGui::BulletText("%s: %s %s", 
+                                    param.name.c_str(), 
+                                    param.type.c_str(),
+                                    param.required ? "(required)" : "");
+                            }
+                        }
+                        ImGui::EndTooltip();
+                    }
+                }
+            }
+        }
+        
+        // ===== Condition Nodes =====
+        if (ImGui::CollapsingHeader("Conditions", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            auto conditionTypes = EnumCatalogManager::Get().GetConditionTypes();
+            
+            if (conditionTypes.empty())
+            {
+                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
+                    "No conditions available");
+            }
+            else
+            {
+                for (const auto& conditionType : conditionTypes)
+                {
+                    ImGui::Selectable(conditionType.c_str());
+                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+                    {
+                        std::string payload = "Condition:" + conditionType;
+                        ImGui::SetDragDropPayload("NODE_TYPE", payload.c_str(), payload.size() + 1);
+                        ImGui::Text("%s", conditionType.c_str());
+                        ImGui::EndDragDropSource();
+                    }
+                    
+                    // Show tooltip with condition info
+                    const CatalogType* conditionDef = EnumCatalogManager::Get().FindConditionType(conditionType);
+                    if (conditionDef && ImGui::IsItemHovered())
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "%s", conditionDef->name.c_str());
+                        if (!conditionDef->description.empty())
+                        {
+                            ImGui::TextWrapped("%s", conditionDef->description.c_str());
+                        }
+                        ImGui::EndTooltip();
+                    }
+                }
+            }
+        }
+        
+        // ===== Decorator Nodes =====
+        if (ImGui::CollapsingHeader("Decorators"))
+        {
+            auto decoratorTypes = EnumCatalogManager::Get().GetDecoratorTypes();
+            
+            if (decoratorTypes.empty())
+            {
+                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
+                    "No decorators available");
+            }
+            else
+            {
+                for (const auto& decoratorType : decoratorTypes)
+                {
+                    ImGui::Selectable(decoratorType.c_str());
+                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+                    {
+                        std::string payload = "Decorator:" + decoratorType;
+                        ImGui::SetDragDropPayload("NODE_TYPE", payload.c_str(), payload.size() + 1);
+                        ImGui::Text("%s", decoratorType.c_str());
+                        ImGui::EndDragDropSource();
+                    }
+                    
+                    // Show tooltip with decorator info
+                    const CatalogType* decoratorDef = EnumCatalogManager::Get().FindDecoratorType(decoratorType);
+                    if (decoratorDef && ImGui::IsItemHovered())
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "%s", decoratorDef->name.c_str());
+                        if (!decoratorDef->description.empty())
+                        {
+                            ImGui::TextWrapped("%s", decoratorDef->description.c_str());
+                        }
+                        ImGui::EndTooltip();
+                    }
+                }
+            }
+        }
+        
+        ImGui::Separator();
+        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
+            "Tip: Drag & drop nodes onto the graph canvas");
     }
 
     std::string AssetBrowser::GetSelectedAssetPath() const

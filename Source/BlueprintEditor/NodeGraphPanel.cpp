@@ -286,6 +286,58 @@ namespace Olympe
             BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
         }
 
+        // Handle drag & drop from node palette
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("NODE_TYPE"))
+            {
+                std::string nodeTypeData((const char*)payload->Data);
+                ImVec2 mousePos = ImGui::GetMousePos();
+                
+                // Parse the type and create appropriate node
+                if (nodeTypeData.find("Action:") == 0)
+                {
+                    std::string actionType = nodeTypeData.substr(7);
+                    int nodeId = graph->CreateNode(NodeType::BT_Action, mousePos.x, mousePos.y, actionType);
+                    GraphNode* node = graph->GetNode(nodeId);
+                    if (node)
+                    {
+                        node->actionType = actionType;
+                        std::cout << "Created Action node: " << actionType << std::endl;
+                    }
+                }
+                else if (nodeTypeData.find("Condition:") == 0)
+                {
+                    std::string conditionType = nodeTypeData.substr(10);
+                    int nodeId = graph->CreateNode(NodeType::BT_Condition, mousePos.x, mousePos.y, conditionType);
+                    GraphNode* node = graph->GetNode(nodeId);
+                    if (node)
+                    {
+                        node->conditionType = conditionType;
+                        std::cout << "Created Condition node: " << conditionType << std::endl;
+                    }
+                }
+                else if (nodeTypeData.find("Decorator:") == 0)
+                {
+                    std::string decoratorType = nodeTypeData.substr(10);
+                    int nodeId = graph->CreateNode(NodeType::BT_Decorator, mousePos.x, mousePos.y, decoratorType);
+                    GraphNode* node = graph->GetNode(nodeId);
+                    if (node)
+                    {
+                        node->decoratorType = decoratorType;
+                        std::cout << "Created Decorator node: " << decoratorType << std::endl;
+                    }
+                }
+                else if (nodeTypeData == "Sequence" || nodeTypeData == "Selector")
+                {
+                    NodeType type = (nodeTypeData == "Sequence") ? NodeType::BT_Sequence : NodeType::BT_Selector;
+                    graph->CreateNode(type, mousePos.x, mousePos.y, nodeTypeData);
+                    std::cout << "Created " << nodeTypeData << " node" << std::endl;
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+
         // Update node positions
         for (GraphNode* node : nodes)
         {
