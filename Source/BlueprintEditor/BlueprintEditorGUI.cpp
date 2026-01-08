@@ -133,7 +133,56 @@ namespace Olympe
             // ===== D) FILE MENU =====
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("New Blueprint", "Ctrl+N"))
+                // New Blueprint submenu with all types
+                if (ImGui::BeginMenu("New Blueprint"))
+                {
+                    if (ImGui::BeginMenu("AI"))
+                    {
+                        if (ImGui::MenuItem("Behavior Tree", "Ctrl+Shift+B"))
+                        {
+                            // TODO: Create new BehaviorTree
+                            std::cout << "Creating new Behavior Tree..." << std::endl;
+                        }
+                        if (ImGui::MenuItem("Hierarchical FSM", "Ctrl+Shift+H"))
+                        {
+                            std::cout << "Creating new HFSM..." << std::endl;
+                        }
+                        ImGui::EndMenu();
+                    }
+                    
+                    ImGui::Separator();
+                    
+                    if (ImGui::MenuItem("Entity Prefab", "Ctrl+Shift+E"))
+                    {
+                        std::cout << "Creating new Entity Prefab..." << std::endl;
+                    }
+                    
+                    if (ImGui::MenuItem("Animation Graph", "Ctrl+Shift+A"))
+                    {
+                        std::cout << "Creating new Animation Graph..." << std::endl;
+                    }
+                    
+                    if (ImGui::MenuItem("Scripted Event", "Ctrl+Shift+S"))
+                    {
+                        std::cout << "Creating new Scripted Event..." << std::endl;
+                    }
+                    
+                    ImGui::Separator();
+                    
+                    if (ImGui::MenuItem("Level Definition", "Ctrl+Shift+L"))
+                    {
+                        std::cout << "Creating new Level Definition..." << std::endl;
+                    }
+                    
+                    if (ImGui::MenuItem("UI Menu", "Ctrl+Shift+U"))
+                    {
+                        std::cout << "Creating new UI Menu..." << std::endl;
+                    }
+                    
+                    ImGui::EndMenu();
+                }
+                
+                if (ImGui::MenuItem("New Blueprint (Legacy)", "Ctrl+N"))
                     NewBlueprint();
                 
                 if (ImGui::MenuItem("Open Blueprint...", "Ctrl+O"))
@@ -228,6 +277,24 @@ namespace Olympe
                 if (ImGui::MenuItem("Preferences..."))
                 {
                     m_ShowPreferences = true;
+                }
+                
+                ImGui::EndMenu();
+            }
+
+            // ===== TOOLS MENU =====
+            if (ImGui::BeginMenu("Tools"))
+            {
+                if (ImGui::MenuItem("Migrate Blueprints v1 -> v2"))
+                {
+                    backend.SetShowMigrationDialog(true);
+                }
+                
+                ImGui::Separator();
+                
+                if (ImGui::MenuItem("Validate All Blueprints"))
+                {
+                    std::cout << "Validating all blueprints..." << std::endl;
                 }
                 
                 ImGui::EndMenu();
@@ -330,6 +397,10 @@ namespace Olympe
             
         if (m_ShowShortcuts)
             RenderShortcutsDialog();
+            
+        // Migration dialog
+        if (backend.ShowMigrationDialog())
+            RenderMigrationDialog();
 
         // About dialog
         if (m_ShowAboutDialog)
@@ -823,6 +894,59 @@ namespace Olympe
             }
             
             ImGui::EndPopup();
+        }
+    }
+    
+    void BlueprintEditorGUI::RenderMigrationDialog()
+    {
+        auto& backend = BlueprintEditor::Get();
+        
+        ImGui::OpenPopup("Migrate Blueprints");
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        ImGui::SetNextWindowSize(ImVec2(500, 300), ImGuiCond_Appearing);
+        
+        bool isOpen = true;
+        if (ImGui::BeginPopupModal("Migrate Blueprints", &isOpen, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::TextWrapped("This will migrate all v1 blueprints to v2 format:");
+            ImGui::Spacing();
+            
+            ImGui::BulletText("Add schema_version and blueprintType fields");
+            ImGui::BulletText("Calculate and save node positions");
+            ImGui::BulletText("Unify parameters structure");
+            ImGui::BulletText("Create .v1.backup files");
+            
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+            
+            ImGui::TextWrapped("Scanning: Blueprints/");
+            ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.0f, 1.0f), 
+                             "Warning: This will modify your blueprint files!");
+            
+            ImGui::Spacing();
+            ImGui::Separator();
+            
+            if (ImGui::Button("Migrate All", ImVec2(150, 0)))
+            {
+                backend.MigrateAllBlueprints();
+                backend.SetShowMigrationDialog(false);
+            }
+            
+            ImGui::SameLine();
+            
+            if (ImGui::Button("Cancel", ImVec2(150, 0)))
+            {
+                backend.SetShowMigrationDialog(false);
+            }
+            
+            ImGui::EndPopup();
+        }
+        
+        if (!isOpen)
+        {
+            backend.SetShowMigrationDialog(false);
         }
     }
     

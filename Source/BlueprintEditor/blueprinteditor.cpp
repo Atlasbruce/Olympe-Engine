@@ -15,6 +15,7 @@
 #include "BlueprintMigrator.h"
 #include "BehaviorTreeEditorPlugin.h"
 #include "EntityPrefabEditorPlugin.h"
+#include "AdditionalEditorPlugins.h"
 #include "../json_helper.h"
 #include <algorithm>
 #include <iostream>
@@ -854,7 +855,12 @@ namespace Olympe
         
         // Register all plugins
         RegisterPlugin(std::make_unique<BehaviorTreeEditorPlugin>());
+        RegisterPlugin(std::make_unique<HFSMEditorPlugin>());
         RegisterPlugin(std::make_unique<EntityPrefabEditorPlugin>());
+        RegisterPlugin(std::make_unique<AnimationGraphEditorPlugin>());
+        RegisterPlugin(std::make_unique<ScriptedEventEditorPlugin>());
+        RegisterPlugin(std::make_unique<LevelDefinitionEditorPlugin>());
+        RegisterPlugin(std::make_unique<UIMenuEditorPlugin>());
         
         std::cout << "BlueprintEditor: " << m_Plugins.size() << " plugins registered" << std::endl;
     }

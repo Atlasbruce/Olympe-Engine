@@ -1,31 +1,77 @@
 {
-    "name": "GuardPatrolTree",
+  "schema_version": 2,
+  "blueprintType": "BehaviorTree",
+  "name": "GuardPatrolTree",
+  "description": "",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-01-08T16:13:49",
+    "lastModified": "2026-01-08T16:13:49",
+    "tags": [
+      "AI",
+      "BehaviorTree"
+    ]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "data": {
     "rootNodeId": 1,
     "nodes": [
-        {
-            "id": 1,
-            "name": "Root Sequence",
-            "type": "Sequence",
-            "children": [2, 3, 4]
+      {
+        "id": 1,
+        "name": "Root Sequence",
+        "type": "Sequence",
+        "position": {
+          "x": 200.0,
+          "y": 300.0
         },
-        {
-            "id": 2,
-            "name": "Pick Next Patrol Point",
-            "type": "Action",
-            "actionType": "PatrolPickNextPoint"
+        "children": [
+          2,
+          3,
+          4
+        ],
+        "parameters": {}
+      },
+      {
+        "id": 2,
+        "name": "Pick Next Patrol Point",
+        "type": "Action",
+        "position": {
+          "x": 550.0,
+          "y": 300.0
         },
-        {
-            "id": 3,
-            "name": "Set Move Goal to Patrol Point",
-            "type": "Action",
-            "actionType": "SetMoveGoalToPatrolPoint"
+        "actionType": "PatrolPickNextPoint",
+        "parameters": {}
+      },
+      {
+        "id": 3,
+        "name": "Set Move Goal to Patrol Point",
+        "type": "Action",
+        "position": {
+          "x": 550.0,
+          "y": 550.0
         },
-        {
-            "id": 4,
-            "name": "Move to Goal",
-            "type": "Action",
-            "actionType": "MoveToGoal",
-            "param1": 0.5
+        "actionType": "SetMoveGoalToPatrolPoint",
+        "parameters": {}
+      },
+      {
+        "id": 4,
+        "name": "Move to Goal",
+        "type": "Action",
+        "position": {
+          "x": 550.0,
+          "y": 800.0
+        },
+        "actionType": "MoveToGoal",
+        "parameters": {
+          "param1": 0.5
         }
+      }
     ]
+  }
 }

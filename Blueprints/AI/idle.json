@@ -1,12 +1,38 @@
 {
-    "name": "IdleTree",
+  "schema_version": 2,
+  "blueprintType": "BehaviorTree",
+  "name": "IdleTree",
+  "description": "",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-01-08T16:13:49",
+    "lastModified": "2026-01-08T16:13:49",
+    "tags": [
+      "AI",
+      "BehaviorTree"
+    ]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "data": {
     "rootNodeId": 1,
     "nodes": [
-        {
-            "id": 1,
-            "name": "Idle Action",
-            "type": "Action",
-            "actionType": "Idle"
-        }
+      {
+        "id": 1,
+        "name": "Idle Action",
+        "type": "Action",
+        "position": {
+          "x": 200.0,
+          "y": 300.0
+        },
+        "actionType": "Idle",
+        "parameters": {}
+      }
     ]
+  }
 }

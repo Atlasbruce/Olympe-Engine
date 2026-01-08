@@ -1,70 +1,157 @@
 {
-    "name": "GuardCombatTree",
+  "schema_version": 2,
+  "blueprintType": "BehaviorTree",
+  "name": "GuardCombatTree",
+  "description": "",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-01-08T16:13:49",
+    "lastModified": "2026-01-08T16:13:49",
+    "tags": [
+      "AI",
+      "BehaviorTree"
+    ]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "data": {
     "rootNodeId": 1,
     "nodes": [
-        {
-            "id": 1,
-            "name": "Root Selector",
-            "type": "Selector",
-            "children": [2, 5, 8]
+      {
+        "id": 1,
+        "name": "Root Selector",
+        "type": "Selector",
+        "position": {
+          "x": 200.0,
+          "y": 300.0
         },
-        {
-            "id": 2,
-            "name": "Attack Sequence",
-            "type": "Sequence",
-            "children": [3, 4]
+        "children": [
+          2,
+          5,
+          8
+        ],
+        "parameters": {}
+      },
+      {
+        "id": 2,
+        "name": "Attack Sequence",
+        "type": "Sequence",
+        "position": {
+          "x": 550.0,
+          "y": 300.0
         },
-        {
-            "id": 3,
-            "name": "Target In Range?",
-            "type": "Condition",
-            "conditionType": "TargetInRange",
-            "param": 60.0
+        "children": [
+          3,
+          4
+        ],
+        "parameters": {}
+      },
+      {
+        "id": 3,
+        "name": "Target In Range?",
+        "type": "Condition",
+        "position": {
+          "x": 900.0,
+          "y": 300.0
         },
-        {
-            "id": 4,
-            "name": "Attack If Close",
-            "type": "Action",
-            "actionType": "AttackIfClose",
-            "param1": 60.0,
-            "param2": 15.0
-        },
-        {
-            "id": 5,
-            "name": "Chase Sequence",
-            "type": "Sequence",
-            "children": [6, 7]
-        },
-        {
-            "id": 6,
-            "name": "Target Visible?",
-            "type": "Condition",
-            "conditionType": "TargetVisible"
-        },
-        {
-            "id": 7,
-            "name": "Chase Target",
-            "type": "Action",
-            "actionType": "SetMoveGoalToTarget"
-        },
-        {
-            "id": 8,
-            "name": "Search Last Known Position",
-            "type": "Sequence",
-            "children": [9, 10]
-        },
-        {
-            "id": 9,
-            "name": "Set Move Goal to Last Known Position",
-            "type": "Action",
-            "actionType": "SetMoveGoalToLastKnownTargetPos"
-        },
-        {
-            "id": 10,
-            "name": "Move to Goal",
-            "type": "Action",
-            "actionType": "MoveToGoal",
-            "param1": 1.0
+        "conditionType": "TargetInRange",
+        "parameters": {
+          "param": 60.0
         }
+      },
+      {
+        "id": 4,
+        "name": "Attack If Close",
+        "type": "Action",
+        "position": {
+          "x": 900.0,
+          "y": 550.0
+        },
+        "actionType": "AttackIfClose",
+        "parameters": {
+          "param1": 60.0,
+          "param2": 15.0
+        }
+      },
+      {
+        "id": 5,
+        "name": "Chase Sequence",
+        "type": "Sequence",
+        "position": {
+          "x": 550.0,
+          "y": 550.0
+        },
+        "children": [
+          6,
+          7
+        ],
+        "parameters": {}
+      },
+      {
+        "id": 6,
+        "name": "Target Visible?",
+        "type": "Condition",
+        "position": {
+          "x": 900.0,
+          "y": 800.0
+        },
+        "conditionType": "TargetVisible",
+        "parameters": {}
+      },
+      {
+        "id": 7,
+        "name": "Chase Target",
+        "type": "Action",
+        "position": {
+          "x": 900.0,
+          "y": 1050.0
+        },
+        "actionType": "SetMoveGoalToTarget",
+        "parameters": {}
+      },
+      {
+        "id": 8,
+        "name": "Search Last Known Position",
+        "type": "Sequence",
+        "position": {
+          "x": 550.0,
+          "y": 800.0
+        },
+        "children": [
+          9,
+          10
+        ],
+        "parameters": {}
+      },
+      {
+        "id": 9,
+        "name": "Set Move Goal to Last Known Position",
+        "type": "Action",
+        "position": {
+          "x": 900.0,
+          "y": 1300.0
+        },
+        "actionType": "SetMoveGoalToLastKnownTargetPos",
+        "parameters": {}
+      },
+      {
+        "id": 10,
+        "name": "Move to Goal",
+        "type": "Action",
+        "position": {
+          "x": 900.0,
+          "y": 1550.0
+        },
+        "actionType": "MoveToGoal",
+        "parameters": {
+          "param1": 1.0
+        }
+      }
     ]
+  }
 }
