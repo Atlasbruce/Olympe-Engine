@@ -7,6 +7,7 @@
 #include "BlueprintEditor.h"
 #include "../third_party/imgui/imgui.h"
 #include <iostream>
+#include "BlueprintValidator.h"
 
 namespace Olympe
 {
@@ -87,7 +88,7 @@ namespace Olympe
 
     bool ValidationPanel::HasErrors() const
     {
-        for (const auto& error : m_Errors)
+        for (const ValidationError& error : m_Errors)
         {
             if (error.severity == ErrorSeverity::Error || error.severity == ErrorSeverity::Critical)
                 return true;
@@ -97,7 +98,7 @@ namespace Olympe
 
     bool ValidationPanel::HasCriticalErrors() const
     {
-        for (const auto& error : m_Errors)
+        for (const ValidationError& error : m_Errors)
         {
             if (error.severity == ErrorSeverity::Critical)
                 return true;

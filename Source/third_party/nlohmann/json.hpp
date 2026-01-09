@@ -11,6 +11,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <cctype>
+#include <initializer_list>
 
 namespace nlohmann {
 
@@ -27,6 +28,28 @@ namespace nlohmann {
         json(int i) : type_(Type::Number), number_value(static_cast<double>(i)) {}
         json(const std::string& s) : type_(Type::String), string_value(new std::string(s)), number_value(0.0) {}
         json(const char* s) : type_(Type::String), string_value(new std::string(s)), number_value(0.0) {}
+
+        // Initializer list constructor for objects (key-value pairs)
+        json(std::initializer_list<std::pair<std::string, json>> init)
+            : type_(Type::Object), number_value(0.0)
+        {
+            object_value = new std::map<std::string, json>();
+            for (const auto& pair : init)
+            {
+                (*object_value)[pair.first] = pair.second;
+            }
+        }
+
+        // Initializer list constructor for arrays (implicit when all same type)
+        json(std::initializer_list<json> init)
+            : type_(Type::Array), number_value(0.0)
+        {
+            array_value = new std::vector<json>();
+            for (const auto& item : init)
+            {
+                array_value->push_back(item);
+            }
+        }
 
         // object/array creators
         static json object()
@@ -48,6 +71,20 @@ namespace nlohmann {
             if (this != &other) { clear(); copy_from(other); }
             return *this;
         }
+        
+        // Assignment from initializer list (object)
+        json& operator=(std::initializer_list<std::pair<std::string, json>> init)
+        {
+            clear();
+            type_ = Type::Object;
+            object_value = new std::map<std::string, json>();
+            for (const auto& pair : init)
+            {
+                (*object_value)[pair.first] = pair.second;
+            }
+            return *this;
+        }
+        
         ~json() { clear(); }
 
         // accessors
@@ -121,6 +158,47 @@ namespace nlohmann {
         {
             if (!is_string()) return false;
             return *string_value == std::string(str);
+        }
+        
+        // Comparison operator for json objects
+        bool operator==(const json& other) const
+        {
+            if (type_ != other.type_) return false;
+            
+            switch (type_)
+            {
+                case Type::Null:
+                    return true;
+                case Type::Boolean:
+                    return bool_value == other.bool_value;
+                case Type::Number:
+                    return number_value == other.number_value;
+                case Type::String:
+                    return *string_value == *other.string_value;
+                case Type::Array:
+                    if (array_value->size() != other.array_value->size()) return false;
+                    for (size_t i = 0; i < array_value->size(); ++i)
+                    {
+                        if (!((*array_value)[i] == (*other.array_value)[i])) return false;
+                    }
+                    return true;
+                case Type::Object:
+                    if (object_value->size() != other.object_value->size()) return false;
+                    for (const auto& kv : *object_value)
+                    {
+                        auto it = other.object_value->find(kv.first);
+                        if (it == other.object_value->end()) return false;
+                        if (!(kv.second == it->second)) return false;
+                    }
+                    return true;
+                default:
+                    return false;
+            }
+        }
+        
+        bool operator!=(const json& other) const
+        {
+            return !(*this == other);
         }
 
         // items() method for iterating over object key-value pairs

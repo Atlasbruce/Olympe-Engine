@@ -7,6 +7,8 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+#include <queue>
+#include <tuple>
 
 using json = nlohmann::json;
 
@@ -30,13 +32,13 @@ namespace Olympe
     {
         auto now = std::chrono::system_clock::now();
         auto time = std::chrono::system_clock::to_time_t(now);
-        std::stringstream ss;
         std::tm timeInfo;
         #ifdef _WIN32
         localtime_s(&timeInfo, &time);
         #else
         localtime_r(&time, &timeInfo);
         #endif
+        std::stringstream ss;
         ss << std::put_time(&timeInfo, "%Y-%m-%dT%H:%M:%S");
         return ss.str();
     }
@@ -78,7 +80,7 @@ namespace Olympe
         // Base structure
         v2["schema_version"] = 2;
         v2["blueprintType"] = detectedType;
-        v2["name"] = v1Blueprint.value("name", "Unnamed");
+        v2["name"] = v1Blueprint.value<std::string>("name", "Unnamed");
         v2["description"] = "";
         
         // Metadata
@@ -89,10 +91,9 @@ namespace Olympe
         
         // Editor state
         v2["editorState"]["zoom"] = 1.0;
-        json scrollOffset = json::object();
-        scrollOffset["x"] = 0;
-        scrollOffset["y"] = 0;
-        v2["editorState"]["scrollOffset"] = scrollOffset;
+        v2["editorState"]["scrollOffset"] = json::object();
+        v2["editorState"]["scrollOffset"]["x"] = 0;
+        v2["editorState"]["scrollOffset"]["y"] = 0;
         
         // Data section
         v2["data"] = json::object();
@@ -116,7 +117,7 @@ namespace Olympe
     
     void BlueprintMigrator::MigrateBehaviorTree(const json& v1, json& v2Data)
     {
-        v2Data["rootNodeId"] = v1.value("rootNodeId", 1);
+        v2Data["rootNodeId"] = v1.value<int>("rootNodeId", 1);
         v2Data["nodes"] = json::array();
         
         if (!v1.contains("nodes") || !v1["nodes"].is_array())
@@ -126,31 +127,38 @@ namespace Olympe
         
         // Build children map for layout calculation
         std::map<int, std::vector<int>> childrenMap;
-        const json& v1Nodes = v1["nodes"];
-        for (size_t i = 0; i < v1Nodes.size(); ++i)
+        for (size_t i = 0; i < v1["nodes"].size(); ++i)
         {
-            const json& node = v1Nodes[i];
-            int id = node.value("id", 0);
+            const json& node = v1["nodes"][i];
+            int id = node.value<int>("id", 0);
             if (node.contains("children") && node["children"].is_array())
             {
-                childrenMap[id] = node["children"].get<std::vector<int>>();
+                std::vector<int> children;
+                for (size_t j = 0; j < node["children"].size(); ++j)
+                {
+                    if (node["children"][j].is_number())
+                    {
+                        children.push_back(node["children"][j].get<int>());
+                    }
+                }
+                childrenMap[id] = children;
             }
         }
         
         // Calculate positions
-        int rootId = v1.value("rootNodeId", 1);
+        int rootId = v1.value<int>("rootNodeId", 1);
         std::map<int, NodeLayout> layouts = CalculateHierarchicalLayout(v1["nodes"], childrenMap, rootId);
         
         // Migrate each node
-        for (size_t i = 0; i < v1Nodes.size(); ++i)
+        for (size_t i = 0; i < v1["nodes"].size(); ++i)
         {
-            const json& v1Node = v1Nodes[i];
-            json v2Node = json::object();
-            int nodeId = v1Node.value("id", 0);
+            const json& v1Node = v1["nodes"][i];
+            json v2Node;
+            int nodeId = v1Node.value<int>("id", 0);
             
             v2Node["id"] = nodeId;
-            v2Node["name"] = v1Node.value("name", "Unnamed");
-            v2Node["type"] = v1Node.value("type", "Unknown");
+            v2Node["name"] = v1Node.value<std::string>("name", "Unnamed");
+            v2Node["type"] = v1Node.value<std::string>("type", "Unknown");
             
             // Position from calculated layout
             if (layouts.count(nodeId))
@@ -195,15 +203,15 @@ namespace Olympe
     void BlueprintMigrator::MigrateHFSM(const json& v1, json& v2Data)
     {
         // Similar to BehaviorTree but for HFSM
-        v2Data["initialState"] = v1.value("initialState", "");
+        v2Data["initialState"] = v1.value<std::string>("initialState", "");
         v2Data["states"] = json::array();
         
         if (v1.contains("states") && v1["states"].is_array())
         {
-            const json& v1States = v1["states"];
-            for (size_t i = 0; i < v1States.size(); ++i)
+            for (size_t i = 0; i < v1["states"].size(); ++i)
             {
-                json v2State = v1States[i];
+                const json& state = v1["states"][i];
+                json v2State = state;
                 // Add position if not present
                 if (!v2State.contains("position"))
                 {
@@ -223,7 +231,7 @@ namespace Olympe
     void BlueprintMigrator::MigrateEntityPrefab(const json& v1, json& v2Data)
     {
         // EntityPrefab migration - mostly copy as-is
-        v2Data["prefabName"] = v1.value("name", "Unnamed");
+        v2Data["prefabName"] = v1.value<std::string>("name", "Unnamed");
         
         if (v1.contains("components"))
         {
@@ -269,12 +277,12 @@ namespace Olympe
         
         while (!queue.empty())
         {
-            std::tuple<int, int, int> current = queue.front();
+            std::tuple<int, int, int> front = queue.front();
             queue.pop();
             
-            int nodeId = std::get<0>(current);
-            int depth = std::get<1>(current);
-            int siblingIndex = std::get<2>(current);
+            int nodeId = std::get<0>(front);
+            int depth = std::get<1>(front);
+            int siblingIndex = std::get<2>(front);
             
             // Calculate position
             NodeLayout layout;
@@ -291,10 +299,9 @@ namespace Olympe
             if (childrenMap.count(nodeId))
             {
                 int childIndex = 0;
-                const std::vector<int>& children = childrenMap.at(nodeId);
-                for (size_t i = 0; i < children.size(); ++i)
+                for (int childId : childrenMap.at(nodeId))
                 {
-                    queue.push(std::make_tuple(children[i], depth + 1, childIndex++));
+                    queue.push(std::make_tuple(childId, depth + 1, childIndex++));
                 }
             }
         }

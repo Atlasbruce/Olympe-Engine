@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 #include "NodeGraphManager.h"
-
+#include "../../Source/third_party/imgui/imgui.h"
 
 namespace Olympe
 {

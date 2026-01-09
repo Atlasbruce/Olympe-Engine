@@ -25,13 +25,16 @@ namespace Olympe
         auto now = std::chrono::system_clock::now();
         auto time = std::chrono::system_clock::to_time_t(now);
         std::stringstream ss;
-        std::tm timeInfo;
-        #ifdef _WIN32
-        localtime_s(&timeInfo, &time);
+        
+        // Use localtime_s for MSVC, localtime_r for other platforms
+        #ifdef _MSC_VER
+            std::tm timeinfo;
+            localtime_s(&timeinfo, &time);
+            ss << std::put_time(&timeinfo, "%Y-%m-%dT%H:%M:%S");
         #else
-        localtime_r(&time, &timeInfo);
+            ss << std::put_time(std::localtime(&time), "%Y-%m-%dT%H:%M:%S");
         #endif
-        ss << std::put_time(&timeInfo, "%Y-%m-%dT%H:%M:%S");
+        
         return ss.str();
     }
     
@@ -111,15 +114,12 @@ namespace Olympe
         {
             for (size_t i = 0; i < data["nodes"].size(); ++i)
             {
-                const json& node = data["nodes"][i];
-                if (node.is_object() && node.contains("id"))
+                const nlohmann::json& nodeObj = data["nodes"][i];
+                int nodeId = nodeObj.contains("id") && nodeObj["id"].is_number() ? nodeObj["id"].get<int>() : -1;
+                if (nodeId == rootId)
                 {
-                    int nodeId = node["id"].get<int>();
-                    if (nodeId == rootId)
-                    {
-                        rootFound = true;
-                        break;
-                    }
+                    rootFound = true;
+                    break;
                 }
             }
         }
@@ -134,21 +134,18 @@ namespace Olympe
         {
             for (size_t i = 0; i < data["nodes"].size(); ++i)
             {
-                const json& node = data["nodes"][i];
-                if (node.is_object() && node.contains("children") && node["children"].is_array())
+                const nlohmann::json& node = data["nodes"][i];
+                if (node.contains("children") && node["children"].is_array())
                 {
                     for (size_t j = 0; j < node["children"].size(); ++j)
                     {
-                        const json& childId = node["children"][j];
-                        if (!childId.is_number())
-                            continue;
-                            
-                        int cid = childId.get<int>();
+                        const nlohmann::json& childIdJson = node["children"][j];
+                        int cid = childIdJson.is_number() ? childIdJson.get<int>() : -1;
                         bool found = false;
 
                         for (size_t k = 0; k < data["nodes"].size(); ++k)
                         {
-                            const json& n = data["nodes"][k];
+                            const nlohmann::json& n = data["nodes"][k];
                             if (n.is_object() && n.contains("id") && n["id"].is_number() && n["id"].get<int>() == cid)
                             {
                                 found = true;
@@ -158,11 +155,10 @@ namespace Olympe
 
                         if (!found)
                         {
-                            int nodeId = node.value("id", -1);
-                            std::string nodeName = node.value("name", "Unknown");
-                            errors.push_back(ValidationError(
-                                nodeId,
-                                nodeName,
+                            int nodeId = node.contains("id") && node["id"].is_number() ? node["id"].get<int>() : -1;
+                            std::string nodeIdStr = std::to_string(nodeId);
+                            errors.push_back(ValidationError(-1, 
+                                nodeIdStr,
                                 "Child node " + std::to_string(cid) + " not found",
                                 ErrorSeverity::Error
                             ));
@@ -235,10 +231,9 @@ namespace Olympe
             ImGui::Separator();
             ImGui::Text("Nodes:");
             
-            const json& nodes = data["nodes"];
-            for (size_t i = 0; i < nodes.size(); ++i)
+            for (size_t i = 0; i < data["nodes"].size(); ++i)
             {
-                const json& node = nodes[i];
+                const nlohmann::json& node = data["nodes"][i];
                 std::string nodeName = node.is_object() && node.contains("name") ? node["name"].get<std::string>() : "Unnamed";
                 std::string nodeType = node.is_object() && node.contains("type") ? node["type"].get<std::string>() : "Unknown";
                 int nodeId = node.value("id", -1);

@@ -62,7 +62,10 @@ namespace Olympe
     {
         std::vector<ValidationError> errors;
         if (!blueprint.contains("data"))
-            errors.push_back(ValidationError(-1, "", "Missing data section", ErrorSeverity::Error));
+        {
+            ValidationError error(-1, "", "Missing data section", ErrorSeverity::Error);
+            errors.push_back(error);
+        }
         return errors;
     }
     
@@ -118,7 +121,10 @@ namespace Olympe
     {
         std::vector<ValidationError> errors;
         if (!blueprint.contains("data"))
-            errors.push_back(ValidationError(-1, "", "Missing data section", ErrorSeverity::Error));
+        {
+            ValidationError error(-1, "", "Missing data section", ErrorSeverity::Error);
+            errors.push_back(error);
+        }
         return errors;
     }
     
@@ -186,7 +192,10 @@ namespace Olympe
     {
         std::vector<ValidationError> errors;
         if (!blueprint.contains("data"))
-            errors.push_back(ValidationError(-1, "", "Missing data section", ErrorSeverity::Error));
+        {
+            ValidationError error(-1, "", "Missing data section", ErrorSeverity::Error);
+            errors.push_back(error);
+        }
         return errors;
     }
     
@@ -260,7 +269,10 @@ namespace Olympe
     {
         std::vector<ValidationError> errors;
         if (!blueprint.contains("data"))
-            errors.push_back(ValidationError(-1, "", "Missing data section", ErrorSeverity::Error));
+        {
+            ValidationError error(-1, "", "Missing data section", ErrorSeverity::Error);
+            errors.push_back(error);
+        }
         return errors;
     }
     
@@ -326,7 +338,10 @@ namespace Olympe
     {
         std::vector<ValidationError> errors;
         if (!blueprint.contains("data"))
-            errors.push_back(ValidationError(-1, "", "Missing data section", ErrorSeverity::Error));
+        {
+            ValidationError error(-1, "", "Missing data section", ErrorSeverity::Error);
+            errors.push_back(error);
+        }
         return errors;
     }
     

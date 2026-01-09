@@ -26,13 +26,16 @@ namespace Olympe
         auto now = std::chrono::system_clock::now();
         auto time = std::chrono::system_clock::to_time_t(now);
         std::stringstream ss;
-        std::tm timeInfo;
-        #ifdef _WIN32
-        localtime_s(&timeInfo, &time);
+        
+        // Use localtime_s for MSVC, localtime_r for other platforms
+        #ifdef _MSC_VER
+            std::tm timeinfo;
+            localtime_s(&timeinfo, &time);
+            ss << std::put_time(&timeinfo, "%Y-%m-%dT%H:%M:%S");
         #else
-        localtime_r(&time, &timeInfo);
+            ss << std::put_time(std::localtime(&time), "%Y-%m-%dT%H:%M:%S");
         #endif
-        ss << std::put_time(&timeInfo, "%Y-%m-%dT%H:%M:%S");
+        
         return ss.str();
     }
     
@@ -61,11 +64,13 @@ namespace Olympe
         
         json position;
         position["type"] = "Position_data";
-        json positionValue = json::object();
-        positionValue["x"] = 0;
-        positionValue["y"] = 0;
-        positionValue["z"] = 0;
-        position["properties"]["position"] = positionValue;
+        
+        // Create position object using initializer list syntax
+        json posObj;
+        posObj["x"] = 0;
+        posObj["y"] = 0;
+        posObj["z"] = 0;
+        position["properties"]["position"] = posObj;
         
         prefab["data"]["components"].push_back(identity);
         prefab["data"]["components"].push_back(position);
@@ -92,7 +97,12 @@ namespace Olympe
         
         if (!blueprint.contains("data"))
         {
-            errors.push_back(ValidationError(-1, "", "Missing 'data' section", ErrorSeverity::Error));
+            ValidationError err;
+            err.nodeId = -1;
+            err.nodeName = "";
+            err.message = "Missing 'data' section";
+            err.severity = ErrorSeverity::Error;
+            errors.push_back(err);
             return errors;
         }
         
@@ -100,7 +110,12 @@ namespace Olympe
         
         if (!data.contains("components"))
         {
-            errors.push_back(ValidationError(-1, "", "Missing 'components' array", ErrorSeverity::Error));
+            ValidationError err;
+            err.nodeId = -1;
+            err.nodeName = "";
+            err.message = "Missing 'components' array";
+            err.severity = ErrorSeverity::Error;
+            errors.push_back(err);
         }
         
         return errors;
@@ -211,54 +226,54 @@ namespace Olympe
     
     void EntityPrefabEditorPlugin::RenderComponentPropertiesEditor(json& properties, EditorContext& ctx)
     {
-        auto items = properties.items();
-        for (size_t idx = 0; idx < items.size(); ++idx)
+        // C++14 compatible: use explicit iterators without structured bindings
+        for (auto it = properties.begin(); it != properties.end(); ++it)
         {
-            std::string key = items[idx].first;
-            json* value = items[idx].second;
+            const std::string& key = it->first;
+            json& value = it->second;
             
             ImGui::PushID(key.c_str());
             
-            if (value->is_number_float())
+            if (value.is_number_float())
             {
-                float f = value->get<float>();
+                float f = value.get<float>();
                 if (ImGui::DragFloat(key.c_str(), &f, 1.0f))
                 {
                     properties[key] = f;
                     ctx.MarkDirty();
                 }
             }
-            else if (value->is_number_integer())
+            else if (value.is_number_integer())
             {
-                int i = value->get<int>();
+                int i = value.get<int>();
                 if (ImGui::InputInt(key.c_str(), &i))
                 {
                     properties[key] = i;
                     ctx.MarkDirty();
                 }
             }
-            else if (value->is_string())
+            else if (value.is_string())
             {
-                std::string str = value->get<std::string>();
+                std::string str = value.get<std::string>();
                 char buffer[256];
-                #ifdef _WIN32
-                strncpy_s(buffer, sizeof(buffer), str.c_str(), _TRUNCATE);
+                #ifdef _MSC_VER
+                    strncpy_s(buffer, 256, str.c_str(), 255);
                 #else
-                strncpy(buffer, str.c_str(), 255);
-                buffer[255] = '\0';
+                    strncpy(buffer, str.c_str(), 255);
                 #endif
+                buffer[255] = '\0';
                 if (ImGui::InputText(key.c_str(), buffer, 256))
                 {
                     properties[key] = std::string(buffer);
                     ctx.MarkDirty();
                 }
             }
-            else if (value->is_object())
+            else if (value.is_object())
             {
                 // Nested object (e.g., position with x,y,z)
                 if (ImGui::TreeNode(key.c_str()))
                 {
-                    RenderComponentPropertiesEditor(*value, ctx);
+                    RenderComponentPropertiesEditor(value, ctx);
                     ImGui::TreePop();
                 }
             }
