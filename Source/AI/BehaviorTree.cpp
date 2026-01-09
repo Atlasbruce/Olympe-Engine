@@ -23,27 +23,53 @@ using json = nlohmann::json;
 
 bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t treeId)
 {
+    std::cout << "[BehaviorTreeManager] ========================================" << std::endl;
+    std::cout << "[BehaviorTreeManager] Loading: " << filepath << std::endl;
+    
     try
     {
         // Read JSON file
         json j;
         if (!JsonHelper::LoadJsonFromFile(filepath, j))
         {
-            SYSTEM_LOG << "BehaviorTreeManager: Failed to load file: " << filepath << "\n";
+            std::cerr << "[BehaviorTreeManager] ERROR: Cannot open " << filepath << std::endl;
+            std::cout << "[BehaviorTreeManager] ========================================" << std::endl;
             return false;
         }
+        
+        std::cout << "[BehaviorTreeManager] File loaded and parsed" << std::endl;
+        
+        // Detect version
+        bool isV2 = j.contains("schema_version") && j["schema_version"].get<int>() == 2;
+        std::cout << "[BehaviorTreeManager] Version: " << (isV2 ? "v2" : "v1") << std::endl;
         
         // Parse behavior tree
         BehaviorTreeAsset tree;
         tree.id = treeId;
-        tree.name = JsonHelper::GetString(j, "name", "Unnamed Tree");
         
-        tree.rootNodeId = JsonHelper::GetUInt(j, "rootNodeId", 0);
+        // Extract data section based on version
+        const json* dataSection = &j;
+        if (isV2) {
+            tree.name = JsonHelper::GetString(j, "name", "Unnamed Tree");
+            if (j.contains("data")) {
+                dataSection = &j["data"];
+                std::cout << "[BehaviorTreeManager] Using v2 data section" << std::endl;
+            }
+        } else {
+            tree.name = JsonHelper::GetString(j, "name", "Unnamed Tree");
+            std::cout << "[BehaviorTreeManager] Using v1 flat structure" << std::endl;
+        }
+        
+        tree.rootNodeId = JsonHelper::GetUInt(*dataSection, "rootNodeId", 0);
+        std::cout << "[BehaviorTreeManager] Tree name: " << tree.name << ", Root node ID: " << tree.rootNodeId << std::endl;
         
         // Parse nodes
-        if (JsonHelper::IsArray(j, "nodes"))
+        if (JsonHelper::IsArray(*dataSection, "nodes"))
         {
-            JsonHelper::ForEachInArray(j, "nodes", [&tree](const json& nodeJson, size_t i)
+            const auto& nodesArray = (*dataSection)["nodes"];
+            std::cout << "[BehaviorTreeManager] Found " << nodesArray.size() << " nodes" << std::endl;
+            
+            JsonHelper::ForEachInArray(*dataSection, "nodes", [&tree, isV2](const json& nodeJson, size_t i)
             {
                 BTNode node;
                 node.id = JsonHelper::GetInt(nodeJson, "id", 0);
@@ -83,7 +109,12 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     else if (condStr == "HeardNoise") 
                         node.conditionType = BTConditionType::HeardNoise;
                     
-                    node.conditionParam = JsonHelper::GetFloat(nodeJson, "param", 0.0f);
+                    // For v2 format, check parameters object first
+                    if (isV2 && nodeJson.contains("parameters") && nodeJson["parameters"].is_object()) {
+                        node.conditionParam = JsonHelper::GetFloat(nodeJson["parameters"], "param", 0.0f);
+                    } else {
+                        node.conditionParam = JsonHelper::GetFloat(nodeJson, "param", 0.0f);
+                    }
                 }
                 
                 // Parse action type
@@ -107,8 +138,15 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     else if (actStr == "Idle") 
                         node.actionType = BTActionType::Idle;
                     
-                    node.actionParam1 = JsonHelper::GetFloat(nodeJson, "param1", 0.0f);
-                    node.actionParam2 = JsonHelper::GetFloat(nodeJson, "param2", 0.0f);
+                    // For v2 format, check parameters object first
+                    if (isV2 && nodeJson.contains("parameters") && nodeJson["parameters"].is_object()) {
+                        const auto& params = nodeJson["parameters"];
+                        node.actionParam1 = JsonHelper::GetFloat(params, "param1", 0.0f);
+                        node.actionParam2 = JsonHelper::GetFloat(params, "param2", 0.0f);
+                    } else {
+                        node.actionParam1 = JsonHelper::GetFloat(nodeJson, "param1", 0.0f);
+                        node.actionParam2 = JsonHelper::GetFloat(nodeJson, "param2", 0.0f);
+                    }
                 }
                 
                 // Parse decorator child
@@ -122,8 +160,15 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     node.repeatCount = JsonHelper::GetInt(nodeJson, "repeatCount", 0);
                 }
                 
+                std::cout << "[BehaviorTreeManager]   Node " << node.id << ": " << node.name << " (" << typeStr << ")" << std::endl;
                 tree.nodes.push_back(node);
             });
+        }
+        else
+        {
+            std::cerr << "[BehaviorTreeManager] ERROR: No 'nodes' array found in " << filepath << std::endl;
+            std::cout << "[BehaviorTreeManager] ========================================" << std::endl;
+            return false;
         }
         
         // Store the tree
@@ -133,19 +178,21 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
         std::string validationError;
         if (!ValidateTree(tree, validationError))
         {
-            SYSTEM_LOG << "BehaviorTreeManager: WARNING - Tree validation failed for '" << tree.name 
-                       << "': " << validationError << "\n";
+            std::cerr << "[BehaviorTreeManager] WARNING: Tree validation failed for '" << tree.name 
+                       << "': " << validationError << std::endl;
             // Don't fail loading - allow hot-reload to fix issues
         }
         
-        SYSTEM_LOG << "BehaviorTreeManager: Loaded tree '" << tree.name << "' (ID=" << treeId 
-                   << ") with " << tree.nodes.size() << " nodes\n";
+        std::cout << "[BehaviorTreeManager] SUCCESS: Loaded '" << tree.name << "' (ID=" << treeId 
+                   << ") with " << tree.nodes.size() << " nodes" << std::endl;
+        std::cout << "[BehaviorTreeManager] ========================================" << std::endl;
         
         return true;
     }
     catch (const std::exception& e)
     {
-        SYSTEM_LOG << "BehaviorTreeManager: Error loading tree from " << filepath << ": " << e.what() << "\n";
+        std::cerr << "[BehaviorTreeManager] EXCEPTION: " << e.what() << std::endl;
+        std::cout << "[BehaviorTreeManager] ========================================" << std::endl;
         return false;
     }
 }

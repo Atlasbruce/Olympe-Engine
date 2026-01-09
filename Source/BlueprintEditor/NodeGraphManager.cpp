@@ -630,10 +630,14 @@ namespace Olympe
 
     int NodeGraphManager::LoadGraph(const std::string& filepath)
     {
+        std::cout << "[NodeGraphManager] ========================================" << std::endl;
+        std::cout << "[NodeGraphManager] Loading graph: " << filepath << std::endl;
+        
         std::ifstream file(filepath);
         if (!file.is_open())
         {
-            std::cerr << "[NodeGraphManager] Failed to open file: " << filepath << "\n";
+            std::cerr << "[NodeGraphManager] ERROR: Failed to open file: " << filepath << "\n";
+            std::cout << "[NodeGraphManager] ========================================" << std::endl;
             return -1;
         }
 
@@ -641,31 +645,40 @@ namespace Olympe
         std::string jsonText((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
         file.close();
         
+        std::cout << "[NodeGraphManager] File loaded: " << jsonText.size() << " bytes" << std::endl;
+        
         try
         {
             j = json::parse(jsonText);
+            std::cout << "[NodeGraphManager] JSON parsed successfully" << std::endl;
         }
         catch (const std::exception& e)
         {
-            std::cerr << "[NodeGraphManager] JSON parse error: " << e.what() << "\n";
+            std::cerr << "[NodeGraphManager] ERROR: JSON parse error: " << e.what() << "\n";
+            std::cout << "[NodeGraphManager] ========================================" << std::endl;
             return -1;
         }
 
         // Detect if v1 format (no schema_version or data section)
         bool isV1 = !j.contains("schema_version") && !j.contains("data");
+        bool isV2 = j.contains("schema_version") && j["schema_version"].get<int>() == 2;
         
+        std::cout << "[NodeGraphManager] Version: " << (isV2 ? "v2" : (isV1 ? "v1" : "unknown")) << std::endl;
+        
+        std::cout << "[NodeGraphManager] Converting JSON to NodeGraph..." << std::endl;
         NodeGraph graph = NodeGraph::FromJson(j);
+        std::cout << "[NodeGraphManager] NodeGraph created: " << graph.name << std::endl;
 
         int graphId = m_NextGraphId++;
         m_Graphs[graphId] = std::make_unique<NodeGraph>(std::move(graph));
         m_ActiveGraphId = graphId;
 
-        std::cout << "[NodeGraphManager] Loaded graph from " << filepath << "\n";
+        std::cout << "[NodeGraphManager] Graph loaded with ID: " << graphId << std::endl;
         
         // If v1 format was loaded, auto-migrate to v2 and save
         if (isV1)
         {
-            std::cout << "[NodeGraphManager] Detected v1 format, auto-migrating to v2...\n";
+            std::cout << "[NodeGraphManager] Detected v1 format, auto-migrating to v2..." << std::endl;
             
             // Convert to v2 JSON format
             json v2Json = m_Graphs[graphId]->ToJson();
@@ -695,18 +708,22 @@ namespace Olympe
             wrappedV2["data"] = v2Json;
             
             // Save migrated version
+            std::cout << "[NodeGraphManager] Saving migrated v2 format..." << std::endl;
             std::ofstream outFile(filepath);
             if (outFile.is_open())
             {
                 outFile << wrappedV2.dump(2);
                 outFile.close();
-                std::cout << "[NodeGraphManager] Saved migrated v2 format to " << filepath << "\n";
+                std::cout << "[NodeGraphManager] Saved migrated v2 format to " << filepath << std::endl;
             }
             else
             {
-                std::cerr << "[NodeGraphManager] Failed to save migrated v2 format\n";
+                std::cerr << "[NodeGraphManager] WARNING: Failed to save migrated v2 format" << std::endl;
             }
         }
+        
+        std::cout << "[NodeGraphManager] SUCCESS: Graph loaded and active" << std::endl;
+        std::cout << "[NodeGraphManager] ========================================" << std::endl;
         
         return graphId;
     }

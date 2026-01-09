@@ -158,8 +158,37 @@ namespace Olympe
                 // Check if this is a BehaviorTree or HFSM - open in Node Graph Editor
                 if (node->type == "BehaviorTree" || node->type == "HFSM")
                 {
-                    std::cout << "AssetBrowser: Opening " << node->type << " in Node Graph Editor" << std::endl;
-                    BlueprintEditor::Get().OpenGraphInEditor(node->fullPath);
+                    std::cout << "[AssetBrowser] ========================================" << std::endl;
+                    std::cout << "[AssetBrowser] Double-click callback triggered" << std::endl;
+                    std::cout << "[AssetBrowser] Path received: " << node->fullPath << std::endl;
+                    
+                    try {
+                        // Normalize path (Windows \ → /)
+                        std::string normalizedPath = node->fullPath;
+                        std::replace(normalizedPath.begin(), normalizedPath.end(), '\\', '/');
+                        std::cout << "[AssetBrowser] Normalized path: " << normalizedPath << std::endl;
+                        
+                        // Vérifier que BlueprintEditor existe
+                        std::cout << "[AssetBrowser] Calling BlueprintEditor::Instance()..." << std::endl;
+                        BlueprintEditor& editor = BlueprintEditor::Instance();
+                        std::cout << "[AssetBrowser] Instance OK" << std::endl;
+                        
+                        // Appeler OpenGraphInEditor
+                        std::cout << "[AssetBrowser] Calling OpenGraphInEditor()..." << std::endl;
+                        editor.OpenGraphInEditor(normalizedPath);
+                        std::cout << "[AssetBrowser] OpenGraphInEditor() returned" << std::endl;
+                        
+                        std::cout << "[AssetBrowser] Callback completed successfully" << std::endl;
+                        std::cout << "[AssetBrowser] ========================================" << std::endl;
+                        
+                    } catch (const std::exception& e) {
+                        std::cerr << "[AssetBrowser] !!!!! EXCEPTION in callback !!!!!" << std::endl;
+                        std::cerr << "[AssetBrowser] Error: " << e.what() << std::endl;
+                        std::cout << "[AssetBrowser] ========================================" << std::endl;
+                    } catch (...) {
+                        std::cerr << "[AssetBrowser] !!!!! UNKNOWN EXCEPTION in callback !!!!!" << std::endl;
+                        std::cout << "[AssetBrowser] ========================================" << std::endl;
+                    }
                 }
                 // Otherwise, use the legacy callback if set (for EntityBlueprint, etc.)
                 else if (m_OnAssetOpen)

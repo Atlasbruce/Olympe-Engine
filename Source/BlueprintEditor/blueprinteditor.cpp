@@ -38,6 +38,14 @@ namespace Olympe
     BlueprintEditor& BlueprintEditor::Instance()
     {
         static BlueprintEditor instance;
+        
+        // Vérifier initialisation (une seule fois)
+        static bool loggedOnce = false;
+        if (!loggedOnce) {
+            std::cout << "[BlueprintEditor::Instance] Singleton instance accessed" << std::endl;
+            loggedOnce = true;
+        }
+        
         return instance;
     }
 
@@ -311,7 +319,16 @@ namespace Olympe
             if (!JsonHelper::LoadJsonFromFile(filepath, j))
                 return "Unknown";
 
-            // Check for common type indicators
+            // Check for v2 format (schema_version: 2)
+            if (j.contains("schema_version") && j["schema_version"].get<int>() == 2)
+            {
+                if (j.contains("blueprintType"))
+                {
+                    return j["blueprintType"].get<std::string>();
+                }
+            }
+
+            // Check for common type indicators (v1 format)
             if (j.contains("type"))
             {
                 std::string type = j["type"].get<std::string>();
@@ -688,32 +705,72 @@ namespace Olympe
     
     void BlueprintEditor::OpenGraphInEditor(const std::string& assetPath)
     {
-        std::cout << "BlueprintEditor: Opening graph " << assetPath << " in Node Graph Editor" << std::endl;
+        std::cout << "\n========================================" << std::endl;
+        std::cout << "[BlueprintEditor] OpenGraphInEditor CALLED" << std::endl;
+        std::cout << "[BlueprintEditor] Path: " << assetPath << std::endl;
+        std::cout << "========================================\n" << std::endl;
         
-        // Detect asset type
-        std::string assetType = DetectAssetType(assetPath);
-        
-        // Only open BehaviorTree and HFSM types
-        if (assetType != "BehaviorTree" && assetType != "HFSM")
-        {
-            std::cerr << "BlueprintEditor: Cannot open asset type '" << assetType 
-                     << "' in Node Graph Editor (only BehaviorTree and HFSM supported)" << std::endl;
-            m_LastError = "Asset type '" + assetType + "' cannot be opened in Node Graph Editor";
-            return;
+        try {
+            // 1. Vérifier fichier existe
+            std::cout << "[BlueprintEditor] Step 1: Checking file exists..." << std::endl;
+            std::ifstream testFile(assetPath);
+            if (!testFile.is_open()) {
+                std::cerr << "[BlueprintEditor] ERROR: File not found: " << assetPath << std::endl;
+                std::cout << "========================================\n" << std::endl;
+                m_LastError = "File not found: " + assetPath;
+                return;
+            }
+            testFile.close();
+            std::cout << "[BlueprintEditor] File exists: OK" << std::endl;
+            
+            // 2. Detect asset type
+            std::cout << "[BlueprintEditor] Step 2: Detecting asset type..." << std::endl;
+            std::string assetType = DetectAssetType(assetPath);
+            std::cout << "[BlueprintEditor] Detected type: " << assetType << std::endl;
+            
+            // Only open BehaviorTree and HFSM types
+            if (assetType != "BehaviorTree" && assetType != "HFSM")
+            {
+                std::cerr << "[BlueprintEditor] ERROR: Cannot open asset type '" << assetType 
+                         << "' in Node Graph Editor (only BehaviorTree and HFSM supported)" << std::endl;
+                m_LastError = "Asset type '" + assetType + "' cannot be opened in Node Graph Editor";
+                std::cout << "========================================\n" << std::endl;
+                return;
+            }
+            
+            // 3. Use NodeGraphManager to load the graph
+            std::cout << "[BlueprintEditor] Step 3: Loading graph via NodeGraphManager..." << std::endl;
+            int graphId = NodeGraphManager::Get().LoadGraph(assetPath);
+            
+            if (graphId < 0)
+            {
+                std::cerr << "[BlueprintEditor] ERROR: Failed to load graph from " << assetPath << std::endl;
+                m_LastError = "Failed to load graph file: " + assetPath;
+                std::cout << "========================================\n" << std::endl;
+                return;
+            }
+            
+            // Graph is now loaded and active in NodeGraphManager
+            std::cout << "[BlueprintEditor] Graph loaded successfully with ID " << graphId << std::endl;
+            
+            std::cout << "\n========================================" << std::endl;
+            std::cout << "[BlueprintEditor] OpenGraphInEditor SUCCESS ✓" << std::endl;
+            std::cout << "========================================\n" << std::endl;
+            
+        } catch (const std::exception& e) {
+            std::cerr << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+            std::cerr << "[BlueprintEditor] EXCEPTION CAUGHT:" << std::endl;
+            std::cerr << "[BlueprintEditor] " << e.what() << std::endl;
+            std::cerr << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl;
+            std::cout << "========================================\n" << std::endl;
+            m_LastError = std::string("Exception: ") + e.what();
+        } catch (...) {
+            std::cerr << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+            std::cerr << "[BlueprintEditor] UNKNOWN EXCEPTION" << std::endl;
+            std::cerr << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl;
+            std::cout << "========================================\n" << std::endl;
+            m_LastError = "Unknown exception occurred";
         }
-        
-        // Use NodeGraphManager to load the graph
-        int graphId = NodeGraphManager::Get().LoadGraph(assetPath);
-        
-        if (graphId < 0)
-        {
-            std::cerr << "BlueprintEditor: Failed to load graph from " << assetPath << std::endl;
-            m_LastError = "Failed to load graph file: " + assetPath;
-            return;
-        }
-        
-        // Graph is now loaded and active in NodeGraphManager
-        std::cout << "BlueprintEditor: Graph loaded with ID " << graphId << std::endl;
     }
 
     // ========================================================================
