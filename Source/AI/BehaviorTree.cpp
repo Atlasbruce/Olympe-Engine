@@ -236,7 +236,6 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
         return false;
     }
 }
-}
 
 const BehaviorTreeAsset* BehaviorTreeManager::GetTree(uint32_t treeId) const
 {
