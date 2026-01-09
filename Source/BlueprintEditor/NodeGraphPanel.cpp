@@ -135,9 +135,10 @@ namespace Olympe
         if (!graph)
             return;
 
-        // Ensure canvas has valid size
+        // Ensure canvas has valid size (minimum 1px to render)
+        constexpr float MIN_CANVAS_SIZE = 1.0f;
         ImVec2 canvasSize = ImGui::GetContentRegionAvail();
-        if (canvasSize.x < 1.0f || canvasSize.y < 1.0f)
+        if (canvasSize.x < MIN_CANVAS_SIZE || canvasSize.y < MIN_CANVAS_SIZE)
         {
             ImGui::Text("Canvas too small to render graph");
             return;

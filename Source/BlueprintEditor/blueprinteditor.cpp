@@ -311,6 +311,9 @@ namespace Olympe
             if (!JsonHelper::LoadJsonFromFile(filepath, j))
                 return "Unknown";
 
+            // Extract filename once for warning messages
+            std::string filename = fs::path(filepath).filename().string();
+
             // Priority 1: Check explicit "type" field (v1 + v2 standardized)
             if (j.contains("type"))
             {
@@ -322,7 +325,6 @@ namespace Olympe
                     std::string blueprintType = j["blueprintType"].get<std::string>();
                     if (type != blueprintType)
                     {
-                        std::string filename = fs::path(filepath).filename().string();
                         std::cerr << "[BlueprintEditor] WARNING: type (" << type 
                                  << ") != blueprintType (" << blueprintType << ") in " << filename << std::endl;
                     }
@@ -335,11 +337,16 @@ namespace Olympe
             if (j.contains("blueprintType"))
             {
                 std::string type = j["blueprintType"].get<std::string>();
-                std::string filename = fs::path(filepath).filename().string();
                 std::cerr << "[BlueprintEditor] WARNING: Using 'blueprintType' field (missing 'type') in " 
                          << filename << std::endl;
                 return type;
             }
+
+            // Helper lambda for logging structural detection warnings
+            auto logStructuralDetection = [&filename](const std::string& detectedType) {
+                std::cerr << "[BlueprintEditor] WARNING: No type information found in " << filename 
+                         << ", using structural detection (detected: " << detectedType << ")" << std::endl;
+            };
 
             // Priority 3: Structural detection for schema v2 (data wrapper)
             if (j.contains("data"))
@@ -347,16 +354,12 @@ namespace Olympe
                 const json& data = j["data"];
                 if (data.contains("rootNodeId") && data.contains("nodes"))
                 {
-                    std::string filename = fs::path(filepath).filename().string();
-                    std::cerr << "[BlueprintEditor] WARNING: No type information found in " << filename 
-                             << ", using structural detection (detected: BehaviorTree)" << std::endl;
+                    logStructuralDetection("BehaviorTree");
                     return "BehaviorTree";
                 }
                 if (data.contains("components"))
                 {
-                    std::string filename = fs::path(filepath).filename().string();
-                    std::cerr << "[BlueprintEditor] WARNING: No type information found in " << filename 
-                             << ", using structural detection (detected: EntityPrefab)" << std::endl;
+                    logStructuralDetection("EntityPrefab");
                     return "EntityPrefab";
                 }
             }
@@ -364,29 +367,22 @@ namespace Olympe
             // Priority 4: Structural detection for schema v1 (direct fields)
             if (j.contains("rootNodeId") && j.contains("nodes"))
             {
-                std::string filename = fs::path(filepath).filename().string();
-                std::cerr << "[BlueprintEditor] WARNING: No type information found in " << filename 
-                         << ", using structural detection (detected: BehaviorTree)" << std::endl;
+                logStructuralDetection("BehaviorTree");
                 return "BehaviorTree";
             }
 
             if (j.contains("states") || j.contains("initialState"))
             {
-                std::string filename = fs::path(filepath).filename().string();
-                std::cerr << "[BlueprintEditor] WARNING: No type information found in " << filename 
-                         << ", using structural detection (detected: HFSM)" << std::endl;
+                logStructuralDetection("HFSM");
                 return "HFSM";
             }
 
             if (j.contains("components"))
             {
-                std::string filename = fs::path(filepath).filename().string();
-                std::cerr << "[BlueprintEditor] WARNING: No type information found in " << filename 
-                         << ", using structural detection (detected: EntityBlueprint)" << std::endl;
+                logStructuralDetection("EntityBlueprint");
                 return "EntityBlueprint";
             }
 
-            std::string filename = fs::path(filepath).filename().string();
             std::cerr << "[BlueprintEditor] WARNING: Could not determine type for " << filename 
                      << ", defaulting to Generic" << std::endl;
             return "Generic";
