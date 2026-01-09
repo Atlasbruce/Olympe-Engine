@@ -228,6 +228,7 @@ namespace Olympe
             else if (m_SelectedLinkId != -1)
             {
                 // Delete selected link
+                // Note: Link IDs start from 1, array indices start from 0
                 auto links = graph->GetAllLinks();
                 if (m_SelectedLinkId >= 1 && m_SelectedLinkId <= (int)links.size())
                 {
@@ -503,9 +504,8 @@ namespace Olympe
         // Convert screen coordinates to canvas coordinates
         ImVec2 canvasPos = ImNodes::ScreenSpaceToGridSpace(ImVec2(screenX, screenY));
         
-        // Validate coordinates
-        if (std::isnan(canvasPos.x) || std::isnan(canvasPos.y) ||
-            std::isinf(canvasPos.x) || std::isinf(canvasPos.y))
+        // Validate coordinates are finite (not NaN or infinity)
+        if (!std::isfinite(canvasPos.x) || !std::isfinite(canvasPos.y))
         {
             std::cerr << "[NodeGraphPanel] Invalid coordinates for node creation\n";
             return;
