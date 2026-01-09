@@ -1,5 +1,6 @@
 {
   "schema_version": 2,
+  "type": "AnimationGraph",
   "blueprintType": "AnimationGraph",
   "name": "GuardAnimations",
   "description": "Animation state machine for guard character",

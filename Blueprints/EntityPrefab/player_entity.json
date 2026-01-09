@@ -1,5 +1,6 @@
 {
   "schema_version": 2,
+  "type": "EntityPrefab",
   "blueprintType": "EntityPrefab",
   "name": "PlayerEntity",
   "description": "Playable character entity with full components",

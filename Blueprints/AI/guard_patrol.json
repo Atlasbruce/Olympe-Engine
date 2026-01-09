@@ -1,5 +1,6 @@
 {
   "schema_version": 2,
+  "type": "BehaviorTree",
   "blueprintType": "BehaviorTree",
   "name": "GuardPatrolTree",
   "description": "",
