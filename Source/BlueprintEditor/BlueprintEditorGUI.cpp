@@ -10,6 +10,13 @@
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
 #include <iostream>
+#include <fstream>
+#ifndef _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+#endif
+#include <experimental/filesystem>
+
+namespace fs = std::experimental::filesystem;
 
 using namespace Olympe::Blueprint;
 
@@ -22,6 +29,7 @@ namespace Olympe
         , m_ShowAddComponentDialog(false)
         , m_ShowAboutDialog(false)
         , m_SelectedComponentType(0)
+        , m_ShowNewBlueprintModal(false)
         , m_ShowAssetBrowser(true)    // Main panel 1
         , m_ShowAssetInfo(false)       // Deprecated - merged into Inspector
         , m_ShowInspector(true)        // Main panel 3
@@ -38,6 +46,7 @@ namespace Olympe
         , m_HistoryPanel(nullptr)
     {
         m_NewBlueprintNameBuffer[0] = '\0';
+        m_NewBlueprintDescBuffer[0] = '\0';
         m_FilepathBuffer[0] = '\0';
     }
 
@@ -140,12 +149,13 @@ namespace Olympe
                     {
                         if (ImGui::MenuItem("Behavior Tree", "Ctrl+Shift+B"))
                         {
-                            // TODO: Create new BehaviorTree
-                            std::cout << "Creating new Behavior Tree..." << std::endl;
+                            m_NewBlueprintType = "BehaviorTree";
+                            m_ShowNewBlueprintModal = true;
                         }
                         if (ImGui::MenuItem("Hierarchical FSM", "Ctrl+Shift+H"))
                         {
-                            std::cout << "Creating new HFSM..." << std::endl;
+                            m_NewBlueprintType = "HFSM";
+                            m_ShowNewBlueprintModal = true;
                         }
                         ImGui::EndMenu();
                     }
@@ -154,29 +164,34 @@ namespace Olympe
                     
                     if (ImGui::MenuItem("Entity Prefab", "Ctrl+Shift+E"))
                     {
-                        std::cout << "Creating new Entity Prefab..." << std::endl;
+                        m_NewBlueprintType = "EntityPrefab";
+                        m_ShowNewBlueprintModal = true;
                     }
                     
                     if (ImGui::MenuItem("Animation Graph", "Ctrl+Shift+A"))
                     {
-                        std::cout << "Creating new Animation Graph..." << std::endl;
+                        m_NewBlueprintType = "AnimationGraph";
+                        m_ShowNewBlueprintModal = true;
                     }
                     
                     if (ImGui::MenuItem("Scripted Event", "Ctrl+Shift+S"))
                     {
-                        std::cout << "Creating new Scripted Event..." << std::endl;
+                        m_NewBlueprintType = "ScriptedEvent";
+                        m_ShowNewBlueprintModal = true;
                     }
                     
                     ImGui::Separator();
                     
                     if (ImGui::MenuItem("Level Definition", "Ctrl+Shift+L"))
                     {
-                        std::cout << "Creating new Level Definition..." << std::endl;
+                        m_NewBlueprintType = "LevelDefinition";
+                        m_ShowNewBlueprintModal = true;
                     }
                     
                     if (ImGui::MenuItem("UI Menu", "Ctrl+Shift+U"))
                     {
-                        std::cout << "Creating new UI Menu..." << std::endl;
+                        m_NewBlueprintType = "UIMenu";
+                        m_ShowNewBlueprintModal = true;
                     }
                     
                     ImGui::EndMenu();
@@ -391,6 +406,9 @@ namespace Olympe
         // Dialogs
         if (m_ShowAddComponentDialog)
             RenderComponentAddDialog();
+            
+        if (m_ShowNewBlueprintModal)
+            RenderNewBlueprintModal();
             
         if (m_ShowPreferences)
             RenderPreferencesDialog();
@@ -692,6 +710,101 @@ namespace Olympe
             if (ImGui::Button("Cancel", ImVec2(120, 0)))
             {
                 m_ShowAddComponentDialog = false;
+            }
+            
+            ImGui::EndPopup();
+        }
+    }
+
+    void BlueprintEditorGUI::RenderNewBlueprintModal()
+    {
+        ImGui::OpenPopup("New Blueprint");
+        
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        
+        if (ImGui::BeginPopupModal("New Blueprint", &m_ShowNewBlueprintModal, 
+            ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            auto& backend = BlueprintEditor::Get();
+            auto plugin = backend.GetPlugin(m_NewBlueprintType);
+            
+            if (!plugin)
+            {
+                ImGui::Text("Error: Plugin not found for type '%s'", m_NewBlueprintType.c_str());
+                if (ImGui::Button("Close"))
+                {
+                    m_ShowNewBlueprintModal = false;
+                }
+                ImGui::EndPopup();
+                return;
+            }
+            
+            ImGui::Text("Create new: %s", plugin->GetDisplayName().c_str());
+            ImGui::TextWrapped("%s", plugin->GetDescription().c_str());
+            ImGui::Separator();
+            
+            ImGui::InputText("Name", m_NewBlueprintNameBuffer, 256);
+            ImGui::InputTextMultiline("Description", m_NewBlueprintDescBuffer, 512, ImVec2(400, 100));
+            
+            ImGui::Separator();
+            
+            bool canCreate = strlen(m_NewBlueprintNameBuffer) > 0;
+            
+            if (ImGui::Button("Create", ImVec2(120, 0)) && canCreate)
+            {
+                try
+                {
+                    // Create blueprint via plugin
+                    nlohmann::json newBlueprint = plugin->CreateNew(m_NewBlueprintNameBuffer);
+                    newBlueprint["description"] = std::string(m_NewBlueprintDescBuffer);
+                    
+                    // Determine save path
+                    std::string folder = plugin->GetDefaultFolder();
+                    std::string filename = std::string(m_NewBlueprintNameBuffer) + ".json";
+                    std::string fullPath = folder + filename;
+                    
+                    // Create directory if needed
+                    fs::create_directories(folder);
+                    
+                    // Save file
+                    std::ofstream file(fullPath);
+                    if (!file.is_open())
+                    {
+                        std::cerr << "Failed to create file: " << fullPath << std::endl;
+                    }
+                    else
+                    {
+                        file << newBlueprint.dump(2);
+                        file.close();
+                        
+                        std::cout << "Created blueprint: " << fullPath << std::endl;
+                        
+                        // Open in editor
+                        backend.OpenGraphInEditor(fullPath);
+                        
+                        // Refresh asset browser
+                        backend.RefreshAssets();
+                    }
+                    
+                    // Reset and close
+                    memset(m_NewBlueprintNameBuffer, 0, 256);
+                    memset(m_NewBlueprintDescBuffer, 0, 512);
+                    m_ShowNewBlueprintModal = false;
+                }
+                catch (const std::exception& e)
+                {
+                    std::cerr << "Failed to create blueprint: " << e.what() << std::endl;
+                }
+            }
+            
+            ImGui::SameLine();
+            
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
+            {
+                memset(m_NewBlueprintNameBuffer, 0, 256);
+                memset(m_NewBlueprintDescBuffer, 0, 512);
+                m_ShowNewBlueprintModal = false;
             }
             
             ImGui::EndPopup();

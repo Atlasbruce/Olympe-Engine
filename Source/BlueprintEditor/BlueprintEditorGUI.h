@@ -58,6 +58,9 @@ namespace Olympe
         void RenderStatusBar();
         void RenderComponentAddDialog();
         
+        // New Blueprint Modal
+        void RenderNewBlueprintModal();
+        
         // D) Additional dialog methods
         void RenderPreferencesDialog();
         void RenderShortcutsDialog();
@@ -91,6 +94,11 @@ namespace Olympe
         char m_NewBlueprintNameBuffer[256];
         char m_FilepathBuffer[512];
         int m_SelectedComponentType;
+        
+        // New Blueprint Dialog state
+        bool m_ShowNewBlueprintModal;
+        std::string m_NewBlueprintType;
+        char m_NewBlueprintDescBuffer[512];
         
         // D) Panel visibility flags for View menu
         bool m_ShowAssetBrowser;
