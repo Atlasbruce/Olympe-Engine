@@ -256,31 +256,48 @@ namespace Olympe
 
     NodeGraph NodeGraph::FromJson(const nlohmann::json& j)
     {
+        std::cout << "[NodeGraph::FromJson] Starting parsing..." << std::endl;
+        
         NodeGraph graph;
 
-        // Detect schema version - v2 has nested "data" structure, v1 doesn't
-        bool isV2 = j.contains("schema_version") || j.contains("data");
-        const json* dataSection = &j;
-        
-        if (isV2 && j.contains("data"))
-        {
-            dataSection = &j["data"];
-            graph.name = JsonHelper::GetString(j, "name", "Untitled Graph");
-            graph.type = JsonHelper::GetString(j, "blueprintType", "BehaviorTree");
-        }
-        else
-        {
-            graph.name = JsonHelper::GetString(j, "name", "Untitled Graph");
-            graph.type = JsonHelper::GetString(j, "type", "BehaviorTree");
-        }
-        
-        graph.rootNodeId = JsonHelper::GetInt(*dataSection, "rootNodeId", -1);
+        try {
+            // Detect schema version - v2 has nested "data" structure, v1 doesn't
+            bool isV2 = j.contains("schema_version") || j.contains("data");
+            std::cout << "[NodeGraph::FromJson] Format: " << (isV2 ? "v2" : "v1") << std::endl;
 
-        std::cout << "[NodeGraph::FromJson] Loading graph '" << graph.name << "' (v" << (isV2 ? "2" : "1") << ")\n";
+            const json* dataSection = &j;
+            
+            if (isV2 && j.contains("data"))
+            {
+                dataSection = &j["data"];
+                graph.name = JsonHelper::GetString(j, "name", "Untitled Graph");
+                graph.type = JsonHelper::GetString(j, "blueprintType", "BehaviorTree");
+                std::cout << "[NodeGraph::FromJson] Extracted 'data' section from v2" << std::endl;
+            }
+            else
+            {
+                graph.name = JsonHelper::GetString(j, "name", "Untitled Graph");
+                graph.type = JsonHelper::GetString(j, "type", "BehaviorTree");
+                std::cout << "[NodeGraph::FromJson] Using root as data section (v1)" << std::endl;
+            }
+            
+            graph.rootNodeId = JsonHelper::GetInt(*dataSection, "rootNodeId", -1);
+            std::cout << "[NodeGraph::FromJson] Root node ID: " << graph.rootNodeId << std::endl;
 
-        if (JsonHelper::IsArray(*dataSection, "nodes"))
-        {
+            // Parse nodes
+            if (!JsonHelper::IsArray(*dataSection, "nodes"))
+            {
+                std::cerr << "[NodeGraph::FromJson] ERROR: No 'nodes' array in data section" << std::endl;
+                return graph;
+            }
+
+            // Get node count
+            int nodeCount = 0;
+            JsonHelper::ForEachInArray(*dataSection, "nodes", [&](const json& nj, size_t idx) { nodeCount++; });
+            std::cout << "[NodeGraph::FromJson] Parsing " << nodeCount << " nodes..." << std::endl;
+
             int maxId = 0;
+            bool hasPositions = false;
             
             // First pass: load nodes
             JsonHelper::ForEachInArray(*dataSection, "nodes", [&](const json& nj, size_t idx)
@@ -290,11 +307,14 @@ namespace Olympe
                 node.type = StringToNodeType(JsonHelper::GetString(nj, "type", "Action"));
                 node.name = JsonHelper::GetString(nj, "name", "");
                 
+                std::string typeStr = JsonHelper::GetString(nj, "type", "Action");
+                
                 // Load position - try v2 format first
                 if (nj.contains("position") && nj["position"].is_object())
                 {
                     node.posX = JsonHelper::GetFloat(nj["position"], "x", 0.0f);
                     node.posY = JsonHelper::GetFloat(nj["position"], "y", 0.0f);
+                    hasPositions = true;
                 }
                 else
                 {
@@ -344,38 +364,52 @@ namespace Olympe
 
                 graph.m_Nodes.push_back(node);
 
+                std::cout << "[NodeGraph::FromJson]   Node " << node.id << ": " << node.name 
+                          << " (" << typeStr << ") at (" << node.posX << "," << node.posY << ")"
+                          << " children: " << node.childIds.size() << std::endl;
+
                 if (node.id > maxId)
                     maxId = node.id;
             });
 
             graph.m_NextNodeId = maxId + 1;
             
-            // If v1 format, calculate positions using hierarchical layout
-            if (!isV2)
+            // Calculate positions if v1 (no positions)
+            if (!hasPositions)
             {
-                std::cout << "[NodeGraph::FromJson] v1 format detected, calculating node positions...\n";
+                std::cout << "[NodeGraph::FromJson] No positions found, calculating hierarchical layout..." << std::endl;
                 graph.CalculateNodePositionsHierarchical();
+                std::cout << "[NodeGraph::FromJson] Position calculation complete" << std::endl;
             }
-        }
-
-        // Load editor metadata if present (v2 only)
-        if (isV2)
-        {
-            if (j.contains("editorState") && j["editorState"].is_object())
+            else
             {
-                const json& state = j["editorState"];
-                graph.editorMetadata.zoom = JsonHelper::GetFloat(state, "zoom", 1.0f);
-                
-                if (state.contains("scrollOffset") && state["scrollOffset"].is_object())
+                std::cout << "[NodeGraph::FromJson] Using existing node positions from file" << std::endl;
+            }
+
+            // Load editor metadata if present (v2 only)
+            if (isV2)
+            {
+                if (j.contains("editorState") && j["editorState"].is_object())
                 {
-                    graph.editorMetadata.scrollOffsetX = JsonHelper::GetFloat(state["scrollOffset"], "x", 0.0f);
-                    graph.editorMetadata.scrollOffsetY = JsonHelper::GetFloat(state["scrollOffset"], "y", 0.0f);
+                    const json& state = j["editorState"];
+                    graph.editorMetadata.zoom = JsonHelper::GetFloat(state, "zoom", 1.0f);
+                    
+                    if (state.contains("scrollOffset") && state["scrollOffset"].is_object())
+                    {
+                        graph.editorMetadata.scrollOffsetX = JsonHelper::GetFloat(state["scrollOffset"], "x", 0.0f);
+                        graph.editorMetadata.scrollOffsetY = JsonHelper::GetFloat(state["scrollOffset"], "y", 0.0f);
+                    }
                 }
             }
-        }
 
-        std::cout << "[NodeGraph::FromJson] Loaded " << graph.m_Nodes.size() << " nodes\n";
-        return graph;
+            std::cout << "[NodeGraph::FromJson] Parsing complete: " << graph.m_Nodes.size() << " nodes loaded" << std::endl;
+
+            return graph;
+
+        } catch (const std::exception& e) {
+            std::cerr << "[NodeGraph::FromJson] EXCEPTION: " << e.what() << std::endl;
+            return graph;
+        }
     }
 
     bool NodeGraph::ValidateGraph(std::string& errorMsg) const
@@ -630,84 +664,171 @@ namespace Olympe
 
     int NodeGraphManager::LoadGraph(const std::string& filepath)
     {
-        std::ifstream file(filepath);
-        if (!file.is_open())
-        {
-            std::cerr << "[NodeGraphManager] Failed to open file: " << filepath << "\n";
+        std::cout << "\n========================================" << std::endl;
+        std::cout << "[NodeGraphManager::LoadGraph] CALLED" << std::endl;
+        std::cout << "[NodeGraphManager::LoadGraph] Path: " << filepath << std::endl;
+        std::cout << "========================================\n" << std::endl;
+        
+        try {
+            // 1. Check file exists
+            std::cout << "[NodeGraphManager] Step 1: Checking file exists..." << std::endl;
+            std::ifstream testFile(filepath);
+            if (!testFile.is_open())
+            {
+                std::cerr << "[NodeGraphManager] ERROR: File not found: " << filepath << std::endl;
+                std::cout << "========================================\n" << std::endl;
+                return -1;
+            }
+            testFile.close();
+            std::cout << "[NodeGraphManager] File exists: OK" << std::endl;
+
+            // 2. Load file content
+            std::cout << "[NodeGraphManager] Step 2: Loading file content..." << std::endl;
+            std::ifstream file(filepath);
+            if (!file.is_open())
+            {
+                std::cerr << "[NodeGraphManager] ERROR: Cannot open file: " << filepath << std::endl;
+                std::cout << "========================================\n" << std::endl;
+                return -1;
+            }
+
+            std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+            file.close();
+            std::cout << "[NodeGraphManager] File loaded: " << content.size() << " bytes" << std::endl;
+
+            if (content.empty())
+            {
+                std::cerr << "[NodeGraphManager] ERROR: File is empty" << std::endl;
+                std::cout << "========================================\n" << std::endl;
+                return -1;
+            }
+
+            // 3. Parse JSON
+            std::cout << "[NodeGraphManager] Step 3: Parsing JSON..." << std::endl;
+            json j;
+            try {
+                j = json::parse(content);
+                std::cout << "[NodeGraphManager] JSON parsed: OK" << std::endl;
+            } catch (const std::exception& e) {
+                std::cerr << "[NodeGraphManager] ERROR parsing JSON: " << e.what() << std::endl;
+                std::cout << "========================================\n" << std::endl;
+                return -1;
+            }
+
+            // 4. Detect version
+            std::cout << "[NodeGraphManager] Step 4: Detecting version..." << std::endl;
+            bool isV2 = j.contains("schema_version") && j["schema_version"].get<int>() == 2;
+            bool isV1 = !isV2 && (j.contains("nodes") || j.contains("rootNodeId"));
+            
+            std::cout << "[NodeGraphManager] Version: " << (isV2 ? "v2" : (isV1 ? "v1" : "Unknown")) << std::endl;
+
+            if (!isV1 && !isV2)
+            {
+                std::cerr << "[NodeGraphManager] ERROR: Invalid blueprint format (neither v1 nor v2)" << std::endl;
+                std::cout << "========================================\n" << std::endl;
+                return -1;
+            }
+
+            // 5. Parse graph from JSON
+            std::cout << "[NodeGraphManager] Step 5: Parsing graph with FromJson..." << std::endl;
+            NodeGraph graph;
+            try {
+                graph = NodeGraph::FromJson(j);
+                std::cout << "[NodeGraphManager] FromJson returned: " << graph.GetAllNodes().size() << " nodes" << std::endl;
+            } catch (const std::exception& e) {
+                std::cerr << "[NodeGraphManager] ERROR in FromJson: " << e.what() << std::endl;
+                std::cout << "========================================\n" << std::endl;
+                return -1;
+            }
+
+            // 6. Handle v1 migration if needed
+            if (isV1)
+            {
+                std::cout << "[NodeGraphManager] Step 6: Detected v1 format, migrating to v2..." << std::endl;
+                
+                // Create v2 structure
+                json v2Json = json::object();
+                v2Json["schema_version"] = 2;
+                v2Json["blueprintType"] = graph.type.empty() ? "BehaviorTree" : graph.type;
+                v2Json["name"] = graph.name;
+                v2Json["description"] = "";
+                
+                // Metadata
+                json metadata = json::object();
+                metadata["author"] = "Atlasbruce";
+                metadata["created"] = "2026-01-09T18:26:00Z";
+                metadata["lastModified"] = "2026-01-09T18:26:00Z";
+                metadata["tags"] = json::array();
+                v2Json["metadata"] = metadata;
+                
+                // Editor state
+                json editorState = json::object();
+                editorState["zoom"] = 1.0;
+                json scrollOffset = json::object();
+                scrollOffset["x"] = 0;
+                scrollOffset["y"] = 0;
+                editorState["scrollOffset"] = scrollOffset;
+                v2Json["editorState"] = editorState;
+                
+                // Data (re-serialize current graph)
+                v2Json["data"] = graph.ToJson();
+                
+                // Save migrated version
+                std::cout << "[NodeGraphManager] Saving migrated v2 file..." << std::endl;
+                try {
+                    // Backup original
+                    std::string backupPath = filepath + ".v1.backup";
+                    std::ifstream src(filepath, std::ios::binary);
+                    std::ofstream dst(backupPath, std::ios::binary);
+                    dst << src.rdbuf();
+                    src.close();
+                    dst.close();
+                    std::cout << "[NodeGraphManager] Original backed up to: " << backupPath << std::endl;
+                    
+                    // Save new version
+                    std::ofstream outFile(filepath);
+                    if (outFile.is_open())
+                    {
+                        outFile << v2Json.dump(2);
+                        outFile.close();
+                        std::cout << "[NodeGraphManager] Migrated file saved: " << filepath << std::endl;
+                    }
+                } catch (const std::exception& e) {
+                    std::cerr << "[NodeGraphManager] WARNING: Could not save migrated file: " << e.what() << std::endl;
+                }
+            }
+
+            // 7. Create graph in manager
+            std::cout << "[NodeGraphManager] Step 7: Creating graph in manager..." << std::endl;
+            int graphId = m_NextGraphId++;
+            auto graphPtr = std::make_unique<NodeGraph>(std::move(graph));
+            m_Graphs[graphId] = std::move(graphPtr);
+            m_ActiveGraphId = graphId;
+
+            std::cout << "[NodeGraphManager] Graph registered with ID: " << graphId << std::endl;
+            std::cout << "[NodeGraphManager] Graph name: " << m_Graphs[graphId]->name << std::endl;
+            std::cout << "[NodeGraphManager] Graph type: " << m_Graphs[graphId]->type << std::endl;
+            std::cout << "[NodeGraphManager] Total graphs loaded: " << m_Graphs.size() << std::endl;
+            std::cout << "[NodeGraphManager] Active graph ID: " << m_ActiveGraphId << std::endl;
+
+            std::cout << "\n========================================" << std::endl;
+            std::cout << "[NodeGraphManager::LoadGraph] SUCCESS ✓" << std::endl;
+            std::cout << "========================================\n" << std::endl;
+
+            return graphId;
+
+        } catch (const std::exception& e) {
+            std::cerr << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+            std::cerr << "[NodeGraphManager] EXCEPTION: " << e.what() << std::endl;
+            std::cerr << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl;
+            std::cout << "========================================\n" << std::endl;
+            return -1;
+        } catch (...) {
+            std::cerr << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+            std::cerr << "[NodeGraphManager] UNKNOWN EXCEPTION" << std::endl;
+            std::cerr << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl;
+            std::cout << "========================================\n" << std::endl;
             return -1;
         }
-
-        json j;
-        std::string jsonText((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        file.close();
-        
-        try
-        {
-            j = json::parse(jsonText);
-        }
-        catch (const std::exception& e)
-        {
-            std::cerr << "[NodeGraphManager] JSON parse error: " << e.what() << "\n";
-            return -1;
-        }
-
-        // Detect if v1 format (no schema_version or data section)
-        bool isV1 = !j.contains("schema_version") && !j.contains("data");
-        
-        NodeGraph graph = NodeGraph::FromJson(j);
-
-        int graphId = m_NextGraphId++;
-        m_Graphs[graphId] = std::make_unique<NodeGraph>(std::move(graph));
-        m_ActiveGraphId = graphId;
-
-        std::cout << "[NodeGraphManager] Loaded graph from " << filepath << "\n";
-        
-        // If v1 format was loaded, auto-migrate to v2 and save
-        if (isV1)
-        {
-            std::cout << "[NodeGraphManager] Detected v1 format, auto-migrating to v2...\n";
-            
-            // Convert to v2 JSON format
-            json v2Json = m_Graphs[graphId]->ToJson();
-            
-            // Wrap in v2 structure
-            json wrappedV2 = json::object();
-            wrappedV2["schema_version"] = 2;
-            wrappedV2["blueprintType"] = v2Json["type"];
-            wrappedV2["name"] = v2Json["name"];
-            wrappedV2["description"] = "";
-            
-            json metadata = json::object();
-            metadata["author"] = "Atlasbruce";
-            metadata["created"] = "2026-01-09T15:33:00Z";
-            metadata["lastModified"] = "2026-01-09T15:33:00Z";
-            metadata["tags"] = json::array();
-            wrappedV2["metadata"] = metadata;
-            
-            json editorState = json::object();
-            editorState["zoom"] = 1.0;
-            json scrollOffset = json::object();
-            scrollOffset["x"] = 0;
-            scrollOffset["y"] = 0;
-            editorState["scrollOffset"] = scrollOffset;
-            wrappedV2["editorState"] = editorState;
-            
-            wrappedV2["data"] = v2Json;
-            
-            // Save migrated version
-            std::ofstream outFile(filepath);
-            if (outFile.is_open())
-            {
-                outFile << wrappedV2.dump(2);
-                outFile.close();
-                std::cout << "[NodeGraphManager] Saved migrated v2 format to " << filepath << "\n";
-            }
-            else
-            {
-                std::cerr << "[NodeGraphManager] Failed to save migrated v2 format\n";
-            }
-        }
-        
-        return graphId;
     }
 }
