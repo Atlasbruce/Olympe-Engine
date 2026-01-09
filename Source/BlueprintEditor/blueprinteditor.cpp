@@ -311,34 +311,46 @@ namespace Olympe
             if (!JsonHelper::LoadJsonFromFile(filepath, j))
                 return "Unknown";
 
-            // Check for common type indicators
+            // Priority 1: Check explicit "type" field (v1 + v2 standardized)
             if (j.contains("type"))
             {
                 std::string type = j["type"].get<std::string>();
-                if (type == "EntityBlueprint")
-                    return "EntityBlueprint";
-                if (type == "BehaviorTree")
-                    return "BehaviorTree";
-                if (type == "HFSM")
-                    return "HFSM";
+                return type;
+            }
+            
+            // Priority 2: FALLBACK - Check "blueprintType" for old v2 files
+            if (j.contains("blueprintType"))
+            {
+                std::string type = j["blueprintType"].get<std::string>();
+                std::cout << "[DetectAssetType] Warning: Using deprecated 'blueprintType' field, consider adding 'type' field to " << filepath << std::endl;
+                return type;
             }
 
-            // Check for behavior tree structure (rootNodeId + nodes)
+            // Priority 3: Structural detection for schema v2 (data wrapper)
+            if (j.contains("data"))
+            {
+                const json& data = j["data"];
+                if (data.contains("rootNodeId") && data.contains("nodes"))
+                    return "BehaviorTree";
+                if (data.contains("components"))
+                    return "EntityPrefab";
+            }
+
+            // Priority 4: Structural detection for schema v1 (direct fields)
             if (j.contains("rootNodeId") && j.contains("nodes"))
                 return "BehaviorTree";
 
-            // Check for HFSM structure (states + transitions or initialState)
             if (j.contains("states") || j.contains("initialState"))
                 return "HFSM";
 
-            // Check for components (entity blueprint without explicit type)
             if (j.contains("components"))
                 return "EntityBlueprint";
 
             return "Generic";
         }
-        catch (const std::exception&)
+        catch (const std::exception& e)
         {
+            std::cerr << "Error detecting asset type: " << e.what() << std::endl;
             return "Unknown";
         }
     }
@@ -460,7 +472,7 @@ namespace Olympe
                 return;
             }
             
-            // Determine asset type and parse accordingly
+            // Priority 1: Check explicit "type" field
             if (j.contains("type"))
             {
                 std::string type = JsonHelper::GetString(j, "type", "");
@@ -470,27 +482,84 @@ namespace Olympe
                 {
                     ParseEntityBlueprint(j, metadata);
                 }
+                else if (type == "BehaviorTree")
+                {
+                    ParseBehaviorTree(j, metadata);
+                }
+                else if (type == "HFSM")
+                {
+                    ParseHFSM(j, metadata);
+                }
+                else if (type == "EntityPrefab")
+                {
+                    ParseEntityBlueprint(j, metadata);
+                }
                 else
                 {
                     metadata.name = JsonHelper::GetString(j, "name", metadata.name);
                     metadata.description = JsonHelper::GetString(j, "description", "");
                 }
             }
+            // Priority 2: FALLBACK - Check "blueprintType" for old v2 files
+            else if (j.contains("blueprintType"))
+            {
+                std::string type = JsonHelper::GetString(j, "blueprintType", "");
+                metadata.type = type;
+                
+                std::cout << "[ParseAssetMetadata] Warning: Using deprecated 'blueprintType' field in " << filepath << std::endl;
+                
+                if (type == "BehaviorTree")
+                {
+                    ParseBehaviorTree(j, metadata);
+                }
+                else if (type == "HFSM")
+                {
+                    ParseHFSM(j, metadata);
+                }
+                else if (type == "EntityBlueprint" || type == "EntityPrefab")
+                {
+                    ParseEntityBlueprint(j, metadata);
+                }
+                else
+                {
+                    metadata.name = JsonHelper::GetString(j, "name", metadata.name);
+                    metadata.description = JsonHelper::GetString(j, "description", "");
+                }
+            }
+            // Priority 3: Structural detection for schema v2 (data wrapper)
+            else if (j.contains("data"))
+            {
+                const json& data = j["data"];
+                if (data.contains("rootNodeId") && data.contains("nodes"))
+                {
+                    metadata.type = "BehaviorTree";
+                    ParseBehaviorTree(j, metadata);
+                }
+                else if (data.contains("components"))
+                {
+                    metadata.type = "EntityPrefab";
+                    ParseEntityBlueprint(j, metadata);
+                }
+                else
+                {
+                    metadata.type = "Generic";
+                    metadata.name = JsonHelper::GetString(j, "name", metadata.name);
+                    metadata.description = JsonHelper::GetString(j, "description", "");
+                }
+            }
+            // Priority 4: Structural detection for schema v1 (direct fields)
             else if (j.contains("rootNodeId") && j.contains("nodes"))
             {
-                // Behavior Tree
                 metadata.type = "BehaviorTree";
                 ParseBehaviorTree(j, metadata);
             }
             else if (j.contains("states") || j.contains("initialState"))
             {
-                // HFSM (Hierarchical Finite State Machine)
                 metadata.type = "HFSM";
                 ParseHFSM(j, metadata);
             }
             else if (j.contains("components"))
             {
-                // Entity Blueprint without explicit type
                 metadata.type = "EntityBlueprint";
                 ParseEntityBlueprint(j, metadata);
             }
@@ -516,7 +585,25 @@ namespace Olympe
         metadata.name = JsonHelper::GetString(j, "name", "Unnamed Entity");
         metadata.description = JsonHelper::GetString(j, "description", "");
 
-        if (j.contains("components") && j["components"].is_array())
+        // Schema v2: Check for components in "data" wrapper
+        if (j.contains("data") && j["data"].contains("components") && j["data"]["components"].is_array())
+        {
+            const auto& components = j["data"]["components"];
+            metadata.componentCount = (int)components.size();
+            
+            // Extract component types
+            for (size_t i = 0; i < components.size(); ++i)
+            {
+                const auto& comp = components[i];
+                if (comp.contains("type") && comp["type"].is_string())
+                {
+                    std::string compType = JsonHelper::GetString(comp, "type", "Unknown");
+                    metadata.components.push_back(compType);
+                }
+            }
+        }
+        // Schema v1: Check for components at top level
+        else if (j.contains("components") && j["components"].is_array())
         {
             const auto& components = j["components"];
             metadata.componentCount = (int)components.size();
@@ -539,7 +626,43 @@ namespace Olympe
         metadata.name = JsonHelper::GetString(j, "name", "Unnamed Behavior Tree");
         metadata.description = "Behavior Tree AI Definition";
 
-        if (j.contains("nodes") && j["nodes"].is_array())
+        // Schema v2: Check for nodes in "data" wrapper
+        if (j.contains("data"))
+        {
+            const json& data = j["data"];
+            if (data.contains("nodes") && data["nodes"].is_array())
+            {
+                const auto& nodes = data["nodes"];
+                metadata.nodeCount = (int)nodes.size();
+                
+                // Extract node types
+                for (size_t i = 0; i < nodes.size(); ++i)
+                {
+                    const auto& node = nodes[i];
+                    if (node.contains("type") && node["type"].is_string())
+                    {
+                        std::string nodeType = JsonHelper::GetString(node, "type", "Unknown");
+                        if (node.contains("name") && node["name"].is_string())
+                        {
+                            std::string nodeName = JsonHelper::GetString(node, "name", "");
+                            metadata.nodes.push_back(nodeName + " (" + nodeType + ")");
+                        }
+                        else
+                        {
+                            metadata.nodes.push_back(nodeType);
+                        }
+                    }
+                }
+            }
+
+            if (data.contains("rootNodeId"))
+            {
+                int rootId = data["rootNodeId"].get<int>();
+                metadata.description += " - Root Node ID: " + std::to_string(rootId);
+            }
+        }
+        // Schema v1: Check for nodes at top level
+        else if (j.contains("nodes") && j["nodes"].is_array())
         {
             const auto& nodes = j["nodes"];
             metadata.nodeCount = (int)nodes.size();
@@ -562,12 +685,12 @@ namespace Olympe
                     }
                 }
             }
-        }
 
-        if (j.contains("rootNodeId"))
-        {
-            int rootId = j["rootNodeId"].get<int>();
-            metadata.description += " - Root Node ID: " + std::to_string(rootId);
+            if (j.contains("rootNodeId"))
+            {
+                int rootId = j["rootNodeId"].get<int>();
+                metadata.description += " - Root Node ID: " + std::to_string(rootId);
+            }
         }
     }
     
