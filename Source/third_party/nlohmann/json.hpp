@@ -224,6 +224,66 @@ namespace nlohmann {
             return object_value->end();
         }
 
+        // at() method for safe access with exception if key absent
+        const json& at(const std::string& key) const
+        {
+            if (!is_object()) throw std::runtime_error("not an object");
+            auto it = object_value->find(key);
+            if (it == object_value->end()) throw std::out_of_range("key not found: " + key);
+            return it->second;
+        }
+
+        json& at(const std::string& key)
+        {
+            if (!is_object()) throw std::runtime_error("not an object");
+            auto it = object_value->find(key);
+            if (it == object_value->end()) throw std::out_of_range("key not found: " + key);
+            return it->second;
+        }
+
+        // count() method to check if key exists
+        size_t count(const std::string& key) const
+        {
+            if (!is_object()) return 0;
+            return object_value->count(key);
+        }
+
+        // empty() method to check if array or object is empty
+        bool empty() const
+        {
+            if (is_array()) return array_value->empty();
+            if (is_object()) return object_value->empty();
+            return true;
+        }
+
+        // Array iterator support
+        using array_iterator = std::vector<json>::iterator;
+        using const_array_iterator = std::vector<json>::const_iterator;
+
+        array_iterator array_begin()
+        {
+            if (!is_array()) throw std::runtime_error("not an array");
+            return array_value->begin();
+        }
+
+        array_iterator array_end()
+        {
+            if (!is_array()) throw std::runtime_error("not an array");
+            return array_value->end();
+        }
+
+        const_array_iterator array_begin() const
+        {
+            if (!is_array()) throw std::runtime_error("not an array");
+            return array_value->begin();
+        }
+
+        const_array_iterator array_end() const
+        {
+            if (!is_array()) throw std::runtime_error("not an array");
+            return array_value->end();
+        }
+
     private:
         Type type_;
         bool bool_value = false;

@@ -159,6 +159,9 @@ namespace Olympe
         // Utility
         void Clear();
         int GetNextNodeId() const { return m_NextNodeId; }
+        
+        // Calculate node positions for v1 blueprints (hierarchical layout)
+        void CalculateNodePositionsHierarchical();
 
     private:
         std::vector<GraphNode> m_Nodes;
