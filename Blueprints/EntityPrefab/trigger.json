@@ -30,6 +30,15 @@
           }
         }
       },
+	  {
+        "type": "VisualEdotor_data",
+        "properties": {
+          "spritePath": "Resources/Icons/trigger-50.png",
+          "width": 32,
+          "height": 32,
+          "layer": 10
+        }
+      },
       {
         "type": "BoundingBox_data",
         "properties": {

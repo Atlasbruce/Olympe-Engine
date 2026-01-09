@@ -11,30 +11,12 @@
 #include <vector>
 #include <memory>
 #include "../../Source/third_party/nlohmann/json.hpp"
+#include "BlueprintValidator.h"
 
 namespace Olympe
 {
     // Forward declarations
     struct EditorContext;
-    
-    // Validation error severity
-    enum class ErrorSeverity
-    {
-        Info,
-        Warning,
-        Error
-    };
-    
-    // Validation error structure
-    struct ValidationError
-    {
-        std::string nodeId;
-        std::string message;
-        ErrorSeverity severity;
-        
-        ValidationError(const std::string& id, const std::string& msg, ErrorSeverity sev)
-            : nodeId(id), message(msg), severity(sev) {}
-    };
     
     // Editor context for plugins
     struct EditorContext

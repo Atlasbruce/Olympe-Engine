@@ -20,6 +20,15 @@
           "entityType": "Waypoint"
         }
       },
+	  {
+        "type": "VisualEdotor_data",
+        "properties": {
+          "spritePath": "Resources/Icons/location-32.png",
+          "width": 32,
+          "height": 32,
+          "layer": 10
+        }
+      },
       {
         "type": "Position_data",
         "properties": {

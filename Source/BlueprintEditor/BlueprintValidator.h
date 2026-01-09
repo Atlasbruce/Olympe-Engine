@@ -11,6 +11,9 @@
 #include <vector>
 #include "NodeGraphManager.h"
 
+// Forward declare ImVec4
+struct ImVec4;
+
 namespace Olympe
 {
     // Validation error severity levels

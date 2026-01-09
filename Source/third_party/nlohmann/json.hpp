@@ -1,4 +1,4 @@
-// Minimal subset of nlohmann::json functionality for this project
+// Minimal and custom subset of nlohmann::json functionality for this project
 // This is a tiny JSON implementation (parse + dump) sufficient for serialization
 // of the project's data structures. Not a full replacement of nlohmann::json.
 
@@ -102,6 +102,77 @@ namespace nlohmann {
         {
             if (!is_object()) return false;
             return object_value->find(key) != object_value->end();
+        }
+
+        // is_number_integer() check
+        bool is_number_integer() const { return is_number(); }
+        
+        // is_number_float() check
+        bool is_number_float() const { return is_number(); }
+
+        // Comparison operator for strings
+        bool operator==(const std::string& str) const
+        {
+            if (!is_string()) return false;
+            return *string_value == str;
+        }
+
+        bool operator==(const char* str) const
+        {
+            if (!is_string()) return false;
+            return *string_value == std::string(str);
+        }
+
+        // items() method for iterating over object key-value pairs
+        // Returns a vector of pairs since we can't create a proper iterator range easily
+        std::vector<std::pair<std::string, json*>> items()
+        {
+            std::vector<std::pair<std::string, json*>> result;
+            if (!is_object()) return result;
+            for (auto& kv : *object_value)
+            {
+                result.push_back(std::make_pair(kv.first, &kv.second));
+            }
+            return result;
+        }
+
+        std::vector<std::pair<std::string, const json*>> items() const
+        {
+            std::vector<std::pair<std::string, const json*>> result;
+            if (!is_object()) return result;
+            for (const auto& kv : *object_value)
+            {
+                result.push_back(std::make_pair(kv.first, &kv.second));
+            }
+            return result;
+        }
+
+        // erase method for arrays (by iterator-like index)
+        void erase(size_t index)
+        {
+            if (!is_array()) throw std::runtime_error("not an array");
+            if (index >= array_value->size()) throw std::out_of_range("index out of range");
+            array_value->erase(array_value->begin() + index);
+        }
+
+        // value() with default - returns value if key exists, otherwise returns default
+        template<typename T>
+        T value(const std::string& key, const T& default_value) const
+        {
+            if (!is_object()) return default_value;
+            auto it = object_value->find(key);
+            if (it == object_value->end()) return default_value;
+            try {
+                return it->second.get<T>();
+            } catch (...) {
+                return default_value;
+            }
+        }
+
+        // Specialization for const char* to return std::string
+        std::string value(const std::string& key, const char* default_value) const
+        {
+            return value<std::string>(key, std::string(default_value));
         }
 
         // getters
@@ -353,6 +424,32 @@ namespace nlohmann {
     {
         if (!is_number()) throw std::runtime_error("not a number");
         return static_cast<float>(number_value);
+    }
+
+    // Template specialization for std::vector<int>
+    template<>
+    inline std::vector<int> json::get<std::vector<int>>() const
+    {
+        if (!is_array()) throw std::runtime_error("not an array");
+        std::vector<int> result;
+        for (size_t i = 0; i < array_value->size(); ++i)
+        {
+            result.push_back((*array_value)[i].get<int>());
+        }
+        return result;
+    }
+
+    // Template specialization for std::vector<std::string>
+    template<>
+    inline std::vector<std::string> json::get<std::vector<std::string>>() const
+    {
+        if (!is_array()) throw std::runtime_error("not an array");
+        std::vector<std::string> result;
+        for (size_t i = 0; i < array_value->size(); ++i)
+        {
+            result.push_back((*array_value)[i].get<std::string>());
+        }
+        return result;
     }
 
 } // namespace nlohmann

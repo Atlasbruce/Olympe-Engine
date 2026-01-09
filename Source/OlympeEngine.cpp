@@ -375,10 +375,11 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result)
     // Shutdown Blueprint Editor
     if (blueprintEditorGUI)
     {
-        blueprintEditorGUI->Shutdown();
+    //    blueprintEditorGUI->Shutdown(); // Double delete 
         delete blueprintEditorGUI;
         blueprintEditorGUI = nullptr;
     }
+
     Olympe::BlueprintEditor::Get().Shutdown();
 
     // Shutdown datamanager to ensure resources freed

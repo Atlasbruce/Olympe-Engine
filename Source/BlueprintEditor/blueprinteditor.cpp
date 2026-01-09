@@ -892,8 +892,10 @@ namespace Olympe
         }
         
         // V1 format: use heuristic detection
-        for (auto& [type, plugin] : m_Plugins)
+        for (auto& pluginPair : m_Plugins)
         {
+            auto& type = pluginPair.first;
+            auto& plugin = pluginPair.second;
             if (plugin->CanHandle(blueprint))
             {
                 return plugin.get();

@@ -17,7 +17,13 @@ namespace Olympe
         auto now = std::chrono::system_clock::now();
         auto time = std::chrono::system_clock::to_time_t(now);
         std::stringstream ss;
-        ss << std::put_time(std::localtime(&time), "%Y-%m-%dT%H:%M:%S");
+        std::tm timeInfo;
+        #ifdef _WIN32
+        localtime_s(&timeInfo, &time);
+        #else
+        localtime_r(&time, &timeInfo);
+        #endif
+        ss << std::put_time(&timeInfo, "%Y-%m-%dT%H:%M:%S");
         return ss.str();
     }
 
@@ -36,7 +42,9 @@ namespace Olympe
         hfsm["metadata"]["created"] = GetCurrentTimestamp();
         hfsm["metadata"]["tags"] = json::array();
         hfsm["editorState"]["zoom"] = 1.0;
-        hfsm["editorState"]["scrollOffset"] = {{"x", 0}, {"y", 0}};
+        hfsm["editorState"]["scrollOffset"] = nlohmann::json::object();
+        hfsm["editorState"]["scrollOffset"]["x"] = 0;
+        hfsm["editorState"]["scrollOffset"]["y"] = 0;
         hfsm["data"]["initialState"] = "Idle";
         hfsm["data"]["states"] = json::array();
         hfsm["data"]["transitions"] = json::array();
@@ -45,7 +53,7 @@ namespace Olympe
     
     bool HFSMEditorPlugin::CanHandle(const json& blueprint) const
     {
-        if (blueprint.contains("blueprintType") && blueprint["blueprintType"] == "HFSM")
+        if (blueprint.contains("blueprintType") && blueprint["blueprintType"].is_string() && blueprint["blueprintType"].get<std::string>() == "HFSM")
             return true;
         return blueprint.contains("states") || blueprint.contains("initialState");
     }
@@ -54,7 +62,7 @@ namespace Olympe
     {
         std::vector<ValidationError> errors;
         if (!blueprint.contains("data"))
-            errors.push_back(ValidationError("", "Missing data section", ErrorSeverity::Error));
+            errors.push_back(ValidationError(-1, "", "Missing data section", ErrorSeverity::Error));
         return errors;
     }
     
@@ -90,7 +98,9 @@ namespace Olympe
         anim["metadata"]["created"] = GetCurrentTimestamp();
         anim["metadata"]["tags"] = json::array();
         anim["editorState"]["zoom"] = 1.0;
-        anim["editorState"]["scrollOffset"] = {{"x", 0}, {"y", 0}};
+        anim["editorState"]["scrollOffset"] = nlohmann::json::object();
+        anim["editorState"]["scrollOffset"]["x"] = 0;
+        anim["editorState"]["scrollOffset"]["y"] = 0;
         anim["data"]["initialState"] = "Idle";
         anim["data"]["states"] = json::array();
         anim["data"]["transitions"] = json::array();
@@ -99,7 +109,7 @@ namespace Olympe
     
     bool AnimationGraphEditorPlugin::CanHandle(const json& blueprint) const
     {
-        if (blueprint.contains("blueprintType") && blueprint["blueprintType"] == "AnimationGraph")
+        if (blueprint.contains("blueprintType") && blueprint["blueprintType"].is_string() && blueprint["blueprintType"].get<std::string>() == "AnimationGraph")
             return true;
         return false;
     }
@@ -108,7 +118,7 @@ namespace Olympe
     {
         std::vector<ValidationError> errors;
         if (!blueprint.contains("data"))
-            errors.push_back(ValidationError("", "Missing data section", ErrorSeverity::Error));
+            errors.push_back(ValidationError(-1, "", "Missing data section", ErrorSeverity::Error));
         return errors;
     }
     
@@ -117,11 +127,15 @@ namespace Olympe
         ImGui::Text("Animation Graph Editor");
         if (blueprintData.contains("data") && blueprintData["data"].contains("states"))
         {
-            ImGui::Text("Animation States: %d", (int)blueprintData["data"]["states"].size());
+            const json& states = blueprintData["data"]["states"];
+            ImGui::Text("Animation States: %d", (int)states.size());
             
-            for (auto& state : blueprintData["data"]["states"])
+            for (size_t i = 0; i < states.size(); ++i)
             {
-                std::string stateName = state.value("name", "Unnamed");
+                const json& state = states[i];
+                std::string stateName = state.contains("name") && state["name"].is_string()
+                    ? state["name"].get<std::string>()
+                    : "Unnamed";
                 ImGui::BulletText("%s", stateName.c_str());
             }
         }
@@ -152,7 +166,9 @@ namespace Olympe
         event["metadata"]["created"] = GetCurrentTimestamp();
         event["metadata"]["tags"] = json::array();
         event["editorState"]["zoom"] = 1.0;
-        event["editorState"]["scrollOffset"] = {{"x", 0}, {"y", 0}};
+        event["editorState"]["scrollOffset"] = nlohmann::json::object();
+        event["editorState"]["scrollOffset"]["x"] = 0;
+        event["editorState"]["scrollOffset"]["y"] = 0;
         event["data"]["triggerType"] = "Manual";
         event["data"]["oneShot"] = true;
         event["data"]["sequence"] = json::array();
@@ -161,7 +177,7 @@ namespace Olympe
     
     bool ScriptedEventEditorPlugin::CanHandle(const json& blueprint) const
     {
-        if (blueprint.contains("blueprintType") && blueprint["blueprintType"] == "ScriptedEvent")
+        if (blueprint.contains("blueprintType") && blueprint["blueprintType"].is_string() && blueprint["blueprintType"].get<std::string>() == "ScriptedEvent")
             return true;
         return false;
     }
@@ -170,7 +186,7 @@ namespace Olympe
     {
         std::vector<ValidationError> errors;
         if (!blueprint.contains("data"))
-            errors.push_back(ValidationError("", "Missing data section", ErrorSeverity::Error));
+            errors.push_back(ValidationError(-1, "", "Missing data section", ErrorSeverity::Error));
         return errors;
     }
     
@@ -179,12 +195,18 @@ namespace Olympe
         ImGui::Text("Scripted Event Editor");
         if (blueprintData.contains("data") && blueprintData["data"].contains("sequence"))
         {
-            ImGui::Text("Steps: %d", (int)blueprintData["data"]["sequence"].size());
+            const json& sequence = blueprintData["data"]["sequence"];
+            ImGui::Text("Steps: %d", (int)sequence.size());
             
-            for (auto& step : blueprintData["data"]["sequence"])
+            for (size_t i = 0; i < sequence.size(); ++i)
             {
-                std::string stepType = step.value("type", "Unknown");
-                int stepNum = step.value("step", 0);
+                const json& step = sequence[i];
+                std::string stepType = step.contains("type") && step["type"].is_string()
+                    ? step["type"].get<std::string>()
+                    : "Unknown";
+                int stepNum = step.contains("step") && step["step"].is_number()
+                    ? step["step"].get<int>()
+                    : 0;
                 ImGui::BulletText("Step %d: %s", stepNum, stepType.c_str());
             }
         }
@@ -215,16 +237,21 @@ namespace Olympe
         level["metadata"]["created"] = GetCurrentTimestamp();
         level["metadata"]["tags"] = json::array();
         level["editorState"]["zoom"] = 0.5;
-        level["editorState"]["scrollOffset"] = {{"x", 0}, {"y", 0}};
+        level["editorState"]["scrollOffset"] = nlohmann::json::object();
+        level["editorState"]["scrollOffset"]["x"] = 0;
+        level["editorState"]["scrollOffset"]["y"] = 0;
         level["data"]["levelName"] = name;
-        level["data"]["worldSize"] = {{"width", 1024}, {"height", 768}};
+        nlohmann::json worldSize = nlohmann::json::object();
+        worldSize["width"] = 1024;
+        worldSize["height"] = 768;
+        level["data"]["worldSize"] = worldSize;
         level["data"]["entities"] = json::array();
         return level;
     }
     
     bool LevelDefinitionEditorPlugin::CanHandle(const json& blueprint) const
     {
-        if (blueprint.contains("blueprintType") && blueprint["blueprintType"] == "LevelDefinition")
+        if (blueprint.contains("blueprintType") && blueprint["blueprintType"].is_string() && blueprint["blueprintType"].get<std::string>() == "LevelDefinition")
             return true;
         return false;
     }
@@ -233,7 +260,7 @@ namespace Olympe
     {
         std::vector<ValidationError> errors;
         if (!blueprint.contains("data"))
-            errors.push_back(ValidationError("", "Missing data section", ErrorSeverity::Error));
+            errors.push_back(ValidationError(-1, "", "Missing data section", ErrorSeverity::Error));
         return errors;
     }
     
@@ -243,7 +270,7 @@ namespace Olympe
         if (blueprintData.contains("data"))
         {
             auto& data = blueprintData["data"];
-            ImGui::Text("Level: %s", data.value("levelName", "Unnamed").c_str());
+            ImGui::Text("Level: %s", (data.contains("levelName") && data["levelName"].is_string() ? data["levelName"].get<std::string>() : "Unnamed").c_str());
             
             if (data.contains("entities"))
                 ImGui::Text("Entities: %d", (int)data["entities"].size());
@@ -280,7 +307,9 @@ namespace Olympe
         menu["metadata"]["created"] = GetCurrentTimestamp();
         menu["metadata"]["tags"] = json::array();
         menu["editorState"]["zoom"] = 1.0;
-        menu["editorState"]["scrollOffset"] = {{"x", 0}, {"y", 0}};
+        menu["editorState"]["scrollOffset"] = nlohmann::json::object();
+        menu["editorState"]["scrollOffset"]["x"] = 0;
+        menu["editorState"]["scrollOffset"]["y"] = 0;
         menu["data"]["menuName"] = name;
         menu["data"]["elements"] = json::array();
         return menu;
@@ -288,7 +317,7 @@ namespace Olympe
     
     bool UIMenuEditorPlugin::CanHandle(const json& blueprint) const
     {
-        if (blueprint.contains("blueprintType") && blueprint["blueprintType"] == "UIMenu")
+        if (blueprint.contains("blueprintType") && blueprint["blueprintType"].is_string() && blueprint["blueprintType"].get<std::string>() == "UIMenu")
             return true;
         return false;
     }
@@ -297,7 +326,7 @@ namespace Olympe
     {
         std::vector<ValidationError> errors;
         if (!blueprint.contains("data"))
-            errors.push_back(ValidationError("", "Missing data section", ErrorSeverity::Error));
+            errors.push_back(ValidationError(-1, "", "Missing data section", ErrorSeverity::Error));
         return errors;
     }
     
@@ -306,12 +335,18 @@ namespace Olympe
         ImGui::Text("UI Menu Editor");
         if (blueprintData.contains("data") && blueprintData["data"].contains("elements"))
         {
-            ImGui::Text("UI Elements: %d", (int)blueprintData["data"]["elements"].size());
+            const json& elements = blueprintData["data"]["elements"];
+            ImGui::Text("UI Elements: %d", (int)elements.size());
             
-            for (auto& element : blueprintData["data"]["elements"])
+            for (size_t i = 0; i < elements.size(); ++i)
             {
-                std::string elemType = element.value("type", "Unknown");
-                std::string elemId = element.value("id", "unnamed");
+                const json& element = elements[i];
+                std::string elemType = element.contains("type") && element["type"].is_string()
+                    ? element["type"].get<std::string>()
+                    : "Unknown";
+                std::string elemId = element.contains("id") && element["id"].is_string()
+                    ? element["id"].get<std::string>()
+                    : "unnamed";
                 ImGui::BulletText("%s (%s)", elemId.c_str(), elemType.c_str());
             }
         }

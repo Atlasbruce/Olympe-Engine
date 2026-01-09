@@ -1033,3 +1033,36 @@ void GridSystem::RenderHex(const CameraTransform& cam, const GridSettings_data& 
         }
     }
 }
+//-------------------------------------------------------------
+RenderingEditorSystem::RenderingEditorSystem()
+{
+}
+void RenderingEditorSystem::Render()
+{
+    SDL_Renderer* renderer = GameEngine::renderer;
+    if (!renderer) return;
+    // Iterate over all entities with Position and VisualSprite
+    for (EntityID entity : World::Get().GetSystem<RenderingEditorSystem>()->m_entities)
+    {
+        try
+        {
+            Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+            VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
+            // Render sprite at position (no camera transform)
+            SDL_FRect destRect = {
+                pos.position.x - visual.hotSpot.x,
+                pos.position.y - visual.hotSpot.y,
+                visual.srcRect.w,
+                visual.srcRect.h
+            };
+            // Apply color modulation
+            SDL_SetTextureColorMod(visual.sprite, visual.color.r, visual.color.g, visual.color.b);
+            // Render sprite
+            SDL_RenderTexture(renderer, visual.sprite, nullptr, &destRect);
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "RenderingEditorSystem Error for Entity " << entity << ": " << e.what() << "\n";
+        }
+    }
+}

@@ -207,7 +207,7 @@ void VideoGame::RegisterPrefabItems()
 		world.AddComponent<Identity_data>(id, string("Trigger_" + to_string(id)), "Trigger", EntityType::Trigger);
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "Trigger";
-        static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/trigger-50.png");
+        static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/Icons/trigger-50.png");
         if (!st_vspriteData_ptr)
         {
             SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
@@ -224,14 +224,14 @@ void VideoGame::RegisterPrefabItems()
 		world.AddComponent<Identity_data>(id, string("Waypoint_" + to_string(id)), "Waypoint", EntityType::Waypoint);
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "Waypoint";
-        static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/waypoint-64.png");
+        static VisualEditor_data* st_vspriteData_ptr = DataManager::Get().GetSpriteEditor_data(prefabName, "Resources/Icons/location-32.png");
         if (!st_vspriteData_ptr)
         {
             SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
             return;
         }
-        VisualSprite_data st_vsprite = *st_vspriteData_ptr;
-        world.AddComponent<VisualSprite_data>(id, st_vsprite.srcRect, st_vsprite.sprite, st_vsprite.hotSpot);
+        VisualEditor_data st_vsprite = *st_vspriteData_ptr;
+        world.AddComponent<VisualEditor_data>(id, st_vsprite.srcRect, st_vsprite.sprite, st_vsprite.hotSpot);
 		world.AddComponent<BoundingBox_data>(id, SDL_FRect{ 0.f, 0.f, st_vsprite.srcRect.w, st_vsprite.srcRect.h });
 		});
 

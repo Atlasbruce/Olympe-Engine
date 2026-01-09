@@ -25,7 +25,13 @@ namespace Olympe
         auto now = std::chrono::system_clock::now();
         auto time = std::chrono::system_clock::to_time_t(now);
         std::stringstream ss;
-        ss << std::put_time(std::localtime(&time), "%Y-%m-%dT%H:%M:%S");
+        std::tm timeInfo;
+        #ifdef _WIN32
+        localtime_s(&timeInfo, &time);
+        #else
+        localtime_r(&time, &timeInfo);
+        #endif
+        ss << std::put_time(&timeInfo, "%Y-%m-%dT%H:%M:%S");
         return ss.str();
     }
     
@@ -41,7 +47,9 @@ namespace Olympe
         bt["metadata"]["lastModified"] = GetCurrentTimestamp();
         bt["metadata"]["tags"] = json::array();
         bt["editorState"]["zoom"] = 1.0;
-        bt["editorState"]["scrollOffset"] = {{"x", 0}, {"y", 0}};
+        bt["editorState"]["scrollOffset"] = nlohmann::json::object();
+        bt["editorState"]["scrollOffset"]["x"] = 0;
+        bt["editorState"]["scrollOffset"]["y"] = 0;
         
         // Root node by default
         bt["data"]["rootNodeId"] = 1;
@@ -49,10 +57,14 @@ namespace Olympe
         rootNode["id"] = 1;
         rootNode["name"] = "Root Selector";
         rootNode["type"] = "Selector";
-        rootNode["position"] = {{"x", 400}, {"y", 300}};
+        nlohmann::json position = nlohmann::json::object();
+        position["x"] = 400;
+        position["y"] = 300;
+        rootNode["position"] = position;
         rootNode["children"] = json::array();
         rootNode["parameters"] = json::object();
-        bt["data"]["nodes"] = json::array({rootNode});
+        bt["data"]["nodes"] = json::array();
+        bt["data"]["nodes"].push_back(rootNode);
         
         return bt;
     }
@@ -61,7 +73,7 @@ namespace Olympe
     {
         // V2 format check
         if (blueprint.contains("blueprintType") && 
-            blueprint["blueprintType"] == "BehaviorTree")
+            blueprint["blueprintType"].get<std::string>() == "BehaviorTree")
         {
             return true;
         }
@@ -79,17 +91,17 @@ namespace Olympe
         // Check if data section exists
         if (!blueprint.contains("data"))
         {
-            errors.push_back(ValidationError("", "Missing 'data' section", ErrorSeverity::Error));
+            errors.push_back(ValidationError(-1, "", "Missing 'data' section", ErrorSeverity::Error));
             return errors;
         }
         
         const json& data = blueprint["data"];
         
         // Check root node exists
-        int rootId = data.value("rootNodeId", -1);
+        int rootId = data.contains("rootNodeId") ? data["rootNodeId"].get<int>() : -1;
         if (rootId == -1)
         {
-            errors.push_back(ValidationError("", "Missing rootNodeId", ErrorSeverity::Error));
+            errors.push_back(ValidationError(-1, "", "Missing rootNodeId", ErrorSeverity::Error));
             return errors;
         }
         
@@ -97,47 +109,60 @@ namespace Olympe
         
         if (data.contains("nodes") && data["nodes"].is_array())
         {
-            for (auto& node : data["nodes"])
+            for (size_t i = 0; i < data["nodes"].size(); ++i)
             {
-                if (node.value("id", -1) == rootId)
+                const json& node = data["nodes"][i];
+                if (node.is_object() && node.contains("id"))
                 {
-                    rootFound = true;
-                    break;
+                    int nodeId = node["id"].get<int>();
+                    if (nodeId == rootId)
+                    {
+                        rootFound = true;
+                        break;
+                    }
                 }
             }
         }
         
         if (!rootFound)
         {
-            errors.push_back(ValidationError("", "Root node not found in nodes list", ErrorSeverity::Error));
+            errors.push_back(ValidationError(-1, "", "Root node not found in nodes list", ErrorSeverity::Error));
         }
         
         // Verify all children exist
-        if (data.contains("nodes"))
+        if (data.contains("nodes") && data["nodes"].is_array())
         {
-            for (auto& node : data["nodes"])
+            for (size_t i = 0; i < data["nodes"].size(); ++i)
             {
-                if (node.contains("children") && node["children"].is_array())
+                const json& node = data["nodes"][i];
+                if (node.is_object() && node.contains("children") && node["children"].is_array())
                 {
-                    for (auto& childId : node["children"])
+                    for (size_t j = 0; j < node["children"].size(); ++j)
                     {
+                        const json& childId = node["children"][j];
+                        if (!childId.is_number())
+                            continue;
+                            
                         int cid = childId.get<int>();
                         bool found = false;
-                        
-                        for (auto& n : data["nodes"])
+
+                        for (size_t k = 0; k < data["nodes"].size(); ++k)
                         {
-                            if (n.value("id", -1) == cid)
+                            const json& n = data["nodes"][k];
+                            if (n.is_object() && n.contains("id") && n["id"].is_number() && n["id"].get<int>() == cid)
                             {
                                 found = true;
                                 break;
                             }
                         }
-                        
+
                         if (!found)
                         {
-                            std::string nodeIdStr = std::to_string(node.value("id", -1));
+                            int nodeId = node.value("id", -1);
+                            std::string nodeName = node.value("name", "Unknown");
                             errors.push_back(ValidationError(
-                                nodeIdStr,
+                                nodeId,
+                                nodeName,
                                 "Child node " + std::to_string(cid) + " not found",
                                 ErrorSeverity::Error
                             ));
@@ -210,10 +235,12 @@ namespace Olympe
             ImGui::Separator();
             ImGui::Text("Nodes:");
             
-            for (auto& node : data["nodes"])
+            const json& nodes = data["nodes"];
+            for (size_t i = 0; i < nodes.size(); ++i)
             {
-                std::string nodeName = node.value("name", "Unnamed");
-                std::string nodeType = node.value("type", "Unknown");
+                const json& node = nodes[i];
+                std::string nodeName = node.is_object() && node.contains("name") ? node["name"].get<std::string>() : "Unnamed";
+                std::string nodeType = node.is_object() && node.contains("type") ? node["type"].get<std::string>() : "Unknown";
                 int nodeId = node.value("id", -1);
                 
                 ImGui::BulletText("[%d] %s (%s)", nodeId, nodeName.c_str(), nodeType.c_str());

@@ -31,7 +31,13 @@ namespace Olympe
         auto now = std::chrono::system_clock::now();
         auto time = std::chrono::system_clock::to_time_t(now);
         std::stringstream ss;
-        ss << std::put_time(std::localtime(&time), "%Y-%m-%dT%H:%M:%S");
+        std::tm timeInfo;
+        #ifdef _WIN32
+        localtime_s(&timeInfo, &time);
+        #else
+        localtime_r(&time, &timeInfo);
+        #endif
+        ss << std::put_time(&timeInfo, "%Y-%m-%dT%H:%M:%S");
         return ss.str();
     }
     
@@ -83,7 +89,10 @@ namespace Olympe
         
         // Editor state
         v2["editorState"]["zoom"] = 1.0;
-        v2["editorState"]["scrollOffset"] = {{"x", 0}, {"y", 0}};
+        json scrollOffset = json::object();
+        scrollOffset["x"] = 0;
+        scrollOffset["y"] = 0;
+        v2["editorState"]["scrollOffset"] = scrollOffset;
         
         // Data section
         v2["data"] = json::object();
@@ -117,8 +126,10 @@ namespace Olympe
         
         // Build children map for layout calculation
         std::map<int, std::vector<int>> childrenMap;
-        for (auto& node : v1["nodes"])
+        const json& v1Nodes = v1["nodes"];
+        for (size_t i = 0; i < v1Nodes.size(); ++i)
         {
+            const json& node = v1Nodes[i];
             int id = node.value("id", 0);
             if (node.contains("children") && node["children"].is_array())
             {
@@ -131,9 +142,10 @@ namespace Olympe
         std::map<int, NodeLayout> layouts = CalculateHierarchicalLayout(v1["nodes"], childrenMap, rootId);
         
         // Migrate each node
-        for (auto& v1Node : v1["nodes"])
+        for (size_t i = 0; i < v1Nodes.size(); ++i)
         {
-            json v2Node;
+            const json& v1Node = v1Nodes[i];
+            json v2Node = json::object();
             int nodeId = v1Node.value("id", 0);
             
             v2Node["id"] = nodeId;
@@ -188,9 +200,10 @@ namespace Olympe
         
         if (v1.contains("states") && v1["states"].is_array())
         {
-            for (auto& state : v1["states"])
+            const json& v1States = v1["states"];
+            for (size_t i = 0; i < v1States.size(); ++i)
             {
-                json v2State = state;
+                json v2State = v1States[i];
                 // Add position if not present
                 if (!v2State.contains("position"))
                 {
@@ -250,14 +263,18 @@ namespace Olympe
         
         // BFS to calculate positions
         std::queue<std::tuple<int, int, int>> queue; // nodeId, depth, siblingIndex
-        queue.push({rootId, 0, 0});
+        queue.push(std::make_tuple(rootId, 0, 0));
         
         std::map<int, int> depthCounter; // Count nodes at each depth
         
         while (!queue.empty())
         {
-            auto [nodeId, depth, siblingIndex] = queue.front();
+            std::tuple<int, int, int> current = queue.front();
             queue.pop();
+            
+            int nodeId = std::get<0>(current);
+            int depth = std::get<1>(current);
+            int siblingIndex = std::get<2>(current);
             
             // Calculate position
             NodeLayout layout;
@@ -274,9 +291,10 @@ namespace Olympe
             if (childrenMap.count(nodeId))
             {
                 int childIndex = 0;
-                for (int childId : childrenMap.at(nodeId))
+                const std::vector<int>& children = childrenMap.at(nodeId);
+                for (size_t i = 0; i < children.size(); ++i)
                 {
-                    queue.push({childId, depth + 1, childIndex++});
+                    queue.push(std::make_tuple(children[i], depth + 1, childIndex++));
                 }
             }
         }

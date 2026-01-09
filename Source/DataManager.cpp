@@ -203,6 +203,22 @@ VisualSprite_data* DataManager::GetSprite_data(const std::string& id, const std:
     return nullptr;
 }
 //-------------------------------------------------------------
+VisualEditor_data* DataManager::GetSpriteEditor_data(const std::string& id, const std::string& path)
+{
+    VisualEditor_data vsprite;
+    vsprite.sprite = GetSprite(id, path, ResourceCategory::GameEntity);
+    // set srcRect based on texture size
+    if (vsprite.sprite)
+    {
+        int w = ((SDL_Texture*)vsprite.sprite)->w, h = ((SDL_Texture*)vsprite.sprite)->h;
+        vsprite.srcRect = { 0.0f, 0.0f, static_cast<float>(w), static_cast<float>(h) };
+        vsprite.hotSpot = Vector(w / 2.0f, h / 2.0f, 0.0f);
+        return &vsprite;
+    }
+    SYSTEM_LOG << "DataManager: GetSprite_data failed for '" << id << "' file/path '" << path << "' does not exists or is incorrect\n";
+    return nullptr;
+}
+//-------------------------------------------------------------
 bool DataManager::ReleaseResource(const std::string& id)
 {
     std::lock_guard<std::mutex> lock(m_mutex_);

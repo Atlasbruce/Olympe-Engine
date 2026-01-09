@@ -222,6 +222,24 @@
     <ClCompile Include="Source\BlueprintEditor\HistoryPanel.cpp">
       <Filter>Blueprint Editor</Filter>
     </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\AdditionalEditorPlugins.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\ValidationPanel.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\BehaviorTreeEditorPlugin.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\BlueprintMigrator.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\BlueprintValidator.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -441,6 +459,27 @@
       <Filter>Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\HistoryPanel.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\AdditionalEditorPlugins.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\ValidationPanel.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\BehaviorTreeEditorPlugin.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\BlueprintEditorPlugin.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\BlueprintMigrator.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\BlueprintValidator.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.h">
       <Filter>Blueprint Editor</Filter>
     </ClInclude>
   </ItemGroup>

@@ -19,12 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\BlueprintEditor\AdditionalEditorPlugins.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AssetBrowser.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AssetInfoPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\BehaviorTreeEditorPlugin.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlueprintEditor.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlueprintEditorGUI.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\BlueprintMigrator.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\BlueprintValidator.cpp" />
     <ClCompile Include="Source\BlueprintEditor\CommandSystem.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityBlueprint.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Graph.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EnumCatalogManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\HistoryPanel.cpp" />
@@ -32,6 +37,7 @@
     <ClCompile Include="Source\BlueprintEditor\EntityInspectorManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\TemplateBrowserPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\TemplateManager.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\ValidationPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\WorldBridge.cpp" />
     <ClCompile Include="Source\BlueprintEditor\NodeGraphPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntitiesPanel.cpp" />
@@ -75,12 +81,18 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="Source\AI\AIEvents.h" />
     <ClInclude Include="Source\AI\BehaviorTree.h" />
+    <ClInclude Include="Source\BlueprintEditor\AdditionalEditorPlugins.h" />
     <ClInclude Include="Source\BlueprintEditor\AssetBrowser.h" />
     <ClInclude Include="Source\BlueprintEditor\AssetInfoPanel.h" />
+    <ClInclude Include="Source\BlueprintEditor\BehaviorTreeEditorPlugin.h" />
     <ClInclude Include="Source\BlueprintEditor\BlueprintEditor.h" />
     <ClInclude Include="Source\BlueprintEditor\BlueprintEditorGUI.h" />
+    <ClInclude Include="Source\BlueprintEditor\BlueprintEditorPlugin.h" />
+    <ClInclude Include="Source\BlueprintEditor\BlueprintMigrator.h" />
+    <ClInclude Include="Source\BlueprintEditor\BlueprintValidator.h" />
     <ClInclude Include="Source\BlueprintEditor\CommandSystem.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityBlueprint.h" />
+    <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.h" />
     <ClInclude Include="Source\BlueprintEditor\Graph.h" />
     <ClInclude Include="Source\BlueprintEditor\EnumCatalogManager.h" />
     <ClInclude Include="Source\BlueprintEditor\HistoryPanel.h" />
@@ -91,6 +103,7 @@
     <ClInclude Include="Source\BlueprintEditor\InspectorPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\TemplateBrowserPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\TemplateManager.h" />
+    <ClInclude Include="Source\BlueprintEditor\ValidationPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\WorldBridge.h" />
     <ClInclude Include="Source\CollisionMap.h" />
     <ClInclude Include="Source\drawing.h" />

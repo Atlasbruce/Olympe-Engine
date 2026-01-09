@@ -147,6 +147,13 @@ public:
     RenderingSystem();
 	virtual void Render() override;
 };
+// Rendering Editor System: displays editor-specific visuals (grid, gizmos, etc.)
+class RenderingEditorSystem : public ECS_System
+{
+public:
+    RenderingEditorSystem();
+    virtual void Render() override;
+};
 //-------------------------------------------------------------
 class GridSystem : public ECS_System
 {

@@ -95,6 +95,16 @@ struct VisualSprite_data
 	Vector hotSpot;        // Hotspot offset for rendering
 	SDL_Color color = { 255, 255, 255, 255 }; // Color (RGBA)
 };
+// --- Component visual Editor Data ---
+struct VisualEditor_data
+{
+	SDL_FRect srcRect = { 0, 0, 25, 25 }; // Source rectangle for texture atlas
+	Sprite* sprite = nullptr; // Pointer to the sprite/texture
+	Vector hotSpot;        // Hotspot offset for rendering
+	SDL_Color color = { 255, 255, 255, 255 }; // Color (RGBA)
+	bool isSelected = false; // Is the entity selected in the editor?
+	bool isVisible = true;   // Is the entity visible in the editor?
+};
 // --- Component Animation Data ---
 struct Animation_data
 {

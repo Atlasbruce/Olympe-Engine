@@ -26,7 +26,13 @@ namespace Olympe
         auto now = std::chrono::system_clock::now();
         auto time = std::chrono::system_clock::to_time_t(now);
         std::stringstream ss;
-        ss << std::put_time(std::localtime(&time), "%Y-%m-%dT%H:%M:%S");
+        std::tm timeInfo;
+        #ifdef _WIN32
+        localtime_s(&timeInfo, &time);
+        #else
+        localtime_r(&time, &timeInfo);
+        #endif
+        ss << std::put_time(&timeInfo, "%Y-%m-%dT%H:%M:%S");
         return ss.str();
     }
     
@@ -55,7 +61,11 @@ namespace Olympe
         
         json position;
         position["type"] = "Position_data";
-        position["properties"]["position"] = {{"x", 0}, {"y", 0}, {"z", 0}};
+        json positionValue = json::object();
+        positionValue["x"] = 0;
+        positionValue["y"] = 0;
+        positionValue["z"] = 0;
+        position["properties"]["position"] = positionValue;
         
         prefab["data"]["components"].push_back(identity);
         prefab["data"]["components"].push_back(position);
@@ -82,7 +92,7 @@ namespace Olympe
         
         if (!blueprint.contains("data"))
         {
-            errors.push_back(ValidationError("", "Missing 'data' section", ErrorSeverity::Error));
+            errors.push_back(ValidationError(-1, "", "Missing 'data' section", ErrorSeverity::Error));
             return errors;
         }
         
@@ -90,7 +100,7 @@ namespace Olympe
         
         if (!data.contains("components"))
         {
-            errors.push_back(ValidationError("", "Missing 'components' array", ErrorSeverity::Error));
+            errors.push_back(ValidationError(-1, "", "Missing 'components' array", ErrorSeverity::Error));
         }
         
         return errors;
@@ -201,46 +211,54 @@ namespace Olympe
     
     void EntityPrefabEditorPlugin::RenderComponentPropertiesEditor(json& properties, EditorContext& ctx)
     {
-        for (auto& [key, value] : properties.items())
+        auto items = properties.items();
+        for (size_t idx = 0; idx < items.size(); ++idx)
         {
+            std::string key = items[idx].first;
+            json* value = items[idx].second;
+            
             ImGui::PushID(key.c_str());
             
-            if (value.is_number_float())
+            if (value->is_number_float())
             {
-                float f = value.get<float>();
+                float f = value->get<float>();
                 if (ImGui::DragFloat(key.c_str(), &f, 1.0f))
                 {
                     properties[key] = f;
                     ctx.MarkDirty();
                 }
             }
-            else if (value.is_number_integer())
+            else if (value->is_number_integer())
             {
-                int i = value.get<int>();
+                int i = value->get<int>();
                 if (ImGui::InputInt(key.c_str(), &i))
                 {
                     properties[key] = i;
                     ctx.MarkDirty();
                 }
             }
-            else if (value.is_string())
+            else if (value->is_string())
             {
-                std::string str = value.get<std::string>();
+                std::string str = value->get<std::string>();
                 char buffer[256];
+                #ifdef _WIN32
+                strncpy_s(buffer, sizeof(buffer), str.c_str(), _TRUNCATE);
+                #else
                 strncpy(buffer, str.c_str(), 255);
                 buffer[255] = '\0';
+                #endif
                 if (ImGui::InputText(key.c_str(), buffer, 256))
                 {
                     properties[key] = std::string(buffer);
                     ctx.MarkDirty();
                 }
             }
-            else if (value.is_object())
+            else if (value->is_object())
             {
                 // Nested object (e.g., position with x,y,z)
                 if (ImGui::TreeNode(key.c_str()))
                 {
-                    RenderComponentPropertiesEditor(value, ctx);
+                    RenderComponentPropertiesEditor(*value, ctx);
                     ImGui::TreePop();
                 }
             }

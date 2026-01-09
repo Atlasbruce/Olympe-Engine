@@ -33,6 +33,7 @@ Notes:
 using Sprite = SDL_Texture;
 
 struct VisualSprite_data;
+struct VisualEditor_data;
 
 // Catégories et types de ressources
 enum class ResourceType : uint32_t
@@ -93,6 +94,7 @@ public:
     Sprite* GetTexture(const std::string& id) const;
     Sprite* GetSprite(const std::string& id, const std::string& path, ResourceCategory category = ResourceCategory::GameEntity);
     VisualSprite_data* GetSprite_data(const std::string& id, const std::string& path);
+    VisualEditor_data* GetSpriteEditor_data(const std::string& id, const std::string& path);
     bool ReleaseResource(const std::string& id);
 
 
