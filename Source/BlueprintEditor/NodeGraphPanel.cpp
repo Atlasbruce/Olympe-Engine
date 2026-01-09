@@ -360,12 +360,25 @@ namespace Olympe
         }
 
         // Update node positions from ImNodes with unique ID handling
+        bool positionsChanged = false;
         for (GraphNode* node : nodes)
         {
             int uniqueNodeId = GetUniqueImGuiID(graphId, node->id);
             ImVec2 pos = ImNodes::GetNodeGridSpacePos(uniqueNodeId);
-            node->posX = pos.x;
-            node->posY = pos.y;
+            
+            // Check if position changed
+            if (node->posX != pos.x || node->posY != pos.y)
+            {
+                node->posX = pos.x;
+                node->posY = pos.y;
+                positionsChanged = true;
+            }
+        }
+        
+        // Mark graph dirty if positions changed
+        if (positionsChanged)
+        {
+            NodeGraphManager::Get().MarkGraphDirty(graphId);
         }
     }
 

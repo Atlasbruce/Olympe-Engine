@@ -122,13 +122,41 @@ namespace Olympe
         // Update entity inspector (sync with World)
         EntityInspectorManager::Get().Update();
         
-        // Can be used for background tasks, auto-save, etc.
-        // For now, this is a placeholder for future backend logic
-        // such as:
-        // - Auto-save timer
-        // - Asset watching/hot-reload
-        // - Background compilation
-        // - Validation
+        // Auto-save graph positions periodically
+        static float autoSaveTimer = 0.0f;
+        const float AUTO_SAVE_INTERVAL = 5.0f; // Save every 5 seconds
+        
+        autoSaveTimer += deltaTime;
+        if (autoSaveTimer >= AUTO_SAVE_INTERVAL)
+        {
+            autoSaveTimer = 0.0f;
+            
+            // Auto-save all graphs that have filepaths and unsaved changes
+            auto& ngm = NodeGraphManager::Get();
+            auto graphIds = ngm.GetAllGraphIds();
+            
+            for (int graphId : graphIds)
+            {
+                if (ngm.HasUnsavedChanges(graphId))
+                {
+                    std::string filepath = ngm.GetGraphFilepath(graphId);
+                    if (!filepath.empty())
+                    {
+                        try
+                        {
+                            if (ngm.SaveGraph(graphId, filepath))
+                            {
+                                std::cout << "[BlueprintEditor] Auto-saved graph to: " << filepath << "\n";
+                            }
+                        }
+                        catch (const std::exception& e)
+                        {
+                            std::cerr << "[BlueprintEditor] Auto-save failed: " << e.what() << "\n";
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // Blueprint operations

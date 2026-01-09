@@ -201,6 +201,13 @@ namespace Olympe
         // File operations
         bool SaveGraph(int graphId, const std::string& filepath);
         int LoadGraph(const std::string& filepath);
+        
+        // Filepath tracking
+        std::string GetGraphFilepath(int graphId) const;
+        void SetGraphFilepath(int graphId, const std::string& filepath);
+        bool HasUnsavedChanges(int graphId) const;
+        void MarkGraphDirty(int graphId);
+        void MarkGraphClean(int graphId);
 
         // State
         bool IsInitialized() const { return m_Initialized; }
@@ -217,5 +224,7 @@ namespace Olympe
         int m_ActiveGraphId = -1;
         int m_NextGraphId = 1;
         std::map<int, std::unique_ptr<NodeGraph>> m_Graphs;
+        std::map<int, std::string> m_GraphFilepaths;  // Track filepath for each graph
+        std::map<int, bool> m_GraphDirtyFlags;  // Track unsaved changes per graph
     };
 }

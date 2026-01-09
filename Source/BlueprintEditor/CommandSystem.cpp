@@ -160,7 +160,8 @@ namespace Olympe
     void CreateNodeCommand::Execute()
     {
         // Get the graph
-        NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
+        int graphId = std::stoi(m_GraphId);
+        NodeGraph* graph = NodeGraphManager::Get().GetGraph(graphId);
         if (!graph)
         {
             std::cerr << "CreateNodeCommand: Graph not found: " << m_GraphId << std::endl;
@@ -170,12 +171,16 @@ namespace Olympe
         // Create the node
         NodeType type = StringToNodeType(m_NodeType);
         m_CreatedNodeId = graph->CreateNode(type, m_PosX, m_PosY, m_NodeName);
+        
+        // Mark graph as dirty
+        NodeGraphManager::Get().MarkGraphDirty(graphId);
     }
 
     void CreateNodeCommand::Undo()
     {
         // Get the graph
-        NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
+        int graphId = std::stoi(m_GraphId);
+        NodeGraph* graph = NodeGraphManager::Get().GetGraph(graphId);
         if (!graph)
         {
             std::cerr << "CreateNodeCommand::Undo: Graph not found: " << m_GraphId << std::endl;
@@ -187,6 +192,9 @@ namespace Olympe
         {
             graph->DeleteNode(m_CreatedNodeId);
         }
+        
+        // Mark graph as dirty
+        NodeGraphManager::Get().MarkGraphDirty(graphId);
     }
 
     std::string CreateNodeCommand::GetDescription() const
@@ -207,7 +215,8 @@ namespace Olympe
     void DeleteNodeCommand::Execute()
     {
         // Get the graph
-        NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
+        int graphId = std::stoi(m_GraphId);
+        NodeGraph* graph = NodeGraphManager::Get().GetGraph(graphId);
         if (!graph)
         {
             std::cerr << "DeleteNodeCommand: Graph not found: " << m_GraphId << std::endl;
@@ -229,12 +238,16 @@ namespace Olympe
 
         // Delete the node
         graph->DeleteNode(m_NodeId);
+        
+        // Mark graph as dirty
+        NodeGraphManager::Get().MarkGraphDirty(graphId);
     }
 
     void DeleteNodeCommand::Undo()
     {
         // Get the graph
-        NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
+        int graphId = std::stoi(m_GraphId);
+        NodeGraph* graph = NodeGraphManager::Get().GetGraph(graphId);
         if (!graph)
         {
             std::cerr << "DeleteNodeCommand::Undo: Graph not found: " << m_GraphId << std::endl;
@@ -249,11 +262,14 @@ namespace Olympe
             
             int nodeId = graph->CreateNode(type, 
                                           m_NodeData["posX"].get<float>(), 
-                                          m_NodeData["posY"].get<float>(), 
+                                          m_NodeData["posY"].get<float>(),
                                           name);
             
             // TODO: Restore additional node properties
         }
+        
+        // Mark graph as dirty
+        NodeGraphManager::Get().MarkGraphDirty(graphId);
     }
 
     std::string DeleteNodeCommand::GetDescription() const

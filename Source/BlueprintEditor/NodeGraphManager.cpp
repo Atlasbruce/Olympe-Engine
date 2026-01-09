@@ -426,6 +426,10 @@ namespace Olympe
         int graphId = m_NextGraphId++;
         m_Graphs[graphId] = std::move(graph);
         m_ActiveGraphId = graphId;
+        
+        // Initialize tracking
+        m_GraphFilepaths[graphId] = "";
+        m_GraphDirtyFlags[graphId] = true;  // New graph is unsaved
 
         std::cout << "[NodeGraphManager] Created graph " << graphId << " (" << name << ")\n";
         return graphId;
@@ -438,6 +442,8 @@ namespace Olympe
             return false;
 
         m_Graphs.erase(it);
+        m_GraphFilepaths.erase(graphId);
+        m_GraphDirtyFlags.erase(graphId);
 
         if (m_ActiveGraphId == graphId)
         {
@@ -504,17 +510,32 @@ namespace Olympe
         if (!graph)
             return false;
 
-        json j = graph->ToJson();
+        try
+        {
+            json j = graph->ToJson();
 
-        std::ofstream file(filepath);
-        if (!file.is_open())
+            std::ofstream file(filepath);
+            if (!file.is_open())
+            {
+                std::cerr << "[NodeGraphManager] Failed to open file for writing: " << filepath << "\n";
+                return false;
+            }
+
+            file << j.dump(2);
+            file.close();
+            
+            // Update filepath tracking
+            m_GraphFilepaths[graphId] = filepath;
+            m_GraphDirtyFlags[graphId] = false;
+
+            std::cout << "[NodeGraphManager] Saved graph " << graphId << " to " << filepath << "\n";
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "[NodeGraphManager] Error saving graph: " << e.what() << "\n";
             return false;
-
-        file << j.dump(2);
-        file.close();
-
-        std::cout << "[NodeGraphManager] Saved graph " << graphId << " to " << filepath << "\n";
-        return true;
+        }
     }
 
     int NodeGraphManager::LoadGraph(const std::string& filepath)
@@ -540,8 +561,43 @@ namespace Olympe
         int graphId = m_NextGraphId++;
         m_Graphs[graphId] = std::make_unique<NodeGraph>(std::move(graph));
         m_ActiveGraphId = graphId;
+        
+        // Track the filepath
+        m_GraphFilepaths[graphId] = filepath;
+        m_GraphDirtyFlags[graphId] = false;
 
         std::cout << "[NodeGraphManager] Loaded graph from " << filepath << "\n";
         return graphId;
+    }
+    
+    std::string NodeGraphManager::GetGraphFilepath(int graphId) const
+    {
+        auto it = m_GraphFilepaths.find(graphId);
+        if (it != m_GraphFilepaths.end())
+            return it->second;
+        return "";
+    }
+    
+    void NodeGraphManager::SetGraphFilepath(int graphId, const std::string& filepath)
+    {
+        m_GraphFilepaths[graphId] = filepath;
+    }
+    
+    bool NodeGraphManager::HasUnsavedChanges(int graphId) const
+    {
+        auto it = m_GraphDirtyFlags.find(graphId);
+        if (it != m_GraphDirtyFlags.end())
+            return it->second;
+        return false;
+    }
+    
+    void NodeGraphManager::MarkGraphDirty(int graphId)
+    {
+        m_GraphDirtyFlags[graphId] = true;
+    }
+    
+    void NodeGraphManager::MarkGraphClean(int graphId)
+    {
+        m_GraphDirtyFlags[graphId] = false;
     }
 }
