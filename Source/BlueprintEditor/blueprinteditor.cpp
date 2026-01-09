@@ -311,10 +311,25 @@ namespace Olympe
             if (!JsonHelper::LoadJsonFromFile(filepath, j))
                 return "Unknown";
 
+            // Extract filename once for warning messages
+            std::string filename = fs::path(filepath).filename().string();
+
             // Priority 1: Check explicit "type" field (v1 + v2 standardized)
             if (j.contains("type"))
             {
                 std::string type = j["type"].get<std::string>();
+                
+                // Validate against blueprintType if present
+                if (j.contains("blueprintType"))
+                {
+                    std::string blueprintType = j["blueprintType"].get<std::string>();
+                    if (type != blueprintType)
+                    {
+                        std::cerr << "[BlueprintEditor] WARNING: type (" << type 
+                                 << ") != blueprintType (" << blueprintType << ") in " << filename << std::endl;
+                    }
+                }
+                
                 return type;
             }
             
@@ -322,31 +337,54 @@ namespace Olympe
             if (j.contains("blueprintType"))
             {
                 std::string type = j["blueprintType"].get<std::string>();
-                std::string filename = fs::path(filepath).filename().string();
-                std::cerr << "[DetectAssetType] Warning: Using deprecated 'blueprintType' field in " << filename << std::endl;
+                std::cerr << "[BlueprintEditor] WARNING: Using 'blueprintType' field (missing 'type') in " 
+                         << filename << std::endl;
                 return type;
             }
+
+            // Helper lambda for logging structural detection warnings
+            auto logStructuralDetection = [&filename](const std::string& detectedType) {
+                std::cerr << "[BlueprintEditor] WARNING: No type information found in " << filename 
+                         << ", using structural detection (detected: " << detectedType << ")" << std::endl;
+            };
 
             // Priority 3: Structural detection for schema v2 (data wrapper)
             if (j.contains("data"))
             {
                 const json& data = j["data"];
                 if (data.contains("rootNodeId") && data.contains("nodes"))
+                {
+                    logStructuralDetection("BehaviorTree");
                     return "BehaviorTree";
+                }
                 if (data.contains("components"))
+                {
+                    logStructuralDetection("EntityPrefab");
                     return "EntityPrefab";
+                }
             }
 
             // Priority 4: Structural detection for schema v1 (direct fields)
             if (j.contains("rootNodeId") && j.contains("nodes"))
+            {
+                logStructuralDetection("BehaviorTree");
                 return "BehaviorTree";
+            }
 
             if (j.contains("states") || j.contains("initialState"))
+            {
+                logStructuralDetection("HFSM");
                 return "HFSM";
+            }
 
             if (j.contains("components"))
+            {
+                logStructuralDetection("EntityBlueprint");
                 return "EntityBlueprint";
+            }
 
+            std::cerr << "[BlueprintEditor] WARNING: Could not determine type for " << filename 
+                     << ", defaulting to Generic" << std::endl;
             return "Generic";
         }
         catch (const std::exception& e)

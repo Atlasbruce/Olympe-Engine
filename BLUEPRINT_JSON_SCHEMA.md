@@ -492,6 +492,23 @@ The Blueprint Editor validates blueprints according to these rules:
 5. **Component Types**: Component types must be registered in the engine
 6. **Node IDs**: In BehaviorTrees, node IDs must be unique
 7. **State Names**: In HFSMs, state names must be unique
+8. **Field Consistency**: If both `type` and `blueprintType` are present, they must match
+
+### Validation Warnings
+
+The editor will log warnings in the following cases:
+
+- **Missing `type` field**: "WARNING: Using 'blueprintType' field (missing 'type') in [filename]"
+  - Action: Add explicit `type` field to the blueprint
+  
+- **Type mismatch**: "WARNING: type (X) != blueprintType (Y) in [filename]"
+  - Action: Ensure both fields have the same value
+  
+- **Structural detection fallback**: "WARNING: No type information found in [filename], using structural detection (detected: [type])"
+  - Action: Add explicit `type` field for better reliability
+  
+- **Cannot determine type**: "WARNING: Could not determine type for [filename], defaulting to Generic"
+  - Action: Add explicit `type` field and ensure correct structure
 
 ---
 
@@ -504,6 +521,7 @@ Common validation errors and their meanings:
 - **"Missing required field: components"**: EntityBlueprint/Prefab without components
 - **"Missing required field: rootNodeId"**: BehaviorTree without root node
 - **"Invalid schema_version"**: Must be 1 or 2
+- **"type (X) != blueprintType (Y)"**: Inconsistent type fields - both must match if present
 
 ---
 
@@ -544,6 +562,7 @@ Complete example blueprints are available in:
 
 ## Version History
 
+- **v2.2.0** (2026-01-09): Enhanced validation with warnings for missing/mismatched type fields
 - **v2.1.0** (2026-01-09): Added standardized `type` field requirement
 - **v2.0.0** (2026-01-08): Introduced schema v2 with `data` wrapper
 - **v1.0.0** (2025-XX-XX): Initial schema v1 implementation

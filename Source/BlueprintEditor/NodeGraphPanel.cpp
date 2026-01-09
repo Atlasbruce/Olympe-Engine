@@ -41,21 +41,20 @@ namespace Olympe
         // Handle keyboard shortcuts
         HandleKeyboardShortcuts();
 
-        // C) Show currently selected entity at the top
+        // Show currently selected entity at the top (informational only, doesn't block rendering)
         uint64_t selectedEntity = BlueprintEditor::Get().GetSelectedEntity();
         if (selectedEntity != 0)
         {
             EntityInfo info = EntityInspectorManager::Get().GetEntityInfo(selectedEntity);
             ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), 
-                "Selected Entity: %s (ID: %llu)", info.name.c_str(), selectedEntity);
-            ImGui::Separator();
+                "Editing for Entity: %s (ID: %llu)", info.name.c_str(), selectedEntity);
         }
         else
         {
-            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
-                "No entity selected. Select an entity to view its Behavior Tree / HFSM.");
-            ImGui::Separator();
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.9f, 1.0f), 
+                "Editing BehaviorTree Asset (no entity context)");
         }
+        ImGui::Separator();
 
         // Render graph tabs
         RenderGraphTabs();
@@ -136,12 +135,24 @@ namespace Olympe
         if (!graph)
             return;
 
+        // Ensure canvas has valid size (minimum 1px to render)
+        constexpr float MIN_CANVAS_SIZE = 1.0f;
+        ImVec2 canvasSize = ImGui::GetContentRegionAvail();
+        if (canvasSize.x < MIN_CANVAS_SIZE || canvasSize.y < MIN_CANVAS_SIZE)
+        {
+            ImGui::Text("Canvas too small to render graph");
+            return;
+        }
+
         ImNodes::BeginNodeEditor();
 
         // Render all nodes
         auto nodes = graph->GetAllNodes();
         for (GraphNode* node : nodes)
         {
+            // Set node position BEFORE rendering (ImNodes requirement)
+            ImNodes::SetNodeGridSpacePos(node->id, ImVec2(node->posX, node->posY));
+
             ImNodes::BeginNode(node->id);
 
             // Title bar
@@ -176,9 +187,6 @@ namespace Olympe
             ImNodes::EndOutputAttribute();
 
             ImNodes::EndNode();
-
-            // Set node position
-            ImNodes::SetNodeGridSpacePos(node->id, ImVec2(node->posX, node->posY));
         }
 
         // Render all links
