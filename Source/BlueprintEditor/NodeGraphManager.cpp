@@ -8,6 +8,9 @@
 #include <iostream>
 #include <algorithm>
 #include <string>
+#include <queue>
+#include <set>
+#include <map>
 
 using json = nlohmann::json;
 
@@ -255,22 +258,39 @@ namespace Olympe
     {
         NodeGraph graph;
 
-        graph.name = JsonHelper::GetString(j, "name", "Untitled Graph");
-        graph.type = JsonHelper::GetString(j, "type", "BehaviorTree");
-        graph.rootNodeId = JsonHelper::GetInt(j, "rootNodeId", -1);
+        // Detect schema version - v2 has nested "data" structure, v1 doesn't
+        bool isV2 = j.contains("schema_version") || j.contains("data");
+        const json* dataSection = &j;
+        
+        if (isV2 && j.contains("data"))
+        {
+            dataSection = &j["data"];
+            graph.name = JsonHelper::GetString(j, "name", "Untitled Graph");
+            graph.type = JsonHelper::GetString(j, "blueprintType", "BehaviorTree");
+        }
+        else
+        {
+            graph.name = JsonHelper::GetString(j, "name", "Untitled Graph");
+            graph.type = JsonHelper::GetString(j, "type", "BehaviorTree");
+        }
+        
+        graph.rootNodeId = JsonHelper::GetInt(*dataSection, "rootNodeId", -1);
 
-        if (JsonHelper::IsArray(j, "nodes"))
+        std::cout << "[NodeGraph::FromJson] Loading graph '" << graph.name << "' (v" << (isV2 ? "2" : "1") << ")\n";
+
+        if (JsonHelper::IsArray(*dataSection, "nodes"))
         {
             int maxId = 0;
-
-            JsonHelper::ForEachInArray(j, "nodes", [&](const json& nj, size_t idx)
+            
+            // First pass: load nodes
+            JsonHelper::ForEachInArray(*dataSection, "nodes", [&](const json& nj, size_t idx)
             {
                 GraphNode node;
                 node.id = JsonHelper::GetInt(nj, "id", 0);
                 node.type = StringToNodeType(JsonHelper::GetString(nj, "type", "Action"));
                 node.name = JsonHelper::GetString(nj, "name", "");
                 
-                // Load position - try new format first, fallback to old format
+                // Load position - try v2 format first
                 if (nj.contains("position") && nj["position"].is_object())
                 {
                     node.posX = JsonHelper::GetFloat(nj["position"], "x", 0.0f);
@@ -278,18 +298,19 @@ namespace Olympe
                 }
                 else
                 {
-                    // Fallback to old format
-                    node.posX = JsonHelper::GetFloat(nj, "posX", 0.0f);
-                    node.posY = JsonHelper::GetFloat(nj, "posY", 0.0f);
+                    // v1 format has no position - will calculate later
+                    node.posX = 0.0f;
+                    node.posY = 0.0f;
                 }
 
                 node.actionType = JsonHelper::GetString(nj, "actionType", "");
                 node.conditionType = JsonHelper::GetString(nj, "conditionType", "");
                 node.decoratorType = JsonHelper::GetString(nj, "decoratorType", "");
 
-                // Load parameters
+                // Load parameters - v2 has nested "parameters" object, v1 has flat structure
                 if (nj.contains("parameters") && nj["parameters"].is_object())
                 {
+                    // v2 format
                     const json& params = nj["parameters"];
                     for (auto it = params.begin(); it != params.end(); ++it)
                     {
@@ -297,6 +318,16 @@ namespace Olympe
                             ? it->second.get<std::string>() 
                             : it->second.dump();
                     }
+                }
+                else
+                {
+                    // v1 format - parameters are flat in node object
+                    if (nj.contains("param"))
+                        node.parameters["param"] = nj["param"].dump();
+                    if (nj.contains("param1"))
+                        node.parameters["param1"] = nj["param1"].dump();
+                    if (nj.contains("param2"))
+                        node.parameters["param2"] = nj["param2"].dump();
                 }
 
                 // Load children
@@ -318,23 +349,32 @@ namespace Olympe
             });
 
             graph.m_NextNodeId = maxId + 1;
-        }
-
-        // Load editor metadata if present
-        if (j.contains("editorMetadata") && j["editorMetadata"].is_object())
-        {
-            const json& meta = j["editorMetadata"];
-            graph.editorMetadata.zoom = JsonHelper::GetFloat(meta, "zoom", 1.0f);
             
-            if (meta.contains("scrollOffset") && meta["scrollOffset"].is_object())
+            // If v1 format, calculate positions using hierarchical layout
+            if (!isV2)
             {
-                graph.editorMetadata.scrollOffsetX = JsonHelper::GetFloat(meta["scrollOffset"], "x", 0.0f);
-                graph.editorMetadata.scrollOffsetY = JsonHelper::GetFloat(meta["scrollOffset"], "y", 0.0f);
+                std::cout << "[NodeGraph::FromJson] v1 format detected, calculating node positions...\n";
+                graph.CalculateNodePositionsHierarchical();
             }
-            
-            graph.editorMetadata.lastModified = JsonHelper::GetString(meta, "lastModified", "");
         }
 
+        // Load editor metadata if present (v2 only)
+        if (isV2)
+        {
+            if (j.contains("editorState") && j["editorState"].is_object())
+            {
+                const json& state = j["editorState"];
+                graph.editorMetadata.zoom = JsonHelper::GetFloat(state, "zoom", 1.0f);
+                
+                if (state.contains("scrollOffset") && state["scrollOffset"].is_object())
+                {
+                    graph.editorMetadata.scrollOffsetX = JsonHelper::GetFloat(state["scrollOffset"], "x", 0.0f);
+                    graph.editorMetadata.scrollOffsetY = JsonHelper::GetFloat(state["scrollOffset"], "y", 0.0f);
+                }
+            }
+        }
+
+        std::cout << "[NodeGraph::FromJson] Loaded " << graph.m_Nodes.size() << " nodes\n";
         return graph;
     }
 
@@ -378,6 +418,75 @@ namespace Olympe
                 return static_cast<int>(i);
         }
         return -1;
+    }
+
+    void NodeGraph::CalculateNodePositionsHierarchical()
+    {
+        const float HORIZONTAL_SPACING = 350.0f;
+        const float VERTICAL_SPACING = 200.0f;
+        const float START_X = 200.0f;
+        const float START_Y = 300.0f;
+
+        std::cout << "[NodeGraph] Calculating hierarchical positions for " << m_Nodes.size() << " nodes\n";
+
+        // Build parent-child map
+        std::map<int, std::vector<int>> childrenMap;
+        for (const auto& node : m_Nodes)
+        {
+            if (!node.childIds.empty())
+            {
+                childrenMap[node.id] = node.childIds;
+            }
+        }
+
+        // BFS from root to assign positions by depth
+        if (rootNodeId < 0)
+        {
+            std::cerr << "[NodeGraph] No root node ID, cannot calculate positions\n";
+            return;
+        }
+
+        std::queue<std::pair<int, int>> queue; // nodeId, depth
+        queue.push({rootNodeId, 0});
+        
+        std::map<int, int> depthCounter; // tracks sibling index at each depth
+        std::set<int> visited;
+
+        while (!queue.empty())
+        {
+            auto [nodeId, depth] = queue.front();
+            queue.pop();
+
+            if (visited.count(nodeId)) continue;
+            visited.insert(nodeId);
+
+            int siblingIndex = depthCounter[depth]++;
+            
+            // Find node and set position
+            int nodeIndex = FindNodeIndex(nodeId);
+            if (nodeIndex >= 0)
+            {
+                m_Nodes[nodeIndex].posX = START_X + depth * HORIZONTAL_SPACING;
+                m_Nodes[nodeIndex].posY = START_Y + siblingIndex * VERTICAL_SPACING;
+                
+                std::cout << "[NodeGraph] Node " << nodeId << " positioned at (" 
+                         << m_Nodes[nodeIndex].posX << ", " << m_Nodes[nodeIndex].posY << ")\n";
+            }
+
+            // Queue children
+            if (childrenMap.count(nodeId))
+            {
+                for (int childId : childrenMap[nodeId])
+                {
+                    if (!visited.count(childId))
+                    {
+                        queue.push({childId, depth + 1});
+                    }
+                }
+            }
+        }
+
+        std::cout << "[NodeGraph] Position calculation complete\n";
     }
 
     // ========== NodeGraphManager Implementation ==========
@@ -521,10 +630,15 @@ namespace Olympe
     {
         std::ifstream file(filepath);
         if (!file.is_open())
+        {
+            std::cerr << "[NodeGraphManager] Failed to open file: " << filepath << "\n";
             return -1;
+        }
 
         json j;
         std::string jsonText((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        file.close();
+        
         try
         {
             j = json::parse(jsonText);
@@ -535,6 +649,9 @@ namespace Olympe
             return -1;
         }
 
+        // Detect if v1 format (no schema_version or data section)
+        bool isV1 = !j.contains("schema_version") && !j.contains("data");
+        
         NodeGraph graph = NodeGraph::FromJson(j);
 
         int graphId = m_NextGraphId++;
@@ -542,6 +659,53 @@ namespace Olympe
         m_ActiveGraphId = graphId;
 
         std::cout << "[NodeGraphManager] Loaded graph from " << filepath << "\n";
+        
+        // If v1 format was loaded, auto-migrate to v2 and save
+        if (isV1)
+        {
+            std::cout << "[NodeGraphManager] Detected v1 format, auto-migrating to v2...\n";
+            
+            // Convert to v2 JSON format
+            json v2Json = m_Graphs[graphId]->ToJson();
+            
+            // Wrap in v2 structure
+            json wrappedV2 = json::object();
+            wrappedV2["schema_version"] = 2;
+            wrappedV2["blueprintType"] = v2Json["type"];
+            wrappedV2["name"] = v2Json["name"];
+            wrappedV2["description"] = "";
+            
+            json metadata = json::object();
+            metadata["author"] = "Atlasbruce";
+            metadata["created"] = "2026-01-09T15:33:00Z";
+            metadata["lastModified"] = "2026-01-09T15:33:00Z";
+            metadata["tags"] = json::array();
+            wrappedV2["metadata"] = metadata;
+            
+            json editorState = json::object();
+            editorState["zoom"] = 1.0;
+            json scrollOffset = json::object();
+            scrollOffset["x"] = 0;
+            scrollOffset["y"] = 0;
+            editorState["scrollOffset"] = scrollOffset;
+            wrappedV2["editorState"] = editorState;
+            
+            wrappedV2["data"] = v2Json;
+            
+            // Save migrated version
+            std::ofstream outFile(filepath);
+            if (outFile.is_open())
+            {
+                outFile << wrappedV2.dump(2);
+                outFile.close();
+                std::cout << "[NodeGraphManager] Saved migrated v2 format to " << filepath << "\n";
+            }
+            else
+            {
+                std::cerr << "[NodeGraphManager] Failed to save migrated v2 format\n";
+            }
+        }
+        
         return graphId;
     }
 }
