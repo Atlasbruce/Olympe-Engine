@@ -322,7 +322,7 @@ namespace Olympe
             if (j.contains("blueprintType"))
             {
                 std::string type = j["blueprintType"].get<std::string>();
-                std::cout << "[DetectAssetType] Warning: Using deprecated 'blueprintType' field, consider adding 'type' field to " << filepath << std::endl;
+                std::cerr << "[DetectAssetType] Warning: Using deprecated 'blueprintType' field, consider adding 'type' field to " << filepath << std::endl;
                 return type;
             }
 
@@ -478,7 +478,7 @@ namespace Olympe
                 std::string type = JsonHelper::GetString(j, "type", "");
                 metadata.type = type;
                 
-                if (type == "EntityBlueprint")
+                if (type == "EntityBlueprint" || type == "EntityPrefab")
                 {
                     ParseEntityBlueprint(j, metadata);
                 }
@@ -489,10 +489,6 @@ namespace Olympe
                 else if (type == "HFSM")
                 {
                     ParseHFSM(j, metadata);
-                }
-                else if (type == "EntityPrefab")
-                {
-                    ParseEntityBlueprint(j, metadata);
                 }
                 else
                 {
@@ -506,7 +502,7 @@ namespace Olympe
                 std::string type = JsonHelper::GetString(j, "blueprintType", "");
                 metadata.type = type;
                 
-                std::cout << "[ParseAssetMetadata] Warning: Using deprecated 'blueprintType' field in " << filepath << std::endl;
+                std::cerr << "[ParseAssetMetadata] Warning: Using deprecated 'blueprintType' field in " << filepath << std::endl;
                 
                 if (type == "BehaviorTree")
                 {
