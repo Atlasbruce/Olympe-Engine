@@ -15,6 +15,7 @@ Behavior Tree implementation: JSON loading and built-in node execution.
 #include "../World.h"
 #include "../system/system_utils.h"
 #include "../json_helper.h"
+#include <iostream>
 #include <cmath>
 
 using json = nlohmann::json;
