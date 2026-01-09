@@ -37,6 +37,17 @@ namespace Olympe
 
         // Node creation helpers
         void CreateNewNode(const char* nodeType, float x, float y);
+        
+        // Helper to generate unique ImGui IDs per graph to avoid conflicts
+        static int GetUniqueImGuiID(int graphId, int nodeId) {
+            // Offset unique per graph to avoid conflicts when multiple graphs are open
+            return graphId * 1000000 + nodeId;
+        }
+        
+        static int GetOriginalNodeId(int uniqueId) {
+            // Extract original node ID from unique ID
+            return uniqueId % 1000000;
+        }
 
         // ImNodes state
         int m_SelectedNodeId = -1;

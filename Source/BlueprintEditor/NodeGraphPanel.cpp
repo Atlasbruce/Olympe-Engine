@@ -136,21 +136,28 @@ namespace Olympe
         if (!graph)
             return;
 
+        // Get current graph ID for unique ImGui IDs
+        int graphId = NodeGraphManager::Get().GetActiveGraphId();
+
         ImNodes::BeginNodeEditor();
 
         // Render all nodes
         auto nodes = graph->GetAllNodes();
         for (GraphNode* node : nodes)
         {
-            ImNodes::BeginNode(node->id);
+            // Generate unique ImGui ID to avoid conflicts between multiple open graphs
+            int uniqueNodeId = GetUniqueImGuiID(graphId, node->id);
+            
+            ImNodes::BeginNode(uniqueNodeId);
 
             // Title bar
             ImNodes::BeginNodeTitleBar();
             ImGui::TextUnformatted(node->name.c_str());
             ImNodes::EndNodeTitleBar();
 
-            // Input attribute (for child connections)
-            ImNodes::BeginInputAttribute(node->id * 100 + 1);
+            // Input attribute (for child connections) with unique ID
+            int inputPinId = uniqueNodeId * 10;
+            ImNodes::BeginInputAttribute(inputPinId);
             ImGui::Text("In");
             ImNodes::EndInputAttribute();
 
@@ -170,24 +177,28 @@ namespace Olympe
                 ImGui::Text("Decorator: %s", node->decoratorType.c_str());
             }
 
-            // Output attribute (for parent connections)
-            ImNodes::BeginOutputAttribute(node->id * 100 + 2);
+            // Output attribute (for parent connections) with unique ID
+            int outputPinId = uniqueNodeId * 10 + 1;
+            ImNodes::BeginOutputAttribute(outputPinId);
             ImGui::Text("Out");
             ImNodes::EndOutputAttribute();
 
             ImNodes::EndNode();
 
             // Set node position
-            ImNodes::SetNodeGridSpacePos(node->id, ImVec2(node->posX, node->posY));
+            ImNodes::SetNodeGridSpacePos(uniqueNodeId, ImVec2(node->posX, node->posY));
         }
 
-        // Render all links
+        // Render all links with unique IDs
         auto links = graph->GetAllLinks();
         for (size_t i = 0; i < links.size(); ++i)
         {
             const GraphLink& link = links[i];
-            int linkId = (int)i + 1;  // Link IDs start from 1
-            ImNodes::Link(linkId, link.fromNode * 100 + 2, link.toNode * 100 + 1);
+            // Use unique link ID and map pin IDs
+            int uniqueLinkId = GetUniqueImGuiID(graphId, 10000 + (int)i);
+            int fromPinId = GetUniqueImGuiID(graphId, link.fromNode) * 10 + 1;  // output pin
+            int toPinId = GetUniqueImGuiID(graphId, link.toNode) * 10;  // input pin
+            ImNodes::Link(uniqueLinkId, fromPinId, toPinId);
         }
 
         ImNodes::EndNodeEditor();
@@ -198,8 +209,9 @@ namespace Olympe
         {
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
             {
-                m_EditingNodeId = hoveredNodeId;
-                GraphNode* node = graph->GetNode(hoveredNodeId);
+                // Convert unique ID back to original node ID
+                m_EditingNodeId = GetOriginalNodeId(hoveredNodeId);
+                GraphNode* node = graph->GetNode(m_EditingNodeId);
                 if (node)
                 {
                     strncpy_s(m_NodeNameBuffer, node->name.c_str(), sizeof(m_NodeNameBuffer) - 1);
@@ -211,7 +223,7 @@ namespace Olympe
             // Right-click context menu on node
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
             {
-                m_SelectedNodeId = hoveredNodeId;
+                m_SelectedNodeId = GetOriginalNodeId(hoveredNodeId);
                 ImGui::OpenPopup("NodeContextMenu");
             }
         }
@@ -264,25 +276,34 @@ namespace Olympe
 
         RenderContextMenu();
 
-        // Handle node selection
+        // Handle node selection with unique IDs
         int selectedNodeCount = ImNodes::NumSelectedNodes();
         if (selectedNodeCount > 0)
         {
             std::vector<int> selectedNodes(selectedNodeCount);
             ImNodes::GetSelectedNodes(selectedNodes.data());
             if (selectedNodes.size() > 0)
-                m_SelectedNodeId = selectedNodes[0];
+            {
+                // Convert unique ID to original ID
+                m_SelectedNodeId = GetOriginalNodeId(selectedNodes[0]);
+            }
         }
 
-        // Handle link creation
+        // Handle link creation with unique IDs
         int startAttr, endAttr;
         if (ImNodes::IsLinkCreated(&startAttr, &endAttr))
         {
-            int fromNode = startAttr / 100;
-            int toNode = endAttr / 100;
+            // Extract node IDs from pin IDs
+            // Pin IDs are: uniqueNodeId * 10 (input) or uniqueNodeId * 10 + 1 (output)
+            int fromUniqueNodeId = startAttr / 10;
+            int toUniqueNodeId = endAttr / 10;
             
-            std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
-            auto cmd = std::make_unique<LinkNodesCommand>(graphId, fromNode, toNode);
+            // Convert back to original node IDs
+            int fromNode = GetOriginalNodeId(fromUniqueNodeId);
+            int toNode = GetOriginalNodeId(toUniqueNodeId);
+            
+            std::string graphIdStr = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+            auto cmd = std::make_unique<LinkNodesCommand>(graphIdStr, fromNode, toNode);
             BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
         }
 
@@ -338,10 +359,11 @@ namespace Olympe
             ImGui::EndDragDropTarget();
         }
 
-        // Update node positions
+        // Update node positions from ImNodes with unique ID handling
         for (GraphNode* node : nodes)
         {
-            ImVec2 pos = ImNodes::GetNodeGridSpacePos(node->id);
+            int uniqueNodeId = GetUniqueImGuiID(graphId, node->id);
+            ImVec2 pos = ImNodes::GetNodeGridSpacePos(uniqueNodeId);
             node->posX = pos.x;
             node->posY = pos.y;
         }
@@ -485,7 +507,8 @@ namespace Olympe
                 ImNodes::GetSelectedNodes(selectedNodes.data());
                 if (selectedNodes.size() > 0)
                 {
-                    int nodeId = selectedNodes[0];
+                    // Convert unique ID to original node ID
+                    int nodeId = GetOriginalNodeId(selectedNodes[0]);
                     std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
                     auto cmd = std::make_unique<DeleteNodeCommand>(graphId, nodeId);
                     BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
@@ -499,12 +522,17 @@ namespace Olympe
                 ImNodes::GetSelectedLinks(selectedLinks.data());
                 if (selectedLinks.size() > 0)
                 {
+                    // Extract link index from unique link ID
+                    int uniqueLinkId = selectedLinks[0];
+                    int graphIdNum = NodeGraphManager::Get().GetActiveGraphId();
+                    int linkIndex = GetOriginalNodeId(uniqueLinkId) - 10000;
+                    
                     // Find the link and delete it
                     auto links = graph->GetAllLinks();
-                    if (selectedLinks[0] > 0 && selectedLinks[0] <= (int)links.size())
+                    if (linkIndex >= 0 && linkIndex < (int)links.size())
                     {
-                        const GraphLink& link = links[selectedLinks[0] - 1];
-                        std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+                        const GraphLink& link = links[linkIndex];
+                        std::string graphId = std::to_string(graphIdNum);
                         auto cmd = std::make_unique<UnlinkNodesCommand>(graphId, link.fromNode, link.toNode);
                         BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
                     }
@@ -522,7 +550,8 @@ namespace Olympe
                 ImNodes::GetSelectedNodes(selectedNodes.data());
                 if (selectedNodes.size() > 0)
                 {
-                    int nodeId = selectedNodes[0];
+                    // Convert unique ID to original node ID
+                    int nodeId = GetOriginalNodeId(selectedNodes[0]);
                     std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
                     auto cmd = std::make_unique<DuplicateNodeCommand>(graphId, nodeId);
                     BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
