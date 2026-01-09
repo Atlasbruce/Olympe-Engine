@@ -454,7 +454,9 @@ namespace Olympe
 
         while (!queue.empty())
         {
-            auto [nodeId, depth] = queue.front();
+            std::pair<int, int> front = queue.front();
+            int nodeId = front.first;
+            int depth = front.second;
             queue.pop();
 
             if (visited.count(nodeId)) continue;
