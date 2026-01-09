@@ -1,5 +1,6 @@
 {
   "schema_version": 2,
+  "type": "ScriptedEvent",
   "blueprintType": "ScriptedEvent",
   "name": "GuardsAmbush",
   "description": "Scripted event where guards ambush the player",

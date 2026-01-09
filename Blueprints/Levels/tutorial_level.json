@@ -1,5 +1,6 @@
 {
   "schema_version": 2,
+  "type": "LevelDefinition",
   "blueprintType": "LevelDefinition",
   "name": "TutorialLevel",
   "description": "Tutorial level with basic mechanics introduction",

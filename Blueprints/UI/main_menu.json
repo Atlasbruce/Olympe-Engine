@@ -1,5 +1,6 @@
 {
   "schema_version": 2,
+  "type": "UIMenu",
   "blueprintType": "UIMenu",
   "name": "MainMenu",
   "description": "Main menu UI layout and navigation",
