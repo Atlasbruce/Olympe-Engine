@@ -13,6 +13,7 @@
 #include <iostream>
 #include <vector>
 #include <cstring>
+#include <cmath>
 
 namespace Olympe
 {
@@ -96,11 +97,14 @@ namespace Olympe
             for (int graphId : graphIds)
             {
                 std::string graphName = NodeGraphManager::Get().GetGraphName(graphId);
-                bool isActive = (NodeGraphManager::Get().GetActiveGraphId() == graphId);
 
-                if (ImGui::BeginTabItem(graphName.c_str(), nullptr, isActive ? ImGuiTabItemFlags_SetSelected : 0))
+                if (ImGui::BeginTabItem(graphName.c_str(), nullptr, ImGuiTabItemFlags_None))
                 {
-                    NodeGraphManager::Get().SetActiveGraph(graphId);
+                    // Set active only if not already active (user clicked the tab)
+                    if (NodeGraphManager::Get().GetActiveGraphId() != graphId)
+                    {
+                        NodeGraphManager::Get().SetActiveGraph(graphId);
+                    }
                     ImGui::EndTabItem();
                 }
             }
@@ -200,6 +204,43 @@ namespace Olympe
 
         ImNodes::EndNodeEditor();
 
+        // Handle link selection
+        int numSelectedLinks = ImNodes::NumSelectedLinks();
+        if (numSelectedLinks > 0)
+        {
+            std::vector<int> selectedLinks(numSelectedLinks);
+            ImNodes::GetSelectedLinks(selectedLinks.data());
+            if (selectedLinks.size() > 0)
+                m_SelectedLinkId = selectedLinks[0];
+        }
+
+        // Handle Delete key for nodes and links
+        if (ImGui::IsKeyPressed(ImGuiKey_Delete))
+        {
+            if (m_SelectedNodeId != -1)
+            {
+                // Delete selected node
+                std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+                auto cmd = std::make_unique<DeleteNodeCommand>(graphId, m_SelectedNodeId);
+                BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+                m_SelectedNodeId = -1;
+            }
+            else if (m_SelectedLinkId != -1)
+            {
+                // Delete selected link
+                // Note: Link IDs start from 1, array indices start from 0
+                auto links = graph->GetAllLinks();
+                if (m_SelectedLinkId >= 1 && m_SelectedLinkId <= (int)links.size())
+                {
+                    const GraphLink& link = links[m_SelectedLinkId - 1];
+                    std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+                    auto cmd = std::make_unique<UnlinkNodesCommand>(graphId, link.fromNode, link.toNode);
+                    BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+                    m_SelectedLinkId = -1;
+                }
+            }
+        }
+
         // Check for double-click on node to open edit modal
         int hoveredNodeId = -1;
         if (ImNodes::IsNodeHovered(&hoveredNodeId))
@@ -215,13 +256,13 @@ namespace Olympe
                     m_ShowNodeEditModal = true;
                 }
             }
-            
-            // Right-click context menu on node
-            if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
-            {
-                m_SelectedNodeId = hoveredNodeId;
-                ImGui::OpenPopup("NodeContextMenu");
-            }
+        }
+        
+        // Right-click context menu on node
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && hoveredNodeId != -1)
+        {
+            m_SelectedNodeId = hoveredNodeId;
+            ImGui::OpenPopup("NodeContextMenu");
         }
 
         // Handle right-click on canvas for node creation menu
@@ -300,47 +341,54 @@ namespace Olympe
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("NODE_TYPE"))
             {
                 std::string nodeTypeData((const char*)payload->Data);
-                ImVec2 mousePos = ImGui::GetMousePos();
+                
+                // Convert screen space coordinates to grid space
+                ImVec2 mouseScreenPos = ImGui::GetMousePos();
+                ImVec2 canvasPos = ImNodes::ScreenSpaceToGridSpace(mouseScreenPos);
                 
                 // Parse the type and create appropriate node
                 if (nodeTypeData.find("Action:") == 0)
                 {
                     std::string actionType = nodeTypeData.substr(7);
-                    int nodeId = graph->CreateNode(NodeType::BT_Action, mousePos.x, mousePos.y, actionType);
+                    int nodeId = graph->CreateNode(NodeType::BT_Action, canvasPos.x, canvasPos.y, actionType);
                     GraphNode* node = graph->GetNode(nodeId);
                     if (node)
                     {
                         node->actionType = actionType;
-                        std::cout << "Created Action node: " << actionType << std::endl;
+                        std::cout << "[NodeGraphPanel] Created Action node: " << actionType 
+                                  << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
                     }
                 }
                 else if (nodeTypeData.find("Condition:") == 0)
                 {
                     std::string conditionType = nodeTypeData.substr(10);
-                    int nodeId = graph->CreateNode(NodeType::BT_Condition, mousePos.x, mousePos.y, conditionType);
+                    int nodeId = graph->CreateNode(NodeType::BT_Condition, canvasPos.x, canvasPos.y, conditionType);
                     GraphNode* node = graph->GetNode(nodeId);
                     if (node)
                     {
                         node->conditionType = conditionType;
-                        std::cout << "Created Condition node: " << conditionType << std::endl;
+                        std::cout << "[NodeGraphPanel] Created Condition node: " << conditionType 
+                                  << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
                     }
                 }
                 else if (nodeTypeData.find("Decorator:") == 0)
                 {
                     std::string decoratorType = nodeTypeData.substr(10);
-                    int nodeId = graph->CreateNode(NodeType::BT_Decorator, mousePos.x, mousePos.y, decoratorType);
+                    int nodeId = graph->CreateNode(NodeType::BT_Decorator, canvasPos.x, canvasPos.y, decoratorType);
                     GraphNode* node = graph->GetNode(nodeId);
                     if (node)
                     {
                         node->decoratorType = decoratorType;
-                        std::cout << "Created Decorator node: " << decoratorType << std::endl;
+                        std::cout << "[NodeGraphPanel] Created Decorator node: " << decoratorType 
+                                  << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
                     }
                 }
                 else if (nodeTypeData == "Sequence" || nodeTypeData == "Selector")
                 {
                     NodeType type = (nodeTypeData == "Sequence") ? NodeType::BT_Sequence : NodeType::BT_Selector;
-                    graph->CreateNode(type, mousePos.x, mousePos.y, nodeTypeData);
-                    std::cout << "Created " << nodeTypeData << " node" << std::endl;
+                    graph->CreateNode(type, canvasPos.x, canvasPos.y, nodeTypeData);
+                    std::cout << "[NodeGraphPanel] Created " << nodeTypeData << " node"
+                              << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
                 }
             }
             ImGui::EndDragDropTarget();
@@ -444,14 +492,30 @@ namespace Olympe
         }
     }
 
-    void NodeGraphPanel::CreateNewNode(const char* nodeType, float x, float y)
+    void NodeGraphPanel::CreateNewNode(const char* nodeType, float screenX, float screenY)
     {
         NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
         if (!graph)
+        {
+            std::cerr << "[NodeGraphPanel] Cannot create node: No active graph\n";
             return;
+        }
+        
+        // Convert screen coordinates to canvas coordinates
+        ImVec2 canvasPos = ImNodes::ScreenSpaceToGridSpace(ImVec2(screenX, screenY));
+        
+        // Validate coordinates are finite (not NaN or infinity)
+        if (!std::isfinite(canvasPos.x) || !std::isfinite(canvasPos.y))
+        {
+            std::cerr << "[NodeGraphPanel] Invalid coordinates for node creation\n";
+            return;
+        }
+        
+        std::cout << "[NodeGraphPanel] Creating " << nodeType << " at canvas pos (" 
+                  << canvasPos.x << ", " << canvasPos.y << ")\n";
 
         NodeType type = StringToNodeType(nodeType);
-        int nodeId = graph->CreateNode(type, x, y, nodeType);
+        int nodeId = graph->CreateNode(type, canvasPos.x, canvasPos.y, nodeType);
 
         std::cout << "[NodeGraphPanel] Created node " << nodeId << " of type " << nodeType << "\n";
     }
@@ -481,43 +545,6 @@ namespace Olympe
             (io.KeyCtrl && io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_Z)))
         {
             BlueprintEditor::Get().Redo();
-        }
-        
-        // Delete: Delete selected node or link
-        if (ImGui::IsKeyPressed(ImGuiKey_Delete))
-        {
-            int selectedNodeCount = ImNodes::NumSelectedNodes();
-            if (selectedNodeCount > 0)
-            {
-                std::vector<int> selectedNodes(selectedNodeCount);
-                ImNodes::GetSelectedNodes(selectedNodes.data());
-                if (selectedNodes.size() > 0)
-                {
-                    int nodeId = selectedNodes[0];
-                    std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
-                    auto cmd = std::make_unique<DeleteNodeCommand>(graphId, nodeId);
-                    BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
-                }
-            }
-            
-            int selectedLinkCount = ImNodes::NumSelectedLinks();
-            if (selectedLinkCount > 0)
-            {
-                std::vector<int> selectedLinks(selectedLinkCount);
-                ImNodes::GetSelectedLinks(selectedLinks.data());
-                if (selectedLinks.size() > 0)
-                {
-                    // Find the link and delete it
-                    auto links = graph->GetAllLinks();
-                    if (selectedLinks[0] > 0 && selectedLinks[0] <= (int)links.size())
-                    {
-                        const GraphLink& link = links[selectedLinks[0] - 1];
-                        std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
-                        auto cmd = std::make_unique<UnlinkNodesCommand>(graphId, link.fromNode, link.toNode);
-                        BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
-                    }
-                }
-            }
         }
         
         // Ctrl+D: Duplicate selected node
