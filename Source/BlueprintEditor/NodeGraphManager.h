@@ -218,7 +218,9 @@ namespace Olympe
     private:
         bool m_Initialized = false;
         int m_ActiveGraphId = -1;
+        int m_LastActiveGraphId = -1;  // Track last active for persistence
         int m_NextGraphId = 1;
         std::map<int, std::unique_ptr<NodeGraph>> m_Graphs;
+        std::vector<int> m_GraphOrder;  // Track insertion order for consistent tab rendering
     };
 }

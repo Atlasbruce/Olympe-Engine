@@ -7,6 +7,7 @@
 
 #include "BlueprintEditor.h"
 #include "EntityBlueprint.h"
+#include "EditorContext.h"
 #include "EnumCatalogManager.h"
 #include "NodeGraphManager.h"
 #include "EntityInspectorManager.h"
@@ -92,6 +93,20 @@ namespace Olympe
         
         // Scan assets on initialization
         RefreshAssets();
+    }
+    
+    void BlueprintEditor::InitializeRuntimeEditor()
+    {
+        std::cout << "[BlueprintEditor] Initializing Runtime Editor mode\n";
+        // Initialize the EditorContext in Runtime mode
+        EditorContext::Get().InitializeRuntime();
+    }
+    
+    void BlueprintEditor::InitializeStandaloneEditor()
+    {
+        std::cout << "[BlueprintEditor] Initializing Standalone Editor mode\n";
+        // Initialize the EditorContext in Standalone mode
+        EditorContext::Get().InitializeStandalone();
     }
 
     void BlueprintEditor::Shutdown()

@@ -570,7 +570,9 @@ namespace Olympe
 
         int graphId = m_NextGraphId++;
         m_Graphs[graphId] = std::move(graph);
+        m_GraphOrder.push_back(graphId);  // Track insertion order
         m_ActiveGraphId = graphId;
+        m_LastActiveGraphId = graphId;  // Update last active
 
         std::cout << "[NodeGraphManager] Created graph " << graphId << " (" << name << ")\n";
         return graphId;
@@ -582,15 +584,46 @@ namespace Olympe
         if (it == m_Graphs.end())
             return false;
 
+        // Remove from graph order
+        auto orderIt = std::find(m_GraphOrder.begin(), m_GraphOrder.end(), graphId);
+        if (orderIt != m_GraphOrder.end())
+            m_GraphOrder.erase(orderIt);
+
         m_Graphs.erase(it);
 
         if (m_ActiveGraphId == graphId)
         {
-            // Set active to first available graph
-            if (!m_Graphs.empty())
-                m_ActiveGraphId = m_Graphs.begin()->first;
+            // Try to select a neighbor from graph order for better UX
+            // Find closest neighbor (prefer next, then previous)
+            if (!m_GraphOrder.empty())
+            {
+                // Find where the closed graph was in order
+                size_t closedIndex = 0;
+                for (size_t i = 0; i < m_GraphOrder.size(); ++i)
+                {
+                    if (m_GraphOrder[i] > graphId)
+                    {
+                        closedIndex = i;
+                        break;
+                    }
+                    closedIndex = i + 1;
+                }
+                
+                // Pick the next available tab, or previous if at end
+                if (closedIndex < m_GraphOrder.size())
+                    m_ActiveGraphId = m_GraphOrder[closedIndex];
+                else if (!m_GraphOrder.empty())
+                    m_ActiveGraphId = m_GraphOrder[m_GraphOrder.size() - 1];
+                else
+                    m_ActiveGraphId = -1;
+            }
             else
+            {
                 m_ActiveGraphId = -1;
+            }
+            
+            if (m_ActiveGraphId != -1)
+                m_LastActiveGraphId = m_ActiveGraphId;
         }
 
         std::cout << "[NodeGraphManager] Closed graph " << graphId << "\n";
@@ -616,7 +649,10 @@ namespace Olympe
     void NodeGraphManager::SetActiveGraph(int graphId)
     {
         if (m_Graphs.find(graphId) != m_Graphs.end())
+        {
             m_ActiveGraphId = graphId;
+            m_LastActiveGraphId = graphId;  // Update last active for persistence
+        }
     }
 
     NodeGraph* NodeGraphManager::GetActiveGraph()
@@ -631,10 +667,8 @@ namespace Olympe
 
     std::vector<int> NodeGraphManager::GetAllGraphIds() const
     {
-        std::vector<int> ids;
-        for (const auto& pair : m_Graphs)
-            ids.push_back(pair.first);
-        return ids;
+        // Return graphs in insertion order for consistent tab rendering
+        return m_GraphOrder;
     }
 
     std::string NodeGraphManager::GetGraphName(int graphId) const
@@ -803,7 +837,9 @@ namespace Olympe
             int graphId = m_NextGraphId++;
             auto graphPtr = std::make_unique<NodeGraph>(std::move(graph));
             m_Graphs[graphId] = std::move(graphPtr);
+            m_GraphOrder.push_back(graphId);  // Track insertion order
             m_ActiveGraphId = graphId;
+            m_LastActiveGraphId = graphId;  // Update last active
 
             std::cout << "[NodeGraphManager] Graph registered with ID: " << graphId << std::endl;
             std::cout << "[NodeGraphManager] Graph name: " << m_Graphs[graphId]->name << std::endl;
