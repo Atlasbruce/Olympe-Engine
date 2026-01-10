@@ -14,6 +14,7 @@
 #include "TemplateManager.h"
 #include "CommandSystem.h"
 #include "BlueprintMigrator.h"
+#include "BlueprintValidator.h"
 #include "BehaviorTreeEditorPlugin.h"
 #include "EntityPrefabEditorPlugin.h"
 #include "AdditionalEditorPlugins.h"
