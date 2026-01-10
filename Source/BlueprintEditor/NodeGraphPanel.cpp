@@ -113,31 +113,31 @@ namespace Olympe
         auto graphIds = NodeGraphManager::Get().GetAllGraphIds();
         int currentActiveId = NodeGraphManager::Get().GetActiveGraphId();
 
-        if (ImGui::BeginTabBar("GraphTabs"))
+        // Enable tab reordering for better UX
+        if (ImGui::BeginTabBar("GraphTabs", ImGuiTabBarFlags_Reorderable))
         {
+            std::vector<int> newOrder;
+            
             for (int graphId : graphIds)
             {
                 std::string graphName = NodeGraphManager::Get().GetGraphName(graphId);
 
-                // Only set ImGuiTabItemFlags_SetSelected if this is the active graph
-                // This ensures the tab is selected visually without forcing re-selection each frame
-                ImGuiTabItemFlags flags = ImGuiTabItemFlags_None;
-                if (graphId == currentActiveId)
+                // Do NOT use ImGuiTabItemFlags_SetSelected - let ImGui manage tab selection
+                // BeginTabItem returns true only when this tab is actually being shown/active
+                if (ImGui::BeginTabItem(graphName.c_str(), nullptr, ImGuiTabItemFlags_None))
                 {
-                    flags = ImGuiTabItemFlags_SetSelected;
-                }
-
-                if (ImGui::BeginTabItem(graphName.c_str(), nullptr, flags))
-                {
-                    // Only change active graph if user clicked this tab (and it's not already active)
-                    // BeginTabItem returns true when the tab content should be shown
-                    if (currentActiveId != graphId)
-                    {
-                        NodeGraphManager::Get().SetActiveGraph(graphId);
-                    }
+                    // Only set active graph when BeginTabItem returns true (tab is actually shown)
+                    // This prevents flickering from forced re-selection each frame
+                    NodeGraphManager::Get().SetActiveGraph(graphId);
                     ImGui::EndTabItem();
                 }
+                
+                // Track the new order of tabs (after potential reordering)
+                newOrder.push_back(graphId);
             }
+            
+            // Update graph order if tabs were reordered
+            NodeGraphManager::Get().SetGraphOrder(newOrder);
 
             // Add "+" button for new graph
             if (ImGui::TabItemButton("+", ImGuiTabItemFlags_Trailing))
@@ -178,15 +178,15 @@ namespace Olympe
             return;
         }
 
+        // Capture editor origin BEFORE BeginNodeEditor for correct coordinate conversion
+        ImVec2 editorOrigin = ImGui::GetCursorScreenPos();
+
         ImNodes::BeginNodeEditor();
 
         // Render all nodes
         auto nodes = graph->GetAllNodes();
         for (GraphNode* node : nodes)
         {
-            // Set node position BEFORE rendering (ImNodes requirement)
-            ImNodes::SetNodeGridSpacePos(node->id, ImVec2(node->posX, node->posY));
-
             ImNodes::BeginNode(node->id);
 
             // Title bar
@@ -221,6 +221,9 @@ namespace Olympe
             ImNodes::EndOutputAttribute();
 
             ImNodes::EndNode();
+            
+            // Set position AFTER EndNode (ImNodes requirement to avoid assertion)
+            ImNodes::SetNodeGridSpacePos(node->id, ImVec2(node->posX, node->posY));
         }
 
         // Render all links
@@ -233,6 +236,14 @@ namespace Olympe
         }
 
         ImNodes::EndNodeEditor();
+
+        // Update node positions BEFORE drag & drop (query ImNodes for existing nodes only)
+        for (GraphNode* node : nodes)
+        {
+            ImVec2 pos = ImNodes::GetNodeGridSpacePos(node->id);
+            node->posX = pos.x;
+            node->posY = pos.y;
+        }
 
         // Handle link selection
         int numSelectedLinks = ImNodes::NumSelectedLinks();
@@ -377,7 +388,8 @@ namespace Olympe
         }
 
         // Handle drag & drop from node palette
-        if (ImGui::BeginDragDropTarget())
+        // ONLY execute if editor is hovered to ensure target is the canvas
+        if (ImNodes::IsEditorHovered() && ImGui::BeginDragDropTarget())
         {
             const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("NODE_TYPE");
             
@@ -410,9 +422,11 @@ namespace Olympe
                 while (!nodeTypeData.empty() && nodeTypeData.back() == '\0')
                     nodeTypeData.pop_back();
                 
-                // Convert screen space coordinates to grid space
+                // Convert screen coordinates to canvas coordinates using captured editor origin
                 ImVec2 mouseScreenPos = ImGui::GetMousePos();
-                ImVec2 canvasPos = ScreenSpaceToGridSpace(mouseScreenPos);
+                ImVec2 panning = ImNodes::EditorContextGetPanning();
+                ImVec2 canvasPos = ImVec2(mouseScreenPos.x - editorOrigin.x - panning.x,
+                                          mouseScreenPos.y - editorOrigin.y - panning.y);
                 
                 bool validNode = false;
                 
@@ -436,8 +450,8 @@ namespace Olympe
                     }
                     else
                     {
-                        std::cerr << "[NodeGraphPanel] ERROR: Invalid ActionType: " << actionType << "\n";
-                        ImGui::SetTooltip("Invalid ActionType: %s", actionType.c_str());
+                        // Single error line per invalid drop (no spam)
+                        std::cerr << "[NodeGraphPanel] Invalid ActionType dropped: " << actionType << "\n";
                     }
                 }
                 else if (nodeTypeData.find("Condition:") == 0)
@@ -459,8 +473,8 @@ namespace Olympe
                     }
                     else
                     {
-                        std::cerr << "[NodeGraphPanel] ERROR: Invalid ConditionType: " << conditionType << "\n";
-                        ImGui::SetTooltip("Invalid ConditionType: %s", conditionType.c_str());
+                        // Single error line per invalid drop (no spam)
+                        std::cerr << "[NodeGraphPanel] Invalid ConditionType dropped: " << conditionType << "\n";
                     }
                 }
                 else if (nodeTypeData.find("Decorator:") == 0)
@@ -482,8 +496,8 @@ namespace Olympe
                     }
                     else
                     {
-                        std::cerr << "[NodeGraphPanel] ERROR: Invalid DecoratorType: " << decoratorType << "\n";
-                        ImGui::SetTooltip("Invalid DecoratorType: %s", decoratorType.c_str());
+                        // Single error line per invalid drop (no spam)
+                        std::cerr << "[NodeGraphPanel] Invalid DecoratorType dropped: " << decoratorType << "\n";
                     }
                 }
                 else if (nodeTypeData == "Sequence" || nodeTypeData == "Selector")
@@ -499,29 +513,14 @@ namespace Olympe
                 }
                 else
                 {
-                    std::cerr << "[NodeGraphPanel] ERROR: Unknown node type: " << nodeTypeData << "\n";
-                    ImGui::SetTooltip("Unknown node type: %s", nodeTypeData.c_str());
+                    // Single error line per invalid drop (no spam)
+                    std::cerr << "[NodeGraphPanel] Unknown node type dropped: " << nodeTypeData << "\n";
                 }
                 
-                if (!validNode)
-                {
-                    std::cerr << "[NodeGraphPanel] Failed to create node from DnD payload\n";
-                }
-            }
-            else
-            {
-                std::cerr << "[NodeGraphPanel] Invalid DnD payload received (null or empty)\n";
+                // No additional error message needed - already logged once per case
             }
             
             ImGui::EndDragDropTarget();
-        }
-
-        // Update node positions
-        for (GraphNode* node : nodes)
-        {
-            ImVec2 pos = ImNodes::GetNodeGridSpacePos(node->id);
-            node->posX = pos.x;
-            node->posY = pos.y;
         }
     }
 

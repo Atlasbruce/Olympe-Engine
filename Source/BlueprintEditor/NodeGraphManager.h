@@ -200,6 +200,7 @@ namespace Olympe
         // Graph list
         std::vector<int> GetAllGraphIds() const;
         std::string GetGraphName(int graphId) const;
+        void SetGraphOrder(const std::vector<int>& newOrder);
 
         // File operations
         bool SaveGraph(int graphId, const std::string& filepath);
