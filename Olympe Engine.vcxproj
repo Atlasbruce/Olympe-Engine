@@ -28,6 +28,7 @@
     <ClCompile Include="Source\BlueprintEditor\BlueprintMigrator.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlueprintValidator.cpp" />
     <ClCompile Include="Source\BlueprintEditor\CommandSystem.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EditorContext.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityBlueprint.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Graph.cpp" />
@@ -91,6 +92,7 @@
     <ClInclude Include="Source\BlueprintEditor\BlueprintMigrator.h" />
     <ClInclude Include="Source\BlueprintEditor\BlueprintValidator.h" />
     <ClInclude Include="Source\BlueprintEditor\CommandSystem.h" />
+    <ClInclude Include="Source\BlueprintEditor\EditorContext.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityBlueprint.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.h" />
     <ClInclude Include="Source\BlueprintEditor\Graph.h" />

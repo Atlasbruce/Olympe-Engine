@@ -206,3 +206,228 @@ Ensure existing functionality still works:
 4. Consider user feedback for improvements
 5. Plan implementation of undo/redo system
 6. Plan native file dialog integration
+
+## Phase: Tab Persistence and Selection Testing
+
+### Test Case: Tab Order Persistence
+**Objective:** Verify tabs maintain consistent order across operations
+
+**Steps:**
+1. Open 3 behavior trees: "GuardPatrol", "NPCIdle", "Investigation"
+2. Note the tab order (left to right)
+3. Close the editor (F2) and reopen
+4. Verify tabs appear in same order
+
+**Expected:**
+- Tab order is deterministic and consistent
+- Tabs appear in insertion order
+
+### Test Case: Active Tab Persistence
+**Objective:** Verify selected tab remains active
+
+**Steps:**
+1. Open 3 graphs
+2. Click on the middle tab
+3. Wait several frames (render cycles)
+4. Verify middle tab stays selected
+
+**Expected:**
+- Selected tab does not change without user action
+- No automatic re-selection to first tab
+
+### Test Case: Smart Tab Selection on Close
+**Objective:** Verify intelligent neighbor selection when closing tab
+
+**Steps:**
+1. Open 5 graphs: A, B, C, D, E
+2. Select tab C (middle)
+3. Close tab C
+4. Verify tab D is now selected (next neighbor)
+5. Select tab A (first)
+6. Close tab A
+7. Verify tab B is now selected
+
+**Expected:**
+- Closing a tab selects next tab if available
+- If no next tab, selects previous tab
+- Selection is predictable and user-friendly
+
+## Phase: DnD Safety Testing
+
+### Test Case: Valid Node Creation
+**Objective:** Verify normal DnD operations work
+
+**Steps:**
+1. Open Node Graph Editor
+2. Drag "MoveTo" action from palette
+3. Drop on canvas
+4. Verify node created at mouse position
+
+**Expected:**
+- Node appears at drop location
+- No errors in console
+- Node has correct type
+
+### Test Case: Invalid Payload Handling
+**Objective:** Verify graceful handling of bad payloads
+
+**Steps:**
+1. Attempt to drag an invalid or corrupted payload (testing scenario)
+2. Check console for error messages
+3. Verify no crash occurs
+
+**Expected:**
+- Error logged to console
+- Tooltip shows "Invalid node type"
+- No crash or undefined behavior
+
+### Test Case: Unknown Type Validation
+**Objective:** Verify catalog validation works
+
+**Steps:**
+1. Modify a blueprint to reference non-existent ActionType
+2. Try to create node via DnD
+3. Check error handling
+
+**Expected:**
+- Error message: "Invalid ActionType: <name>"
+- Node creation blocked
+- Tooltip shown to user
+
+## Phase: CRUD Capability Gating
+
+### Test Case: Runtime Mode (Read-Only)
+**Objective:** Verify CRUD operations hidden in Runtime mode
+
+**Steps:**
+1. Initialize editor in Runtime mode:
+   ```cpp
+   BlueprintEditor::Get().InitializeRuntimeEditor();
+   ```
+2. Open a behavior tree
+3. Right-click on a node
+4. Verify context menu options
+
+**Expected:**
+- "Edit" available (read-only)
+- "Duplicate" NOT shown
+- "Delete" NOT shown
+- Delete key does nothing
+- Right-click on canvas shows no creation menu
+
+### Test Case: Standalone Mode (Full CRUD)
+**Objective:** Verify all CRUD operations available
+
+**Steps:**
+1. Initialize editor in Standalone mode:
+   ```cpp
+   BlueprintEditor::Get().InitializeStandaloneEditor();
+   ```
+2. Open a behavior tree
+3. Right-click on a node
+4. Verify context menu options
+
+**Expected:**
+- "Edit", "Duplicate", "Delete" all shown
+- Delete key removes node
+- Ctrl+D duplicates node
+- Right-click on canvas shows node creation menu
+- Link creation works
+
+### Test Case: Mode Switching
+**Objective:** Verify mode changes take effect
+
+**Steps:**
+1. Start in Standalone mode
+2. Verify CRUD available
+3. Switch to Runtime mode
+4. Verify CRUD hidden
+
+**Expected:**
+- UI updates immediately when mode changes
+- No restart required
+- Capabilities correctly gated
+
+## Phase: JSON Validation Testing
+
+### Test Case: Type Detection
+**Objective:** Verify heuristic type detection
+
+**Steps:**
+1. Create JSON file without `type` field:
+   ```json
+   {
+     "rootNodeId": 1,
+     "nodes": [...]
+   }
+   ```
+2. Load in editor
+3. Check detected type
+
+**Expected:**
+- Type detected as "BehaviorTree" via heuristics
+- Warning logged: "Type field missing, detected as BehaviorTree"
+
+### Test Case: Normalization
+**Objective:** Verify missing fields are added
+
+**Steps:**
+1. Create minimal JSON:
+   ```json
+   {
+     "rootNodeId": 1,
+     "nodes": []
+   }
+   ```
+2. Load and normalize
+3. Check added fields
+
+**Expected:**
+- `schema_version: 2` added
+- `type: "BehaviorTree"` added
+- `metadata: {...}` added with defaults
+- `editorState: {...}` added with defaults
+
+### Test Case: Validation Errors
+**Objective:** Verify validation catches issues
+
+**Steps:**
+1. Create invalid BehaviorTree (missing nodes array)
+2. Run validation
+3. Check error message
+
+**Expected:**
+- Validation returns false
+- Error: "BehaviorTree missing 'nodes' array"
+- Informative error message for user
+
+## Phase: Entity-Independent Rendering
+
+### Test Case: No Entity Selected
+**Objective:** Verify graph renders without entity
+
+**Steps:**
+1. Open Node Graph Editor
+2. Ensure no entity selected (selectedEntity == 0)
+3. Open a behavior tree
+4. Verify graph renders
+
+**Expected:**
+- Graph renders normally
+- Top banner shows: "Editing BehaviorTree Asset (no entity context)"
+- All nodes and links visible
+- No error or blocked rendering
+
+### Test Case: With Entity Selected
+**Objective:** Verify entity info is informational only
+
+**Steps:**
+1. Select an entity from Runtime Entities
+2. Open a behavior tree
+3. Verify graph renders with entity info
+
+**Expected:**
+- Top banner shows: "Editing for Entity: <name> (ID: <id>)"
+- Graph still renders fully
+- Entity selection is purely informational
+- Can still edit graph (in Standalone mode)

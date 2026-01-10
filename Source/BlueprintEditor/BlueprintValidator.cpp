@@ -288,4 +288,256 @@ namespace Olympe
                 ErrorSeverity::Error, "Link"));
         }
     }
+    
+    // ========== JSON Schema Validation and Normalization ==========
+    
+    std::string BlueprintValidator::DetectType(const nlohmann::json& blueprint)
+    {
+        // Check if type is already specified
+        if (blueprint.contains("type") && blueprint["type"].is_string())
+        {
+            return blueprint["type"].get<std::string>();
+        }
+        
+        // Use heuristics to detect type
+        // BehaviorTree: has rootNodeId + nodes array
+        if (blueprint.contains("rootNodeId") && blueprint.contains("nodes"))
+        {
+            return "BehaviorTree";
+        }
+        
+        // HFSM: has states or initialState
+        if (blueprint.contains("states") || blueprint.contains("initialState"))
+        {
+            return "HFSM";
+        }
+        
+        // EntityBlueprint: has components array at root
+        if (blueprint.contains("components") && blueprint["components"].is_array())
+        {
+            return "EntityBlueprint";
+        }
+        
+        // EntityPrefab: has data.prefabName or data.components
+        if (blueprint.contains("data"))
+        {
+            const auto& data = blueprint["data"];
+            if (data.contains("prefabName") || data.contains("components"))
+            {
+                return "EntityPrefab";
+            }
+        }
+        
+        // UI Blueprint: has elements array
+        if (blueprint.contains("elements") && blueprint["elements"].is_array())
+        {
+            return "UIBlueprint";
+        }
+        
+        // Level: has worldSize or entities
+        if (blueprint.contains("worldSize") || blueprint.contains("entities"))
+        {
+            return "Level";
+        }
+        
+        // Catalog types
+        if (blueprint.contains("catalogType"))
+        {
+            return "Catalog";
+        }
+        
+        // Template
+        if (blueprint.contains("blueprintData"))
+        {
+            return "Template";
+        }
+        
+        // Default to Generic
+        return "Generic";
+    }
+    
+    bool BlueprintValidator::Normalize(nlohmann::json& blueprint)
+    {
+        bool modified = false;
+        
+        // Ensure schema_version exists
+        if (!blueprint.contains("schema_version"))
+        {
+            blueprint["schema_version"] = 2;
+            modified = true;
+        }
+        
+        // Detect and add type if missing
+        std::string detectedType = DetectType(blueprint);
+        if (!blueprint.contains("type"))
+        {
+            blueprint["type"] = detectedType;
+            modified = true;
+        }
+        
+        // Add blueprintType if missing (should match type)
+        if (!blueprint.contains("blueprintType"))
+        {
+            std::string type = blueprint.contains("type") ? 
+                blueprint["type"].get<std::string>() : detectedType;
+            blueprint["blueprintType"] = type;
+            modified = true;
+        }
+        
+        // Ensure metadata exists
+        if (!blueprint.contains("metadata"))
+        {
+            blueprint["metadata"] = nlohmann::json::object();
+            blueprint["metadata"]["author"] = "Unknown";
+            blueprint["metadata"]["created"] = "";
+            blueprint["metadata"]["lastModified"] = "";
+            blueprint["metadata"]["tags"] = nlohmann::json::array();
+            modified = true;
+        }
+        
+        // Ensure editorState exists
+        if (!blueprint.contains("editorState"))
+        {
+            blueprint["editorState"] = nlohmann::json::object();
+            blueprint["editorState"]["zoom"] = 1.0f;
+            blueprint["editorState"]["scrollOffset"] = nlohmann::json::object();
+            blueprint["editorState"]["scrollOffset"]["x"] = 0.0f;
+            blueprint["editorState"]["scrollOffset"]["y"] = 0.0f;
+            modified = true;
+        }
+        
+        return modified;
+    }
+    
+    bool BlueprintValidator::ValidateJSON(const nlohmann::json& blueprint, std::string& errors)
+    {
+        errors.clear();
+        
+        // Check if type exists
+        if (!blueprint.contains("type"))
+        {
+            errors = "Missing 'type' field";
+            return false;
+        }
+        
+        std::string type = blueprint["type"].get<std::string>();
+        
+        // Validate based on type
+        if (type == "BehaviorTree")
+        {
+            return ValidateBehaviorTree(blueprint, errors);
+        }
+        else if (type == "HFSM")
+        {
+            return ValidateHFSM(blueprint, errors);
+        }
+        else if (type == "EntityPrefab" || type == "EntityBlueprint")
+        {
+            return ValidateEntityPrefab(blueprint, errors);
+        }
+        else if (type == "UIBlueprint")
+        {
+            return ValidateUIBlueprint(blueprint, errors);
+        }
+        else if (type == "Level")
+        {
+            return ValidateLevel(blueprint, errors);
+        }
+        
+        // Generic or unknown types are considered valid
+        return true;
+    }
+    
+    bool BlueprintValidator::ValidateBehaviorTree(const nlohmann::json& blueprint, std::string& errors)
+    {
+        // Check for data wrapper (v2 format)
+        const nlohmann::json* data = &blueprint;
+        if (blueprint.contains("data") && blueprint["data"].is_object())
+        {
+            data = &blueprint["data"];
+        }
+        
+        // Required fields for BehaviorTree
+        if (!data->contains("nodes") || !(*data)["nodes"].is_array())
+        {
+            errors = "BehaviorTree missing 'nodes' array";
+            return false;
+        }
+        
+        if (!data->contains("rootNodeId"))
+        {
+            errors = "BehaviorTree missing 'rootNodeId'";
+            return false;
+        }
+        
+        return true;
+    }
+    
+    bool BlueprintValidator::ValidateHFSM(const nlohmann::json& blueprint, std::string& errors)
+    {
+        // Check for data wrapper (v2 format)
+        const nlohmann::json* data = &blueprint;
+        if (blueprint.contains("data") && blueprint["data"].is_object())
+        {
+            data = &blueprint["data"];
+        }
+        
+        // Required fields for HFSM
+        if (!data->contains("states") || !(*data)["states"].is_array())
+        {
+            errors = "HFSM missing 'states' array";
+            return false;
+        }
+        
+        if (!data->contains("initialState"))
+        {
+            errors = "HFSM missing 'initialState'";
+            return false;
+        }
+        
+        return true;
+    }
+    
+    bool BlueprintValidator::ValidateEntityPrefab(const nlohmann::json& blueprint, std::string& errors)
+    {
+        // Check for data wrapper (v2 format)
+        const nlohmann::json* data = &blueprint;
+        if (blueprint.contains("data") && blueprint["data"].is_object())
+        {
+            data = &blueprint["data"];
+        }
+        
+        // Required fields for EntityPrefab
+        if (!data->contains("components") || !(*data)["components"].is_array())
+        {
+            errors = "EntityPrefab missing 'components' array";
+            return false;
+        }
+        
+        return true;
+    }
+    
+    bool BlueprintValidator::ValidateUIBlueprint(const nlohmann::json& blueprint, std::string& errors)
+    {
+        // Required fields for UIBlueprint
+        if (!blueprint.contains("elements") || !blueprint["elements"].is_array())
+        {
+            errors = "UIBlueprint missing 'elements' array";
+            return false;
+        }
+        
+        return true;
+    }
+    
+    bool BlueprintValidator::ValidateLevel(const nlohmann::json& blueprint, std::string& errors)
+    {
+        // Required fields for Level
+        if (!blueprint.contains("worldSize") && !blueprint.contains("entities"))
+        {
+            errors = "Level missing 'worldSize' or 'entities'";
+            return false;
+        }
+        
+        return true;
+    }
 }

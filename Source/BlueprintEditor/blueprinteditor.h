@@ -73,6 +73,10 @@ namespace Olympe
         void Initialize();
         void Shutdown();
         void Update(float deltaTime);  // Called by GameEngine when active
+        
+        // Editor mode initialization
+        void InitializeRuntimeEditor();    // Initialize in Runtime mode (read-only)
+        void InitializeStandaloneEditor(); // Initialize in Standalone mode (full CRUD)
 
         // Editor state
         bool IsActive() const { return m_IsActive; }

@@ -663,3 +663,183 @@ Node positions and editor state are now saved with your graphs.
 ---
 
 **Enjoy the streamlined Blueprint Editor experience! 🎉**
+
+## Editor Modes: Runtime vs Standalone
+
+The Blueprint Editor supports two distinct modes:
+
+### Runtime Editor (In-Game Debugging)
+**When to use:** During gameplay for debugging and inspection
+
+**Features:**
+- ✅ View behavior trees and state machines
+- ✅ Inspect node parameters
+- ✅ See runtime entity context
+- ✅ Monitor graph execution
+- ❌ Cannot create or delete nodes
+- ❌ Cannot modify links
+- ❌ Cannot save changes
+
+**How to enable:**
+```cpp
+BlueprintEditor::Get().InitializeRuntimeEditor();
+```
+
+**UI Differences:**
+- Top banner shows selected entity context
+- Right-click shows "Edit" (view only)
+- No "Duplicate" or "Delete" options
+- No node creation menu
+- Delete key disabled
+
+### Standalone Editor (Asset Editing)
+**When to use:** For creating and editing blueprint assets
+
+**Features:**
+- ✅ Create new nodes and links
+- ✅ Edit node parameters
+- ✅ Duplicate nodes (Ctrl+D)
+- ✅ Delete nodes and links (Del)
+- ✅ Save changes to disk (Ctrl+S)
+- ✅ Undo/Redo operations
+- ❌ No runtime entity context
+
+**How to enable:**
+```cpp
+BlueprintEditor::Get().InitializeStandaloneEditor();
+```
+
+**UI Differences:**
+- Top banner shows "Editing BehaviorTree Asset (no entity context)"
+- Full context menu with Duplicate, Delete
+- Node creation via right-click
+- All keyboard shortcuts enabled
+- Save button active
+
+## Working with Multiple Graphs
+
+### Opening Multiple Tabs
+1. Use File → Open or double-click blueprints in Asset Browser
+2. Each graph opens in a new tab
+3. Tabs appear in order you opened them
+
+### Switching Between Tabs
+- Click on any tab to switch to that graph
+- Selected tab stays active until you click another
+- Tab order persists across editor sessions
+
+### Closing Tabs
+- Click the tab and select close (if available)
+- Close individual graphs via File menu
+- When you close a tab, the next tab becomes active
+- If closing the last tab, canvas shows "No graph open"
+
+### Tab Persistence
+- Tab order is saved automatically
+- Last active tab is remembered
+- Reopen editor and tabs appear in same order
+
+## Node Creation (Standalone Mode Only)
+
+### Via Context Menu
+1. Right-click on canvas
+2. Select node type:
+   - Composite → Sequence, Selector
+   - Action → MoveTo, Attack, Patrol, etc.
+   - Condition → CheckHealth, IsInRange, etc.
+   - Decorator → Inverter, Repeater, etc.
+
+### Via Drag & Drop
+1. Open Node Palette panel (if available)
+2. Drag node type onto canvas
+3. Node created at drop location
+
+**Safety:** Invalid node types are rejected with error tooltip
+
+## JSON Blueprint Validation
+
+The editor automatically validates and normalizes blueprint JSON files.
+
+### Automatic Type Detection
+If a blueprint is missing the `type` field, the editor detects it via structure:
+- Has `rootNodeId` + `nodes` → BehaviorTree
+- Has `states` + `initialState` → HFSM
+- Has `components` → EntityPrefab
+- Has `elements` → UIBlueprint
+- Has `worldSize` or `entities` → Level
+
+### Automatic Normalization
+Missing fields are added automatically when loading:
+- `schema_version: 2`
+- `type` (detected if missing)
+- `blueprintType` (matches type)
+- `metadata` object with author, timestamps, tags
+- `editorState` with zoom and scroll defaults
+
+### Validation Warnings
+Check console for warnings:
+```
+[BlueprintEditor] WARNING: No type information found in guard_patrol.json,
+using structural detection (detected: BehaviorTree)
+```
+
+### Manual Validation
+In Standalone mode, you can validate blueprints:
+```cpp
+BlueprintValidator validator;
+nlohmann::json blueprint = LoadBlueprint("example.json");
+
+// Normalize (add missing fields)
+validator.Normalize(blueprint);
+
+// Validate structure
+std::string errors;
+if (!validator.ValidateJSON(blueprint, errors)) {
+    std::cerr << "Validation error: " << errors << std::endl;
+}
+```
+
+See JSON_FIT_GAP.md for complete documentation.
+
+## Keyboard Shortcuts
+
+### Universal (Both Modes)
+- **F2** - Toggle editor on/off
+- **Ctrl+Z** - Undo (when available)
+- **Ctrl+Y** - Redo (when available)
+- **Double-click node** - Edit node properties
+
+### Standalone Mode Only
+- **Ctrl+N** - New blueprint
+- **Ctrl+O** - Open blueprint
+- **Ctrl+S** - Save current blueprint
+- **Ctrl+Shift+S** - Save As
+- **Ctrl+D** - Duplicate selected node
+- **Del** - Delete selected node or link
+- **Right-click canvas** - Create node menu
+
+### Runtime Mode
+Most shortcuts are disabled for safety.
+
+## Troubleshooting
+
+### "No CRUD options in menu"
+- You're in Runtime mode
+- Switch to Standalone mode for editing
+
+### "Tab keeps switching back to first graph"
+- This is fixed in latest version
+- Active tab now persists correctly
+
+### "Node creation crashes editor"
+- This is fixed in latest version
+- Invalid payloads are now validated
+
+### "Blueprint shows as 'Generic' type"
+- Blueprint missing `type` field
+- Editor detects type via structure
+- Add `"type": "BehaviorTree"` to JSON for explicit typing
+
+### "Missing metadata or editorState"
+- These are added automatically via normalization
+- No action needed, happens transparently
