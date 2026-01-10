@@ -91,17 +91,23 @@ namespace Olympe
     void NodeGraphPanel::RenderGraphTabs()
     {
         auto graphIds = NodeGraphManager::Get().GetAllGraphIds();
+        int activeGraphId = NodeGraphManager::Get().GetActiveGraphId();
 
         if (ImGui::BeginTabBar("GraphTabs"))
         {
             for (int graphId : graphIds)
             {
                 std::string graphName = NodeGraphManager::Get().GetGraphName(graphId);
+                
+                // Use SetSelected flag to ensure the active tab is visually selected
+                ImGuiTabItemFlags flags = (graphId == activeGraphId) 
+                    ? ImGuiTabItemFlags_SetSelected 
+                    : ImGuiTabItemFlags_None;
 
-                if (ImGui::BeginTabItem(graphName.c_str(), nullptr, ImGuiTabItemFlags_None))
+                if (ImGui::BeginTabItem(graphName.c_str(), nullptr, flags))
                 {
-                    // Set active only if not already active (user clicked the tab)
-                    if (NodeGraphManager::Get().GetActiveGraphId() != graphId)
+                    // Only set active if user actually clicked this tab (not the already active one)
+                    if (activeGraphId != graphId)
                     {
                         NodeGraphManager::Get().SetActiveGraph(graphId);
                     }
@@ -200,6 +206,69 @@ namespace Olympe
             const GraphLink& link = links[i];
             int linkId = (int)i + 1;  // Link IDs start from 1
             ImNodes::Link(linkId, link.fromNode * 100 + 2, link.toNode * 100 + 1);
+        }
+
+        // Handle drag & drop from node palette BEFORE ending editor
+        // This must be done inside the ImNodes context for proper coordinate conversion
+        if (ImNodes::IsEditorHovered())
+        {
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("NODE_TYPE"))
+                {
+                    std::string nodeTypeData((const char*)payload->Data);
+                    
+                    // Convert screen space coordinates to grid space
+                    ImVec2 mouseScreenPos = ImGui::GetMousePos();
+                    ImVec2 canvasPos = ImNodes::ScreenSpaceToGridSpace(mouseScreenPos);
+                    
+                    // Parse the type and create appropriate node
+                    if (nodeTypeData.find("Action:") == 0)
+                    {
+                        std::string actionType = nodeTypeData.substr(7);
+                        int nodeId = graph->CreateNode(NodeType::BT_Action, canvasPos.x, canvasPos.y, actionType);
+                        GraphNode* node = graph->GetNode(nodeId);
+                        if (node)
+                        {
+                            node->actionType = actionType;
+                            std::cout << "[NodeGraphPanel] Created Action node: " << actionType 
+                                      << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                        }
+                    }
+                    else if (nodeTypeData.find("Condition:") == 0)
+                    {
+                        std::string conditionType = nodeTypeData.substr(10);
+                        int nodeId = graph->CreateNode(NodeType::BT_Condition, canvasPos.x, canvasPos.y, conditionType);
+                        GraphNode* node = graph->GetNode(nodeId);
+                        if (node)
+                        {
+                            node->conditionType = conditionType;
+                            std::cout << "[NodeGraphPanel] Created Condition node: " << conditionType 
+                                      << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                        }
+                    }
+                    else if (nodeTypeData.find("Decorator:") == 0)
+                    {
+                        std::string decoratorType = nodeTypeData.substr(10);
+                        int nodeId = graph->CreateNode(NodeType::BT_Decorator, canvasPos.x, canvasPos.y, decoratorType);
+                        GraphNode* node = graph->GetNode(nodeId);
+                        if (node)
+                        {
+                            node->decoratorType = decoratorType;
+                            std::cout << "[NodeGraphPanel] Created Decorator node: " << decoratorType 
+                                      << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                        }
+                    }
+                    else if (nodeTypeData == "Sequence" || nodeTypeData == "Selector")
+                    {
+                        NodeType type = (nodeTypeData == "Sequence") ? NodeType::BT_Sequence : NodeType::BT_Selector;
+                        graph->CreateNode(type, canvasPos.x, canvasPos.y, nodeTypeData);
+                        std::cout << "[NodeGraphPanel] Created " << nodeTypeData << " node"
+                                  << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                    }
+                }
+                ImGui::EndDragDropTarget();
+            }
         }
 
         ImNodes::EndNodeEditor();
@@ -333,65 +402,6 @@ namespace Olympe
             std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
             auto cmd = std::make_unique<LinkNodesCommand>(graphId, fromNode, toNode);
             BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
-        }
-
-        // Handle drag & drop from node palette
-        if (ImGui::BeginDragDropTarget())
-        {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("NODE_TYPE"))
-            {
-                std::string nodeTypeData((const char*)payload->Data);
-                
-                // Convert screen space coordinates to grid space
-                ImVec2 mouseScreenPos = ImGui::GetMousePos();
-                ImVec2 canvasPos = ImNodes::ScreenSpaceToGridSpace(mouseScreenPos);
-                
-                // Parse the type and create appropriate node
-                if (nodeTypeData.find("Action:") == 0)
-                {
-                    std::string actionType = nodeTypeData.substr(7);
-                    int nodeId = graph->CreateNode(NodeType::BT_Action, canvasPos.x, canvasPos.y, actionType);
-                    GraphNode* node = graph->GetNode(nodeId);
-                    if (node)
-                    {
-                        node->actionType = actionType;
-                        std::cout << "[NodeGraphPanel] Created Action node: " << actionType 
-                                  << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
-                    }
-                }
-                else if (nodeTypeData.find("Condition:") == 0)
-                {
-                    std::string conditionType = nodeTypeData.substr(10);
-                    int nodeId = graph->CreateNode(NodeType::BT_Condition, canvasPos.x, canvasPos.y, conditionType);
-                    GraphNode* node = graph->GetNode(nodeId);
-                    if (node)
-                    {
-                        node->conditionType = conditionType;
-                        std::cout << "[NodeGraphPanel] Created Condition node: " << conditionType 
-                                  << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
-                    }
-                }
-                else if (nodeTypeData.find("Decorator:") == 0)
-                {
-                    std::string decoratorType = nodeTypeData.substr(10);
-                    int nodeId = graph->CreateNode(NodeType::BT_Decorator, canvasPos.x, canvasPos.y, decoratorType);
-                    GraphNode* node = graph->GetNode(nodeId);
-                    if (node)
-                    {
-                        node->decoratorType = decoratorType;
-                        std::cout << "[NodeGraphPanel] Created Decorator node: " << decoratorType 
-                                  << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
-                    }
-                }
-                else if (nodeTypeData == "Sequence" || nodeTypeData == "Selector")
-                {
-                    NodeType type = (nodeTypeData == "Sequence") ? NodeType::BT_Sequence : NodeType::BT_Selector;
-                    graph->CreateNode(type, canvasPos.x, canvasPos.y, nodeTypeData);
-                    std::cout << "[NodeGraphPanel] Created " << nodeTypeData << " node"
-                              << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
-                }
-            }
-            ImGui::EndDragDropTarget();
         }
 
         // Update node positions
