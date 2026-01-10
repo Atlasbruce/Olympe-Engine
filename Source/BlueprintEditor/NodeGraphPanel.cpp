@@ -15,6 +15,25 @@
 #include <cstring>
 #include <cmath>
 
+namespace
+{
+    // Helper function to convert screen space coordinates to grid space coordinates
+    // Screen space: origin at upper-left corner of the window
+    // Grid space: origin at upper-left corner of the node editor, adjusted by panning
+    ImVec2 ScreenSpaceToGridSpace(const ImVec2& screenPos)
+    {
+        // Get the editor's screen space position
+        ImVec2 editorPos = ImGui::GetCursorScreenPos();
+        
+        // Get the current panning offset
+        ImVec2 panning = ImNodes::EditorContextGetPanning();
+        
+        // Convert: subtract editor position to get editor space, then subtract panning to get grid space
+        return ImVec2(screenPos.x - editorPos.x - panning.x, 
+                      screenPos.y - editorPos.y - panning.y);
+    }
+}
+
 namespace Olympe
 {
     NodeGraphPanel::NodeGraphPanel()
@@ -344,7 +363,7 @@ namespace Olympe
                 
                 // Convert screen space coordinates to grid space
                 ImVec2 mouseScreenPos = ImGui::GetMousePos();
-                ImVec2 canvasPos = ImNodes::ScreenSpaceToGridSpace(mouseScreenPos);
+                ImVec2 canvasPos = ScreenSpaceToGridSpace(mouseScreenPos);
                 
                 // Parse the type and create appropriate node
                 if (nodeTypeData.find("Action:") == 0)
@@ -502,7 +521,7 @@ namespace Olympe
         }
         
         // Convert screen coordinates to canvas coordinates
-        ImVec2 canvasPos = ImNodes::ScreenSpaceToGridSpace(ImVec2(screenX, screenY));
+        ImVec2 canvasPos = ScreenSpaceToGridSpace(ImVec2(screenX, screenY));
         
         // Validate coordinates are finite (not NaN or infinity)
         if (!std::isfinite(canvasPos.x) || !std::isfinite(canvasPos.y))
