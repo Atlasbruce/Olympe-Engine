@@ -14,8 +14,19 @@
 namespace Olympe
 {
     /**
+     * Blueprint Editor Mode
+     * Defines the operational mode of the blueprint editor
+     */
+    enum class BlueprintEditorMode
+    {
+        Standalone,     // Full CRUD editing, no entity binding
+        Runtime         // Read-only or light operations, for runtime entity inspection
+    };
+
+    /**
      * NodeGraphPanel - ImGui/ImNodes panel for node graph editing
      * Provides visual editor for behavior trees and state machines
+     * Supports both Standalone (full CRUD) and Runtime (visualization) modes
      */
     class NodeGraphPanel
     {
@@ -26,6 +37,10 @@ namespace Olympe
         void Initialize();
         void Shutdown();
         void Render();
+        
+        // Set editor mode
+        void SetEditorMode(BlueprintEditorMode mode) { m_EditorMode = mode; }
+        BlueprintEditorMode GetEditorMode() const { return m_EditorMode; }
 
     private:
         void RenderGraphTabs();
@@ -37,6 +52,9 @@ namespace Olympe
 
         // Node creation helpers
         void CreateNewNode(const char* nodeType, float x, float y);
+        
+        // Check if editor is in read-only mode
+        bool IsReadOnly() const { return m_EditorMode == BlueprintEditorMode::Runtime; }
 
         // ImNodes state
         int m_SelectedNodeId = -1;
@@ -44,6 +62,9 @@ namespace Olympe
         bool m_ShowContextMenu = false;
         float m_ContextMenuPosX = 0.0f;
         float m_ContextMenuPosY = 0.0f;
+        
+        // Editor mode
+        BlueprintEditorMode m_EditorMode = BlueprintEditorMode::Standalone;
         
         // Node editing modal
         bool m_ShowNodeEditModal = false;

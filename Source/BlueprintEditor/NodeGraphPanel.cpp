@@ -37,10 +37,37 @@ namespace Olympe
 
     void NodeGraphPanel::Render()
     {
-        ImGui::Begin("Node Graph Editor");
+        // Set window title based on editor mode
+        const char* windowTitle = (m_EditorMode == BlueprintEditorMode::Runtime) 
+            ? "Node Graph Viewer (Runtime)" 
+            : "Node Graph Editor (Standalone)";
+        ImGui::Begin(windowTitle);
 
-        // Handle keyboard shortcuts
-        HandleKeyboardShortcuts();
+        // Display editor mode badge
+        if (m_EditorMode == BlueprintEditorMode::Runtime)
+        {
+            ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "[Runtime Mode - Read Only]");
+            ImGui::SameLine();
+            if (ImGui::SmallButton("Switch to Standalone"))
+            {
+                m_EditorMode = BlueprintEditorMode::Standalone;
+            }
+        }
+        else
+        {
+            ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.5f, 1.0f), "[Standalone Mode - Full Editing]");
+            ImGui::SameLine();
+            if (ImGui::SmallButton("Switch to Runtime"))
+            {
+                m_EditorMode = BlueprintEditorMode::Runtime;
+            }
+        }
+
+        // Handle keyboard shortcuts (only in Standalone mode)
+        if (!IsReadOnly())
+        {
+            HandleKeyboardShortcuts();
+        }
 
         // Show currently selected entity at the top (informational only, doesn't block rendering)
         uint64_t selectedEntity = BlueprintEditor::Get().GetSelectedEntity();
@@ -48,12 +75,14 @@ namespace Olympe
         {
             EntityInfo info = EntityInspectorManager::Get().GetEntityInfo(selectedEntity);
             ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), 
-                "Editing for Entity: %s (ID: %llu)", info.name.c_str(), selectedEntity);
+                "Viewing Entity: %s (ID: %llu)", info.name.c_str(), selectedEntity);
         }
         else
         {
             ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.9f, 1.0f), 
-                "Editing BehaviorTree Asset (no entity context)");
+                m_EditorMode == BlueprintEditorMode::Runtime 
+                    ? "Runtime Blueprint Viewer (no entity context)"
+                    : "Standalone Blueprint Editor (no entity context)");
         }
         ImGui::Separator();
 
@@ -71,19 +100,32 @@ namespace Olympe
         else
         {
             ImGui::Text("No graph open. Create or load a graph to begin.");
-            if (ImGui::Button("Create New Behavior Tree"))
+            
+            // Only show creation buttons in Standalone mode
+            if (!IsReadOnly())
             {
-                NodeGraphManager::Get().CreateGraph("New Behavior Tree", "BehaviorTree");
+                if (ImGui::Button("Create New Behavior Tree"))
+                {
+                    NodeGraphManager::Get().CreateGraph("New Behavior Tree", "BehaviorTree");
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Create New HFSM"))
+                {
+                    NodeGraphManager::Get().CreateGraph("New HFSM", "HFSM");
+                }
             }
-            ImGui::SameLine();
-            if (ImGui::Button("Create New HFSM"))
+            else
             {
-                NodeGraphManager::Get().CreateGraph("New HFSM", "HFSM");
+                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
+                    "(Runtime mode: switch to Standalone to create graphs)");
             }
         }
 
-        // Render node edit modal
-        RenderNodeEditModal();
+        // Render node edit modal (only in Standalone mode)
+        if (!IsReadOnly())
+        {
+            RenderNodeEditModal();
+        }
 
         ImGui::End();
     }
@@ -115,17 +157,20 @@ namespace Olympe
                 }
             }
 
-            // Add "+" button for new graph
-            if (ImGui::TabItemButton("+", ImGuiTabItemFlags_Trailing))
+            // Add "+" button for new graph (only in Standalone mode)
+            if (!IsReadOnly())
             {
-                ImGui::OpenPopup("CreateGraphPopup");
+                if (ImGui::TabItemButton("+", ImGuiTabItemFlags_Trailing))
+                {
+                    ImGui::OpenPopup("CreateGraphPopup");
+                }
             }
 
             ImGui::EndTabBar();
         }
 
-        // Create graph popup
-        if (ImGui::BeginPopup("CreateGraphPopup"))
+        // Create graph popup (only in Standalone mode)
+        if (!IsReadOnly() && ImGui::BeginPopup("CreateGraphPopup"))
         {
             if (ImGui::MenuItem("New Behavior Tree"))
             {
@@ -208,9 +253,9 @@ namespace Olympe
             ImNodes::Link(linkId, link.fromNode * 100 + 2, link.toNode * 100 + 1);
         }
 
-        // Handle drag & drop from node palette BEFORE ending editor
+        // Handle drag & drop from node palette BEFORE ending editor (only in Standalone mode)
         // This must be done inside the ImNodes context for proper coordinate conversion
-        if (ImNodes::IsEditorHovered())
+        if (!IsReadOnly() && ImNodes::IsEditorHovered())
         {
             if (ImGui::BeginDragDropTarget())
             {
@@ -283,8 +328,8 @@ namespace Olympe
                 m_SelectedLinkId = selectedLinks[0];
         }
 
-        // Handle Delete key for nodes and links
-        if (ImGui::IsKeyPressed(ImGuiKey_Delete))
+        // Handle Delete key for nodes and links (only in Standalone mode)
+        if (!IsReadOnly() && ImGui::IsKeyPressed(ImGuiKey_Delete))
         {
             if (m_SelectedNodeId != -1)
             {
@@ -310,7 +355,7 @@ namespace Olympe
             }
         }
 
-        // Check for double-click on node to open edit modal
+        // Check for double-click on node to open edit modal (or view in Runtime mode)
         int hoveredNodeId = -1;
         if (ImNodes::IsNodeHovered(&hoveredNodeId))
         {
@@ -334,8 +379,8 @@ namespace Olympe
             ImGui::OpenPopup("NodeContextMenu");
         }
 
-        // Handle right-click on canvas for node creation menu
-        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImNodes::IsEditorHovered() && !ImNodes::IsNodeHovered(&hoveredNodeId))
+        // Handle right-click on canvas for node creation menu (only in Standalone mode)
+        if (!IsReadOnly() && ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImNodes::IsEditorHovered() && !ImNodes::IsNodeHovered(&hoveredNodeId))
         {
             ImGui::OpenPopup("NodeCreationMenu");
             ImVec2 mousePos = ImGui::GetMousePos();
@@ -349,7 +394,11 @@ namespace Olympe
             ImGui::Text("Node: %d", m_SelectedNodeId);
             ImGui::Separator();
             
-            if (ImGui::MenuItem("Edit", "Double-click"))
+            // Show View option in Runtime mode, Edit in Standalone mode
+            const char* viewEditLabel = IsReadOnly() ? "View" : "Edit";
+            const char* viewEditShortcut = IsReadOnly() ? "Double-click" : "Double-click";
+            
+            if (ImGui::MenuItem(viewEditLabel, viewEditShortcut))
             {
                 m_EditingNodeId = m_SelectedNodeId;
                 GraphNode* node = graph->GetNode(m_SelectedNodeId);
@@ -361,20 +410,24 @@ namespace Olympe
                 }
             }
             
-            if (ImGui::MenuItem("Duplicate", "Ctrl+D"))
+            // Editing operations only in Standalone mode
+            if (!IsReadOnly())
             {
-                std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
-                auto cmd = std::make_unique<DuplicateNodeCommand>(graphId, m_SelectedNodeId);
-                BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
-            }
-            
-            ImGui::Separator();
-            
-            if (ImGui::MenuItem("Delete", "Del"))
-            {
-                std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
-                auto cmd = std::make_unique<DeleteNodeCommand>(graphId, m_SelectedNodeId);
-                BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+                if (ImGui::MenuItem("Duplicate", "Ctrl+D"))
+                {
+                    std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+                    auto cmd = std::make_unique<DuplicateNodeCommand>(graphId, m_SelectedNodeId);
+                    BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+                }
+                
+                ImGui::Separator();
+                
+                if (ImGui::MenuItem("Delete", "Del"))
+                {
+                    std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+                    auto cmd = std::make_unique<DeleteNodeCommand>(graphId, m_SelectedNodeId);
+                    BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+                }
             }
             
             ImGui::EndPopup();
@@ -392,24 +445,30 @@ namespace Olympe
                 m_SelectedNodeId = selectedNodes[0];
         }
 
-        // Handle link creation
-        int startAttr, endAttr;
-        if (ImNodes::IsLinkCreated(&startAttr, &endAttr))
+        // Handle link creation (only in Standalone mode)
+        if (!IsReadOnly())
         {
-            int fromNode = startAttr / 100;
-            int toNode = endAttr / 100;
-            
-            std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
-            auto cmd = std::make_unique<LinkNodesCommand>(graphId, fromNode, toNode);
-            BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+            int startAttr, endAttr;
+            if (ImNodes::IsLinkCreated(&startAttr, &endAttr))
+            {
+                int fromNode = startAttr / 100;
+                int toNode = endAttr / 100;
+                
+                std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+                auto cmd = std::make_unique<LinkNodesCommand>(graphId, fromNode, toNode);
+                BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+            }
         }
 
-        // Update node positions
-        for (GraphNode* node : nodes)
+        // Update node positions (only in Standalone mode to prevent accidental moves in Runtime mode)
+        if (!IsReadOnly())
         {
-            ImVec2 pos = ImNodes::GetNodeGridSpacePos(node->id);
-            node->posX = pos.x;
-            node->posY = pos.y;
+            for (GraphNode* node : nodes)
+            {
+                ImVec2 pos = ImNodes::GetNodeGridSpacePos(node->id);
+                node->posX = pos.x;
+                node->posY = pos.y;
+            }
         }
     }
 
@@ -595,16 +654,25 @@ namespace Olympe
             return;
         }
 
-        ImGui::OpenPopup("Edit Node");
+        // Different title for Runtime vs Standalone mode
+        const char* modalTitle = IsReadOnly() ? "View Node" : "Edit Node";
+        ImGui::OpenPopup(modalTitle);
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
         
-        if (ImGui::BeginPopupModal("Edit Node", &m_ShowNodeEditModal, ImGuiWindowFlags_AlwaysAutoResize))
+        if (ImGui::BeginPopupModal(modalTitle, &m_ShowNodeEditModal, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            // Node name
-            if (ImGui::InputText("Name", m_NodeNameBuffer, sizeof(m_NodeNameBuffer)))
+            // Node name (read-only in Runtime mode)
+            if (IsReadOnly())
             {
-                // Name will be saved on OK
+                ImGui::Text("Name: %s", node->name.c_str());
+            }
+            else
+            {
+                if (ImGui::InputText("Name", m_NodeNameBuffer, sizeof(m_NodeNameBuffer)))
+                {
+                    // Name will be saved on OK
+                }
             }
             
             ImGui::Text("Type: %s", NodeTypeToString(node->type));
@@ -616,24 +684,31 @@ namespace Olympe
             // Type-specific parameters
             if (node->type == NodeType::BT_Action)
             {
-                // Action type dropdown
-                ImGui::Text("Action Type:");
-                auto actionTypes = EnumCatalogManager::Get().GetActionTypes();
-                if (ImGui::BeginCombo("##actiontype", node->actionType.c_str()))
+                // Action type dropdown (read-only in Runtime mode)
+                if (IsReadOnly())
                 {
-                    for (const auto& actionType : actionTypes)
+                    ImGui::Text("Action Type: %s", node->actionType.c_str());
+                }
+                else
+                {
+                    ImGui::Text("Action Type:");
+                    auto actionTypes = EnumCatalogManager::Get().GetActionTypes();
+                    if (ImGui::BeginCombo("##actiontype", node->actionType.c_str()))
                     {
-                        bool isSelected = (node->actionType == actionType);
-                        if (ImGui::Selectable(actionType.c_str(), isSelected))
+                        for (const auto& actionType : actionTypes)
                         {
-                            std::string oldType = node->actionType;
-                            node->actionType = actionType;
-                            // Could create EditNodeCommand here
+                            bool isSelected = (node->actionType == actionType);
+                            if (ImGui::Selectable(actionType.c_str(), isSelected))
+                            {
+                                std::string oldType = node->actionType;
+                                node->actionType = actionType;
+                                // Could create EditNodeCommand here
+                            }
+                            if (isSelected)
+                                ImGui::SetItemDefaultFocus();
                         }
-                        if (isSelected)
-                            ImGui::SetItemDefaultFocus();
+                        ImGui::EndCombo();
                     }
-                    ImGui::EndCombo();
                 }
                 
                 // Show and edit parameters
@@ -650,15 +725,24 @@ namespace Olympe
                         if (currentValue.empty())
                             currentValue = paramDef.defaultValue;
                         
-                        char buffer[256];
-                        strncpy_s(buffer, currentValue.c_str(), sizeof(buffer) - 1);
-                        buffer[sizeof(buffer) - 1] = '\0';
-                        
-                        if (ImGui::InputText(paramDef.name.c_str(), buffer, sizeof(buffer)))
+                        if (IsReadOnly())
                         {
-                            std::string oldValue = node->parameters[paramDef.name];
-                            node->parameters[paramDef.name] = buffer;
-                            // Could create SetParameterCommand here for undo support
+                            // Display as read-only text in Runtime mode
+                            ImGui::Text("%s: %s", paramDef.name.c_str(), currentValue.c_str());
+                        }
+                        else
+                        {
+                            // Allow editing in Standalone mode
+                            char buffer[256];
+                            strncpy_s(buffer, currentValue.c_str(), sizeof(buffer) - 1);
+                            buffer[sizeof(buffer) - 1] = '\0';
+                            
+                            if (ImGui::InputText(paramDef.name.c_str(), buffer, sizeof(buffer)))
+                            {
+                                std::string oldValue = node->parameters[paramDef.name];
+                                node->parameters[paramDef.name] = buffer;
+                                // Could create SetParameterCommand here for undo support
+                            }
                         }
                         
                         if (!actionDef->tooltip.empty() && ImGui::IsItemHovered())
@@ -670,22 +754,29 @@ namespace Olympe
             }
             else if (node->type == NodeType::BT_Condition)
             {
-                // Condition type dropdown
-                ImGui::Text("Condition Type:");
-                auto conditionTypes = EnumCatalogManager::Get().GetConditionTypes();
-                if (ImGui::BeginCombo("##conditiontype", node->conditionType.c_str()))
+                // Condition type dropdown (read-only in Runtime mode)
+                if (IsReadOnly())
                 {
-                    for (const auto& conditionType : conditionTypes)
+                    ImGui::Text("Condition Type: %s", node->conditionType.c_str());
+                }
+                else
+                {
+                    ImGui::Text("Condition Type:");
+                    auto conditionTypes = EnumCatalogManager::Get().GetConditionTypes();
+                    if (ImGui::BeginCombo("##conditiontype", node->conditionType.c_str()))
                     {
-                        bool isSelected = (node->conditionType == conditionType);
-                        if (ImGui::Selectable(conditionType.c_str(), isSelected))
+                        for (const auto& conditionType : conditionTypes)
                         {
-                            node->conditionType = conditionType;
+                            bool isSelected = (node->conditionType == conditionType);
+                            if (ImGui::Selectable(conditionType.c_str(), isSelected))
+                            {
+                                node->conditionType = conditionType;
+                            }
+                            if (isSelected)
+                                ImGui::SetItemDefaultFocus();
                         }
-                        if (isSelected)
-                            ImGui::SetItemDefaultFocus();
+                        ImGui::EndCombo();
                     }
-                    ImGui::EndCombo();
                 }
                 
                 // Show and edit parameters
@@ -701,64 +792,93 @@ namespace Olympe
                         if (currentValue.empty())
                             currentValue = paramDef.defaultValue;
                         
-                        char buffer[256];
-                        strncpy_s(buffer, currentValue.c_str(), sizeof(buffer) - 1);
-                        buffer[sizeof(buffer) - 1] = '\0';
-                        
-                        if (ImGui::InputText(paramDef.name.c_str(), buffer, sizeof(buffer)))
+                        if (IsReadOnly())
                         {
-                            node->parameters[paramDef.name] = buffer;
+                            // Display as read-only text in Runtime mode
+                            ImGui::Text("%s: %s", paramDef.name.c_str(), currentValue.c_str());
+                        }
+                        else
+                        {
+                            // Allow editing in Standalone mode
+                            char buffer[256];
+                            strncpy_s(buffer, currentValue.c_str(), sizeof(buffer) - 1);
+                            buffer[sizeof(buffer) - 1] = '\0';
+                            
+                            if (ImGui::InputText(paramDef.name.c_str(), buffer, sizeof(buffer)))
+                            {
+                                node->parameters[paramDef.name] = buffer;
+                            }
                         }
                     }
                 }
             }
             else if (node->type == NodeType::BT_Decorator)
             {
-                // Decorator type dropdown
-                ImGui::Text("Decorator Type:");
-                auto decoratorTypes = EnumCatalogManager::Get().GetDecoratorTypes();
-                if (ImGui::BeginCombo("##decoratortype", node->decoratorType.c_str()))
+                // Decorator type dropdown (read-only in Runtime mode)
+                if (IsReadOnly())
                 {
-                    for (const auto& decoratorType : decoratorTypes)
+                    ImGui::Text("Decorator Type: %s", node->decoratorType.c_str());
+                }
+                else
+                {
+                    ImGui::Text("Decorator Type:");
+                    auto decoratorTypes = EnumCatalogManager::Get().GetDecoratorTypes();
+                    if (ImGui::BeginCombo("##decoratortype", node->decoratorType.c_str()))
                     {
-                        bool isSelected = (node->decoratorType == decoratorType);
-                        if (ImGui::Selectable(decoratorType.c_str(), isSelected))
+                        for (const auto& decoratorType : decoratorTypes)
                         {
-                            node->decoratorType = decoratorType;
+                            bool isSelected = (node->decoratorType == decoratorType);
+                            if (ImGui::Selectable(decoratorType.c_str(), isSelected))
+                            {
+                                node->decoratorType = decoratorType;
+                            }
+                            if (isSelected)
+                                ImGui::SetItemDefaultFocus();
                         }
-                        if (isSelected)
-                            ImGui::SetItemDefaultFocus();
+                        ImGui::EndCombo();
                     }
-                    ImGui::EndCombo();
                 }
             }
             
             ImGui::Separator();
             
-            if (ImGui::Button("OK", ImVec2(120, 0)))
+            // In Runtime mode, only show Close button
+            if (IsReadOnly())
             {
-                // Apply name change if different
-                std::string newName(m_NodeNameBuffer);
-                if (newName != node->name)
+                if (ImGui::Button("Close", ImVec2(120, 0)))
                 {
-                    node->name = newName;
+                    m_ShowNodeEditModal = false;
+                    m_EditingNodeId = -1;
+                }
+            }
+            else
+            {
+                // In Standalone mode, show OK and Cancel buttons
+                if (ImGui::Button("OK", ImVec2(120, 0)))
+                {
+                    // Apply name change if different
+                    std::string newName(m_NodeNameBuffer);
+                    if (newName != node->name)
+                    {
+                        node->name = newName;
+                    }
+                    
+                    m_ShowNodeEditModal = false;
+                    m_EditingNodeId = -1;
+                    
+                    // Auto-save the graph
+                    int graphId = NodeGraphManager::Get().GetActiveGraphId();
+                    std::string filename = "graph_" + std::to_string(graphId) + ".json";
+                    NodeGraphManager::Get().SaveGraph(graphId, filename);
                 }
                 
-                m_ShowNodeEditModal = false;
-                m_EditingNodeId = -1;
+                ImGui::SameLine();
                 
-                // Auto-save the graph
-                int graphId = NodeGraphManager::Get().GetActiveGraphId();
-                std::string filename = "graph_" + std::to_string(graphId) + ".json";
-                NodeGraphManager::Get().SaveGraph(graphId, filename);
-            }
-            
-            ImGui::SameLine();
-            
-            if (ImGui::Button("Cancel", ImVec2(120, 0)))
-            {
-                m_ShowNodeEditModal = false;
-                m_EditingNodeId = -1;
+                if (ImGui::Button("Cancel", ImVec2(120, 0)))
+                {
+                    m_ShowNodeEditModal = false;
+                    m_EditingNodeId = -1;
+                }
             }
             
             ImGui::EndPopup();
