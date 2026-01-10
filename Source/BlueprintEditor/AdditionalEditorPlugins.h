@@ -26,7 +26,7 @@ namespace Olympe
         bool CanHandle(const nlohmann::json& blueprint) const override;
         std::vector<ValidationError> Validate(const nlohmann::json& blueprint) override;
         
-        void RenderEditor(nlohmann::json& blueprintData, EditorContext& ctx) override;
+        void RenderEditor(nlohmann::json& blueprintData, EditorContext_st& ctx) override;
         void RenderProperties(const nlohmann::json& blueprintData) override;
         void RenderToolbar(nlohmann::json& blueprintData) override;
     };
@@ -47,7 +47,7 @@ namespace Olympe
         bool CanHandle(const nlohmann::json& blueprint) const override;
         std::vector<ValidationError> Validate(const nlohmann::json& blueprint) override;
         
-        void RenderEditor(nlohmann::json& blueprintData, EditorContext& ctx) override;
+        void RenderEditor(nlohmann::json& blueprintData, EditorContext_st& ctx) override;
         void RenderProperties(const nlohmann::json& blueprintData) override;
         void RenderToolbar(nlohmann::json& blueprintData) override;
     };
@@ -68,7 +68,7 @@ namespace Olympe
         bool CanHandle(const nlohmann::json& blueprint) const override;
         std::vector<ValidationError> Validate(const nlohmann::json& blueprint) override;
         
-        void RenderEditor(nlohmann::json& blueprintData, EditorContext& ctx) override;
+        void RenderEditor(nlohmann::json& blueprintData, EditorContext_st& ctx) override;
         void RenderProperties(const nlohmann::json& blueprintData) override;
         void RenderToolbar(nlohmann::json& blueprintData) override;
     };
@@ -89,7 +89,7 @@ namespace Olympe
         bool CanHandle(const nlohmann::json& blueprint) const override;
         std::vector<ValidationError> Validate(const nlohmann::json& blueprint) override;
         
-        void RenderEditor(nlohmann::json& blueprintData, EditorContext& ctx) override;
+        void RenderEditor(nlohmann::json& blueprintData, EditorContext_st& ctx) override;
         void RenderProperties(const nlohmann::json& blueprintData) override;
         void RenderToolbar(nlohmann::json& blueprintData) override;
     };
@@ -110,7 +110,7 @@ namespace Olympe
         bool CanHandle(const nlohmann::json& blueprint) const override;
         std::vector<ValidationError> Validate(const nlohmann::json& blueprint) override;
         
-        void RenderEditor(nlohmann::json& blueprintData, EditorContext& ctx) override;
+        void RenderEditor(nlohmann::json& blueprintData, EditorContext_st& ctx) override;
         void RenderProperties(const nlohmann::json& blueprintData) override;
         void RenderToolbar(nlohmann::json& blueprintData) override;
     };

@@ -121,7 +121,7 @@ namespace Olympe
         return errors;
     }
     
-    void EntityPrefabEditorPlugin::RenderEditor(json& blueprintData, EditorContext& ctx)
+    void EntityPrefabEditorPlugin::RenderEditor(json& blueprintData, EditorContext_st& ctx)
     {
         if (!blueprintData.contains("data"))
         {
@@ -224,7 +224,7 @@ namespace Olympe
         }
     }
     
-    void EntityPrefabEditorPlugin::RenderComponentPropertiesEditor(json& properties, EditorContext& ctx)
+    void EntityPrefabEditorPlugin::RenderComponentPropertiesEditor(json& properties, EditorContext_st& ctx)
     {
         // C++14 compatible: use explicit iterators without structured bindings
         for (auto it = properties.begin(); it != properties.end(); ++it)

@@ -240,6 +240,9 @@
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp">
       <Filter>Blueprint Editor</Filter>
     </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\EditorContext.cpp">
+      <Filter>Blueprint Editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -480,6 +483,9 @@
       <Filter>Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.h">
+      <Filter>Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\EditorContext.h">
       <Filter>Blueprint Editor</Filter>
     </ClInclude>
   </ItemGroup>

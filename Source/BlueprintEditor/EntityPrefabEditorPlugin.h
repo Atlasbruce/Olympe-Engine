@@ -29,12 +29,12 @@ namespace Olympe
         std::vector<ValidationError> Validate(const nlohmann::json& blueprint) override;
         
         // Rendering
-        void RenderEditor(nlohmann::json& blueprintData, EditorContext& ctx) override;
+        void RenderEditor(nlohmann::json& blueprintData, EditorContext_st& ctx) override;
         void RenderProperties(const nlohmann::json& blueprintData) override;
         void RenderToolbar(nlohmann::json& blueprintData) override;
         
     private:
-        void RenderComponentPropertiesEditor(nlohmann::json& properties, EditorContext& ctx);
+        void RenderComponentPropertiesEditor(nlohmann::json& properties, EditorContext_st& ctx);
         void AddComponentToBlueprint(nlohmann::json& blueprintData, const std::string& type);
         std::vector<std::string> GetAvailableComponentTypes();
         std::string GetCurrentTimestamp();

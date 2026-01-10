@@ -69,7 +69,7 @@ namespace Olympe
         return errors;
     }
     
-    void HFSMEditorPlugin::RenderEditor(json& blueprintData, EditorContext& ctx)
+    void HFSMEditorPlugin::RenderEditor(json& blueprintData, EditorContext_st& ctx)
     {
         ImGui::Text("HFSM Editor");
         ImGui::Text("States: %d", blueprintData.contains("data") && blueprintData["data"].contains("states") ? 
@@ -128,7 +128,7 @@ namespace Olympe
         return errors;
     }
     
-    void AnimationGraphEditorPlugin::RenderEditor(json& blueprintData, EditorContext& ctx)
+    void AnimationGraphEditorPlugin::RenderEditor(json& blueprintData, EditorContext_st& ctx)
     {
         ImGui::Text("Animation Graph Editor");
         if (blueprintData.contains("data") && blueprintData["data"].contains("states"))
@@ -199,7 +199,7 @@ namespace Olympe
         return errors;
     }
     
-    void ScriptedEventEditorPlugin::RenderEditor(json& blueprintData, EditorContext& ctx)
+    void ScriptedEventEditorPlugin::RenderEditor(json& blueprintData, EditorContext_st& ctx)
     {
         ImGui::Text("Scripted Event Editor");
         if (blueprintData.contains("data") && blueprintData["data"].contains("sequence"))
@@ -276,7 +276,7 @@ namespace Olympe
         return errors;
     }
     
-    void LevelDefinitionEditorPlugin::RenderEditor(json& blueprintData, EditorContext& ctx)
+    void LevelDefinitionEditorPlugin::RenderEditor(json& blueprintData, EditorContext_st& ctx)
     {
         ImGui::Text("Level Definition Editor");
         if (blueprintData.contains("data"))
@@ -345,7 +345,7 @@ namespace Olympe
         return errors;
     }
     
-    void UIMenuEditorPlugin::RenderEditor(json& blueprintData, EditorContext& ctx)
+    void UIMenuEditorPlugin::RenderEditor(json& blueprintData, EditorContext_st& ctx)
     {
         ImGui::Text("UI Menu Editor");
         if (blueprintData.contains("data") && blueprintData["data"].contains("elements"))

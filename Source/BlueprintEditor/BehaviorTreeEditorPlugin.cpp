@@ -171,7 +171,7 @@ namespace Olympe
         return errors;
     }
     
-    void BehaviorTreeEditorPlugin::RenderEditor(json& blueprintData, EditorContext& ctx)
+    void BehaviorTreeEditorPlugin::RenderEditor(json& blueprintData, EditorContext_st& ctx)
     {
         if (!blueprintData.contains("data"))
         {
@@ -219,7 +219,7 @@ namespace Olympe
         }
     }
     
-    void BehaviorTreeEditorPlugin::RenderBehaviorTreeGraph(json& data, EditorContext& ctx)
+    void BehaviorTreeEditorPlugin::RenderBehaviorTreeGraph(json& data, EditorContext_st& ctx)
     {
         // This would integrate with the existing NodeGraphPanel
         // For now, just show a placeholder

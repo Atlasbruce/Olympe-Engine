@@ -15,17 +15,14 @@
 
 namespace Olympe
 {
-    // Forward declarations
-    struct EditorContext;
-    
     // Editor context for plugins
-    struct EditorContext
+    struct EditorContext_st
     {
         bool isDirty = false;
         float deltaTime = 0.0f;
         
         void MarkDirty() { isDirty = true; }
-    };
+    };/**/
     
     /**
      * BlueprintEditorPlugin - Base interface for blueprint type plugins
@@ -49,7 +46,7 @@ namespace Olympe
         virtual std::vector<ValidationError> Validate(const nlohmann::json& blueprint) = 0;
         
         // ===== Rendering =====
-        virtual void RenderEditor(nlohmann::json& blueprintData, EditorContext& ctx) = 0;
+        virtual void RenderEditor(nlohmann::json& blueprintData, EditorContext_st& ctx) = 0;
         virtual void RenderProperties(const nlohmann::json& blueprintData) = 0;
         virtual void RenderToolbar(nlohmann::json& blueprintData) = 0;
     };

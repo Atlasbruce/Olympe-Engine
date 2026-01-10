@@ -20,7 +20,7 @@ namespace
 {
     // Helper function to convert screen space coordinates to grid space coordinates
     // Screen space: origin at upper-left corner of the window
-    // Grid space: origin at upper-left corner of the node editor, adjusted by panning
+    // Grid space: origin at upper-left corner of the node editor, adjusted to panning
     ImVec2 ScreenSpaceToGridSpace(const ImVec2& screenPos)
     {
         // Get the editor's screen space position
@@ -340,8 +340,6 @@ namespace Olympe
             ImGui::Separator();
             
             if (EditorContext::Get().CanDelete())
-            {
-                if (EditorContext::Get().CanDelete())
             {
                 if (ImGui::MenuItem("Delete", "Del"))
                 {
