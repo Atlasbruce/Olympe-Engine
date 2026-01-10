@@ -677,6 +677,23 @@ namespace Olympe
         return graph ? graph->name : "";
     }
 
+    void NodeGraphManager::SetGraphOrder(const std::vector<int>& newOrder)
+    {
+        // Update the graph order (e.g., after tab reordering in UI)
+        // Only update if the order contains valid graph IDs
+        if (newOrder.size() != m_GraphOrder.size())
+            return;
+        
+        // Verify all IDs in newOrder exist in m_Graphs
+        for (int graphId : newOrder)
+        {
+            if (m_Graphs.find(graphId) == m_Graphs.end())
+                return;  // Invalid ID, don't update
+        }
+        
+        m_GraphOrder = newOrder;
+    }
+
     bool NodeGraphManager::SaveGraph(int graphId, const std::string& filepath)
     {
         const NodeGraph* graph = GetGraph(graphId);
