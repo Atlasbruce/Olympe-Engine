@@ -164,3 +164,66 @@ Conditional Panel Rendering:
 - **Clean Separation**: Backend has no GUI code, GUI has no business logic
 - **Event Capture**: ImGui gets priority on input events
 - **Extensibility**: Easy to add new panels that auto-sync with selection
+
+## EditorContext: Capability-Driven Architecture
+
+The Blueprint Editor now supports two distinct modes with different capabilities:
+
+### Editor Modes
+
+#### Runtime Editor Mode
+**Purpose:** Non-destructive visualization of blueprints during gameplay
+- Read-only access to graphs and entities
+- Shows runtime entity context
+- No file save operations
+
+**Capabilities:**
+```
+isRuntime = true
+canCreate = false, canEdit = false, canDelete = false
+canLink = false, canSave = false
+showEntityContext = true
+```
+
+#### Standalone Editor Mode
+**Purpose:** Full CRUD editing of blueprint assets
+- Complete graph manipulation
+- Save changes to disk
+- No dependency on runtime entities
+
+**Capabilities:**
+```
+isRuntime = false
+canCreate = true, canEdit = true, canDelete = true
+canLink = true, canSave = true
+showEntityContext = false
+```
+
+### Usage
+```cpp
+// Initialize modes
+BlueprintEditor::Get().InitializeRuntimeEditor();
+BlueprintEditor::Get().InitializeStandaloneEditor();
+
+// Query capabilities
+if (EditorContext::Get().CanCreate()) {
+    // Show node creation UI
+}
+```
+
+## Tab Persistence and Selection
+
+- `m_GraphOrder` vector stores insertion order
+- Active graph persists via `m_LastActiveGraphId`
+- Intelligent neighbor selection when closing tabs
+- No forced re-selection each frame
+
+## DnD Safety and JSON Validation
+
+- Payload validation: null checks, size bounds, NUL-termination
+- Catalog validation before node creation
+- JSON schema detection via heuristics
+- Normalization adds missing fields (type, metadata, editorState)
+- Per-type validation (BehaviorTree, HFSM, EntityPrefab, UI, Level)
+
+See JSON_FIT_GAP.md for complete documentation.
