@@ -24,7 +24,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\AssetBrowser.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\AssetInfoPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeEditorPlugin.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\BlueprintEditor.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\blueprinteditor.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BlueprintEditorGUI.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BlueprintMigrator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BlueprintValidator.cpp" />
@@ -63,7 +63,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\AssetBrowser.h" />
     <ClInclude Include="..\Source\BlueprintEditor\AssetInfoPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeEditorPlugin.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\BlueprintEditor.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\blueprinteditor.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BlueprintEditorGUI.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BlueprintEditorPlugin.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BlueprintMigrator.h" />

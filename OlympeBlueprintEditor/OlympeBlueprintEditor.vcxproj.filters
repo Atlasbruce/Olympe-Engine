@@ -41,7 +41,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeEditorPlugin.cpp">
       <Filter>Source Files\BlueprintEditor</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\BlueprintEditor.cpp">
+    <ClCompile Include="..\Source\BlueprintEditor\blueprinteditor.cpp">
       <Filter>Source Files\BlueprintEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\BlueprintEditor\BlueprintEditorGUI.cpp">
@@ -154,7 +154,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeEditorPlugin.h">
       <Filter>Header Files\BlueprintEditor</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BlueprintEditor.h">
+    <ClInclude Include="..\Source\BlueprintEditor\blueprinteditor.h">
       <Filter>Header Files\BlueprintEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\BlueprintEditor\BlueprintEditorGUI.h">
