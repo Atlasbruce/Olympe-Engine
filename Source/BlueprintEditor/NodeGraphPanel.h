@@ -42,7 +42,7 @@ namespace Olympe
         // Helper for converting global UID to local node ID
         int GlobalUIDToLocalNodeID(int globalUID, int graphID) const
         {
-            return globalUID - (graphID * 10000);
+            return globalUID - (graphID * 10000);  // 10000 is GRAPH_ID_MULTIPLIER
         }
 
         // ImNodes state

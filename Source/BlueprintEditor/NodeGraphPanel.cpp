@@ -18,6 +18,12 @@
 
 namespace
 {
+    // UID generation constants for ImNodes
+    // These ensure unique IDs across multiple open graphs
+    constexpr int GRAPH_ID_MULTIPLIER = 10000;     // Multiplier for graph ID in node UID calculation
+    constexpr int ATTR_ID_MULTIPLIER = 100;        // Multiplier for node UID in attribute UID calculation
+    constexpr int LINK_ID_MULTIPLIER = 100000;     // Multiplier for graph ID in link UID calculation
+
     // Helper function to convert screen space coordinates to grid space coordinates
     // Screen space: origin at upper-left corner of the window
     // Grid space: origin at upper-left corner of the node editor, adjusted by panning
@@ -193,9 +199,9 @@ namespace Olympe
         for (GraphNode* node : nodes)
         {
             // Generate a global unique UID for ImNodes
-            // Format: graphID * 10000 + nodeID
+            // Format: graphID * GRAPH_ID_MULTIPLIER + nodeID
             // This ensures no node from different graphs has the same UID
-            int globalNodeUID = (graphID * 10000) + node->id;
+            int globalNodeUID = (graphID * GRAPH_ID_MULTIPLIER) + node->id;
 
             // Set node position BEFORE rendering (ImNodes requirement)
             ImNodes::SetNodeGridSpacePos(globalNodeUID, ImVec2(node->posX, node->posY));
@@ -208,7 +214,7 @@ namespace Olympe
             ImNodes::EndNodeTitleBar();
 
             // Input attribute with UID based on globalNodeUID
-            int inputAttrUID = globalNodeUID * 100 + 1;
+            int inputAttrUID = globalNodeUID * ATTR_ID_MULTIPLIER + 1;
             ImNodes::BeginInputAttribute(inputAttrUID);
             ImGui::Text("In");
             ImNodes::EndInputAttribute();
@@ -230,7 +236,7 @@ namespace Olympe
             }
 
             // Output attribute with UID based on globalNodeUID
-            int outputAttrUID = globalNodeUID * 100 + 2;
+            int outputAttrUID = globalNodeUID * ATTR_ID_MULTIPLIER + 2;
             ImNodes::BeginOutputAttribute(outputAttrUID);
             ImGui::Text("Out");
             ImNodes::EndOutputAttribute();
@@ -245,14 +251,14 @@ namespace Olympe
             const GraphLink& link = links[i];
             
             // Generate global UIDs for the attributes
-            int fromNodeUID = (graphID * 10000) + link.fromNode;
-            int toNodeUID = (graphID * 10000) + link.toNode;
+            int fromNodeUID = (graphID * GRAPH_ID_MULTIPLIER) + link.fromNode;
+            int toNodeUID = (graphID * GRAPH_ID_MULTIPLIER) + link.toNode;
             
-            int fromAttrUID = fromNodeUID * 100 + 2;  // Output attribute
-            int toAttrUID = toNodeUID * 100 + 1;      // Input attribute
+            int fromAttrUID = fromNodeUID * ATTR_ID_MULTIPLIER + 2;  // Output attribute
+            int toAttrUID = toNodeUID * ATTR_ID_MULTIPLIER + 1;      // Input attribute
             
             // Link ID must also be unique globally
-            int globalLinkUID = (graphID * 100000) + (int)i + 1;
+            int globalLinkUID = (graphID * LINK_ID_MULTIPLIER) + (int)i + 1;
             
             ImNodes::Link(globalLinkUID, fromAttrUID, toAttrUID);
         }
@@ -287,7 +293,7 @@ namespace Olympe
             {
                 // Delete selected link
                 // Extract the link index from the global link UID
-                int linkIndex = (m_SelectedLinkId - (graphID * 100000)) - 1;
+                int linkIndex = (m_SelectedLinkId - (graphID * LINK_ID_MULTIPLIER)) - 1;
                 
                 auto links = graph->GetAllLinks();
                 if (linkIndex >= 0 && linkIndex < (int)links.size())
@@ -532,7 +538,7 @@ namespace Olympe
             // Update node positions using global UIDs
             for (GraphNode* node : nodes)
             {
-                int globalNodeUID = (graphID * 10000) + node->id;
+                int globalNodeUID = (graphID * GRAPH_ID_MULTIPLIER) + node->id;
                 ImVec2 pos = ImNodes::GetNodeGridSpacePos(globalNodeUID);
                 node->posX = pos.x;
                 node->posY = pos.y;
@@ -553,15 +559,11 @@ namespace Olympe
             std::vector<int> selectedUIDs(numSelected);
             ImNodes::GetSelectedNodes(selectedUIDs.data());
             
-            // Convert the first UID global to Node ID local
+            // Convert the first global UID to local Node ID
             if (!selectedUIDs.empty())
             {
                 int selectedLocalNodeID = GlobalUIDToLocalNodeID(selectedUIDs[0], graphID);
                 m_SelectedNodeId = selectedLocalNodeID;
-                
-                std::cout << "[NodeGraphPanel] Selected node (global UID: " 
-                          << selectedUIDs[0] << ", local ID: " 
-                          << selectedLocalNodeID << ")" << std::endl;
             }
         }
 
@@ -569,9 +571,9 @@ namespace Olympe
         int startAttrUID, endAttrUID;
         if (EditorContext::Get().CanLink() && ImNodes::IsLinkCreated(&startAttrUID, &endAttrUID))
         {
-            // Extract the UIDs global of nodes
-            int startNodeGlobalUID = startAttrUID / 100;
-            int endNodeGlobalUID = endAttrUID / 100;
+            // Extract the global UIDs of nodes
+            int startNodeGlobalUID = startAttrUID / ATTR_ID_MULTIPLIER;
+            int endNodeGlobalUID = endAttrUID / ATTR_ID_MULTIPLIER;
             
             // Convert to local IDs
             int startNodeLocalID = GlobalUIDToLocalNodeID(startNodeGlobalUID, graphID);
@@ -581,9 +583,6 @@ namespace Olympe
             std::string graphId = std::to_string(graphID);
             auto cmd = std::make_unique<LinkNodesCommand>(graphId, startNodeLocalID, endNodeLocalID);
             BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
-            
-            std::cout << "[NodeGraphPanel] Created link: " 
-                      << startNodeLocalID << " -> " << endNodeLocalID << std::endl;
         }
     }
 
