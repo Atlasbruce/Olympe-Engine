@@ -20,7 +20,7 @@ namespace
 {
     // Helper function to convert screen space coordinates to grid space coordinates
     // Screen space: origin at upper-left corner of the window
-    // Grid space: origin at upper-left corner of the node editor, adjusted to panning
+    // Grid space: origin at upper-left corner of the node editor, adjusted by panning
     ImVec2 ScreenSpaceToGridSpace(const ImVec2& screenPos)
     {
         // Get the editor's screen space position
@@ -113,31 +113,31 @@ namespace Olympe
         auto graphIds = NodeGraphManager::Get().GetAllGraphIds();
         int currentActiveId = NodeGraphManager::Get().GetActiveGraphId();
 
-        // Enable tab reordering for better UX
-        if (ImGui::BeginTabBar("GraphTabs", ImGuiTabBarFlags_Reorderable))
+        if (ImGui::BeginTabBar("GraphTabs"))
         {
-            std::vector<int> newOrder;
-            
             for (int graphId : graphIds)
             {
                 std::string graphName = NodeGraphManager::Get().GetGraphName(graphId);
 
-                // Do NOT use ImGuiTabItemFlags_SetSelected - let ImGui manage tab selection
-                // BeginTabItem returns true only when this tab is actually being shown/active
-                if (ImGui::BeginTabItem(graphName.c_str(), nullptr, ImGuiTabItemFlags_None))
+                // Only set ImGuiTabItemFlags_SetSelected if this is the active graph
+                // This ensures the tab is selected visually without forcing re-selection each frame
+                ImGuiTabItemFlags flags = ImGuiTabItemFlags_None;
+                if (graphId == currentActiveId)
                 {
-                    // Only set active graph when BeginTabItem returns true (tab is actually shown)
-                    // This prevents flickering from forced re-selection each frame
-                    NodeGraphManager::Get().SetActiveGraph(graphId);
+                    flags = ImGuiTabItemFlags_SetSelected;
+                }
+
+                if (ImGui::BeginTabItem(graphName.c_str(), nullptr, flags))
+                {
+                    // Only change active graph if user clicked this tab (and it's not already active)
+                    // BeginTabItem returns true when the tab content should be shown
+                    if (currentActiveId != graphId)
+                    {
+                        NodeGraphManager::Get().SetActiveGraph(graphId);
+                    }
                     ImGui::EndTabItem();
                 }
-                
-                // Track the new order of tabs (after potential reordering)
-                newOrder.push_back(graphId);
             }
-            
-            // Update graph order if tabs were reordered
-            NodeGraphManager::Get().SetGraphOrder(newOrder);
 
             // Add "+" button for new graph
             if (ImGui::TabItemButton("+", ImGuiTabItemFlags_Trailing))
@@ -178,15 +178,15 @@ namespace Olympe
             return;
         }
 
-        // Capture editor origin BEFORE BeginNodeEditor for correct coordinate conversion
-        ImVec2 editorOrigin = ImGui::GetCursorScreenPos();
-
         ImNodes::BeginNodeEditor();
 
         // Render all nodes
         auto nodes = graph->GetAllNodes();
         for (GraphNode* node : nodes)
         {
+            // Set node position BEFORE rendering (ImNodes requirement)
+            ImNodes::SetNodeGridSpacePos(node->id, ImVec2(node->posX, node->posY));
+
             ImNodes::BeginNode(node->id);
 
             // Title bar
@@ -201,7 +201,7 @@ namespace Olympe
 
             // Node content based on type
             ImGui::Text("Type: %s", NodeTypeToString(node->type));
-            
+
             if (node->type == NodeType::BT_Action && !node->actionType.empty())
             {
                 ImGui::Text("Action: %s", node->actionType.c_str());
@@ -221,9 +221,6 @@ namespace Olympe
             ImNodes::EndOutputAttribute();
 
             ImNodes::EndNode();
-            
-            // Set position AFTER EndNode (ImNodes requirement to avoid assertion)
-            ImNodes::SetNodeGridSpacePos(node->id, ImVec2(node->posX, node->posY));
         }
 
         // Render all links
@@ -236,14 +233,6 @@ namespace Olympe
         }
 
         ImNodes::EndNodeEditor();
-
-        // Update node positions BEFORE drag & drop (query ImNodes for existing nodes only)
-        for (GraphNode* node : nodes)
-        {
-            ImVec2 pos = ImNodes::GetNodeGridSpacePos(node->id);
-            node->posX = pos.x;
-            node->posY = pos.y;
-        }
 
         // Handle link selection
         int numSelectedLinks = ImNodes::NumSelectedLinks();
@@ -298,7 +287,7 @@ namespace Olympe
                 }
             }
         }
-        
+
         // Right-click context menu on node
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && hoveredNodeId != -1)
         {
@@ -307,9 +296,9 @@ namespace Olympe
         }
 
         // Handle right-click on canvas for node creation menu (only if canCreate)
-        if (EditorContext::Get().CanCreate() && 
-            ImGui::IsMouseReleased(ImGuiMouseButton_Right) && 
-            ImNodes::IsEditorHovered() && 
+        if (EditorContext::Get().CanCreate() &&
+            ImGui::IsMouseReleased(ImGuiMouseButton_Right) &&
+            ImNodes::IsEditorHovered() &&
             !ImNodes::IsNodeHovered(&hoveredNodeId))
         {
             ImGui::OpenPopup("NodeCreationMenu");
@@ -323,7 +312,7 @@ namespace Olympe
         {
             ImGui::Text("Node: %d", m_SelectedNodeId);
             ImGui::Separator();
-            
+
             // Edit is always available for viewing
             if (ImGui::MenuItem("Edit", "Double-click"))
             {
@@ -336,7 +325,7 @@ namespace Olympe
                     m_ShowNodeEditModal = true;
                 }
             }
-            
+
             // Duplicate and Delete only shown if allowed
             if (EditorContext::Get().CanEdit() && EditorContext::Get().CanCreate())
             {
@@ -347,180 +336,195 @@ namespace Olympe
                     BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
                 }
             }
-            
+
             ImGui::Separator();
-            
+
             if (EditorContext::Get().CanDelete())
             {
-                if (ImGui::MenuItem("Delete", "Del"))
+                if (EditorContext::Get().CanDelete())
                 {
-                    std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
-                    auto cmd = std::make_unique<DeleteNodeCommand>(graphId, m_SelectedNodeId);
-                    BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+                    if (ImGui::MenuItem("Delete", "Del"))
+                    {
+                        std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+                        auto cmd = std::make_unique<DeleteNodeCommand>(graphId, m_SelectedNodeId);
+                        BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+                    }
                 }
+
+                ImGui::EndPopup();
             }
-            
-            ImGui::EndPopup();
-        }
 
-        RenderContextMenu();
+            RenderContextMenu();
 
-        // Handle node selection
-        int selectedNodeCount = ImNodes::NumSelectedNodes();
-        if (selectedNodeCount > 0)
-        {
-            std::vector<int> selectedNodes(selectedNodeCount);
-            ImNodes::GetSelectedNodes(selectedNodes.data());
-            if (selectedNodes.size() > 0)
-                m_SelectedNodeId = selectedNodes[0];
-        }
-
-        // Handle link creation (only if canLink)
-        int startAttr, endAttr;
-        if (EditorContext::Get().CanLink() && ImNodes::IsLinkCreated(&startAttr, &endAttr))
-        {
-            int fromNode = startAttr / 100;
-            int toNode = endAttr / 100;
-            
-            std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
-            auto cmd = std::make_unique<LinkNodesCommand>(graphId, fromNode, toNode);
-            BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
-        }
-
-        // Handle drag & drop from node palette
-        // ONLY execute if editor is hovered to ensure target is the canvas
-        if (ImNodes::IsEditorHovered() && ImGui::BeginDragDropTarget())
-        {
-            const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("NODE_TYPE");
-            
-            // Validate payload safety
-            if (payload && payload->Data && payload->DataSize > 0)
+            // Handle node selection
+            int selectedNodeCount = ImNodes::NumSelectedNodes();
+            if (selectedNodeCount > 0)
             {
-                // Copy payload data to local string with bounds checking
-                size_t maxSize = 256;  // Reasonable max for node type strings
-                size_t dataSize = (payload->DataSize < maxSize) ? payload->DataSize : maxSize;
-                
-                std::string nodeTypeData;
-                nodeTypeData.resize(dataSize);
-                std::memcpy(&nodeTypeData[0], payload->Data, dataSize);
-                
-                // Ensure NUL-termination
-                if (nodeTypeData.find('\0') == std::string::npos)
+                std::vector<int> selectedNodes(selectedNodeCount);
+                ImNodes::GetSelectedNodes(selectedNodes.data());
+                if (selectedNodes.size() > 0)
+                    m_SelectedNodeId = selectedNodes[0];
+            }
+
+            // Handle link creation (only if canLink)
+            int startAttr, endAttr;
+            if (EditorContext::Get().CanLink() && ImNodes::IsLinkCreated(&startAttr, &endAttr))
+            {
+                int fromNode = startAttr / 100;
+                int toNode = endAttr / 100;
+
+                std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+                auto cmd = std::make_unique<LinkNodesCommand>(graphId, fromNode, toNode);
+                BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+            }
+
+            // Handle drag & drop from node palette
+            if (ImGui::BeginDragDropTarget())
+            {
+                const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("NODE_TYPE");
+
+                // Validate payload safety
+                if (payload && payload->Data && payload->DataSize > 0)
                 {
-                    // Truncate at first non-printable or add terminator
-                    size_t validLen = 0;
-                    for (size_t i = 0; i < nodeTypeData.size(); ++i)
+                    // Copy payload data to local string with bounds checking
+                    size_t maxSize = 256;  // Reasonable max for node type strings
+                    size_t dataSize = (payload->DataSize < maxSize) ? payload->DataSize : maxSize;
+
+                    std::string nodeTypeData;
+                    nodeTypeData.resize(dataSize);
+                    std::memcpy(&nodeTypeData[0], payload->Data, dataSize);
+
+                    // Ensure NUL-termination
+                    if (nodeTypeData.find('\0') == std::string::npos)
                     {
-                        if (nodeTypeData[i] == '\0' || nodeTypeData[i] < 32)
-                            break;
-                        validLen = i + 1;
-                    }
-                    nodeTypeData.resize(validLen);
-                }
-                
-                // Remove any trailing null bytes
-                while (!nodeTypeData.empty() && nodeTypeData.back() == '\0')
-                    nodeTypeData.pop_back();
-                
-                // Convert screen coordinates to canvas coordinates using captured editor origin
-                ImVec2 mouseScreenPos = ImGui::GetMousePos();
-                ImVec2 panning = ImNodes::EditorContextGetPanning();
-                ImVec2 canvasPos = ImVec2(mouseScreenPos.x - editorOrigin.x - panning.x,
-                                          mouseScreenPos.y - editorOrigin.y - panning.y);
-                
-                bool validNode = false;
-                
-                // Parse the type and create appropriate node
-                if (nodeTypeData.find("Action:") == 0)
-                {
-                    std::string actionType = nodeTypeData.substr(7);
-                    
-                    // Validate action type exists in catalog
-                    if (EnumCatalogManager::Get().IsValidActionType(actionType))
-                    {
-                        int nodeId = graph->CreateNode(NodeType::BT_Action, canvasPos.x, canvasPos.y, actionType);
-                        GraphNode* node = graph->GetNode(nodeId);
-                        if (node)
+                        // Truncate at first non-printable or add terminator
+                        size_t validLen = 0;
+                        for (size_t i = 0; i < nodeTypeData.size(); ++i)
                         {
-                            node->actionType = actionType;
+                            if (nodeTypeData[i] == '\0' || nodeTypeData[i] < 32)
+                                break;
+                            validLen = i + 1;
+                        }
+                        nodeTypeData.resize(validLen);
+                    }
+
+                    // Remove any trailing null bytes
+                    while (!nodeTypeData.empty() && nodeTypeData.back() == '\0')
+                        nodeTypeData.pop_back();
+
+                    // Convert screen space coordinates to grid space
+                    ImVec2 mouseScreenPos = ImGui::GetMousePos();
+                    ImVec2 canvasPos = ScreenSpaceToGridSpace(mouseScreenPos);
+
+                    bool validNode = false;
+
+                    // Parse the type and create appropriate node
+                    if (nodeTypeData.find("Action:") == 0)
+                    {
+                        std::string actionType = nodeTypeData.substr(7);
+
+                        // Validate action type exists in catalog
+                        if (EnumCatalogManager::Get().IsValidActionType(actionType))
+                        {
+                            int nodeId = graph->CreateNode(NodeType::BT_Action, canvasPos.x, canvasPos.y, actionType);
+                            GraphNode* node = graph->GetNode(nodeId);
+                            if (node)
+                            {
+                                node->actionType = actionType;
+                                validNode = true;
+                                std::cout << "[NodeGraphPanel] Created Action node: " << actionType
+                                    << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                            }
+                        }
+                        else
+                        {
+                            std::cerr << "[NodeGraphPanel] ERROR: Invalid ActionType: " << actionType << "\n";
+                            ImGui::SetTooltip("Invalid ActionType: %s", actionType.c_str());
+                        }
+                    }
+                    else if (nodeTypeData.find("Condition:") == 0)
+                    {
+                        std::string conditionType = nodeTypeData.substr(10);
+
+                        // Validate condition type exists in catalog
+                        if (EnumCatalogManager::Get().IsValidConditionType(conditionType))
+                        {
+                            int nodeId = graph->CreateNode(NodeType::BT_Condition, canvasPos.x, canvasPos.y, conditionType);
+                            GraphNode* node = graph->GetNode(nodeId);
+                            if (node)
+                            {
+                                node->conditionType = conditionType;
+                                validNode = true;
+                                std::cout << "[NodeGraphPanel] Created Condition node: " << conditionType
+                                    << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                            }
+                        }
+                        else
+                        {
+                            std::cerr << "[NodeGraphPanel] ERROR: Invalid ConditionType: " << conditionType << "\n";
+                            ImGui::SetTooltip("Invalid ConditionType: %s", conditionType.c_str());
+                        }
+                    }
+                    else if (nodeTypeData.find("Decorator:") == 0)
+                    {
+                        std::string decoratorType = nodeTypeData.substr(10);
+
+                        // Validate decorator type exists in catalog
+                        if (EnumCatalogManager::Get().IsValidDecoratorType(decoratorType))
+                        {
+                            int nodeId = graph->CreateNode(NodeType::BT_Decorator, canvasPos.x, canvasPos.y, decoratorType);
+                            GraphNode* node = graph->GetNode(nodeId);
+                            if (node)
+                            {
+                                node->decoratorType = decoratorType;
+                                validNode = true;
+                                std::cout << "[NodeGraphPanel] Created Decorator node: " << decoratorType
+                                    << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                            }
+                        }
+                        else
+                        {
+                            std::cerr << "[NodeGraphPanel] ERROR: Invalid DecoratorType: " << decoratorType << "\n";
+                            ImGui::SetTooltip("Invalid DecoratorType: %s", decoratorType.c_str());
+                        }
+                    }
+                    else if (nodeTypeData == "Sequence" || nodeTypeData == "Selector")
+                    {
+                        NodeType type = (nodeTypeData == "Sequence") ? NodeType::BT_Sequence : NodeType::BT_Selector;
+                        int nodeId = graph->CreateNode(type, canvasPos.x, canvasPos.y, nodeTypeData);
+                        if (nodeId > 0)
+                        {
                             validNode = true;
-                            std::cout << "[NodeGraphPanel] Created Action node: " << actionType 
-                                      << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                            std::cout << "[NodeGraphPanel] Created " << nodeTypeData << " node"
+                                << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
                         }
                     }
                     else
                     {
-                        // Single error line per invalid drop (no spam)
-                        std::cerr << "[NodeGraphPanel] Invalid ActionType dropped: " << actionType << "\n";
+                        std::cerr << "[NodeGraphPanel] ERROR: Unknown node type: " << nodeTypeData << "\n";
+                        ImGui::SetTooltip("Unknown node type: %s", nodeTypeData.c_str());
                     }
-                }
-                else if (nodeTypeData.find("Condition:") == 0)
-                {
-                    std::string conditionType = nodeTypeData.substr(10);
-                    
-                    // Validate condition type exists in catalog
-                    if (EnumCatalogManager::Get().IsValidConditionType(conditionType))
+
+                    if (!validNode)
                     {
-                        int nodeId = graph->CreateNode(NodeType::BT_Condition, canvasPos.x, canvasPos.y, conditionType);
-                        GraphNode* node = graph->GetNode(nodeId);
-                        if (node)
-                        {
-                            node->conditionType = conditionType;
-                            validNode = true;
-                            std::cout << "[NodeGraphPanel] Created Condition node: " << conditionType 
-                                      << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
-                        }
-                    }
-                    else
-                    {
-                        // Single error line per invalid drop (no spam)
-                        std::cerr << "[NodeGraphPanel] Invalid ConditionType dropped: " << conditionType << "\n";
-                    }
-                }
-                else if (nodeTypeData.find("Decorator:") == 0)
-                {
-                    std::string decoratorType = nodeTypeData.substr(10);
-                    
-                    // Validate decorator type exists in catalog
-                    if (EnumCatalogManager::Get().IsValidDecoratorType(decoratorType))
-                    {
-                        int nodeId = graph->CreateNode(NodeType::BT_Decorator, canvasPos.x, canvasPos.y, decoratorType);
-                        GraphNode* node = graph->GetNode(nodeId);
-                        if (node)
-                        {
-                            node->decoratorType = decoratorType;
-                            validNode = true;
-                            std::cout << "[NodeGraphPanel] Created Decorator node: " << decoratorType 
-                                      << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
-                        }
-                    }
-                    else
-                    {
-                        // Single error line per invalid drop (no spam)
-                        std::cerr << "[NodeGraphPanel] Invalid DecoratorType dropped: " << decoratorType << "\n";
-                    }
-                }
-                else if (nodeTypeData == "Sequence" || nodeTypeData == "Selector")
-                {
-                    NodeType type = (nodeTypeData == "Sequence") ? NodeType::BT_Sequence : NodeType::BT_Selector;
-                    int nodeId = graph->CreateNode(type, canvasPos.x, canvasPos.y, nodeTypeData);
-                    if (nodeId > 0)
-                    {
-                        validNode = true;
-                        std::cout << "[NodeGraphPanel] Created " << nodeTypeData << " node"
-                                  << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                        std::cerr << "[NodeGraphPanel] Failed to create node from DnD payload\n";
                     }
                 }
                 else
                 {
-                    // Single error line per invalid drop (no spam)
-                    std::cerr << "[NodeGraphPanel] Unknown node type dropped: " << nodeTypeData << "\n";
+                    std::cerr << "[NodeGraphPanel] Invalid DnD payload received (null or empty)\n";
                 }
-                
-                // No additional error message needed - already logged once per case
+
+                ImGui::EndDragDropTarget();
             }
-            
-            ImGui::EndDragDropTarget();
+
+            // Update node positions
+            for (GraphNode* node : nodes)
+            {
+                ImVec2 pos = ImNodes::GetNodeGridSpacePos(node->id);
+                node->posX = pos.x;
+                node->posY = pos.y;
+            }
         }
     }
 

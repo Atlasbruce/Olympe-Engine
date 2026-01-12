@@ -27,7 +27,7 @@ namespace Olympe
         void Shutdown();
         void Render();
 
-    private:
+
         void RenderGraphTabs();
         void RenderGraph();
         void RenderContextMenu();

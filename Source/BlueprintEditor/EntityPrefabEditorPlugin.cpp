@@ -176,7 +176,7 @@ namespace Olympe
         if (toRemove != (size_t)-1)
         {
             components.erase(toRemove);
-            ctx.MarkDirty();
+            ctx.isDirty = true;
         }
         
         ImGui::Separator();
@@ -195,7 +195,7 @@ namespace Olympe
                 if (ImGui::MenuItem(type.c_str()))
                 {
                     AddComponentToBlueprint(blueprintData, type);
-                    ctx.MarkDirty();
+                    ctx.isDirty = true;
                 }
             }
             ImGui::EndPopup();
@@ -240,7 +240,7 @@ namespace Olympe
                 if (ImGui::DragFloat(key.c_str(), &f, 1.0f))
                 {
                     properties[key] = f;
-                    ctx.MarkDirty();
+                    ctx.isDirty = true;
                 }
             }
             else if (value.is_number_integer())
@@ -249,7 +249,7 @@ namespace Olympe
                 if (ImGui::InputInt(key.c_str(), &i))
                 {
                     properties[key] = i;
-                    ctx.MarkDirty();
+                    ctx.isDirty = true;
                 }
             }
             else if (value.is_string())
@@ -265,7 +265,7 @@ namespace Olympe
                 if (ImGui::InputText(key.c_str(), buffer, 256))
                 {
                     properties[key] = std::string(buffer);
-                    ctx.MarkDirty();
+                    ctx.isDirty = true;
                 }
             }
             else if (value.is_object())

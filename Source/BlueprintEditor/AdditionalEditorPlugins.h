@@ -8,6 +8,8 @@
 
 #include "BlueprintEditorPlugin.h"
 
+//struct EditorContext_st;
+
 namespace Olympe
 {
     class HFSMEditorPlugin : public BlueprintEditorPlugin

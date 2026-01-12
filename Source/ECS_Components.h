@@ -354,3 +354,9 @@ struct CameraInputBinding_data
 	float zoomInput = 0.0f;                  // Zoom input value (-1 to 1)
 	bool resetRequested = false;             // Reset button pressed this frame
 };
+// Editor context for plugins
+struct EditorContext_st
+{
+	bool isDirty = false;
+	float deltaTime = 0.0f;
+};/**/

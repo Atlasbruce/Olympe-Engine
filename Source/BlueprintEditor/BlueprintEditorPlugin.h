@@ -20,10 +20,9 @@ namespace Olympe
     {
         bool isDirty = false;
         float deltaTime = 0.0f;
-        
-        void MarkDirty() { isDirty = true; }
+
     };/**/
-    
+
     /**
      * BlueprintEditorPlugin - Base interface for blueprint type plugins
      * Each plugin handles a specific blueprint type with custom rendering and validation
