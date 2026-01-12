@@ -18,6 +18,7 @@
 static SDL_Window* g_BlueprintEditorWindow = nullptr;
 static SDL_Renderer* g_BlueprintEditorRenderer = nullptr;
 static Olympe::BlueprintEditorGUI* g_BlueprintEditorGUI = nullptr;
+static Uint64 g_LastFrameTime = 0;
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 {
@@ -28,7 +29,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     std::cout << "Mode: Blueprint Editor Standalone (Full CRUD)" << std::endl;
     std::cout << "=============================================" << std::endl;
     
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS))
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0)
     {
         std::cerr << "[BlueprintEditorStandalone] SDL3 Init failed: " << SDL_GetError() << std::endl;
         return SDL_APP_FAILURE;
@@ -83,6 +84,9 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     std::cout << "[BlueprintEditorStandalone] EditorContext: Standalone (Full CRUD enabled)" << std::endl;
     std::cout << "[BlueprintEditorStandalone] Press Ctrl+Q to quit" << std::endl;
     
+    // Initialize frame timing
+    g_LastFrameTime = SDL_GetTicks();
+    
     return SDL_APP_CONTINUE;
 }
 
@@ -129,7 +133,17 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 
 SDL_AppResult SDL_AppIterate(void* appstate)
 {
-    Olympe::BlueprintEditor::Get().Update(0.016f);
+    // Calculate delta time
+    Uint64 currentTime = SDL_GetTicks();
+    float deltaTime = (currentTime - g_LastFrameTime) / 1000.0f;
+    g_LastFrameTime = currentTime;
+    
+    // Clamp delta time to prevent large jumps (e.g., when debugging)
+    if (deltaTime > 0.1f) {
+        deltaTime = 0.016f; // Fall back to ~60 FPS if delta is too large
+    }
+    
+    Olympe::BlueprintEditor::Get().Update(deltaTime);
     
     ImGui_ImplSDLRenderer3_NewFrame();
     ImGui_ImplSDL3_NewFrame();

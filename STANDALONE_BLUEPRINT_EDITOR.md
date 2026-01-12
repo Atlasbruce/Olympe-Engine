@@ -275,5 +275,5 @@ Same license as Olympe Engine V2.
 
 ## Credits
 
-Developed by Nicolas Chereau (nchereau@gmail.com)
+Developed by the Olympe Engine Team
 Standalone editor implementation: 2025
