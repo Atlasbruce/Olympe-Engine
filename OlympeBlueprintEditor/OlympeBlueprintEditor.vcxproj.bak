@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Source\BlueprintEditorStandalone\BlueprintEditorStandaloneMain.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\AdditionalEditorPlugins.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\AssetBrowser.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\AssetInfoPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeEditorPlugin.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\blueprinteditor.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BlueprintEditorGUI.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BlueprintMigrator.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BlueprintValidator.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\CommandSystem.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EditorContext.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityBlueprint.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Graph.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EnumCatalogManager.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\HistoryPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\NodeGraphManager.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityInspectorManager.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\TemplateBrowserPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\TemplateManager.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\ValidationPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\WorldBridge.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\NodeGraphPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntitiesPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\InspectorPanel.cpp" />
+    <ClCompile Include="..\Source\drawing.cpp" />
+    <ClCompile Include="..\Source\AI\BehaviorTree.cpp" />
+    <ClCompile Include="..\Source\DataManager.cpp" />
+    <ClCompile Include="..\Source\GameEngine.cpp" />
+    <ClCompile Include="..\Source\GameState.cpp" />
+    <ClCompile Include="..\Source\VideoGame.cpp" />
+    <ClCompile Include="..\Source\engine_utils.cpp" />
+    <ClCompile Include="..\Source\vector.cpp" />
+    <ClCompile Include="..\Source\World.cpp" />
+    <ClCompile Include="..\Source\ECS_Systems.cpp" />
+    <ClCompile Include="..\Source\ECS_Systems_AI.cpp" />
+    <ClCompile Include="..\Source\ECS_Systems_Camera.cpp" />
+    <ClCompile Include="..\Source\InputsManager.cpp" />
+    <ClCompile Include="..\Source\system\ViewportManager.cpp" />
+    <ClCompile Include="..\Source\system\system_utils.cpp" />
+    <ClCompile Include="..\Source\system\KeyboardManager.cpp" />
+    <ClCompile Include="..\Source\system\JoystickManager.cpp" />
+    <ClCompile Include="..\Source\system\MouseManager.cpp" />
+    <ClCompile Include="..\Source\system\GameMenu.cpp" />`r`n    <ClCompile Include="..\Source\system\SystemMenu.cpp" />`r`n    <ClCompile Include="..\Source\PanelManager.cpp" />`r`n    <ClCompile Include="..\Source\ECS_Systems_Rendering_Camera.cpp" />
+    <ClCompile Include="..\Source\system\CameraEventHandler.cpp" />
+    <ClCompile Include="..\Source\third_party\imgui\backends\imgui_impl_sdl3.cpp" />
+    <ClCompile Include="..\Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.cpp" />
+    <ClCompile Include="..\Source\third_party\imgui\imgui.cpp" />
+    <ClCompile Include="..\Source\third_party\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\Source\third_party\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\Source\third_party\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\Source\third_party\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\Source\third_party\imnodes\imnodes.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Source\AI\AIEvents.h" />
+    <ClInclude Include="..\Source\AI\BehaviorTree.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\AdditionalEditorPlugins.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\AssetBrowser.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\AssetInfoPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeEditorPlugin.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\blueprinteditor.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BlueprintEditorGUI.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BlueprintEditorPlugin.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BlueprintMigrator.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BlueprintValidator.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\CommandSystem.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EditorContext.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityBlueprint.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditorPlugin.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Graph.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EnumCatalogManager.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\HistoryPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\NodeGraphManager.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityInspectorManager.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\NodeGraphPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntitiesPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\InspectorPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\TemplateBrowserPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\TemplateManager.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\ValidationPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\WorldBridge.h" />
+    <ClInclude Include="..\Source\drawing.h" />
+    <ClInclude Include="..\Source\DataManager.h" />
+    <ClInclude Include="..\Source\json_helper.h" />
+    <ClInclude Include="..\Source\vector.h" />
+    <ClInclude Include="..\Source\World.h" />
+    <ClInclude Include="..\Source\ECS_Entity.h" />
+    <ClInclude Include="..\Source\ECS_Components.h" />
+    <ClInclude Include="..\Source\ECS_Components_AI.h" />
+    <ClInclude Include="..\Source\ECS_Systems.h" />
+    <ClInclude Include="..\Source\ECS_Systems_AI.h" />
+    <ClInclude Include="..\Source\ECS_Systems_Camera.h" />
+    <ClInclude Include="..\Source\GameEngine.h" />
+    <ClInclude Include="..\Source\GameState.h" />
+    <ClInclude Include="..\Source\VideoGame.h" />
+    <ClInclude Include="..\Source\engine_utils.h" />
+    <ClInclude Include="..\Source\InputsManager.h" />
+    <ClInclude Include="..\Source\system\ViewportManager.h" />
+    <ClInclude Include="..\Source\system\system_utils.h" />
+    <ClInclude Include="..\Source\system\KeyboardManager.h" />
+    <ClInclude Include="..\Source\system\JoystickManager.h" />
+    <ClInclude Include="..\Source\system\MouseManager.h" />
+    <ClInclude Include="..\Source\system\EventQueue.h" />
+    <ClInclude Include="..\Source\system\EventManager.h" />
+    <ClInclude Include="..\Source\system\GameMenu.h" />`r`n    <ClInclude Include="..\Source\system\SystemMenu.h" />`r`n    <ClInclude Include="..\Source\PanelManager.h" />`r`n    <ClInclude Include="..\Source\ECS_Systems_Rendering_Camera.h" />`r`n    <ClInclude Include="..\Source\system\SystemMenu.h" />`r`n    <ClInclude Include="..\Source\PanelManager.h" />`r`n    <ClInclude Include="..\Source\ECS_Systems_Rendering_Camera.h" />
+    <ClInclude Include="..\Source\system\CameraEventHandler.h" />
+    <ClInclude Include="..\Source\third_party\imgui\backends\imgui_impl_sdl3.h" />
+    <ClInclude Include="..\Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.h" />
+    <ClInclude Include="..\Source\third_party\imgui\imconfig.h" />
+    <ClInclude Include="..\Source\third_party\imgui\imgui.h" />
+    <ClInclude Include="..\Source\third_party\imgui\imgui_internal.h" />
+    <ClInclude Include="..\Source\third_party\imnodes\imnodes.h" />
+    <ClInclude Include="..\Source\third_party\imnodes\imnodes_internal.h" />
+    <ClInclude Include="..\Source\third_party\nlohmann\json.hpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{9B4C9E2A-0000-0000-0000-000000000001}</ProjectGuid>
+    <RootNamespace>OlympeBlueprintEditor</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <TargetName>OlympeBlueprintEditor_d</TargetName>
+    <OutDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\Intermediate\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetName>OlympeBlueprintEditor</TargetName>
+    <OutDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\Intermediate\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <TargetName>OlympeBlueprintEditor_d</TargetName>
+    <OutDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\Intermediate\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <TargetName>OlympeBlueprintEditor</TargetName>
+    <OutDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\</OutDir>
+    <IntDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\Intermediate\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;OLYMPE_BLUEPRINT_EDITOR_ENABLED;OLYMPE_BLUEPRINT_EDITOR_STANDALONE_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\SDL\include\SDL3_image;..\SDL\include\SDL3;..\SDL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>..\SDL\lib\SDL3.lib;..\SDL\lib\SDL3_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;OLYMPE_BLUEPRINT_EDITOR_ENABLED;OLYMPE_BLUEPRINT_EDITOR_STANDALONE_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\SDL\include\SDL3_image;..\SDL\include\SDL3;..\SDL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>..\SDL\lib\SDL3.lib;..\SDL\lib\SDL3_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;OLYMPE_BLUEPRINT_EDITOR_ENABLED;OLYMPE_BLUEPRINT_EDITOR_STANDALONE_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\SDL\include\SDL3_image;..\SDL\include\SDL3;..\SDL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>..\SDL\lib\SDL3.lib;..\SDL\lib\SDL3_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;OLYMPE_BLUEPRINT_EDITOR_ENABLED;OLYMPE_BLUEPRINT_EDITOR_STANDALONE_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>..\SDL\include\SDL3_image;..\SDL\include\SDL3;..\SDL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>..\SDL\lib\SDL3.lib;..\SDL\lib\SDL3_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
+
+

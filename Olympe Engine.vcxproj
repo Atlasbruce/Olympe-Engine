@@ -164,6 +164,7 @@
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
     <None Include="olympe.ini" />
+    <None Include="OlympeBlueprintEditor\OlympeBlueprintEditor_new.vcxproj" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\olympe.ico" />

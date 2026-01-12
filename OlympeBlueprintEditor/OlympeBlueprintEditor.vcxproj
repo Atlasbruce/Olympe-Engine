@@ -50,20 +50,22 @@
     <ClCompile Include="..\Source\GameEngine.cpp" />
     <ClCompile Include="..\Source\GameState.cpp" />
     <ClCompile Include="..\Source\VideoGame.cpp" />
-    <ClCompile Include="..\Source\Sprite.cpp" />
     <ClCompile Include="..\Source\engine_utils.cpp" />
     <ClCompile Include="..\Source\vector.cpp" />
     <ClCompile Include="..\Source\World.cpp" />
     <ClCompile Include="..\Source\ECS_Systems.cpp" />
     <ClCompile Include="..\Source\ECS_Systems_AI.cpp" />
     <ClCompile Include="..\Source\ECS_Systems_Camera.cpp" />
+    <ClCompile Include="..\Source\ECS_Systems_Rendering_Camera.cpp" />
     <ClCompile Include="..\Source\InputsManager.cpp" />
+    <ClCompile Include="..\Source\PanelManager.cpp" />
     <ClCompile Include="..\Source\system\ViewportManager.cpp" />
     <ClCompile Include="..\Source\system\system_utils.cpp" />
     <ClCompile Include="..\Source\system\KeyboardManager.cpp" />
     <ClCompile Include="..\Source\system\JoystickManager.cpp" />
     <ClCompile Include="..\Source\system\MouseManager.cpp" />
     <ClCompile Include="..\Source\system\GameMenu.cpp" />
+    <ClCompile Include="..\Source\system\SystemMenu.cpp" />
     <ClCompile Include="..\Source\system\CameraEventHandler.cpp" />
     <ClCompile Include="..\Source\third_party\imgui\backends\imgui_impl_sdl3.cpp" />
     <ClCompile Include="..\Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.cpp" />
@@ -105,6 +107,7 @@
     <ClInclude Include="..\Source\drawing.h" />
     <ClInclude Include="..\Source\DataManager.h" />
     <ClInclude Include="..\Source\json_helper.h" />
+    <ClInclude Include="..\Source\resource.h" />
     <ClInclude Include="..\Source\vector.h" />
     <ClInclude Include="..\Source\World.h" />
     <ClInclude Include="..\Source\ECS_Entity.h" />
@@ -113,12 +116,13 @@
     <ClInclude Include="..\Source\ECS_Systems.h" />
     <ClInclude Include="..\Source\ECS_Systems_AI.h" />
     <ClInclude Include="..\Source\ECS_Systems_Camera.h" />
+    <ClInclude Include="..\Source\ECS_Systems_Rendering_Camera.h" />
     <ClInclude Include="..\Source\GameEngine.h" />
     <ClInclude Include="..\Source\GameState.h" />
     <ClInclude Include="..\Source\VideoGame.h" />
-    <ClInclude Include="..\Source\Sprite.h" />
     <ClInclude Include="..\Source\engine_utils.h" />
     <ClInclude Include="..\Source\InputsManager.h" />
+    <ClInclude Include="..\Source\PanelManager.h" />
     <ClInclude Include="..\Source\system\ViewportManager.h" />
     <ClInclude Include="..\Source\system\system_utils.h" />
     <ClInclude Include="..\Source\system\KeyboardManager.h" />
@@ -127,6 +131,7 @@
     <ClInclude Include="..\Source\system\EventQueue.h" />
     <ClInclude Include="..\Source\system\EventManager.h" />
     <ClInclude Include="..\Source\system\GameMenu.h" />
+    <ClInclude Include="..\Source\system\SystemMenu.h" />
     <ClInclude Include="..\Source\system\CameraEventHandler.h" />
     <ClInclude Include="..\Source\third_party\imgui\backends\imgui_impl_sdl3.h" />
     <ClInclude Include="..\Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.h" />
@@ -136,6 +141,15 @@
     <ClInclude Include="..\Source\third_party\imnodes\imnodes.h" />
     <ClInclude Include="..\Source\third_party\imnodes\imnodes_internal.h" />
     <ClInclude Include="..\Source\third_party\nlohmann\json.hpp" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Resources\olympe.ico" />
+    <Image Include="icon1.ico" />
+    <Image Include="Resources\olympe.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="OlympeBlueprintEditor.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -201,7 +215,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>OlympeBlueprintEditor_d</TargetName>
-    <OutDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\</OutDir>
+    <OutDir>$(SolutionDir)\</OutDir>
     <IntDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\Intermediate\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

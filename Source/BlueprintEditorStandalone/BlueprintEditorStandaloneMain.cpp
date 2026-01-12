@@ -6,6 +6,7 @@
  * Blueprint Editor Standalone mode for full CRUD operations.
  */
 
+#define SDL_MAIN_USE_CALLBACKS
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include "../third_party/imgui/imgui.h"
@@ -14,6 +15,9 @@
 #include "../BlueprintEditor/blueprinteditor.h"
 #include "../BlueprintEditor/BlueprintEditorGUI.h"
 #include <iostream>
+
+// This provides the platform-specific entry point implementation for SDL3
+#include <SDL3/SDL_main_impl.h>
 
 static SDL_Window* g_BlueprintEditorWindow = nullptr;
 static SDL_Renderer* g_BlueprintEditorRenderer = nullptr;
@@ -29,7 +33,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     std::cout << "Mode: Blueprint Editor Standalone (Full CRUD)" << std::endl;
     std::cout << "=============================================" << std::endl;
     
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0)
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) == false)
     {
         std::cerr << "[BlueprintEditorStandalone] SDL3 Init failed: " << SDL_GetError() << std::endl;
         return SDL_APP_FAILURE;
@@ -61,7 +65,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	// io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // does not exist in SDL3 imgui backend yet
     
     ImGui::StyleColorsDark();
     

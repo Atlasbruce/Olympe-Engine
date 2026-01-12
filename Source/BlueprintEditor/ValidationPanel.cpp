@@ -59,7 +59,7 @@ namespace Olympe
         if (m_AutoValidate)
         {
             // Validate every few seconds
-            float currentTime = ImGui::GetTime();
+            float currentTime = (float) ImGui::GetTime();
             if (currentTime - m_LastValidationTime > 2.0f)
             {
                 ValidateActiveGraph();

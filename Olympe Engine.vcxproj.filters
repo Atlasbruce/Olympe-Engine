@@ -504,6 +504,7 @@
     <None Include="olympe.ini">
       <Filter>Fichiers sources</Filter>
     </None>
+    <None Include="OlympeBlueprintEditor\OlympeBlueprintEditor_new.vcxproj" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
