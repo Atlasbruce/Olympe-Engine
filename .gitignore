@@ -372,3 +372,6 @@ Blueprints/test_*.json
 # Allow imnodes (used alongside imgui)
 !/Source/third_party/imnodes/
 !/Source/third_party/imnodes/**
+
+# CMake build directory
+build/

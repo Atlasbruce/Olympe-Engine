@@ -1,1 +1,0 @@
-/usr/bin/c++ -g -Wl,--dependency-file=CMakeFiles/OlympeBlueprintEditor.dir/link.d CMakeFiles/OlympeBlueprintEditor.dir/Source/BlueprintEditorStandalone/BlueprintEditorStandaloneMain.cpp.o -o OlympeBlueprintEditor  libOlympeCore.a -lSDL3::SDL3
