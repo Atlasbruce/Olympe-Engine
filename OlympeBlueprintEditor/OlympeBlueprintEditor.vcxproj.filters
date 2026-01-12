@@ -110,6 +110,18 @@
     <ClCompile Include="..\Source\DataManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\vector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\World.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\ECS_Systems.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\ECS_Systems_AI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\Source\third_party\imgui\backends\imgui_impl_sdl3.cpp">
       <Filter>Source Files\ImGui</Filter>
     </ClCompile>
@@ -224,6 +236,27 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\json_helper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\vector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\World.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\ECS_Entity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\ECS_Components.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\ECS_Components_AI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\ECS_Systems.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\ECS_Systems_AI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\third_party\imgui\backends\imgui_impl_sdl3.h">
