@@ -2,18 +2,24 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28729.10
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OlympeBlueprintEditor", "OlympeBlueprintEditor\OlympeBlueprintEditor.vcxproj", "{9B4C9E2A-0000-0000-0000-000000000001}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OlympeBlueprintEditor", "OlympeBlueprintEditor\OlympeBlueprintEditor.vcxproj", "{9B4C9E2A-0000-0000-0000-000000000001}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
 		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{9B4C9E2A-0000-0000-0000-000000000001}.Debug|Win32.ActiveCfg = Debug|Win32
 		{9B4C9E2A-0000-0000-0000-000000000001}.Debug|Win32.Build.0 = Debug|Win32
+		{9B4C9E2A-0000-0000-0000-000000000001}.Debug|x64.ActiveCfg = Debug|x64
+		{9B4C9E2A-0000-0000-0000-000000000001}.Debug|x64.Build.0 = Debug|x64
 		{9B4C9E2A-0000-0000-0000-000000000001}.Release|Win32.ActiveCfg = Release|Win32
 		{9B4C9E2A-0000-0000-0000-000000000001}.Release|Win32.Build.0 = Release|Win32
+		{9B4C9E2A-0000-0000-0000-000000000001}.Release|x64.ActiveCfg = Release|x64
+		{9B4C9E2A-0000-0000-0000-000000000001}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

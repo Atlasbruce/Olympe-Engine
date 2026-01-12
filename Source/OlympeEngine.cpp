@@ -90,12 +90,13 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 
     // Initialize Blueprint Editor Backend
     Olympe::BlueprintEditor::Get().Initialize();
+    Olympe::BlueprintEditor::Get().InitializeRuntimeEditor();
     
     // Create Blueprint Editor GUI
     blueprintEditorGUI = new Olympe::BlueprintEditorGUI();
     blueprintEditorGUI->Initialize();
     
-    SYSTEM_LOG << "BlueprintEditor initialized (toggle with F2)" << endl;
+    SYSTEM_LOG << "BlueprintEditor initialized in Runtime mode (toggle with F2)" << endl;
 
     // Initialisation (à l'initialisation de l'application)
     ImGui::CreateContext();
