@@ -34,9 +34,16 @@ namespace Olympe
         void RenderNodeProperties();
         void RenderNodeEditModal();
         void HandleKeyboardShortcuts();
+        void HandleNodeInteractions(int graphID);
 
         // Node creation helpers
         void CreateNewNode(const char* nodeType, float x, float y);
+        
+        // Helper for converting global UID to local node ID
+        int GlobalUIDToLocalNodeID(int globalUID, int graphID) const
+        {
+            return globalUID - (graphID * 10000);  // 10000 is GRAPH_ID_MULTIPLIER
+        }
 
         // ImNodes state
         int m_SelectedNodeId = -1;
