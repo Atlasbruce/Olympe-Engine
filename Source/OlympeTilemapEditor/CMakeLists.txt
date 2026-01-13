@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.14)
 project(OlympeTilemapEditor VERSION 1.0.0 LANGUAGES CXX)
 
 # Set C++14 standard (matching Olympe Engine)
@@ -15,41 +15,22 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 # Find Required Packages
 # ============================================================================
 
-# Find SDL3
-find_package(SDL3 REQUIRED CONFIG)
-if(NOT SDL3_FOUND)
-    message(FATAL_ERROR "SDL3 not found! Please install SDL3 or set SDL3_DIR")
-endif()
-message(STATUS "Found SDL3: ${SDL3_DIR}")
-
-# Find ImGui (assuming it's available via find_package or add_subdirectory)
-# Adjust this based on your project's ImGui integration method
-if(NOT TARGET imgui)
-    find_package(imgui CONFIG)
-    if(NOT imgui_FOUND)
-        message(WARNING "ImGui not found via find_package, attempting to use existing target")
+# SDL3 is found at the root CMakeLists.txt level
+if(NOT TARGET SDL3::SDL3)
+    find_package(SDL3 REQUIRED CONFIG)
+    if(NOT SDL3_FOUND)
+        message(FATAL_ERROR "SDL3 not found! Please install SDL3 or set SDL3_DIR")
     endif()
+    message(STATUS "Found SDL3: ${SDL3_DIR}")
 endif()
 
-# Find or use custom json.hpp (nlohmann/json)
-if(NOT TARGET nlohmann_json::nlohmann_json)
-    find_package(nlohmann_json CONFIG)
-    if(NOT nlohmann_json_FOUND)
-        message(STATUS "nlohmann_json not found via find_package, assuming custom json.hpp in project")
-        # Add custom json.hpp include path if needed
-        set(JSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../ThirdParty/json/include" CACHE PATH "Path to custom json.hpp")
-        if(NOT EXISTS ${JSON_INCLUDE_DIR}/nlohmann/json.hpp)
-            message(WARNING "Custom json.hpp not found at ${JSON_INCLUDE_DIR}")
-        endif()
-    endif()
-endif()
-
-# Find fmt library
-find_package(fmt REQUIRED CONFIG)
-if(NOT fmt_FOUND)
-    message(FATAL_ERROR "fmt not found! Please install fmt or set fmt_DIR")
-endif()
-message(STATUS "Found fmt: ${fmt_DIR}")
+# ImGui sources are included in the parent OlympeCore library
+# We'll compile them directly for this standalone editor
+file(GLOB IMGUI_SOURCES 
+    ${CMAKE_SOURCE_DIR}/Source/third_party/imgui/*.cpp
+    ${CMAKE_SOURCE_DIR}/Source/third_party/imgui/backends/imgui_impl_sdl3.cpp
+    ${CMAKE_SOURCE_DIR}/Source/third_party/imgui/backends/imgui_impl_sdlrenderer3.cpp
+)
 
 # ============================================================================
 # Source Files
@@ -76,7 +57,11 @@ set(SOURCE_FILES
 # Create Executable
 # ============================================================================
 
-add_executable(OlympeTilemapEditor ${SOURCE_FILES} ${HEADER_FILES})
+add_executable(OlympeTilemapEditor 
+    ${SOURCE_FILES} 
+    ${HEADER_FILES}
+    ${IMGUI_SOURCES}
+)
 
 # ============================================================================
 # Include Directories
@@ -84,13 +69,11 @@ add_executable(OlympeTilemapEditor ${SOURCE_FILES} ${HEADER_FILES})
 
 target_include_directories(OlympeTilemapEditor PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../OlympeBlueprintEditor/include
+    ${CMAKE_SOURCE_DIR}/Source
+    ${CMAKE_SOURCE_DIR}/Source/third_party
+    ${CMAKE_SOURCE_DIR}/Source/third_party/imgui
+    ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
 )
-
-# Add custom json.hpp include if not found via find_package
-if(NOT nlohmann_json_FOUND AND DEFINED JSON_INCLUDE_DIR)
-    target_include_directories(OlympeTilemapEditor PRIVATE ${JSON_INCLUDE_DIR})
-endif()
 
 # ============================================================================
 # Link Libraries
@@ -98,22 +81,7 @@ endif()
 
 target_link_libraries(OlympeTilemapEditor PRIVATE
     SDL3::SDL3
-    fmt::fmt
 )
-
-# Link ImGui
-if(TARGET imgui)
-    target_link_libraries(OlympeTilemapEditor PRIVATE imgui)
-elseif(TARGET ImGui::ImGui)
-    target_link_libraries(OlympeTilemapEditor PRIVATE ImGui::ImGui)
-else()
-    message(WARNING "ImGui target not found, you may need to link it manually")
-endif()
-
-# Link nlohmann_json if found
-if(TARGET nlohmann_json::nlohmann_json)
-    target_link_libraries(OlympeTilemapEditor PRIVATE nlohmann_json::nlohmann_json)
-endif()
 
 # ============================================================================
 # Compiler Options
@@ -209,10 +177,10 @@ if(EXISTS ${LEVELS_SOURCE_DIR})
 endif()
 
 # Copy SDL3 DLL on Windows (if using shared library)
-if(WIN32 AND TARGET SDL3::SDL3-shared)
+if(WIN32)
     add_custom_command(TARGET OlympeTilemapEditor POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "$<TARGET_FILE:SDL3::SDL3-shared>"
+            "$<TARGET_FILE:SDL3::SDL3>"
             "$<TARGET_FILE_DIR:OlympeTilemapEditor>"
         COMMENT "Copying SDL3 DLL"
     )
@@ -245,7 +213,4 @@ message(STATUS "========================================")
 message(STATUS "C++ Standard: C++${CMAKE_CXX_STANDARD}")
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
-message(STATUS "SDL3 Found: ${SDL3_FOUND}")
-message(STATUS "fmt Found: ${fmt_FOUND}")
-message(STATUS "Output Directory: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 message(STATUS "========================================")

@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(BUILD_RUNTIME_ENGINE "Build runtime engine executable" ON)
 option(BUILD_BLUEPRINT_EDITOR_STANDALONE "Build Blueprint Editor Standalone executable" ON)
+option(BUILD_TILEMAP_EDITOR "Build Tilemap Editor executable" ON)
 
 # Find SDL3
 find_package(SDL3 REQUIRED)
@@ -145,6 +146,13 @@ if(BUILD_BLUEPRINT_EDITOR_STANDALONE)
 endif()
 
 # ============================================================================
+# Exécutable 3: Tilemap Editor (OlympeTilemapEditor.exe)
+# ============================================================================
+if(BUILD_TILEMAP_EDITOR)
+    add_subdirectory(Source/OlympeTilemapEditor)
+endif()
+
+# ============================================================================
 # Build Summary
 # ============================================================================
 message(STATUS "============================================")
@@ -153,4 +161,5 @@ message(STATUS "============================================")
 message(STATUS "  C++ Standard: C++14")
 message(STATUS "  Runtime Engine: ${BUILD_RUNTIME_ENGINE}")
 message(STATUS "  Blueprint Editor Standalone: ${BUILD_BLUEPRINT_EDITOR_STANDALONE}")
+message(STATUS "  Tilemap Editor: ${BUILD_TILEMAP_EDITOR}")
 message(STATUS "============================================")
