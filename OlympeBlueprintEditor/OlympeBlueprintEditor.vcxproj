@@ -144,7 +144,6 @@
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\Resources\olympe.ico" />
     <Image Include="icon1.ico" />
     <Image Include="Resources\olympe.ico" />
   </ItemGroup>
