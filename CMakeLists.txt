@@ -8,8 +8,33 @@ option(BUILD_RUNTIME_ENGINE "Build runtime engine executable" ON)
 option(BUILD_BLUEPRINT_EDITOR_STANDALONE "Build Blueprint Editor Standalone executable" ON)
 option(BUILD_TILEMAP_EDITOR "Build Tilemap Editor executable" ON)
 
-# Find SDL3
-find_package(SDL3 REQUIRED)
+# Find SDL3 or create manual target
+set(SDL3_DIR "${CMAKE_SOURCE_DIR}/SDL/cmake" CACHE PATH "Path to SDL3 cmake config")
+find_package(SDL3 CONFIG QUIET)
+
+if(NOT SDL3_FOUND OR NOT TARGET SDL3::SDL3)
+    message(STATUS "Creating manual SDL3 target")
+    
+    # Create SDL3 imported target manually
+    add_library(SDL3::SDL3 SHARED IMPORTED)
+    
+    set_target_properties(SDL3::SDL3 PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/SDL/include"
+    )
+    
+    if(WIN32)
+        set_target_properties(SDL3::SDL3 PROPERTIES
+            IMPORTED_IMPLIB "${CMAKE_SOURCE_DIR}/SDL/lib/SDL3.lib"
+            IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/SDL/lib/SDL3.dll"
+        )
+    else()
+        set_target_properties(SDL3::SDL3 PROPERTIES
+            IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/SDL/lib/SDL3.dll"
+        )
+    endif()
+    
+    set(SDL3_FOUND TRUE)
+endif()
 
 # ============================================================================
 # Shared Blueprint Editor Sources

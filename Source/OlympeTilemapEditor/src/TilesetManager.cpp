@@ -295,18 +295,19 @@ bool TilesetManager::import_tileset(const std::string& file_path, SDL_Renderer* 
 
 bool TilesetManager::validate_tileset(const Tileset& tileset) const
 {
-    clear_validation_errors();
+    // Clear validation errors at the beginning (cast away const for this)
+    const_cast<TilesetManager*>(this)->validation_errors_.clear();
     
     if (tileset.name.empty()) {
-        add_validation_error("Tileset name is empty");
+        const_cast<TilesetManager*>(this)->validation_errors_.push_back("Tileset name is empty");
     }
     
     if (tileset.tile_width <= 0 || tileset.tile_height <= 0) {
-        add_validation_error("Invalid tile dimensions");
+        const_cast<TilesetManager*>(this)->validation_errors_.push_back("Invalid tile dimensions");
     }
     
     if (tileset.columns <= 0 || tileset.rows <= 0) {
-        add_validation_error("Invalid tileset dimensions");
+        const_cast<TilesetManager*>(this)->validation_errors_.push_back("Invalid tileset dimensions");
     }
     
     return validation_errors_.empty();
@@ -346,8 +347,11 @@ bool TilesetManager::load_tileset_metadata(const std::string& file_path, Tileset
             return false;
         }
         
-        nlohmann::json data;
-        file >> data;
+        // Read file content into string
+        std::string content((std::istreambuf_iterator<char>(file)),
+                           std::istreambuf_iterator<char>());
+        
+        nlohmann::json data = nlohmann::json::parse(content);
         
         out_tileset.name = data.value("name", "Unnamed");
         out_tileset.texture_path = data.value("texture", "");
@@ -409,12 +413,12 @@ bool TilesetManager::validate_tile_id(const Tileset* tileset, int tile_id) const
     return tileset && tile_id >= 0 && tile_id < tileset->tile_count;
 }
 
-void TilesetManager::clear_validation_errors() const
+void TilesetManager::clear_validation_errors()
 {
     validation_errors_.clear();
 }
 
-void TilesetManager::add_validation_error(const std::string& error) const
+void TilesetManager::add_validation_error(const std::string& error)
 {
     validation_errors_.push_back(error);
 }

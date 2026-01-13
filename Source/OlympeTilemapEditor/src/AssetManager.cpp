@@ -48,7 +48,10 @@ SDL_Texture* AssetManager::load_texture(const std::string& file_path)
     // Create texture asset
     auto asset = std::make_unique<TextureAsset>();
     asset->texture = texture;
-    SDL_GetTextureSize(texture, &asset->width, &asset->height);
+    float width, height;
+    SDL_GetTextureSize(texture, &width, &height);
+    asset->width = static_cast<int>(width);
+    asset->height = static_cast<int>(height);
     asset->file_path = file_path;
     asset->is_valid = true;
     

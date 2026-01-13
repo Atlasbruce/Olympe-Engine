@@ -72,6 +72,7 @@ target_include_directories(OlympeTilemapEditor PRIVATE
     ${CMAKE_SOURCE_DIR}/Source
     ${CMAKE_SOURCE_DIR}/Source/third_party
     ${CMAKE_SOURCE_DIR}/Source/third_party/imgui
+    ${CMAKE_SOURCE_DIR}/Source/third_party/imgui/backends
     ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
 )
 

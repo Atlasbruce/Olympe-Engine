@@ -7,6 +7,8 @@
 #include <fstream>
 #include <ctime>
 
+using json = nlohmann::json;
+
 namespace Olympe {
 namespace Editor {
 
@@ -142,16 +144,17 @@ bool LevelManager::duplicate_level(const std::string& source_path, const std::st
 
 bool LevelManager::validate_level_data(const nlohmann::json& data) const
 {
-    validation_errors_.clear();
+    // Clear validation errors (cast away const for this operation)
+    const_cast<std::vector<std::string>&>(validation_errors_).clear();
     
     // TODO: Implement comprehensive validation
     if (!data.contains("version")) {
-        validation_errors_.push_back("Missing 'version' field");
+        const_cast<std::vector<std::string>&>(validation_errors_).push_back("Missing 'version' field");
         return false;
     }
     
     if (!data.contains("name")) {
-        validation_errors_.push_back("Missing 'name' field");
+        const_cast<std::vector<std::string>&>(validation_errors_).push_back("Missing 'name' field");
         return false;
     }
     
@@ -186,7 +189,12 @@ bool LevelManager::read_level_file(const std::string& file_path, nlohmann::json&
         if (!file.is_open()) {
             return false;
         }
-        file >> out_data;
+        
+        // Read file content into string
+        std::string content((std::istreambuf_iterator<char>(file)),
+                           std::istreambuf_iterator<char>());
+        
+        out_data = nlohmann::json::parse(content);
         return true;
     } catch (const std::exception& e) {
         std::cerr << "[LevelManager] Exception reading file: " << e.what() << std::endl;

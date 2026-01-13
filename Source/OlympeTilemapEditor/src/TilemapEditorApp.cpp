@@ -73,7 +73,7 @@ void TilemapEditorApp::run()
     
     while (is_running_) {
         Uint64 current_time = SDL_GetTicks();
-        delta_time_ = (current_time - last_frame_time_) / 1000.0f;
+        delta_time_ = static_cast<float>(current_time - last_frame_time_) / 1000.0f;
         last_frame_time_ = current_time;
         
         // Clamp delta time
