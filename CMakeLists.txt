@@ -11,6 +11,11 @@ option(BUILD_BLUEPRINT_EDITOR_STANDALONE "Build Blueprint Editor Standalone exec
 find_package(SDL3 REQUIRED)
 
 # ============================================================================
+# TiledLevelLoader - Tiled MapEditor file loader
+# ============================================================================
+add_subdirectory(Source/TiledLevelLoader)
+
+# ============================================================================
 # Shared Blueprint Editor Sources
 # ============================================================================
 file(GLOB_RECURSE BLUEPRINT_EDITOR_SOURCES "Source/BlueprintEditor/*.cpp")
@@ -49,7 +54,7 @@ target_include_directories(OlympeCore PUBLIC
     ${SDL3_INCLUDE_DIRS}
 )
 
-target_link_libraries(OlympeCore PUBLIC SDL3::SDL3)
+target_link_libraries(OlympeCore PUBLIC SDL3::SDL3 TiledLevelLoader)
 target_compile_definitions(OlympeCore PUBLIC OLYMPE_BLUEPRINT_EDITOR_ENABLED)
 
 # C++14 standard
