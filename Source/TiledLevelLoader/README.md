@@ -78,6 +78,12 @@ config.collisionLayerPatterns = {"collision", "walls"};
 TiledToOlympe converter;
 converter.SetConfig(config);
 
+// Optionally load prefab mappings from JSON file
+// This will merge with or replace the manual mappings above
+if (!converter.LoadPrefabMapping("Config/tiled_prefab_mapping.json")) {
+    SYSTEM_LOG << "Warning: Could not load prefab mapping file" << std::endl;
+}
+
 Olympe::Editor::LevelDefinition level;
 if (converter.Convert(map, level)) {
     SYSTEM_LOG << "Converted: " << level.entities.size() << " entities" << std::endl;
@@ -87,6 +93,32 @@ if (converter.Convert(map, level)) {
     SYSTEM_LOG << "Parallax layers: " << parallax.GetLayerCount() << std::endl;
 }
 ```
+
+### Loading Prefab Mappings from JSON
+
+Instead of manually configuring the type-to-prefab map in code, you can load mappings from a JSON file:
+
+```cpp
+TiledToOlympe converter;
+
+// Load mappings from JSON file
+if (converter.LoadPrefabMapping("Config/tiled_prefab_mapping.json")) {
+    SYSTEM_LOG << "Prefab mappings loaded successfully" << std::endl;
+} else {
+    SYSTEM_LOG << "Failed to load mappings: " << converter.GetLastError() << std::endl;
+}
+
+// The JSON file format:
+// {
+//   "schema_version": 1,
+//   "mapping": {
+//     "player": "Blueprints/EntityPrefab/player.json",
+//     "enemy": "Blueprints/EntityPrefab/enemy.json",
+//     "collectible": "Blueprints/EntityPrefab/item.json"
+//   }
+// }
+```
+
 
 ### Isometric Projection
 
@@ -108,6 +140,39 @@ Vec2 worldPos = IsometricProjection::IsoToWorld(screenPos.x, screenPos.y, tileWi
 int tileX, tileY;
 IsometricProjection::ScreenToTile(mouseX, mouseY, tileWidth, tileHeight, tileX, tileY);
 ```
+
+### Working with Tile GIDs
+
+Tiled uses Global Tile IDs (GIDs) which include both the tile ID and flip flags. Use the utility functions in TiledStructures.h to extract this information:
+
+```cpp
+#include "TiledStructures.h"
+
+using namespace Olympe::Tiled;
+
+// Given a tile GID from the map data
+uint32_t gid = layer.data[index];
+
+// Extract the actual tile ID (removing flip flags)
+uint32_t tileId = GetTileId(gid);
+
+// Check flip flags
+bool flippedH = IsFlippedHorizontally(gid);
+bool flippedV = IsFlippedVertically(gid);
+bool flippedD = IsFlippedDiagonally(gid);
+
+// Use these when rendering or processing tiles
+if (tileId > 0) {  // 0 = empty tile
+    // Render the tile with appropriate flipping
+    RenderTile(tileId, flippedH, flippedV, flippedD);
+}
+```
+
+The flip flag constants are also available if you need to manipulate GIDs:
+- `FLIPPED_HORIZONTALLY_FLAG` - 0x80000000
+- `FLIPPED_VERTICALLY_FLAG` - 0x40000000
+- `FLIPPED_DIAGONALLY_FLAG` - 0x20000000
+- `TILE_ID_MASK` - 0x1FFFFFFF
 
 ## Architecture
 
