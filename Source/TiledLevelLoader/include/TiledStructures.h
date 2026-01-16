@@ -262,10 +262,10 @@ namespace Tiled {
     };
 
     // Flip flags for tile data
-    const uint32_t FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
-    const uint32_t FLIPPED_VERTICALLY_FLAG   = 0x40000000;
-    const uint32_t FLIPPED_DIAGONALLY_FLAG   = 0x20000000;
-    const uint32_t TILE_ID_MASK              = 0x1FFFFFFF;
+    constexpr uint32_t FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
+    constexpr uint32_t FLIPPED_VERTICALLY_FLAG   = 0x40000000;
+    constexpr uint32_t FLIPPED_DIAGONALLY_FLAG   = 0x20000000;
+    constexpr uint32_t TILE_ID_MASK              = 0x1FFFFFFF;
 
     // Helper to extract tile ID and flip flags
     inline uint32_t GetTileId(uint32_t gid)

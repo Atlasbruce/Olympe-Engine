@@ -5,7 +5,6 @@
 #include "TiledToOlympe.h"
 #include "OlympeTilemapEditor/include/LevelManager.h"
 #include "system/system_utils.h"
-#include <sstream>
 #include <algorithm>
 
 namespace Olympe {
@@ -224,9 +223,7 @@ namespace Tiled {
         auto entity = std::make_unique<Olympe::Editor::EntityInstance>();
         
         // Generate unique ID
-        std::ostringstream oss;
-        oss << "sector_" << obj.id;
-        entity->id = oss.str();
+        entity->id = "sector_" + std::to_string(obj.id);
         entity->name = obj.name.empty() ? ("Sector " + std::to_string(obj.id)) : obj.name;
         entity->prefabPath = "Blueprints/Sector.json";
         
@@ -257,9 +254,7 @@ namespace Tiled {
         // Create a patrol path entity
         auto entity = std::make_unique<Olympe::Editor::EntityInstance>();
         
-        std::ostringstream oss;
-        oss << "patrol_" << obj.id;
-        entity->id = oss.str();
+        entity->id = "patrol_" + std::to_string(obj.id);
         entity->name = obj.name.empty() ? ("Patrol " + std::to_string(obj.id)) : obj.name;
         entity->prefabPath = "Blueprints/PatrolPath.json";
         
@@ -289,9 +284,7 @@ namespace Tiled {
         auto entity = std::make_unique<Olympe::Editor::EntityInstance>();
         
         // Generate unique ID
-        std::ostringstream oss;
-        oss << "entity_" << obj.id;
-        entity->id = oss.str();
+        entity->id = "entity_" + std::to_string(obj.id);
         entity->name = obj.name.empty() ? ("Object " + std::to_string(obj.id)) : obj.name;
         
         // Get prefab path from type mapping

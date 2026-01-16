@@ -121,8 +121,9 @@ namespace Tiled {
     // Convert int color to hex string
     inline std::string ColorToString(int color)
     {
-        char buffer[16];
-        std::snprintf(buffer, sizeof(buffer), "#%08X", static_cast<unsigned int>(color));
+        constexpr size_t BUFFER_SIZE = 16;
+        char buffer[BUFFER_SIZE];
+        std::snprintf(buffer, BUFFER_SIZE, "#%08X", static_cast<unsigned int>(color));
         return std::string(buffer);
     }
 
