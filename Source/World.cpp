@@ -244,3 +244,176 @@ void World::NotifyBlueprintEditorEntityDestroyed(EntityID entity)
     NotifyEditorEntityDestroyed((uint64_t)entity);
     #endif
 }
+//---------------------------------------------------------------------------------------------
+// Tiled MapEditor Integration
+//---------------------------------------------------------------------------------------------
+#include "TiledLevelLoader/include/TiledLevelLoader.h"
+#include "TiledLevelLoader/include/TiledToOlympe.h"
+#include "prefabfactory.h"
+#include "ECS_Components_AI.h"
+#include <fstream>
+
+bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
+{
+    SYSTEM_LOG << "World::LoadLevelFromTiled - Loading: " << tiledMapPath << "\n";
+    
+    // 1. Load the Tiled map
+    Olympe::Tiled::TiledLevelLoader loader;
+    if (!loader.LoadFromFile(tiledMapPath))
+    {
+        SYSTEM_LOG << "World::LoadLevelFromTiled - Failed to load Tiled map\n";
+        return false;
+    }
+    
+    const Olympe::Tiled::TiledMap& tiledMap = loader.GetMap();
+    SYSTEM_LOG << "World::LoadLevelFromTiled - Map loaded: " << tiledMap.width << "x" << tiledMap.height 
+               << " (orientation: " << tiledMap.orientation << ")\n";
+    
+    // 2. Convert to Olympe format
+    Olympe::Tiled::TiledToOlympe converter;
+    
+    // Load prefab mapping from Config/tiled_prefab_mapping.json
+    std::string mappingPath = "Config/tiled_prefab_mapping.json";
+    if (!converter.LoadPrefabMapping(mappingPath))
+    {
+        SYSTEM_LOG << "World::LoadLevelFromTiled - Warning: Could not load prefab mapping from " 
+                   << mappingPath << ", using defaults\n";
+    }
+    
+    // Convert the map
+    Olympe::Editor::LevelDefinition levelDef;
+    if (!converter.Convert(tiledMap, levelDef))
+    {
+        SYSTEM_LOG << "World::LoadLevelFromTiled - Failed to convert Tiled map to Olympe format\n";
+        return false;
+    }
+    
+    SYSTEM_LOG << "World::LoadLevelFromTiled - Converted level with " 
+               << levelDef.entities.size() << " entities\n";
+    
+    // 3. Unload current level if any
+    UnloadCurrentLevel();
+    
+    // 4. Create entities from level definition
+    PrefabFactory& factory = PrefabFactory::Get();
+    
+    for (const auto& entityInstance : levelDef.entities)
+    {
+        if (!entityInstance) continue;
+        
+        SYSTEM_LOG << "World::LoadLevelFromTiled - Creating entity: " << entityInstance->name 
+                   << " from prefab: " << entityInstance->prefabPath << "\n";
+        
+        // Extract prefab name from path (e.g., "Blueprints/EntityPrefab/player.json" -> "player")
+        std::string prefabName = entityInstance->prefabPath;
+        size_t lastSlash = prefabName.find_last_of("/\\");
+        if (lastSlash != std::string::npos)
+        {
+            prefabName = prefabName.substr(lastSlash + 1);
+        }
+        size_t lastDot = prefabName.find_last_of(".");
+        if (lastDot != std::string::npos)
+        {
+            prefabName = prefabName.substr(0, lastDot);
+        }
+        
+        // Create entity using prefab factory
+        EntityID entity = factory.CreateEntity(prefabName);
+        if (entity == INVALID_ENTITY_ID)
+        {
+            SYSTEM_LOG << "World::LoadLevelFromTiled - Warning: Failed to create entity from prefab: " 
+                       << prefabName << "\n";
+            continue;
+        }
+        
+        // Set position if entity has Position_data component
+        if (HasComponent<Position_data>(entity))
+        {
+            Position_data& pos = GetComponent<Position_data>(entity);
+            pos.position.x = static_cast<float>(entityInstance->position.x);
+            pos.position.y = static_cast<float>(entityInstance->position.y);
+            pos.position.z = 0.0f;
+        }
+        
+        // Apply overrides from entityInstance->overrides (component property overrides)
+        // This would require reflection or manual parsing based on override structure
+        // For now, we'll handle special cases like patrol paths
+        
+        // Handle patrol paths from custom properties
+        if (!entityInstance->overrides.is_null() && entityInstance->overrides.contains("patrolPath"))
+        {
+            if (HasComponent<AIBlackboard_data>(entity))
+            {
+                AIBlackboard_data& blackboard = GetComponent<AIBlackboard_data>(entity);
+                
+                // Extract patrol points from overrides
+                const auto& patrolPath = entityInstance->overrides["patrolPath"];
+                if (patrolPath.is_array())
+                {
+                    blackboard.patrolPointCount = 0;
+                    for (size_t i = 0; i < patrolPath.size() && i < 8; ++i)
+                    {
+                        if (patrolPath[i].contains("x") && patrolPath[i].contains("y"))
+                        {
+                            blackboard.patrolPoints[blackboard.patrolPointCount].x = 
+                                static_cast<float>(patrolPath[i]["x"].get<double>());
+                            blackboard.patrolPoints[blackboard.patrolPointCount].y = 
+                                static_cast<float>(patrolPath[i]["y"].get<double>());
+                            blackboard.patrolPoints[blackboard.patrolPointCount].z = 0.0f;
+                            blackboard.patrolPointCount++;
+                        }
+                    }
+                    
+                    if (blackboard.patrolPointCount > 0)
+                    {
+                        SYSTEM_LOG << "World::LoadLevelFromTiled - Assigned " 
+                                   << blackboard.patrolPointCount << " patrol points to entity " 
+                                   << entityInstance->name << "\n";
+                    }
+                }
+            }
+        }
+    }
+    
+    SYSTEM_LOG << "World::LoadLevelFromTiled - Level loaded successfully\n";
+    return true;
+}
+
+void World::UnloadCurrentLevel()
+{
+    SYSTEM_LOG << "World::UnloadCurrentLevel - Unloading current level\n";
+    
+    // Destroy all entities except system entities (like GridSettings)
+    std::vector<EntityID> entitiesToDestroy;
+    
+    for (const auto& kv : m_entitySignatures)
+    {
+        EntityID e = kv.first;
+        
+        // Keep system entities (GridSettings, Camera settings, etc.)
+        if (HasComponent<GridSettings_data>(e))
+        {
+            continue; // Keep grid settings
+        }
+        
+        // Keep camera entities if they exist as system entities
+        if (HasComponent<Camera_data>(e))
+        {
+            // Check if it's a player camera or system camera
+            // For now, we'll keep all cameras
+            continue;
+        }
+        
+        // Mark all other entities for destruction
+        entitiesToDestroy.push_back(e);
+    }
+    
+    // Destroy marked entities
+    for (EntityID e : entitiesToDestroy)
+    {
+        DestroyEntity(e);
+    }
+    
+    SYSTEM_LOG << "World::UnloadCurrentLevel - Destroyed " << entitiesToDestroy.size() 
+               << " entities\n";
+}

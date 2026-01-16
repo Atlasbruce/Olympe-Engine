@@ -25,6 +25,7 @@ Notes:
 #include "InputsManager.h"
 #include "GameState.h"
 #include "system/ViewportManager.h"
+#include "system/GameMenu.h"
 #include "DataManager.h"
 #include "system/system_utils.h"
 #include "PanelManager.h"
@@ -165,6 +166,16 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
                       << (Olympe::BlueprintEditor::Get().IsActive() ? "activated" : "deactivated") 
                       << endl;
             return SDL_APP_CONTINUE; // Early return to avoid ESC dialog below
+        }
+        
+        // F3 toggles Tiled Level Loader menu
+        if (event->key.key == SDLK_F3)
+        {
+            GameMenu::Get().ToggleF2Menu();
+            SYSTEM_LOG << "Tiled Level Loader Menu " 
+                      << (GameMenu::Get().IsF2MenuOpen() ? "opened" : "closed") 
+                      << endl;
+            return SDL_APP_CONTINUE;
         }
         
         if (event->key.key == SDLK_ESCAPE)
@@ -324,6 +335,9 @@ SDL_AppResult SDL_AppIterate(void* appstate)
         ImGui::NewFrame();
 
         blueprintEditorGUI->Render(); // BeginMainMenuBar() est maintenant sûr
+        
+        // Render Tiled Level Loader menu (F3)
+        GameMenu::Get().RenderF2Menu();
 
         ImGui::Render();
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
