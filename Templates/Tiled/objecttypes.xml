@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objecttypes>
+  <!-- Player Spawn -->
+  <objecttype name="player" color="#00ff00">
+    <property name="prefabPath" type="string" default="Blueprints/EntityPrefab/player_entity.json"/>
+    <property name="health" type="int" default="100"/>
+    <property name="speed" type="float" default="100.0"/>
+    <property name="facing" type="string" default="right"/>
+  </objecttype>
+
+  <!-- NPCs -->
+  <objecttype name="npc" color="#0000ff">
+    <property name="prefabPath" type="string" default="Blueprints/EntityPrefab/npc_entity.json"/>
+    <property name="friendlyName" type="string" default=""/>
+    <property name="dialogueFile" type="file" default=""/>
+    <property name="speed" type="float" default="50.0"/>
+    <property name="interactRadius" type="float" default="32.0"/>
+  </objecttype>
+
+  <objecttype name="guard" color="#0080ff">
+    <property name="prefabPath" type="string" default="Blueprints/EntityPrefab/guard_npc.json"/>
+    <property name="patrolPathName" type="string" default=""/>
+    <property name="speed" type="float" default="60.0"/>
+    <property name="alertRadius" type="float" default="100.0"/>
+    <property name="hostile" type="bool" default="false"/>
+  </objecttype>
+
+  <!-- Enemies -->
+  <objecttype name="enemy" color="#ff0000">
+    <property name="prefabPath" type="string" default="Blueprints/EntityPrefab/enemy.json"/>
+    <property name="health" type="int" default="50"/>
+    <property name="damage" type="int" default="10"/>
+    <property name="speed" type="float" default="80.0"/>
+    <property name="aggroRadius" type="float" default="150.0"/>
+    <property name="attackRange" type="float" default="32.0"/>
+  </objecttype>
+
+  <objecttype name="zombie" color="#800000">
+    <property name="prefabPath" type="string" default="Blueprints/EntityPrefab/zombie.json"/>
+    <property name="health" type="int" default="100"/>
+    <property name="damage" type="int" default="20"/>
+    <property name="speed" type="float" default="50.0"/>
+    <property name="aggroRadius" type="float" default="200.0"/>
+  </objecttype>
+
+  <!-- Special Objects -->
+  <objecttype name="collision" color="#ff0000">
+    <!-- Collision objects are auto-handled, no properties needed -->
+  </objecttype>
+
+  <objecttype name="sector" color="#ffff00">
+    <!-- Custom sector properties -->
+    <property name="biome" type="string" default=""/>
+    <property name="music" type="file" default=""/>
+    <property name="ambientColor" type="color" default="#ffffffff"/>
+    <property name="spawnRate" type="float" default="1.0"/>
+    <property name="fogDensity" type="float" default="0.0"/>
+  </objecttype>
+
+  <objecttype name="way" color="#ff00ff">
+    <property name="name" type="string" default=""/>
+    <property name="looped" type="bool" default="true"/>
+    <property name="bidirectional" type="bool" default="false"/>
+  </objecttype>
+
+  <!-- Items -->
+  <objecttype name="key" color="#ffff00">
+    <property name="prefabPath" type="string" default="Blueprints/EntityPrefab/key.json"/>
+    <property name="keyId" type="string" default=""/>
+    <property name="consumable" type="bool" default="true"/>
+  </objecttype>
+
+  <objecttype name="treasure" color="#ffd700">
+    <property name="prefabPath" type="string" default="Blueprints/EntityPrefab/treasure.json"/>
+    <property name="value" type="int" default="100"/>
+    <property name="itemId" type="string" default=""/>
+    <property name="locked" type="bool" default="false"/>
+    <property name="requiresKey" type="string" default=""/>
+  </objecttype>
+
+  <objecttype name="collectible" color="#ffa500">
+    <property name="prefabPath" type="string" default="Blueprints/EntityPrefab/item.json"/>
+    <property name="itemId" type="string" default=""/>
+    <property name="quantity" type="int" default="1"/>
+    <property name="autoPickup" type="bool" default="true"/>
+  </objecttype>
+
+  <!-- Portals and Exits -->
+  <objecttype name="exit" color="#00ff00">
+    <property name="prefabPath" type="string" default="Blueprints/EntityPrefab/portal.json"/>
+    <property name="targetLevel" type="file" default=""/>
+    <property name="targetX" type="float" default="0.0"/>
+    <property name="targetY" type="float" default="0.0"/>
+  </objecttype>
+
+  <objecttype name="door" color="#804000">
+    <property name="prefabPath" type="string" default="Blueprints/EntityPrefab/portal.json"/>
+    <property name="targetLevel" type="file" default=""/>
+    <property name="requiresKey" type="string" default=""/>
+    <property name="targetX" type="float" default="0.0"/>
+    <property name="targetY" type="float" default="0.0"/>
+  </objecttype>
+
+  <objecttype name="portal" color="#ff00ff">
+    <property name="prefabPath" type="string" default="Blueprints/EntityPrefab/portal.json"/>
+    <property name="targetLevel" type="file" default=""/>
+    <property name="targetX" type="float" default="0.0"/>
+    <property name="targetY" type="float" default="0.0"/>
+    <property name="bidirectional" type="bool" default="false"/>
+  </objecttype>
+
+  <!-- Misc -->
+  <objecttype name="trigger" color="#00ffff">
+    <property name="prefabPath" type="string" default="Blueprints/EntityPrefab/trigger.json"/>
+    <property name="triggerId" type="string" default=""/>
+    <property name="oneTime" type="bool" default="false"/>
+  </objecttype>
+
+  <objecttype name="waypoint" color="#00ffff">
+    <property name="prefabPath" type="string" default="Blueprints/EntityPrefab/waypoint.json"/>
+    <property name="waypointId" type="string" default=""/>
+    <property name="visible" type="bool" default="false"/>
+    <property name="unlocked" type="bool" default="true"/>
+  </objecttype>
+</objecttypes>

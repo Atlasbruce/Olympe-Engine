@@ -354,6 +354,14 @@ struct CameraInputBinding_data
 	float zoomInput = 0.0f;                  // Zoom input value (-1 to 1)
 	bool resetRequested = false;             // Reset button pressed this frame
 };
+// --- Collision Zone Component ---
+// Represents a static collision area (e.g., from Tiled object layer)
+struct CollisionZone_data
+{
+	SDL_FRect bounds = { 0.f, 0.f, 100.f, 100.f };  // Collision rectangle
+	bool isStatic = true;                            // Is this a static collision zone
+};
+
 // Editor context for plugins
 struct EditorContext_st
 {

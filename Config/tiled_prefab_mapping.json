@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "description": "Mapping between Tiled object types and Olympe Engine prefab paths",
+  "mapping": {
+    "player": "Blueprints/EntityPrefab/player.json",
+    "npc": "Blueprints/EntityPrefab/npc_entity.json",
+    "guard": "Blueprints/EntityPrefab/npc_entity.json",
+    "enemy": "Blueprints/EntityPrefab/enemy.json",
+    "zombie": "Blueprints/EntityPrefab/zombie.json",
+    "collectible": "Blueprints/EntityPrefab/item.json",
+    "treasure": "Blueprints/EntityPrefab/treasure.json",
+    "key": "Blueprints/EntityPrefab/key.json",
+    "trigger": "Blueprints/EntityPrefab/trigger.json",
+    "exit": "Blueprints/EntityPrefab/portal.json",
+    "door": "Blueprints/EntityPrefab/portal.json",
+    "portal": "Blueprints/EntityPrefab/portal.json",
+    "waypoint": "Blueprints/EntityPrefab/waypoint.json"
+  },
+  "notes": {
+    "usage": "Add new mappings here to define how Tiled objects map to Olympe prefabs",
+    "collision": "Objects of type 'collision' are converted to CollisionZone_data components automatically",
+    "way": "Polyline objects of type 'way' are converted to patrol paths (AIBlackboard_data.patrolPoints)",
+    "sector": "Polygon or rectangle objects of type 'sector' define level boundaries"
+  }
+}

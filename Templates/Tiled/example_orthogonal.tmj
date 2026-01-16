@@ -1,0 +1,183 @@
+{ "compressionlevel":-1,
+ "height":15,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1,
+            1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1,
+            1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1,
+            1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1,
+            1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1,
+            1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1,
+            1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1,
+            1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1,
+            1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1,
+            1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1,
+            1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+         "height":15,
+         "id":1,
+         "name":"Ground",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":20,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "id":2,
+         "name":"Collision",
+         "objects":[
+                {
+                 "height":32,
+                 "id":1,
+                 "name":"wall_top",
+                 "rotation":0,
+                 "type":"collision",
+                 "visible":true,
+                 "width":576,
+                 "x":64,
+                 "y":32
+                }, 
+                {
+                 "height":32,
+                 "id":2,
+                 "name":"wall_bottom",
+                 "rotation":0,
+                 "type":"collision",
+                 "visible":true,
+                 "width":576,
+                 "x":64,
+                 "y":416
+                }, 
+                {
+                 "height":352,
+                 "id":3,
+                 "name":"wall_left",
+                 "rotation":0,
+                 "type":"collision",
+                 "visible":true,
+                 "width":32,
+                 "x":32,
+                 "y":64
+                }, 
+                {
+                 "height":352,
+                 "id":4,
+                 "name":"wall_right",
+                 "rotation":0,
+                 "type":"collision",
+                 "visible":true,
+                 "width":32,
+                 "x":608,
+                 "y":64
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "id":3,
+         "name":"Objects",
+         "objects":[
+                {
+                 "height":0,
+                 "id":5,
+                 "name":"player_spawn",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"health",
+                         "type":"int",
+                         "value":100
+                        }],
+                 "rotation":0,
+                 "type":"player",
+                 "visible":true,
+                 "width":0,
+                 "x":320,
+                 "y":240
+                }, 
+                {
+                 "height":0,
+                 "id":6,
+                 "name":"npc_villager",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"friendlyName",
+                         "type":"string",
+                         "value":"Friendly Villager"
+                        }],
+                 "rotation":0,
+                 "type":"npc",
+                 "visible":true,
+                 "width":0,
+                 "x":480,
+                 "y":160
+                }, 
+                {
+                 "height":0,
+                 "id":7,
+                 "name":"enemy_goblin",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"health",
+                         "type":"int",
+                         "value":50
+                        }, 
+                        {
+                         "name":"damage",
+                         "type":"int",
+                         "value":10
+                        }],
+                 "rotation":0,
+                 "type":"enemy",
+                 "visible":true,
+                 "width":0,
+                 "x":160,
+                 "y":320
+                }, 
+                {
+                 "height":0,
+                 "id":8,
+                 "name":"treasure_chest",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"value",
+                         "type":"int",
+                         "value":100
+                        }],
+                 "rotation":0,
+                 "type":"treasure",
+                 "visible":true,
+                 "width":0,
+                 "x":480,
+                 "y":320
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":4,
+ "nextobjectid":9,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.11.0",
+ "tileheight":32,
+ "tilesets":[],
+ "tilewidth":32,
+ "type":"map",
+ "version":"1.10",
+ "width":20
+}

@@ -92,6 +92,10 @@ public:
     }
 
     const std::vector<std::unique_ptr<Level>>& GetLevels() const { return m_levels; }
+    
+    // Tiled MapEditor integration
+    bool LoadLevelFromTiled(const std::string& tiledMapPath);
+    void UnloadCurrentLevel();
     // -------------------------------------------------------------
     // ECS Entity Management
     EntityID CreateEntity();
