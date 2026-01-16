@@ -16,6 +16,7 @@
 
 #include "TiledStructures.h"
 #include "ParallaxLayerManager.h"
+#include "third_party/nlohmann/json.hpp"
 #include <string>
 #include <map>
 #include <memory>
@@ -66,6 +67,9 @@ namespace Tiled {
 
         // Set conversion configuration
         void SetConfig(const ConversionConfig& config);
+
+        // Load prefab mapping from JSON file
+        bool LoadPrefabMapping(const std::string& jsonPath);
 
         // Convert Tiled map to Olympe LevelDefinition
         bool Convert(const TiledMap& tiledMap, Olympe::Editor::LevelDefinition& outLevel);

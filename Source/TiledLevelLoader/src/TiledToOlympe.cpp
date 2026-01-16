@@ -6,6 +6,7 @@
 #include "OlympeTilemapEditor/include/LevelManager.h"
 #include "system/system_utils.h"
 #include <algorithm>
+#include <fstream>
 
 namespace Olympe {
 namespace Tiled {
@@ -29,6 +30,53 @@ namespace Tiled {
     void TiledToOlympe::SetConfig(const ConversionConfig& config)
     {
         config_ = config;
+    }
+
+    bool TiledToOlympe::LoadPrefabMapping(const std::string& jsonPath)
+    {
+        SYSTEM_LOG << "TiledToOlympe: Loading prefab mapping from " << jsonPath << std::endl;
+        
+        try {
+            // Open and read the JSON file
+            std::ifstream file(jsonPath);
+            if (!file.is_open()) {
+                lastError_ = "Failed to open prefab mapping file: " + jsonPath;
+                SYSTEM_LOG << "TiledToOlympe: " << lastError_ << std::endl;
+                return false;
+            }
+            
+            nlohmann::json mappingJson;
+            mappingJson = nlohmann::json::parse(file);
+            file.close();
+            
+            // Validate the JSON structure
+            if (!mappingJson.contains("mapping") || !mappingJson["mapping"].is_object()) {
+                lastError_ = "Invalid prefab mapping file: missing or invalid 'mapping' field";
+                SYSTEM_LOG << "TiledToOlympe: " << lastError_ << std::endl;
+                return false;
+            }
+            
+            // Load mappings into config (C++14 compatible iteration)
+            config_.typeToPrefabMap.clear();
+            const nlohmann::json& mappingObj = mappingJson["mapping"];
+            for (nlohmann::json::const_iterator it = mappingObj.begin(); it != mappingObj.end(); ++it) {
+                if (it.value().is_string()) {
+                    std::string key = it.key();
+                    std::string value = it.value().get<std::string>();
+                    config_.typeToPrefabMap[key] = value;
+                    SYSTEM_LOG << "TiledToOlympe: Mapped '" << key << "' -> '" << value << "'" << std::endl;
+                }
+            }
+            
+            SYSTEM_LOG << "TiledToOlympe: Successfully loaded " << config_.typeToPrefabMap.size() 
+                       << " prefab mappings" << std::endl;
+            return true;
+        }
+        catch (const std::exception& e) {
+            lastError_ = std::string("Exception while loading prefab mapping: ") + e.what();
+            SYSTEM_LOG << "TiledToOlympe: " << lastError_ << std::endl;
+            return false;
+        }
     }
 
     bool TiledToOlympe::Convert(const TiledMap& tiledMap, Olympe::Editor::LevelDefinition& outLevel)
