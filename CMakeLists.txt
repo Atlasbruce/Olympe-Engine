@@ -82,6 +82,7 @@ if(BUILD_RUNTIME_ENGINE)
         "Source/engine_utils.cpp"
         "Source/vector.cpp"
         "Source/Sprite.cpp"
+        "Source/Rendering/IsometricRenderer.cpp"
     )
     
     add_executable(OlympeEngine ${RUNTIME_SOURCES})
