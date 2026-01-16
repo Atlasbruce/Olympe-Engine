@@ -22,6 +22,7 @@ namespace Tiled {
         
         // Remove whitespace
         std::string cleaned;
+        cleaned.reserve(encoded.size());
         for (char c : encoded) {
             if (!isspace(static_cast<unsigned char>(c))) {
                 cleaned += c;

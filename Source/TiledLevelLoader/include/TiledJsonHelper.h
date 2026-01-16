@@ -122,7 +122,7 @@ namespace Tiled {
     inline std::string ColorToString(int color)
     {
         char buffer[16];
-        snprintf(buffer, sizeof(buffer), "#%08X", static_cast<unsigned int>(color));
+        std::snprintf(buffer, sizeof(buffer), "#%08X", static_cast<unsigned int>(color));
         return std::string(buffer);
     }
 

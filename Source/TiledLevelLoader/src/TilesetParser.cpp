@@ -74,7 +74,8 @@ namespace Tiled {
             tileset.imageheight = imageElement->IntAttribute("height", 0);
             const char* trans = imageElement->Attribute("trans");
             if (trans) {
-                tileset.transparentcolor = std::string("#") + trans;
+                std::string transStr = trans;
+                tileset.transparentcolor = (transStr[0] == '#') ? transStr : ("#" + transStr);
             }
         }
 
