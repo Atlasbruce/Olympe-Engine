@@ -39,8 +39,8 @@
         },
         "parallax-forext.tmx": {
             "expandedObjectLayers": [
-                2,
-                17
+                17,
+                2
             ],
             "scale": 0.33,
             "selectedLayer": 8,

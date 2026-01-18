@@ -119,10 +119,10 @@
                         }],
                  "rotation":0,
                  "type":"sector",
-                 "visible":true,
+                 "visible":false,
                  "width":0,
-                 "x":-376.704,
-                 "y":822.511
+                 "x":-357.54412539185,
+                 "y":868.078398119122
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -213,32 +213,29 @@
                  "y":93.8945
                 }, 
                 {
-                 "height":0,
-                 "id":2,
+                 "id":26,
                  "name":"guard_3",
-                 "point":true,
-                 "rotation":0,
-                 "type":"npc",
-                 "visible":true,
-                 "width":0,
-                 "x":94.4253,
-                 "y":42.908
+                 "properties":[
+                        {
+                         "name":"patrol way",
+                         "type":"object",
+                         "value":8
+                        }],
+                 "template":"guard_object.tx",
+                 "x":73.1034482758621,
+                 "y":32.8965517241378
                 }, 
                 {
-                 "height":0,
                  "id":3,
                  "name":"guard_2",
-                 "point":true,
                  "properties":[
                         {
                          "name":"patrol way",
                          "type":"object",
                          "value":9
                         }],
-                 "rotation":0,
+                 "template":"guard_object.tx",
                  "type":"npc",
-                 "visible":true,
-                 "width":0,
                  "x":95.3908,
                  "y":501.943
                 }, 
@@ -253,38 +250,6 @@
                  "width":0,
                  "x":472.391,
                  "y":500.943
-                }, 
-                {
-                 "height":0,
-                 "id":6,
-                 "name":"way_1",
-                 "polyline":[
-                        {
-                         "x":0,
-                         "y":0
-                        }, 
-                        {
-                         "x":-1.6092,
-                         "y":-153.057
-                        }, 
-                        {
-                         "x":-123.299,
-                         "y":-239.368
-                        }, 
-                        {
-                         "x":-5.87356,
-                         "y":-263.46
-                        }, 
-                        {
-                         "x":-7.93103,
-                         "y":-456.069
-                        }],
-                 "rotation":0,
-                 "type":"way",
-                 "visible":true,
-                 "width":0,
-                 "x":474.908,
-                 "y":490.425
                 }, 
                 {
                  "height":0,
@@ -384,6 +349,38 @@
                 }, 
                 {
                  "height":0,
+                 "id":6,
+                 "name":"way_1",
+                 "polyline":[
+                        {
+                         "x":0,
+                         "y":0
+                        }, 
+                        {
+                         "x":-1.6092,
+                         "y":-153.057
+                        }, 
+                        {
+                         "x":-123.299,
+                         "y":-239.368
+                        }, 
+                        {
+                         "x":-5.87356,
+                         "y":-263.46
+                        }, 
+                        {
+                         "x":-7.93103,
+                         "y":-456.069
+                        }],
+                 "rotation":0,
+                 "type":"way",
+                 "visible":true,
+                 "width":0,
+                 "x":474.908,
+                 "y":490.425
+                }, 
+                {
+                 "height":0,
                  "id":10,
                  "name":"treasure_crest",
                  "point":true,
@@ -393,18 +390,6 @@
                  "width":0,
                  "x":250.54,
                  "y":256.126
-                }, 
-                {
-                 "height":0,
-                 "id":13,
-                 "name":"key_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"key",
-                 "visible":true,
-                 "width":0,
-                 "x":954.713,
-                 "y":631.954
                 }, 
                 {
                  "height":0,
@@ -420,6 +405,18 @@
                 }, 
                 {
                  "height":0,
+                 "id":13,
+                 "name":"key_1",
+                 "point":true,
+                 "rotation":0,
+                 "type":"key",
+                 "visible":true,
+                 "width":0,
+                 "x":954.713,
+                 "y":631.954
+                }, 
+                {
+                 "height":0,
                  "id":15,
                  "name":"portal",
                  "point":true,
@@ -429,6 +426,13 @@
                  "width":0,
                  "x":90.8276,
                  "y":-354.828
+                }, 
+                {
+                 "id":21,
+                 "template":"trigger_object.tx",
+                 "type":"trigger",
+                 "x":170.64367816092,
+                 "y":-207.977011494253
                 }, 
                 {
                  "height":0,
@@ -441,13 +445,6 @@
                  "width":0,
                  "x":-260.598,
                  "y":227.264
-                }, 
-                {
-                 "id":21,
-                 "template":"trigger_object.tx",
-                 "type":"trigger",
-                 "x":170.64367816092,
-                 "y":-207.977011494253
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -481,7 +478,7 @@
          "y":0
         }],
  "nextlayerid":11,
- "nextobjectid":23,
+ "nextobjectid":27,
  "orientation":"isometric",
  "renderorder":"left-up",
  "tiledversion":"1.11.2",
