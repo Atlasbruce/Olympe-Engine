@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+ <object name="portal_trigger" type="trigger">
+  <properties>
+   <property name="activated once" type="bool" value="true"/>
+   <property name="activator #1" type="object" value="16"/>
+   <property name="activator #2" type="object" value="0"/>
+   <property name="activator #3" type="object" value="0"/>
+   <property name="detection radius" type="int" value="150"/>
+  </properties>
+  <point/>
+ </object>
+</template>

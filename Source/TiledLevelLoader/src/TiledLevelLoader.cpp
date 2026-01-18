@@ -98,9 +98,10 @@ namespace Tiled {
 
         // Parse tilesets
         if (HasKey(j, "tilesets") && j["tilesets"].is_array()) {
-            for (const auto& tsJson : j["tilesets"]) {
+            for (size_t i = 0; i < j["tilesets"].size(); ++i) {
+                const json& tsJson = j["tilesets"][i];
                 TiledTileset tileset;
-                if (ParseTileset(tsJson.second, tileset, "")) {
+                if (ParseTileset(tsJson, tileset, "")) {
                     map.tilesets.push_back(tileset);
                 }
             }
@@ -108,9 +109,10 @@ namespace Tiled {
 
         // Parse layers
         if (HasKey(j, "layers") && j["layers"].is_array()) {
-            for (const auto& layerJson : j["layers"]) {
+            for (size_t i = 0; i < j["layers"].size(); ++i) {
+                const json& layerJson = j["layers"][i];
                 std::shared_ptr<TiledLayer> layer;
-                if (ParseLayer(layerJson.second, layer)) {
+                if (ParseLayer(layerJson, layer)) {
                     map.layers.push_back(layer);
                 }
             }
@@ -177,9 +179,10 @@ namespace Tiled {
 
         // Parse chunks (for infinite maps)
         if (HasKey(j, "chunks") && j["chunks"].is_array()) {
-            for (const auto& chunkJson : j["chunks"]) {
+            for (size_t i = 0; i < j["chunks"].size(); ++i) {
+                const json& chunkJson = j["chunks"][i];
                 TiledChunk chunk;
-                if (ParseChunk(chunkJson.second, chunk)) {
+                if (ParseChunk(chunkJson, chunk)) {
                     layer.chunks.push_back(chunk);
                 }
             }
@@ -197,9 +200,10 @@ namespace Tiled {
     bool TiledLevelLoader::ParseObjectLayer(const json& j, TiledLayer& layer)
     {
         if (HasKey(j, "objects") && j["objects"].is_array()) {
-            for (const auto& objJson : j["objects"]) {
+            for (size_t i = 0; i < j["objects"].size(); ++i) {
+                const json& objJson = j["objects"][i];
                 TiledObject object;
-                if (ParseObject(objJson.second, object)) {
+                if (ParseObject(objJson, object)) {
                     layer.objects.push_back(object);
                 }
             }
@@ -219,9 +223,10 @@ namespace Tiled {
     bool TiledLevelLoader::ParseGroupLayer(const json& j, TiledLayer& layer)
     {
         if (HasKey(j, "layers") && j["layers"].is_array()) {
-            for (const auto& childJson : j["layers"]) {
+            for (size_t i = 0; i < j["layers"].size(); ++i) {
+                const json& childJson = j["layers"][i];
                 std::shared_ptr<TiledLayer> childLayer;
-                if (ParseLayer(childJson.second, childLayer)) {
+                if (ParseLayer(childJson, childLayer)) {
                     layer.layers.push_back(childLayer);
                 }
             }
@@ -253,10 +258,11 @@ namespace Tiled {
         else if (HasKey(j, "polygon")) {
             object.objectType = ObjectType::Polygon;
             if (j["polygon"].is_array()) {
-                for (const auto& ptJson : j["polygon"]) {
+                for (size_t i = 0; i < j["polygon"].size(); ++i) {
+                    const json& ptJson = j["polygon"][i];
                     Point pt;
-                    pt.x = GetFloat(ptJson.second, "x");
-                    pt.y = GetFloat(ptJson.second, "y");
+                    pt.x = GetFloat(ptJson, "x");
+                    pt.y = GetFloat(ptJson, "y");
                     object.polygon.push_back(pt);
                 }
             }
@@ -264,10 +270,11 @@ namespace Tiled {
         else if (HasKey(j, "polyline")) {
             object.objectType = ObjectType::Polyline;
             if (j["polyline"].is_array()) {
-                for (const auto& ptJson : j["polyline"]) {
+                for (size_t i = 0; i < j["polyline"].size(); ++i) {
+                    const json& ptJson = j["polyline"][i];
                     Point pt;
-                    pt.x = GetFloat(ptJson.second, "x");
-                    pt.y = GetFloat(ptJson.second, "y");
+                    pt.x = GetFloat(ptJson, "x");
+                    pt.y = GetFloat(ptJson, "y");
                     object.polyline.push_back(pt);
                 }
             }
@@ -313,16 +320,17 @@ namespace Tiled {
 
         // Parse tiles
         if (HasKey(j, "tiles") && j["tiles"].is_array()) {
-            for (const auto& tileJson : j["tiles"]) {
+            for (size_t i = 0; i < j["tiles"].size(); ++i) {
+                const json& tileJson = j["tiles"][i];
                 TiledTile tile;
-                tile.id = GetInt(tileJson.second, "id");
-                tile.type = GetString(tileJson.second, "type");
-                tile.image = GetString(tileJson.second, "image");
-                tile.imagewidth = GetInt(tileJson.second, "imagewidth");
-                tile.imageheight = GetInt(tileJson.second, "imageheight");
+                tile.id = GetInt(tileJson, "id");
+                tile.type = GetString(tileJson, "type");
+                tile.image = GetString(tileJson, "image");
+                tile.imagewidth = GetInt(tileJson, "imagewidth");
+                tile.imageheight = GetInt(tileJson, "imageheight");
 
-                if (HasKey(tileJson.second, "properties")) {
-                    ParseProperties(tileJson.second["properties"], tile.properties);
+                if (HasKey(tileJson, "properties")) {
+                    ParseProperties(tileJson["properties"], tile.properties);
                 }
 
                 tileset.tiles.push_back(tile);
@@ -371,9 +379,10 @@ namespace Tiled {
             }
             else if (j["data"].is_array()) {
                 // CSV array
-                for (const auto& val : j["data"]) {
-                    if (val.second.is_number()) {
-                        chunk.data.push_back(static_cast<uint32_t>(val.second.get<int>()));
+                for (size_t i = 0; i < j["data"].size(); ++i) {
+                    const json& val = j["data"][i];
+                    if (val.is_number()) {
+                        chunk.data.push_back(static_cast<uint32_t>(val.get<int>()));
                     }
                 }
             }
@@ -386,9 +395,10 @@ namespace Tiled {
     {
         if (!j.is_array()) return;
 
-        for (const auto& propJson : j) {
+        for (size_t i = 0; i < j.size(); ++i) {
+            const json& propJson = j[i];
             TiledProperty prop;
-            ParseProperty(propJson.second, prop);
+            ParseProperty(propJson, prop);
             properties[prop.name] = prop;
         }
     }
@@ -437,9 +447,10 @@ namespace Tiled {
         }
         else if (j["data"].is_array()) {
             // CSV array
-            for (const auto& val : j["data"]) {
-                if (val.second.is_number()) {
-                    layer.data.push_back(static_cast<uint32_t>(val.second.get<int>()));
+            for (size_t i = 0; i < j["data"].size(); ++i) {
+                const json& val = j["data"][i];
+                if (val.is_number()) {
+                    layer.data.push_back(static_cast<uint32_t>(val.get<int>()));
                 }
             }
         }
