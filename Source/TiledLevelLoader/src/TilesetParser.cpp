@@ -2,12 +2,15 @@
  * TilesetParser.cpp - Parse external tileset files
  */
 
-#include "TilesetParser.h"
-#include "TiledJsonHelper.h"
-#include "system/system_utils.h"
-#include "tinyxml2/tinyxml2.h"
+#include "../include/TilesetParser.h"
+#include "../include/TiledJsonHelper.h"
+#include "../../system/system_utils.h"
 #include <fstream>
 #include <sstream>
+
+#define MINIZ_NO_ARCHIVE
+#include "../third_party/miniz/miniz.h"
+#include "../third_party/tinyxml2/tinyxml2.h"
 
 namespace Olympe {
 namespace Tiled {
@@ -128,8 +131,11 @@ namespace Tiled {
         }
 
         json j;
+        // Remplacer file >> j; par un parseur manuel utilisant le contenu du fichier
+        std::stringstream buffer;
+        buffer << file.rdbuf();
         try {
-            file >> j;
+            j = json::parse(buffer.str());
         } catch (const std::exception& e) {
             SYSTEM_LOG << "TilesetParser: JSON parse error in " << filepath << ": " << e.what() << std::endl;
             return false;
@@ -150,9 +156,9 @@ namespace Tiled {
 
         // Parse tiles
         if (HasKey(j, "tiles") && j["tiles"].is_array()) {
-            for (const auto& tileJson : j["tiles"]) {
+            for (const auto& tilePair : j["tiles"].items()) {
                 TiledTile tile;
-                ParseTileFromJSON(tileJson, tile);
+                ParseTileFromJSON(tilePair.second, tile);
                 tileset.tiles.push_back(tile);
             }
         }
@@ -212,7 +218,8 @@ namespace Tiled {
     {
         if (!j.is_array()) return;
 
-        for (const auto& propJson : j) {
+        for (const auto& propJsonPair : j.items()) {
+            const auto& propJson = propJsonPair.second;
             TiledProperty prop;
             prop.name = GetString(propJson, "name");
             

@@ -1,0 +1,498 @@
+{ "class":"Trees",
+ "columns":0,
+ "grid":
+    {
+     "height":1,
+     "orientation":"orthogonal",
+     "width":1
+    },
+ "margin":0,
+ "name":"Trees",
+ "spacing":0,
+ "tilecount":79,
+ "tiledversion":"1.11.2",
+ "tileheight":256,
+ "tileoffset":
+    {
+     "x":-100,
+     "y":0
+    },
+ "tiles":[
+        {
+         "id":0,
+         "image":"isometric tiles\/bamboo01.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":1,
+         "image":"isometric tiles\/bamboo02.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":2,
+         "image":"isometric tiles\/bamboo03.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":3,
+         "image":"isometric tiles\/bamboo04.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":4,
+         "image":"isometric tiles\/bamboo05.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":5,
+         "image":"isometric tiles\/bamboo06.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":6,
+         "image":"isometric tiles\/bigtree01.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":7,
+         "image":"isometric tiles\/bigtree02.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":8,
+         "image":"isometric tiles\/bigtree03.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":9,
+         "image":"isometric tiles\/bush01.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":10,
+         "image":"isometric tiles\/bush02.png",
+         "imageheight":64,
+         "imagewidth":128
+        }, 
+        {
+         "id":11,
+         "image":"isometric tiles\/bush03.png",
+         "imageheight":64,
+         "imagewidth":128
+        }, 
+        {
+         "id":12,
+         "image":"isometric tiles\/bush04.png",
+         "imageheight":64,
+         "imagewidth":128
+        }, 
+        {
+         "id":13,
+         "image":"isometric tiles\/bush05.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":14,
+         "image":"isometric tiles\/cactus01.png",
+         "imageheight":128,
+         "imagewidth":128
+        }, 
+        {
+         "id":15,
+         "image":"isometric tiles\/cactus02.png",
+         "imageheight":128,
+         "imagewidth":128
+        }, 
+        {
+         "id":16,
+         "image":"isometric tiles\/cactus03.png",
+         "imageheight":128,
+         "imagewidth":128
+        }, 
+        {
+         "id":17,
+         "image":"isometric tiles\/cactus04.png",
+         "imageheight":128,
+         "imagewidth":128
+        }, 
+        {
+         "id":18,
+         "image":"isometric tiles\/grasses01.png",
+         "imageheight":64,
+         "imagewidth":128
+        }, 
+        {
+         "id":19,
+         "image":"isometric tiles\/grasses02.png",
+         "imageheight":64,
+         "imagewidth":128
+        }, 
+        {
+         "id":20,
+         "image":"isometric tiles\/grasses03.png",
+         "imageheight":64,
+         "imagewidth":128
+        }, 
+        {
+         "id":21,
+         "image":"isometric tiles\/grasses04.png",
+         "imageheight":64,
+         "imagewidth":128
+        }, 
+        {
+         "id":22,
+         "image":"isometric tiles\/grasses05.png",
+         "imageheight":64,
+         "imagewidth":128
+        }, 
+        {
+         "id":23,
+         "image":"isometric tiles\/hemp01.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":24,
+         "image":"isometric tiles\/hemp02.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":25,
+         "image":"isometric tiles\/hemp03.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":26,
+         "image":"isometric tiles\/palm01.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":27,
+         "image":"isometric tiles\/palm02.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":28,
+         "image":"isometric tiles\/palm03.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":29,
+         "image":"isometric tiles\/palm04.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":30,
+         "image":"isometric tiles\/palm05.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":31,
+         "image":"isometric tiles\/palm06.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":32,
+         "image":"isometric tiles\/pine-full01.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":33,
+         "image":"isometric tiles\/pine-full02.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":34,
+         "image":"isometric tiles\/pine-full03.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":35,
+         "image":"isometric tiles\/pine-full04.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":36,
+         "image":"isometric tiles\/pine-full05.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":37,
+         "image":"isometric tiles\/pine-full06.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":38,
+         "image":"isometric tiles\/pine-full07.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":39,
+         "image":"isometric tiles\/pine-full08.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":40,
+         "image":"isometric tiles\/pine-half01.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":41,
+         "image":"isometric tiles\/pine-half02.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":42,
+         "image":"isometric tiles\/pine-half03.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":43,
+         "image":"isometric tiles\/pine-half04.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":44,
+         "image":"isometric tiles\/pine-half05.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":45,
+         "image":"isometric tiles\/pine-half06.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":46,
+         "image":"isometric tiles\/pine-half07.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":47,
+         "image":"isometric tiles\/pine-half08.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":48,
+         "image":"isometric tiles\/pine-none01.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":49,
+         "image":"isometric tiles\/pine-none02.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":50,
+         "image":"isometric tiles\/pine-none03.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":51,
+         "image":"isometric tiles\/pine-none04.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":52,
+         "image":"isometric tiles\/pine-none05.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":53,
+         "image":"isometric tiles\/pine-none06.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":54,
+         "image":"isometric tiles\/pine-none07.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":55,
+         "image":"isometric tiles\/pine-none08.png",
+         "imageheight":256,
+         "imagewidth":256
+        }, 
+        {
+         "id":56,
+         "image":"isometric tiles\/shrub1-01.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":57,
+         "image":"isometric tiles\/shrub1-02.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":58,
+         "image":"isometric tiles\/shrub1-03.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":59,
+         "image":"isometric tiles\/shrub1-04.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":60,
+         "image":"isometric tiles\/shrub1-05.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":61,
+         "image":"isometric tiles\/shrub2-01.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":62,
+         "image":"isometric tiles\/shrub2-02.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":63,
+         "image":"isometric tiles\/shrub2-03.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":64,
+         "image":"isometric tiles\/shrub2-04.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":65,
+         "image":"isometric tiles\/shrub2-05.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":66,
+         "image":"isometric tiles\/swirl01.png",
+         "imageheight":64,
+         "imagewidth":128
+        }, 
+        {
+         "id":67,
+         "image":"isometric tiles\/swirl02.png",
+         "imageheight":64,
+         "imagewidth":128
+        }, 
+        {
+         "id":68,
+         "image":"isometric tiles\/tropical01.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":69,
+         "image":"isometric tiles\/tropical02.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":70,
+         "image":"isometric tiles\/tropical03.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":71,
+         "image":"isometric tiles\/tropical04.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":72,
+         "image":"isometric tiles\/tropical05.png",
+         "imageheight":128,
+         "imagewidth":256
+        }, 
+        {
+         "id":73,
+         "image":"isometric tiles\/weed01.png",
+         "imageheight":64,
+         "imagewidth":128
+        }, 
+        {
+         "id":74,
+         "image":"isometric tiles\/weed02.png",
+         "imageheight":64,
+         "imagewidth":128
+        }, 
+        {
+         "id":75,
+         "image":"isometric tiles\/weed03.png",
+         "imageheight":64,
+         "imagewidth":128
+        }, 
+        {
+         "id":76,
+         "image":"isometric tiles\/weed04.png",
+         "imageheight":64,
+         "imagewidth":128
+        }, 
+        {
+         "id":77,
+         "image":"isometric tiles\/weed05.png",
+         "imageheight":64,
+         "imagewidth":128
+        }, 
+        {
+         "id":78,
+         "image":"isometric tiles\/weed06.png",
+         "imageheight":64,
+         "imagewidth":128
+        }],
+ "tilewidth":256,
+ "type":"tileset",
+ "version":"1.10"
+}

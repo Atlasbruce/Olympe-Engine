@@ -1,0 +1,96 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "map_forest.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "fileStates": {
+        "": {
+            "scaleInDock": 1
+        },
+        "#parallax_forest": {
+            "dynamicWrapping": true
+        },
+        "Tiles iso cube.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Trees.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "map_forest.tmx": {
+            "expandedObjectLayers": [
+                8,
+                6
+            ],
+            "scale": 1.5,
+            "selectedLayer": 5,
+            "viewCenter": {
+                "x": 285.99999999999994,
+                "y": 94.33333333333331
+            }
+        },
+        "parallax-forext.tmx": {
+            "expandedObjectLayers": [
+                2,
+                17
+            ],
+            "scale": 0.33,
+            "selectedLayer": 8,
+            "viewCenter": {
+                "x": -1206.060606060606,
+                "y": 40.909090909090764
+            }
+        },
+        "parallax-forext.tmx#parallax_forest": {
+            "dynamicWrapping": true
+        },
+        "parallax_forest.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 0.0625,
+            "scaleInEditor": 0.12
+        },
+        "tiles-iso-1.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "tiles-iso-2.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.exportedFilePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels",
+    "last.imagePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels/Parallax Layers",
+    "last.objectTemplatePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels",
+    "lastUsedTilesetExportFilter": "Fichiers de jeu de tuiles JSON (*.tsj *.json)",
+    "map.fixedSize": false,
+    "map.lastUsedExportFilter": "Fichiers de carte JSON (*.tmj *.json)",
+    "map.lastUsedFormat": "tmx",
+    "map.renderOrder": "3",
+    "map.tileHeight": 64,
+    "map.tileWidth": 64,
+    "openFiles": [
+        "map_forest.tmx",
+        "Tiles iso cube.tsx",
+        "Trees.tsx"
+    ],
+    "project": "parallax-level.tiled-project",
+    "property.type": "int",
+    "recentFiles": [
+        "Trees.tsx",
+        "Tiles iso cube.tsx",
+        "map_forest.tmx",
+        "parallax-forext.tmx",
+        "parallax_forest.tsx",
+        "tiles-iso-2.tsx",
+        "tiles-iso-1.tsx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.type": 1
+}

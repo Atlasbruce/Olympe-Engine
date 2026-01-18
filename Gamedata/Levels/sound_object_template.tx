@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+ <object name="ambiant_music" type="ambiant">
+  <properties>
+   <property name="local sound" type="bool" value="false"/>
+   <property name="loop sound" type="bool" value="true"/>
+   <property name="resource" type="file" value="ambiant/Sketchbook 2024-01-24_01.ogg"/>
+   <property name="rolloff max radius " type="int" value="300"/>
+   <property name="rolloff min radius " type="int" value="400"/>
+  </properties>
+  <point/>
+ </object>
+</template>

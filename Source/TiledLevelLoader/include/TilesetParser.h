@@ -12,12 +12,13 @@
 #pragma once
 
 #include "TiledStructures.h"
+#include "../../third_party/nlohmann/json.hpp"
 #include <string>
 #include <memory>
 
 namespace Olympe {
 namespace Tiled {
-
+      
     class TilesetParser
     {
     public:
@@ -35,9 +36,9 @@ namespace Tiled {
 
     private:
         void ParsePropertiesFromXML(void* element, std::map<std::string, TiledProperty>& properties);
-        void ParsePropertiesFromJSON(const json& j, std::map<std::string, TiledProperty>& properties);
+        void ParsePropertiesFromJSON(const nlohmann::json& j, std::map<std::string, TiledProperty>& properties);
         void ParseTileFromXML(void* element, TiledTile& tile);
-        void ParseTileFromJSON(const json& j, TiledTile& tile);
+        void ParseTileFromJSON(const nlohmann::json& j, TiledTile& tile);
     };
 
 } // namespace Tiled

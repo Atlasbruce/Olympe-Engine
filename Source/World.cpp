@@ -249,6 +249,7 @@ void World::NotifyBlueprintEditorEntityDestroyed(EntityID entity)
 //---------------------------------------------------------------------------------------------
 #include "TiledLevelLoader/include/TiledLevelLoader.h"
 #include "TiledLevelLoader/include/TiledToOlympe.h"
+#include "OlympeTilemapEditor/include/LevelManager.h"
 #include "prefabfactory.h"
 #include "ECS_Components_AI.h"
 #include <fstream>
@@ -257,17 +258,28 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
 {
     SYSTEM_LOG << "World::LoadLevelFromTiled - Loading: " << tiledMapPath << "\n";
     
+    Olympe::Tiled::TiledMap tiledMap;
+
     // 1. Load the Tiled map
     Olympe::Tiled::TiledLevelLoader loader;
-    if (!loader.LoadFromFile(tiledMapPath))
+    if (!loader.LoadFromFile(tiledMapPath, tiledMap))
     {
         SYSTEM_LOG << "World::LoadLevelFromTiled - Failed to load Tiled map\n";
         return false;
     }
     
-    const Olympe::Tiled::TiledMap& tiledMap = loader.GetMap();
+    //const Olympe::Tiled::TiledMap& tiledMap = loader.GetMap();
+    std::string orientationStr;
+    switch (tiledMap.orientation)
+    {
+        case Olympe::Tiled::MapOrientation::Orthogonal: orientationStr = "Orthogonal"; break;
+        case Olympe::Tiled::MapOrientation::Isometric: orientationStr = "Isometric"; break;
+        case Olympe::Tiled::MapOrientation::Staggered: orientationStr = "Staggered"; break;
+        case Olympe::Tiled::MapOrientation::Hexagonal: orientationStr = "Hexagonal"; break;
+        default: orientationStr = "Unknown"; break;
+    }
     SYSTEM_LOG << "World::LoadLevelFromTiled - Map loaded: " << tiledMap.width << "x" << tiledMap.height 
-               << " (orientation: " << tiledMap.orientation << ")\n";
+               << " (orientation: " << orientationStr << ")\n";
     
     // 2. Convert to Olympe format
     Olympe::Tiled::TiledToOlympe converter;
@@ -356,9 +368,9 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
                         if (patrolPath[i].contains("x") && patrolPath[i].contains("y"))
                         {
                             blackboard.patrolPoints[blackboard.patrolPointCount].x = 
-                                static_cast<float>(patrolPath[i]["x"].get<double>());
+                                static_cast<float>(patrolPath[i]["x"].get<float>());
                             blackboard.patrolPoints[blackboard.patrolPointCount].y = 
-                                static_cast<float>(patrolPath[i]["y"].get<double>());
+                                static_cast<float>(patrolPath[i]["y"].get<float>());
                             blackboard.patrolPoints[blackboard.patrolPointCount].z = 0.0f;
                             blackboard.patrolPointCount++;
                         }

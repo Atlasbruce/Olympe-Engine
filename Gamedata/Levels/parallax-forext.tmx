@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="left-up" width="30" height="20" tilewidth="64" tileheight="64" infinite="1" nextlayerid="18" nextobjectid="13">
+ <editorsettings>
+  <export target="parallax-forext..tmj" format="json"/>
+ </editorsettings>
+ <tileset firstgid="1" source="parallax_forest.tsx"/>
+ <imagelayer id="14" name="Layer_background_4" offsetx="-1000" offsety="0" parallaxx="0">
+  <image source="Parallax Layers/2.png" width="1980" height="1080"/>
+ </imagelayer>
+ <imagelayer id="13" name="Layer_background_3" parallaxx="0.5" repeatx="1">
+  <image source="Parallax Layers/3.png" width="1980" height="1080"/>
+ </imagelayer>
+ <imagelayer id="12" name="Layer_background_2" parallaxx="0.7" repeatx="1">
+  <image source="Parallax Layers/4.png" width="1980" height="1080"/>
+ </imagelayer>
+ <imagelayer id="10" name="Layer_background_1" parallaxx="0.9" repeatx="1">
+  <image source="Parallax Layers/5.png" width="1980" height="1080"/>
+ </imagelayer>
+ <imagelayer id="3" name="Layer_0_ground" repeatx="1">
+  <image source="Parallax Layers/7.png" width="1980" height="1080"/>
+ </imagelayer>
+ <imagelayer id="11" name="Layer_ground_trees" repeatx="1">
+  <image source="Parallax Layers/8.png" width="1980" height="1080"/>
+ </imagelayer>
+ <imagelayer id="16" name="Layer_ground_house" offsetx="2200" offsety="520">
+  <image source="houses2D/housebrickdoor.png" width="512" height="512"/>
+ </imagelayer>
+ <imagelayer id="15" name="Layer_foreground_light" offsetx="-1000" offsety="0" parallaxx="0">
+  <image source="Parallax Layers/6.png" width="1980" height="1080"/>
+ </imagelayer>
+ <objectgroup id="17" name="Sectors">
+  <object id="12" name="Sector_1" type="sector" x="-2624" y="0" width="5504" height="1088"/>
+ </objectgroup>
+ <objectgroup id="2" name="Layer_0_Leveldesign">
+  <object id="1" name="player" type="player" x="33.3333" y="887.879">
+   <point/>
+  </object>
+  <object id="2" name="collision_ground" type="collision" x="-2496" y="954.173" width="5312" height="75.6538"/>
+  <object id="3" name="collision_wall_left" type="collision" x="-2496" y="512" width="64" height="512"/>
+  <object id="6" name="collision_wall_right" type="collision" x="2752" y="512" width="64" height="512"/>
+  <object id="7" name="key_1" type="key" x="-2069.7" y="900">
+   <point/>
+  </object>
+  <object id="8" name="zombie_1" type="zombie" x="-1075.76" y="848.485">
+   <point/>
+  </object>
+  <object id="9" name="zombie_2" type="zombie" x="1566.67" y="887.879">
+   <point/>
+  </object>
+  <object id="11" name="exit" type="door" x="2354" y="928">
+   <point/>
+  </object>
+ </objectgroup>
+</map>

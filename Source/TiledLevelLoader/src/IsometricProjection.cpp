@@ -2,7 +2,7 @@
  * IsometricProjection.cpp - Isometric coordinate transformations
  */
 
-#include "IsometricProjection.h"
+#include "../include/IsometricProjection.h"
 #include <cmath>
 
 namespace Olympe {

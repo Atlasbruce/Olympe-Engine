@@ -2,9 +2,9 @@
  * TilesetCache.cpp - Implementation of tileset cache
  */
 
-#include "TilesetCache.h"
-#include "TilesetParser.h"
-#include "system/system_utils.h"
+#include "../include/TilesetCache.h"
+#include "../include/TilesetParser.h"
+#include "../../system/system_utils.h"
 
 namespace Olympe {
 namespace Tiled {
@@ -26,13 +26,13 @@ namespace Tiled {
         }
 
         // Not cached, load it
-        SYSTEM_LOG << "TilesetCache: Loading tileset from " << filepath << std::endl;
+        SYSTEM_LOG << "TilesetCache: Loading tileset from " << filepath << "\n";
         
         auto tileset = std::make_shared<TiledTileset>();
         TilesetParser parser;
         
         if (!parser.ParseFile(filepath, *tileset)) {
-            SYSTEM_LOG << "TilesetCache: Failed to load tileset from " << filepath << std::endl;
+            SYSTEM_LOG << "TilesetCache: Failed to load tileset from " << filepath << "\n";
             return nullptr;
         }
 

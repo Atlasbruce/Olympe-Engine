@@ -2,7 +2,7 @@
  * ParallaxLayerManager.cpp - Parallax layer management
  */
 
-#include "ParallaxLayerManager.h"
+#include "../include/ParallaxLayerManager.h"
 
 namespace Olympe {
 namespace Tiled {

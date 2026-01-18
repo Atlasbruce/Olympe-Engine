@@ -18,6 +18,10 @@
 #include "system_consts.h"
 #include "log_sink.h"
 
+//-------------------------------------------------------------
+// Convenience macro (keeps existing code using SYSTEM_LOG)
+#define SYSTEM_LOG ::Logging::Logger()
+
 namespace Logging
 {
     // Output destinations flags
@@ -178,9 +182,7 @@ namespace Logging
         Logger().Shutdown();
     }
 }
-//-------------------------------------------------------------
-// Convenience macro (keeps existing code using SYSTEM_LOG)
-#define SYSTEM_LOG ::Logging::Logger()
+
 
 //-------------------------------------------------------------
 // JSON helpers (kept here for compatibility with existing code)

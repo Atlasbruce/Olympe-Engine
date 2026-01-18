@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <cctype>
 #include <initializer_list>
+#include <istream>
 
 namespace nlohmann {
 
@@ -590,4 +591,12 @@ namespace nlohmann {
         return result;
     }
 
+    // Ajout de l'opérateur >> pour permettre la lecture depuis un flux std::istream
+    inline std::istream& operator>>(std::istream& is, nlohmann::json& j)
+    {
+        std::ostringstream ss;
+        ss << is.rdbuf();
+        j = nlohmann::json::parse(ss.str());
+        return is;
+    }
 } // namespace nlohmann

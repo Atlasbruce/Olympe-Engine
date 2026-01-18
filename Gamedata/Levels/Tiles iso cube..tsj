@@ -1,0 +1,26 @@
+{ "columns":9,
+ "grid":
+    {
+     "height":60,
+     "orientation":"orthogonal",
+     "width":60
+    },
+ "image":"tiles-iso-set3.png",
+ "imageheight":152,
+ "imagewidth":667,
+ "margin":16,
+ "name":"Tiles iso cube",
+ "spacing":17,
+ "tilecount":18,
+ "tiledversion":"1.11.2",
+ "tileheight":54,
+ "tileoffset":
+    {
+     "x":0,
+     "y":26
+    },
+ "tilewidth":56,
+ "transparentcolor":"#000000",
+ "type":"tileset",
+ "version":"1.10"
+}

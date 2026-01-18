@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <functional>
+#include "../../third_party/nlohmann/json.hpp"
 
 // Forward declare Olympe::Editor types
 namespace Olympe {
@@ -69,6 +70,9 @@ namespace Tiled {
 
         // Convert Tiled map to Olympe LevelDefinition
         bool Convert(const TiledMap& tiledMap, Olympe::Editor::LevelDefinition& outLevel);
+
+        // Load prefab mapping from JSON file
+        bool LoadPrefabMapping(const std::string& jsonFilePath);
 
         // Get last error message
         const std::string& GetLastError() const { return lastError_; }

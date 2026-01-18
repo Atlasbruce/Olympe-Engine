@@ -1,11 +1,12 @@
 /*
  * TiledToOlympe.cpp - Converter implementation
  */
-
-#include "TiledToOlympe.h"
-#include "OlympeTilemapEditor/include/LevelManager.h"
-#include "system/system_utils.h"
+#include "../include/TiledLevelLoader.h"
+#include "../include/TiledToOlympe.h"
+#include "../../OlympeTilemapEditor/include/LevelManager.h"
+#include "../../system/system_utils.h"
 #include <algorithm>
+#include <fstream>
 
 namespace Olympe {
 namespace Tiled {
@@ -422,6 +423,76 @@ namespace Tiled {
                 ++index;
             }
         }
+    }
+
+    bool TiledToOlympe::LoadPrefabMapping(const std::string& jsonFilePath)
+    {
+        SYSTEM_LOG << "TiledToOlympe::LoadPrefabMapping - Loading from: " << jsonFilePath << std::endl;
+
+        // Read file
+        std::ifstream file(jsonFilePath);
+        if (!file.is_open())
+        {
+            lastError_ = "Failed to open prefab mapping file: " + jsonFilePath;
+            SYSTEM_LOG << "TiledToOlympe::LoadPrefabMapping - " << lastError_ << std::endl;
+            return false;
+        }
+
+        // Parse JSON
+        nlohmann::json j;
+        try
+        {
+            file >> j;
+        }
+        catch (const std::exception& e)
+        {
+            lastError_ = std::string("JSON parse error: ") + e.what();
+            SYSTEM_LOG << "TiledToOlympe::LoadPrefabMapping - " << lastError_ << std::endl;
+            return false;
+        }
+
+        // Validate schema
+        if (!j.contains("schema_version"))
+        {
+            lastError_ = "Missing 'schema_version' in prefab mapping file";
+            SYSTEM_LOG << "TiledToOlympe::LoadPrefabMapping - " << lastError_ << std::endl;
+            return false;
+        }
+
+        int schemaVersion = j["schema_version"].get<int>();
+        if (schemaVersion != 1)
+        {
+            lastError_ = "Unsupported schema version: " + std::to_string(schemaVersion);
+            SYSTEM_LOG << "TiledToOlympe::LoadPrefabMapping - " << lastError_ << std::endl;
+            return false;
+        }
+
+        // Load mappings
+        if (!j.contains("mapping") || !j["mapping"].is_object())
+        {
+            lastError_ = "Missing or invalid 'mapping' object in prefab mapping file";
+            SYSTEM_LOG << "TiledToOlympe::LoadPrefabMapping - " << lastError_ << std::endl;
+            return false;
+        }
+
+        const auto& mapping = j["mapping"];
+        config_.typeToPrefabMap.clear();
+
+        for (auto it = mapping.begin(); it != mapping.end(); ++it)
+        {
+            std::string objectType = it->first;
+            std::string prefabPath = it->second.get<std::string>();
+            
+            config_.typeToPrefabMap[objectType] = prefabPath;
+            
+            SYSTEM_LOG << "TiledToOlympe::LoadPrefabMapping - Mapped '" << objectType 
+                       << "' -> '" << prefabPath << "'" << std::endl;
+        }
+
+        SYSTEM_LOG << "TiledToOlympe::LoadPrefabMapping - Loaded " 
+                   << config_.typeToPrefabMap.size() << " prefab mappings" << std::endl;
+
+        return true;
     }
 
 } // namespace Tiled

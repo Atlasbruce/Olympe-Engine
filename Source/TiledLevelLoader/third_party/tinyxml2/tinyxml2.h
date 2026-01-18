@@ -831,7 +831,7 @@ public:
     const XMLElement*	NextSiblingElement( const char* name = 0 ) const;
 
     XMLElement*	NextSiblingElement( const char* name = 0 )	{
-        return const_cast<XMLElement*>(const_cast<const XMLNode*>(this)->NextSiblingElement( name ) );
+        return const_cast<XMLElement*>( (this)->NextSiblingElement( name ) );
     }
 
     /**

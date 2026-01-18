@@ -2,9 +2,9 @@
  * TiledDecoder.cpp - Base64 and compression implementation
  */
 
-#include "TiledDecoder.h"
-#include "system/system_utils.h"
-#include "miniz/miniz.h"
+#include "../include/TiledDecoder.h"
+#include "../../system/system_utils.h"
+#include "../../TiledLevelLoader/third_party/miniz/miniz.h"
 #include <sstream>
 #include <cctype>
 
