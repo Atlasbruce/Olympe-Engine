@@ -111,7 +111,9 @@ int main()
     // Resource paths
     config.resourceBasePath = "Resources";
     
-    // Object type to prefab mapping
+    // Object type to prefab mapping - Method 1: Manual configuration
+    // Alternatively, you can load mappings from a JSON file using LoadPrefabMapping()
+    // (see Config/tiled_prefab_mapping.json for the expected format)
     config.typeToPrefabMap["Player"] = "Blueprints/Player.json";
     config.typeToPrefabMap["Enemy"] = "Blueprints/Enemy.json";
     config.typeToPrefabMap["Coin"] = "Blueprints/Collectibles/Coin.json";
@@ -140,6 +142,12 @@ int main()
     
     TiledToOlympe converter;
     converter.SetConfig(config);
+    
+    // Method 2: Load prefab mappings from JSON file (alternative to manual config)
+    // This will merge with or override the mappings set above
+    // if (!converter.LoadPrefabMapping("Config/tiled_prefab_mapping.json")) {
+    //     SYSTEM_LOG << "Warning: Could not load prefab mapping file" << std::endl;
+    // }
     
     Olympe::Editor::LevelDefinition olympeLevel;
     
