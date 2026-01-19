@@ -60,9 +60,7 @@ void GameMenu::Update()
 }
 
 void GameMenu::ScanForTiledMaps(const std::string& directory)
-{
-    m_tiledMapPaths.clear();
-    
+{ 
     #ifdef _WIN32
     // Windows implementation
     std::string searchPath = directory + "\\*";
@@ -145,9 +143,12 @@ void GameMenu::RenderF2Menu()
         // Scan button
         if (ImGui::Button("Refresh List"))
         {
-            ScanForTiledMaps("Blueprints");
-            ScanForTiledMaps("Levels");
-            ScanForTiledMaps("gamedata");
+            m_tiledMapPaths.clear();
+
+            //ScanForTiledMaps("Blueprints");
+            //ScanForTiledMaps("Levels");
+            //ScanForTiledMaps("gamedata");
+            //ScanForTiledMaps("gamedata\\levels");
             ScanForTiledMaps(".");
             SYSTEM_LOG << "GameMenu: Found " << m_tiledMapPaths.size() << " Tiled maps\n";
         }

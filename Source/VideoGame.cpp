@@ -334,7 +334,8 @@ void VideoGame::RegisterPrefabItems()
         if (sprite) {
             sprite->color = SDL_Color{255, 100, 100, 255}; // Reddish tint for enemies
             world.AddComponent<VisualSprite_data>(id, *sprite);
-            world.AddComponent<BoundingBox_data>(id, {0, 0, sprite->srcRect.w, sprite->srcRect.h});
+            SDL_FRect frect = { 0.f, 0.f, sprite->srcRect.w, sprite->srcRect.h };
+            world.AddComponent<BoundingBox_data>(id, frect);
         }
         
         world.AddComponent<Movement_data>(id);
@@ -361,7 +362,8 @@ void VideoGame::RegisterPrefabItems()
         if (sprite) {
             sprite->color = SDL_Color{100, 255, 100, 255}; // Greenish tint for zombies
             world.AddComponent<VisualSprite_data>(id, *sprite);
-            world.AddComponent<BoundingBox_data>(id, {0, 0, sprite->srcRect.w, sprite->srcRect.h});
+            SDL_FRect frect = { 0.f, 0.f, sprite->srcRect.w, sprite->srcRect.h };
+            world.AddComponent<BoundingBox_data>(id, frect);
         }
         
         world.AddComponent<Movement_data>(id);
@@ -386,7 +388,8 @@ void VideoGame::RegisterPrefabItems()
         if (sprite) {
             sprite->color = SDL_Color{255, 215, 0, 255}; // Gold color
             world.AddComponent<VisualSprite_data>(id, *sprite);
-            world.AddComponent<BoundingBox_data>(id, {0, 0, sprite->srcRect.w, sprite->srcRect.h});
+            SDL_FRect frect = { 0.f, 0.f, sprite->srcRect.w, sprite->srcRect.h };
+            world.AddComponent<BoundingBox_data>(id, frect);
         }
     });
 
@@ -403,7 +406,8 @@ void VideoGame::RegisterPrefabItems()
         if (sprite) {
             sprite->color = SDL_Color{255, 255, 0, 255}; // Yellow color
             world.AddComponent<VisualSprite_data>(id, *sprite);
-            world.AddComponent<BoundingBox_data>(id, {0, 0, sprite->srcRect.w, sprite->srcRect.h});
+            SDL_FRect frect = { 0.f, 0.f, sprite->srcRect.w, sprite->srcRect.h };
+            world.AddComponent<BoundingBox_data>(id, frect);
         }
     });
 
@@ -420,7 +424,8 @@ void VideoGame::RegisterPrefabItems()
         if (sprite) {
             sprite->color = SDL_Color{139, 69, 19, 255}; // Brown color
             world.AddComponent<VisualSprite_data>(id, *sprite);
-            world.AddComponent<BoundingBox_data>(id, {0, 0, sprite->srcRect.w, sprite->srcRect.h});
+            SDL_FRect frect = { 0.f, 0.f, sprite->srcRect.w, sprite->srcRect.h };
+            world.AddComponent<BoundingBox_data>(id, frect);
         }
     });
 
@@ -437,7 +442,8 @@ void VideoGame::RegisterPrefabItems()
         if (sprite) {
             sprite->color = SDL_Color{138, 43, 226, 255}; // Purple color
             world.AddComponent<VisualSprite_data>(id, *sprite);
-            world.AddComponent<BoundingBox_data>(id, {0, 0, sprite->srcRect.w, sprite->srcRect.h});
+            SDL_FRect frect = { 0.f, 0.f, sprite->srcRect.w, sprite->srcRect.h };
+            world.AddComponent<BoundingBox_data>(id, frect);
         }
     });
 

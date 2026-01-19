@@ -16,7 +16,7 @@
             "dynamicWrapping": true
         },
         "Tiles iso cube.tsx": {
-            "dynamicWrapping": false,
+            "dynamicWrapping": true,
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
@@ -28,12 +28,13 @@
         "map_forest.tmx": {
             "expandedObjectLayers": [
                 8,
+                10,
                 6
             ],
             "scale": 0.33,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 696.9696969696969,
+                "x": 634.8484848484849,
                 "y": 171.21212121212102
             }
         },

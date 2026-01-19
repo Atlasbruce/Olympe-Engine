@@ -22,7 +22,7 @@
         }
       },
 	  {
-        "type": "VisualEdotor_data",
+        "type": "VisualEditor_data",
         "properties": {
           "spritePath": "Resources/Icons/location-32.png",
           "width": 32,

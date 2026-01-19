@@ -51,6 +51,11 @@ struct AIBlackboard_data
     Vector lastNoisePosition;
     bool heardNoise = false;
     float noiseCooldown = 0.0f;
+    
+    // Constructors
+    AIBlackboard_data() = default;
+    AIBlackboard_data(const AIBlackboard_data&) = default;
+    AIBlackboard_data& operator=(const AIBlackboard_data&) = default;
 };
 
 // --- AI Senses Component ---
@@ -68,6 +73,13 @@ struct AISenses_data
     // Internal timers (updated by systems)
     float nextPerceptionTime = 0.0f;
     float nextThinkTime = 0.0f;
+    
+    // Constructors
+    AISenses_data() = default;
+    AISenses_data(float vision, float hearing) 
+        : visionRadius(vision), hearingRadius(hearing) {}
+    AISenses_data(const AISenses_data&) = default;
+    AISenses_data& operator=(const AISenses_data&) = default;
 };
 
 // --- AI State Component (HFSM) ---
@@ -92,6 +104,11 @@ struct AIState_data
     float combatEngageDistance = 250.0f;
     float fleeHealthThreshold = 0.2f;      // Flee when health below 20%
     float investigateTimeout = 5.0f;        // Time to investigate before returning to patrol
+    
+    // Constructors
+    AIState_data() = default;
+    AIState_data(const AIState_data&) = default;
+    AIState_data& operator=(const AIState_data&) = default;
 };
 
 // --- Behavior Tree Runtime Component ---
@@ -111,6 +128,13 @@ struct BehaviorTreeRuntime_data
     // Tree execution control
     bool isActive = true;                // Enable/disable tree execution
     bool needsRestart = false;           // Flag to restart tree from root
+    
+    // Constructors
+    BehaviorTreeRuntime_data() = default;
+    BehaviorTreeRuntime_data(uint32_t treeId, bool active) 
+        : treeAssetId(treeId), isActive(active) {}
+    BehaviorTreeRuntime_data(const BehaviorTreeRuntime_data&) = default;
+    BehaviorTreeRuntime_data& operator=(const BehaviorTreeRuntime_data&) = default;
 };
 
 // --- Move Intent Component ---
@@ -125,6 +149,11 @@ struct MoveIntent_data
     // Pathfinding flags (for future expansion)
     bool usePathfinding = false;
     bool avoidObstacles = false;
+    
+    // Constructors
+    MoveIntent_data() = default;
+    MoveIntent_data(const MoveIntent_data&) = default;
+    MoveIntent_data& operator=(const MoveIntent_data&) = default;
 };
 
 // --- Attack Intent Component ---
@@ -145,4 +174,9 @@ struct AttackIntent_data
         Area
     };
     AttackType attackType = AttackType::Melee;
+    
+    // Constructors
+    AttackIntent_data() = default;
+    AttackIntent_data(const AttackIntent_data&) = default;
+    AttackIntent_data& operator=(const AttackIntent_data&) = default;
 };

@@ -183,15 +183,8 @@
     <ClInclude Include="Source\World.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="add_tiled_to_project.ps1" />
-    <None Include="BUILD_TILEMAP_EDITOR.md" />
-    <None Include="CHECKLIST_FINALE.md" />
     <None Include="ClassDiagram.cd" />
-    <None Include="INSTALLATION_TILED_COMPLETE.md" />
     <None Include="olympe.ini" />
-    <None Include="PATCH_VCXPROJ_FILTERS.md" />
-    <None Include="RAPPORT_FINAL_TILED_INTEGRATION.md" />
-    <None Include="README_TILED_INTEGRATION.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\olympe.ico" />

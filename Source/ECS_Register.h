@@ -62,13 +62,15 @@ public:
     }
 
     // Adds a component (T) for the given EntityID
-    void AddComponent(EntityID entity, T&& component)
+    // Constructs the component in-place using perfect forwarding
+    template<typename... Args>
+    void AddComponent(EntityID entity, Args&&... args)
     {
         if (m_entityToIndex.count(entity)) return;
 
         size_t newIndex = m_data.size();
 
-        m_data.push_back(std::move(component));
+        m_data.emplace_back(std::forward<Args>(args)...);
         m_indexToEntity.push_back(entity);
         m_entityToIndex[entity] = newIndex;
     }

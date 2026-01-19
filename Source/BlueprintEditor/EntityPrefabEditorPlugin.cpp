@@ -229,8 +229,8 @@ namespace Olympe
         // C++14 compatible: use explicit iterators without structured bindings
         for (auto it = properties.begin(); it != properties.end(); ++it)
         {
-            const std::string& key = it->first;
-            json& value = it->second;
+            const std::string& key = it.key();
+            json& value = it.value();
             
             ImGui::PushID(key.c_str());
             

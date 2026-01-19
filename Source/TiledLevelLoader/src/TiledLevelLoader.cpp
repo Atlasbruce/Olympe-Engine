@@ -370,8 +370,8 @@ namespace Tiled {
         chunk.height = GetInt(j, "height");
 
         if (HasKey(j, "data")) {
-            std::string encoding = GetString(j, "encoding", "csv");
-            std::string compression = GetString(j, "compression", "");
+            std::string encoding = GetString(j, "encoding", "");
+            std::string compression = GetString(j, "compression", "-1");
             
             if (j["data"].is_string()) {
                 std::string dataStr = j["data"].get<std::string>();

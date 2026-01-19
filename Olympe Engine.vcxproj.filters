@@ -576,13 +576,6 @@
     <None Include="olympe.ini">
       <Filter>Fichiers sources</Filter>
     </None>
-    <None Include="BUILD_TILEMAP_EDITOR.md" />
-    <None Include="INSTALLATION_TILED_COMPLETE.md" />
-    <None Include="PATCH_VCXPROJ_FILTERS.md" />
-    <None Include="RAPPORT_FINAL_TILED_INTEGRATION.md" />
-    <None Include="add_tiled_to_project.ps1" />
-    <None Include="README_TILED_INTEGRATION.md" />
-    <None Include="CHECKLIST_FINALE.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

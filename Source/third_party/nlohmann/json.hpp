@@ -21,6 +21,10 @@ namespace nlohmann {
     public:
         enum class Type { Null, Boolean, Number, String, Array, Object };
 
+        // Forward declaration for iterator
+        class iterator;
+        class const_iterator;
+
         // Constructors
         json() : type_(Type::Null), number_value(0.0) {}
         json(std::nullptr_t) : type_(Type::Null), number_value(0.0) {}
@@ -275,29 +279,285 @@ namespace nlohmann {
             return parse_internal(s, idx);
         }
 
-        // Iterators for objects
+        // Unified iterator for both arrays and objects
+        class iterator
+        {
+        public:
+            using object_iterator = std::map<std::string, json>::iterator;
+            using array_iterator = std::vector<json>::iterator;
+
+            iterator() : parent_(nullptr) {}
+            
+            iterator(json* parent, object_iterator it) 
+                : parent_(parent), object_it_(it) {}
+            
+            iterator(json* parent, array_iterator it)
+                : parent_(parent), array_it_(it) {}
+
+            json& operator*()
+            {
+                if (parent_->is_object())
+                {
+                    return object_it_->second;
+                }
+                else if (parent_->is_array())
+                {
+                    return *array_it_;
+                }
+                throw std::runtime_error("invalid iterator dereference");
+            }
+
+            json* operator->()
+            {
+                if (parent_->is_object())
+                {
+                    return &(object_it_->second);
+                }
+                else if (parent_->is_array())
+                {
+                    return &(*array_it_);
+                }
+                throw std::runtime_error("invalid iterator dereference");
+            }
+
+            iterator& operator++()
+            {
+                if (parent_->is_object())
+                {
+                    ++object_it_;
+                }
+                else if (parent_->is_array())
+                {
+                    ++array_it_;
+                }
+                return *this;
+            }
+
+            iterator operator++(int)
+            {
+                iterator tmp = *this;
+                ++(*this);
+                return tmp;
+            }
+
+            bool operator==(const iterator& other) const
+            {
+                if (parent_ != other.parent_) return false;
+                if (parent_->is_object())
+                {
+                    return object_it_ == other.object_it_;
+                }
+                else if (parent_->is_array())
+                {
+                    return array_it_ == other.array_it_;
+                }
+                return true;
+            }
+
+            bool operator!=(const iterator& other) const
+            {
+                return !(*this == other);
+            }
+
+            // Key accessor for object iterators
+            const std::string& key() const
+            {
+                if (!parent_->is_object())
+                {
+                    throw std::runtime_error("cannot use key() on non-object iterator");
+                }
+                return object_it_->first;
+            }
+
+            // Value accessor (works for both arrays and objects)
+            json& value()
+            {
+                return **this;
+            }
+
+        private:
+            json* parent_;
+            object_iterator object_it_;
+            array_iterator array_it_;
+        };
+
+        class const_iterator
+        {
+        public:
+            using const_object_iterator = std::map<std::string, json>::const_iterator;
+            using const_array_iterator = std::vector<json>::const_iterator;
+
+            const_iterator() : parent_(nullptr) {}
+            
+            const_iterator(const json* parent, const_object_iterator it) 
+                : parent_(parent), object_it_(it) {}
+            
+            const_iterator(const json* parent, const_array_iterator it)
+                : parent_(parent), array_it_(it) {}
+
+            const json& operator*() const
+            {
+                if (parent_->is_object())
+                {
+                    return object_it_->second;
+                }
+                else if (parent_->is_array())
+                {
+                    return *array_it_;
+                }
+                throw std::runtime_error("invalid iterator dereference");
+            }
+
+            const json* operator->() const
+            {
+                if (parent_->is_object())
+                {
+                    return &(object_it_->second);
+                }
+                else if (parent_->is_array())
+                {
+                    return &(*array_it_);
+                }
+                throw std::runtime_error("invalid iterator dereference");
+            }
+
+            const_iterator& operator++()
+            {
+                if (parent_->is_object())
+                {
+                    ++object_it_;
+                }
+                else if (parent_->is_array())
+                {
+                    ++array_it_;
+                }
+                return *this;
+            }
+
+            const_iterator operator++(int)
+            {
+                const_iterator tmp = *this;
+                ++(*this);
+                return tmp;
+            }
+
+            bool operator==(const const_iterator& other) const
+            {
+                if (parent_ != other.parent_) return false;
+                if (parent_->is_object())
+                {
+                    return object_it_ == other.object_it_;
+                }
+                else if (parent_->is_array())
+                {
+                    return array_it_ == other.array_it_;
+                }
+                return true;
+            }
+
+            bool operator!=(const const_iterator& other) const
+            {
+                return !(*this == other);
+            }
+
+            // Key accessor for object iterators
+            const std::string& key() const
+            {
+                if (!parent_->is_object())
+                {
+                    throw std::runtime_error("cannot use key() on non-object iterator");
+                }
+                return object_it_->first;
+            }
+
+            // Value accessor (works for both arrays and objects)
+            const json& value() const
+            {
+                return **this;
+            }
+
+        private:
+            const json* parent_;
+            const_object_iterator object_it_;
+            const_array_iterator array_it_;
+        };
+
+        // Unified begin() and end() that work for both objects and arrays
+        iterator begin()
+        {
+            if (is_object())
+            {
+                return iterator(this, object_value->begin());
+            }
+            else if (is_array())
+            {
+                return iterator(this, array_value->begin());
+            }
+            throw std::runtime_error("cannot iterate over non-container type");
+        }
+
+        iterator end()
+        {
+            if (is_object())
+            {
+                return iterator(this, object_value->end());
+            }
+            else if (is_array())
+            {
+                return iterator(this, array_value->end());
+            }
+            throw std::runtime_error("cannot iterate over non-container type");
+        }
+
+        const_iterator begin() const
+        {
+            if (is_object())
+            {
+                return const_iterator(this, object_value->begin());
+            }
+            else if (is_array())
+            {
+                return const_iterator(this, array_value->begin());
+            }
+            throw std::runtime_error("cannot iterate over non-container type");
+        }
+
+        const_iterator end() const
+        {
+            if (is_object())
+            {
+                return const_iterator(this, object_value->end());
+            }
+            else if (is_array())
+            {
+                return const_iterator(this, array_value->end());
+            }
+            throw std::runtime_error("cannot iterate over non-container type");
+        }
+
+        // Legacy object-specific iterators (kept for backward compatibility)
         using object_iterator = std::map<std::string, json>::iterator;
         using const_object_iterator = std::map<std::string, json>::const_iterator;
 
-        object_iterator begin()
+        object_iterator object_begin()
         {
             if (!is_object()) throw std::runtime_error("not an object");
             return object_value->begin();
         }
 
-        object_iterator end()
+        object_iterator object_end()
         {
             if (!is_object()) throw std::runtime_error("not an object");
             return object_value->end();
         }
 
-        const_object_iterator begin() const
+        const_object_iterator object_begin() const
         {
             if (!is_object()) throw std::runtime_error("not an object");
             return object_value->begin();
         }
 
-        const_object_iterator end() const
+        const_object_iterator object_end() const
         {
             if (!is_object()) throw std::runtime_error("not an object");
             return object_value->end();
@@ -335,7 +595,7 @@ namespace nlohmann {
             return true;
         }
 
-        // Array iterator support
+        // Legacy Array iterator support (kept for backward compatibility)
         using array_iterator = std::vector<json>::iterator;
         using const_array_iterator = std::vector<json>::const_iterator;
 

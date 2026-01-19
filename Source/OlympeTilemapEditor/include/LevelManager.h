@@ -34,6 +34,7 @@ namespace Editor {
         std::string id;              // Unique identifier
         std::string prefabPath;      // Path to the entity prefab blueprint
         std::string name;            // Display name
+		std::string type;            // Entity type (e.g., "Player", "Enemy", "Item", "Collision"...)
         Vec2 position;               // World position
         json overrides;              // Component property overrides
 

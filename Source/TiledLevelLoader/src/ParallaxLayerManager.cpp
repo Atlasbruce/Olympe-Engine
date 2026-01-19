@@ -11,11 +11,6 @@
 namespace Olympe {
 namespace Tiled {
 
-    ParallaxLayerManager& ParallaxLayerManager::Get()
-    {
-        static ParallaxLayerManager instance;
-        return instance;
-    }
 
     ParallaxLayerManager::ParallaxLayerManager()
     {
@@ -32,6 +27,12 @@ namespace Tiled {
                 layer.texture = nullptr;
             }
         }
+    }
+
+    ParallaxLayerManager& ParallaxLayerManager::Get()
+    {
+        static ParallaxLayerManager instance;
+        return instance;
     }
 
     void ParallaxLayerManager::AddLayer(const ParallaxLayer& layer)
@@ -86,7 +87,7 @@ namespace Tiled {
         float scrollX, scrollY;
         CalculateRenderPosition(layer, cam.worldPosition.x, cam.worldPosition.y, scrollX, scrollY);
 
-        int texW, texH;
+        float texW, texH;
         SDL_GetTextureSize(layer.texture, &texW, &texH);
 
         SDL_SetTextureAlphaMod(layer.texture, static_cast<Uint8>(layer.opacity * 255));
@@ -127,7 +128,7 @@ namespace Tiled {
     void ParallaxLayerManager::RenderAllLayers(const CameraTransform& cam) const
     {
         // Create a sorted copy of layers by z-order
-        std::vector<const ParallaxLayer*> sortedLayers;
+        vector<const ParallaxLayer*> sortedLayers;
         sortedLayers.reserve(layers_.size());
         
         for (const auto& layer : layers_)
@@ -136,7 +137,7 @@ namespace Tiled {
         }
 
         // Sort by z-order (back to front)
-        std::sort(sortedLayers.begin(), sortedLayers.end(),
+        sort(sortedLayers.begin(), sortedLayers.end(),
             [](const ParallaxLayer* a, const ParallaxLayer* b) {
                 return a->zOrder < b->zOrder;
             });

@@ -551,11 +551,11 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
     {
         if (item.type == RenderItem::BackgroundLayer)
         {
-            parallaxMgr.RenderLayer(layers[item.layerIndex], cam);
+            parallaxMgr.RenderLayer(layers[item.layerIndex], reinterpret_cast<const CameraTransform&>(cam));
         }
         else if (item.type == RenderItem::ForegroundLayer)
         {
-            parallaxMgr.RenderLayer(layers[item.layerIndex], cam);
+            parallaxMgr.RenderLayer(layers[item.layerIndex], reinterpret_cast<const CameraTransform&>(cam));
         }
         else // Entity
         {

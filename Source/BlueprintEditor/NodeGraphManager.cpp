@@ -334,9 +334,8 @@ namespace Olympe
                     const json& params = nj["parameters"];
                     for (auto it = params.begin(); it != params.end(); ++it)
                     {
-                        node.parameters[it->first] = it->second.is_string() 
-                            ? it->second.get<std::string>() 
-                            : it->second.dump();
+						node.parameters[it.key()] = it.value().is_string() ? it.value().get<std::string>()
+                            : it.value().dump();
                     }
                 }
                 else

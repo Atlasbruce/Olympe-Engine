@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include "../../ECS_Systems.h"
 
 // Forward declarations
 struct SDL_Texture;
@@ -21,75 +22,74 @@ struct SDL_Renderer;
 namespace Olympe {
 namespace Tiled {
 
-    // Forward declare CameraTransform
-    struct CameraTransform;
 
-    struct ParallaxLayer
-    {
-        std::string name;
-        std::string imagePath;
-        float scrollFactorX;
-        float scrollFactorY;
-        float offsetX;
-        float offsetY;
-        float opacity;
-        bool repeatX;
-        bool repeatY;
-        bool visible;
-        int tintColor;  // ARGB
-        int zOrder;     // Z-order for sorting (lower = background, higher = foreground)
-        SDL_Texture* texture; // Runtime texture
 
-        ParallaxLayer()
-            : scrollFactorX(1.0f), scrollFactorY(1.0f),
-              offsetX(0.0f), offsetY(0.0f), opacity(1.0f),
-              repeatX(false), repeatY(false), visible(true),
-              tintColor(0xFFFFFFFF), zOrder(0), texture(nullptr) {}
-    };
+        struct ParallaxLayer
+        {
+            string name;
+            string imagePath;
+            float scrollFactorX;
+            float scrollFactorY;
+            float offsetX;
+            float offsetY;
+            float opacity;
+            bool repeatX;
+            bool repeatY;
+            bool visible;
+            int tintColor;  // ARGB
+            int zOrder;     // Z-order for sorting (lower = background, higher = foreground)
+            SDL_Texture* texture; // Runtime texture
 
-    class ParallaxLayerManager
-    {
-    public:
-        // Singleton access
-        static ParallaxLayerManager& Get();
+            ParallaxLayer()
+                : scrollFactorX(1.0f), scrollFactorY(1.0f),
+                offsetX(0.0f), offsetY(0.0f), opacity(1.0f),
+                repeatX(false), repeatY(false), visible(true),
+                tintColor(0xFFFFFFFF), zOrder(0), texture(nullptr) {
+            }
+        };
 
-        // Add a parallax layer
-        void AddLayer(const ParallaxLayer& layer);
+        class ParallaxLayerManager
+        {
+        public:
+            // Singleton access
+            static ParallaxLayerManager& Get();
 
-        // Get all layers
-        const std::vector<ParallaxLayer>& GetLayers() const { return layers_; }
+            // Add a parallax layer
+            void AddLayer(const ParallaxLayer& layer);
 
-        // Clear all layers
-        void Clear();
+            // Get all layers
+            const vector<ParallaxLayer>& GetLayers() const { return layers_; }
 
-        // Calculate render position for a layer based on camera position
-        void CalculateRenderPosition(
-            const ParallaxLayer& layer,
-            float cameraX, float cameraY,
-            float& outX, float& outY) const;
+            // Clear all layers
+            void Clear();
 
-        // Get number of layers
-        size_t GetLayerCount() const { return layers_.size(); }
+            // Calculate render position for a layer based on camera position
+            void CalculateRenderPosition(
+                const ParallaxLayer& layer,
+                float cameraX, float cameraY,
+                float& outX, float& outY) const;
 
-        // Get layer by index
-        const ParallaxLayer* GetLayer(size_t index) const;
+            // Get number of layers
+            size_t GetLayerCount() const { return layers_.size(); }
 
-        // Render a specific layer
-        void RenderLayer(const ParallaxLayer& layer, const CameraTransform& cam) const;
+            // Get layer by index
+            const ParallaxLayer* GetLayer(size_t index) const;
 
-        // Render all layers in z-order
-        void RenderAllLayers(const CameraTransform& cam) const;
+            // Render a specific layer
+            void RenderLayer(const ParallaxLayer& layer, const CameraTransform& cam) const;
 
-    private:
-        ParallaxLayerManager();
-        ~ParallaxLayerManager();
-        
-        // Prevent copying
-        ParallaxLayerManager(const ParallaxLayerManager&) = delete;
-        ParallaxLayerManager& operator=(const ParallaxLayerManager&) = delete;
+            // Render all layers in z-order
+            void RenderAllLayers(const CameraTransform& cam) const;
 
-        std::vector<ParallaxLayer> layers_;
-    };
+            ParallaxLayerManager();
+            ~ParallaxLayerManager();
+
+            // Prevent copying
+            ParallaxLayerManager(const ParallaxLayerManager&) = delete;
+            ParallaxLayerManager& operator=(const ParallaxLayerManager&) = delete;
+
+            vector<ParallaxLayer> layers_;
+        };
 
 } // namespace Tiled
 } // namespace Olympe

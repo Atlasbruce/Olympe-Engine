@@ -12,8 +12,8 @@ namespace Olympe {
 namespace Tiled {
 
     TiledToOlympe::TiledToOlympe()
-        : mapWidth_(0), mapHeight_(0)
     {
+        mapWidth_ = 0; mapHeight_ = 0;
         // Set default configuration
         config_.flipY = true;
         config_.defaultPrefab = "Blueprints/DefaultEntity.json";
@@ -94,20 +94,19 @@ namespace Tiled {
                 const ParallaxLayer* layer = parallaxLayers_.GetLayer(i);
                 if (layer)
                 {
-                    nlohmann::json layerJson = {
-                        {"name", layer->name},
-                        {"imagePath", layer->imagePath},
-                        {"scrollFactorX", layer->scrollFactorX},
-                        {"scrollFactorY", layer->scrollFactorY},
-                        {"repeatX", layer->repeatX},
-                        {"repeatY", layer->repeatY},
-                        {"offsetX", layer->offsetX},
-                        {"offsetY", layer->offsetY},
-                        {"opacity", layer->opacity},
-                        {"zOrder", static_cast<int>(i)},
-                        {"visible", layer->visible},
-                        {"tintColor", layer->tintColor}
-                    };
+                    nlohmann::json layerJson = nlohmann::json::object();
+                    layerJson["name"] = layer->name;
+                    layerJson["imagePath"] = layer->imagePath;
+                    layerJson["scrollFactorX"] = layer->scrollFactorX;
+                    layerJson["scrollFactorY"] = layer->scrollFactorY;
+                    layerJson["repeatX"] = layer->repeatX;
+                    layerJson["repeatY"] = layer->repeatY;
+                    layerJson["offsetX"] = layer->offsetX;
+                    layerJson["offsetY"] = layer->offsetY;
+                    layerJson["opacity"] = layer->opacity;
+                    layerJson["zOrder"] = static_cast<int>(i);
+                    layerJson["visible"] = layer->visible;
+                    layerJson["tintColor"] = layer->tintColor;
                     parallaxLayersJson.push_back(layerJson);
                 }
             }
@@ -513,8 +512,8 @@ namespace Tiled {
 
         for (auto it = mapping.begin(); it != mapping.end(); ++it)
         {
-            std::string objectType = it->first;
-            std::string prefabPath = it->second.get<std::string>();
+            std::string objectType = it.key();
+            std::string prefabPath = it.value().get<std::string>();
             
             config_.typeToPrefabMap[objectType] = prefabPath;
             

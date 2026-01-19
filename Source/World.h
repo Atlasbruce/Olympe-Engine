@@ -122,8 +122,8 @@ public:
         // 2. Get the pool and add the component
         auto* pool = static_cast<ComponentPool<T>*>(m_componentPools[typeID].get());
 
-        // Creation and adding of the component using move semantics
-        pool->AddComponent(entity, T{ std::forward<Args>(args)... });
+        // Creation and adding of the component using perfect forwarding
+        pool->AddComponent(entity, std::forward<Args>(args)...);
 
         // 3. Update the Entity's Signature
         m_entitySignatures[entity].set(typeID, true);

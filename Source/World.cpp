@@ -16,7 +16,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "BlueprintEditor/WorldBridge.h"
 #include "TiledLevelLoader/include/ParallaxLayerManager.h"
 #include "GameEngine.h"
-#include <SDL3/SDL_image.h>
+#include "../SDL/include/SDL3_image/SDL_image.h"
 #include <chrono>
 
 //---------------------------------------------------------------------------------------------
@@ -324,7 +324,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
         {
             EntityID eid = CreateEntity();
             
-            AddComponent<Identity_data>(eid, entityInstance->name, "Collision", EntityType::Static);
+            AddComponent<Identity_data>(eid, entityInstance->name, "Collision", EntityType::Collision);
             AddComponent<Position_data>(eid, Vector(
                 static_cast<float>(entityInstance->position.x),
                 static_cast<float>(entityInstance->position.y),
@@ -467,7 +467,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
                 layer.zOrder = layerJson.value("zOrder", 0);
                 layer.visible = layerJson.value("visible", true);
                 layer.tintColor = layerJson.value("tintColor", 0xFFFFFFFF);
-                
+
                 parallaxMgr.AddLayer(layer);
                 
                 SYSTEM_LOG << "World::LoadLevelFromTiled - Loaded parallax layer '" << layer.name 
