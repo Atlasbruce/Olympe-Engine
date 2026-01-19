@@ -3,7 +3,7 @@
  */
 
 #include "../include/ParallaxLayerManager.h"
-#include "../../ECS_Systems_Rendering_Camera.h"
+#include "../../ECS_Systems.h"
 #include "../../GameEngine.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
@@ -84,7 +84,7 @@ namespace Tiled {
 
         // Calculate parallax offset
         float scrollX, scrollY;
-        CalculateRenderPosition(layer, cam.position.x, cam.position.y, scrollX, scrollY);
+        CalculateRenderPosition(layer, cam.worldPosition.x, cam.worldPosition.y, scrollX, scrollY);
 
         int texW, texH;
         SDL_GetTextureSize(layer.texture, &texW, &texH);
