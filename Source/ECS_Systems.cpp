@@ -21,9 +21,11 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #include "system/EventQueue.h"
 #include "VideoGame.h"
 #include "system/GameMenu.h"
+#include "TiledLevelLoader/include/ParallaxLayerManager.h"
 #include <iostream>
 #include <bitset>
 #include <cmath>
+#include <algorithm>
 #include "drawing.h"
 
 #undef min
@@ -446,8 +448,8 @@ void RenderingSystem::Render()
                 if (grid)
                     grid->RenderForCamera(camTransform);
 
-                // Render entities for this camera
-                RenderEntitiesForCamera(camTransform);
+                // Render with parallax layers
+                RenderMultiLayerForCamera(camTransform);
                 
                 // Reset viewport-specific state
                 //SDL_SetRenderClipRect(renderer, nullptr);
@@ -471,8 +473,8 @@ void RenderingSystem::Render()
                 SDL_SetRenderViewport(renderer, &viewportRect);
                 //SDL_SetRenderClipRect(renderer, &viewportRect);
                 
-                // Render entities for this camera
-                RenderEntitiesForCamera(camTransform);
+                // Render with parallax layers
+                RenderMultiLayerForCamera(camTransform);
                 
                 // Reset viewport-specific state
                 //SDL_SetRenderClipRect(renderer, nullptr);
@@ -482,6 +484,158 @@ void RenderingSystem::Render()
         // Final reset
         //SDL_SetRenderClipRect(renderer, nullptr);
         SDL_SetRenderViewport(renderer, nullptr);
+    }
+}
+
+// Multi-layer rendering with parallax support
+void RenderMultiLayerForCamera(const CameraTransform& cam)
+{
+    Olympe::Tiled::ParallaxLayerManager& parallaxMgr = Olympe::Tiled::ParallaxLayerManager::Get();
+    
+    // Collect entities and layers with depth information for sorting
+    struct RenderItem
+    {
+        enum Type { BackgroundLayer, Entity, ForegroundLayer } type;
+        float depthY;
+        int layerIndex;
+        EntityID entityId;
+        
+        RenderItem(Type t, float y, int layer = -1, EntityID eid = 0)
+            : type(t), depthY(y), layerIndex(layer), entityId(eid) {}
+    };
+    
+    std::vector<RenderItem> renderQueue;
+    
+    // Add parallax layers
+    const auto& layers = parallaxMgr.GetLayers();
+    for (size_t i = 0; i < layers.size(); ++i)
+    {
+        const auto& layer = layers[i];
+        if (!layer.visible) continue;
+        
+        // Classify layers by z-order
+        // Background: zOrder < 0 or scrollFactor < 1.0
+        // Foreground: zOrder > 0 or scrollFactor > 1.0
+        if (layer.zOrder < 0 || layer.scrollFactorX < 1.0f)
+        {
+            renderQueue.push_back(RenderItem(RenderItem::BackgroundLayer, -1000.0f + layer.zOrder, i));
+        }
+        else if (layer.zOrder > 0 || layer.scrollFactorX > 1.0f)
+        {
+            renderQueue.push_back(RenderItem(RenderItem::ForegroundLayer, 10000.0f + layer.zOrder, i));
+        }
+    }
+    
+    // Add entities with their Y positions for depth sorting
+    for (EntityID entity : World::Get().GetSystem<RenderingSystem>()->m_entities)
+    {
+        try
+        {
+            Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+            renderQueue.push_back(RenderItem(RenderItem::Entity, pos.position.y, -1, entity));
+        }
+        catch (const std::exception&)
+        {
+            // Entity may not have position component, skip it
+        }
+    }
+    
+    // Sort render queue by depth (back to front)
+    std::sort(renderQueue.begin(), renderQueue.end(),
+        [](const RenderItem& a, const RenderItem& b) {
+            return a.depthY < b.depthY;
+        });
+    
+    // Render in sorted order
+    for (const auto& item : renderQueue)
+    {
+        if (item.type == RenderItem::BackgroundLayer)
+        {
+            parallaxMgr.RenderLayer(layers[item.layerIndex], cam);
+        }
+        else if (item.type == RenderItem::ForegroundLayer)
+        {
+            parallaxMgr.RenderLayer(layers[item.layerIndex], cam);
+        }
+        else // Entity
+        {
+            RenderSingleEntity(cam, item.entityId);
+        }
+    }
+}
+
+// Render a single entity
+void RenderSingleEntity(const CameraTransform& cam, EntityID entity)
+{
+    try
+    {
+        Identity_data& id = World::Get().GetComponent<Identity_data>(entity);
+        Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+        VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
+        BoundingBox_data& boxComp = World::Get().GetComponent<BoundingBox_data>(entity);
+        
+        // Create world bounds for frustum culling
+        SDL_FRect worldBounds = {
+            pos.position.x - visual.hotSpot.x,
+            pos.position.y - visual.hotSpot.y,
+            boxComp.boundingBox.w,
+            boxComp.boundingBox.h
+        };
+        
+        // Frustum culling - skip if not visible
+        if (!cam.IsVisible(worldBounds))
+            return;
+        
+        // Transform position to screen space
+        Vector centerScreen = cam.WorldToScreen(pos.position);
+        
+        // Transform size to screen space
+        Vector screenSize = cam.WorldSizeToScreenSize(
+            Vector(boxComp.boundingBox.w, boxComp.boundingBox.h, 0.f)
+        );
+        
+        // Create destination rectangle
+        SDL_FRect destRect = {
+            centerScreen.x - visual.hotSpot.x * cam.zoom,
+            centerScreen.y - visual.hotSpot.y * cam.zoom,
+            screenSize.x,
+            screenSize.y
+        };
+        
+        // Render based on sprite type
+        if (visual.sprite)
+        {
+            // Apply color modulation
+            SDL_SetTextureColorMod(visual.sprite, visual.color.r, visual.color.g, visual.color.b);
+            
+            SDL_FPoint fpoint = { visual.hotSpot.x * cam.zoom, visual.hotSpot.y * cam.zoom };
+            SDL_RenderTextureRotated(GameEngine::renderer, visual.sprite, nullptr, &destRect, cam.rotation, &fpoint, SDL_FLIP_NONE);
+            
+            // Debug: draw position & bounding box
+            switch (id.type)
+            {
+                case EntityType::UIElement:
+                case EntityType::Background:
+                    SDL_SetRenderDrawColor(GameEngine::renderer, 0, 0, 255, 255); // blue
+                    break;
+                case EntityType::Player:
+                    SDL_SetRenderDrawColor(GameEngine::renderer, 0, 255, 0, 255); // green
+                    break;
+                case EntityType::Enemy:
+                case EntityType::NPC:
+                    SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 0, 255); // red
+                    break;
+                default:
+                    SDL_SetRenderDrawColor(GameEngine::renderer, 255, 255, 0, 255); // yellow
+                    break;
+            }
+            
+            Draw_FilledCircle((int)(centerScreen.x), (int)(centerScreen.y), 3); // draw pivot/centre
+        }
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "RenderSingleEntity Error for Entity " << entity << ": " << e.what() << "\n";
     }
 }
 

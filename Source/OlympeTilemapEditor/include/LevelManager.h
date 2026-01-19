@@ -48,9 +48,10 @@ namespace Editor {
         std::string created;
         std::string lastModified;
         std::vector<std::string> tags;
+        nlohmann::json customData; // For storing additional metadata like parallax layers
 
         LevelMetadata()
-            : author(""), created(""), lastModified("") {}
+            : author(""), created(""), lastModified(""), customData(json::object()) {}
     };
 
     // Represents editor-specific state

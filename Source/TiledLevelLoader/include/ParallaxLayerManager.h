@@ -14,8 +14,15 @@
 #include <vector>
 #include <memory>
 
+// Forward declarations
+struct SDL_Texture;
+struct SDL_Renderer;
+
 namespace Olympe {
 namespace Tiled {
+
+    // Forward declare CameraTransform
+    struct CameraTransform;
 
     struct ParallaxLayer
     {
@@ -30,19 +37,21 @@ namespace Tiled {
         bool repeatY;
         bool visible;
         int tintColor;  // ARGB
+        int zOrder;     // Z-order for sorting (lower = background, higher = foreground)
+        SDL_Texture* texture; // Runtime texture
 
         ParallaxLayer()
             : scrollFactorX(1.0f), scrollFactorY(1.0f),
               offsetX(0.0f), offsetY(0.0f), opacity(1.0f),
               repeatX(false), repeatY(false), visible(true),
-              tintColor(0xFFFFFFFF) {}
+              tintColor(0xFFFFFFFF), zOrder(0), texture(nullptr) {}
     };
 
     class ParallaxLayerManager
     {
     public:
-        ParallaxLayerManager();
-        ~ParallaxLayerManager();
+        // Singleton access
+        static ParallaxLayerManager& Get();
 
         // Add a parallax layer
         void AddLayer(const ParallaxLayer& layer);
@@ -65,7 +74,20 @@ namespace Tiled {
         // Get layer by index
         const ParallaxLayer* GetLayer(size_t index) const;
 
+        // Render a specific layer
+        void RenderLayer(const ParallaxLayer& layer, const CameraTransform& cam) const;
+
+        // Render all layers in z-order
+        void RenderAllLayers(const CameraTransform& cam) const;
+
     private:
+        ParallaxLayerManager();
+        ~ParallaxLayerManager();
+        
+        // Prevent copying
+        ParallaxLayerManager(const ParallaxLayerManager&) = delete;
+        ParallaxLayerManager& operator=(const ParallaxLayerManager&) = delete;
+
         std::vector<ParallaxLayer> layers_;
     };
 
