@@ -25,6 +25,8 @@ struct GridSettings_data;
 
 // Prototype function to render entities for a given camera
 void RenderEntitiesForCamera(const CameraTransform& cam);
+void RenderMultiLayerForCamera(const CameraTransform& cam);
+void RenderSingleEntity(const CameraTransform& cam, EntityID entity);
 // Get the active camera transform for a specific player
 CameraTransform GetActiveCameraTransform(short playerID);
 

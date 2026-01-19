@@ -84,6 +84,39 @@ namespace Tiled {
                    << outLevel.entities.size() << " entities, "
                    << parallaxLayers_.GetLayerCount() << " parallax layers" << std::endl;
 
+        // Store parallax layers in metadata as JSON array
+        if (parallaxLayers_.GetLayerCount() > 0)
+        {
+            nlohmann::json parallaxLayersJson = nlohmann::json::array();
+            
+            for (size_t i = 0; i < parallaxLayers_.GetLayerCount(); ++i)
+            {
+                const ParallaxLayer* layer = parallaxLayers_.GetLayer(i);
+                if (layer)
+                {
+                    nlohmann::json layerJson = {
+                        {"name", layer->name},
+                        {"imagePath", layer->imagePath},
+                        {"scrollFactorX", layer->scrollFactorX},
+                        {"scrollFactorY", layer->scrollFactorY},
+                        {"repeatX", layer->repeatX},
+                        {"repeatY", layer->repeatY},
+                        {"offsetX", layer->offsetX},
+                        {"offsetY", layer->offsetY},
+                        {"opacity", layer->opacity},
+                        {"zOrder", static_cast<int>(i)},
+                        {"visible", layer->visible},
+                        {"tintColor", layer->tintColor}
+                    };
+                    parallaxLayersJson.push_back(layerJson);
+                }
+            }
+            
+            outLevel.metadata.customData["parallaxLayers"] = parallaxLayersJson;
+            SYSTEM_LOG << "TiledToOlympe: Stored " << parallaxLayersJson.size() 
+                       << " parallax layers in metadata\n";
+        }
+
         return true;
     }
 

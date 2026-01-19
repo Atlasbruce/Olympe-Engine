@@ -318,6 +318,135 @@ void VideoGame::RegisterPrefabItems()
         world.AddComponent<BoundingBox_data>(id, SDL_FRect{ 0.f, 0.f, st_vsprite.srcRect.w, st_vsprite.srcRect.h });
         // Add other components as needed
 		});
+
+    // ENEMY PREFAB
+    PrefabFactory::Get().RegisterPrefab("Enemy", [](EntityID id) {
+        World& world = World::Get();
+        world.AddComponent<Identity_data>(id, "Enemy_" + std::to_string(id), "Enemy", EntityType::NPC);
+        world.AddComponent<Position_data>(id, Vector(0, 0, 0));
+        
+        static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Enemy", "Resources/SpriteEntities/enemy.png");
+        if (!sprite) {
+            // Fallback to random entity sprite
+            string str_index = to_string(Random_Int(1, 15));
+            sprite = DataManager::Get().GetSprite_data("Enemy", "Resources/SpriteEntities/entity_" + str_index + ".png");
+        }
+        if (sprite) {
+            sprite->color = SDL_Color{255, 100, 100, 255}; // Reddish tint for enemies
+            world.AddComponent<VisualSprite_data>(id, *sprite);
+            world.AddComponent<BoundingBox_data>(id, {0, 0, sprite->srcRect.w, sprite->srcRect.h});
+        }
+        
+        world.AddComponent<Movement_data>(id);
+        world.AddComponent<PhysicsBody_data>(id);
+        world.AddComponent<Health_data>(id, 50, 50);
+        world.AddComponent<AIBlackboard_data>(id);
+        world.AddComponent<AISenses_data>(id);
+        world.AddComponent<AIState_data>(id);
+        world.AddComponent<BehaviorTreeRuntime_data>(id, 3, true);
+    });
+
+    // ZOMBIE PREFAB
+    PrefabFactory::Get().RegisterPrefab("Zombie", [](EntityID id) {
+        World& world = World::Get();
+        world.AddComponent<Identity_data>(id, "Zombie_" + std::to_string(id), "Zombie", EntityType::NPC);
+        world.AddComponent<Position_data>(id, Vector(0, 0, 0));
+        
+        static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Zombie", "Resources/SpriteEntities/zombie.png");
+        if (!sprite) {
+            // Fallback to random entity sprite
+            string str_index = to_string(Random_Int(1, 15));
+            sprite = DataManager::Get().GetSprite_data("Zombie", "Resources/SpriteEntities/entity_" + str_index + ".png");
+        }
+        if (sprite) {
+            sprite->color = SDL_Color{100, 255, 100, 255}; // Greenish tint for zombies
+            world.AddComponent<VisualSprite_data>(id, *sprite);
+            world.AddComponent<BoundingBox_data>(id, {0, 0, sprite->srcRect.w, sprite->srcRect.h});
+        }
+        
+        world.AddComponent<Movement_data>(id);
+        world.AddComponent<PhysicsBody_data>(id, 0.5f, 80.0f);
+        world.AddComponent<Health_data>(id, 30, 30);
+        world.AddComponent<AIBlackboard_data>(id);
+        world.AddComponent<AISenses_data>(id, 150.0f, 300.0f);
+        world.AddComponent<AIState_data>(id);
+        world.AddComponent<BehaviorTreeRuntime_data>(id, 3, true);
+    });
+
+    // KEY PREFAB
+    PrefabFactory::Get().RegisterPrefab("Key", [](EntityID id) {
+        World& world = World::Get();
+        world.AddComponent<Identity_data>(id, "Key_" + std::to_string(id), "Key", EntityType::Item);
+        world.AddComponent<Position_data>(id, Vector(0, 0, 0));
+        
+        static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Key", "Resources/Items/key.png");
+        if (!sprite) {
+            sprite = DataManager::Get().GetSprite_data("Key", "Resources/Icons/trigger-50.png");
+        }
+        if (sprite) {
+            sprite->color = SDL_Color{255, 215, 0, 255}; // Gold color
+            world.AddComponent<VisualSprite_data>(id, *sprite);
+            world.AddComponent<BoundingBox_data>(id, {0, 0, sprite->srcRect.w, sprite->srcRect.h});
+        }
+    });
+
+    // COLLECTIBLE PREFAB
+    PrefabFactory::Get().RegisterPrefab("Collectible", [](EntityID id) {
+        World& world = World::Get();
+        world.AddComponent<Identity_data>(id, "Collectible_" + std::to_string(id), "Collectible", EntityType::Item);
+        world.AddComponent<Position_data>(id, Vector(0, 0, 0));
+        
+        static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Collectible", "Resources/Items/coin.png");
+        if (!sprite) {
+            sprite = DataManager::Get().GetSprite_data("Collectible", "Resources/Icons/trigger-50.png");
+        }
+        if (sprite) {
+            sprite->color = SDL_Color{255, 255, 0, 255}; // Yellow color
+            world.AddComponent<VisualSprite_data>(id, *sprite);
+            world.AddComponent<BoundingBox_data>(id, {0, 0, sprite->srcRect.w, sprite->srcRect.h});
+        }
+    });
+
+    // TREASURE PREFAB
+    PrefabFactory::Get().RegisterPrefab("Treasure", [](EntityID id) {
+        World& world = World::Get();
+        world.AddComponent<Identity_data>(id, "Treasure_" + std::to_string(id), "Treasure", EntityType::Item);
+        world.AddComponent<Position_data>(id, Vector(0, 0, 0));
+        
+        static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Treasure", "Resources/Items/chest.png");
+        if (!sprite) {
+            sprite = DataManager::Get().GetSprite_data("Treasure", "Resources/Icons/trigger-50.png");
+        }
+        if (sprite) {
+            sprite->color = SDL_Color{139, 69, 19, 255}; // Brown color
+            world.AddComponent<VisualSprite_data>(id, *sprite);
+            world.AddComponent<BoundingBox_data>(id, {0, 0, sprite->srcRect.w, sprite->srcRect.h});
+        }
+    });
+
+    // PORTAL PREFAB
+    PrefabFactory::Get().RegisterPrefab("Portal", [](EntityID id) {
+        World& world = World::Get();
+        world.AddComponent<Identity_data>(id, "Portal_" + std::to_string(id), "Portal", EntityType::Trigger);
+        world.AddComponent<Position_data>(id, Vector(0, 0, 0));
+        
+        static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Portal", "Resources/Items/portal.png");
+        if (!sprite) {
+            sprite = DataManager::Get().GetSprite_data("Portal", "Resources/Icons/trigger-50.png");
+        }
+        if (sprite) {
+            sprite->color = SDL_Color{138, 43, 226, 255}; // Purple color
+            world.AddComponent<VisualSprite_data>(id, *sprite);
+            world.AddComponent<BoundingBox_data>(id, {0, 0, sprite->srcRect.w, sprite->srcRect.h});
+        }
+    });
+
+    // AMBIENT SOUND PREFAB
+    PrefabFactory::Get().RegisterPrefab("AmbientSound", [](EntityID id) {
+        World& world = World::Get();
+        world.AddComponent<Identity_data>(id, "AmbientSound_" + std::to_string(id), "AmbientSound", EntityType::Trigger);
+        world.AddComponent<Position_data>(id, Vector(0, 0, 0));
+    });
 }
 //-------------------------------------------------------------
 void VideoGame::InitializeAITestScene()

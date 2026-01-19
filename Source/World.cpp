@@ -14,6 +14,9 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "system/ViewportManager.h"
 #include "ECS_Systems_AI.h"
 #include "BlueprintEditor/WorldBridge.h"
+#include "TiledLevelLoader/include/ParallaxLayerManager.h"
+#include "GameEngine.h"
+#include <SDL3/SDL_image.h>
 #include <chrono>
 
 //---------------------------------------------------------------------------------------------
@@ -316,7 +319,49 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
         SYSTEM_LOG << "World::LoadLevelFromTiled - Creating entity: " << entityInstance->name 
                    << " from prefab: " << entityInstance->prefabPath << "\n";
         
+        // Handle collision objects manually (not via prefab)
+        if (entityInstance->type == "collision")
+        {
+            EntityID eid = CreateEntity();
+            
+            AddComponent<Identity_data>(eid, entityInstance->name, "Collision", EntityType::Static);
+            AddComponent<Position_data>(eid, Vector(
+                static_cast<float>(entityInstance->position.x),
+                static_cast<float>(entityInstance->position.y),
+                0.0f
+            ));
+            
+            // Extract collision bounds from overrides
+            float width = 64.0f;
+            float height = 64.0f;
+            if (!entityInstance->overrides.is_null())
+            {
+                if (entityInstance->overrides.contains("width"))
+                {
+                    width = entityInstance->overrides["width"].get<float>();
+                }
+                if (entityInstance->overrides.contains("height"))
+                {
+                    height = entityInstance->overrides["height"].get<float>();
+                }
+            }
+            
+            AddComponent<CollisionZone_data>(eid, SDL_FRect{
+                static_cast<float>(entityInstance->position.x),
+                static_cast<float>(entityInstance->position.y),
+                width,
+                height
+            }, true);
+            
+            SYSTEM_LOG << "World::LoadLevelFromTiled - Created collision zone '" << entityInstance->name 
+                       << "' at (" << entityInstance->position.x << "," << entityInstance->position.y 
+                       << ") size (" << width << "x" << height << ")\n";
+            
+            continue; // Skip prefab creation for collision objects
+        }
+        
         // Extract prefab name from path (e.g., "Blueprints/EntityPrefab/player.json" -> "player")
+        // or use directly if it's already a short name (e.g., "PlayerEntity")
         std::string prefabName = entityInstance->prefabPath;
         size_t lastSlash = prefabName.find_last_of("/\\");
         if (lastSlash != std::string::npos)
@@ -384,6 +429,53 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
                     }
                 }
             }
+        }
+    }
+    
+    // 5. Load parallax layers from metadata
+    if (levelDef.metadata.customData.contains("parallaxLayers"))
+    {
+        Olympe::Tiled::ParallaxLayerManager& parallaxMgr = Olympe::Tiled::ParallaxLayerManager::Get();
+        parallaxMgr.Clear();
+        
+        const auto& parallaxLayersJson = levelDef.metadata.customData["parallaxLayers"];
+        if (parallaxLayersJson.is_array())
+        {
+            for (const auto& layerJson : parallaxLayersJson)
+            {
+                std::string imagePath = layerJson["imagePath"].get<std::string>();
+                SDL_Texture* texture = IMG_LoadTexture(GameEngine::renderer, imagePath.c_str());
+                
+                if (!texture)
+                {
+                    SYSTEM_LOG << "World::LoadLevelFromTiled - Warning: Failed to load parallax image: " 
+                               << imagePath << " - " << SDL_GetError() << "\n";
+                    continue;
+                }
+                
+                Olympe::Tiled::ParallaxLayer layer;
+                layer.name = layerJson["name"].get<std::string>();
+                layer.imagePath = imagePath;
+                layer.texture = texture;
+                layer.scrollFactorX = layerJson["scrollFactorX"].get<float>();
+                layer.scrollFactorY = layerJson.value("scrollFactorY", 0.0f);
+                layer.repeatX = layerJson.value("repeatX", false);
+                layer.repeatY = layerJson.value("repeatY", false);
+                layer.offsetX = layerJson.value("offsetX", 0.0f);
+                layer.offsetY = layerJson.value("offsetY", 0.0f);
+                layer.opacity = layerJson.value("opacity", 1.0f);
+                layer.zOrder = layerJson.value("zOrder", 0);
+                layer.visible = layerJson.value("visible", true);
+                layer.tintColor = layerJson.value("tintColor", 0xFFFFFFFF);
+                
+                parallaxMgr.AddLayer(layer);
+                
+                SYSTEM_LOG << "World::LoadLevelFromTiled - Loaded parallax layer '" << layer.name 
+                           << "' (zOrder=" << layer.zOrder << ", parallaxX=" << layer.scrollFactorX << ")\n";
+            }
+            
+            SYSTEM_LOG << "World::LoadLevelFromTiled - Total parallax layers loaded: " 
+                       << parallaxMgr.GetLayerCount() << "\n";
         }
     }
     
