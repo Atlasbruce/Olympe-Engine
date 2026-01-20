@@ -15,9 +15,15 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "ECS_Systems_AI.h"
 #include "BlueprintEditor/WorldBridge.h"
 #include "TiledLevelLoader/include/ParallaxLayerManager.h"
+#include "TiledLevelLoader/include/LevelParser.h"
+#include "TiledLevelLoader/include/TiledToOlympe.h"
+#include "PrefabScanner.h"
+#include "prefabfactory.h"
+#include "DataManager.h"
 #include "GameEngine.h"
 #include "../SDL/include/SDL3_image/SDL_image.h"
 #include <chrono>
+#include <iostream>
 
 //---------------------------------------------------------------------------------------------
 // Helper function to register input entities with InputsManager
@@ -259,225 +265,107 @@ void World::NotifyBlueprintEditorEntityDestroyed(EntityID entity)
 
 bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
 {
-    SYSTEM_LOG << "World::LoadLevelFromTiled - Loading: " << tiledMapPath << "\n";
+    std::cout << "\n";
+    std::cout << "╔══════════════════════════════════════════════════════════════════════╗\n";
+    std::cout << "║         3-PHASE LEVEL LOADING SYSTEM                                 ║\n";
+    std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n";
     
-    Olympe::Tiled::TiledMap tiledMap;
-
-    // 1. Load the Tiled map
-    Olympe::Tiled::TiledLevelLoader loader;
-    if (!loader.LoadFromFile(tiledMapPath, tiledMap))
+    // =======================================================================
+    // PHASE 1: PARSING & VISUAL ANALYSIS
+    // =======================================================================
+    
+    Olympe::Tiled::LevelParser parser;
+    Olympe::Tiled::LevelParseResult phase1Result = parser.ParseAndAnalyze(tiledMapPath);
+    
+    if (!phase1Result.IsSuccess())
     {
-        SYSTEM_LOG << "World::LoadLevelFromTiled - Failed to load Tiled map\n";
+        SYSTEM_LOG << "World::LoadLevelFromTiled - Phase 1 failed\n";
+        for (const auto& error : phase1Result.errors)
+        {
+            SYSTEM_LOG << "  ERROR: " << error << "\n";
+        }
         return false;
     }
     
-    //const Olympe::Tiled::TiledMap& tiledMap = loader.GetMap();
-    std::string orientationStr;
-    switch (tiledMap.orientation)
-    {
-        case Olympe::Tiled::MapOrientation::Orthogonal: orientationStr = "Orthogonal"; break;
-        case Olympe::Tiled::MapOrientation::Isometric: orientationStr = "Isometric"; break;
-        case Olympe::Tiled::MapOrientation::Staggered: orientationStr = "Staggered"; break;
-        case Olympe::Tiled::MapOrientation::Hexagonal: orientationStr = "Hexagonal"; break;
-        default: orientationStr = "Unknown"; break;
-    }
-    SYSTEM_LOG << "World::LoadLevelFromTiled - Map loaded: " << tiledMap.width << "x" << tiledMap.height 
-               << " (orientation: " << orientationStr << ")\n";
+    // =======================================================================
+    // PHASE 2: PREFAB DISCOVERY & PRELOADING
+    // =======================================================================
     
-    // 2. Convert to Olympe format
+    Phase2Result phase2Result = ExecutePhase2(phase1Result);
+    
+    if (!phase2Result.success)
+    {
+        SYSTEM_LOG << "World::LoadLevelFromTiled - Phase 2 failed (non-critical, continuing)\n";
+    }
+    
+    // =======================================================================
+    // PHASE 3: INSTANTIATION (5-Pass Pipeline)
+    // =======================================================================
+    
+    std::cout << "\n";
+    std::cout << "╔══════════════════════════════════════════════════════════════════════╗\n";
+    std::cout << "║         PHASE 3: INSTANTIATION (5-Pass Pipeline)                     ║\n";
+    std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n\n";
+    
+    // Load and convert using existing TiledToOlympe
+    Olympe::Tiled::TiledMap tiledMap;
+    Olympe::Tiled::TiledLevelLoader loader;
+    
+    if (!loader.LoadFromFile(tiledMapPath, tiledMap))
+    {
+        SYSTEM_LOG << "World::LoadLevelFromTiled - Failed to reload map for conversion\n";
+        return false;
+    }
+    
     Olympe::Tiled::TiledToOlympe converter;
-    
-    // Load prefab mapping from Config/tiled_prefab_mapping.json
     std::string mappingPath = "Config/tiled_prefab_mapping.json";
-    if (!converter.LoadPrefabMapping(mappingPath))
-    {
-        SYSTEM_LOG << "World::LoadLevelFromTiled - Warning: Could not load prefab mapping from " 
-                   << mappingPath << ", using defaults\n";
-    }
+    converter.LoadPrefabMapping(mappingPath);
     
-    // Convert the map
     Olympe::Editor::LevelDefinition levelDef;
     if (!converter.Convert(tiledMap, levelDef))
     {
-        SYSTEM_LOG << "World::LoadLevelFromTiled - Failed to convert Tiled map to Olympe format\n";
+        SYSTEM_LOG << "World::LoadLevelFromTiled - Failed to convert map\n";
         return false;
     }
     
-    SYSTEM_LOG << "World::LoadLevelFromTiled - Converted level with " 
-               << levelDef.entities.size() << " entities\n";
-    
-    // 3. Unload current level if any
+    // Unload current level
     UnloadCurrentLevel();
     
-    // 4. Create entities from level definition
-    PrefabFactory& factory = PrefabFactory::Get();
+    // Execute 5-pass instantiation
+    InstantiationResult instResult;
     
-    for (const auto& entityInstance : levelDef.entities)
-    {
-        if (!entityInstance) continue;
-        
-        SYSTEM_LOG << "World::LoadLevelFromTiled - Creating entity: " << entityInstance->name 
-                   << " from prefab: " << entityInstance->prefabPath << "\n";
-        
-        // Handle collision objects manually (not via prefab)
-        if (entityInstance->type == "collision")
-        {
-            EntityID eid = CreateEntity();
-            
-            AddComponent<Identity_data>(eid, entityInstance->name, "Collision", EntityType::Collision);
-            AddComponent<Position_data>(eid, Vector(
-                static_cast<float>(entityInstance->position.x),
-                static_cast<float>(entityInstance->position.y),
-                0.0f
-            ));
-            
-            // Extract collision bounds from overrides
-            float width = 64.0f;
-            float height = 64.0f;
-            if (!entityInstance->overrides.is_null())
-            {
-                if (entityInstance->overrides.contains("width"))
-                {
-                    width = entityInstance->overrides["width"].get<float>();
-                }
-                if (entityInstance->overrides.contains("height"))
-                {
-                    height = entityInstance->overrides["height"].get<float>();
-                }
-            }
-            
-            AddComponent<CollisionZone_data>(eid, SDL_FRect{
-                static_cast<float>(entityInstance->position.x),
-                static_cast<float>(entityInstance->position.y),
-                width,
-                height
-            }, true);
-            
-            SYSTEM_LOG << "World::LoadLevelFromTiled - Created collision zone '" << entityInstance->name 
-                       << "' at (" << entityInstance->position.x << "," << entityInstance->position.y 
-                       << ") size (" << width << "x" << height << ")\n";
-            
-            continue; // Skip prefab creation for collision objects
-        }
-        
-        // Extract prefab name from path (e.g., "Blueprints/EntityPrefab/player.json" -> "player")
-        // or use directly if it's already a short name (e.g., "PlayerEntity")
-        std::string prefabName = entityInstance->prefabPath;
-        size_t lastSlash = prefabName.find_last_of("/\\");
-        if (lastSlash != std::string::npos)
-        {
-            prefabName = prefabName.substr(lastSlash + 1);
-        }
-        size_t lastDot = prefabName.find_last_of(".");
-        if (lastDot != std::string::npos)
-        {
-            prefabName = prefabName.substr(0, lastDot);
-        }
-        
-        // Create entity using prefab factory
-        EntityID entity = factory.CreateEntity(prefabName);
-        if (entity == INVALID_ENTITY_ID)
-        {
-            SYSTEM_LOG << "World::LoadLevelFromTiled - Warning: Failed to create entity from prefab: " 
-                       << prefabName << "\n";
-            continue;
-        }
-        
-        // Set position if entity has Position_data component
-        if (HasComponent<Position_data>(entity))
-        {
-            Position_data& pos = GetComponent<Position_data>(entity);
-            pos.position.x = static_cast<float>(entityInstance->position.x);
-            pos.position.y = static_cast<float>(entityInstance->position.y);
-            pos.position.z = 0.0f;
-        }
-        
-        // Apply overrides from entityInstance->overrides (component property overrides)
-        // This would require reflection or manual parsing based on override structure
-        // For now, we'll handle special cases like patrol paths
-        
-        // Handle patrol paths from custom properties
-        if (!entityInstance->overrides.is_null() && entityInstance->overrides.contains("patrolPath"))
-        {
-            if (HasComponent<AIBlackboard_data>(entity))
-            {
-                AIBlackboard_data& blackboard = GetComponent<AIBlackboard_data>(entity);
-                
-                // Extract patrol points from overrides
-                const auto& patrolPath = entityInstance->overrides["patrolPath"];
-                if (patrolPath.is_array())
-                {
-                    blackboard.patrolPointCount = 0;
-                    for (size_t i = 0; i < patrolPath.size() && i < 8; ++i)
-                    {
-                        if (patrolPath[i].contains("x") && patrolPath[i].contains("y"))
-                        {
-                            blackboard.patrolPoints[blackboard.patrolPointCount].x = 
-                                static_cast<float>(patrolPath[i]["x"].get<float>());
-                            blackboard.patrolPoints[blackboard.patrolPointCount].y = 
-                                static_cast<float>(patrolPath[i]["y"].get<float>());
-                            blackboard.patrolPoints[blackboard.patrolPointCount].z = 0.0f;
-                            blackboard.patrolPointCount++;
-                        }
-                    }
-                    
-                    if (blackboard.patrolPointCount > 0)
-                    {
-                        SYSTEM_LOG << "World::LoadLevelFromTiled - Assigned " 
-                                   << blackboard.patrolPointCount << " patrol points to entity " 
-                                   << entityInstance->name << "\n";
-                    }
-                }
-            }
-        }
-    }
+    std::cout << "→ Pass 1: Visual Layers (Parallax)\n";
+    InstantiatePass1_VisualLayers(levelDef, instResult);
     
-    // 5. Load parallax layers from metadata
-    if (levelDef.metadata.customData.contains("parallaxLayers"))
-    {
-        Olympe::Tiled::ParallaxLayerManager& parallaxMgr = Olympe::Tiled::ParallaxLayerManager::Get();
-        parallaxMgr.Clear();
-        
-        const auto& parallaxLayersJson = levelDef.metadata.customData["parallaxLayers"];
-        if (parallaxLayersJson.is_array())
-        {
-            for (const auto& layerJson : parallaxLayersJson)
-            {
-                std::string imagePath = layerJson["imagePath"].get<std::string>();
-                SDL_Texture* texture = IMG_LoadTexture(GameEngine::renderer, imagePath.c_str());
-                
-                if (!texture)
-                {
-                    SYSTEM_LOG << "World::LoadLevelFromTiled - Warning: Failed to load parallax image: " 
-                               << imagePath << " - " << SDL_GetError() << "\n";
-                    continue;
-                }
-                
-                Olympe::Tiled::ParallaxLayer layer;
-                layer.name = layerJson["name"].get<std::string>();
-                layer.imagePath = imagePath;
-                layer.texture = texture;
-                layer.scrollFactorX = layerJson["scrollFactorX"].get<float>();
-                layer.scrollFactorY = layerJson.value("scrollFactorY", 0.0f);
-                layer.repeatX = layerJson.value("repeatX", false);
-                layer.repeatY = layerJson.value("repeatY", false);
-                layer.offsetX = layerJson.value("offsetX", 0.0f);
-                layer.offsetY = layerJson.value("offsetY", 0.0f);
-                layer.opacity = layerJson.value("opacity", 1.0f);
-                layer.zOrder = layerJson.value("zOrder", 0);
-                layer.visible = layerJson.value("visible", true);
-                layer.tintColor = layerJson.value("tintColor", 0xFFFFFFFF);
-
-                parallaxMgr.AddLayer(layer);
-                
-                SYSTEM_LOG << "World::LoadLevelFromTiled - Loaded parallax layer '" << layer.name 
-                           << "' (zOrder=" << layer.zOrder << ", parallaxX=" << layer.scrollFactorX << ")\n";
-            }
-            
-            SYSTEM_LOG << "World::LoadLevelFromTiled - Total parallax layers loaded: " 
-                       << parallaxMgr.GetLayerCount() << "\n";
-        }
-    }
+    std::cout << "→ Pass 2: Spatial Structure (Sectors, Collision)\n";
+    InstantiatePass2_SpatialStructure(levelDef, instResult);
+    
+    std::cout << "→ Pass 3: Static Objects (Items, Waypoints)\n";
+    InstantiatePass3_StaticObjects(levelDef, instResult);
+    
+    std::cout << "→ Pass 4: Dynamic Objects (Player, NPCs, Enemies)\n";
+    InstantiatePass4_DynamicObjects(levelDef, instResult);
+    
+    std::cout << "→ Pass 5: Relationships (Patrol Paths, AI Links)\n";
+    InstantiatePass5_Relationships(levelDef, instResult);
+    
+    instResult.success = true;
+    
+    // Final summary
+    std::cout << "\n";
+    std::cout << "╔══════════════════════════════════════════════════════════════════════╗\n";
+    std::cout << "║ LEVEL LOADING COMPLETE                                               ║\n";
+    std::cout << "╠══════════════════════════════════════════════════════════════════════╣\n";
+    std::cout << "║ Phase 1: ✓ Parse & Analysis                                          ║\n";
+    std::cout << "║ Phase 2: " << (phase2Result.success ? "✓" : "⊙") << " Prefab Discovery & Preload"
+              << std::string(37, ' ') << "║\n";
+    std::cout << "║ Phase 3: ✓ Instantiation Complete                                    ║\n";
+    std::cout << "║                                                                      ║\n";
+    std::cout << "║ Entities Created: " << instResult.GetTotalCreated()
+              << std::string(std::max(0, 48 - static_cast<int>(std::to_string(instResult.GetTotalCreated()).length())), ' ') << "║\n";
+    std::cout << "║ Entities Failed:  " << instResult.GetTotalFailed()
+              << std::string(std::max(0, 48 - static_cast<int>(std::to_string(instResult.GetTotalFailed()).length())), ' ') << "║\n";
+    std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n\n";
     
     SYSTEM_LOG << "World::LoadLevelFromTiled - Level loaded successfully\n";
     return true;
@@ -520,4 +408,371 @@ void World::UnloadCurrentLevel()
     
     SYSTEM_LOG << "World::UnloadCurrentLevel - Destroyed " << entitiesToDestroy.size() 
                << " entities\n";
+}
+
+//=============================================================================
+// Phase 2: Prefab Discovery & Preloading Implementation
+//=============================================================================
+
+World::Phase2Result World::ExecutePhase2(const Olympe::Tiled::LevelParseResult& phase1Result)
+{
+    std::cout << "\n";
+    std::cout << "╔══════════════════════════════════════════════════════════════════════╗\n";
+    std::cout << "║         PHASE 2: PREFAB DISCOVERY & PRELOADING                       ║\n";
+    std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n\n";
+    
+    Phase2Result result;
+    
+    // Step 1: Scan prefab directory
+    std::cout << "→ Scanning prefab directory...\n";
+    PrefabScanner scanner;
+    result.prefabRegistry = scanner.ScanPrefabDirectory("GameData/Prefab");
+    
+    // Step 2: Cross-check level requirements vs available prefabs
+    std::cout << "\n→ Cross-checking level requirements...\n";
+    for (const auto& type : phase1Result.objectCensus.uniqueTypes)
+    {
+        if (!result.prefabRegistry.HasPrefab(type))
+        {
+            result.prefabRegistry.missingPrefabs.insert(type);
+            std::cout << "  ✗ Missing prefab: " << type << "\n";
+        }
+        else
+        {
+            std::cout << "  ✓ Found prefab: " << type << "\n";
+        }
+    }
+    
+    // Step 3: Preload visual resources
+    std::cout << "\n→ Preloading visual resources...\n";
+    DataManager& dataManager = DataManager::Get();
+    
+    // Preload tilesets
+    std::vector<DataManager::TilesetInfo> tilesets;
+    for (const auto& tilesetRef : phase1Result.visualManifest.tilesets)
+    {
+        DataManager::TilesetInfo info;
+        info.sourceFile = tilesetRef.sourceFile;
+        info.imageFile = tilesetRef.imageFile;
+        info.individualImages = tilesetRef.individualImages;
+        info.isCollection = tilesetRef.isCollection;
+        tilesets.push_back(info);
+    }
+    result.preloadResult.tilesets = dataManager.PreloadTilesets(tilesets, true);
+    
+    // Preload parallax layers
+    std::vector<std::string> parallaxPaths(
+        phase1Result.visualManifest.parallaxLayers.begin(),
+        phase1Result.visualManifest.parallaxLayers.end()
+    );
+    result.preloadResult.textures = dataManager.PreloadTextures(parallaxPaths, ResourceCategory::Level, true);
+    
+    // Preload prefab resources
+    std::vector<std::string> spritePaths;
+    std::vector<std::string> audioPaths;
+    for (const auto& kv : result.prefabRegistry.prefabsByName)
+    {
+        const PrefabEntry& entry = kv.second;
+        for (const auto& spritePath : entry.spriteRefs)
+        {
+            spritePaths.push_back(spritePath);
+        }
+        for (const auto& audioPath : entry.audioRefs)
+        {
+            audioPaths.push_back(audioPath);
+        }
+    }
+    
+    if (!spritePaths.empty())
+    {
+        result.preloadResult.sprites = dataManager.PreloadSprites(spritePaths, ResourceCategory::GameEntity, true);
+    }
+    
+    if (!audioPaths.empty())
+    {
+        result.preloadResult.audio = dataManager.PreloadAudioFiles(audioPaths, true);
+    }
+    
+    result.preloadResult.success = result.preloadResult.IsComplete() || 
+                                   result.preloadResult.GetSuccessRate() > 0.5f;
+    result.success = true;
+    
+    // Summary
+    std::cout << "\n";
+    std::cout << "╔══════════════════════════════════════════════════════════════════════╗\n";
+    std::cout << "║ PHASE 2 COMPLETE                                                     ║\n";
+    std::cout << "╠══════════════════════════════════════════════════════════════════════╣\n";
+    std::cout << "║ Prefabs Found:    " << result.prefabRegistry.GetTotalPrefabCount()
+              << std::string(49 - std::to_string(result.prefabRegistry.GetTotalPrefabCount()).length(), ' ') << "║\n";
+    std::cout << "║ Resources Loaded: " << result.preloadResult.GetTotalLoaded()
+              << std::string(49 - std::to_string(result.preloadResult.GetTotalLoaded()).length(), ' ') << "║\n";
+    std::cout << "║ Resources Failed: " << result.preloadResult.GetTotalFailed()
+              << std::string(49 - std::to_string(result.preloadResult.GetTotalFailed()).length(), ' ') << "║\n";
+    std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n";
+    
+    return result;
+}
+
+//=============================================================================
+// Phase 3: Instantiation Pass Implementations
+//=============================================================================
+
+bool World::InstantiatePass1_VisualLayers(
+    const Olympe::Editor::LevelDefinition& levelDef,
+    InstantiationResult& result)
+{
+    // Load parallax layers from metadata
+    if (levelDef.metadata.customData.contains("parallaxLayers"))
+    {
+        Olympe::Tiled::ParallaxLayerManager& parallaxMgr = Olympe::Tiled::ParallaxLayerManager::Get();
+        parallaxMgr.Clear();
+        
+        const auto& parallaxLayersJson = levelDef.metadata.customData["parallaxLayers"];
+        if (parallaxLayersJson.is_array())
+        {
+            result.pass1_visualLayers.totalObjects = static_cast<int>(parallaxLayersJson.size());
+            
+            for (const auto& layerJson : parallaxLayersJson)
+            {
+                std::string imagePath = layerJson["imagePath"].get<std::string>();
+                SDL_Texture* texture = IMG_LoadTexture(GameEngine::renderer, imagePath.c_str());
+                
+                if (!texture)
+                {
+                    result.pass1_visualLayers.failed++;
+                    result.pass1_visualLayers.failedObjects.push_back(imagePath);
+                    std::cout << "  ✗ Failed to load parallax layer: " << imagePath << "\n";
+                    continue;
+                }
+                
+                Olympe::Tiled::ParallaxLayer layer;
+                layer.name = layerJson["name"].get<std::string>();
+                layer.imagePath = imagePath;
+                layer.texture = texture;
+                layer.scrollFactorX = layerJson["scrollFactorX"].get<float>();
+                layer.scrollFactorY = layerJson.value("scrollFactorY", 0.0f);
+                layer.repeatX = layerJson.value("repeatX", false);
+                layer.repeatY = layerJson.value("repeatY", false);
+                layer.offsetX = layerJson.value("offsetX", 0.0f);
+                layer.offsetY = layerJson.value("offsetY", 0.0f);
+                layer.opacity = layerJson.value("opacity", 1.0f);
+                layer.zOrder = layerJson.value("zOrder", 0);
+                layer.visible = layerJson.value("visible", true);
+                layer.tintColor = layerJson.value("tintColor", 0xFFFFFFFF);
+
+                parallaxMgr.AddLayer(layer);
+                result.pass1_visualLayers.successfullyCreated++;
+                std::cout << "  ✓ Loaded parallax layer: " << layer.name << "\n";
+            }
+        }
+    }
+    
+    return true;
+}
+
+bool World::InstantiatePass2_SpatialStructure(
+    const Olympe::Editor::LevelDefinition& levelDef,
+    InstantiationResult& result)
+{
+    // Create collision zones and sectors
+    PrefabFactory& factory = PrefabFactory::Get();
+    
+    for (const auto& entityInstance : levelDef.entities)
+    {
+        if (!entityInstance) continue;
+        
+        if (entityInstance->type == "collision")
+        {
+            result.pass2_spatialStructure.totalObjects++;
+            
+            EntityID eid = CreateEntity();
+            
+            AddComponent<Identity_data>(eid, entityInstance->name, "Collision", EntityType::Collision);
+            AddComponent<Position_data>(eid, Vector(
+                static_cast<float>(entityInstance->position.x),
+                static_cast<float>(entityInstance->position.y),
+                0.0f
+            ));
+            
+            float width = 64.0f;
+            float height = 64.0f;
+            if (!entityInstance->overrides.is_null())
+            {
+                if (entityInstance->overrides.contains("width"))
+                    width = entityInstance->overrides["width"].get<float>();
+                if (entityInstance->overrides.contains("height"))
+                    height = entityInstance->overrides["height"].get<float>();
+            }
+            
+            AddComponent<CollisionZone_data>(eid, SDL_FRect{
+                static_cast<float>(entityInstance->position.x),
+                static_cast<float>(entityInstance->position.y),
+                width, height
+            }, true);
+            
+            result.pass2_spatialStructure.successfullyCreated++;
+            result.entityRegistry[entityInstance->name] = eid;
+            std::cout << "  ✓ Created collision zone: " << entityInstance->name << "\n";
+        }
+    }
+    
+    return true;
+}
+
+bool World::InstantiatePass3_StaticObjects(
+    const Olympe::Editor::LevelDefinition& levelDef,
+    InstantiationResult& result)
+{
+    // Create items, waypoints, and other static objects
+    PrefabFactory& factory = PrefabFactory::Get();
+    
+    for (const auto& entityInstance : levelDef.entities)
+    {
+        if (!entityInstance) continue;
+        
+        // Skip collision (handled in Pass 2)
+        if (entityInstance->type == "collision") continue;
+        
+        // Check if it's a static object (items, waypoints, etc.)
+        if (entityInstance->type == "item" || entityInstance->type == "waypoint" || 
+            entityInstance->type == "trigger" || entityInstance->type == "spawn")
+        {
+            result.pass3_staticObjects.totalObjects++;
+            
+            std::string prefabName = entityInstance->prefabPath;
+            size_t lastSlash = prefabName.find_last_of("/\\");
+            if (lastSlash != std::string::npos)
+                prefabName = prefabName.substr(lastSlash + 1);
+            size_t lastDot = prefabName.find_last_of(".");
+            if (lastDot != std::string::npos)
+                prefabName = prefabName.substr(0, lastDot);
+            
+            EntityID entity = factory.CreateEntity(prefabName);
+            if (entity == INVALID_ENTITY_ID)
+            {
+                result.pass3_staticObjects.failed++;
+                result.pass3_staticObjects.failedObjects.push_back(prefabName);
+                std::cout << "  ✗ Failed to create static object: " << prefabName << "\n";
+                continue;
+            }
+            
+            if (HasComponent<Position_data>(entity))
+            {
+                Position_data& pos = GetComponent<Position_data>(entity);
+                pos.position.x = static_cast<float>(entityInstance->position.x);
+                pos.position.y = static_cast<float>(entityInstance->position.y);
+            }
+            
+            result.pass3_staticObjects.successfullyCreated++;
+            result.entityRegistry[entityInstance->name] = entity;
+            std::cout << "  ✓ Created static object: " << entityInstance->name << "\n";
+        }
+    }
+    
+    return true;
+}
+
+bool World::InstantiatePass4_DynamicObjects(
+    const Olympe::Editor::LevelDefinition& levelDef,
+    InstantiationResult& result)
+{
+    // Create player, NPCs, enemies, and other dynamic objects
+    PrefabFactory& factory = PrefabFactory::Get();
+    
+    for (const auto& entityInstance : levelDef.entities)
+    {
+        if (!entityInstance) continue;
+        
+        // Skip already handled types
+        if (entityInstance->type == "collision" || entityInstance->type == "item" || 
+            entityInstance->type == "waypoint" || entityInstance->type == "trigger" || 
+            entityInstance->type == "spawn")
+        {
+            continue;
+        }
+        
+        result.pass4_dynamicObjects.totalObjects++;
+        
+        std::string prefabName = entityInstance->prefabPath;
+        size_t lastSlash = prefabName.find_last_of("/\\");
+        if (lastSlash != std::string::npos)
+            prefabName = prefabName.substr(lastSlash + 1);
+        size_t lastDot = prefabName.find_last_of(".");
+        if (lastDot != std::string::npos)
+            prefabName = prefabName.substr(0, lastDot);
+        
+        EntityID entity = factory.CreateEntity(prefabName);
+        if (entity == INVALID_ENTITY_ID)
+        {
+            result.pass4_dynamicObjects.failed++;
+            result.pass4_dynamicObjects.failedObjects.push_back(prefabName);
+            std::cout << "  ✗ Failed to create dynamic object: " << prefabName << "\n";
+            continue;
+        }
+        
+        if (HasComponent<Position_data>(entity))
+        {
+            Position_data& pos = GetComponent<Position_data>(entity);
+            pos.position.x = static_cast<float>(entityInstance->position.x);
+            pos.position.y = static_cast<float>(entityInstance->position.y);
+        }
+        
+        result.pass4_dynamicObjects.successfullyCreated++;
+        result.entityRegistry[entityInstance->name] = entity;
+        std::cout << "  ✓ Created dynamic object: " << entityInstance->name << "\n";
+    }
+    
+    return true;
+}
+
+bool World::InstantiatePass5_Relationships(
+    const Olympe::Editor::LevelDefinition& levelDef,
+    InstantiationResult& result)
+{
+    // Assign patrol paths and other relationships
+    for (const auto& entityInstance : levelDef.entities)
+    {
+        if (!entityInstance) continue;
+        
+        // Look for entity in registry
+        auto it = result.entityRegistry.find(entityInstance->name);
+        if (it == result.entityRegistry.end()) continue;
+        
+        EntityID entity = it->second;
+        
+        // Handle patrol paths
+        if (!entityInstance->overrides.is_null() && entityInstance->overrides.contains("patrolPath"))
+        {
+            if (HasComponent<AIBlackboard_data>(entity))
+            {
+                result.pass5_relationships.totalObjects++;
+                
+                AIBlackboard_data& blackboard = GetComponent<AIBlackboard_data>(entity);
+                const auto& patrolPath = entityInstance->overrides["patrolPath"];
+                
+                if (patrolPath.is_array())
+                {
+                    blackboard.patrolPointCount = 0;
+                    for (size_t i = 0; i < patrolPath.size() && i < 8; ++i)
+                    {
+                        if (patrolPath[i].contains("x") && patrolPath[i].contains("y"))
+                        {
+                            blackboard.patrolPoints[blackboard.patrolPointCount].x = 
+                                static_cast<float>(patrolPath[i]["x"].get<float>());
+                            blackboard.patrolPoints[blackboard.patrolPointCount].y = 
+                                static_cast<float>(patrolPath[i]["y"].get<float>());
+                            blackboard.patrolPoints[blackboard.patrolPointCount].z = 0.0f;
+                            blackboard.patrolPointCount++;
+                        }
+                    }
+                    
+                    result.pass5_relationships.successfullyCreated++;
+                    std::cout << "  ✓ Assigned " << blackboard.patrolPointCount 
+                              << " patrol points to: " << entityInstance->name << "\n";
+                }
+            }
+        }
+    }
+    
+    return true;
 }
