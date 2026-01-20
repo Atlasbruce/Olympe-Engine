@@ -35,6 +35,7 @@ namespace Editor {
         std::string prefabPath;      // Path to the entity prefab blueprint
         std::string name;            // Display name
 		std::string type;            // Entity type (e.g., "Player", "Enemy", "Item", "Collision"...)
+		std::string spritePath = ""; // Optional sprite path for visual representation
         Vec2 position;               // World position
         json overrides;              // Component property overrides
 

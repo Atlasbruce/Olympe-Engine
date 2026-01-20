@@ -1,0 +1,54 @@
+{
+  "schema_version": 2,
+  "type": "EntityPrefab",
+  "blueprintType": "EntityPrefab",
+  "name": "Trigger",
+  "description": "Invisible trigger zone for events",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-01-08T10:00:00Z",
+    "lastModified": "2026-01-08T10:00:00Z",
+    "tags": ["Trigger", "Event", "Zone"]
+  },
+  "data": {
+    "prefabName": "Trigger",
+    "components": [
+      {
+        "type": "Identity_data",
+        "properties": {
+          "name": "Trigger_{id}",
+          "tag": "Trigger",
+          "entityType": "Trigger"
+        }
+      },
+      {
+        "type": "Position_data",
+        "properties": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        }
+      },
+	  {
+        "type": "VisualEdotor_data",
+        "properties": {
+          "spritePath": "Resources/Icons/trigger-50.png",
+          "width": 32,
+          "height": 32,
+          "layer": 0
+        }
+      },
+      {
+        "type": "BoundingBox_data",
+        "properties": {
+          "width": 64,
+          "height": 64,
+          "offsetX": 0,
+          "offsetY": 0
+        }
+      }
+    ]
+  }
+}

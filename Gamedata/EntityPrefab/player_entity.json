@@ -1,0 +1,91 @@
+{
+  "schema_version": 2,
+  "type": "EntityPrefab",
+  "blueprintType": "EntityPrefab",
+  "name": "PlayerEntity",
+  "description": "Playable character entity with full components",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-01-08T10:00:00Z",
+    "lastModified": "2026-01-08T10:00:00Z",
+    "tags": ["Player", "Character", "Controllable"]
+  },
+  "data": {
+    "prefabName": "PlayerEntity",
+    "components": [
+      {
+        "type": "Identity_data",
+        "properties": {
+          "name": "Player_{id}",
+          "tag": "Player",
+          "entityType": "Player"
+        }
+      },
+      {
+        "type": "Position_data",
+        "properties": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        }
+      },
+      {
+        "type": "VisualSprite_data",
+        "properties": {
+          "spritePath": "Resources/Sprites/player.png",
+          "width": 32,
+          "height": 32,
+          "layer": 0
+        }
+      },
+      {
+        "type": "BoundingBox_data",
+        "properties": {
+          "width": 28,
+          "height": 28,
+          "offsetX": 2,
+          "offsetY": 2
+        }
+      },
+      {
+        "type": "Movement_data",
+        "properties": {
+          "speed": 100.0,
+          "acceleration": 500.0
+        }
+      },
+      {
+        "type": "PhysicsBody_data",
+        "properties": {
+          "mass": 1.0,
+          "friction": 0.8,
+          "useGravity": false
+        }
+      },
+      {
+        "type": "Health_data",
+        "properties": {
+          "maxHealth": 100,
+          "currentHealth": 100,
+          "invulnerable": false
+        }
+      },
+      {
+        "type": "PlayerBinding_data",
+        "properties": {
+          "playerIndex": 0,
+          "controlScheme": "WASD"
+        }
+      },
+      {
+        "type": "Controller_data",
+        "properties": {
+          "enabled": true,
+          "inputEnabled": true
+        }
+      }
+    ]
+  }
+}

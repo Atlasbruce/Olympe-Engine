@@ -391,7 +391,24 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
             pos.position.y = static_cast<float>(entityInstance->position.y);
             pos.position.z = 0.0f;
         }
-        
+
+        // Set position if entity has Position_data component
+        if (HasComponent<VisualSprite_data>(entity))
+        {
+            VisualSprite_data& sprite = GetComponent<VisualSprite_data>(entity);
+            static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, entityInstance->spritePath);
+            if (!st_vspriteData_ptr)
+            {
+                SYSTEM_LOG << "World::LoadLevelFromTiled: Failed to load sprite data for " + prefabName + " \n";
+                continue;
+            }
+			sprite.sprite = st_vspriteData_ptr->sprite;
+            sprite.hotSpot = st_vspriteData_ptr->hotSpot;
+			sprite.srcRect = st_vspriteData_ptr->srcRect;
+			sprite.color = st_vspriteData_ptr->color;
+        }
+
+
         // Apply overrides from entityInstance->overrides (component property overrides)
         // This would require reflection or manual parsing based on override structure
         // For now, we'll handle special cases like patrol paths

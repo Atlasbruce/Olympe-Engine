@@ -44,10 +44,10 @@
                 2
             ],
             "scale": 0.33,
-            "selectedLayer": 8,
+            "selectedLayer": 7,
             "viewCenter": {
-                "x": -1206.060606060606,
-                "y": 40.909090909090764
+                "x": -1701.5151515151515,
+                "y": 762.121212121212
             }
         },
         "parallax-forext.tmx#parallax_forest": {
