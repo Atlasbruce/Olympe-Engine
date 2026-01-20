@@ -362,9 +362,9 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     std::cout << "║ Phase 3: ✓ Instantiation Complete                                    ║\n";
     std::cout << "║                                                                      ║\n";
     std::cout << "║ Entities Created: " << instResult.GetTotalCreated()
-              << std::string(48 - std::to_string(instResult.GetTotalCreated()).length(), ' ') << "║\n";
+              << std::string(std::max(0, 48 - static_cast<int>(std::to_string(instResult.GetTotalCreated()).length())), ' ') << "║\n";
     std::cout << "║ Entities Failed:  " << instResult.GetTotalFailed()
-              << std::string(48 - std::to_string(instResult.GetTotalFailed()).length(), ' ') << "║\n";
+              << std::string(std::max(0, 48 - static_cast<int>(std::to_string(instResult.GetTotalFailed()).length())), ' ') << "║\n";
     std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n\n";
     
     SYSTEM_LOG << "World::LoadLevelFromTiled - Level loaded successfully\n";

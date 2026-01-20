@@ -35,7 +35,7 @@ PrefabRegistry PrefabScanner::ScanPrefabDirectory(const std::string& rootPath)
     std::cout << "╔══════════════════════════════════════════════════════════════════════╗\n";
     std::cout << "║         PREFAB DIRECTORY SCAN                                        ║\n";
     std::cout << "╠══════════════════════════════════════════════════════════════════════╣\n";
-    std::cout << "║ Path: " << rootPath << std::string(63 - rootPath.length(), ' ') << "║\n";
+    std::cout << "║ Path: " << rootPath << std::string(std::max(0, 63 - static_cast<int>(rootPath.length())), ' ') << "║\n";
     std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n\n";
 
     PrefabRegistry registry;

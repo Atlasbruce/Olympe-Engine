@@ -40,7 +40,7 @@ namespace Tiled {
         std::cout << "╔══════════════════════════════════════════════════════════════════════╗\n";
         std::cout << "║         PHASE 1: PARSING & VISUAL ANALYSIS                           ║\n";
         std::cout << "╠══════════════════════════════════════════════════════════════════════╣\n";
-        std::cout << "║ File: " << levelPath << std::string(65 - levelPath.length(), ' ') << "║\n";
+        std::cout << "║ File: " << levelPath << std::string(std::max(0, 65 - static_cast<int>(levelPath.length())), ' ') << "║\n";
         std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n\n";
 
         // Step 1: Load the Tiled map using existing loader

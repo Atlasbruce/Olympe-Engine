@@ -741,9 +741,6 @@ std::string DataManager::FindResourceRecursive_Windows(const std::string& filena
     return "";
 }
 #else
-#include <dirent.h>
-#include <sys/stat.h>
-
 std::string DataManager::FindResourceRecursive_Unix(const std::string& filename, const std::string& rootDir) const
 {
     DIR* dir = opendir(rootDir.c_str());
