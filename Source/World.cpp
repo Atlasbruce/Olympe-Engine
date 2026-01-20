@@ -265,10 +265,13 @@ void World::NotifyBlueprintEditorEntityDestroyed(EntityID entity)
 
 bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
 {
+    // Unload current level
+    UnloadCurrentLevel();
+
     std::cout << "\n";
-    std::cout << "╔══════════════════════════════════════════════════════════════════════╗\n";
-    std::cout << "║         3-PHASE LEVEL LOADING SYSTEM                                 ║\n";
-    std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n";
+    std::cout << "/======================================================================\\n";
+    std::cout << "|         PHASE 1: PARSING & VISUAL ANALYSIS                           |\n";
+    std::cout << "\======================================================================/\n";
     
     // =======================================================================
     // PHASE 1: PARSING & VISUAL ANALYSIS
@@ -303,9 +306,9 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     // =======================================================================
     
     std::cout << "\n";
-    std::cout << "╔══════════════════════════════════════════════════════════════════════╗\n";
-    std::cout << "║         PHASE 3: INSTANTIATION (5-Pass Pipeline)                     ║\n";
-    std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n\n";
+    std::cout << "/======================================================================\\n";
+    std::cout << "|         PHASE 3: INSTANTIATION (5-Pass Pipeline)                     |\n";
+    std::cout << "\======================================================================/\n\n";
     
     // Load and convert using existing TiledToOlympe
     Olympe::Tiled::TiledMap tiledMap;
@@ -318,19 +321,16 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     }
     
     Olympe::Tiled::TiledToOlympe converter;
-    std::string mappingPath = "Config/tiled_prefab_mapping.json";
-    converter.LoadPrefabMapping(mappingPath);
+    //std::string mappingPath = "Config/tiled_prefab_mapping.json";
+    //converter.LoadPrefabMapping(mappingPath);
     
     Olympe::Editor::LevelDefinition levelDef;
     if (!converter.Convert(tiledMap, levelDef))
     {
         SYSTEM_LOG << "World::LoadLevelFromTiled - Failed to convert map\n";
         return false;
-    }
-    
-    // Unload current level
-    UnloadCurrentLevel();
-    
+    }/**/
+        
     // Execute 5-pass instantiation
     InstantiationResult instResult;
     
@@ -353,19 +353,19 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     
     // Final summary
     std::cout << "\n";
-    std::cout << "╔══════════════════════════════════════════════════════════════════════╗\n";
-    std::cout << "║ LEVEL LOADING COMPLETE                                               ║\n";
-    std::cout << "╠══════════════════════════════════════════════════════════════════════╣\n";
-    std::cout << "║ Phase 1: ✓ Parse & Analysis                                          ║\n";
-    std::cout << "║ Phase 2: " << (phase2Result.success ? "✓" : "⊙") << " Prefab Discovery & Preload"
-              << std::string(37, ' ') << "║\n";
-    std::cout << "║ Phase 3: ✓ Instantiation Complete                                    ║\n";
-    std::cout << "║                                                                      ║\n";
-    std::cout << "║ Entities Created: " << instResult.GetTotalCreated()
-              << std::string(std::max(0, 48 - static_cast<int>(std::to_string(instResult.GetTotalCreated()).length())), ' ') << "║\n";
-    std::cout << "║ Entities Failed:  " << instResult.GetTotalFailed()
-              << std::string(std::max(0, 48 - static_cast<int>(std::to_string(instResult.GetTotalFailed()).length())), ' ') << "║\n";
-    std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n\n";
+    std::cout << "/======================================================================\\n";
+    std::cout << "| LEVEL LOADING COMPLETE                                               |\n";
+    std::cout << "|======================================================================|\n";
+    std::cout << "| Phase 1: ✓ Parse & Analysis                                          |\n";
+    std::cout << "| Phase 2: " << (phase2Result.success ? "✓" : "⊙") << " Prefab Discovery & Preload"
+              << std::string(37, ' ') << "|\n";
+    std::cout << "| Phase 3: ✓ Instantiation Complete                                    |\n";
+    std::cout << "|                                                                      |\n";
+    std::cout << "| Entities Created: " << instResult.GetTotalCreated()
+              << std::string(std::max(0, 48 - static_cast<int>(std::to_string(instResult.GetTotalCreated()).length())), ' ') << "|\n";
+    std::cout << "| Entities Failed:  " << instResult.GetTotalFailed()
+              << std::string(std::max(0, 48 - static_cast<int>(std::to_string(instResult.GetTotalFailed()).length())), ' ') << "|\n";
+    std::cout << "\======================================================================/\n\n";
     
     SYSTEM_LOG << "World::LoadLevelFromTiled - Level loaded successfully\n";
     return true;
@@ -417,16 +417,16 @@ void World::UnloadCurrentLevel()
 World::Phase2Result World::ExecutePhase2(const Olympe::Tiled::LevelParseResult& phase1Result)
 {
     std::cout << "\n";
-    std::cout << "╔══════════════════════════════════════════════════════════════════════╗\n";
-    std::cout << "║         PHASE 2: PREFAB DISCOVERY & PRELOADING                       ║\n";
-    std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n\n";
+    std::cout << "/======================================================================\\n";
+    std::cout << "|         PHASE 2: PREFAB DISCOVERY & PRELOADING                       |\n";
+    std::cout << "\======================================================================/\n\n";
     
     Phase2Result result;
     
     // Step 1: Scan prefab directory
     std::cout << "→ Scanning prefab directory...\n";
     PrefabScanner scanner;
-    result.prefabRegistry = scanner.ScanPrefabDirectory("GameData/Prefab");
+    result.prefabRegistry = scanner.ScanPrefabDirectory("GameData\\EntityPrefab");
     
     // Step 2: Cross-check level requirements vs available prefabs
     std::cout << "\n→ Cross-checking level requirements...\n";
@@ -494,21 +494,21 @@ World::Phase2Result World::ExecutePhase2(const Olympe::Tiled::LevelParseResult& 
     }
     
     result.preloadResult.success = result.preloadResult.IsComplete() || 
-                                   result.preloadResult.GetSuccessRate() > 0.5f;
+                                   result.preloadResult.GetTotalLoaded() > 0.5f;
     result.success = true;
     
     // Summary
     std::cout << "\n";
-    std::cout << "╔══════════════════════════════════════════════════════════════════════╗\n";
-    std::cout << "║ PHASE 2 COMPLETE                                                     ║\n";
-    std::cout << "╠══════════════════════════════════════════════════════════════════════╣\n";
-    std::cout << "║ Prefabs Found:    " << result.prefabRegistry.GetTotalPrefabCount()
-              << std::string(49 - std::to_string(result.prefabRegistry.GetTotalPrefabCount()).length(), ' ') << "║\n";
-    std::cout << "║ Resources Loaded: " << result.preloadResult.GetTotalLoaded()
-              << std::string(49 - std::to_string(result.preloadResult.GetTotalLoaded()).length(), ' ') << "║\n";
-    std::cout << "║ Resources Failed: " << result.preloadResult.GetTotalFailed()
-              << std::string(49 - std::to_string(result.preloadResult.GetTotalFailed()).length(), ' ') << "║\n";
-    std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n";
+    std::cout << "/======================================================================\\n";
+    std::cout << "| PHASE 2 COMPLETE                                                     |\n";
+    std::cout << "|======================================================================|\n";
+    std::cout << "| Prefabs Found:    " << result.prefabRegistry.GetTotalPrefabCount()
+              << std::string(49 - std::to_string(result.prefabRegistry.GetTotalPrefabCount()).length(), ' ') << "|\n";
+    std::cout << "| Resources Loaded: " << result.preloadResult.GetTotalLoaded()
+              << std::string(49 - std::to_string(result.preloadResult.GetTotalLoaded()).length(), ' ') << "|\n";
+    std::cout << "| Resources Failed: " << result.preloadResult.GetTotalFailed()
+              << std::string(49 - std::to_string(result.preloadResult.GetTotalFailed()).length(), ' ') << "|\n";
+    std::cout << "\======================================================================/\n";
     
     return result;
 }
@@ -535,6 +535,15 @@ bool World::InstantiatePass1_VisualLayers(
             for (const auto& layerJson : parallaxLayersJson)
             {
                 std::string imagePath = layerJson["imagePath"].get<std::string>();
+                std::string filename;
+
+				// extract only filename if full path is given
+				size_t lastSlash = imagePath.find_last_of("/\\");
+				if (lastSlash != std::string::npos)
+                    filename = imagePath.substr(lastSlash + 1);
+				//recursive search file from Gamedata folder
+				imagePath = DataManager::Get().FindResourceRecursive(filename);
+
                 SDL_Texture* texture = IMG_LoadTexture(GameEngine::renderer, imagePath.c_str());
                 
                 if (!texture)

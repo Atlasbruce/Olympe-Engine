@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="isometric" renderorder="left-up" width="20" height="20" tilewidth="58" tileheight="27" infinite="1" nextlayerid="11" nextobjectid="23">
+<map version="1.10" tiledversion="1.11.2" orientation="isometric" renderorder="left-up" width="20" height="20" tilewidth="58" tileheight="27" infinite="1" nextlayerid="11" nextobjectid="29">
  <editorsettings>
   <export target="map_forest.tmj" format="json"/>
  </editorsettings>
@@ -7,7 +7,7 @@
  <tileset firstgid="109" source="Tiles iso cube.tsx"/>
  <tileset firstgid="127" source="Trees.tsx"/>
  <imagelayer id="9" name="layer_skywater" class="layer" parallaxx="0.8" parallaxy="0.8" repeatx="1" repeaty="1">
-  <image source="sky.jpg" width="1200" height="675"/>
+  <image source="../Resources/sky.jpg" width="1200" height="675"/>
  </imagelayer>
  <layer id="2" name="graphicmap_ground" width="20" height="20">
   <data encoding="base64">
@@ -38,7 +38,7 @@
   </data>
  </layer>
  <objectgroup id="8" name="Sectors">
-  <object id="17" name="Sector_1" type="sector" x="-376.704" y="822.511">
+  <object id="17" name="Sector_1" type="sector" x="-357.544" y="868.078" visible="0">
    <polygon points="0,0 -16.8986,-1313.97 1449.89,-1266.32 1458.48,36.284"/>
   </object>
  </objectgroup>
@@ -68,23 +68,25 @@
   </data>
  </layer>
  <objectgroup id="6" name="leveldesignmap_ground">
-  <object id="1" name="guard_4" type="npc" x="446.954" y="93.8945">
-   <point/>
+  <object id="28" template="guard_object.tx" name="guard_4" x="449.784" y="32.2155">
+   <properties>
+    <property name="patrol way" type="object" value="7"/>
+   </properties>
   </object>
-  <object id="2" name="guard_3" type="npc" x="94.4253" y="42.908">
-   <point/>
+  <object id="26" template="guard_object.tx" name="guard_3" x="67.8362" y="27.1638" visible="1">
+   <properties>
+    <property name="patrol way" type="object" value="8"/>
+   </properties>
   </object>
-  <object id="3" name="guard_2" type="npc" x="95.3908" y="501.943">
+  <object id="3" template="guard_object.tx" name="guard_2" type="npc" x="95.3908" y="501.943">
    <properties>
     <property name="patrol way" type="object" value="9"/>
    </properties>
-   <point/>
   </object>
-  <object id="4" name="guard_1" type="npc" x="472.391" y="500.943">
-   <point/>
-  </object>
-  <object id="6" name="way_1" type="way" x="474.908" y="490.425">
-   <polyline points="0,0 -1.6092,-153.057 -123.299,-239.368 -5.87356,-263.46 -7.93103,-456.069"/>
+  <object id="27" template="guard_object.tx" name="guard_1" x="466.138" y="496.862">
+   <properties>
+    <property name="patrol way" type="object" value="6"/>
+   </properties>
   </object>
   <object id="7" name="way_4" type="way" x="450.069" y="37.931">
    <polyline points="0,0 -170.943,1.6092 -217.678,115.011 -275.126,0.45977 -387.701,-1.63218"/>
@@ -95,22 +97,25 @@
   <object id="9" name="way_2" type="way" x="87.931" y="500.069">
    <polyline points="0,0 119.046,-5.71264 160.816,-114.149 196.023,-1.35632 359.023,-0.356322"/>
   </object>
-  <object id="10" name="treasure_crest" type="collectible" x="250.54" y="256.126">
-   <point/>
+  <object id="6" name="way_1" type="way" x="474.908" y="490.425">
+   <polyline points="0,0 -1.6092,-153.057 -123.299,-239.368 -5.87356,-263.46 -7.93103,-456.069"/>
   </object>
-  <object id="13" name="key_1" type="key" x="954.713" y="631.954">
+  <object id="10" name="treasure_crest" type="collectible" x="250.54" y="256.126">
    <point/>
   </object>
   <object id="14" name="key_2" type="key" x="282.276" y="793.724">
    <point/>
   </object>
+  <object id="13" name="key_1" type="key" x="954.713" y="631.954">
+   <point/>
+  </object>
   <object id="15" name="portal" type="exit" x="90.8276" y="-354.828">
    <point/>
   </object>
+  <object id="21" template="trigger_object.tx" type="trigger" x="170.644" y="-207.977"/>
   <object id="16" name="player" type="player" x="-260.598" y="227.264">
    <point/>
   </object>
-  <object id="21" template="trigger_object.tx" type="trigger" x="170.644" y="-207.977"/>
  </objectgroup>
  <objectgroup id="10" name="sounddesign">
   <object id="18" template="sound_object_template.tx" type="ambiant" x="-69.6322" y="228.299"/>

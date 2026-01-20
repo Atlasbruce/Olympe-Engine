@@ -279,6 +279,12 @@
     <ClCompile Include="Source\TiledLevelLoader\third_party\miniz\miniz.c">
       <Filter>Fichiers d%27en-t�te\Miniz</Filter>
     </ClCompile>
+    <ClCompile Include="Source\TiledLevelLoader\src\LevelParser.cpp">
+      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PrefabScanner.cpp">
+      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -559,6 +565,12 @@
     </ClInclude>
     <ClInclude Include="Source\TiledLevelLoader\third_party\tinyxml2\tinyxml2.h">
       <Filter>Fichiers d%27en-t�te\TinyXML2</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TiledLevelLoader\include\LevelParser.h">
+      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PrefabScanner.h">
+      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

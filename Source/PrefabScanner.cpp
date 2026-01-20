@@ -32,14 +32,16 @@ PrefabScanner::~PrefabScanner()
 PrefabRegistry PrefabScanner::ScanPrefabDirectory(const std::string& rootPath)
 {
     std::cout << "\n";
-    std::cout << "╔══════════════════════════════════════════════════════════════════════╗\n";
-    std::cout << "║         PREFAB DIRECTORY SCAN                                        ║\n";
-    std::cout << "╠══════════════════════════════════════════════════════════════════════╣\n";
-    std::cout << "║ Path: " << rootPath << std::string(std::max(0, 63 - static_cast<int>(rootPath.length())), ' ') << "║\n";
-    std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n\n";
+    std::cout << "/======================================================================\\n";
+    std::cout << "|         PREFAB DIRECTORY SCAN                                        |\n";
+    std::cout << "|======================================================================|\n";
+    std::cout << "| Path: " << rootPath << std::string(max(0, 63 - static_cast<int>(rootPath.length())), ' ') << "|\n";
+    std::cout << "\======================================================================/\n\n";
 
     PrefabRegistry registry;
     std::vector<std::string> prefabFiles;
+
+	//prefabFiles.push_back("*.json"); // Test entry to ensure at least one file is processed
     
     // Scan directory recursively
     std::cout << "→ Scanning for .json files...\n";
@@ -77,16 +79,16 @@ PrefabRegistry PrefabScanner::ScanPrefabDirectory(const std::string& rootPath)
     }
     
     std::cout << "\n";
-    std::cout << "╔══════════════════════════════════════════════════════════════════════╗\n";
-    std::cout << "║ SCAN COMPLETE                                                        ║\n";
-    std::cout << "╠══════════════════════════════════════════════════════════════════════╣\n";
-    std::cout << "║ Valid Prefabs:   " << validCount
-              << std::string(51 - std::to_string(validCount).length(), ' ') << "║\n";
-    std::cout << "║ Invalid Prefabs: " << invalidCount
-              << std::string(51 - std::to_string(invalidCount).length(), ' ') << "║\n";
-    std::cout << "║ Entity Types:    " << registry.GetTypeCount()
-              << std::string(51 - std::to_string(registry.GetTypeCount()).length(), ' ') << "║\n";
-    std::cout << "╚══════════════════════════════════════════════════════════════════════╝\n\n";
+    std::cout << "/======================================================================\\n";
+    std::cout << "| SCAN COMPLETE                                                        |\n";
+    std::cout << "|======================================================================|\n";
+    std::cout << "| Valid Prefabs:   " << validCount
+              << std::string(51 - std::to_string(validCount).length(), ' ') << "|\n";
+    std::cout << "| Invalid Prefabs: " << invalidCount
+              << std::string(51 - std::to_string(invalidCount).length(), ' ') << "|\n";
+    std::cout << "| Entity Types:    " << registry.GetTypeCount()
+              << std::string(51 - std::to_string(registry.GetTypeCount()).length(), ' ') << "|\n";
+    std::cout << "\======================================================================/\n\n";
     
     return registry;
 }

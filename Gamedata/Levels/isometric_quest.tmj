@@ -5,7 +5,7 @@
         {
          "class":"layer",
          "id":9,
-         "image":"sky.jpg",
+         "image":"..\/Resources\/sky.jpg",
          "imageheight":675,
          "imagewidth":1200,
          "name":"layer_skywater",
@@ -121,8 +121,8 @@
                  "type":"sector",
                  "visible":false,
                  "width":0,
-                 "x":-357.54412539185,
-                 "y":868.078398119122
+                 "x":-357.544,
+                 "y":868.078
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -201,16 +201,17 @@
          "name":"leveldesignmap_ground",
          "objects":[
                 {
-                 "height":0,
-                 "id":1,
+                 "id":28,
                  "name":"guard_4",
-                 "point":true,
-                 "rotation":0,
-                 "type":"npc",
-                 "visible":true,
-                 "width":0,
-                 "x":446.954,
-                 "y":93.8945
+                 "properties":[
+                        {
+                         "name":"patrol way",
+                         "type":"object",
+                         "value":7
+                        }],
+                 "template":"guard_object.tx",
+                 "x":449.784,
+                 "y":32.2155
                 }, 
                 {
                  "id":26,
@@ -222,8 +223,9 @@
                          "value":8
                         }],
                  "template":"guard_object.tx",
-                 "x":73.1034482758621,
-                 "y":32.8965517241378
+                 "visible":true,
+                 "x":67.8362,
+                 "y":27.1638
                 }, 
                 {
                  "id":3,
@@ -240,16 +242,17 @@
                  "y":501.943
                 }, 
                 {
-                 "height":0,
-                 "id":4,
+                 "id":27,
                  "name":"guard_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"npc",
-                 "visible":true,
-                 "width":0,
-                 "x":472.391,
-                 "y":500.943
+                 "properties":[
+                        {
+                         "name":"patrol way",
+                         "type":"object",
+                         "value":6
+                        }],
+                 "template":"guard_object.tx",
+                 "x":466.138,
+                 "y":496.862
                 }, 
                 {
                  "height":0,
@@ -431,8 +434,8 @@
                  "id":21,
                  "template":"trigger_object.tx",
                  "type":"trigger",
-                 "x":170.64367816092,
-                 "y":-207.977011494253
+                 "x":170.644,
+                 "y":-207.977
                 }, 
                 {
                  "height":0,
@@ -478,7 +481,7 @@
          "y":0
         }],
  "nextlayerid":11,
- "nextobjectid":27,
+ "nextobjectid":29,
  "orientation":"isometric",
  "renderorder":"left-up",
  "tiledversion":"1.11.2",

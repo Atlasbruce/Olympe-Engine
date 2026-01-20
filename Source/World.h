@@ -27,9 +27,10 @@ World purpose: Manage the overall game world, including object management, level
 #include "ECS_Components.h"
 #include "ECS_Systems.h"
 #include "ECS_Register.h" // Include the implementation of ComponentPool
+#include "PrefabScanner.h"
 
 // Forward declarations for 3-Phase Level Loading
-struct PrefabRegistry;
+//struct PrefabRegistry;
 namespace Olympe { 
     namespace Tiled { struct LevelParseResult; }
     namespace Editor { struct LevelDefinition; }

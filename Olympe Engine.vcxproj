@@ -58,6 +58,7 @@
     <ClCompile Include="Source\GameState.cpp" />
     <ClCompile Include="Source\OlympeEngine.cpp" />
     <ClCompile Include="Source\PanelManager.cpp" />
+    <ClCompile Include="Source\PrefabScanner.cpp" />
     <ClCompile Include="Source\system\CameraEventHandler.cpp" />
     <ClCompile Include="Source\system\GameMenu.cpp" />
     <ClCompile Include="Source\system\JoystickManager.cpp" />
@@ -75,6 +76,7 @@
     <ClCompile Include="Source\third_party\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Source\third_party\imnodes\imnodes.cpp" />
     <ClCompile Include="Source\TiledLevelLoader\src\IsometricProjection.cpp" />
+    <ClCompile Include="Source\TiledLevelLoader\src\LevelParser.cpp" />
     <ClCompile Include="Source\TiledLevelLoader\src\ParallaxLayerManager.cpp" />
     <ClCompile Include="Source\TiledLevelLoader\src\TiledDecoder.cpp" />
     <ClCompile Include="Source\TiledLevelLoader\src\TiledLevelLoader.cpp" />
@@ -139,6 +141,7 @@
     <ClInclude Include="Source\OptionsManager.h" />
     <ClInclude Include="Source\PanelManager.h" />
     <ClInclude Include="source\prefabfactory.h" />
+    <ClInclude Include="Source\PrefabScanner.h" />
     <ClInclude Include="Source\Quest.h" />
     <ClInclude Include="Source\QuestManager.h" />
     <ClInclude Include="source\resource.h" />
@@ -167,6 +170,7 @@
     <ClInclude Include="Source\third_party\imnodes\imnodes_internal.h" />
     <ClInclude Include="Source\third_party\nlohmann\json.hpp" />
     <ClInclude Include="Source\TiledLevelLoader\include\IsometricProjection.h" />
+    <ClInclude Include="Source\TiledLevelLoader\include\LevelParser.h" />
     <ClInclude Include="Source\TiledLevelLoader\include\ParallaxLayerManager.h" />
     <ClInclude Include="Source\TiledLevelLoader\include\TiledDecoder.h" />
     <ClInclude Include="Source\TiledLevelLoader\include\TiledJsonHelper.h" />

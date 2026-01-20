@@ -29,6 +29,7 @@ Notes:
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <map>
 
 using Sprite = SDL_Texture;
 
@@ -138,7 +139,7 @@ public:
         int completelyFailed;
         std::vector<std::string> failedPaths;
         std::map<std::string, std::string> fallbackPaths;  // original -> actual
-        
+
         PreloadStats() 
             : totalRequested(0), successfullyLoaded(0), 
               failedWithFallback(0), completelyFailed(0) {}
