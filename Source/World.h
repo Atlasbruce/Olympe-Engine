@@ -28,6 +28,13 @@ World purpose: Manage the overall game world, including object management, level
 #include "ECS_Systems.h"
 #include "ECS_Register.h" // Include the implementation of ComponentPool
 
+// Forward declarations for 3-Phase Level Loading
+struct PrefabRegistry;
+namespace Olympe { 
+    namespace Tiled { struct LevelParseResult; }
+    namespace Editor { struct LevelDefinition; }
+}
+
 class World 
 {
 public:
@@ -96,6 +103,69 @@ public:
     // Tiled MapEditor integration
     bool LoadLevelFromTiled(const std::string& tiledMapPath);
     void UnloadCurrentLevel();
+    
+    // ========================================================================
+    // PHASE 2 & 3: Advanced Level Loading Structures
+    // ========================================================================
+    
+    struct Phase2Result
+    {
+        PrefabRegistry prefabRegistry;
+        DataManager::LevelPreloadResult preloadResult;
+        bool success;
+        
+        Phase2Result() : success(false) {}
+    };
+    
+    struct InstantiationResult
+    {
+        struct PassStats
+        {
+            int totalObjects;
+            int successfullyCreated;
+            int failed;
+            std::vector<std::string> failedObjects;
+            
+            PassStats() : totalObjects(0), successfullyCreated(0), failed(0) {}
+            
+            bool IsSuccess() const { return failed == 0; }
+        };
+        
+        bool success;
+        PassStats pass1_visualLayers;
+        PassStats pass2_spatialStructure;
+        PassStats pass3_staticObjects;
+        PassStats pass4_dynamicObjects;
+        PassStats pass5_relationships;
+        
+        std::map<std::string, EntityID> entityRegistry;      // name -> entity ID
+        std::map<int, EntityID> objectIdToEntity;            // Tiled object ID -> entity ID
+        std::vector<EntityID> sectors;
+        
+        InstantiationResult() : success(false) {}
+        
+        int GetTotalCreated() const
+        {
+            return pass1_visualLayers.successfullyCreated + 
+                   pass2_spatialStructure.successfullyCreated +
+                   pass3_staticObjects.successfullyCreated +
+                   pass4_dynamicObjects.successfullyCreated +
+                   pass5_relationships.successfullyCreated;
+        }
+        
+        int GetTotalFailed() const
+        {
+            return pass1_visualLayers.failed + pass2_spatialStructure.failed +
+                   pass3_staticObjects.failed + pass4_dynamicObjects.failed +
+                   pass5_relationships.failed;
+        }
+        
+        bool IsComplete() const
+        {
+            return success && GetTotalFailed() == 0;
+        }
+    };
+    
     // -------------------------------------------------------------
     // ECS Entity Management
     EntityID CreateEntity();
@@ -218,6 +288,34 @@ private:
     // Blueprint Editor notification hooks
     void NotifyBlueprintEditorEntityCreated(EntityID entity);
     void NotifyBlueprintEditorEntityDestroyed(EntityID entity);
+
+    // ========================================================================
+    // PHASE 2 & 3: Helper Methods for 3-Phase Level Loading
+    // ========================================================================
+    
+    // Phase 2: Prefab discovery and resource preloading
+    Phase2Result ExecutePhase2(const Olympe::Tiled::LevelParseResult& phase1Result);
+    
+    // Phase 3: Instantiation passes (using existing TiledToOlympe for now)
+    bool InstantiatePass1_VisualLayers(
+        const Olympe::Editor::LevelDefinition& levelDef,
+        InstantiationResult& result);
+    
+    bool InstantiatePass2_SpatialStructure(
+        const Olympe::Editor::LevelDefinition& levelDef,
+        InstantiationResult& result);
+    
+    bool InstantiatePass3_StaticObjects(
+        const Olympe::Editor::LevelDefinition& levelDef,
+        InstantiationResult& result);
+    
+    bool InstantiatePass4_DynamicObjects(
+        const Olympe::Editor::LevelDefinition& levelDef,
+        InstantiationResult& result);
+    
+    bool InstantiatePass5_Relationships(
+        const Olympe::Editor::LevelDefinition& levelDef,
+        InstantiationResult& result);
 
 private:
 

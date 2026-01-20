@@ -448,3 +448,344 @@ bool DataManager::PreloadSystemResources(const std::string& configFilePath)
 
     return true;
 }
+
+//=============================================================================
+// PHASE 2: Batch Preloading Implementation
+//=============================================================================
+
+DataManager::PreloadStats DataManager::PreloadTextures(
+    const std::vector<std::string>& paths,
+    ResourceCategory category,
+    bool enableFallbackScan)
+{
+    PreloadStats stats;
+    stats.totalRequested = static_cast<int>(paths.size());
+    
+    for (const auto& path : paths)
+    {
+        if (path.empty()) continue;
+        
+        // Generate ID from path
+        std::string id = path;
+        size_t lastSlash = id.find_last_of("/\\");
+        if (lastSlash != std::string::npos)
+        {
+            id = id.substr(lastSlash + 1);
+        }
+        
+        // Try direct load
+        if (PreloadTexture(id, path, category))
+        {
+            stats.successfullyLoaded++;
+            SYSTEM_LOG << "  ✓ Loaded texture: " << path << "\n";
+        }
+        else if (enableFallbackScan && m_enableFallbackScan)
+        {
+            // Try fallback search
+            std::string filename = id;
+            std::string foundPath = FindResourceRecursive(filename);
+            
+            if (!foundPath.empty() && PreloadTexture(id, foundPath, category))
+            {
+                stats.failedWithFallback++;
+                stats.fallbackPaths[path] = foundPath;
+                SYSTEM_LOG << "  ✓ Loaded texture (fallback): " << path << " -> " << foundPath << "\n";
+            }
+            else
+            {
+                stats.completelyFailed++;
+                stats.failedPaths.push_back(path);
+                SYSTEM_LOG << "  ✗ Failed to load texture: " << path << "\n";
+            }
+        }
+        else
+        {
+            stats.completelyFailed++;
+            stats.failedPaths.push_back(path);
+            SYSTEM_LOG << "  ✗ Failed to load texture: " << path << "\n";
+        }
+    }
+    
+    return stats;
+}
+
+DataManager::PreloadStats DataManager::PreloadSprites(
+    const std::vector<std::string>& paths,
+    ResourceCategory category,
+    bool enableFallbackScan)
+{
+    PreloadStats stats;
+    stats.totalRequested = static_cast<int>(paths.size());
+    
+    for (const auto& path : paths)
+    {
+        if (path.empty()) continue;
+        
+        // Generate ID from path
+        std::string id = path;
+        size_t lastSlash = id.find_last_of("/\\");
+        if (lastSlash != std::string::npos)
+        {
+            id = id.substr(lastSlash + 1);
+        }
+        
+        // Try direct load
+        if (PreloadSprite(id, path, category))
+        {
+            stats.successfullyLoaded++;
+            SYSTEM_LOG << "  ✓ Loaded sprite: " << path << "\n";
+        }
+        else if (enableFallbackScan && m_enableFallbackScan)
+        {
+            // Try fallback search
+            std::string filename = id;
+            std::string foundPath = FindResourceRecursive(filename);
+            
+            if (!foundPath.empty() && PreloadSprite(id, foundPath, category))
+            {
+                stats.failedWithFallback++;
+                stats.fallbackPaths[path] = foundPath;
+                SYSTEM_LOG << "  ✓ Loaded sprite (fallback): " << path << " -> " << foundPath << "\n";
+            }
+            else
+            {
+                stats.completelyFailed++;
+                stats.failedPaths.push_back(path);
+                SYSTEM_LOG << "  ✗ Failed to load sprite: " << path << "\n";
+            }
+        }
+        else
+        {
+            stats.completelyFailed++;
+            stats.failedPaths.push_back(path);
+            SYSTEM_LOG << "  ✗ Failed to load sprite: " << path << "\n";
+        }
+    }
+    
+    return stats;
+}
+
+DataManager::PreloadStats DataManager::PreloadAudioFiles(
+    const std::vector<std::string>& paths,
+    bool enableFallbackScan)
+{
+    PreloadStats stats;
+    stats.totalRequested = static_cast<int>(paths.size());
+    
+    // Audio loading not implemented yet - just log
+    for (const auto& path : paths)
+    {
+        if (path.empty()) continue;
+        SYSTEM_LOG << "  ⊙ Audio loading not yet implemented: " << path << "\n";
+        stats.completelyFailed++;
+        stats.failedPaths.push_back(path);
+    }
+    
+    return stats;
+}
+
+DataManager::PreloadStats DataManager::PreloadTilesets(
+    const std::vector<TilesetInfo>& tilesets,
+    bool enableFallbackScan)
+{
+    PreloadStats stats;
+    stats.totalRequested = static_cast<int>(tilesets.size());
+    
+    for (const auto& tileset : tilesets)
+    {
+        bool success = true;
+        
+        // Load main tileset image (if not a collection)
+        if (!tileset.isCollection && !tileset.imageFile.empty())
+        {
+            std::string id = tileset.imageFile;
+            size_t lastSlash = id.find_last_of("/\\");
+            if (lastSlash != std::string::npos)
+            {
+                id = id.substr(lastSlash + 1);
+            }
+            
+            if (PreloadTexture(id, tileset.imageFile, ResourceCategory::Level))
+            {
+                SYSTEM_LOG << "  ✓ Loaded tileset image: " << tileset.imageFile << "\n";
+            }
+            else if (enableFallbackScan && m_enableFallbackScan)
+            {
+                std::string foundPath = FindResourceRecursive(id);
+                if (!foundPath.empty() && PreloadTexture(id, foundPath, ResourceCategory::Level))
+                {
+                    stats.fallbackPaths[tileset.imageFile] = foundPath;
+                    SYSTEM_LOG << "  ✓ Loaded tileset image (fallback): " << foundPath << "\n";
+                }
+                else
+                {
+                    success = false;
+                    SYSTEM_LOG << "  ✗ Failed to load tileset image: " << tileset.imageFile << "\n";
+                }
+            }
+            else
+            {
+                success = false;
+            }
+        }
+        
+        // Load individual tile images (for collection tilesets)
+        for (const auto& imagePath : tileset.individualImages)
+        {
+            std::string id = imagePath;
+            size_t lastSlash = id.find_last_of("/\\");
+            if (lastSlash != std::string::npos)
+            {
+                id = id.substr(lastSlash + 1);
+            }
+            
+            if (PreloadTexture(id, imagePath, ResourceCategory::Level))
+            {
+                SYSTEM_LOG << "  ✓ Loaded tile image: " << imagePath << "\n";
+            }
+            else if (enableFallbackScan && m_enableFallbackScan)
+            {
+                std::string foundPath = FindResourceRecursive(id);
+                if (!foundPath.empty() && PreloadTexture(id, foundPath, ResourceCategory::Level))
+                {
+                    stats.fallbackPaths[imagePath] = foundPath;
+                    SYSTEM_LOG << "  ✓ Loaded tile image (fallback): " << foundPath << "\n";
+                }
+                else
+                {
+                    success = false;
+                    SYSTEM_LOG << "  ✗ Failed to load tile image: " << imagePath << "\n";
+                }
+            }
+            else
+            {
+                success = false;
+            }
+        }
+        
+        if (success)
+        {
+            stats.successfullyLoaded++;
+        }
+        else if (!stats.fallbackPaths.empty())
+        {
+            stats.failedWithFallback++;
+        }
+        else
+        {
+            stats.completelyFailed++;
+            if (!tileset.sourceFile.empty())
+            {
+                stats.failedPaths.push_back(tileset.sourceFile);
+            }
+        }
+    }
+    
+    return stats;
+}
+
+std::string DataManager::FindResourceRecursive(const std::string& filename, const std::string& rootDir) const
+{
+#ifdef _WIN32
+    return FindResourceRecursive_Windows(filename, rootDir);
+#else
+    return FindResourceRecursive_Unix(filename, rootDir);
+#endif
+}
+
+#ifdef _WIN32
+std::string DataManager::FindResourceRecursive_Windows(const std::string& filename, const std::string& rootDir) const
+{
+    WIN32_FIND_DATAA findData;
+    std::string searchPath = rootDir + "\\*";
+    HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
+    
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        return "";
+    }
+    
+    do
+    {
+        std::string name = findData.cFileName;
+        
+        if (name == "." || name == "..")
+            continue;
+        
+        std::string fullPath = rootDir + "\\" + name;
+        
+        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            // Recursively search subdirectory
+            std::string found = FindResourceRecursive_Windows(filename, fullPath);
+            if (!found.empty())
+            {
+                FindClose(hFind);
+                return found;
+            }
+        }
+        else
+        {
+            // Check if filename matches
+            if (name == filename)
+            {
+                FindClose(hFind);
+                return fullPath;
+            }
+        }
+    } while (FindNextFileA(hFind, &findData) != 0);
+    
+    FindClose(hFind);
+    return "";
+}
+#else
+#include <dirent.h>
+#include <sys/stat.h>
+
+std::string DataManager::FindResourceRecursive_Unix(const std::string& filename, const std::string& rootDir) const
+{
+    DIR* dir = opendir(rootDir.c_str());
+    if (!dir)
+    {
+        return "";
+    }
+    
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != nullptr)
+    {
+        std::string name = entry->d_name;
+        
+        if (name == "." || name == "..")
+            continue;
+        
+        std::string fullPath = rootDir + "/" + name;
+        
+        struct stat statbuf;
+        if (stat(fullPath.c_str(), &statbuf) == 0)
+        {
+            if (S_ISDIR(statbuf.st_mode))
+            {
+                // Recursively search subdirectory
+                std::string found = FindResourceRecursive_Unix(filename, fullPath);
+                if (!found.empty())
+                {
+                    closedir(dir);
+                    return found;
+                }
+            }
+            else if (S_ISREG(statbuf.st_mode))
+            {
+                // Check if filename matches
+                if (name == filename)
+                {
+                    closedir(dir);
+                    return fullPath;
+                }
+            }
+        }
+    }
+    
+    closedir(dir);
+    return "";
+}
+#endif
