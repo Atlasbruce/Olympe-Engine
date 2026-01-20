@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include <functional>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -216,7 +217,7 @@ bool PrefabScanner::ParsePrefabFile(const std::string& filepath, PrefabEntry& ou
         outEntry.isValid = true;
         return true;
     }
-    catch (const json::exception& e)
+    catch (const std::exception& e)
     {
         return false;
     }
@@ -292,7 +293,7 @@ void PrefabScanner::ExtractResourceReferences(const std::string& jsonContent, Pr
         
         searchJson(j);
     }
-    catch (const json::exception& e)
+    catch (const std::exception& e)
     {
         // Silently fail - entry will have empty resource refs
     }
