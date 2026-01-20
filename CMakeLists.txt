@@ -31,6 +31,7 @@ file(GLOB_RECURSE ENGINE_CORE_SOURCES
     "Source/DataManager.cpp"
     "Source/drawing.cpp"
     "Source/InputsManager.cpp"
+    "Source/PrefabScanner.cpp"
 )
 
 # ============================================================================
@@ -43,6 +44,7 @@ add_library(OlympeCore STATIC
     Source/AI/BehaviorTree.cpp
     Source/DataManager.cpp
     Source/drawing.cpp
+    Source/PrefabScanner.cpp
 )
 
 target_include_directories(OlympeCore PUBLIC
@@ -82,6 +84,7 @@ if(BUILD_RUNTIME_ENGINE)
         "Source/engine_utils.cpp"
         "Source/vector.cpp"
         "Source/Sprite.cpp"
+        "Source/PrefabScanner.cpp"
         "Source/Rendering/IsometricRenderer.cpp"
     )
     

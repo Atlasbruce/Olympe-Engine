@@ -13,6 +13,7 @@ set(TILED_LOADER_SOURCES
     src/TilesetParser.cpp
     src/IsometricProjection.cpp
     src/ParallaxLayerManager.cpp
+    src/LevelParser.cpp
     third_party/tinyxml2/tinyxml2.cpp
 )
 
@@ -26,6 +27,7 @@ set(TILED_LOADER_HEADERS
     include/IsometricProjection.h
     include/ParallaxLayerManager.h
     include/TiledJsonHelper.h
+    include/LevelParser.h
     third_party/miniz/miniz.h
     third_party/tinyxml2/tinyxml2.h
 )

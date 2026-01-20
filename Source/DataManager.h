@@ -35,7 +35,7 @@ using Sprite = SDL_Texture;
 struct VisualSprite_data;
 struct VisualEditor_data;
 
-// Catégories et types de ressources
+// Catï¿½gories et types de ressources
 enum class ResourceType : uint32_t
 {
     Unknown = 0,
@@ -126,8 +126,102 @@ public:
     // { "system_resources": [ { "id":"ui_icon", "path":"assets/ui/icon.bmp", "type":"texture" }, ... ] }
     bool PreloadSystemResources(const std::string& configFilePath);
 
+    // ========================================================================
+    // PHASE 2: Batch Preloading System (for 3-Phase Level Loading)
+    // ========================================================================
+    
+    struct PreloadStats
+    {
+        int totalRequested;
+        int successfullyLoaded;
+        int failedWithFallback;
+        int completelyFailed;
+        std::vector<std::string> failedPaths;
+        std::map<std::string, std::string> fallbackPaths;  // original -> actual
+        
+        PreloadStats() 
+            : totalRequested(0), successfullyLoaded(0), 
+              failedWithFallback(0), completelyFailed(0) {}
+        
+        bool IsSuccess() const { return completelyFailed == 0; }
+        float GetSuccessRate() const 
+        { 
+            return totalRequested > 0 ? 
+                static_cast<float>(successfullyLoaded + failedWithFallback) / totalRequested : 1.0f;
+        }
+    };
+    
+    struct TilesetInfo
+    {
+        std::string sourceFile;      // .tsj file path
+        std::string imageFile;       // Main tileset image
+        std::vector<std::string> individualImages;  // For collection tilesets
+        bool isCollection;
+        
+        TilesetInfo() : isCollection(false) {}
+    };
+    
+    struct LevelPreloadResult
+    {
+        bool success;
+        PreloadStats sprites;
+        PreloadStats textures;
+        PreloadStats audio;
+        PreloadStats tilesets;
+        
+        LevelPreloadResult() : success(false) {}
+        
+        int GetTotalLoaded() const
+        {
+            return sprites.successfullyLoaded + textures.successfullyLoaded + 
+                   audio.successfullyLoaded + tilesets.successfullyLoaded +
+                   sprites.failedWithFallback + textures.failedWithFallback +
+                   audio.failedWithFallback + tilesets.failedWithFallback;
+        }
+        
+        int GetTotalFailed() const
+        {
+            return sprites.completelyFailed + textures.completelyFailed + 
+                   audio.completelyFailed + tilesets.completelyFailed;
+        }
+        
+        bool IsComplete() const
+        {
+            return success && GetTotalFailed() == 0;
+        }
+    };
+    
+    // Batch preload methods
+    PreloadStats PreloadTextures(const std::vector<std::string>& paths, 
+                                  ResourceCategory category = ResourceCategory::Level,
+                                  bool enableFallbackScan = true);
+    
+    PreloadStats PreloadSprites(const std::vector<std::string>& paths, 
+                                ResourceCategory category = ResourceCategory::GameEntity,
+                                bool enableFallbackScan = true);
+    
+    PreloadStats PreloadAudioFiles(const std::vector<std::string>& paths,
+                                   bool enableFallbackScan = true);
+    
+    PreloadStats PreloadTilesets(const std::vector<TilesetInfo>& tilesets,
+                                bool enableFallbackScan = true);
+    
+    // Fallback resource discovery
+    std::string FindResourceRecursive(const std::string& filename, 
+                                     const std::string& rootDir = "GameData") const;
+
 private:
     std::string name;
     mutable std::mutex m_mutex_;
     std::unordered_map<std::string, std::shared_ptr<Resource>> m_resources_;
+    bool m_enableFallbackScan = true;
+    
+    // Platform-specific recursive search helpers
+#ifdef _WIN32
+    std::string FindResourceRecursive_Windows(const std::string& filename, 
+                                             const std::string& rootDir) const;
+#else
+    std::string FindResourceRecursive_Unix(const std::string& filename, 
+                                          const std::string& rootDir) const;
+#endif
 };
