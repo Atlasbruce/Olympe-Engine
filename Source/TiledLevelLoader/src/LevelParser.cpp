@@ -16,6 +16,14 @@
 namespace Olympe {
 namespace Tiled {
 
+    // Helper function for box-drawing padding
+    static std::string GetPadding(int totalWidth, const std::string& content)
+    {
+        int contentLen = static_cast<int>(content.length());
+        int padding = totalWidth - contentLen;
+        return std::string(padding > 0 ? padding : 0, ' ');
+    }
+
     LevelParser::LevelParser()
     {
     }

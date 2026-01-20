@@ -32,9 +32,11 @@ Notes:
 
 #ifdef _WIN32
 #include <direct.h>
+#include <windows.h>
 #else
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <dirent.h>
 #endif
 
 DataManager::DataManager()
