@@ -282,6 +282,9 @@
     <ClCompile Include="Source\TiledLevelLoader\src\LevelParser.cpp">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
     </ClCompile>
+    <ClCompile Include="Source\PrefabFactory.cpp">
+      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
+    </ClCompile>
     <ClCompile Include="Source\PrefabScanner.cpp">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
     </ClCompile>

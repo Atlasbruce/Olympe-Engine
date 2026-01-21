@@ -6,9 +6,10 @@
  */
 
 #include "PrefabScanner.h"
+#include "ComponentDefinition.h"
 #include "third_party/nlohmann/json.hpp"
+#include "system/system_utils.h"
 #include <fstream>
-#include <iostream>
 #include <algorithm>
 #include <functional>
 
@@ -21,6 +22,55 @@
 
 using json = nlohmann::json;
 
+//=============================================================================
+// PrefabRegistry Implementation
+//=============================================================================
+
+void PrefabRegistry::Register(const PrefabBlueprint& blueprint)
+{
+    if (blueprint.prefabName.empty()) return;
+    
+    m_blueprints[blueprint.prefabName] = blueprint;
+    if (!blueprint.prefabType.empty())
+    {
+        m_typeToName[blueprint.prefabType] = blueprint.prefabName;
+    }
+}
+
+const PrefabBlueprint* PrefabRegistry::Find(const std::string& name) const
+{
+    auto it = m_blueprints.find(name);
+    return (it != m_blueprints.end()) ? &it->second : nullptr;
+}
+
+std::vector<const PrefabBlueprint*> PrefabRegistry::FindByType(const std::string& type) const
+{
+    std::vector<const PrefabBlueprint*> results;
+    for (const auto& pair : m_blueprints)
+    {
+        if (pair.second.prefabType == type)
+        {
+            results.push_back(&pair.second);
+        }
+    }
+    return results;
+}
+
+std::vector<std::string> PrefabRegistry::GetAllPrefabNames() const
+{
+    std::vector<std::string> names;
+    names.reserve(m_blueprints.size());
+    for (const auto& pair : m_blueprints)
+    {
+        names.push_back(pair.first);
+    }
+    return names;
+}
+
+//=============================================================================
+// PrefabScanner Implementation
+//=============================================================================
+
 PrefabScanner::PrefabScanner()
 {
 }
@@ -29,68 +79,80 @@ PrefabScanner::~PrefabScanner()
 {
 }
 
-PrefabRegistry PrefabScanner::ScanPrefabDirectory(const std::string& rootPath)
+std::vector<PrefabBlueprint> PrefabScanner::ScanDirectory(const std::string& rootPath)
 {
-    std::cout << "\n";
-    std::cout << "/======================================================================\\n";
-    std::cout << "|         PREFAB DIRECTORY SCAN                                        |\n";
-    std::cout << "|======================================================================|\n";
-    std::cout << "| Path: " << rootPath << std::string(max(0, 63 - static_cast<int>(rootPath.length())), ' ') << "|\n";
-    std::cout << "\======================================================================/\n\n";
+    SYSTEM_LOG << "\n";
+    SYSTEM_LOG << "/======================================================================\\\n";
+    SYSTEM_LOG << "|         PREFAB DIRECTORY SCAN                                        |\n";
+    SYSTEM_LOG << "|======================================================================|\n";
+    SYSTEM_LOG << "| Path: " << rootPath << std::string(std::max(0, 63 - static_cast<int>(rootPath.length())), ' ') << "|\n";
+    SYSTEM_LOG << "\\======================================================================/\n\n";
 
-    PrefabRegistry registry;
+    std::vector<PrefabBlueprint> blueprints;
     std::vector<std::string> prefabFiles;
-
-	//prefabFiles.push_back("*.json"); // Test entry to ensure at least one file is processed
     
     // Scan directory recursively
-    std::cout << "→ Scanning for .json files...\n";
+    SYSTEM_LOG << "→ Scanning for .json files...\n";
 #ifdef _WIN32
     ScanDirectoryRecursive_Windows(rootPath, prefabFiles);
 #else
     ScanDirectoryRecursive_Unix(rootPath, prefabFiles);
 #endif
     
-    std::cout << "✓ Found " << prefabFiles.size() << " file(s)\n\n";
+    SYSTEM_LOG << "✓ Found " << prefabFiles.size() << " file(s)\n\n";
     
     // Parse each prefab file
-    std::cout << "→ Parsing prefab files...\n";
+    SYSTEM_LOG << "→ Parsing prefab files...\n";
     int validCount = 0;
     int invalidCount = 0;
+    int totalComponents = 0;
+    int totalResources = 0;
     
     for (const auto& filepath : prefabFiles)
     {
-        PrefabEntry entry;
-        if (ParsePrefabFile(filepath, entry))
+        PrefabBlueprint blueprint = ParsePrefab(filepath);
+        
+        if (blueprint.isValid)
         {
-            registry.prefabsByName[entry.prefabName] = entry;
-            registry.prefabsByType[entry.entityType].push_back(entry);
+            blueprints.push_back(blueprint);
             validCount++;
+            totalComponents += static_cast<int>(blueprint.components.size());
+            totalResources += static_cast<int>(blueprint.resources.spriteRefs.size() + 
+                                              blueprint.resources.audioRefs.size() + 
+                                              blueprint.resources.modelRefs.size());
             
-            std::cout << "  ✓ " << entry.prefabName << " [" << entry.entityType << "] "
-                      << "(" << entry.spriteRefs.size() << " sprites, " 
-                      << entry.audioRefs.size() << " audio)\n";
+            SYSTEM_LOG << "  ✓ " << blueprint.prefabName << " [" << blueprint.prefabType << "] "
+                      << "(" << blueprint.components.size() << " components, " 
+                      << (blueprint.resources.spriteRefs.size() + blueprint.resources.audioRefs.size() + blueprint.resources.modelRefs.size()) 
+                      << " resources)\n";
         }
         else
         {
             invalidCount++;
-            std::cout << "  ✗ " << filepath << " (parse failed)\n";
+            SYSTEM_LOG << "  ✗ " << filepath << " (parse failed)";
+            if (!blueprint.errors.empty())
+            {
+                SYSTEM_LOG << " - " << blueprint.errors[0];
+            }
+            SYSTEM_LOG << "\n";
         }
     }
     
-    std::cout << "\n";
-    std::cout << "/======================================================================\\n";
-    std::cout << "| SCAN COMPLETE                                                        |\n";
-    std::cout << "|======================================================================|\n";
-    std::cout << "| Valid Prefabs:   " << validCount
+    SYSTEM_LOG << "\n";
+    SYSTEM_LOG << "/======================================================================\\\n";
+    SYSTEM_LOG << "| SCAN COMPLETE                                                        |\n";
+    SYSTEM_LOG << "|======================================================================|\n";
+    SYSTEM_LOG << "| Valid Prefabs:   " << validCount
               << std::string(51 - std::to_string(validCount).length(), ' ') << "|\n";
-    std::cout << "| Invalid Prefabs: " << invalidCount
+    SYSTEM_LOG << "| Invalid Prefabs: " << invalidCount
               << std::string(51 - std::to_string(invalidCount).length(), ' ') << "|\n";
-    std::cout << "| Entity Types:    " << registry.GetTypeCount()
-              << std::string(51 - std::to_string(registry.GetTypeCount()).length(), ' ') << "|\n";
-    std::cout << "\======================================================================/\n\n";
+    SYSTEM_LOG << "| Total Components: " << totalComponents
+              << std::string(50 - std::to_string(totalComponents).length(), ' ') << "|\n";
+    SYSTEM_LOG << "| Total Resources:  " << totalResources
+              << std::string(50 - std::to_string(totalResources).length(), ' ') << "|\n";
+    SYSTEM_LOG << "\\======================================================================/\n\n";
     
-    return registry;
+    return blueprints;
 }
 
 #ifdef _WIN32
@@ -178,13 +240,18 @@ void PrefabScanner::ScanDirectoryRecursive_Unix(const std::string& path, std::ve
 }
 #endif
 
-bool PrefabScanner::ParsePrefabFile(const std::string& filepath, PrefabEntry& outEntry)
+PrefabBlueprint PrefabScanner::ParsePrefab(const std::string& filepath)
 {
+    PrefabBlueprint blueprint;
+    blueprint.filePath = filepath;
+    blueprint.prefabName = RemoveExtension(GetFilename(filepath));
+    
     // Read file
     std::ifstream file(filepath);
     if (!file.is_open())
     {
-        return false;
+        blueprint.errors.push_back("Failed to open file");
+        return blueprint;
     }
     
     std::string content((std::istreambuf_iterator<char>(file)),
@@ -195,110 +262,177 @@ bool PrefabScanner::ParsePrefabFile(const std::string& filepath, PrefabEntry& ou
     {
         json j = json::parse(content);
         
-        // Extract prefab name from filename
-        outEntry.filePath = filepath;
-        outEntry.prefabName = RemoveExtension(GetFilename(filepath));
-        
-        // Extract entity type
-        if (j.contains("entityType"))
+        // Extract top-level metadata
+        if (j.contains("type"))
         {
-            outEntry.entityType = j["entityType"].get<std::string>();
+            blueprint.prefabType = j["type"].get<std::string>();
         }
-        else if (j.contains("type"))
+        else if (j.contains("blueprintType"))
         {
-            outEntry.entityType = j["type"].get<std::string>();
-        }
-        else
-        {
-            outEntry.entityType = "undefined";
+            blueprint.prefabType = j["blueprintType"].get<std::string>();
         }
         
-        // Extract resource references
-        ExtractResourceReferences(content, outEntry);
+        if (j.contains("schema_version"))
+        {
+            blueprint.version = std::to_string(j["schema_version"].get<int>());
+        }
         
-        outEntry.isValid = true;
-        return true;
+        if (j.contains("description"))
+        {
+            blueprint.description = j["description"].get<std::string>();
+        }
+        
+        if (j.contains("name"))
+        {
+            blueprint.prefabName = j["name"].get<std::string>();
+        }
+        
+        // Parse the "data" field
+        if (j.contains("data") && j["data"].is_object())
+        {
+            json dataJson = j["data"];
+            
+            // Override prefab name from data if available
+            if (dataJson.contains("prefabName"))
+            {
+                blueprint.prefabName = dataJson["prefabName"].get<std::string>();
+            }
+            
+            // Parse components array
+            if (dataJson.contains("components") && dataJson["components"].is_array())
+            {
+                json componentsArray = dataJson["components"];
+                
+                for (const auto& compJson : componentsArray)
+                {
+                    try
+                    {
+                        ComponentDefinition compDef = ComponentDefinition::FromJSON(compJson);
+                        blueprint.components.push_back(compDef);
+                    }
+                    catch (const std::exception& e)
+                    {
+                        blueprint.errors.push_back(std::string("Component parse error: ") + e.what());
+                    }
+                }
+                
+                // Extract resource references from components
+                ExtractResources(componentsArray, blueprint.resources);
+            }
+        }
+        
+        blueprint.isValid = true;
     }
     catch (const std::exception& e)
     {
-        return false;
+        blueprint.errors.push_back(std::string("JSON parse error: ") + e.what());
+        blueprint.isValid = false;
     }
+    
+    return blueprint;
 }
 
-void PrefabScanner::ExtractResourceReferences(const std::string& jsonContent, PrefabEntry& entry)
+std::string PrefabScanner::DetectComponentType(const std::string& typeName)
 {
-    try
+    // Component type detection heuristics
+    std::string lower = typeName;
+    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+    
+    if (lower.find("identity") != std::string::npos) return "Identity";
+    if (lower.find("position") != std::string::npos) return "Position";
+    if (lower.find("sprite") != std::string::npos || lower.find("visual") != std::string::npos) return "VisualSprite";
+    if (lower.find("boundingbox") != std::string::npos || lower.find("collision") != std::string::npos) return "BoundingBox";
+    if (lower.find("movement") != std::string::npos) return "Movement";
+    if (lower.find("physics") != std::string::npos) return "PhysicsBody";
+    if (lower.find("health") != std::string::npos) return "Health";
+    if (lower.find("player") != std::string::npos && lower.find("binding") != std::string::npos) return "PlayerBinding";
+    if (lower.find("controller") != std::string::npos) return "Controller";
+    if (lower.find("audio") != std::string::npos || lower.find("sound") != std::string::npos) return "Audio";
+    
+    return typeName;
+}
+
+void PrefabScanner::ExtractResources(const nlohmann::json& componentsJson, ResourceRefs& outResources)
+{
+    // Common resource field names
+    std::vector<std::string> spriteFields = {
+        "sprite", "spritePath", "texture", "texturePath", "image", "imagePath"
+    };
+    
+    std::vector<std::string> audioFields = {
+        "audio", "audioPath", "sound", "soundPath", "music", "musicPath"
+    };
+    
+    std::vector<std::string> modelFields = {
+        "model", "modelPath", "mesh", "meshPath"
+    };
+    
+    // Recursive search for resource references
+    std::function<void(const json&)> searchJson;
+    searchJson = [&](const json& obj)
     {
-        json j = json::parse(jsonContent);
-        
-        // Common sprite reference fields
-        std::vector<std::string> spriteFields = {
-            "sprite", "spritePath", "texture", "texturePath", "image", "imagePath"
-        };
-        
-        // Common audio reference fields
-        std::vector<std::string> audioFields = {
-            "audio", "audioPath", "sound", "soundPath", "music", "musicPath"
-        };
-        
-        // Recursively search for resource references
-        std::function<void(const json&)> searchJson;
-        searchJson = [&](const json& obj)
+        if (obj.is_object())
         {
-            if (obj.is_object())
+            for (auto it = obj.begin(); it != obj.end(); ++it)
             {
-                for (auto it = obj.begin(); it != obj.end(); ++it)
+                std::string key = it.key();
+                
+                // Check for sprite references
+                for (const auto& field : spriteFields)
                 {
-                    std::string key = it.key();
-                    
-                    // Check for sprite references
-                    for (const auto& field : spriteFields)
+                    if (key == field && it.value().is_string())
                     {
-                        if (key == field && it.value().is_string())
+                        std::string path = it.value().get<std::string>();
+                        if (!path.empty())
                         {
-                            std::string path = it.value().get<std::string>();
-                            if (!path.empty())
-                            {
-                                entry.spriteRefs.push_back(path);
-                            }
+                            outResources.spriteRefs.push_back(path);
                         }
                     }
-                    
-                    // Check for audio references
-                    for (const auto& field : audioFields)
+                }
+                
+                // Check for audio references
+                for (const auto& field : audioFields)
+                {
+                    if (key == field && it.value().is_string())
                     {
-                        if (key == field && it.value().is_string())
+                        std::string path = it.value().get<std::string>();
+                        if (!path.empty())
                         {
-                            std::string path = it.value().get<std::string>();
-                            if (!path.empty())
-                            {
-                                entry.audioRefs.push_back(path);
-                            }
+                            outResources.audioRefs.push_back(path);
                         }
                     }
-                    
-                    // Recurse into nested objects and arrays
-                    if (it.value().is_object() || it.value().is_array())
+                }
+                
+                // Check for model references
+                for (const auto& field : modelFields)
+                {
+                    if (key == field && it.value().is_string())
                     {
-                        searchJson(it.value());
+                        std::string path = it.value().get<std::string>();
+                        if (!path.empty())
+                        {
+                            outResources.modelRefs.push_back(path);
+                        }
                     }
                 }
-            }
-            else if (obj.is_array())
-            {
-                for (const auto& element : obj)
+                
+                // Recurse into nested objects and arrays
+                if (it.value().is_object() || it.value().is_array())
                 {
-                    searchJson(element);
+                    searchJson(it.value());
                 }
             }
-        };
-        
-        searchJson(j);
-    }
-    catch (const std::exception& e)
-    {
-        // Silently fail - entry will have empty resource refs
-    }
+        }
+        else if (obj.is_array())
+        {
+            for (const auto& element : obj)
+            {
+                searchJson(element);
+            }
+        }
+    };
+    
+    searchJson(componentsJson);
 }
 
 std::string PrefabScanner::GetFilename(const std::string& filepath)

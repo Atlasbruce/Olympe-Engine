@@ -111,8 +111,20 @@ public:
     
     struct Phase2Result
     {
+        struct PreloadStats
+        {
+            int spritesPreloaded;
+            int audioPreloaded;
+            int prefabsLoaded;
+            
+            PreloadStats() : spritesPreloaded(0), audioPreloaded(0), prefabsLoaded(0) {}
+        };
+        
         PrefabRegistry prefabRegistry;
         DataManager::LevelPreloadResult preloadResult;
+        PreloadStats stats;
+        std::vector<std::string> missingPrefabs;
+        std::vector<std::string> errors;
         bool success;
         
         Phase2Result() : success(false) {}
@@ -295,7 +307,7 @@ private:
     // ========================================================================
     
     // Phase 2: Prefab discovery and resource preloading
-    Phase2Result ExecutePhase2(const Olympe::Tiled::LevelParseResult& phase1Result);
+    Phase2Result ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::LevelParseResult& phase1Result);
     
     // Phase 3: Instantiation passes (using existing TiledToOlympe for now)
     bool InstantiatePass1_VisualLayers(
@@ -312,6 +324,7 @@ private:
     
     bool InstantiatePass4_DynamicObjects(
         const Olympe::Editor::LevelDefinition& levelDef,
+        const Phase2Result& phase2Result,
         InstantiationResult& result);
     
     bool InstantiatePass5_Relationships(
