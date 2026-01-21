@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "type": "EntityPrefab",
+  "type": "Waypoint",
   "blueprintType": "EntityPrefab",
   "name": "Waypoint",
   "description": "Navigation waypoint marker",
@@ -24,7 +24,7 @@
 	  {
         "type": "VisualEditor_data",
         "properties": {
-          "spritePath": "Resources/Icons/location-32.png",
+          "spritePath": "./Resources/Icons/location-32.png",
           "width": 32,
           "height": 32,
           "layer": 0

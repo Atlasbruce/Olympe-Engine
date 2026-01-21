@@ -1,6 +1,6 @@
 // CREDITS
 
-⚠️ DOCUMENTATION MOVED
+/!\️ DOCUMENTATION MOVED
 This file has been converted to Markdown and moved to:
 - New Location: Documentation/07-Reference/CREDITS.md
 - Documentation Hub: Documentation/README.md

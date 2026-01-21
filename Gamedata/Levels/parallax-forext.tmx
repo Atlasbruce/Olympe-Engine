@@ -32,22 +32,22 @@
   <object id="12" name="Sector_1" type="sector" x="-2624" y="0" width="5504" height="1088"/>
  </objectgroup>
  <objectgroup id="2" name="Layer_0_Leveldesign">
-  <object id="1" name="player" type="player" x="33.3333" y="887.879">
+  <object id="1" name="player" type="Player" x="33.3333" y="887.879">
    <point/>
   </object>
-  <object id="2" name="collision_ground" type="collision" x="-2496" y="954.173" width="5312" height="75.6538"/>
-  <object id="3" name="collision_wall_left" type="collision" x="-2496" y="512" width="64" height="512"/>
-  <object id="6" name="collision_wall_right" type="collision" x="2752" y="512" width="64" height="512"/>
-  <object id="7" name="key_1" type="key" x="-2069.7" y="900">
+  <object id="2" name="collision_ground" type="Collision" x="-2496" y="954.173" width="5312" height="75.6538"/>
+  <object id="3" name="collision_wall_left" type="Collision" x="-2496" y="512" width="64" height="512"/>
+  <object id="6" name="collision_wall_right" type="Collision" x="2752" y="512" width="64" height="512"/>
+  <object id="7" name="key_1" type="Key" x="-2069.7" y="900">
    <point/>
   </object>
-  <object id="8" name="zombie_1" type="zombie" x="-1075.76" y="848.485">
+  <object id="8" name="zombie_1" type="Zombie" x="-1075.76" y="848.485">
    <point/>
   </object>
-  <object id="9" name="zombie_2" type="zombie" x="1566.67" y="887.879">
+  <object id="9" name="zombie_2" type="Zombie" x="1566.67" y="887.879">
    <point/>
   </object>
-  <object id="11" name="exit" type="door" x="2354" y="928">
+  <object id="11" name="exit" type="Door" x="2354" y="928">
    <point/>
   </object>
  </objectgroup>

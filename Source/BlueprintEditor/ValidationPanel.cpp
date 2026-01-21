@@ -115,7 +115,7 @@ namespace Olympe
 
         if (m_Errors.empty())
         {
-            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "✓ No validation errors");
+            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "-> No validation errors");
             return;
         }
 

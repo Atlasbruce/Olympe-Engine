@@ -472,7 +472,7 @@ namespace Tiled {
             return relativePath;
         }
 
-        return mapDir + "/" + relativePath;
+        return mapDir + "\\" + relativePath;
     }
 
     std::string TiledLevelLoader::GetDirectory(const std::string& filepath)

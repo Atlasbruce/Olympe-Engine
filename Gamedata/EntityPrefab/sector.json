@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "type": "EntityPrefab",
+  "type": "Sector",
   "blueprintType": "EntityPrefab",
   "name": "Sector",
   "description": "Invisible Sector zone for sectorization",
@@ -34,7 +34,7 @@
 	  {
         "type": "VisualEdotor_data",
         "properties": {
-          "spritePath": "Resources/Icons/sector.png",
+          "spritePath": "./Resources/Icons/sector.png",
           "width": 512,
           "height": 512,
           "layer": 0

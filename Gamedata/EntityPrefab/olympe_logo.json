@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "type": "EntityPrefab",
+  "type": "OlympeLogo",
   "blueprintType": "EntityPrefab",
   "name": "OlympeLogo",
   "description": "Olympe Engine logo sprite entity",
@@ -34,7 +34,7 @@
       {
         "type": "VisualSprite_data",
         "properties": {
-          "spritePath": "Resources/Sprites/olympe_logo.png",
+          "spritePath": "./Resources/olympe_logo.png",
           "width": 256,
           "height": 128,
           "layer": 0

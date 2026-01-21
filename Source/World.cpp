@@ -273,9 +273,9 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     UnloadCurrentLevel();
 
     std::cout << "\n";
-    std::cout << "/======================================================================\\n";
-    std::cout << "|         PHASE 1: PARSING & VISUAL ANALYSIS                           |\n";
-    std::cout << "\======================================================================/\n";
+    std::cout << "/======================================================================\ \n";
+    std::cout << "|         PHASE 1: PARSING & VISUAL ANALYSIS                           | \n";
+    std::cout << "\======================================================================/ \n\n";
     
     // =======================================================================
     // PHASE 1: PARSING & VISUAL ANALYSIS
@@ -310,9 +310,9 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     // =======================================================================
     
     std::cout << "\n";
-    std::cout << "/======================================================================\\n";
-    std::cout << "|         PHASE 3: INSTANTIATION (5-Pass Pipeline)                     |\n";
-    std::cout << "\======================================================================/\n\n";
+    std::cout << "/======================================================================\ \n";
+    std::cout << "|         PHASE 3: INSTANTIATION (5-Pass Pipeline)                     | \n";
+    std::cout << "\======================================================================/ \n\n";
     
     // Load and convert using existing TiledToOlympe
     Olympe::Tiled::TiledMap tiledMap;
@@ -338,38 +338,38 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     // Execute 5-pass instantiation
     InstantiationResult instResult;
     
-    std::cout << "→ Pass 1: Visual Layers (Parallax)\n";
+    std::cout << "-> Pass 1: Visual Layers (Parallax)\n";
     InstantiatePass1_VisualLayers(levelDef, instResult);
     
-    std::cout << "→ Pass 2: Spatial Structure (Sectors, Collision)\n";
+    std::cout << "-> Pass 2: Spatial Structure (Sectors, Collision)\n";
     InstantiatePass2_SpatialStructure(levelDef, instResult);
     
-    std::cout << "→ Pass 3: Static Objects (Items, Waypoints)\n";
+    std::cout << "-> Pass 3: Static Objects (Items, Waypoints)\n";
     InstantiatePass3_StaticObjects(levelDef, instResult);
     
-    std::cout << "→ Pass 4: Dynamic Objects (Player, NPCs, Enemies)\n";
+    std::cout << "-> Pass 4: Dynamic Objects (Player, NPCs, Enemies)\n";
     InstantiatePass4_DynamicObjects(levelDef, phase2Result, instResult);
     
-    std::cout << "→ Pass 5: Relationships (Patrol Paths, AI Links)\n";
+    std::cout << "-> Pass 5: Relationships (Patrol Paths, AI Links)\n";
     InstantiatePass5_Relationships(levelDef, instResult);
     
     instResult.success = true;
     
     // Final summary
     std::cout << "\n";
-    std::cout << "/======================================================================\\n";
-    std::cout << "| LEVEL LOADING COMPLETE                                               |\n";
-    std::cout << "|======================================================================|\n";
-    std::cout << "| Phase 1: ✓ Parse & Analysis                                          |\n";
-    std::cout << "| Phase 2: " << (phase2Result.success ? "✓" : "⊙") << " Prefab Discovery & Preload"
-              << std::string(37, ' ') << "|\n";
-    std::cout << "| Phase 3: ✓ Instantiation Complete                                    |\n";
-    std::cout << "|                                                                      |\n";
+    std::cout << "/======================================================================\ \n";
+    std::cout << "| LEVEL LOADING COMPLETE                                               | \n";
+    std::cout << "|======================================================================| \n";
+    std::cout << "| Phase 1: -> Parse & Analysis                                          | \n";
+    std::cout << "| Phase 2: " << (phase2Result.success ? "->" : "⊙") << " Prefab Discovery & Preload"
+              << std::string(37, ' ') << "| \n";
+    std::cout << "| Phase 3: -> Instantiation Complete                                    | \n";
+    std::cout << "|                                                                      | \n";
     std::cout << "| Entities Created: " << instResult.GetTotalCreated()
-              << std::string(std::max(0, 48 - static_cast<int>(std::to_string(instResult.GetTotalCreated()).length())), ' ') << "|\n";
+              << std::string(std::max(0, 48 - static_cast<int>(std::to_string(instResult.GetTotalCreated()).length())), ' ') << "| \n";
     std::cout << "| Entities Failed:  " << instResult.GetTotalFailed()
-              << std::string(std::max(0, 48 - static_cast<int>(std::to_string(instResult.GetTotalFailed()).length())), ' ') << "|\n";
-    std::cout << "\======================================================================/\n\n";
+              << std::string(std::max(0, 48 - static_cast<int>(std::to_string(instResult.GetTotalFailed()).length())), ' ') << "| \n";
+    std::cout << "\======================================================================/ \n\n";
     
     SYSTEM_LOG << "World::LoadLevelFromTiled - Level loaded successfully\n";
     return true;
@@ -421,20 +421,20 @@ void World::UnloadCurrentLevel()
 World::Phase2Result World::ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::LevelParseResult& phase1Result)
 {
     SYSTEM_LOG << "\n";
-    SYSTEM_LOG << "/======================================================================\\\n";
-    SYSTEM_LOG << "|         PHASE 2: PREFAB DISCOVERY & PRELOADING                       |\n";
-    SYSTEM_LOG << "\\======================================================================/\n\n";
+    SYSTEM_LOG << "/======================================================================\ \n";
+    SYSTEM_LOG << "|         PHASE 2: PREFAB DISCOVERY & PRELOADING                       | \n";
+    SYSTEM_LOG << "\\======================================================================/ \n\n";
     
     Phase2Result result;
     
     // Step 1: Scan prefab directory
-    SYSTEM_LOG << "→ Step 1: Scanning prefab directory...\n";
+    SYSTEM_LOG << "-> Step 1: Scanning prefab directory...\n";
     PrefabScanner scanner;
     std::vector<PrefabBlueprint> blueprints = scanner.ScanDirectory("GameData\\EntityPrefab");
     
     if (blueprints.empty())
     {
-        SYSTEM_LOG << "  ⚠ No prefabs found in directory\n";
+        SYSTEM_LOG << "  /!\ No prefabs found in directory\n";
         result.errors.push_back("No prefabs found in GameData\\EntityPrefab");
     }
     
@@ -445,10 +445,10 @@ World::Phase2Result World::ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::Le
         result.stats.prefabsLoaded++;
     }
     
-    SYSTEM_LOG << "  ✓ Loaded " << result.stats.prefabsLoaded << " prefab blueprints\n";
+    SYSTEM_LOG << "  -> Loaded " << result.stats.prefabsLoaded << " prefab blueprints\n";
     
     // Step 2: Cross-check level requirements vs available prefabs
-    SYSTEM_LOG << "\n→ Step 2: Cross-checking level requirements...\n";
+    SYSTEM_LOG << "\n-> Step 2: Cross-checking level requirements...\n";
     
     for (const auto& type : phase1Result.objectCensus.uniqueTypes)
     {
@@ -456,22 +456,22 @@ World::Phase2Result World::ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::Le
         
         if (blueprints.empty())
         {
-            SYSTEM_LOG << "  ✗ Missing prefab for type: " << type << "\n";
+            SYSTEM_LOG << "  x Missing prefab for type: " << type << "\n";
             result.missingPrefabs.push_back(type);
         }
         else
         {
-            SYSTEM_LOG << "  ✓ Found prefab: " << blueprints[0]->prefabName << " (type: " << type << ")\n";
+            SYSTEM_LOG << "  -> Found prefab: " << blueprints[0]->prefabName << " (type: " << type << ")\n";
         }
     }
     
     if (!result.missingPrefabs.empty())
     {
-        SYSTEM_LOG << "  ⚠ " << result.missingPrefabs.size() << " missing prefabs detected\n";
+        SYSTEM_LOG << "  /!\ " << result.missingPrefabs.size() << " missing prefabs detected\n";
     }
     
     // Step 3: Preload visual resources
-    SYSTEM_LOG << "\n→ Step 3: Preloading visual resources...\n";
+    SYSTEM_LOG << "\n-> Step 3: Preloading visual resources...\n";
     DataManager& dataManager = DataManager::Get();
     
     // Preload tilesets
@@ -495,7 +495,7 @@ World::Phase2Result World::ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::Le
     result.preloadResult.textures = dataManager.PreloadTextures(parallaxPaths, ResourceCategory::Level, true);
     
     // Step 4: Preload prefab resources (sprites and audio)
-    SYSTEM_LOG << "\n→ Step 4: Preloading prefab resources...\n";
+    SYSTEM_LOG << "\n-> Step 4: Preloading prefab resources...\n";
     
     std::vector<std::string> spritePaths;
     std::vector<std::string> audioPaths;
@@ -520,7 +520,7 @@ World::Phase2Result World::ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::Le
     {
         result.preloadResult.sprites = dataManager.PreloadSprites(spritePaths, ResourceCategory::GameEntity, true);
         result.stats.spritesPreloaded = result.preloadResult.sprites.totalRequested;
-        SYSTEM_LOG << "  ✓ Preloaded " << result.preloadResult.sprites.successfullyLoaded 
+        SYSTEM_LOG << "  -> Preloaded " << result.preloadResult.sprites.successfullyLoaded 
                    << " sprites (" << result.preloadResult.sprites.completelyFailed << " failed)\n";
     }
     
@@ -528,7 +528,7 @@ World::Phase2Result World::ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::Le
     {
         result.preloadResult.audio = dataManager.PreloadAudioFiles(audioPaths, true);
         result.stats.audioPreloaded = result.preloadResult.audio.totalRequested;
-        SYSTEM_LOG << "  ✓ Preloaded " << result.preloadResult.audio.successfullyLoaded 
+        SYSTEM_LOG << "  -> Preloaded " << result.preloadResult.audio.successfullyLoaded 
                    << " audio files (" << result.preloadResult.audio.completelyFailed << " failed)\n";
     }
     
@@ -538,22 +538,22 @@ World::Phase2Result World::ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::Le
     
     // Summary
     SYSTEM_LOG << "\n";
-    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════════════════╗\n";
-    SYSTEM_LOG << "║ PHASE 2 COMPLETE                                                     ║\n";
-    SYSTEM_LOG << "╠══════════════════════════════════════════════════════════════════════╣\n";
-    SYSTEM_LOG << "║ Prefabs Loaded:      " << std::setw(3) << result.stats.prefabsLoaded
-               << std::string(45, ' ') << "║\n";
-    SYSTEM_LOG << "║ Missing Prefabs:     " << std::setw(3) << result.missingPrefabs.size()
-               << std::string(45, ' ') << "║\n";
-    SYSTEM_LOG << "║ Sprites Preloaded:   " << std::setw(3) << result.stats.spritesPreloaded
-               << std::string(45, ' ') << "║\n";
-    SYSTEM_LOG << "║ Audio Preloaded:     " << std::setw(3) << result.stats.audioPreloaded
-               << std::string(45, ' ') << "║\n";
-    SYSTEM_LOG << "║ Resources Loaded:    " << std::setw(3) << result.preloadResult.GetTotalLoaded()
-               << std::string(45, ' ') << "║\n";
-    SYSTEM_LOG << "║ Resources Failed:    " << std::setw(3) << result.preloadResult.GetTotalFailed()
-               << std::string(45, ' ') << "║\n";
-    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════════════════╝\n";
+    SYSTEM_LOG << "/======================================================================\ \n";
+    SYSTEM_LOG << "| PHASE 2 COMPLETE                                                     | \n";
+    SYSTEM_LOG << "|======================================================================| \n";
+    SYSTEM_LOG << "| Prefabs Loaded:      " << std::setw(3) << result.stats.prefabsLoaded
+               << std::string(45, ' ') << "| \n";
+    SYSTEM_LOG << "| Missing Prefabs:     " << std::setw(3) << result.missingPrefabs.size()
+               << std::string(45, ' ') << "| \n";
+    SYSTEM_LOG << "| Sprites Preloaded:   " << std::setw(3) << result.stats.spritesPreloaded
+               << std::string(45, ' ') << "| \n";
+    SYSTEM_LOG << "| Audio Preloaded:     " << std::setw(3) << result.stats.audioPreloaded
+               << std::string(45, ' ') << "| \n";
+    SYSTEM_LOG << "| Resources Loaded:    " << std::setw(3) << result.preloadResult.GetTotalLoaded()
+               << std::string(45, ' ') << "| \n";
+    SYSTEM_LOG << "| Resources Failed:    " << std::setw(3) << result.preloadResult.GetTotalFailed()
+               << std::string(45, ' ') << "| \n";
+    SYSTEM_LOG << "\======================================================================/ \n";
     
     return result;
 }
@@ -595,7 +595,7 @@ bool World::InstantiatePass1_VisualLayers(
                 {
                     result.pass1_visualLayers.failed++;
                     result.pass1_visualLayers.failedObjects.push_back(imagePath);
-                    std::cout << "  ✗ Failed to load parallax layer: " << imagePath << "\n";
+                    std::cout << "  x Failed to load parallax layer: " << imagePath << "\n";
                     continue;
                 }
                 
@@ -616,7 +616,7 @@ bool World::InstantiatePass1_VisualLayers(
 
                 parallaxMgr.AddLayer(layer);
                 result.pass1_visualLayers.successfullyCreated++;
-                std::cout << "  ✓ Loaded parallax layer: " << layer.name << "\n";
+                std::cout << "  -> Loaded parallax layer: " << layer.name << "\n";
             }
         }
     }
@@ -635,7 +635,7 @@ bool World::InstantiatePass2_SpatialStructure(
     {
         if (!entityInstance) continue;
         
-        if (entityInstance->type == "collision")
+        if (entityInstance->type == "Collision")
         {
             result.pass2_spatialStructure.totalObjects++;
             
@@ -666,7 +666,7 @@ bool World::InstantiatePass2_SpatialStructure(
             
             result.pass2_spatialStructure.successfullyCreated++;
             result.entityRegistry[entityInstance->name] = eid;
-            std::cout << "  ✓ Created collision zone: " << entityInstance->name << "\n";
+            std::cout << "  -> Created collision zone: " << entityInstance->name << "\n";
         }
     }
     
@@ -685,11 +685,11 @@ bool World::InstantiatePass3_StaticObjects(
         if (!entityInstance) continue;
         
         // Skip collision (handled in Pass 2)
-        if (entityInstance->type == "collision") continue;
+        if (entityInstance->type == "Collision") continue;
         
         // Check if it's a static object (items, waypoints, etc.)
-        if (entityInstance->type == "item" || entityInstance->type == "waypoint" || 
-            entityInstance->type == "trigger" || entityInstance->type == "spawn")
+        if (entityInstance->type == "Item" || entityInstance->type == "Waypoint" || 
+            entityInstance->type == "Trigger" || entityInstance->type == "Spawn")
         {
             result.pass3_staticObjects.totalObjects++;
             
@@ -706,7 +706,7 @@ bool World::InstantiatePass3_StaticObjects(
             {
                 result.pass3_staticObjects.failed++;
                 result.pass3_staticObjects.failedObjects.push_back(prefabName);
-                std::cout << "  ✗ Failed to create static object: " << prefabName << "\n";
+                std::cout << "  x Failed to create static object: " << prefabName << "\n";
                 continue;
             }
             
@@ -719,7 +719,7 @@ bool World::InstantiatePass3_StaticObjects(
             
             result.pass3_staticObjects.successfullyCreated++;
             result.entityRegistry[entityInstance->name] = entity;
-            std::cout << "  ✓ Created static object: " << entityInstance->name << "\n";
+            std::cout << "  -> Created static object: " << entityInstance->name << "\n";
         }
     }
     
@@ -732,9 +732,9 @@ bool World::InstantiatePass4_DynamicObjects(
     InstantiationResult& result)
 {
     SYSTEM_LOG << "\n";
-    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════════════════╗\n";
-    SYSTEM_LOG << "║ PASS 4: DYNAMIC OBJECTS (Prefab-Based Instantiation)                ║\n";
-    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════════════════╝\n\n";
+    SYSTEM_LOG << "/======================================================================\ \n";
+    SYSTEM_LOG << "| PASS 4: DYNAMIC OBJECTS (Prefab-Based Instantiation)                 | \n";
+    SYSTEM_LOG << "\======================================================================/ \n\n";
     
     PrefabFactory& factory = PrefabFactory::Get();
     factory.SetPrefabRegistry(phase2Result.prefabRegistry);
@@ -771,14 +771,14 @@ bool World::InstantiatePass4_DynamicObjects(
         {
             result.pass4_dynamicObjects.failed++;
             result.pass4_dynamicObjects.failedObjects.push_back(entityInstance->name + " (type: " + entityInstance->type + ")");
-            SYSTEM_LOG << "  ✗ Failed: No prefab found for type '" << entityInstance->type 
+            SYSTEM_LOG << "  x Failed: No prefab found for type '" << entityInstance->type 
                        << "' (instance: " << entityInstance->name << ")\n";
             continue;
         }
         
         const PrefabBlueprint* blueprint = blueprints[0];
         
-        SYSTEM_LOG << "  → Creating: " << entityInstance->name << " [" << blueprint->prefabName << "]\n";
+        SYSTEM_LOG << "  -> Creating: " << entityInstance->name << " [" << blueprint->prefabName << "]\n";
         
         // Create entity
         EntityID entity = CreateEntity();
@@ -786,7 +786,7 @@ bool World::InstantiatePass4_DynamicObjects(
         {
             result.pass4_dynamicObjects.failed++;
             result.pass4_dynamicObjects.failedObjects.push_back(entityInstance->name);
-            SYSTEM_LOG << "    ✗ Failed to create entity ID\n";
+            SYSTEM_LOG << "    x Failed to create entity ID\n";
             continue;
         }
         
@@ -843,7 +843,7 @@ bool World::InstantiatePass4_DynamicObjects(
             if (!resolved.isValid)
             {
                 failedComponents++;
-                SYSTEM_LOG << "    ⚠ Invalid resolved component: " << resolved.componentType << "\n";
+                SYSTEM_LOG << "    /!\ Invalid resolved component: " << resolved.componentType << "\n";
                 continue;
             }
             
@@ -858,18 +858,18 @@ bool World::InstantiatePass4_DynamicObjects(
             else
             {
                 failedComponents++;
-                SYSTEM_LOG << "    ⚠ Failed to instantiate component: " << resolved.componentType << "\n";
+                SYSTEM_LOG << "    /!\ Failed to instantiate component: " << resolved.componentType << "\n";
             }
         }
         
         if (failedComponents > 0)
         {
-            SYSTEM_LOG << "    ⚠ Created with " << componentCount << " components (" 
+            SYSTEM_LOG << "    /!\ Created with " << componentCount << " components (" 
                        << failedComponents << " failed)\n";
         }
         else
         {
-            SYSTEM_LOG << "    ✓ Created with " << componentCount << " components\n";
+            SYSTEM_LOG << "    -> Created with " << componentCount << " components\n";
         }
         
         result.pass4_dynamicObjects.successfullyCreated++;
@@ -877,16 +877,16 @@ bool World::InstantiatePass4_DynamicObjects(
     }
     
     SYSTEM_LOG << "\n";
-    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════════════════╗\n";
-    SYSTEM_LOG << "║ PASS 4 COMPLETE                                                      ║\n";
-    SYSTEM_LOG << "╠══════════════════════════════════════════════════════════════════════╣\n";
-    SYSTEM_LOG << "║ Total Objects:       " << std::setw(3) << result.pass4_dynamicObjects.totalObjects
-               << std::string(45, ' ') << "║\n";
-    SYSTEM_LOG << "║ Successfully Created: " << std::setw(3) << result.pass4_dynamicObjects.successfullyCreated
-               << std::string(44, ' ') << "║\n";
-    SYSTEM_LOG << "║ Failed:              " << std::setw(3) << result.pass4_dynamicObjects.failed
-               << std::string(45, ' ') << "║\n";
-    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════════════════╝\n";
+    SYSTEM_LOG << "/======================================================================\ \n";
+    SYSTEM_LOG << "| PASS 4 COMPLETE                                                      | \n";
+    SYSTEM_LOG << "|======================================================================| \n";
+    SYSTEM_LOG << "| Total Objects:       " << std::setw(3) << result.pass4_dynamicObjects.totalObjects
+               << std::string(45, ' ') << "| \n";
+    SYSTEM_LOG << "| Successfully Created: " << std::setw(3) << result.pass4_dynamicObjects.successfullyCreated
+               << std::string(44, ' ') << "| \n";
+    SYSTEM_LOG << "| Failed:              " << std::setw(3) << result.pass4_dynamicObjects.failed
+               << std::string(45, ' ') << "| \n";
+    SYSTEM_LOG << "\======================================================================/ \n";
     
     return result.pass4_dynamicObjects.IsSuccess();
 }
@@ -933,7 +933,7 @@ bool World::InstantiatePass5_Relationships(
                     }
                     
                     result.pass5_relationships.successfullyCreated++;
-                    std::cout << "  ✓ Assigned " << blackboard.patrolPointCount 
+                    std::cout << "  -> Assigned " << blackboard.patrolPointCount 
                               << " patrol points to: " << entityInstance->name << "\n";
                 }
             }

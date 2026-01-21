@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "type": "EntityPrefab",
+  "type": "Collision",
   "blueprintType": "EntityPrefab",
   "name": "Collision",
   "description": "Invisible Collision zone for navigation",
@@ -34,7 +34,7 @@
 	  {
         "type": "VisualEdotor_data",
         "properties": {
-          "spritePath": "Resources/Icons/zone.png",
+          "spritePath": "./Resources/Icons/zone.png",
           "width": 64,
           "height": 64,
           "layer": 0

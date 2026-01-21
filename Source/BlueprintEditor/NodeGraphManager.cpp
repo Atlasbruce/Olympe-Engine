@@ -864,7 +864,7 @@ namespace Olympe
             std::cout << "[NodeGraphManager] Active graph ID: " << m_ActiveGraphId << std::endl;
 
             std::cout << "\n========================================" << std::endl;
-            std::cout << "[NodeGraphManager::LoadGraph] SUCCESS ✓" << std::endl;
+            std::cout << "[NodeGraphManager::LoadGraph] SUCCESS ->" << std::endl;
             std::cout << "========================================\n" << std::endl;
 
             return graphId;

@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "type": "EntityPrefab",
+  "type": "GuardNPC",
   "blueprintType": "EntityPrefab",
   "name": "GuardNPC",
   "description": "Guard NPC with full AI combat capabilities",
@@ -34,7 +34,7 @@
       {
         "type": "VisualSprite_data",
         "properties": {
-          "spritePath": "Resources/Sprites/guard.png",
+          "spritePath": "./Resources/Sprites/guard.png",
           "width": 32,
           "height": 32,
           "layer": 10

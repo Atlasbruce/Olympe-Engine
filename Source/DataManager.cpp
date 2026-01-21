@@ -479,7 +479,7 @@ DataManager::PreloadStats DataManager::PreloadTextures(
         if (PreloadTexture(id, path, category))
         {
             stats.successfullyLoaded++;
-            SYSTEM_LOG << "  ✓ Loaded texture: " << path << "\n";
+            SYSTEM_LOG << "  -> Loaded texture: " << path << "\n";
         }
         else if (enableFallbackScan && m_enableFallbackScan)
         {
@@ -491,20 +491,20 @@ DataManager::PreloadStats DataManager::PreloadTextures(
             {
                 stats.failedWithFallback++;
                 stats.fallbackPaths[path] = foundPath;
-                SYSTEM_LOG << "  ✓ Loaded texture (fallback): " << path << " -> " << foundPath << "\n";
+                SYSTEM_LOG << "  -> Loaded texture (fallback): " << path << " -> " << foundPath << "\n";
             }
             else
             {
                 stats.completelyFailed++;
                 stats.failedPaths.push_back(path);
-                SYSTEM_LOG << "  ✗ Failed to load texture: " << path << "\n";
+                SYSTEM_LOG << "  x Failed to load texture: " << path << "\n";
             }
         }
         else
         {
             stats.completelyFailed++;
             stats.failedPaths.push_back(path);
-            SYSTEM_LOG << "  ✗ Failed to load texture: " << path << "\n";
+            SYSTEM_LOG << "  x Failed to load texture: " << path << "\n";
         }
     }
     
@@ -535,7 +535,7 @@ DataManager::PreloadStats DataManager::PreloadSprites(
         if (PreloadSprite(id, path, category))
         {
             stats.successfullyLoaded++;
-            SYSTEM_LOG << "  ✓ Loaded sprite: " << path << "\n";
+            SYSTEM_LOG << "  -> Loaded sprite: " << path << "\n";
         }
         else if (enableFallbackScan && m_enableFallbackScan)
         {
@@ -547,20 +547,20 @@ DataManager::PreloadStats DataManager::PreloadSprites(
             {
                 stats.failedWithFallback++;
                 stats.fallbackPaths[path] = foundPath;
-                SYSTEM_LOG << "  ✓ Loaded sprite (fallback): " << path << " -> " << foundPath << "\n";
+                SYSTEM_LOG << "  -> Loaded sprite (fallback): " << path << " -> " << foundPath << "\n";
             }
             else
             {
                 stats.completelyFailed++;
                 stats.failedPaths.push_back(path);
-                SYSTEM_LOG << "  ✗ Failed to load sprite: " << path << "\n";
+                SYSTEM_LOG << "  x Failed to load sprite: " << path << "\n";
             }
         }
         else
         {
             stats.completelyFailed++;
             stats.failedPaths.push_back(path);
-            SYSTEM_LOG << "  ✗ Failed to load sprite: " << path << "\n";
+            SYSTEM_LOG << "  x Failed to load sprite: " << path << "\n";
         }
     }
     
@@ -609,7 +609,7 @@ DataManager::PreloadStats DataManager::PreloadTilesets(
             
             if (PreloadTexture(id, tileset.imageFile, ResourceCategory::Level))
             {
-                SYSTEM_LOG << "  ✓ Loaded tileset image: " << tileset.imageFile << "\n";
+                SYSTEM_LOG << "  -> Loaded tileset image: " << tileset.imageFile << "\n";
             }
             else if (enableFallbackScan && m_enableFallbackScan)
             {
@@ -617,12 +617,12 @@ DataManager::PreloadStats DataManager::PreloadTilesets(
                 if (!foundPath.empty() && PreloadTexture(id, foundPath, ResourceCategory::Level))
                 {
                     stats.fallbackPaths[tileset.imageFile] = foundPath;
-                    SYSTEM_LOG << "  ✓ Loaded tileset image (fallback): " << foundPath << "\n";
+                    SYSTEM_LOG << "  -> Loaded tileset image (fallback): " << foundPath << "\n";
                 }
                 else
                 {
                     success = false;
-                    SYSTEM_LOG << "  ✗ Failed to load tileset image: " << tileset.imageFile << "\n";
+                    SYSTEM_LOG << "  x Failed to load tileset image: " << tileset.imageFile << "\n";
                 }
             }
             else
@@ -640,10 +640,12 @@ DataManager::PreloadStats DataManager::PreloadTilesets(
             {
                 id = id.substr(lastSlash + 1);
             }
+
+            std::string foundPath = FindResourceRecursive(id);
             
-            if (PreloadTexture(id, imagePath, ResourceCategory::Level))
+            if (PreloadTexture(id, foundPath/*imagePath*/, ResourceCategory::Level))
             {
-                SYSTEM_LOG << "  ✓ Loaded tile image: " << imagePath << "\n";
+                SYSTEM_LOG << "  -> Loaded tile image: " << imagePath << "\n";
             }
             else if (enableFallbackScan && m_enableFallbackScan)
             {
@@ -651,12 +653,12 @@ DataManager::PreloadStats DataManager::PreloadTilesets(
                 if (!foundPath.empty() && PreloadTexture(id, foundPath, ResourceCategory::Level))
                 {
                     stats.fallbackPaths[imagePath] = foundPath;
-                    SYSTEM_LOG << "  ✓ Loaded tile image (fallback): " << foundPath << "\n";
+                    SYSTEM_LOG << "  -> Loaded tile image (fallback): " << foundPath << "\n";
                 }
                 else
                 {
                     success = false;
-                    SYSTEM_LOG << "  ✗ Failed to load tile image: " << imagePath << "\n";
+                    SYSTEM_LOG << "  x Failed to load tile image: " << imagePath << "\n";
                 }
             }
             else

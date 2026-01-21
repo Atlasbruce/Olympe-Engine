@@ -276,7 +276,7 @@ struct NPC_data
 // --- Component Input Mapping Data ---
 struct InputMapping_data
 {
-	// Map action name → scancode/button
+	// Map action name -> scancode/button
 	std::unordered_map<std::string, SDL_Scancode> keyboardBindings;
 	std::unordered_map<std::string, int> gamepadBindings;
 	float deadzone = 0.15f;

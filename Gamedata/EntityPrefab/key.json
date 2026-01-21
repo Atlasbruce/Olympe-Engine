@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "type": "EntityPrefab",
+  "type": "Key",
   "blueprintType": "EntityPrefab",
   "name": "Key",
   "description": "Collectible Key to activate triggers or to open doors",
@@ -34,7 +34,7 @@
 	  {
         "type": "VisualEdotor_data",
         "properties": {
-          "spritePath": "Resources/Items/key.png",
+          "spritePath": "./Resources/Sprites/key.png",
           "width": 32,
           "height": 32,
           "layer": 0

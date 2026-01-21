@@ -47,8 +47,14 @@ std::vector<const PrefabBlueprint*> PrefabRegistry::FindByType(const std::string
 {
     std::vector<const PrefabBlueprint*> results;
     for (const auto& pair : m_blueprints)
-    {
-        if (pair.second.prefabType == type)
+    { 
+		// Case-insensitive comparison -> convert both stings to uppercase
+        std::string prefabType = pair.second.prefabType;
+		std::transform(prefabType.begin(), prefabType.end(), prefabType.begin(), ::toupper);
+		std::string searchType = type;
+		std::transform(searchType.begin(), searchType.end(), searchType.begin(), ::toupper);
+
+        if (prefabType == searchType)
         {
             results.push_back(&pair.second);
         }
@@ -92,17 +98,17 @@ std::vector<PrefabBlueprint> PrefabScanner::ScanDirectory(const std::string& roo
     std::vector<std::string> prefabFiles;
     
     // Scan directory recursively
-    SYSTEM_LOG << "→ Scanning for .json files...\n";
+    SYSTEM_LOG << "-> Scanning for .json files...\n";
 #ifdef _WIN32
     ScanDirectoryRecursive_Windows(rootPath, prefabFiles);
 #else
     ScanDirectoryRecursive_Unix(rootPath, prefabFiles);
 #endif
     
-    SYSTEM_LOG << "✓ Found " << prefabFiles.size() << " file(s)\n\n";
+    SYSTEM_LOG << "-> Found " << prefabFiles.size() << " file(s)\n\n";
     
     // Parse each prefab file
-    SYSTEM_LOG << "→ Parsing prefab files...\n";
+    SYSTEM_LOG << "-> Parsing prefab files...\n";
     int validCount = 0;
     int invalidCount = 0;
     int totalComponents = 0;
@@ -121,7 +127,7 @@ std::vector<PrefabBlueprint> PrefabScanner::ScanDirectory(const std::string& roo
                                               blueprint.resources.audioRefs.size() + 
                                               blueprint.resources.modelRefs.size());
             
-            SYSTEM_LOG << "  ✓ " << blueprint.prefabName << " [" << blueprint.prefabType << "] "
+            SYSTEM_LOG << "  -> " << blueprint.prefabName << " [" << blueprint.prefabType << "] "
                       << "(" << blueprint.components.size() << " components, " 
                       << (blueprint.resources.spriteRefs.size() + blueprint.resources.audioRefs.size() + blueprint.resources.modelRefs.size()) 
                       << " resources)\n";
@@ -129,7 +135,7 @@ std::vector<PrefabBlueprint> PrefabScanner::ScanDirectory(const std::string& roo
         else
         {
             invalidCount++;
-            SYSTEM_LOG << "  ✗ " << filepath << " (parse failed)";
+            SYSTEM_LOG << "  x " << filepath << " (parse failed)";
             if (!blueprint.errors.empty())
             {
                 SYSTEM_LOG << " - " << blueprint.errors[0];
@@ -139,18 +145,18 @@ std::vector<PrefabBlueprint> PrefabScanner::ScanDirectory(const std::string& roo
     }
     
     SYSTEM_LOG << "\n";
-    SYSTEM_LOG << "/======================================================================\\\n";
-    SYSTEM_LOG << "| SCAN COMPLETE                                                        |\n";
-    SYSTEM_LOG << "|======================================================================|\n";
+    SYSTEM_LOG << "/======================================================================\ \n";
+    SYSTEM_LOG << "| SCAN COMPLETE                                                        | \n";
+    SYSTEM_LOG << "|======================================================================| \n";
     SYSTEM_LOG << "| Valid Prefabs:   " << validCount
-              << std::string(51 - std::to_string(validCount).length(), ' ') << "|\n";
+              << std::string(51 - std::to_string(validCount).length(), ' ') << "| \n";
     SYSTEM_LOG << "| Invalid Prefabs: " << invalidCount
-              << std::string(51 - std::to_string(invalidCount).length(), ' ') << "|\n";
+              << std::string(51 - std::to_string(invalidCount).length(), ' ') << "| \n";
     SYSTEM_LOG << "| Total Components: " << totalComponents
-              << std::string(50 - std::to_string(totalComponents).length(), ' ') << "|\n";
+              << std::string(50 - std::to_string(totalComponents).length(), ' ') << "| \n";
     SYSTEM_LOG << "| Total Resources:  " << totalResources
-              << std::string(50 - std::to_string(totalResources).length(), ' ') << "|\n";
-    SYSTEM_LOG << "\\======================================================================/\n\n";
+              << std::string(50 - std::to_string(totalResources).length(), ' ') << "| \n";
+    SYSTEM_LOG << "\\======================================================================/ \n\n";
     
     return blueprints;
 }

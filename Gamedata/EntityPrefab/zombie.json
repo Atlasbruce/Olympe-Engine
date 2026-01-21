@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "type": "EntityPrefab",
+  "type": "Zombie",
   "blueprintType": "EntityPrefab",
   "name": "Zombie",
   "description": "Zombie NPC entity",
@@ -34,7 +34,7 @@
       {
         "type": "VisualSprite_data",
         "properties": {
-          "spritePath": "Resources/Items/zombie.png",
+          "spritePath": "./Resources/Sprites/zombie.png",
           "width": 32,
           "height": 32,
           "layer": 0

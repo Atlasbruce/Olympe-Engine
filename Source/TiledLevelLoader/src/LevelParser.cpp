@@ -37,25 +37,26 @@ namespace Tiled {
         LevelParseResult result;
         
         std::cout << "\n";
-        std::cout << "/======================================================================\\n";
-        std::cout << "|         PHASE 1: PARSING & VISUAL ANALYSIS                           |\n";
-        std::cout << "|======================================================================|\n";
-        std::cout << "| File: " << levelPath << std::string(std::max(0, 65 - static_cast<int>(levelPath.length())), ' ') << "|\n";
-        std::cout << "\======================================================================/\n\n";
+        std::cout << "/======================================================================\ \n";
+        std::cout << "|         PHASE 1: PARSING & VISUAL ANALYSIS                           | \n";
+        std::cout << "|======================================================================| \n";
+        std::cout << "| File: " << levelPath << std::string(std::max(0, 65 - static_cast<int>(levelPath.length())), ' ') << "| \n";
+        std::cout << "\======================================================================/ \n\n";
 
         // Step 1: Load the Tiled map using existing loader
         TiledMap tiledMap;
         TiledLevelLoader loader;
         
-        std::cout << "→ Loading Tiled map file...\n";
+        std::cout << "-> Loading Tiled map file...\n";
         if (!loader.LoadFromFile(levelPath, tiledMap))
         {
             result.success = false;
             result.errors.push_back("Failed to load Tiled map: " + loader.GetLastError());
-            std::cout << "✗ Failed to load map: " << loader.GetLastError() << "\n";
+            std::cout << "x Failed to load map: " << loader.GetLastError() << "\n";
             return result;
         }
-        std::cout << "✓ Map loaded successfully\n\n";
+        std::cout << "-> Map loaded successfully\n\n";
+		std::cout << "Extracting metadata and analyzing contents...\n\n";
 
         // Step 2: Extract map metadata
         result.width = tiledMap.width;
@@ -72,80 +73,80 @@ namespace Tiled {
             default: result.orientation = "unknown"; break;
         }
 
-        std::cout << "/======================================================================\\n";
-        std::cout << "| MAP METADATA                                                         |\n";
-        std::cout << "|======================================================================|\n";
+        std::cout << "/======================================================================\ \n";
+        std::cout << "| MAP METADATA                                                         | \n";
+        std::cout << "|======================================================================| \n";
         std::cout << "| Dimensions:   " << result.width << " x " << result.height 
                   << " tiles (" << (result.width * result.tileWidth) << " x " 
                   << (result.height * result.tileHeight) << " pixels)" 
-                  << std::string(std::max(0, 19 - static_cast<int>(std::to_string(result.width).length() + std::to_string(result.height).length())), ' ') << "|\n";
+                  << std::string(std::max(0, 19 - static_cast<int>(std::to_string(result.width).length() + std::to_string(result.height).length())), ' ') << "| \n";
         std::cout << "| Tile Size:    " << result.tileWidth << " x " << result.tileHeight << " pixels"
-                  << std::string(std::max(0, 44 - static_cast<int>(std::to_string(result.tileWidth).length() + std::to_string(result.tileHeight).length())), ' ') << "|\n";
+                  << std::string(std::max(0, 44 - static_cast<int>(std::to_string(result.tileWidth).length() + std::to_string(result.tileHeight).length())), ' ') << "| \n";
         std::cout << "| Orientation:  " << result.orientation 
                   << std::string(54 - result.orientation.length(), ' ') << "|\n";
         std::cout << "| Infinite:     " << (tiledMap.infinite ? "Yes" : "No ")
-                  << std::string(53, ' ') << "|\n";
-        std::cout << "\======================================================================/\n\n";
+                  << std::string(53, ' ') << "| \n";
+        std::cout << "\======================================================================/ \n\n";
 
         // Step 3: Extract visual resources
-        std::cout << "→ Extracting visual resource manifest...\n";
+        std::cout << "-> Extracting visual resource manifest...\n";
         ExtractVisualResources(tiledMap, result.visualManifest);
         
         std::cout << "/======================================================================\ \n";
-        std::cout << "| VISUAL RESOURCES                                                     |\n";
-        std::cout << "|======================================================================|\n";
+        std::cout << "| VISUAL RESOURCES                                                     | \n";
+        std::cout << "|======================================================================| \n";
         std::cout << "| Tilesets:        " << result.visualManifest.GetTilesetCount() 
-                  << std::string(51 - std::to_string(result.visualManifest.GetTilesetCount()).length(), ' ') << "|\n";
+                  << std::string(51 - std::to_string(result.visualManifest.GetTilesetCount()).length(), ' ') << "| \n";
         std::cout << "| Parallax Layers: " << result.visualManifest.GetParallaxLayerCount()
-                  << std::string(51 - std::to_string(result.visualManifest.GetParallaxLayerCount()).length(), ' ') << "|\n";
+                  << std::string(51 - std::to_string(result.visualManifest.GetParallaxLayerCount()).length(), ' ') << "| \n";
         std::cout << "| Total Images:    " << result.visualManifest.GetTotalImageCount()
-                  << std::string(51 - std::to_string(result.visualManifest.GetTotalImageCount()).length(), ' ') << "|\n";
-        std::cout << "\======================================================================/\n\n";
+                  << std::string(51 - std::to_string(result.visualManifest.GetTotalImageCount()).length(), ' ') << "| \n";
+        std::cout << "\======================================================================/ \n\n";
 
         // Step 4: Build object census
-        std::cout << "→ Building object census...\n";
+        std::cout << "-> Building object census...\n";
         BuildObjectCensus(tiledMap, result.objectCensus);
         
         std::cout << "/======================================================================\ \n";
-        std::cout << "| OBJECT CENSUS                                                        |\n";
-        std::cout << "|======================================================================|\n";
+        std::cout << "| OBJECT CENSUS                                                        | \n";
+        std::cout << "|======================================================================| \n";
         std::cout << "| Total Objects:   " << result.objectCensus.GetTotalObjectCount()
-                  << std::string(51 - std::to_string(result.objectCensus.GetTotalObjectCount()).length(), ' ') << "|\n";
+                  << std::string(51 - std::to_string(result.objectCensus.GetTotalObjectCount()).length(), ' ') << "| \n";
         std::cout << "| Unique Types:    " << result.objectCensus.GetUniqueTypeCount()
-                  << std::string(51 - std::to_string(result.objectCensus.GetUniqueTypeCount()).length(), ' ') << "|\n";
+                  << std::string(51 - std::to_string(result.objectCensus.GetUniqueTypeCount()).length(), ' ') << "| \n";
         
         if (!result.objectCensus.typeCounts.empty())
         {
-            std::cout << "|                                                                      |\n";
-            std::cout << "| Type Breakdown:                                                      |\n";
+            std::cout << "|                                                                      | \n";
+            std::cout << "| Type Breakdown:                                                      | \n";
             for (const auto& kv : result.objectCensus.typeCounts)
             {
                 std::string line = "|   " + kv.first + ": " + std::to_string(kv.second);
-                std::cout << line << std::string(70 - line.length(), ' ') << "|\n";
+                std::cout << line << std::string(70 - line.length(), ' ') << "| \n";
             }
         }
-        std::cout << "\======================================================================/\n\n";
+        std::cout << "\======================================================================/ \n\n";
 
         // Step 5: Extract object references
-        std::cout << "→ Extracting object references...\n";
+        std::cout << "-> Extracting object references...\n";
         ExtractObjectReferences(tiledMap, result.objectReferences);
         
         if (!result.objectReferences.empty())
         {
-            std::cout << "✓ Found " << result.objectReferences.size() << " object reference(s)\n\n";
+            std::cout << "-> Found " << result.objectReferences.size() << " object reference(s)\n\n";
         }
 
         result.success = true;
         
-        std::cout << "/======================================================================\\n";
-        std::cout << "| PHASE 1 COMPLETE                                                     |\n";
-        std::cout << "|======================================================================|\n";
-        std::cout << "| Status:   ✓ SUCCESS                                                  |\n";
+        std::cout << "/======================================================================\ \n";
+        std::cout << "| PHASE 1 COMPLETE                                                     | \n";
+        std::cout << "|======================================================================| \n";
+        std::cout << "| Status:   -> SUCCESS                                                  | \n";
         std::cout << "| Errors:   " << result.GetErrorCount()
-                  << std::string(59 - std::to_string(result.GetErrorCount()).length(), ' ') << "|\n";
+                  << std::string(59 - std::to_string(result.GetErrorCount()).length(), ' ') << "| \n";
         std::cout << "| Warnings: " << result.GetWarningCount()
-                  << std::string(59 - std::to_string(result.GetWarningCount()).length(), ' ') << "|\n";
-        std::cout << "\======================================================================/\n\n";
+                  << std::string(59 - std::to_string(result.GetWarningCount()).length(), ' ') << "| \n";
+        std::cout << "\======================================================================/ \n\n";
 
         return result;
     }

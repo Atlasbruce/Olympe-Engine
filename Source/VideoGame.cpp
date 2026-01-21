@@ -183,7 +183,7 @@ void VideoGame::RegisterPrefabItems()
         string prefabName = "PlayerEntity";
         static VisualSprite_data* st_vspriteData_ptr = nullptr;
         string str_index = to_string(Random_Int(1, 15));
-        st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName + str_index, "Resources/SpriteEntities/entity_" + str_index + ".png");
+        st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName + str_index, "Resources/Sprites/entity_" + str_index + ".png");
         if (!st_vspriteData_ptr)
         {
             SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
@@ -241,7 +241,7 @@ void VideoGame::RegisterPrefabItems()
 		world.AddComponent<Identity_data>(id, string("Npc_" + to_string(id)), "Npc", EntityType::NPC);
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "NPCEntity";
-        static VisualSprite_data * st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/entity_" + to_string(Random_Int(1, 15)) + ".png");
+        static VisualSprite_data * st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/Sprites/entity_" + to_string(Random_Int(1, 15)) + ".png");
         if (!st_vspriteData_ptr)
         {
             SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
@@ -261,7 +261,7 @@ void VideoGame::RegisterPrefabItems()
 		world.AddComponent<Identity_data>(id, string("GuardNPC_" + to_string(id)), "GuardNPC", EntityType::NPC);
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "GuardNPC";
-        static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/SpriteEntities/entity_4.png");
+        static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/Sprites/entity_4.png");
         if (!st_vspriteData_ptr)
         {
             SYSTEM_LOG << "PrefabFactory: Failed to load sprite data for " + prefabName + " \n";
@@ -325,11 +325,11 @@ void VideoGame::RegisterPrefabItems()
         world.AddComponent<Identity_data>(id, "Enemy_" + std::to_string(id), "Enemy", EntityType::NPC);
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         
-        static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Enemy", "Resources/SpriteEntities/enemy.png");
+        static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Enemy", "Resources/Sprites/enemy.png");
         if (!sprite) {
             // Fallback to random entity sprite
             string str_index = to_string(Random_Int(1, 15));
-            sprite = DataManager::Get().GetSprite_data("Enemy", "Resources/SpriteEntities/entity_" + str_index + ".png");
+            sprite = DataManager::Get().GetSprite_data("Enemy", "Resources/Sprites/entity_" + str_index + ".png");
         }
         if (sprite) {
             sprite->color = SDL_Color{255, 100, 100, 255}; // Reddish tint for enemies
@@ -353,11 +353,11 @@ void VideoGame::RegisterPrefabItems()
         world.AddComponent<Identity_data>(id, "Zombie_" + std::to_string(id), "Zombie", EntityType::NPC);
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         
-        static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Zombie", "Resources/SpriteEntities/zombie.png");
+        static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Zombie", "Resources/Sprites/zombie.png");
         if (!sprite) {
             // Fallback to random entity sprite
             string str_index = to_string(Random_Int(1, 15));
-            sprite = DataManager::Get().GetSprite_data("Zombie", "Resources/SpriteEntities/entity_" + str_index + ".png");
+            sprite = DataManager::Get().GetSprite_data("Zombie", "Resources/Sprites/entity_" + str_index + ".png");
         }
         if (sprite) {
             sprite->color = SDL_Color{100, 255, 100, 255}; // Greenish tint for zombies
