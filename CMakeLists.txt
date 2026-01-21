@@ -87,6 +87,7 @@ if(BUILD_RUNTIME_ENGINE)
         "Source/Sprite.cpp"
         "Source/PrefabScanner.cpp"
         "Source/ComponentDefinition.cpp"
+        "Source/PrefabFactory.cpp"
         "Source/Rendering/IsometricRenderer.cpp"
     )
     

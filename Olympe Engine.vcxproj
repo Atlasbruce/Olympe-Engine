@@ -58,6 +58,7 @@
     <ClCompile Include="Source\GameState.cpp" />
     <ClCompile Include="Source\OlympeEngine.cpp" />
     <ClCompile Include="Source\PanelManager.cpp" />
+    <ClCompile Include="Source\PrefabFactory.cpp" />
     <ClCompile Include="Source\PrefabScanner.cpp" />
     <ClCompile Include="Source\system\CameraEventHandler.cpp" />
     <ClCompile Include="Source\system\GameMenu.cpp" />
