@@ -12,46 +12,47 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <set>
+#include "ComponentDefinition.h"
 
-// Prefab entry with resource dependencies
-struct PrefabEntry
+// Resource references extracted from prefab
+struct ResourceRefs
 {
-    std::string prefabName;        // Short name (e.g., "player")
-    std::string filePath;          // Full path to .json file
-    std::string entityType;        // Entity type from prefab
-    std::vector<std::string> spriteRefs;   // Sprite references in prefab
-    std::vector<std::string> audioRefs;    // Audio references in prefab
-    bool isValid;                  // Whether prefab JSON was parsed successfully
+    std::vector<std::string> spriteRefs;
+    std::vector<std::string> audioRefs;
+    std::vector<std::string> modelRefs;
+};
+
+// Complete prefab blueprint with component definitions
+struct PrefabBlueprint
+{
+    std::string prefabName;
+    std::string prefabType;
+    std::string filePath;
+    std::string version;
+    std::string description;
+    std::vector<ComponentDefinition> components;
+    ResourceRefs resources;
+    bool isValid;
+    std::vector<std::string> errors;
     
-    PrefabEntry() : isValid(false) {}
-    
-    int GetTotalResourceCount() const 
-    { 
-        return static_cast<int>(spriteRefs.size() + audioRefs.size()); 
-    }
+    PrefabBlueprint() : isValid(false) {}
 };
 
 // Registry of all discovered prefabs
-struct PrefabRegistry
+class PrefabRegistry
 {
-    std::map<std::string, std::vector<PrefabEntry>> prefabsByType;  // type -> prefabs
-    std::map<std::string, PrefabEntry> prefabsByName;               // name -> prefab
-    std::set<std::string> missingPrefabs;                          // Prefabs referenced but not found
+public:
+    PrefabRegistry() = default;
     
-    int GetTotalPrefabCount() const { return static_cast<int>(prefabsByName.size()); }
-    int GetTypeCount() const { return static_cast<int>(prefabsByType.size()); }
+    void Register(const PrefabBlueprint& blueprint);
+    const PrefabBlueprint* Find(const std::string& name) const;
+    std::vector<const PrefabBlueprint*> FindByType(const std::string& type) const;
+    std::vector<std::string> GetAllPrefabNames() const;
+    int GetCount() const { return static_cast<int>(m_blueprints.size()); }
     
-    bool HasPrefab(const std::string& name) const
-    {
-        return prefabsByName.find(name) != prefabsByName.end();
-    }
-    
-    const PrefabEntry* GetPrefab(const std::string& name) const
-    {
-        auto it = prefabsByName.find(name);
-        return (it != prefabsByName.end()) ? &it->second : nullptr;
-    }
+private:
+    std::map<std::string, PrefabBlueprint> m_blueprints;  // name -> blueprint
+    std::map<std::string, std::string> m_typeToName;      // type -> name
 };
 
 // PrefabScanner: Scan directory for prefabs
@@ -61,10 +62,11 @@ public:
     PrefabScanner();
     ~PrefabScanner();
     
-    // Main entry point: Scan a directory for prefab JSON files
-    PrefabRegistry ScanPrefabDirectory(const std::string& rootPath);
+    std::vector<PrefabBlueprint> ScanDirectory(const std::string& rootPath);
     
 private:
+    PrefabBlueprint ParsePrefab(const std::string& filepath);
+    
     // Recursive directory scanning (platform-specific)
 #ifdef _WIN32
     void ScanDirectoryRecursive_Windows(const std::string& path, std::vector<std::string>& outFiles);
@@ -72,15 +74,9 @@ private:
     void ScanDirectoryRecursive_Unix(const std::string& path, std::vector<std::string>& outFiles);
 #endif
     
-    // Parse a prefab JSON file and extract metadata
-    bool ParsePrefabFile(const std::string& filepath, PrefabEntry& outEntry);
-    
-    // Extract resource references from JSON
-    void ExtractResourceReferences(const std::string& jsonContent, PrefabEntry& entry);
-    
-    // Helper: Extract filename from path
+    // Helper methods
+    std::string DetectComponentType(const std::string& typeName);
+    void ExtractResources(const nlohmann::json& componentsJson, ResourceRefs& outResources);
     std::string GetFilename(const std::string& filepath);
-    
-    // Helper: Remove file extension
     std::string RemoveExtension(const std::string& filename);
 };

@@ -426,15 +426,20 @@ World::Phase2Result World::ExecutePhase2(const Olympe::Tiled::LevelParseResult& 
     // Step 1: Scan prefab directory
     std::cout << "→ Scanning prefab directory...\n";
     PrefabScanner scanner;
-    result.prefabRegistry = scanner.ScanPrefabDirectory("GameData\\EntityPrefab");
+    std::vector<PrefabBlueprint> blueprints = scanner.ScanDirectory("GameData\\EntityPrefab");
+    
+    // Build the registry from blueprints
+    for (const auto& blueprint : blueprints)
+    {
+        result.prefabRegistry.Register(blueprint);
+    }
     
     // Step 2: Cross-check level requirements vs available prefabs
     std::cout << "\n→ Cross-checking level requirements...\n";
     for (const auto& type : phase1Result.objectCensus.uniqueTypes)
     {
-        if (!result.prefabRegistry.HasPrefab(type))
+        if (!result.prefabRegistry.Find(type))
         {
-            result.prefabRegistry.missingPrefabs.insert(type);
             std::cout << "  ✗ Missing prefab: " << type << "\n";
         }
         else
@@ -470,16 +475,19 @@ World::Phase2Result World::ExecutePhase2(const Olympe::Tiled::LevelParseResult& 
     // Preload prefab resources
     std::vector<std::string> spritePaths;
     std::vector<std::string> audioPaths;
-    for (const auto& kv : result.prefabRegistry.prefabsByName)
+    for (const auto& name : result.prefabRegistry.GetAllPrefabNames())
     {
-        const PrefabEntry& entry = kv.second;
-        for (const auto& spritePath : entry.spriteRefs)
+        const PrefabBlueprint* blueprint = result.prefabRegistry.Find(name);
+        if (blueprint)
         {
-            spritePaths.push_back(spritePath);
-        }
-        for (const auto& audioPath : entry.audioRefs)
-        {
-            audioPaths.push_back(audioPath);
+            for (const auto& spritePath : blueprint->resources.spriteRefs)
+            {
+                spritePaths.push_back(spritePath);
+            }
+            for (const auto& audioPath : blueprint->resources.audioRefs)
+            {
+                audioPaths.push_back(audioPath);
+            }
         }
     }
     
