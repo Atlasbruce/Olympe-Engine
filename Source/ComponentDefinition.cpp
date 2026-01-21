@@ -217,6 +217,10 @@ Vector ComponentParameter::AsVector() const
 		
 		while (std::getline(iss, token, ',') && idx < 3)
 		{
+			// Trim whitespace
+			token.erase(0, token.find_first_not_of(" \t\n\r"));
+			token.erase(token.find_last_not_of(" \t\n\r") + 1);
+			
 			try {
 				float val = std::stof(token);
 				if (idx == 0) result.x = val;
@@ -245,7 +249,7 @@ SDL_Color ComponentParameter::AsColor() const
 	{
 		// Parse hex color like "#RRGGBB" or "#RRGGBBAA"
 		std::string s = stringValue;
-		if (s[0] == '#' && (s.length() == 7 || s.length() == 9))
+		if (!s.empty() && s[0] == '#' && (s.length() == 7 || s.length() == 9))
 		{
 			try {
 				unsigned long val = std::stoul(s.substr(1), nullptr, 16);
@@ -283,6 +287,10 @@ SDL_Color ComponentParameter::AsColor() const
 			
 			while (std::getline(iss, token, ',') && idx < 4)
 			{
+				// Trim whitespace
+				token.erase(0, token.find_first_not_of(" \t\n\r"));
+				token.erase(token.find_last_not_of(" \t\n\r") + 1);
+				
 				try {
 					values[idx] = std::stoi(token);
 					idx++;
@@ -377,7 +385,7 @@ ComponentDefinition ComponentDefinition::FromJSON(const nlohmann::json& jsonObj)
 				std::string strValue = value.get<std::string>();
 				
 				// Check if it's a color (hex or rgba format)
-				if ((strValue[0] == '#' && (strValue.length() == 7 || strValue.length() == 9)) ||
+				if ((!strValue.empty() && strValue[0] == '#' && (strValue.length() == 7 || strValue.length() == 9)) ||
 					strValue.find("rgb") == 0)
 				{
 					param = ComponentParameter::FromString(strValue);
@@ -424,11 +432,15 @@ ComponentDefinition ComponentDefinition::FromJSON(const nlohmann::json& jsonObj)
 				// Check for color object
 				else if (value.contains("r") && value.contains("g") && value.contains("b"))
 				{
-					uint8_t r = value["r"].is_number() ? static_cast<uint8_t>(value["r"].get<int>()) : 255;
-					uint8_t g = value["g"].is_number() ? static_cast<uint8_t>(value["g"].get<int>()) : 255;
-					uint8_t b = value["b"].is_number() ? static_cast<uint8_t>(value["b"].get<int>()) : 255;
+					auto clamp = [](int v) -> uint8_t { 
+						return static_cast<uint8_t>(v < 0 ? 0 : (v > 255 ? 255 : v)); 
+					};
+					
+					uint8_t r = value["r"].is_number() ? clamp(value["r"].get<int>()) : 255;
+					uint8_t g = value["g"].is_number() ? clamp(value["g"].get<int>()) : 255;
+					uint8_t b = value["b"].is_number() ? clamp(value["b"].get<int>()) : 255;
 					uint8_t a = value.contains("a") && value["a"].is_number() ? 
-								static_cast<uint8_t>(value["a"].get<int>()) : 255;
+								clamp(value["a"].get<int>()) : 255;
 					
 					param = ComponentParameter::FromColor(r, g, b, a);
 				}
@@ -459,10 +471,14 @@ ComponentDefinition ComponentDefinition::FromJSON(const nlohmann::json& jsonObj)
 				// Check if it's a color array [r, g, b] or [r, g, b, a]
 				else if (value.size() >= 3 && value.size() <= 4 && value[0].is_number())
 				{
-					uint8_t r = static_cast<uint8_t>(value[0].get<int>());
-					uint8_t g = static_cast<uint8_t>(value[1].get<int>());
-					uint8_t b = static_cast<uint8_t>(value[2].get<int>());
-					uint8_t a = value.size() == 4 ? static_cast<uint8_t>(value[3].get<int>()) : 255;
+					auto clamp = [](int v) -> uint8_t { 
+						return static_cast<uint8_t>(v < 0 ? 0 : (v > 255 ? 255 : v)); 
+					};
+					
+					uint8_t r = clamp(value[0].get<int>());
+					uint8_t g = clamp(value[1].get<int>());
+					uint8_t b = clamp(value[2].get<int>());
+					uint8_t a = value.size() == 4 ? clamp(value[3].get<int>()) : 255;
 					
 					param = ComponentParameter::FromColor(r, g, b, a);
 				}

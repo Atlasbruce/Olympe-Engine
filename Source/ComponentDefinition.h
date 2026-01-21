@@ -20,9 +20,7 @@ for entity components. Supports type-safe parameter access and conversions.
 
 // Forward declaration
 namespace nlohmann {
-	template<typename T>
-	class basic_json;
-	using json = basic_json<std::map>;
+	class json;
 }
 
 struct ComponentParameter
