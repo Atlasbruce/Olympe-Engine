@@ -88,6 +88,114 @@ namespace Editor {
         std::vector<std::vector<int>> tileMap;      // 2D grid of tile IDs
         std::vector<std::vector<uint8_t>> collisionMap;  // 2D grid of collision masks
 
+        // Visual layers (Pass 1)
+        struct VisualLayer {
+            std::string name;
+            int zOrder;
+            bool isParallax;
+            std::string imagePath;
+            float scrollFactorX;
+            float scrollFactorY;
+            float offsetX;
+            float offsetY;
+            bool repeatX;
+            bool repeatY;
+            float opacity;
+            uint32_t tintColor;
+            bool visible;
+            
+            VisualLayer()
+                : zOrder(0), isParallax(false), scrollFactorX(1.0f), scrollFactorY(1.0f),
+                  offsetX(0.0f), offsetY(0.0f), repeatX(false), repeatY(false),
+                  opacity(1.0f), tintColor(0xFFFFFFFF), visible(true) {}
+        };
+        std::vector<VisualLayer> visualLayers;
+        
+        // Tile layer definitions (Pass 1)
+        struct TileLayerDef {
+            std::string name;
+            int zOrder;
+            std::vector<std::vector<int>> tiles;  // [y][x] = tileGID
+            float opacity;
+            bool visible;
+            
+            TileLayerDef()
+                : zOrder(0), opacity(1.0f), visible(true) {}
+        };
+        std::vector<TileLayerDef> tileLayers;
+        
+        // Spatial structures (Pass 2)
+        struct SectorDef {
+            std::string name;
+            std::string type;
+            std::vector<Vec2> polygon;
+            Vec2 position;
+            nlohmann::json properties;
+            
+            SectorDef()
+                : position(0, 0), properties(json::object()) {}
+        };
+        std::vector<SectorDef> sectors;
+        
+        struct CollisionShape {
+            std::string name;
+            enum Type { Rectangle, Polygon, Polyline } type;
+            Vec2 position;
+            Vec2 size;  // for rectangles
+            std::vector<Vec2> points;  // for polygons/polylines
+            
+            CollisionShape()
+                : type(Rectangle), position(0, 0), size(0, 0) {}
+        };
+        std::vector<CollisionShape> collisionShapes;
+        
+        // Object categorization (Pass 3, 4)
+        struct ObjectCategory {
+            std::vector<std::unique_ptr<EntityInstance>> staticObjects;    // items, waypoints, triggers
+            std::vector<std::unique_ptr<EntityInstance>> dynamicObjects;   // player, NPCs, enemies
+            std::vector<std::unique_ptr<EntityInstance>> patrolPaths;      // AI patrol paths
+            std::vector<std::unique_ptr<EntityInstance>> soundObjects;     // ambient sounds, music
+        };
+        ObjectCategory categorizedObjects;
+        
+        // Relationships (Pass 5)
+        struct ObjectLink {
+            std::string sourceObjectName;
+            int sourceObjectId;
+            std::string targetObjectName;
+            int targetObjectId;
+            std::string linkType;  // "patrol_path", "trigger_target", "ai_target"
+            nlohmann::json linkData;
+            
+            ObjectLink()
+                : sourceObjectId(0), targetObjectId(0), linkData(json::object()) {}
+        };
+        std::vector<ObjectLink> objectLinks;
+        
+        // Resource catalog
+        struct ResourceCatalog {
+            std::vector<std::string> tilesetPaths;
+            std::vector<std::string> imagePaths;
+            std::vector<std::string> audioPaths;
+        };
+        ResourceCatalog resources;
+        
+        // Map configuration
+        struct MapConfig {
+            std::string orientation;  // "orthogonal", "isometric", "staggered", "hexagonal"
+            int tileWidth;
+            int tileHeight;
+            int mapWidth;
+            int mapHeight;
+            std::string renderOrder;  // "right-down", "right-up", "left-down", "left-up"
+            bool infinite;
+            
+            MapConfig()
+                : tileWidth(0), tileHeight(0), mapWidth(0), mapHeight(0),
+                  orientation("orthogonal"), renderOrder("right-down"), infinite(false) {}
+        };
+        MapConfig mapConfig;
+
         LevelDefinition()
             : schema_version(2), type("LevelDefinition"), blueprintType("LevelDefinition"),
               name(""), description(""), levelName(""), worldSize(1024, 768),
