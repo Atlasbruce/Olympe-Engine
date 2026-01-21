@@ -636,7 +636,15 @@ bool World::InstantiatePass2_SpatialStructure(
     {
         if (!entityInstance) continue;
         
-        if (entityInstance->type == "Collision")
+        // Improved: Use case-insensitive substring matching for collision/sector types
+        std::string typeLower = entityInstance->type;
+        std::transform(typeLower.begin(), typeLower.end(), typeLower.begin(), ::tolower);
+        
+        bool isCollision = (typeLower.find("collision") != std::string::npos);
+        bool isSector = (typeLower.find("sector") != std::string::npos || 
+                        typeLower.find("zone") != std::string::npos);
+        
+        if (isCollision)
         {
             result.pass2_spatialStructure.totalObjects++;
             
@@ -651,12 +659,23 @@ bool World::InstantiatePass2_SpatialStructure(
             
             float width = 64.0f;
             float height = 64.0f;
+            float rotation = entityInstance->rotation;
+            
             if (!entityInstance->overrides.is_null())
             {
                 if (entityInstance->overrides.contains("width"))
                     width = entityInstance->overrides["width"].get<float>();
                 if (entityInstance->overrides.contains("height"))
                     height = entityInstance->overrides["height"].get<float>();
+            }
+            
+            // Handle polygon collision if present
+            if (entityInstance->overrides.contains("CollisionPolygon") &&
+                entityInstance->overrides["CollisionPolygon"].contains("points"))
+            {
+                // TODO: Create polygon collision component when available
+                // For now, create bounding box as fallback
+                std::cout << "  -> Created collision polygon (using bbox fallback): " << entityInstance->name << "\n";
             }
             
             AddComponent<CollisionZone_data>(eid, SDL_FRect{
@@ -668,6 +687,26 @@ bool World::InstantiatePass2_SpatialStructure(
             result.pass2_spatialStructure.successfullyCreated++;
             result.entityRegistry[entityInstance->name] = eid;
             std::cout << "  -> Created collision zone: " << entityInstance->name << "\n";
+        }
+        else if (isSector)
+        {
+            // Add sector instantiation support
+            result.pass2_spatialStructure.totalObjects++;
+            
+            EntityID eid = CreateEntity();
+            AddComponent<Identity_data>(eid, entityInstance->name, "Sector", EntityType::Waypoint);
+            AddComponent<Position_data>(eid, Vector(
+                static_cast<float>(entityInstance->position.x),
+                static_cast<float>(entityInstance->position.y),
+                0.0f
+            ));
+            
+            // TODO: Add SectorZone_data component when available
+            
+            result.pass2_spatialStructure.successfullyCreated++;
+            result.sectors.push_back(eid);
+            result.entityRegistry[entityInstance->name] = eid;
+            std::cout << "  -> Created sector: " << entityInstance->name << "\n";
         }
     }
     
@@ -685,32 +724,81 @@ bool World::InstantiatePass3_StaticObjects(
     {
         if (!entityInstance) continue;
         
-        // Skip collision (handled in Pass 2)
-        if (entityInstance->type == "Collision") continue;
+        // Skip collision/sectors (handled in Pass 2)
+        std::string typeLower = entityInstance->type;
+        std::transform(typeLower.begin(), typeLower.end(), typeLower.begin(), ::tolower);
         
-        // Check if it's a static object (items, waypoints, etc.)
-        if (entityInstance->type == "Item" || entityInstance->type == "Waypoint" || 
-            entityInstance->type == "Trigger" || entityInstance->type == "Spawn")
+        if (typeLower.find("collision") != std::string::npos ||
+            typeLower.find("sector") != std::string::npos ||
+            typeLower.find("zone") != std::string::npos)
         {
-            result.pass3_staticObjects.totalObjects++;
-            
-            std::string prefabName = entityInstance->prefabPath;
-            size_t lastSlash = prefabName.find_last_of("/\\");
-            if (lastSlash != std::string::npos)
-                prefabName = prefabName.substr(lastSlash + 1);
-            size_t lastDot = prefabName.find_last_of(".");
-            if (lastDot != std::string::npos)
-                prefabName = prefabName.substr(0, lastDot);
-            
-            EntityID entity = factory.CreateEntity(prefabName);
-            if (entity == INVALID_ENTITY_ID)
+            continue;
+        }
+        
+        // Extensible static type list
+        std::vector<std::string> staticTypes = {
+            "item", "waypoint", "trigger", "spawn",
+            "key", "door", "exit", "pickup", "interactable",
+            "checkpoint", "portal", "teleporter", "switch"
+        };
+        
+        // Check if it's a dynamic type (will be handled in Pass 4)
+        std::vector<std::string> dynamicTypes = {
+            "player", "npc", "guard", "enemy", "zombie", "ambiant"
+        };
+        
+        bool isDynamic = false;
+        for (const auto& dynamicType : dynamicTypes)
+        {
+            if (typeLower == dynamicType)
             {
-                result.pass3_staticObjects.failed++;
-                result.pass3_staticObjects.failedObjects.push_back(prefabName);
-                std::cout << "  x Failed to create static object: " << prefabName << "\n";
-                continue;
+                isDynamic = true;
+                break;
             }
+        }
+        
+        if (isDynamic) continue;
+        
+        // Check if it's a static type
+        bool isStatic = false;
+        for (const auto& staticType : staticTypes)
+        {
+            if (typeLower == staticType)
+            {
+                isStatic = true;
+                break;
+            }
+        }
+        
+        if (!isStatic) continue;
+        
+        result.pass3_staticObjects.totalObjects++;
+        
+        std::string prefabName = entityInstance->prefabPath;
+        size_t lastSlash = prefabName.find_last_of("/\\");
+        if (lastSlash != std::string::npos)
+            prefabName = prefabName.substr(lastSlash + 1);
+        size_t lastDot = prefabName.find_last_of(".");
+        if (lastDot != std::string::npos)
+            prefabName = prefabName.substr(0, lastDot);
+        
+        EntityID entity = factory.CreateEntity(prefabName);
+        if (entity == INVALID_ENTITY_ID)
+        {
+            // Fallback: create basic entity even if prefab missing
+            entity = CreateEntity();
+            AddComponent<Identity_data>(entity, entityInstance->name, entityInstance->type, EntityType::Generic);
+            AddComponent<Position_data>(entity, Vector(
+                static_cast<float>(entityInstance->position.x),
+                static_cast<float>(entityInstance->position.y),
+                0.0f
+            ));
             
+            std::cout << "  ! Created fallback entity (prefab missing): " << entityInstance->name << "\n";
+        }
+        
+        if (entity != INVALID_ENTITY_ID)
+        {
             if (HasComponent<Position_data>(entity))
             {
                 Position_data& pos = GetComponent<Position_data>(entity);
@@ -721,6 +809,11 @@ bool World::InstantiatePass3_StaticObjects(
             result.pass3_staticObjects.successfullyCreated++;
             result.entityRegistry[entityInstance->name] = entity;
             std::cout << "  -> Created static object: " << entityInstance->name << "\n";
+        }
+        else
+        {
+            result.pass3_staticObjects.failed++;
+            result.pass3_staticObjects.failedObjects.push_back(entityInstance->name);
         }
     }
     

@@ -37,10 +37,11 @@ namespace Editor {
 		std::string type;            // Entity type (e.g., "Player", "Enemy", "Item", "Collision"...)
 		std::string spritePath = ""; // Optional sprite path for visual representation
         Vec2 position;               // World position
+        float rotation;              // Rotation in degrees (0-360)
         json overrides;              // Component property overrides
 
         EntityInstance()
-            : id(""), prefabPath(""), name(""), position(), overrides(json::object()) {}
+            : id(""), prefabPath(""), name(""), position(), rotation(0.0f), overrides(json::object()) {}
     };
 
     // Represents level metadata
@@ -156,9 +157,10 @@ namespace Editor {
             Vec2 position;
             Vec2 size;  // for rectangles
             std::vector<Vec2> points;  // for polygons/polylines
+            float rotation;  // rotation in degrees
             
             CollisionShape()
-                : type(Rectangle), position(0, 0), size(0, 0) {}
+                : type(Rectangle), position(0, 0), size(0, 0), rotation(0.0f) {}
         };
         std::vector<CollisionShape> collisionShapes;
         
