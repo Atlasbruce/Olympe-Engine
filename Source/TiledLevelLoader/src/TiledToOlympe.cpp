@@ -32,6 +32,20 @@ namespace Tiled {
         const char* PROPERTY_PATROL_WAY = "patrol way";
         const char* PROPERTY_TARGET = "target";
         const char* PROPERTY_AUDIO = "audio";
+        
+        // Flip flag constants for compact storage
+        const uint8_t FLIP_FLAG_HORIZONTAL = 0x1;
+        const uint8_t FLIP_FLAG_VERTICAL   = 0x2;
+        const uint8_t FLIP_FLAG_DIAGONAL   = 0x4;
+        
+        // Helper function to extract flip flags from Tiled GID
+        inline uint8_t ExtractFlipFlags(uint32_t gid) {
+            uint8_t flags = 0;
+            if (IsFlippedHorizontally(gid)) flags |= FLIP_FLAG_HORIZONTAL;
+            if (IsFlippedVertically(gid))   flags |= FLIP_FLAG_VERTICAL;
+            if (IsFlippedDiagonally(gid))   flags |= FLIP_FLAG_DIAGONAL;
+            return flags;
+        }
     }
 
     void TiledToOlympe::SetConfig(const ConversionConfig& config)
@@ -589,13 +603,7 @@ namespace Tiled {
                                     if (index < static_cast<int>(chunk.data.size())) {
                                         uint32_t gid = chunk.data[index];
                                         chunkDef.tiles[y][x] = GetTileId(gid);
-                                        
-                                        // Extract flip flags: H=0x1, V=0x2, D=0x4
-                                        uint8_t flags = 0;
-                                        if (IsFlippedHorizontally(gid)) flags |= 0x1;
-                                        if (IsFlippedVertically(gid)) flags |= 0x2;
-                                        if (IsFlippedDiagonally(gid)) flags |= 0x4;
-                                        chunkDef.tileFlipFlags[y][x] = flags;
+                                        chunkDef.tileFlipFlags[y][x] = ExtractFlipFlags(gid);
                                     }
                                     ++index;
                                 }
@@ -620,13 +628,7 @@ namespace Tiled {
                                 if (index < static_cast<int>(layer->data.size())) {
                                     uint32_t gid = layer->data[index];
                                     tileDef.tiles[y][x] = GetTileId(gid);
-                                    
-                                    // Extract flip flags: H=0x1, V=0x2, D=0x4
-                                    uint8_t flags = 0;
-                                    if (IsFlippedHorizontally(gid)) flags |= 0x1;
-                                    if (IsFlippedVertically(gid)) flags |= 0x2;
-                                    if (IsFlippedDiagonally(gid)) flags |= 0x4;
-                                    tileDef.tileFlipFlags[y][x] = flags;
+                                    tileDef.tileFlipFlags[y][x] = ExtractFlipFlags(gid);
                                 }
                                 ++index;
                             }
@@ -1040,13 +1042,7 @@ namespace Tiled {
                                 if (index < static_cast<int>(chunk.data.size())) {
                                     uint32_t gid = chunk.data[index];
                                     chunkDef.tiles[y][x] = GetTileId(gid);
-                                    
-                                    // Extract flip flags: H=0x1, V=0x2, D=0x4
-                                    uint8_t flags = 0;
-                                    if (IsFlippedHorizontally(gid)) flags |= 0x1;
-                                    if (IsFlippedVertically(gid)) flags |= 0x2;
-                                    if (IsFlippedDiagonally(gid)) flags |= 0x4;
-                                    chunkDef.tileFlipFlags[y][x] = flags;
+                                    chunkDef.tileFlipFlags[y][x] = ExtractFlipFlags(gid);
                                 }
                                 ++index;
                             }
@@ -1068,13 +1064,7 @@ namespace Tiled {
                             if (index < static_cast<int>(childLayer->data.size())) {
                                 uint32_t gid = childLayer->data[index];
                                 tileDef.tiles[y][x] = GetTileId(gid);
-                                
-                                // Extract flip flags: H=0x1, V=0x2, D=0x4
-                                uint8_t flags = 0;
-                                if (IsFlippedHorizontally(gid)) flags |= 0x1;
-                                if (IsFlippedVertically(gid)) flags |= 0x2;
-                                if (IsFlippedDiagonally(gid)) flags |= 0x4;
-                                tileDef.tileFlipFlags[y][x] = flags;
+                                tileDef.tileFlipFlags[y][x] = ExtractFlipFlags(gid);
                             }
                             ++index;
                         }
