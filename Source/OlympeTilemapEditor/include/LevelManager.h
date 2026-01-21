@@ -116,11 +116,24 @@ namespace Editor {
             std::string name;
             int zOrder;
             std::vector<std::vector<int>> tiles;  // [y][x] = tileGID
+            std::vector<std::vector<uint8_t>> tileFlipFlags;  // [y][x] = flip flags (H=0x1, V=0x2, D=0x4)
             float opacity;
             bool visible;
             
+            // Chunk support for infinite maps
+            struct Chunk {
+                int x, y;  // Chunk coordinates (in tiles)
+                int width, height;  // Chunk dimensions (in tiles)
+                std::vector<std::vector<int>> tiles;  // [y][x] = tileGID
+                std::vector<std::vector<uint8_t>> tileFlipFlags;  // [y][x] = flip flags
+                
+                Chunk() : x(0), y(0), width(0), height(0) {}
+            };
+            std::vector<Chunk> chunks;  // For infinite maps
+            bool isInfinite;  // Whether this layer uses chunks
+            
             TileLayerDef()
-                : zOrder(0), opacity(1.0f), visible(true) {}
+                : zOrder(0), opacity(1.0f), visible(true), isInfinite(false) {}
         };
         std::vector<TileLayerDef> tileLayers;
         
