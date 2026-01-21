@@ -91,6 +91,8 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
         return InstantiateAIBehavior(entity, componentDef);
     else if (type == "AIBlackboard" || type == "AIBlackboard_data")
         return InstantiateAIBlackboard(entity, componentDef);
+    else if (type == "AISenses" || type == "AISenses_data")
+        return InstantiateAISenses(entity, componentDef);
     else if (type == "BoundingBox" || type == "BoundingBox_data")
         return InstantiateBoundingBox(entity, componentDef);
     else if (type == "Movement" || type == "Movement_data")
@@ -207,6 +209,10 @@ bool PrefabFactory::InstantiatePhysicsBody(EntityID entity, const ComponentDefin
     if (def.HasParameter("speed"))
         physics.speed = def.GetParameter("speed")->AsFloat();
     
+    // Note: friction, restitution, useGravity are not in PhysicsBody_data struct currently
+    // These would need to be added to the struct definition in ECS_Components.h
+    // For now, we only support mass and speed
+    
     World::Get().AddComponent<PhysicsBody_data>(entity, physics);
     return true;
 }
@@ -226,37 +232,53 @@ bool PrefabFactory::InstantiateVisualSprite(EntityID entity, const ComponentDefi
         if (!visual.sprite)
         {
             SYSTEM_LOG << "PrefabFactory::InstantiateVisualSprite: Failed to load sprite '" 
-                       << spritePath << "'\n";
-            return false;
+                       << spritePath << "' - component will have null sprite\n";
+            // Don't fail completely - create component with null sprite
         }
-    }
-    
-    // Extract optional hotSpot
-    if (def.HasParameter("hotSpot"))
-    {
-        visual.hotSpot = def.GetParameter("hotSpot")->AsVector();
-    }
-    else if (def.HasParameter("hotSpotX") && def.HasParameter("hotSpotY"))
-    {
-        float x = def.GetParameter("hotSpotX")->AsFloat();
-        float y = def.GetParameter("hotSpotY")->AsFloat();
-        visual.hotSpot = Vector(x, y, 0.0f);
+        else
+        {
+            // Get texture dimensions for srcRect
+            float texW, texH;
+            SDL_GetTextureSize(visual.sprite, &texW, &texH);
+            
+            // Extract optional srcRect
+            if (def.HasParameter("srcX") && def.HasParameter("srcY") && 
+                def.HasParameter("srcW") && def.HasParameter("srcH"))
+            {
+                visual.srcRect.x = def.GetParameter("srcX")->AsFloat();
+                visual.srcRect.y = def.GetParameter("srcY")->AsFloat();
+                visual.srcRect.w = def.GetParameter("srcW")->AsFloat();
+                visual.srcRect.h = def.GetParameter("srcH")->AsFloat();
+            }
+            else
+            {
+                // Default to full texture
+                visual.srcRect = SDL_FRect{0, 0, texW, texH};
+            }
+            
+            // Extract optional hotSpot
+            if (def.HasParameter("hotSpot"))
+            {
+                visual.hotSpot = def.GetParameter("hotSpot")->AsVector();
+            }
+            else if (def.HasParameter("hotSpotX") && def.HasParameter("hotSpotY"))
+            {
+                float x = def.GetParameter("hotSpotX")->AsFloat();
+                float y = def.GetParameter("hotSpotY")->AsFloat();
+                visual.hotSpot = Vector(x, y, 0.0f);
+            }
+            else
+            {
+                // Default to center of sprite
+                visual.hotSpot = Vector(texW / 2.0f, texH / 2.0f, 0.0f);
+            }
+        }
     }
     
     // Extract optional color
     if (def.HasParameter("color"))
     {
         visual.color = def.GetParameter("color")->AsColor();
-    }
-    
-    // Extract optional srcRect
-    if (def.HasParameter("srcX") && def.HasParameter("srcY") && 
-        def.HasParameter("srcW") && def.HasParameter("srcH"))
-    {
-        visual.srcRect.x = def.GetParameter("srcX")->AsFloat();
-        visual.srcRect.y = def.GetParameter("srcY")->AsFloat();
-        visual.srcRect.w = def.GetParameter("srcW")->AsFloat();
-        visual.srcRect.h = def.GetParameter("srcH")->AsFloat();
     }
     
     World::Get().AddComponent<VisualSprite_data>(entity, visual);
@@ -289,7 +311,45 @@ bool PrefabFactory::InstantiateAIBlackboard(EntityID entity, const ComponentDefi
     if (def.HasParameter("attackCooldown"))
         blackboard.attackCooldown = def.GetParameter("attackCooldown")->AsFloat();
     
+    // Add support for additional AI parameters
+    if (def.HasParameter("distanceToTarget"))
+        blackboard.distanceToTarget = def.GetParameter("distanceToTarget")->AsFloat();
+    
+    if (def.HasParameter("targetVisible"))
+        blackboard.targetVisible = def.GetParameter("targetVisible")->AsBool();
+    
+    if (def.HasParameter("targetInRange"))
+        blackboard.targetInRange = def.GetParameter("targetInRange")->AsBool();
+    
     World::Get().AddComponent<AIBlackboard_data>(entity, blackboard);
+    return true;
+}
+
+bool PrefabFactory::InstantiateAISenses(EntityID entity, const ComponentDefinition& def)
+{
+    AISenses_data senses;
+    
+    // Extract senses parameters
+    if (def.HasParameter("visionRadius"))
+        senses.visionRadius = def.GetParameter("visionRadius")->AsFloat();
+    else if (def.HasParameter("visionRange"))
+        senses.visionRadius = def.GetParameter("visionRange")->AsFloat();
+    
+    if (def.HasParameter("visionAngle"))
+        senses.visionAngle = def.GetParameter("visionAngle")->AsFloat();
+    
+    if (def.HasParameter("hearingRadius"))
+        senses.hearingRadius = def.GetParameter("hearingRadius")->AsFloat();
+    else if (def.HasParameter("hearingRange"))
+        senses.hearingRadius = def.GetParameter("hearingRange")->AsFloat();
+    
+    if (def.HasParameter("perceptionHz"))
+        senses.perceptionHz = def.GetParameter("perceptionHz")->AsFloat();
+    
+    if (def.HasParameter("thinkHz"))
+        senses.thinkHz = def.GetParameter("thinkHz")->AsFloat();
+    
+    World::Get().AddComponent<AISenses_data>(entity, senses);
     return true;
 }
 
@@ -308,6 +368,12 @@ bool PrefabFactory::InstantiateBoundingBox(EntityID entity, const ComponentDefin
             bbox.boundingBox.x = def.GetParameter("x")->AsFloat();
         if (def.HasParameter("y"))
             bbox.boundingBox.y = def.GetParameter("y")->AsFloat();
+        
+        // Optional offsetX, offsetY (alternative to x,y)
+        if (def.HasParameter("offsetX"))
+            bbox.boundingBox.x = def.GetParameter("offsetX")->AsFloat();
+        if (def.HasParameter("offsetY"))
+            bbox.boundingBox.y = def.GetParameter("offsetY")->AsFloat();
     }
     
     World::Get().AddComponent<BoundingBox_data>(entity, bbox);

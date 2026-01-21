@@ -88,6 +88,7 @@ private:
     bool InstantiateVisualSprite(EntityID entity, const ComponentDefinition& def);
     bool InstantiateAIBehavior(EntityID entity, const ComponentDefinition& def);
     bool InstantiateAIBlackboard(EntityID entity, const ComponentDefinition& def);
+    bool InstantiateAISenses(EntityID entity, const ComponentDefinition& def);
     bool InstantiateBoundingBox(EntityID entity, const ComponentDefinition& def);
     bool InstantiateMovement(EntityID entity, const ComponentDefinition& def);
     bool InstantiateHealth(EntityID entity, const ComponentDefinition& def);

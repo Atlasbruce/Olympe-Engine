@@ -228,12 +228,26 @@ namespace Tiled {
 
     void TiledToOlympe::ConvertObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level)
     {
-        // Check for special object types
+        // Check for collision polygons/polylines first
+        std::string typeLower = obj.type;
+        std::transform(typeLower.begin(), typeLower.end(), typeLower.begin(), ::tolower);
+        
+        if ((typeLower == "collision" || typeLower.find("collision") != std::string::npos))
+        {
+            if (obj.objectType == ObjectType::Polygon || obj.objectType == ObjectType::Polyline)
+            {
+                ConvertPolygonCollision(obj, level);
+                return;
+            }
+        }
+        
+        // Check for patrol paths (polyline objects)
         if (obj.objectType == ObjectType::Polyline) {
             ConvertPatrolPath(obj, level);
             return;
         }
 
+        // Check for sector polygons
         if (obj.objectType == ObjectType::Polygon) {
             ConvertSectorObject(obj, level);
             return;
@@ -296,6 +310,46 @@ namespace Tiled {
         level.entities.push_back(std::move(entity));
     }
 
+    void TiledToOlympe::ConvertPolygonCollision(const TiledObject& obj, Olympe::Editor::LevelDefinition& level)
+    {
+        // Create a collision polygon entity
+        auto entity = std::make_unique<Olympe::Editor::EntityInstance>();
+        
+        entity->id = "collision_poly_" + std::to_string(obj.id);
+        entity->name = obj.name.empty() ? ("CollisionPoly " + std::to_string(obj.id)) : obj.name;
+        entity->type = "CollisionPolygon";
+        entity->prefabPath = "Blueprints/CollisionPolygon.json";
+        
+        float transformedY = TransformY(obj.y, 0);
+        entity->position = Olympe::Editor::Vec2(obj.x, transformedY);
+        entity->rotation = obj.rotation;
+        
+        // Store polygon/polyline points
+        nlohmann::json polygon = nlohmann::json::array();
+        const auto& points = (obj.objectType == ObjectType::Polygon) ? obj.polygon : obj.polyline;
+        
+        for (const auto& pt : points)
+        {
+            nlohmann::json point = nlohmann::json::object();
+            point["x"] = pt.x;
+            point["y"] = config_.flipY ? -pt.y : pt.y;
+            polygon.push_back(point);
+        }
+        
+        entity->overrides["CollisionPolygon"] = nlohmann::json::object();
+        entity->overrides["CollisionPolygon"]["points"] = polygon;
+        entity->overrides["CollisionPolygon"]["isClosed"] = (obj.objectType == ObjectType::Polygon);
+        
+        // Store dimensions for bounding box fallback
+        entity->overrides["width"] = obj.width;
+        entity->overrides["height"] = obj.height;
+        
+        // Convert properties
+        PropertiesToOverrides(obj.properties, entity->overrides);
+        
+        level.entities.push_back(std::move(entity));
+    }
+
     void TiledToOlympe::ConvertPatrolPath(const TiledObject& obj, Olympe::Editor::LevelDefinition& level)
     {
         // Create a patrol path entity
@@ -334,12 +388,18 @@ namespace Tiled {
         entity->id = "entity_" + std::to_string(obj.id);
         entity->name = obj.name.empty() ? ("Object " + std::to_string(obj.id)) : obj.name;
         
+        // Store entity type
+        entity->type = obj.type;
+        
         // Get prefab path from type mapping
         entity->prefabPath = GetPrefabPath(obj.type);
         
         // Transform position (Tiled uses top-left origin, Olympe may use different)
         float transformedY = TransformY(obj.y, obj.height);
         entity->position = Olympe::Editor::Vec2(obj.x, transformedY);
+
+        // Store rotation (extract to entity level field)
+        entity->rotation = obj.rotation;
 
         // Convert properties to overrides
         PropertiesToOverrides(obj.properties, entity->overrides);
@@ -353,7 +413,7 @@ namespace Tiled {
             entity->overrides["Transform"]["height"] = obj.height;
         }
 
-        // Store rotation if present
+        // Store rotation in Transform overrides if present
         if (obj.rotation != 0.0f) {
             if (!entity->overrides.contains("Transform")) {
                 entity->overrides["Transform"] = nlohmann::json::object();

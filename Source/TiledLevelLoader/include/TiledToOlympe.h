@@ -130,6 +130,7 @@ namespace Tiled {
         void ConvertCollisionObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level);
         void ConvertSectorObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level);
         void ConvertPatrolPath(const TiledObject& obj, Olympe::Editor::LevelDefinition& level);
+        void ConvertPolygonCollision(const TiledObject& obj, Olympe::Editor::LevelDefinition& level);
 
         // Create entity from Tiled object
         std::unique_ptr<Olympe::Editor::EntityInstance> CreateEntity(const TiledObject& obj);
