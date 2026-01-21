@@ -288,6 +288,15 @@
     <ClCompile Include="Source\PrefabScanner.cpp">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
     </ClCompile>
+    <ClCompile Include="Source\ComponentDefinition.cpp">
+      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ParameterResolver.cpp">
+      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ParameterSchema.cpp">
+      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -573,6 +582,15 @@
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
     </ClInclude>
     <ClInclude Include="Source\PrefabScanner.h">
+      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ComponentDefinition.h">
+      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ParameterResolver.h">
+      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ParameterSchema.h">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
     </ClInclude>
   </ItemGroup>

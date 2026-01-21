@@ -85,7 +85,7 @@ std::vector<PrefabBlueprint> PrefabScanner::ScanDirectory(const std::string& roo
     SYSTEM_LOG << "/======================================================================\\\n";
     SYSTEM_LOG << "|         PREFAB DIRECTORY SCAN                                        |\n";
     SYSTEM_LOG << "|======================================================================|\n";
-    SYSTEM_LOG << "| Path: " << rootPath << std::string(std::max(0, 63 - static_cast<int>(rootPath.length())), ' ') << "|\n";
+    SYSTEM_LOG << "| Path: " << rootPath << std::string(max(0, 63 - static_cast<int>(rootPath.length())), ' ') << "|" << endl;
     SYSTEM_LOG << "\\======================================================================/\n\n";
 
     std::vector<PrefabBlueprint> blueprints;

@@ -96,9 +96,11 @@ ResolvedComponentInstance ParameterResolver::ResolveComponent(
 	SYSTEM_LOG << "[ParameterResolver]     Applying " << componentParams.size() 
 	           << " level property overrides" << std::endl;
 	
-	for (const auto& [propName, propValue] : componentParams)
+	for (const auto& it : componentParams)
 	{
-		ApplyPropertyOverride(resolved, propName, propValue);
+	    const std::string& propName = it.first;
+	    const ComponentParameter& propValue = it.second;
+	    ApplyPropertyOverride(resolved, propName, propValue);
 	}
 	
 	return resolved;
@@ -156,8 +158,9 @@ std::map<std::string, ComponentParameter> ParameterResolver::ExtractComponentPar
 	}
 	
 	// Extract parameters that belong to this component
-	for (const auto& [paramName, paramEntry] : schema->parameters)
+	for (const auto& paramPair : schema->parameters)
 	{
+		const std::string& paramName = paramPair.first;
 		// Check if level instance has this parameter
 		auto it = instanceParams.properties.find(paramName);
 		if (it != instanceParams.properties.end())
@@ -251,8 +254,11 @@ void ParameterResolver::ValidateResolvedComponent(ResolvedComponentInstance& com
 	}
 	
 	// Validate parameter types
-	for (const auto& [paramName, paramValue] : component.parameters)
+	for (const auto& paramPair : component.parameters)
 	{
+		const std::string& paramName = paramPair.first;
+		const ComponentParameter& paramValue = paramPair.second;
+		
 		auto schemaIt = schema->parameters.find(paramName);
 		if (schemaIt != schema->parameters.end())
 		{

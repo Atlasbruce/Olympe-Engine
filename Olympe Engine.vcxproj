@@ -43,6 +43,7 @@
     <ClCompile Include="Source\BlueprintEditor\NodeGraphPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntitiesPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\InspectorPanel.cpp" />
+    <ClCompile Include="Source\ComponentDefinition.cpp" />
     <ClCompile Include="Source\drawing.cpp" />
     <ClCompile Include="source\ECS_Register.h" />
     <ClCompile Include="Source\AI\BehaviorTree.cpp" />
@@ -58,6 +59,8 @@
     <ClCompile Include="Source\GameState.cpp" />
     <ClCompile Include="Source\OlympeEngine.cpp" />
     <ClCompile Include="Source\PanelManager.cpp" />
+    <ClCompile Include="Source\ParameterResolver.cpp" />
+    <ClCompile Include="Source\ParameterSchema.cpp" />
     <ClCompile Include="Source\PrefabFactory.cpp" />
     <ClCompile Include="Source\PrefabScanner.cpp" />
     <ClCompile Include="Source\system\CameraEventHandler.cpp" />
@@ -120,6 +123,7 @@
     <ClInclude Include="Source\BlueprintEditor\ValidationPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\WorldBridge.h" />
     <ClInclude Include="Source\CollisionMap.h" />
+    <ClInclude Include="Source\ComponentDefinition.h" />
     <ClInclude Include="Source\drawing.h" />
     <ClInclude Include="source\ECS_Components.h" />
     <ClInclude Include="Source\ECS_Components_AI.h" />
@@ -141,6 +145,8 @@
     <ClInclude Include="Source\Objective.h" />
     <ClInclude Include="Source\OptionsManager.h" />
     <ClInclude Include="Source\PanelManager.h" />
+    <ClInclude Include="Source\ParameterResolver.h" />
+    <ClInclude Include="Source\ParameterSchema.h" />
     <ClInclude Include="source\prefabfactory.h" />
     <ClInclude Include="Source\PrefabScanner.h" />
     <ClInclude Include="Source\Quest.h" />

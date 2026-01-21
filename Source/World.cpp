@@ -461,7 +461,7 @@ World::Phase2Result World::ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::Le
         }
         else
         {
-            SYSTEM_LOG << "  ✓ Found prefab: " << blueprints[0]->metadata.name << " (type: " << type << ")\n";
+            SYSTEM_LOG << "  ✓ Found prefab: " << blueprints[0]->prefabName << " (type: " << type << ")\n";
         }
     }
     
@@ -521,7 +521,7 @@ World::Phase2Result World::ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::Le
         result.preloadResult.sprites = dataManager.PreloadSprites(spritePaths, ResourceCategory::GameEntity, true);
         result.stats.spritesPreloaded = result.preloadResult.sprites.totalRequested;
         SYSTEM_LOG << "  ✓ Preloaded " << result.preloadResult.sprites.successfullyLoaded 
-                   << " sprites (" << result.preloadResult.sprites.failed << " failed)\n";
+                   << " sprites (" << result.preloadResult.sprites.completelyFailed << " failed)\n";
     }
     
     if (!audioPaths.empty())
@@ -529,7 +529,7 @@ World::Phase2Result World::ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::Le
         result.preloadResult.audio = dataManager.PreloadAudioFiles(audioPaths, true);
         result.stats.audioPreloaded = result.preloadResult.audio.totalRequested;
         SYSTEM_LOG << "  ✓ Preloaded " << result.preloadResult.audio.successfullyLoaded 
-                   << " audio files (" << result.preloadResult.audio.failed << " failed)\n";
+                   << " audio files (" << result.preloadResult.audio.completelyFailed << " failed)\n";
     }
     
     result.preloadResult.success = result.preloadResult.IsComplete() || 
@@ -778,7 +778,7 @@ bool World::InstantiatePass4_DynamicObjects(
         
         const PrefabBlueprint* blueprint = blueprints[0];
         
-        SYSTEM_LOG << "  → Creating: " << entityInstance->name << " [" << blueprint->metadata.name << "]\n";
+        SYSTEM_LOG << "  → Creating: " << entityInstance->name << " [" << blueprint->prefabName << "]\n";
         
         // Create entity
         EntityID entity = CreateEntity();
