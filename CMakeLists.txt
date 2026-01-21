@@ -45,6 +45,7 @@ add_library(OlympeCore STATIC
     Source/DataManager.cpp
     Source/drawing.cpp
     Source/PrefabScanner.cpp
+    Source/ComponentDefinition.cpp
 )
 
 target_include_directories(OlympeCore PUBLIC
@@ -85,6 +86,7 @@ if(BUILD_RUNTIME_ENGINE)
         "Source/vector.cpp"
         "Source/Sprite.cpp"
         "Source/PrefabScanner.cpp"
+        "Source/ComponentDefinition.cpp"
         "Source/Rendering/IsometricRenderer.cpp"
     )
     
