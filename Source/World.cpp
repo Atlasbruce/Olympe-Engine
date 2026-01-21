@@ -25,6 +25,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "DataManager.h"
 #include "GameEngine.h"
 #include "../SDL/include/SDL3_image/SDL_image.h"
+#include <algorithm>
 #include <chrono>
 #include <iostream>
 #include <iomanip>
