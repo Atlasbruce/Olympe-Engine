@@ -19,11 +19,15 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "TiledLevelLoader/include/TiledToOlympe.h"
 #include "PrefabScanner.h"
 #include "prefabfactory.h"
+#include "ParameterResolver.h"
+#include "ParameterSchema.h"
+#include "ComponentDefinition.h"
 #include "DataManager.h"
 #include "GameEngine.h"
 #include "../SDL/include/SDL3_image/SDL_image.h"
 #include <chrono>
 #include <iostream>
+#include <iomanip>
 
 //---------------------------------------------------------------------------------------------
 // Helper function to register input entities with InputsManager
@@ -294,7 +298,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     // PHASE 2: PREFAB DISCOVERY & PRELOADING
     // =======================================================================
     
-    Phase2Result phase2Result = ExecutePhase2(phase1Result);
+    Phase2Result phase2Result = ExecutePhase2_PrefabDiscovery(phase1Result);
     
     if (!phase2Result.success)
     {
@@ -344,7 +348,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     InstantiatePass3_StaticObjects(levelDef, instResult);
     
     std::cout << "→ Pass 4: Dynamic Objects (Player, NPCs, Enemies)\n";
-    InstantiatePass4_DynamicObjects(levelDef, instResult);
+    InstantiatePass4_DynamicObjects(levelDef, phase2Result, instResult);
     
     std::cout << "→ Pass 5: Relationships (Patrol Paths, AI Links)\n";
     InstantiatePass5_Relationships(levelDef, instResult);
@@ -414,7 +418,7 @@ void World::UnloadCurrentLevel()
 // Phase 2: Prefab Discovery & Preloading Implementation
 //=============================================================================
 
-World::Phase2Result World::ExecutePhase2(const Olympe::Tiled::LevelParseResult& phase1Result)
+World::Phase2Result World::ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::LevelParseResult& phase1Result)
 {
     SYSTEM_LOG << "\n";
     SYSTEM_LOG << "/======================================================================\\\n";
@@ -424,32 +428,50 @@ World::Phase2Result World::ExecutePhase2(const Olympe::Tiled::LevelParseResult& 
     Phase2Result result;
     
     // Step 1: Scan prefab directory
-    SYSTEM_LOG << "→ Scanning prefab directory...\n";
+    SYSTEM_LOG << "→ Step 1: Scanning prefab directory...\n";
     PrefabScanner scanner;
     std::vector<PrefabBlueprint> blueprints = scanner.ScanDirectory("GameData\\EntityPrefab");
+    
+    if (blueprints.empty())
+    {
+        SYSTEM_LOG << "  ⚠ No prefabs found in directory\n";
+        result.errors.push_back("No prefabs found in GameData\\EntityPrefab");
+    }
     
     // Build the registry from blueprints
     for (const auto& blueprint : blueprints)
     {
         result.prefabRegistry.Register(blueprint);
+        result.stats.prefabsLoaded++;
     }
     
+    SYSTEM_LOG << "  ✓ Loaded " << result.stats.prefabsLoaded << " prefab blueprints\n";
+    
     // Step 2: Cross-check level requirements vs available prefabs
-    SYSTEM_LOG << "\n→ Cross-checking level requirements...\n";
+    SYSTEM_LOG << "\n→ Step 2: Cross-checking level requirements...\n";
+    
     for (const auto& type : phase1Result.objectCensus.uniqueTypes)
     {
-        if (!result.prefabRegistry.Find(type))
+        std::vector<const PrefabBlueprint*> blueprints = result.prefabRegistry.FindByType(type);
+        
+        if (blueprints.empty())
         {
-            SYSTEM_LOG << "  ✗ Missing prefab: " << type << "\n";
+            SYSTEM_LOG << "  ✗ Missing prefab for type: " << type << "\n";
+            result.missingPrefabs.push_back(type);
         }
         else
         {
-            SYSTEM_LOG << "  ✓ Found prefab: " << type << "\n";
+            SYSTEM_LOG << "  ✓ Found prefab: " << blueprints[0]->metadata.name << " (type: " << type << ")\n";
         }
     }
     
+    if (!result.missingPrefabs.empty())
+    {
+        SYSTEM_LOG << "  ⚠ " << result.missingPrefabs.size() << " missing prefabs detected\n";
+    }
+    
     // Step 3: Preload visual resources
-    SYSTEM_LOG << "\n→ Preloading visual resources...\n";
+    SYSTEM_LOG << "\n→ Step 3: Preloading visual resources...\n";
     DataManager& dataManager = DataManager::Get();
     
     // Preload tilesets
@@ -472,9 +494,12 @@ World::Phase2Result World::ExecutePhase2(const Olympe::Tiled::LevelParseResult& 
     );
     result.preloadResult.textures = dataManager.PreloadTextures(parallaxPaths, ResourceCategory::Level, true);
     
-    // Preload prefab resources
+    // Step 4: Preload prefab resources (sprites and audio)
+    SYSTEM_LOG << "\n→ Step 4: Preloading prefab resources...\n";
+    
     std::vector<std::string> spritePaths;
     std::vector<std::string> audioPaths;
+    
     for (const auto& name : result.prefabRegistry.GetAllPrefabNames())
     {
         const PrefabBlueprint* blueprint = result.prefabRegistry.Find(name);
@@ -494,11 +519,17 @@ World::Phase2Result World::ExecutePhase2(const Olympe::Tiled::LevelParseResult& 
     if (!spritePaths.empty())
     {
         result.preloadResult.sprites = dataManager.PreloadSprites(spritePaths, ResourceCategory::GameEntity, true);
+        result.stats.spritesPreloaded = result.preloadResult.sprites.totalRequested;
+        SYSTEM_LOG << "  ✓ Preloaded " << result.preloadResult.sprites.successfullyLoaded 
+                   << " sprites (" << result.preloadResult.sprites.failed << " failed)\n";
     }
     
     if (!audioPaths.empty())
     {
         result.preloadResult.audio = dataManager.PreloadAudioFiles(audioPaths, true);
+        result.stats.audioPreloaded = result.preloadResult.audio.totalRequested;
+        SYSTEM_LOG << "  ✓ Preloaded " << result.preloadResult.audio.successfullyLoaded 
+                   << " audio files (" << result.preloadResult.audio.failed << " failed)\n";
     }
     
     result.preloadResult.success = result.preloadResult.IsComplete() || 
@@ -507,16 +538,22 @@ World::Phase2Result World::ExecutePhase2(const Olympe::Tiled::LevelParseResult& 
     
     // Summary
     SYSTEM_LOG << "\n";
-    SYSTEM_LOG << "/======================================================================\\\n";
-    SYSTEM_LOG << "| PHASE 2 COMPLETE                                                     |\n";
-    SYSTEM_LOG << "|======================================================================|\n";
-    SYSTEM_LOG << "| Prefabs Found:    " << result.prefabRegistry.GetCount()
-              << std::string(49 - std::to_string(result.prefabRegistry.GetCount()).length(), ' ') << "|\n";
-    SYSTEM_LOG << "| Resources Loaded: " << result.preloadResult.GetTotalLoaded()
-              << std::string(49 - std::to_string(result.preloadResult.GetTotalLoaded()).length(), ' ') << "|\n";
-    SYSTEM_LOG << "| Resources Failed: " << result.preloadResult.GetTotalFailed()
-              << std::string(49 - std::to_string(result.preloadResult.GetTotalFailed()).length(), ' ') << "|\n";
-    SYSTEM_LOG << "\\======================================================================/\n";
+    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════════════════╗\n";
+    SYSTEM_LOG << "║ PHASE 2 COMPLETE                                                     ║\n";
+    SYSTEM_LOG << "╠══════════════════════════════════════════════════════════════════════╣\n";
+    SYSTEM_LOG << "║ Prefabs Loaded:      " << std::setw(3) << result.stats.prefabsLoaded
+               << std::string(45, ' ') << "║\n";
+    SYSTEM_LOG << "║ Missing Prefabs:     " << std::setw(3) << result.missingPrefabs.size()
+               << std::string(45, ' ') << "║\n";
+    SYSTEM_LOG << "║ Sprites Preloaded:   " << std::setw(3) << result.stats.spritesPreloaded
+               << std::string(45, ' ') << "║\n";
+    SYSTEM_LOG << "║ Audio Preloaded:     " << std::setw(3) << result.stats.audioPreloaded
+               << std::string(45, ' ') << "║\n";
+    SYSTEM_LOG << "║ Resources Loaded:    " << std::setw(3) << result.preloadResult.GetTotalLoaded()
+               << std::string(45, ' ') << "║\n";
+    SYSTEM_LOG << "║ Resources Failed:    " << std::setw(3) << result.preloadResult.GetTotalFailed()
+               << std::string(45, ' ') << "║\n";
+    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════════════════╝\n";
     
     return result;
 }
@@ -691,55 +728,167 @@ bool World::InstantiatePass3_StaticObjects(
 
 bool World::InstantiatePass4_DynamicObjects(
     const Olympe::Editor::LevelDefinition& levelDef,
+    const Phase2Result& phase2Result,
     InstantiationResult& result)
 {
-    // Create player, NPCs, enemies, and other dynamic objects
+    SYSTEM_LOG << "\n";
+    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════════════════╗\n";
+    SYSTEM_LOG << "║ PASS 4: DYNAMIC OBJECTS (Prefab-Based Instantiation)                ║\n";
+    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════════════════╝\n\n";
+    
     PrefabFactory& factory = PrefabFactory::Get();
+    factory.SetPrefabRegistry(phase2Result.prefabRegistry);
+    
+    ParameterResolver resolver;
+    
+    std::vector<std::string> dynamicTypes = {
+        "player", "npc", "guard", "enemy", "zombie", "trigger", "ambiant"
+    };
     
     for (const auto& entityInstance : levelDef.entities)
     {
         if (!entityInstance) continue;
         
-        // Skip already handled types
-        if (entityInstance->type == "collision" || entityInstance->type == "item" || 
-            entityInstance->type == "waypoint" || entityInstance->type == "trigger" || 
-            entityInstance->type == "spawn")
+        // Filter: Only dynamic types
+        bool isDynamic = false;
+        for (const auto& dynamicType : dynamicTypes)
         {
-            continue;
+            if (entityInstance->type == dynamicType)
+            {
+                isDynamic = true;
+                break;
+            }
         }
+        
+        if (!isDynamic) continue;
         
         result.pass4_dynamicObjects.totalObjects++;
         
-        std::string prefabName = entityInstance->prefabPath;
-        size_t lastSlash = prefabName.find_last_of("/\\");
-        if (lastSlash != std::string::npos)
-            prefabName = prefabName.substr(lastSlash + 1);
-        size_t lastDot = prefabName.find_last_of(".");
-        if (lastDot != std::string::npos)
-            prefabName = prefabName.substr(0, lastDot);
+        // Find prefab blueprint by type
+        std::vector<const PrefabBlueprint*> blueprints = phase2Result.prefabRegistry.FindByType(entityInstance->type);
         
-        EntityID entity = factory.CreateEntity(prefabName);
-        if (entity == INVALID_ENTITY_ID)
+        if (blueprints.empty())
         {
             result.pass4_dynamicObjects.failed++;
-            result.pass4_dynamicObjects.failedObjects.push_back(prefabName);
-            std::cout << "  ✗ Failed to create dynamic object: " << prefabName << "\n";
+            result.pass4_dynamicObjects.failedObjects.push_back(entityInstance->name + " (type: " + entityInstance->type + ")");
+            SYSTEM_LOG << "  ✗ Failed: No prefab found for type '" << entityInstance->type 
+                       << "' (instance: " << entityInstance->name << ")\n";
             continue;
         }
         
-        if (HasComponent<Position_data>(entity))
+        const PrefabBlueprint* blueprint = blueprints[0];
+        
+        SYSTEM_LOG << "  → Creating: " << entityInstance->name << " [" << blueprint->metadata.name << "]\n";
+        
+        // Create entity
+        EntityID entity = CreateEntity();
+        if (entity == INVALID_ENTITY_ID)
         {
-            Position_data& pos = GetComponent<Position_data>(entity);
-            pos.position.x = static_cast<float>(entityInstance->position.x);
-            pos.position.y = static_cast<float>(entityInstance->position.y);
+            result.pass4_dynamicObjects.failed++;
+            result.pass4_dynamicObjects.failedObjects.push_back(entityInstance->name);
+            SYSTEM_LOG << "    ✗ Failed to create entity ID\n";
+            continue;
+        }
+        
+        // Build level instance parameters
+        LevelInstanceParameters instanceParams(entityInstance->name, entityInstance->type);
+        instanceParams.position = Vector(
+            static_cast<float>(entityInstance->position.x),
+            static_cast<float>(entityInstance->position.y),
+            0.0f
+        );
+        
+        // Extract custom properties from level instance
+        if (!entityInstance->overrides.is_null())
+        {
+            for (auto it = entityInstance->overrides.begin(); it != entityInstance->overrides.end(); ++it)
+            {
+                ComponentParameter param;
+                const auto& value = it.value();
+                
+                if (value.is_number_float())
+                {
+                    param.type = ComponentParameter::Type::Float;
+                    param.floatValue = value.get<float>();
+                }
+                else if (value.is_number_integer())
+                {
+                    param.type = ComponentParameter::Type::Int;
+                    param.intValue = value.get<int>();
+                }
+                else if (value.is_boolean())
+                {
+                    param.type = ComponentParameter::Type::Bool;
+                    param.boolValue = value.get<bool>();
+                }
+                else if (value.is_string())
+                {
+                    param.type = ComponentParameter::Type::String;
+                    param.stringValue = value.get<std::string>();
+                }
+                
+                instanceParams.properties[it.key()] = param;
+            }
+        }
+        
+        // Resolve components using ParameterResolver
+        std::vector<ResolvedComponentInstance> resolvedComponents = resolver.Resolve(*blueprint, instanceParams);
+        
+        // Instantiate components
+        int componentCount = 0;
+        int failedComponents = 0;
+        
+        for (const auto& resolved : resolvedComponents)
+        {
+            if (!resolved.isValid)
+            {
+                failedComponents++;
+                SYSTEM_LOG << "    ⚠ Invalid resolved component: " << resolved.componentType << "\n";
+                continue;
+            }
+            
+            ComponentDefinition compDef;
+            compDef.componentType = resolved.componentType;
+            compDef.parameters = resolved.parameters;
+            
+            if (factory.InstantiateComponent(entity, compDef))
+            {
+                componentCount++;
+            }
+            else
+            {
+                failedComponents++;
+                SYSTEM_LOG << "    ⚠ Failed to instantiate component: " << resolved.componentType << "\n";
+            }
+        }
+        
+        if (failedComponents > 0)
+        {
+            SYSTEM_LOG << "    ⚠ Created with " << componentCount << " components (" 
+                       << failedComponents << " failed)\n";
+        }
+        else
+        {
+            SYSTEM_LOG << "    ✓ Created with " << componentCount << " components\n";
         }
         
         result.pass4_dynamicObjects.successfullyCreated++;
         result.entityRegistry[entityInstance->name] = entity;
-        std::cout << "  ✓ Created dynamic object: " << entityInstance->name << "\n";
     }
     
-    return true;
+    SYSTEM_LOG << "\n";
+    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════════════════╗\n";
+    SYSTEM_LOG << "║ PASS 4 COMPLETE                                                      ║\n";
+    SYSTEM_LOG << "╠══════════════════════════════════════════════════════════════════════╣\n";
+    SYSTEM_LOG << "║ Total Objects:       " << std::setw(3) << result.pass4_dynamicObjects.totalObjects
+               << std::string(45, ' ') << "║\n";
+    SYSTEM_LOG << "║ Successfully Created: " << std::setw(3) << result.pass4_dynamicObjects.successfullyCreated
+               << std::string(44, ' ') << "║\n";
+    SYSTEM_LOG << "║ Failed:              " << std::setw(3) << result.pass4_dynamicObjects.failed
+               << std::string(45, ' ') << "║\n";
+    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════════════════╝\n";
+    
+    return result.pass4_dynamicObjects.IsSuccess();
 }
 
 bool World::InstantiatePass5_Relationships(
