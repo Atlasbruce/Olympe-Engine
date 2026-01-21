@@ -416,15 +416,15 @@ void World::UnloadCurrentLevel()
 
 World::Phase2Result World::ExecutePhase2(const Olympe::Tiled::LevelParseResult& phase1Result)
 {
-    std::cout << "\n";
-    std::cout << "/======================================================================\\n";
-    std::cout << "|         PHASE 2: PREFAB DISCOVERY & PRELOADING                       |\n";
-    std::cout << "\======================================================================/\n\n";
+    SYSTEM_LOG << "\n";
+    SYSTEM_LOG << "/======================================================================\\\n";
+    SYSTEM_LOG << "|         PHASE 2: PREFAB DISCOVERY & PRELOADING                       |\n";
+    SYSTEM_LOG << "\\======================================================================/\n\n";
     
     Phase2Result result;
     
     // Step 1: Scan prefab directory
-    std::cout << "→ Scanning prefab directory...\n";
+    SYSTEM_LOG << "→ Scanning prefab directory...\n";
     PrefabScanner scanner;
     std::vector<PrefabBlueprint> blueprints = scanner.ScanDirectory("GameData\\EntityPrefab");
     
@@ -435,21 +435,21 @@ World::Phase2Result World::ExecutePhase2(const Olympe::Tiled::LevelParseResult& 
     }
     
     // Step 2: Cross-check level requirements vs available prefabs
-    std::cout << "\n→ Cross-checking level requirements...\n";
+    SYSTEM_LOG << "\n→ Cross-checking level requirements...\n";
     for (const auto& type : phase1Result.objectCensus.uniqueTypes)
     {
         if (!result.prefabRegistry.Find(type))
         {
-            std::cout << "  ✗ Missing prefab: " << type << "\n";
+            SYSTEM_LOG << "  ✗ Missing prefab: " << type << "\n";
         }
         else
         {
-            std::cout << "  ✓ Found prefab: " << type << "\n";
+            SYSTEM_LOG << "  ✓ Found prefab: " << type << "\n";
         }
     }
     
     // Step 3: Preload visual resources
-    std::cout << "\n→ Preloading visual resources...\n";
+    SYSTEM_LOG << "\n→ Preloading visual resources...\n";
     DataManager& dataManager = DataManager::Get();
     
     // Preload tilesets
@@ -506,17 +506,17 @@ World::Phase2Result World::ExecutePhase2(const Olympe::Tiled::LevelParseResult& 
     result.success = true;
     
     // Summary
-    std::cout << "\n";
-    std::cout << "/======================================================================\\n";
-    std::cout << "| PHASE 2 COMPLETE                                                     |\n";
-    std::cout << "|======================================================================|\n";
-    std::cout << "| Prefabs Found:    " << result.prefabRegistry.GetTotalPrefabCount()
-              << std::string(49 - std::to_string(result.prefabRegistry.GetTotalPrefabCount()).length(), ' ') << "|\n";
-    std::cout << "| Resources Loaded: " << result.preloadResult.GetTotalLoaded()
+    SYSTEM_LOG << "\n";
+    SYSTEM_LOG << "/======================================================================\\\n";
+    SYSTEM_LOG << "| PHASE 2 COMPLETE                                                     |\n";
+    SYSTEM_LOG << "|======================================================================|\n";
+    SYSTEM_LOG << "| Prefabs Found:    " << result.prefabRegistry.GetCount()
+              << std::string(49 - std::to_string(result.prefabRegistry.GetCount()).length(), ' ') << "|\n";
+    SYSTEM_LOG << "| Resources Loaded: " << result.preloadResult.GetTotalLoaded()
               << std::string(49 - std::to_string(result.preloadResult.GetTotalLoaded()).length(), ' ') << "|\n";
-    std::cout << "| Resources Failed: " << result.preloadResult.GetTotalFailed()
+    SYSTEM_LOG << "| Resources Failed: " << result.preloadResult.GetTotalFailed()
               << std::string(49 - std::to_string(result.preloadResult.GetTotalFailed()).length(), ' ') << "|\n";
-    std::cout << "\======================================================================/\n";
+    SYSTEM_LOG << "\\======================================================================/\n";
     
     return result;
 }

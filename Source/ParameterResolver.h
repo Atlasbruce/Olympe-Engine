@@ -17,6 +17,7 @@ overrides with priority-based merging and type conversion.
 #include <vector>
 #include "vector.h"
 #include "ComponentDefinition.h"
+#include "PrefabScanner.h"
 
 // Forward declarations
 namespace Olympe {
@@ -24,19 +25,6 @@ namespace Blueprint {
 	struct EntityBlueprint;
 }
 }
-
-// PrefabBlueprint - Simplified structure for prefab data
-// Note: This will be refactored later, but we maintain compatibility
-struct PrefabBlueprint
-{
-	std::string prefabName;
-	std::string entityType;
-	std::vector<ComponentDefinition> components;
-	
-	PrefabBlueprint() = default;
-	PrefabBlueprint(const std::string& name, const std::string& type)
-		: prefabName(name), entityType(type) {}
-};
 
 // Object reference for linking level objects together
 struct ObjectReference
