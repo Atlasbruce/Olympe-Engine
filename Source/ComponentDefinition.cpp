@@ -18,6 +18,12 @@ for entity components. Supports type-safe parameter access and conversions.
 
 using nlohmann::json;
 
+// Helper function for clamping color values to valid range
+static inline uint8_t ClampColorValue(int value)
+{
+	return static_cast<uint8_t>(value < 0 ? 0 : (value > 255 ? 255 : value));
+}
+
 // ============================================================================
 // ComponentParameter Factory Methods
 // ============================================================================
@@ -292,7 +298,7 @@ SDL_Color ComponentParameter::AsColor() const
 				token.erase(token.find_last_not_of(" \t\n\r") + 1);
 				
 				try {
-					values[idx] = std::stoi(token);
+					values[idx] = ClampColorValue(std::stoi(token));
 					idx++;
 				}
 				catch (...) {
@@ -432,15 +438,11 @@ ComponentDefinition ComponentDefinition::FromJSON(const nlohmann::json& jsonObj)
 				// Check for color object
 				else if (value.contains("r") && value.contains("g") && value.contains("b"))
 				{
-					auto clamp = [](int v) -> uint8_t { 
-						return static_cast<uint8_t>(v < 0 ? 0 : (v > 255 ? 255 : v)); 
-					};
-					
-					uint8_t r = value["r"].is_number() ? clamp(value["r"].get<int>()) : 255;
-					uint8_t g = value["g"].is_number() ? clamp(value["g"].get<int>()) : 255;
-					uint8_t b = value["b"].is_number() ? clamp(value["b"].get<int>()) : 255;
+					uint8_t r = value["r"].is_number() ? ClampColorValue(value["r"].get<int>()) : 255;
+					uint8_t g = value["g"].is_number() ? ClampColorValue(value["g"].get<int>()) : 255;
+					uint8_t b = value["b"].is_number() ? ClampColorValue(value["b"].get<int>()) : 255;
 					uint8_t a = value.contains("a") && value["a"].is_number() ? 
-								clamp(value["a"].get<int>()) : 255;
+								ClampColorValue(value["a"].get<int>()) : 255;
 					
 					param = ComponentParameter::FromColor(r, g, b, a);
 				}
@@ -471,14 +473,10 @@ ComponentDefinition ComponentDefinition::FromJSON(const nlohmann::json& jsonObj)
 				// Check if it's a color array [r, g, b] or [r, g, b, a]
 				else if (value.size() >= 3 && value.size() <= 4 && value[0].is_number())
 				{
-					auto clamp = [](int v) -> uint8_t { 
-						return static_cast<uint8_t>(v < 0 ? 0 : (v > 255 ? 255 : v)); 
-					};
-					
-					uint8_t r = clamp(value[0].get<int>());
-					uint8_t g = clamp(value[1].get<int>());
-					uint8_t b = clamp(value[2].get<int>());
-					uint8_t a = value.size() == 4 ? clamp(value[3].get<int>()) : 255;
+					uint8_t r = ClampColorValue(value[0].get<int>());
+					uint8_t g = ClampColorValue(value[1].get<int>());
+					uint8_t b = ClampColorValue(value[2].get<int>());
+					uint8_t a = value.size() == 4 ? ClampColorValue(value[3].get<int>()) : 255;
 					
 					param = ComponentParameter::FromColor(r, g, b, a);
 				}
