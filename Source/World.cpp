@@ -351,6 +351,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     InstantiatePass4_DynamicObjects(levelDef, phase2Result, instResult);
     
     std::cout << "-> Pass 5: Relationships (Patrol Paths, AI Links)\n";
+
     InstantiatePass5_Relationships(levelDef, instResult);
     
     instResult.success = true;
