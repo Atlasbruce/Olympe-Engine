@@ -1018,17 +1018,66 @@ namespace Tiled {
                 tileDef.zOrder = zOrder++;
                 tileDef.opacity = childLayer->opacity;
                 tileDef.visible = childLayer->visible;
+                tileDef.isInfinite = !childLayer->chunks.empty();
                 
-                // Extract tile data
-                tileDef.tiles.resize(childLayer->height);
-                int index = 0;
-                for (int y = 0; y < childLayer->height; ++y) {
-                    tileDef.tiles[y].resize(childLayer->width, 0);
-                    for (int x = 0; x < childLayer->width; ++x) {
-                        if (index < static_cast<int>(childLayer->data.size())) {
-                            tileDef.tiles[y][x] = GetTileId(childLayer->data[index]);
+                // Handle infinite maps with chunks
+                if (tileDef.isInfinite) {
+                    for (const auto& chunk : childLayer->chunks) {
+                        Olympe::Editor::LevelDefinition::TileLayerDef::Chunk chunkDef;
+                        chunkDef.x = chunk.x;
+                        chunkDef.y = chunk.y;
+                        chunkDef.width = chunk.width;
+                        chunkDef.height = chunk.height;
+                        
+                        // Extract chunk tile data and flip flags
+                        chunkDef.tiles.resize(chunk.height);
+                        chunkDef.tileFlipFlags.resize(chunk.height);
+                        int index = 0;
+                        for (int y = 0; y < chunk.height; ++y) {
+                            chunkDef.tiles[y].resize(chunk.width, 0);
+                            chunkDef.tileFlipFlags[y].resize(chunk.width, 0);
+                            for (int x = 0; x < chunk.width; ++x) {
+                                if (index < static_cast<int>(chunk.data.size())) {
+                                    uint32_t gid = chunk.data[index];
+                                    chunkDef.tiles[y][x] = GetTileId(gid);
+                                    
+                                    // Extract flip flags: H=0x1, V=0x2, D=0x4
+                                    uint8_t flags = 0;
+                                    if (IsFlippedHorizontally(gid)) flags |= 0x1;
+                                    if (IsFlippedVertically(gid)) flags |= 0x2;
+                                    if (IsFlippedDiagonally(gid)) flags |= 0x4;
+                                    chunkDef.tileFlipFlags[y][x] = flags;
+                                }
+                                ++index;
+                            }
                         }
-                        ++index;
+                        
+                        tileDef.chunks.push_back(chunkDef);
+                    }
+                }
+                // Handle finite maps with regular data
+                else {
+                    // Extract tile data and flip flags
+                    tileDef.tiles.resize(childLayer->height);
+                    tileDef.tileFlipFlags.resize(childLayer->height);
+                    int index = 0;
+                    for (int y = 0; y < childLayer->height; ++y) {
+                        tileDef.tiles[y].resize(childLayer->width, 0);
+                        tileDef.tileFlipFlags[y].resize(childLayer->width, 0);
+                        for (int x = 0; x < childLayer->width; ++x) {
+                            if (index < static_cast<int>(childLayer->data.size())) {
+                                uint32_t gid = childLayer->data[index];
+                                tileDef.tiles[y][x] = GetTileId(gid);
+                                
+                                // Extract flip flags: H=0x1, V=0x2, D=0x4
+                                uint8_t flags = 0;
+                                if (IsFlippedHorizontally(gid)) flags |= 0x1;
+                                if (IsFlippedVertically(gid)) flags |= 0x2;
+                                if (IsFlippedDiagonally(gid)) flags |= 0x4;
+                                tileDef.tileFlipFlags[y][x] = flags;
+                            }
+                            ++index;
+                        }
                     }
                 }
                 
