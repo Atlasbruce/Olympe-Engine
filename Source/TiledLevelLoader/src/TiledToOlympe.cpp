@@ -27,6 +27,13 @@ namespace Tiled {
     {
     }
 
+    // Property key constants
+    namespace {
+        const char* PROPERTY_PATROL_WAY = "patrol way";
+        const char* PROPERTY_TARGET = "target";
+        const char* PROPERTY_AUDIO = "audio";
+    }
+
     void TiledToOlympe::SetConfig(const ConversionConfig& config)
     {
         config_ = config;
@@ -632,6 +639,7 @@ namespace Tiled {
                                                  int& objectCount)
     {
         objectCount = 0;
+        int collisionTileCount = 0;
         
         // Initialize collision map
         InitializeCollisionMap(outLevel, mapWidth_, mapHeight_);
@@ -650,14 +658,14 @@ namespace Tiled {
                             uint32_t tileId = GetTileId(layer->data[index]);
                             if (tileId > 0) {
                                 outLevel.collisionMap[y][x] = 0xFF;
-                                objectCount++;
+                                collisionTileCount++;
                             }
                         }
                         ++index;
                     }
                 }
                 
-                SYSTEM_LOG << "  → Collision Layer: '" << layer->name << "' (filled tiles: " << objectCount << ")\n";
+                SYSTEM_LOG << "  → Collision Layer: '" << layer->name << "' (filled tiles: " << collisionTileCount << ")\n";
             }
             
             // Process object layers (sectors, collision shapes)
@@ -720,7 +728,7 @@ namespace Tiled {
         };
         
         const std::set<std::string> soundTypes = {
-            "ambiant", "sound", "music"
+            "ambient", "sound", "music"
         };
         
         for (const auto& layer : tiledMap.layers) {
@@ -778,6 +786,9 @@ namespace Tiled {
                 stats.totalObjects++;
             }
         }
+        
+        // Ensure totalObjects is accurate
+        stats.totalObjects = stats.staticObjects + stats.dynamicObjects + stats.patrolPaths + stats.soundObjects;
     }
 
     void TiledToOlympe::ExtractObjectRelationships(const TiledMap& tiledMap,
@@ -801,7 +812,7 @@ namespace Tiled {
             
             for (const auto& obj : layer->objects) {
                 // Check for "patrol way" property (NPC → patrol path link)
-                auto patrolProp = obj.properties.find("patrol way");
+                auto patrolProp = obj.properties.find(PROPERTY_PATROL_WAY);
                 if (patrolProp != obj.properties.end() && patrolProp->second.type == PropertyType::Object) {
                     Olympe::Editor::LevelDefinition::ObjectLink link;
                     link.sourceObjectName = obj.name;
@@ -818,7 +829,7 @@ namespace Tiled {
                 }
                 
                 // Check for trigger targets
-                auto targetProp = obj.properties.find("target");
+                auto targetProp = obj.properties.find(PROPERTY_TARGET);
                 if (targetProp != obj.properties.end() && targetProp->second.type == PropertyType::Object) {
                     Olympe::Editor::LevelDefinition::ObjectLink link;
                     link.sourceObjectName = obj.name;
@@ -863,7 +874,7 @@ namespace Tiled {
             if (layer->type != LayerType::ObjectGroup) continue;
             for (const auto& obj : layer->objects) {
                 // Check for audio properties
-                auto audioProp = obj.properties.find("audio");
+                auto audioProp = obj.properties.find(PROPERTY_AUDIO);
                 if (audioProp != obj.properties.end() && audioProp->second.type == PropertyType::File) {
                     outLevel.resources.audioPaths.push_back(audioProp->second.stringValue);
                 }
