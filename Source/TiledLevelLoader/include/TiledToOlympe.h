@@ -18,6 +18,7 @@
 #include "ParallaxLayerManager.h"
 #include <string>
 #include <map>
+#include <set>
 #include <memory>
 #include <functional>
 #include "../../third_party/nlohmann/json.hpp"
@@ -81,7 +82,44 @@ namespace Tiled {
         const ParallaxLayerManager& GetParallaxLayers() const { return parallaxLayers_; }
 
     private:
-        // Convert layers
+        // Conversion statistics
+        struct ConversionStats {
+            int staticObjects = 0;
+            int dynamicObjects = 0;
+            int patrolPaths = 0;
+            int soundObjects = 0;
+            int totalObjects = 0;
+        };
+
+        // New 6-phase pipeline methods
+        void ExtractMapConfiguration(const TiledMap& tiledMap, 
+                                    Olympe::Editor::LevelDefinition& outLevel);
+        void ExtractMapMetadata(const TiledMap& tiledMap, 
+                               Olympe::Editor::LevelDefinition& outLevel);
+        void ProcessVisualLayers(const TiledMap& tiledMap, 
+                                Olympe::Editor::LevelDefinition& outLevel,
+                                int& layerCount);
+        void ExtractSpatialStructures(const TiledMap& tiledMap,
+                                     Olympe::Editor::LevelDefinition& outLevel,
+                                     int& objectCount);
+        void CategorizeGameObjects(const TiledMap& tiledMap,
+                                  Olympe::Editor::LevelDefinition& outLevel,
+                                  ConversionStats& stats);
+        void ExtractObjectRelationships(const TiledMap& tiledMap,
+                                       Olympe::Editor::LevelDefinition& outLevel,
+                                       int& linkCount);
+        void BuildResourceCatalog(const TiledMap& tiledMap,
+                                 Olympe::Editor::LevelDefinition& outLevel);
+
+        // Helper methods
+        std::string ResolveImagePath(const std::string& imagePath);
+        nlohmann::json PropertyToJSON(const TiledProperty& prop);
+        void ProcessGroupLayers(const TiledLayer& groupLayer,
+                               Olympe::Editor::LevelDefinition& outLevel,
+                               int& zOrder,
+                               int& layerCount);
+
+        // Convert layers (legacy methods kept for compatibility)
         void ConvertTileLayer(const TiledLayer& layer, Olympe::Editor::LevelDefinition& level);
         void ConvertObjectLayer(const TiledLayer& layer, Olympe::Editor::LevelDefinition& level);
         void ConvertImageLayer(const TiledLayer& layer);

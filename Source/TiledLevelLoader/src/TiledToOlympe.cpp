@@ -36,86 +36,79 @@ namespace Tiled {
     {
         lastError_.clear();
         parallaxLayers_.Clear();
-
-        SYSTEM_LOG << "TiledToOlympe: Converting map '" << tiledMap.type << "'" << std::endl;
-
-        // Set map dimensions
+        
+        SYSTEM_LOG << "\n╔═══════════════════════════════════════════════════════════╗\n";
+        SYSTEM_LOG << "║ TILED → OLYMPE CONVERSION - COMPLETE PIPELINE            ║\n";
+        SYSTEM_LOG << "╚═══════════════════════════════════════════════════════════╝\n\n";
+        
+        // Store map dimensions
         mapWidth_ = tiledMap.width;
         mapHeight_ = tiledMap.height;
-
-        // Initialize level
-        outLevel.worldSize.x = tiledMap.width * tiledMap.tilewidth;
-        outLevel.worldSize.y = tiledMap.height * tiledMap.tileheight;
         
-        if (!tiledMap.backgroundcolor.empty()) {
-            outLevel.ambientColor = tiledMap.backgroundcolor;
-        }
-
-        // Initialize tile and collision maps
-        InitializeCollisionMap(outLevel, mapWidth_, mapHeight_);
-        outLevel.tileMap.resize(mapHeight_);
-        for (int y = 0; y < mapHeight_; ++y) {
-            outLevel.tileMap[y].resize(mapWidth_, 0);
-        }
-
-        // Process layers
-        for (const auto& layer : tiledMap.layers) {
-            if (!layer->visible) {
-                continue; // Skip invisible layers
-            }
-
-            switch (layer->type) {
-                case LayerType::TileLayer:
-                    ConvertTileLayer(*layer, outLevel);
-                    break;
-                case LayerType::ObjectGroup:
-                    ConvertObjectLayer(*layer, outLevel);
-                    break;
-                case LayerType::ImageLayer:
-                    ConvertImageLayer(*layer);
-                    break;
-                case LayerType::Group:
-                    ConvertGroupLayer(*layer, outLevel);
-                    break;
-            }
-        }
-
-        SYSTEM_LOG << "TiledToOlympe: Conversion complete. "
-                   << outLevel.entities.size() << " entities, "
-                   << parallaxLayers_.GetLayerCount() << " parallax layers" << std::endl;
-
-        // Store parallax layers in metadata as JSON array
-        if (parallaxLayers_.GetLayerCount() > 0)
-        {
-            nlohmann::json parallaxLayersJson = nlohmann::json::array();
-            
-            for (size_t i = 0; i < parallaxLayers_.GetLayerCount(); ++i)
-            {
-                const ParallaxLayer* layer = parallaxLayers_.GetLayer(i);
-                if (layer)
-                {
-                    nlohmann::json layerJson = nlohmann::json::object();
-                    layerJson["name"] = layer->name;
-                    layerJson["imagePath"] = layer->imagePath;
-                    layerJson["scrollFactorX"] = layer->scrollFactorX;
-                    layerJson["scrollFactorY"] = layer->scrollFactorY;
-                    layerJson["repeatX"] = layer->repeatX;
-                    layerJson["repeatY"] = layer->repeatY;
-                    layerJson["offsetX"] = layer->offsetX;
-                    layerJson["offsetY"] = layer->offsetY;
-                    layerJson["opacity"] = layer->opacity;
-                    layerJson["zOrder"] = static_cast<int>(i);
-                    layerJson["visible"] = layer->visible;
-                    layerJson["tintColor"] = layer->tintColor;
-                    parallaxLayersJson.push_back(layerJson);
-                }
-            }
-            
-            outLevel.metadata.customData["parallaxLayers"] = parallaxLayersJson;
-            SYSTEM_LOG << "TiledToOlympe: Stored " << parallaxLayersJson.size() 
-                       << " parallax layers in metadata\n";
-        }
-
+        // ===================================================================
+        // PHASE 1: MAP CONFIGURATION & METADATA
+        // ===================================================================
+        SYSTEM_LOG << "[Phase 1/6] Extracting Map Configuration & Metadata...\n";
+        ExtractMapConfiguration(tiledMap, outLevel);
+        ExtractMapMetadata(tiledMap, outLevel);
+        
+        // ===================================================================
+        // PHASE 2: VISUAL LAYERS (Parallax, Image Layers, Tile Layers)
+        // ===================================================================
+        SYSTEM_LOG << "[Phase 2/6] Processing Visual Layers...\n";
+        int visualLayerCount = 0;
+        ProcessVisualLayers(tiledMap, outLevel, visualLayerCount);
+        SYSTEM_LOG << "  ✓ Processed " << visualLayerCount << " visual layers\n";
+        
+        // ===================================================================
+        // PHASE 3: SPATIAL STRUCTURES (Sectors, Collision, Navigation)
+        // ===================================================================
+        SYSTEM_LOG << "[Phase 3/6] Extracting Spatial Structures...\n";
+        int spatialObjectCount = 0;
+        ExtractSpatialStructures(tiledMap, outLevel, spatialObjectCount);
+        SYSTEM_LOG << "  ✓ Extracted " << spatialObjectCount << " spatial objects\n";
+        
+        // ===================================================================
+        // PHASE 4: GAME OBJECTS (Categorized by Type)
+        // ===================================================================
+        SYSTEM_LOG << "[Phase 4/6] Converting Game Objects...\n";
+        ConversionStats stats;
+        CategorizeGameObjects(tiledMap, outLevel, stats);
+        SYSTEM_LOG << "  ✓ Static: " << stats.staticObjects 
+                   << " | Dynamic: " << stats.dynamicObjects
+                   << " | Paths: " << stats.patrolPaths
+                   << " | Sounds: " << stats.soundObjects << "\n";
+        
+        // ===================================================================
+        // PHASE 5: OBJECT RELATIONSHIPS (Links, References)
+        // ===================================================================
+        SYSTEM_LOG << "[Phase 5/6] Extracting Object Relationships...\n";
+        int linkCount = 0;
+        ExtractObjectRelationships(tiledMap, outLevel, linkCount);
+        SYSTEM_LOG << "  ✓ Created " << linkCount << " object links\n";
+        
+        // ===================================================================
+        // PHASE 6: RESOURCE CATALOG
+        // ===================================================================
+        SYSTEM_LOG << "[Phase 6/6] Building Resource Catalog...\n";
+        BuildResourceCatalog(tiledMap, outLevel);
+        SYSTEM_LOG << "  ✓ Tilesets: " << outLevel.resources.tilesetPaths.size()
+                   << " | Images: " << outLevel.resources.imagePaths.size()
+                   << " | Audio: " << outLevel.resources.audioPaths.size() << "\n";
+        
+        // ===================================================================
+        // FINAL SUMMARY
+        // ===================================================================
+        SYSTEM_LOG << "\n╔═══════════════════════════════════════════════════════════╗\n";
+        SYSTEM_LOG << "║ CONVERSION COMPLETE                                       ║\n";
+        SYSTEM_LOG << "╠═══════════════════════════════════════════════════════════╣\n";
+        SYSTEM_LOG << "║ Map: " << outLevel.mapConfig.orientation 
+                   << " " << outLevel.mapConfig.mapWidth << "x" << outLevel.mapConfig.mapHeight << "\n";
+        SYSTEM_LOG << "║ Visual Layers: " << visualLayerCount << "\n";
+        SYSTEM_LOG << "║ Entities: " << stats.totalObjects << "\n";
+        SYSTEM_LOG << "║ Relationships: " << linkCount << "\n";
+        SYSTEM_LOG << "╚═══════════════════════════════════════════════════════════╝\n\n";
+        
         return true;
     }
 
@@ -453,6 +446,536 @@ namespace Tiled {
                     }
                 }
                 ++index;
+            }
+        }
+    }
+
+    // ===================================================================
+    // NEW 6-PHASE PIPELINE IMPLEMENTATION
+    // ===================================================================
+
+    void TiledToOlympe::ExtractMapConfiguration(const TiledMap& tiledMap, 
+                                                Olympe::Editor::LevelDefinition& outLevel)
+    {
+        outLevel.mapConfig.mapWidth = tiledMap.width;
+        outLevel.mapConfig.mapHeight = tiledMap.height;
+        outLevel.mapConfig.tileWidth = tiledMap.tilewidth;
+        outLevel.mapConfig.tileHeight = tiledMap.tileheight;
+        outLevel.mapConfig.infinite = tiledMap.infinite;
+        
+        // Convert orientation enum to string
+        switch (tiledMap.orientation) {
+            case MapOrientation::Orthogonal: outLevel.mapConfig.orientation = "orthogonal"; break;
+            case MapOrientation::Isometric: outLevel.mapConfig.orientation = "isometric"; break;
+            case MapOrientation::Staggered: outLevel.mapConfig.orientation = "staggered"; break;
+            case MapOrientation::Hexagonal: outLevel.mapConfig.orientation = "hexagonal"; break;
+            default: outLevel.mapConfig.orientation = "unknown"; break;
+        }
+        
+        // Convert render order
+        switch (tiledMap.renderorder) {
+            case RenderOrder::RightDown: outLevel.mapConfig.renderOrder = "right-down"; break;
+            case RenderOrder::RightUp: outLevel.mapConfig.renderOrder = "right-up"; break;
+            case RenderOrder::LeftDown: outLevel.mapConfig.renderOrder = "left-down"; break;
+            case RenderOrder::LeftUp: outLevel.mapConfig.renderOrder = "left-up"; break;
+        }
+        
+        // Set world size
+        outLevel.worldSize.x = tiledMap.width * tiledMap.tilewidth;
+        outLevel.worldSize.y = tiledMap.height * tiledMap.tileheight;
+        
+        // Background color
+        if (!tiledMap.backgroundcolor.empty()) {
+            outLevel.ambientColor = tiledMap.backgroundcolor;
+        }
+        
+        SYSTEM_LOG << "  → Map: " << outLevel.mapConfig.orientation 
+                   << " " << outLevel.mapConfig.mapWidth << "x" << outLevel.mapConfig.mapHeight
+                   << " (tiles: " << outLevel.mapConfig.tileWidth << "x" << outLevel.mapConfig.tileHeight << ")\n";
+    }
+
+    void TiledToOlympe::ExtractMapMetadata(const TiledMap& tiledMap, 
+                                          Olympe::Editor::LevelDefinition& outLevel)
+    {
+        // Convert map custom properties to metadata
+        for (const auto& prop : tiledMap.properties) {
+            outLevel.metadata.customData[prop.first] = PropertyToJSON(prop.second);
+        }
+    }
+
+    void TiledToOlympe::ProcessVisualLayers(const TiledMap& tiledMap, 
+                                            Olympe::Editor::LevelDefinition& outLevel,
+                                            int& layerCount)
+    {
+        layerCount = 0;
+        int zOrder = 0;
+        
+        // Initialize tile map
+        outLevel.tileMap.resize(mapHeight_);
+        for (int y = 0; y < mapHeight_; ++y) {
+            outLevel.tileMap[y].resize(mapWidth_, 0);
+        }
+        
+        for (const auto& layer : tiledMap.layers) {
+            if (!layer->visible) continue;
+            
+            switch (layer->type) {
+                case LayerType::ImageLayer: {
+                    // Parallax/Background layers
+                    Olympe::Editor::LevelDefinition::VisualLayer visual;
+                    visual.name = layer->name;
+                    visual.zOrder = zOrder++;
+                    visual.isParallax = (layer->parallaxx != 1.0f || layer->parallaxy != 1.0f);
+                    visual.imagePath = ResolveImagePath(layer->image);
+                    visual.scrollFactorX = layer->parallaxx;
+                    visual.scrollFactorY = layer->parallaxy;
+                    visual.offsetX = layer->offsetx;
+                    visual.offsetY = layer->offsety;
+                    visual.repeatX = layer->repeatx;
+                    visual.repeatY = layer->repeaty;
+                    visual.opacity = layer->opacity;
+                    visual.tintColor = layer->tintcolor;
+                    visual.visible = layer->visible;
+                    
+                    outLevel.visualLayers.push_back(visual);
+                    layerCount++;
+                    
+                    // Also add to parallax layer manager for backward compatibility
+                    ConvertImageLayer(*layer);
+                    
+                    SYSTEM_LOG << "  → Image Layer: '" << visual.name << "' (parallax: " 
+                               << visual.scrollFactorX << ", z: " << visual.zOrder << ")\n";
+                    break;
+                }
+                
+                case LayerType::TileLayer: {
+                    // Skip collision layers (handled in Phase 3)
+                    if (MatchesPattern(layer->name, config_.collisionLayerPatterns)) {
+                        break;
+                    }
+                    
+                    // Visual tile layer
+                    Olympe::Editor::LevelDefinition::TileLayerDef tileDef;
+                    tileDef.name = layer->name;
+                    tileDef.zOrder = zOrder++;
+                    tileDef.opacity = layer->opacity;
+                    tileDef.visible = layer->visible;
+                    
+                    // Extract tile data
+                    tileDef.tiles.resize(layer->height);
+                    int index = 0;
+                    for (int y = 0; y < layer->height; ++y) {
+                        tileDef.tiles[y].resize(layer->width, 0);
+                        for (int x = 0; x < layer->width; ++x) {
+                            if (index < static_cast<int>(layer->data.size())) {
+                                tileDef.tiles[y][x] = GetTileId(layer->data[index]);
+                            }
+                            ++index;
+                        }
+                    }
+                    
+                    outLevel.tileLayers.push_back(tileDef);
+                    layerCount++;
+                    
+                    // Also merge into legacy tileMap for backward compatibility
+                    MergeTileLayer(*layer, outLevel.tileMap, mapWidth_, mapHeight_);
+                    
+                    SYSTEM_LOG << "  → Tile Layer: '" << tileDef.name << "' (" 
+                               << layer->width << "x" << layer->height << " tiles, z: " << tileDef.zOrder << ")\n";
+                    break;
+                }
+                
+                case LayerType::Group: {
+                    // Recursively process group layers
+                    ProcessGroupLayers(*layer, outLevel, zOrder, layerCount);
+                    break;
+                }
+                
+                default:
+                    break;
+            }
+        }
+        
+        // Store parallax layers in metadata for backward compatibility
+        if (parallaxLayers_.GetLayerCount() > 0)
+        {
+            nlohmann::json parallaxLayersJson = nlohmann::json::array();
+            
+            for (size_t i = 0; i < parallaxLayers_.GetLayerCount(); ++i)
+            {
+                const ParallaxLayer* layer = parallaxLayers_.GetLayer(i);
+                if (layer)
+                {
+                    nlohmann::json layerJson = nlohmann::json::object();
+                    layerJson["name"] = layer->name;
+                    layerJson["imagePath"] = layer->imagePath;
+                    layerJson["scrollFactorX"] = layer->scrollFactorX;
+                    layerJson["scrollFactorY"] = layer->scrollFactorY;
+                    layerJson["repeatX"] = layer->repeatX;
+                    layerJson["repeatY"] = layer->repeatY;
+                    layerJson["offsetX"] = layer->offsetX;
+                    layerJson["offsetY"] = layer->offsetY;
+                    layerJson["opacity"] = layer->opacity;
+                    layerJson["zOrder"] = static_cast<int>(i);
+                    layerJson["visible"] = layer->visible;
+                    layerJson["tintColor"] = layer->tintColor;
+                    parallaxLayersJson.push_back(layerJson);
+                }
+            }
+            
+            outLevel.metadata.customData["parallaxLayers"] = parallaxLayersJson;
+        }
+    }
+
+    void TiledToOlympe::ExtractSpatialStructures(const TiledMap& tiledMap,
+                                                 Olympe::Editor::LevelDefinition& outLevel,
+                                                 int& objectCount)
+    {
+        objectCount = 0;
+        
+        // Initialize collision map
+        InitializeCollisionMap(outLevel, mapWidth_, mapHeight_);
+        
+        for (const auto& layer : tiledMap.layers) {
+            if (!layer->visible) continue;
+            
+            // Process collision tile layers
+            if (layer->type == LayerType::TileLayer && 
+                MatchesPattern(layer->name, config_.collisionLayerPatterns)) {
+                
+                int index = 0;
+                for (int y = 0; y < layer->height && y < mapHeight_; ++y) {
+                    for (int x = 0; x < layer->width && x < mapWidth_; ++x) {
+                        if (index < static_cast<int>(layer->data.size())) {
+                            uint32_t tileId = GetTileId(layer->data[index]);
+                            if (tileId > 0) {
+                                outLevel.collisionMap[y][x] = 0xFF;
+                                objectCount++;
+                            }
+                        }
+                        ++index;
+                    }
+                }
+                
+                SYSTEM_LOG << "  → Collision Layer: '" << layer->name << "' (filled tiles: " << objectCount << ")\n";
+            }
+            
+            // Process object layers (sectors, collision shapes)
+            if (layer->type == LayerType::ObjectGroup) {
+                for (const auto& obj : layer->objects) {
+                    // Sector objects (polygons)
+                    if (obj.objectType == ObjectType::Polygon) {
+                        Olympe::Editor::LevelDefinition::SectorDef sector;
+                        sector.name = obj.name.empty() ? ("Sector_" + std::to_string(obj.id)) : obj.name;
+                        sector.type = obj.type;
+                        sector.position = Olympe::Editor::Vec2(obj.x, TransformY(obj.y, 0));
+                        
+                        for (const auto& pt : obj.polygon) {
+                            sector.polygon.push_back(Olympe::Editor::Vec2(
+                                pt.x, config_.flipY ? -pt.y : pt.y
+                            ));
+                        }
+                        
+                        // Store properties
+                        for (const auto& prop : obj.properties) {
+                            sector.properties[prop.first] = PropertyToJSON(prop.second);
+                        }
+                        
+                        outLevel.sectors.push_back(sector);
+                        objectCount++;
+                        
+                        SYSTEM_LOG << "  → Sector: '" << sector.name << "' (" << sector.polygon.size() << " points)\n";
+                    }
+                    
+                    // Collision shapes (rectangles)
+                    else if (obj.type == "collision" && obj.objectType == ObjectType::Rectangle) {
+                        Olympe::Editor::LevelDefinition::CollisionShape shape;
+                        shape.name = obj.name;
+                        shape.type = Olympe::Editor::LevelDefinition::CollisionShape::Rectangle;
+                        shape.position = Olympe::Editor::Vec2(obj.x, TransformY(obj.y, obj.height));
+                        shape.size = Olympe::Editor::Vec2(obj.width, obj.height);
+                        
+                        outLevel.collisionShapes.push_back(shape);
+                        objectCount++;
+                        
+                        SYSTEM_LOG << "  → Collision Shape: '" << shape.name << "' (rect: " 
+                                   << shape.size.x << "x" << shape.size.y << ")\n";
+                    }
+                }
+            }
+        }
+    }
+
+    void TiledToOlympe::CategorizeGameObjects(const TiledMap& tiledMap,
+                                              Olympe::Editor::LevelDefinition& outLevel,
+                                              ConversionStats& stats)
+    {
+        // Define category rules
+        const std::set<std::string> staticTypes = {
+            "item", "collectible", "key", "treasure", "waypoint", "trigger", "portal", "door", "exit"
+        };
+        
+        const std::set<std::string> dynamicTypes = {
+            "player", "npc", "guard", "enemy", "zombie"
+        };
+        
+        const std::set<std::string> soundTypes = {
+            "ambiant", "sound", "music"
+        };
+        
+        for (const auto& layer : tiledMap.layers) {
+            if (layer->type != LayerType::ObjectGroup || !layer->visible) continue;
+            
+            for (const auto& obj : layer->objects) {
+                // Skip spatial structures (already processed)
+                if (obj.objectType == ObjectType::Polygon || 
+                    obj.objectType == ObjectType::Polyline ||
+                    obj.type == "collision" || obj.type == "sector") {
+                    continue;
+                }
+                
+                auto entity = CreateEntity(obj);
+                if (!entity) continue;
+                
+                // Create a copy for the legacy entities array
+                auto entityCopy = std::make_unique<Olympe::Editor::EntityInstance>();
+                entityCopy->id = entity->id;
+                entityCopy->prefabPath = entity->prefabPath;
+                entityCopy->name = entity->name;
+                entityCopy->type = entity->type;
+                entityCopy->spritePath = entity->spritePath;
+                entityCopy->position = entity->position;
+                entityCopy->overrides = entity->overrides;
+                
+                // Categorize by type
+                if (obj.objectType == ObjectType::Polyline && obj.type == "way") {
+                    outLevel.categorizedObjects.patrolPaths.push_back(std::move(entity));
+                    stats.patrolPaths++;
+                    SYSTEM_LOG << "  → Patrol Path: '" << obj.name << "' (" << obj.polyline.size() << " points)\n";
+                }
+                else if (soundTypes.count(obj.type)) {
+                    outLevel.categorizedObjects.soundObjects.push_back(std::move(entity));
+                    stats.soundObjects++;
+                    SYSTEM_LOG << "  → Sound Object: '" << obj.name << "' (type: " << obj.type << ")\n";
+                }
+                else if (staticTypes.count(obj.type)) {
+                    outLevel.categorizedObjects.staticObjects.push_back(std::move(entity));
+                    stats.staticObjects++;
+                }
+                else if (dynamicTypes.count(obj.type)) {
+                    outLevel.categorizedObjects.dynamicObjects.push_back(std::move(entity));
+                    stats.dynamicObjects++;
+                }
+                else {
+                    // Default: static object
+                    outLevel.categorizedObjects.staticObjects.push_back(std::move(entity));
+                    stats.staticObjects++;
+                }
+                
+                // Add copy to legacy entities array for backward compatibility
+                outLevel.entities.push_back(std::move(entityCopy));
+                
+                stats.totalObjects++;
+            }
+        }
+    }
+
+    void TiledToOlympe::ExtractObjectRelationships(const TiledMap& tiledMap,
+                                                   Olympe::Editor::LevelDefinition& outLevel,
+                                                   int& linkCount)
+    {
+        linkCount = 0;
+        
+        // Build object ID → name mapping
+        std::map<int, std::string> idToName;
+        for (const auto& layer : tiledMap.layers) {
+            if (layer->type != LayerType::ObjectGroup) continue;
+            for (const auto& obj : layer->objects) {
+                idToName[obj.id] = obj.name;
+            }
+        }
+        
+        // Extract relationships from custom properties
+        for (const auto& layer : tiledMap.layers) {
+            if (layer->type != LayerType::ObjectGroup) continue;
+            
+            for (const auto& obj : layer->objects) {
+                // Check for "patrol way" property (NPC → patrol path link)
+                auto patrolProp = obj.properties.find("patrol way");
+                if (patrolProp != obj.properties.end() && patrolProp->second.type == PropertyType::Object) {
+                    Olympe::Editor::LevelDefinition::ObjectLink link;
+                    link.sourceObjectName = obj.name;
+                    link.sourceObjectId = obj.id;
+                    link.targetObjectId = patrolProp->second.intValue;
+                    link.targetObjectName = idToName[link.targetObjectId];
+                    link.linkType = "patrol_path";
+                    
+                    outLevel.objectLinks.push_back(link);
+                    linkCount++;
+                    
+                    SYSTEM_LOG << "  → Link: '" << link.sourceObjectName << "' → '" 
+                               << link.targetObjectName << "' (patrol_path)\n";
+                }
+                
+                // Check for trigger targets
+                auto targetProp = obj.properties.find("target");
+                if (targetProp != obj.properties.end() && targetProp->second.type == PropertyType::Object) {
+                    Olympe::Editor::LevelDefinition::ObjectLink link;
+                    link.sourceObjectName = obj.name;
+                    link.sourceObjectId = obj.id;
+                    link.targetObjectId = targetProp->second.intValue;
+                    link.targetObjectName = idToName[link.targetObjectId];
+                    link.linkType = "trigger_target";
+                    
+                    outLevel.objectLinks.push_back(link);
+                    linkCount++;
+                    
+                    SYSTEM_LOG << "  → Link: '" << link.sourceObjectName << "' → '" 
+                               << link.targetObjectName << "' (trigger_target)\n";
+                }
+            }
+        }
+    }
+
+    void TiledToOlympe::BuildResourceCatalog(const TiledMap& tiledMap,
+                                             Olympe::Editor::LevelDefinition& outLevel)
+    {
+        // Extract tileset paths
+        for (const auto& tileset : tiledMap.tilesets) {
+            if (!tileset.source.empty()) {
+                outLevel.resources.tilesetPaths.push_back(tileset.source);
+            }
+            else if (!tileset.image.empty()) {
+                outLevel.resources.imagePaths.push_back(tileset.image);
+            }
+        }
+        
+        // Extract image layer paths
+        for (const auto& layer : tiledMap.layers) {
+            if (layer->type == LayerType::ImageLayer && !layer->image.empty()) {
+                std::string resolvedPath = ResolveImagePath(layer->image);
+                outLevel.resources.imagePaths.push_back(resolvedPath);
+            }
+        }
+        
+        // Extract object template paths (from custom properties)
+        for (const auto& layer : tiledMap.layers) {
+            if (layer->type != LayerType::ObjectGroup) continue;
+            for (const auto& obj : layer->objects) {
+                // Check for audio properties
+                auto audioProp = obj.properties.find("audio");
+                if (audioProp != obj.properties.end() && audioProp->second.type == PropertyType::File) {
+                    outLevel.resources.audioPaths.push_back(audioProp->second.stringValue);
+                }
+            }
+        }
+        
+        // Remove duplicates
+        auto removeDuplicates = [](std::vector<std::string>& vec) {
+            std::sort(vec.begin(), vec.end());
+            vec.erase(std::unique(vec.begin(), vec.end()), vec.end());
+        };
+        
+        removeDuplicates(outLevel.resources.tilesetPaths);
+        removeDuplicates(outLevel.resources.imagePaths);
+        removeDuplicates(outLevel.resources.audioPaths);
+    }
+
+    std::string TiledToOlympe::ResolveImagePath(const std::string& imagePath)
+    {
+        if (imagePath.empty()) return "";
+        
+        if (!config_.resourceBasePath.empty()) {
+            return config_.resourceBasePath + "/" + imagePath;
+        }
+        return imagePath;
+    }
+
+    nlohmann::json TiledToOlympe::PropertyToJSON(const TiledProperty& prop)
+    {
+        switch (prop.type) {
+            case PropertyType::String:
+            case PropertyType::File:
+            case PropertyType::Color:
+                return prop.stringValue;
+            case PropertyType::Int:
+                return prop.intValue;
+            case PropertyType::Float:
+                return prop.floatValue;
+            case PropertyType::Bool:
+                return prop.boolValue;
+            case PropertyType::Object:
+                return prop.intValue;  // Object reference (ID)
+            default:
+                return nullptr;
+        }
+    }
+
+    void TiledToOlympe::ProcessGroupLayers(const TiledLayer& groupLayer,
+                                           Olympe::Editor::LevelDefinition& outLevel,
+                                           int& zOrder,
+                                           int& layerCount)
+    {
+        for (const auto& childLayer : groupLayer.layers) {
+            if (!childLayer->visible) continue;
+            
+            if (childLayer->type == LayerType::ImageLayer) {
+                // Process as visual layer
+                Olympe::Editor::LevelDefinition::VisualLayer visual;
+                visual.name = childLayer->name;
+                visual.zOrder = zOrder++;
+                visual.isParallax = (childLayer->parallaxx != 1.0f || childLayer->parallaxy != 1.0f);
+                visual.imagePath = ResolveImagePath(childLayer->image);
+                visual.scrollFactorX = childLayer->parallaxx;
+                visual.scrollFactorY = childLayer->parallaxy;
+                visual.offsetX = childLayer->offsetx;
+                visual.offsetY = childLayer->offsety;
+                visual.repeatX = childLayer->repeatx;
+                visual.repeatY = childLayer->repeaty;
+                visual.opacity = childLayer->opacity;
+                visual.tintColor = childLayer->tintcolor;
+                visual.visible = childLayer->visible;
+                
+                outLevel.visualLayers.push_back(visual);
+                layerCount++;
+                
+                // Also add to parallax layer manager for backward compatibility
+                ConvertImageLayer(*childLayer);
+            }
+            else if (childLayer->type == LayerType::TileLayer) {
+                // Skip collision layers
+                if (MatchesPattern(childLayer->name, config_.collisionLayerPatterns)) {
+                    continue;
+                }
+                
+                // Process as tile layer
+                Olympe::Editor::LevelDefinition::TileLayerDef tileDef;
+                tileDef.name = childLayer->name;
+                tileDef.zOrder = zOrder++;
+                tileDef.opacity = childLayer->opacity;
+                tileDef.visible = childLayer->visible;
+                
+                // Extract tile data
+                tileDef.tiles.resize(childLayer->height);
+                int index = 0;
+                for (int y = 0; y < childLayer->height; ++y) {
+                    tileDef.tiles[y].resize(childLayer->width, 0);
+                    for (int x = 0; x < childLayer->width; ++x) {
+                        if (index < static_cast<int>(childLayer->data.size())) {
+                            tileDef.tiles[y][x] = GetTileId(childLayer->data[index]);
+                        }
+                        ++index;
+                    }
+                }
+                
+                outLevel.tileLayers.push_back(tileDef);
+                layerCount++;
+                
+                // Also merge into legacy tileMap
+                MergeTileLayer(*childLayer, outLevel.tileMap, mapWidth_, mapHeight_);
+            }
+            else if (childLayer->type == LayerType::Group) {
+                ProcessGroupLayers(*childLayer, outLevel, zOrder, layerCount);
             }
         }
     }
