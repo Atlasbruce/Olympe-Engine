@@ -76,6 +76,7 @@ void ParameterSchemaRegistry::InitializeBuiltInSchemas()
 		ComponentParameter::FromInt(100)
 	));
 	
+	// Note: patrolPoints and patrolRoute are different fields for AI navigation
 	RegisterParameterSchema(ParameterSchemaEntry(
 		"patrolPoints", "AIBlackboard_data", "patrolPoints",
 		ComponentParameter::Type::String, false,
@@ -146,13 +147,14 @@ void ParameterSchemaRegistry::InitializeBuiltInSchemas()
 	));
 	
 	// "category" is an alias for "tag" field (backward compatibility)
+	// If both "category" and "tag" are specified, the last one processed will take precedence
 	RegisterParameterSchema(ParameterSchemaEntry(
 		"category", "Identity_data", "tag",
 		ComponentParameter::Type::String, false,
 		ComponentParameter::FromString("Untagged")
 	));
 	
-	// "tag" parameter maps to "tag" field
+	// "tag" parameter maps to "tag" field (preferred parameter name)
 	RegisterParameterSchema(ParameterSchemaEntry(
 		"tag", "Identity_data", "tag",
 		ComponentParameter::Type::String, false,
@@ -532,7 +534,7 @@ void ParameterSchemaRegistry::AutoRegisterParameter(
 	ParameterSchemaEntry entry(
 		paramName,
 		componentType,
-		paramName,  // Use same name for field
+		paramName,  // Field name defaults to parameter name (can differ in manual registrations)
 		paramType,
 		false,      // Not required by default
 		defaultValue
