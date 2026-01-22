@@ -19,35 +19,19 @@ Components purpose: Include all component definitions used in the ECS architectu
 #include "DataManager.h"
 #include "SDL_rect.h"
 
-// Entity types
-enum class EntityType : uint8_t
-{
-	Generic = 0,
-	Background,
-	Collision,
-	Decoration,
-	Player,
-	NPC,
-	Enemy,
-	Projectile,
-	Item,
-	Environment,
-	Trigger,
-	Waypoint,
-	UIElement
-};
+
 
 // Component type definitions
 struct Identity_data
 {
 	std::string name = "Entity"; // Entity name
 	std::string tag = "Untagged"; // Entity tag/category
-	EntityType type = EntityType::Generic; // Entity type
+	std::string type = "UnknownType"; // Entity type
 	
 	// Constructors
 	Identity_data() = default;
-	Identity_data(std::string n, std::string t, EntityType et)
-		: name(std::move(n)), tag(std::move(t)), type(et) {}
+	Identity_data(std::string n, std::string t, std::string et)
+		: name(std::move(n)), tag(std::move(t)), type(std::move(et)) {}
 	Identity_data(const Identity_data&) = default;
 	Identity_data& operator=(const Identity_data&) = default;
 };
@@ -154,6 +138,16 @@ struct VisualSprite_data
 		: srcRect(rect), sprite(spr), hotSpot(hotspot) {}
 	VisualSprite_data(const VisualSprite_data&) = default;
 	VisualSprite_data& operator=(const VisualSprite_data&) = default;
+	void UpdateRect()
+	{
+		if (sprite)
+		{
+			srcRect.w = static_cast<float>(sprite->w);
+			srcRect.h = static_cast<float>(sprite->h);
+			hotSpot.x = srcRect.w / 2.f;
+			hotSpot.y = srcRect.h / 2.f;
+		}
+	}
 };
 // --- Component visual Editor Data ---
 struct VisualEditor_data

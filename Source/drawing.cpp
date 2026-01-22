@@ -202,3 +202,15 @@ void Draw_Hexagon(Vector center, float radius, SDL_Color color)
         SDL_RenderLine(GameEngine::renderer, verts[i].x, verts[i].y, verts[next].x, verts[next].y);
     }
 }
+//----------------------------------------------------------
+// Draw rectangle outline with float coordinates
+void Draw_Rectangle(const SDL_FRect* rect, SDL_Color color)
+{
+    // Apply color
+    SDL_SetRenderDrawColor(GameEngine::renderer, color.r, color.g, color.b, color.a);
+	// Draw rectangle edges
+    SDL_RenderLine(GameEngine::renderer, rect->x, rect->y, rect->x + rect->w, rect->y); // Top
+    SDL_RenderLine(GameEngine::renderer, rect->x + rect->w, rect->y, rect->x + rect->w, rect->y + rect->h); // Right
+    SDL_RenderLine(GameEngine::renderer, rect->x + rect->w, rect->y + rect->h, rect->x, rect->y + rect->h); // Bottom
+	SDL_RenderLine(GameEngine::renderer, rect->x, rect->y + rect->h, rect->x, rect->y); // Left
+}

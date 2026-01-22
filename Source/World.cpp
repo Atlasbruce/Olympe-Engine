@@ -651,7 +651,7 @@ bool World::InstantiatePass2_SpatialStructure(
             
             EntityID eid = CreateEntity();
             
-            AddComponent<Identity_data>(eid, entityInstance->name, "Collision", EntityType::Collision);
+            AddComponent<Identity_data>(eid, entityInstance->name, "Collision", entityInstance->type);
             AddComponent<Position_data>(eid, Vector(
                 static_cast<float>(entityInstance->position.x),
                 static_cast<float>(entityInstance->position.y),
@@ -695,7 +695,7 @@ bool World::InstantiatePass2_SpatialStructure(
             result.pass2_spatialStructure.totalObjects++;
             
             EntityID eid = CreateEntity();
-            AddComponent<Identity_data>(eid, entityInstance->name, "Sector", EntityType::Waypoint);
+            AddComponent<Identity_data>(eid, entityInstance->name, "Sector", entityInstance->type);
             AddComponent<Position_data>(eid, Vector(
                 static_cast<float>(entityInstance->position.x),
                 static_cast<float>(entityInstance->position.y),
@@ -788,7 +788,7 @@ bool World::InstantiatePass3_StaticObjects(
         {
             // Fallback: create basic entity even if prefab missing
             entity = CreateEntity();
-            AddComponent<Identity_data>(entity, entityInstance->name, entityInstance->type, EntityType::Generic);
+            AddComponent<Identity_data>(entity, entityInstance->name, entityInstance->type, entityInstance->type);
             AddComponent<Position_data>(entity, Vector(
                 static_cast<float>(entityInstance->position.x),
                 static_cast<float>(entityInstance->position.y),
@@ -806,6 +806,20 @@ bool World::InstantiatePass3_StaticObjects(
                 pos.position.x = static_cast<float>(entityInstance->position.x);
                 pos.position.y = static_cast<float>(entityInstance->position.y);
             }
+
+            if (HasComponent<Identity_data>(entity))
+            {
+                Identity_data& id = GetComponent<Identity_data>(entity);
+                id.name = entityInstance->name;
+                id.type = entityInstance->type;
+			}
+
+            if (HasComponent<VisualSprite_data>(entity))
+            {
+                VisualSprite_data& spriteComp = GetComponent<VisualSprite_data>(entity);
+                spriteComp.sprite = DataManager::Get().GetSprite(entityInstance->spritePath, entityInstance->spritePath);
+                spriteComp.UpdateRect();
+			}
             
             result.pass3_staticObjects.successfullyCreated++;
             result.entityRegistry[entityInstance->name] = entity;

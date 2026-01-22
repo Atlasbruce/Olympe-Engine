@@ -612,7 +612,7 @@ void RenderSingleEntity(const CameraTransform& cam, EntityID entity)
             SDL_RenderTextureRotated(GameEngine::renderer, visual.sprite, nullptr, &destRect, cam.rotation, &fpoint, SDL_FLIP_NONE);
             
             // Debug: draw position & bounding box
-            switch (id.type)
+            /*switch (id.type)
             {
                 case EntityType::UIElement:
                 case EntityType::Background:
@@ -621,17 +621,20 @@ void RenderSingleEntity(const CameraTransform& cam, EntityID entity)
                 case EntityType::Player:
                     SDL_SetRenderDrawColor(GameEngine::renderer, 0, 255, 0, 255); // green
                     break;
-                case EntityType::Enemy:
+                case EntityType::Ennemy:
                 case EntityType::NPC:
                     SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 0, 255); // red
                     break;
                 default:
                     SDL_SetRenderDrawColor(GameEngine::renderer, 255, 255, 0, 255); // yellow
                     break;
-            }
-            
-            Draw_FilledCircle((int)(centerScreen.x), (int)(centerScreen.y), 3); // draw pivot/centre
+            }/**/
         }
+
+        SDL_SetRenderDrawColor(GameEngine::renderer, 255, 255, 0, 255); // yellow
+
+        Draw_FilledCircle((int)(centerScreen.x), (int)(centerScreen.y), 3); // draw pivot/centre
+        Draw_Rectangle(&destRect, SDL_Color{ 0, 255, 255, 255 }); // draw bounding box
     }
     catch (const std::exception& e)
     {
@@ -699,7 +702,7 @@ void RenderEntitiesForCamera(const CameraTransform& cam)
                 SDL_RenderTextureRotated(GameEngine::renderer, visual.sprite, nullptr, &destRect, cam.rotation, &fpoint, SDL_FLIP_NONE);
                 
                 // Debug: draw position & bounding box
-                switch (id.type)
+                /*switch (id.type)
                 {
                     case EntityType::UIElement:
 					case EntityType::Background:
@@ -709,7 +712,7 @@ void RenderEntitiesForCamera(const CameraTransform& cam)
                     case EntityType::Player:
 					    SDL_SetRenderDrawColor(GameEngine::renderer, 0, 255, 0, 255); // green
                         break;
-                    case EntityType::Enemy:
+                    case EntityType::Ennemy:
                     case EntityType::NPC:
                         SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 0, 255); // red
                         break;
@@ -717,10 +720,13 @@ void RenderEntitiesForCamera(const CameraTransform& cam)
                         SDL_SetRenderDrawColor(GameEngine::renderer, 255, 255, 0, 255); // yellow
 						break;
 
-                }
-
-                Draw_FilledCircle((int)(centerScreen.x), (int)(centerScreen.y), 3); // draw pivot/centre
+                }/**/
             }
+
+			SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 255, 255); // magenta
+
+            Draw_FilledCircle((int)(centerScreen.x), (int)(centerScreen.y), 3); // draw pivot/centre
+            Draw_Rectangle(&destRect, SDL_Color{ 0, 255, 255, 255 }); // draw bounding box
         }
         catch (const std::exception& e)
         {

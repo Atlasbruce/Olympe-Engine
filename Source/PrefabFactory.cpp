@@ -156,21 +156,8 @@ bool PrefabFactory::InstantiateIdentity(EntityID entity, const ComponentDefiniti
     
     if (def.HasParameter("type"))
     {
-        std::string typeStr = def.GetParameter("type")->AsString();
         // Map string to EntityType enum
-        if (typeStr == "Background") identity.type = EntityType::Background;
-        else if (typeStr == "Collision") identity.type = EntityType::Collision;
-        else if (typeStr == "Decoration") identity.type = EntityType::Decoration;
-        else if (typeStr == "Player") identity.type = EntityType::Player;
-        else if (typeStr == "NPC") identity.type = EntityType::NPC;
-        else if (typeStr == "Enemy") identity.type = EntityType::Enemy;
-        else if (typeStr == "Projectile") identity.type = EntityType::Projectile;
-        else if (typeStr == "Item") identity.type = EntityType::Item;
-        else if (typeStr == "Environment") identity.type = EntityType::Environment;
-        else if (typeStr == "Trigger") identity.type = EntityType::Trigger;
-        else if (typeStr == "Waypoint") identity.type = EntityType::Waypoint;
-        else if (typeStr == "UIElement") identity.type = EntityType::UIElement;
-        else identity.type = EntityType::Generic;
+        identity.type = def.GetParameter("type")->AsString();
     }
     
     World::Get().AddComponent<Identity_data>(entity, identity);

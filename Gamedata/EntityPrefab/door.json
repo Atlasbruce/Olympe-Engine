@@ -32,7 +32,7 @@
         }
       },
 	  {
-        "type": "VisualEdotor_data",
+        "type": "VisualEditor_data",
         "properties": {
           "spritePath": "./Resources/Sprites/door.png",
           "width": 32,

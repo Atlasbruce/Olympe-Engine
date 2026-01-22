@@ -174,10 +174,10 @@ void VideoGame::SetViewportLayout(short playerID)
 //-------------------------------------------------------------
 void VideoGame::RegisterPrefabItems()
 {
-	// PLAYER PREFAB
-    PrefabFactory::Get().RegisterPrefab("PlayerEntity", [](EntityID id) {
+	// PREFAB REGISTRATION
+/*    PrefabFactory::Get().RegisterPrefab("PlayerEntity", [](EntityID id) {
         World& world = World::Get();
-		world.AddComponent<Identity_data>(id, string("Player_" + to_string(id)), "Player", EntityType::Player);
+        world.AddComponent<Identity_data>(id, string("Player_" + to_string(id)), "Player", "Player");
 
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "PlayerEntity";
@@ -194,7 +194,7 @@ void VideoGame::RegisterPrefabItems()
         world.AddComponent<VisualSprite_data>(id, st_vsprite);// .srcRect, st_vsprite.sprite, st_vsprite.hotSpot);
         world.AddComponent<BoundingBox_data>(id, SDL_FRect{ 0.f, 0.f, st_vsprite.srcRect.w, st_vsprite.srcRect.h });
         world.AddComponent<PlayerBinding_data>(id);// , (short)++m_playerIdCounter, (short)-1); // default to keyboard
-        world.AddComponent<Controller_data>(id);// , (short)-1/*controller index*/, false, false);
+        world.AddComponent<Controller_data>(id);// , (short)-1, false, false);
         world.AddComponent<PlayerController_data>(id);// , Vector(), false, false, false, false, false);
 		world.AddComponent<Health_data>(id, 100, 100);
         world.AddComponent<PhysicsBody_data>(id);// , Vector(), Vector(), false, 0.f, 0.f,
@@ -204,7 +204,7 @@ void VideoGame::RegisterPrefabItems()
 	//TRIGGER PREFAB
     PrefabFactory::Get().RegisterPrefab("Trigger", [](EntityID id) {
         World& world = World::Get();
-		world.AddComponent<Identity_data>(id, string("Trigger_" + to_string(id)), "Trigger", EntityType::Trigger);
+        world.AddComponent<Identity_data>(id, string("Trigger_" + to_string(id)), "Trigger", "Trigger");
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "Trigger";
         static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/Icons/trigger-50.png");
@@ -221,7 +221,7 @@ void VideoGame::RegisterPrefabItems()
 	// WAYPOINT PREFAB
     PrefabFactory::Get().RegisterPrefab("Waypoint", [](EntityID id) {
         World& world = World::Get();
-		world.AddComponent<Identity_data>(id, string("Waypoint_" + to_string(id)), "Waypoint", EntityType::Waypoint);
+        world.AddComponent<Identity_data>(id, string("Waypoint_" + to_string(id)), "Waypoint", "Waypoint");
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "Waypoint";
         static VisualEditor_data* st_vspriteData_ptr = DataManager::Get().GetSpriteEditor_data(prefabName, "Resources/Icons/location-32.png");
@@ -238,7 +238,7 @@ void VideoGame::RegisterPrefabItems()
 	//NPC PREFAB
     PrefabFactory::Get().RegisterPrefab("NPCEntity", [](EntityID id) {
         World& world = World::Get();
-		world.AddComponent<Identity_data>(id, string("Npc_" + to_string(id)), "Npc", EntityType::NPC);
+        world.AddComponent<Identity_data>(id, string("Npc_" + to_string(id)), "Npc", "Npc");
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "NPCEntity";
         static VisualSprite_data * st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/Sprites/entity_" + to_string(Random_Int(1, 15)) + ".png");
@@ -258,7 +258,7 @@ void VideoGame::RegisterPrefabItems()
 	//GUARD NPC PREFAB (AI-enabled)
     PrefabFactory::Get().RegisterPrefab("GuardNPC", [](EntityID id) {
         World& world = World::Get();
-		world.AddComponent<Identity_data>(id, string("GuardNPC_" + to_string(id)), "GuardNPC", EntityType::NPC);
+        world.AddComponent<Identity_data>(id, string("GuardNPC_" + to_string(id)), "GuardNPC", "Npc");
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "GuardNPC";
         static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/Sprites/entity_4.png");
@@ -304,7 +304,7 @@ void VideoGame::RegisterPrefabItems()
 	//OLYMPE LOGO PREFAB
     PrefabFactory::Get().RegisterPrefab("OlympeIdentity", [](EntityID id) {
         World& world = World::Get();
-        world.AddComponent<Identity_data>(id, string("OlympeIdentity_" + to_string(id)), "Logo", EntityType::UIElement);
+        world.AddComponent<Identity_data>(id, string("OlympeIdentity_" + to_string(id)), "Logo", "UIElement");
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         string prefabName = "OlympeIdentity";
         static VisualSprite_data* st_vspriteData_ptr = DataManager::Get().GetSprite_data(prefabName, "Resources/olympe_logo.png");
@@ -320,12 +320,12 @@ void VideoGame::RegisterPrefabItems()
 		});
 
     // ENEMY PREFAB
-    PrefabFactory::Get().RegisterPrefab("Enemy", [](EntityID id) {
+    PrefabFactory::Get().RegisterPrefab("Ennemy", [](EntityID id) {
         World& world = World::Get();
-        world.AddComponent<Identity_data>(id, "Enemy_" + std::to_string(id), "Enemy", EntityType::NPC);
+        world.AddComponent<Identity_data>(id, "Ennemy_" + std::to_string(id), "Ennemy", "Ennemy");
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
-        
-        static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Enemy", "Resources/Sprites/enemy.png");
+
+        static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Ennemy", "Resources/Sprites/ennemy.png");
         if (!sprite) {
             // Fallback to random entity sprite
             string str_index = to_string(Random_Int(1, 15));
@@ -350,7 +350,7 @@ void VideoGame::RegisterPrefabItems()
     // ZOMBIE PREFAB
     PrefabFactory::Get().RegisterPrefab("Zombie", [](EntityID id) {
         World& world = World::Get();
-        world.AddComponent<Identity_data>(id, "Zombie_" + std::to_string(id), "Zombie", EntityType::NPC);
+        world.AddComponent<Identity_data>(id, "Zombie_" + std::to_string(id), "Zombie", "Zombie");
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         
         static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Zombie", "Resources/Sprites/zombie.png");
@@ -378,7 +378,7 @@ void VideoGame::RegisterPrefabItems()
     // KEY PREFAB
     PrefabFactory::Get().RegisterPrefab("Key", [](EntityID id) {
         World& world = World::Get();
-        world.AddComponent<Identity_data>(id, "Key_" + std::to_string(id), "Key", EntityType::Item);
+        world.AddComponent<Identity_data>(id, "Key_" + std::to_string(id), "Key", "Key");
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         
         static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Key", "Resources/Items/key.png");
@@ -396,7 +396,7 @@ void VideoGame::RegisterPrefabItems()
     // COLLECTIBLE PREFAB
     PrefabFactory::Get().RegisterPrefab("Collectible", [](EntityID id) {
         World& world = World::Get();
-        world.AddComponent<Identity_data>(id, "Collectible_" + std::to_string(id), "Collectible", EntityType::Item);
+        world.AddComponent<Identity_data>(id, "Collectible_" + std::to_string(id), "Collectible", "Collectible");
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         
         static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Collectible", "Resources/Items/coin.png");
@@ -414,7 +414,7 @@ void VideoGame::RegisterPrefabItems()
     // TREASURE PREFAB
     PrefabFactory::Get().RegisterPrefab("Treasure", [](EntityID id) {
         World& world = World::Get();
-        world.AddComponent<Identity_data>(id, "Treasure_" + std::to_string(id), "Treasure", EntityType::Item);
+        world.AddComponent<Identity_data>(id, "Treasure_" + std::to_string(id), "Treasure", "Treasure");
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         
         static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Treasure", "Resources/Items/chest.png");
@@ -432,7 +432,7 @@ void VideoGame::RegisterPrefabItems()
     // PORTAL PREFAB
     PrefabFactory::Get().RegisterPrefab("Portal", [](EntityID id) {
         World& world = World::Get();
-        world.AddComponent<Identity_data>(id, "Portal_" + std::to_string(id), "Portal", EntityType::Trigger);
+        world.AddComponent<Identity_data>(id, "Portal_" + std::to_string(id), "Portal", "Portal");
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
         
         static VisualSprite_data* sprite = DataManager::Get().GetSprite_data("Portal", "Resources/Items/portal.png");
@@ -450,9 +450,10 @@ void VideoGame::RegisterPrefabItems()
     // AMBIENT SOUND PREFAB
     PrefabFactory::Get().RegisterPrefab("AmbientSound", [](EntityID id) {
         World& world = World::Get();
-        world.AddComponent<Identity_data>(id, "AmbientSound_" + std::to_string(id), "AmbientSound", EntityType::Trigger);
+        world.AddComponent<Identity_data>(id, "AmbientSound_" + std::to_string(id), "AmbientSound", "AmbientSound");
         world.AddComponent<Position_data>(id, Vector(0, 0, 0));
     });
+    /**/
 }
 //-------------------------------------------------------------
 void VideoGame::InitializeAITestScene()

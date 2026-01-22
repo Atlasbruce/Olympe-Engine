@@ -38,3 +38,6 @@ void Draw_FilledHexagon(
     Vector center,
 	float radius,
 	SDL_FColor color);
+
+// Draws rectangle outline with float coordinates
+void Draw_Rectangle(const SDL_FRect* rect, SDL_Color color);
