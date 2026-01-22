@@ -1218,8 +1218,16 @@ namespace Tiled {
     {
         if (colorStr.empty() || colorStr == "none") return 0xFFFFFFFF;
         
+        // Fix potential buffer underflow - check string has content after '#'
+        if (colorStr == "#") return 0xFFFFFFFF;
+        
         std::string hex = colorStr;
-        if (hex[0] == '#') hex = hex.substr(1);
+        if (hex.length() > 0 && hex[0] == '#') {
+            hex = hex.substr(1);
+        }
+        
+        // Handle empty string after removing '#'
+        if (hex.empty()) return 0xFFFFFFFF;
         
         uint32_t color = 0xFFFFFFFF;
         try {
