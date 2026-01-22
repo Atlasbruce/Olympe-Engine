@@ -361,12 +361,20 @@ ComponentDefinition ComponentDefinition::FromJSON(const nlohmann::json& jsonObj)
 			return def;
 		}
 		
-		// Parse all other fields as parameters
-		for (auto it = jsonObj.begin(); it != jsonObj.end(); ++it)
+		// Check if there's a "properties" object - if so, parse its contents instead of top-level fields
+		const json* fieldsToIterate = &jsonObj;
+		bool hasPropertiesField = jsonObj.contains("properties") && jsonObj["properties"].is_object();
+		if (hasPropertiesField)
+		{
+			fieldsToIterate = &jsonObj["properties"];
+		}
+		
+		// Parse all fields as parameters
+		for (auto it = fieldsToIterate->begin(); it != fieldsToIterate->end(); ++it)
 		{
 			const std::string& key = it.key();
 			
-			// Skip the type field
+			// Skip the type field (shouldn't be in properties, but check anyway)
 			if (key == "type")
 				continue;
 			
