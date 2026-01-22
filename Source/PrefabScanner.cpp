@@ -7,6 +7,7 @@
 
 #include "PrefabScanner.h"
 #include "ComponentDefinition.h"
+#include "ParameterSchema.h"
 #include "third_party/nlohmann/json.hpp"
 #include "system/system_utils.h"
 #include <fstream>
@@ -333,6 +334,12 @@ PrefabBlueprint PrefabScanner::ParsePrefab(const std::string& filepath)
     {
         blueprint.errors.push_back(std::string("JSON parse error: ") + e.what());
         blueprint.isValid = false;
+    }
+    
+    // Auto-discover schemas from this prefab if valid
+    if (blueprint.isValid)
+    {
+        ParameterSchemaRegistry::GetInstance().DiscoverSchemasFromPrefab(blueprint);
     }
     
     return blueprint;
