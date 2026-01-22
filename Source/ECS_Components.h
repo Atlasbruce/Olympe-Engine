@@ -165,6 +165,16 @@ struct VisualEditor_data
 		: srcRect(rect), sprite(spr), hotSpot(hotspot) {}
 	VisualEditor_data(const VisualEditor_data&) = default;
 	VisualEditor_data& operator=(const VisualEditor_data&) = default;
+	void UpdateRect()
+	{
+		if (sprite)
+		{
+			srcRect.w = static_cast<float>(sprite->w);
+			srcRect.h = static_cast<float>(sprite->h);
+			hotSpot.x = srcRect.w / 2.f;
+			hotSpot.y = srcRect.h / 2.f;
+		}
+	}
 };
 // --- Component Animation Data ---
 struct Animation_data

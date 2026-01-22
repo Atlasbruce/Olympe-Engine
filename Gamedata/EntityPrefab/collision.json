@@ -32,6 +32,15 @@
         }
       },
 	  {
+        "type": "VisualSprite_data",
+        "properties": {
+          "spritePath": "./Resources/Icons/zone.png",
+          "width": 64,
+          "height": 64,
+          "layer": 0
+        }
+      },
+	  {
         "type": "VisualEditor_data",
         "properties": {
           "spritePath": "./Resources/Icons/zone.png",

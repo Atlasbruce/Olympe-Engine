@@ -820,6 +820,13 @@ bool World::InstantiatePass3_StaticObjects(
                 spriteComp.sprite = DataManager::Get().GetSprite(entityInstance->spritePath, entityInstance->spritePath);
                 spriteComp.UpdateRect();
 			}
+
+            if (HasComponent<VisualEditor_data>(entity))
+            {
+                VisualEditor_data& editorComp = GetComponent<VisualEditor_data>(entity);
+                editorComp.sprite = DataManager::Get().GetSprite(entityInstance->spritePath, entityInstance->spritePath);
+                editorComp.UpdateRect();
+            }
             
             result.pass3_staticObjects.successfullyCreated++;
             result.entityRegistry[entityInstance->name] = entity;
@@ -853,6 +860,9 @@ bool World::InstantiatePass4_DynamicObjects(
     std::vector<std::string> dynamicTypes = {
         "player", "npc", "guard", "enemy", "zombie", "trigger", "ambiant"
     };
+
+    std::string instancetypeLower;
+	std::string dynamicTypeLower;
     
     for (const auto& entityInstance : levelDef.entities)
     {
@@ -862,7 +872,13 @@ bool World::InstantiatePass4_DynamicObjects(
         bool isDynamic = false;
         for (const auto& dynamicType : dynamicTypes)
         {
-            if (entityInstance->type == dynamicType)
+			instancetypeLower = entityInstance->type;
+            std::transform(instancetypeLower.begin(), instancetypeLower.end(), instancetypeLower.begin(), ::tolower);
+
+			dynamicTypeLower = dynamicType;
+			std::transform(dynamicTypeLower.begin(), dynamicTypeLower.end(), dynamicTypeLower.begin(), ::tolower);
+
+            if (instancetypeLower == dynamicTypeLower)
             {
                 isDynamic = true;
                 break;

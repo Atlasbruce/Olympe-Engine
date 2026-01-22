@@ -37,7 +37,7 @@
           "spritePath": "./Resources/Sprites/guard.png",
           "width": 32,
           "height": 32,
-          "layer": 10
+          "layer": 1
         }
       },
       {

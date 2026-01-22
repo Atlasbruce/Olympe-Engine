@@ -32,6 +32,15 @@
         }
       },
 	  {
+        "type": "VisualSprite_data",
+        "properties": {
+          "spritePath": "./Resources/Icons/sector.png",
+          "width": 512,
+          "height": 512,
+          "layer": 0
+        }
+      },
+	  {
         "type": "VisualEditor_data",
         "properties": {
           "spritePath": "./Resources/Icons/sector.png",

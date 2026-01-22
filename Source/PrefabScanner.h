@@ -33,6 +33,7 @@ struct PrefabBlueprint
     std::vector<ComponentDefinition> components;
     ResourceRefs resources;
     bool isValid;
+	bool isDynamic = false;
     std::vector<std::string> errors;
     
     PrefabBlueprint() : isValid(false) {}
