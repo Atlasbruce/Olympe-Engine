@@ -371,7 +371,7 @@ ComponentDefinition ComponentDefinition::FromJSON(const nlohmann::json& jsonObj)
 		{
 			const std::string& key = it.key();
 			
-			// Skip the type field (shouldn't be in properties, but check anyway)
+			// Skip the type field (normally at top level, but safeguard against it in properties)
 			if (key == "type")
 				continue;
 			
