@@ -9,7 +9,6 @@ ParameterSchema purpose: Implementation of the parameter schema registry.
 */
 
 #include "ParameterSchema.h"
-#include "PrefabScanner.h"
 #include "system/system_utils.h"
 #include <algorithm>
 
@@ -114,6 +113,7 @@ void ParameterSchemaRegistry::InitializeBuiltInSchemas()
 		ComponentParameter::FromColor(255, 255, 255, 255)
 	));
 	
+	// Note: width, height, layer are also used in VisualEditor_data component
 	RegisterParameterSchema(ParameterSchemaEntry(
 		"width", "VisualSprite_data", "width",
 		ComponentParameter::Type::Int, false,
@@ -145,12 +145,14 @@ void ParameterSchemaRegistry::InitializeBuiltInSchemas()
 		ComponentParameter::FromString("Generic")
 	));
 	
+	// "category" is an alias for "tag" field (backward compatibility)
 	RegisterParameterSchema(ParameterSchemaEntry(
 		"category", "Identity_data", "tag",
 		ComponentParameter::Type::String, false,
 		ComponentParameter::FromString("Untagged")
 	));
 	
+	// "tag" parameter maps to "tag" field
 	RegisterParameterSchema(ParameterSchemaEntry(
 		"tag", "Identity_data", "tag",
 		ComponentParameter::Type::String, false,
@@ -221,12 +223,14 @@ void ParameterSchemaRegistry::InitializeBuiltInSchemas()
 	));
 	
 	// VisualEditor_data component schemas
+	// Note: Uses spritePath (like VisualSprite_data) but different purpose (editor visualization)
 	RegisterParameterSchema(ParameterSchemaEntry(
 		"spritePath", "VisualEditor_data", "spritePath",
 		ComponentParameter::Type::String, false,
 		ComponentParameter::FromString("")
 	));
 	
+	// Note: width, height, layer are separate registrations for VisualEditor_data component
 	RegisterParameterSchema(ParameterSchemaEntry(
 		"width", "VisualEditor_data", "width",
 		ComponentParameter::Type::Int, false,
