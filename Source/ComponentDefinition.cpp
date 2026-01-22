@@ -363,8 +363,7 @@ ComponentDefinition ComponentDefinition::FromJSON(const nlohmann::json& jsonObj)
 		
 		// Check if there's a "properties" object - if so, parse its contents instead of top-level fields
 		const json* fieldsToIterate = &jsonObj;
-		bool hasPropertiesField = jsonObj.contains("properties") && jsonObj["properties"].is_object();
-		if (hasPropertiesField)
+		if (jsonObj.contains("properties") && jsonObj["properties"].is_object())
 		{
 			fieldsToIterate = &jsonObj["properties"];
 		}
