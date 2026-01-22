@@ -157,7 +157,7 @@ bool PrefabFactory::InstantiateIdentity(EntityID entity, const ComponentDefiniti
     if (def.HasParameter("entityType"))
     {
         // Map string to EntityType enum
-        identity.type = def.GetParameter("type")->AsString();
+        identity.type = def.GetParameter("entityType")->AsString();
     }
     
     World::Get().AddComponent<Identity_data>(entity, identity);

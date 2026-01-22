@@ -424,7 +424,7 @@
                  "name":"portal",
                  "point":true,
                  "rotation":0,
-                 "type":"exit",
+                 "type":"door",
                  "visible":true,
                  "width":0,
                  "x":90.8276,
@@ -463,14 +463,14 @@
                 {
                  "id":18,
                  "template":"sound_object_template.tx",
-                 "type":"ambiant",
+                 "type":"sound_ambiant",
                  "x":-69.6322,
                  "y":228.299
                 }, 
                 {
                  "id":19,
                  "template":"sound_object_template.tx",
-                 "type":"ambiant",
+                 "type":"sound_ambiant",
                  "x":-42.8621,
                  "y":230.862
                 }],

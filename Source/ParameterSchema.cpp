@@ -9,6 +9,7 @@ ParameterSchema purpose: Implementation of the parameter schema registry.
 */
 
 #include "ParameterSchema.h"
+#include "PrefabScanner.h"
 #include "system/system_utils.h"
 #include <algorithm>
 

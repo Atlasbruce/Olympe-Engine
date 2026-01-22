@@ -633,7 +633,7 @@ void RenderSingleEntity(const CameraTransform& cam, EntityID entity)
 
         SDL_SetRenderDrawColor(GameEngine::renderer, 255, 255, 0, 255); // yellow
 
-        Draw_FilledCircle((int)(centerScreen.x), (int)(centerScreen.y), 3); // draw pivot/centre
+        Draw_FilledCircle((int)(destRect.x + destRect.w / 2), (int)(destRect.y + destRect.h / 2), 3); // draw pivot/centre
         Draw_Rectangle(&destRect, SDL_Color{ 0, 255, 255, 255 }); // draw bounding box
     }
     catch (const std::exception& e)
@@ -725,7 +725,7 @@ void RenderEntitiesForCamera(const CameraTransform& cam)
 
 			SDL_SetRenderDrawColor(GameEngine::renderer, 255, 0, 255, 255); // magenta
 
-            Draw_FilledCircle((int)(centerScreen.x), (int)(centerScreen.y), 3); // draw pivot/centre
+            Draw_FilledCircle((int)(destRect.x + destRect.w / 2), (int)(destRect.y + destRect.h / 2), 3); // draw pivot/centre
             Draw_Rectangle(&destRect, SDL_Color{ 0, 255, 255, 255 }); // draw bounding box
         }
         catch (const std::exception& e)

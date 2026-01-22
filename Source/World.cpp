@@ -270,6 +270,11 @@ void World::NotifyBlueprintEditorEntityDestroyed(EntityID entity)
 
 bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
 {
+    Olympe::Tiled::LevelParser parser;
+    Olympe::Tiled::LevelParseResult phase1Result;
+    Phase2Result phase2Result;
+
+
     // Unload current level
     UnloadCurrentLevel();
 
@@ -282,8 +287,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     // PHASE 1: PARSING & VISUAL ANALYSIS
     // =======================================================================
     
-    Olympe::Tiled::LevelParser parser;
-    Olympe::Tiled::LevelParseResult phase1Result = parser.ParseAndAnalyze(tiledMapPath);
+    phase1Result = parser.ParseAndAnalyze(tiledMapPath);
     
     if (!phase1Result.IsSuccess())
     {
@@ -299,7 +303,8 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     // PHASE 2: PREFAB DISCOVERY & PRELOADING
     // =======================================================================
     
-    Phase2Result phase2Result = ExecutePhase2_PrefabDiscovery(phase1Result);
+    /*Phase2Result*/
+    phase2Result = ExecutePhase2_PrefabDiscovery(phase1Result);
     
     if (!phase2Result.success)
     {
@@ -335,7 +340,15 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
         SYSTEM_LOG << "World::LoadLevelFromTiled - Failed to convert map\n";
         return false;
     }/**/
-        
+
+	// Clean and standardize Object.type following prefab registry
+    PrefabFactory& factory = PrefabFactory::Get();
+    factory.SetPrefabRegistry(phase2Result.prefabRegistry);
+	for (const auto& entity : levelDef.entities)
+    {
+		entity->type = parser.ObjectTypeChecker(entity->type);
+    }
+            
     // Execute 5-pass instantiation
     InstantiationResult instResult;
     
@@ -814,19 +827,19 @@ bool World::InstantiatePass3_StaticObjects(
                 id.type = entityInstance->type;
 			}
 
-            if (HasComponent<VisualSprite_data>(entity))
-            {
-                VisualSprite_data& spriteComp = GetComponent<VisualSprite_data>(entity);
-                spriteComp.sprite = DataManager::Get().GetSprite(entityInstance->spritePath, entityInstance->spritePath);
-                spriteComp.UpdateRect();
-			}
+   //         if (HasComponent<VisualSprite_data>(entity))
+   //         {
+   //             VisualSprite_data& spriteComp = GetComponent<VisualSprite_data>(entity);
+   //             spriteComp.sprite = DataManager::Get().GetSprite(entityInstance->spritePath, entityInstance->spritePath);
+   //             spriteComp.UpdateRect();
+			//}
 
-            if (HasComponent<VisualEditor_data>(entity))
-            {
-                VisualEditor_data& editorComp = GetComponent<VisualEditor_data>(entity);
-                editorComp.sprite = DataManager::Get().GetSprite(entityInstance->spritePath, entityInstance->spritePath);
-                editorComp.UpdateRect();
-            }
+   //         if (HasComponent<VisualEditor_data>(entity))
+   //         {
+   //             VisualEditor_data& editorComp = GetComponent<VisualEditor_data>(entity);
+   //             editorComp.sprite = DataManager::Get().GetSprite(entityInstance->spritePath, entityInstance->spritePath);
+   //             editorComp.UpdateRect();
+   //         }
             
             result.pass3_staticObjects.successfullyCreated++;
             result.entityRegistry[entityInstance->name] = entity;
