@@ -54,6 +54,9 @@ struct ComponentSchema
 	explicit ComponentSchema(const std::string& type) : componentType(type) {}
 };
 
+// Forward declarations
+struct PrefabBlueprint;
+
 // Singleton registry for parameter schemas
 class ParameterSchemaRegistry
 {
@@ -62,6 +65,7 @@ public:
 	static ParameterSchemaRegistry& GetInstance()
 	{
 		static ParameterSchemaRegistry instance;
+		instance.EnsureInitialized();  // Auto-initialize on first access
 		return instance;
 	}
 	
@@ -71,7 +75,7 @@ public:
 	ParameterSchemaRegistry(ParameterSchemaRegistry&&) = delete;
 	ParameterSchemaRegistry& operator=(ParameterSchemaRegistry&&) = delete;
 	
-	// Initialize built-in schemas for standard components
+	// Initialize built-in schemas for standard components (public for manual reinit if needed)
 	void InitializeBuiltInSchemas();
 	
 	// Load schema from JSON file
@@ -89,10 +93,26 @@ public:
 	// Register a new parameter schema entry
 	void RegisterParameterSchema(const ParameterSchemaEntry& entry);
 	
+	// Automatic schema discovery methods
+	void DiscoverComponentSchema(const ComponentDefinition& componentDef);
+	void DiscoverSchemasFromPrefab(const PrefabBlueprint& prefab);
+	
 private:
 	// Private constructor for singleton
 	ParameterSchemaRegistry() = default;
 	~ParameterSchemaRegistry() = default;
+	
+	// Auto-initialization
+	bool isInitialized_ = false;
+	void EnsureInitialized();
+	
+	// Auto-register discovered parameter
+	void AutoRegisterParameter(
+		const std::string& componentType,
+		const std::string& paramName,
+		ComponentParameter::Type paramType,
+		const ComponentParameter& defaultValue
+	);
 	
 	// Storage
 	std::map<std::string, ComponentSchema> componentSchemas_;  // Component type -> schema
