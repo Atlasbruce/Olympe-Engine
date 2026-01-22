@@ -833,9 +833,10 @@ namespace Tiled {
                                               Olympe::Editor::LevelDefinition& outLevel,
                                               ConversionStats& stats)
     {
-        // Define category rules
+        // Define category rules (synchronized with World.cpp InstantiatePass3_StaticObjects)
         const std::set<std::string> staticTypes = {
-            "item", "collectible", "key", "treasure", "waypoint", "trigger", "portal", "door", "exit"
+            "item", "collectible", "key", "treasure", "waypoint", "trigger", "portal", "door", "exit",
+            "pickup", "interactable", "checkpoint", "teleporter", "switch", "spawn"
         };
         
         const std::set<std::string> dynamicTypes = {
@@ -1211,6 +1212,97 @@ namespace Tiled {
                    << config_.typeToPrefabMap.size() << " prefab mappings" << std::endl;
 
         return true;
+    }
+
+    uint32_t TiledToOlympe::ParseTintColor(const std::string& colorStr)
+    {
+        if (colorStr.empty() || colorStr == "none") return 0xFFFFFFFF;
+        
+        // Fix potential buffer underflow - check string has content after '#'
+        if (colorStr == "#") return 0xFFFFFFFF;
+        
+        std::string hex = colorStr;
+        if (hex.length() > 0 && hex[0] == '#') {
+            hex = hex.substr(1);
+        }
+        
+        // Handle empty string after removing '#'
+        if (hex.empty()) return 0xFFFFFFFF;
+        
+        uint32_t color = 0xFFFFFFFF;
+        try {
+            color = static_cast<uint32_t>(std::stoul(hex, nullptr, 16));
+            
+            // If 6-digit hex (RGB), add full alpha
+            if (hex.length() == 6) {
+                color = 0xFF000000 | color;
+            }
+        } catch (...) {
+            // Invalid color format, return white
+        }
+        
+        return color;
+    }
+
+    std::unique_ptr<Olympe::Editor::EntityInstance> TiledToOlympe::CreateSectorEntity(const TiledObject& obj)
+    {
+        auto entity = std::make_unique<Olympe::Editor::EntityInstance>();
+        
+        entity->id = "sector_" + std::to_string(obj.id);
+        entity->name = obj.name.empty() ? ("Sector_" + std::to_string(obj.id)) : obj.name;
+        entity->type = "Sector";
+        entity->prefabPath = "Blueprints/Sector.json";
+        
+        float transformedY = TransformY(obj.y, 0);
+        entity->position = Olympe::Editor::Vec2(obj.x, transformedY);
+        entity->rotation = obj.rotation;
+        
+        // Store polygon in overrides
+        nlohmann::json polygon = nlohmann::json::array();
+        for (const auto& pt : obj.polygon) {
+            nlohmann::json point;
+            point["x"] = pt.x;
+            point["y"] = config_.flipY ? -pt.y : pt.y;
+            polygon.push_back(point);
+        }
+        
+        entity->overrides["Sector"] = nlohmann::json::object();
+        entity->overrides["Sector"]["polygon"] = polygon;
+        entity->overrides["Sector"]["type"] = obj.type;
+        
+        PropertiesToOverrides(obj.properties, entity->overrides);
+        
+        return entity;
+    }
+
+    std::unique_ptr<Olympe::Editor::EntityInstance> TiledToOlympe::CreatePatrolPathEntity(const TiledObject& obj)
+    {
+        auto entity = std::make_unique<Olympe::Editor::EntityInstance>();
+        
+        entity->id = "patrol_" + std::to_string(obj.id);
+        entity->name = obj.name.empty() ? ("PatrolPath_" + std::to_string(obj.id)) : obj.name;
+        entity->type = "PatrolPath";
+        entity->prefabPath = "Blueprints/PatrolPath.json";
+        
+        float transformedY = TransformY(obj.y, 0);
+        entity->position = Olympe::Editor::Vec2(obj.x, transformedY);
+        entity->rotation = obj.rotation;
+        
+        // Store polyline in overrides
+        nlohmann::json path = nlohmann::json::array();
+        for (const auto& pt : obj.polyline) {
+            nlohmann::json point;
+            point["x"] = pt.x;
+            point["y"] = config_.flipY ? -pt.y : pt.y;
+            path.push_back(point);
+        }
+        
+        entity->overrides["AIBlackboard_data"] = nlohmann::json::object();
+        entity->overrides["AIBlackboard_data"]["patrolPath"] = path;
+        
+        PropertiesToOverrides(obj.properties, entity->overrides);
+        
+        return entity;
     }
 
 } // namespace Tiled

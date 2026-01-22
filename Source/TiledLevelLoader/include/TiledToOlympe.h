@@ -156,6 +156,15 @@ namespace Tiled {
                            std::vector<std::vector<int>>& tileMap,
                            int mapWidth, int mapHeight);
 
+        // Parse tint color from hex string to uint32_t
+        uint32_t ParseTintColor(const std::string& colorStr);
+
+        // Create sector entity from polygon object (convenience wrapper)
+        std::unique_ptr<Olympe::Editor::EntityInstance> CreateSectorEntity(const TiledObject& obj);
+
+        // Create patrol path entity from polyline object (convenience wrapper)
+        std::unique_ptr<Olympe::Editor::EntityInstance> CreatePatrolPathEntity(const TiledObject& obj);
+
         ConversionConfig config_;
         ParallaxLayerManager parallaxLayers_;
         std::string lastError_;
