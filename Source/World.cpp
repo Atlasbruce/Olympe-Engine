@@ -596,12 +596,12 @@ bool World::InstantiatePass1_VisualLayers(
     SYSTEM_LOG << "[DEBUG] Checking customData[\"orientation\"]...\n";
     
     // Extract map orientation and tile size from metadata
-<<<<<<< HEAD
+
     // Use .value() with defaults to safely handle missing or wrong-type JSON values
     m_mapOrientation = levelDef.metadata.customData.value("orientation", "orthogonal");
     m_tileWidth = levelDef.metadata.customData.value("tilewidth", 32);
     m_tileHeight = levelDef.metadata.customData.value("tileheight", 32);
-=======
+
     if (levelDef.metadata.customData.contains("orientation"))
     {
         m_mapOrientation = levelDef.metadata.customData["orientation"].get<std::string>();
@@ -623,7 +623,6 @@ bool World::InstantiatePass1_VisualLayers(
         m_tileHeight = levelDef.metadata.customData["tileheight"].get<int>();
         SYSTEM_LOG << "[DEBUG]   → Found tileheight: " << m_tileHeight << "\n";
     }
->>>>>>> 8c0f60a652ca6ad5a2fac8a15d9cf29ca6b1d0fc
     
     SYSTEM_LOG << "-> Map configuration: " << m_mapOrientation 
                << " (" << m_tileWidth << "x" << m_tileHeight << ")\n\n";
