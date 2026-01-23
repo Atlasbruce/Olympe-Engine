@@ -396,6 +396,11 @@ private:
     
     // Get tileset manager (for rendering system)
     const TilesetManager& GetTilesetManager() const { return m_tilesetManager; }
+    
+    // Get map configuration for rendering
+    const std::string& GetMapOrientation() const { return m_mapOrientation; }
+    int GetTileWidth() const { return m_tileWidth; }
+    int GetTileHeight() const { return m_tileHeight; }
 
 private:
     // Tile layer loading helper methods (internal use only)
@@ -407,5 +412,8 @@ private:
     
     TilesetManager m_tilesetManager;
     std::vector<TileChunk> m_tileChunks;
+    std::string m_mapOrientation;  // "orthogonal" or "isometric"
+    int m_tileWidth;
+    int m_tileHeight;
     std::vector<std::unique_ptr<Level>> m_levels;
 };

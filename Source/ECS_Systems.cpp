@@ -566,7 +566,7 @@ void RenderChunkOrthogonal(const World::TileChunk& chunk, const CameraTransform&
     }
 }
 
-void RenderTileChunks(const CameraTransform& cam, const std::string& mapOrientation)
+void RenderTileChunks(const CameraTransform& cam, const std::string& mapOrientation, int tileWidth, int tileHeight)
 {
     const auto& tileChunks = World::Get().GetTileChunks();
     
@@ -578,7 +578,7 @@ void RenderTileChunks(const CameraTransform& cam, const std::string& mapOrientat
         if (!g_isoRenderer)
         {
             g_isoRenderer = std::make_unique<Olympe::Rendering::IsometricRenderer>();
-            g_isoRenderer->Initialize(GameEngine::renderer, 58, 27);  // Default tile size
+            g_isoRenderer->Initialize(GameEngine::renderer, tileWidth, tileHeight);
         }
         
         // Use IsometricRenderer for proper depth sorting
@@ -609,8 +609,9 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
 {
     Olympe::Tiled::ParallaxLayerManager& parallaxMgr = Olympe::Tiled::ParallaxLayerManager::Get();
     
-    // Render tile chunks first (for now, assume isometric - TODO: get from level metadata)
-    RenderTileChunks(cam, "isometric");
+    // Render tile chunks first (get config from World)
+    RenderTileChunks(cam, World::Get().GetMapOrientation(), 
+                     World::Get().GetTileWidth(), World::Get().GetTileHeight());
     
     // Collect entities and layers with depth information for sorting
     struct RenderItem

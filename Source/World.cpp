@@ -39,6 +39,7 @@ void RegisterInputEntityWithManager(EntityID e)
 }
 //---------------------------------------------------------------------------------------------
 World::World()
+    : m_mapOrientation("orthogonal"), m_tileWidth(32), m_tileHeight(32)
 {
     Initialize_ECS_Systems();
 
@@ -586,6 +587,29 @@ bool World::InstantiatePass1_VisualLayers(
     const Olympe::Editor::LevelDefinition& levelDef,
     InstantiationResult& result)
 {
+    // ===== PART 0: Map Configuration =====
+    // Extract map orientation and tile size from metadata
+    if (levelDef.metadata.customData.contains("orientation"))
+    {
+        m_mapOrientation = levelDef.metadata.customData["orientation"].get<std::string>();
+    }
+    else
+    {
+        m_mapOrientation = "orthogonal";  // Default
+    }
+    
+    if (levelDef.metadata.customData.contains("tilewidth"))
+    {
+        m_tileWidth = levelDef.metadata.customData["tilewidth"].get<int>();
+    }
+    if (levelDef.metadata.customData.contains("tileheight"))
+    {
+        m_tileHeight = levelDef.metadata.customData["tileheight"].get<int>();
+    }
+    
+    std::cout << "-> Map configuration: " << m_mapOrientation 
+              << " (" << m_tileWidth << "x" << m_tileHeight << ")\n";
+    
     // ===== PART 1: Parallax Layers =====
     if (levelDef.metadata.customData.contains("parallaxLayers"))
     {
@@ -843,7 +867,8 @@ void World::LoadTileData(const nlohmann::json& dataJson, const std::string& laye
 
 void World::TilesetManager::Clear()
 {
-    // Cleanup textures
+    // Cleanup textures - these are owned by TilesetManager and loaded directly
+    // via IMG_LoadTexture, not through DataManager's texture cache
     for (auto& tileset : m_tilesets)
     {
         if (tileset.texture)
@@ -978,9 +1003,13 @@ bool World::TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTextur
                 auto it = tileset.individualTiles.find(localId);
                 if (it != tileset.individualTiles.end())
                 {
-                    outTexture = it->second;
-                    outSrcRect = tileset.individualSrcRects.at(localId);
-                    return true;
+                    auto srcIt = tileset.individualSrcRects.find(localId);
+                    if (srcIt != tileset.individualSrcRects.end())
+                    {
+                        outTexture = it->second;
+                        outSrcRect = srcIt->second;
+                        return true;
+                    }
                 }
             }
             else

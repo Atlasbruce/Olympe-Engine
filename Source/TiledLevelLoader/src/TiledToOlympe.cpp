@@ -578,6 +578,11 @@ namespace Tiled {
     void TiledToOlympe::ExtractMapMetadata(const TiledMap& tiledMap, 
                                           Olympe::Editor::LevelDefinition& outLevel)
     {
+        // Store map configuration for rendering
+        outLevel.metadata.customData["orientation"] = tiledMap.orientation;
+        outLevel.metadata.customData["tilewidth"] = tiledMap.tilewidth;
+        outLevel.metadata.customData["tileheight"] = tiledMap.tileheight;
+        
         // Convert map custom properties to metadata
         for (const auto& prop : tiledMap.properties) {
             outLevel.metadata.customData[prop.first] = PropertyToJSON(prop.second);
