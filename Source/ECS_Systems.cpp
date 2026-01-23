@@ -533,11 +533,13 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             
             tilesWithTextures++;
             
+            // Calculate world coordinates once
+            int worldX = chunk.x + x;
+            int worldY = chunk.y + y;
+            
             // Log first 3 tiles with textures
             if (first3Count < 3)
             {
-                int worldX = chunk.x + x;
-                int worldY = chunk.y + y;
                 SYSTEM_LOG << "[CHUNK RENDER]   Tile #" << (first3Count + 1) 
                            << ": world(" << worldX << "," << worldY 
                            << ") GID=" << gid << "\n";
@@ -546,8 +548,8 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             
             // Create isometric tile for rendering
             Olympe::Rendering::IsometricTile tile;
-            tile.worldX = chunk.x + x;
-            tile.worldY = chunk.y + y;
+            tile.worldX = worldX;
+            tile.worldY = worldY;
             tile.tileGID = gid;
             tile.texture = texture;
             tile.srcRect = srcRect;

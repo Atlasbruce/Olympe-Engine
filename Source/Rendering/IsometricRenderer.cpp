@@ -209,6 +209,7 @@ namespace Rendering {
         if (!visible)
         {
             // Only log first 5 culled tiles to avoid spam
+            // Note: Static counter is used for debug purposes only - not thread-safe
             static int culledCount = 0;
             if (culledCount < 5)
             {
