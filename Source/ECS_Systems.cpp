@@ -499,6 +499,15 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
 {
     auto& tilesetMgr = World::Get().GetTilesetManager();
     
+    // Debug logging for chunk processing
+    SYSTEM_LOG << "[CHUNK RENDER] Processing chunk at (" << chunk.x << ", " << chunk.y << ")\n";
+    SYSTEM_LOG << "[CHUNK RENDER]   Chunk size: " << chunk.width << "x" << chunk.height << " = " << chunk.tileGIDs.size() << " tiles\n";
+    
+    int tilesProcessed = 0;
+    int nonZeroTiles = 0;
+    int tilesWithTextures = 0;
+    int first3Count = 0;
+    
     for (int y = 0; y < chunk.height; ++y)
     {
         for (int x = 0; x < chunk.width; ++x)
@@ -506,8 +515,12 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             int tileIndex = y * chunk.width + x;
             if (tileIndex >= chunk.tileGIDs.size()) continue;
             
+            tilesProcessed++;
+            
             uint32_t gid = chunk.tileGIDs[tileIndex];
             if (gid == 0) continue;  // Empty tile
+            
+            nonZeroTiles++;
             
             // Get tile texture and source rect
             SDL_Texture* texture = nullptr;
@@ -516,6 +529,19 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             if (!tilesetMgr.GetTileTexture(gid, texture, srcRect))
             {
                 continue;  // Tile not found in tilesets
+            }
+            
+            tilesWithTextures++;
+            
+            // Log first 3 tiles with textures
+            if (first3Count < 3)
+            {
+                int worldX = chunk.x + x;
+                int worldY = chunk.y + y;
+                SYSTEM_LOG << "[CHUNK RENDER]   Tile #" << (first3Count + 1) 
+                           << ": world(" << worldX << "," << worldY 
+                           << ") GID=" << gid << "\n";
+                first3Count++;
             }
             
             // Create isometric tile for rendering
@@ -529,6 +555,10 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             isoRenderer->RenderTile(tile);  // Batched for depth sorting
         }
     }
+    
+    SYSTEM_LOG << "[CHUNK RENDER]   Tiles processed: " << tilesProcessed 
+               << " (non-zero: " << nonZeroTiles << ")\n";
+    SYSTEM_LOG << "[CHUNK RENDER]   Tiles added to batch: " << tilesWithTextures << "\n";
 }
 
 void RenderChunkOrthogonal(const TileChunk& chunk, const CameraTransform& cam)
@@ -572,6 +602,16 @@ void RenderTileChunks(const CameraTransform& cam, const std::string& mapOrientat
     const auto& tileChunks = World::Get().GetTileChunks();
     
     if (tileChunks.empty()) return;
+    
+    // Debug logging for tile rendering pipeline
+    SYSTEM_LOG << "[TILE RENDER] ======================================\n";
+    SYSTEM_LOG << "[TILE RENDER] RenderTileChunks() called\n";
+    SYSTEM_LOG << "[TILE RENDER]   Map Orientation: " << mapOrientation << "\n";
+    SYSTEM_LOG << "[TILE RENDER]   Tile Size: " << tileWidth << "x" << tileHeight << "\n";
+    SYSTEM_LOG << "[TILE RENDER]   Chunk Count: " << tileChunks.size() << "\n";
+    SYSTEM_LOG << "[TILE RENDER]   Camera Position: (" << cam.worldPosition.x << ", " << cam.worldPosition.y << ")\n";
+    SYSTEM_LOG << "[TILE RENDER]   Viewport Size: " << cam.viewport.w << "x" << cam.viewport.h << "\n";
+    SYSTEM_LOG << "[TILE RENDER] ======================================\n";
     
     if (mapOrientation == "isometric")
     {
