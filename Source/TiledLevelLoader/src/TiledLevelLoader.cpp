@@ -374,26 +374,9 @@ namespace Tiled {
             chunk.height = GetInt(j, "height");
 
             if (HasKey(j, "data")) {
-                // Use layer encoding/compression instead of chunk-level
-                std::string encoding = layerEncoding;
-                std::string compression = layerCompression;
-                
-                SYSTEM_LOG << "[ParseChunk] Decoding chunk at (" << chunk.x << ", " << chunk.y 
-                           << ") with encoding: '" << encoding << "', compression: '" << compression << "'\n";
-                
                 if (j["data"].is_string()) {
                     std::string dataStr = j["data"].get<std::string>();
-                    
-                    SYSTEM_LOG << "[ParseChunk] Data length: " << dataStr.length() << " chars\n";
-                    
-                    chunk.data = TiledDecoder::DecodeTileData(dataStr, encoding, compression);
-                    
-                    if (chunk.data.empty()) {
-                        SYSTEM_LOG << "[ParseChunk] ERROR: Failed to decode chunk data!\n";
-                        return false;
-                    }
-                    
-                    SYSTEM_LOG << "[ParseChunk] Successfully decoded " << chunk.data.size() << " tiles\n";
+                    chunk.data = TiledDecoder::DecodeTileData(dataStr, layerEncoding, layerCompression);
                 }
                 else if (j["data"].is_array()) {
                     // CSV array
@@ -403,14 +386,13 @@ namespace Tiled {
                             chunk.data.push_back(static_cast<uint32_t>(val.get<int>()));
                         }
                     }
-                    SYSTEM_LOG << "[ParseChunk] Loaded " << chunk.data.size() << " tiles from CSV array\n";
                 }
             }
 
             return true;
         }
         catch (const std::exception& e) {
-            SYSTEM_LOG << "[ParseChunk] EXCEPTION: " << e.what() << "\n";
+            SYSTEM_LOG << "TiledLevelLoader: Failed to parse chunk: " << e.what() << std::endl;
             return false;
         }
     }
