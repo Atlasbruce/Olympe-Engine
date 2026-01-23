@@ -182,7 +182,8 @@ namespace Tiled {
             for (size_t i = 0; i < j["chunks"].size(); ++i) {
                 const json& chunkJson = j["chunks"][i];
                 TiledChunk chunk;
-                if (ParseChunk(chunkJson, chunk)) {
+                // PASS LAYER ENCODING/COMPRESSION TO CHUNK
+                if (ParseChunk(chunkJson, chunk, layer.encoding, layer.compression)) {
                     layer.chunks.push_back(chunk);
                 }
             }
@@ -362,33 +363,56 @@ namespace Tiled {
         return false;
     }
 
-    bool TiledLevelLoader::ParseChunk(const json& j, TiledChunk& chunk)
+    bool TiledLevelLoader::ParseChunk(const json& j, TiledChunk& chunk,
+                                      const std::string& layerEncoding,
+                                      const std::string& layerCompression)
     {
-        chunk.x = GetInt(j, "x");
-        chunk.y = GetInt(j, "y");
-        chunk.width = GetInt(j, "width");
-        chunk.height = GetInt(j, "height");
+        try {
+            chunk.x = GetInt(j, "x");
+            chunk.y = GetInt(j, "y");
+            chunk.width = GetInt(j, "width");
+            chunk.height = GetInt(j, "height");
 
-        if (HasKey(j, "data")) {
-            std::string encoding = GetString(j, "encoding", "");
-            std::string compression = GetString(j, "compression", "-1");
-            
-            if (j["data"].is_string()) {
-                std::string dataStr = j["data"].get<std::string>();
-                chunk.data = TiledDecoder::DecodeTileData(dataStr, encoding, compression);
-            }
-            else if (j["data"].is_array()) {
-                // CSV array
-                for (size_t i = 0; i < j["data"].size(); ++i) {
-                    const json& val = j["data"][i];
-                    if (val.is_number()) {
-                        chunk.data.push_back(static_cast<uint32_t>(val.get<int>()));
+            if (HasKey(j, "data")) {
+                // Use layer encoding/compression instead of chunk-level
+                std::string encoding = layerEncoding;
+                std::string compression = layerCompression;
+                
+                SYSTEM_LOG << "[ParseChunk] Decoding chunk at (" << chunk.x << ", " << chunk.y 
+                           << ") with encoding: '" << encoding << "', compression: '" << compression << "'\n";
+                
+                if (j["data"].is_string()) {
+                    std::string dataStr = j["data"].get<std::string>();
+                    
+                    SYSTEM_LOG << "[ParseChunk] Data length: " << dataStr.length() << " chars\n";
+                    
+                    chunk.data = TiledDecoder::DecodeTileData(dataStr, encoding, compression);
+                    
+                    if (chunk.data.empty()) {
+                        SYSTEM_LOG << "[ParseChunk] ERROR: Failed to decode chunk data!\n";
+                        return false;
                     }
+                    
+                    SYSTEM_LOG << "[ParseChunk] Successfully decoded " << chunk.data.size() << " tiles\n";
+                }
+                else if (j["data"].is_array()) {
+                    // CSV array
+                    for (size_t i = 0; i < j["data"].size(); ++i) {
+                        const json& val = j["data"][i];
+                        if (val.is_number()) {
+                            chunk.data.push_back(static_cast<uint32_t>(val.get<int>()));
+                        }
+                    }
+                    SYSTEM_LOG << "[ParseChunk] Loaded " << chunk.data.size() << " tiles from CSV array\n";
                 }
             }
-        }
 
-        return true;
+            return true;
+        }
+        catch (const std::exception& e) {
+            SYSTEM_LOG << "[ParseChunk] EXCEPTION: " << e.what() << "\n";
+            return false;
+        }
     }
 
     void TiledLevelLoader::ParseProperties(const json& j, std::map<std::string, TiledProperty>& properties)
