@@ -499,14 +499,6 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
 {
     auto& tilesetMgr = World::Get().GetTilesetManager();
     
-    // Debug logging for chunk processing
-    SYSTEM_LOG << "[CHUNK RENDER] Processing chunk at (" << chunk.x << ", " << chunk.y << ")\n";
-    SYSTEM_LOG << "[CHUNK RENDER]   Chunk size: " << chunk.width << "x" << chunk.height << " = " << chunk.tileGIDs.size() << " tiles\n";
-    
-    int tilesProcessed = 0;
-    int nonZeroTiles = 0;
-    int tilesWithTextures = 0;
-    
     for (int y = 0; y < chunk.height; ++y)
     {
         for (int x = 0; x < chunk.width; ++x)
@@ -514,12 +506,8 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             int tileIndex = y * chunk.width + x;
             if (tileIndex >= chunk.tileGIDs.size()) continue;
             
-            tilesProcessed++;
-            
             uint32_t gid = chunk.tileGIDs[tileIndex];
             if (gid == 0) continue;  // Empty tile
-            
-            nonZeroTiles++;
             
             // Get tile texture and source rect
             SDL_Texture* texture = nullptr;
@@ -529,8 +517,6 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             {
                 continue;  // Tile not found in tilesets
             }
-            
-            tilesWithTextures++;
             
             // Calculate world coordinates once
             int worldX = chunk.x + x;
@@ -547,10 +533,6 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             isoRenderer->RenderTile(tile);  // Batched for depth sorting
         }
     }
-    
-    SYSTEM_LOG << "[CHUNK RENDER]   Tiles processed: " << tilesProcessed 
-               << " (non-zero: " << nonZeroTiles << ")\n";
-    SYSTEM_LOG << "[CHUNK RENDER]   Tiles added to batch: " << tilesWithTextures << "\n";
 }
 
 void RenderChunkOrthogonal(const TileChunk& chunk, const CameraTransform& cam)
@@ -595,16 +577,6 @@ void RenderTileChunks(const CameraTransform& cam, const std::string& mapOrientat
     
     if (tileChunks.empty()) return;
     
-    // Debug logging for tile rendering pipeline
-    SYSTEM_LOG << "[TILE RENDER] ======================================\n";
-    SYSTEM_LOG << "[TILE RENDER] RenderTileChunks() called\n";
-    SYSTEM_LOG << "[TILE RENDER]   Map Orientation: " << mapOrientation << "\n";
-    SYSTEM_LOG << "[TILE RENDER]   Tile Size: " << tileWidth << "x" << tileHeight << "\n";
-    SYSTEM_LOG << "[TILE RENDER]   Chunk Count: " << tileChunks.size() << "\n";
-    SYSTEM_LOG << "[TILE RENDER]   Camera Position: (" << cam.worldPosition.x << ", " << cam.worldPosition.y << ")\n";
-    SYSTEM_LOG << "[TILE RENDER]   Viewport Size: " << cam.viewport.w << "x" << cam.viewport.h << "\n";
-    SYSTEM_LOG << "[TILE RENDER] ======================================\n";
-    
     if (mapOrientation == "isometric")
     {
         // Initialize isometric renderer if needed
@@ -642,14 +614,10 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
 {
     Olympe::Tiled::ParallaxLayerManager& parallaxMgr = Olympe::Tiled::ParallaxLayerManager::Get();
     
-    // Render tile chunks first (get config from World)
-    RenderTileChunks(cam, World::Get().GetMapOrientation(), 
-                     World::Get().GetTileWidth(), World::Get().GetTileHeight());
-    
-    // Collect entities and layers with depth information for sorting
+    // Collect entities, layers, and tiles with depth information for sorting
     struct RenderItem
     {
-        enum Type { BackgroundLayer, Entity, ForegroundLayer } type;
+        enum Type { BackgroundLayer, Tiles, Entity, ForegroundLayer } type;
         float depthY;
         int layerIndex;
         EntityID entityId;
@@ -680,6 +648,9 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
         }
     }
     
+    // Add tiles at z=0 (render after background, before entities)
+    renderQueue.push_back(RenderItem(RenderItem::Tiles, 0.0f));
+    
     // Add entities with their Y positions for depth sorting
     for (EntityID entity : World::Get().GetSystem<RenderingSystem>()->m_entities)
     {
@@ -706,6 +677,12 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
         if (item.type == RenderItem::BackgroundLayer)
         {
             parallaxMgr.RenderLayer(layers[item.layerIndex], reinterpret_cast<const CameraTransform&>(cam));
+        }
+        else if (item.type == RenderItem::Tiles)
+        {
+            // Render tile chunks at z=0 (after background, before entities)
+            RenderTileChunks(cam, World::Get().GetMapOrientation(), 
+                           World::Get().GetTileWidth(), World::Get().GetTileHeight());
         }
         else if (item.type == RenderItem::ForegroundLayer)
         {

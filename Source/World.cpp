@@ -1091,23 +1091,16 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
     // Strip flip flags (top 3 bits)
     uint32_t cleanGid = gid & 0x1FFFFFFF;
     
-    SYSTEM_LOG << "[TEXTURE LOOKUP] GID=" << gid;
-    
     if (cleanGid == 0)
     {
-        SYSTEM_LOG << " -> EMPTY TILE (GID=0)\n";
         return false;  // Empty tile
     }
     
     // Find the tileset containing this GID
-    bool found = false;
     for (const auto& tileset : m_tilesets)
     {
         if (cleanGid >= tileset.firstgid && cleanGid <= tileset.lastgid)
         {
-            found = true;
-            SYSTEM_LOG << " -> Tileset '" << tileset.name << "' (firstGid=" << tileset.firstgid << ")\n";
-            
             uint32_t localId = cleanGid - tileset.firstgid;
             
             if (tileset.isCollection)
@@ -1124,7 +1117,8 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                         
                         if (outTexture == nullptr)
                         {
-                            SYSTEM_LOG << "[TEXTURE LOOKUP] WARNING: NULL texture for collection tile localId=" << localId << "\n";
+                            SDL_LogError(SDL_LOG_CATEGORY_RENDER, 
+                                "[TILESET] NULL texture for collection tile GID=%u, localId=%u", gid, localId);
                         }
                         
                         return true;
@@ -1136,7 +1130,8 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                 // Image-based tileset - calculate source rect
                 if (!tileset.texture)
                 {
-                    SYSTEM_LOG << "[TEXTURE LOOKUP] WARNING: NULL texture for tileset '" << tileset.name << "'\n";
+                    SDL_LogError(SDL_LOG_CATEGORY_RENDER, 
+                        "[TILESET] NULL texture for tileset '%s' (GID=%u)", tileset.name.c_str(), gid);
                     return false;
                 }
                 
@@ -1154,11 +1149,6 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                 return true;
             }
         }
-    }
-    
-    if (!found)
-    {
-        SYSTEM_LOG << " -> NOT FOUND (no matching tileset)\n";
     }
     
     return false;  // GID not found in any tileset
