@@ -692,6 +692,7 @@ void World::LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& 
     int zOrder = layerJson.value("zOrder", 0);
     bool visible = layerJson.value("visible", true);
     float opacity = layerJson.value("opacity", 1.0f);
+    std::string encoding = layerJson.value("encoding", "");  // Extract encoding from layer
     
     if (!visible)
     {
@@ -706,17 +707,17 @@ void World::LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& 
     {
         const auto& chunks = layerJson["chunks"];
         std::cout << "  -> Tile Layer (Infinite): " << layerName 
-                  << " (" << chunks.size() << " chunks, z: " << zOrder << ")\n";
+                  << " (" << chunks.size() << " chunks, encoding: " << encoding << ", z: " << zOrder << ")\n";
         
         for (const auto& chunkJson : chunks)
         {
-            LoadTileChunk(chunkJson, layerName, zOrder);
+            LoadTileChunk(chunkJson, layerName, zOrder, encoding);  // Pass encoding
         }
         
         result.pass1_visualLayers.successfullyCreated++;
     }
     // Handle finite maps with regular data
-    else if (layerJson.contains("data") && layerJson["data"].is_array())
+    else if (layerJson.contains("data"))
     {
         int width = layerJson.value("width", 0);
         int height = layerJson.value("height", 0);
@@ -724,7 +725,7 @@ void World::LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& 
         std::cout << "  -> Tile Layer (Finite): " << layerName 
                   << " (" << width << "x" << height << ", z: " << zOrder << ")\n";
         
-        LoadTileData(layerJson["data"], layerName, width, height, zOrder);
+        LoadTileData(layerJson["data"], layerName, width, height, zOrder, encoding);  // Pass encoding
         result.pass1_visualLayers.successfullyCreated++;
     }
     else
@@ -734,27 +735,38 @@ void World::LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& 
     }
 }
 
-void World::LoadTileChunk(const nlohmann::json& chunkJson, const std::string& layerName, int zOrder)
+void World::LoadTileChunk(const nlohmann::json& chunkJson, const std::string& layerName, 
+                          int zOrder, const std::string& encoding)
 {
     int chunkX = chunkJson.value("x", 0);
     int chunkY = chunkJson.value("y", 0);
     int chunkW = chunkJson.value("width", 0);
     int chunkH = chunkJson.value("height", 0);
     
-    // Decode Base64 tile data
-    std::string dataStr = chunkJson.value("data", "");
-    if (dataStr.empty())
-    {
-        std::cout << "    x Empty chunk data at (" << chunkX << ", " << chunkY << ")\n";
-        return;
-    }
+    // Decode tile data
+    std::vector<uint32_t> tileGIDs;
     
-    // Use TiledDecoder to decode base64 tile data
-    std::vector<uint32_t> tileGIDs = Olympe::Tiled::TiledDecoder::DecodeTileData(
-        dataStr, 
-        "base64",  // encoding
-        ""         // no compression
-    );
+    if (chunkJson.contains("data"))
+    {
+        if (chunkJson["data"].is_string())
+        {
+            // Base64 encoded data
+            std::string dataStr = chunkJson["data"].get<std::string>();
+            tileGIDs = Olympe::Tiled::TiledDecoder::DecodeTileData(
+                dataStr, 
+                encoding,  // Use layer encoding
+                ""         // No compression
+            );
+        }
+        else if (chunkJson["data"].is_array())
+        {
+            // Direct array of GIDs
+            for (const auto& gid : chunkJson["data"])
+            {
+                tileGIDs.push_back(gid.get<uint32_t>());
+            }
+        }
+    }
     
     if (tileGIDs.empty())
     {
@@ -773,15 +785,23 @@ void World::LoadTileChunk(const nlohmann::json& chunkJson, const std::string& la
     chunk.tileGIDs = tileGIDs;
     
     m_tileChunks.push_back(chunk);
+    
+    std::cout << "    ✓ Loaded chunk at (" << chunkX << ", " << chunkY 
+              << ") - " << tileGIDs.size() << " tiles\n";
 }
 
 void World::LoadTileData(const nlohmann::json& dataJson, const std::string& layerName, 
-                         int width, int height, int zOrder)
+                         int width, int height, int zOrder, const std::string& encoding)
 {
-    // For finite maps, data is stored as a single chunk at (0, 0)
     std::vector<uint32_t> tileGIDs;
     
-    if (dataJson.is_array())
+    if (dataJson.is_string())
+    {
+        // Base64 encoded
+        std::string dataStr = dataJson.get<std::string>();
+        tileGIDs = Olympe::Tiled::TiledDecoder::DecodeTileData(dataStr, encoding, "");
+    }
+    else if (dataJson.is_array())
     {
         // Direct array of tile IDs
         for (const auto& tile : dataJson)

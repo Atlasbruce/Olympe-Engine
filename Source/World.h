@@ -358,9 +358,10 @@ private:
 private:
     // Tile layer loading helper methods (internal use only)
     void LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& result);
-    void LoadTileChunk(const nlohmann::json& chunkJson, const std::string& layerName, int zOrder);
+    void LoadTileChunk(const nlohmann::json& chunkJson, const std::string& layerName, 
+                       int zOrder, const std::string& encoding);
     void LoadTileData(const nlohmann::json& dataJson, const std::string& layerName, 
-                      int width, int height, int zOrder);
+                      int width, int height, int zOrder, const std::string& encoding);
     
     std::vector<TileChunk> m_tileChunks;
     std::vector<std::unique_ptr<Level>> m_levels;
