@@ -392,7 +392,7 @@ namespace Tiled {
             return true;
         }
         catch (const std::exception& e) {
-            SYSTEM_LOG << "TiledLevelLoader: Failed to parse chunk: " << e.what() << std::endl;
+            SYSTEM_LOG << "TiledLevelLoader: Failed to parse chunk at (" << chunk.x << ", " << chunk.y << "): " << e.what() << std::endl;
             return false;
         }
     }
