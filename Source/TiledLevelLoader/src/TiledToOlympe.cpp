@@ -594,7 +594,7 @@ namespace Tiled {
                 outLevel.metadata.customData["orientation"] = "hexagonal"; 
                 break;
             default: 
-                outLevel.metadata.customData["orientation"] = "orthogonal"; 
+                outLevel.metadata.customData["orientation"] = "unknown"; 
                 break;
         }
         
