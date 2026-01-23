@@ -63,6 +63,13 @@ namespace Rendering {
 
     void IsometricRenderer::EndFrame()
     {
+        // Debug logging before sorting and rendering
+        SYSTEM_LOG << "[ISO RENDERER] ======================================\n";
+        SYSTEM_LOG << "[ISO RENDERER] EndFrame() called\n";
+        SYSTEM_LOG << "[ISO RENDERER]   Batch size before culling: " << m_tileBatch.size() << " tiles\n";
+        SYSTEM_LOG << "[ISO RENDERER]   Camera: (" << m_cameraX << ", " << m_cameraY << ") zoom=" << m_zoom << "\n";
+        SYSTEM_LOG << "[ISO RENDERER]   Viewport: " << m_screenWidth << "x" << m_screenHeight << "\n";
+        
         // Sort tiles back-to-front (painter's algorithm)
         // In isometric view, tiles with lower (worldX + worldY) are rendered first
         std::sort(m_tileBatch.begin(), m_tileBatch.end(),
@@ -74,11 +81,41 @@ namespace Rendering {
                 return a.worldX < b.worldX;
             });
         
-        // Render all tiles
+        SYSTEM_LOG << "[ISO RENDERER]   Sorted batch size: " << m_tileBatch.size() << "\n";
+        
+        // Log first tile
+        if (!m_tileBatch.empty())
+        {
+            const auto& firstTile = m_tileBatch.front();
+            Vector screenPos = WorldToScreen((float)firstTile.worldX, (float)firstTile.worldY);
+            SYSTEM_LOG << "[ISO RENDERER]   First tile: world(" << firstTile.worldX << "," << firstTile.worldY 
+                       << ") -> screen(" << screenPos.x << "," << screenPos.y << ")\n";
+            SYSTEM_LOG << "[ISO RENDERER]      texture=" << (firstTile.texture ? "VALID" : "NULL") 
+                       << " srcRect=(" << firstTile.srcRect.x << "," << firstTile.srcRect.y 
+                       << " " << firstTile.srcRect.w << "x" << firstTile.srcRect.h << ")\n";
+        }
+        
+        // Render all tiles and track rendered count
+        int renderedCount = 0;
         for (const auto& tile : m_tileBatch)
         {
+            if (tile.texture != nullptr)
+            {
+                renderedCount++;
+                // Only log first 3 rendered tiles
+                if (renderedCount <= 3)
+                {
+                    Vector screenPos = WorldToScreen((float)tile.worldX, (float)tile.worldY);
+                    SYSTEM_LOG << "[ISO RENDERER]   Rendering tile #" << renderedCount 
+                               << ": world(" << tile.worldX << "," << tile.worldY 
+                               << ") screen(" << screenPos.x << "," << screenPos.y << ")\n";
+                }
+            }
             RenderTileImmediate(tile);
         }
+        
+        SYSTEM_LOG << "[ISO RENDERER]   Total tiles rendered: " << renderedCount << "\n";
+        SYSTEM_LOG << "[ISO RENDERER] ======================================\n";
         
         m_tileBatch.clear();
     }
@@ -166,8 +203,23 @@ namespace Rendering {
         // Check if tile is within screen bounds (with padding for tile size)
         float padding = std::max(m_tileWidth, m_tileHeight) * m_zoom;
         
-        return (screenX >= -padding && screenX <= m_screenWidth + padding &&
-                screenY >= -padding && screenY <= m_screenHeight + padding);
+        bool visible = (screenX >= -padding && screenX <= m_screenWidth + padding &&
+                        screenY >= -padding && screenY <= m_screenHeight + padding);
+        
+        if (!visible)
+        {
+            // Only log first 5 culled tiles to avoid spam
+            // Note: Static counter is used for debug purposes only - not thread-safe
+            static int culledCount = 0;
+            if (culledCount < 5)
+            {
+                SYSTEM_LOG << "[ISO CULL] Tile culled: world(" << worldX << "," << worldY 
+                           << ") screen(" << screenX << "," << screenY << ")\n";
+                culledCount++;
+            }
+        }
+        
+        return visible;
     }
 
     void IsometricRenderer::GetVisibleTileRange(int& minX, int& minY, int& maxX, int& maxY) const
