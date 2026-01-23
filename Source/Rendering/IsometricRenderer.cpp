@@ -197,15 +197,22 @@ namespace Rendering {
     Vector IsometricRenderer::ScreenToWorld(float screenX, float screenY) const
     {
         // Inverse isometric projection: screen coordinates to world grid coordinates
-        // worldX = (screenX / (tileWidth/2) + screenY / (tileHeight/2)) / 2
-        // worldY = (screenY / (tileHeight/2) - screenX / (tileWidth/2)) / 2
+        // First, undo the isometric offset applied in WorldToScreen
+        screenY -= ISOMETRIC_OFFSET_Y;
         
+        // Then undo viewport centering and camera transform
+        float isoX = (screenX - m_screenWidth / 2.0f) / m_zoom + m_cameraX;
+        float isoY = (screenY - m_screenHeight / 2.0f) / m_zoom + m_cameraY;
+        
+        // Finally, inverse isometric projection
+        // worldX = (isoX / (tileWidth/2) + isoY / (tileHeight/2)) / 2
+        // worldY = (isoY / (tileHeight/2) - isoX / (tileWidth/2)) / 2
         Vector world;
         float halfTileW = m_tileWidth / 2.0f;
         float halfTileH = m_tileHeight / 2.0f;
         
-        world.x = (screenX / halfTileW + screenY / halfTileH) / 2.0f;
-        world.y = (screenY / halfTileH - screenX / halfTileW) / 2.0f;
+        world.x = (isoX / halfTileW + isoY / halfTileH) / 2.0f;
+        world.y = (isoY / halfTileH - isoX / halfTileW) / 2.0f;
         world.z = 0.0f;
         return world;
     }
