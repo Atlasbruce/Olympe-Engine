@@ -106,11 +106,12 @@ namespace Rendering {
             // Calculate screen position for culling check
             Vector screenPos = WorldToScreen((float)tile.worldX, (float)tile.worldY);
             
-            // Culling with margin
-            if (screenPos.x < -m_tileWidth - CULL_MARGIN || 
-                screenPos.x > m_screenWidth + CULL_MARGIN ||
-                screenPos.y < -m_tileHeight - CULL_MARGIN || 
-                screenPos.y > m_screenHeight + CULL_MARGIN)
+            // Culling with margin (consistent with IsTileVisible)
+            float padding = std::max(m_tileWidth, m_tileHeight) * m_zoom;
+            float totalMargin = padding + CULL_MARGIN;
+            
+            if (screenPos.x < -totalMargin || screenPos.x > m_screenWidth + totalMargin ||
+                screenPos.y < -totalMargin || screenPos.y > m_screenHeight + totalMargin)
             {
                 culledCount++;
                 continue;
