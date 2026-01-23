@@ -1089,6 +1089,9 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
 
 bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect)
 {
+    // Limit error logging to avoid spam
+    static constexpr size_t MAX_LOGGED_MISSING_GIDS = 10;
+    
     // Strip flip flags (top 3 bits)
     uint32_t cleanGid = gid & 0x1FFFFFFF;
     
@@ -1163,7 +1166,7 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
     
     // Only log first few missing GIDs to avoid spam
     static std::set<uint32_t> loggedMissing;
-    if (loggedMissing.size() < 10 && loggedMissing.find(cleanGid) == loggedMissing.end()) {
+    if (loggedMissing.size() < MAX_LOGGED_MISSING_GIDS && loggedMissing.find(cleanGid) == loggedMissing.end()) {
         SYSTEM_LOG << "[ERROR] GID " << gid << " not found in any tileset\n";
         loggedMissing.insert(cleanGid);
     }

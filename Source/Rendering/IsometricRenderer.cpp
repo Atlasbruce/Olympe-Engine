@@ -103,8 +103,8 @@ namespace Rendering {
         // Frame summary diagnostic (once per frame)
         if (!tilesToRender.empty())
         {
-            const auto& firstTile = tilesToRender[0];
-            const auto& lastTile = tilesToRender[tilesToRender.size() - 1];
+            const auto& firstTile = tilesToRender.front();
+            const auto& lastTile = tilesToRender.back();
             Vector firstScreen = WorldToScreen(static_cast<float>(firstTile.worldX), static_cast<float>(firstTile.worldY));
             Vector lastScreen = WorldToScreen(static_cast<float>(lastTile.worldX), static_cast<float>(lastTile.worldY));
             
