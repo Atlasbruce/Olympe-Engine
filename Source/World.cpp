@@ -660,6 +660,25 @@ bool World::InstantiatePass1_VisualLayers(
         }
     }
     
+    // NOTE: Tile chunks are now loaded and stored in m_tileChunks.
+    // To fully render these tiles, the following work is still needed:
+    // 
+    // 1. Store tileset metadata (firstgid, tilewidth, tileheight, source texture)
+    //    during level loading in Phase 1 or Phase 2
+    // 
+    // 2. Create a helper method to map tile GID to (texture, srcRect):
+    //    - Find which tileset the GID belongs to (using firstgid ranges)
+    //    - Calculate source rectangle within the tileset texture
+    //    - Handle collection vs image-based tilesets differently
+    // 
+    // 3. Integrate tile rendering into RenderMultiLayerForCamera():
+    //    - Add TileLayer render items to the depth-sorted render queue
+    //    - Use IsometricRenderer for isometric maps
+    //    - Use simple quad rendering for orthogonal maps
+    //
+    // See: Source/Rendering/IsometricRenderer.h for the rendering interface
+    // See: Source/DataManager.h - PreloadTilesets() for texture loading
+    
     return true;
 }
 
