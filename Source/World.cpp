@@ -17,6 +17,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "TiledLevelLoader/include/ParallaxLayerManager.h"
 #include "TiledLevelLoader/include/LevelParser.h"
 #include "TiledLevelLoader/include/TiledToOlympe.h"
+#include "TiledLevelLoader/include/TiledDecoder.h"
 #include "PrefabScanner.h"
 #include "prefabfactory.h"
 #include "ParameterResolver.h"
@@ -394,6 +395,9 @@ void World::UnloadCurrentLevel()
 {
     SYSTEM_LOG << "World::UnloadCurrentLevel - Unloading current level\n";
     
+    // Clear tile chunks
+    m_tileChunks.clear();
+    
     // Destroy all entities except system entities (like GridSettings)
     std::vector<EntityID> entitiesToDestroy;
     
@@ -581,7 +585,7 @@ bool World::InstantiatePass1_VisualLayers(
     const Olympe::Editor::LevelDefinition& levelDef,
     InstantiationResult& result)
 {
-    // Load parallax layers from metadata
+    // ===== PART 1: Parallax Layers =====
     if (levelDef.metadata.customData.contains("parallaxLayers"))
     {
         Olympe::Tiled::ParallaxLayerManager& parallaxMgr = Olympe::Tiled::ParallaxLayerManager::Get();
@@ -636,7 +640,173 @@ bool World::InstantiatePass1_VisualLayers(
         }
     }
     
+    // ===== PART 2: Tile Layers =====
+    if (levelDef.metadata.customData.contains("tileLayers"))
+    {
+        const auto& tileLayersJson = levelDef.metadata.customData["tileLayers"];
+        if (tileLayersJson.is_array())
+        {
+            std::cout << "-> Loading " << tileLayersJson.size() << " tile layers...\n";
+            
+            for (const auto& layerJson : tileLayersJson)
+            {
+                std::string layerType = layerJson.value("type", "");
+                
+                if (layerType == "tilelayer")
+                {
+                    LoadTileLayer(layerJson, result);
+                }
+            }
+        }
+    }
+    
+    // NOTE: Tile chunks are now loaded and stored in m_tileChunks.
+    // To fully render these tiles, the following work is still needed:
+    // 
+    // 1. Store tileset metadata (firstgid, tilewidth, tileheight, source texture)
+    //    during level loading in Phase 1 or Phase 2
+    // 
+    // 2. Create a helper method to map tile GID to (texture, srcRect):
+    //    - Find which tileset the GID belongs to (using firstgid ranges)
+    //    - Calculate source rectangle within the tileset texture
+    //    - Handle collection vs image-based tilesets differently
+    // 
+    // 3. Integrate tile rendering into RenderMultiLayerForCamera():
+    //    - Add TileLayer render items to the depth-sorted render queue
+    //    - Use IsometricRenderer for isometric maps
+    //    - Use simple quad rendering for orthogonal maps
+    //
+    // See: Source/Rendering/IsometricRenderer.h for the rendering interface
+    // See: Source/DataManager.h - PreloadTilesets() for texture loading
+    
     return true;
+}
+
+//=============================================================================
+// Tile Layer Loading Helper Methods
+//=============================================================================
+
+void World::LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& result)
+{
+    std::string layerName = layerJson.value("name", "unnamed_layer");
+    int zOrder = layerJson.value("zOrder", 0);
+    bool visible = layerJson.value("visible", true);
+    float opacity = layerJson.value("opacity", 1.0f);
+    
+    if (!visible)
+    {
+        std::cout << "  ⊙ Skipping invisible layer: " << layerName << "\n";
+        return;
+    }
+    
+    result.pass1_visualLayers.totalObjects++;
+    
+    // Handle infinite maps with chunks
+    if (layerJson.contains("chunks") && layerJson["chunks"].is_array())
+    {
+        const auto& chunks = layerJson["chunks"];
+        std::cout << "  -> Tile Layer (Infinite): " << layerName 
+                  << " (" << chunks.size() << " chunks, z: " << zOrder << ")\n";
+        
+        for (const auto& chunkJson : chunks)
+        {
+            LoadTileChunk(chunkJson, layerName, zOrder);
+        }
+        
+        result.pass1_visualLayers.successfullyCreated++;
+    }
+    // Handle finite maps with regular data
+    else if (layerJson.contains("data") && layerJson["data"].is_array())
+    {
+        int width = layerJson.value("width", 0);
+        int height = layerJson.value("height", 0);
+        
+        std::cout << "  -> Tile Layer (Finite): " << layerName 
+                  << " (" << width << "x" << height << ", z: " << zOrder << ")\n";
+        
+        LoadTileData(layerJson["data"], layerName, width, height, zOrder);
+        result.pass1_visualLayers.successfullyCreated++;
+    }
+    else
+    {
+        std::cout << "  x Tile layer missing data: " << layerName << "\n";
+        result.pass1_visualLayers.failed++;
+    }
+}
+
+void World::LoadTileChunk(const nlohmann::json& chunkJson, const std::string& layerName, int zOrder)
+{
+    int chunkX = chunkJson.value("x", 0);
+    int chunkY = chunkJson.value("y", 0);
+    int chunkW = chunkJson.value("width", 0);
+    int chunkH = chunkJson.value("height", 0);
+    
+    // Decode Base64 tile data
+    std::string dataStr = chunkJson.value("data", "");
+    if (dataStr.empty())
+    {
+        std::cout << "    x Empty chunk data at (" << chunkX << ", " << chunkY << ")\n";
+        return;
+    }
+    
+    // Use TiledDecoder to decode base64 tile data
+    std::vector<uint32_t> tileGIDs = Olympe::Tiled::TiledDecoder::DecodeTileData(
+        dataStr, 
+        "base64",  // encoding
+        ""         // no compression
+    );
+    
+    if (tileGIDs.empty())
+    {
+        std::cout << "    x Failed to decode chunk at (" << chunkX << ", " << chunkY << ")\n";
+        return;
+    }
+    
+    // Store chunk for rendering
+    TileChunk chunk;
+    chunk.layerName = layerName;
+    chunk.x = chunkX;
+    chunk.y = chunkY;
+    chunk.width = chunkW;
+    chunk.height = chunkH;
+    chunk.zOrder = zOrder;
+    chunk.tileGIDs = tileGIDs;
+    
+    m_tileChunks.push_back(chunk);
+}
+
+void World::LoadTileData(const nlohmann::json& dataJson, const std::string& layerName, 
+                         int width, int height, int zOrder)
+{
+    // For finite maps, data is stored as a single chunk at (0, 0)
+    std::vector<uint32_t> tileGIDs;
+    
+    if (dataJson.is_array())
+    {
+        // Direct array of tile IDs
+        for (const auto& tile : dataJson)
+        {
+            tileGIDs.push_back(tile.get<uint32_t>());
+        }
+    }
+    
+    if (tileGIDs.empty())
+    {
+        std::cout << "    x No tile data for layer: " << layerName << "\n";
+        return;
+    }
+    
+    // Store as a single chunk
+    TileChunk chunk;
+    chunk.layerName = layerName;
+    chunk.x = 0;
+    chunk.y = 0;
+    chunk.width = width;
+    chunk.height = height;
+    chunk.zOrder = zOrder;
+    chunk.tileGIDs = tileGIDs;
+    
+    m_tileChunks.push_back(chunk);
 }
 
 bool World::InstantiatePass2_SpatialStructure(

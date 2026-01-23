@@ -7,6 +7,7 @@
 #include "../../GameEngine.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
+#include <cmath>
 
 namespace Olympe {
 namespace Tiled {
@@ -97,21 +98,29 @@ namespace Tiled {
 
         if (layer.repeatX || layer.repeatY)
         {
-            // Tiled rendering
-            int startTileX = layer.repeatX ? ((int)scrollX / texW) - 1 : 0;
-            int endTileX = layer.repeatX ? (((int)scrollX + screenW) / texW) + 1 : 0;
-            int startTileY = layer.repeatY ? ((int)scrollY / texH) - 1 : 0;
-            int endTileY = layer.repeatY ? (((int)scrollY + screenH) / texH) + 1 : 0;
-
-            for (int tileY = startTileY; tileY <= endTileY; ++tileY)
+            // Tiled rendering with proper wrapping
+            // Calculate wrapped offset for seamless tiling
+            float tileOffsetX = layer.repeatX ? fmod(scrollX, texW) : scrollX;
+            float tileOffsetY = layer.repeatY ? fmod(scrollY, texH) : scrollY;
+            
+            // Adjust for negative values (ensure offset is always negative or zero)
+            if (tileOffsetX > 0) tileOffsetX -= texW;
+            if (tileOffsetY > 0) tileOffsetY -= texH;
+            
+            // Calculate number of tiles needed to cover viewport
+            int tilesX = layer.repeatX ? (int)ceil(screenW / texW) + 2 : 1;
+            int tilesY = layer.repeatY ? (int)ceil(screenH / texH) + 2 : 1;
+            
+            // Render tiled pattern
+            for (int tileY = 0; tileY < tilesY; ++tileY)
             {
-                for (int tileX = startTileX; tileX <= endTileX; ++tileX)
+                for (int tileX = 0; tileX < tilesX; ++tileX)
                 {
                     SDL_FRect destRect = {
-                        scrollX + tileX * texW,
-                        scrollY + tileY * texH,
-                        (float)texW,
-                        (float)texH
+                        tileOffsetX + tileX * texW,
+                        tileOffsetY + tileY * texH,
+                        texW,
+                        texH
                     };
                     SDL_RenderTexture(renderer, layer.texture, nullptr, &destRect);
                 }
