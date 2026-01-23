@@ -27,6 +27,7 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #include <bitset>
 #include <cmath>
 #include <algorithm>
+#include <set>
 #include "drawing.h"
 
 #undef min
@@ -499,12 +500,6 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
 {
     auto& tilesetMgr = World::Get().GetTilesetManager();
     
-    // Debug logging for chunk processing
-    SYSTEM_LOG << "[CHUNK RENDER] Processing chunk at (" << chunk.x << ", " << chunk.y << ")\n";
-    SYSTEM_LOG << "[CHUNK RENDER]   Chunk size: " << chunk.width << "x" << chunk.height << " = " << chunk.tileGIDs.size() << " tiles\n";
-    
-    int tilesProcessed = 0;
-    int nonZeroTiles = 0;
     int tilesWithTextures = 0;
     
     for (int y = 0; y < chunk.height; ++y)
@@ -514,12 +509,8 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             int tileIndex = y * chunk.width + x;
             if (tileIndex >= chunk.tileGIDs.size()) continue;
             
-            tilesProcessed++;
-            
             uint32_t gid = chunk.tileGIDs[tileIndex];
             if (gid == 0) continue;  // Empty tile
-            
-            nonZeroTiles++;
             
             // Get tile texture and source rect
             SDL_Texture* texture = nullptr;
@@ -527,7 +518,13 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             
             if (!tilesetMgr.GetTileTexture(gid, texture, srcRect))
             {
-                continue;  // Tile not found in tilesets
+                // Only log errors for missing textures
+                static std::set<uint32_t> loggedErrors;
+                if (loggedErrors.find(gid) == loggedErrors.end()) {
+                    SYSTEM_LOG << "[ERROR] Missing texture for GID=" << gid << "\n";
+                    loggedErrors.insert(gid);
+                }
+                continue;
             }
             
             tilesWithTextures++;
@@ -547,10 +544,6 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             isoRenderer->RenderTile(tile);  // Batched for depth sorting
         }
     }
-    
-    SYSTEM_LOG << "[CHUNK RENDER]   Tiles processed: " << tilesProcessed 
-               << " (non-zero: " << nonZeroTiles << ")\n";
-    SYSTEM_LOG << "[CHUNK RENDER]   Tiles added to batch: " << tilesWithTextures << "\n";
 }
 
 void RenderChunkOrthogonal(const TileChunk& chunk, const CameraTransform& cam)

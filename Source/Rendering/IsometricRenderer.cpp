@@ -63,9 +63,6 @@ namespace Rendering {
 
     void IsometricRenderer::EndFrame()
     {
-        // Minimal diagnostic logging
-        SYSTEM_LOG << "[ISO RENDERER] Batch size: " << m_tileBatch.size() << " tiles\n";
-        
         // Sort tiles back-to-front (painter's algorithm)
         // In isometric view, tiles with lower (worldX + worldY) are rendered first
         std::sort(m_tileBatch.begin(), m_tileBatch.end(),
@@ -77,18 +74,56 @@ namespace Rendering {
                 return a.worldX < b.worldX;
             });
         
-        // TEMPORARY: Disable culling for diagnostic - render ALL tiles
-        int renderedCount = 0;
+        // Culling and rendering
+        std::vector<IsometricTile> tilesToRender;
         
+        #if OLYMPE_DEBUG_DISABLE_CULLING
+        // TEMPORARY: Disable culling for diagnostic - render ALL tiles
+        tilesToRender = m_tileBatch;
+        #else
+        // Normal culling: only render tiles in viewport
         for (const auto& tile : m_tileBatch)
         {
+            if (IsTileVisible(tile.worldX, tile.worldY))
+            {
+                tilesToRender.push_back(tile);
+            }
+        }
+        #endif
+        
+        // Render tiles
+        int renderedCount = 0;
+        for (const auto& tile : tilesToRender)
+        {
             if (!tile.texture) continue;
-            
             renderedCount++;
             RenderTileImmediate(tile);
         }
         
-        SYSTEM_LOG << "[ISO RENDERER] Rendered: " << renderedCount << " tiles (culling DISABLED)\n";
+        // Frame summary diagnostic (once per frame)
+        if (!tilesToRender.empty())
+        {
+            const auto& firstTile = tilesToRender[0];
+            const auto& lastTile = tilesToRender[tilesToRender.size() - 1];
+            Vector firstScreen = WorldToScreen(static_cast<float>(firstTile.worldX), static_cast<float>(firstTile.worldY));
+            Vector lastScreen = WorldToScreen(static_cast<float>(lastTile.worldX), static_cast<float>(lastTile.worldY));
+            
+            SYSTEM_LOG << "[ISO RENDER] Frame Summary:\n";
+            SYSTEM_LOG << "  Total tiles in batch: " << m_tileBatch.size() << "\n";
+            SYSTEM_LOG << "  After culling: " << tilesToRender.size() << "\n";
+            SYSTEM_LOG << "  Rendered: " << renderedCount << "\n";
+            SYSTEM_LOG << "  First tile: world(" << firstTile.worldX << "," << firstTile.worldY 
+                       << ") screen(" << firstScreen.x << "," << firstScreen.y << ")\n";
+            SYSTEM_LOG << "  Last tile: world(" << lastTile.worldX << "," << lastTile.worldY 
+                       << ") screen(" << lastScreen.x << "," << lastScreen.y << ")\n";
+            SYSTEM_LOG << "  Viewport: " << m_screenWidth << "x" << m_screenHeight << "\n";
+            SYSTEM_LOG << "  Camera: (" << m_cameraX << "," << m_cameraY << ") zoom=" << m_zoom << "\n";
+            #if OLYMPE_DEBUG_DISABLE_CULLING
+            SYSTEM_LOG << "  [DEBUG] Culling: DISABLED\n";
+            #else
+            SYSTEM_LOG << "  [DEBUG] Culling: ENABLED\n";
+            #endif
+        }
         
         m_tileBatch.clear();
     }

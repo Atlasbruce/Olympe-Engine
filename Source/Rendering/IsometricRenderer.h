@@ -84,6 +84,11 @@ namespace Rendering {
         static constexpr float ISOMETRIC_OFFSET_Y = 200.0f; // Y offset for negative world coords
         static constexpr float CULL_MARGIN = 100.0f;        // Safety margin for tall tiles
         
+        // Debug flags
+        #ifndef OLYMPE_DEBUG_DISABLE_CULLING
+        #define OLYMPE_DEBUG_DISABLE_CULLING 1
+        #endif
+        
         // Helper functions
         void RenderTileImmediate(const IsometricTile& tile);
         void ExtractFlipFlags(uint32_t gid, bool& flipH, bool& flipV, bool& flipD) const;

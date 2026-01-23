@@ -30,6 +30,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include <chrono>
 #include <iostream>
 #include <iomanip>
+#include <set>
 
 //---------------------------------------------------------------------------------------------
 // Helper function to register input entities with InputsManager
@@ -1091,23 +1092,16 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
     // Strip flip flags (top 3 bits)
     uint32_t cleanGid = gid & 0x1FFFFFFF;
     
-    SYSTEM_LOG << "[TEXTURE LOOKUP] GID=" << gid;
-    
     if (cleanGid == 0)
     {
-        SYSTEM_LOG << " -> EMPTY TILE (GID=0)\n";
         return false;  // Empty tile
     }
     
     // Find the tileset containing this GID
-    bool found = false;
     for (const auto& tileset : m_tilesets)
     {
         if (cleanGid >= tileset.firstgid && cleanGid <= tileset.lastgid)
         {
-            found = true;
-            SYSTEM_LOG << " -> Tileset '" << tileset.name << "' (firstGid=" << tileset.firstgid << ")\n";
-            
             uint32_t localId = cleanGid - tileset.firstgid;
             
             if (tileset.isCollection)
@@ -1124,7 +1118,13 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                         
                         if (outTexture == nullptr)
                         {
-                            SYSTEM_LOG << "[TEXTURE LOOKUP] WARNING: NULL texture for collection tile localId=" << localId << "\n";
+                            // Only log once per null texture
+                            static std::set<uint32_t> loggedNulls;
+                            if (loggedNulls.find(cleanGid) == loggedNulls.end()) {
+                                SYSTEM_LOG << "[ERROR] NULL texture for collection tile GID=" << gid 
+                                          << " (localId=" << localId << ")\n";
+                                loggedNulls.insert(cleanGid);
+                            }
                         }
                         
                         return true;
@@ -1136,7 +1136,12 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                 // Image-based tileset - calculate source rect
                 if (!tileset.texture)
                 {
-                    SYSTEM_LOG << "[TEXTURE LOOKUP] WARNING: NULL texture for tileset '" << tileset.name << "'\n";
+                    // Only log once per tileset
+                    static std::set<std::string> loggedTilesets;
+                    if (loggedTilesets.find(tileset.name) == loggedTilesets.end()) {
+                        SYSTEM_LOG << "[ERROR] NULL texture for tileset '" << tileset.name << "'\n";
+                        loggedTilesets.insert(tileset.name);
+                    }
                     return false;
                 }
                 
@@ -1156,9 +1161,11 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
         }
     }
     
-    if (!found)
-    {
-        SYSTEM_LOG << " -> NOT FOUND (no matching tileset)\n";
+    // Only log first few missing GIDs to avoid spam
+    static std::set<uint32_t> loggedMissing;
+    if (loggedMissing.size() < 10 && loggedMissing.find(cleanGid) == loggedMissing.end()) {
+        SYSTEM_LOG << "[ERROR] GID " << gid << " not found in any tileset\n";
+        loggedMissing.insert(cleanGid);
     }
     
     return false;  // GID not found in any tileset
