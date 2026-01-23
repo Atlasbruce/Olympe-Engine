@@ -593,6 +593,11 @@ namespace Tiled {
                                             Olympe::Editor::LevelDefinition& outLevel,
                                             int& layerCount)
     {
+        SYSTEM_LOG << "\n[DEBUG] ============================================\n";
+        SYSTEM_LOG << "[DEBUG] ProcessVisualLayers() START\n";
+        SYSTEM_LOG << "[DEBUG] Total layers in TiledMap: " << tiledMap.layers.size() << "\n";
+        SYSTEM_LOG << "[DEBUG] ============================================\n\n";
+        
         layerCount = 0;
         int zOrder = 0;
         
@@ -602,11 +607,25 @@ namespace Tiled {
             outLevel.tileMap[y].resize(mapWidth_, 0);
         }
         
+        int imageLayerCount = 0;
+        int tileLayerCount = 0;
+        int groupLayerCount = 0;
+        int skippedLayerCount = 0;
+        
         for (const auto& layer : tiledMap.layers) {
-            if (!layer->visible) continue;
+            SYSTEM_LOG << "[DEBUG] Processing layer: '" << layer->name << "' (type: ";
+            
+            if (!layer->visible) {
+                SYSTEM_LOG << "INVISIBLE - SKIPPED)\n";
+                skippedLayerCount++;
+                continue;
+            }
             
             switch (layer->type) {
                 case LayerType::ImageLayer: {
+                    SYSTEM_LOG << "ImageLayer)\n";
+                    imageLayerCount++;
+                    
                     // Parallax/Background layers
                     Olympe::Editor::LevelDefinition::VisualLayer visual;
                     visual.name = layer->name;
@@ -635,10 +654,23 @@ namespace Tiled {
                 }
                 
                 case LayerType::TileLayer: {
+                    SYSTEM_LOG << "TileLayer";
+                    
                     // Skip collision layers (handled in Phase 3)
                     if (MatchesPattern(layer->name, config_.collisionLayerPatterns)) {
+                        SYSTEM_LOG << " - COLLISION - SKIPPED)\n";
+                        skippedLayerCount++;
                         break;
                     }
+                    
+                    SYSTEM_LOG << ")\n";
+                    SYSTEM_LOG << "[DEBUG]   → Visible: " << (layer->visible ? "YES" : "NO") << "\n";
+                    SYSTEM_LOG << "[DEBUG]   → Width: " << layer->width << ", Height: " << layer->height << "\n";
+                    SYSTEM_LOG << "[DEBUG]   → Data size: " << layer->data.size() << "\n";
+                    SYSTEM_LOG << "[DEBUG]   → Chunks: " << layer->chunks.size() << "\n";
+                    SYSTEM_LOG << "[DEBUG]   → IsInfinite: " << (!layer->chunks.empty() ? "YES" : "NO") << "\n";
+                    
+                    tileLayerCount++;
                     
                     // Visual tile layer
                     Olympe::Editor::LevelDefinition::TileLayerDef tileDef;
@@ -650,7 +682,15 @@ namespace Tiled {
                     
                     // Handle infinite maps with chunks
                     if (tileDef.isInfinite) {
-                        for (const auto& chunk : layer->chunks) {
+                        SYSTEM_LOG << "[DEBUG]   → Processing " << layer->chunks.size() << " chunks...\n";
+                        
+                        for (size_t chunkIdx = 0; chunkIdx < layer->chunks.size(); ++chunkIdx) {
+                            const auto& chunk = layer->chunks[chunkIdx];
+                            
+                            SYSTEM_LOG << "[DEBUG]     Chunk " << chunkIdx << ": pos=(" << chunk.x << ", " << chunk.y 
+                                       << "), size=" << chunk.width << "x" << chunk.height 
+                                       << ", data=" << chunk.data.size() << " GIDs\n";
+                            
                             Olympe::Editor::LevelDefinition::TileLayerDef::Chunk chunkDef;
                             chunkDef.x = chunk.x;
                             chunkDef.y = chunk.y;
@@ -661,6 +701,8 @@ namespace Tiled {
                             chunkDef.tiles.resize(chunk.height);
                             chunkDef.tileFlipFlags.resize(chunk.height);
                             int index = 0;
+                            int nonZeroTiles = 0;
+                            
                             for (int y = 0; y < chunk.height; ++y) {
                                 chunkDef.tiles[y].resize(chunk.width, 0);
                                 chunkDef.tileFlipFlags[y].resize(chunk.width, 0);
@@ -669,10 +711,14 @@ namespace Tiled {
                                         uint32_t gid = chunk.data[index];
                                         chunkDef.tiles[y][x] = GetTileId(gid);
                                         chunkDef.tileFlipFlags[y][x] = ExtractFlipFlags(gid);
+                                        
+                                        if (GetTileId(gid) != 0) nonZeroTiles++;
                                     }
                                     ++index;
                                 }
                             }
+                            
+                            SYSTEM_LOG << "[DEBUG]       → Non-zero tiles: " << nonZeroTiles << "\n";
                             
                             tileDef.chunks.push_back(chunkDef);
                         }
@@ -682,6 +728,8 @@ namespace Tiled {
                     }
                     // Handle finite maps with regular data
                     else {
+                        SYSTEM_LOG << "[DEBUG]   → Processing finite tile data...\n";
+                        
                         // Extract tile data and flip flags
                         tileDef.tiles.resize(layer->height);
                         tileDef.tileFlipFlags.resize(layer->height);
@@ -706,6 +754,9 @@ namespace Tiled {
                     outLevel.tileLayers.push_back(tileDef);
                     layerCount++;
                     
+                    SYSTEM_LOG << "[DEBUG]   → TileLayer ADDED to outLevel.tileLayers (total: " 
+                               << outLevel.tileLayers.size() << ")\n";
+                    
                     // Also merge into legacy tileMap for backward compatibility
                     MergeTileLayer(*layer, outLevel.tileMap, mapWidth_, mapHeight_);
                     
@@ -713,19 +764,34 @@ namespace Tiled {
                 }
                 
                 case LayerType::Group: {
+                    SYSTEM_LOG << "GroupLayer)\n";
+                    groupLayerCount++;
+                    
                     // Recursively process group layers
                     ProcessGroupLayers(*layer, outLevel, zOrder, layerCount);
                     break;
                 }
                 
                 default:
+                    SYSTEM_LOG << "UNKNOWN)\n";
                     break;
             }
         }
         
+        SYSTEM_LOG << "\n[DEBUG] ============================================\n";
+        SYSTEM_LOG << "[DEBUG] Layer Processing Summary:\n";
+        SYSTEM_LOG << "[DEBUG]   Image Layers: " << imageLayerCount << "\n";
+        SYSTEM_LOG << "[DEBUG]   Tile Layers: " << tileLayerCount << "\n";
+        SYSTEM_LOG << "[DEBUG]   Group Layers: " << groupLayerCount << "\n";
+        SYSTEM_LOG << "[DEBUG]   Skipped: " << skippedLayerCount << "\n";
+        SYSTEM_LOG << "[DEBUG]   outLevel.tileLayers.size() = " << outLevel.tileLayers.size() << "\n";
+        SYSTEM_LOG << "[DEBUG] ============================================\n\n";
+        
         // Store parallax layers in metadata for backward compatibility
         if (parallaxLayers_.GetLayerCount() > 0)
         {
+            SYSTEM_LOG << "[DEBUG] Storing " << parallaxLayers_.GetLayerCount() << " parallax layers...\n";
+            
             nlohmann::json parallaxLayersJson = nlohmann::json::array();
             
             for (size_t i = 0; i < parallaxLayers_.GetLayerCount(); ++i)
@@ -754,12 +820,26 @@ namespace Tiled {
         }
         
         // Store tile layers in metadata
+        SYSTEM_LOG << "\n[DEBUG] ============================================\n";
+        SYSTEM_LOG << "[DEBUG] TILE LAYER STORAGE CHECK\n";
+        SYSTEM_LOG << "[DEBUG] outLevel.tileLayers.empty() = " << (outLevel.tileLayers.empty() ? "TRUE (PROBLEM!)" : "FALSE (OK)") << "\n";
+        SYSTEM_LOG << "[DEBUG] ============================================\n\n";
+        
         if (!outLevel.tileLayers.empty())
         {
+            SYSTEM_LOG << "[DEBUG] Creating tileLayersJson array...\n";
+            
             nlohmann::json tileLayersJson = nlohmann::json::array();
             
-            for (const auto& tileLayer : outLevel.tileLayers)
+            for (size_t i = 0; i < outLevel.tileLayers.size(); ++i)
             {
+                const auto& tileLayer = outLevel.tileLayers[i];
+                
+                SYSTEM_LOG << "[DEBUG] Serializing tile layer " << i << ": '" << tileLayer.name << "'\n";
+                SYSTEM_LOG << "[DEBUG]   → isInfinite: " << (tileLayer.isInfinite ? "YES" : "NO") << "\n";
+                SYSTEM_LOG << "[DEBUG]   → chunks.size(): " << tileLayer.chunks.size() << "\n";
+                SYSTEM_LOG << "[DEBUG]   → tiles.size(): " << tileLayer.tiles.size() << "\n";
+                
                 nlohmann::json layerJson = nlohmann::json::object();
                 layerJson["name"] = tileLayer.name;
                 layerJson["type"] = "tilelayer";
@@ -771,10 +851,14 @@ namespace Tiled {
                 
                 if (tileLayer.isInfinite && !tileLayer.chunks.empty())
                 {
+                    SYSTEM_LOG << "[DEBUG]   → Serializing " << tileLayer.chunks.size() << " chunks...\n";
+                    
                     nlohmann::json chunksJson = nlohmann::json::array();
                     
-                    for (const auto& chunk : tileLayer.chunks)
+                    for (size_t chunkIdx = 0; chunkIdx < tileLayer.chunks.size(); ++chunkIdx)
                     {
+                        const auto& chunk = tileLayer.chunks[chunkIdx];
+                        
                         nlohmann::json chunkJson = nlohmann::json::object();
                         chunkJson["x"] = chunk.x;
                         chunkJson["y"] = chunk.y;
@@ -783,6 +867,8 @@ namespace Tiled {
                         
                         // Flatten tile data to array (with flip flags)
                         nlohmann::json dataJson = nlohmann::json::array();
+                        int serializedTiles = 0;
+                        
                         for (int y = 0; y < chunk.height; ++y)
                         {
                             for (int x = 0; x < chunk.width; ++x)
@@ -807,17 +893,22 @@ namespace Tiled {
                                 if (flipFlags & 0x4) fullGID |= 0x20000000;  // Diagonal flip
                                 
                                 dataJson.push_back(fullGID);
+                                if (gid != 0) serializedTiles++;
                             }
                         }
                         
                         chunkJson["data"] = dataJson;
                         chunksJson.push_back(chunkJson);
+                        
+                        SYSTEM_LOG << "[DEBUG]     Chunk " << chunkIdx << ": serialized " << serializedTiles << " non-zero tiles\n";
                     }
                     
                     layerJson["chunks"] = chunksJson;
                 }
                 else if (!tileLayer.tiles.empty())
                 {
+                    SYSTEM_LOG << "[DEBUG]   → Serializing finite tile data...\n";
+                    
                     // Finite map
                     int width = tileLayer.tiles.empty() ? 0 : static_cast<int>(tileLayer.tiles[0].size());
                     int height = static_cast<int>(tileLayer.tiles.size());
@@ -846,8 +937,18 @@ namespace Tiled {
             
             outLevel.metadata.customData["tileLayers"] = tileLayersJson;
             
-            SYSTEM_LOG << "  ✓ Stored " << tileLayersJson.size() 
-                       << " tile layers in metadata\n";
+            SYSTEM_LOG << "\n[DEBUG] ============================================\n";
+            SYSTEM_LOG << "[DEBUG] TILE LAYERS SAVED TO METADATA!\n";
+            SYSTEM_LOG << "  ✓ Stored " << tileLayersJson.size() << " tile layers in metadata\n";
+            SYSTEM_LOG << "[DEBUG] customData[\"tileLayers\"].size() = " << outLevel.metadata.customData["tileLayers"].size() << "\n";
+            SYSTEM_LOG << "[DEBUG] ============================================\n\n";
+        }
+        else
+        {
+            SYSTEM_LOG << "\n[DEBUG] ============================================\n";
+            SYSTEM_LOG << "[DEBUG] ❌ ERROR: outLevel.tileLayers is EMPTY!\n";
+            SYSTEM_LOG << "[DEBUG] ❌ NO TILE LAYERS WILL BE SAVED TO METADATA!\n";
+            SYSTEM_LOG << "[DEBUG] ============================================\n\n";
         }
     }
 
