@@ -607,8 +607,8 @@ bool World::InstantiatePass1_VisualLayers(
         m_tileHeight = levelDef.metadata.customData["tileheight"].get<int>();
     }
     
-    std::cout << "-> Map configuration: " << m_mapOrientation 
-              << " (" << m_tileWidth << "x" << m_tileHeight << ")\n";
+    SYSTEM_LOG << "-> Map configuration: " << m_mapOrientation 
+               << " (" << m_tileWidth << "x" << m_tileHeight << ")\n";
     
     // ===== PART 1: Parallax Layers =====
     if (levelDef.metadata.customData.contains("parallaxLayers"))
@@ -668,7 +668,7 @@ bool World::InstantiatePass1_VisualLayers(
     // ===== PART 2: Tilesets =====
     if (levelDef.metadata.customData.contains("tilesets"))
     {
-        std::cout << "-> Loading tilesets...\n";
+        SYSTEM_LOG << "-> Loading tilesets...\n";
         m_tilesetManager.LoadTilesets(levelDef.metadata.customData["tilesets"]);
     }
     
@@ -678,7 +678,7 @@ bool World::InstantiatePass1_VisualLayers(
         const auto& tileLayersJson = levelDef.metadata.customData["tileLayers"];
         if (tileLayersJson.is_array())
         {
-            std::cout << "-> Loading " << tileLayersJson.size() << " tile layers...\n";
+            SYSTEM_LOG << "-> Loading " << tileLayersJson.size() << " tile layers...\n";
             
             for (const auto& layerJson : tileLayersJson)
             {
@@ -932,12 +932,12 @@ void World::TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                 info.texture = IMG_LoadTexture(GameEngine::renderer, fullPath.c_str());
                 if (info.texture)
                 {
-                    std::cout << "  ✓ Loaded tileset texture: " << filename << " (gid: " 
+                    SYSTEM_LOG << "  ✓ Loaded tileset texture: " << filename << " (gid: " 
                               << info.firstgid << "-" << info.lastgid << ")\n";
                 }
                 else
                 {
-                    std::cout << "  x Failed to load tileset texture: " << fullPath << "\n";
+                    SYSTEM_LOG << "  x Failed to load tileset texture: " << fullPath << "\n";
                 }
             }
         }
@@ -975,7 +975,7 @@ void World::TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                 }
             }
             
-            std::cout << "  ✓ Loaded collection tileset: " << info.name 
+            SYSTEM_LOG << "  ✓ Loaded collection tileset: " << info.name 
                       << " (" << info.individualTiles.size() << " tiles)\n";
         }
         
