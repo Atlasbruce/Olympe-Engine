@@ -67,6 +67,7 @@ namespace Tiled {
             void CalculateRenderPosition(
                 const ParallaxLayer& layer,
                 float cameraX, float cameraY,
+                float zoom,
                 float& outX, float& outY) const;
 
             // Get number of layers
