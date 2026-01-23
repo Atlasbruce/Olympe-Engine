@@ -579,7 +579,25 @@ namespace Tiled {
                                           Olympe::Editor::LevelDefinition& outLevel)
     {
         // Store map configuration for rendering
-        outLevel.metadata.customData["orientation"] = (int) tiledMap.orientation;
+        // FIX: Store orientation as STRING, not INT
+        switch (tiledMap.orientation) {
+            case MapOrientation::Orthogonal: 
+                outLevel.metadata.customData["orientation"] = "orthogonal"; 
+                break;
+            case MapOrientation::Isometric: 
+                outLevel.metadata.customData["orientation"] = "isometric"; 
+                break;
+            case MapOrientation::Staggered: 
+                outLevel.metadata.customData["orientation"] = "staggered"; 
+                break;
+            case MapOrientation::Hexagonal: 
+                outLevel.metadata.customData["orientation"] = "hexagonal"; 
+                break;
+            default: 
+                outLevel.metadata.customData["orientation"] = "unknown"; 
+                break;
+        }
+        
         outLevel.metadata.customData["tilewidth"] = tiledMap.tilewidth;
         outLevel.metadata.customData["tileheight"] = tiledMap.tileheight;
         
