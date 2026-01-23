@@ -578,6 +578,11 @@ namespace Tiled {
     void TiledToOlympe::ExtractMapMetadata(const TiledMap& tiledMap, 
                                           Olympe::Editor::LevelDefinition& outLevel)
     {
+        // Store map configuration for rendering
+        outLevel.metadata.customData["orientation"] = tiledMap.orientation;
+        outLevel.metadata.customData["tilewidth"] = tiledMap.tilewidth;
+        outLevel.metadata.customData["tileheight"] = tiledMap.tileheight;
+        
         // Convert map custom properties to metadata
         for (const auto& prop : tiledMap.properties) {
             outLevel.metadata.customData[prop.first] = PropertyToJSON(prop.second);
@@ -746,6 +751,103 @@ namespace Tiled {
             }
             
             outLevel.metadata.customData["parallaxLayers"] = parallaxLayersJson;
+        }
+        
+        // Store tile layers in metadata
+        if (!outLevel.tileLayers.empty())
+        {
+            nlohmann::json tileLayersJson = nlohmann::json::array();
+            
+            for (const auto& tileLayer : outLevel.tileLayers)
+            {
+                nlohmann::json layerJson = nlohmann::json::object();
+                layerJson["name"] = tileLayer.name;
+                layerJson["type"] = "tilelayer";
+                layerJson["zOrder"] = tileLayer.zOrder;
+                layerJson["opacity"] = tileLayer.opacity;
+                layerJson["visible"] = tileLayer.visible;
+                layerJson["isInfinite"] = tileLayer.isInfinite;
+                layerJson["encoding"] = "base64";  // Store encoding for decoding
+                
+                if (tileLayer.isInfinite && !tileLayer.chunks.empty())
+                {
+                    nlohmann::json chunksJson = nlohmann::json::array();
+                    
+                    for (const auto& chunk : tileLayer.chunks)
+                    {
+                        nlohmann::json chunkJson = nlohmann::json::object();
+                        chunkJson["x"] = chunk.x;
+                        chunkJson["y"] = chunk.y;
+                        chunkJson["width"] = chunk.width;
+                        chunkJson["height"] = chunk.height;
+                        
+                        // Flatten tile data to array (with flip flags)
+                        nlohmann::json dataJson = nlohmann::json::array();
+                        for (int y = 0; y < chunk.height; ++y)
+                        {
+                            for (int x = 0; x < chunk.width; ++x)
+                            {
+                                uint32_t gid = 0;
+                                uint8_t flipFlags = 0;
+                                
+                                if (y < chunk.tiles.size() && x < chunk.tiles[y].size())
+                                {
+                                    gid = chunk.tiles[y][x];
+                                }
+                                
+                                if (y < chunk.tileFlipFlags.size() && x < chunk.tileFlipFlags[y].size())
+                                {
+                                    flipFlags = chunk.tileFlipFlags[y][x];
+                                }
+                                
+                                // Reconstruct GID with flip flags (Tiled format)
+                                uint32_t fullGID = gid;
+                                if (flipFlags & 0x1) fullGID |= 0x80000000;  // Horizontal flip
+                                if (flipFlags & 0x2) fullGID |= 0x40000000;  // Vertical flip
+                                if (flipFlags & 0x4) fullGID |= 0x20000000;  // Diagonal flip
+                                
+                                dataJson.push_back(fullGID);
+                            }
+                        }
+                        
+                        chunkJson["data"] = dataJson;
+                        chunksJson.push_back(chunkJson);
+                    }
+                    
+                    layerJson["chunks"] = chunksJson;
+                }
+                else if (!tileLayer.tiles.empty())
+                {
+                    // Finite map
+                    int width = tileLayer.tiles.empty() ? 0 : static_cast<int>(tileLayer.tiles[0].size());
+                    int height = static_cast<int>(tileLayer.tiles.size());
+                    
+                    layerJson["width"] = width;
+                    layerJson["height"] = height;
+                    
+                    nlohmann::json dataJson = nlohmann::json::array();
+                    for (int y = 0; y < height; ++y)
+                    {
+                        for (int x = 0; x < width; ++x)
+                        {
+                            uint32_t gid = 0;
+                            if (y < tileLayer.tiles.size() && x < tileLayer.tiles[y].size())
+                            {
+                                gid = tileLayer.tiles[y][x];
+                            }
+                            dataJson.push_back(gid);
+                        }
+                    }
+                    layerJson["data"] = dataJson;
+                }
+                
+                tileLayersJson.push_back(layerJson);
+            }
+            
+            outLevel.metadata.customData["tileLayers"] = tileLayersJson;
+            
+            SYSTEM_LOG << "  ✓ Stored " << tileLayersJson.size() 
+                       << " tile layers in metadata\n";
         }
     }
 
@@ -1006,6 +1108,60 @@ namespace Tiled {
         removeDuplicates(outLevel.resources.tilesetPaths);
         removeDuplicates(outLevel.resources.imagePaths);
         removeDuplicates(outLevel.resources.audioPaths);
+        
+        // Store tileset metadata
+        if (!tiledMap.tilesets.empty())
+        {
+            nlohmann::json tilesetsJson = nlohmann::json::array();
+            
+            for (const auto& tileset : tiledMap.tilesets)
+            {
+                nlohmann::json tilesetJson = nlohmann::json::object();
+                tilesetJson["firstgid"] = tileset.firstgid;
+                tilesetJson["name"] = tileset.name;
+                tilesetJson["tilewidth"] = tileset.tilewidth;
+                tilesetJson["tileheight"] = tileset.tileheight;
+                tilesetJson["tilecount"] = tileset.tilecount;
+                tilesetJson["columns"] = tileset.columns;
+                tilesetJson["imagewidth"] = tileset.imagewidth;
+                tilesetJson["imageheight"] = tileset.imageheight;
+                tilesetJson["margin"] = tileset.margin;
+                tilesetJson["spacing"] = tileset.spacing;
+                
+                // Handle image-based tilesets
+                if (!tileset.image.empty())
+                {
+                    tilesetJson["image"] = tileset.image;
+                    tilesetJson["type"] = "image";
+                }
+                // Handle collection tilesets (individual tiles)
+                else if (!tileset.tiles.empty())
+                {
+                    tilesetJson["type"] = "collection";
+                    nlohmann::json tilesJson = nlohmann::json::array();
+                    
+                    for (const auto& tile : tileset.tiles)
+                    {
+                        nlohmann::json tileJson = nlohmann::json::object();
+                        tileJson["id"] = tile.id;
+                        tileJson["image"] = tile.image;
+                        tileJson["width"] = tile.width;
+                        tileJson["height"] = tile.height;
+                        tilesJson.push_back(tileJson);
+                    }
+                    
+                    tilesetJson["tiles"] = tilesJson;
+                }
+                
+                tilesetJson["source"] = tileset.source;
+                
+                tilesetsJson.push_back(tilesetJson);
+            }
+            
+            outLevel.metadata.customData["tilesets"] = tilesetsJson;
+            
+            SYSTEM_LOG << "  ✓ Stored " << tilesetsJson.size() << " tilesets in metadata\n";
+        }
     }
 
     std::string TiledToOlympe::ResolveImagePath(const std::string& imagePath)

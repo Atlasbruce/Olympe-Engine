@@ -22,6 +22,7 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #include "VideoGame.h"
 #include "system/GameMenu.h"
 #include "TiledLevelLoader/include/ParallaxLayerManager.h"
+#include "Rendering/IsometricRenderer.h"
 #include <iostream>
 #include <bitset>
 #include <cmath>
@@ -487,10 +488,130 @@ void RenderingSystem::Render()
     }
 }
 
+// ========================================================================
+// Tile Rendering Helper Functions
+// ========================================================================
+
+// Global isometric renderer (initialized once)
+static std::unique_ptr<Olympe::Rendering::IsometricRenderer> g_isoRenderer = nullptr;
+
+void RenderChunkIsometric(const World::TileChunk& chunk, Olympe::Rendering::IsometricRenderer* isoRenderer)
+{
+    const auto& tilesetMgr = World::Get().GetTilesetManager();
+    
+    for (int y = 0; y < chunk.height; ++y)
+    {
+        for (int x = 0; x < chunk.width; ++x)
+        {
+            int tileIndex = y * chunk.width + x;
+            if (tileIndex >= chunk.tileGIDs.size()) continue;
+            
+            uint32_t gid = chunk.tileGIDs[tileIndex];
+            if (gid == 0) continue;  // Empty tile
+            
+            // Get tile texture and source rect
+            SDL_Texture* texture = nullptr;
+            SDL_Rect srcRect;
+            
+            if (!tilesetMgr.GetTileTexture(gid, texture, srcRect))
+            {
+                continue;  // Tile not found in tilesets
+            }
+            
+            // Create isometric tile for rendering
+            Olympe::Rendering::IsometricTile tile;
+            tile.worldX = chunk.x + x;
+            tile.worldY = chunk.y + y;
+            tile.tileGID = gid;
+            tile.texture = texture;
+            tile.srcRect = srcRect;
+            
+            isoRenderer->RenderTile(tile);  // Batched for depth sorting
+        }
+    }
+}
+
+void RenderChunkOrthogonal(const World::TileChunk& chunk, const CameraTransform& cam)
+{
+    const auto& tilesetMgr = World::Get().GetTilesetManager();
+    
+    for (int y = 0; y < chunk.height; ++y)
+    {
+        for (int x = 0; x < chunk.width; ++x)
+        {
+            int tileIndex = y * chunk.width + x;
+            if (tileIndex >= chunk.tileGIDs.size()) continue;
+            
+            uint32_t gid = chunk.tileGIDs[tileIndex];
+            if (gid == 0) continue;
+            
+            SDL_Texture* texture = nullptr;
+            SDL_Rect srcRect;
+            
+            if (!tilesetMgr.GetTileTexture(gid, texture, srcRect))
+            {
+                continue;
+            }
+            
+            // Simple orthogonal rendering
+            int worldX = (chunk.x + x) * srcRect.w;
+            int worldY = (chunk.y + y) * srcRect.h;
+            
+            float screenX = worldX - cam.worldPosition.x + cam.viewport.w / 2.0f;
+            float screenY = worldY - cam.worldPosition.y + cam.viewport.h / 2.0f;
+            
+            SDL_FRect destRect = {screenX, screenY, (float)srcRect.w, (float)srcRect.h};
+            SDL_RenderTexture(GameEngine::renderer, texture, &srcRect, &destRect);
+        }
+    }
+}
+
+void RenderTileChunks(const CameraTransform& cam, const std::string& mapOrientation, int tileWidth, int tileHeight)
+{
+    const auto& tileChunks = World::Get().GetTileChunks();
+    
+    if (tileChunks.empty()) return;
+    
+    if (mapOrientation == "isometric")
+    {
+        // Initialize isometric renderer if needed
+        if (!g_isoRenderer)
+        {
+            g_isoRenderer = std::make_unique<Olympe::Rendering::IsometricRenderer>();
+            g_isoRenderer->Initialize(GameEngine::renderer, tileWidth, tileHeight);
+        }
+        
+        // Use IsometricRenderer for proper depth sorting
+        g_isoRenderer->SetCamera(cam.worldPosition.x, cam.worldPosition.y, 1.0f);
+        g_isoRenderer->SetViewport((int)cam.viewport.w, (int)cam.viewport.h);
+        
+        g_isoRenderer->BeginFrame();
+        
+        for (const auto& chunk : tileChunks)
+        {
+            RenderChunkIsometric(chunk, g_isoRenderer.get());
+        }
+        
+        g_isoRenderer->EndFrame();  // Automatic depth sorting
+    }
+    else
+    {
+        // Orthogonal rendering (simple)
+        for (const auto& chunk : tileChunks)
+        {
+            RenderChunkOrthogonal(chunk, cam);
+        }
+    }
+}
+
 // Multi-layer rendering with parallax support
 void RenderMultiLayerForCamera(const CameraTransform& cam)
 {
     Olympe::Tiled::ParallaxLayerManager& parallaxMgr = Olympe::Tiled::ParallaxLayerManager::Get();
+    
+    // Render tile chunks first (get config from World)
+    RenderTileChunks(cam, World::Get().GetMapOrientation(), 
+                     World::Get().GetTileWidth(), World::Get().GetTileHeight());
     
     // Collect entities and layers with depth information for sorting
     struct RenderItem

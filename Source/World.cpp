@@ -39,6 +39,7 @@ void RegisterInputEntityWithManager(EntityID e)
 }
 //---------------------------------------------------------------------------------------------
 World::World()
+    : m_mapOrientation("orthogonal"), m_tileWidth(32), m_tileHeight(32)
 {
     Initialize_ECS_Systems();
 
@@ -395,8 +396,9 @@ void World::UnloadCurrentLevel()
 {
     SYSTEM_LOG << "World::UnloadCurrentLevel - Unloading current level\n";
     
-    // Clear tile chunks
+    // Clear tile chunks and tilesets
     m_tileChunks.clear();
+    m_tilesetManager.Clear();
     
     // Destroy all entities except system entities (like GridSettings)
     std::vector<EntityID> entitiesToDestroy;
@@ -585,6 +587,29 @@ bool World::InstantiatePass1_VisualLayers(
     const Olympe::Editor::LevelDefinition& levelDef,
     InstantiationResult& result)
 {
+    // ===== PART 0: Map Configuration =====
+    // Extract map orientation and tile size from metadata
+    if (levelDef.metadata.customData.contains("orientation"))
+    {
+        m_mapOrientation = levelDef.metadata.customData["orientation"].get<std::string>();
+    }
+    else
+    {
+        m_mapOrientation = "orthogonal";  // Default
+    }
+    
+    if (levelDef.metadata.customData.contains("tilewidth"))
+    {
+        m_tileWidth = levelDef.metadata.customData["tilewidth"].get<int>();
+    }
+    if (levelDef.metadata.customData.contains("tileheight"))
+    {
+        m_tileHeight = levelDef.metadata.customData["tileheight"].get<int>();
+    }
+    
+    SYSTEM_LOG << "-> Map configuration: " << m_mapOrientation 
+               << " (" << m_tileWidth << "x" << m_tileHeight << ")\n";
+    
     // ===== PART 1: Parallax Layers =====
     if (levelDef.metadata.customData.contains("parallaxLayers"))
     {
@@ -640,13 +665,20 @@ bool World::InstantiatePass1_VisualLayers(
         }
     }
     
-    // ===== PART 2: Tile Layers =====
+    // ===== PART 2: Tilesets =====
+    if (levelDef.metadata.customData.contains("tilesets"))
+    {
+        SYSTEM_LOG << "-> Loading tilesets...\n";
+        m_tilesetManager.LoadTilesets(levelDef.metadata.customData["tilesets"]);
+    }
+    
+    // ===== PART 3: Tile Layers =====
     if (levelDef.metadata.customData.contains("tileLayers"))
     {
         const auto& tileLayersJson = levelDef.metadata.customData["tileLayers"];
         if (tileLayersJson.is_array())
         {
-            std::cout << "-> Loading " << tileLayersJson.size() << " tile layers...\n";
+            SYSTEM_LOG << "-> Loading " << tileLayersJson.size() << " tile layers...\n";
             
             for (const auto& layerJson : tileLayersJson)
             {
@@ -692,6 +724,7 @@ void World::LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& 
     int zOrder = layerJson.value("zOrder", 0);
     bool visible = layerJson.value("visible", true);
     float opacity = layerJson.value("opacity", 1.0f);
+    std::string encoding = layerJson.value("encoding", "");  // Extract encoding from layer
     
     if (!visible)
     {
@@ -706,17 +739,17 @@ void World::LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& 
     {
         const auto& chunks = layerJson["chunks"];
         std::cout << "  -> Tile Layer (Infinite): " << layerName 
-                  << " (" << chunks.size() << " chunks, z: " << zOrder << ")\n";
+                  << " (" << chunks.size() << " chunks, encoding: " << encoding << ", z: " << zOrder << ")\n";
         
         for (const auto& chunkJson : chunks)
         {
-            LoadTileChunk(chunkJson, layerName, zOrder);
+            LoadTileChunk(chunkJson, layerName, zOrder, encoding);  // Pass encoding
         }
         
         result.pass1_visualLayers.successfullyCreated++;
     }
     // Handle finite maps with regular data
-    else if (layerJson.contains("data") && layerJson["data"].is_array())
+    else if (layerJson.contains("data"))
     {
         int width = layerJson.value("width", 0);
         int height = layerJson.value("height", 0);
@@ -724,7 +757,7 @@ void World::LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& 
         std::cout << "  -> Tile Layer (Finite): " << layerName 
                   << " (" << width << "x" << height << ", z: " << zOrder << ")\n";
         
-        LoadTileData(layerJson["data"], layerName, width, height, zOrder);
+        LoadTileData(layerJson["data"], layerName, width, height, zOrder, encoding);  // Pass encoding
         result.pass1_visualLayers.successfullyCreated++;
     }
     else
@@ -734,27 +767,38 @@ void World::LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& 
     }
 }
 
-void World::LoadTileChunk(const nlohmann::json& chunkJson, const std::string& layerName, int zOrder)
+void World::LoadTileChunk(const nlohmann::json& chunkJson, const std::string& layerName, 
+                          int zOrder, const std::string& encoding)
 {
     int chunkX = chunkJson.value("x", 0);
     int chunkY = chunkJson.value("y", 0);
     int chunkW = chunkJson.value("width", 0);
     int chunkH = chunkJson.value("height", 0);
     
-    // Decode Base64 tile data
-    std::string dataStr = chunkJson.value("data", "");
-    if (dataStr.empty())
-    {
-        std::cout << "    x Empty chunk data at (" << chunkX << ", " << chunkY << ")\n";
-        return;
-    }
+    // Decode tile data
+    std::vector<uint32_t> tileGIDs;
     
-    // Use TiledDecoder to decode base64 tile data
-    std::vector<uint32_t> tileGIDs = Olympe::Tiled::TiledDecoder::DecodeTileData(
-        dataStr, 
-        "base64",  // encoding
-        ""         // no compression
-    );
+    if (chunkJson.contains("data"))
+    {
+        if (chunkJson["data"].is_string())
+        {
+            // Base64 encoded data
+            std::string dataStr = chunkJson["data"].get<std::string>();
+            tileGIDs = Olympe::Tiled::TiledDecoder::DecodeTileData(
+                dataStr, 
+                encoding,  // Use layer encoding
+                ""         // No compression
+            );
+        }
+        else if (chunkJson["data"].is_array())
+        {
+            // Direct array of GIDs
+            for (const auto& gid : chunkJson["data"])
+            {
+                tileGIDs.push_back(gid.get<uint32_t>());
+            }
+        }
+    }
     
     if (tileGIDs.empty())
     {
@@ -773,15 +817,23 @@ void World::LoadTileChunk(const nlohmann::json& chunkJson, const std::string& la
     chunk.tileGIDs = tileGIDs;
     
     m_tileChunks.push_back(chunk);
+    
+    std::cout << "    ✓ Loaded chunk at (" << chunkX << ", " << chunkY 
+              << ") - " << tileGIDs.size() << " tiles\n";
 }
 
 void World::LoadTileData(const nlohmann::json& dataJson, const std::string& layerName, 
-                         int width, int height, int zOrder)
+                         int width, int height, int zOrder, const std::string& encoding)
 {
-    // For finite maps, data is stored as a single chunk at (0, 0)
     std::vector<uint32_t> tileGIDs;
     
-    if (dataJson.is_array())
+    if (dataJson.is_string())
+    {
+        // Base64 encoded
+        std::string dataStr = dataJson.get<std::string>();
+        tileGIDs = Olympe::Tiled::TiledDecoder::DecodeTileData(dataStr, encoding, "");
+    }
+    else if (dataJson.is_array())
     {
         // Direct array of tile IDs
         for (const auto& tile : dataJson)
@@ -807,6 +859,181 @@ void World::LoadTileData(const nlohmann::json& dataJson, const std::string& laye
     chunk.tileGIDs = tileGIDs;
     
     m_tileChunks.push_back(chunk);
+}
+
+// ========================================================================
+// TilesetManager Implementation
+// ========================================================================
+
+void World::TilesetManager::Clear()
+{
+    // Cleanup textures - these are owned by TilesetManager and loaded directly
+    // via IMG_LoadTexture, not through DataManager's texture cache
+    for (auto& tileset : m_tilesets)
+    {
+        if (tileset.texture)
+        {
+            SDL_DestroyTexture(tileset.texture);
+            tileset.texture = nullptr;
+        }
+        
+        for (auto& pair : tileset.individualTiles)
+        {
+            if (pair.second)
+            {
+                SDL_DestroyTexture(pair.second);
+            }
+        }
+        tileset.individualTiles.clear();
+    }
+    
+    m_tilesets.clear();
+}
+
+void World::TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
+{
+    Clear();
+    
+    if (!tilesetsJson.is_array()) return;
+    
+    for (const auto& tilesetJson : tilesetsJson)
+    {
+        TilesetInfo info;
+        info.firstgid = tilesetJson.value("firstgid", 0);
+        info.name = tilesetJson.value("name", "");
+        info.tilewidth = tilesetJson.value("tilewidth", 32);
+        info.tileheight = tilesetJson.value("tileheight", 32);
+        info.columns = tilesetJson.value("columns", 0);
+        info.imagewidth = tilesetJson.value("imagewidth", 0);
+        info.imageheight = tilesetJson.value("imageheight", 0);
+        info.margin = tilesetJson.value("margin", 0);
+        info.spacing = tilesetJson.value("spacing", 0);
+        
+        uint32_t tilecount = tilesetJson.value("tilecount", 0);
+        info.lastgid = info.firstgid + tilecount - 1;
+        
+        std::string type = tilesetJson.value("type", "image");
+        info.isCollection = (type == "collection");
+        
+        if (!info.isCollection && tilesetJson.contains("image"))
+        {
+            // Image-based tileset
+            std::string imagePath = tilesetJson["image"].get<std::string>();
+            
+            // Extract filename
+            size_t lastSlash = imagePath.find_last_of("/\\");
+            std::string filename = (lastSlash != std::string::npos) ? imagePath.substr(lastSlash + 1) : imagePath;
+            
+            // Find resource recursively
+            std::string fullPath = DataManager::Get().FindResourceRecursive(filename);
+            
+            if (!fullPath.empty())
+            {
+                info.texture = IMG_LoadTexture(GameEngine::renderer, fullPath.c_str());
+                if (info.texture)
+                {
+                    SYSTEM_LOG << "  ✓ Loaded tileset texture: " << filename << " (gid: " 
+                              << info.firstgid << "-" << info.lastgid << ")\n";
+                }
+                else
+                {
+                    SYSTEM_LOG << "  x Failed to load tileset texture: " << fullPath << "\n";
+                }
+            }
+        }
+        else if (info.isCollection && tilesetJson.contains("tiles"))
+        {
+            // Collection tileset (individual tile images)
+            const auto& tilesArray = tilesetJson["tiles"];
+            
+            for (const auto& tileJson : tilesArray)
+            {
+                uint32_t tileId = tileJson["id"].get<uint32_t>();
+                std::string imagePath = tileJson["image"].get<std::string>();
+                
+                // Extract filename
+                size_t lastSlash = imagePath.find_last_of("/\\");
+                std::string filename = (lastSlash != std::string::npos) ? imagePath.substr(lastSlash + 1) : imagePath;
+                
+                // Find resource recursively
+                std::string fullPath = DataManager::Get().FindResourceRecursive(filename);
+                
+                if (!fullPath.empty())
+                {
+                    SDL_Texture* tex = IMG_LoadTexture(GameEngine::renderer, fullPath.c_str());
+                    if (tex)
+                    {
+                        info.individualTiles[tileId] = tex;
+                        
+                        SDL_Rect srcRect;
+                        srcRect.x = 0;
+                        srcRect.y = 0;
+                        srcRect.w = tileJson.value("width", info.tilewidth);
+                        srcRect.h = tileJson.value("height", info.tileheight);
+                        info.individualSrcRects[tileId] = srcRect;
+                    }
+                }
+            }
+            
+            SYSTEM_LOG << "  ✓ Loaded collection tileset: " << info.name 
+                      << " (" << info.individualTiles.size() << " tiles)\n";
+        }
+        
+        m_tilesets.push_back(info);
+    }
+}
+
+bool World::TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect)
+{
+    // Strip flip flags (top 3 bits)
+    uint32_t cleanGid = gid & 0x1FFFFFFF;
+    
+    if (cleanGid == 0) return false;  // Empty tile
+    
+    // Find the tileset containing this GID
+    for (const auto& tileset : m_tilesets)
+    {
+        if (cleanGid >= tileset.firstgid && cleanGid <= tileset.lastgid)
+        {
+            uint32_t localId = cleanGid - tileset.firstgid;
+            
+            if (tileset.isCollection)
+            {
+                // Collection tileset - lookup individual tile
+                auto it = tileset.individualTiles.find(localId);
+                if (it != tileset.individualTiles.end())
+                {
+                    auto srcIt = tileset.individualSrcRects.find(localId);
+                    if (srcIt != tileset.individualSrcRects.end())
+                    {
+                        outTexture = it->second;
+                        outSrcRect = srcIt->second;
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                // Image-based tileset - calculate source rect
+                if (!tileset.texture) return false;
+                
+                outTexture = tileset.texture;
+                
+                // Calculate source rect with margin and spacing
+                int col = localId % tileset.columns;
+                int row = localId / tileset.columns;
+                
+                outSrcRect.x = tileset.margin + col * (tileset.tilewidth + tileset.spacing);
+                outSrcRect.y = tileset.margin + row * (tileset.tileheight + tileset.spacing);
+                outSrcRect.w = tileset.tilewidth;
+                outSrcRect.h = tileset.tileheight;
+                
+                return true;
+            }
+        }
+    }
+    
+    return false;  // GID not found in any tileset
 }
 
 bool World::InstantiatePass2_SpatialStructure(
