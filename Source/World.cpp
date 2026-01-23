@@ -1091,11 +1091,8 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
     // Strip flip flags (top 3 bits)
     uint32_t cleanGid = gid & 0x1FFFFFFF;
     
-    SYSTEM_LOG << "[TEXTURE LOOKUP] GID=" << gid;
-    
     if (cleanGid == 0)
     {
-        SYSTEM_LOG << " -> EMPTY TILE (GID=0)\n";
         return false;  // Empty tile
     }
     
@@ -1106,7 +1103,6 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
         if (cleanGid >= tileset.firstgid && cleanGid <= tileset.lastgid)
         {
             found = true;
-            SYSTEM_LOG << " -> Tileset '" << tileset.name << "' (firstGid=" << tileset.firstgid << ")\n";
             
             uint32_t localId = cleanGid - tileset.firstgid;
             

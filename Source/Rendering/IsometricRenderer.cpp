@@ -63,8 +63,11 @@ namespace Rendering {
 
     void IsometricRenderer::EndFrame()
     {
-        // Minimal diagnostic logging
-        SYSTEM_LOG << "[ISO RENDERER] Batch size: " << m_tileBatch.size() << " tiles\n";
+        if (m_tileBatch.empty())
+        {
+            SYSTEM_LOG << "[ISO RENDER] No tiles to render\n";
+            return;
+        }
         
         // Sort tiles back-to-front (painter's algorithm)
         // In isometric view, tiles with lower (worldX + worldY) are rendered first
@@ -77,18 +80,37 @@ namespace Rendering {
                 return a.worldX < b.worldX;
             });
         
-        // TEMPORARY: Disable culling for diagnostic - render ALL tiles
         int renderedCount = 0;
+        int skippedCount = 0;
+        bool loggedFirstTile = false;
         
         for (const auto& tile : m_tileBatch)
         {
-            if (!tile.texture) continue;
+            if (!tile.texture) 
+            {
+                skippedCount++;
+                continue;
+            }
+            
+            // Log only the FIRST tile for diagnosis
+            if (!loggedFirstTile)
+            {
+                Vector screenPos = WorldToScreen(static_cast<float>(tile.worldX), 
+                                                static_cast<float>(tile.worldY));
+                
+                SYSTEM_LOG << "[ISO RENDER] First tile: world(" << tile.worldX << "," << tile.worldY 
+                           << ") screen(" << screenPos.x << "," << screenPos.y 
+                           << ") srcRect(" << tile.srcRect.w << "x" << tile.srcRect.h 
+                           << ") texture=" << (void*)tile.texture << "\n";
+                loggedFirstTile = true;
+            }
             
             renderedCount++;
             RenderTileImmediate(tile);
         }
         
-        SYSTEM_LOG << "[ISO RENDERER] Rendered: " << renderedCount << " tiles (culling DISABLED)\n";
+        SYSTEM_LOG << "[ISO RENDER] Frame complete: " << renderedCount << " rendered, " 
+                   << skippedCount << " skipped (batch size: " << m_tileBatch.size() << ")\n";
         
         m_tileBatch.clear();
     }
