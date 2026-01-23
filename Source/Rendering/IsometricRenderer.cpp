@@ -95,26 +95,41 @@ namespace Rendering {
                        << " " << firstTile.srcRect.w << "x" << firstTile.srcRect.h << ")\n";
         }
         
-        // Render all tiles and track rendered count
+        // Render tiles with culling and track counts
         int renderedCount = 0;
+        int culledCount = 0;
+        
         for (const auto& tile : m_tileBatch)
         {
-            if (tile.texture != nullptr)
+            if (!tile.texture) continue;
+            
+            // Calculate screen position for culling check
+            Vector screenPos = WorldToScreen((float)tile.worldX, (float)tile.worldY);
+            
+            // Culling with margin (consistent with IsTileVisible)
+            float totalMargin = CalculateCullingMargin();
+            
+            if (screenPos.x < -totalMargin || screenPos.x > m_screenWidth + totalMargin ||
+                screenPos.y < -totalMargin || screenPos.y > m_screenHeight + totalMargin)
             {
-                renderedCount++;
-                // Only log first 3 rendered tiles
-                if (renderedCount <= 3)
-                {
-                    Vector screenPos = WorldToScreen((float)tile.worldX, (float)tile.worldY);
-                    SYSTEM_LOG << "[ISO RENDERER]   Rendering tile #" << renderedCount 
-                               << ": world(" << tile.worldX << "," << tile.worldY 
-                               << ") screen(" << screenPos.x << "," << screenPos.y << ")\n";
-                }
+                culledCount++;
+                continue;
             }
+            
+            renderedCount++;
+            // Only log first 3 rendered tiles
+            if (renderedCount <= 3)
+            {
+                SYSTEM_LOG << "[ISO RENDERER]   Rendering tile #" << renderedCount 
+                           << ": world(" << tile.worldX << "," << tile.worldY 
+                           << ") screen(" << screenPos.x << "," << screenPos.y << ")\n";
+            }
+            
             RenderTileImmediate(tile);
         }
         
-        SYSTEM_LOG << "[ISO RENDERER]   Total tiles rendered: " << renderedCount << "\n";
+        SYSTEM_LOG << "[ISO RENDERER]   Tiles rendered: " << renderedCount << "\n";
+        SYSTEM_LOG << "[ISO RENDERER]   Tiles culled: " << culledCount << "\n";
         SYSTEM_LOG << "[ISO RENDERER] ======================================\n";
         
         m_tileBatch.clear();
@@ -168,6 +183,10 @@ namespace Rendering {
         float screenX = (isoX - m_cameraX) * m_zoom + m_screenWidth / 2.0f;
         float screenY = (isoY - m_cameraY) * m_zoom + m_screenHeight / 2.0f;
         
+        // Add isometric Y offset to ensure tiles with negative world coordinates are visible
+        // This is necessary for infinite maps that start at negative world coordinates
+        screenY += ISOMETRIC_OFFSET_Y;
+        
         Vector screen;
         screen.x = screenX;
         screen.y = screenY;
@@ -178,15 +197,22 @@ namespace Rendering {
     Vector IsometricRenderer::ScreenToWorld(float screenX, float screenY) const
     {
         // Inverse isometric projection: screen coordinates to world grid coordinates
-        // worldX = (screenX / (tileWidth/2) + screenY / (tileHeight/2)) / 2
-        // worldY = (screenY / (tileHeight/2) - screenX / (tileWidth/2)) / 2
+        // First, undo the isometric offset applied in WorldToScreen
+        screenY -= ISOMETRIC_OFFSET_Y;
         
+        // Then undo viewport centering and camera transform
+        float isoX = (screenX - m_screenWidth / 2.0f) / m_zoom + m_cameraX;
+        float isoY = (screenY - m_screenHeight / 2.0f) / m_zoom + m_cameraY;
+        
+        // Finally, inverse isometric projection
+        // worldX = (isoX / (tileWidth/2) + isoY / (tileHeight/2)) / 2
+        // worldY = (isoY / (tileHeight/2) - isoX / (tileWidth/2)) / 2
         Vector world;
         float halfTileW = m_tileWidth / 2.0f;
         float halfTileH = m_tileHeight / 2.0f;
         
-        world.x = (screenX / halfTileW + screenY / halfTileH) / 2.0f;
-        world.y = (screenY / halfTileH - screenX / halfTileW) / 2.0f;
+        world.x = (isoX / halfTileW + isoY / halfTileH) / 2.0f;
+        world.y = (isoY / halfTileH - isoX / halfTileW) / 2.0f;
         world.z = 0.0f;
         return world;
     }
@@ -197,11 +223,11 @@ namespace Rendering {
         Vector screenPos = WorldToScreen(static_cast<float>(worldX), 
                                          static_cast<float>(worldY));
         
-        // Check if tile is within screen bounds (with padding for tile size)
-        float padding = std::max(m_tileWidth, m_tileHeight) * m_zoom;
+        // Check if tile is within screen bounds (with padding for tile size and safety margin)
+        float totalMargin = CalculateCullingMargin();
         
-        bool visible = (screenPos.x >= -padding && screenPos.x <= m_screenWidth + padding &&
-                        screenPos.y >= -padding && screenPos.y <= m_screenHeight + padding);
+        bool visible = (screenPos.x >= -totalMargin && screenPos.x <= m_screenWidth + totalMargin &&
+                        screenPos.y >= -totalMargin && screenPos.y <= m_screenHeight + totalMargin);
         
         if (!visible)
         {
@@ -224,11 +250,11 @@ namespace Rendering {
         // Calculate visible tile range based on camera position and screen size
         // This is an approximation; exact calculation would require diamond-shaped culling
         
-        // Get screen corners in world coordinates
-        Vector topLeft = ScreenToWorld(-m_screenWidth / 2.0f, -m_screenHeight / 2.0f);
-        Vector topRight = ScreenToWorld(m_screenWidth / 2.0f, -m_screenHeight / 2.0f);
-        Vector bottomLeft = ScreenToWorld(-m_screenWidth / 2.0f, m_screenHeight / 2.0f);
-        Vector bottomRight = ScreenToWorld(m_screenWidth / 2.0f, m_screenHeight / 2.0f);
+        // Get screen corners in world coordinates (using absolute screen coordinates)
+        Vector topLeft = ScreenToWorld(0.0f, 0.0f);
+        Vector topRight = ScreenToWorld(static_cast<float>(m_screenWidth), 0.0f);
+        Vector bottomLeft = ScreenToWorld(0.0f, static_cast<float>(m_screenHeight));
+        Vector bottomRight = ScreenToWorld(static_cast<float>(m_screenWidth), static_cast<float>(m_screenHeight));
         
         // Find bounding box in world coordinates
         float worldMinX = std::min({topLeft.x, topRight.x, bottomLeft.x, bottomRight.x});
@@ -263,6 +289,13 @@ namespace Rendering {
         if (flipV) flip |= SDL_FLIP_VERTICAL;
         
         return static_cast<SDL_FlipMode>(flip);
+    }
+
+    float IsometricRenderer::CalculateCullingMargin() const
+    {
+        // Calculate total culling margin: tile size (with zoom) + safety margin
+        float padding = std::max(m_tileWidth, m_tileHeight) * m_zoom;
+        return padding + CULL_MARGIN;
     }
 
 } // namespace Rendering
