@@ -63,9 +63,6 @@ namespace Rendering {
 
     void IsometricRenderer::EndFrame()
     {
-        // Minimal diagnostic logging
-        SYSTEM_LOG << "[ISO RENDERER] Batch size: " << m_tileBatch.size() << " tiles\n";
-        
         // Sort tiles back-to-front (painter's algorithm)
         // In isometric view, tiles with lower (worldX + worldY) are rendered first
         std::sort(m_tileBatch.begin(), m_tileBatch.end(),
@@ -77,18 +74,12 @@ namespace Rendering {
                 return a.worldX < b.worldX;
             });
         
-        // TEMPORARY: Disable culling for diagnostic - render ALL tiles
-        int renderedCount = 0;
-        
+        // Render all tiles
         for (const auto& tile : m_tileBatch)
         {
             if (!tile.texture) continue;
-            
-            renderedCount++;
             RenderTileImmediate(tile);
         }
-        
-        SYSTEM_LOG << "[ISO RENDERER] Rendered: " << renderedCount << " tiles (culling DISABLED)\n";
         
         m_tileBatch.clear();
     }
