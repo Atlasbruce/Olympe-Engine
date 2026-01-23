@@ -571,127 +571,178 @@ void RenderChunkOrthogonal(const TileChunk& chunk, const CameraTransform& cam)
     }
 }
 
-void RenderTileChunks(const CameraTransform& cam, const std::string& mapOrientation, int tileWidth, int tileHeight)
-{
-    const auto& tileChunks = World::Get().GetTileChunks();
-    
-    if (tileChunks.empty()) return;
-    
-    if (mapOrientation == "isometric")
-    {
-        // Initialize isometric renderer if needed
-        if (!g_isoRenderer)
-        {
-            g_isoRenderer = std::make_unique<Olympe::Rendering::IsometricRenderer>();
-            g_isoRenderer->Initialize(GameEngine::renderer, tileWidth, tileHeight);
-        }
-        
-        // Use IsometricRenderer for proper depth sorting
-        g_isoRenderer->SetCamera(cam.worldPosition.x, cam.worldPosition.y, 1.0f);
-        g_isoRenderer->SetViewport((int)cam.viewport.w, (int)cam.viewport.h);
-        
-        g_isoRenderer->BeginFrame();
-        
-        for (const auto& chunk : tileChunks)
-        {
-            RenderChunkIsometric(chunk, g_isoRenderer.get());
-        }
-        
-        g_isoRenderer->EndFrame();  // Automatic depth sorting
-    }
-    else
-    {
-        // Orthogonal rendering (simple)
-        for (const auto& chunk : tileChunks)
-        {
-            RenderChunkOrthogonal(chunk, cam);
-        }
-    }
-}
-
 // Multi-layer rendering with parallax support
 void RenderMultiLayerForCamera(const CameraTransform& cam)
 {
     Olympe::Tiled::ParallaxLayerManager& parallaxMgr = Olympe::Tiled::ParallaxLayerManager::Get();
     
-    // Collect entities, layers, and tiles with depth information for sorting
+    // Unified RenderItem structure for all renderable elements
     struct RenderItem
     {
-        enum Type { BackgroundLayer, Tiles, Entity, ForegroundLayer } type;
-        float depthY;
-        int layerIndex;
-        EntityID entityId;
+        enum Type { 
+            ParallaxLayer,    // Image layers (backgrounds/foregrounds)
+            TileLayer,        // Tile chunks (NEW!)
+            Entity            // Game objects
+        } type;
         
-        RenderItem(Type t, float y, int layer = -1, EntityID eid = 0)
-            : type(t), depthY(y), layerIndex(layer), entityId(eid) {}
+        float depth;          // Sorting key (lower = background)
+        
+        // Type-specific data
+        union {
+            struct {
+                int layerIndex;
+            } parallax;
+            
+            struct {
+                const TileChunk* chunk;
+            } tile;
+            
+            struct {
+                EntityID entityId;
+            } entity;
+        };
+        
+        // Factory methods
+        static RenderItem MakeParallax(float depth, int layerIndex) {
+            RenderItem item;
+            item.type = ParallaxLayer;
+            item.depth = depth;
+            item.parallax.layerIndex = layerIndex;
+            return item;
+        }
+        
+        static RenderItem MakeTileLayer(float depth, const TileChunk* chunk) {
+            RenderItem item;
+            item.type = TileLayer;
+            item.depth = depth;
+            item.tile.chunk = chunk;
+            return item;
+        }
+        
+        static RenderItem MakeEntity(float depth, EntityID id) {
+            RenderItem item;
+            item.type = Entity;
+            item.depth = depth;
+            item.entity.entityId = id;
+            return item;
+        }
     };
     
     std::vector<RenderItem> renderQueue;
     
-    // Add parallax layers
-    const auto& layers = parallaxMgr.GetLayers();
-    for (size_t i = 0; i < layers.size(); ++i)
-    {
-        const auto& layer = layers[i];
+    // ================================================================
+    // STEP 1: Add Parallax Layers
+    // ================================================================
+    const auto& parallaxLayers = parallaxMgr.GetLayers();
+    for (size_t i = 0; i < parallaxLayers.size(); ++i) {
+        const auto& layer = parallaxLayers[i];
         if (!layer.visible) continue;
         
-        // Classify layers by z-order
-        // Background: zOrder < 0 or scrollFactor < 1.0
-        // Foreground: zOrder > 0 or scrollFactor > 1.0
-        if (layer.zOrder < 0 || layer.scrollFactorX < 1.0f)
-        {
-            renderQueue.push_back(RenderItem(RenderItem::BackgroundLayer, -1000.0f + layer.zOrder, i));
+        float depth;
+        if (layer.scrollFactorX < 1.0f || layer.zOrder < 0) {
+            // Background (distant)
+            depth = -1000.0f + layer.zOrder;
+        } else if (layer.scrollFactorX > 1.0f || layer.zOrder > 100) {
+            // Foreground (close)
+            depth = 10000.0f + layer.zOrder;
+        } else {
+            // Middle layers
+            depth = static_cast<float>(layer.zOrder);
         }
-        else if (layer.zOrder > 0 || layer.scrollFactorX > 1.0f)
-        {
-            renderQueue.push_back(RenderItem(RenderItem::ForegroundLayer, 10000.0f + layer.zOrder, i));
-        }
+        
+        renderQueue.push_back(RenderItem::MakeParallax(depth, static_cast<int>(i)));
     }
     
-    // Add tiles at z=0 (render after background, before entities)
-    renderQueue.push_back(RenderItem(RenderItem::Tiles, 0.0f));
+    // ================================================================
+    // STEP 2: Add Tile Layers (NEW - FIX FOR RENDERING BUG!)
+    // ================================================================
+    const auto& tileChunks = World::Get().GetTileChunks();
     
-    // Add entities with their Y positions for depth sorting
-    for (EntityID entity : World::Get().GetSystem<RenderingSystem>()->m_entities)
-    {
-        try
-        {
+    for (const auto& chunk : tileChunks) {
+        // Tile layers use their zOrder from TMJ file
+        // Typical range: 0-100 (above backgrounds, below foregrounds)
+        float depth = static_cast<float>(chunk.zOrder);
+        
+        renderQueue.push_back(RenderItem::MakeTileLayer(depth, &chunk));
+    }
+    
+    // ================================================================
+    // STEP 3: Add Entities
+    // ================================================================
+    for (EntityID entity : World::Get().GetSystem<RenderingSystem>()->m_entities) {
+        try {
             Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-            renderQueue.push_back(RenderItem(RenderItem::Entity, pos.position.y, -1, entity));
-        }
-        catch (const std::exception&)
-        {
-            // Entity may not have position component, skip it
+            // Entities use Y position for isometric-style depth sorting
+            renderQueue.push_back(RenderItem::MakeEntity(pos.position.y, entity));
+        } catch (...) {
+            // Entity without position, skip
         }
     }
     
-    // Sort render queue by depth (back to front)
+    // ================================================================
+    // STEP 4: GLOBAL SORT BY DEPTH
+    // ================================================================
     std::sort(renderQueue.begin(), renderQueue.end(),
         [](const RenderItem& a, const RenderItem& b) {
-            return a.depthY < b.depthY;
+            return a.depth < b.depth;
         });
     
-    // Render in sorted order
-    for (const auto& item : renderQueue)
-    {
-        if (item.type == RenderItem::BackgroundLayer)
-        {
-            parallaxMgr.RenderLayer(layers[item.layerIndex], reinterpret_cast<const CameraTransform&>(cam));
+    // ================================================================
+    // STEP 5: RENDER IN SORTED ORDER
+    // ================================================================
+    for (const auto& item : renderQueue) {
+        switch (item.type) {
+            case RenderItem::ParallaxLayer:
+                parallaxMgr.RenderLayer(
+                    parallaxLayers[item.parallax.layerIndex],
+                    reinterpret_cast<const CameraTransform&>(cam)
+                );
+                break;
+                
+            case RenderItem::TileLayer:
+                RenderSingleTileChunk(cam, *item.tile.chunk);
+                break;
+                
+            case RenderItem::Entity:
+                RenderSingleEntity(cam, item.entity.entityId);
+                break;
         }
-        else if (item.type == RenderItem::Tiles)
-        {
-            // Render tile chunks at z=0 (after background, before entities)
-            RenderTileChunks(cam, World::Get().GetMapOrientation(), 
-                           World::Get().GetTileWidth(), World::Get().GetTileHeight());
+    }
+}
+
+// Render a single tile chunk using the appropriate renderer for map orientation
+void RenderSingleTileChunk(const CameraTransform& cam, const TileChunk& chunk)
+{
+    const std::string& mapOrientation = World::Get().GetMapOrientation();
+    int tileWidth = World::Get().GetTileWidth();
+    int tileHeight = World::Get().GetTileHeight();
+    
+    if (mapOrientation == "isometric") {
+        // Initialize isometric renderer if needed
+        if (!g_isoRenderer) {
+            g_isoRenderer = std::make_unique<Olympe::Rendering::IsometricRenderer>();
+            g_isoRenderer->Initialize(GameEngine::renderer, tileWidth, tileHeight);
         }
-        else if (item.type == RenderItem::ForegroundLayer)
-        {
-            parallaxMgr.RenderLayer(layers[item.layerIndex], reinterpret_cast<const CameraTransform&>(cam));
-        }
-        else // Entity
-        {
-            RenderSingleEntity(cam, item.entityId);
-        }
+        
+        g_isoRenderer->SetCamera(cam.worldPosition.x, cam.worldPosition.y, 1.0f);
+        g_isoRenderer->SetViewport(static_cast<int>(cam.viewport.w), 
+                                   static_cast<int>(cam.viewport.h));
+        g_isoRenderer->BeginFrame();
+        
+        RenderChunkIsometric(chunk, g_isoRenderer.get());
+        
+        g_isoRenderer->EndFrame();
+    }
+    else if (mapOrientation == "orthogonal") {
+        RenderChunkOrthogonal(chunk, cam);
+    }
+    else if (mapOrientation == "staggered") {
+        // TODO: Implement staggered rendering if needed
+        RenderChunkOrthogonal(chunk, cam);  // Fallback
+    }
+    else if (mapOrientation == "hexagonal") {
+        // TODO: Implement hexagonal rendering if needed
+        RenderChunkOrthogonal(chunk, cam);  // Fallback
     }
 }
 
