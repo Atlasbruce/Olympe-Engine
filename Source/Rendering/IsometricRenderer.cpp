@@ -98,7 +98,6 @@ namespace Rendering {
         // Render tiles with culling and track counts
         int renderedCount = 0;
         int culledCount = 0;
-        const float CULL_MARGIN = 100.0f; // Safety margin for tall tiles/sprites
         
         for (const auto& tile : m_tileBatch)
         {
@@ -184,12 +183,8 @@ namespace Rendering {
         float screenX = (isoX - m_cameraX) * m_zoom + m_screenWidth / 2.0f;
         float screenY = (isoY - m_cameraY) * m_zoom + m_screenHeight / 2.0f;
         
-        // Add isometric offset to ensure tiles with negative world coordinates are visible
+        // Add isometric Y offset to ensure tiles with negative world coordinates are visible
         // This is necessary for infinite maps that start at negative world coordinates
-        const float ISOMETRIC_OFFSET_X = 0.0f;  // X centering already handled by viewport/2
-        const float ISOMETRIC_OFFSET_Y = 200.0f; // Offset to bring negative Y coords into view
-        
-        screenX += ISOMETRIC_OFFSET_X;
         screenY += ISOMETRIC_OFFSET_Y;
         
         Vector screen;
@@ -223,7 +218,6 @@ namespace Rendering {
         
         // Check if tile is within screen bounds (with padding for tile size and safety margin)
         float padding = std::max(m_tileWidth, m_tileHeight) * m_zoom;
-        const float CULL_MARGIN = 100.0f; // Safety margin for tall tiles/sprites
         float totalMargin = padding + CULL_MARGIN;
         
         bool visible = (screenPos.x >= -totalMargin && screenPos.x <= m_screenWidth + totalMargin &&
