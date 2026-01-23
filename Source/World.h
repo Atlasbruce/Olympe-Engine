@@ -86,7 +86,7 @@ public:
 
         TilesetInfo() : firstgid(0), lastgid(0), tilewidth(0), tileheight(0),
             columns(0), imagewidth(0), imageheight(0), margin(0), spacing(0),
-            isCollection(false), texture(nullptr), tileoffsetX(0), tileoffsetY(0) {
+            isCollection(false), tileoffsetX(0), tileoffsetY(0), texture(nullptr) {
         }
     };
 
