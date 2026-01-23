@@ -250,11 +250,11 @@ namespace Rendering {
         // Calculate visible tile range based on camera position and screen size
         // This is an approximation; exact calculation would require diamond-shaped culling
         
-        // Get screen corners in world coordinates
-        Vector topLeft = ScreenToWorld(-m_screenWidth / 2.0f, -m_screenHeight / 2.0f);
-        Vector topRight = ScreenToWorld(m_screenWidth / 2.0f, -m_screenHeight / 2.0f);
-        Vector bottomLeft = ScreenToWorld(-m_screenWidth / 2.0f, m_screenHeight / 2.0f);
-        Vector bottomRight = ScreenToWorld(m_screenWidth / 2.0f, m_screenHeight / 2.0f);
+        // Get screen corners in world coordinates (using absolute screen coordinates)
+        Vector topLeft = ScreenToWorld(0.0f, 0.0f);
+        Vector topRight = ScreenToWorld(static_cast<float>(m_screenWidth), 0.0f);
+        Vector bottomLeft = ScreenToWorld(0.0f, static_cast<float>(m_screenHeight));
+        Vector bottomRight = ScreenToWorld(static_cast<float>(m_screenWidth), static_cast<float>(m_screenHeight));
         
         // Find bounding box in world coordinates
         float worldMinX = std::min({topLeft.x, topRight.x, bottomLeft.x, bottomRight.x});
