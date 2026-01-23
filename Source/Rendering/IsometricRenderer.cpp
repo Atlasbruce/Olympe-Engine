@@ -95,26 +95,42 @@ namespace Rendering {
                        << " " << firstTile.srcRect.w << "x" << firstTile.srcRect.h << ")\n";
         }
         
-        // Render all tiles and track rendered count
+        // Render tiles with culling and track counts
         int renderedCount = 0;
+        int culledCount = 0;
+        const float CULL_MARGIN = 100.0f; // Safety margin for tall tiles/sprites
+        
         for (const auto& tile : m_tileBatch)
         {
-            if (tile.texture != nullptr)
+            if (!tile.texture) continue;
+            
+            // Calculate screen position for culling check
+            Vector screenPos = WorldToScreen((float)tile.worldX, (float)tile.worldY);
+            
+            // Culling with margin
+            if (screenPos.x < -m_tileWidth - CULL_MARGIN || 
+                screenPos.x > m_screenWidth + CULL_MARGIN ||
+                screenPos.y < -m_tileHeight - CULL_MARGIN || 
+                screenPos.y > m_screenHeight + CULL_MARGIN)
             {
-                renderedCount++;
-                // Only log first 3 rendered tiles
-                if (renderedCount <= 3)
-                {
-                    Vector screenPos = WorldToScreen((float)tile.worldX, (float)tile.worldY);
-                    SYSTEM_LOG << "[ISO RENDERER]   Rendering tile #" << renderedCount 
-                               << ": world(" << tile.worldX << "," << tile.worldY 
-                               << ") screen(" << screenPos.x << "," << screenPos.y << ")\n";
-                }
+                culledCount++;
+                continue;
             }
+            
+            renderedCount++;
+            // Only log first 3 rendered tiles
+            if (renderedCount <= 3)
+            {
+                SYSTEM_LOG << "[ISO RENDERER]   Rendering tile #" << renderedCount 
+                           << ": world(" << tile.worldX << "," << tile.worldY 
+                           << ") screen(" << screenPos.x << "," << screenPos.y << ")\n";
+            }
+            
             RenderTileImmediate(tile);
         }
         
-        SYSTEM_LOG << "[ISO RENDERER]   Total tiles rendered: " << renderedCount << "\n";
+        SYSTEM_LOG << "[ISO RENDERER]   Tiles rendered: " << renderedCount << "\n";
+        SYSTEM_LOG << "[ISO RENDERER]   Tiles culled: " << culledCount << "\n";
         SYSTEM_LOG << "[ISO RENDERER] ======================================\n";
         
         m_tileBatch.clear();
@@ -168,6 +184,14 @@ namespace Rendering {
         float screenX = (isoX - m_cameraX) * m_zoom + m_screenWidth / 2.0f;
         float screenY = (isoY - m_cameraY) * m_zoom + m_screenHeight / 2.0f;
         
+        // Add isometric offset to ensure tiles with negative world coordinates are visible
+        // This is necessary for infinite maps that start at negative world coordinates
+        const float ISOMETRIC_OFFSET_X = 0.0f;  // X centering already handled by viewport/2
+        const float ISOMETRIC_OFFSET_Y = 200.0f; // Offset to bring negative Y coords into view
+        
+        screenX += ISOMETRIC_OFFSET_X;
+        screenY += ISOMETRIC_OFFSET_Y;
+        
         Vector screen;
         screen.x = screenX;
         screen.y = screenY;
@@ -197,11 +221,13 @@ namespace Rendering {
         Vector screenPos = WorldToScreen(static_cast<float>(worldX), 
                                          static_cast<float>(worldY));
         
-        // Check if tile is within screen bounds (with padding for tile size)
+        // Check if tile is within screen bounds (with padding for tile size and safety margin)
         float padding = std::max(m_tileWidth, m_tileHeight) * m_zoom;
+        const float CULL_MARGIN = 100.0f; // Safety margin for tall tiles/sprites
+        float totalMargin = padding + CULL_MARGIN;
         
-        bool visible = (screenPos.x >= -padding && screenPos.x <= m_screenWidth + padding &&
-                        screenPos.y >= -padding && screenPos.y <= m_screenHeight + padding);
+        bool visible = (screenPos.x >= -totalMargin && screenPos.x <= m_screenWidth + totalMargin &&
+                        screenPos.y >= -totalMargin && screenPos.y <= m_screenHeight + totalMargin);
         
         if (!visible)
         {
