@@ -591,20 +591,6 @@ bool World::InstantiatePass1_VisualLayers(
     m_mapOrientation = levelDef.metadata.customData.value("orientation", "orthogonal");
     m_tileWidth = levelDef.metadata.customData.value("tilewidth", 32);
     m_tileHeight = levelDef.metadata.customData.value("tileheight", 32);
-
-    if (levelDef.metadata.customData.contains("orientation"))
-    {
-        m_mapOrientation = levelDef.metadata.customData["orientation"].get<std::string>();
-    }
-    
-    if (levelDef.metadata.customData.contains("tilewidth"))
-    {
-        m_tileWidth = levelDef.metadata.customData["tilewidth"].get<int>();
-    }
-    if (levelDef.metadata.customData.contains("tileheight"))
-    {
-        m_tileHeight = levelDef.metadata.customData["tileheight"].get<int>();
-    }
     
     std::cout << "-> Map configuration: " << m_mapOrientation 
                << " (" << m_tileWidth << "x" << m_tileHeight << ")\n";

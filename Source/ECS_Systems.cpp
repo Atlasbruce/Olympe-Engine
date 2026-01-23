@@ -690,59 +690,74 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
     // ================================================================
     // STEP 5: RENDER IN SORTED ORDER
     // ================================================================
-    for (const auto& item : renderQueue) {
-        switch (item.type) {
-            case RenderItem::ParallaxLayer:
-                parallaxMgr.RenderLayer(
-                    parallaxLayers[item.parallax.layerIndex],
-                    reinterpret_cast<const CameraTransform&>(cam)
-                );
-                break;
-                
-            case RenderItem::TileLayer:
-                RenderSingleTileChunk(cam, *item.tile.chunk);
-                break;
-                
-            case RenderItem::Entity:
-                RenderSingleEntity(cam, item.entity.entityId);
-                break;
-        }
-    }
-}
-
-// Render a single tile chunk using the appropriate renderer for map orientation
-void RenderSingleTileChunk(const CameraTransform& cam, const TileChunk& chunk)
-{
-    const std::string& mapOrientation = World::Get().GetMapOrientation();
-    int tileWidth = World::Get().GetTileWidth();
-    int tileHeight = World::Get().GetTileHeight();
     
-    if (mapOrientation == "isometric") {
-        // Initialize isometric renderer if needed
-        if (!g_isoRenderer) {
-            g_isoRenderer = std::make_unique<Olympe::Rendering::IsometricRenderer>();
-            g_isoRenderer->Initialize(GameEngine::renderer, tileWidth, tileHeight);
+    // Batch consecutive tile chunks of same orientation together for performance
+    for (size_t i = 0; i < renderQueue.size(); ++i) {
+        const auto& item = renderQueue[i];
+        
+        if (item.type == RenderItem::TileLayer) {
+            // Find consecutive tile chunks to batch together
+            std::vector<const TileChunk*> tileBatch;
+            tileBatch.push_back(item.tile.chunk);
+            
+            // Look ahead for more consecutive tile chunks
+            while (i + 1 < renderQueue.size() && renderQueue[i + 1].type == RenderItem::TileLayer) {
+                ++i;
+                tileBatch.push_back(renderQueue[i].tile.chunk);
+            }
+            
+            // Render batched tile chunks
+            const std::string& mapOrientation = World::Get().GetMapOrientation();
+            int tileWidth = World::Get().GetTileWidth();
+            int tileHeight = World::Get().GetTileHeight();
+            
+            if (mapOrientation == "isometric") {
+                // Initialize isometric renderer if needed
+                if (!g_isoRenderer) {
+                    g_isoRenderer = std::make_unique<Olympe::Rendering::IsometricRenderer>();
+                    g_isoRenderer->Initialize(GameEngine::renderer, tileWidth, tileHeight);
+                }
+                
+                g_isoRenderer->SetCamera(cam.worldPosition.x, cam.worldPosition.y, 1.0f);
+                g_isoRenderer->SetViewport(static_cast<int>(cam.viewport.w), 
+                                           static_cast<int>(cam.viewport.h));
+                g_isoRenderer->BeginFrame();
+                
+                // Render all batched chunks
+                for (const auto* chunk : tileBatch) {
+                    RenderChunkIsometric(*chunk, g_isoRenderer.get());
+                }
+                
+                g_isoRenderer->EndFrame();
+            }
+            else if (mapOrientation == "orthogonal") {
+                for (const auto* chunk : tileBatch) {
+                    RenderChunkOrthogonal(*chunk, cam);
+                }
+            }
+            else {
+                // Unsupported orientation - fallback to orthogonal with warning
+                static bool warningShown = false;
+                if (!warningShown) {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_RENDER, 
+                               "[RENDER] Unsupported map orientation '%s', using orthogonal fallback", 
+                               mapOrientation.c_str());
+                    warningShown = true;
+                }
+                for (const auto* chunk : tileBatch) {
+                    RenderChunkOrthogonal(*chunk, cam);
+                }
+            }
         }
-        
-        g_isoRenderer->SetCamera(cam.worldPosition.x, cam.worldPosition.y, 1.0f);
-        g_isoRenderer->SetViewport(static_cast<int>(cam.viewport.w), 
-                                   static_cast<int>(cam.viewport.h));
-        g_isoRenderer->BeginFrame();
-        
-        RenderChunkIsometric(chunk, g_isoRenderer.get());
-        
-        g_isoRenderer->EndFrame();
-    }
-    else if (mapOrientation == "orthogonal") {
-        RenderChunkOrthogonal(chunk, cam);
-    }
-    else if (mapOrientation == "staggered") {
-        // TODO: Implement staggered rendering if needed
-        RenderChunkOrthogonal(chunk, cam);  // Fallback
-    }
-    else if (mapOrientation == "hexagonal") {
-        // TODO: Implement hexagonal rendering if needed
-        RenderChunkOrthogonal(chunk, cam);  // Fallback
+        else if (item.type == RenderItem::ParallaxLayer) {
+            parallaxMgr.RenderLayer(
+                parallaxLayers[item.parallax.layerIndex],
+                reinterpret_cast<const CameraTransform&>(cam)
+            );
+        }
+        else { // Entity
+            RenderSingleEntity(cam, item.entity.entityId);
+        }
     }
 }
 
