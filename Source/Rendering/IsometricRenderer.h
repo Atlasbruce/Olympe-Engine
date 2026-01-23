@@ -88,6 +88,7 @@ namespace Rendering {
         void RenderTileImmediate(const IsometricTile& tile);
         void ExtractFlipFlags(uint32_t gid, bool& flipH, bool& flipV, bool& flipD) const;
         SDL_FlipMode GetSDLFlip(bool flipH, bool flipV, bool flipD) const;
+        float CalculateCullingMargin() const;
     };
 
 } // namespace Rendering

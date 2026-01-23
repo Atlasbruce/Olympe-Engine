@@ -107,8 +107,7 @@ namespace Rendering {
             Vector screenPos = WorldToScreen((float)tile.worldX, (float)tile.worldY);
             
             // Culling with margin (consistent with IsTileVisible)
-            float padding = std::max(m_tileWidth, m_tileHeight) * m_zoom;
-            float totalMargin = padding + CULL_MARGIN;
+            float totalMargin = CalculateCullingMargin();
             
             if (screenPos.x < -totalMargin || screenPos.x > m_screenWidth + totalMargin ||
                 screenPos.y < -totalMargin || screenPos.y > m_screenHeight + totalMargin)
@@ -218,8 +217,7 @@ namespace Rendering {
                                          static_cast<float>(worldY));
         
         // Check if tile is within screen bounds (with padding for tile size and safety margin)
-        float padding = std::max(m_tileWidth, m_tileHeight) * m_zoom;
-        float totalMargin = padding + CULL_MARGIN;
+        float totalMargin = CalculateCullingMargin();
         
         bool visible = (screenPos.x >= -totalMargin && screenPos.x <= m_screenWidth + totalMargin &&
                         screenPos.y >= -totalMargin && screenPos.y <= m_screenHeight + totalMargin);
@@ -284,6 +282,13 @@ namespace Rendering {
         if (flipV) flip |= SDL_FLIP_VERTICAL;
         
         return static_cast<SDL_FlipMode>(flip);
+    }
+
+    float IsometricRenderer::CalculateCullingMargin() const
+    {
+        // Calculate total culling margin: tile size (with zoom) + safety margin
+        float padding = std::max(m_tileWidth, m_tileHeight) * m_zoom;
+        return padding + CULL_MARGIN;
     }
 
 } // namespace Rendering
