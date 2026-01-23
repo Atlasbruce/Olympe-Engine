@@ -579,7 +579,7 @@ namespace Tiled {
                                           Olympe::Editor::LevelDefinition& outLevel)
     {
         // Store map configuration for rendering
-        outLevel.metadata.customData["orientation"] = tiledMap.orientation;
+        outLevel.metadata.customData["orientation"] = (int) tiledMap.orientation;
         outLevel.metadata.customData["tilewidth"] = tiledMap.tilewidth;
         outLevel.metadata.customData["tileheight"] = tiledMap.tileheight;
         
@@ -806,7 +806,7 @@ namespace Tiled {
                                 if (flipFlags & 0x2) fullGID |= 0x40000000;  // Vertical flip
                                 if (flipFlags & 0x4) fullGID |= 0x20000000;  // Diagonal flip
                                 
-                                dataJson.push_back(fullGID);
+                                dataJson.push_back((int)fullGID);
                             }
                         }
                         
@@ -830,12 +830,12 @@ namespace Tiled {
                     {
                         for (int x = 0; x < width; ++x)
                         {
-                            uint32_t gid = 0;
+                            int  gid = 0;
                             if (y < tileLayer.tiles.size() && x < tileLayer.tiles[y].size())
                             {
                                 gid = tileLayer.tiles[y][x];
                             }
-                            dataJson.push_back(gid);
+                            dataJson.push_back(static_cast<int>(gid));
                         }
                     }
                     layerJson["data"] = dataJson;
@@ -1145,8 +1145,8 @@ namespace Tiled {
                         nlohmann::json tileJson = nlohmann::json::object();
                         tileJson["id"] = tile.id;
                         tileJson["image"] = tile.image;
-                        tileJson["width"] = tile.width;
-                        tileJson["height"] = tile.height;
+                        tileJson["width"] = tile.imagewidth;
+                        tileJson["height"] = tile.imageheight;
                         tilesJson.push_back(tileJson);
                     }
                     

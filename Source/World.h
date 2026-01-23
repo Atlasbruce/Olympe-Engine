@@ -39,6 +39,64 @@ namespace Olympe {
     namespace Editor { struct LevelDefinition; }
 }
 
+// ========================================================================
+// TILE LAYER SUPPORT
+// ========================================================================
+
+// Tile chunk structure for rendering
+struct TileChunk
+{
+    std::string layerName;
+    int x;              // Chunk X position (in tiles)
+    int y;              // Chunk Y position (in tiles)
+    int width;          // Chunk width (in tiles)
+    int height;         // Chunk height (in tiles)
+    int zOrder;         // Render order
+    std::vector<uint32_t> tileGIDs;  // Tile Global IDs (with flip flags)
+
+    TileChunk() : x(0), y(0), width(0), height(0), zOrder(0) {}
+};
+
+// TilesetManager class
+class TilesetManager
+{
+public:
+    struct TilesetInfo
+    {
+        uint32_t firstgid;
+        uint32_t lastgid;  // firstgid + tilecount - 1
+        std::string name;
+        int tilewidth;
+        int tileheight;
+        int columns;
+        int imagewidth;
+        int imageheight;
+        int margin;
+        int spacing;
+        bool isCollection;
+
+        // Image-based tileset
+        SDL_Texture* texture;
+
+        // Collection tileset (individual tiles)
+        std::map<uint32_t, SDL_Texture*> individualTiles;
+        std::map<uint32_t, SDL_Rect> individualSrcRects;
+
+        TilesetInfo() : firstgid(0), lastgid(0), tilewidth(0), tileheight(0),
+            columns(0), imagewidth(0), imageheight(0), margin(0), spacing(0),
+            isCollection(false), texture(nullptr) {
+        }
+    };
+
+    void Clear();
+    void LoadTilesets(const nlohmann::json& tilesetsJson);
+    bool GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect);
+    const std::vector<TilesetInfo>& GetTilesets() const { return m_tilesets; }
+
+private:
+    std::vector<TilesetInfo> m_tilesets;
+};
+
 class World 
 {
 public:
@@ -334,82 +392,28 @@ private:
         const Olympe::Editor::LevelDefinition& levelDef,
         InstantiationResult& result);
     
-    // ========================================================================
-    // TILE LAYER SUPPORT
-    // ========================================================================
-    
-    // Tile chunk structure for rendering
-    struct TileChunk
-    {
-        std::string layerName;
-        int x;              // Chunk X position (in tiles)
-        int y;              // Chunk Y position (in tiles)
-        int width;          // Chunk width (in tiles)
-        int height;         // Chunk height (in tiles)
-        int zOrder;         // Render order
-        std::vector<uint32_t> tileGIDs;  // Tile Global IDs (with flip flags)
-        
-        TileChunk() : x(0), y(0), width(0), height(0), zOrder(0) {}
-    };
-    
-    // Nested TilesetManager class
-    class TilesetManager
-    {
-    public:
-        struct TilesetInfo
-        {
-            uint32_t firstgid;
-            uint32_t lastgid;  // firstgid + tilecount - 1
-            std::string name;
-            int tilewidth;
-            int tileheight;
-            int columns;
-            int imagewidth;
-            int imageheight;
-            int margin;
-            int spacing;
-            bool isCollection;
-            
-            // Image-based tileset
-            SDL_Texture* texture;
-            
-            // Collection tileset (individual tiles)
-            std::map<uint32_t, SDL_Texture*> individualTiles;
-            std::map<uint32_t, SDL_Rect> individualSrcRects;
-            
-            TilesetInfo() : firstgid(0), lastgid(0), tilewidth(0), tileheight(0), 
-                           columns(0), imagewidth(0), imageheight(0), margin(0), spacing(0),
-                           isCollection(false), texture(nullptr) {}
-        };
-        
-        void Clear();
-        void LoadTilesets(const nlohmann::json& tilesetsJson);
-        bool GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect);
-        const std::vector<TilesetInfo>& GetTilesets() const { return m_tilesets; }
-        
-    private:
-        std::vector<TilesetInfo> m_tilesets;
-    };
-    
+
+public:    
     // Get tile chunks (for rendering system)
     const std::vector<TileChunk>& GetTileChunks() const { return m_tileChunks; }
     
     // Get tileset manager (for rendering system)
-    const TilesetManager& GetTilesetManager() const { return m_tilesetManager; }
+    TilesetManager& GetTilesetManager() { return m_tilesetManager; }
     
     // Get map configuration for rendering
     const std::string& GetMapOrientation() const { return m_mapOrientation; }
     int GetTileWidth() const { return m_tileWidth; }
     int GetTileHeight() const { return m_tileHeight; }
 
-private:
+
     // Tile layer loading helper methods (internal use only)
     void LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& result);
     void LoadTileChunk(const nlohmann::json& chunkJson, const std::string& layerName, 
                        int zOrder, const std::string& encoding);
     void LoadTileData(const nlohmann::json& dataJson, const std::string& layerName, 
                       int width, int height, int zOrder, const std::string& encoding);
-    
+
+private:
     TilesetManager m_tilesetManager;
     std::vector<TileChunk> m_tileChunks;
     std::string m_mapOrientation;  // "orthogonal" or "isometric"

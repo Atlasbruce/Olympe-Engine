@@ -39,9 +39,12 @@ void RegisterInputEntityWithManager(EntityID e)
 }
 //---------------------------------------------------------------------------------------------
 World::World()
-    : m_mapOrientation("orthogonal"), m_tileWidth(32), m_tileHeight(32)
 {
     Initialize_ECS_Systems();
+
+    m_mapOrientation = "orthogonal"; 
+    m_tileWidth = 32;
+    m_tileHeight = 32;
 
     // Auto-create singleton GridSettings entity if missing
     bool hasGridSettings = false;
@@ -124,8 +127,6 @@ void World::Initialize_ECS_Systems()
     Add_ECS_System(std::make_unique<CameraSystem>());
 	Add_ECS_System(std::make_unique<GridSystem>()); 
     Add_ECS_System(std::make_unique<RenderingSystem>());
-
-    
 }
 //---------------------------------------------------------------------------------------------
 void World::Add_ECS_System(std::unique_ptr<ECS_System> system)
@@ -141,7 +142,6 @@ void World::Process_ECS_Systems()
     {
         system->Process();
     }
-
 }
 //---------------------------------------------------------------------------------------------
 void World::Render_ECS_Systems()
@@ -589,23 +589,10 @@ bool World::InstantiatePass1_VisualLayers(
 {
     // ===== PART 0: Map Configuration =====
     // Extract map orientation and tile size from metadata
-    if (levelDef.metadata.customData.contains("orientation"))
-    {
-        m_mapOrientation = levelDef.metadata.customData["orientation"].get<std::string>();
-    }
-    else
-    {
-        m_mapOrientation = "orthogonal";  // Default
-    }
-    
-    if (levelDef.metadata.customData.contains("tilewidth"))
-    {
-        m_tileWidth = levelDef.metadata.customData["tilewidth"].get<int>();
-    }
-    if (levelDef.metadata.customData.contains("tileheight"))
-    {
-        m_tileHeight = levelDef.metadata.customData["tileheight"].get<int>();
-    }
+    // Use .value() with defaults to safely handle missing or wrong-type JSON values
+    m_mapOrientation = levelDef.metadata.customData.value("orientation", "orthogonal");
+    m_tileWidth = levelDef.metadata.customData.value("tilewidth", 32);
+    m_tileHeight = levelDef.metadata.customData.value("tileheight", 32);
     
     SYSTEM_LOG << "-> Map configuration: " << m_mapOrientation 
                << " (" << m_tileWidth << "x" << m_tileHeight << ")\n";
@@ -623,7 +610,15 @@ bool World::InstantiatePass1_VisualLayers(
             
             for (const auto& layerJson : parallaxLayersJson)
             {
-                std::string imagePath = layerJson["imagePath"].get<std::string>();
+                std::string imagePath = layerJson.value("imagePath", "");
+                if (imagePath.empty())
+                {
+                    result.pass1_visualLayers.failed++;
+                    result.pass1_visualLayers.failedObjects.push_back("<missing imagePath>");
+                    std::cout << "  x Failed: parallax layer missing imagePath\n";
+                    continue;
+                }
+                
                 std::string filename;
 
 				// extract only filename if full path is given
@@ -644,10 +639,10 @@ bool World::InstantiatePass1_VisualLayers(
                 }
                 
                 Olympe::Tiled::ParallaxLayer layer;
-                layer.name = layerJson["name"].get<std::string>();
+                layer.name = layerJson.value("name", "unnamed_parallax");
                 layer.imagePath = imagePath;
                 layer.texture = texture;
-                layer.scrollFactorX = layerJson["scrollFactorX"].get<float>();
+                layer.scrollFactorX = layerJson.value("scrollFactorX", 1.0f);
                 layer.scrollFactorY = layerJson.value("scrollFactorY", 0.0f);
                 layer.repeatX = layerJson.value("repeatX", false);
                 layer.repeatY = layerJson.value("repeatY", false);
@@ -865,7 +860,7 @@ void World::LoadTileData(const nlohmann::json& dataJson, const std::string& laye
 // TilesetManager Implementation
 // ========================================================================
 
-void World::TilesetManager::Clear()
+void TilesetManager::Clear()
 {
     // Cleanup textures - these are owned by TilesetManager and loaded directly
     // via IMG_LoadTexture, not through DataManager's texture cache
@@ -890,7 +885,7 @@ void World::TilesetManager::Clear()
     m_tilesets.clear();
 }
 
-void World::TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
+void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
 {
     Clear();
     
@@ -983,7 +978,7 @@ void World::TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
     }
 }
 
-bool World::TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect)
+bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect)
 {
     // Strip flip flags (top 3 bits)
     uint32_t cleanGid = gid & 0x1FFFFFFF;

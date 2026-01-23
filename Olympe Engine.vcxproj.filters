@@ -297,6 +297,9 @@
     <ClCompile Include="Source\ParameterSchema.cpp">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Rendering\IsometricRenderer.cpp">
+      <Filter>Fichiers d%27en-t�te\Engine Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -592,6 +595,9 @@
     </ClInclude>
     <ClInclude Include="Source\ParameterSchema.h">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\IsometricRenderer.h">
+      <Filter>Fichiers d%27en-t�te\Engine Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

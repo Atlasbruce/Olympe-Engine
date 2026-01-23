@@ -83,7 +83,7 @@ namespace Rendering {
         // Helper functions
         void RenderTileImmediate(const IsometricTile& tile);
         void ExtractFlipFlags(uint32_t gid, bool& flipH, bool& flipV, bool& flipD) const;
-        SDL_RendererFlip GetSDLFlip(bool flipH, bool flipV, bool flipD) const;
+        SDL_FlipMode GetSDLFlip(bool flipH, bool flipV, bool flipD) const;
     };
 
 } // namespace Rendering

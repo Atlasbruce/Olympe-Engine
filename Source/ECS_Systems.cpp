@@ -495,9 +495,9 @@ void RenderingSystem::Render()
 // Global isometric renderer (initialized once)
 static std::unique_ptr<Olympe::Rendering::IsometricRenderer> g_isoRenderer = nullptr;
 
-void RenderChunkIsometric(const World::TileChunk& chunk, Olympe::Rendering::IsometricRenderer* isoRenderer)
+void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRenderer* isoRenderer)
 {
-    const auto& tilesetMgr = World::Get().GetTilesetManager();
+    auto& tilesetMgr = World::Get().GetTilesetManager();
     
     for (int y = 0; y < chunk.height; ++y)
     {
@@ -531,9 +531,9 @@ void RenderChunkIsometric(const World::TileChunk& chunk, Olympe::Rendering::Isom
     }
 }
 
-void RenderChunkOrthogonal(const World::TileChunk& chunk, const CameraTransform& cam)
+void RenderChunkOrthogonal(const TileChunk& chunk, const CameraTransform& cam)
 {
-    const auto& tilesetMgr = World::Get().GetTilesetManager();
+    auto& tilesetMgr = World::Get().GetTilesetManager();
     
     for (int y = 0; y < chunk.height; ++y)
     {
@@ -561,7 +561,8 @@ void RenderChunkOrthogonal(const World::TileChunk& chunk, const CameraTransform&
             float screenY = worldY - cam.worldPosition.y + cam.viewport.h / 2.0f;
             
             SDL_FRect destRect = {screenX, screenY, (float)srcRect.w, (float)srcRect.h};
-            SDL_RenderTexture(GameEngine::renderer, texture, &srcRect, &destRect);
+			SDL_FRect srcFRect = { (float)srcRect.x, (float)srcRect.y, (float)srcRect.w, (float)srcRect.h };
+            SDL_RenderTexture(GameEngine::renderer, texture, &srcFRect, &destRect);
         }
     }
 }

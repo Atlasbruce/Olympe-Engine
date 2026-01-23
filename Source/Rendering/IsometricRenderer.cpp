@@ -114,10 +114,13 @@ namespace Rendering {
         destRect.y -= destRect.h;
         
         // Get SDL flip flags
-        SDL_RendererFlip flip = GetSDLFlip(flipH, flipV, flipD);
+        SDL_FlipMode flip = GetSDLFlip(flipH, flipV, flipD);
         
+		// Source rectangle conversion
+		SDL_FRect srcFRect = {(float)tile.srcRect.x, (float)tile.srcRect.y, (float)tile.srcRect.w, (float)tile.srcRect.h};
+
         // Render the tile
-        SDL_RenderTextureRotated(m_renderer, tile.texture, &tile.srcRect, &destRect, 
+        SDL_RenderTextureRotated(m_renderer, tile.texture, &srcFRect, &destRect, 
                                   0.0, nullptr, flip);
     }
 
@@ -200,7 +203,7 @@ namespace Rendering {
         flipD = (gid & FLIPPED_DIAGONALLY_FLAG) != 0;
     }
 
-    SDL_RendererFlip IsometricRenderer::GetSDLFlip(bool flipH, bool flipV, bool flipD) const
+    SDL_FlipMode IsometricRenderer::GetSDLFlip(bool flipH, bool flipV, bool flipD) const
     {
         // SDL3 only supports horizontal and vertical flips, not diagonal
         // Diagonal flip requires rotation, which we don't handle here for simplicity
@@ -210,7 +213,7 @@ namespace Rendering {
         if (flipH) flip |= SDL_FLIP_HORIZONTAL;
         if (flipV) flip |= SDL_FLIP_VERTICAL;
         
-        return static_cast<SDL_RendererFlip>(flip);
+        return static_cast<SDL_FlipMode>(flip);
     }
 
 } // namespace Rendering
