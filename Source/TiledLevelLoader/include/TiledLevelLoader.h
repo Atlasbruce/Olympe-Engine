@@ -52,7 +52,9 @@ namespace Tiled {
         bool LoadExternalTileset(const std::string& filepath, TiledTileset& tileset);
 
         // Parse chunks (for infinite maps)
-        bool ParseChunk(const json& j, TiledChunk& chunk);
+        bool ParseChunk(const json& j, TiledChunk& chunk,
+                        const std::string& layerEncoding,
+                        const std::string& layerCompression);
 
         // Parse properties
         void ParseProperties(const json& j, std::map<std::string, TiledProperty>& properties);
