@@ -587,54 +587,17 @@ bool World::InstantiatePass1_VisualLayers(
     const Olympe::Editor::LevelDefinition& levelDef,
     InstantiationResult& result)
 {
-    SYSTEM_LOG << "\n[DEBUG] ============================================\n";
-    SYSTEM_LOG << "[DEBUG] InstantiatePass1_VisualLayers() START\n";
-    SYSTEM_LOG << "[DEBUG] ============================================\n\n";
-    
-    // ===== PART 0: Map Configuration =====
-    SYSTEM_LOG << "[DEBUG] PART 0: Map Configuration\n";
-    SYSTEM_LOG << "[DEBUG] Checking customData[\"orientation\"]...\n";
-    
     // Extract map orientation and tile size from metadata
-
-    // Use .value() with defaults to safely handle missing or wrong-type JSON values
     m_mapOrientation = levelDef.metadata.customData.value("orientation", "orthogonal");
     m_tileWidth = levelDef.metadata.customData.value("tilewidth", 32);
     m_tileHeight = levelDef.metadata.customData.value("tileheight", 32);
-
-    if (levelDef.metadata.customData.contains("orientation"))
-    {
-        m_mapOrientation = levelDef.metadata.customData["orientation"].get<std::string>();
-        SYSTEM_LOG << "[DEBUG]   → Found orientation: " << m_mapOrientation << "\n";
-    }
-    else
-    {
-        m_mapOrientation = "orthogonal";  // Default
-        SYSTEM_LOG << "[DEBUG]   → Using default: orthogonal\n";
-    }
     
-    if (levelDef.metadata.customData.contains("tilewidth"))
-    {
-        m_tileWidth = levelDef.metadata.customData["tilewidth"].get<int>();
-        SYSTEM_LOG << "[DEBUG]   → Found tilewidth: " << m_tileWidth << "\n";
-    }
-    if (levelDef.metadata.customData.contains("tileheight"))
-    {
-        m_tileHeight = levelDef.metadata.customData["tileheight"].get<int>();
-        SYSTEM_LOG << "[DEBUG]   → Found tileheight: " << m_tileHeight << "\n";
-    }
-    
-    SYSTEM_LOG << "-> Map configuration: " << m_mapOrientation 
-               << " (" << m_tileWidth << "x" << m_tileHeight << ")\n\n";
+    std::cout << "-> Map configuration: " << m_mapOrientation 
+               << " (" << m_tileWidth << "x" << m_tileHeight << ")\n";
     
     // ===== PART 1: Parallax Layers =====
-    SYSTEM_LOG << "[DEBUG] PART 1: Parallax Layers\n";
-    SYSTEM_LOG << "[DEBUG] Checking customData[\"parallaxLayers\"]...\n";
-    
     if (levelDef.metadata.customData.contains("parallaxLayers"))
     {
-        SYSTEM_LOG << "[DEBUG]   → Found parallaxLayers in customData\n";
-        
         Olympe::Tiled::ParallaxLayerManager& parallaxMgr = Olympe::Tiled::ParallaxLayerManager::Get();
         parallaxMgr.Clear();
         
@@ -694,93 +657,35 @@ bool World::InstantiatePass1_VisualLayers(
             }
         }
     }
-    else
-    {
-        SYSTEM_LOG << "[DEBUG]   → No parallaxLayers found\n";
-    }
     
     // ===== PART 2: Tilesets =====
-    SYSTEM_LOG << "\n[DEBUG] PART 2: Tilesets\n";
-    SYSTEM_LOG << "[DEBUG] Checking customData[\"tilesets\"]...\n";
-    
     if (levelDef.metadata.customData.contains("tilesets"))
     {
-        SYSTEM_LOG << "[DEBUG]   → Found tilesets in customData\n";
-        SYSTEM_LOG << "-> Loading tilesets...\n";
+        std::cout << "-> Loading tilesets...\n";
         m_tilesetManager.LoadTilesets(levelDef.metadata.customData["tilesets"]);
-    }
-    else
-    {
-        SYSTEM_LOG << "[DEBUG]   ❌ ERROR: No tilesets found in customData!\n";
     }
     
     // ===== PART 3: Tile Layers =====
-    SYSTEM_LOG << "\n[DEBUG] ============================================\n";
-    SYSTEM_LOG << "[DEBUG] PART 3: Tile Layers - CRITICAL CHECK\n";
-    SYSTEM_LOG << "[DEBUG] ============================================\n";
-    SYSTEM_LOG << "[DEBUG] Checking customData[\"tileLayers\"]...\n";
-    SYSTEM_LOG << "[DEBUG] customData.contains(\"tileLayers\") = " 
-               << (levelDef.metadata.customData.contains("tileLayers") ? "TRUE" : "FALSE (PROBLEM!)") << "\n";
-    
     if (levelDef.metadata.customData.contains("tileLayers"))
     {
         const auto& tileLayersJson = levelDef.metadata.customData["tileLayers"];
         
-        SYSTEM_LOG << "[DEBUG]   → Found tileLayers in customData\n";
-        SYSTEM_LOG << "[DEBUG]   → is_array(): " << (tileLayersJson.is_array() ? "YES" : "NO (PROBLEM!)") << "\n";
-        
         if (tileLayersJson.is_array())
         {
-            SYSTEM_LOG << "[DEBUG]   → Array size: " << tileLayersJson.size() << "\n";
-            SYSTEM_LOG << "-> Loading " << tileLayersJson.size() << " tile layers...\n";
+            std::cout << "-> Loading " << tileLayersJson.size() << " tile layers...\n";
             
             for (size_t i = 0; i < tileLayersJson.size(); ++i)
             {
                 const auto& layerJson = tileLayersJson[i];
-                
-                SYSTEM_LOG << "\n[DEBUG] Processing tile layer " << i << ":\n";
-                SYSTEM_LOG << "[DEBUG]   name: " << layerJson.value("name", "UNNAMED") << "\n";
-                SYSTEM_LOG << "[DEBUG]   type: " << layerJson.value("type", "UNKNOWN") << "\n";
-                SYSTEM_LOG << "[DEBUG]   encoding: " << layerJson.value("encoding", "NONE") << "\n";
-                SYSTEM_LOG << "[DEBUG]   isInfinite: " << layerJson.value("isInfinite", false) << "\n";
-                
                 std::string layerType = layerJson.value("type", "");
                 
                 if (layerType == "tilelayer")
                 {
                     LoadTileLayer(layerJson, result);
                 }
-                else
-                {
-                    SYSTEM_LOG << "[DEBUG]   ❌ Skipped: not a tilelayer\n";
-                }
             }
         }
-        else
-        {
-            SYSTEM_LOG << "[DEBUG]   ❌ ERROR: tileLayers is NOT an array!\n";
-        }
     }
-    else
-    {
-        SYSTEM_LOG << "\n[DEBUG] ============================================\n";
-        SYSTEM_LOG << "[DEBUG] ❌ CRITICAL ERROR!\n";
-        SYSTEM_LOG << "[DEBUG] ❌ customData does NOT contain 'tileLayers'\n";
-        SYSTEM_LOG << "[DEBUG] ❌ This means TiledToOlympe did NOT save tile layers!\n";
-        SYSTEM_LOG << "[DEBUG] ============================================\n\n";
-        
-        // Print all customData keys for debugging
-        SYSTEM_LOG << "[DEBUG] Available customData keys:\n";
-        for (auto it = levelDef.metadata.customData.begin(); it != levelDef.metadata.customData.end(); ++it)
-        {
-            SYSTEM_LOG << "[DEBUG]   - " << it.key() << "\n";
-        }
-    }
-    
-    SYSTEM_LOG << "\n[DEBUG] ============================================\n";
-    SYSTEM_LOG << "[DEBUG] InstantiatePass1_VisualLayers() END\n";
-    SYSTEM_LOG << "[DEBUG] m_tileChunks.size() = " << m_tileChunks.size() << "\n";
-    SYSTEM_LOG << "[DEBUG] ============================================\n\n";
     
     // NOTE: Tile chunks are now loaded and stored in m_tileChunks.
     // To fully render these tiles, the following work is still needed:
@@ -816,12 +721,6 @@ void World::LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& 
     float opacity = layerJson.value("opacity", 1.0f);
     std::string encoding = layerJson.value("encoding", "");  // Extract encoding from layer
     
-    SYSTEM_LOG << "\n[DEBUG] LoadTileLayer() called\n";
-    SYSTEM_LOG << "[DEBUG]   layerName: " << layerName << "\n";
-    SYSTEM_LOG << "[DEBUG]   zOrder: " << zOrder << "\n";
-    SYSTEM_LOG << "[DEBUG]   visible: " << (visible ? "YES" : "NO") << "\n";
-    SYSTEM_LOG << "[DEBUG]   encoding: '" << encoding << "' (should be 'base64')\n";
-    
     if (!visible)
     {
         std::cout << "  ⊙ Skipping invisible layer: " << layerName << "\n";
@@ -835,14 +734,11 @@ void World::LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& 
     {
         const auto& chunks = layerJson["chunks"];
         
-        SYSTEM_LOG << "[DEBUG]   → Infinite map with " << chunks.size() << " chunks\n";
-        
         std::cout << "  -> Tile Layer (Infinite): " << layerName 
                   << " (" << chunks.size() << " chunks, encoding: " << encoding << ", z: " << zOrder << ")\n";
         
         for (size_t i = 0; i < chunks.size(); ++i)
         {
-            SYSTEM_LOG << "[DEBUG]   Processing chunk " << i << "...\n";
             LoadTileChunk(chunks[i], layerName, zOrder, encoding);  // Pass encoding
         }
         
@@ -851,8 +747,6 @@ void World::LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& 
     // Handle finite maps with regular data
     else if (layerJson.contains("data"))
     {
-        SYSTEM_LOG << "[DEBUG]   → Finite map detected\n";
-        
         int width = layerJson.value("width", 0);
         int height = layerJson.value("height", 0);
         
@@ -864,7 +758,6 @@ void World::LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& 
     }
     else
     {
-        SYSTEM_LOG << "[DEBUG]   ❌ No chunks found or not an array\n";
         std::cout << "  x Tile layer missing data: " << layerName << "\n";
         result.pass1_visualLayers.failed++;
     }
