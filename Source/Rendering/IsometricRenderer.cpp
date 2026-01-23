@@ -131,24 +131,18 @@ namespace Rendering {
         bool flipH, flipV, flipD;
         ExtractFlipFlags(tile.tileGID, flipH, flipV, flipD);
         
-        // Convert world coordinates to screen position
+        // Convert world coordinates to screen position (already includes camera and viewport transforms)
         Vector screenPos = WorldToScreen(static_cast<float>(tile.worldX), 
                                          static_cast<float>(tile.worldY));
         
-        // Apply camera offset and zoom
-        float screenX = (screenPos.x - m_cameraX) * m_zoom + m_screenWidth / 2.0f;
-        float screenY = (screenPos.y - m_cameraY) * m_zoom + m_screenHeight / 2.0f;
-        
         // Calculate destination rectangle
         SDL_FRect destRect;
-        destRect.x = screenX;
-        destRect.y = screenY;
         destRect.w = static_cast<float>(tile.srcRect.w) * m_zoom;
         destRect.h = static_cast<float>(tile.srcRect.h) * m_zoom;
         
         // Adjust for tile anchor point (typically bottom-center for isometric tiles)
-        destRect.x -= destRect.w / 2.0f;
-        destRect.y -= destRect.h;
+        destRect.x = screenPos.x - destRect.w / 2.0f;
+        destRect.y = screenPos.y - destRect.h;
         
         // Get SDL flip flags
         SDL_FlipMode flip = GetSDLFlip(flipH, flipV, flipD);
@@ -167,9 +161,16 @@ namespace Rendering {
         // screenX = (worldX - worldY) * (tileWidth / 2)
         // screenY = (worldX + worldY) * (tileHeight / 2)
         
+        float isoX = (worldX - worldY) * (m_tileWidth / 2.0f);
+        float isoY = (worldX + worldY) * (m_tileHeight / 2.0f);
+        
+        // Apply camera transform and center in viewport
+        float screenX = (isoX - m_cameraX) * m_zoom + m_screenWidth / 2.0f;
+        float screenY = (isoY - m_cameraY) * m_zoom + m_screenHeight / 2.0f;
+        
         Vector screen;
-        screen.x = (worldX - worldY) * (m_tileWidth / 2.0f);
-        screen.y = (worldX + worldY) * (m_tileHeight / 2.0f);
+        screen.x = screenX;
+        screen.y = screenY;
         screen.z = 0.0f;
         return screen;
     }
@@ -192,19 +193,15 @@ namespace Rendering {
 
     bool IsometricRenderer::IsTileVisible(int worldX, int worldY) const
     {
-        // Convert tile position to screen coordinates
+        // Convert tile position to screen coordinates (already includes camera and viewport transforms)
         Vector screenPos = WorldToScreen(static_cast<float>(worldX), 
                                          static_cast<float>(worldY));
-        
-        // Apply camera offset and zoom
-        float screenX = (screenPos.x - m_cameraX) * m_zoom + m_screenWidth / 2.0f;
-        float screenY = (screenPos.y - m_cameraY) * m_zoom + m_screenHeight / 2.0f;
         
         // Check if tile is within screen bounds (with padding for tile size)
         float padding = std::max(m_tileWidth, m_tileHeight) * m_zoom;
         
-        bool visible = (screenX >= -padding && screenX <= m_screenWidth + padding &&
-                        screenY >= -padding && screenY <= m_screenHeight + padding);
+        bool visible = (screenPos.x >= -padding && screenPos.x <= m_screenWidth + padding &&
+                        screenPos.y >= -padding && screenPos.y <= m_screenHeight + padding);
         
         if (!visible)
         {
@@ -214,7 +211,7 @@ namespace Rendering {
             if (culledCount < 5)
             {
                 SYSTEM_LOG << "[ISO CULL] Tile culled: world(" << worldX << "," << worldY 
-                           << ") screen(" << screenX << "," << screenY << ")\n";
+                           << ") screen(" << screenPos.x << "," << screenPos.y << ")\n";
                 culledCount++;
             }
         }
