@@ -395,8 +395,9 @@ void World::UnloadCurrentLevel()
 {
     SYSTEM_LOG << "World::UnloadCurrentLevel - Unloading current level\n";
     
-    // Clear tile chunks
+    // Clear tile chunks and tilesets
     m_tileChunks.clear();
+    m_tilesetManager.Clear();
     
     // Destroy all entities except system entities (like GridSettings)
     std::vector<EntityID> entitiesToDestroy;
@@ -640,7 +641,14 @@ bool World::InstantiatePass1_VisualLayers(
         }
     }
     
-    // ===== PART 2: Tile Layers =====
+    // ===== PART 2: Tilesets =====
+    if (levelDef.metadata.customData.contains("tilesets"))
+    {
+        std::cout << "-> Loading tilesets...\n";
+        m_tilesetManager.LoadTilesets(levelDef.metadata.customData["tilesets"]);
+    }
+    
+    // ===== PART 3: Tile Layers =====
     if (levelDef.metadata.customData.contains("tileLayers"))
     {
         const auto& tileLayersJson = levelDef.metadata.customData["tileLayers"];
@@ -827,6 +835,176 @@ void World::LoadTileData(const nlohmann::json& dataJson, const std::string& laye
     chunk.tileGIDs = tileGIDs;
     
     m_tileChunks.push_back(chunk);
+}
+
+// ========================================================================
+// TilesetManager Implementation
+// ========================================================================
+
+void World::TilesetManager::Clear()
+{
+    // Cleanup textures
+    for (auto& tileset : m_tilesets)
+    {
+        if (tileset.texture)
+        {
+            SDL_DestroyTexture(tileset.texture);
+            tileset.texture = nullptr;
+        }
+        
+        for (auto& pair : tileset.individualTiles)
+        {
+            if (pair.second)
+            {
+                SDL_DestroyTexture(pair.second);
+            }
+        }
+        tileset.individualTiles.clear();
+    }
+    
+    m_tilesets.clear();
+}
+
+void World::TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
+{
+    Clear();
+    
+    if (!tilesetsJson.is_array()) return;
+    
+    for (const auto& tilesetJson : tilesetsJson)
+    {
+        TilesetInfo info;
+        info.firstgid = tilesetJson.value("firstgid", 0);
+        info.name = tilesetJson.value("name", "");
+        info.tilewidth = tilesetJson.value("tilewidth", 32);
+        info.tileheight = tilesetJson.value("tileheight", 32);
+        info.columns = tilesetJson.value("columns", 0);
+        info.imagewidth = tilesetJson.value("imagewidth", 0);
+        info.imageheight = tilesetJson.value("imageheight", 0);
+        info.margin = tilesetJson.value("margin", 0);
+        info.spacing = tilesetJson.value("spacing", 0);
+        
+        uint32_t tilecount = tilesetJson.value("tilecount", 0);
+        info.lastgid = info.firstgid + tilecount - 1;
+        
+        std::string type = tilesetJson.value("type", "image");
+        info.isCollection = (type == "collection");
+        
+        if (!info.isCollection && tilesetJson.contains("image"))
+        {
+            // Image-based tileset
+            std::string imagePath = tilesetJson["image"].get<std::string>();
+            
+            // Extract filename
+            size_t lastSlash = imagePath.find_last_of("/\\");
+            std::string filename = (lastSlash != std::string::npos) ? imagePath.substr(lastSlash + 1) : imagePath;
+            
+            // Find resource recursively
+            std::string fullPath = DataManager::Get().FindResourceRecursive(filename);
+            
+            if (!fullPath.empty())
+            {
+                info.texture = IMG_LoadTexture(GameEngine::renderer, fullPath.c_str());
+                if (info.texture)
+                {
+                    std::cout << "  ✓ Loaded tileset texture: " << filename << " (gid: " 
+                              << info.firstgid << "-" << info.lastgid << ")\n";
+                }
+                else
+                {
+                    std::cout << "  x Failed to load tileset texture: " << fullPath << "\n";
+                }
+            }
+        }
+        else if (info.isCollection && tilesetJson.contains("tiles"))
+        {
+            // Collection tileset (individual tile images)
+            const auto& tilesArray = tilesetJson["tiles"];
+            
+            for (const auto& tileJson : tilesArray)
+            {
+                uint32_t tileId = tileJson["id"].get<uint32_t>();
+                std::string imagePath = tileJson["image"].get<std::string>();
+                
+                // Extract filename
+                size_t lastSlash = imagePath.find_last_of("/\\");
+                std::string filename = (lastSlash != std::string::npos) ? imagePath.substr(lastSlash + 1) : imagePath;
+                
+                // Find resource recursively
+                std::string fullPath = DataManager::Get().FindResourceRecursive(filename);
+                
+                if (!fullPath.empty())
+                {
+                    SDL_Texture* tex = IMG_LoadTexture(GameEngine::renderer, fullPath.c_str());
+                    if (tex)
+                    {
+                        info.individualTiles[tileId] = tex;
+                        
+                        SDL_Rect srcRect;
+                        srcRect.x = 0;
+                        srcRect.y = 0;
+                        srcRect.w = tileJson.value("width", info.tilewidth);
+                        srcRect.h = tileJson.value("height", info.tileheight);
+                        info.individualSrcRects[tileId] = srcRect;
+                    }
+                }
+            }
+            
+            std::cout << "  ✓ Loaded collection tileset: " << info.name 
+                      << " (" << info.individualTiles.size() << " tiles)\n";
+        }
+        
+        m_tilesets.push_back(info);
+    }
+}
+
+bool World::TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect)
+{
+    // Strip flip flags (top 3 bits)
+    uint32_t cleanGid = gid & 0x1FFFFFFF;
+    
+    if (cleanGid == 0) return false;  // Empty tile
+    
+    // Find the tileset containing this GID
+    for (const auto& tileset : m_tilesets)
+    {
+        if (cleanGid >= tileset.firstgid && cleanGid <= tileset.lastgid)
+        {
+            uint32_t localId = cleanGid - tileset.firstgid;
+            
+            if (tileset.isCollection)
+            {
+                // Collection tileset - lookup individual tile
+                auto it = tileset.individualTiles.find(localId);
+                if (it != tileset.individualTiles.end())
+                {
+                    outTexture = it->second;
+                    outSrcRect = tileset.individualSrcRects.at(localId);
+                    return true;
+                }
+            }
+            else
+            {
+                // Image-based tileset - calculate source rect
+                if (!tileset.texture) return false;
+                
+                outTexture = tileset.texture;
+                
+                // Calculate source rect with margin and spacing
+                int col = localId % tileset.columns;
+                int row = localId / tileset.columns;
+                
+                outSrcRect.x = tileset.margin + col * (tileset.tilewidth + tileset.spacing);
+                outSrcRect.y = tileset.margin + row * (tileset.tileheight + tileset.spacing);
+                outSrcRect.w = tileset.tilewidth;
+                outSrcRect.h = tileset.tileheight;
+                
+                return true;
+            }
+        }
+    }
+    
+    return false;  // GID not found in any tileset
 }
 
 bool World::InstantiatePass2_SpatialStructure(
