@@ -195,6 +195,8 @@ namespace Tiled {
         int columns;
         int spacing;
         int margin;
+        int tileoffsetX;
+        int tileoffsetY;
         std::string image;  // Single image file (for image-based tilesets)
         int imagewidth;
         int imageheight;
@@ -208,7 +210,8 @@ namespace Tiled {
 
         TiledTileset()
             : firstgid(0), tilewidth(0), tileheight(0), tilecount(0),
-              columns(0), spacing(0), margin(0), imagewidth(0), imageheight(0) {}
+              columns(0), spacing(0), margin(0), tileoffsetX(0), tileoffsetY(0),
+              imagewidth(0), imageheight(0) {}
     };
 
     // Map orientations
