@@ -572,7 +572,7 @@ void RenderChunkOrthogonal(const TileChunk& chunk, const CameraTransform& cam)
                 srcRect.w * cam.zoom,
                 srcRect.h * cam.zoom
             };
-			SDL_FRect srcFRect = { (float)srcRect.x, (float)srcRect.y, (float)srcRect.w, (float)srcRect.h };
+            SDL_FRect srcFRect = { (float)srcRect.x, (float)srcRect.y, (float)srcRect.w, (float)srcRect.h };
             SDL_RenderTexture(GameEngine::renderer, texture, &srcFRect, &destRect);
         }
     }
