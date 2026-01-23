@@ -63,12 +63,8 @@ namespace Rendering {
 
     void IsometricRenderer::EndFrame()
     {
-        // Debug logging before sorting and rendering
-        SYSTEM_LOG << "[ISO RENDERER] ======================================\n";
-        SYSTEM_LOG << "[ISO RENDERER] EndFrame() called\n";
-        SYSTEM_LOG << "[ISO RENDERER]   Batch size before culling: " << m_tileBatch.size() << " tiles\n";
-        SYSTEM_LOG << "[ISO RENDERER]   Camera: (" << m_cameraX << ", " << m_cameraY << ") zoom=" << m_zoom << "\n";
-        SYSTEM_LOG << "[ISO RENDERER]   Viewport: " << m_screenWidth << "x" << m_screenHeight << "\n";
+        // Minimal diagnostic logging
+        SYSTEM_LOG << "[ISO RENDERER] Batch size: " << m_tileBatch.size() << " tiles\n";
         
         // Sort tiles back-to-front (painter's algorithm)
         // In isometric view, tiles with lower (worldX + worldY) are rendered first
@@ -81,56 +77,18 @@ namespace Rendering {
                 return a.worldX < b.worldX;
             });
         
-        SYSTEM_LOG << "[ISO RENDERER]   Sorted batch size: " << m_tileBatch.size() << "\n";
-        
-        // Log first tile
-        if (!m_tileBatch.empty())
-        {
-            const auto& firstTile = m_tileBatch.front();
-            Vector screenPos = WorldToScreen((float)firstTile.worldX, (float)firstTile.worldY);
-            SYSTEM_LOG << "[ISO RENDERER]   First tile: world(" << firstTile.worldX << "," << firstTile.worldY 
-                       << ") -> screen(" << screenPos.x << "," << screenPos.y << ")\n";
-            SYSTEM_LOG << "[ISO RENDERER]      texture=" << (firstTile.texture ? "VALID" : "NULL") 
-                       << " srcRect=(" << firstTile.srcRect.x << "," << firstTile.srcRect.y 
-                       << " " << firstTile.srcRect.w << "x" << firstTile.srcRect.h << ")\n";
-        }
-        
-        // Render tiles with culling and track counts
+        // TEMPORARY: Disable culling for diagnostic - render ALL tiles
         int renderedCount = 0;
-        int culledCount = 0;
         
         for (const auto& tile : m_tileBatch)
         {
             if (!tile.texture) continue;
             
-            // Calculate screen position for culling check
-            Vector screenPos = WorldToScreen((float)tile.worldX, (float)tile.worldY);
-            
-            // Culling with margin (consistent with IsTileVisible)
-            float totalMargin = CalculateCullingMargin();
-            
-            if (screenPos.x < -totalMargin || screenPos.x > m_screenWidth + totalMargin ||
-                screenPos.y < -totalMargin || screenPos.y > m_screenHeight + totalMargin)
-            {
-                culledCount++;
-                continue;
-            }
-            
             renderedCount++;
-            // Only log first 3 rendered tiles
-            if (renderedCount <= 3)
-            {
-                SYSTEM_LOG << "[ISO RENDERER]   Rendering tile #" << renderedCount 
-                           << ": world(" << tile.worldX << "," << tile.worldY 
-                           << ") screen(" << screenPos.x << "," << screenPos.y << ")\n";
-            }
-            
             RenderTileImmediate(tile);
         }
         
-        SYSTEM_LOG << "[ISO RENDERER]   Tiles rendered: " << renderedCount << "\n";
-        SYSTEM_LOG << "[ISO RENDERER]   Tiles culled: " << culledCount << "\n";
-        SYSTEM_LOG << "[ISO RENDERER] ======================================\n";
+        SYSTEM_LOG << "[ISO RENDERER] Rendered: " << renderedCount << " tiles (culling DISABLED)\n";
         
         m_tileBatch.clear();
     }
