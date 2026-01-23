@@ -29,6 +29,9 @@ World purpose: Manage the overall game world, including object management, level
 #include "ECS_Register.h" // Include the implementation of ComponentPool
 #include "PrefabScanner.h"
 
+// JSON library for tile layer loading
+#include "third_party/nlohmann/json.hpp"
+
 // Forward declarations for 3-Phase Level Loading
 //struct PrefabRegistry;
 namespace Olympe { 
@@ -349,16 +352,16 @@ private:
         TileChunk() : x(0), y(0), width(0), height(0), zOrder(0) {}
     };
     
-    // Helper methods for tile layer loading
+    // Get tile chunks (for rendering system)
+    const std::vector<TileChunk>& GetTileChunks() const { return m_tileChunks; }
+
+private:
+    // Tile layer loading helper methods (internal use only)
     void LoadTileLayer(const nlohmann::json& layerJson, InstantiationResult& result);
     void LoadTileChunk(const nlohmann::json& chunkJson, const std::string& layerName, int zOrder);
     void LoadTileData(const nlohmann::json& dataJson, const std::string& layerName, 
                       int width, int height, int zOrder);
     
-    // Get tile chunks (for rendering system)
-    const std::vector<TileChunk>& GetTileChunks() const { return m_tileChunks; }
-
-private:
     std::vector<TileChunk> m_tileChunks;
     std::vector<std::unique_ptr<Level>> m_levels;
 };
