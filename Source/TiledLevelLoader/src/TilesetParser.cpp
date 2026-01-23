@@ -69,6 +69,13 @@ namespace Tiled {
         tileset.spacing = tsElement->IntAttribute("spacing", 0);
         tileset.margin = tsElement->IntAttribute("margin", 0);
 
+        // Parse tileoffset element
+        tinyxml2::XMLElement* offsetElement = tsElement->FirstChildElement("tileoffset");
+        if (offsetElement) {
+            tileset.tileoffsetX = offsetElement->IntAttribute("x", 0);
+            tileset.tileoffsetY = offsetElement->IntAttribute("y", 0);
+        }
+
         // Parse image element (for image-based tilesets)
         tinyxml2::XMLElement* imageElement = tsElement->FirstChildElement("image");
         if (imageElement) {
@@ -149,6 +156,15 @@ namespace Tiled {
         tileset.columns = GetInt(j, "columns");
         tileset.spacing = GetInt(j, "spacing");
         tileset.margin = GetInt(j, "margin");
+        
+        // Parse tileoffset
+        if (HasKey(j, "tileoffset"))
+        {
+            const auto& offset = j["tileoffset"];
+            tileset.tileoffsetX = GetInt(offset, "x");
+            tileset.tileoffsetY = GetInt(offset, "y");
+        }
+        
         tileset.image = GetString(j, "image");
         tileset.imagewidth = GetInt(j, "imagewidth");
         tileset.imageheight = GetInt(j, "imageheight");

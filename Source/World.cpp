@@ -905,11 +905,18 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
         info.margin = tilesetJson.value("margin", 0);
         info.spacing = tilesetJson.value("spacing", 0);
         
+        // Parse tileoffset
+        if (tilesetJson.contains("tileoffset"))
+        {
+            info.tileoffsetX = tilesetJson["tileoffset"].value("x", 0);
+            info.tileoffsetY = tilesetJson["tileoffset"].value("y", 0);
+        }
+        
         uint32_t tilecount = tilesetJson.value("tilecount", 0);
         info.lastgid = info.firstgid + tilecount - 1;
         
-        std::string type = tilesetJson.value("type", "image");
-        info.isCollection = (type == "collection");
+        // Detect collection tileset by columns == 0
+        info.isCollection = (info.columns == 0);
         
         if (!info.isCollection && tilesetJson.contains("image"))
         {
@@ -964,8 +971,8 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                         SDL_Rect srcRect;
                         srcRect.x = 0;
                         srcRect.y = 0;
-                        srcRect.w = tileJson.value("width", info.tilewidth);
-                        srcRect.h = tileJson.value("height", info.tileheight);
+                        srcRect.w = tileJson.value("imagewidth", info.tilewidth);
+                        srcRect.h = tileJson.value("imageheight", info.tileheight);
                         info.individualSrcRects[tileId] = srcRect;
                     }
                 }
