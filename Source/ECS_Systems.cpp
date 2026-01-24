@@ -566,7 +566,7 @@ void RenderChunkOrthogonal(const TileChunk& chunk, const CameraTransform& cam)
                 continue;
             }
             
-            // Simple orthogonal rendering
+            // World position
             int worldX = (chunk.x + x) * srcRect.w;
             int worldY = (chunk.y + y) * srcRect.h;
             
@@ -577,8 +577,14 @@ void RenderChunkOrthogonal(const TileChunk& chunk, const CameraTransform& cam)
             float screenX = worldX + tileoffsetX - cam.worldPosition.x + cam.viewport.w / 2.0f;
             float screenY = worldY + tileoffsetY - cam.worldPosition.y + cam.viewport.h / 2.0f;
             
-            SDL_FRect destRect = {screenX, screenY, (float)srcRect.w, (float)srcRect.h};
-			SDL_FRect srcFRect = { (float)srcRect.x, (float)srcRect.y, (float)srcRect.w, (float)srcRect.h };
+            // Apply zoom to dimensions
+            SDL_FRect destRect = {
+                screenX,
+                screenY,
+                srcRect.w * cam.zoom,
+                srcRect.h * cam.zoom
+            };
+            SDL_FRect srcFRect = { (float)srcRect.x, (float)srcRect.y, (float)srcRect.w, (float)srcRect.h };
             SDL_RenderTexture(GameEngine::renderer, texture, &srcFRect, &destRect);
         }
     }
@@ -731,7 +737,7 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
                     g_isoRenderer->Initialize(GameEngine::renderer, tileWidth, tileHeight);
                 }
                 
-                g_isoRenderer->SetCamera(cam.worldPosition.x, cam.worldPosition.y, 1.0f);
+                g_isoRenderer->SetCamera(cam.worldPosition.x, cam.worldPosition.y, cam.zoom);
                 g_isoRenderer->SetViewport(static_cast<int>(cam.viewport.w), 
                                            static_cast<int>(cam.viewport.h));
                 g_isoRenderer->BeginFrame();

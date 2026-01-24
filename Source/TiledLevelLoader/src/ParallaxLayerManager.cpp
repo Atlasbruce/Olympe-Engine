@@ -58,6 +58,7 @@ namespace Tiled {
     void ParallaxLayerManager::CalculateRenderPosition(
         const ParallaxLayer& layer,
         float cameraX, float cameraY,
+        float zoom,
         float& outX, float& outY) const
     {
         // Calculate position based on parallax scroll factors
@@ -65,8 +66,9 @@ namespace Tiled {
         // A scroll factor of 1.0 means the layer moves with the camera (normal)
         // A scroll factor > 1.0 means the layer moves faster (foreground)
         
-        outX = layer.offsetX - (cameraX * layer.scrollFactorX);
-        outY = layer.offsetY - (cameraY * layer.scrollFactorY);
+        // Apply parallax factor AND zoom
+        outX = (layer.offsetX - (cameraX * layer.scrollFactorX)) * zoom;
+        outY = (layer.offsetY - (cameraY * layer.scrollFactorY)) * zoom;
     }
 
     const ParallaxLayer* ParallaxLayerManager::GetLayer(size_t index) const
@@ -84,12 +86,17 @@ namespace Tiled {
         SDL_Renderer* renderer = GameEngine::renderer;
         if (!renderer) return;
 
-        // Calculate parallax offset
+        // Apply zoom to position calculation
         float scrollX, scrollY;
-        CalculateRenderPosition(layer, cam.worldPosition.x, cam.worldPosition.y, scrollX, scrollY);
+        CalculateRenderPosition(layer, cam.worldPosition.x, cam.worldPosition.y, 
+                               cam.zoom, scrollX, scrollY);
 
         float texW, texH;
         SDL_GetTextureSize(layer.texture, &texW, &texH);
+        
+        // Apply zoom to dimensions
+        texW *= cam.zoom;
+        texH *= cam.zoom;
 
         SDL_SetTextureAlphaMod(layer.texture, static_cast<Uint8>(layer.opacity * 255));
 
@@ -98,16 +105,15 @@ namespace Tiled {
 
         if (layer.repeatX || layer.repeatY)
         {
-            // Tiled rendering with proper wrapping
-            // Calculate wrapped offset for seamless tiling
+            // Tiled rendering with zoom-aware calculations
             float tileOffsetX = layer.repeatX ? fmod(scrollX, texW) : scrollX;
             float tileOffsetY = layer.repeatY ? fmod(scrollY, texH) : scrollY;
             
-            // Adjust for negative values (ensure offset is always negative or zero)
+            // Adjust for negative values
             if (tileOffsetX > 0) tileOffsetX -= texW;
             if (tileOffsetY > 0) tileOffsetY -= texH;
             
-            // Calculate number of tiles needed to cover viewport
+            // Calculate number of tiles needed (using zoomed dimensions)
             int tilesX = layer.repeatX ? (int)ceil(screenW / texW) + 2 : 1;
             int tilesY = layer.repeatY ? (int)ceil(screenH / texH) + 2 : 1;
             
@@ -128,8 +134,8 @@ namespace Tiled {
         }
         else
         {
-            // Single image
-            SDL_FRect destRect = {scrollX, scrollY, (float)texW, (float)texH};
+            // Single image with zoom
+            SDL_FRect destRect = {scrollX, scrollY, texW, texH};
             SDL_RenderTexture(renderer, layer.texture, nullptr, &destRect);
         }
     }

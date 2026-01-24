@@ -189,16 +189,17 @@ int main()
             }
         }
         
-        // Example: Calculate render position for camera at (100, 50)
+        // Example: Calculate render position for camera at (100, 50) with zoom 1.0
         float cameraX = 100.0f;
         float cameraY = 50.0f;
+        float zoom = 1.0f;
         
-        SYSTEM_LOG << "\n  Render positions for camera at (" << cameraX << ", " << cameraY << "):" << std::endl;
+        SYSTEM_LOG << "\n  Render positions for camera at (" << cameraX << ", " << cameraY << ") zoom=" << zoom << ":" << std::endl;
         for (size_t i = 0; i < parallaxManager.GetLayerCount(); ++i) {
             const auto* layer = parallaxManager.GetLayer(i);
             if (layer) {
                 float renderX, renderY;
-                parallaxManager.CalculateRenderPosition(*layer, cameraX, cameraY, renderX, renderY);
+                parallaxManager.CalculateRenderPosition(*layer, cameraX, cameraY, zoom, renderX, renderY);
                 SYSTEM_LOG << "    " << layer->name << ": (" << renderX << ", " << renderY << ")" << std::endl;
             }
         }
