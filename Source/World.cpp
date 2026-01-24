@@ -986,7 +986,7 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
     }
 }
 
-bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect)
+bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect, const TilesetInfo*& outTileset)
 {
     // Strip flip flags (top 3 bits)
     uint32_t cleanGid = gid & 0x1FFFFFFF;
@@ -1019,8 +1019,11 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                         {
                             SDL_LogError(SDL_LOG_CATEGORY_RENDER, 
                                 "[TILESET] NULL texture for collection tile GID=%u, localId=%u", gid, localId);
+                            return false;
                         }
                         
+                        // Return pointer to tileset for tileoffset access
+                        outTileset = &tileset;
                         return true;
                     }
                 }
@@ -1046,6 +1049,8 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                 outSrcRect.w = tileset.tilewidth;
                 outSrcRect.h = tileset.tileheight;
                 
+                // Return pointer to tileset for tileoffset access
+                outTileset = &tileset;
                 return true;
             }
         }

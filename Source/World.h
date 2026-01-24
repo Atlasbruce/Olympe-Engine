@@ -92,7 +92,7 @@ public:
 
     void Clear();
     void LoadTilesets(const nlohmann::json& tilesetsJson);
-    bool GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect);
+    bool GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect, const TilesetInfo*& outTileset);
     const std::vector<TilesetInfo>& GetTilesets() const { return m_tilesets; }
 
 private:
