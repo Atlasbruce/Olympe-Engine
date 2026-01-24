@@ -993,6 +993,7 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
     
     if (cleanGid == 0)
     {
+        outTileset = nullptr;
         return false;  // Empty tile
     }
     
@@ -1002,6 +1003,9 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
         if (cleanGid >= tileset.firstgid && cleanGid <= tileset.lastgid)
         {
             uint32_t localId = cleanGid - tileset.firstgid;
+            
+            // ✅ CRITICAL: Set the tileset pointer BEFORE any return
+            outTileset = &tileset;
             
             if (tileset.isCollection)
             {
@@ -1022,11 +1026,14 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                             return false;
                         }
                         
-                        // Return pointer to tileset for tileoffset access
-                        outTileset = &tileset;
                         return true;
                     }
                 }
+                
+                // Collection tile not found
+                SDL_LogError(SDL_LOG_CATEGORY_RENDER, 
+                    "[TILESET] Collection tile not found: GID=%u, localId=%u", gid, localId);
+                return false;
             }
             else
             {
@@ -1049,14 +1056,14 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                 outSrcRect.w = tileset.tilewidth;
                 outSrcRect.h = tileset.tileheight;
                 
-                // Return pointer to tileset for tileoffset access
-                outTileset = &tileset;
                 return true;
             }
         }
     }
     
-    return false;  // GID not found in any tileset
+    // GID not found in any tileset
+    outTileset = nullptr;
+    return false;
 }
 
 bool World::InstantiatePass2_SpatialStructure(
