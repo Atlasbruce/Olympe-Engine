@@ -87,8 +87,10 @@ namespace Rendering {
         std::vector<IsometricTile> m_tileBatch;
         
         // Rendering constants
-        static constexpr float ISOMETRIC_OFFSET_Y = 200.0f; // Y offset for negative world coords
-        static constexpr float CULL_MARGIN = 100.0f;        // Safety margin for tall tiles
+        static constexpr float ISOMETRIC_OFFSET_Y = 200.0f;     // Y offset for negative world coords
+        static constexpr float CULL_MARGIN = 100.0f;            // Safety margin for tall tiles
+        static constexpr float TALL_TILE_MULTIPLIER = 5.0f;     // Multiplier for culling margin to handle tall tiles (256px)
+        static constexpr int VISIBLE_TILE_PADDING = 5;          // Padding in tiles for visible range calculation
         
         // Helper functions
         void RenderTileImmediate(const IsometricTile& tile);

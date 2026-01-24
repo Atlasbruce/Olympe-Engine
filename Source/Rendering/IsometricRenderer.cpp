@@ -218,13 +218,11 @@ namespace Rendering {
         float worldMinY = std::min({topLeft.y, topRight.y, bottomLeft.y, bottomRight.y});
         float worldMaxY = std::max({topLeft.y, topRight.y, bottomLeft.y, bottomRight.y});
         
-        // Add padding for tile size - increased for large tiles like 256x256 trees
-        int padding = 5;  // Increased from 2 to 5 for better coverage
-        
-        minX = static_cast<int>(std::floor(worldMinX)) - padding;
-        minY = static_cast<int>(std::floor(worldMinY)) - padding;
-        maxX = static_cast<int>(std::ceil(worldMaxX)) + padding;
-        maxY = static_cast<int>(std::ceil(worldMaxY)) + padding;
+        // Add padding for tile size - VISIBLE_TILE_PADDING provides coverage for large tiles
+        minX = static_cast<int>(std::floor(worldMinX)) - VISIBLE_TILE_PADDING;
+        minY = static_cast<int>(std::floor(worldMinY)) - VISIBLE_TILE_PADDING;
+        maxX = static_cast<int>(std::ceil(worldMaxX)) + VISIBLE_TILE_PADDING;
+        maxY = static_cast<int>(std::ceil(worldMaxY)) + VISIBLE_TILE_PADDING;
     }
 
     void IsometricRenderer::ExtractFlipFlags(uint32_t gid, bool& flipH, bool& flipV, bool& flipD) const
@@ -250,8 +248,8 @@ namespace Rendering {
     float IsometricRenderer::CalculateCullingMargin() const
     {
         // Calculate total culling margin: tile size (with zoom) + safety margin
-        // Use a larger multiplier to account for tall tiles (like 256x256 trees on 58x27 base tiles)
-        float padding = std::max(m_tileWidth, m_tileHeight) * m_zoom * 5.0f;  // 5x multiplier for tall tiles
+        // Use TALL_TILE_MULTIPLIER to account for tall tiles (like 256x256 trees on 58x27 base tiles)
+        float padding = std::max(m_tileWidth, m_tileHeight) * m_zoom * TALL_TILE_MULTIPLIER;
         return padding + CULL_MARGIN;
     }
 
