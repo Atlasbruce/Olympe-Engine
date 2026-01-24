@@ -30,8 +30,13 @@ namespace Rendering {
         SDL_Texture* texture; // Texture to render
         SDL_Rect srcRect;     // Source rectangle in texture
         
+        // Tile offset from tileset (for proper alignment)
+        int tileoffsetX;
+        int tileoffsetY;
+        
         IsometricTile()
-            : worldX(0), worldY(0), tileGID(0), texture(nullptr), srcRect{0, 0, 0, 0} {}
+            : worldX(0), worldY(0), tileGID(0), texture(nullptr), 
+              srcRect{0, 0, 0, 0}, tileoffsetX(0), tileoffsetY(0) {}
     };
 
     // Isometric Renderer class

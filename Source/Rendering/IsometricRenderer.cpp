@@ -104,9 +104,9 @@ namespace Rendering {
         destRect.w = static_cast<float>(tile.srcRect.w) * m_zoom;
         destRect.h = static_cast<float>(tile.srcRect.h) * m_zoom;
         
-        // Adjust for tile anchor point (typically bottom-center for isometric tiles)
-        destRect.x = screenPos.x - destRect.w / 2.0f;
-        destRect.y = screenPos.y - destRect.h;
+        // Apply tileoffset for proper alignment
+        destRect.x = screenPos.x + (tile.tileoffsetX * m_zoom) - destRect.w / 2.0f;
+        destRect.y = screenPos.y + (tile.tileoffsetY * m_zoom) - destRect.h;
         
         // Get SDL flip flags
         SDL_FlipMode flip = GetSDLFlip(flipH, flipV, flipD);

@@ -986,7 +986,7 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
     }
 }
 
-bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect)
+bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect, const TilesetInfo*& outTileset)
 {
     // Strip flip flags (top 3 bits)
     uint32_t cleanGid = gid & 0x1FFFFFFF;
@@ -1002,6 +1002,9 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
         if (cleanGid >= tileset.firstgid && cleanGid <= tileset.lastgid)
         {
             uint32_t localId = cleanGid - tileset.firstgid;
+            
+            // Return pointer to tileset for tileoffset access
+            outTileset = &tileset;
             
             if (tileset.isCollection)
             {

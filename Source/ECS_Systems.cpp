@@ -509,16 +509,17 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             uint32_t gid = chunk.tileGIDs[tileIndex];
             if (gid == 0) continue;  // Empty tile
             
-            // Get tile texture and source rect
+            // Get tile texture, source rect, and tileset info
             SDL_Texture* texture = nullptr;
             SDL_Rect srcRect;
+            const TilesetManager::TilesetInfo* tileset = nullptr;
             
-            if (!tilesetMgr.GetTileTexture(gid, texture, srcRect))
+            if (!tilesetMgr.GetTileTexture(gid, texture, srcRect, tileset))
             {
                 continue;  // Tile not found in tilesets
             }
             
-            // Calculate world coordinates once
+            // Calculate world coordinates
             int worldX = chunk.x + x;
             int worldY = chunk.y + y;
             
@@ -529,6 +530,13 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             tile.tileGID = gid;
             tile.texture = texture;
             tile.srcRect = srcRect;
+            
+            // Apply tileoffset from tileset
+            if (tileset)
+            {
+                tile.tileoffsetX = tileset->tileoffsetX;
+                tile.tileoffsetY = tileset->tileoffsetY;
+            }
             
             isoRenderer->RenderTile(tile);  // Batched for depth sorting
         }
@@ -551,8 +559,9 @@ void RenderChunkOrthogonal(const TileChunk& chunk, const CameraTransform& cam)
             
             SDL_Texture* texture = nullptr;
             SDL_Rect srcRect;
+            const TilesetManager::TilesetInfo* tileset = nullptr;
             
-            if (!tilesetMgr.GetTileTexture(gid, texture, srcRect))
+            if (!tilesetMgr.GetTileTexture(gid, texture, srcRect, tileset))
             {
                 continue;
             }
@@ -561,8 +570,12 @@ void RenderChunkOrthogonal(const TileChunk& chunk, const CameraTransform& cam)
             int worldX = (chunk.x + x) * srcRect.w;
             int worldY = (chunk.y + y) * srcRect.h;
             
-            float screenX = worldX - cam.worldPosition.x + cam.viewport.w / 2.0f;
-            float screenY = worldY - cam.worldPosition.y + cam.viewport.h / 2.0f;
+            // Apply tileoffset
+            int tileoffsetX = tileset ? tileset->tileoffsetX : 0;
+            int tileoffsetY = tileset ? tileset->tileoffsetY : 0;
+            
+            float screenX = worldX + tileoffsetX - cam.worldPosition.x + cam.viewport.w / 2.0f;
+            float screenY = worldY + tileoffsetY - cam.worldPosition.y + cam.viewport.h / 2.0f;
             
             SDL_FRect destRect = {screenX, screenY, (float)srcRect.w, (float)srcRect.h};
 			SDL_FRect srcFRect = { (float)srcRect.x, (float)srcRect.y, (float)srcRect.w, (float)srcRect.h };
