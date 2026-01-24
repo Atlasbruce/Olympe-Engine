@@ -64,12 +64,17 @@ namespace Rendering {
     void IsometricRenderer::EndFrame()
     {
         // Sort tiles back-to-front (painter's algorithm)
-        // In isometric view, tiles with lower (worldX + worldY) are rendered first
+        // First by layer z-order, then by isometric depth
         std::sort(m_tileBatch.begin(), m_tileBatch.end(),
             [](const IsometricTile& a, const IsometricTile& b) {
+                // Sort by layer z-order first
+                if (a.zOrder != b.zOrder) return a.zOrder < b.zOrder;
+                
+                // Then by isometric depth (worldX + worldY)
                 int sumA = a.worldX + a.worldY;
                 int sumB = b.worldX + b.worldY;
                 if (sumA != sumB) return sumA < sumB;
+                
                 // If on same diagonal, sort by X coordinate
                 return a.worldX < b.worldX;
             });
@@ -104,9 +109,11 @@ namespace Rendering {
         destRect.w = static_cast<float>(tile.srcRect.w) * m_zoom;
         destRect.h = static_cast<float>(tile.srcRect.h) * m_zoom;
         
-        // Apply tileoffset for proper alignment
+        // Apply tileoffset and anchor at bottom for isometric tiles
+        // The screenPos represents the base tile position, so we anchor the image at the bottom
+        // and add back the base tile height to properly position tall tiles (like trees)
         destRect.x = screenPos.x + (tile.tileoffsetX * m_zoom) - destRect.w / 2.0f;
-        destRect.y = screenPos.y + (tile.tileoffsetY * m_zoom) - destRect.h;
+        destRect.y = screenPos.y + (tile.tileoffsetY * m_zoom) - destRect.h + (m_tileHeight * m_zoom);
         
         // Get SDL flip flags
         SDL_FlipMode flip = GetSDLFlip(flipH, flipV, flipD);
@@ -211,13 +218,11 @@ namespace Rendering {
         float worldMinY = std::min({topLeft.y, topRight.y, bottomLeft.y, bottomRight.y});
         float worldMaxY = std::max({topLeft.y, topRight.y, bottomLeft.y, bottomRight.y});
         
-        // Add padding for tile size
-        int padding = 2;
-        
-        minX = static_cast<int>(std::floor(worldMinX)) - padding;
-        minY = static_cast<int>(std::floor(worldMinY)) - padding;
-        maxX = static_cast<int>(std::ceil(worldMaxX)) + padding;
-        maxY = static_cast<int>(std::ceil(worldMaxY)) + padding;
+        // Add padding for tile size - VISIBLE_TILE_PADDING provides coverage for large tiles
+        minX = static_cast<int>(std::floor(worldMinX)) - VISIBLE_TILE_PADDING;
+        minY = static_cast<int>(std::floor(worldMinY)) - VISIBLE_TILE_PADDING;
+        maxX = static_cast<int>(std::ceil(worldMaxX)) + VISIBLE_TILE_PADDING;
+        maxY = static_cast<int>(std::ceil(worldMaxY)) + VISIBLE_TILE_PADDING;
     }
 
     void IsometricRenderer::ExtractFlipFlags(uint32_t gid, bool& flipH, bool& flipV, bool& flipD) const
@@ -243,7 +248,8 @@ namespace Rendering {
     float IsometricRenderer::CalculateCullingMargin() const
     {
         // Calculate total culling margin: tile size (with zoom) + safety margin
-        float padding = std::max(m_tileWidth, m_tileHeight) * m_zoom;
+        // Use TALL_TILE_MULTIPLIER to account for tall tiles (like 256x256 trees on 58x27 base tiles)
+        float padding = std::max(m_tileWidth, m_tileHeight) * m_zoom * TALL_TILE_MULTIPLIER;
         return padding + CULL_MARGIN;
     }
 

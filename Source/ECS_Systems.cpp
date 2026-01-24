@@ -530,6 +530,7 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             tile.tileGID = gid;
             tile.texture = texture;
             tile.srcRect = srcRect;
+            tile.zOrder = chunk.zOrder;  // Pass layer z-order for proper sorting
             
             // Apply tileoffset from tileset
             if (tileset)
