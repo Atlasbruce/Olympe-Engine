@@ -1003,9 +1003,6 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
         {
             uint32_t localId = cleanGid - tileset.firstgid;
             
-            // Return pointer to tileset for tileoffset access
-            outTileset = &tileset;
-            
             if (tileset.isCollection)
             {
                 // Collection tileset - lookup individual tile
@@ -1022,8 +1019,11 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                         {
                             SDL_LogError(SDL_LOG_CATEGORY_RENDER, 
                                 "[TILESET] NULL texture for collection tile GID=%u, localId=%u", gid, localId);
+                            return false;
                         }
                         
+                        // Return pointer to tileset for tileoffset access
+                        outTileset = &tileset;
                         return true;
                     }
                 }
@@ -1049,6 +1049,8 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                 outSrcRect.w = tileset.tilewidth;
                 outSrcRect.h = tileset.tileheight;
                 
+                // Return pointer to tileset for tileoffset access
+                outTileset = &tileset;
                 return true;
             }
         }
