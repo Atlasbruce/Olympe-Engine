@@ -18,6 +18,9 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "TiledLevelLoader/include/LevelParser.h"
 #include "TiledLevelLoader/include/TiledToOlympe.h"
 #include "TiledLevelLoader/include/TiledDecoder.h"
+#include "TiledLevelLoader/include/TilesetCache.h"
+#include "TiledLevelLoader/include/TilesetParser.h"
+#include "TiledLevelLoader/include/TiledStructures.h"
 #include "PrefabScanner.h"
 #include "prefabfactory.h"
 #include "ParameterResolver.h"
@@ -896,90 +899,216 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
     {
         TilesetInfo info;
         info.firstgid = tilesetJson.value("firstgid", 0);
-        info.name = tilesetJson.value("name", "");
-        info.tilewidth = tilesetJson.value("tilewidth", 32);
-        info.tileheight = tilesetJson.value("tileheight", 32);
-        info.columns = tilesetJson.value("columns", 0);
-        info.imagewidth = tilesetJson.value("imagewidth", 0);
-        info.imageheight = tilesetJson.value("imageheight", 0);
-        info.margin = tilesetJson.value("margin", 0);
-        info.spacing = tilesetJson.value("spacing", 0);
         
-        // Parse tileoffset
-        if (tilesetJson.contains("tileoffset"))
+        // ========================================================================
+        // CRITICAL: Check if tileset is external (has "source" property)
+        // ========================================================================
+        if (tilesetJson.contains("source") && !tilesetJson["source"].get<std::string>().empty())
         {
-            info.tileoffsetX = tilesetJson["tileoffset"].value("x", 0);
-            info.tileoffsetY = tilesetJson["tileoffset"].value("y", 0);
-        }
-        
-        uint32_t tilecount = tilesetJson.value("tilecount", 0);
-        info.lastgid = info.firstgid + tilecount - 1;
-        
-        // Detect collection tileset by columns == 0
-        info.isCollection = (info.columns == 0);
-        
-        if (!info.isCollection && tilesetJson.contains("image"))
-        {
-            // Image-based tileset
-            std::string imagePath = tilesetJson["image"].get<std::string>();
+            std::string sourceFile = tilesetJson["source"].get<std::string>();
             
-            // Extract filename
-            size_t lastSlash = imagePath.find_last_of("/\\");
-            std::string filename = (lastSlash != std::string::npos) ? imagePath.substr(lastSlash + 1) : imagePath;
+            SYSTEM_LOG << "  -> Loading external tileset: " << sourceFile << "\n";
             
-            // Find resource recursively
-            std::string fullPath = DataManager::Get().FindResourceRecursive(filename);
+            // Build full path relative to Levels directory
+            std::string baseDir = "Gamedata/Levels/";
+            std::string fullPath = baseDir + sourceFile;
             
-            if (!fullPath.empty())
+            // ========================================================================
+            // CRITICAL: Use TilesetCache to load and parse external tileset file
+            // ========================================================================
+            auto cachedTileset = Olympe::Tiled::TilesetCache::GetInstance().GetTileset(fullPath);
+            
+            if (cachedTileset)
             {
-                info.texture = IMG_LoadTexture(GameEngine::renderer, fullPath.c_str());
-                if (info.texture)
+                // Copy properties from TiledTileset to TilesetInfo
+                info.name = cachedTileset->name;
+                info.tilewidth = cachedTileset->tilewidth;
+                info.tileheight = cachedTileset->tileheight;
+                info.columns = cachedTileset->columns;
+                info.imagewidth = cachedTileset->imagewidth;
+                info.imageheight = cachedTileset->imageheight;
+                info.margin = cachedTileset->margin;
+                info.spacing = cachedTileset->spacing;
+                
+                // ========================================================================
+                // CRITICAL: Extract tileoffset from external tileset file
+                // ========================================================================
+                info.tileoffsetX = cachedTileset->tileoffsetX;
+                info.tileoffsetY = cachedTileset->tileoffsetY;
+                
+                SYSTEM_LOG << "  -> Extracted tileoffset: (" << info.tileoffsetX 
+                          << ", " << info.tileoffsetY << ")\n";
+                
+                // Determine if collection tileset
+                info.isCollection = !cachedTileset->tiles.empty() && cachedTileset->image.empty();
+                
+                // Calculate lastgid
+                uint32_t tilecount = cachedTileset->tilecount;
+                info.lastgid = info.firstgid + tilecount - 1;
+                
+                // ========================================================================
+                // Load textures based on tileset type
+                // ========================================================================
+                if (!info.isCollection && !cachedTileset->image.empty())
                 {
-                    SYSTEM_LOG << "  ✓ Loaded tileset texture: " << filename << " (gid: " 
-                              << info.firstgid << "-" << info.lastgid << ")\n";
+                    // Image-based tileset
+                    std::string imagePath = cachedTileset->image;
+                    
+                    // Extract filename
+                    size_t lastSlash = imagePath.find_last_of("/\\");
+                    std::string filename = (lastSlash != std::string::npos) ? 
+                        imagePath.substr(lastSlash + 1) : imagePath;
+                    
+                    // Find resource recursively
+                    std::string fullImagePath = DataManager::Get().FindResourceRecursive(filename);
+                    
+                    if (!fullImagePath.empty())
+                    {
+                        info.texture = IMG_LoadTexture(GameEngine::renderer, fullImagePath.c_str());
+                        if (info.texture)
+                        {
+                            SYSTEM_LOG << "  ✓ Loaded tileset texture: " << filename 
+                                      << " (gid: " << info.firstgid << "-" << info.lastgid 
+                                      << ", offset: " << info.tileoffsetX << "," << info.tileoffsetY << ")\n";
+                        }
+                        else
+                        {
+                            SYSTEM_LOG << "  x Failed to load tileset texture: " << fullImagePath << "\n";
+                        }
+                    }
                 }
-                else
+                else if (info.isCollection)
                 {
-                    SYSTEM_LOG << "  x Failed to load tileset texture: " << fullPath << "\n";
+                    // Collection tileset (individual tile images)
+                    for (const auto& tile : cachedTileset->tiles)
+                    {
+                        if (tile.image.empty()) continue;
+                        
+                        uint32_t tileId = tile.id;
+                        std::string imagePath = tile.image;
+                        
+                        // Extract filename
+                        size_t lastSlash = imagePath.find_last_of("/\\");
+                        std::string filename = (lastSlash != std::string::npos) ? 
+                            imagePath.substr(lastSlash + 1) : imagePath;
+                        
+                        // Find resource recursively
+                        std::string fullImagePath = DataManager::Get().FindResourceRecursive(filename);
+                        
+                        if (!fullImagePath.empty())
+                        {
+                            SDL_Texture* tex = IMG_LoadTexture(GameEngine::renderer, fullImagePath.c_str());
+                            if (tex)
+                            {
+                                info.individualTiles[tileId] = tex;
+                                
+                                SDL_Rect srcRect;
+                                srcRect.x = 0;
+                                srcRect.y = 0;
+                                srcRect.w = tile.imagewidth > 0 ? tile.imagewidth : info.tilewidth;
+                                srcRect.h = tile.imageheight > 0 ? tile.imageheight : info.tileheight;
+                                info.individualSrcRects[tileId] = srcRect;
+                            }
+                        }
+                    }
+                    
+                    SYSTEM_LOG << "  ✓ Loaded collection tileset: " << info.name 
+                              << " (" << info.individualTiles.size() << " tiles"
+                              << ", offset: " << info.tileoffsetX << "," << info.tileoffsetY << ")\n";
                 }
             }
-        }
-        else if (info.isCollection && tilesetJson.contains("tiles"))
-        {
-            // Collection tileset (individual tile images)
-            const auto& tilesArray = tilesetJson["tiles"];
-            
-            for (const auto& tileJson : tilesArray)
+            else
             {
-                uint32_t tileId = tileJson["id"].get<uint32_t>();
-                std::string imagePath = tileJson["image"].get<std::string>();
+                SYSTEM_LOG << "  x Failed to load external tileset: " << sourceFile << "\n";
+                continue;
+            }
+        }
+        else
+        {
+            // ========================================================================
+            // Embedded tileset (inline in TMJ) - LEGACY CODE PATH
+            // ========================================================================
+            info.name = tilesetJson.value("name", "");
+            info.tilewidth = tilesetJson.value("tilewidth", 32);
+            info.tileheight = tilesetJson.value("tileheight", 32);
+            info.columns = tilesetJson.value("columns", 0);
+            info.imagewidth = tilesetJson.value("imagewidth", 0);
+            info.imageheight = tilesetJson.value("imageheight", 0);
+            info.margin = tilesetJson.value("margin", 0);
+            info.spacing = tilesetJson.value("spacing", 0);
+            
+            // Parse tileoffset (if embedded)
+            if (tilesetJson.contains("tileoffset"))
+            {
+                info.tileoffsetX = tilesetJson["tileoffset"].value("x", 0);
+                info.tileoffsetY = tilesetJson["tileoffset"].value("y", 0);
+            }
+            
+            uint32_t tilecount = tilesetJson.value("tilecount", 0);
+            info.lastgid = info.firstgid + tilecount - 1;
+            
+            info.isCollection = (info.columns == 0);
+            
+            // Load embedded tileset textures (existing code)
+            if (!info.isCollection && tilesetJson.contains("image"))
+            {
+                std::string imagePath = tilesetJson["image"].get<std::string>();
                 
-                // Extract filename
                 size_t lastSlash = imagePath.find_last_of("/\\");
-                std::string filename = (lastSlash != std::string::npos) ? imagePath.substr(lastSlash + 1) : imagePath;
+                std::string filename = (lastSlash != std::string::npos) ? 
+                    imagePath.substr(lastSlash + 1) : imagePath;
                 
-                // Find resource recursively
                 std::string fullPath = DataManager::Get().FindResourceRecursive(filename);
                 
                 if (!fullPath.empty())
                 {
-                    SDL_Texture* tex = IMG_LoadTexture(GameEngine::renderer, fullPath.c_str());
-                    if (tex)
+                    info.texture = IMG_LoadTexture(GameEngine::renderer, fullPath.c_str());
+                    if (info.texture)
                     {
-                        info.individualTiles[tileId] = tex;
-                        
-                        SDL_Rect srcRect;
-                        srcRect.x = 0;
-                        srcRect.y = 0;
-                        srcRect.w = tileJson.value("imagewidth", info.tilewidth);
-                        srcRect.h = tileJson.value("imageheight", info.tileheight);
-                        info.individualSrcRects[tileId] = srcRect;
+                        SYSTEM_LOG << "  ✓ Loaded embedded tileset texture: " << filename 
+                                  << " (gid: " << info.firstgid << "-" << info.lastgid << ")\n";
+                    }
+                    else
+                    {
+                        SYSTEM_LOG << "  x Failed to load embedded tileset texture: " << fullPath << "\n";
                     }
                 }
             }
-            
-            SYSTEM_LOG << "  ✓ Loaded collection tileset: " << info.name 
-                      << " (" << info.individualTiles.size() << " tiles)\n";
+            else if (info.isCollection && tilesetJson.contains("tiles"))
+            {
+                const auto& tilesArray = tilesetJson["tiles"];
+                
+                for (const auto& tileJson : tilesArray)
+                {
+                    uint32_t tileId = tileJson["id"].get<uint32_t>();
+                    std::string imagePath = tileJson["image"].get<std::string>();
+                    
+                    size_t lastSlash = imagePath.find_last_of("/\\");
+                    std::string filename = (lastSlash != std::string::npos) ? 
+                        imagePath.substr(lastSlash + 1) : imagePath;
+                    
+                    std::string fullPath = DataManager::Get().FindResourceRecursive(filename);
+                    
+                    if (!fullPath.empty())
+                    {
+                        SDL_Texture* tex = IMG_LoadTexture(GameEngine::renderer, fullPath.c_str());
+                        if (tex)
+                        {
+                            info.individualTiles[tileId] = tex;
+                            
+                            SDL_Rect srcRect;
+                            srcRect.x = 0;
+                            srcRect.y = 0;
+                            srcRect.w = tileJson.value("width", info.tilewidth);
+                            srcRect.h = tileJson.value("height", info.tileheight);
+                            info.individualSrcRects[tileId] = srcRect;
+                        }
+                    }
+                }
+                
+                SYSTEM_LOG << "  ✓ Loaded embedded collection tileset: " << info.name 
+                          << " (" << info.individualTiles.size() << " tiles)\n";
+            }
         }
         
         m_tilesets.push_back(info);
