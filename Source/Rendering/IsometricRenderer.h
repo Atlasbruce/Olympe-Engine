@@ -29,6 +29,7 @@ namespace Rendering {
         uint32_t tileGID;     // Tile Global ID (with flip flags)
         SDL_Texture* texture; // Texture to render
         SDL_Rect srcRect;     // Source rectangle in texture
+        int zOrder;           // Layer z-order for sorting
         
         // Tile offset from tileset (for proper alignment)
         int tileoffsetX;
@@ -36,7 +37,7 @@ namespace Rendering {
         
         IsometricTile()
             : worldX(0), worldY(0), tileGID(0), texture(nullptr), 
-              srcRect{0, 0, 0, 0}, tileoffsetX(0), tileoffsetY(0) {}
+              srcRect{0, 0, 0, 0}, zOrder(0), tileoffsetX(0), tileoffsetY(0) {}
     };
 
     // Isometric Renderer class
