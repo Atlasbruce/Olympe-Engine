@@ -1023,6 +1023,7 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                         {
                             SDL_LogError(SDL_LOG_CATEGORY_RENDER, 
                                 "[TILESET] NULL texture for collection tile GID=%u, localId=%u", gid, localId);
+                            return false;
                         }
                         
                         return true;
