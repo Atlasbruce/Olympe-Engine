@@ -1254,17 +1254,6 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
             // ✅ CRITICAL: Set the tileset pointer BEFORE any return
             outTileset = &tileset;
             
-            // ✅ LOG RETRIEVAL (limit spam with static counter)
-            static int logCounter = 0;
-            bool shouldLog = (logCounter < 20) || (cleanGid >= 127 && cleanGid <= 135);
-            
-            if (shouldLog) {
-                SYSTEM_LOG << "[TilesetManager::GetTileTexture] GID " << cleanGid 
-                          << " FOUND in tileset '" << tileset.name << "'\n";
-                SYSTEM_LOG << "  Tileset offset: (" << tileset.tileoffsetX << ", " << tileset.tileoffsetY << ")\n";
-                logCounter++;
-            }
-            
             if (tileset.isCollection)
             {
                 // Collection tileset - lookup individual tile
@@ -1276,10 +1265,6 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                     {
                         outTexture = it->second;
                         outSrcRect = srcIt->second;
-                        
-                        if (shouldLog) {
-                            SYSTEM_LOG << "  Collection tile - size: (" << outSrcRect.w << "x" << outSrcRect.h << ")\n";
-                        }
                         
                         if (outTexture == nullptr)
                         {
@@ -1317,10 +1302,6 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                 outSrcRect.y = tileset.margin + row * (tileset.tileheight + tileset.spacing);
                 outSrcRect.w = tileset.tilewidth;
                 outSrcRect.h = tileset.tileheight;
-                
-                if (shouldLog) {
-                    SYSTEM_LOG << "  Atlas tile - size: (" << outSrcRect.w << "x" << outSrcRect.h << ")\n";
-                }
                 
                 return true;
             }

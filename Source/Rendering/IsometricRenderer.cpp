@@ -105,21 +105,6 @@ namespace Rendering {
         Vector screenPos = WorldToScreen(static_cast<float>(tile.worldX), 
                                          static_cast<float>(tile.worldY));
         
-        // ====================================================================
-        // ✅ DIAGNOSTIC LOGGING: Track offset application through rendering
-        // ====================================================================
-        static int renderLogCount = 0;
-        bool shouldLog = (renderLogCount < 10) || (tileId >= 127 && tileId <= 135);
-        
-        if (shouldLog) {
-            SYSTEM_LOG << "[IsometricRenderer::RenderTileImmediate] ========================================\n";
-            SYSTEM_LOG << "  GID: " << tileId << "\n";
-            SYSTEM_LOG << "  World pos: (" << tile.worldX << ", " << tile.worldY << ")\n";
-            SYSTEM_LOG << "  Iso screen pos (before offset): (" << screenPos.x << ", " << screenPos.y << ")\n";
-            SYSTEM_LOG << "  IsometricTile offset: (" << tile.tileoffsetX << ", " << tile.tileoffsetY << ")\n";
-            SYSTEM_LOG << "  Tile size: (" << tile.srcRect.w << "x" << tile.srcRect.h << ")\n";
-        }
-        
         // Calculate destination rectangle
         SDL_FRect destRect;
         destRect.w = static_cast<float>(tile.srcRect.w) * m_zoom;
@@ -139,37 +124,8 @@ namespace Rendering {
         //
         // This ensures tiles are positioned exactly as designed in Tiled editor.
         // ====================================================================
-        float beforeX = screenPos.x;
-        float beforeY = screenPos.y;
-        
         destRect.x = screenPos.x + (tile.tileoffsetX * m_zoom) - destRect.w / 2.0f;
         destRect.y = screenPos.y + (tile.tileoffsetY * m_zoom) - destRect.h + (m_tileHeight * m_zoom);
-        
-        if (shouldLog) {
-            float appliedOffsetX = (tile.tileoffsetX * m_zoom);
-            float appliedOffsetY = (tile.tileoffsetY * m_zoom);
-            
-            SYSTEM_LOG << "  After offset application:\n";
-            SYSTEM_LOG << "    Applied offset X: " << appliedOffsetX << " (from tileoffsetX=" << tile.tileoffsetX << " * zoom=" << m_zoom << ")\n";
-            SYSTEM_LOG << "    Applied offset Y: " << appliedOffsetY << " (from tileoffsetY=" << tile.tileoffsetY << " * zoom=" << m_zoom << ")\n";
-            SYSTEM_LOG << "    destRect.x = " << screenPos.x << " + " << appliedOffsetX << " - " << (destRect.w / 2.0f) << " = " << destRect.x << "\n";
-            SYSTEM_LOG << "    destRect.y = " << screenPos.y << " + " << appliedOffsetY << " - " << destRect.h << " + " << (m_tileHeight * m_zoom) << " = " << destRect.y << "\n";
-            
-            // ⚠️ VERIFICATION: Check if offset was actually applied
-            if (tile.tileoffsetX != 0) {
-                float expectedXComponent = beforeX + appliedOffsetX;
-                // Note: we can't check exact destRect.x because it also includes centering adjustment
-                SYSTEM_LOG << "    ✓ OffsetX=" << tile.tileoffsetX << " applied (contribution: " << appliedOffsetX << "px)\n";
-            }
-            if (tile.tileoffsetY != 0) {
-                SYSTEM_LOG << "    ✓ OffsetY=" << tile.tileoffsetY << " applied (contribution: " << appliedOffsetY << "px)\n";
-            }
-            
-            SYSTEM_LOG << "  Final dest rect: x=" << destRect.x << " y=" << destRect.y 
-                      << " w=" << destRect.w << " h=" << destRect.h << "\n";
-            SYSTEM_LOG << "[IsometricRenderer::RenderTileImmediate] ========================================\n";
-            renderLogCount++;
-        }
         
         // Get SDL flip flags
         SDL_FlipMode flip = GetSDLFlip(flipH, flipV, flipD);
