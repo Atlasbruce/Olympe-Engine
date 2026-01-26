@@ -31,10 +31,18 @@ namespace Rendering {
         SDL_Rect srcRect;     // Source rectangle in texture
         int zOrder;           // Layer z-order for sorting
         
-        // Tile offset from tileset (for proper alignment)
+        // ====================================================================
+        // CRITICAL: Tile offset from tileset definition (for proper alignment)
+        // These values come from the .tsx/.tsj file's <tileoffset> element
+        // Examples:
+        // - Trees.tsj: tileoffsetX = -100, tileoffsetY = 0 (shift left)
+        // - Tiles iso cube.tsx: tileoffsetX = 0, tileoffsetY = 26 (shift down)
+        // - tiles-iso-1.tsx: tileoffsetX = 0, tileoffsetY = 0 (no offset)
+        // ====================================================================
         int tileoffsetX;
         int tileoffsetY;
         
+        // Constructor with explicit default values
         IsometricTile()
             : worldX(0), worldY(0), tileGID(0), texture(nullptr), 
               srcRect{0, 0, 0, 0}, zOrder(0), tileoffsetX(0), tileoffsetY(0) {}

@@ -532,11 +532,21 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             tile.srcRect = srcRect;
             tile.zOrder = chunk.zOrder;  // Pass layer z-order for proper sorting
             
-            // Apply tileoffset from tileset
+            // ====================================================================
+            // CRITICAL: Apply tileoffset from tileset to this tile
+            // The offset comes from the tileset's .tsx/.tsj file and is used
+            // by the renderer to correctly position tiles (e.g., trees at -100px X)
+            // ====================================================================
             if (tileset)
             {
                 tile.tileoffsetX = tileset->tileoffsetX;
                 tile.tileoffsetY = tileset->tileoffsetY;
+            }
+            else
+            {
+                // Default to zero if no tileset found (should not happen)
+                tile.tileoffsetX = 0;
+                tile.tileoffsetY = 0;
             }
             
             isoRenderer->RenderTile(tile);  // Batched for depth sorting
