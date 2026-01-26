@@ -1169,6 +1169,68 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                       << storedInfo.tileoffsetX << ", " << storedInfo.tileoffsetY << ") preserved\n";
         }
     }
+    
+    // ========================================================================
+    // CRITICAL FIX: Sort tilesets by firstgid in DESCENDING order
+    // This ensures that when searching for a GID in GetTileTexture(), we check
+    // the most specific (highest firstgid) tileset first.
+    // 
+    // Example: If we have overlapping ranges:
+    //   - tiles-iso-1: [1-396]
+    //   - Tiles iso cube: [109-126] (embedded in tiles-iso-1)
+    //   - Trees: [127-205] (embedded in tiles-iso-1)
+    // 
+    // Without sorting, GID 127 would match tiles-iso-1 first (wrong).
+    // With descending sort, GID 127 matches Trees first (correct).
+    // ========================================================================
+    std::sort(m_tilesets.begin(), m_tilesets.end(), 
+        [](const TilesetInfo& a, const TilesetInfo& b) {
+            return a.firstgid > b.firstgid;  // Descending order
+        });
+    
+    SYSTEM_LOG << "\n[TilesetManager] ========================================\n";
+    SYSTEM_LOG << "[TilesetManager] Tileset load complete. Final ordering (by firstgid DESC):\n";
+    for (const auto& tileset : m_tilesets)
+    {
+        SYSTEM_LOG << "  - " << tileset.name 
+                  << " [" << tileset.firstgid << " - " << tileset.lastgid << "]"
+                  << " offset=(" << tileset.tileoffsetX << ", " << tileset.tileoffsetY << ")\n";
+    }
+    
+    // ========================================================================
+    // VALIDATION: Detect overlapping GID ranges (warning only)
+    // This helps identify potential configuration issues in Tiled maps
+    // ========================================================================
+    bool hasOverlaps = false;
+    for (size_t i = 0; i < m_tilesets.size(); ++i)
+    {
+        for (size_t j = i + 1; j < m_tilesets.size(); ++j)
+        {
+            const auto& ts1 = m_tilesets[i];
+            const auto& ts2 = m_tilesets[j];
+            
+            // Check if ranges overlap
+            // After sorting by descending firstgid:
+            // ts1.firstgid >= ts2.firstgid, so we only need to check if ts1.firstgid <= ts2.lastgid
+            if (ts1.firstgid <= ts2.lastgid)
+            {
+                hasOverlaps = true;
+                SYSTEM_LOG << "  ⚠️  WARNING: GID range overlap detected!\n";
+                SYSTEM_LOG << "      Tileset '" << ts1.name 
+                          << "' [" << ts1.firstgid << "-" << ts1.lastgid << "]\n";
+                SYSTEM_LOG << "      overlaps with '" << ts2.name 
+                          << "' [" << ts2.firstgid << "-" << ts2.lastgid << "]\n";
+                SYSTEM_LOG << "      → GetTileTexture() will prioritize '" << ts1.name 
+                          << "' due to higher firstgid\n";
+            }
+        }
+    }
+    
+    if (!hasOverlaps)
+    {
+        SYSTEM_LOG << "  ✓ No GID range overlaps detected\n";
+    }
+    SYSTEM_LOG << "[TilesetManager] ========================================\n\n";
 }
 
 bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect, const TilesetInfo*& outTileset)
