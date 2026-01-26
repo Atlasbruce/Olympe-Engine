@@ -7,6 +7,7 @@
 #include "../system/system_utils.h"
 #include <algorithm>
 #include <cmath>
+#include "../drawing.h"
 
 namespace Olympe {
 namespace Rendering {
@@ -124,6 +125,9 @@ namespace Rendering {
         // Render the tile
         SDL_RenderTextureRotated(m_renderer, tile.texture, &srcFRect, &destRect, 
                                   0.0, nullptr, flip);
+
+		SDL_SetRenderDrawColor(m_renderer, 255, 0, 0, 255);
+        Draw_Circle(destRect.x + destRect.w / 2, destRect.y + destRect.h / 2, 5);
     }
 
     Vector IsometricRenderer::WorldToScreen(float worldX, float worldY) const
