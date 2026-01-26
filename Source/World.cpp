@@ -1215,12 +1215,12 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
             if (ts1.firstgid <= ts2.lastgid)
             {
                 hasOverlaps = true;
-                SYSTEM_LOG << "  ⚠️  WARNING: GID range overlap detected!\n";
+                SYSTEM_LOG << "  [WARNING] GID range overlap detected!\n";
                 SYSTEM_LOG << "      Tileset '" << ts1.name 
                           << "' [" << ts1.firstgid << "-" << ts1.lastgid << "]\n";
                 SYSTEM_LOG << "      overlaps with '" << ts2.name 
                           << "' [" << ts2.firstgid << "-" << ts2.lastgid << "]\n";
-                SYSTEM_LOG << "      → GetTileTexture() will prioritize '" << ts1.name 
+                SYSTEM_LOG << "      -> GetTileTexture() will prioritize '" << ts1.name 
                           << "' due to higher firstgid\n";
             }
         }
@@ -1228,7 +1228,7 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
     
     if (!hasOverlaps)
     {
-        SYSTEM_LOG << "  ✓ No GID range overlaps detected\n";
+        SYSTEM_LOG << "  [OK] No GID range overlaps detected\n";
     }
     SYSTEM_LOG << "[TilesetManager] ========================================\n\n";
 }
