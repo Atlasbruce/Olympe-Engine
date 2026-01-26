@@ -15,6 +15,9 @@
         "#parallax_forest": {
             "dynamicWrapping": true
         },
+        "Tiles iso cube..tsj": {
+            "dynamicWrapping": false
+        },
         "Tiles iso cube.tsx": {
             "dynamicWrapping": true,
             "scaleInDock": 1,
