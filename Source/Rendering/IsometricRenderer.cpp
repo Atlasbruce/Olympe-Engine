@@ -109,9 +109,20 @@ namespace Rendering {
         destRect.w = static_cast<float>(tile.srcRect.w) * m_zoom;
         destRect.h = static_cast<float>(tile.srcRect.h) * m_zoom;
         
-        // Apply tileoffset and anchor at bottom for isometric tiles
-        // The screenPos represents the base tile position, so we anchor the image at the bottom
-        // and add back the base tile height to properly position tall tiles (like trees)
+        // ====================================================================
+        // CRITICAL: Apply tileoffset and anchor at bottom for isometric tiles
+        // ====================================================================
+        // The tileoffset values come from the .tsx/.tsj tileset files:
+        // - Trees.tsj: offset (-100, 0) shifts trees left for centering
+        // - Tiles iso cube.tsx: offset (0, 26) shifts cubes down for alignment
+        // - tiles-iso-1.tsx: offset (0, 0) no adjustment needed
+        //
+        // Formula:
+        // X = screenPos.x + (offsetX * zoom) - width/2    (center horizontally, apply offset)
+        // Y = screenPos.y + (offsetY * zoom) - height + baseHeight  (anchor bottom, apply offset)
+        //
+        // This ensures tiles are positioned exactly as designed in Tiled editor.
+        // ====================================================================
         destRect.x = screenPos.x + (tile.tileoffsetX * m_zoom) - destRect.w / 2.0f;
         destRect.y = screenPos.y + (tile.tileoffsetY * m_zoom) - destRect.h + (m_tileHeight * m_zoom);
         

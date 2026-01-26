@@ -74,6 +74,16 @@ public:
         int margin;
         int spacing;
         bool isCollection;
+        
+        // ====================================================================
+        // CRITICAL: Global tile offset for this tileset
+        // These values come from the .tsx/.tsj file's <tileoffset> element
+        // ALL tiles in this tileset inherit these offset values for rendering
+        // Examples from Olympe tilesets:
+        // - Trees.tsj: tileoffsetX = -100, tileoffsetY = 0
+        // - Tiles iso cube.tsx: tileoffsetX = 0, tileoffsetY = 26
+        // - tiles-iso-1.tsx: tileoffsetX = 0, tileoffsetY = 0 (default)
+        // ====================================================================
         int tileoffsetX;
         int tileoffsetY;
 
@@ -84,6 +94,7 @@ public:
         std::map<uint32_t, SDL_Texture*> individualTiles;
         std::map<uint32_t, SDL_Rect> individualSrcRects;
 
+        // Constructor with explicit default values
         TilesetInfo() : firstgid(0), lastgid(0), tilewidth(0), tileheight(0),
             columns(0), imagewidth(0), imageheight(0), margin(0), spacing(0),
             isCollection(false), tileoffsetX(0), tileoffsetY(0), texture(nullptr) {

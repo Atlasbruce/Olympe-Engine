@@ -932,11 +932,14 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                 
                 // ========================================================================
                 // CRITICAL: Extract tileoffset from external tileset file
+                // These offsets come directly from the .tsx/.tsj file's <tileoffset> element
+                // and must be applied to ALL tiles in this tileset during rendering.
                 // ========================================================================
                 info.tileoffsetX = cachedTileset->tileoffsetX;
                 info.tileoffsetY = cachedTileset->tileoffsetY;
                 
-                SYSTEM_LOG << "  -> Extracted tileoffset: (" << info.tileoffsetX 
+                SYSTEM_LOG << "  [TilesetManager] Tileset '" << info.name << "'"
+                          << " - Global tileoffset: (" << info.tileoffsetX 
                           << ", " << info.tileoffsetY << ")\n";
                 
                 // Determine if collection tileset
@@ -979,12 +982,21 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                 }
                 else if (info.isCollection)
                 {
+                    // ====================================================================
                     // Collection tileset (individual tile images)
+                    // Each tile in a collection inherits the tileset's global tileoffset
+                    // ====================================================================
+                    SYSTEM_LOG << "  [TilesetManager] Loading collection tileset '" << info.name 
+                              << "' - Each tile will inherit offset (" 
+                              << info.tileoffsetX << ", " << info.tileoffsetY << ")\n";
+                    
+                    int loadedCount = 0;
                     for (const auto& tile : cachedTileset->tiles)
                     {
                         if (tile.image.empty()) continue;
                         
                         uint32_t tileId = tile.id;
+                        uint32_t gid = info.firstgid + tileId;
                         std::string imagePath = tile.image;
                         
                         // Extract filename
@@ -1008,13 +1020,24 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                                 srcRect.w = tile.imagewidth > 0 ? tile.imagewidth : info.tilewidth;
                                 srcRect.h = tile.imageheight > 0 ? tile.imageheight : info.tileheight;
                                 info.individualSrcRects[tileId] = srcRect;
+                                
+                                loadedCount++;
+                                
+                                // Log first few tiles for verification
+                                if (loadedCount <= 3)
+                                {
+                                    SYSTEM_LOG << "    [TilesetManager] Tile GID " << gid 
+                                              << " (" << srcRect.w << "x" << srcRect.h << ")"
+                                              << " - Will use tileset offset: (" 
+                                              << info.tileoffsetX << ", " << info.tileoffsetY << ")\n";
+                                }
                             }
                         }
                     }
                     
                     SYSTEM_LOG << "  ✓ Loaded collection tileset: " << info.name 
                               << " (" << info.individualTiles.size() << " tiles"
-                              << ", offset: " << info.tileoffsetX << "," << info.tileoffsetY << ")\n";
+                              << ", global offset: " << info.tileoffsetX << "," << info.tileoffsetY << ")\n";
                 }
             }
             else
@@ -1037,11 +1060,24 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
             info.margin = tilesetJson.value("margin", 0);
             info.spacing = tilesetJson.value("spacing", 0);
             
-            // Parse tileoffset (if embedded)
+            // ====================================================================
+            // CRITICAL: Parse tileoffset from embedded tileset
+            // These offsets come from the embedded tileset's tileoffset property
+            // ====================================================================
             if (tilesetJson.contains("tileoffset"))
             {
                 info.tileoffsetX = tilesetJson["tileoffset"].value("x", 0);
                 info.tileoffsetY = tilesetJson["tileoffset"].value("y", 0);
+                
+                SYSTEM_LOG << "  [TilesetManager] Embedded tileset '" << info.name << "'"
+                          << " - Global tileoffset: (" << info.tileoffsetX 
+                          << ", " << info.tileoffsetY << ")\n";
+            }
+            else
+            {
+                // Explicit default values
+                info.tileoffsetX = 0;
+                info.tileoffsetY = 0;
             }
             
             uint32_t tilecount = tilesetJson.value("tilecount", 0);
