@@ -938,9 +938,12 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                 info.tileoffsetX = cachedTileset->tileoffsetX;
                 info.tileoffsetY = cachedTileset->tileoffsetY;
                 
-                SYSTEM_LOG << "  [TilesetManager] Tileset '" << info.name << "'"
-                          << " - Global tileoffset: (" << info.tileoffsetX 
-                          << ", " << info.tileoffsetY << ")\n";
+                SYSTEM_LOG << "[TilesetManager] ========================================\n";
+                SYSTEM_LOG << "[TilesetManager] Loading external tileset: " << info.name << "\n";
+                SYSTEM_LOG << "[TilesetManager] Parsed global offset from cache: (" 
+                          << info.tileoffsetX << ", " << info.tileoffsetY << ")\n";
+                SYSTEM_LOG << "[TilesetManager] GID range: " << info.firstgid << " - " 
+                          << (info.firstgid + cachedTileset->tilecount - 1) << "\n";
                 
                 // Determine if collection tileset
                 info.isCollection = !cachedTileset->tiles.empty() && cachedTileset->image.empty();
@@ -970,9 +973,11 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                         info.texture = IMG_LoadTexture(GameEngine::renderer, fullImagePath.c_str());
                         if (info.texture)
                         {
-                            SYSTEM_LOG << "  ✓ Loaded tileset texture: " << filename 
-                                      << " (gid: " << info.firstgid << "-" << info.lastgid 
-                                      << ", offset: " << info.tileoffsetX << "," << info.tileoffsetY << ")\n";
+                            SYSTEM_LOG << "[TilesetManager] ✓ Loaded atlas texture: " << filename << "\n";
+                            SYSTEM_LOG << "[TilesetManager] Image-based tileset - All " 
+                                      << tilecount << " tiles will use offset (" 
+                                      << info.tileoffsetX << ", " << info.tileoffsetY << ")\n";
+                            SYSTEM_LOG << "[TilesetManager] ========================================\n";
                         }
                         else
                         {
@@ -986,9 +991,6 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                     // Collection tileset (individual tile images)
                     // Each tile in a collection inherits the tileset's global tileoffset
                     // ====================================================================
-                    SYSTEM_LOG << "  [TilesetManager] Loading collection tileset '" << info.name 
-                              << "' - Each tile will inherit offset (" 
-                              << info.tileoffsetX << ", " << info.tileoffsetY << ")\n";
                     
                     int loadedCount = 0;
                     for (const auto& tile : cachedTileset->tiles)
@@ -1023,21 +1025,23 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                                 
                                 loadedCount++;
                                 
-                                // Log first few tiles for verification
-                                if (loadedCount <= 3)
+                                // Log first few tiles and any in Trees GID range (127-135)
+                                if (loadedCount <= 3 || (gid >= 127 && gid <= 135))
                                 {
-                                    SYSTEM_LOG << "    [TilesetManager] Tile GID " << gid 
+                                    SYSTEM_LOG << "[TilesetManager] GID " << gid 
                                               << " (" << srcRect.w << "x" << srcRect.h << ")"
-                                              << " - Will use tileset offset: (" 
+                                              << " - STORED with tileset offset: (" 
                                               << info.tileoffsetX << ", " << info.tileoffsetY << ")\n";
                                 }
                             }
                         }
                     }
                     
-                    SYSTEM_LOG << "  ✓ Loaded collection tileset: " << info.name 
-                              << " (" << info.individualTiles.size() << " tiles"
-                              << ", global offset: " << info.tileoffsetX << "," << info.tileoffsetY << ")\n";
+                    SYSTEM_LOG << "[TilesetManager] ✓ Loaded collection tileset: " << info.name 
+                              << " (" << info.individualTiles.size() << " tiles)\n";
+                    SYSTEM_LOG << "[TilesetManager] All tiles stored with global offset: (" 
+                              << info.tileoffsetX << ", " << info.tileoffsetY << ")\n";
+                    SYSTEM_LOG << "[TilesetManager] ========================================\n";
                 }
             }
             else
@@ -1148,6 +1152,22 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
         }
         
         m_tilesets.push_back(info);
+        
+        // ====================================================================
+        // POST-INSERTION VERIFICATION: Check that offset values survived storage
+        // ====================================================================
+        const TilesetInfo& storedInfo = m_tilesets.back();
+        if (storedInfo.tileoffsetX != info.tileoffsetX || storedInfo.tileoffsetY != info.tileoffsetY)
+        {
+            SYSTEM_LOG << "[TilesetManager] ❌ ERROR: Offset LOST during vector storage!\n";
+            SYSTEM_LOG << "                  Expected: (" << info.tileoffsetX << ", " << info.tileoffsetY << ")\n";
+            SYSTEM_LOG << "                  Got: (" << storedInfo.tileoffsetX << ", " << storedInfo.tileoffsetY << ")\n";
+        }
+        else if (info.tileoffsetX != 0 || info.tileoffsetY != 0)
+        {
+            SYSTEM_LOG << "[TilesetManager] ✓ POST-INSERT verification: offset=(" 
+                      << storedInfo.tileoffsetX << ", " << storedInfo.tileoffsetY << ") preserved\n";
+        }
     }
 }
 
@@ -1172,6 +1192,17 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
             // ✅ CRITICAL: Set the tileset pointer BEFORE any return
             outTileset = &tileset;
             
+            // ✅ LOG RETRIEVAL (limit spam with static counter)
+            static int logCounter = 0;
+            bool shouldLog = (logCounter < 20) || (cleanGid >= 127 && cleanGid <= 135);
+            
+            if (shouldLog) {
+                SYSTEM_LOG << "[TilesetManager::GetTileTexture] GID " << cleanGid 
+                          << " FOUND in tileset '" << tileset.name << "'\n";
+                SYSTEM_LOG << "  Tileset offset: (" << tileset.tileoffsetX << ", " << tileset.tileoffsetY << ")\n";
+                logCounter++;
+            }
+            
             if (tileset.isCollection)
             {
                 // Collection tileset - lookup individual tile
@@ -1183,6 +1214,10 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                     {
                         outTexture = it->second;
                         outSrcRect = srcIt->second;
+                        
+                        if (shouldLog) {
+                            SYSTEM_LOG << "  Collection tile - size: (" << outSrcRect.w << "x" << outSrcRect.h << ")\n";
+                        }
                         
                         if (outTexture == nullptr)
                         {
@@ -1221,12 +1256,18 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
                 outSrcRect.w = tileset.tilewidth;
                 outSrcRect.h = tileset.tileheight;
                 
+                if (shouldLog) {
+                    SYSTEM_LOG << "  Atlas tile - size: (" << outSrcRect.w << "x" << outSrcRect.h << ")\n";
+                }
+                
                 return true;
             }
         }
     }
     
     // GID not found in any tileset
+    SYSTEM_LOG << "[TilesetManager::GetTileTexture] ❌ GID " << cleanGid 
+              << " NOT FOUND in any tileset (total tilesets: " << m_tilesets.size() << ")\n";
     outTileset = nullptr;
     return false;
 }
