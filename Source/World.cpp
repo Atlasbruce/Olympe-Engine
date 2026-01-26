@@ -1244,86 +1244,84 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
         return false;  // Empty tile
     }
     
-    // Find the tileset containing this GID
+    // ====================================================================
+    // Find the tileset with the HIGHEST firstgid that contains this GID.
+    // This ensures we get the most specific tileset when ranges overlap.
+    // For example, if tiles-iso-1 has [1-396] and Trees has [127-205],
+    // GID 127 should match Trees (firstgid=127) not tiles-iso-1 (firstgid=1).
+    // ====================================================================
+    const TilesetInfo* bestMatch = nullptr;
+    
     for (const auto& tileset : m_tilesets)
     {
         if (cleanGid >= tileset.firstgid && cleanGid <= tileset.lastgid)
         {
-            uint32_t localId = cleanGid - tileset.firstgid;
-            
-            // ✅ CRITICAL: Set the tileset pointer BEFORE any return
-            outTileset = &tileset;
-            
-            // ✅ LOG RETRIEVAL (limit spam with static counter)
-            static int logCounter = 0;
-            bool shouldLog = (logCounter < 20) || (cleanGid >= 127 && cleanGid <= 135);
-            
-            if (shouldLog) {
-                SYSTEM_LOG << "[TilesetManager::GetTileTexture] GID " << cleanGid 
-                          << " FOUND in tileset '" << tileset.name << "'\n";
-                SYSTEM_LOG << "  Tileset offset: (" << tileset.tileoffsetX << ", " << tileset.tileoffsetY << ")\n";
-                logCounter++;
+            // Select tileset with highest firstgid
+            if (!bestMatch || tileset.firstgid > bestMatch->firstgid)
+            {
+                bestMatch = &tileset;
+            }
+        }
+    }
+    
+    if (bestMatch)
+    {
+        const TilesetInfo& tileset = *bestMatch;
+        uint32_t localId = cleanGid - tileset.firstgid;
+        
+        // ✅ CRITICAL: Set the tileset pointer BEFORE any return
+        outTileset = bestMatch;
+        
+        if (tileset.isCollection)
+        {
+            // Collection tileset - lookup individual tile
+            auto it = tileset.individualTiles.find(localId);
+            if (it != tileset.individualTiles.end())
+            {
+                auto srcIt = tileset.individualSrcRects.find(localId);
+                if (srcIt != tileset.individualSrcRects.end())
+                {
+                    outTexture = it->second;
+                    outSrcRect = srcIt->second;
+                    
+                    if (outTexture == nullptr)
+                    {
+                        SDL_LogError(SDL_LOG_CATEGORY_RENDER, 
+                            "[TILESET] NULL texture for collection tile GID=%u, localId=%u", gid, localId);
+                        return false;
+                    }
+                    
+                    return true;
+                }
             }
             
-            if (tileset.isCollection)
+            // Collection tile not found
+            SDL_LogError(SDL_LOG_CATEGORY_RENDER, 
+                "[TILESET] Collection tile not found: GID=%u, localId=%u", gid, localId);
+            return false;
+        }
+        else
+        {
+            // Image-based tileset - calculate source rect
+            if (!tileset.texture)
             {
-                // Collection tileset - lookup individual tile
-                auto it = tileset.individualTiles.find(localId);
-                if (it != tileset.individualTiles.end())
-                {
-                    auto srcIt = tileset.individualSrcRects.find(localId);
-                    if (srcIt != tileset.individualSrcRects.end())
-                    {
-                        outTexture = it->second;
-                        outSrcRect = srcIt->second;
-                        
-                        if (shouldLog) {
-                            SYSTEM_LOG << "  Collection tile - size: (" << outSrcRect.w << "x" << outSrcRect.h << ")\n";
-                        }
-                        
-                        if (outTexture == nullptr)
-                        {
-                            SDL_LogError(SDL_LOG_CATEGORY_RENDER, 
-                                "[TILESET] NULL texture for collection tile GID=%u, localId=%u", gid, localId);
-                            return false;
-                        }
-                        
-                        return true;
-                    }
-                }
-                
-                // Collection tile not found
                 SDL_LogError(SDL_LOG_CATEGORY_RENDER, 
-                    "[TILESET] Collection tile not found: GID=%u, localId=%u", gid, localId);
+                    "[TILESET] NULL texture for tileset '%s' (GID=%u)", tileset.name.c_str(), gid);
                 return false;
             }
-            else
-            {
-                // Image-based tileset - calculate source rect
-                if (!tileset.texture)
-                {
-                    SDL_LogError(SDL_LOG_CATEGORY_RENDER, 
-                        "[TILESET] NULL texture for tileset '%s' (GID=%u)", tileset.name.c_str(), gid);
-                    return false;
-                }
-                
-                outTexture = tileset.texture;
-                
-                // Calculate source rect with margin and spacing
-                int col = localId % tileset.columns;
-                int row = localId / tileset.columns;
-                
-                outSrcRect.x = tileset.margin + col * (tileset.tilewidth + tileset.spacing);
-                outSrcRect.y = tileset.margin + row * (tileset.tileheight + tileset.spacing);
-                outSrcRect.w = tileset.tilewidth;
-                outSrcRect.h = tileset.tileheight;
-                
-                if (shouldLog) {
-                    SYSTEM_LOG << "  Atlas tile - size: (" << outSrcRect.w << "x" << outSrcRect.h << ")\n";
-                }
-                
-                return true;
-            }
+            
+            outTexture = tileset.texture;
+            
+            // Calculate source rect with margin and spacing
+            int col = localId % tileset.columns;
+            int row = localId / tileset.columns;
+            
+            outSrcRect.x = tileset.margin + col * (tileset.tilewidth + tileset.spacing);
+            outSrcRect.y = tileset.margin + row * (tileset.tileheight + tileset.spacing);
+            outSrcRect.w = tileset.tilewidth;
+            outSrcRect.h = tileset.tileheight;
+            
+            return true;
         }
     }
     

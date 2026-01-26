@@ -541,32 +541,6 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
             {
                 tile.tileoffsetX = tileset->tileoffsetX;
                 tile.tileoffsetY = tileset->tileoffsetY;
-                
-                // ✅ LOG OFFSET ASSIGNMENT (limit spam with static counter)
-                static int assignCounter = 0;
-                uint32_t cleanGid = gid & 0x1FFFFFFF;
-                bool shouldLog = (assignCounter < 10) || (cleanGid >= 127 && cleanGid <= 135);
-                
-                if (shouldLog) {
-                    SYSTEM_LOG << "[ECS_Systems::RenderChunkIsometric] ========================================\n";
-                    SYSTEM_LOG << "  GID: " << cleanGid << "\n";
-                    SYSTEM_LOG << "  World pos: (" << worldX << ", " << worldY << ")\n";
-                    SYSTEM_LOG << "  Tileset: '" << tileset->name << "'\n";
-                    SYSTEM_LOG << "  ASSIGNED offset from tileset: (" << tile.tileoffsetX << ", " << tile.tileoffsetY << ")\n";
-                    
-                    // ⚠️ VERIFICATION: Check if assignment worked
-                    if (tileset->tileoffsetX != 0 || tileset->tileoffsetY != 0) {
-                        if (tile.tileoffsetX == tileset->tileoffsetX && tile.tileoffsetY == tileset->tileoffsetY) {
-                            SYSTEM_LOG << "  ✓ Offset correctly assigned to IsometricTile\n";
-                        } else {
-                            SYSTEM_LOG << "  ❌ ERROR: Offset assignment failed!\n";
-                            SYSTEM_LOG << "    Expected: (" << tileset->tileoffsetX << ", " << tileset->tileoffsetY << ")\n";
-                            SYSTEM_LOG << "    Got: (" << tile.tileoffsetX << ", " << tile.tileoffsetY << ")\n";
-                        }
-                    }
-                    SYSTEM_LOG << "[ECS_Systems::RenderChunkIsometric] ========================================\n";
-                    assignCounter++;
-                }
             }
             else
             {
