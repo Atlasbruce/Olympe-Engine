@@ -195,8 +195,15 @@ namespace Tiled {
         int columns;
         int spacing;
         int margin;
+        
+        // ====================================================================
+        // CRITICAL: Global tile offset from tileset definition
+        // Parsed from .tsx <tileoffset> or .tsj "tileoffset" property
+        // ALL tiles in this tileset inherit these values
+        // ====================================================================
         int tileoffsetX;
         int tileoffsetY;
+        
         std::string image;  // Single image file (for image-based tilesets)
         int imagewidth;
         int imageheight;
@@ -208,6 +215,7 @@ namespace Tiled {
         // Properties
         std::map<std::string, TiledProperty> properties;
 
+        // Constructor with explicit default values
         TiledTileset()
             : firstgid(0), tilewidth(0), tileheight(0), tilecount(0),
               columns(0), spacing(0), margin(0), tileoffsetX(0), tileoffsetY(0),

@@ -69,11 +69,23 @@ namespace Tiled {
         tileset.spacing = tsElement->IntAttribute("spacing", 0);
         tileset.margin = tsElement->IntAttribute("margin", 0);
 
+        // ====================================================================
         // Parse tileoffset element
+        // This is the CRITICAL value that must be extracted and propagated
+        // ====================================================================
         tinyxml2::XMLElement* offsetElement = tsElement->FirstChildElement("tileoffset");
         if (offsetElement) {
             tileset.tileoffsetX = offsetElement->IntAttribute("x", 0);
             tileset.tileoffsetY = offsetElement->IntAttribute("y", 0);
+            SYSTEM_LOG << "TilesetParser (TSX): Parsed tileoffset (" 
+                      << tileset.tileoffsetX << ", " << tileset.tileoffsetY 
+                      << ") for tileset '" << tileset.name << "'\n";
+        }
+        else
+        {
+            // Explicit defaults when no tileoffset element present
+            tileset.tileoffsetX = 0;
+            tileset.tileoffsetY = 0;
         }
 
         // Parse image element (for image-based tilesets)
@@ -157,12 +169,24 @@ namespace Tiled {
         tileset.spacing = GetInt(j, "spacing");
         tileset.margin = GetInt(j, "margin");
         
+        // ====================================================================
         // Parse tileoffset
+        // This is the CRITICAL value that must be extracted and propagated
+        // ====================================================================
         if (HasKey(j, "tileoffset"))
         {
             const auto& offset = j["tileoffset"];
             tileset.tileoffsetX = GetInt(offset, "x");
             tileset.tileoffsetY = GetInt(offset, "y");
+            SYSTEM_LOG << "TilesetParser (TSJ): Parsed tileoffset (" 
+                      << tileset.tileoffsetX << ", " << tileset.tileoffsetY 
+                      << ") for tileset '" << tileset.name << "'\n";
+        }
+        else
+        {
+            // Explicit defaults when no tileoffset property present
+            tileset.tileoffsetX = 0;
+            tileset.tileoffsetY = 0;
         }
         
         tileset.image = GetString(j, "image");
