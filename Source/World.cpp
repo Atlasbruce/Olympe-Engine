@@ -1749,28 +1749,22 @@ bool World::InstantiatePass5_Relationships(
 {
     SYSTEM_LOG << "\n[Pass 5] Linking object relationships...\n";
     
-    // Build name → EntityID mapping for faster lookup
-    std::map<std::string, EntityID> nameToEntity;
-    for (const auto& kv : result.entityRegistry) {
-        nameToEntity[kv.first] = kv.second;
-    }
-    
     int linksCreated = 0;
     
     // Process object links from level definition
     for (const auto& link : levelDef.objectLinks) {
         if (link.linkType == "patrol_path") {
             // Find guard entity
-            auto guardIt = nameToEntity.find(link.sourceObjectName);
-            if (guardIt == nameToEntity.end()) {
+            auto guardIt = result.entityRegistry.find(link.sourceObjectName);
+            if (guardIt == result.entityRegistry.end()) {
                 SYSTEM_LOG << "  x Guard '" << link.sourceObjectName << "' not found in registry\n";
                 result.pass5_relationships.failed++;
                 continue;
             }
             
             // Find patrol path entity
-            auto pathIt = nameToEntity.find(link.targetObjectName);
-            if (pathIt == nameToEntity.end()) {
+            auto pathIt = result.entityRegistry.find(link.targetObjectName);
+            if (pathIt == result.entityRegistry.end()) {
                 SYSTEM_LOG << "  x Patrol path '" << link.targetObjectName << "' not found in registry\n";
                 result.pass5_relationships.failed++;
                 continue;

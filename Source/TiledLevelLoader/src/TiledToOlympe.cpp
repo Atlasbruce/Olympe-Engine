@@ -1035,13 +1035,9 @@ namespace Tiled {
                     }
                 }
                 
-                // Skip spatial structures (already processed in ExtractSpatialStructures)
-                if (obj.objectType == ObjectType::Polygon || 
-                    obj.objectType == ObjectType::Polyline) {
-                    // Polylines that are not collision are handled below (patrol paths)
-                    if (obj.objectType == ObjectType::Polygon) {
-                        continue;  // Skip polygons (sectors already handled)
-                    }
+                // Skip polygon objects (sectors already processed in ExtractSpatialStructures)
+                if (obj.objectType == ObjectType::Polygon) {
+                    continue;
                 }
                 
                 // Skip sector/zone objects (already processed)
@@ -1054,6 +1050,9 @@ namespace Tiled {
                 if (!entity) continue;
                 
                 // Create a copy for the legacy entities array
+                // Note: Both categorizedObjects (new system) and entities (legacy) need to be populated
+                // for backward compatibility. The entity is moved into categorizedObjects and a copy
+                // is placed in the legacy array.
                 auto entityCopy = std::make_unique<Olympe::Editor::EntityInstance>();
                 entityCopy->id = entity->id;
                 entityCopy->prefabPath = entity->prefabPath;
