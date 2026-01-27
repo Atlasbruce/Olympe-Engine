@@ -308,25 +308,7 @@ namespace Tiled {
         entity->prefabPath = "Blueprints/Sector.json";
         
         // Transform position based on map orientation
-        Olympe::Editor::Vec2 finalPosition;
-        bool isIsometric = (config_.mapOrientation == "isometric");
-        
-        if (isIsometric) {
-            // Apply isometric projection
-            Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
-                obj.x, 
-                obj.y, 
-                config_.tileWidth, 
-                config_.tileHeight
-            );
-            finalPosition = Olympe::Editor::Vec2(isoPos.x, isoPos.y);
-        } else {
-            // Orthogonal: flip Y only
-            float transformedY = TransformY(obj.y, 0);
-            finalPosition = Olympe::Editor::Vec2(obj.x, transformedY);
-        }
-        
-        entity->position = finalPosition;
+        entity->position = TransformObjectPosition(obj.x, obj.y);
 
         // Store polygon points in overrides
         nlohmann::json polygon = nlohmann::json::array();
@@ -358,25 +340,7 @@ namespace Tiled {
         entity->prefabPath = "Blueprints/CollisionPolygon.json";
         
         // Transform position based on map orientation
-        Olympe::Editor::Vec2 finalPosition;
-        bool isIsometric = (config_.mapOrientation == "isometric");
-        
-        if (isIsometric) {
-            // Apply isometric projection
-            Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
-                obj.x, 
-                obj.y, 
-                config_.tileWidth, 
-                config_.tileHeight
-            );
-            finalPosition = Olympe::Editor::Vec2(isoPos.x, isoPos.y);
-        } else {
-            // Orthogonal: flip Y only
-            float transformedY = TransformY(obj.y, 0);
-            finalPosition = Olympe::Editor::Vec2(obj.x, transformedY);
-        }
-        
-        entity->position = finalPosition;
+        entity->position = TransformObjectPosition(obj.x, obj.y);
         entity->rotation = obj.rotation;
         
         // Store polygon/polyline points
@@ -415,25 +379,7 @@ namespace Tiled {
         entity->prefabPath = "Blueprints/PatrolPath.json";
         
         // Transform position based on map orientation
-        Olympe::Editor::Vec2 finalPosition;
-        bool isIsometric = (config_.mapOrientation == "isometric");
-        
-        if (isIsometric) {
-            // Apply isometric projection
-            Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
-                obj.x, 
-                obj.y, 
-                config_.tileWidth, 
-                config_.tileHeight
-            );
-            finalPosition = Olympe::Editor::Vec2(isoPos.x, isoPos.y);
-        } else {
-            // Orthogonal: flip Y only
-            float transformedY = TransformY(obj.y, 0);
-            finalPosition = Olympe::Editor::Vec2(obj.x, transformedY);
-        }
-        
-        entity->position = finalPosition;
+        entity->position = TransformObjectPosition(obj.x, obj.y);
 
         // Store polyline points in overrides
         nlohmann::json path = nlohmann::json::array();
@@ -585,6 +531,25 @@ namespace Tiled {
             return worldHeight - y - height;
         }
         return y;
+    }
+    
+    Olympe::Editor::Vec2 TiledToOlympe::TransformObjectPosition(float x, float y)
+    {
+        bool isIsometric = (config_.mapOrientation == "isometric");
+        
+        if (isIsometric) {
+            // Apply isometric projection
+            Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
+                x, y, 
+                config_.tileWidth, 
+                config_.tileHeight
+            );
+            return Olympe::Editor::Vec2(isoPos.x, isoPos.y);
+        } else {
+            // Orthogonal: flip Y only
+            float transformedY = TransformY(y, 0);
+            return Olympe::Editor::Vec2(x, transformedY);
+        }
     }
 
     void TiledToOlympe::InitializeCollisionMap(Olympe::Editor::LevelDefinition& level, 

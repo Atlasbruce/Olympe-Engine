@@ -706,6 +706,10 @@ bool PrefabFactory::InstantiateAIState(EntityID entity, const ComponentDefinitio
         else if (stateStr == "Flee") aiState.currentMode = AIMode::Flee;
         else if (stateStr == "Investigate") aiState.currentMode = AIMode::Investigate;
         else if (stateStr == "Dead") aiState.currentMode = AIMode::Dead;
+        else {
+            SYSTEM_LOG << "PrefabFactory::InstantiateAIState: Warning - Unknown state '" 
+                       << stateStr << "', defaulting to Idle\n";
+        }
     }
     
     if (def.HasParameter("previousState"))
@@ -717,6 +721,10 @@ bool PrefabFactory::InstantiateAIState(EntityID entity, const ComponentDefinitio
         else if (stateStr == "Flee") aiState.previousMode = AIMode::Flee;
         else if (stateStr == "Investigate") aiState.previousMode = AIMode::Investigate;
         else if (stateStr == "Dead") aiState.previousMode = AIMode::Dead;
+        else {
+            SYSTEM_LOG << "PrefabFactory::InstantiateAIState: Warning - Unknown previousState '" 
+                       << stateStr << "', defaulting to Idle\n";
+        }
     }
     
     if (def.HasParameter("combatEngageDistance"))
@@ -824,6 +832,10 @@ bool PrefabFactory::InstantiateAttackIntent(EntityID entity, const ComponentDefi
         if (typeStr == "Melee") attackIntent.attackType = AttackIntent_data::AttackType::Melee;
         else if (typeStr == "Ranged") attackIntent.attackType = AttackIntent_data::AttackType::Ranged;
         else if (typeStr == "Area") attackIntent.attackType = AttackIntent_data::AttackType::Area;
+        else {
+            SYSTEM_LOG << "PrefabFactory::InstantiateAttackIntent: Warning - Unknown attackType '" 
+                       << typeStr << "', defaulting to Melee\n";
+        }
     }
     
     World::Get().AddComponent<AttackIntent_data>(entity, attackIntent);
