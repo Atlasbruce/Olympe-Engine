@@ -307,8 +307,26 @@ namespace Tiled {
         entity->name = obj.name.empty() ? ("Sector " + std::to_string(obj.id)) : obj.name;
         entity->prefabPath = "Blueprints/Sector.json";
         
-        float transformedY = TransformY(obj.y, 0);
-        entity->position = Olympe::Editor::Vec2(obj.x, transformedY);
+        // Transform position based on map orientation
+        Olympe::Editor::Vec2 finalPosition;
+        bool isIsometric = (config_.mapOrientation == "isometric");
+        
+        if (isIsometric) {
+            // Apply isometric projection
+            Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
+                obj.x, 
+                obj.y, 
+                config_.tileWidth, 
+                config_.tileHeight
+            );
+            finalPosition = Olympe::Editor::Vec2(isoPos.x, isoPos.y);
+        } else {
+            // Orthogonal: flip Y only
+            float transformedY = TransformY(obj.y, 0);
+            finalPosition = Olympe::Editor::Vec2(obj.x, transformedY);
+        }
+        
+        entity->position = finalPosition;
 
         // Store polygon points in overrides
         nlohmann::json polygon = nlohmann::json::array();
@@ -339,8 +357,26 @@ namespace Tiled {
         entity->type = "CollisionPolygon";
         entity->prefabPath = "Blueprints/CollisionPolygon.json";
         
-        float transformedY = TransformY(obj.y, 0);
-        entity->position = Olympe::Editor::Vec2(obj.x, transformedY);
+        // Transform position based on map orientation
+        Olympe::Editor::Vec2 finalPosition;
+        bool isIsometric = (config_.mapOrientation == "isometric");
+        
+        if (isIsometric) {
+            // Apply isometric projection
+            Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
+                obj.x, 
+                obj.y, 
+                config_.tileWidth, 
+                config_.tileHeight
+            );
+            finalPosition = Olympe::Editor::Vec2(isoPos.x, isoPos.y);
+        } else {
+            // Orthogonal: flip Y only
+            float transformedY = TransformY(obj.y, 0);
+            finalPosition = Olympe::Editor::Vec2(obj.x, transformedY);
+        }
+        
+        entity->position = finalPosition;
         entity->rotation = obj.rotation;
         
         // Store polygon/polyline points
@@ -378,8 +414,26 @@ namespace Tiled {
         entity->name = obj.name.empty() ? ("Patrol " + std::to_string(obj.id)) : obj.name;
         entity->prefabPath = "Blueprints/PatrolPath.json";
         
-        float transformedY = TransformY(obj.y, 0);
-        entity->position = Olympe::Editor::Vec2(obj.x, transformedY);
+        // Transform position based on map orientation
+        Olympe::Editor::Vec2 finalPosition;
+        bool isIsometric = (config_.mapOrientation == "isometric");
+        
+        if (isIsometric) {
+            // Apply isometric projection
+            Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
+                obj.x, 
+                obj.y, 
+                config_.tileWidth, 
+                config_.tileHeight
+            );
+            finalPosition = Olympe::Editor::Vec2(isoPos.x, isoPos.y);
+        } else {
+            // Orthogonal: flip Y only
+            float transformedY = TransformY(obj.y, 0);
+            finalPosition = Olympe::Editor::Vec2(obj.x, transformedY);
+        }
+        
+        entity->position = finalPosition;
 
         // Store polyline points in overrides
         nlohmann::json path = nlohmann::json::array();
@@ -1113,11 +1167,37 @@ namespace Tiled {
             }
         }
         
+        SYSTEM_LOG << "[DEBUG] ExtractObjectRelationships - Processing objects...\n";
+        
         // Extract relationships from custom properties
         for (const auto& layer : tiledMap.layers) {
             if (layer->type != LayerType::ObjectGroup) continue;
             
             for (const auto& obj : layer->objects) {
+                // Debug: Show properties of guard/npc objects
+                std::string typeLower = obj.type;
+                std::transform(typeLower.begin(), typeLower.end(), typeLower.begin(), ::tolower);
+                
+                if (typeLower == "guard" || typeLower == "npc") {
+                    SYSTEM_LOG << "  [DEBUG] Object '" << obj.name << "' (type: " << obj.type << ") properties:\n";
+                    for (const auto& prop : obj.properties) {
+                        SYSTEM_LOG << "    - '" << prop.first << "' = ";
+                        if (prop.second.type == PropertyType::Object) {
+                            int targetID = prop.second.intValue;
+                            std::string targetName = idToName.count(targetID) ? idToName[targetID] : "(unknown)";
+                            SYSTEM_LOG << "(Object ID: " << targetID << " → '" << targetName << "')\n";
+                        } else if (prop.second.type == PropertyType::String || prop.second.type == PropertyType::File) {
+                            SYSTEM_LOG << "\"" << prop.second.stringValue << "\"\n";
+                        } else if (prop.second.type == PropertyType::Int) {
+                            SYSTEM_LOG << prop.second.intValue << "\n";
+                        } else if (prop.second.type == PropertyType::Float) {
+                            SYSTEM_LOG << prop.second.floatValue << "\n";
+                        } else if (prop.second.type == PropertyType::Bool) {
+                            SYSTEM_LOG << (prop.second.boolValue ? "true" : "false") << "\n";
+                        }
+                    }
+                }
+                
                 // Check for "patrol way" property (NPC → patrol path link)
                 auto patrolProp = obj.properties.find(PROPERTY_PATROL_WAY);
                 if (patrolProp != obj.properties.end() && patrolProp->second.type == PropertyType::Object) {
@@ -1152,6 +1232,12 @@ namespace Tiled {
                                << link.targetObjectName << "' (trigger_target)\n";
                 }
             }
+        }
+        
+        if (linkCount == 0) {
+            SYSTEM_LOG << "  /! No object relationships found. Check:\n";
+            SYSTEM_LOG << "    - Guards should have 'patrol way' property (Object type)\n";
+            SYSTEM_LOG << "    - Property must reference a 'way' object by ID\n";
         }
     }
 

@@ -93,6 +93,14 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
         return InstantiateAIBlackboard(entity, componentDef);
     else if (type == "AISenses" || type == "AISenses_data")
         return InstantiateAISenses(entity, componentDef);
+    else if (type == "AIState" || type == "AIState_data")
+        return InstantiateAIState(entity, componentDef);
+    else if (type == "BehaviorTreeRuntime" || type == "BehaviorTreeRuntime_data")
+        return InstantiateBehaviorTreeRuntime(entity, componentDef);
+    else if (type == "MoveIntent" || type == "MoveIntent_data")
+        return InstantiateMoveIntent(entity, componentDef);
+    else if (type == "AttackIntent" || type == "AttackIntent_data")
+        return InstantiateAttackIntent(entity, componentDef);
     else if (type == "BoundingBox" || type == "BoundingBox_data")
         return InstantiateBoundingBox(entity, componentDef);
     else if (type == "Movement" || type == "Movement_data")
@@ -680,5 +688,144 @@ bool PrefabFactory::InstantiateInputMapping(EntityID entity, const ComponentDefi
         mapping.sensitivity = def.GetParameter("sensitivity")->AsFloat();
     
     World::Get().AddComponent<InputMapping_data>(entity, mapping);
+    return true;
+}
+
+bool PrefabFactory::InstantiateAIState(EntityID entity, const ComponentDefinition& def)
+{
+    AIState_data aiState;
+    
+    // Extract AI state parameters
+    if (def.HasParameter("currentState"))
+    {
+        std::string stateStr = def.GetParameter("currentState")->AsString();
+        // Convert string to AIMode enum
+        if (stateStr == "Idle") aiState.currentMode = AIMode::Idle;
+        else if (stateStr == "Patrol") aiState.currentMode = AIMode::Patrol;
+        else if (stateStr == "Combat") aiState.currentMode = AIMode::Combat;
+        else if (stateStr == "Flee") aiState.currentMode = AIMode::Flee;
+        else if (stateStr == "Investigate") aiState.currentMode = AIMode::Investigate;
+        else if (stateStr == "Dead") aiState.currentMode = AIMode::Dead;
+    }
+    
+    if (def.HasParameter("previousState"))
+    {
+        std::string stateStr = def.GetParameter("previousState")->AsString();
+        if (stateStr == "Idle") aiState.previousMode = AIMode::Idle;
+        else if (stateStr == "Patrol") aiState.previousMode = AIMode::Patrol;
+        else if (stateStr == "Combat") aiState.previousMode = AIMode::Combat;
+        else if (stateStr == "Flee") aiState.previousMode = AIMode::Flee;
+        else if (stateStr == "Investigate") aiState.previousMode = AIMode::Investigate;
+        else if (stateStr == "Dead") aiState.previousMode = AIMode::Dead;
+    }
+    
+    if (def.HasParameter("combatEngageDistance"))
+        aiState.combatEngageDistance = def.GetParameter("combatEngageDistance")->AsFloat();
+    
+    if (def.HasParameter("fleeHealthThreshold"))
+        aiState.fleeHealthThreshold = def.GetParameter("fleeHealthThreshold")->AsFloat();
+    
+    if (def.HasParameter("investigateTimeout"))
+        aiState.investigateTimeout = def.GetParameter("investigateTimeout")->AsFloat();
+    
+    World::Get().AddComponent<AIState_data>(entity, aiState);
+    return true;
+}
+
+bool PrefabFactory::InstantiateBehaviorTreeRuntime(EntityID entity, const ComponentDefinition& def)
+{
+    BehaviorTreeRuntime_data btRuntime;
+    
+    // Extract behavior tree runtime parameters
+    if (def.HasParameter("treeAssetId"))
+        btRuntime.treeAssetId = static_cast<uint32_t>(def.GetParameter("treeAssetId")->AsInt());
+    
+    if (def.HasParameter("treePath"))
+    {
+        // If a tree path is provided, we could load it here
+        // For now, just log it
+        std::string treePath = def.GetParameter("treePath")->AsString();
+        // TODO: Load behavior tree from path and get its ID
+    }
+    
+    if (def.HasParameter("active"))
+        btRuntime.isActive = def.GetParameter("active")->AsBool();
+    
+    if (def.HasParameter("currentNodeIndex"))
+        btRuntime.currentNodeIndex = static_cast<uint32_t>(def.GetParameter("currentNodeIndex")->AsInt());
+    
+    World::Get().AddComponent<BehaviorTreeRuntime_data>(entity, btRuntime);
+    return true;
+}
+
+bool PrefabFactory::InstantiateMoveIntent(EntityID entity, const ComponentDefinition& def)
+{
+    MoveIntent_data moveIntent;
+    
+    // Extract move intent parameters
+    if (def.HasParameter("targetX") && def.HasParameter("targetY"))
+    {
+        float x = def.GetParameter("targetX")->AsFloat();
+        float y = def.GetParameter("targetY")->AsFloat();
+        moveIntent.targetPosition = Vector(x, y, 0.0f);
+    }
+    
+    if (def.HasParameter("targetPosition"))
+        moveIntent.targetPosition = def.GetParameter("targetPosition")->AsVector();
+    
+    if (def.HasParameter("desiredSpeed"))
+        moveIntent.desiredSpeed = def.GetParameter("desiredSpeed")->AsFloat();
+    
+    if (def.HasParameter("hasTarget"))
+        moveIntent.hasIntent = def.GetParameter("hasTarget")->AsBool();
+    
+    if (def.HasParameter("hasIntent"))
+        moveIntent.hasIntent = def.GetParameter("hasIntent")->AsBool();
+    
+    if (def.HasParameter("arrivalThreshold"))
+        moveIntent.arrivalThreshold = def.GetParameter("arrivalThreshold")->AsFloat();
+    
+    if (def.HasParameter("usePathfinding"))
+        moveIntent.usePathfinding = def.GetParameter("usePathfinding")->AsBool();
+    
+    if (def.HasParameter("avoidObstacles"))
+        moveIntent.avoidObstacles = def.GetParameter("avoidObstacles")->AsBool();
+    
+    World::Get().AddComponent<MoveIntent_data>(entity, moveIntent);
+    return true;
+}
+
+bool PrefabFactory::InstantiateAttackIntent(EntityID entity, const ComponentDefinition& def)
+{
+    AttackIntent_data attackIntent;
+    
+    // Extract attack intent parameters
+    if (def.HasParameter("targetEntity"))
+        attackIntent.targetEntity = def.GetParameter("targetEntity")->AsEntityRef();
+    
+    if (def.HasParameter("targetPosition"))
+        attackIntent.targetPosition = def.GetParameter("targetPosition")->AsVector();
+    
+    if (def.HasParameter("damage"))
+        attackIntent.damage = def.GetParameter("damage")->AsFloat();
+    
+    if (def.HasParameter("range"))
+        attackIntent.range = def.GetParameter("range")->AsFloat();
+    
+    if (def.HasParameter("attackRange"))
+        attackIntent.range = def.GetParameter("attackRange")->AsFloat();
+    
+    if (def.HasParameter("hasIntent"))
+        attackIntent.hasIntent = def.GetParameter("hasIntent")->AsBool();
+    
+    if (def.HasParameter("attackType"))
+    {
+        std::string typeStr = def.GetParameter("attackType")->AsString();
+        if (typeStr == "Melee") attackIntent.attackType = AttackIntent_data::AttackType::Melee;
+        else if (typeStr == "Ranged") attackIntent.attackType = AttackIntent_data::AttackType::Ranged;
+        else if (typeStr == "Area") attackIntent.attackType = AttackIntent_data::AttackType::Area;
+    }
+    
+    World::Get().AddComponent<AttackIntent_data>(entity, attackIntent);
     return true;
 }

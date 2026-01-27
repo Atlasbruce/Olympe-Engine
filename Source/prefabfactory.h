@@ -89,6 +89,10 @@ private:
     bool InstantiateAIBehavior(EntityID entity, const ComponentDefinition& def);
     bool InstantiateAIBlackboard(EntityID entity, const ComponentDefinition& def);
     bool InstantiateAISenses(EntityID entity, const ComponentDefinition& def);
+    bool InstantiateAIState(EntityID entity, const ComponentDefinition& def);
+    bool InstantiateBehaviorTreeRuntime(EntityID entity, const ComponentDefinition& def);
+    bool InstantiateMoveIntent(EntityID entity, const ComponentDefinition& def);
+    bool InstantiateAttackIntent(EntityID entity, const ComponentDefinition& def);
     bool InstantiateBoundingBox(EntityID entity, const ComponentDefinition& def);
     bool InstantiateMovement(EntityID entity, const ComponentDefinition& def);
     bool InstantiateHealth(EntityID entity, const ComponentDefinition& def);
