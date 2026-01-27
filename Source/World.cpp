@@ -1427,78 +1427,19 @@ bool World::InstantiatePass3_StaticObjects(
     // Create items, waypoints, and other static objects
     PrefabFactory& factory = PrefabFactory::Get();
     
-    for (const auto& entityInstance : levelDef.entities)
+    // ✅ ADD DEBUG LOGGING
+    SYSTEM_LOG << "[DEBUG] Pass 3 Entry:\n";
+    SYSTEM_LOG << "  Total entities in levelDef: " << levelDef.entities.size() << "\n";
+    SYSTEM_LOG << "  Categorized static objects: " << levelDef.categorizedObjects.staticObjects.size() << "\n";
+    SYSTEM_LOG << "  Categorized dynamic objects: " << levelDef.categorizedObjects.dynamicObjects.size() << "\n";
+    
+    // ✅ USE CATEGORIZED STATIC OBJECTS (no manual filtering needed)
+    for (const auto& entityInstance : levelDef.categorizedObjects.staticObjects)
     {
         if (!entityInstance) continue;
         
-        // Skip collision/sectors (handled in Pass 2)
-        std::string typeLower = entityInstance->type;
-        std::transform(typeLower.begin(), typeLower.end(), typeLower.begin(), ::tolower);
-        
-        // Add debug logging for keys
-        if (typeLower == "key") {
-            SYSTEM_LOG << "  [DEBUG] Found key object: '" << entityInstance->name 
-                       << "' at (" << entityInstance->position.x << ", " 
-                       << entityInstance->position.y << ")\n";
-        }
-        
-        if (typeLower.find("collision") != std::string::npos ||
-            typeLower.find("sector") != std::string::npos ||
-            typeLower.find("zone") != std::string::npos)
-        {
-            continue;
-        }
-        
-        // Extensible static type list
-        std::vector<std::string> staticTypes = {
-            "item", "waypoint", "trigger", "spawn",
-            "key", "door", "exit", "pickup", "interactable",
-            "checkpoint", "portal", "teleporter", "switch"
-        };
-        
-        // Check if it's a dynamic type (will be handled in Pass 4)
-        std::vector<std::string> dynamicTypes = {
-            "player", "npc", "guard", "enemy", "zombie", "ambiant"
-        };
-        
-        bool isDynamic = false;
-        for (const auto& dynamicType : dynamicTypes)
-        {
-            if (typeLower == dynamicType)
-            {
-                isDynamic = true;
-                break;
-            }
-        }
-        
-        if (isDynamic) {
-            // Add debug for filtered keys
-            if (typeLower == "key") {
-                SYSTEM_LOG << "  x Key '" << entityInstance->name 
-                           << "' filtered as dynamic (type: '" << entityInstance->type << "')\n";
-            }
-            continue;
-        }
-        
-        // Check if it's a static type
-        bool isStatic = false;
-        for (const auto& staticType : staticTypes)
-        {
-            if (typeLower == staticType)
-            {
-                isStatic = true;
-                break;
-            }
-        }
-        
-        if (!isStatic) {
-            // Add debug for non-static keys
-            if (typeLower == "key") {
-                SYSTEM_LOG << "  x Key '" << entityInstance->name 
-                           << "' filtered as non-static (type: '" << entityInstance->type << "')\n";
-            }
-            continue;
-        }
+        SYSTEM_LOG << "  [DEBUG] Processing static object: " << entityInstance->name 
+                   << " (type: " << entityInstance->type << ")\n";
         
         result.pass3_staticObjects.totalObjects++;
         
@@ -1579,42 +1520,39 @@ bool World::InstantiatePass4_DynamicObjects(
     SYSTEM_LOG << "| PASS 4: DYNAMIC OBJECTS (Prefab-Based Instantiation)                 | \n";
     SYSTEM_LOG << "\======================================================================/ \n\n";
     
+    // ✅ ADD DEBUG LOGGING
+    SYSTEM_LOG << "[DEBUG] Pass 4 Entry - Analyzing categorized objects:\n";
+    SYSTEM_LOG << "  Total entities in levelDef: " << levelDef.entities.size() << "\n";
+    SYSTEM_LOG << "  Categorized dynamic objects: " << levelDef.categorizedObjects.dynamicObjects.size() << "\n";
+    SYSTEM_LOG << "  Categorized static objects: " << levelDef.categorizedObjects.staticObjects.size() << "\n";
+    SYSTEM_LOG << "  Categorized patrol paths: " << levelDef.categorizedObjects.patrolPaths.size() << "\n";
+    
+    if (!levelDef.categorizedObjects.dynamicObjects.empty()) {
+        SYSTEM_LOG << "\n[DEBUG] Dynamic objects to instantiate:\n";
+        for (const auto& entity : levelDef.categorizedObjects.dynamicObjects) {
+            if (entity) {
+                SYSTEM_LOG << "  - " << entity->name << " (type: " << entity->type << ")\n";
+            }
+        }
+    } else {
+        SYSTEM_LOG << "  ⚠️ WARNING: No dynamic objects in categorized list!\n";
+    }
+    SYSTEM_LOG << "\n";
+    
     PrefabFactory& factory = PrefabFactory::Get();
     factory.SetPrefabRegistry(phase2Result.prefabRegistry);
     
     ParameterResolver resolver;
     
-    std::vector<std::string> dynamicTypes = {
-        "player", "npc", "guard", "enemy", "zombie", "trigger", "ambiant"
-    };
-
-    std::string instancetypeLower;
-	std::string dynamicTypeLower;
-    
-    for (const auto& entityInstance : levelDef.entities)
+    // ✅ USE CATEGORIZED DYNAMIC OBJECTS (no manual filtering needed)
+    for (const auto& entityInstance : levelDef.categorizedObjects.dynamicObjects)
     {
         if (!entityInstance) continue;
         
-        // Filter: Only dynamic types
-        bool isDynamic = false;
-        for (const auto& dynamicType : dynamicTypes)
-        {
-			instancetypeLower = entityInstance->type;
-            std::transform(instancetypeLower.begin(), instancetypeLower.end(), instancetypeLower.begin(), ::tolower);
-
-			dynamicTypeLower = dynamicType;
-			std::transform(dynamicTypeLower.begin(), dynamicTypeLower.end(), dynamicTypeLower.begin(), ::tolower);
-
-            if (instancetypeLower == dynamicTypeLower)
-            {
-                isDynamic = true;
-                break;
-            }
-        }
-        
-        if (!isDynamic) continue;
-        
         result.pass4_dynamicObjects.totalObjects++;
+        
+        SYSTEM_LOG << "  [DEBUG] Processing dynamic object: " << entityInstance->name 
+                   << " (type: " << entityInstance->type << ")\n";
         
         // Find prefab blueprint by type
         std::vector<const PrefabBlueprint*> blueprints = phase2Result.prefabRegistry.FindByType(entityInstance->type);
