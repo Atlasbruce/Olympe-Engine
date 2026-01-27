@@ -991,7 +991,7 @@ namespace Tiled {
     {
         // Define category rules (synchronized with World.cpp InstantiatePass3_StaticObjects)
         const std::set<std::string> staticTypes = {
-            "item", "collectible", "key", "treasure", "waypoint", "trigger", "portal", "door", "exit",
+            "item", "collectible", "key", "treasure", "waypoint", "way", "trigger", "portal", "door", "exit",
             "pickup", "interactable", "checkpoint", "teleporter", "switch", "spawn"
         };
         
