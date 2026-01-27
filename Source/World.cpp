@@ -1435,6 +1435,13 @@ bool World::InstantiatePass3_StaticObjects(
         std::string typeLower = entityInstance->type;
         std::transform(typeLower.begin(), typeLower.end(), typeLower.begin(), ::tolower);
         
+        // Add debug logging for keys
+        if (typeLower == "key") {
+            SYSTEM_LOG << "  [DEBUG] Found key object: '" << entityInstance->name 
+                       << "' at (" << entityInstance->position.x << ", " 
+                       << entityInstance->position.y << ")\n";
+        }
+        
         if (typeLower.find("collision") != std::string::npos ||
             typeLower.find("sector") != std::string::npos ||
             typeLower.find("zone") != std::string::npos)
@@ -1464,7 +1471,14 @@ bool World::InstantiatePass3_StaticObjects(
             }
         }
         
-        if (isDynamic) continue;
+        if (isDynamic) {
+            // Add debug for filtered keys
+            if (typeLower == "key") {
+                SYSTEM_LOG << "  x Key '" << entityInstance->name 
+                           << "' filtered as dynamic (type: '" << entityInstance->type << "')\n";
+            }
+            continue;
+        }
         
         // Check if it's a static type
         bool isStatic = false;
@@ -1477,7 +1491,14 @@ bool World::InstantiatePass3_StaticObjects(
             }
         }
         
-        if (!isStatic) continue;
+        if (!isStatic) {
+            // Add debug for non-static keys
+            if (typeLower == "key") {
+                SYSTEM_LOG << "  x Key '" << entityInstance->name 
+                           << "' filtered as non-static (type: '" << entityInstance->type << "')\n";
+            }
+            continue;
+        }
         
         result.pass3_staticObjects.totalObjects++;
         
@@ -1726,7 +1747,69 @@ bool World::InstantiatePass5_Relationships(
     const Olympe::Editor::LevelDefinition& levelDef,
     InstantiationResult& result)
 {
-    // Assign patrol paths and other relationships
+    SYSTEM_LOG << "\n[Pass 5] Linking object relationships...\n";
+    
+    int linksCreated = 0;
+    
+    // Process object links from level definition
+    for (const auto& link : levelDef.objectLinks) {
+        if (link.linkType == "patrol_path") {
+            // Find guard entity
+            auto guardIt = result.entityRegistry.find(link.sourceObjectName);
+            if (guardIt == result.entityRegistry.end()) {
+                SYSTEM_LOG << "  x Guard '" << link.sourceObjectName << "' not found in registry\n";
+                result.pass5_relationships.failed++;
+                continue;
+            }
+            
+            // Find patrol path entity
+            auto pathIt = result.entityRegistry.find(link.targetObjectName);
+            if (pathIt == result.entityRegistry.end()) {
+                SYSTEM_LOG << "  x Patrol path '" << link.targetObjectName << "' not found in registry\n";
+                result.pass5_relationships.failed++;
+                continue;
+            }
+            
+            EntityID guard = guardIt->second;
+            EntityID patrolPath = pathIt->second;
+            
+            // Link guard to patrol path via AIBlackboard_data
+            if (HasComponent<AIBlackboard_data>(guard)) {
+                AIBlackboard_data& guardBlackboard = GetComponent<AIBlackboard_data>(guard);
+                
+                // Get patrol points from patrol path entity
+                if (HasComponent<AIBlackboard_data>(patrolPath)) {
+                    const AIBlackboard_data& pathData = GetComponent<AIBlackboard_data>(patrolPath);
+                    
+                    // Copy patrol points from path to guard
+                    guardBlackboard.patrolPointCount = pathData.patrolPointCount;
+                    for (int i = 0; i < pathData.patrolPointCount && i < 8; ++i) {
+                        guardBlackboard.patrolPoints[i] = pathData.patrolPoints[i];
+                    }
+                    guardBlackboard.currentPatrolIndex = 0;
+                    guardBlackboard.hasPatrolPath = true;
+                    
+                    SYSTEM_LOG << "  ✓ Linked guard '" << link.sourceObjectName 
+                               << "' → patrol '" << link.targetObjectName 
+                               << "' (" << guardBlackboard.patrolPointCount << " points)\n";
+                    
+                    result.pass5_relationships.linkedObjects++;
+                    linksCreated++;
+                } else {
+                    SYSTEM_LOG << "  x Patrol path '" << link.targetObjectName 
+                               << "' missing AIBlackboard_data\n";
+                    result.pass5_relationships.failed++;
+                }
+            } else {
+                SYSTEM_LOG << "  x Guard '" << link.sourceObjectName 
+                           << "' missing AIBlackboard_data\n";
+                result.pass5_relationships.failed++;
+            }
+        }
+        // TODO: Handle other link types (trigger_target, etc.) here
+    }
+    
+    // Legacy: Assign patrol paths from entity overrides (backward compatibility)
     for (const auto& entityInstance : levelDef.entities)
     {
         if (!entityInstance) continue;
@@ -1737,7 +1820,7 @@ bool World::InstantiatePass5_Relationships(
         
         EntityID entity = it->second;
         
-        // Handle patrol paths
+        // Handle patrol paths embedded in overrides
         if (!entityInstance->overrides.is_null() && entityInstance->overrides.contains("patrolPath"))
         {
             if (HasComponent<AIBlackboard_data>(entity))
@@ -1771,5 +1854,6 @@ bool World::InstantiatePass5_Relationships(
         }
     }
     
+    SYSTEM_LOG << "  ✓ Created " << linksCreated << " object relationships\n";
     return true;
 }

@@ -55,9 +55,16 @@ namespace Tiled {
         
         // Base path for resolving relative image paths
         std::string resourceBasePath;
+        
+        // Map orientation ("orthogonal" or "isometric")
+        std::string mapOrientation;
+        
+        // Tile dimensions for isometric projection
+        int tileWidth;
+        int tileHeight;
 
         ConversionConfig()
-            : flipY(true) {}
+            : flipY(true), mapOrientation("orthogonal"), tileWidth(0), tileHeight(0) {}
     };
 
     class TiledToOlympe
@@ -164,6 +171,9 @@ namespace Tiled {
 
         // Create patrol path entity from polyline object (convenience wrapper)
         std::unique_ptr<Olympe::Editor::EntityInstance> CreatePatrolPathEntity(const TiledObject& obj);
+
+        // Create collision polyline entity from polyline/polygon object
+        std::unique_ptr<Olympe::Editor::EntityInstance> CreateCollisionPolylineEntity(const TiledObject& obj);
 
         ConversionConfig config_;
         ParallaxLayerManager parallaxLayers_;
