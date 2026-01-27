@@ -68,22 +68,22 @@
   </data>
  </layer>
  <objectgroup id="6" name="leveldesignmap_ground">
-  <object id="28" template="guard_object.tx" name="guard_4" x="449.784" y="32.2155">
+  <object id="28" template="guard_object.tx" name="guard_4" type="guard" x="449.784" y="32.2155">
    <properties>
     <property name="patrol way" type="object" value="7"/>
    </properties>
   </object>
-  <object id="26" template="guard_object.tx" name="guard_3" x="67.8362" y="27.1638" visible="1">
+  <object id="26" template="guard_object.tx" name="guard_3" type="guard" x="67.8362" y="27.1638" visible="1">
    <properties>
     <property name="patrol way" type="object" value="8"/>
    </properties>
   </object>
-  <object id="3" template="guard_object.tx" name="guard_2" type="npc" x="95.3908" y="501.943">
+  <object id="3" template="guard_object.tx" name="guard_2" type="guard" x="95.3908" y="501.943">
    <properties>
     <property name="patrol way" type="object" value="9"/>
    </properties>
   </object>
-  <object id="27" template="guard_object.tx" name="guard_1" x="466.138" y="496.862">
+  <object id="27" template="guard_object.tx" name="guard_1" type="guard" x="466.138" y="496.862">
    <properties>
     <property name="patrol way" type="object" value="6"/>
    </properties>
@@ -109,7 +109,7 @@
   <object id="13" name="key_1" type="key" x="954.713" y="631.954">
    <point/>
   </object>
-  <object id="15" name="portal" type="exit" x="90.8276" y="-354.828">
+  <object id="15" name="portal" type="door" x="90.8276" y="-354.828">
    <point/>
   </object>
   <object id="21" template="trigger_object.tx" type="trigger" x="170.644" y="-207.977"/>

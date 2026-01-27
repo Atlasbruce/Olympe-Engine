@@ -212,9 +212,10 @@ public:
             int successfullyCreated;
             int failed;
             std::vector<std::string> failedObjects;
-            
-            PassStats() : totalObjects(0), successfullyCreated(0), failed(0) {}
-            
+            int linkedObjects;
+
+            PassStats() : totalObjects(0), successfullyCreated(0), failed(0), linkedObjects(0) {}
+
             bool IsSuccess() const { return failed == 0; }
         };
         

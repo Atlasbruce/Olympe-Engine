@@ -37,8 +37,10 @@ struct AIBlackboard_data
     
     // Patrol state
     int currentPatrolPoint = 0;
+    int currentPatrolIndex = 0;
     Vector patrolPoints[8]; // Fixed size for performance
     int patrolPointCount = 0;
+    bool hasPatrolPath = false; 
     
     // Combat state
     float lastAttackTime = 0.0f;

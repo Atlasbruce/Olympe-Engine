@@ -210,6 +210,7 @@
                          "value":7
                         }],
                  "template":"guard_object.tx",
+                 "type":"guard",
                  "x":449.784,
                  "y":32.2155
                 }, 
@@ -223,6 +224,7 @@
                          "value":8
                         }],
                  "template":"guard_object.tx",
+                 "type":"guard",
                  "visible":true,
                  "x":67.8362,
                  "y":27.1638
@@ -237,7 +239,7 @@
                          "value":9
                         }],
                  "template":"guard_object.tx",
-                 "type":"npc",
+                 "type":"guard",
                  "x":95.3908,
                  "y":501.943
                 }, 
@@ -251,6 +253,7 @@
                          "value":6
                         }],
                  "template":"guard_object.tx",
+                 "type":"guard",
                  "x":466.138,
                  "y":496.862
                 }, 
@@ -463,14 +466,14 @@
                 {
                  "id":18,
                  "template":"sound_object_template.tx",
-                 "type":"sound_ambiant",
+                 "type":"ambiant",
                  "x":-69.6322,
                  "y":228.299
                 }, 
                 {
                  "id":19,
                  "template":"sound_object_template.tx",
-                 "type":"sound_ambiant",
+                 "type":"ambiant",
                  "x":-42.8621,
                  "y":230.862
                 }],

@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "isometric_quest.tmx",
+    "activeFile": "parallax-forest.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -16,10 +16,16 @@
             "dynamicWrapping": true
         },
         "Tiles iso cube..tsj": {
-            "dynamicWrapping": false
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "Tiles iso cube.tsx": {
             "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "Trees.tsj": {
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
@@ -32,8 +38,8 @@
             "scale": 0.5,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 667,
-                "y": 197
+                "x": 703,
+                "y": 201
             }
         },
         "map_forest.tmj": {
@@ -56,6 +62,22 @@
                 "x": 153.75,
                 "y": 422.25
             }
+        },
+        "parallax-forest.tmx": {
+            "expandedObjectLayers": [
+                17,
+                2
+            ],
+            "scale": 0.25,
+            "selectedLayer": 10,
+            "viewCenter": {
+                "x": -22,
+                "y": 614
+            }
+        },
+        "parallax-forest.tmx#tileset 2D ortho": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
         },
         "parallax-forext..tmj": {
             "scale": 0.2200969827586207,
@@ -93,10 +115,15 @@
         "tiles-iso-2.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
+        },
+        "tileset 2D ortho.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         }
     },
     "last.exportedFilePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels",
-    "last.imagePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels/Parallax Layers",
+    "last.imagePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels",
     "last.objectTemplatePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels",
     "lastUsedTilesetExportFilter": "Fichiers de jeu de tuiles JSON (*.tsj *.json)",
     "map.fixedSize": false,
@@ -106,22 +133,34 @@
     "map.tileHeight": 64,
     "map.tileWidth": 64,
     "openFiles": [
-        "isometric_quest.tmx"
+        "isometric_quest.tmx",
+        "Tiles iso cube..tsj",
+        "Trees.tsx",
+        "Trees.tsj",
+        "parallax-forest.tmx",
+        "tileset 2D ortho.tsx"
     ],
     "project": "parallax-level.tiled-project",
     "property.type": "int",
     "recentFiles": [
         "isometric_quest.tmx",
+        "Tiles iso cube..tsj",
+        "Trees.tsx",
+        "Trees.tsj",
+        "tileset 2D ortho.tsx",
+        "parallax-forest.tmx",
         "parallax-forext..tmj",
         "map_forest.tmx",
         "Tiles iso cube.tsx",
-        "Trees.tsx",
         "parallax-forext.tmx",
         "parallax_forest.tsx",
-        "map_forest.tmj",
-        "tiles-iso-2.tsx",
-        "tiles-iso-1.tsx"
+        "map_forest.tmj"
     ],
     "tileset.lastUsedFormat": "tsx",
-    "tileset.type": 1
+    "tileset.spacing": 1,
+    "tileset.tileSize": {
+        "height": 34,
+        "width": 34
+    },
+    "tileset.type": 0
 }

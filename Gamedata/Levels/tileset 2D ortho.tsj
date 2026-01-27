@@ -1,0 +1,22 @@
+{ "columns":3,
+ "grid":
+    {
+     "height":260,
+     "orientation":"orthogonal",
+     "width":260
+    },
+ "image":"tileset 2D ortho.png",
+ "imageheight":260,
+ "imagewidth":261,
+ "margin":0,
+ "name":"tileset 2D ortho",
+ "objectalignment":"topleft",
+ "spacing":3,
+ "tilecount":9,
+ "tiledversion":"1.11.2",
+ "tileheight":64,
+ "tilewidth":64,
+ "transparentcolor":"#000000",
+ "type":"tileset",
+ "version":"1.10"
+}

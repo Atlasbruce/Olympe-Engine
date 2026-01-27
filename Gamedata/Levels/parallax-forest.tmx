@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="left-up" width="30" height="20" tilewidth="64" tileheight="64" infinite="1" nextlayerid="18" nextobjectid="13">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="left-up" width="30" height="20" tilewidth="64" tileheight="64" infinite="1" nextlayerid="19" nextobjectid="13">
  <editorsettings>
   <export target="parallax-forext..tmj" format="json"/>
  </editorsettings>
  <tileset firstgid="1" source="parallax_forest.tsx"/>
+ <tileset firstgid="8" name="tileset 2D ortho" tilewidth="64" tileheight="64" spacing="3" tilecount="9" columns="3" objectalignment="topleft">
+  <grid orientation="orthogonal" width="260" height="260"/>
+  <image source="tileset 2D ortho.png" trans="000000" width="261" height="260"/>
+ </tileset>
  <imagelayer id="14" name="Layer_background_4" offsetx="-1000" offsety="0" parallaxx="0">
   <image source="../Resources/Parallax Layers/2.png" width="1980" height="1080"/>
  </imagelayer>
@@ -51,4 +55,44 @@
    <point/>
   </object>
  </objectgroup>
+ <layer id="18" name="Layer_ground_tiles" width="30" height="20">
+  <data encoding="base64" compression="zlib">
+   <chunk x="-48" y="0" width="16" height="16">
+   eJxjYBgFowA/4BvVP6T1c+LBAHSoAKI=
+  </chunk>
+   <chunk x="-32" y="0" width="16" height="16">
+   eJxjYBgFo2AUwAA3hfL0BpwUYgAqYACn
+  </chunk>
+   <chunk x="-16" y="0" width="16" height="16">
+   eJxjYBgFo2BkAO6BdgANACeFGAAi/ACc
+  </chunk>
+   <chunk x="0" y="0" width="16" height="16">
+   eJxjYBgFo2B4Au6BdgAdACeFGAAjrACc
+  </chunk>
+   <chunk x="16" y="0" width="16" height="16">
+   eJxjYBgFo2B4Ae6BdgAdASeFGAAkBACc
+  </chunk>
+   <chunk x="32" y="0" width="16" height="16">
+   eJxjYBgFo4A4wDcI9XMPsP0DrZ+TRIwOAI0gANo=
+  </chunk>
+   <chunk x="-48" y="16" width="16" height="16">
+   eJxjYCAMOPDgUTAKRsHQBQDZgAA5
+  </chunk>
+   <chunk x="-32" y="16" width="16" height="16">
+   eJzjYGBg4KAAj4JRMAqGLgAA9Q8AgQ==
+  </chunk>
+   <chunk x="-16" y="16" width="16" height="16">
+   eJzjYGBg4KAAj4JRMAqGLgAA9Q8AgQ==
+  </chunk>
+   <chunk x="0" y="16" width="16" height="16">
+   eJzjYGBg4KAAj4JRMAqGLgAA9Q8AgQ==
+  </chunk>
+   <chunk x="16" y="16" width="16" height="16">
+   eJzjYGBg4KAAj4JRMAqGLgAA9Q8AgQ==
+  </chunk>
+   <chunk x="32" y="16" width="16" height="16">
+   eJzjYGBg4CABj4JRMAqGDwAAe88AYQ==
+  </chunk>
+  </data>
+ </layer>
 </map>
