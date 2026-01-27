@@ -1062,22 +1062,22 @@ namespace Tiled {
                 entityCopy->position = entity->position;
                 entityCopy->overrides = entity->overrides;
                 
-                // Categorize by type
-                if (obj.objectType == ObjectType::Polyline && obj.type == "way") {
+                // Categorize by type (use typeLower for case-insensitive comparison)
+                if (obj.objectType == ObjectType::Polyline && typeLower == "way") {
                     outLevel.categorizedObjects.patrolPaths.push_back(std::move(entity));
                     stats.patrolPaths++;
                     SYSTEM_LOG << "  → Patrol Path: '" << obj.name << "' (" << obj.polyline.size() << " points)\n";
                 }
-                else if (soundTypes.count(obj.type)) {
+                else if (soundTypes.count(typeLower)) {
                     outLevel.categorizedObjects.soundObjects.push_back(std::move(entity));
                     stats.soundObjects++;
                     SYSTEM_LOG << "  → Sound Object: '" << obj.name << "' (type: " << obj.type << ")\n";
                 }
-                else if (staticTypes.count(obj.type)) {
+                else if (staticTypes.count(typeLower)) {
                     outLevel.categorizedObjects.staticObjects.push_back(std::move(entity));
                     stats.staticObjects++;
                 }
-                else if (dynamicTypes.count(obj.type)) {
+                else if (dynamicTypes.count(typeLower)) {
                     outLevel.categorizedObjects.dynamicObjects.push_back(std::move(entity));
                     stats.dynamicObjects++;
                 }
