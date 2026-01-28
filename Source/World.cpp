@@ -1693,6 +1693,14 @@ bool World::InstantiatePass4_DynamicObjects(
             SYSTEM_LOG << "    -> Created with " << componentCount << " components\n";
         }
         
+        // ✅ CRITICAL: Override position INCLUDING z component (zOrder) to preserve layer depth
+        if (HasComponent<Position_data>(entity)) {
+            auto& pos = GetComponent<Position_data>(entity);
+            pos.position = entityInstance->position;  // Includes x, y, AND z!
+            SYSTEM_LOG << "    -> Position: (" << pos.position.x << ", " << pos.position.y 
+                       << ", " << pos.position.z << ") [zOrder preserved]\n";
+        }
+        
         result.pass4_dynamicObjects.successfullyCreated++;
         result.entityRegistry[entityInstance->name] = entity;
     }

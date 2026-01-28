@@ -604,6 +604,69 @@ void RenderChunkOrthogonal(const TileChunk& chunk, const CameraTransform& cam)
     }
 }
 
+// ✅ Helper function to add entity sprites to isometric batch for unified rendering
+void AddEntitySpritesToIsometricBatch(
+    Olympe::Rendering::IsometricRenderer* isoRenderer,
+    const CameraTransform& cam,
+    int tileWidth,
+    int tileHeight)
+{
+    for (EntityID entity : World::Get().GetSystem<RenderingSystem>()->m_entities) {
+        try {
+            Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+            VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
+            BoundingBox_data& bbox = World::Get().GetComponent<BoundingBox_data>(entity);
+            
+            if (!visual.visible) continue;
+            
+            // Frustum culling
+            SDL_FRect worldBounds = {
+                pos.position.x - visual.hotSpot.x,
+                pos.position.y - visual.hotSpot.y,
+                bbox.boundingBox.w,
+                bbox.boundingBox.h
+            };
+            if (!cam.IsVisible(worldBounds)) continue;
+            
+            // ✅ Create IsometricTile for this entity sprite
+            Olympe::Rendering::IsometricTile spriteTile;
+            spriteTile.isEntitySprite = true;
+            spriteTile.worldPosX = pos.position.x;
+            spriteTile.worldPosY = pos.position.y;
+            
+            // Calculate tile coordinates for depth sorting
+            spriteTile.worldX = static_cast<int>(pos.position.x / tileWidth);
+            spriteTile.worldY = static_cast<int>(pos.position.y / tileHeight);
+            
+            // ✅ CRITICAL: Use position.z as zOrder
+            spriteTile.zOrder = static_cast<int>(pos.position.z);
+            
+            // Store sprite data
+            spriteTile.texture = visual.sprite;
+            // Pack RGBA into uint32_t (R in highest byte)
+            spriteTile.colorTint = (static_cast<uint32_t>(visual.color.r) << 24) |
+                                   (static_cast<uint32_t>(visual.color.g) << 16) |
+                                   (static_cast<uint32_t>(visual.color.b) << 8) |
+                                   255;  // Alpha = 255 (fully opaque)
+            spriteTile.hotSpot = { visual.hotSpot.x, visual.hotSpot.y };
+            
+            // Pre-calculate destination rect (will be converted to screen in renderer)
+            spriteTile.destRect = {
+                pos.position.x,
+                pos.position.y,
+                bbox.boundingBox.w,
+                bbox.boundingBox.h
+            };
+            
+            // Add to batch for sorting
+            isoRenderer->RenderTile(spriteTile);
+            
+        } catch (...) {
+            // Skip entities without required components
+        }
+    }
+}
+
 // Multi-layer rendering with parallax support
 void RenderMultiLayerForCamera(const CameraTransform& cam)
 {
@@ -702,13 +765,20 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
     // ================================================================
     // STEP 3: Add Entities
     // ================================================================
-    for (EntityID entity : World::Get().GetSystem<RenderingSystem>()->m_entities) {
-        try {
-            Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-            // Entities use Y position for isometric-style depth sorting
-            renderQueue.push_back(RenderItem::MakeEntity(pos.position.y, entity));
-        } catch (...) {
-            // Entity without position, skip
+    // For orthogonal maps, add entities to the render queue for depth sorting
+    // For isometric maps, entities are handled by the isometric renderer batch
+    const std::string& mapOrientation = World::Get().GetMapOrientation();
+    
+    if (mapOrientation != "isometric") {
+        for (EntityID entity : World::Get().GetSystem<RenderingSystem>()->m_entities) {
+            try {
+                Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+                // ✅ Use position.z (layer zOrder) for depth, plus Y for within-layer sorting
+                float depth = pos.position.z * 10000.0f + pos.position.y;
+                renderQueue.push_back(RenderItem::MakeEntity(depth, entity));
+            } catch (...) {
+                // Entity without position, skip
+            }
         }
     }
     
@@ -745,6 +815,7 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
             int tileHeight = World::Get().GetTileHeight();
             
             if (mapOrientation == "isometric") {
+                // ✅ ISOMETRIC: Unified batch rendering (tiles + entities)
                 // Initialize isometric renderer if needed
                 if (!g_isoRenderer) {
                     g_isoRenderer = std::make_unique<Olympe::Rendering::IsometricRenderer>();
@@ -756,11 +827,20 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
                                            static_cast<int>(cam.viewport.h));
                 g_isoRenderer->BeginFrame();
                 
-                // Render all batched chunks
+                // Step 1: Add tiles to batch
                 for (const auto* chunk : tileBatch) {
                     RenderChunkIsometric(*chunk, g_isoRenderer.get());
                 }
                 
+                // ✅ Step 2: Add entity sprites to batch
+                AddEntitySpritesToIsometricBatch(
+                    g_isoRenderer.get(),
+                    cam,
+                    tileWidth,
+                    tileHeight
+                );
+                
+                // Step 3: Sort and render everything together
                 g_isoRenderer->EndFrame();
             }
             else if (mapOrientation == "orthogonal") {

@@ -998,8 +998,19 @@ namespace Tiled {
             "ambient", "sound", "music"
         };
         
+        // ✅ FIX #1: Track global zOrder across ALL layers for depth sorting
+        int globalZOrder = 0;
+        
         for (const auto& layer : tiledMap.layers) {
-            if (layer->type != LayerType::ObjectGroup || !layer->visible) continue;
+            // ✅ Process object layers and assign zOrder
+            if (layer->type == LayerType::ObjectGroup) {
+                if (!layer->visible) {
+                    globalZOrder++;  // ✅ Increment even for invisible layers to maintain ordering
+                    continue;
+                }
+                
+                SYSTEM_LOG << "[CategorizeGameObjects] Processing object layer '" 
+                           << layer->name << "' (zOrder: " << globalZOrder << ")\n";
             
             for (const auto& obj : layer->objects) {
                 // PROCESS collision polylines/polygons BEFORE filtering
@@ -1010,6 +1021,9 @@ namespace Tiled {
                     if (obj.objectType == ObjectType::Polyline || obj.objectType == ObjectType::Polygon) {
                         auto collisionEntity = CreateCollisionPolylineEntity(obj);
                         if (collisionEntity) {
+                            // ✅ CRITICAL FIX: Store layer zOrder in position.z
+                            collisionEntity->position.z = static_cast<float>(globalZOrder);
+                            
                             // Create a copy for the legacy entities array
                             auto entityCopy = std::make_unique<Olympe::Editor::EntityInstance>();
                             entityCopy->id = collisionEntity->id;
@@ -1024,7 +1038,7 @@ namespace Tiled {
                             outLevel.entities.push_back(std::move(entityCopy));
                             stats.staticObjects++;
                             stats.totalObjects++;
-                            SYSTEM_LOG << "  → Collision Polyline: '" << obj.name << "'\n";
+                            SYSTEM_LOG << "  → Collision Polyline: '" << obj.name << "' (zOrder: " << globalZOrder << ")\n";
                         }
                         continue;  // Skip to next object
                     }
@@ -1043,6 +1057,12 @@ namespace Tiled {
                 
                 auto entity = CreateEntity(obj);
                 if (!entity) continue;
+                
+                // ✅ CRITICAL FIX: Store layer zOrder in position.z
+                entity->position.z = static_cast<float>(globalZOrder);
+                
+                SYSTEM_LOG << "  → Entity '" << entity->name 
+                           << "' assigned zOrder: " << globalZOrder << "\n";
                 
                 // Create a copy for the legacy entities array
                 // Note: Both categorizedObjects (new system) and entities (legacy) need to be populated
@@ -1086,6 +1106,15 @@ namespace Tiled {
                 outLevel.entities.push_back(std::move(entityCopy));
                 
                 stats.totalObjects++;
+            }
+            
+            // ✅ Increment zOrder after processing object layer
+            globalZOrder++;
+            
+            } else {
+                // ✅ For non-object layers (tile layers, image layers, etc.), still increment zOrder
+                // to maintain correct ordering between all layer types
+                globalZOrder++;
             }
         }
         

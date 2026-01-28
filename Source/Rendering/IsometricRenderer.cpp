@@ -64,23 +64,39 @@ namespace Rendering {
 
     void IsometricRenderer::EndFrame()
     {
-        // Sort tiles back-to-front (painter's algorithm)
-        // First by layer z-order, then by isometric depth
+        // ✅ UNIFIED SORT: tiles and entity sprites together
         std::sort(m_tileBatch.begin(), m_tileBatch.end(),
-            [](const IsometricTile& a, const IsometricTile& b) {
-                // Sort by layer z-order first
+            [this](const IsometricTile& a, const IsometricTile& b) {
+                // 1. PRIMARY SORT: Layer zOrder (back to front)
                 if (a.zOrder != b.zOrder) return a.zOrder < b.zOrder;
                 
-                // Then by isometric depth (worldX + worldY)
-                int sumA = a.worldX + a.worldY;
-                int sumB = b.worldX + b.worldY;
-                if (sumA != sumB) return sumA < sumB;
-                
-                // If on same diagonal, sort by X coordinate
-                return a.worldX < b.worldX;
+                // 2. SECONDARY SORT: Isometric depth
+                if (a.isEntitySprite && b.isEntitySprite) {
+                    // Both entities: sort by exact worldPosY
+                    if (std::abs(a.worldPosY - b.worldPosY) > 0.1f) {
+                        return a.worldPosY < b.worldPosY;
+                    }
+                    // Same Y: sort by X for determinism
+                    return a.worldPosX < b.worldPosX;
+                }
+                else if (!a.isEntitySprite && !b.isEntitySprite) {
+                    // Both tiles: isometric diagonal sort
+                    int sumA = a.worldX + a.worldY;
+                    int sumB = b.worldX + b.worldY;
+                    if (sumA != sumB) return sumA < sumB;
+                    return a.worldX < b.worldX;
+                }
+                else {
+                    // Mixed: compare entity worldPosY vs tile center
+                    float entityY = a.isEntitySprite ? a.worldPosY : b.worldPosY;
+                    float tileY = a.isEntitySprite ? 
+                        (b.worldY + 0.5f) * m_tileHeight : 
+                        (a.worldY + 0.5f) * m_tileHeight;
+                    return entityY < tileY;
+                }
             });
         
-        // Render all tiles
+        // Render all items in sorted order
         for (const auto& tile : m_tileBatch)
         {
             if (!tile.texture) continue;
@@ -94,51 +110,74 @@ namespace Rendering {
     {
         if (!m_renderer || !tile.texture) return;
         
-        // Extract tile ID and flip flags
-        uint32_t tileId = tile.tileGID & TILE_ID_MASK;
-        if (tileId == 0) return; // Empty tile
-        
-        bool flipH, flipV, flipD;
-        ExtractFlipFlags(tile.tileGID, flipH, flipV, flipD);
-        
-        // Convert world coordinates to screen position (already includes camera and viewport transforms)
-        Vector screenPos = WorldToScreen(static_cast<float>(tile.worldX), 
-                                         static_cast<float>(tile.worldY));
-        
-        // Calculate destination rectangle
-        SDL_FRect destRect;
-        destRect.w = static_cast<float>(tile.srcRect.w) * m_zoom;
-        destRect.h = static_cast<float>(tile.srcRect.h) * m_zoom;
-        
-        // ====================================================================
-        // CRITICAL: Apply tileoffset and anchor at bottom for isometric tiles
-        // ====================================================================
-        // The tileoffset values come from the .tsx/.tsj tileset files:
-        // - Trees.tsj: offset (-100, 0) shifts trees left for centering
-        // - Tiles iso cube.tsx: offset (0, 26) shifts cubes down for alignment
-        // - tiles-iso-1.tsx: offset (0, 0) no adjustment needed
-        //
-        // Formula:
-        // X = screenPos.x + (offsetX * zoom) - width/2    (center horizontally, apply offset)
-        // Y = screenPos.y + (offsetY * zoom) - height + baseHeight  (anchor bottom, apply offset)
-        //
-        // This ensures tiles are positioned exactly as designed in Tiled editor.
-        // ====================================================================
-        destRect.x = screenPos.x + (tile.tileoffsetX * m_zoom) - destRect.w / 2.0f;
-        destRect.y = screenPos.y + (tile.tileoffsetY * m_zoom) - destRect.h + (m_tileHeight * m_zoom);
-        
-        // Get SDL flip flags
-        SDL_FlipMode flip = GetSDLFlip(flipH, flipV, flipD);
-        
-		// Source rectangle conversion
-		SDL_FRect srcFRect = {(float)tile.srcRect.x, (float)tile.srcRect.y, (float)tile.srcRect.w, (float)tile.srcRect.h};
+        if (tile.isEntitySprite) {
+            // ✅ ENTITY SPRITE RENDERING
+            // worldPosX/Y are already in world coordinates, convert to screen
+            Vector screenPos = WorldToScreen(tile.worldPosX, tile.worldPosY);
+            
+            SDL_FRect destRect = {
+                screenPos.x - tile.hotSpot.x * m_zoom,
+                screenPos.y - tile.hotSpot.y * m_zoom,
+                tile.destRect.w * m_zoom,
+                tile.destRect.h * m_zoom
+            };
+            
+            // Apply color tint
+            uint8_t r = (tile.colorTint >> 24) & 0xFF;
+            uint8_t g = (tile.colorTint >> 16) & 0xFF;
+            uint8_t b = (tile.colorTint >> 8) & 0xFF;
+            SDL_SetTextureColorMod(tile.texture, r, g, b);
+            
+            SDL_RenderTexture(m_renderer, tile.texture, nullptr, &destRect);
+        }
+        else {
+            // ✅ TILE RENDERING (existing code)
+            // Extract tile ID and flip flags
+            uint32_t tileId = tile.tileGID & TILE_ID_MASK;
+            if (tileId == 0) return; // Empty tile
+            
+            bool flipH, flipV, flipD;
+            ExtractFlipFlags(tile.tileGID, flipH, flipV, flipD);
+            
+            // Convert world coordinates to screen position (already includes camera and viewport transforms)
+            Vector screenPos = WorldToScreen(static_cast<float>(tile.worldX), 
+                                             static_cast<float>(tile.worldY));
+            
+            // Calculate destination rectangle
+            SDL_FRect destRect;
+            destRect.w = static_cast<float>(tile.srcRect.w) * m_zoom;
+            destRect.h = static_cast<float>(tile.srcRect.h) * m_zoom;
+            
+            // ====================================================================
+            // CRITICAL: Apply tileoffset and anchor at bottom for isometric tiles
+            // ====================================================================
+            // The tileoffset values come from the .tsx/.tsj tileset files:
+            // - Trees.tsj: offset (-100, 0) shifts trees left for centering
+            // - Tiles iso cube.tsx: offset (0, 26) shifts cubes down for alignment
+            // - tiles-iso-1.tsx: offset (0, 0) no adjustment needed
+            //
+            // Formula:
+            // X = screenPos.x + (offsetX * zoom) - width/2    (center horizontally, apply offset)
+            // Y = screenPos.y + (offsetY * zoom) - height + baseHeight  (anchor bottom, apply offset)
+            //
+            // This ensures tiles are positioned exactly as designed in Tiled editor.
+            // ====================================================================
+            destRect.x = screenPos.x + (tile.tileoffsetX * m_zoom) - destRect.w / 2.0f;
+            destRect.y = screenPos.y + (tile.tileoffsetY * m_zoom) - destRect.h + (m_tileHeight * m_zoom);
+            
+            // Get SDL flip flags
+            SDL_FlipMode flip = GetSDLFlip(flipH, flipV, flipD);
+            
+            // Source rectangle conversion
+            SDL_FRect srcFRect = {(float)tile.srcRect.x, (float)tile.srcRect.y, (float)tile.srcRect.w, (float)tile.srcRect.h};
 
-        // Render the tile
-        SDL_RenderTextureRotated(m_renderer, tile.texture, &srcFRect, &destRect, 
-                                  0.0, nullptr, flip);
+            // Render the tile
+            SDL_RenderTextureRotated(m_renderer, tile.texture, &srcFRect, &destRect, 
+                                      0.0, nullptr, flip);
 
-		//SDL_SetRenderDrawColor(m_renderer, 255, 0, 0, 255);
-  //      Draw_Circle(destRect.x + destRect.w / 2, destRect.y + destRect.h / 2, 5);
+            //SDL_SetRenderDrawColor(m_renderer, 255, 0, 0, 255);
+      //      Draw_Circle(destRect.x + destRect.w / 2, destRect.y + destRect.h / 2, 5);
+        }
     }
 
     Vector IsometricRenderer::WorldToScreen(float worldX, float worldY) const
