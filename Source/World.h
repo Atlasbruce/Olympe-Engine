@@ -11,6 +11,7 @@ World purpose: Manage the overall game world, including object management, level
 #pragma once
 
 #include "system/EventQueue.h"
+#include "system/system_utils.h"
 #include <vector>
 #include <memory>
 #include <unordered_map>
