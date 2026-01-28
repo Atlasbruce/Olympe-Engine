@@ -50,7 +50,6 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
 {
     // ✅ Utiliser le système centralisé
     EntityID eID = PrefabFactory::Get().CreateEntityFromPrefabName(_playerPrefabName);
-	m_playersEntity.push_back(eID);
 
     if (eID == INVALID_ENTITY_ID)
     {
@@ -58,6 +57,8 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
         return INVALID_ENTITY_ID;
 	}
 
+	World& world = World::Get();
+	
 	// Vérifier que les composants requis existent
 	if (!world.HasComponent<PlayerBinding_data>(eID) || 
 		!world.HasComponent<Controller_data>(eID))
@@ -65,6 +66,9 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
 		SYSTEM_LOG << "❌ Player entity missing required input components!\n";
 		return INVALID_ENTITY_ID;
 	}
+
+	// Add to player list only after all validation passes
+	m_playersEntity.push_back(eID);
 
 	// bind input components with player ID
 	PlayerBinding_data &binding = world.GetComponent<PlayerBinding_data>(eID);

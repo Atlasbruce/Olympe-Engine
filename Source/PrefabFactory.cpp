@@ -85,6 +85,12 @@ void PrefabFactory::SetPrefabRegistry(const PrefabRegistry& registry)
 {
     m_prefabRegistry = registry;
     SYSTEM_LOG << "PrefabFactory: Registry cached with " << registry.GetCount() << " prefabs\n";
+    
+    // Mark as preloaded if registry is non-empty
+    if (registry.GetCount() > 0)
+    {
+        m_prefabsPreloaded = true;
+    }
 }
 
 EntityID PrefabFactory::CreateEntityFromBlueprint(const PrefabBlueprint& blueprint)
