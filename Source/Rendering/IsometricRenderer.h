@@ -2,7 +2,8 @@
  * Olympe Engine V2 - 2025
  * Isometric Renderer
  * 
- * Renders isometric tilemaps with proper depth sorting, tile flipping, and culling.
+ * ✅ REFACTORED: Now provides utility functions only
+ * Batching and sorting moved to unified rendering pipeline in ECS_Systems.cpp
  */
 
 #pragma once
@@ -21,48 +22,8 @@ namespace Rendering {
     constexpr uint32_t FLIPPED_DIAGONALLY_FLAG = 0x20000000;
     constexpr uint32_t TILE_ID_MASK = 0x1FFFFFFF;
 
-    // Tile rendering data
-    struct IsometricTile
-    {
-        int worldX;           // Grid X coordinate
-        int worldY;           // Grid Y coordinate
-        uint32_t tileGID;     // Tile Global ID (with flip flags)
-        SDL_Texture* texture; // Texture to render
-        SDL_Rect srcRect;     // Source rectangle in texture
-        int zOrder;           // Layer z-order for sorting
-        
-        // ====================================================================
-        // CRITICAL: Tile offset from tileset definition (for proper alignment)
-        // These values come from the .tsx/.tsj file's <tileoffset> element
-        // Examples:
-        // - Trees.tsj: tileoffsetX = -100, tileoffsetY = 0 (shift left)
-        // - Tiles iso cube.tsx: tileoffsetX = 0, tileoffsetY = 26 (shift down)
-        // - tiles-iso-1.tsx: tileoffsetX = 0, tileoffsetY = 0 (no offset)
-        // ====================================================================
-        int tileoffsetX;
-        int tileoffsetY;
-        
-        // ====================================================================
-        // ✅ NEW: Entity sprite support
-        // These fields enable unified rendering of entities and tiles together
-        // ====================================================================
-        bool isEntitySprite;    // True if this is an entity, not a tile
-        float worldPosX;        // Exact world position (for entities)
-        float worldPosY;
-        SDL_FRect destRect;     // Pre-calculated destination rect
-        uint32_t colorTint;     // RGBA color modulation
-        SDL_FPoint hotSpot;     // Sprite pivot/hotspot
-        
-        // Constructor with explicit default values
-        IsometricTile()
-            : worldX(0), worldY(0), tileGID(0), texture(nullptr), 
-              srcRect{0, 0, 0, 0}, zOrder(0), tileoffsetX(0), tileoffsetY(0),
-              isEntitySprite(false), worldPosX(0.0f), worldPosY(0.0f),
-              destRect{0.0f, 0.0f, 0.0f, 0.0f}, colorTint(0xFFFFFFFF),
-              hotSpot{0.0f, 0.0f} {}
-    };
-
-    // Isometric Renderer class
+    // ✅ Isometric utility functions (coordinate conversion, culling)
+    // Note: Tile batching and sorting moved to unified pipeline in ECS_Systems.cpp
     class IsometricRenderer
     {
     public:
@@ -76,16 +37,11 @@ namespace Rendering {
         void SetCamera(float camX, float camY, float zoom);
         void SetViewport(int screenWidth, int screenHeight);
         
-        // Rendering
-        void BeginFrame();
-        void RenderTile(const IsometricTile& tile);
-        void EndFrame();
-        
-        // Utility functions
+        // ✅ Utility functions (coordinate conversion)
         Vector WorldToScreen(float worldX, float worldY) const;
         Vector ScreenToWorld(float screenX, float screenY) const;
         
-        // Culling
+        // Culling utilities
         bool IsTileVisible(int worldX, int worldY) const;
         void GetVisibleTileRange(int& minX, int& minY, int& maxX, int& maxY) const;
 
@@ -105,19 +61,13 @@ namespace Rendering {
         int m_screenWidth;
         int m_screenHeight;
         
-        // Tile batch for depth sorting
-        std::vector<IsometricTile> m_tileBatch;
-        
         // Rendering constants
-        static constexpr float ISOMETRIC_OFFSET_Y = 200.0f;     // Y offset for negative world coords
-        static constexpr float CULL_MARGIN = 100.0f;            // Safety margin for tall tiles
-        static constexpr float TALL_TILE_MULTIPLIER = 5.0f;     // Multiplier for culling margin to handle tall tiles (256px)
-        static constexpr int VISIBLE_TILE_PADDING = 5;          // Padding in tiles for visible range calculation
+        static constexpr float ISOMETRIC_OFFSET_Y = 200.0f;
+        static constexpr float CULL_MARGIN = 100.0f;
+        static constexpr float TALL_TILE_MULTIPLIER = 5.0f;
+        static constexpr int VISIBLE_TILE_PADDING = 5;
         
         // Helper functions
-        void RenderTileImmediate(const IsometricTile& tile);
-        void ExtractFlipFlags(uint32_t gid, bool& flipH, bool& flipV, bool& flipD) const;
-        SDL_FlipMode GetSDLFlip(bool flipH, bool flipV, bool flipD) const;
         float CalculateCullingMargin() const;
     };
 
