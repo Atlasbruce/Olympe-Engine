@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="isometric" renderorder="left-up" width="20" height="20" tilewidth="58" tileheight="27" infinite="1" nextlayerid="11" nextobjectid="29">
+<map version="1.10" tiledversion="1.11.2" orientation="isometric" renderorder="left-up" width="20" height="20" tilewidth="58" tileheight="27" infinite="1" nextlayerid="11" nextobjectid="31">
  <editorsettings>
-  <export target="map_forest.tmj" format="json"/>
+  <export target="isometric_quest.tmj" format="json"/>
  </editorsettings>
  <tileset firstgid="1" source="tiles-iso-1.tsx"/>
  <tileset firstgid="109" source="Tiles iso cube.tsx"/>
  <tileset firstgid="127" source="Trees.tsx"/>
  <imagelayer id="9" name="layer_skywater" class="layer" parallaxx="0.8" parallaxy="0.8" repeatx="1" repeaty="1">
-  <image source="../Resources/sky.jpg" width="1200" height="675"/>
+  <image source="../Resources/sky.jpg" width="1024" height="1024"/>
  </imagelayer>
  <layer id="2" name="graphicmap_ground" width="20" height="20">
   <data encoding="base64">
@@ -100,7 +100,7 @@
   <object id="6" name="way_1" type="way" x="474.908" y="490.425">
    <polyline points="0,0 -1.6092,-153.057 -123.299,-239.368 -5.87356,-263.46 -7.93103,-456.069"/>
   </object>
-  <object id="10" name="treasure_crest" type="collectible" x="250.54" y="256.126">
+  <object id="10" name="treasure_crest" type="collectible" x="250" y="256">
    <point/>
   </object>
   <object id="14" name="key_2" type="key" x="282.276" y="793.724">
@@ -113,12 +113,17 @@
    <point/>
   </object>
   <object id="21" template="trigger_object.tx" type="trigger" x="170.644" y="-207.977"/>
-  <object id="16" name="player" type="player" x="-260.598" y="227.264">
+  <object id="16" name="player_1" type="player" x="-260.598" y="227.264">
+   <point/>
+  </object>
+  <object id="29" name="player_2" type="player" x="-268.322" y="118.988">
+   <point/>
+  </object>
+  <object id="30" name="player_3" type="player" x="-238.529" y="305.195">
    <point/>
   </object>
  </objectgroup>
  <objectgroup id="10" name="sounddesign">
   <object id="18" template="sound_object_template.tx" type="ambiant" x="-69.6322" y="228.299"/>
-  <object id="19" template="sound_object_template.tx" type="ambiant" x="-42.8621" y="230.862"/>
  </objectgroup>
 </map>

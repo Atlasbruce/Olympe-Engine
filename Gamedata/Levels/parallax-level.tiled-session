@@ -36,10 +36,10 @@
         },
         "isometric_quest.tmx": {
             "scale": 0.5,
-            "selectedLayer": 0,
+            "selectedLayer": 4,
             "viewCenter": {
-                "x": 703,
-                "y": 201
+                "x": 571,
+                "y": 267
             }
         },
         "map_forest.tmj": {
@@ -141,7 +141,7 @@
         "tileset 2D ortho.tsx"
     ],
     "project": "parallax-level.tiled-project",
-    "property.type": "int",
+    "property.type": "string",
     "recentFiles": [
         "isometric_quest.tmx",
         "Tiles iso cube..tsj",

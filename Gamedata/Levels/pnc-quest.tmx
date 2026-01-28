@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="left-up" width="30" height="20" tilewidth="64" tileheight="64" infinite="1" nextlayerid="9" nextobjectid="6">
+ <editorsettings>
+  <export target="pnc-quest.tmj" format="json"/>
+ </editorsettings>
+ <imagelayer id="2" name="scene_1">
+  <image source="../Resources/pointnclick scenes/scene_1.png" width="1157" height="743"/>
+ </imagelayer>
+ <imagelayer id="4" name="scene_2" offsetx="1230.3" offsety="27.2727">
+  <image source="../Resources/pointnclick scenes/scene_2.png" width="871" height="676"/>
+ </imagelayer>
+ <imagelayer id="3" name="scene_3" offsetx="0" offsety="-703.03">
+  <image source="../Resources/pointnclick scenes/scene_3.png" width="1000" height="646"/>
+ </imagelayer>
+ <imagelayer id="5" name="scene_4" offsetx="-1084.85" offsety="-706.061">
+  <image source="../Resources/pointnclick scenes/scene_4.jpg" width="1000" height="646"/>
+ </imagelayer>
+ <imagelayer id="6" name="scene_5" offsetx="1075.76" offsety="-709.091">
+  <image source="../Resources/pointnclick scenes/scene_5.jpg" width="1000" height="646"/>
+ </imagelayer>
+ <imagelayer id="7" name="scene_6" offsetx="3.0303" offsety="-1439.39">
+  <image source="../Resources/pointnclick scenes/scene_6.jpg" width="1000" height="672"/>
+ </imagelayer>
+ <objectgroup id="8" name="layer_leveldesign">
+  <object id="1" name="main entrance" type="mouse_zone" x="301.333" y="400" width="61.3333" height="173.333">
+   <properties>
+    <property name="Current scene" value="scene_1"/>
+    <property name="Event to trigger" value=""/>
+    <property name="Next scene" value="scene_3"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

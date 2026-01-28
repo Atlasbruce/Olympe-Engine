@@ -6,8 +6,8 @@
          "class":"layer",
          "id":9,
          "image":"..\/Resources\/sky.jpg",
-         "imageheight":675,
-         "imagewidth":1200,
+         "imageheight":1024,
+         "imagewidth":1024,
          "name":"layer_skywater",
          "opacity":1,
          "parallaxx":0.8,
@@ -394,8 +394,8 @@
                  "type":"collectible",
                  "visible":true,
                  "width":0,
-                 "x":250.54,
-                 "y":256.126
+                 "x":250,
+                 "y":256
                 }, 
                 {
                  "height":0,
@@ -443,7 +443,7 @@
                 {
                  "height":0,
                  "id":16,
-                 "name":"player",
+                 "name":"player_1",
                  "point":true,
                  "rotation":0,
                  "type":"player",
@@ -451,6 +451,30 @@
                  "width":0,
                  "x":-260.598,
                  "y":227.264
+                }, 
+                {
+                 "height":0,
+                 "id":29,
+                 "name":"player_2",
+                 "point":true,
+                 "rotation":0,
+                 "type":"player",
+                 "visible":true,
+                 "width":0,
+                 "x":-268.322,
+                 "y":118.988
+                }, 
+                {
+                 "height":0,
+                 "id":30,
+                 "name":"player_3",
+                 "point":true,
+                 "rotation":0,
+                 "type":"player",
+                 "visible":true,
+                 "width":0,
+                 "x":-238.529,
+                 "y":305.195
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -469,13 +493,6 @@
                  "type":"ambiant",
                  "x":-69.6322,
                  "y":228.299
-                }, 
-                {
-                 "id":19,
-                 "template":"sound_object_template.tx",
-                 "type":"ambiant",
-                 "x":-42.8621,
-                 "y":230.862
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -484,7 +501,7 @@
          "y":0
         }],
  "nextlayerid":11,
- "nextobjectid":29,
+ "nextobjectid":31,
  "orientation":"isometric",
  "renderorder":"left-up",
  "tiledversion":"1.11.2",
