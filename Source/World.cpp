@@ -278,8 +278,8 @@ RenderLayer World::GetEntityLayer(EntityID entity) const
     {
         return RenderLayer::Ground;
     }
-    
-    const Position_data& pos = GetComponent<Position_data>(entity);
+
+    const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
     return ZToLayer(pos.position.z);
 }
 //---------------------------------------------------------------------------------------------
