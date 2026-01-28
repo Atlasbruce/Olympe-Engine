@@ -395,6 +395,43 @@ public:
     { 
         return m_nextCustomLayerIndex++; 
     }
+    
+    // ========================================================================
+    // Grid Management
+    // ========================================================================
+    
+    /// Toggle grid visibility
+    void ToggleGrid()
+    {
+        for (const auto& kv : m_entitySignatures)
+        {
+            EntityID e = kv.first;
+            if (HasComponent<GridSettings_data>(e))
+            {
+                GridSettings_data& settings = GetComponent<GridSettings_data>(e);
+                settings.enabled = !settings.enabled;
+                
+                SYSTEM_LOG << "World::ToggleGrid: Grid " 
+                           << (settings.enabled ? "enabled" : "disabled") << "\n";
+                break;
+            }
+        }
+    }
+    
+    /// Get current grid state
+    bool IsGridEnabled() const
+    {
+        for (const auto& kv : m_entitySignatures)
+        {
+            EntityID e = kv.first;
+            if (HasComponent<GridSettings_data>(e))
+            {
+                const GridSettings_data& settings = GetComponent<GridSettings_data>(e);
+                return settings.enabled;
+            }
+        }
+        return false;  // Default if no GridSettings entity exists
+    }
 
     // Public for inspection/debug
     std::unordered_map<EntityID, ComponentSignature> m_entitySignatures;

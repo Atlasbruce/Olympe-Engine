@@ -58,8 +58,32 @@ void InputEventConsumeSystem::Process()
     // Get all Input domain events from the EventQueue
     const EventQueue& queue = EventQueue::Get();
     
+    // Static flags for debouncing
+    static bool s_key_TabPressed = false;
+    
     // Process each input event
     queue.ForEachDomainEvent(EventDomain::Input, [](const Message& msg) {
+        
+        // Handle TAB key for grid toggle (global, not player-specific)
+        if (msg.msg_type == EventType::Olympe_EventType_Keyboard_KeyDown)
+        {
+            auto sc = static_cast<SDL_Scancode>(msg.controlId);
+            
+            if (sc == SDL_SCANCODE_TAB && !s_key_TabPressed)
+            {
+                s_key_TabPressed = true;
+                World::Get().ToggleGrid();
+            }
+        }
+        else if (msg.msg_type == EventType::Olympe_EventType_Keyboard_KeyUp)
+        {
+            auto sc = static_cast<SDL_Scancode>(msg.controlId);
+            
+            if (sc == SDL_SCANCODE_TAB)
+            {
+                s_key_TabPressed = false;
+            }
+        }
         
         // Handle joystick connect/disconnect for InputsManager auto-rebind logic
         if (msg.msg_type == EventType::Olympe_EventType_Joystick_Connected)

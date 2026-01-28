@@ -378,7 +378,7 @@ enum class GridProjection : uint8_t
 
 struct GridSettings_data
 {
-	bool enabled = true;
+	bool enabled = false;  // Disabled by default - toggle with TAB key
 	GridProjection projection = GridProjection::Ortho;
 
 	// Ortho / Iso: taille cellule en unités "world"
