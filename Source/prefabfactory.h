@@ -37,6 +37,9 @@ public:
     /// This is the new recommended API for creating entities
     EntityID CreateEntityFromPrefabName(const std::string& prefabName);
     
+    /// Create entity from prefab name with explicit layer override
+    EntityID CreateEntityFromPrefabName(const std::string& prefabName, RenderLayer layer);
+    
     /// Get prefab count
     int GetPrefabCount() const { return static_cast<int>(m_prefabRegistry.GetCount()); }
     
@@ -85,7 +88,8 @@ public:
     const PrefabRegistry& GetPrefabRegistry() const { return m_prefabRegistry; }
     
     // Create entity from a parsed blueprint (no re-parsing)
-    EntityID CreateEntityFromBlueprint(const PrefabBlueprint& blueprint);
+    // autoAssignLayer: if true, automatically assign layer based on EntityType
+    EntityID CreateEntityFromBlueprint(const PrefabBlueprint& blueprint, bool autoAssignLayer = true);
     
     // Instantiate a single component on an entity (component-agnostic)
     bool InstantiateComponent(EntityID entity, const ComponentDefinition& componentDef);
