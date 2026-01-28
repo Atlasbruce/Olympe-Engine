@@ -17,19 +17,6 @@ namespace Editor {
     // JSON Conversion Helpers
     // ========================================================================
 
-    void to_json(json& j, const Vec2& v)
-    {
-        j = json::object();
-        j["x"] = v.x;
-        j["y"] = v.y;
-    }
-
-    void from_json(const json& j, Vec2& v)
-    {
-        if (j.contains("x")) v.x = j["x"].get<double>();
-        if (j.contains("y")) v.y = j["y"].get<double>();
-    }
-
     // Vector serialization (for EntityInstance.position which is now a Vector)
     void to_json(json& j, const Vector& v)
     {
@@ -468,7 +455,7 @@ namespace Editor {
         return result;
     }
 
-    bool LevelManager::UpdateEntityPosition(const std::string& id, const Vec2& position)
+    bool LevelManager::UpdateEntityPosition(const std::string& id, const Vector& position)
     {
         EntityInstance* entity = GetEntity(id);
         if (entity)

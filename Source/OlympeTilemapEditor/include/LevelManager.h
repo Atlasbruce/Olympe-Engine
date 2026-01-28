@@ -19,15 +19,6 @@ using json = nlohmann::json;
 namespace Olympe {
 namespace Editor {
 
-    // Represents a 2D position/vector
-    struct Vec2
-    {
-        double x;
-        double y;
-
-        Vec2() : x(0.0), y(0.0) {}
-        Vec2(double x_, double y_) : x(x_), y(y_) {}
-    };
 
     // Represents an entity instance in the level
     struct EntityInstance
@@ -62,10 +53,10 @@ namespace Editor {
     struct EditorStateData
     {
         double zoom;
-        Vec2 scrollOffset;
+        Vector scrollOffset;
 
         EditorStateData()
-            : zoom(0.5), scrollOffset(0, 0) {}
+            : zoom(0.5), scrollOffset(0, 0, 0) {}
     };
 
     // Main level definition structure
@@ -82,7 +73,7 @@ namespace Editor {
 
         // Level data
         std::string levelName;
-        Vec2 worldSize;
+        Vector worldSize;
         std::string backgroundMusic;
         std::string ambientColor;
 
@@ -143,25 +134,25 @@ namespace Editor {
         struct SectorDef {
             std::string name;
             std::string type;
-            std::vector<Vec2> polygon;
-            Vec2 position;
+            std::vector<Vector> polygon;
+            Vector position;
             nlohmann::json properties;
             
             SectorDef()
-                : position(0, 0), properties(json::object()) {}
+                : position(0, 0, 0), properties(json::object()) {}
         };
         std::vector<SectorDef> sectors;
         
         struct CollisionShape {
             std::string name;
             enum Type { Rectangle, Polygon, Polyline } type;
-            Vec2 position;
-            Vec2 size;  // for rectangles
-            std::vector<Vec2> points;  // for polygons/polylines
+            Vector position;
+            Vector size;  // for rectangles
+            std::vector<Vector> points;  // for polygons/polylines
             float rotation;  // rotation in degrees
             
             CollisionShape()
-                : type(Rectangle), position(0, 0), size(0, 0), rotation(0.0f) {}
+                : type(Rectangle), position(0, 0, 0), size(0, 0, 0), rotation(0.0f) {}
         };
         std::vector<CollisionShape> collisionShapes;
         
@@ -214,7 +205,7 @@ namespace Editor {
 
         LevelDefinition()
             : schema_version(2), type("LevelDefinition"), blueprintType("LevelDefinition"),
-              name(""), description(""), levelName(""), worldSize(1024, 768),
+              name(""), description(""), levelName(""), worldSize(1024, 768, 0),
               backgroundMusic(""), ambientColor("#000000") {}
     };
 
@@ -235,7 +226,7 @@ namespace Editor {
         void DeleteEntity(const std::string& id);
         EntityInstance* GetEntity(const std::string& id) const;
         std::vector<EntityInstance*> GetAllEntities();
-        bool UpdateEntityPosition(const std::string& id, const Vec2& position);
+        bool UpdateEntityPosition(const std::string& id, const Vector& position);
 
         // Tile management
         void SetTile(int x, int y, int tileId);
@@ -271,8 +262,8 @@ namespace Editor {
     };
 
     // JSON conversion helpers
-    void to_json(json& j, const Vec2& v);
-    void from_json(const json& j, Vec2& v);
+    void to_json(json& j, const Vector& v);
+    void from_json(const json& j, Vector& v);
     void to_json(json& j, const EntityInstance& e);
     void from_json(const json& j, EntityInstance& e);
 

@@ -12,7 +12,7 @@ namespace Editor {
     // PlaceEntityCommand Implementation
     // ========================================================================
 
-    PlaceEntityCommand::PlaceEntityCommand(const std::string& prefabPath, const Vec2& position)
+    PlaceEntityCommand::PlaceEntityCommand(const std::string& prefabPath, const Vector& position)
         : m_prefabPath(prefabPath), m_position(position), m_entityId("")
     {
     }
@@ -76,7 +76,7 @@ namespace Editor {
     // MoveEntityCommand Implementation
     // ========================================================================
 
-    MoveEntityCommand::MoveEntityCommand(const std::string& entityId, const Vec2& newPosition)
+    MoveEntityCommand::MoveEntityCommand(const std::string& entityId, const Vector& newPosition)
         : m_entityId(entityId), m_newPosition(newPosition), m_oldPosition(0, 0)
     {
     }

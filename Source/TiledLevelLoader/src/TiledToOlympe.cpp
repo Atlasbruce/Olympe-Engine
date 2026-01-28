@@ -942,11 +942,11 @@ namespace Tiled {
                         Olympe::Editor::LevelDefinition::SectorDef sector;
                         sector.name = obj.name.empty() ? ("Sector_" + std::to_string(obj.id)) : obj.name;
                         sector.type = obj.type;
-                        sector.position = Olympe::Editor::Vec2(obj.x, TransformY(obj.y, 0));
+                        sector.position = Vector(obj.x, TransformY(obj.y, 0), 0.f);
                         
                         for (const auto& pt : obj.polygon) {
-                            sector.polygon.push_back(Olympe::Editor::Vec2(
-                                pt.x, config_.flipY ? -pt.y : pt.y
+                            sector.polygon.push_back(Vector(
+                                pt.x, config_.flipY ? -pt.y : pt.y, 0.f
                             ));
                         }
                         
@@ -966,8 +966,8 @@ namespace Tiled {
                         Olympe::Editor::LevelDefinition::CollisionShape shape;
                         shape.name = obj.name;
                         shape.type = Olympe::Editor::LevelDefinition::CollisionShape::Rectangle;
-                        shape.position = Olympe::Editor::Vec2(obj.x, TransformY(obj.y, obj.height));
-                        shape.size = Olympe::Editor::Vec2(obj.width, obj.height);
+                        shape.position = Vector(obj.x, TransformY(obj.y, obj.height), 0.f);
+                        shape.size = Vector(obj.width, obj.height, 0.f);
                         
                         outLevel.collisionShapes.push_back(shape);
                         objectCount++;

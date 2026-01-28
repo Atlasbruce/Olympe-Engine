@@ -68,7 +68,7 @@ namespace Editor {
 
         // Editor settings
         float m_viewportZoom;
-        Vec2 m_viewportOffset;
+        Vector m_viewportOffset;
         
         // Selection state
         std::string m_selectedEntityId;

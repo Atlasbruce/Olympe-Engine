@@ -54,7 +54,7 @@ namespace Editor {
 
     private:
         std::string m_prefabPath;
-        Vec2 m_position;
+        Vector m_position;
         std::string m_entityId;  // Stored after execution
     };
 
@@ -80,7 +80,7 @@ namespace Editor {
     class MoveEntityCommand : public Command
     {
     public:
-        MoveEntityCommand(const std::string& entityId, const Vec2& newPosition);
+        MoveEntityCommand(const std::string& entityId, const Vector& newPosition);
         ~MoveEntityCommand() override = default;
 
         void Execute(LevelManager& levelManager) override;
@@ -89,8 +89,8 @@ namespace Editor {
 
     private:
         std::string m_entityId;
-        Vec2 m_newPosition;
-        Vec2 m_oldPosition;
+        Vector m_newPosition;
+        Vector m_oldPosition;
     };
 
     // Command to delete an entity

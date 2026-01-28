@@ -6,18 +6,10 @@
  */
 
 #pragma once
+#include "../../vector.h"  // Use engine's Vector class
 
 namespace Olympe {
 namespace Tiled {
-
-    struct Vec2
-    {
-        float x;
-        float y;
-
-        Vec2() : x(0.0f), y(0.0f) {}
-        Vec2(float x_, float y_) : x(x_), y(y_) {}
-    };
 
     class IsometricProjection
     {
@@ -26,20 +18,20 @@ namespace Tiled {
         // worldX, worldY: tile coordinates (e.g., tile 0,0 = world 0,0)
         // tileWidth, tileHeight: dimensions of a single isometric tile in pixels
         // Returns screen pixel position
-        static Vec2 WorldToIso(float worldX, float worldY, int tileWidth, int tileHeight);
+        static Vector WorldToIso(float worldX, float worldY, int tileWidth, int tileHeight);
 
         // Convert isometric screen coordinates to world (tile) coordinates
         // isoX, isoY: screen pixel coordinates
         // tileWidth, tileHeight: dimensions of a single isometric tile in pixels
         // Returns world tile coordinates (may be fractional)
-        static Vec2 IsoToWorld(float isoX, float isoY, int tileWidth, int tileHeight);
+        static Vector IsoToWorld(float isoX, float isoY, int tileWidth, int tileHeight);
 
         // Get tile at screen position
         static void ScreenToTile(float screenX, float screenY, int tileWidth, int tileHeight,
                                  int& outTileX, int& outTileY);
 
         // Get screen position of tile corner
-        static Vec2 TileToScreen(int tileX, int tileY, int tileWidth, int tileHeight);
+        static Vector TileToScreen(int tileX, int tileY, int tileWidth, int tileHeight);
     };
 
 } // namespace Tiled

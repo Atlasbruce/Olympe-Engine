@@ -1378,7 +1378,7 @@ struct TriangleOffsets
 
 TriangleOffsets CalculateTriangleOffsets(const float side_length)
 {
-    // Calculates the Vec2 offsets from an equilateral triangle's midpoint to
+    // Calculates the Vector offsets from an equilateral triangle's midpoint to
     // its vertices. Here is how the left_offset and right_offset are
     // calculated.
     //

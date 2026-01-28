@@ -202,7 +202,7 @@ namespace Editor {
                 }
                 if (ImGui::MenuItem("Reset Pan"))
                 {
-                    m_viewportOffset = Vec2(0, 0);
+                    m_viewportOffset = Vector(0, 0, 0);
                 }
                 ImGui::EndMenu();
             }
@@ -309,7 +309,7 @@ namespace Editor {
         {
             auto cmd = std::make_unique<PlaceEntityCommand>(
                 "Blueprints/DefaultEntity.json",
-                Vec2(0, 0)
+                Vector(0, 0, 0)
             );
             m_editorState->ExecuteCommand(std::move(cmd), *m_levelManager);
         }
