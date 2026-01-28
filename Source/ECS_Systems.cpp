@@ -643,10 +643,11 @@ void AddEntitySpritesToIsometricBatch(
             
             // Store sprite data
             spriteTile.texture = visual.sprite;
-            spriteTile.colorTint = SDL_MapRGBA(
-                SDL_PIXELFORMAT_RGBA8888,
-                visual.color.r, visual.color.g, visual.color.b, 255
-            );
+            // Pack RGBA into uint32_t (R in highest byte)
+            spriteTile.colorTint = (static_cast<uint32_t>(visual.color.r) << 24) |
+                                   (static_cast<uint32_t>(visual.color.g) << 16) |
+                                   (static_cast<uint32_t>(visual.color.b) << 8) |
+                                   255;  // Alpha = 255 (fully opaque)
             spriteTile.hotSpot = { visual.hotSpot.x, visual.hotSpot.y };
             
             // Pre-calculate destination rect (will be converted to screen in renderer)
