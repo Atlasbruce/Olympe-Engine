@@ -23,6 +23,64 @@
 // Public API Implementation
 // ========================================================================
 
+void PrefabFactory::PreloadAllPrefabs(const std::string& prefabDirectory)
+{
+    if (m_prefabsPreloaded)
+    {
+        SYSTEM_LOG << "PrefabFactory::PreloadAllPrefabs: Already preloaded\n";
+        return;
+    }
+    
+    SYSTEM_LOG << "╔═══════════════════════════════════════════════════════════╗\n";
+    SYSTEM_LOG << "║ PREFAB FACTORY: PRELOADING ALL PREFABS                   ║\n";
+    SYSTEM_LOG << "╚═══════════════════════════════════════════════════════════╝\n";
+    
+    PrefabScanner scanner;
+    std::vector<PrefabBlueprint> blueprints = scanner.ScanDirectory(prefabDirectory);
+    
+    // Build registry from scanned blueprints
+    for (const auto& blueprint : blueprints)
+    {
+        m_prefabRegistry.Register(blueprint);
+    }
+    
+    int prefabCount = static_cast<int>(m_prefabRegistry.GetCount());
+    
+    SYSTEM_LOG << "✅ Loaded " << prefabCount << " prefabs:\n";
+    
+    auto allNames = m_prefabRegistry.GetAllPrefabNames();
+    for (const auto& name : allNames)
+    {
+        const PrefabBlueprint* bp = m_prefabRegistry.Find(name);
+        if (bp && bp->isValid)
+        {
+            SYSTEM_LOG << "   ├─ " << name << " (" << bp->components.size() << " components)\n";
+        }
+    }
+    
+    SYSTEM_LOG << "\n✅ PrefabFactory ready\n\n";
+    m_prefabsPreloaded = true;
+}
+
+EntityID PrefabFactory::CreateEntityFromPrefabName(const std::string& prefabName)
+{
+    if (!m_prefabsPreloaded)
+    {
+        SYSTEM_LOG << "⚠️  PrefabFactory: Prefabs not preloaded! Call PreloadAllPrefabs() first\n";
+        return INVALID_ENTITY_ID;
+    }
+    
+    const PrefabBlueprint* blueprint = m_prefabRegistry.Find(prefabName);
+    
+    if (!blueprint || !blueprint->isValid)
+    {
+        SYSTEM_LOG << "❌ PrefabFactory: Prefab '" << prefabName << "' not found\n";
+        return INVALID_ENTITY_ID;
+    }
+    
+    return CreateEntityFromBlueprint(*blueprint);
+}
+
 void PrefabFactory::SetPrefabRegistry(const PrefabRegistry& registry)
 {
     m_prefabRegistry = registry;

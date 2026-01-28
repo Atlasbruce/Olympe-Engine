@@ -26,6 +26,27 @@ public:
     }
     
     // ========================================================================
+    // NEW: Centralized Prefab Management
+    // ========================================================================
+    
+    /// Preload all prefabs from Blueprints/EntityPrefab directory
+    /// This should be called once at engine startup (World::Initialize)
+    void PreloadAllPrefabs(const std::string& prefabDirectory = "Blueprints/EntityPrefab");
+    
+    /// Create entity from prefab name (uses cached registry)
+    /// This is the new recommended API for creating entities
+    EntityID CreateEntityFromPrefabName(const std::string& prefabName);
+    
+    /// Get prefab count
+    int GetPrefabCount() const { return static_cast<int>(m_prefabRegistry.GetCount()); }
+    
+    /// Check if prefab exists
+    bool HasPrefab(const std::string& prefabName) const 
+    { 
+        return m_prefabRegistry.Find(prefabName) != nullptr; 
+    }
+    
+    // ========================================================================
     // Legacy API (for backward compatibility)
     // ========================================================================
     
@@ -39,21 +60,18 @@ public:
     // create an Entity 
     EntityID CreateEntity(const std::string& prefabName)
     {
-        if (m_prefabs.find(prefabName) == m_prefabs.end())
+        // Try legacy system first
+        if (m_prefabs.find(prefabName) != m_prefabs.end())
         {
-            SYSTEM_LOG << "PrefabFactory::RegisteredPrefab"  << "Error: Prefab '" << prefabName << "' unknown.\n";
-            return INVALID_ENTITY_ID;
+            World& world = World::Get();
+            EntityID newEntity = world.CreateEntity();
+            m_prefabs[prefabName](newEntity);
+            SYSTEM_LOG << "PrefabFactory::CreateEntity '" << prefabName << "' created (ID: " << newEntity << ")\n";
+            return newEntity;
         }
-
-        // 1. Cr�er l'ID unique via le World (UID Nanoseconde)
-        World& world = World::Get();
-        EntityID newEntity = world.CreateEntity();
-
-        // 2. Appliquer la recette (ajouter les composants)
-        m_prefabs[prefabName](newEntity);
-
-        SYSTEM_LOG << "PrefabFactory::CreateEntity '" << prefabName << "' created (ID: " << newEntity << ")\n";
-        return newEntity;
+        
+        // Fallback to modern system
+        return CreateEntityFromPrefabName(prefabName);
     }
     
     // ========================================================================
@@ -75,6 +93,7 @@ public:
 private:
     std::map<std::string, PrefabBuilder> m_prefabs;
     PrefabRegistry m_prefabRegistry;
+    bool m_prefabsPreloaded = false;
 
     PrefabFactory() = default;
     
