@@ -49,6 +49,10 @@ CameraSystem::~CameraSystem()
 //-------------------------------------------------------------
 void CameraSystem::Process()
 {
+    // Early return if no entities
+    if (m_entities.empty())
+        return;
+
     float dt = GameEngine::fDt;
     
     // Process all camera entities
