@@ -1761,26 +1761,61 @@ void UIRenderingSystem::RenderInGameMenu(const CameraTransform& cam)
     float buttonY = panelY + 80;
     float buttonSpacing = 70;
     
+    int selectedOption = GameMenu::Get().GetSelectedOption();
+    
     // Resume button
     SDL_FRect resumeButton = { buttonX, buttonY, buttonWidth, buttonHeight };
     SDL_SetRenderDrawColor(renderer, 80, 120, 180, 255);  // Blue
     SDL_RenderFillRect(renderer, &resumeButton);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderRect(renderer, &resumeButton);
+    if (selectedOption == GameMenu::Resume)
+    {
+        // Selected - draw thick yellow border
+        SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+        SDL_RenderRect(renderer, &resumeButton);
+        SDL_FRect innerRect = { buttonX + 2, buttonY + 2, buttonWidth - 4, buttonHeight - 4 };
+        SDL_RenderRect(renderer, &innerRect);
+    }
+    else
+    {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderRect(renderer, &resumeButton);
+    }
     
     // Restart button
     SDL_FRect restartButton = { buttonX, buttonY + buttonSpacing, buttonWidth, buttonHeight };
     SDL_SetRenderDrawColor(renderer, 180, 120, 80, 255);  // Orange
     SDL_RenderFillRect(renderer, &restartButton);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderRect(renderer, &restartButton);
+    if (selectedOption == GameMenu::Restart)
+    {
+        // Selected - draw thick yellow border
+        SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+        SDL_RenderRect(renderer, &restartButton);
+        SDL_FRect innerRect = { buttonX + 2, buttonY + buttonSpacing + 2, buttonWidth - 4, buttonHeight - 4 };
+        SDL_RenderRect(renderer, &innerRect);
+    }
+    else
+    {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderRect(renderer, &restartButton);
+    }
     
     // Quit button
     SDL_FRect quitButton = { buttonX, buttonY + buttonSpacing * 2, buttonWidth, buttonHeight };
     SDL_SetRenderDrawColor(renderer, 180, 80, 80, 255);  // Red
     SDL_RenderFillRect(renderer, &quitButton);
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderRect(renderer, &quitButton);
+    if (selectedOption == GameMenu::Quit)
+    {
+        // Selected - draw thick yellow border
+        SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+        SDL_RenderRect(renderer, &quitButton);
+        SDL_FRect innerRect = { buttonX + 2, buttonY + buttonSpacing * 2 + 2, buttonWidth - 4, buttonHeight - 4 };
+        SDL_RenderRect(renderer, &innerRect);
+    }
+    else
+    {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderRect(renderer, &quitButton);
+    }
     
     // TODO: Add text rendering with SDL_ttf
     // For now, logs indicate menu is active
