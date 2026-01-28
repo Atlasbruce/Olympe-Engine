@@ -1358,11 +1358,8 @@ bool World::InstantiatePass2_SpatialStructure(
             EntityID eid = CreateEntity();
             
             AddComponent<Identity_data>(eid, entityInstance->name, "Collision", entityInstance->type);
-            AddComponent<Position_data>(eid, Vector(
-                static_cast<float>(entityInstance->position.x),
-                static_cast<float>(entityInstance->position.y),
-                0.0f
-            ));
+            // Use position directly - already a Vector, no conversion needed
+            AddComponent<Position_data>(eid, entityInstance->position);
             
             float width = 64.0f;
             float height = 64.0f;
@@ -1386,8 +1383,8 @@ bool World::InstantiatePass2_SpatialStructure(
             }
             
             AddComponent<CollisionZone_data>(eid, SDL_FRect{
-                static_cast<float>(entityInstance->position.x),
-                static_cast<float>(entityInstance->position.y),
+                entityInstance->position.x,
+                entityInstance->position.y,
                 width, height
             }, true);
             
@@ -1402,11 +1399,8 @@ bool World::InstantiatePass2_SpatialStructure(
             
             EntityID eid = CreateEntity();
             AddComponent<Identity_data>(eid, entityInstance->name, "Sector", entityInstance->type);
-            AddComponent<Position_data>(eid, Vector(
-                static_cast<float>(entityInstance->position.x),
-                static_cast<float>(entityInstance->position.y),
-                0.0f
-            ));
+            // Use position directly - already a Vector, no conversion needed
+            AddComponent<Position_data>(eid, entityInstance->position);
             
             // TODO: Add SectorZone_data component when available
             

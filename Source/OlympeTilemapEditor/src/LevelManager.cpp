@@ -30,6 +30,23 @@ namespace Editor {
         if (j.contains("y")) v.y = j["y"].get<double>();
     }
 
+    // Vector serialization (for EntityInstance.position which is now a Vector)
+    void to_json(json& j, const Vector& v)
+    {
+        j = json::object();
+        j["x"] = v.x;
+        j["y"] = v.y;
+        j["z"] = v.z;
+    }
+
+    void from_json(const json& j, Vector& v)
+    {
+        if (j.contains("x")) v.x = j["x"].get<float>();
+        if (j.contains("y")) v.y = j["y"].get<float>();
+        if (j.contains("z")) v.z = j["z"].get<float>();
+        else v.z = 0.0f;  // Default z to 0 for 2D compatibility
+    }
+
     void to_json(json& j, const EntityInstance& e)
     {
         j = json::object();
