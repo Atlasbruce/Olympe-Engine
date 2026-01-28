@@ -89,6 +89,9 @@ namespace Olympe
         bool IsInitialized() const { return m_Initialized; }
         size_t GetEntityCount() const { return m_EntityList.size(); }
 
+        // Force manual sync (for initial load or error recovery)
+        void ForceSyncWithWorld();
+
     private:
         EntityInspectorManager();
         ~EntityInspectorManager();

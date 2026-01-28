@@ -30,6 +30,10 @@ AIStimuliSystem::AIStimuliSystem()
 
 void AIStimuliSystem::Process()
 {
+    // Early return if no entities
+    if (m_entities.empty())
+        return;
+
     const EventQueue& queue = EventQueue::Get();
     float currentTime = GameEngine::fDt;
     
@@ -147,6 +151,10 @@ AIPerceptionSystem::AIPerceptionSystem()
 
 void AIPerceptionSystem::Process()
 {
+    // Early return if no entities
+    if (m_entities.empty())
+        return;
+
     float currentTime = GameEngine::fDt;
     
     for (EntityID entity : m_entities)
@@ -280,6 +288,10 @@ AIStateTransitionSystem::AIStateTransitionSystem()
 
 void AIStateTransitionSystem::Process()
 {
+    // Early return if no entities
+    if (m_entities.empty())
+        return;
+
     for (EntityID entity : m_entities)
     {
         try
@@ -432,6 +444,10 @@ BehaviorTreeSystem::BehaviorTreeSystem()
 
 void BehaviorTreeSystem::Process()
 {
+    // Early return if no entities
+    if (m_entities.empty())
+        return;
+
     float currentTime = GameEngine::fDt;
     
     for (EntityID entity : m_entities)
@@ -551,6 +567,10 @@ AIMotionSystem::AIMotionSystem()
 
 void AIMotionSystem::Process()
 {
+    // Early return if no entities
+    if (m_entities.empty())
+        return;
+
     for (EntityID entity : m_entities)
     {
         try

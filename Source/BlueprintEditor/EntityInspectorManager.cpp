@@ -58,9 +58,8 @@ namespace Olympe
         if (!m_Initialized)
             return;
 
-        // Periodically sync with World to catch any missed entities
-        // This ensures we stay synchronized even without perfect hook coverage
-        SyncWithWorld();
+        // Event-driven tracking via OnEntityCreated/Destroyed hooks
+        // No polling needed - sync only on explicit request via ForceSyncWithWorld()
     }
 
     void EntityInspectorManager::OnEntityCreated(EntityID entity)
@@ -352,6 +351,11 @@ namespace Olympe
     {
         if (IsEntityValid(entity) || entity == INVALID_ENTITY_ID)
             m_SelectedEntity = entity;
+    }
+
+    void EntityInspectorManager::ForceSyncWithWorld()
+    {
+        SyncWithWorld();
     }
 
     void EntityInspectorManager::SyncWithWorld()

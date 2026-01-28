@@ -40,6 +40,10 @@ InputSystem::InputSystem()
 }
 void InputSystem::Process()
 {
+    // Early return if no entities
+    if (m_entities.empty())
+        return;
+
     // Input processing logic here
 }
 //-------------------------------------------------------------
@@ -319,6 +323,10 @@ AISystem::AISystem()
 }
 void AISystem::Process()
 {
+    // Early return if no entities
+    if (m_entities.empty())
+        return;
+
     // AI processing logic here
 }
 //-------------------------------------------------------------
@@ -327,6 +335,10 @@ DetectionSystem::DetectionSystem()
 }
 void DetectionSystem::Process()
 {
+    // Early return if no entities
+    if (m_entities.empty())
+        return;
+
     // Detection processing logic here
 }
 //-------------------------------------------------------------
@@ -335,6 +347,10 @@ PhysicsSystem::PhysicsSystem()
 }
 void PhysicsSystem::Process()
 {
+    // Early return if no entities
+    if (m_entities.empty())
+        return;
+
     // Physics processing logic here
 }
 //-------------------------------------------------------------
@@ -343,6 +359,10 @@ CollisionSystem::CollisionSystem()
 }
 void CollisionSystem::Process()
 {
+    // Early return if no entities
+    if (m_entities.empty())
+        return;
+
     // Collision processing logic here
 }
 //-------------------------------------------------------------
@@ -351,6 +371,10 @@ TriggerSystem::TriggerSystem()
 }
 void TriggerSystem::Process()
 {
+    // Early return if no entities
+    if (m_entities.empty())
+        return;
+
     // Trigger processing logic here
 }
 //-------------------------------------------------------------
@@ -363,6 +387,10 @@ MovementSystem::MovementSystem()
 
 void MovementSystem::Process()
 {
+    // Early return if no entities
+    if (m_entities.empty())
+        return;
+
     // Iterate ONLY over the relevant entities stored in m_entities
     for (EntityID entity : m_entities)
     {
@@ -1086,6 +1114,10 @@ PlayerControlSystem::PlayerControlSystem()
 }
 void PlayerControlSystem::Process()
 {
+    // Early return if no entities
+    if (m_entities.empty())
+        return;
+
     // Iterate ONLY over the relevant entities stored in m_entities
     for (EntityID entity : m_entities)
     {
@@ -1122,6 +1154,10 @@ InputMappingSystem::InputMappingSystem()
 
 void InputMappingSystem::Process()
 {
+    // Early return if no entities
+    if (m_entities.empty())
+        return;
+
     // Check if we should process gameplay input
     InputContext activeContext = InputsManager::Get().GetActiveContext();
     if (activeContext != InputContext::Gameplay)
