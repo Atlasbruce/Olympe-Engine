@@ -16,6 +16,7 @@
 
 #include "TiledStructures.h"
 #include "ParallaxLayerManager.h"
+#include "../../vector.h"
 #include <string>
 #include <map>
 #include <set>

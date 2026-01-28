@@ -53,6 +53,11 @@ namespace Editor {
         j["id"] = e.id;
         j["prefabPath"] = e.prefabPath;
         j["name"] = e.name;
+        j["type"] = e.type;
+        j["rotation"] = e.rotation;
+        if (!e.spritePath.empty()) {
+            j["spritePath"] = e.spritePath;
+        }
         json posJson;
         to_json(posJson, e.position);
         j["position"] = posJson;
@@ -71,6 +76,9 @@ namespace Editor {
         if (j.contains("id")) e.id = j["id"].get<std::string>();
         if (j.contains("prefabPath")) e.prefabPath = j["prefabPath"].get<std::string>();
         if (j.contains("name")) e.name = j["name"].get<std::string>();
+        if (j.contains("type")) e.type = j["type"].get<std::string>();
+        if (j.contains("rotation")) e.rotation = j["rotation"].get<float>();
+        if (j.contains("spritePath")) e.spritePath = j["spritePath"].get<std::string>();
         if (j.contains("position")) from_json(j["position"], e.position);
         if (j.contains("overrides")) e.overrides = j["overrides"];
         else e.overrides = json::object();

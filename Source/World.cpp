@@ -1455,14 +1455,16 @@ bool World::InstantiatePass3_StaticObjects(
             // Use position directly - already a Vector, no conversion needed
             AddComponent<Position_data>(entity, entityInstance->position);
             
-            // Add red sprite placeholder
-            VisualSprite_data sprite;
-            sprite.spritePath = "./Resources/Icons/location-32.png";
-            sprite.visible = true;
-            sprite.colorTint = 0xFF0000FF;  // Bright red (RGBA: R=255, G=0, B=0, A=255)
-            sprite.width = 32;
-            sprite.height = 32;
-            AddComponent<VisualSprite_data>(entity, sprite);
+            // Add visual editor marker with red color for missing prefabs
+            VisualEditor_data editorData;
+            editorData.sprite = DataManager::Get().GetSprite("./Resources/Icons/location-32.png", "./Resources/Icons/location-32.png");
+            editorData.color = { 255, 0, 0, 255 };  // Bright red (RGBA)
+            editorData.isVisible = true;
+            if (editorData.sprite) {
+                editorData.srcRect = { 0, 0, static_cast<float>(editorData.sprite->w), static_cast<float>(editorData.sprite->h) };
+                editorData.hotSpot = Vector(editorData.srcRect.w / 2.0f, editorData.srcRect.h / 2.0f, 0.0f);
+            }
+            AddComponent<VisualEditor_data>(entity, editorData);
             
             SYSTEM_LOG << "  ⚠️  PLACEHOLDER: Created red marker for missing prefab '" 
                        << entityInstance->type << "' (name: " << entityInstance->name 
@@ -1570,14 +1572,16 @@ bool World::InstantiatePass4_DynamicObjects(
                 // Use position directly - already a Vector, no conversion needed
                 AddComponent<Position_data>(entity, entityInstance->position);
                 
-                // Add red sprite placeholder
-                VisualSprite_data sprite;
-                sprite.spritePath = "./Resources/Icons/location-32.png";
-                sprite.visible = true;
-                sprite.colorTint = 0xFF0000FF;  // Bright red (RGBA: R=255, G=0, B=0, A=255)
-                sprite.width = 32;
-                sprite.height = 32;
-                AddComponent<VisualSprite_data>(entity, sprite);
+                // Add visual editor marker with red color for missing prefabs
+                VisualEditor_data editorData;
+                editorData.sprite = DataManager::Get().GetSprite("./Resources/Icons/location-32.png", "./Resources/Icons/location-32.png");
+                editorData.color = { 255, 0, 0, 255 };  // Bright red (RGBA)
+                editorData.isVisible = true;
+                if (editorData.sprite) {
+                    editorData.srcRect = { 0, 0, static_cast<float>(editorData.sprite->w), static_cast<float>(editorData.sprite->h) };
+                    editorData.hotSpot = Vector(editorData.srcRect.w / 2.0f, editorData.srcRect.h / 2.0f, 0.0f);
+                }
+                AddComponent<VisualEditor_data>(entity, editorData);
                 
                 result.pass4_dynamicObjects.successfullyCreated++;
                 result.entityRegistry[entityInstance->name] = entity;
