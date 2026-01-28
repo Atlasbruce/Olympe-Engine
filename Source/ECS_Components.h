@@ -131,6 +131,7 @@ struct VisualSprite_data
 	Sprite* sprite = nullptr; // Pointer to the sprite/texture
 	Vector hotSpot;        // Hotspot offset for rendering
 	SDL_Color color = { 255, 255, 255, 255 }; // Color (RGBA)
+	bool visible = true;    // Is the entity visible
 	
 	// Constructors
 	VisualSprite_data() = default;

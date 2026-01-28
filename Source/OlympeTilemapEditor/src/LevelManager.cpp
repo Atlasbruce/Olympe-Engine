@@ -422,7 +422,7 @@ namespace Editor {
         entity->id = GenerateUniqueEntityId();
         entity->prefabPath = prefabPath;
         entity->name = "New Entity";
-        entity->position = Vec2(0, 0);
+        entity->position = Vector();
         entity->overrides = json::object();
 
         EntityInstance* entityPtr = entity.get();

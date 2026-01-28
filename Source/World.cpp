@@ -1457,7 +1457,7 @@ bool World::InstantiatePass3_StaticObjects(
             
             // Add visual editor marker with red color for missing prefabs
             VisualEditor_data editorData;
-            editorData.sprite = DataManager::Get().GetSprite("./Resources/Icons/location-32.png", "./Resources/Icons/location-32.png");
+            editorData.sprite = DataManager::Get().GetSprite("location-32.png", ".\\Resources\\Icons\\location-32.png");
             editorData.color = { 255, 0, 0, 255 };  // Bright red (RGBA)
             editorData.isVisible = true;
             if (editorData.sprite) {
@@ -1466,7 +1466,7 @@ bool World::InstantiatePass3_StaticObjects(
             }
             AddComponent<VisualEditor_data>(entity, editorData);
             
-            SYSTEM_LOG << "  ⚠️  PLACEHOLDER: Created red marker for missing prefab '" 
+            SYSTEM_LOG << "  /!\  PLACEHOLDER: Created red marker for missing prefab '" 
                        << entityInstance->type << "' (name: " << entityInstance->name 
                        << ") at position: " << entityInstance->position << "\n";
         }
@@ -1574,7 +1574,7 @@ bool World::InstantiatePass4_DynamicObjects(
                 
                 // Add visual editor marker with red color for missing prefabs
                 VisualEditor_data editorData;
-                editorData.sprite = DataManager::Get().GetSprite("./Resources/Icons/location-32.png", "./Resources/Icons/location-32.png");
+                editorData.sprite = DataManager::Get().GetSprite("location-32.png", ".\\Resources\\Icons\\location-32.png");
                 editorData.color = { 255, 0, 0, 255 };  // Bright red (RGBA)
                 editorData.isVisible = true;
                 if (editorData.sprite) {
@@ -1586,7 +1586,7 @@ bool World::InstantiatePass4_DynamicObjects(
                 result.pass4_dynamicObjects.successfullyCreated++;
                 result.entityRegistry[entityInstance->name] = entity;
                 
-                SYSTEM_LOG << "  ⚠️  PLACEHOLDER: Created red marker for missing prefab '" 
+                SYSTEM_LOG << "  /!\  PLACEHOLDER: Created red marker for missing prefab '" 
                            << entityInstance->type << "' (name: " << entityInstance->name 
                            << ") at position: " << entityInstance->position << "\n";
             }
