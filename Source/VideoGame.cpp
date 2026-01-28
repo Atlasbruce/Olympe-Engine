@@ -48,14 +48,27 @@ VideoGame::~VideoGame()
 //-------------------------------------------------------------
 EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
 {
-    EntityID eID = PrefabFactory::Get().CreateEntity("PlayerEntity");
-	m_playersEntity.push_back(eID);
+    // ✅ Utiliser le système centralisé
+    EntityID eID = PrefabFactory::Get().CreateEntityFromPrefabName(_playerPrefabName);
 
     if (eID == INVALID_ENTITY_ID)
     {
-        SYSTEM_LOG << "VideoGame::AddPlayerEntity: Failed to create player entity from prefab '" << _playerPrefabName << "'\n";
+        SYSTEM_LOG << "❌ Failed to create player from prefab '" << _playerPrefabName << "'\n";
         return INVALID_ENTITY_ID;
 	}
+
+	World& world = World::Get();
+	
+	// Vérifier que les composants requis existent
+	if (!world.HasComponent<PlayerBinding_data>(eID) || 
+		!world.HasComponent<Controller_data>(eID))
+	{
+		SYSTEM_LOG << "❌ Player entity missing required input components!\n";
+		return INVALID_ENTITY_ID;
+	}
+
+	// Add to player list only after all validation passes
+	m_playersEntity.push_back(eID);
 
 	// bind input components with player ID
 	PlayerBinding_data &binding = world.GetComponent<PlayerBinding_data>(eID);
@@ -70,11 +83,7 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
         IM::Get().AddPlayerEntityIndex(binding.playerIndex, eID);
         binding.controllerID = IM::Get().AutoBindControllerToPlayer(binding.playerIndex);
 		controller.controllerID = binding.controllerID;		
-		SYSTEM_LOG << "VideoGame::AddPlayerEntity: Player " << binding.playerIndex << " bound to controller " << binding.controllerID << "\n";
-	}
-    else
-    {
-        SYSTEM_LOG << "VideoGame::AddPlayerEntity: No available controllers to bind to player " << binding.playerIndex << "\n";
+		SYSTEM_LOG << "Player " << binding.playerIndex << " bound to controller " << binding.controllerID << "\n";
 	}
 
     //Send message to ViewportManager to add a new player viewport
@@ -101,7 +110,6 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
         {
             // Camera doesn't exist yet, create it
             cameraEntity = camSys->CreateCameraForPlayer(binding.playerIndex, false);
-            SYSTEM_LOG << "VideoGame::AddPlayerEntity: Created camera " << cameraEntity << " for player " << binding.playerIndex << "\n";
         }
         
         // Bind camera to the same input device as the player
@@ -109,14 +117,12 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
         {
             // Keyboard-bound player: bind camera to keyboard
             camSys->BindCameraToKeyboard(cameraEntity);
-            SYSTEM_LOG << "VideoGame::AddPlayerEntity: Bound camera to keyboard for player " << binding.playerIndex << "\n";
             
             // Disable keyboard binding on default camera (player -1) if it exists
             EntityID defaultCamera = camSys->GetCameraEntityForPlayer(-1);
             if (defaultCamera != INVALID_ENTITY_ID)
             {
                 camSys->UnbindCameraKeyboard(defaultCamera);
-                SYSTEM_LOG << "VideoGame::AddPlayerEntity: Disabled keyboard binding on default camera\n";
             }
         }
         else if (binding.controllerID >= 0)
@@ -124,14 +130,10 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
             // Joystick-bound player: bind camera to joystick
             // Safe cast: controllerID validated as >= 0, matches SDL_JoystickID range
             camSys->BindCameraToJoystick(cameraEntity, binding.playerIndex, (SDL_JoystickID)binding.controllerID);
-            SYSTEM_LOG << "VideoGame::AddPlayerEntity: Bound camera to joystick " << binding.controllerID << " for player " << binding.playerIndex << "\n";
-        }
-        else
-        {
-            SYSTEM_LOG << "VideoGame::AddPlayerEntity: Invalid controllerID " << binding.controllerID << " for player " << binding.playerIndex << "\n";
         }
     }
 
+    SYSTEM_LOG << "✅ Player " << binding.playerIndex << " created (Entity: " << eID << ")\n";
     return eID;
 }
 //-------------------------------------------------------------

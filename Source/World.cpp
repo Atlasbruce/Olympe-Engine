@@ -104,6 +104,12 @@ void World::Initialize_ECS_Systems()
 
     - RenderingSystem
     */
+	
+	// ✅ NOUVEAU : Précharger tous les prefabs AVANT de créer les systèmes
+	SYSTEM_LOG << "\n";
+	PrefabFactory::Get().PreloadAllPrefabs("Blueprints/EntityPrefab");
+	SYSTEM_LOG << "\n";
+	
 	Add_ECS_System(std::make_unique<InputEventConsumeSystem>());
 	Add_ECS_System(std::make_unique<GameEventConsumeSystem>());
 	Add_ECS_System(std::make_unique<UIEventConsumeSystem>());
@@ -451,22 +457,34 @@ World::Phase2Result World::ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::Le
     
     Phase2Result result;
     
-    // Step 1: Scan prefab directory
-    SYSTEM_LOG << "-> Step 1: Scanning prefab directory...\n";
-    PrefabScanner scanner;
-    std::vector<PrefabBlueprint> blueprints = scanner.ScanDirectory("GameData\\EntityPrefab");
+    // Step 1: Reuse PrefabFactory's cached registry if available
+    SYSTEM_LOG << "-> Step 1: Loading prefab registry...\n";
+    result.prefabRegistry = PrefabFactory::Get().GetPrefabRegistry();
     
-    if (blueprints.empty())
+    if (result.prefabRegistry.GetCount() == 0)
     {
-        SYSTEM_LOG << "  /!\ No prefabs found in directory\n";
-        result.errors.push_back("No prefabs found in GameData\\EntityPrefab");
+        SYSTEM_LOG << "  ⚠️  PrefabFactory registry is empty, scanning now...\n";
+        PrefabScanner scanner;
+        std::vector<PrefabBlueprint> blueprints = scanner.ScanDirectory("Blueprints/EntityPrefab");
+        
+        if (blueprints.empty())
+        {
+            SYSTEM_LOG << "  /!\ No prefabs found in directory\n";
+            result.errors.push_back("No prefabs found in Blueprints/EntityPrefab");
+        }
+        
+        // Build the registry from blueprints
+        for (const auto& blueprint : blueprints)
+        {
+            result.prefabRegistry.Register(blueprint);
+            result.stats.prefabsLoaded++;
+        }
     }
-    
-    // Build the registry from blueprints
-    for (const auto& blueprint : blueprints)
+    else
     {
-        result.prefabRegistry.Register(blueprint);
-        result.stats.prefabsLoaded++;
+        SYSTEM_LOG << "  ✅ Using " << result.prefabRegistry.GetCount() 
+                   << " prefabs from PrefabFactory cache\n";
+        result.stats.prefabsLoaded = result.prefabRegistry.GetCount();
     }
     
     SYSTEM_LOG << "  -> Loaded " << result.stats.prefabsLoaded << " prefab blueprints\n";

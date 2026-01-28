@@ -1,0 +1,93 @@
+{
+  "schema_version": 2,
+  "type": "EntityPrefab",
+  "blueprintType": "EntityPrefab",
+  "name": "PlayerEntity",
+  "description": "Playable character entity with full input control support",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-01-28T00:00:00Z",
+    "tags": ["Player", "Character", "Controllable"]
+  },
+  "data": {
+    "prefabName": "PlayerEntity",
+    "components": [
+      {
+        "type": "Identity_data",
+        "properties": {
+          "name": "Player",
+          "tag": "Player",
+          "entityType": "Dynamic"
+        }
+      },
+      {
+        "type": "Position_data",
+        "properties": {
+          "position": { "x": 0.0, "y": 0.0, "z": 0.0 }
+        }
+      },
+      {
+        "type": "VisualSprite_data",
+        "properties": {
+          "spritePath": "Resources/Sprites/entity_1.png",
+          "color": { "r": 255, "g": 255, "b": 255, "a": 255 },
+          "visible": true
+        }
+      },
+      {
+        "type": "BoundingBox_data",
+        "properties": {
+          "bounds": { "x": 0.0, "y": 0.0, "w": 50.0, "h": 50.0 }
+        }
+      },
+      {
+        "type": "PhysicsBody_data",
+        "properties": {
+          "mass": 1.0,
+          "speed": 200.0,
+          "friction": 0.9,
+          "isKinematic": false
+        }
+      },
+      {
+        "type": "Health_data",
+        "properties": {
+          "maxHealth": 100,
+          "currentHealth": 100
+        }
+      },
+      {
+        "type": "PlayerBinding_data",
+        "properties": {
+          "playerIndex": 0,
+          "controllerID": -1
+        }
+      },
+      {
+        "type": "Controller_data",
+        "properties": {
+          "controllerID": -1,
+          "isConnected": false
+        }
+      },
+      {
+        "type": "PlayerController_data",
+        "properties": {
+          "isJumping": false,
+          "isShooting": false,
+          "isRunning": false,
+          "isInteracting": false,
+          "isUsingItem": false,
+          "isMenuOpen": false
+        }
+      },
+      {
+        "type": "InputMapping_data",
+        "properties": {
+          "deadzone": 0.15,
+          "sensitivity": 1.0
+        }
+      }
+    ]
+  }
+}
