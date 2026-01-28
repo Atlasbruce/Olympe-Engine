@@ -134,8 +134,11 @@ void World::Initialize_ECS_Systems()
     
     // Camera System (manages ECS cameras - added before rendering)
     Add_ECS_System(std::make_unique<CameraSystem>());
-	Add_ECS_System(std::make_unique<GridSystem>()); 
-    Add_ECS_System(std::make_unique<RenderingSystem>());
+    
+    // Rendering systems (order matters - defines render pass sequence!)
+    Add_ECS_System(std::make_unique<RenderingSystem>());        // Pass 1: World (parallax, tiles, entities)
+	Add_ECS_System(std::make_unique<GridSystem>());             // Grid overlay
+    Add_ECS_System(std::make_unique<UIRenderingSystem>());      // ✅ Pass 2: UI/HUD/Menu (ALWAYS on top)
 }
 //---------------------------------------------------------------------------------------------
 void World::Add_ECS_System(std::unique_ptr<ECS_System> system)
