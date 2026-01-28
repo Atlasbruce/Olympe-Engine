@@ -414,10 +414,8 @@ namespace Tiled {
         // Get prefab path from type mapping
         entity->prefabPath = GetPrefabPath(obj.type);
         
-        // Use TMJ coordinates directly - no conversion needed
-        // TMJ files already store objects in screen pixel coordinates (not tile coords)
-        // Tiled has already applied isometric transformation when saving
-        entity->position = Vector(obj.x, obj.y, 0.0f);
+        // Transform position based on map orientation (isometric vs orthogonal)
+        entity->position = TransformObjectPosition(obj.x, obj.y);
         
         SYSTEM_LOG << "  → Created entity '" << obj.name 
                    << "' at TMJ position: (" << obj.x << ", " << obj.y << ")\n";
@@ -526,6 +524,14 @@ namespace Tiled {
         bool isIsometric = (config_.mapOrientation == "isometric");
         
         if (isIsometric) {
+            // Validate tile dimensions before division
+            if (config_.tileWidth <= 0 || config_.tileHeight <= 0) {
+                SYSTEM_LOG << "WARNING: Invalid tile dimensions for isometric conversion ("
+                          << config_.tileWidth << "x" << config_.tileHeight 
+                          << "), using TMJ coordinates as-is\n";
+                return Vector(x, y, 0.0f);
+            }
+            
             // FIX: Convert TMJ pixels → tile coordinates → ISO projection
             
             // Step 1: TMJ object coordinates are in Tiled's orthogonal canvas pixels
