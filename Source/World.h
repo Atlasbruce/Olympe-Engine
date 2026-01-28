@@ -341,6 +341,61 @@ public:
         return false;
     }
 
+    // ========================================================================
+    // Layer Management API
+    // ========================================================================
+    
+    /// Get the default render layer for an entity type
+    /// Automatically assigns appropriate layer based on entity classification
+    RenderLayer GetDefaultLayerForType(EntityType type) const
+    {
+        switch (type)
+        {
+            case EntityType::Player:
+            case EntityType::NPC:
+                return RenderLayer::Characters;
+            
+            case EntityType::Enemy:
+                return RenderLayer::Characters;  // Same layer as players for proper overlap
+            
+            case EntityType::Item:
+            case EntityType::Collectible:
+                return RenderLayer::Objects;
+            
+            case EntityType::Effect:
+            case EntityType::Particle:
+                return RenderLayer::Effects;
+            
+            case EntityType::UIElement:
+                return RenderLayer::UI_Near;
+            
+            case EntityType::Background:
+                return RenderLayer::Background_Near;
+            
+            case EntityType::Trigger:
+            case EntityType::Waypoint:
+                return RenderLayer::Ground;  // Invisible helpers at ground level
+            
+            case EntityType::Static:
+            case EntityType::Dynamic:
+            case EntityType::None:
+            default:
+                return RenderLayer::Ground;
+        }
+    }
+    
+    /// Set entity render layer (updates position.z)
+    void SetEntityLayer(EntityID entity, RenderLayer layer);
+    
+    /// Get entity render layer
+    RenderLayer GetEntityLayer(EntityID entity) const;
+    
+    /// Get next available custom layer index (for dynamic layers)
+    int GetNextCustomLayerIndex() 
+    { 
+        return m_nextCustomLayerIndex++; 
+    }
+
     // Public for inspection/debug
     std::unordered_map<EntityID, ComponentSignature> m_entitySignatures;
 
@@ -434,4 +489,7 @@ private:
     int m_tileWidth;
     int m_tileHeight;
     std::vector<std::unique_ptr<Level>> m_levels;
+    
+    // Custom layer counter (starts after predefined layers)
+    int m_nextCustomLayerIndex = static_cast<int>(RenderLayer::Foreground_Far) + 1;
 };

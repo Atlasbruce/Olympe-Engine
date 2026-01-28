@@ -19,19 +19,70 @@ Components purpose: Include all component definitions used in the ECS architectu
 #include "DataManager.h"
 #include "SDL_rect.h"
 
+// ========================================================================
+// Entity Type Enumeration
+// ========================================================================
 
+enum class EntityType : int
+{
+    None = 0,
+    Player,
+    NPC,
+    Enemy,
+    Item,
+    Collectible,
+    Effect,
+    Particle,
+    UIElement,
+    Background,
+    Trigger,
+    Waypoint,
+    Static,
+    Dynamic
+};
+
+// ========================================================================
+// Render Layers (Z-Order) - Used for depth sorting
+// ========================================================================
+
+enum class RenderLayer : int
+{
+    Background_Far = -2,      // -2 * 10000 = -20000 (distant parallax backgrounds)
+    Background_Near = -1,     // -1 * 10000 = -10000 (near backgrounds)
+    Ground = 0,               //  0 * 10000 = 0      (floor tiles, terrain)
+    Objects = 1,              //  1 * 10000 = 10000  (items, decorations, collectibles)
+    Characters = 2,           //  2 * 10000 = 20000  (NPCs, players)
+    Flying = 3,               //  3 * 10000 = 30000  (flying enemies, projectiles)
+    Effects = 4,              //  4 * 10000 = 40000  (particles, VFX)
+    UI_Near = 5,              //  5 * 10000 = 50000  (UI elements, HUD)
+    Foreground_Near = 10,     // 10 * 10000 = 100000 (close foreground elements)
+    Foreground_Far = 20       // 20 * 10000 = 200000 (very close overlay)
+};
+
+/// Convert layer enum to z-coordinate value
+inline float LayerToZ(RenderLayer layer)
+{
+    return static_cast<float>(static_cast<int>(layer));
+}
+
+/// Convert z-coordinate to layer enum
+inline RenderLayer ZToLayer(float z)
+{
+    return static_cast<RenderLayer>(static_cast<int>(z));
+}
 
 // Component type definitions
 struct Identity_data
 {
 	std::string name = "Entity"; // Entity name
 	std::string tag = "Untagged"; // Entity tag/category
-	std::string type = "UnknownType"; // Entity type
+	std::string type = "UnknownType"; // Entity type (string for backward compatibility)
+	EntityType entityType = EntityType::None; // Entity type (enum for layer management)
 	
 	// Constructors
 	Identity_data() = default;
 	Identity_data(std::string n, std::string t, std::string et)
-		: name(std::move(n)), tag(std::move(t)), type(std::move(et)) {}
+		: name(std::move(n)), tag(std::move(t)), type(std::move(et)), entityType(EntityType::None) {}
 	Identity_data(const Identity_data&) = default;
 	Identity_data& operator=(const Identity_data&) = default;
 };

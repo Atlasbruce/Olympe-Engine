@@ -253,6 +253,36 @@ void World::DestroyEntity(EntityID entity)
     std::cout << "Entit� " << entity << " d�truite et ID recycl�.\n";
 }
 //---------------------------------------------------------------------------------------------
+// Layer Management Implementation
+//---------------------------------------------------------------------------------------------
+void World::SetEntityLayer(EntityID entity, RenderLayer layer)
+{
+    if (!HasComponent<Position_data>(entity))
+    {
+        SYSTEM_LOG << "⚠️  World::SetEntityLayer: Entity " << entity 
+                   << " has no Position_data component\n";
+        return;
+    }
+    
+    Position_data& pos = GetComponent<Position_data>(entity);
+    pos.position.z = LayerToZ(layer);
+    
+    SYSTEM_LOG << "World::SetEntityLayer: Entity " << entity 
+               << " assigned to layer " << static_cast<int>(layer) 
+               << " (z=" << pos.position.z << ")\n";
+}
+//---------------------------------------------------------------------------------------------
+RenderLayer World::GetEntityLayer(EntityID entity) const
+{
+    if (!HasComponent<Position_data>(entity))
+    {
+        return RenderLayer::Ground;
+    }
+    
+    const Position_data& pos = GetComponent<Position_data>(entity);
+    return ZToLayer(pos.position.z);
+}
+//---------------------------------------------------------------------------------------------
 // Blueprint Editor notification hooks
 //---------------------------------------------------------------------------------------------
 void World::NotifyBlueprintEditorEntityCreated(EntityID entity)

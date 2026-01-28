@@ -81,6 +81,38 @@ EntityID PrefabFactory::CreateEntityFromPrefabName(const std::string& prefabName
     return CreateEntityFromBlueprint(*blueprint);
 }
 
+EntityID PrefabFactory::CreateEntityFromPrefabName(const std::string& prefabName, 
+                                                   RenderLayer layer)
+{
+    if (!m_prefabsPreloaded)
+    {
+        SYSTEM_LOG << "⚠️  PrefabFactory::CreateEntityFromPrefabName: Prefabs not preloaded!\n";
+        return INVALID_ENTITY_ID;
+    }
+    
+    const PrefabBlueprint* blueprint = m_prefabRegistry.Find(prefabName);
+    
+    if (!blueprint || !blueprint->isValid)
+    {
+        SYSTEM_LOG << "❌ PrefabFactory::CreateEntityFromPrefabName: Prefab '" 
+                   << prefabName << "' not found\n";
+        return INVALID_ENTITY_ID;
+    }
+    
+    EntityID entity = CreateEntityFromBlueprint(*blueprint);
+    
+    if (entity != INVALID_ENTITY_ID)
+    {
+        // ✅ Override layer if specified
+        World::Get().SetEntityLayer(entity, layer);
+        
+        SYSTEM_LOG << "PrefabFactory::CreateEntityFromPrefabName: Entity " << entity 
+                   << " layer overridden to " << static_cast<int>(layer) << "\n";
+    }
+    
+    return entity;
+}
+
 void PrefabFactory::SetPrefabRegistry(const PrefabRegistry& registry)
 {
     m_prefabRegistry = registry;
@@ -129,6 +161,15 @@ EntityID PrefabFactory::CreateEntityFromBlueprint(const PrefabBlueprint& bluepri
             SYSTEM_LOG << "PrefabFactory::CreateEntityFromBlueprint: Failed to instantiate component '" 
                        << componentDef.componentType << "' on entity " << entity << "\n";
         }
+    }
+    
+    // ✅ NEW: Auto-assign render layer based on entity type
+    if (world.HasComponent<Identity_data>(entity) && 
+        world.HasComponent<Position_data>(entity))
+    {
+        const Identity_data& identity = world.GetComponent<Identity_data>(entity);
+        RenderLayer defaultLayer = world.GetDefaultLayerForType(identity.entityType);
+        world.SetEntityLayer(entity, defaultLayer);
     }
     
     SYSTEM_LOG << "PrefabFactory::CreateEntityFromBlueprint: Created entity " << entity 
@@ -228,8 +269,40 @@ bool PrefabFactory::InstantiateIdentity(EntityID entity, const ComponentDefiniti
     
     if (def.HasParameter("entityType"))
     {
-        // Map string to EntityType enum
+        // Store string type for backward compatibility
         identity.type = def.GetParameter("entityType")->AsString();
+        
+        // Map string to EntityType enum
+        std::string typeStr = identity.type;
+        
+        if (typeStr == "Player")
+            identity.entityType = EntityType::Player;
+        else if (typeStr == "NPC")
+            identity.entityType = EntityType::NPC;
+        else if (typeStr == "Enemy")
+            identity.entityType = EntityType::Enemy;
+        else if (typeStr == "Item")
+            identity.entityType = EntityType::Item;
+        else if (typeStr == "Collectible")
+            identity.entityType = EntityType::Collectible;
+        else if (typeStr == "Effect")
+            identity.entityType = EntityType::Effect;
+        else if (typeStr == "Particle")
+            identity.entityType = EntityType::Particle;
+        else if (typeStr == "UIElement")
+            identity.entityType = EntityType::UIElement;
+        else if (typeStr == "Background")
+            identity.entityType = EntityType::Background;
+        else if (typeStr == "Trigger")
+            identity.entityType = EntityType::Trigger;
+        else if (typeStr == "Waypoint")
+            identity.entityType = EntityType::Waypoint;
+        else if (typeStr == "Static")
+            identity.entityType = EntityType::Static;
+        else if (typeStr == "Dynamic")
+            identity.entityType = EntityType::Dynamic;
+        else
+            identity.entityType = EntityType::None;
     }
     
     World::Get().AddComponent<Identity_data>(entity, identity);

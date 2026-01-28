@@ -37,6 +37,9 @@ public:
     /// This is the new recommended API for creating entities
     EntityID CreateEntityFromPrefabName(const std::string& prefabName);
     
+    /// Create entity from prefab name with explicit layer override
+    EntityID CreateEntityFromPrefabName(const std::string& prefabName, RenderLayer layer);
+    
     /// Get prefab count
     int GetPrefabCount() const { return static_cast<int>(m_prefabRegistry.GetCount()); }
     
