@@ -435,6 +435,9 @@ public:
     }
     
     /// Synchronize grid settings with loaded level
+    /// Extracts map orientation and tile dimensions from LevelDefinition
+    /// and updates GridSettings_data (projection mode, cellSize, hexRadius)
+    /// Supports: orthogonal, isometric, hexagonal orientations
     void SyncGridWithLevel(const Olympe::Editor::LevelDefinition& levelDef);
 
     // Public for inspection/debug

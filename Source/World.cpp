@@ -308,22 +308,21 @@ void World::NotifyBlueprintEditorEntityDestroyed(EntityID entity)
 void World::SyncGridWithLevel(const Olympe::Editor::LevelDefinition& levelDef)
 {
     // Find GridSettings entity
+    bool foundGridSettings = false;
     for (const auto& kv : m_entitySignatures)
     {
         EntityID e = kv.first;
         if (HasComponent<GridSettings_data>(e))
         {
+            foundGridSettings = true;
             GridSettings_data& settings = GetComponent<GridSettings_data>(e);
             
-            // Extract orientation from metadata
-            std::string orientation = "orthogonal";  // Default
-            if (levelDef.metadata.customData.contains("orientation"))
+            // Extract orientation from mapConfig (primary source)
+            std::string orientation = levelDef.mapConfig.orientation;
+            if (orientation.empty())
             {
-                const auto& orientValue = levelDef.metadata.customData.at("orientation");
-                if (orientValue.is_string())
-                {
-                    orientation = orientValue.get<std::string>();
-                }
+                orientation = "orthogonal";  // Default fallback
+                SYSTEM_LOG << "World::SyncGridWithLevel: Warning - No orientation specified, using orthogonal\n";
             }
             
             // Extract tile dimensions
@@ -346,11 +345,24 @@ void World::SyncGridWithLevel(const Olympe::Editor::LevelDefinition& levelDef)
             else if (orientation == "hexagonal")
             {
                 settings.projection = GridProjection::HexAxial;
+                // Note: This assumes "pointy-top" hexagonal orientation
+                // Radius is half the tile width for pointy-top hexagons
                 settings.hexRadius = static_cast<float>(tileWidth) / 2.0f;
+            }
+            else if (orientation == "staggered")
+            {
+                // Staggered orientation is not fully supported yet
+                // Fall back to orthogonal with a warning
+                SYSTEM_LOG << "World::SyncGridWithLevel: Warning - Staggered orientation not fully supported, using orthogonal\n";
+                settings.projection = GridProjection::Ortho;
+                settings.cellSize = Vector(static_cast<float>(tileWidth), 
+                                          static_cast<float>(tileHeight), 0.f);
             }
             else
             {
-                // Fallback to orthogonal for unknown orientations
+                // Unknown orientation - fallback to orthogonal
+                SYSTEM_LOG << "World::SyncGridWithLevel: Warning - Unknown orientation '" 
+                           << orientation << "', using orthogonal\n";
                 settings.projection = GridProjection::Ortho;
                 settings.cellSize = Vector(static_cast<float>(tileWidth), 
                                           static_cast<float>(tileHeight), 0.f);
@@ -362,6 +374,11 @@ void World::SyncGridWithLevel(const Olympe::Editor::LevelDefinition& levelDef)
             
             break;
         }
+    }
+    
+    if (!foundGridSettings)
+    {
+        SYSTEM_LOG << "World::SyncGridWithLevel: Warning - No GridSettings entity found, grid sync skipped\n";
     }
 }
 //---------------------------------------------------------------------------------------------
