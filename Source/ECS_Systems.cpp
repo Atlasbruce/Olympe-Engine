@@ -264,6 +264,54 @@ void UIEventConsumeSystem::Process()
     // Forward declaration to access GameMenu
     extern class GameMenu;
     
+    // Process keyboard events from Input domain for menu toggle (ESC key)
+    queue.ForEachDomainEvent(EventDomain::Input, [](const Message& msg) {
+        // Toggle menu with ESC key
+        if (msg.msg_type == EventType::Olympe_EventType_Keyboard_KeyDown)
+        {
+            auto sc = static_cast<SDL_Scancode>(msg.controlId);
+            
+            if (sc == SDL_SCANCODE_ESCAPE)
+            {
+                if (GameMenu::Get().IsActive())
+                {
+                    GameMenu::Get().Deactivate();  // Close menu, resume game
+                    SYSTEM_LOG << "UIEventConsumeSystem: ESC pressed - menu deactivated\n";
+                }
+                else
+                {
+                    GameMenu::Get().Activate();    // Open menu, pause game
+                    SYSTEM_LOG << "UIEventConsumeSystem: ESC pressed - menu activated\n";
+                }
+            }
+            
+            // Handle menu navigation (if menu is active)
+            if (GameMenu::Get().IsActive())
+            {
+                switch (sc)
+                {
+                    case SDL_SCANCODE_UP:
+                    case SDL_SCANCODE_W:
+                        GameMenu::Get().SelectPrevious();
+                        SYSTEM_LOG << "UIEventConsumeSystem: Menu selection moved up\n";
+                        break;
+                    case SDL_SCANCODE_DOWN:
+                    case SDL_SCANCODE_S:
+                        GameMenu::Get().SelectNext();
+                        SYSTEM_LOG << "UIEventConsumeSystem: Menu selection moved down\n";
+                        break;
+                    case SDL_SCANCODE_RETURN:
+                    case SDL_SCANCODE_SPACE:
+                        GameMenu::Get().ValidateSelection();
+                        SYSTEM_LOG << "UIEventConsumeSystem: Menu selection validated\n";
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    });
+    
     // Process each UI event
     queue.ForEachDomainEvent(EventDomain::UI, [](const Message& msg) {
         
@@ -281,10 +329,7 @@ void UIEventConsumeSystem::Process()
                 if (GameMenu::Get().IsActive())
                 {
                     SYSTEM_LOG << "UIEventConsumeSystem: Menu Validate event\n";
-                    // GameMenu will handle the validation internally
-                    // For now, we'll emit a message that GameMenu's OnEvent can handle
-                    // But since we're migrating away from OnEvent, we need to handle it here
-                    // This is a placeholder - full implementation depends on menu structure
+                    GameMenu::Get().ValidateSelection();
                 }
                 break;
             default:
@@ -877,6 +922,14 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
             Position_data& pos = World::Get().GetComponent<Position_data>(entity);
             VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
             BoundingBox_data& bbox = World::Get().GetComponent<BoundingBox_data>(entity);
+            
+            // ✅ NEW: Skip UI entities (rendered in Pass 2)
+            if (World::Get().HasComponent<Identity_data>(entity))
+            {
+                Identity_data& id = World::Get().GetComponent<Identity_data>(entity);
+                if (id.type == "UIElement")
+                    continue;  // Skip UI, will be rendered in UIRenderingSystem
+            }
             
             if (!visual.visible) continue;
             
@@ -1568,6 +1621,219 @@ void GridSystem::RenderHex(const CameraTransform& cam, const GridSettings_data& 
             lines += 6;
         }
     }
+}
+//-------------------------------------------------------------
+// UIRenderingSystem: Pass 2 rendering for UI/HUD/Menu (always on top)
+//-------------------------------------------------------------
+UIRenderingSystem::UIRenderingSystem()
+{
+    // Require UI components
+    requiredSignature.set(GetComponentTypeID_Static<Identity_data>(), true);
+    requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
+    requiredSignature.set(GetComponentTypeID_Static<VisualSprite_data>(), true);
+    requiredSignature.set(GetComponentTypeID_Static<BoundingBox_data>(), true);
+}
+
+void UIRenderingSystem::Render()
+{
+    SDL_Renderer* renderer = GameEngine::renderer;
+    if (!renderer) return;
+
+    const auto& players = ViewportManager::Get().GetPlayers();
+    
+    if (!players.empty())
+    {
+        // Multi-player: render UI for each player's viewport
+        for (short playerID : players)
+        {
+            CameraTransform cam = GetActiveCameraTransform(playerID);
+            if (!cam.isActive) continue;
+            
+            // Set viewport
+            SDL_Rect viewportRect = {
+                (int)cam.viewport.x, (int)cam.viewport.y,
+                (int)cam.viewport.w, (int)cam.viewport.h
+            };
+            SDL_SetRenderViewport(renderer, &viewportRect);
+            SDL_SetRenderClipRect(renderer, &viewportRect);
+            
+            // Render UI layers
+            RenderHUD(cam);
+            RenderInGameMenu(cam);
+            RenderDebugOverlay(cam);
+        }
+        
+        // Reset viewport
+        SDL_SetRenderClipRect(renderer, nullptr);
+        SDL_SetRenderViewport(renderer, nullptr);
+    }
+    else
+    {
+        // Single camera fallback
+        CameraTransform cam = GetActiveCameraTransform(-1);
+        if (cam.isActive)
+        {
+            RenderHUD(cam);
+            RenderInGameMenu(cam);
+            RenderDebugOverlay(cam);
+        }
+    }
+}
+
+void UIRenderingSystem::RenderHUD(const CameraTransform& cam)
+{
+    // Render HUD entities (health bars, score, etc.)
+    for (EntityID entity : m_entities)
+    {
+        if (!World::Get().HasComponent<Identity_data>(entity))
+            continue;
+        
+        Identity_data& id = World::Get().GetComponent<Identity_data>(entity);
+        
+        // Only render UI elements
+        if (id.type != "UIElement")
+            continue;
+        
+        // Skip menu-specific elements
+        if (id.tag == "MenuElement")
+            continue;
+        
+        Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+        VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
+        BoundingBox_data& bbox = World::Get().GetComponent<BoundingBox_data>(entity);
+        
+        if (!visual.visible)
+            continue;
+        
+        // Render in screen space (no camera transform)
+        SDL_FRect destRect = {
+            pos.position.x,  // Already in screen coordinates
+            pos.position.y,
+            bbox.boundingBox.w,
+            bbox.boundingBox.h
+        };
+        
+        if (visual.sprite)
+        {
+            SDL_SetTextureColorMod(visual.sprite, visual.color.r, visual.color.g, visual.color.b);
+            SDL_RenderTexture(GameEngine::renderer, visual.sprite, nullptr, &destRect);
+        }
+    }
+}
+
+void UIRenderingSystem::RenderInGameMenu(const CameraTransform& cam)
+{
+    // Only render if menu is active
+    if (!GameMenu::Get().IsActive())
+        return;
+    
+    SDL_Renderer* renderer = GameEngine::renderer;
+    
+    // Semi-transparent background overlay
+    SDL_FRect overlay = {
+        0, 0,
+        (float)GameEngine::screenWidth,
+        (float)GameEngine::screenHeight
+    };
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 128);  // Black, 50% alpha
+    SDL_RenderFillRect(renderer, &overlay);
+    
+    // Menu panel (centered)
+    float panelWidth = 400;
+    float panelHeight = 300;
+    float panelX = (GameEngine::screenWidth - panelWidth) / 2.0f;
+    float panelY = (GameEngine::screenHeight - panelHeight) / 2.0f;
+    
+    SDL_FRect panel = { panelX, panelY, panelWidth, panelHeight };
+    SDL_SetRenderDrawColor(renderer, 40, 40, 40, 255);  // Dark gray
+    SDL_RenderFillRect(renderer, &panel);
+    
+    // Panel border
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);  // Light gray
+    SDL_RenderRect(renderer, &panel);
+    
+    // TODO: Render menu text with SDL_ttf or ImGui
+    // For now, render placeholder rectangles for buttons
+    
+    float buttonWidth = 300;
+    float buttonHeight = 50;
+    float buttonX = panelX + (panelWidth - buttonWidth) / 2.0f;
+    float buttonY = panelY + 80;
+    float buttonSpacing = 70;
+    
+    int selectedOption = GameMenu::Get().GetSelectedOption();
+    
+    // Resume button
+    SDL_FRect resumeButton = { buttonX, buttonY, buttonWidth, buttonHeight };
+    SDL_SetRenderDrawColor(renderer, 80, 120, 180, 255);  // Blue
+    SDL_RenderFillRect(renderer, &resumeButton);
+    if (selectedOption == GameMenu::Resume)
+    {
+        // Selected - draw thick yellow border
+        SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+        SDL_RenderRect(renderer, &resumeButton);
+        SDL_FRect innerRect = { buttonX + 2, buttonY + 2, buttonWidth - 4, buttonHeight - 4 };
+        SDL_RenderRect(renderer, &innerRect);
+    }
+    else
+    {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderRect(renderer, &resumeButton);
+    }
+    
+    // Restart button
+    SDL_FRect restartButton = { buttonX, buttonY + buttonSpacing, buttonWidth, buttonHeight };
+    SDL_SetRenderDrawColor(renderer, 180, 120, 80, 255);  // Orange
+    SDL_RenderFillRect(renderer, &restartButton);
+    if (selectedOption == GameMenu::Restart)
+    {
+        // Selected - draw thick yellow border
+        SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+        SDL_RenderRect(renderer, &restartButton);
+        SDL_FRect innerRect = { buttonX + 2, buttonY + buttonSpacing + 2, buttonWidth - 4, buttonHeight - 4 };
+        SDL_RenderRect(renderer, &innerRect);
+    }
+    else
+    {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderRect(renderer, &restartButton);
+    }
+    
+    // Quit button
+    SDL_FRect quitButton = { buttonX, buttonY + buttonSpacing * 2, buttonWidth, buttonHeight };
+    SDL_SetRenderDrawColor(renderer, 180, 80, 80, 255);  // Red
+    SDL_RenderFillRect(renderer, &quitButton);
+    if (selectedOption == GameMenu::Quit)
+    {
+        // Selected - draw thick yellow border
+        SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+        SDL_RenderRect(renderer, &quitButton);
+        SDL_FRect innerRect = { buttonX + 2, buttonY + buttonSpacing * 2 + 2, buttonWidth - 4, buttonHeight - 4 };
+        SDL_RenderRect(renderer, &innerRect);
+    }
+    else
+    {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderRect(renderer, &quitButton);
+    }
+    
+    // TODO: Add text rendering with SDL_ttf
+    // For now, logs indicate menu is active
+    static bool loggedOnce = false;
+    if (!loggedOnce)
+    {
+        SYSTEM_LOG << "UIRenderingSystem: In-game menu rendered (Resume/Restart/Quit)\n";
+        loggedOnce = true;
+    }
+}
+
+void UIRenderingSystem::RenderDebugOverlay(const CameraTransform& cam)
+{
+    // Render debug information (FPS, entity count, etc.)
+    // This is always on top of everything
+    
+    // TODO: Use SDL_ttf for text rendering
+    // For now, just a placeholder
 }
 //-------------------------------------------------------------
 RenderingEditorSystem::RenderingEditorSystem()
