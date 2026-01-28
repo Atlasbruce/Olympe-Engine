@@ -22,36 +22,8 @@ namespace Rendering {
     constexpr uint32_t FLIPPED_DIAGONALLY_FLAG = 0x20000000;
     constexpr uint32_t TILE_ID_MASK = 0x1FFFFFFF;
 
-    // ✅ DEPRECATED: Legacy tile structure - kept for compatibility
-    // New unified pipeline uses RenderItem in ECS_Systems.cpp
-    struct IsometricTile
-    {
-        int worldX;           // Grid X coordinate
-        int worldY;           // Grid Y coordinate
-        uint32_t tileGID;     // Tile Global ID (with flip flags)
-        SDL_Texture* texture; // Texture to render
-        SDL_Rect srcRect;     // Source rectangle in texture
-        int zOrder;           // Layer z-order for sorting
-        int tileoffsetX;
-        int tileoffsetY;
-        
-        // Entity sprite support (DEPRECATED - now in unified pipeline)
-        bool isEntitySprite;
-        float worldPosX;
-        float worldPosY;
-        SDL_FRect destRect;
-        uint32_t colorTint;
-        SDL_FPoint hotSpot;
-        
-        IsometricTile()
-            : worldX(0), worldY(0), tileGID(0), texture(nullptr), 
-              srcRect{0, 0, 0, 0}, zOrder(0), tileoffsetX(0), tileoffsetY(0),
-              isEntitySprite(false), worldPosX(0.0f), worldPosY(0.0f),
-              destRect{0.0f, 0.0f, 0.0f, 0.0f}, colorTint(0xFFFFFFFF),
-              hotSpot{0.0f, 0.0f} {}
-    };
-
-    // ✅ REFACTORED: Isometric utility functions (coordinate conversion, culling)
+    // ✅ Isometric utility functions (coordinate conversion, culling)
+    // Note: Tile batching and sorting moved to unified pipeline in ECS_Systems.cpp
     class IsometricRenderer
     {
     public:
@@ -65,7 +37,7 @@ namespace Rendering {
         void SetCamera(float camX, float camY, float zoom);
         void SetViewport(int screenWidth, int screenHeight);
         
-        // ✅ Utility functions (static-like, can be used without instance)
+        // ✅ Utility functions (coordinate conversion)
         Vector WorldToScreen(float worldX, float worldY) const;
         Vector ScreenToWorld(float screenX, float screenY) const;
         

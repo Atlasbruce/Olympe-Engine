@@ -492,6 +492,20 @@ void RenderingSystem::Render()
 // Tile Rendering Helper Functions
 // ========================================================================
 
+// Rendering constants
+namespace {
+    constexpr float ISOMETRIC_OFFSET_Y = 200.0f;  // Y offset for negative world coords
+    
+    // Depth calculation constants
+    constexpr float DEPTH_LAYER_SCALE = 10000.0f;  // Scale for layer separation
+    constexpr float DEPTH_DIAGONAL_SCALE = 100.0f; // Scale for isometric diagonal (X+Y)
+    constexpr float DEPTH_X_SCALE = 0.1f;          // Scale for X coordinate tie-breaking
+    
+    // Frustum culling padding
+    constexpr int ISO_TILE_PADDING = 5;    // Padding for isometric tall tiles
+    constexpr int ORTHO_TILE_PADDING = 2;  // Padding for orthogonal tiles
+}
+
 // ✅ Helper: Extract flip flags from GID
 void ExtractFlipFlags(uint32_t gid, bool& flipH, bool& flipV, bool& flipD)
 {
@@ -505,7 +519,9 @@ void ExtractFlipFlags(uint32_t gid, bool& flipH, bool& flipV, bool& flipD)
 }
 
 // ✅ Helper: Convert flip flags to SDL flip mode
-SDL_FlipMode GetSDLFlip(bool flipH, bool flipV, bool flipD)
+// Note: SDL3 only supports horizontal and vertical flips
+// Diagonal flip (flipD) is extracted but not applied - requires rotation
+SDL_FlipMode GetSDLFlip(bool flipH, bool flipV, bool /*flipD*/)
 {
     int flip = SDL_FLIP_NONE;
     if (flipH) flip |= SDL_FLIP_HORIZONTAL;
@@ -525,7 +541,6 @@ Vector IsoWorldToScreen(int worldX, int worldY, const CameraTransform& cam, int 
     float screenY = (isoY - cam.worldPosition.y) * cam.zoom + cam.viewport.h / 2.0f;
     
     // Add isometric Y offset for negative world coordinates
-    constexpr float ISOMETRIC_OFFSET_Y = 200.0f;
     screenY += ISOMETRIC_OFFSET_Y;
     
     return Vector(screenX, screenY, 0.0f);
@@ -534,7 +549,6 @@ Vector IsoWorldToScreen(int worldX, int worldY, const CameraTransform& cam, int 
 // ✅ Helper: Convert screen coordinates to isometric world coordinates
 Vector IsoScreenToWorld(float screenX, float screenY, const CameraTransform& cam, int tileWidth, int tileHeight)
 {
-    constexpr float ISOMETRIC_OFFSET_Y = 200.0f;
     screenY -= ISOMETRIC_OFFSET_Y;
     
     float isoX = (screenX - cam.viewport.w / 2.0f) / cam.zoom + cam.worldPosition.x;
@@ -569,17 +583,17 @@ void GetVisibleTileRange(const CameraTransform& cam,
         float worldMaxY = std::max({topLeft.y, topRight.y, bottomLeft.y, bottomRight.y});
         
         // Bounding box with padding for tall tiles
-        minX = static_cast<int>(std::floor(worldMinX)) - 5;
-        minY = static_cast<int>(std::floor(worldMinY)) - 5;
-        maxX = static_cast<int>(std::ceil(worldMaxX)) + 5;
-        maxY = static_cast<int>(std::ceil(worldMaxY)) + 5;
+        minX = static_cast<int>(std::floor(worldMinX)) - ISO_TILE_PADDING;
+        minY = static_cast<int>(std::floor(worldMinY)) - ISO_TILE_PADDING;
+        maxX = static_cast<int>(std::ceil(worldMaxX)) + ISO_TILE_PADDING;
+        maxY = static_cast<int>(std::ceil(worldMaxY)) + ISO_TILE_PADDING;
     }
     else {
         // Orthogonal/hex
-        minX = static_cast<int>((cam.worldPosition.x - cam.viewport.w / (2 * cam.zoom)) / tileWidth) - 2;
-        minY = static_cast<int>((cam.worldPosition.y - cam.viewport.h / (2 * cam.zoom)) / tileHeight) - 2;
-        maxX = static_cast<int>((cam.worldPosition.x + cam.viewport.w / (2 * cam.zoom)) / tileWidth) + 2;
-        maxY = static_cast<int>((cam.worldPosition.y + cam.viewport.h / (2 * cam.zoom)) / tileHeight) + 2;
+        minX = static_cast<int>((cam.worldPosition.x - cam.viewport.w / (2 * cam.zoom)) / tileWidth) - ORTHO_TILE_PADDING;
+        minY = static_cast<int>((cam.worldPosition.y - cam.viewport.h / (2 * cam.zoom)) / tileHeight) - ORTHO_TILE_PADDING;
+        maxX = static_cast<int>((cam.worldPosition.x + cam.viewport.w / (2 * cam.zoom)) / tileWidth) + ORTHO_TILE_PADDING;
+        maxY = static_cast<int>((cam.worldPosition.y + cam.viewport.h / (2 * cam.zoom)) / tileHeight) + ORTHO_TILE_PADDING;
     }
 }
 
@@ -589,12 +603,12 @@ float CalculateTileDepth(const std::string& orientation,
                         int layerZOrder,
                         int tileWidth, int tileHeight)
 {
-    float baseDepth = static_cast<float>(layerZOrder) * 10000.0f;
+    float baseDepth = static_cast<float>(layerZOrder) * DEPTH_LAYER_SCALE;
     
     if (orientation == "isometric") {
         // Isometric diagonal sort: X+Y then X
         int diagonalSum = worldX + worldY;
-        return baseDepth + diagonalSum * 100.0f + worldX * 0.1f;
+        return baseDepth + diagonalSum * DEPTH_DIAGONAL_SCALE + worldX * DEPTH_X_SCALE;
     }
     else {
         // Orthogonal/hex: Y position
@@ -607,10 +621,11 @@ float CalculateEntityDepth(const std::string& orientation,
                           const Vector& position,
                           int tileWidth, int tileHeight)
 {
-    float baseDepth = position.z * 10000.0f;  // Layer zOrder
+    float baseDepth = position.z * DEPTH_LAYER_SCALE;  // Layer zOrder
     
     if (orientation == "isometric") {
         // Use exact worldPosY for fine sorting
+        // This matches the tile depth calculation for proper integration
         return baseDepth + position.y;
     }
     else {
@@ -622,7 +637,7 @@ float CalculateEntityDepth(const std::string& orientation,
 // ✅ NEW: Render individual tile immediately (unified for all orientations)
 void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
                         int worldX, int worldY, uint32_t gid,
-                        int tileoffsetX, int tileoffsetY, int zOrder,
+                        int tileoffsetX, int tileoffsetY,
                         const CameraTransform& cam,
                         const std::string& orientation,
                         int tileWidth, int tileHeight)
@@ -630,6 +645,14 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
     if (!texture) return;
     
     Vector screenPos;
+    
+    // Extract flip flags
+    bool flipH, flipV, flipD;
+    ExtractFlipFlags(gid, flipH, flipV, flipD);
+    SDL_FlipMode flip = GetSDLFlip(flipH, flipV, flipD);
+    
+    SDL_FRect srcFRect = {(float)srcRect.x, (float)srcRect.y, 
+                         (float)srcRect.w, (float)srcRect.h};
     
     if (orientation == "isometric") {
         // Isometric projection
@@ -641,13 +664,6 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
         destRect.x = screenPos.x + (tileoffsetX * cam.zoom) - destRect.w / 2.0f;
         destRect.y = screenPos.y + (tileoffsetY * cam.zoom) - destRect.h + (tileHeight * cam.zoom);
         
-        // Extract flip flags
-        bool flipH, flipV, flipD;
-        ExtractFlipFlags(gid, flipH, flipV, flipD);
-        SDL_FlipMode flip = GetSDLFlip(flipH, flipV, flipD);
-        
-        SDL_FRect srcFRect = {(float)srcRect.x, (float)srcRect.y, 
-                             (float)srcRect.w, (float)srcRect.h};
         SDL_RenderTextureRotated(GameEngine::renderer, texture, 
                                 &srcFRect, &destRect, 0.0, nullptr, flip);
     }
@@ -663,9 +679,9 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
             srcRect.h * cam.zoom
         };
         
-        SDL_FRect srcFRect = {(float)srcRect.x, (float)srcRect.y, 
-                             (float)srcRect.w, (float)srcRect.h};
-        SDL_RenderTexture(GameEngine::renderer, texture, &srcFRect, &destRect);
+        // Apply flipping for orthogonal tiles too
+        SDL_RenderTextureRotated(GameEngine::renderer, texture, &srcFRect, &destRect,
+                                0.0, nullptr, flip);
     }
 }
 
@@ -747,7 +763,7 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
     };
     
     std::vector<RenderItem> renderBatch;
-    renderBatch.reserve(3000);  // Pre-allocate (parallax + tiles + entities)
+    renderBatch.reserve(1000);  // Reserve for typical visible items (parallax + ~200-400 tiles + entities)
     
     // ================================================================
     // PHASE 1: FRUSTUM CULLING + POPULATION
@@ -876,7 +892,7 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
                 RenderTileImmediate(
                     item.tile.texture, item.tile.srcRect,
                     item.tile.worldX, item.tile.worldY, item.tile.gid,
-                    item.tile.tileoffsetX, item.tile.tileoffsetY, item.tile.zOrder,
+                    item.tile.tileoffsetX, item.tile.tileoffsetY,
                     cam, mapOrientation, tileWidth, tileHeight
                 );
                 break;
