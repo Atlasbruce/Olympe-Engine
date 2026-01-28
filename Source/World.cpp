@@ -303,6 +303,68 @@ void World::NotifyBlueprintEditorEntityDestroyed(EntityID entity)
     #endif
 }
 //---------------------------------------------------------------------------------------------
+// Grid Management
+//---------------------------------------------------------------------------------------------
+void World::SyncGridWithLevel(const Olympe::Editor::LevelDefinition& levelDef)
+{
+    // Find GridSettings entity
+    for (const auto& kv : m_entitySignatures)
+    {
+        EntityID e = kv.first;
+        if (HasComponent<GridSettings_data>(e))
+        {
+            GridSettings_data& settings = GetComponent<GridSettings_data>(e);
+            
+            // Extract orientation from metadata
+            std::string orientation = "orthogonal";  // Default
+            if (levelDef.metadata.customData.contains("orientation"))
+            {
+                const auto& orientValue = levelDef.metadata.customData.at("orientation");
+                if (orientValue.is_string())
+                {
+                    orientation = orientValue.get<std::string>();
+                }
+            }
+            
+            // Extract tile dimensions
+            int tileWidth = levelDef.mapConfig.tileWidth > 0 ? levelDef.mapConfig.tileWidth : 32;
+            int tileHeight = levelDef.mapConfig.tileHeight > 0 ? levelDef.mapConfig.tileHeight : 32;
+            
+            // Update projection mode
+            if (orientation == "orthogonal")
+            {
+                settings.projection = GridProjection::Ortho;
+                settings.cellSize = Vector(static_cast<float>(tileWidth), 
+                                          static_cast<float>(tileHeight), 0.f);
+            }
+            else if (orientation == "isometric")
+            {
+                settings.projection = GridProjection::Iso;
+                settings.cellSize = Vector(static_cast<float>(tileWidth), 
+                                          static_cast<float>(tileHeight), 0.f);
+            }
+            else if (orientation == "hexagonal")
+            {
+                settings.projection = GridProjection::HexAxial;
+                settings.hexRadius = static_cast<float>(tileWidth) / 2.0f;
+            }
+            else
+            {
+                // Fallback to orthogonal for unknown orientations
+                settings.projection = GridProjection::Ortho;
+                settings.cellSize = Vector(static_cast<float>(tileWidth), 
+                                          static_cast<float>(tileHeight), 0.f);
+            }
+            
+            SYSTEM_LOG << "World::SyncGridWithLevel: Grid synced with level\n"
+                       << "  Orientation: " << orientation << "\n"
+                       << "  Tile size: " << tileWidth << "x" << tileHeight << "\n";
+            
+            break;
+        }
+    }
+}
+//---------------------------------------------------------------------------------------------
 // Tiled MapEditor Integration
 //---------------------------------------------------------------------------------------------
 #include "TiledLevelLoader/include/TiledLevelLoader.h"
@@ -384,6 +446,9 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
         SYSTEM_LOG << "World::LoadLevelFromTiled - Failed to convert map\n";
         return false;
     }/**/
+    
+    // Synchronize grid settings with loaded level
+    SyncGridWithLevel(levelDef);
 
 	// Clean and standardize Object.type following prefab registry
     PrefabFactory& factory = PrefabFactory::Get();

@@ -433,6 +433,9 @@ public:
         }
         return false;  // Default if no GridSettings entity exists
     }
+    
+    /// Synchronize grid settings with loaded level
+    void SyncGridWithLevel(const Olympe::Editor::LevelDefinition& levelDef);
 
     // Public for inspection/debug
     std::unordered_map<EntityID, ComponentSignature> m_entitySignatures;
