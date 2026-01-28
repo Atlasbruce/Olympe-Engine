@@ -40,9 +40,9 @@ void GameEngine::Initialize()
 	DataManager::Get().PreloadSystemResources("./olympe.ini");
 
 	// Create and initialize panel manager
-	PanelManager::Get().Initialize();
+	//PanelManager::Get().Initialize();
 	//PanelManager::Get().CreateMainMenuWindow();
-	PanelManager::Get().CreateLogWindow();
+	//PanelManager::Get().CreateLogWindow();
 	//PanelManager::Get().CreateObjectInspectorWindow();
 	//PanelManager::Get().CreateTreeViewWindow();	
 	//PanelManager::Get().CreateInputsInspectorWindow();
