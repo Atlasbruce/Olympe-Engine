@@ -11,6 +11,7 @@ World purpose: Manage the overall game world, including object management, level
 #pragma once
 
 #include "system/EventQueue.h"
+#include "system/system_utils.h"
 #include <vector>
 #include <memory>
 #include <unordered_map>
@@ -394,6 +395,43 @@ public:
     int GetNextCustomLayerIndex() 
     { 
         return m_nextCustomLayerIndex++; 
+    }
+    
+    // ========================================================================
+    // Grid Management
+    // ========================================================================
+    
+    /// Toggle grid visibility
+    void ToggleGrid()
+    {
+        for (const auto& kv : m_entitySignatures)
+        {
+            EntityID e = kv.first;
+            if (HasComponent<GridSettings_data>(e))
+            {
+                GridSettings_data& settings = GetComponent<GridSettings_data>(e);
+                settings.enabled = !settings.enabled;
+                
+                SYSTEM_LOG << "World::ToggleGrid: Grid " 
+                           << (settings.enabled ? "enabled" : "disabled") << "\n";
+                break;
+            }
+        }
+    }
+    
+    /// Get current grid state
+    bool IsGridEnabled()
+    {
+        for (const auto& kv : m_entitySignatures)
+        {
+            EntityID e = kv.first;
+            if (HasComponent<GridSettings_data>(e))
+            {
+                const GridSettings_data& settings = GetComponent<GridSettings_data>(e);
+                return settings.enabled;
+            }
+        }
+        return false;  // Default if no GridSettings entity exists
     }
 
     // Public for inspection/debug
