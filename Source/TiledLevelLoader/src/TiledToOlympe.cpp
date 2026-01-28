@@ -414,10 +414,8 @@ namespace Tiled {
         // Get prefab path from type mapping
         entity->prefabPath = GetPrefabPath(obj.type);
         
-        // Use TMJ coordinates directly - no conversion needed
-        // TMJ files already store objects in screen pixel coordinates (not tile coords)
-        // Tiled has already applied isometric transformation when saving
-        entity->position = Vector(obj.x, obj.y, 0.0f);
+        // Transform position based on map orientation (isometric vs orthogonal)
+        entity->position = TransformObjectPosition(obj.x, obj.y);
         
         SYSTEM_LOG << "  → Created entity '" << obj.name 
                    << "' at TMJ position: (" << obj.x << ", " << obj.y << ")\n";
@@ -523,8 +521,36 @@ namespace Tiled {
     
     Vector TiledToOlympe::TransformObjectPosition(float x, float y)
     {
-        // No conversion needed - TMJ coordinates are already screen pixels
-        // Tiled has already applied any necessary transformations when saving the file
+        bool isIsometric = (config_.mapOrientation == "isometric");
+        
+        if (isIsometric) {
+            // Validate tile dimensions before division
+            if (config_.tileWidth <= 0 || config_.tileHeight <= 0) {
+                SYSTEM_LOG << "WARNING: Invalid tile dimensions for isometric conversion ("
+                          << config_.tileWidth << "x" << config_.tileHeight 
+                          << "), using TMJ coordinates as-is\n";
+                return Vector(x, y, 0.0f);
+            }
+            
+            // FIX: Convert TMJ pixels → tile coordinates → ISO projection
+            
+            // Step 1: TMJ object coordinates are in Tiled's orthogonal canvas pixels
+            //         Convert to tile coordinates (world space)
+            float tileX = x / static_cast<float>(config_.tileWidth);
+            float tileY = y / static_cast<float>(config_.tileHeight);
+            
+            // Step 2: Apply isometric projection (tiles → ISO screen pixels)
+            Vector isoPos = IsometricProjection::WorldToIso(
+                tileX,
+                tileY,
+                config_.tileWidth,
+                config_.tileHeight
+            );
+            
+            return Vector(isoPos.x, isoPos.y, 0.0f);
+        }
+        
+        // Orthogonal case: TMJ coordinates are already correct
         return Vector(x, y, 0.0f);
     }
 
