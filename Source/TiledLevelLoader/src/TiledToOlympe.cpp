@@ -523,8 +523,28 @@ namespace Tiled {
     
     Vector TiledToOlympe::TransformObjectPosition(float x, float y)
     {
-        // No conversion needed - TMJ coordinates are already screen pixels
-        // Tiled has already applied any necessary transformations when saving the file
+        bool isIsometric = (config_.mapOrientation == "isometric");
+        
+        if (isIsometric) {
+            // FIX: Convert TMJ pixels → tile coordinates → ISO projection
+            
+            // Step 1: TMJ object coordinates are in Tiled's orthogonal canvas pixels
+            //         Convert to tile coordinates (world space)
+            float tileX = x / static_cast<float>(config_.tileWidth);
+            float tileY = y / static_cast<float>(config_.tileHeight);
+            
+            // Step 2: Apply isometric projection (tiles → ISO screen pixels)
+            Vector isoPos = IsometricProjection::WorldToIso(
+                tileX,
+                tileY,
+                config_.tileWidth,
+                config_.tileHeight
+            );
+            
+            return Vector(isoPos.x, isoPos.y, 0.0f);
+        }
+        
+        // Orthogonal case: TMJ coordinates are already correct
         return Vector(x, y, 0.0f);
     }
 
