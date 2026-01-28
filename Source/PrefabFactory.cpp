@@ -31,9 +31,9 @@ void PrefabFactory::PreloadAllPrefabs(const std::string& prefabDirectory)
         return;
     }
     
-    SYSTEM_LOG << "╔═══════════════════════════════════════════════════════════╗\n";
-    SYSTEM_LOG << "║ PREFAB FACTORY: PRELOADING ALL PREFABS                   ║\n";
-    SYSTEM_LOG << "╚═══════════════════════════════════════════════════════════╝\n";
+    SYSTEM_LOG << "/===========================================================\\n";
+    SYSTEM_LOG << "| PREFAB FACTORY: PRELOADING ALL PREFABS                   |\n";
+    SYSTEM_LOG << "\===========================================================/\n";
     
     PrefabScanner scanner;
     std::vector<PrefabBlueprint> blueprints = scanner.ScanDirectory(prefabDirectory);
@@ -46,7 +46,7 @@ void PrefabFactory::PreloadAllPrefabs(const std::string& prefabDirectory)
     
     int prefabCount = static_cast<int>(m_prefabRegistry.GetCount());
     
-    SYSTEM_LOG << "✅ Loaded " << prefabCount << " prefabs:\n";
+    SYSTEM_LOG << "ok - Loaded " << prefabCount << " prefabs:\n";
     
     auto allNames = m_prefabRegistry.GetAllPrefabNames();
     for (const auto& name : allNames)
@@ -54,11 +54,11 @@ void PrefabFactory::PreloadAllPrefabs(const std::string& prefabDirectory)
         const PrefabBlueprint* bp = m_prefabRegistry.Find(name);
         if (bp && bp->isValid)
         {
-            SYSTEM_LOG << "   ├─ " << name << " (" << bp->components.size() << " components)\n";
+            SYSTEM_LOG << "   +- " << name << " (" << bp->components.size() << " components)\n";
         }
     }
     
-    SYSTEM_LOG << "\n✅ PrefabFactory ready\n\n";
+    SYSTEM_LOG << "\nok - PrefabFactory ready\n\n";
     m_prefabsPreloaded = true;
 }
 
@@ -66,7 +66,7 @@ EntityID PrefabFactory::CreateEntityFromPrefabName(const std::string& prefabName
 {
     if (!m_prefabsPreloaded)
     {
-        SYSTEM_LOG << "⚠️  PrefabFactory: Prefabs not preloaded! Call PreloadAllPrefabs() first\n";
+        SYSTEM_LOG << "/!\  PrefabFactory: Prefabs not preloaded! Call PreloadAllPrefabs() first\n";
         return INVALID_ENTITY_ID;
     }
     
@@ -74,7 +74,7 @@ EntityID PrefabFactory::CreateEntityFromPrefabName(const std::string& prefabName
     
     if (!blueprint || !blueprint->isValid)
     {
-        SYSTEM_LOG << "❌ PrefabFactory: Prefab '" << prefabName << "' not found\n";
+        SYSTEM_LOG << "x PrefabFactory: Prefab '" << prefabName << "' not found\n";
         return INVALID_ENTITY_ID;
     }
     

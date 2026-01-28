@@ -107,6 +107,14 @@
             "scaleInDock": 0.0625,
             "scaleInEditor": 0.12
         },
+        "pnc-quest.tmx": {
+            "scale": 0.75,
+            "selectedLayer": 6,
+            "viewCenter": {
+                "x": 440.6666666666667,
+                "y": 389.99999999999994
+            }
+        },
         "tiles-iso-1.tsx": {
             "dynamicWrapping": false,
             "scaleInDock": 1,
