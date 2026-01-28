@@ -53,7 +53,7 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
 
     if (eID == INVALID_ENTITY_ID)
     {
-        SYSTEM_LOG << "❌ Failed to create player from prefab '" << _playerPrefabName << "'\n";
+        SYSTEM_LOG << "X Failed to create player from prefab '" << _playerPrefabName << "'\n";
         return INVALID_ENTITY_ID;
 	}
 
@@ -63,7 +63,7 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
 	if (!world.HasComponent<PlayerBinding_data>(eID) || 
 		!world.HasComponent<Controller_data>(eID))
 	{
-		SYSTEM_LOG << "❌ Player entity missing required input components!\n";
+		SYSTEM_LOG << "X Player entity missing required input components!\n";
 		return INVALID_ENTITY_ID;
 	}
 
@@ -176,7 +176,7 @@ void VideoGame::SetViewportLayout(short playerID)
 //-------------------------------------------------------------
 void VideoGame::RegisterPrefabItems()
 {
-	// PREFAB REGISTRATION
+	// DERPECATED PREFAB REGISTRATION
 /*    PrefabFactory::Get().RegisterPrefab("PlayerEntity", [](EntityID id) {
         World& world = World::Get();
         world.AddComponent<Identity_data>(id, string("Player_" + to_string(id)), "Player", "Player");
@@ -460,7 +460,9 @@ void VideoGame::RegisterPrefabItems()
 //-------------------------------------------------------------
 void VideoGame::InitializeAITestScene()
 {
-    SYSTEM_LOG << "VideoGame: Initializing AI Test Scene...\n";
+    // DERPECATED 
+
+    /*SYSTEM_LOG << "VideoGame: Initializing AI Test Scene...\n";
     
     // Create a guard NPC "garde" at position (400, 300)
     EntityID garde = PrefabFactory::Get().CreateEntity("GuardNPC");
@@ -500,6 +502,6 @@ void VideoGame::InitializeAITestScene()
     else
     {
         SYSTEM_LOG << "VideoGame: ERROR - Failed to create guard NPC\n";
-    }
+    }/**/
 }
 
