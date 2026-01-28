@@ -418,13 +418,24 @@ namespace Tiled {
         bool isIsometric = (config_.mapOrientation == "isometric");
         
         if (isIsometric) {
-            // Apply isometric projection
+            // ✅ FIX: Convert TMJ pixels to tile coordinates FIRST
+            float tileX = obj.x / static_cast<float>(config_.tileWidth);
+            float tileY = obj.y / static_cast<float>(config_.tileHeight);
+            
+            SYSTEM_LOG << "  [ISO] Converting object '" << obj.name 
+                       << "' from TMJ pixels (" << obj.x << ", " << obj.y << ")"
+                       << " → tiles (" << tileX << ", " << tileY << ")";
+            
+            // THEN apply isometric projection
             Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
-                obj.x, 
-                obj.y, 
+                tileX,  // Now in tile coordinates
+                tileY, 
                 config_.tileWidth, 
                 config_.tileHeight
             );
+            
+            SYSTEM_LOG << " → ISO screen (" << isoPos.x << ", " << isoPos.y << ")\n";
+            
             finalPosition = Olympe::Editor::Vec2(isoPos.x, isoPos.y);
         } else {
             // Orthogonal: flip Y only
@@ -538,9 +549,13 @@ namespace Tiled {
         bool isIsometric = (config_.mapOrientation == "isometric");
         
         if (isIsometric) {
-            // Apply isometric projection
+            // ✅ Convert pixels → tiles FIRST
+            float tileX = x / static_cast<float>(config_.tileWidth);
+            float tileY = y / static_cast<float>(config_.tileHeight);
+            
+            // THEN apply isometric projection
             Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
-                x, y, 
+                tileX, tileY, 
                 config_.tileWidth, 
                 config_.tileHeight
             );
@@ -1554,8 +1569,13 @@ namespace Tiled {
         bool isIsometric = (config_.mapOrientation == "isometric");
         
         if (isIsometric) {
+            // ✅ Convert pixels → tiles FIRST
+            float tileX = obj.x / static_cast<float>(config_.tileWidth);
+            float tileY = obj.y / static_cast<float>(config_.tileHeight);
+            
+            // THEN apply isometric projection
             Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
-                obj.x, obj.y, 
+                tileX, tileY, 
                 config_.tileWidth, 
                 config_.tileHeight
             );
@@ -1600,8 +1620,13 @@ namespace Tiled {
         bool isIsometric = (config_.mapOrientation == "isometric");
         
         if (isIsometric) {
+            // ✅ Convert pixels → tiles FIRST
+            float tileX = obj.x / static_cast<float>(config_.tileWidth);
+            float tileY = obj.y / static_cast<float>(config_.tileHeight);
+            
+            // THEN apply isometric projection
             Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
-                obj.x, obj.y, 
+                tileX, tileY, 
                 config_.tileWidth, 
                 config_.tileHeight
             );
@@ -1645,8 +1670,13 @@ namespace Tiled {
         bool isIsometric = (config_.mapOrientation == "isometric");
         
         if (isIsometric) {
+            // ✅ Convert pixels → tiles FIRST
+            float tileX = obj.x / static_cast<float>(config_.tileWidth);
+            float tileY = obj.y / static_cast<float>(config_.tileHeight);
+            
+            // THEN apply isometric projection
             Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
-                obj.x, obj.y, 
+                tileX, tileY, 
                 config_.tileWidth, 
                 config_.tileHeight
             );
