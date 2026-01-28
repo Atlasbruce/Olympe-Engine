@@ -66,9 +66,13 @@ namespace Tiled {
         // A scroll factor of 1.0 means the layer moves with the camera (normal)
         // A scroll factor > 1.0 means the layer moves faster (foreground)
         
-        // Apply parallax factor AND zoom
-        outX = (layer.offsetX - (cameraX * layer.scrollFactorX)) * zoom;
-        outY = (layer.offsetY - (cameraY * layer.scrollFactorY)) * zoom;
+        // Calculate world position of the layer (applying parallax factor)
+        float worldX = layer.offsetX - (cameraX * layer.scrollFactorX);
+        float worldY = layer.offsetY - (cameraY * layer.scrollFactorY);
+        
+        // Apply zoom to the relative position (consistent with entity rendering)
+        outX = worldX * zoom;
+        outY = worldY * zoom;
     }
 
     const ParallaxLayer* ParallaxLayerManager::GetLayer(size_t index) const
