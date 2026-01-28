@@ -18,6 +18,7 @@
 #include "ECS_Components_Camera.h"
 #include "system/system_utils.h"
 #include <string>
+#include <unordered_map>
 
 // ========================================================================
 // Public API Implementation
@@ -99,15 +100,16 @@ EntityID PrefabFactory::CreateEntityFromPrefabName(const std::string& prefabName
         return INVALID_ENTITY_ID;
     }
     
-    EntityID entity = CreateEntityFromBlueprint(*blueprint);
+    // Create entity WITHOUT auto-layer assignment since we'll override it
+    EntityID entity = CreateEntityFromBlueprint(*blueprint, false);
     
     if (entity != INVALID_ENTITY_ID)
     {
-        // ✅ Override layer if specified
+        // ✅ Explicitly set the requested layer
         World::Get().SetEntityLayer(entity, layer);
         
         SYSTEM_LOG << "PrefabFactory::CreateEntityFromPrefabName: Entity " << entity 
-                   << " layer overridden to " << static_cast<int>(layer) << "\n";
+                   << " layer set to " << static_cast<int>(layer) << "\n";
     }
     
     return entity;
@@ -125,7 +127,7 @@ void PrefabFactory::SetPrefabRegistry(const PrefabRegistry& registry)
     }
 }
 
-EntityID PrefabFactory::CreateEntityFromBlueprint(const PrefabBlueprint& blueprint)
+EntityID PrefabFactory::CreateEntityFromBlueprint(const PrefabBlueprint& blueprint, bool autoAssignLayer)
 {
     if (!blueprint.isValid)
     {
@@ -163,8 +165,9 @@ EntityID PrefabFactory::CreateEntityFromBlueprint(const PrefabBlueprint& bluepri
         }
     }
     
-    // ✅ NEW: Auto-assign render layer based on entity type
-    if (world.HasComponent<Identity_data>(entity) && 
+    // ✅ Auto-assign render layer based on entity type (if requested)
+    if (autoAssignLayer && 
+        world.HasComponent<Identity_data>(entity) && 
         world.HasComponent<Position_data>(entity))
     {
         const Identity_data& identity = world.GetComponent<Identity_data>(entity);
@@ -256,6 +259,29 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
 // Component-specific instantiation helpers
 // ========================================================================
 
+// Helper function to convert string to EntityType enum
+static EntityType StringToEntityType(const std::string& typeStr)
+{
+    static const std::unordered_map<std::string, EntityType> typeMap = {
+        {"Player", EntityType::Player},
+        {"NPC", EntityType::NPC},
+        {"Enemy", EntityType::Enemy},
+        {"Item", EntityType::Item},
+        {"Collectible", EntityType::Collectible},
+        {"Effect", EntityType::Effect},
+        {"Particle", EntityType::Particle},
+        {"UIElement", EntityType::UIElement},
+        {"Background", EntityType::Background},
+        {"Trigger", EntityType::Trigger},
+        {"Waypoint", EntityType::Waypoint},
+        {"Static", EntityType::Static},
+        {"Dynamic", EntityType::Dynamic}
+    };
+    
+    auto it = typeMap.find(typeStr);
+    return (it != typeMap.end()) ? it->second : EntityType::None;
+}
+
 bool PrefabFactory::InstantiateIdentity(EntityID entity, const ComponentDefinition& def)
 {
     Identity_data identity;
@@ -272,37 +298,8 @@ bool PrefabFactory::InstantiateIdentity(EntityID entity, const ComponentDefiniti
         // Store string type for backward compatibility
         identity.type = def.GetParameter("entityType")->AsString();
         
-        // Map string to EntityType enum
-        std::string typeStr = identity.type;
-        
-        if (typeStr == "Player")
-            identity.entityType = EntityType::Player;
-        else if (typeStr == "NPC")
-            identity.entityType = EntityType::NPC;
-        else if (typeStr == "Enemy")
-            identity.entityType = EntityType::Enemy;
-        else if (typeStr == "Item")
-            identity.entityType = EntityType::Item;
-        else if (typeStr == "Collectible")
-            identity.entityType = EntityType::Collectible;
-        else if (typeStr == "Effect")
-            identity.entityType = EntityType::Effect;
-        else if (typeStr == "Particle")
-            identity.entityType = EntityType::Particle;
-        else if (typeStr == "UIElement")
-            identity.entityType = EntityType::UIElement;
-        else if (typeStr == "Background")
-            identity.entityType = EntityType::Background;
-        else if (typeStr == "Trigger")
-            identity.entityType = EntityType::Trigger;
-        else if (typeStr == "Waypoint")
-            identity.entityType = EntityType::Waypoint;
-        else if (typeStr == "Static")
-            identity.entityType = EntityType::Static;
-        else if (typeStr == "Dynamic")
-            identity.entityType = EntityType::Dynamic;
-        else
-            identity.entityType = EntityType::None;
+        // Map string to EntityType enum using helper function
+        identity.entityType = StringToEntityType(identity.type);
     }
     
     World::Get().AddComponent<Identity_data>(entity, identity);

@@ -65,10 +65,11 @@ inline float LayerToZ(RenderLayer layer)
     return static_cast<float>(static_cast<int>(layer));
 }
 
-/// Convert z-coordinate to layer enum
+/// Convert z-coordinate to layer enum (rounds to nearest integer)
+/// Note: z-coordinates should exactly match RenderLayer integer values for proper layer mapping
 inline RenderLayer ZToLayer(float z)
 {
-    return static_cast<RenderLayer>(static_cast<int>(z));
+    return static_cast<RenderLayer>(static_cast<int>(z + (z >= 0 ? 0.5f : -0.5f)));
 }
 
 // Component type definitions
