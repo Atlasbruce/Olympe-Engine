@@ -42,10 +42,24 @@ namespace Rendering {
         int tileoffsetX;
         int tileoffsetY;
         
+        // ====================================================================
+        // ✅ NEW: Entity sprite support
+        // These fields enable unified rendering of entities and tiles together
+        // ====================================================================
+        bool isEntitySprite;    // True if this is an entity, not a tile
+        float worldPosX;        // Exact world position (for entities)
+        float worldPosY;
+        SDL_FRect destRect;     // Pre-calculated destination rect
+        uint32_t colorTint;     // RGBA color modulation
+        SDL_FPoint hotSpot;     // Sprite pivot/hotspot
+        
         // Constructor with explicit default values
         IsometricTile()
             : worldX(0), worldY(0), tileGID(0), texture(nullptr), 
-              srcRect{0, 0, 0, 0}, zOrder(0), tileoffsetX(0), tileoffsetY(0) {}
+              srcRect{0, 0, 0, 0}, zOrder(0), tileoffsetX(0), tileoffsetY(0),
+              isEntitySprite(false), worldPosX(0.0f), worldPosY(0.0f),
+              destRect{0.0f, 0.0f, 0.0f, 0.0f}, colorTint(0xFFFFFFFF),
+              hotSpot{0.0f, 0.0f} {}
     };
 
     // Isometric Renderer class
