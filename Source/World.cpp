@@ -1463,6 +1463,24 @@ bool World::InstantiatePass3_StaticObjects(
                 0.0f
             ));
             
+            // ✅ ADD RED SPRITE PLACEHOLDER
+            DataManager& dataManager = DataManager::Get();
+            Sprite* placeholderSprite = dataManager.GetSprite("placeholder_missing", "./Resources/Icons/location-32.png", ResourceCategory::GameEntity);
+            if (placeholderSprite)
+            {
+                VisualSprite_data spriteComp;
+                spriteComp.sprite = placeholderSprite;
+                spriteComp.srcRect = SDL_FRect{0, 0, 32, 32};
+                spriteComp.hotSpot = Vector(16, 16, 0);
+                spriteComp.color = SDL_Color{255, 0, 0, 255}; // Red tint
+                AddComponent<VisualSprite_data>(entity, spriteComp);
+                
+                SYSTEM_LOG << "  ⚠️  PLACEHOLDER RED: Created marker for missing prefab '" 
+                           << entityInstance->type << "' (name: " << entityInstance->name 
+                           << ") at (" << entityInstance->position.x << ", " 
+                           << entityInstance->position.y << ")\n";
+            }
+            
             std::cout << "  ! Created fallback entity (prefab missing): " << entityInstance->name << "\n";
         }
         
@@ -1559,10 +1577,46 @@ bool World::InstantiatePass4_DynamicObjects(
         
         if (blueprints.empty())
         {
-            result.pass4_dynamicObjects.failed++;
-            result.pass4_dynamicObjects.failedObjects.push_back(entityInstance->name + " (type: " + entityInstance->type + ")");
-            SYSTEM_LOG << "  x Failed: No prefab found for type '" << entityInstance->type 
-                       << "' (instance: " << entityInstance->name << ")\n";
+            // ✅ CREATE PLACEHOLDER ENTITY FOR MISSING PREFAB
+            EntityID entity = CreateEntity();
+            if (entity != INVALID_ENTITY_ID)
+            {
+                // Add basic identity and position
+                AddComponent<Identity_data>(entity, entityInstance->name, entityInstance->type, entityInstance->type);
+                AddComponent<Position_data>(entity, Vector(
+                    static_cast<float>(entityInstance->position.x),
+                    static_cast<float>(entityInstance->position.y),
+                    0.0f
+                ));
+                
+                // ✅ ADD RED SPRITE PLACEHOLDER
+                DataManager& dataManager = DataManager::Get();
+                Sprite* placeholderSprite = dataManager.GetSprite("placeholder_missing", "./Resources/Icons/location-32.png", ResourceCategory::GameEntity);
+                if (placeholderSprite)
+                {
+                    VisualSprite_data spriteComp;
+                    spriteComp.sprite = placeholderSprite;
+                    spriteComp.srcRect = SDL_FRect{0, 0, 32, 32};
+                    spriteComp.hotSpot = Vector(16, 16, 0);
+                    spriteComp.color = SDL_Color{255, 0, 0, 255}; // Red tint
+                    AddComponent<VisualSprite_data>(entity, spriteComp);
+                }
+                
+                result.entityRegistry[entityInstance->name] = entity;
+                result.pass4_dynamicObjects.successfullyCreated++;
+                
+                SYSTEM_LOG << "  ⚠️  PLACEHOLDER RED: Created marker for missing prefab '" 
+                           << entityInstance->type << "' (name: " << entityInstance->name 
+                           << ") at (" << entityInstance->position.x << ", " 
+                           << entityInstance->position.y << ")\n";
+            }
+            else
+            {
+                result.pass4_dynamicObjects.failed++;
+                result.pass4_dynamicObjects.failedObjects.push_back(entityInstance->name + " (type: " + entityInstance->type + ")");
+                SYSTEM_LOG << "  x Failed: Could not create placeholder entity for missing prefab type '" 
+                           << entityInstance->type << "' (instance: " << entityInstance->name << ")\n";
+            }
             continue;
         }
         
