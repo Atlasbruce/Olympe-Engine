@@ -420,7 +420,7 @@ public:
     }
     
     /// Get current grid state
-    bool IsGridEnabled() const
+    bool IsGridEnabled()
     {
         for (const auto& kv : m_entitySignatures)
         {
