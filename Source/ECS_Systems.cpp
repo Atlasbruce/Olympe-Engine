@@ -619,69 +619,6 @@ float CalculateEntityDepth(const std::string& orientation,
     }
 }
 
-// ✅ DEPRECATED: Old isometric chunk rendering (replaced by unified pipeline)
-void RenderChunkIsometric_DEPRECATED(const TileChunk& chunk, Olympe::Rendering::IsometricRenderer* isoRenderer)
-{
-    auto& tilesetMgr = World::Get().GetTilesetManager();
-    
-    for (int y = 0; y < chunk.height; ++y)
-    {
-        for (int x = 0; x < chunk.width; ++x)
-        {
-            int tileIndex = y * chunk.width + x;
-            if (tileIndex >= chunk.tileGIDs.size()) continue;
-            
-            uint32_t gid = chunk.tileGIDs[tileIndex];
-            if (gid == 0) continue;  // Empty tile
-            
-            // Get tile texture, source rect, and tileset info
-            SDL_Texture* texture = nullptr;
-            SDL_Rect srcRect;
-            const TilesetManager::TilesetInfo* tileset = nullptr;
-            
-            if (!tilesetMgr.GetTileTexture(gid, texture, srcRect, tileset))
-            {
-                continue;  // Tile not found in tilesets
-            }
-            
-            // Calculate world coordinates
-            int worldX = chunk.x + x;
-            int worldY = chunk.y + y;
-            
-            // Create isometric tile for rendering
-            Olympe::Rendering::IsometricTile tile;
-            tile.worldX = worldX;
-            tile.worldY = worldY;
-            tile.tileGID = gid;
-            tile.texture = texture;
-            tile.srcRect = srcRect;
-            tile.zOrder = chunk.zOrder;  // Pass layer z-order for proper sorting
-            
-            // ====================================================================
-            // CRITICAL: Apply tileoffset from tileset to this tile
-            // The offset comes from the tileset's .tsx/.tsj file and is used
-            // by the renderer to correctly position tiles (e.g., trees at -100px X)
-            // ====================================================================
-            if (tileset)
-            {
-                tile.tileoffsetX = tileset->tileoffsetX;
-                tile.tileoffsetY = tileset->tileoffsetY;
-            }
-            else
-            {
-                // Default to zero if no tileset found (should not happen)
-                tile.tileoffsetX = 0;
-                tile.tileoffsetY = 0;
-                
-                SYSTEM_LOG << "[ECS_Systems::RenderChunkIsometric] ⚠️ WARNING: No tileset found for GID " 
-                          << (gid & 0x1FFFFFFF) << " - using default offset (0, 0)\n";
-            }
-            
-            isoRenderer->RenderTile(tile);  // Batched for depth sorting
-        }
-    }
-}
-
 // ✅ NEW: Render individual tile immediately (unified for all orientations)
 void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
                         int worldX, int worldY, uint32_t gid,
