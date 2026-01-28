@@ -30,12 +30,34 @@ namespace Editor {
         if (j.contains("y")) v.y = j["y"].get<double>();
     }
 
+    // Vector serialization (for EntityInstance.position which is now a Vector)
+    void to_json(json& j, const Vector& v)
+    {
+        j = json::object();
+        j["x"] = v.x;
+        j["y"] = v.y;
+        j["z"] = v.z;
+    }
+
+    void from_json(const json& j, Vector& v)
+    {
+        if (j.contains("x")) v.x = j["x"].get<float>();
+        if (j.contains("y")) v.y = j["y"].get<float>();
+        if (j.contains("z")) v.z = j["z"].get<float>();
+        else v.z = 0.0f;  // Default z to 0 for 2D compatibility
+    }
+
     void to_json(json& j, const EntityInstance& e)
     {
         j = json::object();
         j["id"] = e.id;
         j["prefabPath"] = e.prefabPath;
         j["name"] = e.name;
+        j["type"] = e.type;
+        j["rotation"] = e.rotation;
+        if (!e.spritePath.empty()) {
+            j["spritePath"] = e.spritePath;
+        }
         json posJson;
         to_json(posJson, e.position);
         j["position"] = posJson;
@@ -54,6 +76,9 @@ namespace Editor {
         if (j.contains("id")) e.id = j["id"].get<std::string>();
         if (j.contains("prefabPath")) e.prefabPath = j["prefabPath"].get<std::string>();
         if (j.contains("name")) e.name = j["name"].get<std::string>();
+        if (j.contains("type")) e.type = j["type"].get<std::string>();
+        if (j.contains("rotation")) e.rotation = j["rotation"].get<float>();
+        if (j.contains("spritePath")) e.spritePath = j["spritePath"].get<std::string>();
         if (j.contains("position")) from_json(j["position"], e.position);
         if (j.contains("overrides")) e.overrides = j["overrides"];
         else e.overrides = json::object();

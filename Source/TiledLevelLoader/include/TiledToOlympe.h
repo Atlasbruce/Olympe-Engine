@@ -16,6 +16,7 @@
 
 #include "TiledStructures.h"
 #include "ParallaxLayerManager.h"
+#include "../../vector.h"
 #include <string>
 #include <map>
 #include <set>
@@ -155,8 +156,8 @@ namespace Tiled {
         // Transform Y coordinate if needed
         float TransformY(float y, float height);
         
-        // Transform object position based on map orientation
-        Olympe::Editor::Vec2 TransformObjectPosition(float x, float y);
+        // Transform object position - returns Vector directly (no conversion needed, TMJ coordinates are already in pixels)
+        Vector TransformObjectPosition(float x, float y);
 
         // Initialize collision map
         void InitializeCollisionMap(Olympe::Editor::LevelDefinition& level, int width, int height);

@@ -6,6 +6,7 @@
 #include "../include/IsometricProjection.h"
 #include "../../OlympeTilemapEditor/include/LevelManager.h"
 #include "../../system/system_utils.h"
+#include "../../vector.h"
 #include <algorithm>
 #include <fstream>
 
@@ -413,26 +414,13 @@ namespace Tiled {
         // Get prefab path from type mapping
         entity->prefabPath = GetPrefabPath(obj.type);
         
-        // Transform position based on map orientation
-        Olympe::Editor::Vec2 finalPosition;
-        bool isIsometric = (config_.mapOrientation == "isometric");
+        // Use TMJ coordinates directly - no conversion needed
+        // TMJ files already store objects in screen pixel coordinates (not tile coords)
+        // Tiled has already applied isometric transformation when saving
+        entity->position = Vector(obj.x, obj.y, 0.0f);
         
-        if (isIsometric) {
-            // Apply isometric projection
-            Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
-                obj.x, 
-                obj.y, 
-                config_.tileWidth, 
-                config_.tileHeight
-            );
-            finalPosition = Olympe::Editor::Vec2(isoPos.x, isoPos.y);
-        } else {
-            // Orthogonal: flip Y only
-            float transformedY = TransformY(obj.y, obj.height);
-            finalPosition = Olympe::Editor::Vec2(obj.x, transformedY);
-        }
-        
-        entity->position = finalPosition;
+        SYSTEM_LOG << "  → Created entity '" << obj.name 
+                   << "' at TMJ position: (" << obj.x << ", " << obj.y << ")\n";
 
         // Store rotation (extract to entity level field)
         entity->rotation = obj.rotation;
@@ -533,23 +521,11 @@ namespace Tiled {
         return y;
     }
     
-    Olympe::Editor::Vec2 TiledToOlympe::TransformObjectPosition(float x, float y)
+    Vector TiledToOlympe::TransformObjectPosition(float x, float y)
     {
-        bool isIsometric = (config_.mapOrientation == "isometric");
-        
-        if (isIsometric) {
-            // Apply isometric projection
-            Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
-                x, y, 
-                config_.tileWidth, 
-                config_.tileHeight
-            );
-            return Olympe::Editor::Vec2(isoPos.x, isoPos.y);
-        } else {
-            // Orthogonal: flip Y only
-            float transformedY = TransformY(y, 0);
-            return Olympe::Editor::Vec2(x, transformedY);
-        }
+        // No conversion needed - TMJ coordinates are already screen pixels
+        // Tiled has already applied any necessary transformations when saving the file
+        return Vector(x, y, 0.0f);
     }
 
     void TiledToOlympe::InitializeCollisionMap(Olympe::Editor::LevelDefinition& level, 
@@ -1549,23 +1525,8 @@ namespace Tiled {
         entity->type = "Sector";
         entity->prefabPath = "Blueprints/Sector.json";
         
-        // Apply isometric projection for position
-        Olympe::Editor::Vec2 finalPosition;
-        bool isIsometric = (config_.mapOrientation == "isometric");
-        
-        if (isIsometric) {
-            Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
-                obj.x, obj.y, 
-                config_.tileWidth, 
-                config_.tileHeight
-            );
-            finalPosition = Olympe::Editor::Vec2(isoPos.x, isoPos.y);
-        } else {
-            float transformedY = TransformY(obj.y, 0);
-            finalPosition = Olympe::Editor::Vec2(obj.x, transformedY);
-        }
-        
-        entity->position = finalPosition;
+        // Use TMJ coordinates directly - no conversion needed
+        entity->position = Vector(obj.x, obj.y, 0.0f);
         entity->rotation = obj.rotation;
         
         // Store polygon in overrides
@@ -1595,23 +1556,8 @@ namespace Tiled {
         entity->type = "PatrolPath";
         entity->prefabPath = "Blueprints/PatrolPath.json";
         
-        // Apply isometric projection for position
-        Olympe::Editor::Vec2 finalPosition;
-        bool isIsometric = (config_.mapOrientation == "isometric");
-        
-        if (isIsometric) {
-            Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
-                obj.x, obj.y, 
-                config_.tileWidth, 
-                config_.tileHeight
-            );
-            finalPosition = Olympe::Editor::Vec2(isoPos.x, isoPos.y);
-        } else {
-            float transformedY = TransformY(obj.y, 0);
-            finalPosition = Olympe::Editor::Vec2(obj.x, transformedY);
-        }
-        
-        entity->position = finalPosition;
+        // Use TMJ coordinates directly - no conversion needed
+        entity->position = Vector(obj.x, obj.y, 0.0f);
         entity->rotation = obj.rotation;
         
         // Store polyline in overrides
@@ -1640,23 +1586,8 @@ namespace Tiled {
         entity->type = "CollisionPolygon";
         entity->prefabPath = "Blueprints/CollisionPolygon.json";
         
-        // Apply isometric projection for position
-        Olympe::Editor::Vec2 finalPosition;
-        bool isIsometric = (config_.mapOrientation == "isometric");
-        
-        if (isIsometric) {
-            Olympe::Tiled::Vec2 isoPos = IsometricProjection::WorldToIso(
-                obj.x, obj.y, 
-                config_.tileWidth, 
-                config_.tileHeight
-            );
-            finalPosition = Olympe::Editor::Vec2(isoPos.x, isoPos.y);
-        } else {
-            float transformedY = TransformY(obj.y, 0);
-            finalPosition = Olympe::Editor::Vec2(obj.x, transformedY);
-        }
-        
-        entity->position = finalPosition;
+        // Use TMJ coordinates directly - no conversion needed
+        entity->position = Vector(obj.x, obj.y, 0.0f);
         entity->rotation = obj.rotation;
         
         // Store polyline/polygon points

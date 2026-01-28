@@ -8,6 +8,7 @@
 #pragma once
 
 #include "../../third_party/nlohmann/json.hpp"
+#include "../../vector.h"  // Use engine's Vector class
 #include <string>
 #include <vector>
 #include <map>
@@ -36,7 +37,7 @@ namespace Editor {
         std::string name;            // Display name
 		std::string type;            // Entity type (e.g., "Player", "Enemy", "Item", "Collision"...)
 		std::string spritePath = ""; // Optional sprite path for visual representation
-        Vec2 position;               // World position
+        Vector position;             // World position (using engine's Vector for direct usage)
         float rotation;              // Rotation in degrees (0-360)
         json overrides;              // Component property overrides
 
