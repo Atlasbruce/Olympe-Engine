@@ -492,10 +492,135 @@ void RenderingSystem::Render()
 // Tile Rendering Helper Functions
 // ========================================================================
 
-// Global isometric renderer (initialized once)
-static std::unique_ptr<Olympe::Rendering::IsometricRenderer> g_isoRenderer = nullptr;
+// ✅ Helper: Extract flip flags from GID
+void ExtractFlipFlags(uint32_t gid, bool& flipH, bool& flipV, bool& flipD)
+{
+    constexpr uint32_t FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
+    constexpr uint32_t FLIPPED_VERTICALLY_FLAG = 0x40000000;
+    constexpr uint32_t FLIPPED_DIAGONALLY_FLAG = 0x20000000;
+    
+    flipH = (gid & FLIPPED_HORIZONTALLY_FLAG) != 0;
+    flipV = (gid & FLIPPED_VERTICALLY_FLAG) != 0;
+    flipD = (gid & FLIPPED_DIAGONALLY_FLAG) != 0;
+}
 
-void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRenderer* isoRenderer)
+// ✅ Helper: Convert flip flags to SDL flip mode
+SDL_FlipMode GetSDLFlip(bool flipH, bool flipV, bool flipD)
+{
+    int flip = SDL_FLIP_NONE;
+    if (flipH) flip |= SDL_FLIP_HORIZONTAL;
+    if (flipV) flip |= SDL_FLIP_VERTICAL;
+    return static_cast<SDL_FlipMode>(flip);
+}
+
+// ✅ Helper: Convert isometric world coordinates to screen coordinates
+Vector IsoWorldToScreen(int worldX, int worldY, const CameraTransform& cam, int tileWidth, int tileHeight)
+{
+    // Isometric projection: world grid coordinates to screen coordinates
+    float isoX = (worldX - worldY) * (tileWidth / 2.0f);
+    float isoY = (worldX + worldY) * (tileHeight / 2.0f);
+    
+    // Apply camera transform and center in viewport
+    float screenX = (isoX - cam.worldPosition.x) * cam.zoom + cam.viewport.w / 2.0f;
+    float screenY = (isoY - cam.worldPosition.y) * cam.zoom + cam.viewport.h / 2.0f;
+    
+    // Add isometric Y offset for negative world coordinates
+    constexpr float ISOMETRIC_OFFSET_Y = 200.0f;
+    screenY += ISOMETRIC_OFFSET_Y;
+    
+    return Vector(screenX, screenY, 0.0f);
+}
+
+// ✅ Helper: Convert screen coordinates to isometric world coordinates
+Vector IsoScreenToWorld(float screenX, float screenY, const CameraTransform& cam, int tileWidth, int tileHeight)
+{
+    constexpr float ISOMETRIC_OFFSET_Y = 200.0f;
+    screenY -= ISOMETRIC_OFFSET_Y;
+    
+    float isoX = (screenX - cam.viewport.w / 2.0f) / cam.zoom + cam.worldPosition.x;
+    float isoY = (screenY - cam.viewport.h / 2.0f) / cam.zoom + cam.worldPosition.y;
+    
+    float halfTileW = tileWidth / 2.0f;
+    float halfTileH = tileHeight / 2.0f;
+    
+    float worldX = (isoX / halfTileW + isoY / halfTileH) / 2.0f;
+    float worldY = (isoY / halfTileH - isoX / halfTileW) / 2.0f;
+    
+    return Vector(worldX, worldY, 0.0f);
+}
+
+// ✅ NEW: Calculate visible tile range with frustum culling
+void GetVisibleTileRange(const CameraTransform& cam,
+                        const std::string& orientation,
+                        int tileWidth, int tileHeight,
+                        int& minX, int& minY, int& maxX, int& maxY)
+{
+    if (orientation == "isometric") {
+        // Convert screen corners to world coordinates
+        Vector topLeft = IsoScreenToWorld(0, 0, cam, tileWidth, tileHeight);
+        Vector topRight = IsoScreenToWorld(cam.viewport.w, 0, cam, tileWidth, tileHeight);
+        Vector bottomLeft = IsoScreenToWorld(0, cam.viewport.h, cam, tileWidth, tileHeight);
+        Vector bottomRight = IsoScreenToWorld(cam.viewport.w, cam.viewport.h, cam, tileWidth, tileHeight);
+        
+        // Find bounding box in world coordinates
+        float worldMinX = std::min({topLeft.x, topRight.x, bottomLeft.x, bottomRight.x});
+        float worldMaxX = std::max({topLeft.x, topRight.x, bottomLeft.x, bottomRight.x});
+        float worldMinY = std::min({topLeft.y, topRight.y, bottomLeft.y, bottomRight.y});
+        float worldMaxY = std::max({topLeft.y, topRight.y, bottomLeft.y, bottomRight.y});
+        
+        // Bounding box with padding for tall tiles
+        minX = static_cast<int>(std::floor(worldMinX)) - 5;
+        minY = static_cast<int>(std::floor(worldMinY)) - 5;
+        maxX = static_cast<int>(std::ceil(worldMaxX)) + 5;
+        maxY = static_cast<int>(std::ceil(worldMaxY)) + 5;
+    }
+    else {
+        // Orthogonal/hex
+        minX = static_cast<int>((cam.worldPosition.x - cam.viewport.w / (2 * cam.zoom)) / tileWidth) - 2;
+        minY = static_cast<int>((cam.worldPosition.y - cam.viewport.h / (2 * cam.zoom)) / tileHeight) - 2;
+        maxX = static_cast<int>((cam.worldPosition.x + cam.viewport.w / (2 * cam.zoom)) / tileWidth) + 2;
+        maxY = static_cast<int>((cam.worldPosition.y + cam.viewport.h / (2 * cam.zoom)) / tileHeight) + 2;
+    }
+}
+
+// ✅ NEW: Calculate depth for a tile
+float CalculateTileDepth(const std::string& orientation,
+                        int worldX, int worldY,
+                        int layerZOrder,
+                        int tileWidth, int tileHeight)
+{
+    float baseDepth = static_cast<float>(layerZOrder) * 10000.0f;
+    
+    if (orientation == "isometric") {
+        // Isometric diagonal sort: X+Y then X
+        int diagonalSum = worldX + worldY;
+        return baseDepth + diagonalSum * 100.0f + worldX * 0.1f;
+    }
+    else {
+        // Orthogonal/hex: Y position
+        return baseDepth + static_cast<float>(worldY * tileHeight);
+    }
+}
+
+// ✅ NEW: Calculate depth for an entity
+float CalculateEntityDepth(const std::string& orientation,
+                          const Vector& position,
+                          int tileWidth, int tileHeight)
+{
+    float baseDepth = position.z * 10000.0f;  // Layer zOrder
+    
+    if (orientation == "isometric") {
+        // Use exact worldPosY for fine sorting
+        return baseDepth + position.y;
+    }
+    else {
+        // Orthogonal: Y position
+        return baseDepth + position.y;
+    }
+}
+
+// ✅ DEPRECATED: Old isometric chunk rendering (replaced by unified pipeline)
+void RenderChunkIsometric_DEPRECATED(const TileChunk& chunk, Olympe::Rendering::IsometricRenderer* isoRenderer)
 {
     auto& tilesetMgr = World::Get().GetTilesetManager();
     
@@ -557,131 +682,75 @@ void RenderChunkIsometric(const TileChunk& chunk, Olympe::Rendering::IsometricRe
     }
 }
 
-void RenderChunkOrthogonal(const TileChunk& chunk, const CameraTransform& cam)
+// ✅ NEW: Render individual tile immediately (unified for all orientations)
+void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
+                        int worldX, int worldY, uint32_t gid,
+                        int tileoffsetX, int tileoffsetY, int zOrder,
+                        const CameraTransform& cam,
+                        const std::string& orientation,
+                        int tileWidth, int tileHeight)
 {
-    auto& tilesetMgr = World::Get().GetTilesetManager();
+    if (!texture) return;
     
-    for (int y = 0; y < chunk.height; ++y)
-    {
-        for (int x = 0; x < chunk.width; ++x)
-        {
-            int tileIndex = y * chunk.width + x;
-            if (tileIndex >= chunk.tileGIDs.size()) continue;
-            
-            uint32_t gid = chunk.tileGIDs[tileIndex];
-            if (gid == 0) continue;
-            
-            SDL_Texture* texture = nullptr;
-            SDL_Rect srcRect;
-            const TilesetManager::TilesetInfo* tileset = nullptr;
-            
-            if (!tilesetMgr.GetTileTexture(gid, texture, srcRect, tileset))
-            {
-                continue;
-            }
-            
-            // World position
-            int worldX = (chunk.x + x) * srcRect.w;
-            int worldY = (chunk.y + y) * srcRect.h;
-            
-            // Apply tileoffset
-            int tileoffsetX = tileset ? tileset->tileoffsetX : 0;
-            int tileoffsetY = tileset ? tileset->tileoffsetY : 0;
-            
-            float screenX = worldX + tileoffsetX - cam.worldPosition.x + cam.viewport.w / 2.0f;
-            float screenY = worldY + tileoffsetY - cam.worldPosition.y + cam.viewport.h / 2.0f;
-            
-            // Apply zoom to dimensions
-            SDL_FRect destRect = {
-                screenX,
-                screenY,
-                srcRect.w * cam.zoom,
-                srcRect.h * cam.zoom
-            };
-            SDL_FRect srcFRect = { (float)srcRect.x, (float)srcRect.y, (float)srcRect.w, (float)srcRect.h };
-            SDL_RenderTexture(GameEngine::renderer, texture, &srcFRect, &destRect);
-        }
+    Vector screenPos;
+    
+    if (orientation == "isometric") {
+        // Isometric projection
+        screenPos = IsoWorldToScreen(worldX, worldY, cam, tileWidth, tileHeight);
+        
+        SDL_FRect destRect;
+        destRect.w = srcRect.w * cam.zoom;
+        destRect.h = srcRect.h * cam.zoom;
+        destRect.x = screenPos.x + (tileoffsetX * cam.zoom) - destRect.w / 2.0f;
+        destRect.y = screenPos.y + (tileoffsetY * cam.zoom) - destRect.h + (tileHeight * cam.zoom);
+        
+        // Extract flip flags
+        bool flipH, flipV, flipD;
+        ExtractFlipFlags(gid, flipH, flipV, flipD);
+        SDL_FlipMode flip = GetSDLFlip(flipH, flipV, flipD);
+        
+        SDL_FRect srcFRect = {(float)srcRect.x, (float)srcRect.y, 
+                             (float)srcRect.w, (float)srcRect.h};
+        SDL_RenderTextureRotated(GameEngine::renderer, texture, 
+                                &srcFRect, &destRect, 0.0, nullptr, flip);
+    }
+    else {
+        // Orthogonal/hex rendering
+        screenPos = cam.WorldToScreen(Vector(worldX * tileWidth, 
+                                             worldY * tileHeight, 0));
+        
+        SDL_FRect destRect = {
+            screenPos.x + tileoffsetX * cam.zoom,
+            screenPos.y + tileoffsetY * cam.zoom,
+            srcRect.w * cam.zoom,
+            srcRect.h * cam.zoom
+        };
+        
+        SDL_FRect srcFRect = {(float)srcRect.x, (float)srcRect.y, 
+                             (float)srcRect.w, (float)srcRect.h};
+        SDL_RenderTexture(GameEngine::renderer, texture, &srcFRect, &destRect);
     }
 }
 
-// ✅ Helper function to add entity sprites to isometric batch for unified rendering
-void AddEntitySpritesToIsometricBatch(
-    Olympe::Rendering::IsometricRenderer* isoRenderer,
-    const CameraTransform& cam,
-    int tileWidth,
-    int tileHeight)
-{
-    for (EntityID entity : World::Get().GetSystem<RenderingSystem>()->m_entities) {
-        try {
-            Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-            VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
-            BoundingBox_data& bbox = World::Get().GetComponent<BoundingBox_data>(entity);
-            
-            if (!visual.visible) continue;
-            
-            // Frustum culling
-            SDL_FRect worldBounds = {
-                pos.position.x - visual.hotSpot.x,
-                pos.position.y - visual.hotSpot.y,
-                bbox.boundingBox.w,
-                bbox.boundingBox.h
-            };
-            if (!cam.IsVisible(worldBounds)) continue;
-            
-            // ✅ Create IsometricTile for this entity sprite
-            Olympe::Rendering::IsometricTile spriteTile;
-            spriteTile.isEntitySprite = true;
-            spriteTile.worldPosX = pos.position.x;
-            spriteTile.worldPosY = pos.position.y;
-            
-            // Calculate tile coordinates for depth sorting
-            spriteTile.worldX = static_cast<int>(pos.position.x / tileWidth);
-            spriteTile.worldY = static_cast<int>(pos.position.y / tileHeight);
-            
-            // ✅ CRITICAL: Use position.z as zOrder
-            spriteTile.zOrder = static_cast<int>(pos.position.z);
-            
-            // Store sprite data
-            spriteTile.texture = visual.sprite;
-            // Pack RGBA into uint32_t (R in highest byte)
-            spriteTile.colorTint = (static_cast<uint32_t>(visual.color.r) << 24) |
-                                   (static_cast<uint32_t>(visual.color.g) << 16) |
-                                   (static_cast<uint32_t>(visual.color.b) << 8) |
-                                   255;  // Alpha = 255 (fully opaque)
-            spriteTile.hotSpot = { visual.hotSpot.x, visual.hotSpot.y };
-            
-            // Pre-calculate destination rect (will be converted to screen in renderer)
-            spriteTile.destRect = {
-                pos.position.x,
-                pos.position.y,
-                bbox.boundingBox.w,
-                bbox.boundingBox.h
-            };
-            
-            // Add to batch for sorting
-            isoRenderer->RenderTile(spriteTile);
-            
-        } catch (...) {
-            // Skip entities without required components
-        }
-    }
-}
-
+// ✅ UNIFIED RENDERING PIPELINE - Single-pass sorting with frustum culling
 // Multi-layer rendering with parallax support
 void RenderMultiLayerForCamera(const CameraTransform& cam)
 {
     Olympe::Tiled::ParallaxLayerManager& parallaxMgr = Olympe::Tiled::ParallaxLayerManager::Get();
+    const std::string& mapOrientation = World::Get().GetMapOrientation();
+    int tileWidth = World::Get().GetTileWidth();
+    int tileHeight = World::Get().GetTileHeight();
     
     // Unified RenderItem structure for all renderable elements
     struct RenderItem
     {
         enum Type { 
             ParallaxLayer,    // Image layers (backgrounds/foregrounds)
-            TileLayer,        // Tile chunks (NEW!)
+            IndividualTile,   // ✅ NEW: Individual tile with full data
             Entity            // Game objects
         } type;
         
-        float depth;          // Sorting key (lower = background)
+        float depth;          // Unified sorting key (lower = background)
         
         // Type-specific data
         union {
@@ -690,7 +759,13 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
             } parallax;
             
             struct {
-                const TileChunk* chunk;
+                // ✅ Complete tile data for immediate rendering
+                SDL_Texture* texture;
+                SDL_Rect srcRect;
+                int worldX, worldY;
+                uint32_t gid;
+                int tileoffsetX, tileoffsetY;
+                int zOrder;
             } tile;
             
             struct {
@@ -707,11 +782,21 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
             return item;
         }
         
-        static RenderItem MakeTileLayer(float depth, const TileChunk* chunk) {
+        static RenderItem MakeTile(float depth, 
+                                   SDL_Texture* tex, SDL_Rect src,
+                                   int wx, int wy, uint32_t gid,
+                                   int offX, int offY, int z) {
             RenderItem item;
-            item.type = TileLayer;
+            item.type = IndividualTile;
             item.depth = depth;
-            item.tile.chunk = chunk;
+            item.tile.texture = tex;
+            item.tile.srcRect = src;
+            item.tile.worldX = wx;
+            item.tile.worldY = wy;
+            item.tile.gid = gid;
+            item.tile.tileoffsetX = offX;
+            item.tile.tileoffsetY = offY;
+            item.tile.zOrder = z;
             return item;
         }
         
@@ -724,11 +809,14 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
         }
     };
     
-    std::vector<RenderItem> renderQueue;
+    std::vector<RenderItem> renderBatch;
+    renderBatch.reserve(3000);  // Pre-allocate (parallax + tiles + entities)
     
     // ================================================================
-    // STEP 1: Add Parallax Layers
+    // PHASE 1: FRUSTUM CULLING + POPULATION
     // ================================================================
+    
+    // 1.1 Parallax Layers (always visible)
     const auto& parallaxLayers = parallaxMgr.GetLayers();
     for (size_t i = 0; i < parallaxLayers.size(); ++i) {
         const auto& layer = parallaxLayers[i];
@@ -746,130 +834,119 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
             depth = static_cast<float>(layer.zOrder);
         }
         
-        renderQueue.push_back(RenderItem::MakeParallax(depth, static_cast<int>(i)));
+        renderBatch.push_back(RenderItem::MakeParallax(depth, static_cast<int>(i)));
     }
     
-    // ================================================================
-    // STEP 2: Add Tile Layers (NEW - FIX FOR RENDERING BUG!)
-    // ================================================================
+    // 1.2 Tiles (with ✅ FRUSTUM CULLING)
     const auto& tileChunks = World::Get().GetTileChunks();
+    auto& tilesetMgr = World::Get().GetTilesetManager();
+    
+    // ✅ Calculate visible tile range
+    int minX, minY, maxX, maxY;
+    GetVisibleTileRange(cam, mapOrientation, tileWidth, tileHeight, 
+                        minX, minY, maxX, maxY);
     
     for (const auto& chunk : tileChunks) {
-        // Tile layers use their zOrder from TMJ file
-        // Typical range: 0-100 (above backgrounds, below foregrounds)
-        float depth = static_cast<float>(chunk.zOrder);
-        
-        renderQueue.push_back(RenderItem::MakeTileLayer(depth, &chunk));
-    }
-    
-    // ================================================================
-    // STEP 3: Add Entities
-    // ================================================================
-    // For orthogonal maps, add entities to the render queue for depth sorting
-    // For isometric maps, entities are handled by the isometric renderer batch
-    const std::string& mapOrientation = World::Get().GetMapOrientation();
-    
-    if (mapOrientation != "isometric") {
-        for (EntityID entity : World::Get().GetSystem<RenderingSystem>()->m_entities) {
-            try {
-                Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-                // ✅ Use position.z (layer zOrder) for depth, plus Y for within-layer sorting
-                float depth = pos.position.z * 10000.0f + pos.position.y;
-                renderQueue.push_back(RenderItem::MakeEntity(depth, entity));
-            } catch (...) {
-                // Entity without position, skip
+        for (int y = 0; y < chunk.height; ++y) {
+            for (int x = 0; x < chunk.width; ++x) {
+                int worldX = chunk.x + x;
+                int worldY = chunk.y + y;
+                
+                // ✅ FRUSTUM CULLING
+                if (worldX < minX || worldX > maxX || 
+                    worldY < minY || worldY > maxY) {
+                    continue;
+                }
+                
+                int tileIndex = y * chunk.width + x;
+                if (tileIndex >= chunk.tileGIDs.size()) continue;
+                
+                uint32_t gid = chunk.tileGIDs[tileIndex];
+                if (gid == 0) continue;
+                
+                // Get texture
+                SDL_Texture* texture = nullptr;
+                SDL_Rect srcRect;
+                const TilesetManager::TilesetInfo* tileset = nullptr;
+                if (!tilesetMgr.GetTileTexture(gid, texture, srcRect, tileset)) {
+                    continue;
+                }
+                
+                // ✅ Calculate depth
+                float depth = CalculateTileDepth(mapOrientation, 
+                                                worldX, worldY, 
+                                                chunk.zOrder,
+                                                tileWidth, tileHeight);
+                
+                // ✅ Add to batch
+                renderBatch.push_back(RenderItem::MakeTile(
+                    depth, texture, srcRect, 
+                    worldX, worldY, gid,
+                    tileset ? tileset->tileoffsetX : 0,
+                    tileset ? tileset->tileoffsetY : 0,
+                    chunk.zOrder
+                ));
             }
         }
     }
     
+    // 1.3 Entities (with ✅ FRUSTUM CULLING)
+    for (EntityID entity : World::Get().GetSystem<RenderingSystem>()->m_entities) {
+        try {
+            Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+            VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
+            BoundingBox_data& bbox = World::Get().GetComponent<BoundingBox_data>(entity);
+            
+            if (!visual.visible) continue;
+            
+            // ✅ FRUSTUM CULLING
+            SDL_FRect worldBounds = {
+                pos.position.x - visual.hotSpot.x,
+                pos.position.y - visual.hotSpot.y,
+                bbox.boundingBox.w,
+                bbox.boundingBox.h
+            };
+            if (!cam.IsVisible(worldBounds)) continue;
+            
+            // ✅ Calculate depth
+            float depth = CalculateEntityDepth(mapOrientation, 
+                                              pos.position, 
+                                              tileWidth, tileHeight);
+            
+            renderBatch.push_back(RenderItem::MakeEntity(depth, entity));
+            
+        } catch (...) {}
+    }
+    
     // ================================================================
-    // STEP 4: GLOBAL SORT BY DEPTH
+    // PHASE 2: ✅ UNIFIED SORT (SINGLE PASS!)
     // ================================================================
-    std::sort(renderQueue.begin(), renderQueue.end(),
+    std::sort(renderBatch.begin(), renderBatch.end(),
         [](const RenderItem& a, const RenderItem& b) {
             return a.depth < b.depth;
         });
     
     // ================================================================
-    // STEP 5: RENDER IN SORTED ORDER
+    // PHASE 3: BATCH RENDER
     // ================================================================
-    
-    // Batch consecutive tile chunks of same orientation together for performance
-    for (size_t i = 0; i < renderQueue.size(); ++i) {
-        const auto& item = renderQueue[i];
-        
-        if (item.type == RenderItem::TileLayer) {
-            // Find consecutive tile chunks to batch together
-            std::vector<const TileChunk*> tileBatch;
-            tileBatch.push_back(item.tile.chunk);
-            
-            // Look ahead for more consecutive tile chunks
-            while (i + 1 < renderQueue.size() && renderQueue[i + 1].type == RenderItem::TileLayer) {
-                ++i;
-                tileBatch.push_back(renderQueue[i].tile.chunk);
-            }
-            
-            // Render batched tile chunks
-            const std::string& mapOrientation = World::Get().GetMapOrientation();
-            int tileWidth = World::Get().GetTileWidth();
-            int tileHeight = World::Get().GetTileHeight();
-            
-            if (mapOrientation == "isometric") {
-                // ✅ ISOMETRIC: Unified batch rendering (tiles + entities)
-                // Initialize isometric renderer if needed
-                if (!g_isoRenderer) {
-                    g_isoRenderer = std::make_unique<Olympe::Rendering::IsometricRenderer>();
-                    g_isoRenderer->Initialize(GameEngine::renderer, tileWidth, tileHeight);
-                }
+    for (const auto& item : renderBatch) {
+        switch (item.type) {
+            case RenderItem::ParallaxLayer:
+                parallaxMgr.RenderLayer(parallaxLayers[item.parallax.layerIndex], cam);
+                break;
                 
-                g_isoRenderer->SetCamera(cam.worldPosition.x, cam.worldPosition.y, cam.zoom);
-                g_isoRenderer->SetViewport(static_cast<int>(cam.viewport.w), 
-                                           static_cast<int>(cam.viewport.h));
-                g_isoRenderer->BeginFrame();
-                
-                // Step 1: Add tiles to batch
-                for (const auto* chunk : tileBatch) {
-                    RenderChunkIsometric(*chunk, g_isoRenderer.get());
-                }
-                
-                // ✅ Step 2: Add entity sprites to batch
-                AddEntitySpritesToIsometricBatch(
-                    g_isoRenderer.get(),
-                    cam,
-                    tileWidth,
-                    tileHeight
+            case RenderItem::IndividualTile:
+                RenderTileImmediate(
+                    item.tile.texture, item.tile.srcRect,
+                    item.tile.worldX, item.tile.worldY, item.tile.gid,
+                    item.tile.tileoffsetX, item.tile.tileoffsetY, item.tile.zOrder,
+                    cam, mapOrientation, tileWidth, tileHeight
                 );
+                break;
                 
-                // Step 3: Sort and render everything together
-                g_isoRenderer->EndFrame();
-            }
-            else if (mapOrientation == "orthogonal") {
-                for (const auto* chunk : tileBatch) {
-                    RenderChunkOrthogonal(*chunk, cam);
-                }
-            }
-            else {
-                // Unsupported orientation - fallback to orthogonal with warning
-                static bool warningShown = false;
-                if (!warningShown) {
-                    SDL_LogWarn(SDL_LOG_CATEGORY_RENDER, 
-                               "[RENDER] Unsupported map orientation '%s', using orthogonal fallback", 
-                               mapOrientation.c_str());
-                    warningShown = true;
-                }
-                for (const auto* chunk : tileBatch) {
-                    RenderChunkOrthogonal(*chunk, cam);
-                }
-            }
-        }
-        else if (item.type == RenderItem::ParallaxLayer) {
-            parallaxMgr.RenderLayer(
-                parallaxLayers[item.parallax.layerIndex],
-                reinterpret_cast<const CameraTransform&>(cam)
-            );
-        }
-        else { // Entity
-            RenderSingleEntity(cam, item.entity.entityId);
+            case RenderItem::Entity:
+                RenderSingleEntity(cam, item.entity.entityId);
+                break;
         }
     }
 }
