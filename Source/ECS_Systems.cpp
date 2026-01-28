@@ -27,6 +27,8 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #include <bitset>
 #include <cmath>
 #include <algorithm>
+#include <vector>
+#include <cfloat>
 #include "drawing.h"
 
 #undef min
@@ -1542,18 +1544,58 @@ void GridSystem::RenderIso(const CameraTransform& cam, const GridSettings_data& 
     const float h = std::max(1.f, s.cellSize.y);
 
     // Iso basis vectors (diamond)
-    Vector u(w * 0.5f, -h * 0.5f, 0.f);
-    Vector v(w * 0.5f,  h * 0.5f, 0.f);
+    // World position = i*u + j*v
+    Vector u(w * 0.5f, -h * 0.5f, 0.f);  // Right-down diagonal
+    Vector v(w * 0.5f,  h * 0.5f, 0.f);  // Right-up diagonal
 
-    // Get world bounds
+    // Get world bounds from camera (like RenderOrtho)
     SDL_FRect bounds = GetWorldVisibleBounds(cam);
     
-    // Estimate range in "grid units" based on bounds diagonal
-    Vector center(bounds.x + bounds.w * 0.5f, bounds.y + bounds.h * 0.5f, 0.f);
-    float diagonal = std::sqrt(bounds.w * bounds.w + bounds.h * bounds.h);
-    int range = (int)std::ceil(diagonal / std::min(w, h)) + 2;
+    // Convert world bounds to isometric grid coordinates (i, j)
+    // Helper: convert world position to grid coordinates using matrix inversion
+    auto worldToGrid = [&](float wx, float wy) -> std::pair<float, float>
+    {
+        // Solve linear system:
+        //   wx = i * u.x + j * v.x
+        //   wy = i * u.y + j * v.y
+        // Matrix inversion (2x2):
+        //   det = u.x * v.y - u.y * v.x
+        float det = u.x * v.y - u.y * v.x;
+        if (std::abs(det) < 0.0001f) return {0.f, 0.f};
+        
+        float i = (wx * v.y - wy * v.x) / det;
+        float j = (wy * u.x - wx * u.y) / det;
+        return {i, j};
+    };
     
-    // LOD: reduce range when zoomed out
+    // Sample bounds corners to find grid range
+    float minI = FLT_MAX, maxI = -FLT_MAX;
+    float minJ = FLT_MAX, maxJ = -FLT_MAX;
+    
+    std::vector<std::pair<float, float>> samples = {
+        {bounds.x, bounds.y},                                      // Top-left
+        {bounds.x + bounds.w, bounds.y},                          // Top-right
+        {bounds.x, bounds.y + bounds.h},                          // Bottom-left
+        {bounds.x + bounds.w, bounds.y + bounds.h},              // Bottom-right
+        {bounds.x + bounds.w * 0.5f, bounds.y + bounds.h * 0.5f} // Center
+    };
+    
+    for (const auto& [wx, wy] : samples)
+    {
+        auto [i, j] = worldToGrid(wx, wy);
+        minI = std::min(minI, i);
+        maxI = std::max(maxI, i);
+        minJ = std::min(minJ, j);
+        maxJ = std::max(maxJ, j);
+    }
+    
+    // Add padding to ensure full coverage
+    int iMin = (int)std::floor(minI) - 2;
+    int iMax = (int)std::ceil(maxI) + 2;
+    int jMin = (int)std::floor(minJ) - 2;
+    int jMax = (int)std::ceil(maxJ) + 2;
+    
+    // LOD: skip lines when zoomed out
     int skipFactor = 1;
     if (cam.zoom < s.lodZoomThreshold)
     {
@@ -1561,23 +1603,21 @@ void GridSystem::RenderIso(const CameraTransform& cam, const GridSettings_data& 
     }
     
     int lines = 0;
-    Vector origin = center; // center grid around visible area
-
-    // Lines parallel to u (skip every N lines)
-    for (int i = -range; i <= range && lines < s.maxLines; i += skipFactor)
+    
+    // Draw lines parallel to u (constant j)
+    for (int j = jMin; j <= jMax && lines < s.maxLines; j += skipFactor)
     {
-        Vector p0 = origin + v * (float)i - u * (float)range;
-        Vector p1 = origin + v * (float)i + u * (float)range;
+        Vector p0 = v * (float)j + u * (float)iMin;
+        Vector p1 = v * (float)j + u * (float)iMax;
         DrawLineWorld(cam, p0, p1, s.color);
         ++lines;
-        if (lines >= s.maxLines) break;
     }
 
-    // Lines parallel to v (skip every N lines)
-    for (int i = -range; i <= range && lines < s.maxLines; i += skipFactor)
+    // Draw lines parallel to v (constant i)
+    for (int i = iMin; i <= iMax && lines < s.maxLines; i += skipFactor)
     {
-        Vector p0 = origin + u * (float)i - v * (float)range;
-        Vector p1 = origin + u * (float)i + v * (float)range;
+        Vector p0 = u * (float)i + v * (float)jMin;
+        Vector p1 = u * (float)i + v * (float)jMax;
         DrawLineWorld(cam, p0, p1, s.color);
         ++lines;
     }
@@ -1599,10 +1639,10 @@ void GridSystem::RenderHex(const CameraTransform& cam, const GridSettings_data& 
     float maxY = bounds.y + bounds.h;
 
     // Convert bounds to axial hex coords (q, r)
-    int qMin = (int)std::floor((minX / dx) - 2);
-    int qMax = (int)std::ceil((maxX / dx) + 2);
-    int rMin = (int)std::floor((minY / dy) - 2);
-    int rMax = (int)std::ceil((maxY / dy) + 2);
+    int qMin = (int)std::floor(minX / dx) - 2;
+    int qMax = (int)std::ceil(maxX / dx) + 2;
+    int rMin = (int)std::floor(minY / dy) - 2;
+    int rMax = (int)std::ceil(maxY / dy) + 2;
 
     // LOD: skip hexes when zoomed out
     int skipFactor = 1;
