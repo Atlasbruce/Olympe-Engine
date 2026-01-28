@@ -175,6 +175,21 @@ private:
     void RenderIso(const CameraTransform& cam, const GridSettings_data& s);
     void RenderHex(const CameraTransform& cam, const GridSettings_data& s);
 };
+//-------------------------------------------------------------
+// UI Rendering System: Pass 2 rendering for UI/HUD/Menu (always on top)
+// Renders UI elements independently of world depth sorting
+class UIRenderingSystem : public ECS_System
+{
+public:
+    UIRenderingSystem();
+    virtual void Render() override;
+    
+private:
+    void RenderHUD(const CameraTransform& cam);
+    void RenderInGameMenu(const CameraTransform& cam);
+    void RenderDebugOverlay(const CameraTransform& cam);
+};
+//-------------------------------------------------------------
 // Player Control System: processes entities with PlayerBinding_data and Controller_data
 class PlayerControlSystem : public ECS_System
 {

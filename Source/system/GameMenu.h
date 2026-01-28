@@ -11,6 +11,14 @@
 class GameMenu 
 {
 public:
+    enum MenuOption
+    {
+        Resume = 0,
+        Restart = 1,
+        Quit = 2,
+        Count = 3
+    };
+    
     GameMenu()
     {
         name = "GameMenu";
@@ -34,6 +42,13 @@ public:
     bool IsActive() const { return m_active; }
 
     void AddEntry(const std::string& e) { m_entries.push_back(e); }
+    
+    // Menu navigation
+    void SelectPrevious();
+    void SelectNext();
+    void ValidateSelection();
+    
+    int GetSelectedOption() const { return m_selected; }
 
     // Render simplified text-based menu (placeholder)
     virtual void Render();
@@ -51,7 +66,7 @@ private:
     std::string name;
     bool m_active = false;
     std::vector<std::string> m_entries;
-    int m_selected = 0;
+    int m_selected = MenuOption::Resume;  // Default to Resume
     
     // F2 menu state
     bool m_f2MenuOpen = false;

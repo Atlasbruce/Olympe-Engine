@@ -41,6 +41,38 @@ void GameMenu::Deactivate()
     SYSTEM_LOG << "GameMenu: deactivated\n";
 }
 
+void GameMenu::SelectPrevious()
+{
+    m_selected = (m_selected - 1 + MenuOption::Count) % MenuOption::Count;
+}
+
+void GameMenu::SelectNext()
+{
+    m_selected = (m_selected + 1) % MenuOption::Count;
+}
+
+void GameMenu::ValidateSelection()
+{
+    switch (m_selected)
+    {
+        case MenuOption::Resume:
+            Deactivate();  // Resume game
+            break;
+        
+        case MenuOption::Restart:
+            // Restart current level
+            // For now, just log - full implementation depends on level loading system
+            SYSTEM_LOG << "GameMenu: Restart selected (not yet implemented)\n";
+            Deactivate();
+            break;
+        
+        case MenuOption::Quit:
+            // Quit to main menu or exit
+            VideoGame::Get().RequestQuit();
+            break;
+    }
+}
+
 void GameMenu::Render()
 {
     if (!m_active) return;
