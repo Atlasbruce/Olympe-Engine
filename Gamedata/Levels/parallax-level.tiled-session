@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "parallax-forest.tmx",
+    "activeFile": "hexa-quest.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -14,6 +14,11 @@
         },
         "#parallax_forest": {
             "dynamicWrapping": true
+        },
+        "Hexa-tiles_1.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "Tiles iso cube..tsj": {
             "dynamicWrapping": false,
@@ -34,7 +39,19 @@
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
+        "hexa-quest.tmx": {
+            "scale": 0.75,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 546,
+                "y": 643.3333333333333
+            }
+        },
         "isometric_quest.tmx": {
+            "expandedObjectLayers": [
+                6,
+                10
+            ],
             "scale": 0.5,
             "selectedLayer": 4,
             "viewCenter": {
@@ -77,7 +94,8 @@
         },
         "parallax-forest.tmx#tileset 2D ortho": {
             "dynamicWrapping": false,
-            "scaleInDock": 1
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "parallax-forext..tmj": {
             "scale": 0.2200969827586207,
@@ -108,6 +126,9 @@
             "scaleInEditor": 0.12
         },
         "pnc-quest.tmx": {
+            "expandedObjectLayers": [
+                8
+            ],
             "scale": 0.75,
             "selectedLayer": 6,
             "viewCenter": {
@@ -131,12 +152,14 @@
         }
     },
     "last.exportedFilePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels",
-    "last.imagePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels",
+    "last.externalTilesetPath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels/hexa tiles",
+    "last.imagePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Resources/hexa tiles",
     "last.objectTemplatePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels",
     "lastUsedTilesetExportFilter": "Fichiers de jeu de tuiles JSON (*.tsj *.json)",
     "map.fixedSize": false,
     "map.lastUsedExportFilter": "Fichiers de carte JSON (*.tmj *.json)",
     "map.lastUsedFormat": "tmx",
+    "map.orientation": "4",
     "map.renderOrder": "3",
     "map.tileHeight": 64,
     "map.tileWidth": 64,
@@ -146,7 +169,10 @@
         "Trees.tsx",
         "Trees.tsj",
         "parallax-forest.tmx",
-        "tileset 2D ortho.tsx"
+        "tileset 2D ortho.tsx",
+        "pnc-quest.tmx",
+        "hexa-quest.tmx",
+        "Hexa-tiles_1.tsx"
     ],
     "project": "parallax-level.tiled-project",
     "property.type": "string",
@@ -155,20 +181,24 @@
         "Tiles iso cube..tsj",
         "Trees.tsx",
         "Trees.tsj",
-        "tileset 2D ortho.tsx",
         "parallax-forest.tmx",
+        "tileset 2D ortho.tsx",
+        "pnc-quest.tmx",
+        "Hexa-tiles_1.tsx",
+        "hexa-quest.tmx",
         "parallax-forext..tmj",
         "map_forest.tmx",
-        "Tiles iso cube.tsx",
-        "parallax-forext.tmx",
-        "parallax_forest.tsx",
-        "map_forest.tmj"
+        "Tiles iso cube.tsx"
     ],
+    "tileset.lastUsedFilter": "Fichiers de jeu de tuiles Tiled (*.tsx *.xml)",
     "tileset.lastUsedFormat": "tsx",
-    "tileset.spacing": 1,
+    "tileset.margin": 20,
+    "tileset.spacing": 0,
     "tileset.tileSize": {
-        "height": 34,
-        "width": 34
+        "height": 90,
+        "width": 60
     },
-    "tileset.type": 0
+    "tileset.transparentColor": "#000000",
+    "tileset.type": 0,
+    "tileset.useTransparentColor": true
 }

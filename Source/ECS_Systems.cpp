@@ -1580,9 +1580,11 @@ void GridSystem::RenderIso(const CameraTransform& cam, const GridSettings_data& 
         {bounds.x + bounds.w * 0.5f, bounds.y + bounds.h * 0.5f} // Center
     };
     
-    for (const auto& [wx, wy] : samples)
+    for (const auto& sample : samples)
     {
-        auto [i, j] = worldToGrid(wx, wy);
+        std::pair<float, float> gridCoords = worldToGrid(sample.first, sample.second);
+        float i = gridCoords.first;
+        float j = gridCoords.second;
         minI = std::min(minI, i);
         maxI = std::max(maxI, i);
         minJ = std::min(minJ, j);

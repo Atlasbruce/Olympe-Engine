@@ -12,6 +12,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "World.h"
 #include "InputsManager.h"
 #include "system/ViewportManager.h"
+#include "OlympeTilemapEditor/include/LevelManager.h"
 #include "ECS_Systems_AI.h"
 #include "BlueprintEditor/WorldBridge.h"
 #include "TiledLevelLoader/include/ParallaxLayerManager.h"
