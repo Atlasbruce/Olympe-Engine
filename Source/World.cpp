@@ -1454,25 +1454,33 @@ bool World::InstantiatePass3_StaticObjects(
         EntityID entity = factory.CreateEntity(prefabName);
         if (entity == INVALID_ENTITY_ID)
         {
-            // Fallback: create basic entity even if prefab missing
+            // Fallback: create basic entity with red placeholder for missing prefab
             entity = CreateEntity();
             AddComponent<Identity_data>(entity, entityInstance->name, entityInstance->type, entityInstance->type);
-            AddComponent<Position_data>(entity, Vector(
-                static_cast<float>(entityInstance->position.x),
-                static_cast<float>(entityInstance->position.y),
-                0.0f
-            ));
             
-            std::cout << "  ! Created fallback entity (prefab missing): " << entityInstance->name << "\n";
+            // Use position directly - already a Vector, no conversion needed
+            AddComponent<Position_data>(entity, entityInstance->position);
+            
+            // Add red sprite placeholder
+            VisualSprite_data sprite;
+            sprite.spritePath = "./Resources/Icons/location-32.png";
+            sprite.visible = true;
+            sprite.colorTint = 0xFF0000FF;  // Bright red (RGBA: R=255, G=0, B=0, A=255)
+            sprite.width = 32;
+            sprite.height = 32;
+            AddComponent<VisualSprite_data>(entity, sprite);
+            
+            SYSTEM_LOG << "  ⚠️  PLACEHOLDER: Created red marker for missing prefab '" 
+                       << entityInstance->type << "' (name: " << entityInstance->name 
+                       << ") at position: " << entityInstance->position << "\n";
         }
         
         if (entity != INVALID_ENTITY_ID)
         {
             if (HasComponent<Position_data>(entity))
             {
-                Position_data& pos = GetComponent<Position_data>(entity);
-                pos.position.x = static_cast<float>(entityInstance->position.x);
-                pos.position.y = static_cast<float>(entityInstance->position.y);
+                // Use position directly - already a Vector, no conversion needed
+                GetComponent<Position_data>(entity).position = entityInstance->position;
             }
 
             if (HasComponent<Identity_data>(entity))
@@ -1559,10 +1567,38 @@ bool World::InstantiatePass4_DynamicObjects(
         
         if (blueprints.empty())
         {
-            result.pass4_dynamicObjects.failed++;
-            result.pass4_dynamicObjects.failedObjects.push_back(entityInstance->name + " (type: " + entityInstance->type + ")");
-            SYSTEM_LOG << "  x Failed: No prefab found for type '" << entityInstance->type 
-                       << "' (instance: " << entityInstance->name << ")\n";
+            // Create red placeholder for missing prefab
+            EntityID entity = CreateEntity();
+            if (entity != INVALID_ENTITY_ID)
+            {
+                AddComponent<Identity_data>(entity, entityInstance->name, entityInstance->type, entityInstance->type);
+                
+                // Use position directly - already a Vector, no conversion needed
+                AddComponent<Position_data>(entity, entityInstance->position);
+                
+                // Add red sprite placeholder
+                VisualSprite_data sprite;
+                sprite.spritePath = "./Resources/Icons/location-32.png";
+                sprite.visible = true;
+                sprite.colorTint = 0xFF0000FF;  // Bright red (RGBA: R=255, G=0, B=0, A=255)
+                sprite.width = 32;
+                sprite.height = 32;
+                AddComponent<VisualSprite_data>(entity, sprite);
+                
+                result.pass4_dynamicObjects.successfullyCreated++;
+                result.entityRegistry[entityInstance->name] = entity;
+                
+                SYSTEM_LOG << "  ⚠️  PLACEHOLDER: Created red marker for missing prefab '" 
+                           << entityInstance->type << "' (name: " << entityInstance->name 
+                           << ") at position: " << entityInstance->position << "\n";
+            }
+            else
+            {
+                result.pass4_dynamicObjects.failed++;
+                result.pass4_dynamicObjects.failedObjects.push_back(entityInstance->name + " (type: " + entityInstance->type + ")");
+                SYSTEM_LOG << "  x Failed: No prefab found for type '" << entityInstance->type 
+                           << "' (instance: " << entityInstance->name << ") and couldn't create placeholder\n";
+            }
             continue;
         }
         
@@ -1582,11 +1618,8 @@ bool World::InstantiatePass4_DynamicObjects(
         
         // Build level instance parameters
         LevelInstanceParameters instanceParams(entityInstance->name, entityInstance->type);
-        instanceParams.position = Vector(
-            static_cast<float>(entityInstance->position.x),
-            static_cast<float>(entityInstance->position.y),
-            0.0f
-        );
+        // Use position directly - already a Vector, no conversion needed
+        instanceParams.position = entityInstance->position;
         
         // Extract custom properties from level instance
         if (!entityInstance->overrides.is_null())
