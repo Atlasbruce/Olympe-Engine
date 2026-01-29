@@ -30,6 +30,7 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #include <vector>
 #include <cfloat>
 #include "drawing.h"
+#include "RenderContext.h"
 
 #undef min
 #undef max
@@ -533,6 +534,9 @@ void RenderingSystem::Render()
                 if (!camTransform.isActive)
                     continue;
                 
+                // Set active camera for drawing functions
+                RenderContext::Get().SetActiveCamera(camTransform);
+                
                 // Set viewport and clip rect
                 SDL_Rect viewportRect = {
                     (int)camTransform.viewport.x,
@@ -551,6 +555,9 @@ void RenderingSystem::Render()
                 // Render with parallax layers
                 RenderMultiLayerForCamera(camTransform);
                 
+                // Clear active camera after rendering this player
+                RenderContext::Get().ClearActiveCamera();
+                
                 // Reset viewport-specific state
                 //SDL_SetRenderClipRect(renderer, nullptr);
 
@@ -562,6 +569,9 @@ void RenderingSystem::Render()
             CameraTransform camTransform = GetActiveCameraTransform(-1);
             if (camTransform.isActive)
             {
+                // Set active camera for drawing functions
+                RenderContext::Get().SetActiveCamera(camTransform);
+                
                 // Set viewport and clip rect
                 SDL_Rect viewportRect = {
                     (int)camTransform.viewport.x,
@@ -575,6 +585,9 @@ void RenderingSystem::Render()
                 
                 // Render with parallax layers
                 RenderMultiLayerForCamera(camTransform);
+                
+                // Clear active camera after rendering
+                RenderContext::Get().ClearActiveCamera();
                 
                 // Reset viewport-specific state
                 //SDL_SetRenderClipRect(renderer, nullptr);
