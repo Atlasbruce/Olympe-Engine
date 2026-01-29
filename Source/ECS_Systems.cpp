@@ -1086,13 +1086,15 @@ void RenderSingleEntity(const CameraTransform& cam, EntityID entity)
             screenSize.y
         };
         
+		SDL_FPoint fpoint = { visual.hotSpot.x * cam.zoom, visual.hotSpot.y * cam.zoom };
+
         // Render based on sprite type
         if (visual.sprite)
         {
             // Apply color modulation
             SDL_SetTextureColorMod(visual.sprite, visual.color.r, visual.color.g, visual.color.b);
             
-            SDL_FPoint fpoint = { visual.hotSpot.x * cam.zoom, visual.hotSpot.y * cam.zoom };
+            
             SDL_RenderTextureRotated(GameEngine::renderer, visual.sprite, nullptr, &destRect, cam.rotation, &fpoint, SDL_FLIP_NONE);
             
             // Debug: draw position & bounding box
@@ -1117,8 +1119,13 @@ void RenderSingleEntity(const CameraTransform& cam, EntityID entity)
 
         SDL_SetRenderDrawColor(GameEngine::renderer, 255, 255, 0, 255); // yellow
 
+		destRect = { pos.position.x - visual.hotSpot.x, pos.position.y - visual.hotSpot.y, boxComp.boundingBox.w, boxComp.boundingBox.h };
+
         Draw_FilledCircle((int)(destRect.x + destRect.w / 2), (int)(destRect.y + destRect.h / 2), 3); // draw pivot/centre
         Draw_Rectangle(&destRect, SDL_Color{ 0, 255, 255, 255 }); // draw bounding box
+
+
+
     }
     catch (const std::exception& e)
     {
