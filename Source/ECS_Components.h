@@ -439,6 +439,9 @@ struct Camera_data
 	static constexpr float ZOOM_LEVELS[] = {0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 2.5f, 3.0f, 4.0f, 5.0f};
 	static constexpr size_t ZOOM_LEVEL_COUNT = sizeof(ZOOM_LEVELS) / sizeof(ZOOM_LEVELS[0]);
 	int currentZoomLevelIndex = 3;           // Index 3 = 1.0 (default)
+	
+	// Ensure ZOOM_LEVELS array has at least 4 entries (for default index 3)
+	static_assert(sizeof(ZOOM_LEVELS) / sizeof(ZOOM_LEVELS[0]) >= 4, "ZOOM_LEVELS must contain at least 4 entries for default index 3");
 
 	// Rotation management (in degrees)
 	float rotation = 0.0f;                   // Current rotation angle

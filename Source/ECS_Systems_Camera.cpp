@@ -726,6 +726,26 @@ void CameraSystem::ResetCameraControls(EntityID entity)
 }
 
 //-------------------------------------------------------------
+void CameraSystem::SyncZoomLevelIndex(Camera_data& cam)
+{
+    // Find the closest zoom level to current targetZoom and update index
+    int closestIndex = 0;
+    float minDiff = std::abs(Camera_data::ZOOM_LEVELS[0] - cam.targetZoom);
+    
+    for (size_t i = 1; i < Camera_data::ZOOM_LEVEL_COUNT; i++)
+    {
+        float diff = std::abs(Camera_data::ZOOM_LEVELS[i] - cam.targetZoom);
+        if (diff < minDiff)
+        {
+            minDiff = diff;
+            closestIndex = static_cast<int>(i);
+        }
+    }
+    
+    cam.currentZoomLevelIndex = closestIndex;
+}
+
+//-------------------------------------------------------------
 void CameraSystem::ApplyCameraToRenderer(SDL_Renderer* renderer, short playerID)
 {
     // Find camera for this player
@@ -789,6 +809,8 @@ void CameraSystem::OnEvent(const Message& msg)
         {
             cam.targetZoom = msg.param1;
             cam.targetZoom = std::max(cam.minZoom, std::min(cam.maxZoom, cam.targetZoom));
+            // Sync discrete zoom level index to match programmatic zoom
+            SyncZoomLevelIndex(cam);
             break;
         }
         case EventType::Olympe_EventType_Camera_RotateTo:

@@ -87,7 +87,7 @@ The numpad +/- keys control zoom using discrete levels for precision:
 - **Zoom Levels**: `0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0`
 - Each press of + or - moves to the next/previous level
 - Default starting level is 1.0 (index 3)
-- No intermediate zoom values are possible via keyboard
+- Keyboard controls only allow selecting from these fixed zoom levels (smooth interpolation occurs during transitions)
 
 **Programmatic Zoom:**
 ```cpp

@@ -272,6 +272,7 @@ private:
 
     // Camera control
     void ResetCameraControls(EntityID entity);
+    void SyncZoomLevelIndex(Camera_data& cam);  // Helper to sync currentZoomLevelIndex with targetZoom
 
     // Player camera mapping
     std::unordered_map<short, EntityID> m_playerCameras; // Map player ID to camera entity
