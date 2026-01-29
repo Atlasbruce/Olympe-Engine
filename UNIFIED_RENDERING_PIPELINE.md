@@ -1,11 +1,13 @@
 # Unified Rendering Pipeline Implementation
 
-**Date**: 2025-01-28  
+**Date**: 2025-01-28 (Updated: 2025-01-29)  
 **Status**: ✅ IMPLEMENTED
 
 ## Overview
 
 This document describes the implementation of a unified rendering pipeline that eliminates performance bottlenecks caused by double sorting, missing frustum culling, and architectural split between orthogonal and isometric rendering paths.
+
+**Update 2025-01-29**: Fixed tile rendering transformation inconsistency by using `CameraTransform::WorldToScreen()` consistently for all tile orientations. This eliminates double zoom transformation on tile offsets and adds camera rotation support.
 
 ## Problem Statement
 
@@ -105,10 +107,15 @@ void GetVisibleTileRange(const CameraTransform& cam,
 ```
 
 **Features**:
-- Converts screen corners to world coordinates
-- Calculates bounding box with padding for tall tiles
-- Supports both orthogonal and isometric projections
-- Padding: ±5 tiles for isometric, ±2 tiles for orthogonal
+- ✅ **Unified Transform Usage**: Uses `CameraTransform::ScreenToWorld()` for screen-to-world conversion
+- ✅ **Isometric Support**: Converts world coordinates to isometric tile coordinates using inverse projection
+- ✅ **Orthogonal/Hex Support**: Simplified calculation using `cam.ScreenToWorld()`
+- ✅ **Bounding Box with Padding**: ±5 tiles for isometric, ±2 tiles for orthogonal
+- ✅ **Rotation Support**: Works correctly with camera rotation via `ScreenToWorld()`
+
+**Bug Fix (2025-01-29)**:
+- ❌ **Before**: Used deprecated `IsoScreenToWorld()` that didn't support camera rotation
+- ✅ **After**: Uses `CameraTransform::ScreenToWorld()` with full rotation support
 
 ### 3. Depth Calculation Functions
 
@@ -156,28 +163,54 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
 ```
 
 **Features**:
-- Unified rendering for both orthogonal and isometric
-- Applies tile offsets from tileset definitions
-- Handles tile flipping (horizontal/vertical/diagonal)
-- Direct rendering without intermediate batch
+- ✅ **Unified CameraTransform Usage**: Uses `CameraTransform::WorldToScreen()` consistently for all tile orientations
+- ✅ **Camera Rotation Support**: Applies camera rotation via `cam.rotation` parameter to `SDL_RenderTextureRotated()`
+- ✅ **Hexagonal Map Support**: Added hexagonal coordinate conversion (pointy-top hex)
+- ✅ **Consistent Transformation**: Tile offsets are transformed using zoom only (no double transformation)
+- ✅ **Tile Flipping**: Handles horizontal/vertical/diagonal flipping from GID flags
+- ✅ **Direct Rendering**: Immediate rendering without intermediate batch
 
-### 5. Coordinate Conversion Helpers
+**Transformation Pipeline**:
+1. Convert tile coordinates (X,Y) to world coordinates based on orientation:
+   - **Isometric**: `worldPos = ((X-Y) * tileWidth/2, (X+Y) * tileHeight/2)`
+   - **Hexagonal**: `worldPos = (hexRadius * (√3*X + √3/2*Y), hexRadius * 3/2*Y)`
+   - **Orthogonal**: `worldPos = (X * tileWidth, Y * tileHeight)`
+2. Apply `CameraTransform::WorldToScreen()` for consistent camera transformation (position, rotation, zoom, viewport)
+3. Transform tile offsets using zoom only: `offsetScreen = offset * cam.zoom`
+4. Render with camera rotation applied
 
-**File**: `Source/ECS_Systems.cpp`
+**Bug Fix (2025-01-29)**:
+- ❌ **Before**: Custom `IsoWorldToScreen()` applied zoom, then offsets were re-zoomed (double transformation)
+- ✅ **After**: Unified `cam.WorldToScreen()` applies all transformations once, offsets are zoomed only once
+
+### 5. Coordinate Conversion
+
+**File**: `Source/ECS_Systems.h`
+
+The `CameraTransform` struct provides the canonical coordinate transformation methods:
 
 ```cpp
-Vector IsoWorldToScreen(int worldX, int worldY, const CameraTransform& cam, 
-                       int tileWidth, int tileHeight)
-
-Vector IsoScreenToWorld(float screenX, float screenY, const CameraTransform& cam,
-                       int tileWidth, int tileHeight)
+Vector WorldToScreen(const Vector& worldPos) const
+Vector ScreenToWorld(const Vector& screenPos) const
 ```
 
 **Features**:
-- Isometric projection: `screenX = (worldX - worldY) * (tileWidth/2)`
-- Isometric projection: `screenY = (worldX + worldY) * (tileHeight/2)`
-- Includes camera transform and viewport centering
-- Adds ISOMETRIC_OFFSET_Y for negative coordinates
+- ✅ **Complete Transformation Pipeline**: Handles position, rotation, zoom, and viewport centering
+- ✅ **Rotation Support**: Applies camera rotation in both directions
+- ✅ **Consistent API**: Used by tiles, entities, grid, and parallax layers
+- ✅ **Inverse Transform**: `ScreenToWorld()` provides accurate inverse transformation
+
+**Transformation Steps (WorldToScreen)**:
+1. Calculate position relative to camera
+2. Apply camera rotation (if non-zero)
+3. Apply zoom scaling
+4. Apply screen offset (shake + control)
+5. Center in viewport
+
+**Bug Fix (2025-01-29)**:
+- ❌ **Removed**: Deprecated `IsoWorldToScreen()` and `IsoScreenToWorld()` functions
+- ❌ **Removed**: `ISOMETRIC_OFFSET_Y` constant (no longer needed with unified transform)
+- ✅ **Benefit**: All rendering components now use the same transformation, ensuring consistency across zoom, rotation, and camera movement
 
 ## IsometricRenderer Changes
 
@@ -240,6 +273,8 @@ The `IsometricRenderer` is now a lightweight utility class that provides coordin
    - ✅ Entities render with proper depth sorting
    - ✅ Parallax layers work correctly
    - ✅ Camera movement smooth
+   - ✅ **NEW**: Tiles remain aligned with grid when zooming (2025-01-29)
+   - ✅ **NEW**: Tiles rotate correctly with camera rotation (2025-01-29)
 
 2. **Isometric Maps**
    - ✅ Tiles render in correct diagonal order
@@ -247,8 +282,15 @@ The `IsometricRenderer` is now a lightweight utility class that provides coordin
    - ✅ Tile offsets applied correctly
    - ✅ Tile flipping works (horizontal/vertical/diagonal)
    - ✅ Frustum culling filters correctly
+   - ✅ **NEW**: Tiles remain aligned with grid when zooming (2025-01-29)
+   - ✅ **NEW**: Tiles remain aligned with entities when zooming (2025-01-29)
+   - ✅ **NEW**: Tiles rotate correctly with camera rotation (2025-01-29)
 
-3. **Performance**
+3. **Hexagonal Maps**
+   - ✅ **NEW**: Hexagonal coordinate conversion implemented (2025-01-29)
+   - ✅ **NEW**: Hexagonal tiles render at correct positions (2025-01-29)
+
+4. **Performance**
    - ✅ Frame time reduction measured
    - ✅ Sort time reduction verified
    - ✅ Memory usage improvement confirmed
