@@ -214,11 +214,21 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 
             SDL_ShowMessageBox(&messageboxdata, &buttonid);
             if (buttonid == 1)
+            {
+                // Clear input state before exiting
+                KeyboardManager::Get().BeginFrame();
+                JoystickManager::Get().BeginFrame();
+                MouseManager::Get().BeginFrame();
                 return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
+            }
         }
         break;
         case SDL_EVENT_QUIT:
             {
+                // Clear input state before exiting
+                KeyboardManager::Get().BeginFrame();
+                JoystickManager::Get().BeginFrame();
+                MouseManager::Get().BeginFrame();
                 return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
             }
             break;
