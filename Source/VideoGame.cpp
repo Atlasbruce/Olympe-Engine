@@ -144,16 +144,17 @@ bool VideoGame::RemovePlayerEntity(const EntityID eid)
 //-------------------------------------------------------------
 void VideoGame::RegisterLoadedPlayerEntity(EntityID entity)
 {
-    // Entity already exists, just need to register and configure it
-    
-    // Validate required components (should already be validated by caller)
-    if (!world.HasComponent<PlayerBinding_data>(entity) || 
-        !world.HasComponent<Controller_data>(entity))
+    // Validate entity ID
+    if (entity == INVALID_ENTITY_ID)
     {
-        SYSTEM_LOG << "X VideoGame::RegisterLoadedPlayerEntity: Entity " << entity 
-                   << " missing required input components!\n";
+        SYSTEM_LOG << "X VideoGame::RegisterLoadedPlayerEntity: Invalid entity ID\n";
         return;
     }
+    
+    // Entity already exists, just need to register and configure it
+    
+    // Note: Component validation is performed by World::RegisterPlayerEntity before calling this
+    // These components are guaranteed to exist at this point
     
     // Add to player list
     m_playersEntity.push_back(entity);

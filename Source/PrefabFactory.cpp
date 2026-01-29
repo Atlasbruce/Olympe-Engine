@@ -211,6 +211,9 @@ EntityID PrefabFactory::CreateEntityWithOverrides(
     std::vector<ResolvedComponentInstance> resolvedComponents = resolver.Resolve(blueprint, instanceParams);
     
     // Instantiate components with resolved parameters
+    // NOTE: If some components fail to instantiate, the entity is still returned with partial state.
+    // This is intentional - allows entities to be created even if some optional components fail.
+    // Callers should check component existence before accessing them.
     int successCount = 0;
     int failCount = 0;
     

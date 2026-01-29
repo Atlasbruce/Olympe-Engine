@@ -1707,7 +1707,7 @@ bool World::InstantiatePass4_DynamicObjects(
         {
             result.pass4_dynamicObjects.failed++;
             result.pass4_dynamicObjects.failedObjects.push_back(entityInstance->name);
-            SYSTEM_LOG << "    x Failed to create entity\n";
+            SYSTEM_LOG << "  X Failed to create entity\n";
             continue;
         }
         
