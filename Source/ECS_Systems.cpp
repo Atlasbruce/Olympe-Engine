@@ -767,10 +767,10 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
         worldPos = Vector(worldX * tileWidth, worldY * tileHeight, 0.0f);
     }
     
-    // Calculate screen position WITHOUT rotation
-    // Apply only position offset + zoom (rotation will be done via SDL_RenderTextureRotated)
-    float screenX = (worldPos.x - cam.worldPosition.x) * cam.zoom + cam.viewport.w / 2.0f;
-    float screenY = (worldPos.y - cam.worldPosition.y) * cam.zoom + cam.viewport.h / 2.0f;
+    // Calculate screen position with zoom only (no rotation)
+    // Rotation is applied separately via SDL_RenderTextureRotated with viewport-centered pivot
+    float screenX = (worldPos.x - cam.worldPosition.x) * cam.zoom - cam.screenOffset.x + cam.viewport.w / 2.0f;
+    float screenY = (worldPos.y - cam.worldPosition.y) * cam.zoom - cam.screenOffset.y + cam.viewport.h / 2.0f;
     
     // Tile offsets are in pixel/texture space, scale by zoom
     float offsetScreenX = tileoffsetX * cam.zoom;
@@ -796,16 +796,16 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
     
     // Rotate around viewport center (not tile center!)
     // Pivot point is the viewport center expressed in the tile's local coordinate system
-    SDL_FPoint pivotWorld = {
+    SDL_FPoint pivotInTileSpace = {
         cam.viewport.w / 2.0f - destRect.x,
         cam.viewport.h / 2.0f - destRect.y
     };
     
     SDL_RenderTextureRotated(GameEngine::renderer, texture, 
                             &srcFRect, &destRect, 
-                            cam.rotation,   // Camera rotation angle
-                            &pivotWorld,    // Pivot = viewport center in tile space
-                            flip);          // Flip flags
+                            cam.rotation,        // Camera rotation angle
+                            &pivotInTileSpace,   // Pivot = viewport center in tile space
+                            flip);               // Flip flags
 }
 
 // ✅ UNIFIED RENDERING PIPELINE - Single-pass sorting with frustum culling

@@ -93,14 +93,14 @@ namespace Tiled {
         float texW, texH;
         SDL_GetTextureSize(layer.texture, &texW, &texH);
         
-        // Calculate world position (parallax offset)
+        // Calculate parallax-adjusted world position
         float worldX = layer.offsetX - (cam.worldPosition.x * layer.scrollFactorX);
         float worldY = layer.offsetY - (cam.worldPosition.y * layer.scrollFactorY);
         
-        // Apply position + zoom ONLY (NO rotation in coordinates)
-        // Rotation will be applied via SDL_RenderTextureRotated with correct pivot
-        float screenX = (worldX - cam.worldPosition.x) * cam.zoom + cam.viewport.w / 2.0f;
-        float screenY = (worldY - cam.worldPosition.y) * cam.zoom + cam.viewport.h / 2.0f;
+        // Calculate screen position with zoom only (no rotation)
+        // Rotation is applied separately via SDL_RenderTextureRotated with viewport-centered pivot
+        float screenX = worldX * cam.zoom - cam.screenOffset.x + cam.viewport.w / 2.0f;
+        float screenY = worldY * cam.zoom - cam.screenOffset.y + cam.viewport.h / 2.0f;
         
         // Apply zoom to dimensions
         texW *= cam.zoom;
@@ -139,13 +139,13 @@ namespace Tiled {
                     
                     // Pivot = viewport center in tile's coordinate space
                     // This makes the tile rotate around the camera center (not its own center)
-                    SDL_FPoint pivotWorld = {
+                    SDL_FPoint pivotInTileSpace = {
                         cam.viewport.w / 2.0f - destRect.x,
                         cam.viewport.h / 2.0f - destRect.y
                     };
                     
                     SDL_RenderTextureRotated(renderer, layer.texture, nullptr, &destRect,
-                                            cam.rotation, &pivotWorld, SDL_FLIP_NONE);
+                                            cam.rotation, &pivotInTileSpace, SDL_FLIP_NONE);
                 }
             }
         }
@@ -155,13 +155,13 @@ namespace Tiled {
             SDL_FRect destRect = {screenX, screenY, texW, texH};
             
             // Rotate around viewport center
-            SDL_FPoint pivotWorld = {
+            SDL_FPoint pivotInTileSpace = {
                 cam.viewport.w / 2.0f - destRect.x,
                 cam.viewport.h / 2.0f - destRect.y
             };
             
             SDL_RenderTextureRotated(renderer, layer.texture, nullptr, &destRect,
-                                    cam.rotation, &pivotWorld, SDL_FLIP_NONE);
+                                    cam.rotation, &pivotInTileSpace, SDL_FLIP_NONE);
         }
     }
 
