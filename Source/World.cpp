@@ -10,6 +10,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 */
 #pragma once
 #include "World.h"
+#include "VideoGame.h"
 #include "InputsManager.h"
 #include "system/ViewportManager.h"
 #include "ECS_Systems_AI.h"
@@ -1570,68 +1571,53 @@ bool World::InstantiatePass3_StaticObjects(
         
         result.pass3_staticObjects.totalObjects++;
         
-        std::string prefabName = entityInstance->prefabPath;
-        size_t lastSlash = prefabName.find_last_of("/\\");
-        if (lastSlash != std::string::npos)
-            prefabName = prefabName.substr(lastSlash + 1);
-        size_t lastDot = prefabName.find_last_of(".");
-        if (lastDot != std::string::npos)
-            prefabName = prefabName.substr(0, lastDot);
+        // Extract prefab name from path
+        std::string prefabName = ExtractPrefabName(entityInstance->prefabPath);
         
-        EntityID entity = factory.CreateEntity(prefabName);
-        if (entity == INVALID_ENTITY_ID)
+        // Check if prefab exists
+        if (!factory.HasPrefab(prefabName))
         {
-            // Fallback: create basic entity with red placeholder for missing prefab
-            entity = CreateEntity();
-            AddComponent<Identity_data>(entity, entityInstance->name, entityInstance->type, entityInstance->type);
-            
-            // Use position directly - already a Vector, no conversion needed
-            AddComponent<Position_data>(entity, entityInstance->position);
-            
-            // Add visual editor marker with red color for missing prefabs
-            VisualEditor_data editorData;
-            editorData.sprite = DataManager::Get().GetSprite("location-32.png", ".\\Resources\\Icons\\location-32.png");
-            editorData.color = { 255, 0, 0, 255 };  // Bright red (RGBA)
-            editorData.isVisible = true;
-            if (editorData.sprite) {
-                editorData.srcRect = { 0, 0, static_cast<float>(editorData.sprite->w), static_cast<float>(editorData.sprite->h) };
-                editorData.hotSpot = Vector(editorData.srcRect.w / 2.0f, editorData.srcRect.h / 2.0f, 0.0f);
+            // Create placeholder for missing prefab
+            EntityID entity = CreateMissingPrefabPlaceholder(entityInstance, result.pass3_staticObjects);
+            if (entity != INVALID_ENTITY_ID)
+            {
+                result.entityRegistry[entityInstance->name] = entity;
             }
-            AddComponent<VisualEditor_data>(entity, editorData);
-            
-            SYSTEM_LOG << "  /!\  PLACEHOLDER: Created red marker for missing prefab '" 
-                       << entityInstance->type << "' (name: " << entityInstance->name 
-                       << ") at position: " << entityInstance->position << "\n";
+            continue;
         }
+        
+        // Get blueprint
+        const PrefabBlueprint* blueprint = factory.GetPrefabRegistry().Find(prefabName);
+        if (!blueprint || !blueprint->isValid)
+        {
+            // Create placeholder for invalid blueprint
+            EntityID entity = CreateMissingPrefabPlaceholder(entityInstance, result.pass3_staticObjects);
+            if (entity != INVALID_ENTITY_ID)
+            {
+                result.entityRegistry[entityInstance->name] = entity;
+            }
+            continue;
+        }
+        
+        // Build level instance parameters
+        LevelInstanceParameters instanceParams(entityInstance->name, entityInstance->type);
+        instanceParams.position = entityInstance->position;
+        
+        // Extract custom properties from level instance
+        ExtractCustomProperties(entityInstance->overrides, instanceParams);
+        
+        // ✅ USE UNIFIED METHOD WITH OVERRIDES
+        EntityID entity = factory.CreateEntityWithOverrides(*blueprint, instanceParams);
         
         if (entity != INVALID_ENTITY_ID)
         {
-            if (HasComponent<Position_data>(entity))
-            {
-                // Use position directly - already a Vector, no conversion needed
-                GetComponent<Position_data>(entity).position = entityInstance->position;
-            }
-
+            // Update identity component with instance-specific data
             if (HasComponent<Identity_data>(entity))
             {
                 Identity_data& id = GetComponent<Identity_data>(entity);
                 id.name = entityInstance->name;
                 id.type = entityInstance->type;
-			}
-
-   //         if (HasComponent<VisualSprite_data>(entity))
-   //         {
-   //             VisualSprite_data& spriteComp = GetComponent<VisualSprite_data>(entity);
-   //             spriteComp.sprite = DataManager::Get().GetSprite(entityInstance->spritePath, entityInstance->spritePath);
-   //             spriteComp.UpdateRect();
-			//}
-
-   //         if (HasComponent<VisualEditor_data>(entity))
-   //         {
-   //             VisualEditor_data& editorComp = GetComponent<VisualEditor_data>(entity);
-   //             editorComp.sprite = DataManager::Get().GetSprite(entityInstance->spritePath, entityInstance->spritePath);
-   //             editorComp.UpdateRect();
-   //         }
+            }
             
             result.pass3_staticObjects.successfullyCreated++;
             result.entityRegistry[entityInstance->name] = entity;
@@ -1679,8 +1665,6 @@ bool World::InstantiatePass4_DynamicObjects(
     PrefabFactory& factory = PrefabFactory::Get();
     factory.SetPrefabRegistry(phase2Result.prefabRegistry);
     
-    ParameterResolver resolver;
-    
     // ✅ USE CATEGORIZED DYNAMIC OBJECTS (no manual filtering needed)
     for (const auto& entityInstance : levelDef.categorizedObjects.dynamicObjects)
     {
@@ -1697,38 +1681,10 @@ bool World::InstantiatePass4_DynamicObjects(
         if (blueprints.empty())
         {
             // Create red placeholder for missing prefab
-            EntityID entity = CreateEntity();
+            EntityID entity = CreateMissingPrefabPlaceholder(entityInstance, result.pass4_dynamicObjects);
             if (entity != INVALID_ENTITY_ID)
             {
-                AddComponent<Identity_data>(entity, entityInstance->name, entityInstance->type, entityInstance->type);
-                
-                // Use position directly - already a Vector, no conversion needed
-                AddComponent<Position_data>(entity, entityInstance->position);
-                
-                // Add visual editor marker with red color for missing prefabs
-                VisualEditor_data editorData;
-                editorData.sprite = DataManager::Get().GetSprite("location-32.png", ".\\Resources\\Icons\\location-32.png");
-                editorData.color = { 255, 0, 0, 255 };  // Bright red (RGBA)
-                editorData.isVisible = true;
-                if (editorData.sprite) {
-                    editorData.srcRect = { 0, 0, static_cast<float>(editorData.sprite->w), static_cast<float>(editorData.sprite->h) };
-                    editorData.hotSpot = Vector(editorData.srcRect.w / 2.0f, editorData.srcRect.h / 2.0f, 0.0f);
-                }
-                AddComponent<VisualEditor_data>(entity, editorData);
-                
-                result.pass4_dynamicObjects.successfullyCreated++;
                 result.entityRegistry[entityInstance->name] = entity;
-                
-                SYSTEM_LOG << "  /!\  PLACEHOLDER: Created red marker for missing prefab '" 
-                           << entityInstance->type << "' (name: " << entityInstance->name 
-                           << ") at position: " << entityInstance->position << "\n";
-            }
-            else
-            {
-                result.pass4_dynamicObjects.failed++;
-                result.pass4_dynamicObjects.failedObjects.push_back(entityInstance->name + " (type: " + entityInstance->type + ")");
-                SYSTEM_LOG << "  x Failed: No prefab found for type '" << entityInstance->type 
-                           << "' (instance: " << entityInstance->name << ") and couldn't create placeholder\n";
             }
             continue;
         }
@@ -1737,101 +1693,28 @@ bool World::InstantiatePass4_DynamicObjects(
         
         SYSTEM_LOG << "  -> Creating: " << entityInstance->name << " [" << blueprint->prefabName << "]\n";
         
-        // Create entity
-        EntityID entity = CreateEntity();
+        // Build level instance parameters
+        LevelInstanceParameters instanceParams(entityInstance->name, entityInstance->type);
+        instanceParams.position = entityInstance->position;
+        
+        // Extract custom properties from level instance
+        ExtractCustomProperties(entityInstance->overrides, instanceParams);
+        
+        // ✅ USE UNIFIED METHOD WITH OVERRIDES
+        EntityID entity = factory.CreateEntityWithOverrides(*blueprint, instanceParams);
+        
         if (entity == INVALID_ENTITY_ID)
         {
             result.pass4_dynamicObjects.failed++;
             result.pass4_dynamicObjects.failedObjects.push_back(entityInstance->name);
-            SYSTEM_LOG << "    x Failed to create entity ID\n";
+            SYSTEM_LOG << "    x Failed to create entity\n";
             continue;
         }
         
-        // Build level instance parameters
-        LevelInstanceParameters instanceParams(entityInstance->name, entityInstance->type);
-        // Use position directly - already a Vector, no conversion needed
-        instanceParams.position = entityInstance->position;
-        
-        // Extract custom properties from level instance
-        if (!entityInstance->overrides.is_null())
+        // ✅ POST-PROCESSING: Register Player entities
+        if (entityInstance->type == "Player" || entityInstance->type == "PlayerEntity")
         {
-            for (auto it = entityInstance->overrides.begin(); it != entityInstance->overrides.end(); ++it)
-            {
-                ComponentParameter param;
-                const auto& value = it.value();
-                
-                if (value.is_number_float())
-                {
-                    param.type = ComponentParameter::Type::Float;
-                    param.floatValue = value.get<float>();
-                }
-                else if (value.is_number_integer())
-                {
-                    param.type = ComponentParameter::Type::Int;
-                    param.intValue = value.get<int>();
-                }
-                else if (value.is_boolean())
-                {
-                    param.type = ComponentParameter::Type::Bool;
-                    param.boolValue = value.get<bool>();
-                }
-                else if (value.is_string())
-                {
-                    param.type = ComponentParameter::Type::String;
-                    param.stringValue = value.get<std::string>();
-                }
-                
-                instanceParams.properties[it.key()] = param;
-            }
-        }
-        
-        // Resolve components using ParameterResolver
-        std::vector<ResolvedComponentInstance> resolvedComponents = resolver.Resolve(*blueprint, instanceParams);
-        
-        // Instantiate components
-        int componentCount = 0;
-        int failedComponents = 0;
-        
-        for (const auto& resolved : resolvedComponents)
-        {
-            if (!resolved.isValid)
-            {
-                failedComponents++;
-                SYSTEM_LOG << "    /!\ Invalid resolved component: " << resolved.componentType << "\n";
-                continue;
-            }
-            
-            ComponentDefinition compDef;
-            compDef.componentType = resolved.componentType;
-            compDef.parameters = resolved.parameters;
-            
-            if (factory.InstantiateComponent(entity, compDef))
-            {
-                componentCount++;
-            }
-            else
-            {
-                failedComponents++;
-                SYSTEM_LOG << "    /!\ Failed to instantiate component: " << resolved.componentType << "\n";
-            }
-        }
-        
-        if (failedComponents > 0)
-        {
-            SYSTEM_LOG << "    /!\ Created with " << componentCount << " components (" 
-                       << failedComponents << " failed)\n";
-        }
-        else
-        {
-            SYSTEM_LOG << "    -> Created with " << componentCount << " components\n";
-        }
-        
-        // ✅ CRITICAL: Override position INCLUDING z component (zOrder) to preserve layer depth
-        if (HasComponent<Position_data>(entity)) {
-            auto& pos = GetComponent<Position_data>(entity);
-            pos.position = entityInstance->position;  // Includes x, y, AND z!
-            SYSTEM_LOG << "    -> Position: (" << pos.position.x << ", " << pos.position.y 
-                       << ", " << pos.position.z << ") [zOrder preserved]\n";
+            RegisterPlayerEntity(entity);
         }
         
         result.pass4_dynamicObjects.successfullyCreated++;
@@ -1966,4 +1849,112 @@ bool World::InstantiatePass5_Relationships(
     
     SYSTEM_LOG << "  ✓ Created " << linksCreated << " object relationships\n";
     return true;
+}
+
+// ========================================================================
+// Helper Methods for Entity Instantiation
+// ========================================================================
+
+void World::ExtractCustomProperties(
+    const nlohmann::json& overrides,
+    LevelInstanceParameters& instanceParams)
+{
+    if (overrides.is_null())
+        return;
+    
+    for (auto it = overrides.begin(); it != overrides.end(); ++it)
+    {
+        ComponentParameter param;
+        const auto& value = it.value();
+        
+        if (value.is_number_float())
+        {
+            param.type = ComponentParameter::Type::Float;
+            param.floatValue = value.get<float>();
+        }
+        else if (value.is_number_integer())
+        {
+            param.type = ComponentParameter::Type::Int;
+            param.intValue = value.get<int>();
+        }
+        else if (value.is_boolean())
+        {
+            param.type = ComponentParameter::Type::Bool;
+            param.boolValue = value.get<bool>();
+        }
+        else if (value.is_string())
+        {
+            param.type = ComponentParameter::Type::String;
+            param.stringValue = value.get<std::string>();
+        }
+        
+        instanceParams.properties[it.key()] = param;
+    }
+}
+
+EntityID World::CreateMissingPrefabPlaceholder(
+    const std::shared_ptr<Olympe::Editor::EntityInstance>& entityInstance,
+    InstantiationResult::PassStats& stats)
+{
+    EntityID entity = CreateEntity();
+    if (entity == INVALID_ENTITY_ID)
+    {
+        stats.failed++;
+        stats.failedObjects.push_back(entityInstance->name + " (type: " + entityInstance->type + ")");
+        return INVALID_ENTITY_ID;
+    }
+    
+    AddComponent<Identity_data>(entity, entityInstance->name, entityInstance->type, entityInstance->type);
+    AddComponent<Position_data>(entity, entityInstance->position);
+    
+    // Add visual editor marker with red color for missing prefabs
+    VisualEditor_data editorData;
+    editorData.sprite = DataManager::Get().GetSprite("location-32.png", ".\\Resources\\Icons\\location-32.png");
+    editorData.color = { 255, 0, 0, 255 };  // Bright red (RGBA)
+    editorData.isVisible = true;
+    if (editorData.sprite)
+    {
+        editorData.srcRect = { 0, 0, static_cast<float>(editorData.sprite->w), static_cast<float>(editorData.sprite->h) };
+        editorData.hotSpot = Vector(editorData.srcRect.w / 2.0f, editorData.srcRect.h / 2.0f, 0.0f);
+    }
+    AddComponent<VisualEditor_data>(entity, editorData);
+    
+    stats.successfullyCreated++;
+    
+    SYSTEM_LOG << "  /!\  PLACEHOLDER: Created red marker for missing prefab '" 
+               << entityInstance->type << "' (name: " << entityInstance->name 
+               << ") at position: " << entityInstance->position << "\n";
+    
+    return entity;
+}
+
+std::string World::ExtractPrefabName(const std::string& prefabPath)
+{
+    std::string prefabName = prefabPath;
+    
+    // Remove path
+    size_t lastSlash = prefabName.find_last_of("/\\");
+    if (lastSlash != std::string::npos)
+        prefabName = prefabName.substr(lastSlash + 1);
+    
+    // Remove extension
+    size_t lastDot = prefabName.find_last_of(".");
+    if (lastDot != std::string::npos)
+        prefabName = prefabName.substr(0, lastDot);
+    
+    return prefabName;
+}
+
+void World::RegisterPlayerEntity(EntityID entity)
+{
+    // Validate that the entity has required player components
+    if (!HasComponent<PlayerBinding_data>(entity) || !HasComponent<Controller_data>(entity))
+    {
+        SYSTEM_LOG << "X World::RegisterPlayerEntity: Entity " << entity 
+                   << " missing required player components (PlayerBinding_data, Controller_data)\n";
+        return;
+    }
+    
+    // Delegate to VideoGame for full player registration
+    VideoGame::Get().RegisterLoadedPlayerEntity(entity);
 }

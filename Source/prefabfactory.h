@@ -12,6 +12,7 @@
 #include "system/system_utils.h"
 #include "ComponentDefinition.h"
 #include "PrefabScanner.h"
+#include "ParameterResolver.h"
 #include <map>
 
 using PrefabBuilder = std::function<void(EntityID)>;
@@ -90,6 +91,13 @@ public:
     // Create entity from a parsed blueprint (no re-parsing)
     // autoAssignLayer: if true, automatically assign layer based on EntityType
     EntityID CreateEntityFromBlueprint(const PrefabBlueprint& blueprint, bool autoAssignLayer = true);
+    
+    // Create entity from blueprint with level instance parameter overrides
+    // This is the unified method for both static and dynamic object creation
+    EntityID CreateEntityWithOverrides(
+        const PrefabBlueprint& blueprint,
+        const LevelInstanceParameters& instanceParams,
+        bool autoAssignLayer = true);
     
     // Instantiate a single component on an entity (component-agnostic)
     bool InstantiateComponent(EntityID entity, const ComponentDefinition& componentDef);

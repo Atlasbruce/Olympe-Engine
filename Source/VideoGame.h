@@ -51,6 +51,10 @@ public:
      void SetViewportLayout(short playerID);
      EntityID AddPlayerEntity(string _playerPrefabName = "PlayerEntity");
 	 bool RemovePlayerEntity(const EntityID eid);
+	 
+	 // Register a player entity that was loaded from a level
+	 // (reuses setup logic from AddPlayerEntity without entity creation)
+	 void RegisterLoadedPlayerEntity(EntityID entity);
 
      // Save / Load game state (slot optional)
      bool SaveGame(int slot = 0) { return false; }

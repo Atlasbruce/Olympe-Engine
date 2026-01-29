@@ -11,6 +11,7 @@
 #include "prefabfactory.h"
 #include "ComponentDefinition.h"
 #include "PrefabScanner.h"
+#include "ParameterResolver.h"
 #include "World.h"
 #include "DataManager.h"
 #include "ECS_Components.h"
@@ -178,6 +179,88 @@ EntityID PrefabFactory::CreateEntityFromBlueprint(const PrefabBlueprint& bluepri
     SYSTEM_LOG << "PrefabFactory::CreateEntityFromBlueprint: Created entity " << entity 
                << " from blueprint '" << blueprint.prefabName 
                << "' (" << successCount << " components, " << failCount << " failed)\n";
+    
+    return entity;
+}
+
+EntityID PrefabFactory::CreateEntityWithOverrides(
+    const PrefabBlueprint& blueprint,
+    const LevelInstanceParameters& instanceParams,
+    bool autoAssignLayer)
+{
+    if (!blueprint.isValid)
+    {
+        SYSTEM_LOG << "PrefabFactory::CreateEntityWithOverrides: Invalid blueprint '" 
+                   << blueprint.prefabName << "'\n";
+        return INVALID_ENTITY_ID;
+    }
+    
+    // Create entity
+    World& world = World::Get();
+    EntityID entity = world.CreateEntity();
+    
+    if (entity == INVALID_ENTITY_ID)
+    {
+        SYSTEM_LOG << "PrefabFactory::CreateEntityWithOverrides: Failed to create entity for '" 
+                   << blueprint.prefabName << "'\n";
+        return INVALID_ENTITY_ID;
+    }
+    
+    // Use ParameterResolver to merge prefab defaults with instance parameters
+    ParameterResolver resolver;
+    std::vector<ResolvedComponentInstance> resolvedComponents = resolver.Resolve(blueprint, instanceParams);
+    
+    // Instantiate components with resolved parameters
+    int successCount = 0;
+    int failCount = 0;
+    
+    for (const auto& resolved : resolvedComponents)
+    {
+        if (!resolved.isValid)
+        {
+            failCount++;
+            SYSTEM_LOG << "    /!\  Invalid resolved component: " << resolved.componentType << "\n";
+            continue;
+        }
+        
+        ComponentDefinition compDef;
+        compDef.componentType = resolved.componentType;
+        compDef.parameters = resolved.parameters;
+        
+        if (InstantiateComponent(entity, compDef))
+        {
+            successCount++;
+        }
+        else
+        {
+            failCount++;
+            SYSTEM_LOG << "    /!\  Failed to instantiate component: " << resolved.componentType << "\n";
+        }
+    }
+    
+    // Override position INCLUDING z component (zOrder) to preserve layer depth
+    if (world.HasComponent<Position_data>(entity))
+    {
+        auto& pos = world.GetComponent<Position_data>(entity);
+        pos.position = instanceParams.position;
+    }
+    
+    // ✅ Auto-assign render layer based on entity type (if requested)
+    if (autoAssignLayer && 
+        world.HasComponent<Identity_data>(entity) && 
+        world.HasComponent<Position_data>(entity))
+    {
+        const Identity_data& identity = world.GetComponent<Identity_data>(entity);
+        RenderLayer defaultLayer = world.GetDefaultLayerForType(identity.entityType);
+        world.SetEntityLayer(entity, defaultLayer);
+    }
+    
+    SYSTEM_LOG << "    -> Created with " << successCount << " components";
+    if (failCount > 0)
+    {
+        SYSTEM_LOG << " (" << failCount << " failed)";
+    }
+    SYSTEM_LOG << "\n";
     
     return entity;
 }
