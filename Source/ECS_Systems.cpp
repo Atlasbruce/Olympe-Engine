@@ -1572,17 +1572,20 @@ void GridSystem::RenderIso(const CameraTransform& cam, const GridSettings_data& 
     float minI = FLT_MAX, maxI = -FLT_MAX;
     float minJ = FLT_MAX, maxJ = -FLT_MAX;
     
-    std::vector<std::pair<float, float>> samples = {
-        {bounds.x, bounds.y},                                      // Top-left
-        {bounds.x + bounds.w, bounds.y},                          // Top-right
-        {bounds.x, bounds.y + bounds.h},                          // Bottom-left
-        {bounds.x + bounds.w, bounds.y + bounds.h},              // Bottom-right
-        {bounds.x + bounds.w * 0.5f, bounds.y + bounds.h * 0.5f} // Center
-    };
-    
-    for (const auto& [wx, wy] : samples)
+    std::vector<std::pair<float, float>> samples;
+    samples.push_back(std::make_pair(bounds.x, bounds.y));                                      // Top-left
+    samples.push_back(std::make_pair(bounds.x + bounds.w, bounds.y));                          // Top-right
+    samples.push_back(std::make_pair(bounds.x, bounds.y + bounds.h));                          // Bottom-left
+    samples.push_back(std::make_pair(bounds.x + bounds.w, bounds.y + bounds.h));               // Bottom-right
+    samples.push_back(std::make_pair(bounds.x + bounds.w * 0.5f, bounds.y + bounds.h * 0.5f)); // Center
+
+    for (const auto& p : samples)
     {
-        auto [i, j] = worldToGrid(wx, wy);
+        float wx = p.first;
+        float wy = p.second;
+        std::pair<float, float> ij = worldToGrid(wx, wy);
+        float i = ij.first;
+        float j = ij.second;
         minI = std::min(minI, i);
         maxI = std::max(maxI, i);
         minJ = std::min(minJ, j);

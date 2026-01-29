@@ -14,6 +14,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "system/ViewportManager.h"
 #include "ECS_Systems_AI.h"
 #include "BlueprintEditor/WorldBridge.h"
+#include "OlympeTilemapEditor/include/LevelManager.h"
 #include "TiledLevelLoader/include/ParallaxLayerManager.h"
 #include "TiledLevelLoader/include/LevelParser.h"
 #include "TiledLevelLoader/include/TiledToOlympe.h"
