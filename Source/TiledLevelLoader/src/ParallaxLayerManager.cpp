@@ -135,10 +135,9 @@ namespace Tiled {
                         texW,
                         texH
                     };
-                    // ✅ FIX: Apply SDL rotation for texture
-                    SDL_FPoint center = {texW / 2.0f, texH / 2.0f};
-                    SDL_RenderTextureRotated(renderer, layer.texture, nullptr, &destRect,
-                                            cam.rotation, &center, SDL_FLIP_NONE);
+                    // ✅ FIX: Use 0.0 rotation (already applied in WorldToScreen)
+                    SDL_RenderTextureEx(renderer, layer.texture, nullptr, &destRect,
+                                       0.0, nullptr, SDL_FLIP_NONE);
                 }
             }
         }
@@ -146,9 +145,8 @@ namespace Tiled {
         {
             // Single image
             SDL_FRect destRect = {screenPos.x, screenPos.y, texW, texH};
-            SDL_FPoint center = {texW / 2.0f, texH / 2.0f};
-            SDL_RenderTextureRotated(renderer, layer.texture, nullptr, &destRect,
-                                    cam.rotation, &center, SDL_FLIP_NONE);
+            SDL_RenderTextureEx(renderer, layer.texture, nullptr, &destRect,
+                               0.0, nullptr, SDL_FLIP_NONE);
         }
     }
 
