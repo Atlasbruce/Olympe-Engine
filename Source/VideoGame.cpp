@@ -142,6 +142,89 @@ bool VideoGame::RemovePlayerEntity(const EntityID eid)
     return false;
 }
 //-------------------------------------------------------------
+void VideoGame::RegisterLoadedPlayerEntity(EntityID entity)
+{
+    // Validate entity ID
+    if (entity == INVALID_ENTITY_ID)
+    {
+        SYSTEM_LOG << "X VideoGame::RegisterLoadedPlayerEntity: Invalid entity ID\n";
+        return;
+    }
+    
+    // Entity already exists, just need to register and configure it
+    
+    // Note: Component validation is performed by World::RegisterPlayerEntity before calling this
+    // These components are guaranteed to exist at this point
+    
+    // Add to player list
+    m_playersEntity.push_back(entity);
+    
+    // Bind input components with player ID
+    PlayerBinding_data& binding = world.GetComponent<PlayerBinding_data>(entity);
+    Controller_data& controller = world.GetComponent<Controller_data>(entity);
+    
+    binding.playerIndex = ++m_playerIdCounter;
+    binding.controllerID = -1; // keyboard by default
+    
+    // Assign controller (if available)
+    if (IM::Get().GetAvailableJoystickCount() > 0)
+    {
+        IM::Get().AddPlayerEntityIndex(binding.playerIndex, entity);
+        binding.controllerID = IM::Get().AutoBindControllerToPlayer(binding.playerIndex);
+        controller.controllerID = binding.controllerID;
+        SYSTEM_LOG << "Player " << binding.playerIndex << " bound to controller " << binding.controllerID << "\n";
+    }
+    
+    // Send message to ViewportManager to add a new player viewport
+    Message msg = Message::Create(
+        EventType::Olympe_EventType_Camera_Target_Follow,
+        EventDomain::Camera,
+        -1,
+        -1,
+        entity
+    );
+    msg.param1 = binding.playerIndex;
+    
+    EventQueue::Get().Push(msg);
+    
+    SetViewportLayout(binding.playerIndex);
+    
+    // Bind camera input to the same device as the player
+    CameraSystem* camSys = World::Get().GetSystem<CameraSystem>();
+    if (camSys)
+    {
+        // Get or create camera for this player
+        EntityID cameraEntity = camSys->GetCameraEntityForPlayer(binding.playerIndex);
+        if (cameraEntity == INVALID_ENTITY_ID)
+        {
+            // Camera doesn't exist yet, create it
+            cameraEntity = camSys->CreateCameraForPlayer(binding.playerIndex, false);
+        }
+        
+        // Bind camera to the same input device as the player
+        if (binding.controllerID == -1)
+        {
+            // Keyboard-bound player: bind camera to keyboard
+            camSys->BindCameraToKeyboard(cameraEntity);
+            
+            // Disable keyboard binding on default camera (player -1) if it exists
+            EntityID defaultCamera = camSys->GetCameraEntityForPlayer(-1);
+            if (defaultCamera != INVALID_ENTITY_ID)
+            {
+                camSys->UnbindCameraKeyboard(defaultCamera);
+            }
+        }
+        else if (binding.controllerID >= 0)
+        {
+            // Joystick-bound player: bind camera to joystick
+            // Safe cast: controllerID validated as >= 0, matches SDL_JoystickID range
+            camSys->BindCameraToJoystick(cameraEntity, binding.playerIndex, (SDL_JoystickID)binding.controllerID);
+        }
+    }
+    
+    SYSTEM_LOG << "✅ Player " << binding.playerIndex << " registered from level (Entity: " << entity << ")\n";
+}
+//-------------------------------------------------------------
 void VideoGame::SetViewportLayout(short playerID)
 {
 	short nbPLayer = static_cast<short>(m_playersEntity.size());
