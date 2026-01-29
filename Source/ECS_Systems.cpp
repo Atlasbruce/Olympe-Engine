@@ -793,8 +793,9 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
     }
     
     // ✅ FIX: Use SDL_RenderTextureEx() without rotation (already applied in WorldToScreen)
-    SDL_RenderTextureEx(GameEngine::renderer, texture, 
-                        &srcFRect, &destRect, 0.0, nullptr, flip);
+    //SDL_RenderTexture(GameEngine::renderer, texture, &srcFRect, &destRect);
+    SDL_FPoint pivot = { destRect.w / 2.0f, destRect.h / 2.0f };
+    SDL_RenderTextureRotated(GameEngine::renderer, texture, &srcFRect, &destRect, cam.rotation, &pivot, SDL_FLIP_NONE);
 }
 
 // ✅ UNIFIED RENDERING PIPELINE - Single-pass sorting with frustum culling
