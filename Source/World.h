@@ -505,6 +505,31 @@ private:
         const Olympe::Editor::LevelDefinition& levelDef,
         InstantiationResult& result);
     
+    // ========================================================================
+    // Player Entity Registration (for level-loaded players)
+    // ========================================================================
+    
+    /// Register a player entity that was loaded from a level file
+    /// Validates required components and delegates to VideoGame for full setup
+    void RegisterPlayerEntity(EntityID entity);
+    
+    // ========================================================================
+    // Helper Methods for Entity Instantiation
+    // ========================================================================
+    
+    /// Extract custom properties from JSON overrides into LevelInstanceParameters
+    void ExtractCustomProperties(
+        const nlohmann::json& overrides,
+        LevelInstanceParameters& instanceParams);
+    
+    /// Create a red placeholder entity for missing prefabs
+    EntityID CreateMissingPrefabPlaceholder(
+        const std::shared_ptr<Olympe::Editor::EntityInstance>& entityInstance,
+        InstantiationResult::PassStats& stats);
+    
+    /// Extract prefab name from prefab path (removes path and extension)
+    std::string ExtractPrefabName(const std::string& prefabPath);
+    
 
 public:    
     // Get tile chunks (for rendering system)
