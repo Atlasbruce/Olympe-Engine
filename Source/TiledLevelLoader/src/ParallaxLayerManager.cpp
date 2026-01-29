@@ -90,13 +90,16 @@ namespace Tiled {
         SDL_Renderer* renderer = GameEngine::renderer;
         if (!renderer) return;
 
-        // Apply zoom to position calculation
-        float scrollX, scrollY;
-        CalculateRenderPosition(layer, cam.worldPosition.x, cam.worldPosition.y, 
-                               cam.zoom, scrollX, scrollY);
-
         float texW, texH;
         SDL_GetTextureSize(layer.texture, &texW, &texH);
+        
+        // ✅ FIX: Calculate world position of layer (before camera transform)
+        float worldX = layer.offsetX - (cam.worldPosition.x * layer.scrollFactorX);
+        float worldY = layer.offsetY - (cam.worldPosition.y * layer.scrollFactorY);
+        Vector worldPos(worldX, worldY, 0.0f);
+        
+        // ✅ FIX: Use WorldToScreen() for rotation + zoom
+        Vector screenPos = cam.WorldToScreen(worldPos);
         
         // Apply zoom to dimensions
         texW *= cam.zoom;
@@ -109,9 +112,9 @@ namespace Tiled {
 
         if (layer.repeatX || layer.repeatY)
         {
-            // Tiled rendering with zoom-aware calculations
-            float tileOffsetX = layer.repeatX ? fmod(scrollX, texW) : scrollX;
-            float tileOffsetY = layer.repeatY ? fmod(scrollY, texH) : scrollY;
+            // Tiled rendering
+            float tileOffsetX = layer.repeatX ? fmod(screenPos.x, texW) : screenPos.x;
+            float tileOffsetY = layer.repeatY ? fmod(screenPos.y, texH) : screenPos.y;
             
             // Adjust for negative values
             if (tileOffsetX > 0) tileOffsetX -= texW;
@@ -132,15 +135,20 @@ namespace Tiled {
                         texW,
                         texH
                     };
-                    SDL_RenderTexture(renderer, layer.texture, nullptr, &destRect);
+                    // ✅ FIX: Apply SDL rotation for texture
+                    SDL_FPoint center = {texW / 2.0f, texH / 2.0f};
+                    SDL_RenderTextureRotated(renderer, layer.texture, nullptr, &destRect,
+                                            cam.rotation, &center, SDL_FLIP_NONE);
                 }
             }
         }
         else
         {
-            // Single image with zoom
-            SDL_FRect destRect = {scrollX, scrollY, texW, texH};
-            SDL_RenderTexture(renderer, layer.texture, nullptr, &destRect);
+            // Single image
+            SDL_FRect destRect = {screenPos.x, screenPos.y, texW, texH};
+            SDL_FPoint center = {texW / 2.0f, texH / 2.0f};
+            SDL_RenderTextureRotated(renderer, layer.texture, nullptr, &destRect,
+                                    cam.rotation, &center, SDL_FLIP_NONE);
         }
     }
 

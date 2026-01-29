@@ -792,9 +792,9 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
         destRect.y = screenPos.y + offsetScreenY;
     }
     
-    // ✅ FIX: Apply camera rotation to final render
-    SDL_RenderTextureRotated(GameEngine::renderer, texture, 
-                            &srcFRect, &destRect, cam.rotation, nullptr, flip);
+    // ✅ FIX: Use SDL_RenderTextureEx() without rotation (already applied in WorldToScreen)
+    SDL_RenderTextureEx(GameEngine::renderer, texture, 
+                        &srcFRect, &destRect, 0.0, nullptr, flip);
 }
 
 // ✅ UNIFIED RENDERING PIPELINE - Single-pass sorting with frustum culling
