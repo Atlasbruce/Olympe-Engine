@@ -48,6 +48,8 @@ The ECS Camera System is a comprehensive camera solution built on the Entity-Com
 - `rotation`, `targetRotation`: Current and target rotation angles
 - `controlMode`: Free, Follow, or FollowWithControl
 - `viewportRect`: Rendering viewport
+- `ZOOM_LEVELS[]`: Static array of discrete zoom levels (0.25 to 5.0)
+- `currentZoomLevelIndex`: Current index in ZOOM_LEVELS array (default: 3 = 1.0)
 
 **Update Frequency**: Every frame by CameraSystem::Process()
 
@@ -91,7 +93,7 @@ The ECS Camera System is a comprehensive camera solution built on the Entity-Com
 **Key Fields**:
 - `playerId`: Player ID (-1 = keyboard)
 - `useKeyboard`: Keyboard vs joystick
-- `key_*`: Keyboard bindings
+- `key_*`: Keyboard bindings (including diagonal keys: key_up_left, key_up_right, key_down_left, key_down_right)
 - `axis_*`, `button_*`: Joystick bindings
 - `inputDirection`, `rotationInput`, `zoomInput`: Current input state
 
@@ -198,11 +200,14 @@ RenderingSystem::Render()
 
 ### Keyboard (Numpad by Default)
 ```
-8: Up       +: Zoom In      /: Rotate Left
-2: Down     -: Zoom Out     *: Rotate Right
-4: Left     5: Reset
-6: Right
+7: Up-Left    8: Up       9: Up-Right     +: Zoom In (discrete)    /: Rotate Left
+4: Left       5: Reset    6: Right        -: Zoom Out (discrete)   *: Rotate Right
+1: Down-Left  2: Down     3: Down-Right
 ```
+
+**Discrete Zoom Levels**: 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0
+- Each press of +/- moves one step through these fixed levels
+- Diagonal movement is normalized to prevent faster diagonal speed
 
 ### Joystick
 ```
