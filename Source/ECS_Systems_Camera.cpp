@@ -117,6 +117,7 @@ EntityID CameraSystem::CreateCameraForPlayer(short playerID, bool bindToKeyboard
     cam.currentZoomLevelIndex = 3;  // Initialize to 1.0 (index 3)
     cam.rotation = 0.0f;
     cam.targetRotation = 0.0f;
+    cam.currentRotationLevel = 0;  // Initialize to 0° (level 0)
     cam.controlMode = CameraControlMode::Mode_Free;
     cam.isActive = true;
 	    
@@ -344,14 +345,23 @@ void CameraSystem::UpdateCameraInput(EntityID entity, float dt)
         }
     }
     
-    // Apply rotation input
+    // Apply rotation input with discrete levels (15° steps)
     if (binding.rotationInput != 0.0f)
     {
-        cam.targetRotation += binding.rotationInput * cam.rotationStep;
-        
-        // Wrap rotation to -360 to 360
-        while (cam.targetRotation > 360.0f) cam.targetRotation -= 360.0f;
-        while (cam.targetRotation < -360.0f) cam.targetRotation += 360.0f;
+        if (binding.rotationInput > 0.0f)
+        {
+            // Rotate clockwise (+15°)
+            cam.currentRotationLevel = (cam.currentRotationLevel + 1) % Camera_data::ROTATION_LEVELS;
+            cam.targetRotation = Camera_data::GetRotationFromLevel(cam.currentRotationLevel);
+            SYSTEM_LOG << "Rotate clockwise to " << cam.targetRotation << "°\n";
+        }
+        else
+        {
+            // Rotate counter-clockwise (-15°)
+            cam.currentRotationLevel = (cam.currentRotationLevel - 1 + Camera_data::ROTATION_LEVELS) % Camera_data::ROTATION_LEVELS;
+            cam.targetRotation = Camera_data::GetRotationFromLevel(cam.currentRotationLevel);
+            SYSTEM_LOG << "Rotate counter-clockwise to " << cam.targetRotation << "°\n";
+        }
     }
     
     // Handle reset
@@ -413,10 +423,10 @@ void CameraSystem::ProcessKeyboardInput(EntityID entity, CameraInputBinding_data
     
     binding.inputDirection = direction;
     
-    // Rotation input
-    if (kb.IsKeyHeld(binding.key_rotate_left))
+    // Rotation input with key press (not held) for discrete steps
+    if (kb.IsKeyPressed(binding.key_rotate_left))
         binding.rotationInput = -1.0f;
-    if (kb.IsKeyHeld(binding.key_rotate_right))
+    if (kb.IsKeyPressed(binding.key_rotate_right))
         binding.rotationInput = 1.0f;
     
     // Zoom input with discrete levels (use IsKeyPressed for single-step)
@@ -689,6 +699,9 @@ void CameraSystem::ResetCameraControls(EntityID entity)
     cam.currentZoomLevelIndex = 3;  // Index 3 = 1.0
     cam.zoom = 1.0f;
     cam.targetZoom = 1.0f;
+    
+    // Reset rotation to 0° (level 0) using discrete levels
+    cam.currentRotationLevel = 0;
     cam.rotation = 0.0f;
     cam.targetRotation = 0.0f;
     
