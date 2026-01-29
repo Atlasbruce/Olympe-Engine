@@ -137,9 +137,10 @@ namespace Tiled {
                     };
                     // ✅ FIX: Use 0.0 rotation (already applied in WorldToScreen)
                     // SDL_RenderTextureEx(renderer, layer.texture, nullptr, &destRect, 0.0, nullptr, SDL_FLIP_NONE);
-                    SDL_RenderTexture(renderer, layer.texture, nullptr, &destRect);
-                    //SDL_FPoint pivot = { destRect.w / 2.0f, destRect.h / 2.0f };
+                    //SDL_RenderTexture(renderer, layer.texture, nullptr, &destRect);
+                    SDL_FPoint pivot = { destRect.w / 2.0f, destRect.h / 2.0f };
                     //SDL_RenderTextureRotated(GameEngine::renderer, layer.texture, nullptr, &destRect, cam.rotation, &pivot, SDL_FLIP_NONE);
+                    SDL_RenderTextureRotated(GameEngine::renderer, layer.texture, nullptr, &destRect, cam.rotation, &pivot, SDL_FLIP_NONE);
                 }
             }
         }
