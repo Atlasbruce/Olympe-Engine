@@ -21,10 +21,25 @@ camSys->BindCameraToJoystick(camera1, 1, joystickId);
 ## Camera Controls
 
 ### Keyboard Controls (Numpad)
-- **Numpad 8/2/4/6**: Move camera up/down/left/right
-- **Numpad +/-**: Zoom in/out
-- **Numpad * / /**: Rotate camera
-- **Numpad 5**: Reset camera controls
+
+**Directional Movement:**
+- **Numpad 8**: Move camera up (↑)
+- **Numpad 2**: Move camera down (↓)
+- **Numpad 4**: Move camera left (←)
+- **Numpad 6**: Move camera right (→)
+- **Numpad 7**: Move camera diagonal up-left (↖)
+- **Numpad 9**: Move camera diagonal up-right (↗)
+- **Numpad 1**: Move camera diagonal down-left (↙)
+- **Numpad 3**: Move camera diagonal down-right (↘)
+
+**Zoom Control (Discrete Levels):**
+- **Numpad +**: Zoom in (steps through fixed levels)
+- **Numpad -**: Zoom out (steps through fixed levels)
+- **Zoom Levels**: 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0
+
+**Other Controls:**
+- **Numpad * / /**: Rotate camera right/left
+- **Numpad 5**: Reset camera controls (zoom=1.0, rotation=0.0, and resumes target following if a target is set)
 
 ### Joystick Controls
 - **Right Stick**: Move camera
@@ -66,6 +81,15 @@ CameraEventHandler::Get().StopCameraShake(0);
 ```
 
 ### Zoom Control
+
+**Manual Zoom (Keyboard):**
+The numpad +/- keys control zoom using discrete levels for precision:
+- **Zoom Levels**: `0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0`
+- Each press of + or - moves to the next/previous level
+- Default starting level is 1.0 (index 3)
+- No intermediate zoom values are possible via keyboard
+
+**Programmatic Zoom:**
 ```cpp
 // Smooth zoom to target level
 CameraEventHandler::Get().ZoomCameraTo(0, 2.0f, 5.0f); // zoom to 2x, speed 5
@@ -74,6 +98,8 @@ CameraEventHandler::Get().ZoomCameraTo(0, 2.0f, 5.0f); // zoom to 2x, speed 5
 CameraEventHandler::Get().ZoomCameraTo(0, 2.0f, 0.0f); // speed 0 = instant
 ```
 
+**Note**: When using the numpad 5 reset key, zoom returns to 1.0 (index 3).
+
 ### Rotation Control
 ```cpp
 // Smooth rotation
@@ -81,6 +107,27 @@ CameraEventHandler::Get().RotateCameraTo(0, 45.0f, 5.0f); // rotate to 45°
 
 // Instant rotation
 CameraEventHandler::Get().RotateCameraTo(0, 45.0f, 0.0f);
+```
+
+## Camera Reset (Numpad 5)
+
+The reset key (Numpad 5) provides a complete camera reset:
+
+**What Gets Reset:**
+- **Zoom**: Returns to 1.0 (index 3 in discrete levels)
+- **Rotation**: Returns to 0.0 degrees
+- **Control Offset**: Cleared to (0, 0)
+- **Camera Shake**: Stopped if active
+
+**Target Following Behavior:**
+- If the camera is following an entity (`CameraTarget_data` is set), pressing reset will **re-enable** target following
+- This is useful when you've manually moved the camera away from its target and want to return to automatic following
+- If the camera is in Free mode, it resets position to (0, 0)
+
+```cpp
+// Example: Reset camera programmatically
+CameraSystem* camSys = World::Get().GetSystem<CameraSystem>();
+camSys->ResetCameraControls(cameraEntity);
 ```
 
 ## Camera Bounds
