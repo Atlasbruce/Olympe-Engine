@@ -569,6 +569,10 @@ struct CameraInputBinding_data
 	float zoomInput = 0.0f;                  // Zoom input value (-1 to 1)
 	bool resetRequested = false;             // Reset button pressed this frame
 	
+	// Previous trigger state for edge detection (discrete rotation)
+	bool prevLeftTriggerPressed = false;     // Was left trigger pressed last frame
+	bool prevRightTriggerPressed = false;    // Was right trigger pressed last frame
+	
 	// Constructors
 	CameraInputBinding_data() = default;
 	CameraInputBinding_data(const CameraInputBinding_data&) = default;

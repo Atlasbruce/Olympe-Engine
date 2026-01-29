@@ -461,14 +461,22 @@ void CameraSystem::ProcessJoystickInput(EntityID entity, CameraInputBinding_data
     
     binding.inputDirection = Vector(axisX, axisY, 0.f);
     
-    // Read triggers for rotation
+    // Read triggers for rotation with edge detection (for discrete steps)
     float leftTrigger = joy.GetAxis(binding.joystickId, binding.trigger_left);
     float rightTrigger = joy.GetAxis(binding.joystickId, binding.trigger_right);
     
-    if (leftTrigger > binding.triggerThreshold)
-        binding.rotationInput = -leftTrigger;
-    if (rightTrigger > binding.triggerThreshold)
-        binding.rotationInput = rightTrigger;
+    bool leftTriggerPressed = (leftTrigger > binding.triggerThreshold);
+    bool rightTriggerPressed = (rightTrigger > binding.triggerThreshold);
+    
+    // Only register rotation input on trigger press (not hold) for discrete steps
+    if (leftTriggerPressed && !binding.prevLeftTriggerPressed)
+        binding.rotationInput = -1.0f;
+    if (rightTriggerPressed && !binding.prevRightTriggerPressed)
+        binding.rotationInput = 1.0f;
+    
+    // Update previous trigger state for next frame
+    binding.prevLeftTriggerPressed = leftTriggerPressed;
+    binding.prevRightTriggerPressed = rightTriggerPressed;
     
     // Reset button
     if (joy.IsButtonPressed(binding.joystickId, binding.button_reset))
