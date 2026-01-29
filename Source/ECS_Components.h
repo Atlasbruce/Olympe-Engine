@@ -447,6 +447,17 @@ struct Camera_data
 	float rotation = 0.0f;                   // Current rotation angle
 	float targetRotation = 0.0f;             // Target rotation angle for smooth transitions
 	float rotationSpeed = 5.0f;              // Speed of rotation interpolation
+	
+	// Discrete rotation levels
+	static constexpr float ROTATION_STEP = 15.0f;
+	static constexpr int ROTATION_LEVELS = 24;  // 360° / 15° = 24 levels
+	int currentRotationLevel = 0;  // Current level [0, 23] where level*15 = angle
+	
+	// Helper: Get angle from level
+	static constexpr float GetRotationFromLevel(int level)
+	{
+		return static_cast<float>(level) * ROTATION_STEP;
+	}
 
 	// Control settings
 	CameraControlMode controlMode = CameraControlMode::Mode_Free; // Control mode

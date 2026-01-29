@@ -50,6 +50,10 @@ The ECS Camera System is a comprehensive camera solution built on the Entity-Com
 - `viewportRect`: Rendering viewport
 - `ZOOM_LEVELS[]`: Static array of discrete zoom levels (0.25 to 5.0)
 - `currentZoomLevelIndex`: Current index in ZOOM_LEVELS array (default: 3 = 1.0)
+- `ROTATION_STEP`: Discrete rotation step size (15.0°)
+- `ROTATION_LEVELS`: Number of rotation levels (24)
+- `currentRotationLevel`: Current rotation level [0, 23] (default: 0 = 0°)
+- `GetRotationFromLevel()`: Static helper to convert level to angle
 
 **Update Frequency**: Every frame by CameraSystem::Process()
 

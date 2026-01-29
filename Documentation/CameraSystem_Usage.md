@@ -37,8 +37,12 @@ camSys->BindCameraToJoystick(camera1, 1, joystickId);
 - **Numpad -**: Zoom out (steps through fixed levels)
 - **Zoom Levels**: 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0
 
+**Rotation Control (Discrete Levels):**
+- **Numpad ***: Rotate clockwise (+15°)
+- **Numpad /**: Rotate counter-clockwise (-15°)
+- **Rotation Levels**: 24 steps of 15° (0°, 15°, 30°, ..., 345°)
+
 **Other Controls:**
-- **Numpad * / /**: Rotate camera right/left
 - **Numpad 5**: Reset camera controls (zoom=1.0, rotation=0.0, and resumes target following if a target is set)
 
 ### Joystick Controls
@@ -101,6 +105,22 @@ CameraEventHandler::Get().ZoomCameraTo(0, 2.0f, 0.0f); // speed 0 = instant
 **Note**: When using the numpad 5 reset key, zoom returns to 1.0 (index 3).
 
 ### Rotation Control
+
+**Manual Rotation (Keyboard - Discrete Levels):**
+The numpad * and / keys control rotation using discrete 15° steps for precision:
+- **Rotation Levels**: 24 steps of 15° (0°, 15°, 30°, 45°, ..., 330°, 345°)
+- Each press of * or / rotates by exactly 15°
+- Automatic wraparound: 345° + 15° = 0°, and 0° - 15° = 345°
+- Default starting level is 0° (level 0)
+- Keyboard controls only allow selecting from these fixed rotation levels (smooth interpolation occurs during transitions)
+- **Cardinal angles** are easily accessible: 0° (North), 90° (East), 180° (South), 270° (West)
+
+**Examples:**
+- 0° → * → 15° → * → 30°
+- 345° → * → 0° (wraparound)
+- 0° → / → 345° (reverse wraparound)
+
+**Programmatic Rotation:**
 ```cpp
 // Smooth rotation
 CameraEventHandler::Get().RotateCameraTo(0, 45.0f, 5.0f); // rotate to 45°
@@ -109,13 +129,15 @@ CameraEventHandler::Get().RotateCameraTo(0, 45.0f, 5.0f); // rotate to 45°
 CameraEventHandler::Get().RotateCameraTo(0, 45.0f, 0.0f);
 ```
 
+**Note**: When using the numpad 5 reset key, rotation returns to exactly 0° (level 0).
+
 ## Camera Reset (Numpad 5)
 
 The reset key (Numpad 5) provides a complete camera reset:
 
 **What Gets Reset:**
-- **Zoom**: Returns to 1.0 (index 3 in discrete levels)
-- **Rotation**: Returns to 0.0 degrees
+- **Zoom**: Returns to 1.0 (index 3 in discrete zoom levels)
+- **Rotation**: Returns to 0.0 degrees (level 0 in discrete rotation levels)
 - **Control Offset**: Cleared to (0, 0)
 - **Camera Shake**: Stopped if active
 
