@@ -593,8 +593,6 @@ void RenderingSystem::Render()
 
 // Rendering constants
 namespace {
-    constexpr float ISOMETRIC_OFFSET_Y = 200.0f;  // Y offset for negative world coords
-    
     // Depth calculation constants
     constexpr float DEPTH_LAYER_SCALE = 10000.0f;  // Scale for layer separation
     constexpr float DEPTH_DIAGONAL_SCALE = 100.0f; // Scale for isometric diagonal (X+Y)
@@ -628,40 +626,6 @@ SDL_FlipMode GetSDLFlip(bool flipH, bool flipV, bool /*flipD*/)
     return static_cast<SDL_FlipMode>(flip);
 }
 
-// ✅ Helper: Convert isometric world coordinates to screen coordinates
-Vector IsoWorldToScreen(int worldX, int worldY, const CameraTransform& cam, int tileWidth, int tileHeight)
-{
-    // Isometric projection: world grid coordinates to screen coordinates
-    float isoX = (worldX - worldY) * (tileWidth / 2.0f);
-    float isoY = (worldX + worldY) * (tileHeight / 2.0f);
-    
-    // Apply camera transform and center in viewport
-    float screenX = (isoX - cam.worldPosition.x) * cam.zoom + cam.viewport.w / 2.0f;
-    float screenY = (isoY - cam.worldPosition.y) * cam.zoom + cam.viewport.h / 2.0f;
-    
-    // Add isometric Y offset for negative world coordinates
-    screenY += ISOMETRIC_OFFSET_Y;
-    
-    return Vector(screenX, screenY, 0.0f);
-}
-
-// ✅ Helper: Convert screen coordinates to isometric world coordinates
-Vector IsoScreenToWorld(float screenX, float screenY, const CameraTransform& cam, int tileWidth, int tileHeight)
-{
-    screenY -= ISOMETRIC_OFFSET_Y;
-    
-    float isoX = (screenX - cam.viewport.w / 2.0f) / cam.zoom + cam.worldPosition.x;
-    float isoY = (screenY - cam.viewport.h / 2.0f) / cam.zoom + cam.worldPosition.y;
-    
-    float halfTileW = tileWidth / 2.0f;
-    float halfTileH = tileHeight / 2.0f;
-    
-    float worldX = (isoX / halfTileW + isoY / halfTileH) / 2.0f;
-    float worldY = (isoY / halfTileH - isoX / halfTileW) / 2.0f;
-    
-    return Vector(worldX, worldY, 0.0f);
-}
-
 // ✅ NEW: Calculate visible tile range with frustum culling
 void GetVisibleTileRange(const CameraTransform& cam,
                         const std::string& orientation,
@@ -669,30 +633,52 @@ void GetVisibleTileRange(const CameraTransform& cam,
                         int& minX, int& minY, int& maxX, int& maxY)
 {
     if (orientation == "isometric") {
-        // Convert screen corners to world coordinates
-        Vector topLeft = IsoScreenToWorld(0, 0, cam, tileWidth, tileHeight);
-        Vector topRight = IsoScreenToWorld(cam.viewport.w, 0, cam, tileWidth, tileHeight);
-        Vector bottomLeft = IsoScreenToWorld(0, cam.viewport.h, cam, tileWidth, tileHeight);
-        Vector bottomRight = IsoScreenToWorld(cam.viewport.w, cam.viewport.h, cam, tileWidth, tileHeight);
+        // Convert screen corners to world coordinates using CameraTransform::ScreenToWorld()
+        Vector topLeftWorld = cam.ScreenToWorld(Vector(0, 0, 0));
+        Vector topRightWorld = cam.ScreenToWorld(Vector(cam.viewport.w, 0, 0));
+        Vector bottomLeftWorld = cam.ScreenToWorld(Vector(0, cam.viewport.h, 0));
+        Vector bottomRightWorld = cam.ScreenToWorld(Vector(cam.viewport.w, cam.viewport.h, 0));
         
-        // Find bounding box in world coordinates
-        float worldMinX = std::min({topLeft.x, topRight.x, bottomLeft.x, bottomRight.x});
-        float worldMaxX = std::max({topLeft.x, topRight.x, bottomLeft.x, bottomRight.x});
-        float worldMinY = std::min({topLeft.y, topRight.y, bottomLeft.y, bottomRight.y});
-        float worldMaxY = std::max({topLeft.y, topRight.y, bottomLeft.y, bottomRight.y});
+        // Convert world coordinates to isometric tile coordinates
+        // Inverse of: isoX = (worldX - worldY) * (tileWidth / 2.0f)
+        //             isoY = (worldX + worldY) * (tileHeight / 2.0f)
+        // Solution:   worldX = (isoX / (tileWidth/2) + isoY / (tileHeight/2)) / 2
+        //             worldY = (isoY / (tileHeight/2) - isoX / (tileWidth/2)) / 2
+        float halfTileW = tileWidth / 2.0f;
+        float halfTileH = tileHeight / 2.0f;
+        
+        auto worldToTile = [halfTileW, halfTileH](const Vector& world) {
+            float tileX = (world.x / halfTileW + world.y / halfTileH) / 2.0f;
+            float tileY = (world.y / halfTileH - world.x / halfTileW) / 2.0f;
+            return Vector(tileX, tileY, 0);
+        };
+        
+        Vector topLeft = worldToTile(topLeftWorld);
+        Vector topRight = worldToTile(topRightWorld);
+        Vector bottomLeft = worldToTile(bottomLeftWorld);
+        Vector bottomRight = worldToTile(bottomRightWorld);
+        
+        // Find bounding box in tile coordinates
+        float tileMinX = std::min({topLeft.x, topRight.x, bottomLeft.x, bottomRight.x});
+        float tileMaxX = std::max({topLeft.x, topRight.x, bottomLeft.x, bottomRight.x});
+        float tileMinY = std::min({topLeft.y, topRight.y, bottomLeft.y, bottomRight.y});
+        float tileMaxY = std::max({topLeft.y, topRight.y, bottomLeft.y, bottomRight.y});
         
         // Bounding box with padding for tall tiles
-        minX = static_cast<int>(std::floor(worldMinX)) - ISO_TILE_PADDING;
-        minY = static_cast<int>(std::floor(worldMinY)) - ISO_TILE_PADDING;
-        maxX = static_cast<int>(std::ceil(worldMaxX)) + ISO_TILE_PADDING;
-        maxY = static_cast<int>(std::ceil(worldMaxY)) + ISO_TILE_PADDING;
+        minX = static_cast<int>(std::floor(tileMinX)) - ISO_TILE_PADDING;
+        minY = static_cast<int>(std::floor(tileMinY)) - ISO_TILE_PADDING;
+        maxX = static_cast<int>(std::ceil(tileMaxX)) + ISO_TILE_PADDING;
+        maxY = static_cast<int>(std::ceil(tileMaxY)) + ISO_TILE_PADDING;
     }
     else {
-        // Orthogonal/hex
-        minX = static_cast<int>((cam.worldPosition.x - cam.viewport.w / (2 * cam.zoom)) / tileWidth) - ORTHO_TILE_PADDING;
-        minY = static_cast<int>((cam.worldPosition.y - cam.viewport.h / (2 * cam.zoom)) / tileHeight) - ORTHO_TILE_PADDING;
-        maxX = static_cast<int>((cam.worldPosition.x + cam.viewport.w / (2 * cam.zoom)) / tileWidth) + ORTHO_TILE_PADDING;
-        maxY = static_cast<int>((cam.worldPosition.y + cam.viewport.h / (2 * cam.zoom)) / tileHeight) + ORTHO_TILE_PADDING;
+        // Orthogonal/hex: Use CameraTransform::ScreenToWorld() for consistency
+        Vector topLeftWorld = cam.ScreenToWorld(Vector(0, 0, 0));
+        Vector bottomRightWorld = cam.ScreenToWorld(Vector(cam.viewport.w, cam.viewport.h, 0));
+        
+        minX = static_cast<int>(std::floor(topLeftWorld.x / tileWidth)) - ORTHO_TILE_PADDING;
+        minY = static_cast<int>(std::floor(topLeftWorld.y / tileHeight)) - ORTHO_TILE_PADDING;
+        maxX = static_cast<int>(std::ceil(bottomRightWorld.x / tileWidth)) + ORTHO_TILE_PADDING;
+        maxY = static_cast<int>(std::ceil(bottomRightWorld.y / tileHeight)) + ORTHO_TILE_PADDING;
     }
 }
 
@@ -743,8 +729,6 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
 {
     if (!texture) return;
     
-    Vector screenPos;
-    
     // Extract flip flags
     bool flipH, flipV, flipD;
     ExtractFlipFlags(gid, flipH, flipV, flipD);
@@ -753,35 +737,53 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
     SDL_FRect srcFRect = {(float)srcRect.x, (float)srcRect.y, 
                          (float)srcRect.w, (float)srcRect.h};
     
+    // ✅ FIX: Calculate world position for this tile
+    Vector worldPos;
+    
     if (orientation == "isometric") {
-        // Isometric projection
-        screenPos = IsoWorldToScreen(worldX, worldY, cam, tileWidth, tileHeight);
-        
-        SDL_FRect destRect;
-        destRect.w = srcRect.w * cam.zoom;
-        destRect.h = srcRect.h * cam.zoom;
-        destRect.x = screenPos.x + (tileoffsetX * cam.zoom) - destRect.w / 2.0f;
-        destRect.y = screenPos.y + (tileoffsetY * cam.zoom) - destRect.h + (tileHeight * cam.zoom);
-        
-        SDL_RenderTextureRotated(GameEngine::renderer, texture, 
-                                &srcFRect, &destRect, 0.0, nullptr, flip);
+        // Convert tile coordinates to isometric world coordinates
+        float isoX = (worldX - worldY) * (tileWidth / 2.0f);
+        float isoY = (worldX + worldY) * (tileHeight / 2.0f);
+        worldPos = Vector(isoX, isoY, 0.0f);
+    }
+    else if (orientation == "hexagonal") {
+        // Hexagonal axial to world (pointy-top)
+        float hexRadius = tileWidth / 2.0f;
+        float worldXPos = hexRadius * (sqrtf(3.0f) * worldX + sqrtf(3.0f) / 2.0f * worldY);
+        float worldYPos = hexRadius * (3.0f / 2.0f * worldY);
+        worldPos = Vector(worldXPos, worldYPos, 0.0f);
     }
     else {
-        // Orthogonal/hex rendering
-        screenPos = cam.WorldToScreen(Vector(worldX * tileWidth, 
-                                             worldY * tileHeight, 0));
-        
-        SDL_FRect destRect = {
-            screenPos.x + tileoffsetX * cam.zoom,
-            screenPos.y + tileoffsetY * cam.zoom,
-            srcRect.w * cam.zoom,
-            srcRect.h * cam.zoom
-        };
-        
-        // Apply flipping for orthogonal tiles too
-        SDL_RenderTextureRotated(GameEngine::renderer, texture, &srcFRect, &destRect,
-                                0.0, nullptr, flip);
+        // Orthogonal
+        worldPos = Vector(worldX * tileWidth, worldY * tileHeight, 0.0f);
     }
+    
+    // ✅ FIX: Use CameraTransform::WorldToScreen() for consistent transformation
+    Vector screenPos = cam.WorldToScreen(worldPos);
+    
+    // ✅ FIX: Tile offsets are in WORLD space, so transform them with zoom only
+    float offsetScreenX = tileoffsetX * cam.zoom;
+    float offsetScreenY = tileoffsetY * cam.zoom;
+    
+    // Calculate destination rectangle
+    SDL_FRect destRect;
+    destRect.w = srcRect.w * cam.zoom;
+    destRect.h = srcRect.h * cam.zoom;
+    
+    if (orientation == "isometric") {
+        // Isometric: center tile horizontally, anchor at bottom
+        destRect.x = screenPos.x + offsetScreenX - destRect.w / 2.0f;
+        destRect.y = screenPos.y + offsetScreenY - destRect.h + (tileHeight * cam.zoom);
+    }
+    else {
+        // Orthogonal/hex: top-left anchor
+        destRect.x = screenPos.x + offsetScreenX;
+        destRect.y = screenPos.y + offsetScreenY;
+    }
+    
+    // ✅ FIX: Apply camera rotation to final render
+    SDL_RenderTextureRotated(GameEngine::renderer, texture, 
+                            &srcFRect, &destRect, cam.rotation, nullptr, flip);
 }
 
 // ✅ UNIFIED RENDERING PIPELINE - Single-pass sorting with frustum culling
