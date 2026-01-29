@@ -465,8 +465,7 @@ struct Camera_data
 
 	// Control parameters
 	float manualMoveSpeed = 200.0f;          // Speed of manual camera movement (pixels/sec)
-	float zoomStep = 0.1f;                   // Zoom increment per input
-	float rotationStep = 15.0f;              // Rotation increment per input (degrees)
+	float zoomStep = 0.1f;                   // Zoom increment per input (deprecated - use ZOOM_LEVELS)
 
 	bool isActive = true;                    // Is this camera active for rendering
 	
