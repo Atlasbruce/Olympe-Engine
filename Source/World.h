@@ -32,12 +32,15 @@ World purpose: Manage the overall game world, including object management, level
 
 // JSON library for tile layer loading
 #include "third_party/nlohmann/json.hpp"
+#include "ParameterResolver.h"
 
 // Forward declarations for 3-Phase Level Loading
 //struct PrefabRegistry;
 namespace Olympe { 
     namespace Tiled { struct LevelParseResult; }
     namespace Editor { struct LevelDefinition; }
+    namespace Editor { struct EntityInstance;  }
+
 }
 
 // ========================================================================
@@ -518,13 +521,11 @@ private:
     // ========================================================================
     
     /// Extract custom properties from JSON overrides into LevelInstanceParameters
-    void ExtractCustomProperties(
-        const nlohmann::json& overrides,
-        LevelInstanceParameters& instanceParams);
+    void ExtractCustomProperties( const nlohmann::json& overrides, LevelInstanceParameters& instanceParams);
     
     /// Create a red placeholder entity for missing prefabs
     EntityID CreateMissingPrefabPlaceholder(
-        const std::shared_ptr<Olympe::Editor::EntityInstance>& entityInstance,
+        const Olympe::Editor::EntityInstance& entityInstance,
         InstantiationResult::PassStats& stats);
     
     /// Extract prefab name from prefab path (removes path and extension)

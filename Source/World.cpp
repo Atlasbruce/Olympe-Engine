@@ -1580,7 +1580,7 @@ bool World::InstantiatePass3_StaticObjects(
         if (!factory.HasPrefab(prefabName))
         {
             // Create placeholder for missing prefab
-            EntityID entity = CreateMissingPrefabPlaceholder(entityInstance, result.pass3_staticObjects);
+            EntityID entity = CreateMissingPrefabPlaceholder(*entityInstance, result.pass3_staticObjects);
             if (entity != INVALID_ENTITY_ID)
             {
                 result.entityRegistry[entityInstance->name] = entity;
@@ -1593,7 +1593,7 @@ bool World::InstantiatePass3_StaticObjects(
         if (!blueprint || !blueprint->isValid)
         {
             // Create placeholder for invalid blueprint
-            EntityID entity = CreateMissingPrefabPlaceholder(entityInstance, result.pass3_staticObjects);
+            EntityID entity = CreateMissingPrefabPlaceholder(*entityInstance, result.pass3_staticObjects);
             if (entity != INVALID_ENTITY_ID)
             {
                 result.entityRegistry[entityInstance->name] = entity;
@@ -1645,7 +1645,7 @@ bool World::InstantiatePass4_DynamicObjects(
     SYSTEM_LOG << "| PASS 4: DYNAMIC OBJECTS (Prefab-Based Instantiation)                 | \n";
     SYSTEM_LOG << "\======================================================================/ \n\n";
     
-    // ✅ ADD DEBUG LOGGING
+    // ok - ADD DEBUG LOGGING
     SYSTEM_LOG << "[DEBUG] Pass 4 Entry - Analyzing categorized objects:\n";
     SYSTEM_LOG << "  Total entities in levelDef: " << levelDef.entities.size() << "\n";
     SYSTEM_LOG << "  Categorized dynamic objects: " << levelDef.categorizedObjects.dynamicObjects.size() << "\n";
@@ -1667,7 +1667,7 @@ bool World::InstantiatePass4_DynamicObjects(
     PrefabFactory& factory = PrefabFactory::Get();
     factory.SetPrefabRegistry(phase2Result.prefabRegistry);
     
-    // ✅ USE CATEGORIZED DYNAMIC OBJECTS (no manual filtering needed)
+    // ok - USE CATEGORIZED DYNAMIC OBJECTS (no manual filtering needed)
     for (const auto& entityInstance : levelDef.categorizedObjects.dynamicObjects)
     {
         if (!entityInstance) continue;
@@ -1683,7 +1683,7 @@ bool World::InstantiatePass4_DynamicObjects(
         if (blueprints.empty())
         {
             // Create red placeholder for missing prefab
-            EntityID entity = CreateMissingPrefabPlaceholder(entityInstance, result.pass4_dynamicObjects);
+            EntityID entity = CreateMissingPrefabPlaceholder(*entityInstance, result.pass4_dynamicObjects);
             if (entity != INVALID_ENTITY_ID)
             {
                 result.entityRegistry[entityInstance->name] = entity;
@@ -1702,7 +1702,7 @@ bool World::InstantiatePass4_DynamicObjects(
         // Extract custom properties from level instance
         ExtractCustomProperties(entityInstance->overrides, instanceParams);
         
-        // ✅ USE UNIFIED METHOD WITH OVERRIDES
+        // ok - USE UNIFIED METHOD WITH OVERRIDES
         EntityID entity = factory.CreateEntityWithOverrides(*blueprint, instanceParams);
         
         if (entity == INVALID_ENTITY_ID)
@@ -1857,9 +1857,7 @@ bool World::InstantiatePass5_Relationships(
 // Helper Methods for Entity Instantiation
 // ========================================================================
 
-void World::ExtractCustomProperties(
-    const nlohmann::json& overrides,
-    LevelInstanceParameters& instanceParams)
+void World::ExtractCustomProperties( const nlohmann::json& overrides, LevelInstanceParameters& instanceParams)
 {
     if (overrides.is_null())
         return;
@@ -1895,19 +1893,19 @@ void World::ExtractCustomProperties(
 }
 
 EntityID World::CreateMissingPrefabPlaceholder(
-    const std::shared_ptr<Olympe::Editor::EntityInstance>& entityInstance,
+    const Olympe::Editor::EntityInstance& entityInstance,
     InstantiationResult::PassStats& stats)
 {
-    EntityID entity = CreateEntity();
+    EntityID entity = World::Get().CreateEntity();
     if (entity == INVALID_ENTITY_ID)
     {
         stats.failed++;
-        stats.failedObjects.push_back(entityInstance->name + " (type: " + entityInstance->type + ")");
+        stats.failedObjects.push_back(entityInstance.name + " (type: " + entityInstance.type + ")");
         return INVALID_ENTITY_ID;
     }
-    
-    AddComponent<Identity_data>(entity, entityInstance->name, entityInstance->type, entityInstance->type);
-    AddComponent<Position_data>(entity, entityInstance->position);
+
+    World::Get().AddComponent<Identity_data>(entity, entityInstance.name, entityInstance.type, entityInstance.type);
+    World::Get().AddComponent<Position_data>(entity, entityInstance.position);
     
     // Add visual editor marker with red color for missing prefabs
     VisualEditor_data editorData;
@@ -1919,14 +1917,14 @@ EntityID World::CreateMissingPrefabPlaceholder(
         editorData.srcRect = { 0, 0, static_cast<float>(editorData.sprite->w), static_cast<float>(editorData.sprite->h) };
         editorData.hotSpot = Vector(editorData.srcRect.w / 2.0f, editorData.srcRect.h / 2.0f, 0.0f);
     }
-    AddComponent<VisualEditor_data>(entity, editorData);
+    World::Get().AddComponent<VisualEditor_data>(entity, editorData);
     
     stats.successfullyCreated++;
     
     SYSTEM_LOG << "  /!\  PLACEHOLDER: Created red marker for missing prefab '" 
-               << entityInstance->type << "' (name: " << entityInstance->name 
-               << ") at position: " << entityInstance->position << "\n";
-    
+               << entityInstance.type << "' (name: " << entityInstance.name 
+               << ") at position: " << entityInstance.position << "\n";
+
     return entity;
 }
 
