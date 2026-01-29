@@ -447,6 +447,17 @@ struct Camera_data
 	float rotation = 0.0f;                   // Current rotation angle
 	float targetRotation = 0.0f;             // Target rotation angle for smooth transitions
 	float rotationSpeed = 5.0f;              // Speed of rotation interpolation
+	
+	// Discrete rotation levels (15° increments)
+	static constexpr float ROTATION_STEP = 15.0f;
+	static constexpr int ROTATION_LEVELS = 24;  // 360° / 15° = 24 levels
+	int currentRotationLevel = 0;  // Index in [0, 23], where 0 = 0°
+	
+	// Helper method to get rotation angle from level
+	static constexpr float GetRotationFromLevel(int level)
+	{
+		return (level * ROTATION_STEP);  // level 0 = 0°, level 1 = 15°, etc.
+	}
 
 	// Control settings
 	CameraControlMode controlMode = CameraControlMode::Mode_Free; // Control mode
@@ -557,6 +568,10 @@ struct CameraInputBinding_data
 	float rotationInput = 0.0f;              // Rotation input value (-1 to 1)
 	float zoomInput = 0.0f;                  // Zoom input value (-1 to 1)
 	bool resetRequested = false;             // Reset button pressed this frame
+	
+	// Previous trigger state for edge detection (discrete rotation)
+	bool prevLeftTriggerPressed = false;     // Was left trigger pressed last frame
+	bool prevRightTriggerPressed = false;    // Was right trigger pressed last frame
 	
 	// Constructors
 	CameraInputBinding_data() = default;
