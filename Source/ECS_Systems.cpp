@@ -746,7 +746,7 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
     SDL_FRect srcFRect = {(float)srcRect.x, (float)srcRect.y, 
                          (float)srcRect.w, (float)srcRect.h};
     
-    // ✅ FIX: Calculate world position for this tile
+    // Calculate world position for this tile (orientation-specific)
     Vector worldPos;
     
     if (orientation == "isometric") {
@@ -767,10 +767,12 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
         worldPos = Vector(worldX * tileWidth, worldY * tileHeight, 0.0f);
     }
     
-    // ✅ FIX: Use CameraTransform::WorldToScreen() for consistent transformation
-    Vector screenPos = cam.WorldToScreen(worldPos);
+    // Calculate screen position with zoom only (no rotation)
+    // Rotation is applied separately via SDL_RenderTextureRotated with viewport-centered pivot
+    float screenX = (worldPos.x - cam.worldPosition.x) * cam.zoom - cam.screenOffset.x + cam.viewport.w / 2.0f;
+    float screenY = (worldPos.y - cam.worldPosition.y) * cam.zoom - cam.screenOffset.y + cam.viewport.h / 2.0f;
     
-    // ✅ FIX: Tile offsets are in pixel/texture space, scale by zoom to screen space
+    // Tile offsets are in pixel/texture space, scale by zoom
     float offsetScreenX = tileoffsetX * cam.zoom;
     float offsetScreenY = tileoffsetY * cam.zoom;
     
@@ -781,21 +783,29 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
     
     if (orientation == "isometric") {
         // Isometric: center tile horizontally, anchor at bottom
-        destRect.x = screenPos.x + offsetScreenX - destRect.w / 2.0f;
-        destRect.y = screenPos.y + offsetScreenY - destRect.h + (tileHeight * cam.zoom);
+        destRect.x = screenX + offsetScreenX - destRect.w / 2.0f;
+        destRect.y = screenY + offsetScreenY - destRect.h + (tileHeight * cam.zoom);
     }
     else {
         // Orthogonal/hex: top-left anchor
         // NOTE: Hexagonal tiles may require centered anchoring in the future
         // depending on the specific hex tileset and map configuration
-        destRect.x = screenPos.x + offsetScreenX;
-        destRect.y = screenPos.y + offsetScreenY;
+        destRect.x = screenX + offsetScreenX;
+        destRect.y = screenY + offsetScreenY;
     }
     
-    // ✅ FIX: Use SDL_RenderTextureEx() without rotation (already applied in WorldToScreen)
-    //SDL_RenderTexture(GameEngine::renderer, texture, &srcFRect, &destRect);
-    SDL_FPoint pivot = { destRect.w / 2.0f, destRect.h / 2.0f };
-    SDL_RenderTextureRotated(GameEngine::renderer, texture, &srcFRect, &destRect, cam.rotation, &pivot, SDL_FLIP_NONE);
+    // Rotate around viewport center (not tile center!)
+    // Pivot point is the viewport center expressed in the tile's local coordinate system
+    SDL_FPoint pivotInTileSpace = {
+        cam.viewport.w / 2.0f - destRect.x,
+        cam.viewport.h / 2.0f - destRect.y
+    };
+    
+    SDL_RenderTextureRotated(GameEngine::renderer, texture, 
+                            &srcFRect, &destRect, 
+                            cam.rotation,        // Camera rotation angle
+                            &pivotInTileSpace,   // Pivot = viewport center in tile space
+                            flip);               // Flip flags
 }
 
 // ✅ UNIFIED RENDERING PIPELINE - Single-pass sorting with frustum culling
