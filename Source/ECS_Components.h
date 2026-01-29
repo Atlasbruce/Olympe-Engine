@@ -434,6 +434,11 @@ struct Camera_data
 	float zoomSpeed = 5.0f;                  // Speed of zoom interpolation
 	float minZoom = 0.1f;                    // Minimum allowed zoom
 	float maxZoom = 5.0f;                    // Maximum allowed zoom
+	
+	// Discrete zoom levels
+	static constexpr float ZOOM_LEVELS[] = {0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 2.5f, 3.0f, 4.0f, 5.0f};
+	static constexpr size_t ZOOM_LEVEL_COUNT = sizeof(ZOOM_LEVELS) / sizeof(ZOOM_LEVELS[0]);
+	int currentZoomLevelIndex = 3;           // Index 3 = 1.0 (default)
 
 	// Rotation management (in degrees)
 	float rotation = 0.0f;                   // Current rotation angle
@@ -520,6 +525,13 @@ struct CameraInputBinding_data
 	SDL_Scancode key_down = SDL_SCANCODE_KP_2;        // Move camera down
 	SDL_Scancode key_left = SDL_SCANCODE_KP_4;        // Move camera left
 	SDL_Scancode key_right = SDL_SCANCODE_KP_6;       // Move camera right
+	
+	// Diagonal movement keys
+	SDL_Scancode key_up_left = SDL_SCANCODE_KP_7;     // Diagonal up-left
+	SDL_Scancode key_up_right = SDL_SCANCODE_KP_9;    // Diagonal up-right
+	SDL_Scancode key_down_left = SDL_SCANCODE_KP_1;   // Diagonal down-left
+	SDL_Scancode key_down_right = SDL_SCANCODE_KP_3;  // Diagonal down-right
+	
 	SDL_Scancode key_reset = SDL_SCANCODE_KP_5;       // Reset camera controls
 	SDL_Scancode key_rotate_left = SDL_SCANCODE_KP_DIVIDE;   // Rotate camera left
 	SDL_Scancode key_rotate_right = SDL_SCANCODE_KP_MULTIPLY; // Rotate camera right

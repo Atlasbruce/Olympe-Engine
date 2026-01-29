@@ -114,6 +114,7 @@ EntityID CameraSystem::CreateCameraForPlayer(short playerID, bool bindToKeyboard
     cam.position = Vector(0.f, 0.f, 0.f);
     cam.zoom = 1.0f;
     cam.targetZoom = 1.0f;
+    cam.currentZoomLevelIndex = 3;  // Initialize to 1.0 (index 3)
     cam.rotation = 0.0f;
     cam.targetRotation = 0.0f;
     cam.controlMode = CameraControlMode::Mode_Free;
@@ -318,11 +319,29 @@ void CameraSystem::UpdateCameraInput(EntityID entity, float dt)
         cam.controlOffset.y += rotatedY * cam.manualMoveSpeed * dt;
     }
     
-    // Apply zoom input
+    // Apply zoom input with discrete levels
     if (binding.zoomInput != 0.0f)
     {
-        cam.targetZoom += binding.zoomInput * cam.zoomStep;
-        cam.targetZoom = std::max(cam.minZoom, std::min(cam.maxZoom, cam.targetZoom));
+        if (binding.zoomInput > 0.0f)
+        {
+            // Zoom in: go to next level
+            if (cam.currentZoomLevelIndex < (int)Camera_data::ZOOM_LEVEL_COUNT - 1)
+            {
+                cam.currentZoomLevelIndex++;
+                cam.targetZoom = Camera_data::ZOOM_LEVELS[cam.currentZoomLevelIndex];
+                SYSTEM_LOG << "Zoom in to level " << cam.targetZoom << "\n";
+            }
+        }
+        else
+        {
+            // Zoom out: go to previous level
+            if (cam.currentZoomLevelIndex > 0)
+            {
+                cam.currentZoomLevelIndex--;
+                cam.targetZoom = Camera_data::ZOOM_LEVELS[cam.currentZoomLevelIndex];
+                SYSTEM_LOG << "Zoom out to level " << cam.targetZoom << "\n";
+            }
+        }
     }
     
     // Apply rotation input
@@ -350,14 +369,47 @@ void CameraSystem::ProcessKeyboardInput(EntityID entity, CameraInputBinding_data
     // Directional input
     Vector direction(0.f, 0.f, 0.f);
     
-    if (kb.IsKeyHeld(binding.key_up))
-        direction.y -= 1.0f;
-    if (kb.IsKeyHeld(binding.key_down))
-        direction.y += 1.0f;
-    if (kb.IsKeyHeld(binding.key_left))
-        direction.x -= 1.0f;
-    if (kb.IsKeyHeld(binding.key_right))
-        direction.x += 1.0f;
+    // Check diagonal keys FIRST (they combine up/down with left/right)
+    if (kb.IsKeyHeld(binding.key_up_left))
+    {
+        direction.x = -1.0f;
+        direction.y = -1.0f;
+    }
+    else if (kb.IsKeyHeld(binding.key_up_right))
+    {
+        direction.x = 1.0f;
+        direction.y = -1.0f;
+    }
+    else if (kb.IsKeyHeld(binding.key_down_left))
+    {
+        direction.x = -1.0f;
+        direction.y = 1.0f;
+    }
+    else if (kb.IsKeyHeld(binding.key_down_right))
+    {
+        direction.x = 1.0f;
+        direction.y = 1.0f;
+    }
+    else
+    {
+        // Cardinal directions (only if no diagonal is pressed)
+        if (kb.IsKeyHeld(binding.key_up))
+            direction.y -= 1.0f;
+        if (kb.IsKeyHeld(binding.key_down))
+            direction.y += 1.0f;
+        if (kb.IsKeyHeld(binding.key_left))
+            direction.x -= 1.0f;
+        if (kb.IsKeyHeld(binding.key_right))
+            direction.x += 1.0f;
+    }
+    
+    // Normalize diagonal movement to prevent faster diagonal speed
+    if (direction.x != 0.0f && direction.y != 0.0f)
+    {
+        float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+        direction.x /= length;
+        direction.y /= length;
+    }
     
     binding.inputDirection = direction;
     
@@ -367,10 +419,10 @@ void CameraSystem::ProcessKeyboardInput(EntityID entity, CameraInputBinding_data
     if (kb.IsKeyHeld(binding.key_rotate_right))
         binding.rotationInput = 1.0f;
     
-    // Zoom input
-    if (kb.IsKeyHeld(binding.key_zoom_in))
+    // Zoom input with discrete levels (use IsKeyPressed for single-step)
+    if (kb.IsKeyPressed(binding.key_zoom_in))
         binding.zoomInput = 1.0f;
-    if (kb.IsKeyHeld(binding.key_zoom_out))
+    if (kb.IsKeyPressed(binding.key_zoom_out))
         binding.zoomInput = -1.0f;
     
     // Reset input
@@ -633,11 +685,25 @@ void CameraSystem::ResetCameraControls(EntityID entity)
     // Reset all manual controls
     cam.controlOffset = Vector(0.f, 0.f, 0.f);
     
-    // Immediate reset zoom & rotation (no smooth interpolation)
+    // Reset zoom to 1.0 (index 3) using discrete levels
+    cam.currentZoomLevelIndex = 3;  // Index 3 = 1.0
     cam.zoom = 1.0f;
     cam.targetZoom = 1.0f;
     cam.rotation = 0.0f;
     cam.targetRotation = 0.0f;
+    
+    // If camera has a target, re-enable following
+    if (World::Get().HasComponent<CameraTarget_data>(entity))
+    {
+        CameraTarget_data& target = World::Get().GetComponent<CameraTarget_data>(entity);
+        
+        if (target.targetEntityID != INVALID_ENTITY_ID)
+        {
+            // Re-enable target following
+            target.followTarget = true;
+            SYSTEM_LOG << "Camera " << entity << " resuming target follow\n";
+        }
+    }
     
     // If in free mode, also reset position to origin
     if (cam.controlMode == CameraControlMode::Mode_Free)
@@ -654,7 +720,9 @@ void CameraSystem::ResetCameraControls(EntityID entity)
         effects.shakeTimeRemaining = 0.0f;
     }
     
-    SYSTEM_LOG << "Camera " << entity << " controls reset (immediate)\n";
+    SYSTEM_LOG << "Camera " << entity << " controls reset (zoom=1.0, rotation=0.0, following=" 
+               << (World::Get().HasComponent<CameraTarget_data>(entity) && 
+                   World::Get().GetComponent<CameraTarget_data>(entity).followTarget ? "true" : "false") << ")\n";
 }
 
 //-------------------------------------------------------------
