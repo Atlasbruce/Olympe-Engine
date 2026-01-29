@@ -1,7 +1,7 @@
 /*
-    Olype Engine - 2025
+    Olympe Engine - 2025
 	Nicolas Chereau
-    ncherau@gmail.com
+    nchereau@gmail.com
 
 	This file is part of Olympe Engine.
 	Purpose: This file contains functions related to drawing shapes and images on the screen.
@@ -102,6 +102,7 @@ void Draw_Circle(int cx, int cy, int radius)
     }
     
     // Camera active: transform world coordinates to screen
+    // Note: Circles are rotationally symmetric, so camera rotation has no effect
     Vector worldCenter((float)cx, (float)cy, 0.0f);
     Vector screenCenter = cam.WorldToScreen(worldCenter);
     float screenRadius = radius * cam.zoom;
@@ -113,28 +114,16 @@ void Draw_Circle(int cx, int cy, int radius)
     int x = sRadius;
     int y = 0;
     int err = 0;
-    
-    // Apply rotation to circle points
-    float rotRad = cam.rotation * (PI / 180.0f);
-    float cosRot = std::cos(rotRad);
-    float sinRot = std::sin(rotRad);
 
     while (x >= y) {
-        // Rotate each octant point around circle center
-        auto drawRotatedPoint = [&](int dx, int dy) {
-            float rotX = dx * cosRot - dy * sinRot;
-            float rotY = dx * sinRot + dy * cosRot;
-            SDL_RenderPoint(GameEngine::renderer, sCx + rotX, sCy + rotY);
-        };
-
-        drawRotatedPoint(x, y);
-        drawRotatedPoint(y, x);
-        drawRotatedPoint(-y, x);
-        drawRotatedPoint(-x, y);
-        drawRotatedPoint(-x, -y);
-        drawRotatedPoint(-y, -x);
-        drawRotatedPoint(y, -x);
-        drawRotatedPoint(x, -y);
+        SDL_RenderPoint(GameEngine::renderer, (float)sCx + x, (float)sCy + y);
+        SDL_RenderPoint(GameEngine::renderer, (float)sCx + y, (float)sCy + x);
+        SDL_RenderPoint(GameEngine::renderer, (float)sCx - y, (float)sCy + x);
+        SDL_RenderPoint(GameEngine::renderer, (float)sCx - x, (float)sCy + y);
+        SDL_RenderPoint(GameEngine::renderer, (float)sCx - x, (float)sCy - y);
+        SDL_RenderPoint(GameEngine::renderer, (float)sCx - y, (float)sCy - x);
+        SDL_RenderPoint(GameEngine::renderer, (float)sCx + y, (float)sCy - x);
+        SDL_RenderPoint(GameEngine::renderer, (float)sCx + x, (float)sCy - y);
 
         if (err <= 0) { y += 1; err += 2 * y + 1; }
         if (err > 0) { x -= 1; err -= 2 * x + 1; }
@@ -164,7 +153,8 @@ void Draw_FilledCircle(int cx, int cy, int radius)
         return;
     }
     
-    // Camera active: transform and rotate
+    // Camera active: transform center and scale radius
+    // Note: Filled circles are rotationally symmetric, so camera rotation has no effect
     Vector worldCenter((float)cx, (float)cy, 0.0f);
     Vector screenCenter = cam.WorldToScreen(worldCenter);
     float screenRadius = radius * cam.zoom;
@@ -173,28 +163,14 @@ void Draw_FilledCircle(int cx, int cy, int radius)
     int sCy = static_cast<int>(screenCenter.y);
     int sRadius = static_cast<int>(screenRadius);
     
-    float rotRad = cam.rotation * (PI / 180.0f);
-    float cosRot = std::cos(rotRad);
-    float sinRot = std::sin(rotRad);
-    
     int r2 = sRadius * sRadius;
     for (int dy = -sRadius; dy <= sRadius; ++dy) {
         int dy2 = dy * dy;
         int dx2 = r2 - dy2;
         int dx = static_cast<int>(std::sqrt(static_cast<float>(dx2)));
-        
-        // Rotate scanline endpoints
-        float x1 = -dx, y1 = dy;
-        float x2 = dx, y2 = dy;
-        
-        float rotX1 = x1 * cosRot - y1 * sinRot;
-        float rotY1 = x1 * sinRot + y1 * cosRot;
-        float rotX2 = x2 * cosRot - y2 * sinRot;
-        float rotY2 = x2 * sinRot + y2 * cosRot;
-        
-        SDL_RenderLine(GameEngine::renderer, 
-                      sCx + rotX1, sCy + rotY1, 
-                      sCx + rotX2, sCy + rotY2);
+        int x1 = sCx - dx;
+        int x2 = sCx + dx;
+        SDL_RenderLine(GameEngine::renderer, (float)x1, (float)sCy + dy, (float)x2, (float)sCy + dy);
     }
 }
 //----------------------------------------------------------
@@ -237,7 +213,7 @@ void Draw_FilledTriangle(
     SDL_Vertex vertices[3];
 
     vertices[0].position = s1.ToFPoint();
-	vertices[1].position = s2.ToFPoint();
+    vertices[1].position = s2.ToFPoint();
     vertices[2].position = s3.ToFPoint();
 
     vertices[0].color = color;
@@ -263,32 +239,26 @@ void Draw_FilledHexagon(
     SDL_Vertex vertices[numSides + 1];
     int indices[numSides * 3];
 
-    // Transform center and radius
+    // Transform center through camera (applies rotation, zoom, position)
     Vector screenCenter = cam.isActive ? cam.WorldToScreen(center) : center;
-    float screenRadius = cam.isActive ? (radius * cam.zoom) : radius;
 
     // Le centre du polygone
     vertices[0].position = screenCenter.ToFPoint();
     vertices[0].color = color;
     vertices[0].tex_coord = { 0, 0 };
 
-    // Calculate vertices with camera rotation
-    float rotRad = cam.isActive ? (cam.rotation * (PI / 180.0f)) : 0.0f;
-    float cosRot = std::cos(rotRad);
-    float sinRot = std::sin(rotRad);
-
-    // Calcul des sommets sur le cercle avec valeurs pré-calculées
+    // Calculate vertices in world space, then transform each through camera
+    // This ensures rotation is applied correctly by WorldToScreen
     for (int i = 0; i < numSides; ++i) {
-        float localX = screenRadius * HEXAGON_COS_ANGLES[i];
-        float localY = screenRadius * HEXAGON_SIN_ANGLES[i];
+        Vector worldVertex(
+            center.x + radius * HEXAGON_COS_ANGLES[i],
+            center.y + radius * HEXAGON_SIN_ANGLES[i],
+            0.0f
+        );
         
-        float rotX = localX * cosRot - localY * sinRot;
-        float rotY = localX * sinRot + localY * cosRot;
+        Vector screenVertex = cam.isActive ? cam.WorldToScreen(worldVertex) : worldVertex;
         
-        vertices[i + 1].position = {
-            screenCenter.x + rotX,
-            screenCenter.y + rotY
-        };
+        vertices[i + 1].position = screenVertex.ToFPoint();
         vertices[i + 1].color = color;
         vertices[i + 1].tex_coord = { 0, 0 };
     }
@@ -313,23 +283,16 @@ void Draw_Hexagon(Vector center, float radius, SDL_Color color)
     const int numSides = 6;
     Vector verts[numSides];
     
-    Vector screenCenter = cam.isActive ? cam.WorldToScreen(center) : center;
-    float screenRadius = cam.isActive ? (radius * cam.zoom) : radius;
-    
-    float rotRad = cam.isActive ? (cam.rotation * (PI / 180.0f)) : 0.0f;
-    float cosRot = std::cos(rotRad);
-    float sinRot = std::sin(rotRad);
-    
-    // Use pre-calculated trig values for performance
+    // Calculate vertices in world space, then transform each through camera
+    // This ensures rotation is applied correctly by WorldToScreen
     for (int i = 0; i < numSides; ++i) {
-        float localX = screenRadius * HEXAGON_COS_ANGLES[i];
-        float localY = screenRadius * HEXAGON_SIN_ANGLES[i];
+        Vector worldVertex(
+            center.x + radius * HEXAGON_COS_ANGLES[i],
+            center.y + radius * HEXAGON_SIN_ANGLES[i],
+            0.0f
+        );
         
-        float rotX = localX * cosRot - localY * sinRot;
-        float rotY = localX * sinRot + localY * cosRot;
-        
-        verts[i].x = screenCenter.x + rotX;
-        verts[i].y = screenCenter.y + rotY;
+        verts[i] = cam.isActive ? cam.WorldToScreen(worldVertex) : worldVertex;
     }
 
     // Apply color

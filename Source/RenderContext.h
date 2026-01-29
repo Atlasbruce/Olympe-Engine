@@ -36,14 +36,7 @@ public:
     const CameraTransform& GetActiveCamera() const {
         if (!hasCameraSet_) {
             // Return default identity transform (screen space rendering)
-            static CameraTransform identityCamera;
-            identityCamera.worldPosition = Vector(0.f, 0.f, 0.f);
-            identityCamera.screenOffset = Vector(0.f, 0.f, 0.f);
-            identityCamera.zoom = 1.0f;
-            identityCamera.rotation = 0.0f;
-            identityCamera.viewport = {0.f, 0.f, 1920.f, 1080.f};
-            identityCamera.isActive = false;
-            return identityCamera;
+            return identityCamera_;
         }
         return activeCamera_;
     }
@@ -59,10 +52,19 @@ public:
     }
 
 private:
-    RenderContext() : hasCameraSet_(false) {}
+    RenderContext() : hasCameraSet_(false) {
+        // Initialize identity camera once (for screen-space rendering)
+        identityCamera_.worldPosition = Vector(0.f, 0.f, 0.f);
+        identityCamera_.screenOffset = Vector(0.f, 0.f, 0.f);
+        identityCamera_.zoom = 1.0f;
+        identityCamera_.rotation = 0.0f;
+        identityCamera_.viewport = {0.f, 0.f, 1920.f, 1080.f};
+        identityCamera_.isActive = false;
+    }
     ~RenderContext() = default;
 
     CameraTransform activeCamera_;
+    CameraTransform identityCamera_;  // Pre-initialized identity transform
     bool hasCameraSet_;
 
     // Prevent copying
