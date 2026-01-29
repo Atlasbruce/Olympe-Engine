@@ -215,43 +215,56 @@ Les événements SDL3 (`SDL_Event`) sont capturés dans la boucle principale.
 
 ## Pipeline d'exécution
 
-### Ordre frame par frame
+### Ordre frame par frame (SDL3)
 
 ```
 ┌────────────────────────────────────────────────────────────┐
 │                    FRAME N                                  │
 └────────────────────────────────────────────────────────────┘
 
-1. BeginFrame()
-   └─> Clear transient states
-
-2. SDL_PollEvent(&event)
+1. SDL_AppEvent(&event)
    └─> Capture hardware events (keyboard, joystick, mouse)
+   └─> InputsManager::HandleEvent(&event)
+       └─> KeyboardManager::HandleEvent()
+       └─> JoystickManager::HandleEvent()
+       └─> MouseManager::HandleEvent()
+            └─> Set state flags (m_keysPressedThisFrame, etc.)
+            └─> Post messages to EventManager
 
-3. InputsManager::HandleEvent(&event)
-   └─> KeyboardManager::HandleEvent()
-   └─> JoystickManager::HandleEvent()
-   └─> MouseManager::HandleEvent()
-        └─> Post messages to EventManager
+2. SDL_AppIterate()
+   └─> GameEngine::Process() (calculate delta time)
+   └─> EventManager::Process()
+       └─> Dispatch messages to listeners
+   
+3. World::Process()
+   └─> PlayerControlSystem::Process()
+       └─> For each entity with PlayerBinding + Controller:
+           - Read hardware state from Controller_data
+           - Map to gameplay actions in PlayerController_data
+   └─> CameraSystem::Process()
+       └─> Read input state (IsKeyPressed, IsKeyHeld)
+   └─> Other Systems (Movement, AI, etc.)
+       └─> Read PlayerController_data
+       └─> Apply game logic
 
-4. EventManager::Process()
-   └─> Dispatch messages to listeners
-
-5. PlayerControlSystem::Process()
-   └─> For each entity with PlayerBinding + Controller:
-       - Read hardware state from Controller_data
-       - Map to gameplay actions in PlayerController_data
-
-6. Other Systems (Movement, AI, etc.)
-   └─> Read PlayerController_data
-   └─> Apply game logic
-
-7. Render()
+4. Render()
    └─> Draw entities
 
-8. EndFrame()
-   └─> Swap buffers, wait for vsync
+5. BeginFrame()
+   └─> Clear transient states (m_keysPressedThisFrame, m_keysReleasedThisFrame)
+   └─> Prepare for next frame
+
+6. EndFrame()
+   └─> Swap buffers, return to SDL3 event loop
 ```
+
+**⚠️ Important (SDL3):**  
+`BeginFrame()` is called at the **END** of the frame (step 5), not at the beginning. This ensures that:
+- Events captured in `SDL_AppEvent()` set the state flags
+- Systems in `SDL_AppIterate()` can read those state flags
+- State is cleared only after all systems have processed the input
+
+This order is critical for `IsKeyPressed()` to work correctly with SDL3's event loop.
 
 ### Diagramme de séquence
 

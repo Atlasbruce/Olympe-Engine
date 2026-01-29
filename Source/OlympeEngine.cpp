@@ -214,11 +214,21 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 
             SDL_ShowMessageBox(&messageboxdata, &buttonid);
             if (buttonid == 1)
+            {
+                // Clear input state before exiting
+                KeyboardManager::Get().BeginFrame();
+                JoystickManager::Get().BeginFrame();
+                MouseManager::Get().BeginFrame();
                 return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
+            }
         }
         break;
         case SDL_EVENT_QUIT:
             {
+                // Clear input state before exiting
+                KeyboardManager::Get().BeginFrame();
+                JoystickManager::Get().BeginFrame();
+                MouseManager::Get().BeginFrame();
                 return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
             }
             break;
@@ -238,11 +248,6 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 	// PROCESSING PHASE -------------------------------------------------
     //-------------------------------------------------------------------
     
-    // 1. Reset frame state for input managers (Pull API)
-    KeyboardManager::Get().BeginFrame();
-    JoystickManager::Get().BeginFrame();
-    MouseManager::Get().BeginFrame();
-
     // Calculate delta time
 	GameEngine::Get().Process(); // update fDt here for all managers
 
@@ -256,7 +261,14 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 	World::Get().Process(); // process all world objects/components
 
     // If game state requests quit, end the application loop
-    if (GameStateManager::GetState() == GameState::GameState_Quit) { return SDL_APP_SUCCESS; }
+    if (GameStateManager::GetState() == GameState::GameState_Quit) 
+    { 
+        // Clear input state before exiting
+        KeyboardManager::Get().BeginFrame();
+        JoystickManager::Get().BeginFrame();
+        MouseManager::Get().BeginFrame();
+        return SDL_APP_SUCCESS; 
+    }
 
     //-------------------------------------------------------------------
 	// RENDER PHASE -----------------------------------------------------
@@ -378,6 +390,14 @@ SDL_AppResult SDL_AppIterate(void* appstate)
         frameCount = 0;
         fpsLastTime = nowMs;
     }
+
+    //-------------------------------------------------------------------
+    // END OF FRAME: Reset frame state for input managers
+    //-------------------------------------------------------------------
+    // Clear pressed/released state after all systems have processed input
+    KeyboardManager::Get().BeginFrame();
+    JoystickManager::Get().BeginFrame();
+    MouseManager::Get().BeginFrame();
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
