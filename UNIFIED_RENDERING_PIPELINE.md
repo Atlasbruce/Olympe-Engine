@@ -156,7 +156,7 @@ float CalculateEntityDepth(const std::string& orientation,
 ```cpp
 void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
                         int worldX, int worldY, uint32_t gid,
-                        int tileoffsetX, int tileoffsetY, int zOrder,
+                        int tileoffsetX, int tileoffsetY,
                         const CameraTransform& cam,
                         const std::string& orientation,
                         int tileWidth, int tileHeight)
@@ -166,8 +166,8 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
 - ✅ **Unified CameraTransform Usage**: Uses `CameraTransform::WorldToScreen()` consistently for all tile orientations
 - ✅ **Camera Rotation Support**: Applies camera rotation via `cam.rotation` parameter to `SDL_RenderTextureRotated()`
 - ✅ **Hexagonal Map Support**: Added hexagonal coordinate conversion (pointy-top hex)
-- ✅ **Consistent Transformation**: Tile offsets are transformed using zoom only (no double transformation)
-- ✅ **Tile Flipping**: Handles horizontal/vertical/diagonal flipping from GID flags
+- ✅ **Consistent Transformation**: Tile offsets (pixel/texture space) are scaled by zoom only (no double transformation)
+- ✅ **Tile Flipping**: Handles horizontal/vertical flipping from GID flags (diagonal flip not yet supported)
 - ✅ **Direct Rendering**: Immediate rendering without intermediate batch
 
 **Transformation Pipeline**:
@@ -280,7 +280,7 @@ The `IsometricRenderer` is now a lightweight utility class that provides coordin
    - ✅ Tiles render in correct diagonal order
    - ✅ Entities integrate properly with tiles
    - ✅ Tile offsets applied correctly
-   - ✅ Tile flipping works (horizontal/vertical/diagonal)
+   - ✅ Tile flipping works (horizontal/vertical; diagonal not yet supported)
    - ✅ Frustum culling filters correctly
    - ✅ **NEW**: Tiles remain aligned with grid when zooming (2025-01-29)
    - ✅ **NEW**: Tiles remain aligned with entities when zooming (2025-01-29)

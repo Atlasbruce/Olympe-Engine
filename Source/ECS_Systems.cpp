@@ -672,13 +672,22 @@ void GetVisibleTileRange(const CameraTransform& cam,
     }
     else {
         // Orthogonal/hex: Use CameraTransform::ScreenToWorld() for consistency
+        // When camera is rotated, all four corners need to be checked to find min/max
         Vector topLeftWorld = cam.ScreenToWorld(Vector(0, 0, 0));
+        Vector topRightWorld = cam.ScreenToWorld(Vector(cam.viewport.w, 0, 0));
+        Vector bottomLeftWorld = cam.ScreenToWorld(Vector(0, cam.viewport.h, 0));
         Vector bottomRightWorld = cam.ScreenToWorld(Vector(cam.viewport.w, cam.viewport.h, 0));
         
-        minX = static_cast<int>(std::floor(topLeftWorld.x / tileWidth)) - ORTHO_TILE_PADDING;
-        minY = static_cast<int>(std::floor(topLeftWorld.y / tileHeight)) - ORTHO_TILE_PADDING;
-        maxX = static_cast<int>(std::ceil(bottomRightWorld.x / tileWidth)) + ORTHO_TILE_PADDING;
-        maxY = static_cast<int>(std::ceil(bottomRightWorld.y / tileHeight)) + ORTHO_TILE_PADDING;
+        // Find bounding box in world space (handles rotation correctly)
+        float worldMinX = std::min({topLeftWorld.x, topRightWorld.x, bottomLeftWorld.x, bottomRightWorld.x});
+        float worldMaxX = std::max({topLeftWorld.x, topRightWorld.x, bottomLeftWorld.x, bottomRightWorld.x});
+        float worldMinY = std::min({topLeftWorld.y, topRightWorld.y, bottomLeftWorld.y, bottomRightWorld.y});
+        float worldMaxY = std::max({topLeftWorld.y, topRightWorld.y, bottomLeftWorld.y, bottomRightWorld.y});
+        
+        minX = static_cast<int>(std::floor(worldMinX / tileWidth)) - ORTHO_TILE_PADDING;
+        minY = static_cast<int>(std::floor(worldMinY / tileHeight)) - ORTHO_TILE_PADDING;
+        maxX = static_cast<int>(std::ceil(worldMaxX / tileWidth)) + ORTHO_TILE_PADDING;
+        maxY = static_cast<int>(std::ceil(worldMaxY / tileHeight)) + ORTHO_TILE_PADDING;
     }
 }
 
@@ -761,7 +770,7 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
     // ✅ FIX: Use CameraTransform::WorldToScreen() for consistent transformation
     Vector screenPos = cam.WorldToScreen(worldPos);
     
-    // ✅ FIX: Tile offsets are in WORLD space, so transform them with zoom only
+    // ✅ FIX: Tile offsets are in pixel/texture space, scale by zoom to screen space
     float offsetScreenX = tileoffsetX * cam.zoom;
     float offsetScreenY = tileoffsetY * cam.zoom;
     
@@ -777,6 +786,8 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
     }
     else {
         // Orthogonal/hex: top-left anchor
+        // NOTE: Hexagonal tiles may require centered anchoring in the future
+        // depending on the specific hex tileset and map configuration
         destRect.x = screenPos.x + offsetScreenX;
         destRect.y = screenPos.y + offsetScreenY;
     }
