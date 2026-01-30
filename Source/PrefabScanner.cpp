@@ -785,9 +785,9 @@ bool PrefabScanner::GetCanonicalInfo(const std::string& type, std::string& outCa
 PrefabRegistry PrefabScanner::Initialize(const std::string& prefabDirectory)
 {
     SYSTEM_LOG << "\n";
-    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
-    SYSTEM_LOG << "║ PREFAB SCANNER: INITIALIZATION                           ║\n";
-    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n";
+    SYSTEM_LOG << "+===========================================================+\n";
+    SYSTEM_LOG << "| PREFAB SCANNER: INITIALIZATION                            |\n";
+    SYSTEM_LOG << "+===========================================================+\n";
     SYSTEM_LOG << "Directory: " << prefabDirectory << "\n\n";
     
     PrefabRegistry registry;
@@ -855,15 +855,15 @@ PrefabRegistry PrefabScanner::Initialize(const std::string& prefabDirectory)
     }
     
     SYSTEM_LOG << "\n";
-    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
-    SYSTEM_LOG << "║ PREFAB SCANNER: INITIALIZATION COMPLETE                  ║\n";
-    SYSTEM_LOG << "╠══════════════════════════════════════════════════════════╣\n";
-    SYSTEM_LOG << "║ Total Files Scanned:  " << std::left << std::setw(33) << prefabFiles.size() << "║\n";
-    SYSTEM_LOG << "║ Valid Prefabs:        " << std::left << std::setw(33) << validCount << "║\n";
-    SYSTEM_LOG << "║ Invalid Prefabs:      " << std::left << std::setw(33) << invalidCount << "║\n";
-    SYSTEM_LOG << "║ Canonical Types:      " << std::left << std::setw(33) << m_canonicalTypes.size() << "║\n";
-    SYSTEM_LOG << "║ Total Synonyms:       " << std::left << std::setw(33) << m_synonymToCanonical.size() << "║\n";
-    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n\n";
+    SYSTEM_LOG << "+===========================================================+\n";
+    SYSTEM_LOG << "| PREFAB SCANNER: INITIALIZATION COMPLETE                   |\n";
+    SYSTEM_LOG << "+===========================================================+\n";
+    SYSTEM_LOG << "| Total Files Scanned:  " << std::left << std::setw(33) << prefabFiles.size() << "|\n";
+    SYSTEM_LOG << "| Valid Prefabs:        " << std::left << std::setw(33) << validCount << "|\n";
+    SYSTEM_LOG << "| Invalid Prefabs:      " << std::left << std::setw(33) << invalidCount << "|\n";
+    SYSTEM_LOG << "| Canonical Types:      " << std::left << std::setw(33) << m_canonicalTypes.size() << "|\n";
+    SYSTEM_LOG << "| Total Synonyms:       " << std::left << std::setw(33) << m_synonymToCanonical.size() << "|\n";
+    SYSTEM_LOG << "+===========================================================+\n\n";
     
     return registry;
 }

@@ -471,9 +471,9 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     SyncGridWithLevel(levelDef);
 
     // ✅ NORMALIZE ALL ENTITY TYPES - SINGLE SOURCE OF TRUTH
-    SYSTEM_LOG << "\n╔══════════════════════════════════════════════════════════╗\n";
-    SYSTEM_LOG << "║ NORMALIZING ENTITY TYPES (PrefabFactory Authority)      ║\n";
-    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n";
+    SYSTEM_LOG << "\n+===========================================================+\n";
+    SYSTEM_LOG << "| NORMALIZING ENTITY TYPES (PrefabFactory Authority)       |\n";
+    SYSTEM_LOG << "+===========================================================+\n";
     
     PrefabFactory& factory = PrefabFactory::Get();
     factory.SetPrefabRegistry(phase2Result.prefabRegistry);
@@ -507,18 +507,40 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     }
     
     // ✅ CRITICAL FIX: Also normalize categorizedObjects if they are COPIES
-    // Check if categorizedObjects reference the same entities or are copies
-    if (!levelDef.categorizedObjects.dynamicObjects.empty() && 
-        !levelDef.entities.empty())
+    // Simple approach: Always normalize categorizedObjects to ensure consistency
+    // This handles both reference and copy scenarios reliably
+    if (!levelDef.categorizedObjects.dynamicObjects.empty() ||
+        !levelDef.categorizedObjects.staticObjects.empty() ||
+        !levelDef.categorizedObjects.patrolPaths.empty())
     {
-        // Heuristic: compare first entity pointers
-        const auto& firstEntity = levelDef.entities[0];
-        const auto& firstDynamic = levelDef.categorizedObjects.dynamicObjects[0];
+        bool needsSeparateNormalization = false;
         
-        // If pointers differ, categorizedObjects are copies → need separate normalization
-        if (firstEntity.get() != firstDynamic.get())
+        // Check if categorizedObjects are copies by comparing pointers
+        if (!levelDef.categorizedObjects.dynamicObjects.empty() && !levelDef.entities.empty())
         {
-            SYSTEM_LOG << "\n⚠️  Detected: categorizedObjects are COPIES, normalizing separately...\n";
+            bool foundMatch = false;
+            const auto& firstDynamic = levelDef.categorizedObjects.dynamicObjects[0];
+            
+            // Check if first dynamic object exists in main entities list
+            for (const auto& entity : levelDef.entities)
+            {
+                if (entity.get() == firstDynamic.get())
+                {
+                    foundMatch = true;
+                    break;
+                }
+            }
+            
+            // If no match found, they are copies
+            if (!foundMatch)
+            {
+                needsSeparateNormalization = true;
+            }
+        }
+        
+        if (needsSeparateNormalization)
+        {
+            SYSTEM_LOG << "\n/!\\ Detected: categorizedObjects are COPIES, normalizing separately...\n";
             
             // Normalize dynamic objects
             for (const auto& entity : levelDef.categorizedObjects.dynamicObjects)
@@ -529,7 +551,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
                 
                 if (original != entity->type)
                 {
-                    SYSTEM_LOG << "  [Dynamic] → '" << original << "' → '" << entity->type << "'\n";
+                    SYSTEM_LOG << "  [Dynamic] -> '" << original << "' -> '" << entity->type << "'\n";
                 }
             }
             
@@ -542,11 +564,24 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
                 
                 if (original != entity->type)
                 {
-                    SYSTEM_LOG << "  [Static] → '" << original << "' → '" << entity->type << "'\n";
+                    SYSTEM_LOG << "  [Static] -> '" << original << "' -> '" << entity->type << "'\n";
                 }
             }
             
-            SYSTEM_LOG << "  ✓ Categorized objects normalized\n";
+            // Normalize patrol paths
+            for (const auto& entity : levelDef.categorizedObjects.patrolPaths)
+            {
+                if (!entity) continue;
+                std::string original = entity->type;
+                entity->type = factory.NormalizeType(original);
+                
+                if (original != entity->type)
+                {
+                    SYSTEM_LOG << "  [PatrolPath] -> '" << original << "' -> '" << entity->type << "'\n";
+                }
+            }
+            
+            SYSTEM_LOG << "  ok - Categorized objects normalized\n";
         }
     }
     
