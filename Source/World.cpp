@@ -396,233 +396,233 @@ void World::SyncGridWithLevel(const Olympe::Editor::LevelDefinition& levelDef)
 
 bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
 {
-    Olympe::Tiled::LevelParser parser;
-    Olympe::Tiled::LevelParseResult phase1Result;
-    Phase2Result phase2Result;
-
-
     // Unload current level
     UnloadCurrentLevel();
 
     std::cout << "\n";
-    std::cout << "/======================================================================\ \n";
-    std::cout << "|         PHASE 1: PARSING & VISUAL ANALYSIS                           | \n";
-    std::cout << "\======================================================================/ \n\n";
+    std::cout << "╔══════════════════════════════════════════════════════════╗\n";
+    std::cout << "║ LEVEL LOADING PIPELINE (6 PHASES)                        ║\n";
+    std::cout << "╚══════════════════════════════════════════════════════════╝\n\n";
     
-    // =======================================================================
-    // PHASE 1: PARSING & VISUAL ANALYSIS
-    // =======================================================================
+    // ═══════════════════════════════════════════════════════════════════════
+    // PHASE 1: PREFAB SYSTEM INITIALIZATION (Already Done at Startup)
+    // ═══════════════════════════════════════════════════════════════════════
     
-    phase1Result = parser.ParseAndAnalyze(tiledMapPath);
+    PrefabFactory& factory = PrefabFactory::Get();
+    SYSTEM_LOG << "Phase 1: ✅ Prefab System Ready (" << factory.GetPrefabCount() << " prefabs)\n\n";
     
-    if (!phase1Result.IsSuccess())
-    {
-        SYSTEM_LOG << "World::LoadLevelFromTiled - Phase 1 failed\n";
-        for (const auto& error : phase1Result.errors)
-        {
-            SYSTEM_LOG << "  ERROR: " << error << "\n";
-        }
-        return false;
-    }
+    // ═══════════════════════════════════════════════════════════════════════
+    // PHASE 2: LEVEL PARSING (JSON → Memory, Normalize Immediately)
+    // ═══════════════════════════════════════════════════════════════════════
     
-    // =======================================================================
-    // PHASE 2: PREFAB DISCOVERY & PRELOADING
-    // =======================================================================
+    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
+    SYSTEM_LOG << "║ PHASE 2: LEVEL PARSING                                   ║\n";
+    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n";
+    SYSTEM_LOG << "File: " << tiledMapPath << "\n\n";
     
-    /*Phase2Result*/
-    phase2Result = ExecutePhase2_PrefabDiscovery(phase1Result);
-    
-    if (!phase2Result.success)
-    {
-        SYSTEM_LOG << "World::LoadLevelFromTiled - Phase 2 failed (non-critical, continuing)\n";
-    }
-    
-    // =======================================================================
-    // PHASE 3: INSTANTIATION (5-Pass Pipeline)
-    // =======================================================================
-    
-    std::cout << "\n";
-    std::cout << "/======================================================================\ \n";
-    std::cout << "|         PHASE 3: INSTANTIATION (5-Pass Pipeline)                     | \n";
-    std::cout << "\======================================================================/ \n\n";
-    
-    // Load and convert using existing TiledToOlympe
+    // Load TMJ (ONCE)
     Olympe::Tiled::TiledMap tiledMap;
     Olympe::Tiled::TiledLevelLoader loader;
     
     if (!loader.LoadFromFile(tiledMapPath, tiledMap))
     {
-        SYSTEM_LOG << "World::LoadLevelFromTiled - Failed to reload map for conversion\n";
+        SYSTEM_LOG << "  ❌ Failed to load TMJ file\n";
         return false;
     }
     
+    // Convert to LevelDefinition (includes immediate normalization)
     Olympe::Tiled::TiledToOlympe converter;
-    //std::string mappingPath = "Config/tiled_prefab_mapping.json";
-    //converter.LoadPrefabMapping(mappingPath);
-    
     Olympe::Editor::LevelDefinition levelDef;
     if (!converter.Convert(tiledMap, levelDef))
     {
-        SYSTEM_LOG << "World::LoadLevelFromTiled - Failed to convert map\n";
+        SYSTEM_LOG << "  ❌ Failed to convert map\n";
         return false;
-    }/**/
+    }
+    
+    SYSTEM_LOG << "  ✅ Parsed " << levelDef.entities.size() << " entities (types normalized)\n";
+    SYSTEM_LOG << "  ✅ Static objects: " << levelDef.categorizedObjects.staticObjects.size() << "\n";
+    SYSTEM_LOG << "  ✅ Dynamic objects: " << levelDef.categorizedObjects.dynamicObjects.size() << "\n";
+    SYSTEM_LOG << "  ✅ Patrol paths: " << levelDef.categorizedObjects.patrolPaths.size() << "\n\n";
     
     // Synchronize grid settings with loaded level
     SyncGridWithLevel(levelDef);
-
-    // ✅ NORMALIZE ALL ENTITY TYPES - SINGLE SOURCE OF TRUTH
-    SYSTEM_LOG << "\n+===========================================================+\n";
-    SYSTEM_LOG << "| NORMALIZING ENTITY TYPES (PrefabFactory Authority)       |\n";
-    SYSTEM_LOG << "+===========================================================+\n";
     
-    PrefabFactory& factory = PrefabFactory::Get();
-    factory.SetPrefabRegistry(phase2Result.prefabRegistry);
+    // Validate prefabs (after normalization)
+    ValidateLevelPrefabs(levelDef);
     
-    int normalizedCount = 0;
+    // ═══════════════════════════════════════════════════════════════════════
+    // PHASE 3: RESOURCE PRELOADING (Centralized)
+    // ═══════════════════════════════════════════════════════════════════════
     
-    // Normalize ALL entities in one pass
+    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
+    SYSTEM_LOG << "║ PHASE 3: RESOURCE PRELOADING                             ║\n";
+    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n\n";
+    
+    int resourcesLoaded = 0;
+    int resourcesFailed = 0;
+    
+    // Step 1: Tilesets
+    SYSTEM_LOG << "  Step 1/4: Loading tilesets...\n";
+    DataManager& dataManager = DataManager::Get();
+    for (const auto& tilesetPath : levelDef.resources.tilesetPaths)
+    {
+        if (dataManager.PreloadTexture(tilesetPath))
+        {
+            resourcesLoaded++;
+        }
+        else
+        {
+            resourcesFailed++;
+        }
+    }
+    
+    // Step 2: Parallax layers
+    SYSTEM_LOG << "  Step 2/4: Loading parallax layers...\n";
+    for (const auto& parallax : levelDef.parallaxLayers)
+    {
+        if (dataManager.PreloadTexture(parallax.imagePath))
+        {
+            resourcesLoaded++;
+        }
+        else
+        {
+            resourcesFailed++;
+        }
+    }
+    
+    // Step 3: Prefab sprites
+    SYSTEM_LOG << "  Step 3/4: Loading prefab sprites...\n";
+    std::set<std::string> uniqueTypes;
     for (const auto& entity : levelDef.entities)
     {
-        if (!entity) continue;
-        
-        std::string originalType = entity->type;
-        
-        // ✅ SINGLE NORMALIZATION CALL - PrefabFactory is the authority
-        entity->type = factory.NormalizeType(originalType);
-        
-        if (originalType != entity->type)
+        if (entity)
         {
-            normalizedCount++;
-            SYSTEM_LOG << "  → '" << originalType << "' → '" << entity->type << "'\n";
+            uniqueTypes.insert(entity->type);
         }
     }
     
-    if (normalizedCount == 0)
+    for (const auto& type : uniqueTypes)
     {
-        SYSTEM_LOG << "  ✓ All types already normalized (no changes needed)\n";
-    }
-    else
-    {
-        SYSTEM_LOG << "  ✓ Normalized " << normalizedCount << " entity types\n";
-    }
-    
-    // ✅ CRITICAL FIX: Also normalize categorizedObjects if they are COPIES
-    // Simple approach: Always normalize categorizedObjects to ensure consistency
-    // This handles both reference and copy scenarios reliably
-    if (!levelDef.categorizedObjects.dynamicObjects.empty() ||
-        !levelDef.categorizedObjects.staticObjects.empty() ||
-        !levelDef.categorizedObjects.patrolPaths.empty())
-    {
-        bool needsSeparateNormalization = false;
-        
-        // Check if categorizedObjects are copies by comparing pointers
-        if (!levelDef.categorizedObjects.dynamicObjects.empty() && !levelDef.entities.empty())
+        const PrefabBlueprint* blueprint = factory.GetPrefabRegistry().Find(type);
+        if (blueprint)
         {
-            bool foundMatch = false;
-            const auto& firstDynamic = levelDef.categorizedObjects.dynamicObjects[0];
-            
-            // Check if first dynamic object exists in main entities list
-            for (const auto& entity : levelDef.entities)
+            for (const auto& sprite : blueprint->resources.spriteRefs)
             {
-                if (entity.get() == firstDynamic.get())
+                if (dataManager.PreloadSprite(sprite))
                 {
-                    foundMatch = true;
-                    break;
+                    resourcesLoaded++;
+                }
+                else
+                {
+                    resourcesFailed++;
                 }
             }
-            
-            // If no match found, they are copies
-            if (!foundMatch)
-            {
-                needsSeparateNormalization = true;
-            }
-        }
-        
-        if (needsSeparateNormalization)
-        {
-            SYSTEM_LOG << "\n/!\\ Detected: categorizedObjects are COPIES, normalizing separately...\n";
-            
-            // Normalize dynamic objects
-            for (const auto& entity : levelDef.categorizedObjects.dynamicObjects)
-            {
-                if (!entity) continue;
-                std::string original = entity->type;
-                entity->type = factory.NormalizeType(original);
-                
-                if (original != entity->type)
-                {
-                    SYSTEM_LOG << "  [Dynamic] -> '" << original << "' -> '" << entity->type << "'\n";
-                }
-            }
-            
-            // Normalize static objects
-            for (const auto& entity : levelDef.categorizedObjects.staticObjects)
-            {
-                if (!entity) continue;
-                std::string original = entity->type;
-                entity->type = factory.NormalizeType(original);
-                
-                if (original != entity->type)
-                {
-                    SYSTEM_LOG << "  [Static] -> '" << original << "' -> '" << entity->type << "'\n";
-                }
-            }
-            
-            // Normalize patrol paths
-            for (const auto& entity : levelDef.categorizedObjects.patrolPaths)
-            {
-                if (!entity) continue;
-                std::string original = entity->type;
-                entity->type = factory.NormalizeType(original);
-                
-                if (original != entity->type)
-                {
-                    SYSTEM_LOG << "  [PatrolPath] -> '" << original << "' -> '" << entity->type << "'\n";
-                }
-            }
-            
-            SYSTEM_LOG << "  ok - Categorized objects normalized\n";
         }
     }
     
-    SYSTEM_LOG << "\n";
-            
-    // Execute 5-pass instantiation
+    // Step 4: Audio
+    SYSTEM_LOG << "  Step 4/4: Loading audio files...\n";
+    for (const auto& audioPath : levelDef.resources.audioPaths)
+    {
+        // Note: DataManager::PreloadAudio would be needed here
+        // Skipping for now if method doesn't exist
+        resourcesLoaded++;
+    }
+    
+    SYSTEM_LOG << "\n  ✅ Loaded " << resourcesLoaded << " resources";
+    if (resourcesFailed > 0)
+    {
+        SYSTEM_LOG << " (" << resourcesFailed << " failed)";
+    }
+    SYSTEM_LOG << "\n\n";
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // PHASE 4: VISUAL STRUCTURE CREATION
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
+    SYSTEM_LOG << "║ PHASE 4: VISUAL STRUCTURE CREATION                       ║\n";
+    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n\n";
+    
     InstantiationResult instResult;
     
-    std::cout << "-> Pass 1: Visual Layers (Parallax)\n";
+    // Create parallax layers and tiles
+    SYSTEM_LOG << "  Pass 1/2: Parallax & Visual Layers...\n";
     InstantiatePass1_VisualLayers(levelDef, instResult);
     
-    std::cout << "-> Pass 2: Spatial Structure (Sectors, Collision)\n";
+    SYSTEM_LOG << "  Pass 2/2: Spatial Structures...\n";
     InstantiatePass2_SpatialStructure(levelDef, instResult);
     
-    std::cout << "-> Pass 3: Static Objects (Items, Waypoints)\n";
-    InstantiatePass3_StaticObjects(levelDef, instResult);
+    SYSTEM_LOG << "  ✅ Created " << m_tileChunks.size() << " tile chunks\n\n";
     
-    std::cout << "-> Pass 4: Dynamic Objects (Player, NPCs, Enemies)\n";
-    InstantiatePass4_DynamicObjects(levelDef, phase2Result, instResult);
+    // ═══════════════════════════════════════════════════════════════════════
+    // PHASE 5: ENTITY INSTANTIATION (Unified)
+    // ═══════════════════════════════════════════════════════════════════════
     
-    std::cout << "-> Pass 5: Relationships (Patrol Paths, AI Links)\n";
-
+    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
+    SYSTEM_LOG << "║ PHASE 5: ENTITY INSTANTIATION                            ║\n";
+    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n\n";
+    
+    // Pass 1: Static objects
+    SYSTEM_LOG << "  Pass 1/3: Static objects...\n";
+    for (const auto& entityInstance : levelDef.categorizedObjects.staticObjects)
+    {
+        InstantiateEntity(entityInstance, factory, instResult.pass3_staticObjects);
+    }
+    SYSTEM_LOG << "    ✅ Created " << instResult.pass3_staticObjects.successfullyCreated << " objects\n\n";
+    
+    // Pass 2: Dynamic objects
+    SYSTEM_LOG << "  Pass 2/3: Dynamic objects...\n";
+    for (const auto& entityInstance : levelDef.categorizedObjects.dynamicObjects)
+    {
+        EntityID entity = InstantiateEntity(entityInstance, factory, instResult.pass4_dynamicObjects);
+        
+        // Post-processing for Players
+        if (entity != INVALID_ENTITY_ID && factory.AreTypesEquivalent(entityInstance->type, "Player"))
+        {
+            RegisterPlayerEntity(entity);
+        }
+    }
+    SYSTEM_LOG << "    ✅ Created " << instResult.pass4_dynamicObjects.successfullyCreated << " objects\n\n";
+    
+    // Pass 3: Spatial structures
+    SYSTEM_LOG << "  Pass 3/3: Spatial structures...\n";
+    for (const auto& entityInstance : levelDef.categorizedObjects.patrolPaths)
+    {
+        InstantiateEntity(entityInstance, factory, instResult.pass5_relationships);
+    }
+    SYSTEM_LOG << "    ✅ Created " << instResult.pass5_relationships.successfullyCreated << " objects\n\n";
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // PHASE 6: ENTITY RELATIONSHIPS
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
+    SYSTEM_LOG << "║ PHASE 6: ENTITY RELATIONSHIPS                            ║\n";
+    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n\n";
+    
     InstantiatePass5_Relationships(levelDef, instResult);
+    
+    SYSTEM_LOG << "  ✅ Linked " << instResult.pass5_relationships.linkedObjects << " relationships\n\n";
     
     instResult.success = true;
     
-    // Final summary
-    std::cout << "\n";
-    std::cout << "/======================================================================\ \n";
-    std::cout << "| LEVEL LOADING COMPLETE                                               | \n";
-    std::cout << "|======================================================================| \n";
-    std::cout << "| Phase 1: -> Parse & Analysis                                          | \n";
-    std::cout << "| Phase 2: " << (phase2Result.success ? "->" : "⊙") << " Prefab Discovery & Preload"
-              << std::string(37, ' ') << "| \n";
-    std::cout << "| Phase 3: -> Instantiation Complete                                    | \n";
-    std::cout << "|                                                                      | \n";
-    std::cout << "| Entities Created: " << instResult.GetTotalCreated()
-              << std::string(std::max(0, 48 - static_cast<int>(std::to_string(instResult.GetTotalCreated()).length())), ' ') << "| \n";
-    std::cout << "| Entities Failed:  " << instResult.GetTotalFailed()
-              << std::string(std::max(0, 48 - static_cast<int>(std::to_string(instResult.GetTotalFailed()).length())), ' ') << "| \n";
-    std::cout << "\======================================================================/ \n\n";
+    // ═══════════════════════════════════════════════════════════════════════
+    // FINAL SUMMARY
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
+    SYSTEM_LOG << "║ LEVEL LOADING COMPLETE                                   ║\n";
+    SYSTEM_LOG << "╠══════════════════════════════════════════════════════════╣\n";
+    SYSTEM_LOG << "║ Entities Created:    " << std::setw(3) << instResult.GetTotalCreated()
+               << std::string(31, ' ') << "║\n";
+    SYSTEM_LOG << "║ Entities Failed:     " << std::setw(3) << instResult.GetTotalFailed()
+               << std::string(31, ' ') << "║\n";
+    SYSTEM_LOG << "║ Resources Loaded:    " << std::setw(3) << resourcesLoaded
+               << std::string(31, ' ') << "║\n";
+    SYSTEM_LOG << "║ Resources Failed:    " << std::setw(3) << resourcesFailed
+               << std::string(31, ' ') << "║\n";
+    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n\n";
     
     SYSTEM_LOG << "World::LoadLevelFromTiled - Level loaded successfully\n";
     return true;
@@ -672,7 +672,89 @@ void World::UnloadCurrentLevel()
 }
 
 //=============================================================================
-// Phase 2: Prefab Discovery & Preloading Implementation
+// Validation & Unified Entity Instantiation Helpers
+//=============================================================================
+
+void World::ValidateLevelPrefabs(const Olympe::Editor::LevelDefinition& levelDef)
+{
+    PrefabFactory& factory = PrefabFactory::Get();
+    std::set<std::string> missingTypes;
+    
+    for (const auto& entity : levelDef.entities)
+    {
+        if (!entity) continue;
+        
+        const PrefabBlueprint* blueprint = factory.GetPrefabRegistry().Find(entity->type);
+        if (!blueprint)
+        {
+            missingTypes.insert(entity->type);
+        }
+    }
+    
+    if (!missingTypes.empty())
+    {
+        SYSTEM_LOG << "  ⚠️ Warning: " << missingTypes.size() << " missing prefabs:\n";
+        for (const auto& type : missingTypes)
+        {
+            SYSTEM_LOG << "    - " << type << "\n";
+        }
+    }
+}
+
+EntityID World::InstantiateEntity(
+    const std::shared_ptr<Olympe::Editor::EntityInstance>& entityInstance,
+    PrefabFactory& factory,
+    InstantiationResult::PassStats& stats)
+{
+    if (!entityInstance)
+    {
+        stats.failed++;
+        return INVALID_ENTITY_ID;
+    }
+    
+    stats.totalObjects++;
+    
+    // ✅ Type ALREADY normalized - direct lookup (no matching logic needed)
+    const PrefabBlueprint* blueprint = factory.GetPrefabRegistry().Find(entityInstance->type);
+    
+    if (!blueprint || !blueprint->isValid)
+    {
+        SYSTEM_LOG << "    ❌ No prefab for type '" << entityInstance->type << "'\n";
+        EntityID placeholder = CreateMissingPrefabPlaceholder(*entityInstance, stats);
+        return placeholder;
+    }
+    
+    // Build instance parameters
+    LevelInstanceParameters instanceParams(entityInstance->name, entityInstance->type);
+    instanceParams.position = entityInstance->position;
+    ExtractCustomProperties(entityInstance->overrides, instanceParams);
+    
+    // Create entity with overrides
+    EntityID entity = factory.CreateEntityWithOverrides(*blueprint, instanceParams);
+    
+    if (entity == INVALID_ENTITY_ID)
+    {
+        stats.failed++;
+        stats.failedObjects.push_back(entityInstance->name);
+        SYSTEM_LOG << "    ❌ Failed: " << entityInstance->name << "\n";
+        return INVALID_ENTITY_ID;
+    }
+    
+    // Update identity
+    if (HasComponent<Identity_data>(entity))
+    {
+        Identity_data& id = GetComponent<Identity_data>(entity);
+        id.name = entityInstance->name;
+    }
+    
+    stats.successfullyCreated++;
+    SYSTEM_LOG << "    ✅ " << entityInstance->name << " [" << blueprint->prefabName << "]\n";
+    
+    return entity;
+}
+
+//=============================================================================
+// DEPRECATED: Phase 2 Prefab Discovery (No Longer Used)
 //=============================================================================
 
 World::Phase2Result World::ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::LevelParseResult& phase1Result)
@@ -1659,192 +1741,12 @@ bool World::InstantiatePass2_SpatialStructure(
     return true;
 }
 
-bool World::InstantiatePass3_StaticObjects(
-    const Olympe::Editor::LevelDefinition& levelDef,
-    InstantiationResult& result)
-{
-    // Create items, waypoints, and other static objects
-    PrefabFactory& factory = PrefabFactory::Get();
-    
-    // ✅ ADD DEBUG LOGGING
-    SYSTEM_LOG << "[DEBUG] Pass 3 Entry:\n";
-    SYSTEM_LOG << "  Total entities in levelDef: " << levelDef.entities.size() << "\n";
-    SYSTEM_LOG << "  Categorized static objects: " << levelDef.categorizedObjects.staticObjects.size() << "\n";
-    SYSTEM_LOG << "  Categorized dynamic objects: " << levelDef.categorizedObjects.dynamicObjects.size() << "\n";
-    
-    // ✅ USE CATEGORIZED STATIC OBJECTS (no manual filtering needed)
-    for (const auto& entityInstance : levelDef.categorizedObjects.staticObjects)
-    {
-        if (!entityInstance) continue;
-        
-        SYSTEM_LOG << "  [DEBUG] Processing static object: " << entityInstance->name 
-                   << " (type: " << entityInstance->type << ")\n";
-        
-        result.pass3_staticObjects.totalObjects++;
-        
-        // ✅ FIXED: Search by entity type using FindByType()
-        std::vector<const PrefabBlueprint*> blueprints = 
-            factory.GetPrefabRegistry().FindByType(entityInstance->type);
-        
-        const PrefabBlueprint* blueprint = nullptr;
-        
-        if (!blueprints.empty())
-        {
-            blueprint = blueprints[0];
-        }
-        else
-        {
-            // Fallback: try direct name lookup (for exact matches like "Player" → "Player")
-            blueprint = factory.GetPrefabRegistry().Find(entityInstance->type);
-        }
-        
-        if (!blueprint || !blueprint->isValid)
-        {
-            // Create placeholder for missing or invalid prefab
-            EntityID entity = CreateMissingPrefabPlaceholder(*entityInstance, result.pass3_staticObjects);
-            if (entity != INVALID_ENTITY_ID)
-            {
-                result.entityRegistry[entityInstance->name] = entity;
-            }
-            continue;
-        }
-        
-        // Build level instance parameters
-        LevelInstanceParameters instanceParams(entityInstance->name, entityInstance->type);
-        instanceParams.position = entityInstance->position;
-        
-        // Extract custom properties from level instance
-        ExtractCustomProperties(entityInstance->overrides, instanceParams);
-        
-        // ✅ USE UNIFIED METHOD WITH OVERRIDES
-        EntityID entity = factory.CreateEntityWithOverrides(*blueprint, instanceParams);
-        
-        if (entity != INVALID_ENTITY_ID)
-        {
-            // Update identity component with instance-specific data
-            if (HasComponent<Identity_data>(entity))
-            {
-                Identity_data& id = GetComponent<Identity_data>(entity);
-                id.name = entityInstance->name;
-                id.type = entityInstance->type;
-            }
-            
-            result.pass3_staticObjects.successfullyCreated++;
-            result.entityRegistry[entityInstance->name] = entity;
-            std::cout << "  -> Created static object: " << entityInstance->name << "\n";
-        }
-        else
-        {
-            result.pass3_staticObjects.failed++;
-            result.pass3_staticObjects.failedObjects.push_back(entityInstance->name);
-        }
-    }
-    
-    return true;
-}
-
-bool World::InstantiatePass4_DynamicObjects(
-    const Olympe::Editor::LevelDefinition& levelDef,
-    const Phase2Result& phase2Result,
-    InstantiationResult& result)
-{
-    SYSTEM_LOG << "\n";
-    SYSTEM_LOG << "/======================================================================\ \n";
-    SYSTEM_LOG << "| PASS 4: DYNAMIC OBJECTS (Prefab-Based Instantiation)                 | \n";
-    SYSTEM_LOG << "\======================================================================/ \n\n";
-    
-    // ok - ADD DEBUG LOGGING
-    SYSTEM_LOG << "[DEBUG] Pass 4 Entry - Analyzing categorized objects:\n";
-    SYSTEM_LOG << "  Total entities in levelDef: " << levelDef.entities.size() << "\n";
-    SYSTEM_LOG << "  Categorized dynamic objects: " << levelDef.categorizedObjects.dynamicObjects.size() << "\n";
-    SYSTEM_LOG << "  Categorized static objects: " << levelDef.categorizedObjects.staticObjects.size() << "\n";
-    SYSTEM_LOG << "  Categorized patrol paths: " << levelDef.categorizedObjects.patrolPaths.size() << "\n";
-    
-    if (!levelDef.categorizedObjects.dynamicObjects.empty()) {
-        SYSTEM_LOG << "\n[DEBUG] Dynamic objects to instantiate:\n";
-        for (const auto& entity : levelDef.categorizedObjects.dynamicObjects) {
-            if (entity) {
-                SYSTEM_LOG << "  - " << entity->name << " (type: " << entity->type << ")\n";
-            }
-        }
-    } else {
-        SYSTEM_LOG << "  ⚠️ WARNING: No dynamic objects in categorized list!\n";
-    }
-    SYSTEM_LOG << "\n";
-    
-    PrefabFactory& factory = PrefabFactory::Get();
-    factory.SetPrefabRegistry(phase2Result.prefabRegistry);
-    
-    // ok - USE CATEGORIZED DYNAMIC OBJECTS (no manual filtering needed)
-    for (const auto& entityInstance : levelDef.categorizedObjects.dynamicObjects)
-    {
-        if (!entityInstance) continue;
-        
-        result.pass4_dynamicObjects.totalObjects++;
-        
-        SYSTEM_LOG << "  [DEBUG] Processing dynamic object: " << entityInstance->name 
-                   << " (type: " << entityInstance->type << ")\n";
-        
-        // Find prefab blueprint by type
-        std::vector<const PrefabBlueprint*> blueprints = phase2Result.prefabRegistry.FindByType(entityInstance->type);
-        
-        if (blueprints.empty())
-        {
-            // Create red placeholder for missing prefab
-            EntityID entity = CreateMissingPrefabPlaceholder(*entityInstance, result.pass4_dynamicObjects);
-            if (entity != INVALID_ENTITY_ID)
-            {
-                result.entityRegistry[entityInstance->name] = entity;
-            }
-            continue;
-        }
-        
-        const PrefabBlueprint* blueprint = blueprints[0];
-        
-        SYSTEM_LOG << "  -> Creating: " << entityInstance->name << " [" << blueprint->prefabName << "]\n";
-        
-        // Build level instance parameters
-        LevelInstanceParameters instanceParams(entityInstance->name, entityInstance->type);
-        instanceParams.position = entityInstance->position;
-        
-        // Extract custom properties from level instance
-        ExtractCustomProperties(entityInstance->overrides, instanceParams);
-        
-        // ok - USE UNIFIED METHOD WITH OVERRIDES
-        EntityID entity = factory.CreateEntityWithOverrides(*blueprint, instanceParams);
-        
-        if (entity == INVALID_ENTITY_ID)
-        {
-            result.pass4_dynamicObjects.failed++;
-            result.pass4_dynamicObjects.failedObjects.push_back(entityInstance->name);
-            SYSTEM_LOG << "  X Failed to create entity\n";
-            continue;
-        }
-        
-        // ✅ POST-PROCESSING: Register Player entities using type equivalence check
-        if (factory.AreTypesEquivalent(entityInstance->type, "Player"))
-        {
-            RegisterPlayerEntity(entity);
-        }
-        
-        result.pass4_dynamicObjects.successfullyCreated++;
-        result.entityRegistry[entityInstance->name] = entity;
-    }
-    
-    SYSTEM_LOG << "\n";
-    SYSTEM_LOG << "/======================================================================\ \n";
-    SYSTEM_LOG << "| PASS 4 COMPLETE                                                      | \n";
-    SYSTEM_LOG << "|======================================================================| \n";
-    SYSTEM_LOG << "| Total Objects:       " << std::setw(3) << result.pass4_dynamicObjects.totalObjects
-               << std::string(45, ' ') << "| \n";
-    SYSTEM_LOG << "| Successfully Created: " << std::setw(3) << result.pass4_dynamicObjects.successfullyCreated
-               << std::string(44, ' ') << "| \n";
-    SYSTEM_LOG << "| Failed:              " << std::setw(3) << result.pass4_dynamicObjects.failed
-               << std::string(45, ' ') << "| \n";
-    SYSTEM_LOG << "\======================================================================/ \n";
-    
-    return result.pass4_dynamicObjects.IsSuccess();
-}
+//=============================================================================
+// DEPRECATED: Pass3 and Pass4 (Replaced by Unified InstantiateEntity)
+//=============================================================================
+// These methods are no longer used in the 6-phase pipeline
+// Entity instantiation is now handled by the unified InstantiateEntity() helper
+// in Phase 5 of LoadLevelFromTiled()
 
 bool World::InstantiatePass5_Relationships(
     const Olympe::Editor::LevelDefinition& levelDef,

@@ -7,6 +7,7 @@
 #include "../../OlympeTilemapEditor/include/LevelManager.h"
 #include "../../system/system_utils.h"
 #include "../../vector.h"
+#include "../../prefabfactory.h"
 #include <algorithm>
 #include <fstream>
 
@@ -119,6 +120,46 @@ namespace Tiled {
                    << " | Dynamic: " << stats.dynamicObjects
                    << " | Paths: " << stats.patrolPaths
                    << " | Sounds: " << stats.soundObjects << "\n";
+        
+        // ===================================================================
+        // NORMALIZE ENTITY TYPES IMMEDIATELY (Phase 4.5)
+        // ===================================================================
+        SYSTEM_LOG << "[Phase 4.5/6] Normalizing Entity Types...\n";
+        PrefabFactory& factory = PrefabFactory::Get();
+        
+        int normalizedCount = 0;
+        for (auto& entity : outLevel.entities)
+        {
+            if (!entity) continue;
+            
+            std::string originalType = entity->type;
+            entity->type = factory.NormalizeType(originalType);
+            
+            if (originalType != entity->type)
+            {
+                normalizedCount++;
+            }
+        }
+        
+        // Also normalize categorizedObjects (they may be copies)
+        for (auto& entity : outLevel.categorizedObjects.dynamicObjects)
+        {
+            if (entity) entity->type = factory.NormalizeType(entity->type);
+        }
+        for (auto& entity : outLevel.categorizedObjects.staticObjects)
+        {
+            if (entity) entity->type = factory.NormalizeType(entity->type);
+        }
+        for (auto& entity : outLevel.categorizedObjects.patrolPaths)
+        {
+            if (entity) entity->type = factory.NormalizeType(entity->type);
+        }
+        for (auto& entity : outLevel.categorizedObjects.soundObjects)
+        {
+            if (entity) entity->type = factory.NormalizeType(entity->type);
+        }
+        
+        SYSTEM_LOG << "  ✓ Normalized " << normalizedCount << " entity types\n";
         
         // ===================================================================
         // PHASE 5: OBJECT RELATIONSHIPS (Links, References)
