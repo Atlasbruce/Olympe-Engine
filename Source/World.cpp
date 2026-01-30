@@ -36,6 +36,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include <chrono>
 #include <iostream>
 #include <iomanip>
+#include <set>
 
 //---------------------------------------------------------------------------------------------
 // Helper function to register input entities with InputsManager
@@ -461,37 +462,42 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     int resourcesLoaded = 0;
     int resourcesFailed = 0;
     
+    DataManager& dataManager = DataManager::Get();
+    
     // Step 1: Tilesets
     SYSTEM_LOG << "  Step 1/4: Loading tilesets...\n";
-    DataManager& dataManager = DataManager::Get();
-    for (const auto& tilesetPath : levelDef.resources.tilesetPaths)
+    if (!levelDef.resources.tilesetPaths.empty())
     {
-        if (dataManager.PreloadTexture(tilesetPath))
-        {
-            resourcesLoaded++;
-        }
-        else
-        {
-            resourcesFailed++;
-        }
+        auto tilesetResult = dataManager.PreloadTextures(
+            levelDef.resources.tilesetPaths, 
+            ResourceCategory::Level, 
+            true);
+        resourcesLoaded += tilesetResult.successfullyLoaded;
+        resourcesFailed += tilesetResult.completelyFailed;
+        SYSTEM_LOG << "    ✅ Loaded " << tilesetResult.successfullyLoaded << " tilesets\n";
     }
     
     // Step 2: Parallax layers
     SYSTEM_LOG << "  Step 2/4: Loading parallax layers...\n";
+    std::vector<std::string> parallaxPaths;
     for (const auto& parallax : levelDef.parallaxLayers)
     {
-        if (dataManager.PreloadTexture(parallax.imagePath))
+        if (!parallax.imagePath.empty())
         {
-            resourcesLoaded++;
+            parallaxPaths.push_back(parallax.imagePath);
         }
-        else
-        {
-            resourcesFailed++;
-        }
+    }
+    if (!parallaxPaths.empty())
+    {
+        auto parallaxResult = dataManager.PreloadTextures(parallaxPaths, ResourceCategory::Level, true);
+        resourcesLoaded += parallaxResult.successfullyLoaded;
+        resourcesFailed += parallaxResult.completelyFailed;
+        SYSTEM_LOG << "    ✅ Loaded " << parallaxResult.successfullyLoaded << " parallax layers\n";
     }
     
     // Step 3: Prefab sprites
     SYSTEM_LOG << "  Step 3/4: Loading prefab sprites...\n";
+    std::vector<std::string> spritePaths;
     std::set<std::string> uniqueTypes;
     for (const auto& entity : levelDef.entities)
     {
@@ -508,28 +514,30 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
         {
             for (const auto& sprite : blueprint->resources.spriteRefs)
             {
-                if (dataManager.PreloadSprite(sprite))
-                {
-                    resourcesLoaded++;
-                }
-                else
-                {
-                    resourcesFailed++;
-                }
+                spritePaths.push_back(sprite);
             }
         }
     }
     
-    // Step 4: Audio
-    SYSTEM_LOG << "  Step 4/4: Loading audio files...\n";
-    for (const auto& audioPath : levelDef.resources.audioPaths)
+    if (!spritePaths.empty())
     {
-        // Note: DataManager::PreloadAudio would be needed here
-        // Skipping for now if method doesn't exist
-        resourcesLoaded++;
+        auto spriteResult = dataManager.PreloadSprites(spritePaths, ResourceCategory::GameEntity, true);
+        resourcesLoaded += spriteResult.successfullyLoaded;
+        resourcesFailed += spriteResult.completelyFailed;
+        SYSTEM_LOG << "    ✅ Loaded " << spriteResult.successfullyLoaded << " sprites\n";
     }
     
-    SYSTEM_LOG << "\n  ✅ Loaded " << resourcesLoaded << " resources";
+    // Step 4: Audio
+    SYSTEM_LOG << "  Step 4/4: Loading audio files...\n";
+    if (!levelDef.resources.audioPaths.empty())
+    {
+        auto audioResult = dataManager.PreloadAudioFiles(levelDef.resources.audioPaths, true);
+        resourcesLoaded += audioResult.successfullyLoaded;
+        resourcesFailed += audioResult.completelyFailed;
+        SYSTEM_LOG << "    ✅ Loaded " << audioResult.successfullyLoaded << " audio files\n";
+    }
+    
+    SYSTEM_LOG << "\n  ✅ Total resources loaded: " << resourcesLoaded;
     if (resourcesFailed > 0)
     {
         SYSTEM_LOG << " (" << resourcesFailed << " failed)";
