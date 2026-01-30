@@ -139,8 +139,8 @@ namespace Tiled {
         void ConvertPatrolPath(const TiledObject& obj, Olympe::Editor::LevelDefinition& level);
         void ConvertPolygonCollision(const TiledObject& obj, Olympe::Editor::LevelDefinition& level);
 
-        // Create entity from Tiled object
-        std::unique_ptr<Olympe::Editor::EntityInstance> CreateEntity(const TiledObject& obj);
+        // Parse entity descriptor from Tiled object (memory structure, NOT ECS entity)
+        std::unique_ptr<Olympe::Editor::EntityInstance> ParseEntityDescriptor(const TiledObject& obj);
 
         // Convert properties to JSON overrides
         void PropertiesToOverrides(const std::map<std::string, TiledProperty>& properties,
@@ -169,14 +169,14 @@ namespace Tiled {
         // Parse tint color from hex string to uint32_t
         uint32_t ParseTintColor(const std::string& colorStr);
 
-        // Create sector entity from polygon object (convenience wrapper)
-        std::unique_ptr<Olympe::Editor::EntityInstance> CreateSectorEntity(const TiledObject& obj);
+        // Parse sector entity descriptor from polygon object (convenience wrapper)
+        std::unique_ptr<Olympe::Editor::EntityInstance> ParseSectorDescriptor(const TiledObject& obj);
 
-        // Create patrol path entity from polyline object (convenience wrapper)
-        std::unique_ptr<Olympe::Editor::EntityInstance> CreatePatrolPathEntity(const TiledObject& obj);
+        // Parse patrol path entity descriptor from polyline object (convenience wrapper)
+        std::unique_ptr<Olympe::Editor::EntityInstance> ParsePatrolPathDescriptor(const TiledObject& obj);
 
-        // Create collision polyline entity from polyline/polygon object
-        std::unique_ptr<Olympe::Editor::EntityInstance> CreateCollisionPolylineEntity(const TiledObject& obj);
+        // Parse collision polyline entity descriptor from polyline/polygon object
+        std::unique_ptr<Olympe::Editor::EntityInstance> ParseCollisionPolylineDescriptor(const TiledObject& obj);
 
         ConversionConfig config_;
         ParallaxLayerManager parallaxLayers_;
