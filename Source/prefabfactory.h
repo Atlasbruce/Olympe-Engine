@@ -132,6 +132,7 @@ private:
     bool InstantiatePosition(EntityID entity, const ComponentDefinition& def);
     bool InstantiatePhysicsBody(EntityID entity, const ComponentDefinition& def);
     bool InstantiateVisualSprite(EntityID entity, const ComponentDefinition& def);
+    bool InstantiateVisualEditor(EntityID entity, const ComponentDefinition& def);
     bool InstantiateAIBehavior(EntityID entity, const ComponentDefinition& def);
     bool InstantiateAIBlackboard(EntityID entity, const ComponentDefinition& def);
     bool InstantiateAISenses(EntityID entity, const ComponentDefinition& def);

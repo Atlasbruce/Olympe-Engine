@@ -1,0 +1,74 @@
+{
+  "schema_version": 2,
+  "type": "Item",
+  "blueprintType": "EntityPrefab",
+  "name": "Item",
+  "description": "Generic collectible item (coins, treasures, pickups)",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-01-30T02:26:00Z",
+    "lastModified": "2026-01-30T02:26:00Z",
+    "tags": ["Item", "Collectible", "Pickup", "Treasure"]
+  },
+  "data": {
+    "prefabName": "Item",
+    "components": [
+      {
+        "type": "Identity_data",
+        "properties": {
+          "name": "{instanceName}",
+          "tag": "Item",
+          "entityType": "Item"
+        }
+      },
+      {
+        "type": "Position_data",
+        "properties": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        }
+      },
+      {
+        "type": "VisualSprite_data",
+        "properties": {
+          "spritePath": "./Resources/Sprites/item.png",
+          "width": 32,
+          "height": 32,
+          "layer": 0
+        }
+      },
+      {
+        "type": "VisualEditor_data",
+        "properties": {
+          "spritePath": "./Resources/Icons/treasure-32.png",
+          "color": {
+            "r": 255,
+            "g": 215,
+            "b": 0,
+            "a": 255
+          },
+          "visible": true
+        }
+      },
+      {
+        "type": "BoundingBox_data",
+        "properties": {
+          "width": 32,
+          "height": 32,
+          "offsetX": 16,
+          "offsetY": 16
+        }
+      }
+    ],
+    "resources": {
+      "sprites": [
+        "./Resources/Sprites/item.png",
+        "./Resources/Icons/treasure-32.png"
+      ],
+      "audio": []
+    }
+  }
+}
