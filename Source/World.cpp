@@ -575,7 +575,11 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     SYSTEM_LOG << "  Pass 1/3: Static objects...\n";
     for (const auto& entityInstance : levelDef.categorizedObjects.staticObjects)
     {
-        InstantiateEntity(entityInstance, factory, instResult.pass3_staticObjects);
+        EntityID entity = InstantiateEntity(entityInstance, factory, instResult.pass3_staticObjects);
+        if (entity != INVALID_ENTITY_ID && entityInstance)
+        {
+            instResult.entityRegistry[entityInstance->name] = entity;
+        }
     }
     SYSTEM_LOG << "    ✅ Created " << instResult.pass3_staticObjects.successfullyCreated << " objects\n\n";
     
@@ -585,19 +589,28 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     {
         EntityID entity = InstantiateEntity(entityInstance, factory, instResult.pass4_dynamicObjects);
         
-        // Post-processing for Players
-        if (entity != INVALID_ENTITY_ID && factory.AreTypesEquivalent(entityInstance->type, "Player"))
+        if (entity != INVALID_ENTITY_ID && entityInstance)
         {
-            RegisterPlayerEntity(entity);
+            instResult.entityRegistry[entityInstance->name] = entity;
+            
+            // Post-processing for Players
+            if (factory.AreTypesEquivalent(entityInstance->type, "Player"))
+            {
+                RegisterPlayerEntity(entity);
+            }
         }
     }
     SYSTEM_LOG << "    ✅ Created " << instResult.pass4_dynamicObjects.successfullyCreated << " objects\n\n";
     
-    // Pass 3: Spatial structures
-    SYSTEM_LOG << "  Pass 3/3: Spatial structures...\n";
+    // Pass 3: Spatial structures (patrol paths, waypoints)
+    SYSTEM_LOG << "  Pass 3/3: Spatial structures (patrol paths)...\n";
     for (const auto& entityInstance : levelDef.categorizedObjects.patrolPaths)
     {
-        InstantiateEntity(entityInstance, factory, instResult.pass5_relationships);
+        EntityID entity = InstantiateEntity(entityInstance, factory, instResult.pass5_relationships);
+        if (entity != INVALID_ENTITY_ID && entityInstance)
+        {
+            instResult.entityRegistry[entityInstance->name] = entity;
+        }
     }
     SYSTEM_LOG << "    ✅ Created " << instResult.pass5_relationships.successfullyCreated << " objects\n\n";
     

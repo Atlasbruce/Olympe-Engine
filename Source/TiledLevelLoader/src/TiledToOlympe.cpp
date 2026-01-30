@@ -122,9 +122,9 @@ namespace Tiled {
                    << " | Sounds: " << stats.soundObjects << "\n";
         
         // ===================================================================
-        // NORMALIZE ENTITY TYPES IMMEDIATELY (Phase 4.5)
+        // POST-CONVERSION: Normalize Entity Types Immediately
         // ===================================================================
-        SYSTEM_LOG << "[Phase 4.5/6] Normalizing Entity Types...\n";
+        SYSTEM_LOG << "[Post-Conversion] Normalizing Entity Types...\n";
         PrefabFactory& factory = PrefabFactory::Get();
         
         int normalizedCount = 0;

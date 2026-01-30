@@ -486,7 +486,7 @@ private:
     // Phase 2: Validate level prefabs (after normalization)
     void ValidateLevelPrefabs(const Olympe::Editor::LevelDefinition& levelDef);
     
-    // Phase 3: Instantiation passes (using existing TiledToOlympe for now)
+    // Phase 4: Visual structure instantiation passes
     bool InstantiatePass1_VisualLayers(
         const Olympe::Editor::LevelDefinition& levelDef,
         InstantiationResult& result);
@@ -495,11 +495,12 @@ private:
         const Olympe::Editor::LevelDefinition& levelDef,
         InstantiationResult& result);
     
+    // Phase 6: Relationship linking
     bool InstantiatePass5_Relationships(
         const Olympe::Editor::LevelDefinition& levelDef,
         InstantiationResult& result);
     
-    /// Unified entity instantiation helper (used by all passes)
+    /// Unified entity instantiation helper (used by all Phase 5 passes)
     /// Types are already normalized, performs direct lookup and instantiation
     EntityID InstantiateEntity(
         const std::shared_ptr<Olympe::Editor::EntityInstance>& entityInstance,
