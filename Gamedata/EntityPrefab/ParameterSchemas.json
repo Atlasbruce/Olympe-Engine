@@ -1,0 +1,148 @@
+{
+  "schemas": [
+    {
+      "componentType": "Identity_data",
+      "parameters": [
+        { "name": "name", "type": "String", "defaultValue": "" },
+        { "name": "tag", "type": "String", "defaultValue": "" },
+        { "name": "entityType", "type": "String", "defaultValue": "" }
+      ]
+    },
+    {
+      "componentType": "Position_data",
+      "parameters": [
+        { "name": "x", "type": "Float", "defaultValue": 0.0 },
+        { "name": "y", "type": "Float", "defaultValue": 0.0 },
+        { "name": "z", "type": "Float", "defaultValue": 0.0 }
+      ]
+    },
+    {
+      "componentType": "BoundingBox_data",
+      "parameters": [
+        { "name": "width", "type": "Int", "defaultValue": 32 },
+        { "name": "height", "type": "Int", "defaultValue": 32 },
+        { "name": "offsetX", "type": "Int", "defaultValue": 0 },
+        { "name": "offsetY", "type": "Int", "defaultValue": 0 }
+      ]
+    },
+    {
+      "componentType": "Movement_data",
+      "parameters": [
+        { "name": "speed", "type": "Float", "defaultValue": 100.0 },
+        { "name": "acceleration", "type": "Float", "defaultValue": 500.0 }
+      ]
+    },
+    {
+      "componentType": "PhysicsBody_data",
+      "parameters": [
+        { "name": "mass", "type": "Float", "defaultValue": 1.0 },
+        { "name": "friction", "type": "Float", "defaultValue": 0.8 },
+        { "name": "useGravity", "type": "Bool", "defaultValue": false }
+      ]
+    },
+    {
+      "componentType": "Health_data",
+      "parameters": [
+        { "name": "maxHealth", "type": "Int", "defaultValue": 100 },
+        { "name": "currentHealth", "type": "Int", "defaultValue": 100 },
+        { "name": "invulnerable", "type": "Bool", "defaultValue": false }
+      ]
+    },
+    {
+      "componentType": "VisualSprite_data",
+      "parameters": [
+        { "name": "spritePath", "type": "String", "defaultValue": "" },
+        { "name": "width", "type": "Int", "defaultValue": 32 },
+        { "name": "height", "type": "Int", "defaultValue": 32 },
+        { "name": "layer", "type": "Int", "defaultValue": 0 }
+      ]
+    },
+    {
+      "componentType": "VisualEditor_data",
+      "parameters": [
+        { "name": "iconPath", "type": "String", "defaultValue": "" },
+        { "name": "color", "type": "Color", "defaultValue": "#FFFFFF" },
+        { "name": "visible", "type": "Bool", "defaultValue": true },
+        { "name": "layer", "type": "Int", "defaultValue": 0 }
+      ]
+    },
+    {
+      "componentType": "PlayerBinding_data",
+      "parameters": [
+        { "name": "playerIndex", "type": "Int", "defaultValue": 0 },
+        { "name": "controlScheme", "type": "String", "defaultValue": "WASD" }
+      ]
+    },
+    {
+      "componentType": "Controller_data",
+      "parameters": [
+        { "name": "enabled", "type": "Bool", "defaultValue": true },
+        { "name": "inputEnabled", "type": "Bool", "defaultValue": true }
+      ]
+    },
+    {
+      "componentType": "AIBlackboard_data",
+      "parameters": [
+        { "name": "patrolPathID", "type": "String", "defaultValue": "" },
+        { "name": "lastKnownTargetPos", "type": "Vector2", "defaultValue": {"x": 0, "y": 0} }
+      ]
+    },
+    {
+      "componentType": "AISenses_data",
+      "parameters": [
+        { "name": "visionRange", "type": "Float", "defaultValue": 200.0 },
+        { "name": "hearingRange", "type": "Float", "defaultValue": 150.0 },
+        { "name": "canSeeTarget", "type": "Bool", "defaultValue": false }
+      ]
+    },
+    {
+      "componentType": "AIState_data",
+      "parameters": [
+        { "name": "currentState", "type": "String", "defaultValue": "Patrol" },
+        { "name": "previousState", "type": "String", "defaultValue": "Idle" }
+      ]
+    },
+    {
+      "componentType": "BehaviorTreeRuntime_data",
+      "parameters": [
+        { "name": "treeID", "type": "Int", "defaultValue": 0 },
+        { "name": "isRunning", "type": "Bool", "defaultValue": false }
+      ]
+    },
+    {
+      "componentType": "MoveIntent_data",
+      "parameters": [
+        { "name": "targetX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "targetY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "isMoving", "type": "Bool", "defaultValue": false }
+      ]
+    },
+    {
+      "componentType": "AttackIntent_data",
+      "parameters": [
+        { "name": "isAttacking", "type": "Bool", "defaultValue": false },
+        { "name": "attackRange", "type": "Float", "defaultValue": 50.0 },
+        { "name": "cooldown", "type": "Float", "defaultValue": 1.0 }
+      ]
+    },
+    {
+      "componentType": "CollisionZone_data",
+      "parameters": [
+        { "name": "x", "type": "Float", "defaultValue": 0.0 },
+        { "name": "y", "type": "Float", "defaultValue": 0.0 },
+        { "name": "width", "type": "Float", "defaultValue": 100.0 },
+        { "name": "height", "type": "Float", "defaultValue": 100.0 },
+        { "name": "isStatic", "type": "Bool", "defaultValue": true }
+      ]
+    },
+    {
+      "componentType": "PatrolPath_data",
+      "parameters": [
+        { "name": "pathID", "type": "String", "defaultValue": "" },
+        { "name": "waypoints", "type": "Array", "defaultValue": [] },
+        { "name": "currentIndex", "type": "Int", "defaultValue": 0 },
+        { "name": "looping", "type": "Bool", "defaultValue": true }
+      ]
+    }
+  ]
+}

@@ -796,12 +796,28 @@ PrefabRegistry PrefabScanner::Initialize(const std::string& prefabDirectory)
     
     PrefabRegistry registry;
     
-    // Step 1: Load synonym registry
+    // Step 1: Load parameter schemas from JSON
+    SYSTEM_LOG << "Step 1/4: Loading parameter schemas...\n";
+    std::string schemaPath = prefabDirectory + "/ParameterSchemas.json";
+    if (!ParameterSchemaRegistry::GetInstance().LoadFromJSON(schemaPath))
+    {
+        SYSTEM_LOG << "  x Failed to load parameter schemas from: " << schemaPath << "\n";
+        SYSTEM_LOG << "  -> Using built-in schemas as fallback\n";
+        // Note: Built-in schemas are already initialized via EnsureInitialized()
+    }
+    else
+    {
+        size_t schemaCount = ParameterSchemaRegistry::GetInstance().GetSchemaCount();
+        SYSTEM_LOG << "  ✓ Loaded " << schemaCount << " parameter schemas from JSON\n";
+    }
+    
+    // Step 2: Load synonym registry
+    SYSTEM_LOG << "\nStep 2/4: Loading synonym registry...\n";
     LoadSynonymRegistry(prefabDirectory);
     
-    // Step 2: Scan directory for prefab files
+    // Step 3: Scan directory for prefab files
     std::vector<std::string> prefabFiles;
-    SYSTEM_LOG << "\nStep 2/3: Scanning prefab directory...\n";
+    SYSTEM_LOG << "\nStep 3/4: Scanning prefab directory...\n";
     
 #ifdef _WIN32
     ScanDirectoryRecursive_Windows(prefabDirectory, prefabFiles);
@@ -809,19 +825,20 @@ PrefabRegistry PrefabScanner::Initialize(const std::string& prefabDirectory)
     ScanDirectoryRecursive_Unix(prefabDirectory, prefabFiles);
 #endif
     
-    // Filter out the synonym registry file
+    // Filter out the synonym registry and parameter schemas files
     prefabFiles.erase(
         std::remove_if(prefabFiles.begin(), prefabFiles.end(),
             [](const std::string& file) {
-                return file.find("EntityPrefabSynonymsRegister.json") != std::string::npos;
+                return file.find("EntityPrefabSynonymsRegister.json") != std::string::npos ||
+                       file.find("ParameterSchemas.json") != std::string::npos;
             }),
         prefabFiles.end()
     );
     
     SYSTEM_LOG << "  -> Found " << prefabFiles.size() << " .json file(s)\n";
     
-    // Step 3: Parse prefabs
-    SYSTEM_LOG << "\nStep 3/3: Parsing prefabs...\n";
+    // Step 4: Parse prefabs
+    SYSTEM_LOG << "\nStep 4/4: Parsing prefabs...\n";
     
     int validCount = 0;
     int invalidCount = 0;

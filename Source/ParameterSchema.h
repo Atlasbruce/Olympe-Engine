@@ -17,6 +17,12 @@ to ECS component fields with type validation and default values.
 #include <memory>
 #include "ComponentDefinition.h"
 
+// Forward declarations
+namespace nlohmann {
+	template <typename T> class basic_json;
+	using json = basic_json<std::map>;
+}
+
 // Parameter schema entry defining how a blueprint parameter maps to a component field
 struct ParameterSchemaEntry
 {
@@ -78,8 +84,14 @@ public:
 	// Initialize built-in schemas for standard components (public for manual reinit if needed)
 	void InitializeBuiltInSchemas();
 	
-	// Load schema from JSON file
+	// Load schema from JSON file (new unified method)
+	bool LoadFromJSON(const std::string& filepath);
+	
+	// Legacy method for backward compatibility
 	bool LoadSchemaFromFile(const std::string& filepath);
+	
+	// Get count of registered schemas
+	size_t GetSchemaCount() const;
 	
 	// Find a parameter schema entry by parameter name (checks all components)
 	const ParameterSchemaEntry* FindParameterSchema(const std::string& parameterName) const;
@@ -113,6 +125,10 @@ private:
 		ComponentParameter::Type paramType,
 		const ComponentParameter& defaultValue
 	);
+	
+	// Helper methods for JSON loading
+	ComponentParameter::Type StringToParameterType(const std::string& typeStr) const;
+	ComponentParameter ParseDefaultValue(const nlohmann::json& valueJson, ComponentParameter::Type type) const;
 	
 	// Storage
 	std::map<std::string, ComponentSchema> componentSchemas_;  // Component type -> schema
