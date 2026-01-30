@@ -470,28 +470,121 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     // Synchronize grid settings with loaded level
     SyncGridWithLevel(levelDef);
 
-    // ✅ NORMALIZE ALL ENTITY TYPES using synonym registry
-    SYSTEM_LOG << "\n[DEBUG] Normalizing entity types...\n";
+    // ✅ NORMALIZE ALL ENTITY TYPES - SINGLE SOURCE OF TRUTH
+    SYSTEM_LOG << "\n+===========================================================+\n";
+    SYSTEM_LOG << "| NORMALIZING ENTITY TYPES (PrefabFactory Authority)       |\n";
+    SYSTEM_LOG << "+===========================================================+\n";
+    
     PrefabFactory& factory = PrefabFactory::Get();
     factory.SetPrefabRegistry(phase2Result.prefabRegistry);
     
+    int normalizedCount = 0;
+    
+    // Normalize ALL entities in one pass
     for (const auto& entity : levelDef.entities)
     {
         if (!entity) continue;
         
         std::string originalType = entity->type;
         
-        // First, apply legacy ObjectTypeChecker
-        entity->type = parser.ObjectTypeChecker(entity->type);
-        
-        // Then, apply new synonym normalization
-        entity->type = factory.NormalizeType(entity->type);
+        // ✅ SINGLE NORMALIZATION CALL - PrefabFactory is the authority
+        entity->type = factory.NormalizeType(originalType);
         
         if (originalType != entity->type)
         {
+            normalizedCount++;
             SYSTEM_LOG << "  → '" << originalType << "' → '" << entity->type << "'\n";
         }
     }
+    
+    if (normalizedCount == 0)
+    {
+        SYSTEM_LOG << "  ✓ All types already normalized (no changes needed)\n";
+    }
+    else
+    {
+        SYSTEM_LOG << "  ✓ Normalized " << normalizedCount << " entity types\n";
+    }
+    
+    // ✅ CRITICAL FIX: Also normalize categorizedObjects if they are COPIES
+    // Simple approach: Always normalize categorizedObjects to ensure consistency
+    // This handles both reference and copy scenarios reliably
+    if (!levelDef.categorizedObjects.dynamicObjects.empty() ||
+        !levelDef.categorizedObjects.staticObjects.empty() ||
+        !levelDef.categorizedObjects.patrolPaths.empty())
+    {
+        bool needsSeparateNormalization = false;
+        
+        // Check if categorizedObjects are copies by comparing pointers
+        if (!levelDef.categorizedObjects.dynamicObjects.empty() && !levelDef.entities.empty())
+        {
+            bool foundMatch = false;
+            const auto& firstDynamic = levelDef.categorizedObjects.dynamicObjects[0];
+            
+            // Check if first dynamic object exists in main entities list
+            for (const auto& entity : levelDef.entities)
+            {
+                if (entity.get() == firstDynamic.get())
+                {
+                    foundMatch = true;
+                    break;
+                }
+            }
+            
+            // If no match found, they are copies
+            if (!foundMatch)
+            {
+                needsSeparateNormalization = true;
+            }
+        }
+        
+        if (needsSeparateNormalization)
+        {
+            SYSTEM_LOG << "\n/!\\ Detected: categorizedObjects are COPIES, normalizing separately...\n";
+            
+            // Normalize dynamic objects
+            for (const auto& entity : levelDef.categorizedObjects.dynamicObjects)
+            {
+                if (!entity) continue;
+                std::string original = entity->type;
+                entity->type = factory.NormalizeType(original);
+                
+                if (original != entity->type)
+                {
+                    SYSTEM_LOG << "  [Dynamic] -> '" << original << "' -> '" << entity->type << "'\n";
+                }
+            }
+            
+            // Normalize static objects
+            for (const auto& entity : levelDef.categorizedObjects.staticObjects)
+            {
+                if (!entity) continue;
+                std::string original = entity->type;
+                entity->type = factory.NormalizeType(original);
+                
+                if (original != entity->type)
+                {
+                    SYSTEM_LOG << "  [Static] -> '" << original << "' -> '" << entity->type << "'\n";
+                }
+            }
+            
+            // Normalize patrol paths
+            for (const auto& entity : levelDef.categorizedObjects.patrolPaths)
+            {
+                if (!entity) continue;
+                std::string original = entity->type;
+                entity->type = factory.NormalizeType(original);
+                
+                if (original != entity->type)
+                {
+                    SYSTEM_LOG << "  [PatrolPath] -> '" << original << "' -> '" << entity->type << "'\n";
+                }
+            }
+            
+            SYSTEM_LOG << "  ok - Categorized objects normalized\n";
+        }
+    }
+    
     SYSTEM_LOG << "\n";
             
     // Execute 5-pass instantiation

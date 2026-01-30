@@ -95,6 +95,13 @@ public:
     // Check if two types are equivalent (delegates to scanner)
     bool AreTypesEquivalent(const std::string& type1, const std::string& type2) const;
     
+    // Check if a type is registered (after normalization)
+    bool IsTypeRegistered(const std::string& type) const;
+    
+    // Get canonical type info (for debugging)
+    bool GetCanonicalInfo(const std::string& type, std::string& outCanonical, 
+                          std::string& outPrefabFile) const;
+    
     // Create entity from a parsed blueprint (no re-parsing)
     // autoAssignLayer: if true, automatically assign layer based on EntityType
     EntityID CreateEntityFromBlueprint(const PrefabBlueprint& blueprint, bool autoAssignLayer = true);
