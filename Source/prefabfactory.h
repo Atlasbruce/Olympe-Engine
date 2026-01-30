@@ -14,6 +14,7 @@
 #include "PrefabScanner.h"
 #include "ParameterResolver.h"
 #include <map>
+#include <memory>
 
 using PrefabBuilder = std::function<void(EntityID)>;
 
@@ -88,6 +89,12 @@ public:
     // Get the cached prefab registry
     const PrefabRegistry& GetPrefabRegistry() const { return m_prefabRegistry; }
     
+    // Normalize a type string to canonical form (delegates to scanner)
+    std::string NormalizeType(const std::string& type) const;
+    
+    // Check if two types are equivalent (delegates to scanner)
+    bool AreTypesEquivalent(const std::string& type1, const std::string& type2) const;
+    
     // Create entity from a parsed blueprint (no re-parsing)
     // autoAssignLayer: if true, automatically assign layer based on EntityType
     EntityID CreateEntityFromBlueprint(const PrefabBlueprint& blueprint, bool autoAssignLayer = true);
@@ -106,6 +113,7 @@ private:
     std::map<std::string, PrefabBuilder> m_prefabs;
     PrefabRegistry m_prefabRegistry;
     bool m_prefabsPreloaded = false;
+    std::unique_ptr<PrefabScanner> m_scanner;  // For type normalization
 
     PrefabFactory() = default;
     

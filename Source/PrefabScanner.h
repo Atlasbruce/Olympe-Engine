@@ -39,6 +39,15 @@ struct PrefabBlueprint
     PrefabBlueprint() : isValid(false) {}
 };
 
+// Synonym information for a canonical type
+struct SynonymInfo
+{
+    std::string canonicalType;
+    std::string description;
+    std::string prefabFile;
+    std::vector<std::string> synonyms;
+};
+
 // Registry of all discovered prefabs
 class PrefabRegistry
 {
@@ -63,10 +72,38 @@ public:
     PrefabScanner();
     ~PrefabScanner();
     
+    // ========================================================================
+    // Modern API: Unified initialization with synonym support
+    // ========================================================================
+    
+    /// Initialize the prefab system (call once at startup)
+    /// - Loads synonym registry
+    /// - Scans prefab directory recursively
+    /// - Builds registry
+    PrefabRegistry Initialize(const std::string& prefabDirectory = "Gamedata/EntityPrefab");
+    
+    /// Normalize a type string to canonical form
+    std::string NormalizeType(const std::string& type) const;
+    
+    /// Check if two types are equivalent
+    bool AreTypesEquivalent(const std::string& type1, const std::string& type2) const;
+    
+    /// Check if a type is registered
+    bool IsTypeRegistered(const std::string& type) const;
+    
+    // ========================================================================
+    // Legacy API (for backward compatibility)
+    // ========================================================================
+    
     std::vector<PrefabBlueprint> ScanDirectory(const std::string& rootPath);
     
 private:
     PrefabBlueprint ParsePrefab(const std::string& filepath);
+    
+    // Synonym registry methods
+    bool LoadSynonymRegistry(const std::string& directory);
+    std::string ExtractPrefabType(const nlohmann::json& prefabJson);
+    float FuzzyMatch(const std::string& str1, const std::string& str2) const;
     
     // Recursive directory scanning (platform-specific)
 #ifdef _WIN32
@@ -80,4 +117,13 @@ private:
     void ExtractResources(const nlohmann::json& componentsJson, ResourceRefs& outResources);
     std::string GetFilename(const std::string& filepath);
     std::string RemoveExtension(const std::string& filename);
+    std::string ToUpper(const std::string& str) const;
+    
+    // Internal data for synonym system
+    std::map<std::string, std::string> m_synonymToCanonical;  // synonym/type -> canonical
+    std::map<std::string, SynonymInfo> m_canonicalTypes;      // canonical -> info
+    bool m_caseSensitive = false;
+    bool m_enableFuzzyMatching = true;
+    float m_fuzzyThreshold = 0.8f;
+    bool m_logUnmatchedTypes = true;
 };

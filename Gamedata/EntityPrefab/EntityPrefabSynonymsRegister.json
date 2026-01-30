@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "description": "Entity type synonyms registry for Olympe Engine",
+  "canonicalTypes": {
+    "Player": {
+      "description": "Playable character entity",
+      "prefabFile": "player.json",
+      "synonyms": ["player", "PLAYER", "PlayerEntity", "playerentity", "player_entity"]
+    },
+    "Guard": {
+      "description": "Guard NPC with patrol behavior",
+      "prefabFile": "guard.json",
+      "synonyms": ["guard", "GUARD", "Guard_NPC", "patrol_guard"]
+    },
+    "Enemy": {
+      "description": "Hostile enemy entity",
+      "prefabFile": "zombie.json",
+      "synonyms": ["enemy", "ENEMY", "hostile", "monster", "mob", "zombie", "ZOMBIE"]
+    },
+    "Item": {
+      "description": "Collectible item entity",
+      "synonyms": ["item", "ITEM", "collectible", "pickup", "loot"]
+    },
+    "Key": {
+      "description": "Key item for unlocking doors",
+      "prefabFile": "key.json",
+      "synonyms": ["key", "KEY", "keyitem", "unlock_item"]
+    },
+    "Door": {
+      "description": "Door or portal entity",
+      "prefabFile": "door.json",
+      "synonyms": ["door", "DOOR", "portal", "gate", "entrance", "exit"]
+    },
+    "Trigger": {
+      "description": "Trigger zone for events",
+      "prefabFile": "trigger.json",
+      "synonyms": ["trigger", "TRIGGER", "trigger_zone", "event_trigger"]
+    },
+    "Waypoint": {
+      "description": "Waypoint for patrol paths",
+      "prefabFile": "waypoint.json",
+      "synonyms": ["waypoint", "WAYPOINT", "way", "WAY", "patrol_point", "path_node"]
+    },
+    "Ambient": {
+      "description": "Ambient sound source",
+      "prefabFile": "sound.json",
+      "synonyms": ["ambient", "AMBIENT", "ambiant", "sound", "audio_source"]
+    },
+    "Sector": {
+      "description": "Sector or zone entity",
+      "prefabFile": "sector.json",
+      "synonyms": ["sector", "SECTOR", "zone", "area", "region"]
+    },
+    "NPC": {
+      "description": "Non-playable character",
+      "prefabFile": "npc_entity.json",
+      "synonyms": ["npc", "Npc", "non_playable", "character", "civilian"]
+    }
+  },
+  "fallbackBehavior": {
+    "caseSensitive": false,
+    "enableFuzzyMatching": true,
+    "fuzzyThreshold": 0.8,
+    "logUnmatchedTypes": true
+  }
+}
