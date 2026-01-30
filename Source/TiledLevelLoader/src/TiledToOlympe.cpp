@@ -660,8 +660,8 @@ namespace Tiled {
         }
         
         // Set world size
-        outLevel.worldSize.x = tiledMap.width * tiledMap.tilewidth;
-        outLevel.worldSize.y = tiledMap.height * tiledMap.tileheight;
+        outLevel.worldSize.x = (float) tiledMap.width * tiledMap.tilewidth;
+        outLevel.worldSize.y = (float) tiledMap.height * tiledMap.tileheight;
         
         // Background color
         if (!tiledMap.backgroundcolor.empty()) {
