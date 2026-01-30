@@ -29,7 +29,6 @@ namespace Olympe {
 namespace Editor {
     struct LevelDefinition;
     struct EntityInstance;
-    struct Vec2;
 }
 }
 

@@ -12,6 +12,7 @@
 #include "system/system_utils.h"
 #include <fstream>
 #include <algorithm>
+#include <cstring>
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -85,13 +86,20 @@ PrefabScanner::~PrefabScanner()
 {
 }
 
+std::string PrefabScanner::ToUpper(const std::string& str) const
+{
+    std::string result = str;
+    std::transform(result.begin(), result.end(), result.begin(), ::toupper);
+    return result;
+}
+
 std::vector<PrefabBlueprint> PrefabScanner::ScanDirectory(const std::string& rootPath)
 {
     SYSTEM_LOG << "\n";
     SYSTEM_LOG << "/======================================================================\\\n";
     SYSTEM_LOG << "|         PREFAB DIRECTORY SCAN                                        |\n";
     SYSTEM_LOG << "|======================================================================|\n";
-    SYSTEM_LOG << "| Path: " << rootPath << std::string(std::max(0, 63 - static_cast<int>(rootPath.length())), ' ') << "|" << std::endl;
+    SYSTEM_LOG << "| Path: " << rootPath << std::string(max(0, 63 - static_cast<int>(rootPath.length())), ' ') << "|" << std::endl;
     SYSTEM_LOG << "\\======================================================================/\n\n";
 
     std::vector<PrefabBlueprint> blueprints;
@@ -487,13 +495,6 @@ std::string PrefabScanner::RemoveExtension(const std::string& filename)
 // NEW: Synonym System Implementation
 //=============================================================================
 
-std::string PrefabScanner::ToUpper(const std::string& str) const
-{
-    std::string result = str;
-    std::transform(result.begin(), result.end(), result.begin(), ::toupper);
-    return result;
-}
-
 int LevenshteinDistance(const std::string& s1, const std::string& s2)
 {
     const size_t m = s1.size();
@@ -512,11 +513,11 @@ int LevenshteinDistance(const std::string& s1, const std::string& s2)
         for (size_t j = 1; j <= n; ++j)
         {
             int cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
-            costs[i][j] = std::min({
-                costs[i - 1][j] + 1,       // deletion
-                costs[i][j - 1] + 1,       // insertion
-                costs[i - 1][j - 1] + cost // substitution
-            });
+            costs[i][j] = min(
+                min(costs[i - 1][j] + 1,        // suppression
+                         costs[i][j - 1] + 1),       // insertion
+                costs[i - 1][j - 1] + cost           // substitution
+            );
         }
     }
     
@@ -529,7 +530,7 @@ float PrefabScanner::FuzzyMatch(const std::string& str1, const std::string& str2
     if (str1 == str2) return 1.0f;
     
     int distance = LevenshteinDistance(str1, str2);
-    int maxLen = std::max(str1.length(), str2.length());
+    int maxLen = max(str1.length(), str2.length());
     
     if (maxLen == 0) return 1.0f;
     
@@ -571,8 +572,11 @@ bool PrefabScanner::LoadSynonymRegistry(const std::string& directory)
         int totalSynonyms = 0;
         if (j.contains("canonicalTypes") && j["canonicalTypes"].is_object())
         {
-            for (const auto& [canonical, info] : j["canonicalTypes"].items())
+            for (const auto& pair : j["canonicalTypes"].items())
             {
+                const std::string& canonical = pair.first;
+                const nlohmann::json& info = *pair.second;
+                
                 SynonymInfo synInfo;
                 synInfo.canonicalType = canonical;
                 

@@ -97,7 +97,6 @@ public:
     
     std::vector<PrefabBlueprint> ScanDirectory(const std::string& rootPath);
     
-private:
     PrefabBlueprint ParsePrefab(const std::string& filepath);
     
     // Synonym registry methods
@@ -118,7 +117,8 @@ private:
     std::string GetFilename(const std::string& filepath);
     std::string RemoveExtension(const std::string& filename);
     std::string ToUpper(const std::string& str) const;
-    
+
+private:
     // Internal data for synonym system
     std::map<std::string, std::string> m_synonymToCanonical;  // synonym/type -> canonical
     std::map<std::string, SynonymInfo> m_canonicalTypes;      // canonical -> info

@@ -45,7 +45,7 @@ namespace Editor {
     class PlaceEntityCommand : public Command
     {
     public:
-        PlaceEntityCommand(const std::string& prefabPath, const Vec2& position);
+        PlaceEntityCommand(const std::string& prefabPath, const Vector& position);
         ~PlaceEntityCommand() override = default;
 
         void Execute(LevelManager& levelManager) override;

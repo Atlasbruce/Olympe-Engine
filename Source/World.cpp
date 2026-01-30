@@ -110,7 +110,7 @@ void World::Initialize_ECS_Systems()
 	
 	// ✅ NOUVEAU : Précharger tous les prefabs AVANT de créer les systèmes
 	SYSTEM_LOG << "\n";
-	PrefabFactory::Get().PreloadAllPrefabs("Blueprints/EntityPrefab");
+	PrefabFactory::Get().PreloadAllPrefabs("Gamedata/EntityPrefab");
 	SYSTEM_LOG << "\n";
 	
 	Add_ECS_System(std::make_unique<InputEventConsumeSystem>());
