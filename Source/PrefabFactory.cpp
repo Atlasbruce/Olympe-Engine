@@ -144,6 +144,25 @@ bool PrefabFactory::AreTypesEquivalent(const std::string& type1, const std::stri
     return type1 == type2;
 }
 
+bool PrefabFactory::IsTypeRegistered(const std::string& type) const
+{
+    if (m_scanner)
+    {
+        return m_scanner->IsTypeRegistered(type);
+    }
+    return false;
+}
+
+bool PrefabFactory::GetCanonicalInfo(const std::string& type, std::string& outCanonical, 
+                                      std::string& outPrefabFile) const
+{
+    if (m_scanner)
+    {
+        return m_scanner->GetCanonicalInfo(type, outCanonical, outPrefabFile);
+    }
+    return false;
+}
+
 EntityID PrefabFactory::CreateEntityFromBlueprint(const PrefabBlueprint& blueprint, bool autoAssignLayer)
 {
     if (!blueprint.isValid)

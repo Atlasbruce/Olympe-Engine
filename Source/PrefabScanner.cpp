@@ -761,6 +761,27 @@ bool PrefabScanner::IsTypeRegistered(const std::string& type) const
            m_synonymToCanonical.find(ToUpper(type)) != m_synonymToCanonical.end();
 }
 
+bool PrefabScanner::GetCanonicalInfo(const std::string& type, std::string& outCanonical, 
+                                      std::string& outPrefabFile) const
+{
+    // Try to find the canonical type for the given type
+    std::string canonical = NormalizeType(type);
+    
+    // Check if we found a valid canonical type
+    auto it = m_canonicalTypes.find(canonical);
+    if (it != m_canonicalTypes.end())
+    {
+        outCanonical = it->second.canonicalType;
+        outPrefabFile = it->second.prefabFile;
+        return true;
+    }
+    
+    // Not found
+    outCanonical.clear();
+    outPrefabFile.clear();
+    return false;
+}
+
 PrefabRegistry PrefabScanner::Initialize(const std::string& prefabDirectory)
 {
     SYSTEM_LOG << "\n";
