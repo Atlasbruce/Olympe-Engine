@@ -568,6 +568,31 @@ bool PrefabScanner::LoadSynonymRegistry(const std::string& directory)
             m_logUnmatchedTypes = fb.value("logUnmatchedTypes", true);
         }
         
+        // Parse categories
+        int totalCategories = 0;
+        if (j.contains("categories") && j["categories"].is_object())
+        {
+            for (const auto& pair : j["categories"].items())
+            {
+                const std::string& category = pair.first;
+                const nlohmann::json& types = *pair.second;
+                
+                if (types.is_array())
+                {
+                    std::vector<std::string> typeList;
+                    for (const auto& type : types)
+                    {
+                        if (type.is_string())
+                        {
+                            typeList.push_back(type.get<std::string>());
+                        }
+                    }
+                    m_categoryToTypes[category] = typeList;
+                    totalCategories++;
+                }
+            }
+        }
+        
         // Parse canonical types + synonyms
         int totalSynonyms = 0;
         if (j.contains("canonicalTypes") && j["canonicalTypes"].is_object())
@@ -627,6 +652,10 @@ bool PrefabScanner::LoadSynonymRegistry(const std::string& directory)
         
         SYSTEM_LOG << "  -> Loaded " << m_canonicalTypes.size() << " canonical types with " 
                    << totalSynonyms << " synonyms\n";
+        if (totalCategories > 0)
+        {
+            SYSTEM_LOG << "  -> Loaded " << totalCategories << " categories\n";
+        }
         SYSTEM_LOG << "  Settings: case-sensitive=" << (m_caseSensitive ? "yes" : "no") 
                    << ", fuzzy-matching=" << (m_enableFuzzyMatching ? "yes" : "no") << "\n";
         
@@ -862,11 +891,36 @@ PrefabRegistry PrefabScanner::Initialize(const std::string& prefabDirectory)
                 }
             }
             
+            // Assign categories based on prefab type
+            for (const auto& categoryPair : m_categoryToTypes)
+            {
+                const std::string& category = categoryPair.first;
+                const std::vector<std::string>& types = categoryPair.second;
+                
+                // Check if this blueprint's type is in the category
+                if (std::find(types.begin(), types.end(), blueprint.prefabType) != types.end())
+                {
+                    blueprint.AddCategory(category);
+                }
+            }
+            
             registry.Register(blueprint);
             validCount++;
             
+            std::string categoryStr = "";
+            if (!blueprint.categories.empty())
+            {
+                categoryStr = " [Categories: ";
+                for (size_t i = 0; i < blueprint.categories.size(); i++)
+                {
+                    categoryStr += blueprint.categories[i];
+                    if (i < blueprint.categories.size() - 1) categoryStr += ", ";
+                }
+                categoryStr += "]";
+            }
+            
             SYSTEM_LOG << "  -> " << blueprint.prefabName << " [" << blueprint.prefabType << "] "
-                       << "(" << blueprint.components.size() << " components)\n";
+                       << "(" << blueprint.components.size() << " components)" << categoryStr << "\n";
         }
         else
         {

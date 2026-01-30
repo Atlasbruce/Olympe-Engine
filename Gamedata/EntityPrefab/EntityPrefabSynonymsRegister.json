@@ -1,6 +1,13 @@
 {
   "schema_version": 1,
   "description": "Entity type synonyms registry for Olympe Engine",
+  "categories": {
+    "RequiresRegistration": ["Player"],
+    "HasAI": ["Guard", "Enemy"],
+    "IsStatic": ["Collision", "Sector", "Trigger"],
+    "IsCollectible": ["Key", "Item"],
+    "HasPatrolPath": ["Guard"]
+  },
   "canonicalTypes": {
     "Player": {
       "description": "Playable character entity",
