@@ -49,7 +49,7 @@ public:
 
      // Player management
      void SetViewportLayout(short playerID);
-     EntityID AddPlayerEntity(string _playerPrefabName = "PlayerEntity");
+     EntityID AddPlayerEntity(string _playerPrefabName = "Player");
 	 bool RemovePlayerEntity(const EntityID eid);
 	 
 	 // Register a player entity that was loaded from a level

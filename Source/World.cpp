@@ -1682,26 +1682,25 @@ bool World::InstantiatePass3_StaticObjects(
         
         result.pass3_staticObjects.totalObjects++;
         
-        // Extract prefab name from path
-        std::string prefabName = ExtractPrefabName(entityInstance->prefabPath);
+        // ✅ FIXED: Search by entity type using FindByType()
+        std::vector<const PrefabBlueprint*> blueprints = 
+            factory.GetPrefabRegistry().FindByType(entityInstance->type);
         
-        // Check if prefab exists
-        if (!factory.HasPrefab(prefabName))
+        const PrefabBlueprint* blueprint = nullptr;
+        
+        if (!blueprints.empty())
         {
-            // Create placeholder for missing prefab
-            EntityID entity = CreateMissingPrefabPlaceholder(*entityInstance, result.pass3_staticObjects);
-            if (entity != INVALID_ENTITY_ID)
-            {
-                result.entityRegistry[entityInstance->name] = entity;
-            }
-            continue;
+            blueprint = blueprints[0];
+        }
+        else
+        {
+            // Fallback: try direct name lookup (for exact matches like "Player" → "Player")
+            blueprint = factory.GetPrefabRegistry().Find(entityInstance->type);
         }
         
-        // Get blueprint
-        const PrefabBlueprint* blueprint = factory.GetPrefabRegistry().Find(prefabName);
         if (!blueprint || !blueprint->isValid)
         {
-            // Create placeholder for invalid blueprint
+            // Create placeholder for missing or invalid prefab
             EntityID entity = CreateMissingPrefabPlaceholder(*entityInstance, result.pass3_staticObjects);
             if (entity != INVALID_ENTITY_ID)
             {
