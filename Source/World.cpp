@@ -470,13 +470,29 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     // Synchronize grid settings with loaded level
     SyncGridWithLevel(levelDef);
 
-	// Clean and standardize Object.type following prefab registry
+    // ✅ NORMALIZE ALL ENTITY TYPES using synonym registry
+    SYSTEM_LOG << "\n[DEBUG] Normalizing entity types...\n";
     PrefabFactory& factory = PrefabFactory::Get();
     factory.SetPrefabRegistry(phase2Result.prefabRegistry);
-	for (const auto& entity : levelDef.entities)
+    
+    for (const auto& entity : levelDef.entities)
     {
-		entity->type = parser.ObjectTypeChecker(entity->type);
+        if (!entity) continue;
+        
+        std::string originalType = entity->type;
+        
+        // First, apply legacy ObjectTypeChecker
+        entity->type = parser.ObjectTypeChecker(entity->type);
+        
+        // Then, apply new synonym normalization
+        entity->type = factory.NormalizeType(entity->type);
+        
+        if (originalType != entity->type)
+        {
+            SYSTEM_LOG << "  → '" << originalType << "' → '" << entity->type << "'\n";
+        }
     }
+    SYSTEM_LOG << "\n";
             
     // Execute 5-pass instantiation
     InstantiationResult instResult;
@@ -1713,8 +1729,8 @@ bool World::InstantiatePass4_DynamicObjects(
             continue;
         }
         
-        // ✅ POST-PROCESSING: Register Player entities
-        if (entityInstance->type == "Player" || entityInstance->type == "PlayerEntity")
+        // ✅ POST-PROCESSING: Register Player entities using type equivalence check
+        if (factory.AreTypesEquivalent(entityInstance->type, "Player"))
         {
             RegisterPlayerEntity(entity);
         }

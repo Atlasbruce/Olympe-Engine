@@ -37,14 +37,12 @@ void PrefabFactory::PreloadAllPrefabs(const std::string& prefabDirectory)
     SYSTEM_LOG << "| PREFAB FACTORY: PRELOADING ALL PREFABS                   |\n";
     SYSTEM_LOG << "\===========================================================/\n";
     
+    // Use new unified Initialize method from PrefabScanner
     PrefabScanner scanner;
-    std::vector<PrefabBlueprint> blueprints = scanner.ScanDirectory(prefabDirectory);
+    m_prefabRegistry = scanner.Initialize(prefabDirectory);
     
-    // Build registry from scanned blueprints
-    for (const auto& blueprint : blueprints)
-    {
-        m_prefabRegistry.Register(blueprint);
-    }
+    // Store scanner for type normalization
+    m_scanner = std::make_unique<PrefabScanner>(std::move(scanner));
     
     int prefabCount = static_cast<int>(m_prefabRegistry.GetCount());
     
@@ -126,6 +124,24 @@ void PrefabFactory::SetPrefabRegistry(const PrefabRegistry& registry)
     {
         m_prefabsPreloaded = true;
     }
+}
+
+std::string PrefabFactory::NormalizeType(const std::string& type) const
+{
+    if (m_scanner)
+    {
+        return m_scanner->NormalizeType(type);
+    }
+    return type;
+}
+
+bool PrefabFactory::AreTypesEquivalent(const std::string& type1, const std::string& type2) const
+{
+    if (m_scanner)
+    {
+        return m_scanner->AreTypesEquivalent(type1, type2);
+    }
+    return type1 == type2;
 }
 
 EntityID PrefabFactory::CreateEntityFromBlueprint(const PrefabBlueprint& blueprint, bool autoAssignLayer)

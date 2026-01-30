@@ -13,6 +13,7 @@
 #include <fstream>
 #include <algorithm>
 #include <functional>
+#include <iomanip>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -47,19 +48,16 @@ const PrefabBlueprint* PrefabRegistry::Find(const std::string& name) const
 std::vector<const PrefabBlueprint*> PrefabRegistry::FindByType(const std::string& type) const
 {
     std::vector<const PrefabBlueprint*> results;
+    
+    // ✅ Type already normalized in upstream, use direct comparison
     for (const auto& pair : m_blueprints)
     { 
-		// Case-insensitive comparison -> convert both stings to uppercase
-        std::string prefabType = pair.second.prefabType;
-		std::transform(prefabType.begin(), prefabType.end(), prefabType.begin(), ::toupper);
-		std::string searchType = type;
-		std::transform(searchType.begin(), searchType.end(), searchType.begin(), ::toupper);
-
-        if (prefabType == searchType)
+        if (pair.second.prefabType == type)
         {
             results.push_back(&pair.second);
         }
     }
+    
     return results;
 }
 
@@ -269,14 +267,30 @@ PrefabBlueprint PrefabScanner::ParsePrefab(const std::string& filepath)
     {
         json j = json::parse(content);
         
-        // Extract top-level metadata
-        if (j.contains("type"))
+        // CRITICAL FIX: Extract prefabType from Identity_data::entityType first
+        blueprint.prefabType = ExtractPrefabType(j);
+        
+        // Fallback to top-level metadata if extraction failed
+        if (blueprint.prefabType.empty())
         {
-            blueprint.prefabType = j["type"].get<std::string>();
+            if (j.contains("type"))
+            {
+                std::string typeValue = j["type"].get<std::string>();
+                if (typeValue != "EntityPrefab" && typeValue != "Player")
+                {
+                    blueprint.prefabType = typeValue;
+                }
+            }
+            else if (j.contains("blueprintType"))
+            {
+                blueprint.prefabType = j["blueprintType"].get<std::string>();
+            }
         }
-        else if (j.contains("blueprintType"))
+        
+        // Final fallback: use prefabName
+        if (blueprint.prefabType.empty())
         {
-            blueprint.prefabType = j["blueprintType"].get<std::string>();
+            blueprint.prefabType = blueprint.prefabName;
         }
         
         if (j.contains("schema_version"))
@@ -466,4 +480,368 @@ std::string PrefabScanner::RemoveExtension(const std::string& filename)
         return filename.substr(0, pos);
     }
     return filename;
+}
+
+//=============================================================================
+// NEW: Synonym System Implementation
+//=============================================================================
+
+std::string PrefabScanner::ToUpper(const std::string& str) const
+{
+    std::string result = str;
+    std::transform(result.begin(), result.end(), result.begin(), ::toupper);
+    return result;
+}
+
+int LevenshteinDistance(const std::string& s1, const std::string& s2)
+{
+    const size_t m = s1.size();
+    const size_t n = s2.size();
+    
+    if (m == 0) return static_cast<int>(n);
+    if (n == 0) return static_cast<int>(m);
+    
+    std::vector<std::vector<int>> costs(m + 1, std::vector<int>(n + 1));
+    
+    for (size_t i = 0; i <= m; ++i) costs[i][0] = static_cast<int>(i);
+    for (size_t j = 0; j <= n; ++j) costs[0][j] = static_cast<int>(j);
+    
+    for (size_t i = 1; i <= m; ++i)
+    {
+        for (size_t j = 1; j <= n; ++j)
+        {
+            int cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
+            costs[i][j] = std::min({
+                costs[i - 1][j] + 1,       // deletion
+                costs[i][j - 1] + 1,       // insertion
+                costs[i - 1][j - 1] + cost // substitution
+            });
+        }
+    }
+    
+    return costs[m][n];
+}
+
+float PrefabScanner::FuzzyMatch(const std::string& str1, const std::string& str2) const
+{
+    if (str1.empty() || str2.empty()) return 0.0f;
+    if (str1 == str2) return 1.0f;
+    
+    int distance = LevenshteinDistance(str1, str2);
+    int maxLen = std::max(str1.length(), str2.length());
+    
+    if (maxLen == 0) return 1.0f;
+    
+    return 1.0f - (static_cast<float>(distance) / static_cast<float>(maxLen));
+}
+
+bool PrefabScanner::LoadSynonymRegistry(const std::string& directory)
+{
+    std::string filepath = directory + "/EntityPrefabSynonymsRegister.json";
+    
+    SYSTEM_LOG << "Step 1/3: Loading synonym registry...\n";
+    SYSTEM_LOG << "  Loading: " << filepath << "\n";
+    
+    // Check if file exists
+    std::ifstream file(filepath);
+    if (!file.is_open())
+    {
+        SYSTEM_LOG << "  ⚠️ Synonym registry not found, using default behavior\n";
+        return false;
+    }
+    
+    try
+    {
+        json j;
+        file >> j;
+        file.close();
+        
+        // Parse fallback behavior
+        if (j.contains("fallbackBehavior") && j["fallbackBehavior"].is_object())
+        {
+            const json& fb = j["fallbackBehavior"];
+            m_caseSensitive = fb.value("caseSensitive", false);
+            m_enableFuzzyMatching = fb.value("enableFuzzyMatching", true);
+            m_fuzzyThreshold = fb.value("fuzzyThreshold", 0.8f);
+            m_logUnmatchedTypes = fb.value("logUnmatchedTypes", true);
+        }
+        
+        // Parse canonical types + synonyms
+        int totalSynonyms = 0;
+        if (j.contains("canonicalTypes") && j["canonicalTypes"].is_object())
+        {
+            for (const auto& [canonical, info] : j["canonicalTypes"].items())
+            {
+                SynonymInfo synInfo;
+                synInfo.canonicalType = canonical;
+                
+                if (info.contains("description") && info["description"].is_string())
+                {
+                    synInfo.description = info["description"].get<std::string>();
+                }
+                
+                if (info.contains("prefabFile") && info["prefabFile"].is_string())
+                {
+                    synInfo.prefabFile = info["prefabFile"].get<std::string>();
+                }
+                
+                // Register canonical type (exact match)
+                m_synonymToCanonical[canonical] = canonical;
+                
+                // Register uppercase version if case-insensitive
+                if (!m_caseSensitive)
+                {
+                    m_synonymToCanonical[ToUpper(canonical)] = canonical;
+                }
+                
+                // Register synonyms
+                if (info.contains("synonyms") && info["synonyms"].is_array())
+                {
+                    for (const auto& synonym : info["synonyms"])
+                    {
+                        if (synonym.is_string())
+                        {
+                            std::string synStr = synonym.get<std::string>();
+                            synInfo.synonyms.push_back(synStr);
+                            m_synonymToCanonical[synStr] = canonical;
+                            
+                            // Register uppercase version if case-insensitive
+                            if (!m_caseSensitive)
+                            {
+                                m_synonymToCanonical[ToUpper(synStr)] = canonical;
+                            }
+                            
+                            totalSynonyms++;
+                        }
+                    }
+                }
+                
+                m_canonicalTypes[canonical] = synInfo;
+            }
+        }
+        
+        SYSTEM_LOG << "  ✅ Loaded " << m_canonicalTypes.size() << " canonical types with " 
+                   << totalSynonyms << " synonyms\n";
+        SYSTEM_LOG << "  Settings: case-sensitive=" << (m_caseSensitive ? "yes" : "no") 
+                   << ", fuzzy-matching=" << (m_enableFuzzyMatching ? "yes" : "no") << "\n";
+        
+        return true;
+    }
+    catch (const std::exception& e)
+    {
+        SYSTEM_LOG << "  ⚠️ Failed to parse synonym registry: " << e.what() << "\n";
+        return false;
+    }
+}
+
+std::string PrefabScanner::ExtractPrefabType(const nlohmann::json& prefabJson)
+{
+    // Priority 1: Identity_data::entityType
+    if (prefabJson.contains("data") && prefabJson["data"].is_object())
+    {
+        const json& dataJson = prefabJson["data"];
+        if (dataJson.contains("components") && dataJson["components"].is_array())
+        {
+            for (const auto& comp : dataJson["components"])
+            {
+                if (comp.contains("type") && comp["type"].is_string())
+                {
+                    std::string compType = comp["type"].get<std::string>();
+                    if (compType == "Identity_data" || compType == "Identity")
+                    {
+                        if (comp.contains("properties") && comp["properties"].is_object())
+                        {
+                            const json& props = comp["properties"];
+                            if (props.contains("entityType") && props["entityType"].is_string())
+                            {
+                                return props["entityType"].get<std::string>();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Priority 2: Top-level "type" (if not "EntityPrefab")
+    if (prefabJson.contains("type") && prefabJson["type"].is_string())
+    {
+        std::string type = prefabJson["type"].get<std::string>();
+        if (type != "EntityPrefab")
+        {
+            return type;
+        }
+    }
+    
+    return "";
+}
+
+std::string PrefabScanner::NormalizeType(const std::string& type) const
+{
+    if (type.empty()) return type;
+    
+    // 1. Direct lookup (exact match)
+    auto it = m_synonymToCanonical.find(type);
+    if (it != m_synonymToCanonical.end())
+    {
+        return it->second;
+    }
+    
+    // 2. Case-insensitive lookup (if enabled)
+    if (!m_caseSensitive)
+    {
+        std::string upperType = ToUpper(type);
+        it = m_synonymToCanonical.find(upperType);
+        if (it != m_synonymToCanonical.end())
+        {
+            return it->second;
+        }
+    }
+    
+    // 3. Fuzzy matching (if enabled)
+    if (m_enableFuzzyMatching)
+    {
+        std::string bestMatch;
+        float bestScore = 0.0f;
+        
+        for (const auto& pair : m_canonicalTypes)
+        {
+            const std::string& canonical = pair.first;
+            float score = FuzzyMatch(type, canonical);
+            
+            if (score > bestScore && score >= m_fuzzyThreshold)
+            {
+                bestScore = score;
+                bestMatch = canonical;
+            }
+            
+            // Also check synonyms
+            for (const auto& synonym : pair.second.synonyms)
+            {
+                score = FuzzyMatch(type, synonym);
+                if (score > bestScore && score >= m_fuzzyThreshold)
+                {
+                    bestScore = score;
+                    bestMatch = canonical;
+                }
+            }
+        }
+        
+        if (!bestMatch.empty())
+        {
+            SYSTEM_LOG << "  🔍 Fuzzy match: '" << type << "' → '" << bestMatch 
+                       << "' (score: " << bestScore << ")\n";
+            return bestMatch;
+        }
+    }
+    
+    // 4. Fallback: return original type
+    if (m_logUnmatchedTypes && !m_synonymToCanonical.empty())
+    {
+        SYSTEM_LOG << "  ⚠️ Unmatched type: '" << type << "'\n";
+    }
+    
+    return type;
+}
+
+bool PrefabScanner::AreTypesEquivalent(const std::string& type1, const std::string& type2) const
+{
+    if (type1 == type2) return true;
+    
+    std::string normalized1 = NormalizeType(type1);
+    std::string normalized2 = NormalizeType(type2);
+    
+    return normalized1 == normalized2;
+}
+
+bool PrefabScanner::IsTypeRegistered(const std::string& type) const
+{
+    return m_synonymToCanonical.find(type) != m_synonymToCanonical.end() ||
+           m_synonymToCanonical.find(ToUpper(type)) != m_synonymToCanonical.end();
+}
+
+PrefabRegistry PrefabScanner::Initialize(const std::string& prefabDirectory)
+{
+    SYSTEM_LOG << "\n";
+    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
+    SYSTEM_LOG << "║ PREFAB SCANNER: INITIALIZATION                           ║\n";
+    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n";
+    SYSTEM_LOG << "Directory: " << prefabDirectory << "\n\n";
+    
+    PrefabRegistry registry;
+    
+    // Step 1: Load synonym registry
+    LoadSynonymRegistry(prefabDirectory);
+    
+    // Step 2: Scan directory for prefab files
+    std::vector<std::string> prefabFiles;
+    SYSTEM_LOG << "\nStep 2/3: Scanning prefab directory...\n";
+    
+#ifdef _WIN32
+    ScanDirectoryRecursive_Windows(prefabDirectory, prefabFiles);
+#else
+    ScanDirectoryRecursive_Unix(prefabDirectory, prefabFiles);
+#endif
+    
+    // Filter out the synonym registry file
+    prefabFiles.erase(
+        std::remove_if(prefabFiles.begin(), prefabFiles.end(),
+            [](const std::string& file) {
+                return file.find("EntityPrefabSynonymsRegister.json") != std::string::npos;
+            }),
+        prefabFiles.end()
+    );
+    
+    SYSTEM_LOG << "  → Found " << prefabFiles.size() << " .json file(s)\n";
+    
+    // Step 3: Parse prefabs
+    SYSTEM_LOG << "\nStep 3/3: Parsing prefabs...\n";
+    
+    int validCount = 0;
+    int invalidCount = 0;
+    
+    for (const auto& filepath : prefabFiles)
+    {
+        PrefabBlueprint blueprint = ParsePrefab(filepath);
+        
+        if (blueprint.isValid)
+        {
+            // Normalize the prefab type
+            if (!blueprint.prefabType.empty())
+            {
+                std::string originalType = blueprint.prefabType;
+                blueprint.prefabType = NormalizeType(blueprint.prefabType);
+                
+                if (originalType != blueprint.prefabType)
+                {
+                    SYSTEM_LOG << "  → Normalized type: '" << originalType << "' → '" 
+                               << blueprint.prefabType << "' for " << blueprint.prefabName << "\n";
+                }
+            }
+            
+            registry.Register(blueprint);
+            validCount++;
+            
+            SYSTEM_LOG << "  ✅ " << blueprint.prefabName << " [" << blueprint.prefabType << "] "
+                       << "(" << blueprint.components.size() << " components)\n";
+        }
+        else
+        {
+            invalidCount++;
+            SYSTEM_LOG << "  ❌ " << filepath << " (parse failed)\n";
+        }
+    }
+    
+    SYSTEM_LOG << "\n";
+    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
+    SYSTEM_LOG << "║ PREFAB SCANNER: INITIALIZATION COMPLETE                  ║\n";
+    SYSTEM_LOG << "╠══════════════════════════════════════════════════════════╣\n";
+    SYSTEM_LOG << "║ Total Files Scanned:  " << std::left << std::setw(33) << prefabFiles.size() << "║\n";
+    SYSTEM_LOG << "║ Valid Prefabs:        " << std::left << std::setw(33) << validCount << "║\n";
+    SYSTEM_LOG << "║ Invalid Prefabs:      " << std::left << std::setw(33) << invalidCount << "║\n";
+    SYSTEM_LOG << "║ Canonical Types:      " << std::left << std::setw(33) << m_canonicalTypes.size() << "║\n";
+    SYSTEM_LOG << "║ Total Synonyms:       " << std::left << std::setw(33) << m_synonymToCanonical.size() << "║\n";
+    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n\n";
+    
+    return registry;
 }
