@@ -91,6 +91,10 @@ public:
     /// Check if a type is registered
     bool IsTypeRegistered(const std::string& type) const;
     
+    /// Get canonical type info (for debugging)
+    bool GetCanonicalInfo(const std::string& type, std::string& outCanonical, 
+                          std::string& outPrefabFile) const;
+    
     // ========================================================================
     // Legacy API (for backward compatibility)
     // ========================================================================
