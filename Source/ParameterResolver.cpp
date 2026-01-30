@@ -72,13 +72,26 @@ ResolvedComponentInstance ParameterResolver::ResolveComponent(
 	// Step 1: Start with prefab defaults (LOWEST priority)
 	resolved.parameters = componentDef.parameters;
 	
+	// Check if this component needs special position handling
+	bool isPositionComponent = (componentDef.componentType == "Position_data" || 
+	                           componentDef.componentType == "Position");
+	
+	// Extract level overrides for this component
+	auto componentParams = ExtractComponentParameters(componentDef.componentType, instanceParams);
+	
+	// Fast path: No overrides and not a position component - use prefab defaults directly
+	if (!isPositionComponent && componentParams.empty())
+	{
+		SYSTEM_LOG << "[ParameterResolver]     ✓ Fast path: 0 overrides (using prefab defaults)" << std::endl;
+		return resolved;
+	}
+	
 	SYSTEM_LOG << "[ParameterResolver]     Starting with " << resolved.parameters.size() 
 	           << " prefab default parameters" << std::endl;
 	
 	// Step 2: Apply position override (HIGHEST priority)
 	// Position is special - it's always from the level instance
-	if (componentDef.componentType == "Position_data" || 
-	    componentDef.componentType == "Position")
+	if (isPositionComponent)
 	{
 		SYSTEM_LOG << "[ParameterResolver]     Applying level position override: (" 
 		           << instanceParams.position.x << ", " 
@@ -91,16 +104,17 @@ ResolvedComponentInstance ParameterResolver::ResolveComponent(
 	}
 	
 	// Step 3: Apply level custom property overrides (HIGH priority)
-	auto componentParams = ExtractComponentParameters(componentDef.componentType, instanceParams);
-	
-	SYSTEM_LOG << "[ParameterResolver]     Applying " << componentParams.size() 
-	           << " level property overrides" << std::endl;
-	
-	for (const auto& it : componentParams)
+	if (!componentParams.empty())
 	{
-	    const std::string& propName = it.first;
-	    const ComponentParameter& propValue = it.second;
-	    ApplyPropertyOverride(resolved, propName, propValue);
+		SYSTEM_LOG << "[ParameterResolver]     Applying " << componentParams.size() 
+		           << " level property overrides" << std::endl;
+		
+		for (const auto& it : componentParams)
+		{
+		    const std::string& propName = it.first;
+		    const ComponentParameter& propValue = it.second;
+		    ApplyPropertyOverride(resolved, propName, propValue);
+		}
 	}
 	
 	return resolved;
@@ -233,12 +247,14 @@ void ParameterResolver::ValidateResolvedComponent(ResolvedComponentInstance& com
 	auto& schemaRegistry = ParameterSchemaRegistry::GetInstance();
 	const ComponentSchema* schema = schemaRegistry.GetComponentSchema(component.componentType);
 	
+	// Fast path: Skip validation if no schema exists
 	if (schema == nullptr)
 	{
-		SYSTEM_LOG << "[ParameterResolver]     Validation: No schema available for " 
-		           << component.componentType << std::endl;
+		// No schema available - skip validation silently
 		return;
 	}
+	
+	bool hasErrors = false;
 	
 	// Check for missing required parameters
 	for (const auto& requiredParam : schema->requiredParams)
@@ -248,12 +264,13 @@ void ParameterResolver::ValidateResolvedComponent(ResolvedComponentInstance& com
 			std::string error = "Missing required parameter: " + requiredParam;
 			component.errors.push_back(error);
 			component.isValid = false;
+			hasErrors = true;
 			
 			SYSTEM_LOG << "[ParameterResolver]     Validation ERROR: " << error << std::endl;
 		}
 	}
 	
-	// Validate parameter types
+	// Validate parameter types (only log actual mismatches)
 	for (const auto& paramPair : component.parameters)
 	{
 		const std::string& paramName = paramPair.first;
@@ -272,18 +289,19 @@ void ParameterResolver::ValidateResolvedComponent(ResolvedComponentInstance& com
 				                    "': expected " + std::to_string(static_cast<int>(schemaEntry.expectedType)) +
 				                    ", got " + std::to_string(static_cast<int>(paramValue.type));
 				component.errors.push_back(error);
+				hasErrors = true;
 				
 				SYSTEM_LOG << "[ParameterResolver]     Validation WARNING: " << error << std::endl;
 			}
 		}
 	}
 	
-	if (component.isValid)
+	// Only log success if there were no errors (reduces noise)
+	if (!hasErrors && component.isValid)
 	{
-		SYSTEM_LOG << "[ParameterResolver]     Validation: Component " 
-		           << component.componentType << " is valid" << std::endl;
+		// Silently succeed - no need to log
 	}
-	else
+	else if (!component.isValid)
 	{
 		SYSTEM_LOG << "[ParameterResolver]     Validation: Component " 
 		           << component.componentType << " has " << component.errors.size() 

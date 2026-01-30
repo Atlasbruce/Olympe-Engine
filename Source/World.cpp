@@ -624,12 +624,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
         if (entity != INVALID_ENTITY_ID && entityInstance)
         {
             instResult.entityRegistry[entityInstance->name] = entity;
-            
-            // Post-processing for Players
-            if (factory.AreTypesEquivalent(entityInstance->type, "Player"))
-            {
-                RegisterPlayerEntity(entity);
-            }
+            // Note: Post-processing (player registration, AI init) is now handled in InstantiateEntity
         }
     }
     SYSTEM_LOG << "    -> Created " << instResult.pass4_dynamicObjects.successfullyCreated << " objects\n\n";
@@ -801,6 +796,19 @@ EntityID World::InstantiateEntity(
     {
         Identity_data& id = GetComponent<Identity_data>(entity);
         id.name = entityInstance->name;
+    }
+    
+    // Category-based post-processing
+    if (blueprint->HasCategory("RequiresRegistration"))
+    {
+        RegisterPlayerEntity(entity);
+        SYSTEM_LOG << "    -> Registered player entity: " << entityInstance->name << "\n";
+    }
+    
+    if (blueprint->HasCategory("HasAI"))
+    {
+        // Initialize AI systems if needed
+        SYSTEM_LOG << "    -> Entity has AI: " << entityInstance->name << "\n";
     }
     
     // Log entity creation with layer information
