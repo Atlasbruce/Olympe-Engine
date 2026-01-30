@@ -35,6 +35,7 @@ struct ComponentParameter
 		Vector2,
 		Vector3,
 		Color,
+		Array,
 		EntityRef
 	};
 

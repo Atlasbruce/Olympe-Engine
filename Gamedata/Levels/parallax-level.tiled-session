@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "hexa-quest.tmx",
+    "activeFile": "isometric_quest.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -43,8 +43,8 @@
             "scale": 0.75,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 546,
-                "y": 643.3333333333333
+                "x": 694,
+                "y": 644.6666666666667
             }
         },
         "isometric_quest.tmx": {
@@ -55,8 +55,8 @@
             "scale": 0.5,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 571,
-                "y": 267
+                "x": 591,
+                "y": 287
             }
         },
         "map_forest.tmj": {
@@ -82,14 +82,14 @@
         },
         "parallax-forest.tmx": {
             "expandedObjectLayers": [
-                17,
-                2
+                2,
+                17
             ],
             "scale": 0.25,
             "selectedLayer": 10,
             "viewCenter": {
-                "x": -22,
-                "y": 614
+                "x": -640,
+                "y": 612
             }
         },
         "parallax-forest.tmx#tileset 2D ortho": {
@@ -132,8 +132,8 @@
             "scale": 0.75,
             "selectedLayer": 6,
             "viewCenter": {
-                "x": 440.6666666666667,
-                "y": 389.99999999999994
+                "x": 441.33333333333337,
+                "y": 389.33333333333326
             }
         },
         "tiles-iso-1.tsx": {
@@ -177,15 +177,15 @@
     "project": "parallax-level.tiled-project",
     "property.type": "string",
     "recentFiles": [
-        "isometric_quest.tmx",
-        "Tiles iso cube..tsj",
-        "Trees.tsx",
-        "Trees.tsj",
-        "parallax-forest.tmx",
-        "tileset 2D ortho.tsx",
-        "pnc-quest.tmx",
         "Hexa-tiles_1.tsx",
         "hexa-quest.tmx",
+        "pnc-quest.tmx",
+        "tileset 2D ortho.tsx",
+        "parallax-forest.tmx",
+        "Trees.tsj",
+        "Trees.tsx",
+        "Tiles iso cube..tsj",
+        "isometric_quest.tmx",
         "parallax-forext..tmj",
         "map_forest.tmx",
         "Tiles iso cube.tsx"

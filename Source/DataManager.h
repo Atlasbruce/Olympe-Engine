@@ -94,8 +94,8 @@ public:
 	bool PreloadSprite(const std::string& id, const std::string& path, ResourceCategory category = ResourceCategory::GameEntity);
     Sprite* GetTexture(const std::string& id) const;
     Sprite* GetSprite(const std::string& id, const std::string& path, ResourceCategory category = ResourceCategory::GameEntity);
-    VisualSprite_data* GetSprite_data(const std::string& id, const std::string& path);
-    VisualEditor_data* GetSpriteEditor_data(const std::string& id, const std::string& path);
+    bool GetSprite_data(const std::string& id, const std::string& path, VisualSprite_data& outData);
+    bool GetSpriteEditor_data(const std::string& id, const std::string& path, VisualEditor_data& outData);
     bool ReleaseResource(const std::string& id);
 
 

@@ -6,7 +6,7 @@
    <property name="activator #1" type="object" value="16"/>
    <property name="activator #2" type="object" value="0"/>
    <property name="activator #3" type="object" value="0"/>
-   <property name="detection radius" type="int" value="150"/>
+   <property name="detection radius" type="float" value="150.0"/>
   </properties>
   <point/>
  </object>

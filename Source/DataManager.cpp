@@ -187,38 +187,35 @@ Sprite* DataManager::GetSprite(const std::string& id, const std::string& path, R
     return nullptr;
 }
 //-------------------------------------------------------------
-VisualSprite_data* DataManager::GetSprite_data(const std::string& id, const std::string& path)
+bool DataManager::GetSprite_data(const std::string& id, const std::string& path, VisualSprite_data& outData)
 {
-    VisualSprite_data vsprite;
-	vsprite.sprite = GetSprite(id, path, ResourceCategory::GameEntity);
+	outData.sprite = GetSprite(id, path, ResourceCategory::GameEntity);
 	// set srcRect based on texture size
-	if (vsprite.sprite)
+	if (outData.sprite)
 	{
-		int w = ((SDL_Texture*)vsprite.sprite)->w, h = ((SDL_Texture*)vsprite.sprite)->h;
-		vsprite.srcRect = { 0.0f, 0.0f, static_cast<float>(w), static_cast<float>(h) };
-		vsprite.hotSpot = Vector(w / 2.0f, h / 2.0f, 0.0f);
-		return &vsprite;
+		int w = ((SDL_Texture*)outData.sprite)->w, h = ((SDL_Texture*)outData.sprite)->h;
+		outData.srcRect = { 0.0f, 0.0f, static_cast<float>(w), static_cast<float>(h) };
+		outData.hotSpot = Vector(w / 2.0f, h / 2.0f, 0.0f);
+		return true;
 	}
 
 	SYSTEM_LOG << "DataManager: GetSprite_data failed for '" << id << "' file/path '" << path << "' does not exists or is incorrect\n";
-
-    return nullptr;
+	return false;
 }
 //-------------------------------------------------------------
-VisualEditor_data* DataManager::GetSpriteEditor_data(const std::string& id, const std::string& path)
+bool DataManager::GetSpriteEditor_data(const std::string& id, const std::string& path, VisualEditor_data& outData)
 {
-    VisualEditor_data vsprite;
-    vsprite.sprite = GetSprite(id, path, ResourceCategory::GameEntity);
+    outData.sprite = GetSprite(id, path, ResourceCategory::GameEntity);
     // set srcRect based on texture size
-    if (vsprite.sprite)
+    if (outData.sprite)
     {
-        int w = ((SDL_Texture*)vsprite.sprite)->w, h = ((SDL_Texture*)vsprite.sprite)->h;
-        vsprite.srcRect = { 0.0f, 0.0f, static_cast<float>(w), static_cast<float>(h) };
-        vsprite.hotSpot = Vector(w / 2.0f, h / 2.0f, 0.0f);
-        return &vsprite;
+        int w = ((SDL_Texture*)outData.sprite)->w, h = ((SDL_Texture*)outData.sprite)->h;
+        outData.srcRect = { 0.0f, 0.0f, static_cast<float>(w), static_cast<float>(h) };
+        outData.hotSpot = Vector(w / 2.0f, h / 2.0f, 0.0f);
+        return true;
     }
-    SYSTEM_LOG << "DataManager: GetSprite_data failed for '" << id << "' file/path '" << path << "' does not exists or is incorrect\n";
-    return nullptr;
+    SYSTEM_LOG << "DataManager: GetSpriteEditor_data failed for '" << id << "' file/path '" << path << "' does not exists or is incorrect\n";
+    return false;
 }
 //-------------------------------------------------------------
 bool DataManager::ReleaseResource(const std::string& id)

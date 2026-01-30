@@ -20,7 +20,7 @@ to ECS component fields with type validation and default values.
 // Forward declarations
 namespace nlohmann {
 	template <typename T> class basic_json;
-	using json = basic_json<std::map>;
+	using json = nlohmann::json;
 }
 
 // Parameter schema entry defining how a blueprint parameter maps to a component field

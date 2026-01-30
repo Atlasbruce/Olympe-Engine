@@ -5,8 +5,8 @@
    <property name="local sound" type="bool" value="false"/>
    <property name="loop sound" type="bool" value="true"/>
    <property name="resource" type="file" value="ambiant/Sketchbook 2024-01-24_01.ogg"/>
-   <property name="rolloff max radius " type="int" value="300"/>
-   <property name="rolloff min radius " type="int" value="400"/>
+   <property name="rolloff max radius " type="float" value="300.0"/>
+   <property name="rolloff min radius " type="float" value="400.0"/>
   </properties>
   <point/>
  </object>

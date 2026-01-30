@@ -530,7 +530,7 @@ float PrefabScanner::FuzzyMatch(const std::string& str1, const std::string& str2
     if (str1 == str2) return 1.0f;
     
     int distance = LevenshteinDistance(str1, str2);
-    int maxLen = max(str1.length(), str2.length());
+    int maxLen = (int) max(str1.length(), str2.length());
     
     if (maxLen == 0) return 1.0f;
     

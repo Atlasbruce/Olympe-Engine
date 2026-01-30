@@ -3,7 +3,7 @@
  <object name="guard" type="npc">
   <properties>
    <property name="life" type="int" value="10"/>
-   <property name="patrol way" type="object" value="0"/>
+   <property name="patrol way" type="object" value="0.0"/>
   </properties>
   <point/>
  </object>

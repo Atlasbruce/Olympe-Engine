@@ -410,7 +410,7 @@ bool ParameterSchemaRegistry::LoadFromJSON(const std::string& filepath)
 			continue;
 		}
 		
-		std::string componentType = schemaJson["componentType"];
+		std::string componentType = schemaJson["componentType"].get<std::string>();
 		
 		if (!schemaJson["parameters"].is_array())
 		{
@@ -424,8 +424,8 @@ bool ParameterSchemaRegistry::LoadFromJSON(const std::string& filepath)
 				continue;
 			}
 			
-			std::string paramName = paramJson["name"];
-			std::string typeStr = paramJson["type"];
+			std::string paramName = paramJson["name"].get<std::string>();
+			std::string typeStr = paramJson["type"].get<std::string>();
 			
 			ComponentParameter::Type paramType = StringToParameterType(typeStr);
 			
@@ -554,12 +554,6 @@ ComponentParameter ParameterSchemaRegistry::ParseDefaultValue(const nlohmann::js
 size_t ParameterSchemaRegistry::GetSchemaCount() const
 {
 	return parameterToComponent_.size();
-}
-
-bool ParameterSchemaRegistry::LoadSchemaFromFile(const std::string& filepath)
-{
-	SYSTEM_LOG << "LoadSchemaFromFile not yet implemented: " << filepath << std::endl;
-	return false;
 }
 
 const ParameterSchemaEntry* ParameterSchemaRegistry::FindParameterSchema(const std::string& parameterName) const
