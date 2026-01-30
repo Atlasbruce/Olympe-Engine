@@ -226,10 +226,9 @@ namespace Tiled {
                 for (const auto& obj : layer->objects)
                 {
                     std::string type = obj.type;
-					if (type.empty()) type = "undefined"; // will be handled in ObjectTypeChecker
+					if (type.empty()) type = "undefined"; // will be normalized by PrefabFactory later
 
-					// options to standardize and clean up type strings with PrefabScanner
-                    //type = ObjectTypeChecker(type);
+					// Type normalization is now handled by PrefabFactory::NormalizeType() in World::LoadLevelFromTiled()
                     
                     census.uniqueTypes.insert(type);
                     census.typeCounts[type]++;
@@ -333,85 +332,6 @@ namespace Tiled {
             return relativePath;
         
         return baseDir + "/" + relativePath;
-    }
-
-    std::string LevelParser::ObjectTypeChecker(const std::string& type)
-    {
-        // Skip validation for empty or "undefined" types
-        if (type.empty() || type == "undefined")
-        {
-            return type;
-        }
-        
-        // Access the PrefabRegistry from PrefabFactory singleton
-        const PrefabRegistry& registry = PrefabFactory::Get().GetPrefabRegistry();
-        
-        // Get all registered prefab names
-        std::vector<std::string> allPrefabNames = registry.GetAllPrefabNames();
-        
-        // Helper lambda for case-insensitive comparison
-        auto toUpper = [](const std::string& str) -> std::string {
-            std::string result = str;
-            std::transform(result.begin(), result.end(), result.begin(), 
-                          [](unsigned char c) { return std::toupper(c); });
-            return result;
-        };
-        
-        std::string typeUpper = toUpper(type);
-        
-        
-        for (const auto& prefabName : allPrefabNames)
-        {
-            // First pass: exact match (case-sensitive)
-            if (prefabName == type)
-            {
-                return prefabName; // Perfect match, return as-is
-            }
-        
-            // Second pass: case-insensitive match
-            if (toUpper(prefabName) == typeUpper)
-            {
-                std::cout << "-> ObjectTypeChecker: Normalized '" << type 
-                         << "' to '" << prefabName << "' (case mismatch)\n";
-                return prefabName; // Return the correctly-cased prefab name
-            }
-        }
-        
-        // Third pass: check by prefab type (not name)
-        std::vector<const PrefabBlueprint*> matchingPrefabs = registry.FindByType(type);
-        if (!matchingPrefabs.empty())
-        {
-            const std::string& matchedName = matchingPrefabs[0]->prefabName;
-            std::cout << "-> ObjectTypeChecker: Matched type '" << type 
-                     << "' to prefab '" << matchedName << "'\n";
-            return matchedName;
-        }
-
-		// Fourth pass: check by prefab type if it contains the type uppercase
-		for (const auto& prefabName : allPrefabNames)
-		{
-			const PrefabBlueprint* blueprintObj = registry.Find(prefabName);
-			if (blueprintObj)
-			{
-				std::string prefabTypeUpper = toUpper(blueprintObj->prefabType);
-				if (
-					(prefabTypeUpper.find(typeUpper) != std::string::npos) ||
-                    (typeUpper.find(prefabTypeUpper) != std::string::npos)
-					)
-				{
-					std::cout << "ObjectTypeChecker: Object "<< blueprintObj->prefabName << " [Autofixing] loosely matched type '" << type
-						<< "' to prefab '" << prefabName << "' (type contains)\n";
-					return prefabName;
-				}
-			}
-		}
-        
-        // No match found - issue warning but allow it to proceed
-        std::cout << "x ObjectTypeChecker: WARNING - Type '" << type 
-                 << "' not found in PrefabRegistry (known prefabs: " 
-                 << allPrefabNames.size() << ")\n";
-        
-        return type; // Return original type unchanged
     }
 
 } // namespace Tiled

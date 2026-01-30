@@ -121,9 +121,6 @@ namespace Tiled {
         // Main entry point: Parse and analyze a Tiled map file
         LevelParseResult ParseAndAnalyze(const std::string& levelPath);
         
-        // Validate and normalize object type against PrefabRegistry
-        std::string ObjectTypeChecker(const std::string& type);
-        
     private:
         // Extract visual resources from map
         void ExtractVisualResources(const TiledMap& map, VisualResourceManifest& manifest);
