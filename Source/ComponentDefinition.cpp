@@ -427,7 +427,14 @@ ComponentParameter ParseParameterWithSchema(
 						float x = static_cast<float>(jsonValue["x"].get<double>());
 						float y = static_cast<float>(jsonValue["y"].get<double>());
 						param = ComponentParameter::FromVector2(x, y);
+					} else if (jsonValue.is_array() && jsonValue.size() == 2) {
+						// Support array format: [x, y]
+						float x = jsonValue[0].get<float>();
+						float y = jsonValue[1].get<float>();
+						param = ComponentParameter::FromVector2(x, y);
 					} else {
+						SYSTEM_LOG << "  [WARN] Schema expects Vector2 for '" << paramName 
+								   << "', got " << jsonValue.type_name() << std::endl;
 						param = ComponentParameter::FromVector2(0.0f, 0.0f);
 					}
 					break;
@@ -438,7 +445,15 @@ ComponentParameter ParseParameterWithSchema(
 						float y = static_cast<float>(jsonValue["y"].get<double>());
 						float z = static_cast<float>(jsonValue["z"].get<double>());
 						param = ComponentParameter::FromVector3(x, y, z);
+					} else if (jsonValue.is_array() && jsonValue.size() == 3) {
+						// Support array format: [x, y, z]
+						float x = jsonValue[0].get<float>();
+						float y = jsonValue[1].get<float>();
+						float z = jsonValue[2].get<float>();
+						param = ComponentParameter::FromVector3(x, y, z);
 					} else {
+						SYSTEM_LOG << "  [WARN] Schema expects Vector3 for '" << paramName 
+								   << "', got " << jsonValue.type_name() << std::endl;
 						param = ComponentParameter::FromVector3(0.0f, 0.0f, 0.0f);
 					}
 					break;
@@ -450,10 +465,46 @@ ComponentParameter ParseParameterWithSchema(
 						param = ComponentParameter::FromString(colorStr);
 						param.type = ComponentParameter::Type::Color;
 						param.colorValue = param.AsColor();
+					} else if (jsonValue.is_object() && jsonValue.contains("r") && jsonValue.contains("g") && jsonValue.contains("b")) {
+						// Support object format: {"r": 255, "g": 128, "b": 64, "a": 255}
+						uint8_t r = jsonValue["r"].is_number() ? ClampColorValue(jsonValue["r"].get<int>()) : 255;
+						uint8_t g = jsonValue["g"].is_number() ? ClampColorValue(jsonValue["g"].get<int>()) : 255;
+						uint8_t b = jsonValue["b"].is_number() ? ClampColorValue(jsonValue["b"].get<int>()) : 255;
+						uint8_t a = jsonValue.contains("a") && jsonValue["a"].is_number() ? 
+									ClampColorValue(jsonValue["a"].get<int>()) : 255;
+						param = ComponentParameter::FromColor(r, g, b, a);
+					} else if (jsonValue.is_array() && jsonValue.size() >= 3 && jsonValue.size() <= 4) {
+						// Support array format: [r, g, b] or [r, g, b, a]
+						uint8_t r = ClampColorValue(jsonValue[0].get<int>());
+						uint8_t g = ClampColorValue(jsonValue[1].get<int>());
+						uint8_t b = ClampColorValue(jsonValue[2].get<int>());
+						uint8_t a = jsonValue.size() == 4 ? ClampColorValue(jsonValue[3].get<int>()) : 255;
+						param = ComponentParameter::FromColor(r, g, b, a);
 					} else {
+						SYSTEM_LOG << "  [WARN] Schema expects Color for '" << paramName 
+								   << "', got " << jsonValue.type_name() << std::endl;
 						param = ComponentParameter::FromString("#FFFFFF");
 						param.type = ComponentParameter::Type::Color;
 						param.colorValue = param.AsColor();
+					}
+					break;
+					
+				case ComponentParameter::Type::EntityRef:
+					if (jsonValue.is_string()) {
+						try {
+							EntityID entityId = std::stoull(jsonValue.get<std::string>());
+							param = ComponentParameter::FromEntityRef(entityId);
+						}
+						catch (...) {
+							SYSTEM_LOG << "  [WARN] Failed to parse EntityRef from string for '" << paramName << "'" << std::endl;
+							param = ComponentParameter::FromEntityRef(INVALID_ENTITY_ID);
+						}
+					} else if (jsonValue.is_number_integer()) {
+						param = ComponentParameter::FromEntityRef(static_cast<EntityID>(jsonValue.get<int64_t>()));
+					} else {
+						SYSTEM_LOG << "  [WARN] Schema expects EntityRef for '" << paramName 
+								   << "', got " << jsonValue.type_name() << std::endl;
+						param = ComponentParameter::FromEntityRef(INVALID_ENTITY_ID);
 					}
 					break;
 					
@@ -558,30 +609,52 @@ ComponentParameter ParseParameterWithSchema(
 	}
 	else if (jsonValue.is_array())
 	{
-		// Check if it's a 2D or 3D vector array
-		if (jsonValue.size() >= 2 && jsonValue.size() <= 3 && jsonValue[0].is_number())
+		// Handle arrays based on size to avoid ambiguity
+		if (jsonValue.size() == 2 && jsonValue[0].is_number())
 		{
+			// Definitely Vector2
 			float x = jsonValue[0].get<float>();
 			float y = jsonValue[1].get<float>();
+			param = ComponentParameter::FromVector2(x, y);
+		}
+		else if (jsonValue.size() == 3 && jsonValue[0].is_number())
+		{
+			// Ambiguous: could be Vector3 or RGB color
+			// Use heuristic: if values are in typical color range (0-255), treat as color
+			double val0 = jsonValue[0].get<double>();
+			double val1 = jsonValue[1].get<double>();
+			double val2 = jsonValue[2].get<double>();
 			
-			if (jsonValue.size() == 3)
+			// If all values are in [0, 255] range and are integers, likely a color
+			bool looksLikeColor = (val0 >= 0 && val0 <= 255 && val0 == (int)val0) &&
+			                      (val1 >= 0 && val1 <= 255 && val1 == (int)val1) &&
+			                      (val2 >= 0 && val2 <= 255 && val2 == (int)val2);
+			
+			if (looksLikeColor)
 			{
-				float z = jsonValue[2].get<float>();
-				param = ComponentParameter::FromVector3(x, y, z);
+				param = ComponentParameter::FromColor(
+					ClampColorValue((int)val0),
+					ClampColorValue((int)val1),
+					ClampColorValue((int)val2),
+					255
+				);
 			}
 			else
 			{
-				param = ComponentParameter::FromVector2(x, y);
+				// Treat as Vector3
+				float x = jsonValue[0].get<float>();
+				float y = jsonValue[1].get<float>();
+				float z = jsonValue[2].get<float>();
+				param = ComponentParameter::FromVector3(x, y, z);
 			}
 		}
-		// Check if it's a color array [r, g, b] or [r, g, b, a]
-		else if (jsonValue.size() >= 3 && jsonValue.size() <= 4 && jsonValue[0].is_number())
+		else if (jsonValue.size() == 4 && jsonValue[0].is_number())
 		{
+			// 4 elements: likely RGBA color
 			uint8_t r = ClampColorValue(jsonValue[0].get<int>());
 			uint8_t g = ClampColorValue(jsonValue[1].get<int>());
 			uint8_t b = ClampColorValue(jsonValue[2].get<int>());
-			uint8_t a = jsonValue.size() == 4 ? ClampColorValue(jsonValue[3].get<int>()) : 255;
-			
+			uint8_t a = ClampColorValue(jsonValue[3].get<int>());
 			param = ComponentParameter::FromColor(r, g, b, a);
 		}
 		else
