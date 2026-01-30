@@ -2,7 +2,7 @@
  * Olympe Engine V2 - 2025
  * Isometric Renderer
  * 
- * ✅ REFACTORED: Now provides utility functions only
+ * -> REFACTORED: Now provides utility functions only
  * Batching and sorting moved to unified rendering pipeline in ECS_Systems.cpp
  */
 
@@ -22,7 +22,7 @@ namespace Rendering {
     constexpr uint32_t FLIPPED_DIAGONALLY_FLAG = 0x20000000;
     constexpr uint32_t TILE_ID_MASK = 0x1FFFFFFF;
 
-    // ✅ Isometric utility functions (coordinate conversion, culling)
+    // -> Isometric utility functions (coordinate conversion, culling)
     // Note: Tile batching and sorting moved to unified pipeline in ECS_Systems.cpp
     class IsometricRenderer
     {
@@ -37,7 +37,7 @@ namespace Rendering {
         void SetCamera(float camX, float camY, float zoom);
         void SetViewport(int screenWidth, int screenHeight);
         
-        // ✅ Utility functions (coordinate conversion)
+        // -> Utility functions (coordinate conversion)
         Vector WorldToScreen(float worldX, float worldY) const;
         Vector ScreenToWorld(float screenX, float screenY) const;
         

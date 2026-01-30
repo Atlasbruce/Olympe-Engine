@@ -40,11 +40,11 @@ namespace Tiled {
         LevelParseResult result;
         
         std::cout << "\n";
-        std::cout << "/======================================================================\ \n";
+        std::cout << "+======================================================================+ \n";
         std::cout << "|         PHASE 1: PARSING & VISUAL ANALYSIS                           | \n";
         std::cout << "|======================================================================| \n";
         std::cout << "| File: " << levelPath << std::string(std::max(0, 65 - static_cast<int>(levelPath.length())), ' ') << "| \n";
-        std::cout << "\======================================================================/ \n\n";
+        std::cout << "+======================================================================+ \n\n";
 
         // Step 1: Load the Tiled map using existing loader
         TiledMap tiledMap;
@@ -76,7 +76,7 @@ namespace Tiled {
             default: result.orientation = "unknown"; break;
         }
 
-        std::cout << "/======================================================================\ \n";
+        std::cout << "+======================================================================+ \n";
         std::cout << "| MAP METADATA                                                         | \n";
         std::cout << "|======================================================================| \n";
         std::cout << "| Dimensions:   " << result.width << " x " << result.height 
@@ -89,13 +89,13 @@ namespace Tiled {
                   << std::string(54 - result.orientation.length(), ' ') << "|\n";
         std::cout << "| Infinite:     " << (tiledMap.infinite ? "Yes" : "No ")
                   << std::string(53, ' ') << "| \n";
-        std::cout << "\======================================================================/ \n\n";
+        std::cout << "+======================================================================+ \n\n";
 
         // Step 3: Extract visual resources
         std::cout << "-> Extracting visual resource manifest...\n";
         ExtractVisualResources(tiledMap, result.visualManifest);
         
-        std::cout << "/======================================================================\ \n";
+        std::cout << "+======================================================================+ \n";
         std::cout << "| VISUAL RESOURCES                                                     | \n";
         std::cout << "|======================================================================| \n";
         std::cout << "| Tilesets:        " << result.visualManifest.GetTilesetCount() 
@@ -104,13 +104,13 @@ namespace Tiled {
                   << std::string(51 - std::to_string(result.visualManifest.GetParallaxLayerCount()).length(), ' ') << "| \n";
         std::cout << "| Total Images:    " << result.visualManifest.GetTotalImageCount()
                   << std::string(51 - std::to_string(result.visualManifest.GetTotalImageCount()).length(), ' ') << "| \n";
-        std::cout << "\======================================================================/ \n\n";
+        std::cout << "+======================================================================+ \n\n";
 
         // Step 4: Build object census
         std::cout << "-> Building object census...\n";
         BuildObjectCensus(tiledMap, result.objectCensus);
         
-        std::cout << "/======================================================================\ \n";
+        std::cout << "+======================================================================+ \n";
         std::cout << "| OBJECT CENSUS                                                        | \n";
         std::cout << "|======================================================================| \n";
         std::cout << "| Total Objects:   " << result.objectCensus.GetTotalObjectCount()
@@ -128,7 +128,7 @@ namespace Tiled {
                 std::cout << line << std::string(70 - line.length(), ' ') << "| \n";
             }
         }
-        std::cout << "\======================================================================/ \n\n";
+        std::cout << "+======================================================================+ \n\n";
 
         // Step 5: Extract object references
         std::cout << "-> Extracting object references...\n";
@@ -141,7 +141,7 @@ namespace Tiled {
 
         result.success = true;
         
-        std::cout << "/======================================================================\ \n";
+        std::cout << "+======================================================================+ \n";
         std::cout << "| PHASE 1 COMPLETE                                                     | \n";
         std::cout << "|======================================================================| \n";
         std::cout << "| Status:   -> SUCCESS                                                  | \n";
@@ -149,7 +149,7 @@ namespace Tiled {
                   << std::string(59 - std::to_string(result.GetErrorCount()).length(), ' ') << "| \n";
         std::cout << "| Warnings: " << result.GetWarningCount()
                   << std::string(59 - std::to_string(result.GetWarningCount()).length(), ' ') << "| \n";
-        std::cout << "\======================================================================/ \n\n";
+        std::cout << "+======================================================================+ \n\n";
 
         return result;
     }

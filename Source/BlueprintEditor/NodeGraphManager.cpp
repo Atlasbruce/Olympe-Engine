@@ -717,7 +717,7 @@ namespace Olympe
         std::cout << "\n========================================" << std::endl;
         std::cout << "[NodeGraphManager::LoadGraph] CALLED" << std::endl;
         std::cout << "[NodeGraphManager::LoadGraph] Path: " << filepath << std::endl;
-        std::cout << "========================================\n" << std::endl;
+        std::cout << "========================================+n" << std::endl;
         
         try {
             // 1. Check file exists
@@ -726,7 +726,7 @@ namespace Olympe
             if (!testFile.is_open())
             {
                 std::cerr << "[NodeGraphManager] ERROR: File not found: " << filepath << std::endl;
-                std::cout << "========================================\n" << std::endl;
+                std::cout << "========================================+n" << std::endl;
                 return -1;
             }
             testFile.close();
@@ -738,7 +738,7 @@ namespace Olympe
             if (!file.is_open())
             {
                 std::cerr << "[NodeGraphManager] ERROR: Cannot open file: " << filepath << std::endl;
-                std::cout << "========================================\n" << std::endl;
+                std::cout << "========================================+n" << std::endl;
                 return -1;
             }
 
@@ -749,7 +749,7 @@ namespace Olympe
             if (content.empty())
             {
                 std::cerr << "[NodeGraphManager] ERROR: File is empty" << std::endl;
-                std::cout << "========================================\n" << std::endl;
+                std::cout << "========================================+n" << std::endl;
                 return -1;
             }
 
@@ -761,7 +761,7 @@ namespace Olympe
                 std::cout << "[NodeGraphManager] JSON parsed: OK" << std::endl;
             } catch (const std::exception& e) {
                 std::cerr << "[NodeGraphManager] ERROR parsing JSON: " << e.what() << std::endl;
-                std::cout << "========================================\n" << std::endl;
+                std::cout << "========================================+n" << std::endl;
                 return -1;
             }
 
@@ -775,7 +775,7 @@ namespace Olympe
             if (!isV1 && !isV2)
             {
                 std::cerr << "[NodeGraphManager] ERROR: Invalid blueprint format (neither v1 nor v2)" << std::endl;
-                std::cout << "========================================\n" << std::endl;
+                std::cout << "========================================+n" << std::endl;
                 return -1;
             }
 
@@ -787,7 +787,7 @@ namespace Olympe
                 std::cout << "[NodeGraphManager] FromJson returned: " << graph.GetAllNodes().size() << " nodes" << std::endl;
             } catch (const std::exception& e) {
                 std::cerr << "[NodeGraphManager] ERROR in FromJson: " << e.what() << std::endl;
-                std::cout << "========================================\n" << std::endl;
+                std::cout << "========================================+n" << std::endl;
                 return -1;
             }
 
@@ -865,7 +865,7 @@ namespace Olympe
 
             std::cout << "\n========================================" << std::endl;
             std::cout << "[NodeGraphManager::LoadGraph] SUCCESS ->" << std::endl;
-            std::cout << "========================================\n" << std::endl;
+            std::cout << "========================================+n" << std::endl;
 
             return graphId;
 
@@ -873,13 +873,13 @@ namespace Olympe
             std::cerr << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
             std::cerr << "[NodeGraphManager] EXCEPTION: " << e.what() << std::endl;
             std::cerr << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl;
-            std::cout << "========================================\n" << std::endl;
+            std::cout << "========================================+n" << std::endl;
             return -1;
         } catch (...) {
             std::cerr << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
             std::cerr << "[NodeGraphManager] UNKNOWN EXCEPTION" << std::endl;
             std::cerr << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl;
-            std::cout << "========================================\n" << std::endl;
+            std::cout << "========================================+n" << std::endl;
             return -1;
         }
     }

@@ -616,7 +616,7 @@ namespace {
     constexpr int ORTHO_TILE_PADDING = 2;  // Padding for orthogonal tiles
 }
 
-// ✅ Helper: Extract flip flags from GID
+// -> Helper: Extract flip flags from GID
 void ExtractFlipFlags(uint32_t gid, bool& flipH, bool& flipV, bool& flipD)
 {
     constexpr uint32_t FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
@@ -628,7 +628,7 @@ void ExtractFlipFlags(uint32_t gid, bool& flipH, bool& flipV, bool& flipD)
     flipD = (gid & FLIPPED_DIAGONALLY_FLAG) != 0;
 }
 
-// ✅ Helper: Convert flip flags to SDL flip mode
+// -> Helper: Convert flip flags to SDL flip mode
 // Note: SDL3 only supports horizontal and vertical flips
 // Diagonal flip (flipD) is extracted but not applied - requires rotation
 SDL_FlipMode GetSDLFlip(bool flipH, bool flipV, bool /*flipD*/)
@@ -639,7 +639,7 @@ SDL_FlipMode GetSDLFlip(bool flipH, bool flipV, bool /*flipD*/)
     return static_cast<SDL_FlipMode>(flip);
 }
 
-// ✅ NEW: Calculate visible tile range with frustum culling
+// -> NEW: Calculate visible tile range with frustum culling
 void GetVisibleTileRange(const CameraTransform& cam,
                         const std::string& orientation,
                         int tileWidth, int tileHeight,
@@ -704,7 +704,7 @@ void GetVisibleTileRange(const CameraTransform& cam,
     }
 }
 
-// ✅ NEW: Calculate depth for a tile
+// -> NEW: Calculate depth for a tile
 float CalculateTileDepth(const std::string& orientation,
                         int worldX, int worldY,
                         int layerZOrder,
@@ -723,7 +723,7 @@ float CalculateTileDepth(const std::string& orientation,
     }
 }
 
-// ✅ NEW: Calculate depth for an entity
+// -> NEW: Calculate depth for an entity
 float CalculateEntityDepth(const std::string& orientation,
                           const Vector& position,
                           int tileWidth, int tileHeight)
@@ -741,7 +741,7 @@ float CalculateEntityDepth(const std::string& orientation,
     }
 }
 
-// ✅ NEW: Render individual tile immediately (unified for all orientations)
+// -> NEW: Render individual tile immediately (unified for all orientations)
 void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
                         int worldX, int worldY, uint32_t gid,
                         int tileoffsetX, int tileoffsetY,
@@ -821,7 +821,7 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
                             flip);               // Flip flags
 }
 
-// ✅ UNIFIED RENDERING PIPELINE - Single-pass sorting with frustum culling
+// -> UNIFIED RENDERING PIPELINE - Single-pass sorting with frustum culling
 // Multi-layer rendering with parallax support
 void RenderMultiLayerForCamera(const CameraTransform& cam)
 {
@@ -835,7 +835,7 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
     {
         enum Type { 
             ParallaxLayer,    // Image layers (backgrounds/foregrounds)
-            IndividualTile,   // ✅ NEW: Individual tile with full data
+            IndividualTile,   // -> NEW: Individual tile with full data
             Entity            // Game objects
         } type;
         
@@ -848,7 +848,7 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
             } parallax;
             
             struct {
-                // ✅ Complete tile data for immediate rendering
+                // -> Complete tile data for immediate rendering
                 SDL_Texture* texture;
                 SDL_Rect srcRect;
                 int worldX, worldY;
@@ -926,11 +926,11 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
         renderBatch.push_back(RenderItem::MakeParallax(depth, static_cast<int>(i)));
     }
     
-    // 1.2 Tiles (with ✅ FRUSTUM CULLING)
+    // 1.2 Tiles (with -> FRUSTUM CULLING)
     const auto& tileChunks = World::Get().GetTileChunks();
     auto& tilesetMgr = World::Get().GetTilesetManager();
     
-    // ✅ Calculate visible tile range
+    // -> Calculate visible tile range
     int minX, minY, maxX, maxY;
     GetVisibleTileRange(cam, mapOrientation, tileWidth, tileHeight, 
                         minX, minY, maxX, maxY);
@@ -941,7 +941,7 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
                 int worldX = chunk.x + x;
                 int worldY = chunk.y + y;
                 
-                // ✅ FRUSTUM CULLING
+                // -> FRUSTUM CULLING
                 if (worldX < minX || worldX > maxX || 
                     worldY < minY || worldY > maxY) {
                     continue;
@@ -961,13 +961,13 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
                     continue;
                 }
                 
-                // ✅ Calculate depth
+                // -> Calculate depth
                 float depth = CalculateTileDepth(mapOrientation, 
                                                 worldX, worldY, 
                                                 chunk.zOrder,
                                                 tileWidth, tileHeight);
                 
-                // ✅ Add to batch
+                // -> Add to batch
                 renderBatch.push_back(RenderItem::MakeTile(
                     depth, texture, srcRect, 
                     worldX, worldY, gid,
@@ -979,14 +979,14 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
         }
     }
     
-    // 1.3 Entities (with ✅ FRUSTUM CULLING)
+    // 1.3 Entities (with -> FRUSTUM CULLING)
     for (EntityID entity : World::Get().GetSystem<RenderingSystem>()->m_entities) {
         try {
             Position_data& pos = World::Get().GetComponent<Position_data>(entity);
             VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
             BoundingBox_data& bbox = World::Get().GetComponent<BoundingBox_data>(entity);
             
-            // ✅ NEW: Skip UI entities (rendered in Pass 2)
+            // -> NEW: Skip UI entities (rendered in Pass 2)
             if (World::Get().HasComponent<Identity_data>(entity))
             {
                 Identity_data& id = World::Get().GetComponent<Identity_data>(entity);
@@ -996,7 +996,7 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
             
             if (!visual.visible) continue;
             
-            // ✅ FRUSTUM CULLING
+            // -> FRUSTUM CULLING
             SDL_FRect worldBounds = {
                 pos.position.x - visual.hotSpot.x,
                 pos.position.y - visual.hotSpot.y,
@@ -1005,7 +1005,7 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
             };
             if (!cam.IsVisible(worldBounds)) continue;
             
-            // ✅ Calculate depth
+            // -> Calculate depth
             float depth = CalculateEntityDepth(mapOrientation, 
                                               pos.position, 
                                               tileWidth, tileHeight);
@@ -1016,7 +1016,7 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
     }
     
     // ================================================================
-    // PHASE 2: ✅ UNIFIED SORT (SINGLE PASS!)
+    // PHASE 2: -> UNIFIED SORT (SINGLE PASS!)
     // ================================================================
     std::sort(renderBatch.begin(), renderBatch.end(),
         [](const RenderItem& a, const RenderItem& b) {

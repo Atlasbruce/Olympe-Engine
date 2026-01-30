@@ -109,7 +109,7 @@ void World::Initialize_ECS_Systems()
     - RenderingSystem
     */
 	
-	// ✅ NOUVEAU : Précharger tous les prefabs AVANT de créer les systèmes
+	// -> NOUVEAU : Précharger tous les prefabs AVANT de créer les systèmes
 	SYSTEM_LOG << "\n";
 	PrefabFactory::Get().PreloadAllPrefabs("Gamedata/EntityPrefab");
 	SYSTEM_LOG << "\n";
@@ -142,7 +142,7 @@ void World::Initialize_ECS_Systems()
     // Rendering systems (order matters - defines render pass sequence!)
     Add_ECS_System(std::make_unique<RenderingSystem>());        // Pass 1: World (parallax, tiles, entities)
 	Add_ECS_System(std::make_unique<GridSystem>());             // Grid overlay
-    Add_ECS_System(std::make_unique<UIRenderingSystem>());      // ✅ Pass 2: UI/HUD/Menu (ALWAYS on top)
+    Add_ECS_System(std::make_unique<UIRenderingSystem>());      // -> Pass 2: UI/HUD/Menu (ALWAYS on top)
 }
 //---------------------------------------------------------------------------------------------
 void World::Add_ECS_System(std::unique_ptr<ECS_System> system)
@@ -266,7 +266,7 @@ void World::SetEntityLayer(EntityID entity, RenderLayer layer)
 {
     if (!HasComponent<Position_data>(entity))
     {
-        SYSTEM_LOG << "⚠️  World::SetEntityLayer: Entity " << entity 
+        SYSTEM_LOG << "/!\\  World::SetEntityLayer: Entity " << entity 
                    << " has no Position_data component\n";
         return;
     }
@@ -401,24 +401,24 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     UnloadCurrentLevel();
 
     std::cout << "\n";
-    std::cout << "╔══════════════════════════════════════════════════════════╗\n";
-    std::cout << "║ LEVEL LOADING PIPELINE (6 PHASES)                        ║\n";
-    std::cout << "╚══════════════════════════════════════════════════════════╝\n\n";
+    std::cout << "+==========================================================+\n";
+    std::cout << "| LEVEL LOADING PIPELINE (6 PHASES)                        |\n";
+    std::cout << "+==========================================================+\n\n";
     
-    // ═══════════════════════════════════════════════════════════════════════
+    // =======================================================================
     // PHASE 1: PREFAB SYSTEM INITIALIZATION (Already Done at Startup)
-    // ═══════════════════════════════════════════════════════════════════════
+    // =======================================================================
     
     PrefabFactory& factory = PrefabFactory::Get();
-    SYSTEM_LOG << "Phase 1: ✅ Prefab System Ready (" << factory.GetPrefabCount() << " prefabs)\n\n";
+    SYSTEM_LOG << "Phase 1: -> Prefab System Ready (" << factory.GetPrefabCount() << " prefabs)\n\n";
     
-    // ═══════════════════════════════════════════════════════════════════════
-    // PHASE 2: LEVEL PARSING (JSON → Memory, Normalize Immediately)
-    // ═══════════════════════════════════════════════════════════════════════
+    // =======================================================================
+    // PHASE 2: LEVEL PARSING (JSON -> Memory, Normalize Immediately)
+    // =======================================================================
     
-    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
-    SYSTEM_LOG << "║ PHASE 2: LEVEL PARSING                                   ║\n";
-    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n";
+    SYSTEM_LOG << "+==========================================================+\n";
+    SYSTEM_LOG << "| PHASE 2: LEVEL PARSING                                   |\n";
+    SYSTEM_LOG << "+==========================================================+\n";
     SYSTEM_LOG << "File: " << tiledMapPath << "\n\n";
     
     // Load TMJ (ONCE)
@@ -427,7 +427,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     
     if (!loader.LoadFromFile(tiledMapPath, tiledMap))
     {
-        SYSTEM_LOG << "  ❌ Failed to load TMJ file\n";
+        SYSTEM_LOG << "  X Failed to load TMJ file\n";
         return false;
     }
     
@@ -436,14 +436,14 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     Olympe::Editor::LevelDefinition levelDef;
     if (!converter.Convert(tiledMap, levelDef))
     {
-        SYSTEM_LOG << "  ❌ Failed to convert map\n";
+        SYSTEM_LOG << "  X Failed to convert map\n";
         return false;
     }
     
-    SYSTEM_LOG << "  ✅ Parsed " << levelDef.entities.size() << " entities (types normalized)\n";
-    SYSTEM_LOG << "  ✅ Static objects: " << levelDef.categorizedObjects.staticObjects.size() << "\n";
-    SYSTEM_LOG << "  ✅ Dynamic objects: " << levelDef.categorizedObjects.dynamicObjects.size() << "\n";
-    SYSTEM_LOG << "  ✅ Patrol paths: " << levelDef.categorizedObjects.patrolPaths.size() << "\n\n";
+    SYSTEM_LOG << "  -> Parsed " << levelDef.entities.size() << " entities (types normalized)\n";
+    SYSTEM_LOG << "  -> Static objects: " << levelDef.categorizedObjects.staticObjects.size() << "\n";
+    SYSTEM_LOG << "  -> Dynamic objects: " << levelDef.categorizedObjects.dynamicObjects.size() << "\n";
+    SYSTEM_LOG << "  -> Patrol paths: " << levelDef.categorizedObjects.patrolPaths.size() << "\n\n";
     
     // Synchronize grid settings with loaded level
     SyncGridWithLevel(levelDef);
@@ -451,13 +451,13 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     // Validate prefabs (after normalization)
     ValidateLevelPrefabs(levelDef);
     
-    // ═══════════════════════════════════════════════════════════════════════
+    // =======================================================================
     // PHASE 3: RESOURCE PRELOADING (Centralized)
-    // ═══════════════════════════════════════════════════════════════════════
+    // =======================================================================
     
-    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
-    SYSTEM_LOG << "║ PHASE 3: RESOURCE PRELOADING                             ║\n";
-    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n\n";
+    SYSTEM_LOG << "+==========================================================+\n";
+    SYSTEM_LOG << "| PHASE 3: RESOURCE PRELOADING                             |\n";
+    SYSTEM_LOG << "+==========================================================+\n\n";
     
     int resourcesLoaded = 0;
     int resourcesFailed = 0;
@@ -474,17 +474,22 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
             true);
         resourcesLoaded += tilesetResult.successfullyLoaded;
         resourcesFailed += tilesetResult.completelyFailed;
-        SYSTEM_LOG << "    ✅ Loaded " << tilesetResult.successfullyLoaded << " tilesets\n";
+        SYSTEM_LOG << "    -> Loaded " << tilesetResult.successfullyLoaded << " tilesets\n";
     }
     
     // Step 2: Parallax layers
     SYSTEM_LOG << "  Step 2/4: Loading parallax layers...\n";
     std::vector<std::string> parallaxPaths;
-    for (const auto& parallax : levelDef.parallaxLayers)
+    if (levelDef.metadata.customData.contains("parallaxLayers") && levelDef.metadata.customData["parallaxLayers"].is_array())
     {
-        if (!parallax.imagePath.empty())
+        const auto& parallaxLayersJson = levelDef.metadata.customData["parallaxLayers"];
+        for (const auto& layerJson : parallaxLayersJson)
         {
-            parallaxPaths.push_back(parallax.imagePath);
+            std::string imagePath = layerJson.value("imagePath", "");
+            if (!imagePath.empty())
+            {
+                parallaxPaths.push_back(imagePath);
+            }
         }
     }
     if (!parallaxPaths.empty())
@@ -492,7 +497,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
         auto parallaxResult = dataManager.PreloadTextures(parallaxPaths, ResourceCategory::Level, true);
         resourcesLoaded += parallaxResult.successfullyLoaded;
         resourcesFailed += parallaxResult.completelyFailed;
-        SYSTEM_LOG << "    ✅ Loaded " << parallaxResult.successfullyLoaded << " parallax layers\n";
+        SYSTEM_LOG << "    -> Loaded " << parallaxResult.successfullyLoaded << " parallax layers\n";
     }
     
     // Step 3: Prefab sprites
@@ -524,7 +529,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
         auto spriteResult = dataManager.PreloadSprites(spritePaths, ResourceCategory::GameEntity, true);
         resourcesLoaded += spriteResult.successfullyLoaded;
         resourcesFailed += spriteResult.completelyFailed;
-        SYSTEM_LOG << "    ✅ Loaded " << spriteResult.successfullyLoaded << " sprites\n";
+        SYSTEM_LOG << "    -> Loaded " << spriteResult.successfullyLoaded << " sprites\n";
     }
     
     // Step 4: Audio
@@ -534,23 +539,23 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
         auto audioResult = dataManager.PreloadAudioFiles(levelDef.resources.audioPaths, true);
         resourcesLoaded += audioResult.successfullyLoaded;
         resourcesFailed += audioResult.completelyFailed;
-        SYSTEM_LOG << "    ✅ Loaded " << audioResult.successfullyLoaded << " audio files\n";
+        SYSTEM_LOG << "    -> Loaded " << audioResult.successfullyLoaded << " audio files\n";
     }
     
-    SYSTEM_LOG << "\n  ✅ Total resources loaded: " << resourcesLoaded;
+    SYSTEM_LOG << "\n  -> Total resources loaded: " << resourcesLoaded;
     if (resourcesFailed > 0)
     {
         SYSTEM_LOG << " (" << resourcesFailed << " failed)";
     }
     SYSTEM_LOG << "\n\n";
     
-    // ═══════════════════════════════════════════════════════════════════════
+    // =======================================================================
     // PHASE 4: VISUAL STRUCTURE CREATION
-    // ═══════════════════════════════════════════════════════════════════════
+    // =======================================================================
     
-    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
-    SYSTEM_LOG << "║ PHASE 4: VISUAL STRUCTURE CREATION                       ║\n";
-    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n\n";
+    SYSTEM_LOG << "+==========================================================+\n";
+    SYSTEM_LOG << "| PHASE 4: VISUAL STRUCTURE CREATION                       |\n";
+    SYSTEM_LOG << "+==========================================================+\n\n";
     
     InstantiationResult instResult;
     
@@ -561,32 +566,34 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     SYSTEM_LOG << "  Pass 2/2: Spatial Structures...\n";
     InstantiatePass2_SpatialStructure(levelDef, instResult);
     
-    SYSTEM_LOG << "  ✅ Created " << m_tileChunks.size() << " tile chunks\n\n";
+    SYSTEM_LOG << "  -> Created " << m_tileChunks.size() << " tile chunks\n\n";
     
-    // ═══════════════════════════════════════════════════════════════════════
+    // =======================================================================
     // PHASE 5: ENTITY INSTANTIATION (Unified)
-    // ═══════════════════════════════════════════════════════════════════════
+    // =======================================================================
     
-    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
-    SYSTEM_LOG << "║ PHASE 5: ENTITY INSTANTIATION                            ║\n";
-    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n\n";
+    SYSTEM_LOG << "+==========================================================+\n";
+    SYSTEM_LOG << "| PHASE 5: ENTITY INSTANTIATION                            |\n";
+    SYSTEM_LOG << "+==========================================================+\n\n";
     
     // Pass 1: Static objects
     SYSTEM_LOG << "  Pass 1/3: Static objects...\n";
-    for (const auto& entityInstance : levelDef.categorizedObjects.staticObjects)
+    for (auto& entityInstancePtr : levelDef.categorizedObjects.staticObjects)
     {
+        std::shared_ptr<Olympe::Editor::EntityInstance> entityInstance = std::move(entityInstancePtr);
         EntityID entity = InstantiateEntity(entityInstance, factory, instResult.pass3_staticObjects);
         if (entity != INVALID_ENTITY_ID && entityInstance)
         {
             instResult.entityRegistry[entityInstance->name] = entity;
         }
     }
-    SYSTEM_LOG << "    ✅ Created " << instResult.pass3_staticObjects.successfullyCreated << " objects\n\n";
+    SYSTEM_LOG << "    -> Created " << instResult.pass3_staticObjects.successfullyCreated << " objects\n\n";
     
     // Pass 2: Dynamic objects
     SYSTEM_LOG << "  Pass 2/3: Dynamic objects...\n";
-    for (const auto& entityInstance : levelDef.categorizedObjects.dynamicObjects)
+    for (auto& entityInstancePtr : levelDef.categorizedObjects.dynamicObjects)
     {
+        std::shared_ptr<Olympe::Editor::EntityInstance> entityInstance = std::move(entityInstancePtr);
         EntityID entity = InstantiateEntity(entityInstance, factory, instResult.pass4_dynamicObjects);
         
         if (entity != INVALID_ENTITY_ID && entityInstance)
@@ -600,50 +607,51 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
             }
         }
     }
-    SYSTEM_LOG << "    ✅ Created " << instResult.pass4_dynamicObjects.successfullyCreated << " objects\n\n";
+    SYSTEM_LOG << "    -> Created " << instResult.pass4_dynamicObjects.successfullyCreated << " objects\n\n";
     
     // Pass 3: Spatial structures (patrol paths, waypoints)
     SYSTEM_LOG << "  Pass 3/3: Spatial structures (patrol paths)...\n";
-    for (const auto& entityInstance : levelDef.categorizedObjects.patrolPaths)
+    for (auto& entityInstancePtr : levelDef.categorizedObjects.patrolPaths)
     {
+        std::shared_ptr<Olympe::Editor::EntityInstance> entityInstance = std::move(entityInstancePtr);
         EntityID entity = InstantiateEntity(entityInstance, factory, instResult.pass5_relationships);
         if (entity != INVALID_ENTITY_ID && entityInstance)
         {
             instResult.entityRegistry[entityInstance->name] = entity;
         }
     }
-    SYSTEM_LOG << "    ✅ Created " << instResult.pass5_relationships.successfullyCreated << " objects\n\n";
+    SYSTEM_LOG << "    -> Created " << instResult.pass5_relationships.successfullyCreated << " objects\n\n";
     
-    // ═══════════════════════════════════════════════════════════════════════
+    // =======================================================================
     // PHASE 6: ENTITY RELATIONSHIPS
-    // ═══════════════════════════════════════════════════════════════════════
+    // =======================================================================
     
-    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
-    SYSTEM_LOG << "║ PHASE 6: ENTITY RELATIONSHIPS                            ║\n";
-    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n\n";
+    SYSTEM_LOG << "+==========================================================+\n";
+    SYSTEM_LOG << "| PHASE 6: ENTITY RELATIONSHIPS                            |\n";
+    SYSTEM_LOG << "+==========================================================+\n\n";
     
     InstantiatePass5_Relationships(levelDef, instResult);
     
-    SYSTEM_LOG << "  ✅ Linked " << instResult.pass5_relationships.linkedObjects << " relationships\n\n";
+    SYSTEM_LOG << "  -> Linked " << instResult.pass5_relationships.linkedObjects << " relationships\n\n";
     
     instResult.success = true;
     
-    // ═══════════════════════════════════════════════════════════════════════
+    // =======================================================================
     // FINAL SUMMARY
-    // ═══════════════════════════════════════════════════════════════════════
+    // =======================================================================
     
-    SYSTEM_LOG << "╔══════════════════════════════════════════════════════════╗\n";
-    SYSTEM_LOG << "║ LEVEL LOADING COMPLETE                                   ║\n";
-    SYSTEM_LOG << "╠══════════════════════════════════════════════════════════╣\n";
-    SYSTEM_LOG << "║ Entities Created:    " << std::setw(3) << instResult.GetTotalCreated()
-               << std::string(31, ' ') << "║\n";
-    SYSTEM_LOG << "║ Entities Failed:     " << std::setw(3) << instResult.GetTotalFailed()
-               << std::string(31, ' ') << "║\n";
-    SYSTEM_LOG << "║ Resources Loaded:    " << std::setw(3) << resourcesLoaded
-               << std::string(31, ' ') << "║\n";
-    SYSTEM_LOG << "║ Resources Failed:    " << std::setw(3) << resourcesFailed
-               << std::string(31, ' ') << "║\n";
-    SYSTEM_LOG << "╚══════════════════════════════════════════════════════════╝\n\n";
+    SYSTEM_LOG << "+==========================================================+\n";
+    SYSTEM_LOG << "| LEVEL LOADING COMPLETE                                   |\n";
+    SYSTEM_LOG << "╠==========================================================╣\n";
+    SYSTEM_LOG << "| Entities Created:    " << std::setw(3) << instResult.GetTotalCreated()
+               << std::string(31, ' ') << "|\n";
+    SYSTEM_LOG << "| Entities Failed:     " << std::setw(3) << instResult.GetTotalFailed()
+               << std::string(31, ' ') << "|\n";
+    SYSTEM_LOG << "| Resources Loaded:    " << std::setw(3) << resourcesLoaded
+               << std::string(31, ' ') << "|\n";
+    SYSTEM_LOG << "| Resources Failed:    " << std::setw(3) << resourcesFailed
+               << std::string(31, ' ') << "|\n";
+    SYSTEM_LOG << "+==========================================================+\n\n";
     
     SYSTEM_LOG << "World::LoadLevelFromTiled - Level loaded successfully\n";
     return true;
@@ -714,7 +722,7 @@ void World::ValidateLevelPrefabs(const Olympe::Editor::LevelDefinition& levelDef
     
     if (!missingTypes.empty())
     {
-        SYSTEM_LOG << "  ⚠️ Warning: " << missingTypes.size() << " missing prefabs:\n";
+        SYSTEM_LOG << "  /!\\ Warning: " << missingTypes.size() << " missing prefabs:\n";
         for (const auto& type : missingTypes)
         {
             SYSTEM_LOG << "    - " << type << "\n";
@@ -735,12 +743,12 @@ EntityID World::InstantiateEntity(
     
     stats.totalObjects++;
     
-    // ✅ Type ALREADY normalized - direct lookup (no matching logic needed)
+    // -> Type ALREADY normalized - direct lookup (no matching logic needed)
     const PrefabBlueprint* blueprint = factory.GetPrefabRegistry().Find(entityInstance->type);
     
     if (!blueprint || !blueprint->isValid)
     {
-        SYSTEM_LOG << "    ❌ No prefab for type '" << entityInstance->type << "'\n";
+        SYSTEM_LOG << "    X No prefab for type '" << entityInstance->type << "'\n";
         EntityID placeholder = CreateMissingPrefabPlaceholder(*entityInstance, stats);
         return placeholder;
     }
@@ -757,7 +765,7 @@ EntityID World::InstantiateEntity(
     {
         stats.failed++;
         stats.failedObjects.push_back(entityInstance->name);
-        SYSTEM_LOG << "    ❌ Failed: " << entityInstance->name << "\n";
+        SYSTEM_LOG << "    X Failed: " << entityInstance->name << "\n";
         return INVALID_ENTITY_ID;
     }
     
@@ -769,165 +777,9 @@ EntityID World::InstantiateEntity(
     }
     
     stats.successfullyCreated++;
-    SYSTEM_LOG << "    ✅ " << entityInstance->name << " [" << blueprint->prefabName << "]\n";
+    SYSTEM_LOG << "    -> " << entityInstance->name << " [" << blueprint->prefabName << "]\n";
     
     return entity;
-}
-
-//=============================================================================
-// DEPRECATED: Phase 2 Prefab Discovery (No Longer Used)
-//=============================================================================
-
-World::Phase2Result World::ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::LevelParseResult& phase1Result)
-{
-    SYSTEM_LOG << "\n";
-    SYSTEM_LOG << "/======================================================================\ \n";
-    SYSTEM_LOG << "|         PHASE 2: PREFAB DISCOVERY & PRELOADING                       | \n";
-    SYSTEM_LOG << "\\======================================================================/ \n\n";
-    
-    Phase2Result result;
-    
-    // Step 1: Reuse PrefabFactory's cached registry if available
-    SYSTEM_LOG << "-> Step 1: Loading prefab registry...\n";
-    result.prefabRegistry = PrefabFactory::Get().GetPrefabRegistry();
-    
-    if (result.prefabRegistry.GetCount() == 0)
-    {
-        SYSTEM_LOG << "  ⚠️  PrefabFactory registry is empty, scanning now...\n";
-        PrefabScanner scanner;
-        std::vector<PrefabBlueprint> blueprints = scanner.ScanDirectory("Blueprints/EntityPrefab");
-        
-        if (blueprints.empty())
-        {
-            SYSTEM_LOG << "  /!\ No prefabs found in directory\n";
-            result.errors.push_back("No prefabs found in Blueprints/EntityPrefab");
-        }
-        
-        // Build the registry from blueprints
-        for (const auto& blueprint : blueprints)
-        {
-            result.prefabRegistry.Register(blueprint);
-            result.stats.prefabsLoaded++;
-        }
-    }
-    else
-    {
-        SYSTEM_LOG << "  ✅ Using " << result.prefabRegistry.GetCount() 
-                   << " prefabs from PrefabFactory cache\n";
-        result.stats.prefabsLoaded = result.prefabRegistry.GetCount();
-    }
-    
-    SYSTEM_LOG << "  -> Loaded " << result.stats.prefabsLoaded << " prefab blueprints\n";
-    
-    // Step 2: Cross-check level requirements vs available prefabs
-    SYSTEM_LOG << "\n-> Step 2: Cross-checking level requirements...\n";
-    
-    for (const auto& type : phase1Result.objectCensus.uniqueTypes)
-    {
-        std::vector<const PrefabBlueprint*> blueprints = result.prefabRegistry.FindByType(type);
-        
-        if (blueprints.empty())
-        {
-            SYSTEM_LOG << "  x Missing prefab for type: " << type << "\n";
-            result.missingPrefabs.push_back(type);
-        }
-        else
-        {
-            SYSTEM_LOG << "  -> Found prefab: " << blueprints[0]->prefabName << " (type: " << type << ")\n";
-        }
-    }
-    
-    if (!result.missingPrefabs.empty())
-    {
-        SYSTEM_LOG << "  /!\ " << result.missingPrefabs.size() << " missing prefabs detected\n";
-    }
-    
-    // Step 3: Preload visual resources
-    SYSTEM_LOG << "\n-> Step 3: Preloading visual resources...\n";
-    DataManager& dataManager = DataManager::Get();
-    
-    // Preload tilesets
-    std::vector<DataManager::TilesetInfo> tilesets;
-    for (const auto& tilesetRef : phase1Result.visualManifest.tilesets)
-    {
-        DataManager::TilesetInfo info;
-        info.sourceFile = tilesetRef.sourceFile;
-        info.imageFile = tilesetRef.imageFile;
-        info.individualImages = tilesetRef.individualImages;
-        info.isCollection = tilesetRef.isCollection;
-        tilesets.push_back(info);
-    }
-    result.preloadResult.tilesets = dataManager.PreloadTilesets(tilesets, true);
-    
-    // Preload parallax layers
-    std::vector<std::string> parallaxPaths(
-        phase1Result.visualManifest.parallaxLayers.begin(),
-        phase1Result.visualManifest.parallaxLayers.end()
-    );
-    result.preloadResult.textures = dataManager.PreloadTextures(parallaxPaths, ResourceCategory::Level, true);
-    
-    // Step 4: Preload prefab resources (sprites and audio)
-    SYSTEM_LOG << "\n-> Step 4: Preloading prefab resources...\n";
-    
-    std::vector<std::string> spritePaths;
-    std::vector<std::string> audioPaths;
-    
-    for (const auto& name : result.prefabRegistry.GetAllPrefabNames())
-    {
-        const PrefabBlueprint* blueprint = result.prefabRegistry.Find(name);
-        if (blueprint)
-        {
-            for (const auto& spritePath : blueprint->resources.spriteRefs)
-            {
-                spritePaths.push_back(spritePath);
-            }
-            for (const auto& audioPath : blueprint->resources.audioRefs)
-            {
-                audioPaths.push_back(audioPath);
-            }
-        }
-    }
-    
-    if (!spritePaths.empty())
-    {
-        result.preloadResult.sprites = dataManager.PreloadSprites(spritePaths, ResourceCategory::GameEntity, true);
-        result.stats.spritesPreloaded = result.preloadResult.sprites.totalRequested;
-        SYSTEM_LOG << "  -> Preloaded " << result.preloadResult.sprites.successfullyLoaded 
-                   << " sprites (" << result.preloadResult.sprites.completelyFailed << " failed)\n";
-    }
-    
-    if (!audioPaths.empty())
-    {
-        result.preloadResult.audio = dataManager.PreloadAudioFiles(audioPaths, true);
-        result.stats.audioPreloaded = result.preloadResult.audio.totalRequested;
-        SYSTEM_LOG << "  -> Preloaded " << result.preloadResult.audio.successfullyLoaded 
-                   << " audio files (" << result.preloadResult.audio.completelyFailed << " failed)\n";
-    }
-    
-    result.preloadResult.success = result.preloadResult.IsComplete() || 
-                                   result.preloadResult.GetTotalLoaded() > 0.5f;
-    result.success = true;
-    
-    // Summary
-    SYSTEM_LOG << "\n";
-    SYSTEM_LOG << "/======================================================================\ \n";
-    SYSTEM_LOG << "| PHASE 2 COMPLETE                                                     | \n";
-    SYSTEM_LOG << "|======================================================================| \n";
-    SYSTEM_LOG << "| Prefabs Loaded:      " << std::setw(3) << result.stats.prefabsLoaded
-               << std::string(45, ' ') << "| \n";
-    SYSTEM_LOG << "| Missing Prefabs:     " << std::setw(3) << result.missingPrefabs.size()
-               << std::string(45, ' ') << "| \n";
-    SYSTEM_LOG << "| Sprites Preloaded:   " << std::setw(3) << result.stats.spritesPreloaded
-               << std::string(45, ' ') << "| \n";
-    SYSTEM_LOG << "| Audio Preloaded:     " << std::setw(3) << result.stats.audioPreloaded
-               << std::string(45, ' ') << "| \n";
-    SYSTEM_LOG << "| Resources Loaded:    " << std::setw(3) << result.preloadResult.GetTotalLoaded()
-               << std::string(45, ' ') << "| \n";
-    SYSTEM_LOG << "| Resources Failed:    " << std::setw(3) << result.preloadResult.GetTotalFailed()
-               << std::string(45, ' ') << "| \n";
-    SYSTEM_LOG << "\======================================================================/ \n";
-    
-    return result;
 }
 
 //=============================================================================
@@ -1286,7 +1138,7 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                 info.tileoffsetX = cachedTileset->tileoffsetX;
                 info.tileoffsetY = cachedTileset->tileoffsetY;
                 
-                SYSTEM_LOG << "[TilesetManager] ========================================\n";
+                SYSTEM_LOG << "[TilesetManager] ========================================+n";
                 SYSTEM_LOG << "[TilesetManager] Loading external tileset: " << info.name << "\n";
                 SYSTEM_LOG << "[TilesetManager] Parsed global offset from cache: (" 
                           << info.tileoffsetX << ", " << info.tileoffsetY << ")\n";
@@ -1325,7 +1177,7 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                             SYSTEM_LOG << "[TilesetManager] Image-based tileset - All " 
                                       << tilecount << " tiles will use offset (" 
                                       << info.tileoffsetX << ", " << info.tileoffsetY << ")\n";
-                            SYSTEM_LOG << "[TilesetManager] ========================================\n";
+                            SYSTEM_LOG << "[TilesetManager] ========================================+n";
                         }
                         else
                         {
@@ -1389,7 +1241,7 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                               << " (" << info.individualTiles.size() << " tiles)\n";
                     SYSTEM_LOG << "[TilesetManager] All tiles stored with global offset: (" 
                               << info.tileoffsetX << ", " << info.tileoffsetY << ")\n";
-                    SYSTEM_LOG << "[TilesetManager] ========================================\n";
+                    SYSTEM_LOG << "[TilesetManager] ========================================+n";
                 }
             }
             else
@@ -1507,7 +1359,7 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
         const TilesetInfo& storedInfo = m_tilesets.back();
         if (storedInfo.tileoffsetX != info.tileoffsetX || storedInfo.tileoffsetY != info.tileoffsetY)
         {
-            SYSTEM_LOG << "[TilesetManager] ❌ ERROR: Offset LOST during vector storage!\n";
+            SYSTEM_LOG << "[TilesetManager] X ERROR: Offset LOST during vector storage!\n";
             SYSTEM_LOG << "                  Expected: (" << info.tileoffsetX << ", " << info.tileoffsetY << ")\n";
             SYSTEM_LOG << "                  Got: (" << storedInfo.tileoffsetX << ", " << storedInfo.tileoffsetY << ")\n";
         }
@@ -1536,7 +1388,7 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
             return a.firstgid > b.firstgid;  // Descending order
         });
     
-    SYSTEM_LOG << "\n[TilesetManager] ========================================\n";
+    SYSTEM_LOG << "\n[TilesetManager] ========================================+n";
     SYSTEM_LOG << "[TilesetManager] Tileset load complete. Final ordering (by firstgid DESC):\n";
     for (const auto& tileset : m_tilesets)
     {
@@ -1578,7 +1430,7 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
     {
         SYSTEM_LOG << "  [OK] No GID range overlaps detected\n";
     }
-    SYSTEM_LOG << "[TilesetManager] ========================================\n\n";
+    SYSTEM_LOG << "[TilesetManager] ========================================+n\n";
 }
 
 bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect, const TilesetInfo*& outTileset)
@@ -1617,7 +1469,7 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
         const TilesetInfo& tileset = *bestMatch;
         uint32_t localId = cleanGid - tileset.firstgid;
         
-        // ✅ CRITICAL: Set the tileset pointer BEFORE any return
+        // -> CRITICAL: Set the tileset pointer BEFORE any return
         outTileset = bestMatch;
         
         if (tileset.isCollection)
@@ -1674,7 +1526,7 @@ bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_
     }
     
     // GID not found in any tileset
-    SYSTEM_LOG << "[TilesetManager::GetTileTexture] ❌ GID " << cleanGid 
+    SYSTEM_LOG << "[TilesetManager::GetTileTexture] X GID " << cleanGid 
               << " NOT FOUND in any tileset (total tilesets: " << m_tilesets.size() << ")\n";
     outTileset = nullptr;
     return false;
@@ -1816,7 +1668,7 @@ bool World::InstantiatePass5_Relationships(
                     guardBlackboard.hasPatrolPath = true;
                     
                     SYSTEM_LOG << "  ✓ Linked guard '" << link.sourceObjectName 
-                               << "' → patrol '" << link.targetObjectName 
+                               << "' -> patrol '" << link.targetObjectName 
                                << "' (" << guardBlackboard.patrolPointCount << " points)\n";
                     
                     result.pass5_relationships.linkedObjects++;
@@ -1952,7 +1804,7 @@ EntityID World::CreateMissingPrefabPlaceholder(
     
     stats.successfullyCreated++;
     
-    SYSTEM_LOG << "  /!\  PLACEHOLDER: Created red marker for missing prefab '" 
+    SYSTEM_LOG << "  /!\\  PLACEHOLDER: Created red marker for missing prefab '" 
                << entityInstance.type << "' (name: " << entityInstance.name 
                << ") at position: " << entityInstance.position << "\n";
 

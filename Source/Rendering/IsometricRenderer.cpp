@@ -2,7 +2,7 @@
  * Olympe Engine V2 - 2025
  * Isometric Renderer Implementation
  * 
- * ✅ REFACTORED: Now provides utility functions only
+ * -> REFACTORED: Now provides utility functions only
  * Batching and sorting moved to unified rendering pipeline in ECS_Systems.cpp
  */
 

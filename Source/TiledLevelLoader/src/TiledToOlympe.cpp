@@ -61,9 +61,9 @@ namespace Tiled {
         lastError_.clear();
         parallaxLayers_.Clear();
         
-        SYSTEM_LOG << "\n╔═══════════════════════════════════════════════════════════╗\n";
-        SYSTEM_LOG << "║ TILED → OLYMPE CONVERSION - COMPLETE PIPELINE            ║\n";
-        SYSTEM_LOG << "╚═══════════════════════════════════════════════════════════╝\n\n";
+        SYSTEM_LOG << "\n+===========================================================+\n";
+        SYSTEM_LOG << "| TILED -> OLYMPE CONVERSION - COMPLETE PIPELINE            |\n";
+        SYSTEM_LOG << "+===========================================================+\n\n";
         
         // Store map dimensions
         mapWidth_ = tiledMap.width;
@@ -181,15 +181,15 @@ namespace Tiled {
         // ===================================================================
         // FINAL SUMMARY
         // ===================================================================
-        SYSTEM_LOG << "\n╔═══════════════════════════════════════════════════════════╗\n";
-        SYSTEM_LOG << "║ CONVERSION COMPLETE                                       ║\n";
-        SYSTEM_LOG << "╠═══════════════════════════════════════════════════════════╣\n";
-        SYSTEM_LOG << "║ Map: " << outLevel.mapConfig.orientation 
+        SYSTEM_LOG << "\n+===========================================================+\n";
+        SYSTEM_LOG << "| CONVERSION COMPLETE                                       |\n";
+        SYSTEM_LOG << "╠===========================================================╣\n";
+        SYSTEM_LOG << "| Map: " << outLevel.mapConfig.orientation 
                    << " " << outLevel.mapConfig.mapWidth << "x" << outLevel.mapConfig.mapHeight << "\n";
-        SYSTEM_LOG << "║ Visual Layers: " << visualLayerCount << "\n";
-        SYSTEM_LOG << "║ Entities: " << stats.totalObjects << "\n";
-        SYSTEM_LOG << "║ Relationships: " << linkCount << "\n";
-        SYSTEM_LOG << "╚═══════════════════════════════════════════════════════════╝\n\n";
+        SYSTEM_LOG << "| Visual Layers: " << visualLayerCount << "\n";
+        SYSTEM_LOG << "| Entities: " << stats.totalObjects << "\n";
+        SYSTEM_LOG << "| Relationships: " << linkCount << "\n";
+        SYSTEM_LOG << "+===========================================================+\n\n";
         
         return true;
     }
@@ -458,7 +458,7 @@ namespace Tiled {
         // Transform position based on map orientation (isometric vs orthogonal)
         entity->position = TransformObjectPosition(obj.x, obj.y);
         
-        SYSTEM_LOG << "  → Created entity '" << obj.name 
+        SYSTEM_LOG << "  -> Created entity '" << obj.name 
                    << "' at TMJ position: (" << obj.x << ", " << obj.y << ")\n";
 
         // Store rotation (extract to entity level field)
@@ -573,14 +573,14 @@ namespace Tiled {
                 return Vector(x, y, 0.0f);
             }
             
-            // FIX: Convert TMJ pixels → tile coordinates → ISO projection
+            // FIX: Convert TMJ pixels -> tile coordinates -> ISO projection
             
             // Step 1: TMJ object coordinates are in Tiled's orthogonal canvas pixels
             //         Convert to tile coordinates (world space)
             float tileX = x / static_cast<float>(config_.tileWidth);
             float tileY = y / static_cast<float>(config_.tileHeight);
             
-            // Step 2: Apply isometric projection (tiles → ISO screen pixels)
+            // Step 2: Apply isometric projection (tiles -> ISO screen pixels)
             Vector isoPos = IsometricProjection::WorldToIso(
                 tileX,
                 tileY,
@@ -660,15 +660,15 @@ namespace Tiled {
         }
         
         // Set world size
-        outLevel.worldSize.x = tiledMap.width * tiledMap.tilewidth;
-        outLevel.worldSize.y = tiledMap.height * tiledMap.tileheight;
-        
+        outLevel.worldSize.x = (float)tiledMap.width * tiledMap.tilewidth;
+        outLevel.worldSize.y = (float)tiledMap.height * tiledMap.tileheight;
+
         // Background color
         if (!tiledMap.backgroundcolor.empty()) {
             outLevel.ambientColor = tiledMap.backgroundcolor;
         }
         
-        SYSTEM_LOG << "  → Map: " << outLevel.mapConfig.orientation 
+        SYSTEM_LOG << "  -> Map: " << outLevel.mapConfig.orientation 
                    << " " << outLevel.mapConfig.mapWidth << "x" << outLevel.mapConfig.mapHeight
                    << " (tiles: " << outLevel.mapConfig.tileWidth << "x" << outLevel.mapConfig.tileHeight << ")\n";
     }
@@ -745,7 +745,7 @@ namespace Tiled {
                     // Also add to parallax layer manager for backward compatibility
                     ConvertImageLayer(*layer);
                     
-                    SYSTEM_LOG << "  → Image Layer: '" << visual.name << "' (parallax: " 
+                    SYSTEM_LOG << "  -> Image Layer: '" << visual.name << "' (parallax: " 
                                << visual.scrollFactorX << ", z: " << visual.zOrder << ")\n";
                     break;
                 }
@@ -793,7 +793,7 @@ namespace Tiled {
                             tileDef.chunks.push_back(chunkDef);
                         }
                         
-                        SYSTEM_LOG << "  → Tile Layer (Infinite): '" << tileDef.name << "' (" 
+                        SYSTEM_LOG << "  -> Tile Layer (Infinite): '" << tileDef.name << "' (" 
                                    << tileDef.chunks.size() << " chunks, z: " << tileDef.zOrder << ")\n";
                     }
                     // Handle finite maps with regular data
@@ -815,7 +815,7 @@ namespace Tiled {
                             }
                         }
                         
-                        SYSTEM_LOG << "  → Tile Layer: '" << tileDef.name << "' (" 
+                        SYSTEM_LOG << "  -> Tile Layer: '" << tileDef.name << "' (" 
                                    << layer->width << "x" << layer->height << " tiles, z: " << tileDef.zOrder << ")\n";
                     }
                     
@@ -998,7 +998,7 @@ namespace Tiled {
                     }
                 }
                 
-                SYSTEM_LOG << "  → Collision Layer: '" << layer->name << "' (filled tiles: " << collisionTileCount << ")\n";
+                SYSTEM_LOG << "  -> Collision Layer: '" << layer->name << "' (filled tiles: " << collisionTileCount << ")\n";
             }
             
             // Process object layers (sectors, collision shapes)
@@ -1025,7 +1025,7 @@ namespace Tiled {
                         outLevel.sectors.push_back(sector);
                         objectCount++;
                         
-                        SYSTEM_LOG << "  → Sector: '" << sector.name << "' (" << sector.polygon.size() << " points)\n";
+                        SYSTEM_LOG << "  -> Sector: '" << sector.name << "' (" << sector.polygon.size() << " points)\n";
                     }
                     
                     // Collision shapes (rectangles)
@@ -1039,7 +1039,7 @@ namespace Tiled {
                         outLevel.collisionShapes.push_back(shape);
                         objectCount++;
                         
-                        SYSTEM_LOG << "  → Collision Shape: '" << shape.name << "' (rect: " 
+                        SYSTEM_LOG << "  -> Collision Shape: '" << shape.name << "' (rect: " 
                                    << shape.size.x << "x" << shape.size.y << ")\n";
                     }
                 }
@@ -1065,14 +1065,14 @@ namespace Tiled {
             "ambient", "sound", "music"
         };
         
-        // ✅ FIX #1: Track global zOrder across ALL layers for depth sorting
+        // -> FIX #1: Track global zOrder across ALL layers for depth sorting
         int globalZOrder = 0;
         
         for (const auto& layer : tiledMap.layers) {
-            // ✅ Process object layers and assign zOrder
+            // -> Process object layers and assign zOrder
             if (layer->type == LayerType::ObjectGroup) {
                 if (!layer->visible) {
-                    globalZOrder++;  // ✅ Increment even for invisible layers to maintain ordering
+                    globalZOrder++;  // -> Increment even for invisible layers to maintain ordering
                     continue;
                 }
                 
@@ -1088,7 +1088,7 @@ namespace Tiled {
                     if (obj.objectType == ObjectType::Polyline || obj.objectType == ObjectType::Polygon) {
                         auto collisionEntity = CreateCollisionPolylineEntity(obj);
                         if (collisionEntity) {
-                            // ✅ CRITICAL FIX: Store layer zOrder in position.z
+                            // -> CRITICAL FIX: Store layer zOrder in position.z
                             collisionEntity->position.z = static_cast<float>(globalZOrder);
                             
                             // Create a copy for the legacy entities array
@@ -1105,7 +1105,7 @@ namespace Tiled {
                             outLevel.entities.push_back(std::move(entityCopy));
                             stats.staticObjects++;
                             stats.totalObjects++;
-                            SYSTEM_LOG << "  → Collision Polyline: '" << obj.name << "' (zOrder: " << globalZOrder << ")\n";
+                            SYSTEM_LOG << "  -> Collision Polyline: '" << obj.name << "' (zOrder: " << globalZOrder << ")\n";
                         }
                         continue;  // Skip to next object
                     }
@@ -1125,10 +1125,10 @@ namespace Tiled {
                 auto entity = CreateEntity(obj);
                 if (!entity) continue;
                 
-                // ✅ CRITICAL FIX: Store layer zOrder in position.z
+                // -> CRITICAL FIX: Store layer zOrder in position.z
                 entity->position.z = static_cast<float>(globalZOrder);
                 
-                SYSTEM_LOG << "  → Entity '" << entity->name 
+                SYSTEM_LOG << "  -> Entity '" << entity->name 
                            << "' assigned zOrder: " << globalZOrder << "\n";
                 
                 // Create a copy for the legacy entities array
@@ -1148,12 +1148,12 @@ namespace Tiled {
                 if (obj.objectType == ObjectType::Polyline && typeLower == "way") {
                     outLevel.categorizedObjects.patrolPaths.push_back(std::move(entity));
                     stats.patrolPaths++;
-                    SYSTEM_LOG << "  → Patrol Path: '" << obj.name << "' (" << obj.polyline.size() << " points)\n";
+                    SYSTEM_LOG << "  -> Patrol Path: '" << obj.name << "' (" << obj.polyline.size() << " points)\n";
                 }
                 else if (soundTypes.count(typeLower)) {
                     outLevel.categorizedObjects.soundObjects.push_back(std::move(entity));
                     stats.soundObjects++;
-                    SYSTEM_LOG << "  → Sound Object: '" << obj.name << "' (type: " << obj.type << ")\n";
+                    SYSTEM_LOG << "  -> Sound Object: '" << obj.name << "' (type: " << obj.type << ")\n";
                 }
                 else if (staticTypes.count(typeLower)) {
                     outLevel.categorizedObjects.staticObjects.push_back(std::move(entity));
@@ -1175,11 +1175,11 @@ namespace Tiled {
                 stats.totalObjects++;
             }
             
-            // ✅ Increment zOrder after processing object layer
+            // -> Increment zOrder after processing object layer
             globalZOrder++;
             
             } else {
-                // ✅ For non-object layers (tile layers, image layers, etc.), still increment zOrder
+                // -> For non-object layers (tile layers, image layers, etc.), still increment zOrder
                 // to maintain correct ordering between all layer types
                 globalZOrder++;
             }
@@ -1195,7 +1195,7 @@ namespace Tiled {
     {
         linkCount = 0;
         
-        // Build object ID → name mapping
+        // Build object ID -> name mapping
         std::map<int, std::string> idToName;
         for (const auto& layer : tiledMap.layers) {
             if (layer->type != LayerType::ObjectGroup) continue;
@@ -1222,7 +1222,7 @@ namespace Tiled {
                         if (prop.second.type == PropertyType::Object) {
                             int targetID = prop.second.intValue;
                             std::string targetName = idToName.count(targetID) ? idToName[targetID] : "(unknown)";
-                            SYSTEM_LOG << "(Object ID: " << targetID << " → '" << targetName << "')\n";
+                            SYSTEM_LOG << "(Object ID: " << targetID << " -> '" << targetName << "')\n";
                         } else if (prop.second.type == PropertyType::String || prop.second.type == PropertyType::File) {
                             SYSTEM_LOG << "\"" << prop.second.stringValue << "\"\n";
                         } else if (prop.second.type == PropertyType::Int) {
@@ -1235,7 +1235,7 @@ namespace Tiled {
                     }
                 }
                 
-                // Check for "patrol way" property (NPC → patrol path link)
+                // Check for "patrol way" property (NPC -> patrol path link)
                 auto patrolProp = obj.properties.find(PROPERTY_PATROL_WAY);
                 if (patrolProp != obj.properties.end() && patrolProp->second.type == PropertyType::Object) {
                     Olympe::Editor::LevelDefinition::ObjectLink link;
@@ -1248,7 +1248,7 @@ namespace Tiled {
                     outLevel.objectLinks.push_back(link);
                     linkCount++;
                     
-                    SYSTEM_LOG << "  → Link: '" << link.sourceObjectName << "' → '" 
+                    SYSTEM_LOG << "  -> Link: '" << link.sourceObjectName << "' -> '" 
                                << link.targetObjectName << "' (patrol_path)\n";
                 }
                 
@@ -1265,14 +1265,14 @@ namespace Tiled {
                     outLevel.objectLinks.push_back(link);
                     linkCount++;
                     
-                    SYSTEM_LOG << "  → Link: '" << link.sourceObjectName << "' → '" 
+                    SYSTEM_LOG << "  -> Link: '" << link.sourceObjectName << "' -> '" 
                                << link.targetObjectName << "' (trigger_target)\n";
                 }
             }
         }
         
         if (linkCount == 0) {
-            SYSTEM_LOG << "  /! No object relationships found. Check:\n";
+            SYSTEM_LOG << "  /!\\ No object relationships found. Check:\n";
             SYSTEM_LOG << "    - Guards should have 'patrol way' property (Object type)\n";
             SYSTEM_LOG << "    - Property must reference a 'way' object by ID\n";
         }

@@ -16,11 +16,9 @@ World purpose: Manage the overall game world, including object management, level
 #include <memory>
 #include <unordered_map>
 #include <queue>
-//#include <array>
-//#include <algorithm>
 #include <type_traits>
 
-#include "Level.h" // add Level management
+#include "Level.h"
 #include "GameState.h"
 
 // Include ECS related headers
@@ -29,6 +27,7 @@ World purpose: Manage the overall game world, including object management, level
 #include "ECS_Systems.h"
 #include "ECS_Register.h" // Include the implementation of ComponentPool
 #include "PrefabScanner.h"
+#include "PrefabFactory.h"
 
 // JSON library for tile layer loading
 #include "third_party/nlohmann/json.hpp"

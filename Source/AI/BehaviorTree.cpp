@@ -34,7 +34,7 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
         if (!JsonHelper::LoadJsonFromFile(filepath, j))
         {
             std::cerr << "[BehaviorTreeManager] ERROR: Failed to load file: " << filepath << std::endl;
-            std::cout << "[BehaviorTreeManager] ========================================\n" << std::endl;
+            std::cout << "[BehaviorTreeManager] ========================================+n" << std::endl;
             return false;
         }
         std::cout << "[BehaviorTreeManager] JSON loaded successfully" << std::endl;
@@ -58,7 +58,7 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
             if (!j.contains("data"))
             {
                 std::cerr << "[BehaviorTreeManager] ERROR: v2 format but no 'data' section" << std::endl;
-                std::cout << "[BehaviorTreeManager] ========================================\n" << std::endl;
+                std::cout << "[BehaviorTreeManager] ========================================+n" << std::endl;
                 return false;
             }
             
@@ -86,7 +86,7 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
             std::cout << "[BehaviorTreeManager] JSON structure:" << std::endl;
             std::cout << j.dump(2) << std::endl;
             
-            std::cout << "[BehaviorTreeManager] ========================================\n" << std::endl;
+            std::cout << "[BehaviorTreeManager] ========================================+n" << std::endl;
             return false;
         }
         
@@ -223,7 +223,7 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
         
         std::cout << "[BehaviorTreeManager] SUCCESS: Loaded '" << tree.name << "' (ID=" << treeId << ") with " 
                   << tree.nodes.size() << " nodes" << std::endl;
-        std::cout << "[BehaviorTreeManager] ========================================\n" << std::endl;
+        std::cout << "[BehaviorTreeManager] ========================================+n" << std::endl;
         
         return true;
     }
@@ -232,7 +232,7 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
         std::cerr << "\n[BehaviorTreeManager] !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
         std::cerr << "[BehaviorTreeManager] EXCEPTION: " << e.what() << std::endl;
         std::cerr << "[BehaviorTreeManager] !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl;
-        std::cout << "[BehaviorTreeManager] ========================================\n" << std::endl;
+        std::cout << "[BehaviorTreeManager] ========================================+n" << std::endl;
         return false;
     }
 }

@@ -48,7 +48,7 @@ VideoGame::~VideoGame()
 //-------------------------------------------------------------
 EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
 {
-    // ✅ Utiliser le système centralisé
+    // -> Utiliser le système centralisé
     EntityID eID = PrefabFactory::Get().CreateEntityFromPrefabName(_playerPrefabName);
 
     if (eID == INVALID_ENTITY_ID)
@@ -133,7 +133,7 @@ EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
         }
     }
 
-    SYSTEM_LOG << "✅ Player " << binding.playerIndex << " created (Entity: " << eID << ")\n";
+    SYSTEM_LOG << "-> Player " << binding.playerIndex << " created (Entity: " << eID << ")\n";
     return eID;
 }
 //-------------------------------------------------------------
@@ -222,7 +222,7 @@ void VideoGame::RegisterLoadedPlayerEntity(EntityID entity)
         }
     }
     
-    SYSTEM_LOG << "✅ Player " << binding.playerIndex << " registered from level (Entity: " << entity << ")\n";
+    SYSTEM_LOG << "-> Player " << binding.playerIndex << " registered from level (Entity: " << entity << ")\n";
 }
 //-------------------------------------------------------------
 void VideoGame::SetViewportLayout(short playerID)

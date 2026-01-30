@@ -33,9 +33,9 @@ void PrefabFactory::PreloadAllPrefabs(const std::string& prefabDirectory)
         return;
     }
     
-    SYSTEM_LOG << "/===========================================================\\n";
+    SYSTEM_LOG << "+===========================================================+\n";
     SYSTEM_LOG << "| PREFAB FACTORY: PRELOADING ALL PREFABS                   |\n";
-    SYSTEM_LOG << "\===========================================================/\n";
+    SYSTEM_LOG << "+===========================================================+\n";
     
     // Use new unified Initialize method from PrefabScanner
     PrefabScanner scanner;
@@ -66,7 +66,7 @@ EntityID PrefabFactory::CreateEntityFromPrefabName(const std::string& prefabName
 {
     if (!m_prefabsPreloaded)
     {
-        SYSTEM_LOG << "/!\  PrefabFactory: Prefabs not preloaded! Call PreloadAllPrefabs() first\n";
+        SYSTEM_LOG << "/!\\  PrefabFactory: Prefabs not preloaded! Call PreloadAllPrefabs() first\n";
         return INVALID_ENTITY_ID;
     }
     
@@ -80,13 +80,13 @@ EntityID PrefabFactory::CreateEntityFromPrefabName(const std::string& prefabName
     
     return CreateEntityFromBlueprint(*blueprint);
 }
-
+/*UNUSED 
 EntityID PrefabFactory::CreateEntityFromPrefabName(const std::string& prefabName, 
                                                    RenderLayer layer)
 {
     if (!m_prefabsPreloaded)
     {
-        SYSTEM_LOG << "⚠️  PrefabFactory::CreateEntityFromPrefabName: Prefabs not preloaded!\n";
+        SYSTEM_LOG << "/!\\  PrefabFactory::CreateEntityFromPrefabName: Prefabs not preloaded!\n";
         return INVALID_ENTITY_ID;
     }
     
@@ -94,7 +94,7 @@ EntityID PrefabFactory::CreateEntityFromPrefabName(const std::string& prefabName
     
     if (!blueprint || !blueprint->isValid)
     {
-        SYSTEM_LOG << "❌ PrefabFactory::CreateEntityFromPrefabName: Prefab '" 
+        SYSTEM_LOG << "X PrefabFactory::CreateEntityFromPrefabName: Prefab '" 
                    << prefabName << "' not found\n";
         return INVALID_ENTITY_ID;
     }
@@ -104,7 +104,7 @@ EntityID PrefabFactory::CreateEntityFromPrefabName(const std::string& prefabName
     
     if (entity != INVALID_ENTITY_ID)
     {
-        // ✅ Explicitly set the requested layer
+        // -> Explicitly set the requested layer
         World::Get().SetEntityLayer(entity, layer);
         
         SYSTEM_LOG << "PrefabFactory::CreateEntityFromPrefabName: Entity " << entity 
@@ -112,6 +112,21 @@ EntityID PrefabFactory::CreateEntityFromPrefabName(const std::string& prefabName
     }
     
     return entity;
+}
+/**/
+EntityID PrefabFactory::CreateEntity(const std::string& prefabName)
+{
+    // Try legacy system first
+    if (m_prefabs.find(prefabName) != m_prefabs.end())
+    {
+        EntityID newEntity = World::Get().CreateEntity();
+        m_prefabs[prefabName](newEntity);
+        SYSTEM_LOG << "PrefabFactory::CreateEntity '" << prefabName << "' created (ID: " << newEntity << ")\n";
+        return newEntity;
+    }
+
+    // Fallback to modern system
+    return CreateEntityFromPrefabName(prefabName);
 }
 
 void PrefabFactory::SetPrefabRegistry(const PrefabRegistry& registry)
@@ -201,7 +216,7 @@ EntityID PrefabFactory::CreateEntityFromBlueprint(const PrefabBlueprint& bluepri
         }
     }
     
-    // ✅ Auto-assign render layer based on entity type (if requested)
+    // -> Auto-assign render layer based on entity type (if requested)
     if (autoAssignLayer && 
         world.HasComponent<Identity_data>(entity) && 
         world.HasComponent<Position_data>(entity))
@@ -257,7 +272,7 @@ EntityID PrefabFactory::CreateEntityWithOverrides(
         if (!resolved.isValid)
         {
             failCount++;
-            SYSTEM_LOG << "    /!\  Invalid resolved component: " << resolved.componentType << "\n";
+            SYSTEM_LOG << "    /!\\  Invalid resolved component: " << resolved.componentType << "\n";
             continue;
         }
         
@@ -272,7 +287,7 @@ EntityID PrefabFactory::CreateEntityWithOverrides(
         else
         {
             failCount++;
-            SYSTEM_LOG << "    /!\  Failed to instantiate component: " << resolved.componentType << "\n";
+            SYSTEM_LOG << "    /!\\  Failed to instantiate component: " << resolved.componentType << "\n";
         }
     }
     
@@ -283,7 +298,7 @@ EntityID PrefabFactory::CreateEntityWithOverrides(
         pos.position = instanceParams.position;
     }
     
-    // ✅ Auto-assign render layer based on entity type (if requested)
+    // -> Auto-assign render layer based on entity type (if requested)
     if (autoAssignLayer && 
         world.HasComponent<Identity_data>(entity) && 
         world.HasComponent<Position_data>(entity))

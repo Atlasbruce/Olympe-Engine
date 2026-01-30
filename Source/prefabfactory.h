@@ -8,7 +8,6 @@
 	- Supports both legacy function-based prefabs and modern component-agnostic instantiation.
 */
 #pragma once
-#include "World.h"
 #include "system/system_utils.h"
 #include "ComponentDefinition.h"
 #include "PrefabScanner.h"
@@ -40,7 +39,7 @@ public:
     EntityID CreateEntityFromPrefabName(const std::string& prefabName);
     
     /// Create entity from prefab name with explicit layer override
-    EntityID CreateEntityFromPrefabName(const std::string& prefabName, RenderLayer layer);
+   // UNUSED EntityID CreateEntityFromPrefabName(const std::string& prefabName, RenderLayer layer);
     
     /// Get prefab count
     int GetPrefabCount() const { return static_cast<int>(m_prefabRegistry.GetCount()); }
@@ -63,21 +62,7 @@ public:
     }
 
     // create an Entity 
-    EntityID CreateEntity(const std::string& prefabName)
-    {
-        // Try legacy system first
-        if (m_prefabs.find(prefabName) != m_prefabs.end())
-        {
-            World& world = World::Get();
-            EntityID newEntity = world.CreateEntity();
-            m_prefabs[prefabName](newEntity);
-            SYSTEM_LOG << "PrefabFactory::CreateEntity '" << prefabName << "' created (ID: " << newEntity << ")\n";
-            return newEntity;
-        }
-        
-        // Fallback to modern system
-        return CreateEntityFromPrefabName(prefabName);
-    }
+    EntityID CreateEntity(const std::string& prefabName);
     
     // ========================================================================
     // Modern Component-Agnostic API

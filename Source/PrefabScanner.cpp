@@ -51,7 +51,7 @@ std::vector<const PrefabBlueprint*> PrefabRegistry::FindByType(const std::string
 {
     std::vector<const PrefabBlueprint*> results;
     
-    // ✅ Type already normalized in upstream, use direct comparison
+    // -> Type already normalized in upstream, use direct comparison
     for (const auto& pair : m_blueprints)
     { 
         if (pair.second.prefabType == type)
@@ -96,11 +96,11 @@ std::string PrefabScanner::ToUpper(const std::string& str) const
 std::vector<PrefabBlueprint> PrefabScanner::ScanDirectory(const std::string& rootPath)
 {
     SYSTEM_LOG << "\n";
-    SYSTEM_LOG << "/======================================================================\\\n";
+    SYSTEM_LOG << "+======================================================================+\\n";
     SYSTEM_LOG << "|         PREFAB DIRECTORY SCAN                                        |\n";
     SYSTEM_LOG << "|======================================================================|\n";
     SYSTEM_LOG << "| Path: " << rootPath << std::string(max(0, 63 - static_cast<int>(rootPath.length())), ' ') << "|" << std::endl;
-    SYSTEM_LOG << "\\======================================================================/\n\n";
+    SYSTEM_LOG << "\\======================================================================+\n\n";
 
     std::vector<PrefabBlueprint> blueprints;
     std::vector<std::string> prefabFiles;
@@ -153,7 +153,7 @@ std::vector<PrefabBlueprint> PrefabScanner::ScanDirectory(const std::string& roo
     }
     
     SYSTEM_LOG << "\n";
-    SYSTEM_LOG << "/======================================================================\ \n";
+    SYSTEM_LOG << "+======================================================================+ \n";
     SYSTEM_LOG << "| SCAN COMPLETE                                                        | \n";
     SYSTEM_LOG << "|======================================================================| \n";
     SYSTEM_LOG << "| Valid Prefabs:   " << validCount
@@ -164,7 +164,7 @@ std::vector<PrefabBlueprint> PrefabScanner::ScanDirectory(const std::string& roo
               << std::string(50 - std::to_string(totalComponents).length(), ' ') << "| \n";
     SYSTEM_LOG << "| Total Resources:  " << totalResources
               << std::string(50 - std::to_string(totalResources).length(), ' ') << "| \n";
-    SYSTEM_LOG << "\\======================================================================/ \n\n";
+    SYSTEM_LOG << "\\======================================================================+ \n\n";
     
     return blueprints;
 }
@@ -548,7 +548,7 @@ bool PrefabScanner::LoadSynonymRegistry(const std::string& directory)
     std::ifstream file(filepath);
     if (!file.is_open())
     {
-        SYSTEM_LOG << "  ⚠️ Synonym registry not found, using default behavior\n";
+        SYSTEM_LOG << "  /!\\ Synonym registry not found, using default behavior\n";
         return false;
     }
     
@@ -625,7 +625,7 @@ bool PrefabScanner::LoadSynonymRegistry(const std::string& directory)
             }
         }
         
-        SYSTEM_LOG << "  ✅ Loaded " << m_canonicalTypes.size() << " canonical types with " 
+        SYSTEM_LOG << "  -> Loaded " << m_canonicalTypes.size() << " canonical types with " 
                    << totalSynonyms << " synonyms\n";
         SYSTEM_LOG << "  Settings: case-sensitive=" << (m_caseSensitive ? "yes" : "no") 
                    << ", fuzzy-matching=" << (m_enableFuzzyMatching ? "yes" : "no") << "\n";
@@ -634,7 +634,7 @@ bool PrefabScanner::LoadSynonymRegistry(const std::string& directory)
     }
     catch (const std::exception& e)
     {
-        SYSTEM_LOG << "  ⚠️ Failed to parse synonym registry: " << e.what() << "\n";
+        SYSTEM_LOG << "  /!\\ Failed to parse synonym registry: " << e.what() << "\n";
         return false;
     }
 }
@@ -734,7 +734,7 @@ std::string PrefabScanner::NormalizeType(const std::string& type) const
         
         if (!bestMatch.empty())
         {
-            SYSTEM_LOG << "  🔍 Fuzzy match: '" << type << "' → '" << bestMatch 
+            SYSTEM_LOG << "  🔍 Fuzzy match: '" << type << "' -> '" << bestMatch 
                        << "' (score: " << bestScore << ")\n";
             return bestMatch;
         }
@@ -743,7 +743,7 @@ std::string PrefabScanner::NormalizeType(const std::string& type) const
     // 4. Fallback: return original type
     if (m_logUnmatchedTypes && !m_synonymToCanonical.empty())
     {
-        SYSTEM_LOG << "  ⚠️ Unmatched type: '" << type << "'\n";
+        SYSTEM_LOG << "  /!\\ Unmatched type: '" << type << "'\n";
     }
     
     return type;
@@ -818,7 +818,7 @@ PrefabRegistry PrefabScanner::Initialize(const std::string& prefabDirectory)
         prefabFiles.end()
     );
     
-    SYSTEM_LOG << "  → Found " << prefabFiles.size() << " .json file(s)\n";
+    SYSTEM_LOG << "  -> Found " << prefabFiles.size() << " .json file(s)\n";
     
     // Step 3: Parse prefabs
     SYSTEM_LOG << "\nStep 3/3: Parsing prefabs...\n";
@@ -840,7 +840,7 @@ PrefabRegistry PrefabScanner::Initialize(const std::string& prefabDirectory)
                 
                 if (originalType != blueprint.prefabType)
                 {
-                    SYSTEM_LOG << "  → Normalized type: '" << originalType << "' → '" 
+                    SYSTEM_LOG << "  -> Normalized type: '" << originalType << "' -> '" 
                                << blueprint.prefabType << "' for " << blueprint.prefabName << "\n";
                 }
             }
@@ -848,13 +848,13 @@ PrefabRegistry PrefabScanner::Initialize(const std::string& prefabDirectory)
             registry.Register(blueprint);
             validCount++;
             
-            SYSTEM_LOG << "  ✅ " << blueprint.prefabName << " [" << blueprint.prefabType << "] "
+            SYSTEM_LOG << "  -> " << blueprint.prefabName << " [" << blueprint.prefabType << "] "
                        << "(" << blueprint.components.size() << " components)\n";
         }
         else
         {
             invalidCount++;
-            SYSTEM_LOG << "  ❌ " << filepath << " (parse failed)\n";
+            SYSTEM_LOG << "  X " << filepath << " (parse failed)\n";
         }
     }
     
