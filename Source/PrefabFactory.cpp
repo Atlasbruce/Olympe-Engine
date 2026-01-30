@@ -316,6 +316,8 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
         return InstantiatePhysicsBody(entity, componentDef);
     else if (type == "VisualSprite" || type == "VisualSprite_data")
         return InstantiateVisualSprite(entity, componentDef);
+    else if (type == "VisualEditor" || type == "VisualEditor_data")
+        return InstantiateVisualEditor(entity, componentDef);
     else if (type == "AIBehavior" || type == "AIBehavior_data")
         return InstantiateAIBehavior(entity, componentDef);
     else if (type == "AIBlackboard" || type == "AIBlackboard_data")
@@ -532,6 +534,64 @@ bool PrefabFactory::InstantiateVisualSprite(EntityID entity, const ComponentDefi
     }
     
     World::Get().AddComponent<VisualSprite_data>(entity, visual);
+    return true;
+}
+
+bool PrefabFactory::InstantiateVisualEditor(EntityID entity, const ComponentDefinition& def)
+{
+    VisualEditor_data editor;
+    
+    // Extract sprite path and load sprite
+    if (def.HasParameter("spritePath"))
+    {
+        std::string spritePath = def.GetParameter("spritePath")->AsString();
+        
+        // Load sprite via DataManager
+        editor.sprite = DataManager::Get().GetSprite(spritePath, spritePath, ResourceCategory::GameEntity);
+        
+        if (!editor.sprite)
+        {
+            SYSTEM_LOG << "PrefabFactory::InstantiateVisualEditor: Failed to load sprite '" 
+                       << spritePath << "' - component will have null sprite\n";
+            // Don't fail completely - create component with null sprite
+        }
+        else
+        {
+            // Get texture dimensions for srcRect
+            float texW, texH;
+            SDL_GetTextureSize(editor.sprite, &texW, &texH);
+            
+            // Set srcRect to full texture dimensions
+            editor.srcRect = SDL_FRect{0, 0, texW, texH};
+            
+            // Set hotSpot to center of sprite
+            editor.hotSpot = Vector(texW / 2.0f, texH / 2.0f, 0.0f);
+        }
+    }
+    
+    // Extract optional color
+    if (def.HasParameter("color"))
+    {
+        editor.color = def.GetParameter("color")->AsColor();
+    }
+    else
+    {
+        // Default to white
+        editor.color = SDL_Color{255, 255, 255, 255};
+    }
+    
+    // Extract optional visibility flag
+    if (def.HasParameter("visible"))
+    {
+        editor.isVisible = def.GetParameter("visible")->AsBool();
+    }
+    else
+    {
+        // Default to visible
+        editor.isVisible = true;
+    }
+    
+    World::Get().AddComponent<VisualEditor_data>(entity, editor);
     return true;
 }
 
