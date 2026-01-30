@@ -278,6 +278,31 @@ void World::SetEntityLayer(EntityID entity, RenderLayer layer)
                << " assigned to layer " << static_cast<int>(layer) 
                << " (z=" << pos.position.z << ")\n";
 }
+
+RenderLayer World::CalculateLayerFromZOrder(float zOrder) const
+{
+    // Map zOrder values to appropriate RenderLayer enum
+    // This mapping is designed for Tiled levels where zOrder represents layer depth
+    // Note: Tiled typically uses sequential integers (0, 1, 2, ...) for layer ordering
+    
+    // Direct mapping if zOrder matches RenderLayer values
+    // Background layers: negative values
+    if (zOrder <= -2.0f) return RenderLayer::Background_Far;
+    if (zOrder <= -1.0f) return RenderLayer::Background_Near;
+    
+    // Main game layers: positive values
+    if (zOrder <= 0.5f) return RenderLayer::Ground;
+    if (zOrder <= 1.5f) return RenderLayer::Objects;
+    if (zOrder <= 2.5f) return RenderLayer::Characters;
+    if (zOrder <= 3.5f) return RenderLayer::Flying;
+    if (zOrder <= 4.5f) return RenderLayer::Effects;
+    if (zOrder <= 7.0f) return RenderLayer::UI_Near;
+    if (zOrder <= 15.0f) return RenderLayer::Foreground_Near;
+    
+    // Very high z values
+    return RenderLayer::Foreground_Far;
+}
+
 //---------------------------------------------------------------------------------------------
 RenderLayer World::GetEntityLayer(EntityID entity) const
 {
@@ -759,7 +784,9 @@ EntityID World::InstantiateEntity(
     ExtractCustomProperties(entityInstance->overrides, instanceParams);
     
     // Create entity with overrides
-    EntityID entity = factory.CreateEntityWithOverrides(*blueprint, instanceParams);
+    // CRITICAL: Disable autoAssignLayer to preserve position.z from Tiled level
+    // The zOrder from the Tiled level is already stored in position.z and should not be overridden
+    EntityID entity = factory.CreateEntityWithOverrides(*blueprint, instanceParams, false);
     
     if (entity == INVALID_ENTITY_ID)
     {
@@ -776,8 +803,22 @@ EntityID World::InstantiateEntity(
         id.name = entityInstance->name;
     }
     
+    // Log entity creation with layer information
+    if (HasComponent<Position_data>(entity))
+    {
+        const Position_data& pos = GetComponent<Position_data>(entity);
+        RenderLayer layer = CalculateLayerFromZOrder(pos.position.z);
+        SYSTEM_LOG << "    ✓ " << entityInstance->name 
+                   << " [" << blueprint->prefabName << "]"
+                   << " (layer: " << static_cast<int>(layer) << ", z: " << pos.position.z << ")"
+                   << std::endl;
+    }
+    else
+    {
+        SYSTEM_LOG << "    ✓ " << entityInstance->name << " [" << blueprint->prefabName << "]\n";
+    }
+    
     stats.successfullyCreated++;
-    SYSTEM_LOG << "    -> " << entityInstance->name << " [" << blueprint->prefabName << "]\n";
     
     return entity;
 }

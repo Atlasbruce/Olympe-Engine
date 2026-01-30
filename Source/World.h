@@ -390,6 +390,10 @@ public:
     /// Set entity render layer (updates position.z)
     void SetEntityLayer(EntityID entity, RenderLayer layer);
     
+    /// Calculate layer index from zOrder value (for Tiled levels)
+    /// Maps zOrder ranges to layer indices for proper depth sorting
+    RenderLayer CalculateLayerFromZOrder(float zOrder) const;
+    
     /// Get entity render layer
     RenderLayer GetEntityLayer(EntityID entity) const;
     
