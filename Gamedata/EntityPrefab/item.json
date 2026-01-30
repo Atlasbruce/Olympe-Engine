@@ -34,7 +34,7 @@
       {
         "type": "VisualSprite_data",
         "properties": {
-          "spritePath": "./Resources/Sprites/item.png",
+          "spritePath": "./Resources/Sprites/treasure.png",
           "width": 32,
           "height": 32,
           "layer": 0
@@ -43,7 +43,7 @@
       {
         "type": "VisualEditor_data",
         "properties": {
-          "spritePath": "./Resources/Icons/treasure-32.png",
+          "spritePath": "./Resources/Sprites/treasure.png",
           "color": {
             "r": 255,
             "g": 215,

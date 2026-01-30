@@ -642,7 +642,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     
     SYSTEM_LOG << "+==========================================================+\n";
     SYSTEM_LOG << "| LEVEL LOADING COMPLETE                                   |\n";
-    SYSTEM_LOG << "╠==========================================================╣\n";
+    SYSTEM_LOG << "+==========================================================+\n";
     SYSTEM_LOG << "| Entities Created:    " << std::setw(3) << instResult.GetTotalCreated()
                << std::string(31, ' ') << "|\n";
     SYSTEM_LOG << "| Entities Failed:     " << std::setw(3) << instResult.GetTotalFailed()
@@ -1017,7 +1017,7 @@ void World::LoadTileChunk(const nlohmann::json& chunkJson, const std::string& la
     
     m_tileChunks.push_back(chunk);
     
-    std::cout << "    ✓ Loaded chunk at (" << chunkX << ", " << chunkY 
+    std::cout << "    ok - Loaded chunk at (" << chunkX << ", " << chunkY 
               << ") - " << tileGIDs.size() << " tiles\n";
 }
 
@@ -1138,7 +1138,7 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                 info.tileoffsetX = cachedTileset->tileoffsetX;
                 info.tileoffsetY = cachedTileset->tileoffsetY;
                 
-                SYSTEM_LOG << "[TilesetManager] ========================================+n";
+                SYSTEM_LOG << "[TilesetManager] ========================================+\n";
                 SYSTEM_LOG << "[TilesetManager] Loading external tileset: " << info.name << "\n";
                 SYSTEM_LOG << "[TilesetManager] Parsed global offset from cache: (" 
                           << info.tileoffsetX << ", " << info.tileoffsetY << ")\n";
@@ -1173,11 +1173,11 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                         info.texture = IMG_LoadTexture(GameEngine::renderer, fullImagePath.c_str());
                         if (info.texture)
                         {
-                            SYSTEM_LOG << "[TilesetManager] ✓ Loaded atlas texture: " << filename << "\n";
+                            SYSTEM_LOG << "[TilesetManager] ok - Loaded atlas texture: " << filename << "\n";
                             SYSTEM_LOG << "[TilesetManager] Image-based tileset - All " 
                                       << tilecount << " tiles will use offset (" 
                                       << info.tileoffsetX << ", " << info.tileoffsetY << ")\n";
-                            SYSTEM_LOG << "[TilesetManager] ========================================+n";
+                            SYSTEM_LOG << "[TilesetManager] ========================================+\n";
                         }
                         else
                         {
@@ -1237,11 +1237,11 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                         }
                     }
                     
-                    SYSTEM_LOG << "[TilesetManager] ✓ Loaded collection tileset: " << info.name 
+                    SYSTEM_LOG << "[TilesetManager] ok - Loaded collection tileset: " << info.name 
                               << " (" << info.individualTiles.size() << " tiles)\n";
                     SYSTEM_LOG << "[TilesetManager] All tiles stored with global offset: (" 
                               << info.tileoffsetX << ", " << info.tileoffsetY << ")\n";
-                    SYSTEM_LOG << "[TilesetManager] ========================================+n";
+                    SYSTEM_LOG << "[TilesetManager] ========================================+\n";
                 }
             }
             else
@@ -1305,7 +1305,7 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                     info.texture = IMG_LoadTexture(GameEngine::renderer, fullPath.c_str());
                     if (info.texture)
                     {
-                        SYSTEM_LOG << "  ✓ Loaded embedded tileset texture: " << filename 
+                        SYSTEM_LOG << "  ok - Loaded embedded tileset texture: " << filename 
                                   << " (gid: " << info.firstgid << "-" << info.lastgid << ")\n";
                     }
                     else
@@ -1346,7 +1346,7 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
                     }
                 }
                 
-                SYSTEM_LOG << "  ✓ Loaded embedded collection tileset: " << info.name 
+                SYSTEM_LOG << "  ok - Loaded embedded collection tileset: " << info.name 
                           << " (" << info.individualTiles.size() << " tiles)\n";
             }
         }
@@ -1365,7 +1365,7 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
         }
         else if (info.tileoffsetX != 0 || info.tileoffsetY != 0)
         {
-            SYSTEM_LOG << "[TilesetManager] ✓ POST-INSERT verification: offset=(" 
+            SYSTEM_LOG << "[TilesetManager] ok - POST-INSERT verification: offset=(" 
                       << storedInfo.tileoffsetX << ", " << storedInfo.tileoffsetY << ") preserved\n";
         }
     }
@@ -1388,7 +1388,7 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
             return a.firstgid > b.firstgid;  // Descending order
         });
     
-    SYSTEM_LOG << "\n[TilesetManager] ========================================+n";
+    SYSTEM_LOG << "\n[TilesetManager] ========================================+\n";
     SYSTEM_LOG << "[TilesetManager] Tileset load complete. Final ordering (by firstgid DESC):\n";
     for (const auto& tileset : m_tilesets)
     {
@@ -1430,7 +1430,7 @@ void TilesetManager::LoadTilesets(const nlohmann::json& tilesetsJson)
     {
         SYSTEM_LOG << "  [OK] No GID range overlaps detected\n";
     }
-    SYSTEM_LOG << "[TilesetManager] ========================================+n\n";
+    SYSTEM_LOG << "[TilesetManager] ========================================+\n";
 }
 
 bool TilesetManager::GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect, const TilesetInfo*& outTileset)
@@ -1600,7 +1600,7 @@ bool World::InstantiatePass5_Relationships(
                     guardBlackboard.currentPatrolIndex = 0;
                     guardBlackboard.hasPatrolPath = true;
                     
-                    SYSTEM_LOG << "  ✓ Linked guard '" << link.sourceObjectName 
+                    SYSTEM_LOG << "  ok - Linked guard '" << link.sourceObjectName 
                                << "' -> patrol '" << link.targetObjectName 
                                << "' (" << guardBlackboard.patrolPointCount << " points)\n";
                     
@@ -1665,7 +1665,7 @@ bool World::InstantiatePass5_Relationships(
         }
     }
     
-    SYSTEM_LOG << "  ✓ Created " << linksCreated << " object relationships\n";
+    SYSTEM_LOG << "  ok - Created " << linksCreated << " object relationships\n";
     return true;
 }
 

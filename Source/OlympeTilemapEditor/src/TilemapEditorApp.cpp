@@ -16,7 +16,7 @@ namespace Editor {
         , m_showSaveLevelDialog(false)
         , m_showAboutDialog(false)
         , m_viewportZoom(1.0f)
-        , m_viewportOffset(0, 0)
+        , m_viewportOffset(0, 0, 0)
         , m_selectedTileId(0)
         , m_initialized(false)
     {

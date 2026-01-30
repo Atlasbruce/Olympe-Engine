@@ -77,7 +77,7 @@ namespace Editor {
     // ========================================================================
 
     MoveEntityCommand::MoveEntityCommand(const std::string& entityId, const Vector& newPosition)
-        : m_entityId(entityId), m_newPosition(newPosition), m_oldPosition(0, 0)
+        : m_entityId(entityId), m_newPosition(newPosition), m_oldPosition(0, 0, 0)
     {
     }
 

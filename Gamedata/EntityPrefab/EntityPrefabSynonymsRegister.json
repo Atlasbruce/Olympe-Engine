@@ -20,7 +20,7 @@
     "Item": {
       "description": "Collectible item entity",
       "prefabFile": "item.json",
-      "synonyms": ["item", "ITEM", "collectible", "pickup", "loot"]
+      "synonyms": ["item", "ITEM", "collectible", "pickup", "loot", "treasure"]
     },
     "Key": {
       "description": "Key item for unlocking doors",
