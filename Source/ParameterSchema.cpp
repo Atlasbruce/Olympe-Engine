@@ -11,7 +11,9 @@ ParameterSchema purpose: Implementation of the parameter schema registry.
 #include "ParameterSchema.h"
 #include "PrefabScanner.h"
 #include "system/system_utils.h"
+#include "third_party/nlohmann/json.hpp"
 #include <algorithm>
+#include <fstream>
 
 // Auto-initialization
 void ParameterSchemaRegistry::EnsureInitialized()
@@ -363,6 +365,195 @@ void ParameterSchemaRegistry::InitializeBuiltInSchemas()
 	
 	SYSTEM_LOG << "Built-in parameter schemas initialized: " 
 	           << parameterToComponent_.size() << " parameters registered." << std::endl;
+}
+
+bool ParameterSchemaRegistry::LoadSchemaFromFile(const std::string& filepath)
+{
+	// Legacy method - redirect to new implementation
+	return LoadFromJSON(filepath);
+}
+
+bool ParameterSchemaRegistry::LoadFromJSON(const std::string& filepath)
+{
+	std::ifstream file(filepath);
+	if (!file.is_open())
+	{
+		return false;
+	}
+
+	nlohmann::json root;
+	try
+	{
+		file >> root;
+		file.close();
+	}
+	catch (const std::exception& e)
+	{
+		SYSTEM_LOG << "  x JSON parse error: " << e.what() << std::endl;
+		return false;
+	}
+
+	if (!root.contains("schemas") || !root["schemas"].is_array())
+	{
+		return false;
+	}
+
+	// Clear existing schemas (but keep any auto-discovered ones)
+	// Note: We don't clear completely to allow discovered schemas to coexist
+	
+	int loadedSchemas = 0;
+	
+	for (const auto& schemaJson : root["schemas"])
+	{
+		if (!schemaJson.contains("componentType") || !schemaJson.contains("parameters"))
+		{
+			continue;
+		}
+		
+		std::string componentType = schemaJson["componentType"];
+		
+		if (!schemaJson["parameters"].is_array())
+		{
+			continue;
+		}
+		
+		for (const auto& paramJson : schemaJson["parameters"])
+		{
+			if (!paramJson.contains("name") || !paramJson.contains("type"))
+			{
+				continue;
+			}
+			
+			std::string paramName = paramJson["name"];
+			std::string typeStr = paramJson["type"];
+			
+			ComponentParameter::Type paramType = StringToParameterType(typeStr);
+			
+			// Parse default value based on type
+			ComponentParameter defaultValue;
+			if (paramJson.contains("defaultValue"))
+			{
+				defaultValue = ParseDefaultValue(paramJson["defaultValue"], paramType);
+			}
+			else
+			{
+				// Create empty default based on type
+				switch (paramType)
+				{
+					case ComponentParameter::Type::Bool:
+						defaultValue = ComponentParameter::FromBool(false);
+						break;
+					case ComponentParameter::Type::Int:
+						defaultValue = ComponentParameter::FromInt(0);
+						break;
+					case ComponentParameter::Type::Float:
+						defaultValue = ComponentParameter::FromFloat(0.0f);
+						break;
+					case ComponentParameter::Type::String:
+						defaultValue = ComponentParameter::FromString("");
+						break;
+					default:
+						defaultValue = ComponentParameter();
+						break;
+				}
+			}
+			
+			// Register the schema entry
+			ParameterSchemaEntry entry(
+				paramName,
+				componentType,
+				paramName,  // field name = param name by default
+				paramType,
+				false,      // not required by default
+				defaultValue
+			);
+			
+			RegisterParameterSchema(entry);
+			loadedSchemas++;
+		}
+	}
+	
+	SYSTEM_LOG << "  ✓ Loaded " << loadedSchemas << " parameter schemas from JSON" << std::endl;
+	
+	return true;
+}
+
+ComponentParameter::Type ParameterSchemaRegistry::StringToParameterType(const std::string& typeStr) const
+{
+	if (typeStr == "Bool") return ComponentParameter::Type::Bool;
+	if (typeStr == "Int") return ComponentParameter::Type::Int;
+	if (typeStr == "Float") return ComponentParameter::Type::Float;
+	if (typeStr == "String") return ComponentParameter::Type::String;
+	if (typeStr == "Vector2") return ComponentParameter::Type::Vector2;
+	if (typeStr == "Vector3") return ComponentParameter::Type::Vector3;
+	if (typeStr == "Color") return ComponentParameter::Type::Color;
+	if (typeStr == "Array") return ComponentParameter::Type::Array;
+	if (typeStr == "EntityRef") return ComponentParameter::Type::EntityRef;
+	return ComponentParameter::Type::Unknown;
+}
+
+ComponentParameter ParameterSchemaRegistry::ParseDefaultValue(const nlohmann::json& valueJson, ComponentParameter::Type type) const
+{
+	switch (type)
+	{
+		case ComponentParameter::Type::Bool:
+			return ComponentParameter::FromBool(valueJson.get<bool>());
+			
+		case ComponentParameter::Type::Int:
+			return ComponentParameter::FromInt(valueJson.get<int>());
+			
+		case ComponentParameter::Type::Float:
+			return ComponentParameter::FromFloat(valueJson.get<float>());
+			
+		case ComponentParameter::Type::String:
+			return ComponentParameter::FromString(valueJson.get<std::string>());
+			
+		case ComponentParameter::Type::Vector2:
+		case ComponentParameter::Type::Vector3:
+		{
+			if (valueJson.is_object())
+			{
+				float x = valueJson.value("x", 0.0f);
+				float y = valueJson.value("y", 0.0f);
+				float z = valueJson.value("z", 0.0f);
+				return ComponentParameter::FromVector3(x, y, z);
+			}
+			return ComponentParameter::FromVector3(0.0f, 0.0f, 0.0f);
+		}
+		
+		case ComponentParameter::Type::Color:
+		{
+			if (valueJson.is_string())
+			{
+				std::string colorStr = valueJson.get<std::string>();
+				// Simple hex color parsing (#RRGGBB or #RRGGBBAA)
+				if (colorStr.length() >= 7 && colorStr[0] == '#')
+				{
+					int r = std::stoi(colorStr.substr(1, 2), nullptr, 16);
+					int g = std::stoi(colorStr.substr(3, 2), nullptr, 16);
+					int b = std::stoi(colorStr.substr(5, 2), nullptr, 16);
+					int a = (colorStr.length() >= 9) ? std::stoi(colorStr.substr(7, 2), nullptr, 16) : 255;
+					return ComponentParameter::FromColor(r, g, b, a);
+				}
+			}
+			return ComponentParameter::FromColor(255, 255, 255, 255);
+		}
+		
+		case ComponentParameter::Type::Array:
+		{
+			// For arrays, we store the JSON array as a string for now
+			// More sophisticated handling could be added later
+			return ComponentParameter::FromString("[]");
+		}
+		
+		default:
+			return ComponentParameter();
+	}
+}
+
+size_t ParameterSchemaRegistry::GetSchemaCount() const
+{
+	return parameterToComponent_.size();
 }
 
 bool ParameterSchemaRegistry::LoadSchemaFromFile(const std::string& filepath)

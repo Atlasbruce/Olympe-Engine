@@ -568,6 +568,31 @@ bool PrefabScanner::LoadSynonymRegistry(const std::string& directory)
             m_logUnmatchedTypes = fb.value("logUnmatchedTypes", true);
         }
         
+        // Parse categories
+        int totalCategories = 0;
+        if (j.contains("categories") && j["categories"].is_object())
+        {
+            for (const auto& pair : j["categories"].items())
+            {
+                const std::string& category = pair.first;
+                const nlohmann::json& types = *pair.second;
+                
+                if (types.is_array())
+                {
+                    std::vector<std::string> typeList;
+                    for (const auto& type : types)
+                    {
+                        if (type.is_string())
+                        {
+                            typeList.push_back(type.get<std::string>());
+                        }
+                    }
+                    m_categoryToTypes[category] = typeList;
+                    totalCategories++;
+                }
+            }
+        }
+        
         // Parse canonical types + synonyms
         int totalSynonyms = 0;
         if (j.contains("canonicalTypes") && j["canonicalTypes"].is_object())
@@ -627,6 +652,10 @@ bool PrefabScanner::LoadSynonymRegistry(const std::string& directory)
         
         SYSTEM_LOG << "  -> Loaded " << m_canonicalTypes.size() << " canonical types with " 
                    << totalSynonyms << " synonyms\n";
+        if (totalCategories > 0)
+        {
+            SYSTEM_LOG << "  -> Loaded " << totalCategories << " categories\n";
+        }
         SYSTEM_LOG << "  Settings: case-sensitive=" << (m_caseSensitive ? "yes" : "no") 
                    << ", fuzzy-matching=" << (m_enableFuzzyMatching ? "yes" : "no") << "\n";
         
@@ -796,12 +825,28 @@ PrefabRegistry PrefabScanner::Initialize(const std::string& prefabDirectory)
     
     PrefabRegistry registry;
     
-    // Step 1: Load synonym registry
+    // Step 1: Load parameter schemas from JSON
+    SYSTEM_LOG << "Step 1/4: Loading parameter schemas...\n";
+    std::string schemaPath = prefabDirectory + "/ParameterSchemas.json";
+    if (!ParameterSchemaRegistry::GetInstance().LoadFromJSON(schemaPath))
+    {
+        SYSTEM_LOG << "  x Failed to load parameter schemas from: " << schemaPath << "\n";
+        SYSTEM_LOG << "  -> Using built-in schemas as fallback\n";
+        // Note: Built-in schemas are already initialized via EnsureInitialized()
+    }
+    else
+    {
+        size_t schemaCount = ParameterSchemaRegistry::GetInstance().GetSchemaCount();
+        SYSTEM_LOG << "  ✓ Loaded " << schemaCount << " parameter schemas from JSON\n";
+    }
+    
+    // Step 2: Load synonym registry
+    SYSTEM_LOG << "\nStep 2/4: Loading synonym registry...\n";
     LoadSynonymRegistry(prefabDirectory);
     
-    // Step 2: Scan directory for prefab files
+    // Step 3: Scan directory for prefab files
     std::vector<std::string> prefabFiles;
-    SYSTEM_LOG << "\nStep 2/3: Scanning prefab directory...\n";
+    SYSTEM_LOG << "\nStep 3/4: Scanning prefab directory...\n";
     
 #ifdef _WIN32
     ScanDirectoryRecursive_Windows(prefabDirectory, prefabFiles);
@@ -809,19 +854,20 @@ PrefabRegistry PrefabScanner::Initialize(const std::string& prefabDirectory)
     ScanDirectoryRecursive_Unix(prefabDirectory, prefabFiles);
 #endif
     
-    // Filter out the synonym registry file
+    // Filter out the synonym registry and parameter schemas files
     prefabFiles.erase(
         std::remove_if(prefabFiles.begin(), prefabFiles.end(),
             [](const std::string& file) {
-                return file.find("EntityPrefabSynonymsRegister.json") != std::string::npos;
+                return file.find("EntityPrefabSynonymsRegister.json") != std::string::npos ||
+                       file.find("ParameterSchemas.json") != std::string::npos;
             }),
         prefabFiles.end()
     );
     
     SYSTEM_LOG << "  -> Found " << prefabFiles.size() << " .json file(s)\n";
     
-    // Step 3: Parse prefabs
-    SYSTEM_LOG << "\nStep 3/3: Parsing prefabs...\n";
+    // Step 4: Parse prefabs
+    SYSTEM_LOG << "\nStep 4/4: Parsing prefabs...\n";
     
     int validCount = 0;
     int invalidCount = 0;
@@ -845,11 +891,36 @@ PrefabRegistry PrefabScanner::Initialize(const std::string& prefabDirectory)
                 }
             }
             
+            // Assign categories based on prefab type
+            for (const auto& categoryPair : m_categoryToTypes)
+            {
+                const std::string& category = categoryPair.first;
+                const std::vector<std::string>& types = categoryPair.second;
+                
+                // Check if this blueprint's type is in the category
+                if (std::find(types.begin(), types.end(), blueprint.prefabType) != types.end())
+                {
+                    blueprint.AddCategory(category);
+                }
+            }
+            
             registry.Register(blueprint);
             validCount++;
             
+            std::string categoryStr = "";
+            if (!blueprint.categories.empty())
+            {
+                categoryStr = " [Categories: ";
+                for (size_t i = 0; i < blueprint.categories.size(); i++)
+                {
+                    categoryStr += blueprint.categories[i];
+                    if (i < blueprint.categories.size() - 1) categoryStr += ", ";
+                }
+                categoryStr += "]";
+            }
+            
             SYSTEM_LOG << "  -> " << blueprint.prefabName << " [" << blueprint.prefabType << "] "
-                       << "(" << blueprint.components.size() << " components)\n";
+                       << "(" << blueprint.components.size() << " components)" << categoryStr << "\n";
         }
         else
         {

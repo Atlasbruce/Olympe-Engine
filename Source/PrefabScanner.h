@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
 #include "ComponentDefinition.h"
 
 // Resource references extracted from prefab
@@ -35,8 +36,24 @@ struct PrefabBlueprint
     bool isValid;
 	bool isDynamic = false;
     std::vector<std::string> errors;
+    std::vector<std::string> categories;  // Entity categories (RequiresRegistration, HasAI, etc.)
     
     PrefabBlueprint() : isValid(false) {}
+    
+    // Check if this prefab has a specific category
+    bool HasCategory(const std::string& category) const
+    {
+        return std::find(categories.begin(), categories.end(), category) != categories.end();
+    }
+    
+    // Add a category to this prefab
+    void AddCategory(const std::string& category)
+    {
+        if (!HasCategory(category))
+        {
+            categories.push_back(category);
+        }
+    }
 };
 
 // Synonym information for a canonical type
@@ -126,6 +143,7 @@ private:
     // Internal data for synonym system
     std::map<std::string, std::string> m_synonymToCanonical;  // synonym/type -> canonical
     std::map<std::string, SynonymInfo> m_canonicalTypes;      // canonical -> info
+    std::map<std::string, std::vector<std::string>> m_categoryToTypes;  // category -> list of types
     bool m_caseSensitive = false;
     bool m_enableFuzzyMatching = true;
     float m_fuzzyThreshold = 0.8f;
