@@ -81,3 +81,13 @@ struct ComponentDefinition
 	bool HasParameter(const std::string& name) const;
 	const ComponentParameter* GetParameter(const std::string& name) const;
 };
+
+// Helper function to convert ParameterType enum to string
+std::string ParameterTypeToString(ComponentParameter::Type type);
+
+// Schema-aware parameter parsing
+ComponentParameter ParseParameterWithSchema(
+	const std::string& componentType,
+	const std::string& paramName,
+	const nlohmann::json& jsonValue
+);
