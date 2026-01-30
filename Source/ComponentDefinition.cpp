@@ -10,6 +10,7 @@ for entity components. Supports type-safe parameter access and conversions.
 */
 
 #include "ComponentDefinition.h"
+#include "ParameterSchema.h"
 #include "third_party/nlohmann/json.hpp"
 #include "system/system_utils.h"
 #include <algorithm>
@@ -22,6 +23,22 @@ using nlohmann::json;
 static inline uint8_t ClampColorValue(int value)
 {
 	return static_cast<uint8_t>(value < 0 ? 0 : (value > 255 ? 255 : value));
+}
+
+// Helper function to convert ParameterType enum to string for logging
+std::string ParameterTypeToString(ComponentParameter::Type type)
+{
+	switch (type) {
+		case ComponentParameter::Type::Bool:    return "Bool";
+		case ComponentParameter::Type::Int:     return "Int";
+		case ComponentParameter::Type::Float:   return "Float";
+		case ComponentParameter::Type::String:  return "String";
+		case ComponentParameter::Type::Vector2: return "Vector2";
+		case ComponentParameter::Type::Vector3: return "Vector3";
+		case ComponentParameter::Type::Color:   return "Color";
+		case ComponentParameter::Type::EntityRef: return "EntityRef";
+		default:                                return "Unknown";
+	}
 }
 
 // ============================================================================
@@ -344,6 +361,317 @@ EntityID ComponentParameter::AsEntityRef() const
 // ComponentDefinition JSON Parsing
 // ============================================================================
 
+// Parse a single parameter with schema-aware type detection
+ComponentParameter ParseParameterWithSchema(
+	const std::string& componentType,
+	const std::string& paramName,
+	const nlohmann::json& jsonValue)
+{
+	ComponentParameter param;
+	
+	// Step 1: Try to get schema for this component
+	const ComponentSchema* schema = ParameterSchemaRegistry::GetInstance().GetComponentSchema(componentType);
+	
+	// Step 2: If schema exists, look up the parameter type
+	if (schema != nullptr)
+	{
+		auto paramIt = schema->parameters.find(paramName);
+		if (paramIt != schema->parameters.end())
+		{
+			const ParameterSchemaEntry& schemaEntry = paramIt->second;
+			
+			// Force conversion based on schema type
+			switch (schemaEntry.expectedType) {
+				case ComponentParameter::Type::Bool:
+					if (jsonValue.is_boolean()) {
+						param = ComponentParameter::FromBool(jsonValue.get<bool>());
+					} else {
+						SYSTEM_LOG << "  [WARN] Schema expects Bool for '" << paramName 
+								   << "', got " << jsonValue.type_name() << std::endl;
+						param = ComponentParameter::FromBool(false);
+					}
+					break;
+					
+				case ComponentParameter::Type::Int:
+					if (jsonValue.is_number()) {
+						// Convert any number to int
+						param = ComponentParameter::FromInt(static_cast<int>(jsonValue.get<double>()));
+					} else {
+						SYSTEM_LOG << "  [WARN] Schema expects Int for '" << paramName 
+								   << "', got " << jsonValue.type_name() << std::endl;
+						param = ComponentParameter::FromInt(0);
+					}
+					break;
+					
+				case ComponentParameter::Type::Float:
+					if (jsonValue.is_number()) {
+						// CRITICAL FIX: Always convert to float
+						param = ComponentParameter::FromFloat(static_cast<float>(jsonValue.get<double>()));
+					} else {
+						SYSTEM_LOG << "  [WARN] Schema expects Float for '" << paramName 
+								   << "', got " << jsonValue.type_name() << std::endl;
+						param = ComponentParameter::FromFloat(0.0f);
+					}
+					break;
+					
+				case ComponentParameter::Type::String:
+					if (jsonValue.is_string()) {
+						param = ComponentParameter::FromString(jsonValue.get<std::string>());
+					} else {
+						param = ComponentParameter::FromString("");
+					}
+					break;
+					
+				case ComponentParameter::Type::Vector2:
+					if (jsonValue.is_object() && jsonValue.contains("x") && jsonValue.contains("y")) {
+						float x = static_cast<float>(jsonValue["x"].get<double>());
+						float y = static_cast<float>(jsonValue["y"].get<double>());
+						param = ComponentParameter::FromVector2(x, y);
+					} else if (jsonValue.is_array() && jsonValue.size() == 2) {
+						// Support array format: [x, y]
+						float x = jsonValue[0].get<float>();
+						float y = jsonValue[1].get<float>();
+						param = ComponentParameter::FromVector2(x, y);
+					} else {
+						SYSTEM_LOG << "  [WARN] Schema expects Vector2 for '" << paramName 
+								   << "', got " << jsonValue.type_name() << std::endl;
+						param = ComponentParameter::FromVector2(0.0f, 0.0f);
+					}
+					break;
+					
+				case ComponentParameter::Type::Vector3:
+					if (jsonValue.is_object() && jsonValue.contains("x") && jsonValue.contains("y") && jsonValue.contains("z")) {
+						float x = static_cast<float>(jsonValue["x"].get<double>());
+						float y = static_cast<float>(jsonValue["y"].get<double>());
+						float z = static_cast<float>(jsonValue["z"].get<double>());
+						param = ComponentParameter::FromVector3(x, y, z);
+					} else if (jsonValue.is_array() && jsonValue.size() == 3) {
+						// Support array format: [x, y, z]
+						float x = jsonValue[0].get<float>();
+						float y = jsonValue[1].get<float>();
+						float z = jsonValue[2].get<float>();
+						param = ComponentParameter::FromVector3(x, y, z);
+					} else {
+						SYSTEM_LOG << "  [WARN] Schema expects Vector3 for '" << paramName 
+								   << "', got " << jsonValue.type_name() << std::endl;
+						param = ComponentParameter::FromVector3(0.0f, 0.0f, 0.0f);
+					}
+					break;
+					
+				case ComponentParameter::Type::Color:
+					if (jsonValue.is_string()) {
+						std::string colorStr = jsonValue.get<std::string>();
+						// Parse color using existing AsColor logic
+						param = ComponentParameter::FromString(colorStr);
+						param.type = ComponentParameter::Type::Color;
+						param.colorValue = param.AsColor();
+					} else if (jsonValue.is_object() && jsonValue.contains("r") && jsonValue.contains("g") && jsonValue.contains("b")) {
+						// Support object format: {"r": 255, "g": 128, "b": 64, "a": 255}
+						uint8_t r = jsonValue["r"].is_number() ? ClampColorValue(jsonValue["r"].get<int>()) : 255;
+						uint8_t g = jsonValue["g"].is_number() ? ClampColorValue(jsonValue["g"].get<int>()) : 255;
+						uint8_t b = jsonValue["b"].is_number() ? ClampColorValue(jsonValue["b"].get<int>()) : 255;
+						uint8_t a = jsonValue.contains("a") && jsonValue["a"].is_number() ? 
+									ClampColorValue(jsonValue["a"].get<int>()) : 255;
+						param = ComponentParameter::FromColor(r, g, b, a);
+					} else if (jsonValue.is_array() && jsonValue.size() >= 3 && jsonValue.size() <= 4) {
+						// Support array format: [r, g, b] or [r, g, b, a]
+						uint8_t r = ClampColorValue(jsonValue[0].get<int>());
+						uint8_t g = ClampColorValue(jsonValue[1].get<int>());
+						uint8_t b = ClampColorValue(jsonValue[2].get<int>());
+						uint8_t a = jsonValue.size() == 4 ? ClampColorValue(jsonValue[3].get<int>()) : 255;
+						param = ComponentParameter::FromColor(r, g, b, a);
+					} else {
+						SYSTEM_LOG << "  [WARN] Schema expects Color for '" << paramName 
+								   << "', got " << jsonValue.type_name() << std::endl;
+						param = ComponentParameter::FromString("#FFFFFF");
+						param.type = ComponentParameter::Type::Color;
+						param.colorValue = param.AsColor();
+					}
+					break;
+					
+				case ComponentParameter::Type::EntityRef:
+					if (jsonValue.is_string()) {
+						try {
+							EntityID entityId = std::stoull(jsonValue.get<std::string>());
+							param = ComponentParameter::FromEntityRef(entityId);
+						}
+						catch (...) {
+							SYSTEM_LOG << "  [WARN] Failed to parse EntityRef from string for '" << paramName << "'" << std::endl;
+							param = ComponentParameter::FromEntityRef(INVALID_ENTITY_ID);
+						}
+					} else if (jsonValue.is_number_integer()) {
+						param = ComponentParameter::FromEntityRef(static_cast<EntityID>(jsonValue.get<int64_t>()));
+					} else {
+						SYSTEM_LOG << "  [WARN] Schema expects EntityRef for '" << paramName 
+								   << "', got " << jsonValue.type_name() << std::endl;
+						param = ComponentParameter::FromEntityRef(INVALID_ENTITY_ID);
+					}
+					break;
+					
+				default:
+					SYSTEM_LOG << "  [ERROR] Unknown schema type for '" << paramName << "'" << std::endl;
+					break;
+			}
+			
+			#ifdef DEBUG_PARAMETER_PARSING
+			SYSTEM_LOG << "  [SCHEMA-AWARE] " << paramName << " → " 
+					   << ParameterTypeToString(schemaEntry.expectedType) 
+					   << " (from schema)" << std::endl;
+			#endif
+			
+			return param;
+		}
+	}
+	
+	// FALLBACK: No schema found, use improved heuristics
+	#ifdef DEBUG_PARAMETER_PARSING
+	SYSTEM_LOG << "  [WARN] No schema for '" << componentType << "." << paramName << "', using heuristics" << std::endl;
+	#endif
+	
+	if (jsonValue.is_boolean())
+	{
+		param = ComponentParameter::FromBool(jsonValue.get<bool>());
+	}
+	else if (jsonValue.is_number())
+	{
+		// IMPROVED HEURISTIC: Prefer Float over Int for all numbers
+		// This matches most common use cases (speed, mass, positions, etc.)
+		double numValue = jsonValue.get<double>();
+		param = ComponentParameter::FromFloat(static_cast<float>(numValue));
+		
+		#ifdef DEBUG_PARAMETER_PARSING
+		SYSTEM_LOG << "    → Inferred as Float (" << numValue << ")" << std::endl;
+		#endif
+	}
+	else if (jsonValue.is_string())
+	{
+		std::string strValue = jsonValue.get<std::string>();
+		
+		// Check if it's a color (hex or rgba format)
+		if ((!strValue.empty() && strValue[0] == '#' && (strValue.length() == 7 || strValue.length() == 9)) ||
+			strValue.find("rgb") == 0)
+		{
+			param = ComponentParameter::FromString(strValue);
+			param.type = ComponentParameter::Type::Color;
+			param.colorValue = param.AsColor();
+		}
+		// Check if key hints at entity reference
+		else if (paramName.find("entity") != std::string::npos || 
+				 paramName.find("Entity") != std::string::npos ||
+				 paramName.find("ref") != std::string::npos ||
+				 paramName.find("Ref") != std::string::npos)
+		{
+			try {
+				EntityID entityId = std::stoull(strValue);
+				param = ComponentParameter::FromEntityRef(entityId);
+			}
+			catch (...) {
+				param = ComponentParameter::FromString(strValue);
+			}
+		}
+		else
+		{
+			param = ComponentParameter::FromString(strValue);
+		}
+	}
+	else if (jsonValue.is_object())
+	{
+		// Try Vector2/Vector3
+		if (jsonValue.contains("x") && jsonValue.contains("y") && jsonValue.contains("z"))
+		{
+			float x = static_cast<float>(jsonValue["x"].get<double>());
+			float y = static_cast<float>(jsonValue["y"].get<double>());
+			float z = static_cast<float>(jsonValue["z"].get<double>());
+			param = ComponentParameter::FromVector3(x, y, z);
+		}
+		else if (jsonValue.contains("x") && jsonValue.contains("y"))
+		{
+			float x = static_cast<float>(jsonValue["x"].get<double>());
+			float y = static_cast<float>(jsonValue["y"].get<double>());
+			param = ComponentParameter::FromVector2(x, y);
+		}
+		// Check for color object
+		else if (jsonValue.contains("r") && jsonValue.contains("g") && jsonValue.contains("b"))
+		{
+			uint8_t r = jsonValue["r"].is_number() ? ClampColorValue(jsonValue["r"].get<int>()) : 255;
+			uint8_t g = jsonValue["g"].is_number() ? ClampColorValue(jsonValue["g"].get<int>()) : 255;
+			uint8_t b = jsonValue["b"].is_number() ? ClampColorValue(jsonValue["b"].get<int>()) : 255;
+			uint8_t a = jsonValue.contains("a") && jsonValue["a"].is_number() ? 
+						ClampColorValue(jsonValue["a"].get<int>()) : 255;
+			
+			param = ComponentParameter::FromColor(r, g, b, a);
+		}
+		else
+		{
+			// Store as JSON string
+			param = ComponentParameter::FromString(jsonValue.dump());
+		}
+	}
+	else if (jsonValue.is_array())
+	{
+		// Handle arrays based on size to avoid ambiguity
+		if (jsonValue.size() == 2 && jsonValue[0].is_number())
+		{
+			// Definitely Vector2
+			float x = jsonValue[0].get<float>();
+			float y = jsonValue[1].get<float>();
+			param = ComponentParameter::FromVector2(x, y);
+		}
+		else if (jsonValue.size() == 3 && jsonValue[0].is_number())
+		{
+			// Ambiguous: could be Vector3 or RGB color
+			// Use heuristic: if values are in typical color range (0-255), treat as color
+			double val0 = jsonValue[0].get<double>();
+			double val1 = jsonValue[1].get<double>();
+			double val2 = jsonValue[2].get<double>();
+			
+			// If all values are in [0, 255] range and are integers, likely a color
+			bool looksLikeColor = (val0 >= 0 && val0 <= 255 && val0 == (int)val0) &&
+			                      (val1 >= 0 && val1 <= 255 && val1 == (int)val1) &&
+			                      (val2 >= 0 && val2 <= 255 && val2 == (int)val2);
+			
+			if (looksLikeColor)
+			{
+				param = ComponentParameter::FromColor(
+					ClampColorValue((int)val0),
+					ClampColorValue((int)val1),
+					ClampColorValue((int)val2),
+					255
+				);
+			}
+			else
+			{
+				// Treat as Vector3
+				float x = jsonValue[0].get<float>();
+				float y = jsonValue[1].get<float>();
+				float z = jsonValue[2].get<float>();
+				param = ComponentParameter::FromVector3(x, y, z);
+			}
+		}
+		else if (jsonValue.size() == 4 && jsonValue[0].is_number())
+		{
+			// 4 elements: likely RGBA color
+			uint8_t r = ClampColorValue(jsonValue[0].get<int>());
+			uint8_t g = ClampColorValue(jsonValue[1].get<int>());
+			uint8_t b = ClampColorValue(jsonValue[2].get<int>());
+			uint8_t a = ClampColorValue(jsonValue[3].get<int>());
+			param = ComponentParameter::FromColor(r, g, b, a);
+		}
+		else
+		{
+			// Store as JSON string
+			param = ComponentParameter::FromString(jsonValue.dump());
+		}
+	}
+	else
+	{
+		// Unknown type, store as string
+		param = ComponentParameter::FromString(jsonValue.dump());
+	}
+	
+	return param;
+}
+
 ComponentDefinition ComponentDefinition::FromJSON(const nlohmann::json& jsonObj)
 {
 	ComponentDefinition def;
@@ -366,7 +694,7 @@ ComponentDefinition ComponentDefinition::FromJSON(const nlohmann::json& jsonObj)
 									   ? jsonObj["properties"] 
 									   : jsonObj;
 		
-		// Parse all fields as parameters
+		// Parse all fields as parameters using schema-aware parsing
 		for (auto it = fieldsToIterate.begin(); it != fieldsToIterate.end(); ++it)
 		{
 			const std::string& key = it.key();
@@ -376,126 +704,9 @@ ComponentDefinition ComponentDefinition::FromJSON(const nlohmann::json& jsonObj)
 				continue;
 			
 			const auto& value = it.value();
-			ComponentParameter param;
 			
-			// Type detection heuristics
-			if (value.is_boolean())
-			{
-				param = ComponentParameter::FromBool(value.get<bool>());
-			}
-			else if (value.is_number_integer())
-			{
-				param = ComponentParameter::FromInt(value.get<int>());
-			}
-			else if (value.is_number_float())
-			{
-				param = ComponentParameter::FromFloat(value.get<float>());
-			}
-			else if (value.is_string())
-			{
-				std::string strValue = value.get<std::string>();
-				
-				// Check if it's a color (hex or rgba format)
-				if ((!strValue.empty() && strValue[0] == '#' && (strValue.length() == 7 || strValue.length() == 9)) ||
-					strValue.find("rgb") == 0)
-				{
-					param = ComponentParameter::FromString(strValue);
-					param.type = ComponentParameter::Type::Color;
-					param.colorValue = param.AsColor();
-				}
-				// Check if key hints at entity reference
-				else if (key.find("entity") != std::string::npos || 
-						 key.find("Entity") != std::string::npos ||
-						 key.find("ref") != std::string::npos ||
-						 key.find("Ref") != std::string::npos)
-				{
-					try {
-						EntityID entityId = std::stoull(strValue);
-						param = ComponentParameter::FromEntityRef(entityId);
-					}
-					catch (...) {
-						param = ComponentParameter::FromString(strValue);
-					}
-				}
-				else
-				{
-					param = ComponentParameter::FromString(strValue);
-				}
-			}
-			else if (value.is_object())
-			{
-				// Check for vector-like objects
-				if (value.contains("x") && value.contains("y"))
-				{
-					float x = value["x"].is_number() ? value["x"].get<float>() : 0.0f;
-					float y = value["y"].is_number() ? value["y"].get<float>() : 0.0f;
-					
-					if (value.contains("z"))
-					{
-						float z = value["z"].is_number() ? value["z"].get<float>() : 0.0f;
-						param = ComponentParameter::FromVector3(x, y, z);
-					}
-					else
-					{
-						param = ComponentParameter::FromVector2(x, y);
-					}
-				}
-				// Check for color object
-				else if (value.contains("r") && value.contains("g") && value.contains("b"))
-				{
-					uint8_t r = value["r"].is_number() ? ClampColorValue(value["r"].get<int>()) : 255;
-					uint8_t g = value["g"].is_number() ? ClampColorValue(value["g"].get<int>()) : 255;
-					uint8_t b = value["b"].is_number() ? ClampColorValue(value["b"].get<int>()) : 255;
-					uint8_t a = value.contains("a") && value["a"].is_number() ? 
-								ClampColorValue(value["a"].get<int>()) : 255;
-					
-					param = ComponentParameter::FromColor(r, g, b, a);
-				}
-				else
-				{
-					// Store as JSON string
-					param = ComponentParameter::FromString(value.dump());
-				}
-			}
-			else if (value.is_array())
-			{
-				// Check if it's a 2D or 3D vector array
-				if (value.size() >= 2 && value.size() <= 3 && value[0].is_number())
-				{
-					float x = value[0].get<float>();
-					float y = value[1].get<float>();
-					
-					if (value.size() == 3)
-					{
-						float z = value[2].get<float>();
-						param = ComponentParameter::FromVector3(x, y, z);
-					}
-					else
-					{
-						param = ComponentParameter::FromVector2(x, y);
-					}
-				}
-				// Check if it's a color array [r, g, b] or [r, g, b, a]
-				else if (value.size() >= 3 && value.size() <= 4 && value[0].is_number())
-				{
-					uint8_t r = ClampColorValue(value[0].get<int>());
-					uint8_t g = ClampColorValue(value[1].get<int>());
-					uint8_t b = ClampColorValue(value[2].get<int>());
-					uint8_t a = value.size() == 4 ? ClampColorValue(value[3].get<int>()) : 255;
-					
-					param = ComponentParameter::FromColor(r, g, b, a);
-				}
-				else
-				{
-					// Store as JSON string
-					param = ComponentParameter::FromString(value.dump());
-				}
-			}
-			else
-			{
-				// Unknown type, store as string
-				param = ComponentParameter::FromString(value.dump());
-			}
+			// Use schema-aware parsing
+			ComponentParameter param = ParseParameterWithSchema(def.componentType, key, value);
 			
 			def.parameters[key] = param;
 		}
