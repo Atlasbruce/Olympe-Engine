@@ -57,6 +57,16 @@
           "offsetX": 0,
           "offsetY": 0
         }
+      },
+      {
+        "type": "CollisionZone_data",
+        "properties": {
+          "x": 0,
+          "y": 0,
+          "width": 256,
+          "height": 256,
+          "isStatic": true
+        }
       }
     ]
   }

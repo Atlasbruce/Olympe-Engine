@@ -56,6 +56,11 @@
       "description": "Non-playable character",
       "prefabFile": "npc_entity.json",
       "synonyms": ["npc", "Npc", "non_playable", "character", "civilian"]
+    },
+    "Collision": {
+      "description": "Collision zone for physics boundaries",
+      "prefabFile": "collision.json",
+      "synonyms": ["collision", "COLLISION", "collider", "physics_zone", "boundary", "wall"]
     }
   },
   "fallbackBehavior": {

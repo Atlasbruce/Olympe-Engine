@@ -1684,80 +1684,13 @@ bool World::InstantiatePass2_SpatialStructure(
     const Olympe::Editor::LevelDefinition& levelDef,
     InstantiationResult& result)
 {
-    // Create collision zones and sectors
-    PrefabFactory& factory = PrefabFactory::Get();
-    
-    for (const auto& entityInstance : levelDef.entities)
-    {
-        if (!entityInstance) continue;
-        
-        // Improved: Use case-insensitive substring matching for collision/sector types
-        std::string typeLower = entityInstance->type;
-        std::transform(typeLower.begin(), typeLower.end(), typeLower.begin(), ::tolower);
-        
-        bool isCollision = (typeLower.find("collision") != std::string::npos);
-        bool isSector = (typeLower.find("sector") != std::string::npos || 
-                        typeLower.find("zone") != std::string::npos);
-        
-        if (isCollision)
-        {
-            result.pass2_spatialStructure.totalObjects++;
-            
-            EntityID eid = CreateEntity();
-            
-            AddComponent<Identity_data>(eid, entityInstance->name, "Collision", entityInstance->type);
-            // Use position directly - already a Vector, no conversion needed
-            AddComponent<Position_data>(eid, entityInstance->position);
-            
-            float width = 64.0f;
-            float height = 64.0f;
-            float rotation = entityInstance->rotation;
-            
-            if (!entityInstance->overrides.is_null())
-            {
-                if (entityInstance->overrides.contains("width"))
-                    width = entityInstance->overrides["width"].get<float>();
-                if (entityInstance->overrides.contains("height"))
-                    height = entityInstance->overrides["height"].get<float>();
-            }
-            
-            // Handle polygon collision if present
-            if (entityInstance->overrides.contains("CollisionPolygon") &&
-                entityInstance->overrides["CollisionPolygon"].contains("points"))
-            {
-                // TODO: Create polygon collision component when available
-                // For now, create bounding box as fallback
-                std::cout << "  -> Created collision polygon (using bbox fallback): " << entityInstance->name << "\n";
-            }
-            
-            AddComponent<CollisionZone_data>(eid, SDL_FRect{
-                entityInstance->position.x,
-                entityInstance->position.y,
-                width, height
-            }, true);
-            
-            result.pass2_spatialStructure.successfullyCreated++;
-            result.entityRegistry[entityInstance->name] = eid;
-            std::cout << "  -> Created collision zone: " << entityInstance->name << "\n";
-        }
-        else if (isSector)
-        {
-            // Add sector instantiation support
-            result.pass2_spatialStructure.totalObjects++;
-            
-            EntityID eid = CreateEntity();
-            AddComponent<Identity_data>(eid, entityInstance->name, "Sector", entityInstance->type);
-            // Use position directly - already a Vector, no conversion needed
-            AddComponent<Position_data>(eid, entityInstance->position);
-            
-            // TODO: Add SectorZone_data component when available
-            
-            result.pass2_spatialStructure.successfullyCreated++;
-            result.sectors.push_back(eid);
-            result.entityRegistry[entityInstance->name] = eid;
-            std::cout << "  -> Created sector: " << entityInstance->name << "\n";
-        }
-    }
+    // =========================================================================
+    // REMOVED: Legacy collision and sector creation
+    // =========================================================================
+    // All entities (including Collision and Sector types) are now instantiated
+    // via PrefabFactory in Phase 5 (unified entity instantiation).
+    // This ensures consistency and eliminates double instantiation issues.
+    // =========================================================================
     
     return true;
 }
