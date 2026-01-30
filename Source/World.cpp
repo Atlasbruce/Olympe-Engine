@@ -1698,9 +1698,9 @@ bool World::InstantiatePass3_StaticObjects(
             blueprint = factory.GetPrefabRegistry().Find(entityInstance->type);
         }
         
-        if (!blueprint)
+        if (!blueprint || !blueprint->isValid)
         {
-            // Create placeholder for missing prefab
+            // Create placeholder for missing or invalid prefab
             EntityID entity = CreateMissingPrefabPlaceholder(*entityInstance, result.pass3_staticObjects);
             if (entity != INVALID_ENTITY_ID)
             {
