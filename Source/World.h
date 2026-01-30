@@ -480,13 +480,13 @@ private:
     void NotifyBlueprintEditorEntityDestroyed(EntityID entity);
 
     // ========================================================================
-    // PHASE 2 & 3: Helper Methods for 3-Phase Level Loading
+    // PHASE 2 & 3: Helper Methods for 6-Phase Level Loading
     // ========================================================================
     
-    // Phase 2: Prefab discovery and resource preloading
-    Phase2Result ExecutePhase2_PrefabDiscovery(const Olympe::Tiled::LevelParseResult& phase1Result);
+    // Phase 2: Validate level prefabs (after normalization)
+    void ValidateLevelPrefabs(const Olympe::Editor::LevelDefinition& levelDef);
     
-    // Phase 3: Instantiation passes (using existing TiledToOlympe for now)
+    // Phase 4: Visual structure instantiation passes
     bool InstantiatePass1_VisualLayers(
         const Olympe::Editor::LevelDefinition& levelDef,
         InstantiationResult& result);
@@ -495,18 +495,17 @@ private:
         const Olympe::Editor::LevelDefinition& levelDef,
         InstantiationResult& result);
     
-    bool InstantiatePass3_StaticObjects(
-        const Olympe::Editor::LevelDefinition& levelDef,
-        InstantiationResult& result);
-    
-    bool InstantiatePass4_DynamicObjects(
-        const Olympe::Editor::LevelDefinition& levelDef,
-        const Phase2Result& phase2Result,
-        InstantiationResult& result);
-    
+    // Phase 6: Relationship linking
     bool InstantiatePass5_Relationships(
         const Olympe::Editor::LevelDefinition& levelDef,
         InstantiationResult& result);
+    
+    /// Unified entity instantiation helper (used by all Phase 5 passes)
+    /// Types are already normalized, performs direct lookup and instantiation
+    EntityID InstantiateEntity(
+        const std::shared_ptr<Olympe::Editor::EntityInstance>& entityInstance,
+        PrefabFactory& factory,
+        InstantiationResult::PassStats& stats);
     
     // ========================================================================
     // Player Entity Registration (for level-loaded players)
