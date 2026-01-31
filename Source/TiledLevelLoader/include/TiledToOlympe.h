@@ -62,9 +62,12 @@ namespace Tiled {
         // Tile dimensions for isometric projection
         int tileWidth;
         int tileHeight;
+        
+        // Render order ("right-down", "right-up", "left-down", "left-up")
+        std::string renderOrder;
 
         ConversionConfig()
-            : flipY(true), mapOrientation("orthogonal"), tileWidth(0), tileHeight(0) {}
+            : flipY(true), mapOrientation("orthogonal"), tileWidth(0), tileHeight(0), renderOrder("right-down") {}
     };
 
 
@@ -203,6 +206,10 @@ namespace Tiled {
 
 		// ? NEW: Track if map is infinite. if true the map width/height are not reliable => we need to calculate bounds of the map while it loads
         bool isInfiniteMap_ = false;
+        
+        // Chunk coordinate system origin (for infinite maps)
+        int chunkOriginX_ = 0;
+        int chunkOriginY_ = 0;
     };
 
 } // namespace Tiled

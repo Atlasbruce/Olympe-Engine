@@ -17,6 +17,7 @@ namespace Tiled {
     TiledToOlympe::TiledToOlympe()
     {
         mapWidth_ = 0; mapHeight_ = 0;
+        chunkOriginX_ = 0; chunkOriginY_ = 0;
         // Set default configuration
         config_.flipY = true;
         config_.defaultPrefab = "Blueprints/DefaultEntity.json";
@@ -123,10 +124,15 @@ namespace Tiled {
 
             mapWidth_ = bounds.widthInTiles;
             mapHeight_ = bounds.heightInTiles;
+            
+            // Store chunk origin offset for coordinate transformations
+            chunkOriginX_ = bounds.minTileX;
+            chunkOriginY_ = bounds.minTileY;
 
             SYSTEM_LOG << "  -> TMJ declared size:  " << tiledMap.width << "x" << tiledMap.height << " (INVALID)\n";
             SYSTEM_LOG << "  -> Actual bounds:      " << bounds.minTileX << "," << bounds.minTileY
                 << " to " << bounds.maxTileX << "," << bounds.maxTileY << "\n";
+            SYSTEM_LOG << "  -> Chunk origin offset: (" << chunkOriginX_ << ", " << chunkOriginY_ << ")\n";
             SYSTEM_LOG << "  -> Actual map size:    " << mapWidth_ << "x" << mapHeight_ << " tiles ✅\n\n";
         }
         else
@@ -134,6 +140,10 @@ namespace Tiled {
             // Non-infinite maps: use declared dimensions
             mapWidth_ = tiledMap.width;
             mapHeight_ = tiledMap.height;
+            
+            // No chunk offset for finite maps
+            chunkOriginX_ = 0;
+            chunkOriginY_ = 0;
 
             SYSTEM_LOG << "  -> Map size (from TMJ): " << mapWidth_ << "x" << mapHeight_ << " tiles\n\n";
         }
@@ -645,8 +655,20 @@ namespace Tiled {
             float tileX = x / static_cast<float>(config_.tileWidth);
             float tileY = y / static_cast<float>(config_.tileHeight);
 
-            // Step 2: Apply isometric projection directly
-            // WorldToIso expects raw tile coordinates and handles the projection
+            // Step 2: Translate to chunk coordinate system
+            // (align entity coords with chunk origin offset)
+            tileX -= chunkOriginX_;
+            tileY -= chunkOriginY_;
+
+            // Step 3: Apply render order transformation
+            // For render orders with "up" (right-up, left-up), invert Y-axis
+            // because Tiled's Y-axis points down (screen) but isometric Y-axis points up (world)
+            if (config_.renderOrder == "left-up" || config_.renderOrder == "right-up") {
+                tileY = -tileY;
+            }
+
+            // Step 4: Apply isometric projection
+            // WorldToIso expects tile coordinates and handles the projection
             Vector isoPos = IsometricProjection::WorldToIso(
                 tileX,
                 tileY,
@@ -731,6 +753,9 @@ namespace Tiled {
             case RenderOrder::LeftUp: outLevel.mapConfig.renderOrder = "left-up"; break;
         }
         
+        // Store render order in conversion config for use in coordinate transformations
+        config_.renderOrder = outLevel.mapConfig.renderOrder;
+        
         // Set world size
         outLevel.worldSize.x = (float) tiledMap.width * tiledMap.tilewidth;
         outLevel.worldSize.y = (float) tiledMap.height * tiledMap.tileheight;
@@ -743,6 +768,7 @@ namespace Tiled {
         SYSTEM_LOG << "  -> Map: " << outLevel.mapConfig.orientation 
                    << " " << outLevel.mapConfig.mapWidth << "x" << outLevel.mapConfig.mapHeight
                    << " (tiles: " << outLevel.mapConfig.tileWidth << "x" << outLevel.mapConfig.tileHeight << ")\n";
+        SYSTEM_LOG << "  -> Render order: " << config_.renderOrder << "\n";
     }
 
     void TiledToOlympe::ExtractMapMetadata(const TiledMap& tiledMap, 
