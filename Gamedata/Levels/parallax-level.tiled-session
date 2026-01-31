@@ -43,20 +43,20 @@
             "scale": 0.75,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 472.66666666666663,
+                "x": 399.33333333333337,
                 "y": 645.3333333333333
             }
         },
         "isometric_quest.tmx": {
             "expandedObjectLayers": [
-                6,
-                10
+                10,
+                6
             ],
             "scale": 0.5,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 1205,
-                "y": 559
+                "x": 1206,
+                "y": 558
             }
         },
         "map_forest.tmj": {
@@ -82,13 +82,13 @@
         },
         "parallax-forest.tmx": {
             "expandedObjectLayers": [
-                2,
-                17
+                17,
+                2
             ],
             "scale": 0.25,
             "selectedLayer": 10,
             "viewCenter": {
-                "x": -2488,
+                "x": -3104,
                 "y": 612
             }
         },

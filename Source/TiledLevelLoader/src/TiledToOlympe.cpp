@@ -657,9 +657,10 @@ namespace Tiled {
             float tileY = y / static_cast<float>(config_.tileHeight);
 
             // Step 2: Apply render order transformation (Y-axis inversion)
-            // For render orders with "up" (right-up, left-up), invert Y-axis
-            // because Tiled's Y-axis points down (screen) but isometric Y-axis points up (world)
-            if (config_.renderOrder == "left-up" || config_.renderOrder == "right-up") {
+            // For render orders with "down" (right-down, left-down), invert Y-axis
+            // because Tiled's Y-axis points up (screen) but isometric Y-axis points down (world)
+            if (config_.renderOrder == "right-down" || config_.renderOrder == "left-down") {
+
                 tileY = -tileY;
             }
 
