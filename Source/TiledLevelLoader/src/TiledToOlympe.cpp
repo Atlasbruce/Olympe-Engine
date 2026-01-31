@@ -668,7 +668,7 @@ namespace Tiled {
             // (align entity coords with chunk origin offset)
             // This happens AFTER Y-axis inversion so the chunk offset is applied correctly
             tileX -= chunkOriginX_;
-            tileY -= chunkOriginY;
+            tileY -= chunkOriginY_;
 
             // Step 4: Apply isometric projection
             // WorldToIso expects tile coordinates and handles the projection
