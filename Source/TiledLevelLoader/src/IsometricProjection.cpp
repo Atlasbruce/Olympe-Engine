@@ -16,7 +16,7 @@ namespace Tiled {
         
         Vector result;
         result.x = (worldX - worldY) * (tileWidth * 0.5f);
-        result.y = (worldX + worldY) * (tileHeight * 0.5f);
+        result.y = (worldX + worldY) * (tileWidth * 0.5f);
         return result;
     }
 
@@ -29,8 +29,8 @@ namespace Tiled {
         Vector result;
         float halfWidth = tileWidth * 0.5f;
         float halfHeight = tileHeight * 0.5f;
-        
-        result.x = (isoX / halfWidth + isoY / halfHeight) * 0.5f;
+
+        result.x = (isoX / halfWidth + isoY / halfWidth) * 0.5f;
         result.y = (isoY / halfHeight - isoX / halfWidth) * 0.5f;
         return result;
     }
