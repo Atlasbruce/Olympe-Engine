@@ -667,68 +667,6 @@ namespace Tiled {
         return Vector(x, y, 0.0f);
     }
 
-    /*Vector TiledToOlympe::TransformObjectPosition(float x, float y)
-    {
-        bool isIsometric = (config_.mapOrientation == "isometric");
-        
-        SYSTEM_LOG << "\n[POSITION DEBUG] ==========================================\n";
-        SYSTEM_LOG << "  Raw Tiled input (x, y):      (" << x << ", " << y << ")\n";
-        SYSTEM_LOG << "  Map orientation:             " << config_.mapOrientation << "\n";
-        SYSTEM_LOG << "  Tile size (WxH):             " << config_.tileWidth << "x" << config_.tileHeight << "\n";
-
-
-        if (isIsometric) {
-            // Validate tile dimensions before division
-            if (config_.tileWidth <= 0 || config_.tileHeight <= 0) {
-                SYSTEM_LOG << "WARNING: Invalid tile dimensions for isometric conversion ("
-                          << config_.tileWidth << "x" << config_.tileHeight 
-                          << "), using TMJ coordinates as-is\n";
-                return Vector(x, y, 0.0f);
-            }
-            
-            // FIX: Convert TMJ pixels -> tile coordinates -> ISO projection
-            
-            // Step 1: TMJ object coordinates are in Tiled's orthogonal canvas pixels
-            //         Convert to tile coordinates (world space)
-            float tileX = x / static_cast<float>(config_.tileWidth);
-            float tileY = y / static_cast<float>(config_.tileHeight);
-            
-            SYSTEM_LOG << "  Step 1 - Tile coords:        (" << tileX << ", " << tileY << ")\n";
-
-            // ✅ Step 1.5: Center origin (Tiled uses top-left, Olympe uses center)
-            // mapWidth_ and mapHeight_ are populated in Convert() from TiledMap::width/height
-            float centeredX = tileX - (mapWidth_ / 2.0f);
-            float centeredY = tileY - (mapHeight_ / 2.0f);
-
-            SYSTEM_LOG << "  Step 1.5 - Centered tiles:   (" << centeredX << ", " << centeredY << ")\n";
-            SYSTEM_LOG << "             (map size:         " << mapWidth_ << "x" << mapHeight_ << " tiles)\n";
-
-            // ✅ Step 1.75: INVERT Y-axis for isometric projection
-            // Tiled uses Y-down (screen convention), isometric projection expects Y-up (world convention)
-            float worldY = -centeredY;  // ← INVERSION ICI
-
-            SYSTEM_LOG << "  Step 1.75 - Y-axis flip:     (" << centeredX << ", " << worldY << ") [Y inverted]\n";
-
-
-            // Step 2: Apply isometric projection (tiles -> ISO screen pixels)
-            Vector isoPos = IsometricProjection::WorldToIso(
-                tileX,
-                tileY,
-                config_.tileWidth,
-                config_.tileHeight
-            );
-
-            SYSTEM_LOG << "  Step 2 - Isometric screen:   (" << isoPos.x << ", " << isoPos.y << ")\n";
-            SYSTEM_LOG << "  FINAL OUTPUT:                (" << isoPos.x << ", " << isoPos.y << ", 0.0)\n";
-            SYSTEM_LOG << "==========================================================\n";
-            
-            return Vector(isoPos.x, isoPos.y, 0.0f);
-        }
-        
-        // Orthogonal case: TMJ coordinates are already correct
-        return Vector(x, y, 0.0f);
-    }/**/
-
     void TiledToOlympe::InitializeCollisionMap(Olympe::Editor::LevelDefinition& level, 
                                                 int width, int height)
     {
