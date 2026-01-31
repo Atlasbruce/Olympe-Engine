@@ -656,17 +656,19 @@ namespace Tiled {
             float tileX = x / static_cast<float>(config_.tileWidth);
             float tileY = y / static_cast<float>(config_.tileHeight);
 
-            // Step 2: Translate to chunk coordinate system
-            // (align entity coords with chunk origin offset)
-            tileX -= chunkOriginX_;
-            tileY -= chunkOriginY_;
-
-            // Step 3: Apply render order transformation
+            // Step 2: Apply render order transformation (Y-axis inversion)
             // For render orders with "up" (right-up, left-up), invert Y-axis
             // because Tiled's Y-axis points down (screen) but isometric Y-axis points up (world)
+            // IMPORTANT: This must happen BEFORE chunk translation to avoid inverting the chunk offset
             if (config_.renderOrder == "left-up" || config_.renderOrder == "right-up") {
                 tileY = -tileY;
             }
+
+            // Step 3: Translate to chunk coordinate system
+            // (align entity coords with chunk origin offset)
+            // This happens AFTER Y-axis inversion so the chunk offset is applied correctly
+            tileX -= chunkOriginX_;
+            tileY -= chunkOriginY;
 
             // Step 4: Apply isometric projection
             // WorldToIso expects tile coordinates and handles the projection
