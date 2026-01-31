@@ -15,7 +15,6 @@
 #pragma once
 
 #include "TiledStructures.h"
-#include "ParallaxLayerManager.h"
 #include "../../vector.h"
 #include <string>
 #include <map>
@@ -102,9 +101,6 @@ namespace Tiled {
 
         // Get last error message
         const std::string& GetLastError() const { return lastError_; }
-
-        // Get parallax layers extracted from the map
-        const ParallaxLayerManager& GetParallaxLayers() const { return parallaxLayers_; }
 
     private:
         // Conversion statistics
@@ -197,7 +193,6 @@ namespace Tiled {
         std::unique_ptr<Olympe::Editor::EntityInstance> ParseCollisionPolylineDescriptor(const TiledObject& obj);
 
         ConversionConfig config_;
-        ParallaxLayerManager parallaxLayers_;
         std::string lastError_;
 
         // ? MODIFIED: Actual map dimensions (calculated, not from TMJ)

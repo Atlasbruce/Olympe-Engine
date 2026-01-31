@@ -446,7 +446,7 @@
                  "name":"player_1",
                  "point":true,
                  "rotation":0,
-                 "type":"player",
+                 "type":"guard",
                  "visible":true,
                  "width":0,
                  "x":-260.598,

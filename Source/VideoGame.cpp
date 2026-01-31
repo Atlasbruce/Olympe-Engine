@@ -585,27 +585,49 @@ void VideoGame::InitializeAITestScene()
         SYSTEM_LOG << "VideoGame: ERROR - Failed to create guard NPC\n";
     }/**/
 
-    // create an entity
-	EntityID entity = PrefabFactory::Get().CreateEntity("Beacon");
 
-	Identity_data& idData = World::Get().AddComponent<Identity_data>(entity, "World Center", "Beacon", "Beacon");
-	idData.isPersistent = true;
-	idData.name = "World Center Beacon";
-    idData.entityType = EntityType::Static;
-	idData.tag = "Beacon";
-	idData.type = "Beacon";
+    std::vector<Vector> entityPositions = {
+        Vector(0.0f, 0.0f, 5.0f),
+        Vector(540.0f, 540.0f, 5.0f),
+        Vector(0.0f, 540.0f, 5.0f),
+        Vector(540.0f, 0.0f, 5.0f),
+        Vector(270.0f, 270.0f, 5.0f)
+	};
 
-    Position_data &pos  = World::Get().AddComponent<Position_data>(entity, Vector(0, 270, 0));
-
-
-	VisualSprite_data& vspr = World::Get().AddComponent<VisualSprite_data>(entity);
-	if (DataManager::Get().GetSprite_data("Beacon", "Gamedata/Resources/red_flare.png", vspr))
+	for (int i = 0; i < 5; ++i)
     {
-		SYSTEM_LOG << "VideoGame: Created Beacon entity at (0,270)\n";
-	}
-    else
-    {
-        SYSTEM_LOG << "VideoGame: ERROR - Failed to create Beacon entity\n";
+        EntityID beacon = PrefabFactory::Get().CreateEntity("Beacon");
+        if (beacon != INVALID_ENTITY_ID)
+        {
+            Position_data& pos = World::Get().GetComponent<Position_data>(beacon);
+            pos.position = entityPositions[i];
+
+			// Set unique color for each beacon
+			VisualSprite_data& sprite = World::Get().GetComponent<VisualSprite_data>(beacon);
+            switch (i)
+            {
+            case 0:
+                sprite.color = SDL_Color{ 255, 0, 0, 255 }; // Red
+                break;
+            case 1:
+                sprite.color = SDL_Color{ 0, 255, 0, 255 }; // Green
+                break;
+            case 2:
+                sprite.color = SDL_Color{ 0, 0, 255, 255 }; // Blue
+                break;
+            case 3:
+                sprite.color = SDL_Color{ 255, 255, 0, 255 }; // Yellow
+                break;
+            case 4:
+                sprite.color = SDL_Color{ 255, 0, 255, 255 }; // Magenta
+                break;
+            default:
+                break;
+            }
+			//Set persistent flag
+			Identity_data& identity = World::Get().GetComponent<Identity_data>(beacon);
+			identity.isPersistent = true;
+        }
     }
 }
 

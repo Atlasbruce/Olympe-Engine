@@ -4,6 +4,7 @@
 #include "../include/TiledLevelLoader.h"
 #include "../include/TiledToOlympe.h"
 #include "../include/IsometricProjection.h"
+#include "../include/ParallaxLayerManager.h"
 #include "../../OlympeTilemapEditor/include/LevelManager.h"
 #include "../../system/system_utils.h"
 #include "../../vector.h"
@@ -108,7 +109,7 @@ namespace Tiled {
     bool TiledToOlympe::Convert(const TiledMap& tiledMap, Olympe::Editor::LevelDefinition& outLevel)
     {
         lastError_.clear();
-        parallaxLayers_.Clear();
+        Olympe::Tiled::ParallaxLayerManager::Get().Clear();
         
         SYSTEM_LOG << "\n+===========================================================+\n";
         SYSTEM_LOG << "| TILED -> OLYMPE CONVERSION - COMPLETE PIPELINE            |\n";
@@ -336,7 +337,7 @@ namespace Tiled {
         parallax.visible = layer.visible;
         parallax.tintColor = layer.tintcolor;
 
-        parallaxLayers_.AddLayer(parallax);
+        ParallaxLayerManager::Get().AddLayer(parallax);
     }
 
     void TiledToOlympe::ConvertGroupLayer(const TiledLayer& layer, Olympe::Editor::LevelDefinition& level)
@@ -938,13 +939,13 @@ namespace Tiled {
         }
         
         // Store parallax layers in metadata for backward compatibility
-        if (parallaxLayers_.GetLayerCount() > 0)
+        if (ParallaxLayerManager::Get().GetLayerCount() > 0)
         {
             nlohmann::json parallaxLayersJson = nlohmann::json::array();
             
-            for (size_t i = 0; i < parallaxLayers_.GetLayerCount(); ++i)
+            for (size_t i = 0; i < ParallaxLayerManager::Get().GetLayerCount(); ++i)
             {
-                const ParallaxLayer* layer = parallaxLayers_.GetLayer(i);
+                const ParallaxLayer* layer = ParallaxLayerManager::Get().GetLayer(i);
                 if (layer)
                 {
                     nlohmann::json layerJson = nlohmann::json::object();
