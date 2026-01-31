@@ -94,8 +94,9 @@ Vector TiledToOlympe::TransformObjectPosition(float x, float y)
         tileY -= chunkOriginY_;
 
         // Step 3: Apply render order transformation
-        // For "left-up", invert Y-axis (Tiled Y-down → Isometric Y-up)
-        if (config_.renderOrder == "left-up") {
+        // For render orders with "up" (right-up, left-up), invert Y-axis
+        // because Tiled's Y-axis points down (screen) but isometric Y-axis points up (world)
+        if (config_.renderOrder == "left-up" || config_.renderOrder == "right-up") {
             tileY = -tileY;
         }
 
@@ -158,7 +159,11 @@ After this fix:
 
 This fix is backward compatible:
 - ✅ Works with finite maps (chunk origin is 0,0)
-- ✅ Works with all render orders (only affects "left-up")
+- ✅ Works with all render orders:
+  - "right-down": No Y-flip (standard)
+  - "left-down": No Y-flip
+  - "right-up": Y-flip applied
+  - "left-up": Y-flip applied
 - ✅ Works with orthogonal maps (isometric path not taken)
 - ✅ Works with different tile sizes (uses config values)
 

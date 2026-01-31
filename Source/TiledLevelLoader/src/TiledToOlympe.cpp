@@ -661,8 +661,9 @@ namespace Tiled {
             tileY -= chunkOriginY_;
 
             // Step 3: Apply render order transformation
-            // For "left-up", invert Y-axis (Tiled Y-down → Isometric Y-up)
-            if (config_.renderOrder == "left-up") {
+            // For render orders with "up" (right-up, left-up), invert Y-axis
+            // because Tiled's Y-axis points down (screen) but isometric Y-axis points up (world)
+            if (config_.renderOrder == "left-up" || config_.renderOrder == "right-up") {
                 tileY = -tileY;
             }
 
