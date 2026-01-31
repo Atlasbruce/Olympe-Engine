@@ -646,13 +646,10 @@ namespace Tiled {
 
         if (isIsometric)
         {
-            // Step 1: Convert TMJ pixels → tile coordinates
+
             float tileX = x / static_cast<float>(config_.tileWidth);
-            float tileY = y / static_cast<float>(config_.tileHeight);
+            float tileY = y / static_cast<float>(config_.tileWidth);
 
-            // Step 2: NO Y-axis inversion for left-up (Tiled coords already correct)
-
-            // Step 3: Apply isometric projection (same as tiles)
             Vector isoPos = IsometricProjection::WorldToIso(
                 tileX, tileY,
                 config_.tileWidth,

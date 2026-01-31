@@ -585,7 +585,7 @@ void VideoGame::InitializeAITestScene()
         SYSTEM_LOG << "VideoGame: ERROR - Failed to create guard NPC\n";
     }/**/
 
-
+    return;
     std::vector<Vector> entityPositions = {
         Vector(0.0f, 0.0f, 5.0f),
         Vector(540.0f, 540.0f, 5.0f),
