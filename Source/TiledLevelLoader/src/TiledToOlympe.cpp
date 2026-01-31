@@ -647,8 +647,8 @@ namespace Tiled {
         if (isIsometric)
         {
 
-            float tileX = x / static_cast<float>(config_.tileWidth);
-            float tileY = y / static_cast<float>(config_.tileWidth);
+            float tileX = x / static_cast<float>( (float)config_.tileWidth / 2.0);
+            float tileY = y / static_cast<float>(config_.tileHeight);
 
             Vector isoPos = IsometricProjection::WorldToIso(
                 tileX, tileY,

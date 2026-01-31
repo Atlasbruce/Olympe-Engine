@@ -68,6 +68,11 @@
       "description": "Collision zone for physics boundaries",
       "prefabFile": "collision.json",
       "synonyms": ["collision", "COLLISION", "collider", "physics_zone", "boundary", "wall"]
+    },
+	"Beacon": {
+      "description": "Beacon position information",
+      "prefabFile": "beacon.json",
+      "synonyms": ["beacon", "BEACON", "poi", "location", "Beacon"]
     }
   },
   "fallbackBehavior": {
