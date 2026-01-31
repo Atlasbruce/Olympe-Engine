@@ -645,24 +645,19 @@ namespace Tiled {
             float tileX = x / static_cast<float>(config_.tileWidth);
             float tileY = y / static_cast<float>(config_.tileHeight);
 
-            // Step 2: Center origin (Tiled top-left → Olympe center)
-            float centeredX = tileX - (mapWidth_ / 2.0f);
-            float centeredY = tileY - (mapHeight_ / 2.0f);
-
-            // Step 3: Invert Y-axis (Tiled Y-down → Isometric Y-up)
-            float worldY = -centeredY;
-
-            // Step 4: Apply isometric projection
+            // Step 2: Apply isometric projection directly
+            // WorldToIso expects raw tile coordinates and handles the projection
             Vector isoPos = IsometricProjection::WorldToIso(
-                centeredX,
-                worldY,
+                tileX,
+                tileY,
                 config_.tileWidth,
                 config_.tileHeight
             );
 
             // ✅ CLEANED DEBUG LOG (only for important objects or on demand)
 #ifdef DETAILED_POSITION_DEBUG
-            SYSTEM_LOG << "  [POS] " << x << "," << y << " → ISO " << isoPos.x << "," << isoPos.y << "\n";
+            SYSTEM_LOG << "  [POS] " << x << "," << y << " → tile " << tileX << "," << tileY 
+                       << " → ISO " << isoPos.x << "," << isoPos.y << "\n";
 #endif
 
             return Vector(isoPos.x, isoPos.y, 0.0f);
