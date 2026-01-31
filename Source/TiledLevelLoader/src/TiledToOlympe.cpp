@@ -639,8 +639,33 @@ namespace Tiled {
         }
         return y;
     }
-    
+
     Vector TiledToOlympe::TransformObjectPosition(float x, float y)
+    {
+        bool isIsometric = (config_.mapOrientation == "isometric");
+
+        if (isIsometric)
+        {
+            // Step 1: Convert TMJ pixels → tile coordinates
+            float tileX = x / static_cast<float>(config_.tileWidth);
+            float tileY = y / static_cast<float>(config_.tileHeight);
+
+            // Step 2: NO Y-axis inversion for left-up (Tiled coords already correct)
+
+            // Step 3: Apply isometric projection (same as tiles)
+            Vector isoPos = IsometricProjection::WorldToIso(
+                tileX, tileY,
+                config_.tileWidth,
+                config_.tileHeight
+            );
+
+            return Vector(isoPos.x, isoPos.y, 0.0f);
+        }
+
+        return Vector(x, y, 0.0f);
+    }
+    
+    /*Vector TiledToOlympe::TransformObjectPosition(float x, float y)
     {
         bool isIsometric = (config_.mapOrientation == "isometric");
 
@@ -679,7 +704,7 @@ namespace Tiled {
 
         // Orthogonal case
         return Vector(x, y, 0.0f);
-    }
+    }/**/
 
     void TiledToOlympe::InitializeCollisionMap(Olympe::Editor::LevelDefinition& level, 
                                                 int width, int height)
