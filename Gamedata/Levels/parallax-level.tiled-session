@@ -43,7 +43,7 @@
             "scale": 0.75,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 547.3333333333333,
+                "x": 472.66666666666663,
                 "y": 645.3333333333333
             }
         },
@@ -55,8 +55,8 @@
             "scale": 0.5,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 678,
-                "y": 246
+                "x": 1292,
+                "y": 556
             }
         },
         "map_forest.tmj": {
@@ -82,13 +82,13 @@
         },
         "parallax-forest.tmx": {
             "expandedObjectLayers": [
-                17,
-                2
+                2,
+                17
             ],
             "scale": 0.25,
             "selectedLayer": 10,
             "viewCenter": {
-                "x": -1872,
+                "x": -2488,
                 "y": 612
             }
         },

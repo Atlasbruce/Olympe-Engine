@@ -599,7 +599,7 @@ void VideoGame::InitializeAITestScene()
 
 
 	VisualSprite_data& vspr = World::Get().AddComponent<VisualSprite_data>(entity);
-	if (DataManager::Get().GetSprite_data("Beacon", "Resources/Icons/pin-32.png", vspr))
+	if (DataManager::Get().GetSprite_data("Beacon", "Gamedata/Resources/red_flare.png", vspr))
     {
 		SYSTEM_LOG << "VideoGame: Created Beacon entity at (0,270)\n";
 	}
