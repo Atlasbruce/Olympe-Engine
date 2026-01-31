@@ -659,18 +659,13 @@ namespace Tiled {
             // Step 2: Apply render order transformation (Y-axis inversion)
             // For render orders with "up" (right-up, left-up), invert Y-axis
             // because Tiled's Y-axis points down (screen) but isometric Y-axis points up (world)
-            // IMPORTANT: This must happen BEFORE chunk translation to avoid inverting the chunk offset
             if (config_.renderOrder == "left-up" || config_.renderOrder == "right-up") {
                 tileY = -tileY;
             }
 
-            // Step 3: Translate to chunk coordinate system
-            // (align entity coords with chunk origin offset)
-            // This happens AFTER Y-axis inversion so the chunk offset is applied correctly
-            tileX -= chunkOriginX_;
-            tileY -= chunkOriginY_;
-
-            // Step 4: Apply isometric projection
+            // Step 3: Apply isometric projection
+            // IMPORTANT: Use ABSOLUTE world coordinates (same as tile rendering)
+            // DO NOT translate by chunk origin - tiles already use absolute coords
             // WorldToIso expects tile coordinates and handles the projection
             Vector isoPos = IsometricProjection::WorldToIso(
                 tileX,
