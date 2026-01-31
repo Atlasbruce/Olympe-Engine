@@ -451,6 +451,54 @@
                  "width":0,
                  "x":-260.598,
                  "y":227.264
+                },          
+                {
+                 "height":0,
+                 "id":31,
+                 "name":"World North (World Origin)",
+                 "point":true,
+                 "rotation":0,
+                 "type":"Beacon",
+                 "visible":true,
+                 "width":0,
+                 "x":0,
+                 "y":0
+                }, 
+                {
+                 "height":0,
+                 "id":32,
+                 "name":"World south",
+                 "point":true,
+                 "rotation":0,
+                 "type":"beacon",
+                 "visible":true,
+                 "width":0,
+                 "x":540,
+                 "y":540
+                }, 
+                {
+                 "height":0,
+                 "id":33,
+                 "name":"World East",
+                 "point":true,
+                 "rotation":0,
+                 "type":"Beacon",
+                 "visible":true,
+                 "width":0,
+                 "x":540,
+                 "y":0
+                }, 
+                {
+                 "height":0,
+                 "id":34,
+                 "name":"World West",
+                 "point":true,
+                 "rotation":0,
+                 "type":"beacon",
+                 "visible":true,
+                 "width":0,
+                 "x":0,
+                 "y":540
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -477,7 +525,7 @@
          "y":0
         }],
  "nextlayerid":11,
- "nextobjectid":31,
+ "nextobjectid":35,
  "orientation":"isometric",
  "renderorder":"left-up",
  "tiledversion":"1.11.2",

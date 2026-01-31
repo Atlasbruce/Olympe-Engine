@@ -5,7 +5,8 @@
       "parameters": [
         { "name": "name", "type": "String", "defaultValue": "" },
         { "name": "tag", "type": "String", "defaultValue": "" },
-        { "name": "entityType", "type": "String", "defaultValue": "" }
+        { "name": "entityType", "type": "String", "defaultValue": "" },
+		{ "name": "isPersistent", "type": "Bool", "defaultValue": false }
       ]
     },
     {

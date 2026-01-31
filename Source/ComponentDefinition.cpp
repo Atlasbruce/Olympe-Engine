@@ -499,8 +499,9 @@ ComponentParameter ParseParameterWithSchema(
 							SYSTEM_LOG << "  [WARN] Failed to parse EntityRef from string for '" << paramName << "'" << std::endl;
 							param = ComponentParameter::FromEntityRef(INVALID_ENTITY_ID);
 						}
-					} else if (jsonValue.is_number_integer()) {
-						param = ComponentParameter::FromEntityRef(static_cast<EntityID>(jsonValue.get<int64_t>()));
+					} else if (jsonValue.is_number()) {
+						// Use double conversion to avoid MSVC linkage issues with int64_t types
+						param = ComponentParameter::FromEntityRef(static_cast<EntityID>(jsonValue.get<double>()));
 					} else {
 						SYSTEM_LOG << "  [WARN] Schema expects EntityRef for '" << paramName 
 								   << "', got " << jsonValue.type_name() << std::endl;

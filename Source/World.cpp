@@ -705,6 +705,17 @@ void World::UnloadCurrentLevel()
             // For now, we'll keep all cameras
             continue;
         }
+
+		//keep persistent entities
+		if (HasComponent<Identity_data>(e))
+		{
+			Identity_data& id = GetComponent<Identity_data>(e);
+			if (id.isPersistent)
+			{
+				SYSTEM_LOG << "World::UnloadCurrentLevel - Keeping persistent entity: " << e << " (" << id.name << ")\n";
+				continue; // Keep persistent entities
+			}
+		}
         
         // Mark all other entities for destruction
         entitiesToDestroy.push_back(e);

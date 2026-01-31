@@ -99,6 +99,21 @@ namespace nlohmann {
         bool is_string() const { return type_ == Type::String; }
         bool is_array() const { return type_ == Type::Array; }
         bool is_object() const { return type_ == Type::Object; }
+        
+        // Get type name as string
+        const char* type_name() const
+        {
+            switch (type_)
+            {
+                case Type::Null: return "null";
+                case Type::Boolean: return "boolean";
+                case Type::Number: return "number";
+                case Type::String: return "string";
+                case Type::Array: return "array";
+                case Type::Object: return "object";
+                default: return "unknown";
+            }
+        }
 
         // object access
         json& operator[](const std::string& key)

@@ -67,6 +67,8 @@ namespace Tiled {
             : flipY(true), mapOrientation("orthogonal"), tileWidth(0), tileHeight(0) {}
     };
 
+
+
     class TiledToOlympe
     {
     public:
@@ -75,6 +77,19 @@ namespace Tiled {
 
         // Set conversion configuration
         void SetConfig(const ConversionConfig& config);
+
+        // Calculate actual map bounds for infinite maps
+        struct MapBounds
+        {
+            int minTileX = 0;
+            int minTileY = 0;
+            int maxTileX = 0;
+            int maxTileY = 0;
+            int widthInTiles = 0;   // Actual width in tiles
+            int heightInTiles = 0;  // Actual height in tiles
+        };
+
+        TiledToOlympe::MapBounds CalculateActualMapBounds(const TiledMap& tiledMap);
 
         // Convert Tiled map to Olympe LevelDefinition
         bool Convert(const TiledMap& tiledMap, Olympe::Editor::LevelDefinition& outLevel);
@@ -181,8 +196,13 @@ namespace Tiled {
         ConversionConfig config_;
         ParallaxLayerManager parallaxLayers_;
         std::string lastError_;
-        int mapWidth_;
-        int mapHeight_;
+
+        // ? MODIFIED: Actual map dimensions (calculated, not from TMJ)
+        int mapWidth_;   // Actual width in tiles (from bounds calculation)
+        int mapHeight_;  // Actual height in tiles (from bounds calculation)
+
+		// ? NEW: Track if map is infinite. if true the map width/height are not reliable => we need to calculate bounds of the map while it loads
+        bool isInfiniteMap_ = false;
     };
 
 } // namespace Tiled

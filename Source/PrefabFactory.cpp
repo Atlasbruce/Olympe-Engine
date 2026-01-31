@@ -224,12 +224,9 @@ EntityID PrefabFactory::CreateEntityFromBlueprint(const PrefabBlueprint& bluepri
         const Identity_data& identity = world.GetComponent<Identity_data>(entity);
         RenderLayer defaultLayer = world.GetDefaultLayerForType(identity.entityType);
         world.SetEntityLayer(entity, defaultLayer);
+
     }
-    
-    SYSTEM_LOG << "PrefabFactory::CreateEntityFromBlueprint: Created entity " << entity 
-               << " from blueprint '" << blueprint.prefabName 
-               << "' (" << successCount << " components, " << failCount << " failed)\n";
-    
+       
     return entity;
 }
 

@@ -56,6 +56,54 @@ namespace Tiled {
         config_ = config;
     }
 
+    // ✅ NEW: Calculate actual bounds by scanning all tile chunks
+    TiledToOlympe::MapBounds TiledToOlympe::CalculateActualMapBounds(const TiledMap& tiledMap)
+    {
+        MapBounds bounds;
+        bool firstTile = true;
+
+        // Scan all layers
+        for (const auto& layer : tiledMap.layers)
+        {
+            // Only process tile layers
+            if (layer->type != LayerType::TileLayer)
+                continue;
+
+            // Scan all chunks
+            for (const auto& chunk : layer->chunks)
+            {
+                // Chunk position in tiles
+                int chunkMinX = chunk.x;
+                int chunkMinY = chunk.y;
+                int chunkMaxX = chunk.x + chunk.width - 1;
+                int chunkMaxY = chunk.y + chunk.height - 1;
+
+                // Update bounds
+                if (firstTile)
+                {
+                    bounds.minTileX = chunkMinX;
+                    bounds.minTileY = chunkMinY;
+                    bounds.maxTileX = chunkMaxX;
+                    bounds.maxTileY = chunkMaxY;
+                    firstTile = false;
+                }
+                else
+                {
+                    bounds.minTileX = std::min(bounds.minTileX, chunkMinX);
+                    bounds.minTileY = std::min(bounds.minTileY, chunkMinY);
+                    bounds.maxTileX = std::max(bounds.maxTileX, chunkMaxX);
+                    bounds.maxTileY = std::max(bounds.maxTileY, chunkMaxY);
+                }
+            }
+        }
+
+        // Calculate dimensions
+        bounds.widthInTiles = bounds.maxTileX - bounds.minTileX + 1;
+        bounds.heightInTiles = bounds.maxTileY - bounds.minTileY + 1;
+
+        return bounds;
+    }
+
     bool TiledToOlympe::Convert(const TiledMap& tiledMap, Olympe::Editor::LevelDefinition& outLevel)
     {
         lastError_.clear();
@@ -65,10 +113,31 @@ namespace Tiled {
         SYSTEM_LOG << "| TILED -> OLYMPE CONVERSION - COMPLETE PIPELINE            |\n";
         SYSTEM_LOG << "+===========================================================+\n\n";
         
-        // Store map dimensions
-        mapWidth_ = tiledMap.width;
-        mapHeight_ = tiledMap.height;
-        
+        // ✅ PHASE 0: Calculate actual map dimensions
+        isInfiniteMap_ = tiledMap.infinite;
+
+        if (isInfiniteMap_)
+        {
+            SYSTEM_LOG << "  /!\\ Map is INFINITE - calculating actual bounds...\n";
+            MapBounds bounds = CalculateActualMapBounds(tiledMap);
+
+            mapWidth_ = bounds.widthInTiles;
+            mapHeight_ = bounds.heightInTiles;
+
+            SYSTEM_LOG << "  -> TMJ declared size:  " << tiledMap.width << "x" << tiledMap.height << " (INVALID)\n";
+            SYSTEM_LOG << "  -> Actual bounds:      " << bounds.minTileX << "," << bounds.minTileY
+                << " to " << bounds.maxTileX << "," << bounds.maxTileY << "\n";
+            SYSTEM_LOG << "  -> Actual map size:    " << mapWidth_ << "x" << mapHeight_ << " tiles ✅\n\n";
+        }
+        else
+        {
+            // Non-infinite maps: use declared dimensions
+            mapWidth_ = tiledMap.width;
+            mapHeight_ = tiledMap.height;
+
+            SYSTEM_LOG << "  -> Map size (from TMJ): " << mapWidth_ << "x" << mapHeight_ << " tiles\n\n";
+        }
+
         // Initialize config with map properties
         config_.tileWidth = tiledMap.tilewidth;
         config_.tileHeight = tiledMap.tileheight;
@@ -563,7 +632,56 @@ namespace Tiled {
     Vector TiledToOlympe::TransformObjectPosition(float x, float y)
     {
         bool isIsometric = (config_.mapOrientation == "isometric");
+
+        if (isIsometric)
+        {
+            if (config_.tileWidth <= 0 || config_.tileHeight <= 0)
+            {
+                SYSTEM_LOG << "  /!\\ Invalid tile dimensions for isometric conversion\n";
+                return Vector(x, y, 0.0f);
+            }
+
+            // Step 1: Convert TMJ pixels → tile coordinates
+            float tileX = x / static_cast<float>(config_.tileWidth);
+            float tileY = y / static_cast<float>(config_.tileHeight);
+
+            // Step 2: Center origin (Tiled top-left → Olympe center)
+            float centeredX = tileX - (mapWidth_ / 2.0f);
+            float centeredY = tileY - (mapHeight_ / 2.0f);
+
+            // Step 3: Invert Y-axis (Tiled Y-down → Isometric Y-up)
+            float worldY = -centeredY;
+
+            // Step 4: Apply isometric projection
+            Vector isoPos = IsometricProjection::WorldToIso(
+                centeredX,
+                worldY,
+                config_.tileWidth,
+                config_.tileHeight
+            );
+
+            // ✅ CLEANED DEBUG LOG (only for important objects or on demand)
+#ifdef DETAILED_POSITION_DEBUG
+            SYSTEM_LOG << "  [POS] " << x << "," << y << " → ISO " << isoPos.x << "," << isoPos.y << "\n";
+#endif
+
+            return Vector(isoPos.x, isoPos.y, 0.0f);
+        }
+
+        // Orthogonal case
+        return Vector(x, y, 0.0f);
+    }
+
+    /*Vector TiledToOlympe::TransformObjectPosition(float x, float y)
+    {
+        bool isIsometric = (config_.mapOrientation == "isometric");
         
+        SYSTEM_LOG << "\n[POSITION DEBUG] ==========================================\n";
+        SYSTEM_LOG << "  Raw Tiled input (x, y):      (" << x << ", " << y << ")\n";
+        SYSTEM_LOG << "  Map orientation:             " << config_.mapOrientation << "\n";
+        SYSTEM_LOG << "  Tile size (WxH):             " << config_.tileWidth << "x" << config_.tileHeight << "\n";
+
+
         if (isIsometric) {
             // Validate tile dimensions before division
             if (config_.tileWidth <= 0 || config_.tileHeight <= 0) {
@@ -580,6 +698,23 @@ namespace Tiled {
             float tileX = x / static_cast<float>(config_.tileWidth);
             float tileY = y / static_cast<float>(config_.tileHeight);
             
+            SYSTEM_LOG << "  Step 1 - Tile coords:        (" << tileX << ", " << tileY << ")\n";
+
+            // ✅ Step 1.5: Center origin (Tiled uses top-left, Olympe uses center)
+            // mapWidth_ and mapHeight_ are populated in Convert() from TiledMap::width/height
+            float centeredX = tileX - (mapWidth_ / 2.0f);
+            float centeredY = tileY - (mapHeight_ / 2.0f);
+
+            SYSTEM_LOG << "  Step 1.5 - Centered tiles:   (" << centeredX << ", " << centeredY << ")\n";
+            SYSTEM_LOG << "             (map size:         " << mapWidth_ << "x" << mapHeight_ << " tiles)\n";
+
+            // ✅ Step 1.75: INVERT Y-axis for isometric projection
+            // Tiled uses Y-down (screen convention), isometric projection expects Y-up (world convention)
+            float worldY = -centeredY;  // ← INVERSION ICI
+
+            SYSTEM_LOG << "  Step 1.75 - Y-axis flip:     (" << centeredX << ", " << worldY << ") [Y inverted]\n";
+
+
             // Step 2: Apply isometric projection (tiles -> ISO screen pixels)
             Vector isoPos = IsometricProjection::WorldToIso(
                 tileX,
@@ -587,13 +722,17 @@ namespace Tiled {
                 config_.tileWidth,
                 config_.tileHeight
             );
+
+            SYSTEM_LOG << "  Step 2 - Isometric screen:   (" << isoPos.x << ", " << isoPos.y << ")\n";
+            SYSTEM_LOG << "  FINAL OUTPUT:                (" << isoPos.x << ", " << isoPos.y << ", 0.0)\n";
+            SYSTEM_LOG << "==========================================================\n";
             
             return Vector(isoPos.x, isoPos.y, 0.0f);
         }
         
         // Orthogonal case: TMJ coordinates are already correct
         return Vector(x, y, 0.0f);
-    }
+    }/**/
 
     void TiledToOlympe::InitializeCollisionMap(Olympe::Editor::LevelDefinition& level, 
                                                 int width, int height)

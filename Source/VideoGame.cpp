@@ -30,8 +30,8 @@ VideoGame::VideoGame()
 	// Register all prefab items for the game
     RegisterPrefabItems();
 
-    PrefabFactory::Get().CreateEntity("OlympeIdentity");
-    
+    //PrefabFactory::Get().CreateEntity("OlympeIdentity");    
+        
     // Initialize AI test scene (NPC "garde" with patrol)
     InitializeAITestScene();
 
@@ -543,8 +543,6 @@ void VideoGame::RegisterPrefabItems()
 //-------------------------------------------------------------
 void VideoGame::InitializeAITestScene()
 {
-    // DERPECATED 
-
     /*SYSTEM_LOG << "VideoGame: Initializing AI Test Scene...\n";
     
     // Create a guard NPC "garde" at position (400, 300)
@@ -586,5 +584,28 @@ void VideoGame::InitializeAITestScene()
     {
         SYSTEM_LOG << "VideoGame: ERROR - Failed to create guard NPC\n";
     }/**/
+
+    // create an entity
+	EntityID entity = PrefabFactory::Get().CreateEntity("Beacon");
+
+	Identity_data& idData = World::Get().AddComponent<Identity_data>(entity, "World Center", "Beacon", "Beacon");
+	idData.isPersistent = true;
+	idData.name = "World Center Beacon";
+    idData.entityType = EntityType::Static;
+	idData.tag = "Beacon";
+	idData.type = "Beacon";
+
+    Position_data &pos  = World::Get().AddComponent<Position_data>(entity, Vector(0, 270, 0));
+
+
+	VisualSprite_data& vspr = World::Get().AddComponent<VisualSprite_data>(entity);
+	if (DataManager::Get().GetSprite_data("Beacon", "Resources/Icons/pin-32.png", vspr))
+    {
+		SYSTEM_LOG << "VideoGame: Created Beacon entity at (0,270)\n";
+	}
+    else
+    {
+        SYSTEM_LOG << "VideoGame: ERROR - Failed to create Beacon entity\n";
+    }
 }
 

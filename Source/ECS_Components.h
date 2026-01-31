@@ -79,6 +79,7 @@ struct Identity_data
 	std::string tag = "Untagged"; // Entity tag/category
 	std::string type = "UnknownType"; // Entity type (string for backward compatibility)
 	EntityType entityType = EntityType::None; // Entity type (enum for layer management)
+	bool isPersistent = false; // Should the entity persist across levels?
 	
 	// Constructors
 	Identity_data() = default;
