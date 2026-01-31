@@ -659,14 +659,13 @@ namespace Tiled {
             // Step 2: Apply render order transformation (Y-axis inversion)
             // For render orders with "down" (right-down, left-down), invert Y-axis
             // because Tiled's Y-axis points up (screen) but isometric Y-axis points down (world)
-            if (config_.renderOrder == "right-down" || config_.renderOrder == "left-down") {
+            //if (config_.renderOrder == "right-down" || config_.renderOrder == "left-down") {
 
-                tileY = -tileY;
-            }
+            //    tileY = -tileY;
+            //}
 
             // Step 3: Apply isometric projection
             // IMPORTANT: Use ABSOLUTE world coordinates (same as tile rendering)
-            // DO NOT translate by chunk origin - tiles already use absolute coords
             // WorldToIso expects tile coordinates and handles the projection
             Vector isoPos = IsometricProjection::WorldToIso(
                 tileX,
@@ -674,12 +673,6 @@ namespace Tiled {
                 config_.tileWidth,
                 config_.tileHeight
             );
-
-            // ✅ CLEANED DEBUG LOG (only for important objects or on demand)
-#ifdef DETAILED_POSITION_DEBUG
-            SYSTEM_LOG << "  [POS] " << x << "," << y << " → tile " << tileX << "," << tileY 
-                       << " → ISO " << isoPos.x << "," << isoPos.y << "\n";
-#endif
 
             return Vector(isoPos.x, isoPos.y, 0.0f);
         }
