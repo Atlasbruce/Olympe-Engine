@@ -690,8 +690,11 @@ namespace Tiled {
             }
 
             // Apply isometric projection
-            // Note: WorldToIso can also handle startx/starty and offsetx/offsety at projection time
-            // Here we apply layer offsets before conversion, so we use default projection parameters
+            // Offset Strategy: Layer offsets are applied BEFORE tile conversion (above)
+            // WorldToIso parameters (offsetX, offsetY) are for different use cases:
+            // - startx/starty: handled by tile rendering pipeline for infinite maps
+            // - offsetx/offsety: we apply them here before conversion to avoid double-application
+            // Therefore, we use default offset parameters (0.0f) in the projection call
             Vector isoPos = IsometricProjection::WorldToIso(tileX, tileY, config_.tileWidth, config_.tileHeight);
 
             if (shouldLog) {
@@ -704,47 +707,6 @@ namespace Tiled {
         // Orthogonal: apply layer offsets directly
         return Vector(x + layerOffsetX, y + layerOffsetY, 0.0f);
     }
-    
-    /*Vector TiledToOlympe::TransformObjectPosition(float x, float y)
-    {
-        bool isIsometric = (config_.mapOrientation == "isometric");
-
-        if (isIsometric)
-        {
-            if (config_.tileWidth <= 0 || config_.tileHeight <= 0)
-            {
-                SYSTEM_LOG << "  /!\\ Invalid tile dimensions for isometric conversion\n";
-                return Vector(x, y, 0.0f);
-            }
-
-            // Step 1: Convert TMJ pixels → tile coordinates
-            float tileX = x / static_cast<float>(config_.tileWidth);
-            float tileY = y / static_cast<float>(config_.tileHeight);
-
-            // Step 2: Apply render order transformation (Y-axis inversion)
-            // For render orders with "down" (right-down, left-down), invert Y-axis
-            // because Tiled's Y-axis points up (screen) but isometric Y-axis points down (world)
-            //if (config_.renderOrder == "right-down" || config_.renderOrder == "left-down") {
-
-            //    tileY = -tileY;
-            //}
-
-            // Step 3: Apply isometric projection
-            // IMPORTANT: Use ABSOLUTE world coordinates (same as tile rendering)
-            // WorldToIso expects tile coordinates and handles the projection
-            Vector isoPos = IsometricProjection::WorldToIso(
-                tileX,
-                tileY,
-                config_.tileWidth,
-                config_.tileHeight
-            );
-
-            return Vector(isoPos.x, isoPos.y, 0.0f);
-        }
-
-        // Orthogonal case
-        return Vector(x, y, 0.0f);
-    }/**/
 
     void TiledToOlympe::InitializeCollisionMap(Olympe::Editor::LevelDefinition& level, 
                                                 int width, int height)
