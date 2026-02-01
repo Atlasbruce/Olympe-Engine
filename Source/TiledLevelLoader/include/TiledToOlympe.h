@@ -188,7 +188,11 @@ namespace Tiled {
         
         // Transform object position - returns Vector directly (no conversion needed, TMJ coordinates are already in pixels)
         // Added layer offsets for proper position adjustment
-        Vector TransformObjectPosition(float x, float y, float layerOffsetX = 0.0f, float layerOffsetY = 0.0f);
+        // For isometric: pass gid to apply tileset-based alignment and offsets
+        Vector TransformObjectPosition(float x, float y, float layerOffsetX = 0.0f, float layerOffsetY = 0.0f, uint32_t gid = 0);
+        
+        // Helper to find tileset info for a given gid
+        const TiledTileset* FindTilesetForGid(uint32_t gid) const;
 
         // Initialize collision map
         void InitializeCollisionMap(Olympe::Editor::LevelDefinition& level, int width, int height);
@@ -244,6 +248,9 @@ namespace Tiled {
         // Cached flags for performance optimization (updated during configuration)
         bool hasOffsets_ = false;  // true if any chunk origin or global offsets are non-zero
         bool requiresYFlip_ = false;  // true if render order requires Y-flip ("left-up" or "right-up")
+        
+        // Store tilesets during conversion for gid lookup
+        const std::vector<TiledTileset>* tilesets_ = nullptr;
     };
 
 } // namespace Tiled

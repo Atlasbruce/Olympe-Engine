@@ -764,26 +764,13 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
     
     if (orientation == "isometric") {
         // Convert tile coordinates to isometric world coordinates
+        // Uses the standard isometric projection formula
         float isoX = (worldX - worldY) * (tileWidth / 2.0f);
         float isoY = (worldX + worldY) * (tileHeight / 2.0f);
         
-        // Apply isometric origin offset ONLY in tile rendering (gated by orientation)
-        // This offset is computed from the map bounds (minTileX, minTileY) in World
-        // and aligns tiles with TMJ object coordinates (which remain unchanged).
-        float originOffsetX = World::Get().GetIsometricOriginX();
-        float originOffsetY = World::Get().GetIsometricOriginY();
-        
-        worldPos = Vector(isoX + originOffsetX, isoY + originOffsetY, 0.0f);
-        
-        // Log isometric offset application (only log first tile to avoid spam)
-        static bool logged = false;
-        if (!logged) {
-            SYSTEM_LOG << "[RenderTileImmediate] Isometric mode: applying origin offset ("
-                      << originOffsetX << ", " << originOffsetY << ") to tile at ("
-                      << worldX << ", " << worldY << ") -> worldPos: ("
-                      << worldPos.x << ", " << worldPos.y << ")\n";
-            logged = true;
-        }
+        // DO NOT apply isometric origin offset - tiles and objects now use same world coordinate system
+        // Objects are converted from TMJ screen coords to world iso coords using inverse projection
+        worldPos = Vector(isoX, isoY, 0.0f);
     }
     else if (orientation == "hexagonal") {
         // Hexagonal axial to world (pointy-top)
