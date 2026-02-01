@@ -675,12 +675,19 @@ namespace Tiled {
         if (isIsometric)
         {
             // ALWAYS log for isometric transformations to track positioning issues
-            SYSTEM_LOG << "[ISO_TRANSFORM] Raw TMJ coordinates: (" << x << ", " << y << ")\n";
+            SYSTEM_LOG << "[ISO_TRANSFORM] Raw TMJ (Tiled Map JSON) coordinates: (" << x << ", " << y << ")\n";
             SYSTEM_LOG << "  → Layer offsets: offsetX=" << layerOffsetX << ", offsetY=" << layerOffsetY << "\n";
 
             // FIX: Treat TMJ object coordinates as screen-space isometric positions
             // TMJ stores object positions in the final rendered screen space for isometric maps,
             // so we should NOT derive tile coordinates and re-project them (double projection error).
+            // 
+            // Why we removed tile coordinate conversion, chunk origin offsets, and WorldToIso call:
+            // - TMJ coordinates are ALREADY in the target isometric screen-space coordinate system
+            // - Previous code was treating them as world coordinates and re-projecting, causing errors
+            // - Chunk origins apply to tile rendering, not pre-positioned objects in screen space
+            // - Render-order Y-flip applies to tile placement, not objects already positioned in screen space
+            // 
             // Instead, apply only layer offsets and global offsets directly.
             
             // Step 1: Apply layer pixel offsets
