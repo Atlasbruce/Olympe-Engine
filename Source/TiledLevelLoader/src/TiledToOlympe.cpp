@@ -665,40 +665,22 @@ namespace Tiled {
 
         if (isIsometric)
         {
-            // Enhanced logging for debugging entity positions
-            // Log when coordinates are extreme AND (offsets are active OR layer offsets present)
-            const float LOG_THRESHOLD_X_MAX = 2000.0f;
-            const float LOG_THRESHOLD_X_MIN = -1000.0f;
-            const float LOG_THRESHOLD_Y_MAX = 2000.0f;
-            const float LOG_THRESHOLD_Y_MIN = -300.0f;
-            
-            bool isExtremeCoordinate = (x > LOG_THRESHOLD_X_MAX || x < LOG_THRESHOLD_X_MIN || 
-                                       y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN);
-            bool hasAnyOffsets = hasOffsets_ || (layerOffsetX != 0.0f || layerOffsetY != 0.0f);
-            
-            // Log when coordinates are extreme AND offsets might affect positioning
-            bool shouldLog = isExtremeCoordinate && hasAnyOffsets;
-            
-            if (shouldLog) {
-                SYSTEM_LOG << "[TRANSFORM] Input TMJ coordinates: (" << x << ", " << y << ")\n";
-                SYSTEM_LOG << "  → Layer offsets: offsetX=" << layerOffsetX << ", offsetY=" << layerOffsetY << "\n";
-            }
+            // Enhanced logging for entity transform pipeline
+            // Always log entity transformations to track the coordinate conversion
+            SYSTEM_LOG << "[ENTITY_TRANSFORM] Raw TMJ coordinates: (" << x << ", " << y << ")\n";
+            SYSTEM_LOG << "  → Layer offsets: offsetX=" << layerOffsetX << ", offsetY=" << layerOffsetY << "\n";
 
             // Step 1: Apply layer pixel offsets first
             float adjustedX = x + layerOffsetX;
             float adjustedY = y + layerOffsetY;
             
-            if (shouldLog) {
-                SYSTEM_LOG << "  → After layer offsets: (" << adjustedX << ", " << adjustedY << ")\n";
-            }
+            SYSTEM_LOG << "  → After layer offsets: (" << adjustedX << ", " << adjustedY << ")\n";
 
             // Step 2: Convert TMJ pixels to tile coordinates
             float tileX = adjustedX / (static_cast<float>(config_.tileWidth) / 2.0f);
             float tileY = adjustedY / static_cast<float>(config_.tileHeight);
 
-            if (shouldLog) {
-                SYSTEM_LOG << "  → Tile coordinates: (" << tileX << ", " << tileY << ")\n";
-            }
+            SYSTEM_LOG << "  → Tile coordinates: (" << tileX << ", " << tileY << ")\n";
 
             // Step 3: Translate to chunk coordinate system (align entity coords with chunk origin offset)
             // For infinite maps, chunks may start at negative tile coordinates (e.g., -16, -16)
@@ -706,20 +688,18 @@ namespace Tiled {
             tileX -= chunkOriginX_;
             tileY -= chunkOriginY_;
 
-            if (shouldLog && (chunkOriginX_ != 0 || chunkOriginY_ != 0)) {
+            if (chunkOriginX_ != 0 || chunkOriginY_ != 0) {
                 SYSTEM_LOG << "  → After chunk origin offset (" << chunkOriginX_ << ", " << chunkOriginY_ 
                           << "): (" << tileX << ", " << tileY << ")\n";
             }
 
-            // Step 4: Apply render order transformation (use cached flag for performance)
-            // For render orders with "up" (right-up, left-up), invert Y-axis
-            // because Tiled's Y-axis points down (screen) but isometric Y-axis points up (world)
-            if (requiresYFlip_) {
-                tileY = -tileY;
-                if (shouldLog) {
-                    SYSTEM_LOG << "  → After render order Y-flip: (" << tileX << ", " << tileY << ")\n";
-                }
-            }
+            // Step 4: Y-flip removed - entities should not be double-flipped
+            // The config_.flipY flag is used only for polygon/polyline relative points, not for entity positions
+            // Previous implementation incorrectly applied Y-flip here based on render order (requiresYFlip_)
+            // This caused entities to appear mirrored on the Y axis
+            SYSTEM_LOG << "  → Y-flip status: config_.flipY=" << (config_.flipY ? "true" : "false") 
+                      << ", requiresYFlip_=" << (requiresYFlip_ ? "true" : "false")
+                      << " (NOT applied to entity position)\n";
 
             // Step 5: Apply isometric projection with global offsets
             // Global offsets are applied AFTER isometric projection to correct any remaining systematic errors
@@ -730,13 +710,10 @@ namespace Tiled {
                 0.0f, 0.0f,  // offsetX, offsetY - already applied above
                 globalOffsetX_, globalOffsetY_  // Global correction offsets
             );
-            if (shouldLog) {
-                SYSTEM_LOG << "  → Global offsets: globalOffsetX=" << globalOffsetX_ 
-                          << ", globalOffsetY=" << globalOffsetY_ << "\n";
-                SYSTEM_LOG << "  → Final ISO position: (" << isoPos.x << ", " << isoPos.y << ")\n";
-                SYSTEM_LOG << "  → Total difference from input: (" 
-                          << (isoPos.x - x) << ", " << (isoPos.y - y) << ")\n\n";
-            }
+            SYSTEM_LOG << "  → Global offsets: globalOffsetX=" << globalOffsetX_ 
+                      << ", globalOffsetY=" << globalOffsetY_ << "\n";
+            SYSTEM_LOG << "  → Final isometric position: (" << isoPos.x << ", " << isoPos.y << ")\n";
+            SYSTEM_LOG << "  → Total transform: (" << (isoPos.x - x) << ", " << (isoPos.y - y) << ")\n\n";
 
             return Vector(isoPos.x, isoPos.y, 0.0f);
         }
