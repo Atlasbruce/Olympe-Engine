@@ -79,12 +79,12 @@ if (chunkOriginX_ != 0 || chunkOriginY_ != 0) {
 ## Key Design Decisions
 
 ### 1. Use (maxTileY - minTileY) Instead of mapHeight_
-The bounds span `(maxTileY - minTileY)` represents the actual visual extent of tiles in the Y direction, which is what determines where Tiled places the isometric origin.
+The bounds span `(maxTileY - minTileY)` represents the visual extent in tile coordinates (the span from first to last tile index), which is what determines where Tiled places the isometric origin. Note that this is the coordinate span, not the tile count.
 
 **Example**:
-- Tiles from Y=0 to Y=9: boundsHeight = 9
-- Tiles from Y=-5 to Y=14: boundsHeight = 19
-- Both have 20 and 20 tiles respectively, but different coordinate systems
+- Tiles from Y=0 to Y=9 (10 tiles total): boundsHeight = 9 (coordinate span)
+- Tiles from Y=-5 to Y=14 (20 tiles total): boundsHeight = 19 (coordinate span)
+- Both use the coordinate span, not tile count, for proper isometric origin calculation
 
 ### 2. Account for Chunk Origin Offsets
 For infinite maps, chunk coordinates might start at negative values (e.g., -16, -16). This offset must be incorporated into the origin calculation to align the coordinate systems.
