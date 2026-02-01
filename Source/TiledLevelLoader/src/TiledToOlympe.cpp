@@ -113,6 +113,9 @@ namespace Tiled {
         lastError_.clear();
         Olympe::Tiled::ParallaxLayerManager::Get().Clear();
         
+        // Store tileset reference for gid lookups
+        tilesets_ = &tiledMap.tilesets;
+        
         SYSTEM_LOG << "\n+===========================================================+\n";
         SYSTEM_LOG << "| TILED -> OLYMPE CONVERSION - COMPLETE PIPELINE            |\n";
         SYSTEM_LOG << "+===========================================================+\n\n";
@@ -459,7 +462,7 @@ namespace Tiled {
         entity->prefabPath = "Blueprints/Sector.json";
         
         // Transform position based on map orientation
-        entity->position = TransformObjectPosition(obj.x, obj.y, layerOffsetX, layerOffsetY);
+        entity->position = TransformObjectPosition(obj.x, obj.y, layerOffsetX, layerOffsetY, obj.gid);
 
         // Store polygon points in overrides
         // NOTE: For isometric, renderorder handles Y-flip in position transform, not flipY
@@ -495,7 +498,7 @@ namespace Tiled {
         entity->prefabPath = "Blueprints/CollisionPolygon.json";
         
         // Transform position based on map orientation
-        entity->position = TransformObjectPosition(obj.x, obj.y, layerOffsetX, layerOffsetY);
+        entity->position = TransformObjectPosition(obj.x, obj.y, layerOffsetX, layerOffsetY, obj.gid);
         entity->rotation = obj.rotation;
         
         // Store polygon/polyline points
@@ -538,7 +541,7 @@ namespace Tiled {
         entity->prefabPath = "Blueprints/PatrolPath.json";
         
         // Transform position based on map orientation
-        entity->position = TransformObjectPosition(obj.x, obj.y, layerOffsetX, layerOffsetY);
+        entity->position = TransformObjectPosition(obj.x, obj.y, layerOffsetX, layerOffsetY, obj.gid);
 
         // Store polyline points in overrides
         // NOTE: For isometric, renderorder handles Y-flip in position transform, not flipY
@@ -578,7 +581,7 @@ namespace Tiled {
         entityDescriptor->prefabPath = GetPrefabPath(obj.type);
         
         // Transform position based on map orientation (isometric vs orthogonal)
-        entityDescriptor->position = TransformObjectPosition(obj.x, obj.y, layerOffsetX, layerOffsetY);
+        entityDescriptor->position = TransformObjectPosition(obj.x, obj.y, layerOffsetX, layerOffsetY, obj.gid);
         
         SYSTEM_LOG << "  -> Parsed entity descriptor: '" << entityDescriptor->name 
                    << "' (type: " << entityDescriptor->type << ")\n";
@@ -681,29 +684,95 @@ namespace Tiled {
         }
         return y;
     }
+    
+    const TiledTileset* TiledToOlympe::FindTilesetForGid(uint32_t gid) const
+    {
+        if (!tilesets_ || gid == 0) {
+            return nullptr;
+        }
+        
+        // Strip flip flags to get actual tile ID
+        // GetTileId() removes horizontal/vertical/diagonal flip flags (stored in high bits)
+        // and returns the base tile ID that can be used to look up the tileset
+        uint32_t tileId = GetTileId(gid);
+        
+        // Tilesets are ordered by firstgid. Find the tileset that owns this gid.
+        const TiledTileset* matchingTileset = nullptr;
+        for (const auto& tileset : *tilesets_) {
+            if (tileId >= static_cast<uint32_t>(tileset.firstgid)) {
+                matchingTileset = &tileset;
+            } else {
+                // Since tilesets are ordered, we've gone past our tileset
+                break;
+            }
+        }
+        
+        return matchingTileset;
+    }
 
-    Vector TiledToOlympe::TransformObjectPosition(float x, float y, float layerOffsetX, float layerOffsetY)
+    Vector TiledToOlympe::TransformObjectPosition(float x, float y, float layerOffsetX, float layerOffsetY, uint32_t gid)
     {
         SYSTEM_LOG << "[TRANSFORM] Mode: " << config_.mapOrientation 
                   << ", Raw TMJ: (" << x << ", " << y << ")"
-                  << ", Layer offsets: (" << layerOffsetX << ", " << layerOffsetY << ")\n";
+                  << ", Layer offsets: (" << layerOffsetX << ", " << layerOffsetY << ")"
+                  << ", GID: " << gid << "\n";
 
         if (config_.mapOrientation == "isometric")
         {
-            // ISOMETRIC MODE:
-            // Keep TMJ object coordinates unchanged (no origin subtraction).
-            // Objects in TMJ are in isometric pixel space. The isometric origin
-            // will be computed in World from map bounds and applied ONLY during
-            // tile rendering (RenderTileImmediate), NOT during object loading.
-            // This ensures objects remain in raw TMJ coordinates + layer offsets.
+            // ISOMETRIC MODE WITH TMX ALIGNMENT AND TILESET OFFSETS:
             
-            float finalX = x + layerOffsetX;
-            float finalY = y + layerOffsetY;
+            // 1) Determine tileset info for object gid (if gid > 0)
+            int tileWidth = config_.tileWidth;
+            int tileHeight = config_.tileHeight;
+            int tileOffsetX = 0;
+            int tileOffsetY = 0;
             
-            SYSTEM_LOG << "  → Isometric: keeping raw TMJ coords + layer offsets"
-                      << " -> Final: (" << finalX << ", " << finalY << ")\n";
+            if (gid > 0) {
+                const TiledTileset* tileset = FindTilesetForGid(gid);
+                if (tileset) {
+                    tileWidth = tileset->tilewidth;
+                    tileHeight = tileset->tileheight;
+                    tileOffsetX = tileset->tileoffsetX;
+                    tileOffsetY = tileset->tileoffsetY;
+                    SYSTEM_LOG << "  → Found tileset: tileWidth=" << tileWidth 
+                              << ", tileHeight=" << tileHeight
+                              << ", tileOffsetX=" << tileOffsetX
+                              << ", tileOffsetY=" << tileOffsetY << "\n";
+                }
+            } else {
+                SYSTEM_LOG << "  → No gid, using map tileWidth/tileHeight\n";
+            }
             
-            return Vector(finalX, finalY, 0.0f);
+            // 2) Apply TMX alignment rules:
+            //    - TMX uses bottom-left as the base position for tile objects in isometric maps
+            //    - To achieve bottom-center anchor: subtract halfW (tileWidth/2) from X
+            //    - Apply tileset-specific tileoffsetX/Y adjustments (from tileset definition)
+            //    - Apply layer offsets for proper layer positioning
+            float halfW = tileWidth / 2.0f;
+            float halfH = tileHeight / 2.0f;
+            
+            float screenX = x + layerOffsetX + tileOffsetX - halfW;  // bottom-center anchor
+            float screenY = y + layerOffsetY + tileOffsetY;
+            
+            SYSTEM_LOG << "  → Screen coords (after alignment): screenX=" << screenX 
+                      << ", screenY=" << screenY << "\n";
+            
+            // 3) Convert TMJ screen coords into world iso coordinates using inverse iso projection:
+            //    Forward projection (used in tile rendering, see ECS_Systems.cpp RenderTileImmediate):
+            //      screenX = (worldX - worldY) * halfW    where halfW = tileWidth / 2
+            //      screenY = (worldX + worldY) * halfH    where halfH = tileHeight / 2
+            //    Solving for worldX and worldY (inverse projection):
+            //      worldX = (screenX/halfW + screenY/halfH) / 2
+            //      worldY = (screenY/halfH - screenX/halfW) / 2
+            //    This ensures objects and tiles use the same world coordinate system
+            
+            float worldX = (screenX / halfW + screenY / halfH) / 2.0f;
+            float worldY = (screenY / halfH - screenX / halfW) / 2.0f;
+            
+            SYSTEM_LOG << "  → World iso coords: worldX=" << worldX 
+                      << ", worldY=" << worldY << "\n";
+            
+            return Vector(worldX, worldY, 0.0f);
         }
         
         // ORTHOGONAL / HEXAGONAL / STAGGERED MODES:
