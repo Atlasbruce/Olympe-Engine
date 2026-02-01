@@ -719,7 +719,7 @@ namespace Tiled {
 
         if (config_.mapOrientation == "isometric")
         {
-            // ISOMETRIC MODE WITH TMX ALIGNMENT AND TILESET OFFSETS:
+            // ISOMETRIC MODE WITH BOUNDS-AWARE ORIGIN AND PROPER INVERSE PROJECTION:
             
             // 1) Determine tileset info for object gid (if gid > 0)
             int tileWidth = config_.tileWidth;
@@ -743,28 +743,41 @@ namespace Tiled {
                 SYSTEM_LOG << "  → No gid, using map tileWidth/tileHeight\n";
             }
             
-            // 2) Apply TMX alignment rules:
-            //    - TMX uses bottom-left as the base position for tile objects in isometric maps
-            //    - To achieve bottom-center anchor: subtract halfW (tileWidth/2) from X
-            //    - Apply tileset-specific tileoffsetX/Y adjustments (from tileset definition)
-            //    - Apply layer offsets for proper layer positioning
+            // 2) Calculate real isometric origin from map bounds (min/max tiles)
             float halfW = tileWidth / 2.0f;
             float halfH = tileHeight / 2.0f;
             
-            float screenX = x + layerOffsetX + tileOffsetX - halfW;  // bottom-center anchor
-            float screenY = y + layerOffsetY + tileOffsetY;
+            // Real isometric origin formula:
+            // isoOriginX = (maxTileY - minTileX) * halfW
+            // isoOriginY = -(minTileX + minTileY) * halfH
+            float isoOriginX = (maxTileY_ - minTileX_) * halfW;
+            float isoOriginY = -(minTileX_ + minTileY_) * halfH;
             
-            SYSTEM_LOG << "  → Screen coords (after alignment): screenX=" << screenX 
+            SYSTEM_LOG << "  → Map bounds: minTileX=" << minTileX_ << ", minTileY=" << minTileY_
+                      << ", maxTileX=" << maxTileX_ << ", maxTileY=" << maxTileY_ << "\n";
+            SYSTEM_LOG << "  → Isometric origin: isoOriginX=" << isoOriginX 
+                      << ", isoOriginY=" << isoOriginY << "\n";
+            
+            // 3) Rebase TMJ coords to local screen coords before inverse projection
+            float screenX = x + layerOffsetX - isoOriginX;
+            float screenY = y + layerOffsetY - isoOriginY;
+            
+            // 4) If obj.gid > 0, apply tileset tileoffset and bottom-center alignment before inverse projection
+            if (gid > 0) {
+                screenX += tileOffsetX - (tileWidth / 2.0f);
+                screenY += tileOffsetY;
+            }
+            
+            SYSTEM_LOG << "  → Screen coords (after rebasing): screenX=" << screenX 
                       << ", screenY=" << screenY << "\n";
             
-            // 3) Convert TMJ screen coords into world iso coordinates using inverse iso projection:
-            //    Forward projection (used in tile rendering, see ECS_Systems.cpp RenderTileImmediate):
-            //      screenX = (worldX - worldY) * halfW    where halfW = tileWidth / 2
-            //      screenY = (worldX + worldY) * halfH    where halfH = tileHeight / 2
-            //    Solving for worldX and worldY (inverse projection):
+            // 5) Apply inverse isometric projection to compute world tile coords:
+            //    Forward projection (used in tile rendering):
+            //      screenX = (worldX - worldY) * halfW
+            //      screenY = (worldX + worldY) * halfH
+            //    Inverse projection (solving for worldX and worldY):
             //      worldX = (screenX/halfW + screenY/halfH) / 2
             //      worldY = (screenY/halfH - screenX/halfW) / 2
-            //    This ensures objects and tiles use the same world coordinate system
             
             float worldX = (screenX / halfW + screenY / halfH) / 2.0f;
             float worldY = (screenY / halfH - screenX / halfW) / 2.0f;
