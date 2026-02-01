@@ -647,18 +647,24 @@ namespace Tiled {
         if (isIsometric)
         {
 
-            float tileX = x / static_cast<float>( ((float)config_.tileWidth) / 2.f);
+            float tileX = x / static_cast<float>( (float)config_.tileWidth / 2.0f);
             float tileY = y / static_cast<float>(config_.tileHeight);
 
-            Vector isoPos = IsometricProjection::WorldToIso(
-                tileX, tileY,
-                config_.tileWidth,
-                config_.tileHeight
-            );
+            // 🔍 DEBUG LOG (à supprimer après diagnostic)
+            if (x > 5000.0f || x < -2000.0f) {  // Log uniquement pour les beacons éloignés
+                SYSTEM_LOG << "[TRANSFORM] Input: (" << x << ", " << y << ")\n";
+                SYSTEM_LOG << "  → Tiles: (" << tileX << ", " << tileY << ")\n";
+            }
+
+            Vector isoPos = IsometricProjection::WorldToIso( tileX, tileY, config_.tileWidth, config_.tileHeight );
+
+            // 🔍 DEBUG LOG (suite)
+            if (x > 5000.0f || x < -2000.0f) {
+                SYSTEM_LOG << "  → ISO: (" << isoPos.x << ", " << isoPos.y << ")\n\n";
+            }
 
             return Vector(isoPos.x, isoPos.y, 0.0f);
         }
-
         return Vector(x, y, 0.0f);
     }
     

@@ -15,8 +15,8 @@ namespace Tiled {
         // Screen Y = (worldX + worldY) * (tileHeight / 2)
         
         Vector result;
-        result.x = (worldX - worldY) * ((float)tileWidth * 0.5f);
-        result.y = (worldX + worldY) * ((float)tileHeight * 0.5f);
+        result.x = (worldX - worldY) * (tileWidth * 0.5f);
+        result.y = (worldX + worldY) * (tileHeight * 0.5f);
         return result;
     }
 

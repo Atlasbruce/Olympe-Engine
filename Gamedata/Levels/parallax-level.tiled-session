@@ -21,7 +21,7 @@
             "scaleInEditor": 1
         },
         "Tiles iso cube..tsj": {
-            "dynamicWrapping": true,
+            "dynamicWrapping": false,
             "scaleInDock": 1,
             "scaleInEditor": 1
         },
@@ -43,8 +43,8 @@
             "scale": 0.75,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 326,
-                "y": 645.3333333333333
+                "x": 612,
+                "y": 647.3333333333333
             }
         },
         "isometric_quest.tmx": {
@@ -52,11 +52,11 @@
                 10,
                 6
             ],
-            "scale": 5.5,
+            "scale": 0.25,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 731.8181818181818,
-                "y": 866.7272727272727
+                "x": 4452,
+                "y": 306
             }
         },
         "map_forest.tmj": {
@@ -88,8 +88,8 @@
             "scale": 0.25,
             "selectedLayer": 10,
             "viewCenter": {
-                "x": -3720,
-                "y": 612
+                "x": -3084,
+                "y": 618
             }
         },
         "parallax-forest.tmx#tileset 2D ortho": {
@@ -132,8 +132,8 @@
             "scale": 0.75,
             "selectedLayer": 6,
             "viewCenter": {
-                "x": 441.33333333333337,
-                "y": 389.33333333333326
+                "x": 653.3333333333333,
+                "y": 391.33333333333326
             }
         },
         "tiles-iso-1.tsx": {
@@ -177,14 +177,14 @@
     "project": "parallax-level.tiled-project",
     "property.type": "string",
     "recentFiles": [
+        "Tiles iso cube..tsj",
+        "Trees.tsx",
+        "Trees.tsj",
+        "tileset 2D ortho.tsx",
         "Hexa-tiles_1.tsx",
         "hexa-quest.tmx",
         "pnc-quest.tmx",
-        "tileset 2D ortho.tsx",
         "parallax-forest.tmx",
-        "Trees.tsj",
-        "Trees.tsx",
-        "Tiles iso cube..tsj",
         "isometric_quest.tmx",
         "parallax-forext..tmj",
         "map_forest.tmx",
