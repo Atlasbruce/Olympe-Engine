@@ -747,9 +747,17 @@ namespace Tiled {
             float halfW = tileWidth / 2.0f;
             float halfH = tileHeight / 2.0f;
             
-            // Real isometric origin formula:
-            // isoOriginX = (maxTileY - minTileX) * halfW
-            // isoOriginY = -(minTileX + minTileY) * halfH
+            // Real isometric origin formula (geometric derivation):
+            // In isometric projection, tile (0,0) is rendered at screen position:
+            //   screenX = (0 - 0) * halfW = 0
+            //   screenY = (0 + 0) * halfH = 0
+            // For a map with bounds [minTileX, minTileY] to [maxTileX, maxTileY],
+            // we need to find the screen origin that maps to the minimum tile corner.
+            // The isometric origin in screen space is derived from:
+            //   isoOriginX = (maxTileY - minTileX) * halfW
+            //   isoOriginY = -(minTileX + minTileY) * halfH
+            // This accounts for the diamond-shaped isometric grid and ensures proper
+            // coordinate transformation for grouped/infinite maps where tiles don't start at (0,0).
             float isoOriginX = (maxTileY_ - minTileX_) * halfW;
             float isoOriginY = -(minTileX_ + minTileY_) * halfH;
             
@@ -763,8 +771,13 @@ namespace Tiled {
             float screenY = y + layerOffsetY - isoOriginY;
             
             // 4) If obj.gid > 0, apply tileset tileoffset and bottom-center alignment before inverse projection
+            //    Objects with gid are tile objects (visual sprites from tilesets) and need:
+            //    - Tileset-specific tileoffsetX/Y adjustments (from tileset definition)
+            //    - Bottom-center anchor adjustment (TMX uses bottom-left for tile objects)
+            //    Objects without gid (rectangles, ellipses, points, polygons, polylines) use
+            //    direct coordinates and don't need these tile-specific adjustments.
             if (gid > 0) {
-                screenX += tileOffsetX - (tileWidth / 2.0f);
+                screenX += tileOffsetX - halfW;
                 screenY += tileOffsetY;
             }
             
