@@ -658,13 +658,14 @@ namespace Tiled {
 
         if (isIsometric)
         {
-            // Thresholds for debug logging (objects far from origin)
+            // Log input coordinates for debugging objects far from origin
+            // Note: These thresholds are intentionally local for debugging edge cases
+            // Consider making them configurable if needed across multiple functions
             const float LOG_THRESHOLD_X_MAX = 2000.0f;
             const float LOG_THRESHOLD_X_MIN = -1000.0f;
             const float LOG_THRESHOLD_Y_MAX = 2000.0f;
             const float LOG_THRESHOLD_Y_MIN = -300.0f;
             
-            // Log input coordinates for debugging
             bool shouldLog = (x > LOG_THRESHOLD_X_MAX || x < LOG_THRESHOLD_X_MIN || 
                             y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN);
             if (shouldLog) {
@@ -688,7 +689,9 @@ namespace Tiled {
                 SYSTEM_LOG << "  → Tile coordinates: (" << tileX << ", " << tileY << ")\n";
             }
 
-            // Apply isometric projection with startx/starty already handled in WorldToIso
+            // Apply isometric projection
+            // Note: WorldToIso can also handle startx/starty and offsetx/offsety at projection time
+            // Here we apply layer offsets before conversion, so we use default projection parameters
             Vector isoPos = IsometricProjection::WorldToIso(tileX, tileY, config_.tileWidth, config_.tileHeight);
 
             if (shouldLog) {
