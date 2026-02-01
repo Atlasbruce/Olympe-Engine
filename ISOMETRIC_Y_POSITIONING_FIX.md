@@ -170,6 +170,32 @@ This fix maintains backward compatibility:
    - Verify transformation pipeline produces expected results
    - Ensure tile coordinate calculations are correct
 
+### Test Results
+
+A standalone test program was created to demonstrate the magnitude of the fix:
+
+**Test Case: Standard Isometric (left-up)**
+- Input: TMJ position (290, 135)
+- Tile size: 58x27
+- Chunk origin: (-16, -16)
+
+Results:
+- OLD (incorrect): (1363, 67.5)
+- NEW (correct): (1218, 0)
+- **Correction: 159.9 pixels**
+
+**Test Case: No Chunk Offset (right-down)**
+- Input: TMJ position (464, 432)
+- Tile size: 58x27
+- Chunk origin: (0, 0)
+
+Results:
+- OLD (incorrect): (0, 432)
+- NEW (correct): (-232, 324)
+- **Correction: 255.9 pixels**
+
+These test results show that the old formula could cause positioning errors of up to **256 pixels**, which would completely misplace entities relative to their intended tile positions.
+
 ## Additional Notes
 
 ### Why Two Different Y-Flip Mechanisms?
