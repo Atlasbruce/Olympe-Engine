@@ -135,6 +135,10 @@ namespace Tiled {
                 << " to " << bounds.maxTileX << "," << bounds.maxTileY << "\n";
             SYSTEM_LOG << "  -> Chunk origin offset: (" << chunkOriginX_ << ", " << chunkOriginY_ << ")\n";
             SYSTEM_LOG << "  -> Actual map size:    " << mapWidth_ << "x" << mapHeight_ << " tiles ✅\n\n";
+            
+            // Update offset cache (chunk origin offsets are non-zero for infinite maps)
+            hasOffsets_ = (chunkOriginX_ != 0 || chunkOriginY_ != 0 || 
+                          globalOffsetX_ != 0.0f || globalOffsetY_ != 0.0f);
         }
         else
         {
@@ -147,6 +151,9 @@ namespace Tiled {
             chunkOriginY_ = 0;
 
             SYSTEM_LOG << "  -> Map size (from TMJ): " << mapWidth_ << "x" << mapHeight_ << " tiles\n\n";
+            
+            // Update offset cache (only global offsets might be non-zero)
+            hasOffsets_ = (globalOffsetX_ != 0.0f || globalOffsetY_ != 0.0f);
         }
 
         // Initialize config with map properties
@@ -658,24 +665,26 @@ namespace Tiled {
 
         if (isIsometric)
         {
-            // Log input coordinates for debugging objects far from origin
-            // Note: These thresholds are intentionally local for debugging edge cases
-            // Consider making them configurable if needed across multiple functions
+            // Enhanced logging for debugging entity positions
+            // Log when coordinates are extreme AND (offsets are active OR layer offsets present)
             const float LOG_THRESHOLD_X_MAX = 2000.0f;
             const float LOG_THRESHOLD_X_MIN = -1000.0f;
             const float LOG_THRESHOLD_Y_MAX = 2000.0f;
             const float LOG_THRESHOLD_Y_MIN = -300.0f;
             
-            // Only log if coordinates are extreme AND layer has offsets (reduces log noise)
-            bool shouldLog = (x > LOG_THRESHOLD_X_MAX || x < LOG_THRESHOLD_X_MIN || 
-                            y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN) &&
-                            (layerOffsetX != 0.0f || layerOffsetY != 0.0f);
+            bool isExtremeCoordinate = (x > LOG_THRESHOLD_X_MAX || x < LOG_THRESHOLD_X_MIN || 
+                                       y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN);
+            bool hasAnyOffsets = hasOffsets_ || (layerOffsetX != 0.0f || layerOffsetY != 0.0f);
+            
+            // Log when coordinates are extreme AND offsets might affect positioning
+            bool shouldLog = isExtremeCoordinate && hasAnyOffsets;
+            
             if (shouldLog) {
                 SYSTEM_LOG << "[TRANSFORM] Input TMJ coordinates: (" << x << ", " << y << ")\n";
                 SYSTEM_LOG << "  → Layer offsets: offsetX=" << layerOffsetX << ", offsetY=" << layerOffsetY << "\n";
             }
 
-            // Apply layer pixel offsets first
+            // Step 1: Apply layer pixel offsets first
             float adjustedX = x + layerOffsetX;
             float adjustedY = y + layerOffsetY;
             
@@ -683,7 +692,7 @@ namespace Tiled {
                 SYSTEM_LOG << "  → After layer offsets: (" << adjustedX << ", " << adjustedY << ")\n";
             }
 
-            // Convert TMJ pixels to tile coordinates
+            // Step 2: Convert TMJ pixels to tile coordinates
             float tileX = adjustedX / (static_cast<float>(config_.tileWidth) / 2.0f);
             float tileY = adjustedY / static_cast<float>(config_.tileHeight);
 
@@ -691,22 +700,48 @@ namespace Tiled {
                 SYSTEM_LOG << "  → Tile coordinates: (" << tileX << ", " << tileY << ")\n";
             }
 
-            // Apply isometric projection
-            // Offset Strategy: Layer offsets are applied BEFORE tile conversion (above)
-            // WorldToIso parameters (offsetX, offsetY) are for different use cases:
-            // - startx/starty: handled by tile rendering pipeline for infinite maps
-            // - offsetx/offsety: we apply them here before conversion to avoid double-application
-            // Therefore, we use default offset parameters (0.0f) in the projection call
-            Vector isoPos = IsometricProjection::WorldToIso(tileX, tileY, config_.tileWidth, config_.tileHeight);
+            // Step 3: Translate to chunk coordinate system (align entity coords with chunk origin offset)
+            // For infinite maps, chunks may start at negative tile coordinates (e.g., -16, -16)
+            // Entity coordinates need to be adjusted to align with this chunk coordinate system
+            tileX -= chunkOriginX_;
+            tileY -= chunkOriginY_;
 
+            if (shouldLog && (chunkOriginX_ != 0 || chunkOriginY_ != 0)) {
+                SYSTEM_LOG << "  → After chunk origin offset (" << chunkOriginX_ << ", " << chunkOriginY_ 
+                          << "): (" << tileX << ", " << tileY << ")\n";
+            }
+
+            // Step 4: Apply render order transformation (use cached flag for performance)
+            // For render orders with "up" (right-up, left-up), invert Y-axis
+            // because Tiled's Y-axis points down (screen) but isometric Y-axis points up (world)
+            if (requiresYFlip_) {
+                tileY = -tileY;
+                if (shouldLog) {
+                    SYSTEM_LOG << "  → After render order Y-flip: (" << tileX << ", " << tileY << ")\n";
+                }
+            }
+
+            // Step 5: Apply isometric projection with global offsets
+            // Global offsets are applied AFTER isometric projection to correct any remaining systematic errors
+            Vector isoPos = IsometricProjection::WorldToIso(
+                tileX, tileY, 
+                config_.tileWidth, config_.tileHeight,
+                0, 0,  // startX, startY - handled by tile rendering
+                0.0f, 0.0f,  // offsetX, offsetY - already applied above
+                globalOffsetX_, globalOffsetY_  // Global correction offsets
+            );
             if (shouldLog) {
-                SYSTEM_LOG << "  → Final ISO position: (" << isoPos.x << ", " << isoPos.y << ")\n\n";
+                SYSTEM_LOG << "  → Global offsets: globalOffsetX=" << globalOffsetX_ 
+                          << ", globalOffsetY=" << globalOffsetY_ << "\n";
+                SYSTEM_LOG << "  → Final ISO position: (" << isoPos.x << ", " << isoPos.y << ")\n";
+                SYSTEM_LOG << "  → Total difference from input: (" 
+                          << (isoPos.x - x) << ", " << (isoPos.y - y) << ")\n\n";
             }
 
             return Vector(isoPos.x, isoPos.y, 0.0f);
         }
         
-        // Orthogonal: apply layer offsets directly
+        // Orthogonal: apply layer offsets directly (global offsets not needed for orthogonal)
         return Vector(x + layerOffsetX, y + layerOffsetY, 0.0f);
     }
 
@@ -776,6 +811,9 @@ namespace Tiled {
         
         // Store render order in conversion config for use in coordinate transformations
         config_.renderOrder = outLevel.mapConfig.renderOrder;
+        
+        // Cache Y-flip requirement for performance (avoids repeated string comparisons)
+        requiresYFlip_ = (config_.renderOrder == "left-up" || config_.renderOrder == "right-up");
         
         // Set world size
         outLevel.worldSize.x = (float) tiledMap.width * tiledMap.tilewidth;

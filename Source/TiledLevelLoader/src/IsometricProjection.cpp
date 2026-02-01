@@ -9,7 +9,8 @@ namespace Olympe {
 namespace Tiled {
 
     Vector IsometricProjection::WorldToIso(float worldX, float worldY, int tileWidth, int tileHeight,
-                                          int startX, int startY, float offsetX, float offsetY)
+                                          int startX, int startY, float offsetX, float offsetY,
+                                          float globalOffsetX, float globalOffsetY)
     {
         // Apply startx/starty offsets to world coordinates
         float offsetWorldX = worldX + startX;
@@ -20,13 +21,14 @@ namespace Tiled {
         // Screen Y = (worldX + worldY) * (tileHeight / 2)
         
         Vector result;
-        result.x = ((offsetWorldX - offsetWorldY) * ((float)tileWidth * 0.5f)) + offsetX;
-        result.y = ((offsetWorldX + offsetWorldY) * ((float)tileHeight * 0.5f)) + offsetY;
+        result.x = ((offsetWorldX - offsetWorldY) * ((float)tileWidth * 0.5f)) + offsetX + globalOffsetX;
+        result.y = ((offsetWorldX + offsetWorldY) * ((float)tileHeight * 0.5f)) + offsetY + globalOffsetY;
         return result;
     }
 
     Vector IsometricProjection::IsoToWorld(float isoX, float isoY, int tileWidth, int tileHeight,
-                                          int startX, int startY, float offsetX, float offsetY)
+                                          int startX, int startY, float offsetX, float offsetY,
+                                          float globalOffsetX, float globalOffsetY)
     {
         // Inverse isometric projection
         // worldX = (isoX / (tileWidth/2) + isoY / (tileHeight/2)) / 2
@@ -36,9 +38,9 @@ namespace Tiled {
         float halfWidth = tileWidth * 0.5f;
         float halfHeight = tileHeight * 0.5f;
         
-        // Apply pixel offsets first (inverse)
-        float adjIsoX = isoX - offsetX;
-        float adjIsoY = isoY - offsetY;
+        // Apply global offsets first (inverse) and pixel offsets
+        float adjIsoX = isoX - offsetX - globalOffsetX;
+        float adjIsoY = isoY - offsetY - globalOffsetY;
         
         result.x = (adjIsoX / halfWidth + adjIsoY / halfHeight) * 0.5f;
         result.y = (adjIsoY / halfHeight - adjIsoX / halfWidth) * 0.5f;
