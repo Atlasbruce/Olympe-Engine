@@ -146,15 +146,22 @@ namespace Tiled {
         void ConvertImageLayer(const TiledLayer& layer);
         void ConvertGroupLayer(const TiledLayer& layer, Olympe::Editor::LevelDefinition& level);
 
-        // Convert objects
-        void ConvertObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level);
-        void ConvertCollisionObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level);
-        void ConvertSectorObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level);
-        void ConvertPatrolPath(const TiledObject& obj, Olympe::Editor::LevelDefinition& level);
-        void ConvertPolygonCollision(const TiledObject& obj, Olympe::Editor::LevelDefinition& level);
+        // Convert objects (with layer offset support)
+        void ConvertObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level, 
+                          float layerOffsetX = 0.0f, float layerOffsetY = 0.0f);
+        void ConvertCollisionObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level,
+                                   float layerOffsetX = 0.0f, float layerOffsetY = 0.0f);
+        void ConvertSectorObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level,
+                                float layerOffsetX = 0.0f, float layerOffsetY = 0.0f);
+        void ConvertPatrolPath(const TiledObject& obj, Olympe::Editor::LevelDefinition& level,
+                              float layerOffsetX = 0.0f, float layerOffsetY = 0.0f);
+        void ConvertPolygonCollision(const TiledObject& obj, Olympe::Editor::LevelDefinition& level,
+                                    float layerOffsetX = 0.0f, float layerOffsetY = 0.0f);
 
         // Parse entity descriptor from Tiled object (memory structure, NOT ECS entity)
-        std::unique_ptr<Olympe::Editor::EntityInstance> ParseEntityDescriptor(const TiledObject& obj);
+        std::unique_ptr<Olympe::Editor::EntityInstance> ParseEntityDescriptor(const TiledObject& obj,
+                                                                               float layerOffsetX = 0.0f, 
+                                                                               float layerOffsetY = 0.0f);
 
         // Convert properties to JSON overrides
         void PropertiesToOverrides(const std::map<std::string, TiledProperty>& properties,
@@ -170,7 +177,8 @@ namespace Tiled {
         float TransformY(float y, float height);
         
         // Transform object position - returns Vector directly (no conversion needed, TMJ coordinates are already in pixels)
-        Vector TransformObjectPosition(float x, float y);
+        // Added layer offsets for proper position adjustment
+        Vector TransformObjectPosition(float x, float y, float layerOffsetX = 0.0f, float layerOffsetY = 0.0f);
 
         // Initialize collision map
         void InitializeCollisionMap(Olympe::Editor::LevelDefinition& level, int width, int height);
@@ -184,13 +192,19 @@ namespace Tiled {
         uint32_t ParseTintColor(const std::string& colorStr);
 
         // Parse sector entity descriptor from polygon object (convenience wrapper)
-        std::unique_ptr<Olympe::Editor::EntityInstance> ParseSectorDescriptor(const TiledObject& obj);
+        std::unique_ptr<Olympe::Editor::EntityInstance> ParseSectorDescriptor(const TiledObject& obj,
+                                                                               float layerOffsetX = 0.0f, 
+                                                                               float layerOffsetY = 0.0f);
 
         // Parse patrol path entity descriptor from polyline object (convenience wrapper)
-        std::unique_ptr<Olympe::Editor::EntityInstance> ParsePatrolPathDescriptor(const TiledObject& obj);
+        std::unique_ptr<Olympe::Editor::EntityInstance> ParsePatrolPathDescriptor(const TiledObject& obj,
+                                                                                   float layerOffsetX = 0.0f, 
+                                                                                   float layerOffsetY = 0.0f);
 
         // Parse collision polyline entity descriptor from polyline/polygon object
-        std::unique_ptr<Olympe::Editor::EntityInstance> ParseCollisionPolylineDescriptor(const TiledObject& obj);
+        std::unique_ptr<Olympe::Editor::EntityInstance> ParseCollisionPolylineDescriptor(const TiledObject& obj,
+                                                                                         float layerOffsetX = 0.0f, 
+                                                                                         float layerOffsetY = 0.0f);
 
         ConversionConfig config_;
         std::string lastError_;

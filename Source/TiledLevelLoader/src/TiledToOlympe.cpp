@@ -305,9 +305,15 @@ namespace Tiled {
     {
         SYSTEM_LOG << "TiledToOlympe: Converting object layer '" << layer.name 
                    << "' with " << layer.objects.size() << " objects" << std::endl;
+        
+        // Log layer offsets if non-zero
+        if (layer.offsetx != 0.0f || layer.offsety != 0.0f) {
+            SYSTEM_LOG << "  → Layer has offsets: offsetx=" << layer.offsetx 
+                       << ", offsety=" << layer.offsety << std::endl;
+        }
 
         for (const auto& obj : layer.objects) {
-            ConvertObject(obj, level);
+            ConvertObject(obj, level, layer.offsetx, layer.offsety);
         }
     }
 
@@ -367,7 +373,8 @@ namespace Tiled {
         }
     }
 
-    void TiledToOlympe::ConvertObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level)
+    void TiledToOlympe::ConvertObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level,
+                                      float layerOffsetX, float layerOffsetY)
     {
         // Check for collision polygons/polylines first
         std::string typeLower = obj.type;
@@ -377,25 +384,25 @@ namespace Tiled {
         {
             if (obj.objectType == ObjectType::Polygon || obj.objectType == ObjectType::Polyline)
             {
-                ConvertPolygonCollision(obj, level);
+                ConvertPolygonCollision(obj, level, layerOffsetX, layerOffsetY);
                 return;
             }
         }
         
         // Check for patrol paths (polyline objects)
         if (obj.objectType == ObjectType::Polyline) {
-            ConvertPatrolPath(obj, level);
+            ConvertPatrolPath(obj, level, layerOffsetX, layerOffsetY);
             return;
         }
 
         // Check for sector polygons
         if (obj.objectType == ObjectType::Polygon) {
-            ConvertSectorObject(obj, level);
+            ConvertSectorObject(obj, level, layerOffsetX, layerOffsetY);
             return;
         }
 
         // Regular entity
-        auto entityDescriptor = ParseEntityDescriptor(obj);
+        auto entityDescriptor = ParseEntityDescriptor(obj, layerOffsetX, layerOffsetY);
         if (entityDescriptor) {
             level.entities.push_back(std::move(entityDescriptor));
         }
@@ -419,7 +426,8 @@ namespace Tiled {
         }
     }
 
-    void TiledToOlympe::ConvertSectorObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level)
+    void TiledToOlympe::ConvertSectorObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level,
+                                            float layerOffsetX, float layerOffsetY)
     {
         // Create a sector entity
         auto entity = std::make_unique<Olympe::Editor::EntityInstance>();
@@ -430,7 +438,7 @@ namespace Tiled {
         entity->prefabPath = "Blueprints/Sector.json";
         
         // Transform position based on map orientation
-        entity->position = TransformObjectPosition(obj.x, obj.y);
+        entity->position = TransformObjectPosition(obj.x, obj.y, layerOffsetX, layerOffsetY);
 
         // Store polygon points in overrides
         nlohmann::json polygon = nlohmann::json::array();
@@ -451,7 +459,8 @@ namespace Tiled {
         level.entities.push_back(std::move(entity));
     }
 
-    void TiledToOlympe::ConvertPolygonCollision(const TiledObject& obj, Olympe::Editor::LevelDefinition& level)
+    void TiledToOlympe::ConvertPolygonCollision(const TiledObject& obj, Olympe::Editor::LevelDefinition& level,
+                                                float layerOffsetX, float layerOffsetY)
     {
         // Create a collision polygon entity
         auto entity = std::make_unique<Olympe::Editor::EntityInstance>();
@@ -462,7 +471,7 @@ namespace Tiled {
         entity->prefabPath = "Blueprints/CollisionPolygon.json";
         
         // Transform position based on map orientation
-        entity->position = TransformObjectPosition(obj.x, obj.y);
+        entity->position = TransformObjectPosition(obj.x, obj.y, layerOffsetX, layerOffsetY);
         entity->rotation = obj.rotation;
         
         // Store polygon/polyline points
@@ -491,7 +500,8 @@ namespace Tiled {
         level.entities.push_back(std::move(entity));
     }
 
-    void TiledToOlympe::ConvertPatrolPath(const TiledObject& obj, Olympe::Editor::LevelDefinition& level)
+    void TiledToOlympe::ConvertPatrolPath(const TiledObject& obj, Olympe::Editor::LevelDefinition& level,
+                                          float layerOffsetX, float layerOffsetY)
     {
         // Create a patrol path entity
         auto entity = std::make_unique<Olympe::Editor::EntityInstance>();
@@ -501,7 +511,7 @@ namespace Tiled {
         entity->prefabPath = "Blueprints/PatrolPath.json";
         
         // Transform position based on map orientation
-        entity->position = TransformObjectPosition(obj.x, obj.y);
+        entity->position = TransformObjectPosition(obj.x, obj.y, layerOffsetX, layerOffsetY);
 
         // Store polyline points in overrides
         nlohmann::json path = nlohmann::json::array();
@@ -521,7 +531,9 @@ namespace Tiled {
         level.entities.push_back(std::move(entity));
     }
 
-    std::unique_ptr<Olympe::Editor::EntityInstance> TiledToOlympe::ParseEntityDescriptor(const TiledObject& obj)
+    std::unique_ptr<Olympe::Editor::EntityInstance> TiledToOlympe::ParseEntityDescriptor(const TiledObject& obj,
+                                                                                        float layerOffsetX, 
+                                                                                        float layerOffsetY)
     {
         auto entityDescriptor = std::make_unique<Olympe::Editor::EntityInstance>();
         
@@ -536,7 +548,7 @@ namespace Tiled {
         entityDescriptor->prefabPath = GetPrefabPath(obj.type);
         
         // Transform position based on map orientation (isometric vs orthogonal)
-        entityDescriptor->position = TransformObjectPosition(obj.x, obj.y);
+        entityDescriptor->position = TransformObjectPosition(obj.x, obj.y, layerOffsetX, layerOffsetY);
         
         SYSTEM_LOG << "  -> Parsed entity descriptor: '" << entityDescriptor->name 
                    << "' (type: " << entityDescriptor->type << ")\n";
@@ -640,74 +652,63 @@ namespace Tiled {
         return y;
     }
 
-    Vector TiledToOlympe::TransformObjectPosition(float x, float y)
+    Vector TiledToOlympe::TransformObjectPosition(float x, float y, float layerOffsetX, float layerOffsetY)
     {
         bool isIsometric = (config_.mapOrientation == "isometric");
 
         if (isIsometric)
         {
-
-            float tileX = x / static_cast<float>( (float)config_.tileWidth / 2.0f);
-            float tileY = y / static_cast<float>(config_.tileHeight);
-
-            // 🔍 DEBUG LOG (à supprimer après diagnostic)
-            if (x > 5000.0f || x < -2000.0f) {  // Log uniquement pour les beacons éloignés
-                SYSTEM_LOG << "[TRANSFORM] Input: (" << x << ", " << y << ")\n";
-                SYSTEM_LOG << "  → Tiles: (" << tileX << ", " << tileY << ")\n";
+            // Log input coordinates for debugging objects far from origin
+            // Note: These thresholds are intentionally local for debugging edge cases
+            // Consider making them configurable if needed across multiple functions
+            const float LOG_THRESHOLD_X_MAX = 2000.0f;
+            const float LOG_THRESHOLD_X_MIN = -1000.0f;
+            const float LOG_THRESHOLD_Y_MAX = 2000.0f;
+            const float LOG_THRESHOLD_Y_MIN = -300.0f;
+            
+            // Only log if coordinates are extreme AND layer has offsets (reduces log noise)
+            bool shouldLog = (x > LOG_THRESHOLD_X_MAX || x < LOG_THRESHOLD_X_MIN || 
+                            y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN) &&
+                            (layerOffsetX != 0.0f || layerOffsetY != 0.0f);
+            if (shouldLog) {
+                SYSTEM_LOG << "[TRANSFORM] Input TMJ coordinates: (" << x << ", " << y << ")\n";
+                SYSTEM_LOG << "  → Layer offsets: offsetX=" << layerOffsetX << ", offsetY=" << layerOffsetY << "\n";
             }
 
-            Vector isoPos = IsometricProjection::WorldToIso( tileX, tileY, config_.tileWidth, config_.tileHeight );
+            // Apply layer pixel offsets first
+            float adjustedX = x + layerOffsetX;
+            float adjustedY = y + layerOffsetY;
+            
+            if (shouldLog) {
+                SYSTEM_LOG << "  → After layer offsets: (" << adjustedX << ", " << adjustedY << ")\n";
+            }
 
-            // 🔍 DEBUG LOG (suite)
-            if (x > 5000.0f || x < -2000.0f) {
-                SYSTEM_LOG << "  → ISO: (" << isoPos.x << ", " << isoPos.y << ")\n\n";
+            // Convert TMJ pixels to tile coordinates
+            float tileX = adjustedX / (static_cast<float>(config_.tileWidth) / 2.0f);
+            float tileY = adjustedY / static_cast<float>(config_.tileHeight);
+
+            if (shouldLog) {
+                SYSTEM_LOG << "  → Tile coordinates: (" << tileX << ", " << tileY << ")\n";
+            }
+
+            // Apply isometric projection
+            // Offset Strategy: Layer offsets are applied BEFORE tile conversion (above)
+            // WorldToIso parameters (offsetX, offsetY) are for different use cases:
+            // - startx/starty: handled by tile rendering pipeline for infinite maps
+            // - offsetx/offsety: we apply them here before conversion to avoid double-application
+            // Therefore, we use default offset parameters (0.0f) in the projection call
+            Vector isoPos = IsometricProjection::WorldToIso(tileX, tileY, config_.tileWidth, config_.tileHeight);
+
+            if (shouldLog) {
+                SYSTEM_LOG << "  → Final ISO position: (" << isoPos.x << ", " << isoPos.y << ")\n\n";
             }
 
             return Vector(isoPos.x, isoPos.y, 0.0f);
         }
-        return Vector(x, y, 0.0f);
+        
+        // Orthogonal: apply layer offsets directly
+        return Vector(x + layerOffsetX, y + layerOffsetY, 0.0f);
     }
-    
-    /*Vector TiledToOlympe::TransformObjectPosition(float x, float y)
-    {
-        bool isIsometric = (config_.mapOrientation == "isometric");
-
-        if (isIsometric)
-        {
-            if (config_.tileWidth <= 0 || config_.tileHeight <= 0)
-            {
-                SYSTEM_LOG << "  /!\\ Invalid tile dimensions for isometric conversion\n";
-                return Vector(x, y, 0.0f);
-            }
-
-            // Step 1: Convert TMJ pixels → tile coordinates
-            float tileX = x / static_cast<float>(config_.tileWidth);
-            float tileY = y / static_cast<float>(config_.tileHeight);
-
-            // Step 2: Apply render order transformation (Y-axis inversion)
-            // For render orders with "down" (right-down, left-down), invert Y-axis
-            // because Tiled's Y-axis points up (screen) but isometric Y-axis points down (world)
-            //if (config_.renderOrder == "right-down" || config_.renderOrder == "left-down") {
-
-            //    tileY = -tileY;
-            //}
-
-            // Step 3: Apply isometric projection
-            // IMPORTANT: Use ABSOLUTE world coordinates (same as tile rendering)
-            // WorldToIso expects tile coordinates and handles the projection
-            Vector isoPos = IsometricProjection::WorldToIso(
-                tileX,
-                tileY,
-                config_.tileWidth,
-                config_.tileHeight
-            );
-
-            return Vector(isoPos.x, isoPos.y, 0.0f);
-        }
-
-        // Orthogonal case
-        return Vector(x, y, 0.0f);
-    }/**/
 
     void TiledToOlympe::InitializeCollisionMap(Olympe::Editor::LevelDefinition& level, 
                                                 int width, int height)
@@ -1211,7 +1212,7 @@ namespace Tiled {
                 
                 if (typeLower == "collision" || typeLower.find("collision") != std::string::npos) {
                     if (obj.objectType == ObjectType::Polyline || obj.objectType == ObjectType::Polygon) {
-                        auto collisionDescriptor = ParseCollisionPolylineDescriptor(obj);
+                        auto collisionDescriptor = ParseCollisionPolylineDescriptor(obj, layer->offsetx, layer->offsety);
                         if (collisionDescriptor) {
                             // ok - CRITICAL FIX: Store layer zOrder in position.z
                             collisionDescriptor->position.z = static_cast<float>(globalZOrder);
@@ -1247,7 +1248,7 @@ namespace Tiled {
                     continue;
                 }
                 
-                auto entityDescriptor = ParseEntityDescriptor(obj);
+                auto entityDescriptor = ParseEntityDescriptor(obj, layer->offsetx, layer->offsety);
                 if (!entityDescriptor) continue;
                 
                 // ok - CRITICAL FIX: Store layer zOrder in position.z
@@ -1737,7 +1738,9 @@ namespace Tiled {
         return color;
     }
 
-    std::unique_ptr<Olympe::Editor::EntityInstance> TiledToOlympe::ParseSectorDescriptor(const TiledObject& obj)
+    std::unique_ptr<Olympe::Editor::EntityInstance> TiledToOlympe::ParseSectorDescriptor(const TiledObject& obj,
+                                                                                        float layerOffsetX, 
+                                                                                        float layerOffsetY)
     {
         auto entityDescriptor = std::make_unique<Olympe::Editor::EntityInstance>();
         
@@ -1746,8 +1749,8 @@ namespace Tiled {
         entityDescriptor->type = "Sector";
         entityDescriptor->prefabPath = "Blueprints/Sector.json";
         
-        // Use TMJ coordinates directly - no conversion needed
-        entityDescriptor->position = Vector(obj.x, obj.y, 0.0f);
+        // Apply layer offsets to position
+        entityDescriptor->position = Vector(obj.x + layerOffsetX, obj.y + layerOffsetY, 0.0f);
         entityDescriptor->rotation = obj.rotation;
         
         // Store polygon in overrides
@@ -1768,7 +1771,9 @@ namespace Tiled {
         return entityDescriptor;
     }
 
-    std::unique_ptr<Olympe::Editor::EntityInstance> TiledToOlympe::ParsePatrolPathDescriptor(const TiledObject& obj)
+    std::unique_ptr<Olympe::Editor::EntityInstance> TiledToOlympe::ParsePatrolPathDescriptor(const TiledObject& obj,
+                                                                                            float layerOffsetX, 
+                                                                                            float layerOffsetY)
     {
         auto entityDescriptor = std::make_unique<Olympe::Editor::EntityInstance>();
         
@@ -1777,8 +1782,8 @@ namespace Tiled {
         entityDescriptor->type = "PatrolPath";
         entityDescriptor->prefabPath = "Blueprints/PatrolPath.json";
         
-        // Use TMJ coordinates directly - no conversion needed
-        entityDescriptor->position = Vector(obj.x, obj.y, 0.0f);
+        // Apply layer offsets to position
+        entityDescriptor->position = Vector(obj.x + layerOffsetX, obj.y + layerOffsetY, 0.0f);
         entityDescriptor->rotation = obj.rotation;
         
         // Store polyline in overrides
@@ -1798,7 +1803,9 @@ namespace Tiled {
         return entityDescriptor;
     }
 
-    std::unique_ptr<Olympe::Editor::EntityInstance> TiledToOlympe::ParseCollisionPolylineDescriptor(const TiledObject& obj)
+    std::unique_ptr<Olympe::Editor::EntityInstance> TiledToOlympe::ParseCollisionPolylineDescriptor(const TiledObject& obj,
+                                                                                                  float layerOffsetX, 
+                                                                                                  float layerOffsetY)
     {
         auto entityDescriptor = std::make_unique<Olympe::Editor::EntityInstance>();
         
@@ -1807,8 +1814,8 @@ namespace Tiled {
         entityDescriptor->type = "CollisionPolygon";
         entityDescriptor->prefabPath = "Blueprints/CollisionPolygon.json";
         
-        // Use TMJ coordinates directly - no conversion needed
-        entityDescriptor->position = Vector(obj.x, obj.y, 0.0f);
+        // Apply layer offsets to position
+        entityDescriptor->position = Vector(obj.x + layerOffsetX, obj.y + layerOffsetY, 0.0f);
         entityDescriptor->rotation = obj.rotation;
         
         // Store polyline/polygon points
