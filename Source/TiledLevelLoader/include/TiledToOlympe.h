@@ -219,6 +219,11 @@ namespace Tiled {
         // Chunk coordinate system origin (for infinite maps)
         int chunkOriginX_ = 0;
         int chunkOriginY_ = 0;
+        
+        // Global offsets for entity position adjustment
+        // These offsets correct systematic positioning errors in isometric coordinate transformation
+        float globalOffsetX_ = 0.0f;
+        float globalOffsetY_ = 0.0f;
     };
 
 } // namespace Tiled

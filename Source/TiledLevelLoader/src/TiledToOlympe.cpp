@@ -658,18 +658,17 @@ namespace Tiled {
 
         if (isIsometric)
         {
-            // Log input coordinates for debugging objects far from origin
-            // Note: These thresholds are intentionally local for debugging edge cases
-            // Consider making them configurable if needed across multiple functions
+            // Enhanced logging for debugging entity positions
+            // Log coordinates that are far from origin OR when global offsets are active
             const float LOG_THRESHOLD_X_MAX = 2000.0f;
             const float LOG_THRESHOLD_X_MIN = -1000.0f;
             const float LOG_THRESHOLD_Y_MAX = 2000.0f;
             const float LOG_THRESHOLD_Y_MIN = -300.0f;
             
-            // Only log if coordinates are extreme AND layer has offsets (reduces log noise)
             bool shouldLog = (x > LOG_THRESHOLD_X_MAX || x < LOG_THRESHOLD_X_MIN || 
-                            y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN) &&
-                            (layerOffsetX != 0.0f || layerOffsetY != 0.0f);
+                            y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN) ||
+                            (globalOffsetX_ != 0.0f || globalOffsetY_ != 0.0f);
+            
             if (shouldLog) {
                 SYSTEM_LOG << "[TRANSFORM] Input TMJ coordinates: (" << x << ", " << y << ")\n";
                 SYSTEM_LOG << "  → Layer offsets: offsetX=" << layerOffsetX << ", offsetY=" << layerOffsetY << "\n";
@@ -691,22 +690,28 @@ namespace Tiled {
                 SYSTEM_LOG << "  → Tile coordinates: (" << tileX << ", " << tileY << ")\n";
             }
 
-            // Apply isometric projection
-            // Offset Strategy: Layer offsets are applied BEFORE tile conversion (above)
-            // WorldToIso parameters (offsetX, offsetY) are for different use cases:
-            // - startx/starty: handled by tile rendering pipeline for infinite maps
-            // - offsetx/offsety: we apply them here before conversion to avoid double-application
-            // Therefore, we use default offset parameters (0.0f) in the projection call
-            Vector isoPos = IsometricProjection::WorldToIso(tileX, tileY, config_.tileWidth, config_.tileHeight);
+            // Apply isometric projection with global offsets
+            // Global offsets are applied AFTER isometric projection to correct systematic errors
+            Vector isoPos = IsometricProjection::WorldToIso(
+                tileX, tileY, 
+                config_.tileWidth, config_.tileHeight,
+                0, 0,  // startX, startY - handled by tile rendering
+                0.0f, 0.0f,  // offsetX, offsetY - already applied above
+                globalOffsetX_, globalOffsetY_  // Global correction offsets
+            );
 
             if (shouldLog) {
-                SYSTEM_LOG << "  → Final ISO position: (" << isoPos.x << ", " << isoPos.y << ")\n\n";
+                SYSTEM_LOG << "  → Global offsets: globalOffsetX=" << globalOffsetX_ 
+                          << ", globalOffsetY=" << globalOffsetY_ << "\n";
+                SYSTEM_LOG << "  → Final ISO position: (" << isoPos.x << ", " << isoPos.y << ")\n";
+                SYSTEM_LOG << "  → Position difference from input: (" 
+                          << (isoPos.x - x) << ", " << (isoPos.y - y) << ")\n\n";
             }
 
             return Vector(isoPos.x, isoPos.y, 0.0f);
         }
         
-        // Orthogonal: apply layer offsets directly
+        // Orthogonal: apply layer offsets directly (global offsets not needed for orthogonal)
         return Vector(x + layerOffsetX, y + layerOffsetY, 0.0f);
     }
 
