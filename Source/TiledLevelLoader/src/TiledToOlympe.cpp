@@ -666,7 +666,8 @@ namespace Tiled {
         if (isIsometric)
         {
             // Enhanced logging for entity transform pipeline
-            // Always log entity transformations to track the coordinate conversion
+            // Note: Detailed logging enabled to track coordinate transformations and verify Y-flip fix
+            // This can be disabled in production builds if performance is a concern
             SYSTEM_LOG << "[ENTITY_TRANSFORM] Raw TMJ coordinates: (" << x << ", " << y << ")\n";
             SYSTEM_LOG << "  → Layer offsets: offsetX=" << layerOffsetX << ", offsetY=" << layerOffsetY << "\n";
 
@@ -713,7 +714,7 @@ namespace Tiled {
             SYSTEM_LOG << "  → Global offsets: globalOffsetX=" << globalOffsetX_ 
                       << ", globalOffsetY=" << globalOffsetY_ << "\n";
             SYSTEM_LOG << "  → Final isometric position: (" << isoPos.x << ", " << isoPos.y << ")\n";
-            SYSTEM_LOG << "  → Total transform: (" << (isoPos.x - x) << ", " << (isoPos.y - y) << ")\n\n";
+            SYSTEM_LOG << "  → Position delta from input: (" << (isoPos.x - x) << ", " << (isoPos.y - y) << ")\n\n";
 
             return Vector(isoPos.x, isoPos.y, 0.0f);
         }
