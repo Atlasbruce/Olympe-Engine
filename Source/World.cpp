@@ -1882,6 +1882,9 @@ float World::GetIsometricOriginX() const
     // This ensures tiles and entities share the same world-space origin
     // Formula: isoX = (worldX - worldY) * (tileWidth / 2)
     // At minTileX, minTileY: isoX = (minTileX - minTileY) * (tileWidth / 2)
+    // 
+    // NOTE: This caching assumes single-threaded access (typical for game engines).
+    // If multi-threaded access is needed, synchronization should be added.
     if (m_mapOrientation == "isometric")
     {
         // Cache both X and Y values together to avoid inconsistency
@@ -1901,6 +1904,9 @@ float World::GetIsometricOriginY() const
     // For isometric maps, the origin offset is calculated from the minimum tile coordinates
     // Formula: isoY = (worldX + worldY) * (tileHeight / 2)
     // At minTileX, minTileY: isoY = (minTileX + minTileY) * (tileHeight / 2)
+    // 
+    // NOTE: This caching assumes single-threaded access (typical for game engines).
+    // If multi-threaded access is needed, synchronization should be added.
     if (m_mapOrientation == "isometric")
     {
         // Cache both X and Y values together to avoid inconsistency

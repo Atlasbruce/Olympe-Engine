@@ -729,12 +729,11 @@ namespace Tiled {
         
         // For orthogonal/hex/staggered maps with chunk origin offsets, subtract chunk origin
         // to align entity positions with chunk-based tile rendering
-        bool needsChunkOffset = (config_.mapOrientation == "orthogonal" || 
-                                 config_.mapOrientation == "hexagonal" || 
-                                 config_.mapOrientation == "staggered") && 
-                                (chunkOriginX_ != 0 || chunkOriginY_ != 0);
-        
-        if (needsChunkOffset) {
+        if ((config_.mapOrientation == "orthogonal" || 
+             config_.mapOrientation == "hexagonal" || 
+             config_.mapOrientation == "staggered") && 
+            (chunkOriginX_ != 0 || chunkOriginY_ != 0))
+        {
             // Subtract chunk origin in pixels to align with tile coordinate space
             float chunkOffsetPixelsX = (float)chunkOriginX_ * (float)config_.tileWidth;
             float chunkOffsetPixelsY = (float)chunkOriginY_ * (float)config_.tileHeight;
