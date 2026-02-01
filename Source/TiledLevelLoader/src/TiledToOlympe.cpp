@@ -448,11 +448,14 @@ namespace Tiled {
         entity->position = TransformObjectPosition(obj.x, obj.y, layerOffsetX, layerOffsetY);
 
         // Store polygon points in overrides
+        // NOTE: For isometric, renderorder handles Y-flip in position transform, not flipY
+        // Only apply flipY for orthogonal maps
+        bool shouldFlipPolyY = config_.flipY && (config_.mapOrientation != "isometric");
         nlohmann::json polygon = nlohmann::json::array();
         for (const auto& pt : obj.polygon) {
             nlohmann::json point = nlohmann::json::object();
             point["x"] = pt.x;
-            point["y"] = config_.flipY ? -pt.y : pt.y;
+            point["y"] = shouldFlipPolyY ? -pt.y : pt.y;
             polygon.push_back(point);
         }
 
@@ -482,6 +485,9 @@ namespace Tiled {
         entity->rotation = obj.rotation;
         
         // Store polygon/polyline points
+        // NOTE: For isometric, renderorder handles Y-flip in position transform, not flipY
+        // Only apply flipY for orthogonal maps
+        bool shouldFlipPolyY = config_.flipY && (config_.mapOrientation != "isometric");
         nlohmann::json polygon = nlohmann::json::array();
         const auto& points = (obj.objectType == ObjectType::Polygon) ? obj.polygon : obj.polyline;
         
@@ -489,7 +495,7 @@ namespace Tiled {
         {
             nlohmann::json point = nlohmann::json::object();
             point["x"] = pt.x;
-            point["y"] = config_.flipY ? -pt.y : pt.y;
+            point["y"] = shouldFlipPolyY ? -pt.y : pt.y;
             polygon.push_back(point);
         }
         
@@ -521,11 +527,14 @@ namespace Tiled {
         entity->position = TransformObjectPosition(obj.x, obj.y, layerOffsetX, layerOffsetY);
 
         // Store polyline points in overrides
+        // NOTE: For isometric, renderorder handles Y-flip in position transform, not flipY
+        // Only apply flipY for orthogonal maps
+        bool shouldFlipPolyY = config_.flipY && (config_.mapOrientation != "isometric");
         nlohmann::json path = nlohmann::json::array();
         for (const auto& pt : obj.polyline) {
             nlohmann::json point = nlohmann::json::object();
             point["x"] = pt.x;
-            point["y"] = config_.flipY ? -pt.y : pt.y;
+            point["y"] = shouldFlipPolyY ? -pt.y : pt.y;
             path.push_back(point);
         }
 
@@ -665,60 +674,45 @@ namespace Tiled {
 
         if (isIsometric)
         {
-            // Enhanced logging for debugging entity positions
-            // Log when coordinates are extreme AND (offsets are active OR layer offsets present)
-            const float LOG_THRESHOLD_X_MAX = 2000.0f;
-            const float LOG_THRESHOLD_X_MIN = -1000.0f;
-            const float LOG_THRESHOLD_Y_MAX = 2000.0f;
-            const float LOG_THRESHOLD_Y_MIN = -300.0f;
-            
-            bool isExtremeCoordinate = (x > LOG_THRESHOLD_X_MAX || x < LOG_THRESHOLD_X_MIN || 
-                                       y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN);
-            bool hasAnyOffsets = hasOffsets_ || (layerOffsetX != 0.0f || layerOffsetY != 0.0f);
-            
-            // Log when coordinates are extreme AND offsets might affect positioning
-            bool shouldLog = isExtremeCoordinate && hasAnyOffsets;
-            
-            if (shouldLog) {
-                SYSTEM_LOG << "[TRANSFORM] Input TMJ coordinates: (" << x << ", " << y << ")\n";
-                SYSTEM_LOG << "  → Layer offsets: offsetX=" << layerOffsetX << ", offsetY=" << layerOffsetY << "\n";
-            }
+            // ALWAYS log for isometric transformations to track positioning issues
+            SYSTEM_LOG << "[ISO_TRANSFORM] Raw TMJ coordinates: (" << x << ", " << y << ")\n";
+            SYSTEM_LOG << "  → Layer offsets: offsetX=" << layerOffsetX << ", offsetY=" << layerOffsetY << "\n";
 
             // Step 1: Apply layer pixel offsets first
             float adjustedX = x + layerOffsetX;
             float adjustedY = y + layerOffsetY;
             
-            if (shouldLog) {
-                SYSTEM_LOG << "  → After layer offsets: (" << adjustedX << ", " << adjustedY << ")\n";
-            }
+            SYSTEM_LOG << "  → After layer offsets: (" << adjustedX << ", " << adjustedY << ")\n";
 
             // Step 2: Convert TMJ pixels to tile coordinates
-            float tileX = adjustedX / (static_cast<float>(config_.tileWidth) / 2.0f);
+            // FIX: TMJ object coordinates are in pixels, divide by actual tile dimensions
+            // NOT by half-width - that was causing double-sized X offsets
+            float tileX = adjustedX / static_cast<float>(config_.tileWidth);
             float tileY = adjustedY / static_cast<float>(config_.tileHeight);
 
-            if (shouldLog) {
-                SYSTEM_LOG << "  → Tile coordinates: (" << tileX << ", " << tileY << ")\n";
-            }
+            SYSTEM_LOG << "  → Tile coordinates (tileWidth=" << config_.tileWidth 
+                      << ", tileHeight=" << config_.tileHeight << "): (" << tileX << ", " << tileY << ")\n";
 
             // Step 3: Translate to chunk coordinate system (align entity coords with chunk origin offset)
             // For infinite maps, chunks may start at negative tile coordinates (e.g., -16, -16)
             // Entity coordinates need to be adjusted to align with this chunk coordinate system
-            tileX -= chunkOriginX_;
-            tileY -= chunkOriginY_;
-
-            if (shouldLog && (chunkOriginX_ != 0 || chunkOriginY_ != 0)) {
+            if (chunkOriginX_ != 0 || chunkOriginY_ != 0) {
+                tileX -= chunkOriginX_;
+                tileY -= chunkOriginY_;
                 SYSTEM_LOG << "  → After chunk origin offset (" << chunkOriginX_ << ", " << chunkOriginY_ 
                           << "): (" << tileX << ", " << tileY << ")\n";
             }
 
-            // Step 4: Apply render order transformation (use cached flag for performance)
+            // Step 4: Apply render order transformation (renderorder-based Y-flip for isometric)
             // For render orders with "up" (right-up, left-up), invert Y-axis
             // because Tiled's Y-axis points down (screen) but isometric Y-axis points up (world)
+            // NOTE: This is SEPARATE from orthogonal flipY - isometric uses renderorder, not config_.flipY
             if (requiresYFlip_) {
                 tileY = -tileY;
-                if (shouldLog) {
-                    SYSTEM_LOG << "  → After render order Y-flip: (" << tileX << ", " << tileY << ")\n";
-                }
+                SYSTEM_LOG << "  → After renderorder Y-flip (renderOrder=" << config_.renderOrder 
+                          << "): (" << tileX << ", " << tileY << ")\n";
+            } else {
+                SYSTEM_LOG << "  → No renderorder Y-flip needed (renderOrder=" << config_.renderOrder << ")\n";
             }
 
             // Step 5: Apply isometric projection with global offsets
@@ -730,19 +724,32 @@ namespace Tiled {
                 0.0f, 0.0f,  // offsetX, offsetY - already applied above
                 globalOffsetX_, globalOffsetY_  // Global correction offsets
             );
-            if (shouldLog) {
-                SYSTEM_LOG << "  → Global offsets: globalOffsetX=" << globalOffsetX_ 
+            
+            if (globalOffsetX_ != 0.0f || globalOffsetY_ != 0.0f) {
+                SYSTEM_LOG << "  → Global offsets applied: globalOffsetX=" << globalOffsetX_ 
                           << ", globalOffsetY=" << globalOffsetY_ << "\n";
-                SYSTEM_LOG << "  → Final ISO position: (" << isoPos.x << ", " << isoPos.y << ")\n";
-                SYSTEM_LOG << "  → Total difference from input: (" 
-                          << (isoPos.x - x) << ", " << (isoPos.y - y) << ")\n\n";
             }
+            SYSTEM_LOG << "  → Final ISO position: (" << isoPos.x << ", " << isoPos.y << ")\n";
+            SYSTEM_LOG << "  → Total delta from raw TMJ: (" 
+                      << (isoPos.x - x) << ", " << (isoPos.y - y) << ")\n\n";
 
             return Vector(isoPos.x, isoPos.y, 0.0f);
         }
         
-        // Orthogonal: apply layer offsets directly (global offsets not needed for orthogonal)
-        return Vector(x + layerOffsetX, y + layerOffsetY, 0.0f);
+        // Orthogonal: apply layer offsets and optionally flipY
+        // NOTE: Orthogonal flipY is DIFFERENT from isometric renderorder-based flip
+        float finalX = x + layerOffsetX;
+        float finalY = y + layerOffsetY;
+        
+        // Apply orthogonal Y-flip if configured (for orthogonal maps only)
+        if (config_.flipY) {
+            // For orthogonal, we need to flip Y relative to map height
+            // This converts Tiled's top-left origin to bottom-left origin
+            float mapHeightPixels = mapHeight_ * config_.tileHeight;
+            finalY = mapHeightPixels - finalY;
+        }
+        
+        return Vector(finalX, finalY, 0.0f);
     }
 
     void TiledToOlympe::InitializeCollisionMap(Olympe::Editor::LevelDefinition& level, 
@@ -1176,8 +1183,11 @@ namespace Tiled {
                         sector.position = Vector(obj.x, TransformY(obj.y, 0), 0.f);
                         
                         for (const auto& pt : obj.polygon) {
+                            // NOTE: For isometric, renderorder handles Y-flip, not flipY
+                            // Only apply flipY for orthogonal maps
+                            bool shouldFlipY = config_.flipY && (config_.mapOrientation != "isometric");
                             sector.polygon.push_back(Vector(
-                                pt.x, config_.flipY ? -pt.y : pt.y, 0.f
+                                pt.x, shouldFlipY ? -pt.y : pt.y, 0.f
                             ));
                         }
                         
@@ -1792,11 +1802,14 @@ namespace Tiled {
         entityDescriptor->rotation = obj.rotation;
         
         // Store polygon in overrides
+        // NOTE: For isometric, renderorder handles Y-flip in position transform, not flipY
+        // Only apply flipY for orthogonal maps
+        bool shouldFlipPolyY = config_.flipY && (config_.mapOrientation != "isometric");
         nlohmann::json polygon = nlohmann::json::array();
         for (const auto& pt : obj.polygon) {
             nlohmann::json point;
             point["x"] = pt.x;
-            point["y"] = config_.flipY ? -pt.y : pt.y;
+            point["y"] = shouldFlipPolyY ? -pt.y : pt.y;
             polygon.push_back(point);
         }
         
@@ -1825,11 +1838,14 @@ namespace Tiled {
         entityDescriptor->rotation = obj.rotation;
         
         // Store polyline in overrides
+        // NOTE: For isometric, renderorder handles Y-flip in position transform, not flipY
+        // Only apply flipY for orthogonal maps
+        bool shouldFlipPolyY = config_.flipY && (config_.mapOrientation != "isometric");
         nlohmann::json path = nlohmann::json::array();
         for (const auto& pt : obj.polyline) {
             nlohmann::json point;
             point["x"] = pt.x;
-            point["y"] = config_.flipY ? -pt.y : pt.y;
+            point["y"] = shouldFlipPolyY ? -pt.y : pt.y;
             path.push_back(point);
         }
         
@@ -1857,13 +1873,16 @@ namespace Tiled {
         entityDescriptor->rotation = obj.rotation;
         
         // Store polyline/polygon points
+        // NOTE: For isometric, renderorder handles Y-flip in position transform, not flipY
+        // Only apply flipY for orthogonal maps
+        bool shouldFlipPolyY = config_.flipY && (config_.mapOrientation != "isometric");
         nlohmann::json polygon = nlohmann::json::array();
         const auto& points = (obj.objectType == ObjectType::Polygon) ? obj.polygon : obj.polyline;
         
         for (const auto& pt : points) {
             nlohmann::json point;
             point["x"] = pt.x;
-            point["y"] = config_.flipY ? -pt.y : pt.y;
+            point["y"] = shouldFlipPolyY ? -pt.y : pt.y;
             polygon.push_back(point);
         }
         
