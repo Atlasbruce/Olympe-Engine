@@ -697,6 +697,15 @@ namespace Tiled {
             // 2. Convert TMJ screen coords to local screen coords (subtract iso origin)
             // 3. Apply inverse isometric projection to get world tile coords
             
+            // Validate tile dimensions to avoid divide-by-zero
+            if (config_.tileWidth <= 0 || config_.tileHeight <= 0)
+            {
+                SYSTEM_LOG << "  ⚠ ERROR: Invalid tile dimensions ("
+                          << config_.tileWidth << "x" << config_.tileHeight 
+                          << "), falling back to raw coordinates\n";
+                return Vector(x + layerOffsetX, y + layerOffsetY, 0.0f);
+            }
+            
             // Compute half tile dimensions
             float halfW = config_.tileWidth / 2.0f;
             float halfH = config_.tileHeight / 2.0f;
