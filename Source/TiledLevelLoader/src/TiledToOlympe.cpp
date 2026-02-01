@@ -691,19 +691,44 @@ namespace Tiled {
         if (config_.mapOrientation == "isometric")
         {
             // ISOMETRIC MODE:
-            // Keep TMJ object coordinates unchanged (no origin subtraction).
-            // Objects in TMJ are in isometric pixel space. The isometric origin
-            // will be computed in World from map bounds and applied ONLY during
-            // tile rendering (RenderTileImmediate), NOT during object loading.
-            // This ensures objects remain in raw TMJ coordinates + layer offsets.
+            // Convert TMJ object coordinates (screen-space isometric pixels) into world tile coordinates.
+            // TMJ objects are in isometric screen space. We need to:
+            // 1. Compute isometric origin based on map bounds
+            // 2. Convert TMJ screen coords to local screen coords (subtract iso origin)
+            // 3. Apply inverse isometric projection to get world tile coords
             
-            float finalX = x + layerOffsetX;
-            float finalY = y + layerOffsetY;
+            // Compute half tile dimensions
+            float halfW = config_.tileWidth / 2.0f;
+            float halfH = config_.tileHeight / 2.0f;
             
-            SYSTEM_LOG << "  → Isometric: keeping raw TMJ coords + layer offsets"
-                      << " -> Final: (" << finalX << ", " << finalY << ")\n";
+            // Compute isometric origin based on map bounds (min/max tile coords)
+            // This shifts the screen-space TMJ coordinates into a local iso screen coordinate system
+            float isoOriginX = (maxTileY_ - minTileX_) * halfW;
+            float isoOriginY = -(minTileX_ + minTileY_) * halfH;
             
-            return Vector(finalX, finalY, 0.0f);
+            SYSTEM_LOG << "  → Isometric bounds: minTile(" << minTileX_ << "," << minTileY_ 
+                      << "), maxTile(" << maxTileX_ << "," << maxTileY_ << ")\n";
+            SYSTEM_LOG << "  → Isometric origin: (" << isoOriginX << ", " << isoOriginY << ")\n";
+            
+            // Convert TMJ screen coords (x,y) to local screen coords
+            float tmjX = x + layerOffsetX;
+            float tmjY = y + layerOffsetY;
+            float screenX = tmjX - isoOriginX;
+            float screenY = tmjY - isoOriginY;
+            
+            SYSTEM_LOG << "  → TMJ coords (with layer offset): (" << tmjX << ", " << tmjY << ")\n";
+            SYSTEM_LOG << "  → Local screen coords: (" << screenX << ", " << screenY << ")\n";
+            
+            // Apply inverse isometric projection to get world tile coords
+            // Standard inverse isometric formulas:
+            // worldX = (screenX / halfW + screenY / halfH) / 2
+            // worldY = (screenY / halfH - screenX / halfW) / 2
+            float worldX = (screenX / halfW + screenY / halfH) / 2.0f;
+            float worldY = (screenY / halfH - screenX / halfW) / 2.0f;
+            
+            SYSTEM_LOG << "  → World tile coords: (" << worldX << ", " << worldY << ")\n";
+            
+            return Vector(worldX, worldY, 0.0f);
         }
         
         // ORTHOGONAL / HEXAGONAL / STAGGERED MODES:
