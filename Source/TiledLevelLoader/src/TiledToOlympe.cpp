@@ -686,12 +686,14 @@ namespace Tiled {
     {
         bool isIsometric = (config_.mapOrientation == "isometric");
 
-        // Log diagnostic information for all modes
+#ifdef DEBUG_COORDINATE_TRANSFORM
+        // Log diagnostic information for all modes (only in debug builds)
         SYSTEM_LOG << "[TRANSFORM] Mode: " << config_.mapOrientation 
                   << ", Infinite: " << (isInfiniteMap_ ? "true" : "false") << "\n";
         SYSTEM_LOG << "  → Raw TMJ coordinates: (" << x << ", " << y << ")\n";
         SYSTEM_LOG << "  → Chunk origin: (" << chunkOriginX_ << ", " << chunkOriginY_ << ")\n";
         SYSTEM_LOG << "  → Tile dimensions: " << config_.tileWidth << "x" << config_.tileHeight << "\n";
+#endif
 
         if (isIsometric)
         {
@@ -711,9 +713,6 @@ namespace Tiled {
             //
             // IMPORTANT: Do NOT apply renderorder Y flip to objects - that only applies to
             // tile rendering iteration order, not to coordinate transformations.
-
-            SYSTEM_LOG << "  → Map bounds: minTile(" << minTileX_ << ", " << minTileY_ 
-                      << ") maxTile(" << maxTileX_ << ", " << maxTileY_ << ")\n";
             
             // Start with raw Tiled coordinates (already in isometric pixel space)
             float adjustedX = x;
@@ -723,19 +722,25 @@ namespace Tiled {
             adjustedX += layerOffsetX;
             adjustedY += layerOffsetY;
             
+#ifdef DEBUG_COORDINATE_TRANSFORM
             SYSTEM_LOG << "  → After layer offsets (offsetX=" << layerOffsetX 
                       << ", offsetY=" << layerOffsetY << "): (" << adjustedX << ", " << adjustedY << ")\n";
+#endif
 
             // Apply global offsets if configured (for manual adjustments)
             if (globalOffsetX_ != 0.0f || globalOffsetY_ != 0.0f) {
                 adjustedX += globalOffsetX_;
                 adjustedY += globalOffsetY_;
+#ifdef DEBUG_COORDINATE_TRANSFORM
                 SYSTEM_LOG << "  → After global offsets (globalOffsetX=" << globalOffsetX_ 
                           << ", globalOffsetY=" << globalOffsetY_ << "): (" << adjustedX << ", " << adjustedY << ")\n";
+#endif
             }
             
+#ifdef DEBUG_COORDINATE_TRANSFORM
             SYSTEM_LOG << "  → Final isometric position: (" << adjustedX << ", " << adjustedY << ")\n";
             SYSTEM_LOG << "  → Total adjustment: (" << (adjustedX - x) << ", " << (adjustedY - y) << ")\n\n";
+#endif
 
             // Return isometric coordinates in the same system used by the tile renderer
             return Vector(adjustedX, adjustedY, 0.0f);
@@ -755,27 +760,36 @@ namespace Tiled {
             finalX -= chunkOffsetPixelsX;
             finalY -= chunkOffsetPixelsY;
             
+#ifdef DEBUG_COORDINATE_TRANSFORM
             SYSTEM_LOG << "  → Applying chunk origin offset: -(" 
                       << chunkOffsetPixelsX << ", " << chunkOffsetPixelsY << ")\n";
+#endif
         }
         
+#ifdef DEBUG_COORDINATE_TRANSFORM
         SYSTEM_LOG << "  → After layer and chunk offsets: (" << finalX << ", " << finalY << ")\n";
+#endif
         
-        // Apply Y-flip if configured (for orthogonal maps only)
-        // NOTE: This is NOT the same as renderorder Y flip - this is for coordinate system conversion
-        // Do NOT apply renderorder Y flip to objects
-        if (config_.flipY && config_.mapOrientation == "orthogonal") {
+        // Apply Y-flip for orthogonal coordinate system conversion (not renderorder flip)
+        bool shouldApplyOrthogonalYFlip = (config_.flipY && config_.mapOrientation == "orthogonal");
+        if (shouldApplyOrthogonalYFlip) {
             // For orthogonal, we need to flip Y relative to map height
             // This converts Tiled's top-left origin to bottom-left origin
+            // NOTE: This is NOT the same as renderorder Y flip - renderorder only affects
+            // tile iteration order, not coordinate transformations, and is not applied to objects
             float mapHeightPixels = (float) mapHeight_ * config_.tileHeight;
             float oldY = finalY;
             finalY = mapHeightPixels - finalY;
             
+#ifdef DEBUG_COORDINATE_TRANSFORM
             SYSTEM_LOG << "  → Applied Y-flip (flipY=true): " << oldY << " -> " << finalY << "\n";
+#endif
         }
         
+#ifdef DEBUG_COORDINATE_TRANSFORM
         SYSTEM_LOG << "  → Final position: (" << finalX << ", " << finalY << ")\n";
         SYSTEM_LOG << "  → Total adjustment: (" << (finalX - x) << ", " << (finalY - y) << ")\n\n";
+#endif
         
         return Vector(finalX, finalY, 0.0f);
     }
