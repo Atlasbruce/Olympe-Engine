@@ -230,6 +230,12 @@ namespace Tiled {
         int chunkOriginX_ = 0;
         int chunkOriginY_ = 0;
         
+        // Actual tile coordinate bounds (for bounds-aware isometric origin calculation)
+        int minTileX_ = 0;
+        int minTileY_ = 0;
+        int maxTileX_ = 0;
+        int maxTileY_ = 0;
+        
         // Global offsets for entity position adjustment
         // These offsets correct systematic positioning errors in isometric coordinate transformation
         float globalOffsetX_ = 0.0f;
