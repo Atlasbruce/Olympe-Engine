@@ -12,16 +12,16 @@ namespace Tiled {
                                           int startX, int startY)
     {
         // Apply startx/starty offsets to world coordinates
-        float adjustedX = worldX + startX;
-        float adjustedY = worldY + startY;
+        float offsetWorldX = worldX + startX;
+        float offsetWorldY = worldY + startY;
         
         // Standard isometric projection (diamond orientation)
         // Screen X = (worldX - worldY) * (tileWidth / 2)
         // Screen Y = (worldX + worldY) * (tileHeight / 2)
         
         Vector result;
-        result.x = (adjustedX - adjustedY) * ((float)tileWidth * 0.5f);
-        result.y = (adjustedX + adjustedY) * ((float)tileHeight * 0.5f);
+        result.x = (offsetWorldX - offsetWorldY) * ((float)tileWidth * 0.5f);
+        result.y = (offsetWorldX + offsetWorldY) * ((float)tileHeight * 0.5f);
         return result;
     }
 
