@@ -174,6 +174,8 @@ namespace Tiled {
     {
         layer.width = GetInt(j, "width");
         layer.height = GetInt(j, "height");
+        layer.startx = GetInt(j, "startx", 0);  // Parse startx offset
+        layer.starty = GetInt(j, "starty", 0);  // Parse starty offset
         layer.encoding = GetString(j, "encoding", "csv");
         layer.compression = GetString(j, "compression", "");
 

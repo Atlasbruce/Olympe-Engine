@@ -141,6 +141,8 @@ namespace Tiled {
         // Tile layer data
         int width;
         int height;
+        int startx;         // Starting X tile position offset (for infinite maps)
+        int starty;         // Starting Y tile position offset (for infinite maps)
         std::vector<uint32_t> data;  // Tile IDs (for finite maps)
         std::vector<TiledChunk> chunks;  // Chunks (for infinite maps)
         std::string encoding;        // "csv", "base64"
@@ -164,7 +166,8 @@ namespace Tiled {
             : id(0), type(LayerType::TileLayer), visible(true),
               opacity(1.0f), offsetx(0.0f), offsety(0.0f),
               parallaxx(1.0f), parallaxy(1.0f), tintcolor(0xFFFFFFFF),
-              width(0), height(0), repeatx(false), repeaty(false) {}
+              width(0), height(0), startx(0), starty(0),
+              repeatx(false), repeaty(false) {}
     };
 
     // Individual tile in tileset (for tile-specific properties)

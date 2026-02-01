@@ -8,19 +8,25 @@
 namespace Olympe {
 namespace Tiled {
 
-    Vector IsometricProjection::WorldToIso(float worldX, float worldY, int tileWidth, int tileHeight)
+    Vector IsometricProjection::WorldToIso(float worldX, float worldY, int tileWidth, int tileHeight,
+                                          int startX, int startY)
     {
+        // Apply startx/starty offsets to world coordinates
+        float adjustedX = worldX + startX;
+        float adjustedY = worldY + startY;
+        
         // Standard isometric projection (diamond orientation)
         // Screen X = (worldX - worldY) * (tileWidth / 2)
         // Screen Y = (worldX + worldY) * (tileHeight / 2)
         
         Vector result;
-        result.x = (worldX - worldY) * ((float)tileWidth * 0.5f);
-        result.y = (worldX + worldY) * ((float)tileHeight * 0.5f);
+        result.x = (adjustedX - adjustedY) * ((float)tileWidth * 0.5f);
+        result.y = (adjustedX + adjustedY) * ((float)tileHeight * 0.5f);
         return result;
     }
 
-    Vector IsometricProjection::IsoToWorld(float isoX, float isoY, int tileWidth, int tileHeight)
+    Vector IsometricProjection::IsoToWorld(float isoX, float isoY, int tileWidth, int tileHeight,
+                                          int startX, int startY)
     {
         // Inverse isometric projection
         // worldX = (isoX / (tileWidth/2) + isoY / (tileHeight/2)) / 2
@@ -32,6 +38,11 @@ namespace Tiled {
         
         result.x = (isoX / halfWidth + isoY / halfHeight) * 0.5f;
         result.y = (isoY / halfHeight - isoX / halfWidth) * 0.5f;
+        
+        // Apply startx/starty offsets (inverse)
+        result.x -= startX;
+        result.y -= startY;
+        
         return result;
     }
 
