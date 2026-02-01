@@ -674,43 +674,62 @@ namespace Tiled {
 
         if (isIsometric)
         {
-            // ALWAYS log for isometric transformations to track positioning issues
+            // FIX: Convert TMJ object coordinates to the same world-space coordinate system
+            // used by the isometric tile renderer.
+            //
+            // The tile renderer uses world iso coordinates (isoX, isoY) directly:
+            //   isoX = (worldX - worldY) * (tileWidth / 2)
+            //   isoY = (worldX + worldY) * (tileHeight / 2)
+            //
+            // TMJ stores object positions in Tiled's pixel coordinate system, which has
+            // an origin offset. For isometric maps, the north corner (tile 0,0) is rendered
+            // at pixel position (mapHeight * tileWidth / 2, 0) in Tiled's view.
+            //
+            // To align entity positions with the tile renderer, we need to:
+            // 1. Subtract the isometric map origin from TMJ coordinates
+            // 2. Apply layer offsets
+            // 3. Return the world-space isometric coordinates (NOT converted back to tile space)
+            //
+            // IMPORTANT: Do NOT apply renderorder Y flip to objects - that only applies to
+            // tile rendering iteration order, not to coordinate transformations.
+
+            // Calculate isometric map origin (where Tiled places the north corner)
+            float mapOriginX = (float)mapHeight_ * (float)config_.tileWidth / 2.0f;
+            float mapOriginY = 0.0f;  // North corner is at Y=0 in Tiled's coordinate system
+
             SYSTEM_LOG << "[ISO_TRANSFORM] Raw TMJ (Tiled Map JSON) coordinates: (" << x << ", " << y << ")\n";
-            SYSTEM_LOG << "  → Layer offsets: offsetX=" << layerOffsetX << ", offsetY=" << layerOffsetY << "\n";
+            SYSTEM_LOG << "  → Map origin (mapHeight=" << mapHeight_ << ", tileWidth=" << config_.tileWidth 
+                      << "): (" << mapOriginX << ", " << mapOriginY << ")\n";
 
-            // FIX: Treat TMJ object coordinates as screen-space isometric positions
-            // TMJ stores object positions in the final rendered screen space for isometric maps,
-            // so we should NOT derive tile coordinates and re-project them (double projection error).
-            // 
-            // Why we removed tile coordinate conversion, chunk origin offsets, and WorldToIso call:
-            // - TMJ coordinates are ALREADY in the target isometric screen-space coordinate system
-            // - Previous code was treating them as world coordinates and re-projecting, causing errors
-            // - Chunk origins apply to tile rendering, not pre-positioned objects in screen space
-            // - Render-order Y-flip applies to tile placement, not objects already positioned in screen space
-            // 
-            // Instead, apply only layer offsets and global offsets directly.
+            // Step 1: Subtract map origin to convert from Tiled's coordinate system
+            // to the world-space isometric coordinate system
+            float adjustedX = x - mapOriginX;
+            float adjustedY = y - mapOriginY;
             
-            // Step 1: Apply layer pixel offsets
-            float screenX = x + layerOffsetX;
-            float screenY = y + layerOffsetY;
-            
-            SYSTEM_LOG << "  → After layer offsets: (" << screenX << ", " << screenY << ")\n";
+            SYSTEM_LOG << "  → After subtracting map origin: (" << adjustedX << ", " << adjustedY << ")\n";
 
-            // Step 2: Apply global offsets if needed
-            // Global offsets correct any remaining systematic positioning errors
+            // Step 2: Apply layer pixel offsets
+            adjustedX += layerOffsetX;
+            adjustedY += layerOffsetY;
+            
+            SYSTEM_LOG << "  → Layer offsets (offsetX=" << layerOffsetX << ", offsetY=" << layerOffsetY << "): "
+                      << "(" << adjustedX << ", " << adjustedY << ")\n";
+
+            // Step 3: Apply global offsets if configured
             if (globalOffsetX_ != 0.0f || globalOffsetY_ != 0.0f) {
-                screenX += globalOffsetX_;
-                screenY += globalOffsetY_;
-                SYSTEM_LOG << "  → Global offsets applied: globalOffsetX=" << globalOffsetX_ 
-                          << ", globalOffsetY=" << globalOffsetY_ << "\n";
-                SYSTEM_LOG << "  → After global offsets: (" << screenX << ", " << screenY << ")\n";
+                adjustedX += globalOffsetX_;
+                adjustedY += globalOffsetY_;
+                SYSTEM_LOG << "  → Global offsets (globalOffsetX=" << globalOffsetX_ 
+                          << ", globalOffsetY=" << globalOffsetY_ << "): "
+                          << "(" << adjustedX << ", " << adjustedY << ")\n";
             }
             
-            SYSTEM_LOG << "  → Final screen position: (" << screenX << ", " << screenY << ")\n";
-            SYSTEM_LOG << "  → Total delta from raw TMJ: (" 
-                      << (screenX - x) << ", " << (screenY - y) << ")\n\n";
+            SYSTEM_LOG << "  → Final world isometric position: (" << adjustedX << ", " << adjustedY << ")\n";
+            SYSTEM_LOG << "  → Total adjustment: (" << (adjustedX - x) << ", " << (adjustedY - y) << ")\n\n";
 
-            return Vector(screenX, screenY, 0.0f);
+            // Return world-space isometric coordinates
+            // These coordinates are in the same system used by the tile renderer
+            return Vector(adjustedX, adjustedY, 0.0f);
         }
         
         // Orthogonal: apply layer offsets and optionally flipY
