@@ -876,6 +876,13 @@ namespace Tiled {
                     tileDef.visible = layer->visible;
                     tileDef.isInfinite = !layer->chunks.empty();
                     
+                    // Debug: Log startx/starty offsets
+                    if (layer->startx != 0 || layer->starty != 0) {
+                        SYSTEM_LOG << "  -> [DEBUG] Tile Layer '" << layer->name 
+                                   << "' has startx=" << layer->startx 
+                                   << ", starty=" << layer->starty << "\n";
+                    }
+                    
                     // Handle infinite maps with chunks
                     if (tileDef.isInfinite) {
                         for (const auto& chunk : layer->chunks) {

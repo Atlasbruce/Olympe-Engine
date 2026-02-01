@@ -55,6 +55,31 @@ int main()
     SYSTEM_LOG << "Screen -> World (" << worldPos.x << ", " << worldPos.y << ")" << std::endl;
     
     // ========================================================================
+    // Layer Offsets (startx/starty)
+    // ========================================================================
+    
+    SYSTEM_LOG << "\n--- Layer Offsets Example ---" << std::endl;
+    
+    // Example: Working with layer offsets (for infinite maps)
+    // If a tile layer has startx=-80, starty=-16, tile[0][0] in that layer
+    // represents tile at world position (-80, -16), not (0, 0)
+    int startX = -80;  // Example layer offset
+    int startY = -16;  // Example layer offset
+    int layerTileX = 0;  // First tile in layer data
+    int layerTileY = 0;
+    
+    Vec2 screenPosWithOffset = IsometricProjection::WorldToIso(
+        layerTileX, layerTileY, map.tilewidth, map.tileheight, startX, startY);
+    SYSTEM_LOG << "Layer tile [0,0] with offset (" << startX << ", " << startY 
+               << ") -> Screen (" << screenPosWithOffset.x << ", " << screenPosWithOffset.y << ")" << std::endl;
+    
+    // Convert back
+    Vec2 worldPosWithOffset = IsometricProjection::IsoToWorld(
+        screenPosWithOffset.x, screenPosWithOffset.y, map.tilewidth, map.tileheight, startX, startY);
+    SYSTEM_LOG << "Screen -> World (with offset) (" << worldPosWithOffset.x << ", " 
+               << worldPosWithOffset.y << ")" << std::endl;
+    
+    // ========================================================================
     // Mouse Picking
     // ========================================================================
     

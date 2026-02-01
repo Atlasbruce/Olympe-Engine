@@ -375,3 +375,7 @@ Blueprints/test_*.json
 
 # CMake build directory
 build/
+
+# Test binaries
+test_startx_starty
+test_*
