@@ -1,0 +1,958 @@
+{
+  "compressionlevel": -1,
+  "height": 20,
+  "infinite": true,
+  "layers": [
+    {
+      "class": "layer",
+      "id": 9,
+      "image": "../Resources/sky.jpg",
+      "imageheight": 1024,
+      "imagewidth": 1024,
+      "name": "layer_skywater",
+      "opacity": 1,
+      "parallaxx": 0.8,
+      "parallaxy": 0.8,
+      "repeatx": true,
+      "repeaty": true,
+      "type": "imagelayer",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "chunks": [
+        {
+          "data": "cQAAAHAAAAB3AAAAdwAAAHEAAAB4AAAAbgAAAHIAAABuAAAAbwAAAG4AAABwAAAAeAAAAG4AAABuAAAAeAAAAG4AAAB2AAAAcAAAAHAAAAB3AAAAbgAAAHIAAABvAAAAcAAAAHAAAABvAAAAcQAAAHEAAAB3AAAAcQAAAHEAAAB4AAAAeAAAAHQAAAB0AAAAbwAAAHUAAABuAAAAcQAAAG4AAABuAAAAdwAAAG8AAAB1AAAAdQAAAHYAAABxAAAAdgAAAG8AAABzAAAAdwAAAG8AAABzAAAAbwAAAG8AAAByAAAAcQAAAHUAAAB0AAAAdQAAAG4AAABwAAAAdgAAAHYAAABwAAAAcwAAAHMAAABzAAAAbgAAAG4AAABvAAAAbgAAAHEAAAB0AAAAdAAAAHUAAABuAAAAbwAAAHAAAABwAAAAcQAAAHQAAAB1AAAAcwAAAHcAAAByAAAAbwAAAG8AAABvAAAAdwAAAHYAAAB0AAAAcwAAAHgAAABuAAAAcAAAAHgAAAB1AAAAcwAAAHcAAAB3AAAAcgAAAHAAAABxAAAAcQAAAHYAAAB1AAAAbgAAAG8AAABwAAAAbgAAAG4AAABxAAAAdgAAAHcAAAB1AAAAbgAAAG8AAABvAAAAcQAAAHEAAAB0AAAAdQAAAHQAAABzAAAAbgAAAHYAAAB4AAAAcQAAAHcAAAB0AAAAdwAAAG8AAABvAAAAbwAAAG8AAABuAAAAcwAAAHYAAAB3AAAAbwAAAG8AAAB4AAAAcQAAAHAAAABuAAAAdwAAAHYAAAB2AAAAbgAAAG8AAABvAAAAbgAAAHcAAAB2AAAAdAAAAHQAAABwAAAAeAAAAHAAAAB3AAAAdwAAAG8AAAB2AAAAdQAAAHIAAABuAAAAbwAAAG4AAABzAAAAcwAAAHQAAAB0AAAAeAAAAHEAAAB2AAAAcAAAAHcAAABvAAAAdQAAAG4AAABvAAAAcAAAAHAAAABvAAAAbgAAAHcAAABuAAAAdgAAAHEAAABuAAAAeAAAAG8AAAB0AAAAbwAAAHUAAABzAAAAcQAAAG4AAABuAAAAbgAAAG8AAAB1AAAAdQAAAHQAAABxAAAAbwAAAG8AAABxAAAAdwAAAG8AAABzAAAAbwAAAG8AAAByAAAAcQAAAG8AAAB0AAAAdQAAAG4AAABvAAAAdgAAAHEAAABwAAAAdwAAAHYAAABxAAAAdwAAAG4AAABvAAAAbgAAAHEAAABvAAAAbwAAAG4AAAB3AAAAbwAAAHAAAABuAAAAcQAAAG8AAABuAAAAcQAAAHAAAAB3AAAAbwAAAG8AAABvAAAAbgAAAHgAAAB2AAAAcAAAAHgAAABuAAAAdgAAAA==",
+          "height": 16,
+          "width": 16,
+          "x": -16,
+          "y": -24
+        },
+        {
+          "data": "bgAAAHcAAAB2AAAAdgAAAHYAAAB3AAAAbwAAAG4AAABvAAAAbgAAAG4AAAB3AAAAdwAAAG4AAAB2AAAAdgAAAG8AAABvAAAAbgAAAHYAAABuAAAAdgAAAHcAAAB2AAAAbwAAAHYAAABvAAAAbwAAAG8AAAB3AAAAdwAAAHcAAAB3AAAAdwAAAHcAAABvAAAAdwAAAG8AAABvAAAAdgAAAHYAAAB2AAAAdgAAAG4AAABuAAAAbgAAAG8AAAB3AAAAbwAAAG4AAAB2AAAAdwAAAHYAAABuAAAAdgAAAHYAAAB2AAAAcwAAAHUAAABuAAAAbgAAAG8AAABuAAAAbwAAAG4AAAB2AAAAdgAAAG8AAABuAAAAbgAAAHQAAAB1AAAAcwAAAHYAAAB1AAAAdQAAAHQAAABvAAAAdgAAAG4AAAB2AAAAdgAAAHcAAAB2AAAAbgAAAHMAAABxAAAAcQAAAHAAAAByAAAAeAAAAG4AAABuAAAAcwAAAHYAAABuAAAAdgAAAG8AAABuAAAAdgAAAHMAAAB4AAAAcQAAAHEAAABwAAAAcQAAAHAAAAB4AAAAdQAAAHYAAABuAAAAdwAAAHcAAAB2AAAAbgAAAHYAAABuAAAAcQAAAHIAAABxAAAAcAAAAHIAAABwAAAAcQAAAHQAAAB2AAAAdgAAAHcAAAB2AAAAbgAAAHcAAAB0AAAAdQAAAHgAAAB4AAAAcAAAAHAAAAB4AAAAcgAAAHAAAAB1AAAAcwAAAG8AAAB3AAAAbwAAAHcAAABvAAAAcwAAAHMAAAB4AAAAcAAAAHgAAABwAAAAcAAAAHEAAAByAAAAcwAAAHUAAABuAAAAdwAAAHcAAAB2AAAAdgAAAHUAAAB2AAAAcQAAAHAAAABxAAAAcAAAAHAAAAB4AAAAeAAAAHMAAABuAAAAdgAAAG8AAABvAAAAbgAAAHYAAABzAAAAdQAAAHYAAAByAAAAcQAAAHIAAABxAAAAcQAAAHQAAAB2AAAAdgAAAHcAAABuAAAAdwAAAHcAAABvAAAAdwAAAHQAAAB0AAAAdQAAAG4AAAB1AAAAbgAAAHMAAABzAAAAcwAAAG8AAAB3AAAAbwAAAG4AAAB2AAAAdwAAAHYAAABvAAAAdgAAAHYAAAB2AAAAcwAAAHUAAABuAAAAbgAAAG8AAABuAAAAbwAAAG8AAAB2AAAAdgAAAG8AAABvAAAAdwAAAG8AAAB2AAAAbgAAAHcAAAB2AAAAdgAAAG8AAABvAAAAdgAAAG4AAABuAAAAdgAAAHcAAAB3AAAAdwAAAG4AAABvAAAAbwAAAG4AAAB2AAAAdwAAAG8AAABuAAAAbgAAAHYAAABuAAAAbwAAAA==",
+          "height": 16,
+          "width": 16,
+          "x": -16,
+          "y": -40
+        },
+        {
+          "data": "dwAAAHcAAAB2AAAAbgAAAHYAAAB3AAAAbgAAAG4AAABuAAAAdwAAAG8AAAB2AAAAdwAAAHcAAAB3AAAAdgAAAHYAAABvAAAAdgAAAG8AAAB3AAAAbwAAAG4AAAB3AAAAbwAAAHcAAAB3AAAAbgAAAG8AAAB2AAAAbwAAAHYAAABuAAAAdwAAAHYAAABvAAAAdwAAAHcAAABvAAAAbgAAAG8AAAB2AAAAdwAAAHcAAABvAAAAbgAAAG8AAAB2AAAAbwAAAG4AAAB2AAAAdwAAAHYAAABzAAAAdQAAAHYAAABuAAAAcwAAAG4AAABuAAAAbgAAAHYAAAB3AAAAbwAAAG8AAABvAAAAdwAAAHcAAABzAAAAcwAAAHQAAAB1AAAAbgAAAHQAAAB1AAAAdgAAAHQAAAB3AAAAdgAAAG8AAAB2AAAAdwAAAG4AAABzAAAAdQAAAG4AAABwAAAAcAAAAHEAAAByAAAAcAAAAHMAAAB2AAAAcwAAAG8AAABvAAAAbgAAAHcAAAB3AAAAdgAAAHMAAABxAAAAcAAAAHgAAABwAAAAeAAAAHEAAAByAAAAbgAAAHMAAAB2AAAAbgAAAG4AAABuAAAAbgAAAG4AAAB0AAAAcgAAAHgAAABwAAAAcAAAAHEAAABwAAAAcQAAAHYAAABuAAAAdwAAAHcAAABvAAAAbwAAAG8AAABzAAAAcwAAAHEAAABxAAAAcQAAAHEAAABwAAAAcAAAAHEAAAB2AAAAdQAAAG4AAAB3AAAAbwAAAHYAAABuAAAAcwAAAHYAAABxAAAAcAAAAHEAAABwAAAAeAAAAHEAAABwAAAAdAAAAHMAAABvAAAAdgAAAHcAAAB2AAAAbgAAAHUAAABuAAAAcAAAAHAAAABwAAAAeAAAAHEAAAByAAAAeAAAAHYAAAB2AAAAdgAAAG4AAABvAAAAdgAAAG8AAAB2AAAAdAAAAHMAAAB4AAAAcQAAAHgAAAB4AAAAcAAAAHQAAAB1AAAAdAAAAHYAAABvAAAAdwAAAHYAAABvAAAAdwAAAHYAAAB0AAAAcwAAAHQAAABuAAAAdgAAAHYAAAB0AAAAcwAAAG8AAAB2AAAAbwAAAG4AAAB2AAAAdwAAAHYAAABuAAAAdQAAAHYAAABuAAAAcwAAAG4AAABuAAAAbgAAAHYAAAB3AAAAbwAAAG4AAABvAAAAdwAAAHcAAABuAAAAbgAAAG8AAAB2AAAAdwAAAG8AAAB2AAAAdwAAAG8AAAB3AAAAdgAAAG8AAABvAAAAdwAAAG4AAABuAAAAdgAAAG8AAABuAAAAbgAAAG8AAAB2AAAAbgAAAG4AAAB3AAAAbgAAAG8AAABvAAAAbgAAAA==",
+          "height": 16,
+          "width": 16,
+          "x": 0,
+          "y": -40
+        },
+        {
+          "data": "eAAAAHcAAABxAAAAcQAAAHcAAAByAAAAcQAAAHEAAABwAAAAcgAAAHAAAAB3AAAAcQAAAHEAAAByAAAAcgAAAHIAAABvAAAAdQAAAG8AAAB2AAAAcAAAAHMAAAB0AAAAbgAAAHYAAAB3AAAAdQAAAHMAAAB0AAAAdAAAAHIAAABwAAAAdgAAAHYAAABuAAAAbgAAAHIAAAB2AAAAdgAAAG4AAABvAAAAdwAAAG4AAABzAAAAbgAAAHYAAABwAAAAeAAAAG4AAAB1AAAAbgAAAHQAAAB4AAAAbgAAAHMAAAB0AAAAcwAAAHAAAAB2AAAAbgAAAHYAAABvAAAAcQAAAHAAAAB1AAAAdgAAAHQAAAB2AAAAcQAAAG8AAAB2AAAAdQAAAG8AAABwAAAAdgAAAG8AAABvAAAAdAAAAHAAAAB4AAAAcgAAAHgAAAB4AAAAdwAAAHgAAABxAAAAcQAAAHgAAAByAAAAeAAAAHgAAAB3AAAAcQAAAHgAAABxAAAAdwAAAHYAAABuAAAAcwAAAG8AAAB3AAAAdAAAAG4AAABvAAAAbwAAAHcAAAB2AAAAcwAAAG4AAABuAAAAcgAAAHEAAAB0AAAAdAAAAHQAAABvAAAAcQAAAHQAAABzAAAAcwAAAG4AAABwAAAAbwAAAG8AAAB2AAAAdQAAAHAAAAByAAAAbwAAAHYAAAB0AAAAdgAAAHEAAAB1AAAAdQAAAHMAAAB0AAAAcAAAAHQAAABuAAAAcwAAAHQAAABwAAAAcQAAAG4AAABzAAAAbwAAAG4AAABxAAAAdgAAAHMAAAB2AAAAbwAAAHAAAAB1AAAAdgAAAG4AAABuAAAAdwAAAHcAAABxAAAAcQAAAHcAAAByAAAAcQAAAHEAAABwAAAAcgAAAHAAAAB3AAAAcQAAAHEAAAByAAAAcgAAAHIAAABwAAAAdQAAAG8AAAB2AAAAbwAAAHAAAAB0AAAAbgAAAHYAAABzAAAAcQAAAHMAAAB0AAAAdAAAAHYAAAByAAAAcgAAAHYAAABuAAAAbgAAAG4AAAByAAAAdgAAAG4AAABvAAAAdAAAAHEAAABzAAAAbgAAAHYAAAB2AAAAdwAAAHIAAAB1AAAAbgAAAHQAAABzAAAAcgAAAHMAAAB0AAAAcwAAAHMAAAB3AAAAbgAAAHYAAABvAAAAbwAAAHgAAAB4AAAAdgAAAHQAAAB2AAAAdAAAAHcAAAB2AAAAdQAAAG8AAAB1AAAAeAAAAG8AAABvAAAAdAAAAHYAAAB4AAAAcgAAAHgAAAB4AAAAdwAAAHgAAABxAAAAcQAAAHgAAAByAAAAeAAAAHgAAAB3AAAAcQAAAHgAAABxAAAAcAAAAA==",
+          "height": 16,
+          "width": 16,
+          "x": -32,
+          "y": -48
+        },
+        {
+          "data": "cwAAAHYAAAB3AAAAdwAAAHYAAAB0AAAAcwAAAHMAAAB3AAAAbwAAAHYAAABvAAAAbwAAAG4AAABuAAAAdAAAAG4AAAB2AAAAbwAAAHQAAABwAAAAdgAAAHMAAAB3AAAAcwAAAHYAAAB3AAAAbwAAAHAAAABvAAAAdgAAAG4AAAB3AAAAcwAAAHcAAAB1AAAAdAAAAG4AAABuAAAAbgAAAHcAAAB2AAAAbgAAAG4AAAB2AAAAbwAAAHUAAABvAAAAbgAAAHQAAABuAAAAbgAAAHMAAABuAAAAbgAAAHMAAAB0AAAAdwAAAHYAAABzAAAAdAAAAHYAAABzAAAAdgAAAHcAAABvAAAAbgAAAHMAAAB2AAAAcwAAAHYAAAB0AAAAcAAAAG8AAABzAAAAcwAAAHQAAAB0AAAAbwAAAG4AAAB0AAAAbwAAAHcAAABwAAAAbwAAAG4AAABzAAAAdgAAAG8AAAB2AAAAbwAAAG4AAAB0AAAAbwAAAHMAAABzAAAAdwAAAHcAAAB1AAAAdQAAAG4AAAB2AAAAbgAAAG4AAAB0AAAAdgAAAG4AAABvAAAAcwAAAHcAAAB3AAAAbwAAAHMAAAB2AAAAbgAAAG4AAAB3AAAAbgAAAG8AAABzAAAAbwAAAG4AAABzAAAAbwAAAHcAAABwAAAAdwAAAHUAAAB2AAAAcwAAAHQAAABuAAAAbwAAAG4AAAB1AAAAbwAAAHAAAABuAAAAbwAAAHYAAAB2AAAAbwAAAHMAAAB2AAAAbwAAAHYAAAB3AAAAcwAAAG4AAABwAAAAcwAAAHYAAABzAAAAbgAAAHAAAAB0AAAAcwAAAHcAAAB2AAAAbwAAAHYAAAB3AAAAdwAAAHYAAAB0AAAAcwAAAHMAAAB3AAAAbwAAAHYAAABvAAAAbwAAAG4AAABuAAAAdAAAAHcAAAB2AAAAbwAAAHQAAABwAAAAdgAAAHMAAAB3AAAAcwAAAHYAAAB3AAAAbwAAAHAAAABvAAAAdgAAAG4AAAB2AAAAcwAAAHcAAAB1AAAAdAAAAG4AAABuAAAAbgAAAHcAAAB2AAAAbgAAAG4AAAB2AAAAbwAAAHUAAABvAAAAdQAAAHQAAABuAAAAbgAAAHMAAABuAAAAbgAAAHMAAAB0AAAAdwAAAHYAAABzAAAAdAAAAHYAAABzAAAAdgAAAG8AAABvAAAAbgAAAHMAAAB2AAAAcwAAAHYAAAB0AAAAcAAAAG8AAABzAAAAcwAAAHQAAAB0AAAAbwAAAG4AAABuAAAAbwAAAHcAAABwAAAAbwAAAG4AAABzAAAAdgAAAG8AAAB2AAAAbwAAAG4AAAB0AAAAbwAAAHMAAABzAAAAbwAAAA==",
+          "height": 16,
+          "width": 16,
+          "x": 16,
+          "y": -48
+        },
+        {
+          "data": "dAAAAHgAAAByAAAAcAAAAHMAAAByAAAAcAAAAHAAAAByAAAAeAAAAHMAAAByAAAAcAAAAHgAAAB3AAAAdwAAAHUAAABzAAAAdgAAAHgAAAB1AAAAcQAAAHgAAAByAAAAeAAAAHEAAAB1AAAAcQAAAHEAAABzAAAAcQAAAHgAAAByAAAAcwAAAHIAAABwAAAAcAAAAHIAAABxAAAAcgAAAHAAAAByAAAAdAAAAHYAAAB0AAAAcAAAAHQAAAB0AAAAcwAAAHYAAAB4AAAAdAAAAHQAAABwAAAAcQAAAHIAAABwAAAAcQAAAHUAAABxAAAAdQAAAHAAAAByAAAAcAAAAHEAAAB3AAAAcQAAAHcAAABzAAAAcwAAAHIAAAB4AAAAcAAAAHAAAAB2AAAAcgAAAHQAAAB4AAAAcQAAAHYAAAB3AAAAcgAAAHIAAAB4AAAAdwAAAHQAAABwAAAAcAAAAHEAAAByAAAAcwAAAHgAAAB0AAAAdQAAAHEAAAB2AAAAdgAAAHUAAABxAAAAcQAAAHMAAAB0AAAAcAAAAHIAAABxAAAAcAAAAHYAAAB4AAAAcAAAAHQAAAB3AAAAdAAAAHIAAAB3AAAAdQAAAHYAAABzAAAAeAAAAHEAAABxAAAAcQAAAHIAAABxAAAAcgAAAHYAAABxAAAAdwAAAHUAAAB3AAAAdQAAAHAAAAB0AAAAcwAAAHUAAABwAAAAcAAAAHEAAABwAAAAcgAAAHYAAABwAAAAcAAAAHAAAAB1AAAAeAAAAHgAAAB4AAAAcwAAAHMAAAB0AAAAcAAAAHIAAABwAAAAcAAAAHYAAAByAAAAdQAAAHcAAABzAAAAeAAAAHgAAAByAAAAcAAAAHMAAAByAAAAcgAAAHAAAAByAAAAeAAAAHAAAAByAAAAcAAAAHgAAAB3AAAAdwAAAHIAAABzAAAAdgAAAHgAAAB1AAAAcQAAAHAAAAByAAAAeAAAAHEAAAB4AAAAcQAAAHEAAABzAAAAcQAAAHgAAABxAAAAcwAAAHIAAABwAAAAcAAAAHIAAAB4AAAAcgAAAHAAAAByAAAAcQAAAHYAAAB0AAAAcAAAAHQAAAB0AAAAcAAAAHYAAAB4AAAAdAAAAHQAAABwAAAAeAAAAHIAAABwAAAAcQAAAHAAAABxAAAAdQAAAHAAAAByAAAAcAAAAHcAAAB3AAAAcQAAAHcAAABzAAAAcwAAAHIAAAB4AAAAcAAAAHAAAAByAAAAcgAAAHQAAAB4AAAAcQAAAHYAAABwAAAAcgAAAHIAAAB4AAAAdwAAAHQAAABxAAAAcAAAAHEAAAByAAAAeAAAAHgAAAB0AAAAdQAAAHEAAAB2AAAAcQAAAA==",
+          "height": 16,
+          "width": 16,
+          "x": -16,
+          "y": -56
+        },
+        {
+          "data": "cwAAAHgAAAB3AAAAcwAAAHAAAAB2AAAAcgAAAHAAAABxAAAAcgAAAHgAAAB2AAAAcQAAAHcAAAB3AAAAeAAAAHgAAAB1AAAAdQAAAHEAAAB2AAAAcgAAAHAAAAB4AAAAcgAAAHIAAAByAAAAdgAAAHAAAAByAAAAcQAAAHgAAAByAAAAcgAAAHYAAABwAAAAdQAAAHcAAABwAAAAcAAAAHgAAAByAAAAcgAAAHUAAAByAAAAdAAAAHMAAAB4AAAAdgAAAHgAAABxAAAAcQAAAHcAAAB0AAAAcgAAAHgAAABxAAAAcgAAAHEAAAB0AAAAcwAAAHMAAAByAAAAcQAAAHAAAAByAAAAdwAAAHUAAAB1AAAAcgAAAHEAAAB4AAAAcgAAAHIAAABxAAAAdgAAAHIAAAB2AAAAcwAAAHAAAABwAAAAdgAAAHgAAAB2AAAAcgAAAHgAAAB4AAAAcQAAAHIAAABxAAAAdQAAAHAAAABwAAAAcgAAAHQAAAB3AAAAdQAAAHgAAAByAAAAcwAAAHAAAAB0AAAAcQAAAHAAAABwAAAAcAAAAHMAAAB1AAAAcAAAAHUAAAByAAAAcwAAAHIAAABwAAAAcwAAAHQAAAB3AAAAdQAAAHIAAAByAAAAeAAAAHEAAAB4AAAAdAAAAHMAAAB2AAAAeAAAAHYAAAB4AAAAeAAAAHQAAAB0AAAAcAAAAHMAAABxAAAAcQAAAHAAAABxAAAAcQAAAHAAAAB4AAAAdwAAAHIAAABwAAAAdAAAAHIAAABxAAAAdAAAAHcAAAB0AAAAeAAAAHEAAAByAAAAcAAAAHcAAABzAAAAcQAAAHIAAABxAAAAcwAAAHgAAAB3AAAAcwAAAHAAAAB2AAAAdwAAAHAAAABxAAAAcgAAAHIAAAB2AAAAcQAAAHcAAAB3AAAAeAAAAHcAAAB1AAAAdQAAAHEAAAB2AAAAcgAAAHMAAAB4AAAAcgAAAHIAAABxAAAAdgAAAHAAAAByAAAAcQAAAHgAAAB1AAAAcgAAAHYAAABwAAAAdQAAAHcAAABzAAAAcAAAAHgAAAByAAAAcgAAAHUAAAByAAAAdAAAAHMAAAB4AAAAcwAAAHgAAABxAAAAcQAAAHcAAAB0AAAAdgAAAHgAAABxAAAAcgAAAHAAAAB0AAAAcwAAAHMAAAByAAAAcQAAAHEAAAByAAAAdwAAAHUAAAB1AAAAcgAAAHIAAAB4AAAAcgAAAHIAAABxAAAAdgAAAHIAAAB2AAAAcwAAAHAAAABzAAAAdgAAAHgAAAB2AAAAcgAAAHgAAAB0AAAAcQAAAHIAAABxAAAAeAAAAHAAAABwAAAAcgAAAHQAAAB3AAAAdgAAAA==",
+          "height": 16,
+          "width": 16,
+          "x": 0,
+          "y": -56
+        }
+      ],
+      "compression": "",
+      "encoding": "base64",
+      "height": 64,
+      "id": 2,
+      "name": "graphicmap_ground",
+      "opacity": 1,
+      "startx": -32,
+      "starty": -32,
+      "type": "tilelayer",
+      "visible": true,
+      "width": 80,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "draworder": "topdown",
+      "id": 8,
+      "name": "Sectors",
+      "objects": [
+        {
+          "height": 0,
+          "id": 1,
+          "name": "Sector_Gardens_Entrance",
+          "polygon": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 600,
+              "y": 0
+            },
+            {
+              "x": 600,
+              "y": 400
+            },
+            {
+              "x": 0,
+              "y": 400
+            }
+          ],
+          "rotation": 0,
+          "type": "sector",
+          "visible": false,
+          "width": 0,
+          "x": -600,
+          "y": -800
+        },
+        {
+          "height": 0,
+          "id": 2,
+          "name": "Sector_Gardens_Hub",
+          "polygon": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 800,
+              "y": 0
+            },
+            {
+              "x": 800,
+              "y": 600
+            },
+            {
+              "x": 0,
+              "y": 600
+            }
+          ],
+          "rotation": 0,
+          "type": "sector",
+          "visible": false,
+          "width": 0,
+          "x": -400,
+          "y": -1400
+        },
+        {
+          "height": 0,
+          "id": 3,
+          "name": "Sector_West_Labyrinth",
+          "polygon": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 500,
+              "y": 0
+            },
+            {
+              "x": 500,
+              "y": 700
+            },
+            {
+              "x": 0,
+              "y": 700
+            }
+          ],
+          "rotation": 0,
+          "type": "sector",
+          "visible": false,
+          "width": 0,
+          "x": -1100,
+          "y": -1800
+        },
+        {
+          "height": 0,
+          "id": 4,
+          "name": "Sector_East_Secrets",
+          "polygon": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 600,
+              "y": 0
+            },
+            {
+              "x": 600,
+              "y": 650
+            },
+            {
+              "x": 0,
+              "y": 650
+            }
+          ],
+          "rotation": 0,
+          "type": "sector",
+          "visible": false,
+          "width": 0,
+          "x": 400,
+          "y": -1900
+        },
+        {
+          "height": 0,
+          "id": 5,
+          "name": "Sector_Temple_Gate",
+          "polygon": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 450,
+              "y": 0
+            },
+            {
+              "x": 450,
+              "y": 350
+            },
+            {
+              "x": 0,
+              "y": 350
+            }
+          ],
+          "rotation": 0,
+          "type": "sector",
+          "visible": false,
+          "width": 0,
+          "x": -225,
+          "y": -2300
+        }
+      ],
+      "opacity": 1,
+      "type": "objectgroup",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "chunks": [
+        {
+          "data": "AAAAAAAAAAB/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCAAAAAAAAAAAAAAAAAAAAAAAAAIUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAggAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIcAAACGAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+          "height": 16,
+          "width": 16,
+          "x": -16,
+          "y": -24
+        },
+        {
+          "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIYAAAAAAAAAAAAAAAAAAAAAAAAAgwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACBAAAAgQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACDAAAAgAAAAAAAAAAAAAAAAAAAAH8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACGAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAgQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIEAAACHAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+          "height": 16,
+          "width": 16,
+          "x": -16,
+          "y": -40
+        },
+        {
+          "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAgQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACDAAAAgwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgQAAAAAAAAAAAAAAggAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAggAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACBAAAAAAAAAAAAAAAAAAAAAAAAAIMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIYAAAAAAAAAfwAAAAAAAAAAAAAAhQAAAIcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+          "height": 16,
+          "width": 16,
+          "x": 0,
+          "y": -40
+        },
+        {
+          "data": "AAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAACCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAggAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIIAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAhwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgQAAAAAAAAAAAAAAAAAAAIcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAggAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/AAAAAAAAAH8AAAAAAAAAAAAAAA==",
+          "height": 16,
+          "width": 16,
+          "x": -32,
+          "y": -48
+        },
+        {
+          "data": "AAAAAAAAAAAAAAAAAAAAAIQAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/AAAAAAAAAAAAAAAAAAAAggAAAAAAAACCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfwAAAAAAAAAAAAAAAAAAAIEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAggAAAAAAAACBAAAAgwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIIAAAAAAAAAAAAAAH8AAAAAAAAAhAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIMAAAAAAAAAAAAAAIIAAAAAAAAAAAAAAAAAAACEAAAAAAAAAAAAAAAAAAAAgwAAAH8AAAAAAAAAggAAAAAAAACCAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAggAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAH8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+          "height": 16,
+          "width": 16,
+          "x": 16,
+          "y": -48
+        },
+        {
+          "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAiwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIwAAAAAAAAAiwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAiQAAAAAAAAAAAAAAAAAAAIkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIsAAAAAAAAAiwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAjAAAAIkAAAAAAAAAAAAAAAAAAACKAAAAAAAAAAAAAAAAAAAAiAAAAAAAAACMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAiwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIsAAACMAAAAAAAAAAAAAAAAAAAAjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+          "height": 16,
+          "width": 16,
+          "x": -16,
+          "y": -56
+        },
+        {
+          "data": "AAAAAAAAAAAAAAAAAAAAAIkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACLAAAAAAAAAIsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACJAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAiwAAAAAAAAAAAAAAAAAAAAAAAACLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAiwAAAAAAAACMAAAAAAAAAAAAAAAAAAAAAAAAAIwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIsAAACKAAAAiwAAAAAAAAAAAAAAiAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAjAAAAAAAAACLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAiwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+          "height": 16,
+          "width": 16,
+          "x": 0,
+          "y": -56
+        }
+      ],
+      "compression": "",
+      "encoding": "base64",
+      "height": 64,
+      "id": 4,
+      "name": "graphicmap_on_ground",
+      "opacity": 1,
+      "startx": -32,
+      "starty": -32,
+      "type": "tilelayer",
+      "visible": true,
+      "width": 80,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "draworder": "topdown",
+      "id": 6,
+      "name": "leveldesignmap_ground",
+      "objects": [
+        {
+          "height": 0,
+          "id": 50,
+          "name": "portal_from_level1",
+          "point": true,
+          "rotation": 0,
+          "type": "door",
+          "visible": true,
+          "width": 0,
+          "x": -300,
+          "y": -650,
+          "properties": [
+            {
+              "name": "destination",
+              "type": "string",
+              "value": "level1_portal"
+            }
+          ]
+        },
+        {
+          "height": 0,
+          "id": 51,
+          "name": "spawn_gardens_entrance",
+          "point": true,
+          "rotation": 0,
+          "type": "guard",
+          "visible": true,
+          "width": 0,
+          "x": -300,
+          "y": -600
+        },
+        {
+          "height": 0,
+          "id": 60,
+          "name": "key_bronze_1",
+          "point": true,
+          "rotation": 0,
+          "type": "key",
+          "visible": true,
+          "width": 0,
+          "x": -800,
+          "y": -1600
+        },
+        {
+          "height": 0,
+          "id": 61,
+          "name": "key_bronze_2",
+          "point": true,
+          "rotation": 0,
+          "type": "key",
+          "visible": true,
+          "width": 0,
+          "x": 650,
+          "y": -1700
+        },
+        {
+          "height": 0,
+          "id": 62,
+          "name": "key_silver_1",
+          "point": true,
+          "rotation": 0,
+          "type": "key",
+          "visible": true,
+          "width": 0,
+          "x": -100,
+          "y": -1100
+        },
+        {
+          "height": 0,
+          "id": 63,
+          "name": "key_silver_2",
+          "point": true,
+          "rotation": 0,
+          "type": "key",
+          "visible": true,
+          "width": 0,
+          "x": 200,
+          "y": -1450
+        },
+        {
+          "height": 0,
+          "id": 64,
+          "name": "key_gold_hidden",
+          "point": true,
+          "rotation": 0,
+          "type": "key",
+          "visible": true,
+          "width": 0,
+          "x": -950,
+          "y": -2000
+        },
+        {
+          "height": 0,
+          "id": 65,
+          "name": "key_gold_master",
+          "point": true,
+          "rotation": 0,
+          "type": "key",
+          "visible": true,
+          "width": 0,
+          "x": 800,
+          "y": -1850
+        },
+        {
+          "height": 0,
+          "id": 70,
+          "name": "gate_west_labyrinth",
+          "point": true,
+          "rotation": 0,
+          "type": "door",
+          "visible": true,
+          "width": 0,
+          "x": -600,
+          "y": -1250,
+          "properties": [
+            {
+              "name": "requires_key",
+              "type": "string",
+              "value": "key_bronze_1"
+            }
+          ]
+        },
+        {
+          "height": 0,
+          "id": 71,
+          "name": "gate_east_secrets",
+          "point": true,
+          "rotation": 0,
+          "type": "door",
+          "visible": true,
+          "width": 0,
+          "x": 500,
+          "y": -1300,
+          "properties": [
+            {
+              "name": "requires_key",
+              "type": "string",
+              "value": "key_silver_1"
+            }
+          ]
+        },
+        {
+          "height": 0,
+          "id": 72,
+          "name": "temple_main_gate",
+          "point": true,
+          "rotation": 0,
+          "type": "door",
+          "visible": true,
+          "width": 0,
+          "x": 0,
+          "y": -2200,
+          "properties": [
+            {
+              "name": "requires_key",
+              "type": "string",
+              "value": "key_gold_master"
+            },
+            {
+              "name": "destination",
+              "type": "string",
+              "value": "level3_entrance"
+            }
+          ]
+        },
+        {
+          "height": 0,
+          "id": 80,
+          "name": "treasure_gardens_main",
+          "point": true,
+          "rotation": 0,
+          "type": "collectible",
+          "visible": true,
+          "width": 0,
+          "x": -200,
+          "y": -1500
+        },
+        {
+          "height": 0,
+          "id": 81,
+          "name": "treasure_labyrinth_secret",
+          "point": true,
+          "rotation": 0,
+          "type": "collectible",
+          "visible": true,
+          "width": 0,
+          "x": -850,
+          "y": -1900
+        },
+        {
+          "height": 0,
+          "id": 82,
+          "name": "treasure_east_hidden",
+          "point": true,
+          "rotation": 0,
+          "type": "collectible",
+          "visible": true,
+          "width": 0,
+          "x": 750,
+          "y": -1650
+        },
+        {
+          "height": 0,
+          "id": 90,
+          "name": "beacon_gardens_center",
+          "point": true,
+          "rotation": 0,
+          "type": "beacon",
+          "visible": true,
+          "width": 0,
+          "x": 0,
+          "y": -1200
+        },
+        {
+          "height": 0,
+          "id": 91,
+          "name": "beacon_labyrinth_entry",
+          "point": true,
+          "rotation": 0,
+          "type": "beacon",
+          "visible": true,
+          "width": 0,
+          "x": -700,
+          "y": -1400
+        },
+        {
+          "height": 0,
+          "id": 92,
+          "name": "beacon_east_plateau",
+          "point": true,
+          "rotation": 0,
+          "type": "beacon",
+          "visible": true,
+          "width": 0,
+          "x": 600,
+          "y": -1500
+        },
+        {
+          "height": 0,
+          "id": 93,
+          "name": "beacon_temple_approach",
+          "point": true,
+          "rotation": 0,
+          "type": "beacon",
+          "visible": true,
+          "width": 0,
+          "x": 0,
+          "y": -2000
+        },
+        {
+          "id": 110,
+          "name": "guard_entrance_patrol",
+          "properties": [
+            {
+              "name": "patrol way",
+              "type": "object",
+              "value": 150
+            }
+          ],
+          "template": "guard_object.tx",
+          "type": "guard",
+          "visible": true,
+          "x": -350,
+          "y": -750
+        },
+        {
+          "height": 0,
+          "id": 150,
+          "name": "way_entrance_patrol",
+          "polyline": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 100,
+              "y": -150
+            },
+            {
+              "x": 0,
+              "y": -300
+            },
+            {
+              "x": -100,
+              "y": -150
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "rotation": 0,
+          "type": "way",
+          "visible": true,
+          "width": 0,
+          "x": -350,
+          "y": -750
+        },
+        {
+          "id": 111,
+          "name": "guard_hub_circle",
+          "properties": [
+            {
+              "name": "patrol way",
+              "type": "object",
+              "value": 151
+            }
+          ],
+          "template": "guard_object.tx",
+          "type": "guard",
+          "visible": true,
+          "x": -100,
+          "y": -1200
+        },
+        {
+          "height": 0,
+          "id": 151,
+          "name": "way_hub_circle",
+          "polyline": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 150,
+              "y": 0
+            },
+            {
+              "x": 150,
+              "y": -150
+            },
+            {
+              "x": 0,
+              "y": -150
+            },
+            {
+              "x": -150,
+              "y": -150
+            },
+            {
+              "x": -150,
+              "y": 0
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "rotation": 0,
+          "type": "way",
+          "visible": true,
+          "width": 0,
+          "x": -100,
+          "y": -1200
+        },
+        {
+          "id": 112,
+          "name": "guard_west_gate_static",
+          "properties": [
+            {
+              "name": "patrol way",
+              "type": "object",
+              "value": 152
+            }
+          ],
+          "template": "guard_object.tx",
+          "type": "guard",
+          "visible": true,
+          "x": -600,
+          "y": -1250
+        },
+        {
+          "height": 0,
+          "id": 152,
+          "name": "way_west_gate_static",
+          "polyline": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 20,
+              "y": 0
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "rotation": 0,
+          "type": "way",
+          "visible": true,
+          "width": 0,
+          "x": -600,
+          "y": -1250
+        },
+        {
+          "id": 113,
+          "name": "guard_labyrinth_patrol",
+          "properties": [
+            {
+              "name": "patrol way",
+              "type": "object",
+              "value": 153
+            }
+          ],
+          "template": "guard_object.tx",
+          "type": "guard",
+          "visible": true,
+          "x": -750,
+          "y": -1500
+        },
+        {
+          "height": 0,
+          "id": 153,
+          "name": "way_labyrinth_complex",
+          "polyline": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": -100,
+              "y": -100
+            },
+            {
+              "x": -150,
+              "y": -250
+            },
+            {
+              "x": -50,
+              "y": -400
+            },
+            {
+              "x": 50,
+              "y": -350
+            },
+            {
+              "x": 100,
+              "y": -200
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "rotation": 0,
+          "type": "way",
+          "visible": true,
+          "width": 0,
+          "x": -750,
+          "y": -1500
+        },
+        {
+          "id": 114,
+          "name": "guard_east_backforth",
+          "properties": [
+            {
+              "name": "patrol way",
+              "type": "object",
+              "value": 154
+            }
+          ],
+          "template": "guard_object.tx",
+          "type": "guard",
+          "visible": true,
+          "x": 550,
+          "y": -1400
+        },
+        {
+          "height": 0,
+          "id": 154,
+          "name": "way_east_backforth",
+          "polyline": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": 0,
+              "y": -250
+            },
+            {
+              "x": 150,
+              "y": -250
+            },
+            {
+              "x": 150,
+              "y": 0
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "rotation": 0,
+          "type": "way",
+          "visible": true,
+          "width": 0,
+          "x": 550,
+          "y": -1400
+        },
+        {
+          "id": 115,
+          "name": "guard_temple_approach",
+          "properties": [
+            {
+              "name": "patrol way",
+              "type": "object",
+              "value": 155
+            }
+          ],
+          "template": "guard_object.tx",
+          "type": "guard",
+          "visible": true,
+          "x": 0,
+          "y": -2100
+        },
+        {
+          "height": 0,
+          "id": 155,
+          "name": "way_temple_short",
+          "polyline": [
+            {
+              "x": 0,
+              "y": 0
+            },
+            {
+              "x": -80,
+              "y": -40
+            },
+            {
+              "x": 0,
+              "y": -80
+            },
+            {
+              "x": 80,
+              "y": -40
+            },
+            {
+              "x": 0,
+              "y": 0
+            }
+          ],
+          "rotation": 0,
+          "type": "way",
+          "visible": true,
+          "width": 0,
+          "x": 0,
+          "y": -2100
+        },
+        {
+          "id": 160,
+          "name": "portal_trigger_gardens",
+          "template": "trigger_object.tx",
+          "type": "trigger",
+          "x": -300,
+          "y": -1000,
+          "properties": [
+            {
+              "name": "event",
+              "type": "string",
+              "value": "activate_gardens_entrance"
+            }
+          ]
+        },
+        {
+          "id": 161,
+          "name": "portal_trigger_temple",
+          "template": "trigger_object.tx",
+          "type": "trigger",
+          "x": 0,
+          "y": -1900,
+          "properties": [
+            {
+              "name": "event",
+              "type": "string",
+              "value": "reveal_temple_gate"
+            }
+          ]
+        }
+      ],
+      "opacity": 1,
+      "type": "objectgroup",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "draworder": "topdown",
+      "id": 10,
+      "name": "sounddesign",
+      "objects": [
+        {
+          "id": 100,
+          "name": "ambiant_music_gardens",
+          "template": "sound_object_template.tx",
+          "type": "ambiant",
+          "x": -200,
+          "y": -1200
+        },
+        {
+          "id": 101,
+          "name": "ambiant_music_temple",
+          "template": "sound_object_template.tx",
+          "type": "ambiant",
+          "x": 0,
+          "y": -2100
+        }
+      ],
+      "opacity": 1,
+      "type": "objectgroup",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "nextlayerid": 11,
+  "nextobjectid": 200,
+  "orientation": "isometric",
+  "renderorder": "left-up",
+  "tiledversion": "1.11.2",
+  "tileheight": 27,
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "source": "tiles-iso-1.tsx"
+    },
+    {
+      "firstgid": 109,
+      "source": "Tiles iso cube.tsx"
+    },
+    {
+      "firstgid": 127,
+      "source": "Trees.tsx"
+    }
+  ],
+  "tilewidth": 58,
+  "type": "map",
+  "version": "1.10",
+  "width": 20
+}
