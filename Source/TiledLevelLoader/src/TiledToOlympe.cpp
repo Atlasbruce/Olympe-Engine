@@ -686,77 +686,35 @@ namespace Tiled {
     {
         SYSTEM_LOG << "[TRANSFORM] Mode: " << config_.mapOrientation 
                   << ", Raw TMJ: (" << x << ", " << y << ")"
-                  << ", Chunk origin: (" << chunkOriginX_ << ", " << chunkOriginY_ << ")\n";
+                  << ", Layer offsets: (" << layerOffsetX << ", " << layerOffsetY << ")\n";
 
         if (config_.mapOrientation == "isometric")
         {
             // ISOMETRIC MODE:
-            // Tiled stores object positions in isometric pixel space (isoX, isoY).
-            // The tile renderer now applies an isometric origin offset (computed from minTileX, minTileY)
-            // to align tiles and entities in the same world space.
-            //
-            // Objects in TMJ are ALREADY in isometric pixel space, so we just need to:
-            // 1. Apply layer offsets
-            // 2. Apply the SAME origin offset that tiles get (for alignment)
-            // 3. Keep entities and tiles in the same coordinate system
+            // Keep TMJ object coordinates unchanged (no origin subtraction).
+            // Objects in TMJ are in isometric pixel space. The isometric origin
+            // will be computed in World from map bounds and applied ONLY during
+            // tile rendering (RenderTileImmediate), NOT during object loading.
+            // This ensures objects remain in raw TMJ coordinates + layer offsets.
             
-            // Start with raw Tiled coordinates (already in isometric pixel space)
-            float adjustedX = x + layerOffsetX;
-            float adjustedY = y + layerOffsetY;
+            float finalX = x + layerOffsetX;
+            float finalY = y + layerOffsetY;
             
-            // Apply the same isometric origin offset that tiles get
-            // This ensures entities and tiles share the same world-space origin
-            // NOTE: This formula is duplicated in World::GetIsometricOriginX/Y() for rendering.
-            // The duplication is intentional - TiledToOlympe calculates it during conversion
-            // (before World exists), while World caches it for efficient rendering.
-            float isometricOriginX = (minTileX_ - minTileY_) * (config_.tileWidth / 2.0f);
-            float isometricOriginY = (minTileX_ + minTileY_) * (config_.tileHeight / 2.0f);
+            SYSTEM_LOG << "  → Isometric: keeping raw TMJ coords + layer offsets"
+                      << " -> Final: (" << finalX << ", " << finalY << ")\n";
             
-            adjustedX += isometricOriginX;
-            adjustedY += isometricOriginY;
-            
-            SYSTEM_LOG << "  → Applied isometric origin: (" << isometricOriginX << ", " << isometricOriginY << ")"
-                      << " -> Final: (" << adjustedX << ", " << adjustedY << ")\n";
-            
-            // Return isometric coordinates in the same system used by the tile renderer
-            return Vector(adjustedX, adjustedY, 0.0f);
+            return Vector(finalX, finalY, 0.0f);
         }
         
         // ORTHOGONAL / HEXAGONAL / STAGGERED MODES:
-        // Apply layer offsets
+        // Keep object positions as raw TMJ + layer offsets.
+        // Remove chunk-origin offsets and renderorder Y-flip for objects.
+        // Chunk-origin handling stays on the tile side only.
         float finalX = x + layerOffsetX;
         float finalY = y + layerOffsetY;
         
-        // For orthogonal/hex/staggered maps with chunk origin offsets, subtract chunk origin
-        // to align entity positions with chunk-based tile rendering
-        if ((config_.mapOrientation == "orthogonal" || 
-             config_.mapOrientation == "hexagonal" || 
-             config_.mapOrientation == "staggered") && 
-            (chunkOriginX_ != 0 || chunkOriginY_ != 0))
-        {
-            // Subtract chunk origin in pixels to align with tile coordinate space
-            float chunkOffsetPixelsX = (float)chunkOriginX_ * (float)config_.tileWidth;
-            float chunkOffsetPixelsY = (float)chunkOriginY_ * (float)config_.tileHeight;
-            
-            finalX -= chunkOffsetPixelsX;
-            finalY -= chunkOffsetPixelsY;
-            
-            SYSTEM_LOG << "  → Applied chunk offset: -(" << chunkOffsetPixelsX << ", " << chunkOffsetPixelsY << ")"
-                      << " -> (" << finalX << ", " << finalY << ")\n";
-        }
-        
-        // Apply Y-flip for orthogonal coordinate system conversion (not renderorder flip)
-        if (config_.flipY && config_.mapOrientation == "orthogonal") {
-            // For orthogonal, we need to flip Y relative to map height
-            // This converts Tiled's top-left origin to bottom-left origin
-            float mapHeightPixels = (float) mapHeight_ * config_.tileHeight;
-            float oldY = finalY;
-            finalY = mapHeightPixels - finalY;
-            
-            SYSTEM_LOG << "  → Applied Y-flip: " << oldY << " -> " << finalY << "\n";
-        }
-        
-        SYSTEM_LOG << "  → Final position: (" << finalX << ", " << finalY << ")\n";
+        SYSTEM_LOG << "  → Non-isometric: no chunk offset/Y-flip applied"
+                  << " -> Final: (" << finalX << ", " << finalY << ")\n";
         
         return Vector(finalX, finalY, 0.0f);
     }
