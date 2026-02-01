@@ -1884,7 +1884,7 @@ float World::GetIsometricOriginX() const
     // At minTileX, minTileY: isoX = (minTileX - minTileY) * (tileWidth / 2)
     if (m_mapOrientation == "isometric")
     {
-        // Cache the result to avoid redundant calculations during rendering
+        // Cache both X and Y values together to avoid inconsistency
         if (!m_isometricOriginCached)
         {
             m_cachedIsometricOriginX = (m_minTileX - m_minTileY) * (m_tileWidth / 2.0f);
@@ -1903,7 +1903,7 @@ float World::GetIsometricOriginY() const
     // At minTileX, minTileY: isoY = (minTileX + minTileY) * (tileHeight / 2)
     if (m_mapOrientation == "isometric")
     {
-        // Cache the result to avoid redundant calculations during rendering
+        // Cache both X and Y values together to avoid inconsistency
         if (!m_isometricOriginCached)
         {
             m_cachedIsometricOriginX = (m_minTileX - m_minTileY) * (m_tileWidth / 2.0f);

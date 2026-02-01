@@ -684,16 +684,11 @@ namespace Tiled {
 
     Vector TiledToOlympe::TransformObjectPosition(float x, float y, float layerOffsetX, float layerOffsetY)
     {
-        bool isIsometric = (config_.mapOrientation == "isometric");
-        bool isOrthogonal = (config_.mapOrientation == "orthogonal");
-        bool isHexagonal = (config_.mapOrientation == "hexagonal");
-        bool isStaggered = (config_.mapOrientation == "staggered");
-
         SYSTEM_LOG << "[TRANSFORM] Mode: " << config_.mapOrientation 
                   << ", Raw TMJ: (" << x << ", " << y << ")"
                   << ", Chunk origin: (" << chunkOriginX_ << ", " << chunkOriginY_ << ")\n";
 
-        if (isIsometric)
+        if (config_.mapOrientation == "isometric")
         {
             // ISOMETRIC MODE:
             // Tiled stores object positions in isometric pixel space (isoX, isoY).
@@ -734,7 +729,12 @@ namespace Tiled {
         
         // For orthogonal/hex/staggered maps with chunk origin offsets, subtract chunk origin
         // to align entity positions with chunk-based tile rendering
-        if ((isOrthogonal || isHexagonal || isStaggered) && (chunkOriginX_ != 0 || chunkOriginY_ != 0)) {
+        bool needsChunkOffset = (config_.mapOrientation == "orthogonal" || 
+                                 config_.mapOrientation == "hexagonal" || 
+                                 config_.mapOrientation == "staggered") && 
+                                (chunkOriginX_ != 0 || chunkOriginY_ != 0);
+        
+        if (needsChunkOffset) {
             // Subtract chunk origin in pixels to align with tile coordinate space
             float chunkOffsetPixelsX = (float)chunkOriginX_ * (float)config_.tileWidth;
             float chunkOffsetPixelsY = (float)chunkOriginY_ * (float)config_.tileHeight;
@@ -747,8 +747,7 @@ namespace Tiled {
         }
         
         // Apply Y-flip for orthogonal coordinate system conversion (not renderorder flip)
-        bool shouldApplyOrthogonalYFlip = (config_.flipY && isOrthogonal);
-        if (shouldApplyOrthogonalYFlip) {
+        if (config_.flipY && config_.mapOrientation == "orthogonal") {
             // For orthogonal, we need to flip Y relative to map height
             // This converts Tiled's top-left origin to bottom-left origin
             float mapHeightPixels = (float) mapHeight_ * config_.tileHeight;
