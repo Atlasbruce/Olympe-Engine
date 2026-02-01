@@ -1652,13 +1652,15 @@ bool World::InstantiatePass5_Relationships(
                 if (HasComponent<AIBlackboard_data>(patrolPath)) {
                     const AIBlackboard_data& pathData = GetComponent<AIBlackboard_data>(patrolPath);
                     
-                    // Copy patrol points from path to guard
-                    guardBlackboard.patrolPointCount = pathData.patrolPointCount;
-                    for (int i = 0; i < pathData.patrolPointCount && i < 8; ++i) {
+                    // Copy patrol points from path to guard (bounded)
+                    const int maxPoints = static_cast<int>(std::size(guardBlackboard.patrolPoints));
+                    const int count = std::min(pathData.patrolPointCount, maxPoints);
+                    guardBlackboard.patrolPointCount = count;
+                    for (int i = 0; i < count; ++i) {
                         guardBlackboard.patrolPoints[i] = pathData.patrolPoints[i];
                     }
                     guardBlackboard.currentPatrolIndex = 0;
-                    guardBlackboard.hasPatrolPath = true;
+                    guardBlackboard.hasPatrolPath = (count > 0);
                     
                     SYSTEM_LOG << "  ok - Linked guard '" << link.sourceObjectName 
                                << "' -> patrol '" << link.targetObjectName 
@@ -1703,8 +1705,9 @@ bool World::InstantiatePass5_Relationships(
                 
                 if (patrolPath.is_array())
                 {
+                    const int maxPoints = static_cast<int>(std::size(blackboard.patrolPoints));
                     blackboard.patrolPointCount = 0;
-                    for (size_t i = 0; i < patrolPath.size() && i < 8; ++i)
+                    for (size_t i = 0; i < patrolPath.size() && blackboard.patrolPointCount < maxPoints; ++i)
                     {
                         if (patrolPath[i].contains("x") && patrolPath[i].contains("y"))
                         {

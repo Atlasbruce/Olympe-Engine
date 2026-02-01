@@ -66,7 +66,16 @@ namespace Tiled {
         std::string renderOrder;
 
         ConversionConfig()
-            : flipY(true), mapOrientation("orthogonal"), tileWidth(0), tileHeight(0), renderOrder("right-down") {}
+            : defaultPrefab("Blueprints/DefaultEntity.json")
+            , flipY(true)
+            , resourceBasePath("")
+            , mapOrientation("orthogonal")
+            , tileWidth(0)
+            , tileHeight(0)
+            , renderOrder("right-down")
+        {
+            // All members are now properly initialized in the initializer list
+        }
     };
 
 
