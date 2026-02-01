@@ -667,14 +667,15 @@ namespace Tiled {
             
             bool shouldLog = (x > LOG_THRESHOLD_X_MAX || x < LOG_THRESHOLD_X_MIN || 
                             y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN) ||
-                            (globalOffsetX_ != 0.0f || globalOffsetY_ != 0.0f);
+                            (globalOffsetX_ != 0.0f || globalOffsetY_ != 0.0f) ||
+                            (chunkOriginX_ != 0 || chunkOriginY_ != 0);
             
             if (shouldLog) {
                 SYSTEM_LOG << "[TRANSFORM] Input TMJ coordinates: (" << x << ", " << y << ")\n";
                 SYSTEM_LOG << "  → Layer offsets: offsetX=" << layerOffsetX << ", offsetY=" << layerOffsetY << "\n";
             }
 
-            // Apply layer pixel offsets first
+            // Step 1: Apply layer pixel offsets first
             float adjustedX = x + layerOffsetX;
             float adjustedY = y + layerOffsetY;
             
@@ -682,7 +683,7 @@ namespace Tiled {
                 SYSTEM_LOG << "  → After layer offsets: (" << adjustedX << ", " << adjustedY << ")\n";
             }
 
-            // Convert TMJ pixels to tile coordinates
+            // Step 2: Convert TMJ pixels to tile coordinates
             float tileX = adjustedX / (static_cast<float>(config_.tileWidth) / 2.0f);
             float tileY = adjustedY / static_cast<float>(config_.tileHeight);
 
@@ -690,8 +691,29 @@ namespace Tiled {
                 SYSTEM_LOG << "  → Tile coordinates: (" << tileX << ", " << tileY << ")\n";
             }
 
-            // Apply isometric projection with global offsets
-            // Global offsets are applied AFTER isometric projection to correct systematic errors
+            // Step 3: Translate to chunk coordinate system (align entity coords with chunk origin offset)
+            // For infinite maps, chunks may start at negative tile coordinates (e.g., -16, -16)
+            // Entity coordinates need to be adjusted to align with this chunk coordinate system
+            tileX -= chunkOriginX_;
+            tileY -= chunkOriginY_;
+
+            if (shouldLog && (chunkOriginX_ != 0 || chunkOriginY_ != 0)) {
+                SYSTEM_LOG << "  → After chunk origin offset (" << chunkOriginX_ << ", " << chunkOriginY_ 
+                          << "): (" << tileX << ", " << tileY << ")\n";
+            }
+
+            // Step 4: Apply render order transformation
+            // For render orders with "up" (right-up, left-up), invert Y-axis
+            // because Tiled's Y-axis points down (screen) but isometric Y-axis points up (world)
+            if (config_.renderOrder == "left-up" || config_.renderOrder == "right-up") {
+                tileY = -tileY;
+                if (shouldLog) {
+                    SYSTEM_LOG << "  → After render order Y-flip: (" << tileX << ", " << tileY << ")\n";
+                }
+            }
+
+            // Step 5: Apply isometric projection with global offsets
+            // Global offsets are applied AFTER isometric projection to correct any remaining systematic errors
             Vector isoPos = IsometricProjection::WorldToIso(
                 tileX, tileY, 
                 config_.tileWidth, config_.tileHeight,
@@ -704,7 +726,7 @@ namespace Tiled {
                 SYSTEM_LOG << "  → Global offsets: globalOffsetX=" << globalOffsetX_ 
                           << ", globalOffsetY=" << globalOffsetY_ << "\n";
                 SYSTEM_LOG << "  → Final ISO position: (" << isoPos.x << ", " << isoPos.y << ")\n";
-                SYSTEM_LOG << "  → Position difference from input: (" 
+                SYSTEM_LOG << "  → Total difference from input: (" 
                           << (isoPos.x - x) << ", " << (isoPos.y - y) << ")\n\n";
             }
 
