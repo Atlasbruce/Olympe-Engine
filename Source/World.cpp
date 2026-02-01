@@ -855,8 +855,25 @@ bool World::InstantiatePass1_VisualLayers(
     m_tileWidth = levelDef.metadata.customData.value("tilewidth", 32);
     m_tileHeight = levelDef.metadata.customData.value("tileheight", 32);
     
+    // Extract map bounds and chunk origin for coordinate system alignment
+    int minTileX = levelDef.metadata.customData.value("minTileX", 0);
+    int minTileY = levelDef.metadata.customData.value("minTileY", 0);
+    int maxTileX = levelDef.metadata.customData.value("maxTileX", 0);
+    int maxTileY = levelDef.metadata.customData.value("maxTileY", 0);
+    int chunkOriginX = levelDef.metadata.customData.value("chunkOriginX", 0);
+    int chunkOriginY = levelDef.metadata.customData.value("chunkOriginY", 0);
+    
+    SetMapBounds(minTileX, minTileY, maxTileX, maxTileY, chunkOriginX, chunkOriginY);
+    
     std::cout << "-> Map configuration: " << m_mapOrientation 
                << " (" << m_tileWidth << "x" << m_tileHeight << ")\n";
+    
+    // Log isometric origin for verification
+    if (m_mapOrientation == "isometric")
+    {
+        SYSTEM_LOG << "[World] Isometric origin calculated: (" 
+                   << GetIsometricOriginX() << ", " << GetIsometricOriginY() << ")\n";
+    }
     
     // ===== PART 1: Parallax Layers =====
     if (levelDef.metadata.customData.contains("parallaxLayers"))
@@ -1836,4 +1853,49 @@ void World::RegisterPlayerEntity(EntityID entity)
     
     // Delegate to VideoGame for full player registration
     VideoGame::Get().RegisterLoadedPlayerEntity(entity);
+}
+
+//=============================================================================
+// Isometric Origin Calculation (for tile/entity alignment)
+//=============================================================================
+
+void World::SetMapBounds(int minTileX, int minTileY, int maxTileX, int maxTileY, int chunkOriginX, int chunkOriginY)
+{
+    m_minTileX = minTileX;
+    m_minTileY = minTileY;
+    m_maxTileX = maxTileX;
+    m_maxTileY = maxTileY;
+    m_chunkOriginX = chunkOriginX;
+    m_chunkOriginY = chunkOriginY;
+    
+    SYSTEM_LOG << "[World] Map bounds set: tiles(" << minTileX << "," << minTileY 
+               << ") to (" << maxTileX << "," << maxTileY << "), chunk origin: ("
+               << chunkOriginX << "," << chunkOriginY << ")\n";
+}
+
+float World::GetIsometricOriginX() const
+{
+    // For isometric maps, the origin offset is calculated from the minimum tile coordinates
+    // This ensures tiles and entities share the same world-space origin
+    // Formula: isoX = (worldX - worldY) * (tileWidth / 2)
+    // At minTileX, minTileY: isoX = (minTileX - minTileY) * (tileWidth / 2)
+    if (m_mapOrientation == "isometric")
+    {
+        float originX = (m_minTileX - m_minTileY) * (m_tileWidth / 2.0f);
+        return originX;
+    }
+    return 0.0f;
+}
+
+float World::GetIsometricOriginY() const
+{
+    // For isometric maps, the origin offset is calculated from the minimum tile coordinates
+    // Formula: isoY = (worldX + worldY) * (tileHeight / 2)
+    // At minTileX, minTileY: isoY = (minTileX + minTileY) * (tileHeight / 2)
+    if (m_mapOrientation == "isometric")
+    {
+        float originY = (m_minTileX + m_minTileY) * (m_tileHeight / 2.0f);
+        return originY;
+    }
+    return 0.0f;
 }

@@ -766,7 +766,13 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
         // Convert tile coordinates to isometric world coordinates
         float isoX = (worldX - worldY) * (tileWidth / 2.0f);
         float isoY = (worldX + worldY) * (tileHeight / 2.0f);
-        worldPos = Vector(isoX, isoY, 0.0f);
+        
+        // Apply isometric origin offset to align tiles and entities in the same world space
+        // This offset is computed from the map bounds (minTileX, minTileY) in World
+        float originOffsetX = World::Get().GetIsometricOriginX();
+        float originOffsetY = World::Get().GetIsometricOriginY();
+        
+        worldPos = Vector(isoX + originOffsetX, isoY + originOffsetY, 0.0f);
     }
     else if (orientation == "hexagonal") {
         // Hexagonal axial to world (pointy-top)
