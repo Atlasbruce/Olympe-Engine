@@ -149,6 +149,7 @@ namespace Tiled {
         // Convert objects (with layer offset support)
         void ConvertObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level, 
                           float layerOffsetX = 0.0f, float layerOffsetY = 0.0f);
+        void ConvertCollisionObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level);
         void ConvertCollisionObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level,
                                    float layerOffsetX = 0.0f, float layerOffsetY = 0.0f);
         void ConvertSectorObject(const TiledObject& obj, Olympe::Editor::LevelDefinition& level,

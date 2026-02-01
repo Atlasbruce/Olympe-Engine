@@ -7,6 +7,9 @@
     "expandedProjectPaths": [
         "."
     ],
+    "exportAsImage.drawObjectLabels": true,
+    "exportAsImage.drawTileGrid": true,
+    "exportAsImage.includeBackgroundColor": true,
     "file.lastUsedOpenFilter": "Tous les Fichiers (*)",
     "fileStates": {
         "": {
@@ -52,11 +55,11 @@
                 10,
                 6
             ],
-            "scale": 0.25,
+            "scale": 3,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 4452,
-                "y": 306
+                "x": 8753.666666666666,
+                "y": 2453.833333333333
             }
         },
         "map_forest.tmj": {
@@ -165,27 +168,22 @@
     "map.tileWidth": 64,
     "openFiles": [
         "isometric_quest.tmx",
-        "Tiles iso cube..tsj",
-        "Trees.tsx",
-        "Trees.tsj",
         "parallax-forest.tmx",
-        "tileset 2D ortho.tsx",
         "pnc-quest.tmx",
-        "hexa-quest.tmx",
-        "Hexa-tiles_1.tsx"
+        "hexa-quest.tmx"
     ],
     "project": "parallax-level.tiled-project",
     "property.type": "string",
     "recentFiles": [
+        "hexa-quest.tmx",
+        "pnc-quest.tmx",
+        "parallax-forest.tmx",
+        "isometric_quest.tmx",
         "Tiles iso cube..tsj",
         "Trees.tsx",
         "Trees.tsj",
         "tileset 2D ortho.tsx",
         "Hexa-tiles_1.tsx",
-        "hexa-quest.tmx",
-        "pnc-quest.tmx",
-        "parallax-forest.tmx",
-        "isometric_quest.tmx",
         "parallax-forext..tmj",
         "map_forest.tmx",
         "Tiles iso cube.tsx"

@@ -261,7 +261,7 @@
   <object id="34" name="World West" type="beacon" x="2079" y="1323">
    <point/>
   </object>
-  <object id="35" name="Beacon Far East" type="Beacon" x="4833" y="0">
+  <object id="35" name="Beacon Far East" type="Beacon" x="4779" y="27">
    <point/>
   </object>
   <object id="36" name="Beacon Far West" type="Beacon" x="0" y="270">
