@@ -135,6 +135,10 @@ namespace Tiled {
                 << " to " << bounds.maxTileX << "," << bounds.maxTileY << "\n";
             SYSTEM_LOG << "  -> Chunk origin offset: (" << chunkOriginX_ << ", " << chunkOriginY_ << ")\n";
             SYSTEM_LOG << "  -> Actual map size:    " << mapWidth_ << "x" << mapHeight_ << " tiles ✅\n\n";
+            
+            // Update offset cache (chunk origin offsets are non-zero for infinite maps)
+            hasOffsets_ = (chunkOriginX_ != 0 || chunkOriginY_ != 0 || 
+                          globalOffsetX_ != 0.0f || globalOffsetY_ != 0.0f);
         }
         else
         {
@@ -147,6 +151,9 @@ namespace Tiled {
             chunkOriginY_ = 0;
 
             SYSTEM_LOG << "  -> Map size (from TMJ): " << mapWidth_ << "x" << mapHeight_ << " tiles\n\n";
+            
+            // Update offset cache (only global offsets might be non-zero)
+            hasOffsets_ = (globalOffsetX_ != 0.0f || globalOffsetY_ != 0.0f);
         }
 
         // Initialize config with map properties
@@ -659,16 +666,15 @@ namespace Tiled {
         if (isIsometric)
         {
             // Enhanced logging for debugging entity positions
-            // Log coordinates that are far from origin OR when global offsets are active
+            // Log coordinates that are far from origin OR when offsets are active
             const float LOG_THRESHOLD_X_MAX = 2000.0f;
             const float LOG_THRESHOLD_X_MIN = -1000.0f;
             const float LOG_THRESHOLD_Y_MAX = 2000.0f;
             const float LOG_THRESHOLD_Y_MIN = -300.0f;
             
+            // Use cached offset flag for performance (avoids repeated member variable checks)
             bool shouldLog = (x > LOG_THRESHOLD_X_MAX || x < LOG_THRESHOLD_X_MIN || 
-                            y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN) ||
-                            (globalOffsetX_ != 0.0f || globalOffsetY_ != 0.0f) ||
-                            (chunkOriginX_ != 0 || chunkOriginY_ != 0);
+                            y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN) || hasOffsets_;
             
             if (shouldLog) {
                 SYSTEM_LOG << "[TRANSFORM] Input TMJ coordinates: (" << x << ", " << y << ")\n";
@@ -702,10 +708,10 @@ namespace Tiled {
                           << "): (" << tileX << ", " << tileY << ")\n";
             }
 
-            // Step 4: Apply render order transformation
+            // Step 4: Apply render order transformation (use cached flag for performance)
             // For render orders with "up" (right-up, left-up), invert Y-axis
             // because Tiled's Y-axis points down (screen) but isometric Y-axis points up (world)
-            if (config_.renderOrder == "left-up" || config_.renderOrder == "right-up") {
+            if (requiresYFlip_) {
                 tileY = -tileY;
                 if (shouldLog) {
                     SYSTEM_LOG << "  → After render order Y-flip: (" << tileX << ", " << tileY << ")\n";
@@ -803,6 +809,9 @@ namespace Tiled {
         
         // Store render order in conversion config for use in coordinate transformations
         config_.renderOrder = outLevel.mapConfig.renderOrder;
+        
+        // Cache Y-flip requirement for performance (avoids repeated string comparisons)
+        requiresYFlip_ = (config_.renderOrder == "left-up" || config_.renderOrder == "right-up");
         
         // Set world size
         outLevel.worldSize.x = (float) tiledMap.width * tiledMap.tilewidth;

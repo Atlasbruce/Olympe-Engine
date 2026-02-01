@@ -224,6 +224,10 @@ namespace Tiled {
         // These offsets correct systematic positioning errors in isometric coordinate transformation
         float globalOffsetX_ = 0.0f;
         float globalOffsetY_ = 0.0f;
+        
+        // Cached flags for performance optimization (updated during configuration)
+        bool hasOffsets_ = false;  // true if any chunk origin or global offsets are non-zero
+        bool requiresYFlip_ = false;  // true if render order requires Y-flip ("left-up" or "right-up")
     };
 
 } // namespace Tiled
