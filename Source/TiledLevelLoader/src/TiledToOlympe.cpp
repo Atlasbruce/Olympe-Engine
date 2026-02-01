@@ -666,8 +666,10 @@ namespace Tiled {
             const float LOG_THRESHOLD_Y_MAX = 2000.0f;
             const float LOG_THRESHOLD_Y_MIN = -300.0f;
             
+            // Only log if coordinates are extreme AND layer has offsets (reduces log noise)
             bool shouldLog = (x > LOG_THRESHOLD_X_MAX || x < LOG_THRESHOLD_X_MIN || 
-                            y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN);
+                            y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN) &&
+                            (layerOffsetX != 0.0f || layerOffsetY != 0.0f);
             if (shouldLog) {
                 SYSTEM_LOG << "[TRANSFORM] Input TMJ coordinates: (" << x << ", " << y << ")\n";
                 SYSTEM_LOG << "  → Layer offsets: offsetX=" << layerOffsetX << ", offsetY=" << layerOffsetY << "\n";
