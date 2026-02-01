@@ -745,7 +745,7 @@ namespace Tiled {
         if (config_.flipY) {
             // For orthogonal, we need to flip Y relative to map height
             // This converts Tiled's top-left origin to bottom-left origin
-            float mapHeightPixels = mapHeight_ * config_.tileHeight;
+            float mapHeightPixels = (float) mapHeight_ * config_.tileHeight;
             finalY = mapHeightPixels - finalY;
         }
         
