@@ -666,15 +666,18 @@ namespace Tiled {
         if (isIsometric)
         {
             // Enhanced logging for debugging entity positions
-            // Log coordinates that are far from origin OR when offsets are active
+            // Log when coordinates are extreme AND (offsets are active OR layer offsets present)
             const float LOG_THRESHOLD_X_MAX = 2000.0f;
             const float LOG_THRESHOLD_X_MIN = -1000.0f;
             const float LOG_THRESHOLD_Y_MAX = 2000.0f;
             const float LOG_THRESHOLD_Y_MIN = -300.0f;
             
-            // Use cached offset flag for performance (avoids repeated member variable checks)
-            bool shouldLog = (x > LOG_THRESHOLD_X_MAX || x < LOG_THRESHOLD_X_MIN || 
-                            y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN) || hasOffsets_;
+            bool isExtremeCoordinate = (x > LOG_THRESHOLD_X_MAX || x < LOG_THRESHOLD_X_MIN || 
+                                       y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN);
+            bool hasAnyOffsets = hasOffsets_ || (layerOffsetX != 0.0f || layerOffsetY != 0.0f);
+            
+            // Log when coordinates are extreme AND offsets might affect positioning
+            bool shouldLog = isExtremeCoordinate && hasAnyOffsets;
             
             if (shouldLog) {
                 SYSTEM_LOG << "[TRANSFORM] Input TMJ coordinates: (" << x << ", " << y << ")\n";
@@ -727,7 +730,6 @@ namespace Tiled {
                 0.0f, 0.0f,  // offsetX, offsetY - already applied above
                 globalOffsetX_, globalOffsetY_  // Global correction offsets
             );
-
             if (shouldLog) {
                 SYSTEM_LOG << "  → Global offsets: globalOffsetX=" << globalOffsetX_ 
                           << ", globalOffsetY=" << globalOffsetY_ << "\n";
