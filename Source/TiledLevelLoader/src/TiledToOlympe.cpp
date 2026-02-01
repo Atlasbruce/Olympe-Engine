@@ -692,6 +692,8 @@ namespace Tiled {
         }
         
         // Strip flip flags to get actual tile ID
+        // GetTileId() removes horizontal/vertical/diagonal flip flags (stored in high bits)
+        // and returns the base tile ID that can be used to look up the tileset
         uint32_t tileId = GetTileId(gid);
         
         // Tilesets are ordered by firstgid. Find the tileset that owns this gid.
@@ -742,9 +744,10 @@ namespace Tiled {
             }
             
             // 2) Apply TMX alignment rules:
-            //    - Objects with gid in isometric are anchored bottom-center
-            //    - Adjust X by -(tileWidth/2) for bottom-center anchor
-            //    - Apply tileset tileoffsetX/Y to the object position
+            //    - TMX uses bottom-left as the base position for tile objects in isometric maps
+            //    - To achieve bottom-center anchor: subtract halfW (tileWidth/2) from X
+            //    - Apply tileset-specific tileoffsetX/Y adjustments (from tileset definition)
+            //    - Apply layer offsets for proper layer positioning
             float halfW = tileWidth / 2.0f;
             float halfH = tileHeight / 2.0f;
             
@@ -755,11 +758,13 @@ namespace Tiled {
                       << ", screenY=" << screenY << "\n";
             
             // 3) Convert TMJ screen coords into world iso coordinates using inverse iso projection:
-            //    screenX = (worldX - worldY) * halfW
-            //    screenY = (worldX + worldY) * halfH
-            //    Solving for worldX and worldY:
-            //    worldX = (screenX/halfW + screenY/halfH) / 2
-            //    worldY = (screenY/halfH - screenX/halfW) / 2
+            //    Forward projection (used in tile rendering, see ECS_Systems.cpp RenderTileImmediate):
+            //      screenX = (worldX - worldY) * halfW    where halfW = tileWidth / 2
+            //      screenY = (worldX + worldY) * halfH    where halfH = tileHeight / 2
+            //    Solving for worldX and worldY (inverse projection):
+            //      worldX = (screenX/halfW + screenY/halfH) / 2
+            //      worldY = (screenY/halfH - screenX/halfW) / 2
+            //    This ensures objects and tiles use the same world coordinate system
             
             float worldX = (screenX / halfW + screenY / halfH) / 2.0f;
             float worldY = (screenY / halfH - screenX / halfW) / 2.0f;
