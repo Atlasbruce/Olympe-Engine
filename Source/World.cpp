@@ -1868,6 +1868,9 @@ void World::SetMapBounds(int minTileX, int minTileY, int maxTileX, int maxTileY,
     m_chunkOriginX = chunkOriginX;
     m_chunkOriginY = chunkOriginY;
     
+    // Invalidate cached isometric origin (will be recalculated on next access)
+    m_isometricOriginCached = false;
+    
     SYSTEM_LOG << "[World] Map bounds set: tiles(" << minTileX << "," << minTileY 
                << ") to (" << maxTileX << "," << maxTileY << "), chunk origin: ("
                << chunkOriginX << "," << chunkOriginY << ")\n";
@@ -1881,8 +1884,14 @@ float World::GetIsometricOriginX() const
     // At minTileX, minTileY: isoX = (minTileX - minTileY) * (tileWidth / 2)
     if (m_mapOrientation == "isometric")
     {
-        float originX = (m_minTileX - m_minTileY) * (m_tileWidth / 2.0f);
-        return originX;
+        // Cache the result to avoid redundant calculations during rendering
+        if (!m_isometricOriginCached)
+        {
+            m_cachedIsometricOriginX = (m_minTileX - m_minTileY) * (m_tileWidth / 2.0f);
+            m_cachedIsometricOriginY = (m_minTileX + m_minTileY) * (m_tileHeight / 2.0f);
+            m_isometricOriginCached = true;
+        }
+        return m_cachedIsometricOriginX;
     }
     return 0.0f;
 }
@@ -1894,8 +1903,14 @@ float World::GetIsometricOriginY() const
     // At minTileX, minTileY: isoY = (minTileX + minTileY) * (tileHeight / 2)
     if (m_mapOrientation == "isometric")
     {
-        float originY = (m_minTileX + m_minTileY) * (m_tileHeight / 2.0f);
-        return originY;
+        // Cache the result to avoid redundant calculations during rendering
+        if (!m_isometricOriginCached)
+        {
+            m_cachedIsometricOriginX = (m_minTileX - m_minTileY) * (m_tileWidth / 2.0f);
+            m_cachedIsometricOriginY = (m_minTileX + m_minTileY) * (m_tileHeight / 2.0f);
+            m_isometricOriginCached = true;
+        }
+        return m_cachedIsometricOriginY;
     }
     return 0.0f;
 }

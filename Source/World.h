@@ -584,6 +584,11 @@ private:
     int m_chunkOriginX = 0;
     int m_chunkOriginY = 0;
     
+    // Cached isometric origin (computed once, used many times during rendering)
+    mutable float m_cachedIsometricOriginX = 0.0f;
+    mutable float m_cachedIsometricOriginY = 0.0f;
+    mutable bool m_isometricOriginCached = false;
+    
     // Custom layer counter (starts after predefined layers)
     int m_nextCustomLayerIndex = static_cast<int>(RenderLayer::Foreground_Far) + 1;
 };

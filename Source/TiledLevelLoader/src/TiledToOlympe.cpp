@@ -711,6 +711,9 @@ namespace Tiled {
             
             // Apply the same isometric origin offset that tiles get
             // This ensures entities and tiles share the same world-space origin
+            // NOTE: This formula is duplicated in World::GetIsometricOriginX/Y() for rendering.
+            // The duplication is intentional - TiledToOlympe calculates it during conversion
+            // (before World exists), while World caches it for efficient rendering.
             float isometricOriginX = (minTileX_ - minTileY_) * (config_.tileWidth / 2.0f);
             float isometricOriginY = (minTileX_ + minTileY_) * (config_.tileHeight / 2.0f);
             
