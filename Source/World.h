@@ -545,6 +545,18 @@ public:
     const std::string& GetMapOrientation() const { return m_mapOrientation; }
     int GetTileWidth() const { return m_tileWidth; }
     int GetTileHeight() const { return m_tileHeight; }
+    
+    // Get isometric origin offset (computed from map bounds)
+    // This offset is applied to tile rendering to align tiles and entities in the same world space
+    float GetIsometricOriginX() const;
+    float GetIsometricOriginY() const;
+    
+    // Set map bounds (for isometric origin calculation)
+    void SetMapBounds(int minTileX, int minTileY, int maxTileX, int maxTileY, int chunkOriginX, int chunkOriginY);
+    
+    // Get chunk origin (for orthogonal/hex/staggered entity offset)
+    int GetChunkOriginX() const { return m_chunkOriginX; }
+    int GetChunkOriginY() const { return m_chunkOriginY; }
 
 
     // Tile layer loading helper methods (internal use only)
@@ -561,6 +573,21 @@ private:
     int m_tileWidth;
     int m_tileHeight;
     std::vector<std::unique_ptr<Level>> m_levels;
+    
+    // Map bounds (for isometric origin calculation)
+    int m_minTileX = 0;
+    int m_minTileY = 0;
+    int m_maxTileX = 0;
+    int m_maxTileY = 0;
+    
+    // Chunk origin (for orthogonal/hex/staggered entity offset)
+    int m_chunkOriginX = 0;
+    int m_chunkOriginY = 0;
+    
+    // Cached isometric origin (computed once, used many times during rendering)
+    mutable float m_cachedIsometricOriginX = 0.0f;
+    mutable float m_cachedIsometricOriginY = 0.0f;
+    mutable bool m_isometricOriginCached = false;
     
     // Custom layer counter (starts after predefined layers)
     int m_nextCustomLayerIndex = static_cast<int>(RenderLayer::Foreground_Far) + 1;
