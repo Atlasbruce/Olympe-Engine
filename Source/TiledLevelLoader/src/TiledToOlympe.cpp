@@ -658,8 +658,15 @@ namespace Tiled {
 
         if (isIsometric)
         {
+            // Thresholds for debug logging (objects far from origin)
+            const float LOG_THRESHOLD_X_MAX = 2000.0f;
+            const float LOG_THRESHOLD_X_MIN = -1000.0f;
+            const float LOG_THRESHOLD_Y_MAX = 2000.0f;
+            const float LOG_THRESHOLD_Y_MIN = -300.0f;
+            
             // Log input coordinates for debugging
-            bool shouldLog = (x > 2000.0f || x < -1000.0f || y > 2000.0f || y < -300.0f);
+            bool shouldLog = (x > LOG_THRESHOLD_X_MAX || x < LOG_THRESHOLD_X_MIN || 
+                            y > LOG_THRESHOLD_Y_MAX || y < LOG_THRESHOLD_Y_MIN);
             if (shouldLog) {
                 SYSTEM_LOG << "[TRANSFORM] Input TMJ coordinates: (" << x << ", " << y << ")\n";
                 SYSTEM_LOG << "  → Layer offsets: offsetX=" << layerOffsetX << ", offsetY=" << layerOffsetY << "\n";
@@ -674,7 +681,7 @@ namespace Tiled {
             }
 
             // Convert TMJ pixels to tile coordinates
-            float tileX = adjustedX / static_cast<float>((float)config_.tileWidth / 2.0f);
+            float tileX = adjustedX / (static_cast<float>(config_.tileWidth) / 2.0f);
             float tileY = adjustedY / static_cast<float>(config_.tileHeight);
 
             if (shouldLog) {
