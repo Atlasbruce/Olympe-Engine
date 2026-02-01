@@ -747,17 +747,18 @@ namespace Tiled {
             float halfW = tileWidth / 2.0f;
             float halfH = tileHeight / 2.0f;
             
-            // Real isometric origin formula (geometric derivation):
-            // In isometric projection, tile (0,0) is rendered at screen position:
-            //   screenX = (0 - 0) * halfW = 0
-            //   screenY = (0 + 0) * halfH = 0
+            // Real isometric origin formula (per problem specification):
+            // In isometric projection, screen coordinates for a tile at (tileX, tileY):
+            //   screenX = (tileX - tileY) * halfW
+            //   screenY = (tileX + tileY) * halfH
             // For a map with bounds [minTileX, minTileY] to [maxTileX, maxTileY],
-            // we need to find the screen origin that maps to the minimum tile corner.
-            // The isometric origin in screen space is derived from:
+            // the real isometric origin accounts for the diamond-shaped grid layout.
+            // The asymmetry (maxTileY vs minTileX) in the X formula and the negative sign
+            // in the Y formula are specific to the isometric diamond orientation and ensure
+            // correct coordinate transformation for grouped/infinite maps where tiles don't start at (0,0).
+            // These formulas are derived from the isometric projection geometry:
             //   isoOriginX = (maxTileY - minTileX) * halfW
             //   isoOriginY = -(minTileX + minTileY) * halfH
-            // This accounts for the diamond-shaped isometric grid and ensures proper
-            // coordinate transformation for grouped/infinite maps where tiles don't start at (0,0).
             float isoOriginX = (maxTileY_ - minTileX_) * halfW;
             float isoOriginY = -(minTileX_ + minTileY_) * halfH;
             
