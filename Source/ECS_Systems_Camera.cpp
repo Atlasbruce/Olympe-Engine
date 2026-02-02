@@ -420,8 +420,9 @@ void CameraSystem::ProcessKeyboardInput(EntityID entity, CameraInputBinding_data
         direction.x /= length;
         direction.y /= length;
     }
-    
-    binding.inputDirection = direction;
+
+	const float fcameraspeed = 300.0f ; // Can be adjusted or made configurable
+    binding.inputDirection = direction * fcameraspeed * GameEngine::fDt;
     
     // Rotation input with key press (not held) for discrete steps
     if (kb.IsKeyPressed(binding.key_rotate_left))
