@@ -1,5 +1,9 @@
 # Isometric Entity Placement - Minimal Stable Version
 
+## Note
+
+This document supersedes the previous complex rebasing approach. The filename retains "FIX" for historical reference, but the current implementation uses a simplified minimal approach.
+
 ## Approach
 
 This document describes the minimal and stable approach for isometric object placement in the Olympe Engine.
@@ -14,7 +18,7 @@ The simplified transformation for isometric objects applies only the necessary o
 
 ```cpp
 // 1) Log raw TMJ coordinates
-SYSTEM_LOG << "[TRANSFORM] Raw TMJ (" << x << ", " << y << ")\n";
+SYSTEM_LOG << "[TRANSFORM] Isometric - Raw TMJ (" << x << ", " << y << ")\n";
 
 // 2) Determine tileset offsets for tile objects (gid > 0)
 int tileOffsetX = 0;
@@ -66,7 +70,7 @@ This simplification creates a stable, minimal version that avoids coordinate sys
 The simplified implementation produces three clean log lines for each object transformation in isometric mode:
 
 ```
-[TRANSFORM] Raw TMJ (x, y)
+[TRANSFORM] Isometric - Raw TMJ (x, y)
 Offsets applied (layer/tile): (layerOffsetX/tileOffsetX, layerOffsetY/tileOffsetY)
 Final position (posX, posY)
 ```

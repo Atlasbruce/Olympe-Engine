@@ -718,7 +718,7 @@ namespace Tiled {
             // Objects remain in TMJ pixels, the origin is handled on the tile side
             
             // 1) Log raw TMJ coordinates
-            SYSTEM_LOG << "[TRANSFORM] Raw TMJ (" << x << ", " << y << ")\n";
+            SYSTEM_LOG << "[TRANSFORM] Isometric - Raw TMJ (" << x << ", " << y << ")\n";
             
             // 2) Determine tileset offsets for tile objects (gid > 0)
             int tileOffsetX = 0;
