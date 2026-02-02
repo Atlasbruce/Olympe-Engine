@@ -316,6 +316,28 @@ namespace Tiled {
         tileset.columns = GetInt(j, "columns");
         tileset.spacing = GetInt(j, "spacing");
         tileset.margin = GetInt(j, "margin");
+        
+        // ====================================================================
+        // CRITICAL: Parse tileoffset for embedded tilesets
+        // This was previously only parsed for external tilesets in TilesetParser
+        // Now properly handled for embedded tilesets as well
+        // ====================================================================
+        if (HasKey(j, "tileoffset"))
+        {
+            const auto& offset = j["tileoffset"];
+            tileset.tileoffsetX = GetInt(offset, "x");
+            tileset.tileoffsetY = GetInt(offset, "y");
+            SYSTEM_LOG << "TiledLevelLoader: Parsed embedded tileset tileoffset (" 
+                      << tileset.tileoffsetX << ", " << tileset.tileoffsetY 
+                      << ") for tileset '" << tileset.name << "'\n";
+        }
+        else
+        {
+            // Explicit defaults when no tileoffset property present
+            tileset.tileoffsetX = 0;
+            tileset.tileoffsetY = 0;
+        }
+        
         tileset.image = GetString(j, "image");
         tileset.imagewidth = GetInt(j, "imagewidth");
         tileset.imageheight = GetInt(j, "imageheight");
@@ -350,18 +372,30 @@ namespace Tiled {
 
     bool TiledLevelLoader::LoadExternalTileset(const std::string& filepath, TiledTileset& tileset)
     {
-        // Try to get from cache
+        SYSTEM_LOG << "TiledLevelLoader: Loading external tileset from " << filepath << std::endl;
+        
+        // Try to get from cache (cache will load from file if not already cached)
         auto cachedTileset = TilesetCache::GetInstance().GetTileset(filepath);
         if (cachedTileset) {
-            // Copy data from cached tileset (preserve firstgid)
+            // Copy data from cached tileset (preserve firstgid and source)
             int firstgid = tileset.firstgid;
             std::string source = tileset.source;
             tileset = *cachedTileset;
             tileset.firstgid = firstgid;
             tileset.source = source;
+            
+            // Log successful loading with tileoffset info
+            SYSTEM_LOG << "TiledLevelLoader: External tileset loaded successfully"
+                      << " - firstgid=" << firstgid
+                      << ", tileoffset=(" << tileset.tileoffsetX << ", " << tileset.tileoffsetY << ")"
+                      << std::endl;
             return true;
         }
 
+        // If we get here, cache returned nullptr meaning parsing failed
+        SYSTEM_LOG << "TiledLevelLoader: Failed to load external tileset from " << filepath 
+                  << " - File may not exist, be corrupted, or have invalid format" << std::endl;
+        lastError_ = "Failed to load or parse external tileset: " + filepath;
         return false;
     }
 
@@ -379,6 +413,15 @@ namespace Tiled {
                 if (j["data"].is_string()) {
                     std::string dataStr = j["data"].get<std::string>();
                     chunk.data = TiledDecoder::DecodeTileData(dataStr, layerEncoding, layerCompression);
+                    
+                    // Validate decoded data
+                    if (chunk.data.empty() && !dataStr.empty()) {
+                        SYSTEM_LOG << "TiledLevelLoader: ERROR - Failed to decode chunk data at (" 
+                                  << chunk.x << ", " << chunk.y << ")"
+                                  << " (encoding=" << layerEncoding 
+                                  << ", compression=" << layerCompression << ")" << std::endl;
+                        return false;
+                    }
                 }
                 else if (j["data"].is_array()) {
                     // CSV array
@@ -388,6 +431,23 @@ namespace Tiled {
                             chunk.data.push_back(static_cast<uint32_t>(val.get<int>()));
                         }
                     }
+                }
+                
+                // ====================================================================
+                // CRITICAL VALIDATION: Check chunk data size matches dimensions
+                // ====================================================================
+                int expectedSize = chunk.width * chunk.height;
+                int actualSize = static_cast<int>(chunk.data.size());
+                
+                if (actualSize != expectedSize) {
+                    SYSTEM_LOG << "TiledLevelLoader: ERROR - Chunk data size mismatch at (" 
+                              << chunk.x << ", " << chunk.y << ")"
+                              << "\n  Expected: " << expectedSize << " tiles (" << chunk.width << " x " << chunk.height << ")"
+                              << "\n  Actual: " << actualSize << " tiles"
+                              << "\n  Encoding: " << layerEncoding
+                              << "\n  Compression: " << (layerCompression.empty() ? "none" : layerCompression)
+                              << std::endl;
+                    return false;
                 }
             }
 
@@ -445,6 +505,7 @@ namespace Tiled {
     bool TiledLevelLoader::ParseTileData(const json& j, TiledLayer& layer)
     {
         if (!HasKey(j, "data")) {
+            SYSTEM_LOG << "TiledLevelLoader: Layer '" << layer.name << "' has no 'data' field" << std::endl;
             return false;
         }
 
@@ -452,6 +513,15 @@ namespace Tiled {
             // Encoded data (base64)
             std::string dataStr = j["data"].get<std::string>();
             layer.data = TiledDecoder::DecodeTileData(dataStr, layer.encoding, layer.compression);
+            
+            // Validate decoded data size
+            if (layer.data.empty() && !dataStr.empty()) {
+                SYSTEM_LOG << "TiledLevelLoader: ERROR - Failed to decode tile data for layer '" 
+                          << layer.name << "' (encoding=" << layer.encoding 
+                          << ", compression=" << layer.compression << ")" << std::endl;
+                lastError_ = "Failed to decode tile data for layer: " + layer.name;
+                return false;
+            }
         }
         else if (j["data"].is_array()) {
             // CSV array
@@ -462,6 +532,27 @@ namespace Tiled {
                 }
             }
         }
+
+        // ====================================================================
+        // CRITICAL VALIDATION: Check data size matches layer dimensions
+        // ====================================================================
+        int expectedSize = layer.width * layer.height;
+        int actualSize = static_cast<int>(layer.data.size());
+        
+        if (actualSize != expectedSize) {
+            SYSTEM_LOG << "TiledLevelLoader: ERROR - Data size mismatch for layer '" << layer.name << "'"
+                      << "\n  Expected: " << expectedSize << " tiles (" << layer.width << " x " << layer.height << ")"
+                      << "\n  Actual: " << actualSize << " tiles"
+                      << "\n  Encoding: " << layer.encoding
+                      << "\n  Compression: " << (layer.compression.empty() ? "none" : layer.compression)
+                      << std::endl;
+            lastError_ = "Data size mismatch for layer '" + layer.name + "': expected " 
+                       + std::to_string(expectedSize) + " but got " + std::to_string(actualSize);
+            return false;
+        }
+        
+        SYSTEM_LOG << "TiledLevelLoader: Successfully parsed layer '" << layer.name 
+                  << "' with " << actualSize << " tiles" << std::endl;
 
         return true;
     }

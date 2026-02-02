@@ -72,7 +72,7 @@ namespace Tiled {
     std::vector<uint8_t> TiledDecoder::DecompressGzip(const std::vector<uint8_t>& compressed)
     {
         if (compressed.empty()) {
-            SYSTEM_LOG << "TiledDecoder: Empty input for gzip decompression" << std::endl;
+            SYSTEM_LOG << "TiledDecoder: ERROR - Empty input for gzip decompression" << std::endl;
             return std::vector<uint8_t>();
         }
 
@@ -85,7 +85,7 @@ namespace Tiled {
                                    static_cast<mz_ulong>(compressed.size()));
 
         if (status == MZ_BUF_ERROR) {
-            // Buffer too small, try larger
+            // Buffer too small, try larger (50x ratio)
             estimated_size = compressed.size() * 50;
             result.resize(estimated_size);
             dest_len = static_cast<mz_ulong>(estimated_size);
@@ -94,7 +94,18 @@ namespace Tiled {
         }
 
         if (status != MZ_OK) {
-            SYSTEM_LOG << "TiledDecoder: Gzip decompression failed with error " << status << std::endl;
+            const char* errorStr = "unknown error";
+            switch (status) {
+                case MZ_STREAM_ERROR: errorStr = "stream error (invalid parameters)"; break;
+                case MZ_DATA_ERROR: errorStr = "data error (corrupted or incomplete data)"; break;
+                case MZ_MEM_ERROR: errorStr = "memory error (out of memory)"; break;
+                case MZ_BUF_ERROR: errorStr = "buffer error (output buffer too small)"; break;
+            }
+            SYSTEM_LOG << "TiledDecoder: ERROR - Gzip decompression failed"
+                      << "\n  Error code: " << status << " (" << errorStr << ")"
+                      << "\n  Input size: " << compressed.size() << " bytes"
+                      << "\n  This indicates corrupted, truncated, or invalid gzip data"
+                      << std::endl;
             return std::vector<uint8_t>();
         }
 
@@ -112,8 +123,17 @@ namespace Tiled {
     {
         std::vector<uint32_t> result;
         
+        // ====================================================================
+        // CRITICAL VALIDATION: Verify byte array size is multiple of 4
+        // Each tile ID requires exactly 4 bytes (uint32_t little-endian)
+        // ====================================================================
         if (bytes.size() % 4 != 0) {
-            SYSTEM_LOG << "TiledDecoder: Byte array size not multiple of 4" << std::endl;
+            SYSTEM_LOG << "TiledDecoder: ERROR - Byte array size (" << bytes.size() 
+                      << ") is not a multiple of 4" 
+                      << "\n  This indicates corrupted or truncated tile data"
+                      << "\n  Each tile ID requires exactly 4 bytes"
+                      << "\n  Missing bytes: " << (4 - (bytes.size() % 4))
+                      << std::endl;
             return result;
         }
 
@@ -137,8 +157,11 @@ namespace Tiled {
         std::vector<uint32_t> result;
         std::istringstream stream(csv);
         std::string token;
+        int tokenCount = 0;
+        int errorCount = 0;
 
         while (std::getline(stream, token, ',')) {
+            ++tokenCount;
             // Remove whitespace
             token.erase(0, token.find_first_not_of(" \t\n\r\f\v"));
             token.erase(token.find_last_not_of(" \t\n\r\f\v") + 1);
@@ -147,10 +170,25 @@ namespace Tiled {
                 try {
                     uint32_t value = static_cast<uint32_t>(std::stoul(token));
                     result.push_back(value);
+                } catch (const std::invalid_argument& e) {
+                    ++errorCount;
+                    SYSTEM_LOG << "TiledDecoder: ERROR - Invalid CSV token at position " << tokenCount 
+                              << ": '" << token << "' (not a valid number)" << std::endl;
+                } catch (const std::out_of_range& e) {
+                    ++errorCount;
+                    SYSTEM_LOG << "TiledDecoder: ERROR - CSV token out of range at position " << tokenCount 
+                              << ": '" << token << "' (exceeds uint32_t maximum)" << std::endl;
                 } catch (...) {
-                    SYSTEM_LOG << "TiledDecoder: Failed to parse CSV token: " << token << std::endl;
+                    ++errorCount;
+                    SYSTEM_LOG << "TiledDecoder: ERROR - Failed to parse CSV token at position " << tokenCount 
+                              << ": '" << token << "'" << std::endl;
                 }
             }
+        }
+        
+        if (errorCount > 0) {
+            SYSTEM_LOG << "TiledDecoder: WARNING - Parsed " << result.size() << " valid tiles from " 
+                      << tokenCount << " tokens with " << errorCount << " errors" << std::endl;
         }
 
         return result;
@@ -168,29 +206,50 @@ namespace Tiled {
             // Decode base64
             std::vector<uint8_t> decoded = DecodeBase64(data);
             if (decoded.empty()) {
-                SYSTEM_LOG << "TiledDecoder: Base64 decode failed" << std::endl;
+                SYSTEM_LOG << "TiledDecoder: ERROR - Base64 decode failed"
+                          << "\n  Input data length: " << data.length() << " characters"
+                          << "\n  This may indicate corrupted or invalid base64 data"
+                          << std::endl;
                 return std::vector<uint32_t>();
             }
 
+            SYSTEM_LOG << "TiledDecoder: Base64 decoded " << decoded.size() << " bytes" << std::endl;
+
             // Decompress if needed
             if (compression == "gzip") {
+                size_t compressedSize = decoded.size();
                 decoded = DecompressGzip(decoded);
                 if (decoded.empty()) {
+                    SYSTEM_LOG << "TiledDecoder: ERROR - Gzip decompression failed"
+                              << "\n  Compressed size: " << compressedSize << " bytes"
+                              << "\n  This may indicate corrupted compression data"
+                              << std::endl;
                     return std::vector<uint32_t>();
                 }
+                SYSTEM_LOG << "TiledDecoder: Gzip decompressed from " << compressedSize 
+                          << " to " << decoded.size() << " bytes" << std::endl;
             }
             else if (compression == "zlib") {
+                size_t compressedSize = decoded.size();
                 decoded = DecompressZlib(decoded);
                 if (decoded.empty()) {
+                    SYSTEM_LOG << "TiledDecoder: ERROR - Zlib decompression failed"
+                              << "\n  Compressed size: " << compressedSize << " bytes"
+                              << "\n  This may indicate corrupted compression data"
+                              << std::endl;
                     return std::vector<uint32_t>();
                 }
+                SYSTEM_LOG << "TiledDecoder: Zlib decompressed from " << compressedSize 
+                          << " to " << decoded.size() << " bytes" << std::endl;
             }
 
             // Convert to tile IDs
             return BytesToTileIds(decoded);
         }
         else {
-            SYSTEM_LOG << "TiledDecoder: Unsupported encoding: " << encoding << std::endl;
+            SYSTEM_LOG << "TiledDecoder: ERROR - Unsupported encoding: '" << encoding << "'"
+                      << "\n  Supported encodings: 'csv', 'base64'"
+                      << std::endl;
             return std::vector<uint32_t>();
         }
     }
