@@ -743,28 +743,28 @@ namespace Tiled {
                 SYSTEM_LOG << "  → No gid, using map tileWidth/tileHeight\n";
             }
             
-            // 2) Calculate real isometric origin from map bounds (min/max tiles)
+            // 2) Calculate real isometric pixel origin using TileToScreen on the 4 map corners
             float halfW = tileWidth / 2.0f;
             float halfH = tileHeight / 2.0f;
             
-            // Real isometric origin formula (per problem specification):
-            // In isometric projection, screen coordinates for a tile at (tileX, tileY):
-            //   screenX = (tileX - tileY) * halfW
-            //   screenY = (tileX + tileY) * halfH
-            // For a map with bounds [minTileX, minTileY] to [maxTileX, maxTileY],
-            // the real isometric origin accounts for the diamond-shaped grid layout.
-            // The formulas use maxTileY (not minTileY) for X and a negative sign for Y
-            // due to the specific geometry of the isometric diamond and how the coordinate
-            // system maps from tile space to screen space. This ensures correct transformation
-            // for grouped/infinite maps where tiles don't start at (0,0).
-            // These formulas are specified in the problem requirements:
-            //   isoOriginX = (maxTileY - minTileX) * halfW
-            //   isoOriginY = -(minTileX + minTileY) * halfH
-            float isoOriginX = (maxTileY_ - minTileX_) * halfW;
-            float isoOriginY = -(minTileX_ + minTileY_) * halfH;
+            // Compute the real isometric pixel origin by projecting the 4 map corners
+            // to screen space and taking the minimum x and y values.
+            // This approach ensures correct positioning for maps with non-zero bounds.
+            Vector p1 = IsometricProjection::TileToScreen(minTileX_, minTileY_, tileWidth, tileHeight);
+            Vector p2 = IsometricProjection::TileToScreen(minTileX_, maxTileY_ + 1, tileWidth, tileHeight);
+            Vector p3 = IsometricProjection::TileToScreen(maxTileX_ + 1, minTileY_, tileWidth, tileHeight);
+            Vector p4 = IsometricProjection::TileToScreen(maxTileX_ + 1, maxTileY_ + 1, tileWidth, tileHeight);
+            
+            float isoOriginX = std::min({p1.x, p2.x, p3.x, p4.x});
+            float isoOriginY = std::min({p1.y, p2.y, p3.y, p4.y});
             
             SYSTEM_LOG << "  → Map bounds: minTileX=" << minTileX_ << ", minTileY=" << minTileY_
                       << ", maxTileX=" << maxTileX_ << ", maxTileY=" << maxTileY_ << "\n";
+            SYSTEM_LOG << "  → TileToScreen corners:\n"
+                      << "      p1(" << minTileX_ << "," << minTileY_ << ") = (" << p1.x << ", " << p1.y << ")\n"
+                      << "      p2(" << minTileX_ << "," << maxTileY_ + 1 << ") = (" << p2.x << ", " << p2.y << ")\n"
+                      << "      p3(" << maxTileX_ + 1 << "," << minTileY_ << ") = (" << p3.x << ", " << p3.y << ")\n"
+                      << "      p4(" << maxTileX_ + 1 << "," << maxTileY_ + 1 << ") = (" << p4.x << ", " << p4.y << ")\n";
             SYSTEM_LOG << "  → Isometric origin: isoOriginX=" << isoOriginX 
                       << ", isoOriginY=" << isoOriginY << "\n";
             
@@ -782,11 +782,15 @@ namespace Tiled {
             //    - Objects without gid (rectangles, ellipses, points, polygons, polylines) use
             //      direct coordinates and don't need these tile-specific adjustments.
             if (gid > 0) {
+                SYSTEM_LOG << "  → Applying tile object adjustments: gid=" << gid 
+                          << ", tileOffsetX=" << tileOffsetX 
+                          << ", tileOffsetY=" << tileOffsetY
+                          << ", tileWidth/2=" << halfW << "\n";
                 screenX += tileOffsetX - halfW;
                 screenY += tileOffsetY;
             }
             
-            SYSTEM_LOG << "  → Screen coords (after rebasing): screenX=" << screenX 
+            SYSTEM_LOG << "  → Screen coords (after rebasing and tile adjustments): screenX=" << screenX 
                       << ", screenY=" << screenY << "\n";
             
             // 5) Apply inverse isometric projection to compute world tile coords:
@@ -800,7 +804,7 @@ namespace Tiled {
             float worldX = (screenX / halfW + screenY / halfH) / 2.0f;
             float worldY = (screenY / halfH - screenX / halfW) / 2.0f;
             
-            SYSTEM_LOG << "  → World iso coords: worldX=" << worldX 
+            SYSTEM_LOG << "  → Final world coords: worldX=" << worldX 
                       << ", worldY=" << worldY << "\n";
             
             return Vector(worldX, worldY, 0.0f);
