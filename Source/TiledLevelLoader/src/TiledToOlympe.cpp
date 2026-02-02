@@ -750,6 +750,8 @@ namespace Tiled {
             // Compute the real isometric pixel origin by projecting the 4 map corners
             // to screen space and taking the minimum x and y values.
             // This approach ensures correct positioning for maps with non-zero bounds.
+            // Note: +1 is added to maxTileX_ and maxTileY_ to get the outer bounds of the tile grid,
+            // as max values represent the last tile's coordinate, not the edge beyond it.
             Vector p1 = IsometricProjection::TileToScreen(minTileX_, minTileY_, tileWidth, tileHeight);
             Vector p2 = IsometricProjection::TileToScreen(minTileX_, maxTileY_ + 1, tileWidth, tileHeight);
             Vector p3 = IsometricProjection::TileToScreen(maxTileX_ + 1, minTileY_, tileWidth, tileHeight);
