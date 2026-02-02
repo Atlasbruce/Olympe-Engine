@@ -753,10 +753,11 @@ namespace Tiled {
             //   screenY = (tileX + tileY) * halfH
             // For a map with bounds [minTileX, minTileY] to [maxTileX, maxTileY],
             // the real isometric origin accounts for the diamond-shaped grid layout.
-            // The asymmetry (maxTileY vs minTileX) in the X formula and the negative sign
-            // in the Y formula are specific to the isometric diamond orientation and ensure
-            // correct coordinate transformation for grouped/infinite maps where tiles don't start at (0,0).
-            // These formulas are derived from the isometric projection geometry:
+            // The formulas use maxTileY (not minTileY) for X and a negative sign for Y
+            // due to the specific geometry of the isometric diamond and how the coordinate
+            // system maps from tile space to screen space. This ensures correct transformation
+            // for grouped/infinite maps where tiles don't start at (0,0).
+            // These formulas are specified in the problem requirements:
             //   isoOriginX = (maxTileY - minTileX) * halfW
             //   isoOriginY = -(minTileX + minTileY) * halfH
             float isoOriginX = (maxTileY_ - minTileX_) * halfW;
@@ -772,11 +773,14 @@ namespace Tiled {
             float screenY = y + layerOffsetY - isoOriginY;
             
             // 4) If obj.gid > 0, apply tileset tileoffset and bottom-center alignment before inverse projection
-            //    Objects with gid are tile objects (visual sprites from tilesets) and need:
-            //    - Tileset-specific tileoffsetX/Y adjustments (from tileset definition)
-            //    - Bottom-center anchor adjustment (TMX uses bottom-left for tile objects)
-            //    Objects without gid (rectangles, ellipses, points, polygons, polylines) use
-            //    direct coordinates and don't need these tile-specific adjustments.
+            //    NOTE: This is a BEHAVIORAL CHANGE from the previous implementation which applied
+            //    these adjustments to all objects. Per problem specification, these adjustments
+            //    should ONLY be applied to tile objects (gid > 0):
+            //    - Objects with gid are tile objects (visual sprites from tilesets) and need:
+            //      * Tileset-specific tileoffsetX/Y adjustments (from tileset definition)
+            //      * Bottom-center anchor adjustment (TMX uses bottom-left for tile objects)
+            //    - Objects without gid (rectangles, ellipses, points, polygons, polylines) use
+            //      direct coordinates and don't need these tile-specific adjustments.
             if (gid > 0) {
                 screenX += tileOffsetX - halfW;
                 screenY += tileOffsetY;
