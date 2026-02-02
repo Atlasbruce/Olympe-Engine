@@ -719,97 +719,34 @@ namespace Tiled {
 
         if (config_.mapOrientation == "isometric")
         {
-            // ISOMETRIC MODE WITH BOUNDS-AWARE ORIGIN AND PROPER INVERSE PROJECTION:
+            // ISOMETRIC MODE - OPTION A: Keep objects in TMJ pixel coordinates
+            // TMJ isometric objects are already in pixel coordinates and should not be converted.
+            // We only apply layer offsets and tileset offsets (for tile objects with gid > 0).
             
-            // 1) Determine tileset info for object gid (if gid > 0)
-            int tileWidth = config_.tileWidth;
-            int tileHeight = config_.tileHeight;
+            SYSTEM_LOG << "  → ISOMETRIC: Objects remain in TMJ pixel coordinates (no tile coordinate conversion)\n";
+            
+            // 1) Determine tileset offsets for tile objects (gid > 0)
             int tileOffsetX = 0;
             int tileOffsetY = 0;
             
             if (gid > 0) {
                 const TiledTileset* tileset = FindTilesetForGid(gid);
                 if (tileset) {
-                    tileWidth = tileset->tilewidth;
-                    tileHeight = tileset->tileheight;
                     tileOffsetX = tileset->tileoffsetX;
                     tileOffsetY = tileset->tileoffsetY;
-                    SYSTEM_LOG << "  → Found tileset: tileWidth=" << tileWidth 
-                              << ", tileHeight=" << tileHeight
-                              << ", tileOffsetX=" << tileOffsetX
+                    SYSTEM_LOG << "  → Found tileset for gid " << gid 
+                              << ": tileOffsetX=" << tileOffsetX
                               << ", tileOffsetY=" << tileOffsetY << "\n";
                 }
-            } else {
-                SYSTEM_LOG << "  → No gid, using map tileWidth/tileHeight\n";
             }
             
-            // 2) Calculate real isometric pixel origin using TileToScreen on the 4 map corners
-            float halfW = tileWidth / 2.0f;
-            float halfH = tileHeight / 2.0f;
+            // 2) Calculate final position: original TMJ pixels + layer offsets + tileset offsets
+            float finalX = x + layerOffsetX + tileOffsetX;
+            float finalY = y + layerOffsetY + tileOffsetY;
             
-            // Compute the real isometric pixel origin by projecting the 4 map corners
-            // to screen space and taking the minimum x and y values.
-            // This approach ensures correct positioning for maps with non-zero bounds.
-            // Note: +1 is added to maxTileX_ and maxTileY_ to get the outer bounds of the tile grid,
-            // as max values represent the last tile's coordinate, not the edge beyond it.
-            Vector p1 = IsometricProjection::TileToScreen(minTileX_, minTileY_, tileWidth, tileHeight);
-            Vector p2 = IsometricProjection::TileToScreen(minTileX_, maxTileY_ + 1, tileWidth, tileHeight);
-            Vector p3 = IsometricProjection::TileToScreen(maxTileX_ + 1, minTileY_, tileWidth, tileHeight);
-            Vector p4 = IsometricProjection::TileToScreen(maxTileX_ + 1, maxTileY_ + 1, tileWidth, tileHeight);
+            SYSTEM_LOG << "  → Final position in TMJ pixels: (" << finalX << ", " << finalY << ")\n";
             
-            float isoOriginX = std::min({p1.x, p2.x, p3.x, p4.x});
-            float isoOriginY = std::min({p1.y, p2.y, p3.y, p4.y});
-            
-            SYSTEM_LOG << "  → Map bounds: minTileX=" << minTileX_ << ", minTileY=" << minTileY_
-                      << ", maxTileX=" << maxTileX_ << ", maxTileY=" << maxTileY_ << "\n";
-            SYSTEM_LOG << "  → TileToScreen corners:\n"
-                      << "      p1(" << minTileX_ << "," << minTileY_ << ") = (" << p1.x << ", " << p1.y << ")\n"
-                      << "      p2(" << minTileX_ << "," << maxTileY_ + 1 << ") = (" << p2.x << ", " << p2.y << ")\n"
-                      << "      p3(" << maxTileX_ + 1 << "," << minTileY_ << ") = (" << p3.x << ", " << p3.y << ")\n"
-                      << "      p4(" << maxTileX_ + 1 << "," << maxTileY_ + 1 << ") = (" << p4.x << ", " << p4.y << ")\n";
-            SYSTEM_LOG << "  → Isometric origin: isoOriginX=" << isoOriginX 
-                      << ", isoOriginY=" << isoOriginY << "\n";
-            
-            // 3) Rebase TMJ coords to local screen coords before inverse projection
-            float screenX = x + layerOffsetX - isoOriginX;
-            float screenY = y + layerOffsetY - isoOriginY;
-            
-            // 4) If obj.gid > 0, apply tileset tileoffset and bottom-center alignment before inverse projection
-            //    NOTE: This is a BEHAVIORAL CHANGE from the previous implementation which applied
-            //    these adjustments to all objects. Per problem specification, these adjustments
-            //    should ONLY be applied to tile objects (gid > 0):
-            //    - Objects with gid are tile objects (visual sprites from tilesets) and need:
-            //      * Tileset-specific tileoffsetX/Y adjustments (from tileset definition)
-            //      * Bottom-center anchor adjustment (TMX uses bottom-left for tile objects)
-            //    - Objects without gid (rectangles, ellipses, points, polygons, polylines) use
-            //      direct coordinates and don't need these tile-specific adjustments.
-            if (gid > 0) {
-                SYSTEM_LOG << "  → Applying tile object adjustments: gid=" << gid 
-                          << ", tileOffsetX=" << tileOffsetX 
-                          << ", tileOffsetY=" << tileOffsetY
-                          << ", tileWidth/2=" << halfW << "\n";
-                screenX += tileOffsetX - halfW;
-                screenY += tileOffsetY;
-            }
-            
-            SYSTEM_LOG << "  → Screen coords (after rebasing and tile adjustments): screenX=" << screenX 
-                      << ", screenY=" << screenY << "\n";
-            
-            // 5) Apply inverse isometric projection to compute world tile coords:
-            //    Forward projection (used in tile rendering):
-            //      screenX = (worldX - worldY) * halfW
-            //      screenY = (worldX + worldY) * halfH
-            //    Inverse projection (solving for worldX and worldY):
-            //      worldX = (screenX/halfW + screenY/halfH) / 2
-            //      worldY = (screenY/halfH - screenX/halfW) / 2
-            
-            float worldX = (screenX / halfW + screenY / halfH) / 2.0f;
-            float worldY = (screenY / halfH - screenX / halfW) / 2.0f;
-            
-            SYSTEM_LOG << "  → Final world coords: worldX=" << worldX 
-                      << ", worldY=" << worldY << "\n";
-            
-            return Vector(worldX, worldY, 0.0f);
+            return Vector(finalX, finalY, 0.0f);
         }
         
         // ORTHOGONAL / HEXAGONAL / STAGGERED MODES:
