@@ -747,13 +747,42 @@ namespace Tiled {
             
             SYSTEM_LOG << "  → Position after offsets: (" << posX << ", " << posY << ")\n";
             
-            // 3) Calculate isometric origin from map bounds (same formula as World::GetIsometricOriginX/Y)
-            // This ensures entities and tiles share the same coordinate system origin
-            float isoOriginX = (minTileX_ - minTileY_) * (config_.tileWidth / 2.0f);
-            float isoOriginY = (minTileX_ + minTileY_) * (config_.tileHeight / 2.0f);
+            // 3) Calculate TMJ origin from the 4 map corners
+            // Tiled uses a coordinate system where the north corner of tile (0,0) is at
+            // position (mapHeight * tileWidth / 2, 0) in TMJ pixel coordinates.
+            // We calculate the origin by projecting all 4 corners and taking the min X/Y,
+            // which gives us the top-left of the bounding box in TMJ coordinates.
             
-            SYSTEM_LOG << "  → ISOMETRIC: rebasing TMJ pixels by iso origin (" 
-                      << isoOriginX << ", " << isoOriginY << ")\n";
+            // Use TileToScreen (standard isometric projection) on the 4 corners
+            float halfTileWidth = config_.tileWidth / 2.0f;
+            float halfTileHeight = config_.tileHeight / 2.0f;
+            
+            // North corner: (minTileX, minTileY)
+            float northX = (minTileX_ - minTileY_) * halfTileWidth;
+            float northY = (minTileX_ + minTileY_) * halfTileHeight;
+            
+            // East corner: (maxTileX, minTileY)
+            float eastX = (maxTileX_ - minTileY_) * halfTileWidth;
+            float eastY = (maxTileX_ + minTileY_) * halfTileHeight;
+            
+            // West corner: (minTileX, maxTileY)
+            float westX = (minTileX_ - maxTileY_) * halfTileWidth;
+            float westY = (minTileX_ + maxTileY_) * halfTileHeight;
+            
+            // South corner: (maxTileX, maxTileY)
+            float southX = (maxTileX_ - maxTileY_) * halfTileWidth;
+            float southY = (maxTileX_ + maxTileY_) * halfTileHeight;
+            
+            // Find min X and Y (top-left of bounding box = TMJ origin)
+            float isoOriginX = std::min(std::min(northX, eastX), std::min(westX, southX));
+            float isoOriginY = std::min(std::min(northY, eastY), std::min(westY, southY));
+            
+            SYSTEM_LOG << "  → ISOMETRIC: Calculated TMJ origin from 4 corners:\n"
+                      << "     North (" << minTileX_ << "," << minTileY_ << ") -> (" << northX << ", " << northY << ")\n"
+                      << "     East  (" << maxTileX_ << "," << minTileY_ << ") -> (" << eastX << ", " << eastY << ")\n"
+                      << "     West  (" << minTileX_ << "," << maxTileY_ << ") -> (" << westX << ", " << westY << ")\n"
+                      << "     South (" << maxTileX_ << "," << maxTileY_ << ") -> (" << southX << ", " << southY << ")\n"
+                      << "     TMJ Origin (min): (" << isoOriginX << ", " << isoOriginY << ")\n";
             
             // 4) Subtract isometric origin to align with tile rendering coordinate system
             float finalX = posX - isoOriginX;
