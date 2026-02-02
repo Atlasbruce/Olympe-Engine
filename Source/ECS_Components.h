@@ -298,6 +298,7 @@ struct PlayerController_data
 	Vector Joydirection;        // Joystick direction vector
 	bool isJumping = false; // Is the player jumping?
 	bool isShooting = false; // Is the player shooting?
+	bool isWalking = false; // Is the player walking?
 	bool isRunning = false; // Is the player running?
 	bool isInteracting = false; // Is the player interacting?
 	bool isUsingItem = false; // Is the player using an item?

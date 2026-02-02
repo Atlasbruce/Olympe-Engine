@@ -82,6 +82,14 @@
       {
         "type": "Controller_data",
         "properties": {
+          "isJumping": false,
+          "isWalking": false,
+		  "isShooting": false
+        }
+      },
+	  {
+        "type": "PlayerController_data",
+        "properties": {
           "enabled": true,
           "inputEnabled": true
         }

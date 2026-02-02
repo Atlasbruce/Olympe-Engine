@@ -77,6 +77,15 @@
     {
       "componentType": "Controller_data",
       "parameters": [
+        { "name": "isJumping", "type": "Bool", "defaultValue": false },
+        { "name": "isShooting", "type": "Bool", "defaultValue": false }
+	    { "name": "isWalking", "type": "Bool", "defaultValue": false } 
+		
+      ]
+    },
+	{
+      "componentType": "PlayerController_data",
+      "parameters": [
         { "name": "enabled", "type": "Bool", "defaultValue": true },
         { "name": "inputEnabled", "type": "Bool", "defaultValue": true }
       ]

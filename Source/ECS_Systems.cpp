@@ -1129,7 +1129,7 @@ void RenderSingleEntity(const CameraTransform& cam, EntityID entity)
         Draw_Rectangle(&destRect, SDL_Color{ 0, 255, 255, 255 }); // draw bounding box
 
 
-        string _str = id.name + ", pos: (" + std::to_string(pos.position.x) + ", " + std::to_string(pos.position.y) + ")";
+		string _str = id.name + ", pos: (" + std::to_string(pos.position.x) + ", " + std::to_string(pos.position.y) + ") z-order: " + std::to_string(pos.position.z) + ")";
 		destRect.y -= 25.f;
 		destRect.w = (_str.length() * 10.f);
 		destRect.h = 16.f;
