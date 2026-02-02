@@ -712,21 +712,15 @@ namespace Tiled {
 
     Vector TiledToOlympe::TransformObjectPosition(float x, float y, float layerOffsetX, float layerOffsetY, uint32_t gid)
     {
-        SYSTEM_LOG << "[TRANSFORM] Mode: " << config_.mapOrientation 
-                  << ", Raw TMJ: (" << x << ", " << y << ")"
-                  << ", Layer offsets: (" << layerOffsetX << ", " << layerOffsetY << ")"
-                  << ", GID: " << gid << "\n";
-
         if (config_.mapOrientation == "isometric")
         {
-            // ISOMETRIC MODE: Keep objects in TMJ pixel coordinates, then rebase to isometric origin
-            // TMJ isometric objects are in pixel coordinates in the top-left reference frame.
-            // We apply layer offsets and tileset offsets, then subtract the isometric origin
-            // to align with the tile rendering coordinate system.
+            // ISOMETRIC MODE: Keep objects in TMJ pixel coordinates without rebase
+            // Objects remain in TMJ pixels, the origin is handled on the tile side
             
-            SYSTEM_LOG << "  → ISOMETRIC: Processing TMJ pixel coordinates\n";
+            // 1) Log raw TMJ coordinates
+            SYSTEM_LOG << "[TRANSFORM] Raw TMJ (" << x << ", " << y << ")\n";
             
-            // 1) Determine tileset offsets for tile objects (gid > 0)
+            // 2) Determine tileset offsets for tile objects (gid > 0)
             int tileOffsetX = 0;
             int tileOffsetY = 0;
             
@@ -735,61 +729,21 @@ namespace Tiled {
                 if (tileset) {
                     tileOffsetX = tileset->tileoffsetX;
                     tileOffsetY = tileset->tileoffsetY;
-                    SYSTEM_LOG << "  → Found tileset for gid " << gid 
-                              << ": tileOffsetX=" << tileOffsetX
-                              << ", tileOffsetY=" << tileOffsetY << "\n";
                 }
             }
             
-            // 2) Apply layer offsets and tileset offsets to TMJ coordinates
+            // 3) Log offsets applied
+            SYSTEM_LOG << "Offsets applied (layer/tile): (" << layerOffsetX << "/" << tileOffsetX 
+                      << ", " << layerOffsetY << "/" << tileOffsetY << ")\n";
+            
+            // 4) Apply layer offsets and tileset offsets to TMJ coordinates
             float posX = x + layerOffsetX + tileOffsetX;
             float posY = y + layerOffsetY + tileOffsetY;
             
-            SYSTEM_LOG << "  → Position after offsets: (" << posX << ", " << posY << ")\n";
+            // 5) Log final position
+            SYSTEM_LOG << "Final position (" << posX << ", " << posY << ")\n";
             
-            // 3) Calculate TMJ origin from the 4 map corners
-            // Tiled uses a coordinate system where the north corner of tile (0,0) is at
-            // position (mapHeight * tileWidth / 2, 0) in TMJ pixel coordinates.
-            // We calculate the origin by projecting all 4 corners and taking the min X/Y,
-            // then negating to define the origin offset.
-            
-            // First, calculate and log all 4 corner positions for debugging
-            Vector northCorner = IsometricProjection::TileToScreen(minTileX_, minTileY_, 
-                                                                    config_.tileWidth, config_.tileHeight);
-            Vector eastCorner = IsometricProjection::TileToScreen(maxTileX_, minTileY_, 
-                                                                   config_.tileWidth, config_.tileHeight);
-            Vector westCorner = IsometricProjection::TileToScreen(minTileX_, maxTileY_, 
-                                                                   config_.tileWidth, config_.tileHeight);
-            Vector southCorner = IsometricProjection::TileToScreen(maxTileX_, maxTileY_, 
-                                                                    config_.tileWidth, config_.tileHeight);
-            
-            SYSTEM_LOG << "  → ISOMETRIC: Calculating TMJ origin from 4 corners:\n"
-                      << "     North corner (" << minTileX_ << "," << minTileY_ << ") -> (" 
-                      << northCorner.x << ", " << northCorner.y << ")\n"
-                      << "     East corner  (" << maxTileX_ << "," << minTileY_ << ") -> (" 
-                      << eastCorner.x << ", " << eastCorner.y << ")\n"
-                      << "     West corner  (" << minTileX_ << "," << maxTileY_ << ") -> (" 
-                      << westCorner.x << ", " << westCorner.y << ")\n"
-                      << "     South corner (" << maxTileX_ << "," << maxTileY_ << ") -> (" 
-                      << southCorner.x << ", " << southCorner.y << ")\n";
-            
-            float isoOriginX, isoOriginY;
-            IsometricProjection::CalculateTMJOrigin(minTileX_, minTileY_, maxTileX_, maxTileY_,
-                                                     config_.tileWidth, config_.tileHeight,
-                                                     isoOriginX, isoOriginY);
-            
-            SYSTEM_LOG << "     TMJ Origin (negative of min): (" << isoOriginX << ", " << isoOriginY << ")\n";
-            
-            // 4) Add isometric origin to align with tile rendering coordinate system
-            // This rebases entities from Tiled's TMJ coordinate system to match the tile origin
-            // Formula: finalX = posX + tmjOriginX, where tmjOriginX = -minX
-            // Equivalent to: finalX = posX - minX
-            float finalX = posX + isoOriginX;
-            float finalY = posY + isoOriginY;
-            
-            SYSTEM_LOG << "  → Final position after rebase (posX + tmjOriginX): (" << finalX << ", " << finalY << ")\n";
-            
-            return Vector(finalX, finalY, 0.0f);
+            return Vector(posX, posY, 0.0f);
         }
         
         // ORTHOGONAL / HEXAGONAL / STAGGERED MODES:
