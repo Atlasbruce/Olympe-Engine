@@ -19,10 +19,10 @@
       "prefabFile": "guard.json",
       "synonyms": ["guard", "GUARD", "Guard_NPC", "patrol_guard"]
     },
-    "Enemy": {
+    "Zombie": {
       "description": "Hostile enemy entity",
       "prefabFile": "zombie.json",
-      "synonyms": ["enemy", "ENEMY", "hostile", "monster", "mob", "zombie", "ZOMBIE"]
+      "synonyms": ["Ennemy", "ennemy","ENNEMY", "enemy", "ENEMY", "hostile", "monster", "mob", "zombie", "ZOMBIE"]
     },
     "Item": {
       "description": "Collectible item entity",

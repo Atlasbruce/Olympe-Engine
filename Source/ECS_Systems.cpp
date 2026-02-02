@@ -781,7 +781,7 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
     }
     else {
         // Orthogonal
-        worldPos = Vector(worldX * tileWidth, worldY * tileHeight, 0.0f);
+        worldPos = Vector((float) worldX * tileWidth, (float) worldY * tileHeight, 0.0f);
     }
     
     // Calculate screen position with zoom only (no rotation)

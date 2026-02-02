@@ -8,7 +8,7 @@
     "author": "Atlasbruce",
     "created": "2026-01-08T10:00:00Z",
     "lastModified": "2026-01-08T10:00:00Z",
-    "tags": ["NPC", "Character", "AI"]
+    "tags": ["Zombie", "Ennemy", "Character", "AI"]
   },
   "data": {
     "prefabName": "Zombie",
@@ -16,9 +16,9 @@
       {
         "type": "Identity_data",
         "properties": {
-          "name": "NPC_{id}",
-          "tag": "NPC",
-          "entityType": "NPC"
+          "name": "Zombie_{id}",
+          "tag": "Zombie",
+          "entityType": "Zombie"
         }
       },
       {
