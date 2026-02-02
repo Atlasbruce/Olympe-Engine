@@ -17,6 +17,7 @@
 #include <map>
 #include <memory>
 #include <cstdint>
+#include <functional>
 
 namespace Olympe {
 namespace Tiled {
@@ -435,6 +436,52 @@ namespace Tiled {
         
         return result;
     }
+    
+    // Helper to get all image paths from a map (for preloading validation)
+    // Returns a vector of image file paths from all tilesets and image layers
+    // NOTE: The runtime must ensure these images are loaded before rendering
+    inline std::vector<std::string> GetAllImagePaths(const TiledMap& map)
+    {
+        std::vector<std::string> imagePaths;
+        
+        // Collect tileset images
+        for (const auto& tileset : map.tilesets) {
+            // Main tileset image
+            if (!tileset.image.empty()) {
+                imagePaths.push_back(tileset.image);
+            }
+            
+            // Collection tileset individual images
+            for (const auto& tile : tileset.tiles) {
+                if (!tile.image.empty()) {
+                    imagePaths.push_back(tile.image);
+                }
+            }
+        }
+        
+        // Collect image layer paths (recursive)
+        std::function<void(const std::shared_ptr<TiledLayer>&)> processLayer;
+        processLayer = [&](const std::shared_ptr<TiledLayer>& layer) {
+            if (!layer) return;
+            
+            if (layer->type == LayerType::ImageLayer && !layer->image.empty()) {
+                imagePaths.push_back(layer->image);
+            }
+            
+            // Recursively process group layers
+            if (layer->type == LayerType::Group) {
+                for (const auto& childLayer : layer->layers) {
+                    processLayer(childLayer);
+                }
+            }
+        };
+        
+        for (const auto& layer : map.layers) {
+            processLayer(layer);
+        }
+        
+        return imagePaths;
+    }
 
 } // namespace Tiled
-} // namespace Olympe
+} // namespace Olymp
