@@ -719,13 +719,22 @@ namespace Tiled {
 
         if (config_.mapOrientation == "isometric")
         {
-            // ISOMETRIC MODE - OPTION A: Keep objects in TMJ pixel coordinates
-            // TMJ isometric objects are already in pixel coordinates and should not be converted.
-            // We only apply layer offsets and tileset offsets (for tile objects with gid > 0).
+            // ISOMETRIC MODE: Rebase TMJ pixel coordinates by isometric origin
+            // TMJ objects are in pixel coordinates relative to Tiled's top-left bounding box.
+            // The tile renderer uses an isometric origin calculated from map bounds.
+            // We need to rebase TMJ coordinates to align with the tile renderer's coordinate system.
             
-            SYSTEM_LOG << "  → ISOMETRIC: Objects remain in TMJ pixel coordinates (no tile coordinate conversion)\n";
+            // 1) Calculate isometric origin from map bounds (same as tile renderer)
+            // Formula matches World::GetIsometricOriginX/Y():
+            //   isoOriginX = (minTileX - minTileY) * (tileWidth / 2)
+            //   isoOriginY = (minTileX + minTileY) * (tileHeight / 2)
+            float isoOriginX = (minTileX_ - minTileY_) * (config_.tileWidth / 2.0f);
+            float isoOriginY = (minTileX_ + minTileY_) * (config_.tileHeight / 2.0f);
             
-            // 1) Determine tileset offsets for tile objects (gid > 0)
+            SYSTEM_LOG << "  → ISOMETRIC: rebasing TMJ pixels by iso origin (" 
+                      << isoOriginX << ", " << isoOriginY << ")\n";
+            
+            // 2) Determine tileset offsets for tile objects (gid > 0)
             int tileOffsetX = 0;
             int tileOffsetY = 0;
             
@@ -740,11 +749,12 @@ namespace Tiled {
                 }
             }
             
-            // 2) Calculate final position: original TMJ pixels + layer offsets + tileset offsets
-            float finalX = x + layerOffsetX + tileOffsetX;
-            float finalY = y + layerOffsetY + tileOffsetY;
+            // 3) Calculate final position: TMJ pixels + layer offsets + tileset offsets - iso origin
+            // This aligns TMJ's top-left bounding box origin with the tile renderer's iso origin at (0,0)
+            float finalX = x + layerOffsetX + tileOffsetX - isoOriginX;
+            float finalY = y + layerOffsetY + tileOffsetY - isoOriginY;
             
-            SYSTEM_LOG << "  → Final position in TMJ pixels: (" << finalX << ", " << finalY << ")\n";
+            SYSTEM_LOG << "  → Final position (rebased): (" << finalX << ", " << finalY << ")\n";
             
             return Vector(finalX, finalY, 0.0f);
         }
