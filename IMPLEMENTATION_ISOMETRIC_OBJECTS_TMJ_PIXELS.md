@@ -20,13 +20,13 @@ The implementation treated isometric objects similarly to how tiles are rendered
 
 ### Changes to `TransformObjectPosition()` in `TiledToOlympe.cpp`
 
-**Before** (lines 720-812):
+**Before** (lines 720-812, ~93 lines):
 - Complex bounds-aware isometric origin calculation
 - TileToScreen projections on map corners
 - Inverse isometric projection formulas
 - Conversion to world tile coordinates
 
-**After** (lines 720-750):
+**After** (lines 720-750, ~30 lines):
 - Simple addition of offsets
 - No coordinate conversion
 - No isometric projection
