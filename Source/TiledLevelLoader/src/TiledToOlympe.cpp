@@ -754,9 +754,6 @@ namespace Tiled {
             // then negating to define the origin offset.
             
             // First, calculate and log all 4 corner positions for debugging
-            float halfTileWidth = config_.tileWidth / 2.0f;
-            float halfTileHeight = config_.tileHeight / 2.0f;
-            
             Vector northCorner = IsometricProjection::TileToScreen(minTileX_, minTileY_, 
                                                                     config_.tileWidth, config_.tileHeight);
             Vector eastCorner = IsometricProjection::TileToScreen(maxTileX_, minTileY_, 
