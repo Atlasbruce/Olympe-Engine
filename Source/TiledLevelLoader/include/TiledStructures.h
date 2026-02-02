@@ -17,9 +17,16 @@
 #include <map>
 #include <memory>
 #include <cstdint>
+#include <functional>
 
 namespace Olympe {
 namespace Tiled {
+
+    // Flip flags for tile data (used by structures below)
+    constexpr uint32_t FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
+    constexpr uint32_t FLIPPED_VERTICALLY_FLAG   = 0x40000000;
+    constexpr uint32_t FLIPPED_DIAGONALLY_FLAG   = 0x20000000;
+    constexpr uint32_t TILE_ID_MASK              = 0x1FFFFFFF;
 
     // Forward declarations
     struct TiledProperty;
@@ -188,6 +195,7 @@ namespace Tiled {
     struct TiledTileset
     {
         int firstgid;       // First global tile ID
+        int lastgid;        // Last global tile ID (calculated from firstgid + tilecount - 1)
         std::string name;
         std::string source; // External tileset file path (.tsx or .tsj)
         
@@ -220,9 +228,53 @@ namespace Tiled {
 
         // Constructor with explicit default values
         TiledTileset()
-            : firstgid(0), tilewidth(0), tileheight(0), tilecount(0),
+            : firstgid(0), lastgid(0), tilewidth(0), tileheight(0), tilecount(0),
               columns(0), spacing(0), margin(0), tileoffsetX(0), tileoffsetY(0),
               imagewidth(0), imageheight(0) {}
+              
+        // Calculate lastgid from tileset parameters
+        void CalculateLastGid()
+        {
+            if (tilecount > 0) {
+                lastgid = firstgid + tilecount - 1;
+            } else if (imagewidth > 0 && imageheight > 0 && tilewidth > 0 && tileheight > 0) {
+                // Calculate from image dimensions
+                int cols = (imagewidth - margin * 2 + spacing) / (tilewidth + spacing);
+                int rows = (imageheight - margin * 2 + spacing) / (tileheight + spacing);
+                int calculatedTilecount = cols * rows;
+                lastgid = firstgid + calculatedTilecount - 1;
+            } else {
+                lastgid = firstgid;
+            }
+        }
+        
+        // Check if a GID belongs to this tileset
+        bool ContainsGid(uint32_t gid) const
+        {
+            uint32_t cleanGid = gid & TILE_ID_MASK;
+            return cleanGid >= static_cast<uint32_t>(firstgid) && 
+                   cleanGid <= static_cast<uint32_t>(lastgid);
+        }
+        
+        // Get local tile ID from global ID
+        int GetLocalId(uint32_t gid) const
+        {
+            uint32_t cleanGid = gid & TILE_ID_MASK;
+            return static_cast<int>(cleanGid) - firstgid;
+        }
+        
+        // Get tile coordinates in atlas (for image-based tilesets)
+        void GetTileCoords(uint32_t gid, int& tileX, int& tileY) const
+        {
+            int localId = GetLocalId(gid);
+            if (columns > 0) {
+                tileX = localId % columns;
+                tileY = localId / columns;
+            } else {
+                tileX = 0;
+                tileY = 0;
+            }
+        }
     };
 
     // Map orientations
@@ -273,13 +325,64 @@ namespace Tiled {
               renderorder(RenderOrder::RightDown), compressionlevel(-1),
               width(0), height(0), tilewidth(0), tileheight(0),
               infinite(false), nextlayerid(1), nextobjectid(1) {}
+              
+        // GID resolver: Find tileset for a given GID
+        // Returns pointer to tileset or nullptr if not found
+        const TiledTileset* FindTilesetForGid(uint32_t gid) const
+        {
+            uint32_t cleanGid = gid & TILE_ID_MASK;
+            if (cleanGid == 0) return nullptr; // GID 0 is empty tile
+            
+            // Tilesets are stored in order, find the one containing this GID
+            for (const auto& tileset : tilesets) {
+                if (tileset.ContainsGid(cleanGid)) {
+                    return &tileset;
+                }
+            }
+            return nullptr;
+        }
+        
+        // Non-const version
+        TiledTileset* FindTilesetForGid(uint32_t gid)
+        {
+            uint32_t cleanGid = gid & TILE_ID_MASK;
+            if (cleanGid == 0) return nullptr; // GID 0 is empty tile
+            
+            // Tilesets are stored in order, find the one containing this GID
+            for (auto& tileset : tilesets) {
+                if (tileset.ContainsGid(cleanGid)) {
+                    return &tileset;
+                }
+            }
+            return nullptr;
+        }
+        
+        // Helper to initialize all tilesets lastgid values
+        void CalculateAllLastGids()
+        {
+            for (auto& tileset : tilesets) {
+                tileset.CalculateLastGid();
+            }
+        }
     };
-
-    // Flip flags for tile data
-    constexpr uint32_t FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
-    constexpr uint32_t FLIPPED_VERTICALLY_FLAG   = 0x40000000;
-    constexpr uint32_t FLIPPED_DIAGONALLY_FLAG   = 0x20000000;
-    constexpr uint32_t TILE_ID_MASK              = 0x1FFFFFFF;
+    
+    // Resolved GID information
+    struct ResolvedGid
+    {
+        const TiledTileset* tileset; // Pointer to tileset (nullptr if not found)
+        int localId;                 // Local tile ID within tileset
+        int tileX;                   // X coordinate in atlas
+        int tileY;                   // Y coordinate in atlas
+        bool flipH;                  // Horizontal flip flag
+        bool flipV;                  // Vertical flip flag
+        bool flipD;                  // Diagonal flip flag
+        
+        ResolvedGid()
+            : tileset(nullptr), localId(-1), tileX(0), tileY(0),
+              flipH(false), flipV(false), flipD(false) {}
+              
+        bool IsValid() const { return tileset != nullptr && localId >= 0; }
+    };
 
     // Helper to extract tile ID and flip flags
     inline uint32_t GetTileId(uint32_t gid)
@@ -301,6 +404,84 @@ namespace Tiled {
     {
         return (gid & FLIPPED_DIAGONALLY_FLAG) != 0;
     }
+    
+    // Comprehensive GID resolver
+    // Resolves a GID to its tileset, local ID, and atlas coordinates
+    inline ResolvedGid ResolveGid(const TiledMap& map, uint32_t gid)
+    {
+        ResolvedGid result;
+        
+        // Extract flip flags
+        result.flipH = IsFlippedHorizontally(gid);
+        result.flipV = IsFlippedVertically(gid);
+        result.flipD = IsFlippedDiagonally(gid);
+        
+        // Clean GID
+        uint32_t cleanGid = gid & TILE_ID_MASK;
+        
+        // GID 0 is empty tile
+        if (cleanGid == 0) {
+            return result;
+        }
+        
+        // Find tileset
+        result.tileset = map.FindTilesetForGid(cleanGid);
+        if (result.tileset == nullptr) {
+            return result;
+        }
+        
+        // Calculate local ID and atlas coordinates
+        result.localId = result.tileset->GetLocalId(cleanGid);
+        result.tileset->GetTileCoords(cleanGid, result.tileX, result.tileY);
+        
+        return result;
+    }
+    
+    // Helper to get all image paths from a map (for preloading validation)
+    // Returns a vector of image file paths from all tilesets and image layers
+    // NOTE: The runtime must ensure these images are loaded before rendering
+    inline std::vector<std::string> GetAllImagePaths(const TiledMap& map)
+    {
+        std::vector<std::string> imagePaths;
+        
+        // Collect tileset images
+        for (const auto& tileset : map.tilesets) {
+            // Main tileset image
+            if (!tileset.image.empty()) {
+                imagePaths.push_back(tileset.image);
+            }
+            
+            // Collection tileset individual images
+            for (const auto& tile : tileset.tiles) {
+                if (!tile.image.empty()) {
+                    imagePaths.push_back(tile.image);
+                }
+            }
+        }
+        
+        // Collect image layer paths (recursive)
+        std::function<void(const std::shared_ptr<TiledLayer>&)> processLayer;
+        processLayer = [&](const std::shared_ptr<TiledLayer>& layer) {
+            if (!layer) return;
+            
+            if (layer->type == LayerType::ImageLayer && !layer->image.empty()) {
+                imagePaths.push_back(layer->image);
+            }
+            
+            // Recursively process group layers
+            if (layer->type == LayerType::Group) {
+                for (const auto& childLayer : layer->layers) {
+                    processLayer(childLayer);
+                }
+            }
+        };
+        
+        for (const auto& layer : map.layers) {
+            processLayer(layer);
+        }
+        
+        return imagePaths;
+    }
 
 } // namespace Tiled
-} // namespace Olympe
+} // namespace Olymp
