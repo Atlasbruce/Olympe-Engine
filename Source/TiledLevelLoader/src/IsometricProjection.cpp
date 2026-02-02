@@ -77,7 +77,7 @@ namespace Tiled {
         // Tiled's coordinate system places the north corner of tile (0,0) at
         // position (mapHeight * tileWidth / 2, 0) in TMJ pixels. By calculating
         // the bounding box of all corners, we find where Tiled's (0,0) is in our
-        // coordinate system, then subtract it to align everything.
+        // coordinate system, then negate it to define the origin offset.
         
         float halfTileWidth = tileWidth / 2.0f;
         float halfTileHeight = tileHeight / 2.0f;
@@ -99,9 +99,14 @@ namespace Tiled {
         float southX = (maxTileX - maxTileY) * halfTileWidth;
         float southY = (maxTileX + maxTileY) * halfTileHeight;
         
-        // Find min X and Y (top-left of bounding box = TMJ origin)
-        outOriginX = std::min(std::min(northX, eastX), std::min(westX, southX));
-        outOriginY = std::min(std::min(northY, eastY), std::min(westY, southY));
+        // Find min X and Y (top-left of bounding box)
+        float minX = std::min(std::min(northX, eastX), std::min(westX, southX));
+        float minY = std::min(std::min(northY, eastY), std::min(westY, southY));
+        
+        // Define TMJ origin as negative of the minimum corner position
+        // This ensures that when we subtract the origin, we move entities in the correct direction
+        outOriginX = -minX;
+        outOriginY = -minY;
     }
 
 } // namespace Tiled

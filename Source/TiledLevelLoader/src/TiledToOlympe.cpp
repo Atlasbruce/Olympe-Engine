@@ -751,17 +751,34 @@ namespace Tiled {
             // Tiled uses a coordinate system where the north corner of tile (0,0) is at
             // position (mapHeight * tileWidth / 2, 0) in TMJ pixel coordinates.
             // We calculate the origin by projecting all 4 corners and taking the min X/Y,
-            // which gives us the top-left of the bounding box in TMJ coordinates.
+            // then negating to define the origin offset.
+            
+            // First, calculate and log all 4 corner positions for debugging
+            Vector northCorner = IsometricProjection::TileToScreen(minTileX_, minTileY_, 
+                                                                    config_.tileWidth, config_.tileHeight);
+            Vector eastCorner = IsometricProjection::TileToScreen(maxTileX_, minTileY_, 
+                                                                   config_.tileWidth, config_.tileHeight);
+            Vector westCorner = IsometricProjection::TileToScreen(minTileX_, maxTileY_, 
+                                                                   config_.tileWidth, config_.tileHeight);
+            Vector southCorner = IsometricProjection::TileToScreen(maxTileX_, maxTileY_, 
+                                                                    config_.tileWidth, config_.tileHeight);
+            
+            SYSTEM_LOG << "  → ISOMETRIC: Calculating TMJ origin from 4 corners:\n"
+                      << "     North corner (" << minTileX_ << "," << minTileY_ << ") -> (" 
+                      << northCorner.x << ", " << northCorner.y << ")\n"
+                      << "     East corner  (" << maxTileX_ << "," << minTileY_ << ") -> (" 
+                      << eastCorner.x << ", " << eastCorner.y << ")\n"
+                      << "     West corner  (" << minTileX_ << "," << maxTileY_ << ") -> (" 
+                      << westCorner.x << ", " << westCorner.y << ")\n"
+                      << "     South corner (" << maxTileX_ << "," << maxTileY_ << ") -> (" 
+                      << southCorner.x << ", " << southCorner.y << ")\n";
             
             float isoOriginX, isoOriginY;
             IsometricProjection::CalculateTMJOrigin(minTileX_, minTileY_, maxTileX_, maxTileY_,
                                                      config_.tileWidth, config_.tileHeight,
                                                      isoOriginX, isoOriginY);
             
-            SYSTEM_LOG << "  → ISOMETRIC: Calculated TMJ origin from map bounds:\n"
-                      << "     Map tiles: (" << minTileX_ << "," << minTileY_ << ") to (" 
-                      << maxTileX_ << "," << maxTileY_ << ")\n"
-                      << "     TMJ Origin: (" << isoOriginX << ", " << isoOriginY << ")\n";
+            SYSTEM_LOG << "     TMJ Origin (negative of min): (" << isoOriginX << ", " << isoOriginY << ")\n";
             
             // 4) Subtract isometric origin to align with tile rendering coordinate system
             float finalX = posX - isoOriginX;
