@@ -785,6 +785,19 @@ EntityID World::InstantiateEntity(
         return placeholder;
     }
     
+    // Check input device availability for Player prefabs before creation
+    if (blueprint->HasCategory("RequiresRegistration"))
+    {
+        if (!VideoGame::Get().IsInputDeviceAvailable())
+        {
+            stats.failed++;
+            stats.failedObjects.push_back(entityInstance->name);
+            SYSTEM_LOG << "    X Cannot create player '" << entityInstance->name 
+                       << "': no input device available (all joysticks and keyboard already assigned)\n";
+            return INVALID_ENTITY_ID;
+        }
+    }
+    
     // Build instance parameters
     LevelInstanceParameters instanceParams(entityInstance->name, entityInstance->type);
     instanceParams.position = entityInstance->position;

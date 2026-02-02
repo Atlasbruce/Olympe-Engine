@@ -48,6 +48,13 @@ VideoGame::~VideoGame()
 //-------------------------------------------------------------
 EntityID VideoGame::AddPlayerEntity(string _playerPrefabName)
 {
+    // Check if an input device is available before creating player
+    if (!IsInputDeviceAvailable())
+    {
+        SYSTEM_LOG << "X Cannot create player '" << _playerPrefabName << "': no input device available (all joysticks and keyboard already assigned)\n";
+        return INVALID_ENTITY_ID;
+    }
+    
     // -> Utiliser le système centralisé
     EntityID eID = PrefabFactory::Get().CreateEntityFromPrefabName(_playerPrefabName);
 
@@ -142,12 +149,28 @@ bool VideoGame::RemovePlayerEntity(const EntityID eid)
     return false;
 }
 //-------------------------------------------------------------
+bool VideoGame::IsInputDeviceAvailable() const
+{
+    // Check if there are available joysticks or if keyboard is not yet assigned
+    int availableJoysticks = IM::Get().GetAvailableJoystickCount();
+    bool keyboardAvailable = !IM::Get().IsKeyboardAssigned();
+    
+    return availableJoysticks > 0 || keyboardAvailable;
+}
+//-------------------------------------------------------------
 void VideoGame::RegisterLoadedPlayerEntity(EntityID entity)
 {
     // Validate entity ID
     if (entity == INVALID_ENTITY_ID)
     {
         SYSTEM_LOG << "X VideoGame::RegisterLoadedPlayerEntity: Invalid entity ID\n";
+        return;
+    }
+    
+    // Check if an input device is available before registering player
+    if (!IsInputDeviceAvailable())
+    {
+        SYSTEM_LOG << "X Cannot register player entity " << entity << ": no input device available (all joysticks and keyboard already assigned)\n";
         return;
     }
 

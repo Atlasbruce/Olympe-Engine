@@ -55,6 +55,9 @@ public:
 	 // Register a player entity that was loaded from a level
 	 // (reuses setup logic from AddPlayerEntity without entity creation)
 	 void RegisterLoadedPlayerEntity(EntityID entity);
+	 
+	 // Check if an input device slot is available for a new player
+	 bool IsInputDeviceAvailable() const;
 
      // Save / Load game state (slot optional)
      bool SaveGame(int slot = 0) { return false; }
