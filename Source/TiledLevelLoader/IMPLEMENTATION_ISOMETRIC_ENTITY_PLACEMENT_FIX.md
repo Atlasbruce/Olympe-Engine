@@ -1,13 +1,14 @@
-# Isometric Entity Placement Fix (v3 - Corrected Sign for TMJ Origin)
+# Isometric Entity Placement Fix (v4 - Corrected Rebase Sign)
 
 ## Problem Statement
 
-When loading isometric maps from Tiled (TMJ format), entities were appearing with incorrect positions, offset from their intended locations relative to the tile map. This was caused by a coordinate system mismatch and an incorrect sign in the origin calculation:
+When loading isometric maps from Tiled (TMJ format), entities were appearing with incorrect positions, offset from their intended locations relative to the tile map. This was caused by a coordinate system mismatch and incorrect sign handling in the rebase formula:
 
-- **Tiles**: Rendered using standard isometric projection (worldToIso) starting from tile coordinates
+- **Tiles**: Rendered using standard isometric projection (worldToIso) starting from tile coordinates with positive origin (e.g., +3683)
 - **Entities**: Positioned using TMJ pixel coordinates, which use Tiled's coordinate system where the north corner of tile (0,0) is offset in screen space
 - **Previous Fix Issue (v1)**: The original formula `isoOriginX = (minTileX - minTileY) * (tileWidth / 2)` resulted in (0,0) for finite maps, causing no rebasing effect
 - **Previous Fix Issue (v2)**: The 4-corner calculation produced correct minimum values but with wrong sign, e.g., `isoOriginX = -3683` resulted in `finalX = posX - (-3683) = posX + 3683`, moving entities away instead of toward their correct position
+- **Previous Fix Issue (v3)**: Changed origin calculation to `tmjOriginX = -minX`, but still used subtraction `finalX = posX - tmjOriginX`, which inverted the sign again, shifting entities to the left when tiles use a positive origin
 
 This resulted in entities appearing offset from their tile positions, especially noticeable in infinite maps with negative tile coordinates.
 
@@ -29,14 +30,20 @@ In TMJ files, both tiles and entities (objects) use pixel coordinates, but in di
    - Using `isoOriginX = minX = -3683` directly, then `finalX = posX - isoOriginX = posX + 3683`
    - This moves entities in the WRONG direction (right instead of left)
 
-## Solution (v3)
+4. **Sign error in v3**: After negating the minimum to get `tmjOriginX = -minX`:
+   - For `minX = -3683`, we get `tmjOriginX = 3683`
+   - Then `finalX = posX - tmjOriginX = posX - 3683`
+   - But this shifts entities LEFT when tiles use a POSITIVE origin (+3683)
+   - The subtraction inverts the sign again, causing misalignment
 
-The corrected fix calculates the TMJ origin by projecting all 4 map corners, finding the minimum X/Y, and then **negating** these values:
+## Solution (v4)
+
+The final corrected fix uses **addition** in the rebase formula to align entities with the tile coordinate system:
 
 1. **Keep TMJ pixel coordinates**: Do not convert to tile coordinates or apply `IsoToWorld` transformations
 2. **Apply layer offsets**: Add `offsetx`/`offsety` from layer properties
 3. **Apply tileset offsets**: For tile objects (gid > 0), add `tileoffset` from tileset definition
-4. **Calculate TMJ origin from 4 corners with correct sign**:
+4. **Calculate TMJ origin from 4 corners** (unchanged from v3):
    ```cpp
    // Project 4 corners using standard isometric projection
    float northX = (minTileX_ - minTileY_) * halfTileWidth;
@@ -52,10 +59,10 @@ The corrected fix calculates the TMJ origin by projecting all 4 map corners, fin
    float tmjOriginX = -minX;
    float tmjOriginY = -minY;
    ```
-5. **Rebase to world coordinates**: Subtract the TMJ origin from entity positions:
+5. **Rebase to tile coordinates**: Add the TMJ origin to entity positions (CHANGED):
    ```cpp
-   float finalX = posX - tmjOriginX;
-   float finalY = posY - tmjOriginY;
+   float finalX = posX + tmjOriginX;  // Equivalent to: posX - minX
+   float finalY = posY + tmjOriginY;  // Equivalent to: posY - minY
    ```
 
 ## Implementation Details
@@ -65,20 +72,22 @@ The corrected fix calculates the TMJ origin by projecting all 4 map corners, fin
 1. `IsometricProjection::CalculateTMJOrigin()` in `Source/TiledLevelLoader/src/IsometricProjection.cpp`
 2. `TiledToOlympe::TransformObjectPosition()` in `Source/TiledLevelLoader/src/TiledToOlympe.cpp`
 
-### Key Changes (v3)
+### Key Changes (v4)
 
-1. **Sign correction in CalculateTMJOrigin**:
-   - Now returns `outOriginX = -minX` and `outOriginY = -minY`
-   - This ensures that `finalX = posX - tmjOriginX` moves entities in the correct direction
+1. **Rebase formula correction** (CRITICAL CHANGE):
+   - Changed from `finalX = posX - tmjOriginX` to `finalX = posX + tmjOriginX`
+   - Where `tmjOriginX = -minX`, so `finalX = posX + (-minX) = posX - minX`
+   - This correctly aligns entities with the tile origin
 
 2. **For an infinite map with negative tiles** (e.g., tiles -10 to 10):
    - West corner (-10, 10): projects to (-640, 0) assuming 64x32 tiles
    - minX = -640
    - tmjOriginX = -(-640) = 640
-   - finalX = posX - 640 ← Correctly subtracts the offset
-   - **Previously (v2)**: tmjOriginX = -640, finalX = posX + 640 ❌
+   - finalX = posX + 640 ← Correctly adds the offset to align with tile origin
+   - **Previously (v3)**: finalX = posX - 640, which shifted entities left ❌
+   - **Previously (v2)**: tmjOriginX = -640, finalX = posX + 640 (accidentally correct) ✓
 
-3. **Enhanced logging** to show all 4 corner calculations explicitly:
+3. **Enhanced logging** to show the formula being applied:
    ```
    → ISOMETRIC: Calculating TMJ origin from 4 corners:
       North corner (minX,minY) -> (nx, ny)
@@ -86,6 +95,7 @@ The corrected fix calculates the TMJ origin by projecting all 4 map corners, fin
       West corner  (minX,maxY) -> (wx, wy)
       South corner (maxX,maxY) -> (sx, sy)
       TMJ Origin (negative of min): (originX, originY)
+   → Final position after rebase (posX + tmjOriginX): (finalX, finalY)
    ```
 
 4. **Preserved orthogonal mode** behavior (no changes to non-isometric code paths)

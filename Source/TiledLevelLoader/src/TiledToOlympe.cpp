@@ -780,11 +780,14 @@ namespace Tiled {
             
             SYSTEM_LOG << "     TMJ Origin (negative of min): (" << isoOriginX << ", " << isoOriginY << ")\n";
             
-            // 4) Subtract isometric origin to align with tile rendering coordinate system
-            float finalX = posX - isoOriginX;
-            float finalY = posY - isoOriginY;
+            // 4) Add isometric origin to align with tile rendering coordinate system
+            // This rebases entities from Tiled's TMJ coordinate system to match the tile origin
+            // Formula: finalX = posX + tmjOriginX, where tmjOriginX = -minX
+            // Equivalent to: finalX = posX - minX
+            float finalX = posX + isoOriginX;
+            float finalY = posY + isoOriginY;
             
-            SYSTEM_LOG << "  → Final position after rebase: (" << finalX << ", " << finalY << ")\n";
+            SYSTEM_LOG << "  → Final position after rebase (posX + tmjOriginX): (" << finalX << ", " << finalY << ")\n";
             
             return Vector(finalX, finalY, 0.0f);
         }
