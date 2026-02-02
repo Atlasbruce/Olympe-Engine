@@ -24,6 +24,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "TiledLevelLoader/include/TilesetCache.h"
 #include "TiledLevelLoader/include/TilesetParser.h"
 #include "TiledLevelLoader/include/TiledStructures.h"
+#include "TiledLevelLoader/include/IsometricProjection.h"
 #include "PrefabScanner.h"
 #include "prefabfactory.h"
 #include "ParameterResolver.h"
@@ -1879,9 +1880,7 @@ void World::SetMapBounds(int minTileX, int minTileY, int maxTileX, int maxTileY,
 float World::GetIsometricOriginX() const
 {
     // For isometric maps, calculate TMJ origin from the 4 map corners
-    // Tiled uses a coordinate system where the north corner of tile (0,0) is offset
-    // in screen space. We calculate the bounding box of all 4 corners and take the
-    // minimum X/Y as the TMJ origin, which aligns with Tiled's coordinate system.
+    // using shared utility function to avoid code duplication
     // 
     // NOTE: This caching assumes single-threaded access (typical for game engines).
     // If multi-threaded access is needed, synchronization should be added.
@@ -1890,25 +1889,10 @@ float World::GetIsometricOriginX() const
         // Cache both X and Y values together to avoid inconsistency
         if (!m_isometricOriginCached)
         {
-            float halfTileWidth = m_tileWidth / 2.0f;
-            float halfTileHeight = m_tileHeight / 2.0f;
-            
-            // Project 4 corners using standard isometric projection
-            float northX = (m_minTileX - m_minTileY) * halfTileWidth;
-            float northY = (m_minTileX + m_minTileY) * halfTileHeight;
-            
-            float eastX = (m_maxTileX - m_minTileY) * halfTileWidth;
-            float eastY = (m_maxTileX + m_minTileY) * halfTileHeight;
-            
-            float westX = (m_minTileX - m_maxTileY) * halfTileWidth;
-            float westY = (m_minTileX + m_maxTileY) * halfTileHeight;
-            
-            float southX = (m_maxTileX - m_maxTileY) * halfTileWidth;
-            float southY = (m_maxTileX + m_maxTileY) * halfTileHeight;
-            
-            // Find min X and Y (top-left of bounding box = TMJ origin)
-            m_cachedIsometricOriginX = std::min(std::min(northX, eastX), std::min(westX, southX));
-            m_cachedIsometricOriginY = std::min(std::min(northY, eastY), std::min(westY, southY));
+            Olympe::Tiled::IsometricProjection::CalculateTMJOrigin(
+                m_minTileX, m_minTileY, m_maxTileX, m_maxTileY,
+                m_tileWidth, m_tileHeight,
+                m_cachedIsometricOriginX, m_cachedIsometricOriginY);
             m_isometricOriginCached = true;
         }
         return m_cachedIsometricOriginX;
@@ -1928,25 +1912,10 @@ float World::GetIsometricOriginY() const
         // Cache both X and Y values together to avoid inconsistency
         if (!m_isometricOriginCached)
         {
-            float halfTileWidth = m_tileWidth / 2.0f;
-            float halfTileHeight = m_tileHeight / 2.0f;
-            
-            // Project 4 corners using standard isometric projection
-            float northX = (m_minTileX - m_minTileY) * halfTileWidth;
-            float northY = (m_minTileX + m_minTileY) * halfTileHeight;
-            
-            float eastX = (m_maxTileX - m_minTileY) * halfTileWidth;
-            float eastY = (m_maxTileX + m_minTileY) * halfTileHeight;
-            
-            float westX = (m_minTileX - m_maxTileY) * halfTileWidth;
-            float westY = (m_minTileX + m_maxTileY) * halfTileHeight;
-            
-            float southX = (m_maxTileX - m_maxTileY) * halfTileWidth;
-            float southY = (m_maxTileX + m_maxTileY) * halfTileHeight;
-            
-            // Find min X and Y (top-left of bounding box = TMJ origin)
-            m_cachedIsometricOriginX = std::min(std::min(northX, eastX), std::min(westX, southX));
-            m_cachedIsometricOriginY = std::min(std::min(northY, eastY), std::min(westY, southY));
+            Olympe::Tiled::IsometricProjection::CalculateTMJOrigin(
+                m_minTileX, m_minTileY, m_maxTileX, m_maxTileY,
+                m_tileWidth, m_tileHeight,
+                m_cachedIsometricOriginX, m_cachedIsometricOriginY);
             m_isometricOriginCached = true;
         }
         return m_cachedIsometricOriginY;

@@ -4,6 +4,7 @@
 
 #include "../include/IsometricProjection.h"
 #include <cmath>
+#include <algorithm>
 
 namespace Olympe {
 namespace Tiled {
@@ -64,6 +65,43 @@ namespace Tiled {
     {
         return WorldToIso(static_cast<float>(tileX), static_cast<float>(tileY), 
                          tileWidth, tileHeight);
+    }
+
+    void IsometricProjection::CalculateTMJOrigin(int minTileX, int minTileY, int maxTileX, int maxTileY,
+                                                  int tileWidth, int tileHeight,
+                                                  float& outOriginX, float& outOriginY)
+    {
+        // Calculate TMJ origin by projecting all 4 map corners and finding the minimum
+        // This aligns Tiled's TMJ coordinate system with the standard isometric projection
+        // 
+        // Tiled's coordinate system places the north corner of tile (0,0) at
+        // position (mapHeight * tileWidth / 2, 0) in TMJ pixels. By calculating
+        // the bounding box of all corners, we find where Tiled's (0,0) is in our
+        // coordinate system, then subtract it to align everything.
+        
+        float halfTileWidth = tileWidth / 2.0f;
+        float halfTileHeight = tileHeight / 2.0f;
+        
+        // Project 4 corners using standard isometric projection
+        // North corner: (minTileX, minTileY) - top of the diamond
+        float northX = (minTileX - minTileY) * halfTileWidth;
+        float northY = (minTileX + minTileY) * halfTileHeight;
+        
+        // East corner: (maxTileX, minTileY) - right of the diamond
+        float eastX = (maxTileX - minTileY) * halfTileWidth;
+        float eastY = (maxTileX + minTileY) * halfTileHeight;
+        
+        // West corner: (minTileX, maxTileY) - left of the diamond
+        float westX = (minTileX - maxTileY) * halfTileWidth;
+        float westY = (minTileX + maxTileY) * halfTileHeight;
+        
+        // South corner: (maxTileX, maxTileY) - bottom of the diamond
+        float southX = (maxTileX - maxTileY) * halfTileWidth;
+        float southY = (maxTileX + maxTileY) * halfTileHeight;
+        
+        // Find min X and Y (top-left of bounding box = TMJ origin)
+        outOriginX = std::min(std::min(northX, eastX), std::min(westX, southX));
+        outOriginY = std::min(std::min(northY, eastY), std::min(westY, southY));
     }
 
 } // namespace Tiled
