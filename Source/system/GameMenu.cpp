@@ -91,6 +91,21 @@ void GameMenu::Update()
     // For now, this is a placeholder - actual key handling is done elsewhere
 }
 
+void GameMenu::ToggleF2Menu()
+{
+    SetF2MenuOpen(!m_f2MenuOpen);
+}
+
+void GameMenu::SetF2MenuOpen(bool open)
+{
+    if (m_f2MenuOpen == open) return;
+    m_f2MenuOpen = open;
+    if (m_f2MenuOpen && !m_hasScannedTiledMaps)
+    {
+        RefreshTiledMapList();
+    }
+}
+
 void GameMenu::ScanForTiledMaps(const std::string& directory)
 { 
     #ifdef _WIN32
@@ -113,6 +128,7 @@ void GameMenu::ScanForTiledMaps(const std::string& directory)
                 // Recursively scan subdirectories
                 ScanForTiledMaps(fullPath);
             }
+
             else
             {
                 // Check if file has .tmj extension
@@ -161,6 +177,26 @@ void GameMenu::ScanForTiledMaps(const std::string& directory)
     #endif
 }
 
+void GameMenu::RefreshTiledMapList()
+{
+    m_tiledMapPaths.clear();
+    m_selectedMapIndex = -1;
+
+    //ScanForTiledMaps("Blueprints");
+    //ScanForTiledMaps("Levels");
+    //ScanForTiledMaps("gamedata");
+    //ScanForTiledMaps("gamedata\\levels");
+    ScanForTiledMaps(".");
+    m_hasScannedTiledMaps = true;
+
+    if (!m_tiledMapPaths.empty())
+    {
+        m_selectedMapIndex = 0;
+    }
+
+    SYSTEM_LOG << "GameMenu: Found " << m_tiledMapPaths.size() << " Tiled maps\n";
+}
+
 void GameMenu::RenderF2Menu()
 {
 #ifdef OLYMPE_BLUEPRINT_EDITOR_ENABLED
@@ -175,14 +211,7 @@ void GameMenu::RenderF2Menu()
         // Scan button
         if (ImGui::Button("Refresh List"))
         {
-            m_tiledMapPaths.clear();
-
-            //ScanForTiledMaps("Blueprints");
-            //ScanForTiledMaps("Levels");
-            //ScanForTiledMaps("gamedata");
-            //ScanForTiledMaps("gamedata\\levels");
-            ScanForTiledMaps(".");
-            SYSTEM_LOG << "GameMenu: Found " << m_tiledMapPaths.size() << " Tiled maps\n";
+            RefreshTiledMapList();
         }
         
         ImGui::SameLine();

@@ -165,6 +165,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
             SYSTEM_LOG << "BlueprintEditor " 
                       << (Olympe::BlueprintEditor::Get().IsActive() ? "activated" : "deactivated") 
                       << endl;
+            GameMenu::Get().SetF2MenuOpen(Olympe::BlueprintEditor::Get().IsActive());
             return SDL_APP_CONTINUE; // Early return to avoid ESC dialog below
         }
         

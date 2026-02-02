@@ -60,7 +60,8 @@ public:
     void Update();
     
     bool IsF2MenuOpen() const { return m_f2MenuOpen; }
-    void ToggleF2Menu() { m_f2MenuOpen = !m_f2MenuOpen; }
+    void ToggleF2Menu();
+    void SetF2MenuOpen(bool open);
 
 private:
     std::string name;
@@ -71,8 +72,10 @@ private:
     // F2 menu state
     bool m_f2MenuOpen = false;
     std::vector<std::string> m_tiledMapPaths;
-    int m_selectedMapIndex = 0;
+    int m_selectedMapIndex = -1;
+    bool m_hasScannedTiledMaps = false;
     
     // Helper to scan for .tmj files
     void ScanForTiledMaps(const std::string& directory);
+    void RefreshTiledMapList();
 };
