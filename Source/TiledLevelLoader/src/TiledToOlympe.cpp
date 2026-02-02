@@ -719,11 +719,12 @@ namespace Tiled {
 
         if (config_.mapOrientation == "isometric")
         {
-            // ISOMETRIC MODE - OPTION A: Keep objects in TMJ pixel coordinates
-            // TMJ isometric objects are already in pixel coordinates and should not be converted.
-            // We only apply layer offsets and tileset offsets (for tile objects with gid > 0).
+            // ISOMETRIC MODE: Keep objects in TMJ pixel coordinates, then rebase to isometric origin
+            // TMJ isometric objects are in pixel coordinates in the top-left reference frame.
+            // We apply layer offsets and tileset offsets, then subtract the isometric origin
+            // to align with the tile rendering coordinate system.
             
-            SYSTEM_LOG << "  → ISOMETRIC: Objects remain in TMJ pixel coordinates (no tile coordinate conversion)\n";
+            SYSTEM_LOG << "  → ISOMETRIC: Processing TMJ pixel coordinates\n";
             
             // 1) Determine tileset offsets for tile objects (gid > 0)
             int tileOffsetX = 0;
@@ -740,11 +741,25 @@ namespace Tiled {
                 }
             }
             
-            // 2) Calculate final position: original TMJ pixels + layer offsets + tileset offsets
-            float finalX = x + layerOffsetX + tileOffsetX;
-            float finalY = y + layerOffsetY + tileOffsetY;
+            // 2) Apply layer offsets and tileset offsets to TMJ coordinates
+            float posX = x + layerOffsetX + tileOffsetX;
+            float posY = y + layerOffsetY + tileOffsetY;
             
-            SYSTEM_LOG << "  → Final position in TMJ pixels: (" << finalX << ", " << finalY << ")\n";
+            SYSTEM_LOG << "  → Position after offsets: (" << posX << ", " << posY << ")\n";
+            
+            // 3) Calculate isometric origin from map bounds (same formula as World::GetIsometricOriginX/Y)
+            // This ensures entities and tiles share the same coordinate system origin
+            float isoOriginX = (minTileX_ - minTileY_) * (config_.tileWidth / 2.0f);
+            float isoOriginY = (minTileX_ + minTileY_) * (config_.tileHeight / 2.0f);
+            
+            SYSTEM_LOG << "  → ISOMETRIC: rebasing TMJ pixels by iso origin (" 
+                      << isoOriginX << ", " << isoOriginY << ")\n";
+            
+            // 4) Subtract isometric origin to align with tile rendering coordinate system
+            float finalX = posX - isoOriginX;
+            float finalY = posY - isoOriginY;
+            
+            SYSTEM_LOG << "  → Final position after rebase: (" << finalX << ", " << finalY << ")\n";
             
             return Vector(finalX, finalY, 0.0f);
         }
