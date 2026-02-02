@@ -150,9 +150,21 @@ void VideoGame::RegisterLoadedPlayerEntity(EntityID entity)
         SYSTEM_LOG << "X VideoGame::RegisterLoadedPlayerEntity: Invalid entity ID\n";
         return;
     }
-    
+
+    if (! world.HasComponent<PlayerBinding_data>(entity))
+        {
+        SYSTEM_LOG << "X VideoGame::RegisterLoadedPlayerEntity: Entity missing PlayerBinding_data component\n";
+        return;
+	}
+
+    if (! world.HasComponent<Controller_data>(entity))
+    {
+        SYSTEM_LOG << "X VideoGame::RegisterLoadedPlayerEntity: Entity missing Controller_data component\n";
+		return;
+	}
+
     // Entity already exists, just need to register and configure it
-    
+
     // Note: Component validation is performed by World::RegisterPlayerEntity before calling this
     // These components are guaranteed to exist at this point
     

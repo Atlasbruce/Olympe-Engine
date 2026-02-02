@@ -20,6 +20,7 @@
 #include "system/system_utils.h"
 #include <string>
 #include <unordered_map>
+#include "VideoGame.h"
 
 // ========================================================================
 // Public API Implementation
@@ -840,6 +841,10 @@ bool PrefabFactory::InstantiateController(EntityID entity, const ComponentDefini
     // Extract controller parameters
     if (def.HasParameter("controllerID"))
         controller.controllerID = static_cast<short>(def.GetParameter("controllerID")->AsInt());
+    else
+    {
+        controller.controllerID = -1;
+    }
     
     if (def.HasParameter("isConnected"))
         controller.isConnected = def.GetParameter("isConnected")->AsBool();
@@ -876,8 +881,9 @@ bool PrefabFactory::InstantiatePlayerBinding(EntityID entity, const ComponentDef
     
     if (def.HasParameter("controllerID"))
         binding.controllerID = static_cast<short>(def.GetParameter("controllerID")->AsInt());
-    
+   
     World::Get().AddComponent<PlayerBinding_data>(entity, binding);
+
     return true;
 }
 
