@@ -81,40 +81,7 @@ EntityID PrefabFactory::CreateEntityFromPrefabName(const std::string& prefabName
     
     return CreateEntityFromBlueprint(*blueprint);
 }
-/*UNUSED 
-EntityID PrefabFactory::CreateEntityFromPrefabName(const std::string& prefabName, 
-                                                   RenderLayer layer)
-{
-    if (!m_prefabsPreloaded)
-    {
-        SYSTEM_LOG << "/!\\  PrefabFactory::CreateEntityFromPrefabName: Prefabs not preloaded!\n";
-        return INVALID_ENTITY_ID;
-    }
-    
-    const PrefabBlueprint* blueprint = m_prefabRegistry.Find(prefabName);
-    
-    if (!blueprint || !blueprint->isValid)
-    {
-        SYSTEM_LOG << "X PrefabFactory::CreateEntityFromPrefabName: Prefab '" 
-                   << prefabName << "' not found\n";
-        return INVALID_ENTITY_ID;
-    }
-    
-    // Create entity WITHOUT auto-layer assignment since we'll override it
-    EntityID entity = CreateEntityFromBlueprint(*blueprint, false);
-    
-    if (entity != INVALID_ENTITY_ID)
-    {
-        // -> Explicitly set the requested layer
-        World::Get().SetEntityLayer(entity, layer);
-        
-        SYSTEM_LOG << "PrefabFactory::CreateEntityFromPrefabName: Entity " << entity 
-                   << " layer set to " << static_cast<int>(layer) << "\n";
-    }
-    
-    return entity;
-}
-/**/
+
 EntityID PrefabFactory::CreateEntity(const std::string& prefabName)
 {
     // Try legacy system first
