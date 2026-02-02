@@ -24,6 +24,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "TiledLevelLoader/include/TilesetCache.h"
 #include "TiledLevelLoader/include/TilesetParser.h"
 #include "TiledLevelLoader/include/TiledStructures.h"
+#include "TiledLevelLoader/include/IsometricProjection.h"
 #include "PrefabScanner.h"
 #include "prefabfactory.h"
 #include "ParameterResolver.h"
@@ -1878,10 +1879,8 @@ void World::SetMapBounds(int minTileX, int minTileY, int maxTileX, int maxTileY,
 
 float World::GetIsometricOriginX() const
 {
-    // For isometric maps, the origin offset is calculated from the minimum tile coordinates
-    // This ensures tiles and entities share the same world-space origin
-    // Formula: isoX = (worldX - worldY) * (tileWidth / 2)
-    // At minTileX, minTileY: isoX = (minTileX - minTileY) * (tileWidth / 2)
+    // For isometric maps, calculate TMJ origin from the 4 map corners
+    // using shared utility function to avoid code duplication
     // 
     // NOTE: This caching assumes single-threaded access (typical for game engines).
     // If multi-threaded access is needed, synchronization should be added.
@@ -1890,8 +1889,10 @@ float World::GetIsometricOriginX() const
         // Cache both X and Y values together to avoid inconsistency
         if (!m_isometricOriginCached)
         {
-            m_cachedIsometricOriginX = (m_minTileX - m_minTileY) * (m_tileWidth / 2.0f);
-            m_cachedIsometricOriginY = (m_minTileX + m_minTileY) * (m_tileHeight / 2.0f);
+            Olympe::Tiled::IsometricProjection::CalculateTMJOrigin(
+                m_minTileX, m_minTileY, m_maxTileX, m_maxTileY,
+                m_tileWidth, m_tileHeight,
+                m_cachedIsometricOriginX, m_cachedIsometricOriginY);
             m_isometricOriginCached = true;
         }
         return m_cachedIsometricOriginX;
@@ -1901,9 +1902,8 @@ float World::GetIsometricOriginX() const
 
 float World::GetIsometricOriginY() const
 {
-    // For isometric maps, the origin offset is calculated from the minimum tile coordinates
-    // Formula: isoY = (worldX + worldY) * (tileHeight / 2)
-    // At minTileX, minTileY: isoY = (minTileX + minTileY) * (tileHeight / 2)
+    // For isometric maps, calculate TMJ origin from the 4 map corners
+    // (See GetIsometricOriginX for detailed explanation)
     // 
     // NOTE: This caching assumes single-threaded access (typical for game engines).
     // If multi-threaded access is needed, synchronization should be added.
@@ -1912,8 +1912,10 @@ float World::GetIsometricOriginY() const
         // Cache both X and Y values together to avoid inconsistency
         if (!m_isometricOriginCached)
         {
-            m_cachedIsometricOriginX = (m_minTileX - m_minTileY) * (m_tileWidth / 2.0f);
-            m_cachedIsometricOriginY = (m_minTileX + m_minTileY) * (m_tileHeight / 2.0f);
+            Olympe::Tiled::IsometricProjection::CalculateTMJOrigin(
+                m_minTileX, m_minTileY, m_maxTileX, m_maxTileY,
+                m_tileWidth, m_tileHeight,
+                m_cachedIsometricOriginX, m_cachedIsometricOriginY);
             m_isometricOriginCached = true;
         }
         return m_cachedIsometricOriginY;

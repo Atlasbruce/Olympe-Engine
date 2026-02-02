@@ -42,6 +42,17 @@ namespace Tiled {
 
         // Get screen position of tile corner
         static Vector TileToScreen(int tileX, int tileY, int tileWidth, int tileHeight);
+        
+        // Calculate TMJ origin from map bounds
+        // Projects all 4 map corners and returns the minimum X/Y as the TMJ origin
+        // This aligns TMJ coordinate system with the standard isometric projection
+        // minTileX, minTileY: Minimum tile coordinates in the map
+        // maxTileX, maxTileY: Maximum tile coordinates in the map
+        // tileWidth, tileHeight: Dimensions of a single isometric tile in pixels
+        // outOriginX, outOriginY: Output parameters for the calculated origin
+        static void CalculateTMJOrigin(int minTileX, int minTileY, int maxTileX, int maxTileY,
+                                       int tileWidth, int tileHeight,
+                                       float& outOriginX, float& outOriginY);
     };
 
 } // namespace Tiled

@@ -747,13 +747,21 @@ namespace Tiled {
             
             SYSTEM_LOG << "  → Position after offsets: (" << posX << ", " << posY << ")\n";
             
-            // 3) Calculate isometric origin from map bounds (same formula as World::GetIsometricOriginX/Y)
-            // This ensures entities and tiles share the same coordinate system origin
-            float isoOriginX = (minTileX_ - minTileY_) * (config_.tileWidth / 2.0f);
-            float isoOriginY = (minTileX_ + minTileY_) * (config_.tileHeight / 2.0f);
+            // 3) Calculate TMJ origin from the 4 map corners
+            // Tiled uses a coordinate system where the north corner of tile (0,0) is at
+            // position (mapHeight * tileWidth / 2, 0) in TMJ pixel coordinates.
+            // We calculate the origin by projecting all 4 corners and taking the min X/Y,
+            // which gives us the top-left of the bounding box in TMJ coordinates.
             
-            SYSTEM_LOG << "  → ISOMETRIC: rebasing TMJ pixels by iso origin (" 
-                      << isoOriginX << ", " << isoOriginY << ")\n";
+            float isoOriginX, isoOriginY;
+            IsometricProjection::CalculateTMJOrigin(minTileX_, minTileY_, maxTileX_, maxTileY_,
+                                                     config_.tileWidth, config_.tileHeight,
+                                                     isoOriginX, isoOriginY);
+            
+            SYSTEM_LOG << "  → ISOMETRIC: Calculated TMJ origin from map bounds:\n"
+                      << "     Map tiles: (" << minTileX_ << "," << minTileY_ << ") to (" 
+                      << maxTileX_ << "," << maxTileY_ << ")\n"
+                      << "     TMJ Origin: (" << isoOriginX << ", " << isoOriginY << ")\n";
             
             // 4) Subtract isometric origin to align with tile rendering coordinate system
             float finalX = posX - isoOriginX;
