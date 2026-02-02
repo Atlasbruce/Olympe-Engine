@@ -190,7 +190,7 @@ When placing entities in Tiled for isometric maps:
 
 ## References
 
-- Tile renderer isometric origin: `Source/World.cpp` lines 1880-1922 (`GetIsometricOriginX/Y()`)
+- Tile renderer isometric origin: `Source/World.cpp` lines 1879-1922 (`GetIsometricOriginX()` and `GetIsometricOriginY()`)
 - IsometricProjection utilities: `Source/TiledLevelLoader/src/IsometricProjection.cpp`
 - Isometric renderer: `Source/Rendering/IsometricRenderer.cpp`
 - Map bounds metadata: stored in `LevelDefinition::metadata.customData`

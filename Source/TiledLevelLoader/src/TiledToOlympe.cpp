@@ -728,6 +728,8 @@ namespace Tiled {
             // Formula matches World::GetIsometricOriginX/Y():
             //   isoOriginX = (minTileX - minTileY) * (tileWidth / 2)
             //   isoOriginY = (minTileX + minTileY) * (tileHeight / 2)
+            // Note: minTileX_, minTileY_ are initialized in Convert() from map bounds
+            //       (lines 139-142 for infinite maps, lines 165-168 for finite maps)
             float isoOriginX = (minTileX_ - minTileY_) * (config_.tileWidth / 2.0f);
             float isoOriginY = (minTileX_ + minTileY_) * (config_.tileHeight / 2.0f);
             
