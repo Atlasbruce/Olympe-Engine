@@ -85,7 +85,7 @@ namespace Tiled {
                                    static_cast<mz_ulong>(compressed.size()));
 
         if (status == MZ_BUF_ERROR) {
-            // Buffer too small, try larger (50x ratio)
+            // Buffer too small, resize to 50 times compressed size to accommodate higher compression ratios
             estimated_size = compressed.size() * 50;
             result.resize(estimated_size);
             dest_len = static_cast<mz_ulong>(estimated_size);

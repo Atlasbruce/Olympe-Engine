@@ -329,7 +329,7 @@ namespace Tiled {
             tileset.tileoffsetY = GetInt(offset, "y");
             SYSTEM_LOG << "TiledLevelLoader: Parsed embedded tileset tileoffset (" 
                       << tileset.tileoffsetX << ", " << tileset.tileoffsetY 
-                      << ") for tileset '" << tileset.name << "'\n";
+                      << ") for tileset '" << tileset.name << "'" << std::endl;
         }
         else
         {
