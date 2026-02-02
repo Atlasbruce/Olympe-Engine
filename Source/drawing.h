@@ -41,3 +41,6 @@ void Draw_FilledHexagon(
 
 // Draws rectangle outline with float coordinates
 void Draw_Rectangle(const SDL_FRect* rect, SDL_Color color);
+
+void Draw_Text(const std::string& text, const SDL_FRect* rect, SDL_Color textcolor, SDL_Color backgroundcolor);
+

@@ -341,3 +341,29 @@ void Draw_Rectangle(const SDL_FRect* rect, SDL_Color color)
                       screenCorners[next].x, screenCorners[next].y);
     }
 }
+//----------------------------------------------------------
+void Draw_Text(const std::string& text, const SDL_FRect* rect, SDL_Color textcolor, SDL_Color backgroundcolor)
+{
+	const CameraTransform& cam = RenderContext::Get().GetActiveCamera();
+	SDL_FRect dst = *rect;
+
+	if (cam.isActive) {
+		Vector worldTopLeft(rect->x, rect->y, 0.0f);
+		Vector worldBottomRight(rect->x + rect->w, rect->y + rect->h, 0.0f);
+		Vector screenTopLeft = cam.WorldToScreen(worldTopLeft);
+		Vector screenBottomRight = cam.WorldToScreen(worldBottomRight);
+		dst.x = screenTopLeft.x;
+		dst.y = screenTopLeft.y;
+		dst.w = screenBottomRight.x - screenTopLeft.x;
+		dst.h = screenBottomRight.y - screenTopLeft.y;
+	}
+
+	if (backgroundcolor.a > 0) {
+		SDL_SetRenderDrawBlendMode(GameEngine::renderer, SDL_BLENDMODE_BLEND);
+		SDL_SetRenderDrawColor(GameEngine::renderer, backgroundcolor.r, backgroundcolor.g, backgroundcolor.b, backgroundcolor.a);
+		SDL_RenderFillRect(GameEngine::renderer, &dst);
+	}
+
+	SDL_SetRenderDrawColor(GameEngine::renderer, textcolor.r, textcolor.g, textcolor.b, textcolor.a);
+	SDL_RenderDebugText(GameEngine::renderer, dst.x, dst.y, text.c_str());
+}

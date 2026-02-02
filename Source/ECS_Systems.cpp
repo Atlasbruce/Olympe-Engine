@@ -1129,6 +1129,13 @@ void RenderSingleEntity(const CameraTransform& cam, EntityID entity)
         Draw_Rectangle(&destRect, SDL_Color{ 0, 255, 255, 255 }); // draw bounding box
 
 
+        string _str = id.name + ", pos: (" + std::to_string(pos.position.x) + ", " + std::to_string(pos.position.y) + ")";
+		destRect.y -= 25.f;
+		destRect.w = (_str.length() * 10.f);
+		destRect.h = 16.f;
+        destRect.x = pos.position.x - (destRect.w / 2);
+		
+        Draw_Text(_str, &destRect, SDL_Color{ 255, 0, 0, 255 }, SDL_Color{ 0, 0, 0, 75 }); // draw entity ID above
 
     }
     catch (const std::exception& e)
@@ -1222,6 +1229,11 @@ void RenderEntitiesForCamera(const CameraTransform& cam)
 
             Draw_FilledCircle((int)(destRect.x + destRect.w / 2), (int)(destRect.y + destRect.h / 2), 3); // draw pivot/centre
             Draw_Rectangle(&destRect, SDL_Color{ 0, 255, 255, 255 }); // draw bounding box
+
+            destRect.y -= 10.f;
+			Draw_Text(id.name, &destRect, SDL_Color{ 255, 0, 0, 255 }, SDL_Color{ 0, 0, 0, 255 }); // draw entity ID above
+
+
         }
         catch (const std::exception& e)
         {
