@@ -123,6 +123,15 @@ IsometricProjection::ScreenToTile(mouseX, mouseY, tileWidth, tileHeight, tileX, 
 - **ParallaxLayerManager**: Parallax scrolling system
 - **TiledJsonHelper**: JSON parsing utilities
 
+### Robustness & Validation
+
+See [VALIDATION_AND_ROBUSTNESS.md](VALIDATION_AND_ROBUSTNESS.md) for details on:
+- Data integrity validation
+- Enhanced error reporting
+- Tileoffset parsing and application
+- Corruption detection
+- Error recovery strategies
+
 ### Dependencies
 
 - **nlohmann/json**: JSON parsing (from `Source/third_party/nlohmann/json.hpp`)
