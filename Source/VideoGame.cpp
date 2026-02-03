@@ -153,7 +153,7 @@ bool VideoGame::IsInputDeviceAvailable() const
 {
     // Check if there are available joysticks or if keyboard is not yet assigned
     int availableJoysticks = IM::Get().GetAvailableJoystickCount();
-    bool keyboardAvailable = !IM::Get().IsKeyboardAssigned();
+    bool keyboardAvailable = IM::Get().IsKeyboardAssigned() ? 0 : 1;
     
     return availableJoysticks > 0 || keyboardAvailable;
 }
@@ -202,7 +202,7 @@ void VideoGame::RegisterLoadedPlayerEntity(EntityID entity)
     binding.controllerID = -1; // keyboard by default
     
     // Assign controller (if available)
-    if (IM::Get().GetAvailableJoystickCount() > 0)
+    // Useless nos because we test the devices availability above if (IM::Get().GetAvailableJoystickCount() > 0)
     {
         IM::Get().AddPlayerEntityIndex(binding.playerIndex, entity);
         binding.controllerID = IM::Get().AutoBindControllerToPlayer(binding.playerIndex);

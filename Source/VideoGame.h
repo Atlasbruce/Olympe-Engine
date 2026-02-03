@@ -94,7 +94,5 @@ public:
 private:
     string name;
      // cached state for quick local reads (authoritative value lives in GameStateManager)
-     GameState m_state = GameState::GameState_Running;
-
-     bool m_keyboardAssigned = false;
+     GameState m_state = GameState::GameState_Running;         
 };
