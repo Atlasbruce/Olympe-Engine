@@ -15,6 +15,7 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #include "World.h" 
 #include "GameEngine.h" // For delta time (fDt)
 #include "InputsManager.h"
+#include "InputDevice.h"
 #include "system/KeyboardManager.h"
 #include "system/JoystickManager.h"
 #include "system/ViewportManager.h"
@@ -1318,7 +1319,10 @@ void InputMappingSystem::Process()
             pctrl.Joydirection.x = 0.0f;
             pctrl.Joydirection.y = 0.0f;
 
-            // Get or create InputMapping_data (optional component)
+            // Try to get device from new input system
+            InputDeviceSlot* device = InputsManager::Get().GetDeviceManager().GetDeviceForPlayer(binding.playerIndex);
+            
+            // Get or create InputMapping_data (optional component) - for backward compatibility
             InputMapping_data* mapping = nullptr;
             if (World::Get().HasComponent<InputMapping_data>(entity))
             {
@@ -1331,7 +1335,55 @@ void InputMappingSystem::Process()
                 // Use Pull API to read keyboard state
                 KeyboardManager& km = KeyboardManager::Get();
 
-                if (mapping)
+                // Try to use new profile system first
+                if (device && device->profile) {
+                    auto profile = device->profile;
+                    
+                    // Movement actions
+                    auto moveUpBinding = profile->GetActionBinding("move_up");
+                    auto moveDownBinding = profile->GetActionBinding("move_down");
+                    auto moveLeftBinding = profile->GetActionBinding("move_left");
+                    auto moveRightBinding = profile->GetActionBinding("move_right");
+                    
+                    if (moveUpBinding && moveUpBinding->type == InputType::Key) {
+                        if (km.IsKeyHeld(static_cast<SDL_Scancode>(moveUpBinding->primaryInput)) ||
+                            (moveUpBinding->alternateInput != -1 && km.IsKeyHeld(static_cast<SDL_Scancode>(moveUpBinding->alternateInput))))
+                            pctrl.Joydirection.y = -1.0f;
+                    }
+                    if (moveDownBinding && moveDownBinding->type == InputType::Key) {
+                        if (km.IsKeyHeld(static_cast<SDL_Scancode>(moveDownBinding->primaryInput)) ||
+                            (moveDownBinding->alternateInput != -1 && km.IsKeyHeld(static_cast<SDL_Scancode>(moveDownBinding->alternateInput))))
+                            pctrl.Joydirection.y = 1.0f;
+                    }
+                    if (moveLeftBinding && moveLeftBinding->type == InputType::Key) {
+                        if (km.IsKeyHeld(static_cast<SDL_Scancode>(moveLeftBinding->primaryInput)) ||
+                            (moveLeftBinding->alternateInput != -1 && km.IsKeyHeld(static_cast<SDL_Scancode>(moveLeftBinding->alternateInput))))
+                            pctrl.Joydirection.x = -1.0f;
+                    }
+                    if (moveRightBinding && moveRightBinding->type == InputType::Key) {
+                        if (km.IsKeyHeld(static_cast<SDL_Scancode>(moveRightBinding->primaryInput)) ||
+                            (moveRightBinding->alternateInput != -1 && km.IsKeyHeld(static_cast<SDL_Scancode>(moveRightBinding->alternateInput))))
+                            pctrl.Joydirection.x = 1.0f;
+                    }
+                    
+                    // Action buttons
+                    auto jumpBinding = profile->GetActionBinding("jump");
+                    if (jumpBinding && jumpBinding->type == InputType::Key) {
+                        pctrl.isJumping = km.IsKeyHeld(static_cast<SDL_Scancode>(jumpBinding->primaryInput));
+                    }
+                    
+                    auto shootBinding = profile->GetActionBinding("shoot");
+                    if (shootBinding && shootBinding->type == InputType::Key) {
+                        pctrl.isShooting = km.IsKeyHeld(static_cast<SDL_Scancode>(shootBinding->primaryInput));
+                    }
+                    
+                    auto interactBinding = profile->GetActionBinding("interact");
+                    if (interactBinding && interactBinding->type == InputType::Key) {
+                        pctrl.isInteracting = km.IsKeyPressed(static_cast<SDL_Scancode>(interactBinding->primaryInput));
+                    }
+                }
+                // Fallback to old InputMapping_data system
+                else if (mapping)
                 {
                     // Use custom bindings
                     if (km.IsKeyHeld(mapping->keyboardBindings["up"]) || km.IsKeyHeld(mapping->keyboardBindings["up_alt"]))
@@ -1376,8 +1428,14 @@ void InputMappingSystem::Process()
                 pctrl.Joydirection.x = ctrl.leftStick.x;
                 pctrl.Joydirection.y = ctrl.leftStick.y;
 
-                // Apply deadzone
-                float deadzone = mapping ? mapping->deadzone : 0.15f;
+                // Apply deadzone from profile or mapping
+                float deadzone = 0.15f;
+                if (device && device->profile) {
+                    deadzone = device->profile->deadzone;
+                } else if (mapping) {
+                    deadzone = mapping->deadzone;
+                }
+                
                 float magnitude = std::sqrt(pctrl.Joydirection.x * pctrl.Joydirection.x + 
                                            pctrl.Joydirection.y * pctrl.Joydirection.y);
                 if (magnitude < deadzone)
@@ -1386,8 +1444,27 @@ void InputMappingSystem::Process()
                     pctrl.Joydirection.y = 0.0f;
                 }
 
-                // Read action buttons
-                if (mapping)
+                // Read action buttons with new profile system
+                if (device && device->profile) {
+                    auto profile = device->profile;
+                    
+                    auto jumpBinding = profile->GetActionBinding("jump");
+                    if (jumpBinding && jumpBinding->type == InputType::Button) {
+                        pctrl.isJumping = jm.GetButton(joyID, jumpBinding->primaryInput);
+                    }
+                    
+                    auto shootBinding = profile->GetActionBinding("shoot");
+                    if (shootBinding && shootBinding->type == InputType::Button) {
+                        pctrl.isShooting = jm.GetButton(joyID, shootBinding->primaryInput);
+                    }
+                    
+                    auto interactBinding = profile->GetActionBinding("interact");
+                    if (interactBinding && interactBinding->type == InputType::Button) {
+                        pctrl.isInteracting = jm.IsButtonPressed(joyID, interactBinding->primaryInput);
+                    }
+                }
+                // Fallback to old mapping system
+                else if (mapping)
                 {
                     pctrl.isJumping = jm.GetButton(joyID, mapping->gamepadBindings["jump"]);
                     pctrl.isShooting = jm.GetButton(joyID, mapping->gamepadBindings["shoot"]);
