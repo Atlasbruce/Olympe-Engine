@@ -2,13 +2,15 @@
 #include "system/JoystickManager.h"
 #include "system/KeyboardManager.h"
 #include "system/MouseManager.h"
+#include "InputDevice.h"
+#include "InputConfigLoader.h"
 #include <unordered_map>
 #include <vector>
 #include "Ecs_Entity.h"
 #include "ECS_Components.h"
 #include "World.h"
 
-// Input context types for context stack
+// Input context types for context stack (backward compatibility)
 enum class InputContext { Gameplay, UI, Editor };
 
 class InputsManager 
@@ -33,6 +35,13 @@ public:
         //m_playerObjectIndex.clear();
         m_keyboardAssigned = false;
     }
+    
+    // Initialize new input system
+    void InitializeInputSystem(const std::string& configPath = "Config/olympe-config.json");
+    
+    // Get new input system components (for advanced usage)
+    InputDeviceManager& GetDeviceManager() { return InputDeviceManager::Get(); }
+    InputContextManager& GetContextManager() { return InputContextManager::Get(); }
 
     virtual void HandleEvent(const SDL_Event* ev);
 

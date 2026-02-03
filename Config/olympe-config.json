@@ -1,0 +1,31 @@
+{
+  "version": "2.0",
+  "screen_width": 1280,
+  "screen_height": 720,
+  "fullscreen": false,
+  "vsync": true,
+
+  "editor_enabled": false,
+  "input_config_path": "Config/Inputs.json",
+  "input_log_level": "info",
+
+  "log_panel_height": 200,
+  "log_panel_width": 800,
+  "log_panel_posx": 240,
+  "log_panel_posy": 500,
+  "log_panel_visible": true,
+
+  "inspector_panel_width": 200,
+  "inspector_panel_height": 400,
+  "inspector_panel_posx": 700,
+  "inspector_panel_posy": 0,
+  "inspector_panel_visible": true,
+
+  "treeview_panel_width": 300,
+  "treeview_panel_height": 600,
+  "treeview_panel_posx": 700,
+  "treeview_panel_posy": 400,
+  "treeview_panel_visible": true,
+
+  "last_opened_project": ""
+}
