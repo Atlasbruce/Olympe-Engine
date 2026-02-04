@@ -555,8 +555,12 @@ namespace Tiled {
             path.push_back(point);
         }
 
+        // REQUIREMENT C: Duplicate patrol path for compatibility
+        // Store in both AIBlackboard_data.patrolPath (component-scoped) 
+        // AND flat patrolPath for World::InstantiatePass5_Relationships
         entity->overrides["AIBlackboard_data"] = nlohmann::json::object();
         entity->overrides["AIBlackboard_data"]["patrolPath"] = path;
+        entity->overrides["patrolPath"] = path;  // Flat override for relationship system
 
         // Convert properties
         PropertiesToOverrides(obj.properties, entity->overrides);
