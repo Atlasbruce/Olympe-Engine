@@ -49,6 +49,10 @@ struct ComponentParameter
 	Vector vectorValue;
 	SDL_Color colorValue = { 255, 255, 255, 255 };
 	EntityID entityRefValue = INVALID_ENTITY_ID;
+	
+	// Array storage (uses nlohmann::json for C++14 compatibility)
+	// Initialized to null by default, set to json::array() when Type::Array is used
+	std::shared_ptr<nlohmann::json> arrayValue;
 
 	// Factory methods
 	static ComponentParameter FromBool(bool value);
@@ -59,6 +63,7 @@ struct ComponentParameter
 	static ComponentParameter FromVector3(float x, float y, float z);
 	static ComponentParameter FromColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
 	static ComponentParameter FromEntityRef(EntityID entityId);
+	static ComponentParameter FromArray(const nlohmann::json& arrayData);
 
 	// Type conversion helpers with fallback logic
 	bool AsBool() const;
@@ -68,6 +73,7 @@ struct ComponentParameter
 	Vector AsVector() const;
 	SDL_Color AsColor() const;
 	EntityID AsEntityRef() const;
+	const nlohmann::json& AsArray() const;
 };
 
 struct ComponentDefinition
