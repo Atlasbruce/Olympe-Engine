@@ -801,7 +801,7 @@ EntityID World::InstantiateEntity(
     // Build instance parameters
     LevelInstanceParameters instanceParams(entityInstance->name, entityInstance->type);
     instanceParams.position = entityInstance->position;
-    ExtractCustomProperties(entityInstance->overrides, instanceParams, entityInstance, blueprint);
+    ExtractCustomProperties(entityInstance->overrides, instanceParams, entityInstance.get(), blueprint);
     
     // Create entity with overrides
     // CRITICAL: Disable autoAssignLayer to preserve position.z from Tiled level

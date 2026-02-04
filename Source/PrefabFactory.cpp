@@ -724,11 +724,8 @@ bool PrefabFactory::InstantiateHealth(EntityID entity, const ComponentDefinition
     
     if (def.HasParameter("maxHealth"))
         health.maxHealth = def.GetParameter("maxHealth")->AsInt();
-    
-    // REQUIREMENT E: Apply invulnerable when present
-    if (def.HasParameter("invulnerable"))
-        health.invulnerable = def.GetParameter("invulnerable")->AsBool();
-    
+ 
+
     World::Get().AddComponent<Health_data>(entity, health);
     return true;
 }
@@ -831,16 +828,7 @@ bool PrefabFactory::InstantiateController(EntityID entity, const ComponentDefini
     
     if (def.HasParameter("isConnected"))
         controller.isConnected = def.GetParameter("isConnected")->AsBool();
-    
-    // REQUIREMENT E: Apply isJumping/isWalking/isShooting when present
-    if (def.HasParameter("isJumping"))
-        controller.isJumping = def.GetParameter("isJumping")->AsBool();
-    
-    if (def.HasParameter("isShooting"))
-        controller.isShooting = def.GetParameter("isShooting")->AsBool();
-    
-    if (def.HasParameter("isWalking"))
-        controller.isWalking = def.GetParameter("isWalking")->AsBool();
+   
     
     World::Get().AddComponent<Controller_data>(entity, controller);
     return true;
@@ -851,11 +839,6 @@ bool PrefabFactory::InstantiatePlayerController(EntityID entity, const Component
     PlayerController_data playerCtrl;
     
     // REQUIREMENT E: Apply enabled/inputEnabled when present
-    if (def.HasParameter("enabled"))
-        playerCtrl.enabled = def.GetParameter("enabled")->AsBool();
-    
-    if (def.HasParameter("inputEnabled"))
-        playerCtrl.inputEnabled = def.GetParameter("inputEnabled")->AsBool();
     
     // Extract player controller parameters
     if (def.HasParameter("isJumping"))
@@ -866,7 +849,19 @@ bool PrefabFactory::InstantiatePlayerController(EntityID entity, const Component
     
     if (def.HasParameter("isRunning"))
         playerCtrl.isRunning = def.GetParameter("isRunning")->AsBool();
+
+    if (def.HasParameter("isInteracting"))
+        playerCtrl.isInteracting = def.GetParameter("isInteracting")->AsBool();
+
+    if (def.HasParameter("isWalking"))
+        playerCtrl.isWalking = def.GetParameter("isWalking")->AsBool();
     
+    if (def.HasParameter("isUsingItem"))
+        playerCtrl.isUsingItem = def.GetParameter("isUsingItem")->AsBool();
+
+    if (def.HasParameter("isMenuOpen"))
+        playerCtrl.isMenuOpen = def.GetParameter("isMenuOpen")->AsBool();
+
     World::Get().AddComponent<PlayerController_data>(entity, playerCtrl);
     return true;
 }
@@ -1158,11 +1153,8 @@ bool PrefabFactory::InstantiateAttackIntent(EntityID entity, const ComponentDefi
     
     if (def.HasParameter("hasIntent"))
         attackIntent.hasIntent = def.GetParameter("hasIntent")->AsBool();
-    
-    // REQUIREMENT E: Apply cooldown when present
-    if (def.HasParameter("cooldown"))
-        attackIntent.cooldown = def.GetParameter("cooldown")->AsFloat();
-    
+   
+
     if (def.HasParameter("attackType"))
     {
         std::string typeStr = def.GetParameter("attackType")->AsString();
