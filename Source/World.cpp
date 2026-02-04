@@ -1767,6 +1767,74 @@ bool World::InstantiatePass5_Relationships(
 // Helper Methods for Entity Instantiation
 // ========================================================================
 
+// Helper function to convert JSON value to ComponentParameter consistently
+namespace {
+    ComponentParameter JsonValueToComponentParameter(const nlohmann::json& value)
+    {
+        ComponentParameter param;
+        
+        if (value.is_number_float())
+        {
+            param = ComponentParameter::FromFloat(value.get<float>());
+        }
+        else if (value.is_number_integer())
+        {
+            param = ComponentParameter::FromInt(value.get<int>());
+        }
+        else if (value.is_boolean())
+        {
+            param = ComponentParameter::FromBool(value.get<bool>());
+        }
+        else if (value.is_string())
+        {
+            param = ComponentParameter::FromString(value.get<std::string>());
+        }
+        else if (value.is_array() && value.size() >= 2)
+        {
+            // Handle vector types with validation
+            bool hasInvalidElements = false;
+            
+            float x = 0.0f;
+            float y = 0.0f;
+            float z = 0.0f;
+            
+            if (value[0].is_number()) {
+                x = value[0].get<float>();
+            } else {
+                hasInvalidElements = true;
+            }
+            
+            if (value[1].is_number()) {
+                y = value[1].get<float>();
+            } else {
+                hasInvalidElements = true;
+            }
+            
+            if (value.size() >= 3) {
+                if (value[2].is_number()) {
+                    z = value[2].get<float>();
+                } else {
+                    hasInvalidElements = true;
+                }
+            }
+            
+            if (hasInvalidElements) {
+                SYSTEM_LOG << "[World] WARNING: Vector array contains non-numeric elements: " 
+                           << value.dump() << ". Non-numeric values defaulted to 0.0f." << std::endl;
+            }
+            
+            param = ComponentParameter::FromVector3(x, y, z);
+        }
+        else
+        {
+            // Default to string representation
+            param = ComponentParameter::FromString(value.dump());
+        }
+        
+        return param;
+    }
+}
+
 void World::ExtractCustomProperties( const nlohmann::json& overrides, LevelInstanceParameters& instanceParams)
 {
     if (overrides.is_null())
@@ -1774,31 +1842,33 @@ void World::ExtractCustomProperties( const nlohmann::json& overrides, LevelInsta
     
     for (auto it = overrides.begin(); it != overrides.end(); ++it)
     {
-        ComponentParameter param;
+        const std::string& key = it.key();
         const auto& value = it.value();
         
-        if (value.is_number_float())
+        // Check if this is a component-scoped override (nested object)
+        // Example: overrides["Transform"] = {"width": 32, "height": 64}
+        if (value.is_object())
         {
-            param.type = ComponentParameter::Type::Float;
-            param.floatValue = value.get<float>();
+            // This is a component-level override - extract all parameters
+            std::map<std::string, ComponentParameter> componentParams;
+            
+            for (auto paramIt = value.begin(); paramIt != value.end(); ++paramIt)
+            {
+                const std::string& paramName = paramIt.key();
+                const auto& paramValue = paramIt.value();
+                
+                // Use helper function for consistent conversion
+                componentParams[paramName] = JsonValueToComponentParameter(paramValue);
+            }
+            
+            // Store in component-scoped overrides
+            instanceParams.componentOverrides[key] = componentParams;
         }
-        else if (value.is_number_integer())
+        else
         {
-            param.type = ComponentParameter::Type::Int;
-            param.intValue = value.get<int>();
+            // This is a flat property - use helper for consistent conversion
+            instanceParams.properties[key] = JsonValueToComponentParameter(value);
         }
-        else if (value.is_boolean())
-        {
-            param.type = ComponentParameter::Type::Bool;
-            param.boolValue = value.get<bool>();
-        }
-        else if (value.is_string())
-        {
-            param.type = ComponentParameter::Type::String;
-            param.stringValue = value.get<std::string>();
-        }
-        
-        instanceParams.properties[it.key()] = param;
     }
 }
 

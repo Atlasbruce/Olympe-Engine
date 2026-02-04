@@ -619,24 +619,68 @@ namespace Tiled {
         for (const auto& pair : properties) {
             const TiledProperty& prop = pair.second;
             
+            // Check if property name contains a component prefix (e.g., "Transform.width")
+            std::string propName = prop.name;
+            size_t dotPos = propName.find('.');
+            
+            nlohmann::json propValue;
+            
+            // Convert property value to JSON
             switch (prop.type) {
                 case PropertyType::String:
                 case PropertyType::File:
                 case PropertyType::Color:
-                    overrides[prop.name] = prop.stringValue;
+                    propValue = prop.stringValue;
                     break;
                 case PropertyType::Int:
-                    overrides[prop.name] = prop.intValue;
+                    propValue = prop.intValue;
                     break;
                 case PropertyType::Float:
-                    overrides[prop.name] = prop.floatValue;
+                    propValue = prop.floatValue;
                     break;
                 case PropertyType::Bool:
-                    overrides[prop.name] = prop.boolValue;
+                    propValue = prop.boolValue;
                     break;
                 default:
-                    overrides[prop.name] = prop.stringValue;
+                    propValue = prop.stringValue;
                     break;
+            }
+            
+            // Validate component-scoped property format
+            // Must have exactly one dot, with content before and after it
+            // Rejects: ".property", "Component.", "..property", "Component..param", etc.
+            if (dotPos != std::string::npos && dotPos > 0 && dotPos < propName.length() - 1)
+            {
+                // Check for multiple dots (nested structures not supported)
+                size_t secondDot = propName.find('.', dotPos + 1);
+                if (secondDot != std::string::npos)
+                {
+                    // Multiple dots found - treat as flat property
+                    SYSTEM_LOG << "[TiledToOlympe] WARNING: Property '" << propName 
+                               << "' has multiple dots (nested structures not supported). "
+                               << "Treating as flat property." << std::endl;
+                    overrides[propName] = propValue;
+                }
+                else
+                {
+                    // Valid component-scoped property
+                    std::string componentName = propName.substr(0, dotPos);
+                    std::string paramName = propName.substr(dotPos + 1);
+                    
+                    // Ensure component object exists
+                    if (!overrides.contains(componentName) || !overrides[componentName].is_object()) {
+                        overrides[componentName] = nlohmann::json::object();
+                    }
+                    
+                    // Store in component-scoped structure
+                    overrides[componentName][paramName] = propValue;
+                }
+            }
+            else
+            {
+                // Store as flat property (legacy/backward compatibility)
+                // This includes properties starting with dot, ending with dot, or no dot at all
+                overrides[propName] = propValue;
             }
         }
     }
