@@ -39,8 +39,10 @@
       "componentType": "PhysicsBody_data",
       "parameters": [
         { "name": "mass", "type": "Float", "defaultValue": 1.0 },
+        { "name": "speed", "type": "Float", "defaultValue": 100.0 },
         { "name": "friction", "type": "Float", "defaultValue": 0.8 },
-        { "name": "useGravity", "type": "Bool", "defaultValue": false }
+        { "name": "useGravity", "type": "Bool", "defaultValue": false },
+        { "name": "rotation", "type": "Float", "defaultValue": 0.0 }
       ]
     },
     {
@@ -65,7 +67,8 @@
         { "name": "hotSpotY", "type": "Float", "defaultValue": 0.0 },
         { "name": "width", "type": "Int", "defaultValue": 32 },
         { "name": "height", "type": "Int", "defaultValue": 32 },
-        { "name": "layer", "type": "Int", "defaultValue": 0 }
+        { "name": "layer", "type": "Int", "defaultValue": 0 },
+        { "name": "visible", "type": "Bool", "defaultValue": true }
       ]
     },
     {
@@ -112,6 +115,7 @@
       "componentType": "AIBlackboard_data",
       "parameters": [
         { "name": "patrolPathID", "type": "String", "defaultValue": "" },
+        { "name": "patrolPath", "type": "Array", "defaultValue": [] },
         { "name": "lastKnownTargetPos", "type": "Vector2", "defaultValue": {"x": 0, "y": 0} }
       ]
     },
@@ -191,6 +195,13 @@
         { "name": "waypoints", "type": "Array", "defaultValue": [] },
         { "name": "currentIndex", "type": "Int", "defaultValue": 0 },
         { "name": "looping", "type": "Bool", "defaultValue": true }
+      ]
+    },
+    {
+      "componentType": "CollisionPolygon_data",
+      "parameters": [
+        { "name": "points", "type": "Array", "defaultValue": [] },
+        { "name": "closed", "type": "Bool", "defaultValue": true }
       ]
     }
   ]
