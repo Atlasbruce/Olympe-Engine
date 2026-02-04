@@ -16,11 +16,81 @@ InputsManager::~InputsManager()
     SYSTEM_LOG << "InputsManager destroyed\n";
 }
 
+void InputsManager::InitializeInputSystem(const std::string& configPath) {
+    SYSTEM_LOG << "[InputsManager][Info] Initializing new input system...\n";
+    
+    // Load engine configuration
+    if (!InputConfigLoader::Get().LoadEngineConfig(configPath)) {
+        SYSTEM_LOG << "[InputsManager][Warning] Failed to load engine config, using defaults\n";
+    }
+    
+    // Load input configuration
+    std::string inputConfigPath = "Config/Inputs.json";  // Default path
+    if (!InputConfigLoader::Get().LoadInputConfig(inputConfigPath)) {
+        SYSTEM_LOG << "[InputsManager][Warning] Failed to load input config, creating defaults\n";
+        
+        // Create default profiles
+        auto keyboardProfile = std::make_shared<InputProfile>("default_keyboard", InputDeviceType::KeyboardMouse);
+        keyboardProfile->InitializeDefaults();
+        InputDeviceManager::Get().AddProfile(keyboardProfile);
+        InputDeviceManager::Get().SetDefaultProfile(InputDeviceType::KeyboardMouse, "default_keyboard");
+        
+        auto gamepadProfile = std::make_shared<InputProfile>("default_gamepad", InputDeviceType::Joystick);
+        gamepadProfile->InitializeDefaults();
+        InputDeviceManager::Get().AddProfile(gamepadProfile);
+        InputDeviceManager::Get().SetDefaultProfile(InputDeviceType::Joystick, "default_gamepad");
+        
+        // Create default action map
+        ActionMap gameplayMap("gameplay", ActionMapContext::Gameplay, 0);
+        gameplayMap.AddAction("move_up");
+        gameplayMap.AddAction("move_down");
+        gameplayMap.AddAction("move_left");
+        gameplayMap.AddAction("move_right");
+        gameplayMap.AddAction("jump");
+        gameplayMap.AddAction("shoot");
+        gameplayMap.AddAction("interact");
+        InputDeviceManager::Get().AddActionMap(gameplayMap);
+    }
+    
+    // Try to load user overrides
+    InputConfigLoader::Get().LoadProfileOverride("Config/Inputs.user.json");
+    
+    // Initialize context manager
+    InputContextManager::Get().Initialize();
+    
+    // Register keyboard-mouse device
+    InputDeviceSlot keyboardSlot(InputDeviceType::KeyboardMouse, -1, "Keyboard+Mouse");
+    InputDeviceManager::Get().RegisterDevice(keyboardSlot);
+    
+    // Joysticks are registered by HandleEvent when they connect
+    
+    SYSTEM_LOG << "[InputsManager][Info] Input system initialized successfully\n";
+    InputDeviceManager::Get().LogDeviceStatus();
+}
+
 void InputsManager::HandleEvent(const SDL_Event* ev)
 {
+    // Forward to individual managers
     JoystickManager::Get().HandleEvent(ev);
     KeyboardManager::Get().HandleEvent(ev);
     MouseManager::Get().HandleEvent(ev);
+    
+    // Register joysticks with new device manager when they connect
+    if (ev->type == SDL_EVENT_JOYSTICK_ADDED) {
+        SDL_JoystickID joyID = ev->jdevice.which;
+        SDL_Joystick* joystick = SDL_OpenJoystick(joyID);
+        if (joystick) {
+            const char* name = SDL_GetJoystickName(joystick);
+            InputDeviceSlot joySlot(InputDeviceType::Joystick, joyID, name ? name : "Unknown Joystick");
+            InputDeviceManager::Get().RegisterDevice(joySlot);
+            SYSTEM_LOG << "[InputsManager][Info] Joystick connected and registered: " << (name ? name : "Unknown") << " (ID: " << joyID << ")\n";
+        }
+    }
+    else if (ev->type == SDL_EVENT_JOYSTICK_REMOVED) {
+        SDL_JoystickID joyID = ev->jdevice.which;
+        InputDeviceManager::Get().UnregisterDevice(joyID);
+        SYSTEM_LOG << "[InputsManager][Info] Joystick disconnected and unregistered (ID: " << joyID << ")\n";
+    }
 }
 
 //-------------------------------------------------------------

@@ -1,0 +1,219 @@
+{
+  "version": "2.0",
+  "comment": "Example Olympe Engine input configuration with all features",
+  
+  "profiles": [
+    {
+      "name": "default_keyboard",
+      "device_type": "KeyboardMouse",
+      "description": "Default keyboard and mouse bindings for PC players",
+      "actions": {
+        "move_up": {
+          "type": "key",
+          "primary": "W",
+          "alternate": "UP",
+          "comment": "Move character forward/up"
+        },
+        "move_down": {
+          "type": "key",
+          "primary": "S",
+          "alternate": "DOWN",
+          "comment": "Move character backward/down"
+        },
+        "move_left": {
+          "type": "key",
+          "primary": "A",
+          "alternate": "LEFT",
+          "comment": "Move character left"
+        },
+        "move_right": {
+          "type": "key",
+          "primary": "D",
+          "alternate": "RIGHT",
+          "comment": "Move character right"
+        },
+        "jump": {
+          "type": "key",
+          "primary": "SPACE",
+          "comment": "Jump action"
+        },
+        "shoot": {
+          "type": "mouse_button",
+          "button": 1,
+          "comment": "Primary fire (left mouse button)"
+        },
+        "aim": {
+          "type": "mouse_button",
+          "button": 3,
+          "comment": "Aim down sights (right mouse button)"
+        },
+        "interact": {
+          "type": "key",
+          "primary": "E",
+          "comment": "Interact with objects/NPCs"
+        },
+        "reload": {
+          "type": "key",
+          "primary": "R",
+          "comment": "Reload weapon"
+        },
+        "sprint": {
+          "type": "key",
+          "primary": "LSHIFT",
+          "comment": "Sprint/run"
+        },
+        "crouch": {
+          "type": "key",
+          "primary": "LCTRL",
+          "comment": "Crouch/sneak"
+        },
+        "menu_open": {
+          "type": "key",
+          "primary": "ESCAPE",
+          "comment": "Open pause menu"
+        },
+        
+        "ui_up": {"type": "key", "primary": "UP"},
+        "ui_down": {"type": "key", "primary": "DOWN"},
+        "ui_left": {"type": "key", "primary": "LEFT"},
+        "ui_right": {"type": "key", "primary": "RIGHT"},
+        "ui_confirm": {"type": "key", "primary": "RETURN"},
+        "ui_cancel": {"type": "key", "primary": "ESCAPE"},
+        
+        "screenshot": {"type": "key", "primary": "F12"},
+        "toggle_fps": {"type": "key", "primary": "F3"},
+        "toggle_debug": {"type": "key", "primary": "F1"}
+      },
+      "settings": {
+        "validate_overlaps": true,
+        "mouse_sensitivity": 1.0
+      }
+    },
+    
+    {
+      "name": "default_gamepad",
+      "device_type": "Joystick",
+      "description": "Default gamepad bindings compatible with Xbox, PlayStation, and generic controllers",
+      "actions": {
+        "move": {
+          "type": "stick",
+          "stick": "left",
+          "deadzone": 0.15,
+          "sensitivity": 1.0,
+          "comment": "Left stick for character movement"
+        },
+        "look": {
+          "type": "stick",
+          "stick": "right",
+          "deadzone": 0.15,
+          "sensitivity": 1.2,
+          "invert_y": false,
+          "comment": "Right stick for camera control"
+        },
+        "jump": {
+          "type": "button",
+          "button": 0,
+          "comment": "A button (Xbox) / Cross (PlayStation)"
+        },
+        "shoot": {
+          "type": "trigger",
+          "trigger": "right",
+          "threshold": 0.1,
+          "comment": "Right trigger for shooting"
+        },
+        "aim": {
+          "type": "trigger",
+          "trigger": "left",
+          "threshold": 0.1,
+          "comment": "Left trigger for aiming"
+        },
+        "interact": {
+          "type": "button",
+          "button": 2,
+          "comment": "X button (Xbox) / Square (PlayStation)"
+        },
+        "reload": {
+          "type": "button",
+          "button": 3,
+          "comment": "Y button (Xbox) / Triangle (PlayStation)"
+        },
+        "sprint": {
+          "type": "button",
+          "button": 8,
+          "comment": "Left stick click (L3)"
+        },
+        "crouch": {
+          "type": "button",
+          "button": 1,
+          "comment": "B button (Xbox) / Circle (PlayStation)"
+        },
+        "menu_open": {
+          "type": "button",
+          "button": 7,
+          "comment": "Start button"
+        },
+        
+        "ui_up": {"type": "button", "button": 12, "comment": "D-pad up"},
+        "ui_down": {"type": "button", "button": 13, "comment": "D-pad down"},
+        "ui_left": {"type": "button", "button": 14, "comment": "D-pad left"},
+        "ui_right": {"type": "button", "button": 15, "comment": "D-pad right"},
+        "ui_confirm": {"type": "button", "button": 0},
+        "ui_cancel": {"type": "button", "button": 1},
+        
+        "screenshot": {"type": "button", "button": 6, "comment": "Select/Back button"}
+      },
+      "settings": {
+        "deadzone": 0.15,
+        "sensitivity": 1.0
+      }
+    }
+  ],
+  
+  "action_maps": [
+    {
+      "name": "gameplay",
+      "context": "Gameplay",
+      "priority": 0,
+      "exclusive": false,
+      "description": "Core gameplay actions for player movement and combat",
+      "actions": [
+        "move_up", "move_down", "move_left", "move_right", "move", "look",
+        "jump", "shoot", "aim", "interact", "reload", "sprint", "crouch"
+      ]
+    },
+    {
+      "name": "ui_navigation",
+      "context": "UI",
+      "priority": 30,
+      "exclusive": true,
+      "description": "Menu and UI navigation controls",
+      "actions": [
+        "ui_up", "ui_down", "ui_left", "ui_right",
+        "ui_confirm", "ui_cancel"
+      ]
+    },
+    {
+      "name": "system",
+      "context": "System",
+      "priority": 100,
+      "exclusive": false,
+      "description": "System-level controls (screenshots, debug tools)",
+      "actions": [
+        "screenshot", "toggle_fps", "toggle_debug", "menu_open"
+      ]
+    }
+  ],
+  
+  "default_profile_assignment": {
+    "Joystick": "default_gamepad",
+    "KeyboardMouse": "default_keyboard"
+  },
+  
+  "settings": {
+    "auto_assign_devices": true,
+    "prefer_joysticks": true,
+    "enable_hot_reload": false,
+    "log_level": "info",
+    "device_reconnect_timeout_ms": 5000
+  }
+}
