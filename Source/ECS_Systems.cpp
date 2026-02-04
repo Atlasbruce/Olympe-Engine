@@ -1138,6 +1138,14 @@ void RenderSingleEntity(const CameraTransform& cam, EntityID entity)
 		
         Draw_Text(_str, &destRect, SDL_Color{ 255, 0, 0, 255 }, SDL_Color{ 0, 0, 0, 75 }); // draw entity ID above
 
+        if (World::Get().HasComponent<CollisionZone_data>(entity))
+        {
+			CollisionZone_data& colZone = World::Get().GetComponent<CollisionZone_data>(entity);
+            // draw bouding box in purple
+            destRect = { pos.position.x - visual.hotSpot.x, pos.position.y - visual.hotSpot.y, colZone.bounds.w, colZone.bounds.h };
+            Draw_Rectangle(&destRect, SDL_Color{ 255, 0, 255, 255 }); // draw bounding box in purple
+        }
+
     }
     catch (const std::exception& e)
     {

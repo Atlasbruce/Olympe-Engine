@@ -523,7 +523,11 @@ private:
     // ========================================================================
     
     /// Extract custom properties from JSON overrides into LevelInstanceParameters
-    void ExtractCustomProperties( const nlohmann::json& overrides, LevelInstanceParameters& instanceParams);
+    void ExtractCustomProperties(
+        const nlohmann::json& overrides, 
+        LevelInstanceParameters& instanceParams,
+        const Olympe::Editor::EntityInstance* entityInstance = nullptr,
+        const PrefabBlueprint* prefab = nullptr);
     
     /// Create a red placeholder entity for missing prefabs
     EntityID CreateMissingPrefabPlaceholder(

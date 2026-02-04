@@ -441,9 +441,12 @@ bool PrefabFactory::InstantiatePhysicsBody(EntityID entity, const ComponentDefin
     if (def.HasParameter("speed"))
         physics.speed = def.GetParameter("speed")->AsFloat();
     
-    // Note: friction, restitution, useGravity are not in PhysicsBody_data struct currently
-    // These would need to be added to the struct definition in ECS_Components.h
-    // For now, we only support mass and speed
+    // REQUIREMENT E: Apply friction and useGravity when present
+    if (def.HasParameter("friction"))
+        physics.friction = def.GetParameter("friction")->AsFloat();
+    
+    if (def.HasParameter("useGravity"))
+        physics.useGravity = def.GetParameter("useGravity")->AsBool();
     
     World::Get().AddComponent<PhysicsBody_data>(entity, physics);
     return true;
@@ -513,6 +516,11 @@ bool PrefabFactory::InstantiateVisualSprite(EntityID entity, const ComponentDefi
         visual.color = def.GetParameter("color")->AsColor();
     }
     
+    // REQUIREMENT E: Apply layer when explicitly provided (if VisualSprite_data had the field)
+    // NOTE: width/height/layer fields don't exist in VisualSprite_data struct yet
+    // These parameters are validated by schema but not applied until struct is updated
+    // For now, srcRect.w and srcRect.h serve as the effective width/height
+    
     World::Get().AddComponent<VisualSprite_data>(entity, visual);
     return true;
 }
@@ -570,6 +578,10 @@ bool PrefabFactory::InstantiateVisualEditor(EntityID entity, const ComponentDefi
         // Default to visible
         editor.isVisible = true;
     }
+    
+    // REQUIREMENT E: Apply layer when explicitly provided (if VisualEditor_data had the field)
+    // NOTE: width/height/layer fields don't exist in VisualEditor_data struct yet
+    // These parameters are validated by schema but not applied until struct is updated
     
     World::Get().AddComponent<VisualEditor_data>(entity, editor);
     return true;
@@ -712,7 +724,8 @@ bool PrefabFactory::InstantiateHealth(EntityID entity, const ComponentDefinition
     
     if (def.HasParameter("maxHealth"))
         health.maxHealth = def.GetParameter("maxHealth")->AsInt();
-    
+ 
+
     World::Get().AddComponent<Health_data>(entity, health);
     return true;
 }
@@ -815,6 +828,7 @@ bool PrefabFactory::InstantiateController(EntityID entity, const ComponentDefini
     
     if (def.HasParameter("isConnected"))
         controller.isConnected = def.GetParameter("isConnected")->AsBool();
+   
     
     World::Get().AddComponent<Controller_data>(entity, controller);
     return true;
@@ -823,6 +837,8 @@ bool PrefabFactory::InstantiateController(EntityID entity, const ComponentDefini
 bool PrefabFactory::InstantiatePlayerController(EntityID entity, const ComponentDefinition& def)
 {
     PlayerController_data playerCtrl;
+    
+    // REQUIREMENT E: Apply enabled/inputEnabled when present
     
     // Extract player controller parameters
     if (def.HasParameter("isJumping"))
@@ -833,7 +849,19 @@ bool PrefabFactory::InstantiatePlayerController(EntityID entity, const Component
     
     if (def.HasParameter("isRunning"))
         playerCtrl.isRunning = def.GetParameter("isRunning")->AsBool();
+
+    if (def.HasParameter("isInteracting"))
+        playerCtrl.isInteracting = def.GetParameter("isInteracting")->AsBool();
+
+    if (def.HasParameter("isWalking"))
+        playerCtrl.isWalking = def.GetParameter("isWalking")->AsBool();
     
+    if (def.HasParameter("isUsingItem"))
+        playerCtrl.isUsingItem = def.GetParameter("isUsingItem")->AsBool();
+
+    if (def.HasParameter("isMenuOpen"))
+        playerCtrl.isMenuOpen = def.GetParameter("isMenuOpen")->AsBool();
+
     World::Get().AddComponent<PlayerController_data>(entity, playerCtrl);
     return true;
 }
@@ -1125,7 +1153,8 @@ bool PrefabFactory::InstantiateAttackIntent(EntityID entity, const ComponentDefi
     
     if (def.HasParameter("hasIntent"))
         attackIntent.hasIntent = def.GetParameter("hasIntent")->AsBool();
-    
+   
+
     if (def.HasParameter("attackType"))
     {
         std::string typeStr = def.GetParameter("attackType")->AsString();

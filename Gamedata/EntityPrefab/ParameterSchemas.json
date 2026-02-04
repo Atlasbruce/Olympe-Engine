@@ -20,6 +20,8 @@
     {
       "componentType": "BoundingBox_data",
       "parameters": [
+        { "name": "x", "type": "Float", "defaultValue": 0.0 },
+        { "name": "y", "type": "Float", "defaultValue": 0.0 },
         { "name": "width", "type": "Int", "defaultValue": 32 },
         { "name": "height", "type": "Int", "defaultValue": 32 },
         { "name": "offsetX", "type": "Int", "defaultValue": 0 },
@@ -53,6 +55,14 @@
       "componentType": "VisualSprite_data",
       "parameters": [
         { "name": "spritePath", "type": "String", "defaultValue": "" },
+        { "name": "color", "type": "Color", "defaultValue": "#FFFFFF" },
+        { "name": "srcX", "type": "Int", "defaultValue": 0 },
+        { "name": "srcY", "type": "Int", "defaultValue": 0 },
+        { "name": "srcW", "type": "Int", "defaultValue": 0 },
+        { "name": "srcH", "type": "Int", "defaultValue": 0 },
+        { "name": "hotSpot", "type": "Vector2", "defaultValue": {"x": 0, "y": 0} },
+        { "name": "hotSpotX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "hotSpotY", "type": "Float", "defaultValue": 0.0 },
         { "name": "width", "type": "Int", "defaultValue": 32 },
         { "name": "height", "type": "Int", "defaultValue": 32 },
         { "name": "layer", "type": "Int", "defaultValue": 0 }
@@ -62,8 +72,11 @@
       "componentType": "VisualEditor_data",
       "parameters": [
         { "name": "iconPath", "type": "String", "defaultValue": "" },
+        { "name": "spritePath", "type": "String", "defaultValue": "" },
         { "name": "color", "type": "Color", "defaultValue": "#FFFFFF" },
         { "name": "visible", "type": "Bool", "defaultValue": true },
+        { "name": "width", "type": "Int", "defaultValue": 32 },
+        { "name": "height", "type": "Int", "defaultValue": 32 },
         { "name": "layer", "type": "Int", "defaultValue": 0 }
       ]
     },
@@ -71,23 +84,28 @@
       "componentType": "PlayerBinding_data",
       "parameters": [
         { "name": "playerIndex", "type": "Int", "defaultValue": 0 },
-        { "name": "controlScheme", "type": "String", "defaultValue": "WASD" }
+        { "name": "controlScheme", "type": "String", "defaultValue": "WASD" },
+        { "name": "controllerID", "type": "Int", "defaultValue": -1 }
       ]
     },
     {
       "componentType": "Controller_data",
       "parameters": [
+        { "name": "controllerID", "type": "Int", "defaultValue": -1 },
+        { "name": "isConnected", "type": "Bool", "defaultValue": false },
         { "name": "isJumping", "type": "Bool", "defaultValue": false },
-        { "name": "isShooting", "type": "Bool", "defaultValue": false }
-	    { "name": "isWalking", "type": "Bool", "defaultValue": false } 
-		
+        { "name": "isShooting", "type": "Bool", "defaultValue": false },
+        { "name": "isWalking", "type": "Bool", "defaultValue": false }
       ]
     },
-	{
+    {
       "componentType": "PlayerController_data",
       "parameters": [
         { "name": "enabled", "type": "Bool", "defaultValue": true },
-        { "name": "inputEnabled", "type": "Bool", "defaultValue": true }
+        { "name": "inputEnabled", "type": "Bool", "defaultValue": true },
+        { "name": "isJumping", "type": "Bool", "defaultValue": false },
+        { "name": "isShooting", "type": "Bool", "defaultValue": false },
+        { "name": "isRunning", "type": "Bool", "defaultValue": false }
       ]
     },
     {
@@ -101,7 +119,10 @@
       "componentType": "AISenses_data",
       "parameters": [
         { "name": "visionRange", "type": "Float", "defaultValue": 200.0 },
+        { "name": "visionAngle", "type": "Float", "defaultValue": 90.0 },
         { "name": "hearingRange", "type": "Float", "defaultValue": 150.0 },
+        { "name": "perceptionHz", "type": "Float", "defaultValue": 10.0 },
+        { "name": "thinkHz", "type": "Float", "defaultValue": 5.0 },
         { "name": "canSeeTarget", "type": "Bool", "defaultValue": false }
       ]
     },
@@ -109,14 +130,21 @@
       "componentType": "AIState_data",
       "parameters": [
         { "name": "currentState", "type": "String", "defaultValue": "Patrol" },
-        { "name": "previousState", "type": "String", "defaultValue": "Idle" }
+        { "name": "previousState", "type": "String", "defaultValue": "Idle" },
+        { "name": "combatEngageDistance", "type": "Float", "defaultValue": 100.0 },
+        { "name": "fleeHealthThreshold", "type": "Float", "defaultValue": 20.0 },
+        { "name": "investigateTimeout", "type": "Float", "defaultValue": 5.0 }
       ]
     },
     {
       "componentType": "BehaviorTreeRuntime_data",
       "parameters": [
         { "name": "treeID", "type": "Int", "defaultValue": 0 },
-        { "name": "isRunning", "type": "Bool", "defaultValue": false }
+        { "name": "treeAssetId", "type": "Int", "defaultValue": 0 },
+        { "name": "treePath", "type": "String", "defaultValue": "" },
+        { "name": "active", "type": "Bool", "defaultValue": false },
+        { "name": "isRunning", "type": "Bool", "defaultValue": false },
+        { "name": "currentNodeIndex", "type": "Int", "defaultValue": 0 }
       ]
     },
     {
@@ -124,13 +152,24 @@
       "parameters": [
         { "name": "targetX", "type": "Float", "defaultValue": 0.0 },
         { "name": "targetY", "type": "Float", "defaultValue": 0.0 },
-        { "name": "isMoving", "type": "Bool", "defaultValue": false }
+        { "name": "targetPosition", "type": "Vector2", "defaultValue": {"x": 0, "y": 0} },
+        { "name": "desiredSpeed", "type": "Float", "defaultValue": 100.0 },
+        { "name": "hasTarget", "type": "Bool", "defaultValue": false },
+        { "name": "hasIntent", "type": "Bool", "defaultValue": false },
+        { "name": "isMoving", "type": "Bool", "defaultValue": false },
+        { "name": "arrivalThreshold", "type": "Float", "defaultValue": 5.0 },
+        { "name": "usePathfinding", "type": "Bool", "defaultValue": false },
+        { "name": "avoidObstacles", "type": "Bool", "defaultValue": true }
       ]
     },
     {
       "componentType": "AttackIntent_data",
       "parameters": [
         { "name": "isAttacking", "type": "Bool", "defaultValue": false },
+        { "name": "hasIntent", "type": "Bool", "defaultValue": false },
+        { "name": "damage", "type": "Float", "defaultValue": 10.0 },
+        { "name": "attackType", "type": "String", "defaultValue": "Melee" },
+        { "name": "range", "type": "Float", "defaultValue": 50.0 },
         { "name": "attackRange", "type": "Float", "defaultValue": 50.0 },
         { "name": "cooldown", "type": "Float", "defaultValue": 1.0 }
       ]

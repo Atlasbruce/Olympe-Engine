@@ -138,6 +138,8 @@ struct PhysicsBody_data
 {
 	float mass = 1.0f;		// Mass of the body
 	float speed = 150.0f;	// Movement speed in pixels/second
+	float friction = 0.1f; // Friction coefficient
+	bool useGravity = true; // Is gravity applied?
 	
 	// Constructors
 	PhysicsBody_data() = default;
