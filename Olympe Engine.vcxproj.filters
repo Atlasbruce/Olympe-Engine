@@ -300,6 +300,12 @@
     <ClCompile Include="Source\Rendering\IsometricRenderer.cpp">
       <Filter>Fichiers d%27en-t�te\Engine Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="Source\InputDevice.cpp">
+      <Filter>Fichiers d%27en-t�te\Engine Systems\Inputs</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\InputConfigLoader.cpp">
+      <Filter>Fichiers d%27en-t�te\Engine Systems\Inputs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -598,6 +604,12 @@
     </ClInclude>
     <ClInclude Include="Source\Rendering\IsometricRenderer.h">
       <Filter>Fichiers d%27en-t�te\Engine Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\InputDevice.h">
+      <Filter>Fichiers d%27en-t�te\Engine Systems\Inputs</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\InputConfigLoader.h">
+      <Filter>Fichiers d%27en-t�te\Engine Systems\Inputs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

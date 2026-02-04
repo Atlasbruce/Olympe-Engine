@@ -13,7 +13,7 @@ Loads input configuration from JSON files including:
 
 #include "InputDevice.h"
 #include <string>
-#include <nlohmann/json.hpp>
+#include "third_party/nlohmann/json.hpp"
 
 using json = nlohmann::json;
 

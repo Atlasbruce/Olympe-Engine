@@ -52,6 +52,8 @@
     <ClCompile Include="Source\ECS_Systems_Camera.cpp" />
     <ClCompile Include="Source\ECS_Systems_Rendering_Camera.cpp" />
     <ClCompile Include="Source\engine_utils.cpp" />
+    <ClCompile Include="Source\InputConfigLoader.cpp" />
+    <ClCompile Include="Source\InputDevice.cpp" />
     <ClCompile Include="Source\InputsInspectorPanel.cpp" />
     <ClCompile Include="Source\InputsManager.cpp" />
     <ClCompile Include="Source\DataManager.cpp" />
@@ -140,6 +142,8 @@
     <ClInclude Include="Source\GameRules.h" />
     <ClInclude Include="Source\GameState.h" />
     <ClInclude Include="Source\GraphicMap.h" />
+    <ClInclude Include="Source\InputConfigLoader.h" />
+    <ClInclude Include="Source\InputDevice.h" />
     <ClInclude Include="Source\InputsManager.h" />
     <ClInclude Include="Source\json_helper.h" />
     <ClInclude Include="Source\Level.h" />

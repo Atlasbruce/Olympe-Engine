@@ -6,7 +6,7 @@ Implementation of the new input device abstraction layer.
 */
 
 #include "InputDevice.h"
-#include "system_utils.h"
+#include "system/system_utils.h"
 #include <algorithm>
 #include <unordered_set>
 
@@ -22,7 +22,11 @@ bool InputProfile::ValidateNoOverlaps() const {
     std::unordered_set<int> usedKeys;
     bool hasOverlap = false;
     
-    for (const auto& [actionName, binding] : actionMappings) {
+    for (const auto& entry : actionMappings) 
+    {
+        const auto& actionName = entry.first;
+        const auto& binding = entry.second;
+
         if (binding.type == InputType::Key) {
             // Check primary key
             if (binding.primaryInput != -1) {
@@ -290,7 +294,8 @@ const InputDeviceSlot* InputDeviceManager::GetDeviceForPlayer(short playerID) co
 
 std::vector<InputDeviceSlot*> InputDeviceManager::GetAvailableDevices() {
     std::vector<InputDeviceSlot*> available;
-    for (auto& [idx, slot] : m_deviceSlots) {
+    for (auto& entry : m_deviceSlots) {
+        auto& slot = entry.second;
         if (slot.IsAvailable()) {
             available.push_back(&slot);
         }
@@ -300,7 +305,8 @@ std::vector<InputDeviceSlot*> InputDeviceManager::GetAvailableDevices() {
 
 std::vector<InputDeviceSlot*> InputDeviceManager::GetAllDevices() {
     std::vector<InputDeviceSlot*> all;
-    for (auto& [idx, slot] : m_deviceSlots) {
+    for (auto& entry : m_deviceSlots) {
+        auto& slot = entry.second;
         all.push_back(&slot);
     }
     return all;
@@ -376,7 +382,9 @@ void InputDeviceManager::LogDeviceStatus() const {
     SYSTEM_LOG << "[InputDevice][Info] === Device Status ===\n";
     SYSTEM_LOG << "[InputDevice][Info] Total devices: " << m_deviceSlots.size() << "\n";
     
-    for (const auto& [idx, slot] : m_deviceSlots) {
+    for (const auto& entry : m_deviceSlots) {
+        const auto& idx = entry.first;
+        const auto& slot = entry.second;
         SYSTEM_LOG << "[InputDevice][Info]   Device " << idx << ": " << slot.deviceName 
                   << " (Type: " << (slot.type == InputDeviceType::Joystick ? "Joystick" : "KeyboardMouse")
                   << ", Connected: " << (slot.isConnected ? "Yes" : "No")
@@ -389,14 +397,16 @@ void InputDeviceManager::LogDeviceStatus() const {
 
 InputDeviceSlot* InputDeviceManager::FindFirstAvailableDevice() {
     // First, try to find available joystick (preferred)
-    for (auto& [idx, slot] : m_deviceSlots) {
+    for (auto& entry : m_deviceSlots) {
+        auto& slot = entry.second;
         if (slot.type == InputDeviceType::Joystick && slot.IsAvailable()) {
             return &slot;
         }
     }
     
     // If no joystick available, try keyboard-mouse
-    for (auto& [idx, slot] : m_deviceSlots) {
+    for (auto& entry : m_deviceSlots) {
+        auto& slot = entry.second;
         if (slot.type == InputDeviceType::KeyboardMouse && slot.IsAvailable()) {
             return &slot;
         }

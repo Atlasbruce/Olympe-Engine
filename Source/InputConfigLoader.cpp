@@ -7,7 +7,7 @@ Loads input configuration from JSON files.
 
 #include "InputConfigLoader.h"
 #include "InputDevice.h"
-#include "system_utils.h"
+#include "system/system_utils.h"
 #include "third_party/nlohmann/json.hpp"
 #include <fstream>
 #include <unordered_map>
