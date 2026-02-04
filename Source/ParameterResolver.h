@@ -44,7 +44,13 @@ struct LevelInstanceParameters
 	std::string objectName;        // Unique name/ID of this object instance
 	std::string objectType;        // Prefab type (e.g., "player", "enemy")
 	Vector position;               // Position in the level (x, y, z)
-	std::map<std::string, ComponentParameter> properties; // Custom property overrides
+	std::map<std::string, ComponentParameter> properties; // Custom property overrides (legacy/flat)
+	
+	// NEW: Component-scoped overrides to prevent cross-component overwrites
+	// Maps: componentType -> (parameterName -> parameterValue)
+	// Example: componentOverrides["Transform"]["width"] = ComponentParameter::FromFloat(32.0f)
+	std::map<std::string, std::map<std::string, ComponentParameter>> componentOverrides;
+	
 	std::vector<ObjectReference> objectReferences;        // References to other objects
 	
 	LevelInstanceParameters() = default;

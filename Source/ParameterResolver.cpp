@@ -160,22 +160,50 @@ std::map<std::string, ComponentParameter> ParameterResolver::ExtractComponentPar
 {
 	std::map<std::string, ComponentParameter> componentParams;
 	
-	// Get component schema
+	// PRIORITY 1: Check component-scoped overrides first (NEW)
+	// This prevents cross-component overwrites
+	auto compOverrideIt = instanceParams.componentOverrides.find(componentType);
+	if (compOverrideIt != instanceParams.componentOverrides.end())
+	{
+		SYSTEM_LOG << "[ParameterResolver]       Found " << compOverrideIt->second.size() 
+		           << " component-scoped overrides for " << componentType << std::endl;
+		// Copy all component-scoped parameters
+		componentParams = compOverrideIt->second;
+	}
+	
+	// PRIORITY 2: Fall back to schema-based extraction from flat properties (LEGACY)
+	// This maintains backward compatibility with existing levels
 	auto& schemaRegistry = ParameterSchemaRegistry::GetInstance();
 	const ComponentSchema* schema = schemaRegistry.GetComponentSchema(componentType);
 	
 	if (schema == nullptr)
 	{
+		// If we found component overrides but no schema, that's fine - return what we have
+		if (!componentParams.empty())
+		{
+			SYSTEM_LOG << "[ParameterResolver]       No schema for component " << componentType 
+			           << ", using component overrides only" << std::endl;
+			return componentParams;
+		}
+		
 		SYSTEM_LOG << "[ParameterResolver]       No schema found for component: " 
 		           << componentType << std::endl;
 		return componentParams;
 	}
 	
-	// Extract parameters that belong to this component
+	// Extract parameters from flat properties that belong to this component
+	// Only add if not already present in componentParams (component overrides take precedence)
 	for (const auto& paramPair : schema->parameters)
 	{
 		const std::string& paramName = paramPair.first;
-		// Check if level instance has this parameter
+		
+		// Skip if already set via component overrides
+		if (componentParams.find(paramName) != componentParams.end())
+		{
+			continue;
+		}
+		
+		// Check if level instance has this parameter in flat properties
 		auto it = instanceParams.properties.find(paramName);
 		if (it != instanceParams.properties.end())
 		{

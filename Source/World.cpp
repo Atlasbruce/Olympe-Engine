@@ -1774,31 +1774,87 @@ void World::ExtractCustomProperties( const nlohmann::json& overrides, LevelInsta
     
     for (auto it = overrides.begin(); it != overrides.end(); ++it)
     {
-        ComponentParameter param;
+        const std::string& key = it.key();
         const auto& value = it.value();
         
-        if (value.is_number_float())
+        // Check if this is a component-scoped override (nested object)
+        // Example: overrides["Transform"] = {"width": 32, "height": 64}
+        if (value.is_object())
         {
-            param.type = ComponentParameter::Type::Float;
-            param.floatValue = value.get<float>();
+            // This is a component-level override - extract all parameters
+            std::map<std::string, ComponentParameter> componentParams;
+            
+            for (auto paramIt = value.begin(); paramIt != value.end(); ++paramIt)
+            {
+                const std::string& paramName = paramIt.key();
+                const auto& paramValue = paramIt.value();
+                
+                ComponentParameter param;
+                
+                if (paramValue.is_number_float())
+                {
+                    param = ComponentParameter::FromFloat(paramValue.get<float>());
+                }
+                else if (paramValue.is_number_integer())
+                {
+                    param = ComponentParameter::FromInt(paramValue.get<int>());
+                }
+                else if (paramValue.is_boolean())
+                {
+                    param = ComponentParameter::FromBool(paramValue.get<bool>());
+                }
+                else if (paramValue.is_string())
+                {
+                    param = ComponentParameter::FromString(paramValue.get<std::string>());
+                }
+                else if (paramValue.is_array() && paramValue.size() >= 2)
+                {
+                    // Handle vector types
+                    float x = paramValue[0].is_number() ? paramValue[0].get<float>() : 0.0f;
+                    float y = paramValue[1].is_number() ? paramValue[1].get<float>() : 0.0f;
+                    float z = (paramValue.size() >= 3 && paramValue[2].is_number()) ? paramValue[2].get<float>() : 0.0f;
+                    param = ComponentParameter::FromVector3(x, y, z);
+                }
+                else
+                {
+                    // Default to string representation
+                    param = ComponentParameter::FromString(paramValue.dump());
+                }
+                
+                componentParams[paramName] = param;
+            }
+            
+            // Store in component-scoped overrides
+            instanceParams.componentOverrides[key] = componentParams;
         }
-        else if (value.is_number_integer())
+        else
         {
-            param.type = ComponentParameter::Type::Int;
-            param.intValue = value.get<int>();
+            // This is a flat property - legacy behavior (backward compatibility)
+            ComponentParameter param;
+            
+            if (value.is_number_float())
+            {
+                param.type = ComponentParameter::Type::Float;
+                param.floatValue = value.get<float>();
+            }
+            else if (value.is_number_integer())
+            {
+                param.type = ComponentParameter::Type::Int;
+                param.intValue = value.get<int>();
+            }
+            else if (value.is_boolean())
+            {
+                param.type = ComponentParameter::Type::Bool;
+                param.boolValue = value.get<bool>();
+            }
+            else if (value.is_string())
+            {
+                param.type = ComponentParameter::Type::String;
+                param.stringValue = value.get<std::string>();
+            }
+            
+            instanceParams.properties[key] = param;
         }
-        else if (value.is_boolean())
-        {
-            param.type = ComponentParameter::Type::Bool;
-            param.boolValue = value.get<bool>();
-        }
-        else if (value.is_string())
-        {
-            param.type = ComponentParameter::Type::String;
-            param.stringValue = value.get<std::string>();
-        }
-        
-        instanceParams.properties[it.key()] = param;
     }
 }
 
