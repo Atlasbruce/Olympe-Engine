@@ -801,7 +801,7 @@ EntityID World::InstantiateEntity(
     // Build instance parameters
     LevelInstanceParameters instanceParams(entityInstance->name, entityInstance->type);
     instanceParams.position = entityInstance->position;
-    ExtractCustomProperties(entityInstance->overrides, instanceParams);
+    ExtractCustomProperties(entityInstance->overrides, instanceParams, entityInstance, blueprint);
     
     // Create entity with overrides
     // CRITICAL: Disable autoAssignLayer to preserve position.z from Tiled level
@@ -1789,41 +1789,50 @@ namespace {
         {
             param = ComponentParameter::FromString(value.get<std::string>());
         }
-        else if (value.is_array() && value.size() >= 2)
+        else if (value.is_array())
         {
-            // Handle vector types with validation
-            bool hasInvalidElements = false;
-            
-            float x = 0.0f;
-            float y = 0.0f;
-            float z = 0.0f;
-            
-            if (value[0].is_number()) {
-                x = value[0].get<float>();
-            } else {
-                hasInvalidElements = true;
-            }
-            
-            if (value[1].is_number()) {
-                y = value[1].get<float>();
-            } else {
-                hasInvalidElements = true;
-            }
-            
-            if (value.size() >= 3) {
-                if (value[2].is_number()) {
-                    z = value[2].get<float>();
+            // Check if this is a numeric array that could be a Vector
+            if (value.size() >= 2 && value.size() <= 3 && value[0].is_number())
+            {
+                // Handle vector types with validation
+                bool hasInvalidElements = false;
+                
+                float x = 0.0f;
+                float y = 0.0f;
+                float z = 0.0f;
+                
+                if (value[0].is_number()) {
+                    x = value[0].get<float>();
                 } else {
                     hasInvalidElements = true;
                 }
+                
+                if (value[1].is_number()) {
+                    y = value[1].get<float>();
+                } else {
+                    hasInvalidElements = true;
+                }
+                
+                if (value.size() >= 3) {
+                    if (value[2].is_number()) {
+                        z = value[2].get<float>();
+                    } else {
+                        hasInvalidElements = true;
+                    }
+                }
+                
+                if (hasInvalidElements) {
+                    SYSTEM_LOG << "[World] WARNING: Vector array contains non-numeric elements: " 
+                               << value.dump() << ". Non-numeric values defaulted to 0.0f." << std::endl;
+                }
+                
+                param = ComponentParameter::FromVector3(x, y, z);
             }
-            
-            if (hasInvalidElements) {
-                SYSTEM_LOG << "[World] WARNING: Vector array contains non-numeric elements: " 
-                           << value.dump() << ". Non-numeric values defaulted to 0.0f." << std::endl;
+            else
+            {
+                // Preserve as array (for patrol paths, waypoints, etc.)
+                param = ComponentParameter::FromArray(value);
             }
-            
-            param = ComponentParameter::FromVector3(x, y, z);
         }
         else
         {
@@ -1835,8 +1844,140 @@ namespace {
     }
 }
 
-void World::ExtractCustomProperties( const nlohmann::json& overrides, LevelInstanceParameters& instanceParams)
+void World::ExtractCustomProperties(
+    const nlohmann::json& overrides, 
+    LevelInstanceParameters& instanceParams,
+    const Olympe::Editor::EntityInstance* entityInstance,
+    const PrefabBlueprint* prefab)
 {
+    // REQUIREMENT A: Automatic TMJ field mapping (NO cross-component overwrites)
+    // Map TMJ object fields (x, y, width, height) to component-scoped overrides
+    // ONLY if entityInstance and prefab are provided, and ONLY if not already set
+    
+    if (entityInstance && prefab)
+    {
+        // Helper lambda to check if prefab has a component
+        auto prefabHasComponent = [&](const std::string& componentType) -> bool {
+            for (const auto& comp : prefab->components) {
+                if (comp.componentType == componentType)
+                    return true;
+            }
+            return false;
+        };
+        
+        // Helper lambda to check if component-scoped override already set
+        auto hasComponentOverride = [&](const std::string& componentType, const std::string& paramName) -> bool {
+            auto compIt = instanceParams.componentOverrides.find(componentType);
+            if (compIt != instanceParams.componentOverrides.end()) {
+                return compIt->second.find(paramName) != compIt->second.end();
+            }
+            return false;
+        };
+        
+        // 1) Position_data: Always map x/y/z from entityInstance.position (TMJ position)
+        // NOTE: This is already done via instanceParams.position = entityInstance->position
+        // No need to create component override here as it's handled by ParameterResolver
+        
+        // 2) BoundingBox_data: Map TMJ width/height AND x/y (offset) if prefab has it
+        if (prefabHasComponent("BoundingBox_data"))
+        {
+            // Get TMJ object dimensions (these come from TMJ object's width/height properties)
+            // Note: For point objects, width/height may be 0
+            float tmjWidth = 0.0f;
+            float tmjHeight = 0.0f;
+            float tmjX = 0.0f;
+            float tmjY = 0.0f;
+            
+            // Extract from entityInstance metadata if available
+            // TMJ width/height are typically stored in the object definition
+            // For now, we'll check if they're in overrides or try to extract from context
+            if (!overrides.is_null())
+            {
+                // Check if TMJ provided width/height as flat properties
+                if (overrides.contains("width") && overrides["width"].is_number())
+                    tmjWidth = overrides["width"].get<float>();
+                if (overrides.contains("height") && overrides["height"].is_number())
+                    tmjHeight = overrides["height"].get<float>();
+                if (overrides.contains("x") && overrides["x"].is_number())
+                    tmjX = overrides["x"].get<float>();
+                if (overrides.contains("y") && overrides["y"].is_number())
+                    tmjY = overrides["y"].get<float>();
+            }
+            
+            // Only apply if dimensions are non-zero and not already overridden
+            // NOTE: BoundingBox_data uses Int type for width/height per schema
+            // TMJ dimensions (float) are rounded down to match schema type
+            if (tmjWidth > 0.0f && !hasComponentOverride("BoundingBox_data", "width"))
+            {
+                instanceParams.componentOverrides["BoundingBox_data"]["width"] = 
+                    ComponentParameter::FromInt(static_cast<int>(tmjWidth));
+            }
+            if (tmjHeight > 0.0f && !hasComponentOverride("BoundingBox_data", "height"))
+            {
+                instanceParams.componentOverrides["BoundingBox_data"]["height"] = 
+                    ComponentParameter::FromInt(static_cast<int>(tmjHeight));
+            }
+            if (tmjX != 0.0f && !hasComponentOverride("BoundingBox_data", "x"))
+            {
+                instanceParams.componentOverrides["BoundingBox_data"]["x"] = 
+                    ComponentParameter::FromFloat(tmjX);
+            }
+            if (tmjY != 0.0f && !hasComponentOverride("BoundingBox_data", "y"))
+            {
+                instanceParams.componentOverrides["BoundingBox_data"]["y"] = 
+                    ComponentParameter::FromFloat(tmjY);
+            }
+        }
+        
+        // 3) CollisionZone_data: Map TMJ x/y/width/height if prefab has it
+        if (prefabHasComponent("CollisionZone_data"))
+        {
+            float tmjWidth = 0.0f;
+            float tmjHeight = 0.0f;
+            float tmjX = 0.0f;
+            float tmjY = 0.0f;
+            
+            if (!overrides.is_null())
+            {
+                if (overrides.contains("width") && overrides["width"].is_number())
+                    tmjWidth = overrides["width"].get<float>();
+                if (overrides.contains("height") && overrides["height"].is_number())
+                    tmjHeight = overrides["height"].get<float>();
+                if (overrides.contains("x") && overrides["x"].is_number())
+                    tmjX = overrides["x"].get<float>();
+                if (overrides.contains("y") && overrides["y"].is_number())
+                    tmjY = overrides["y"].get<float>();
+            }
+            
+            // Apply if not already overridden (component-scoped overrides take precedence)
+            if (tmjX != 0.0f && !hasComponentOverride("CollisionZone_data", "x"))
+            {
+                instanceParams.componentOverrides["CollisionZone_data"]["x"] = 
+                    ComponentParameter::FromFloat(tmjX);
+            }
+            if (tmjY != 0.0f && !hasComponentOverride("CollisionZone_data", "y"))
+            {
+                instanceParams.componentOverrides["CollisionZone_data"]["y"] = 
+                    ComponentParameter::FromFloat(tmjY);
+            }
+            if (tmjWidth > 0.0f && !hasComponentOverride("CollisionZone_data", "width"))
+            {
+                instanceParams.componentOverrides["CollisionZone_data"]["width"] = 
+                    ComponentParameter::FromFloat(tmjWidth);
+            }
+            if (tmjHeight > 0.0f && !hasComponentOverride("CollisionZone_data", "height"))
+            {
+                instanceParams.componentOverrides["CollisionZone_data"]["height"] = 
+                    ComponentParameter::FromFloat(tmjHeight);
+            }
+        }
+        
+        // NOTE: Do NOT map TMJ width/height to VisualSprite_data or VisualEditor_data automatically
+        // These should only be set via explicit component-scoped overrides (e.g., "VisualSprite_data.width")
+        // TMJ rotation is ignored (do not map)
+    }
+    
+    // Now process existing overrides from JSON (explicit overrides take precedence)
     if (overrides.is_null())
         return;
     
@@ -1844,6 +1985,14 @@ void World::ExtractCustomProperties( const nlohmann::json& overrides, LevelInsta
     {
         const std::string& key = it.key();
         const auto& value = it.value();
+        
+        // Skip TMJ metadata fields that were already processed
+        if (key == "width" || key == "height" || key == "x" || key == "y" || key == "rotation")
+        {
+            // These were handled in automatic TMJ mapping above
+            // Don't store them as flat properties to avoid confusion
+            continue;
+        }
         
         // Check if this is a component-scoped override (nested object)
         // Example: overrides["Transform"] = {"width": 32, "height": 64}
@@ -1861,8 +2010,13 @@ void World::ExtractCustomProperties( const nlohmann::json& overrides, LevelInsta
                 componentParams[paramName] = JsonValueToComponentParameter(paramValue);
             }
             
-            // Store in component-scoped overrides
-            instanceParams.componentOverrides[key] = componentParams;
+            // Merge with component-scoped overrides (explicit overrides take precedence)
+            auto& targetParams = instanceParams.componentOverrides[key];
+            for (const auto& pair : componentParams)
+            {
+                // Use insert to check existence and add in one operation
+                targetParams.insert(pair);
+            }
         }
         else
         {

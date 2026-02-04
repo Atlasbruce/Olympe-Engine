@@ -36,6 +36,7 @@ std::string ParameterTypeToString(ComponentParameter::Type type)
 		case ComponentParameter::Type::Vector2: return "Vector2";
 		case ComponentParameter::Type::Vector3: return "Vector3";
 		case ComponentParameter::Type::Color:   return "Color";
+		case ComponentParameter::Type::Array:   return "Array";
 		case ComponentParameter::Type::EntityRef: return "EntityRef";
 		default:                                return "Unknown";
 	}
@@ -106,6 +107,15 @@ ComponentParameter ComponentParameter::FromEntityRef(EntityID entityId)
 	ComponentParameter param;
 	param.type = Type::EntityRef;
 	param.entityRefValue = entityId;
+	return param;
+}
+
+ComponentParameter ComponentParameter::FromArray(const nlohmann::json& arrayData)
+{
+	ComponentParameter param;
+	param.type = Type::Array;
+	// Store array in shared_ptr for efficient copying
+	param.arrayValue = std::make_shared<nlohmann::json>(arrayData);
 	return param;
 }
 
@@ -211,6 +221,14 @@ std::string ComponentParameter::AsString() const
 		oss << "rgba(" << (int)colorValue.r << ", " << (int)colorValue.g 
 			<< ", " << (int)colorValue.b << ", " << (int)colorValue.a << ")";
 		return oss.str();
+	}
+	case Type::Array:
+	{
+		// Convert array to JSON string representation
+		if (arrayValue)
+			return arrayValue->dump();
+		else
+			return "[]";
 	}
 	case Type::EntityRef:
 		return std::to_string(entityRefValue);
@@ -355,6 +373,19 @@ EntityID ComponentParameter::AsEntityRef() const
 	default:
 		return INVALID_ENTITY_ID;
 	}
+}
+
+const nlohmann::json& ComponentParameter::AsArray() const
+{
+	// Return empty array if not an array type or arrayValue is null
+	static const nlohmann::json emptyArray = nlohmann::json::array();
+	
+	if (type == Type::Array && arrayValue)
+	{
+		return *arrayValue;
+	}
+	
+	return emptyArray;
 }
 
 // ============================================================================
@@ -509,6 +540,17 @@ ComponentParameter ParseParameterWithSchema(
 					}
 					break;
 					
+				case ComponentParameter::Type::Array:
+					// Array type: store as-is (do NOT coerce into Vector unless schema expects Vector2/Vector3)
+					if (jsonValue.is_array()) {
+						param = ComponentParameter::FromArray(jsonValue);
+					} else {
+						SYSTEM_LOG << "  [WARN] Schema expects Array for '" << paramName 
+								   << "', got " << jsonValue.type_name() << std::endl;
+						param = ComponentParameter::FromArray(nlohmann::json::array());
+					}
+					break;
+					
 				default:
 					SYSTEM_LOG << "  [ERROR] Unknown schema type for '" << paramName << "'" << std::endl;
 					break;
@@ -611,12 +653,26 @@ ComponentParameter ParseParameterWithSchema(
 	else if (jsonValue.is_array())
 	{
 		// Handle arrays based on size to avoid ambiguity
+		// IMPORTANT: Only coerce to Vector2/Vector3/Color if schema is not available
+		// Otherwise, preserve array structure for proper Array type parameters
 		if (jsonValue.size() == 2 && jsonValue[0].is_number())
 		{
-			// Definitely Vector2
-			float x = jsonValue[0].get<float>();
-			float y = jsonValue[1].get<float>();
-			param = ComponentParameter::FromVector2(x, y);
+			// Could be Vector2 - but check if paramName suggests array (e.g., "waypoints", "path")
+			if (paramName.find("waypoint") != std::string::npos ||
+			    paramName.find("path") != std::string::npos ||
+			    paramName.find("points") != std::string::npos ||
+			    paramName.find("Path") != std::string::npos)
+			{
+				// Preserve as array
+				param = ComponentParameter::FromArray(jsonValue);
+			}
+			else
+			{
+				// Treat as Vector2
+				float x = jsonValue[0].get<float>();
+				float y = jsonValue[1].get<float>();
+				param = ComponentParameter::FromVector2(x, y);
+			}
 		}
 		else if (jsonValue.size() == 3 && jsonValue[0].is_number())
 		{
@@ -660,8 +716,8 @@ ComponentParameter ParseParameterWithSchema(
 		}
 		else
 		{
-			// Store as JSON string
-			param = ComponentParameter::FromString(jsonValue.dump());
+			// Non-standard size or non-numeric: preserve as Array type
+			param = ComponentParameter::FromArray(jsonValue);
 		}
 	}
 	else
