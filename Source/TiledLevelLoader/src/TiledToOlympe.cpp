@@ -646,20 +646,35 @@ namespace Tiled {
                     break;
             }
             
-            // If property name contains a dot, treat as component-scoped
-            // Reject invalid formats: must have content before and after dot, not start with dot
+            // Validate component-scoped property format
+            // Must have exactly one dot, with content before and after it
+            // Rejects: ".property", "Component.", "..property", "Component..param", etc.
             if (dotPos != std::string::npos && dotPos > 0 && dotPos < propName.length() - 1)
             {
-                std::string componentName = propName.substr(0, dotPos);
-                std::string paramName = propName.substr(dotPos + 1);
-                
-                // Ensure component object exists
-                if (!overrides.contains(componentName) || !overrides[componentName].is_object()) {
-                    overrides[componentName] = nlohmann::json::object();
+                // Check for multiple dots (nested structures not supported)
+                size_t secondDot = propName.find('.', dotPos + 1);
+                if (secondDot != std::string::npos)
+                {
+                    // Multiple dots found - treat as flat property
+                    SYSTEM_LOG << "[TiledToOlympe] WARNING: Property '" << propName 
+                               << "' has multiple dots (nested structures not supported). "
+                               << "Treating as flat property." << std::endl;
+                    overrides[propName] = propValue;
                 }
-                
-                // Store in component-scoped structure
-                overrides[componentName][paramName] = propValue;
+                else
+                {
+                    // Valid component-scoped property
+                    std::string componentName = propName.substr(0, dotPos);
+                    std::string paramName = propName.substr(dotPos + 1);
+                    
+                    // Ensure component object exists
+                    if (!overrides.contains(componentName) || !overrides[componentName].is_object()) {
+                        overrides[componentName] = nlohmann::json::object();
+                    }
+                    
+                    // Store in component-scoped structure
+                    overrides[componentName][paramName] = propValue;
+                }
             }
             else
             {

@@ -1791,10 +1791,38 @@ namespace {
         }
         else if (value.is_array() && value.size() >= 2)
         {
-            // Handle vector types
-            float x = value[0].is_number() ? value[0].get<float>() : 0.0f;
-            float y = value[1].is_number() ? value[1].get<float>() : 0.0f;
-            float z = (value.size() >= 3 && value[2].is_number()) ? value[2].get<float>() : 0.0f;
+            // Handle vector types with validation
+            bool hasInvalidElements = false;
+            
+            float x = 0.0f;
+            float y = 0.0f;
+            float z = 0.0f;
+            
+            if (value[0].is_number()) {
+                x = value[0].get<float>();
+            } else {
+                hasInvalidElements = true;
+            }
+            
+            if (value[1].is_number()) {
+                y = value[1].get<float>();
+            } else {
+                hasInvalidElements = true;
+            }
+            
+            if (value.size() >= 3) {
+                if (value[2].is_number()) {
+                    z = value[2].get<float>();
+                } else {
+                    hasInvalidElements = true;
+                }
+            }
+            
+            if (hasInvalidElements) {
+                SYSTEM_LOG << "[World] WARNING: Vector array contains non-numeric elements: " 
+                           << value.dump() << ". Non-numeric values defaulted to 0.0f." << std::endl;
+            }
+            
             param = ComponentParameter::FromVector3(x, y, z);
         }
         else
