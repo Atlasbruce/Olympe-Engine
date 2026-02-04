@@ -1767,6 +1767,46 @@ bool World::InstantiatePass5_Relationships(
 // Helper Methods for Entity Instantiation
 // ========================================================================
 
+// Helper function to convert JSON value to ComponentParameter consistently
+namespace {
+    ComponentParameter JsonValueToComponentParameter(const nlohmann::json& value)
+    {
+        ComponentParameter param;
+        
+        if (value.is_number_float())
+        {
+            param = ComponentParameter::FromFloat(value.get<float>());
+        }
+        else if (value.is_number_integer())
+        {
+            param = ComponentParameter::FromInt(value.get<int>());
+        }
+        else if (value.is_boolean())
+        {
+            param = ComponentParameter::FromBool(value.get<bool>());
+        }
+        else if (value.is_string())
+        {
+            param = ComponentParameter::FromString(value.get<std::string>());
+        }
+        else if (value.is_array() && value.size() >= 2)
+        {
+            // Handle vector types
+            float x = value[0].is_number() ? value[0].get<float>() : 0.0f;
+            float y = value[1].is_number() ? value[1].get<float>() : 0.0f;
+            float z = (value.size() >= 3 && value[2].is_number()) ? value[2].get<float>() : 0.0f;
+            param = ComponentParameter::FromVector3(x, y, z);
+        }
+        else
+        {
+            // Default to string representation
+            param = ComponentParameter::FromString(value.dump());
+        }
+        
+        return param;
+    }
+}
+
 void World::ExtractCustomProperties( const nlohmann::json& overrides, LevelInstanceParameters& instanceParams)
 {
     if (overrides.is_null())
@@ -1789,39 +1829,8 @@ void World::ExtractCustomProperties( const nlohmann::json& overrides, LevelInsta
                 const std::string& paramName = paramIt.key();
                 const auto& paramValue = paramIt.value();
                 
-                ComponentParameter param;
-                
-                if (paramValue.is_number_float())
-                {
-                    param = ComponentParameter::FromFloat(paramValue.get<float>());
-                }
-                else if (paramValue.is_number_integer())
-                {
-                    param = ComponentParameter::FromInt(paramValue.get<int>());
-                }
-                else if (paramValue.is_boolean())
-                {
-                    param = ComponentParameter::FromBool(paramValue.get<bool>());
-                }
-                else if (paramValue.is_string())
-                {
-                    param = ComponentParameter::FromString(paramValue.get<std::string>());
-                }
-                else if (paramValue.is_array() && paramValue.size() >= 2)
-                {
-                    // Handle vector types
-                    float x = paramValue[0].is_number() ? paramValue[0].get<float>() : 0.0f;
-                    float y = paramValue[1].is_number() ? paramValue[1].get<float>() : 0.0f;
-                    float z = (paramValue.size() >= 3 && paramValue[2].is_number()) ? paramValue[2].get<float>() : 0.0f;
-                    param = ComponentParameter::FromVector3(x, y, z);
-                }
-                else
-                {
-                    // Default to string representation
-                    param = ComponentParameter::FromString(paramValue.dump());
-                }
-                
-                componentParams[paramName] = param;
+                // Use helper function for consistent conversion
+                componentParams[paramName] = JsonValueToComponentParameter(paramValue);
             }
             
             // Store in component-scoped overrides
@@ -1829,31 +1838,8 @@ void World::ExtractCustomProperties( const nlohmann::json& overrides, LevelInsta
         }
         else
         {
-            // This is a flat property - legacy behavior (backward compatibility)
-            ComponentParameter param;
-            
-            if (value.is_number_float())
-            {
-                param.type = ComponentParameter::Type::Float;
-                param.floatValue = value.get<float>();
-            }
-            else if (value.is_number_integer())
-            {
-                param.type = ComponentParameter::Type::Int;
-                param.intValue = value.get<int>();
-            }
-            else if (value.is_boolean())
-            {
-                param.type = ComponentParameter::Type::Bool;
-                param.boolValue = value.get<bool>();
-            }
-            else if (value.is_string())
-            {
-                param.type = ComponentParameter::Type::String;
-                param.stringValue = value.get<std::string>();
-            }
-            
-            instanceParams.properties[key] = param;
+            // This is a flat property - use helper for consistent conversion
+            instanceParams.properties[key] = JsonValueToComponentParameter(value);
         }
     }
 }

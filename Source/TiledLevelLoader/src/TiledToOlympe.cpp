@@ -647,6 +647,7 @@ namespace Tiled {
             }
             
             // If property name contains a dot, treat as component-scoped
+            // Reject invalid formats: must have content before and after dot, not start with dot
             if (dotPos != std::string::npos && dotPos > 0 && dotPos < propName.length() - 1)
             {
                 std::string componentName = propName.substr(0, dotPos);
@@ -663,6 +664,7 @@ namespace Tiled {
             else
             {
                 // Store as flat property (legacy/backward compatibility)
+                // This includes properties starting with dot, ending with dot, or no dot at all
                 overrides[propName] = propValue;
             }
         }

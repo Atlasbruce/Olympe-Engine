@@ -165,10 +165,13 @@ std::map<std::string, ComponentParameter> ParameterResolver::ExtractComponentPar
 	auto compOverrideIt = instanceParams.componentOverrides.find(componentType);
 	if (compOverrideIt != instanceParams.componentOverrides.end())
 	{
-		SYSTEM_LOG << "[ParameterResolver]       Found " << compOverrideIt->second.size() 
-		           << " component-scoped overrides for " << componentType << std::endl;
 		// Copy all component-scoped parameters
 		componentParams = compOverrideIt->second;
+		
+		#ifdef DEBUG_PARAMETER_RESOLUTION
+		SYSTEM_LOG << "[ParameterResolver]       Found " << componentParams.size() 
+		           << " component-scoped overrides for " << componentType << std::endl;
+		#endif
 	}
 	
 	// PRIORITY 2: Fall back to schema-based extraction from flat properties (LEGACY)
@@ -181,8 +184,10 @@ std::map<std::string, ComponentParameter> ParameterResolver::ExtractComponentPar
 		// If we found component overrides but no schema, that's fine - return what we have
 		if (!componentParams.empty())
 		{
+			#ifdef DEBUG_PARAMETER_RESOLUTION
 			SYSTEM_LOG << "[ParameterResolver]       No schema for component " << componentType 
 			           << ", using component overrides only" << std::endl;
+			#endif
 			return componentParams;
 		}
 		
