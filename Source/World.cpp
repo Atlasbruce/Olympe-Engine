@@ -1905,6 +1905,8 @@ void World::ExtractCustomProperties(
             }
             
             // Only apply if dimensions are non-zero and not already overridden
+            // NOTE: BoundingBox_data uses Int type for width/height per schema
+            // TMJ dimensions (float) are rounded down to match schema type
             if (tmjWidth > 0.0f && !hasComponentOverride("BoundingBox_data", "width"))
             {
                 instanceParams.componentOverrides["BoundingBox_data"]["width"] = 
@@ -2012,11 +2014,8 @@ void World::ExtractCustomProperties(
             auto& targetParams = instanceParams.componentOverrides[key];
             for (const auto& pair : componentParams)
             {
-                // Only set if not already set (component overrides from above take precedence)
-                if (targetParams.find(pair.first) == targetParams.end())
-                {
-                    targetParams[pair.first] = pair.second;
-                }
+                // Use insert to check existence and add in one operation
+                targetParams.insert(pair);
             }
         }
         else
