@@ -40,6 +40,7 @@
       "parameters": [
         { "name": "mass", "type": "Float", "defaultValue": 1.0 },
         { "name": "friction", "type": "Float", "defaultValue": 0.8 },
+		{ "name": "rotation", "type": "Float", "defaultValue": 0.0 },
         { "name": "useGravity", "type": "Bool", "defaultValue": false }
       ]
     },
