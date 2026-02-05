@@ -1878,7 +1878,27 @@ void World::ExtractCustomProperties(
         // NOTE: This is already done via instanceParams.position = entityInstance->position
         // No need to create component override here as it's handled by ParameterResolver
         
+        // Check if this is a point object (spawners, waypoints)
+        bool isPointObject = false;
+        if (!overrides.is_null())
+        {
+            if (overrides.contains("point") && overrides["point"].is_boolean())
+                isPointObject = overrides["point"].get<bool>();
+            // Also check if both width and height are explicitly 0
+            if (!isPointObject && overrides.contains("width") && overrides.contains("height"))
+            {
+                if (overrides["width"].is_number() && overrides["height"].is_number())
+                {
+                    float w = overrides["width"].get<float>();
+                    float h = overrides["height"].get<float>();
+                    if (w == 0.0f && h == 0.0f)
+                        isPointObject = true;
+                }
+            }
+        }
+        
         // 2) BoundingBox_data: Map TMJ width/height AND x/y (offset) if prefab has it
+        // Skip width/height for point objects
         if (prefabHasComponent("BoundingBox_data"))
         {
             // Get TMJ object dimensions (these come from TMJ object's width/height properties)
@@ -1907,12 +1927,13 @@ void World::ExtractCustomProperties(
             // Only apply if dimensions are non-zero and not already overridden
             // NOTE: BoundingBox_data uses Int type for width/height per schema
             // TMJ dimensions (float) are rounded down to match schema type
-            if (tmjWidth > 0.0f && !hasComponentOverride("BoundingBox_data", "width"))
+            // SKIP width/height for point objects (spawners)
+            if (!isPointObject && tmjWidth > 0.0f && !hasComponentOverride("BoundingBox_data", "width"))
             {
                 instanceParams.componentOverrides["BoundingBox_data"]["width"] = 
                     ComponentParameter::FromInt(static_cast<int>(tmjWidth));
             }
-            if (tmjHeight > 0.0f && !hasComponentOverride("BoundingBox_data", "height"))
+            if (!isPointObject && tmjHeight > 0.0f && !hasComponentOverride("BoundingBox_data", "height"))
             {
                 instanceParams.componentOverrides["BoundingBox_data"]["height"] = 
                     ComponentParameter::FromInt(static_cast<int>(tmjHeight));
@@ -1930,6 +1951,7 @@ void World::ExtractCustomProperties(
         }
         
         // 3) CollisionZone_data: Map TMJ x/y/width/height if prefab has it
+        // Skip width/height for point objects
         if (prefabHasComponent("CollisionZone_data"))
         {
             float tmjWidth = 0.0f;
@@ -1960,21 +1982,60 @@ void World::ExtractCustomProperties(
                 instanceParams.componentOverrides["CollisionZone_data"]["y"] = 
                     ComponentParameter::FromFloat(tmjY);
             }
-            if (tmjWidth > 0.0f && !hasComponentOverride("CollisionZone_data", "width"))
+            // SKIP width/height for point objects
+            if (!isPointObject && tmjWidth > 0.0f && !hasComponentOverride("CollisionZone_data", "width"))
             {
                 instanceParams.componentOverrides["CollisionZone_data"]["width"] = 
                     ComponentParameter::FromFloat(tmjWidth);
             }
-            if (tmjHeight > 0.0f && !hasComponentOverride("CollisionZone_data", "height"))
+            if (!isPointObject && tmjHeight > 0.0f && !hasComponentOverride("CollisionZone_data", "height"))
             {
                 instanceParams.componentOverrides["CollisionZone_data"]["height"] = 
                     ComponentParameter::FromFloat(tmjHeight);
             }
         }
         
+        // 4) PhysicsBody_data: Map TMJ rotation if prefab has it
+        if (prefabHasComponent("PhysicsBody_data"))
+        {
+            float tmjRotation = 0.0f;
+            
+            if (!overrides.is_null())
+            {
+                if (overrides.contains("rotation") && overrides["rotation"].is_number())
+                    tmjRotation = overrides["rotation"].get<float>();
+            }
+            
+            // Apply rotation if non-zero and not already overridden
+            if (tmjRotation != 0.0f && !hasComponentOverride("PhysicsBody_data", "rotation"))
+            {
+                instanceParams.componentOverrides["PhysicsBody_data"]["rotation"] = 
+                    ComponentParameter::FromFloat(tmjRotation);
+            }
+        }
+        
+        // 5) VisualSprite_data: Map TMJ visible field if prefab has it
+        if (prefabHasComponent("VisualSprite_data"))
+        {
+            bool tmjVisible = true;  // Default to visible
+            
+            if (!overrides.is_null())
+            {
+                if (overrides.contains("visible") && overrides["visible"].is_boolean())
+                    tmjVisible = overrides["visible"].get<bool>();
+            }
+            
+            // Apply visible if not already overridden
+            // Note: We always apply this even if true, to ensure explicit TMJ visibility is respected
+            if (!hasComponentOverride("VisualSprite_data", "visible"))
+            {
+                instanceParams.componentOverrides["VisualSprite_data"]["visible"] = 
+                    ComponentParameter::FromBool(tmjVisible);
+            }
+        }
+        
         // NOTE: Do NOT map TMJ width/height to VisualSprite_data or VisualEditor_data automatically
         // These should only be set via explicit component-scoped overrides (e.g., "VisualSprite_data.width")
-        // TMJ rotation is ignored (do not map)
     }
     
     // Now process existing overrides from JSON (explicit overrides take precedence)
@@ -1987,7 +2048,7 @@ void World::ExtractCustomProperties(
         const auto& value = it.value();
         
         // Skip TMJ metadata fields that were already processed
-        if (key == "width" || key == "height" || key == "x" || key == "y" || key == "rotation")
+        if (key == "width" || key == "height" || key == "x" || key == "y" || key == "rotation" || key == "visible")
         {
             // These were handled in automatic TMJ mapping above
             // Don't store them as flat properties to avoid confusion

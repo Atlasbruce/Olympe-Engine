@@ -441,12 +441,15 @@ bool PrefabFactory::InstantiatePhysicsBody(EntityID entity, const ComponentDefin
     if (def.HasParameter("speed"))
         physics.speed = def.GetParameter("speed")->AsFloat();
     
-    // REQUIREMENT E: Apply friction and useGravity when present
+    // REQUIREMENT E: Apply friction, useGravity, and rotation when present
     if (def.HasParameter("friction"))
         physics.friction = def.GetParameter("friction")->AsFloat();
     
     if (def.HasParameter("useGravity"))
         physics.useGravity = def.GetParameter("useGravity")->AsBool();
+    
+    if (def.HasParameter("rotation"))
+        physics.rotation = def.GetParameter("rotation")->AsFloat();
     
     World::Get().AddComponent<PhysicsBody_data>(entity, physics);
     return true;
@@ -516,7 +519,12 @@ bool PrefabFactory::InstantiateVisualSprite(EntityID entity, const ComponentDefi
         visual.color = def.GetParameter("color")->AsColor();
     }
     
-    // REQUIREMENT E: Apply layer when explicitly provided (if VisualSprite_data had the field)
+    // REQUIREMENT E: Apply visible parameter when explicitly provided
+    if (def.HasParameter("visible"))
+    {
+        visual.visible = def.GetParameter("visible")->AsBool();
+    }
+    
     // NOTE: width/height/layer fields don't exist in VisualSprite_data struct yet
     // These parameters are validated by schema but not applied until struct is updated
     // For now, srcRect.w and srcRect.h serve as the effective width/height
@@ -828,7 +836,16 @@ bool PrefabFactory::InstantiateController(EntityID entity, const ComponentDefini
     
     if (def.HasParameter("isConnected"))
         controller.isConnected = def.GetParameter("isConnected")->AsBool();
-   
+    
+    // REQUIREMENT E: Apply isJumping, isWalking, isShooting when present
+    if (def.HasParameter("isJumping"))
+        controller.isJumping = def.GetParameter("isJumping")->AsBool();
+    
+    if (def.HasParameter("isWalking"))
+        controller.isWalking = def.GetParameter("isWalking")->AsBool();
+    
+    if (def.HasParameter("isShooting"))
+        controller.isShooting = def.GetParameter("isShooting")->AsBool();
     
     World::Get().AddComponent<Controller_data>(entity, controller);
     return true;
@@ -839,6 +856,11 @@ bool PrefabFactory::InstantiatePlayerController(EntityID entity, const Component
     PlayerController_data playerCtrl;
     
     // REQUIREMENT E: Apply enabled/inputEnabled when present
+    if (def.HasParameter("enabled"))
+        playerCtrl.enabled = def.GetParameter("enabled")->AsBool();
+    
+    if (def.HasParameter("inputEnabled"))
+        playerCtrl.inputEnabled = def.GetParameter("inputEnabled")->AsBool();
     
     // Extract player controller parameters
     if (def.HasParameter("isJumping"))
@@ -1153,7 +1175,9 @@ bool PrefabFactory::InstantiateAttackIntent(EntityID entity, const ComponentDefi
     
     if (def.HasParameter("hasIntent"))
         attackIntent.hasIntent = def.GetParameter("hasIntent")->AsBool();
-   
+    
+    if (def.HasParameter("cooldown"))
+        attackIntent.cooldown = def.GetParameter("cooldown")->AsFloat();
 
     if (def.HasParameter("attackType"))
     {

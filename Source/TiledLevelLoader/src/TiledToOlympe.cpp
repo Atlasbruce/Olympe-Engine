@@ -516,9 +516,9 @@ namespace Tiled {
             polygon.push_back(point);
         }
         
-        entity->overrides["CollisionPolygon"] = nlohmann::json::object();
-        entity->overrides["CollisionPolygon"]["points"] = polygon;
-        entity->overrides["CollisionPolygon"]["isClosed"] = (obj.objectType == ObjectType::Polygon);
+        entity->overrides["CollisionPolygon_data"] = nlohmann::json::object();
+        entity->overrides["CollisionPolygon_data"]["points"] = polygon;
+        entity->overrides["CollisionPolygon_data"]["closed"] = (obj.objectType == ObjectType::Polygon);
         
         // Store dimensions for bounding box fallback
         entity->overrides["width"] = obj.width;
