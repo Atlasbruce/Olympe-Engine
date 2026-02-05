@@ -148,6 +148,7 @@ struct AttackIntent_data
     float damage = 10.0f;                // Damage to deal
     float range = 50.0f;                 // Attack range
     bool hasIntent = false;              // Whether this intent is active
+	float cooldown = 1.0f;               // Time between attacks
     
     // Attack type (can be extended)
     enum class AttackType : uint8_t

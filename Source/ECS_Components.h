@@ -140,6 +140,7 @@ struct PhysicsBody_data
 	float speed = 150.0f;	// Movement speed in pixels/second
 	float friction = 0.1f; // Friction coefficient
 	bool useGravity = true; // Is gravity applied?
+	bool rotation = false; // Is rotation allowed?
 	
 	// Constructors
 	PhysicsBody_data() = default;
@@ -447,7 +448,8 @@ struct Camera_data
 	// Ensure ZOOM_LEVELS array has at least 4 entries (for default index 3)
 	static_assert(sizeof(ZOOM_LEVELS) / sizeof(ZOOM_LEVELS[0]) >= 4, "ZOOM_LEVELS must contain at least 4 entries for default index 3");
 
-	// Rotation management (in degrees)
+	// Rotation management (in degrees)        { "name": "speed", "type": "Float", "defaultValue": 100.0 },
+
 	float rotation = 0.0f;                   // Current rotation angle
 	float targetRotation = 0.0f;             // Target rotation angle for smooth transitions
 	float rotationSpeed = 5.0f;              // Speed of rotation interpolation

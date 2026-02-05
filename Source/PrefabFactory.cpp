@@ -833,20 +833,11 @@ bool PrefabFactory::InstantiateController(EntityID entity, const ComponentDefini
     {
         controller.controllerID = -1;
     }
+
     
     if (def.HasParameter("isConnected"))
         controller.isConnected = def.GetParameter("isConnected")->AsBool();
-    
-    // REQUIREMENT E: Apply isJumping, isWalking, isShooting when present
-    if (def.HasParameter("isJumping"))
-        controller.isJumping = def.GetParameter("isJumping")->AsBool();
-    
-    if (def.HasParameter("isWalking"))
-        controller.isWalking = def.GetParameter("isWalking")->AsBool();
-    
-    if (def.HasParameter("isShooting"))
-        controller.isShooting = def.GetParameter("isShooting")->AsBool();
-    
+        
     World::Get().AddComponent<Controller_data>(entity, controller);
     return true;
 }
@@ -854,13 +845,6 @@ bool PrefabFactory::InstantiateController(EntityID entity, const ComponentDefini
 bool PrefabFactory::InstantiatePlayerController(EntityID entity, const ComponentDefinition& def)
 {
     PlayerController_data playerCtrl;
-    
-    // REQUIREMENT E: Apply enabled/inputEnabled when present
-    if (def.HasParameter("enabled"))
-        playerCtrl.enabled = def.GetParameter("enabled")->AsBool();
-    
-    if (def.HasParameter("inputEnabled"))
-        playerCtrl.inputEnabled = def.GetParameter("inputEnabled")->AsBool();
     
     // Extract player controller parameters
     if (def.HasParameter("isJumping"))
