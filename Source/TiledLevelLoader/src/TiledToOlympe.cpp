@@ -600,7 +600,8 @@ namespace Tiled {
         // These will be mapped to component-scoped overrides by World.cpp based on prefab components
         
         // Store dimensions (width, height)
-        // Always store these, even if 0, so World.cpp can properly detect point objects
+        // IMPORTANT: Always store these, even if 0, because World.cpp needs explicit 0 values
+        // to detect point objects (spawners, waypoints) via width==0 && height==0 check
         entityDescriptor->overrides["width"] = obj.width;
         entityDescriptor->overrides["height"] = obj.height;
         
@@ -609,12 +610,13 @@ namespace Tiled {
             entityDescriptor->overrides["rotation"] = obj.rotation;
         }
         
-        // Store visible flag if false (true is default)
+        // Store visible flag if false (true is default, so absence implies visible)
         if (!obj.visible) {
             entityDescriptor->overrides["visible"] = obj.visible;
         }
         
-        // Store point flag for point objects (spawners, waypoints)
+        // Store point flag for point objects (absence implies non-point object)
+        // Point objects are spawners, waypoints, etc. that have no collision size
         if (obj.objectType == ObjectType::Point) {
             entityDescriptor->overrides["point"] = true;
         }
