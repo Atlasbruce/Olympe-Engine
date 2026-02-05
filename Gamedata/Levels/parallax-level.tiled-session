@@ -46,20 +46,20 @@
             "scale": 0.75,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 626.6666666666666,
-                "y": 646.6666666666667
+                "x": 742.6666666666667,
+                "y": 611.3333333333334
             }
         },
         "isometric_quest.tmx": {
             "expandedObjectLayers": [
-                10,
-                6
+                6,
+                10
             ],
-            "scale": 0.75,
+            "scale": 1,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 4952.666666666666,
-                "y": 1442
+                "x": 5016,
+                "y": 1634
             }
         },
         "map_forest.tmj": {
@@ -85,14 +85,14 @@
         },
         "parallax-forest.tmx": {
             "expandedObjectLayers": [
-                2,
-                17
+                17,
+                2
             ],
             "scale": 0.25,
             "selectedLayer": 10,
             "viewCenter": {
-                "x": -3572,
-                "y": 616
+                "x": -3520,
+                "y": 510
             }
         },
         "parallax-forest.tmx#tileset 2D ortho": {
@@ -135,8 +135,8 @@
             "scale": 0.75,
             "selectedLayer": 6,
             "viewCenter": {
-                "x": 653.3333333333333,
-                "y": 390.66666666666674
+                "x": 331.99999999999994,
+                "y": 486
             }
         },
         "tiles-iso-1.tsx": {
