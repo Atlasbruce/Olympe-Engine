@@ -768,6 +768,46 @@ namespace Tiled {
 
     Vector TiledToOlympe::TransformObjectPosition(float x, float y, float layerOffsetX, float layerOffsetY, uint32_t gid)
     {
+		// transform the object position based on isometric coordinates
+
+        if (config_.mapOrientation == "isometric")
+        {
+            const float tileWidth = static_cast<float>(config_.tileWidth);
+            const float tileHeight = static_cast<float>(config_.tileHeight);
+            const float halfWidth = tileWidth * 0.5f;
+            const float halfHeight = tileHeight * 0.5f;
+
+            // Input (x, y) are TMJ isometric coordinates in pixels along the grid axes.
+            // Convert to tile units, then project to screen (diamond) coordinates.
+            const float tileX = (tileWidth != 0.0f) ? (x / tileWidth) : 0.0f;
+            const float tileY = (tileHeight != 0.0f) ? (y / tileHeight) : 0.0f;
+
+            float screenX = (tileX - tileY) * halfWidth;
+            float screenY = (tileX + tileY) * halfHeight;
+
+            // Apply layer offsets in screen space
+            screenX += layerOffsetX;
+            screenY += layerOffsetY;
+
+            // Apply tileset offsets for tile objects (gid > 0)
+            if (gid > 0) {
+                const TiledTileset* tileset = FindTilesetForGid(gid);
+                if (tileset) {
+                    screenX += tileset->tileoffsetX;
+                    screenY += tileset->tileoffsetY;
+                }
+            }
+
+            return Vector(screenX, screenY, 0.0f);
+        }
+
+        float posX = x + layerOffsetX;
+        float posY = y + layerOffsetY;
+
+        return Vector(posX, posY, 0.0f);
+
+		/*
+
         if (config_.mapOrientation == "isometric")
         {
             // ISOMETRIC MODE: Keep objects in TMJ pixel coordinates without rebase
@@ -813,6 +853,7 @@ namespace Tiled {
                   << " -> Final: (" << finalX << ", " << finalY << ")\n";
         
         return Vector(finalX, finalY, 0.0f);
+        /**/
     }
 
     void TiledToOlympe::InitializeCollisionMap(Olympe::Editor::LevelDefinition& level, 
