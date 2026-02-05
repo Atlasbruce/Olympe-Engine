@@ -805,55 +805,6 @@ namespace Tiled {
         float posY = y + layerOffsetY;
 
         return Vector(posX, posY, 0.0f);
-
-		/*
-
-        if (config_.mapOrientation == "isometric")
-        {
-            // ISOMETRIC MODE: Keep objects in TMJ pixel coordinates without rebase
-            // Objects remain in TMJ pixels, the origin is handled on the tile side
-            
-            // 1) Log raw TMJ coordinates
-            SYSTEM_LOG << "[TRANSFORM] Isometric - Raw TMJ (" << x << ", " << y << ")\n";
-            
-            // 2) Determine tileset offsets for tile objects (gid > 0)
-            int tileOffsetX = 0;
-            int tileOffsetY = 0;
-            
-            if (gid > 0) {
-                const TiledTileset* tileset = FindTilesetForGid(gid);
-                if (tileset) {
-                    tileOffsetX = tileset->tileoffsetX;
-                    tileOffsetY = tileset->tileoffsetY;
-                }
-            }
-            
-            // 3) Log offsets applied
-            SYSTEM_LOG << "Offsets applied (layer/tile): (" << layerOffsetX << "/" << tileOffsetX 
-                      << ", " << layerOffsetY << "/" << tileOffsetY << ")\n";
-            
-            // 4) Apply layer offsets and tileset offsets to TMJ coordinates
-            float posX = x + layerOffsetX + tileOffsetX;
-            float posY = y + layerOffsetY + tileOffsetY;
-            
-            // 5) Log final position
-            SYSTEM_LOG << "Final position (" << posX << ", " << posY << ")\n";
-            
-            return Vector(posX, posY, 0.0f);
-        }
-        
-        // ORTHOGONAL / HEXAGONAL / STAGGERED MODES:
-        // Keep object positions as raw TMJ + layer offsets.
-        // Remove chunk-origin offsets and renderorder Y-flip for objects.
-        // Chunk-origin handling stays on the tile side only.
-        float finalX = x + layerOffsetX;
-        float finalY = y + layerOffsetY;
-        
-        SYSTEM_LOG << "  → Non-isometric: no chunk offset/Y-flip applied"
-                  << " -> Final: (" << finalX << ", " << finalY << ")\n";
-        
-        return Vector(finalX, finalY, 0.0f);
-        /**/
     }
 
     void TiledToOlympe::InitializeCollisionMap(Olympe::Editor::LevelDefinition& level, 
