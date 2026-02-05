@@ -596,21 +596,29 @@ namespace Tiled {
         // Convert properties to overrides
         PropertiesToOverrides(obj.properties, entityDescriptor->overrides);
 
-        // Store dimensions if present
-        if (obj.width > 0 || obj.height > 0) {
-            if (!entityDescriptor->overrides.contains("Transform")) {
-                entityDescriptor->overrides["Transform"] = nlohmann::json::object();
-            }
-            entityDescriptor->overrides["Transform"]["width"] = obj.width;
-            entityDescriptor->overrides["Transform"]["height"] = obj.height;
-        }
-
-        // Store rotation in Transform overrides if present
+        // Store TMJ native fields as flat properties (not under "Transform")
+        // These will be mapped to component-scoped overrides by World.cpp based on prefab components
+        
+        // Store dimensions (width, height)
+        // IMPORTANT: Always store these, even if 0, because World.cpp needs explicit 0 values
+        // to detect point objects (spawners, waypoints) via width==0 && height==0 check
+        entityDescriptor->overrides["width"] = obj.width;
+        entityDescriptor->overrides["height"] = obj.height;
+        
+        // Store rotation if non-zero
         if (obj.rotation != 0.0f) {
-            if (!entityDescriptor->overrides.contains("Transform")) {
-                entityDescriptor->overrides["Transform"] = nlohmann::json::object();
-            }
-            entityDescriptor->overrides["Transform"]["rotation"] = obj.rotation;
+            entityDescriptor->overrides["rotation"] = obj.rotation;
+        }
+        
+        // Store visible flag if false (true is default, so absence implies visible)
+        if (!obj.visible) {
+            entityDescriptor->overrides["visible"] = obj.visible;
+        }
+        
+        // Store point flag for point objects (absence implies non-point object)
+        // Point objects are spawners, waypoints, etc. that have no collision size
+        if (obj.objectType == ObjectType::Point) {
+            entityDescriptor->overrides["point"] = true;
         }
 
         return entityDescriptor;

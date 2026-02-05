@@ -1958,6 +1958,7 @@ void World::ExtractCustomProperties(
             float tmjHeight = 0.0f;
             float tmjX = 0.0f;
             float tmjY = 0.0f;
+            int overridesApplied = 0;
             
             if (!overrides.is_null())
             {
@@ -1976,22 +1977,33 @@ void World::ExtractCustomProperties(
             {
                 instanceParams.componentOverrides["CollisionZone_data"]["x"] = 
                     ComponentParameter::FromFloat(tmjX);
+                overridesApplied++;
             }
             if (tmjY != 0.0f && !hasComponentOverride("CollisionZone_data", "y"))
             {
                 instanceParams.componentOverrides["CollisionZone_data"]["y"] = 
                     ComponentParameter::FromFloat(tmjY);
+                overridesApplied++;
             }
             // SKIP width/height for point objects
             if (!isPointObject && tmjWidth > 0.0f && !hasComponentOverride("CollisionZone_data", "width"))
             {
                 instanceParams.componentOverrides["CollisionZone_data"]["width"] = 
                     ComponentParameter::FromFloat(tmjWidth);
+                overridesApplied++;
             }
             if (!isPointObject && tmjHeight > 0.0f && !hasComponentOverride("CollisionZone_data", "height"))
             {
                 instanceParams.componentOverrides["CollisionZone_data"]["height"] = 
                     ComponentParameter::FromFloat(tmjHeight);
+                overridesApplied++;
+            }
+            
+            // Log when CollisionZone_data overrides are injected
+            if (overridesApplied > 0)
+            {
+                SYSTEM_LOG << "[World] CollisionZone_data: Applied " << overridesApplied 
+                           << " TMJ overrides for '" << entityInstance->name << "'" << std::endl;
             }
         }
         
