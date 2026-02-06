@@ -1,5 +1,7 @@
 #pragma once
 
+#include <SDL3/SDL.h>
+
 constexpr double k_PI = 3.14159265358979323846;
 
 // Configuration: defaults
