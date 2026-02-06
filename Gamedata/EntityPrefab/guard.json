@@ -116,6 +116,14 @@
           "attackRange": 40.0,
           "cooldown": 1.5
         }
+      },
+      {
+        "type": "NavigationAgent_data",
+        "properties": {
+          "agentRadius": 14.0,
+          "maxSpeed": 90.0,
+          "layerMask": 1
+        }
       }
     ]
   }

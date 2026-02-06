@@ -193,6 +193,17 @@
         { "name": "currentIndex", "type": "Int", "defaultValue": 0 },
         { "name": "looping", "type": "Bool", "defaultValue": true }
       ]
+    },
+    {
+      "componentType": "NavigationAgent_data",
+      "parameters": [
+        { "name": "agentRadius", "type": "Float", "defaultValue": 16.0 },
+        { "name": "maxSpeed", "type": "Float", "defaultValue": 100.0 },
+        { "name": "arrivalThreshold", "type": "Float", "defaultValue": 5.0 },
+        { "name": "layerMask", "type": "Int", "defaultValue": 1 },
+        { "name": "steeringWeight", "type": "Float", "defaultValue": 1.0 },
+        { "name": "avoidObstacles", "type": "Bool", "defaultValue": true }
+      ]
     }
   ]
 }
