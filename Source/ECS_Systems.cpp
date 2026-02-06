@@ -769,8 +769,9 @@ void RenderTileImmediate(SDL_Texture* texture, const SDL_Rect& srcRect,
         float isoX = (worldX - worldY) * (tileWidth / 2.0f);
         float isoY = (worldX + worldY) * (tileHeight / 2.0f);
         
-        // DO NOT apply isometric origin offset - tiles and objects now use same world coordinate system
-        // Objects are converted from TMJ screen coords to world iso coords using inverse projection
+        // Tiles use standard isometric projection with origin at tile (0,0)
+        // Objects are transformed from TMJ coordinates to match this system
+        // (see TransformObjectPosition in TiledToOlympe.cpp)
         worldPos = Vector(isoX, isoY, 0.0f);
     }
     else if (orientation == "hexagonal") {

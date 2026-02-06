@@ -71,42 +71,43 @@ namespace Tiled {
                                                   int tileWidth, int tileHeight,
                                                   float& outOriginX, float& outOriginY)
     {
-        // Calculate TMJ origin by projecting all 4 map corners and finding the minimum
-        // This aligns Tiled's TMJ coordinate system with the standard isometric projection
-        // 
-        // Tiled's coordinate system places the north corner of tile (0,0) at
-        // position (mapHeight * tileWidth / 2, 0) in TMJ pixels. By calculating
-        // the bounding box of all corners, we find where Tiled's (0,0) is in our
-        // coordinate system, then negate it to define the origin offset.
+        // ==========================================================================
+        // TMJ ISOMETRIC ORIGIN CALCULATION
+        // ==========================================================================
+        //
+        // In Tiled's isometric coordinate system, the origin is at the TOP (north)
+        // corner of the diamond. The map extends:
+        // - Right-down along the X axis (increasing tileX)
+        // - Left-down along the Y axis (increasing tileY)
+        //
+        // The isometric origin X offset ensures tile (0,0) appears at the correct
+        // screen position. It equals: mapHeight * (tileWidth / 2)
+        //
+        // This places the northwest edge of the map at screen X = 0.
+        //
+        // VERIFICATION (184x128 map, 58x27 tiles):
+        // - player_1 TMJ: (1818.63, 1064.03)
+        // - Expected tile: (67, 39)
+        // - tileX = 1818.63 / 27 = 67.36 ?
+        // - tileY = 1064.03 / 27 = 39.41 ?
+        // - originX = 128 * 29 = 3712
+        // - screenX = (67.36 - 39.41) * 29 + 3712 = 4522.55 ?
+        // - screenY = (67.36 + 39.41) * 13.5 = 1441.40 ?
+        // - Matches mouse position (4523, 1443) in Tiled! ?
+        //
+        // ==========================================================================
         
-        float halfTileWidth = tileWidth / 2.0f;
-        float halfTileHeight = tileHeight / 2.0f;
+        (void)minTileX;
+        (void)minTileY;
+        (void)maxTileX;
         
-        // Project 4 corners using standard isometric projection
-        // North corner: (minTileX, minTileY) - top of the diamond
-        float northX = (minTileX - minTileY) * halfTileWidth;
-        float northY = (minTileX + minTileY) * halfTileHeight;
+        int mapHeightTiles = maxTileY - minTileY + 1;
+        float halfTileWidth = tileWidth * 0.5f;
         
-        // East corner: (maxTileX, minTileY) - right of the diamond
-        float eastX = (maxTileX - minTileY) * halfTileWidth;
-        float eastY = (maxTileX + minTileY) * halfTileHeight;
-        
-        // West corner: (minTileX, maxTileY) - left of the diamond
-        float westX = (minTileX - maxTileY) * halfTileWidth;
-        float westY = (minTileX + maxTileY) * halfTileHeight;
-        
-        // South corner: (maxTileX, maxTileY) - bottom of the diamond
-        float southX = (maxTileX - maxTileY) * halfTileWidth;
-        float southY = (maxTileX + maxTileY) * halfTileHeight;
-        
-        // Find min X and Y (top-left of bounding box)
-        float minX = std::min(std::min(northX, eastX), std::min(westX, southX));
-        float minY = std::min(std::min(northY, eastY), std::min(westY, southY));
-        
-        // Define TMJ origin as negative of the minimum corner position
-        // This ensures that when we subtract the origin, we move entities in the correct direction
-        outOriginX = -minX;
-        outOriginY = -minY;
+        // Origin X = map height in tiles * half tile width
+        // Origin Y = 0 (top of diamond)
+        outOriginX = mapHeightTiles * halfTileWidth;
+        outOriginY = 0.0f;
     }
 
 } // namespace Tiled

@@ -227,6 +227,10 @@ namespace Tiled {
         int mapWidth_;   // Actual width in tiles (from bounds calculation)
         int mapHeight_;  // Actual height in tiles (from bounds calculation)
 
+        // Declared TMJ dimensions (for origin alignment in infinite maps)
+        int declaredMapWidth_ = 0;
+        int declaredMapHeight_ = 0;
+
 		// ? NEW: Track if map is infinite. if true the map width/height are not reliable => we need to calculate bounds of the map while it loads
         bool isInfiniteMap_ = false;
         
