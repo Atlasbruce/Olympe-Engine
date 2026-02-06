@@ -36,10 +36,14 @@ World purpose: Manage the overall game world, including object management, level
 // Forward declarations for 3-Phase Level Loading
 //struct PrefabRegistry;
 namespace Olympe { 
-    namespace Tiled { struct LevelParseResult; }
-    namespace Editor { struct LevelDefinition; }
-    namespace Editor { struct EntityInstance;  }
-
+    namespace Tiled { 
+        struct LevelParseResult;
+        struct TiledMap;
+    }
+    namespace Editor { 
+        struct LevelDefinition;
+        struct EntityInstance;
+    }
 }
 
 // ========================================================================
@@ -181,6 +185,10 @@ public:
     // Tiled MapEditor integration
     bool LoadLevelFromTiled(const std::string& tiledMapPath);
     void UnloadCurrentLevel();
+    
+    // Generate collision and navigation maps from TMJ/TMX level data
+    void GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& tiledMap,
+                                            const Olympe::Editor::LevelDefinition& levelDef);
     
     // ========================================================================
     // PHASE 2 & 3: Advanced Level Loading Structures
