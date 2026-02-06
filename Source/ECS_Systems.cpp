@@ -24,6 +24,7 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 #include "system/GameMenu.h"
 #include "TiledLevelLoader/include/ParallaxLayerManager.h"
 #include "Rendering/IsometricRenderer.h"
+#include "CollisionMap.h"
 #include <iostream>
 #include <bitset>
 #include <cmath>
@@ -1504,6 +1505,139 @@ void InputMappingSystem::Process()
     }
 }
 //-------------------------------------------------------------
+// NavigationSystem: processes entities with NavigationAgent_data
+//-------------------------------------------------------------
+NavigationSystem::NavigationSystem()
+{
+	// Require Position_data and NavigationAgent_data
+	requiredSignature.set(GetComponentTypeID_Static<Position_data>(), true);
+	requiredSignature.set(GetComponentTypeID_Static<NavigationAgent_data>(), true);
+}
+
+void NavigationSystem::Process()
+{
+	float deltaTime = GameEngine::fDt;
+	
+	for (EntityID entity : m_entities)
+	{
+		NavigationAgent_data& agent = World::Get().GetComponent<NavigationAgent_data>(entity);
+		
+		// Check if we need to repath
+		if (agent.needsRepath)
+		{
+			RequestPath(entity, agent.targetPosition);
+			agent.needsRepath = false;
+		}
+		
+		// Follow current path if we have one
+		if (agent.hasPath && !agent.currentPath.empty())
+		{
+			FollowPath(entity, deltaTime);
+		}
+	}
+}
+
+void NavigationSystem::RequestPath(EntityID entity, const Vector& targetPos)
+{
+	NavigationAgent_data& agent = World::Get().GetComponent<NavigationAgent_data>(entity);
+	Position_data& position = World::Get().GetComponent<Position_data>(entity);
+	
+	NavigationMap& navMap = NavigationMap::Get();
+	
+	// Convert world positions to grid coordinates
+	int startX, startY, goalX, goalY;
+	navMap.WorldToGrid(position.position.x, position.position.y, startX, startY);
+	navMap.WorldToGrid(targetPos.x, targetPos.y, goalX, goalY);
+	
+	// Determine which layer to use based on layerMask
+	CollisionLayer layer = CollisionLayer::Ground;
+	for (int i = 0; i < 8; ++i)
+	{
+		if (agent.layerMask & (1 << i))
+		{
+			layer = static_cast<CollisionLayer>(i);
+			break; // Use first active layer
+		}
+	}
+	
+	// Request pathfinding
+	std::vector<Vector> path;
+	bool pathFound = navMap.FindPath(startX, startY, goalX, goalY, path, layer);
+	
+	if (pathFound && !path.empty())
+	{
+		agent.currentPath = path;
+		agent.currentWaypointIndex = 0;
+		agent.hasPath = true;
+		agent.targetPosition = targetPos;
+	}
+	else
+	{
+		agent.hasPath = false;
+		agent.currentPath.clear();
+	}
+}
+
+void NavigationSystem::FollowPath(EntityID entity, float deltaTime)
+{
+	NavigationAgent_data& agent = World::Get().GetComponent<NavigationAgent_data>(entity);
+	Position_data& position = World::Get().GetComponent<Position_data>(entity);
+	
+	if (agent.currentWaypointIndex >= static_cast<int>(agent.currentPath.size()))
+	{
+		// Path completed
+		agent.hasPath = false;
+		agent.currentPath.clear();
+		return;
+	}
+	
+	// Get current waypoint
+	const Vector& waypoint = agent.currentPath[agent.currentWaypointIndex];
+	
+	// Calculate direction to waypoint
+	Vector direction = waypoint - position.position;
+	float distance = direction.Length();
+	
+	// Check if we've arrived at this waypoint
+	if (distance < agent.arrivalThreshold)
+	{
+		++agent.currentWaypointIndex;
+		return; // Move to next waypoint on next frame
+	}
+	
+	// Move towards waypoint
+	if (distance > 0.0f)
+	{
+		direction.Normalize();
+		float moveSpeed = agent.maxSpeed * deltaTime;
+		
+		if (moveSpeed > distance)
+		{
+			// Don't overshoot
+			position.position = waypoint;
+			++agent.currentWaypointIndex;
+		}
+		else
+		{
+			position.position.x += direction.x * moveSpeed;
+			position.position.y += direction.y * moveSpeed;
+		}
+	}
+}
+
+bool NavigationSystem::NeedsRepath(EntityID entity)
+{
+	// TODO: Implement obstacle detection logic
+	// Planned approach:
+	// 1. Check if current waypoint is still navigable
+	// 2. Raycast along path to detect new obstacles
+	// 3. Check for dynamic tile state changes
+	// For now, always return false
+	(void)entity; // Suppress unused parameter warning
+	return false;
+}
+
+//-------------------------------------------------------------
 GridSystem::GridSystem() {}
 
 const GridSettings_data* GridSystem::FindSettings() const
@@ -1639,6 +1773,10 @@ void GridSystem::RenderForCamera(const CameraTransform& cam)
         case GridProjection::HexAxial: RenderHex(cam, *s); break;
         default: RenderOrtho(cam, *s); break;
     }
+    
+    // **NEW: Render collision and navigation overlays**
+    RenderCollisionOverlay(cam, *s);
+    RenderNavigationOverlay(cam, *s);
 }
 
 void GridSystem::RenderOrtho(const CameraTransform& cam, const GridSettings_data& s)
@@ -1834,6 +1972,144 @@ void GridSystem::RenderHex(const CameraTransform& cam, const GridSettings_data& 
         }
     }
 }
+
+void GridSystem::DrawFilledRectWorld(const CameraTransform& cam, const Vector& worldPos, float width, float height, const SDL_Color& c)
+{
+	SDL_Renderer* renderer = GameEngine::renderer;
+	if (!renderer) return;
+	
+	// Convert world coordinates to screen coordinates
+	Vector topLeft = cam.WorldToScreen(worldPos);
+	Vector bottomRight = cam.WorldToScreen(Vector(worldPos.x + width, worldPos.y + height, 0.0f));
+	
+	SDL_FRect rect;
+	rect.x = topLeft.x;
+	rect.y = topLeft.y;
+	rect.w = bottomRight.x - topLeft.x;
+	rect.h = bottomRight.y - topLeft.y;
+	
+	// Set blend mode for transparency
+	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+	SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
+	SDL_RenderFillRect(renderer, &rect);
+}
+
+void GridSystem::RenderCollisionOverlay(const CameraTransform& cam, const GridSettings_data& s)
+{
+	if (!s.showCollisionOverlay) return;
+	
+	CollisionMap& collMap = CollisionMap::Get();
+	if (collMap.GetWidth() == 0 || collMap.GetHeight() == 0) return;
+	
+	SDL_Renderer* renderer = GameEngine::renderer;
+	if (!renderer) return;
+	
+	// Get the active collision layer
+	CollisionLayer layer = static_cast<CollisionLayer>(s.activeCollisionLayer);
+	const std::vector<std::vector<TileProperties>>& layerData = collMap.GetLayer(layer);
+	
+	if (layerData.empty()) return;
+	
+	// Get visible bounds
+	SDL_FRect bounds = GetWorldVisibleBounds(cam);
+	
+	// Convert world bounds to grid coordinates
+	int minGridX, minGridY, maxGridX, maxGridY;
+	collMap.WorldToGrid(bounds.x, bounds.y, minGridX, minGridY);
+	collMap.WorldToGrid(bounds.x + bounds.w, bounds.y + bounds.h, maxGridX, maxGridY);
+	
+	// Clamp to valid grid range
+	minGridX = std::max(0, minGridX - 1);
+	minGridY = std::max(0, minGridY - 1);
+	maxGridX = std::min(collMap.GetWidth() - 1, maxGridX + 1);
+	maxGridY = std::min(collMap.GetHeight() - 1, maxGridY + 1);
+	
+	// Get color for this layer
+	SDL_Color overlayColor = s.collisionColors[s.activeCollisionLayer];
+	
+	// Render collision tiles
+	for (int y = minGridY; y <= maxGridY; ++y)
+	{
+		for (int x = minGridX; x <= maxGridX; ++x)
+		{
+			const TileProperties& tile = layerData[y][x];
+			
+			// Only render blocked tiles
+			if (tile.isBlocked)
+			{
+				float worldX, worldY;
+				collMap.GridToWorld(x, y, worldX, worldY);
+				
+				// Adjust to tile top-left corner (GridToWorld returns center)
+				float tileWidth = collMap.GetTileWidth();
+				float tileHeight = collMap.GetTileHeight();
+				worldX -= tileWidth * 0.5f;
+				worldY -= tileHeight * 0.5f;
+				
+				DrawFilledRectWorld(cam, Vector(worldX, worldY, 0.0f), tileWidth, tileHeight, overlayColor);
+			}
+		}
+	}
+}
+
+void GridSystem::RenderNavigationOverlay(const CameraTransform& cam, const GridSettings_data& s)
+{
+	if (!s.showNavigationOverlay) return;
+	
+	CollisionMap& collMap = CollisionMap::Get();
+	if (collMap.GetWidth() == 0 || collMap.GetHeight() == 0) return;
+	
+	SDL_Renderer* renderer = GameEngine::renderer;
+	if (!renderer) return;
+	
+	// Get the active navigation layer
+	CollisionLayer layer = static_cast<CollisionLayer>(s.activeNavigationLayer);
+	const std::vector<std::vector<TileProperties>>& layerData = collMap.GetLayer(layer);
+	
+	if (layerData.empty()) return;
+	
+	// Get visible bounds
+	SDL_FRect bounds = GetWorldVisibleBounds(cam);
+	
+	// Convert world bounds to grid coordinates
+	int minGridX, minGridY, maxGridX, maxGridY;
+	collMap.WorldToGrid(bounds.x, bounds.y, minGridX, minGridY);
+	collMap.WorldToGrid(bounds.x + bounds.w, bounds.y + bounds.h, maxGridX, maxGridY);
+	
+	// Clamp to valid grid range
+	minGridX = std::max(0, minGridX - 1);
+	minGridY = std::max(0, minGridY - 1);
+	maxGridX = std::min(collMap.GetWidth() - 1, maxGridX + 1);
+	maxGridY = std::min(collMap.GetHeight() - 1, maxGridY + 1);
+	
+	// Get color for this layer
+	SDL_Color overlayColor = s.navigationColors[s.activeNavigationLayer];
+	
+	// Render navigable tiles
+	for (int y = minGridY; y <= maxGridY; ++y)
+	{
+		for (int x = minGridX; x <= maxGridX; ++x)
+		{
+			const TileProperties& tile = layerData[y][x];
+			
+			// Only render navigable tiles (and not blocked)
+			if (tile.isNavigable && !tile.isBlocked)
+			{
+				float worldX, worldY;
+				collMap.GridToWorld(x, y, worldX, worldY);
+				
+				// Adjust to tile top-left corner (GridToWorld returns center)
+				float tileWidth = collMap.GetTileWidth();
+				float tileHeight = collMap.GetTileHeight();
+				worldX -= tileWidth * 0.5f;
+				worldY -= tileHeight * 0.5f;
+				
+				DrawFilledRectWorld(cam, Vector(worldX, worldY, 0.0f), tileWidth, tileHeight, overlayColor);
+			}
+		}
+	}
+}
+
 //-------------------------------------------------------------
 // UIRenderingSystem: Pass 2 rendering for UI/HUD/Menu (always on top)
 //-------------------------------------------------------------

@@ -93,6 +93,14 @@
           "enabled": true,
           "inputEnabled": true
         }
+      },
+      {
+        "type": "NavigationAgent_data",
+        "properties": {
+          "agentRadius": 16.0,
+          "maxSpeed": 100.0,
+          "layerMask": 1
+        }
       }
     ]
   }

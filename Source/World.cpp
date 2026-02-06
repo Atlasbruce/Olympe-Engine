@@ -10,6 +10,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 */
 #pragma once
 #include "World.h"
+#include "CollisionMap.h"
 #include "VideoGame.h"
 #include "InputsManager.h"
 #include "system/ViewportManager.h"
@@ -129,6 +130,9 @@ void World::Initialize_ECS_Systems()
 	Add_ECS_System(std::make_unique<AIStateTransitionSystem>());
 	Add_ECS_System(std::make_unique<BehaviorTreeSystem>());
 	Add_ECS_System(std::make_unique<AIMotionSystem>());
+	
+	// Navigation System (processes NavigationAgent_data)
+	Add_ECS_System(std::make_unique<NavigationSystem>());
 	
     Add_ECS_System(std::make_unique<AISystem>());
     Add_ECS_System(std::make_unique<DetectionSystem>());
@@ -412,6 +416,191 @@ void World::SyncGridWithLevel(const Olympe::Editor::LevelDefinition& levelDef)
     }
 }
 //---------------------------------------------------------------------------------------------
+// Generate collision and navigation maps from TMJ/TMX level data
+//---------------------------------------------------------------------------------------------
+void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& tiledMap,
+                                                const Olympe::Editor::LevelDefinition& levelDef)
+{
+	SYSTEM_LOG << "\n";
+	SYSTEM_LOG << "+==========================================================+\n";
+	SYSTEM_LOG << "| COLLISION & NAVIGATION MAP GENERATION                    |\n";
+	SYSTEM_LOG << "+==========================================================+\n";
+	
+	// Extract map dimensions
+	int mapWidth = levelDef.mapConfig.width;
+	int mapHeight = levelDef.mapConfig.height;
+	int tileWidth = levelDef.mapConfig.tileWidth > 0 ? levelDef.mapConfig.tileWidth : 32;
+	int tileHeight = levelDef.mapConfig.tileHeight > 0 ? levelDef.mapConfig.tileHeight : 32;
+	std::string orientation = levelDef.mapConfig.orientation;
+	
+	if (mapWidth == 0 || mapHeight == 0)
+	{
+		SYSTEM_LOG << "  X Invalid map dimensions, skipping collision/navigation generation\n\n";
+		return;
+	}
+	
+	SYSTEM_LOG << "  Map dimensions: " << mapWidth << "x" << mapHeight << "\n";
+	SYSTEM_LOG << "  Tile size: " << tileWidth << "x" << tileHeight << "\n";
+	SYSTEM_LOG << "  Orientation: " << orientation << "\n";
+	
+	// Determine projection type
+	GridProjectionType projection = GridProjectionType::Ortho;
+	if (orientation == "isometric")
+		projection = GridProjectionType::Iso;
+	else if (orientation == "hexagonal")
+		projection = GridProjectionType::HexAxial;
+	
+	// Initialize collision map (single layer for now, can be extended later)
+	CollisionMap& collMap = CollisionMap::Get();
+	collMap.Initialize(mapWidth, mapHeight, projection, 
+	                  static_cast<float>(tileWidth), static_cast<float>(tileHeight), 1);
+	
+	// Initialize navigation map
+	NavigationMap& navMap = NavigationMap::Get();
+	navMap.Initialize(mapWidth, mapHeight, projection,
+	                 static_cast<float>(tileWidth), static_cast<float>(tileHeight), 1);
+	
+	SYSTEM_LOG << "  -> Collision map initialized (" << mapWidth * mapHeight << " tiles)\n";
+	SYSTEM_LOG << "  -> Navigation map initialized\n";
+	
+	// Process tile layers for navigation
+	// Tiles that exist = navigable, empty tiles = not navigable
+	int navigableTiles = 0;
+	for (const Olympe::Tiled::TileLayer& layer : tiledMap.tileLayers)
+	{
+		// Skip layers marked as collision layers (we'll process those separately)
+		bool isCollisionLayer = false;
+		for (const Olympe::Tiled::Property& prop : layer.properties)
+		{
+			if (prop.name == "collision" && prop.value == "true")
+			{
+				isCollisionLayer = true;
+				break;
+			}
+		}
+		
+		if (isCollisionLayer) continue;
+		
+		// Process tile data for this layer
+		for (int y = 0; y < mapHeight && y < static_cast<int>(layer.data.size()); ++y)
+		{
+			for (int x = 0; x < mapWidth && x < static_cast<int>(layer.data[y].size()); ++x)
+			{
+				uint32_t gid = layer.data[y][x];
+				
+				// Tile exists (non-zero GID) = navigable
+				if (gid != 0)
+				{
+					TileProperties props;
+					props.isNavigable = true;
+					props.isBlocked = false;
+					props.traversalCost = 1.0f;
+					collMap.SetTileProperties(x, y, props);
+					++navigableTiles;
+				}
+			}
+		}
+	}
+	
+	SYSTEM_LOG << "  -> Processed tile layers: " << navigableTiles << " navigable tiles\n";
+	
+	// Process collision layers (mark as blocked and non-navigable)
+	int collisionTiles = 0;
+	for (const Olympe::Tiled::TileLayer& layer : tiledMap.tileLayers)
+	{
+		// Check if this layer is marked as a collision layer
+		bool isCollisionLayer = false;
+		for (const Olympe::Tiled::Property& prop : layer.properties)
+		{
+			if (prop.name == "collision" && prop.value == "true")
+			{
+				isCollisionLayer = true;
+				break;
+			}
+		}
+		
+		if (!isCollisionLayer) continue;
+		
+		// Process collision data for this layer
+		for (int y = 0; y < mapHeight && y < static_cast<int>(layer.data.size()); ++y)
+		{
+			for (int x = 0; x < mapWidth && x < static_cast<int>(layer.data[y].size()); ++x)
+			{
+				uint32_t gid = layer.data[y][x];
+				
+				// Collision tile exists (non-zero GID) = blocked
+				if (gid != 0)
+				{
+					TileProperties props;
+					props.isBlocked = true;
+					props.isNavigable = false;
+					props.traversalCost = 999.0f; // Large but finite cost for impassable tiles
+					collMap.SetTileProperties(x, y, props);
+					++collisionTiles;
+				}
+			}
+		}
+	}
+	
+	SYSTEM_LOG << "  -> Processed collision layers: " << collisionTiles << " blocked tiles\n";
+	
+	// Process object layers for collision (objects can also define collision)
+	// This is a simplified implementation - can be extended later
+	int collisionObjects = 0;
+	for (const Olympe::Tiled::ObjectGroup& objectGroup : tiledMap.objectGroups)
+	{
+		// Check if this object group is marked as a collision layer
+		bool isCollisionLayer = false;
+		for (const Olympe::Tiled::Property& prop : objectGroup.properties)
+		{
+			if (prop.name == "collision" && prop.value == "true")
+			{
+				isCollisionLayer = true;
+				break;
+			}
+		}
+		
+		if (!isCollisionLayer) continue;
+		
+		// Process objects in this group
+		for (const Olympe::Tiled::Object& obj : objectGroup.objects)
+		{
+			// Convert object bounds to grid tiles
+			int startX, startY, endX, endY;
+			collMap.WorldToGrid(obj.x, obj.y, startX, startY);
+			collMap.WorldToGrid(obj.x + obj.width, obj.y + obj.height, endX, endY);
+			
+			// Mark tiles within object bounds as blocked
+			for (int y = startY; y <= endY; ++y)
+			{
+				for (int x = startX; x <= endX; ++x)
+				{
+					if (collMap.IsValidGridPosition(x, y))
+					{
+						TileProperties props;
+						props.isBlocked = true;
+						props.isNavigable = false;
+						collMap.SetTileProperties(x, y, props);
+						++collisionObjects;
+					}
+				}
+			}
+		}
+	}
+	
+	if (collisionObjects > 0)
+	{
+		SYSTEM_LOG << "  -> Processed collision objects: " << collisionObjects << " tiles blocked\n";
+	}
+	
+	SYSTEM_LOG << "\n";
+	SYSTEM_LOG << "  -> Collision & Navigation maps ready\n";
+	SYSTEM_LOG << "     Total tiles: " << mapWidth * mapHeight << "\n";
+	SYSTEM_LOG << "     Navigable: " << navigableTiles << "\n";
+	SYSTEM_LOG << "     Blocked: " << collisionTiles + collisionObjects << "\n";
+	SYSTEM_LOG << "\n";
+}
+//---------------------------------------------------------------------------------------------
 // Tiled MapEditor Integration
 //---------------------------------------------------------------------------------------------
 #include "TiledLevelLoader/include/TiledLevelLoader.h"
@@ -470,6 +659,9 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     SYSTEM_LOG << "  -> Static objects: " << levelDef.categorizedObjects.staticObjects.size() << "\n";
     SYSTEM_LOG << "  -> Dynamic objects: " << levelDef.categorizedObjects.dynamicObjects.size() << "\n";
     SYSTEM_LOG << "  -> Patrol paths: " << levelDef.categorizedObjects.patrolPaths.size() << "\n\n";
+    
+    // Generate collision and navigation maps
+    GenerateCollisionAndNavigationMaps(tiledMap, levelDef);
     
     // Synchronize grid settings with loaded level
     SyncGridWithLevel(levelDef);

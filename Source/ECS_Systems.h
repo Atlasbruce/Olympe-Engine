@@ -135,6 +135,23 @@ class TriggerSystem : public ECS_System
     TriggerSystem();
     virtual void Process() override;
 };
+// Navigation System: processes entities with NavigationAgent_data
+class NavigationSystem : public ECS_System
+{
+public:
+	NavigationSystem();
+	virtual void Process() override;
+	
+private:
+	// Request pathfinding for entity
+	void RequestPath(EntityID entity, const Vector& targetPos);
+	
+	// Follow current path
+	void FollowPath(EntityID entity, float deltaTime);
+	
+	// Check if repath needed (obstacle detected)
+	bool NeedsRepath(EntityID entity);
+};
 // Movement System: processes entities with Transform_data and Movement_data
 class MovementSystem : public ECS_System
 {
@@ -168,12 +185,19 @@ private:
     const GridSettings_data* FindSettings() const;
 
     void DrawLineWorld(const CameraTransform& cam, const Vector& aWorld, const Vector& bWorld, const SDL_Color& c);
+    
+    // **NEW: Draw filled rectangle in world space (for overlays)**
+    void DrawFilledRectWorld(const CameraTransform& cam, const Vector& worldPos, float width, float height, const SDL_Color& c);
 
     SDL_FRect GetWorldVisibleBounds(const CameraTransform& cam) ;
 
     void RenderOrtho(const CameraTransform& cam, const GridSettings_data& s);
     void RenderIso(const CameraTransform& cam, const GridSettings_data& s);
     void RenderHex(const CameraTransform& cam, const GridSettings_data& s);
+    
+    // **NEW: Overlay rendering methods**
+    void RenderCollisionOverlay(const CameraTransform& cam, const GridSettings_data& s);
+    void RenderNavigationOverlay(const CameraTransform& cam, const GridSettings_data& s);
 };
 //-------------------------------------------------------------
 // UI Rendering System: Pass 2 rendering for UI/HUD/Menu (always on top)

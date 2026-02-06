@@ -1,5 +1,7 @@
 #pragma once
 
+#include <SDL3/SDL.h>
+
 constexpr double k_PI = 3.14159265358979323846;
 
 // Configuration: defaults
@@ -125,3 +127,8 @@ enum class EventType
     Olympe_EventType_Any,
     Olympe_EventType_MAX
 };
+
+// -------- GRID OVERLAY COLORS (backward compatibility, overridden by GridSettings_data) ----------
+static const SDL_Color COLLISION_OVERLAY_COLOR = { 150, 50, 200, 100 };  // Purple
+static const SDL_Color NAVIGATION_OVERLAY_COLOR = { 50, 200, 100, 100 }; // Green
+

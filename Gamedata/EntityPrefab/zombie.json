@@ -74,6 +74,14 @@
         "properties": {
           "currentState": "Idle"
         }
+      },
+      {
+        "type": "NavigationAgent_data",
+        "properties": {
+          "agentRadius": 16.0,
+          "maxSpeed": 60.0,
+          "layerMask": 1
+        }
       }
     ]
   }

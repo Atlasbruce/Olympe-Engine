@@ -400,6 +400,37 @@ struct GridSettings_data
 	float lodZoomThreshold = 0.5f;  // Below this zoom, apply LOD
 	int lodSkipFactor = 10;          // Draw 1 line every N when LOD active
 	
+	// **NEW: Multi-layer overlay support**
+	bool showCollisionOverlay = false;
+	bool showNavigationOverlay = false;
+	
+	// **NEW: Layer selection for visualization**
+	uint8_t activeCollisionLayer = 0;  // Which collision layer to display (0-7)
+	uint8_t activeNavigationLayer = 0; // Which navigation layer to display (0-7)
+	
+	// **NEW: Overlay colors per layer**
+	SDL_Color collisionColors[8] = {
+		{ 150,  50, 200, 100 },  // Ground: purple
+		{  50, 150, 255, 100 },  // Sky: cyan
+		{ 100,  50,  50, 100 },  // Underground: dark red
+		{ 255, 200,  50, 100 },  // Volume: orange
+		{ 200, 200, 200, 100 },  // Custom1-4: gray variants
+		{ 180, 180, 180, 100 },
+		{ 160, 160, 160, 100 },
+		{ 140, 140, 140, 100 }
+	};
+	
+	SDL_Color navigationColors[8] = {
+		{  50, 200, 100, 100 },  // Ground: green
+		{ 100, 200, 255, 100 },  // Sky: light blue
+		{ 200, 100,  50, 100 },  // Underground: brown
+		{ 255, 255, 100, 100 },  // Volume: yellow
+		{ 150, 255, 150, 100 },  // Custom1-4: green variants
+		{ 120, 235, 120, 100 },
+		{  90, 215,  90, 100 },
+		{  60, 195,  60, 100 }
+	};
+	
 	// Constructors
 	GridSettings_data() = default;
 	GridSettings_data(const GridSettings_data&) = default;
@@ -596,6 +627,34 @@ struct CollisionZone_data
 	CollisionZone_data(SDL_FRect rect, bool isStatic_) : bounds(rect), isStatic(isStatic_) {}
 	CollisionZone_data(const CollisionZone_data&) = default;
 	CollisionZone_data& operator=(const CollisionZone_data&) = default;
+};
+
+// --- Navigation Agent Component ---
+// Navigation agent component (lightweight, entity-specific data only)
+struct NavigationAgent_data
+{
+	// Agent properties
+	float agentRadius = 16.0f;         // Collision radius for pathfinding
+	float maxSpeed = 100.0f;           // Max movement speed
+	float arrivalThreshold = 5.0f;     // Distance to consider "arrived"
+	
+	// Layer mask (which collision layers this agent can traverse)
+	uint8_t layerMask = 0x01;          // Bit 0 = Ground layer by default
+	
+	// Pathfinding state
+	std::vector<Vector> currentPath;   // Cached path (world coordinates)
+	int currentWaypointIndex = 0;      // Current target waypoint in path
+	Vector targetPosition = Vector(0, 0, 0);
+	bool hasPath = false;
+	bool needsRepath = false;
+	
+	// Optional: steering behaviors
+	float steeringWeight = 1.0f;
+	bool avoidObstacles = true;
+	
+	NavigationAgent_data() = default;
+	NavigationAgent_data(const NavigationAgent_data&) = default;
+	NavigationAgent_data& operator=(const NavigationAgent_data&) = default;
 };
 
 // Editor context for plugins
