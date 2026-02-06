@@ -138,12 +138,13 @@ void CollisionMap::WorldToGrid(float worldX, float worldY, int& outGridX, int& o
 		
 	case GridProjectionType::Iso:
 		// Isometric: diamond transformation
-		// world -> iso grid
+		// Convert world position to isometric grid coordinates
+		// Standard isometric: divide by half tile dimensions for proper scaling
 		{
-			float isoX = worldX / m_tileWidth;
-			float isoY = worldY / m_tileHeight;
-			outGridX = static_cast<int>(std::floor((isoX + isoY)));
-			outGridY = static_cast<int>(std::floor((isoY - isoX)));
+			float isoX = worldX / (m_tileWidth * 0.5f);
+			float isoY = worldY / (m_tileHeight * 0.5f);
+			outGridX = static_cast<int>(std::floor((isoX + isoY) * 0.5f));
+			outGridY = static_cast<int>(std::floor((isoY - isoX) * 0.5f));
 		}
 		break;
 		
@@ -197,8 +198,9 @@ void CollisionMap::GridToWorld(int gridX, int gridY, float& outWorldX, float& ou
 		
 	case GridProjectionType::Iso:
 		// Isometric: diamond transformation (to tile center)
-		outWorldX = ((gridX - gridY) * 0.5f) * m_tileWidth;
-		outWorldY = ((gridX + gridY) * 0.5f) * m_tileHeight;
+		// Standard isometric formula with half tile dimensions
+		outWorldX = (gridX - gridY) * (m_tileWidth * 0.5f);
+		outWorldY = (gridX + gridY) * (m_tileHeight * 0.5f);
 		break;
 		
 	case GridProjectionType::HexAxial:

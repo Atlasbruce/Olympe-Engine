@@ -534,7 +534,7 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 					TileProperties props;
 					props.isBlocked = true;
 					props.isNavigable = false;
-					props.traversalCost = std::numeric_limits<float>::max();
+					props.traversalCost = 999.0f; // Large but finite cost for impassable tiles
 					collMap.SetTileProperties(x, y, props);
 					++collisionTiles;
 				}

@@ -1606,26 +1606,34 @@ void NavigationSystem::FollowPath(EntityID entity, float deltaTime)
 	}
 	
 	// Move towards waypoint
-	direction.Normalize();
-	float moveSpeed = agent.maxSpeed * deltaTime;
-	
-	if (moveSpeed > distance)
+	if (distance > 0.0f)
 	{
-		// Don't overshoot
-		position.position = waypoint;
-		++agent.currentWaypointIndex;
-	}
-	else
-	{
-		position.position.x += direction.x * moveSpeed;
-		position.position.y += direction.y * moveSpeed;
+		direction.Normalize();
+		float moveSpeed = agent.maxSpeed * deltaTime;
+		
+		if (moveSpeed > distance)
+		{
+			// Don't overshoot
+			position.position = waypoint;
+			++agent.currentWaypointIndex;
+		}
+		else
+		{
+			position.position.x += direction.x * moveSpeed;
+			position.position.y += direction.y * moveSpeed;
+		}
 	}
 }
 
 bool NavigationSystem::NeedsRepath(EntityID entity)
 {
 	// TODO: Implement obstacle detection logic
+	// Planned approach:
+	// 1. Check if current waypoint is still navigable
+	// 2. Raycast along path to detect new obstacles
+	// 3. Check for dynamic tile state changes
 	// For now, always return false
+	(void)entity; // Suppress unused parameter warning
 	return false;
 }
 
