@@ -201,6 +201,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
+    <None Include="Documentation\TILED_ISOMETRIC.md" />
     <None Include="olympe.ini" />
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,26 @@
 /*
- * TiledToOlympe.cpp - Converter implementation
+ * TiledToOlympe.cpp - TMJ to Olympe Engine Level Converter
+ * 
+ * ============================================================================
+ * ISOMETRIC COORDINATE CONVERSION - FINAL WORKING SOLUTION
+ * ============================================================================
+ * 
+ * Tiled stores isometric object positions in TMJ using a special coordinate
+ * system where BOTH X and Y are measured in tileHeight pixel units along
+ * the isometric axes.
+ * 
+ * CONVERSION FORMULA (verified working):
+ * --------------------------------------
+ *   tileX = tmjPixelX / tileHeight
+ *   tileY = tmjPixelY / tileHeight
+ *   worldX = (tileX - tileY) * (tileWidth / 2)
+ *   worldY = (tileX + tileY) * (tileHeight / 2)
+ * 
+ * EXAMPLE (184x128 map, 58x27 tiles):
+ *   player_1: TMJ(1818.4, 1064.26) -> tile(67.35, 39.42) -> world(810, 1441)
+ * 
+ * See IsometricProjection.cpp for detailed documentation.
+ * ============================================================================
  */
 #include "../include/TiledLevelLoader.h"
 #include "../include/TiledToOlympe.h"
@@ -775,55 +796,25 @@ namespace Tiled {
 
         if (config_.mapOrientation == "isometric")
         {
-            // =======================================================================
-            // TILED ISOMETRIC COORDINATE CONVERSION
-            // =======================================================================
-            //
-            // TMJ stores object positions as pixel coordinates along isometric axes.
-            // Both X and Y are measured in "isometric pixels" where movement along
-            // either axis travels diagonally in screen space.
-            //
-            // STEP 1: Convert TMJ pixel coords to tile coords
-            //   tileX = pixelX / tileHeight   (BOTH divided by tileHeight!)
-            //   tileY = pixelY / tileHeight
-            //
-            // STEP 2: Apply same isometric projection as tile rendering
-            //   worldX = (tileX - tileY) * halfTileWidth
-            //   worldY = (tileX + tileY) * halfTileHeight
-            //
-            // NOTE: We do NOT add originX here because our tile rendering system
-            // (ECS_Systems.cpp RenderTile) also doesn't add it. Both tiles and
-            // objects use the same coordinate system where tile (0,0) is at world (0,0).
-            //
-            // The originX in Tiled's pixelToScreenCoords is for SCREEN display only,
-            // not for world coordinates. Our camera system handles the screen offset.
-            //
-            // VERIFICATION (184x128 map, 58x27 tiles, player_1):
-            //   TMJ: (1818.63, 1064.03)
-            //   tileX = 1818.63 / 27 = 67.36
-            //   tileY = 1064.03 / 27 = 39.41
-            //   worldX = (67.36 - 39.41) * 29 = 810.55 ≈ 812
-            //   worldY = (67.36 + 39.41) * 13.5 = 1441.40 ≈ 1431
-            //   Tile (67, 39) renders at: (67-39)*29, (67+39)*13.5 = (812, 1431) ✓
-            //   Objects and tiles now use the same coordinate system!
-            //
-            // =======================================================================
+            // ISOMETRIC TMJ TO WORLD COORDINATE CONVERSION
+            // --------------------------------------------
+            // TMJ stores positions where BOTH x and y use tileHeight as the unit.
+            // Formula: tileCoord = tmjPixel / tileHeight, then standard iso projection.
             
             const float tileWidth = static_cast<float>(config_.tileWidth);
             const float tileHeight = static_cast<float>(config_.tileHeight);
             const float halfWidth = tileWidth * 0.5f;
             const float halfHeight = tileHeight * 0.5f;
             
-            // CRITICAL: Both X and Y are divided by tileHeight (Tiled's convention)
-            // This converts TMJ isometric pixel coords to tile coords
+            // Convert TMJ pixel coords to tile coords (both use tileHeight!)
             const float tileX = (tileHeight != 0.0f) ? (x / tileHeight) : 0.0f;
             const float tileY = (tileHeight != 0.0f) ? (y / tileHeight) : 0.0f;
             
-            // Apply standard isometric projection (same as tile rendering)
+            // Standard isometric projection
             float worldX = (tileX - tileY) * halfWidth;
             float worldY = (tileX + tileY) * halfHeight;
             
-            // Apply layer offsets (these are in isometric pixel space too)
+            // Apply layer offsets (also in isometric pixel space)
             if (layerOffsetX != 0.0f || layerOffsetY != 0.0f) {
                 float layerTileX = layerOffsetX / tileHeight;
                 float layerTileY = layerOffsetY / tileHeight;
@@ -832,7 +823,6 @@ namespace Tiled {
             }
             
             // Apply tileset offsets for tile objects (gid > 0)
-            // These are screen-space pixel offsets, not isometric
             if (gid > 0) {
                 const TiledTileset* tileset = FindTilesetForGid(gid);
                 if (tileset) {
@@ -841,7 +831,7 @@ namespace Tiled {
                 }
             }
 
-            // Debug logging for position transformation
+            // Debug logging
             SYSTEM_LOG << "[TransformObjectPosition] ISO: TMJ(" << x << ", " << y << ")"
                        << " -> tile(" << tileX << ", " << tileY << ")"
                        << " -> world(" << worldX << ", " << worldY << ")\n";

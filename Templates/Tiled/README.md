@@ -79,7 +79,14 @@ Example isometric map (58×27 tiles, 2:1 aspect ratio).
 
 Same as orthogonal example, but note:
 - Tiles render in diamond pattern
-- Coordinate conversion handled automatically
+- Coordinate conversion handled automatically by TiledLevelLoader
+- **Key Formula:** Tiled measures BOTH X and Y in `tileHeight` pixel units:
+  ```
+  tileX = tmjX / tileHeight
+  tileY = tmjY / tileHeight
+  worldX = (tileX - tileY) * (tileWidth / 2)
+  worldY = (tileX + tileY) * (tileHeight / 2)
+  ```
 - See [Documentation/TILED_ISOMETRIC.md](../../Documentation/TILED_ISOMETRIC.md) for details
 
 ## Quick Start

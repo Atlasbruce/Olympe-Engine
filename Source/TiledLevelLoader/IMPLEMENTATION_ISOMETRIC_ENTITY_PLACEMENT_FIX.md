@@ -1,99 +1,126 @@
-# Isometric Entity Placement - Minimal Stable Version
+# Isometric Entity Placement - Final Working Solution
 
-## Note
+## Status: ? SOLVED
 
-This document supersedes the previous complex rebasing approach. The filename retains "FIX" for historical reference, but the current implementation uses a simplified minimal approach.
+This document describes the correct and verified solution for converting Tiled TMJ isometric object coordinates to Olympe Engine world coordinates.
 
-## Approach
+## The Problem
 
-This document describes the minimal and stable approach for isometric object placement in the Olympe Engine.
+Tiled stores object positions in TMJ files using a special isometric coordinate system that differs from standard pixel coordinates. Direct use of these coordinates resulted in entities being misaligned with tiles.
 
-**Core Principle**: Isometric objects remain in TMJ pixel coordinates and are NOT rebased. The origin handling is managed on the tile rendering side.
+## The Solution
+
+### Key Discovery
+
+**Tiled stores isometric object positions where BOTH X and Y are measured in `tileHeight` pixel units along the isometric axes.**
+
+This is different from orthogonal maps where X and Y are direct pixel coordinates.
+
+### Conversion Formula
+
+```cpp
+// Step 1: Convert TMJ pixel coords to tile coords
+// CRITICAL: Both X and Y are divided by tileHeight (Tiled's convention)
+tileX = tmjPixelX / tileHeight
+tileY = tmjPixelY / tileHeight
+
+// Step 2: Apply standard isometric projection
+worldX = (tileX - tileY) * (tileWidth / 2)
+worldY = (tileX + tileY) * (tileHeight / 2)
+```
+
+### Verified Example
+
+**Map Configuration:**
+- Map size: 184x128 tiles
+- Tile size: 58x27 pixels (halfWidth=29, halfHeight=13.5)
+
+**player_1 Conversion:**
+```
+TMJ coordinates: (1818.4, 1064.26)
+tileX = 1818.4 / 27 = 67.35
+tileY = 1064.26 / 27 = 39.42
+worldX = (67.35 - 39.42) * 29 = 810
+worldY = (67.35 + 39.42) * 13.5 = 1441
+Result: Entity renders at tile (67, 39) ?
+```
 
 ## Implementation
 
-### TransformObjectPosition (Isometric Mode)
-
-The simplified transformation for isometric objects applies only the necessary offsets without any rebasing:
+### TransformObjectPosition (TiledToOlympe.cpp)
 
 ```cpp
-// 1) Log raw TMJ coordinates
-SYSTEM_LOG << "[TRANSFORM] Isometric - Raw TMJ (" << x << ", " << y << ")\n";
+Vector TiledToOlympe::TransformObjectPosition(float x, float y, 
+    float layerOffsetX, float layerOffsetY, uint32_t gid)
+{
+    if (config_.mapOrientation == "isometric")
+    {
+        const float tileWidth = static_cast<float>(config_.tileWidth);
+        const float tileHeight = static_cast<float>(config_.tileHeight);
+        const float halfWidth = tileWidth * 0.5f;
+        const float halfHeight = tileHeight * 0.5f;
+        
+        // Convert TMJ pixel coords to tile coords (both use tileHeight!)
+        const float tileX = (tileHeight != 0.0f) ? (x / tileHeight) : 0.0f;
+        const float tileY = (tileHeight != 0.0f) ? (y / tileHeight) : 0.0f;
+        
+        // Standard isometric projection
+        float worldX = (tileX - tileY) * halfWidth;
+        float worldY = (tileX + tileY) * halfHeight;
+        
+        // Apply layer offsets (also in isometric pixel space)
+        if (layerOffsetX != 0.0f || layerOffsetY != 0.0f) {
+            float layerTileX = layerOffsetX / tileHeight;
+            float layerTileY = layerOffsetY / tileHeight;
+            worldX += (layerTileX - layerTileY) * halfWidth;
+            worldY += (layerTileX + layerTileY) * halfHeight;
+        }
+        
+        // Apply tileset offsets for tile objects (gid > 0)
+        if (gid > 0) {
+            const TiledTileset* tileset = FindTilesetForGid(gid);
+            if (tileset) {
+                worldX += static_cast<float>(tileset->tileoffsetX);
+                worldY += static_cast<float>(tileset->tileoffsetY);
+            }
+        }
 
-// 2) Determine tileset offsets for tile objects (gid > 0)
-int tileOffsetX = 0;
-int tileOffsetY = 0;
-if (gid > 0) {
-    const TiledTileset* tileset = FindTilesetForGid(gid);
-    if (tileset) {
-        tileOffsetX = tileset->tileoffsetX;
-        tileOffsetY = tileset->tileoffsetY;
+        return Vector(worldX, worldY, 0.0f);
     }
+
+    // Orthogonal: direct pixel coordinates with layer offset
+    return Vector(x + layerOffsetX, y + layerOffsetY, 0.0f);
 }
-
-// 3) Log offsets applied
-SYSTEM_LOG << "Offsets applied (layer/tile): (" << layerOffsetX << "/" << tileOffsetX 
-          << ", " << layerOffsetY << "/" << tileOffsetY << ")\n";
-
-// 4) Apply layer offsets and tileset offsets to TMJ coordinates
-float posX = x + layerOffsetX + tileOffsetX;
-float posY = y + layerOffsetY + tileOffsetY;
-
-// 5) Log final position
-SYSTEM_LOG << "Final position (" << posX << ", " << posY << ")\n";
-
-return Vector(posX, posY, 0.0f);
 ```
 
-### Key Changes
+## Why Both Divided by tileHeight?
 
-1. **NO rebase calculation**: Removed all isometric origin calculations (4-corner projections, CalculateTMJOrigin)
-2. **NO coordinate transformations**: No TileToScreen, IsoToWorld, or WorldToIso conversions
-3. **Simple offset application**: Only apply layer offsets and tileset offsets
-4. **Clean logging**: Three clear log lines showing the transformation process
+In Tiled's isometric view, the X and Y axes run diagonally. Movement along either axis covers the same diagonal distance on screen. Tiled normalizes this by using `tileHeight` as the unit for BOTH axes, making the coordinate system uniform along both isometric directions.
 
-### Orthogonal Mode
+## No Origin Offset Needed
 
-Orthogonal mode remains unchanged and continues to use raw TMJ coordinates with layer offsets only.
-
-## Coordinate System
-
-With this approach:
-- **Tiles**: Use their own coordinate system with isometric projection applied during rendering
-- **Objects**: Remain in TMJ pixel coordinates without rebasing
-- **Origin handling**: Managed entirely on the tile rendering side, not in object placement
-
-This simplification creates a stable, minimal version that avoids coordinate system mismatches.
-
-## Logging
-
-The simplified implementation produces three clean log lines for each object transformation in isometric mode:
-
-```
-[TRANSFORM] Isometric - Raw TMJ (x, y)
-Offsets applied (layer/tile): (layerOffsetX/tileOffsetX, layerOffsetY/tileOffsetY)
-Final position (posX, posY)
-```
-
-This minimal logging shows:
-1. The raw coordinates from the TMJ file
-2. The offsets being applied (layer and tileset)
-3. The final calculated position
+The `originX` calculation (mapHeight * halfTileWidth) that Tiled uses is for **screen display only**. In our engine, both tiles and objects use the same world coordinate system where tile (0,0) is at world (0,0). The camera handles screen positioning.
 
 ## Files Modified
 
-- `Source/TiledLevelLoader/src/TiledToOlympe.cpp` - Simplified `TransformObjectPosition()` function
-- `Source/TiledLevelLoader/IMPLEMENTATION_ISOMETRIC_ENTITY_PLACEMENT_FIX.md` - This documentation
+- `Source/TiledLevelLoader/src/TiledToOlympe.cpp` - `TransformObjectPosition()` function
+- `Source/TiledLevelLoader/src/IsometricProjection.cpp` - Documentation and utilities
+- `Source/TiledLevelLoader/include/IsometricProjection.h` - Header documentation
+- `Source/TiledLevelLoader/include/TiledToOlympe.h` - Header documentation
 
-## Related Files (Unchanged)
+## Debug Logging
 
-- `Source/TiledLevelLoader/src/IsometricProjection.cpp` - Isometric projection utilities (not used for object placement)
-- `Source/TiledLevelLoader/include/IsometricProjection.h` - Header for isometric utilities
-- Tile rendering code - Remains unchanged, handles origin on tile side
+The implementation includes debug logging:
+```
+[TransformObjectPosition] ISO: TMJ(1818.4, 1064.26) -> tile(67.35, 39.42) -> world(810, 1441)
+```
 
-## Technical Notes
+## Summary
 
-- This approach provides a minimal, stable baseline for isometric object placement
-- No conditional logic based on map type or coordinate ranges
-- The coordinate transformation is straightforward and predictable
-- Tile rendering is not affected and continues to use its own origin handling
+| Step | Operation | Formula |
+|------|-----------|---------|
+| 1 | TMJ ? Tile | `tileX = tmjX / tileHeight`, `tileY = tmjY / tileHeight` |
+| 2 | Tile ? World | `worldX = (tileX - tileY) * halfWidth`, `worldY = (tileX + tileY) * halfHeight` |
+| 3 | Offsets | Add layer offsets (converted to isometric) and tileset offsets |
+
+**Result: Entities align perfectly with tiles as placed in Tiled Editor.**

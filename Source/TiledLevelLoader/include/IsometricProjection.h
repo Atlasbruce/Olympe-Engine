@@ -1,8 +1,18 @@
 /*
  * IsometricProjection.h - Isometric coordinate transformation utilities
  * 
- * Provides conversion between world space (Cartesian) and
- * isometric screen space coordinates for isometric maps.
+ * TILED ISOMETRIC COORDINATE SYSTEM:
+ * ----------------------------------
+ * Tiled stores object positions in TMJ files using isometric pixel coordinates
+ * where BOTH X and Y are measured in tileHeight units along isometric axes.
+ * 
+ * TMJ to World conversion:
+ *   tileX = tmjPixelX / tileHeight
+ *   tileY = tmjPixelY / tileHeight
+ *   worldX = (tileX - tileY) * (tileWidth / 2)
+ *   worldY = (tileX + tileY) * (tileHeight / 2)
+ * 
+ * See IsometricProjection.cpp for detailed documentation and examples.
  */
 
 #pragma once
@@ -14,24 +24,12 @@ namespace Tiled {
     class IsometricProjection
     {
     public:
-        // Convert world (tile) coordinates to isometric screen coordinates
-        // worldX, worldY: tile coordinates (e.g., tile 0,0 = world 0,0)
-        // tileWidth, tileHeight: dimensions of a single isometric tile in pixels
-        // startX, startY: tile offset from layer startx/starty properties (default 0)
-        // offsetX, offsetY: pixel offset from layer offsetx/offsety properties (default 0)
-        // globalOffsetX, globalOffsetY: global correction offsets applied after isometric projection (default 0)
-        // Returns screen pixel position
+        // Convert tile coordinates to screen coordinates (isometric projection)
         static Vector WorldToIso(float worldX, float worldY, int tileWidth, int tileHeight, 
                                 int startX = 0, int startY = 0, float offsetX = 0.0f, float offsetY = 0.0f,
                                 float globalOffsetX = 0.0f, float globalOffsetY = 0.0f);
 
-        // Convert isometric screen coordinates to world (tile) coordinates
-        // isoX, isoY: screen pixel coordinates
-        // tileWidth, tileHeight: dimensions of a single isometric tile in pixels
-        // startX, startY: tile offset from layer startx/starty properties (default 0)
-        // offsetX, offsetY: pixel offset from layer offsetx/offsety properties (default 0)
-        // globalOffsetX, globalOffsetY: global correction offsets to reverse before conversion (default 0)
-        // Returns world tile coordinates (may be fractional)
+        // Convert screen coordinates to tile coordinates (inverse isometric)
         static Vector IsoToWorld(float isoX, float isoY, int tileWidth, int tileHeight,
                                 int startX = 0, int startY = 0, float offsetX = 0.0f, float offsetY = 0.0f,
                                 float globalOffsetX = 0.0f, float globalOffsetY = 0.0f);
@@ -43,13 +41,7 @@ namespace Tiled {
         // Get screen position of tile corner
         static Vector TileToScreen(int tileX, int tileY, int tileWidth, int tileHeight);
         
-        // Calculate TMJ origin from map bounds
-        // Projects all 4 map corners and returns the minimum X/Y as the TMJ origin
-        // This aligns TMJ coordinate system with the standard isometric projection
-        // minTileX, minTileY: Minimum tile coordinates in the map
-        // maxTileX, maxTileY: Maximum tile coordinates in the map
-        // tileWidth, tileHeight: Dimensions of a single isometric tile in pixels
-        // outOriginX, outOriginY: Output parameters for the calculated origin
+        // Calculate Tiled's screen origin (for reference, not used in world coords)
         static void CalculateTMJOrigin(int minTileX, int minTileY, int maxTileX, int maxTileY,
                                        int tileWidth, int tileHeight,
                                        float& outOriginX, float& outOriginY);

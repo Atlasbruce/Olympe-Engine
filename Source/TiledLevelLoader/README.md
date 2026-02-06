@@ -145,26 +145,50 @@ if (converter.Convert(map, level)) {
 }
 ```
 
-### Isometric Projection
+### Isometric Coordinate Conversion
+
+**Important:** Tiled stores isometric object positions where BOTH X and Y are measured in `tileHeight` pixel units.
 
 ```cpp
 #include "IsometricProjection.h"
 
 using namespace Olympe::Tiled;
 
-int tileWidth = 64;
-int tileHeight = 32;
+// TMJ to World Coordinate Conversion (for objects)
+// =================================================
+// Formula: 
+//   tileX = tmjPixelX / tileHeight
+//   tileY = tmjPixelY / tileHeight
+//   worldX = (tileX - tileY) * (tileWidth / 2)
+//   worldY = (tileX + tileY) * (tileHeight / 2)
 
-// World to screen
-Vec2 screenPos = IsometricProjection::WorldToIso(5.0f, 3.0f, tileWidth, tileHeight);
+int tileWidth = 58;
+int tileHeight = 27;
 
-// Screen to world
+// Example: player_1 at TMJ (1818.4, 1064.26)
+float tmjX = 1818.4f;
+float tmjY = 1064.26f;
+
+// Step 1: Convert to tile coords (both divided by tileHeight!)
+float tileX = tmjX / tileHeight;  // = 67.35
+float tileY = tmjY / tileHeight;  // = 39.42
+
+// Step 2: Apply isometric projection
+float worldX = (tileX - tileY) * (tileWidth * 0.5f);  // = 810
+float worldY = (tileX + tileY) * (tileHeight * 0.5f); // = 1441
+
+// Result: Entity renders at tile (67, 39) ✓
+
+// Utility functions (for screen ↔ world conversion)
+Vec2 screenPos = IsometricProjection::WorldToIso(worldX, worldY, tileWidth, tileHeight);
 Vec2 worldPos = IsometricProjection::IsoToWorld(screenPos.x, screenPos.y, tileWidth, tileHeight);
 
 // Screen to tile
-int tileX, tileY;
-IsometricProjection::ScreenToTile(mouseX, mouseY, tileWidth, tileHeight, tileX, tileY);
+int outTileX, outTileY;
+IsometricProjection::ScreenToTile(mouseX, mouseY, tileWidth, tileHeight, outTileX, outTileY);
 ```
+
+See `IMPLEMENTATION_ISOMETRIC_ENTITY_PLACEMENT_FIX.md` for detailed documentation.
 
 ## GID Resolution System
 

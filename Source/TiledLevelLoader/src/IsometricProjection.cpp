@@ -1,5 +1,48 @@
 /*
- * IsometricProjection.cpp - Isometric coordinate transformations
+ * IsometricProjection.cpp - Isometric coordinate transformations for Olympe Engine
+ * 
+ * ============================================================================
+ * TILED ISOMETRIC COORDINATE SYSTEM - COMPLETE REFERENCE
+ * ============================================================================
+ * 
+ * CRITICAL DISCOVERY: Tiled stores object positions in TMJ files using a 
+ * special isometric pixel coordinate system where BOTH X and Y are measured
+ * in units of tileHeight pixels along the isometric axes.
+ * 
+ * TMJ TO WORLD CONVERSION (the correct formula):
+ * -----------------------------------------------
+ *   1. Convert TMJ pixel coords to tile coords:
+ *      tileX = tmjPixelX / tileHeight   (BOTH divided by tileHeight!)
+ *      tileY = tmjPixelY / tileHeight
+ * 
+ *   2. Apply standard isometric projection:
+ *      worldX = (tileX - tileY) * (tileWidth / 2)
+ *      worldY = (tileX + tileY) * (tileHeight / 2)
+ * 
+ * WHY BOTH DIVIDED BY tileHeight?
+ * --------------------------------
+ * In Tiled's isometric view, the X and Y axes run diagonally. Movement along
+ * either axis covers the same diagonal distance on screen. Tiled normalizes
+ * this by using tileHeight as the unit for BOTH axes, making the coordinate
+ * system uniform along both isometric directions.
+ * 
+ * VERIFIED EXAMPLE (184x128 map, 58x27 tile size):
+ * ------------------------------------------------
+ *   player_1 in TMJ: (1818.4, 1064.26)
+ *   tileX = 1818.4 / 27 = 67.35
+ *   tileY = 1064.26 / 27 = 39.42
+ *   worldX = (67.35 - 39.42) * 29 = 810
+ *   worldY = (67.35 + 39.42) * 13.5 = 1441
+ *   Result: Entity renders at tile (67, 39) as expected!
+ * 
+ * NO ORIGIN OFFSET NEEDED:
+ * ------------------------
+ * The originX calculation (mapHeight * halfTileWidth) is for Tiled's SCREEN
+ * display only. In our engine, both tiles and objects use the same world
+ * coordinate system where tile (0,0) is at world (0,0). The camera handles
+ * screen positioning.
+ * 
+ * ============================================================================
  */
 
 #include "../include/IsometricProjection.h"
@@ -18,9 +61,7 @@ namespace Tiled {
         float offsetWorldY = worldY + startY;
         
         // Standard isometric projection (diamond orientation)
-        // Screen X = (worldX - worldY) * (tileWidth / 2)
-        // Screen Y = (worldX + worldY) * (tileHeight / 2)
-        
+        // worldX/Y here are tile coordinates, output is screen pixels
         Vector result;
         result.x = ((offsetWorldX - offsetWorldY) * ((float)tileWidth * 0.5f)) + offsetX + globalOffsetX;
         result.y = ((offsetWorldX + offsetWorldY) * ((float)tileHeight * 0.5f)) + offsetY + globalOffsetY;
@@ -31,10 +72,7 @@ namespace Tiled {
                                           int startX, int startY, float offsetX, float offsetY,
                                           float globalOffsetX, float globalOffsetY)
     {
-        // Inverse isometric projection
-        // worldX = (isoX / (tileWidth/2) + isoY / (tileHeight/2)) / 2
-        // worldY = (isoY / (tileHeight/2) - isoX / (tileWidth/2)) / 2
-        
+        // Inverse isometric projection (screen pixels to tile coordinates)
         Vector result;
         float halfWidth = tileWidth * 0.5f;
         float halfHeight = tileHeight * 0.5f;
@@ -71,32 +109,8 @@ namespace Tiled {
                                                   int tileWidth, int tileHeight,
                                                   float& outOriginX, float& outOriginY)
     {
-        // ==========================================================================
-        // TMJ ISOMETRIC ORIGIN CALCULATION
-        // ==========================================================================
-        //
-        // In Tiled's isometric coordinate system, the origin is at the TOP (north)
-        // corner of the diamond. The map extends:
-        // - Right-down along the X axis (increasing tileX)
-        // - Left-down along the Y axis (increasing tileY)
-        //
-        // The isometric origin X offset ensures tile (0,0) appears at the correct
-        // screen position. It equals: mapHeight * (tileWidth / 2)
-        //
-        // This places the northwest edge of the map at screen X = 0.
-        //
-        // VERIFICATION (184x128 map, 58x27 tiles):
-        // - player_1 TMJ: (1818.63, 1064.03)
-        // - Expected tile: (67, 39)
-        // - tileX = 1818.63 / 27 = 67.36 ?
-        // - tileY = 1064.03 / 27 = 39.41 ?
-        // - originX = 128 * 29 = 3712
-        // - screenX = (67.36 - 39.41) * 29 + 3712 = 4522.55 ?
-        // - screenY = (67.36 + 39.41) * 13.5 = 1441.40 ?
-        // - Matches mouse position (4523, 1443) in Tiled! ?
-        //
-        // ==========================================================================
-        
+        // Tiled's screen origin for display purposes (NOT used in world coords)
+        // This is only for reference - our coordinate system doesn't need it
         (void)minTileX;
         (void)minTileY;
         (void)maxTileX;
@@ -104,8 +118,6 @@ namespace Tiled {
         int mapHeightTiles = maxTileY - minTileY + 1;
         float halfTileWidth = tileWidth * 0.5f;
         
-        // Origin X = map height in tiles * half tile width
-        // Origin Y = 0 (top of diamond)
         outOriginX = mapHeightTiles * halfTileWidth;
         outOriginY = 0.0f;
     }

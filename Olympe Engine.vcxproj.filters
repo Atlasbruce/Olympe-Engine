@@ -627,6 +627,7 @@
     <None Include="olympe.ini">
       <Filter>Fichiers sources</Filter>
     </None>
+    <None Include="Documentation\TILED_ISOMETRIC.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

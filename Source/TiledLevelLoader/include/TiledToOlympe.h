@@ -1,8 +1,7 @@
 /*
- * TiledToOlympe.h - Converter from Tiled format to Olympe LevelDefinition
+ * TiledToOlympe.h - TMJ to Olympe Engine Level Converter
  * 
- * Converts loaded Tiled maps to Olympe Engine's internal level format,
- * including:
+ * Converts Tiled maps (.tmj) to Olympe Engine's internal level format:
  * - Tile layers -> tileMap grid
  * - Object layers -> entities (with prefab mapping)
  * - Collision objects -> collisionMap
@@ -10,6 +9,17 @@
  * - Polyline objects -> patrol paths
  * - Image layers -> parallax layer metadata
  * - Custom properties -> entity overrides
+ * 
+ * ISOMETRIC COORDINATE CONVERSION:
+ * --------------------------------
+ * For isometric maps, TMJ stores object positions where BOTH X and Y are
+ * measured in tileHeight units. The conversion formula is:
+ *   tileX = tmjPixelX / tileHeight
+ *   tileY = tmjPixelY / tileHeight
+ *   worldX = (tileX - tileY) * (tileWidth / 2)
+ *   worldY = (tileX + tileY) * (tileHeight / 2)
+ * 
+ * See TiledToOlympe.cpp and IsometricProjection.cpp for implementation.
  */
 
 #pragma once

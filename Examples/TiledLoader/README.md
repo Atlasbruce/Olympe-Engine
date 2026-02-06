@@ -23,9 +23,23 @@ g++ -std=c++14 example_load_tiled_map.cpp -I../../Source -L../../build -lTiledLe
 ### 2. example_isometric.cpp
 Demonstrates isometric map support:
 - Loading isometric maps
-- World ↔ isometric coordinate transformations
+- TMJ object coordinate → world coordinate conversion
 - Mouse picking in isometric view
 - Calculating screen positions for tiles
+
+**Key Formula:**
+Tiled stores isometric object positions where BOTH X and Y are measured in `tileHeight` units:
+```cpp
+// TMJ pixel coords → tile coords (both divided by tileHeight!)
+float tileX = tmjX / tileHeight;
+float tileY = tmjY / tileHeight;
+
+// Standard isometric projection
+float worldX = (tileX - tileY) * (tileWidth / 2);
+float worldY = (tileX + tileY) * (tileHeight / 2);
+```
+
+See [Documentation/TILED_ISOMETRIC.md](../../Documentation/TILED_ISOMETRIC.md) for detailed explanation.
 
 **Usage:**
 ```cpp
