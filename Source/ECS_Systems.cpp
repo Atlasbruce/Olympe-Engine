@@ -2040,9 +2040,21 @@ void GridSystem::RenderCollisionOverlay(const CameraTransform& cam, const GridSe
 	SDL_FRect bounds = GetWorldVisibleBounds(cam);
 	
 	// Convert world bounds to grid coordinates
+	// For isometric grids, we need to check all 4 corners to get proper min/max bounds
 	int minGridX, minGridY, maxGridX, maxGridY;
-	collMap.WorldToGrid(bounds.x, bounds.y, minGridX, minGridY);
-	collMap.WorldToGrid(bounds.x + bounds.w, bounds.y + bounds.h, maxGridX, maxGridY);
+	
+	// Check all four corners of the world visible bounds
+	int tlX, tlY, trX, trY, blX, blY, brX, brY;
+	collMap.WorldToGrid(bounds.x, bounds.y, tlX, tlY); // Top-left
+	collMap.WorldToGrid(bounds.x + bounds.w, bounds.y, trX, trY); // Top-right
+	collMap.WorldToGrid(bounds.x, bounds.y + bounds.h, blX, blY); // Bottom-left
+	collMap.WorldToGrid(bounds.x + bounds.w, bounds.y + bounds.h, brX, brY); // Bottom-right
+	
+	// Find min/max across all corners
+	minGridX = std::min({tlX, trX, blX, brX});
+	minGridY = std::min({tlY, trY, blY, brY});
+	maxGridX = std::max({tlX, trX, blX, brX});
+	maxGridY = std::max({tlY, trY, blY, brY});
 	
 	// Clamp to valid grid range
 	minGridX = std::max(0, minGridX - 1);
@@ -2059,6 +2071,9 @@ void GridSystem::RenderCollisionOverlay(const CameraTransform& cam, const GridSe
 		SYSTEM_LOG << "[GridSystem] RenderCollisionOverlay call #" << renderCount << "\n";
 		SYSTEM_LOG << "  World bounds: x=" << bounds.x << ", y=" << bounds.y 
 		           << ", w=" << bounds.w << ", h=" << bounds.h << "\n";
+		SYSTEM_LOG << "  Corner grid coords: TL(" << tlX << "," << tlY << ") TR(" 
+		           << trX << "," << trY << ") BL(" << blX << "," << blY << ") BR(" 
+		           << brX << "," << brY << ")\n";
 		SYSTEM_LOG << "  Grid range: (" << minGridX << "," << minGridY << ") to (" 
 		           << maxGridX << "," << maxGridY << ")\n";
 		SYSTEM_LOG << "  Tiles to scan: " << ((maxGridX - minGridX + 1) * (maxGridY - minGridY + 1)) << "\n";
@@ -2160,9 +2175,21 @@ void GridSystem::RenderNavigationOverlay(const CameraTransform& cam, const GridS
 	SDL_FRect bounds = GetWorldVisibleBounds(cam);
 	
 	// Convert world bounds to grid coordinates
+	// For isometric grids, we need to check all 4 corners to get proper min/max bounds
 	int minGridX, minGridY, maxGridX, maxGridY;
-	collMap.WorldToGrid(bounds.x, bounds.y, minGridX, minGridY);
-	collMap.WorldToGrid(bounds.x + bounds.w, bounds.y + bounds.h, maxGridX, maxGridY);
+	
+	// Check all four corners of the world visible bounds
+	int tlX, tlY, trX, trY, blX, blY, brX, brY;
+	collMap.WorldToGrid(bounds.x, bounds.y, tlX, tlY); // Top-left
+	collMap.WorldToGrid(bounds.x + bounds.w, bounds.y, trX, trY); // Top-right
+	collMap.WorldToGrid(bounds.x, bounds.y + bounds.h, blX, blY); // Bottom-left
+	collMap.WorldToGrid(bounds.x + bounds.w, bounds.y + bounds.h, brX, brY); // Bottom-right
+	
+	// Find min/max across all corners
+	minGridX = std::min({tlX, trX, blX, brX});
+	minGridY = std::min({tlY, trY, blY, brY});
+	maxGridX = std::max({tlX, trX, blX, brX});
+	maxGridY = std::max({tlY, trY, blY, brY});
 	
 	// Clamp to valid grid range
 	minGridX = std::max(0, minGridX - 1);
@@ -2179,6 +2206,9 @@ void GridSystem::RenderNavigationOverlay(const CameraTransform& cam, const GridS
 		SYSTEM_LOG << "[GridSystem] RenderNavigationOverlay call #" << renderCount << "\n";
 		SYSTEM_LOG << "  World bounds: x=" << bounds.x << ", y=" << bounds.y 
 		           << ", w=" << bounds.w << ", h=" << bounds.h << "\n";
+		SYSTEM_LOG << "  Corner grid coords: TL(" << tlX << "," << tlY << ") TR(" 
+		           << trX << "," << trY << ") BL(" << blX << "," << blY << ") BR(" 
+		           << brX << "," << brY << ")\n";
 		SYSTEM_LOG << "  Grid range: (" << minGridX << "," << minGridY << ") to (" 
 		           << maxGridX << "," << maxGridY << ")\n";
 		SYSTEM_LOG << "  Tiles to scan: " << ((maxGridX - minGridX + 1) * (maxGridY - minGridY + 1)) << "\n";
