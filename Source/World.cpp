@@ -621,7 +621,6 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 		SYSTEM_LOG << "    Layer '" << layer->name << "' navigation properties:\n";
 		SYSTEM_LOG << "      - isTilesetWalkable: " << (props.isTilesetWalkable ? "true" : "false") << "\n";
 		SYSTEM_LOG << "      - useTilesetBorder: " << (props.useTilesetBorder ? "true" : "false") << "\n";
-		SYSTEM_LOG << "      Processing layer '" << layer->name << "' for navigation...\n";
 
 		// Use layer dimensions, clamped to map bounds
 		int layerW = std::min(layer->width, mapWidth);
@@ -681,6 +680,10 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 		}
 		
 		// Second pass: Mark borders if useTilesetBorder is true
+		// 8-directional neighbor offsets (works for all projections)
+		const int dx[] = {-1, 0, 1, -1, 1, -1, 0, 1};
+		const int dy[] = {-1, -1, -1, 0, 0, 1, 1, 1};
+		
 		if (props.useTilesetBorder)
 		{
 			index = 0;
@@ -698,10 +701,6 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 					{
 						// Check all 8 directions for non-empty tiles
 						bool hasNonEmptyNeighbor = false;
-						
-						// 8-directional neighbor checks (works for all projections)
-						const int dx[] = {-1, 0, 1, -1, 1, -1, 0, 1};
-						const int dy[] = {-1, -1, -1, 0, 0, 1, 1, 1};
 						
 						for (int dir = 0; dir < 8; ++dir)
 						{
@@ -810,11 +809,11 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 					
 					if (collMap.IsValidGridPosition(cx, cy))
 					{
-						TileProperties props = collMap.GetTileProperties(cx, cy);
-						props.isBlocked = true;
-						props.isNavigable = false;
-						props.traversalCost = 999.0f;
-						collMap.SetTileProperties(cx, cy, props);
+						TileProperties objProps = collMap.GetTileProperties(cx, cy);
+						objProps.isBlocked = true;
+						objProps.isNavigable = false;
+						objProps.traversalCost = 999.0f;
+						collMap.SetTileProperties(cx, cy, objProps);
 						objectCollisionTiles++;
 					}
 				}

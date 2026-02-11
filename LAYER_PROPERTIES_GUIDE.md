@@ -11,7 +11,7 @@ Add these **optional** boolean properties to tile layers in Tiled MapEditor:
 | Property | Type | Default | Behavior |
 |----------|------|---------|----------|
 | `isTilesetWalkable` | `bool` | N/A | If `true`: non-empty tiles (GID ≠ 0) are **navigable**<br>If `false`: non-empty tiles are **collisions/obstacles** |
-| `useTilesetBorder` | `bool` | N/A | If `true`: empty tiles (GID = 0) **adjacent** to non-empty tiles are **border collisions**<br>If `false`: empty tiles adjacent to non-empty tiles are **navigable** |
+| `useTilesetBorder` | `bool` | N/A | If `true`: empty tiles (GID = 0) **adjacent** to non-empty tiles are **border collisions**<br>If `false` or not set: border detection is not performed |
 
 ## Key Rules
 
