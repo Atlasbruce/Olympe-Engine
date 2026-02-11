@@ -2002,6 +2002,8 @@ void GridSystem::RenderCollisionOverlay(const CameraTransform& cam, const GridSe
 	
 	// One-time diagnostic logging
 	static bool firstCall = true;
+	static int renderCount = 0;
+	
 	if (firstCall)
 	{
 		SYSTEM_LOG << "[GridSystem] RenderCollisionOverlay first call\n";
@@ -2013,6 +2015,9 @@ void GridSystem::RenderCollisionOverlay(const CameraTransform& cam, const GridSe
 		           << (int)s.collisionColors[s.activeCollisionLayer].g << ","
 		           << (int)s.collisionColors[s.activeCollisionLayer].b << ","
 		           << (int)s.collisionColors[s.activeCollisionLayer].a << ")\n";
+		SYSTEM_LOG << "  Tile size: " << collMap.GetTileWidth() 
+		           << "x" << collMap.GetTileHeight() << "\n";
+		SYSTEM_LOG << "  Projection type: " << (int)collMap.GetProjection() << "\n";
 		firstCall = false;
 	}
 	
@@ -2048,16 +2053,40 @@ void GridSystem::RenderCollisionOverlay(const CameraTransform& cam, const GridSe
 	// Get color for this layer
 	SDL_Color overlayColor = s.collisionColors[s.activeCollisionLayer];
 	
+	// DEBUG: Log rendering bounds and tile scanning (first 3 calls only)
+	if (renderCount < 3)
+	{
+		SYSTEM_LOG << "[GridSystem] RenderCollisionOverlay call #" << renderCount << "\n";
+		SYSTEM_LOG << "  World bounds: x=" << bounds.x << ", y=" << bounds.y 
+		           << ", w=" << bounds.w << ", h=" << bounds.h << "\n";
+		SYSTEM_LOG << "  Grid range: (" << minGridX << "," << minGridY << ") to (" 
+		           << maxGridX << "," << maxGridY << ")\n";
+		SYSTEM_LOG << "  Tiles to scan: " << ((maxGridX - minGridX + 1) * (maxGridY - minGridY + 1)) << "\n";
+	}
+	
 	// Render collision tiles
+	int blockedCount = 0;
+	int tilesScanned = 0;
+	
 	for (int y = minGridY; y <= maxGridY; ++y)
 	{
 		for (int x = minGridX; x <= maxGridX; ++x)
 		{
+			tilesScanned++;
 			const TileProperties& tile = layerData[y][x];
 			
 			// Only render blocked tiles
 			if (tile.isBlocked)
 			{
+				blockedCount++;
+				
+				// DEBUG: Log first 5 blocked tiles found
+				if (renderCount < 3 && blockedCount <= 5)
+				{
+					SYSTEM_LOG << "  -> Blocked tile #" << blockedCount << " at grid (" 
+					           << x << "," << y << ")\n";
+				}
+				
 				float worldX, worldY;
 				collMap.GridToWorld(x, y, worldX, worldY);
 				
@@ -2075,6 +2104,14 @@ void GridSystem::RenderCollisionOverlay(const CameraTransform& cam, const GridSe
 			}
 		}
 	}
+	
+	// DEBUG: Summary logging (first 3 calls only)
+	if (renderCount < 3)
+	{
+		SYSTEM_LOG << "  -> Scanned " << tilesScanned << " tiles, found " 
+		           << blockedCount << " blocked tiles\n";
+		renderCount++;
+	}
 }
 
 void GridSystem::RenderNavigationOverlay(const CameraTransform& cam, const GridSettings_data& s)
@@ -2085,12 +2122,22 @@ void GridSystem::RenderNavigationOverlay(const CameraTransform& cam, const GridS
 	
 	// One-time diagnostic logging
 	static bool firstCall = true;
+	static int renderCount = 0;
+	
 	if (firstCall)
 	{
 		SYSTEM_LOG << "[GridSystem] RenderNavigationOverlay first call\n";
 		SYSTEM_LOG << "  NavigationMap dimensions: " << collMap.GetWidth() 
 		           << "x" << collMap.GetHeight() << "\n";
 		SYSTEM_LOG << "  Active layer: " << (int)s.activeNavigationLayer << "\n";
+		SYSTEM_LOG << "  Overlay color: rgba(" 
+		           << (int)s.navigationColors[s.activeNavigationLayer].r << ","
+		           << (int)s.navigationColors[s.activeNavigationLayer].g << ","
+		           << (int)s.navigationColors[s.activeNavigationLayer].b << ","
+		           << (int)s.navigationColors[s.activeNavigationLayer].a << ")\n";
+		SYSTEM_LOG << "  Tile size: " << collMap.GetTileWidth() 
+		           << "x" << collMap.GetTileHeight() << "\n";
+		SYSTEM_LOG << "  Projection type: " << (int)collMap.GetProjection() << "\n";
 		firstCall = false;
 	}
 	
@@ -2126,18 +2173,48 @@ void GridSystem::RenderNavigationOverlay(const CameraTransform& cam, const GridS
 	// Get color for this layer
 	SDL_Color overlayColor = s.navigationColors[s.activeNavigationLayer];
 	
+	// DEBUG: Log rendering bounds and tile scanning (first 3 calls only)
+	if (renderCount < 3)
+	{
+		SYSTEM_LOG << "[GridSystem] RenderNavigationOverlay call #" << renderCount << "\n";
+		SYSTEM_LOG << "  World bounds: x=" << bounds.x << ", y=" << bounds.y 
+		           << ", w=" << bounds.w << ", h=" << bounds.h << "\n";
+		SYSTEM_LOG << "  Grid range: (" << minGridX << "," << minGridY << ") to (" 
+		           << maxGridX << "," << maxGridY << ")\n";
+		SYSTEM_LOG << "  Tiles to scan: " << ((maxGridX - minGridX + 1) * (maxGridY - minGridY + 1)) << "\n";
+	}
+	
 	// Render navigable tiles
+	int navigableCount = 0;
+	int tilesScanned = 0;
+	
 	for (int y = minGridY; y <= maxGridY; ++y)
 	{
 		for (int x = minGridX; x <= maxGridX; ++x)
 		{
+			tilesScanned++;
 			const TileProperties& tile = layerData[y][x];
 			
 			// Only render navigable tiles (and not blocked)
 			if (tile.isNavigable && !tile.isBlocked)
 			{
+				navigableCount++;
+				
+				// DEBUG: Log first 10 navigable tiles found
+				if (renderCount < 3 && navigableCount <= 10)
+				{
+					SYSTEM_LOG << "  -> Navigable tile #" << navigableCount << " at grid (" 
+					           << x << "," << y << ")\n";
+				}
+				
 				float worldX, worldY;
 				collMap.GridToWorld(x, y, worldX, worldY);
+				
+				// DEBUG: Log world coordinates for first few tiles
+				if (renderCount < 3 && navigableCount <= 3)
+				{
+					SYSTEM_LOG << "     World coords: (" << worldX << "," << worldY << ")\n";
+				}
 				
 				// Adjust to tile top-left corner (GridToWorld returns center)
 				float tileWidth = collMap.GetTileWidth();
@@ -2148,6 +2225,14 @@ void GridSystem::RenderNavigationOverlay(const CameraTransform& cam, const GridS
 				DrawFilledRectWorld(cam, Vector(worldX, worldY, 0.0f), tileWidth, tileHeight, overlayColor);
 			}
 		}
+	}
+	
+	// DEBUG: Summary logging (first 3 calls only)
+	if (renderCount < 3)
+	{
+		SYSTEM_LOG << "  -> Scanned " << tilesScanned << " tiles, found " 
+		           << navigableCount << " navigable tiles\n";
+		renderCount++;
 	}
 }
 
