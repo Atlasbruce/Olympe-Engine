@@ -521,28 +521,31 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 		projection = GridProjectionType::HexAxial;
 	
 	// Calculate proper tile pixel dimensions
-	float tileWidth = 0.0f;
-	float tileHeight = 0.0f;
+	// TMX/TMJ flip flags mask: bits 29-31 encode horizontal flip, vertical flip, and diagonal flip
+	const uint32_t TILE_FLIP_FLAGS_MASK = 0xE0000000;
+	
+	float tilePixelWidth = 0.0f;
+	float tilePixelHeight = 0.0f;
 	
 	if (projection == GridProjectionType::Iso)
 	{
 		// For isometric, calculate from world bounds if available
 		if (levelDef.mapConfig.mapWidth > 0 && mapWidth > 0)
 		{
-			tileWidth = static_cast<float>(levelDef.mapConfig.mapWidth) / static_cast<float>(mapWidth);
+			tilePixelWidth = static_cast<float>(levelDef.mapConfig.mapWidth) / static_cast<float>(mapWidth);
 		}
 		else
 		{
-			tileWidth = 64.0f; // Default isometric tile width
+			tilePixelWidth = 64.0f; // Default isometric tile width
 		}
 		
 		if (levelDef.mapConfig.mapHeight > 0 && mapHeight > 0)
 		{
-			tileHeight = static_cast<float>(levelDef.mapConfig.mapHeight) / static_cast<float>(mapHeight);
+			tilePixelHeight = static_cast<float>(levelDef.mapConfig.mapHeight) / static_cast<float>(mapHeight);
 		}
 		else
 		{
-			tileHeight = tileWidth / 2.0f; // Isometric 2:1 ratio
+			tilePixelHeight = tilePixelWidth / 2.0f; // Isometric 2:1 ratio
 		}
 	}
 	else // Orthogonal or Hexagonal
@@ -550,26 +553,26 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 		// Use tilewidth/tileheight from TMJ if they look like pixel dimensions
 		if (tiledMap.tilewidth > mapWidth && tiledMap.tileheight > mapHeight)
 		{
-			tileWidth = static_cast<float>(tiledMap.tilewidth);
-			tileHeight = static_cast<float>(tiledMap.tileheight);
+			tilePixelWidth = static_cast<float>(tiledMap.tilewidth);
+			tilePixelHeight = static_cast<float>(tiledMap.tileheight);
 		}
 		else
 		{
-			tileWidth = 32.0f;  // Fallback
-			tileHeight = 32.0f;
+			tilePixelWidth = 32.0f;  // Fallback
+			tilePixelHeight = 32.0f;
 		}
 	}
 	
-	SYSTEM_LOG << "  Calculated tile pixel size: " << tileWidth << "x" << tileHeight << " px\n";
+	SYSTEM_LOG << "  Calculated tile pixel size: " << tilePixelWidth << "x" << tilePixelHeight << " px\n";
 	SYSTEM_LOG << "  Projection: " << orientation << " (type=" << static_cast<int>(projection) << ")\n";
 	
 	// Initialize collision map (single layer for now, can be extended later)
 	CollisionMap& collMap = CollisionMap::Get();
-	collMap.Initialize(mapWidth, mapHeight, projection, tileWidth, tileHeight, 1);
+	collMap.Initialize(mapWidth, mapHeight, projection, tilePixelWidth, tilePixelHeight, 1);
 	
 	// Initialize navigation map
 	NavigationMap& navMap = NavigationMap::Get();
-	navMap.Initialize(mapWidth, mapHeight, projection, tileWidth, tileHeight, 1);
+	navMap.Initialize(mapWidth, mapHeight, projection, tilePixelWidth, tilePixelHeight, 1);
 	
 	SYSTEM_LOG << "  -> CollisionMap initialized: " << mapWidth << "x" << mapHeight 
 	           << " (" << (mapWidth * mapHeight) << " tiles)\n";
@@ -624,7 +627,7 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 				}
 
 				uint32_t gid = layer->data[index];
-				uint32_t tileId = gid & ~(0xE0000000); // Remove flip flags
+				uint32_t tileId = gid & ~TILE_FLIP_FLAGS_MASK; // Remove flip flags
 
 				if (tileId > 0) // Tile exists (graphic tile)
 				{
@@ -699,7 +702,7 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 				}
 
 				uint32_t gid = layer->data[index];
-				uint32_t tileId = gid & ~(0xE0000000); // Remove flip flags
+				uint32_t tileId = gid & ~TILE_FLIP_FLAGS_MASK; // Remove flip flags
 
 				// Collision tile exists (non-zero GID) = blocked
 				if (tileId > 0)
@@ -745,8 +748,8 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 			int gridX, gridY;
 			collMap.WorldToGrid(obj.x, obj.y, gridX, gridY);
 			
-			int gridW = static_cast<int>(std::ceil(obj.width / tileWidth));
-			int gridH = static_cast<int>(std::ceil(obj.height / tileHeight));
+			int gridW = static_cast<int>(std::ceil(obj.width / tilePixelWidth));
+			int gridH = static_cast<int>(std::ceil(obj.height / tilePixelHeight));
 
 			// Mark tiles within object bounds as blocked
 			for (int dy = 0; dy < gridH; ++dy)
