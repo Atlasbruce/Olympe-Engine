@@ -2047,6 +2047,10 @@ void GridSystem::RenderCollisionOverlay(const CameraTransform& cam, const GridSe
 				worldY -= tileHeight * 0.5f;
 				
 				DrawFilledRectWorld(cam, Vector(worldX, worldY, 0.0f), tileWidth, tileHeight, overlayColor);
+
+				// Optional: draw a translucid purple circle for blocked tiles
+				SDL_SetRenderDrawColor(renderer, 128, 0, 128, 128); // Semi-transparent purple				
+				Draw_FilledCircle((int) worldX + tileWidth * 0.5f, (int)worldY + tileHeight * 0.5f, 5.f);
 			}
 		}
 	}

@@ -509,6 +509,15 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 					collMap.SetTileProperties(x, y, props);
 					++navigableTiles;
 				}
+    //            else // it is a collision tile (empty tile = blocked)
+    //            {
+    //                TileProperties props;
+    //                props.isNavigable = false;
+    //                props.isBlocked = true;
+    //                props.traversalCost = 999.0f; // Large but finite cost for impassable tiles
+    //                collMap.SetTileProperties(x, y, props);
+				//	collMap.SetCollision(x, y, true); // For backward compatibility with HasCollision checks
+				//}
 			}
 		}
 	}
