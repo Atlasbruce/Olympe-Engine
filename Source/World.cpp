@@ -648,11 +648,11 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 					navigableTiles++;
 					tilesInThisLayer++;
 					
-					// DEBUG: Log first 5 navigable tiles set
+					// DEBUG: Log first 5 navigable tiles in this layer
 					if (tilesInThisLayer <= 5)
 					{
 						SYSTEM_LOG << "      DEBUG: Set navigable at tile (" << x << "," << y 
-						           << "), tileId=" << tileId << "\n";
+						           << "), tileId=" << tileId << " in layer '" << layer->name << "'\n";
 					}
 				}
 				else // Empty tile = collision by default (provides boundaries when no explicit collision layers exist)
@@ -813,11 +813,12 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 	// DEBUG: Verify that tiles can be read back correctly
 	SYSTEM_LOG << "\n";
 	SYSTEM_LOG << "  DEBUG: Verifying tile data can be read back...\n";
+	constexpr int VERIFY_SCAN_SIZE = 10; // Sample grid size for verification
 	int verifyNavigable = 0;
 	int verifyBlocked = 0;
-	for (int y = 0; y < std::min(10, mapHeight); ++y)
+	for (int y = 0; y < std::min(VERIFY_SCAN_SIZE, mapHeight); ++y)
 	{
-		for (int x = 0; x < std::min(10, mapWidth); ++x)
+		for (int x = 0; x < std::min(VERIFY_SCAN_SIZE, mapWidth); ++x)
 		{
 			const TileProperties& tile = collMap.GetTileProperties(x, y);
 			if (tile.isNavigable && !tile.isBlocked)
@@ -838,7 +839,8 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 			}
 		}
 	}
-	SYSTEM_LOG << "    -> In first 10x10 grid: " << verifyNavigable << " navigable, " 
+	SYSTEM_LOG << "    -> In first " << VERIFY_SCAN_SIZE << "x" << VERIFY_SCAN_SIZE 
+	           << " grid: " << verifyNavigable << " navigable, " 
 	           << verifyBlocked << " blocked\n";
 	
 	SYSTEM_LOG << "+==========================================================+\n";

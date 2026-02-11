@@ -2002,7 +2002,7 @@ void GridSystem::RenderCollisionOverlay(const CameraTransform& cam, const GridSe
 	
 	// One-time diagnostic logging
 	static bool firstCall = true;
-	static int renderCount = 0;
+	static int renderCount = 0; // Tracks render calls for limited debug output
 	
 	if (firstCall)
 	{
@@ -2137,7 +2137,7 @@ void GridSystem::RenderNavigationOverlay(const CameraTransform& cam, const GridS
 	
 	// One-time diagnostic logging
 	static bool firstCall = true;
-	static int renderCount = 0;
+	static int renderCount = 0; // Tracks render calls for limited debug output
 	
 	if (firstCall)
 	{
@@ -2219,11 +2219,10 @@ void GridSystem::RenderNavigationOverlay(const CameraTransform& cam, const GridS
 	int tilesScanned = 0;
 	
 	// DEBUG: Test rendering a known tile position (e.g., player spawn at ~67,39 based on logs)
-	static bool testKnownTile = true;
-	if (testKnownTile && renderCount < 3)
+	if (renderCount < 3)
 	{
 		// Test if tile (67, 39) is navigable (expected from problem statement)
-		int testX = 67, testY = 39;
+		constexpr int testX = 67, testY = 39;
 		if (testX >= 0 && testX < collMap.GetWidth() && testY >= 0 && testY < collMap.GetHeight())
 		{
 			const TileProperties& testTile = layerData[testY][testX];
