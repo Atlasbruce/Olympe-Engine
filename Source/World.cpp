@@ -521,7 +521,8 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 		projection = GridProjectionType::HexAxial;
 	
 	// Calculate proper tile pixel dimensions
-	// TMX/TMJ flip flags mask: bits 29-31 encode horizontal flip, vertical flip, and diagonal flip
+	// TMX/TMJ flip flags mask: 0xE0000000 represents bits 29-31 (horizontal flip, vertical flip, diagonal flip)
+	// Reference: https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#tile-flipping
 	const uint32_t TILE_FLIP_FLAGS_MASK = 0xE0000000;
 	
 	float tilePixelWidth = 0.0f;
@@ -561,6 +562,14 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 			tilePixelWidth = 32.0f;  // Fallback
 			tilePixelHeight = 32.0f;
 		}
+	}
+	
+	// Validate tile pixel dimensions
+	if (tilePixelWidth <= 0.0f || tilePixelHeight <= 0.0f)
+	{
+		SYSTEM_LOG << "  X Invalid tile pixel dimensions, using defaults\n";
+		tilePixelWidth = 32.0f;
+		tilePixelHeight = 32.0f;
 	}
 	
 	SYSTEM_LOG << "  Calculated tile pixel size: " << tilePixelWidth << "x" << tilePixelHeight << " px\n";
@@ -639,7 +648,7 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 					navigableTiles++;
 					tilesInThisLayer++;
 				}
-				else // FALLBACK: Empty tile = collision by default
+				else // Empty tile = collision by default (provides boundaries when no explicit collision layers exist)
 				{
 					TileProperties props;
 					props.isNavigable = false;
