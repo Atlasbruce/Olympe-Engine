@@ -1999,7 +1999,28 @@ void GridSystem::RenderCollisionOverlay(const CameraTransform& cam, const GridSe
 	if (!s.showCollisionOverlay) return;
 	
 	CollisionMap& collMap = CollisionMap::Get();
-	if (collMap.GetWidth() == 0 || collMap.GetHeight() == 0) return;
+	
+	// One-time diagnostic logging
+	static bool firstCall = true;
+	if (firstCall)
+	{
+		SYSTEM_LOG << "[GridSystem] RenderCollisionOverlay first call\n";
+		SYSTEM_LOG << "  CollisionMap dimensions: " << collMap.GetWidth() 
+		           << "x" << collMap.GetHeight() << "\n";
+		SYSTEM_LOG << "  Active layer: " << (int)s.activeCollisionLayer << "\n";
+		SYSTEM_LOG << "  Overlay color: rgba(" 
+		           << (int)s.collisionColors[s.activeCollisionLayer].r << ","
+		           << (int)s.collisionColors[s.activeCollisionLayer].g << ","
+		           << (int)s.collisionColors[s.activeCollisionLayer].b << ","
+		           << (int)s.collisionColors[s.activeCollisionLayer].a << ")\n";
+		firstCall = false;
+	}
+	
+	if (collMap.GetWidth() == 0 || collMap.GetHeight() == 0)
+	{
+		SYSTEM_LOG << "[GridSystem] ERROR: CollisionMap is EMPTY (not initialized)!\n";
+		return;
+	}
 	
 	SDL_Renderer* renderer = GameEngine::renderer;
 	if (!renderer) return;
@@ -2061,7 +2082,23 @@ void GridSystem::RenderNavigationOverlay(const CameraTransform& cam, const GridS
 	if (!s.showNavigationOverlay) return;
 	
 	CollisionMap& collMap = CollisionMap::Get();
-	if (collMap.GetWidth() == 0 || collMap.GetHeight() == 0) return;
+	
+	// One-time diagnostic logging
+	static bool firstCall = true;
+	if (firstCall)
+	{
+		SYSTEM_LOG << "[GridSystem] RenderNavigationOverlay first call\n";
+		SYSTEM_LOG << "  NavigationMap dimensions: " << collMap.GetWidth() 
+		           << "x" << collMap.GetHeight() << "\n";
+		SYSTEM_LOG << "  Active layer: " << (int)s.activeNavigationLayer << "\n";
+		firstCall = false;
+	}
+	
+	if (collMap.GetWidth() == 0 || collMap.GetHeight() == 0)
+	{
+		SYSTEM_LOG << "[GridSystem] ERROR: NavigationMap is EMPTY (not initialized)!\n";
+		return;
+	}
 	
 	SDL_Renderer* renderer = GameEngine::renderer;
 	if (!renderer) return;

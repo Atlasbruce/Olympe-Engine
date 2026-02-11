@@ -426,9 +426,33 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 	SYSTEM_LOG << "| COLLISION & NAVIGATION MAP GENERATION                    |\n";
 	SYSTEM_LOG << "+==========================================================+\n";
 	
-	// Extract map dimensions
-	int mapWidth = levelDef.mapConfig.mapWidth;
-	int mapHeight = levelDef.mapConfig.mapHeight;
+	// Calculate actual dimensions from tile layers (not TMJ config)
+	int mapWidth = 0;
+	int mapHeight = 0;
+	
+	// Scan all tile layers to find actual dimensions
+	for (size_t layerIdx = 0; layerIdx < tiledMap.layers.size(); ++layerIdx)
+	{
+		const std::shared_ptr<Olympe::Tiled::TiledLayer>& layer = tiledMap.layers[layerIdx];
+		if (layer && layer->type == Olympe::Tiled::LayerType::TileLayer)
+		{
+			mapWidth = std::max(mapWidth, layer->width);
+			mapHeight = std::max(mapHeight, layer->height);
+		}
+	}
+	
+	// Fallback to config if no layers found
+	if (mapWidth == 0 || mapHeight == 0)
+	{
+		mapWidth = levelDef.mapConfig.mapWidth;
+		mapHeight = levelDef.mapConfig.mapHeight;
+		SYSTEM_LOG << "  WARNING: No tile layers found, using TMJ config dimensions\n";
+	}
+	
+	SYSTEM_LOG << "  TMJ declared dimensions: " 
+	           << levelDef.mapConfig.mapWidth << "x" << levelDef.mapConfig.mapHeight << "\n";
+	SYSTEM_LOG << "  Actual layer dimensions: " << mapWidth << "x" << mapHeight << "\n";
+	
 	int tileWidth = levelDef.mapConfig.tileWidth > 0 ? levelDef.mapConfig.tileWidth : 32;
 	int tileHeight = levelDef.mapConfig.tileHeight > 0 ? levelDef.mapConfig.tileHeight : 32;
 	std::string orientation = levelDef.mapConfig.orientation;
@@ -439,8 +463,7 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 		return;
 	}
 	
-	SYSTEM_LOG << "  Map dimensions: " << mapWidth << "x" << mapHeight << "\n";
-	SYSTEM_LOG << "  Tile size: " << tileWidth << "x" << tileHeight << "\n";
+	SYSTEM_LOG << "  Tile size: " << tileWidth << "x" << tileHeight << " px\n";
 	SYSTEM_LOG << "  Orientation: " << orientation << "\n";
 	
 	// Determine projection type
@@ -488,14 +511,20 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 
 		if (isCollisionLayer) continue;
 
+		// Use layer dimensions, clamped to map bounds
+		int layerW = std::min(layer->width, mapWidth);
+		int layerH = std::min(layer->height, mapHeight);
+
 		// Process tile data for this layer (data is 1D array: index = y * width + x)
-		int layerWidth = layer->width > 0 ? layer->width : mapWidth;
-		for (int y = 0; y < mapHeight && y < layer->height; ++y)
+		int index = 0;
+		for (int y = 0; y < layerH; ++y)
 		{
-			for (int x = 0; x < mapWidth && x < layerWidth; ++x)
+			for (int x = 0; x < layerW; ++x)
 			{
-				size_t index = static_cast<size_t>(y * layerWidth + x);
-				if (index >= layer->data.size()) continue;
+				if (index >= static_cast<int>(layer->data.size()))
+				{
+					break;
+				}
 
 				uint32_t gid = layer->data[index];
 
@@ -518,6 +547,8 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
     //                collMap.SetTileProperties(x, y, props);
 				//	collMap.SetCollision(x, y, true); // For backward compatibility with HasCollision checks
 				//}
+			
+				++index;
 			}
 		}
 	}
@@ -548,14 +579,20 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 
 		if (!isCollisionLayer) continue;
 
+		// Use layer dimensions, clamped to map bounds
+		int layerW = std::min(layer->width, mapWidth);
+		int layerH = std::min(layer->height, mapHeight);
+
 		// Process collision data for this layer (data is 1D array: index = y * width + x)
-		int layerWidth = layer->width > 0 ? layer->width : mapWidth;
-		for (int y = 0; y < mapHeight && y < layer->height; ++y)
+		int index = 0;
+		for (int y = 0; y < layerH; ++y)
 		{
-			for (int x = 0; x < mapWidth && x < layerWidth; ++x)
+			for (int x = 0; x < layerW; ++x)
 			{
-				size_t index = static_cast<size_t>(y * layerWidth + x);
-				if (index >= layer->data.size()) continue;
+				if (index >= static_cast<int>(layer->data.size()))
+				{
+					break;
+				}
 
 				uint32_t gid = layer->data[index];
 
@@ -569,6 +606,8 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 					collMap.SetTileProperties(x, y, props);
 					++collisionTiles;
 				}
+				
+				++index;
 			}
 		}
 	}
