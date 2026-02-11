@@ -408,7 +408,7 @@ struct GridSettings_data
 	uint8_t activeCollisionLayer = 0;  // Which collision layer to display (0-7)
 	uint8_t activeNavigationLayer = 0; // Which navigation layer to display (0-7)
 	
-	// **NEW: Overlay colors per layer (increased alpha for better visibility)
+	// **Updated: Overlay colors per layer (increased alpha for better visibility)**
 	SDL_Color collisionColors[8] = {
 		{ 150,  50, 200, 150 },  // Ground: purple
 		{  50, 150, 255, 150 },  // Sky: cyan

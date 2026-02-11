@@ -599,6 +599,10 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 	int layersProcessed = 0;
 	int layersSkipped = 0;
 	
+	// 8-directional neighbor offsets (constant for all layers and projections)
+	const int dx[] = {-1, 0, 1, -1, 1, -1, 0, 1};
+	const int dy[] = {-1, -1, -1, 0, 0, 1, 1, 1};
+	
 	for (size_t layerIdx = 0; layerIdx < tiledMap.layers.size(); ++layerIdx)
 	{
 		const std::shared_ptr<Olympe::Tiled::TiledLayer>& layer = tiledMap.layers[layerIdx];
@@ -680,10 +684,6 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 		}
 		
 		// Second pass: Mark borders if useTilesetBorder is true
-		// 8-directional neighbor offsets (works for all projections)
-		const int dx[] = {-1, 0, 1, -1, 1, -1, 0, 1};
-		const int dy[] = {-1, -1, -1, 0, 0, 1, 1, 1};
-		
 		if (props.useTilesetBorder)
 		{
 			index = 0;
