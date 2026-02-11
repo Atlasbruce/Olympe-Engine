@@ -2218,6 +2218,28 @@ void GridSystem::RenderNavigationOverlay(const CameraTransform& cam, const GridS
 	int navigableCount = 0;
 	int tilesScanned = 0;
 	
+	// DEBUG: Test rendering a known tile position (e.g., player spawn at ~67,39 based on logs)
+	static bool testKnownTile = true;
+	if (testKnownTile && renderCount < 3)
+	{
+		// Test if tile (67, 39) is navigable (expected from problem statement)
+		int testX = 67, testY = 39;
+		if (testX >= 0 && testX < collMap.GetWidth() && testY >= 0 && testY < collMap.GetHeight())
+		{
+			const TileProperties& testTile = layerData[testY][testX];
+			SYSTEM_LOG << "  DEBUG: Test tile (" << testX << "," << testY << "): "
+			           << "navigable=" << (testTile.isNavigable ? "YES" : "NO")
+			           << ", blocked=" << (testTile.isBlocked ? "YES" : "NO") << "\n";
+			
+			// Convert to world coordinates to see if it's in viewport
+			float testWorldX, testWorldY;
+			collMap.GridToWorld(testX, testY, testWorldX, testWorldY);
+			SYSTEM_LOG << "  DEBUG: Test tile world coords: (" << testWorldX << "," << testWorldY << ")\n";
+			SYSTEM_LOG << "  DEBUG: Is in grid scan range? " 
+			           << ((testX >= minGridX && testX <= maxGridX && testY >= minGridY && testY <= maxGridY) ? "YES" : "NO") << "\n";
+		}
+	}
+	
 	for (int y = minGridY; y <= maxGridY; ++y)
 	{
 		for (int x = minGridX; x <= maxGridX; ++x)
