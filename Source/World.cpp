@@ -419,6 +419,39 @@ void World::SyncGridWithLevel(const Olympe::Editor::LevelDefinition& levelDef)
 //---------------------------------------------------------------------------------------------
 // Generate collision and navigation maps from TMJ/TMX level data
 //---------------------------------------------------------------------------------------------
+
+// Helper function to check if a layer is a collision layer
+namespace {
+	bool IsCollisionLayer(const std::shared_ptr<Olympe::Tiled::TiledLayer>& layer)
+	{
+		if (!layer) return false;
+		
+		// Check by name (case-insensitive)
+		std::string layerNameLower = layer->name;
+		std::transform(layerNameLower.begin(), layerNameLower.end(), 
+		              layerNameLower.begin(), 
+		              [](unsigned char c) { return std::tolower(c); });
+		
+		if (layerNameLower.find("collision") != std::string::npos ||
+		    layerNameLower.find("walls") != std::string::npos)
+		{
+			return true;
+		}
+		
+		// Check by property
+		for (std::map<std::string, Olympe::Tiled::TiledProperty>::const_iterator propIt = layer->properties.begin();
+		     propIt != layer->properties.end(); ++propIt)
+		{
+			if (propIt->second.name == "collision" && propIt->second.boolValue == true)
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+}
+
 void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& tiledMap,
                                                 const Olympe::Editor::LevelDefinition& levelDef)
 {
@@ -561,34 +594,7 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 		if (layer->type != Olympe::Tiled::LayerType::TileLayer) continue;
 
 		// Skip collision layers (will be processed in Phase 2)
-		std::string layerNameLower = layer->name;
-		std::transform(layerNameLower.begin(), layerNameLower.end(), 
-		              layerNameLower.begin(), ::tolower);
-		
-		bool isCollisionLayer = false;
-		
-		// Check by name
-		if (layerNameLower.find("collision") != std::string::npos ||
-		    layerNameLower.find("walls") != std::string::npos)
-		{
-			isCollisionLayer = true;
-		}
-		
-		// Check by property
-		if (!isCollisionLayer)
-		{
-			for (std::map<std::string, Olympe::Tiled::TiledProperty>::const_iterator propIt = layer->properties.begin();
-				 propIt != layer->properties.end(); ++propIt)
-			{
-				if (propIt->second.name == "collision" && propIt->second.boolValue == true)
-				{
-					isCollisionLayer = true;
-					break;
-				}
-			}
-		}
-
-		if (isCollisionLayer)
+		if (IsCollisionLayer(layer))
 		{
 			SYSTEM_LOG << "    Skipping collision layer: " << layer->name << "\n";
 			continue;
@@ -670,34 +676,7 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 		if (layer->type != Olympe::Tiled::LayerType::TileLayer) continue;
 
 		// Check if this layer is marked as a collision layer
-		std::string layerNameLower = layer->name;
-		std::transform(layerNameLower.begin(), layerNameLower.end(), 
-		              layerNameLower.begin(), ::tolower);
-		
-		bool isCollisionLayer = false;
-		
-		// Check by name
-		if (layerNameLower.find("collision") != std::string::npos ||
-		    layerNameLower.find("walls") != std::string::npos)
-		{
-			isCollisionLayer = true;
-		}
-		
-		// Check by property
-		if (!isCollisionLayer)
-		{
-			for (std::map<std::string, Olympe::Tiled::TiledProperty>::const_iterator propIt = layer->properties.begin();
-				 propIt != layer->properties.end(); ++propIt)
-			{
-				if (propIt->second.name == "collision" && propIt->second.boolValue == true)
-				{
-					isCollisionLayer = true;
-					break;
-				}
-			}
-		}
-
-		if (!isCollisionLayer) continue;
+		if (!IsCollisionLayer(layer)) continue;
 
 		SYSTEM_LOG << "    Processing collision layer: " << layer->name 
 		           << " (" << layer->width << "x" << layer->height << ")\n";
@@ -752,33 +731,7 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 		if (layer->type != Olympe::Tiled::LayerType::ObjectGroup) continue;
 
 		// Check if this object group is marked as a collision layer
-		std::string layerNameLower = layer->name;
-		std::transform(layerNameLower.begin(), layerNameLower.end(), 
-		              layerNameLower.begin(), ::tolower);
-		
-		bool isCollisionLayer = false;
-		
-		// Check by name
-		if (layerNameLower.find("collision") != std::string::npos)
-		{
-			isCollisionLayer = true;
-		}
-		
-		// Check by property
-		if (!isCollisionLayer)
-		{
-			for (std::map<std::string, Olympe::Tiled::TiledProperty>::const_iterator propIt = layer->properties.begin();
-				 propIt != layer->properties.end(); ++propIt)
-			{
-				if (propIt->second.name == "collision" && propIt->second.boolValue == true)
-				{
-					isCollisionLayer = true;
-					break;
-				}
-			}
-		}
-
-		if (!isCollisionLayer) continue;
+		if (!IsCollisionLayer(layer)) continue;
 
 		SYSTEM_LOG << "    Processing collision objects from layer: " << layer->name << "\n";
 
