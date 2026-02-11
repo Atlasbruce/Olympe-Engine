@@ -67,7 +67,7 @@ namespace Logging
 
         // Generic stream insertion
         template<typename T>
-        Log& operator<<(const T& v)
+        auto operator<<(const T& v) -> decltype(std::declval<std::ostringstream&>() << v, std::declval<Log&>())
         {
             {
                 std::lock_guard<std::mutex> lock(m_);

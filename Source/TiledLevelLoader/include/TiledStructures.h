@@ -18,6 +18,7 @@
 #include <memory>
 #include <cstdint>
 #include <functional>
+#include <ostream> // For std::ostream
 
 namespace Olympe {
 namespace Tiled {
@@ -285,6 +286,19 @@ namespace Tiled {
         Staggered,
         Hexagonal
     };
+
+    // Stream operator for MapOrientation (for logging)
+    inline std::ostream& operator<<(std::ostream& os, MapOrientation orientation)
+    {
+        switch (orientation)
+        {
+            case MapOrientation::Orthogonal: return os << "Orthogonal";
+            case MapOrientation::Isometric: return os << "Isometric";
+            case MapOrientation::Staggered: return os << "Staggered";
+            case MapOrientation::Hexagonal: return os << "Hexagonal";
+            default: return os << "Unknown";
+        }
+    }
 
     // Render order
     enum class RenderOrder
