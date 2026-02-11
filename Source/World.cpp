@@ -701,6 +701,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     SYSTEM_LOG << "  -> Patrol paths: " << levelDef.categorizedObjects.patrolPaths.size() << "\n\n";
     
     // Generate collision and navigation maps
+    SYSTEM_LOG << "[Phase 5/6] Generating Collision & Navigation Maps...\n";
     GenerateCollisionAndNavigationMaps(tiledMap, levelDef);
     
     // Synchronize grid settings with loaded level
