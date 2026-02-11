@@ -64,6 +64,42 @@ namespace Tiled {
             : type(PropertyType::String), intValue(0), floatValue(0.0f), boolValue(false) {}
     };
 
+    // Layer navigation/collision properties
+    // Used to control how tile layers are processed for navigation and collision maps
+    struct LayerProperties
+    {
+        bool hasNavigationProperties;  // true if layer has any nav/col properties
+        bool isTilesetWalkable;        // true = non-empty tiles are walkable, false = they are obstacles
+        bool useTilesetBorder;         // true = empty tiles adjacent to non-empty are borders (obstacles)
+
+        LayerProperties()
+            : hasNavigationProperties(false), isTilesetWalkable(false), useTilesetBorder(false) {}
+    };
+
+    // Helper function to parse layer navigation/collision properties
+    inline LayerProperties ParseLayerProperties(const std::map<std::string, TiledProperty>& properties)
+    {
+        LayerProperties props;
+        
+        // Check for isTilesetWalkable property
+        auto walkableIt = properties.find("isTilesetWalkable");
+        if (walkableIt != properties.end() && walkableIt->second.type == PropertyType::Bool)
+        {
+            props.hasNavigationProperties = true;
+            props.isTilesetWalkable = walkableIt->second.boolValue;
+        }
+        
+        // Check for useTilesetBorder property
+        auto borderIt = properties.find("useTilesetBorder");
+        if (borderIt != properties.end() && borderIt->second.type == PropertyType::Bool)
+        {
+            props.hasNavigationProperties = true;
+            props.useTilesetBorder = borderIt->second.boolValue;
+        }
+        
+        return props;
+    }
+
     // Chunk for infinite maps
     struct TiledChunk
     {
