@@ -142,7 +142,6 @@ public:
 	NavigationSystem();
 	virtual void Process() override;
 	
-private:
 	// Request pathfinding for entity
 	void RequestPath(EntityID entity, const Vector& targetPos);
 	
@@ -181,7 +180,6 @@ public:
     virtual void Render() override;
     void RenderForCamera(const CameraTransform& cam);
 
-private:
     const GridSettings_data* FindSettings() const;
 
     void DrawLineWorld(const CameraTransform& cam, const Vector& aWorld, const Vector& bWorld, const SDL_Color& c);
@@ -208,7 +206,6 @@ public:
     UIRenderingSystem();
     virtual void Render() override;
     
-private:
     void RenderHUD(const CameraTransform& cam);
     void RenderInGameMenu(const CameraTransform& cam);
     void RenderDebugOverlay(const CameraTransform& cam);
@@ -280,7 +277,6 @@ public:
     // Event handling
     void OnEvent(const Message& msg);
 
-private:
     // Update methods called during Process()
     void UpdateCameraInput(EntityID entity, float dt);
     void UpdateCameraFollow(EntityID entity, float dt);

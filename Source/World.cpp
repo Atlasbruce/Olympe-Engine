@@ -427,8 +427,8 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 	SYSTEM_LOG << "+==========================================================+\n";
 	
 	// Extract map dimensions
-	int mapWidth = levelDef.mapConfig.width;
-	int mapHeight = levelDef.mapConfig.height;
+	int mapWidth = levelDef.mapConfig.mapWidth;
+	int mapHeight = levelDef.mapConfig.mapHeight;
 	int tileWidth = levelDef.mapConfig.tileWidth > 0 ? levelDef.mapConfig.tileWidth : 32;
 	int tileHeight = levelDef.mapConfig.tileHeight > 0 ? levelDef.mapConfig.tileHeight : 32;
 	std::string orientation = levelDef.mapConfig.orientation;
@@ -466,28 +466,39 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 	// Process tile layers for navigation
 	// Tiles that exist = navigable, empty tiles = not navigable
 	int navigableTiles = 0;
-	for (const Olympe::Tiled::TileLayer& layer : tiledMap.tileLayers)
+	for (size_t layerIdx = 0; layerIdx < tiledMap.layers.size(); ++layerIdx)
 	{
+		const std::shared_ptr<Olympe::Tiled::TiledLayer>& layer = tiledMap.layers[layerIdx];
+		if (!layer) continue;
+
+		// Skip non-tile layers
+		if (layer->type != Olympe::Tiled::LayerType::TileLayer) continue;
+
 		// Skip layers marked as collision layers (we'll process those separately)
 		bool isCollisionLayer = false;
-		for (const Olympe::Tiled::Property& prop : layer.properties)
+		for (std::map<std::string, Olympe::Tiled::TiledProperty>::const_iterator propIt = layer->properties.begin();
+			 propIt != layer->properties.end(); ++propIt)
 		{
-			if (prop.name == "collision" && prop.value == "true")
+			if (propIt->second.name == "collision" && propIt->second.boolValue == true)
 			{
 				isCollisionLayer = true;
 				break;
 			}
 		}
-		
+
 		if (isCollisionLayer) continue;
-		
-		// Process tile data for this layer
-		for (int y = 0; y < mapHeight && y < static_cast<int>(layer.data.size()); ++y)
+
+		// Process tile data for this layer (data is 1D array: index = y * width + x)
+		int layerWidth = layer->width > 0 ? layer->width : mapWidth;
+		for (int y = 0; y < mapHeight && y < layer->height; ++y)
 		{
-			for (int x = 0; x < mapWidth && x < static_cast<int>(layer.data[y].size()); ++x)
+			for (int x = 0; x < mapWidth && x < layerWidth; ++x)
 			{
-				uint32_t gid = layer.data[y][x];
-				
+				size_t index = static_cast<size_t>(y * layerWidth + x);
+				if (index >= layer->data.size()) continue;
+
+				uint32_t gid = layer->data[index];
+
 				// Tile exists (non-zero GID) = navigable
 				if (gid != 0)
 				{
@@ -501,33 +512,44 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 			}
 		}
 	}
-	
+
 	SYSTEM_LOG << "  -> Processed tile layers: " << navigableTiles << " navigable tiles\n";
-	
+
 	// Process collision layers (mark as blocked and non-navigable)
 	int collisionTiles = 0;
-	for (const Olympe::Tiled::TileLayer& layer : tiledMap.tileLayers)
+	for (size_t layerIdx = 0; layerIdx < tiledMap.layers.size(); ++layerIdx)
 	{
+		const std::shared_ptr<Olympe::Tiled::TiledLayer>& layer = tiledMap.layers[layerIdx];
+		if (!layer) continue;
+
+		// Skip non-tile layers
+		if (layer->type != Olympe::Tiled::LayerType::TileLayer) continue;
+
 		// Check if this layer is marked as a collision layer
 		bool isCollisionLayer = false;
-		for (const Olympe::Tiled::Property& prop : layer.properties)
+		for (std::map<std::string, Olympe::Tiled::TiledProperty>::const_iterator propIt = layer->properties.begin();
+			 propIt != layer->properties.end(); ++propIt)
 		{
-			if (prop.name == "collision" && prop.value == "true")
+			if (propIt->second.name == "collision" && propIt->second.boolValue == true)
 			{
 				isCollisionLayer = true;
 				break;
 			}
 		}
-		
+
 		if (!isCollisionLayer) continue;
-		
-		// Process collision data for this layer
-		for (int y = 0; y < mapHeight && y < static_cast<int>(layer.data.size()); ++y)
+
+		// Process collision data for this layer (data is 1D array: index = y * width + x)
+		int layerWidth = layer->width > 0 ? layer->width : mapWidth;
+		for (int y = 0; y < mapHeight && y < layer->height; ++y)
 		{
-			for (int x = 0; x < mapWidth && x < static_cast<int>(layer.data[y].size()); ++x)
+			for (int x = 0; x < mapWidth && x < layerWidth; ++x)
 			{
-				uint32_t gid = layer.data[y][x];
-				
+				size_t index = static_cast<size_t>(y * layerWidth + x);
+				if (index >= layer->data.size()) continue;
+
+				uint32_t gid = layer->data[index];
+
 				// Collision tile exists (non-zero GID) = blocked
 				if (gid != 0)
 				{
@@ -541,35 +563,44 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 			}
 		}
 	}
-	
+
 	SYSTEM_LOG << "  -> Processed collision layers: " << collisionTiles << " blocked tiles\n";
-	
+
 	// Process object layers for collision (objects can also define collision)
 	// This is a simplified implementation - can be extended later
 	int collisionObjects = 0;
-	for (const Olympe::Tiled::ObjectGroup& objectGroup : tiledMap.objectGroups)
+	for (size_t layerIdx = 0; layerIdx < tiledMap.layers.size(); ++layerIdx)
 	{
+		const std::shared_ptr<Olympe::Tiled::TiledLayer>& layer = tiledMap.layers[layerIdx];
+		if (!layer) continue;
+
+		// Only process object group layers
+		if (layer->type != Olympe::Tiled::LayerType::ObjectGroup) continue;
+
 		// Check if this object group is marked as a collision layer
 		bool isCollisionLayer = false;
-		for (const Olympe::Tiled::Property& prop : objectGroup.properties)
+		for (std::map<std::string, Olympe::Tiled::TiledProperty>::const_iterator propIt = layer->properties.begin();
+			 propIt != layer->properties.end(); ++propIt)
 		{
-			if (prop.name == "collision" && prop.value == "true")
+			if (propIt->second.name == "collision" && propIt->second.boolValue == true)
 			{
 				isCollisionLayer = true;
 				break;
 			}
 		}
-		
+
 		if (!isCollisionLayer) continue;
-		
+
 		// Process objects in this group
-		for (const Olympe::Tiled::Object& obj : objectGroup.objects)
+		for (size_t objIdx = 0; objIdx < layer->objects.size(); ++objIdx)
 		{
+			const Olympe::Tiled::TiledObject& obj = layer->objects[objIdx];
+
 			// Convert object bounds to grid tiles
 			int startX, startY, endX, endY;
 			collMap.WorldToGrid(obj.x, obj.y, startX, startY);
 			collMap.WorldToGrid(obj.x + obj.width, obj.y + obj.height, endX, endY);
-			
+
 			// Mark tiles within object bounds as blocked
 			for (int y = startY; y <= endY; ++y)
 			{

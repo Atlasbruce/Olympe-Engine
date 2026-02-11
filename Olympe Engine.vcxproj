@@ -43,6 +43,7 @@
     <ClCompile Include="Source\BlueprintEditor\NodeGraphPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntitiesPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\InspectorPanel.cpp" />
+    <ClCompile Include="Source\CollisionMap.cpp" />
     <ClCompile Include="Source\ComponentDefinition.cpp" />
     <ClCompile Include="Source\drawing.cpp" />
     <ClCompile Include="source\ECS_Register.h" />

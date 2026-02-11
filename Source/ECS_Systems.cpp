@@ -1592,7 +1592,7 @@ void NavigationSystem::FollowPath(EntityID entity, float deltaTime)
 	}
 	
 	// Get current waypoint
-	const Vector& waypoint = agent.currentPath[agent.currentWaypointIndex];
+	Vector& waypoint = agent.currentPath[agent.currentWaypointIndex];
 	
 	// Calculate direction to waypoint
 	Vector direction = waypoint - position.position;

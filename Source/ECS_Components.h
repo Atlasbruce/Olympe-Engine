@@ -401,8 +401,8 @@ struct GridSettings_data
 	int lodSkipFactor = 10;          // Draw 1 line every N when LOD active
 	
 	// **NEW: Multi-layer overlay support**
-	bool showCollisionOverlay = false;
-	bool showNavigationOverlay = false;
+	bool showCollisionOverlay = true;
+	bool showNavigationOverlay = true;
 	
 	// **NEW: Layer selection for visualization**
 	uint8_t activeCollisionLayer = 0;  // Which collision layer to display (0-7)

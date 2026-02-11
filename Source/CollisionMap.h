@@ -150,7 +150,7 @@ public:
 	// Clear
 	void Clear();
 
-private:
+
 	CollisionMap() = default;
 	~CollisionMap() = default;
 	CollisionMap(const CollisionMap&) = delete;
@@ -236,7 +236,7 @@ public:
 	// Clear
 	void Clear();
 
-private:
+
 	NavigationMap() = default;
 	~NavigationMap() = default;
 	NavigationMap(const NavigationMap&) = delete;
