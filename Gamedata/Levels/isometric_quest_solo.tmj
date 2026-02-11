@@ -80,7 +80,7 @@
          "encoding":"base64",
          "height":128,
          "id":4,
-         "name":"graphicmap_on_ground",
+         "name":"graphicmap_trees",
          "opacity":1,
          "type":"tilelayer",
          "visible":true,
@@ -351,7 +351,7 @@
                  "name":"player_2",
                  "point":true,
                  "rotation":0,
-                 "type":"Guard",
+                 "type":"player",
                  "visible":true,
                  "width":0,
                  "x":1810.68,
@@ -363,7 +363,7 @@
                  "name":"player_3",
                  "point":true,
                  "rotation":0,
-                 "type":"Guard",
+                 "type":"player",
                  "visible":true,
                  "width":0,
                  "x":1840.47,
@@ -454,6 +454,17 @@
                  "y":3456
                 }],
          "opacity":1,
+         "properties":[
+                {
+                 "name":"isTilesetWalkable",
+                 "type":"bool",
+                 "value":true
+                }, 
+                {
+                 "name":"useTilesetBorder",
+                 "type":"bool",
+                 "value":true
+                }],
          "type":"objectgroup",
          "visible":true,
          "x":0,

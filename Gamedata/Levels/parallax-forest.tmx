@@ -56,6 +56,10 @@
   </object>
  </objectgroup>
  <layer id="18" name="Layer_ground_tiles" width="83" height="20">
+  <properties>
+   <property name="isTilesetWalkable" type="bool" value="false"/>
+   <property name="useTilesetBorder" type="bool" value="false"/>
+  </properties>
   <data encoding="base64" compression="zlib">
    eJzt0lEKgCAQBFA/i8D7Hzc6gSgT2fIezN+u6GBrAACQ07++QBG96TJFlzk7dXm9PL+yNzM72+Xo7NX3VbDTv/w7XeY8PZ4SyyGxALXdIzQGig==
   </data>

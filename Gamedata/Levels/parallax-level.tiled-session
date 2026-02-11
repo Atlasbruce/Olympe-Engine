@@ -46,20 +46,20 @@
             "scale": 0.75,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 757.3333333333333,
+                "x": 772,
                 "y": 611.9999999999999
             }
         },
         "isometric_quest.tmx": {
             "expandedObjectLayers": [
-                10,
-                6
+                6,
+                10
             ],
             "scale": 1,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 5016,
-                "y": 1634
+                "x": 5036,
+                "y": 1677
             }
         },
         "map_forest.tmj": {
@@ -85,14 +85,14 @@
         },
         "parallax-forest.tmx": {
             "expandedObjectLayers": [
-                2,
-                17
+                17,
+                2
             ],
             "scale": 0.25,
             "selectedLayer": 10,
             "viewCenter": {
-                "x": -3816,
-                "y": 508
+                "x": 2572,
+                "y": 228
             }
         },
         "parallax-forest.tmx#tileset 2D ortho": {
@@ -135,8 +135,8 @@
             "scale": 0.75,
             "selectedLayer": 6,
             "viewCenter": {
-                "x": 332,
-                "y": 485.33333333333326
+                "x": 449.3333333333333,
+                "y": 392
             }
         },
         "tiles-iso-1.tsx": {
@@ -173,7 +173,7 @@
         "hexa-quest.tmx"
     ],
     "project": "parallax-level.tiled-project",
-    "property.type": "string",
+    "property.type": "bool",
     "recentFiles": [
         "hexa-quest.tmx",
         "pnc-quest.tmx",

@@ -34,6 +34,17 @@
          "id":1,
          "name":"layer_ground",
          "opacity":1,
+         "properties":[
+                {
+                 "name":"isTilesetWalkable",
+                 "type":"bool",
+                 "value":true
+                }, 
+                {
+                 "name":"useTilesetBorder",
+                 "type":"bool",
+                 "value":true
+                }],
          "type":"tilelayer",
          "visible":true,
          "width":33,

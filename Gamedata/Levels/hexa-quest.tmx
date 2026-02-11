@@ -6,6 +6,10 @@
  <tileset firstgid="1" source="Hexa-tiles_1.tsx"/>
  <tileset firstgid="41" source="Trees.tsx"/>
  <layer id="1" name="layer_ground" width="33" height="26">
+  <properties>
+   <property name="isTilesetWalkable" type="bool" value="true"/>
+   <property name="useTilesetBorder" type="bool" value="true"/>
+  </properties>
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
