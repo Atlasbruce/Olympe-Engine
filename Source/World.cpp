@@ -525,10 +525,12 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 	float tilePixelWidth = static_cast<float>(tiledMap.tilewidth);
 	float tilePixelHeight = static_cast<float>(tiledMap.tileheight);
 	
-	// Validate tile pixel dimensions
-	if (tilePixelWidth <= 0.0f || tilePixelHeight <= 0.0f)
+	// Validate tile pixel dimensions (reasonable range: 4-1024 pixels)
+	if (tilePixelWidth <= 0.0f || tilePixelHeight <= 0.0f ||
+	    tilePixelWidth > 1024.0f || tilePixelHeight > 1024.0f)
 	{
-		SYSTEM_LOG << "  X Invalid tile pixel dimensions from TMJ, using defaults\n";
+		SYSTEM_LOG << "  X Invalid or unreasonable tile pixel dimensions from TMJ (" 
+		           << tilePixelWidth << "x" << tilePixelHeight << "), using defaults\n";
 		tilePixelWidth = 32.0f;
 		tilePixelHeight = 32.0f;
 	}

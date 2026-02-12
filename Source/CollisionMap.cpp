@@ -65,12 +65,14 @@ void CollisionMap::Initialize(int width, int height, GridProjectionType projecti
 				m_layers[layer][y][x].worldX = worldX;
 				m_layers[layer][y][x].worldY = worldY;
 				
+				#ifdef DEBUG_COLLISION_MAP_INIT
 				// Debug first few tiles in first layer to verify correct calculations
 				if (layer == 0 && y == 0 && x < 3)
 				{
 					SYSTEM_LOG << "    [DEBUG] Tile (" << x << "," << y << ") -> world (" 
 					           << worldX << ", " << worldY << ")\n";
 				}
+				#endif
 			}
 		}
 	}
