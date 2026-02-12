@@ -89,7 +89,7 @@ void CollisionMap::Initialize(int width, int height, GridProjectionType projecti
 					           << worldX << ", " << worldY << ")";
 					if (m_tileOffsetX != 0.0f || m_tileOffsetY != 0.0f)
 					{
-						SYSTEM_LOG << " [offset applied: (" << m_tileOffsetX << ", " << m_tileOffsetY << ")]";
+						SYSTEM_LOG << " [offset: (" << m_tileOffsetX << ", " << m_tileOffsetY << ")]";
 					}
 					SYSTEM_LOG << "\n";
 				}
