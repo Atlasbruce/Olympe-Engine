@@ -199,7 +199,7 @@ public:
     
     // **NEW: Helper functions for drawing overlay shapes**
     void DrawIsometricTileOverlay(float centerX, float centerY, float width, float height, const SDL_Color& color);
-    void DrawHexagonOverlay(float centerX, float centerY, float radius, const SDL_Color& color);
+	void DrawHexagonOverlay(float centerX, float centerY, float radius, const SDL_Color& color);
 };
 //-------------------------------------------------------------
 // UI Rendering System: Pass 2 rendering for UI/HUD/Menu (always on top)

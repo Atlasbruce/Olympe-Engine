@@ -670,9 +670,9 @@ void GetVisibleTileRange(const CameraTransform& cam,
     if (orientation == "isometric") {
         // Convert screen corners to world coordinates using CameraTransform::ScreenToWorld()
         Vector topLeftWorld = cam.ScreenToWorld(Vector(0, 0, 0));
-        Vector topRightWorld = cam.ScreenToWorld(Vector(cam.viewport.w, 0, 0));
-        Vector bottomLeftWorld = cam.ScreenToWorld(Vector(0, cam.viewport.h, 0));
-        Vector bottomRightWorld = cam.ScreenToWorld(Vector(cam.viewport.w, cam.viewport.h, 0));
+        Vector topRightWorld = cam.ScreenToWorld(Vector(cam.viewport.w, 0));
+        Vector bottomLeftWorld = cam.ScreenToWorld(Vector(0, cam.viewport.h));
+        Vector bottomRightWorld = cam.ScreenToWorld(Vector(cam.viewport.w, cam.viewport.h));
         
         // Convert world coordinates to isometric tile coordinates
         // Inverse of: isoX = (worldX - worldY) * (tileWidth / 2.0f)
@@ -709,9 +709,9 @@ void GetVisibleTileRange(const CameraTransform& cam,
         // Orthogonal/hex: Use CameraTransform::ScreenToWorld() for consistency
         // When camera is rotated, all four corners need to be checked to find min/max
         Vector topLeftWorld = cam.ScreenToWorld(Vector(0, 0, 0));
-        Vector topRightWorld = cam.ScreenToWorld(Vector(cam.viewport.w, 0, 0));
-        Vector bottomLeftWorld = cam.ScreenToWorld(Vector(0, cam.viewport.h, 0));
-        Vector bottomRightWorld = cam.ScreenToWorld(Vector(cam.viewport.w, cam.viewport.h, 0));
+        Vector topRightWorld = cam.ScreenToWorld(Vector(cam.viewport.w, 0));
+        Vector bottomLeftWorld = cam.ScreenToWorld(Vector(0, cam.viewport.h));
+        Vector bottomRightWorld = cam.ScreenToWorld(Vector(cam.viewport.w, cam.viewport.h));
         
         // Find bounding box in world space (handles rotation correctly)
         float worldMinX = std::min({topLeftWorld.x, topRightWorld.x, bottomLeftWorld.x, bottomRightWorld.x});
@@ -880,7 +880,7 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
                 SDL_Rect srcRect;
                 int worldX, worldY;
                 uint32_t gid;
-                int tileoffsetX, tileoffsetY;
+                int tileoffsetX; int tileoffsetY;
                 int zOrder;
             } tile;
             
@@ -1562,7 +1562,7 @@ void NavigationSystem::Process()
 	float deltaTime = GameEngine::fDt;
 	
 	for (EntityID entity : m_entities)
-	{
+    {
 		NavigationAgent_data& agent = World::Get().GetComponent<NavigationAgent_data>(entity);
 		
 		// Check if we need to repath
@@ -2040,19 +2040,46 @@ void GridSystem::DrawIsometricTileOverlay(float centerX, float centerY, float wi
 {
 	SDL_Renderer* renderer = GameEngine::renderer;
 	if (!renderer) return;
-	
+
 	// Draw filled isometric diamond
 	float halfW = width / 2.0f;
 	float halfH = height / 2.0f;
-	
+
+	// Convert SDL_Color (Uint8) to SDL_FColor (float) for SDL3 SDL_Vertex
+	SDL_FColor fcolor = { color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f };
+
 	SDL_Vertex vertices[4];
-	vertices[0] = {{centerX, centerY - halfH}, color, {0, 0}};  // Top
-	vertices[1] = {{centerX + halfW, centerY}, color, {0, 0}};  // Right
-	vertices[2] = {{centerX, centerY + halfH}, color, {0, 0}};  // Bottom
-	vertices[3] = {{centerX - halfW, centerY}, color, {0, 0}};  // Left
-	
+
+	// Top vertex
+	vertices[0].position.x = centerX;
+	vertices[0].position.y = centerY - halfH;
+	vertices[0].color = fcolor;
+	vertices[0].tex_coord.x = 0;
+	vertices[0].tex_coord.y = 0;
+
+	// Right vertex
+	vertices[1].position.x = centerX - halfW;
+	vertices[1].position.y = centerY;
+	vertices[1].color = fcolor;
+	vertices[1].tex_coord.x = 0;
+	vertices[1].tex_coord.y = 0;
+
+	// Bottom vertex
+	vertices[2].position.x = centerX;
+	vertices[2].position.y = centerY + halfH;
+	vertices[2].color = fcolor;
+	vertices[2].tex_coord.x = 0;
+	vertices[2].tex_coord.y = 0;
+
+	// Left vertex
+	vertices[3].position.x = centerX + halfW;
+	vertices[3].position.y = centerY;
+	vertices[3].color = fcolor;
+	vertices[3].tex_coord.x = 0;
+	vertices[3].tex_coord.y = 0;
+
 	int indices[] = {0, 1, 2, 0, 2, 3};
-	
+
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 	SDL_RenderGeometry(renderer, nullptr, vertices, 4, indices, 6);
 }
@@ -2061,31 +2088,38 @@ void GridSystem::DrawHexagonOverlay(float centerX, float centerY, float radius, 
 {
 	SDL_Renderer* renderer = GameEngine::renderer;
 	if (!renderer) return;
-	
+
 	// Draw hexagon with center vertex + 6 edge vertices for triangle fan
 	constexpr int numPoints = 7; // Center + 6 edge vertices
 	constexpr float HEXAGON_ROTATION_OFFSET = -30.0f; // Rotate hexagon to have flat top
 	constexpr float DEG_TO_RAD = (float)(k_PI / 180.0f);
 	SDL_Vertex vertices[numPoints];
-	
-	// Center vertex
-	vertices[0] = {{centerX, centerY}, color, {0, 0}};
-	
-	// Edge vertices (1-6)
+
+	// Convert SDL_Color (Uint8) to SDL_FColor (float) for SDL3 SDL_Vertex
+	SDL_FColor fcolor = { color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f };
+
+	// Center vertex - member by member assignment
+	vertices[0].position.x = centerX;
+	vertices[0].position.y = centerY;
+	vertices[0].color = fcolor;
+	vertices[0].tex_coord.x = 0;
+	vertices[0].tex_coord.y = 0;
+
+	// Edge vertices (1-6) - member by member assignment
 	for (int i = 0; i < 6; ++i)
 	{
 		float angle = (60.0f * i + HEXAGON_ROTATION_OFFSET) * DEG_TO_RAD;
-		vertices[i + 1] = {
-			{centerX + radius * std::cos(angle), centerY + radius * std::sin(angle)},
-			color,
-			{0, 0}
-		};
+		vertices[i + 1].position.x = centerX + radius * std::cos(angle);
+		vertices[i + 1].position.y = centerY + radius * std::sin(angle);
+		vertices[i + 1].color = fcolor;
+		vertices[i + 1].tex_coord.x = 0;
+		vertices[i + 1].tex_coord.y = 0;
 	}
-	
+
 	// Triangle fan from center vertex (0) to edge vertices (1-6)
 	// 6 triangles: (0,1,2), (0,2,3), (0,3,4), (0,4,5), (0,5,6), (0,6,1)
 	int indices[18] = {0,1,2, 0,2,3, 0,3,4, 0,4,5, 0,5,6, 0,6,1};
-	
+
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 	SDL_RenderGeometry(renderer, nullptr, vertices, numPoints, indices, 18);
 }
@@ -2266,7 +2300,8 @@ void GridSystem::RenderNavigationOverlay(const CameraTransform& cam, const GridS
 	{
 		SYSTEM_LOG << "[GridSystem] RenderNavigationOverlay first call\n";
 		SYSTEM_LOG << "  NavigationMap dimensions: " << collMap.GetWidth() 
-		           << "x" << collMap.GetHeight() << "\n";
+		           << "x" << collMap.GetHeight() << "\n"
+		           << "y" << collMap.GetHeight() << "\n";
 		SYSTEM_LOG << "  Active layer: " << (int)s.activeNavigationLayer << "\n";
 		SYSTEM_LOG << "  Overlay color: rgba(" 
 		           << (int)s.navigationColors[s.activeNavigationLayer].r << ","

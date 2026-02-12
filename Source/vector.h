@@ -24,7 +24,7 @@ public:
 	float x,y,z;
 	Vector(void) { x = 0.0f; y = 0.0f; z = 0.0f;} // default constructor
 	Vector(const Vector &v) { x = v.x; y = v.y; z = v.z;}// constructor by copy
-	Vector(float _x, float _y, float _z) { x = _x; y = _y; z = _z;}
+	Vector(float _x, float _y = 0.f, float _z = 0.f) { x = _x; y = _y; z = _z;}
 	virtual ~Vector () {}
 	
 	friend ostream &operator<<(ostream &os, const Vector &v);
