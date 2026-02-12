@@ -16,7 +16,8 @@ Multi-layer collision and A* pathfinding system
 const TileProperties CollisionMap::s_emptyTile = TileProperties();
 
 void CollisionMap::Initialize(int width, int height, GridProjectionType projection,
-							  float tileWidth, float tileHeight, int numLayers)
+							  float tileWidth, float tileHeight, int numLayers,
+							  float tileOffsetX, float tileOffsetY)
 {
 	SYSTEM_LOG << "CollisionMap::Initialize(" << width << "x" << height << ", "
 			   << numLayers << " layers, projection=" << static_cast<int>(projection) << ")\n";
@@ -29,9 +30,17 @@ void CollisionMap::Initialize(int width, int height, GridProjectionType projecti
 	m_tileHeight = tileHeight;
 	m_numLayers = numLayers;
 	m_activeLayer = CollisionLayer::Ground;
+	m_tileOffsetX = tileOffsetX;
+	m_tileOffsetY = tileOffsetY;
 	
 	SYSTEM_LOG << "  -> Stored tile dimensions: m_tileWidth=" << m_tileWidth 
 	           << ", m_tileHeight=" << m_tileHeight << "\n";
+	
+	// Log tile offset if present
+	if (m_tileOffsetX != 0.0f || m_tileOffsetY != 0.0f)
+	{
+		SYSTEM_LOG << "  -> Tile offset: (" << m_tileOffsetX << ", " << m_tileOffsetY << ")\n";
+	}
 	
 	// Allocate layers
 	m_layers.resize(numLayers);
@@ -62,6 +71,13 @@ void CollisionMap::Initialize(int width, int height, GridProjectionType projecti
 				float worldX, worldY;
 				GridToWorld(x, y, worldX, worldY);
 				
+				// Apply tile offset correction for isometric projection
+				if (m_projection == GridProjectionType::Iso)
+				{
+					worldX += m_tileOffsetX;
+					worldY += m_tileOffsetY;
+				}
+				
 				m_layers[layer][y][x].worldX = worldX;
 				m_layers[layer][y][x].worldY = worldY;
 				
@@ -70,7 +86,12 @@ void CollisionMap::Initialize(int width, int height, GridProjectionType projecti
 				if (layer == 0 && y == 0 && x < 3)
 				{
 					SYSTEM_LOG << "    [DEBUG] Tile (" << x << "," << y << ") -> world (" 
-					           << worldX << ", " << worldY << ")\n";
+					           << worldX << ", " << worldY << ")";
+					if (m_tileOffsetX != 0.0f || m_tileOffsetY != 0.0f)
+					{
+						SYSTEM_LOG << " [offset: (" << m_tileOffsetX << ", " << m_tileOffsetY << ")]";
+					}
+					SYSTEM_LOG << "\n";
 				}
 				#endif
 			}

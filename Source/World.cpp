@@ -454,6 +454,13 @@ namespace {
 void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& tiledMap,
                                                 const Olympe::Editor::LevelDefinition& levelDef)
 {
+	// Constants for isometric tile offset heuristic
+	// These bounds allow ±10% deviation from theoretical 2:1 ratio (i.e., 1.8 to 2.2)
+	// to accommodate asset variations in isometric tilesets (e.g., 58x27 vs exact 54x27)
+	constexpr float ISO_ASPECT_RATIO_MIN = 1.8f;  // Minimum aspect ratio for standard 2:1 isometric
+	constexpr float ISO_ASPECT_RATIO_MAX = 2.2f;  // Maximum aspect ratio for standard 2:1 isometric
+	constexpr float STANDARD_ISO_OFFSET_RATIO = 0.5f;  // Standard isometric vertical offset (tileHeight/2)
+	
 	SYSTEM_LOG << "\n";
 	SYSTEM_LOG << "+==========================================================+\n";
 	SYSTEM_LOG << "| COLLISION & NAVIGATION MAP GENERATION                    |\n";
@@ -538,9 +545,49 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 	SYSTEM_LOG << "  Tile pixel size (from TMJ): " << tilePixelWidth << "x" << tilePixelHeight << " px\n";
 	SYSTEM_LOG << "  Projection: " << orientation << " (type=" << static_cast<int>(projection) << ")\n";
 	
+	// Extract tileset offset for isometric alignment
+	float tileOffsetX = 0.0f;
+	float tileOffsetY = 0.0f;
+	
+	if (projection == GridProjectionType::Iso && !tiledMap.tilesets.empty())
+	{
+		// Get offset from the first loaded tileset
+		// NOTE: We use only the first tileset's offset as collision/navigation overlays
+		// are unified across the entire map. If different layers use different tilesets
+		// with different offsets, they should share the same base tile dimensions for
+		// consistent collision detection. Multi-tileset maps with varying offsets are
+		// not currently supported for overlay alignment.
+		const Olympe::Tiled::TiledTileset& firstTileset = tiledMap.tilesets[0];
+		tileOffsetX = static_cast<float>(firstTileset.tileoffsetX);
+		tileOffsetY = static_cast<float>(firstTileset.tileoffsetY);
+		
+		if (tileOffsetX != 0.0f || tileOffsetY != 0.0f)
+		{
+			SYSTEM_LOG << "  -> Found tileset offset from '" << firstTileset.name << "': (" 
+			           << tileOffsetX << ", " << tileOffsetY << ")\n";
+		}
+		else
+		{
+			// Fallback heuristic for standard isometric tiles without explicit offset
+			// Most isometric tilesets use tileHeight/2 as vertical offset
+			// Note: Division is safe - tilePixelHeight is validated in the dimension check
+			// earlier in this function and set to 32.0f if invalid or zero
+			float aspectRatio = tilePixelWidth / tilePixelHeight;
+			
+			if (aspectRatio >= ISO_ASPECT_RATIO_MIN && aspectRatio <= ISO_ASPECT_RATIO_MAX)
+			{
+				// Looks like standard 2:1 isometric
+				tileOffsetY = tilePixelHeight * STANDARD_ISO_OFFSET_RATIO;
+				SYSTEM_LOG << "  -> Applying standard isometric offset heuristic: (0, " 
+				           << tileOffsetY << ")\n";
+			}
+		}
+	}
+	
 	// Initialize collision map (single layer for now, can be extended later)
 	CollisionMap& collMap = CollisionMap::Get();
-	collMap.Initialize(mapWidth, mapHeight, projection, tilePixelWidth, tilePixelHeight, 1);
+	collMap.Initialize(mapWidth, mapHeight, projection, tilePixelWidth, tilePixelHeight, 1,
+	                   tileOffsetX, tileOffsetY);
 	
 	// Initialize navigation map
 	NavigationMap& navMap = NavigationMap::Get();
