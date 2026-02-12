@@ -20,6 +20,7 @@ void CollisionMap::Initialize(int width, int height, GridProjectionType projecti
 {
 	SYSTEM_LOG << "CollisionMap::Initialize(" << width << "x" << height << ", "
 			   << numLayers << " layers, projection=" << static_cast<int>(projection) << ")\n";
+	SYSTEM_LOG << "  -> Received tile dimensions: " << tileWidth << "x" << tileHeight << " px\n";
 	
 	m_width = width;
 	m_height = height;
@@ -28,6 +29,9 @@ void CollisionMap::Initialize(int width, int height, GridProjectionType projecti
 	m_tileHeight = tileHeight;
 	m_numLayers = numLayers;
 	m_activeLayer = CollisionLayer::Ground;
+	
+	SYSTEM_LOG << "  -> Stored tile dimensions: m_tileWidth=" << m_tileWidth 
+	           << ", m_tileHeight=" << m_tileHeight << "\n";
 	
 	// Allocate layers
 	m_layers.resize(numLayers);
@@ -60,6 +64,13 @@ void CollisionMap::Initialize(int width, int height, GridProjectionType projecti
 				
 				m_layers[layer][y][x].worldX = worldX;
 				m_layers[layer][y][x].worldY = worldY;
+				
+				// Debug first few tiles in first layer to verify correct calculations
+				if (layer == 0 && y == 0 && x < 3)
+				{
+					SYSTEM_LOG << "    [DEBUG] Tile (" << x << "," << y << ") -> world (" 
+					           << worldX << ", " << worldY << ")\n";
+				}
 			}
 		}
 	}
