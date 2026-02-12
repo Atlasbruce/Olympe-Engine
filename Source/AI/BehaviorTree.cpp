@@ -597,25 +597,25 @@ BTStatus ExecuteBTAction(BTActionType actionType, float param1, float param2, En
         // NEW: Wander behavior actions
         case BTActionType::WaitRandomTime:
         {
-            // Si timer pas initialisé, créer un temps aléatoire
+            // If timer not initialized, create a random time
             if (blackboard.wanderTargetWaitTime == 0.0f)
             {
                 float minWait = (param1 > 0.0f) ? param1 : 2.0f;
                 float maxWait = (param2 > 0.0f) ? param2 : 6.0f;
                 
-                // Génération aléatoire entre min et max
+                // Random generation between min and max
                 float randomFactor = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
                 blackboard.wanderTargetWaitTime = minWait + randomFactor * (maxWait - minWait);
                 blackboard.wanderWaitTimer = 0.0f;
             }
             
-            // Incrémenter le timer avec le deltaTime du moteur
+            // Increment timer with engine deltaTime
             blackboard.wanderWaitTimer += GameEngine::fDt;
             
-            // Vérifier si timer expiré
+            // Check if timer expired
             if (blackboard.wanderWaitTimer >= blackboard.wanderTargetWaitTime)
             {
-                // Reset pour prochain cycle
+                // Reset for next cycle
                 blackboard.wanderTargetWaitTime = 0.0f;
                 blackboard.wanderWaitTimer = 0.0f;
                 return BTStatus::Success;
@@ -626,17 +626,17 @@ BTStatus ExecuteBTAction(BTActionType actionType, float param1, float param2, En
         
         case BTActionType::ChooseRandomNavigablePoint:
         {
-            // Récupérer position actuelle
+            // Get current position
             if (!World::Get().HasComponent<Position_data>(entity))
                 return BTStatus::Failure;
             
             const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
             
-            // Paramètres
+            // Parameters
             float searchRadius = (param1 > 0.0f) ? param1 : blackboard.wanderSearchRadius;
             int maxAttempts = (param2 > 0.0f) ? static_cast<int>(param2) : blackboard.wanderMaxSearchAttempts;
             
-            // Chercher un point navigable aléatoire
+            // Search for a random navigable point
             float destX, destY;
             bool found = NavigationMap::Get().GetRandomNavigablePoint(
                 pos.position.x, pos.position.y, searchRadius, maxAttempts, destX, destY
@@ -658,14 +658,14 @@ BTStatus ExecuteBTAction(BTActionType actionType, float param1, float param2, En
         {
             if (!blackboard.hasMoveGoal) return BTStatus::Failure;
             
-            // Passer par MoveIntent_data avec pathfinding activé
+            // Go through MoveIntent_data with pathfinding enabled
             if (World::Get().HasComponent<MoveIntent_data>(entity))
             {
                 MoveIntent_data& intent = World::Get().GetComponent<MoveIntent_data>(entity);
                 intent.targetPosition = blackboard.moveGoal;
                 intent.desiredSpeed = 1.0f;
                 intent.hasIntent = true;
-                intent.usePathfinding = true;  // Activer le pathfinding
+                intent.usePathfinding = true;  // Enable pathfinding
                 intent.avoidObstacles = true;
                 
                 return BTStatus::Success;
@@ -678,12 +678,12 @@ BTStatus ExecuteBTAction(BTActionType actionType, float param1, float param2, En
         {
             if (!blackboard.hasWanderDestination) return BTStatus::Failure;
             
-            // Vérifier si on a un MoveIntent actif
+            // Check if we have an active MoveIntent
             if (World::Get().HasComponent<MoveIntent_data>(entity))
             {
                 MoveIntent_data& intent = World::Get().GetComponent<MoveIntent_data>(entity);
                 
-                // Maintenir l'intent actif
+                // Maintain the active intent
                 if (!intent.hasIntent)
                 {
                     intent.targetPosition = blackboard.wanderDestination;
@@ -692,7 +692,7 @@ BTStatus ExecuteBTAction(BTActionType actionType, float param1, float param2, En
                     intent.usePathfinding = true;
                 }
                 
-                // Vérifier si on est arrivé
+                // Check if we have arrived
                 if (World::Get().HasComponent<Position_data>(entity))
                 {
                     const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
@@ -700,7 +700,7 @@ BTStatus ExecuteBTAction(BTActionType actionType, float param1, float param2, En
                     
                     if (dist < 5.0f)
                     {
-                        // Arrivé à destination
+                        // Arrived at destination
                         blackboard.hasWanderDestination = false;
                         blackboard.hasMoveGoal = false;
                         intent.hasIntent = false;
