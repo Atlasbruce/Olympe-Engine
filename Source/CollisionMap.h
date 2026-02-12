@@ -64,6 +64,10 @@ struct TileProperties
 	std::string onBuiltState;         // State name after construction (e.g., "Bridge")
 	std::string metadata;             // JSON metadata for custom gameplay logic
 	
+	// Pre-calculated world coordinates (tile center) - for performance optimization
+	float worldX = 0.0f;
+	float worldY = 0.0f;
+	
 	TileProperties() = default;
 };
 
