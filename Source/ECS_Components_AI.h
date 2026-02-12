@@ -53,6 +53,14 @@ struct AIBlackboard_data
     Vector lastNoisePosition;
     bool heardNoise = false;
     float noiseCooldown = 0.0f;
+    
+    // NEW: Wander behavior state
+    float wanderWaitTimer = 0.0f;           // Timer actuel
+    float wanderTargetWaitTime = 0.0f;      // Temps d'attente cible
+    Vector wanderDestination;               // Point de destination choisi
+    bool hasWanderDestination = false;      // Point choisi ?
+    float wanderSearchRadius = 500.0f;      // Rayon de recherche par défaut
+    int wanderMaxSearchAttempts = 10;       // Tentatives max par défaut
 };
 
 // --- AI Senses Component ---

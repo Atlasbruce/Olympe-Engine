@@ -242,6 +242,13 @@ public:
 	bool FindPath(int startX, int startY, int goalX, int goalY, 
 				 std::vector<Vector>& outPath, CollisionLayer layer = CollisionLayer::Ground, int maxIterations = 10000);
 	
+	// NEW: Get random navigable point within radius from center position
+	// Returns true if found, false if all attempts failed
+	// outX, outY: world coordinates of the found point
+	bool GetRandomNavigablePoint(float centerX, float centerY, float radius, 
+	                              int maxAttempts, float& outX, float& outY,
+	                              CollisionLayer layer = CollisionLayer::Ground) const;
+	
 	// Clear
 	void Clear();
 

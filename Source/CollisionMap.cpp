@@ -667,3 +667,37 @@ void NavigationMap::Clear()
 	m_numLayers = 1;
 	m_activeLayer = CollisionLayer::Ground;
 }
+
+bool NavigationMap::GetRandomNavigablePoint(float centerX, float centerY, float radius,
+                                             int maxAttempts, float& outX, float& outY,
+                                             CollisionLayer layer) const
+{
+    for (int attempt = 0; attempt < maxAttempts; ++attempt)
+    {
+        // Générer angle aléatoire (0 à 2π)
+        float angle = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * 2.0f * 3.14159265f;
+        
+        // Générer distance aléatoire (0 à radius)
+        // Utiliser sqrt pour distribution uniforme
+        float randomRadius = std::sqrt(static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * radius;
+        
+        // Calculer position mondiale
+        float worldX = centerX + randomRadius * std::cos(angle);
+        float worldY = centerY + randomRadius * std::sin(angle);
+        
+        // Convertir en coordonnées grille
+        int gridX, gridY;
+        WorldToGrid(worldX, worldY, gridX, gridY);
+        
+        // Vérifier si navigable
+        if (IsValidGridPosition(gridX, gridY) && IsNavigable(gridX, gridY, layer))
+        {
+            outX = worldX;
+            outY = worldY;
+            return true;
+        }
+    }
+    
+    // Échec après maxAttempts tentatives
+    return false;
+}
