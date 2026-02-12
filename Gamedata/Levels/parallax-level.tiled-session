@@ -18,6 +18,9 @@
         "#parallax_forest": {
             "dynamicWrapping": true
         },
+        "Greek decoration.tsx": {
+            "dynamicWrapping": true
+        },
         "Hexa-tiles_1.tsx": {
             "dynamicWrapping": false,
             "scaleInDock": 1,
@@ -50,13 +53,24 @@
                 "y": 518.6666666666666
             }
         },
+        "iso-test.tmx": {
+            "expandedObjectLayers": [
+                2
+            ],
+            "scale": 1.5,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 644,
+                "y": 286.66666666666663
+            }
+        },
         "isometric_quest.tmx": {
             "expandedObjectLayers": [
                 6,
                 10
             ],
             "scale": 1,
-            "selectedLayer": 4,
+            "selectedLayer": 1,
             "viewCenter": {
                 "x": 5036,
                 "y": 1677
@@ -156,7 +170,7 @@
     },
     "last.exportedFilePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels",
     "last.externalTilesetPath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels/hexa tiles",
-    "last.imagePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Resources/hexa tiles",
+    "last.imagePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels",
     "last.objectTemplatePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels",
     "lastUsedTilesetExportFilter": "Fichiers de jeu de tuiles JSON (*.tsj *.json)",
     "map.fixedSize": true,
@@ -175,12 +189,12 @@
     "project": "parallax-level.tiled-project",
     "property.type": "bool",
     "recentFiles": [
+        "Trees.tsx",
         "hexa-quest.tmx",
         "pnc-quest.tmx",
         "parallax-forest.tmx",
         "isometric_quest.tmx",
         "Tiles iso cube..tsj",
-        "Trees.tsx",
         "Trees.tsj",
         "tileset 2D ortho.tsx",
         "Hexa-tiles_1.tsx",
@@ -197,6 +211,6 @@
         "width": 60
     },
     "tileset.transparentColor": "#000000",
-    "tileset.type": 0,
+    "tileset.type": 1,
     "tileset.useTransparentColor": true
 }

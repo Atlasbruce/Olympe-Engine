@@ -29,6 +29,17 @@
          "id":2,
          "name":"graphicmap_ground",
          "opacity":1,
+         "properties":[
+                {
+                 "name":"isTilesetWalkable",
+                 "type":"bool",
+                 "value":true
+                }, 
+                {
+                 "name":"useTilesetBorder",
+                 "type":"bool",
+                 "value":true
+                }],
          "type":"tilelayer",
          "visible":true,
          "width":184,
@@ -454,17 +465,6 @@
                  "y":3456
                 }],
          "opacity":1,
-         "properties":[
-                {
-                 "name":"isTilesetWalkable",
-                 "type":"bool",
-                 "value":true
-                }, 
-                {
-                 "name":"useTilesetBorder",
-                 "type":"bool",
-                 "value":true
-                }],
          "type":"objectgroup",
          "visible":true,
          "x":0,

@@ -614,6 +614,9 @@
     <ClInclude Include="Source\InputConfigLoader.h">
       <Filter>Fichiers d%27en-t�te\Engine Systems\Inputs</Filter>
     </ClInclude>
+    <ClInclude Include="source\tiledlevelloader\include\tiled_constants.h">
+      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc">

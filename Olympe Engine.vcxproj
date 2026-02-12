@@ -191,6 +191,7 @@
     <ClInclude Include="Source\TiledLevelLoader\include\TiledLevelLoader.h" />
     <ClInclude Include="Source\TiledLevelLoader\include\TiledStructures.h" />
     <ClInclude Include="Source\TiledLevelLoader\include\TiledToOlympe.h" />
+    <ClInclude Include="source\tiledlevelloader\include\tiled_constants.h" />
     <ClInclude Include="Source\TiledLevelLoader\include\TilesetCache.h" />
     <ClInclude Include="Source\TiledLevelLoader\include\TilesetParser.h" />
     <ClInclude Include="Source\TiledLevelLoader\third_party\miniz\miniz.h" />

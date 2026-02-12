@@ -39,6 +39,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include <iostream>
 #include <iomanip>
 #include <set>
+#include "TiledLevelLoader/include/tiled_constants.h"
 
 //---------------------------------------------------------------------------------------------
 // Helper function to register input entities with InputsManager
