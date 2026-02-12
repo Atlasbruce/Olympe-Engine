@@ -2062,26 +2062,31 @@ void GridSystem::DrawHexagonOverlay(float centerX, float centerY, float radius, 
 	SDL_Renderer* renderer = GameEngine::renderer;
 	if (!renderer) return;
 	
-	// Draw hexagon with 6 vertices
-	constexpr int numPoints = 6;
+	// Draw hexagon with center vertex + 6 edge vertices for triangle fan
+	constexpr int numPoints = 7; // Center + 6 edge vertices
 	constexpr float HEXAGON_ROTATION_OFFSET = -30.0f; // Rotate hexagon to have flat top
 	SDL_Vertex vertices[numPoints];
 	
-	for (int i = 0; i < numPoints; ++i)
+	// Center vertex
+	vertices[0] = {{centerX, centerY}, color, {0, 0}};
+	
+	// Edge vertices (1-6)
+	for (int i = 0; i < 6; ++i)
 	{
 		float angle = (60.0f * i + HEXAGON_ROTATION_OFFSET) * (float)(k_PI / 180.0f);
-		vertices[i] = {
+		vertices[i + 1] = {
 			{centerX + radius * std::cos(angle), centerY + radius * std::sin(angle)},
 			color,
 			{0, 0}
 		};
 	}
 	
-	// Triangle fan from center - need 6 triangles to cover all segments
-	int indices[15] = {0,1,2, 0,2,3, 0,3,4, 0,4,5, 0,5,1};
+	// Triangle fan from center vertex (0) to edge vertices (1-6)
+	// 6 triangles: (0,1,2), (0,2,3), (0,3,4), (0,4,5), (0,5,6), (0,6,1)
+	int indices[18] = {0,1,2, 0,2,3, 0,3,4, 0,4,5, 0,5,6, 0,6,1};
 	
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-	SDL_RenderGeometry(renderer, nullptr, vertices, numPoints, indices, 15);
+	SDL_RenderGeometry(renderer, nullptr, vertices, numPoints, indices, 18);
 }
 
 void GridSystem::RenderCollisionOverlay(const CameraTransform& cam, const GridSettings_data& s)
