@@ -246,6 +246,39 @@ struct Animation_data
 	Animation_data(const Animation_data&) = default;
 	Animation_data& operator=(const Animation_data&) = default;
 };
+
+// --- Component Visual Animation Data (for Animation System V2) ---
+// Forward declarations for animation system types
+namespace OlympeAnimation {
+	class AnimationGraph;
+	class AnimationBank;
+}
+
+struct VisualAnimation_data
+{
+	std::string animGraphPath;  // Path to animation graph JSON file
+	std::string currentState = "Idle";  // Current animation state name
+	int currentFrame = 0;       // Current frame in the animation
+	float frameTime = 0.0f;     // Accumulated time for frame advancement
+	float playbackSpeed = 1.0f; // Speed multiplier for animation playback
+	bool isPaused = false;      // Is the animation paused?
+	bool flipX = false;         // Flip sprite horizontally
+	bool flipY = false;         // Flip sprite vertically
+	
+	// Runtime pointers (not serialized, set by AnimationSystem)
+	OlympeAnimation::AnimationGraph* animGraph = nullptr;
+	OlympeAnimation::AnimationBank* animBank = nullptr;
+	
+	// Blending support (for future implementation)
+	std::string previousAnimation;
+	float blendFactor = 0.0f;
+	
+	// Constructors
+	VisualAnimation_data() = default;
+	VisualAnimation_data(const VisualAnimation_data&) = default;
+	VisualAnimation_data& operator=(const VisualAnimation_data&) = default;
+};
+
 // --- Component FX Data --- Visual effects like particles, explosions, etc.
 struct FX_data
 {

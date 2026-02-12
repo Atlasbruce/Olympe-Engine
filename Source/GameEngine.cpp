@@ -22,6 +22,7 @@ Purpose:
 #include "World.h"
 #include "system/CameraEventHandler.h"
 #include "AI/BehaviorTree.h"
+#include "Animation/AnimationManager.h"
 
 float GameEngine::fDt = 0.0f;
 SDL_Renderer* GameEngine::renderer = nullptr;
@@ -58,6 +59,13 @@ void GameEngine::Initialize()
 	BehaviorTreeManager::Get().LoadTreeFromFile("Blueprints/AI/guard_combat.json", 3);
 	BehaviorTreeManager::Get().LoadTreeFromFile("Blueprints/AI/investigate.json", 5);
 	SYSTEM_LOG << "AI Behavior Trees loaded.\n";
+	
+	// Initialize Animation System
+	SYSTEM_LOG << "Initializing Animation System...\n";
+	OlympeAnimation::AnimationManager::Get().Init();
+	OlympeAnimation::AnimationManager::Get().LoadAnimationBanks("Gamedata/Animations/AnimationBanks");
+	OlympeAnimation::AnimationManager::Get().LoadAnimationGraphs("Gamedata/Animations/AnimationGraphs");
+	SYSTEM_LOG << "Animation System initialized.\n";
 	
 	// Create default camera for player 0 with keyboard controls
 	CameraSystem* camSys = World::Get().GetSystem<CameraSystem>();
