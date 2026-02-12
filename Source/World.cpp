@@ -519,59 +519,23 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 	else if (orientation == "hexagonal")
 		projection = GridProjectionType::HexAxial;
 	
-	// Calculate proper tile pixel dimensions
-	// TMX/TMJ flip flags mask: 0xE0000000 represents bits 29-31 (horizontal flip, vertical flip, diagonal flip)
-	// Reference: https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#tile-flipping
-	const uint32_t TILE_FLIP_FLAGS_MASK = 0xE0000000;
+	// Extract tile pixel dimensions from TMJ
+	// The TMJ file's tilewidth/tileheight fields contain the actual pixel dimensions
+	// These are already correctly stored in levelDef.mapConfig by TiledToOlympe::ExtractMapConfiguration()
+	float tilePixelWidth = static_cast<float>(tiledMap.tilewidth);
+	float tilePixelHeight = static_cast<float>(tiledMap.tileheight);
 	
-	float tilePixelWidth = 0.0f;
-	float tilePixelHeight = 0.0f;
-	
-	if (projection == GridProjectionType::Iso)
+	// Validate tile pixel dimensions (reasonable range: 4-1024 pixels)
+	if (tilePixelWidth <= 0.0f || tilePixelHeight <= 0.0f ||
+	    tilePixelWidth > 1024.0f || tilePixelHeight > 1024.0f)
 	{
-		// For isometric, calculate from world bounds if available
-		if (levelDef.mapConfig.mapWidth > 0 && mapWidth > 0)
-		{
-			tilePixelWidth = static_cast<float>(levelDef.mapConfig.mapWidth) / static_cast<float>(mapWidth);
-		}
-		else
-		{
-			tilePixelWidth = 64.0f; // Default isometric tile width
-		}
-		
-		if (levelDef.mapConfig.mapHeight > 0 && mapHeight > 0)
-		{
-			tilePixelHeight = static_cast<float>(levelDef.mapConfig.mapHeight) / static_cast<float>(mapHeight);
-		}
-		else
-		{
-			tilePixelHeight = tilePixelWidth / 2.0f; // Isometric 2:1 ratio
-		}
-	}
-	else // Orthogonal or Hexagonal
-	{
-		// Use tilewidth/tileheight from TMJ if they look like pixel dimensions
-		if (tiledMap.tilewidth > mapWidth && tiledMap.tileheight > mapHeight)
-		{
-			tilePixelWidth = static_cast<float>(tiledMap.tilewidth);
-			tilePixelHeight = static_cast<float>(tiledMap.tileheight);
-		}
-		else
-		{
-			tilePixelWidth = 32.0f;  // Fallback
-			tilePixelHeight = 32.0f;
-		}
-	}
-	
-	// Validate tile pixel dimensions
-	if (tilePixelWidth <= 0.0f || tilePixelHeight <= 0.0f)
-	{
-		SYSTEM_LOG << "  X Invalid tile pixel dimensions, using defaults\n";
+		SYSTEM_LOG << "  X Invalid or unreasonable tile pixel dimensions from TMJ (" 
+		           << tilePixelWidth << "x" << tilePixelHeight << "), using defaults\n";
 		tilePixelWidth = 32.0f;
 		tilePixelHeight = 32.0f;
 	}
 	
-	SYSTEM_LOG << "  Calculated tile pixel size: " << tilePixelWidth << "x" << tilePixelHeight << " px\n";
+	SYSTEM_LOG << "  Tile pixel size (from TMJ): " << tilePixelWidth << "x" << tilePixelHeight << " px\n";
 	SYSTEM_LOG << "  Projection: " << orientation << " (type=" << static_cast<int>(projection) << ")\n";
 	
 	// Initialize collision map (single layer for now, can be extended later)
