@@ -47,6 +47,24 @@ void CollisionMap::Initialize(int width, int height, GridProjectionType projecti
 	}
 	
 	SYSTEM_LOG << "  -> Allocated " << (width * height * numLayers) << " tiles\n";
+	
+	// Pre-calculate world coordinates for all tiles (performance optimization)
+	for (int layer = 0; layer < numLayers; ++layer)
+	{
+		for (int y = 0; y < height; ++y)
+		{
+			for (int x = 0; x < width; ++x)
+			{
+				float worldX, worldY;
+				GridToWorld(x, y, worldX, worldY);
+				
+				m_layers[layer][y][x].worldX = worldX;
+				m_layers[layer][y][x].worldY = worldY;
+			}
+		}
+	}
+	
+	SYSTEM_LOG << "  -> Pre-calculated world coordinates for " << (width * height * numLayers) << " tiles\n";
 }
 
 void CollisionMap::SetActiveLayer(CollisionLayer layer)

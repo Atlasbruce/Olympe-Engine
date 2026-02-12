@@ -2036,6 +2036,53 @@ void GridSystem::DrawFilledRectWorld(const CameraTransform& cam, const Vector& w
 	SDL_RenderFillRect(renderer, &rect);
 }
 
+void GridSystem::DrawIsometricTileOverlay(float centerX, float centerY, float width, float height, const SDL_Color& color)
+{
+	SDL_Renderer* renderer = GameEngine::renderer;
+	if (!renderer) return;
+	
+	// Draw filled isometric diamond
+	float halfW = width / 2.0f;
+	float halfH = height / 2.0f;
+	
+	SDL_Vertex vertices[4];
+	vertices[0] = {{centerX, centerY - halfH}, color, {0, 0}};  // Top
+	vertices[1] = {{centerX + halfW, centerY}, color, {0, 0}};  // Right
+	vertices[2] = {{centerX, centerY + halfH}, color, {0, 0}};  // Bottom
+	vertices[3] = {{centerX - halfW, centerY}, color, {0, 0}};  // Left
+	
+	int indices[] = {0, 1, 2, 0, 2, 3};
+	
+	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+	SDL_RenderGeometry(renderer, nullptr, vertices, 4, indices, 6);
+}
+
+void GridSystem::DrawHexagonOverlay(float centerX, float centerY, float radius, const SDL_Color& color)
+{
+	SDL_Renderer* renderer = GameEngine::renderer;
+	if (!renderer) return;
+	
+	// Draw hexagon with 6 vertices
+	constexpr int numPoints = 6;
+	SDL_Vertex vertices[numPoints];
+	
+	for (int i = 0; i < numPoints; ++i)
+	{
+		float angle = (60.0f * i - 30.0f) * (float)(k_PI / 180.0f);
+		vertices[i] = {
+			{centerX + radius * std::cos(angle), centerY + radius * std::sin(angle)},
+			color,
+			{0, 0}
+		};
+	}
+	
+	// Triangle fan from center
+	int indices[12] = {0,1,2, 0,2,3, 0,3,4, 0,4,5};
+	
+	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+	SDL_RenderGeometry(renderer, nullptr, vertices, numPoints, indices, 12);
+}
+
 void GridSystem::RenderCollisionOverlay(const CameraTransform& cam, const GridSettings_data& s)
 {
 	if (!s.showCollisionOverlay) return;
@@ -2142,22 +2189,49 @@ void GridSystem::RenderCollisionOverlay(const CameraTransform& cam, const GridSe
 				{
 					SYSTEM_LOG << "  -> Blocked tile #" << blockedCount << " at grid (" 
 					           << x << "," << y << ")\n";
+					SYSTEM_LOG << "     Pre-calculated world coords: (" << tile.worldX << "," << tile.worldY << ")\n";
 				}
 				
-				float worldX, worldY;
-				collMap.GridToWorld(x, y, worldX, worldY);
+				// Use pre-calculated world coordinates (tile center)
+				float worldX = tile.worldX;
+				float worldY = tile.worldY;
 				
-				// Adjust to tile top-left corner (GridToWorld returns center)
+				// Transform to screen space with camera
+				Vector worldCenter(worldX, worldY, 0.0f);
+				Vector screenCenter = cam.WorldToScreen(worldCenter);
+				
+				// Get tile dimensions scaled by zoom
 				float tileWidth = collMap.GetTileWidth();
 				float tileHeight = collMap.GetTileHeight();
-				worldX -= tileWidth * 0.5f;
-				worldY -= tileHeight * 0.5f;
+				float screenWidth = tileWidth * cam.zoom;
+				float screenHeight = tileHeight * cam.zoom;
 				
-				DrawFilledRectWorld(cam, Vector(worldX, worldY, 0.0f), tileWidth, tileHeight, overlayColor);
-
-				//// Optional: draw a translucid purple circle for blocked tiles
-				//SDL_SetRenderDrawColor(renderer, 128, 0, 128, 128); // Semi-transparent purple				
-				//Draw_FilledCircle((int) worldX + tileWidth * 0.5f, (int)worldY + tileHeight * 0.5f, 5.f);
+				// Render overlay based on projection type
+				if (collMap.GetProjection() == GridProjectionType::Iso)
+				{
+					// Draw isometric diamond shape
+					DrawIsometricTileOverlay(screenCenter.x, screenCenter.y, 
+					                        screenWidth, screenHeight, overlayColor);
+				}
+				else if (collMap.GetProjection() == GridProjectionType::HexAxial)
+				{
+					// Draw hexagonal shape
+					DrawHexagonOverlay(screenCenter.x, screenCenter.y, 
+					                  screenWidth * 0.5f, overlayColor);
+				}
+				else
+				{
+					// Orthogonal: simple rectangle
+					SDL_FRect rect;
+					rect.x = screenCenter.x - screenWidth / 2.0f;
+					rect.y = screenCenter.y - screenHeight / 2.0f;
+					rect.w = screenWidth;
+					rect.h = screenHeight;
+					
+					SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+					SDL_SetRenderDrawColor(renderer, overlayColor.r, overlayColor.g, overlayColor.b, overlayColor.a);
+					SDL_RenderFillRect(renderer, &rect);
+				}
 			}
 		}
 	}
@@ -2298,24 +2372,55 @@ void GridSystem::RenderNavigationOverlay(const CameraTransform& cam, const GridS
 				{
 					SYSTEM_LOG << "  -> Navigable tile #" << navigableCount << " at grid (" 
 					           << x << "," << y << ")\n";
+					SYSTEM_LOG << "     Pre-calculated world coords: (" << tile.worldX << "," << tile.worldY << ")\n";
 				}
 				
-				float worldX, worldY;
-				collMap.GridToWorld(x, y, worldX, worldY);
+				// Use pre-calculated world coordinates (tile center)
+				float worldX = tile.worldX;
+				float worldY = tile.worldY;
 				
-				// DEBUG: Log world coordinates for first few tiles
+				// Transform to screen space with camera
+				Vector worldCenter(worldX, worldY, 0.0f);
+				Vector screenCenter = cam.WorldToScreen(worldCenter);
+				
+				// DEBUG: Log screen coordinates for first few tiles
 				if (renderCount < 3 && navigableCount <= 3)
 				{
-					SYSTEM_LOG << "     World coords: (" << worldX << "," << worldY << ")\n";
+					SYSTEM_LOG << "     Screen coords: (" << screenCenter.x << "," << screenCenter.y << ")\n";
 				}
 				
-				// Adjust to tile top-left corner (GridToWorld returns center)
+				// Get tile dimensions scaled by zoom
 				float tileWidth = collMap.GetTileWidth();
 				float tileHeight = collMap.GetTileHeight();
-				worldX -= tileWidth * 0.5f;
-				worldY -= tileHeight * 0.5f;
+				float screenWidth = tileWidth * cam.zoom;
+				float screenHeight = tileHeight * cam.zoom;
 				
-				DrawFilledRectWorld(cam, Vector(worldX, worldY, 0.0f), tileWidth, tileHeight, overlayColor);
+				// Render overlay based on projection type
+				if (collMap.GetProjection() == GridProjectionType::Iso)
+				{
+					// Draw isometric diamond shape
+					DrawIsometricTileOverlay(screenCenter.x, screenCenter.y, 
+					                        screenWidth, screenHeight, overlayColor);
+				}
+				else if (collMap.GetProjection() == GridProjectionType::HexAxial)
+				{
+					// Draw hexagonal shape
+					DrawHexagonOverlay(screenCenter.x, screenCenter.y, 
+					                  screenWidth * 0.5f, overlayColor);
+				}
+				else
+				{
+					// Orthogonal: simple rectangle
+					SDL_FRect rect;
+					rect.x = screenCenter.x - screenWidth / 2.0f;
+					rect.y = screenCenter.y - screenHeight / 2.0f;
+					rect.w = screenWidth;
+					rect.h = screenHeight;
+					
+					SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+					SDL_SetRenderDrawColor(renderer, overlayColor.r, overlayColor.g, overlayColor.b, overlayColor.a);
+					SDL_RenderFillRect(renderer, &rect);
+				}
 			}
 		}
 	}
