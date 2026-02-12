@@ -455,6 +455,8 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
                                                 const Olympe::Editor::LevelDefinition& levelDef)
 {
 	// Constants for isometric tile offset heuristic
+	// These bounds allow 10% deviation from theoretical 2:1 ratio to accommodate
+	// asset variations in isometric tilesets (e.g., 58x27 vs exact 54x27)
 	constexpr float ISO_ASPECT_RATIO_MIN = 1.8f;  // Minimum aspect ratio for standard 2:1 isometric
 	constexpr float ISO_ASPECT_RATIO_MAX = 2.2f;  // Maximum aspect ratio for standard 2:1 isometric
 	constexpr float STANDARD_ISO_OFFSET_RATIO = 0.5f;  // Standard isometric vertical offset (tileHeight/2)
@@ -550,6 +552,11 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 	if (projection == GridProjectionType::Iso && !tiledMap.tilesets.empty())
 	{
 		// Get offset from the first loaded tileset
+		// NOTE: We use only the first tileset's offset as collision/navigation overlays
+		// are unified across the entire map. If different layers use different tilesets
+		// with different offsets, they should share the same base tile dimensions for
+		// consistent collision detection. Multi-tileset maps with varying offsets are
+		// not currently supported for overlay alignment.
 		const Olympe::Tiled::TiledTileset& firstTileset = tiledMap.tilesets[0];
 		tileOffsetX = static_cast<float>(firstTileset.tileoffsetX);
 		tileOffsetY = static_cast<float>(firstTileset.tileoffsetY);
@@ -563,6 +570,7 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 		{
 			// Fallback heuristic for standard isometric tiles without explicit offset
 			// Most isometric tilesets use tileHeight/2 as vertical offset
+			// Note: Division is safe here as tilePixelHeight is validated above (lines 534-541)
 			float aspectRatio = tilePixelWidth / tilePixelHeight;
 			
 			if (aspectRatio >= ISO_ASPECT_RATIO_MIN && aspectRatio <= ISO_ASPECT_RATIO_MAX)
