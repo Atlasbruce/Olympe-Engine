@@ -454,6 +454,11 @@ namespace {
 void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& tiledMap,
                                                 const Olympe::Editor::LevelDefinition& levelDef)
 {
+	// Constants for isometric tile offset heuristic
+	constexpr float ISO_ASPECT_RATIO_MIN = 1.8f;  // Minimum aspect ratio for standard 2:1 isometric
+	constexpr float ISO_ASPECT_RATIO_MAX = 2.2f;  // Maximum aspect ratio for standard 2:1 isometric
+	constexpr float STANDARD_ISO_OFFSET_RATIO = 0.5f;  // Standard isometric vertical offset (tileHeight/2)
+	
 	SYSTEM_LOG << "\n";
 	SYSTEM_LOG << "+==========================================================+\n";
 	SYSTEM_LOG << "| COLLISION & NAVIGATION MAP GENERATION                    |\n";
@@ -560,10 +565,10 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 			// Most isometric tilesets use tileHeight/2 as vertical offset
 			float aspectRatio = tilePixelWidth / tilePixelHeight;
 			
-			if (aspectRatio >= 1.8f && aspectRatio <= 2.2f)
+			if (aspectRatio >= ISO_ASPECT_RATIO_MIN && aspectRatio <= ISO_ASPECT_RATIO_MAX)
 			{
 				// Looks like standard 2:1 isometric
-				tileOffsetY = tilePixelHeight * 0.5f;
+				tileOffsetY = tilePixelHeight * STANDARD_ISO_OFFSET_RATIO;
 				SYSTEM_LOG << "  -> Applying standard isometric offset heuristic: (0, " 
 				           << tileOffsetY << ")\n";
 			}
