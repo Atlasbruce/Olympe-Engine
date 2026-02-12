@@ -448,6 +448,72 @@ public:
         return false;  // Default if no GridSettings entity exists
     }
     
+    /// Toggle collision overlay visibility
+    void ToggleCollisionOverlay()
+    {
+        for (const auto& kv : m_entitySignatures)
+        {
+            EntityID e = kv.first;
+            if (HasComponent<GridSettings_data>(e))
+            {
+                GridSettings_data& settings = GetComponent<GridSettings_data>(e);
+                settings.showCollisionOverlay = !settings.showCollisionOverlay;
+                
+                SYSTEM_LOG << "World::ToggleCollisionOverlay: Collision overlay " 
+                           << (settings.showCollisionOverlay ? "enabled" : "disabled") << "\n";
+                break;
+            }
+        }
+    }
+    
+    /// Toggle navigation overlay visibility
+    void ToggleNavigationOverlay()
+    {
+        for (const auto& kv : m_entitySignatures)
+        {
+            EntityID e = kv.first;
+            if (HasComponent<GridSettings_data>(e))
+            {
+                GridSettings_data& settings = GetComponent<GridSettings_data>(e);
+                settings.showNavigationOverlay = !settings.showNavigationOverlay;
+                
+                SYSTEM_LOG << "World::ToggleNavigationOverlay: Navigation overlay " 
+                           << (settings.showNavigationOverlay ? "enabled" : "disabled") << "\n";
+                break;
+            }
+        }
+    }
+    
+    /// Get collision overlay state
+    bool IsCollisionOverlayVisible()
+    {
+        for (const auto& kv : m_entitySignatures)
+        {
+            EntityID e = kv.first;
+            if (HasComponent<GridSettings_data>(e))
+            {
+                const GridSettings_data& settings = GetComponent<GridSettings_data>(e);
+                return settings.showCollisionOverlay;
+            }
+        }
+        return false;  // Default if no GridSettings entity exists
+    }
+    
+    /// Get navigation overlay state
+    bool IsNavigationOverlayVisible()
+    {
+        for (const auto& kv : m_entitySignatures)
+        {
+            EntityID e = kv.first;
+            if (HasComponent<GridSettings_data>(e))
+            {
+                const GridSettings_data& settings = GetComponent<GridSettings_data>(e);
+                return settings.showNavigationOverlay;
+            }
+        }
+        return false;  // Default if no GridSettings entity exists
+    }
+    
     /// Synchronize grid settings with loaded level
     /// Extracts map orientation and tile dimensions from LevelDefinition
     /// and updates GridSettings_data (projection mode, cellSize, hexRadius)

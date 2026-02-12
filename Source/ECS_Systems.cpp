@@ -65,6 +65,8 @@ void InputEventConsumeSystem::Process()
     
     // Static flags for debouncing
     static bool s_key_TabPressed = false;
+    static bool s_key_CPressed = false;
+    static bool s_key_NPressed = false;
     
     // Process each input event
     queue.ForEachDomainEvent(EventDomain::Input, [](const Message& msg) {
@@ -79,6 +81,16 @@ void InputEventConsumeSystem::Process()
                 s_key_TabPressed = true;
                 World::Get().ToggleGrid();
             }
+            else if (sc == SDL_SCANCODE_C && !s_key_CPressed)
+            {
+                s_key_CPressed = true;
+                World::Get().ToggleCollisionOverlay();
+            }
+            else if (sc == SDL_SCANCODE_N && !s_key_NPressed)
+            {
+                s_key_NPressed = true;
+                World::Get().ToggleNavigationOverlay();
+            }
         }
         else if (msg.msg_type == EventType::Olympe_EventType_Keyboard_KeyUp)
         {
@@ -87,6 +99,14 @@ void InputEventConsumeSystem::Process()
             if (sc == SDL_SCANCODE_TAB)
             {
                 s_key_TabPressed = false;
+            }
+            else if (sc == SDL_SCANCODE_C)
+            {
+                s_key_CPressed = false;
+            }
+            else if (sc == SDL_SCANCODE_N)
+            {
+                s_key_NPressed = false;
             }
         }
         
