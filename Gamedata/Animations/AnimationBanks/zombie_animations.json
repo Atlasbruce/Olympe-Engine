@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "bankName": "zombie_animations",
+  "description": "Animation bank for zombie enemy",
+  "spritesheets": [
+    {
+      "id": "zombie_idle",
+      "path": "./Resources/Sprites/zombie_idle.png",
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "columns": 4,
+      "rows": 1,
+      "totalFrames": 4,
+      "hotspot": { "x": 16, "y": 16 }
+    },
+    {
+      "id": "zombie_walk",
+      "path": "./Resources/Sprites/zombie_walk.png",
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "columns": 6,
+      "rows": 1,
+      "totalFrames": 6,
+      "hotspot": { "x": 16, "y": 16 }
+    },
+    {
+      "id": "zombie_attack",
+      "path": "./Resources/Sprites/zombie_attack.png",
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "columns": 5,
+      "rows": 1,
+      "totalFrames": 5,
+      "hotspot": { "x": 16, "y": 16 }
+    },
+    {
+      "id": "zombie_dead",
+      "path": "./Resources/Sprites/zombie_dead.png",
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "columns": 4,
+      "rows": 1,
+      "totalFrames": 4,
+      "hotspot": { "x": 16, "y": 16 }
+    }
+  ],
+  "animations": [
+    {
+      "name": "Idle",
+      "spritesheetId": "zombie_idle",
+      "startFrame": 0,
+      "endFrame": 3,
+      "framerate": 6.0,
+      "looping": true,
+      "events": []
+    },
+    {
+      "name": "Walk",
+      "spritesheetId": "zombie_walk",
+      "startFrame": 0,
+      "endFrame": 5,
+      "framerate": 8.0,
+      "looping": true,
+      "events": [
+        {
+          "frame": 2,
+          "type": "sound",
+          "data": {
+            "soundPath": "./Resources/Sounds/zombie_groan.wav",
+            "volume": 0.4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attack",
+      "spritesheetId": "zombie_attack",
+      "startFrame": 0,
+      "endFrame": 4,
+      "framerate": 12.0,
+      "looping": false,
+      "events": [
+        {
+          "frame": 3,
+          "type": "hitbox",
+          "data": {
+            "offsetX": 20,
+            "offsetY": 0,
+            "width": 30,
+            "height": 32,
+            "damage": 15.0
+          }
+        },
+        {
+          "frame": 3,
+          "type": "sound",
+          "data": {
+            "soundPath": "./Resources/Sounds/zombie_attack.wav",
+            "volume": 0.7
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dead",
+      "spritesheetId": "zombie_dead",
+      "startFrame": 0,
+      "endFrame": 3,
+      "framerate": 8.0,
+      "looping": false,
+      "events": [
+        {
+          "frame": 0,
+          "type": "sound",
+          "data": {
+            "soundPath": "./Resources/Sounds/zombie_death.wav",
+            "volume": 0.6
+          }
+        },
+        {
+          "frame": 3,
+          "type": "gamelogic",
+          "data": {
+            "action": "entity_death_complete"
+          }
+        }
+      ]
+    }
+  ]
+}
