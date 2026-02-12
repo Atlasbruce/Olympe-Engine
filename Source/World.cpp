@@ -898,7 +898,89 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 #include "OlympeTilemapEditor/include/LevelManager.h"
 #include "prefabfactory.h"
 #include "ECS_Components_AI.h"
+#include "AI/BehaviorTreeDependencyScanner.h"
+#include "AI/BehaviorTree.h"
 #include <fstream>
+
+bool World::LoadLevelDependencies(const nlohmann::json& levelJson)
+{
+    std::cout << "\n+===========================================================+\n";
+    std::cout << "| LEVEL DEPENDENCY LOADING                                  |\n";
+    std::cout << "+===========================================================+\n";
+    
+    // Step 1: Extract all prefab types used in the level
+    std::cout << "Step 1/3: Extracting prefab types from level...\n";
+    std::set<std::string> prefabNames = BehaviorTreeDependencyScanner::ExtractPrefabsFromLevel(levelJson);
+    
+    if (prefabNames.empty())
+    {
+        std::cout << "  -> No prefabs found in level (this may be normal for tile-only levels)\n";
+        std::cout << "+===========================================================+\n\n";
+        return true;
+    }
+    
+    std::cout << "  -> Found " << prefabNames.size() << " unique prefab type(s):\n";
+    for (const auto& name : prefabNames)
+    {
+        std::cout << "     - " << name << "\n";
+    }
+    
+    // Step 2: Scan prefabs for behavior tree dependencies
+    std::cout << "\nStep 2/3: Scanning prefabs for behavior tree dependencies...\n";
+    std::vector<std::string> prefabList(prefabNames.begin(), prefabNames.end());
+    auto btDeps = BehaviorTreeDependencyScanner::ScanPrefabs(prefabList);
+    
+    if (btDeps.empty())
+    {
+        std::cout << "  -> No behavior trees required for this level\n";
+        std::cout << "+===========================================================+\n\n";
+        return true;
+    }
+    
+    // Step 3: Load all required behavior trees
+    std::cout << "\nStep 3/3: Loading required behavior trees...\n";
+    int loaded = 0;
+    int alreadyLoaded = 0;
+    int failed = 0;
+    
+    for (const auto& dep : btDeps)
+    {
+        // Check if already loaded
+        if (BehaviorTreeManager::Get().IsTreeLoadedByPath(dep.treePath))
+        {
+            std::cout << "  [CACHED] " << dep.treePath << " (ID=" << dep.suggestedTreeId << ")\n";
+            alreadyLoaded++;
+            continue;
+        }
+        
+        // Load the tree
+        std::cout << "  [LOADING] " << dep.treePath << " (ID=" << dep.suggestedTreeId << ")... ";
+        
+        if (BehaviorTreeManager::Get().LoadTreeFromFile(dep.treePath, dep.suggestedTreeId))
+        {
+            std::cout << "SUCCESS\n";
+            loaded++;
+        }
+        else
+        {
+            std::cout << "FAILED\n";
+            std::cerr << "  [ERROR] Failed to load behavior tree: " << dep.treePath << "\n";
+            failed++;
+        }
+    }
+    
+    // Summary
+    std::cout << "\n+===========================================================+\n";
+    std::cout << "| DEPENDENCY LOADING SUMMARY                                |\n";
+    std::cout << "+===========================================================+\n";
+    std::cout << "| Behavior Trees Required:   " << btDeps.size() << "\n";
+    std::cout << "| Loaded This Session:       " << loaded << "\n";
+    std::cout << "| Already Cached:            " << alreadyLoaded << "\n";
+    std::cout << "| Failed:                    " << failed << "\n";
+    std::cout << "+===========================================================+\n\n";
+    
+    return (failed == 0);
+}
 
 bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
 {
@@ -959,6 +1041,26 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     
     // Validate prefabs (after normalization)
     ValidateLevelPrefabs(levelDef);
+    
+    // =======================================================================
+    // PHASE 2.5: BEHAVIOR TREE DEPENDENCY LOADING (NEW!)
+    // =======================================================================
+    
+    // Load the raw JSON again for dependency scanning
+    nlohmann::json levelJsonRaw;
+    if (JsonHelper::LoadJsonFromFile(tiledMapPath, levelJsonRaw))
+    {
+        if (!LoadLevelDependencies(levelJsonRaw))
+        {
+            std::cerr << "[World] ERROR: Failed to load level dependencies\n";
+            return false;
+        }
+    }
+    else
+    {
+        std::cerr << "[World] WARNING: Could not load level JSON for dependency scanning\n";
+        // Continue anyway - not all levels may have behavior trees
+    }
     
     // =======================================================================
     // PHASE 3: RESOURCE PRELOADING (Centralized)

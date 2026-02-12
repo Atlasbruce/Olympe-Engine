@@ -10,6 +10,7 @@ Behavior Tree implementation: JSON loading and built-in node execution.
 */
 
 #include "BehaviorTree.h"
+#include "BehaviorTreeDependencyScanner.h"
 #include "../ECS_Components_AI.h"
 #include "../ECS_Components.h"
 #include "../World.h"
@@ -223,8 +224,12 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
         std::cout << "[BehaviorTreeManager] Step 6: Registering tree..." << std::endl;
         m_trees.push_back(tree);
         
+        // Register the path → ID mapping
+        m_pathToIdMap[filepath] = treeId;
+        
         std::cout << "[BehaviorTreeManager] SUCCESS: Loaded '" << tree.name << "' (ID=" << treeId << ") with " 
                   << tree.nodes.size() << " nodes" << std::endl;
+        std::cout << "[BehaviorTreeManager] Registered path mapping: " << filepath << " → ID " << treeId << "\n";
         std::cout << "[BehaviorTreeManager] ========================================+n" << std::endl;
         
         return true;
@@ -252,6 +257,7 @@ const BehaviorTreeAsset* BehaviorTreeManager::GetTree(uint32_t treeId) const
 void BehaviorTreeManager::Clear()
 {
     m_trees.clear();
+    m_pathToIdMap.clear();
 }
 
 bool BehaviorTreeManager::ReloadTree(uint32_t treeId)
@@ -725,4 +731,28 @@ BTStatus ExecuteBTAction(BTActionType actionType, float param1, float param2, En
     }
     
     return BTStatus::Failure;
+}
+
+// --- Path-to-ID Registry Methods ---
+
+uint32_t BehaviorTreeManager::GetTreeIdFromPath(const std::string& treePath) const
+{
+    auto it = m_pathToIdMap.find(treePath);
+    if (it != m_pathToIdMap.end())
+        return it->second;
+    
+    // Fallback: generate ID from path if not in registry
+    // This allows forward compatibility with paths that aren't loaded yet
+    return BehaviorTreeDependencyScanner::GenerateTreeIdFromPath(treePath);
+}
+
+bool BehaviorTreeManager::IsTreeLoadedByPath(const std::string& treePath) const
+{
+    return m_pathToIdMap.find(treePath) != m_pathToIdMap.end();
+}
+
+const BehaviorTreeAsset* BehaviorTreeManager::GetTreeByPath(const std::string& treePath) const
+{
+    uint32_t treeId = GetTreeIdFromPath(treePath);
+    return GetTree(treeId);
 }

@@ -186,6 +186,9 @@ public:
     bool LoadLevelFromTiled(const std::string& tiledMapPath);
     void UnloadCurrentLevel();
     
+    // NEW: Load and prepare all behavior tree dependencies for a level
+    bool LoadLevelDependencies(const nlohmann::json& levelJson);
+    
     // Generate collision and navigation maps from TMJ/TMX level data
     void GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& tiledMap,
                                             const Olympe::Editor::LevelDefinition& levelDef);
