@@ -94,7 +94,8 @@ public:
 
 	// Initialize with layers
 	void Initialize(int width, int height, GridProjectionType projection, 
-				   float tileWidth, float tileHeight, int numLayers = 1);
+				   float tileWidth, float tileHeight, int numLayers = 1,
+				   float tileOffsetX = 0.0f, float tileOffsetY = 0.0f);
 	
 	// Layer management
 	void SetActiveLayer(CollisionLayer layer);
@@ -170,6 +171,10 @@ public:
 	GridProjectionType m_projection = GridProjectionType::Ortho;
 	float m_tileWidth = 32.0f;
 	float m_tileHeight = 32.0f;
+	
+	// Tile offset for coordinate calculations (isometric alignment)
+	float m_tileOffsetX = 0.0f;
+	float m_tileOffsetY = 0.0f;
 	
 	// Sectorization (for future dynamic loading)
 	std::vector<Sector> m_sectors;
