@@ -408,27 +408,27 @@ struct GridSettings_data
 	uint8_t activeCollisionLayer = 0;  // Which collision layer to display (0-7)
 	uint8_t activeNavigationLayer = 0; // Which navigation layer to display (0-7)
 	
-	// **NEW: Overlay colors per layer**
+	// **Updated: Overlay colors per layer (increased alpha for better visibility)**
 	SDL_Color collisionColors[8] = {
-		{ 150,  50, 200, 100 },  // Ground: purple
-		{  50, 150, 255, 100 },  // Sky: cyan
-		{ 100,  50,  50, 100 },  // Underground: dark red
-		{ 255, 200,  50, 100 },  // Volume: orange
-		{ 200, 200, 200, 100 },  // Custom1-4: gray variants
-		{ 180, 180, 180, 100 },
-		{ 160, 160, 160, 100 },
-		{ 140, 140, 140, 100 }
+		{ 150,  50, 200, 150 },  // Ground: purple
+		{  50, 150, 255, 150 },  // Sky: cyan
+		{ 100,  50,  50, 150 },  // Underground: dark red
+		{ 255, 200,  50, 150 },  // Volume: orange
+		{ 200, 200, 200, 150 },  // Custom1-4: gray variants
+		{ 180, 180, 180, 150 },
+		{ 160, 160, 160, 150 },
+		{ 140, 140, 140, 150 }
 	};
 	
 	SDL_Color navigationColors[8] = {
-		{  50, 200, 100, 100 },  // Ground: green
-		{ 100, 200, 255, 100 },  // Sky: light blue
-		{ 200, 100,  50, 100 },  // Underground: brown
-		{ 255, 255, 100, 100 },  // Volume: yellow
-		{ 150, 255, 150, 100 },  // Custom1-4: green variants
-		{ 120, 235, 120, 100 },
-		{  90, 215,  90, 100 },
-		{  60, 195,  60, 100 }
+		{  50, 200, 100, 150 },  // Ground: green
+		{ 100, 200, 255, 150 },  // Sky: light blue
+		{ 200, 100,  50, 150 },  // Underground: brown
+		{ 255, 255, 100, 150 },  // Volume: yellow
+		{ 150, 255, 150, 150 },  // Custom1-4: green variants
+		{ 120, 235, 120, 150 },
+		{  90, 215,  90, 150 },
+		{  60, 195,  60, 150 }
 	};
 	
 	// Constructors

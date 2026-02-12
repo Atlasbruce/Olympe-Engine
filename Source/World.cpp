@@ -588,14 +588,20 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 	SYSTEM_LOG << "  -> NavigationMap initialized: " << mapWidth << "x" << mapHeight << "\n";
 	
 	// ========================================================================
-	// PHASE 1: Build navigation map from tile layers
+	// PHASE 1: Build navigation map from tile layers with custom properties
 	// ========================================================================
 	
 	SYSTEM_LOG << "  [1/2] Processing tile layers for navigation...\n";
 	
-	int navigableTiles = 0;
-	int collisionFromEmptyTiles = 0;
-	int totalTilesProcessed = 0;
+	int totalNavigableTiles = 0;
+	int totalBlockedTiles = 0;
+	int totalBorderTiles = 0;
+	int layersProcessed = 0;
+	int layersSkipped = 0;
+	
+	// 8-directional neighbor offsets (constant for all layers and projections)
+	const int dx[] = {-1, 0, 1, -1, 1, -1, 0, 1};
+	const int dy[] = {-1, -1, -1, 0, 0, 1, 1, 1};
 	
 	for (size_t layerIdx = 0; layerIdx < tiledMap.layers.size(); ++layerIdx)
 	{
@@ -605,25 +611,32 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 		// Skip non-tile layers
 		if (layer->type != Olympe::Tiled::LayerType::TileLayer) continue;
 
-		// Skip collision layers (will be processed in Phase 2)
-		if (IsCollisionLayer(layer))
+		// Parse layer navigation properties
+		Olympe::Tiled::LayerProperties props = Olympe::Tiled::ParseLayerProperties(layer->properties);
+		
+		// Skip layers without navigation properties (graphic-only layers)
+		if (!props.hasNavigationProperties)
 		{
-			SYSTEM_LOG << "    Skipping collision layer: " << layer->name << "\n";
+			SYSTEM_LOG << "    Skipping graphic-only layer: " << layer->name << "\n";
+			layersSkipped++;
 			continue;
 		}
 
-		SYSTEM_LOG << "    Processing navigation from layer: " << layer->name 
-		           << " (" << layer->width << "x" << layer->height 
-		           << ", data size: " << layer->data.size() << ")\n";
+		SYSTEM_LOG << "    Layer '" << layer->name << "' navigation properties:\n";
+		SYSTEM_LOG << "      - isTilesetWalkable: " << (props.isTilesetWalkable ? "true" : "false") << "\n";
+		SYSTEM_LOG << "      - useTilesetBorder: " << (props.useTilesetBorder ? "true" : "false") << "\n";
 
 		// Use layer dimensions, clamped to map bounds
 		int layerW = std::min(layer->width, mapWidth);
 		int layerH = std::min(layer->height, mapHeight);
 
 		// Process tile data for this layer (data is 1D array: index = y * width + x)
-		int index = 0;
-		int tilesInThisLayer = 0;
+		int navigableCount = 0;
+		int blockedCount = 0;
+		int borderCount = 0;
 		
+		// First pass: Mark non-empty tiles based on isTilesetWalkable
+		int index = 0;
 		for (int y = 0; y < layerH; ++y)
 		{
 			for (int x = 0; x < layerW; ++x)
@@ -638,109 +651,128 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 				uint32_t gid = layer->data[index];
 				uint32_t tileId = gid & ~TILE_FLIP_FLAGS_MASK; // Remove flip flags
 
-				if (tileId > 0) // Tile exists (graphic tile)
+				if (tileId > 0) // Non-empty tile
 				{
-					TileProperties props;
-					props.isNavigable = true;
-					props.isBlocked = false;
-					props.traversalCost = 1.0f;
-					collMap.SetTileProperties(x, y, props);
-					navigableTiles++;
-					tilesInThisLayer++;
+					// Get current tile properties (may have been set by previous layers)
+					TileProperties tileProps = collMap.GetTileProperties(x, y);
 					
-					// DEBUG: Log first 5 navigable tiles in this layer
-					if (tilesInThisLayer <= 5)
+					if (props.isTilesetWalkable)
 					{
-						SYSTEM_LOG << "      DEBUG: Set navigable at tile (" << x << "," << y 
-						           << "), tileId=" << tileId << " in layer '" << layer->name << "'\n";
+						// Walkable layer: mark non-empty tiles as navigable (unless already blocked)
+						if (!tileProps.isBlocked)
+						{
+							tileProps.isNavigable = true;
+							tileProps.isBlocked = false;
+							tileProps.traversalCost = 1.0f;
+							collMap.SetTileProperties(x, y, tileProps);
+							navigableCount++;
+						}
+					}
+					else
+					{
+						// Collision layer: mark non-empty tiles as blocked (override previous settings)
+						tileProps.isBlocked = true;
+						tileProps.isNavigable = false;
+						tileProps.traversalCost = 999.0f;
+						collMap.SetTileProperties(x, y, tileProps);
+						blockedCount++;
 					}
 				}
-				else // Empty tile = collision by default (provides boundaries when no explicit collision layers exist)
-				{
-					TileProperties props;
-					props.isNavigable = false;
-					props.isBlocked = true;
-					props.traversalCost = 999.0f;
-					collMap.SetTileProperties(x, y, props);
-					collMap.SetCollision(x, y, true);
-					collisionFromEmptyTiles++;
-				}
 				
-				totalTilesProcessed++;
 				++index;
 			}
 		}
 		
-		SYSTEM_LOG << "      -> Marked " << tilesInThisLayer << " navigable tiles in this layer\n";
-	}
-
-	SYSTEM_LOG << "  -> Processed tile layers: " << navigableTiles << " navigable tiles\n";
-	SYSTEM_LOG << "  -> Fallback collisions (empty tiles): " << collisionFromEmptyTiles << "\n";
-
-	// ========================================================================
-	// PHASE 2: Build collision map from explicit collision layers
-	// ========================================================================
-	
-	SYSTEM_LOG << "  [2/2] Processing explicit collision layers and objects...\n";
-	
-	int blockedTiles = 0;
-	
-	// A) Collision tile layers
-	for (size_t layerIdx = 0; layerIdx < tiledMap.layers.size(); ++layerIdx)
-	{
-		const std::shared_ptr<Olympe::Tiled::TiledLayer>& layer = tiledMap.layers[layerIdx];
-		if (!layer) continue;
-
-		// Skip non-tile layers
-		if (layer->type != Olympe::Tiled::LayerType::TileLayer) continue;
-
-		// Check if this layer is marked as a collision layer
-		if (!IsCollisionLayer(layer)) continue;
-
-		SYSTEM_LOG << "    Processing collision layer: " << layer->name 
-		           << " (" << layer->width << "x" << layer->height << ")\n";
-
-		// Use layer dimensions, clamped to map bounds
-		int layerW = std::min(layer->width, mapWidth);
-		int layerH = std::min(layer->height, mapHeight);
-
-		// Process collision data for this layer (data is 1D array: index = y * width + x)
-		int index = 0;
-		int blockedInLayer = 0;
-		
-		for (int y = 0; y < layerH; ++y)
+		// Second pass: Mark borders if useTilesetBorder is true
+		if (props.useTilesetBorder)
 		{
-			for (int x = 0; x < layerW; ++x)
+			index = 0;
+			for (int y = 0; y < layerH; ++y)
 			{
-				if (index >= static_cast<int>(layer->data.size()))
+				for (int x = 0; x < layerW; ++x)
 				{
-					break;
-				}
+					if (index >= static_cast<int>(layer->data.size())) break;
 
-				uint32_t gid = layer->data[index];
-				uint32_t tileId = gid & ~TILE_FLIP_FLAGS_MASK; // Remove flip flags
+					uint32_t gid = layer->data[index];
+					uint32_t tileId = gid & ~TILE_FLIP_FLAGS_MASK;
 
-				// Collision tile exists (non-zero GID) = blocked
-				if (tileId > 0)
-				{
-					TileProperties props;
-					props.isBlocked = true;
-					props.isNavigable = false;
-					props.traversalCost = 999.0f; // Large but finite cost for impassable tiles
-					collMap.SetTileProperties(x, y, props);
-					collMap.SetCollision(x, y, true);
-					blockedInLayer++;
+					// Check if this is an empty tile
+					if (tileId == 0)
+					{
+						// Check all 8 directions for non-empty tiles
+						bool hasNonEmptyNeighbor = false;
+						
+						for (int dir = 0; dir < 8; ++dir)
+						{
+							int nx = x + dx[dir];
+							int ny = y + dy[dir];
+							
+							// Check bounds
+							if (nx < 0 || nx >= layerW || ny < 0 || ny >= layerH)
+								continue;
+							
+							// Check if neighbor has a tile in this layer
+							int neighborIndex = ny * layerW + nx;
+							if (neighborIndex >= 0 && neighborIndex < static_cast<int>(layer->data.size()))
+							{
+								uint32_t neighborGid = layer->data[neighborIndex];
+								uint32_t neighborTileId = neighborGid & ~TILE_FLIP_FLAGS_MASK;
+								
+								if (neighborTileId > 0)
+								{
+									hasNonEmptyNeighbor = true;
+									break;
+								}
+							}
+						}
+						
+						// If this empty tile is adjacent to a non-empty tile, mark it as a border
+						if (hasNonEmptyNeighbor)
+						{
+							TileProperties tileProps = collMap.GetTileProperties(x, y);
+							tileProps.isBlocked = true;
+							tileProps.isNavigable = false;
+							tileProps.traversalCost = 999.0f;
+							collMap.SetTileProperties(x, y, tileProps);
+							borderCount++;
+						}
+					}
+					
+					++index;
 				}
-				
-				++index;
 			}
 		}
 		
-		SYSTEM_LOG << "      -> Marked " << blockedInLayer << " blocked tiles in this layer\n";
-		blockedTiles += blockedInLayer;
+		SYSTEM_LOG << "        -> Non-empty tiles: " << navigableCount << " navigable, " 
+		           << blockedCount << " blocked\n";
+		if (props.useTilesetBorder)
+		{
+			SYSTEM_LOG << "        -> Border tiles: " << borderCount << " marked as blocked\n";
+		}
+		
+		totalNavigableTiles += navigableCount;
+		totalBlockedTiles += blockedCount;
+		totalBorderTiles += borderCount;
+		layersProcessed++;
 	}
 
-	// B) Collision object layers
+	SYSTEM_LOG << "    -> Summary: " << layersProcessed << " layers processed, " 
+	           << layersSkipped << " skipped (graphic only)\n";
+	SYSTEM_LOG << "    -> Total navigable tiles: " << totalNavigableTiles << "\n";
+	SYSTEM_LOG << "    -> Total blocked tiles: " << (totalBlockedTiles + totalBorderTiles) 
+	           << " (" << totalBlockedTiles << " from obstacles + " 
+	           << totalBorderTiles << " from borders)\n";
+
+	
+	// ========================================================================
+	// PHASE 2: Process explicit collision object layers (optional)
+	// ========================================================================
+	
+	SYSTEM_LOG << "  [2/2] Processing explicit collision object layers (if any)...\n";
+	
+	int objectCollisionTiles = 0;
+	
+	// B) Collision object layers (optional, legacy support)
 	for (size_t layerIdx = 0; layerIdx < tiledMap.layers.size(); ++layerIdx)
 	{
 		const std::shared_ptr<Olympe::Tiled::TiledLayer>& layer = tiledMap.layers[layerIdx];
@@ -749,7 +781,7 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 		// Only process object group layers
 		if (layer->type != Olympe::Tiled::LayerType::ObjectGroup) continue;
 
-		// Check if this object group is marked as a collision layer
+		// Check if this object group is marked as a collision layer (legacy pattern matching)
 		if (!IsCollisionLayer(layer)) continue;
 
 		SYSTEM_LOG << "    Processing collision objects from layer: " << layer->name << "\n";
@@ -777,13 +809,12 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 					
 					if (collMap.IsValidGridPosition(cx, cy))
 					{
-						TileProperties props;
-						props.isBlocked = true;
-						props.isNavigable = false;
-						props.traversalCost = 999.0f;
-						collMap.SetTileProperties(cx, cy, props);
-						collMap.SetCollision(cx, cy, true);
-						blockedTiles++;
+						TileProperties objProps = collMap.GetTileProperties(cx, cy);
+						objProps.isBlocked = true;
+						objProps.isNavigable = false;
+						objProps.traversalCost = 999.0f;
+						collMap.SetTileProperties(cx, cy, objProps);
+						objectCollisionTiles++;
 					}
 				}
 			}
@@ -793,22 +824,24 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 		SYSTEM_LOG << "      -> Processed " << objectsProcessed << " collision objects\n";
 	}
 	
-	SYSTEM_LOG << "  -> Processed explicit collision layers: " << blockedTiles << " blocked tiles\n";
+	if (objectCollisionTiles > 0)
+	{
+		SYSTEM_LOG << "    -> Object collision tiles: " << objectCollisionTiles << "\n";
+	}
 	
 	// ========================================================================
 	// Summary
 	// ========================================================================
 	
-	int totalBlocked = blockedTiles + collisionFromEmptyTiles;
-	
 	SYSTEM_LOG << "\n";
 	SYSTEM_LOG << "  -> Collision & Navigation maps ready\n";
 	SYSTEM_LOG << "     Grid dimensions: " << mapWidth << "x" << mapHeight 
 	           << " (" << (mapWidth * mapHeight) << " total tiles)\n";
-	SYSTEM_LOG << "     Navigable tiles: " << navigableTiles << "\n";
-	SYSTEM_LOG << "     Blocked tiles (explicit): " << blockedTiles << "\n";
-	SYSTEM_LOG << "     Blocked tiles (empty fallback): " << collisionFromEmptyTiles << "\n";
-	SYSTEM_LOG << "     Total blocked: " << totalBlocked << "\n";
+	SYSTEM_LOG << "     Navigable tiles: " << totalNavigableTiles << "\n";
+	SYSTEM_LOG << "     Blocked tiles: " << (totalBlockedTiles + totalBorderTiles + objectCollisionTiles)
+	           << " (obstacles: " << totalBlockedTiles 
+	           << ", borders: " << totalBorderTiles
+	           << ", objects: " << objectCollisionTiles << ")\n";
 	
 	// DEBUG: Verify that tiles can be read back correctly
 	SYSTEM_LOG << "\n";

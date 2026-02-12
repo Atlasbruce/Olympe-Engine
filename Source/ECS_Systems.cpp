@@ -1053,6 +1053,29 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
                 break;
         }
     }
+    
+    // ================================================================
+    // PHASE 4: RENDER OVERLAYS (LAST - ON TOP OF EVERYTHING)
+    // ================================================================
+    GridSystem* gridSystem = World::Get().GetSystem<GridSystem>();
+    if (gridSystem)
+    {
+        const GridSettings_data* settings = gridSystem->FindSettings();
+        if (settings)
+        {
+            // Render collision overlay
+            if (settings->showCollisionOverlay)
+            {
+                gridSystem->RenderCollisionOverlay(cam, *settings);
+            }
+            
+            // Render navigation overlay
+            if (settings->showNavigationOverlay)
+            {
+                gridSystem->RenderNavigationOverlay(cam, *settings);
+            }
+        }
+    }
 }
 
 // Render a single entity
@@ -1774,9 +1797,8 @@ void GridSystem::RenderForCamera(const CameraTransform& cam)
         default: RenderOrtho(cam, *s); break;
     }
     
-    // **NEW: Render collision and navigation overlays**
-    RenderCollisionOverlay(cam, *s);
-    RenderNavigationOverlay(cam, *s);
+    // NOTE: Overlays are now rendered in RenderMultiLayerForCamera (after all tiles/entities)
+    // This ensures they appear on top of all graphics
 }
 
 void GridSystem::RenderOrtho(const CameraTransform& cam, const GridSettings_data& s)
