@@ -249,7 +249,8 @@ struct Animation_data
 
 // --- Component Visual Animation Data (for Animation System V2) ---
 // Forward declarations for animation system types
-namespace OlympeAnimation {
+namespace OlympeAnimation
+{
 	class AnimationGraph;
 	class AnimationBank;
 }
@@ -265,7 +266,8 @@ struct VisualAnimation_data
 	bool flipX = false;         // Flip sprite horizontally
 	bool flipY = false;         // Flip sprite vertically
 	
-	// Runtime pointers (not serialized, set by AnimationSystem)
+	// Runtime pointers (not serialized, set by AnimationSystem at runtime)
+	// These are resolved from animGraphPath when the entity is spawned
 	OlympeAnimation::AnimationGraph* animGraph = nullptr;
 	OlympeAnimation::AnimationBank* animBank = nullptr;
 	

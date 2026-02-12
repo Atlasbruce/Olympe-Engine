@@ -40,6 +40,9 @@ Animation banks define the visual data for animations.
 
 **Location:** `Gamedata/Animations/AnimationBanks/*.json`
 
+**Schema Versioning:**
+The `schema_version` field (currently 1) is included for future compatibility. If breaking changes are made to the JSON format, the version will be incremented. The animation system will check this version and provide appropriate migration warnings or automatic conversion when loading older files.
+
 ```json
 {
   "schema_version": 1,

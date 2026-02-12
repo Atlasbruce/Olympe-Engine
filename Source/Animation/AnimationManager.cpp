@@ -133,7 +133,9 @@ namespace OlympeAnimation
                 {
                     std::string path = entry.path().string();
                     // Check if file has .json extension
-                    if (path.size() >= 5 && path.substr(path.size() - 5) == ".json")
+                    // Using find_last_of for robust extension checking
+                    size_t dotPos = path.find_last_of('.');
+                    if (dotPos != std::string::npos && path.substr(dotPos) == ".json")
                     {
                         files.push_back(path);
                     }

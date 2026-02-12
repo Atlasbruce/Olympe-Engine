@@ -33,7 +33,7 @@ namespace OlympeAnimation
         int rows = 1;                // Number of rows in the sheet
         int totalFrames = 1;         // Total number of frames
         
-        Vector2 hotspot;             // Center point for rendering (default: center)
+        Hotspot hotspot;             // Center point for rendering (default: center)
 
         SpriteSheet() = default;
     };

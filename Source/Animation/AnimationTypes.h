@@ -12,7 +12,6 @@ Purpose:
 #include <string>
 #include <vector>
 #include <SDL3/SDL.h>
-#include "vector.h"
 
 // Forward declarations
 using TextureHandle = SDL_Texture*;
@@ -20,15 +19,17 @@ using TextureHandle = SDL_Texture*;
 namespace OlympeAnimation
 {
     // ========================================================================
-    // Common Vector2 structure for animation system
+    // Hotspot - 2D position for sprite anchor points
+    // Note: We don't reuse the engine's Vector class here to keep the
+    // animation system decoupled and use a simple POD structure
     // ========================================================================
-    struct Vector2
+    struct Hotspot
     {
         float x = 0.0f;
         float y = 0.0f;
 
-        Vector2() = default;
-        Vector2(float _x, float _y) : x(_x), y(_y) {}
+        Hotspot() = default;
+        Hotspot(float _x, float _y) : x(_x), y(_y) {}
     };
 
     // ========================================================================
