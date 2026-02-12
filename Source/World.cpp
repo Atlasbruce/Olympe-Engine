@@ -1046,7 +1046,10 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     // PHASE 2.5: BEHAVIOR TREE DEPENDENCY LOADING (NEW!)
     // =======================================================================
     
-    // Load the raw JSON again for dependency scanning
+    // Note: We reload the JSON here to access the raw layer data for dependency scanning.
+    // This is intentional - the TiledMap structure is already converted to LevelDefinition,
+    // and creating a new API to extract the raw JSON would require larger refactoring.
+    // The performance impact is negligible for typical level sizes.
     nlohmann::json levelJsonRaw;
     if (JsonHelper::LoadJsonFromFile(tiledMapPath, levelJsonRaw))
     {
