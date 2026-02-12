@@ -2064,11 +2064,12 @@ void GridSystem::DrawHexagonOverlay(float centerX, float centerY, float radius, 
 	
 	// Draw hexagon with 6 vertices
 	constexpr int numPoints = 6;
+	constexpr float HEXAGON_ROTATION_OFFSET = -30.0f; // Rotate hexagon to have flat top
 	SDL_Vertex vertices[numPoints];
 	
 	for (int i = 0; i < numPoints; ++i)
 	{
-		float angle = (60.0f * i - 30.0f) * (float)(k_PI / 180.0f);
+		float angle = (60.0f * i + HEXAGON_ROTATION_OFFSET) * (float)(k_PI / 180.0f);
 		vertices[i] = {
 			{centerX + radius * std::cos(angle), centerY + radius * std::sin(angle)},
 			color,
@@ -2076,11 +2077,11 @@ void GridSystem::DrawHexagonOverlay(float centerX, float centerY, float radius, 
 		};
 	}
 	
-	// Triangle fan from center
-	int indices[12] = {0,1,2, 0,2,3, 0,3,4, 0,4,5};
+	// Triangle fan from center - need 6 triangles to cover all segments
+	int indices[15] = {0,1,2, 0,2,3, 0,3,4, 0,4,5, 0,5,1};
 	
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-	SDL_RenderGeometry(renderer, nullptr, vertices, numPoints, indices, 12);
+	SDL_RenderGeometry(renderer, nullptr, vertices, numPoints, indices, 15);
 }
 
 void GridSystem::RenderCollisionOverlay(const CameraTransform& cam, const GridSettings_data& s)
