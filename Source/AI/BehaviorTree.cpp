@@ -481,7 +481,16 @@ BTStatus ExecuteBTCondition(BTConditionType condType, float param, EntityID enti
             {
                 const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
                 float dist = (pos.position - blackboard.wanderDestination).Magnitude();
-                return (dist < 5.0f) ? BTStatus::Success : BTStatus::Failure;
+                
+                // Use arrival threshold from MoveIntent if available, otherwise use default
+                float threshold = 5.0f;
+                if (World::Get().HasComponent<MoveIntent_data>(entity))
+                {
+                    const MoveIntent_data& intent = World::Get().GetComponent<MoveIntent_data>(entity);
+                    threshold = intent.arrivalThreshold;
+                }
+                
+                return (dist < threshold) ? BTStatus::Success : BTStatus::Failure;
             }
             return BTStatus::Failure;
     }
@@ -698,7 +707,7 @@ BTStatus ExecuteBTAction(BTActionType actionType, float param1, float param2, En
                     const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
                     float dist = (pos.position - blackboard.wanderDestination).Magnitude();
                     
-                    if (dist < 5.0f)
+                    if (dist < intent.arrivalThreshold)
                     {
                         // Arrived at destination
                         blackboard.hasWanderDestination = false;
