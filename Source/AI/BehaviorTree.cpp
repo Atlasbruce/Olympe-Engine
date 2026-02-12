@@ -15,6 +15,8 @@ Behavior Tree implementation: JSON loading and built-in node execution.
 #include "../World.h"
 #include "../system/system_utils.h"
 #include "../json_helper.h"
+#include "../CollisionMap.h"
+#include "../GameEngine.h"
 #include <cmath>
 
 using json = nlohmann::json;
@@ -455,6 +457,42 @@ BTStatus ExecuteBTCondition(BTConditionType condType, float param, EntityID enti
         
         case BTConditionType::HeardNoise:
             return blackboard.heardNoise ? BTStatus::Success : BTStatus::Failure;
+        
+        // NEW: Wander behavior conditions
+        case BTConditionType::IsWaitTimerExpired:
+            return (blackboard.wanderWaitTimer >= blackboard.wanderTargetWaitTime) ? BTStatus::Success : BTStatus::Failure;
+        
+        case BTConditionType::HasNavigableDestination:
+            return blackboard.hasWanderDestination ? BTStatus::Success : BTStatus::Failure;
+        
+        case BTConditionType::HasValidPath:
+            // Check if NavigationAgent has a valid path
+            if (World::Get().HasComponent<NavigationAgent_data>(entity))
+            {
+                const NavigationAgent_data& navAgent = World::Get().GetComponent<NavigationAgent_data>(entity);
+                return (!navAgent.currentPath.empty()) ? BTStatus::Success : BTStatus::Failure;
+            }
+            return BTStatus::Failure;
+        
+        case BTConditionType::HasReachedDestination:
+            if (!blackboard.hasWanderDestination) return BTStatus::Failure;
+            
+            if (World::Get().HasComponent<Position_data>(entity))
+            {
+                const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+                float dist = (pos.position - blackboard.wanderDestination).Magnitude();
+                
+                // Use arrival threshold from MoveIntent if available, otherwise use default
+                float threshold = 5.0f;
+                if (World::Get().HasComponent<MoveIntent_data>(entity))
+                {
+                    const MoveIntent_data& intent = World::Get().GetComponent<MoveIntent_data>(entity);
+                    threshold = intent.arrivalThreshold;
+                }
+                
+                return (dist < threshold) ? BTStatus::Success : BTStatus::Failure;
+            }
+            return BTStatus::Failure;
     }
     
     return BTStatus::Failure;
@@ -564,6 +602,126 @@ BTStatus ExecuteBTAction(BTActionType actionType, float param1, float param2, En
         case BTActionType::Idle:
             // Do nothing
             return BTStatus::Success;
+        
+        // NEW: Wander behavior actions
+        case BTActionType::WaitRandomTime:
+        {
+            // If timer not initialized, create a random time
+            if (blackboard.wanderTargetWaitTime == 0.0f)
+            {
+                float minWait = (param1 > 0.0f) ? param1 : 2.0f;
+                float maxWait = (param2 > 0.0f) ? param2 : 6.0f;
+                
+                // Random generation between min and max
+                float randomFactor = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+                blackboard.wanderTargetWaitTime = minWait + randomFactor * (maxWait - minWait);
+                blackboard.wanderWaitTimer = 0.0f;
+            }
+            
+            // Increment timer with engine deltaTime
+            blackboard.wanderWaitTimer += GameEngine::fDt;
+            
+            // Check if timer expired
+            if (blackboard.wanderWaitTimer >= blackboard.wanderTargetWaitTime)
+            {
+                // Reset for next cycle
+                blackboard.wanderTargetWaitTime = 0.0f;
+                blackboard.wanderWaitTimer = 0.0f;
+                return BTStatus::Success;
+            }
+            
+            return BTStatus::Running;
+        }
+        
+        case BTActionType::ChooseRandomNavigablePoint:
+        {
+            // Get current position
+            if (!World::Get().HasComponent<Position_data>(entity))
+                return BTStatus::Failure;
+            
+            const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+            
+            // Parameters
+            float searchRadius = (param1 > 0.0f) ? param1 : blackboard.wanderSearchRadius;
+            int maxAttempts = (param2 > 0.0f) ? static_cast<int>(param2) : blackboard.wanderMaxSearchAttempts;
+            
+            // Search for a random navigable point
+            float destX, destY;
+            bool found = NavigationMap::Get().GetRandomNavigablePoint(
+                pos.position.x, pos.position.y, searchRadius, maxAttempts, destX, destY
+            );
+            
+            if (found)
+            {
+                blackboard.wanderDestination = Vector(destX, destY);
+                blackboard.hasWanderDestination = true;
+                blackboard.moveGoal = blackboard.wanderDestination;
+                blackboard.hasMoveGoal = true;
+                return BTStatus::Success;
+            }
+            
+            return BTStatus::Failure;
+        }
+        
+        case BTActionType::RequestPathfinding:
+        {
+            if (!blackboard.hasMoveGoal) return BTStatus::Failure;
+            
+            // Go through MoveIntent_data with pathfinding enabled
+            if (World::Get().HasComponent<MoveIntent_data>(entity))
+            {
+                MoveIntent_data& intent = World::Get().GetComponent<MoveIntent_data>(entity);
+                intent.targetPosition = blackboard.moveGoal;
+                intent.desiredSpeed = 1.0f;
+                intent.hasIntent = true;
+                intent.usePathfinding = true;  // Enable pathfinding
+                intent.avoidObstacles = true;
+                
+                return BTStatus::Success;
+            }
+            
+            return BTStatus::Failure;
+        }
+        
+        case BTActionType::FollowPath:
+        {
+            if (!blackboard.hasWanderDestination) return BTStatus::Failure;
+            
+            // Check if we have an active MoveIntent
+            if (World::Get().HasComponent<MoveIntent_data>(entity))
+            {
+                MoveIntent_data& intent = World::Get().GetComponent<MoveIntent_data>(entity);
+                
+                // Maintain the active intent
+                if (!intent.hasIntent)
+                {
+                    intent.targetPosition = blackboard.wanderDestination;
+                    intent.desiredSpeed = 1.0f;
+                    intent.hasIntent = true;
+                    intent.usePathfinding = true;
+                }
+                
+                // Check if we have arrived
+                if (World::Get().HasComponent<Position_data>(entity))
+                {
+                    const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+                    float dist = (pos.position - blackboard.wanderDestination).Magnitude();
+                    
+                    if (dist < intent.arrivalThreshold)
+                    {
+                        // Arrived at destination
+                        blackboard.hasWanderDestination = false;
+                        blackboard.hasMoveGoal = false;
+                        intent.hasIntent = false;
+                        return BTStatus::Success;
+                    }
+                }
+                
+                return BTStatus::Running;
+            }
+            
+            return BTStatus::Failure;
+        }
     }
     
     return BTStatus::Failure;

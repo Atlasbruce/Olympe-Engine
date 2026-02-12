@@ -1,0 +1,98 @@
+{
+  "schema_version": 2,
+  "type": "BehaviorTree",
+  "blueprintType": "BehaviorTree",
+  "name": "NPCWanderTree",
+  "description": "NPC wander behavior with random pathfinding movement",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-02-12T00:00:00Z",
+    "lastModified": "2026-02-12T00:00:00Z",
+    "tags": ["AI", "BehaviorTree", "Wander", "Pathfinding"]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "data": {
+    "rootNodeId": 1,
+    "nodes": [
+      {
+        "id": 1,
+        "name": "Wander Loop (Repeater)",
+        "type": "Repeater",
+        "position": {
+          "x": 200.0,
+          "y": 100.0
+        },
+        "decoratorChildId": 2,
+        "repeatCount": -1,
+        "parameters": {}
+      },
+      {
+        "id": 2,
+        "name": "Wander Sequence",
+        "type": "Sequence",
+        "position": {
+          "x": 200.0,
+          "y": 300.0
+        },
+        "children": [3, 4, 5, 6],
+        "parameters": {}
+      },
+      {
+        "id": 3,
+        "name": "Wait Random Time (2-6s)",
+        "type": "Action",
+        "position": {
+          "x": 550.0,
+          "y": 300.0
+        },
+        "actionType": "WaitRandomTime",
+        "parameters": {
+          "param1": 2.0,
+          "param2": 6.0
+        }
+      },
+      {
+        "id": 4,
+        "name": "Choose Random Navigable Point",
+        "type": "Action",
+        "position": {
+          "x": 550.0,
+          "y": 550.0
+        },
+        "actionType": "ChooseRandomNavigablePoint",
+        "parameters": {
+          "param1": 500.0,
+          "param2": 10.0
+        }
+      },
+      {
+        "id": 5,
+        "name": "Request Pathfinding",
+        "type": "Action",
+        "position": {
+          "x": 550.0,
+          "y": 800.0
+        },
+        "actionType": "RequestPathfinding",
+        "parameters": {}
+      },
+      {
+        "id": 6,
+        "name": "Follow Path",
+        "type": "Action",
+        "position": {
+          "x": 550.0,
+          "y": 1050.0
+        },
+        "actionType": "FollowPath",
+        "parameters": {}
+      }
+    ]
+  }
+}

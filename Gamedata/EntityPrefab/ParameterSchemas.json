@@ -113,7 +113,11 @@
       "componentType": "AIBlackboard_data",
       "parameters": [
         { "name": "patrolPathID", "type": "String", "defaultValue": "" },
-        { "name": "lastKnownTargetPos", "type": "Vector2", "defaultValue": {"x": 0, "y": 0} }
+        { "name": "lastKnownTargetPos", "type": "Vector2", "defaultValue": {"x": 0, "y": 0} },
+        { "name": "wanderWaitTimer", "type": "Float", "defaultValue": 0.0 },
+        { "name": "wanderTargetWaitTime", "type": "Float", "defaultValue": 0.0 },
+        { "name": "wanderSearchRadius", "type": "Float", "defaultValue": 500.0 },
+        { "name": "wanderMaxSearchAttempts", "type": "Int", "defaultValue": 10 }
       ]
     },
     {

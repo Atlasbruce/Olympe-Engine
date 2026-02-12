@@ -3,12 +3,12 @@
   "type": "NPCEntity",
   "blueprintType": "EntityPrefab",
   "name": "NPCEntity",
-  "description": "Generic NPC entity",
+  "description": "Generic NPC entity with wander behavior",
   "metadata": {
     "author": "Atlasbruce",
     "created": "2026-01-08T10:00:00Z",
-    "lastModified": "2026-01-08T10:00:00Z",
-    "tags": ["NPC", "Character", "AI"]
+    "lastModified": "2026-02-12T00:00:00Z",
+    "tags": ["NPC", "Character", "AI", "Wander"]
   },
   "data": {
     "prefabName": "NPCEntity",
@@ -37,7 +37,7 @@
           "spritePath": "./Resources/Sprites/ennemy.png",
           "width": 32,
           "height": 32,
-          "layer": 0
+          "layer": 1
         }
       },
       {
@@ -59,14 +59,18 @@
       {
         "type": "AIBlackboard_data",
         "properties": {
-          "initialized": true
+          "initialized": true,
+          "wanderSearchRadius": 500.0,
+          "wanderMaxSearchAttempts": 10
         }
       },
       {
         "type": "AISenses_data",
         "properties": {
           "visionRange": 150.0,
-          "hearingRange": 100.0
+          "hearingRange": 100.0,
+          "perceptionHz": 5.0,
+          "thinkHz": 10.0
         }
       },
       {
@@ -76,10 +80,28 @@
         }
       },
       {
+        "type": "BehaviorTreeRuntime_data",
+        "properties": {
+          "treePath": "Blueprints/AI/npc_wander.json",
+          "active": true
+        }
+      },
+      {
+        "type": "MoveIntent_data",
+        "properties": {
+          "targetX": 0.0,
+          "targetY": 0.0,
+          "hasTarget": false,
+          "usePathfinding": true,
+          "avoidObstacles": true,
+          "arrivalThreshold": 5.0
+        }
+      },
+      {
         "type": "NavigationAgent_data",
         "properties": {
-          "agentRadius": 16.0,
-          "maxSpeed": 70.0,
+          "agentRadius": 14.0,
+          "maxSpeed": 80.0,
           "layerMask": 1
         }
       }

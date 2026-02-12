@@ -48,6 +48,11 @@ enum class BTConditionType : uint8_t
     HasMoveGoal,
     CanAttack,
     HeardNoise,
+    // NEW: Wander behavior conditions
+    IsWaitTimerExpired,               // Wait timer expired?
+    HasNavigableDestination,          // Navigable destination chosen?
+    HasValidPath,                     // Valid path calculated?
+    HasReachedDestination,            // Reached destination?
     // Catalog aliases for better readability
     HasTarget = TargetVisible,          // Alias for HasTarget condition
     IsTargetInAttackRange = TargetInRange  // Alias for range check
@@ -64,6 +69,11 @@ enum class BTActionType : uint8_t
     PatrolPickNextPoint,
     ClearTarget,
     Idle,
+    // NEW: Wander behavior actions
+    WaitRandomTime,               // Initialize random timer (param1=min, param2=max)
+    ChooseRandomNavigablePoint,   // Choose navigable point (param1=searchRadius, param2=maxAttempts)
+    RequestPathfinding,           // Request pathfinding to moveGoal via MoveIntent
+    FollowPath,                   // Follow the path (check progression)
     // Catalog aliases for better readability
     MoveTo = MoveToGoal,                // Alias for MoveTo action
     AttackMelee = AttackIfClose         // Alias for melee attack
