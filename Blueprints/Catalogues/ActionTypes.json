@@ -127,6 +127,42 @@
       "category": "Basic",
       "parameters": [],
       "tooltip": "Reste immobile sans effectuer d'action"
+    },
+    {
+      "id": "WaitRandomTime",
+      "name": "Wait Random Time",
+      "description": "Waits for a random duration between min and max seconds",
+      "category": "Behavior",
+      "tooltip": "param1 = min wait time (seconds), param2 = max wait time (seconds)",
+      "parameters": [
+        { "name": "param1", "type": "float", "required": false, "default": "2.0" },
+        { "name": "param2", "type": "float", "required": false, "default": "6.0" }
+      ]
+    },
+    {
+      "id": "ChooseRandomNavigablePoint",
+      "name": "Choose Random Navigable Point",
+      "description": "Selects a random navigable point within a radius",
+      "category": "Navigation",
+      "tooltip": "param1 = search radius (world units), param2 = max attempts",
+      "parameters": [
+        { "name": "param1", "type": "float", "required": false, "default": "500.0" },
+        { "name": "param2", "type": "float", "required": false, "default": "10.0" }
+      ]
+    },
+    {
+      "id": "RequestPathfinding",
+      "name": "Request Pathfinding",
+      "description": "Requests pathfinding to the current move goal via MoveIntent",
+      "category": "Navigation",
+      "tooltip": "No parameters required"
+    },
+    {
+      "id": "FollowPath",
+      "name": "Follow Path",
+      "description": "Follows the calculated path until destination is reached",
+      "category": "Navigation",
+      "tooltip": "Returns Running while moving, Success when arrived"
     }
   ]
 }
