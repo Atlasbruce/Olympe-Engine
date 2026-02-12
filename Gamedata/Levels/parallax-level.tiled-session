@@ -44,10 +44,10 @@
         },
         "hexa-quest.tmx": {
             "scale": 0.75,
-            "selectedLayer": 2,
+            "selectedLayer": 0,
             "viewCenter": {
-                "x": 772,
-                "y": 611.9999999999999
+                "x": 874.6666666666666,
+                "y": 518.6666666666666
             }
         },
         "isometric_quest.tmx": {
@@ -159,10 +159,10 @@
     "last.imagePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Resources/hexa tiles",
     "last.objectTemplatePath": "C:/Users/Nico/source/repos/Atlasbruce/Olympe-Engine/Gamedata/Levels",
     "lastUsedTilesetExportFilter": "Fichiers de jeu de tuiles JSON (*.tsj *.json)",
-    "map.fixedSize": false,
+    "map.fixedSize": true,
     "map.lastUsedExportFilter": "Fichiers de carte JSON (*.tmj *.json)",
     "map.lastUsedFormat": "tmx",
-    "map.orientation": "4",
+    "map.orientation": "2",
     "map.renderOrder": "3",
     "map.tileHeight": 64,
     "map.tileWidth": 64,
