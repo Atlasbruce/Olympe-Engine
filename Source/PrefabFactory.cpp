@@ -18,6 +18,7 @@
 #include "ECS_Components_AI.h"
 #include "ECS_Components_Camera.h"
 #include "system/system_utils.h"
+#include "AI/BehaviorTree.h"
 #include <string>
 #include <unordered_map>
 #include "VideoGame.h"
@@ -1084,10 +1085,24 @@ bool PrefabFactory::InstantiateBehaviorTreeRuntime(EntityID entity, const Compon
     
     if (def.HasParameter("treePath"))
     {
-        // If a tree path is provided, we could load it here
-        // For now, just log it
+        // Map treePath → treeId using the registry
         std::string treePath = def.GetParameter("treePath")->AsString();
-        // TODO: Load behavior tree from path and get its ID
+        
+        if (!treePath.empty())
+        {
+            uint32_t treeId = BehaviorTreeManager::Get().GetTreeIdFromPath(treePath);
+            btRuntime.treeAssetId = treeId;
+            
+            std::cout << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " → ID " << treeId << "\n";
+            
+            // Verify the tree is loaded
+            const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTree(treeId);
+            if (!tree)
+            {
+                std::cerr << "[PrefabFactory] WARNING: BehaviorTree not loaded: " << treePath 
+                          << " (ID=" << treeId << ") - this should not happen if dependencies were loaded correctly\n";
+            }
+        }
     }
     
     if (def.HasParameter("active"))
