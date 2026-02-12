@@ -45,6 +45,53 @@
          "y":0
         }, 
         {
+         "draworder":"topdown",
+         "id":2,
+         "name":"layer_leveldesign",
+         "objects":[
+                {
+                 "height":0,
+                 "id":1,
+                 "name":"player_1",
+                 "point":true,
+                 "rotation":0,
+                 "type":"Player",
+                 "visible":true,
+                 "width":0,
+                 "x":351,
+                 "y":216
+                }, 
+                {
+                 "height":0,
+                 "id":2,
+                 "name":"npc_1",
+                 "point":true,
+                 "rotation":0,
+                 "type":"NPCEntity",
+                 "visible":true,
+                 "width":0,
+                 "x":189,
+                 "y":324
+                }, 
+                {
+                 "height":0,
+                 "id":3,
+                 "name":"npc_2",
+                 "point":true,
+                 "rotation":0,
+                 "type":"NPC",
+                 "visible":true,
+                 "width":0,
+                 "x":567,
+                 "y":324
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
          "data":[19, 0, 0, 0, 0, 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -71,37 +118,25 @@
          "offsetx":6,
          "offsety":-7,
          "opacity":1,
+         "properties":[
+                {
+                 "name":"isTilesetWalkable",
+                 "type":"bool",
+                 "value":false
+                }, 
+                {
+                 "name":"useTilesetBorder",
+                 "type":"bool",
+                 "value":false
+                }],
          "type":"tilelayer",
          "visible":true,
          "width":30,
          "x":0,
          "y":0
-        }, 
-        {
-         "draworder":"topdown",
-         "id":2,
-         "name":"layer_leveldesign",
-         "objects":[
-                {
-                 "height":0,
-                 "id":1,
-                 "name":"player_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"Player",
-                 "visible":true,
-                 "width":0,
-                 "x":351,
-                 "y":216
-                }],
-         "opacity":1,
-         "type":"objectgroup",
-         "visible":true,
-         "x":0,
-         "y":0
         }],
  "nextlayerid":4,
- "nextobjectid":2,
+ "nextobjectid":4,
  "orientation":"isometric",
  "renderorder":"left-up",
  "tiledversion":"1.11.2",
