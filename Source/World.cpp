@@ -8,7 +8,6 @@ This file is part of Olympe Engine V2.
 World purpose: Manage the lifecycle of Entities and their interaction with ECS Systems.
 
 */
-#pragma once
 #include "World.h"
 #include "CollisionMap.h"
 #include "VideoGame.h"
