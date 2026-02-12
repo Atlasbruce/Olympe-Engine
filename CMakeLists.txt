@@ -42,6 +42,7 @@ add_library(OlympeCore STATIC
     ${IMGUI_SOURCES}
     ${IMNODES_SOURCES}
     Source/AI/BehaviorTree.cpp
+    Source/AI/BehaviorTreeDependencyScanner.cpp
     Source/DataManager.cpp
     Source/drawing.cpp
     Source/PrefabScanner.cpp

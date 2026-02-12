@@ -16,6 +16,7 @@ Behavior Tree purpose: Data-driven behavior tree system for AI decision making.
 #include <vector>
 #include <string>
 #include <cstdint>
+#include <map>
 
 // Forward declarations
 struct AIBlackboard_data;
@@ -161,9 +162,21 @@ public:
     // Clear all loaded trees
     void Clear();
     
+    // NEW: Get tree ID from path (for prefab instantiation)
+    uint32_t GetTreeIdFromPath(const std::string& treePath) const;
+    
+    // NEW: Check if tree is already loaded by path
+    bool IsTreeLoadedByPath(const std::string& treePath) const;
+    
+    // NEW: Get loaded tree by path
+    const BehaviorTreeAsset* GetTreeByPath(const std::string& treePath) const;
+    
 private:
     BehaviorTreeManager() = default;
     std::vector<BehaviorTreeAsset> m_trees;
+    
+    // NEW: Registry to map file paths to tree IDs
+    std::map<std::string, uint32_t> m_pathToIdMap;
 };
 
 // --- Behavior Tree Execution ---
