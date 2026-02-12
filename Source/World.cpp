@@ -570,8 +570,8 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 		{
 			// Fallback heuristic for standard isometric tiles without explicit offset
 			// Most isometric tilesets use tileHeight/2 as vertical offset
-			// Note: Division is safe here as tilePixelHeight is validated above and set to
-			// 32.0f if invalid (lines 536-542), so it's guaranteed to be non-zero
+			// Note: Division is safe - tilePixelHeight is validated above and set to 32.0f
+			// if invalid or zero, so it's guaranteed to be non-zero at this point
 			float aspectRatio = tilePixelWidth / tilePixelHeight;
 			
 			if (aspectRatio >= ISO_ASPECT_RATIO_MIN && aspectRatio <= ISO_ASPECT_RATIO_MAX)
