@@ -74,8 +74,8 @@ void CollisionMap::Initialize(int width, int height, GridProjectionType projecti
 				// Apply tile offset correction for isometric projection
 				if (m_projection == GridProjectionType::Iso)
 				{
-					worldX += m_tileOffsetX;
-					worldY += m_tileOffsetY;
+					worldX -= m_tileOffsetX;
+					worldY += m_tileOffsetY / 2.f;
 				}
 				
 				m_layers[layer][y][x].worldX = worldX;
