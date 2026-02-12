@@ -538,9 +538,42 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 	SYSTEM_LOG << "  Tile pixel size (from TMJ): " << tilePixelWidth << "x" << tilePixelHeight << " px\n";
 	SYSTEM_LOG << "  Projection: " << orientation << " (type=" << static_cast<int>(projection) << ")\n";
 	
+	// Extract tileset offset for isometric alignment
+	float tileOffsetX = 0.0f;
+	float tileOffsetY = 0.0f;
+	
+	if (projection == GridProjectionType::Iso && !tiledMap.tilesets.empty())
+	{
+		// Get offset from the first loaded tileset
+		const Olympe::Tiled::TiledTileset& firstTileset = tiledMap.tilesets[0];
+		tileOffsetX = static_cast<float>(firstTileset.tileoffsetX);
+		tileOffsetY = static_cast<float>(firstTileset.tileoffsetY);
+		
+		if (tileOffsetX != 0.0f || tileOffsetY != 0.0f)
+		{
+			SYSTEM_LOG << "  -> Found tileset offset from '" << firstTileset.name << "': (" 
+			           << tileOffsetX << ", " << tileOffsetY << ")\n";
+		}
+		else
+		{
+			// Fallback heuristic for standard isometric tiles without explicit offset
+			// Most isometric tilesets use tileHeight/2 as vertical offset
+			float aspectRatio = tilePixelWidth / tilePixelHeight;
+			
+			if (aspectRatio >= 1.8f && aspectRatio <= 2.2f)
+			{
+				// Looks like standard 2:1 isometric
+				tileOffsetY = tilePixelHeight * 0.5f;
+				SYSTEM_LOG << "  -> Applying standard isometric offset heuristic: (0, " 
+				           << tileOffsetY << ")\n";
+			}
+		}
+	}
+	
 	// Initialize collision map (single layer for now, can be extended later)
 	CollisionMap& collMap = CollisionMap::Get();
-	collMap.Initialize(mapWidth, mapHeight, projection, tilePixelWidth, tilePixelHeight, 1);
+	collMap.Initialize(mapWidth, mapHeight, projection, tilePixelWidth, tilePixelHeight, 1,
+	                   tileOffsetX, tileOffsetY);
 	
 	// Initialize navigation map
 	NavigationMap& navMap = NavigationMap::Get();
