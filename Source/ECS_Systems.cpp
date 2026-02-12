@@ -2065,6 +2065,7 @@ void GridSystem::DrawHexagonOverlay(float centerX, float centerY, float radius, 
 	// Draw hexagon with center vertex + 6 edge vertices for triangle fan
 	constexpr int numPoints = 7; // Center + 6 edge vertices
 	constexpr float HEXAGON_ROTATION_OFFSET = -30.0f; // Rotate hexagon to have flat top
+	constexpr float DEG_TO_RAD = (float)(k_PI / 180.0f);
 	SDL_Vertex vertices[numPoints];
 	
 	// Center vertex
@@ -2073,7 +2074,7 @@ void GridSystem::DrawHexagonOverlay(float centerX, float centerY, float radius, 
 	// Edge vertices (1-6)
 	for (int i = 0; i < 6; ++i)
 	{
-		float angle = (60.0f * i + HEXAGON_ROTATION_OFFSET) * (float)(k_PI / 180.0f);
+		float angle = (60.0f * i + HEXAGON_ROTATION_OFFSET) * DEG_TO_RAD;
 		vertices[i + 1] = {
 			{centerX + radius * std::cos(angle), centerY + radius * std::sin(angle)},
 			color,
