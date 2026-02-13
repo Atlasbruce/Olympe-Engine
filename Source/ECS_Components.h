@@ -18,6 +18,7 @@ Components purpose: Include all component definitions used in the ECS architectu
 #include <SDL3/SDL.h>
 #include "DataManager.h"
 #include "SDL_rect.h"
+#include "ComponentRegistry.h"
 
 // ========================================================================
 // Entity Type Enumeration
@@ -88,6 +89,7 @@ struct Identity_data
 	Identity_data(const Identity_data&) = default;
 	Identity_data& operator=(const Identity_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(Identity_data);
 
 // --- Component Position Data ---
 struct Position_data
@@ -100,6 +102,8 @@ struct Position_data
 	Position_data(const Position_data&) = default;
 	Position_data& operator=(const Position_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(Position_data);
+
 // --- Component BoundingBox Data ---
 struct BoundingBox_data
 {
@@ -111,6 +115,8 @@ struct BoundingBox_data
 	BoundingBox_data(const BoundingBox_data&) = default;
 	BoundingBox_data& operator=(const BoundingBox_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(BoundingBox_data);
+
 // --- Component Detection Data ---
 struct TriggerZone_data
 {
@@ -122,6 +128,8 @@ struct TriggerZone_data
 	TriggerZone_data(const TriggerZone_data&) = default;
 	TriggerZone_data& operator=(const TriggerZone_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(TriggerZone_data);
+
 // --- Component Movement Data ---
 struct Movement_data
 {
@@ -133,6 +141,8 @@ struct Movement_data
 	Movement_data(const Movement_data&) = default;
 	Movement_data& operator=(const Movement_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(Movement_data);
+
 // --- Component Physics Data ---
 struct PhysicsBody_data
 {
@@ -148,6 +158,8 @@ struct PhysicsBody_data
 	PhysicsBody_data(const PhysicsBody_data&) = default;
 	PhysicsBody_data& operator=(const PhysicsBody_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(PhysicsBody_data);
+
 // --- Component Health Data ---
 struct Health_data
 {
@@ -160,6 +172,8 @@ struct Health_data
 	Health_data(const Health_data&) = default;
 	Health_data& operator=(const Health_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(Health_data);
+
 // --- Component AI Data ---
 struct AIBehavior_data
 {
@@ -170,6 +184,8 @@ struct AIBehavior_data
 	AIBehavior_data(const AIBehavior_data&) = default;
 	AIBehavior_data& operator=(const AIBehavior_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(AIBehavior_data);
+
 // --- Component Inventory Data ---
 struct Inventory_data
 {
@@ -180,6 +196,8 @@ struct Inventory_data
 	Inventory_data(const Inventory_data&) = default;
 	Inventory_data& operator=(const Inventory_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(Inventory_data);
+
 // --- Component Render Data --- Sprite, Animation, FX, GUI, etc.
 struct VisualSprite_data
 {
@@ -206,6 +224,8 @@ struct VisualSprite_data
 		}
 	}
 };
+AUTO_REGISTER_COMPONENT(VisualSprite_data);
+
 // --- Component visual Editor Data ---
 struct VisualEditor_data
 {
@@ -233,6 +253,8 @@ struct VisualEditor_data
 		}
 	}
 };
+AUTO_REGISTER_COMPONENT(VisualEditor_data);
+
 // --- Component Animation Data ---
 struct Animation_data
 {
@@ -246,6 +268,8 @@ struct Animation_data
 	Animation_data(const Animation_data&) = default;
 	Animation_data& operator=(const Animation_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(Animation_data);
+
 // --- Component FX Data --- Visual effects like particles, explosions, etc.
 struct FX_data
 {
@@ -258,6 +282,8 @@ struct FX_data
 	FX_data(const FX_data&) = default;
 	FX_data& operator=(const FX_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(FX_data);
+
 // --- Component Audio Data ---
 struct AudioSource_data
 {
@@ -269,6 +295,8 @@ struct AudioSource_data
 	AudioSource_data(const AudioSource_data&) = default;
 	AudioSource_data& operator=(const AudioSource_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(AudioSource_data);
+
 // --- Component Controller Data ---
 struct Controller_data
 {
@@ -295,6 +323,8 @@ struct Controller_data
 	Controller_data(const Controller_data&) = default;
 	Controller_data& operator=(const Controller_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(Controller_data);
+
 // --- Component PlayerConroller Data ---
 struct PlayerController_data
 {
@@ -312,6 +342,8 @@ struct PlayerController_data
 	PlayerController_data(const PlayerController_data&) = default;
 	PlayerController_data& operator=(const PlayerController_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(PlayerController_data);
+
 // --- Component Player Binding Controller --- JoystickID, KeyboardID, etc.
 struct PlayerBinding_data
 {
@@ -323,6 +355,7 @@ struct PlayerBinding_data
 	PlayerBinding_data(const PlayerBinding_data&) = default;
 	PlayerBinding_data& operator=(const PlayerBinding_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(PlayerBinding_data);
 
 // --- Component NPC Data ---
 struct NPC_data
@@ -334,6 +367,7 @@ struct NPC_data
 	NPC_data(const NPC_data&) = default;
 	NPC_data& operator=(const NPC_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(NPC_data);
 
 // --- Component Input Mapping Data ---
 struct InputMapping_data
@@ -373,6 +407,8 @@ struct InputMapping_data
 	InputMapping_data(const InputMapping_data&) = default;
 	InputMapping_data& operator=(const InputMapping_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(InputMapping_data);
+
 // --- Grid settings (singleton component) ---
 enum class GridProjection : uint8_t
 {
@@ -436,6 +472,7 @@ struct GridSettings_data
 	GridSettings_data(const GridSettings_data&) = default;
 	GridSettings_data& operator=(const GridSettings_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(GridSettings_data);
 
 // Camera type enumeration
 enum class CameraType : uint8_t {
@@ -512,6 +549,7 @@ struct Camera_data
 	Camera_data(const Camera_data&) = default;
 	Camera_data& operator=(const Camera_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(Camera_data);
 
 // --- Camera Target Component ---
 // Handles target following for both ECS entities and legacy GameObjects
@@ -531,6 +569,7 @@ struct CameraTarget_data
 	CameraTarget_data(const CameraTarget_data&) = default;
 	CameraTarget_data& operator=(const CameraTarget_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(CameraTarget_data);
 
 // --- Camera Effects Component ---
 // Visual effects such as camera shake
@@ -547,6 +586,7 @@ struct CameraEffects_data
 	CameraEffects_data(const CameraEffects_data&) = default;
 	CameraEffects_data& operator=(const CameraEffects_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(CameraEffects_data);
 
 // --- Camera Bounds Component ---
 // Constrains camera movement to a specific area
@@ -561,6 +601,7 @@ struct CameraBounds_data
 	CameraBounds_data(const CameraBounds_data&) = default;
 	CameraBounds_data& operator=(const CameraBounds_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(CameraBounds_data);
 
 // --- Camera Input Binding Component ---
 // Configures input controls for the camera (keyboard or joystick)
@@ -615,6 +656,8 @@ struct CameraInputBinding_data
 	CameraInputBinding_data(const CameraInputBinding_data&) = default;
 	CameraInputBinding_data& operator=(const CameraInputBinding_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(CameraInputBinding_data);
+
 // --- Collision Zone Component ---
 // Represents a static collision area (e.g., from Tiled object layer)
 struct CollisionZone_data
@@ -628,6 +671,7 @@ struct CollisionZone_data
 	CollisionZone_data(const CollisionZone_data&) = default;
 	CollisionZone_data& operator=(const CollisionZone_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(CollisionZone_data);
 
 // --- Navigation Agent Component ---
 // Navigation agent component (lightweight, entity-specific data only)
@@ -656,6 +700,7 @@ struct NavigationAgent_data
 	NavigationAgent_data(const NavigationAgent_data&) = default;
 	NavigationAgent_data& operator=(const NavigationAgent_data&) = default;
 };
+AUTO_REGISTER_COMPONENT(NavigationAgent_data);
 
 // Editor context for plugins
 struct EditorContext_st
