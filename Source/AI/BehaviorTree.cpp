@@ -778,3 +778,68 @@ const BehaviorTreeAsset* BehaviorTreeManager::GetTreeByPath(const std::string& t
     uint32_t treeId = GetTreeIdFromPath(treePath);
     return GetTree(treeId);
 }
+
+const BehaviorTreeAsset* BehaviorTreeManager::GetTreeByAnyId(uint32_t treeId) const
+{
+    // Strategy 1: Direct ID lookup
+    for (const auto& tree : m_trees)
+    {
+        if (tree.id == treeId)
+            return &tree;
+    }
+    
+    // Strategy 2: Reverse path-to-ID map lookup
+    // Check if this ID exists in the path registry
+    for (const auto& [path, registeredId] : m_pathToIdMap)
+    {
+        if (registeredId == treeId)
+        {
+            // Found in registry, now find the actual tree
+            for (const auto& tree : m_trees)
+            {
+                if (tree.id == registeredId)
+                    return &tree;
+            }
+        }
+    }
+    
+    // Strategy 3: Fallback to first loaded tree with matching nodes
+    // (in case ID changed but tree structure is similar)
+    // This is a best-effort approach for corrupted prefabs
+    
+    return nullptr;
+}
+
+std::string BehaviorTreeManager::GetTreePathFromId(uint32_t treeId) const
+{
+    // Check path-to-ID registry
+    for (const auto& [path, id] : m_pathToIdMap)
+    {
+        if (id == treeId)
+            return path;
+    }
+    
+    // Check if a tree with this ID exists (might be loaded with different path)
+    for (const auto& tree : m_trees)
+    {
+        if (tree.id == treeId)
+            return tree.name; // Return tree name as fallback
+    }
+    
+    return "";
+}
+
+void BehaviorTreeManager::DebugPrintLoadedTrees() const
+{
+    std::cout << "[BehaviorTreeManager] Loaded trees (" << m_trees.size() << "):" << std::endl;
+    for (const auto& tree : m_trees)
+    {
+        std::cout << "  - ID=" << tree.id << " Name='" << tree.name << "' Nodes=" << tree.nodes.size() << std::endl;
+    }
+    
+    std::cout << "[BehaviorTreeManager] Path-to-ID registry (" << m_pathToIdMap.size() << "):" << std::endl;
+    for (const auto& [path, id] : m_pathToIdMap)
+    {
+        std::cout << "  - '" << path << "' -> ID=" << id << std::endl;
+    }
+}

@@ -218,6 +218,15 @@ public:
     // NEW: Get loaded tree by path
     const BehaviorTreeAsset* GetTreeByPath(const std::string& treePath) const;
     
+    // NEW: Enhanced lookup that tries multiple strategies
+    const BehaviorTreeAsset* GetTreeByAnyId(uint32_t treeId) const;
+    
+    // NEW: Get tree path from ID (reverse lookup)
+    std::string GetTreePathFromId(uint32_t treeId) const;
+    
+    // NEW: Debug method to list all loaded trees
+    void DebugPrintLoadedTrees() const;
+    
 private:
     BehaviorTreeManager() = default;
     std::vector<BehaviorTreeAsset> m_trees;

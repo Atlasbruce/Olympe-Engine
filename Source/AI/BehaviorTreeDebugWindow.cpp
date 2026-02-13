@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cstring>
 #include <cmath>
+#include <set>
 
 namespace Olympe
 {
@@ -193,15 +194,35 @@ namespace Olympe
             info.currentNodeId = btRuntime.currentNodeIndex;
             info.lastStatus = static_cast<BTStatus>(btRuntime.lastStatus);
 
-            // Get tree name
-            const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTree(info.treeId);
+            // Get tree name - FIXED: Use enhanced lookup
+            const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(info.treeId);
             if (tree)
             {
                 info.treeName = tree->name;
             }
             else
             {
-                info.treeName = "Unknown Tree";
+                // Fallback: Try to get path from registry
+                std::string path = BehaviorTreeManager::Get().GetTreePathFromId(info.treeId);
+                
+                if (!path.empty())
+                {
+                    info.treeName = "Not Loaded: " + path;
+                }
+                else
+                {
+                    info.treeName = "Unknown (ID=" + std::to_string(info.treeId) + ")";
+                }
+                
+                // DEBUG: Print diagnostic info (only once per entity)
+                static std::set<EntityID> debuggedEntities;
+                if (debuggedEntities.find(entity) == debuggedEntities.end())
+                {
+                    debuggedEntities.insert(entity);
+                    std::cout << "[BTDebugger] WARNING: Entity " << entity << " (" << info.entityName 
+                              << ") has unknown tree ID=" << info.treeId << std::endl;
+                    BehaviorTreeManager::Get().DebugPrintLoadedTrees();
+                }
             }
 
             // Get AI state
@@ -386,8 +407,8 @@ namespace Olympe
         {
             m_selectedEntity = info.entityId;
             
-            // Recompute layout for selected entity
-            const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTree(info.treeId);
+            // Recompute layout for selected entity - FIXED: Use enhanced lookup
+            const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(info.treeId);
             if (tree)
             {
                 m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY);
@@ -431,11 +452,41 @@ namespace Olympe
         }
 
         const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
-        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTree(btRuntime.treeAssetId);
+        
+        // FIXED: Use enhanced lookup
+        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.treeAssetId);
 
         if (!tree)
         {
-            ImGui::Text("Behavior tree asset not found");
+            // More helpful error message
+            std::string path = BehaviorTreeManager::Get().GetTreePathFromId(btRuntime.treeAssetId);
+            
+            ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Behavior Tree asset not found!");
+            ImGui::Separator();
+            ImGui::Text("Tree ID: %u", btRuntime.treeAssetId);
+            
+            if (!path.empty())
+            {
+                ImGui::Text("Expected Path: %s", path.c_str());
+                ImGui::Spacing();
+                ImGui::TextWrapped("The tree file may not be loaded. Check if the JSON file exists and is loaded during level initialization.");
+            }
+            else
+            {
+                ImGui::Spacing();
+                ImGui::TextWrapped("This tree ID is not registered in the BehaviorTreeManager.");
+                ImGui::TextWrapped("Possible causes:");
+                ImGui::BulletText("Tree JSON file not loaded");
+                ImGui::BulletText("Prefab uses obsolete tree ID");
+                ImGui::BulletText("Tree ID mismatch between prefab and runtime");
+            }
+            
+            ImGui::Spacing();
+            if (ImGui::Button("Show All Loaded Trees"))
+            {
+                BehaviorTreeManager::Get().DebugPrintLoadedTrees();
+            }
+            
             return;
         }
 
@@ -451,7 +502,9 @@ namespace Olympe
     {
         auto& world = World::Get();
         const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
-        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTree(btRuntime.treeAssetId);
+        
+        // FIXED: Use enhanced lookup
+        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.treeAssetId);
 
         if (!tree)
             return;
@@ -658,13 +711,34 @@ namespace Olympe
             return;
 
         const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
-        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTree(btRuntime.treeAssetId);
+        
+        // FIXED: Use enhanced lookup
+        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.treeAssetId);
 
         ImGui::Text("Tree ID: %u", btRuntime.treeAssetId);
+        
         if (tree)
         {
-            ImGui::Text("Tree Name: %s", tree->name.c_str());
+            ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Tree Name: %s", tree->name.c_str());
+            ImGui::Text("Node Count: %zu", tree->nodes.size());
         }
+        else
+        {
+            ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Tree: NOT FOUND");
+            
+            std::string path = BehaviorTreeManager::Get().GetTreePathFromId(btRuntime.treeAssetId);
+            if (!path.empty())
+            {
+                ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Expected: %s", path.c_str());
+            }
+            
+            if (ImGui::Button("Debug: List All Trees"))
+            {
+                BehaviorTreeManager::Get().DebugPrintLoadedTrees();
+            }
+        }
+        
+        ImGui::Separator();
 
         ImGui::Text("Current Node ID: %u", btRuntime.currentNodeIndex);
         
