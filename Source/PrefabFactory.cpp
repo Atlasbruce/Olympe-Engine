@@ -341,7 +341,7 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
         {
             return false;
         }
-        /* LEGACY DEPRECATED
+        
         // For components that need specialized parameter handling, call the specialized function
         // Note: The specialized function applies parameters but does NOT recreate the component
         // This if-else chain is intentional for clarity and ease of modification.
@@ -364,7 +364,7 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
             return InstantiateMoveIntent(entity, componentDef);
         
         // Component created successfully with default values
-        return true;/**/
+        return true;
     }
     else
     {

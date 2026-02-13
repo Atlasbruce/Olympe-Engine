@@ -282,12 +282,6 @@
     <ClCompile Include="Source\TiledLevelLoader\src\LevelParser.cpp">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
     </ClCompile>
-    <ClCompile Include="Source\PrefabFactory.cpp">
-      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\PrefabScanner.cpp">
-      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
-    </ClCompile>
     <ClCompile Include="Source\ComponentDefinition.cpp">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
     </ClCompile>
@@ -323,6 +317,12 @@
     </ClCompile>
     <ClCompile Include="Source\AI\BehaviorTree.cpp">
       <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PrefabFactory.cpp">
+      <Filter>Fichiers d%27en-t�te\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PrefabScanner.cpp">
+      <Filter>Fichiers d%27en-t�te\ECS</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -605,9 +605,6 @@
     <ClInclude Include="Source\TiledLevelLoader\include\LevelParser.h">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PrefabScanner.h">
-      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
-    </ClInclude>
     <ClInclude Include="Source\ComponentDefinition.h">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
     </ClInclude>
@@ -637,6 +634,9 @@
     </ClInclude>
     <ClInclude Include="Source\AI\BehaviorTree.h">
       <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PrefabScanner.h">
+      <Filter>Fichiers d%27en-t�te\ECS</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
