@@ -1,0 +1,122 @@
+name: 📋 Suivi de Pull Request
+description: Template pour documenter automatiquement une Pull Request
+title: "PR #[numéro] - [Description courte]"
+labels: ["pr-tracking", "documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🔗 Informations de la Pull Request
+        Ce template est utilisé pour suivre l'avancement et documenter les Pull Requests du projet.
+  
+  - type: input
+    id: pr-number
+    attributes:
+      label: Numéro de la PR
+      description: Le numéro de la Pull Request associée
+      placeholder: "42"
+    validations:
+      required: true
+  
+  - type: input
+    id: pr-link
+    attributes:
+      label: 🔗 Lien vers la PR
+      description: URL complète de la Pull Request
+      placeholder: "https://github.com/Atlasbruce/Olympe-Engine/pull/42"
+    validations:
+      required: true
+  
+  - type: input
+    id: date-creation
+    attributes:
+      label: 📅 Date de création
+      description: Date de création de la PR (YYYY-MM-DD)
+      placeholder: "2026-02-13"
+    validations:
+      required: true
+  
+  - type: input
+    id: date-merge
+    attributes:
+      label: 📅 Date de merge
+      description: Date de merge de la PR (à remplir après merge)
+      placeholder: "2026-02-15"
+    validations:
+      required: false
+  
+  - type: textarea
+    id: objectifs
+    attributes:
+      label: 🎯 Objectifs
+      description: Décrivez les objectifs principaux de cette Pull Request
+      placeholder: |
+        - Ajouter le système de rendu 3D
+        - Optimiser les performances du moteur
+        - Corriger le bug de mémoire
+    validations:
+      required: true
+  
+  - type: textarea
+    id: problemes
+    attributes:
+      label: ⚠️ Problèmes rencontrés
+      description: Documentez les obstacles et défis rencontrés pendant le développement
+      placeholder: |
+        - Conflit de dépendances avec OpenGL
+        - Performance insuffisante sur les shaders
+        - Incompatibilité avec C++17
+    validations:
+      required: false
+  
+  - type: textarea
+    id: solutions
+    attributes:
+      label: ✅ Solutions apportées
+      description: Expliquez comment vous avez résolu les problèmes
+      placeholder: |
+        - Migration vers GLFW 3.4
+        - Refactoring du pipeline de rendu
+        - Mise à jour vers C++20
+    validations:
+      required: false
+  
+  - type: textarea
+    id: impact
+    attributes:
+      label: 📊 Impact sur le projet
+      description: Décrivez l'impact de cette PR sur le projet (performance, architecture, fonctionnalités, etc.)
+      placeholder: |
+        - Performance : +25% de FPS
+        - Architecture : Nouveau module de rendu modulaire
+        - Fonctionnalités : Support du ray tracing
+    validations:
+      required: false
+  
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type de modification
+      description: Quel type de modification cette PR apporte-t-elle ?
+      options:
+        - feature (nouvelle fonctionnalité)
+        - bugfix (correction de bug)
+        - refactor (refactoring)
+        - performance (optimisation)
+        - documentation
+        - test
+        - chore (maintenance)
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priorité
+      options:
+        - low
+        - medium
+        - high
+        - critical
+    validations:
+      required: true
