@@ -29,7 +29,7 @@ const sidebars = {
       type: 'category',
       label: 'API Reference',
       items: [
-        'api-reference/index',
+        'api-reference/api-index',
       ],
     },
     {
