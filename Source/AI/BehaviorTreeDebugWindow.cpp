@@ -215,9 +215,11 @@ namespace Olympe
                 }
                 
                 // DEBUG: Print diagnostic info (only once per entity)
-                // Note: Static set persists for program lifetime. Not thread-safe but
-                // debugger UI runs on main thread only. In typical games with <1000 entities,
-                // memory impact is negligible (~8KB for 1000 EntityIDs).
+                // Note: Static set persists for program lifetime. This is acceptable for
+                // a debug tool as: 1) Debugger UI runs on main thread only (ImGui is single-threaded),
+                // 2) Typical games have <1000 entities (~8KB memory), 3) Debug tools are used during
+                // development, not in production. If unbounded growth becomes an issue, clear on
+                // level change or add max size limit.
                 static std::set<EntityID> debuggedEntities;
                 if (debuggedEntities.find(entity) == debuggedEntities.end())
                 {
