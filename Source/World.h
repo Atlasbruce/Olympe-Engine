@@ -1,13 +1,25 @@
-/*
-Olympe Engine V2 - 2025
-Nicolas Chereau
-nchereau@gmail.com
-
-This file is part of Olympe Engine V2.
-
-World purpose: Manage the overall game world, including object management, level handling, and ECS architecture.
-
-*/
+/**
+ * @file World.h
+ * @brief World and ECS Manager for Olympe Engine
+ * @author Nicolas Chereau
+ * @date 2025
+ * @version 2.0
+ * 
+ * @details
+ * This file contains the World class which manages the Entity-Component-System
+ * architecture, level loading, and game state. The World is a singleton that
+ * coordinates all game entities, components, and systems.
+ * 
+ * Key responsibilities:
+ * - Entity lifecycle management (create, destroy, query)
+ * - Component storage and retrieval
+ * - System execution coordination
+ * - Level loading from Tiled maps
+ * - Tile rendering and tileset management
+ * 
+ * @note World purpose: Manage the overall game world, including object management,
+ * level handling, and ECS architecture.
+ */
 #pragma once
 
 #include "system/EventQueue.h"
@@ -50,37 +62,59 @@ namespace Olympe {
 // TILE LAYER SUPPORT
 // ========================================================================
 
-// Tile chunk structure for rendering
+/**
+ * @struct TileChunk
+ * @brief Represents a chunk of tiles for rendering
+ * 
+ * Tile chunks are used to batch tile rendering for performance.
+ * Each chunk contains a grid of tiles from a single layer.
+ */
 struct TileChunk
 {
-    std::string layerName;
-    int x;              // Chunk X position (in tiles)
-    int y;              // Chunk Y position (in tiles)
-    int width;          // Chunk width (in tiles)
-    int height;         // Chunk height (in tiles)
-    int zOrder;         // Render order
-    std::vector<uint32_t> tileGIDs;  // Tile Global IDs (with flip flags)
+    std::string layerName;       ///< Name of the source layer
+    int x;                       ///< Chunk X position (in tiles)
+    int y;                       ///< Chunk Y position (in tiles)
+    int width;                   ///< Chunk width (in tiles)
+    int height;                  ///< Chunk height (in tiles)
+    int zOrder;                  ///< Render order (Z-coordinate)
+    std::vector<uint32_t> tileGIDs;  ///< Tile Global IDs (with flip flags)
 
+    /** @brief Default constructor */
     TileChunk() : x(0), y(0), width(0), height(0), zOrder(0) {}
 };
 
-// TilesetManager class
+/**
+ * @class TilesetManager
+ * @brief Manages tilesets loaded from Tiled maps
+ * 
+ * Handles both image-based tilesets (single texture atlas) and
+ * collection tilesets (individual tile images).
+ * 
+ * Provides tile lookup by Global ID (GID) and texture access.
+ */
 class TilesetManager
 {
 public:
+    /**
+     * @struct TilesetInfo
+     * @brief Information about a loaded tileset
+     * 
+     * Stores tileset properties including dimensions, offsets, and textures.
+     * Critical for proper tile rendering with correct positioning.
+     */
     struct TilesetInfo
     {
-        uint32_t firstgid;
-        uint32_t lastgid;  // firstgid + tilecount - 1
-        std::string name;
-        int tilewidth;
-        int tileheight;
-        int columns;
-        int imagewidth;
-        int imageheight;
-        int margin;
-        int spacing;
-        bool isCollection;
+        uint32_t firstgid;       ///< First Global ID in this tileset
+        uint32_t lastgid;        ///< Last Global ID (firstgid + tilecount - 1)
+        std::string name;        ///< Tileset name
+        int tilewidth;           ///< Width of each tile
+        int tileheight;          ///< Height of each tile
+        int columns;             ///< Number of columns in atlas
+        int imagewidth;          ///< Total atlas width
+        int imageheight;         ///< Total atlas height
+        int margin;              ///< Margin around atlas
+        int spacing;             ///< Spacing between tiles
+        bool isCollection;       ///< True if collection tileset
         
         // ====================================================================
         // CRITICAL: Global tile offset for this tileset
@@ -91,43 +125,110 @@ public:
         // - Tiles iso cube.tsx: tileoffsetX = 0, tileoffsetY = 26
         // - tiles-iso-1.tsx: tileoffsetX = 0, tileoffsetY = 0 (default)
         // ====================================================================
-        int tileoffsetX;
-        int tileoffsetY;
+        int tileoffsetX;         ///< Global X offset for all tiles
+        int tileoffsetY;         ///< Global Y offset for all tiles
 
         // Image-based tileset
-        SDL_Texture* texture;
+        SDL_Texture* texture;    ///< Atlas texture (image-based)
 
         // Collection tileset (individual tiles)
-        std::map<uint32_t, SDL_Texture*> individualTiles;
-        std::map<uint32_t, SDL_Rect> individualSrcRects;
+        std::map<uint32_t, SDL_Texture*> individualTiles;      ///< Per-tile textures
+        std::map<uint32_t, SDL_Rect> individualSrcRects;       ///< Per-tile source rects
 
-        // Constructor with explicit default values
+        /**
+         * @brief Default constructor with explicit initialization
+         */
         TilesetInfo() : firstgid(0), lastgid(0), tilewidth(0), tileheight(0),
             columns(0), imagewidth(0), imageheight(0), margin(0), spacing(0),
             isCollection(false), tileoffsetX(0), tileoffsetY(0), texture(nullptr) {
         }
     };
 
+    /**
+     * @brief Clear all loaded tilesets
+     */
     void Clear();
+    
+    /**
+     * @brief Load tilesets from JSON data
+     * @param tilesetsJson JSON array of tileset definitions
+     */
     void LoadTilesets(const nlohmann::json& tilesetsJson);
+    
+    /**
+     * @brief Get texture and source rect for a tile by GID
+     * @param gid Global tile ID
+     * @param outTexture Output texture pointer
+     * @param outSrcRect Output source rectangle
+     * @param outTileset Output tileset info pointer
+     * @return True if tile was found
+     */
     bool GetTileTexture(uint32_t gid, SDL_Texture*& outTexture, SDL_Rect& outSrcRect, const TilesetInfo*& outTileset);
+    
+    /**
+     * @brief Get all loaded tilesets
+     * @return Reference to tileset vector
+     */
     const std::vector<TilesetInfo>& GetTilesets() const { return m_tilesets; }
 
 private:
-    std::vector<TilesetInfo> m_tilesets;
+    std::vector<TilesetInfo> m_tilesets;  ///< All loaded tilesets
 };
 
+/**
+ * @class World
+ * @brief Core ECS manager and world coordinator
+ * 
+ * The World class is the central hub for the Entity-Component-System architecture.
+ * It manages all entities, components, systems, and level loading.
+ * 
+ * Key features:
+ * - Entity creation and destruction
+ * - Component addition, removal, and queries
+ * - System registration and execution
+ * - Level loading from Tiled maps (.tmj/.tmx)
+ * - Tile rendering with multiple tilesets
+ * - Collision and navigation mesh management
+ * 
+ * @note Singleton class - use World::Get() to access
+ * 
+ * @example
+ * @code
+ * // Create entity
+ * EntityID player = World::Get().CreateEntity();
+ * 
+ * // Add components
+ * Position_data pos;
+ * pos.position = Vector(100, 200, 0);
+ * World::Get().AddComponent<Position_data>(player, pos);
+ * 
+ * // Query entities
+ * auto entities = World::Get().GetEntitiesWithComponents<Position_data, Sprite_data>();
+ * @endcode
+ */
 class World 
 {
 public:
+    /** @brief Default constructor */
     World();
+    
+    /** @brief Destructor */
     virtual ~World();
 
+    /**
+     * @brief Get singleton instance
+     * @return Reference to World singleton
+     */
     static World& GetInstance()
     {
         static World instance;
         return instance;
     }
+    
+    /**
+     * @brief Get singleton instance (short form)
+     * @return Reference to World singleton
+     */
     static World& Get() { return GetInstance(); }
 
     //---------------------------------------------------------------

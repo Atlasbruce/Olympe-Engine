@@ -20,9 +20,20 @@ const sidebars: SidebarsConfig = {
       label: 'Getting Started',
       collapsed: false,
       items: [
+        'getting-started/prerequisites',
         'getting-started/installation',
         'getting-started/quick-start',
         'getting-started/project-structure',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Tutorials',
+      collapsed: false,
+      items: [
+        'tutorials/first-tiled-map',
+        'tutorials/creating-entities',
+        'tutorials/behavior-tree-basics',
       ],
     },
     {
@@ -37,6 +48,8 @@ const sidebars: SidebarsConfig = {
             'user-guide/tiled-editor/tiled-introduction',
             'user-guide/tiled-editor/tiled-quick-start',
             'user-guide/tiled-editor/layer-properties',
+            'user-guide/tiled-editor/object-properties',
+            'user-guide/tiled-editor/best-practices',
           ],
         },
         {
@@ -45,6 +58,7 @@ const sidebars: SidebarsConfig = {
           items: [
             'user-guide/blueprints/blueprints-overview',
             'user-guide/blueprints/creating-prefabs',
+            'user-guide/blueprints/prefab-properties',
             'user-guide/blueprints/component-overrides',
           ],
         },
@@ -69,6 +83,9 @@ const sidebars: SidebarsConfig = {
           label: 'Architecture',
           items: [
             'technical-reference/architecture/ecs-overview',
+            'technical-reference/architecture/ecs-components',
+            'technical-reference/architecture/ecs-systems',
+            'technical-reference/architecture/component-lifecycle',
             'technical-reference/architecture/modules',
             'technical-reference/architecture/implementation-summary',
           ],
@@ -78,6 +95,8 @@ const sidebars: SidebarsConfig = {
           label: 'Behavior Trees',
           items: [
             'technical-reference/behavior-trees/behavior-trees-overview',
+            'technical-reference/behavior-trees/nodes',
+            'technical-reference/behavior-trees/custom-nodes',
             'technical-reference/behavior-trees/behavior-tree-dependency-loading',
           ],
         },
@@ -86,6 +105,8 @@ const sidebars: SidebarsConfig = {
           label: 'Navigation',
           items: [
             'technical-reference/navigation/navigation-system',
+            'technical-reference/navigation/pathfinding',
+            'technical-reference/navigation/navigation-mesh',
             'technical-reference/navigation/overlay-rendering',
           ],
         },
@@ -115,7 +136,8 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'API Reference',
       items: [
-        'api-reference/api-introduction',
+        'api-reference/index',
+        'api-reference/introduction',
       ],
     },
   ],

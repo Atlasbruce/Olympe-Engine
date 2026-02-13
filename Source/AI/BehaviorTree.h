@@ -1,13 +1,34 @@
-/*
-Olympe Engine V2 - 2025
-Nicolas Chereau
-nchereau@gmail.com
-
-This file is part of Olympe Engine V2.
-
-Behavior Tree purpose: Data-driven behavior tree system for AI decision making.
-
-*/
+/**
+ * @file BehaviorTree.h
+ * @brief Data-driven behavior tree system for AI decision making
+ * @author Nicolas Chereau
+ * @date 2025
+ * @version 2.0
+ * 
+ * @details
+ * This file implements a behavior tree system for creating complex AI behaviors.
+ * Behavior trees are hierarchical structures that make decisions based on conditions
+ * and execute actions based on those decisions.
+ * 
+ * Key features:
+ * - Composite nodes: Selector (OR), Sequence (AND)
+ * - Decorator nodes: Inverter, Repeater
+ * - Condition nodes: State checking (health, target, etc.)
+ * - Action nodes: Behaviors (move, attack, patrol, etc.)
+ * - JSON-based tree definitions
+ * - Per-entity tree execution
+ * 
+ * @note Behavior Tree purpose: Data-driven behavior tree system for AI decision making.
+ * 
+ * @example
+ * @code
+ * // Load behavior tree from JSON
+ * BehaviorTree::LoadTreeForEntity(npcEntity, "Blueprints/BehaviorTrees/Patrol.json");
+ * 
+ * // Update tree each frame
+ * BehaviorTree::UpdateEntity(npcEntity, deltaTime);
+ * @endcode
+ */
 
 #pragma once
 
@@ -21,82 +42,108 @@ Behavior Tree purpose: Data-driven behavior tree system for AI decision making.
 // Forward declarations
 struct AIBlackboard_data;
 
-// --- Behavior Tree Node Types ---
+/**
+ * @enum BTNodeType
+ * @brief Behavior tree node types
+ * 
+ * Defines the different types of nodes that can exist in a behavior tree.
+ */
 enum class BTNodeType : uint8_t
 {
-    Selector = 0,       // OR node - succeeds if any child succeeds
-    Sequence,           // AND node - succeeds if all children succeed
-    Condition,          // Leaf node - checks a condition
-    Action,             // Leaf node - performs an action
-    Inverter,           // Decorator - inverts child result
-    Repeater            // Decorator - repeats child N times
+    Selector = 0,       ///< OR node - succeeds if any child succeeds
+    Sequence,           ///< AND node - succeeds if all children succeed
+    Condition,          ///< Leaf node - checks a condition
+    Action,             ///< Leaf node - performs an action
+    Inverter,           ///< Decorator - inverts child result
+    Repeater            ///< Decorator - repeats child N times
 };
 
-// --- Behavior Tree Node Status ---
+/**
+ * @enum BTStatus
+ * @brief Behavior tree node execution status
+ * 
+ * Represents the current state of a behavior tree node.
+ */
 enum class BTStatus : uint8_t
 {
-    Running = 0,        // Node is still executing
-    Success,            // Node completed successfully
-    Failure             // Node failed
+    Running = 0,        ///< Node is still executing
+    Success,            ///< Node completed successfully
+    Failure             ///< Node failed
 };
 
-// --- Built-in Condition Types ---
+/**
+ * @enum BTConditionType
+ * @brief Built-in condition types for behavior trees
+ * 
+ * Predefined conditions that can be checked during tree execution.
+ */
 enum class BTConditionType : uint8_t
 {
-    TargetVisible = 0,
-    TargetInRange,
-    HealthBelow,
-    HasMoveGoal,
-    CanAttack,
-    HeardNoise,
+    TargetVisible = 0,              ///< Can see target entity
+    TargetInRange,                  ///< Target within specified range
+    HealthBelow,                    ///< Health below threshold
+    HasMoveGoal,                    ///< Movement goal is set
+    CanAttack,                      ///< Attack is available
+    HeardNoise,                     ///< Detected noise
     // NEW: Wander behavior conditions
-    IsWaitTimerExpired,               // Wait timer expired?
-    HasNavigableDestination,          // Navigable destination chosen?
-    HasValidPath,                     // Valid path calculated?
-    HasReachedDestination,            // Reached destination?
+    IsWaitTimerExpired,             ///< Wait timer expired?
+    HasNavigableDestination,        ///< Navigable destination chosen?
+    HasValidPath,                   ///< Valid path calculated?
+    HasReachedDestination,          ///< Reached destination?
     // Catalog aliases for better readability
-    HasTarget = TargetVisible,          // Alias for HasTarget condition
-    IsTargetInAttackRange = TargetInRange  // Alias for range check
+    HasTarget = TargetVisible,          ///< Alias for HasTarget condition
+    IsTargetInAttackRange = TargetInRange  ///< Alias for range check
 };
 
-// --- Built-in Action Types ---
+/**
+ * @enum BTActionType
+ * @brief Built-in action types for behavior trees
+ * 
+ * Predefined actions that can be executed during tree execution.
+ */
 enum class BTActionType : uint8_t
 {
-    SetMoveGoalToLastKnownTargetPos = 0,
-    SetMoveGoalToTarget,
-    SetMoveGoalToPatrolPoint,
-    MoveToGoal,
-    AttackIfClose,
-    PatrolPickNextPoint,
-    ClearTarget,
-    Idle,
+    SetMoveGoalToLastKnownTargetPos = 0, ///< Move to last seen target position
+    SetMoveGoalToTarget,                  ///< Move towards current target
+    SetMoveGoalToPatrolPoint,             ///< Move to next patrol waypoint
+    MoveToGoal,                           ///< Execute movement to goal
+    AttackIfClose,                        ///< Attack if in range
+    PatrolPickNextPoint,                  ///< Select next patrol point
+    ClearTarget,                          ///< Clear current target
+    Idle,                                 ///< Do nothing
     // NEW: Wander behavior actions
-    WaitRandomTime,               // Initialize random timer (param1=min, param2=max)
-    ChooseRandomNavigablePoint,   // Choose navigable point (param1=searchRadius, param2=maxAttempts)
-    RequestPathfinding,           // Request pathfinding to moveGoal via MoveIntent
-    FollowPath,                   // Follow the path (check progression)
+    WaitRandomTime,                       ///< Initialize random timer (param1=min, param2=max)
+    ChooseRandomNavigablePoint,           ///< Choose navigable point (param1=searchRadius, param2=maxAttempts)
+    RequestPathfinding,                   ///< Request pathfinding to moveGoal via MoveIntent
+    FollowPath,                           ///< Follow the path (check progression)
     // Catalog aliases for better readability
-    MoveTo = MoveToGoal,                // Alias for MoveTo action
-    AttackMelee = AttackIfClose         // Alias for melee attack
+    MoveTo = MoveToGoal,                  ///< Alias for MoveTo action
+    AttackMelee = AttackIfClose           ///< Alias for melee attack
 };
 
-// --- Behavior Tree Node ---
+/**
+ * @struct BTNode
+ * @brief Represents a single node in a behavior tree
+ * 
+ * Can be a composite, decorator, condition, or action node.
+ * Stores node type, parameters, and child references.
+ */
 struct BTNode
 {
-    BTNodeType type = BTNodeType::Action;
-    uint32_t id = 0;                        // Unique node ID within tree
+    BTNodeType type = BTNodeType::Action;   ///< Node type
+    uint32_t id = 0;                        ///< Unique node ID within tree
     
     // For composite nodes (Selector, Sequence)
-    std::vector<uint32_t> childIds;
+    std::vector<uint32_t> childIds;         ///< IDs of child nodes
     
     // For condition nodes
-    BTConditionType conditionType = BTConditionType::TargetVisible;
-    float conditionParam = 0.0f;            // Generic parameter for conditions
+    BTConditionType conditionType = BTConditionType::TargetVisible;  ///< Condition type
+    float conditionParam = 0.0f;            ///< Generic parameter for conditions
     
     // For action nodes
-    BTActionType actionType = BTActionType::Idle;
-    float actionParam1 = 0.0f;              // Generic parameter 1 for actions
-    float actionParam2 = 0.0f;              // Generic parameter 2 for actions
+    BTActionType actionType = BTActionType::Idle;  ///< Action type
+    float actionParam1 = 0.0f;              ///< Generic parameter 1 for actions
+    float actionParam2 = 0.0f;              ///< Generic parameter 2 for actions
     
     // For decorator nodes
     uint32_t decoratorChildId = 0;
