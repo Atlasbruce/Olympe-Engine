@@ -142,7 +142,7 @@ Each `○` represents a navigable tile rendered with the overlay color.
 
 **Performance Impact:**
 - Additional overhead: ~2 extra WorldToGrid() calls per frame
-- Negligible impact: <0.1ms on modern hardware
+- Negligible impact: &lt;0.1ms on modern hardware
 - Memory: No additional allocations (uses existing tile data)
 
 ## Success Criteria
