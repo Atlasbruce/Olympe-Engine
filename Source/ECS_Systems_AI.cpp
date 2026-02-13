@@ -13,12 +13,16 @@ AI Systems implementation: NPC AI behavior systems.
 #include "ECS_Components.h"
 #include "ECS_Components_AI.h"
 #include "AI/BehaviorTree.h"
+#include "AI/BehaviorTreeDebugWindow.h"
 #include "World.h"
 #include "GameEngine.h"
 #include "system/EventQueue.h"
 #include "system/system_utils.h"
 #include <cmath>
 #include <algorithm>
+
+// Forward declaration of global debugger instance (defined in OlympeEngine.cpp)
+extern Olympe::BehaviorTreeDebugWindow* g_btDebugWindow;
 
 // --- AIStimuliSystem Implementation ---
 
@@ -500,6 +504,12 @@ void BehaviorTreeSystem::Process()
                 // Execute the node
                 BTStatus status = ExecuteBTNode(*node, entity, blackboard, *tree);
                 btRuntime.lastStatus = static_cast<uint8_t>(status);
+                
+                // Notify debugger if active
+                if (g_btDebugWindow && g_btDebugWindow->IsVisible())
+                {
+                    g_btDebugWindow->AddExecutionEntry(entity, node->id, node->name, status);
+                }
                 
                 // Debug logging (every 2 seconds to avoid spam)
                 static float lastLogTime = 0.0f;
