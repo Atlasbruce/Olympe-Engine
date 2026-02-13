@@ -377,6 +377,14 @@ public:
     {
         return m_entitySignatures.find(entity) != m_entitySignatures.end();
 	}
+    /**
+     * @brief Get all active entity IDs
+     * @return Vector of all entity IDs in the world
+     */
+    const std::vector<EntityID>& GetAllEntities() const
+    {
+        return m_entities;
+    }
     // -------------------------------------------------------------
     // Component Management (Pool Facade)
 
@@ -634,6 +642,7 @@ private:
     // Entity ID management
     EntityID m_nextEntityID = 1;
     std::queue<EntityID> m_freeEntityIDs;
+    std::vector<EntityID> m_entities;
 
     // System management
     std::vector<std::unique_ptr<ECS_System>> m_systems;

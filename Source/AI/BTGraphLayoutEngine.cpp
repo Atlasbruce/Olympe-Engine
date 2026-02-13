@@ -77,7 +77,9 @@ namespace Olympe
 
         while (!queue.empty())
         {
-            auto [nodeId, layer] = queue.front();
+            std::pair<uint32_t, int> front = queue.front();
+            uint32_t nodeId = front.first;
+            int layer = front.second;
             queue.pop();
 
             const BTNode* node = tree->GetNode(nodeId);

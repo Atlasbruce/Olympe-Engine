@@ -76,6 +76,9 @@
     <Filter Include="Fichiers d%27en-t�te\Miniz">
       <UniqueIdentifier>{e1745148-9ef5-4423-9308-ca1ff062d45d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers d%27en-t�te\Blueprint Visual Debug">
+      <UniqueIdentifier>{0dd0099a-cec2-48a7-8658-76570dbde708}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\GameEngine.cpp">
@@ -314,6 +317,12 @@
     </ClCompile>
     <ClCompile Include="Source\ECS_Components_Registration.cpp">
       <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\BehaviorTreeDebugWindow.cpp">
+      <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\BTGraphLayoutEngine.cpp">
+      <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -622,6 +631,12 @@
     </ClInclude>
     <ClInclude Include="source\tiledlevelloader\include\tiled_constants.h">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\BehaviorTreeDebugWindow.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\BTGraphLayoutEngine.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

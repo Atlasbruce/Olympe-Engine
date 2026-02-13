@@ -231,6 +231,9 @@ EntityID World::CreateEntity()
     
     // Notify Blueprint Editor (if active)
     NotifyBlueprintEditorEntityCreated(newID);
+
+    // Add to entity list
+    m_entities.push_back(newID);
     
     return newID;
 }
@@ -262,6 +265,8 @@ void World::DestroyEntity(EntityID entity)
 
     // 3. Nettoyer les maps
     m_entitySignatures.erase(entity);
+
+	m_entities.erase(std::remove(m_entities.begin(), m_entities.end(), entity), m_entities.end());
 
     // 4. Recycler l'ID (gestion de l'information)
     m_freeEntityIDs.push(entity);
@@ -1287,6 +1292,7 @@ void World::UnloadCurrentLevel()
     // Clear tile chunks and tilesets
     m_tileChunks.clear();
     m_tilesetManager.Clear();
+	m_entities.clear();
     
     // Destroy all entities except system entities (like GridSettings)
     std::vector<EntityID> entitiesToDestroy;

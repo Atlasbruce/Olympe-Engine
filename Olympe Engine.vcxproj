@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\AI\BehaviorTreeDebugWindow.cpp" />
+    <ClCompile Include="Source\AI\BTGraphLayoutEngine.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AdditionalEditorPlugins.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AssetBrowser.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AssetInfoPanel.cpp" />
@@ -103,6 +105,8 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="Source\AI\AIEvents.h" />
     <ClInclude Include="Source\AI\BehaviorTree.h" />
+    <ClInclude Include="Source\AI\BehaviorTreeDebugWindow.h" />
+    <ClInclude Include="Source\AI\BTGraphLayoutEngine.h" />
     <ClInclude Include="Source\BlueprintEditor\AdditionalEditorPlugins.h" />
     <ClInclude Include="Source\BlueprintEditor\AssetBrowser.h" />
     <ClInclude Include="Source\BlueprintEditor\AssetInfoPanel.h" />
