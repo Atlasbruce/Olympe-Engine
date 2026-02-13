@@ -501,6 +501,12 @@ void BehaviorTreeSystem::Process()
                 BTStatus status = ExecuteBTNode(*node, entity, blackboard, *tree);
                 btRuntime.lastStatus = static_cast<uint8_t>(status);
                 
+                // Notify debugger if active
+                if (g_btDebugWindow && g_btDebugWindow->IsVisible())
+                {
+                    g_btDebugWindow->AddExecutionEntry(entity, node->id, node->name, status);
+                }
+                
                 // Debug logging (every 2 seconds to avoid spam)
                 static float lastLogTime = 0.0f;
                 if (currentTime - lastLogTime > 2.0f)
