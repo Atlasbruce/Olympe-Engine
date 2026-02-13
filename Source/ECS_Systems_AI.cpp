@@ -13,12 +13,16 @@ AI Systems implementation: NPC AI behavior systems.
 #include "ECS_Components.h"
 #include "ECS_Components_AI.h"
 #include "AI/BehaviorTree.h"
+#include "AI/BehaviorTreeDebugWindow.h"
 #include "World.h"
 #include "GameEngine.h"
 #include "system/EventQueue.h"
 #include "system/system_utils.h"
 #include <cmath>
 #include <algorithm>
+
+// Forward declaration of global debugger instance (defined in OlympeEngine.cpp)
+extern Olympe::BehaviorTreeDebugWindow* g_btDebugWindow;
 
 // --- AIStimuliSystem Implementation ---
 
