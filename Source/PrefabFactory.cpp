@@ -44,9 +44,9 @@ std::vector<std::string> PrefabFactory::GetRegisteredComponents() const
 {
     std::vector<std::string> components;
     components.reserve(m_componentFactories.size());
-    for (const auto& [name, factory] : m_componentFactories)
+    for (const auto& kv : m_componentFactories)
     {
-        components.push_back(name);
+        components.push_back(kv.first);
     }
     return components;
 }
@@ -428,9 +428,9 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
         SYSTEM_LOG << "PrefabFactory::InstantiateComponent: Unknown component type '" 
                    << type << "'\n";
         SYSTEM_LOG << "  Available auto-registered components:\n";
-        for (const auto& [name, factory] : m_componentFactories)
+        for (const auto& kv : m_componentFactories)
         {
-            SYSTEM_LOG << "    - " << name << "\n";
+            SYSTEM_LOG << "    - " << kv.first << "\n";
         }
         return false;
     }
