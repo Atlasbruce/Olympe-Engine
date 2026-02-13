@@ -364,10 +364,9 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
             return InstantiateMoveIntent(entity, componentDef);
         
         // Component created successfully with default values
-        return true;
+        // too soon return true;
     }
-    else
-    {
+
         SYSTEM_LOG << "[WARNING] PrefabFactory::InstantiateComponent: No factory registered for component type '" << type << "'\n";
         // Step 2: Fallback to legacy specialized functions (for backward compatibility)
         // This allows the system to work even if AUTO_REGISTER_COMPONENT was forgotten
@@ -444,7 +443,7 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
             }
             return false;
         }
-    }
+    
 }
 
 // ========================================================================
