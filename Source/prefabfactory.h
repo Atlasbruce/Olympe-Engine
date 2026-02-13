@@ -254,6 +254,7 @@ private:
     bool InstantiateCameraBounds(EntityID entity, const ComponentDefinition& def);
     bool InstantiateCameraInputBinding(EntityID entity, const ComponentDefinition& def);
     bool InstantiateInputMapping(EntityID entity, const ComponentDefinition& def);
+    bool InstantiateNavigationAgent(EntityID entity, const ComponentDefinition& def);
 };
 
 // Helper function for auto-registration (called by macro)

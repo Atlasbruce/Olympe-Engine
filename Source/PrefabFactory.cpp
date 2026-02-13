@@ -362,12 +362,13 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
             return InstantiateAISenses(entity, componentDef);
         else if (type == "MoveIntent_data")
             return InstantiateMoveIntent(entity, componentDef);
+		else if (type == "NavigationAgent_data")
+            return InstantiateNavigationAgent(entity, componentDef);
         
         // Component created successfully with default values
         // too soon return true;
     }
 
-        SYSTEM_LOG << "[WARNING] PrefabFactory::InstantiateComponent: No factory registered for component type '" << type << "'\n";
         // Step 2: Fallback to legacy specialized functions (for backward compatibility)
         // This allows the system to work even if AUTO_REGISTER_COMPONENT was forgotten
         if (type == "Identity" || type == "Identity_data")
@@ -1164,6 +1165,30 @@ bool PrefabFactory::InstantiateInputMapping(EntityID entity, const ComponentDefi
         mapping.sensitivity = def.GetParameter("sensitivity")->AsFloat();
     
     World::Get().AddComponent<InputMapping_data>(entity, mapping);
+    return true;
+}
+
+bool PrefabFactory::InstantiateNavigationAgent(EntityID entity, const ComponentDefinition& def)
+{
+    // Get existing component created by auto-registration
+    if (!World::Get().HasComponent<NavigationAgent_data>(entity))
+    {
+        SYSTEM_LOG << "[PrefabFactory] ERROR: NavigationAgent_data should exist (auto-registration)\n";
+        return false;
+    }
+
+    NavigationAgent_data& navAgent = World::Get().GetComponent<NavigationAgent_data>(entity);
+
+    // Apply parameters
+    if (def.HasParameter("agentRadius"))
+        navAgent.agentRadius = def.GetParameter("agentRadius")->AsFloat();
+
+    if (def.HasParameter("maxSpeed"))
+        navAgent.maxSpeed = def.GetParameter("maxSpeed")->AsFloat();
+
+    if (def.HasParameter("layerMask"))
+        navAgent.layerMask = static_cast<int>(def.GetParameter("layerMask")->AsInt());
+
     return true;
 }
 

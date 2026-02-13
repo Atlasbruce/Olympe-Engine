@@ -133,9 +133,21 @@ struct BehaviorTreeRuntime_data
     bool needsRestart = false;           // Flag to restart tree from root
     
     // Constructors
-    BehaviorTreeRuntime_data() = default;
-    BehaviorTreeRuntime_data(uint32_t treeId, bool active) 
-        : treeAssetId(treeId), isActive(active) {}
+    BehaviorTreeRuntime_data()
+        : treeAssetId(0), currentNodeIndex(0), lastStatus(0),
+        nextThinkTime(0.0f), isActive(true), needsRestart(false)
+    {
+        SYSTEM_LOG << "[BehaviorTreeRuntime_data] Default constructor called: treeAssetId="
+            << treeAssetId << std::endl;
+    }
+
+    BehaviorTreeRuntime_data(uint32_t treeId, bool active)
+        : treeAssetId(treeId), isActive(active),
+        currentNodeIndex(0), lastStatus(0), nextThinkTime(0.0f), needsRestart(false)
+    {
+        SYSTEM_LOG << "[BehaviorTreeRuntime_data] Parameterized constructor called: treeAssetId="
+            << treeId << ", active=" << active << std::endl;
+    }
 };
 AUTO_REGISTER_COMPONENT(BehaviorTreeRuntime_data);
 
