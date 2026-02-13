@@ -12,7 +12,7 @@ behavior tree dependencies for automatic loading.
 #include "BehaviorTreeDependencyScanner.h"
 #include "../PrefabScanner.h"
 #include "../prefabfactory.h"
-#include "../json_helper.h"
+#include "../third_party/nlohmann/json.hpp"
 #include <iostream>
 #include <algorithm>
 #include <cctype>
@@ -119,7 +119,7 @@ BehaviorTreeDependencyScanner::ScanPrefabs(const std::vector<std::string>& prefa
     
     for (const auto& prefabName : prefabNames)
     {
-        const PrefabBlueprint* prefab = PrefabFactory::Get().GetPrefab(prefabName);
+        const PrefabBlueprint* prefab = PrefabFactory::Get().GetPrefabRegistry().Find(prefabName);
         if (!prefab)
         {
             std::cerr << "[BTDepScanner] Warning: Prefab not found: " << prefabName << "\n";
@@ -194,7 +194,7 @@ std::set<std::string> BehaviorTreeDependencyScanner::ExtractPrefabsFromLevel(con
     for (const auto& layer : layers)
     {
         // Look for object layers (where entities are defined)
-        std::string layerType = JsonHelper::GetString(layer, "type", "");
+        std::string layerType = layer.value("type", "");
         
         if (layerType == "objectgroup")
         {

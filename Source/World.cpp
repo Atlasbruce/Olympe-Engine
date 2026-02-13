@@ -38,6 +38,7 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include <cctype>
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include <set>
 #include "TiledLevelLoader/include/tiled_constants.h"
 
@@ -149,6 +150,7 @@ void World::Initialize_ECS_Systems()
     Add_ECS_System(std::make_unique<RenderingSystem>());        // Pass 1: World (parallax, tiles, entities)
 	Add_ECS_System(std::make_unique<GridSystem>());             // Grid overlay
     Add_ECS_System(std::make_unique<UIRenderingSystem>());      // -> Pass 2: UI/HUD/Menu (ALWAYS on top)
+
 }
 //---------------------------------------------------------------------------------------------
 void World::Add_ECS_System(std::unique_ptr<ECS_System> system)
@@ -1051,17 +1053,29 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     // and creating a new API to extract the raw JSON would require larger refactoring.
     // The performance impact is negligible for typical level sizes.
     nlohmann::json levelJsonRaw;
-    if (JsonHelper::LoadJsonFromFile(tiledMapPath, levelJsonRaw))
+    std::ifstream jsonFile(tiledMapPath);
+    if (jsonFile.is_open())
     {
-        if (!LoadLevelDependencies(levelJsonRaw))
+        try 
         {
-            std::cerr << "[World] ERROR: Failed to load level dependencies\n";
-            return false;
+            jsonFile >> levelJsonRaw;
+            jsonFile.close();
+            
+            if (!LoadLevelDependencies(levelJsonRaw))
+            {
+                std::cerr << "[World] ERROR: Failed to load level dependencies\n";
+                return false;
+            }
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "[World] WARNING: Failed to parse level JSON: " << e.what() << "\n";
+            // Continue anyway - not all levels may have behavior trees
         }
     }
     else
     {
-        std::cerr << "[World] WARNING: Could not load level JSON for dependency scanning\n";
+        std::cerr << "[World] WARNING: Could not open level JSON file for dependency scanning\n";
         // Continue anyway - not all levels may have behavior trees
     }
     
