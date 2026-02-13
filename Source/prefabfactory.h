@@ -15,6 +15,8 @@
 #include "ParameterResolver.h"
 #include <map>
 #include <memory>
+#include <functional>
+#include <vector>
 
 using PrefabBuilder = std::function<void(EntityID)>;
 
@@ -39,6 +41,20 @@ public:
         static PrefabFactory instance;
         return instance;
     }
+    
+    // ========================================================================
+    // Component Factory Registry (Auto-Registration System)
+    // ========================================================================
+    
+    /// Register a component factory (called by auto-registration system)
+    void RegisterComponentFactory(const std::string& componentName, 
+                                   std::function<bool(EntityID, const ComponentDefinition&)> factory);
+    
+    /// Check if a component is registered
+    bool IsComponentRegistered(const std::string& componentName) const;
+    
+    /// Get list of all registered components (for debugging)
+    std::vector<std::string> GetRegisteredComponents() const;
     
     // ========================================================================
     // NEW: Centralized Prefab Management
@@ -197,6 +213,9 @@ private:
     PrefabRegistry m_prefabRegistry;
     bool m_prefabsPreloaded = false;
     std::unique_ptr<PrefabScanner> m_scanner;  // For type normalization
+    
+    // Registry: component name → factory function
+    std::map<std::string, std::function<bool(EntityID, const ComponentDefinition&)>> m_componentFactories;
 
     PrefabFactory() = default;
     
@@ -236,6 +255,10 @@ private:
     bool InstantiateCameraInputBinding(EntityID entity, const ComponentDefinition& def);
     bool InstantiateInputMapping(EntityID entity, const ComponentDefinition& def);
 };
+
+// Helper function for auto-registration (called by macro)
+void RegisterComponentFactory_Internal(const char* componentName, 
+                                       std::function<bool(EntityID, const ComponentDefinition&)> factory);
 
 // Macro pour faciliter l'enregistrement automatique (similaire � votre ancienne m�thode)
 #define REGISTER_PREFAB(Name, BuilderLambda) \

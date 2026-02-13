@@ -48,6 +48,7 @@
     <ClCompile Include="Source\drawing.cpp" />
     <ClCompile Include="source\ECS_Register.h" />
     <ClCompile Include="Source\AI\BehaviorTree.cpp" />
+	<ClCompile Include="Source\AI\BehaviorTreeDependencyScanner.cpp" />
     <ClCompile Include="Source\ECS_Systems.cpp" />
     <ClCompile Include="Source\ECS_Systems_AI.cpp" />
     <ClCompile Include="Source\ECS_Systems_Camera.cpp" />
