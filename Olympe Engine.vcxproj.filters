@@ -309,6 +309,12 @@
     <ClCompile Include="Source\CollisionMap.cpp">
       <Filter>Fichiers d%27en-t�te\Game Systems</Filter>
     </ClCompile>
+    <ClCompile Include="Source\AI\BehaviorTreeDependencyScanner.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ECS_Components_Registration.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
