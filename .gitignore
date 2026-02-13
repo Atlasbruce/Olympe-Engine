@@ -391,3 +391,4 @@ website/build/
 website/.docusaurus/
 website/.cache-loader/
 website/package-lock.json
+/Olympe Engine_d.exe
