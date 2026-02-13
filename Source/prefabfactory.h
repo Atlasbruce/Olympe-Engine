@@ -214,7 +214,7 @@ private:
     bool m_prefabsPreloaded = false;
     std::unique_ptr<PrefabScanner> m_scanner;  // For type normalization
     
-    // Registry: component name → factory function
+    // Registry: component name -> factory function
     std::map<std::string, std::function<bool(EntityID, const ComponentDefinition&)>> m_componentFactories;
 
     PrefabFactory() = default;

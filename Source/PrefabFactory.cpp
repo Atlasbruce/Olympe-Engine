@@ -341,7 +341,7 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
         {
             return false;
         }
-        
+        /* LEGACY DEPRECATED
         // For components that need specialized parameter handling, call the specialized function
         // Note: The specialized function applies parameters but does NOT recreate the component
         // This if-else chain is intentional for clarity and ease of modification.
@@ -364,83 +364,86 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
             return InstantiateMoveIntent(entity, componentDef);
         
         // Component created successfully with default values
-        return true;
+        return true;/**/
     }
-    
-    // Step 2: Fallback to legacy specialized functions (for backward compatibility)
-    // This allows the system to work even if AUTO_REGISTER_COMPONENT was forgotten
-    if (type == "Identity" || type == "Identity_data")
-        return InstantiateIdentity(entity, componentDef);
-    else if (type == "Position" || type == "Position_data")
-        return InstantiatePosition(entity, componentDef);
-    else if (type == "PhysicsBody" || type == "PhysicsBody_data")
-        return InstantiatePhysicsBody(entity, componentDef);
-    else if (type == "VisualSprite" || type == "VisualSprite_data")
-        return InstantiateVisualSprite(entity, componentDef);
-    else if (type == "VisualEditor" || type == "VisualEditor_data")
-        return InstantiateVisualEditor(entity, componentDef);
-    else if (type == "AIBehavior" || type == "AIBehavior_data")
-        return InstantiateAIBehavior(entity, componentDef);
-    else if (type == "AIBlackboard" || type == "AIBlackboard_data")
-        return InstantiateAIBlackboard(entity, componentDef);
-    else if (type == "AISenses" || type == "AISenses_data")
-        return InstantiateAISenses(entity, componentDef);
-    else if (type == "AIState" || type == "AIState_data")
-        return InstantiateAIState(entity, componentDef);
-    else if (type == "BehaviorTreeRuntime" || type == "BehaviorTreeRuntime_data")
-        return InstantiateBehaviorTreeRuntime(entity, componentDef);
-    else if (type == "MoveIntent" || type == "MoveIntent_data")
-        return InstantiateMoveIntent(entity, componentDef);
-    else if (type == "AttackIntent" || type == "AttackIntent_data")
-        return InstantiateAttackIntent(entity, componentDef);
-    else if (type == "BoundingBox" || type == "BoundingBox_data")
-        return InstantiateBoundingBox(entity, componentDef);
-    else if (type == "Movement" || type == "Movement_data")
-        return InstantiateMovement(entity, componentDef);
-    else if (type == "Health" || type == "Health_data")
-        return InstantiateHealth(entity, componentDef);
-    else if (type == "TriggerZone" || type == "TriggerZone_data")
-        return InstantiateTriggerZone(entity, componentDef);
-    else if (type == "CollisionZone" || type == "CollisionZone_data")
-        return InstantiateCollisionZone(entity, componentDef);
-    else if (type == "Animation" || type == "Animation_data")
-        return InstantiateAnimation(entity, componentDef);
-    else if (type == "FX" || type == "FX_data")
-        return InstantiateFX(entity, componentDef);
-    else if (type == "AudioSource" || type == "AudioSource_data")
-        return InstantiateAudioSource(entity, componentDef);
-    else if (type == "Controller" || type == "Controller_data")
-        return InstantiateController(entity, componentDef);
-    else if (type == "PlayerController" || type == "PlayerController_data")
-        return InstantiatePlayerController(entity, componentDef);
-    else if (type == "PlayerBinding" || type == "PlayerBinding_data")
-        return InstantiatePlayerBinding(entity, componentDef);
-    else if (type == "NPC" || type == "NPC_data")
-        return InstantiateNPC(entity, componentDef);
-    else if (type == "Inventory" || type == "Inventory_data")
-        return InstantiateInventory(entity, componentDef);
-    else if (type == "Camera" || type == "Camera_data")
-        return InstantiateCamera(entity, componentDef);
-    else if (type == "CameraTarget" || type == "CameraTarget_data")
-        return InstantiateCameraTarget(entity, componentDef);
-    else if (type == "CameraEffects" || type == "CameraEffects_data")
-        return InstantiateCameraEffects(entity, componentDef);
-    else if (type == "CameraBounds" || type == "CameraBounds_data")
-        return InstantiateCameraBounds(entity, componentDef);
-    else if (type == "CameraInputBinding" || type == "CameraInputBinding_data")
-        return InstantiateCameraInputBinding(entity, componentDef);
-    else if (type == "InputMapping" || type == "InputMapping_data")
-        return InstantiateInputMapping(entity, componentDef);
     else
     {
-        SYSTEM_LOG << "PrefabFactory::InstantiateComponent: Unknown component type '" 
-                   << type << "'\n";
-        SYSTEM_LOG << "  Available auto-registered components:\n";
-        for (const auto& kv : m_componentFactories)
+        SYSTEM_LOG << "[WARNING] PrefabFactory::InstantiateComponent: No factory registered for component type '" << type << "'\n";
+        // Step 2: Fallback to legacy specialized functions (for backward compatibility)
+        // This allows the system to work even if AUTO_REGISTER_COMPONENT was forgotten
+        if (type == "Identity" || type == "Identity_data")
+            return InstantiateIdentity(entity, componentDef);
+        else if (type == "Position" || type == "Position_data")
+            return InstantiatePosition(entity, componentDef);
+        else if (type == "PhysicsBody" || type == "PhysicsBody_data")
+            return InstantiatePhysicsBody(entity, componentDef);
+        else if (type == "VisualSprite" || type == "VisualSprite_data")
+            return InstantiateVisualSprite(entity, componentDef);
+        else if (type == "VisualEditor" || type == "VisualEditor_data")
+            return InstantiateVisualEditor(entity, componentDef);
+        else if (type == "AIBehavior" || type == "AIBehavior_data")
+            return InstantiateAIBehavior(entity, componentDef);
+        else if (type == "AIBlackboard" || type == "AIBlackboard_data")
+            return InstantiateAIBlackboard(entity, componentDef);
+        else if (type == "AISenses" || type == "AISenses_data")
+            return InstantiateAISenses(entity, componentDef);
+        else if (type == "AIState" || type == "AIState_data")
+            return InstantiateAIState(entity, componentDef);
+        else if (type == "BehaviorTreeRuntime" || type == "BehaviorTreeRuntime_data")
+            return InstantiateBehaviorTreeRuntime(entity, componentDef);
+        else if (type == "MoveIntent" || type == "MoveIntent_data")
+            return InstantiateMoveIntent(entity, componentDef);
+        else if (type == "AttackIntent" || type == "AttackIntent_data")
+            return InstantiateAttackIntent(entity, componentDef);
+        else if (type == "BoundingBox" || type == "BoundingBox_data")
+            return InstantiateBoundingBox(entity, componentDef);
+        else if (type == "Movement" || type == "Movement_data")
+            return InstantiateMovement(entity, componentDef);
+        else if (type == "Health" || type == "Health_data")
+            return InstantiateHealth(entity, componentDef);
+        else if (type == "TriggerZone" || type == "TriggerZone_data")
+            return InstantiateTriggerZone(entity, componentDef);
+        else if (type == "CollisionZone" || type == "CollisionZone_data")
+            return InstantiateCollisionZone(entity, componentDef);
+        else if (type == "Animation" || type == "Animation_data")
+            return InstantiateAnimation(entity, componentDef);
+        else if (type == "FX" || type == "FX_data")
+            return InstantiateFX(entity, componentDef);
+        else if (type == "AudioSource" || type == "AudioSource_data")
+            return InstantiateAudioSource(entity, componentDef);
+        else if (type == "Controller" || type == "Controller_data")
+            return InstantiateController(entity, componentDef);
+        else if (type == "PlayerController" || type == "PlayerController_data")
+            return InstantiatePlayerController(entity, componentDef);
+        else if (type == "PlayerBinding" || type == "PlayerBinding_data")
+            return InstantiatePlayerBinding(entity, componentDef);
+        else if (type == "NPC" || type == "NPC_data")
+            return InstantiateNPC(entity, componentDef);
+        else if (type == "Inventory" || type == "Inventory_data")
+            return InstantiateInventory(entity, componentDef);
+        else if (type == "Camera" || type == "Camera_data")
+            return InstantiateCamera(entity, componentDef);
+        else if (type == "CameraTarget" || type == "CameraTarget_data")
+            return InstantiateCameraTarget(entity, componentDef);
+        else if (type == "CameraEffects" || type == "CameraEffects_data")
+            return InstantiateCameraEffects(entity, componentDef);
+        else if (type == "CameraBounds" || type == "CameraBounds_data")
+            return InstantiateCameraBounds(entity, componentDef);
+        else if (type == "CameraInputBinding" || type == "CameraInputBinding_data")
+            return InstantiateCameraInputBinding(entity, componentDef);
+        else if (type == "InputMapping" || type == "InputMapping_data")
+            return InstantiateInputMapping(entity, componentDef);
+        else
         {
-            SYSTEM_LOG << "    - " << kv.first << "\n";
+            SYSTEM_LOG << "PrefabFactory::InstantiateComponent: Unknown component type '"
+                << type << "'\n";
+            SYSTEM_LOG << "  Available auto-registered components:\n";
+            for (const auto& kv : m_componentFactories)
+            {
+                SYSTEM_LOG << "    - " << kv.first << "\n";
+            }
+            return false;
         }
-        return false;
     }
 }
 
@@ -1170,15 +1173,22 @@ bool PrefabFactory::InstantiateBehaviorTreeRuntime(EntityID entity, const Compon
     
     if (def.HasParameter("treePath"))
     {
-        // Map treePath → treeId using the registry
+        Identity_data* identity = nullptr;
+		if (World::Get().HasComponent<Identity_data>(entity))
+            identity = &World::Get().GetComponent<Identity_data>(entity);
+
+        // Map treePath -> treeId using the registry
         std::string treePath = def.GetParameter("treePath")->AsString();
-        
+        btRuntime.treePath = treePath; 
+
         if (!treePath.empty())
         {
             uint32_t treeId = BehaviorTreeManager::Get().GetTreeIdFromPath(treePath);
             btRuntime.treeAssetId = treeId;
-            
-            std::cout << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " → ID " << treeId << "\n";
+			if (identity != nullptr)
+                std::cout << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << identity->name << "\n";
+            else
+				std::cout << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << entity << "\n";
             
             // Verify the tree is loaded
             const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTree(treeId);

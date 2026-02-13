@@ -557,7 +557,7 @@ ComponentParameter ParseParameterWithSchema(
 			}
 			
 			#ifdef DEBUG_PARAMETER_PARSING
-			SYSTEM_LOG << "  [SCHEMA-AWARE] " << paramName << " → " 
+			SYSTEM_LOG << "  [SCHEMA-AWARE] " << paramName << " -> " 
 					   << ParameterTypeToString(schemaEntry.expectedType) 
 					   << " (from schema)" << std::endl;
 			#endif
@@ -583,7 +583,7 @@ ComponentParameter ParseParameterWithSchema(
 		param = ComponentParameter::FromFloat(static_cast<float>(numValue));
 		
 		#ifdef DEBUG_PARAMETER_PARSING
-		SYSTEM_LOG << "    → Inferred as Float (" << numValue << ")" << std::endl;
+		SYSTEM_LOG << "    -> Inferred as Float (" << numValue << ")" << std::endl;
 		#endif
 	}
 	else if (jsonValue.is_string())

@@ -141,9 +141,6 @@
     <ClCompile Include="source\ECS_Register.h">
       <Filter>Fichiers d%27en-t�te\ECS\Components</Filter>
     </ClCompile>
-    <ClCompile Include="Source\AI\BehaviorTree.cpp">
-      <Filter>Fichiers d%27en-t�te\AI</Filter>
-    </ClCompile>
     <ClCompile Include="Source\ECS_Systems_Rendering_Camera.cpp">
       <Filter>Fichiers d%27en-t�te\ECS</Filter>
     </ClCompile>
@@ -324,6 +321,9 @@
     <ClCompile Include="Source\AI\BTGraphLayoutEngine.cpp">
       <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
     </ClCompile>
+    <ClCompile Include="Source\AI\BehaviorTree.cpp">
+      <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -436,9 +436,6 @@
     </ClInclude>
     <ClInclude Include="source\ECS_Systems.h">
       <Filter>Fichiers d%27en-t�te\ECS\Systems</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\AI\BehaviorTree.h">
-      <Filter>Fichiers d%27en-t�te\AI</Filter>
     </ClInclude>
     <ClInclude Include="Source\AI\AIEvents.h">
       <Filter>Fichiers d%27en-t�te\AI</Filter>
@@ -636,6 +633,9 @@
       <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
     </ClInclude>
     <ClInclude Include="Source\AI\BTGraphLayoutEngine.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\BehaviorTree.h">
       <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
     </ClInclude>
   </ItemGroup>

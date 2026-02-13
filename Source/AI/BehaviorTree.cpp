@@ -242,12 +242,12 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
         std::cout << "[BehaviorTreeManager] Step 6: Registering tree..." << std::endl;
         m_trees.push_back(tree);
         
-        // Register the path → ID mapping
+        // Register the path -> ID mapping
         m_pathToIdMap[filepath] = treeId;
         
         std::cout << "[BehaviorTreeManager] SUCCESS: Loaded '" << tree.name << "' (ID=" << treeId << ") with " 
                   << tree.nodes.size() << " nodes" << std::endl;
-        std::cout << "[BehaviorTreeManager] Registered path mapping: " << filepath << " → ID " << treeId << "\n";
+        std::cout << "[BehaviorTreeManager] Registered path mapping: " << filepath << " -> ID " << treeId << "\n";
         std::cout << "[BehaviorTreeManager] ========================================+n" << std::endl;
         
         return true;
@@ -797,10 +797,10 @@ const BehaviorTreeAsset* BehaviorTreeManager::GetTreeByAnyId(uint32_t treeId) co
 std::string BehaviorTreeManager::GetTreePathFromId(uint32_t treeId) const
 {
     // Check path-to-ID registry
-    for (const auto& [path, id] : m_pathToIdMap)
+    for (const auto& entry : m_pathToIdMap)
     {
-        if (id == treeId)
-            return path;
+        if (entry.second == treeId)
+            return entry.first;
     }
     
     // Check if a tree with this ID exists (might be loaded with different path)
@@ -822,8 +822,8 @@ void BehaviorTreeManager::DebugPrintLoadedTrees() const
     }
     
     std::cout << "[BehaviorTreeManager] Path-to-ID registry (" << m_pathToIdMap.size() << "):" << std::endl;
-    for (const auto& [path, id] : m_pathToIdMap)
+    for (const auto& entry : m_pathToIdMap)
     {
-        std::cout << "  - '" << path << "' -> ID=" << id << std::endl;
+        std::cout << "  - '" << entry.first << "' -> ID=" << entry.second << std::endl;
     }
 }

@@ -460,6 +460,7 @@ void BehaviorTreeSystem::Process()
         {
             BehaviorTreeRuntime_data& btRuntime = World::Get().GetComponent<BehaviorTreeRuntime_data>(entity);
             AIBlackboard_data& blackboard = World::Get().GetComponent<AIBlackboard_data>(entity);
+			Identity_data& identity = World::Get().GetComponent<Identity_data>(entity);
             
             if (!btRuntime.isActive)
                 continue;
@@ -479,9 +480,30 @@ void BehaviorTreeSystem::Process()
             }
             
             // Get the behavior tree asset
-            const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTree(btRuntime.treeAssetId);
+            const BehaviorTreeAsset* tree = nullptr;
+
+            if (!btRuntime.treePath.empty())
+            {
+                // Load by path (preferred method)
+                tree = BehaviorTreeManager::Get().GetTreeByPath(btRuntime.treePath);
+
+                if (!tree)
+                {
+                    std::cerr << "[BehaviorTreeSystem] WARNING: Tree not found: "
+                        << btRuntime.treePath << " for entity " << identity.name << std::endl;
+                }
+            }
+            else if (btRuntime.treeAssetId != 0)
+            {
+                // Fallback to ID lookup
+                tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.treeAssetId);
+            }
+
             if (!tree)
+            {
+                // Tree not found, skip this entity
                 continue;
+            }
             
             // Restart tree if needed
             if (btRuntime.needsRestart)

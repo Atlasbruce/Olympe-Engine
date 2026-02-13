@@ -356,7 +356,7 @@ namespace Tiled {
         
         // Log layer offsets if non-zero
         if (layer.offsetx != 0.0f || layer.offsety != 0.0f) {
-            SYSTEM_LOG << "  → Layer has offsets: offsetx=" << layer.offsetx 
+            SYSTEM_LOG << "  -> Layer has offsets: offsetx=" << layer.offsetx 
                        << ", offsety=" << layer.offsety << std::endl;
         }
 

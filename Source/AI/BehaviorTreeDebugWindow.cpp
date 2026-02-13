@@ -669,7 +669,7 @@ namespace Olympe
         switch (type)
         {
             case BTNodeType::Selector: return "?";
-            case BTNodeType::Sequence: return "→";
+            case BTNodeType::Sequence: return "->";
             case BTNodeType::Condition: return "◆";
             case BTNodeType::Action: return "►";
             case BTNodeType::Inverter: return "!";

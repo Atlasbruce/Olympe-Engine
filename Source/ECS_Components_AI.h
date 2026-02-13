@@ -119,6 +119,7 @@ struct BehaviorTreeRuntime_data
 {
     // Tree identification
     uint32_t treeAssetId = 0;           // ID of the behavior tree asset to execute
+	std::string treePath = "";          // Path to the tree asset 
     
     // Execution state
     uint32_t currentNodeIndex = 0;       // Index of the currently executing node
