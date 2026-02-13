@@ -35,6 +35,8 @@ At program startup, you'll see:
 [ComponentRegistry] Registered: MyNewComponent_data
 ```
 
+**Note**: Registration occurs during static initialization (before `main()`). See the "Static Initialization Order" section below for details.
+
 To list all registered components:
 ```cpp
 auto components = PrefabFactory::Get().GetRegisteredComponents();

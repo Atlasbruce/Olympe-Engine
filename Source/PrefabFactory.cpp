@@ -336,6 +336,8 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
         
         // For components that need specialized parameter handling, call the specialized function
         // Note: The specialized function applies parameters but does NOT recreate the component
+        // This if-else chain is intentional for clarity and ease of modification.
+        // Performance impact is negligible as this only runs once per component during entity creation.
         if (type == "BehaviorTreeRuntime_data")
             return InstantiateBehaviorTreeRuntime(entity, componentDef);
         else if (type == "Position_data")
