@@ -1,0 +1,111 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write  # Required for peaceiris/actions-gh-pages to push to gh-pages branch
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+name: Deploy Documentation to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'website/**'
+      - '.github/workflows/deploy-docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Docusaurus
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: website/package-lock.json
+      
+      - name: Install Doxygen
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz
+          doxygen --version
+      
+      - name: Generate API Documentation with Doxygen
+        run: |
+          echo "Generating Doxygen documentation..."
+          doxygen Doxyfile
+          echo "Doxygen generation complete"
+          ls -la website/static/api/
+      
+      - name: Install Docusaurus dependencies
+        working-directory: website
+        run: npm ci
+      
+      - name: Build Docusaurus site
+        working-directory: website
+        run: npm run build
+      
+      - name: Deploy to GitHub Pages
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./website/build
+          cname: # Leave empty for github.io
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: website
+        run: npm ci
+        
+      - name: Build website
+        working-directory: website
+        run: npm run build
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: website/build
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

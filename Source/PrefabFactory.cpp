@@ -31,6 +31,14 @@
 void PrefabFactory::RegisterComponentFactory(const std::string& componentName, 
                                               std::function<bool(EntityID, const ComponentDefinition&)> factory)
 {
+    // Check if component is already registered (prevents duplicate registrations from multiple translation units)
+    if (m_componentFactories.find(componentName) != m_componentFactories.end())
+    {
+        // Already registered, silently ignore duplicate
+        return;
+    }
+    
+    // First registration: store factory and log
     m_componentFactories[componentName] = factory;
     std::cout << "[ComponentRegistry] Registered: " << componentName << "\n";
 }

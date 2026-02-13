@@ -1,13 +1,14 @@
-/*
-Olympe Engine V2 - 2025
-Nicolas Chereau
-nchereau@gmail.com
-
-This file is part of Olympe Engine V2.
-
-Components purpose: Include all component definitions used in the ECS architecture.
-
-*/
+/**
+ * @file ECS_Components.h
+ * @brief Core ECS component definitions
+ * @author Nicolas Chereau
+ * @date 2025
+ * 
+ * This file contains all component data structures used in the
+ * Entity Component System architecture.
+ * 
+ * Components purpose: Include all component definitions used in the ECS architecture.
+ */
 
 #pragma once
 
@@ -24,6 +25,11 @@ Components purpose: Include all component definitions used in the ECS architectu
 // Entity Type Enumeration
 // ========================================================================
 
+/**
+ * @brief Entity type classification
+ * 
+ * Used to categorize entities for gameplay and rendering purposes.
+ */
 enum class EntityType : int
 {
     None = 0,
@@ -46,6 +52,12 @@ enum class EntityType : int
 // Render Layers (Z-Order) - Used for depth sorting
 // ========================================================================
 
+/**
+ * @brief Render layer enumeration for Z-ordering
+ * 
+ * Defines rendering order with lower values rendered first (background)
+ * and higher values rendered last (foreground).
+ */
 enum class RenderLayer : int
 {
     Background_Far = -2,      // -2 * 10000 = -20000 (distant parallax backgrounds)
@@ -74,45 +86,102 @@ inline RenderLayer ZToLayer(float z)
 }
 
 // Component type definitions
+
+/**
+ * @brief Identity component for entity identification
+ * 
+ * Stores basic entity identification information including name, tag,
+ * and type classification.
+ */
 struct Identity_data
 {
-	std::string name = "Entity"; // Entity name
-	std::string tag = "Untagged"; // Entity tag/category
-	std::string type = "UnknownType"; // Entity type (string for backward compatibility)
-	EntityType entityType = EntityType::None; // Entity type (enum for layer management)
-	bool isPersistent = false; // Should the entity persist across levels?
+	/** @brief Entity name identifier */
+	std::string name = "Entity";
 	
-	// Constructors
+	/** @brief Entity tag/category for grouping */
+	std::string tag = "Untagged";
+	
+	/** @brief Entity type string (for backward compatibility) */
+	std::string type = "UnknownType";
+	
+	/** @brief Entity type enum (for layer management) */
+	EntityType entityType = EntityType::None;
+	
+	/** @brief Should the entity persist across levels? */
+	bool isPersistent = false;
+	
+	/** @brief Default constructor */
 	Identity_data() = default;
+	
+	/**
+	 * @brief Construct with name, tag, and type
+	 * @param n Entity name
+	 * @param t Entity tag
+	 * @param et Entity type string
+	 */
 	Identity_data(std::string n, std::string t, std::string et)
 		: name(std::move(n)), tag(std::move(t)), type(std::move(et)), entityType(EntityType::None) {}
+	
+	/** @brief Copy constructor */
 	Identity_data(const Identity_data&) = default;
+	
+	/** @brief Copy assignment operator */
 	Identity_data& operator=(const Identity_data&) = default;
 };
 AUTO_REGISTER_COMPONENT(Identity_data);
 
-// --- Component Position Data ---
+/**
+ * @brief Position component for spatial location
+ * 
+ * Stores entity position in world space.
+ */
 struct Position_data
 {
-	Vector position; // 2D/3D position
+	/** @brief 2D/3D position vector */
+	Vector position;
 	
-	// Constructors
+	/** @brief Default constructor */
 	Position_data() = default;
+	
+	/**
+	 * @brief Construct with position
+	 * @param pos Initial position vector
+	 */
 	Position_data(Vector pos) : position(pos) {}
+	
+	/** @brief Copy constructor */
 	Position_data(const Position_data&) = default;
+	
+	/** @brief Copy assignment operator */
 	Position_data& operator=(const Position_data&) = default;
 };
+
+/**
+ * @brief Bounding box component for collision detection
+ * 
+ * Defines rectangular collision area for the entity.
+ */
 AUTO_REGISTER_COMPONENT(Position_data);
 
 // --- Component BoundingBox Data ---
 struct BoundingBox_data
 {
-	SDL_FRect boundingBox = {0.f, 0.f, 25.f, 25.f}; // Collision rectangle
+	/** @brief Collision rectangle */
+	SDL_FRect boundingBox = {0.f, 0.f, 25.f, 25.f};
 	
-	// Constructors
+	/** @brief Default constructor */
 	BoundingBox_data() = default;
+	
+	/**
+	 * @brief Construct with bounding box
+	 * @param rect SDL rectangle for collision bounds
+	 */
 	BoundingBox_data(SDL_FRect rect) : boundingBox(rect) {}
+	
+	/** @brief Copy constructor */
 	BoundingBox_data(const BoundingBox_data&) = default;
+	
+	/** @brief Copy assignment operator */
 	BoundingBox_data& operator=(const BoundingBox_data&) = default;
 };
 AUTO_REGISTER_COMPONENT(BoundingBox_data);
