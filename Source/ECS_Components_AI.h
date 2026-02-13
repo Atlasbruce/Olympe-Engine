@@ -15,6 +15,7 @@ AI Components purpose: Define all AI-related components for the ECS architecture
 #include "vector.h"
 #include <cstdint>
 #include "ECS_Systems_AI.h"
+#include "ComponentRegistry.h"
 
 // --- AI Blackboard Component ---
 // Typed blackboard with explicit fields for performance (no std::map/std::string keys in hot path)
@@ -62,6 +63,7 @@ struct AIBlackboard_data
     float wanderSearchRadius = 500.0f;      // Default search radius
     int wanderMaxSearchAttempts = 10;       // Default max attempts
 };
+AUTO_REGISTER_COMPONENT(AIBlackboard_data);
 
 // --- AI Senses Component ---
 // Perception parameters for the AI entity
@@ -84,6 +86,7 @@ struct AISenses_data
     AISenses_data(float vision, float hearing) 
         : visionRadius(vision), hearingRadius(hearing) {}
 };
+AUTO_REGISTER_COMPONENT(AISenses_data);
 
 // --- AI State Component (HFSM) ---
 // Hierarchical Finite State Machine mode/state
@@ -108,6 +111,7 @@ struct AIState_data
     float fleeHealthThreshold = 0.2f;      // Flee when health below 20%
     float investigateTimeout = 5.0f;        // Time to investigate before returning to patrol
 };
+AUTO_REGISTER_COMPONENT(AIState_data);
 
 // --- Behavior Tree Runtime Component ---
 // Per-entity behavior tree execution state
@@ -132,6 +136,7 @@ struct BehaviorTreeRuntime_data
     BehaviorTreeRuntime_data(uint32_t treeId, bool active) 
         : treeAssetId(treeId), isActive(active) {}
 };
+AUTO_REGISTER_COMPONENT(BehaviorTreeRuntime_data);
 
 // --- Move Intent Component ---
 // Movement intent that will be converted to Movement_data by AIMotionSystem
@@ -146,6 +151,7 @@ struct MoveIntent_data
     bool usePathfinding = false;
     bool avoidObstacles = false;
 };
+AUTO_REGISTER_COMPONENT(MoveIntent_data);
 
 // --- Attack Intent Component ---
 // Attack intent for combat actions
@@ -167,3 +173,4 @@ struct AttackIntent_data
     };
     AttackType attackType = AttackType::Melee;
 };
+AUTO_REGISTER_COMPONENT(AttackIntent_data);
