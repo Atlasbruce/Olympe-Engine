@@ -778,3 +778,52 @@ const BehaviorTreeAsset* BehaviorTreeManager::GetTreeByPath(const std::string& t
     uint32_t treeId = GetTreeIdFromPath(treePath);
     return GetTree(treeId);
 }
+
+const BehaviorTreeAsset* BehaviorTreeManager::GetTreeByAnyId(uint32_t treeId) const
+{
+    // Strategy 1: Direct ID lookup
+    for (const auto& tree : m_trees)
+    {
+        if (tree.id == treeId)
+            return &tree;
+    }
+    
+    // No additional strategies currently implemented
+    // Future enhancement: Could add tree structure matching for corrupted prefabs
+    
+    return nullptr;
+}
+
+std::string BehaviorTreeManager::GetTreePathFromId(uint32_t treeId) const
+{
+    // Check path-to-ID registry
+    for (const auto& [path, id] : m_pathToIdMap)
+    {
+        if (id == treeId)
+            return path;
+    }
+    
+    // Check if a tree with this ID exists (might be loaded with different path)
+    for (const auto& tree : m_trees)
+    {
+        if (tree.id == treeId)
+            return "TreeName:" + tree.name; // Prefix to distinguish from actual file path
+    }
+    
+    return "";
+}
+
+void BehaviorTreeManager::DebugPrintLoadedTrees() const
+{
+    std::cout << "[BehaviorTreeManager] Loaded trees (" << m_trees.size() << "):" << std::endl;
+    for (const auto& tree : m_trees)
+    {
+        std::cout << "  - ID=" << tree.id << " Name='" << tree.name << "' Nodes=" << tree.nodes.size() << std::endl;
+    }
+    
+    std::cout << "[BehaviorTreeManager] Path-to-ID registry (" << m_pathToIdMap.size() << "):" << std::endl;
+    for (const auto& [path, id] : m_pathToIdMap)
+    {
+        std::cout << "  - '" << path << "' -> ID=" << id << std::endl;
+    }
+}
