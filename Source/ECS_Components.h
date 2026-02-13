@@ -161,12 +161,22 @@ struct Position_data
  */
 struct BoundingBox_data
 {
-	SDL_FRect boundingBox = {0.f, 0.f, 25.f, 25.f}; // Collision rectangle
+	/** @brief Collision rectangle */
+	SDL_FRect boundingBox = {0.f, 0.f, 25.f, 25.f};
 	
-	// Constructors
+	/** @brief Default constructor */
 	BoundingBox_data() = default;
+	
+	/**
+	 * @brief Construct with bounding box
+	 * @param rect SDL rectangle for collision bounds
+	 */
 	BoundingBox_data(SDL_FRect rect) : boundingBox(rect) {}
+	
+	/** @brief Copy constructor */
 	BoundingBox_data(const BoundingBox_data&) = default;
+	
+	/** @brief Copy assignment operator */
 	BoundingBox_data& operator=(const BoundingBox_data&) = default;
 };
 // --- Component Detection Data ---
