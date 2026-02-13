@@ -137,6 +137,15 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     node.conditionType = BTConditionType::CanAttack;
                 else if (condStr == "HeardNoise") 
                     node.conditionType = BTConditionType::HeardNoise;
+                // NEW: Wander behavior conditions
+                else if (condStr == "IsWaitTimerExpired")
+                    node.conditionType = BTConditionType::IsWaitTimerExpired;
+                else if (condStr == "HasNavigableDestination")
+                    node.conditionType = BTConditionType::HasNavigableDestination;
+                else if (condStr == "HasValidPath")
+                    node.conditionType = BTConditionType::HasValidPath;
+                else if (condStr == "HasReachedDestination")
+                    node.conditionType = BTConditionType::HasReachedDestination;
                 
                 // Handle v2 format parameters (nested in "parameters" object)
                 if (isV2 && nodeJson.contains("parameters") && nodeJson["parameters"].is_object())
@@ -171,6 +180,15 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     node.actionType = BTActionType::ClearTarget;
                 else if (actStr == "Idle") 
                     node.actionType = BTActionType::Idle;
+                // NEW: Wander behavior actions
+                else if (actStr == "WaitRandomTime")
+                    node.actionType = BTActionType::WaitRandomTime;
+                else if (actStr == "ChooseRandomNavigablePoint")
+                    node.actionType = BTActionType::ChooseRandomNavigablePoint;
+                else if (actStr == "RequestPathfinding")
+                    node.actionType = BTActionType::RequestPathfinding;
+                else if (actStr == "FollowPath")
+                    node.actionType = BTActionType::FollowPath;
                 
                 // Handle v2 format parameters (nested in "parameters" object)
                 if (isV2 && nodeJson.contains("parameters") && nodeJson["parameters"].is_object())
