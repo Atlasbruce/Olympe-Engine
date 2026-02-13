@@ -475,7 +475,16 @@ static EntityType StringToEntityType(const std::string& typeStr)
 
 bool PrefabFactory::InstantiateIdentity(EntityID entity, const ComponentDefinition& def)
 {
-    Identity_data identity;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<Identity_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: Identity_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    Identity_data& identity = World::Get().GetComponent<Identity_data>(entity);
     
     // Extract parameters
     if (def.HasParameter("name"))
@@ -493,13 +502,22 @@ bool PrefabFactory::InstantiateIdentity(EntityID entity, const ComponentDefiniti
         identity.entityType = StringToEntityType(identity.type);
     }
     
-    World::Get().AddComponent<Identity_data>(entity, identity);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 
 bool PrefabFactory::InstantiatePosition(EntityID entity, const ComponentDefinition& def)
 {
-    Position_data position;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<Position_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: Position_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    Position_data& position = World::Get().GetComponent<Position_data>(entity);
     
     // Extract position vector
     if (def.HasParameter("position"))
@@ -514,7 +532,7 @@ bool PrefabFactory::InstantiatePosition(EntityID entity, const ComponentDefiniti
         position.position = Vector(x, y, z);
     }
     
-    World::Get().AddComponent<Position_data>(entity, position);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 
@@ -1164,7 +1182,16 @@ bool PrefabFactory::InstantiateAIState(EntityID entity, const ComponentDefinitio
 
 bool PrefabFactory::InstantiateBehaviorTreeRuntime(EntityID entity, const ComponentDefinition& def)
 {
-    BehaviorTreeRuntime_data btRuntime;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<BehaviorTreeRuntime_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: BehaviorTreeRuntime_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    BehaviorTreeRuntime_data& btRuntime = World::Get().GetComponent<BehaviorTreeRuntime_data>(entity);
     
     // Extract behavior tree runtime parameters
     if (def.HasParameter("treeAssetId"))
@@ -1205,7 +1232,7 @@ bool PrefabFactory::InstantiateBehaviorTreeRuntime(EntityID entity, const Compon
     if (def.HasParameter("currentNodeIndex"))
         btRuntime.currentNodeIndex = static_cast<uint32_t>(def.GetParameter("currentNodeIndex")->AsInt());
     
-    World::Get().AddComponent<BehaviorTreeRuntime_data>(entity, btRuntime);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 
