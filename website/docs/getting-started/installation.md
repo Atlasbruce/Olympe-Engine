@@ -1,13 +1,11 @@
 ---
 id: installation
-title: Installation
-sidebar_label: Installation
+title: "Installation Guide"
+sidebar_label: "Installation"
 sidebar_position: 2
 ---
 
-# Installation
-title: Installation Guide
-sidebar_label: Installation
+# Installation Guide
 ---
 
 # Installation Guide

@@ -1,10 +1,8 @@
 ---
 id: code-style
-title: Code Style Guide
-sidebar_label: Code Style
-sidebar_position: 1
 title: "Code Style Guide"
 sidebar_label: "Code Style"
+sidebar_position: 1
 ---
 
 # Code Style Guide
