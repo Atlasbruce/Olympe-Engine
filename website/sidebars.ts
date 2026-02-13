@@ -95,8 +95,8 @@ const sidebars: SidebarsConfig = {
           label: 'Behavior Trees',
           items: [
             'technical-reference/behavior-trees/behavior-trees-overview',
-            'technical-reference/behavior-trees/nodes',
-            'technical-reference/behavior-trees/custom-nodes',
+            'technical-reference/behavior-trees/bt-nodes',
+            'technical-reference/behavior-trees/bt-custom-nodes',
             'technical-reference/behavior-trees/behavior-tree-dependency-loading',
           ],
         },
@@ -136,8 +136,8 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'API Reference',
       items: [
-        'api-reference/index',
-        'api-reference/introduction',
+        'api-reference/api-index',
+        'api-reference/api-introduction',
       ],
     },
   ],

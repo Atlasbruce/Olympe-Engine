@@ -1,36 +1,5 @@
 # Olympe Engine
 
-A powerful 2D game engine built with Entity Component System (ECS) architecture.
-
-## 🎮 Features
-
-- **ECS Architecture** - Efficient and flexible entity component system
-- **Advanced AI** - Behavior trees, pathfinding, and navigation systems
-- **Tiled Integration** - Full support for Tiled map editor (orthogonal, isometric, hexagonal)
-- **Prefab System** - Blueprint-based entity creation for rapid development
-- **Input Management** - Multi-device input handling
-- **Camera System** - Advanced camera controls with zoom and pan
-- **Collision & Navigation** - Built-in collision detection and pathfinding
-
-## 📚 Documentation
-
-- **[User Guide & Tutorials](https://atlasbruce.github.io/Olympe-Engine/)** - Complete documentation
-- **[API Reference](https://atlasbruce.github.io/Olympe-Engine/api/html/)** - Auto-generated from code
-
-### Building Documentation Locally
-
-```bash
-# Generate API docs with Doxygen
-doxygen Doxyfile
-
-# Build Docusaurus site
-cd website
-npm install
-npm run build
-
-# Serve locally
-npm run serve
-```
 ![Documentation](https://img.shields.io/badge/docs-online-blue?style=flat-square)
 ![C++14](https://img.shields.io/badge/C%2B%2B-14-00599C?style=flat-square&logo=cplusplus)
 ![SDL3](https://img.shields.io/badge/SDL-3-blue?style=flat-square)
@@ -55,9 +24,9 @@ Olympe Engine is a modern 2D game engine built with C++14, designed for creating
 
 The documentation includes:
 - [Getting Started Guide](https://atlasbruce.github.io/Olympe-Engine/getting-started/installation) - Installation and quick start
-- [User Guide](https://atlasbruce.github.io/Olympe-Engine/user-guide/tiled-editor/introduction) - Tiled Editor, Blueprints, Input System
+- [User Guide](https://atlasbruce.github.io/Olympe-Engine/user-guide/tiled-editor/tiled-introduction) - Tiled Editor, Blueprints, Input System
 - [Technical Reference](https://atlasbruce.github.io/Olympe-Engine/technical-reference/architecture/ecs-overview) - Deep dive into architecture
-- [API Reference](https://atlasbruce.github.io/Olympe-Engine/api-reference/introduction) - Complete API documentation
+- [API Reference](https://atlasbruce.github.io/Olympe-Engine/api-reference/api-index) - Complete API documentation
 - [Contributing Guide](https://atlasbruce.github.io/Olympe-Engine/contributing/testing-guide) - How to contribute
 
 **Note:** Documentation is automatically built and deployed to GitHub Pages on every push to master.
@@ -66,16 +35,11 @@ The documentation includes:
 
 ### Prerequisites
 
+- C++14 compatible compiler (GCC 7+, Clang 5+, MSVC 2017+)
 - CMake 3.15 or higher
-- C++17 compatible compiler (GCC, Clang, MSVC)
 - SDL3 development libraries
 
 ### Building
-- C++14 compatible compiler (GCC 7+, Clang 5+, MSVC 2017+)
-- CMake 3.14+
-- SDL3
-
-### Build
 
 ```bash
 # Clone the repository
@@ -85,9 +49,9 @@ cd Olympe-Engine
 # Build with CMake
 mkdir build && cd build
 cmake ..
-make
+cmake --build .
 
-# Run
+# Run the engine
 ./OlympeEngine
 ```
 
@@ -121,63 +85,6 @@ Create a simple entity using blueprints:
 Load it in code:
 
 ```cpp
-EntityID player = PrefabFactory::Get().CreateEntityFromPrefabName("Player");
-```
-
-## 🗂️ Project Structure
-
-- `Source/` - Engine source code
-- `Blueprints/` - Entity blueprint definitions
-- `Gamedata/` - Game assets and data
-- `Docs/` - Documentation guides
-- `Examples/` - Example projects
-- `website/` - Docusaurus documentation site
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read our [Code Style Guide](https://atlasbruce.github.io/Olympe-Engine/docs/contributing/code-style) before submitting pull requests.
-
-### Documentation Standards
-
-When contributing code, please add Doxygen comments:
-
-```cpp
-/**
- * @brief Brief description of the function
- * @param paramName Description of parameter
- * @return Description of return value
- */
-ReturnType FunctionName(ParamType paramName);
-```
-
-See [Code Documentation Guide](Docs/CODE_DOCUMENTATION_GUIDE.md) for details.
-
-## 📝 License
-
-See the repository for license details.
-
-## 🔗 Links
-
-- [GitHub Repository](https://github.com/Atlasbruce/Olympe-Engine)
-- [Documentation](https://atlasbruce.github.io/Olympe-Engine/)
-- [API Reference](https://atlasbruce.github.io/Olympe-Engine/api/html/)
-
-## 🛠️ Built With
-
-- C++17
-- SDL3
-- ImGui
-- Tiled Map Editor
-- CMake
-cmake --build .
-
-# Run the engine
-./OlympeEngine
-```
-
-### Your First Game
-
-```cpp
 #include "World.h"
 #include "PrefabFactory.h"
 
@@ -207,43 +114,6 @@ Olympe Engine follows a modular Entity Component System architecture:
 - **Navigation** - Collision maps and pathfinding
 - **Behavior Trees** - AI decision trees for NPCs
 
-## 📖 System Requirements
-
-- **Compiler**: C++14 compatible
-- **CMake**: 3.14 or higher
-- **SDL3**: Required for rendering and input
-- **Operating Systems**: Windows, Linux, macOS
-
-## 🤝 Contributing
-
-Contributions are welcome! Please see our [Contributing Guide](https://atlasbruce.github.io/Olympe-Engine/contributing/testing-guide) for:
-
-- Testing guidelines
-- Adding ECS components
-- Code style conventions
-- Pull request process
-
-## 📝 Documentation Development
-
-The documentation is built using [Docusaurus](https://docusaurus.io/) and automatically deployed to GitHub Pages.
-
-### Build Documentation Locally
-
-```bash
-cd website
-npm install
-npm start
-```
-
-This will start a local development server at `http://localhost:3000`.
-
-### Build for Production
-
-```bash
-cd website
-npm run build
-```
-
 ## 🗂️ Project Structure
 
 ```
@@ -257,9 +127,55 @@ Olympe-Engine/
 ├── Gamedata/            # Game content (maps, sprites)
 ├── Resources/           # Engine resources
 ├── Config/              # Configuration files
-├── Documentation/       # Additional documentation
 ├── website/             # Docusaurus documentation site
 └── CMakeLists.txt       # CMake build configuration
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please see our [Contributing Guide](https://atlasbruce.github.io/Olympe-Engine/contributing/testing-guide) for:
+
+- Testing guidelines
+- Adding ECS components
+- Code style conventions
+- Pull request process
+
+### Documentation Standards
+
+When contributing code, please add Doxygen comments:
+
+```cpp
+/**
+ * @brief Brief description of the function
+ * @param paramName Description of parameter
+ * @return Description of return value
+ */
+ReturnType FunctionName(ParamType paramName);
+```
+
+## 📝 Documentation Development
+
+The documentation is built using [Docusaurus](https://docusaurus.io/) and automatically deployed to GitHub Pages.
+
+### Build Documentation Locally
+
+```bash
+# Quick build using helper script
+./scripts/setup-docs.sh full
+
+# Or manually:
+cd website
+npm install
+npm start  # Development server at http://localhost:3000
+npm run build  # Production build
+```
+
+### Generate API Documentation
+
+```bash
+# Generate Doxygen API docs
+doxygen Doxyfile
+# Output: website/static/api/html/
 ```
 
 ## 📜 License
