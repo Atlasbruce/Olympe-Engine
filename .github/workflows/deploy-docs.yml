@@ -1,22 +1,3 @@
-name: Deploy Documentation
-
-on:
-  push:
-    branches: [master, main]
-  pull_request:
-    branches: [master, main]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    
-    permissions:
-      contents: write  # Required for peaceiris/actions-gh-pages to push to gh-pages branch
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
 name: Deploy Documentation to GitHub Pages
 
 on:
@@ -25,6 +6,7 @@ on:
       - master
     paths:
       - 'website/**'
+      - 'Doxyfile'
       - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
 
@@ -39,7 +21,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build Docusaurus
+    name: Build Documentation
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -50,7 +32,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: 'npm'
           cache-dependency-path: website/package-lock.json
       
@@ -58,6 +40,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y doxygen graphviz
+          echo "Doxygen version:"
           doxygen --version
       
       - name: Generate API Documentation with Doxygen
@@ -65,33 +48,27 @@ jobs:
           echo "Generating Doxygen documentation..."
           doxygen Doxyfile
           echo "Doxygen generation complete"
-          ls -la website/static/api/
+          if [ -d "website/static/api" ]; then
+            echo "API documentation generated successfully"
+            ls -la website/static/api/
+          else
+            echo "Warning: API documentation directory not found"
+          fi
       
       - name: Install Docusaurus dependencies
         working-directory: website
-        run: npm ci
+        run: |
+          echo "Installing dependencies..."
+          npm ci
+          echo "Dependencies installed successfully"
       
       - name: Build Docusaurus site
         working-directory: website
-        run: npm run build
-      
-      - name: Deploy to GitHub Pages
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./website/build
-          cname: # Leave empty for github.io
-          cache: npm
-          cache-dependency-path: website/package-lock.json
-          
-      - name: Install dependencies
-        working-directory: website
-        run: npm ci
-        
-      - name: Build website
-        working-directory: website
-        run: npm run build
+        run: |
+          echo "Building Docusaurus site..."
+          npm run build
+          echo "Build complete"
+          ls -la build/
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
