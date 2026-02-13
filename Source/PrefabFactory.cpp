@@ -538,7 +538,16 @@ bool PrefabFactory::InstantiatePosition(EntityID entity, const ComponentDefiniti
 
 bool PrefabFactory::InstantiatePhysicsBody(EntityID entity, const ComponentDefinition& def)
 {
-    PhysicsBody_data physics;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<PhysicsBody_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: PhysicsBody_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    PhysicsBody_data& physics = World::Get().GetComponent<PhysicsBody_data>(entity);
     
     // Extract parameters
     if (def.HasParameter("mass"))
@@ -557,13 +566,22 @@ bool PrefabFactory::InstantiatePhysicsBody(EntityID entity, const ComponentDefin
     if (def.HasParameter("rotation"))
         physics.rotation = def.GetParameter("rotation")->AsFloat();
     
-    World::Get().AddComponent<PhysicsBody_data>(entity, physics);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 
 bool PrefabFactory::InstantiateVisualSprite(EntityID entity, const ComponentDefinition& def)
 {
-    VisualSprite_data visual;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<VisualSprite_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: VisualSprite_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
     
     // Extract sprite path and load sprite
     if (def.HasParameter("spritePath"))
@@ -635,7 +653,7 @@ bool PrefabFactory::InstantiateVisualSprite(EntityID entity, const ComponentDefi
     // These parameters are validated by schema but not applied until struct is updated
     // For now, srcRect.w and srcRect.h serve as the effective width/height
     
-    World::Get().AddComponent<VisualSprite_data>(entity, visual);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 
@@ -715,7 +733,16 @@ bool PrefabFactory::InstantiateAIBehavior(EntityID entity, const ComponentDefini
 
 bool PrefabFactory::InstantiateAIBlackboard(EntityID entity, const ComponentDefinition& def)
 {
-    AIBlackboard_data blackboard;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<AIBlackboard_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: AIBlackboard_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    AIBlackboard_data& blackboard = World::Get().GetComponent<AIBlackboard_data>(entity);
     
     // Extract blackboard parameters
     if (def.HasParameter("targetEntity"))
@@ -737,13 +764,22 @@ bool PrefabFactory::InstantiateAIBlackboard(EntityID entity, const ComponentDefi
     if (def.HasParameter("targetInRange"))
         blackboard.targetInRange = def.GetParameter("targetInRange")->AsBool();
     
-    World::Get().AddComponent<AIBlackboard_data>(entity, blackboard);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 
 bool PrefabFactory::InstantiateAISenses(EntityID entity, const ComponentDefinition& def)
 {
-    AISenses_data senses;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<AISenses_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: AISenses_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    AISenses_data& senses = World::Get().GetComponent<AISenses_data>(entity);
     
     // Extract senses parameters
     if (def.HasParameter("visionRadius"))
@@ -765,7 +801,7 @@ bool PrefabFactory::InstantiateAISenses(EntityID entity, const ComponentDefiniti
     if (def.HasParameter("thinkHz"))
         senses.thinkHz = def.GetParameter("thinkHz")->AsFloat();
     
-    World::Get().AddComponent<AISenses_data>(entity, senses);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 
@@ -1238,7 +1274,16 @@ bool PrefabFactory::InstantiateBehaviorTreeRuntime(EntityID entity, const Compon
 
 bool PrefabFactory::InstantiateMoveIntent(EntityID entity, const ComponentDefinition& def)
 {
-    MoveIntent_data moveIntent;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<MoveIntent_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: MoveIntent_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    MoveIntent_data& moveIntent = World::Get().GetComponent<MoveIntent_data>(entity);
     
     // Extract move intent parameters
     if (def.HasParameter("targetX") && def.HasParameter("targetY"))
@@ -1269,7 +1314,7 @@ bool PrefabFactory::InstantiateMoveIntent(EntityID entity, const ComponentDefini
     if (def.HasParameter("avoidObstacles"))
         moveIntent.avoidObstacles = def.GetParameter("avoidObstacles")->AsBool();
     
-    World::Get().AddComponent<MoveIntent_data>(entity, moveIntent);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 
