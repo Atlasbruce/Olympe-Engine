@@ -142,7 +142,7 @@ namespace Olympe
         // UI state
         bool m_isVisible = false;
         bool m_isInitialized = false;
-        float m_lastRefreshTime = 0.0f;
+        // Note: m_lastRefreshTime removed - using local static in Render() instead
         float m_autoRefreshInterval = 0.5f;
 
         // Filtering

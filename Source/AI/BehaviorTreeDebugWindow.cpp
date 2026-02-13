@@ -69,15 +69,17 @@ namespace Olympe
         if (!m_isVisible || !m_isInitialized)
             return;
 
-        // Update pulse animation
+        // Update pulse animation (using delta time)
         m_pulseTimer += GameEngine::fDt;
 
-        // Auto-refresh entity list
-        float currentTime = GameEngine::fDt;
-        if (currentTime - m_lastRefreshTime >= m_autoRefreshInterval)
+        // Auto-refresh entity list (accumulate time properly)
+        static float accumulatedTime = 0.0f;
+        accumulatedTime += GameEngine::fDt;
+        
+        if (accumulatedTime >= m_autoRefreshInterval)
         {
             RefreshEntityList();
-            m_lastRefreshTime = currentTime;
+            accumulatedTime = 0.0f;
         }
 
         // Update execution log timers
@@ -229,7 +231,9 @@ namespace Olympe
                 info.hasTarget = blackboard.hasTarget;
             }
 
-            info.lastUpdateTime = GameEngine::fDt;
+            // Use accumulated game time if available, otherwise leave as 0
+            // Note: This field is not currently used for sorting by time
+            info.lastUpdateTime = 0.0f;
 
             m_entities.push_back(info);
         }
@@ -538,19 +542,25 @@ namespace Olympe
             ImNodes::EndOutputAttribute();
         }
 
+        // Highlight current node with pulsing effect (BEFORE EndNode)
+        if (isCurrentNode)
+        {
+            // Pulse between 0.5 and 1.0 alpha using sine wave
+            float pulse = 0.5f + 0.5f * sinf(m_pulseTimer * 2.0f * 3.14159265f);  // 1 Hz pulse (2π radians/sec)
+            uint32_t highlightColor = IM_COL32(255, 255, 0, static_cast<int>(pulse * 255));
+            ImNodes::PushColorStyle(ImNodesCol_NodeOutline, highlightColor);
+        }
+
         ImNodes::EndNode();
+        
+        // Pop color style after EndNode
+        if (isCurrentNode)
+        {
+            ImNodes::PopColorStyle();
+        }
 
         // Set node position
         ImNodes::SetNodeGridSpacePos(node->id, ImVec2(layout->position.x, layout->position.y));
-
-        // Highlight current node with pulsing effect
-        if (isCurrentNode)
-        {
-            float pulse = 0.5f + 0.5f * sinf(m_pulseTimer * 6.28f);  // 1 Hz pulse
-            uint32_t highlightColor = IM_COL32(255, 255, 0, static_cast<int>(pulse * 255));
-            ImNodes::PushColorStyle(ImNodesCol_NodeOutline, highlightColor);
-            ImNodes::PopColorStyle();
-        }
     }
 
     void BehaviorTreeDebugWindow::RenderNodeConnections(const BTNode* node, const BTNodeLayout* layout, const BehaviorTreeAsset* tree)
@@ -754,8 +764,20 @@ namespace Olympe
         {
             ImGui::Text("Can Attack: %s", blackboard.canAttack ? "Yes" : "No");
             ImGui::Text("Attack Cooldown: %.2f s", blackboard.attackCooldown);
-            ImGui::Text("Last Attack: %.2f s ago", 
-                GameEngine::fDt - blackboard.lastAttackTime);
+            
+            // Calculate time since last attack if lastAttackTime is a timestamp
+            // Note: If lastAttackTime is 0, display "Never"
+            if (blackboard.lastAttackTime > 0.0f)
+            {
+                // Assuming there's a global game time available
+                // For now, just display the raw value
+                ImGui::Text("Last Attack Time: %.2f", blackboard.lastAttackTime);
+            }
+            else
+            {
+                ImGui::Text("Last Attack: Never");
+            }
+            
             ImGui::TreePop();
         }
 

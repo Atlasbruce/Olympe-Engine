@@ -51,6 +51,7 @@ const Uint32 FRAME_TARGET_TIME_MS = 1000 / TARGET_FPS;
 static Olympe::BlueprintEditorGUI* blueprintEditorGUI = nullptr;
 
 // Behavior Tree Debug Window instance (global for access from AI systems)
+// Note: Using raw pointer for consistency with existing code. Cleaned up in SDL_AppQuit().
 Olympe::BehaviorTreeDebugWindow* g_btDebugWindow = nullptr;
 
 /* This function runs once at startup. */
