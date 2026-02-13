@@ -429,6 +429,13 @@ void WaitRandom(AIBlackboard_data& bb, float minTime, float maxTime)
     if (bb.wanderTargetWaitTime == 0.0f)
     {
         // Initialize random wait time
+        // NOTE: Engine uses rand() for simplicity, but modern C++ should use <random>
+        // Example with std::uniform_real_distribution:
+        //   static std::random_device rd;
+        //   static std::mt19937 gen(rd());
+        //   std::uniform_real_distribution<float> dist(minTime, maxTime);
+        //   bb.wanderTargetWaitTime = dist(gen);
+        
         float randomFactor = (float)rand() / RAND_MAX;
         bb.wanderTargetWaitTime = minTime + randomFactor * (maxTime - minTime);
         bb.wanderWaitTimer = 0.0f;

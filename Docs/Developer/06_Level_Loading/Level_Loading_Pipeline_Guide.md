@@ -355,7 +355,12 @@ for (const TiledLayer& layer : tiledMap.layers)
             else if (prop.type == "float")
                 overrides[prop.name] = std::stof(prop.value);
             else if (prop.type == "bool")
-                overrides[prop.name] = (prop.value == "true");
+            {
+                // Robust boolean parsing (case-insensitive, multiple formats)
+                std::string lowerValue = prop.value;
+                std::transform(lowerValue.begin(), lowerValue.end(), lowerValue.begin(), ::tolower);
+                overrides[prop.name] = (lowerValue == "true" || lowerValue == "1" || lowerValue == "yes");
+            }
             else
                 overrides[prop.name] = prop.value;
         }
