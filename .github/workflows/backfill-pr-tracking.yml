@@ -1,0 +1,284 @@
+name: Backfill PR Tracking
+
+on:
+  workflow_dispatch:
+    inputs:
+      months_back:
+        description: 'Number of months to go back'
+        required: true
+        default: '4'
+        type: number
+
+permissions:
+  issues: write
+  pull-requests: read
+  contents: read
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Backfill PR Tracking Issues
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const monthsBack = parseInt('${{ inputs.months_back }}') || 4;
+            
+            console.log(`Starting backfill for the last ${monthsBack} months`);
+            
+            // Calculate date range
+            const now = new Date();
+            const startDate = new Date(now);
+            startDate.setMonth(now.getMonth() - monthsBack);
+            
+            console.log(`Looking for PRs from ${startDate.toISOString()} to ${now.toISOString()}`);
+            
+            // Fetch all existing tracking issues to avoid duplicates
+            console.log('Fetching existing tracking issues...');
+            const existingIssues = new Set();
+            let page = 1;
+            let hasMore = true;
+            
+            while (hasMore) {
+              const issues = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: 'pr-tracking',
+                state: 'all',
+                per_page: 100,
+                page: page
+              });
+              
+              for (const issue of issues.data) {
+                // Extract PR number from title
+                const match = issue.title.match(/PR #(\d+)/);
+                if (match) {
+                  existingIssues.add(parseInt(match[1]));
+                }
+              }
+              
+              if (issues.data.length < 100) {
+                hasMore = false;
+              } else {
+                page++;
+              }
+            }
+            
+            console.log(`Found ${existingIssues.size} existing tracking issues`);
+            
+            // Fetch all closed PRs in the time range
+            console.log('Fetching PRs...');
+            let allPRs = [];
+            page = 1;
+            hasMore = true;
+            
+            while (hasMore) {
+              const prs = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'all',
+                sort: 'created',
+                direction: 'desc',
+                per_page: 100,
+                page: page
+              });
+              
+              if (prs.data.length === 0) {
+                hasMore = false;
+              } else {
+                const recentPRs = prs.data.filter(pr => {
+                  const createdAt = new Date(pr.created_at);
+                  return createdAt >= startDate;
+                });
+                
+                allPRs = allPRs.concat(recentPRs);
+                
+                // Stop if we've gone past the date range
+                const lastPRDate = new Date(prs.data[prs.data.length - 1].created_at);
+                if (lastPRDate < startDate) {
+                  hasMore = false;
+                }
+                
+                page++;
+              }
+            }
+            
+            console.log(`Found ${allPRs.length} PRs in the time range`);
+            
+            // Filter PRs that don't have tracking issues
+            const prsToProcess = allPRs.filter(pr => !existingIssues.has(pr.number));
+            
+            console.log(`${prsToProcess.length} PRs need tracking issues`);
+            
+            if (prsToProcess.length === 0) {
+              console.log('No PRs to process. All PRs already have tracking issues.');
+              return;
+            }
+            
+            // Detect PR type based on title
+            function detectPRType(title) {
+              const lowerTitle = title.toLowerCase();
+              if (lowerTitle.includes('fix') || lowerTitle.includes('bug')) return 'bugfix';
+              if (lowerTitle.includes('refactor') || lowerTitle.includes('clean')) return 'refactor';
+              if (lowerTitle.includes('perf') || lowerTitle.includes('optim')) return 'performance';
+              if (lowerTitle.includes('doc')) return 'documentation';
+              if (lowerTitle.includes('test')) return 'test';
+              if (lowerTitle.includes('chore')) return 'chore';
+              return 'feature';
+            }
+            
+            // Format dates
+            function formatDate(dateString) {
+              if (!dateString) return 'N/A';
+              return new Date(dateString).toISOString().split('T')[0];
+            }
+            
+            // Process each PR
+            const results = {
+              success: [],
+              errors: []
+            };
+            
+            for (let i = 0; i < prsToProcess.length; i++) {
+              const pr = prsToProcess[i];
+              
+              try {
+                console.log(`Processing PR #${pr.number} (${i + 1}/${prsToProcess.length})`);
+                
+                const prType = detectPRType(pr.title);
+                const prBody = pr.body || 'Pas de description disponible';
+                const prAuthor = pr.user.login;
+                const createdDate = formatDate(pr.created_at);
+                const mergedDate = formatDate(pr.merged_at);
+                const closedDate = formatDate(pr.closed_at);
+                const prMerged = pr.merged_at !== null;
+                
+                // Determine status
+                let statusLabel = prMerged ? 'merged' : 'closed';
+                
+                // Create issue body
+                const issueBody = '## 🔗 Informations\n' +
+                  '- PR associée : #' + pr.number + '\n' +
+                  '- Date de création : ' + createdDate + '\n' +
+                  '- Date de merge : ' + mergedDate + '\n' +
+                  '- Date de fermeture : ' + closedDate + '\n' +
+                  '- Auteur : @' + prAuthor + '\n' +
+                  '- Statut : ' + (prMerged ? '✅ Mergée' : '❌ Fermée') + '\n\n' +
+                  '## 🎯 Objectifs\n' +
+                  prBody + '\n\n' +
+                  '## ⚠️ Problèmes rencontrés\n' +
+                  '_Cette PR a été fermée avant la mise en place du système de tracking. Informations non disponibles._\n\n' +
+                  '## ✅ Solutions apportées\n' +
+                  '_Cette PR a été fermée avant la mise en place du système de tracking. Informations non disponibles._\n\n' +
+                  '## 📊 Impact sur le projet\n' +
+                  '_Cette PR a été fermée avant la mise en place du système de tracking. Informations non disponibles._\n\n' +
+                  '---\n\n' +
+                  '## 📈 Statistiques de la PR\n' +
+                  '- Fichiers modifiés : ' + pr.changed_files + '\n' +
+                  '- Lignes ajoutées : +' + pr.additions + '\n' +
+                  '- Lignes supprimées : -' + pr.deletions + '\n' +
+                  '- Commits : ' + pr.commits + '\n' +
+                  '- Type : ' + prType + '\n\n' +
+                  '---\n\n' +
+                  '_Cette issue a été créée automatiquement par le système de backfill des PRs._';
+                
+                // Create tracking issue
+                const newIssue = await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: `PR #${pr.number} - ${pr.title}`,
+                  body: issueBody,
+                  labels: ['pr-tracking', 'documentation', prType, statusLabel]
+                });
+                
+                console.log(`Created tracking issue #${newIssue.data.number} for PR #${pr.number}`);
+                
+                // Close the issue immediately since the PR is already closed
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: newIssue.data.number,
+                  state: 'closed'
+                });
+                
+                console.log(`Closed tracking issue #${newIssue.data.number}`);
+                
+                // Comment on the original PR
+                try {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    body: `📋 Issue de tracking créée rétroactivement : #${newIssue.data.number}\n\nCette issue documente cette PR dans le cadre du système de tracking mis en place ultérieurement.`
+                  });
+                } catch (commentError) {
+                  console.log(`Could not comment on PR #${pr.number} (might be locked):`, commentError.message);
+                }
+                
+                results.success.push({
+                  prNumber: pr.number,
+                  issueNumber: newIssue.data.number,
+                  title: pr.title
+                });
+                
+                // Pause to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+              } catch (error) {
+                console.error(`Error processing PR #${pr.number}:`, error);
+                results.errors.push({
+                  prNumber: pr.number,
+                  error: error.message
+                });
+              }
+            }
+            
+            // Generate summary report
+            console.log('\n=== Backfill Summary ===');
+            console.log(`Successfully processed: ${results.success.length} PRs`);
+            console.log(`Errors: ${results.errors.length} PRs`);
+            
+            // Create summary issue
+            let successList = '';
+            for (const item of results.success) {
+              successList += '- ✅ PR #' + item.prNumber + ' → Issue #' + item.issueNumber + ' - ' + item.title + '\n';
+            }
+            
+            let errorList = '';
+            for (const item of results.errors) {
+              errorList += '- ❌ PR #' + item.prNumber + ' - Error: ' + item.error + '\n';
+            }
+            
+            const summaryBody = '# 📊 Rapport de backfill du système de tracking des PRs\n\n' +
+              '## 📋 Paramètres\n' +
+              '- **Période couverte** : ' + monthsBack + ' mois (depuis ' + startDate.toLocaleDateString('fr-FR') + ')\n' +
+              '- **Date d\'exécution** : ' + new Date().toLocaleDateString('fr-FR') + ' à ' + new Date().toLocaleTimeString('fr-FR') + '\n\n' +
+              '## 📈 Résultats\n' +
+              '- **Total de PRs trouvées** : ' + allPRs.length + '\n' +
+              '- **PRs avec issue existante** : ' + existingIssues.size + '\n' +
+              '- **PRs traitées** : ' + prsToProcess.length + '\n' +
+              '- **Succès** : ' + results.success.length + '\n' +
+              '- **Erreurs** : ' + results.errors.length + '\n\n' +
+              '## ✅ PRs traitées avec succès (' + results.success.length + ')\n\n' +
+              (successList || '_Aucune_') + '\n' +
+              '## ❌ Erreurs (' + results.errors.length + ')\n\n' +
+              (errorList || '_Aucune erreur_') + '\n' +
+              '---\n\n' +
+              '_Ce rapport a été généré automatiquement par le workflow de backfill._';
+            
+            try {
+              const summaryIssue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `📊 Rapport de backfill PR tracking - ${new Date().toLocaleDateString('fr-FR')}`,
+                body: summaryBody,
+                labels: ['report', 'documentation', 'pr-tracking']
+              });
+              
+              console.log(`Created summary issue #${summaryIssue.data.number}`);
+            } catch (error) {
+              console.error('Error creating summary issue:', error);
+            }
+            
+            console.log('\n=== Backfill Complete ===');

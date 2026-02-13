@@ -1,0 +1,228 @@
+name: Monthly PR Report
+
+on:
+  schedule:
+    # Run on the 1st of each month at 09:00 UTC
+    - cron: '0 9 1 * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: read
+  contents: read
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Monthly PR Report
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Calculate date range for last month
+            const now = new Date();
+            const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+            
+            const monthName = lastMonth.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+            const startDate = lastMonth.toISOString();
+            const endDate = lastMonthEnd.toISOString();
+            
+            console.log(`Generating report for ${monthName} (${startDate} to ${endDate})`);
+            
+            // Fetch all PRs from last month
+            let allPRs = [];
+            let page = 1;
+            let hasMore = true;
+            
+            while (hasMore) {
+              const prs = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'all',
+                sort: 'created',
+                direction: 'desc',
+                per_page: 100,
+                page: page
+              });
+              
+              if (prs.data.length === 0) {
+                hasMore = false;
+              } else {
+                const monthPRs = prs.data.filter(pr => {
+                  const createdAt = new Date(pr.created_at);
+                  return createdAt >= lastMonth && createdAt <= lastMonthEnd;
+                });
+                
+                allPRs = allPRs.concat(monthPRs);
+                
+                // Stop if we've gone past the date range
+                const lastPRDate = new Date(prs.data[prs.data.length - 1].created_at);
+                if (lastPRDate < lastMonth) {
+                  hasMore = false;
+                }
+                
+                page++;
+              }
+            }
+            
+            console.log(`Found ${allPRs.length} PRs for ${monthName}`);
+            
+            // Analyze PRs
+            const stats = {
+              total: allPRs.length,
+              merged: 0,
+              closed: 0,
+              open: 0,
+              byType: {},
+              byAuthor: {},
+              totalAdditions: 0,
+              totalDeletions: 0,
+              totalFiles: 0,
+              totalCommits: 0
+            };
+            
+            // Detect PR type
+            function detectPRType(title) {
+              const lowerTitle = title.toLowerCase();
+              if (lowerTitle.includes('fix') || lowerTitle.includes('bug')) return 'bugfix';
+              if (lowerTitle.includes('refactor') || lowerTitle.includes('clean')) return 'refactor';
+              if (lowerTitle.includes('perf') || lowerTitle.includes('optim')) return 'performance';
+              if (lowerTitle.includes('doc')) return 'documentation';
+              if (lowerTitle.includes('test')) return 'test';
+              if (lowerTitle.includes('chore')) return 'chore';
+              return 'feature';
+            }
+            
+            const prDetails = [];
+            
+            for (const pr of allPRs) {
+              // Count by status
+              if (pr.merged_at) {
+                stats.merged++;
+              } else if (pr.state === 'closed') {
+                stats.closed++;
+              } else {
+                stats.open++;
+              }
+              
+              // Count by type
+              const prType = detectPRType(pr.title);
+              stats.byType[prType] = (stats.byType[prType] || 0) + 1;
+              
+              // Count by author
+              const author = pr.user.login;
+              stats.byAuthor[author] = (stats.byAuthor[author] || 0) + 1;
+              
+              // Accumulate statistics
+              stats.totalAdditions += pr.additions || 0;
+              stats.totalDeletions += pr.deletions || 0;
+              stats.totalFiles += pr.changed_files || 0;
+              stats.totalCommits += pr.commits || 0;
+              
+              // Store PR details
+              prDetails.push({
+                number: pr.number,
+                title: pr.title,
+                author: pr.user.login,
+                type: prType,
+                status: pr.merged_at ? 'merged' : pr.state,
+                createdAt: pr.created_at,
+                mergedAt: pr.merged_at,
+                closedAt: pr.closed_at,
+                additions: pr.additions,
+                deletions: pr.deletions,
+                changedFiles: pr.changed_files
+              });
+            }
+            
+            // Calculate metrics
+            const mergeRate = stats.total > 0 ? ((stats.merged / stats.total) * 100).toFixed(1) : 0;
+            const closeRate = stats.total > 0 ? (((stats.merged + stats.closed) / stats.total) * 100).toFixed(1) : 0;
+            
+            // Generate type distribution
+            let typeDistribution = '';
+            for (const [type, count] of Object.entries(stats.byType).sort((a, b) => b[1] - a[1])) {
+              const percentage = ((count / stats.total) * 100).toFixed(1);
+              typeDistribution += '- **' + type + '** : ' + count + ' PRs (' + percentage + '%)\n';
+            }
+            
+            // Generate author distribution
+            let authorDistribution = '';
+            for (const [author, count] of Object.entries(stats.byAuthor).sort((a, b) => b[1] - a[1])) {
+              const percentage = ((count / stats.total) * 100).toFixed(1);
+              authorDistribution += '- **@' + author + '** : ' + count + ' PRs (' + percentage + '%)\n';
+            }
+            
+            // Generate PR list
+            let prList = '';
+            const sortedPRs = prDetails.sort((a, b) => b.number - a.number);
+            
+            for (const pr of sortedPRs) {
+              const statusEmoji = pr.status === 'merged' ? '✅' : pr.status === 'closed' ? '❌' : '🔄';
+              const dateStr = new Date(pr.createdAt).toLocaleDateString('fr-FR');
+              prList += '### ' + statusEmoji + ' PR #' + pr.number + ' - ' + pr.title + '\n';
+              prList += '- **Type** : ' + pr.type + '\n';
+              prList += '- **Auteur** : @' + pr.author + '\n';
+              prList += '- **Date** : ' + dateStr + '\n';
+              prList += '- **Statut** : ' + pr.status + '\n';
+              prList += '- **Changements** : ' + pr.changedFiles + ' fichiers, +' + pr.additions + '/-' + pr.deletions + ' lignes\n\n';
+            }
+            
+            // Generate recommendations
+            let recommendations = '';
+            if (mergeRate < 50) {
+              recommendations += '- ⚠️ Le taux de merge est faible (<50%). Envisagez de revoir le processus de review.\n';
+            }
+            if (stats.byType.bugfix > stats.byType.test) {
+              recommendations += '- 🧪 Plus de bugfixes que de tests. Considérez augmenter la couverture de tests.\n';
+            }
+            if (stats.open > stats.merged) {
+              recommendations += '- 📊 Plus de PRs ouvertes que mergées. Priorisez la review des PRs en attente.\n';
+            }
+            if (stats.total === 0) {
+              recommendations += '- 💤 Aucune PR ce mois-ci. Activité faible.\n';
+            }
+            if (!recommendations) {
+              recommendations = '- ✅ Tout semble bien se passer ! Continuez ainsi.\n';
+            }
+            
+            // Create report issue
+            const reportBody = '# 📊 Rapport mensuel des Pull Requests - ' + monthName + '\n\n' +
+              '## 📈 Statistiques globales\n\n' +
+              '- **Total de PRs** : ' + stats.total + '\n' +
+              '- **PRs mergées** : ' + stats.merged + ' (' + mergeRate + '%)\n' +
+              '- **PRs fermées sans merge** : ' + stats.closed + '\n' +
+              '- **PRs encore ouvertes** : ' + stats.open + '\n' +
+              '- **Taux de complétion** : ' + closeRate + '%\n\n' +
+              '### 💻 Statistiques de code\n' +
+              '- **Total lignes ajoutées** : +' + stats.totalAdditions.toLocaleString() + '\n' +
+              '- **Total lignes supprimées** : -' + stats.totalDeletions.toLocaleString() + '\n' +
+              '- **Total fichiers modifiés** : ' + stats.totalFiles.toLocaleString() + '\n' +
+              '- **Total commits** : ' + stats.totalCommits.toLocaleString() + '\n\n' +
+              '## 🏷️ Répartition par type\n\n' +
+              typeDistribution + '\n' +
+              '## 👥 Répartition par auteur\n\n' +
+              authorDistribution + '\n' +
+              '## 🎯 Recommandations\n\n' +
+              recommendations + '\n' +
+              '## 📋 Liste détaillée des PRs\n\n' +
+              (prList || '_Aucune PR ce mois-ci_') + '\n' +
+              '---\n\n' +
+              '_Ce rapport a été généré automatiquement le ' + new Date().toLocaleDateString('fr-FR') + ' à ' + new Date().toLocaleTimeString('fr-FR') + '_';
+            
+            try {
+              const issue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `📊 Rapport mensuel PR - ${monthName}`,
+                body: reportBody,
+                labels: ['report', 'documentation', 'pr-tracking']
+              });
+              
+              console.log(`Created monthly report issue #${issue.data.number}`);
+            } catch (error) {
+              console.error('Error creating monthly report:', error);
+              throw error;
+            }

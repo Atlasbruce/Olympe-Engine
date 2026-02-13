@@ -1,0 +1,202 @@
+name: PR Tracking System
+
+on:
+  pull_request:
+    types: [opened, edited, closed, reopened, synchronize, ready_for_review, review_requested]
+
+permissions:
+  issues: write
+  pull-requests: read
+  contents: read
+
+jobs:
+  track-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Track Pull Request
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const prTitle = context.payload.pull_request.title;
+            const prBody = context.payload.pull_request.body || 'Pas de description disponible';
+            const prAuthor = context.payload.pull_request.user.login;
+            const prCreatedAt = context.payload.pull_request.created_at;
+            const prState = context.payload.pull_request.state;
+            const prMergedAt = context.payload.pull_request.merged_at;
+            const prClosedAt = context.payload.pull_request.closed_at;
+            const prMerged = context.payload.pull_request.merged;
+            const prDraft = context.payload.pull_request.draft;
+            const action = context.payload.action;
+            
+            // PR Statistics
+            const additions = context.payload.pull_request.additions;
+            const deletions = context.payload.pull_request.deletions;
+            const changedFiles = context.payload.pull_request.changed_files;
+            const commits = context.payload.pull_request.commits;
+            
+            // Detect PR type based on title
+            function detectPRType(title) {
+              const lowerTitle = title.toLowerCase();
+              if (lowerTitle.includes('fix') || lowerTitle.includes('bug')) return 'bugfix';
+              if (lowerTitle.includes('refactor') || lowerTitle.includes('clean')) return 'refactor';
+              if (lowerTitle.includes('perf') || lowerTitle.includes('optim')) return 'performance';
+              if (lowerTitle.includes('doc')) return 'documentation';
+              if (lowerTitle.includes('test')) return 'test';
+              if (lowerTitle.includes('chore')) return 'chore';
+              return 'feature';
+            }
+            
+            const prType = detectPRType(prTitle);
+            
+            // Format dates
+            function formatDate(dateString) {
+              if (!dateString) return 'N/A';
+              return new Date(dateString).toISOString().split('T')[0];
+            }
+            
+            const createdDate = formatDate(prCreatedAt);
+            const mergedDate = formatDate(prMergedAt);
+            const closedDate = formatDate(prClosedAt);
+            
+            // Search for existing tracking issue
+            const issueTitle = `PR #${prNumber} - ${prTitle}`;
+            
+            let existingIssue = null;
+            try {
+              const issues = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: 'pr-tracking',
+                state: 'all',
+                per_page: 100
+              });
+              
+              existingIssue = issues.data.find(issue => 
+                issue.title.includes(`PR #${prNumber}`)
+              );
+            } catch (error) {
+              console.log('Error searching for existing issue:', error);
+            }
+            
+            // Determine status label
+            let statusLabel = 'in-progress';
+            if (prDraft) {
+              statusLabel = 'draft';
+            } else if (prMerged) {
+              statusLabel = 'merged';
+            } else if (prState === 'closed') {
+              statusLabel = 'closed';
+            }
+            
+            // Create or update issue body
+            const issueBody = `## 🔗 Informations
+            - PR associée : #${prNumber}
+            - Date de création : ${createdDate}
+            - Date de merge : ${mergedDate}
+            - Date de fermeture : ${closedDate}
+            - Auteur : @${prAuthor}
+            - Statut : ${prMerged ? '✅ Mergée' : prState === 'closed' ? '❌ Fermée' : '🔄 En cours'}
+            
+            ## 🎯 Objectifs
+            ${prBody}
+            
+            ## ⚠️ Problèmes rencontrés
+            _À compléter lors du développement_
+            
+            ## ✅ Solutions apportées
+            _À compléter lors du développement_
+            
+            ## 📊 Impact sur le projet
+            _À compléter après le merge_
+            
+            ---
+            
+            ## 📈 Statistiques de la PR
+            - Fichiers modifiés : ${changedFiles}
+            - Lignes ajoutées : +${additions}
+            - Lignes supprimées : -${deletions}
+            - Commits : ${commits}
+            - Type : ${prType}
+            
+            ---
+            
+            _Cette issue a été créée automatiquement par le système de tracking des PRs._`.replace(/^\s+/gm, '');
+            
+            if (action === 'opened') {
+              // Create new tracking issue
+              console.log(`Creating tracking issue for PR #${prNumber}`);
+              
+              try {
+                const newIssue = await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: issueTitle,
+                  body: issueBody,
+                  labels: ['pr-tracking', 'documentation', prType, statusLabel]
+                });
+                
+                console.log(`Created issue #${newIssue.data.number}`);
+                
+                // Comment on PR with link to tracking issue
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  body: `📋 Issue de tracking créée : #${newIssue.data.number}\n\nCette issue permet de documenter l'avancement et les décisions prises lors du développement de cette PR.`
+                });
+                
+              } catch (error) {
+                console.error('Error creating tracking issue:', error);
+              }
+              
+            } else if (existingIssue) {
+              // Update existing tracking issue
+              console.log(`Updating tracking issue #${existingIssue.number} for PR #${prNumber}`);
+              
+              try {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: existingIssue.number,
+                  body: issueBody,
+                  labels: ['pr-tracking', 'documentation', prType, statusLabel]
+                });
+                
+                // Add comment for significant events
+                let commentBody = null;
+                if (action === 'closed' && prMerged) {
+                  commentBody = `✅ **PR mergée avec succès !**\n\n**Statistiques finales :**\n- Fichiers modifiés : ${changedFiles}\n- Lignes ajoutées : +${additions}\n- Lignes supprimées : -${deletions}\n- Commits : ${commits}\n\nDate de merge : ${mergedDate}`;
+                } else if (action === 'closed' && !prMerged) {
+                  commentBody = `❌ **PR fermée sans merge**\n\nDate de fermeture : ${closedDate}`;
+                } else if (action === 'ready_for_review') {
+                  commentBody = `🔍 **PR prête pour review**\n\nLa PR est maintenant prête à être examinée.`;
+                } else if (action === 'review_requested') {
+                  commentBody = `👀 **Review demandée**\n\nUne review a été demandée pour cette PR.`;
+                }
+                
+                if (commentBody) {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: existingIssue.number,
+                    body: commentBody
+                  });
+                }
+                
+                // Close issue if PR is closed/merged
+                if ((prMerged || prState === 'closed') && existingIssue.state === 'open') {
+                  await github.rest.issues.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: existingIssue.number,
+                    state: 'closed'
+                  });
+                  console.log(`Closed tracking issue #${existingIssue.number}`);
+                }
+                
+              } catch (error) {
+                console.error('Error updating tracking issue:', error);
+              }
+            }
