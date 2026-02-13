@@ -9,6 +9,7 @@
 */
 
 #include "prefabfactory.h"
+#include "ComponentRegistry.h"
 #include "ComponentDefinition.h"
 #include "PrefabScanner.h"
 #include "ParameterResolver.h"
@@ -22,6 +23,40 @@
 #include <string>
 #include <unordered_map>
 #include "VideoGame.h"
+
+// ========================================================================
+// Component Factory Registry Implementation
+// ========================================================================
+
+void PrefabFactory::RegisterComponentFactory(const std::string& componentName, 
+                                              std::function<bool(EntityID, const ComponentDefinition&)> factory)
+{
+    m_componentFactories[componentName] = factory;
+    std::cout << "[ComponentRegistry] Registered: " << componentName << "\n";
+}
+
+bool PrefabFactory::IsComponentRegistered(const std::string& componentName) const
+{
+    return m_componentFactories.find(componentName) != m_componentFactories.end();
+}
+
+std::vector<std::string> PrefabFactory::GetRegisteredComponents() const
+{
+    std::vector<std::string> components;
+    components.reserve(m_componentFactories.size());
+    for (const auto& [name, factory] : m_componentFactories)
+    {
+        components.push_back(name);
+    }
+    return components;
+}
+
+// Helper function for macro
+void RegisterComponentFactory_Internal(const char* componentName, 
+                                       std::function<bool(EntityID, const ComponentDefinition&)> factory)
+{
+    PrefabFactory::Get().RegisterComponentFactory(componentName, factory);
+}
 
 // ========================================================================
 // Public API Implementation
@@ -288,7 +323,56 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
 {
     const std::string& type = componentDef.componentType;
     
-    // Dispatch to appropriate helper based on component type
+    // Step 1: Try auto-registered components first
+    auto it = m_componentFactories.find(type);
+    if (it != m_componentFactories.end())
+    {
+        // Call the registered factory function
+        bool success = it->second(entity, componentDef);
+        
+        // For components that need specialized parameter handling, call legacy function
+        if (success)
+        {
+            // Check if we have a specialized function for parameter application
+            if (type == "BehaviorTreeRuntime_data")
+            {
+                InstantiateBehaviorTreeRuntime(entity, componentDef);  // Apply parameters
+            }
+            else if (type == "Position_data")
+            {
+                InstantiatePosition(entity, componentDef);  // Apply parameters
+            }
+            else if (type == "Identity_data")
+            {
+                InstantiateIdentity(entity, componentDef);  // Apply parameters
+            }
+            else if (type == "PhysicsBody_data")
+            {
+                InstantiatePhysicsBody(entity, componentDef);  // Apply parameters
+            }
+            else if (type == "VisualSprite_data")
+            {
+                InstantiateVisualSprite(entity, componentDef);  // Apply parameters
+            }
+            else if (type == "AIBlackboard_data")
+            {
+                InstantiateAIBlackboard(entity, componentDef);  // Apply parameters
+            }
+            else if (type == "AISenses_data")
+            {
+                InstantiateAISenses(entity, componentDef);  // Apply parameters
+            }
+            else if (type == "MoveIntent_data")
+            {
+                InstantiateMoveIntent(entity, componentDef);  // Apply parameters
+            }
+            // Add other specialized handlers as needed
+        }
+        
+        return success;
+    }
+    
+    // Step 2: Fallback to legacy specialized functions (for backward compatibility)
     if (type == "Identity" || type == "Identity_data")
         return InstantiateIdentity(entity, componentDef);
     else if (type == "Position" || type == "Position_data")
@@ -355,6 +439,11 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
     {
         SYSTEM_LOG << "PrefabFactory::InstantiateComponent: Unknown component type '" 
                    << type << "'\n";
+        SYSTEM_LOG << "  Available auto-registered components:\n";
+        for (const auto& [name, factory] : m_componentFactories)
+        {
+            SYSTEM_LOG << "    - " << name << "\n";
+        }
         return false;
     }
 }
