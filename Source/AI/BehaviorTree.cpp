@@ -788,24 +788,8 @@ const BehaviorTreeAsset* BehaviorTreeManager::GetTreeByAnyId(uint32_t treeId) co
             return &tree;
     }
     
-    // Strategy 2: Reverse path-to-ID map lookup
-    // Check if this ID exists in the path registry
-    for (const auto& [path, registeredId] : m_pathToIdMap)
-    {
-        if (registeredId == treeId)
-        {
-            // Found in registry, now find the actual tree
-            for (const auto& tree : m_trees)
-            {
-                if (tree.id == registeredId)
-                    return &tree;
-            }
-        }
-    }
-    
-    // Strategy 3: Fallback to first loaded tree with matching nodes
-    // (in case ID changed but tree structure is similar)
-    // This is a best-effort approach for corrupted prefabs
+    // No additional strategies currently implemented
+    // Future enhancement: Could add tree structure matching for corrupted prefabs
     
     return nullptr;
 }
@@ -823,7 +807,7 @@ std::string BehaviorTreeManager::GetTreePathFromId(uint32_t treeId) const
     for (const auto& tree : m_trees)
     {
         if (tree.id == treeId)
-            return tree.name; // Return tree name as fallback
+            return "TreeName:" + tree.name; // Prefix to distinguish from actual file path
     }
     
     return "";
