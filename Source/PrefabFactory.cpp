@@ -327,52 +327,38 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
     auto it = m_componentFactories.find(type);
     if (it != m_componentFactories.end())
     {
-        // Call the registered factory function
+        // Call the registered factory function to create component
         bool success = it->second(entity, componentDef);
-        
-        // For components that need specialized parameter handling, call legacy function
-        if (success)
+        if (!success)
         {
-            // Check if we have a specialized function for parameter application
-            if (type == "BehaviorTreeRuntime_data")
-            {
-                InstantiateBehaviorTreeRuntime(entity, componentDef);  // Apply parameters
-            }
-            else if (type == "Position_data")
-            {
-                InstantiatePosition(entity, componentDef);  // Apply parameters
-            }
-            else if (type == "Identity_data")
-            {
-                InstantiateIdentity(entity, componentDef);  // Apply parameters
-            }
-            else if (type == "PhysicsBody_data")
-            {
-                InstantiatePhysicsBody(entity, componentDef);  // Apply parameters
-            }
-            else if (type == "VisualSprite_data")
-            {
-                InstantiateVisualSprite(entity, componentDef);  // Apply parameters
-            }
-            else if (type == "AIBlackboard_data")
-            {
-                InstantiateAIBlackboard(entity, componentDef);  // Apply parameters
-            }
-            else if (type == "AISenses_data")
-            {
-                InstantiateAISenses(entity, componentDef);  // Apply parameters
-            }
-            else if (type == "MoveIntent_data")
-            {
-                InstantiateMoveIntent(entity, componentDef);  // Apply parameters
-            }
-            // Add other specialized handlers as needed
+            return false;
         }
         
-        return success;
+        // For components that need specialized parameter handling, call the specialized function
+        // Note: The specialized function applies parameters but does NOT recreate the component
+        if (type == "BehaviorTreeRuntime_data")
+            return InstantiateBehaviorTreeRuntime(entity, componentDef);
+        else if (type == "Position_data")
+            return InstantiatePosition(entity, componentDef);
+        else if (type == "Identity_data")
+            return InstantiateIdentity(entity, componentDef);
+        else if (type == "PhysicsBody_data")
+            return InstantiatePhysicsBody(entity, componentDef);
+        else if (type == "VisualSprite_data")
+            return InstantiateVisualSprite(entity, componentDef);
+        else if (type == "AIBlackboard_data")
+            return InstantiateAIBlackboard(entity, componentDef);
+        else if (type == "AISenses_data")
+            return InstantiateAISenses(entity, componentDef);
+        else if (type == "MoveIntent_data")
+            return InstantiateMoveIntent(entity, componentDef);
+        
+        // Component created successfully with default values
+        return true;
     }
     
     // Step 2: Fallback to legacy specialized functions (for backward compatibility)
+    // This allows the system to work even if AUTO_REGISTER_COMPONENT was forgotten
     if (type == "Identity" || type == "Identity_data")
         return InstantiateIdentity(entity, componentDef);
     else if (type == "Position" || type == "Position_data")

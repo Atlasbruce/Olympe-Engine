@@ -53,6 +53,16 @@ static ComponentRegistrar_MyNewComponent_data g_registrar_MyNewComponent_data;
 
 Its constructor executes **before `main()`**, registering the component in the factory.
 
+### Static Initialization Order
+
+Component registration uses C++ static initialization, which occurs before `main()` but in an unspecified order across translation units. This design is safe because:
+
+1. **No cross-component dependencies**: Each component registers independently
+2. **PrefabFactory is a singleton**: Uses local static initialization (guaranteed initialized on first use)
+3. **Simple registration**: Only stores a function pointer in a map, no complex initialization
+
+**Important**: Do NOT access other components or game systems during component struct construction or registration. Keep component constructors simple with only default member initialization.
+
 ## Best Practices
 
 1. **Always place `AUTO_REGISTER_COMPONENT()` immediately after struct definition**
@@ -71,6 +81,11 @@ Its constructor executes **before `main()`**, registering the component in the f
 3. **Verify registration at startup**
    - Check console logs for `[ComponentRegistry] Registered: ...`
    - If a component is missing, you forgot the macro!
+
+4. **Keep component constructors simple**
+   - Use only default member initialization in component structs
+   - Do NOT access other components or game systems during construction
+   - Complex initialization should be done in specialized `InstantiateXYZ()` functions
 
 ## Specialized Parameter Handling
 

@@ -15,6 +15,12 @@ Usage:
         float value = 0.0f;
     };
     AUTO_REGISTER_COMPONENT(MyComponent_data);
+
+Implementation Notes:
+- Uses static initialization (before main()) for auto-registration
+- Safe because: no cross-component dependencies, singleton pattern, simple registration
+- Keep component constructors simple (default initialization only)
+- Complex initialization should be done in specialized InstantiateXYZ() functions
 */
 
 #pragma once
@@ -33,6 +39,10 @@ class PrefabFactory;
 /// Generic template function for instantiating any ECS component
 /// This handles the common case: create component if missing, get reference
 /// Specialized behavior can still use custom InstantiateXYZ() functions
+/// 
+/// @return true if component was created successfully, false otherwise
+///         Note: Currently always returns true for generic components.
+///         Custom factory functions can return false to indicate failure.
 template<typename T>
 bool InstantiateComponentGeneric(EntityID entity, const ComponentDefinition& def)
 {
