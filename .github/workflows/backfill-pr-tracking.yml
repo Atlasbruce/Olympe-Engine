@@ -6,7 +6,7 @@ on:
       months_back:
         description: 'Number of months to go back'
         required: true
-        default: '4'
+        default: 4
         type: number
 
 permissions:
