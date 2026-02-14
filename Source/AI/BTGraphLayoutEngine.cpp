@@ -39,23 +39,19 @@ namespace Olympe
         // Phase 3: Reduce crossings (10 passes)
         ReduceCrossings(tree);
 
-        // Phase 4: Assign X coordinates
-        AssignXCoordinates(nodeSpacingX);
-
-        // Phase 5: Resolve collisions
-        ResolveCollisions(nodeSpacingX);
-        
-        // Phase 6: Apply Buchheim-Walker optimal layout for better parent centering
+        // Phase 4: Apply Buchheim-Walker optimal layout for better parent centering
+        // This sets position.x in abstract units (0, 1, 2, etc.)
         ApplyBuchheimWalkerLayout(tree);
         
-        // Phase 7: Force-directed collision resolution with generous padding
-        const float nodePadding = 120.0f;  // Generous padding between nodes (increased from 80)
-        const int maxIterations = 15;      // More iterations for better convergence
+        // Phase 5: Force-directed collision resolution with generous padding
+        // This works in abstract unit space
+        const float nodePadding = 1.5f;  // 1.5 abstract units of padding
+        const int maxIterations = 15;    // More iterations for better convergence
         ResolveNodeCollisionsForceDirected(nodePadding, maxIterations);
 
-        // Apply generous spacing multipliers based on tree complexity
-        float finalSpacingX = nodeSpacingX;
-        float finalSpacingY = nodeSpacingY;
+        // Calculate adaptive spacing multipliers based on tree complexity
+        float spacingMultiplierX = 1.0f;
+        float spacingMultiplierY = 1.0f;
         
         // Calculate tree complexity
         size_t maxNodesInLayer = 1;
@@ -67,34 +63,42 @@ namespace Olympe
         // Adaptive spacing: increase for wide trees
         if (maxNodesInLayer > 5)
         {
-            finalSpacingX *= 1.3f;  // +30% for wide trees
+            spacingMultiplierX = 1.3f;  // +30% for wide trees
         }
         
         // Adaptive spacing: increase for deep trees
         if (m_layers.size() > 5)
         {
-            finalSpacingY *= 1.2f;  // +20% for deep trees
+            spacingMultiplierY = 1.2f;  // +20% for deep trees
         }
+        
+        // Apply final spacing multipliers
+        float finalSpacingX = nodeSpacingX * spacingMultiplierX;
+        float finalSpacingY = nodeSpacingY * spacingMultiplierY;
 
-        // Assign final positions based on layout direction
+        // Convert from abstract units to world coordinates and apply layout direction
         if (m_layoutDirection == BTLayoutDirection::TopToBottom)
         {
             // Vertical layout (default): layers go top-to-bottom
             for (auto& layout : m_layouts)
             {
+                // Convert abstract X units to world coordinates
                 layout.position.x *= finalSpacingX;
+                // Set Y based on layer depth
                 layout.position.y = layout.layer * finalSpacingY;
             }
         }
         else  // LeftToRight
         {
             // Horizontal layout: rotate 90° clockwise
-            // Layers become left-to-right, order becomes top-to-bottom
+            // Layers become left-to-right, abstract X units become vertical positions
             for (auto& layout : m_layouts)
             {
-                float originalX = layout.position.x * finalSpacingX;
+                float abstractX = layout.position.x;
+                // Layers become horizontal position
                 layout.position.x = layout.layer * finalSpacingY;
-                layout.position.y = originalX;
+                // Abstract X units become vertical position
+                layout.position.y = abstractX * finalSpacingX;
             }
         }
 
@@ -484,7 +488,9 @@ namespace Olympe
         float childrenEndX = nextAvailableX;
 
         // Center parent on children
-        // Subtract 1.0f because each node reserves 1.0f width unit, so last child ends at childrenEndX - 1.0f
+        // Note: Position values are in abstract units where each leaf occupies 1.0 unit.
+        // nextAvailableX tracks the next slot position, so childrenEndX is one past the last child.
+        // For correct midpoint, we subtract 1.0 to get the end position of the last child.
         float childrenMidpoint = (childrenStartX + childrenEndX - 1.0f) / 2.0f;
         layout.position.x = childrenMidpoint;
 
@@ -567,17 +573,20 @@ namespace Olympe
 
     bool BTGraphLayoutEngine::DoNodesOverlap(const BTNodeLayout& a, const BTNodeLayout& b, float padding) const
     {
-        float aLeft = a.position.x - a.width / 2.0f - padding;
-        float aRight = a.position.x + a.width / 2.0f + padding;
-        float aTop = a.position.y - a.height / 2.0f - padding;
-        float aBottom = a.position.y + a.height / 2.0f + padding;
+        // Note: During collision resolution, positions are in abstract units (0, 1, 2, etc.)
+        // We treat each node as occupying 1.0 abstract unit width
+        // Height is not relevant since we only check horizontal collisions within the same layer
+        
+        const float abstractNodeWidth = 1.0f;  // Each node occupies 1 abstract unit
+        
+        float aLeft = a.position.x - abstractNodeWidth / 2.0f - padding;
+        float aRight = a.position.x + abstractNodeWidth / 2.0f + padding;
 
-        float bLeft = b.position.x - b.width / 2.0f;
-        float bRight = b.position.x + b.width / 2.0f;
-        float bTop = b.position.y - b.height / 2.0f;
-        float bBottom = b.position.y + b.height / 2.0f;
+        float bLeft = b.position.x - abstractNodeWidth / 2.0f;
+        float bRight = b.position.x + abstractNodeWidth / 2.0f;
 
-        return !(aRight < bLeft || aLeft > bRight || aBottom < bTop || aTop > bBottom);
+        // Check horizontal overlap (vertical not relevant since both nodes in same layer)
+        return !(aRight < bLeft || aLeft > bRight);
     }
 
     void BTGraphLayoutEngine::PushNodeApart(uint32_t nodeA, uint32_t nodeB, float minDistance)
@@ -591,8 +600,11 @@ namespace Olympe
         BTNodeLayout& layoutA = m_layouts[itA->second];
         BTNodeLayout& layoutB = m_layouts[itB->second];
 
+        // Note: Positions are in abstract units where each node occupies 1.0 unit
+        const float abstractNodeWidth = 1.0f;
+        
         float dx = layoutB.position.x - layoutA.position.x;
-        float currentDistance = std::abs(dx) - (layoutA.width + layoutB.width) / 2.0f;
+        float currentDistance = std::abs(dx) - abstractNodeWidth;  // Distance between node edges
 
         if (currentDistance < minDistance)
         {
