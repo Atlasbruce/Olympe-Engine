@@ -13,50 +13,50 @@ Welcome to the Olympe Engine API Reference documentation. This section contains 
 
 ### Core Systems
 
-- **[ECS Components](../../api/html/ECS__Components_8h.html)** - All component definitions
-- **[ECS Systems](../../api/html/ECS__Systems_8h.html)** - System implementations
-- **[Game Engine](../../api/html/classGameEngine.html)** - Core engine class
-- **[World](../../api/html/classWorld.html)** - World management
+- **[ECS Components](/api/html/ECS__Components_8h.html)** - All component definitions
+- **[ECS Systems](/api/html/ECS__Systems_8h.html)** - System implementations
+- **[Game Engine](/api/html/classGameEngine.html)** - Core engine class
+- **[World](/api/html/classWorld.html)** - World management
 
 ### AI System
 
-- **[Behavior Trees](../../api/html/namespaceBehaviorTree.html)** - AI behavior tree implementation
-- **[AI Components](../../api/html/ECS__Components__AI_8h.html)** - AI-specific components
-- **[AI Systems](../../api/html/ECS__Systems__AI_8h.html)** - AI processing systems
+- **[Behavior Trees](/api/html/namespaceBehaviorTree.html)** - AI behavior tree implementation
+- **[AI Components](/api/html/ECS__Components__AI_8h.html)** - AI-specific components
+- **[AI Systems](/api/html/ECS__Systems__AI_8h.html)** - AI processing systems
 
 ### Prefab & Blueprint System
 
-- **[Prefab Factory](../../api/html/classPrefabFactory.html)** - Entity creation from prefabs
-- **[Prefab Scanner](../../api/html/classPrefabScanner.html)** - Blueprint file parser
-- **[Component Definition](../../api/html/structComponentDefinition.html)** - Component schema
+- **[Prefab Factory](/api/html/classPrefabFactory.html)** - Entity creation from prefabs
+- **[Prefab Scanner](/api/html/classPrefabScanner.html)** - Blueprint file parser
+- **[Component Definition](/api/html/structComponentDefinition.html)** - Component schema
 
 ### Input System
 
-- **[Input Manager](../../api/html/classInputsManager.html)** - Input handling
-- **[Input Device](../../api/html/structInputDeviceSlot.html)** - Device management
+- **[Input Manager](/api/html/classInputsManager.html)** - Input handling
+- **[Input Device](/api/html/structInputDeviceSlot.html)** - Device management
 
 ### Rendering & Camera
 
-- **[Camera System](../../api/html/classCameraSystem.html)** - Camera management
-- **[Rendering](../../api/html/namespaceiRender.html)** - Rendering pipeline
+- **[Camera System](/api/html/classCameraSystem.html)** - Camera management
+- **[Rendering](/api/html/namespaceiRender.html)** - Rendering pipeline
 
 ### Utilities
 
-- **[Vector](../../api/html/classVector.html)** - Math vector class
-- **[System Utils](../../api/html/system__utils_8h.html)** - Utility functions
+- **[Vector](/api/html/classVector.html)** - Math vector class
+- **[System Utils](/api/html/system__utils_8h.html)** - Utility functions
 
 ## 🔍 Browse Full API
 
 For complete API documentation with all classes, functions, and file listings:
 
-**[→ Browse Full Doxygen Documentation](../../api/html/index.html)**
+**[→ Browse Full Doxygen Documentation](/api/html/index.html)**
 
 ## 📖 Quick Links
 
-- [Class Index](../../api/html/classes.html)
-- [Class Hierarchy](../../api/html/hierarchy.html)
-- [File List](../../api/html/files.html)
-- [Namespace List](../../api/html/namespaces.html)
+- [Class Index](/api/html/classes.html)
+- [Class Hierarchy](/api/html/hierarchy.html)
+- [File List](/api/html/files.html)
+- [Namespace List](/api/html/namespaces.html)
 
 ## 🛠️ For Developers
 
@@ -98,4 +98,4 @@ Follow these conventions when documenting code:
 - Use `@warning` for important notes
 - Use `@example` for code examples
 
-For more information, see the [Contributing Guide](../contributing/code-style).
+For more information, see the [Contributing Guide](../contributing/code-style.md).

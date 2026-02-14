@@ -286,7 +286,7 @@ When instantiating blueprints from Tiled, you can override specific component pr
 
 ### Behavior Tree Dependencies
 
-AI entities with `AIBehaviorTree` components reference external behavior tree JSON files. The Blueprint Editor scans these dependencies. See [Behavior Tree Dependency Loading](../../technical-reference/behavior-trees/dependency-loading.md).
+AI entities with `AIBehaviorTree` components reference external behavior tree JSON files. The Blueprint Editor scans these dependencies. See [Behavior Tree Dependency Loading](../../technical-reference/behavior-trees/behavior-tree-dependency-loading.md).
 
 ### Blueprint Validation
 

@@ -22,7 +22,7 @@ Olympe Engine is a powerful 2D game engine built with **Entity Component System 
 
 ## 📚 Documentation Structure
 
-- **[Getting Started](getting-started/introduction)** - Learn the basics and set up your first project
+- **[Getting Started](getting-started/quick-start)** - Learn the basics and set up your first project
 - **[API Reference](api-reference/index)** - Complete API documentation
 - **[Contributing](contributing/code-style)** - Guidelines for contributors
 
@@ -89,7 +89,7 @@ cmake --build .
 
 ## 💡 Need Help?
 
-- Check out the [documentation](getting-started/introduction)
+- Check out the [documentation](getting-started/quick-start)
 - Browse the [API reference](api-reference/index)
 - Visit our [GitHub repository](https://github.com/Atlasbruce/Olympe-Engine)
 
