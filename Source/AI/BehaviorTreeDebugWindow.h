@@ -126,6 +126,12 @@ namespace Olympe
         void RenderBlackboardSection();
         void RenderExecutionLog();
 
+        // Camera control helpers
+        void FitGraphToView();
+        void CenterViewOnGraph();
+        void ResetZoom();
+        void RenderMinimap();
+
         // Data management
         std::vector<EntityDebugInfo> m_entities;
         std::vector<EntityDebugInfo> m_filteredEntities;
@@ -137,6 +143,9 @@ namespace Olympe
         
         // Camera state tracking
         EntityID m_lastCenteredEntity = 0;  // Track which entity was last centered
+        float m_currentZoom = 1.0f;         // Current zoom level (0.3 to 3.0)
+        ImVec2 m_cameraPan = ImVec2(0.0f, 0.0f);  // Camera pan offset
+        bool m_showMinimap = true;          // Show minimap overlay
 
         // Execution log (circular buffer with max 100 entries)
         std::deque<ExecutionLogEntry> m_executionLog;

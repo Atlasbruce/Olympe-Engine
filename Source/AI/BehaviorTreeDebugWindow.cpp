@@ -139,6 +139,9 @@ namespace Olympe
                     }
                 }
                 
+                ImGui::Separator();
+                ImGui::Checkbox("Show Minimap", &m_showMinimap);
+                
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Actions"))
@@ -151,6 +154,18 @@ namespace Olympe
                 {
                     m_executionLog.clear();
                 }
+                
+                ImGui::Separator();
+                
+                if (ImGui::MenuItem("Fit Graph to View", "F"))
+                    FitGraphToView();
+                
+                if (ImGui::MenuItem("Center View", "C"))
+                    CenterViewOnGraph();
+                
+                if (ImGui::MenuItem("Reset Zoom", "0"))
+                    ResetZoom();
+                
                 ImGui::EndMenu();
             }
             ImGui::EndMenuBar();
@@ -640,7 +655,6 @@ namespace Olympe
 
         // ✅ NEW: Mouse wheel zoom support
         // Manual zoom with style scaling (ImNodes v0.4 compatible)
-        static float currentZoom = 1.0f;
 
         ImGuiIO& io = ImGui::GetIO();
         if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered())
@@ -648,18 +662,59 @@ namespace Olympe
             if (io.MouseWheel != 0.0f)
             {
                 float zoomDelta = io.MouseWheel * 0.1f;  // 10% per wheel notch
-                currentZoom = std::max(0.3f, std::min(3.0f, currentZoom + zoomDelta));
+                m_currentZoom = std::max(0.3f, std::min(3.0f, m_currentZoom + zoomDelta));
                 
                 // Scale ImNodes style for zoom effect
-                ImNodes::GetStyle().NodePadding = ImVec2(8.0f * currentZoom, 8.0f * currentZoom);
-                ImNodes::GetStyle().NodeCornerRounding = 8.0f * currentZoom;
-                ImNodes::GetStyle().GridSpacing = 32.0f * currentZoom;
+                ImNodes::GetStyle().NodePadding = ImVec2(8.0f * m_currentZoom, 8.0f * m_currentZoom);
+                ImNodes::GetStyle().NodeCornerRounding = 8.0f * m_currentZoom;
+                ImNodes::GetStyle().GridSpacing = 32.0f * m_currentZoom;
                 
-                std::cout << "[BTDebugger] Zoom: " << (int)(currentZoom * 100) << "%" << std::endl;
+                std::cout << "[BTDebugger] Zoom: " << (int)(m_currentZoom * 100) << "%" << std::endl;
+            }
+        }
+
+        // Keyboard shortcuts for camera control
+        if (ImGui::IsWindowFocused())
+        {
+            // F : Fit to view
+            if (ImGui::IsKeyPressed(ImGuiKey_F) && !ImGui::GetIO().KeyCtrl)
+                FitGraphToView();
+            
+            // C : Center view
+            if (ImGui::IsKeyPressed(ImGuiKey_C) && !ImGui::GetIO().KeyCtrl)
+                CenterViewOnGraph();
+            
+            // 0 (numpad or main) : Reset zoom
+            if (ImGui::IsKeyPressed(ImGuiKey_0) || ImGui::IsKeyPressed(ImGuiKey_Keypad0))
+                ResetZoom();
+            
+            // M : Toggle minimap
+            if (ImGui::IsKeyPressed(ImGuiKey_M))
+                m_showMinimap = !m_showMinimap;
+            
+            // + / - : Zoom in/out
+            if (ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::IsKeyPressed(ImGuiKey_KeypadAdd))
+            {
+                m_currentZoom = std::min(3.0f, m_currentZoom * 1.2f);
+                ImNodes::GetStyle().NodePadding = ImVec2(8.0f * m_currentZoom, 8.0f * m_currentZoom);
+                ImNodes::GetStyle().NodeCornerRounding = 8.0f * m_currentZoom;
+                ImNodes::GetStyle().GridSpacing = 32.0f * m_currentZoom;
+            }
+            
+            if (ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract))
+            {
+                m_currentZoom = std::max(0.3f, m_currentZoom / 1.2f);
+                ImNodes::GetStyle().NodePadding = ImVec2(8.0f * m_currentZoom, 8.0f * m_currentZoom);
+                ImNodes::GetStyle().NodeCornerRounding = 8.0f * m_currentZoom;
+                ImNodes::GetStyle().GridSpacing = 32.0f * m_currentZoom;
             }
         }
 
         RenderBehaviorTreeGraph();
+
+        // Render minimap after the graph
+        if (m_showMinimap)
+            RenderMinimap();
 
         ImNodes::EndNodeEditor();
     }
@@ -1121,5 +1176,204 @@ namespace Olympe
         {
             m_executionLog.pop_front();
         }
+    }
+
+    void BehaviorTreeDebugWindow::FitGraphToView()
+    {
+        if (m_currentLayout.empty())
+            return;
+
+        // 1. Calculate the bounds of the graph
+        ImVec2 minPos(FLT_MAX, FLT_MAX);
+        ImVec2 maxPos(-FLT_MAX, -FLT_MAX);
+        
+        for (const auto& layout : m_currentLayout)
+        {
+            minPos.x = std::min(minPos.x, layout.position.x - layout.width / 2.0f);
+            minPos.y = std::min(minPos.y, layout.position.y - layout.height / 2.0f);
+            maxPos.x = std::max(maxPos.x, layout.position.x + layout.width / 2.0f);
+            maxPos.y = std::max(maxPos.y, layout.position.y + layout.height / 2.0f);
+        }
+        
+        ImVec2 graphSize(maxPos.x - minPos.x, maxPos.y - minPos.y);
+        ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+        
+        // 2. Calculate the zoom needed
+        float zoomX = viewportSize.x / graphSize.x;
+        float zoomY = viewportSize.y / graphSize.y;
+        float targetZoom = std::min(zoomX, zoomY) * 0.9f; // 90% for margins
+        
+        // 3. Apply the zoom
+        m_currentZoom = std::max(0.3f, std::min(3.0f, targetZoom));
+        
+        // 4. Apply style scaling
+        ImNodes::GetStyle().NodePadding = ImVec2(8.0f * m_currentZoom, 8.0f * m_currentZoom);
+        ImNodes::GetStyle().NodeCornerRounding = 8.0f * m_currentZoom;
+        ImNodes::GetStyle().GridSpacing = 32.0f * m_currentZoom;
+        
+        // 5. Center the view
+        ImVec2 graphCenter((minPos.x + maxPos.x) / 2.0f, (minPos.y + maxPos.y) / 2.0f);
+        ImVec2 panOffset(
+            -graphCenter.x * m_currentZoom + viewportSize.x / 2.0f,
+            -graphCenter.y * m_currentZoom + viewportSize.y / 2.0f
+        );
+        
+        ImNodes::EditorContextResetPanning(panOffset);
+        
+        std::cout << "[BTDebugger] Fit to view: zoom=" << (int)(m_currentZoom * 100) 
+                  << "%, center=(" << (int)graphCenter.x << "," << (int)graphCenter.y << ")" << std::endl;
+    }
+
+    void BehaviorTreeDebugWindow::CenterViewOnGraph()
+    {
+        if (m_currentLayout.empty())
+            return;
+
+        ImVec2 minPos(FLT_MAX, FLT_MAX);
+        ImVec2 maxPos(-FLT_MAX, -FLT_MAX);
+
+        for (const auto& layout : m_currentLayout)
+        {
+            minPos.x = std::min(minPos.x, layout.position.x);
+            minPos.y = std::min(minPos.y, layout.position.y);
+            maxPos.x = std::max(maxPos.x, layout.position.x);
+            maxPos.y = std::max(maxPos.y, layout.position.y);
+        }
+
+        ImVec2 graphCenter((minPos.x + maxPos.x) / 2.0f, (minPos.y + maxPos.y) / 2.0f);
+        ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+
+        ImVec2 panOffset(
+            -graphCenter.x * m_currentZoom + viewportSize.x / 2.0f,
+            -graphCenter.y * m_currentZoom + viewportSize.y / 2.0f
+        );
+
+        ImNodes::EditorContextResetPanning(panOffset);
+        
+        std::cout << "[BTDebugger] Centered view on graph (" << (int)graphCenter.x 
+                  << ", " << (int)graphCenter.y << ")" << std::endl;
+    }
+
+    void BehaviorTreeDebugWindow::ResetZoom()
+    {
+        m_currentZoom = 1.0f;
+        
+        ImNodes::GetStyle().NodePadding = ImVec2(8.0f, 8.0f);
+        ImNodes::GetStyle().NodeCornerRounding = 8.0f;
+        ImNodes::GetStyle().GridSpacing = 32.0f;
+        
+        std::cout << "[BTDebugger] Reset zoom to 100%" << std::endl;
+    }
+
+    void BehaviorTreeDebugWindow::RenderMinimap()
+    {
+        if (m_currentLayout.empty())
+            return;
+
+        // Minimap size and position
+        const ImVec2 minimapSize(200, 150);
+        const ImVec2 minimapPadding(10, 10);
+        
+        ImVec2 windowSize = ImGui::GetWindowSize();
+        ImVec2 windowPos = ImGui::GetWindowPos();
+        ImVec2 contentMax = ImGui::GetWindowContentRegionMax();
+        ImVec2 minimapPos(
+            contentMax.x - minimapSize.x - minimapPadding.x,
+            contentMax.y - minimapSize.y - minimapPadding.y
+        );
+        
+        ImGui::SetCursorPos(minimapPos);
+        
+        // Background semi-transparent
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        ImVec2 minimapMin = ImGui::GetCursorScreenPos();
+        ImVec2 minimapMax(minimapMin.x + minimapSize.x, minimapMin.y + minimapSize.y);
+        
+        drawList->AddRectFilled(
+            minimapMin, 
+            minimapMax, 
+            IM_COL32(20, 20, 20, 200), 
+            4.0f
+        );
+        
+        // Calculate the bounds of the graph
+        ImVec2 graphMin(FLT_MAX, FLT_MAX);
+        ImVec2 graphMax(-FLT_MAX, -FLT_MAX);
+        
+        for (const auto& layout : m_currentLayout)
+        {
+            graphMin.x = std::min(graphMin.x, layout.position.x);
+            graphMin.y = std::min(graphMin.y, layout.position.y);
+            graphMax.x = std::max(graphMax.x, layout.position.x);
+            graphMax.y = std::max(graphMax.y, layout.position.y);
+        }
+        
+        ImVec2 graphSize(graphMax.x - graphMin.x, graphMax.y - graphMin.y);
+        
+        // Scale for minimap
+        float scaleX = minimapSize.x / graphSize.x;
+        float scaleY = minimapSize.y / graphSize.y;
+        float scale = std::min(scaleX, scaleY) * 0.9f; // Margins
+        
+        // Draw nodes
+        for (const auto& layout : m_currentLayout)
+        {
+            float x = minimapMin.x + (layout.position.x - graphMin.x) * scale;
+            float y = minimapMin.y + (layout.position.y - graphMin.y) * scale;
+            
+            ImU32 color = IM_COL32(100, 150, 255, 255); // Blue by default
+            
+            // Highlight current node
+            auto& world = World::Get();
+            if (m_selectedEntity != 0 && 
+                world.HasComponent<BehaviorTreeRuntime_data>(m_selectedEntity))
+            {
+                const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
+                if (layout.nodeId == btRuntime.AICurrentNodeIndex)
+                    color = IM_COL32(255, 255, 0, 255); // Yellow
+            }
+            
+            drawList->AddCircleFilled(ImVec2(x, y), 3.0f, color);
+        }
+        
+        // Draw the visible viewport (red rectangle)
+        ImVec2 panOffset = ImNodes::EditorContextGetPanning();
+        ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+        
+        float viewMinX = minimapMin.x + (-panOffset.x / m_currentZoom - graphMin.x) * scale;
+        float viewMinY = minimapMin.y + (-panOffset.y / m_currentZoom - graphMin.y) * scale;
+        float viewMaxX = viewMinX + (viewportSize.x / m_currentZoom) * scale;
+        float viewMaxY = viewMinY + (viewportSize.y / m_currentZoom) * scale;
+        
+        drawList->AddRect(
+            ImVec2(viewMinX, viewMinY),
+            ImVec2(viewMaxX, viewMaxY),
+            IM_COL32(255, 0, 0, 255),
+            0.0f,
+            0,
+            2.0f
+        );
+        
+        // Interaction: click to center
+        ImGui::SetCursorPos(minimapPos);
+        ImGui::InvisibleButton("##minimap", minimapSize);
+        
+        if (ImGui::IsItemClicked())
+        {
+            ImVec2 clickPos = ImGui::GetMousePos();
+            float clickX = (clickPos.x - minimapMin.x) / scale + graphMin.x;
+            float clickY = (clickPos.y - minimapMin.y) / scale + graphMin.y;
+            
+            ImVec2 newPan(
+                -clickX * m_currentZoom + viewportSize.x / 2.0f,
+                -clickY * m_currentZoom + viewportSize.y / 2.0f
+            );
+            
+            ImNodes::EditorContextResetPanning(newPan);
+        }
+        
+        // Label
+        ImGui::SetCursorPos(ImVec2(minimapPos.x + 5, minimapPos.y + 5));
+        ImGui::TextColored(ImVec4(1, 1, 1, 0.7f), "Minimap");
     }
 }
