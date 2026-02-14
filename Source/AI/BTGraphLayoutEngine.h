@@ -107,6 +107,12 @@ namespace Olympe
         // Phase 5: Resolve collisions between nodes
         void ResolveCollisions(float nodeSpacingX);
 
+        // NEW: Phase 6: Buchheim-Walker optimal layout
+        void ApplyBuchheimWalkerLayout(const BehaviorTreeAsset* tree);
+        
+        // NEW: Phase 7: Force-directed collision resolution
+        void ResolveNodeCollisionsForceDirected(float nodePadding, int maxIterations);
+
         // Helper: Get children of a node
         std::vector<uint32_t> GetChildren(const BTNode* node) const;
 
@@ -115,6 +121,14 @@ namespace Olympe
 
         // Helper: Calculate barycenter for a node
         float CalculateBarycenter(uint32_t nodeId, const std::vector<BTNodeLayout*>& neighbors) const;
+        
+        // NEW: Helper methods for Buchheim-Walker
+        void PlaceSubtree(uint32_t nodeId, const BehaviorTreeAsset* tree, int depth, float& nextAvailableX);
+        void ShiftSubtree(uint32_t nodeId, const BehaviorTreeAsset* tree, float offset);
+        
+        // NEW: Helper methods for collision detection
+        bool DoNodesOverlap(const BTNodeLayout& a, const BTNodeLayout& b, float padding) const;
+        void PushNodeApart(uint32_t nodeA, uint32_t nodeB, float minDistance);
 
         // Layout configuration
         BTLayoutDirection m_layoutDirection = BTLayoutDirection::TopToBottom;  ///< Default vertical

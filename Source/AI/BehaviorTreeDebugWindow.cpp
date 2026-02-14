@@ -89,8 +89,8 @@ namespace Olympe
             entry.timeAgo += GameEngine::fDt;
         }
 
-        // Configure as true external window with generous size
-        ImGui::SetNextWindowSize(ImVec2(1600, 1000), ImGuiCond_FirstUseEver);
+        // Configure as professional external-style window with generous size
+        ImGui::SetNextWindowSize(ImVec2(1800, 1200), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowPos(ImVec2(100, 100), ImGuiCond_FirstUseEver);
 
         // Force external floating window (no docking, no bring to front on focus)
@@ -113,9 +113,9 @@ namespace Olympe
                 ImGui::SliderFloat("Auto Refresh (s)", &m_autoRefreshInterval, 0.1f, 5.0f);
                 ImGui::SliderFloat("Entity List Width", &m_entityListWidth, 150.0f, 400.0f);
                 ImGui::SliderFloat("Inspector Width", &m_inspectorWidth, 250.0f, 500.0f);
-                // Generous spacing ranges: 400-800px horizontal, 250-400px vertical
-                ImGui::SliderFloat("Node Spacing X", &m_nodeSpacingX, 400.0f, 800.0f);
-                ImGui::SliderFloat("Node Spacing Y", &m_nodeSpacingY, 250.0f, 400.0f);
+                // Professional spacing ranges: 500-1000px horizontal, 300-600px vertical
+                ImGui::SliderFloat("Node Spacing X", &m_nodeSpacingX, 500.0f, 1000.0f);
+                ImGui::SliderFloat("Node Spacing Y", &m_nodeSpacingY, 300.0f, 600.0f);
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Actions"))
