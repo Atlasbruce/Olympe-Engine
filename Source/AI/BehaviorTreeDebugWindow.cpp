@@ -672,12 +672,14 @@ namespace Olympe
         // Keyboard shortcuts for camera control
         if (ImGui::IsWindowFocused())
         {
+            bool ctrlPressed = ImGui::GetIO().KeyCtrl;
+            
             // F : Fit to view
-            if (ImGui::IsKeyPressed(ImGuiKey_F) && !ImGui::GetIO().KeyCtrl)
+            if (ImGui::IsKeyPressed(ImGuiKey_F) && !ctrlPressed)
                 FitGraphToView();
             
             // C : Center view
-            if (ImGui::IsKeyPressed(ImGuiKey_C) && !ImGui::GetIO().KeyCtrl)
+            if (ImGui::IsKeyPressed(ImGuiKey_C) && !ctrlPressed)
                 CenterViewOnGraph();
             
             // 0 (numpad or main) : Reset zoom
@@ -1211,7 +1213,14 @@ namespace Olympe
         ImVec2 graphSize(maxPos.x - minPos.x, maxPos.y - minPos.y);
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
         
-        // 2. Calculate the zoom needed
+        // 2. Calculate the zoom needed (protect against division by zero)
+        if (graphSize.x <= 0.0f || graphSize.y <= 0.0f)
+        {
+            // Graph has no dimensions, just center it with current zoom
+            CenterViewOnGraph();
+            return;
+        }
+        
         float zoomX = viewportSize.x / graphSize.x;
         float zoomY = viewportSize.y / graphSize.y;
         float targetZoom = std::min(zoomX, zoomY) * 0.9f; // 90% for margins
@@ -1294,10 +1303,26 @@ namespace Olympe
         
         ImVec2 graphSize(graphMax.x - graphMin.x, graphMax.y - graphMin.y);
         
-        // Scale for minimap
+        // Scale for minimap (protect against division by zero)
+        if (graphSize.x <= 0.0f || graphSize.y <= 0.0f)
+        {
+            // Graph has no dimensions, just show label
+            ImGui::SetCursorPos(ImVec2(minimapPos.x + 5, minimapPos.y + 5));
+            ImGui::TextColored(ImVec4(1, 1, 1, 0.7f), "Minimap");
+            return;
+        }
+        
         float scaleX = minimapSize.x / graphSize.x;
         float scaleY = minimapSize.y / graphSize.y;
         float scale = std::min(scaleX, scaleY) * 0.9f; // Margins
+        
+        // Additional safety check for scale
+        if (scale <= 0.0f)
+        {
+            ImGui::SetCursorPos(ImVec2(minimapPos.x + 5, minimapPos.y + 5));
+            ImGui::TextColored(ImVec4(1, 1, 1, 0.7f), "Minimap");
+            return;
+        }
         
         // Draw nodes
         for (const auto& layout : m_currentLayout)
