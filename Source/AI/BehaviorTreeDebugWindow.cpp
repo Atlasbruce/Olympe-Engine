@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <cstring>
 #include <cmath>
-#include <set>
+#include <unordered_set>
 
 namespace Olympe
 {

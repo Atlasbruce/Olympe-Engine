@@ -107,9 +107,8 @@ namespace Olympe
             // Vertical layout (default): layers go top-to-bottom
             for (auto& layout : m_layouts)
             {
-                // ✅ CRITICAL: Multiply relative X by spacing (NOT just assign)
-                float relativeX = layout.position.x;
-                layout.position.x = relativeX * baseSpacingX;
+                // ✅ CRITICAL: Multiply abstract X by pixel spacing to get world coordinates
+                layout.position.x *= baseSpacingX;
                 
                 // ✅ CRITICAL: Multiply layer index by vertical spacing
                 layout.position.y = layout.layer * baseSpacingY;
