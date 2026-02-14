@@ -5,12 +5,15 @@
  * @date 2025
  * 
  * @details
- * Implements a 5-phase Sugiyama algorithm for hierarchical graph layout:
+ * Implements a 5-phase hierarchical graph layout algorithm:
  * 1. Layering: Assign nodes to layers via BFS
  * 2. Initial Ordering: Order nodes within layers
  * 3. Crossing Reduction: Minimize edge crossings using barycenter heuristic
- * 4. X-Coordinate Assignment: Horizontal positioning with parent centering
- * 5. Collision Resolution: Resolve overlaps with dynamic spacing
+ * 4. Buchheim-Walker Layout: Optimal parent centering in abstract unit space
+ * 5. Force-Directed Collision Resolution: Iterative overlap elimination
+ * 
+ * The algorithm works in abstract unit space (each node = 1.0 unit) and converts
+ * to world coordinates at the end with adaptive spacing based on tree complexity.
  */
 
 #pragma once
@@ -98,13 +101,17 @@ namespace Olympe
         // Phase 2: Initial ordering of nodes within each layer
         void InitialOrdering();
 
-        // Phase 3: Reduce edge crossings (10 passes of barycenter heuristic)
+        // Phase 3: Reduce edge crossings (barycenter heuristic)
         void ReduceCrossings(const BehaviorTreeAsset* tree);
 
-        // Phase 4: Assign X coordinates with parent centering
-        void AssignXCoordinates(float nodeSpacingX);
+        // Phase 4: Buchheim-Walker optimal layout (in abstract unit space)
+        void ApplyBuchheimWalkerLayout(const BehaviorTreeAsset* tree);
+        
+        // Phase 5: Force-directed collision resolution (in abstract unit space)
+        void ResolveNodeCollisionsForceDirected(float nodePadding, int maxIterations);
 
-        // Phase 5: Resolve collisions between nodes
+        // DEPRECATED: Old phases replaced by Buchheim-Walker
+        void AssignXCoordinates(float nodeSpacingX);
         void ResolveCollisions(float nodeSpacingX);
 
         // Helper: Get children of a node
@@ -115,6 +122,14 @@ namespace Olympe
 
         // Helper: Calculate barycenter for a node
         float CalculateBarycenter(uint32_t nodeId, const std::vector<BTNodeLayout*>& neighbors) const;
+        
+        // NEW: Helper methods for Buchheim-Walker
+        void PlaceSubtree(uint32_t nodeId, const BehaviorTreeAsset* tree, int depth, float& nextAvailableX);
+        void ShiftSubtree(uint32_t nodeId, const BehaviorTreeAsset* tree, float offset);
+        
+        // NEW: Helper methods for collision detection
+        bool DoNodesOverlap(const BTNodeLayout& a, const BTNodeLayout& b, float padding) const;
+        void PushNodeApart(uint32_t nodeA, uint32_t nodeB, float minDistance);
 
         // Layout configuration
         BTLayoutDirection m_layoutDirection = BTLayoutDirection::TopToBottom;  ///< Default vertical

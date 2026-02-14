@@ -39,33 +39,66 @@ namespace Olympe
         // Phase 3: Reduce crossings (10 passes)
         ReduceCrossings(tree);
 
-        // Phase 4: Assign X coordinates
-        AssignXCoordinates(nodeSpacingX);
+        // Phase 4: Apply Buchheim-Walker optimal layout for better parent centering
+        // This sets position.x in abstract units (0, 1, 2, etc.)
+        ApplyBuchheimWalkerLayout(tree);
+        
+        // Phase 5: Force-directed collision resolution with generous padding
+        // This works in abstract unit space
+        const float nodePadding = 1.5f;  // 1.5 abstract units of padding
+        const int maxIterations = 15;    // More iterations for better convergence
+        ResolveNodeCollisionsForceDirected(nodePadding, maxIterations);
 
-        // Phase 5: Resolve collisions
-        ResolveCollisions(nodeSpacingX);
+        // Calculate adaptive spacing multipliers based on tree complexity
+        float spacingMultiplierX = 1.0f;
+        float spacingMultiplierY = 1.0f;
+        
+        // Calculate tree complexity
+        size_t maxNodesInLayer = 1;
+        for (const auto& layer : m_layers)
+        {
+            maxNodesInLayer = std::max(maxNodesInLayer, layer.size());
+        }
+        
+        // Adaptive spacing: increase for wide trees
+        if (maxNodesInLayer > 5)
+        {
+            spacingMultiplierX = 1.3f;  // +30% for wide trees
+        }
+        
+        // Adaptive spacing: increase for deep trees
+        if (m_layers.size() > 5)
+        {
+            spacingMultiplierY = 1.2f;  // +20% for deep trees
+        }
+        
+        // Apply final spacing multipliers
+        float finalSpacingX = nodeSpacingX * spacingMultiplierX;
+        float finalSpacingY = nodeSpacingY * spacingMultiplierY;
 
-        // Assign final positions based on layout direction
+        // Convert from abstract units to world coordinates and apply layout direction
         if (m_layoutDirection == BTLayoutDirection::TopToBottom)
         {
             // Vertical layout (default): layers go top-to-bottom
             for (auto& layout : m_layouts)
             {
-                layout.position.y = layout.layer * nodeSpacingY;
+                // Convert abstract X units to world coordinates
+                layout.position.x *= finalSpacingX;
+                // Set Y based on layer depth
+                layout.position.y = layout.layer * finalSpacingY;
             }
         }
         else  // LeftToRight
         {
             // Horizontal layout: rotate 90° clockwise
-            // Layers become left-to-right, order becomes top-to-bottom
+            // Layers become left-to-right, abstract X units become vertical positions
             for (auto& layout : m_layouts)
             {
-                float originalX = layout.position.x;
-                float layerX = layout.layer * nodeSpacingY;
-                
-                // Swap axes: X becomes Y (for sibling ordering), layer becomes X
-                layout.position.x = layerX;
-                layout.position.y = originalX;
+                float abstractX = layout.position.x;
+                // Layers become horizontal position
+                layout.position.x = layout.layer * finalSpacingY;
+                // Abstract X units become vertical position
+                layout.position.y = abstractX * finalSpacingX;
             }
         }
 
@@ -398,5 +431,214 @@ namespace Olympe
         }
 
         return sum / neighbors.size();
+    }
+
+    void BTGraphLayoutEngine::ApplyBuchheimWalkerLayout(const BehaviorTreeAsset* tree)
+    {
+        /*
+         * Buchheim-Walker Algorithm (2002)
+         * Reference: "Improving Walker's Algorithm to Run in Linear Time"
+         * 
+         * Guarantees:
+         * 1. Parents centered on their children
+         * 2. No collisions between sibling subtrees
+         * 3. Optimal horizontal space usage
+         * 4. Linear time complexity O(n)
+         */
+
+        if (!tree || m_layers.empty() || m_layouts.empty())
+            return;
+
+        // Start from root and recursively place subtrees
+        if (!m_layers.empty() && !m_layers[0].empty())
+        {
+            uint32_t rootId = m_layers[0][0];
+            float startX = 0.0f;
+            PlaceSubtree(rootId, tree, 0, startX);
+        }
+    }
+
+    void BTGraphLayoutEngine::PlaceSubtree(uint32_t nodeId, const BehaviorTreeAsset* tree, int depth, float& nextAvailableX)
+    {
+        const BTNode* node = tree->GetNode(nodeId);
+        if (!node)
+            return;
+
+        auto itLayout = m_nodeIdToIndex.find(nodeId);
+        if (itLayout == m_nodeIdToIndex.end())
+            return;
+
+        BTNodeLayout& layout = m_layouts[itLayout->second];
+        auto children = GetChildren(node);
+
+        if (children.empty())
+        {
+            // Leaf: place at next available position
+            layout.position.x = nextAvailableX;
+            nextAvailableX += 1.0f;  // Reserve 1 unit
+            return;
+        }
+
+        // Recursively place all children
+        float childrenStartX = nextAvailableX;
+        for (uint32_t childId : children)
+        {
+            PlaceSubtree(childId, tree, depth + 1, nextAvailableX);
+        }
+        float childrenEndX = nextAvailableX;
+
+        // Center parent on children
+        // Note: Position values are in abstract units where each leaf occupies 1.0 unit.
+        // childrenStartX = position where first child starts (e.g., 0)
+        // childrenEndX = nextAvailableX after all children placed (e.g., 2 for two children)
+        // Since nextAvailableX is one past the last child's position, we subtract 1.0
+        // Example: Two children at 0 and 1 -> midpoint = (0 + 2 - 1) / 2 = 0.5 ✓
+        // Example: One child at 0 -> midpoint = (0 + 1 - 1) / 2 = 0 ✓
+        float childrenMidpoint = (childrenStartX + childrenEndX - 1.0f) / 2.0f;
+        layout.position.x = childrenMidpoint;
+
+        // If parent position collides with previous sibling's subtree, shift everything
+        if (layout.position.x < childrenStartX)
+        {
+            float shift = childrenStartX - layout.position.x;
+            layout.position.x += shift;
+            
+            // Shift all children by the same amount
+            for (uint32_t childId : children)
+            {
+                ShiftSubtree(childId, tree, shift);
+            }
+        }
+    }
+
+    void BTGraphLayoutEngine::ShiftSubtree(uint32_t nodeId, const BehaviorTreeAsset* tree, float offset)
+    {
+        auto itLayout = m_nodeIdToIndex.find(nodeId);
+        if (itLayout == m_nodeIdToIndex.end())
+            return;
+
+        m_layouts[itLayout->second].position.x += offset;
+
+        const BTNode* node = tree->GetNode(nodeId);
+        if (!node)
+            return;
+
+        auto children = GetChildren(node);
+        for (uint32_t childId : children)
+        {
+            ShiftSubtree(childId, tree, offset);
+        }
+    }
+
+    void BTGraphLayoutEngine::ResolveNodeCollisionsForceDirected(float nodePadding, int maxIterations)
+    {
+        for (int iter = 0; iter < maxIterations; ++iter)
+        {
+            bool hadCollision = false;
+
+            // Check all pairs within each layer
+            for (size_t layerIdx = 0; layerIdx < m_layers.size(); ++layerIdx)
+            {
+                auto& layer = m_layers[layerIdx];
+
+                for (size_t i = 0; i < layer.size(); ++i)
+                {
+                    for (size_t j = i + 1; j < layer.size(); ++j)
+                    {
+                        uint32_t nodeA = layer[i];
+                        uint32_t nodeB = layer[j];
+
+                        auto itA = m_nodeIdToIndex.find(nodeA);
+                        auto itB = m_nodeIdToIndex.find(nodeB);
+
+                        if (itA == m_nodeIdToIndex.end() || itB == m_nodeIdToIndex.end())
+                            continue;
+
+                        BTNodeLayout& layoutA = m_layouts[itA->second];
+                        BTNodeLayout& layoutB = m_layouts[itB->second];
+
+                        if (DoNodesOverlap(layoutA, layoutB, nodePadding))
+                        {
+                            PushNodeApart(nodeA, nodeB, nodePadding);
+                            hadCollision = true;
+                        }
+                    }
+                }
+            }
+
+            if (!hadCollision)
+            {
+                // Converged early
+                break;
+            }
+        }
+    }
+
+    bool BTGraphLayoutEngine::DoNodesOverlap(const BTNodeLayout& a, const BTNodeLayout& b, float padding) const
+    {
+        // Note: During collision resolution, positions are in abstract units (0, 1, 2, etc.)
+        // We treat each node as occupying 1.0 abstract unit width
+        // Height is not relevant since we only check horizontal collisions within the same layer
+        
+        const float abstractNodeWidth = 1.0f;  // Each node occupies 1 abstract unit
+        
+        float aLeft = a.position.x - abstractNodeWidth / 2.0f - padding;
+        float aRight = a.position.x + abstractNodeWidth / 2.0f + padding;
+
+        float bLeft = b.position.x - abstractNodeWidth / 2.0f;
+        float bRight = b.position.x + abstractNodeWidth / 2.0f;
+
+        // Check horizontal overlap (vertical not relevant since both nodes in same layer)
+        return !(aRight < bLeft || aLeft > bRight);
+    }
+
+    void BTGraphLayoutEngine::PushNodeApart(uint32_t nodeA, uint32_t nodeB, float minDistance)
+    {
+        auto itA = m_nodeIdToIndex.find(nodeA);
+        auto itB = m_nodeIdToIndex.find(nodeB);
+
+        if (itA == m_nodeIdToIndex.end() || itB == m_nodeIdToIndex.end())
+            return;
+
+        BTNodeLayout& layoutA = m_layouts[itA->second];
+        BTNodeLayout& layoutB = m_layouts[itB->second];
+
+        // Note: Positions are in abstract units where each node occupies 1.0 unit
+        const float abstractNodeWidth = 1.0f;
+        
+        // Calculate center-to-center distance
+        float dx = layoutB.position.x - layoutA.position.x;
+        float centerDistance = std::abs(dx);
+        
+        // Minimum center-to-center distance needed = abstractNodeWidth + minDistance
+        float requiredCenterDistance = abstractNodeWidth + minDistance;
+        
+        if (centerDistance < requiredCenterDistance)
+        {
+            // Calculate how much total separation is needed
+            float totalPushNeeded = requiredCenterDistance - centerDistance;
+            // Each node moves half the distance
+            float pushAmount = totalPushNeeded / 2.0f;
+
+            // Push nodes apart in the direction they're already separated
+            // If B is to the right of A (dx > 0), push A left and B right
+            // If B is to the left of A (dx < 0), push A right and B left
+            if (dx > 0)
+            {
+                layoutA.position.x -= pushAmount;
+                layoutB.position.x += pushAmount;
+            }
+            else if (dx < 0)
+            {
+                layoutA.position.x += pushAmount;
+                layoutB.position.x -= pushAmount;
+            }
+            // If dx == 0 (nodes at same X), push them apart arbitrarily
+            else
+            {
+                layoutA.position.x -= pushAmount;
+                layoutB.position.x += pushAmount;
+            }
+        }
     }
 }
