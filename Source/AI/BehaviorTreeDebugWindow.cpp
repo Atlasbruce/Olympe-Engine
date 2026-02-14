@@ -499,32 +499,29 @@ namespace Olympe
         ImGui::Text("Layout:");
         ImGui::SameLine();
         
-        static int layoutMode = 0;  // 0 = Vertical, 1 = Horizontal
-        
         bool layoutChanged = false;
-        if (ImGui::RadioButton("Vertical", &layoutMode, 0))
+        if (ImGui::RadioButton("Vertical", m_layoutDirection == BTLayoutDirection::TopToBottom))
         {
-            layoutChanged = true;
+            if (m_layoutDirection != BTLayoutDirection::TopToBottom)
+            {
+                m_layoutDirection = BTLayoutDirection::TopToBottom;
+                layoutChanged = true;
+            }
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Horizontal", &layoutMode, 1))
+        if (ImGui::RadioButton("Horizontal", m_layoutDirection == BTLayoutDirection::LeftToRight))
         {
-            layoutChanged = true;
+            if (m_layoutDirection != BTLayoutDirection::LeftToRight)
+            {
+                m_layoutDirection = BTLayoutDirection::LeftToRight;
+                layoutChanged = true;
+            }
         }
         
-        // Update layout direction if changed
+        // Update layout engine and recompute if changed
         if (layoutChanged)
         {
-            if (layoutMode == 1)
-            {
-                m_layoutEngine.SetLayoutDirection(BTLayoutDirection::LeftToRight);
-            }
-            else
-            {
-                m_layoutEngine.SetLayoutDirection(BTLayoutDirection::TopToBottom);
-            }
-            
-            // Recompute layout with new direction
+            m_layoutEngine.SetLayoutDirection(m_layoutDirection);
             m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY);
         }
         
