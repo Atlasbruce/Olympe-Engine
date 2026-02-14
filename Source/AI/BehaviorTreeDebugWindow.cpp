@@ -575,9 +575,6 @@ namespace Olympe
                 
                 std::cout << "[BTDebugger] ✅ Camera centered on graph" << std::endl;
                 m_lastCenteredEntity = m_selectedEntity;
-                
-                // Clear printed nodes when changing entities
-                m_printedNodeIds.clear();
             }
         }
 
@@ -645,16 +642,19 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::RenderNode(const BTNode* node, const BTNodeLayout* layout, bool isCurrentNode)
     {
+        // Static local variable to track which nodes have been debug printed
+        static std::unordered_set<uint32_t> printedNodeIds;
+        
         if (!node || !layout)
             return;
 
         // ✅ NEW: Debug position (only print once per entity)
-        if (m_printedNodeIds.find(node->id) == m_printedNodeIds.end())
+        if (printedNodeIds.find(node->id) == printedNodeIds.end())
         {
             std::cout << "[RenderNode] Node " << node->id 
                       << " (" << node->name << ") at (" 
                       << (int)layout->position.x << ", " << (int)layout->position.y << ")" << std::endl;
-            m_printedNodeIds.insert(node->id);
+            printedNodeIds.insert(node->id);
         }
 
         // Set node position BEFORE BeginNode (ImNodes requirement)
