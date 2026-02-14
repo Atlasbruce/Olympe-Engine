@@ -74,6 +74,15 @@ Entities: 5 / 10
 ### Center Panel: Node Graph
 The center panel shows the behavior tree as an interactive node graph:
 
+**Layout Direction:**
+Toggle between two visualization modes using the radio buttons at the top:
+- **Vertical** (default): Traditional top-to-bottom hierarchical tree
+- **Horizontal**: Left-to-right flowchart layout
+
+The layout can be switched in real-time to better suit different tree structures:
+- **Wide trees** (many siblings) → Use horizontal layout for better vertical space usage
+- **Deep trees** (many layers) → Use vertical or horizontal based on preference
+
 **Node Colors:**
 - **Blue** (Selector): OR logic - succeeds if any child succeeds
 - **Green** (Sequence): AND logic - succeeds if all children succeed
@@ -170,6 +179,7 @@ Shows the last 100 node executions for the selected entity:
 ### View Menu Options
 Access these options via the menu bar (View menu):
 
+- **Layout Direction**: Choose between Vertical (top-to-bottom) or Horizontal (left-to-right) layout
 - **Auto Refresh**: Set refresh interval (0.1 - 5.0 seconds, default: 0.5s)
 - **Entity List Width**: Adjust left panel width (150 - 400 pixels)
 - **Inspector Width**: Adjust right panel width (250 - 500 pixels)
@@ -206,7 +216,15 @@ The debugger uses a **5-phase Sugiyama algorithm** for clean, readable node layo
 4. **X-Coordinate Assignment**: Positions nodes horizontally with parent centering
 5. **Collision Resolution**: Resolves overlaps with dynamic spacing
 
-**Result**: Professional-looking graphs without overlapping nodes or tangled edges.
+**Layout Directions:**
+- **Vertical (TopToBottom)**: Traditional hierarchical layout with root at top, children spreading horizontally, layers progressing downward
+- **Horizontal (LeftToRight)**: Flowchart-style layout with root at left, children spreading vertically, layers progressing rightward
+
+The horizontal layout applies a 90° clockwise rotation to the vertical layout coordinates, transforming:
+- Layer progression: Y-axis → X-axis
+- Sibling ordering: X-axis → Y-axis
+
+**Result**: Professional-looking graphs without overlapping nodes or tangled edges, optimized for different tree shapes.
 
 ## Keyboard Shortcuts
 

@@ -15,11 +15,11 @@
 │  (Left Panel)         │         (Center Panel)                       │     (Right Panel)    │
 │  250px                │         ~900px                               │     350px            │
 │                       │                                               │                      │
-├───────────────────────┤                                               ├──────────────────────┤
-│ Entities with BT      │              ┌────────────┐                  │ Inspector            │
-│ ────────────────      │              │ ? RootSel  │ ◄── Blue         │ ─────────            │
-│ Search: [_______]     │              │  (0)       │                  │                      │
-│ ☑ Active Only         │              └─────┬──────┘                  │ ▼ Runtime Info       │
+├───────────────────────┤  Layout: ● Vertical  ○ Horizontal            ├──────────────────────┤
+│ Entities with BT      │  ─────────────────────────────────           │ Inspector            │
+│ ────────────────      │              ┌────────────┐                  │ ─────────            │
+│ Search: [_______]     │              │ ? RootSel  │ ◄── Blue         │                      │
+│ ☑ Active Only         │              │  (0)       │                  │ ▼ Runtime Info       │
 │ ☑ Has Target          │                    │                         │  Tree ID: 42         │
 │                       │         ┌──────────┴──────────┐              │  Tree: Patrol_BT     │
 │ Sort: [Name ▼] [Asc]  │         │                     │              │  Node ID: 7          │
@@ -92,11 +92,16 @@ Position: 100, 100 (default, first use)
 7. **Click** Refresh button for manual refresh (or press F5)
 
 ### Node Graph Panel
-1. **Mouse Wheel** to zoom in/out
-2. **Middle Mouse Button + Drag** to pan
-3. **Hover** over nodes to see details
-4. **Watch** yellow pulsing highlight on current node
-5. **Follow** execution flow through tree visually
+1. **Toggle Layout** - Click "Vertical" or "Horizontal" radio buttons to switch layout
+2. **Mouse Wheel** to zoom in/out
+3. **Middle Mouse Button + Drag** to pan
+4. **Hover** over nodes to see details
+5. **Watch** yellow pulsing highlight on current node
+6. **Follow** execution flow through tree visually
+
+**Layout Modes:**
+- **Vertical** (default): Traditional top-to-bottom tree - best for deep trees or balanced structures
+- **Horizontal**: Left-to-right flowchart - best for wide trees with many siblings
 
 ### Inspector Panel
 1. **Click** section headers to expand/collapse
@@ -149,9 +154,64 @@ Position: 100, 100 (default, first use)
 3. **Use filtering aggressively** - Reduces visual clutter
 4. **Clear log frequently** - Keeps history relevant
 5. **Adjust spacing** - If graph too cramped or sparse
-6. **Watch pulsing highlight** - Best way to track execution
-7. **Check blackboard first** - Often reveals root cause
-8. **Use execution log** - To find patterns over time
+6. **Toggle layout direction** - Use horizontal for wide trees, vertical for deep trees
+7. **Watch pulsing highlight** - Best way to track execution
+8. **Check blackboard first** - Often reveals root cause
+9. **Use execution log** - To find patterns over time
+
+## Layout Direction Feature
+
+The debugger supports two layout orientations, selectable via radio buttons in the node graph panel:
+
+### Vertical Layout (TopToBottom)
+```
+        [Root]
+          |
+    +-----------+
+    |           |
+ [Child1]   [Child2]
+    |           |
+ [Leaf1]    [Leaf2]
+```
+**Characteristics:**
+- Root at top, layers progress downward
+- Siblings spread horizontally
+- Traditional hierarchical tree view
+- **Best for**: Deep trees, balanced structures
+
+### Horizontal Layout (LeftToRight)
+```
+                [Child1] → [Leaf1]
+               /
+[Root] -------+
+               \
+                [Child2] → [Leaf2]
+```
+**Characteristics:**
+- Root at left, layers progress rightward
+- Siblings spread vertically
+- Flowchart-style visualization
+- **Best for**: Wide trees with many siblings, limited vertical space
+
+### When to Use Each Layout
+
+**Use Vertical:**
+- Tree has many layers (deep)
+- Limited horizontal screen space
+- Prefer traditional tree diagrams
+- Tree is roughly balanced
+
+**Use Horizontal:**
+- Tree has many children per node (wide)
+- Limited vertical screen space
+- Prefer flowchart-style visualization
+- Tree is shallow but wide
+
+### Implementation Details
+- Layout changes are instant (no recompilation needed)
+- Uses 90° clockwise coordinate rotation
+- Preserves relative node positions
+- No performance difference between modes
 
 ## Performance Considerations
 
