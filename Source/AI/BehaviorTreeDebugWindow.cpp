@@ -113,9 +113,32 @@ namespace Olympe
                 ImGui::SliderFloat("Auto Refresh (s)", &m_autoRefreshInterval, 0.1f, 5.0f);
                 ImGui::SliderFloat("Entity List Width", &m_entityListWidth, 150.0f, 400.0f);
                 ImGui::SliderFloat("Inspector Width", &m_inspectorWidth, 250.0f, 500.0f);
-                // Professional spacing ranges: 500-1000px horizontal, 300-600px vertical
-                ImGui::SliderFloat("Node Spacing X", &m_nodeSpacingX, 500.0f, 1000.0f);
-                ImGui::SliderFloat("Node Spacing Y", &m_nodeSpacingY, 300.0f, 600.0f);
+                // Reasonable spacing ranges to prevent massive graphs
+                ImGui::SliderFloat("Node Spacing X", &m_nodeSpacingX, 150.0f, 500.0f);
+                ImGui::SliderFloat("Node Spacing Y", &m_nodeSpacingY, 100.0f, 400.0f);
+                
+                // Reset button to restore defaults
+                if (ImGui::Button("Reset Spacing to Defaults"))
+                {
+                    m_nodeSpacingX = 250.0f;
+                    m_nodeSpacingY = 180.0f;
+                    
+                    // Recompute layout with new spacing
+                    if (m_selectedEntity != 0)
+                    {
+                        auto& world = World::Get();
+                        if (world.HasComponent<BehaviorTreeRuntime_data>(m_selectedEntity))
+                        {
+                            const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
+                            const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
+                            if (tree)
+                            {
+                                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY);
+                            }
+                        }
+                    }
+                }
+                
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Actions"))
@@ -529,6 +552,43 @@ namespace Olympe
         {
             m_layoutEngine.SetLayoutDirection(m_layoutDirection);
             m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY);
+        }
+        
+        // Reset Camera button
+        ImGui::SameLine();
+        if (ImGui::Button("Reset Camera"))
+        {
+            // Center camera on graph bounding box
+            if (!m_currentLayout.empty())
+            {
+                ImVec2 minPos(FLT_MAX, FLT_MAX);
+                ImVec2 maxPos(-FLT_MAX, -FLT_MAX);
+
+                for (const auto& layout : m_currentLayout)
+                {
+                    float halfWidth = layout.width / 2.0f;
+                    float halfHeight = layout.height / 2.0f;
+                    
+                    minPos.x = std::min(minPos.x, layout.position.x - halfWidth);
+                    minPos.y = std::min(minPos.y, layout.position.y - halfHeight);
+                    maxPos.x = std::max(maxPos.x, layout.position.x + halfWidth);
+                    maxPos.y = std::max(maxPos.y, layout.position.y + halfHeight);
+                }
+
+                ImVec2 graphCenter((minPos.x + maxPos.x) / 2.0f, (minPos.y + maxPos.y) / 2.0f);
+                ImVec2 editorSize = ImGui::GetContentRegionAvail();
+                
+                // Center camera on graph (panning = where graph origin is in screen space)
+                ImVec2 targetPanning(
+                    graphCenter.x - editorSize.x / 2.0f,
+                    graphCenter.y - editorSize.y / 2.0f
+                );
+                
+                ImNodes::EditorContextResetPanning(targetPanning);
+                
+                std::cout << "[BTDebugger] Camera reset to center: (" 
+                          << graphCenter.x << ", " << graphCenter.y << ")" << std::endl;
+            }
         }
         
         ImGui::Separator();
