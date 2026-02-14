@@ -1373,11 +1373,11 @@ namespace Olympe
             2.0f
         );
         
-        // Interaction: click to center (only if scale is valid)
+        // Interaction: click to center
         ImGui::SetCursorPos(minimapPos);
         ImGui::InvisibleButton("##minimap", minimapSize);
         
-        if (ImGui::IsItemClicked() && scale > 0.0f)
+        if (ImGui::IsItemClicked())
         {
             ImVec2 clickPos = ImGui::GetMousePos();
             float clickX = (clickPos.x - minimapMin.x) / scale + graphMin.x;
