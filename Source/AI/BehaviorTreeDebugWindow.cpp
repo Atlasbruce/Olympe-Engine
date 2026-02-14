@@ -683,21 +683,21 @@ namespace Olympe
                 CenterViewOnGraph();
             
             // 0 (numpad or main) : Reset zoom
-            if (ImGui::IsKeyPressed(ImGuiKey_0) || ImGui::IsKeyPressed(ImGuiKey_Keypad0))
+            if ((ImGui::IsKeyPressed(ImGuiKey_0) || ImGui::IsKeyPressed(ImGuiKey_Keypad0)) && !ctrlPressed)
                 ResetZoom();
             
             // M : Toggle minimap
-            if (ImGui::IsKeyPressed(ImGuiKey_M))
+            if (ImGui::IsKeyPressed(ImGuiKey_M) && !ctrlPressed)
                 m_showMinimap = !m_showMinimap;
             
             // + / - : Zoom in/out (Note: '+' requires Shift+Equal on most keyboards)
-            if (ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::IsKeyPressed(ImGuiKey_KeypadAdd))
+            if ((ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::IsKeyPressed(ImGuiKey_KeypadAdd)) && !ctrlPressed)
             {
                 m_currentZoom = std::min(3.0f, m_currentZoom * 1.2f);
                 ApplyZoomToStyle();
             }
             
-            if (ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract))
+            if ((ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract)) && !ctrlPressed)
             {
                 m_currentZoom = std::max(0.3f, m_currentZoom / 1.2f);
                 ApplyZoomToStyle();
@@ -1195,9 +1195,12 @@ namespace Olympe
 
     ImVec2 BehaviorTreeDebugWindow::CalculatePanOffset(const ImVec2& graphCenter, const ImVec2& viewportSize) const
     {
+        // Safety: Ensure zoom is valid (should always be 0.3-3.0, but defensive check)
+        float safeZoom = std::max(0.3f, std::min(3.0f, m_currentZoom));
+        
         return ImVec2(
-            -graphCenter.x * m_currentZoom + viewportSize.x / 2.0f,
-            -graphCenter.y * m_currentZoom + viewportSize.y / 2.0f
+            -graphCenter.x * safeZoom + viewportSize.x / 2.0f,
+            -graphCenter.y * safeZoom + viewportSize.y / 2.0f
         );
     }
 
