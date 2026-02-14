@@ -554,13 +554,13 @@ Now that you can create and load Tiled maps, explore these advanced topics:
 
 ### Advanced:
 - [**Behavior Trees for NPCs**](./behavior-tree-basics.md) - Add AI to your level entities
-- [**Collision and Physics**](../user-guide/physics/collision-detection.md) - Set up collision layers
-- [**Animation System**](../user-guide/animation/sprite-animation.md) - Animate your map objects
-- [**Dynamic Lighting**](../user-guide/rendering/lighting.md) - Add lighting to your levels
+<!-- - [**Collision and Physics**](../user-guide/physics/collision-detection.md) - Set up collision layers (Coming soon) -->
+<!-- - [**Animation System**](../user-guide/animation/sprite-animation.md) - Animate your map objects (Coming soon) -->
+<!-- - [**Dynamic Lighting**](../user-guide/rendering/lighting.md) - Add lighting to your levels (Coming soon) -->
 
 ### Resources:
 - [**Tiled Best Practices**](../user-guide/tiled-editor/best-practices.md) - Professional map design tips
-- [**Performance Optimization**](../technical-reference/optimization/level-loading.md) - Optimize large maps
+<!-- - [**Performance Optimization**](../technical-reference/optimization/level-loading.md) - Optimize large maps (Coming soon) -->
 - [**Tiled Documentation**](https://doc.mapeditor.org/) - Official Tiled reference
 
 ---
@@ -586,7 +586,7 @@ You're now ready to create rich, complex levels for your Olympe Engine games!
 
 - **Example Maps**: `Examples/TiledLoader/` - Sample map files
 - **Example Code**: `Examples/TiledLoader/example_load_tiled_map.cpp`
-- **Component Reference**: `website/docs/api-reference/components.md`
+- **Component Reference**: See [API Reference](../api-reference/api-index)
 - **Tiled Website**: [https://www.mapeditor.org/](https://www.mapeditor.org/)
 - **Olympe Discord**: Get help from the community
 

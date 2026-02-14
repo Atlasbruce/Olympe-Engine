@@ -1231,13 +1231,13 @@ You've learned the fundamentals of behavior trees! Continue with:
 
 ### Advanced Topics:
 - [**Custom Behavior Nodes**](../technical-reference/behavior-trees/custom-nodes.md) - Extend the system
-- [**AI Systems Deep Dive**](../technical-reference/architecture/ai-systems.md) - How AI processing works
-- [**Pathfinding Guide**](../user-guide/navigation/pathfinding.md) - Navigation system details
+<!-- - [**AI Systems Deep Dive**](../technical-reference/architecture/ai-systems.md) - How AI processing works (Coming soon) -->
+- [**Pathfinding Guide**](../technical-reference/navigation/pathfinding.md) - Navigation system details
 
 ### Reference:
 - [**Behavior Tree Nodes**](../technical-reference/behavior-trees/nodes.md) - Complete node reference
-- [**Behavior Tree Overview**](../technical-reference/behavior-trees/overview.md) - System architecture
-- [**AI Components**](../api-reference/components.md) - AIBlackboard and AIBehaviorTree details
+- [**Behavior Tree Overview**](../technical-reference/behavior-trees/behavior-trees-overview.md) - System architecture
+<!-- - [**AI Components**](../api-reference/components.md) - AIBlackboard and AIBehaviorTree details (Coming soon) -->
 
 ---
 

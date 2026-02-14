@@ -516,8 +516,8 @@ InputDeviceManager::Get().AssignProfileToDevice(deviceID, "racing");
 
 ## Related Documentation
 
-- [Input System Architecture](../../technical-reference/architecture/input-architecture.md) - Technical implementation details
-- [Input System User Guide](./user-guide.md) - How to use input in gameplay
+- [Input System Architecture](./input-architecture.md) - Technical implementation details
+- [Input System User Guide](./input-user-guide.md) - How to use input in gameplay
 - [ECS Overview](../../technical-reference/architecture/ecs-overview.md) - Controller_data component details
 
 ## Example Files

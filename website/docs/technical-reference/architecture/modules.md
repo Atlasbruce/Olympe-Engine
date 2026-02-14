@@ -266,7 +266,7 @@ Common behaviors:
 - **Chase**: Pursue target
 - **Flee**: Escape from threat
 
-See [Behavior Trees Overview](../behavior-trees/overview.md) for details.
+See [Behavior Trees Overview](../behavior-trees/behavior-trees-overview.md) for details.
 
 ## Data Manager
 
@@ -328,6 +328,6 @@ option(BUILD_BLUEPRINT_EDITOR_STANDALONE "Build Blueprint Editor Standalone exec
 ## Next Steps
 
 - Dive deeper into the [ECS Architecture](./ecs-overview.md)
-- Learn about [Behavior Trees](../behavior-trees/overview.md) for AI
-- Explore [Input System Configuration](../../user-guide/input-system/configuration.md)
-- Read [Creating Blueprints](../../user-guide/blueprints/overview.md)
+- Learn about [Behavior Trees](../behavior-trees/behavior-trees-overview.md) for AI
+- Explore [Input System Configuration](../../user-guide/input-system/input-configuration.md)
+- Read [Creating Blueprints](../../user-guide/blueprints/blueprints-overview.md)

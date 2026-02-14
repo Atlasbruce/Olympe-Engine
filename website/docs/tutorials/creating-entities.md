@@ -1113,7 +1113,7 @@ You've learned how to create entities using both C++ and JSON prefabs! Continue 
 ### Related Tutorials:
 - [**Behavior Tree Basics**](./behavior-tree-basics.md) - Add AI to your entities
 - [**First Tiled Map**](./first-tiled-map.md) - Spawn entities from Tiled maps
-- [**Animation System**](../user-guide/animation/sprite-animation.md) - Animate your entities
+<!-- - [**Animation System**](../user-guide/animation/sprite-animation.md) - Animate your entities (Coming soon) -->
 
 ### Advanced Topics:
 - [**ECS Architecture**](../technical-reference/architecture/ecs-overview.md) - Deep dive into ECS
@@ -1121,9 +1121,9 @@ You've learned how to create entities using both C++ and JSON prefabs! Continue 
 - [**System Development**](../technical-reference/architecture/ecs-systems.md) - Writing custom systems
 
 ### Reference Documentation:
-- [**Component API Reference**](../api-reference/components.md) - All available components
-- [**Prefab System**](../user-guide/blueprints/overview.md) - Advanced prefab features
-- [**World API**](../api-reference/world.md) - World class methods
+<!-- - [**Component API Reference**](../api-reference/components.md) - All available components (Coming soon) -->
+- [**Prefab System**](../user-guide/blueprints/blueprints-overview.md) - Advanced prefab features
+<!-- - [**World API**](../api-reference/world.md) - World class methods (Coming soon) -->
 
 ---
 

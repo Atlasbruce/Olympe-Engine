@@ -22,7 +22,7 @@ Olympe Engine is a powerful 2D game engine built with **Entity Component System 
 
 ## 📚 Documentation Structure
 
-- **[Getting Started](getting-started/introduction)** - Learn the basics and set up your first project
+- **[Getting Started](getting-started/quick-start)** - Learn the basics and set up your first project
 - **[API Reference](api-reference/index)** - Complete API documentation
 - **[Contributing](contributing/code-style)** - Guidelines for contributors
 
@@ -89,7 +89,7 @@ cmake --build .
 
 ## 💡 Need Help?
 
-- Check out the [documentation](getting-started/introduction)
+- Check out the [documentation](getting-started/quick-start)
 - Browse the [API reference](api-reference/index)
 - Visit our [GitHub repository](https://github.com/Atlasbruce/Olympe-Engine)
 
@@ -124,7 +124,7 @@ graph TB
 ### [Getting Started](./getting-started/installation.md)
 Installation guide, prerequisites, and your first project
 
-### [User Guide](./user-guide/tiled-editor/introduction.md)
+### [User Guide](./user-guide/tiled-editor/tiled-introduction.md)
 Learn how to use Tiled Editor, Blueprints, and Input System
 
 ### [Technical Reference](./technical-reference/architecture/ecs-overview.md)
@@ -186,7 +186,7 @@ bool success = World::Get().LoadLevel("Gamedata/Levels/dungeon.tmj");
 - [Installation Guide](./getting-started/installation.md) - Set up your development environment
 - [Project Structure](./getting-started/project-structure.md) - Understand the codebase organization
 - [ECS Overview](./technical-reference/architecture/ecs-overview.md) - Learn the Entity Component System
-- [Blueprint System](./user-guide/blueprints/overview.md) - Create entities without code
+- [Blueprint System](./user-guide/blueprints/blueprints-overview.md) - Create entities without code
 - [Testing Guide](./contributing/testing-guide.md) - Run and write tests
 
 ## 🤝 Community & Support

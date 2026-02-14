@@ -69,9 +69,9 @@ Olympe Engine supports these Tiled features:
 
 ## Quick Links
 
-- [Quick Start Guide](./quick-start.md) - Get started with Tiled in 5 minutes
+- [Quick Start Guide](./tiled-quick-start.md) - Get started with Tiled in 5 minutes
 - [Layer Properties](./layer-properties.md) - Configure navigation and collision
-- [Object Spawning](./object-spawning.md) - Place entities in your maps
+- [Object Properties](./object-properties.md) - Place entities in your maps
 
 ## File Format
 
@@ -134,9 +134,9 @@ if (success) {
 
 ## Next Steps
 
-- **New to Tiled?** Start with the [Quick Start Guide](./quick-start.md)
+- **New to Tiled?** Start with the [Quick Start Guide](./tiled-quick-start.md)
 - **Need navigation control?** Read about [Layer Properties](./layer-properties.md)
-- **Want to spawn entities?** Learn about [Object Spawning](./object-spawning.md)
+- **Want to spawn entities?** Learn about [Object Properties](./object-properties.md)
 
 ## Resources
 
