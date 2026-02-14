@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cstring>
 #include <cmath>
+#include <set>
 #include <unordered_set>
 
 namespace Olympe
@@ -561,39 +562,47 @@ namespace Olympe
             std::cout << "[BTDebugger] Graph size: " << graphSize.x << "x" << graphSize.y << " pixels" << std::endl;
             std::cout << "[BTDebugger] Graph center: (" << graphCenter.x << "," << graphCenter.y << ")" << std::endl;
 
-            // ✅ NEW: Center camera when entity changes
-            if (m_lastCenteredEntity != m_selectedEntity)
+            // ✅ WORKING: Compatible camera centering
+            static bool firstLoad = true;
+            static ImVec2 cameraOffset(0.0f, 0.0f);
+
+            if (firstLoad || m_lastCenteredEntity != m_selectedEntity)
             {
-                // Center the camera on the graph
+                // Calculate offset to center graph
                 ImVec2 editorSize = ImGui::GetContentRegionAvail();
-                ImVec2 cameraOffset(
-                    graphCenter.x - editorSize.x / 2.0f,
-                    graphCenter.y - editorSize.y / 2.0f
+                cameraOffset = ImVec2(
+                    -graphCenter.x + editorSize.x / 2.0f,
+                    -graphCenter.y + editorSize.y / 2.0f
                 );
                 
-                ImNodes::EditorContextResetPanning(cameraOffset);
+                std::cout << "[BTDebugger] Camera will be offset by (" 
+                          << cameraOffset.x << ", " << cameraOffset.y << ") to center graph" << std::endl;
                 
-                std::cout << "[BTDebugger] ✅ Camera centered on graph" << std::endl;
-                m_lastCenteredEntity = m_selectedEntity;
-                
-                // Clear printed nodes when changing entities
-                m_printedNodeIds.clear();
+                if (m_lastCenteredEntity != m_selectedEntity)
+                {
+                    m_lastCenteredEntity = m_selectedEntity;
+                }
+                firstLoad = false;
             }
         }
 
-        // ✅ NEW: Mouse wheel zoom support
+        // ✅ WORKING: Manual zoom with style scaling (ImNodes v0.4 compatible)
+        static float currentZoom = 1.0f;
+
         ImGuiIO& io = ImGui::GetIO();
         if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered())
         {
             if (io.MouseWheel != 0.0f)
             {
-                float currentZoom = ImNodes::EditorContextGetZoom();
                 float zoomDelta = io.MouseWheel * 0.1f;  // 10% per wheel notch
-                float newZoom = std::max(0.3f, std::min(3.0f, currentZoom + zoomDelta));
+                currentZoom = std::max(0.3f, std::min(3.0f, currentZoom + zoomDelta));
                 
-                ImNodes::EditorContextSetZoom(newZoom);
+                // Scale ImNodes style for zoom effect
+                ImNodes::GetStyle().NodePadding = ImVec2(8.0f * currentZoom, 8.0f * currentZoom);
+                ImNodes::GetStyle().NodeCornerRounding = 8.0f * currentZoom;
+                ImNodes::GetStyle().GridSpacing = 32.0f * currentZoom;
                 
-                std::cout << "[BTDebugger] Zoom: " << (int)(newZoom * 100) << "%" << std::endl;
+                std::cout << "[BTDebugger] Zoom: " << (int)(currentZoom * 100) << "%" << std::endl;
             }
         }
 
@@ -643,13 +652,24 @@ namespace Olympe
         if (!node || !layout)
             return;
 
-        // ✅ NEW: Debug position (only print once per entity)
-        if (m_printedNodeIds.find(node->id) == m_printedNodeIds.end())
+        // ✅ WORKING: Correct static variable name
+        static std::set<uint32_t> printedNodes;  // ✅ FIXED: Use static local instead of member
+        static bool needsClear = true;
+
+        // Clear set when new tree is loaded
+        if (needsClear)
+        {
+            printedNodes.clear();
+            needsClear = false;
+        }
+
+        // Debug position (only print once per tree load)
+        if (printedNodes.find(node->id) == printedNodes.end())
         {
             std::cout << "[RenderNode] Node " << node->id 
                       << " (" << node->name << ") at (" 
                       << (int)layout->position.x << ", " << (int)layout->position.y << ")" << std::endl;
-            m_printedNodeIds.insert(node->id);
+            printedNodes.insert(node->id);
         }
 
         // Set node position BEFORE BeginNode (ImNodes requirement)
