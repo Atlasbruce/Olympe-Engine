@@ -1,0 +1,184 @@
+{
+  "schema_version": 2,
+  "type": "BehaviorTree",
+  "blueprintType": "BehaviorTree",
+  "name": "GuardAITree",
+  "description": "Unified AI behavior tree for Guard NPC with Combat, Patrol, and Idle modes",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-02-14T00:00:00Z",
+    "lastModified": "2026-02-14T00:00:00Z",
+    "tags": ["AI", "BehaviorTree", "Guard", "Combat", "Patrol"]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "data": {
+    "rootNodeId": 1,
+    "nodes": [
+      {
+        "id": 1,
+        "name": "Root Selector",
+        "type": "Selector",
+        "position": { "x": 200.0, "y": 100.0 },
+        "children": [2, 10, 20],
+        "parameters": {}
+      },
+      
+      {
+        "id": 2,
+        "name": "Combat Mode Branch",
+        "type": "Sequence",
+        "position": { "x": 100.0, "y": 300.0 },
+        "children": [3, 4, 5, 6],
+        "parameters": {}
+      },
+      {
+        "id": 3,
+        "name": "Check AIMode == Combat",
+        "type": "Condition",
+        "position": { "x": 100.0, "y": 500.0 },
+        "conditionType": "CheckBlackboardValue",
+        "parameters": {
+          "key": "AIMode",
+          "operator": "Equals",
+          "value": 3
+        }
+      },
+      {
+        "id": 4,
+        "name": "Has Target?",
+        "type": "Condition",
+        "position": { "x": 100.0, "y": 700.0 },
+        "conditionType": "HasTarget",
+        "parameters": {}
+      },
+      {
+        "id": 5,
+        "name": "Move To Target",
+        "type": "Action",
+        "position": { "x": 100.0, "y": 900.0 },
+        "actionType": "SetMoveGoalToTarget",
+        "parameters": {}
+      },
+      {
+        "id": 6,
+        "name": "Attack Target",
+        "type": "Action",
+        "position": { "x": 100.0, "y": 1100.0 },
+        "actionType": "AttackIfClose",
+        "parameters": {}
+      },
+      
+      {
+        "id": 10,
+        "name": "Patrol Mode Branch",
+        "type": "Sequence",
+        "position": { "x": 400.0, "y": 300.0 },
+        "children": [11, 12, 13, 14],
+        "parameters": {}
+      },
+      {
+        "id": 11,
+        "name": "Check AIMode == Patrol",
+        "type": "Condition",
+        "position": { "x": 400.0, "y": 500.0 },
+        "conditionType": "CheckBlackboardValue",
+        "parameters": {
+          "key": "AIMode",
+          "operator": "Equals",
+          "value": 2
+        }
+      },
+      {
+        "id": 12,
+        "name": "Get Next Patrol Point",
+        "type": "Action",
+        "position": { "x": 400.0, "y": 700.0 },
+        "actionType": "PatrolPickNextPoint",
+        "parameters": {}
+      },
+      {
+        "id": 13,
+        "name": "Set Move Goal to Patrol Point",
+        "type": "Action",
+        "position": { "x": 400.0, "y": 900.0 },
+        "actionType": "SetMoveGoalToPatrolPoint",
+        "parameters": {}
+      },
+      {
+        "id": 14,
+        "name": "Move To Goal",
+        "type": "Action",
+        "position": { "x": 400.0, "y": 1100.0 },
+        "actionType": "MoveToGoal",
+        "parameters": {
+          "param1": 0.5
+        }
+      },
+      
+      {
+        "id": 20,
+        "name": "Idle/Wander Mode Branch",
+        "type": "Sequence",
+        "position": { "x": 700.0, "y": 300.0 },
+        "children": [21, 22, 23, 24, 25],
+        "parameters": {}
+      },
+      {
+        "id": 21,
+        "name": "Check AIMode == Idle",
+        "type": "Condition",
+        "position": { "x": 700.0, "y": 500.0 },
+        "conditionType": "CheckBlackboardValue",
+        "parameters": {
+          "key": "AIMode",
+          "operator": "Equals",
+          "value": 1
+        }
+      },
+      {
+        "id": 22,
+        "name": "Wait Random Time",
+        "type": "Action",
+        "position": { "x": 700.0, "y": 700.0 },
+        "actionType": "WaitRandomTime",
+        "parameters": {
+          "param1": 2.0,
+          "param2": 6.0
+        }
+      },
+      {
+        "id": 23,
+        "name": "Choose Random Point",
+        "type": "Action",
+        "position": { "x": 700.0, "y": 900.0 },
+        "actionType": "ChooseRandomNavigablePoint",
+        "parameters": {
+          "param1": 500.0,
+          "param2": 10.0
+        }
+      },
+      {
+        "id": 24,
+        "name": "Request Pathfinding",
+        "type": "Action",
+        "position": { "x": 700.0, "y": 1100.0 },
+        "actionType": "RequestPathfinding",
+        "parameters": {}
+      },
+      {
+        "id": 25,
+        "name": "Follow Path",
+        "type": "Action",
+        "position": { "x": 700.0, "y": 1300.0 },
+        "actionType": "FollowPath",
+        "parameters": {}
+      }
+    ]
+  }
+}
