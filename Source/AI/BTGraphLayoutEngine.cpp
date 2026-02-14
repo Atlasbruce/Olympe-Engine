@@ -489,8 +489,11 @@ namespace Olympe
 
         // Center parent on children
         // Note: Position values are in abstract units where each leaf occupies 1.0 unit.
-        // nextAvailableX tracks the next slot position, so childrenEndX is one past the last child.
-        // For correct midpoint, we subtract 1.0 to get the end position of the last child.
+        // childrenStartX = position where first child starts (e.g., 0)
+        // childrenEndX = nextAvailableX after all children placed (e.g., 2 for two children)
+        // Since nextAvailableX is one past the last child's position, we subtract 1.0
+        // Example: Two children at 0 and 1 -> midpoint = (0 + 2 - 1) / 2 = 0.5 ✓
+        // Example: One child at 0 -> midpoint = (0 + 1 - 1) / 2 = 0 ✓
         float childrenMidpoint = (childrenStartX + childrenEndX - 1.0f) / 2.0f;
         layout.position.x = childrenMidpoint;
 
@@ -603,12 +606,19 @@ namespace Olympe
         // Note: Positions are in abstract units where each node occupies 1.0 unit
         const float abstractNodeWidth = 1.0f;
         
+        // Calculate center-to-center distance
         float dx = layoutB.position.x - layoutA.position.x;
-        float currentDistance = std::abs(dx) - abstractNodeWidth;  // Distance between node edges
-
-        if (currentDistance < minDistance)
+        float centerDistance = std::abs(dx);
+        
+        // Minimum center-to-center distance needed = abstractNodeWidth + minDistance
+        float requiredCenterDistance = abstractNodeWidth + minDistance;
+        
+        if (centerDistance < requiredCenterDistance)
         {
-            float pushAmount = (minDistance - currentDistance) / 2.0f;
+            // Calculate how much total separation is needed
+            float totalPushNeeded = requiredCenterDistance - centerDistance;
+            // Each node moves half the distance
+            float pushAmount = totalPushNeeded / 2.0f;
 
             // Push nodes apart in the direction they're already separated
             // If B is to the right of A (dx > 0), push A left and B right
