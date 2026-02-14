@@ -42,8 +42,8 @@ namespace Olympe
         Vector position;                ///< Final position (x, y)
         int layer = 0;                  ///< Hierarchical layer (0 = root)
         int orderInLayer = 0;           ///< Order within the layer
-        float width = 120.0f;           ///< Node visual width
-        float height = 60.0f;           ///< Node visual height
+        float width = 200.0f;           ///< Node visual width (increased for readability)
+        float height = 100.0f;          ///< Node visual height (increased for readability)
     };
 
     /**
@@ -74,14 +74,14 @@ namespace Olympe
         /**
          * @brief Compute layout for a behavior tree
          * @param tree The behavior tree asset to layout
-         * @param nodeSpacingX Horizontal spacing between nodes
-         * @param nodeSpacingY Vertical spacing between layers
+         * @param nodeSpacingX Horizontal spacing between nodes (default: 400px for generous spacing)
+         * @param nodeSpacingY Vertical spacing between layers (default: 250px for generous spacing)
          * @return Vector of node layouts with computed positions
          */
         std::vector<BTNodeLayout> ComputeLayout(
             const BehaviorTreeAsset* tree,
-            float nodeSpacingX = 250.0f,
-            float nodeSpacingY = 150.0f
+            float nodeSpacingX = 400.0f,
+            float nodeSpacingY = 250.0f
         );
 
         /**
