@@ -23,6 +23,16 @@
 namespace Olympe
 {
     /**
+     * @enum BTLayoutDirection
+     * @brief Layout direction for behavior tree visualization
+     */
+    enum class BTLayoutDirection
+    {
+        TopToBottom,    ///< Traditional top-down layout (vertical)
+        LeftToRight     ///< Horizontal left-to-right layout
+    };
+
+    /**
      * @struct BTNodeLayout
      * @brief Layout information for a single behavior tree node
      */
@@ -48,6 +58,18 @@ namespace Olympe
     public:
         BTGraphLayoutEngine();
         ~BTGraphLayoutEngine() = default;
+
+        /**
+         * @brief Set layout direction
+         * @param direction Layout direction (TopToBottom or LeftToRight)
+         */
+        void SetLayoutDirection(BTLayoutDirection direction) { m_layoutDirection = direction; }
+
+        /**
+         * @brief Get current layout direction
+         * @return Current layout direction
+         */
+        BTLayoutDirection GetLayoutDirection() const { return m_layoutDirection; }
 
         /**
          * @brief Compute layout for a behavior tree
@@ -93,6 +115,9 @@ namespace Olympe
 
         // Helper: Calculate barycenter for a node
         float CalculateBarycenter(uint32_t nodeId, const std::vector<BTNodeLayout*>& neighbors) const;
+
+        // Layout configuration
+        BTLayoutDirection m_layoutDirection = BTLayoutDirection::TopToBottom;  ///< Default vertical
 
         // Computed layouts
         std::vector<BTNodeLayout> m_layouts;

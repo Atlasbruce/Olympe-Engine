@@ -45,10 +45,28 @@ namespace Olympe
         // Phase 5: Resolve collisions
         ResolveCollisions(nodeSpacingX);
 
-        // Assign Y coordinates based on layers
-        for (auto& layout : m_layouts)
+        // Assign final positions based on layout direction
+        if (m_layoutDirection == BTLayoutDirection::TopToBottom)
         {
-            layout.position.y = layout.layer * nodeSpacingY;
+            // Vertical layout (default): layers go top-to-bottom
+            for (auto& layout : m_layouts)
+            {
+                layout.position.y = layout.layer * nodeSpacingY;
+            }
+        }
+        else  // LeftToRight
+        {
+            // Horizontal layout: rotate 90° clockwise
+            // Layers become left-to-right, order becomes top-to-bottom
+            for (auto& layout : m_layouts)
+            {
+                float originalX = layout.position.x;
+                float layerX = layout.layer * nodeSpacingY;
+                
+                // Swap axes: X becomes Y (for sibling ordering), layer becomes X
+                layout.position.x = layerX;
+                layout.position.y = originalX;
+            }
         }
 
         return m_layouts;

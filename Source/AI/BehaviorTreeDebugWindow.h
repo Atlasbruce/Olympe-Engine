@@ -170,6 +170,7 @@ namespace Olympe
         // Graph view state
         bool m_imnodesInitialized = false;
         int m_imnodesEditorContext = -1;
+        BTLayoutDirection m_layoutDirection = BTLayoutDirection::TopToBottom;  ///< Current layout direction
 
         // Animation
         float m_pulseTimer = 0.0f;
