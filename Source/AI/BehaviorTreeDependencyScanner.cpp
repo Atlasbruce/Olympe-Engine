@@ -75,7 +75,7 @@ BehaviorTreeDependencyScanner::ScanPrefab(const PrefabBlueprint& prefab)
             compDef.componentType == "BehaviorTreeRuntime")
         {
             // Look for treePath property
-            const auto* treePathParam = compDef.GetParameter("treePath");
+            const auto* treePathParam = compDef.GetParameter("AITreePath");
             if (treePathParam && treePathParam->type == ComponentParameter::Type::String)
             {
                 std::string treePath = treePathParam->AsString();
