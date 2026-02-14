@@ -541,6 +541,9 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::RenderNode(const BTNode* node, const BTNodeLayout* layout, bool isCurrentNode)
     {
+        // Set node position BEFORE BeginNode (ImNodes requirement)
+        ImNodes::SetNodeGridSpacePos(node->id, ImVec2(layout->position.x, layout->position.y));
+
         ImNodes::BeginNode(node->id);
 
         // Node title bar
