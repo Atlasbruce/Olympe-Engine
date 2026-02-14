@@ -189,9 +189,9 @@ namespace Olympe
 
             // Get BT runtime data
             const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(entity);
-            info.treeId = btRuntime.treeAssetId;
+            info.treeId = btRuntime.AITreeAssetId;
             info.isActive = btRuntime.isActive;
-            info.currentNodeId = btRuntime.currentNodeIndex;
+            info.currentNodeId = btRuntime.AICurrentNodeIndex;
             info.lastStatus = static_cast<BTStatus>(btRuntime.lastStatus);
 
             // Get tree name - FIXED: Use enhanced lookup
@@ -459,16 +459,16 @@ namespace Olympe
         const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
         
         // FIXED: Use enhanced lookup
-        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.treeAssetId);
+        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
 
         if (!tree)
         {
             // More helpful error message
-            std::string path = BehaviorTreeManager::Get().GetTreePathFromId(btRuntime.treeAssetId);
+            std::string path = BehaviorTreeManager::Get().GetTreePathFromId(btRuntime.AITreeAssetId);
             
             ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Behavior Tree asset not found!");
             ImGui::Separator();
-            ImGui::Text("Tree ID: %u", btRuntime.treeAssetId);
+            ImGui::Text("Tree ID: %u", btRuntime.AITreeAssetId);
             
             if (!path.empty())
             {
@@ -541,12 +541,12 @@ namespace Olympe
         const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
         
         // FIXED: Use enhanced lookup
-        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.treeAssetId);
+        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
 
         if (!tree)
             return;
 
-        uint32_t currentNodeId = btRuntime.currentNodeIndex;
+        uint32_t currentNodeId = btRuntime.AICurrentNodeIndex;
 
         // Render all nodes
         for (const auto& node : tree->nodes)
@@ -753,9 +753,9 @@ namespace Olympe
         const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
         
         // FIXED: Use enhanced lookup
-        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.treeAssetId);
+        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
 
-        ImGui::Text("Tree ID: %u", btRuntime.treeAssetId);
+        ImGui::Text("Tree ID: %u", btRuntime.AITreeAssetId);
         
         if (tree)
         {
@@ -766,7 +766,7 @@ namespace Olympe
         {
             ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Tree: NOT FOUND");
             
-            std::string path = BehaviorTreeManager::Get().GetTreePathFromId(btRuntime.treeAssetId);
+            std::string path = BehaviorTreeManager::Get().GetTreePathFromId(btRuntime.AITreeAssetId);
             if (!path.empty())
             {
                 ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Expected: %s", path.c_str());
@@ -780,11 +780,11 @@ namespace Olympe
         
         ImGui::Separator();
 
-        ImGui::Text("Current Node ID: %u", btRuntime.currentNodeIndex);
+        ImGui::Text("Current Node ID: %u", btRuntime.AICurrentNodeIndex);
         
         if (tree)
         {
-            const BTNode* currentNode = tree->GetNode(btRuntime.currentNodeIndex);
+            const BTNode* currentNode = tree->GetNode(btRuntime.AICurrentNodeIndex);
             if (currentNode)
             {
                 ImGui::Text("Node Name: %s", currentNode->name.c_str());

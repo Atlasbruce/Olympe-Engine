@@ -157,14 +157,14 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     node.conditionParam = JsonHelper::GetFloat(params, "param", 0.0f);
                     
                     // Parse flexible parameters for conditions like CheckBlackboardValue
-                    for (auto& [key, value] : params.items())
+                    for (auto it = params.begin(); it != params.end(); ++it)
                     {
-                        if (value.is_string())
-                            node.stringParams[key] = value.get<std::string>();
-                        else if (value.is_number_integer())
-                            node.intParams[key] = value.get<int>();
-                        else if (value.is_number_float())
-                            node.floatParams[key] = value.get<float>();
+                        if (it.value().is_string())
+                            node.stringParams[it.key()] = it.value().get<std::string>();
+                        else if (it.value().is_number_integer())
+                            node.intParams[it.key()] = it.value().get<int>();
+                        else if (it.value().is_number_float())
+                            node.floatParams[it.key()] = it.value().get<float>();
                     }
                 }
                 else
