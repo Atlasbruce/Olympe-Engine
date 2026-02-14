@@ -1255,53 +1255,65 @@ bool PrefabFactory::InstantiateBehaviorTreeRuntime(EntityID entity, const Compon
     BehaviorTreeRuntime_data& btRuntime = World::Get().GetComponent<BehaviorTreeRuntime_data>(entity);
     
     // Extract behavior tree runtime parameters
-    if (def.HasParameter("treeAssetId"))
+    // Support both old and new property names for backward compatibility
+    
+    // Check for treeAssetId (old) or AITreeAssetId (new)
+    if (def.HasParameter("AITreeAssetId"))
     {
-        uint32_t oldId = btRuntime.treeAssetId;
-        btRuntime.treeAssetId = static_cast<uint32_t>(def.GetParameter("treeAssetId")->AsInt());
-        std::cerr << "[TRACE treeAssetId] Entity " << entity
-                  << " | PrefabFactory(treeAssetId param) -> changed from "
-                  << oldId << " to " << btRuntime.treeAssetId << std::endl;
+        btRuntime.AITreeAssetId = static_cast<uint32_t>(def.GetParameter("AITreeAssetId")->AsInt());
+        std::cerr << "[PrefabFactory] Entity " << entity << " AITreeAssetId set to " << btRuntime.AITreeAssetId << std::endl;
+    }
+    else if (def.HasParameter("treeAssetId"))
+    {
+        btRuntime.AITreeAssetId = static_cast<uint32_t>(def.GetParameter("treeAssetId")->AsInt());
+        std::cerr << "[PrefabFactory] Entity " << entity << " treeAssetId (old) set to " << btRuntime.AITreeAssetId << std::endl;
     }
     
-    if (def.HasParameter("treePath"))
+    // Check for treePath (old) or AITreePath (new)
+    std::string treePath;
+    if (def.HasParameter("AITreePath"))
+    {
+        treePath = def.GetParameter("AITreePath")->AsString();
+    }
+    else if (def.HasParameter("treePath"))
+    {
+        treePath = def.GetParameter("treePath")->AsString();
+    }
+    
+    if (!treePath.empty())
     {
         Identity_data* identity = nullptr;
 		if (World::Get().HasComponent<Identity_data>(entity))
             identity = &World::Get().GetComponent<Identity_data>(entity);
 
         // Map treePath -> treeId using the registry
-        std::string treePath = def.GetParameter("treePath")->AsString();
-        btRuntime.treePath = treePath; 
+        btRuntime.AITreePath = treePath; 
 
-        if (!treePath.empty())
+        uint32_t treeId = BehaviorTreeManager::Get().GetTreeIdFromPath(treePath);
+        btRuntime.AITreeAssetId = treeId;
+        
+		if (identity != nullptr)
+            std::cerr << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << identity->name << std::endl;
+        else
+			std::cerr << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << entity << std::endl;
+        
+        // Verify the tree is loaded
+        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTree(treeId);
+        if (!tree)
         {
-            uint32_t treeId = BehaviorTreeManager::Get().GetTreeIdFromPath(treePath);
-            uint32_t oldId = btRuntime.treeAssetId;
-            btRuntime.treeAssetId = treeId;
-            std::cerr << "[TRACE treeAssetId] Entity " << entity
-                      << " | PrefabFactory(treePath=" << treePath << ") -> changed from "
-                      << oldId << " to " << treeId << std::endl;
-			if (identity != nullptr)
-                std::cout << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << identity->name << "\n";
-            else
-				std::cout << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << entity << "\n";
-            
-            // Verify the tree is loaded
-            const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTree(treeId);
-            if (!tree)
-            {
-                std::cerr << "[PrefabFactory] WARNING: BehaviorTree not loaded: " << treePath 
-                          << " (ID=" << treeId << ") - this should not happen if dependencies were loaded correctly\n";
-            }
+            std::cerr << "[PrefabFactory] WARNING: BehaviorTree not loaded: " << treePath 
+                      << " (ID=" << treeId << ") - this should not happen if dependencies were loaded correctly" << std::endl;
         }
     }
     
     if (def.HasParameter("active"))
         btRuntime.isActive = def.GetParameter("active")->AsBool();
     
-    if (def.HasParameter("currentNodeIndex"))
-        btRuntime.currentNodeIndex = static_cast<uint32_t>(def.GetParameter("currentNodeIndex")->AsInt());
+    // Support both old and new property names for currentNodeIndex
+    if (def.HasParameter("AICurrentNodeIndex"))
+        btRuntime.AICurrentNodeIndex = static_cast<uint32_t>(def.GetParameter("AICurrentNodeIndex")->AsInt());
+    else if (def.HasParameter("currentNodeIndex"))
+        btRuntime.AICurrentNodeIndex = static_cast<uint32_t>(def.GetParameter("currentNodeIndex")->AsInt());
     
     // DO NOT call AddComponent() - component is already modified by reference
     return true;
