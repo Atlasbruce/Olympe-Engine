@@ -536,6 +536,65 @@ namespace Olympe
         // ImNodes editor
         ImNodes::BeginNodeEditor();
 
+        // ✅ NEW: Calculate graph bounding box for camera centering
+        if (!m_currentLayout.empty())
+        {
+            ImVec2 minPos(FLT_MAX, FLT_MAX);
+            ImVec2 maxPos(-FLT_MAX, -FLT_MAX);
+
+            for (const auto& layout : m_currentLayout)
+            {
+                float halfWidth = layout.width / 2.0f;
+                float halfHeight = layout.height / 2.0f;
+                
+                minPos.x = std::min(minPos.x, layout.position.x - halfWidth);
+                minPos.y = std::min(minPos.y, layout.position.y - halfHeight);
+                maxPos.x = std::max(maxPos.x, layout.position.x + halfWidth);
+                maxPos.y = std::max(maxPos.y, layout.position.y + halfHeight);
+            }
+
+            ImVec2 graphCenter((minPos.x + maxPos.x) / 2.0f, (minPos.y + maxPos.y) / 2.0f);
+            ImVec2 graphSize(maxPos.x - minPos.x, maxPos.y - minPos.y);
+
+            std::cout << "[BTDebugger] Graph bounds: (" << minPos.x << "," << minPos.y 
+                      << ") to (" << maxPos.x << "," << maxPos.y << ")" << std::endl;
+            std::cout << "[BTDebugger] Graph size: " << graphSize.x << "x" << graphSize.y << " pixels" << std::endl;
+            std::cout << "[BTDebugger] Graph center: (" << graphCenter.x << "," << graphCenter.y << ")" << std::endl;
+
+            // ✅ NEW: Center camera on first load
+            static bool firstLoad = true;
+            if (firstLoad)
+            {
+                // Center the camera on the graph
+                ImVec2 editorSize = ImGui::GetContentRegionAvail();
+                ImVec2 cameraOffset(
+                    graphCenter.x - editorSize.x / 2.0f,
+                    graphCenter.y - editorSize.y / 2.0f
+                );
+                
+                ImNodes::EditorContextResetPanning(cameraOffset);
+                
+                std::cout << "[BTDebugger] ✅ Camera centered on graph" << std::endl;
+                firstLoad = false;
+            }
+        }
+
+        // ✅ NEW: Mouse wheel zoom support
+        ImGuiIO& io = ImGui::GetIO();
+        if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered())
+        {
+            if (io.MouseWheel != 0.0f)
+            {
+                float currentZoom = ImNodes::EditorContextGetZoom();
+                float zoomDelta = io.MouseWheel * 0.1f;  // 10% per wheel notch
+                float newZoom = std::max(0.3f, std::min(3.0f, currentZoom + zoomDelta));
+                
+                ImNodes::EditorContextSetZoom(newZoom);
+                
+                std::cout << "[BTDebugger] Zoom: " << (int)(newZoom * 100) << "%" << std::endl;
+            }
+        }
+
         RenderBehaviorTreeGraph();
 
         ImNodes::EndNodeEditor();
@@ -579,6 +638,19 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::RenderNode(const BTNode* node, const BTNodeLayout* layout, bool isCurrentNode)
     {
+        if (!node || !layout)
+            return;
+
+        // ✅ NEW: Debug position (only print once per tree load)
+        static std::set<uint32_t> printedNodes;
+        if (printedNodes.find(node->id) == printedNodes.end())
+        {
+            std::cout << "[RenderNode] Node " << node->id 
+                      << " (" << node->name << ") at (" 
+                      << (int)layout->position.x << ", " << (int)layout->position.y << ")" << std::endl;
+            printedNodes.insert(node->id);
+        }
+
         // Set node position BEFORE BeginNode (ImNodes requirement)
         ImNodes::SetNodeGridSpacePos(node->id, ImVec2(layout->position.x, layout->position.y));
 
