@@ -43,7 +43,7 @@ namespace Olympe
         CalculateOptimalSpacing(tree, optimalSpacingX, optimalSpacingY);
 
         SYSTEM_LOG << "[BTGraphLayout] Using spacing: X=" << optimalSpacingX 
-                   << "px, Y=" << optimalSpacingY << "px" << std::endl;
+                   << "px, Y=" << optimalSpacingY << "px\n";
 
         // Phase 2: Initial ordering within layers
         InitialOrdering();
@@ -458,7 +458,7 @@ namespace Olympe
 
         SYSTEM_LOG << "[BTGraphLayout] Tree analysis: maxNodes=" << maxNodesInLayer 
                    << ", layers=" << numLayers 
-                   << ", maxNodeWidth=" << maxNodeWidth << "px" << std::endl;
+                   << ", maxNodeWidth=" << maxNodeWidth << "px\n";
     }
 
     float BTGraphLayoutEngine::CalculateNodeWidth(const BTNode* node) const
