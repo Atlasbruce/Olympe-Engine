@@ -194,7 +194,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
                     g_btDebugWindow->ToggleFloatingMode();
                     SYSTEM_LOG << "BT Debugger mode: " 
                               << (g_btDebugWindow->IsFloating() ? "Floating" : "Embedded") 
-                              << endl;
+                              << "\n";
                 }
                 else
                 {
@@ -202,7 +202,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
                     g_btDebugWindow->ToggleVisibility();
                     SYSTEM_LOG << "BT Runtime Debugger " 
                               << (g_btDebugWindow->IsVisible() ? "opened" : "closed") 
-                              << endl;
+                              << "\n";
                 }
             }
             return SDL_APP_CONTINUE;

@@ -17,6 +17,9 @@
 
 namespace Olympe
 {
+    // UI layout constants
+    constexpr float SPLITTER_WIDTH = 8.0f;
+
     BehaviorTreeDebugWindow::BehaviorTreeDebugWindow()
     {
     }
@@ -224,7 +227,7 @@ namespace Olympe
         ImGui::SameLine();
 
         // Splitter 1
-        ImGui::Button("##splitter1", ImVec2(8.0f, -1));
+        ImGui::Button("##splitter1", ImVec2(SPLITTER_WIDTH, -1));
         if (ImGui::IsItemActive())
         {
             m_leftPanelWidth += ImGui::GetIO().MouseDelta.x;
@@ -238,7 +241,7 @@ namespace Olympe
         ImGui::SameLine();
 
         // Middle panel (Node graph)
-        float middlePanelWidth = ImGui::GetContentRegionAvail().x - m_rightPanelWidth - 16.0f;
+        float middlePanelWidth = ImGui::GetContentRegionAvail().x - m_rightPanelWidth - (2 * SPLITTER_WIDTH);
         ImGui::BeginChild("MiddlePanel", ImVec2(middlePanelWidth, 0), true);
         RenderNodeGraphPanel();
         ImGui::EndChild();
@@ -246,7 +249,7 @@ namespace Olympe
         ImGui::SameLine();
 
         // Splitter 2
-        ImGui::Button("##splitter2", ImVec2(8.0f, -1));
+        ImGui::Button("##splitter2", ImVec2(SPLITTER_WIDTH, -1));
         if (ImGui::IsItemActive())
         {
             m_rightPanelWidth -= ImGui::GetIO().MouseDelta.x;
