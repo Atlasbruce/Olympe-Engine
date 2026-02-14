@@ -18,8 +18,8 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs">
-            Get Started - 5min ⏱️
+            to="/getting-started/quick-start">
+            Get Started →
           </Link>
         </div>
       </div>
@@ -41,23 +41,26 @@ export default function Home() {
               <div className="text--center padding-horiz--md">
                 <h3>🎮 ECS Architecture</h3>
                 <p>
-                  Built on Entity Component System for performance and flexibility
+                  Built on a powerful Entity-Component-System architecture for maximum flexibility
+                  and performance. Create complex game logic with modular, reusable components.
                 </p>
               </div>
             </div>
             <div className="col col--4">
               <div className="text--center padding-horiz--md">
-                <h3>🤖 Advanced AI</h3>
+                <h3>🗺️ Tiled Map Integration</h3>
                 <p>
-                  Behavior trees, pathfinding, and navigation systems included
+                  Seamlessly import maps from Tiled Map Editor with full support for layers,
+                  tilesets, objects, and custom properties. Design your worlds visually.
                 </p>
               </div>
             </div>
             <div className="col col--4">
               <div className="text--center padding-horiz--md">
-                <h3>🗺️ Tiled Integration</h3>
+                <h3>🤖 Behavior Trees & Navigation</h3>
                 <p>
-                  Full support for Tiled maps with multiple projections
+                  Advanced AI with behavior trees and A* pathfinding. Create intelligent NPCs
+                  with complex decision-making and smooth navigation.
                 </p>
               </div>
             </div>
