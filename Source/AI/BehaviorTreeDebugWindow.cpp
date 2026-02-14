@@ -1197,10 +1197,15 @@ namespace Olympe
         }
     }
 
+    float BehaviorTreeDebugWindow::GetSafeZoom() const
+    {
+        // Ensure zoom is always within valid bounds
+        return std::max(MIN_ZOOM, std::min(MAX_ZOOM, m_currentZoom));
+    }
+
     ImVec2 BehaviorTreeDebugWindow::CalculatePanOffset(const ImVec2& graphCenter, const ImVec2& viewportSize) const
     {
-        // Safety: Ensure zoom is valid (should always be MIN_ZOOM-MAX_ZOOM, but defensive check)
-        float safeZoom = std::max(MIN_ZOOM, std::min(MAX_ZOOM, m_currentZoom));
+        float safeZoom = GetSafeZoom();
         
         return ImVec2(
             -graphCenter.x * safeZoom + viewportSize.x / 2.0f,
@@ -1356,8 +1361,7 @@ namespace Olympe
         ImVec2 panOffset = ImNodes::EditorContextGetPanning();
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
         
-        // Safety: ensure zoom is valid before division
-        float safeZoom = std::max(MIN_ZOOM, std::min(MAX_ZOOM, m_currentZoom));
+        float safeZoom = GetSafeZoom();
         
         float viewMinX = minimapMin.x + (-panOffset.x / safeZoom - graphMin.x) * scale;
         float viewMinY = minimapMin.y + (-panOffset.y / safeZoom - graphMin.y) * scale;
