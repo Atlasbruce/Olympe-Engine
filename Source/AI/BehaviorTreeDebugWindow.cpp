@@ -17,6 +17,10 @@
 
 namespace Olympe
 {
+    // Camera zoom constants
+    constexpr float MIN_ZOOM = 0.3f;
+    constexpr float MAX_ZOOM = 3.0f;
+
     BehaviorTreeDebugWindow::BehaviorTreeDebugWindow()
     {
     }
@@ -662,7 +666,7 @@ namespace Olympe
             if (io.MouseWheel != 0.0f)
             {
                 float zoomDelta = io.MouseWheel * 0.1f;  // 10% per wheel notch
-                m_currentZoom = std::max(0.3f, std::min(3.0f, m_currentZoom + zoomDelta));
+                m_currentZoom = std::max(MIN_ZOOM, std::min(MAX_ZOOM, m_currentZoom + zoomDelta));
                 ApplyZoomToStyle();
                 
                 std::cout << "[BTDebugger] Zoom: " << (int)(m_currentZoom * 100) << "%" << std::endl;
@@ -693,13 +697,13 @@ namespace Olympe
             // + / - : Zoom in/out (Note: '+' requires Shift+Equal on most keyboards)
             if ((ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::IsKeyPressed(ImGuiKey_KeypadAdd)) && !ctrlPressed)
             {
-                m_currentZoom = std::min(3.0f, m_currentZoom * 1.2f);
+                m_currentZoom = std::min(MAX_ZOOM, m_currentZoom * 1.2f);
                 ApplyZoomToStyle();
             }
             
             if ((ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract)) && !ctrlPressed)
             {
-                m_currentZoom = std::max(0.3f, m_currentZoom / 1.2f);
+                m_currentZoom = std::max(MIN_ZOOM, m_currentZoom / 1.2f);
                 ApplyZoomToStyle();
             }
         }
@@ -1195,8 +1199,8 @@ namespace Olympe
 
     ImVec2 BehaviorTreeDebugWindow::CalculatePanOffset(const ImVec2& graphCenter, const ImVec2& viewportSize) const
     {
-        // Safety: Ensure zoom is valid (should always be 0.3-3.0, but defensive check)
-        float safeZoom = std::max(0.3f, std::min(3.0f, m_currentZoom));
+        // Safety: Ensure zoom is valid (should always be MIN_ZOOM-MAX_ZOOM, but defensive check)
+        float safeZoom = std::max(MIN_ZOOM, std::min(MAX_ZOOM, m_currentZoom));
         
         return ImVec2(
             -graphCenter.x * safeZoom + viewportSize.x / 2.0f,
@@ -1229,7 +1233,7 @@ namespace Olympe
         float targetZoom = std::min(zoomX, zoomY) * 0.9f; // 90% for margins
         
         // 3. Apply the zoom
-        m_currentZoom = std::max(0.3f, std::min(3.0f, targetZoom));
+        m_currentZoom = std::max(MIN_ZOOM, std::min(MAX_ZOOM, targetZoom));
         ApplyZoomToStyle();
         
         // 4. Center the view
@@ -1353,7 +1357,7 @@ namespace Olympe
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
         
         // Safety: ensure zoom is valid before division
-        float safeZoom = std::max(0.3f, std::min(3.0f, m_currentZoom));
+        float safeZoom = std::max(MIN_ZOOM, std::min(MAX_ZOOM, m_currentZoom));
         
         float viewMinX = minimapMin.x + (-panOffset.x / safeZoom - graphMin.x) * scale;
         float viewMinY = minimapMin.y + (-panOffset.y / safeZoom - graphMin.y) * scale;
@@ -1369,11 +1373,11 @@ namespace Olympe
             2.0f
         );
         
-        // Interaction: click to center (only if scale and zoom are valid)
+        // Interaction: click to center (only if scale is valid)
         ImGui::SetCursorPos(minimapPos);
         ImGui::InvisibleButton("##minimap", minimapSize);
         
-        if (ImGui::IsItemClicked() && scale > 0.0f && m_currentZoom > 0.0f)
+        if (ImGui::IsItemClicked() && scale > 0.0f)
         {
             ImVec2 clickPos = ImGui::GetMousePos();
             float clickX = (clickPos.x - minimapMin.x) / scale + graphMin.x;
