@@ -134,9 +134,9 @@ namespace Olympe
         
         // Camera helper utilities
         void ApplyZoomToStyle();
-        void GetGraphBounds(ImVec2& outMin, ImVec2& outMax) const;
+        void GetGraphBounds(Vector& outMin, Vector& outMax) const;
         float GetSafeZoom() const;
-        ImVec2 CalculatePanOffset(const ImVec2& graphCenter, const ImVec2& viewportSize) const;
+        Vector CalculatePanOffset(const Vector& graphCenter, const Vector& viewportSize) const;
 
         // Data management
         std::vector<EntityDebugInfo> m_entities;

@@ -1183,10 +1183,10 @@ namespace Olympe
         ImNodes::GetStyle().GridSpacing = 32.0f * m_currentZoom;
     }
 
-    void BehaviorTreeDebugWindow::GetGraphBounds(ImVec2& outMin, ImVec2& outMax) const
+    void BehaviorTreeDebugWindow::GetGraphBounds(Vector& outMin, Vector& outMax) const
     {
-        outMin = ImVec2(FLT_MAX, FLT_MAX);
-        outMax = ImVec2(-FLT_MAX, -FLT_MAX);
+        outMin = Vector(FLT_MAX, FLT_MAX);
+        outMax = Vector(-FLT_MAX, -FLT_MAX);
         
         for (const auto& layout : m_currentLayout)
         {
@@ -1203,11 +1203,11 @@ namespace Olympe
         return std::max(MIN_ZOOM, std::min(MAX_ZOOM, m_currentZoom));
     }
 
-    ImVec2 BehaviorTreeDebugWindow::CalculatePanOffset(const ImVec2& graphCenter, const ImVec2& viewportSize) const
+    Vector BehaviorTreeDebugWindow::CalculatePanOffset(const Vector& graphCenter, const Vector& viewportSize) const
     {
         float safeZoom = GetSafeZoom();
         
-        return ImVec2(
+        return Vector(
             -graphCenter.x * safeZoom + viewportSize.x / 2.0f,
             -graphCenter.y * safeZoom + viewportSize.y / 2.0f
         );
@@ -1219,11 +1219,12 @@ namespace Olympe
             return;
 
         // 1. Calculate the bounds of the graph
-        ImVec2 minPos, maxPos;
+        Vector minPos, maxPos;
         GetGraphBounds(minPos, maxPos);
         
-        ImVec2 graphSize(maxPos.x - minPos.x, maxPos.y - minPos.y);
-        ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+        Vector graphSize(maxPos.x - minPos.x, maxPos.y - minPos.y);
+        ImVec2 imvectmp = ImGui::GetContentRegionAvail();
+        Vector viewportSize = Vector(imvectmp.x, imvectmp.y);
         
         // 2. Calculate the zoom needed (protect against division by zero)
         if (graphSize.x <= 0.0f || graphSize.y <= 0.0f)
@@ -1242,10 +1243,10 @@ namespace Olympe
         ApplyZoomToStyle();
         
         // 4. Center the view
-        ImVec2 graphCenter((minPos.x + maxPos.x) / 2.0f, (minPos.y + maxPos.y) / 2.0f);
-        ImVec2 panOffset = CalculatePanOffset(graphCenter, viewportSize);
+        Vector graphCenter((minPos.x + maxPos.x) / 2.0f, (minPos.y + maxPos.y) / 2.0f);
+        Vector panOffset = CalculatePanOffset(graphCenter, viewportSize);
         
-        ImNodes::EditorContextResetPanning(panOffset);
+        ImNodes::EditorContextResetPanning(ImVec2(panOffset.x, panOffset.y));
         
         std::cout << "[BTDebugger] Fit to view: zoom=" << (int)(m_currentZoom * 100) 
                   << "%, center=(" << (int)graphCenter.x << "," << (int)graphCenter.y << ")" << std::endl;
@@ -1256,15 +1257,16 @@ namespace Olympe
         if (m_currentLayout.empty())
             return;
 
-        ImVec2 minPos, maxPos;
+        Vector minPos, maxPos;
         GetGraphBounds(minPos, maxPos);
 
-        ImVec2 graphCenter((minPos.x + maxPos.x) / 2.0f, (minPos.y + maxPos.y) / 2.0f);
-        ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+        Vector graphCenter((minPos.x + maxPos.x) / 2.0f, (minPos.y + maxPos.y) / 2.0f);
+        ImVec2 imvectmp = ImGui::GetContentRegionAvail();
+        Vector viewportSize = Vector(imvectmp.x, imvectmp.y);
 
-        ImVec2 panOffset = CalculatePanOffset(graphCenter, viewportSize);
+        Vector panOffset = CalculatePanOffset(graphCenter, viewportSize);
 
-        ImNodes::EditorContextResetPanning(panOffset);
+        ImNodes::EditorContextResetPanning(ImVec2(panOffset.x, panOffset.y));
         
         std::cout << "[BTDebugger] Centered view on graph (" << (int)graphCenter.x 
                   << ", " << (int)graphCenter.y << ")" << std::endl;
@@ -1310,10 +1312,10 @@ namespace Olympe
         );
         
         // Calculate the bounds of the graph
-        ImVec2 graphMin, graphMax;
+        Vector graphMin, graphMax;
         GetGraphBounds(graphMin, graphMax);
         
-        ImVec2 graphSize(graphMax.x - graphMin.x, graphMax.y - graphMin.y);
+        Vector graphSize(graphMax.x - graphMin.x, graphMax.y - graphMin.y);
         
         // Scale for minimap (protect against division by zero)
         if (graphSize.x <= 0.0f || graphSize.y <= 0.0f)
@@ -1386,9 +1388,9 @@ namespace Olympe
             ImVec2 clickPos = ImGui::GetMousePos();
             float clickX = (clickPos.x - minimapMin.x) / scale + graphMin.x;
             float clickY = (clickPos.y - minimapMin.y) / scale + graphMin.y;
-            
-            ImVec2 newPan = CalculatePanOffset(ImVec2(clickX, clickY), viewportSize);
-            ImNodes::EditorContextResetPanning(newPan);
+            Vector clickPosVec(clickX, clickY);
+            Vector newPan = CalculatePanOffset(clickPosVec, Vector(viewportSize.x, viewportSize.y));
+            ImNodes::EditorContextResetPanning(ImVec2(newPan.x, newPan.y));
         }
         
         // Label
