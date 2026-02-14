@@ -1352,10 +1352,13 @@ namespace Olympe
         ImVec2 panOffset = ImNodes::EditorContextGetPanning();
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
         
-        float viewMinX = minimapMin.x + (-panOffset.x / m_currentZoom - graphMin.x) * scale;
-        float viewMinY = minimapMin.y + (-panOffset.y / m_currentZoom - graphMin.y) * scale;
-        float viewMaxX = viewMinX + (viewportSize.x / m_currentZoom) * scale;
-        float viewMaxY = viewMinY + (viewportSize.y / m_currentZoom) * scale;
+        // Safety: ensure zoom is valid before division
+        float safeZoom = std::max(0.3f, std::min(3.0f, m_currentZoom));
+        
+        float viewMinX = minimapMin.x + (-panOffset.x / safeZoom - graphMin.x) * scale;
+        float viewMinY = minimapMin.y + (-panOffset.y / safeZoom - graphMin.y) * scale;
+        float viewMaxX = viewMinX + (viewportSize.x / safeZoom) * scale;
+        float viewMaxY = viewMinY + (viewportSize.y / safeZoom) * scale;
         
         drawList->AddRect(
             ImVec2(viewMinX, viewMinY),
@@ -1366,11 +1369,11 @@ namespace Olympe
             2.0f
         );
         
-        // Interaction: click to center
+        // Interaction: click to center (only if scale and zoom are valid)
         ImGui::SetCursorPos(minimapPos);
         ImGui::InvisibleButton("##minimap", minimapSize);
         
-        if (ImGui::IsItemClicked() && scale > 0.0f)
+        if (ImGui::IsItemClicked() && scale > 0.0f && m_currentZoom > 0.0f)
         {
             ImVec2 clickPos = ImGui::GetMousePos();
             float clickX = (clickPos.x - minimapMin.x) / scale + graphMin.x;
