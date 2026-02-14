@@ -312,7 +312,7 @@ void AIStateTransitionSystem::Process()
 void AIStateTransitionSystem::UpdateAIState(EntityID entity)
 {
     AIState_data& state = World::Get().GetComponent<AIState_data>(entity);
-    const AIBlackboard_data& blackboard = World::Get().GetComponent<AIBlackboard_data>(entity);
+    AIBlackboard_data& blackboard = World::Get().GetComponent<AIBlackboard_data>(entity);
     
     state.timeInCurrentMode += GameEngine::fDt;
     
@@ -415,39 +415,27 @@ void AIStateTransitionSystem::UpdateAIState(EntityID entity)
         state.currentMode = newMode;
         state.timeInCurrentMode = 0.0f;
         
-        // Update behavior tree based on new mode
+        // IMPORTANT: Restart tree execution when mode changes
+        // The unified BT will handle mode-specific behavior via CheckBlackboardValue conditions
         if (World::Get().HasComponent<BehaviorTreeRuntime_data>(entity))
         {
             BehaviorTreeRuntime_data& btRuntime = World::Get().GetComponent<BehaviorTreeRuntime_data>(entity);
-
-            uint32_t oldTreeId = btRuntime.treeAssetId;
-
-            /* DEPRECATE tree asset ID hardcoded changes */
-            // Map AI mode to behavior tree ID
-            // Tree IDs: 1 = Idle, 2 = Patrol, 3 = Combat, 4 = Flee, 5 = Investigate
-           /* switch (newMode)
+            
+            // Handle Dead state - disable tree execution
+            if (newMode == AIMode::Dead)
             {
-                case AIMode::Idle:        btRuntime.treeAssetId = 1; break;
-                case AIMode::Patrol:      btRuntime.treeAssetId = 2; break;
-                case AIMode::Combat:      btRuntime.treeAssetId = 3; break;
-                case AIMode::Flee:        btRuntime.treeAssetId = 4; break;
-                case AIMode::Investigate: btRuntime.treeAssetId = 5; break;
-                case AIMode::Dead:        btRuntime.isActive = false; break;
+                btRuntime.isActive = false;
             }
-
-            // TRACE: Log when treeAssetId is overwritten (especially to 3)
-            if (btRuntime.treeAssetId != oldTreeId)
-            {
-                std::cerr << "[TRACE treeAssetId] Entity " << entity
-                          << " | HFSM mode change -> treeAssetId OVERWRITTEN from "
-                          << oldTreeId << " to " << btRuntime.treeAssetId
-                          << " (treePath=" << btRuntime.treePath << ")"
-                          << std::endl;
-            }
-            */
+            
+            // DO NOT change AITreeAssetId here! It's set once from the prefab.
+            // The unified BT handles all modes internally via condition checks.
             btRuntime.needsRestart = true;
         }
     }
+    
+    // SYNC: Always sync AIMode to blackboard for BT condition checks
+    // This allows the BT to check "AIMode == 3" (Combat) etc.
+    blackboard.AIMode = static_cast<int>(state.currentMode);
 }
 
 // --- BehaviorTreeSystem Implementation ---
@@ -495,21 +483,21 @@ void BehaviorTreeSystem::Process()
             // Get the behavior tree asset
             const BehaviorTreeAsset* tree = nullptr;
 
-            if (!btRuntime.treePath.empty())
+            if (!btRuntime.AITreePath.empty())
             {
                 // Load by path (preferred method)
-                tree = BehaviorTreeManager::Get().GetTreeByPath(btRuntime.treePath);
+                tree = BehaviorTreeManager::Get().GetTreeByPath(btRuntime.AITreePath);
 
                 if (!tree)
                 {
                     std::cerr << "[BehaviorTreeSystem] WARNING: Tree not found: "
-                        << btRuntime.treePath << " for entity " << identity.name << std::endl;
+                        << btRuntime.AITreePath << " for entity " << identity.name << std::endl;
                 }
             }
-            else if (btRuntime.treeAssetId != 0)
+            else if (btRuntime.AITreeAssetId != 0)
             {
                 // Fallback to ID lookup
-                tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.treeAssetId);
+                tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
             }
 
             if (!tree)
@@ -521,17 +509,17 @@ void BehaviorTreeSystem::Process()
             // Restart tree if needed
             if (btRuntime.needsRestart)
             {
-                btRuntime.currentNodeIndex = tree->rootNodeId;
+                btRuntime.AICurrentNodeIndex = tree->rootNodeId;
                 btRuntime.needsRestart = false;
             }
             
             // Get the current node
-            const BTNode* node = tree->GetNode(btRuntime.currentNodeIndex);
+            const BTNode* node = tree->GetNode(btRuntime.AICurrentNodeIndex);
             if (!node)
             {
                 // Invalid node - restart from root
-                btRuntime.currentNodeIndex = tree->rootNodeId;
-                node = tree->GetNode(btRuntime.currentNodeIndex);
+                btRuntime.AICurrentNodeIndex = tree->rootNodeId;
+                node = tree->GetNode(btRuntime.AICurrentNodeIndex);
             }
             
             if (node)
@@ -573,7 +561,7 @@ void BehaviorTreeSystem::Process()
                         }
                         
                         SYSTEM_LOG << "BT[Entity " << entity << "]: Mode=" << modeName 
-                                   << ", Tree=" << btRuntime.treeAssetId
+                                   << ", Tree=" << btRuntime.AITreeAssetId
                                    << ", Node=" << node->name 
                                    << ", Status=" << statusName;
                         
