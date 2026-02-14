@@ -495,6 +495,41 @@ namespace Olympe
             return;
         }
 
+        // Layout direction toggle
+        ImGui::Text("Layout:");
+        ImGui::SameLine();
+        
+        static int layoutMode = 0;  // 0 = Vertical, 1 = Horizontal
+        
+        bool layoutChanged = false;
+        if (ImGui::RadioButton("Vertical", &layoutMode, 0))
+        {
+            layoutChanged = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Horizontal", &layoutMode, 1))
+        {
+            layoutChanged = true;
+        }
+        
+        // Update layout direction if changed
+        if (layoutChanged)
+        {
+            if (layoutMode == 1)
+            {
+                m_layoutEngine.SetLayoutDirection(BTLayoutDirection::LeftToRight);
+            }
+            else
+            {
+                m_layoutEngine.SetLayoutDirection(BTLayoutDirection::TopToBottom);
+            }
+            
+            // Recompute layout with new direction
+            m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY);
+        }
+        
+        ImGui::Separator();
+
         // ImNodes editor
         ImNodes::BeginNodeEditor();
 
