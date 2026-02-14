@@ -140,6 +140,8 @@ Contributions are welcome! Please see our [Contributing Guide](https://atlasbruc
 - Code style conventions
 - Pull request process
 
+**For AI-assisted development:** Please review [**Copilot Instructions**](.github/COPILOT_INSTRUCTIONS.md) before generating code. This ensures compatibility with our C++14 standard, ImGui/ImNodes versions, and existing code patterns.
+
 ### Documentation Standards
 
 When contributing code, please add Doxygen comments:
