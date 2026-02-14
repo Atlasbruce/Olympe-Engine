@@ -419,10 +419,13 @@ void AIStateTransitionSystem::UpdateAIState(EntityID entity)
         if (World::Get().HasComponent<BehaviorTreeRuntime_data>(entity))
         {
             BehaviorTreeRuntime_data& btRuntime = World::Get().GetComponent<BehaviorTreeRuntime_data>(entity);
-            
+
+            uint32_t oldTreeId = btRuntime.treeAssetId;
+
+            /* DEPRECATE tree asset ID hardcoded changes */
             // Map AI mode to behavior tree ID
             // Tree IDs: 1 = Idle, 2 = Patrol, 3 = Combat, 4 = Flee, 5 = Investigate
-            switch (newMode)
+           /* switch (newMode)
             {
                 case AIMode::Idle:        btRuntime.treeAssetId = 1; break;
                 case AIMode::Patrol:      btRuntime.treeAssetId = 2; break;
@@ -431,7 +434,17 @@ void AIStateTransitionSystem::UpdateAIState(EntityID entity)
                 case AIMode::Investigate: btRuntime.treeAssetId = 5; break;
                 case AIMode::Dead:        btRuntime.isActive = false; break;
             }
-            
+
+            // TRACE: Log when treeAssetId is overwritten (especially to 3)
+            if (btRuntime.treeAssetId != oldTreeId)
+            {
+                std::cerr << "[TRACE treeAssetId] Entity " << entity
+                          << " | HFSM mode change -> treeAssetId OVERWRITTEN from "
+                          << oldTreeId << " to " << btRuntime.treeAssetId
+                          << " (treePath=" << btRuntime.treePath << ")"
+                          << std::endl;
+            }
+            */
             btRuntime.needsRestart = true;
         }
     }

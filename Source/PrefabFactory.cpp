@@ -1256,7 +1256,13 @@ bool PrefabFactory::InstantiateBehaviorTreeRuntime(EntityID entity, const Compon
     
     // Extract behavior tree runtime parameters
     if (def.HasParameter("treeAssetId"))
+    {
+        uint32_t oldId = btRuntime.treeAssetId;
         btRuntime.treeAssetId = static_cast<uint32_t>(def.GetParameter("treeAssetId")->AsInt());
+        std::cerr << "[TRACE treeAssetId] Entity " << entity
+                  << " | PrefabFactory(treeAssetId param) -> changed from "
+                  << oldId << " to " << btRuntime.treeAssetId << std::endl;
+    }
     
     if (def.HasParameter("treePath"))
     {
@@ -1271,7 +1277,11 @@ bool PrefabFactory::InstantiateBehaviorTreeRuntime(EntityID entity, const Compon
         if (!treePath.empty())
         {
             uint32_t treeId = BehaviorTreeManager::Get().GetTreeIdFromPath(treePath);
+            uint32_t oldId = btRuntime.treeAssetId;
             btRuntime.treeAssetId = treeId;
+            std::cerr << "[TRACE treeAssetId] Entity " << entity
+                      << " | PrefabFactory(treePath=" << treePath << ") -> changed from "
+                      << oldId << " to " << treeId << std::endl;
 			if (identity != nullptr)
                 std::cout << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << identity->name << "\n";
             else
