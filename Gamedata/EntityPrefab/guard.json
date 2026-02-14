@@ -97,7 +97,7 @@
       {
         "type": "BehaviorTreeRuntime_data",
         "properties": {
-          "AITreePath": "Blueprints/AI/guard_ai.json",
+          "AITreePath": "Blueprints/AI/npc_wander_ai.json",
           "active": true
         }
       },
