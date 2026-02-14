@@ -4,12 +4,16 @@
  */
 
 #include "BTGraphLayoutEngine.h"
+#include "../system/system_utils.h"
 #include <queue>
 #include <algorithm>
 #include <cmath>
 
 namespace Olympe
 {
+    // Character width estimation for node sizing
+    constexpr float PIXELS_PER_CHARACTER = 8.0f;
+
     BTGraphLayoutEngine::BTGraphLayoutEngine()
     {
     }
@@ -38,8 +42,8 @@ namespace Olympe
         float optimalSpacingY = nodeSpacingY;
         CalculateOptimalSpacing(tree, optimalSpacingX, optimalSpacingY);
 
-        std::cout << "[BTGraphLayout] Using spacing: X=" << optimalSpacingX 
-                  << "px, Y=" << optimalSpacingY << "px" << std::endl;
+        SYSTEM_LOG << "[BTGraphLayout] Using spacing: X=" << optimalSpacingX 
+                   << "px, Y=" << optimalSpacingY << "px" << std::endl;
 
         // Phase 2: Initial ordering within layers
         InitialOrdering();
@@ -452,9 +456,9 @@ namespace Olympe
         // Clamp to reasonable range (180-300px)
         outSpacingY = std::max(180.0f, std::min(outSpacingY, 300.0f));
 
-        std::cout << "[BTGraphLayout] Tree analysis: maxNodes=" << maxNodesInLayer 
-                  << ", layers=" << numLayers 
-                  << ", maxNodeWidth=" << maxNodeWidth << "px" << std::endl;
+        SYSTEM_LOG << "[BTGraphLayout] Tree analysis: maxNodes=" << maxNodesInLayer 
+                   << ", layers=" << numLayers 
+                   << ", maxNodeWidth=" << maxNodeWidth << "px" << std::endl;
     }
 
     float BTGraphLayoutEngine::CalculateNodeWidth(const BTNode* node) const
@@ -465,8 +469,8 @@ namespace Olympe
         // Base width
         float baseWidth = 120.0f;
 
-        // Estimate text width (approximate: 8 pixels per character)
-        float estimatedTextWidth = node->name.length() * 8.0f;
+        // Estimate text width using character width constant
+        float estimatedTextWidth = node->name.length() * PIXELS_PER_CHARACTER;
 
         // Add padding for node border and spacing
         float padding = 40.0f;

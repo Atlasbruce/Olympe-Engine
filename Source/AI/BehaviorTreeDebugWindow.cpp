@@ -131,6 +131,12 @@ namespace Olympe
             RenderEmbeddedLayout();
         }
 
+        // Handle ESC key to close window
+        if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+        {
+            m_isVisible = false;
+        }
+
         ImGui::End();
     }
 
@@ -203,10 +209,6 @@ namespace Olympe
         if (ImGui::IsKeyPressed(ImGuiKey_F5))
         {
             RefreshEntityList();
-        }
-        if (ImGui::IsKeyPressed(ImGuiKey_Escape))
-        {
-            m_isVisible = false;
         }
     }
 
