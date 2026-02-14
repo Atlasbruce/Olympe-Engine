@@ -1261,12 +1261,12 @@ bool PrefabFactory::InstantiateBehaviorTreeRuntime(EntityID entity, const Compon
     if (def.HasParameter("AITreeAssetId"))
     {
         btRuntime.AITreeAssetId = static_cast<uint32_t>(def.GetParameter("AITreeAssetId")->AsInt());
-        std::cout << "[PrefabFactory] Entity " << entity << " AITreeAssetId set to " << btRuntime.AITreeAssetId << std::endl;
+        std::cerr << "[PrefabFactory] Entity " << entity << " AITreeAssetId set to " << btRuntime.AITreeAssetId << std::endl;
     }
     else if (def.HasParameter("treeAssetId"))
     {
         btRuntime.AITreeAssetId = static_cast<uint32_t>(def.GetParameter("treeAssetId")->AsInt());
-        std::cout << "[PrefabFactory] Entity " << entity << " treeAssetId (old) set to " << btRuntime.AITreeAssetId << std::endl;
+        std::cerr << "[PrefabFactory] Entity " << entity << " treeAssetId (old) set to " << btRuntime.AITreeAssetId << std::endl;
     }
     
     // Check for treePath (old) or AITreePath (new)
@@ -1293,16 +1293,16 @@ bool PrefabFactory::InstantiateBehaviorTreeRuntime(EntityID entity, const Compon
         btRuntime.AITreeAssetId = treeId;
         
 		if (identity != nullptr)
-            std::cout << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << identity->name << "\n";
+            std::cerr << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << identity->name << std::endl;
         else
-			std::cout << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << entity << "\n";
+			std::cerr << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << entity << std::endl;
         
         // Verify the tree is loaded
         const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTree(treeId);
         if (!tree)
         {
             std::cerr << "[PrefabFactory] WARNING: BehaviorTree not loaded: " << treePath 
-                      << " (ID=" << treeId << ") - this should not happen if dependencies were loaded correctly\n";
+                      << " (ID=" << treeId << ") - this should not happen if dependencies were loaded correctly" << std::endl;
         }
     }
     

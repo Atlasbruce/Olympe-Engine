@@ -300,6 +300,11 @@ void AIStateTransitionSystem::Process()
     {
         try
         {
+            // Always sync AIMode to blackboard first (ensures initial sync)
+            AIState_data& state = World::Get().GetComponent<AIState_data>(entity);
+            AIBlackboard_data& blackboard = World::Get().GetComponent<AIBlackboard_data>(entity);
+            blackboard.AIMode = static_cast<int>(state.currentMode);
+            
             UpdateAIState(entity);
         }
         catch (const std::exception& e)
@@ -432,10 +437,7 @@ void AIStateTransitionSystem::UpdateAIState(EntityID entity)
             btRuntime.needsRestart = true;
         }
     }
-    
-    // SYNC: Always sync AIMode to blackboard for BT condition checks
-    // This allows the BT to check "AIMode == 3" (Combat) etc.
-    blackboard.AIMode = static_cast<int>(state.currentMode);
+    // Note: AIMode sync to blackboard is now done at start of Process() for all entities
 }
 
 // --- BehaviorTreeSystem Implementation ---
