@@ -184,10 +184,26 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
         {
             if (g_btDebugWindow)
             {
-                g_btDebugWindow->ToggleVisibility();
-                SYSTEM_LOG << "BT Runtime Debugger " 
-                          << (g_btDebugWindow->IsVisible() ? "opened" : "closed") 
-                          << endl;
+                // Check if Ctrl is pressed
+                SDL_Keymod modifiers = SDL_GetModState();
+                bool ctrlPressed = (modifiers & SDL_KMOD_CTRL) != 0;
+                
+                if (ctrlPressed && g_btDebugWindow->IsVisible())
+                {
+                    // Ctrl+F10: Toggle floating mode (only if window is open)
+                    g_btDebugWindow->ToggleFloatingMode();
+                    SYSTEM_LOG << "BT Debugger mode: " 
+                              << (g_btDebugWindow->IsFloating() ? "Floating" : "Embedded") 
+                              << endl;
+                }
+                else
+                {
+                    // F10: Toggle window visibility
+                    g_btDebugWindow->ToggleVisibility();
+                    SYSTEM_LOG << "BT Runtime Debugger " 
+                              << (g_btDebugWindow->IsVisible() ? "opened" : "closed") 
+                              << endl;
+                }
             }
             return SDL_APP_CONTINUE;
         }

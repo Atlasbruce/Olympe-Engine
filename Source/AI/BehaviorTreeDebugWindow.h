@@ -94,6 +94,22 @@ namespace Olympe
         bool IsVisible() const { return m_isVisible; }
 
         /**
+         * @brief Set floating mode
+         * @param floating True for floating window, false for embedded
+         */
+        void SetFloatingMode(bool floating) { m_isFloating = floating; }
+
+        /**
+         * @brief Check if window is in floating mode
+         */
+        bool IsFloating() const { return m_isFloating; }
+
+        /**
+         * @brief Toggle between floating and embedded mode
+         */
+        void ToggleFloatingMode() { m_isFloating = !m_isFloating; }
+
+        /**
          * @brief Add an execution log entry
          * @param entity Entity that executed
          * @param nodeId Node that was executed
@@ -107,6 +123,13 @@ namespace Olympe
         void RenderEntityListPanel();
         void RenderNodeGraphPanel();
         void RenderInspectorPanel();
+
+        // Menu bar rendering
+        void RenderMenuBar();
+
+        // Layout rendering
+        void RenderFloatingLayout();
+        void RenderEmbeddedLayout();
 
         // Entity list helpers
         void RefreshEntityList();
@@ -142,6 +165,7 @@ namespace Olympe
         // UI state
         bool m_isVisible = false;
         bool m_isInitialized = false;
+        bool m_isFloating = true;  // Default to floating mode
         // Note: m_lastRefreshTime removed - using local static in Render() instead
         float m_autoRefreshInterval = 0.5f;
 
@@ -164,6 +188,8 @@ namespace Olympe
         // Panel layout
         float m_entityListWidth = 250.0f;
         float m_inspectorWidth = 350.0f;
+        float m_leftPanelWidth = 250.0f;   // For floating mode
+        float m_rightPanelWidth = 300.0f;  // For floating mode
         float m_nodeSpacingX = 250.0f;
         float m_nodeSpacingY = 150.0f;
 

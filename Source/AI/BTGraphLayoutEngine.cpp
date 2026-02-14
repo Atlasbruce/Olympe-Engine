@@ -33,6 +33,14 @@ namespace Olympe
         // Phase 1: Assign nodes to layers via BFS
         AssignLayers(tree);
 
+        // Calculate optimal spacing based on tree structure
+        float optimalSpacingX = nodeSpacingX;
+        float optimalSpacingY = nodeSpacingY;
+        CalculateOptimalSpacing(tree, optimalSpacingX, optimalSpacingY);
+
+        std::cout << "[BTGraphLayout] Using spacing: X=" << optimalSpacingX 
+                  << "px, Y=" << optimalSpacingY << "px" << std::endl;
+
         // Phase 2: Initial ordering within layers
         InitialOrdering();
 
@@ -40,10 +48,10 @@ namespace Olympe
         ReduceCrossings(tree);
 
         // Phase 4: Assign X coordinates
-        AssignXCoordinates(nodeSpacingX);
+        AssignXCoordinates(optimalSpacingX);
 
         // Phase 5: Resolve collisions
-        ResolveCollisions(nodeSpacingX);
+        ResolveCollisions(optimalSpacingX);
 
         // Assign final positions based on layout direction
         if (m_layoutDirection == BTLayoutDirection::TopToBottom)
@@ -51,7 +59,7 @@ namespace Olympe
             // Vertical layout (default): layers go top-to-bottom
             for (auto& layout : m_layouts)
             {
-                layout.position.y = layout.layer * nodeSpacingY;
+                layout.position.y = layout.layer * optimalSpacingY;
             }
         }
         else  // LeftToRight
@@ -61,7 +69,7 @@ namespace Olympe
             for (auto& layout : m_layouts)
             {
                 float originalX = layout.position.x;
-                float layerX = layout.layer * nodeSpacingY;
+                float layerX = layout.layer * optimalSpacingY;
                 
                 // Swap axes: X becomes Y (for sibling ordering), layer becomes X
                 layout.position.x = layerX;
@@ -398,5 +406,74 @@ namespace Olympe
         }
 
         return sum / neighbors.size();
+    }
+
+    void BTGraphLayoutEngine::CalculateOptimalSpacing(const BehaviorTreeAsset* tree, 
+                                                        float& outSpacingX, 
+                                                        float& outSpacingY)
+    {
+        if (!tree || m_layers.empty())
+            return;
+
+        // 1. Calculate maximum node width in tree
+        float maxNodeWidth = 120.0f;  // Default minimum
+        for (const auto& node : tree->nodes)
+        {
+            float nodeWidth = CalculateNodeWidth(&node);
+            maxNodeWidth = std::max(maxNodeWidth, nodeWidth);
+        }
+
+        // 2. Find maximum nodes per layer (widest layer)
+        size_t maxNodesInLayer = 1;
+        for (const auto& layer : m_layers)
+        {
+            maxNodesInLayer = std::max(maxNodesInLayer, layer.size());
+        }
+
+        // 3. Calculate horizontal spacing
+        // Formula: baseSpacing + (nodeWidth * 0.5) + extraSpacing for wide trees
+        float baseSpacingX = 200.0f;
+        float widthFactor = maxNodeWidth * 0.5f;
+        float wideTreeBonus = (maxNodesInLayer > 3) ? 50.0f : 0.0f;
+        
+        outSpacingX = baseSpacingX + widthFactor + wideTreeBonus;
+        
+        // Clamp to reasonable range (250-500px)
+        outSpacingX = std::max(250.0f, std::min(outSpacingX, 500.0f));
+
+        // 4. Calculate vertical spacing
+        // Formula: baseSpacing + extraSpacing for deep trees
+        size_t numLayers = m_layers.size();
+        float baseSpacingY = 150.0f;
+        float deepTreeBonus = (numLayers > 5) ? 50.0f : 0.0f;
+        
+        outSpacingY = baseSpacingY + deepTreeBonus;
+        
+        // Clamp to reasonable range (180-300px)
+        outSpacingY = std::max(180.0f, std::min(outSpacingY, 300.0f));
+
+        std::cout << "[BTGraphLayout] Tree analysis: maxNodes=" << maxNodesInLayer 
+                  << ", layers=" << numLayers 
+                  << ", maxNodeWidth=" << maxNodeWidth << "px" << std::endl;
+    }
+
+    float BTGraphLayoutEngine::CalculateNodeWidth(const BTNode* node) const
+    {
+        if (!node)
+            return 120.0f;
+
+        // Base width
+        float baseWidth = 120.0f;
+
+        // Estimate text width (approximate: 8 pixels per character)
+        float estimatedTextWidth = node->name.length() * 8.0f;
+
+        // Add padding for node border and spacing
+        float padding = 40.0f;
+
+        float totalWidth = estimatedTextWidth + padding;
+
+        // Clamp to reasonable range (120-300px)
+        return std::max(baseWidth, std::min(totalWidth, 300.0f));
     }
 }

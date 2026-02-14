@@ -116,6 +116,23 @@ namespace Olympe
         // Helper: Calculate barycenter for a node
         float CalculateBarycenter(uint32_t nodeId, const std::vector<BTNodeLayout*>& neighbors) const;
 
+        /**
+         * @brief Calculate optimal spacing based on tree structure
+         * @param tree The behavior tree to analyze
+         * @param outSpacingX Output: calculated horizontal spacing
+         * @param outSpacingY Output: calculated vertical spacing
+         */
+        void CalculateOptimalSpacing(const BehaviorTreeAsset* tree, 
+                                       float& outSpacingX, 
+                                       float& outSpacingY);
+        
+        /**
+         * @brief Calculate node width based on text content
+         * @param node The node to measure
+         * @return Calculated width in pixels
+         */
+        float CalculateNodeWidth(const BTNode* node) const;
+
         // Layout configuration
         BTLayoutDirection m_layoutDirection = BTLayoutDirection::TopToBottom;  ///< Default vertical
 

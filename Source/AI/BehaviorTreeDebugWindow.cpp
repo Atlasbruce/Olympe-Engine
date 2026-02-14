@@ -89,41 +89,113 @@ namespace Olympe
             entry.timeAgo += GameEngine::fDt;
         }
 
-        // Main window
-        ImGui::SetNextWindowSize(ImVec2(1400, 900), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowPos(ImVec2(100, 100), ImGuiCond_FirstUseEver);
-
+        // Configure window flags based on mode
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar;
+        
+        if (m_isFloating)
+        {
+            // Floating mode: separate, draggable window
+            windowFlags |= ImGuiWindowFlags_NoDocking;
+            
+            // Set initial size and position (first time only)
+            ImGui::SetNextWindowSize(ImVec2(1400, 900), ImGuiCond_FirstUseEver);
+            ImGui::SetNextWindowPos(ImVec2(100, 100), ImGuiCond_FirstUseEver);
+        }
+        else
+        {
+            // Embedded mode: fixed inside main viewport
+            windowFlags |= ImGuiWindowFlags_NoMove;
+            
+            // Fill available space
+            ImGuiViewport* viewport = ImGui::GetMainViewport();
+            ImGui::SetNextWindowPos(viewport->WorkPos);
+            ImGui::SetNextWindowSize(viewport->WorkSize);
+        }
+
         if (!ImGui::Begin("Behavior Tree Runtime Debugger", &m_isVisible, windowFlags))
         {
             ImGui::End();
             return;
         }
 
-        // Menu bar
+        // Render menu bar
+        RenderMenuBar();
+
+        // Render content based on mode
+        if (m_isFloating)
+        {
+            RenderFloatingLayout();
+        }
+        else
+        {
+            RenderEmbeddedLayout();
+        }
+
+        ImGui::End();
+    }
+
+    void BehaviorTreeDebugWindow::RenderMenuBar()
+    {
         if (ImGui::BeginMenuBar())
         {
             if (ImGui::BeginMenu("View"))
             {
+                // Toggle floating mode
+                if (ImGui::MenuItem("Floating Window", "Ctrl+F10", m_isFloating))
+                {
+                    ToggleFloatingMode();
+                }
+                
+                ImGui::Separator();
+                
+                // Layout direction
+                bool isVertical = (m_layoutDirection == BTLayoutDirection::TopToBottom);
+                bool isHorizontal = (m_layoutDirection == BTLayoutDirection::LeftToRight);
+                
+                if (ImGui::MenuItem("Vertical Layout", nullptr, isVertical))
+                {
+                    if (m_layoutDirection != BTLayoutDirection::TopToBottom)
+                    {
+                        m_layoutDirection = BTLayoutDirection::TopToBottom;
+                        m_layoutEngine.SetLayoutDirection(m_layoutDirection);
+                    }
+                }
+                if (ImGui::MenuItem("Horizontal Layout", nullptr, isHorizontal))
+                {
+                    if (m_layoutDirection != BTLayoutDirection::LeftToRight)
+                    {
+                        m_layoutDirection = BTLayoutDirection::LeftToRight;
+                        m_layoutEngine.SetLayoutDirection(m_layoutDirection);
+                    }
+                }
+                
+                ImGui::Separator();
+                
                 ImGui::SliderFloat("Auto Refresh (s)", &m_autoRefreshInterval, 0.1f, 5.0f);
-                ImGui::SliderFloat("Entity List Width", &m_entityListWidth, 150.0f, 400.0f);
-                ImGui::SliderFloat("Inspector Width", &m_inspectorWidth, 250.0f, 500.0f);
-                ImGui::SliderFloat("Node Spacing X", &m_nodeSpacingX, 100.0f, 500.0f);
-                ImGui::SliderFloat("Node Spacing Y", &m_nodeSpacingY, 80.0f, 300.0f);
+                
+                if (ImGui::MenuItem("Close", "ESC"))
+                {
+                    m_isVisible = false;
+                }
+                
                 ImGui::EndMenu();
             }
+
             if (ImGui::BeginMenu("Actions"))
             {
                 if (ImGui::MenuItem("Refresh Now (F5)"))
                 {
                     RefreshEntityList();
                 }
+                
                 if (ImGui::MenuItem("Clear Execution Log"))
                 {
                     m_executionLog.clear();
                 }
+                
                 ImGui::EndMenu();
             }
+
             ImGui::EndMenuBar();
         }
 
@@ -132,8 +204,68 @@ namespace Olympe
         {
             RefreshEntityList();
         }
+        if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+        {
+            m_isVisible = false;
+        }
+    }
 
-        // Three-panel layout
+    void BehaviorTreeDebugWindow::RenderFloatingLayout()
+    {
+        // Flexible 3-panel layout with resizable splitters
+        
+        // Left panel (Entity list)
+        ImGui::BeginChild("LeftPanel", ImVec2(m_leftPanelWidth, 0), true);
+        RenderEntityListPanel();
+        ImGui::EndChild();
+
+        ImGui::SameLine();
+
+        // Splitter 1
+        ImGui::Button("##splitter1", ImVec2(8.0f, -1));
+        if (ImGui::IsItemActive())
+        {
+            m_leftPanelWidth += ImGui::GetIO().MouseDelta.x;
+            m_leftPanelWidth = std::max(200.0f, std::min(m_leftPanelWidth, 400.0f));
+        }
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+        }
+
+        ImGui::SameLine();
+
+        // Middle panel (Node graph)
+        float middlePanelWidth = ImGui::GetContentRegionAvail().x - m_rightPanelWidth - 16.0f;
+        ImGui::BeginChild("MiddlePanel", ImVec2(middlePanelWidth, 0), true);
+        RenderNodeGraphPanel();
+        ImGui::EndChild();
+
+        ImGui::SameLine();
+
+        // Splitter 2
+        ImGui::Button("##splitter2", ImVec2(8.0f, -1));
+        if (ImGui::IsItemActive())
+        {
+            m_rightPanelWidth -= ImGui::GetIO().MouseDelta.x;
+            m_rightPanelWidth = std::max(250.0f, std::min(m_rightPanelWidth, 500.0f));
+        }
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+        }
+
+        ImGui::SameLine();
+
+        // Right panel (Inspector)
+        ImGui::BeginChild("RightPanel", ImVec2(0, 0), true);
+        RenderInspectorPanel();
+        ImGui::EndChild();
+    }
+
+    void BehaviorTreeDebugWindow::RenderEmbeddedLayout()
+    {
+        // Original fixed 3-column layout
         float windowWidth = ImGui::GetContentRegionAvail().x;
         float windowHeight = ImGui::GetContentRegionAvail().y;
 
@@ -156,8 +288,6 @@ namespace Olympe
         ImGui::BeginChild("InspectorPanel", ImVec2(m_inspectorWidth, windowHeight), true);
         RenderInspectorPanel();
         ImGui::EndChild();
-
-        ImGui::End();
     }
 
     void BehaviorTreeDebugWindow::RefreshEntityList()
@@ -495,35 +625,9 @@ namespace Olympe
             return;
         }
 
-        // Layout direction toggle
-        ImGui::Text("Layout:");
-        ImGui::SameLine();
-        
-        bool layoutChanged = false;
-        if (ImGui::RadioButton("Vertical", m_layoutDirection == BTLayoutDirection::TopToBottom))
-        {
-            if (m_layoutDirection != BTLayoutDirection::TopToBottom)
-            {
-                m_layoutDirection = BTLayoutDirection::TopToBottom;
-                layoutChanged = true;
-            }
-        }
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Horizontal", m_layoutDirection == BTLayoutDirection::LeftToRight))
-        {
-            if (m_layoutDirection != BTLayoutDirection::LeftToRight)
-            {
-                m_layoutDirection = BTLayoutDirection::LeftToRight;
-                layoutChanged = true;
-            }
-        }
-        
-        // Update layout engine and recompute if changed
-        if (layoutChanged)
-        {
-            m_layoutEngine.SetLayoutDirection(m_layoutDirection);
-            m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY);
-        }
+        // Compute layout
+        m_layoutEngine.SetLayoutDirection(m_layoutDirection);
+        m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY);
         
         ImGui::Separator();
 
