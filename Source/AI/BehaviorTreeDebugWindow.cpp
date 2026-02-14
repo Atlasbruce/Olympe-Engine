@@ -672,7 +672,7 @@ namespace Olympe
         // Keyboard shortcuts for camera control
         if (ImGui::IsWindowFocused())
         {
-            bool ctrlPressed = ImGui::GetIO().KeyCtrl;
+            bool ctrlPressed = io.KeyCtrl;
             
             // F : Fit to view
             if (ImGui::IsKeyPressed(ImGuiKey_F) && !ctrlPressed)
@@ -690,7 +690,7 @@ namespace Olympe
             if (ImGui::IsKeyPressed(ImGuiKey_M))
                 m_showMinimap = !m_showMinimap;
             
-            // + / - : Zoom in/out
+            // + / - : Zoom in/out (Note: '+' requires Shift+Equal on most keyboards)
             if (ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::IsKeyPressed(ImGuiKey_KeypadAdd))
             {
                 m_currentZoom = std::min(3.0f, m_currentZoom * 1.2f);
@@ -1367,7 +1367,7 @@ namespace Olympe
         ImGui::SetCursorPos(minimapPos);
         ImGui::InvisibleButton("##minimap", minimapSize);
         
-        if (ImGui::IsItemClicked())
+        if (ImGui::IsItemClicked() && scale > 0.0f)
         {
             ImVec2 clickPos = ImGui::GetMousePos();
             float clickX = (clickPos.x - minimapMin.x) / scale + graphMin.x;
