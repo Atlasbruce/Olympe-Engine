@@ -81,7 +81,7 @@ namespace Tiled {
         config_ = config;
     }
 
-    // ✅ NEW: Calculate actual bounds by scanning all tile chunks
+    // ok -  NEW: Calculate actual bounds by scanning all tile chunks
     TiledToOlympe::MapBounds TiledToOlympe::CalculateActualMapBounds(const TiledMap& tiledMap)
     {
         MapBounds bounds;
@@ -144,7 +144,7 @@ namespace Tiled {
         SYSTEM_LOG << "| TILED -> OLYMPE CONVERSION - COMPLETE PIPELINE            |\n";
         SYSTEM_LOG << "+===========================================================+\n\n";
         
-        // ✅ PHASE 0: Calculate actual map dimensions
+        // ok -  PHASE 0: Calculate actual map dimensions
         isInfiniteMap_ = tiledMap.infinite;
 
         if (isInfiniteMap_)
@@ -169,7 +169,7 @@ namespace Tiled {
             SYSTEM_LOG << "  -> Actual bounds:      " << bounds.minTileX << "," << bounds.minTileY
                 << " to " << bounds.maxTileX << "," << bounds.maxTileY << "\n";
             SYSTEM_LOG << "  -> Chunk origin offset: (" << chunkOriginX_ << ", " << chunkOriginY_ << ")\n";
-            SYSTEM_LOG << "  -> Actual map size:    " << mapWidth_ << "x" << mapHeight_ << " tiles ✅\n\n";
+            SYSTEM_LOG << "  -> Actual map size:    " << mapWidth_ << "x" << mapHeight_ << " tiles ok - \n\n";
             
             // Update offset cache (chunk origin offsets are non-zero for infinite maps)
             hasOffsets_ = (chunkOriginX_ != 0 || chunkOriginY_ != 0 || 

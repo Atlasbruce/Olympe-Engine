@@ -536,7 +536,7 @@ namespace Olympe
         // ImNodes editor
         ImNodes::BeginNodeEditor();
 
-        // ✅ NEW: Calculate graph bounding box for camera centering
+        // ok -  NEW: Calculate graph bounding box for camera centering
         if (!m_currentLayout.empty())
         {
             ImVec2 minPos(FLT_MAX, FLT_MAX);
@@ -561,7 +561,7 @@ namespace Olympe
             std::cout << "[BTDebugger] Graph size: " << graphSize.x << "x" << graphSize.y << " pixels" << std::endl;
             std::cout << "[BTDebugger] Graph center: (" << graphCenter.x << "," << graphCenter.y << ")" << std::endl;
 
-            // ✅ NEW: Center camera when entity changes
+            // ok -  NEW: Center camera when entity changes
             if (m_lastCenteredEntity != m_selectedEntity)
             {
                 // Center the camera on the graph
@@ -573,7 +573,7 @@ namespace Olympe
                 
                 ImNodes::EditorContextResetPanning(cameraOffset);
                 
-                std::cout << "[BTDebugger] ✅ Camera centered on graph" << std::endl;
+                std::cout << "[BTDebugger] ok -  Camera centered on graph" << std::endl;
                 m_lastCenteredEntity = m_selectedEntity;
                 
                 // Clear printed nodes when changing entities
@@ -581,7 +581,7 @@ namespace Olympe
             }
         }
 
-        // ✅ NEW: Mouse wheel zoom support
+        // ok -  NEW: Mouse wheel zoom support
         ImGuiIO& io = ImGui::GetIO();
         if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered())
         {
@@ -643,7 +643,7 @@ namespace Olympe
         if (!node || !layout)
             return;
 
-        // ✅ NEW: Debug position (only print once per entity)
+        // ok -  NEW: Debug position (only print once per entity)
         if (m_printedNodeIds.find(node->id) == m_printedNodeIds.end())
         {
             std::cout << "[RenderNode] Node " << node->id 

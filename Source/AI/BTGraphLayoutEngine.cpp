@@ -80,7 +80,7 @@ namespace Olympe
             spacingMultiplierY = 1.2f;  // +20% for deep trees
         }
         
-        // ✅ CRITICAL FIX: Apply generous spacing and proper scaling
+        // ok -  CRITICAL FIX: Apply generous spacing and proper scaling
         float baseSpacingX = BASE_SPACING_X;  // 700px horizontal spacing
         float baseSpacingY = BASE_SPACING_Y;  // 400px vertical spacing
 
@@ -97,7 +97,7 @@ namespace Olympe
             baseSpacingY *= SPACING_INCREASE_FACTOR;  // +20% for deep trees
         }
 
-        // ✅ CRITICAL: Apply scaling to convert relative positions to pixel coordinates
+        // ok -  CRITICAL: Apply scaling to convert relative positions to pixel coordinates
         std::cout << "[BTGraphLayout] Applying final scaling: " 
                   << baseSpacingX << "x" << baseSpacingY << " pixels" << std::endl;
 
@@ -107,10 +107,10 @@ namespace Olympe
             // Vertical layout (default): layers go top-to-bottom
             for (auto& layout : m_layouts)
             {
-                // ✅ CRITICAL: Multiply abstract X by pixel spacing to get world coordinates
+                // ok -  CRITICAL: Multiply abstract X by pixel spacing to get world coordinates
                 layout.position.x *= baseSpacingX;
                 
-                // ✅ CRITICAL: Multiply layer index by vertical spacing
+                // ok -  CRITICAL: Multiply layer index by vertical spacing
                 layout.position.y = layout.layer * baseSpacingY;
             }
         }
@@ -128,7 +128,7 @@ namespace Olympe
             }
         }
 
-        // ✅ NEW: Debug output - verify positions are in pixel range (hundreds, not 0-1)
+        // ok -  NEW: Debug output - verify positions are in pixel range (hundreds, not 0-1)
         if (!m_layouts.empty())
         {
             std::cout << "[BTGraphLayout] Sample node positions (should be 100s-1000s of pixels):" << std::endl;
