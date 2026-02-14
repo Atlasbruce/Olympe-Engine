@@ -119,7 +119,7 @@ const config: Config = {
           items: [
             {
               label: 'Getting Started',
-              to: '/getting-started/installation',
+              to: '/getting-started/quick-start',
             },
             {
               label: 'User Guide',

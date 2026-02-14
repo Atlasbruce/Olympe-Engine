@@ -9,7 +9,7 @@
   <!-- Hexagon outline -->
   <polygon points="20,40 35,15 165,15 180,40 165,65 35,65" 
            fill="none" 
-           stroke="#4A90E2" 
+           stroke="#FFFFFF" 
            stroke-width="3"/>
   
   <!-- OLYMPE text -->
