@@ -663,11 +663,7 @@ namespace Olympe
             {
                 float zoomDelta = io.MouseWheel * 0.1f;  // 10% per wheel notch
                 m_currentZoom = std::max(0.3f, std::min(3.0f, m_currentZoom + zoomDelta));
-                
-                // Scale ImNodes style for zoom effect
-                ImNodes::GetStyle().NodePadding = ImVec2(8.0f * m_currentZoom, 8.0f * m_currentZoom);
-                ImNodes::GetStyle().NodeCornerRounding = 8.0f * m_currentZoom;
-                ImNodes::GetStyle().GridSpacing = 32.0f * m_currentZoom;
+                ApplyZoomToStyle();
                 
                 std::cout << "[BTDebugger] Zoom: " << (int)(m_currentZoom * 100) << "%" << std::endl;
             }
@@ -696,17 +692,13 @@ namespace Olympe
             if (ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::IsKeyPressed(ImGuiKey_KeypadAdd))
             {
                 m_currentZoom = std::min(3.0f, m_currentZoom * 1.2f);
-                ImNodes::GetStyle().NodePadding = ImVec2(8.0f * m_currentZoom, 8.0f * m_currentZoom);
-                ImNodes::GetStyle().NodeCornerRounding = 8.0f * m_currentZoom;
-                ImNodes::GetStyle().GridSpacing = 32.0f * m_currentZoom;
+                ApplyZoomToStyle();
             }
             
             if (ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract))
             {
                 m_currentZoom = std::max(0.3f, m_currentZoom / 1.2f);
-                ImNodes::GetStyle().NodePadding = ImVec2(8.0f * m_currentZoom, 8.0f * m_currentZoom);
-                ImNodes::GetStyle().NodeCornerRounding = 8.0f * m_currentZoom;
-                ImNodes::GetStyle().GridSpacing = 32.0f * m_currentZoom;
+                ApplyZoomToStyle();
             }
         }
 
@@ -1178,22 +1170,43 @@ namespace Olympe
         }
     }
 
+    void BehaviorTreeDebugWindow::ApplyZoomToStyle()
+    {
+        ImNodes::GetStyle().NodePadding = ImVec2(8.0f * m_currentZoom, 8.0f * m_currentZoom);
+        ImNodes::GetStyle().NodeCornerRounding = 8.0f * m_currentZoom;
+        ImNodes::GetStyle().GridSpacing = 32.0f * m_currentZoom;
+    }
+
+    void BehaviorTreeDebugWindow::GetGraphBounds(ImVec2& outMin, ImVec2& outMax) const
+    {
+        outMin = ImVec2(FLT_MAX, FLT_MAX);
+        outMax = ImVec2(-FLT_MAX, -FLT_MAX);
+        
+        for (const auto& layout : m_currentLayout)
+        {
+            outMin.x = std::min(outMin.x, layout.position.x - layout.width / 2.0f);
+            outMin.y = std::min(outMin.y, layout.position.y - layout.height / 2.0f);
+            outMax.x = std::max(outMax.x, layout.position.x + layout.width / 2.0f);
+            outMax.y = std::max(outMax.y, layout.position.y + layout.height / 2.0f);
+        }
+    }
+
+    ImVec2 BehaviorTreeDebugWindow::CalculatePanOffset(const ImVec2& graphCenter, const ImVec2& viewportSize) const
+    {
+        return ImVec2(
+            -graphCenter.x * m_currentZoom + viewportSize.x / 2.0f,
+            -graphCenter.y * m_currentZoom + viewportSize.y / 2.0f
+        );
+    }
+
     void BehaviorTreeDebugWindow::FitGraphToView()
     {
         if (m_currentLayout.empty())
             return;
 
         // 1. Calculate the bounds of the graph
-        ImVec2 minPos(FLT_MAX, FLT_MAX);
-        ImVec2 maxPos(-FLT_MAX, -FLT_MAX);
-        
-        for (const auto& layout : m_currentLayout)
-        {
-            minPos.x = std::min(minPos.x, layout.position.x - layout.width / 2.0f);
-            minPos.y = std::min(minPos.y, layout.position.y - layout.height / 2.0f);
-            maxPos.x = std::max(maxPos.x, layout.position.x + layout.width / 2.0f);
-            maxPos.y = std::max(maxPos.y, layout.position.y + layout.height / 2.0f);
-        }
+        ImVec2 minPos, maxPos;
+        GetGraphBounds(minPos, maxPos);
         
         ImVec2 graphSize(maxPos.x - minPos.x, maxPos.y - minPos.y);
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
@@ -1205,18 +1218,11 @@ namespace Olympe
         
         // 3. Apply the zoom
         m_currentZoom = std::max(0.3f, std::min(3.0f, targetZoom));
+        ApplyZoomToStyle();
         
-        // 4. Apply style scaling
-        ImNodes::GetStyle().NodePadding = ImVec2(8.0f * m_currentZoom, 8.0f * m_currentZoom);
-        ImNodes::GetStyle().NodeCornerRounding = 8.0f * m_currentZoom;
-        ImNodes::GetStyle().GridSpacing = 32.0f * m_currentZoom;
-        
-        // 5. Center the view
+        // 4. Center the view
         ImVec2 graphCenter((minPos.x + maxPos.x) / 2.0f, (minPos.y + maxPos.y) / 2.0f);
-        ImVec2 panOffset(
-            -graphCenter.x * m_currentZoom + viewportSize.x / 2.0f,
-            -graphCenter.y * m_currentZoom + viewportSize.y / 2.0f
-        );
+        ImVec2 panOffset = CalculatePanOffset(graphCenter, viewportSize);
         
         ImNodes::EditorContextResetPanning(panOffset);
         
@@ -1229,24 +1235,13 @@ namespace Olympe
         if (m_currentLayout.empty())
             return;
 
-        ImVec2 minPos(FLT_MAX, FLT_MAX);
-        ImVec2 maxPos(-FLT_MAX, -FLT_MAX);
-
-        for (const auto& layout : m_currentLayout)
-        {
-            minPos.x = std::min(minPos.x, layout.position.x);
-            minPos.y = std::min(minPos.y, layout.position.y);
-            maxPos.x = std::max(maxPos.x, layout.position.x);
-            maxPos.y = std::max(maxPos.y, layout.position.y);
-        }
+        ImVec2 minPos, maxPos;
+        GetGraphBounds(minPos, maxPos);
 
         ImVec2 graphCenter((minPos.x + maxPos.x) / 2.0f, (minPos.y + maxPos.y) / 2.0f);
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 
-        ImVec2 panOffset(
-            -graphCenter.x * m_currentZoom + viewportSize.x / 2.0f,
-            -graphCenter.y * m_currentZoom + viewportSize.y / 2.0f
-        );
+        ImVec2 panOffset = CalculatePanOffset(graphCenter, viewportSize);
 
         ImNodes::EditorContextResetPanning(panOffset);
         
@@ -1257,10 +1252,7 @@ namespace Olympe
     void BehaviorTreeDebugWindow::ResetZoom()
     {
         m_currentZoom = 1.0f;
-        
-        ImNodes::GetStyle().NodePadding = ImVec2(8.0f, 8.0f);
-        ImNodes::GetStyle().NodeCornerRounding = 8.0f;
-        ImNodes::GetStyle().GridSpacing = 32.0f;
+        ApplyZoomToStyle();
         
         std::cout << "[BTDebugger] Reset zoom to 100%" << std::endl;
     }
@@ -1297,16 +1289,8 @@ namespace Olympe
         );
         
         // Calculate the bounds of the graph
-        ImVec2 graphMin(FLT_MAX, FLT_MAX);
-        ImVec2 graphMax(-FLT_MAX, -FLT_MAX);
-        
-        for (const auto& layout : m_currentLayout)
-        {
-            graphMin.x = std::min(graphMin.x, layout.position.x);
-            graphMin.y = std::min(graphMin.y, layout.position.y);
-            graphMax.x = std::max(graphMax.x, layout.position.x);
-            graphMax.y = std::max(graphMax.y, layout.position.y);
-        }
+        ImVec2 graphMin, graphMax;
+        GetGraphBounds(graphMin, graphMax);
         
         ImVec2 graphSize(graphMax.x - graphMin.x, graphMax.y - graphMin.y);
         
@@ -1364,11 +1348,7 @@ namespace Olympe
             float clickX = (clickPos.x - minimapMin.x) / scale + graphMin.x;
             float clickY = (clickPos.y - minimapMin.y) / scale + graphMin.y;
             
-            ImVec2 newPan(
-                -clickX * m_currentZoom + viewportSize.x / 2.0f,
-                -clickY * m_currentZoom + viewportSize.y / 2.0f
-            );
-            
+            ImVec2 newPan = CalculatePanOffset(ImVec2(clickX, clickY), viewportSize);
             ImNodes::EditorContextResetPanning(newPan);
         }
         
