@@ -137,6 +137,7 @@ namespace Olympe
         
         // Camera state tracking
         EntityID m_lastCenteredEntity = 0;  // Track which entity was last centered
+        std::unordered_set<uint32_t> m_printedNodeIds;  // Track which nodes have been debug printed
 
         // Execution log (circular buffer with max 100 entries)
         std::deque<ExecutionLogEntry> m_executionLog;
