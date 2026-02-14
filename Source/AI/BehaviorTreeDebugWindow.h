@@ -164,8 +164,8 @@ namespace Olympe
         // Panel layout
         float m_entityListWidth = 250.0f;
         float m_inspectorWidth = 350.0f;
-        float m_nodeSpacingX = 250.0f;
-        float m_nodeSpacingY = 150.0f;
+        float m_nodeSpacingX = 400.0f;  // Generous default horizontal spacing
+        float m_nodeSpacingY = 250.0f;  // Generous default vertical spacing
 
         // Graph view state
         bool m_imnodesInitialized = false;
