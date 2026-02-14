@@ -484,13 +484,14 @@ namespace Olympe
         float childrenEndX = nextAvailableX;
 
         // Center parent on children
+        // Subtract 1.0f because each node reserves 1.0f width unit, so last child ends at childrenEndX - 1.0f
         float childrenMidpoint = (childrenStartX + childrenEndX - 1.0f) / 2.0f;
         layout.position.x = childrenMidpoint;
 
         // If parent position collides with previous sibling's subtree, shift everything
-        if (layout.position.x < nextAvailableX - (nextAvailableX - childrenStartX))
+        if (layout.position.x < childrenStartX)
         {
-            float shift = (nextAvailableX - (nextAvailableX - childrenStartX)) - layout.position.x;
+            float shift = childrenStartX - layout.position.x;
             layout.position.x += shift;
             
             // Shift all children by the same amount
@@ -591,21 +592,30 @@ namespace Olympe
         BTNodeLayout& layoutB = m_layouts[itB->second];
 
         float dx = layoutB.position.x - layoutA.position.x;
-        float distance = std::abs(dx) - (layoutA.width + layoutB.width) / 2.0f;
+        float currentDistance = std::abs(dx) - (layoutA.width + layoutB.width) / 2.0f;
 
-        if (distance < minDistance)
+        if (currentDistance < minDistance)
         {
-            float pushAmount = (minDistance - distance) / 2.0f;
+            float pushAmount = (minDistance - currentDistance) / 2.0f;
 
+            // Push nodes apart in the direction they're already separated
+            // If B is to the right of A (dx > 0), push A left and B right
+            // If B is to the left of A (dx < 0), push A right and B left
             if (dx > 0)
             {
                 layoutA.position.x -= pushAmount;
                 layoutB.position.x += pushAmount;
             }
-            else
+            else if (dx < 0)
             {
                 layoutA.position.x += pushAmount;
                 layoutB.position.x -= pushAmount;
+            }
+            // If dx == 0 (nodes at same X), push them apart arbitrarily
+            else
+            {
+                layoutA.position.x -= pushAmount;
+                layoutB.position.x += pushAmount;
             }
         }
     }
