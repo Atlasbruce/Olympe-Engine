@@ -318,7 +318,7 @@ Currently, blueprint changes require restarting the engine. Future versions will
 - [Creating Prefabs](./creating-prefabs.md) - Step-by-step guide to creating entity prefabs
 - [Component Overrides](./component-overrides.md) - Override blueprint properties in Tiled
 - [ECS Overview](../../technical-reference/architecture/ecs-overview.md) - Understanding components and entities
-- [Behavior Trees](../../technical-reference/behavior-trees/overview.md) - AI programming with behavior trees
+- [Behavior Trees](../../technical-reference/behavior-trees/behavior-trees-overview.md) - AI programming with behavior trees
 
 ## Examples
 
