@@ -582,18 +582,23 @@ namespace Olympe
         }
 
         // ✅ NEW: Mouse wheel zoom support
+        // Manual zoom with style scaling (ImNodes v0.4 compatible)
+        static float currentZoom = 1.0f;
+
         ImGuiIO& io = ImGui::GetIO();
         if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered())
         {
             if (io.MouseWheel != 0.0f)
             {
-                float currentZoom = ImNodes::EditorContextGetZoom();
                 float zoomDelta = io.MouseWheel * 0.1f;  // 10% per wheel notch
-                float newZoom = std::max(0.3f, std::min(3.0f, currentZoom + zoomDelta));
+                currentZoom = std::max(0.3f, std::min(3.0f, currentZoom + zoomDelta));
                 
-                ImNodes::EditorContextSetZoom(newZoom);
+                // Scale ImNodes style for zoom effect
+                ImNodes::GetStyle().NodePadding = ImVec2(8.0f * currentZoom, 8.0f * currentZoom);
+                ImNodes::GetStyle().NodeCornerRounding = 8.0f * currentZoom;
+                ImNodes::GetStyle().GridSpacing = 32.0f * currentZoom;
                 
-                std::cout << "[BTDebugger] Zoom: " << (int)(newZoom * 100) << "%" << std::endl;
+                std::cout << "[BTDebugger] Zoom: " << (int)(currentZoom * 100) << "%" << std::endl;
             }
         }
 

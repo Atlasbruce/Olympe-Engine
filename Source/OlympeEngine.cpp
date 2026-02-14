@@ -113,12 +113,6 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     
-    // Enable multi-viewport support for external windows
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;     // ok -  CRITICAL
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;       // ok -  Optional but recommended
-    
-    std::cout << "[ImGui] Multi-viewport support enabled" << std::endl;
-    
     ImGui::StyleColorsDark();
     // Initialiser vos implémentations (ex. SDL + renderer)
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
@@ -390,14 +384,6 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 
         ImGui::Render();
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
-        
-        // ok -  NEW: Render additional platform windows (external OS windows)
-        ImGuiIO& io = ImGui::GetIO();
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        {
-            ImGui::UpdatePlatformWindows();
-            ImGui::RenderPlatformWindowsDefault();
-        }
     }
 
     SDL_RenderPresent(renderer);  /* put it all on the screen! */
