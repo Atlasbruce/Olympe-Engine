@@ -137,7 +137,8 @@ struct BTNode
     std::vector<uint32_t> childIds;         ///< IDs of child nodes
     
     // For condition nodes
-    BTConditionType conditionType = BTConditionType::TargetVisible;  ///< Condition type
+    BTConditionType conditionType = BTConditionType::TargetVisible;  ///< Condition type (enum)
+    std::string conditionTypeString;         ///< Condition type as string (for flexible conditions like CheckBlackboardValue)
     float conditionParam = 0.0f;            ///< Generic parameter for conditions
     
     // For action nodes
@@ -151,6 +152,30 @@ struct BTNode
     
     // Debug info
     std::string name;
+    
+    // Flexible parameters (for new condition/action types that need structured data)
+    std::map<std::string, std::string> stringParams;  ///< String parameters
+    std::map<std::string, int> intParams;             ///< Integer parameters
+    std::map<std::string, float> floatParams;         ///< Float parameters
+    
+    // Helper methods for parameter access
+    std::string GetParameterString(const std::string& key, const std::string& defaultValue = "") const
+    {
+        auto it = stringParams.find(key);
+        return (it != stringParams.end()) ? it->second : defaultValue;
+    }
+    
+    int GetParameterInt(const std::string& key, int defaultValue = 0) const
+    {
+        auto it = intParams.find(key);
+        return (it != intParams.end()) ? it->second : defaultValue;
+    }
+    
+    float GetParameterFloat(const std::string& key, float defaultValue = 0.0f) const
+    {
+        auto it = floatParams.find(key);
+        return (it != floatParams.end()) ? it->second : defaultValue;
+    }
 };
 
 // --- Behavior Tree Asset ---

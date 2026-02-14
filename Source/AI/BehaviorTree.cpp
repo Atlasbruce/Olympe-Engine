@@ -125,6 +125,8 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
             if (node.type == BTNodeType::Condition && nodeJson.contains("conditionType"))
             {
                 std::string condStr = JsonHelper::GetString(nodeJson, "conditionType", "");
+                node.conditionTypeString = condStr; // Store string for flexible conditions
+                
                 if (condStr == "TargetVisible" || condStr == "HasTarget") 
                     node.conditionType = BTConditionType::TargetVisible;
                 else if (condStr == "TargetInRange" || condStr == "IsTargetInAttackRange") 
@@ -146,12 +148,24 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     node.conditionType = BTConditionType::HasValidPath;
                 else if (condStr == "HasReachedDestination")
                     node.conditionType = BTConditionType::HasReachedDestination;
+                // NEW: CheckBlackboardValue is handled via string type, not enum
                 
                 // Handle v2 format parameters (nested in "parameters" object)
                 if (isV2 && nodeJson.contains("parameters") && nodeJson["parameters"].is_object())
                 {
                     const json& params = nodeJson["parameters"];
                     node.conditionParam = JsonHelper::GetFloat(params, "param", 0.0f);
+                    
+                    // Parse flexible parameters for conditions like CheckBlackboardValue
+                    for (auto& [key, value] : params.items())
+                    {
+                        if (value.is_string())
+                            node.stringParams[key] = value.get<std::string>();
+                        else if (value.is_number_integer())
+                            node.intParams[key] = value.get<int>();
+                        else if (value.is_number_float())
+                            node.floatParams[key] = value.get<float>();
+                    }
                 }
                 else
                 {
@@ -419,7 +433,48 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
         
         case BTNodeType::Condition:
         {
-            return ExecuteBTCondition(node.conditionType, node.conditionParam, entity, blackboard);
+            // Check if this is a string-based condition (like CheckBlackboardValue)
+            if (!node.conditionTypeString.empty() && node.conditionTypeString == "CheckBlackboardValue")
+            {
+                // Execute CheckBlackboardValue condition
+                std::string key = node.GetParameterString("key");
+                std::string op = node.GetParameterString("operator");
+                int expectedValue = node.GetParameterInt("value");
+                
+                int actualValue = 0;
+                
+                // Get value from blackboard
+                if (key == "AIMode")
+                {
+                    actualValue = blackboard.AIMode;
+                }
+                else
+                {
+                    // Future: support other blackboard integer fields
+                    return BTStatus::Failure;  // Key not found
+                }
+                
+                // Perform comparison
+                if (op == "Equals" || op == "equals" || op == "==")
+                    return (actualValue == expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                else if (op == "NotEquals" || op == "notequals" || op == "!=")
+                    return (actualValue != expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                else if (op == "GreaterThan" || op == "greaterthan" || op == ">")
+                    return (actualValue > expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                else if (op == "LessThan" || op == "lessthan" || op == "<")
+                    return (actualValue < expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                else if (op == "GreaterOrEqual" || op == "greaterorequal" || op == ">=")
+                    return (actualValue >= expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                else if (op == "LessOrEqual" || op == "lessorequal" || op == "<=")
+                    return (actualValue <= expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                
+                return BTStatus::Failure;
+            }
+            else
+            {
+                // Execute enum-based condition (legacy)
+                return ExecuteBTCondition(node.conditionType, node.conditionParam, entity, blackboard);
+            }
         }
         
         case BTNodeType::Action:
