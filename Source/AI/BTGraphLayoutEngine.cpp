@@ -11,6 +11,13 @@
 
 namespace Olympe
 {
+    // Layout spacing constants
+    constexpr float BASE_SPACING_X = 700.0f;  // Horizontal spacing in pixels
+    constexpr float BASE_SPACING_Y = 400.0f;  // Vertical spacing in pixels
+    constexpr size_t WIDE_TREE_THRESHOLD = 5;  // Nodes per layer before considering tree "wide"
+    constexpr size_t DEEP_TREE_THRESHOLD = 5;  // Layers before considering tree "deep"
+    constexpr float SPACING_INCREASE_FACTOR = 1.2f;  // 20% increase for complex trees
+
     BTGraphLayoutEngine::BTGraphLayoutEngine()
     {
     }
@@ -74,20 +81,20 @@ namespace Olympe
         }
         
         // ✅ CRITICAL FIX: Apply generous spacing and proper scaling
-        float baseSpacingX = 700.0f;  // Horizontal spacing in pixels
-        float baseSpacingY = 400.0f;  // Vertical spacing in pixels
+        float baseSpacingX = BASE_SPACING_X;  // 700px horizontal spacing
+        float baseSpacingY = BASE_SPACING_Y;  // 400px vertical spacing
 
         // Scale based on tree complexity
         // Increase spacing for wide trees
-        if (maxNodesInLayer > 5)
+        if (maxNodesInLayer > WIDE_TREE_THRESHOLD)
         {
-            baseSpacingX *= 1.2f;  // +20% for wide trees
+            baseSpacingX *= SPACING_INCREASE_FACTOR;  // +20% for wide trees
         }
 
         // Increase spacing for deep trees
-        if (m_layers.size() > 5)
+        if (m_layers.size() > DEEP_TREE_THRESHOLD)
         {
-            baseSpacingY *= 1.2f;  // +20% for deep trees
+            baseSpacingY *= SPACING_INCREASE_FACTOR;  // +20% for deep trees
         }
 
         // ✅ CRITICAL: Apply scaling to convert relative positions to pixel coordinates

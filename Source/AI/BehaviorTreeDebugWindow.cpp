@@ -561,9 +561,8 @@ namespace Olympe
             std::cout << "[BTDebugger] Graph size: " << graphSize.x << "x" << graphSize.y << " pixels" << std::endl;
             std::cout << "[BTDebugger] Graph center: (" << graphCenter.x << "," << graphCenter.y << ")" << std::endl;
 
-            // ✅ NEW: Center camera on first load
-            static bool firstLoad = true;
-            if (firstLoad)
+            // ✅ NEW: Center camera when entity changes
+            if (m_lastCenteredEntity != m_selectedEntity)
             {
                 // Center the camera on the graph
                 ImVec2 editorSize = ImGui::GetContentRegionAvail();
@@ -575,7 +574,10 @@ namespace Olympe
                 ImNodes::EditorContextResetPanning(cameraOffset);
                 
                 std::cout << "[BTDebugger] ✅ Camera centered on graph" << std::endl;
-                firstLoad = false;
+                m_lastCenteredEntity = m_selectedEntity;
+                
+                // Clear printed nodes when changing entities
+                m_printedNodeIds.clear();
             }
         }
 
@@ -641,14 +643,13 @@ namespace Olympe
         if (!node || !layout)
             return;
 
-        // ✅ NEW: Debug position (only print once per tree load)
-        static std::set<uint32_t> printedNodes;
-        if (printedNodes.find(node->id) == printedNodes.end())
+        // ✅ NEW: Debug position (only print once per entity)
+        if (m_printedNodeIds.find(node->id) == m_printedNodeIds.end())
         {
             std::cout << "[RenderNode] Node " << node->id 
                       << " (" << node->name << ") at (" 
                       << (int)layout->position.x << ", " << (int)layout->position.y << ")" << std::endl;
-            printedNodes.insert(node->id);
+            m_printedNodeIds.insert(node->id);
         }
 
         // Set node position BEFORE BeginNode (ImNodes requirement)

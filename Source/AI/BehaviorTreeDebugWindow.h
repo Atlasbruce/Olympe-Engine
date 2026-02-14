@@ -134,6 +134,10 @@ namespace Olympe
         // Layout engine
         BTGraphLayoutEngine m_layoutEngine;
         std::vector<BTNodeLayout> m_currentLayout;
+        
+        // Camera state tracking
+        EntityID m_lastCenteredEntity = 0;  // Track which entity was last centered
+        std::set<uint32_t> m_printedNodeIds;  // Track which nodes have been debug printed
 
         // Execution log (circular buffer with max 100 entries)
         std::deque<ExecutionLogEntry> m_executionLog;
