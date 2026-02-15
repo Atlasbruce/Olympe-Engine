@@ -10,6 +10,9 @@
 #include "../ECS_Components_AI.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
+#include "../third_party/imgui/backends/imgui_impl_sdl3.h"
+#include "../third_party/imgui/backends/imgui_impl_sdlrenderer3.h"
+#include <SDL3/SDL.h>
 #include <algorithm>
 #include <cstring>
 #include <cmath>
@@ -23,6 +26,10 @@ namespace Olympe
     constexpr float ZOOM_EPSILON = 0.001f;  // Minimum zoom change to trigger layout recomputation
 
     BehaviorTreeDebugWindow::BehaviorTreeDebugWindow()
+        : m_separateWindow(nullptr)          // C++14: explicit initialization
+        , m_separateRenderer(nullptr)        // C++14: explicit initialization
+        , m_windowCreated(false)
+        , m_separateImGuiContext(nullptr)
     {
     }
 
@@ -36,7 +43,7 @@ namespace Olympe
         if (m_isInitialized)
             return;
 
-        // Initialize ImNodes context
+        // Initialize ImNodes context (for node graph rendering)
         if (!m_imnodesInitialized)
         {
             ImNodes::CreateContext();
@@ -47,10 +54,15 @@ namespace Olympe
         }
 
         m_isInitialized = true;
+        
+        std::cout << "[BTDebugger] Initialized (window will be created on first F10)" << std::endl;
     }
 
     void BehaviorTreeDebugWindow::Shutdown()
     {
+        // Destroy separate window if exists
+        DestroySeparateWindow();
+        
         if (m_imnodesInitialized)
         {
             ImNodes::DestroyContext();
@@ -64,21 +76,158 @@ namespace Olympe
     {
         m_isVisible = !m_isVisible;
         
-        if (m_isVisible && !m_isInitialized)
+        if (m_isVisible)
         {
-            Initialize();
+            // Opening: Create separate window if not exists
+            if (!m_isInitialized)
+            {
+                Initialize();
+            }
+            
+            if (!m_windowCreated)
+            {
+                CreateSeparateWindow();
+            }
+            
+            std::cout << "[BTDebugger] F10: Debugger window opened (separate window)" << std::endl;
         }
+        else
+        {
+            // Closing: Destroy separate window
+            DestroySeparateWindow();
+            
+            std::cout << "[BTDebugger] F10: Debugger window closed" << std::endl;
+        }
+    }
+    
+    void BehaviorTreeDebugWindow::CreateSeparateWindow()
+    {
+        if (m_windowCreated)
+        {
+            std::cout << "[BTDebugger] Separate window already exists" << std::endl;
+            return;
+        }
+        
+        // Create native SDL3 window (NOT ImGui viewport)
+        const int windowWidth = 1800;
+        const int windowHeight = 1200;
+        
+        if (!SDL_CreateWindowAndRenderer(
+            "Behavior Tree Runtime Debugger - Independent Window",
+            windowWidth,
+            windowHeight,
+            SDL_WINDOW_RESIZABLE,  // User can resize
+            &m_separateWindow,
+            &m_separateRenderer))
+        {
+            std::cout << "[BTDebugger] ERROR: Failed to create separate window: " 
+                      << SDL_GetError() << std::endl;
+            return;
+        }
+        
+        // Create separate ImGui context for this window
+        m_separateImGuiContext = ImGui::CreateContext();
+        ImGui::SetCurrentContext(m_separateImGuiContext);
+        
+        // Initialize ImGui backends for separate window
+        ImGuiIO& io = ImGui::GetIO();
+        (void)io; // Prevent unused variable warning
+        ImGui::StyleColorsDark();
+        
+        ImGui_ImplSDL3_InitForSDLRenderer(m_separateWindow, m_separateRenderer);
+        ImGui_ImplSDLRenderer3_Init(m_separateRenderer);
+        
+        m_windowCreated = true;
+        
+        std::cout << "[BTDebugger] ✅ Separate window created successfully!" << std::endl;
+        std::cout << "[BTDebugger] Window can be moved to second monitor" << std::endl;
+    }
+    
+    void BehaviorTreeDebugWindow::DestroySeparateWindow()
+    {
+        if (!m_windowCreated)
+            return;
+        
+        std::cout << "[BTDebugger] Destroying separate window..." << std::endl;
+        
+        // Cleanup ImGui context for separate window
+        if (m_separateImGuiContext != nullptr)
+        {
+            ImGui::SetCurrentContext(m_separateImGuiContext);
+            ImGui_ImplSDLRenderer3_Shutdown();
+            ImGui_ImplSDL3_Shutdown();
+            ImGui::DestroyContext(m_separateImGuiContext);
+            m_separateImGuiContext = nullptr;
+        }
+        
+        // Destroy SDL3 resources
+        if (m_separateRenderer != nullptr)
+        {
+            SDL_DestroyRenderer(m_separateRenderer);
+            m_separateRenderer = nullptr;
+        }
+        
+        if (m_separateWindow != nullptr)
+        {
+            SDL_DestroyWindow(m_separateWindow);
+            m_separateWindow = nullptr;
+        }
+        
+        m_windowCreated = false;
+        
+        std::cout << "[BTDebugger] Separate window destroyed" << std::endl;
+    }
+    
+    void BehaviorTreeDebugWindow::ProcessEvent(SDL_Event* event)
+    {
+        if (!m_windowCreated || !m_isVisible)
+            return;
+        
+        // Only process events for our separate window
+        if (event->type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
+        {
+            // Check if it's our window
+            if (event->window.windowID == SDL_GetWindowID(m_separateWindow))
+            {
+                ToggleVisibility();  // Close debugger
+            }
+        }
+        
+        // Switch to our ImGui context and process event
+        ImGui::SetCurrentContext(m_separateImGuiContext);
+        ImGui_ImplSDL3_ProcessEvent(event);
     }
 
     void BehaviorTreeDebugWindow::Render()
     {
-        if (!m_isVisible || !m_isInitialized)
+        if (!m_isVisible || !m_windowCreated)
             return;
-
-        // Update pulse animation (using delta time)
+        
+        // Switch to separate window's ImGui context
+        ImGui::SetCurrentContext(m_separateImGuiContext);
+        
+        // Begin new frame for separate window
+        ImGui_ImplSDLRenderer3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
+        ImGui::NewFrame();
+        
+        // Render debugger content (existing code, but now in separate window)
+        RenderInSeparateWindow();
+        
+        // Render ImGui to separate window
+        ImGui::Render();
+        SDL_SetRenderDrawColor(m_separateRenderer, 18, 18, 20, 255);  // Dark background
+        SDL_RenderClear(m_separateRenderer);
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_separateRenderer);
+        SDL_RenderPresent(m_separateRenderer);
+    }
+    
+    void BehaviorTreeDebugWindow::RenderInSeparateWindow()
+    {
+        // Update animations and timers
         m_pulseTimer += GameEngine::fDt;
-
-        // Auto-refresh entity list (accumulate time properly)
+        
+        // Auto-refresh entity list
         static float accumulatedTime = 0.0f;
         accumulatedTime += GameEngine::fDt;
         
@@ -87,29 +236,31 @@ namespace Olympe
             RefreshEntityList();
             accumulatedTime = 0.0f;
         }
-
+        
         // Update execution log timers
         for (auto& entry : m_executionLog)
         {
             entry.timeAgo += GameEngine::fDt;
         }
-
-        // Configure as professional external-style window with generous size
-        ImGui::SetNextWindowSize(ImVec2(1800, 1200), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowPos(ImVec2(100, 100), ImGuiCond_FirstUseEver);
-
-        // Force external floating window (no docking, no bring to front on focus)
+        
+        // Main window (fills entire separate window)
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+        
         ImGuiWindowFlags windowFlags = 
             ImGuiWindowFlags_MenuBar |
+            ImGuiWindowFlags_NoTitleBar |     // No title bar (OS window has title)
+            ImGuiWindowFlags_NoResize |       // Use OS window resize
+            ImGuiWindowFlags_NoMove |         // Fills entire window
             ImGuiWindowFlags_NoCollapse |
             ImGuiWindowFlags_NoBringToFrontOnFocus;
         
-        if (!ImGui::Begin("Behavior Tree Runtime Debugger", &m_isVisible, windowFlags))
+        if (!ImGui::Begin("Behavior Tree Runtime Debugger##Main", nullptr, windowFlags))
         {
             ImGui::End();
             return;
         }
-
+        
         // Menu bar
         if (ImGui::BeginMenuBar())
         {
@@ -141,15 +292,20 @@ namespace Olympe
                 ImGui::Text("Current Zoom: %.0f%%", m_currentZoom * 100.0f);
                 ImGui::Checkbox("Show Minimap", &m_showMinimap);
                 
-                // NEW: Auto-fit option
+                // Auto-fit option
                 ImGui::Checkbox("Auto-Fit on Load", &m_autoFitOnLoad);
                 if (ImGui::IsItemHovered())
                 {
                     ImGui::SetTooltip("Automatically fit tree to view when selecting an entity");
                 }
                 
+                ImGui::Separator();
+                ImGui::Text("Window Mode: Separate (Independent)");
+                ImGui::Text("Press F10 to close window");
+                
                 ImGui::EndMenu();
             }
+            
             if (ImGui::BeginMenu("Actions"))
             {
                 if (ImGui::MenuItem("Refresh Now (F5)"))
@@ -174,39 +330,40 @@ namespace Olympe
                 
                 ImGui::EndMenu();
             }
+            
             ImGui::EndMenuBar();
         }
-
+        
         // Keyboard shortcuts
         if (ImGui::IsKeyPressed(ImGuiKey_F5))
         {
             RefreshEntityList();
         }
-
+        
         // Three-panel layout
         float windowWidth = ImGui::GetContentRegionAvail().x;
         float windowHeight = ImGui::GetContentRegionAvail().y;
-
+        
         // Left panel: Entity list
         ImGui::BeginChild("EntityListPanel", ImVec2(m_entityListWidth, windowHeight), true);
         RenderEntityListPanel();
         ImGui::EndChild();
-
+        
         ImGui::SameLine();
-
+        
         // Center panel: Node graph
         float centerWidth = windowWidth - m_entityListWidth - m_inspectorWidth - 20.0f;
         ImGui::BeginChild("NodeGraphPanel", ImVec2(centerWidth, windowHeight), true);
         RenderNodeGraphPanel();
         ImGui::EndChild();
-
+        
         ImGui::SameLine();
-
+        
         // Right panel: Inspector
         ImGui::BeginChild("InspectorPanel", ImVec2(m_inspectorWidth, windowHeight), true);
         RenderInspectorPanel();
         ImGui::EndChild();
-
+        
         ImGui::End();
     }
 

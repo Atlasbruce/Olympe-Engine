@@ -22,6 +22,12 @@
 #include <deque>
 #include <cstdint>
 
+// Forward declarations for SDL3
+struct SDL_Window;
+struct SDL_Renderer;
+union SDL_Event;
+struct ImGuiContext;
+
 namespace Olympe
 {
     /**
@@ -61,6 +67,8 @@ namespace Olympe
      * 
      * Provides comprehensive debugging capabilities for AI behavior trees,
      * including entity selection, graph visualization, and blackboard inspection.
+     * 
+     * Renders in a separate SDL3 native window (not embedded in main engine window).
      */
     class BehaviorTreeDebugWindow
     {
@@ -79,12 +87,12 @@ namespace Olympe
         void Shutdown();
 
         /**
-         * @brief Render the debug window
+         * @brief Render the debug window (in separate SDL3 window)
          */
         void Render();
 
         /**
-         * @brief Toggle window visibility
+         * @brief Toggle window visibility (creates/destroys separate window)
          */
         void ToggleVisibility();
 
@@ -92,6 +100,12 @@ namespace Olympe
          * @brief Check if window is visible
          */
         bool IsVisible() const { return m_isVisible; }
+        
+        /**
+         * @brief Process SDL events for separate window
+         * @param event SDL event to process
+         */
+        void ProcessEvent(SDL_Event* event);
 
         /**
          * @brief Add an execution log entry
@@ -107,6 +121,11 @@ namespace Olympe
         void RenderEntityListPanel();
         void RenderNodeGraphPanel();
         void RenderInspectorPanel();
+        
+        // Separate window management
+        void CreateSeparateWindow();
+        void DestroySeparateWindow();
+        void RenderInSeparateWindow();
 
         // Entity list helpers
         void RefreshEntityList();
@@ -195,5 +214,13 @@ namespace Olympe
         // Layout update flags
         bool m_needsLayoutUpdate = false;    // Track if spacing changed via sliders
         bool m_autoFitOnLoad = true;         // Auto-fit tree when selecting entity
+        
+        // Separate SDL3 window for debugger (C++14 compatible - explicit nullptr initialization)
+        SDL_Window* m_separateWindow;
+        SDL_Renderer* m_separateRenderer;
+        bool m_windowCreated;  // Track if window exists
+        
+        // Separate ImGui context for this window
+        ImGuiContext* m_separateImGuiContext;
     };
 }
