@@ -659,16 +659,44 @@ namespace Olympe
         if (!graph)
             return;
         
-        // Check for cycles by verifying no node can reach itself
+        // Check for cycles by verifying each node can't reach itself through its children
         auto nodes = graph->GetAllNodes();
+        std::set<int> nodesInCycles;
         
         for (const GraphNode* node : nodes)
         {
-            if (m_ConnectionValidator.WouldCreateCycle(graph, node->id, node->id))
+            // Skip if already detected in a cycle
+            if (nodesInCycles.find(node->id) != nodesInCycles.end())
+                continue;
+            
+            // For each child of this node, check if there's a path back to this node
+            std::vector<int> childrenToCheck;
+            
+            // Add all children
+            for (int childId : node->childIds)
             {
-                errors.push_back(ValidationError(node->id, node->name,
-                    "Node is part of a cycle in the tree", 
-                    ErrorSeverity::Critical, "Connection"));
+                childrenToCheck.push_back(childId);
+            }
+            
+            if (node->decoratorChildId >= 0)
+            {
+                childrenToCheck.push_back(node->decoratorChildId);
+            }
+            
+            // Check each child
+            for (int childId : childrenToCheck)
+            {
+                // Check if there's a path from child back to parent (which would be a cycle)
+                std::set<int> visited;
+                if (m_ConnectionValidator.HasPathTo(graph, childId, node->id, visited))
+                {
+                    // Found a cycle involving this node
+                    nodesInCycles.insert(node->id);
+                    errors.push_back(ValidationError(node->id, node->name,
+                        "Node is part of a cycle in the tree", 
+                        ErrorSeverity::Critical, "Connection"));
+                    break;
+                }
             }
         }
     }

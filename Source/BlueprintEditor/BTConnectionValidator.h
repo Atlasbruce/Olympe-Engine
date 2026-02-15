@@ -149,20 +149,19 @@ namespace Olympe
          * @return true if node can have a parent
          */
         bool CanHaveParent(NodeType nodeType, bool isRoot) const;
-        
-    private:
         /**
-         * Recursive helper for cycle detection using DFS
+         * Check if there's a path from one node to another
          * @param graph The node graph
-         * @param currentId Current node in traversal
-         * @param targetId Target node to find
-         * @param visited Set of visited nodes
-         * @return true if cycle detected
+         * @param fromId Starting node ID
+         * @param toId Target node ID
+         * @param visited Set of visited nodes (for recursion tracking)
+         * @return true if path exists
          */
         bool HasPathTo(
             const NodeGraph* graph,
-            int currentId,
-            int targetId,
+            int fromId,
+            int toId,
             std::set<int>& visited) const;
-    };
+        
+    private:
 }

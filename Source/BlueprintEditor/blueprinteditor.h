@@ -102,6 +102,11 @@ namespace Olympe
         void MarkAsModified() { m_HasUnsavedChanges = true; }
         void ClearModified() { m_HasUnsavedChanges = false; }
         
+    private:
+        // Validation helper for save operations
+        bool ValidateBeforeSave();
+        
+    public:
         // Asset management
         std::string GetAssetRootPath() const { return m_AssetRootPath; }
         void SetAssetRootPath(const std::string& path);

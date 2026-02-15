@@ -616,16 +616,11 @@ namespace Olympe
             }
             else
             {
-                // Show error message with tooltip
+                // Show error message in console
                 std::cerr << "[NodeGraphPanel] Invalid connection: " << cmd->GetValidationError() << std::endl;
                 
-                // Show a tooltip with the error
-                ImGui::BeginTooltip();
-                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-                ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Connection Invalid:");
-                ImGui::TextWrapped("%s", cmd->GetValidationError().c_str());
-                ImGui::PopTextWrapPos();
-                ImGui::EndTooltip();
+                // Note: Visual feedback is limited by ImNodes API
+                // Future enhancement: Show error popup or notification
             }
         }
     }
