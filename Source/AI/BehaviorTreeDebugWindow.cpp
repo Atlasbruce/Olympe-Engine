@@ -108,9 +108,12 @@ namespace Olympe
             return;
         }
         
+        // Save current ImGui context before switching
+        ImGuiContext* previousContext = ImGui::GetCurrentContext();
+        
         // Create native SDL3 window (NOT ImGui viewport)
-        const int windowWidth = 1800;
-        const int windowHeight = 1200;
+        const int windowWidth = 1200;
+        const int windowHeight = 720;
         
         if (!SDL_CreateWindowAndRenderer(
             "Behavior Tree Runtime Debugger - Independent Window",
@@ -139,6 +142,9 @@ namespace Olympe
         
         m_windowCreated = true;
         
+        // Restore previous ImGui context
+        ImGui::SetCurrentContext(previousContext);
+        
         std::cout << "[BTDebugger] ✅ Separate window created successfully!" << std::endl;
         std::cout << "[BTDebugger] Window can be moved to second monitor" << std::endl;
     }
@@ -147,10 +153,10 @@ namespace Olympe
     {
         if (!m_windowCreated)
             return;
-        
-        std::cout << "[BTDebugger] Destroying separate window..." << std::endl;
-        
-        // Cleanup ImGui context for separate window
+
+        // ✅ Sauvegarder le contexte principal
+        ImGuiContext* previousContext = ImGui::GetCurrentContext();
+
         if (m_separateImGuiContext != nullptr)
         {
             ImGui::SetCurrentContext(m_separateImGuiContext);
@@ -159,7 +165,11 @@ namespace Olympe
             ImGui::DestroyContext(m_separateImGuiContext);
             m_separateImGuiContext = nullptr;
         }
-        
+
+        // ✅ Restaurer le contexte principal (seulement s'il n'était pas celui qu'on vient de détruire)
+        if (previousContext != m_separateImGuiContext)
+            ImGui::SetCurrentContext(previousContext);
+
         // Destroy SDL3 resources
         if (m_separateRenderer != nullptr)
         {
@@ -190,18 +200,28 @@ namespace Olympe
             if (event->window.windowID == SDL_GetWindowID(m_separateWindow))
             {
                 ToggleVisibility();  // Close debugger
+                return;
             }
         }
-        
+
+		// Save current ImGui context
+        ImGuiContext* previousContext = ImGui::GetCurrentContext();
+                
         // Switch to our ImGui context and process event
         ImGui::SetCurrentContext(m_separateImGuiContext);
         ImGui_ImplSDL3_ProcessEvent(event);
+
+        // Restore previous ImGui context
+        ImGui::SetCurrentContext(previousContext);
     }
 
     void BehaviorTreeDebugWindow::Render()
     {
         if (!m_isVisible || !m_windowCreated)
             return;
+
+        // Save current ImGui context
+        ImGuiContext* previousContext = ImGui::GetCurrentContext();
         
         // Switch to separate window's ImGui context
         ImGui::SetCurrentContext(m_separateImGuiContext);
@@ -220,6 +240,9 @@ namespace Olympe
         SDL_RenderClear(m_separateRenderer);
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_separateRenderer);
         SDL_RenderPresent(m_separateRenderer);
+
+        // Restore previous ImGui context
+        ImGui::SetCurrentContext(previousContext);
     }
     
     void BehaviorTreeDebugWindow::RenderInSeparateWindow()
@@ -812,10 +835,9 @@ namespace Olympe
             ImVec2 graphCenter((minPos.x + maxPos.x) / 2.0f, (minPos.y + maxPos.y) / 2.0f);
             ImVec2 graphSize(maxPos.x - minPos.x, maxPos.y - minPos.y);
 
-            std::cout << "[BTDebugger] Graph bounds: (" << minPos.x << "," << minPos.y 
-                      << ") to (" << maxPos.x << "," << maxPos.y << ")" << std::endl;
-            std::cout << "[BTDebugger] Graph size: " << graphSize.x << "x" << graphSize.y << " pixels" << std::endl;
-            std::cout << "[BTDebugger] Graph center: (" << graphCenter.x << "," << graphCenter.y << ")" << std::endl;
+            //std::cout << "[BTDebugger] Graph bounds: (" << minPos.x << "," << minPos.y << ") to (" << maxPos.x << "," << maxPos.y << ")" << std::endl;
+            //std::cout << "[BTDebugger] Graph size: " << graphSize.x << "x" << graphSize.y << " pixels" << std::endl;
+            //std::cout << "[BTDebugger] Graph center: (" << graphCenter.x << "," << graphCenter.y << ")" << std::endl;
 
             // Center camera when entity changes (with optional auto-fit)
             if (m_lastCenteredEntity != m_selectedEntity)
