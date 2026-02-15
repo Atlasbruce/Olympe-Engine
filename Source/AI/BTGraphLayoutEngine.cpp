@@ -11,13 +11,6 @@
 
 namespace Olympe
 {
-    // Layout spacing constants
-    constexpr float BASE_SPACING_X = 700.0f;  // Horizontal spacing in pixels
-    constexpr float BASE_SPACING_Y = 400.0f;  // Vertical spacing in pixels
-    constexpr size_t WIDE_TREE_THRESHOLD = 5;  // Nodes per layer before considering tree "wide"
-    constexpr size_t DEEP_TREE_THRESHOLD = 5;  // Layers before considering tree "deep"
-    constexpr float SPACING_INCREASE_FACTOR = 1.2f;  // 20% increase for complex trees
-
     BTGraphLayoutEngine::BTGraphLayoutEngine()
     {
     }
@@ -57,49 +50,37 @@ namespace Olympe
         const int maxIterations = 15;    // More iterations for better convergence
         ResolveNodeCollisionsForceDirected(nodePadding, maxIterations);
 
-        // Calculate adaptive spacing multipliers based on tree complexity
-        float spacingMultiplierX = 1.0f;
-        float spacingMultiplierY = 1.0f;
-        
-        // Calculate tree complexity
+        // Use the spacing values passed from UI sliders
+        float baseSpacingX = nodeSpacingX;  // ✅ Respects UI slider
+        float baseSpacingY = nodeSpacingY;  // ✅ Respects UI slider
+
+        // Optional adaptive scaling (only if needed)
         size_t maxNodesInLayer = 1;
         for (const auto& layer : m_layers)
         {
             maxNodesInLayer = std::max(maxNodesInLayer, layer.size());
         }
-        
-        // Adaptive spacing: increase for wide trees
-        if (maxNodesInLayer > 5)
-        {
-            spacingMultiplierX = 1.3f;  // +30% for wide trees
-        }
-        
-        // Adaptive spacing: increase for deep trees
-        if (m_layers.size() > 5)
-        {
-            spacingMultiplierY = 1.2f;  // +20% for deep trees
-        }
-        
-        // ok -  CRITICAL FIX: Apply generous spacing and proper scaling
-        float baseSpacingX = BASE_SPACING_X;  // 700px horizontal spacing
-        float baseSpacingY = BASE_SPACING_Y;  // 400px vertical spacing
 
-        // Scale based on tree complexity
-        // Increase spacing for wide trees
+        // Scale up ONLY for very wide/deep trees
+        constexpr size_t WIDE_TREE_THRESHOLD = 8;   // Increased from 5
+        constexpr size_t DEEP_TREE_THRESHOLD = 8;   // Increased from 5
+        constexpr float SPACING_INCREASE_FACTOR = 1.15f;  // Reduced from 1.2
+
         if (maxNodesInLayer > WIDE_TREE_THRESHOLD)
         {
-            baseSpacingX *= SPACING_INCREASE_FACTOR;  // +20% for wide trees
+            baseSpacingX *= SPACING_INCREASE_FACTOR;  // +15% only for very wide trees
         }
 
-        // Increase spacing for deep trees
         if (m_layers.size() > DEEP_TREE_THRESHOLD)
         {
-            baseSpacingY *= SPACING_INCREASE_FACTOR;  // +20% for deep trees
+            baseSpacingY *= SPACING_INCREASE_FACTOR;  // +15% only for very deep trees
         }
 
-        // ok -  CRITICAL: Apply scaling to convert relative positions to pixel coordinates
-        std::cout << "[BTGraphLayout] Applying final scaling: " 
-                  << baseSpacingX << "x" << baseSpacingY << " pixels" << std::endl;
+        // Debug output to verify
+        std::cout << "[BTGraphLayout] Using spacing: " 
+                  << baseSpacingX << "px × " << baseSpacingY << "px" 
+                  << " (from UI: " << nodeSpacingX << " × " << nodeSpacingY << ")" 
+                  << std::endl;
 
         // Convert from abstract units to world coordinates and apply layout direction
         if (m_layoutDirection == BTLayoutDirection::TopToBottom)
