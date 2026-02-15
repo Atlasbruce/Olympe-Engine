@@ -158,11 +158,17 @@ namespace Olympe
         void Execute() override;
         void Undo() override;
         std::string GetDescription() const override;
+        
+        // Check if the link is valid before executing
+        bool IsValid() const { return m_IsValid; }
+        std::string GetValidationError() const { return m_ValidationError; }
 
     private:
         std::string m_GraphId;
         int m_ParentId;
         int m_ChildId;
+        bool m_IsValid;
+        std::string m_ValidationError;
     };
 
     /**

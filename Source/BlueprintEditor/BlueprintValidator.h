@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include "NodeGraphManager.h"
+#include "BTConnectionValidator.h"
 #include "../../Source/third_party/imgui/imgui.h"
 #include "../../Source/third_party/nlohmann/json.hpp"
 
@@ -82,11 +83,25 @@ namespace Olympe
         void ValidateNodeLinks(const NodeGraph* graph, const GraphNode* node, 
                               std::vector<ValidationError>& errors);
         
+        // Connection validation helpers (new)
+        void ValidateConnectionRules(const NodeGraph* graph, 
+                                    std::vector<ValidationError>& errors);
+        void ValidateMultipleParents(const NodeGraph* graph, 
+                                    std::vector<ValidationError>& errors);
+        void ValidateCycles(const NodeGraph* graph, 
+                           std::vector<ValidationError>& errors);
+        void ValidateOrphanNodes(const NodeGraph* graph, 
+                                std::vector<ValidationError>& errors);
+        void ValidateRootNodes(const NodeGraph* graph, 
+                              std::vector<ValidationError>& errors);
+        
         // JSON validation helpers (new)
         bool ValidateBehaviorTree(const nlohmann::json& blueprint, std::string& errors);
         bool ValidateHFSM(const nlohmann::json& blueprint, std::string& errors);
         bool ValidateEntityPrefab(const nlohmann::json& blueprint, std::string& errors);
         bool ValidateUIBlueprint(const nlohmann::json& blueprint, std::string& errors);
         bool ValidateLevel(const nlohmann::json& blueprint, std::string& errors);
+        
+        BTConnectionValidator m_ConnectionValidator;
     };
 }

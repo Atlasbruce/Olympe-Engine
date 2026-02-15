@@ -579,10 +579,21 @@ namespace Olympe
             int startNodeLocalID = GlobalUIDToLocalNodeID(startNodeGlobalUID, graphID);
             int endNodeLocalID = GlobalUIDToLocalNodeID(endNodeGlobalUID, graphID);
             
-            // Create the link with local IDs
+            // Create the link with local IDs and validate
             std::string graphId = std::to_string(graphID);
             auto cmd = std::make_unique<LinkNodesCommand>(graphId, startNodeLocalID, endNodeLocalID);
-            BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+            
+            // Check if the link is valid
+            if (cmd->IsValid())
+            {
+                BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+            }
+            else
+            {
+                // Show error message
+                std::cerr << "[NodeGraphPanel] Invalid connection: " << cmd->GetValidationError() << std::endl;
+                // TODO: Show visual feedback (tooltip or popup)
+            }
         }
     }
 

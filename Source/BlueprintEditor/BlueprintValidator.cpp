@@ -6,6 +6,8 @@
 #include "EnumCatalogManager.h"
 #include "../third_party/imgui/imgui.h"
 #include <iostream>
+#include <set>
+#include <map>
 
 namespace Olympe
 {
@@ -42,6 +44,13 @@ namespace Olympe
             errors.push_back(ValidationError(-1, graph->name, 
                 "No root node defined", ErrorSeverity::Warning, "Graph"));
         }
+        
+        // NEW: Connection rule validations
+        ValidateConnectionRules(graph, errors);
+        ValidateMultipleParents(graph, errors);
+        ValidateCycles(graph, errors);
+        ValidateOrphanNodes(graph, errors);
+        ValidateRootNodes(graph, errors);
 
         return errors;
     }
@@ -539,5 +548,187 @@ namespace Olympe
         }
         
         return true;
+    }
+    
+    // ========== Connection Rule Validations ==========
+    
+    void BlueprintValidator::ValidateConnectionRules(const NodeGraph* graph, 
+                                                     std::vector<ValidationError>& errors)
+    {
+        if (!graph)
+            return;
+        
+        auto nodes = graph->GetAllNodes();
+        for (const GraphNode* node : nodes)
+        {
+            // Check if decorator has exactly one child
+            if (node->type == NodeType::BT_Decorator)
+            {
+                int childCount = (node->decoratorChildId >= 0) ? 1 : 0;
+                int minChildren = m_ConnectionValidator.GetMinChildrenForType(node->type);
+                
+                if (childCount < minChildren)
+                {
+                    errors.push_back(ValidationError(node->id, node->name,
+                        "Decorator must have exactly 1 child (currently has " + 
+                        std::to_string(childCount) + ")", 
+                        ErrorSeverity::Error, "Connection"));
+                }
+            }
+            // Check if composite has children
+            else if (node->type == NodeType::BT_Sequence || node->type == NodeType::BT_Selector)
+            {
+                int childCount = static_cast<int>(node->childIds.size());
+                int minChildren = m_ConnectionValidator.GetMinChildrenForType(node->type);
+                
+                if (childCount < minChildren)
+                {
+                    errors.push_back(ValidationError(node->id, node->name,
+                        "Composite node should have at least " + std::to_string(minChildren) + 
+                        " child (currently has " + std::to_string(childCount) + ")", 
+                        ErrorSeverity::Warning, "Connection"));
+                }
+            }
+            // Check if leaf nodes have no children
+            else if (node->type == NodeType::BT_Action || node->type == NodeType::BT_Condition)
+            {
+                int childCount = static_cast<int>(node->childIds.size());
+                if (node->decoratorChildId >= 0)
+                    childCount++;
+                
+                if (childCount > 0)
+                {
+                    errors.push_back(ValidationError(node->id, node->name,
+                        "Leaf node (Action/Condition) cannot have children", 
+                        ErrorSeverity::Error, "Connection"));
+                }
+            }
+        }
+    }
+    
+    void BlueprintValidator::ValidateMultipleParents(const NodeGraph* graph, 
+                                                     std::vector<ValidationError>& errors)
+    {
+        if (!graph)
+            return;
+        
+        auto nodes = graph->GetAllNodes();
+        
+        // Count how many times each node appears as a child
+        std::map<int, std::vector<int>> childToParents;
+        
+        for (const GraphNode* node : nodes)
+        {
+            // Check regular children
+            for (int childId : node->childIds)
+            {
+                childToParents[childId].push_back(node->id);
+            }
+            
+            // Check decorator child
+            if (node->decoratorChildId >= 0)
+            {
+                childToParents[node->decoratorChildId].push_back(node->id);
+            }
+        }
+        
+        // Report nodes with multiple parents
+        for (const auto& pair : childToParents)
+        {
+            if (pair.second.size() > 1)
+            {
+                const GraphNode* childNode = graph->GetNode(pair.first);
+                std::string parentList;
+                for (size_t i = 0; i < pair.second.size(); ++i)
+                {
+                    if (i > 0) parentList += ", ";
+                    parentList += std::to_string(pair.second[i]);
+                }
+                
+                errors.push_back(ValidationError(pair.first, 
+                    childNode ? childNode->name : "Unknown",
+                    "Node has multiple parents (" + parentList + "). Each node can only have one parent.", 
+                    ErrorSeverity::Error, "Connection"));
+            }
+        }
+    }
+    
+    void BlueprintValidator::ValidateCycles(const NodeGraph* graph, 
+                                           std::vector<ValidationError>& errors)
+    {
+        if (!graph)
+            return;
+        
+        // Check for cycles by verifying no node can reach itself
+        auto nodes = graph->GetAllNodes();
+        
+        for (const GraphNode* node : nodes)
+        {
+            if (m_ConnectionValidator.WouldCreateCycle(graph, node->id, node->id))
+            {
+                errors.push_back(ValidationError(node->id, node->name,
+                    "Node is part of a cycle in the tree", 
+                    ErrorSeverity::Critical, "Connection"));
+            }
+        }
+    }
+    
+    void BlueprintValidator::ValidateOrphanNodes(const NodeGraph* graph, 
+                                                std::vector<ValidationError>& errors)
+    {
+        if (!graph)
+            return;
+        
+        std::set<int> orphans = m_ConnectionValidator.GetOrphanNodes(graph);
+        
+        for (int orphanId : orphans)
+        {
+            const GraphNode* orphanNode = graph->GetNode(orphanId);
+            errors.push_back(ValidationError(orphanId, 
+                orphanNode ? orphanNode->name : "Unknown",
+                "Orphan node detected - node has no parent and is not the root", 
+                ErrorSeverity::Warning, "Connection"));
+        }
+    }
+    
+    void BlueprintValidator::ValidateRootNodes(const NodeGraph* graph, 
+                                              std::vector<ValidationError>& errors)
+    {
+        if (!graph)
+            return;
+        
+        std::set<int> roots = m_ConnectionValidator.GetRootNodes(graph);
+        
+        // Check if there are multiple roots (including orphans)
+        if (roots.size() > 1)
+        {
+            errors.push_back(ValidationError(-1, graph->name,
+                "Multiple root nodes detected (" + std::to_string(roots.size()) + 
+                "). Tree should have exactly one root.", 
+                ErrorSeverity::Error, "Connection"));
+        }
+        
+        // Check if root node exists
+        if (graph->rootNodeId >= 0)
+        {
+            const GraphNode* rootNode = graph->GetNode(graph->rootNodeId);
+            if (!rootNode)
+            {
+                errors.push_back(ValidationError(graph->rootNodeId, "",
+                    "Root node does not exist in graph", 
+                    ErrorSeverity::Critical, "Connection"));
+            }
+            else
+            {
+                // Check if root has a parent
+                int parentId = m_ConnectionValidator.GetParentNode(graph, graph->rootNodeId);
+                if (parentId >= 0)
+                {
+                    errors.push_back(ValidationError(graph->rootNodeId, rootNode->name,
+                        "Root node has a parent (node " + std::to_string(parentId) + "). Root cannot have a parent.", 
+                        ErrorSeverity::Error, "Connection"));
+                }
+            }
+        }
     }
 }

@@ -4,6 +4,7 @@
 
 #include "CommandSystem.h"
 #include "NodeGraphManager.h"
+#include "BTConnectionValidator.h"
 #include <iostream>
 
 namespace Olympe
@@ -325,11 +326,31 @@ namespace Olympe
         : m_GraphId(graphId)
         , m_ParentId(parentId)
         , m_ChildId(childId)
+        , m_IsValid(false)
     {
+        // Validate the connection before creating the command
+        NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
+        if (graph)
+        {
+            BTConnectionValidator validator;
+            auto result = validator.CanCreateConnection(graph, parentId, childId);
+            m_IsValid = result.isValid;
+            m_ValidationError = result.errorMessage;
+        }
+        else
+        {
+            m_ValidationError = "Graph not found";
+        }
     }
 
     void LinkNodesCommand::Execute()
     {
+        if (!m_IsValid)
+        {
+            std::cerr << "[LinkNodesCommand] Cannot execute: " << m_ValidationError << std::endl;
+            return;
+        }
+        
         NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
         if (graph)
         {
