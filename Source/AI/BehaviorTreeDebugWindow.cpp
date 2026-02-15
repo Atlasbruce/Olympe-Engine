@@ -8,6 +8,7 @@
 #include "../GameEngine.h"
 #include "../ECS_Components.h"
 #include "../ECS_Components_AI.h"
+#include "../json_helper.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
 #include "../third_party/imgui/backends/imgui_impl_sdl3.h"
@@ -43,6 +44,9 @@ namespace Olympe
         if (m_isInitialized)
             return;
 
+        // Load configuration
+        LoadBTConfig();
+        
         // Initialize ImNodes context (for node graph rendering)
         if (!m_imnodesInitialized)
         {
@@ -52,6 +56,9 @@ namespace Olympe
             ImNodes::GetStyle().NodePadding = ImVec2(8, 8);
             m_imnodesInitialized = true;
         }
+
+        // Apply configuration to layout
+        ApplyConfigToLayout();
 
         m_isInitialized = true;
         
@@ -1635,5 +1642,245 @@ namespace Olympe
         // Label
         ImGui::SetCursorPos(ImVec2(minimapPos.x + 5, minimapPos.y + 5));
         ImGui::TextColored(ImVec4(1, 1, 1, 0.7f), "Minimap");
+    }
+
+    // ========================================================================
+    // Configuration Loading
+    // ========================================================================
+
+    void BehaviorTreeDebugWindow::LoadBTConfig()
+    {
+        json configJson;
+        if (!JsonHelper::LoadJsonFromFile("Config/BT_config.json", configJson))
+        {
+            std::cerr << "[BTDebugger] Failed to load BT_config.json, using defaults" << std::endl;
+            m_configLoaded = false;
+            return;
+        }
+
+        // Load layout settings
+        if (JsonHelper::IsObject(configJson, "layout"))
+        {
+            const auto& layout = configJson["layout"];
+            m_config.defaultHorizontal = JsonHelper::GetString(layout, "defaultDirection", "horizontal") == "horizontal";
+            m_config.gridSize = JsonHelper::GetFloat(layout, "gridSize", 16.0f);
+            m_config.gridSnappingEnabled = JsonHelper::GetBool(layout, "gridSnappingEnabled", true);
+            m_config.horizontalSpacing = JsonHelper::GetFloat(layout, "horizontalSpacing", 280.0f);
+            m_config.verticalSpacing = JsonHelper::GetFloat(layout, "verticalSpacing", 120.0f);
+        }
+
+        // Load rendering settings
+        if (JsonHelper::IsObject(configJson, "rendering"))
+        {
+            const auto& rendering = configJson["rendering"];
+            m_config.pinRadius = JsonHelper::GetFloat(rendering, "pinRadius", 6.0f);
+            m_config.pinOutlineThickness = JsonHelper::GetFloat(rendering, "pinOutlineThickness", 2.0f);
+            m_config.bezierTangent = JsonHelper::GetFloat(rendering, "bezierTangent", 80.0f);
+            m_config.connectionThickness = JsonHelper::GetFloat(rendering, "connectionThickness", 2.0f);
+        }
+
+        // Load node colors
+        if (JsonHelper::IsObject(configJson, "nodeColors"))
+        {
+            const auto& nodeColors = configJson["nodeColors"];
+            
+            // Load colors for each node type
+            std::vector<std::string> nodeTypes = {"Selector", "Sequence", "Condition", "Action", "Inverter", "Repeater"};
+            std::vector<std::string> statusTypes = {"idle", "running", "success", "failure", "aborted"};
+            
+            for (const auto& nodeType : nodeTypes)
+            {
+                if (JsonHelper::IsObject(nodeColors, nodeType))
+                {
+                    const auto& typeColors = nodeColors[nodeType];
+                    
+                    for (const auto& status : statusTypes)
+                    {
+                        if (JsonHelper::IsObject(typeColors, status))
+                        {
+                            const auto& colorObj = typeColors[status];
+                            BTConfig::Color color;
+                            color.r = static_cast<uint8_t>(JsonHelper::GetInt(colorObj, "r", 128));
+                            color.g = static_cast<uint8_t>(JsonHelper::GetInt(colorObj, "g", 128));
+                            color.b = static_cast<uint8_t>(JsonHelper::GetInt(colorObj, "b", 128));
+                            color.a = static_cast<uint8_t>(JsonHelper::GetInt(colorObj, "a", 255));
+                            
+                            m_config.nodeColors[nodeType][status] = color;
+                        }
+                    }
+                }
+            }
+        }
+
+        m_configLoaded = true;
+        std::cout << "[BTDebugger] Configuration loaded from BT_config.json" << std::endl;
+    }
+
+    void BehaviorTreeDebugWindow::ApplyConfigToLayout()
+    {
+        if (!m_configLoaded)
+            return;
+
+        // Apply layout direction
+        m_layoutDirection = m_config.defaultHorizontal ? BTLayoutDirection::LeftToRight : BTLayoutDirection::TopToBottom;
+        m_layoutEngine.SetLayoutDirection(m_layoutDirection);
+
+        // Apply spacing
+        m_nodeSpacingX = m_config.horizontalSpacing;
+        m_nodeSpacingY = m_config.verticalSpacing;
+
+        std::cout << "[BTDebugger] Applied configuration to layout engine" << std::endl;
+    }
+
+    Vector BehaviorTreeDebugWindow::SnapToGrid(const Vector& pos) const
+    {
+        if (!m_config.gridSnappingEnabled)
+            return pos;
+
+        float gridSize = m_config.gridSize;
+        return Vector(
+            std::round(pos.x / gridSize) * gridSize,
+            std::round(pos.y / gridSize) * gridSize,
+            pos.z
+        );
+    }
+
+    // ========================================================================
+    // Bezier Connection Rendering
+    // ========================================================================
+
+    void BehaviorTreeDebugWindow::RenderBezierConnection(const Vector& start, const Vector& end, uint32_t color, float thickness, float tangent)
+    {
+        ImVec2 p1(start.x, start.y);
+        ImVec2 p2(end.x, end.y);
+        
+        // Calculate control points for horizontal Bezier curve
+        ImVec2 cp1(p1.x + tangent, p1.y);  // Control point 1: extends right from start
+        ImVec2 cp2(p2.x - tangent, p2.y);  // Control point 2: extends left toward end
+        
+        ImGui::GetWindowDrawList()->AddBezierCubic(p1, cp1, cp2, p2, color, thickness);
+    }
+
+    // ========================================================================
+    // Pin Rendering
+    // ========================================================================
+
+    void BehaviorTreeDebugWindow::RenderNodePins(const BTNode* node, const BTNodeLayout* layout)
+    {
+        if (!node || !layout)
+            return;
+
+        float halfWidth = layout->width / 2.0f;
+        float halfHeight = layout->height / 2.0f;
+        
+        // Draw input pin (left side) for non-root nodes
+        if (node->id != 0)  // Not root
+        {
+            Vector inputPinPos(
+                layout->position.x - halfWidth,
+                layout->position.y,
+                0.0f
+            );
+            
+            ImVec2 pinCenter(inputPinPos.x, inputPinPos.y);
+            uint32_t pinColor = IM_COL32(200, 200, 200, 255);
+            uint32_t outlineColor = IM_COL32(80, 80, 80, 255);
+            
+            // Draw outline
+            ImGui::GetWindowDrawList()->AddCircleFilled(
+                pinCenter, 
+                m_config.pinRadius + m_config.pinOutlineThickness, 
+                outlineColor
+            );
+            
+            // Draw fill
+            ImGui::GetWindowDrawList()->AddCircleFilled(
+                pinCenter, 
+                m_config.pinRadius, 
+                pinColor
+            );
+        }
+
+        // Draw output pin (right side) for composite/decorator nodes
+        if (node->type == BTNodeType::Selector || node->type == BTNodeType::Sequence ||
+            node->type == BTNodeType::Inverter || node->type == BTNodeType::Repeater)
+        {
+            Vector outputPinPos(
+                layout->position.x + halfWidth,
+                layout->position.y,
+                0.0f
+            );
+            
+            ImVec2 pinCenter(outputPinPos.x, outputPinPos.y);
+            uint32_t pinColor = IM_COL32(200, 200, 200, 255);
+            uint32_t outlineColor = IM_COL32(80, 80, 80, 255);
+            
+            // Draw outline
+            ImGui::GetWindowDrawList()->AddCircleFilled(
+                pinCenter, 
+                m_config.pinRadius + m_config.pinOutlineThickness, 
+                outlineColor
+            );
+            
+            // Draw fill
+            ImGui::GetWindowDrawList()->AddCircleFilled(
+                pinCenter, 
+                m_config.pinRadius, 
+                pinColor
+            );
+        }
+    }
+
+    // ========================================================================
+    // Color by Status
+    // ========================================================================
+
+    uint32_t BehaviorTreeDebugWindow::GetNodeColorByStatus(BTNodeType type, BTStatus status) const
+    {
+        if (!m_configLoaded)
+        {
+            // Fallback to old GetNodeColor
+            return GetNodeColor(type);
+        }
+
+        // Map node type to string
+        std::string nodeTypeName;
+        switch (type)
+        {
+            case BTNodeType::Selector: nodeTypeName = "Selector"; break;
+            case BTNodeType::Sequence: nodeTypeName = "Sequence"; break;
+            case BTNodeType::Condition: nodeTypeName = "Condition"; break;
+            case BTNodeType::Action: nodeTypeName = "Action"; break;
+            case BTNodeType::Inverter: nodeTypeName = "Inverter"; break;
+            case BTNodeType::Repeater: nodeTypeName = "Repeater"; break;
+            default: return IM_COL32(128, 128, 128, 255);
+        }
+
+        // Map status to string
+        std::string statusName;
+        switch (status)
+        {
+            case BTStatus::Idle: statusName = "idle"; break;
+            case BTStatus::Running: statusName = "running"; break;
+            case BTStatus::Success: statusName = "success"; break;
+            case BTStatus::Failure: statusName = "failure"; break;
+            case BTStatus::Aborted: statusName = "aborted"; break;
+            default: statusName = "idle"; break;
+        }
+
+        // Look up color in config
+        auto nodeTypeIt = m_config.nodeColors.find(nodeTypeName);
+        if (nodeTypeIt != m_config.nodeColors.end())
+        {
+            auto statusIt = nodeTypeIt->second.find(statusName);
+            if (statusIt != nodeTypeIt->second.end())
+            {
+                const auto& color = statusIt->second;
+                return IM_COL32(color.r, color.g, color.b, color.a);
+            }
+        }
+
+        // Fallback to old GetNodeColor
+        return GetNodeColor(type);
     }
 }
