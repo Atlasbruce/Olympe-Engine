@@ -1,71 +1,171 @@
 {
-  "bankId": "player",
-  "frameWidth": 32,
-  "frameHeight": 32,
-  "columns": 8,
-  "spacing": 0,
-  "margin": 0,
-  "animations": {
-    "idle": {
-      "spritesheet": "./Resources/Sprites/player_idle.png",
-      "frames": {
-        "start": 0,
-        "count": 8
-      },
-      "frameDuration": 0.1,
-      "loop": true,
-      "speed": 1.0
+  "schema_version": 1,
+  "bankName": "player_animations",
+  "description": "Animation bank for player character Thésée",
+  "spritesheets": [
+    {
+      "id": "these_idle",
+      "path": "./Resources/Sprites/these_idle.png",
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "columns": 4,
+      "rows": 1,
+      "totalFrames": 4,
+      "hotspot": { "x": 16, "y": 16 }
     },
-    "walk": {
-      "spritesheet": "./Resources/Sprites/player_walk.png",
-      "frames": {
-        "start": 0,
-        "count": 8
-      },
-      "frameDuration": 0.08,
-      "loop": true,
-      "speed": 1.0
+    {
+      "id": "these_walk",
+      "path": "./Resources/Sprites/these_walk.png",
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "columns": 6,
+      "rows": 1,
+      "totalFrames": 6,
+      "hotspot": { "x": 16, "y": 16 }
     },
-    "run": {
-      "spritesheet": "./Resources/Sprites/player_run.png",
-      "frames": {
-        "start": 0,
-        "count": 8
-      },
-      "frameDuration": 0.06,
-      "loop": true,
-      "speed": 1.2
+    {
+      "id": "these_run",
+      "path": "./Resources/Sprites/these_run.png",
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "columns": 8,
+      "rows": 1,
+      "totalFrames": 8,
+      "hotspot": { "x": 16, "y": 16 }
     },
-    "jump": {
-      "spritesheet": "./Resources/Sprites/player_jump.png",
-      "frames": {
-        "start": 0,
-        "count": 6
-      },
-      "frameDuration": 0.1,
-      "loop": false,
-      "speed": 1.0
+    {
+      "id": "these_hit",
+      "path": "./Resources/Sprites/these_hit.png",
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "columns": 3,
+      "rows": 1,
+      "totalFrames": 3,
+      "hotspot": { "x": 16, "y": 16 }
     },
-    "fall": {
-      "spritesheet": "./Resources/Sprites/player_fall.png",
-      "frames": {
-        "start": 0,
-        "count": 4
-      },
-      "frameDuration": 0.1,
-      "loop": true,
-      "speed": 1.0
-    },
-    "attack": {
-      "spritesheet": "./Resources/Sprites/player_attack.png",
-      "frames": {
-        "start": 0,
-        "count": 6
-      },
-      "frameDuration": 0.05,
-      "loop": false,
-      "speed": 1.5,
-      "nextAnimation": "idle"
+    {
+      "id": "these_dead",
+      "path": "./Resources/Sprites/these_dead.png",
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "columns": 5,
+      "rows": 1,
+      "totalFrames": 5,
+      "hotspot": { "x": 16, "y": 16 }
     }
-  }
+  ],
+  "animations": [
+    {
+      "name": "Idle",
+      "spritesheetId": "these_idle",
+      "startFrame": 0,
+      "endFrame": 3,
+      "framerate": 8.0,
+      "looping": true,
+      "events": []
+    },
+    {
+      "name": "Walk",
+      "spritesheetId": "these_walk",
+      "startFrame": 0,
+      "endFrame": 5,
+      "framerate": 12.0,
+      "looping": true,
+      "events": [
+        {
+          "frame": 1,
+          "type": "sound",
+          "data": {
+            "soundPath": "./Resources/Sounds/footstep.wav",
+            "volume": 0.5
+          }
+        },
+        {
+          "frame": 4,
+          "type": "sound",
+          "data": {
+            "soundPath": "./Resources/Sounds/footstep.wav",
+            "volume": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "name": "Run",
+      "spritesheetId": "these_run",
+      "startFrame": 0,
+      "endFrame": 7,
+      "framerate": 16.0,
+      "looping": true,
+      "events": [
+        {
+          "frame": 2,
+          "type": "sound",
+          "data": {
+            "soundPath": "./Resources/Sounds/footstep_run.wav",
+            "volume": 0.6
+          }
+        },
+        {
+          "frame": 6,
+          "type": "sound",
+          "data": {
+            "soundPath": "./Resources/Sounds/footstep_run.wav",
+            "volume": 0.6
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hit",
+      "spritesheetId": "these_hit",
+      "startFrame": 0,
+      "endFrame": 2,
+      "framerate": 15.0,
+      "looping": false,
+      "events": [
+        {
+          "frame": 0,
+          "type": "sound",
+          "data": {
+            "soundPath": "./Resources/Sounds/hit_impact.wav",
+            "volume": 0.8
+          }
+        },
+        {
+          "frame": 1,
+          "type": "vfx",
+          "data": {
+            "effectType": "impact_flash",
+            "duration": 0.1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dead",
+      "spritesheetId": "these_dead",
+      "startFrame": 0,
+      "endFrame": 4,
+      "framerate": 10.0,
+      "looping": false,
+      "events": [
+        {
+          "frame": 0,
+          "type": "sound",
+          "data": {
+            "soundPath": "./Resources/Sounds/death.wav",
+            "volume": 0.9
+          }
+        },
+        {
+          "frame": 4,
+          "type": "gamelogic",
+          "data": {
+            "action": "entity_death_complete"
+          }
+        }
+      ]
+    }
+  ]
 }

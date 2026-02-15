@@ -112,6 +112,16 @@
           "maxSpeed": 100.0,
           "layerMask": 1
         }
+      },
+      {
+        "type": "VisualAnimation_data",
+        "properties": {
+          "animGraphPath": "./Gamedata/Animations/AnimationGraphs/player_animgraph.json",
+          "currentState": "Idle",
+          "playbackSpeed": 1.0,
+          "flipX": false,
+          "flipY": false
+        }
       }
     ]
   }

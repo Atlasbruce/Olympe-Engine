@@ -1,20 +1,127 @@
 {
-  "graphId": "player_animgraph",
-  "defaultState": "idle",
-  "states": [
-    "idle",
-    "walk",
-    "run",
-    "jump",
-    "fall",
-    "attack"
+  "schema_version": 1,
+  "graphName": "player_animgraph",
+  "description": "Animation state machine for player character",
+  "animationBankPath": "./Gamedata/Animations/AnimationBanks/player_animations.json",
+  "parameters": [
+    { "name": "speed", "type": "float", "defaultValue": 0.0 },
+    { "name": "isMoving", "type": "bool", "defaultValue": false },
+    { "name": "isRunning", "type": "bool", "defaultValue": false },
+    { "name": "isAttacking", "type": "bool", "defaultValue": false },
+    { "name": "isDead", "type": "bool", "defaultValue": false },
+    { "name": "health", "type": "float", "defaultValue": 100.0 }
   ],
-  "transitions": {
-    "idle": ["walk", "run", "jump", "attack"],
-    "walk": ["idle", "run", "jump", "attack"],
-    "run": ["idle", "walk", "jump", "attack"],
-    "jump": ["fall", "idle"],
-    "fall": ["idle", "walk", "run"],
-    "attack": ["idle"]
-  }
+  "states": [
+    {
+      "name": "Idle",
+      "animationName": "Idle",
+      "blendMode": "override",
+      "priority": 0
+    },
+    {
+      "name": "Walk",
+      "animationName": "Walk",
+      "blendMode": "override",
+      "priority": 1
+    },
+    {
+      "name": "Run",
+      "animationName": "Run",
+      "blendMode": "override",
+      "priority": 2
+    },
+    {
+      "name": "Hit",
+      "animationName": "Hit",
+      "blendMode": "override",
+      "priority": 3
+    },
+    {
+      "name": "Dead",
+      "animationName": "Dead",
+      "blendMode": "override",
+      "priority": 10
+    }
+  ],
+  "transitions": [
+    {
+      "from": "Idle",
+      "to": "Walk",
+      "transitionTime": 0.1,
+      "conditions": [
+        { "parameter": "isMoving", "operator": "==", "value": true },
+        { "parameter": "speed", "operator": ">", "value": 10.0 },
+        { "parameter": "speed", "operator": "<=", "value": 120.0 }
+      ]
+    },
+    {
+      "from": "Idle",
+      "to": "Run",
+      "transitionTime": 0.1,
+      "conditions": [
+        { "parameter": "isMoving", "operator": "==", "value": true },
+        { "parameter": "speed", "operator": ">", "value": 120.0 },
+        { "parameter": "isRunning", "operator": "==", "value": true }
+      ]
+    },
+    {
+      "from": "Walk",
+      "to": "Idle",
+      "transitionTime": 0.1,
+      "conditions": [
+        { "parameter": "isMoving", "operator": "==", "value": false }
+      ]
+    },
+    {
+      "from": "Walk",
+      "to": "Run",
+      "transitionTime": 0.15,
+      "conditions": [
+        { "parameter": "speed", "operator": ">", "value": 120.0 },
+        { "parameter": "isRunning", "operator": "==", "value": true }
+      ]
+    },
+    {
+      "from": "Run",
+      "to": "Walk",
+      "transitionTime": 0.15,
+      "conditions": [
+        { "parameter": "speed", "operator": "<=", "value": 120.0 }
+      ]
+    },
+    {
+      "from": "Run",
+      "to": "Idle",
+      "transitionTime": 0.2,
+      "conditions": [
+        { "parameter": "isMoving", "operator": "==", "value": false }
+      ]
+    },
+    {
+      "from": "ANY",
+      "to": "Hit",
+      "transitionTime": 0.05,
+      "conditions": [
+        { "parameter": "isAttacking", "operator": "==", "value": true },
+        { "parameter": "isDead", "operator": "==", "value": false }
+      ]
+    },
+    {
+      "from": "Hit",
+      "to": "Idle",
+      "transitionTime": 0.1,
+      "conditions": [
+        { "parameter": "isAttacking", "operator": "==", "value": false }
+      ]
+    },
+    {
+      "from": "ANY",
+      "to": "Dead",
+      "transitionTime": 0.1,
+      "conditions": [
+        { "parameter": "isDead", "operator": "==", "value": true }
+      ]
+    }
+  ],
+  "defaultState": "Idle"
 }

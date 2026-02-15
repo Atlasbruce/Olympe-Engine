@@ -1,14 +1,90 @@
 {
-  "graphId": "zombie_animgraph",
-  "defaultState": "idle",
-  "states": [
-    "idle",
-    "walk",
-    "attack"
+  "schema_version": 1,
+  "graphName": "zombie_animgraph",
+  "description": "Animation state machine for zombie enemy",
+  "animationBankPath": "./Gamedata/Animations/AnimationBanks/zombie_animations.json",
+  "parameters": [
+    { "name": "isMoving", "type": "bool", "defaultValue": false },
+    { "name": "isAttacking", "type": "bool", "defaultValue": false },
+    { "name": "isDead", "type": "bool", "defaultValue": false },
+    { "name": "aiState", "type": "string", "defaultValue": "Idle" },
+    { "name": "speed", "type": "float", "defaultValue": 0.0 }
   ],
-  "transitions": {
-    "idle": ["walk", "attack"],
-    "walk": ["idle", "attack"],
-    "attack": ["idle", "walk"]
-  }
+  "states": [
+    {
+      "name": "Idle",
+      "animationName": "Idle",
+      "blendMode": "override",
+      "priority": 0
+    },
+    {
+      "name": "Walk",
+      "animationName": "Walk",
+      "blendMode": "override",
+      "priority": 1
+    },
+    {
+      "name": "Attack",
+      "animationName": "Attack",
+      "blendMode": "override",
+      "priority": 3
+    },
+    {
+      "name": "Dead",
+      "animationName": "Dead",
+      "blendMode": "override",
+      "priority": 10
+    }
+  ],
+  "transitions": [
+    {
+      "from": "Idle",
+      "to": "Walk",
+      "transitionTime": 0.1,
+      "conditions": [
+        { "parameter": "isMoving", "operator": "==", "value": true }
+      ]
+    },
+    {
+      "from": "Idle",
+      "to": "Attack",
+      "transitionTime": 0.05,
+      "conditions": [
+        { "parameter": "isAttacking", "operator": "==", "value": true }
+      ]
+    },
+    {
+      "from": "Walk",
+      "to": "Idle",
+      "transitionTime": 0.1,
+      "conditions": [
+        { "parameter": "isMoving", "operator": "==", "value": false }
+      ]
+    },
+    {
+      "from": "Walk",
+      "to": "Attack",
+      "transitionTime": 0.05,
+      "conditions": [
+        { "parameter": "isAttacking", "operator": "==", "value": true }
+      ]
+    },
+    {
+      "from": "Attack",
+      "to": "Idle",
+      "transitionTime": 0.1,
+      "conditions": [
+        { "parameter": "isAttacking", "operator": "==", "value": false }
+      ]
+    },
+    {
+      "from": "ANY",
+      "to": "Dead",
+      "transitionTime": 0.1,
+      "conditions": [
+        { "parameter": "isDead", "operator": "==", "value": true }
+      ]
+    }
+  ],
+  "defaultState": "Idle"
 }

@@ -92,6 +92,7 @@ if(BUILD_RUNTIME_ENGINE)
         "Source/ComponentDefinition.cpp"
         "Source/PrefabFactory.cpp"
         "Source/Rendering/IsometricRenderer.cpp"
+        "Source/Animation/*.cpp"
     )
     
     add_executable(OlympeEngine ${RUNTIME_SOURCES})

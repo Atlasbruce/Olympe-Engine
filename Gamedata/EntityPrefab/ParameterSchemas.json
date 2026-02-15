@@ -222,6 +222,19 @@
         { "name": "steeringWeight", "type": "Float", "defaultValue": 1.0 },
         { "name": "avoidObstacles", "type": "Bool", "defaultValue": true }
       ]
+    },
+    {
+      "componentType": "VisualAnimation_data",
+      "parameters": [
+        { "name": "animGraphPath", "type": "String", "defaultValue": "" },
+        { "name": "currentState", "type": "String", "defaultValue": "Idle" },
+        { "name": "currentFrame", "type": "Int", "defaultValue": 0 },
+        { "name": "frameTime", "type": "Float", "defaultValue": 0.0 },
+        { "name": "playbackSpeed", "type": "Float", "defaultValue": 1.0 },
+        { "name": "isPaused", "type": "Bool", "defaultValue": false },
+        { "name": "flipX", "type": "Bool", "defaultValue": false },
+        { "name": "flipY", "type": "Bool", "defaultValue": false }
+      ]
     }
   ]
 }
