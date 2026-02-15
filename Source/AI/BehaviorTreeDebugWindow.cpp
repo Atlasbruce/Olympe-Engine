@@ -12,11 +12,16 @@
 #include "../third_party/imnodes/imnodes.h"
 #include "../third_party/imgui/backends/imgui_impl_sdl3.h"
 #include "../third_party/imgui/backends/imgui_impl_sdlrenderer3.h"
+#include "../third_party/nlohmann/json.hpp"
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <cstring>
 #include <cmath>
+#include <ctime>
+#include <fstream>
 #include <unordered_set>
+
+using json = nlohmann::json;
 
 namespace Olympe
 {
@@ -2180,8 +2185,53 @@ namespace Olympe
             return false;
         }
         
-        // Prevent cycles (simple check: child cannot be ancestor of parent)
-        // Note: This is a simplified check. Full cycle detection would require graph traversal
+        // Prevent duplicate connections
+        if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+        {
+            if (std::find(parent->childIds.begin(), parent->childIds.end(), childId) != parent->childIds.end())
+            {
+                return false;
+            }
+        }
+        
+        // Prevent cycles: Check if parent is a descendant of child
+        // Use DFS to traverse from child to see if we can reach parent
+        std::vector<uint32_t> visited;
+        std::vector<uint32_t> toVisit;
+        toVisit.push_back(childId);
+        
+        while (!toVisit.empty())
+        {
+            uint32_t currentId = toVisit.back();
+            toVisit.pop_back();
+            
+            if (currentId == parentId)
+            {
+                // Found parent as descendant of child - would create cycle
+                return false;
+            }
+            
+            if (std::find(visited.begin(), visited.end(), currentId) != visited.end())
+            {
+                continue;  // Already visited
+            }
+            
+            visited.push_back(currentId);
+            
+            const BTNode* current = m_editingTree.GetNode(currentId);
+            if (current)
+            {
+                // Add children to visit list
+                for (uint32_t id : current->childIds)
+                {
+                    toVisit.push_back(id);
+                }
+                if (current->decoratorChildId != 0)
+                {
+                    toVisit.push_back(current->decoratorChildId);
+                }
+            }
+        }
         
         return true;
     }
@@ -2194,11 +2244,155 @@ namespace Olympe
             return;
         }
         
-        // TODO: Implement actual save to JSON file
-        // For now, just mark as unmodified
-        m_treeModified = false;
+        // Generate JSON for the edited tree
+        json treeJson;
+        treeJson["schema_version"] = 2;
+        treeJson["type"] = "BehaviorTree";
+        treeJson["blueprintType"] = "BehaviorTree";
+        treeJson["name"] = m_editingTree.name;
+        treeJson["description"] = "Edited in BT Editor";
         
-        std::cout << "[BTEditor] Tree saved (placeholder - actual save not implemented)" << std::endl;
+        // Metadata
+        json metadata;
+        metadata["author"] = "BT Editor";
+        // Get current timestamp
+        auto now = std::time(nullptr);
+        char timestamp[32];
+        std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%S", std::localtime(&now));
+        metadata["created"] = timestamp;
+        metadata["lastModified"] = timestamp;
+        metadata["tags"] = json::array({"AI", "BehaviorTree", "Edited"});
+        treeJson["metadata"] = metadata;
+        
+        // Editor state
+        json editorState;
+        editorState["zoom"] = 1.0;
+        editorState["scrollOffset"] = {{"x", 0}, {"y", 0}};
+        treeJson["editorState"] = editorState;
+        
+        // Data section
+        json dataSection;
+        dataSection["rootNodeId"] = m_editingTree.rootNodeId;
+        
+        // Nodes array
+        json nodesArray = json::array();
+        for (const auto& node : m_editingTree.nodes)
+        {
+            json nodeJson;
+            nodeJson["id"] = node.id;
+            nodeJson["name"] = node.name;
+            
+            // Node type
+            switch (node.type)
+            {
+                case BTNodeType::Selector: nodeJson["type"] = "Selector"; break;
+                case BTNodeType::Sequence: nodeJson["type"] = "Sequence"; break;
+                case BTNodeType::Condition: nodeJson["type"] = "Condition"; break;
+                case BTNodeType::Action: nodeJson["type"] = "Action"; break;
+                case BTNodeType::Inverter: nodeJson["type"] = "Inverter"; break;
+                case BTNodeType::Repeater: nodeJson["type"] = "Repeater"; break;
+            }
+            
+            // Position (default if not available)
+            nodeJson["position"] = {{"x", 0.0}, {"y", 0.0}};
+            
+            // Node-specific data
+            if (node.type == BTNodeType::Condition)
+            {
+                // Map enum to string
+                const char* conditionTypeStr = "TargetVisible";
+                switch (node.conditionType)
+                {
+                    case BTConditionType::TargetVisible: conditionTypeStr = "TargetVisible"; break;
+                    case BTConditionType::TargetInRange: conditionTypeStr = "TargetInRange"; break;
+                    case BTConditionType::HealthBelow: conditionTypeStr = "HealthBelow"; break;
+                    case BTConditionType::HasMoveGoal: conditionTypeStr = "HasMoveGoal"; break;
+                    case BTConditionType::CanAttack: conditionTypeStr = "CanAttack"; break;
+                    case BTConditionType::HeardNoise: conditionTypeStr = "HeardNoise"; break;
+                    case BTConditionType::IsWaitTimerExpired: conditionTypeStr = "IsWaitTimerExpired"; break;
+                    case BTConditionType::HasNavigableDestination: conditionTypeStr = "HasNavigableDestination"; break;
+                    case BTConditionType::HasValidPath: conditionTypeStr = "HasValidPath"; break;
+                    case BTConditionType::HasReachedDestination: conditionTypeStr = "HasReachedDestination"; break;
+                }
+                nodeJson["conditionType"] = conditionTypeStr;
+                if (node.conditionParam != 0.0f)
+                {
+                    nodeJson["parameters"] = {{"param", node.conditionParam}};
+                }
+                else
+                {
+                    nodeJson["parameters"] = json::object();
+                }
+            }
+            else if (node.type == BTNodeType::Action)
+            {
+                // Map enum to string
+                const char* actionTypeStr = "Idle";
+                switch (node.actionType)
+                {
+                    case BTActionType::SetMoveGoalToLastKnownTargetPos: actionTypeStr = "SetMoveGoalToLastKnownTargetPos"; break;
+                    case BTActionType::SetMoveGoalToTarget: actionTypeStr = "SetMoveGoalToTarget"; break;
+                    case BTActionType::SetMoveGoalToPatrolPoint: actionTypeStr = "SetMoveGoalToPatrolPoint"; break;
+                    case BTActionType::MoveToGoal: actionTypeStr = "MoveToGoal"; break;
+                    case BTActionType::AttackIfClose: actionTypeStr = "AttackIfClose"; break;
+                    case BTActionType::PatrolPickNextPoint: actionTypeStr = "PatrolPickNextPoint"; break;
+                    case BTActionType::ClearTarget: actionTypeStr = "ClearTarget"; break;
+                    case BTActionType::Idle: actionTypeStr = "Idle"; break;
+                    case BTActionType::WaitRandomTime: actionTypeStr = "WaitRandomTime"; break;
+                    case BTActionType::ChooseRandomNavigablePoint: actionTypeStr = "ChooseRandomNavigablePoint"; break;
+                    case BTActionType::RequestPathfinding: actionTypeStr = "RequestPathfinding"; break;
+                    case BTActionType::FollowPath: actionTypeStr = "FollowPath"; break;
+                }
+                nodeJson["actionType"] = actionTypeStr;
+                json params;
+                if (node.actionParam1 != 0.0f) params["param1"] = node.actionParam1;
+                if (node.actionParam2 != 0.0f) params["param2"] = node.actionParam2;
+                nodeJson["parameters"] = params.empty() ? json::object() : params;
+            }
+            else if (node.type == BTNodeType::Repeater)
+            {
+                nodeJson["repeatCount"] = node.repeatCount;
+            }
+            
+            // Children
+            if (!node.childIds.empty())
+            {
+                nodeJson["childIds"] = node.childIds;
+            }
+            if (node.decoratorChildId != 0)
+            {
+                nodeJson["decoratorChildId"] = node.decoratorChildId;
+            }
+            
+            nodesArray.push_back(nodeJson);
+        }
+        
+        dataSection["nodes"] = nodesArray;
+        treeJson["data"] = dataSection;
+        
+        // Save to file
+        std::string filename = "Blueprints/AI/" + m_editingTree.name + "_edited.json";
+        
+        try
+        {
+            std::ofstream file(filename);
+            if (file.is_open())
+            {
+                file << treeJson.dump(2);  // Pretty print with 2-space indentation
+                file.close();
+                
+                m_treeModified = false;
+                std::cout << "[BTEditor] Tree saved to: " << filename << std::endl;
+            }
+            else
+            {
+                std::cerr << "[BTEditor] ERROR: Failed to open file for writing: " << filename << std::endl;
+            }
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "[BTEditor] ERROR: Exception during save: " << e.what() << std::endl;
+        }
     }
     
     void BehaviorTreeDebugWindow::UndoLastAction()
