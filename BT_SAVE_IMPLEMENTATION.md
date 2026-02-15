@@ -226,15 +226,21 @@ All existing BT files validated:
 
 ## Future Enhancements
 
-### Potential Improvements
+### Potential Improvements (from code review)
+
+**High Priority:**
 1. **File Dialog Integration** - Replace text input with native file picker
-2. **Auto-save** - Optional periodic auto-save to temp file
-3. **Undo/Redo Integration** - Clear dirty flag only on save, not undo/redo
-4. **Creation Timestamp** - Track when graph was first created
-5. **Author Configuration** - Allow user to set author name in preferences
-6. **Multiple Save Locations** - Support "Export to..." for different paths
-7. **Backup Files** - Create .bak files before overwriting
-8. **Save All** - Button to save all dirty graphs at once
+2. **Instance Member Variables** - Move static popup state (saveAsPopupOpen, confirmationOpen, graphToClose) to NodeGraphPanel members for better multi-instance support
+3. **Reduce Code Duplication** - Refactor timestamp generation to declare std::tm once and only branch on system call
+
+**Medium Priority:**
+4. **Auto-save** - Optional periodic auto-save to temp file
+5. **Undo/Redo Integration** - Clear dirty flag only on save, not undo/redo
+6. **Creation Timestamp** - Track when graph was first created
+7. **Author Configuration** - Allow user to set author name in preferences
+8. **Multiple Save Locations** - Support "Export to..." for different paths
+9. **Backup Files** - Create .bak files before overwriting
+10. **Save All** - Button to save all dirty graphs at once
 
 ### Known Limitations
 1. Save As popup uses simple text input (no file browser)
@@ -242,6 +248,7 @@ All existing BT files validated:
 3. Created timestamp not tracked (empty string)
 4. No conflict resolution for concurrent edits
 5. No file locking mechanism
+6. Static variables for popup state (designed for single panel instance)
 
 ## Error Messages
 
