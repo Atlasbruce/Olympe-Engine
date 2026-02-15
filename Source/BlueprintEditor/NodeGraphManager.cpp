@@ -11,6 +11,9 @@
 #include <queue>
 #include <set>
 #include <map>
+#include <chrono>
+#include <sstream>
+#include <iomanip>
 
 using json = nlohmann::json;
 
@@ -209,10 +212,27 @@ namespace Olympe
     nlohmann::json NodeGraph::ToJson() const
     {
         json j;
+        
+        // v2 Schema wrapper
+        j["schema_version"] = 2;
+        j["blueprintType"] = type.empty() ? "BehaviorTree" : type;
         j["name"] = name;
-        j["type"] = type;
-        j["rootNodeId"] = rootNodeId;
-        j["nodes"] = json::array();
+        j["description"] = "";  // Could be added to NodeGraph if needed
+        
+        // Metadata section
+        j["metadata"]["author"] = "User";  // Could be made configurable
+        j["metadata"]["created"] = "";  // Could be tracked if needed
+        j["metadata"]["lastModified"] = editorMetadata.lastModified;
+        j["metadata"]["tags"] = json::array();
+        
+        // Editor state
+        j["editorState"]["zoom"] = editorMetadata.zoom;
+        j["editorState"]["scrollOffset"]["x"] = editorMetadata.scrollOffsetX;
+        j["editorState"]["scrollOffset"]["y"] = editorMetadata.scrollOffsetY;
+        
+        // Data section containing the actual tree
+        j["data"]["rootNodeId"] = rootNodeId;
+        j["data"]["nodes"] = json::array();
 
         for (const auto& node : m_Nodes)
         {
@@ -222,10 +242,8 @@ namespace Olympe
             nj["name"] = node.name;
             
             // Save position in a structured format
-            nlohmann::json posJson = nlohmann::json::object();
-            posJson["x"] = node.posX;
-            posJson["y"] = node.posY;
-            nj["position"] = posJson;
+            nj["position"]["x"] = node.posX;
+            nj["position"]["y"] = node.posY;
 
             if (!node.actionType.empty())
                 nj["actionType"] = node.actionType;
@@ -234,6 +252,7 @@ namespace Olympe
             if (!node.decoratorType.empty())
                 nj["decoratorType"] = node.decoratorType;
 
+            // Parameters as nested object (v2 format)
             if (!node.parameters.empty())
             {
                 json params = json::object();
@@ -241,27 +260,21 @@ namespace Olympe
                     params[pair.first] = pair.second;
                 nj["parameters"] = params;
             }
+            else
+            {
+                nj["parameters"] = json::object();
+            }
 
-            nlohmann::json childrenJson = nlohmann::json::array();
+            // Children array
+            nj["children"] = json::array();
             for (int childId : node.childIds)
-                childrenJson.push_back(childId);
-            nj["children"] = childrenJson;
+                nj["children"].push_back(childId);
 
             if (node.decoratorChildId >= 0)
                 nj["decoratorChild"] = node.decoratorChildId;
 
-            j["nodes"].push_back(nj);
+            j["data"]["nodes"].push_back(nj);
         }
-
-        // Add editor metadata
-        nlohmann::json editorMeta = nlohmann::json::object();
-        editorMeta["zoom"] = editorMetadata.zoom;
-        nlohmann::json scrollOffset = nlohmann::json::object();
-        scrollOffset["x"] = editorMetadata.scrollOffsetX;
-        scrollOffset["y"] = editorMetadata.scrollOffsetY;
-        editorMeta["scrollOffset"] = scrollOffset;
-        editorMeta["lastModified"] = editorMetadata.lastModified;
-        j["editorMetadata"] = editorMeta;
 
         return j;
     }
@@ -710,6 +723,21 @@ namespace Olympe
         NodeGraph* graph = GetGraph(graphId);
         if (!graph)
             return false;
+        
+        // Update lastModified timestamp
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        std::stringstream ss;
+        
+        #ifdef _MSC_VER
+            std::tm timeinfo;
+            localtime_s(&timeinfo, &time);
+            ss << std::put_time(&timeinfo, "%Y-%m-%dT%H:%M:%S");
+        #else
+            ss << std::put_time(std::localtime(&time), "%Y-%m-%dT%H:%M:%S");
+        #endif
+        
+        graph->editorMetadata.lastModified = ss.str();
 
         json j = graph->ToJson();
 
