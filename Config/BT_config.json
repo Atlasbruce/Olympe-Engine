@@ -1,0 +1,60 @@
+{
+  "version": "1.0",
+  "layout": {
+    "defaultDirection": "horizontal",
+    "gridSize": 16.0,
+    "gridSnappingEnabled": true,
+    "horizontalSpacing": 280.0,
+    "verticalSpacing": 120.0
+  },
+  "rendering": {
+    "pinRadius": 6.0,
+    "pinOutlineThickness": 2.0,
+    "bezierTangent": 80.0,
+    "connectionThickness": 2.0
+  },
+  "nodeColors": {
+    "Selector": {
+      "idle": { "r": 60, "g": 100, "b": 180, "a": 255 },
+      "running": { "r": 80, "g": 130, "b": 230, "a": 255 },
+      "success": { "r": 80, "g": 200, "b": 80, "a": 255 },
+      "failure": { "r": 220, "g": 80, "b": 80, "a": 255 },
+      "aborted": { "r": 120, "g": 120, "b": 120, "a": 255 }
+    },
+    "Sequence": {
+      "idle": { "r": 100, "g": 160, "b": 100, "a": 255 },
+      "running": { "r": 120, "g": 200, "b": 120, "a": 255 },
+      "success": { "r": 80, "g": 220, "b": 80, "a": 255 },
+      "failure": { "r": 220, "g": 80, "b": 80, "a": 255 },
+      "aborted": { "r": 120, "g": 120, "b": 120, "a": 255 }
+    },
+    "Condition": {
+      "idle": { "r": 180, "g": 140, "b": 60, "a": 255 },
+      "running": { "r": 230, "g": 180, "b": 80, "a": 255 },
+      "success": { "r": 100, "g": 220, "b": 100, "a": 255 },
+      "failure": { "r": 220, "g": 80, "b": 80, "a": 255 },
+      "aborted": { "r": 120, "g": 120, "b": 120, "a": 255 }
+    },
+    "Action": {
+      "idle": { "r": 160, "g": 100, "b": 180, "a": 255 },
+      "running": { "r": 200, "g": 120, "b": 230, "a": 255 },
+      "success": { "r": 100, "g": 220, "b": 100, "a": 255 },
+      "failure": { "r": 220, "g": 80, "b": 80, "a": 255 },
+      "aborted": { "r": 120, "g": 120, "b": 120, "a": 255 }
+    },
+    "Inverter": {
+      "idle": { "r": 140, "g": 140, "b": 180, "a": 255 },
+      "running": { "r": 170, "g": 170, "b": 230, "a": 255 },
+      "success": { "r": 100, "g": 220, "b": 100, "a": 255 },
+      "failure": { "r": 220, "g": 80, "b": 80, "a": 255 },
+      "aborted": { "r": 120, "g": 120, "b": 120, "a": 255 }
+    },
+    "Repeater": {
+      "idle": { "r": 100, "g": 140, "b": 180, "a": 255 },
+      "running": { "r": 120, "g": 170, "b": 230, "a": 255 },
+      "success": { "r": 100, "g": 220, "b": 100, "a": 255 },
+      "failure": { "r": 220, "g": 80, "b": 80, "a": 255 },
+      "aborted": { "r": 120, "g": 120, "b": 120, "a": 255 }
+    }
+  }
+}
