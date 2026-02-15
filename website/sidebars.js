@@ -32,6 +32,14 @@ const sidebars = {
       items: [
         {
           type: 'category',
+          label: 'Grid System',
+          items: [
+            'user-guide/grid-system/grid-system-overview',
+            'user-guide/grid-system/grid-configuration',
+          ],
+        },
+        {
+          type: 'category',
           label: 'Animation System',
           collapsed: false,
           items: [
