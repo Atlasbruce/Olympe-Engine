@@ -82,6 +82,154 @@ namespace Olympe
                 "Editing BehaviorTree Asset (no entity context)");
         }
         ImGui::Separator();
+        
+        // Toolbar with Save/Save As buttons
+        NodeGraph* activeGraph = NodeGraphManager::Get().GetActiveGraph();
+        if (activeGraph)
+        {
+            // Save button
+            bool canSave = activeGraph->HasFilepath();
+            if (!canSave)
+                ImGui::BeginDisabled();
+                
+            if (ImGui::Button("Save"))
+            {
+                // Validate before saving
+                std::string validationError;
+                if (!activeGraph->ValidateGraph(validationError))
+                {
+                    // Show validation error popup
+                    ImGui::OpenPopup("ValidationError");
+                }
+                else
+                {
+                    int graphId = NodeGraphManager::Get().GetActiveGraphId();
+                    const std::string& filepath = activeGraph->GetFilepath();
+                    if (NodeGraphManager::Get().SaveGraph(graphId, filepath))
+                    {
+                        std::cout << "[NodeGraphPanel] Saved graph to: " << filepath << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "[NodeGraphPanel] Failed to save graph!" << std::endl;
+                    }
+                }
+            }
+            
+            if (!canSave)
+                ImGui::EndDisabled();
+                
+            if (!canSave && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+            {
+                ImGui::SetTooltip("No filepath set. Use 'Save As...' first.");
+            }
+            
+            ImGui::SameLine();
+            
+            // Save As button
+            if (ImGui::Button("Save As..."))
+            {
+                // TODO: Open file dialog to select save location
+                // For now, show popup to enter filename
+                ImGui::OpenPopup("SaveAsPopup");
+            }
+            
+            // Show dirty indicator
+            ImGui::SameLine();
+            if (activeGraph->IsDirty())
+            {
+                ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.2f, 1.0f), "*");
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("Unsaved changes");
+                }
+            }
+            
+            // Save As popup (simple text input for now)
+            static bool saveAsPopupOpen = false;
+            static char filepathBuffer[512] = "";
+            
+            if (ImGui::BeginPopup("SaveAsPopup"))
+            {
+                // Clear buffer when popup first opens
+                if (!saveAsPopupOpen)
+                {
+                    filepathBuffer[0] = '\0';
+                    saveAsPopupOpen = true;
+                }
+                
+                ImGui::Text("Save graph as:");
+                ImGui::InputText("Filepath", filepathBuffer, sizeof(filepathBuffer));
+                
+                if (ImGui::Button("Save", ImVec2(120, 0)))
+                {
+                    std::string filepath(filepathBuffer);
+                    if (!filepath.empty())
+                    {
+                        // Validate before saving
+                        std::string validationError;
+                        if (!activeGraph->ValidateGraph(validationError))
+                        {
+                            // Show validation error
+                            saveAsPopupOpen = false;
+                            ImGui::CloseCurrentPopup();
+                            ImGui::OpenPopup("ValidationError");
+                        }
+                        else
+                        {
+                            // Ensure .json extension (check that it ends with .json)
+                            if (filepath.size() < 5 || filepath.substr(filepath.size() - 5) != ".json")
+                                filepath += ".json";
+                                
+                            int graphId = NodeGraphManager::Get().GetActiveGraphId();
+                            if (NodeGraphManager::Get().SaveGraph(graphId, filepath))
+                            {
+                                std::cout << "[NodeGraphPanel] Saved graph as: " << filepath << std::endl;
+                                saveAsPopupOpen = false;
+                                ImGui::CloseCurrentPopup();
+                            }
+                            else
+                            {
+                                std::cout << "[NodeGraphPanel] Failed to save graph!" << std::endl;
+                            }
+                        }
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel", ImVec2(120, 0)))
+                {
+                    saveAsPopupOpen = false;
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+            else
+            {
+                saveAsPopupOpen = false;
+            }
+            
+            // Validation error popup
+            if (ImGui::BeginPopupModal("ValidationError", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+            {
+                ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Cannot save: Graph validation failed!");
+                ImGui::Separator();
+                
+                std::string validationError;
+                if (!activeGraph->ValidateGraph(validationError))
+                {
+                    ImGui::TextWrapped("%s", validationError.c_str());
+                }
+                
+                ImGui::Separator();
+                if (ImGui::Button("OK", ImVec2(120, 0)))
+                {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+            
+            ImGui::Separator();
+        }
 
         // Render graph tabs
         RenderGraphTabs();
@@ -118,12 +266,22 @@ namespace Olympe
     {
         auto graphIds = NodeGraphManager::Get().GetAllGraphIds();
         int currentActiveId = NodeGraphManager::Get().GetActiveGraphId();
+        
+        // Track which graph was requested to close
+        // Using static but ensuring cleanup to prevent issues with multiple rapid closes
+        static int graphToClose = -1;
+        static bool confirmationOpen = false;
 
         if (ImGui::BeginTabBar("GraphTabs"))
         {
             for (int graphId : graphIds)
             {
                 std::string graphName = NodeGraphManager::Get().GetGraphName(graphId);
+                
+                // Add dirty indicator to tab name
+                NodeGraph* graph = NodeGraphManager::Get().GetGraph(graphId);
+                if (graph && graph->IsDirty())
+                    graphName += " *";
 
                 // Only set ImGuiTabItemFlags_SetSelected if this is the active graph
                 // This ensures the tab is selected visually without forcing re-selection each frame
@@ -132,8 +290,10 @@ namespace Olympe
                 {
                     flags = ImGuiTabItemFlags_SetSelected;
                 }
-
-                if (ImGui::BeginTabItem(graphName.c_str(), nullptr, flags))
+                
+                // Enable close button for tabs
+                bool tabOpen = true;
+                if (ImGui::BeginTabItem(graphName.c_str(), &tabOpen, flags))
                 {
                     // Only change active graph if user clicked this tab (and it's not already active)
                     // BeginTabItem returns true when the tab content should be shown
@@ -142,6 +302,27 @@ namespace Olympe
                         NodeGraphManager::Get().SetActiveGraph(graphId);
                     }
                     ImGui::EndTabItem();
+                }
+                
+                // If tab was closed (X button clicked)
+                if (!tabOpen)
+                {
+                    // Only process if no confirmation dialog is currently open
+                    if (!confirmationOpen)
+                    {
+                        // Check if graph has unsaved changes
+                        if (graph && graph->IsDirty())
+                        {
+                            graphToClose = graphId;
+                            confirmationOpen = true;
+                            ImGui::OpenPopup("ConfirmCloseUnsaved");
+                        }
+                        else
+                        {
+                            // Close immediately if no unsaved changes
+                            NodeGraphManager::Get().CloseGraph(graphId);
+                        }
+                    }
                 }
             }
 
@@ -152,6 +333,86 @@ namespace Olympe
             }
 
             ImGui::EndTabBar();
+        }
+        
+        // Confirmation popup for closing unsaved graph
+        if (ImGui::BeginPopupModal("ConfirmCloseUnsaved", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.2f, 1.0f), "Warning: Unsaved Changes!");
+            ImGui::Separator();
+            
+            std::string graphName = NodeGraphManager::Get().GetGraphName(graphToClose);
+            ImGui::TextWrapped("The graph '%s' has unsaved changes.", graphName.c_str());
+            ImGui::TextWrapped("Do you want to save before closing?");
+            
+            ImGui::Separator();
+            
+            // Save and Close button
+            if (ImGui::Button("Save and Close", ImVec2(120, 0)))
+            {
+                NodeGraph* graph = NodeGraphManager::Get().GetGraph(graphToClose);
+                if (graph && graph->HasFilepath())
+                {
+                    // Validate before saving
+                    std::string validationError;
+                    if (!graph->ValidateGraph(validationError))
+                    {
+                        // Show validation error
+                        ImGui::CloseCurrentPopup();
+                        ImGui::OpenPopup("ValidationError");
+                    }
+                    else
+                    {
+                        // Save and close
+                        if (NodeGraphManager::Get().SaveGraph(graphToClose, graph->GetFilepath()))
+                        {
+                            NodeGraphManager::Get().CloseGraph(graphToClose);
+                            graphToClose = -1;
+                            confirmationOpen = false;
+                            ImGui::CloseCurrentPopup();
+                        }
+                    }
+                }
+                else
+                {
+                    // No filepath - need Save As
+                    confirmationOpen = false;
+                    ImGui::CloseCurrentPopup();
+                    ImGui::OpenPopup("SaveAsPopup");
+                }
+            }
+            
+            ImGui::SameLine();
+            
+            // Close without saving button
+            if (ImGui::Button("Close Without Saving", ImVec2(150, 0)))
+            {
+                NodeGraphManager::Get().CloseGraph(graphToClose);
+                graphToClose = -1;
+                confirmationOpen = false;
+                ImGui::CloseCurrentPopup();
+            }
+            
+            ImGui::SameLine();
+            
+            // Cancel button
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
+            {
+                graphToClose = -1;
+                confirmationOpen = false;
+                ImGui::CloseCurrentPopup();
+            }
+            
+            ImGui::EndPopup();
+        }
+        else
+        {
+            // Popup closed without action - reset state
+            if (confirmationOpen && graphToClose >= 0)
+            {
+                confirmationOpen = false;
+                graphToClose = -1;
+            }
         }
 
         // Create graph popup
@@ -540,8 +801,17 @@ namespace Olympe
             {
                 int globalNodeUID = (graphID * GRAPH_ID_MULTIPLIER) + node->id;
                 ImVec2 pos = ImNodes::GetNodeGridSpacePos(globalNodeUID);
-                node->posX = pos.x;
-                node->posY = pos.y;
+                
+                // Check if position changed
+                if (node->posX != pos.x || node->posY != pos.y)
+                {
+                    node->posX = pos.x;
+                    node->posY = pos.y;
+                    
+                    // Mark graph as dirty when node is moved
+                    if (graph)
+                        graph->MarkDirty();
+                }
             }
         }
     }
@@ -917,13 +1187,12 @@ namespace Olympe
                     node->name = newName;
                 }
                 
+                // Mark graph as dirty since node was edited
+                if (graph)
+                    graph->MarkDirty();
+                
                 m_ShowNodeEditModal = false;
                 m_EditingNodeId = -1;
-                
-                // Auto-save the graph
-                int graphId = NodeGraphManager::Get().GetActiveGraphId();
-                std::string filename = "graph_" + std::to_string(graphId) + ".json";
-                NodeGraphManager::Get().SaveGraph(graphId, filename);
             }
             
             ImGui::SameLine();
