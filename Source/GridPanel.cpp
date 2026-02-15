@@ -14,6 +14,11 @@
 #include "third_party/imgui/imgui.h"
 #endif
 
+// Constants
+namespace {
+    const char* LAYER_DESCRIPTION = "Layer 0: Ground, 1: Sky, 2: Underground, 3: Volume";
+}
+
 GridPanel::GridPanel()
     : m_visible(false)
     , m_name("Grid Settings")
@@ -255,7 +260,7 @@ void GridPanel::RenderOverlaySettings()
         {
             ApplySettingsToECS();
         }
-        ImGui::TextDisabled("Layer 0: Ground, 1: Sky, 2: Underground, 3: Volume");
+        ImGui::TextDisabled("%s", LAYER_DESCRIPTION);
         ImGui::Unindent();
     }
     
@@ -276,7 +281,7 @@ void GridPanel::RenderOverlaySettings()
         {
             ApplySettingsToECS();
         }
-        ImGui::TextDisabled("Layer 0: Ground, 1: Sky, 2: Underground, 3: Volume");
+        ImGui::TextDisabled("%s", LAYER_DESCRIPTION);
         ImGui::Unindent();
     }
 #endif

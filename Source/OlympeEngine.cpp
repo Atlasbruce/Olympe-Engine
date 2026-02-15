@@ -55,7 +55,7 @@ static Olympe::BlueprintEditorGUI* blueprintEditorGUI = nullptr;
 // Note: Using raw pointer for consistency with existing code. Cleaned up in SDL_AppQuit().
 Olympe::BehaviorTreeDebugWindow* g_btDebugWindow = nullptr;
 
-// Grid Panel instance (global for F3 toggle)
+// Grid Panel instance (global for F4 toggle)
 static GridPanel* gridPanel = nullptr;
 
 /* This function runs once at startup. */

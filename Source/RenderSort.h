@@ -30,6 +30,8 @@ namespace RenderSort
     constexpr float DIAGONAL_SCALE = 100.0f;     // Scale for isometric X+Y diagonal
     constexpr float X_SCALE = 0.1f;              // Tie-breaker for X position
     constexpr float Y_SCALE = 1.0f;              // Primary scale for Y position
+    // Constants for hexagonal coordinate conversion
+    constexpr float HEX_SQRT3_OVER_2 = 0.866025404f;  // sqrt(3)/2 for pointy-top hexagon layout
     constexpr float HEX_ROW_SCALE = 100.0f;      // Scale for hexagonal row sorting
     constexpr float HEX_COL_SCALE = 0.1f;        // Tie-breaker for hexagonal column
     
@@ -95,7 +97,7 @@ namespace RenderSort
     {
         // Convert world position to hexagonal axial coordinates (q, r)
         // Pointy-top hexagon layout
-        float q = ((worldPos.x * 0.866025404f) / hexRadius) - ((worldPos.y * 0.5f) / hexRadius);
+        float q = ((worldPos.x * HEX_SQRT3_OVER_2) / hexRadius) - ((worldPos.y * 0.5f) / hexRadius);
         float r = worldPos.y / hexRadius;
         
         // Sort by row first (r), then column (q) as tie-breaker
