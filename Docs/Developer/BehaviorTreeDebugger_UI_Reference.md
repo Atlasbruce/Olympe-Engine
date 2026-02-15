@@ -8,7 +8,7 @@
 │  └─ Auto Refresh (0.5s)                      └─ Refresh Now (F5)                            │
 │  └─ Entity List Width (250px)                └─ Clear Execution Log                         │
 │  └─ Inspector Width (350px)                                                                  │
-│  └─ Node Spacing X/Y (250px/150px)                                                           │
+│  └─ Node Spacing X/Y (250px/180px)           └─ Reset Spacing to Defaults                   │
 ├─────────────────────────────────────────────────────────────────────────────────────────────┤
 │                       │                                               │                      │
 │  Entity List          │         Node Graph (ImNodes)                 │     Inspector        │

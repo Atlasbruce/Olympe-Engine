@@ -183,8 +183,9 @@ Access these options via the menu bar (View menu):
 - **Auto Refresh**: Set refresh interval (0.1 - 5.0 seconds, default: 0.5s)
 - **Entity List Width**: Adjust left panel width (150 - 400 pixels)
 - **Inspector Width**: Adjust right panel width (250 - 500 pixels)
-- **Node Spacing X**: Horizontal spacing between nodes (100 - 500 pixels)
-- **Node Spacing Y**: Vertical spacing between layers (80 - 300 pixels)
+- **Node Spacing X**: Horizontal spacing between nodes (150 - 500 pixels, default: 250px)
+- **Node Spacing Y**: Vertical spacing between layers (100 - 400 pixels, default: 180px)
+- **Reset Spacing to Defaults**: Button to restore default spacing values
 
 ### Actions Menu
 - **Refresh Now (F5)**: Manually refresh the entity list
