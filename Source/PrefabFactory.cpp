@@ -356,6 +356,8 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
             return InstantiatePhysicsBody(entity, componentDef);
         else if (type == "VisualSprite_data")
             return InstantiateVisualSprite(entity, componentDef);
+        else if (type == "VisualAnimation_data")
+            return InstantiateVisualAnimation(entity, componentDef);
         else if (type == "AIBlackboard_data")
             return InstantiateAIBlackboard(entity, componentDef);
         else if (type == "AISenses_data")
@@ -379,6 +381,8 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
             return InstantiatePhysicsBody(entity, componentDef);
         else if (type == "VisualSprite" || type == "VisualSprite_data")
             return InstantiateVisualSprite(entity, componentDef);
+        else if (type == "VisualAnimation" || type == "VisualAnimation_data")
+            return InstantiateVisualAnimation(entity, componentDef);
         else if (type == "VisualEditor" || type == "VisualEditor_data")
             return InstantiateVisualEditor(entity, componentDef);
         else if (type == "AIBehavior" || type == "AIBehavior_data")
@@ -717,6 +721,55 @@ bool PrefabFactory::InstantiateVisualEditor(EntityID entity, const ComponentDefi
     // These parameters are validated by schema but not applied until struct is updated
     
     World::Get().AddComponent<VisualEditor_data>(entity, editor);
+    return true;
+}
+
+bool PrefabFactory::InstantiateVisualAnimation(EntityID entity, const ComponentDefinition& def)
+{
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<VisualAnimation_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: VisualAnimation_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    VisualAnimation_data& animData = World::Get().GetComponent<VisualAnimation_data>(entity);
+    
+    // Extract animation bank reference
+    if (def.HasParameter("bankId"))
+        animData.bankId = def.GetParameter("bankId")->AsString();
+    
+    // Extract current animation name
+    if (def.HasParameter("currentAnimName"))
+        animData.currentAnimName = def.GetParameter("currentAnimName")->AsString();
+    
+    // Extract optional animation graph path
+    if (def.HasParameter("animGraphPath"))
+        animData.animGraphPath = def.GetParameter("animGraphPath")->AsString();
+    
+    // Extract playback settings
+    if (def.HasParameter("playbackSpeed"))
+        animData.playbackSpeed = def.GetParameter("playbackSpeed")->AsFloat();
+    
+    if (def.HasParameter("isPlaying"))
+        animData.isPlaying = def.GetParameter("isPlaying")->AsBool();
+    
+    if (def.HasParameter("isPaused"))
+        animData.isPaused = def.GetParameter("isPaused")->AsBool();
+    
+    if (def.HasParameter("loop"))
+        animData.loop = def.GetParameter("loop")->AsBool();
+    
+    // Extract visual transforms
+    if (def.HasParameter("flipX"))
+        animData.flipX = def.GetParameter("flipX")->AsBool();
+    
+    if (def.HasParameter("flipY"))
+        animData.flipY = def.GetParameter("flipY")->AsBool();
+    
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 

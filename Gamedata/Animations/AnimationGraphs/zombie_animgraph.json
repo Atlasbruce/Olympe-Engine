@@ -1,0 +1,14 @@
+{
+  "graphId": "zombie_animgraph",
+  "defaultState": "idle",
+  "states": [
+    "idle",
+    "walk",
+    "attack"
+  ],
+  "transitions": {
+    "idle": ["walk", "attack"],
+    "walk": ["idle", "attack"],
+    "attack": ["idle", "walk"]
+  }
+}

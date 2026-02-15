@@ -41,6 +41,17 @@
         }
       },
       {
+        "type": "VisualAnimation_data",
+        "properties": {
+          "bankId": "player",
+          "currentAnimName": "idle",
+          "animGraphPath": "./Gamedata/Animations/AnimationGraphs/player_animgraph.json",
+          "playbackSpeed": 1.0,
+          "loop": true,
+          "isPlaying": true
+        }
+      },
+      {
         "type": "BoundingBox_data",
         "properties": {
           "width": 32,

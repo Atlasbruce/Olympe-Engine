@@ -401,6 +401,44 @@ struct Animation_data
 	Animation_data& operator=(const Animation_data&) = default;
 };
 
+// Forward declaration for AnimationSequence
+namespace Olympe { struct AnimationSequence; }
+
+// --- Component Visual Animation Data --- Advanced sprite animation system
+struct VisualAnimation_data
+{
+	// Animation bank reference
+	std::string bankId;               // Reference to animation bank
+	std::string currentAnimName;      // Current animation name
+	std::string animGraphPath;        // Optional path to FSM graph
+	
+	// Frame tracking
+	int currentFrame = 0;             // Current frame index
+	float frameTimer = 0.0f;          // Accumulated time for current frame
+	
+	// Playback control
+	float playbackSpeed = 1.0f;       // Speed multiplier (1.0 = normal)
+	bool isPlaying = true;            // Is animation playing?
+	bool isPaused = false;            // Is animation paused?
+	bool loop = true;                 // Should animation loop?
+	
+	// Visual transforms
+	bool flipX = false;               // Flip horizontally
+	bool flipY = false;               // Flip vertically
+	
+	// Event tracking
+	bool animationJustFinished = false; // Flag set when animation completes (one frame only)
+	int loopCount = 0;                // Number of times animation has looped
+	
+	// Runtime pointer (resolved from AnimationManager)
+	const Olympe::AnimationSequence* currentSequence = nullptr;
+	
+	// Constructors
+	VisualAnimation_data() = default;
+	VisualAnimation_data(const VisualAnimation_data&) = default;
+	VisualAnimation_data& operator=(const VisualAnimation_data&) = default;
+};
+
 // --- Component FX Data --- Visual effects like particles, explosions, etc.
 struct FX_data
 {

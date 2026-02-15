@@ -1,0 +1,41 @@
+{
+  "bankId": "zombie",
+  "frameWidth": 32,
+  "frameHeight": 32,
+  "columns": 8,
+  "spacing": 0,
+  "margin": 0,
+  "animations": {
+    "idle": {
+      "spritesheet": "./Resources/Sprites/zombie_idle.png",
+      "frames": {
+        "start": 0,
+        "count": 4
+      },
+      "frameDuration": 0.15,
+      "loop": true,
+      "speed": 1.0
+    },
+    "walk": {
+      "spritesheet": "./Resources/Sprites/zombie_walk.png",
+      "frames": {
+        "start": 0,
+        "count": 8
+      },
+      "frameDuration": 0.12,
+      "loop": true,
+      "speed": 0.8
+    },
+    "attack": {
+      "spritesheet": "./Resources/Sprites/zombie_attack.png",
+      "frames": {
+        "start": 0,
+        "count": 6
+      },
+      "frameDuration": 0.08,
+      "loop": false,
+      "speed": 1.0,
+      "nextAnimation": "idle"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "graphId": "player_animgraph",
+  "defaultState": "idle",
+  "states": [
+    "idle",
+    "walk",
+    "run",
+    "jump",
+    "fall",
+    "attack"
+  ],
+  "transitions": {
+    "idle": ["walk", "run", "jump", "attack"],
+    "walk": ["idle", "run", "jump", "attack"],
+    "run": ["idle", "walk", "jump", "attack"],
+    "jump": ["fall", "idle"],
+    "fall": ["idle", "walk", "run"],
+    "attack": ["idle"]
+  }
+}

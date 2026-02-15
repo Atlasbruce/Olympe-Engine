@@ -40,6 +40,7 @@ AUTO_REGISTER_COMPONENT(Inventory_data);
 AUTO_REGISTER_COMPONENT(VisualSprite_data);
 AUTO_REGISTER_COMPONENT(VisualEditor_data);
 AUTO_REGISTER_COMPONENT(Animation_data);
+AUTO_REGISTER_COMPONENT(VisualAnimation_data);
 AUTO_REGISTER_COMPONENT(FX_data);
 
 // Audio
