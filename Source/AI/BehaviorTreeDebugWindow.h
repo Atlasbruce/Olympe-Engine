@@ -255,7 +255,7 @@ namespace Olympe
         };
         std::vector<EditorAction> m_undoStack;
         std::vector<EditorAction> m_redoStack;
-        const size_t MAX_UNDO_STACK = 100;
+        static const size_t kMaxUndoStackSize = 100;  // Maximum undo history
         
         // Link ID tracking for connection deletion
         struct LinkInfo {

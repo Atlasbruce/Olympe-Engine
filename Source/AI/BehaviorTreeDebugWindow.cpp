@@ -763,6 +763,7 @@ namespace Olympe
                 m_undoStack.clear();
                 m_redoStack.clear();
                 m_nextNodeId = 1000;
+                m_nextLinkId = 100000;  // Reset link ID counter to prevent overflow
                 
                 // Find max node ID to avoid conflicts
                 for (const auto& node : m_editingTree.nodes)
@@ -1031,28 +1032,43 @@ namespace Olympe
                     {
                         if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
                         {
-                            // Add to childIds
+                            // Capture the actual index before adding the child
+                            int childIndex = parent->childIds.size();
                             parent->childIds.push_back(childId);
+                            
+                            // Add to undo stack with correct index
+                            EditorAction action;
+                            action.type = EditorAction::AddConnection;
+                            action.parentId = parentId;
+                            action.childId = childId;
+                            action.childIndex = childIndex;
+                            m_undoStack.push_back(action);
+                            if (m_undoStack.size() > kMaxUndoStackSize)
+                            {
+                                m_undoStack.erase(m_undoStack.begin());
+                            }
+                            m_redoStack.clear();
+                            m_treeModified = true;
                         }
                         else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
                         {
                             // Set decoratorChildId
                             parent->decoratorChildId = childId;
+                            
+                            // Add to undo stack
+                            EditorAction action;
+                            action.type = EditorAction::AddConnection;
+                            action.parentId = parentId;
+                            action.childId = childId;
+                            action.childIndex = 0;  // Decorators don't use childIndex
+                            m_undoStack.push_back(action);
+                            if (m_undoStack.size() > kMaxUndoStackSize)
+                            {
+                                m_undoStack.erase(m_undoStack.begin());
+                            }
+                            m_redoStack.clear();
+                            m_treeModified = true;
                         }
-                        
-                        // Add to undo stack
-                        EditorAction action;
-                        action.type = EditorAction::AddConnection;
-                        action.parentId = parentId;
-                        action.childId = childId;
-                        action.childIndex = parent->childIds.size() - 1;
-                        m_undoStack.push_back(action);
-                        if (m_undoStack.size() > MAX_UNDO_STACK)
-                        {
-                            m_undoStack.erase(m_undoStack.begin());
-                        }
-                        m_redoStack.clear();
-                        m_treeModified = true;
                         
                         std::cout << "[BTEditor] Connection created: " << parentId << " -> " << childId << std::endl;
                     }
@@ -1095,7 +1111,7 @@ namespace Olympe
                                 action.childId = childId;
                                 action.childIndex = childIndex;
                                 m_undoStack.push_back(action);
-                                if (m_undoStack.size() > MAX_UNDO_STACK)
+                                if (m_undoStack.size() > kMaxUndoStackSize)
                                 {
                                     m_undoStack.erase(m_undoStack.begin());
                                 }
@@ -1112,7 +1128,7 @@ namespace Olympe
                             action.parentId = parentId;
                             action.childId = childId;
                             m_undoStack.push_back(action);
-                            if (m_undoStack.size() > MAX_UNDO_STACK)
+                            if (m_undoStack.size() > kMaxUndoStackSize)
                             {
                                 m_undoStack.erase(m_undoStack.begin());
                             }
@@ -1331,12 +1347,16 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::RenderNodeConnections(const BTNode* node, const BTNodeLayout* layout, const BehaviorTreeAsset* tree)
     {
-        // Clear link map when starting to render connections (only once per frame)
-        static bool firstCall = true;
-        if (firstCall && m_editorMode)
+        // Clear link map at the start of each render pass (only in editor mode)
+        // Use a frame counter to ensure we clear once per frame, not once per lifetime
+        static int lastFrameCleared = -1;
+        static int currentFrame = 0;
+        currentFrame++;
+        
+        if (m_editorMode && lastFrameCleared != currentFrame)
         {
             m_linkMap.clear();
-            firstCall = false;
+            lastFrameCleared = currentFrame;
         }
         
         // Composite nodes
@@ -1375,9 +1395,6 @@ namespace Olympe
                 m_linkMap.push_back(info);
             }
         }
-        
-        // Reset first call flag for next frame
-        firstCall = false;
     }
 
     uint32_t BehaviorTreeDebugWindow::GetNodeColor(BTNodeType type) const
@@ -2072,7 +2089,7 @@ namespace Olympe
         action.type = EditorAction::AddNode;
         action.nodeData = newNode;
         m_undoStack.push_back(action);
-        if (m_undoStack.size() > MAX_UNDO_STACK)
+        if (m_undoStack.size() > kMaxUndoStackSize)
         {
             m_undoStack.erase(m_undoStack.begin());
         }
@@ -2105,7 +2122,7 @@ namespace Olympe
                 action.type = EditorAction::DeleteNode;
                 action.nodeData = *it;
                 m_undoStack.push_back(action);
-                if (m_undoStack.size() > MAX_UNDO_STACK)
+                if (m_undoStack.size() > kMaxUndoStackSize)
                 {
                     m_undoStack.erase(m_undoStack.begin());
                 }
@@ -2576,7 +2593,7 @@ namespace Olympe
         
         // Add to undo stack
         m_undoStack.push_back(action);
-        if (m_undoStack.size() > MAX_UNDO_STACK)
+        if (m_undoStack.size() > kMaxUndoStackSize)
         {
             m_undoStack.erase(m_undoStack.begin());
         }
