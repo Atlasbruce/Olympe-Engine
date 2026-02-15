@@ -319,6 +319,19 @@ namespace Olympe
                 }
                 
                 ImGui::Separator();
+                
+                // Grid snapping toggle
+                if (ImGui::Checkbox("Grid Snapping", &m_config.gridSnappingEnabled))
+                {
+                    std::cout << "[BTDebugger] Grid snapping " 
+                              << (m_config.gridSnappingEnabled ? "enabled" : "disabled") << std::endl;
+                }
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("Snap node positions to %.0fpx grid", m_config.gridSize);
+                }
+                
+                ImGui::Separator();
                 ImGui::Text("Current Zoom: %.0f%%", m_currentZoom * 100.0f);
                 ImGui::Checkbox("Show Minimap", &m_showMinimap);
                 
@@ -330,8 +343,58 @@ namespace Olympe
                 }
                 
                 ImGui::Separator();
+                
+                // Reload config option
+                if (ImGui::MenuItem("Reload Config"))
+                {
+                    LoadBTConfig();
+                    ApplyConfigToLayout();
+                    m_needsLayoutUpdate = true;
+                    std::cout << "[BTDebugger] Configuration reloaded" << std::endl;
+                }
+                
+                ImGui::Separator();
                 ImGui::Text("Window Mode: Separate (Independent)");
                 ImGui::Text("Press F10 to close window");
+                
+                ImGui::EndMenu();
+            }
+            
+            if (ImGui::BeginMenu("Tools"))
+            {
+                if (ImGui::MenuItem("Auto Organize Graph"))
+                {
+                    // Force recalculation of layout with current settings
+                    if (m_selectedEntity != 0)
+                    {
+                        auto& world = World::Get();
+                        if (world.HasComponent<BehaviorTreeRuntime_data>(m_selectedEntity))
+                        {
+                            const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
+                            const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
+                            if (tree)
+                            {
+                                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                                std::cout << "[BTDebugger] Graph reorganized with current settings" << std::endl;
+                            }
+                        }
+                    }
+                }
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("Recalculate all node positions using the current layout algorithm");
+                }
+                
+                if (ImGui::MenuItem("Reset View"))
+                {
+                    ResetZoom();
+                    CenterViewOnGraph();
+                    std::cout << "[BTDebugger] View reset to default (zoom 100%%, centered)" << std::endl;
+                }
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("Reset zoom to 100%% and center camera");
+                }
                 
                 ImGui::EndMenu();
             }
