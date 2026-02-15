@@ -36,6 +36,8 @@ namespace Olympe
         node.posY = y;
 
         m_Nodes.push_back(node);
+        
+        MarkDirty();  // Mark graph as modified
 
         std::cout << "[NodeGraph] Created node " << node.id << " (" << node.name << ")\n";
         return node.id;
@@ -62,6 +64,8 @@ namespace Olympe
             if (node.decoratorChildId == nodeId)
                 node.decoratorChildId = -1;
         }
+        
+        MarkDirty();  // Mark graph as modified
 
         std::cout << "[NodeGraph] Deleted node " << nodeId << "\n";
         return true;
@@ -118,6 +122,8 @@ namespace Olympe
         {
             parent->childIds.push_back(childId);
         }
+        
+        MarkDirty();  // Mark graph as modified
 
         std::cout << "[NodeGraph] Linked node " << parentId << " -> " << childId << "\n";
         return true;
@@ -129,13 +135,15 @@ namespace Olympe
         if (!parent)
             return false;
 
+        bool unlinked = false;
+
         // Remove from child list
         auto it = std::find(parent->childIds.begin(), parent->childIds.end(), childId);
         if (it != parent->childIds.end())
         {
             parent->childIds.erase(it);
             std::cout << "[NodeGraph] Unlinked node " << parentId << " -> " << childId << "\n";
-            return true;
+            unlinked = true;
         }
 
         // Check decorator child
@@ -143,10 +151,13 @@ namespace Olympe
         {
             parent->decoratorChildId = -1;
             std::cout << "[NodeGraph] Unlinked decorator child " << parentId << " -> " << childId << "\n";
-            return true;
+            unlinked = true;
         }
+        
+        if (unlinked)
+            MarkDirty();  // Mark graph as modified
 
-        return false;
+        return unlinked;
     }
 
     std::vector<GraphLink> NodeGraph::GetAllLinks() const
@@ -178,6 +189,7 @@ namespace Olympe
             return false;
 
         node->parameters[paramName] = value;
+        MarkDirty();  // Mark graph as modified
         return true;
     }
 
@@ -695,7 +707,7 @@ namespace Olympe
 
     bool NodeGraphManager::SaveGraph(int graphId, const std::string& filepath)
     {
-        const NodeGraph* graph = GetGraph(graphId);
+        NodeGraph* graph = GetGraph(graphId);
         if (!graph)
             return false;
 
@@ -707,6 +719,10 @@ namespace Olympe
 
         file << j.dump(2);
         file.close();
+        
+        // Update filepath and clear dirty flag on successful save
+        graph->SetFilepath(filepath);
+        graph->ClearDirty();
 
         std::cout << "[NodeGraphManager] Saved graph " << graphId << " to " << filepath << "\n";
         return true;
@@ -852,6 +868,11 @@ namespace Olympe
             std::cout << "[NodeGraphManager] Step 7: Creating graph in manager..." << std::endl;
             int graphId = m_NextGraphId++;
             auto graphPtr = std::make_unique<NodeGraph>(std::move(graph));
+            
+            // Set filepath and clear dirty flag for freshly loaded graph
+            graphPtr->SetFilepath(filepath);
+            graphPtr->ClearDirty();
+            
             m_Graphs[graphId] = std::move(graphPtr);
             m_GraphOrder.push_back(graphId);  // Track insertion order
             m_ActiveGraphId = graphId;
@@ -882,5 +903,21 @@ namespace Olympe
             std::cout << "========================================+n" << std::endl;
             return -1;
         }
+    }
+    
+    bool NodeGraphManager::IsGraphDirty(int graphId) const
+    {
+        const NodeGraph* graph = GetGraph(graphId);
+        return graph ? graph->IsDirty() : false;
+    }
+    
+    bool NodeGraphManager::HasUnsavedChanges() const
+    {
+        for (const auto& pair : m_Graphs)
+        {
+            if (pair.second && pair.second->IsDirty())
+                return true;
+        }
+        return false;
     }
 }

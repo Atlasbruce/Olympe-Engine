@@ -162,10 +162,22 @@ namespace Olympe
         
         // Calculate node positions for v1 blueprints (hierarchical layout)
         void CalculateNodePositionsHierarchical();
+        
+        // Dirty flag tracking for unsaved changes
+        bool IsDirty() const { return m_IsDirty; }
+        void MarkDirty() { m_IsDirty = true; }
+        void ClearDirty() { m_IsDirty = false; }
+        
+        // Filepath tracking
+        const std::string& GetFilepath() const { return m_Filepath; }
+        void SetFilepath(const std::string& filepath) { m_Filepath = filepath; }
+        bool HasFilepath() const { return !m_Filepath.empty(); }
 
     private:
         std::vector<GraphNode> m_Nodes;
         int m_NextNodeId = 1;
+        bool m_IsDirty = false;
+        std::string m_Filepath;
 
         // Helper to find node index
         int FindNodeIndex(int nodeId) const;
@@ -208,6 +220,10 @@ namespace Olympe
 
         // State
         bool IsInitialized() const { return m_Initialized; }
+        
+        // Dirty flag queries for graphs
+        bool IsGraphDirty(int graphId) const;
+        bool HasUnsavedChanges() const;  // Returns true if any graph has unsaved changes
 
     private:
         NodeGraphManager();

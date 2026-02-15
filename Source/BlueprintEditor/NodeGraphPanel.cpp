@@ -82,6 +82,89 @@ namespace Olympe
                 "Editing BehaviorTree Asset (no entity context)");
         }
         ImGui::Separator();
+        
+        // Toolbar with Save/Save As buttons
+        NodeGraph* activeGraph = NodeGraphManager::Get().GetActiveGraph();
+        if (activeGraph)
+        {
+            // Save button
+            bool canSave = activeGraph->HasFilepath();
+            if (!canSave)
+                ImGui::BeginDisabled();
+                
+            if (ImGui::Button("Save"))
+            {
+                int graphId = NodeGraphManager::Get().GetActiveGraphId();
+                const std::string& filepath = activeGraph->GetFilepath();
+                if (NodeGraphManager::Get().SaveGraph(graphId, filepath))
+                {
+                    std::cout << "[NodeGraphPanel] Saved graph to: " << filepath << std::endl;
+                }
+            }
+            
+            if (!canSave)
+                ImGui::EndDisabled();
+                
+            if (!canSave && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+            {
+                ImGui::SetTooltip("No filepath set. Use 'Save As...' first.");
+            }
+            
+            ImGui::SameLine();
+            
+            // Save As button
+            if (ImGui::Button("Save As..."))
+            {
+                // TODO: Open file dialog to select save location
+                // For now, show popup to enter filename
+                ImGui::OpenPopup("SaveAsPopup");
+            }
+            
+            // Show dirty indicator
+            ImGui::SameLine();
+            if (activeGraph->IsDirty())
+            {
+                ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.2f, 1.0f), "*");
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("Unsaved changes");
+                }
+            }
+            
+            // Save As popup (simple text input for now)
+            if (ImGui::BeginPopup("SaveAsPopup"))
+            {
+                static char filepathBuffer[512] = "";
+                ImGui::Text("Save graph as:");
+                ImGui::InputText("Filepath", filepathBuffer, sizeof(filepathBuffer));
+                
+                if (ImGui::Button("Save", ImVec2(120, 0)))
+                {
+                    std::string filepath(filepathBuffer);
+                    if (!filepath.empty())
+                    {
+                        // Ensure .json extension
+                        if (filepath.find(".json") == std::string::npos)
+                            filepath += ".json";
+                            
+                        int graphId = NodeGraphManager::Get().GetActiveGraphId();
+                        if (NodeGraphManager::Get().SaveGraph(graphId, filepath))
+                        {
+                            std::cout << "[NodeGraphPanel] Saved graph as: " << filepath << std::endl;
+                            ImGui::CloseCurrentPopup();
+                        }
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel", ImVec2(120, 0)))
+                {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+            
+            ImGui::Separator();
+        }
 
         // Render graph tabs
         RenderGraphTabs();
@@ -124,6 +207,11 @@ namespace Olympe
             for (int graphId : graphIds)
             {
                 std::string graphName = NodeGraphManager::Get().GetGraphName(graphId);
+                
+                // Add dirty indicator to tab name
+                NodeGraph* graph = NodeGraphManager::Get().GetGraph(graphId);
+                if (graph && graph->IsDirty())
+                    graphName += " *";
 
                 // Only set ImGuiTabItemFlags_SetSelected if this is the active graph
                 // This ensures the tab is selected visually without forcing re-selection each frame
@@ -540,8 +628,17 @@ namespace Olympe
             {
                 int globalNodeUID = (graphID * GRAPH_ID_MULTIPLIER) + node->id;
                 ImVec2 pos = ImNodes::GetNodeGridSpacePos(globalNodeUID);
-                node->posX = pos.x;
-                node->posY = pos.y;
+                
+                // Check if position changed
+                if (node->posX != pos.x || node->posY != pos.y)
+                {
+                    node->posX = pos.x;
+                    node->posY = pos.y;
+                    
+                    // Mark graph as dirty when node is moved
+                    if (graph)
+                        graph->MarkDirty();
+                }
             }
         }
     }
@@ -917,13 +1014,12 @@ namespace Olympe
                     node->name = newName;
                 }
                 
+                // Mark graph as dirty since node was edited
+                if (graph)
+                    graph->MarkDirty();
+                
                 m_ShowNodeEditModal = false;
                 m_EditingNodeId = -1;
-                
-                // Auto-save the graph
-                int graphId = NodeGraphManager::Get().GetActiveGraphId();
-                std::string filename = "graph_" + std::to_string(graphId) + ".json";
-                NodeGraphManager::Get().SaveGraph(graphId, filename);
             }
             
             ImGui::SameLine();
