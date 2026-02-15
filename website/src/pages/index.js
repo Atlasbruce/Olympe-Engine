@@ -65,6 +65,35 @@ export default function Home() {
               </div>
             </div>
           </div>
+          
+          {/* BT Editor Documentation Cartouche */}
+          <div className="row margin-top--lg">
+            <div className="col">
+              <div className={clsx('card', 'padding--lg', styles.btEditorCard)}>
+                <div className="card__header">
+                  <h3>🌳 Behavior Tree Editor</h3>
+                </div>
+                <div className="card__body">
+                  <p>
+                    Olympe Engine includes a powerful visual Behavior Tree editor for designing AI logic.
+                    Create complex behavior patterns with an intuitive node-based interface.
+                  </p>
+                  <div className="button-group">
+                    <Link
+                      className="button button--primary"
+                      to="/technical-reference/behavior-trees/behavior-trees-overview">
+                      BT Editor Documentation →
+                    </Link>
+                    <Link
+                      className="button button--secondary margin-left--sm"
+                      to="/tutorials/behavior-tree-basics">
+                      Tutorial →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </Layout>

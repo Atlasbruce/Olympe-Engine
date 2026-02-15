@@ -79,6 +79,7 @@ if(BUILD_RUNTIME_ENGINE)
         "Source/VideoGame.cpp"
         "Source/PanelManager.cpp"
         "Source/InputsInspectorPanel.cpp"
+        "Source/GridPanel.cpp"
         "Source/ECS_Systems.cpp"
         "Source/ECS_Systems_AI.cpp"
         "Source/ECS_Systems_Camera.cpp"

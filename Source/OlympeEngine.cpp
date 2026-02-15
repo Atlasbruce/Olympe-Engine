@@ -32,6 +32,7 @@ Notes:
 #include "BlueprintEditor/BlueprintEditor.h"
 #include "BlueprintEditor/BlueprintEditorGUI.h"
 #include "AI/BehaviorTreeDebugWindow.h"
+#include "GridPanel.h"
 #include "third_party/imgui/imgui.h"
 #include "third_party/imgui/backends/imgui_impl_sdl3.h"
 #include "third_party/imgui/backends/imgui_impl_sdlrenderer3.h"
@@ -53,6 +54,9 @@ static Olympe::BlueprintEditorGUI* blueprintEditorGUI = nullptr;
 // Behavior Tree Debug Window instance (global for access from AI systems)
 // Note: Using raw pointer for consistency with existing code. Cleaned up in SDL_AppQuit().
 Olympe::BehaviorTreeDebugWindow* g_btDebugWindow = nullptr;
+
+// Grid Panel instance (global for F3 toggle)
+static GridPanel* gridPanel = nullptr;
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
@@ -106,8 +110,13 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     g_btDebugWindow = new Olympe::BehaviorTreeDebugWindow();
     g_btDebugWindow->Initialize();
     
+    // Create Grid Panel
+    gridPanel = new GridPanel();
+    gridPanel->Initialize();
+    
     SYSTEM_LOG << "BlueprintEditor initialized in Runtime mode (toggle with F2)" << endl;
     SYSTEM_LOG << "BehaviorTree Debugger initialized (toggle with F10)" << endl;
+    SYSTEM_LOG << "Grid Panel initialized (toggle with F4)" << endl;
 
     // Initialisation (à l'initialisation de l'application)
     ImGui::CreateContext();
@@ -206,6 +215,19 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
             SYSTEM_LOG << "Tiled Level Loader Menu " 
                       << (GameMenu::Get().IsF2MenuOpen() ? "opened" : "closed") 
                       << endl;
+            return SDL_APP_CONTINUE;
+        }
+        
+        // F4 toggles Grid Panel
+        if (event->key.key == SDLK_F4)
+        {
+            if (gridPanel)
+            {
+                gridPanel->Toggle();
+                SYSTEM_LOG << "Grid Panel " 
+                          << (gridPanel->IsVisible() ? "opened" : "closed") 
+                          << endl;
+            }
             return SDL_APP_CONTINUE;
         }
         
@@ -387,6 +409,12 @@ SDL_AppResult SDL_AppIterate(void* appstate)
         
         // Render Tiled Level Loader menu (F3)
         GameMenu::Get().RenderF2Menu();
+        
+        // Render Grid Panel (F4)
+        if (gridPanel)
+        {
+            gridPanel->Render();
+        }
 
         ImGui::Render();
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
@@ -450,6 +478,13 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result)
         g_btDebugWindow->Shutdown();
         delete g_btDebugWindow;
         g_btDebugWindow = nullptr;
+    }
+    
+    // Cleanup Grid Panel
+    if (gridPanel)
+    {
+        delete gridPanel;
+        gridPanel = nullptr;
     }
 
     // Shutdown Blueprint Editor
