@@ -30,19 +30,19 @@ namespace Olympe
 // Animation Bank Loading
 // ========================================================================
 
-bool AnimationManager::LoadAnimationBank(const std::string& bankId, const std::string& filePath)
+bool AnimationManager::LoadAnimationBank(const std::string& bankJsonPath)
 {
-    SYSTEM_LOG << "[AnimationManager] Loading animation bank: " << bankId << " from " << filePath << "\n";
+    SYSTEM_LOG << "[AnimationManager] Loading animation bank from " << bankJsonPath << "\n";
     
     // Check if file exists
-    if (!std::ifstream(filePath).good())
+    if (!std::ifstream(bankJsonPath).good())
     {
-        SYSTEM_LOG << "[AnimationManager] ERROR: File not found: " << filePath << "\n";
+        SYSTEM_LOG << "[AnimationManager] ERROR: File not found: " << bankJsonPath << "\n";
         return false;
     }
     
     // Parse JSON file
-    std::ifstream file(filePath);
+    std::ifstream file(bankJsonPath);
     json jsonData;
     
     try
@@ -51,30 +51,38 @@ bool AnimationManager::LoadAnimationBank(const std::string& bankId, const std::s
     }
     catch (const std::exception& e)
     {
-        SYSTEM_LOG << "[AnimationManager] ERROR: JSON parse error in " << filePath << ": " << e.what() << "\n";
+        SYSTEM_LOG << "[AnimationManager] ERROR: JSON parse error in " << bankJsonPath << ": " << e.what() << "\n";
         return false;
     }
     
+    // Get bank ID from JSON
+    if (!jsonData.contains("id"))
+    {
+        SYSTEM_LOG << "[AnimationManager] ERROR: No 'id' field found in " << bankJsonPath << "\n";
+        return false;
+    }
+    std::string bankId = jsonData["id"].get<std::string>();
+    
     // Create animation bank
-    auto bank = std::unique_ptr<AnimationBank>(new AnimationBank());
-    bank->bankId = bankId;
+    AnimationBank bank;
+    bank.bankId = bankId;
     
     // Load spritesheet metadata
     if (jsonData.contains("frameWidth"))
-        bank->frameWidth = jsonData["frameWidth"].get<int>();
+        bank.frameWidth = jsonData["frameWidth"].get<int>();
     if (jsonData.contains("frameHeight"))
-        bank->frameHeight = jsonData["frameHeight"].get<int>();
+        bank.frameHeight = jsonData["frameHeight"].get<int>();
     if (jsonData.contains("columns"))
-        bank->columns = jsonData["columns"].get<int>();
+        bank.columns = jsonData["columns"].get<int>();
     if (jsonData.contains("spacing"))
-        bank->spacing = jsonData["spacing"].get<int>();
+        bank.spacing = jsonData["spacing"].get<int>();
     if (jsonData.contains("margin"))
-        bank->margin = jsonData["margin"].get<int>();
+        bank.margin = jsonData["margin"].get<int>();
     
     // Load animations
     if (!jsonData.contains("animations") || !jsonData["animations"].is_object())
     {
-        SYSTEM_LOG << "[AnimationManager] ERROR: No 'animations' object found in " << filePath << "\n";
+        SYSTEM_LOG << "[AnimationManager] ERROR: No 'animations' object found in " << bankJsonPath << "\n";
         return false;
     }
     
@@ -151,10 +159,10 @@ bool AnimationManager::LoadAnimationBank(const std::string& bankId, const std::s
                 for (int i = 0; i < frameCount; ++i)
                 {
                     AnimationFrame frame;
-                    frame.srcRect = bank->CalculateFrameRect(startFrame + i);
+                    frame.srcRect = bank.CalculateFrameRect(startFrame + i);
                     frame.duration = frameDuration;
-                    frame.hotSpot.x = bank->frameWidth / 2.0f;
-                    frame.hotSpot.y = bank->frameHeight / 2.0f;
+                    frame.hotSpot.x = bank.frameWidth / 2.0f;
+                    frame.hotSpot.y = bank.frameHeight / 2.0f;
                     sequence.frames.push_back(frame);
                 }
             }
@@ -168,10 +176,10 @@ bool AnimationManager::LoadAnimationBank(const std::string& bankId, const std::s
             for (int i = 0; i < frameCount; ++i)
             {
                 AnimationFrame frame;
-                frame.srcRect = bank->CalculateFrameRect(i);
+                frame.srcRect = bank.CalculateFrameRect(i);
                 frame.duration = frameDuration;
-                frame.hotSpot.x = bank->frameWidth / 2.0f;
-                frame.hotSpot.y = bank->frameHeight / 2.0f;
+                frame.hotSpot.x = bank.frameWidth / 2.0f;
+                frame.hotSpot.y = bank.frameHeight / 2.0f;
                 sequence.frames.push_back(frame);
             }
         }
@@ -183,7 +191,7 @@ bool AnimationManager::LoadAnimationBank(const std::string& bankId, const std::s
             DataManager::Get().PreloadSprite(textureId, sequence.spritesheetPath);
         }
         
-        bank->animations[animName] = sequence;
+        bank.animations[animName] = sequence;
         animCount++;
     }
     
@@ -194,7 +202,7 @@ bool AnimationManager::LoadAnimationBank(const std::string& bankId, const std::s
     return true;
 }
 
-int AnimationManager::LoadAnimationBanksFromDirectory(const std::string& directoryPath)
+bool AnimationManager::LoadAnimationBanksFromDirectory(const std::string& directoryPath)
 {
     SYSTEM_LOG << "[AnimationManager] Loading animation banks from: " << directoryPath << "\n";
     
@@ -215,11 +223,7 @@ int AnimationManager::LoadAnimationBanksFromDirectory(const std::string& directo
                 std::string fileName = findData.cFileName;
                 std::string filePath = directoryPath + "/" + fileName;
                 
-                // Extract bankId (filename without extension)
-                size_t dotPos = fileName.find_last_of('.');
-                std::string bankId = (dotPos != std::string::npos) ? fileName.substr(0, dotPos) : fileName;
-                
-                if (LoadAnimationBank(bankId, filePath))
+                if (LoadAnimationBank(filePath))
                 {
                     loadedCount++;
                 }
@@ -250,10 +254,7 @@ int AnimationManager::LoadAnimationBanksFromDirectory(const std::string& directo
                 struct stat st;
                 if (stat(filePath.c_str(), &st) == 0 && S_ISREG(st.st_mode))
                 {
-                    // Extract bankId (filename without extension)
-                    std::string bankId = fileName.substr(0, fileName.length() - 5);
-                    
-                    if (LoadAnimationBank(bankId, filePath))
+                    if (LoadAnimationBank(filePath))
                     {
                         loadedCount++;
                     }
@@ -269,26 +270,26 @@ int AnimationManager::LoadAnimationBanksFromDirectory(const std::string& directo
 #endif
     
     SYSTEM_LOG << "[AnimationManager] Loaded " << loadedCount << " animation banks\n";
-    return loadedCount;
+    return (loadedCount > 0);
 }
 
 // ========================================================================
 // Animation Graph Loading
 // ========================================================================
 
-bool AnimationManager::LoadAnimationGraph(const std::string& graphId, const std::string& filePath)
+bool AnimationManager::LoadAnimationGraph(const std::string& graphJsonPath)
 {
-    SYSTEM_LOG << "[AnimationManager] Loading animation graph: " << graphId << " from " << filePath << "\n";
+    SYSTEM_LOG << "[AnimationManager] Loading animation graph from " << graphJsonPath << "\n";
     
     // Check if file exists
-    if (!std::ifstream(filePath).good())
+    if (!std::ifstream(graphJsonPath).good())
     {
-        SYSTEM_LOG << "[AnimationManager] ERROR: File not found: " << filePath << "\n";
+        SYSTEM_LOG << "[AnimationManager] ERROR: File not found: " << graphJsonPath << "\n";
         return false;
     }
     
     // Parse JSON file
-    std::ifstream file(filePath);
+    std::ifstream file(graphJsonPath);
     json jsonData;
     
     try
@@ -297,58 +298,56 @@ bool AnimationManager::LoadAnimationGraph(const std::string& graphId, const std:
     }
     catch (const std::exception& e)
     {
-        SYSTEM_LOG << "[AnimationManager] ERROR: JSON parse error in " << filePath << ": " << e.what() << "\n";
+        SYSTEM_LOG << "[AnimationManager] ERROR: JSON parse error in " << graphJsonPath << ": " << e.what() << "\n";
         return false;
     }
     
+    // Get graph ID from JSON
+    if (!jsonData.contains("id"))
+    {
+        SYSTEM_LOG << "[AnimationManager] ERROR: No 'id' field found in " << graphJsonPath << "\n";
+        return false;
+    }
+    std::string graphId = jsonData["id"].get<std::string>();
+    
     // Create animation graph
-    auto graph = std::unique_ptr<AnimationGraph>(new AnimationGraph());
-    graph->graphId = graphId;
+    AnimationGraph graph;
+    graph.graphId = graphId;
     
     // Load default state
     if (jsonData.contains("defaultState"))
-        graph->defaultState = jsonData["defaultState"].get<std::string>();
+        graph.defaultState = jsonData["defaultState"].get<std::string>();
     
     // Load states
     if (jsonData.contains("states") && jsonData["states"].is_array())
     {
-        for (auto& state : jsonData["states"])
+        for (auto& stateData : jsonData["states"])
         {
-            graph->states.push_back(state.get<std::string>());
-        }
-    }
-    
-    // Load transitions
-    if (jsonData.contains("transitions") && jsonData["transitions"].is_object())
-    {
-        for (auto it = jsonData["transitions"].begin(); it != jsonData["transitions"].end(); ++it)
-        {
-            const std::string& fromState = it.key();
-            const json& toStates = it.value();
-            
-            if (toStates.is_array())
+            AnimationState state;
+            if (stateData.contains("name"))
+                state.name = stateData["name"].get<std::string>();
+            if (stateData.contains("animation"))
+                state.animation = stateData["animation"].get<std::string>();
+            if (stateData.contains("transitions") && stateData["transitions"].is_array())
             {
-                for (auto& toState : toStates)
+                for (auto& trans : stateData["transitions"])
                 {
-                    AnimationTransition transition;
-                    transition.fromState = fromState;
-                    transition.toState = toState.get<std::string>();
-                    graph->transitions.push_back(transition);
+                    state.transitions.push_back(trans.get<std::string>());
                 }
             }
+            graph.states[state.name] = state;
         }
     }
     
     SYSTEM_LOG << "[AnimationManager] Loaded graph '" << graphId << "' with " 
-               << graph->states.size() << " states and " 
-               << graph->transitions.size() << " transitions\n";
+               << graph.states.size() << " states\n";
     
     // Store graph
-    m_graphs[graphId] = std::move(graph);
+    m_graphs[graphId] = graph;
     return true;
 }
 
-int AnimationManager::LoadAnimationGraphsFromDirectory(const std::string& directoryPath)
+bool AnimationManager::LoadAnimationGraphsFromDirectory(const std::string& directoryPath)
 {
     SYSTEM_LOG << "[AnimationManager] Loading animation graphs from: " << directoryPath << "\n";
     
@@ -369,11 +368,7 @@ int AnimationManager::LoadAnimationGraphsFromDirectory(const std::string& direct
                 std::string fileName = findData.cFileName;
                 std::string filePath = directoryPath + "/" + fileName;
                 
-                // Extract graphId (filename without extension)
-                size_t dotPos = fileName.find_last_of('.');
-                std::string graphId = (dotPos != std::string::npos) ? fileName.substr(0, dotPos) : fileName;
-                
-                if (LoadAnimationGraph(graphId, filePath))
+                if (LoadAnimationGraph(filePath))
                 {
                     loadedCount++;
                 }
@@ -404,10 +399,7 @@ int AnimationManager::LoadAnimationGraphsFromDirectory(const std::string& direct
                 struct stat st;
                 if (stat(filePath.c_str(), &st) == 0 && S_ISREG(st.st_mode))
                 {
-                    // Extract graphId (filename without extension)
-                    std::string graphId = fileName.substr(0, fileName.length() - 5);
-                    
-                    if (LoadAnimationGraph(graphId, filePath))
+                    if (LoadAnimationGraph(filePath))
                     {
                         loadedCount++;
                     }
@@ -423,58 +415,27 @@ int AnimationManager::LoadAnimationGraphsFromDirectory(const std::string& direct
 #endif
     
     SYSTEM_LOG << "[AnimationManager] Loaded " << loadedCount << " animation graphs\n";
-    return loadedCount;
+    return (loadedCount > 0);
 }
 
 // ========================================================================
 // Access Methods
 // ========================================================================
 
-const AnimationBank* AnimationManager::GetAnimationBank(const std::string& bankId) const
+const AnimationBank* AnimationManager::GetBank(const std::string& bankId) const
 {
     auto it = m_banks.find(bankId);
     if (it != m_banks.end())
-        return it->second.get();
+        return &it->second;
     return nullptr;
 }
 
-const AnimationGraph* AnimationManager::GetAnimationGraph(const std::string& graphId) const
+const AnimationGraph* AnimationManager::GetGraph(const std::string& graphId) const
 {
     auto it = m_graphs.find(graphId);
     if (it != m_graphs.end())
-        return it->second.get();
-    return nullptr;
-}
-
-const AnimationSequence* AnimationManager::GetAnimationSequence(const std::string& bankId, 
-                                                                 const std::string& animName) const
-{
-    const AnimationBank* bank = GetAnimationBank(bankId);
-    if (!bank)
-        return nullptr;
-    
-    auto it = bank->animations.find(animName);
-    if (it != bank->animations.end())
         return &it->second;
-    
     return nullptr;
-}
-
-bool AnimationManager::HasAnimationBank(const std::string& bankId) const
-{
-    return m_banks.find(bankId) != m_banks.end();
-}
-
-bool AnimationManager::HasAnimationGraph(const std::string& graphId) const
-{
-    return m_graphs.find(graphId) != m_graphs.end();
-}
-
-void AnimationManager::Clear()
-{
-    m_banks.clear();
-    m_graphs.clear();
-    SYSTEM_LOG << "[AnimationManager] Cleared all animation data\n";
 }
 
 // ========================================================================
@@ -487,10 +448,10 @@ void AnimationManager::ListLoadedBanks() const
     for (auto it = m_banks.begin(); it != m_banks.end(); ++it)
     {
         const std::string& bankId = it->first;
-        const AnimationBank* bank = it->second.get();
+        const AnimationBank& bank = it->second;
         
-        SYSTEM_LOG << "  - " << bankId << " (" << bank->animations.size() << " animations)\n";
-        for (auto animIt = bank->animations.begin(); animIt != bank->animations.end(); ++animIt)
+        SYSTEM_LOG << "  - " << bankId << " (" << bank.animations.size() << " animations)\n";
+        for (auto animIt = bank.animations.begin(); animIt != bank.animations.end(); ++animIt)
         {
             const std::string& animName = animIt->first;
             const AnimationSequence& anim = animIt->second;
@@ -507,17 +468,9 @@ void AnimationManager::ListLoadedGraphs() const
     for (auto it = m_graphs.begin(); it != m_graphs.end(); ++it)
     {
         const std::string& graphId = it->first;
-        const AnimationGraph* graph = it->second.get();
+        const AnimationGraph& graph = it->second;
         
-        SYSTEM_LOG << "  - " << graphId << " (default: " << graph->defaultState << ")\n";
-        SYSTEM_LOG << "    States: ";
-        for (size_t i = 0; i < graph->states.size(); ++i)
-        {
-            SYSTEM_LOG << graph->states[i];
-            if (i < graph->states.size() - 1)
-                SYSTEM_LOG << ", ";
-        }
-        SYSTEM_LOG << "\n";
+        SYSTEM_LOG << "  - " << graphId << " (default: " << graph.defaultState << ", " << graph.states.size() << " states)\n";
     }
 }
 

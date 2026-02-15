@@ -104,5 +104,4 @@ private:
     std::unordered_map<std::string, Olympe::AnimationGraph> m_graphs;
 };
 
-} // namespace Animation
 } // namespace Olympe
