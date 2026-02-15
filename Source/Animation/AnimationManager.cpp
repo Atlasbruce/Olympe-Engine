@@ -9,8 +9,17 @@
 #include "../DataManager.h"
 #include "../system/system_utils.h"
 #include <fstream>
-#include <filesystem>
+#include <algorithm>
 #include "../third_party/nlohmann/json.hpp"
+
+// C++14 compatible directory iteration
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <dirent.h>
+    #include <sys/types.h>
+    #include <sys/stat.h>
+#endif
 
 using json = nlohmann::json;
 
@@ -40,7 +49,7 @@ bool AnimationManager::LoadAnimationBank(const std::string& bankId, const std::s
     {
         file >> jsonData;
     }
-    catch (const json::exception& e)
+    catch (const std::exception& e)
     {
         SYSTEM_LOG << "[AnimationManager] ERROR: JSON parse error in " << filePath << ": " << e.what() << "\n";
         return false;
@@ -70,8 +79,11 @@ bool AnimationManager::LoadAnimationBank(const std::string& bankId, const std::s
     }
     
     int animCount = 0;
-    for (auto& [animName, animData] : jsonData["animations"].items())
+    for (auto it = jsonData["animations"].begin(); it != jsonData["animations"].end(); ++it)
     {
+        const std::string& animName = it.key();
+        const json& animData = it.value();
+        
         AnimationSequence sequence;
         sequence.name = animName;
         
@@ -188,34 +200,73 @@ int AnimationManager::LoadAnimationBanksFromDirectory(const std::string& directo
     
     int loadedCount = 0;
     
-    try
+#ifdef _WIN32
+    // Windows directory iteration
+    WIN32_FIND_DATAA findData;
+    std::string searchPath = directoryPath + "/*.json";
+    HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
+    
+    if (hFind != INVALID_HANDLE_VALUE)
     {
-        // Check if directory exists
-        if (!std::filesystem::exists(directoryPath))
+        do
         {
-            SYSTEM_LOG << "[AnimationManager] Directory not found: " << directoryPath << "\n";
-            return 0;
-        }
-        
-        // Iterate through directory
-        for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
-        {
-            if (entry.is_regular_file() && entry.path().extension() == ".json")
+            if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
             {
-                std::string bankId = entry.path().stem().string();
-                std::string filePath = entry.path().string();
+                std::string fileName = findData.cFileName;
+                std::string filePath = directoryPath + "/" + fileName;
+                
+                // Extract bankId (filename without extension)
+                size_t dotPos = fileName.find_last_of('.');
+                std::string bankId = (dotPos != std::string::npos) ? fileName.substr(0, dotPos) : fileName;
                 
                 if (LoadAnimationBank(bankId, filePath))
                 {
                     loadedCount++;
                 }
             }
-        }
+        } while (FindNextFileA(hFind, &findData));
+        FindClose(hFind);
     }
-    catch (const std::filesystem::filesystem_error& e)
+#else
+    // POSIX directory iteration
+    DIR* dir = opendir(directoryPath.c_str());
+    if (dir)
     {
-        SYSTEM_LOG << "[AnimationManager] Filesystem error: " << e.what() << "\n";
+        struct dirent* entry;
+        while ((entry = readdir(dir)) != NULL)
+        {
+            std::string fileName = entry->d_name;
+            
+            // Skip . and ..
+            if (fileName == "." || fileName == "..")
+                continue;
+            
+            // Check if it's a .json file
+            if (fileName.length() > 5 && fileName.substr(fileName.length() - 5) == ".json")
+            {
+                std::string filePath = directoryPath + "/" + fileName;
+                
+                // Check if it's a regular file
+                struct stat st;
+                if (stat(filePath.c_str(), &st) == 0 && S_ISREG(st.st_mode))
+                {
+                    // Extract bankId (filename without extension)
+                    std::string bankId = fileName.substr(0, fileName.length() - 5);
+                    
+                    if (LoadAnimationBank(bankId, filePath))
+                    {
+                        loadedCount++;
+                    }
+                }
+            }
+        }
+        closedir(dir);
     }
+    else
+    {
+        SYSTEM_LOG << "[AnimationManager] Directory not found: " << directoryPath << "\n";
+    }
+#endif
     
     SYSTEM_LOG << "[AnimationManager] Loaded " << loadedCount << " animation banks\n";
     return loadedCount;
@@ -244,7 +295,7 @@ bool AnimationManager::LoadAnimationGraph(const std::string& graphId, const std:
     {
         file >> jsonData;
     }
-    catch (const json::exception& e)
+    catch (const std::exception& e)
     {
         SYSTEM_LOG << "[AnimationManager] ERROR: JSON parse error in " << filePath << ": " << e.what() << "\n";
         return false;
@@ -270,8 +321,11 @@ bool AnimationManager::LoadAnimationGraph(const std::string& graphId, const std:
     // Load transitions
     if (jsonData.contains("transitions") && jsonData["transitions"].is_object())
     {
-        for (auto& [fromState, toStates] : jsonData["transitions"].items())
+        for (auto it = jsonData["transitions"].begin(); it != jsonData["transitions"].end(); ++it)
         {
+            const std::string& fromState = it.key();
+            const json& toStates = it.value();
+            
             if (toStates.is_array())
             {
                 for (auto& toState : toStates)
@@ -300,34 +354,73 @@ int AnimationManager::LoadAnimationGraphsFromDirectory(const std::string& direct
     
     int loadedCount = 0;
     
-    try
+#ifdef _WIN32
+    // Windows directory iteration
+    WIN32_FIND_DATAA findData;
+    std::string searchPath = directoryPath + "/*.json";
+    HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
+    
+    if (hFind != INVALID_HANDLE_VALUE)
     {
-        // Check if directory exists
-        if (!std::filesystem::exists(directoryPath))
+        do
         {
-            SYSTEM_LOG << "[AnimationManager] Directory not found: " << directoryPath << "\n";
-            return 0;
-        }
-        
-        // Iterate through directory
-        for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
-        {
-            if (entry.is_regular_file() && entry.path().extension() == ".json")
+            if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
             {
-                std::string graphId = entry.path().stem().string();
-                std::string filePath = entry.path().string();
+                std::string fileName = findData.cFileName;
+                std::string filePath = directoryPath + "/" + fileName;
+                
+                // Extract graphId (filename without extension)
+                size_t dotPos = fileName.find_last_of('.');
+                std::string graphId = (dotPos != std::string::npos) ? fileName.substr(0, dotPos) : fileName;
                 
                 if (LoadAnimationGraph(graphId, filePath))
                 {
                     loadedCount++;
                 }
             }
-        }
+        } while (FindNextFileA(hFind, &findData));
+        FindClose(hFind);
     }
-    catch (const std::filesystem::filesystem_error& e)
+#else
+    // POSIX directory iteration
+    DIR* dir = opendir(directoryPath.c_str());
+    if (dir)
     {
-        SYSTEM_LOG << "[AnimationManager] Filesystem error: " << e.what() << "\n";
+        struct dirent* entry;
+        while ((entry = readdir(dir)) != NULL)
+        {
+            std::string fileName = entry->d_name;
+            
+            // Skip . and ..
+            if (fileName == "." || fileName == "..")
+                continue;
+            
+            // Check if it's a .json file
+            if (fileName.length() > 5 && fileName.substr(fileName.length() - 5) == ".json")
+            {
+                std::string filePath = directoryPath + "/" + fileName;
+                
+                // Check if it's a regular file
+                struct stat st;
+                if (stat(filePath.c_str(), &st) == 0 && S_ISREG(st.st_mode))
+                {
+                    // Extract graphId (filename without extension)
+                    std::string graphId = fileName.substr(0, fileName.length() - 5);
+                    
+                    if (LoadAnimationGraph(graphId, filePath))
+                    {
+                        loadedCount++;
+                    }
+                }
+            }
+        }
+        closedir(dir);
     }
+    else
+    {
+        SYSTEM_LOG << "[AnimationManager] Directory not found: " << directoryPath << "\n";
+    }
+#endif
     
     SYSTEM_LOG << "[AnimationManager] Loaded " << loadedCount << " animation graphs\n";
     return loadedCount;
@@ -391,11 +484,17 @@ void AnimationManager::Clear()
 void AnimationManager::ListLoadedBanks() const
 {
     SYSTEM_LOG << "[AnimationManager] Loaded Animation Banks:\n";
-    for (const auto& [bankId, bank] : m_banks)
+    for (auto it = m_banks.begin(); it != m_banks.end(); ++it)
     {
+        const std::string& bankId = it->first;
+        const AnimationBank* bank = it->second.get();
+        
         SYSTEM_LOG << "  - " << bankId << " (" << bank->animations.size() << " animations)\n";
-        for (const auto& [animName, anim] : bank->animations)
+        for (auto animIt = bank->animations.begin(); animIt != bank->animations.end(); ++animIt)
         {
+            const std::string& animName = animIt->first;
+            const AnimationSequence& anim = animIt->second;
+            
             SYSTEM_LOG << "    * " << animName << ": " << anim.frames.size() << " frames, "
                        << (anim.loop ? "looping" : "one-shot") << "\n";
         }
@@ -405,8 +504,11 @@ void AnimationManager::ListLoadedBanks() const
 void AnimationManager::ListLoadedGraphs() const
 {
     SYSTEM_LOG << "[AnimationManager] Loaded Animation Graphs:\n";
-    for (const auto& [graphId, graph] : m_graphs)
+    for (auto it = m_graphs.begin(); it != m_graphs.end(); ++it)
     {
+        const std::string& graphId = it->first;
+        const AnimationGraph* graph = it->second.get();
+        
         SYSTEM_LOG << "  - " << graphId << " (default: " << graph->defaultState << ")\n";
         SYSTEM_LOG << "    States: ";
         for (size_t i = 0; i < graph->states.size(); ++i)
