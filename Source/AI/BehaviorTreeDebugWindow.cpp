@@ -741,10 +741,40 @@ namespace Olympe
         }
 
         // Editor mode toggle
+        bool prevEditorMode = m_editorMode;
         ImGui::Checkbox("Editor Mode", &m_editorMode);
         if (ImGui::IsItemHovered())
         {
             ImGui::SetTooltip("Enable editing mode to add/remove/connect nodes");
+        }
+        
+        // Initialize editing tree when entering editor mode
+        if (m_editorMode && !prevEditorMode)
+        {
+            auto& world = World::Get();
+            const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
+            const BehaviorTreeAsset* originalTree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
+            
+            if (originalTree)
+            {
+                m_editingTree = *originalTree;
+                m_treeModified = false;
+                m_selectedNodes.clear();
+                m_undoStack.clear();
+                m_redoStack.clear();
+                m_nextNodeId = 1000;
+                
+                // Find max node ID to avoid conflicts
+                for (const auto& node : m_editingTree.nodes)
+                {
+                    if (node.id >= m_nextNodeId)
+                    {
+                        m_nextNodeId = node.id + 1;
+                    }
+                }
+                
+                std::cout << "[BTEditor] Entered editor mode, editing tree: " << m_editingTree.name << std::endl;
+            }
         }
         
         if (m_editorMode)
