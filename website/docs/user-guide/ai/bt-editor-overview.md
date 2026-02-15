@@ -290,5 +290,3 @@ Ready to start building? Continue with:
 - ✅ Check condition parameters (range values, thresholds)
 - ✅ Verify entity has required components (Navigation, Combat, etc.)
 - ✅ Use debugger to see which node fails
-
-For more help, see the [Troubleshooting section](../../tutorials/behavior-tree-basics.md#troubleshooting) in the tutorial.

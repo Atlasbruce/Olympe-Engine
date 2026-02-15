@@ -308,8 +308,8 @@ Checks if a timer has expired.
 **Parameters:** None
 
 **Returns:**
-- **Success** if timer <= 0
-- **Failure** if timer > 0
+- **Success** if timer &lt;= 0
+- **Failure** if timer &gt; 0
 
 **Use Cases:**
 - Wander behavior (wait before moving)

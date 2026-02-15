@@ -444,7 +444,7 @@ Blackboard shows:
    - Simplify tree structure
 
 **Performance Tips:**
-- Trees should evaluate in <0.5ms
+- Trees should evaluate in &lt;0.5ms
 - Use conditions to skip expensive branches
 - Limit tree depth (2-4 levels ideal)
 
