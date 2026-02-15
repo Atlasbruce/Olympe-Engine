@@ -5,6 +5,8 @@
 
 #include "BlueprintEditorGUI.h"
 #include "BlueprintEditor.h"
+#include "BlueprintValidator.h"
+#include "NodeGraphManager.h"
 #include "TemplateBrowserPanel.h"
 #include "HistoryPanel.h"
 #include "../third_party/imgui/imgui.h"
@@ -34,6 +36,7 @@ namespace Olympe
         , m_ShowHistory(false)
         , m_ShowPreferences(false)
         , m_ShowShortcuts(false)
+        , m_SaveWarningCount(0)
         , m_TemplateBrowserPanel(nullptr)
         , m_HistoryPanel(nullptr)
     {
@@ -723,6 +726,70 @@ namespace Olympe
     {
         auto& backend = BlueprintEditor::Get();
         
+        // Check for validation warnings (non-critical issues)
+        if (backend.GetCurrentBlueprint().blueprintType == "BehaviorTree")
+        {
+            NodeGraph* activeGraph = NodeGraphManager::Get().GetActiveGraph();
+            if (activeGraph)
+            {
+                BlueprintValidator validator;
+                auto errors = validator.ValidateGraph(activeGraph);
+                
+                // Check for warnings
+                int warningCount = 0;
+                for (const auto& error : errors)
+                {
+                    if (error.severity == ErrorSeverity::Warning)
+                    {
+                        warningCount++;
+                    }
+                }
+                
+                // Show warning dialog if there are warnings
+                if (warningCount > 0)
+                {
+                    // Open a popup to warn the user
+                    ImGui::OpenPopup("Save With Warnings");
+                    
+                    // Store warnings for the popup
+                    m_SaveWarningCount = warningCount;
+                }
+            }
+        }
+        
+        // Handle the warning popup
+        if (ImGui::BeginPopupModal("Save With Warnings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("The blueprint has %d validation warning(s).", m_SaveWarningCount);
+            ImGui::Text("Do you want to save anyway?");
+            ImGui::Separator();
+            
+            if (ImGui::Button("Save Anyway", ImVec2(120, 0)))
+            {
+                ImGui::CloseCurrentPopup();
+                // Proceed with save
+                if (backend.GetCurrentFilepath().empty())
+                {
+                    const std::string& name = backend.GetCurrentBlueprint().name;
+                    std::string filepath = "../Blueprints/" + name + ".json";
+                    backend.SaveBlueprintAs(filepath);
+                }
+                else
+                {
+                    backend.SaveBlueprint();
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
+            {
+                ImGui::CloseCurrentPopup();
+            }
+            
+            ImGui::EndPopup();
+            return; // Don't proceed with save until user chooses
+        }
+        
+        // Normal save flow (no warnings or warnings already handled)
         if (backend.GetCurrentFilepath().empty())
         {
             // Default save location if no filepath set
@@ -733,6 +800,27 @@ namespace Olympe
         else
         {
             backend.SaveBlueprint();
+        }
+        
+        // Show error message if save failed due to validation errors
+        if (!backend.GetLastError().empty())
+        {
+            ImGui::OpenPopup("Save Error");
+        }
+        
+        // Error popup
+        if (ImGui::BeginPopupModal("Save Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Failed to save blueprint:");
+            ImGui::TextWrapped("%s", backend.GetLastError().c_str());
+            ImGui::Separator();
+            
+            if (ImGui::Button("OK", ImVec2(120, 0)))
+            {
+                ImGui::CloseCurrentPopup();
+            }
+            
+            ImGui::EndPopup();
         }
     }
 

@@ -108,6 +108,9 @@ namespace Olympe
         bool m_ShowPreferences;
         bool m_ShowShortcuts;
         
+        // Save validation state
+        int m_SaveWarningCount;
+        
         // Asset management UI (uses backend for data)
         AssetBrowser m_AssetBrowser;
         AssetInfoPanel m_AssetInfoPanel;
