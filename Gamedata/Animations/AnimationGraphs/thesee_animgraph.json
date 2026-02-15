@@ -1,0 +1,16 @@
+{
+  "graphId": "thesee_animgraph",
+  "defaultState": "idle",
+  "states": [
+    "idle",
+    "walk",
+    "run",
+    "hit"
+  ],
+  "transitions": {
+    "idle": ["walk", "run", "hit"],
+    "walk": ["idle", "run", "hit"],
+    "run": ["idle", "walk", "hit"],
+    "hit": ["idle"]
+  }
+}

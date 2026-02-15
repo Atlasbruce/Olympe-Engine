@@ -1,0 +1,51 @@
+{
+  "bankId": "thesee",
+  "frameWidth": 46,
+  "frameHeight": 81,
+  "columns": 16,
+  "spacing": 0,
+  "margin": 0,
+  "animations": {
+    "idle": {
+      "spritesheet": "./Gamedata/Minotaurus/texture/these_idle.png",
+      "frames": {
+        "start": 0,
+        "count": 128
+      },
+      "frameDuration": 0.08,
+      "loop": true,
+      "speed": 1.0
+    },
+    "walk": {
+      "spritesheet": "./Gamedata/Minotaurus/texture/these_walk.png",
+      "frames": {
+        "start": 0,
+        "count": 128
+      },
+      "frameDuration": 0.06,
+      "loop": true,
+      "speed": 1.0
+    },
+    "run": {
+      "spritesheet": "./Gamedata/Minotaurus/texture/these_run.png",
+      "frames": {
+        "start": 0,
+        "count": 128
+      },
+      "frameDuration": 0.05,
+      "loop": true,
+      "speed": 1.2
+    },
+    "hit": {
+      "spritesheet": "./Gamedata/Minotaurus/texture/these_hit.png",
+      "frames": {
+        "start": 0,
+        "count": 112
+      },
+      "frameDuration": 0.04,
+      "loop": false,
+      "speed": 1.5,
+      "nextAnimation": "idle"
+    }
+  }
+}

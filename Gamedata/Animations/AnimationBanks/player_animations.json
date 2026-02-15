@@ -1,0 +1,71 @@
+{
+  "bankId": "player",
+  "frameWidth": 32,
+  "frameHeight": 32,
+  "columns": 8,
+  "spacing": 0,
+  "margin": 0,
+  "animations": {
+    "idle": {
+      "spritesheet": "./Resources/Sprites/player_idle.png",
+      "frames": {
+        "start": 0,
+        "count": 8
+      },
+      "frameDuration": 0.1,
+      "loop": true,
+      "speed": 1.0
+    },
+    "walk": {
+      "spritesheet": "./Resources/Sprites/player_walk.png",
+      "frames": {
+        "start": 0,
+        "count": 8
+      },
+      "frameDuration": 0.08,
+      "loop": true,
+      "speed": 1.0
+    },
+    "run": {
+      "spritesheet": "./Resources/Sprites/player_run.png",
+      "frames": {
+        "start": 0,
+        "count": 8
+      },
+      "frameDuration": 0.06,
+      "loop": true,
+      "speed": 1.2
+    },
+    "jump": {
+      "spritesheet": "./Resources/Sprites/player_jump.png",
+      "frames": {
+        "start": 0,
+        "count": 6
+      },
+      "frameDuration": 0.1,
+      "loop": false,
+      "speed": 1.0
+    },
+    "fall": {
+      "spritesheet": "./Resources/Sprites/player_fall.png",
+      "frames": {
+        "start": 0,
+        "count": 4
+      },
+      "frameDuration": 0.1,
+      "loop": true,
+      "speed": 1.0
+    },
+    "attack": {
+      "spritesheet": "./Resources/Sprites/player_attack.png",
+      "frames": {
+        "start": 0,
+        "count": 6
+      },
+      "frameDuration": 0.05,
+      "loop": false,
+      "speed": 1.5,
+      "nextAnimation": "idle"
+    }
+  }
+}
