@@ -18,7 +18,8 @@ namespace Olympe
     std::vector<BTNodeLayout> BTGraphLayoutEngine::ComputeLayout(
         const BehaviorTreeAsset* tree,
         float nodeSpacingX,
-        float nodeSpacingY)
+        float nodeSpacingY,
+        float zoomFactor)
     {
         if (!tree || tree->nodes.empty())
         {
@@ -46,8 +47,8 @@ namespace Olympe
         
         // Phase 5: Force-directed collision resolution with generous padding
         // This works in abstract unit space
-        const float nodePadding = 1.5f;  // 1.5 abstract units of padding
-        const int maxIterations = 15;    // More iterations for better convergence
+        const float nodePadding = 2.5f;  // 2.5 abstract units of padding (increased from 1.5 for better spacing)
+        const int maxIterations = 30;    // 30 iterations for better convergence (doubled from 15)
         ResolveNodeCollisionsForceDirected(nodePadding, maxIterations);
 
         // Use the spacing values passed from UI sliders
@@ -76,10 +77,15 @@ namespace Olympe
             baseSpacingY *= SPACING_INCREASE_FACTOR;  // +15% only for very deep trees
         }
 
+        // Apply zoom factor to spacing BEFORE converting to pixels
+        float finalSpacingX = baseSpacingX * zoomFactor;
+        float finalSpacingY = baseSpacingY * zoomFactor;
+
         // Debug output to verify
         std::cout << "[BTGraphLayout] Using spacing: " 
-                  << baseSpacingX << "px × " << baseSpacingY << "px" 
-                  << " (from UI: " << nodeSpacingX << " × " << nodeSpacingY << ")" 
+                  << finalSpacingX << "px × " << finalSpacingY << "px" 
+                  << " (base: " << baseSpacingX << " × " << baseSpacingY 
+                  << ", zoom: " << (int)(zoomFactor * 100) << "%)" 
                   << std::endl;
 
         // Convert from abstract units to world coordinates and apply layout direction
@@ -88,11 +94,11 @@ namespace Olympe
             // Vertical layout (default): layers go top-to-bottom
             for (auto& layout : m_layouts)
             {
-                // ok -  CRITICAL: Multiply abstract X by pixel spacing to get world coordinates
-                layout.position.x *= baseSpacingX;
+                // Convert abstract X position to world coordinates with zoomed spacing
+                layout.position.x *= finalSpacingX;
                 
-                // ok -  CRITICAL: Multiply layer index by vertical spacing
-                layout.position.y = layout.layer * baseSpacingY;
+                // Convert layer index to vertical world position with zoomed spacing
+                layout.position.y = layout.layer * finalSpacingY;
             }
         }
         else  // LeftToRight
@@ -103,9 +109,9 @@ namespace Olympe
             {
                 float abstractX = layout.position.x;
                 // Layers become horizontal position
-                layout.position.x = layout.layer * baseSpacingY;
+                layout.position.x = layout.layer * finalSpacingY;
                 // Abstract X units become vertical position
-                layout.position.y = abstractX * baseSpacingX;
+                layout.position.y = abstractX * finalSpacingX;
             }
         }
 
@@ -215,8 +221,8 @@ namespace Olympe
 
     void BTGraphLayoutEngine::ReduceCrossings(const BehaviorTreeAsset* tree)
     {
-        // Barycenter heuristic - 10 passes alternating between forward and backward
-        const int numPasses = 10;
+        // Barycenter heuristic - 20 passes alternating between forward and backward (doubled from 10)
+        const int numPasses = 20;
 
         for (int pass = 0; pass < numPasses; ++pass)
         {
@@ -337,6 +343,13 @@ namespace Olympe
                 }
             }
         }
+        
+        // Debug output to verify crossing reduction effectiveness
+        #ifdef DEBUG_BT_LAYOUT
+        int totalCrossings = CountEdgeCrossings(tree);
+        std::cout << "[BTGraphLayout] Edge crossings after reduction: " 
+                  << totalCrossings << std::endl;
+        #endif
     }
 
     void BTGraphLayoutEngine::AssignXCoordinates(float nodeSpacingX)
@@ -662,5 +675,61 @@ namespace Olympe
                 layoutB.position.x += pushAmount;
             }
         }
+    }
+    
+    int BTGraphLayoutEngine::CountEdgeCrossings(const BehaviorTreeAsset* tree) const
+    {
+        int crossingCount = 0;
+        
+        // Check all pairs of edges between adjacent layers
+        for (size_t layerIdx = 0; layerIdx + 1 < m_layers.size(); ++layerIdx)
+        {
+            const auto& upperLayer = m_layers[layerIdx];
+            const auto& lowerLayer = m_layers[layerIdx + 1];
+            
+            // Get all edges from upper to lower layer
+            std::vector<std::pair<int, int>> edges;  // C++14: use std::pair explicitly
+            
+            for (size_t i = 0; i < upperLayer.size(); ++i)
+            {
+                uint32_t parentId = upperLayer[i];
+                const BTNode* parentNode = tree->GetNode(parentId);
+                if (!parentNode)
+                    continue;
+                
+                auto children = GetChildren(parentNode);
+                for (uint32_t childId : children)
+                {
+                    // Find child position in lower layer
+                    auto childIt = std::find(lowerLayer.begin(), lowerLayer.end(), childId);
+                    if (childIt != lowerLayer.end())
+                    {
+                        int childPos = static_cast<int>(std::distance(lowerLayer.begin(), childIt));
+                        edges.push_back(std::make_pair(static_cast<int>(i), childPos));
+                    }
+                }
+            }
+            
+            // Count crossings between all edge pairs
+            for (size_t i = 0; i < edges.size(); ++i)
+            {
+                for (size_t j = i + 1; j < edges.size(); ++j)
+                {
+                    // C++14: use explicit variable names instead of structured bindings
+                    int a1 = edges[i].first;
+                    int a2 = edges[i].second;
+                    int b1 = edges[j].first;
+                    int b2 = edges[j].second;
+                    
+                    // Check if edges cross: (a1 < b1 && a2 > b2) || (a1 > b1 && a2 < b2)
+                    if ((a1 < b1 && a2 > b2) || (a1 > b1 && a2 < b2))
+                    {
+                        crossingCount++;
+                    }
+                }
+            }
+        }
+        
+        return crossingCount;
     }
 }

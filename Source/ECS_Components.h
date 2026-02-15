@@ -315,6 +315,78 @@ struct VisualEditor_data
 	}
 };
 
+/**
+ * @struct VisualAnimation_data
+ * @brief ECS component for animated sprites
+ * 
+ * Stores animation state and references to animation data from the Animation System.
+ * Works in conjunction with VisualSprite_data to display animated sprites.
+ * 
+ * Usage example:
+ * @code
+ * VisualAnimation_data anim;
+ * anim.bankId = "player";
+ * anim.graphId = "player_fsm";
+ * anim.currentAnimName = "idle";
+ * anim.isPlaying = true;
+ * anim.autoStart = true;
+ * World::Get().AddComponent<VisualAnimation_data>(entity, anim);
+ * @endcode
+ * 
+ * @see AnimationSystem
+ * @see AnimationManager
+ * @see VisualSprite_data
+ */
+struct VisualAnimation_data
+{
+	/// Animation bank identifier (links to AnimationManager)
+	std::string bankId;
+	
+	/// Animation graph identifier for FSM control (optional)
+	std::string graphId;
+	
+	/// Current animation name (e.g., "idle", "walk", "attack")
+	std::string currentAnimName;
+	
+	/// Current FSM state name (if using animation graph)
+	std::string currentStateName;
+	
+	/// Current frame index in animation sequence (0-based)
+	int currentFrame = 0;
+	
+	/// Time accumulated since last frame change (seconds)
+	float elapsedTime = 0.0f;
+	
+	/// Whether animation is actively updating
+	bool isPlaying = true;
+	
+	/// Whether current animation should loop
+	bool loop = true;
+	
+	/// Playback speed multiplier (1.0 = normal, 2.0 = double speed)
+	float playbackSpeed = 1.0f;
+	
+	/// Start playing immediately on entity creation
+	bool autoStart = true;
+	
+	/// Cached pointer to current animation sequence (internal use)
+	void* currentSequence = nullptr;
+	
+	/// Cached texture pointer (internal use)
+	void* cachedTexture = nullptr;
+	
+	/// True when non-looping animation finishes
+	bool isAnimationComplete = false;
+	
+	/// Total frame count in current sequence
+	int totalFrames = 0;
+	
+	// Constructors
+	VisualAnimation_data() = default;
+	VisualAnimation_data(const VisualAnimation_data&) = default;
+	VisualAnimation_data& operator=(const VisualAnimation_data&) = default;
+};
+
 // --- Component Animation Data ---
 struct Animation_data
 {

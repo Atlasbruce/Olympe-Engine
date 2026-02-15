@@ -10,6 +10,9 @@
 #include "../ECS_Components_AI.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
+#include "../third_party/imgui/backends/imgui_impl_sdl3.h"
+#include "../third_party/imgui/backends/imgui_impl_sdlrenderer3.h"
+#include <SDL3/SDL.h>
 #include <algorithm>
 #include <cstring>
 #include <cmath>
@@ -20,8 +23,13 @@ namespace Olympe
     // Camera zoom constants
     constexpr float MIN_ZOOM = 0.3f;
     constexpr float MAX_ZOOM = 3.0f;
+    constexpr float ZOOM_EPSILON = 0.001f;  // Minimum zoom change to trigger layout recomputation
 
     BehaviorTreeDebugWindow::BehaviorTreeDebugWindow()
+        : m_separateWindow(nullptr)          // C++14: explicit initialization
+        , m_separateRenderer(nullptr)        // C++14: explicit initialization
+        , m_windowCreated(false)
+        , m_separateImGuiContext(nullptr)
     {
     }
 
@@ -35,7 +43,7 @@ namespace Olympe
         if (m_isInitialized)
             return;
 
-        // Initialize ImNodes context
+        // Initialize ImNodes context (for node graph rendering)
         if (!m_imnodesInitialized)
         {
             ImNodes::CreateContext();
@@ -46,10 +54,15 @@ namespace Olympe
         }
 
         m_isInitialized = true;
+        
+        std::cout << "[BTDebugger] Initialized (window will be created on first F10)" << std::endl;
     }
 
     void BehaviorTreeDebugWindow::Shutdown()
     {
+        // Destroy separate window if exists
+        DestroySeparateWindow();
+        
         if (m_imnodesInitialized)
         {
             ImNodes::DestroyContext();
@@ -63,21 +76,181 @@ namespace Olympe
     {
         m_isVisible = !m_isVisible;
         
-        if (m_isVisible && !m_isInitialized)
+        if (m_isVisible)
         {
-            Initialize();
+            // Opening: Create separate window if not exists
+            if (!m_isInitialized)
+            {
+                Initialize();
+            }
+            
+            if (!m_windowCreated)
+            {
+                CreateSeparateWindow();
+            }
+            
+            std::cout << "[BTDebugger] F10: Debugger window opened (separate window)" << std::endl;
         }
+        else
+        {
+            // Closing: Destroy separate window
+            DestroySeparateWindow();
+            
+            std::cout << "[BTDebugger] F10: Debugger window closed" << std::endl;
+        }
+    }
+    
+    void BehaviorTreeDebugWindow::CreateSeparateWindow()
+    {
+        if (m_windowCreated)
+        {
+            std::cout << "[BTDebugger] Separate window already exists" << std::endl;
+            return;
+        }
+        
+        // Save current ImGui context before switching
+        ImGuiContext* previousContext = ImGui::GetCurrentContext();
+        
+        // Create native SDL3 window (NOT ImGui viewport)
+        const int windowWidth = 1200;
+        const int windowHeight = 720;
+        
+        if (!SDL_CreateWindowAndRenderer(
+            "Behavior Tree Runtime Debugger - Independent Window",
+            windowWidth,
+            windowHeight,
+            SDL_WINDOW_RESIZABLE,  // User can resize
+            &m_separateWindow,
+            &m_separateRenderer))
+        {
+            std::cout << "[BTDebugger] ERROR: Failed to create separate window: " 
+                      << SDL_GetError() << std::endl;
+            return;
+        }
+        
+        // Create separate ImGui context for this window
+        m_separateImGuiContext = ImGui::CreateContext();
+        ImGui::SetCurrentContext(m_separateImGuiContext);
+        
+        // Initialize ImGui backends for separate window
+        ImGuiIO& io = ImGui::GetIO();
+        (void)io; // Prevent unused variable warning
+        ImGui::StyleColorsDark();
+        
+        ImGui_ImplSDL3_InitForSDLRenderer(m_separateWindow, m_separateRenderer);
+        ImGui_ImplSDLRenderer3_Init(m_separateRenderer);
+        
+        m_windowCreated = true;
+        
+        // Restore previous ImGui context
+        ImGui::SetCurrentContext(previousContext);
+        
+        std::cout << "[BTDebugger] ✅ Separate window created successfully!" << std::endl;
+        std::cout << "[BTDebugger] Window can be moved to second monitor" << std::endl;
+    }
+    
+    void BehaviorTreeDebugWindow::DestroySeparateWindow()
+    {
+        if (!m_windowCreated)
+            return;
+
+        // ✅ Sauvegarder le contexte principal
+        ImGuiContext* previousContext = ImGui::GetCurrentContext();
+
+        if (m_separateImGuiContext != nullptr)
+        {
+            ImGui::SetCurrentContext(m_separateImGuiContext);
+            ImGui_ImplSDLRenderer3_Shutdown();
+            ImGui_ImplSDL3_Shutdown();
+            ImGui::DestroyContext(m_separateImGuiContext);
+            m_separateImGuiContext = nullptr;
+        }
+
+        // ✅ Restaurer le contexte principal (seulement s'il n'était pas celui qu'on vient de détruire)
+        if (previousContext != m_separateImGuiContext)
+            ImGui::SetCurrentContext(previousContext);
+
+        // Destroy SDL3 resources
+        if (m_separateRenderer != nullptr)
+        {
+            SDL_DestroyRenderer(m_separateRenderer);
+            m_separateRenderer = nullptr;
+        }
+        
+        if (m_separateWindow != nullptr)
+        {
+            SDL_DestroyWindow(m_separateWindow);
+            m_separateWindow = nullptr;
+        }
+        
+        m_windowCreated = false;
+        
+        std::cout << "[BTDebugger] Separate window destroyed" << std::endl;
+    }
+    
+    void BehaviorTreeDebugWindow::ProcessEvent(SDL_Event* event)
+    {
+        if (!m_windowCreated || !m_isVisible)
+            return;
+        
+        // Only process events for our separate window
+        if (event->type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
+        {
+            // Check if it's our window
+            if (event->window.windowID == SDL_GetWindowID(m_separateWindow))
+            {
+                ToggleVisibility();  // Close debugger
+                return;
+            }
+        }
+
+		// Save current ImGui context
+        ImGuiContext* previousContext = ImGui::GetCurrentContext();
+                
+        // Switch to our ImGui context and process event
+        ImGui::SetCurrentContext(m_separateImGuiContext);
+        ImGui_ImplSDL3_ProcessEvent(event);
+
+        // Restore previous ImGui context
+        ImGui::SetCurrentContext(previousContext);
     }
 
     void BehaviorTreeDebugWindow::Render()
     {
-        if (!m_isVisible || !m_isInitialized)
+        if (!m_isVisible || !m_windowCreated)
             return;
 
-        // Update pulse animation (using delta time)
-        m_pulseTimer += GameEngine::fDt;
+        // Save current ImGui context
+        ImGuiContext* previousContext = ImGui::GetCurrentContext();
+        
+        // Switch to separate window's ImGui context
+        ImGui::SetCurrentContext(m_separateImGuiContext);
+        
+        // Begin new frame for separate window
+        ImGui_ImplSDLRenderer3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
+        ImGui::NewFrame();
+        
+        // Render debugger content (existing code, but now in separate window)
+        RenderInSeparateWindow();
+        
+        // Render ImGui to separate window
+        ImGui::Render();
+        SDL_SetRenderDrawColor(m_separateRenderer, 18, 18, 20, 255);  // Dark background
+        SDL_RenderClear(m_separateRenderer);
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_separateRenderer);
+        SDL_RenderPresent(m_separateRenderer);
 
-        // Auto-refresh entity list (accumulate time properly)
+        // Restore previous ImGui context
+        ImGui::SetCurrentContext(previousContext);
+    }
+    
+    void BehaviorTreeDebugWindow::RenderInSeparateWindow()
+    {
+        // Update animations and timers
+        m_pulseTimer += GameEngine::fDt;
+        
+        // Auto-refresh entity list
         static float accumulatedTime = 0.0f;
         accumulatedTime += GameEngine::fDt;
         
@@ -86,29 +259,31 @@ namespace Olympe
             RefreshEntityList();
             accumulatedTime = 0.0f;
         }
-
+        
         // Update execution log timers
         for (auto& entry : m_executionLog)
         {
             entry.timeAgo += GameEngine::fDt;
         }
-
-        // Configure as professional external-style window with generous size
-        ImGui::SetNextWindowSize(ImVec2(1800, 1200), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowPos(ImVec2(100, 100), ImGuiCond_FirstUseEver);
-
-        // Force external floating window (no docking, no bring to front on focus)
+        
+        // Main window (fills entire separate window)
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+        
         ImGuiWindowFlags windowFlags = 
             ImGuiWindowFlags_MenuBar |
+            ImGuiWindowFlags_NoTitleBar |     // No title bar (OS window has title)
+            ImGuiWindowFlags_NoResize |       // Use OS window resize
+            ImGuiWindowFlags_NoMove |         // Fills entire window
             ImGuiWindowFlags_NoCollapse |
             ImGuiWindowFlags_NoBringToFrontOnFocus;
         
-        if (!ImGui::Begin("Behavior Tree Runtime Debugger", &m_isVisible, windowFlags))
+        if (!ImGui::Begin("Behavior Tree Runtime Debugger##Main", nullptr, windowFlags))
         {
             ImGui::End();
             return;
         }
-
+        
         // Menu bar
         if (ImGui::BeginMenuBar())
         {
@@ -117,37 +292,43 @@ namespace Olympe
                 ImGui::SliderFloat("Auto Refresh (s)", &m_autoRefreshInterval, 0.1f, 5.0f);
                 ImGui::SliderFloat("Entity List Width", &m_entityListWidth, 150.0f, 400.0f);
                 ImGui::SliderFloat("Inspector Width", &m_inspectorWidth, 250.0f, 500.0f);
-                // Reasonable spacing ranges to prevent massive graphs
-                ImGui::SliderFloat("Node Spacing X", &m_nodeSpacingX, 150.0f, 500.0f);
-                ImGui::SliderFloat("Node Spacing Y", &m_nodeSpacingY, 100.0f, 400.0f);
+                
+                // Reduced ranges, mark for recomputation
+                if (ImGui::SliderFloat("Node Spacing X", &m_nodeSpacingX, 80.0f, 400.0f))
+                {
+                    m_needsLayoutUpdate = true;
+                }
+                if (ImGui::SliderFloat("Node Spacing Y", &m_nodeSpacingY, 60.0f, 300.0f))
+                {
+                    m_needsLayoutUpdate = true;
+                }
                 
                 // Reset button to restore defaults
                 if (ImGui::Button("Reset Spacing to Defaults"))
                 {
-                    m_nodeSpacingX = 250.0f;
-                    m_nodeSpacingY = 180.0f;
-                    
-                    // Recompute layout with new spacing
-                    if (m_selectedEntity != 0)
-                    {
-                        auto& world = World::Get();
-                        if (world.HasComponent<BehaviorTreeRuntime_data>(m_selectedEntity))
-                        {
-                            const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
-                            const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
-                            if (tree)
-                            {
-                                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY);
-                            }
-                        }
-                    }
+                    m_nodeSpacingX = 180.0f;
+                    m_nodeSpacingY = 120.0f;
+                    m_needsLayoutUpdate = true;
                 }
                 
                 ImGui::Separator();
+                ImGui::Text("Current Zoom: %.0f%%", m_currentZoom * 100.0f);
                 ImGui::Checkbox("Show Minimap", &m_showMinimap);
+                
+                // Auto-fit option
+                ImGui::Checkbox("Auto-Fit on Load", &m_autoFitOnLoad);
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("Automatically fit tree to view when selecting an entity");
+                }
+                
+                ImGui::Separator();
+                ImGui::Text("Window Mode: Separate (Independent)");
+                ImGui::Text("Press F10 to close window");
                 
                 ImGui::EndMenu();
             }
+            
             if (ImGui::BeginMenu("Actions"))
             {
                 if (ImGui::MenuItem("Refresh Now (F5)"))
@@ -172,39 +353,40 @@ namespace Olympe
                 
                 ImGui::EndMenu();
             }
+            
             ImGui::EndMenuBar();
         }
-
+        
         // Keyboard shortcuts
         if (ImGui::IsKeyPressed(ImGuiKey_F5))
         {
             RefreshEntityList();
         }
-
+        
         // Three-panel layout
         float windowWidth = ImGui::GetContentRegionAvail().x;
         float windowHeight = ImGui::GetContentRegionAvail().y;
-
+        
         // Left panel: Entity list
         ImGui::BeginChild("EntityListPanel", ImVec2(m_entityListWidth, windowHeight), true);
         RenderEntityListPanel();
         ImGui::EndChild();
-
+        
         ImGui::SameLine();
-
+        
         // Center panel: Node graph
         float centerWidth = windowWidth - m_entityListWidth - m_inspectorWidth - 20.0f;
         ImGui::BeginChild("NodeGraphPanel", ImVec2(centerWidth, windowHeight), true);
         RenderNodeGraphPanel();
         ImGui::EndChild();
-
+        
         ImGui::SameLine();
-
+        
         // Right panel: Inspector
         ImGui::BeginChild("InspectorPanel", ImVec2(m_inspectorWidth, windowHeight), true);
         RenderInspectorPanel();
         ImGui::EndChild();
-
+        
         ImGui::End();
     }
 
@@ -464,7 +646,17 @@ namespace Olympe
             const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(info.treeId);
             if (tree)
             {
-                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY);
+                // Pass current zoom factor
+                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                m_needsLayoutUpdate = false;
+                
+                // Auto-fit if enabled
+                if (m_autoFitOnLoad)
+                {
+                    // Defer fit to next frame by clearing the last centered entity
+                    // Note: We rely on the fact that entity selection changed, so m_selectedEntity != m_lastCenteredEntity
+                    // This will trigger the auto-center/fit logic in the graph panel
+                }
             }
         }
 
@@ -570,7 +762,15 @@ namespace Olympe
         if (layoutChanged)
         {
             m_layoutEngine.SetLayoutDirection(m_layoutDirection);
-            m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY);
+            m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+            m_needsLayoutUpdate = false;
+        }
+        
+        // Recompute layout if spacing changed via sliders
+        if (m_needsLayoutUpdate && tree)
+        {
+            m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+            m_needsLayoutUpdate = false;
         }
         
         // Reset Camera button
@@ -635,41 +835,48 @@ namespace Olympe
             ImVec2 graphCenter((minPos.x + maxPos.x) / 2.0f, (minPos.y + maxPos.y) / 2.0f);
             ImVec2 graphSize(maxPos.x - minPos.x, maxPos.y - minPos.y);
 
-            std::cout << "[BTDebugger] Graph bounds: (" << minPos.x << "," << minPos.y 
-                      << ") to (" << maxPos.x << "," << maxPos.y << ")" << std::endl;
-            std::cout << "[BTDebugger] Graph size: " << graphSize.x << "x" << graphSize.y << " pixels" << std::endl;
-            std::cout << "[BTDebugger] Graph center: (" << graphCenter.x << "," << graphCenter.y << ")" << std::endl;
+            //std::cout << "[BTDebugger] Graph bounds: (" << minPos.x << "," << minPos.y << ") to (" << maxPos.x << "," << maxPos.y << ")" << std::endl;
+            //std::cout << "[BTDebugger] Graph size: " << graphSize.x << "x" << graphSize.y << " pixels" << std::endl;
+            //std::cout << "[BTDebugger] Graph center: (" << graphCenter.x << "," << graphCenter.y << ")" << std::endl;
 
-            // ✅ NEW: Center camera when entity changes
+            // Center camera when entity changes (with optional auto-fit)
             if (m_lastCenteredEntity != m_selectedEntity)
             {
-                // Center the camera on the graph
-                ImVec2 editorSize = ImGui::GetContentRegionAvail();
-                ImVec2 cameraOffset(
-                    graphCenter.x - editorSize.x / 2.0f,
-                    graphCenter.y - editorSize.y / 2.0f
-                );
+                if (m_autoFitOnLoad)
+                {
+                    // Fit entire tree to view
+                    FitGraphToView();
+                }
+                else
+                {
+                    // Just center without changing zoom
+                    CenterViewOnGraph();
+                }
                 
-                ImNodes::EditorContextResetPanning(cameraOffset);
-                
-                std::cout << "[BTDebugger] ✅ Camera centered on graph" << std::endl;
+                std::cout << "[BTDebugger] ✅ Camera " << (m_autoFitOnLoad ? "fitted" : "centered") << " on graph" << std::endl;
                 m_lastCenteredEntity = m_selectedEntity;
             }
         }
 
-        // ✅ NEW: Mouse wheel zoom support
-        // Manual zoom with style scaling (ImNodes v0.4 compatible)
-
+        // Mouse wheel zoom with layout recomputation
         ImGuiIO& io = ImGui::GetIO();
         if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered())
         {
             if (io.MouseWheel != 0.0f)
             {
+                float oldZoom = m_currentZoom;
                 float zoomDelta = io.MouseWheel * 0.1f;  // 10% per wheel notch
                 m_currentZoom = std::max(MIN_ZOOM, std::min(MAX_ZOOM, m_currentZoom + zoomDelta));
-                ApplyZoomToStyle();
                 
-                std::cout << "[BTDebugger] Zoom: " << (int)(m_currentZoom * 100) << "%" << std::endl;
+                // Recompute layout with new zoom
+                if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
+                {
+                    m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                    ApplyZoomToStyle();  // Also update ImNodes style
+                    
+                    std::cout << "[BTDebugger] Zoom: " << (int)(m_currentZoom * 100) 
+                              << "% (layout recomputed)" << std::endl;
+                }
             }
         }
 
@@ -697,14 +904,28 @@ namespace Olympe
             // + / - : Zoom in/out (Note: '+' requires Shift+Equal on most keyboards)
             if ((ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::IsKeyPressed(ImGuiKey_KeypadAdd)) && !ctrlPressed)
             {
+                float oldZoom = m_currentZoom;
                 m_currentZoom = std::min(MAX_ZOOM, m_currentZoom * 1.2f);
-                ApplyZoomToStyle();
+                
+                // Recompute layout
+                if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
+                {
+                    m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                    ApplyZoomToStyle();
+                }
             }
             
             if ((ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract)) && !ctrlPressed)
             {
+                float oldZoom = m_currentZoom;
                 m_currentZoom = std::max(MIN_ZOOM, m_currentZoom / 1.2f);
-                ApplyZoomToStyle();
+                
+                // Recompute layout
+                if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
+                {
+                    m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                    ApplyZoomToStyle();
+                }
             }
         }
 
@@ -1274,9 +1495,27 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::ResetZoom()
     {
+        // Recompute layout when resetting zoom
+        auto& world = World::Get();
+        if (m_selectedEntity != 0 && world.HasComponent<BehaviorTreeRuntime_data>(m_selectedEntity))
+        {
+            const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
+            const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
+            
+            if (tree)
+            {
+                m_currentZoom = 1.0f;
+                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                ApplyZoomToStyle();
+                
+                std::cout << "[BTDebugger] Reset zoom to 100% (layout recomputed)" << std::endl;
+                return;
+            }
+        }
+        
+        // Fallback if no tree
         m_currentZoom = 1.0f;
         ApplyZoomToStyle();
-        
         std::cout << "[BTDebugger] Reset zoom to 100%" << std::endl;
     }
 

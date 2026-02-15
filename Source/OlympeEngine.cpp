@@ -126,7 +126,13 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 {
     if (!event) return SDL_APP_CONTINUE;
 
-    // ===== A) ImGui Event Processing - MUST BE FIRST =====
+    // ===== NEW: Route events to BT Debugger separate window FIRST =====
+    if (g_btDebugWindow != nullptr)
+    {
+        g_btDebugWindow->ProcessEvent(event);
+    }
+    
+    // ===== A) ImGui Event Processing for MAIN window =====
     // Process ImGui events before game logic to enable panel interactivity
     ImGui_ImplSDL3_ProcessEvent(event);
     
