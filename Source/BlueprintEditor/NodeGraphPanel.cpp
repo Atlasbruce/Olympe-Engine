@@ -146,9 +146,18 @@ namespace Olympe
             }
             
             // Save As popup (simple text input for now)
+            static bool saveAsPopupOpen = false;
+            static char filepathBuffer[512] = "";
+            
             if (ImGui::BeginPopup("SaveAsPopup"))
             {
-                static char filepathBuffer[512] = "";
+                // Clear buffer when popup first opens
+                if (!saveAsPopupOpen)
+                {
+                    filepathBuffer[0] = '\0';
+                    saveAsPopupOpen = true;
+                }
+                
                 ImGui::Text("Save graph as:");
                 ImGui::InputText("Filepath", filepathBuffer, sizeof(filepathBuffer));
                 
@@ -162,19 +171,21 @@ namespace Olympe
                         if (!activeGraph->ValidateGraph(validationError))
                         {
                             // Show validation error
+                            saveAsPopupOpen = false;
                             ImGui::CloseCurrentPopup();
                             ImGui::OpenPopup("ValidationError");
                         }
                         else
                         {
-                            // Ensure .json extension
-                            if (filepath.find(".json") == std::string::npos)
+                            // Ensure .json extension (check that it ends with .json)
+                            if (filepath.size() < 5 || filepath.substr(filepath.size() - 5) != ".json")
                                 filepath += ".json";
                                 
                             int graphId = NodeGraphManager::Get().GetActiveGraphId();
                             if (NodeGraphManager::Get().SaveGraph(graphId, filepath))
                             {
                                 std::cout << "[NodeGraphPanel] Saved graph as: " << filepath << std::endl;
+                                saveAsPopupOpen = false;
                                 ImGui::CloseCurrentPopup();
                             }
                             else
@@ -187,9 +198,14 @@ namespace Olympe
                 ImGui::SameLine();
                 if (ImGui::Button("Cancel", ImVec2(120, 0)))
                 {
+                    saveAsPopupOpen = false;
                     ImGui::CloseCurrentPopup();
                 }
                 ImGui::EndPopup();
+            }
+            else
+            {
+                saveAsPopupOpen = false;
             }
             
             // Validation error popup
@@ -252,7 +268,9 @@ namespace Olympe
         int currentActiveId = NodeGraphManager::Get().GetActiveGraphId();
         
         // Track which graph was requested to close
+        // Using static but ensuring cleanup to prevent issues with multiple rapid closes
         static int graphToClose = -1;
+        static bool confirmationOpen = false;
 
         if (ImGui::BeginTabBar("GraphTabs"))
         {
@@ -289,16 +307,21 @@ namespace Olympe
                 // If tab was closed (X button clicked)
                 if (!tabOpen)
                 {
-                    // Check if graph has unsaved changes
-                    if (graph && graph->IsDirty())
+                    // Only process if no confirmation dialog is currently open
+                    if (!confirmationOpen)
                     {
-                        graphToClose = graphId;
-                        ImGui::OpenPopup("ConfirmCloseUnsaved");
-                    }
-                    else
-                    {
-                        // Close immediately if no unsaved changes
-                        NodeGraphManager::Get().CloseGraph(graphId);
+                        // Check if graph has unsaved changes
+                        if (graph && graph->IsDirty())
+                        {
+                            graphToClose = graphId;
+                            confirmationOpen = true;
+                            ImGui::OpenPopup("ConfirmCloseUnsaved");
+                        }
+                        else
+                        {
+                            // Close immediately if no unsaved changes
+                            NodeGraphManager::Get().CloseGraph(graphId);
+                        }
                     }
                 }
             }
@@ -345,6 +368,7 @@ namespace Olympe
                         {
                             NodeGraphManager::Get().CloseGraph(graphToClose);
                             graphToClose = -1;
+                            confirmationOpen = false;
                             ImGui::CloseCurrentPopup();
                         }
                     }
@@ -352,6 +376,7 @@ namespace Olympe
                 else
                 {
                     // No filepath - need Save As
+                    confirmationOpen = false;
                     ImGui::CloseCurrentPopup();
                     ImGui::OpenPopup("SaveAsPopup");
                 }
@@ -364,6 +389,7 @@ namespace Olympe
             {
                 NodeGraphManager::Get().CloseGraph(graphToClose);
                 graphToClose = -1;
+                confirmationOpen = false;
                 ImGui::CloseCurrentPopup();
             }
             
@@ -373,10 +399,20 @@ namespace Olympe
             if (ImGui::Button("Cancel", ImVec2(120, 0)))
             {
                 graphToClose = -1;
+                confirmationOpen = false;
                 ImGui::CloseCurrentPopup();
             }
             
             ImGui::EndPopup();
+        }
+        else
+        {
+            // Popup closed without action - reset state
+            if (confirmationOpen && graphToClose >= 0)
+            {
+                confirmationOpen = false;
+                graphToClose = -1;
+            }
         }
 
         // Create graph popup

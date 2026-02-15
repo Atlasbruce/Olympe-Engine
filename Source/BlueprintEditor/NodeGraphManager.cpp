@@ -253,16 +253,11 @@ namespace Olympe
                 nj["decoratorType"] = node.decoratorType;
 
             // Parameters as nested object (v2 format)
+            nj["parameters"] = json::object();
             if (!node.parameters.empty())
             {
-                json params = json::object();
                 for (const auto& pair : node.parameters)
-                    params[pair.first] = pair.second;
-                nj["parameters"] = params;
-            }
-            else
-            {
-                nj["parameters"] = json::object();
+                    nj["parameters"][pair.first] = pair.second;
             }
 
             // Children array
@@ -734,7 +729,10 @@ namespace Olympe
             localtime_s(&timeinfo, &time);
             ss << std::put_time(&timeinfo, "%Y-%m-%dT%H:%M:%S");
         #else
-            ss << std::put_time(std::localtime(&time), "%Y-%m-%dT%H:%M:%S");
+            // Use localtime_r for thread safety on POSIX systems
+            std::tm timeinfo;
+            localtime_r(&time, &timeinfo);
+            ss << std::put_time(&timeinfo, "%Y-%m-%dT%H:%M:%S");
         #endif
         
         graph->editorMetadata.lastModified = ss.str();
