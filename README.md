@@ -13,6 +13,7 @@ Olympe Engine is a modern 2D game engine built with C++14, designed for creating
 
 - 🎯 **Entity Component System (ECS)** - Clean, modular architecture for managing game entities
 - 🎨 **Blueprint System** - JSON-based entity definitions for designers
+- 🎬 **2D Sprite Animation System** - Spritesheet support with FSM state machines and frame-by-frame control
 - 🗺️ **Tiled Map Integration** - First-class support for Tiled MapEditor (orthogonal, isometric, hexagonal)
 - 🤖 **AI & Behavior Trees** - Built-in AI system for complex NPC behaviors
 - 🧭 **Navigation System** - Advanced pathfinding with collision detection
