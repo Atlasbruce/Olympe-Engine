@@ -566,6 +566,26 @@ namespace Olympe
                 m_SelectedNodeId = selectedLocalNodeID;
             }
         }
+        
+        // Check if a link is being dragged (for visual feedback)
+        int hoveredAttrUID = -1;
+        if (ImNodes::IsLinkStarted(&hoveredAttrUID))
+        {
+            // Link drag has started, show validation feedback
+            int startNodeGlobalUID = hoveredAttrUID / ATTR_ID_MULTIPLIER;
+            int startNodeLocalID = GlobalUIDToLocalNodeID(startNodeGlobalUID, graphID);
+            
+            // Check if starting from output (normal forward connection)
+            bool isOutputPin = (hoveredAttrUID % ATTR_ID_MULTIPLIER) == 2;
+            
+            // For now, just log that validation could happen here
+            // Visual feedback will be added in the rendering phase
+            if (isOutputPin)
+            {
+                // Starting from output pin (normal parent->child direction)
+                // We could highlight valid/invalid pins here
+            }
+        }
 
         // Handle link creation (only if canLink)
         int startAttrUID, endAttrUID;
@@ -579,9 +599,15 @@ namespace Olympe
             int startNodeLocalID = GlobalUIDToLocalNodeID(startNodeGlobalUID, graphID);
             int endNodeLocalID = GlobalUIDToLocalNodeID(endNodeGlobalUID, graphID);
             
+            // Determine parent and child based on which pin was dragged
+            // Output pin (2) -> Input pin (1) means parent -> child
+            bool isForwardConnection = (startAttrUID % ATTR_ID_MULTIPLIER) == 2;
+            int parentId = isForwardConnection ? startNodeLocalID : endNodeLocalID;
+            int childId = isForwardConnection ? endNodeLocalID : startNodeLocalID;
+            
             // Create the link with local IDs and validate
             std::string graphId = std::to_string(graphID);
-            auto cmd = std::make_unique<LinkNodesCommand>(graphId, startNodeLocalID, endNodeLocalID);
+            auto cmd = std::make_unique<LinkNodesCommand>(graphId, parentId, childId);
             
             // Check if the link is valid
             if (cmd->IsValid())
@@ -590,9 +616,16 @@ namespace Olympe
             }
             else
             {
-                // Show error message
+                // Show error message with tooltip
                 std::cerr << "[NodeGraphPanel] Invalid connection: " << cmd->GetValidationError() << std::endl;
-                // TODO: Show visual feedback (tooltip or popup)
+                
+                // Show a tooltip with the error
+                ImGui::BeginTooltip();
+                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Connection Invalid:");
+                ImGui::TextWrapped("%s", cmd->GetValidationError().c_str());
+                ImGui::PopTextWrapPos();
+                ImGui::EndTooltip();
             }
         }
     }

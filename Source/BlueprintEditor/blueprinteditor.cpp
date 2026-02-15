@@ -184,6 +184,38 @@ namespace Olympe
             return false;
         }
         
+        // Validate blueprint before saving (if it's a BehaviorTree)
+        if (m_CurrentBlueprint.blueprintType == "BehaviorTree")
+        {
+            // Check for critical errors in the active graph
+            NodeGraph* activeGraph = NodeGraphManager::Get().GetActiveGraph();
+            if (activeGraph)
+            {
+                BlueprintValidator validator;
+                auto errors = validator.ValidateGraph(activeGraph);
+                
+                // Check for critical errors
+                bool hasCriticalErrors = false;
+                for (const auto& error : errors)
+                {
+                    if (error.severity == ErrorSeverity::Critical || 
+                        error.severity == ErrorSeverity::Error)
+                    {
+                        hasCriticalErrors = true;
+                        std::cerr << "[BlueprintEditor] Save blocked - " 
+                                  << BlueprintValidator::SeverityToString(error.severity) 
+                                  << ": " << error.message << std::endl;
+                    }
+                }
+                
+                if (hasCriticalErrors)
+                {
+                    m_LastError = "Cannot save: blueprint has critical validation errors. Please fix errors in the Validation panel.";
+                    return false;
+                }
+            }
+        }
+        
         bool success = m_CurrentBlueprint.SaveToFile(m_CurrentFilepath);
         
         if (success)
@@ -199,6 +231,38 @@ namespace Olympe
         if (m_CurrentBlueprint.name.empty())
         {
             return false;
+        }
+        
+        // Validate blueprint before saving (if it's a BehaviorTree)
+        if (m_CurrentBlueprint.blueprintType == "BehaviorTree")
+        {
+            // Check for critical errors in the active graph
+            NodeGraph* activeGraph = NodeGraphManager::Get().GetActiveGraph();
+            if (activeGraph)
+            {
+                BlueprintValidator validator;
+                auto errors = validator.ValidateGraph(activeGraph);
+                
+                // Check for critical errors
+                bool hasCriticalErrors = false;
+                for (const auto& error : errors)
+                {
+                    if (error.severity == ErrorSeverity::Critical || 
+                        error.severity == ErrorSeverity::Error)
+                    {
+                        hasCriticalErrors = true;
+                        std::cerr << "[BlueprintEditor] Save blocked - " 
+                                  << BlueprintValidator::SeverityToString(error.severity) 
+                                  << ": " << error.message << std::endl;
+                    }
+                }
+                
+                if (hasCriticalErrors)
+                {
+                    m_LastError = "Cannot save: blueprint has critical validation errors. Please fix errors in the Validation panel.";
+                    return false;
+                }
+            }
         }
         
         bool success = m_CurrentBlueprint.SaveToFile(filepath);
