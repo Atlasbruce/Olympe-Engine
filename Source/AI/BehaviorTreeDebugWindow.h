@@ -146,8 +146,6 @@ namespace Olympe
         void HandleNodeCreation(BTNodeType nodeType);
         void HandleNodeDeletion();
         void HandleNodeDuplication();
-        void HandleConnectionCreation();
-        void HandleConnectionDeletion();
         bool ValidateConnection(uint32_t parentId, uint32_t childId) const;
         void SaveEditedTree();
         void UndoLastAction();
@@ -258,5 +256,14 @@ namespace Olympe
         std::vector<EditorAction> m_undoStack;
         std::vector<EditorAction> m_redoStack;
         const size_t MAX_UNDO_STACK = 100;
+        
+        // Link ID tracking for connection deletion
+        struct LinkInfo {
+            int linkId;
+            uint32_t parentId;
+            uint32_t childId;
+        };
+        std::vector<LinkInfo> m_linkMap;
+        int m_nextLinkId = 100000;
     };
 }

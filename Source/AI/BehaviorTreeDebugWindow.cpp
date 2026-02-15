@@ -990,8 +990,37 @@ namespace Olympe
                 
                 if (ValidateConnection(parentId, childId))
                 {
-                    HandleConnectionCreation();
-                    std::cout << "[BTEditor] Connection created: " << parentId << " -> " << childId << std::endl;
+                    // Find parent node and add connection
+                    BTNode* parent = m_editingTree.GetNode(parentId);
+                    if (parent)
+                    {
+                        if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+                        {
+                            // Add to childIds
+                            parent->childIds.push_back(childId);
+                        }
+                        else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
+                        {
+                            // Set decoratorChildId
+                            parent->decoratorChildId = childId;
+                        }
+                        
+                        // Add to undo stack
+                        EditorAction action;
+                        action.type = EditorAction::AddConnection;
+                        action.parentId = parentId;
+                        action.childId = childId;
+                        action.childIndex = parent->childIds.size() - 1;
+                        m_undoStack.push_back(action);
+                        if (m_undoStack.size() > MAX_UNDO_STACK)
+                        {
+                            m_undoStack.erase(m_undoStack.begin());
+                        }
+                        m_redoStack.clear();
+                        m_treeModified = true;
+                        
+                        std::cout << "[BTEditor] Connection created: " << parentId << " -> " << childId << std::endl;
+                    }
                 }
                 else
                 {
@@ -1003,8 +1032,62 @@ namespace Olympe
             int linkId;
             if (ImNodes::IsLinkDestroyed(&linkId))
             {
-                HandleConnectionDeletion();
-                std::cout << "[BTEditor] Connection deleted: linkId=" << linkId << std::endl;
+                // Find the link in our map
+                auto it = std::find_if(m_linkMap.begin(), m_linkMap.end(),
+                    [linkId](const LinkInfo& info) { return info.linkId == linkId; });
+                
+                if (it != m_linkMap.end())
+                {
+                    uint32_t parentId = it->parentId;
+                    uint32_t childId = it->childId;
+                    
+                    // Remove the connection from the tree
+                    BTNode* parent = m_editingTree.GetNode(parentId);
+                    if (parent)
+                    {
+                        if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+                        {
+                            auto childIt = std::find(parent->childIds.begin(), parent->childIds.end(), childId);
+                            if (childIt != parent->childIds.end())
+                            {
+                                int childIndex = std::distance(parent->childIds.begin(), childIt);
+                                parent->childIds.erase(childIt);
+                                
+                                // Add to undo stack
+                                EditorAction action;
+                                action.type = EditorAction::DeleteConnection;
+                                action.parentId = parentId;
+                                action.childId = childId;
+                                action.childIndex = childIndex;
+                                m_undoStack.push_back(action);
+                                if (m_undoStack.size() > MAX_UNDO_STACK)
+                                {
+                                    m_undoStack.erase(m_undoStack.begin());
+                                }
+                                m_redoStack.clear();
+                            }
+                        }
+                        else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
+                        {
+                            parent->decoratorChildId = 0;
+                            
+                            // Add to undo stack
+                            EditorAction action;
+                            action.type = EditorAction::DeleteConnection;
+                            action.parentId = parentId;
+                            action.childId = childId;
+                            m_undoStack.push_back(action);
+                            if (m_undoStack.size() > MAX_UNDO_STACK)
+                            {
+                                m_undoStack.erase(m_undoStack.begin());
+                            }
+                            m_redoStack.clear();
+                        }
+                        
+                        m_treeModified = true;
+                        std::cout << "[BTEditor] Connection deleted: " << parentId << " -> " << childId << std::endl;
+                    }
+                }
             }
             
             // Detect node selection
@@ -1213,24 +1296,53 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::RenderNodeConnections(const BTNode* node, const BTNodeLayout* layout, const BehaviorTreeAsset* tree)
     {
-        static int linkIdCounter = 100000;
-
+        // Clear link map when starting to render connections (only once per frame)
+        static bool firstCall = true;
+        if (firstCall && m_editorMode)
+        {
+            m_linkMap.clear();
+            firstCall = false;
+        }
+        
         // Composite nodes
         if (node->type == BTNodeType::Selector || node->type == BTNodeType::Sequence)
         {
             for (uint32_t childId : node->childIds)
             {
-                int linkId = linkIdCounter++;
+                int linkId = m_nextLinkId++;
                 ImNodes::Link(linkId, node->id * 10000 + 1, childId * 10000);
+                
+                // Track this link in editor mode
+                if (m_editorMode)
+                {
+                    LinkInfo info;
+                    info.linkId = linkId;
+                    info.parentId = node->id;
+                    info.childId = childId;
+                    m_linkMap.push_back(info);
+                }
             }
         }
         // Decorator nodes
         else if ((node->type == BTNodeType::Inverter || node->type == BTNodeType::Repeater) && 
                   node->decoratorChildId != 0)
         {
-            int linkId = linkIdCounter++;
+            int linkId = m_nextLinkId++;
             ImNodes::Link(linkId, node->id * 10000 + 1, node->decoratorChildId * 10000);
+            
+            // Track this link in editor mode
+            if (m_editorMode)
+            {
+                LinkInfo info;
+                info.linkId = linkId;
+                info.parentId = node->id;
+                info.childId = node->decoratorChildId;
+                m_linkMap.push_back(info);
+            }
         }
+        
+        // Reset first call flag for next frame
+        firstCall = false;
     }
 
     uint32_t BehaviorTreeDebugWindow::GetNodeColor(BTNodeType type) const
@@ -1966,6 +2078,23 @@ namespace Olympe
                 // Remove from tree
                 m_editingTree.nodes.erase(it);
                 
+                // Remove any connections to/from this node
+                for (auto& node : m_editingTree.nodes)
+                {
+                    // Remove from childIds
+                    auto childIt = std::find(node.childIds.begin(), node.childIds.end(), nodeId);
+                    if (childIt != node.childIds.end())
+                    {
+                        node.childIds.erase(childIt);
+                    }
+                    
+                    // Remove from decoratorChildId
+                    if (node.decoratorChildId == nodeId)
+                    {
+                        node.decoratorChildId = 0;
+                    }
+                }
+                
                 std::cout << "[BTEditor] Deleted node ID: " << nodeId << std::endl;
             }
         }
@@ -2020,26 +2149,6 @@ namespace Olympe
         
         // Recompute layout
         m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
-    }
-    
-    void BehaviorTreeDebugWindow::HandleConnectionCreation()
-    {
-        // Connection was created by ImNodes, just mark as modified
-        m_treeModified = true;
-        
-        // Note: Full connection management would require storing the connection info
-        // and updating the parent node's childIds or decoratorChildId
-        // This is a simplified implementation
-    }
-    
-    void BehaviorTreeDebugWindow::HandleConnectionDeletion()
-    {
-        // Connection was deleted by ImNodes, just mark as modified
-        m_treeModified = true;
-        
-        // Note: Full connection management would require removing the connection
-        // from the parent node's childIds or decoratorChildId
-        // This is a simplified implementation
     }
     
     bool BehaviorTreeDebugWindow::ValidateConnection(uint32_t parentId, uint32_t childId) const
@@ -2120,6 +2229,44 @@ namespace Olympe
                 m_editingTree.nodes.push_back(action.nodeData);
                 break;
             }
+            case EditorAction::AddConnection:
+            {
+                // Remove the connection
+                BTNode* parent = m_editingTree.GetNode(action.parentId);
+                if (parent)
+                {
+                    if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+                    {
+                        auto it = std::find(parent->childIds.begin(), parent->childIds.end(), action.childId);
+                        if (it != parent->childIds.end())
+                        {
+                            parent->childIds.erase(it);
+                        }
+                    }
+                    else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
+                    {
+                        parent->decoratorChildId = 0;
+                    }
+                }
+                break;
+            }
+            case EditorAction::DeleteConnection:
+            {
+                // Restore the connection
+                BTNode* parent = m_editingTree.GetNode(action.parentId);
+                if (parent)
+                {
+                    if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+                    {
+                        parent->childIds.push_back(action.childId);
+                    }
+                    else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
+                    {
+                        parent->decoratorChildId = action.childId;
+                    }
+                }
+                break;
+            }
             default:
                 break;
         }
@@ -2158,6 +2305,44 @@ namespace Olympe
                 if (it != m_editingTree.nodes.end())
                 {
                     m_editingTree.nodes.erase(it);
+                }
+                break;
+            }
+            case EditorAction::AddConnection:
+            {
+                // Re-add the connection
+                BTNode* parent = m_editingTree.GetNode(action.parentId);
+                if (parent)
+                {
+                    if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+                    {
+                        parent->childIds.push_back(action.childId);
+                    }
+                    else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
+                    {
+                        parent->decoratorChildId = action.childId;
+                    }
+                }
+                break;
+            }
+            case EditorAction::DeleteConnection:
+            {
+                // Re-delete the connection
+                BTNode* parent = m_editingTree.GetNode(action.parentId);
+                if (parent)
+                {
+                    if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+                    {
+                        auto it = std::find(parent->childIds.begin(), parent->childIds.end(), action.childId);
+                        if (it != parent->childIds.end())
+                        {
+                            parent->childIds.erase(it);
+                        }
+                    }
+                    else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
+                    {
+                        parent->decoratorChildId = 0;
+                    }
                 }
                 break;
             }
