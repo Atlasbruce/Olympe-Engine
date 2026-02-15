@@ -94,10 +94,10 @@ namespace Olympe
             // Vertical layout (default): layers go top-to-bottom
             for (auto& layout : m_layouts)
             {
-                // CRITICAL: Multiply abstract X by zoomed pixel spacing to get world coordinates
+                // Convert abstract X position to world coordinates with zoomed spacing
                 layout.position.x *= finalSpacingX;
                 
-                // CRITICAL: Multiply layer index by zoomed vertical spacing
+                // Convert layer index to vertical world position with zoomed spacing
                 layout.position.y = layout.layer * finalSpacingY;
             }
         }

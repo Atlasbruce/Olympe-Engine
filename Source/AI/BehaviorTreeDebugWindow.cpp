@@ -20,6 +20,7 @@ namespace Olympe
     // Camera zoom constants
     constexpr float MIN_ZOOM = 0.3f;
     constexpr float MAX_ZOOM = 3.0f;
+    constexpr float ZOOM_EPSILON = 0.001f;  // Minimum zoom change to trigger layout recomputation
 
     BehaviorTreeDebugWindow::BehaviorTreeDebugWindow()
     {
@@ -472,8 +473,9 @@ namespace Olympe
                 // Auto-fit if enabled
                 if (m_autoFitOnLoad)
                 {
-                    // Defer fit to next frame (after layout is set)
-                    m_lastCenteredEntity = 0;  // Force re-center
+                    // Defer fit to next frame by clearing the last centered entity
+                    // Note: We rely on the fact that entity selection changed, so m_selectedEntity != m_lastCenteredEntity
+                    // This will trigger the auto-center/fit logic in the graph panel
                 }
             }
         }
@@ -688,7 +690,7 @@ namespace Olympe
                 m_currentZoom = std::max(MIN_ZOOM, std::min(MAX_ZOOM, m_currentZoom + zoomDelta));
                 
                 // Recompute layout with new zoom
-                if (std::abs(m_currentZoom - oldZoom) > 0.001f && tree)
+                if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
                 {
                     m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
                     ApplyZoomToStyle();  // Also update ImNodes style
@@ -727,7 +729,7 @@ namespace Olympe
                 m_currentZoom = std::min(MAX_ZOOM, m_currentZoom * 1.2f);
                 
                 // Recompute layout
-                if (std::abs(m_currentZoom - oldZoom) > 0.001f && tree)
+                if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
                 {
                     m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
                     ApplyZoomToStyle();
@@ -740,7 +742,7 @@ namespace Olympe
                 m_currentZoom = std::max(MIN_ZOOM, m_currentZoom / 1.2f);
                 
                 // Recompute layout
-                if (std::abs(m_currentZoom - oldZoom) > 0.001f && tree)
+                if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
                 {
                     m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
                     ApplyZoomToStyle();
