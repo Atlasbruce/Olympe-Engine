@@ -567,25 +567,10 @@ namespace Olympe
             }
         }
         
-        // Check if a link is being dragged (for visual feedback)
-        int hoveredAttrUID = -1;
-        if (ImNodes::IsLinkStarted(&hoveredAttrUID))
-        {
-            // Link drag has started, show validation feedback
-            int startNodeGlobalUID = hoveredAttrUID / ATTR_ID_MULTIPLIER;
-            int startNodeLocalID = GlobalUIDToLocalNodeID(startNodeGlobalUID, graphID);
-            
-            // Check if starting from output (normal forward connection)
-            bool isOutputPin = (hoveredAttrUID % ATTR_ID_MULTIPLIER) == 2;
-            
-            // For now, just log that validation could happen here
-            // Visual feedback will be added in the rendering phase
-            if (isOutputPin)
-            {
-                // Starting from output pin (normal parent->child direction)
-                // We could highlight valid/invalid pins here
-            }
-        }
+        // TODO: Add visual feedback during link drag (requires ImNodes v0.5+ API)
+        // - Highlight valid/invalid target pins with colors
+        // - Show preview of connection being created
+        // - Display validation message near cursor
 
         // Handle link creation (only if canLink)
         int startAttrUID, endAttrUID;

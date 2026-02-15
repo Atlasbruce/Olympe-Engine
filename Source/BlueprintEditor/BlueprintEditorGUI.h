@@ -110,6 +110,8 @@ namespace Olympe
         
         // Save validation state
         int m_SaveWarningCount;
+        bool m_ShowSaveWarningPopup;
+        bool m_PendingSaveRequest;
         
         // Asset management UI (uses backend for data)
         AssetBrowser m_AssetBrowser;
