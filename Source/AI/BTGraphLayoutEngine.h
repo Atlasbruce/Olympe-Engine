@@ -132,6 +132,9 @@ namespace Olympe
         // NEW: Helper methods for collision detection
         bool DoNodesOverlap(const BTNodeLayout& a, const BTNodeLayout& b, float padding) const;
         void PushNodeApart(uint32_t nodeA, uint32_t nodeB, float minDistance);
+        
+        // NEW: Helper function to count edge crossings (for debugging)
+        int CountEdgeCrossings(const BehaviorTreeAsset* tree) const;
 
         // Layout configuration
         BTLayoutDirection m_layoutDirection = BTLayoutDirection::TopToBottom;  ///< Default vertical
