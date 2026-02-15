@@ -15,6 +15,8 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "system/ViewportManager.h"
 #include "OlympeTilemapEditor/include/LevelManager.h"
 #include "ECS_Systems_AI.h"
+#include "ECS_Systems_Animation.h"
+#include "Animation/AnimationManager.h"
 #include "BlueprintEditor/WorldBridge.h"
 #include "OlympeTilemapEditor/include/LevelManager.h"
 #include "TiledLevelLoader/include/ParallaxLayerManager.h"
@@ -38,7 +40,9 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include <cctype>
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include <set>
+#include "TiledLevelLoader/include/tiled_constants.h"
 
 //---------------------------------------------------------------------------------------------
 // Helper function to register input entities with InputsManager
@@ -116,6 +120,15 @@ void World::Initialize_ECS_Systems()
 	PrefabFactory::Get().PreloadAllPrefabs("Gamedata/EntityPrefab");
 	SYSTEM_LOG << "\n";
 	
+	// Load animation banks and graphs
+	SYSTEM_LOG << "\n";
+	SYSTEM_LOG << "+===========================================================+\n";
+	SYSTEM_LOG << "| ANIMATION SYSTEM: LOADING RESOURCES                      |\n";
+	SYSTEM_LOG << "+===========================================================+\n";
+	Olympe::AnimationManager::Get().LoadAnimationBanksFromDirectory("Gamedata/Animations/AnimationBanks");
+	Olympe::AnimationManager::Get().LoadAnimationGraphsFromDirectory("Gamedata/Animations/AnimationGraphs");
+	SYSTEM_LOG << "\n";
+	
 	Add_ECS_System(std::make_unique<InputEventConsumeSystem>());
 	Add_ECS_System(std::make_unique<GameEventConsumeSystem>());
 	Add_ECS_System(std::make_unique<UIEventConsumeSystem>());
@@ -141,6 +154,9 @@ void World::Initialize_ECS_Systems()
 	Add_ECS_System(std::make_unique<TriggerSystem>());
 	Add_ECS_System(std::make_unique<MovementSystem>());
     
+    // Animation System (updates animation frames before rendering)
+    Add_ECS_System(std::make_unique<AnimationSystem>());
+    
     // Camera System (manages ECS cameras - added before rendering)
     Add_ECS_System(std::make_unique<CameraSystem>());
     
@@ -148,6 +164,7 @@ void World::Initialize_ECS_Systems()
     Add_ECS_System(std::make_unique<RenderingSystem>());        // Pass 1: World (parallax, tiles, entities)
 	Add_ECS_System(std::make_unique<GridSystem>());             // Grid overlay
     Add_ECS_System(std::make_unique<UIRenderingSystem>());      // -> Pass 2: UI/HUD/Menu (ALWAYS on top)
+
 }
 //---------------------------------------------------------------------------------------------
 void World::Add_ECS_System(std::unique_ptr<ECS_System> system)
@@ -228,6 +245,9 @@ EntityID World::CreateEntity()
     
     // Notify Blueprint Editor (if active)
     NotifyBlueprintEditorEntityCreated(newID);
+
+    // Add to entity list
+    m_entities.push_back(newID);
     
     return newID;
 }
@@ -259,6 +279,8 @@ void World::DestroyEntity(EntityID entity)
 
     // 3. Nettoyer les maps
     m_entitySignatures.erase(entity);
+
+	m_entities.erase(std::remove(m_entities.begin(), m_entities.end(), entity), m_entities.end());
 
     // 4. Recycler l'ID (gestion de l'information)
     m_freeEntityIDs.push(entity);
@@ -454,6 +476,13 @@ namespace {
 void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& tiledMap,
                                                 const Olympe::Editor::LevelDefinition& levelDef)
 {
+	// Constants for isometric tile offset heuristic
+	// These bounds allow ±10% deviation from theoretical 2:1 ratio (i.e., 1.8 to 2.2)
+	// to accommodate asset variations in isometric tilesets (e.g., 58x27 vs exact 54x27)
+	constexpr float ISO_ASPECT_RATIO_MIN = 1.8f;  // Minimum aspect ratio for standard 2:1 isometric
+	constexpr float ISO_ASPECT_RATIO_MAX = 2.2f;  // Maximum aspect ratio for standard 2:1 isometric
+	constexpr float STANDARD_ISO_OFFSET_RATIO = 0.5f;  // Standard isometric vertical offset (tileHeight/2)
+	
 	SYSTEM_LOG << "\n";
 	SYSTEM_LOG << "+==========================================================+\n";
 	SYSTEM_LOG << "| COLLISION & NAVIGATION MAP GENERATION                    |\n";
@@ -538,9 +567,49 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 	SYSTEM_LOG << "  Tile pixel size (from TMJ): " << tilePixelWidth << "x" << tilePixelHeight << " px\n";
 	SYSTEM_LOG << "  Projection: " << orientation << " (type=" << static_cast<int>(projection) << ")\n";
 	
+	// Extract tileset offset for isometric alignment
+	float tileOffsetX = 0.0f;
+	float tileOffsetY = 0.0f;
+	
+	if (projection == GridProjectionType::Iso && !tiledMap.tilesets.empty())
+	{
+		// Get offset from the first loaded tileset
+		// NOTE: We use only the first tileset's offset as collision/navigation overlays
+		// are unified across the entire map. If different layers use different tilesets
+		// with different offsets, they should share the same base tile dimensions for
+		// consistent collision detection. Multi-tileset maps with varying offsets are
+		// not currently supported for overlay alignment.
+		const Olympe::Tiled::TiledTileset& firstTileset = tiledMap.tilesets[0];
+		tileOffsetX = static_cast<float>(firstTileset.tileoffsetX);
+		tileOffsetY = static_cast<float>(firstTileset.tileoffsetY);
+		
+		if (tileOffsetX != 0.0f || tileOffsetY != 0.0f)
+		{
+			SYSTEM_LOG << "  -> Found tileset offset from '" << firstTileset.name << "': (" 
+			           << tileOffsetX << ", " << tileOffsetY << ")\n";
+		}
+		else
+		{
+			// Fallback heuristic for standard isometric tiles without explicit offset
+			// Most isometric tilesets use tileHeight/2 as vertical offset
+			// Note: Division is safe - tilePixelHeight is validated in the dimension check
+			// earlier in this function and set to 32.0f if invalid or zero
+			float aspectRatio = tilePixelWidth / tilePixelHeight;
+			
+			if (aspectRatio >= ISO_ASPECT_RATIO_MIN && aspectRatio <= ISO_ASPECT_RATIO_MAX)
+			{
+				// Looks like standard 2:1 isometric
+				tileOffsetY = tilePixelHeight * STANDARD_ISO_OFFSET_RATIO;
+				SYSTEM_LOG << "  -> Applying standard isometric offset heuristic: (0, " 
+				           << tileOffsetY << ")\n";
+			}
+		}
+	}
+	
 	// Initialize collision map (single layer for now, can be extended later)
 	CollisionMap& collMap = CollisionMap::Get();
-	collMap.Initialize(mapWidth, mapHeight, projection, tilePixelWidth, tilePixelHeight, 1);
+	collMap.Initialize(mapWidth, mapHeight, projection, tilePixelWidth, tilePixelHeight, 1,
+	                   tileOffsetX, tileOffsetY);
 	
 	// Initialize navigation map
 	NavigationMap& navMap = NavigationMap::Get();
@@ -850,7 +919,89 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 #include "OlympeTilemapEditor/include/LevelManager.h"
 #include "prefabfactory.h"
 #include "ECS_Components_AI.h"
+#include "AI/BehaviorTreeDependencyScanner.h"
+#include "AI/BehaviorTree.h"
 #include <fstream>
+
+bool World::LoadLevelDependencies(const nlohmann::json& levelJson)
+{
+    std::cout << "\n+===========================================================+\n";
+    std::cout << "| LEVEL DEPENDENCY LOADING                                  |\n";
+    std::cout << "+===========================================================+\n";
+    
+    // Step 1: Extract all prefab types used in the level
+    std::cout << "Step 1/3: Extracting prefab types from level...\n";
+    std::set<std::string> prefabNames = BehaviorTreeDependencyScanner::ExtractPrefabsFromLevel(levelJson);
+    
+    if (prefabNames.empty())
+    {
+        std::cout << "  -> No prefabs found in level (this may be normal for tile-only levels)\n";
+        std::cout << "+===========================================================+\n\n";
+        return true;
+    }
+    
+    std::cout << "  -> Found " << prefabNames.size() << " unique prefab type(s):\n";
+    for (const auto& name : prefabNames)
+    {
+        std::cout << "     - " << name << "\n";
+    }
+    
+    // Step 2: Scan prefabs for behavior tree dependencies
+    std::cout << "\nStep 2/3: Scanning prefabs for behavior tree dependencies...\n";
+    std::vector<std::string> prefabList(prefabNames.begin(), prefabNames.end());
+    auto btDeps = BehaviorTreeDependencyScanner::ScanPrefabs(prefabList);
+    
+    if (btDeps.empty())
+    {
+        std::cout << "  -> No behavior trees required for this level\n";
+        std::cout << "+===========================================================+\n\n";
+        return true;
+    }
+    
+    // Step 3: Load all required behavior trees
+    std::cout << "\nStep 3/3: Loading required behavior trees...\n";
+    int loaded = 0;
+    int alreadyLoaded = 0;
+    int failed = 0;
+    
+    for (const auto& dep : btDeps)
+    {
+        // Check if already loaded
+        if (BehaviorTreeManager::Get().IsTreeLoadedByPath(dep.treePath))
+        {
+            std::cout << "  [CACHED] " << dep.treePath << " (ID=" << dep.suggestedTreeId << ")\n";
+            alreadyLoaded++;
+            continue;
+        }
+        
+        // Load the tree
+        std::cout << "  [LOADING] " << dep.treePath << " (ID=" << dep.suggestedTreeId << ")... ";
+        
+        if (BehaviorTreeManager::Get().LoadTreeFromFile(dep.treePath, dep.suggestedTreeId))
+        {
+            std::cout << "SUCCESS\n";
+            loaded++;
+        }
+        else
+        {
+            std::cout << "FAILED\n";
+            std::cerr << "  [ERROR] Failed to load behavior tree: " << dep.treePath << "\n";
+            failed++;
+        }
+    }
+    
+    // Summary
+    std::cout << "\n+===========================================================+\n";
+    std::cout << "| DEPENDENCY LOADING SUMMARY                                |\n";
+    std::cout << "+===========================================================+\n";
+    std::cout << "| Behavior Trees Required:   " << btDeps.size() << "\n";
+    std::cout << "| Loaded This Session:       " << loaded << "\n";
+    std::cout << "| Already Cached:            " << alreadyLoaded << "\n";
+    std::cout << "| Failed:                    " << failed << "\n";
+    std::cout << "+===========================================================+\n\n";
+    
+    return (failed == 0);
+}
 
 bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
 {
@@ -911,6 +1062,41 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     
     // Validate prefabs (after normalization)
     ValidateLevelPrefabs(levelDef);
+    
+    // =======================================================================
+    // PHASE 2.5: BEHAVIOR TREE DEPENDENCY LOADING (NEW!)
+    // =======================================================================
+    
+    // Note: We reload the JSON here to access the raw layer data for dependency scanning.
+    // This is intentional - the TiledMap structure is already converted to LevelDefinition,
+    // and creating a new API to extract the raw JSON would require larger refactoring.
+    // The performance impact is negligible for typical level sizes.
+    nlohmann::json levelJsonRaw;
+    std::ifstream jsonFile(tiledMapPath);
+    if (jsonFile.is_open())
+    {
+        try 
+        {
+            jsonFile >> levelJsonRaw;
+            jsonFile.close();
+            
+            if (!LoadLevelDependencies(levelJsonRaw))
+            {
+                std::cerr << "[World] ERROR: Failed to load level dependencies\n";
+                return false;
+            }
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "[World] WARNING: Failed to parse level JSON: " << e.what() << "\n";
+            // Continue anyway - not all levels may have behavior trees
+        }
+    }
+    else
+    {
+        std::cerr << "[World] WARNING: Could not open level JSON file for dependency scanning\n";
+        // Continue anyway - not all levels may have behavior trees
+    }
     
     // =======================================================================
     // PHASE 3: RESOURCE PRELOADING (Centralized)
@@ -1120,6 +1306,7 @@ void World::UnloadCurrentLevel()
     // Clear tile chunks and tilesets
     m_tileChunks.clear();
     m_tilesetManager.Clear();
+	m_entities.clear();
     
     // Destroy all entities except system entities (like GridSettings)
     std::vector<EntityID> entitiesToDestroy;

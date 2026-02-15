@@ -9,6 +9,7 @@
 */
 
 #include "prefabfactory.h"
+#include "ComponentRegistry.h"
 #include "ComponentDefinition.h"
 #include "PrefabScanner.h"
 #include "ParameterResolver.h"
@@ -18,9 +19,52 @@
 #include "ECS_Components_AI.h"
 #include "ECS_Components_Camera.h"
 #include "system/system_utils.h"
+#include "AI/BehaviorTree.h"
 #include <string>
 #include <unordered_map>
 #include "VideoGame.h"
+
+// ========================================================================
+// Component Factory Registry Implementation
+// ========================================================================
+
+void PrefabFactory::RegisterComponentFactory(const std::string& componentName, 
+                                              std::function<bool(EntityID, const ComponentDefinition&)> factory)
+{
+    // Check if component is already registered (prevents duplicate registrations from multiple translation units)
+    if (m_componentFactories.find(componentName) != m_componentFactories.end())
+    {
+        // Already registered, silently ignore duplicate
+        return;
+    }
+    
+    // First registration: store factory and log
+    m_componentFactories[componentName] = factory;
+    std::cout << "[ComponentRegistry] Registered: " << componentName << "\n";
+}
+
+bool PrefabFactory::IsComponentRegistered(const std::string& componentName) const
+{
+    return m_componentFactories.find(componentName) != m_componentFactories.end();
+}
+
+std::vector<std::string> PrefabFactory::GetRegisteredComponents() const
+{
+    std::vector<std::string> components;
+    components.reserve(m_componentFactories.size());
+    for (const auto& kv : m_componentFactories)
+    {
+        components.push_back(kv.first);
+    }
+    return components;
+}
+
+// Helper function for macro
+void RegisterComponentFactory_Internal(const char* componentName, 
+                                       std::function<bool(EntityID, const ComponentDefinition&)> factory)
+{
+    PrefabFactory::Get().RegisterComponentFactory(componentName, factory);
+}
 
 // ========================================================================
 // Public API Implementation
@@ -287,75 +331,124 @@ bool PrefabFactory::InstantiateComponent(EntityID entity, const ComponentDefinit
 {
     const std::string& type = componentDef.componentType;
     
-    // Dispatch to appropriate helper based on component type
-    if (type == "Identity" || type == "Identity_data")
-        return InstantiateIdentity(entity, componentDef);
-    else if (type == "Position" || type == "Position_data")
-        return InstantiatePosition(entity, componentDef);
-    else if (type == "PhysicsBody" || type == "PhysicsBody_data")
-        return InstantiatePhysicsBody(entity, componentDef);
-    else if (type == "VisualSprite" || type == "VisualSprite_data")
-        return InstantiateVisualSprite(entity, componentDef);
-    else if (type == "VisualEditor" || type == "VisualEditor_data")
-        return InstantiateVisualEditor(entity, componentDef);
-    else if (type == "AIBehavior" || type == "AIBehavior_data")
-        return InstantiateAIBehavior(entity, componentDef);
-    else if (type == "AIBlackboard" || type == "AIBlackboard_data")
-        return InstantiateAIBlackboard(entity, componentDef);
-    else if (type == "AISenses" || type == "AISenses_data")
-        return InstantiateAISenses(entity, componentDef);
-    else if (type == "AIState" || type == "AIState_data")
-        return InstantiateAIState(entity, componentDef);
-    else if (type == "BehaviorTreeRuntime" || type == "BehaviorTreeRuntime_data")
-        return InstantiateBehaviorTreeRuntime(entity, componentDef);
-    else if (type == "MoveIntent" || type == "MoveIntent_data")
-        return InstantiateMoveIntent(entity, componentDef);
-    else if (type == "AttackIntent" || type == "AttackIntent_data")
-        return InstantiateAttackIntent(entity, componentDef);
-    else if (type == "BoundingBox" || type == "BoundingBox_data")
-        return InstantiateBoundingBox(entity, componentDef);
-    else if (type == "Movement" || type == "Movement_data")
-        return InstantiateMovement(entity, componentDef);
-    else if (type == "Health" || type == "Health_data")
-        return InstantiateHealth(entity, componentDef);
-    else if (type == "TriggerZone" || type == "TriggerZone_data")
-        return InstantiateTriggerZone(entity, componentDef);
-    else if (type == "CollisionZone" || type == "CollisionZone_data")
-        return InstantiateCollisionZone(entity, componentDef);
-    else if (type == "Animation" || type == "Animation_data")
-        return InstantiateAnimation(entity, componentDef);
-    else if (type == "FX" || type == "FX_data")
-        return InstantiateFX(entity, componentDef);
-    else if (type == "AudioSource" || type == "AudioSource_data")
-        return InstantiateAudioSource(entity, componentDef);
-    else if (type == "Controller" || type == "Controller_data")
-        return InstantiateController(entity, componentDef);
-    else if (type == "PlayerController" || type == "PlayerController_data")
-        return InstantiatePlayerController(entity, componentDef);
-    else if (type == "PlayerBinding" || type == "PlayerBinding_data")
-        return InstantiatePlayerBinding(entity, componentDef);
-    else if (type == "NPC" || type == "NPC_data")
-        return InstantiateNPC(entity, componentDef);
-    else if (type == "Inventory" || type == "Inventory_data")
-        return InstantiateInventory(entity, componentDef);
-    else if (type == "Camera" || type == "Camera_data")
-        return InstantiateCamera(entity, componentDef);
-    else if (type == "CameraTarget" || type == "CameraTarget_data")
-        return InstantiateCameraTarget(entity, componentDef);
-    else if (type == "CameraEffects" || type == "CameraEffects_data")
-        return InstantiateCameraEffects(entity, componentDef);
-    else if (type == "CameraBounds" || type == "CameraBounds_data")
-        return InstantiateCameraBounds(entity, componentDef);
-    else if (type == "CameraInputBinding" || type == "CameraInputBinding_data")
-        return InstantiateCameraInputBinding(entity, componentDef);
-    else if (type == "InputMapping" || type == "InputMapping_data")
-        return InstantiateInputMapping(entity, componentDef);
-    else
+    // Step 1: Try auto-registered components first
+    auto it = m_componentFactories.find(type);
+    if (it != m_componentFactories.end())
     {
-        SYSTEM_LOG << "PrefabFactory::InstantiateComponent: Unknown component type '" 
-                   << type << "'\n";
-        return false;
+        // Call the registered factory function to create component
+        bool success = it->second(entity, componentDef);
+        if (!success)
+        {
+            return false;
+        }
+        
+        // For components that need specialized parameter handling, call the specialized function
+        // Note: The specialized function applies parameters but does NOT recreate the component
+        // This if-else chain is intentional for clarity and ease of modification.
+        // Performance impact is negligible as this only runs once per component during entity creation.
+        if (type == "BehaviorTreeRuntime_data")
+            return InstantiateBehaviorTreeRuntime(entity, componentDef);
+        else if (type == "Position_data")
+            return InstantiatePosition(entity, componentDef);
+        else if (type == "Identity_data")
+            return InstantiateIdentity(entity, componentDef);
+        else if (type == "PhysicsBody_data")
+            return InstantiatePhysicsBody(entity, componentDef);
+        else if (type == "VisualSprite_data")
+            return InstantiateVisualSprite(entity, componentDef);
+        else if (type == "VisualAnimation_data")
+            return InstantiateVisualAnimation(entity, componentDef);
+        else if (type == "AIBlackboard_data")
+            return InstantiateAIBlackboard(entity, componentDef);
+        else if (type == "AISenses_data")
+            return InstantiateAISenses(entity, componentDef);
+        else if (type == "MoveIntent_data")
+            return InstantiateMoveIntent(entity, componentDef);
+		else if (type == "NavigationAgent_data")
+            return InstantiateNavigationAgent(entity, componentDef);
+        
+        // Component created successfully with default values
+        // too soon return true;
     }
+
+        // Step 2: Fallback to legacy specialized functions (for backward compatibility)
+        // This allows the system to work even if AUTO_REGISTER_COMPONENT was forgotten
+        if (type == "Identity" || type == "Identity_data")
+            return InstantiateIdentity(entity, componentDef);
+        else if (type == "Position" || type == "Position_data")
+            return InstantiatePosition(entity, componentDef);
+        else if (type == "PhysicsBody" || type == "PhysicsBody_data")
+            return InstantiatePhysicsBody(entity, componentDef);
+        else if (type == "VisualSprite" || type == "VisualSprite_data")
+            return InstantiateVisualSprite(entity, componentDef);
+        else if (type == "VisualAnimation" || type == "VisualAnimation_data")
+            return InstantiateVisualAnimation(entity, componentDef);
+        else if (type == "VisualEditor" || type == "VisualEditor_data")
+            return InstantiateVisualEditor(entity, componentDef);
+        else if (type == "AIBehavior" || type == "AIBehavior_data")
+            return InstantiateAIBehavior(entity, componentDef);
+        else if (type == "AIBlackboard" || type == "AIBlackboard_data")
+            return InstantiateAIBlackboard(entity, componentDef);
+        else if (type == "AISenses" || type == "AISenses_data")
+            return InstantiateAISenses(entity, componentDef);
+        else if (type == "AIState" || type == "AIState_data")
+            return InstantiateAIState(entity, componentDef);
+        else if (type == "BehaviorTreeRuntime" || type == "BehaviorTreeRuntime_data")
+            return InstantiateBehaviorTreeRuntime(entity, componentDef);
+        else if (type == "MoveIntent" || type == "MoveIntent_data")
+            return InstantiateMoveIntent(entity, componentDef);
+        else if (type == "AttackIntent" || type == "AttackIntent_data")
+            return InstantiateAttackIntent(entity, componentDef);
+        else if (type == "BoundingBox" || type == "BoundingBox_data")
+            return InstantiateBoundingBox(entity, componentDef);
+        else if (type == "Movement" || type == "Movement_data")
+            return InstantiateMovement(entity, componentDef);
+        else if (type == "Health" || type == "Health_data")
+            return InstantiateHealth(entity, componentDef);
+        else if (type == "TriggerZone" || type == "TriggerZone_data")
+            return InstantiateTriggerZone(entity, componentDef);
+        else if (type == "CollisionZone" || type == "CollisionZone_data")
+            return InstantiateCollisionZone(entity, componentDef);
+        else if (type == "Animation" || type == "Animation_data")
+            return InstantiateAnimation(entity, componentDef);
+        else if (type == "FX" || type == "FX_data")
+            return InstantiateFX(entity, componentDef);
+        else if (type == "AudioSource" || type == "AudioSource_data")
+            return InstantiateAudioSource(entity, componentDef);
+        else if (type == "Controller" || type == "Controller_data")
+            return InstantiateController(entity, componentDef);
+        else if (type == "PlayerController" || type == "PlayerController_data")
+            return InstantiatePlayerController(entity, componentDef);
+        else if (type == "PlayerBinding" || type == "PlayerBinding_data")
+            return InstantiatePlayerBinding(entity, componentDef);
+        else if (type == "NPC" || type == "NPC_data")
+            return InstantiateNPC(entity, componentDef);
+        else if (type == "Inventory" || type == "Inventory_data")
+            return InstantiateInventory(entity, componentDef);
+        else if (type == "Camera" || type == "Camera_data")
+            return InstantiateCamera(entity, componentDef);
+        else if (type == "CameraTarget" || type == "CameraTarget_data")
+            return InstantiateCameraTarget(entity, componentDef);
+        else if (type == "CameraEffects" || type == "CameraEffects_data")
+            return InstantiateCameraEffects(entity, componentDef);
+        else if (type == "CameraBounds" || type == "CameraBounds_data")
+            return InstantiateCameraBounds(entity, componentDef);
+        else if (type == "CameraInputBinding" || type == "CameraInputBinding_data")
+            return InstantiateCameraInputBinding(entity, componentDef);
+        else if (type == "InputMapping" || type == "InputMapping_data")
+            return InstantiateInputMapping(entity, componentDef);
+        else
+        {
+            SYSTEM_LOG << "PrefabFactory::InstantiateComponent: Unknown component type '"
+                << type << "'\n";
+            SYSTEM_LOG << "  Available auto-registered components:\n";
+            for (const auto& kv : m_componentFactories)
+            {
+                SYSTEM_LOG << "    - " << kv.first << "\n";
+            }
+            return false;
+        }
+    
 }
 
 // ========================================================================
@@ -387,7 +480,16 @@ static EntityType StringToEntityType(const std::string& typeStr)
 
 bool PrefabFactory::InstantiateIdentity(EntityID entity, const ComponentDefinition& def)
 {
-    Identity_data identity;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<Identity_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: Identity_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    Identity_data& identity = World::Get().GetComponent<Identity_data>(entity);
     
     // Extract parameters
     if (def.HasParameter("name"))
@@ -405,13 +507,22 @@ bool PrefabFactory::InstantiateIdentity(EntityID entity, const ComponentDefiniti
         identity.entityType = StringToEntityType(identity.type);
     }
     
-    World::Get().AddComponent<Identity_data>(entity, identity);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 
 bool PrefabFactory::InstantiatePosition(EntityID entity, const ComponentDefinition& def)
 {
-    Position_data position;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<Position_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: Position_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    Position_data& position = World::Get().GetComponent<Position_data>(entity);
     
     // Extract position vector
     if (def.HasParameter("position"))
@@ -426,13 +537,22 @@ bool PrefabFactory::InstantiatePosition(EntityID entity, const ComponentDefiniti
         position.position = Vector(x, y, z);
     }
     
-    World::Get().AddComponent<Position_data>(entity, position);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 
 bool PrefabFactory::InstantiatePhysicsBody(EntityID entity, const ComponentDefinition& def)
 {
-    PhysicsBody_data physics;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<PhysicsBody_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: PhysicsBody_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    PhysicsBody_data& physics = World::Get().GetComponent<PhysicsBody_data>(entity);
     
     // Extract parameters
     if (def.HasParameter("mass"))
@@ -451,13 +571,22 @@ bool PrefabFactory::InstantiatePhysicsBody(EntityID entity, const ComponentDefin
     if (def.HasParameter("rotation"))
         physics.rotation = def.GetParameter("rotation")->AsFloat();
     
-    World::Get().AddComponent<PhysicsBody_data>(entity, physics);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 
 bool PrefabFactory::InstantiateVisualSprite(EntityID entity, const ComponentDefinition& def)
 {
-    VisualSprite_data visual;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<VisualSprite_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: VisualSprite_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    VisualSprite_data& visual = World::Get().GetComponent<VisualSprite_data>(entity);
     
     // Extract sprite path and load sprite
     if (def.HasParameter("spritePath"))
@@ -529,7 +658,7 @@ bool PrefabFactory::InstantiateVisualSprite(EntityID entity, const ComponentDefi
     // These parameters are validated by schema but not applied until struct is updated
     // For now, srcRect.w and srcRect.h serve as the effective width/height
     
-    World::Get().AddComponent<VisualSprite_data>(entity, visual);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 
@@ -595,6 +724,55 @@ bool PrefabFactory::InstantiateVisualEditor(EntityID entity, const ComponentDefi
     return true;
 }
 
+bool PrefabFactory::InstantiateVisualAnimation(EntityID entity, const ComponentDefinition& def)
+{
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<VisualAnimation_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: VisualAnimation_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    VisualAnimation_data& animData = World::Get().GetComponent<VisualAnimation_data>(entity);
+    
+    // Extract animation bank reference
+    if (def.HasParameter("bankId"))
+        animData.bankId = def.GetParameter("bankId")->AsString();
+    
+    // Extract current animation name
+    if (def.HasParameter("currentAnimName"))
+        animData.currentAnimName = def.GetParameter("currentAnimName")->AsString();
+    
+    // Extract optional animation graph path
+    if (def.HasParameter("animGraphPath"))
+        animData.animGraphPath = def.GetParameter("animGraphPath")->AsString();
+    
+    // Extract playback settings
+    if (def.HasParameter("playbackSpeed"))
+        animData.playbackSpeed = def.GetParameter("playbackSpeed")->AsFloat();
+    
+    if (def.HasParameter("isPlaying"))
+        animData.isPlaying = def.GetParameter("isPlaying")->AsBool();
+    
+    if (def.HasParameter("isPaused"))
+        animData.isPaused = def.GetParameter("isPaused")->AsBool();
+    
+    if (def.HasParameter("loop"))
+        animData.loop = def.GetParameter("loop")->AsBool();
+    
+    // Extract visual transforms
+    if (def.HasParameter("flipX"))
+        animData.flipX = def.GetParameter("flipX")->AsBool();
+    
+    if (def.HasParameter("flipY"))
+        animData.flipY = def.GetParameter("flipY")->AsBool();
+    
+    // DO NOT call AddComponent() - component is already modified by reference
+    return true;
+}
+
 bool PrefabFactory::InstantiateAIBehavior(EntityID entity, const ComponentDefinition& def)
 {
     AIBehavior_data ai;
@@ -609,7 +787,16 @@ bool PrefabFactory::InstantiateAIBehavior(EntityID entity, const ComponentDefini
 
 bool PrefabFactory::InstantiateAIBlackboard(EntityID entity, const ComponentDefinition& def)
 {
-    AIBlackboard_data blackboard;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<AIBlackboard_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: AIBlackboard_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    AIBlackboard_data& blackboard = World::Get().GetComponent<AIBlackboard_data>(entity);
     
     // Extract blackboard parameters
     if (def.HasParameter("targetEntity"))
@@ -631,13 +818,22 @@ bool PrefabFactory::InstantiateAIBlackboard(EntityID entity, const ComponentDefi
     if (def.HasParameter("targetInRange"))
         blackboard.targetInRange = def.GetParameter("targetInRange")->AsBool();
     
-    World::Get().AddComponent<AIBlackboard_data>(entity, blackboard);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 
 bool PrefabFactory::InstantiateAISenses(EntityID entity, const ComponentDefinition& def)
 {
-    AISenses_data senses;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<AISenses_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: AISenses_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    AISenses_data& senses = World::Get().GetComponent<AISenses_data>(entity);
     
     // Extract senses parameters
     if (def.HasParameter("visionRadius"))
@@ -659,7 +855,7 @@ bool PrefabFactory::InstantiateAISenses(EntityID entity, const ComponentDefiniti
     if (def.HasParameter("thinkHz"))
         senses.thinkHz = def.GetParameter("thinkHz")->AsFloat();
     
-    World::Get().AddComponent<AISenses_data>(entity, senses);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 
@@ -1025,6 +1221,30 @@ bool PrefabFactory::InstantiateInputMapping(EntityID entity, const ComponentDefi
     return true;
 }
 
+bool PrefabFactory::InstantiateNavigationAgent(EntityID entity, const ComponentDefinition& def)
+{
+    // Get existing component created by auto-registration
+    if (!World::Get().HasComponent<NavigationAgent_data>(entity))
+    {
+        SYSTEM_LOG << "[PrefabFactory] ERROR: NavigationAgent_data should exist (auto-registration)\n";
+        return false;
+    }
+
+    NavigationAgent_data& navAgent = World::Get().GetComponent<NavigationAgent_data>(entity);
+
+    // Apply parameters
+    if (def.HasParameter("agentRadius"))
+        navAgent.agentRadius = def.GetParameter("agentRadius")->AsFloat();
+
+    if (def.HasParameter("maxSpeed"))
+        navAgent.maxSpeed = def.GetParameter("maxSpeed")->AsFloat();
+
+    if (def.HasParameter("layerMask"))
+        navAgent.layerMask = static_cast<int>(def.GetParameter("layerMask")->AsInt());
+
+    return true;
+}
+
 bool PrefabFactory::InstantiateAIState(EntityID entity, const ComponentDefinition& def)
 {
     AIState_data aiState;
@@ -1076,33 +1296,94 @@ bool PrefabFactory::InstantiateAIState(EntityID entity, const ComponentDefinitio
 
 bool PrefabFactory::InstantiateBehaviorTreeRuntime(EntityID entity, const ComponentDefinition& def)
 {
-    BehaviorTreeRuntime_data btRuntime;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<BehaviorTreeRuntime_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: BehaviorTreeRuntime_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    BehaviorTreeRuntime_data& btRuntime = World::Get().GetComponent<BehaviorTreeRuntime_data>(entity);
     
     // Extract behavior tree runtime parameters
-    if (def.HasParameter("treeAssetId"))
-        btRuntime.treeAssetId = static_cast<uint32_t>(def.GetParameter("treeAssetId")->AsInt());
+    // Support both old and new property names for backward compatibility
     
-    if (def.HasParameter("treePath"))
+    // Check for treeAssetId (old) or AITreeAssetId (new)
+    if (def.HasParameter("AITreeAssetId"))
     {
-        // If a tree path is provided, we could load it here
-        // For now, just log it
-        std::string treePath = def.GetParameter("treePath")->AsString();
-        // TODO: Load behavior tree from path and get its ID
+        btRuntime.AITreeAssetId = static_cast<uint32_t>(def.GetParameter("AITreeAssetId")->AsInt());
+        std::cerr << "[PrefabFactory] Entity " << entity << " AITreeAssetId set to " << btRuntime.AITreeAssetId << std::endl;
+    }
+    else if (def.HasParameter("treeAssetId"))
+    {
+        btRuntime.AITreeAssetId = static_cast<uint32_t>(def.GetParameter("treeAssetId")->AsInt());
+        std::cerr << "[PrefabFactory] Entity " << entity << " treeAssetId (old) set to " << btRuntime.AITreeAssetId << std::endl;
+    }
+    
+    // Check for treePath (old) or AITreePath (new)
+    std::string treePath;
+    if (def.HasParameter("AITreePath"))
+    {
+        treePath = def.GetParameter("AITreePath")->AsString();
+    }
+    else if (def.HasParameter("treePath"))
+    {
+        treePath = def.GetParameter("treePath")->AsString();
+    }
+    
+    if (!treePath.empty())
+    {
+        Identity_data* identity = nullptr;
+		if (World::Get().HasComponent<Identity_data>(entity))
+            identity = &World::Get().GetComponent<Identity_data>(entity);
+
+        // Map treePath -> treeId using the registry
+        btRuntime.AITreePath = treePath; 
+
+        uint32_t treeId = BehaviorTreeManager::Get().GetTreeIdFromPath(treePath);
+        btRuntime.AITreeAssetId = treeId;
+        
+		if (identity != nullptr)
+            std::cerr << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << identity->name << std::endl;
+        else
+			std::cerr << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << entity << std::endl;
+        
+        // Verify the tree is loaded
+        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTree(treeId);
+        if (!tree)
+        {
+            std::cerr << "[PrefabFactory] WARNING: BehaviorTree not loaded: " << treePath 
+                      << " (ID=" << treeId << ") - this should not happen if dependencies were loaded correctly" << std::endl;
+        }
     }
     
     if (def.HasParameter("active"))
         btRuntime.isActive = def.GetParameter("active")->AsBool();
     
-    if (def.HasParameter("currentNodeIndex"))
-        btRuntime.currentNodeIndex = static_cast<uint32_t>(def.GetParameter("currentNodeIndex")->AsInt());
+    // Support both old and new property names for currentNodeIndex
+    if (def.HasParameter("AICurrentNodeIndex"))
+        btRuntime.AICurrentNodeIndex = static_cast<uint32_t>(def.GetParameter("AICurrentNodeIndex")->AsInt());
+    else if (def.HasParameter("currentNodeIndex"))
+        btRuntime.AICurrentNodeIndex = static_cast<uint32_t>(def.GetParameter("currentNodeIndex")->AsInt());
     
-    World::Get().AddComponent<BehaviorTreeRuntime_data>(entity, btRuntime);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 
 bool PrefabFactory::InstantiateMoveIntent(EntityID entity, const ComponentDefinition& def)
 {
-    MoveIntent_data moveIntent;
+    // Get the EXISTING component created by auto-registration
+    if (!World::Get().HasComponent<MoveIntent_data>(entity))
+    {
+        std::cerr << "[PrefabFactory] ERROR: MoveIntent_data not found for entity " << entity << std::endl;
+        std::cerr << "[PrefabFactory] This should have been created by auto-registration!" << std::endl;
+        return false;
+    }
+    
+    // Get reference to existing component (not a copy)
+    MoveIntent_data& moveIntent = World::Get().GetComponent<MoveIntent_data>(entity);
     
     // Extract move intent parameters
     if (def.HasParameter("targetX") && def.HasParameter("targetY"))
@@ -1133,7 +1414,7 @@ bool PrefabFactory::InstantiateMoveIntent(EntityID entity, const ComponentDefini
     if (def.HasParameter("avoidObstacles"))
         moveIntent.avoidObstacles = def.GetParameter("avoidObstacles")->AsBool();
     
-    World::Get().AddComponent<MoveIntent_data>(entity, moveIntent);
+    // DO NOT call AddComponent() - component is already modified by reference
     return true;
 }
 

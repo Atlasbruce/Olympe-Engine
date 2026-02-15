@@ -113,6 +113,34 @@
         {"name": "tolerance", "type": "float", "default": 10.0}
       ],
       "tooltip": "Vrai si l'acteur est arrivé à destination"
+    },
+    {
+      "id": "IsWaitTimerExpired",
+      "name": "Is Wait Timer Expired",
+      "description": "Checks if the wander wait timer has expired",
+      "category": "Behavior",
+      "tooltip": "No parameters required"
+    },
+    {
+      "id": "HasNavigableDestination",
+      "name": "Has Navigable Destination",
+      "description": "Checks if a navigable destination point has been chosen",
+      "category": "Navigation",
+      "tooltip": "No parameters required"
+    },
+    {
+      "id": "HasValidPath",
+      "name": "Has Valid Path",
+      "description": "Checks if the NavigationAgent has a valid calculated path",
+      "category": "Navigation",
+      "tooltip": "No parameters required"
+    },
+    {
+      "id": "HasReachedDestination",
+      "name": "Has Reached Destination",
+      "description": "Checks if the entity has reached its wander destination (within 5 units)",
+      "category": "Navigation",
+      "tooltip": "No parameters required"
     }
   ]
 }

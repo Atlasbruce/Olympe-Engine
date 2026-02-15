@@ -19,6 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\AI\BehaviorTreeDebugWindow.cpp" />
+    <ClCompile Include="Source\AI\BTGraphLayoutEngine.cpp" />
+    <ClCompile Include="Source\Animation\AnimationManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AdditionalEditorPlugins.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AssetBrowser.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AssetInfoPanel.cpp" />
@@ -46,10 +49,13 @@
     <ClCompile Include="Source\CollisionMap.cpp" />
     <ClCompile Include="Source\ComponentDefinition.cpp" />
     <ClCompile Include="Source\drawing.cpp" />
+    <ClCompile Include="Source\ECS_Components_Registration.cpp" />
     <ClCompile Include="source\ECS_Register.h" />
     <ClCompile Include="Source\AI\BehaviorTree.cpp" />
+    <ClCompile Include="Source\AI\BehaviorTreeDependencyScanner.cpp" />
     <ClCompile Include="Source\ECS_Systems.cpp" />
     <ClCompile Include="Source\ECS_Systems_AI.cpp" />
+    <ClCompile Include="Source\ECS_Systems_Animation.cpp" />
     <ClCompile Include="Source\ECS_Systems_Camera.cpp" />
     <ClCompile Include="Source\ECS_Systems_Rendering_Camera.cpp" />
     <ClCompile Include="Source\engine_utils.cpp" />
@@ -101,6 +107,10 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="Source\AI\AIEvents.h" />
     <ClInclude Include="Source\AI\BehaviorTree.h" />
+    <ClInclude Include="Source\AI\BehaviorTreeDebugWindow.h" />
+    <ClInclude Include="Source\AI\BTGraphLayoutEngine.h" />
+    <ClInclude Include="Source\Animation\AnimationManager.h" />
+    <ClInclude Include="Source\Animation\AnimationTypes.h" />
     <ClInclude Include="Source\BlueprintEditor\AdditionalEditorPlugins.h" />
     <ClInclude Include="Source\BlueprintEditor\AssetBrowser.h" />
     <ClInclude Include="Source\BlueprintEditor\AssetInfoPanel.h" />
@@ -135,6 +145,7 @@
     <ClInclude Include="source\ECS_Entity.h" />
     <ClInclude Include="source\ECS_Systems.h" />
     <ClInclude Include="Source\ECS_Systems_AI.h" />
+    <ClInclude Include="Source\ECS_Systems_Animation.h" />
     <ClInclude Include="Source\ECS_Systems_Camera.h" />
     <ClInclude Include="Source\ECS_Systems_Rendering_Camera.h" />
     <ClInclude Include="Source\engine_utils.h" />
@@ -191,6 +202,7 @@
     <ClInclude Include="Source\TiledLevelLoader\include\TiledLevelLoader.h" />
     <ClInclude Include="Source\TiledLevelLoader\include\TiledStructures.h" />
     <ClInclude Include="Source\TiledLevelLoader\include\TiledToOlympe.h" />
+    <ClInclude Include="source\tiledlevelloader\include\tiled_constants.h" />
     <ClInclude Include="Source\TiledLevelLoader\include\TilesetCache.h" />
     <ClInclude Include="Source\TiledLevelLoader\include\TilesetParser.h" />
     <ClInclude Include="Source\TiledLevelLoader\third_party\miniz\miniz.h" />
@@ -202,7 +214,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
-    <None Include="Documentation\TILED_ISOMETRIC.md" />
     <None Include="olympe.ini" />
   </ItemGroup>
   <ItemGroup>

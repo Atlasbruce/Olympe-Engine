@@ -41,6 +41,17 @@
         }
       },
       {
+        "type": "VisualAnimation_data",
+        "properties": {
+          "bankId": "zombie",
+          "currentAnimName": "idle",
+          "animGraphPath": "./Gamedata/Animations/AnimationGraphs/zombie_animgraph.json",
+          "playbackSpeed": 1.0,
+          "loop": true,
+          "isPlaying": true
+        }
+      },
+      {
         "type": "BoundingBox_data",
         "properties": {
           "width": 28,
@@ -73,6 +84,29 @@
         "type": "AIState_data",
         "properties": {
           "currentState": "Idle"
+        }
+      },
+      {
+        "type": "BehaviorTreeRuntime_data",
+        "properties": {
+          "AITreePath": "Blueprints/AI/zombie_ai.json",
+          "active": true
+        }
+      },
+      {
+        "type": "MoveIntent_data",
+        "properties": {
+          "targetX": 0,
+          "targetY": 0,
+          "hasTarget": false
+        }
+      },
+      {
+        "type": "AttackIntent_data",
+        "properties": {
+          "damage": 10,
+          "attackRange": 35.0,
+          "cooldown": 2.0
         }
       },
       {

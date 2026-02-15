@@ -94,7 +94,8 @@ public:
 
 	// Initialize with layers
 	void Initialize(int width, int height, GridProjectionType projection, 
-				   float tileWidth, float tileHeight, int numLayers = 1);
+				   float tileWidth, float tileHeight, int numLayers = 1,
+				   float tileOffsetX = 0.0f, float tileOffsetY = 0.0f);
 	
 	// Layer management
 	void SetActiveLayer(CollisionLayer layer);
@@ -171,6 +172,10 @@ public:
 	float m_tileWidth = 32.0f;
 	float m_tileHeight = 32.0f;
 	
+	// Tile offset for coordinate calculations (isometric alignment)
+	float m_tileOffsetX = 0.0f;
+	float m_tileOffsetY = 0.0f;
+	
 	// Sectorization (for future dynamic loading)
 	std::vector<Sector> m_sectors;
 	
@@ -236,6 +241,13 @@ public:
 	// A* pathfinding
 	bool FindPath(int startX, int startY, int goalX, int goalY, 
 				 std::vector<Vector>& outPath, CollisionLayer layer = CollisionLayer::Ground, int maxIterations = 10000);
+	
+	// NEW: Get random navigable point within radius from center position
+	// Returns true if found, false if all attempts failed
+	// outX, outY: world coordinates of the found point
+	bool GetRandomNavigablePoint(float centerX, float centerY, float radius, 
+	                              int maxAttempts, float& outX, float& outY,
+	                              CollisionLayer layer = CollisionLayer::Ground) const;
 	
 	// Clear
 	void Clear();

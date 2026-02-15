@@ -43,9 +43,6 @@
     <Filter Include="Fichiers d%27en-t�te\ECS\Entity">
       <UniqueIdentifier>{d4e74054-56ec-4bdf-bdef-6b868fe6c968}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Fichiers d%27en-t�te\ECS\Components">
-      <UniqueIdentifier>{6c09fc85-1a65-4e02-b138-33965a6fc688}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Fichiers d%27en-t�te\ECS\Systems">
       <UniqueIdentifier>{2158b1dc-24a7-43b3-b02d-330d72a35fed}</UniqueIdentifier>
     </Filter>
@@ -75,6 +72,15 @@
     </Filter>
     <Filter Include="Fichiers d%27en-t�te\Miniz">
       <UniqueIdentifier>{e1745148-9ef5-4423-9308-ca1ff062d45d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers d%27en-t�te\Blueprint Visual Debug">
+      <UniqueIdentifier>{0dd0099a-cec2-48a7-8658-76570dbde708}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers d%27en-t�te\ECS\Components">
+      <UniqueIdentifier>{6c09fc85-1a65-4e02-b138-33965a6fc688}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers d%27en-t�te\Animation">
+      <UniqueIdentifier>{4fb54ad4-494c-4b63-9e60-8ec2fb3c715d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -137,9 +143,6 @@
     </ClCompile>
     <ClCompile Include="source\ECS_Register.h">
       <Filter>Fichiers d%27en-t�te\ECS\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\AI\BehaviorTree.cpp">
-      <Filter>Fichiers d%27en-t�te\AI</Filter>
     </ClCompile>
     <ClCompile Include="Source\ECS_Systems_Rendering_Camera.cpp">
       <Filter>Fichiers d%27en-t�te\ECS</Filter>
@@ -282,12 +285,6 @@
     <ClCompile Include="Source\TiledLevelLoader\src\LevelParser.cpp">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
     </ClCompile>
-    <ClCompile Include="Source\PrefabFactory.cpp">
-      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\PrefabScanner.cpp">
-      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
-    </ClCompile>
     <ClCompile Include="Source\ComponentDefinition.cpp">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
     </ClCompile>
@@ -308,6 +305,33 @@
     </ClCompile>
     <ClCompile Include="Source\CollisionMap.cpp">
       <Filter>Fichiers d%27en-t�te\Game Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\BehaviorTreeDebugWindow.cpp">
+      <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\BTGraphLayoutEngine.cpp">
+      <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\BehaviorTree.cpp">
+      <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PrefabFactory.cpp">
+      <Filter>Fichiers d%27en-t�te\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PrefabScanner.cpp">
+      <Filter>Fichiers d%27en-t�te\ECS</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\BehaviorTreeDependencyScanner.cpp">
+      <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ECS_Components_Registration.cpp">
+      <Filter>Fichiers d%27en-t�te\ECS\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Animation\AnimationManager.cpp">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ECS_Systems_Animation.cpp">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -421,9 +445,6 @@
     </ClInclude>
     <ClInclude Include="source\ECS_Systems.h">
       <Filter>Fichiers d%27en-t�te\ECS\Systems</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\AI\BehaviorTree.h">
-      <Filter>Fichiers d%27en-t�te\AI</Filter>
     </ClInclude>
     <ClInclude Include="Source\AI\AIEvents.h">
       <Filter>Fichiers d%27en-t�te\AI</Filter>
@@ -593,9 +614,6 @@
     <ClInclude Include="Source\TiledLevelLoader\include\LevelParser.h">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
     </ClInclude>
-    <ClInclude Include="Source\PrefabScanner.h">
-      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
-    </ClInclude>
     <ClInclude Include="Source\ComponentDefinition.h">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
     </ClInclude>
@@ -614,6 +632,30 @@
     <ClInclude Include="Source\InputConfigLoader.h">
       <Filter>Fichiers d%27en-t�te\Engine Systems\Inputs</Filter>
     </ClInclude>
+    <ClInclude Include="source\tiledlevelloader\include\tiled_constants.h">
+      <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\BehaviorTreeDebugWindow.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\BTGraphLayoutEngine.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\BehaviorTree.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PrefabScanner.h">
+      <Filter>Fichiers d%27en-t�te\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Animation\AnimationManager.h">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Animation\AnimationTypes.h">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ECS_Systems_Animation.h">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc">
@@ -630,7 +672,6 @@
     <None Include="olympe.ini">
       <Filter>Fichiers sources</Filter>
     </None>
-    <None Include="Documentation\TILED_ISOMETRIC.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

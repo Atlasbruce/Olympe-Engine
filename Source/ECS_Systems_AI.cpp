@@ -13,12 +13,16 @@ AI Systems implementation: NPC AI behavior systems.
 #include "ECS_Components.h"
 #include "ECS_Components_AI.h"
 #include "AI/BehaviorTree.h"
+#include "AI/BehaviorTreeDebugWindow.h"
 #include "World.h"
 #include "GameEngine.h"
 #include "system/EventQueue.h"
 #include "system/system_utils.h"
 #include <cmath>
 #include <algorithm>
+
+// Forward declaration of global debugger instance (defined in OlympeEngine.cpp)
+extern Olympe::BehaviorTreeDebugWindow* g_btDebugWindow;
 
 // --- AIStimuliSystem Implementation ---
 
@@ -296,6 +300,11 @@ void AIStateTransitionSystem::Process()
     {
         try
         {
+            // Always sync AIMode to blackboard first (ensures initial sync)
+            AIState_data& state = World::Get().GetComponent<AIState_data>(entity);
+            AIBlackboard_data& blackboard = World::Get().GetComponent<AIBlackboard_data>(entity);
+            blackboard.AIMode = static_cast<int>(state.currentMode);
+            
             UpdateAIState(entity);
         }
         catch (const std::exception& e)
@@ -308,7 +317,7 @@ void AIStateTransitionSystem::Process()
 void AIStateTransitionSystem::UpdateAIState(EntityID entity)
 {
     AIState_data& state = World::Get().GetComponent<AIState_data>(entity);
-    const AIBlackboard_data& blackboard = World::Get().GetComponent<AIBlackboard_data>(entity);
+    AIBlackboard_data& blackboard = World::Get().GetComponent<AIBlackboard_data>(entity);
     
     state.timeInCurrentMode += GameEngine::fDt;
     
@@ -411,26 +420,24 @@ void AIStateTransitionSystem::UpdateAIState(EntityID entity)
         state.currentMode = newMode;
         state.timeInCurrentMode = 0.0f;
         
-        // Update behavior tree based on new mode
+        // IMPORTANT: Restart tree execution when mode changes
+        // The unified BT will handle mode-specific behavior via CheckBlackboardValue conditions
         if (World::Get().HasComponent<BehaviorTreeRuntime_data>(entity))
         {
             BehaviorTreeRuntime_data& btRuntime = World::Get().GetComponent<BehaviorTreeRuntime_data>(entity);
             
-            // Map AI mode to behavior tree ID
-            // Tree IDs: 1 = Idle, 2 = Patrol, 3 = Combat, 4 = Flee, 5 = Investigate
-            switch (newMode)
+            // Handle Dead state - disable tree execution
+            if (newMode == AIMode::Dead)
             {
-                case AIMode::Idle:        btRuntime.treeAssetId = 1; break;
-                case AIMode::Patrol:      btRuntime.treeAssetId = 2; break;
-                case AIMode::Combat:      btRuntime.treeAssetId = 3; break;
-                case AIMode::Flee:        btRuntime.treeAssetId = 4; break;
-                case AIMode::Investigate: btRuntime.treeAssetId = 5; break;
-                case AIMode::Dead:        btRuntime.isActive = false; break;
+                btRuntime.isActive = false;
             }
             
+            // DO NOT change AITreeAssetId here! It's set once from the prefab.
+            // The unified BT handles all modes internally via condition checks.
             btRuntime.needsRestart = true;
         }
     }
+    // Note: AIMode sync to blackboard is now done at start of Process() for all entities
 }
 
 // --- BehaviorTreeSystem Implementation ---
@@ -456,6 +463,7 @@ void BehaviorTreeSystem::Process()
         {
             BehaviorTreeRuntime_data& btRuntime = World::Get().GetComponent<BehaviorTreeRuntime_data>(entity);
             AIBlackboard_data& blackboard = World::Get().GetComponent<AIBlackboard_data>(entity);
+			Identity_data& identity = World::Get().GetComponent<Identity_data>(entity);
             
             if (!btRuntime.isActive)
                 continue;
@@ -475,24 +483,45 @@ void BehaviorTreeSystem::Process()
             }
             
             // Get the behavior tree asset
-            const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTree(btRuntime.treeAssetId);
+            const BehaviorTreeAsset* tree = nullptr;
+
+            if (!btRuntime.AITreePath.empty())
+            {
+                // Load by path (preferred method)
+                tree = BehaviorTreeManager::Get().GetTreeByPath(btRuntime.AITreePath);
+
+                if (!tree)
+                {
+                    std::cerr << "[BehaviorTreeSystem] WARNING: Tree not found: "
+                        << btRuntime.AITreePath << " for entity " << identity.name << std::endl;
+                }
+            }
+            else if (btRuntime.AITreeAssetId != 0)
+            {
+                // Fallback to ID lookup
+                tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
+            }
+
             if (!tree)
+            {
+                // Tree not found, skip this entity
                 continue;
+            }
             
             // Restart tree if needed
             if (btRuntime.needsRestart)
             {
-                btRuntime.currentNodeIndex = tree->rootNodeId;
+                btRuntime.AICurrentNodeIndex = tree->rootNodeId;
                 btRuntime.needsRestart = false;
             }
             
             // Get the current node
-            const BTNode* node = tree->GetNode(btRuntime.currentNodeIndex);
+            const BTNode* node = tree->GetNode(btRuntime.AICurrentNodeIndex);
             if (!node)
             {
                 // Invalid node - restart from root
-                btRuntime.currentNodeIndex = tree->rootNodeId;
-                node = tree->GetNode(btRuntime.currentNodeIndex);
+                btRuntime.AICurrentNodeIndex = tree->rootNodeId;
+                node = tree->GetNode(btRuntime.AICurrentNodeIndex);
             }
             
             if (node)
@@ -500,6 +529,12 @@ void BehaviorTreeSystem::Process()
                 // Execute the node
                 BTStatus status = ExecuteBTNode(*node, entity, blackboard, *tree);
                 btRuntime.lastStatus = static_cast<uint8_t>(status);
+                
+                // Notify debugger if active
+                if (g_btDebugWindow && g_btDebugWindow->IsVisible())
+                {
+                    g_btDebugWindow->AddExecutionEntry(entity, node->id, node->name, status);
+                }
                 
                 // Debug logging (every 2 seconds to avoid spam)
                 static float lastLogTime = 0.0f;
@@ -528,7 +563,7 @@ void BehaviorTreeSystem::Process()
                         }
                         
                         SYSTEM_LOG << "BT[Entity " << entity << "]: Mode=" << modeName 
-                                   << ", Tree=" << btRuntime.treeAssetId
+                                   << ", Tree=" << btRuntime.AITreeAssetId
                                    << ", Node=" << node->name 
                                    << ", Status=" << statusName;
                         

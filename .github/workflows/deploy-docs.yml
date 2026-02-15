@@ -1,0 +1,88 @@
+name: Deploy Documentation to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'website/**'
+      - 'Doxyfile'
+      - '.github/workflows/deploy-docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: website/package-lock.json
+      
+      - name: Install Doxygen
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz
+          echo "Doxygen version:"
+          doxygen --version
+      
+      - name: Generate API Documentation with Doxygen
+        run: |
+          echo "Generating Doxygen documentation..."
+          doxygen Doxyfile
+          echo "Doxygen generation complete"
+          if [ -d "website/static/api" ]; then
+            echo "API documentation generated successfully"
+            ls -la website/static/api/
+          else
+            echo "Warning: API documentation directory not found"
+          fi
+      
+      - name: Install Docusaurus dependencies
+        working-directory: website
+        run: |
+          echo "Installing dependencies..."
+          npm ci
+          echo "Dependencies installed successfully"
+      
+      - name: Build Docusaurus site
+        working-directory: website
+        run: |
+          echo "Building Docusaurus site..."
+          npm run build
+          echo "Build complete"
+          ls -la build/
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: website/build
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -10,11 +10,14 @@ Behavior Tree implementation: JSON loading and built-in node execution.
 */
 
 #include "BehaviorTree.h"
+#include "BehaviorTreeDependencyScanner.h"
 #include "../ECS_Components_AI.h"
 #include "../ECS_Components.h"
 #include "../World.h"
 #include "../system/system_utils.h"
 #include "../json_helper.h"
+#include "../CollisionMap.h"
+#include "../GameEngine.h"
 #include <cmath>
 
 using json = nlohmann::json;
@@ -122,6 +125,8 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
             if (node.type == BTNodeType::Condition && nodeJson.contains("conditionType"))
             {
                 std::string condStr = JsonHelper::GetString(nodeJson, "conditionType", "");
+                node.conditionTypeString = condStr; // Store string for flexible conditions
+                
                 if (condStr == "TargetVisible" || condStr == "HasTarget") 
                     node.conditionType = BTConditionType::TargetVisible;
                 else if (condStr == "TargetInRange" || condStr == "IsTargetInAttackRange") 
@@ -134,12 +139,33 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     node.conditionType = BTConditionType::CanAttack;
                 else if (condStr == "HeardNoise") 
                     node.conditionType = BTConditionType::HeardNoise;
+                // NEW: Wander behavior conditions
+                else if (condStr == "IsWaitTimerExpired")
+                    node.conditionType = BTConditionType::IsWaitTimerExpired;
+                else if (condStr == "HasNavigableDestination")
+                    node.conditionType = BTConditionType::HasNavigableDestination;
+                else if (condStr == "HasValidPath")
+                    node.conditionType = BTConditionType::HasValidPath;
+                else if (condStr == "HasReachedDestination")
+                    node.conditionType = BTConditionType::HasReachedDestination;
+                // NEW: CheckBlackboardValue is handled via string type, not enum
                 
                 // Handle v2 format parameters (nested in "parameters" object)
                 if (isV2 && nodeJson.contains("parameters") && nodeJson["parameters"].is_object())
                 {
                     const json& params = nodeJson["parameters"];
                     node.conditionParam = JsonHelper::GetFloat(params, "param", 0.0f);
+                    
+                    // Parse flexible parameters for conditions like CheckBlackboardValue
+                    for (auto it = params.begin(); it != params.end(); ++it)
+                    {
+                        if (it.value().is_string())
+                            node.stringParams[it.key()] = it.value().get<std::string>();
+                        else if (it.value().is_number_integer())
+                            node.intParams[it.key()] = it.value().get<int>();
+                        else if (it.value().is_number_float())
+                            node.floatParams[it.key()] = it.value().get<float>();
+                    }
                 }
                 else
                 {
@@ -168,6 +194,15 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     node.actionType = BTActionType::ClearTarget;
                 else if (actStr == "Idle") 
                     node.actionType = BTActionType::Idle;
+                // NEW: Wander behavior actions
+                else if (actStr == "WaitRandomTime")
+                    node.actionType = BTActionType::WaitRandomTime;
+                else if (actStr == "ChooseRandomNavigablePoint")
+                    node.actionType = BTActionType::ChooseRandomNavigablePoint;
+                else if (actStr == "RequestPathfinding")
+                    node.actionType = BTActionType::RequestPathfinding;
+                else if (actStr == "FollowPath")
+                    node.actionType = BTActionType::FollowPath;
                 
                 // Handle v2 format parameters (nested in "parameters" object)
                 if (isV2 && nodeJson.contains("parameters") && nodeJson["parameters"].is_object())
@@ -187,7 +222,7 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
             // Parse decorator child
             if (node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater)
             {
-                node.decoratorChildId = JsonHelper::GetInt(nodeJson, "child", 0);
+                node.decoratorChildId = JsonHelper::GetInt(nodeJson, "decoratorChildId", 0);
             }
             
             if (node.type == BTNodeType::Repeater)
@@ -221,8 +256,12 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
         std::cout << "[BehaviorTreeManager] Step 6: Registering tree..." << std::endl;
         m_trees.push_back(tree);
         
+        // Register the path -> ID mapping
+        m_pathToIdMap[filepath] = treeId;
+        
         std::cout << "[BehaviorTreeManager] SUCCESS: Loaded '" << tree.name << "' (ID=" << treeId << ") with " 
                   << tree.nodes.size() << " nodes" << std::endl;
+        std::cout << "[BehaviorTreeManager] Registered path mapping: " << filepath << " -> ID " << treeId << "\n";
         std::cout << "[BehaviorTreeManager] ========================================+n" << std::endl;
         
         return true;
@@ -250,6 +289,7 @@ const BehaviorTreeAsset* BehaviorTreeManager::GetTree(uint32_t treeId) const
 void BehaviorTreeManager::Clear()
 {
     m_trees.clear();
+    m_pathToIdMap.clear();
 }
 
 bool BehaviorTreeManager::ReloadTree(uint32_t treeId)
@@ -393,7 +433,48 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
         
         case BTNodeType::Condition:
         {
-            return ExecuteBTCondition(node.conditionType, node.conditionParam, entity, blackboard);
+            // Check if this is a string-based condition (like CheckBlackboardValue)
+            if (!node.conditionTypeString.empty() && node.conditionTypeString == "CheckBlackboardValue")
+            {
+                // Execute CheckBlackboardValue condition
+                std::string key = node.GetParameterString("key");
+                std::string op = node.GetParameterString("operator");
+                int expectedValue = node.GetParameterInt("value");
+                
+                int actualValue = 0;
+                
+                // Get value from blackboard
+                if (key == "AIMode")
+                {
+                    actualValue = blackboard.AIMode;
+                }
+                else
+                {
+                    // Future: support other blackboard integer fields
+                    return BTStatus::Failure;  // Key not found
+                }
+                
+                // Perform comparison
+                if (op == "Equals" || op == "equals" || op == "==")
+                    return (actualValue == expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                else if (op == "NotEquals" || op == "notequals" || op == "!=")
+                    return (actualValue != expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                else if (op == "GreaterThan" || op == "greaterthan" || op == ">")
+                    return (actualValue > expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                else if (op == "LessThan" || op == "lessthan" || op == "<")
+                    return (actualValue < expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                else if (op == "GreaterOrEqual" || op == "greaterorequal" || op == ">=")
+                    return (actualValue >= expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                else if (op == "LessOrEqual" || op == "lessorequal" || op == "<=")
+                    return (actualValue <= expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                
+                return BTStatus::Failure;
+            }
+            else
+            {
+                // Execute enum-based condition (legacy)
+                return ExecuteBTCondition(node.conditionType, node.conditionParam, entity, blackboard);
+            }
         }
         
         case BTNodeType::Action:
@@ -455,6 +536,44 @@ BTStatus ExecuteBTCondition(BTConditionType condType, float param, EntityID enti
         
         case BTConditionType::HeardNoise:
             return blackboard.heardNoise ? BTStatus::Success : BTStatus::Failure;
+        
+        // NEW: Wander behavior conditions
+        case BTConditionType::IsWaitTimerExpired:
+            return (blackboard.wanderWaitTimer >= blackboard.wanderTargetWaitTime) ? BTStatus::Success : BTStatus::Failure;
+        
+        case BTConditionType::HasNavigableDestination:
+            return blackboard.hasWanderDestination ? BTStatus::Success : BTStatus::Failure;
+        
+        case BTConditionType::HasValidPath:
+            // Check if NavigationAgent has a valid path
+            if (World::Get().HasComponent<NavigationAgent_data>(entity))
+            {
+                const NavigationAgent_data& navAgent = World::Get().GetComponent<NavigationAgent_data>(entity);
+                return (!navAgent.currentPath.empty()) ? BTStatus::Success : BTStatus::Failure;
+            }
+            return BTStatus::Failure;
+        
+        case BTConditionType::HasReachedDestination:
+            if (!blackboard.hasWanderDestination) return BTStatus::Failure;
+            
+            if (World::Get().HasComponent<Position_data>(entity))
+            {
+                const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+                Vector vDest = pos.position;
+                vDest -= blackboard.wanderDestination;
+                float dist = vDest.Magnitude();
+                
+                // Use arrival threshold from MoveIntent if available, otherwise use default
+                float threshold = 5.0f;
+                if (World::Get().HasComponent<MoveIntent_data>(entity))
+                {
+                    const MoveIntent_data& intent = World::Get().GetComponent<MoveIntent_data>(entity);
+                    threshold = intent.arrivalThreshold;
+                }
+                
+                return (dist < threshold) ? BTStatus::Success : BTStatus::Failure;
+            }
+            return BTStatus::Failure;
     }
     
     return BTStatus::Failure;
@@ -564,7 +683,202 @@ BTStatus ExecuteBTAction(BTActionType actionType, float param1, float param2, En
         case BTActionType::Idle:
             // Do nothing
             return BTStatus::Success;
+        
+        // NEW: Wander behavior actions
+        case BTActionType::WaitRandomTime:
+        {
+            // If timer not initialized, create a random time
+            if (blackboard.wanderTargetWaitTime == 0.0f)
+            {
+                float minWait = (param1 > 0.0f) ? param1 : 2.0f;
+                float maxWait = (param2 > 0.0f) ? param2 : 6.0f;
+                
+                // Random generation between min and max
+                float randomFactor = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+                blackboard.wanderTargetWaitTime = minWait + randomFactor * (maxWait - minWait);
+                blackboard.wanderWaitTimer = 0.0f;
+            }
+            
+            // Increment timer with engine deltaTime
+            blackboard.wanderWaitTimer += GameEngine::fDt;
+            
+            // Check if timer expired
+            if (blackboard.wanderWaitTimer >= blackboard.wanderTargetWaitTime)
+            {
+                // Reset for next cycle
+                blackboard.wanderTargetWaitTime = 0.0f;
+                blackboard.wanderWaitTimer = 0.0f;
+                return BTStatus::Success;
+            }
+            
+            return BTStatus::Running;
+        }
+        
+        case BTActionType::ChooseRandomNavigablePoint:
+        {
+            // Get current position
+            if (!World::Get().HasComponent<Position_data>(entity))
+                return BTStatus::Failure;
+            
+            const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+            
+            // Parameters
+            float searchRadius = (param1 > 0.0f) ? param1 : blackboard.wanderSearchRadius;
+            int maxAttempts = (param2 > 0.0f) ? static_cast<int>(param2) : blackboard.wanderMaxSearchAttempts;
+            
+            // Search for a random navigable point
+            float destX, destY;
+            bool found = NavigationMap::Get().GetRandomNavigablePoint(
+                pos.position.x, pos.position.y, searchRadius, maxAttempts, destX, destY
+            );
+            
+            if (found)
+            {
+                blackboard.wanderDestination = Vector(destX, destY);
+                blackboard.hasWanderDestination = true;
+                blackboard.moveGoal = blackboard.wanderDestination;
+                blackboard.hasMoveGoal = true;
+                return BTStatus::Success;
+            }
+            
+            return BTStatus::Failure;
+        }
+        
+        case BTActionType::RequestPathfinding:
+        {
+            if (!blackboard.hasMoveGoal) return BTStatus::Failure;
+            
+            // Go through MoveIntent_data with pathfinding enabled
+            if (World::Get().HasComponent<MoveIntent_data>(entity))
+            {
+                MoveIntent_data& intent = World::Get().GetComponent<MoveIntent_data>(entity);
+                intent.targetPosition = blackboard.moveGoal;
+                intent.desiredSpeed = 1.0f;
+                intent.hasIntent = true;
+                intent.usePathfinding = true;  // Enable pathfinding
+                intent.avoidObstacles = true;
+                
+                return BTStatus::Success;
+            }
+            
+            return BTStatus::Failure;
+        }
+        
+        case BTActionType::FollowPath:
+        {
+            if (!blackboard.hasWanderDestination) return BTStatus::Failure;
+            
+            // Check if we have an active MoveIntent
+            if (World::Get().HasComponent<MoveIntent_data>(entity))
+            {
+                MoveIntent_data& intent = World::Get().GetComponent<MoveIntent_data>(entity);
+                
+                // Maintain the active intent
+                if (!intent.hasIntent)
+                {
+                    intent.targetPosition = blackboard.wanderDestination;
+                    intent.desiredSpeed = 1.0f;
+                    intent.hasIntent = true;
+                    intent.usePathfinding = true;
+                }
+                
+                // Check if we have arrived
+                if (World::Get().HasComponent<Position_data>(entity))
+                {
+                    const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+                    Vector vDest = pos.position;
+                    vDest -= blackboard.wanderDestination;
+                    float dist = vDest.Magnitude();
+                    
+                    if (dist < intent.arrivalThreshold)
+                    {
+                        // Arrived at destination
+                        blackboard.hasWanderDestination = false;
+                        blackboard.hasMoveGoal = false;
+                        intent.hasIntent = false;
+                        return BTStatus::Success;
+                    }
+                }
+                
+                return BTStatus::Running;
+            }
+            
+            return BTStatus::Failure;
+        }
     }
     
     return BTStatus::Failure;
+}
+
+// --- Path-to-ID Registry Methods ---
+
+uint32_t BehaviorTreeManager::GetTreeIdFromPath(const std::string& treePath) const
+{
+    auto it = m_pathToIdMap.find(treePath);
+    if (it != m_pathToIdMap.end())
+        return it->second;
+    
+    // Fallback: generate ID from path if not in registry
+    // This allows forward compatibility with paths that aren't loaded yet
+    return BehaviorTreeDependencyScanner::GenerateTreeIdFromPath(treePath);
+}
+
+bool BehaviorTreeManager::IsTreeLoadedByPath(const std::string& treePath) const
+{
+    return m_pathToIdMap.find(treePath) != m_pathToIdMap.end();
+}
+
+const BehaviorTreeAsset* BehaviorTreeManager::GetTreeByPath(const std::string& treePath) const
+{
+    uint32_t treeId = GetTreeIdFromPath(treePath);
+    return GetTree(treeId);
+}
+
+const BehaviorTreeAsset* BehaviorTreeManager::GetTreeByAnyId(uint32_t treeId) const
+{
+    // Strategy 1: Direct ID lookup
+    for (const auto& tree : m_trees)
+    {
+        if (tree.id == treeId)
+            return &tree;
+    }
+    
+    // No additional strategies currently implemented
+    // Future enhancement: Could add tree structure matching for corrupted prefabs
+    
+    return nullptr;
+}
+
+std::string BehaviorTreeManager::GetTreePathFromId(uint32_t treeId) const
+{
+    // Check path-to-ID registry
+    for (const auto& entry : m_pathToIdMap)
+    {
+        if (entry.second == treeId)
+            return entry.first;
+    }
+    
+    // Check if a tree with this ID exists (might be loaded with different path)
+    for (const auto& tree : m_trees)
+    {
+        if (tree.id == treeId)
+            return "TreeName:" + tree.name; // Prefix to distinguish from actual file path
+    }
+    
+    return "";
+}
+
+void BehaviorTreeManager::DebugPrintLoadedTrees() const
+{
+    std::cout << "[BehaviorTreeManager] Loaded trees (" << m_trees.size() << "):" << std::endl;
+    for (const auto& tree : m_trees)
+    {
+        std::cout << "  - ID=" << tree.id << " Name='" << tree.name << "' Nodes=" << tree.nodes.size() << std::endl;
+    }
+    
+    std::cout << "[BehaviorTreeManager] Path-to-ID registry (" << m_pathToIdMap.size() << "):" << std::endl;
+    for (const auto& entry : m_pathToIdMap)
+    {
+        std::cout << "  - '" << entry.first << "' -> ID=" << entry.second << std::endl;
+    }
 }

@@ -69,3 +69,19 @@ bool Vector::operator >= (const Vector &v)
 {
 	return ((x >= v.x) && (y >= v.y) && (z >= v.z)); 
 }
+///////////////////////////////////////////////////////////
+// ImGui conversion implementations
+// Note: These are only usable when imgui.h is included in the translation unit
+#ifdef IMGUI_VERSION
+#include "third_party/imgui/imgui.h"
+
+ImVec2 Vector::ToImVec2() const
+{
+	return ImVec2(x, y);
+}
+
+Vector Vector::FromImVec2(const ImVec2& v)
+{
+	return Vector(v.x, v.y, 0.0f);
+}
+#endif

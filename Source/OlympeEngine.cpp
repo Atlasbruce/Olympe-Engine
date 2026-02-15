@@ -31,6 +31,7 @@ Notes:
 #include "PanelManager.h"
 #include "BlueprintEditor/BlueprintEditor.h"
 #include "BlueprintEditor/BlueprintEditorGUI.h"
+#include "AI/BehaviorTreeDebugWindow.h"
 #include "third_party/imgui/imgui.h"
 #include "third_party/imgui/backends/imgui_impl_sdl3.h"
 #include "third_party/imgui/backends/imgui_impl_sdlrenderer3.h"
@@ -48,6 +49,10 @@ const Uint32 FRAME_TARGET_TIME_MS = 1000 / TARGET_FPS;
 
 // BlueprintEditor GUI instance
 static Olympe::BlueprintEditorGUI* blueprintEditorGUI = nullptr;
+
+// Behavior Tree Debug Window instance (global for access from AI systems)
+// Note: Using raw pointer for consistency with existing code. Cleaned up in SDL_AppQuit().
+Olympe::BehaviorTreeDebugWindow* g_btDebugWindow = nullptr;
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
@@ -97,11 +102,17 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     blueprintEditorGUI = new Olympe::BlueprintEditorGUI();
     blueprintEditorGUI->Initialize();
     
+    // Create Behavior Tree Debug Window
+    g_btDebugWindow = new Olympe::BehaviorTreeDebugWindow();
+    g_btDebugWindow->Initialize();
+    
     SYSTEM_LOG << "BlueprintEditor initialized in Runtime mode (toggle with F2)" << endl;
+    SYSTEM_LOG << "BehaviorTree Debugger initialized (toggle with F10)" << endl;
 
     // Initialisation (à l'initialisation de l'application)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
+    
     ImGui::StyleColorsDark();
     // Initialiser vos implémentations (ex. SDL + renderer)
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
@@ -115,7 +126,13 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 {
     if (!event) return SDL_APP_CONTINUE;
 
-    // ===== A) ImGui Event Processing - MUST BE FIRST =====
+    // ===== NEW: Route events to BT Debugger separate window FIRST =====
+    if (g_btDebugWindow != nullptr)
+    {
+        g_btDebugWindow->ProcessEvent(event);
+    }
+    
+    // ===== A) ImGui Event Processing for MAIN window =====
     // Process ImGui events before game logic to enable panel interactivity
     ImGui_ImplSDL3_ProcessEvent(event);
     
@@ -167,6 +184,19 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
                       << endl;
             GameMenu::Get().SetF2MenuOpen(Olympe::BlueprintEditor::Get().IsActive());
             return SDL_APP_CONTINUE; // Early return to avoid ESC dialog below
+        }
+        
+        // F10 toggles Behavior Tree Debug Window
+        if (event->key.key == SDLK_F10)
+        {
+            if (g_btDebugWindow)
+            {
+                g_btDebugWindow->ToggleVisibility();
+                SYSTEM_LOG << "BT Runtime Debugger " 
+                          << (g_btDebugWindow->IsVisible() ? "opened" : "closed") 
+                          << endl;
+            }
+            return SDL_APP_CONTINUE;
         }
         
         // F3 toggles Tiled Level Loader menu
@@ -349,6 +379,12 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 
         blueprintEditorGUI->Render(); // BeginMainMenuBar() est maintenant sûr
         
+        // Render Behavior Tree Debug Window
+        if (g_btDebugWindow)
+        {
+            g_btDebugWindow->Render();
+        }
+        
         // Render Tiled Level Loader menu (F3)
         GameMenu::Get().RenderF2Menu();
 
@@ -407,6 +443,14 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
     /* SDL will clean up the window/renderer for us. */
+    
+    // Cleanup Behavior Tree Debug Window
+    if (g_btDebugWindow)
+    {
+        g_btDebugWindow->Shutdown();
+        delete g_btDebugWindow;
+        g_btDebugWindow = nullptr;
+    }
 
     // Shutdown Blueprint Editor
     if (blueprintEditorGUI)

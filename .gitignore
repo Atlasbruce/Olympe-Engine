@@ -379,3 +379,17 @@ build/
 # Test binaries
 test_startx_starty
 test_*
+
+# Doxygen output (will be regenerated)
+website/static/api/html/
+website/static/api/xml/
+doxygen_warnings.log
+
+# Docusaurus
+website/node_modules/
+website/build/
+website/.docusaurus/
+website/.cache-loader/
+website/package-lock.json
+/Olympe Engine_d.exe
+*.gch

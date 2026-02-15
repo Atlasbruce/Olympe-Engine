@@ -16,7 +16,8 @@ Multi-layer collision and A* pathfinding system
 const TileProperties CollisionMap::s_emptyTile = TileProperties();
 
 void CollisionMap::Initialize(int width, int height, GridProjectionType projection,
-							  float tileWidth, float tileHeight, int numLayers)
+							  float tileWidth, float tileHeight, int numLayers,
+							  float tileOffsetX, float tileOffsetY)
 {
 	SYSTEM_LOG << "CollisionMap::Initialize(" << width << "x" << height << ", "
 			   << numLayers << " layers, projection=" << static_cast<int>(projection) << ")\n";
@@ -29,9 +30,17 @@ void CollisionMap::Initialize(int width, int height, GridProjectionType projecti
 	m_tileHeight = tileHeight;
 	m_numLayers = numLayers;
 	m_activeLayer = CollisionLayer::Ground;
+	m_tileOffsetX = tileOffsetX;
+	m_tileOffsetY = tileOffsetY;
 	
 	SYSTEM_LOG << "  -> Stored tile dimensions: m_tileWidth=" << m_tileWidth 
 	           << ", m_tileHeight=" << m_tileHeight << "\n";
+	
+	// Log tile offset if present
+	if (m_tileOffsetX != 0.0f || m_tileOffsetY != 0.0f)
+	{
+		SYSTEM_LOG << "  -> Tile offset: (" << m_tileOffsetX << ", " << m_tileOffsetY << ")\n";
+	}
 	
 	// Allocate layers
 	m_layers.resize(numLayers);
@@ -62,6 +71,13 @@ void CollisionMap::Initialize(int width, int height, GridProjectionType projecti
 				float worldX, worldY;
 				GridToWorld(x, y, worldX, worldY);
 				
+				// Apply tile offset correction for isometric projection
+				if (m_projection == GridProjectionType::Iso)
+				{
+					worldX -= m_tileOffsetX;
+					worldY += m_tileOffsetY / 2.f;
+				}
+				
 				m_layers[layer][y][x].worldX = worldX;
 				m_layers[layer][y][x].worldY = worldY;
 				
@@ -70,7 +86,12 @@ void CollisionMap::Initialize(int width, int height, GridProjectionType projecti
 				if (layer == 0 && y == 0 && x < 3)
 				{
 					SYSTEM_LOG << "    [DEBUG] Tile (" << x << "," << y << ") -> world (" 
-					           << worldX << ", " << worldY << ")\n";
+					           << worldX << ", " << worldY << ")";
+					if (m_tileOffsetX != 0.0f || m_tileOffsetY != 0.0f)
+					{
+						SYSTEM_LOG << " [offset: (" << m_tileOffsetX << ", " << m_tileOffsetY << ")]";
+					}
+					SYSTEM_LOG << "\n";
 				}
 				#endif
 			}
@@ -645,4 +666,38 @@ void NavigationMap::Clear()
 	m_height = 0;
 	m_numLayers = 1;
 	m_activeLayer = CollisionLayer::Ground;
+}
+
+bool NavigationMap::GetRandomNavigablePoint(float centerX, float centerY, float radius,
+                                             int maxAttempts, float& outX, float& outY,
+                                             CollisionLayer layer) const
+{
+    for (int attempt = 0; attempt < maxAttempts; ++attempt)
+    {
+        // Generate random angle (0 to 2π)
+        float angle = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * 2.0f * 3.14159265f;
+        
+        // Generate random distance (0 to radius)
+        // Use sqrt for uniform distribution
+        float randomRadius = std::sqrt(static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * radius;
+        
+        // Calculate world position
+        float worldX = centerX + randomRadius * std::cos(angle);
+        float worldY = centerY + randomRadius * std::sin(angle);
+        
+        // Convert to grid coordinates
+        int gridX, gridY;
+        WorldToGrid(worldX, worldY, gridX, gridY);
+        
+        // Check if navigable
+        if (IsValidGridPosition(gridX, gridY) && IsNavigable(gridX, gridY, layer))
+        {
+            outX = worldX;
+            outY = worldY;
+            return true;
+        }
+    }
+    
+    // Failed after maxAttempts attempts
+    return false;
 }

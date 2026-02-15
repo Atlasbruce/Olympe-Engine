@@ -1,13 +1,14 @@
-/*
-Olympe Engine V2 - 2025
-Nicolas Chereau
-nchereau@gmail.com
-
-This file is part of Olympe Engine V2.
-
-Components purpose: Include all component definitions used in the ECS architecture.
-
-*/
+/**
+ * @file ECS_Components.h
+ * @brief Core ECS component definitions
+ * @author Nicolas Chereau
+ * @date 2025
+ * 
+ * This file contains all component data structures used in the
+ * Entity Component System architecture.
+ * 
+ * Components purpose: Include all component definitions used in the ECS architecture.
+ */
 
 #pragma once
 
@@ -19,10 +20,18 @@ Components purpose: Include all component definitions used in the ECS architectu
 #include "DataManager.h"
 #include "SDL_rect.h"
 
+// NOTE: ComponentRegistry.h is NOT included here to avoid circular dependency.
+// AUTO_REGISTER_COMPONENT calls are in ECS_Components_Registration.cpp
+
 // ========================================================================
 // Entity Type Enumeration
 // ========================================================================
 
+/**
+ * @brief Entity type classification
+ * 
+ * Used to categorize entities for gameplay and rendering purposes.
+ */
 enum class EntityType : int
 {
     None = 0,
@@ -45,6 +54,12 @@ enum class EntityType : int
 // Render Layers (Z-Order) - Used for depth sorting
 // ========================================================================
 
+/**
+ * @brief Render layer enumeration for Z-ordering
+ * 
+ * Defines rendering order with lower values rendered first (background)
+ * and higher values rendered last (foreground).
+ */
 enum class RenderLayer : int
 {
     Background_Far = -2,      // -2 * 10000 = -20000 (distant parallax backgrounds)
@@ -73,44 +88,103 @@ inline RenderLayer ZToLayer(float z)
 }
 
 // Component type definitions
+
+/**
+ * @brief Identity component for entity identification
+ * 
+ * Stores basic entity identification information including name, tag,
+ * and type classification.
+ */
 struct Identity_data
 {
-	std::string name = "Entity"; // Entity name
-	std::string tag = "Untagged"; // Entity tag/category
-	std::string type = "UnknownType"; // Entity type (string for backward compatibility)
-	EntityType entityType = EntityType::None; // Entity type (enum for layer management)
-	bool isPersistent = false; // Should the entity persist across levels?
+	/** @brief Entity name identifier */
+	std::string name = "Entity";
 	
-	// Constructors
+	/** @brief Entity tag/category for grouping */
+	std::string tag = "Untagged";
+	
+	/** @brief Entity type string (for backward compatibility) */
+	std::string type = "UnknownType";
+	
+	/** @brief Entity type enum (for layer management) */
+	EntityType entityType = EntityType::None;
+	
+	/** @brief Should the entity persist across levels? */
+	bool isPersistent = false;
+	
+	/** @brief Default constructor */
 	Identity_data() = default;
+	
+	/**
+	 * @brief Construct with name, tag, and type
+	 * @param n Entity name
+	 * @param t Entity tag
+	 * @param et Entity type string
+	 */
 	Identity_data(std::string n, std::string t, std::string et)
 		: name(std::move(n)), tag(std::move(t)), type(std::move(et)), entityType(EntityType::None) {}
+	
+	/** @brief Copy constructor */
 	Identity_data(const Identity_data&) = default;
+	
+	/** @brief Copy assignment operator */
 	Identity_data& operator=(const Identity_data&) = default;
 };
 
-// --- Component Position Data ---
+/**
+ * @brief Position component for spatial location
+ * 
+ * Stores entity position in world space.
+ */
 struct Position_data
 {
-	Vector position; // 2D/3D position
+	/** @brief 2D/3D position vector */
+	Vector position;
 	
-	// Constructors
+	/** @brief Default constructor */
 	Position_data() = default;
+	
+	/**
+	 * @brief Construct with position
+	 * @param pos Initial position vector
+	 */
 	Position_data(Vector pos) : position(pos) {}
+	
+	/** @brief Copy constructor */
 	Position_data(const Position_data&) = default;
+	
+	/** @brief Copy assignment operator */
 	Position_data& operator=(const Position_data&) = default;
 };
+
+/**
+ * @brief Bounding box component for collision detection
+ *
+ * Defines rectangular collision area for the entity.
+ */
+
 // --- Component BoundingBox Data ---
 struct BoundingBox_data
 {
-	SDL_FRect boundingBox = {0.f, 0.f, 25.f, 25.f}; // Collision rectangle
+	/** @brief Collision rectangle */
+	SDL_FRect boundingBox = {0.f, 0.f, 25.f, 25.f};
 	
-	// Constructors
+	/** @brief Default constructor */
 	BoundingBox_data() = default;
+	
+	/**
+	 * @brief Construct with bounding box
+	 * @param rect SDL rectangle for collision bounds
+	 */
 	BoundingBox_data(SDL_FRect rect) : boundingBox(rect) {}
+	
+	/** @brief Copy constructor */
 	BoundingBox_data(const BoundingBox_data&) = default;
+	
+	/** @brief Copy assignment operator */
 	BoundingBox_data& operator=(const BoundingBox_data&) = default;
 };
+
 // --- Component Detection Data ---
 struct TriggerZone_data
 {
@@ -122,6 +196,7 @@ struct TriggerZone_data
 	TriggerZone_data(const TriggerZone_data&) = default;
 	TriggerZone_data& operator=(const TriggerZone_data&) = default;
 };
+
 // --- Component Movement Data ---
 struct Movement_data
 {
@@ -133,6 +208,7 @@ struct Movement_data
 	Movement_data(const Movement_data&) = default;
 	Movement_data& operator=(const Movement_data&) = default;
 };
+
 // --- Component Physics Data ---
 struct PhysicsBody_data
 {
@@ -148,6 +224,7 @@ struct PhysicsBody_data
 	PhysicsBody_data(const PhysicsBody_data&) = default;
 	PhysicsBody_data& operator=(const PhysicsBody_data&) = default;
 };
+
 // --- Component Health Data ---
 struct Health_data
 {
@@ -160,6 +237,7 @@ struct Health_data
 	Health_data(const Health_data&) = default;
 	Health_data& operator=(const Health_data&) = default;
 };
+
 // --- Component AI Data ---
 struct AIBehavior_data
 {
@@ -170,6 +248,7 @@ struct AIBehavior_data
 	AIBehavior_data(const AIBehavior_data&) = default;
 	AIBehavior_data& operator=(const AIBehavior_data&) = default;
 };
+
 // --- Component Inventory Data ---
 struct Inventory_data
 {
@@ -180,6 +259,7 @@ struct Inventory_data
 	Inventory_data(const Inventory_data&) = default;
 	Inventory_data& operator=(const Inventory_data&) = default;
 };
+
 // --- Component Render Data --- Sprite, Animation, FX, GUI, etc.
 struct VisualSprite_data
 {
@@ -206,6 +286,7 @@ struct VisualSprite_data
 		}
 	}
 };
+
 // --- Component visual Editor Data ---
 struct VisualEditor_data
 {
@@ -233,6 +314,7 @@ struct VisualEditor_data
 		}
 	}
 };
+
 // --- Component Animation Data ---
 struct Animation_data
 {
@@ -274,6 +356,40 @@ struct VisualAnimation_data
 	// Blending support (for future implementation)
 	std::string previousAnimation;
 	float blendFactor = 0.0f;
+// Forward declaration for AnimationSequence
+namespace Olympe { struct AnimationSequence; }
+
+/**
+ * @struct VisualAnimation_data
+ * @brief ECS component for animated sprites
+ */
+struct VisualAnimation_data
+{
+	// Animation bank reference
+	std::string bankId;               // Reference to animation bank
+	std::string currentAnimName;      // Current animation name
+	std::string animGraphPath;        // Optional path to FSM graph
+	
+	// Frame tracking
+	int currentFrame = 0;             // Current frame index
+	float frameTimer = 0.0f;          // Accumulated time for current frame
+	
+	// Playback control
+	float playbackSpeed = 1.0f;       // Speed multiplier (1.0 = normal)
+	bool isPlaying = true;            // Is animation playing?
+	bool isPaused = false;            // Is animation paused?
+	bool loop = true;                 // Should animation loop?
+	
+	// Visual transforms
+	bool flipX = false;               // Flip horizontally
+	bool flipY = false;               // Flip vertically
+	
+	// Event tracking
+	bool animationJustFinished = false; // Flag set when animation completes (one frame only)
+	int loopCount = 0;                // Number of times animation has looped
+	
+	// Runtime pointer (resolved from AnimationManager)
+	const Olympe::AnimationSequence* currentSequence = nullptr;
 	
 	// Constructors
 	VisualAnimation_data() = default;
@@ -293,6 +409,7 @@ struct FX_data
 	FX_data(const FX_data&) = default;
 	FX_data& operator=(const FX_data&) = default;
 };
+
 // --- Component Audio Data ---
 struct AudioSource_data
 {
@@ -304,6 +421,7 @@ struct AudioSource_data
 	AudioSource_data(const AudioSource_data&) = default;
 	AudioSource_data& operator=(const AudioSource_data&) = default;
 };
+
 // --- Component Controller Data ---
 struct Controller_data
 {
@@ -330,6 +448,7 @@ struct Controller_data
 	Controller_data(const Controller_data&) = default;
 	Controller_data& operator=(const Controller_data&) = default;
 };
+
 // --- Component PlayerConroller Data ---
 struct PlayerController_data
 {
@@ -347,6 +466,7 @@ struct PlayerController_data
 	PlayerController_data(const PlayerController_data&) = default;
 	PlayerController_data& operator=(const PlayerController_data&) = default;
 };
+
 // --- Component Player Binding Controller --- JoystickID, KeyboardID, etc.
 struct PlayerBinding_data
 {
@@ -408,6 +528,7 @@ struct InputMapping_data
 	InputMapping_data(const InputMapping_data&) = default;
 	InputMapping_data& operator=(const InputMapping_data&) = default;
 };
+
 // --- Grid settings (singleton component) ---
 enum class GridProjection : uint8_t
 {
@@ -650,6 +771,7 @@ struct CameraInputBinding_data
 	CameraInputBinding_data(const CameraInputBinding_data&) = default;
 	CameraInputBinding_data& operator=(const CameraInputBinding_data&) = default;
 };
+
 // --- Collision Zone Component ---
 // Represents a static collision area (e.g., from Tiled object layer)
 struct CollisionZone_data

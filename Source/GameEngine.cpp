@@ -53,12 +53,12 @@ void GameEngine::Initialize()
 	CameraEventHandler::Get().Initialize();
 	
 	// Load AI Behavior Trees
-	SYSTEM_LOG << "Loading AI Behavior Trees...\n";
-	BehaviorTreeManager::Get().LoadTreeFromFile("Blueprints/AI/idle.json", 1);
-	BehaviorTreeManager::Get().LoadTreeFromFile("Blueprints/AI/guard_patrol.json", 2);
-	BehaviorTreeManager::Get().LoadTreeFromFile("Blueprints/AI/guard_combat.json", 3);
-	BehaviorTreeManager::Get().LoadTreeFromFile("Blueprints/AI/investigate.json", 5);
-	SYSTEM_LOG << "AI Behavior Trees loaded.\n";
+	//SYSTEM_LOG << "Loading AI Behavior Trees...\n";
+	//BehaviorTreeManager::Get().LoadTreeFromFile("Blueprints/AI/idle.json", 1);
+	//BehaviorTreeManager::Get().LoadTreeFromFile("Blueprints/AI/guard_patrol.json", 2);
+	//BehaviorTreeManager::Get().LoadTreeFromFile("Blueprints/AI/guard_combat.json", 3);
+	//BehaviorTreeManager::Get().LoadTreeFromFile("Blueprints/AI/investigate.json", 5);
+	//SYSTEM_LOG << "AI Behavior Trees loaded.\n";
 	
 	// Initialize Animation System
 	SYSTEM_LOG << "Initializing Animation System...\n";

@@ -82,6 +82,20 @@
       ]
     },
     {
+      "componentType": "VisualAnimation_data",
+      "parameters": [
+        { "name": "bankId", "type": "String", "defaultValue": "" },
+        { "name": "currentAnimName", "type": "String", "defaultValue": "idle" },
+        { "name": "animGraphPath", "type": "String", "defaultValue": "" },
+        { "name": "playbackSpeed", "type": "Float", "defaultValue": 1.0 },
+        { "name": "loop", "type": "Bool", "defaultValue": true },
+        { "name": "isPlaying", "type": "Bool", "defaultValue": true },
+        { "name": "isPaused", "type": "Bool", "defaultValue": false },
+        { "name": "flipX", "type": "Bool", "defaultValue": false },
+        { "name": "flipY", "type": "Bool", "defaultValue": false }
+      ]
+    },
+    {
       "componentType": "PlayerBinding_data",
       "parameters": [
         { "name": "playerIndex", "type": "Int", "defaultValue": 0 },
@@ -113,7 +127,11 @@
       "componentType": "AIBlackboard_data",
       "parameters": [
         { "name": "patrolPathID", "type": "String", "defaultValue": "" },
-        { "name": "lastKnownTargetPos", "type": "Vector2", "defaultValue": {"x": 0, "y": 0} }
+        { "name": "lastKnownTargetPos", "type": "Vector2", "defaultValue": {"x": 0, "y": 0} },
+        { "name": "wanderWaitTimer", "type": "Float", "defaultValue": 0.0 },
+        { "name": "wanderTargetWaitTime", "type": "Float", "defaultValue": 0.0 },
+        { "name": "wanderSearchRadius", "type": "Float", "defaultValue": 500.0 },
+        { "name": "wanderMaxSearchAttempts", "type": "Int", "defaultValue": 10 }
       ]
     },
     {

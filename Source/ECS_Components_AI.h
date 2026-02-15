@@ -15,11 +15,15 @@ AI Components purpose: Define all AI-related components for the ECS architecture
 #include "vector.h"
 #include <cstdint>
 #include "ECS_Systems_AI.h"
+#include "ComponentRegistry.h"
 
 // --- AI Blackboard Component ---
 // Typed blackboard with explicit fields for performance (no std::map/std::string keys in hot path)
 struct AIBlackboard_data
 {
+    // Mode tracking (exposed to BT for condition checks)
+    int AIMode = 1;  // 1=Idle, 2=Patrol, 3=Combat, 4=Flee, 5=Investigate
+    
     // Target tracking
     EntityID targetEntity = INVALID_ENTITY_ID;
     Vector lastKnownTargetPosition;
@@ -53,7 +57,16 @@ struct AIBlackboard_data
     Vector lastNoisePosition;
     bool heardNoise = false;
     float noiseCooldown = 0.0f;
+    
+    // NEW: Wander behavior state
+    float wanderWaitTimer = 0.0f;           // Current timer
+    float wanderTargetWaitTime = 0.0f;      // Target wait time
+    Vector wanderDestination;               // Chosen destination point
+    bool hasWanderDestination = false;      // Destination chosen?
+    float wanderSearchRadius = 500.0f;      // Default search radius
+    int wanderMaxSearchAttempts = 10;       // Default max attempts
 };
+AUTO_REGISTER_COMPONENT(AIBlackboard_data);
 
 // --- AI Senses Component ---
 // Perception parameters for the AI entity
@@ -76,17 +89,23 @@ struct AISenses_data
     AISenses_data(float vision, float hearing) 
         : visionRadius(vision), hearingRadius(hearing) {}
 };
+AUTO_REGISTER_COMPONENT(AISenses_data);
 
 // --- AI State Component (HFSM) ---
 // Hierarchical Finite State Machine mode/state
+/**
+ * @enum AIMode
+ * @brief AI behavior modes for NPCs
+ * @note Values start at 1 to match BT condition checks (AIMode == 1 for Idle, 2 for Patrol, 3 for Combat)
+ */
 enum class AIMode : uint8_t
 {
-    Idle = 0,
-    Patrol,
-    Combat,
-    Flee,
-    Investigate,
-    Dead
+    Idle = 1,        // Default wander/idle behavior
+    Patrol = 2,      // Following patrol route
+    Combat = 3,      // Engaging enemies
+    Flee = 4,        // Running away from threats
+    Investigate = 5, // Checking suspicious activity
+    Dead = 6         // Entity is dead
 };
 
 struct AIState_data
@@ -100,30 +119,45 @@ struct AIState_data
     float fleeHealthThreshold = 0.2f;      // Flee when health below 20%
     float investigateTimeout = 5.0f;        // Time to investigate before returning to patrol
 };
+AUTO_REGISTER_COMPONENT(AIState_data);
 
 // --- Behavior Tree Runtime Component ---
 // Per-entity behavior tree execution state
 struct BehaviorTreeRuntime_data
 {
-    // Tree identification
-    uint32_t treeAssetId = 0;           // ID of the behavior tree asset to execute
+    // Tree identification (RENAMED: Added AI prefix for clarity)
+    uint32_t AITreeAssetId = 0;         // ID of the behavior tree asset to execute
+	std::string AITreePath = "";        // Path to the tree asset 
     
-    // Execution state
-    uint32_t currentNodeIndex = 0;       // Index of the currently executing node
-    uint8_t lastStatus = 0;              // Last node execution status (0=Running, 1=Success, 2=Failure)
+    // Execution state (RENAMED: Added AI prefix for clarity)
+    uint32_t AICurrentNodeIndex = 0;    // Index of the currently executing node
+    uint8_t lastStatus = 0;             // Last node execution status (0=Running, 1=Success, 2=Failure)
     
     // Timeslicing state
-    float nextThinkTime = 0.0f;          // When to next tick the behavior tree
+    float nextThinkTime = 0.0f;         // When to next tick the behavior tree
     
     // Tree execution control
-    bool isActive = true;                // Enable/disable tree execution
-    bool needsRestart = false;           // Flag to restart tree from root
+    bool isActive = true;               // Enable/disable tree execution
+    bool needsRestart = false;          // Flag to restart tree from root
     
     // Constructors
-    BehaviorTreeRuntime_data() = default;
-    BehaviorTreeRuntime_data(uint32_t treeId, bool active) 
-        : treeAssetId(treeId), isActive(active) {}
+    BehaviorTreeRuntime_data()
+        : AITreeAssetId(0), AICurrentNodeIndex(0), lastStatus(0),
+        nextThinkTime(0.0f), isActive(true), needsRestart(false)
+    {
+        SYSTEM_LOG << "[BehaviorTreeRuntime_data] Default constructor called: AITreeAssetId="
+            << AITreeAssetId << std::endl;
+    }
+
+    BehaviorTreeRuntime_data(uint32_t treeId, bool active)
+        : AITreeAssetId(treeId), isActive(active),
+        AICurrentNodeIndex(0), lastStatus(0), nextThinkTime(0.0f), needsRestart(false)
+    {
+        SYSTEM_LOG << "[BehaviorTreeRuntime_data] Parameterized constructor called: AITreeAssetId="
+            << treeId << ", active=" << active << std::endl;
+    }
 };
+AUTO_REGISTER_COMPONENT(BehaviorTreeRuntime_data);
 
 // --- Move Intent Component ---
 // Movement intent that will be converted to Movement_data by AIMotionSystem
@@ -138,6 +172,7 @@ struct MoveIntent_data
     bool usePathfinding = false;
     bool avoidObstacles = false;
 };
+AUTO_REGISTER_COMPONENT(MoveIntent_data);
 
 // --- Attack Intent Component ---
 // Attack intent for combat actions
@@ -159,3 +194,4 @@ struct AttackIntent_data
     };
     AttackType attackType = AttackType::Melee;
 };
+AUTO_REGISTER_COMPONENT(AttackIntent_data);

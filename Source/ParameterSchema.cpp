@@ -288,7 +288,7 @@ void ParameterSchemaRegistry::InitializeBuiltInSchemas()
 	
 	// BehaviorTreeRuntime_data component schemas
 	RegisterParameterSchema(ParameterSchemaEntry(
-		"treePath", "BehaviorTreeRuntime_data", "treePath",
+		"AITreePath", "BehaviorTreeRuntime_data", "AITreePath",
 		ComponentParameter::Type::String, false,
 		ComponentParameter::FromString("")
 	));

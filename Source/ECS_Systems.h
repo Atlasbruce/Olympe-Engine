@@ -22,6 +22,7 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 // Forward declaration
 struct CameraTransform;
 struct GridSettings_data;
+struct CameraInputBinding_data;
 
 // Prototype function to render entities for a given camera
 void RenderEntitiesForCamera(const CameraTransform& cam);

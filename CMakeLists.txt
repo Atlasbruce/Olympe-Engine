@@ -42,6 +42,7 @@ add_library(OlympeCore STATIC
     ${IMGUI_SOURCES}
     ${IMNODES_SOURCES}
     Source/AI/BehaviorTree.cpp
+    Source/AI/BehaviorTreeDependencyScanner.cpp
     Source/DataManager.cpp
     Source/drawing.cpp
     Source/PrefabScanner.cpp
@@ -82,6 +83,8 @@ if(BUILD_RUNTIME_ENGINE)
         "Source/ECS_Systems_AI.cpp"
         "Source/ECS_Systems_Camera.cpp"
         "Source/ECS_Systems_Rendering_Camera.cpp"
+        "Source/ECS_Systems_Animation.cpp"
+        "Source/Animation/AnimationManager.cpp"
         "Source/engine_utils.cpp"
         "Source/vector.cpp"
         "Source/Sprite.cpp"
