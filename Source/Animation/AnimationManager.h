@@ -84,6 +84,33 @@ public:
     const Olympe::AnimationGraph* GetGraph(const std::string& id) const;
     
     /**
+    * @brief Get animation sequence from a bank by name
+    * @param bankId Animation bank identifier
+    * @param animName Animation name within the bank
+    * @return Pointer to AnimationSequence if found, nullptr otherwise
+    *
+    * Helper function to avoid manual bank lookup + animation lookup.
+    *
+    * Example:
+    * @code
+    * auto* seq = AnimationManager::Get().GetAnimationSequence("player", "walk");
+    * if (seq) {
+    *     // Use sequence
+    * }
+    * @endcode
+    */
+    const Olympe::AnimationSequence* GetAnimationSequence(const std::string& bankId, const std::string& animName) const;
+
+    /**
+     * @brief Check if animation exists in bank
+     * @param bankId Bank identifier
+     * @param animName Animation name
+     * @return true if animation exists
+     */
+    bool HasAnimation(const std::string& bankId, const std::string& animName) const;
+
+
+    /**
      * @brief List all loaded animation banks (debug)
      */
     void ListLoadedBanks() const;

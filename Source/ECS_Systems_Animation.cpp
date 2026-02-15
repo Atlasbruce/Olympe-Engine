@@ -20,8 +20,9 @@ AnimationSystem::AnimationSystem()
 {
     // Require both VisualAnimation_data and VisualSprite_data
     ComponentSignature signature;
-    signature.set(World::Get().GetComponentID<VisualAnimation_data>());
-    signature.set(World::Get().GetComponentID<VisualSprite_data>());
+
+    //signature.set(World::Get().GetComponentID<VisualAnimation_data>());
+    //signature.set(World::Get().GetComponentID<VisualSprite_data>());
     requiredSignature = signature;
 }
 
@@ -36,6 +37,9 @@ void AnimationSystem::Process()
     // Iterate through all entities with animation components
     for (EntityID entity : m_entities)
     {
+		if (!world.HasComponent<VisualAnimation_data>(entity) || !world.HasComponent<VisualSprite_data>(entity))
+            continue;
+
         auto& animData = world.GetComponent<VisualAnimation_data>(entity);
         auto& spriteData = world.GetComponent<VisualSprite_data>(entity);
         

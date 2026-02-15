@@ -79,6 +79,9 @@
     <Filter Include="Fichiers d%27en-t�te\ECS\Components">
       <UniqueIdentifier>{6c09fc85-1a65-4e02-b138-33965a6fc688}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers d%27en-t�te\Animation">
+      <UniqueIdentifier>{4fb54ad4-494c-4b63-9e60-8ec2fb3c715d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\GameEngine.cpp">
@@ -323,6 +326,12 @@
     </ClCompile>
     <ClCompile Include="Source\ECS_Components_Registration.cpp">
       <Filter>Fichiers d%27en-t�te\ECS\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Animation\AnimationManager.cpp">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ECS_Systems_Animation.cpp">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -637,6 +646,15 @@
     </ClInclude>
     <ClInclude Include="Source\PrefabScanner.h">
       <Filter>Fichiers d%27en-t�te\ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Animation\AnimationManager.h">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Animation\AnimationTypes.h">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ECS_Systems_Animation.h">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

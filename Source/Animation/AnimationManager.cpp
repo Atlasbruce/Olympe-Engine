@@ -442,6 +442,47 @@ const AnimationGraph* AnimationManager::GetGraph(const std::string& graphId) con
 // Debug Methods
 // ========================================================================
 
+const Olympe::AnimationSequence* AnimationManager::GetAnimationSequence(
+    const std::string& bankId,
+    const std::string& animName
+) const
+{
+    // Find the bank
+    auto bankIt = m_banks.find(bankId);
+    if (bankIt == m_banks.end())
+    {
+        // Bank not found
+        return nullptr;
+    }
+
+    const Olympe::AnimationBank& bank = bankIt->second;
+
+    // Find the animation within the bank
+    auto animIt = bank.animations.find(animName);
+    if (animIt == bank.animations.end())
+    {
+        // Animation not found in bank
+        return nullptr;
+    }
+
+    // Return pointer to the animation sequence
+    return &animIt->second;
+}
+
+bool AnimationManager::HasAnimation(
+    const std::string& bankId,
+    const std::string& animName
+) const
+{
+    auto bankIt = m_banks.find(bankId);
+    if (bankIt == m_banks.end())
+    {
+        return false;
+    }
+
+    return bankIt->second.animations.find(animName) != bankIt->second.animations.end();
+}
+
 void AnimationManager::ListLoadedBanks() const
 {
     SYSTEM_LOG << "[AnimationManager] Loaded Animation Banks:\n";
