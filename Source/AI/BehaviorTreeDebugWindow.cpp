@@ -1042,6 +1042,18 @@ namespace Olympe
                 RenderNodeConnections(&node, layout, tree);
             }
         }
+        
+        // Render pins (after ImNodes rendering, using ImGui DrawList)
+        // Note: This happens INSIDE ImNodes::BeginNodeEditor/EndNodeEditor
+        // but AFTER all nodes are rendered, so we can use the DrawList
+        for (const auto& node : tree->nodes)
+        {
+            const BTNodeLayout* layout = m_layoutEngine.GetNodeLayout(node.id);
+            if (layout)
+            {
+                RenderNodePins(&node, layout);
+            }
+        }
     }
 
     void BehaviorTreeDebugWindow::RenderNode(const BTNode* node, const BTNodeLayout* layout, bool isCurrentNode)
@@ -1069,8 +1081,11 @@ namespace Olympe
         // Node title bar
         ImNodes::BeginNodeTitleBar();
         
-        // Get node color
-        uint32_t color = GetNodeColor(node->type);
+        // Determine node status for coloring
+        BTStatus nodeStatus = isCurrentNode ? BTStatus::Running : BTStatus::Idle;
+        
+        // Get node color based on type and status
+        uint32_t color = GetNodeColorByStatus(node->type, nodeStatus);
         ImNodes::PushColorStyle(ImNodesCol_TitleBar, color);
         ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, color);
         ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, color);
