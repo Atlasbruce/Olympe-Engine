@@ -18,7 +18,8 @@ namespace Olympe
     std::vector<BTNodeLayout> BTGraphLayoutEngine::ComputeLayout(
         const BehaviorTreeAsset* tree,
         float nodeSpacingX,
-        float nodeSpacingY)
+        float nodeSpacingY,
+        float zoomFactor)
     {
         if (!tree || tree->nodes.empty())
         {
@@ -76,10 +77,15 @@ namespace Olympe
             baseSpacingY *= SPACING_INCREASE_FACTOR;  // +15% only for very deep trees
         }
 
+        // Apply zoom factor to spacing BEFORE converting to pixels
+        float finalSpacingX = baseSpacingX * zoomFactor;
+        float finalSpacingY = baseSpacingY * zoomFactor;
+
         // Debug output to verify
         std::cout << "[BTGraphLayout] Using spacing: " 
-                  << baseSpacingX << "px × " << baseSpacingY << "px" 
-                  << " (from UI: " << nodeSpacingX << " × " << nodeSpacingY << ")" 
+                  << finalSpacingX << "px × " << finalSpacingY << "px" 
+                  << " (base: " << baseSpacingX << " × " << baseSpacingY 
+                  << ", zoom: " << (int)(zoomFactor * 100) << "%)" 
                   << std::endl;
 
         // Convert from abstract units to world coordinates and apply layout direction
@@ -88,11 +94,11 @@ namespace Olympe
             // Vertical layout (default): layers go top-to-bottom
             for (auto& layout : m_layouts)
             {
-                // ok -  CRITICAL: Multiply abstract X by pixel spacing to get world coordinates
-                layout.position.x *= baseSpacingX;
+                // Convert abstract X position to world coordinates with zoomed spacing
+                layout.position.x *= finalSpacingX;
                 
-                // ok -  CRITICAL: Multiply layer index by vertical spacing
-                layout.position.y = layout.layer * baseSpacingY;
+                // Convert layer index to vertical world position with zoomed spacing
+                layout.position.y = layout.layer * finalSpacingY;
             }
         }
         else  // LeftToRight
@@ -103,9 +109,9 @@ namespace Olympe
             {
                 float abstractX = layout.position.x;
                 // Layers become horizontal position
-                layout.position.x = layout.layer * baseSpacingY;
+                layout.position.x = layout.layer * finalSpacingY;
                 // Abstract X units become vertical position
-                layout.position.y = abstractX * baseSpacingX;
+                layout.position.y = abstractX * finalSpacingX;
             }
         }
 

@@ -181,8 +181,8 @@ namespace Olympe
         // Panel layout
         float m_entityListWidth = 250.0f;
         float m_inspectorWidth = 350.0f;
-        float m_nodeSpacingX = 250.0f;  // Standard horizontal spacing (comfortable for isometric game)
-        float m_nodeSpacingY = 180.0f;  // Standard vertical spacing (comfortable layer separation)
+        float m_nodeSpacingX = 180.0f;  // Reduced from 250.0f for better default view
+        float m_nodeSpacingY = 120.0f;  // Reduced from 180.0f for better default view
 
         // Graph view state
         bool m_imnodesInitialized = false;
@@ -191,5 +191,9 @@ namespace Olympe
 
         // Animation
         float m_pulseTimer = 0.0f;
+        
+        // Layout update flags
+        bool m_needsLayoutUpdate = false;    // Track if spacing changed via sliders
+        bool m_autoFitOnLoad = true;         // Auto-fit tree when selecting entity
     };
 }

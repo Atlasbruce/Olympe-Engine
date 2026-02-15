@@ -20,6 +20,7 @@ namespace Olympe
     // Camera zoom constants
     constexpr float MIN_ZOOM = 0.3f;
     constexpr float MAX_ZOOM = 3.0f;
+    constexpr float ZOOM_EPSILON = 0.001f;  // Minimum zoom change to trigger layout recomputation
 
     BehaviorTreeDebugWindow::BehaviorTreeDebugWindow()
     {
@@ -117,34 +118,35 @@ namespace Olympe
                 ImGui::SliderFloat("Auto Refresh (s)", &m_autoRefreshInterval, 0.1f, 5.0f);
                 ImGui::SliderFloat("Entity List Width", &m_entityListWidth, 150.0f, 400.0f);
                 ImGui::SliderFloat("Inspector Width", &m_inspectorWidth, 250.0f, 500.0f);
-                // Reasonable spacing ranges to prevent massive graphs
-                ImGui::SliderFloat("Node Spacing X", &m_nodeSpacingX, 150.0f, 500.0f);
-                ImGui::SliderFloat("Node Spacing Y", &m_nodeSpacingY, 100.0f, 400.0f);
+                
+                // Reduced ranges, mark for recomputation
+                if (ImGui::SliderFloat("Node Spacing X", &m_nodeSpacingX, 80.0f, 400.0f))
+                {
+                    m_needsLayoutUpdate = true;
+                }
+                if (ImGui::SliderFloat("Node Spacing Y", &m_nodeSpacingY, 60.0f, 300.0f))
+                {
+                    m_needsLayoutUpdate = true;
+                }
                 
                 // Reset button to restore defaults
                 if (ImGui::Button("Reset Spacing to Defaults"))
                 {
-                    m_nodeSpacingX = 250.0f;
-                    m_nodeSpacingY = 180.0f;
-                    
-                    // Recompute layout with new spacing
-                    if (m_selectedEntity != 0)
-                    {
-                        auto& world = World::Get();
-                        if (world.HasComponent<BehaviorTreeRuntime_data>(m_selectedEntity))
-                        {
-                            const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
-                            const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
-                            if (tree)
-                            {
-                                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY);
-                            }
-                        }
-                    }
+                    m_nodeSpacingX = 180.0f;
+                    m_nodeSpacingY = 120.0f;
+                    m_needsLayoutUpdate = true;
                 }
                 
                 ImGui::Separator();
+                ImGui::Text("Current Zoom: %.0f%%", m_currentZoom * 100.0f);
                 ImGui::Checkbox("Show Minimap", &m_showMinimap);
+                
+                // NEW: Auto-fit option
+                ImGui::Checkbox("Auto-Fit on Load", &m_autoFitOnLoad);
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::SetTooltip("Automatically fit tree to view when selecting an entity");
+                }
                 
                 ImGui::EndMenu();
             }
@@ -464,7 +466,17 @@ namespace Olympe
             const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(info.treeId);
             if (tree)
             {
-                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY);
+                // Pass current zoom factor
+                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                m_needsLayoutUpdate = false;
+                
+                // Auto-fit if enabled
+                if (m_autoFitOnLoad)
+                {
+                    // Defer fit to next frame by clearing the last centered entity
+                    // Note: We rely on the fact that entity selection changed, so m_selectedEntity != m_lastCenteredEntity
+                    // This will trigger the auto-center/fit logic in the graph panel
+                }
             }
         }
 
@@ -570,7 +582,15 @@ namespace Olympe
         if (layoutChanged)
         {
             m_layoutEngine.SetLayoutDirection(m_layoutDirection);
-            m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY);
+            m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+            m_needsLayoutUpdate = false;
+        }
+        
+        // Recompute layout if spacing changed via sliders
+        if (m_needsLayoutUpdate && tree)
+        {
+            m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+            m_needsLayoutUpdate = false;
         }
         
         // Reset Camera button
@@ -640,36 +660,44 @@ namespace Olympe
             std::cout << "[BTDebugger] Graph size: " << graphSize.x << "x" << graphSize.y << " pixels" << std::endl;
             std::cout << "[BTDebugger] Graph center: (" << graphCenter.x << "," << graphCenter.y << ")" << std::endl;
 
-            // ✅ NEW: Center camera when entity changes
+            // Center camera when entity changes (with optional auto-fit)
             if (m_lastCenteredEntity != m_selectedEntity)
             {
-                // Center the camera on the graph
-                ImVec2 editorSize = ImGui::GetContentRegionAvail();
-                ImVec2 cameraOffset(
-                    graphCenter.x - editorSize.x / 2.0f,
-                    graphCenter.y - editorSize.y / 2.0f
-                );
+                if (m_autoFitOnLoad)
+                {
+                    // Fit entire tree to view
+                    FitGraphToView();
+                }
+                else
+                {
+                    // Just center without changing zoom
+                    CenterViewOnGraph();
+                }
                 
-                ImNodes::EditorContextResetPanning(cameraOffset);
-                
-                std::cout << "[BTDebugger] ✅ Camera centered on graph" << std::endl;
+                std::cout << "[BTDebugger] ✅ Camera " << (m_autoFitOnLoad ? "fitted" : "centered") << " on graph" << std::endl;
                 m_lastCenteredEntity = m_selectedEntity;
             }
         }
 
-        // ✅ NEW: Mouse wheel zoom support
-        // Manual zoom with style scaling (ImNodes v0.4 compatible)
-
+        // Mouse wheel zoom with layout recomputation
         ImGuiIO& io = ImGui::GetIO();
         if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered())
         {
             if (io.MouseWheel != 0.0f)
             {
+                float oldZoom = m_currentZoom;
                 float zoomDelta = io.MouseWheel * 0.1f;  // 10% per wheel notch
                 m_currentZoom = std::max(MIN_ZOOM, std::min(MAX_ZOOM, m_currentZoom + zoomDelta));
-                ApplyZoomToStyle();
                 
-                std::cout << "[BTDebugger] Zoom: " << (int)(m_currentZoom * 100) << "%" << std::endl;
+                // Recompute layout with new zoom
+                if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
+                {
+                    m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                    ApplyZoomToStyle();  // Also update ImNodes style
+                    
+                    std::cout << "[BTDebugger] Zoom: " << (int)(m_currentZoom * 100) 
+                              << "% (layout recomputed)" << std::endl;
+                }
             }
         }
 
@@ -697,14 +725,28 @@ namespace Olympe
             // + / - : Zoom in/out (Note: '+' requires Shift+Equal on most keyboards)
             if ((ImGui::IsKeyPressed(ImGuiKey_Equal) || ImGui::IsKeyPressed(ImGuiKey_KeypadAdd)) && !ctrlPressed)
             {
+                float oldZoom = m_currentZoom;
                 m_currentZoom = std::min(MAX_ZOOM, m_currentZoom * 1.2f);
-                ApplyZoomToStyle();
+                
+                // Recompute layout
+                if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
+                {
+                    m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                    ApplyZoomToStyle();
+                }
             }
             
             if ((ImGui::IsKeyPressed(ImGuiKey_Minus) || ImGui::IsKeyPressed(ImGuiKey_KeypadSubtract)) && !ctrlPressed)
             {
+                float oldZoom = m_currentZoom;
                 m_currentZoom = std::max(MIN_ZOOM, m_currentZoom / 1.2f);
-                ApplyZoomToStyle();
+                
+                // Recompute layout
+                if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
+                {
+                    m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                    ApplyZoomToStyle();
+                }
             }
         }
 
@@ -1274,9 +1316,27 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::ResetZoom()
     {
+        // Recompute layout when resetting zoom
+        auto& world = World::Get();
+        if (m_selectedEntity != 0 && world.HasComponent<BehaviorTreeRuntime_data>(m_selectedEntity))
+        {
+            const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
+            const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
+            
+            if (tree)
+            {
+                m_currentZoom = 1.0f;
+                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                ApplyZoomToStyle();
+                
+                std::cout << "[BTDebugger] Reset zoom to 100% (layout recomputed)" << std::endl;
+                return;
+            }
+        }
+        
+        // Fallback if no tree
         m_currentZoom = 1.0f;
         ApplyZoomToStyle();
-        
         std::cout << "[BTDebugger] Reset zoom to 100%" << std::endl;
     }
 
