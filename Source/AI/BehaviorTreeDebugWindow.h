@@ -3,7 +3,7 @@
  * @brief Runtime debugger for behavior tree visualization and inspection
  * @author Olympe Engine - Behavior Tree Debugger
  * @date 2025
- * 
+ *
  * @details
  * Provides real-time visualization of AI decision-making with:
  * - Entity list with filtering and sorting
@@ -23,7 +23,7 @@
 #include <map>
 #include <cstdint>
 
-// Forward declarations for SDL3
+ // Forward declarations for SDL3
 struct SDL_Window;
 struct SDL_Renderer;
 union SDL_Event;
@@ -65,13 +65,13 @@ namespace Olympe
         bool gridSnappingEnabled = true;
         float horizontalSpacing = 280.0f;
         float verticalSpacing = 120.0f;
-        
+
         // Rendering settings
         float pinRadius = 6.0f;
         float pinOutlineThickness = 2.0f;
         float bezierTangent = 80.0f;
         float connectionThickness = 2.0f;
-        
+
         // Node colors by type and status (RGBA values 0-255)
         // nodeColors[nodeType][status] = {r, g, b, a}
         struct Color { uint8_t r, g, b, a; };
@@ -124,10 +124,10 @@ namespace Olympe
     /**
      * @class BehaviorTreeDebugWindow
      * @brief Main debug window for behavior tree runtime visualization
-     * 
+     *
      * Provides comprehensive debugging capabilities for AI behavior trees,
      * including entity selection, graph visualization, and blackboard inspection.
-     * 
+     *
      * Renders in a separate SDL3 native window (not embedded in main engine window).
      */
     class BehaviorTreeDebugWindow
@@ -160,7 +160,7 @@ namespace Olympe
          * @brief Check if window is visible
          */
         bool IsVisible() const { return m_isVisible; }
-        
+
         /**
          * @brief Process SDL events for separate window
          * @param event SDL event to process
@@ -181,7 +181,7 @@ namespace Olympe
         void RenderEntityListPanel();
         void RenderNodeGraphPanel();
         void RenderInspectorPanel();
-        
+
         // Separate window management
         void CreateSeparateWindow();
         void DestroySeparateWindow();
@@ -202,7 +202,7 @@ namespace Olympe
         uint32_t GetNodeColor(BTNodeType type) const;
         uint32_t GetNodeColorByStatus(BTNodeType type, BTStatus status) const;
         const char* GetNodeIcon(BTNodeType type) const;
-        
+
         // Editor mode helpers
         void RenderNodePalette();
         void RenderEditorToolbar();
@@ -229,7 +229,7 @@ namespace Olympe
         void CenterViewOnGraph();
         void ResetZoom();
         void RenderMinimap();
-        
+
         // Camera helper utilities
         void ApplyZoomToStyle();
         void GetGraphBounds(Vector& outMin, Vector& outMax) const;
@@ -240,11 +240,11 @@ namespace Olympe
         std::vector<EntityDebugInfo> m_entities;
         std::vector<EntityDebugInfo> m_filteredEntities;
         EntityID m_selectedEntity = 0;
-        
+
         // Layout engine
         BTGraphLayoutEngine m_layoutEngine;
         std::vector<BTNodeLayout> m_currentLayout;
-        
+
         // Camera state tracking
         EntityID m_lastCenteredEntity = 0;  // Track which entity was last centered
         float m_currentZoom = 1.0f;         // Current zoom level (0.3 to 3.0)
@@ -257,7 +257,6 @@ namespace Olympe
         // UI state
         bool m_isVisible = false;
         bool m_isInitialized = false;
-        // Note: m_lastRefreshTime removed - using local static in Render() instead
         float m_autoRefreshInterval = 0.5f;
 
         // Filtering
@@ -279,59 +278,59 @@ namespace Olympe
         // Panel layout
         float m_entityListWidth = 250.0f;
         float m_inspectorWidth = 350.0f;
-        float m_nodeSpacingX = 180.0f;  // Reduced from 250.0f for better default view
-        float m_nodeSpacingY = 120.0f;  // Reduced from 180.0f for better default view
+        float m_nodeSpacingX = 180.0f;
+        float m_nodeSpacingY = 120.0f;
 
         // Graph view state
         bool m_imnodesInitialized = false;
         int m_imnodesEditorContext = -1;
-        BTLayoutDirection m_layoutDirection = BTLayoutDirection::TopToBottom;  ///< Current layout direction
+        BTLayoutDirection m_layoutDirection = BTLayoutDirection::TopToBottom;
 
         // Animation
         float m_pulseTimer = 0.0f;
-        
+
         // Layout update flags
-        bool m_needsLayoutUpdate = false;    // Track if spacing changed via sliders
-        bool m_autoFitOnLoad = true;         // Auto-fit tree when selecting entity
-        
+        bool m_needsLayoutUpdate = false;
+        bool m_autoFitOnLoad = true;
+
         // Configuration
-        BTConfig m_config;                   // Loaded configuration from BT_config.json
-        bool m_configLoaded = false;         // Track if config was successfully loaded
-        
+        BTConfig m_config;
+        bool m_configLoaded = false;
+
         // Node colors by type and status (loaded from BT_config.json)
         std::map<BTNodeType, std::map<BTStatus, BTColor>> m_nodeColors;
-        
-        // Separate SDL3 window for debugger (C++14 compatible - explicit nullptr initialization)
+
+        // Separate SDL3 window for debugger
         SDL_Window* m_separateWindow;
         SDL_Renderer* m_separateRenderer;
-        bool m_windowCreated;  // Track if window exists
-        
+        bool m_windowCreated;
+
         // Separate ImGui context for this window
         ImGuiContext* m_separateImGuiContext;
-        
+
         // Editor mode state
-        bool m_editorMode = false;            // Toggle between debugger and editor mode
-        bool m_treeModified = false;          // Track if current tree has been modified
-        BehaviorTreeAsset m_editingTree;      // Copy of tree being edited
-        uint32_t m_nextNodeId = 1000;         // ID counter for new nodes
-        
+        bool m_editorMode = false;
+        bool m_treeModified = false;
+        BehaviorTreeAsset m_editingTree;
+        uint32_t m_nextNodeId = 1000;
+
         // Editor interaction state
-        std::vector<uint32_t> m_selectedNodes;  // Currently selected node IDs
-        bool m_showNodePalette = false;         // Show/hide node palette popup
-        ImVec2 m_nodeCreationPos;               // Position for new node creation
-        
+        std::vector<uint32_t> m_selectedNodes;
+        bool m_showNodePalette = false;
+        Vector m_nodeCreationPos;
+
         // Undo/Redo system
         struct EditorAction {
             enum Type { AddNode, DeleteNode, AddConnection, DeleteConnection, ModifyNode } type;
-            BTNode nodeData;                    // For add/delete/modify operations
-            uint32_t parentId;                  // For connection operations
-            uint32_t childId;                   // For connection operations
-            int childIndex;                     // For connection position in childIds
+            BTNode nodeData;
+            uint32_t parentId = 0;
+            uint32_t childId = 0;
+            int childIndex = 0;
         };
         std::vector<EditorAction> m_undoStack;
         std::vector<EditorAction> m_redoStack;
-        static const size_t kMaxUndoStackSize = 100;  // Maximum undo history
-        
+        static const size_t kMaxUndoStackSize = 100;
+
         // Link ID tracking for connection deletion
         struct LinkInfo {
             int linkId;
