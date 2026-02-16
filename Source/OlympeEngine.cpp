@@ -32,6 +32,7 @@ Notes:
 #include "BlueprintEditor/BlueprintEditor.h"
 #include "BlueprintEditor/BlueprintEditorGUI.h"
 #include "AI/BehaviorTreeDebugWindow.h"
+#include "Editor/AnimationEditorWindow.h"
 #include "third_party/imgui/imgui.h"
 #include "third_party/imgui/backends/imgui_impl_sdl3.h"
 #include "third_party/imgui/backends/imgui_impl_sdlrenderer3.h"
@@ -53,6 +54,9 @@ static Olympe::BlueprintEditorGUI* blueprintEditorGUI = nullptr;
 // Behavior Tree Debug Window instance (global for access from AI systems)
 // Note: Using raw pointer for consistency with existing code. Cleaned up in SDL_AppQuit().
 Olympe::BehaviorTreeDebugWindow* g_btDebugWindow = nullptr;
+
+// Animation Editor Window instance
+static Olympe::AnimationEditorWindow* animationEditorWindow = nullptr;
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
@@ -106,8 +110,12 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     g_btDebugWindow = new Olympe::BehaviorTreeDebugWindow();
     g_btDebugWindow->Initialize();
     
+    // Create Animation Editor Window
+    animationEditorWindow = new Olympe::AnimationEditorWindow();
+    
     SYSTEM_LOG << "BlueprintEditor initialized in Runtime mode (toggle with F2)" << endl;
     SYSTEM_LOG << "BehaviorTree Debugger initialized (toggle with F10)" << endl;
+    SYSTEM_LOG << "Animation Editor initialized (toggle with F9)" << endl;
 
     // Initialisation (à l'initialisation de l'application)
     ImGui::CreateContext();
@@ -194,6 +202,19 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
                 g_btDebugWindow->ToggleVisibility();
                 SYSTEM_LOG << "BT Runtime Debugger " 
                           << (g_btDebugWindow->IsVisible() ? "opened" : "closed") 
+                          << endl;
+            }
+            return SDL_APP_CONTINUE;
+        }
+        
+        // F9 toggles Animation Editor Window
+        if (event->key.key == SDLK_F9)
+        {
+            if (animationEditorWindow)
+            {
+                animationEditorWindow->Toggle();
+                SYSTEM_LOG << "Animation Editor " 
+                          << (animationEditorWindow->IsOpen() ? "opened" : "closed") 
                           << endl;
             }
             return SDL_APP_CONTINUE;
@@ -377,12 +398,24 @@ SDL_AppResult SDL_AppIterate(void* appstate)
         ImGui_ImplSDLRenderer3_NewFrame();
         ImGui::NewFrame();
 
+        // Update Animation Editor preview (before rendering)
+        if (animationEditorWindow && animationEditorWindow->IsOpen())
+        {
+            animationEditorWindow->UpdatePreview(GameEngine::fDt);
+        }
+
         blueprintEditorGUI->Render(); // BeginMainMenuBar() est maintenant sûr
         
         // Render Behavior Tree Debug Window
         if (g_btDebugWindow)
         {
             g_btDebugWindow->Render();
+        }
+        
+        // Render Animation Editor Window
+        if (animationEditorWindow && animationEditorWindow->IsOpen())
+        {
+            animationEditorWindow->Render();
         }
         
         // Render Tiled Level Loader menu (F3)
@@ -450,6 +483,13 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result)
         // g_btDebugWindow->Shutdown(); // delete 
         delete g_btDebugWindow;
         g_btDebugWindow = nullptr;
+    }
+    
+    // Cleanup Animation Editor Window
+    if (animationEditorWindow)
+    {
+        delete animationEditorWindow;
+        animationEditorWindow = nullptr;
     }
 
     // Shutdown Blueprint Editor
