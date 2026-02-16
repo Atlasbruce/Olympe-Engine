@@ -447,7 +447,7 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result)
     // Cleanup Behavior Tree Debug Window
     if (g_btDebugWindow)
     {
-        g_btDebugWindow->Shutdown();
+        // g_btDebugWindow->Shutdown(); // delete 
         delete g_btDebugWindow;
         g_btDebugWindow = nullptr;
     }

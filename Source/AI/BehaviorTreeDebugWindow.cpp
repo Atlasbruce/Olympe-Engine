@@ -973,6 +973,8 @@ namespace Olympe
         if (m_showMinimap)
             RenderMinimap();
 
+        ImNodes::EndNodeEditor();
+
         if (m_editorMode)
         {
             int startAttrId, endAttrId;
@@ -1127,8 +1129,6 @@ namespace Olympe
                 RedoLastAction();
             }
         }
-
-        ImNodes::EndNodeEditor();
 
         if (m_showNodePalette)
         {
