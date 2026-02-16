@@ -2572,5 +2572,177 @@ namespace Olympe
 
         return GetNodeColor(type);
     }
+    
+    // ========================================================================
+    // New Editor Features Implementation
+    // ========================================================================
+    
+    void BehaviorTreeDebugWindow::RenderValidationPanel()
+    {
+        if (!m_showValidationPanel)
+            return;
+        
+        ImGui::SetNextWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Validation Messages", &m_showValidationPanel))
+        {
+            ImGui::Text("Tree Validation Results:");
+            ImGui::Separator();
+            
+            if (m_validationMessages.empty())
+            {
+                ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "No issues found!");
+            }
+            else
+            {
+                for (const auto& msg : m_validationMessages)
+                {
+                    ImVec4 color;
+                    const char* icon;
+                    
+                    switch (msg.severity)
+                    {
+                    case BTValidationSeverity::Error:
+                        color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+                        icon = "[ERROR]";
+                        break;
+                    case BTValidationSeverity::Warning:
+                        color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+                        icon = "[WARNING]";
+                        break;
+                    case BTValidationSeverity::Info:
+                        color = ImVec4(0.0f, 0.5f, 1.0f, 1.0f);
+                        icon = "[INFO]";
+                        break;
+                    }
+                    
+                    ImGui::TextColored(color, "%s", icon);
+                    ImGui::SameLine();
+                    if (ImGui::Selectable(msg.message.c_str()))
+                    {
+                        // Select the node when clicking on message
+                        if (msg.nodeId != 0)
+                        {
+                            m_selectedNodes.clear();
+                            m_selectedNodes.push_back(msg.nodeId);
+                        }
+                    }
+                }
+            }
+        }
+        ImGui::End();
+    }
+    
+    void BehaviorTreeDebugWindow::RenderNodeProperties()
+    {
+        // Placeholder - will be implemented with parameter editing
+        SYSTEM_LOG << "[BTEditor] Node properties rendering not yet implemented\n";
+    }
+    
+    void BehaviorTreeDebugWindow::RenderContextMenu()
+    {
+        // Placeholder - will be implemented with right-click menu
+        SYSTEM_LOG << "[BTEditor] Context menu not yet implemented\n";
+    }
+    
+    void BehaviorTreeDebugWindow::RenderNewBTDialog()
+    {
+        if (!m_showNewBTDialog)
+            return;
+        
+        ImGui::OpenPopup("New Behavior Tree");
+        ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+        
+        if (ImGui::BeginPopupModal("New Behavior Tree", &m_showNewBTDialog, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Create a new Behavior Tree from template");
+            ImGui::Separator();
+            
+            ImGui::InputText("Name", m_newBTName, sizeof(m_newBTName));
+            
+            ImGui::Text("Template:");
+            ImGui::RadioButton("Empty", &m_selectedTemplate, 0);
+            ImGui::RadioButton("Basic AI (Wander)", &m_selectedTemplate, 1);
+            ImGui::RadioButton("Patrol", &m_selectedTemplate, 2);
+            ImGui::RadioButton("Combat", &m_selectedTemplate, 3);
+            
+            ImGui::Separator();
+            
+            if (ImGui::Button("Create", ImVec2(120, 0)))
+            {
+                std::string templateName;
+                switch (m_selectedTemplate)
+                {
+                case 0: templateName = "Empty"; break;
+                case 1: templateName = "BasicAI"; break;
+                case 2: templateName = "Patrol"; break;
+                case 3: templateName = "Combat"; break;
+                }
+                
+                // Create tree from template
+                m_editingTree = BehaviorTreeAsset::CreateFromTemplate(templateName, m_newBTName);
+                m_isDirty = true;
+                m_treeModified = true;
+                m_needsLayoutUpdate = true;
+                m_editorMode = true;
+                
+                // Save to file
+                std::string filepath = "Blueprints/AI/" + std::string(m_newBTName) + ".json";
+                m_currentFilePath = filepath;
+                SaveEditedTree();
+                
+                m_showNewBTDialog = false;
+                SYSTEM_LOG << "[BTEditor] Created new tree from template: " << templateName << "\n";
+            }
+            
+            ImGui::SetItemDefaultFocus();
+            ImGui::SameLine();
+            
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
+            {
+                m_showNewBTDialog = false;
+            }
+            
+            ImGui::EndPopup();
+        }
+    }
+    
+    void BehaviorTreeDebugWindow::RenderFileMenu()
+    {
+        // Placeholder - will be integrated into main menu bar
+        SYSTEM_LOG << "[BTEditor] File menu not yet implemented\n";
+    }
+    
+    void BehaviorTreeDebugWindow::HandlePinDrag()
+    {
+        // Placeholder - pin drag will be implemented with bezier rendering
+        SYSTEM_LOG << "[BTEditor] Pin drag not yet implemented\n";
+    }
+    
+    void BehaviorTreeDebugWindow::Save()
+    {
+        if (!m_currentFilePath.empty())
+        {
+            SaveEditedTree();
+        }
+        else
+        {
+            SaveAs();
+        }
+    }
+    
+    void BehaviorTreeDebugWindow::SaveAs()
+    {
+        // For now, save to default location
+        if (m_editingTree.name.empty())
+        {
+            SYSTEM_LOG << "[BTEditor] Cannot save: tree name is empty\n";
+            return;
+        }
+        
+        std::string filepath = "Blueprints/AI/" + m_editingTree.name + ".json";
+        m_currentFilePath = filepath;
+        SaveEditedTree();
+    }
 
 } // namespace Olympe
