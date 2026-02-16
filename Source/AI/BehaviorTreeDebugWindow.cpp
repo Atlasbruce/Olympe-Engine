@@ -1130,7 +1130,7 @@ namespace Olympe
             }
         }
 
-        ImNodes::EndNodeEditor();
+		// ImNodes::EndNodeEditor(); // remove second call to EndNodeEditor TO BE REMOVED it causes crashes when interacting with the graph, but is needed to render the minimap correctly. Need to refactor rendering flow to avoid this hack
 
         if (m_showNodePalette)
         {
