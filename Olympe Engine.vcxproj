@@ -21,6 +21,9 @@
   <ItemGroup>
     <ClCompile Include="Source\AI\BehaviorTreeDebugWindow.cpp" />
     <ClCompile Include="Source\AI\BTGraphLayoutEngine.cpp" />
+    <ClCompile Include="Source\Animation\AnimationBank.cpp" />
+    <ClCompile Include="Source\Animation\AnimationErrorHandler.cpp" />
+    <ClCompile Include="Source\Animation\AnimationGraph.cpp" />
     <ClCompile Include="Source\Animation\AnimationManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AdditionalEditorPlugins.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AssetBrowser.cpp" />
@@ -109,6 +112,9 @@
     <ClInclude Include="Source\AI\BehaviorTree.h" />
     <ClInclude Include="Source\AI\BehaviorTreeDebugWindow.h" />
     <ClInclude Include="Source\AI\BTGraphLayoutEngine.h" />
+    <ClInclude Include="Source\Animation\AnimationBank.h" />
+    <ClInclude Include="Source\Animation\AnimationErrorHandler.h" />
+    <ClInclude Include="Source\Animation\AnimationGraph.h" />
     <ClInclude Include="Source\Animation\AnimationManager.h" />
     <ClInclude Include="Source\Animation\AnimationTypes.h" />
     <ClInclude Include="Source\BlueprintEditor\AdditionalEditorPlugins.h" />

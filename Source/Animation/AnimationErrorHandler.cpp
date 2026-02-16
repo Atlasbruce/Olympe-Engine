@@ -3,8 +3,8 @@ Olympe Engine V2 2025
 Animation System - Error Handler Implementation
 */
 
-#include "Animation/AnimationErrorHandler.h"
-#include "system/system_utils.h"
+#include "AnimationErrorHandler.h"
+#include "../system/system_utils.h"
 
 namespace OlympeAnimation
 {

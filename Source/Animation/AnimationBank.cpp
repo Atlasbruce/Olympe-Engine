@@ -3,10 +3,10 @@ Olympe Engine V2 2025
 Animation System - Animation Bank Implementation
 */
 
-#include "Animation/AnimationBank.h"
-#include "json_helper.h"
-#include "DataManager.h"
-#include "system/system_utils.h"
+#include "AnimationBank.h"
+#include "../json_helper.h"
+#include "../DataManager.h"
+#include "../system/system_utils.h"
 #include <fstream>
 
 using json = nlohmann::json;

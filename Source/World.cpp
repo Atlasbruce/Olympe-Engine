@@ -125,8 +125,8 @@ void World::Initialize_ECS_Systems()
 	SYSTEM_LOG << "+===========================================================+\n";
 	SYSTEM_LOG << "| ANIMATION SYSTEM: LOADING RESOURCES                      |\n";
 	SYSTEM_LOG << "+===========================================================+\n";
-	Olympe::AnimationManager::Get().LoadAnimationBanksFromDirectory("Gamedata/Animations/AnimationBanks");
-	Olympe::AnimationManager::Get().LoadAnimationGraphsFromDirectory("Gamedata/Animations/AnimationGraphs");
+	OlympeAnimation::AnimationManager::Get().LoadAnimationBanks("Gamedata/Animations/AnimationBanks");
+	OlympeAnimation::AnimationManager::Get().LoadAnimationGraphs("Gamedata/Animations/AnimationGraphs");
 	SYSTEM_LOG << "\n";
 	
 	Add_ECS_System(std::make_unique<InputEventConsumeSystem>());

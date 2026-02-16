@@ -337,25 +337,6 @@ namespace OlympeAnimation
 	class AnimationBank;
 }
 
-struct VisualAnimation_data
-{
-	std::string animGraphPath;  // Path to animation graph JSON file
-	std::string currentState = "Idle";  // Current animation state name
-	int currentFrame = 0;       // Current frame in the animation
-	float frameTime = 0.0f;     // Accumulated time for frame advancement
-	float playbackSpeed = 1.0f; // Speed multiplier for animation playback
-	bool isPaused = false;      // Is the animation paused?
-	bool flipX = false;         // Flip sprite horizontally
-	bool flipY = false;         // Flip sprite vertically
-	
-	// Runtime pointers (not serialized, set by AnimationSystem at runtime)
-	// These are resolved from animGraphPath when the entity is spawned
-	OlympeAnimation::AnimationGraph* animGraph = nullptr;
-	OlympeAnimation::AnimationBank* animBank = nullptr;
-	
-	// Blending support (for future implementation)
-	std::string previousAnimation;
-	float blendFactor = 0.0f;
 // Forward declaration for AnimationSequence
 namespace Olympe { struct AnimationSequence; }
 

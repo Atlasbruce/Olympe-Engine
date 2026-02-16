@@ -237,7 +237,7 @@ namespace Olympe
         ImGui::Separator();
 
         // Render the active graph
-        NodeGraph* activeGraph = NodeGraphManager::Get().GetActiveGraph();
+        activeGraph = NodeGraphManager::Get().GetActiveGraph();
         if (activeGraph)
         {
             RenderGraph();

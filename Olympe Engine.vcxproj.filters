@@ -333,6 +333,15 @@
     <ClCompile Include="Source\ECS_Systems_Animation.cpp">
       <Filter>Fichiers d%27en-t�te\Animation</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Animation\AnimationBank.cpp">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Animation\AnimationErrorHandler.cpp">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Animation\AnimationGraph.cpp">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -654,6 +663,15 @@
       <Filter>Fichiers d%27en-t�te\Animation</Filter>
     </ClInclude>
     <ClInclude Include="Source\ECS_Systems_Animation.h">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Animation\AnimationGraph.h">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Animation\AnimationBank.h">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Animation\AnimationErrorHandler.h">
       <Filter>Fichiers d%27en-t�te\Animation</Filter>
     </ClInclude>
   </ItemGroup>

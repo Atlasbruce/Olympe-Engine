@@ -159,7 +159,7 @@ bool AnimationSystem::ResolveAnimationSequence(VisualAnimation_data& animData)
     
     // Get animation sequence from AnimationManager
     const Olympe::AnimationSequence* sequence = 
-        Olympe::AnimationManager::Get().GetAnimationSequence(animData.bankId, animData.currentAnimName);
+        OlympeAnimation::AnimationManager::Get().GetAnimationSequence(animData.bankId, animData.currentAnimName);
     
     if (!sequence)
     {

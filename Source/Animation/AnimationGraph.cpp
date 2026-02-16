@@ -3,9 +3,9 @@ Olympe Engine V2 2025
 Animation System - Animation Graph Implementation
 */
 
-#include "Animation/AnimationGraph.h"
-#include "json_helper.h"
-#include "system/system_utils.h"
+#include "AnimationGraph.h"
+#include "../json_helper.h"
+#include "../system/system_utils.h"
 #include <algorithm>
 
 using json = nlohmann::json;

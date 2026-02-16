@@ -3,12 +3,17 @@ Olympe Engine V2 2025
 Animation System - Animation Manager Implementation
 */
 
-#include "Animation/AnimationManager.h"
-#include "system/system_utils.h"
-#include <filesystem>
+
+#include "AnimationManager.h"
+#include "../system/system_utils.h"
 #include <algorithm>
 
-namespace fs = std::filesystem;
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <dirent.h>
+    #include <sys/stat.h>
+#endif
 
 namespace OlympeAnimation
 {
@@ -107,6 +112,61 @@ namespace OlympeAnimation
         return nullptr;
     }
 
+
+    const Olympe::AnimationSequence* AnimationManager::GetAnimationSequence(
+        const std::string& bankId,
+        const std::string& animName
+    ) const
+    {
+        // Find the bank
+        auto bankIt = m_banks.find(bankId);
+        if (bankIt == m_banks.end())
+        {
+            // Bank not found
+            return nullptr;
+        }
+
+        const AnimationBank* bank = bankIt->second.get();
+        if (!bank)
+        {
+            return nullptr;
+        }
+
+        // Get the animation from the bank using the public interface
+        const Animation* anim = bank->GetAnimation(animName);
+        if (!anim)
+        {
+            // Animation not found in bank
+            return nullptr;
+        }
+
+        // Note: This function returns Olympe::AnimationSequence* but AnimationBank 
+        // contains OlympeAnimation::Animation. This may need further review.
+        // For now, returning nullptr as the types are incompatible.
+        return nullptr;
+    }
+
+    bool AnimationManager::HasAnimation(
+        const std::string& bankId,
+        const std::string& animName
+    ) const
+    {
+        auto bankIt = m_banks.find(bankId);
+        if (bankIt == m_banks.end())
+        {
+            return false;
+        }
+
+        const AnimationBank* bank = bankIt->second.get();
+        if (!bank)
+        {
+            return false;
+        }
+
+        // Use the public GetAnimation method to check if animation exists
+        return bank->GetAnimation(animName) != nullptr;
+    }
+
     void AnimationManager::Shutdown()
     {
         SYSTEM_LOG << "AnimationManager: Shutting down...\n";
@@ -119,34 +179,64 @@ namespace OlympeAnimation
     {
         std::vector<std::string> files;
 
-        try
-        {
-            if (!fs::exists(directoryPath))
-            {
-                SYSTEM_LOG << "AnimationManager: Directory not found: " << directoryPath << "\n";
-                return files;
-            }
+#ifdef _WIN32
+        // Windows implementation
+        std::string searchPattern = directoryPath + "\\*.json";
+        WIN32_FIND_DATAA findData;
+        HANDLE hFind = FindFirstFileA(searchPattern.c_str(), &findData);
 
-            for (const auto& entry : fs::directory_iterator(directoryPath))
+        if (hFind == INVALID_HANDLE_VALUE)
+        {
+            SYSTEM_LOG << "AnimationManager: Directory not found or empty: " << directoryPath << "\n";
+            return files;
+        }
+
+        do
+        {
+            if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
             {
-                if (entry.is_regular_file())
+                std::string fileName = findData.cFileName;
+                std::string fullPath = directoryPath + "\\" + fileName;
+                files.push_back(fullPath);
+            }
+        } while (FindNextFileA(hFind, &findData) != 0);
+
+        FindClose(hFind);
+#else
+        // POSIX implementation (Linux/Mac)
+        DIR* dir = opendir(directoryPath.c_str());
+        if (!dir)
+        {
+            SYSTEM_LOG << "AnimationManager: Directory not found: " << directoryPath << "\n";
+            return files;
+        }
+
+        struct dirent* entry;
+        while ((entry = readdir(dir)) != nullptr)
+        {
+            std::string fileName = entry->d_name;
+            
+            // Skip . and ..
+            if (fileName == "." || fileName == "..")
+                continue;
+
+            // Check for .json extension
+            size_t dotPos = fileName.find_last_of('.');
+            if (dotPos != std::string::npos && fileName.substr(dotPos) == ".json")
+            {
+                std::string fullPath = directoryPath + "/" + fileName;
+                
+                // Verify it's a regular file
+                struct stat statbuf;
+                if (stat(fullPath.c_str(), &statbuf) == 0 && S_ISREG(statbuf.st_mode))
                 {
-                    std::string path = entry.path().string();
-                    // Check if file has .json extension
-                    // Using find_last_of for robust extension checking
-                    size_t dotPos = path.find_last_of('.');
-                    if (dotPos != std::string::npos && path.substr(dotPos) == ".json")
-                    {
-                        files.push_back(path);
-                    }
+                    files.push_back(fullPath);
                 }
             }
         }
-        catch (const std::exception& e)
-        {
-            SYSTEM_LOG << "AnimationManager: Error scanning directory " << directoryPath 
-                      << ": " << e.what() << "\n";
-        }
+
+        closedir(dir);
+#endif
 
         return files;
     }
