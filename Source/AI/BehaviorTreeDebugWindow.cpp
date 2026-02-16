@@ -21,6 +21,7 @@
 #include <ctime>
 #include <fstream>
 #include <unordered_set>
+#include <unordered_map>
 
 using json = nlohmann::json;
 
@@ -2695,13 +2696,15 @@ namespace Olympe
     namespace
     {
         // Helper function to clamp integer values to uint8_t range (0-255)
+        // Note: Using manual ternary instead of std::clamp (C++17) for C++14 compatibility
         uint8_t ClampToByte(int value)
         {
             return static_cast<uint8_t>(value < 0 ? 0 : (value > 255 ? 255 : value));
         }
         
         // Static lookup maps for string to enum conversion (initialized once)
-        const std::map<std::string, BTNodeType> kNodeTypeMap = {
+        // Using unordered_map for O(1) average lookup time
+        const std::unordered_map<std::string, BTNodeType> kNodeTypeMap = {
             {"Selector", BTNodeType::Selector},
             {"Sequence", BTNodeType::Sequence},
             {"Action", BTNodeType::Action},
@@ -2710,7 +2713,7 @@ namespace Olympe
             {"Repeater", BTNodeType::Repeater}
         };
         
-        const std::map<std::string, BTStatus> kStatusMap = {
+        const std::unordered_map<std::string, BTStatus> kStatusMap = {
             {"idle", BTStatus::Idle},
             {"running", BTStatus::Running},
             {"success", BTStatus::Success},
