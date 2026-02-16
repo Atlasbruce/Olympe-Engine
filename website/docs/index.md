@@ -87,6 +87,13 @@ cmake --build .
 ./OlympeEngine
 ```
 
+## 👨‍💻 For Developers
+
+- **[Coding Standards](contributing/coding-standards)** - **Required reading for contributors**
+- [Code Style Guide](contributing/code-style) - Naming conventions and formatting
+- [Testing Guide](contributing/testing-guide) - How to test your contributions
+- [Adding Components](contributing/adding-components) - Guide to adding new ECS components
+
 ## 💡 Need Help?
 
 - Check out the [documentation](getting-started/quick-start)
