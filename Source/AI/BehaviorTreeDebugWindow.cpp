@@ -1130,6 +1130,8 @@ namespace Olympe
             }
         }
 
+        ImNodes::EndNodeEditor();
+
         if (m_showNodePalette)
         {
             RenderNodePalette();
