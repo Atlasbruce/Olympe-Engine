@@ -1892,70 +1892,93 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::HandleNodeCreation(BTNodeType nodeType)
     {
-        BTNode newNode;
-        newNode.type = nodeType;
-        newNode.id = m_nextNodeId++;
-
+        // Determine position for new node
+        Vector position = m_contextMenuPos;
+        if (position.x == 0.0f && position.y == 0.0f)
+        {
+            // Use center of view if no context menu position
+            position = Vector(400.0f, 300.0f, 0.0f);
+        }
+        
+        // Determine default name
+        std::string defaultName;
         switch (nodeType)
         {
         case BTNodeType::Selector:
-            newNode.name = "New Selector";
+            defaultName = "New Selector";
             break;
         case BTNodeType::Sequence:
-            newNode.name = "New Sequence";
+            defaultName = "New Sequence";
             break;
         case BTNodeType::Condition:
-            newNode.name = "New Condition";
-            newNode.conditionType = BTConditionType::TargetVisible;
+            defaultName = "New Condition";
             break;
         case BTNodeType::Action:
-            newNode.name = "New Action";
-            newNode.actionType = BTActionType::Idle;
+            defaultName = "New Action";
             break;
         case BTNodeType::Inverter:
-            newNode.name = "New Inverter";
+            defaultName = "New Inverter";
             break;
         case BTNodeType::Repeater:
-            newNode.name = "New Repeater";
-            newNode.repeatCount = 1;
+            defaultName = "New Repeater";
             break;
         }
 
+        // Initialize editing tree if empty
         if (m_editingTree.nodes.empty() && m_selectedEntity != 0)
         {
             auto& world = World::Get();
-            const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
-            const BehaviorTreeAsset* originalTree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
+            if (world.HasComponent<BehaviorTreeRuntime_data>(m_selectedEntity))
+            {
+                const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
+                const BehaviorTreeAsset* originalTree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
 
-            if (originalTree)
-            {
-                m_editingTree = *originalTree;
-            }
-            else
-            {
-                m_editingTree.id = btRuntime.AITreeAssetId;
-                m_editingTree.name = "New Tree";
-                m_editingTree.rootNodeId = 0;
+                if (originalTree)
+                {
+                    m_editingTree = *originalTree;
+                    m_nextNodeId = m_editingTree.GetNextNodeId();
+                }
+                else
+                {
+                    m_editingTree.id = btRuntime.AITreeAssetId;
+                    m_editingTree.name = "New Tree";
+                    m_editingTree.rootNodeId = 0;
+                    m_nextNodeId = 1;
+                }
             }
         }
-
-        m_editingTree.nodes.push_back(newNode);
-
-        EditorAction action;
-        action.type = EditorAction::AddNode;
-        action.nodeData = newNode;
-        m_undoStack.push_back(action);
-        if (m_undoStack.size() > kMaxUndoStackSize)
+        
+        // Create node data
+        BTNode newNode;
+        newNode.type = nodeType;
+        newNode.id = m_nextNodeId++;
+        newNode.name = defaultName;
+        
+        // Set type-specific defaults
+        switch (nodeType)
         {
-            m_undoStack.erase(m_undoStack.begin());
+        case BTNodeType::Condition:
+            newNode.conditionType = BTConditionType::TargetVisible;
+            break;
+        case BTNodeType::Action:
+            newNode.actionType = BTActionType::Idle;
+            break;
+        case BTNodeType::Repeater:
+            newNode.repeatCount = 1;
+            break;
+        default:
+            break;
         }
-        m_redoStack.clear();
 
+        // Create and execute command
+        auto command = std::make_unique<AddNodeCommand>(newNode);
+        m_commandStack.Execute(m_editingTree, std::move(command));
+
+        m_isDirty = true;
         m_treeModified = true;
+        m_needsLayoutUpdate = true;
 
-        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
-
-        std::cout << "[BTEditor] Created node: " << newNode.name << " (ID: " << newNode.id << ")" << std::endl;
+        SYSTEM_LOG << "[BTEditor] Created node: " << newNode.name << " (ID: " << newNode.id << ")\n";
     }
 
     void BehaviorTreeDebugWindow::HandleNodeDeletion()
@@ -1965,45 +1988,21 @@ namespace Olympe
 
         for (uint32_t nodeId : m_selectedNodes)
         {
-            auto it = std::find_if(m_editingTree.nodes.begin(), m_editingTree.nodes.end(),
-                [nodeId](const BTNode& n) { return n.id == nodeId; });
+            BTNode* node = m_editingTree.GetNode(nodeId);
+            if (!node)
+                continue;
+            
+            // Create deletion command
+            auto command = std::make_unique<DeleteNodeCommand>(*node);
+            m_commandStack.Execute(m_editingTree, std::move(command));
 
-            if (it != m_editingTree.nodes.end())
-            {
-                EditorAction action;
-                action.type = EditorAction::DeleteNode;
-                action.nodeData = *it;
-                m_undoStack.push_back(action);
-                if (m_undoStack.size() > kMaxUndoStackSize)
-                {
-                    m_undoStack.erase(m_undoStack.begin());
-                }
-
-                m_editingTree.nodes.erase(it);
-
-                for (auto& node : m_editingTree.nodes)
-                {
-                    auto childIt = std::find(node.childIds.begin(), node.childIds.end(), nodeId);
-                    if (childIt != node.childIds.end())
-                    {
-                        node.childIds.erase(childIt);
-                    }
-
-                    if (node.decoratorChildId == nodeId)
-                    {
-                        node.decoratorChildId = 0;
-                    }
-                }
-
-                std::cout << "[BTEditor] Deleted node ID: " << nodeId << std::endl;
-            }
+            SYSTEM_LOG << "[BTEditor] Deleted node ID: " << nodeId << "\n";
         }
 
         m_selectedNodes.clear();
-        m_redoStack.clear();
+        m_isDirty = true;
         m_treeModified = true;
-
-        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+        m_needsLayoutUpdate = true;
     }
 
     void BehaviorTreeDebugWindow::HandleNodeDuplication()
@@ -2015,32 +2014,32 @@ namespace Olympe
 
         for (uint32_t nodeId : m_selectedNodes)
         {
-            auto it = std::find_if(m_editingTree.nodes.begin(), m_editingTree.nodes.end(),
-                [nodeId](const BTNode& n) { return n.id == nodeId; });
+            const BTNode* original = m_editingTree.GetNode(nodeId);
+            if (!original)
+                continue;
 
-            if (it != m_editingTree.nodes.end())
-            {
-                BTNode duplicate = *it;
-                duplicate.id = m_nextNodeId++;
-                duplicate.name = duplicate.name + " (Copy)";
+            // Create duplicate with new ID
+            BTNode duplicate = *original;
+            duplicate.id = m_nextNodeId++;
+            duplicate.name = duplicate.name + " (Copy)";
+            
+            // Don't copy children connections - just duplicate the node itself
+            duplicate.childIds.clear();
+            duplicate.decoratorChildId = 0;
 
-                m_editingTree.nodes.push_back(duplicate);
-                newNodes.push_back(duplicate.id);
+            // Create and execute command
+            auto command = std::make_unique<AddNodeCommand>(duplicate);
+            m_commandStack.Execute(m_editingTree, std::move(command));
+            
+            newNodes.push_back(duplicate.id);
 
-                EditorAction action;
-                action.type = EditorAction::AddNode;
-                action.nodeData = duplicate;
-                m_undoStack.push_back(action);
-
-                std::cout << "[BTEditor] Duplicated node: " << duplicate.name << " (ID: " << duplicate.id << ")" << std::endl;
-            }
+            SYSTEM_LOG << "[BTEditor] Duplicated node: " << duplicate.name << " (ID: " << duplicate.id << ")\n";
         }
 
         m_selectedNodes = newNodes;
-        m_redoStack.clear();
+        m_isDirty = true;
         m_treeModified = true;
-
-        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+        m_needsLayoutUpdate = true;
     }
 
     bool BehaviorTreeDebugWindow::ValidateConnection(uint32_t parentId, uint32_t childId) const
@@ -2049,69 +2048,120 @@ namespace Olympe
         const BTNode* child = m_editingTree.GetNode(childId);
 
         if (!parent || !child)
+        {
+            SYSTEM_LOG << "[BTEditor] Validation failed: parent or child node not found\n";
             return false;
+        }
 
+        // Rule 1: No self-connection
         if (parentId == childId)
+        {
+            SYSTEM_LOG << "[BTEditor] Validation failed: cannot connect node to itself\n";
             return false;
+        }
 
+        // Rule 2: Check parent type can have children
         if (parent->type != BTNodeType::Selector &&
             parent->type != BTNodeType::Sequence &&
             parent->type != BTNodeType::Inverter &&
             parent->type != BTNodeType::Repeater)
         {
+            SYSTEM_LOG << "[BTEditor] Validation failed: leaf nodes cannot have children in connection creation\n";
+            // Note: This is for NEW connections. Existing trees may have leaf nodes with children.
             return false;
         }
 
+        // Rule 3: Decorators (Inverter/Repeater) can only have 1 child
         if ((parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater) &&
-            parent->decoratorChildId != 0)
+            !parent->childIds.empty())
         {
+            SYSTEM_LOG << "[BTEditor] Validation failed: decorator already has 1 child (max 1)\n";
             return false;
         }
 
+        // Rule 4: Check if already connected
         if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
         {
             if (std::find(parent->childIds.begin(), parent->childIds.end(), childId) != parent->childIds.end())
             {
+                SYSTEM_LOG << "[BTEditor] Validation failed: nodes already connected\n";
                 return false;
             }
         }
 
-        std::vector<uint32_t> visited;
-        std::vector<uint32_t> toVisit;
-        toVisit.push_back(childId);
+        // Rule 5: Child must not already have a parent (no orphan nodes with multiple parents)
+        for (const auto& node : m_editingTree.nodes)
+        {
+            if (node.id == parentId)
+                continue; // Skip the parent we're trying to connect to
+            
+            // Check if this node already claims childId as a child
+            if (std::find(node.childIds.begin(), node.childIds.end(), childId) != node.childIds.end())
+            {
+                SYSTEM_LOG << "[BTEditor] Validation failed: child already has a parent (node " << node.id << ")\n";
+                return false;
+            }
+            
+            if (node.decoratorChildId == childId)
+            {
+                SYSTEM_LOG << "[BTEditor] Validation failed: child already has a parent decorator (node " << node.id << ")\n";
+                return false;
+            }
+        }
 
+        // Rule 6: No cycles - check if connecting would create a cycle
+        if (DetectCycle(childId, parentId, m_editingTree))
+        {
+            SYSTEM_LOG << "[BTEditor] Validation failed: would create cycle in tree\n";
+            return false;
+        }
+
+        return true;
+    }
+    
+    bool BehaviorTreeDebugWindow::DetectCycle(uint32_t startId, uint32_t targetId, const BehaviorTreeAsset& tree) const
+    {
+        // DFS to detect if we can reach targetId from startId
+        // If we can, then connecting targetId -> startId would create a cycle
+        
+        std::set<uint32_t> visited;
+        std::vector<uint32_t> toVisit;
+        toVisit.push_back(startId);
+        
         while (!toVisit.empty())
         {
             uint32_t currentId = toVisit.back();
             toVisit.pop_back();
-
-            if (currentId == parentId)
-            {
-                return false;
-            }
-
-            if (std::find(visited.begin(), visited.end(), currentId) != visited.end())
-            {
+            
+            // Found target - cycle would be created
+            if (currentId == targetId)
+                return true;
+            
+            // Already visited this node
+            if (visited.find(currentId) != visited.end())
                 continue;
-            }
-
-            visited.push_back(currentId);
-
-            const BTNode* current = m_editingTree.GetNode(currentId);
+            
+            visited.insert(currentId);
+            
+            // Visit all children
+            const BTNode* current = tree.GetNode(currentId);
             if (current)
             {
-                for (uint32_t id : current->childIds)
+                for (uint32_t childId : current->childIds)
                 {
-                    toVisit.push_back(id);
+                    toVisit.push_back(childId);
                 }
-                if (current->decoratorChildId != 0)
+                
+                // Also check decoratorChildId if not already in childIds
+                if (current->decoratorChildId != 0 &&
+                    std::find(current->childIds.begin(), current->childIds.end(), current->decoratorChildId) == current->childIds.end())
                 {
                     toVisit.push_back(current->decoratorChildId);
                 }
             }
         }
-
-        return true;
+        
+        return false; // No cycle detected
     }
 
     void BehaviorTreeDebugWindow::SaveEditedTree()
@@ -2282,150 +2332,34 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::UndoLastAction()
     {
-        if (m_undoStack.empty())
-            return;
-
-        EditorAction action = m_undoStack.back();
-        m_undoStack.pop_back();
-
-        switch (action.type)
+        if (m_commandStack.Undo(m_editingTree))
         {
-        case EditorAction::AddNode:
+            m_isDirty = true;
+            m_treeModified = true;
+            m_needsLayoutUpdate = true;
+            
+            SYSTEM_LOG << "[BTEditor] Undo: " << m_commandStack.GetRedoDescription() << "\n";
+        }
+        else
         {
-            auto it = std::find_if(m_editingTree.nodes.begin(), m_editingTree.nodes.end(),
-                [&action](const BTNode& n) { return n.id == action.nodeData.id; });
-            if (it != m_editingTree.nodes.end())
-            {
-                m_editingTree.nodes.erase(it);
-            }
-            break;
+            SYSTEM_LOG << "[BTEditor] Nothing to undo\n";
         }
-        case EditorAction::DeleteNode:
-        {
-            m_editingTree.nodes.push_back(action.nodeData);
-            break;
-        }
-        case EditorAction::AddConnection:
-        {
-            BTNode* parent = m_editingTree.GetNode(action.parentId);
-            if (parent)
-            {
-                if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
-                {
-                    auto it = std::find(parent->childIds.begin(), parent->childIds.end(), action.childId);
-                    if (it != parent->childIds.end())
-                    {
-                        parent->childIds.erase(it);
-                    }
-                }
-                else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
-                {
-                    parent->decoratorChildId = 0;
-                }
-            }
-            break;
-        }
-        case EditorAction::DeleteConnection:
-        {
-            BTNode* parent = m_editingTree.GetNode(action.parentId);
-            if (parent)
-            {
-                if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
-                {
-                    parent->childIds.push_back(action.childId);
-                }
-                else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
-                {
-                    parent->decoratorChildId = action.childId;
-                }
-            }
-            break;
-        }
-        default:
-            break;
-        }
-
-        m_redoStack.push_back(action);
-
-        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
-
-        std::cout << "[BTEditor] Undo performed" << std::endl;
     }
 
     void BehaviorTreeDebugWindow::RedoLastAction()
     {
-        if (m_redoStack.empty())
-            return;
-
-        EditorAction action = m_redoStack.back();
-        m_redoStack.pop_back();
-
-        switch (action.type)
+        if (m_commandStack.Redo(m_editingTree))
         {
-        case EditorAction::AddNode:
+            m_isDirty = true;
+            m_treeModified = true;
+            m_needsLayoutUpdate = true;
+            
+            SYSTEM_LOG << "[BTEditor] Redo: " << m_commandStack.GetUndoDescription() << "\n";
+        }
+        else
         {
-            m_editingTree.nodes.push_back(action.nodeData);
-            break;
+            SYSTEM_LOG << "[BTEditor] Nothing to redo\n";
         }
-        case EditorAction::DeleteNode:
-        {
-            auto it = std::find_if(m_editingTree.nodes.begin(), m_editingTree.nodes.end(),
-                [&action](const BTNode& n) { return n.id == action.nodeData.id; });
-            if (it != m_editingTree.nodes.end())
-            {
-                m_editingTree.nodes.erase(it);
-            }
-            break;
-        }
-        case EditorAction::AddConnection:
-        {
-            BTNode* parent = m_editingTree.GetNode(action.parentId);
-            if (parent)
-            {
-                if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
-                {
-                    parent->childIds.push_back(action.childId);
-                }
-                else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
-                {
-                    parent->decoratorChildId = action.childId;
-                }
-            }
-            break;
-        }
-        case EditorAction::DeleteConnection:
-        {
-            BTNode* parent = m_editingTree.GetNode(action.parentId);
-            if (parent)
-            {
-                if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
-                {
-                    auto it = std::find(parent->childIds.begin(), parent->childIds.end(), action.childId);
-                    if (it != parent->childIds.end())
-                    {
-                        parent->childIds.erase(it);
-                    }
-                }
-                else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
-                {
-                    parent->decoratorChildId = 0;
-                }
-            }
-            break;
-        }
-        default:
-            break;
-        }
-
-        m_undoStack.push_back(action);
-        if (m_undoStack.size() > kMaxUndoStackSize)
-        {
-            m_undoStack.erase(m_undoStack.begin());
-        }
-
-        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
-
-        std::cout << "[BTEditor] Redo performed" << std::endl;
     }
 
     void BehaviorTreeDebugWindow::LoadBTConfig()
