@@ -127,7 +127,30 @@ namespace Olympe
 {
 
 /**
- * @brief Represents a single frame in an animation
+ * @struct SpritesheetInfo
+ * @brief Metadata for a single spritesheet within an animation bank
+ */
+struct SpritesheetInfo
+{
+    std::string id;                 ///< Unique identifier (e.g., "thesee_idle")
+    std::string path;               ///< Relative path to image
+    std::string description;
+    
+    int frameWidth = 0;             ///< Width of each frame in pixels
+    int frameHeight = 0;            ///< Height of each frame in pixels
+    int columns = 0;                ///< Number of columns in spritesheet
+    int rows = 0;                   ///< Number of rows in spritesheet
+    int totalFrames = 0;            ///< Total number of frames available
+    int spacing = 0;                ///< Spacing between frames in pixels
+    int margin = 0;                 ///< Margin around spritesheet edges
+    
+    SDL_FPoint hotspot = {0.0f, 0.0f}; ///< Default hotspot/pivot point
+    
+    SpritesheetInfo() = default;
+};
+
+/**
+ * @brief Represents a single frame in an animation (DEPRECATED - use SpritesheetInfo + frame ranges)
  */
 struct AnimationFrame
 {
@@ -149,34 +172,63 @@ struct AnimationFrame
  */
 struct AnimationSequence
 {
-    std::string name;           ///< Animation identifier
-    std::string spritesheetPath;///< Path to spritesheet texture
-    std::vector<AnimationFrame> frames; ///< Frame data
+    std::string name;                   ///< Animation name (e.g., "idle", "walk")
+    std::string spritesheetId;          ///< References SpritesheetInfo.id
     
-    // Playback settings
-    bool loop;                  ///< Whether animation loops
-    float speed;                ///< Playback speed multiplier (1.0 = normal)
-    std::string nextAnimation;  ///< Animation to play after completion (if not looping)
+    int startFrame = 0;                 ///< Starting frame index (0-based)
+    int frameCount = 1;                 ///< Number of frames in sequence
+    
+    float frameDuration = 0.1f;         ///< Duration of each frame in seconds
+    bool loop = true;                   ///< Whether animation loops
+    float speed = 1.0f;                 ///< Speed multiplier
+    std::string nextAnimation;          ///< Animation to play after this one
+    
+    // DEPRECATED: Old frame-by-frame approach (kept for backward compatibility)
+    std::string spritesheetPath;        ///< Path to spritesheet texture
+    std::vector<AnimationFrame> frames; ///< Frame data
     
     AnimationSequence()
         : name("")
-        , spritesheetPath("")
+        , spritesheetId("")
+        , startFrame(0)
+        , frameCount(1)
+        , frameDuration(0.1f)
         , loop(true)
         , speed(1.0f)
         , nextAnimation("")
+        , spritesheetPath("")
     {}
     
-    int GetFrameCount() const { return static_cast<int>(frames.size()); }
+    float GetTotalDuration() const {
+        return frameCount * frameDuration / speed;
+    }
+    
+    float GetEffectiveFPS() const {
+        return (frameDuration > 0.0f) ? (1.0f / frameDuration) * speed : 0.0f;
+    }
+    
+    int GetFrameCount() const { 
+        // Support both old and new formats
+        return frames.empty() ? frameCount : static_cast<int>(frames.size());
+    }
 };
 
 /**
- * @brief Collection of animations for an entity with spritesheet metadata
+ * @brief Collection of animations for an entity with multi-spritesheet support
  */
 struct AnimationBank
 {
     std::string bankId;         ///< Unique identifier for this animation bank
+    std::string description;
+    std::string author;
+    std::string createdDate;
+    std::string lastModifiedDate;
+    std::vector<std::string> tags;
     
-    // Spritesheet metadata (for automatic frame calculation)
+    // Multi-spritesheet support (NEW)
+    std::vector<SpritesheetInfo> spritesheets;
+    
+    // DEPRECATED: Old single-spritesheet metadata (kept for backward compatibility)
     int frameWidth;             ///< Width of each frame in pixels
     int frameHeight;            ///< Height of each frame in pixels
     int columns;                ///< Number of columns in spritesheet
@@ -188,6 +240,10 @@ struct AnimationBank
     
     AnimationBank()
         : bankId("")
+        , description("")
+        , author("")
+        , createdDate("")
+        , lastModifiedDate("")
         , frameWidth(32)
         , frameHeight(32)
         , columns(1)
@@ -196,7 +252,49 @@ struct AnimationBank
     {}
     
     /**
-     * @brief Calculate source rectangle for a frame based on spritesheet layout
+     * @brief Get spritesheet by ID
+     * @param id Spritesheet identifier
+     * @return Pointer to SpritesheetInfo if found, nullptr otherwise
+     */
+    const SpritesheetInfo* GetSpritesheet(const std::string& id) const
+    {
+        for (const auto& sheet : spritesheets)
+        {
+            if (sheet.id == id)
+                return &sheet;
+        }
+        return nullptr;
+    }
+    
+    SpritesheetInfo* GetSpritesheet(const std::string& id)
+    {
+        for (auto& sheet : spritesheets)
+        {
+            if (sheet.id == id)
+                return &sheet;
+        }
+        return nullptr;
+    }
+    
+    /**
+     * @brief Get animation sequence by name
+     * @param name Animation name
+     * @return Pointer to AnimationSequence if found, nullptr otherwise
+     */
+    const AnimationSequence* GetSequence(const std::string& name) const
+    {
+        auto it = animations.find(name);
+        return (it != animations.end()) ? &it->second : nullptr;
+    }
+    
+    AnimationSequence* GetSequence(const std::string& name)
+    {
+        auto it = animations.find(name);
+        return (it != animations.end()) ? &it->second : nullptr;
+    }
+    
+    /**
+     * @brief DEPRECATED: Calculate source rectangle for a frame based on spritesheet layout
      * @param frameIndex Frame index (0-based)
      * @return Source rectangle in spritesheet coordinates
      */
@@ -216,8 +314,7 @@ struct AnimationBank
     
     const AnimationSequence* GetAnimation(const std::string& name) const
     {
-        auto it = animations.find(name);
-        return (it != animations.end()) ? &it->second : nullptr;
+        return GetSequence(name);
     }
 };
 

@@ -372,6 +372,11 @@ struct VisualAnimation_data
 	// Runtime pointer (resolved from AnimationManager)
 	const Olympe::AnimationSequence* currentSequence = nullptr;
 	
+	// Runtime parameters for FSM transitions (NEW)
+	std::unordered_map<std::string, float> floatParams;
+	std::unordered_map<std::string, bool> boolParams;
+	std::unordered_map<std::string, int> intParams;
+	
 	// Constructors
 	VisualAnimation_data() = default;
 	VisualAnimation_data(const VisualAnimation_data&) = default;
