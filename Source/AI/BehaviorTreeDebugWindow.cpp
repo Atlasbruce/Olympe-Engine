@@ -2692,10 +2692,31 @@ namespace Olympe
     // Configuration Loading
     // ========================================================================
 
-    // Helper function to clamp integer values to uint8_t range (0-255)
-    static uint8_t ClampToByte(int value)
+    namespace
     {
-        return static_cast<uint8_t>(value < 0 ? 0 : (value > 255 ? 255 : value));
+        // Helper function to clamp integer values to uint8_t range (0-255)
+        uint8_t ClampToByte(int value)
+        {
+            return static_cast<uint8_t>(value < 0 ? 0 : (value > 255 ? 255 : value));
+        }
+        
+        // Static lookup maps for string to enum conversion (initialized once)
+        const std::map<std::string, BTNodeType> kNodeTypeMap = {
+            {"Selector", BTNodeType::Selector},
+            {"Sequence", BTNodeType::Sequence},
+            {"Action", BTNodeType::Action},
+            {"Condition", BTNodeType::Condition},
+            {"Inverter", BTNodeType::Inverter},
+            {"Repeater", BTNodeType::Repeater}
+        };
+        
+        const std::map<std::string, BTStatus> kStatusMap = {
+            {"idle", BTStatus::Idle},
+            {"running", BTStatus::Running},
+            {"success", BTStatus::Success},
+            {"failure", BTStatus::Failure},
+            {"aborted", BTStatus::Aborted}
+        };
     }
 
     void BehaviorTreeDebugWindow::LoadBTConfig()
@@ -2767,32 +2788,15 @@ namespace Olympe
         {
             const auto& colorsJson = configJson["nodeColors"];
             
-            // Mapping string -> BTNodeType (C++14 compatible)
-            std::map<std::string, BTNodeType> typeMap;
-            typeMap["Selector"] = BTNodeType::Selector;
-            typeMap["Sequence"] = BTNodeType::Sequence;
-            typeMap["Action"] = BTNodeType::Action;
-            typeMap["Condition"] = BTNodeType::Condition;
-            typeMap["Inverter"] = BTNodeType::Inverter;
-            typeMap["Repeater"] = BTNodeType::Repeater;
-            
-            // Mapping string -> BTStatus (C++14 compatible)
-            std::map<std::string, BTStatus> statusMap;
-            statusMap["idle"] = BTStatus::Idle;
-            statusMap["running"] = BTStatus::Running;
-            statusMap["success"] = BTStatus::Success;
-            statusMap["failure"] = BTStatus::Failure;
-            statusMap["aborted"] = BTStatus::Aborted;
-            
-            // Parse colors for each node type
+            // Parse colors for each node type using const lookup maps
             for (auto typeIt = colorsJson.begin(); typeIt != colorsJson.end(); ++typeIt)
             {
                 const std::string& typeName = typeIt.key();
                 const auto& statusColors = typeIt.value();
                 
-                // Find BTNodeType
-                auto typeMapIt = typeMap.find(typeName);
-                if (typeMapIt == typeMap.end())
+                // Find BTNodeType using const map
+                auto typeMapIt = kNodeTypeMap.find(typeName);
+                if (typeMapIt == kNodeTypeMap.end())
                     continue;
                 
                 BTNodeType nodeType = typeMapIt->second;
@@ -2803,9 +2807,9 @@ namespace Olympe
                     const std::string& statusName = statusIt.key();
                     const auto& colorJson = statusIt.value();
                     
-                    // Find BTStatus
-                    auto statusMapIt = statusMap.find(statusName);
-                    if (statusMapIt == statusMap.end())
+                    // Find BTStatus using const map
+                    auto statusMapIt = kStatusMap.find(statusName);
+                    if (statusMapIt == kStatusMap.end())
                         continue;
                     
                     BTStatus status = statusMapIt->second;
