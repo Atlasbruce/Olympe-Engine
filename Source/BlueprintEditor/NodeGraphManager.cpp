@@ -11,6 +11,9 @@
 #include <queue>
 #include <set>
 #include <map>
+#include <chrono>
+#include <sstream>
+#include <iomanip>
 
 using json = nlohmann::json;
 
@@ -36,6 +39,8 @@ namespace Olympe
         node.posY = y;
 
         m_Nodes.push_back(node);
+        
+        MarkDirty();  // Mark graph as modified
 
         std::cout << "[NodeGraph] Created node " << node.id << " (" << node.name << ")\n";
         return node.id;
@@ -62,6 +67,8 @@ namespace Olympe
             if (node.decoratorChildId == nodeId)
                 node.decoratorChildId = -1;
         }
+        
+        MarkDirty();  // Mark graph as modified
 
         std::cout << "[NodeGraph] Deleted node " << nodeId << "\n";
         return true;
@@ -118,6 +125,8 @@ namespace Olympe
         {
             parent->childIds.push_back(childId);
         }
+        
+        MarkDirty();  // Mark graph as modified
 
         std::cout << "[NodeGraph] Linked node " << parentId << " -> " << childId << "\n";
         return true;
@@ -129,13 +138,15 @@ namespace Olympe
         if (!parent)
             return false;
 
+        bool unlinked = false;
+
         // Remove from child list
         auto it = std::find(parent->childIds.begin(), parent->childIds.end(), childId);
         if (it != parent->childIds.end())
         {
             parent->childIds.erase(it);
             std::cout << "[NodeGraph] Unlinked node " << parentId << " -> " << childId << "\n";
-            return true;
+            unlinked = true;
         }
 
         // Check decorator child
@@ -143,10 +154,13 @@ namespace Olympe
         {
             parent->decoratorChildId = -1;
             std::cout << "[NodeGraph] Unlinked decorator child " << parentId << " -> " << childId << "\n";
-            return true;
+            unlinked = true;
         }
+        
+        if (unlinked)
+            MarkDirty();  // Mark graph as modified
 
-        return false;
+        return unlinked;
     }
 
     std::vector<GraphLink> NodeGraph::GetAllLinks() const
@@ -178,6 +192,7 @@ namespace Olympe
             return false;
 
         node->parameters[paramName] = value;
+        MarkDirty();  // Mark graph as modified
         return true;
     }
 
@@ -197,10 +212,27 @@ namespace Olympe
     nlohmann::json NodeGraph::ToJson() const
     {
         json j;
+        
+        // v2 Schema wrapper
+        j["schema_version"] = 2;
+        j["blueprintType"] = type.empty() ? "BehaviorTree" : type;
         j["name"] = name;
-        j["type"] = type;
-        j["rootNodeId"] = rootNodeId;
-        j["nodes"] = json::array();
+        j["description"] = "";  // Could be added to NodeGraph if needed
+        
+        // Metadata section
+        j["metadata"]["author"] = "User";  // Could be made configurable
+        j["metadata"]["created"] = "";  // Could be tracked if needed
+        j["metadata"]["lastModified"] = editorMetadata.lastModified;
+        j["metadata"]["tags"] = json::array();
+        
+        // Editor state
+        j["editorState"]["zoom"] = editorMetadata.zoom;
+        j["editorState"]["scrollOffset"]["x"] = editorMetadata.scrollOffsetX;
+        j["editorState"]["scrollOffset"]["y"] = editorMetadata.scrollOffsetY;
+        
+        // Data section containing the actual tree
+        j["data"]["rootNodeId"] = rootNodeId;
+        j["data"]["nodes"] = json::array();
 
         for (const auto& node : m_Nodes)
         {
@@ -210,10 +242,8 @@ namespace Olympe
             nj["name"] = node.name;
             
             // Save position in a structured format
-            nlohmann::json posJson = nlohmann::json::object();
-            posJson["x"] = node.posX;
-            posJson["y"] = node.posY;
-            nj["position"] = posJson;
+            nj["position"]["x"] = node.posX;
+            nj["position"]["y"] = node.posY;
 
             if (!node.actionType.empty())
                 nj["actionType"] = node.actionType;
@@ -222,34 +252,24 @@ namespace Olympe
             if (!node.decoratorType.empty())
                 nj["decoratorType"] = node.decoratorType;
 
+            // Parameters as nested object (v2 format)
+            nj["parameters"] = json::object();
             if (!node.parameters.empty())
             {
-                json params = json::object();
                 for (const auto& pair : node.parameters)
-                    params[pair.first] = pair.second;
-                nj["parameters"] = params;
+                    nj["parameters"][pair.first] = pair.second;
             }
 
-            nlohmann::json childrenJson = nlohmann::json::array();
+            // Children array
+            nj["children"] = json::array();
             for (int childId : node.childIds)
-                childrenJson.push_back(childId);
-            nj["children"] = childrenJson;
+                nj["children"].push_back(childId);
 
             if (node.decoratorChildId >= 0)
                 nj["decoratorChild"] = node.decoratorChildId;
 
-            j["nodes"].push_back(nj);
+            j["data"]["nodes"].push_back(nj);
         }
-
-        // Add editor metadata
-        nlohmann::json editorMeta = nlohmann::json::object();
-        editorMeta["zoom"] = editorMetadata.zoom;
-        nlohmann::json scrollOffset = nlohmann::json::object();
-        scrollOffset["x"] = editorMetadata.scrollOffsetX;
-        scrollOffset["y"] = editorMetadata.scrollOffsetY;
-        editorMeta["scrollOffset"] = scrollOffset;
-        editorMeta["lastModified"] = editorMetadata.lastModified;
-        j["editorMetadata"] = editorMeta;
 
         return j;
     }
@@ -695,9 +715,27 @@ namespace Olympe
 
     bool NodeGraphManager::SaveGraph(int graphId, const std::string& filepath)
     {
-        const NodeGraph* graph = GetGraph(graphId);
+        NodeGraph* graph = GetGraph(graphId);
         if (!graph)
             return false;
+        
+        // Update lastModified timestamp
+        auto now = std::chrono::system_clock::now();
+        auto time = std::chrono::system_clock::to_time_t(now);
+        std::stringstream ss;
+        
+        #ifdef _MSC_VER
+            std::tm timeinfo;
+            localtime_s(&timeinfo, &time);
+            ss << std::put_time(&timeinfo, "%Y-%m-%dT%H:%M:%S");
+        #else
+            // Use localtime_r for thread safety on POSIX systems
+            std::tm timeinfo;
+            localtime_r(&time, &timeinfo);
+            ss << std::put_time(&timeinfo, "%Y-%m-%dT%H:%M:%S");
+        #endif
+        
+        graph->editorMetadata.lastModified = ss.str();
 
         json j = graph->ToJson();
 
@@ -707,6 +745,10 @@ namespace Olympe
 
         file << j.dump(2);
         file.close();
+        
+        // Update filepath and clear dirty flag on successful save
+        graph->SetFilepath(filepath);
+        graph->ClearDirty();
 
         std::cout << "[NodeGraphManager] Saved graph " << graphId << " to " << filepath << "\n";
         return true;
@@ -852,6 +894,11 @@ namespace Olympe
             std::cout << "[NodeGraphManager] Step 7: Creating graph in manager..." << std::endl;
             int graphId = m_NextGraphId++;
             auto graphPtr = std::make_unique<NodeGraph>(std::move(graph));
+            
+            // Set filepath and clear dirty flag for freshly loaded graph
+            graphPtr->SetFilepath(filepath);
+            graphPtr->ClearDirty();
+            
             m_Graphs[graphId] = std::move(graphPtr);
             m_GraphOrder.push_back(graphId);  // Track insertion order
             m_ActiveGraphId = graphId;
@@ -882,5 +929,21 @@ namespace Olympe
             std::cout << "========================================+n" << std::endl;
             return -1;
         }
+    }
+    
+    bool NodeGraphManager::IsGraphDirty(int graphId) const
+    {
+        const NodeGraph* graph = GetGraph(graphId);
+        return graph ? graph->IsDirty() : false;
+    }
+    
+    bool NodeGraphManager::HasUnsavedChanges() const
+    {
+        for (const auto& pair : m_Graphs)
+        {
+            if (pair.second && pair.second->IsDirty())
+                return true;
+        }
+        return false;
     }
 }

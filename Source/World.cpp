@@ -15,6 +15,8 @@ World purpose: Manage the lifecycle of Entities and their interaction with ECS S
 #include "system/ViewportManager.h"
 #include "OlympeTilemapEditor/include/LevelManager.h"
 #include "ECS_Systems_AI.h"
+#include "ECS_Systems_Animation.h"
+#include "Animation/AnimationManager.h"
 #include "BlueprintEditor/WorldBridge.h"
 #include "OlympeTilemapEditor/include/LevelManager.h"
 #include "TiledLevelLoader/include/ParallaxLayerManager.h"
@@ -118,6 +120,15 @@ void World::Initialize_ECS_Systems()
 	PrefabFactory::Get().PreloadAllPrefabs("Gamedata/EntityPrefab");
 	SYSTEM_LOG << "\n";
 	
+	// Load animation banks and graphs
+	SYSTEM_LOG << "\n";
+	SYSTEM_LOG << "+===========================================================+\n";
+	SYSTEM_LOG << "| ANIMATION SYSTEM: LOADING RESOURCES                      |\n";
+	SYSTEM_LOG << "+===========================================================+\n";
+	OlympeAnimation::AnimationManager::Get().LoadAnimationBanks("Gamedata/Animations/AnimationBanks");
+	OlympeAnimation::AnimationManager::Get().LoadAnimationGraphs("Gamedata/Animations/AnimationGraphs");
+	SYSTEM_LOG << "\n";
+	
 	Add_ECS_System(std::make_unique<InputEventConsumeSystem>());
 	Add_ECS_System(std::make_unique<GameEventConsumeSystem>());
 	Add_ECS_System(std::make_unique<UIEventConsumeSystem>());
@@ -142,6 +153,9 @@ void World::Initialize_ECS_Systems()
     Add_ECS_System(std::make_unique<CollisionSystem>());
 	Add_ECS_System(std::make_unique<TriggerSystem>());
 	Add_ECS_System(std::make_unique<MovementSystem>());
+    
+    // Animation System (updates animation frames before rendering)
+    Add_ECS_System(std::make_unique<AnimationSystem>());
     
     // Camera System (manages ECS cameras - added before rendering)
     Add_ECS_System(std::make_unique<CameraSystem>());

@@ -32,6 +32,19 @@ const sidebars = {
       items: [
         {
           type: 'category',
+          label: 'AI & Behavior Trees',
+          collapsed: false,
+          items: [
+            'user-guide/ai/bt-editor-overview',
+            'user-guide/ai/bt-node-types',
+            'user-guide/ai/bt-connection-rules',
+            'user-guide/ai/bt-keyboard-shortcuts',
+            'user-guide/ai/bt-first-tree-tutorial',
+            'user-guide/ai/bt-debugger',
+          ],
+        },
+        {
+          type: 'category',
           label: 'Animation System',
           collapsed: false,
           items: [

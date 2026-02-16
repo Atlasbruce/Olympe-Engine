@@ -315,78 +315,6 @@ struct VisualEditor_data
 	}
 };
 
-/**
- * @struct VisualAnimation_data
- * @brief ECS component for animated sprites
- * 
- * Stores animation state and references to animation data from the Animation System.
- * Works in conjunction with VisualSprite_data to display animated sprites.
- * 
- * Usage example:
- * @code
- * VisualAnimation_data anim;
- * anim.bankId = "player";
- * anim.graphId = "player_fsm";
- * anim.currentAnimName = "idle";
- * anim.isPlaying = true;
- * anim.autoStart = true;
- * World::Get().AddComponent<VisualAnimation_data>(entity, anim);
- * @endcode
- * 
- * @see AnimationSystem
- * @see AnimationManager
- * @see VisualSprite_data
- */
-struct VisualAnimation_data
-{
-	/// Animation bank identifier (links to AnimationManager)
-	std::string bankId;
-	
-	/// Animation graph identifier for FSM control (optional)
-	std::string graphId;
-	
-	/// Current animation name (e.g., "idle", "walk", "attack")
-	std::string currentAnimName;
-	
-	/// Current FSM state name (if using animation graph)
-	std::string currentStateName;
-	
-	/// Current frame index in animation sequence (0-based)
-	int currentFrame = 0;
-	
-	/// Time accumulated since last frame change (seconds)
-	float elapsedTime = 0.0f;
-	
-	/// Whether animation is actively updating
-	bool isPlaying = true;
-	
-	/// Whether current animation should loop
-	bool loop = true;
-	
-	/// Playback speed multiplier (1.0 = normal, 2.0 = double speed)
-	float playbackSpeed = 1.0f;
-	
-	/// Start playing immediately on entity creation
-	bool autoStart = true;
-	
-	/// Cached pointer to current animation sequence (internal use)
-	void* currentSequence = nullptr;
-	
-	/// Cached texture pointer (internal use)
-	void* cachedTexture = nullptr;
-	
-	/// True when non-looping animation finishes
-	bool isAnimationComplete = false;
-	
-	/// Total frame count in current sequence
-	int totalFrames = 0;
-	
-	// Constructors
-	VisualAnimation_data() = default;
-	VisualAnimation_data(const VisualAnimation_data&) = default;
-	VisualAnimation_data& operator=(const VisualAnimation_data&) = default;
-};
-
 // --- Component Animation Data ---
 struct Animation_data
 {
@@ -399,6 +327,55 @@ struct Animation_data
 	Animation_data() = default;
 	Animation_data(const Animation_data&) = default;
 	Animation_data& operator=(const Animation_data&) = default;
+};
+
+// --- Component Visual Animation Data (for Animation System V2) ---
+// Forward declarations for animation system types
+namespace OlympeAnimation
+{
+	class AnimationGraph;
+	class AnimationBank;
+}
+
+// Forward declaration for AnimationSequence
+namespace Olympe { struct AnimationSequence; }
+
+/**
+ * @struct VisualAnimation_data
+ * @brief ECS component for animated sprites
+ */
+struct VisualAnimation_data
+{
+	// Animation bank reference
+	std::string bankId;               // Reference to animation bank
+	std::string currentAnimName;      // Current animation name
+	std::string animGraphPath;        // Optional path to FSM graph
+	
+	// Frame tracking
+	int currentFrame = 0;             // Current frame index
+	float frameTimer = 0.0f;          // Accumulated time for current frame
+	
+	// Playback control
+	float playbackSpeed = 1.0f;       // Speed multiplier (1.0 = normal)
+	bool isPlaying = true;            // Is animation playing?
+	bool isPaused = false;            // Is animation paused?
+	bool loop = true;                 // Should animation loop?
+	
+	// Visual transforms
+	bool flipX = false;               // Flip horizontally
+	bool flipY = false;               // Flip vertically
+	
+	// Event tracking
+	bool animationJustFinished = false; // Flag set when animation completes (one frame only)
+	int loopCount = 0;                // Number of times animation has looped
+	
+	// Runtime pointer (resolved from AnimationManager)
+	const Olympe::AnimationSequence* currentSequence = nullptr;
+	
+	// Constructors
+	VisualAnimation_data() = default;
+	VisualAnimation_data(const VisualAnimation_data&) = default;
+	VisualAnimation_data& operator=(const VisualAnimation_data&) = default;
 };
 
 // --- Component FX Data --- Visual effects like particles, explosions, etc.

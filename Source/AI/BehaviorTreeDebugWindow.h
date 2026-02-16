@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <deque>
+#include <map>
 #include <cstdint>
 
 // Forward declarations for SDL3
@@ -30,6 +31,53 @@ struct ImGuiContext;
 
 namespace Olympe
 {
+    /**
+     * @enum PinType
+     * @brief Type of connection pin on a node
+     */
+    enum class PinType
+    {
+        Input,      ///< Input pin (left side of node in horizontal layout)
+        Output      ///< Output pin (right side of node in horizontal layout)
+    };
+
+    /**
+     * @struct NodePin
+     * @brief Visual connection pin on a behavior tree node
+     */
+    struct NodePin
+    {
+        uint32_t nodeId = 0;                    ///< ID of the node this pin belongs to
+        PinType type = PinType::Input;          ///< Pin type (input or output)
+        Vector worldPos;                         ///< World position of the pin
+        std::vector<uint32_t> connectedTo;      ///< IDs of connected nodes
+    };
+
+    /**
+     * @struct BTConfig
+     * @brief Configuration loaded from BT_config.json
+     */
+    struct BTConfig
+    {
+        // Layout settings
+        bool defaultHorizontal = true;
+        float gridSize = 16.0f;
+        bool gridSnappingEnabled = true;
+        float horizontalSpacing = 280.0f;
+        float verticalSpacing = 120.0f;
+        
+        // Rendering settings
+        float pinRadius = 6.0f;
+        float pinOutlineThickness = 2.0f;
+        float bezierTangent = 80.0f;
+        float connectionThickness = 2.0f;
+        
+        // Node colors by type and status (RGBA values 0-255)
+        // nodeColors[nodeType][status] = {r, g, b, a}
+        struct Color { uint8_t r, g, b, a; };
+        std::map<std::string, std::map<std::string, Color>> nodeColors;
+    };
+
     /**
      * @struct ExecutionLogEntry
      * @brief Single entry in the execution log
@@ -137,7 +185,10 @@ namespace Olympe
         void RenderBehaviorTreeGraph();
         void RenderNode(const BTNode* node, const BTNodeLayout* layout, bool isCurrentNode);
         void RenderNodeConnections(const BTNode* node, const BTNodeLayout* layout, const BehaviorTreeAsset* tree);
+        void RenderBezierConnection(const Vector& start, const Vector& end, uint32_t color, float thickness, float tangent);
+        void RenderNodePins(const BTNode* node, const BTNodeLayout* layout);
         uint32_t GetNodeColor(BTNodeType type) const;
+        uint32_t GetNodeColorByStatus(BTNodeType type, BTStatus status) const;
         const char* GetNodeIcon(BTNodeType type) const;
         
         // Editor mode helpers
@@ -150,6 +201,11 @@ namespace Olympe
         void SaveEditedTree();
         void UndoLastAction();
         void RedoLastAction();
+
+        // Configuration helpers
+        void LoadBTConfig();
+        void ApplyConfigToLayout();
+        Vector SnapToGrid(const Vector& pos) const;
 
         // Inspector helpers
         void RenderRuntimeInfo();
@@ -225,6 +281,10 @@ namespace Olympe
         // Layout update flags
         bool m_needsLayoutUpdate = false;    // Track if spacing changed via sliders
         bool m_autoFitOnLoad = true;         // Auto-fit tree when selecting entity
+        
+        // Configuration
+        BTConfig m_config;                   // Loaded configuration from BT_config.json
+        bool m_configLoaded = false;         // Track if config was successfully loaded
         
         // Separate SDL3 window for debugger (C++14 compatible - explicit nullptr initialization)
         SDL_Window* m_separateWindow;

@@ -13,6 +13,9 @@
 
 using namespace std;
 
+// Forward declaration for ImGui integration
+struct ImVec2;
+
 class Vector;
 	Vector vBlend ( Vector& , Vector& , float );
 	float fDist ( Vector& , Vector&);
@@ -55,6 +58,10 @@ public:
 
 	inline SDL_FPoint ToFPoint() const { SDL_FPoint p = { x, y }; return p; }
 	inline SDL_Point ToPoint() const { SDL_Point p = { (int)x, (int)y }; return p; }
+	
+	// ImGui conversion helpers (requires ImVec2 definition - include imgui.h before using these)
+	inline ImVec2 ToImVec2() const;
+	static inline Vector FromImVec2(const ImVec2& v);
 
 	inline float Norm() const { return sqrtf(x*x + y*y + z*z); }
 	inline float operator ^ (const Vector &V)	const// cross product

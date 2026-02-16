@@ -66,9 +66,11 @@ enum class BTNodeType : uint8_t
  */
 enum class BTStatus : uint8_t
 {
-    Running = 0,        ///< Node is still executing
-    Success,            ///< Node completed successfully
-    Failure             ///< Node failed
+    Idle = 0,           ///< Node waiting for execution (not yet started)
+    Running = 1,        ///< Node is currently executing
+    Success = 2,        ///< Node completed successfully
+    Failure = 3,        ///< Node failed
+    Aborted = 4         ///< Node execution interrupted (e.g., entity destroyed)
 };
 
 /**

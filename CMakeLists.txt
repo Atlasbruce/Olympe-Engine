@@ -83,6 +83,8 @@ if(BUILD_RUNTIME_ENGINE)
         "Source/ECS_Systems_AI.cpp"
         "Source/ECS_Systems_Camera.cpp"
         "Source/ECS_Systems_Rendering_Camera.cpp"
+        "Source/ECS_Systems_Animation.cpp"
+        "Source/Animation/AnimationManager.cpp"
         "Source/engine_utils.cpp"
         "Source/vector.cpp"
         "Source/Sprite.cpp"
@@ -90,6 +92,7 @@ if(BUILD_RUNTIME_ENGINE)
         "Source/ComponentDefinition.cpp"
         "Source/PrefabFactory.cpp"
         "Source/Rendering/IsometricRenderer.cpp"
+        "Source/Animation/*.cpp"
     )
     
     add_executable(OlympeEngine ${RUNTIME_SOURCES})

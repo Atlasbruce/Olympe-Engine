@@ -1,207 +1,291 @@
+/*
+Olympe Engine V2 2025
+Animation System - Common Types
+
+Purpose:
+- Define common types, enums, and structures used throughout the animation system
+- Provides shared data structures for AnimationBank, AnimationGraph, and AnimationManager
+*/
 /**
  * @file AnimationTypes.h
- * @brief Core data structures for 2D sprite animation system
- * @author Olympe Engine Team
- * @date 2026
+ * @brief Core animation data structures for 2D sprite animation system
+ * @author Nicolas Chereau
+ * @date 2025
  * 
- * Defines animation frames, sequences, banks, and state machines.
- * These structures are used by AnimationManager to load animation data from JSON files.
+ * Defines data structures for frame-based sprite animation including:
+ * - AnimationFrame: Individual frame data
+ * - AnimationSequence: Complete animation with frames and playback settings
+ * - AnimationBank: Collection of animations for an entity
+ * - AnimationGraph: State machine for animation transitions
  */
 
-#ifndef ANIMATION_TYPES_H
-#define ANIMATION_TYPES_H
+#pragma once
 
 #include <string>
 #include <vector>
-#include <memory>
-#include "SDL3/SDL.h"
-#include "vector.h"
+#include <SDL3/SDL.h>
 
-namespace Olympe {
-namespace Animation {
+// Forward declarations
+using TextureHandle = SDL_Texture*;
+
+namespace OlympeAnimation
+{
+    // ========================================================================
+    // Hotspot - 2D position for sprite anchor points
+    // Note: We don't reuse the engine's Vector class here to keep the
+    // animation system decoupled and use a simple POD structure
+    // ========================================================================
+    struct Hotspot
+    {
+        float x = 0.0f;
+        float y = 0.0f;
+
+        Hotspot() = default;
+        Hotspot(float _x, float _y) : x(_x), y(_y) {}
+    };
+
+    // ========================================================================
+    // Blend Mode - How animations blend together
+    // ========================================================================
+    enum class BlendMode
+    {
+        Override,  // Replace current animation completely
+        Additive,  // Add to current animation
+        Blend      // Smooth blend between animations
+    };
+
+    // ========================================================================
+    // Transition Type - How transitions are evaluated
+    // ========================================================================
+    enum class TransitionType
+    {
+        Immediate,     // Instant transition
+        Smooth,        // Smooth blend over time
+        AfterComplete  // Wait for current animation to complete
+    };
+
+    // ========================================================================
+    // Parameter Type - Types of parameters in animation graph
+    // ========================================================================
+    enum class ParameterType
+    {
+        Bool,
+        Float,
+        Int,
+        String
+    };
+
+    // ========================================================================
+    // Comparison Operator - For condition evaluation
+    // ========================================================================
+    enum class ComparisonOperator
+    {
+        Equal,              // ==
+        NotEqual,           // !=
+        Greater,            // >
+        GreaterOrEqual,     // >=
+        Less,               // <
+        LessOrEqual         // <=
+    };
+
+    // ========================================================================
+    // Parameter Value - Union for storing different parameter types
+    // ========================================================================
+    struct ParameterValue
+    {
+        ParameterType type = ParameterType::Float;
+        union
+        {
+            bool boolValue;
+            float floatValue;
+            int intValue;
+        };
+        std::string stringValue;
+
+        ParameterValue() : floatValue(0.0f) {}
+        ParameterValue(bool val) : type(ParameterType::Bool), boolValue(val) {}
+        ParameterValue(float val) : type(ParameterType::Float), floatValue(val) {}
+        ParameterValue(int val) : type(ParameterType::Int), intValue(val) {}
+        ParameterValue(const std::string& val) : type(ParameterType::String), stringValue(val) {}
+    };
+
+    // ========================================================================
+    // Animation Event Data - Events triggered during animation playback
+    // ========================================================================
+    struct AnimationEventData
+    {
+        std::string type;           // Event type: "sound", "hitbox", "vfx", "gamelogic"
+        int frame = 0;              // Frame number to trigger on
+        std::string dataJson;       // JSON string with event-specific data
+    };
+
+} // namespace OlympeAnimation
+#include <unordered_map>
+#include <SDL3/SDL.h>
+
+namespace Olympe
+{
 
 /**
- * @struct AnimationFrame
- * @brief Single frame in an animation sequence
- * 
- * Represents one frame with source rectangle, duration, and optional metadata.
- * 
- * Example usage:
- * @code
- * AnimationFrame frame;
- * frame.srcRect = {0, 0, 64, 64};
- * frame.duration = 0.1f;  // 100ms per frame
- * frame.hotSpot = {32, 32};  // Center pivot
- * frame.events.push_back("footstep");
- * @endcode
+ * @brief Represents a single frame in an animation
  */
 struct AnimationFrame
 {
-    SDL_Rect srcRect;       ///< Source rectangle in spritesheet (pixels)
-    float duration;         ///< Frame duration in seconds
-    Vector hotSpot;         ///< Pivot point for rendering (relative to top-left)
-    std::vector<std::string> events; ///< Frame events (footstep, hit, etc.)
+    SDL_FRect srcRect;          ///< Source rectangle in spritesheet (x, y, w, h)
+    float duration;             ///< Duration of this frame in seconds
+    SDL_FPoint hotSpot;         ///< Render offset (pivot point)
+    std::string eventName;      ///< Optional event triggered when this frame starts (empty if none)
+    
+    AnimationFrame()
+        : srcRect{0, 0, 0, 0}
+        , duration(0.1f)
+        , hotSpot{0, 0}
+        , eventName("")
+    {}
 };
 
 /**
- * @struct AnimationSequence
- * @brief A named sequence of frames that make up an animation
- * 
- * Defines a complete animation with timing, looping, and transition properties.
- * Multiple entities can share the same AnimationSequence (flyweight pattern).
- * 
- * Example usage:
- * @code
- * AnimationSequence walk;
- * walk.name = "walk";
- * walk.loop = true;
- * walk.speed = 1.0f;
- * // Add frames...
- * @endcode
+ * @brief Defines a complete animation sequence
  */
 struct AnimationSequence
 {
-    std::string name;              ///< Animation name (e.g., "walk", "idle", "attack")
-    bool loop;                     ///< Whether animation repeats or plays once
-    float speed;                   ///< Playback speed multiplier (1.0 = normal)
-    std::string nextAnimation;     ///< Auto-transition to this animation when done (optional)
-    std::vector<AnimationFrame> frames; ///< Sequence of frames
+    std::string name;           ///< Animation identifier
+    std::string spritesheetPath;///< Path to spritesheet texture
+    std::vector<AnimationFrame> frames; ///< Frame data
+    
+    // Playback settings
+    bool loop;                  ///< Whether animation loops
+    float speed;                ///< Playback speed multiplier (1.0 = normal)
+    std::string nextAnimation;  ///< Animation to play after completion (if not looping)
+    
+    AnimationSequence()
+        : name("")
+        , spritesheetPath("")
+        , loop(true)
+        , speed(1.0f)
+        , nextAnimation("")
+    {}
+    
+    int GetFrameCount() const { return static_cast<int>(frames.size()); }
 };
 
 /**
- * @struct AnimationBank
- * @brief Collection of animation sequences for a character or object
- * 
- * An animation bank defines all animations for a single entity type, along with
- * spritesheet layout information. Banks are loaded from JSON files and cached.
- * 
- * Example JSON structure:
- * @code{.json}
- * {
- *   "id": "player",
- *   "spritesheetPath": "Gamedata/Sprites/player.png",
- *   "frameWidth": 64,
- *   "frameHeight": 64,
- *   "columns": 8,
- *   "spacing": 0,
- *   "margin": 0,
- *   "animations": [
- *     {
- *       "name": "idle",
- *       "loop": true,
- *       "frameRange": {
- *         "start": 0,
- *         "end": 7,
- *         "frameDuration": 0.1
- *       }
- *     }
- *   ]
- * }
- * @endcode
+ * @brief Collection of animations for an entity with spritesheet metadata
  */
 struct AnimationBank
 {
-    std::string id;                ///< Unique identifier for this bank
-    std::string spritesheetPath;   ///< Path to spritesheet PNG file
-    int frameWidth;                ///< Width of each frame in pixels
-    int frameHeight;               ///< Height of each frame in pixels
-    int columns;                   ///< Number of frames per row
-    int spacing;                   ///< Pixels between frames
-    int margin;                    ///< Border pixels around grid
+    std::string bankId;         ///< Unique identifier for this animation bank
     
-    /// Collection of animation sequences in this bank
-    std::vector<std::shared_ptr<AnimationSequence>> animations;
+    // Spritesheet metadata (for automatic frame calculation)
+    int frameWidth;             ///< Width of each frame in pixels
+    int frameHeight;            ///< Height of each frame in pixels
+    int columns;                ///< Number of columns in spritesheet
+    int spacing;                ///< Spacing between frames in pixels
+    int margin;                 ///< Margin around spritesheet edges in pixels
+    
+    // Animation sequences
+    std::unordered_map<std::string, AnimationSequence> animations;
+    
+    AnimationBank()
+        : bankId("")
+        , frameWidth(32)
+        , frameHeight(32)
+        , columns(1)
+        , spacing(0)
+        , margin(0)
+    {}
     
     /**
-     * @brief Get animation by name
-     * @param name Animation name to search for
-     * @return Shared pointer to animation sequence, or nullptr if not found
+     * @brief Calculate source rectangle for a frame based on spritesheet layout
+     * @param frameIndex Frame index (0-based)
+     * @return Source rectangle in spritesheet coordinates
      */
-    std::shared_ptr<AnimationSequence> GetAnimation(const std::string& name) const;
-};
-
-/**
- * @struct AnimationTransition
- * @brief Defines a valid state transition in an animation graph
- * 
- * Specifies which states can be entered from the current state, with optional conditions.
- */
-struct AnimationTransition
-{
-    std::string to;                ///< Target state name
-    std::string condition;         ///< Optional condition string (for documentation/tools)
+    SDL_FRect CalculateFrameRect(int frameIndex) const
+    {
+        int row = frameIndex / columns;
+        int col = frameIndex % columns;
+        
+        SDL_FRect rect;
+        rect.x = static_cast<float>(margin + col * (frameWidth + spacing));
+        rect.y = static_cast<float>(margin + row * (frameHeight + spacing));
+        rect.w = static_cast<float>(frameWidth);
+        rect.h = static_cast<float>(frameHeight);
+        
+        return rect;
+    }
+    
+    const AnimationSequence* GetAnimation(const std::string& name) const
+    {
+        auto it = animations.find(name);
+        return (it != animations.end()) ? &it->second : nullptr;
+    }
 };
 
 /**
  * @struct AnimationState
- * @brief Single state in a finite state machine (FSM)
- * 
- * Each state plays a specific animation and defines valid transitions to other states.
- * 
- * Example:
- * @code
- * AnimationState idle;
- * idle.name = "idle";
- * idle.animation = "idle";
- * idle.transitions.push_back({"walk", "velocity > 0"});
- * idle.transitions.push_back({"attack", "input.attack"});
- * @endcode
+ * @brief Single state in FSM
  */
 struct AnimationState
 {
-    std::string name;              ///< State name (e.g., "idle", "walking")
-    std::string animation;         ///< Animation to play in this state
-    std::vector<AnimationTransition> transitions; ///< Valid state transitions
+    std::string name;
+    std::string animation;
+    std::vector<std::string> transitions;
+    
+    AnimationState() : name(""), animation("") {}
 };
 
 /**
- * @struct AnimationGraph
- * @brief Finite state machine (FSM) for controlling animation flow
- * 
- * Animation graphs define valid state transitions and ensure only legal animation
- * changes occur. This prevents bugs like jumping while dead or attacking while stunned.
- * 
- * Example JSON structure:
- * @code{.json}
- * {
- *   "id": "player_fsm",
- *   "defaultState": "idle",
- *   "states": [
- *     {
- *       "name": "idle",
- *       "animation": "idle",
- *       "transitions": [
- *         {"to": "walk"},
- *         {"to": "attack"}
- *       ]
- *     }
- *   ]
- * }
- * @endcode
+ * @brief Animation state machine (FSM) for managing transitions
  */
 struct AnimationGraph
 {
-    std::string id;                ///< Unique identifier for this graph
-    std::string defaultState;      ///< Starting state when entity is created
-    std::vector<AnimationState> states; ///< All states in the FSM
+    std::string graphId;        ///< Unique identifier for this graph
+    std::string defaultState;   ///< Initial animation state
+    
+    // State machine data
+    std::unordered_map<std::string, AnimationState> states;
+    
+    AnimationGraph()
+        : graphId("")
+        , defaultState("")
+    {}
     
     /**
      * @brief Get state by name
      * @param name State name to search for
      * @return Pointer to state, or nullptr if not found
      */
-    const AnimationState* GetState(const std::string& name) const;
+    const AnimationState* GetState(const std::string& name) const
+    {
+        auto it = states.find(name);
+        return (it != states.end()) ? &it->second : nullptr;
+    }
     
     /**
-     * @brief Check if transition is valid
-     * @param fromState Current state name
-     * @param toState Target state name
-     * @return True if transition is allowed, false otherwise
+     * @brief Check if transition from one state to another is valid
+     * @param from Source animation state
+     * @param to Target animation state
+     * @return true if transition is allowed
      */
-    bool IsTransitionValid(const std::string& fromState, const std::string& toState) const;
+    bool CanTransition(const std::string& from, const std::string& to) const
+    {
+        // Always allow transitioning to the same state (restart)
+        if (from == to)
+            return true;
+        
+        // Check if explicit transition exists
+        auto it = states.find(from);
+        if (it == states.end())
+            return false;
+        
+        for (const auto& target : it->second.transitions)
+        {
+            if (target == to)
+                return true;
+        }
+        
+        return false;
+    }
 };
 
-} // namespace Animation
 } // namespace Olympe
-
-#endif // ANIMATION_TYPES_H

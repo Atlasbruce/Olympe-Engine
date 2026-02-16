@@ -186,6 +186,35 @@ inline bool GetBool(const json& j, const std::string& key, bool defaultValue = f
     return defaultValue;
 }
 
+/**
+ * Generic template function to safely get any type from JSON
+ * @tparam T Type to extract
+ * @param j JSON object
+ * @param key Key to access
+ * @param defaultValue Default value if key doesn't exist or type mismatch
+ * @return The value of type T or default
+ * 
+ * @note Use specialized functions (GetInt, GetFloat, etc.) when available
+ * for better type safety. This template is useful for custom types or
+ * when working with generic code.
+ */
+template<typename T>
+inline T json_get(const json& j, const std::string& key, const T& defaultValue)
+{
+    try
+    {
+        if (j.contains(key) && !j[key].is_null())
+        {
+            return j[key].get<T>();
+        }
+    }
+    catch (const std::exception&)
+    {
+        // Type mismatch or conversion error - return default
+    }
+    return defaultValue;
+}
+
 // ============================================================================
 // Array/Object Helper Functions
 // ============================================================================
