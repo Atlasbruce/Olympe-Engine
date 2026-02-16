@@ -21,6 +21,7 @@
 #include <ctime>
 #include <fstream>
 #include <unordered_set>
+#include <unordered_map>
 
 using json = nlohmann::json;
 
@@ -2692,6 +2693,35 @@ namespace Olympe
     // Configuration Loading
     // ========================================================================
 
+    namespace
+    {
+        // Helper function to clamp integer values to uint8_t range (0-255)
+        // Note: Using manual ternary instead of std::clamp (C++17) for C++14 compatibility
+        uint8_t ClampToByte(int value)
+        {
+            return static_cast<uint8_t>(value < 0 ? 0 : (value > 255 ? 255 : value));
+        }
+        
+        // Static lookup maps for string to enum conversion (initialized once)
+        // Using unordered_map for O(1) average lookup time
+        const std::unordered_map<std::string, BTNodeType> kNodeTypeMap = {
+            {"Selector", BTNodeType::Selector},
+            {"Sequence", BTNodeType::Sequence},
+            {"Action", BTNodeType::Action},
+            {"Condition", BTNodeType::Condition},
+            {"Inverter", BTNodeType::Inverter},
+            {"Repeater", BTNodeType::Repeater}
+        };
+        
+        const std::unordered_map<std::string, BTStatus> kStatusMap = {
+            {"idle", BTStatus::Idle},
+            {"running", BTStatus::Running},
+            {"success", BTStatus::Success},
+            {"failure", BTStatus::Failure},
+            {"aborted", BTStatus::Aborted}
+        };
+    }
+
     void BehaviorTreeDebugWindow::LoadBTConfig()
     {
         json configJson;
@@ -2754,6 +2784,51 @@ namespace Olympe
                     }
                 }
             }
+        }
+
+        // ✅ NEW: Parse node colors from BT_config.json into m_nodeColors
+        if (JsonHelper::IsObject(configJson, "nodeColors"))
+        {
+            const auto& colorsJson = configJson["nodeColors"];
+            
+            // Parse colors for each node type using const lookup maps
+            for (auto typeIt = colorsJson.begin(); typeIt != colorsJson.end(); ++typeIt)
+            {
+                const std::string& typeName = typeIt.key();
+                const auto& statusColors = typeIt.value();
+                
+                // Find BTNodeType using const map
+                auto typeMapIt = kNodeTypeMap.find(typeName);
+                if (typeMapIt == kNodeTypeMap.end())
+                    continue;
+                
+                BTNodeType nodeType = typeMapIt->second;
+                
+                // Parse colors for each status
+                for (auto statusIt = statusColors.begin(); statusIt != statusColors.end(); ++statusIt)
+                {
+                    const std::string& statusName = statusIt.key();
+                    const auto& colorJson = statusIt.value();
+                    
+                    // Find BTStatus using const map
+                    auto statusMapIt = kStatusMap.find(statusName);
+                    if (statusMapIt == kStatusMap.end())
+                        continue;
+                    
+                    BTStatus status = statusMapIt->second;
+                    
+                    // Parse RGBA (using existing JsonHelper with clamping)
+                    BTColor color;
+                    color.r = ClampToByte(JsonHelper::GetInt(colorJson, "r", 255));
+                    color.g = ClampToByte(JsonHelper::GetInt(colorJson, "g", 255));
+                    color.b = ClampToByte(JsonHelper::GetInt(colorJson, "b", 255));
+                    color.a = ClampToByte(JsonHelper::GetInt(colorJson, "a", 255));
+                    
+                    m_nodeColors[nodeType][status] = color;
+                }
+            }
+            
+            std::cout << "[BTDebugger] Loaded " << m_nodeColors.size() << " node color schemes" << std::endl;
         }
 
         m_configLoaded = true;
@@ -2887,40 +2962,16 @@ namespace Olympe
             return GetNodeColor(type);
         }
 
-        // Map node type to string
-        std::string nodeTypeName;
-        switch (type)
+        // Look up color in m_nodeColors using enum keys
+        auto it = m_nodeColors.find(type);
+        if (it != m_nodeColors.end())
         {
-            case BTNodeType::Selector: nodeTypeName = "Selector"; break;
-            case BTNodeType::Sequence: nodeTypeName = "Sequence"; break;
-            case BTNodeType::Condition: nodeTypeName = "Condition"; break;
-            case BTNodeType::Action: nodeTypeName = "Action"; break;
-            case BTNodeType::Inverter: nodeTypeName = "Inverter"; break;
-            case BTNodeType::Repeater: nodeTypeName = "Repeater"; break;
-            default: return IM_COL32(128, 128, 128, 255);
-        }
-
-        // Map status to string
-        std::string statusName;
-        switch (status)
-        {
-            case BTStatus::Idle: statusName = "idle"; break;
-            case BTStatus::Running: statusName = "running"; break;
-            case BTStatus::Success: statusName = "success"; break;
-            case BTStatus::Failure: statusName = "failure"; break;
-            case BTStatus::Aborted: statusName = "aborted"; break;
-            default: statusName = "idle"; break;
-        }
-
-        // Look up color in config
-        auto nodeTypeIt = m_config.nodeColors.find(nodeTypeName);
-        if (nodeTypeIt != m_config.nodeColors.end())
-        {
-            auto statusIt = nodeTypeIt->second.find(statusName);
-            if (statusIt != nodeTypeIt->second.end())
+            const auto& statusColors = it->second;
+            auto statusIt = statusColors.find(status);
+            if (statusIt != statusColors.end())
             {
-                const auto& color = statusIt->second;
-                return IM_COL32(color.r, color.g, color.b, color.a);
+                const BTColor& c = statusIt->second;
+                return IM_COL32(c.r, c.g, c.b, c.a);
             }
         }
 

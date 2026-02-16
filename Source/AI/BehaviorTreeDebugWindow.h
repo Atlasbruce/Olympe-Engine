@@ -79,6 +79,18 @@ namespace Olympe
     };
 
     /**
+     * @struct BTColor
+     * @brief RGBA color value (0-255 range)
+     */
+    struct BTColor
+    {
+        uint8_t r = 255;
+        uint8_t g = 255;
+        uint8_t b = 255;
+        uint8_t a = 255;
+    };
+
+    /**
      * @struct ExecutionLogEntry
      * @brief Single entry in the execution log
      */
@@ -285,6 +297,9 @@ namespace Olympe
         // Configuration
         BTConfig m_config;                   // Loaded configuration from BT_config.json
         bool m_configLoaded = false;         // Track if config was successfully loaded
+        
+        // Node colors by type and status (loaded from BT_config.json)
+        std::map<BTNodeType, std::map<BTStatus, BTColor>> m_nodeColors;
         
         // Separate SDL3 window for debugger (C++14 compatible - explicit nullptr initialization)
         SDL_Window* m_separateWindow;
