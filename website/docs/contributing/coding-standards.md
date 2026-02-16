@@ -11,7 +11,7 @@ This project strictly adheres to **C++14** for maximum compatibility across plat
 
 ## Quick Links
 
-- [Full Standards (Source)](https://github.com/Atlasbruce/Olympe-Engine/blob/master/Source/COPILOT_CODING_RULES.md) - Complete comprehensive reference
+- [Full Standards (Source)](https://github.com/Atlasbruce/Olympe-Engine/blob/master/Source/COPILOT_CODING_RULES.md) - Complete reference
 - [Quick Reference](https://github.com/Atlasbruce/Olympe-Engine/blob/master/Source/COPILOT_QUICK_REFERENCE.md) - One-page quick lookup
 
 :::warning Required Reading
