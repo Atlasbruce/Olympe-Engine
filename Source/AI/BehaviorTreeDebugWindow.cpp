@@ -2804,12 +2804,18 @@ namespace Olympe
                     
                     BTStatus status = statusMapIt->second;
                     
-                    // Parse RGBA (using existing JsonHelper)
+                    // Parse RGBA (using existing JsonHelper with clamping)
                     BTColor color;
-                    color.r = static_cast<uint8_t>(JsonHelper::GetInt(colorJson, "r", 255));
-                    color.g = static_cast<uint8_t>(JsonHelper::GetInt(colorJson, "g", 255));
-                    color.b = static_cast<uint8_t>(JsonHelper::GetInt(colorJson, "b", 255));
-                    color.a = static_cast<uint8_t>(JsonHelper::GetInt(colorJson, "a", 255));
+                    int r = JsonHelper::GetInt(colorJson, "r", 255);
+                    int g = JsonHelper::GetInt(colorJson, "g", 255);
+                    int b = JsonHelper::GetInt(colorJson, "b", 255);
+                    int a = JsonHelper::GetInt(colorJson, "a", 255);
+                    
+                    // Clamp values to 0-255 range to prevent overflow
+                    color.r = static_cast<uint8_t>(r < 0 ? 0 : (r > 255 ? 255 : r));
+                    color.g = static_cast<uint8_t>(g < 0 ? 0 : (g > 255 ? 255 : g));
+                    color.b = static_cast<uint8_t>(b < 0 ? 0 : (b > 255 ? 255 : b));
+                    color.a = static_cast<uint8_t>(a < 0 ? 0 : (a > 255 ? 255 : a));
                     
                     m_nodeColors[nodeType][status] = color;
                 }
