@@ -1275,7 +1275,9 @@ void AnimationEditorWindow::ResetPreview()
 
 void AnimationEditorWindow::RenderPreviewFrame()
 {
-    // Implementation is in RenderPreviewPanel() above
+    // Note: This method is intentionally empty as the rendering logic
+    // is directly embedded in RenderPreviewPanel() for better cohesion
+    // with the preview controls and UI layout.
 }
 
 // ========================================================================

@@ -312,6 +312,12 @@ struct AnimationBank
         return rect;
     }
     
+    /**
+     * @brief DEPRECATED: Get animation sequence by name (use GetSequence() instead)
+     * @param name Animation name
+     * @return Pointer to AnimationSequence if found, nullptr otherwise
+     * @deprecated Use GetSequence() for consistency with new API
+     */
     const AnimationSequence* GetAnimation(const std::string& name) const
     {
         return GetSequence(name);
