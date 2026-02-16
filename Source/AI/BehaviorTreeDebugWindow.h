@@ -17,10 +17,12 @@
 #include "../vector.h"
 #include "BTGraphLayoutEngine.h"
 #include "BehaviorTree.h"
+#include "BTEditorCommand.h"
 #include <string>
 #include <vector>
 #include <deque>
 #include <map>
+#include <set>
 #include <cstdint>
 
  // Forward declarations for SDL3
@@ -213,6 +215,17 @@ namespace Olympe
         void SaveEditedTree();
         void UndoLastAction();
         void RedoLastAction();
+        
+        // New editor features
+        void RenderValidationPanel();
+        bool DetectCycle(uint32_t startId, uint32_t targetId, const BehaviorTreeAsset& tree) const;
+        void RenderNodeProperties();
+        void RenderContextMenu();
+        void RenderNewBTDialog();
+        void RenderFileMenu();
+        void HandlePinDrag();
+        void Save();
+        void SaveAs();
 
         // Configuration helpers
         void LoadBTConfig();
@@ -319,7 +332,10 @@ namespace Olympe
         bool m_showNodePalette = false;
         Vector m_nodeCreationPos;
 
-        // Undo/Redo system
+        // Command stack (replaces old EditorAction-based undo/redo)
+        BTCommandStack m_commandStack;
+
+        // Undo/Redo system (legacy - kept for compatibility)
         struct EditorAction {
             enum Type { AddNode, DeleteNode, AddConnection, DeleteConnection, ModifyNode } type;
             BTNode nodeData;
@@ -339,5 +355,34 @@ namespace Olympe
         };
         std::vector<LinkInfo> m_linkMap;
         int m_nextLinkId = 100000;
+        
+        // File state
+        bool m_isDirty = false;
+        std::string m_currentFilePath;
+        
+        // Validation
+        bool m_showValidationPanel = false;
+        std::vector<BTValidationMessage> m_validationMessages;
+        
+        // Node properties
+        uint32_t m_doubleClickedNodeId = 0;
+        
+        // Context menu
+        Vector m_contextMenuPos;
+        bool m_showContextMenu = false;
+        
+        // Pin drag state
+        struct PinDragState {
+            bool isDragging = false;
+            uint32_t sourceNodeId = 0;
+            PinType sourceType = PinType::Output;
+            Vector currentMousePos;
+        };
+        PinDragState m_pinDragState;
+        
+        // New BT dialog
+        bool m_showNewBTDialog = false;
+        char m_newBTName[256] = "";
+        int m_selectedTemplate = 0;
     };
 }
