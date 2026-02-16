@@ -13,11 +13,16 @@
 #include "../third_party/imnodes/imnodes.h"
 #include "../third_party/imgui/backends/imgui_impl_sdl3.h"
 #include "../third_party/imgui/backends/imgui_impl_sdlrenderer3.h"
+#include "../third_party/nlohmann/json.hpp"
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <cstring>
 #include <cmath>
+#include <ctime>
+#include <fstream>
 #include <unordered_set>
+
+using json = nlohmann::json;
 
 namespace Olympe
 {
@@ -805,6 +810,62 @@ namespace Olympe
             return;
         }
 
+        // Editor mode toggle
+        bool prevEditorMode = m_editorMode;
+        ImGui::Checkbox("Editor Mode", &m_editorMode);
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("Enable editing mode to add/remove/connect nodes");
+        }
+        
+        // Initialize editing tree when entering editor mode
+        if (m_editorMode && !prevEditorMode)
+        {
+            auto& world = World::Get();
+            const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
+            const BehaviorTreeAsset* originalTree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
+            
+            if (originalTree)
+            {
+                m_editingTree = *originalTree;
+                m_treeModified = false;
+                m_selectedNodes.clear();
+                m_undoStack.clear();
+                m_redoStack.clear();
+                m_nextNodeId = 1000;
+                m_nextLinkId = 100000;  // Reset link ID counter to prevent overflow
+                
+                // Find max node ID to avoid conflicts
+                for (const auto& node : m_editingTree.nodes)
+                {
+                    if (node.id >= m_nextNodeId)
+                    {
+                        m_nextNodeId = node.id + 1;
+                    }
+                }
+                
+                std::cout << "[BTEditor] Entered editor mode, editing tree: " << m_editingTree.name << std::endl;
+            }
+        }
+        
+        if (m_editorMode)
+        {
+            ImGui::SameLine();
+            if (m_treeModified)
+            {
+                ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.0f, 1.0f), "[Modified]");
+            }
+            else
+            {
+                ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "[Unmodified]");
+            }
+            
+            // Editor toolbar
+            RenderEditorToolbar();
+        }
+        
+        ImGui::Separator();
+        
         // Layout direction toggle
         ImGui::Text("Layout:");
         ImGui::SameLine();
@@ -912,6 +973,23 @@ namespace Olympe
             // Center camera when entity changes (with optional auto-fit)
             if (m_lastCenteredEntity != m_selectedEntity)
             {
+                // Initialize editing tree when entity changes in editor mode
+                if (m_editorMode)
+                {
+                    auto& world = World::Get();
+                    const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
+                    const BehaviorTreeAsset* originalTree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
+                    
+                    if (originalTree)
+                    {
+                        m_editingTree = *originalTree;
+                        m_treeModified = false;
+                        m_selectedNodes.clear();
+                        m_undoStack.clear();
+                        m_redoStack.clear();
+                    }
+                }
+                
                 if (m_autoFitOnLoad)
                 {
                     // Fit entire tree to view
@@ -1005,7 +1083,187 @@ namespace Olympe
         if (m_showMinimap)
             RenderMinimap();
 
+        // Editor mode interactions (after graph rendering, before EndNodeEditor)
+        if (m_editorMode)
+        {
+            // Detect link creation
+            int startAttrId, endAttrId;
+            if (ImNodes::IsLinkCreated(&startAttrId, &endAttrId))
+            {
+                // Convert attribute IDs back to node IDs
+                uint32_t parentId = startAttrId / 10000;
+                uint32_t childId = endAttrId / 10000;
+                
+                if (ValidateConnection(parentId, childId))
+                {
+                    // Find parent node and add connection
+                    BTNode* parent = m_editingTree.GetNode(parentId);
+                    if (parent)
+                    {
+                        if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+                        {
+                            // Capture the actual index before adding the child
+                            int childIndex = parent->childIds.size();
+                            parent->childIds.push_back(childId);
+                            
+                            // Add to undo stack with correct index
+                            EditorAction action;
+                            action.type = EditorAction::AddConnection;
+                            action.parentId = parentId;
+                            action.childId = childId;
+                            action.childIndex = childIndex;
+                            m_undoStack.push_back(action);
+                            if (m_undoStack.size() > kMaxUndoStackSize)
+                            {
+                                m_undoStack.erase(m_undoStack.begin());
+                            }
+                            m_redoStack.clear();
+                            m_treeModified = true;
+                        }
+                        else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
+                        {
+                            // Set decoratorChildId
+                            parent->decoratorChildId = childId;
+                            
+                            // Add to undo stack
+                            EditorAction action;
+                            action.type = EditorAction::AddConnection;
+                            action.parentId = parentId;
+                            action.childId = childId;
+                            action.childIndex = 0;  // Decorators don't use childIndex
+                            m_undoStack.push_back(action);
+                            if (m_undoStack.size() > kMaxUndoStackSize)
+                            {
+                                m_undoStack.erase(m_undoStack.begin());
+                            }
+                            m_redoStack.clear();
+                            m_treeModified = true;
+                        }
+                        
+                        std::cout << "[BTEditor] Connection created: " << parentId << " -> " << childId << std::endl;
+                    }
+                }
+                else
+                {
+                    std::cout << "[BTEditor] Invalid connection: " << parentId << " -> " << childId << std::endl;
+                }
+            }
+            
+            // Detect link destruction
+            int linkId;
+            if (ImNodes::IsLinkDestroyed(&linkId))
+            {
+                // Find the link in our map
+                auto it = std::find_if(m_linkMap.begin(), m_linkMap.end(),
+                    [linkId](const LinkInfo& info) { return info.linkId == linkId; });
+                
+                if (it != m_linkMap.end())
+                {
+                    uint32_t parentId = it->parentId;
+                    uint32_t childId = it->childId;
+                    
+                    // Remove the connection from the tree
+                    BTNode* parent = m_editingTree.GetNode(parentId);
+                    if (parent)
+                    {
+                        if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+                        {
+                            auto childIt = std::find(parent->childIds.begin(), parent->childIds.end(), childId);
+                            if (childIt != parent->childIds.end())
+                            {
+                                int childIndex = std::distance(parent->childIds.begin(), childIt);
+                                parent->childIds.erase(childIt);
+                                
+                                // Add to undo stack
+                                EditorAction action;
+                                action.type = EditorAction::DeleteConnection;
+                                action.parentId = parentId;
+                                action.childId = childId;
+                                action.childIndex = childIndex;
+                                m_undoStack.push_back(action);
+                                if (m_undoStack.size() > kMaxUndoStackSize)
+                                {
+                                    m_undoStack.erase(m_undoStack.begin());
+                                }
+                                m_redoStack.clear();
+                            }
+                        }
+                        else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
+                        {
+                            parent->decoratorChildId = 0;
+                            
+                            // Add to undo stack
+                            EditorAction action;
+                            action.type = EditorAction::DeleteConnection;
+                            action.parentId = parentId;
+                            action.childId = childId;
+                            m_undoStack.push_back(action);
+                            if (m_undoStack.size() > kMaxUndoStackSize)
+                            {
+                                m_undoStack.erase(m_undoStack.begin());
+                            }
+                            m_redoStack.clear();
+                        }
+                        
+                        m_treeModified = true;
+                        std::cout << "[BTEditor] Connection deleted: " << parentId << " -> " << childId << std::endl;
+                    }
+                }
+            }
+            
+            // Detect node selection
+            int numSelected = ImNodes::NumSelectedNodes();
+            if (numSelected > 0)
+            {
+                std::vector<int> selectedIds(numSelected);
+                ImNodes::GetSelectedNodes(selectedIds.data());
+                m_selectedNodes.clear();
+                for (int id : selectedIds)
+                {
+                    m_selectedNodes.push_back(static_cast<uint32_t>(id));
+                }
+            }
+            
+            // Right-click context menu
+            if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+            {
+                m_showNodePalette = true;
+                m_nodeCreationPos = ImGui::GetMousePos();
+            }
+            
+            // Delete key to delete selected nodes
+            if (ImGui::IsKeyPressed(ImGuiKey_Delete) && !m_selectedNodes.empty())
+            {
+                HandleNodeDeletion();
+            }
+            
+            // Ctrl+D to duplicate selected nodes
+            if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_D) && !m_selectedNodes.empty())
+            {
+                HandleNodeDuplication();
+            }
+            
+            // Ctrl+Z for undo
+            if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z))
+            {
+                UndoLastAction();
+            }
+            
+            // Ctrl+Y or Ctrl+Shift+Z for redo
+            if (ImGui::GetIO().KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Y) || 
+                (ImGui::GetIO().KeyShift && ImGui::IsKeyPressed(ImGuiKey_Z))))
+            {
+                RedoLastAction();
+            }
+        }
+
         ImNodes::EndNodeEditor();
+        
+        // Node palette popup (outside of node editor)
+        if (m_showNodePalette)
+        {
+            RenderNodePalette();
+        }
     }
 
     void BehaviorTreeDebugWindow::RenderBehaviorTreeGraph()
@@ -1013,8 +1271,18 @@ namespace Olympe
         auto& world = World::Get();
         const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
         
-        // FIXED: Use enhanced lookup
-        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
+        // Use editing tree in editor mode, otherwise use runtime tree
+        const BehaviorTreeAsset* tree = nullptr;
+        
+        if (m_editorMode && !m_editingTree.nodes.empty())
+        {
+            tree = &m_editingTree;
+        }
+        else
+        {
+            // FIXED: Use enhanced lookup
+            tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
+        }
 
         if (!tree)
             return;
@@ -1027,7 +1295,7 @@ namespace Olympe
             const BTNodeLayout* layout = m_layoutEngine.GetNodeLayout(node.id);
             if (layout)
             {
-                bool isCurrentNode = (node.id == currentNodeId) && btRuntime.isActive;
+                bool isCurrentNode = (node.id == currentNodeId) && btRuntime.isActive && !m_editorMode;
                 RenderNode(&node, layout, isCurrentNode);
             }
         }
@@ -1164,23 +1432,53 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::RenderNodeConnections(const BTNode* node, const BTNodeLayout* layout, const BehaviorTreeAsset* tree)
     {
-        static int linkIdCounter = 100000;
-
+        // Clear link map at the start of each render pass (only in editor mode)
+        // Use a frame counter to ensure we clear once per frame, not once per lifetime
+        static int lastFrameCleared = -1;
+        static int currentFrame = 0;
+        currentFrame++;
+        
+        if (m_editorMode && lastFrameCleared != currentFrame)
+        {
+            m_linkMap.clear();
+            lastFrameCleared = currentFrame;
+        }
+        
         // Composite nodes
         if (node->type == BTNodeType::Selector || node->type == BTNodeType::Sequence)
         {
             for (uint32_t childId : node->childIds)
             {
-                int linkId = linkIdCounter++;
+                int linkId = m_nextLinkId++;
                 ImNodes::Link(linkId, node->id * 10000 + 1, childId * 10000);
+                
+                // Track this link in editor mode
+                if (m_editorMode)
+                {
+                    LinkInfo info;
+                    info.linkId = linkId;
+                    info.parentId = node->id;
+                    info.childId = childId;
+                    m_linkMap.push_back(info);
+                }
             }
         }
         // Decorator nodes
         else if ((node->type == BTNodeType::Inverter || node->type == BTNodeType::Repeater) && 
                   node->decoratorChildId != 0)
         {
-            int linkId = linkIdCounter++;
+            int linkId = m_nextLinkId++;
             ImNodes::Link(linkId, node->id * 10000 + 1, node->decoratorChildId * 10000);
+            
+            // Track this link in editor mode
+            if (m_editorMode)
+            {
+                LinkInfo info;
+                info.linkId = linkId;
+                info.parentId = node->id;
+                info.childId = node->decoratorChildId;
+                m_linkMap.push_back(info);
+            }
         }
     }
 
@@ -1721,6 +2019,674 @@ namespace Olympe
         ImGui::SetCursorPos(ImVec2(minimapPos.x + 5, minimapPos.y + 5));
         ImGui::TextColored(ImVec4(1, 1, 1, 0.7f), "Minimap");
     }
+    
+    // ========================================================================
+    // Editor Mode Functions
+    // ========================================================================
+    
+    void BehaviorTreeDebugWindow::RenderEditorToolbar()
+    {
+        if (ImGui::Button("Add Node"))
+        {
+            m_showNodePalette = true;
+            m_nodeCreationPos = ImGui::GetMousePos();
+        }
+        
+        ImGui::SameLine();
+        if (ImGui::Button("Save Tree"))
+        {
+            SaveEditedTree();
+        }
+        
+        ImGui::SameLine();
+        bool canUndo = !m_undoStack.empty();
+        if (!canUndo) ImGui::BeginDisabled();
+        if (ImGui::Button("Undo"))
+        {
+            UndoLastAction();
+        }
+        if (!canUndo) ImGui::EndDisabled();
+        
+        ImGui::SameLine();
+        bool canRedo = !m_redoStack.empty();
+        if (!canRedo) ImGui::BeginDisabled();
+        if (ImGui::Button("Redo"))
+        {
+            RedoLastAction();
+        }
+        if (!canRedo) ImGui::EndDisabled();
+        
+        ImGui::SameLine();
+        ImGui::Text("Selected: %zu", m_selectedNodes.size());
+    }
+    
+    void BehaviorTreeDebugWindow::RenderNodePalette()
+    {
+        ImGui::OpenPopup("##NodePalette");
+        
+        if (ImGui::BeginPopup("##NodePalette"))
+        {
+            ImGui::Text("Add Node");
+            ImGui::Separator();
+            
+            if (ImGui::MenuItem("Selector"))
+            {
+                HandleNodeCreation(BTNodeType::Selector);
+                m_showNodePalette = false;
+            }
+            
+            if (ImGui::MenuItem("Sequence"))
+            {
+                HandleNodeCreation(BTNodeType::Sequence);
+                m_showNodePalette = false;
+            }
+            
+            if (ImGui::MenuItem("Condition"))
+            {
+                HandleNodeCreation(BTNodeType::Condition);
+                m_showNodePalette = false;
+            }
+            
+            if (ImGui::MenuItem("Action"))
+            {
+                HandleNodeCreation(BTNodeType::Action);
+                m_showNodePalette = false;
+            }
+            
+            if (ImGui::MenuItem("Inverter"))
+            {
+                HandleNodeCreation(BTNodeType::Inverter);
+                m_showNodePalette = false;
+            }
+            
+            if (ImGui::MenuItem("Repeater"))
+            {
+                HandleNodeCreation(BTNodeType::Repeater);
+                m_showNodePalette = false;
+            }
+            
+            ImGui::EndPopup();
+        }
+        else
+        {
+            m_showNodePalette = false;
+        }
+    }
+    
+    void BehaviorTreeDebugWindow::HandleNodeCreation(BTNodeType nodeType)
+    {
+        // Create new node
+        BTNode newNode;
+        newNode.type = nodeType;
+        newNode.id = m_nextNodeId++;
+        
+        // Set default name based on type
+        switch (nodeType)
+        {
+            case BTNodeType::Selector:
+                newNode.name = "New Selector";
+                break;
+            case BTNodeType::Sequence:
+                newNode.name = "New Sequence";
+                break;
+            case BTNodeType::Condition:
+                newNode.name = "New Condition";
+                newNode.conditionType = BTConditionType::TargetVisible;
+                break;
+            case BTNodeType::Action:
+                newNode.name = "New Action";
+                newNode.actionType = BTActionType::Idle;
+                break;
+            case BTNodeType::Inverter:
+                newNode.name = "New Inverter";
+                break;
+            case BTNodeType::Repeater:
+                newNode.name = "New Repeater";
+                newNode.repeatCount = 1;
+                break;
+        }
+        
+        // Initialize editing tree if needed
+        if (m_editingTree.nodes.empty() && m_selectedEntity != 0)
+        {
+            auto& world = World::Get();
+            const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
+            const BehaviorTreeAsset* originalTree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
+            
+            if (originalTree)
+            {
+                m_editingTree = *originalTree;
+            }
+            else
+            {
+                // Create new empty tree
+                m_editingTree.id = btRuntime.AITreeAssetId;
+                m_editingTree.name = "New Tree";
+                m_editingTree.rootNodeId = 0;
+            }
+        }
+        
+        // Add to editing tree
+        m_editingTree.nodes.push_back(newNode);
+        
+        // Add to undo stack
+        EditorAction action;
+        action.type = EditorAction::AddNode;
+        action.nodeData = newNode;
+        m_undoStack.push_back(action);
+        if (m_undoStack.size() > kMaxUndoStackSize)
+        {
+            m_undoStack.erase(m_undoStack.begin());
+        }
+        m_redoStack.clear();
+        
+        m_treeModified = true;
+        
+        // Recompute layout
+        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+        
+        std::cout << "[BTEditor] Created node: " << newNode.name << " (ID: " << newNode.id << ")" << std::endl;
+    }
+    
+    void BehaviorTreeDebugWindow::HandleNodeDeletion()
+    {
+        if (m_selectedNodes.empty())
+            return;
+        
+        // Delete each selected node
+        for (uint32_t nodeId : m_selectedNodes)
+        {
+            // Find node in editing tree
+            auto it = std::find_if(m_editingTree.nodes.begin(), m_editingTree.nodes.end(),
+                [nodeId](const BTNode& n) { return n.id == nodeId; });
+            
+            if (it != m_editingTree.nodes.end())
+            {
+                // Add to undo stack
+                EditorAction action;
+                action.type = EditorAction::DeleteNode;
+                action.nodeData = *it;
+                m_undoStack.push_back(action);
+                if (m_undoStack.size() > kMaxUndoStackSize)
+                {
+                    m_undoStack.erase(m_undoStack.begin());
+                }
+                
+                // Remove from tree
+                m_editingTree.nodes.erase(it);
+                
+                // Remove any connections to/from this node
+                for (auto& node : m_editingTree.nodes)
+                {
+                    // Remove from childIds
+                    auto childIt = std::find(node.childIds.begin(), node.childIds.end(), nodeId);
+                    if (childIt != node.childIds.end())
+                    {
+                        node.childIds.erase(childIt);
+                    }
+                    
+                    // Remove from decoratorChildId
+                    if (node.decoratorChildId == nodeId)
+                    {
+                        node.decoratorChildId = 0;
+                    }
+                }
+                
+                std::cout << "[BTEditor] Deleted node ID: " << nodeId << std::endl;
+            }
+        }
+        
+        m_selectedNodes.clear();
+        m_redoStack.clear();
+        m_treeModified = true;
+        
+        // Recompute layout
+        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+    }
+    
+    void BehaviorTreeDebugWindow::HandleNodeDuplication()
+    {
+        if (m_selectedNodes.empty())
+            return;
+        
+        std::vector<uint32_t> newNodes;
+        
+        // Duplicate each selected node
+        for (uint32_t nodeId : m_selectedNodes)
+        {
+            // Find node in editing tree
+            auto it = std::find_if(m_editingTree.nodes.begin(), m_editingTree.nodes.end(),
+                [nodeId](const BTNode& n) { return n.id == nodeId; });
+            
+            if (it != m_editingTree.nodes.end())
+            {
+                // Create duplicate
+                BTNode duplicate = *it;
+                duplicate.id = m_nextNodeId++;
+                duplicate.name = duplicate.name + " (Copy)";
+                
+                // Add to tree
+                m_editingTree.nodes.push_back(duplicate);
+                newNodes.push_back(duplicate.id);
+                
+                // Add to undo stack
+                EditorAction action;
+                action.type = EditorAction::AddNode;
+                action.nodeData = duplicate;
+                m_undoStack.push_back(action);
+                
+                std::cout << "[BTEditor] Duplicated node: " << duplicate.name << " (ID: " << duplicate.id << ")" << std::endl;
+            }
+        }
+        
+        // Select the new nodes
+        m_selectedNodes = newNodes;
+        m_redoStack.clear();
+        m_treeModified = true;
+        
+        // Recompute layout
+        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+    }
+    
+    bool BehaviorTreeDebugWindow::ValidateConnection(uint32_t parentId, uint32_t childId) const
+    {
+        // Find parent and child nodes
+        const BTNode* parent = m_editingTree.GetNode(parentId);
+        const BTNode* child = m_editingTree.GetNode(childId);
+        
+        if (!parent || !child)
+            return false;
+        
+        // Prevent self-connection
+        if (parentId == childId)
+            return false;
+        
+        // Only composite and decorator nodes can have children
+        if (parent->type != BTNodeType::Selector &&
+            parent->type != BTNodeType::Sequence &&
+            parent->type != BTNodeType::Inverter &&
+            parent->type != BTNodeType::Repeater)
+        {
+            return false;
+        }
+        
+        // Decorator nodes (Inverter, Repeater) can only have one child
+        if ((parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater) &&
+            parent->decoratorChildId != 0)
+        {
+            return false;
+        }
+        
+        // Prevent duplicate connections
+        if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+        {
+            if (std::find(parent->childIds.begin(), parent->childIds.end(), childId) != parent->childIds.end())
+            {
+                return false;
+            }
+        }
+        
+        // Prevent cycles: Check if parent is a descendant of child
+        // Use DFS to traverse from child to see if we can reach parent
+        std::vector<uint32_t> visited;
+        std::vector<uint32_t> toVisit;
+        toVisit.push_back(childId);
+        
+        while (!toVisit.empty())
+        {
+            uint32_t currentId = toVisit.back();
+            toVisit.pop_back();
+            
+            if (currentId == parentId)
+            {
+                // Found parent as descendant of child - would create cycle
+                return false;
+            }
+            
+            if (std::find(visited.begin(), visited.end(), currentId) != visited.end())
+            {
+                continue;  // Already visited
+            }
+            
+            visited.push_back(currentId);
+            
+            const BTNode* current = m_editingTree.GetNode(currentId);
+            if (current)
+            {
+                // Add children to visit list
+                for (uint32_t id : current->childIds)
+                {
+                    toVisit.push_back(id);
+                }
+                if (current->decoratorChildId != 0)
+                {
+                    toVisit.push_back(current->decoratorChildId);
+                }
+            }
+        }
+        
+        return true;
+    }
+    
+    void BehaviorTreeDebugWindow::SaveEditedTree()
+    {
+        if (!m_treeModified)
+        {
+            std::cout << "[BTEditor] No changes to save" << std::endl;
+            return;
+        }
+        
+        // Generate JSON for the edited tree
+        json treeJson;
+        treeJson["schema_version"] = 2;
+        treeJson["type"] = "BehaviorTree";
+        treeJson["blueprintType"] = "BehaviorTree";
+        treeJson["name"] = m_editingTree.name;
+        treeJson["description"] = "Edited in BT Editor";
+        
+        // Metadata
+        json metadata;
+        metadata["author"] = "BT Editor";
+        // Get current timestamp
+        auto now = std::time(nullptr);
+        char timestamp[32];
+        std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%S", std::localtime(&now));
+        metadata["created"] = timestamp;
+        metadata["lastModified"] = timestamp;
+        metadata["tags"] = json::array({"AI", "BehaviorTree", "Edited"});
+        treeJson["metadata"] = metadata;
+        
+        // Editor state
+        json editorState;
+        editorState["zoom"] = 1.0;
+        editorState["scrollOffset"] = {{"x", 0}, {"y", 0}};
+        treeJson["editorState"] = editorState;
+        
+        // Data section
+        json dataSection;
+        dataSection["rootNodeId"] = m_editingTree.rootNodeId;
+        
+        // Nodes array
+        json nodesArray = json::array();
+        for (const auto& node : m_editingTree.nodes)
+        {
+            json nodeJson;
+            nodeJson["id"] = node.id;
+            nodeJson["name"] = node.name;
+            
+            // Node type
+            switch (node.type)
+            {
+                case BTNodeType::Selector: nodeJson["type"] = "Selector"; break;
+                case BTNodeType::Sequence: nodeJson["type"] = "Sequence"; break;
+                case BTNodeType::Condition: nodeJson["type"] = "Condition"; break;
+                case BTNodeType::Action: nodeJson["type"] = "Action"; break;
+                case BTNodeType::Inverter: nodeJson["type"] = "Inverter"; break;
+                case BTNodeType::Repeater: nodeJson["type"] = "Repeater"; break;
+            }
+            
+            // Position (default if not available)
+            nodeJson["position"] = {{"x", 0.0}, {"y", 0.0}};
+            
+            // Node-specific data
+            if (node.type == BTNodeType::Condition)
+            {
+                // Map enum to string
+                const char* conditionTypeStr = "TargetVisible";
+                switch (node.conditionType)
+                {
+                    case BTConditionType::TargetVisible: conditionTypeStr = "TargetVisible"; break;
+                    case BTConditionType::TargetInRange: conditionTypeStr = "TargetInRange"; break;
+                    case BTConditionType::HealthBelow: conditionTypeStr = "HealthBelow"; break;
+                    case BTConditionType::HasMoveGoal: conditionTypeStr = "HasMoveGoal"; break;
+                    case BTConditionType::CanAttack: conditionTypeStr = "CanAttack"; break;
+                    case BTConditionType::HeardNoise: conditionTypeStr = "HeardNoise"; break;
+                    case BTConditionType::IsWaitTimerExpired: conditionTypeStr = "IsWaitTimerExpired"; break;
+                    case BTConditionType::HasNavigableDestination: conditionTypeStr = "HasNavigableDestination"; break;
+                    case BTConditionType::HasValidPath: conditionTypeStr = "HasValidPath"; break;
+                    case BTConditionType::HasReachedDestination: conditionTypeStr = "HasReachedDestination"; break;
+                }
+                nodeJson["conditionType"] = conditionTypeStr;
+                if (node.conditionParam != 0.0f)
+                {
+                    nodeJson["parameters"] = {{"param", node.conditionParam}};
+                }
+                else
+                {
+                    nodeJson["parameters"] = json::object();
+                }
+            }
+            else if (node.type == BTNodeType::Action)
+            {
+                // Map enum to string
+                const char* actionTypeStr = "Idle";
+                switch (node.actionType)
+                {
+                    case BTActionType::SetMoveGoalToLastKnownTargetPos: actionTypeStr = "SetMoveGoalToLastKnownTargetPos"; break;
+                    case BTActionType::SetMoveGoalToTarget: actionTypeStr = "SetMoveGoalToTarget"; break;
+                    case BTActionType::SetMoveGoalToPatrolPoint: actionTypeStr = "SetMoveGoalToPatrolPoint"; break;
+                    case BTActionType::MoveToGoal: actionTypeStr = "MoveToGoal"; break;
+                    case BTActionType::AttackIfClose: actionTypeStr = "AttackIfClose"; break;
+                    case BTActionType::PatrolPickNextPoint: actionTypeStr = "PatrolPickNextPoint"; break;
+                    case BTActionType::ClearTarget: actionTypeStr = "ClearTarget"; break;
+                    case BTActionType::Idle: actionTypeStr = "Idle"; break;
+                    case BTActionType::WaitRandomTime: actionTypeStr = "WaitRandomTime"; break;
+                    case BTActionType::ChooseRandomNavigablePoint: actionTypeStr = "ChooseRandomNavigablePoint"; break;
+                    case BTActionType::RequestPathfinding: actionTypeStr = "RequestPathfinding"; break;
+                    case BTActionType::FollowPath: actionTypeStr = "FollowPath"; break;
+                }
+                nodeJson["actionType"] = actionTypeStr;
+                json params;
+                if (node.actionParam1 != 0.0f) params["param1"] = node.actionParam1;
+                if (node.actionParam2 != 0.0f) params["param2"] = node.actionParam2;
+                nodeJson["parameters"] = params.empty() ? json::object() : params;
+            }
+            else if (node.type == BTNodeType::Repeater)
+            {
+                nodeJson["repeatCount"] = node.repeatCount;
+            }
+            
+            // Children
+            if (!node.childIds.empty())
+            {
+                nodeJson["childIds"] = node.childIds;
+            }
+            if (node.decoratorChildId != 0)
+            {
+                nodeJson["decoratorChildId"] = node.decoratorChildId;
+            }
+            
+            nodesArray.push_back(nodeJson);
+        }
+        
+        dataSection["nodes"] = nodesArray;
+        treeJson["data"] = dataSection;
+        
+        // Save to file
+        std::string filename = "Blueprints/AI/" + m_editingTree.name + "_edited.json";
+        
+        try
+        {
+            std::ofstream file(filename);
+            if (file.is_open())
+            {
+                file << treeJson.dump(2);  // Pretty print with 2-space indentation
+                file.close();
+                
+                m_treeModified = false;
+                std::cout << "[BTEditor] Tree saved to: " << filename << std::endl;
+            }
+            else
+            {
+                std::cerr << "[BTEditor] ERROR: Failed to open file for writing: " << filename << std::endl;
+            }
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "[BTEditor] ERROR: Exception during save: " << e.what() << std::endl;
+        }
+    }
+    
+    void BehaviorTreeDebugWindow::UndoLastAction()
+    {
+        if (m_undoStack.empty())
+            return;
+        
+        EditorAction action = m_undoStack.back();
+        m_undoStack.pop_back();
+        
+        // Perform undo
+        switch (action.type)
+        {
+            case EditorAction::AddNode:
+            {
+                // Remove the added node
+                auto it = std::find_if(m_editingTree.nodes.begin(), m_editingTree.nodes.end(),
+                    [&action](const BTNode& n) { return n.id == action.nodeData.id; });
+                if (it != m_editingTree.nodes.end())
+                {
+                    m_editingTree.nodes.erase(it);
+                }
+                break;
+            }
+            case EditorAction::DeleteNode:
+            {
+                // Restore the deleted node
+                m_editingTree.nodes.push_back(action.nodeData);
+                break;
+            }
+            case EditorAction::AddConnection:
+            {
+                // Remove the connection
+                BTNode* parent = m_editingTree.GetNode(action.parentId);
+                if (parent)
+                {
+                    if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+                    {
+                        auto it = std::find(parent->childIds.begin(), parent->childIds.end(), action.childId);
+                        if (it != parent->childIds.end())
+                        {
+                            parent->childIds.erase(it);
+                        }
+                    }
+                    else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
+                    {
+                        parent->decoratorChildId = 0;
+                    }
+                }
+                break;
+            }
+            case EditorAction::DeleteConnection:
+            {
+                // Restore the connection
+                BTNode* parent = m_editingTree.GetNode(action.parentId);
+                if (parent)
+                {
+                    if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+                    {
+                        parent->childIds.push_back(action.childId);
+                    }
+                    else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
+                    {
+                        parent->decoratorChildId = action.childId;
+                    }
+                }
+                break;
+            }
+            default:
+                break;
+        }
+        
+        // Add to redo stack
+        m_redoStack.push_back(action);
+        
+        // Recompute layout
+        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+        
+        std::cout << "[BTEditor] Undo performed" << std::endl;
+    }
+    
+    void BehaviorTreeDebugWindow::RedoLastAction()
+    {
+        if (m_redoStack.empty())
+            return;
+        
+        EditorAction action = m_redoStack.back();
+        m_redoStack.pop_back();
+        
+        // Perform redo
+        switch (action.type)
+        {
+            case EditorAction::AddNode:
+            {
+                // Re-add the node
+                m_editingTree.nodes.push_back(action.nodeData);
+                break;
+            }
+            case EditorAction::DeleteNode:
+            {
+                // Re-delete the node
+                auto it = std::find_if(m_editingTree.nodes.begin(), m_editingTree.nodes.end(),
+                    [&action](const BTNode& n) { return n.id == action.nodeData.id; });
+                if (it != m_editingTree.nodes.end())
+                {
+                    m_editingTree.nodes.erase(it);
+                }
+                break;
+            }
+            case EditorAction::AddConnection:
+            {
+                // Re-add the connection
+                BTNode* parent = m_editingTree.GetNode(action.parentId);
+                if (parent)
+                {
+                    if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+                    {
+                        parent->childIds.push_back(action.childId);
+                    }
+                    else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
+                    {
+                        parent->decoratorChildId = action.childId;
+                    }
+                }
+                break;
+            }
+            case EditorAction::DeleteConnection:
+            {
+                // Re-delete the connection
+                BTNode* parent = m_editingTree.GetNode(action.parentId);
+                if (parent)
+                {
+                    if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+                    {
+                        auto it = std::find(parent->childIds.begin(), parent->childIds.end(), action.childId);
+                        if (it != parent->childIds.end())
+                        {
+                            parent->childIds.erase(it);
+                        }
+                    }
+                    else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
+                    {
+                        parent->decoratorChildId = 0;
+                    }
+                }
+                break;
+            }
+            default:
+                break;
+        }
+        
+        // Add to undo stack
+        m_undoStack.push_back(action);
+        if (m_undoStack.size() > kMaxUndoStackSize)
+        {
+            m_undoStack.erase(m_undoStack.begin());
+        }
+        
+        // Recompute layout
+        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+        
+        std::cout << "[BTEditor] Redo performed" << std::endl;
 
     // ========================================================================
     // Configuration Loading

@@ -190,6 +190,17 @@ namespace Olympe
         uint32_t GetNodeColor(BTNodeType type) const;
         uint32_t GetNodeColorByStatus(BTNodeType type, BTStatus status) const;
         const char* GetNodeIcon(BTNodeType type) const;
+        
+        // Editor mode helpers
+        void RenderNodePalette();
+        void RenderEditorToolbar();
+        void HandleNodeCreation(BTNodeType nodeType);
+        void HandleNodeDeletion();
+        void HandleNodeDuplication();
+        bool ValidateConnection(uint32_t parentId, uint32_t childId) const;
+        void SaveEditedTree();
+        void UndoLastAction();
+        void RedoLastAction();
 
         // Configuration helpers
         void LoadBTConfig();
@@ -282,5 +293,37 @@ namespace Olympe
         
         // Separate ImGui context for this window
         ImGuiContext* m_separateImGuiContext;
+        
+        // Editor mode state
+        bool m_editorMode = false;            // Toggle between debugger and editor mode
+        bool m_treeModified = false;          // Track if current tree has been modified
+        BehaviorTreeAsset m_editingTree;      // Copy of tree being edited
+        uint32_t m_nextNodeId = 1000;         // ID counter for new nodes
+        
+        // Editor interaction state
+        std::vector<uint32_t> m_selectedNodes;  // Currently selected node IDs
+        bool m_showNodePalette = false;         // Show/hide node palette popup
+        ImVec2 m_nodeCreationPos;               // Position for new node creation
+        
+        // Undo/Redo system
+        struct EditorAction {
+            enum Type { AddNode, DeleteNode, AddConnection, DeleteConnection, ModifyNode } type;
+            BTNode nodeData;                    // For add/delete/modify operations
+            uint32_t parentId;                  // For connection operations
+            uint32_t childId;                   // For connection operations
+            int childIndex;                     // For connection position in childIds
+        };
+        std::vector<EditorAction> m_undoStack;
+        std::vector<EditorAction> m_redoStack;
+        static const size_t kMaxUndoStackSize = 100;  // Maximum undo history
+        
+        // Link ID tracking for connection deletion
+        struct LinkInfo {
+            int linkId;
+            uint32_t parentId;
+            uint32_t childId;
+        };
+        std::vector<LinkInfo> m_linkMap;
+        int m_nextLinkId = 100000;
     };
 }
