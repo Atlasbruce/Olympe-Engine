@@ -43,6 +43,28 @@
 struct AIBlackboard_data;
 
 /**
+ * @enum BTValidationSeverity
+ * @brief Severity levels for validation messages
+ */
+enum class BTValidationSeverity : uint8_t
+{
+    Error = 0,      ///< Critical error that prevents tree execution
+    Warning,        ///< Non-critical issue that may affect behavior
+    Info            ///< Informational message
+};
+
+/**
+ * @struct BTValidationMessage
+ * @brief Validation message for behavior tree structure
+ */
+struct BTValidationMessage
+{
+    BTValidationSeverity severity = BTValidationSeverity::Error;
+    uint32_t nodeId = 0;
+    std::string message;
+};
+
+/**
  * @enum BTNodeType
  * @brief Behavior tree node types
  * 
@@ -208,6 +230,61 @@ struct BehaviorTreeAsset
         }
         return nullptr;
     }
+    
+    // Editor mutation methods
+    /**
+     * @brief Add a new node to the tree
+     * @param type Type of node to create
+     * @param name Name for the node
+     * @param position Initial position (for editor state)
+     * @return ID of the created node
+     */
+    uint32_t AddNode(BTNodeType type, const std::string& name, const Vector& position);
+    
+    /**
+     * @brief Remove a node from the tree
+     * @param nodeId ID of node to remove
+     * @return true if node was found and removed
+     */
+    bool RemoveNode(uint32_t nodeId);
+    
+    /**
+     * @brief Connect two nodes (parent -> child)
+     * @param parentId ID of parent node
+     * @param childId ID of child node
+     * @return true if connection was made
+     */
+    bool ConnectNodes(uint32_t parentId, uint32_t childId);
+    
+    /**
+     * @brief Disconnect two nodes
+     * @param parentId ID of parent node
+     * @param childId ID of child node
+     * @return true if disconnection was made
+     */
+    bool DisconnectNodes(uint32_t parentId, uint32_t childId);
+    
+    /**
+     * @brief Get next available node ID
+     * @return Next unique node ID
+     */
+    uint32_t GetNextNodeId() const;
+    
+    // Comprehensive validation
+    /**
+     * @brief Validate the entire tree structure
+     * @return Vector of validation messages (empty if valid)
+     */
+    std::vector<BTValidationMessage> ValidateTreeFull() const;
+    
+    // Template creation
+    /**
+     * @brief Create a behavior tree from a predefined template
+     * @param templateName Name of template ("Empty", "BasicAI", "Patrol", "Combat")
+     * @param treeName Name for the created tree
+     * @return Populated BehaviorTreeAsset
+     */
+    static BehaviorTreeAsset CreateFromTemplate(const std::string& templateName, const std::string& treeName);
 };
 
 // --- Behavior Tree Manager ---

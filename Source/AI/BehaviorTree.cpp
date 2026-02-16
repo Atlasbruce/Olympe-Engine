@@ -223,6 +223,13 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
             if (node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater)
             {
                 node.decoratorChildId = JsonHelper::GetInt(nodeJson, "decoratorChildId", 0);
+                
+                // Harmonize decoratorChildId with childIds for uniform handling
+                // If decoratorChildId is set but childIds is empty, copy to childIds
+                if (node.decoratorChildId != 0 && node.childIds.empty())
+                {
+                    node.childIds.push_back(node.decoratorChildId);
+                }
             }
             
             if (node.type == BTNodeType::Repeater)
@@ -881,4 +888,465 @@ void BehaviorTreeManager::DebugPrintLoadedTrees() const
     {
         std::cout << "  - '" << entry.first << "' -> ID=" << entry.second << std::endl;
     }
+}
+
+// ============================================================================
+// BehaviorTreeAsset Editor Methods Implementation
+// ============================================================================
+
+uint32_t BehaviorTreeAsset::AddNode(BTNodeType type, const std::string& name, const Vector& position)
+{
+    BTNode newNode;
+    newNode.type = type;
+    newNode.id = GetNextNodeId();
+    newNode.name = name;
+    
+    // Set default values based on type
+    switch (type)
+    {
+    case BTNodeType::Condition:
+        newNode.conditionType = BTConditionType::TargetVisible;
+        break;
+    case BTNodeType::Action:
+        newNode.actionType = BTActionType::Idle;
+        break;
+    case BTNodeType::Repeater:
+        newNode.repeatCount = 1;
+        break;
+    default:
+        break;
+    }
+    
+    nodes.push_back(newNode);
+    
+    // Note: position is typically stored in layout engine or editorState,
+    // not in BTNode struct itself
+    
+    return newNode.id;
+}
+
+bool BehaviorTreeAsset::RemoveNode(uint32_t nodeId)
+{
+    // Find the node
+    auto it = std::find_if(nodes.begin(), nodes.end(),
+        [nodeId](const BTNode& n) { return n.id == nodeId; });
+    
+    if (it == nodes.end())
+        return false; // Node not found
+    
+    // Remove references from all parent nodes
+    for (auto& node : nodes)
+    {
+        // Remove from childIds
+        auto childIt = std::find(node.childIds.begin(), node.childIds.end(), nodeId);
+        if (childIt != node.childIds.end())
+        {
+            node.childIds.erase(childIt);
+        }
+        
+        // Remove from decoratorChildId
+        if (node.decoratorChildId == nodeId)
+        {
+            node.decoratorChildId = 0;
+        }
+    }
+    
+    // Remove the node itself
+    nodes.erase(it);
+    return true;
+}
+
+bool BehaviorTreeAsset::ConnectNodes(uint32_t parentId, uint32_t childId)
+{
+    BTNode* parent = GetNode(parentId);
+    if (!parent)
+        return false;
+    
+    // Check if connection already exists
+    if (std::find(parent->childIds.begin(), parent->childIds.end(), childId) != parent->childIds.end())
+        return false; // Already connected
+    
+    // Add connection based on parent type
+    if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+    {
+        parent->childIds.push_back(childId);
+    }
+    else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
+    {
+        // Decorators can only have one child
+        if (!parent->childIds.empty())
+            return false; // Already has a child
+        
+        parent->childIds.push_back(childId);
+        parent->decoratorChildId = childId; // Maintain backward compatibility
+    }
+    else
+    {
+        // Leaf nodes (Action/Condition) can have children in this implementation
+        parent->childIds.push_back(childId);
+    }
+    
+    return true;
+}
+
+bool BehaviorTreeAsset::DisconnectNodes(uint32_t parentId, uint32_t childId)
+{
+    BTNode* parent = GetNode(parentId);
+    if (!parent)
+        return false;
+    
+    // Remove from childIds
+    auto it = std::find(parent->childIds.begin(), parent->childIds.end(), childId);
+    if (it != parent->childIds.end())
+    {
+        parent->childIds.erase(it);
+    }
+    
+    // Remove from decoratorChildId if applicable
+    if (parent->decoratorChildId == childId)
+    {
+        parent->decoratorChildId = 0;
+    }
+    
+    return true;
+}
+
+uint32_t BehaviorTreeAsset::GetNextNodeId() const
+{
+    uint32_t maxId = 0;
+    for (const auto& node : nodes)
+    {
+        if (node.id > maxId)
+            maxId = node.id;
+    }
+    return maxId + 1;
+}
+
+std::vector<BTValidationMessage> BehaviorTreeAsset::ValidateTreeFull() const
+{
+    std::vector<BTValidationMessage> messages;
+    
+    if (nodes.empty())
+    {
+        BTValidationMessage msg;
+        msg.severity = BTValidationSeverity::Error;
+        msg.nodeId = 0;
+        msg.message = "Tree is empty (no nodes)";
+        messages.push_back(msg);
+        return messages;
+    }
+    
+    // Build parent-child relationship map
+    std::map<uint32_t, uint32_t> childToParentCount;
+    for (const auto& node : nodes)
+    {
+        for (uint32_t childId : node.childIds)
+        {
+            childToParentCount[childId]++;
+        }
+        if (node.decoratorChildId != 0)
+        {
+            childToParentCount[node.decoratorChildId]++;
+        }
+    }
+    
+    // Check 1: Exactly one root (node with no parents)
+    std::vector<uint32_t> rootNodes;
+    for (const auto& node : nodes)
+    {
+        if (childToParentCount[node.id] == 0)
+        {
+            rootNodes.push_back(node.id);
+        }
+    }
+    
+    if (rootNodes.empty())
+    {
+        BTValidationMessage msg;
+        msg.severity = BTValidationSeverity::Error;
+        msg.nodeId = 0;
+        msg.message = "No root node found (all nodes have parents - circular dependency)";
+        messages.push_back(msg);
+    }
+    else if (rootNodes.size() > 1)
+    {
+        BTValidationMessage msg;
+        msg.severity = BTValidationSeverity::Warning;
+        msg.nodeId = 0;
+        msg.message = "Multiple root nodes found (" + std::to_string(rootNodes.size()) + ")";
+        messages.push_back(msg);
+    }
+    
+    // Check 2: No orphan nodes (multiple parents)
+    for (const auto& entry : childToParentCount)
+    {
+        if (entry.second > 1)
+        {
+            BTValidationMessage msg;
+            msg.severity = BTValidationSeverity::Error;
+            msg.nodeId = entry.first;
+            msg.message = "Node has multiple parents (" + std::to_string(entry.second) + ")";
+            messages.push_back(msg);
+        }
+    }
+    
+    // Check 3: No cycles (DFS from root)
+    if (!rootNodes.empty())
+    {
+        std::vector<uint32_t> visited;
+        std::vector<uint32_t> recursionStack;
+        
+        // Helper lambda for cycle detection
+        auto hasCycle = [&](uint32_t nodeId, auto& hasCycleRef) -> bool
+        {
+            // Check if in recursion stack (cycle detected)
+            if (std::find(recursionStack.begin(), recursionStack.end(), nodeId) != recursionStack.end())
+            {
+                return true;
+            }
+            
+            // Already visited and no cycle found
+            if (std::find(visited.begin(), visited.end(), nodeId) != visited.end())
+            {
+                return false;
+            }
+            
+            // Add to recursion stack
+            recursionStack.push_back(nodeId);
+            visited.push_back(nodeId);
+            
+            // Visit children
+            const BTNode* node = GetNode(nodeId);
+            if (node)
+            {
+                for (uint32_t childId : node->childIds)
+                {
+                    if (hasCycleRef(childId, hasCycleRef))
+                    {
+                        return true;
+                    }
+                }
+                
+                if (node->decoratorChildId != 0 &&
+                    std::find(node->childIds.begin(), node->childIds.end(), node->decoratorChildId) == node->childIds.end())
+                {
+                    if (hasCycleRef(node->decoratorChildId, hasCycleRef))
+                    {
+                        return true;
+                    }
+                }
+            }
+            
+            // Remove from recursion stack
+            recursionStack.pop_back();
+            return false;
+        };
+        
+        for (uint32_t rootId : rootNodes)
+        {
+            recursionStack.clear();
+            if (hasCycle(rootId, hasCycle))
+            {
+                BTValidationMessage msg;
+                msg.severity = BTValidationSeverity::Error;
+                msg.nodeId = rootId;
+                msg.message = "Cycle detected in tree structure";
+                messages.push_back(msg);
+                break;
+            }
+        }
+    }
+    
+    // Check 4: Node-specific validations
+    for (const auto& node : nodes)
+    {
+        if (node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater)
+        {
+            if (node.childIds.size() != 1)
+            {
+                BTValidationMessage msg;
+                msg.severity = BTValidationSeverity::Warning;
+                msg.nodeId = node.id;
+                msg.message = "Decorator should have exactly 1 child (has " + std::to_string(node.childIds.size()) + ")";
+                messages.push_back(msg);
+            }
+        }
+        else if (node.type == BTNodeType::Selector || node.type == BTNodeType::Sequence)
+        {
+            if (node.childIds.empty())
+            {
+                BTValidationMessage msg;
+                msg.severity = BTValidationSeverity::Warning;
+                msg.nodeId = node.id;
+                msg.message = "Composite should have at least 1 child";
+                messages.push_back(msg);
+            }
+        }
+        // Note: Leaves (Action/Condition) CAN have children - no restriction
+    }
+    
+    return messages;
+}
+
+BehaviorTreeAsset BehaviorTreeAsset::CreateFromTemplate(const std::string& templateName, const std::string& treeName)
+{
+    BehaviorTreeAsset tree;
+    tree.id = 0; // Will be assigned on save
+    tree.name = treeName;
+    
+    if (templateName == "Empty")
+    {
+        // Just a single Selector root
+        BTNode root;
+        root.id = 1;
+        root.type = BTNodeType::Selector;
+        root.name = "Root Selector";
+        tree.nodes.push_back(root);
+        tree.rootNodeId = 1;
+    }
+    else if (templateName == "BasicAI")
+    {
+        // Selector → Sequence with Wait + Wander
+        BTNode root;
+        root.id = 1;
+        root.type = BTNodeType::Selector;
+        root.name = "Root Selector";
+        root.childIds.push_back(2);
+        tree.nodes.push_back(root);
+        
+        BTNode sequence;
+        sequence.id = 2;
+        sequence.type = BTNodeType::Sequence;
+        sequence.name = "Wander Sequence";
+        sequence.childIds.push_back(3);
+        sequence.childIds.push_back(4);
+        tree.nodes.push_back(sequence);
+        
+        BTNode wait;
+        wait.id = 3;
+        wait.type = BTNodeType::Action;
+        wait.name = "Wait Random Time";
+        wait.actionType = BTActionType::WaitRandomTime;
+        wait.actionParam1 = 2.0f;
+        wait.actionParam2 = 5.0f;
+        tree.nodes.push_back(wait);
+        
+        BTNode wander;
+        wander.id = 4;
+        wander.type = BTNodeType::Action;
+        wander.name = "Wander";
+        wander.actionType = BTActionType::ChooseRandomNavigablePoint;
+        wander.actionParam1 = 300.0f;
+        wander.actionParam2 = 10.0f;
+        tree.nodes.push_back(wander);
+        
+        tree.rootNodeId = 1;
+    }
+    else if (templateName == "Patrol")
+    {
+        // Sequence with PatrolPickNextPoint + SetMoveGoalToPatrolPoint + MoveToGoal
+        BTNode root;
+        root.id = 1;
+        root.type = BTNodeType::Sequence;
+        root.name = "Patrol Sequence";
+        root.childIds.push_back(2);
+        root.childIds.push_back(3);
+        root.childIds.push_back(4);
+        tree.nodes.push_back(root);
+        
+        BTNode pickPoint;
+        pickPoint.id = 2;
+        pickPoint.type = BTNodeType::Action;
+        pickPoint.name = "Pick Next Patrol Point";
+        pickPoint.actionType = BTActionType::PatrolPickNextPoint;
+        tree.nodes.push_back(pickPoint);
+        
+        BTNode setGoal;
+        setGoal.id = 3;
+        setGoal.type = BTNodeType::Action;
+        setGoal.name = "Set Move Goal to Patrol Point";
+        setGoal.actionType = BTActionType::SetMoveGoalToPatrolPoint;
+        tree.nodes.push_back(setGoal);
+        
+        BTNode move;
+        move.id = 4;
+        move.type = BTNodeType::Action;
+        move.name = "Move To Goal";
+        move.actionType = BTActionType::MoveToGoal;
+        tree.nodes.push_back(move);
+        
+        tree.rootNodeId = 1;
+    }
+    else if (templateName == "Combat")
+    {
+        // Selector → Attack Sequence + Chase Sequence
+        BTNode root;
+        root.id = 1;
+        root.type = BTNodeType::Selector;
+        root.name = "Combat Selector";
+        root.childIds.push_back(2);
+        root.childIds.push_back(6);
+        tree.nodes.push_back(root);
+        
+        // Attack Sequence
+        BTNode attackSeq;
+        attackSeq.id = 2;
+        attackSeq.type = BTNodeType::Sequence;
+        attackSeq.name = "Attack Sequence";
+        attackSeq.childIds.push_back(3);
+        attackSeq.childIds.push_back(4);
+        tree.nodes.push_back(attackSeq);
+        
+        BTNode inRange;
+        inRange.id = 3;
+        inRange.type = BTNodeType::Condition;
+        inRange.name = "Target In Range?";
+        inRange.conditionType = BTConditionType::TargetInRange;
+        inRange.conditionParam = 50.0f;
+        tree.nodes.push_back(inRange);
+        
+        BTNode attack;
+        attack.id = 4;
+        attack.type = BTNodeType::Action;
+        attack.name = "Attack If Close";
+        attack.actionType = BTActionType::AttackIfClose;
+        tree.nodes.push_back(attack);
+        
+        // Chase Sequence
+        BTNode chaseSeq;
+        chaseSeq.id = 6;
+        chaseSeq.type = BTNodeType::Sequence;
+        chaseSeq.name = "Chase Sequence";
+        chaseSeq.childIds.push_back(7);
+        chaseSeq.childIds.push_back(8);
+        tree.nodes.push_back(chaseSeq);
+        
+        BTNode visible;
+        visible.id = 7;
+        visible.type = BTNodeType::Condition;
+        visible.name = "Target Visible?";
+        visible.conditionType = BTConditionType::TargetVisible;
+        tree.nodes.push_back(visible);
+        
+        BTNode setMoveGoal;
+        setMoveGoal.id = 8;
+        setMoveGoal.type = BTNodeType::Action;
+        setMoveGoal.name = "Set Move Goal To Target";
+        setMoveGoal.actionType = BTActionType::SetMoveGoalToTarget;
+        tree.nodes.push_back(setMoveGoal);
+        
+        tree.rootNodeId = 1;
+    }
+    else
+    {
+        // Default to Empty template
+        BTNode root;
+        root.id = 1;
+        root.type = BTNodeType::Selector;
+        root.name = "Root Selector";
+        tree.nodes.push_back(root);
+        tree.rootNodeId = 1;
+    }
+    
+    return tree;
 }
