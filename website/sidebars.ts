@@ -124,9 +124,10 @@ const sidebars: SidebarsConfig = {
       label: 'Contributing',
       collapsed: false,
       items: [
+        'contributing/coding-standards',
+        'contributing/code-style',
         'contributing/testing-guide',
         'contributing/adding-components',
-        'contributing/code-style',
       ],
     },
   ],
