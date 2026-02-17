@@ -19,6 +19,8 @@ Behavior Tree implementation: JSON loading and built-in node execution.
 #include "../CollisionMap.h"
 #include "../GameEngine.h"
 #include <cmath>
+#include <functional>
+#include <set>
 
 using json = nlohmann::json;
 
@@ -881,4 +883,404 @@ void BehaviorTreeManager::DebugPrintLoadedTrees() const
     {
         std::cout << "  - '" << entry.first << "' -> ID=" << entry.second << std::endl;
     }
+}
+
+// =============================================================================
+// BehaviorTreeAsset - Validation Methods
+// =============================================================================
+
+std::vector<BTValidationMessage> BehaviorTreeAsset::ValidateTreeFull() const
+{
+    std::vector<BTValidationMessage> messages;
+    
+    // Rule 1: Exactly one root node
+    int rootCount = 0;
+    const BTNode* rootNode = nullptr;
+    for (const auto& node : nodes)
+    {
+        if (node.id == rootNodeId)
+        {
+            rootNode = &node;
+            rootCount++;
+        }
+    }
+    
+    if (rootCount == 0)
+    {
+        BTValidationMessage msg;
+        msg.severity = BTValidationMessage::Severity::Error;
+        msg.nodeId = 0;
+        msg.message = "No root node found (rootNodeId=" + std::to_string(rootNodeId) + ")";
+        messages.push_back(msg);
+        return messages; // Cannot continue without root
+    }
+    else if (rootCount > 1)
+    {
+        BTValidationMessage msg;
+        msg.severity = BTValidationMessage::Severity::Error;
+        msg.nodeId = 0;
+        msg.message = "Multiple nodes with root ID found";
+        messages.push_back(msg);
+    }
+    
+    // Build parent count map
+    std::map<uint32_t, int> parentCounts;
+    for (const auto& node : nodes)
+    {
+        parentCounts[node.id] = 0;
+    }
+    
+    // Count parents for each node
+    for (const auto& node : nodes)
+    {
+        // Check childIds for composites
+        if (node.type == BTNodeType::Selector || node.type == BTNodeType::Sequence)
+        {
+            for (uint32_t childId : node.childIds)
+            {
+                if (parentCounts.find(childId) != parentCounts.end())
+                {
+                    parentCounts[childId]++;
+                }
+                else
+                {
+                    BTValidationMessage msg;
+                    msg.severity = BTValidationMessage::Severity::Error;
+                    msg.nodeId = node.id;
+                    msg.message = "Node references non-existent child ID " + std::to_string(childId);
+                    messages.push_back(msg);
+                }
+            }
+        }
+        
+        // Check decoratorChildId for decorators
+        if (node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater)
+        {
+            if (node.decoratorChildId != 0)
+            {
+                if (parentCounts.find(node.decoratorChildId) != parentCounts.end())
+                {
+                    parentCounts[node.decoratorChildId]++;
+                }
+                else
+                {
+                    BTValidationMessage msg;
+                    msg.severity = BTValidationMessage::Severity::Error;
+                    msg.nodeId = node.id;
+                    msg.message = "Decorator references non-existent child ID " + std::to_string(node.decoratorChildId);
+                    messages.push_back(msg);
+                }
+            }
+        }
+    }
+    
+    // Rule 2: No node should have multiple parents
+    for (const auto& entry : parentCounts)
+    {
+        if (entry.second > 1)
+        {
+            BTValidationMessage msg;
+            msg.severity = BTValidationMessage::Severity::Error;
+            msg.nodeId = entry.first;
+            msg.message = "Node has multiple parents (count=" + std::to_string(entry.second) + ")";
+            messages.push_back(msg);
+        }
+    }
+    
+    // Rule 3: Root should have no parent
+    if (rootNode && parentCounts[rootNode->id] > 0)
+    {
+        BTValidationMessage msg;
+        msg.severity = BTValidationMessage::Severity::Error;
+        msg.nodeId = rootNode->id;
+        msg.message = "Root node has parent(s)";
+        messages.push_back(msg);
+    }
+    
+    // Rule 4: No orphan nodes (except root)
+    for (const auto& entry : parentCounts)
+    {
+        if (entry.second == 0 && entry.first != rootNodeId)
+        {
+            BTValidationMessage msg;
+            msg.severity = BTValidationMessage::Severity::Warning;
+            msg.nodeId = entry.first;
+            msg.message = "Orphan node (no parent, not root)";
+            messages.push_back(msg);
+        }
+    }
+    
+    // Rule 5: Validate node type-specific constraints
+    for (const auto& node : nodes)
+    {
+        if (node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater)
+        {
+            // Decorators must have exactly 1 child
+            if (node.decoratorChildId == 0)
+            {
+                BTValidationMessage msg;
+                msg.severity = BTValidationMessage::Severity::Error;
+                msg.nodeId = node.id;
+                msg.message = "Decorator has no child (decoratorChildId=0)";
+                messages.push_back(msg);
+            }
+        }
+        else if (node.type == BTNodeType::Selector || node.type == BTNodeType::Sequence)
+        {
+            // Composites should have at least 1 child (warning if 0)
+            if (node.childIds.empty())
+            {
+                BTValidationMessage msg;
+                msg.severity = BTValidationMessage::Severity::Warning;
+                msg.nodeId = node.id;
+                msg.message = "Composite has no children";
+                messages.push_back(msg);
+            }
+        }
+    }
+    
+    // Rule 6: Detect cycles
+    for (const auto& node : nodes)
+    {
+        if (DetectCycle(node.id))
+        {
+            BTValidationMessage msg;
+            msg.severity = BTValidationMessage::Severity::Error;
+            msg.nodeId = node.id;
+            msg.message = "Cycle detected starting from this node";
+            messages.push_back(msg);
+        }
+    }
+    
+    return messages;
+}
+
+bool BehaviorTreeAsset::DetectCycle(uint32_t startNodeId) const
+{
+    std::set<uint32_t> visited;
+    std::set<uint32_t> recursionStack;
+    
+    // DFS helper function
+    std::function<bool(uint32_t)> dfs = [&](uint32_t nodeId) -> bool
+    {
+        if (recursionStack.find(nodeId) != recursionStack.end())
+        {
+            return true; // Cycle detected
+        }
+        
+        if (visited.find(nodeId) != visited.end())
+        {
+            return false; // Already checked this node
+        }
+        
+        visited.insert(nodeId);
+        recursionStack.insert(nodeId);
+        
+        const BTNode* node = GetNode(nodeId);
+        if (!node)
+        {
+            recursionStack.erase(nodeId);
+            return false;
+        }
+        
+        // Check children in childIds (composites)
+        for (uint32_t childId : node->childIds)
+        {
+            if (dfs(childId))
+            {
+                return true;
+            }
+        }
+        
+        // Check decoratorChildId (decorators)
+        if ((node->type == BTNodeType::Inverter || node->type == BTNodeType::Repeater) &&
+            node->decoratorChildId != 0)
+        {
+            if (dfs(node->decoratorChildId))
+            {
+                return true;
+            }
+        }
+        
+        recursionStack.erase(nodeId);
+        return false;
+    };
+    
+    return dfs(startNodeId);
+}
+
+// =============================================================================
+// BehaviorTreeAsset - Editor CRUD Operations
+// =============================================================================
+
+uint32_t BehaviorTreeAsset::GenerateNextNodeId() const
+{
+    uint32_t maxId = 0;
+    for (const auto& node : nodes)
+    {
+        if (node.id > maxId)
+        {
+            maxId = node.id;
+        }
+    }
+    return maxId + 1;
+}
+
+uint32_t BehaviorTreeAsset::AddNode(BTNodeType type, const std::string& name, const Vector& position)
+{
+    BTNode newNode;
+    newNode.type = type;
+    newNode.id = GenerateNextNodeId();
+    newNode.name = name;
+    
+    // Set default parameters based on type
+    if (type == BTNodeType::Action)
+    {
+        newNode.actionType = BTActionType::Idle;
+        newNode.actionParam1 = 0.0f;
+        newNode.actionParam2 = 0.0f;
+    }
+    else if (type == BTNodeType::Condition)
+    {
+        newNode.conditionType = BTConditionType::TargetVisible;
+        newNode.conditionParam = 0.0f;
+    }
+    else if (type == BTNodeType::Repeater)
+    {
+        newNode.repeatCount = 1;
+        newNode.decoratorChildId = 0;
+    }
+    else if (type == BTNodeType::Inverter)
+    {
+        newNode.decoratorChildId = 0;
+    }
+    
+    nodes.push_back(newNode);
+    
+    std::cout << "[BehaviorTreeAsset] Added node ID=" << newNode.id
+              << " type=" << static_cast<int>(type) << " name='" << name << "'" << std::endl;
+    
+    return newNode.id;
+}
+
+bool BehaviorTreeAsset::RemoveNode(uint32_t nodeId)
+{
+    // Find and remove the node
+    auto it = nodes.begin();
+    while (it != nodes.end())
+    {
+        if (it->id == nodeId)
+        {
+            nodes.erase(it);
+            break;
+        }
+        ++it;
+    }
+    
+    // Clean up connections to/from this node
+    for (auto& node : nodes)
+    {
+        // Remove from childIds
+        auto childIt = node.childIds.begin();
+        while (childIt != node.childIds.end())
+        {
+            if (*childIt == nodeId)
+            {
+                childIt = node.childIds.erase(childIt);
+            }
+            else
+            {
+                ++childIt;
+            }
+        }
+        
+        // Remove from decoratorChildId
+        if (node.decoratorChildId == nodeId)
+        {
+            node.decoratorChildId = 0;
+        }
+    }
+    
+    std::cout << "[BehaviorTreeAsset] Removed node ID=" << nodeId << std::endl;
+    return true;
+}
+
+bool BehaviorTreeAsset::ConnectNodes(uint32_t parentId, uint32_t childId)
+{
+    BTNode* parent = GetNode(parentId);
+    const BTNode* child = GetNode(childId);
+    
+    if (!parent || !child)
+    {
+        std::cerr << "[BehaviorTreeAsset] ConnectNodes failed: invalid node IDs" << std::endl;
+        return false;
+    }
+    
+    // Add connection based on parent type
+    if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
+    {
+        // Check if already connected
+        for (uint32_t id : parent->childIds)
+        {
+            if (id == childId)
+            {
+                std::cerr << "[BehaviorTreeAsset] Connection already exists" << std::endl;
+                return false;
+            }
+        }
+        
+        parent->childIds.push_back(childId);
+        std::cout << "[BehaviorTreeAsset] Connected composite node " << parentId << " -> " << childId << std::endl;
+        return true;
+    }
+    else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
+    {
+        if (parent->decoratorChildId != 0)
+        {
+            std::cerr << "[BehaviorTreeAsset] Decorator already has a child" << std::endl;
+            return false;
+        }
+        
+        parent->decoratorChildId = childId;
+        std::cout << "[BehaviorTreeAsset] Connected decorator node " << parentId << " -> " << childId << std::endl;
+        return true;
+    }
+    else
+    {
+        std::cerr << "[BehaviorTreeAsset] Cannot connect from leaf node" << std::endl;
+        return false;
+    }
+}
+
+bool BehaviorTreeAsset::DisconnectNodes(uint32_t parentId, uint32_t childId)
+{
+    BTNode* parent = GetNode(parentId);
+    
+    if (!parent)
+    {
+        return false;
+    }
+    
+    // Remove from childIds
+    auto it = parent->childIds.begin();
+    while (it != parent->childIds.end())
+    {
+        if (*it == childId)
+        {
+            parent->childIds.erase(it);
+            std::cout << "[BehaviorTreeAsset] Disconnected " << parentId << " -X-> " << childId << std::endl;
+            return true;
+        }
+        ++it;
+    }
+    
+    // Remove from decoratorChildId
+    if (parent->decoratorChildId == childId)
+    {
+        parent->decoratorChildId = 0;
+        std::cout << "[BehaviorTreeAsset] Disconnected decorator " << parentId << " -X-> " << childId << std::endl;
+        return true;
+    }
+    
+    return false;
 }

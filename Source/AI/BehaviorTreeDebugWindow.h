@@ -17,6 +17,7 @@
 #include "../vector.h"
 #include "BTGraphLayoutEngine.h"
 #include "BehaviorTree.h"
+#include "BTEditorCommand.h"
 #include <string>
 #include <vector>
 #include <deque>
@@ -28,6 +29,13 @@ struct SDL_Window;
 struct SDL_Renderer;
 union SDL_Event;
 struct ImGuiContext;
+
+// Forward declaration for JSON
+namespace nlohmann {
+    template<typename T, typename SFINAE> class basic_json;
+    using json = basic_json<std::map, std::vector, std::string, bool, int64_t, uint64_t, double, std::allocator, void, void>;
+}
+using json = nlohmann::json;
 
 namespace Olympe
 {
@@ -213,6 +221,28 @@ namespace Olympe
         void SaveEditedTree();
         void UndoLastAction();
         void RedoLastAction();
+        
+        // Validation helpers
+        void RenderValidationPanel();
+        uint32_t GetPinColor(uint32_t nodeId, PinType pinType) const;
+        bool IsConnectionValid(uint32_t parentId, uint32_t childId) const;
+        
+        // Node properties editor
+        void RenderNodeProperties();
+        
+        // Save system
+        void Save();
+        void SaveAs();
+        void RenderFileMenu();
+        json SerializeTreeToJson(const BehaviorTreeAsset& tree) const;
+        std::string GetCurrentTimestamp() const;
+        
+        // New BT creation
+        void RenderNewBTDialog();
+        BehaviorTreeAsset CreateFromTemplate(int templateIndex, const std::string& name);
+        
+        // Edit menu
+        void RenderEditMenu();
 
         // Configuration helpers
         void LoadBTConfig();
@@ -311,25 +341,24 @@ namespace Olympe
         // Editor mode state
         bool m_editorMode = false;
         bool m_treeModified = false;
+        bool m_isDirty = false;
         BehaviorTreeAsset m_editingTree;
         uint32_t m_nextNodeId = 1000;
+        std::string m_currentFilePath;
 
         // Editor interaction state
         std::vector<uint32_t> m_selectedNodes;
         bool m_showNodePalette = false;
         Vector m_nodeCreationPos;
+        
+        // Pin dragging for connections
+        bool m_isDraggingPin = false;
+        uint32_t m_dragSourceNodeId = 0;
+        PinType m_dragSourcePinType = PinType::Output;
+        Vector m_dragEndPos;
 
-        // Undo/Redo system
-        struct EditorAction {
-            enum Type { AddNode, DeleteNode, AddConnection, DeleteConnection, ModifyNode } type;
-            BTNode nodeData;
-            uint32_t parentId = 0;
-            uint32_t childId = 0;
-            int childIndex = 0;
-        };
-        std::vector<EditorAction> m_undoStack;
-        std::vector<EditorAction> m_redoStack;
-        static const size_t kMaxUndoStackSize = 100;
+        // Undo/Redo system (command pattern)
+        BTCommandStack m_commandStack;
 
         // Link ID tracking for connection deletion
         struct LinkInfo {
@@ -339,5 +368,18 @@ namespace Olympe
         };
         std::vector<LinkInfo> m_linkMap;
         int m_nextLinkId = 100000;
+        
+        // Validation
+        std::vector<BTValidationMessage> m_validationMessages;
+        bool m_showValidationPanel = true;
+        
+        // Node properties
+        uint32_t m_inspectedNodeId = 0;
+        bool m_showNodeProperties = false;
+        
+        // New BT dialog
+        bool m_showNewBTDialog = false;
+        char m_newBTName[256] = "";
+        int m_selectedTemplate = 0;
     };
 }

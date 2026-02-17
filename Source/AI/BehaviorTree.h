@@ -180,6 +180,24 @@ struct BTNode
     }
 };
 
+/**
+ * @struct BTValidationMessage
+ * @brief Validation message for behavior tree structure checking
+ */
+struct BTValidationMessage
+{
+    enum class Severity : uint8_t
+    {
+        Info = 0,
+        Warning = 1,
+        Error = 2
+    };
+    
+    Severity severity = Severity::Info;
+    uint32_t nodeId = 0;
+    std::string message;
+};
+
 // --- Behavior Tree Asset ---
 struct BehaviorTreeAsset
 {
@@ -208,6 +226,17 @@ struct BehaviorTreeAsset
         }
         return nullptr;
     }
+    
+    // Validation methods
+    std::vector<BTValidationMessage> ValidateTreeFull() const;
+    bool DetectCycle(uint32_t startNodeId) const;
+    
+    // Editor CRUD operations
+    uint32_t AddNode(BTNodeType type, const std::string& name, const Vector& position);
+    bool RemoveNode(uint32_t nodeId);
+    bool ConnectNodes(uint32_t parentId, uint32_t childId);
+    bool DisconnectNodes(uint32_t parentId, uint32_t childId);
+    uint32_t GenerateNextNodeId() const;
 };
 
 // --- Behavior Tree Manager ---
