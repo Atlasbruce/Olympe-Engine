@@ -271,6 +271,13 @@ namespace Olympe
 
         if (ImGui::BeginMenuBar())
         {
+            // File menu (only visible in editor mode)
+            if (m_editorMode)
+            {
+                RenderFileMenu();
+                RenderEditMenu();
+            }
+            
             if (ImGui::BeginMenu("View"))
             {
                 ImGui::SliderFloat("Auto Refresh (s)", &m_autoRefreshInterval, 0.1f, 5.0f);
@@ -398,9 +405,60 @@ namespace Olympe
             ImGui::EndMenuBar();
         }
 
+        // Keyboard shortcuts
         if (ImGui::IsKeyPressed(ImGuiKey_F5))
         {
             RefreshEntityList();
+        }
+        
+        // Editor mode shortcuts
+        if (m_editorMode)
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            
+            // Ctrl+S - Save
+            if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S))
+            {
+                Save();
+            }
+            
+            // Ctrl+Z - Undo
+            if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z))
+            {
+                if (m_commandStack.CanUndo())
+                {
+                    m_commandStack.Undo();
+                    m_isDirty = true;
+                }
+            }
+            
+            // Ctrl+Y - Redo
+            if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y))
+            {
+                if (m_commandStack.CanRedo())
+                {
+                    m_commandStack.Redo();
+                    m_isDirty = true;
+                }
+            }
+            
+            // Delete - Delete selected nodes
+            if (ImGui::IsKeyPressed(ImGuiKey_Delete))
+            {
+                HandleNodeDeletion();
+            }
+            
+            // Ctrl+D - Duplicate selected nodes
+            if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_D))
+            {
+                HandleNodeDuplication();
+            }
+            
+            // Escape - Deselect all
+            if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+            {
+                m_selectedNodes.clear();
+            }
         }
 
         float windowWidth = ImGui::GetContentRegionAvail().x;
@@ -1364,11 +1422,36 @@ namespace Olympe
         if (m_selectedEntity == 0)
         {
             ImGui::Text("No entity selected");
+            
+            // Show validation panel even without entity in editor mode
+            if (m_editorMode)
+            {
+                RenderValidationPanel();
+                RenderNodeProperties();
+            }
+            
             return;
         }
 
         ImGui::Text("Inspector");
         ImGui::Separator();
+        
+        // Editor mode panels
+        if (m_editorMode)
+        {
+            if (ImGui::CollapsingHeader("Validation", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                RenderValidationPanel();
+            }
+            
+            if (m_inspectedNodeId != 0)
+            {
+                if (ImGui::CollapsingHeader("Node Properties", ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    RenderNodeProperties();
+                }
+            }
+        }
 
         if (ImGui::CollapsingHeader("Runtime Info", ImGuiTreeNodeFlags_DefaultOpen))
         {
@@ -1384,6 +1467,9 @@ namespace Olympe
         {
             RenderExecutionLog();
         }
+        
+        // Render new BT dialog if open
+        RenderNewBTDialog();
     }
 
     void BehaviorTreeDebugWindow::RenderRuntimeInfo()
@@ -1813,24 +1899,30 @@ namespace Olympe
         ImGui::SameLine();
         if (ImGui::Button("Save Tree"))
         {
-            SaveEditedTree();
+            Save();
         }
 
         ImGui::SameLine();
-        bool canUndo = !m_undoStack.empty();
+        bool canUndo = m_commandStack.CanUndo();
         if (!canUndo) ImGui::BeginDisabled();
         if (ImGui::Button("Undo"))
         {
-            UndoLastAction();
+            m_commandStack.Undo();
+            m_isDirty = true;
+            m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+            m_validationMessages = m_editingTree.ValidateTreeFull();
         }
         if (!canUndo) ImGui::EndDisabled();
 
         ImGui::SameLine();
-        bool canRedo = !m_redoStack.empty();
+        bool canRedo = m_commandStack.CanRedo();
         if (!canRedo) ImGui::BeginDisabled();
         if (ImGui::Button("Redo"))
         {
-            RedoLastAction();
+            m_commandStack.Redo();
+            m_isDirty = true;
+            m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+            m_validationMessages = m_editingTree.ValidateTreeFull();
         }
         if (!canRedo) ImGui::EndDisabled();
 
@@ -1893,94 +1985,95 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::HandleNodeCreation(BTNodeType nodeType)
     {
-        BTNode newNode;
-        newNode.type = nodeType;
-        newNode.id = m_nextNodeId++;
-
+        if (!m_editorMode)
+            return;
+        
+        // Get node name based on type
+        std::string nodeName;
         switch (nodeType)
         {
         case BTNodeType::Selector:
-            newNode.name = "New Selector";
+            nodeName = "New Selector";
             break;
         case BTNodeType::Sequence:
-            newNode.name = "New Sequence";
+            nodeName = "New Sequence";
             break;
         case BTNodeType::Condition:
-            newNode.name = "New Condition";
-            newNode.conditionType = BTConditionType::TargetVisible;
+            nodeName = "New Condition";
             break;
         case BTNodeType::Action:
-            newNode.name = "New Action";
-            newNode.actionType = BTActionType::Idle;
+            nodeName = "New Action";
             break;
         case BTNodeType::Inverter:
-            newNode.name = "New Inverter";
+            nodeName = "New Inverter";
             break;
         case BTNodeType::Repeater:
-            newNode.name = "New Repeater";
-            newNode.repeatCount = 1;
+            nodeName = "New Repeater";
             break;
         }
 
+        // Initialize editing tree if empty
         if (m_editingTree.nodes.empty() && m_selectedEntity != 0)
         {
             auto& world = World::Get();
-            const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
-            const BehaviorTreeAsset* originalTree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
+            if (world.HasComponent<BehaviorTreeRuntime_data>(m_selectedEntity))
+            {
+                const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
+                const BehaviorTreeAsset* originalTree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
 
-            if (originalTree)
-            {
-                m_editingTree = *originalTree;
-            }
-            else
-            {
-                m_editingTree.id = btRuntime.AITreeAssetId;
-                m_editingTree.name = "New Tree";
-                m_editingTree.rootNodeId = 0;
+                if (originalTree)
+                {
+                    m_editingTree = *originalTree;
+                }
+                else
+                {
+                    m_editingTree.id = btRuntime.AITreeAssetId;
+                    m_editingTree.name = "New Tree";
+                    m_editingTree.rootNodeId = 0;
+                }
             }
         }
 
-        m_editingTree.nodes.push_back(newNode);
-
-        EditorAction action;
-        action.type = EditorAction::AddNode;
-        action.nodeData = newNode;
-        m_undoStack.push_back(action);
-        if (m_undoStack.size() > kMaxUndoStackSize)
-        {
-            m_undoStack.erase(m_undoStack.begin());
-        }
-        m_redoStack.clear();
-
+        // Use command pattern
+        auto cmd = std::make_unique<AddNodeCommand>(&m_editingTree, nodeType, nodeName, m_nodeCreationPos);
+        m_commandStack.Execute(std::move(cmd));
+        
+        m_isDirty = true;
         m_treeModified = true;
 
+        // Update layout
         m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+        
+        // Run validation
+        m_validationMessages = m_editingTree.ValidateTreeFull();
 
-        std::cout << "[BTEditor] Created node: " << newNode.name << " (ID: " << newNode.id << ")" << std::endl;
+        std::cout << "[BTEditor] Created node: " << nodeName << std::endl;
     }
 
     void BehaviorTreeDebugWindow::HandleNodeDeletion()
     {
-        if (m_selectedNodes.empty())
+        if (m_selectedNodes.empty() || !m_editorMode)
             return;
 
         for (uint32_t nodeId : m_selectedNodes)
         {
-            auto it = std::find_if(m_editingTree.nodes.begin(), m_editingTree.nodes.end(),
-                [nodeId](const BTNode& n) { return n.id == nodeId; });
+            // Use command pattern
+            auto cmd = std::make_unique<DeleteNodeCommand>(&m_editingTree, nodeId);
+            m_commandStack.Execute(std::move(cmd));
+            
+            std::cout << "[BTEditor] Deleted node ID: " << nodeId << std::endl;
+        }
 
-            if (it != m_editingTree.nodes.end())
-            {
-                EditorAction action;
-                action.type = EditorAction::DeleteNode;
-                action.nodeData = *it;
-                m_undoStack.push_back(action);
-                if (m_undoStack.size() > kMaxUndoStackSize)
-                {
-                    m_undoStack.erase(m_undoStack.begin());
-                }
+        m_selectedNodes.clear();
+        m_isDirty = true;
+        m_treeModified = true;
 
-                m_editingTree.nodes.erase(it);
+        // Update layout
+        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+        
+        // Run validation
+        m_validationMessages = m_editingTree.ValidateTreeFull();
+    }
 
                 for (auto& node : m_editingTree.nodes)
                 {
@@ -2009,29 +2102,49 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::HandleNodeDuplication()
     {
-        if (m_selectedNodes.empty())
+        if (m_selectedNodes.empty() || !m_editorMode)
             return;
 
         std::vector<uint32_t> newNodes;
 
         for (uint32_t nodeId : m_selectedNodes)
         {
-            auto it = std::find_if(m_editingTree.nodes.begin(), m_editingTree.nodes.end(),
-                [nodeId](const BTNode& n) { return n.id == nodeId; });
-
-            if (it != m_editingTree.nodes.end())
+            const BTNode* original = m_editingTree.GetNode(nodeId);
+            
+            if (original)
             {
-                BTNode duplicate = *it;
-                duplicate.id = m_nextNodeId++;
-                duplicate.name = duplicate.name + " (Copy)";
+                std::string newName = original->name + " (Copy)";
+                auto cmd = std::make_unique<AddNodeCommand>(&m_editingTree, original->type, newName, Vector());
+                m_commandStack.Execute(std::move(cmd));
+                
+                // Get the newly created node to copy parameters
+                if (!m_editingTree.nodes.empty())
+                {
+                    BTNode* newNode = &m_editingTree.nodes.back();
+                    newNode->actionType = original->actionType;
+                    newNode->actionParam1 = original->actionParam1;
+                    newNode->actionParam2 = original->actionParam2;
+                    newNode->conditionType = original->conditionType;
+                    newNode->conditionParam = original->conditionParam;
+                    newNode->repeatCount = original->repeatCount;
+                    newNode->stringParams = original->stringParams;
+                    newNode->intParams = original->intParams;
+                    newNode->floatParams = original->floatParams;
+                    
+                    newNodes.push_back(newNode->id);
+                }
 
-                m_editingTree.nodes.push_back(duplicate);
-                newNodes.push_back(duplicate.id);
+                std::cout << "[BTEditor] Duplicated node ID: " << nodeId << std::endl;
+            }
+        }
 
-                EditorAction action;
-                action.type = EditorAction::AddNode;
-                action.nodeData = duplicate;
-                m_undoStack.push_back(action);
+        m_selectedNodes = newNodes;
+        m_isDirty = true;
+        m_treeModified = true;
+
+        // Update layout
+        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+    }
 
                 std::cout << "[BTEditor] Duplicated node: " << duplicate.name << " (ID: " << duplicate.id << ")" << std::endl;
             }
