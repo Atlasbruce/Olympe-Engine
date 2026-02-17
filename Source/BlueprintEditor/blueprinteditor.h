@@ -23,6 +23,12 @@ namespace Olympe
     // Forward declaration
     class BlueprintEditorGUI;
     
+    // Forward declare Blueprint namespace types
+    namespace Blueprint
+    {
+        class CommandStack;
+    }
+    
     // Use nlohmann json
     using json = nlohmann::json;
 
@@ -172,7 +178,7 @@ namespace Olympe
         std::string GetNextRedoDescription() const;
         
         // Command stack access for history panel
-        class CommandStack* GetCommandStack();
+        Blueprint::CommandStack* GetCommandStack();
         
         // ===== Plugin System =====
         void InitializePlugins();
@@ -229,7 +235,7 @@ namespace Olympe
         std::string m_SelectedAssetPath; // Currently selected asset file path
         
         // ===== Phase 6: Command System =====
-        class CommandStack* m_CommandStack;  // Undo/redo command stack
+        Blueprint::CommandStack* m_CommandStack;  // Undo/redo command stack
         
         // ===== Plugin System =====
         std::map<std::string, std::unique_ptr<class BlueprintEditorPlugin>> m_Plugins;

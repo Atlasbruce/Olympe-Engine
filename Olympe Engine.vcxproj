@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\AI\BehaviorTreeDebugWindow.cpp" />
+    <ClCompile Include="Source\AI\BTEditorCommand.cpp" />
     <ClCompile Include="Source\AI\BTGraphLayoutEngine.cpp" />
     <ClCompile Include="Source\Animation\AnimationBank.cpp" />
     <ClCompile Include="Source\Animation\AnimationErrorHandler.cpp" />
@@ -112,6 +113,7 @@
     <ClInclude Include="Source\AI\AIEvents.h" />
     <ClInclude Include="Source\AI\BehaviorTree.h" />
     <ClInclude Include="Source\AI\BehaviorTreeDebugWindow.h" />
+    <ClInclude Include="Source\AI\BTEditorCommand.h" />
     <ClInclude Include="Source\AI\BTGraphLayoutEngine.h" />
     <ClInclude Include="Source\Animation\AnimationBank.h" />
     <ClInclude Include="Source\Animation\AnimationErrorHandler.h" />

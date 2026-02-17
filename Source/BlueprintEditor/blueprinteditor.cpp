@@ -87,7 +87,7 @@ namespace Olympe
         TemplateManager::Get().Initialize();
         
         // Initialize command stack
-        m_CommandStack = new CommandStack();
+        m_CommandStack = new Olympe::Blueprint::CommandStack();
         
         // Initialize plugin system
         InitializePlugins();

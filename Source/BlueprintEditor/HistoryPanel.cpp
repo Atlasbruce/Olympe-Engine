@@ -37,7 +37,7 @@ namespace Olympe
         ImGui::Begin("History", &m_ShowPanel);
 
         auto& backend = BlueprintEditor::Get();
-        CommandStack* cmdStack = backend.GetCommandStack();
+        Blueprint::CommandStack* cmdStack = backend.GetCommandStack();
 
         if (!cmdStack)
         {

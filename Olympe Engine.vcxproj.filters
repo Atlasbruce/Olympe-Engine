@@ -345,6 +345,9 @@
     <ClCompile Include="Source\Editor\AnimationEditorWindow.cpp">
       <Filter>Fichiers d%27en-t�te\Animation</Filter>
     </ClCompile>
+    <ClCompile Include="Source\AI\BTEditorCommand.cpp">
+      <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -682,6 +685,9 @@
     </ClInclude>
     <ClInclude Include="Source\Editor\AnimationEditorWindow.h">
       <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\BTEditorCommand.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

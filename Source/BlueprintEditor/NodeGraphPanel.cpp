@@ -16,6 +16,9 @@
 #include <cstring>
 #include <cmath>
 
+// Use Blueprint namespace for command classes
+using namespace Olympe::Blueprint;
+
 namespace
 {
     // UID generation constants for ImNodes
@@ -1012,7 +1015,7 @@ namespace Olympe
                 {
                     int nodeId = selectedNodes[0];
                     std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
-                    auto cmd = std::make_unique<DuplicateNodeCommand>(graphId, nodeId);
+                    auto cmd = std::make_unique<Olympe::Blueprint::DuplicateNodeCommand>(graphId, nodeId);
                     BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
                 }
             }
