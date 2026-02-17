@@ -9,7 +9,10 @@
 #include "../DataManager.h"
 #include "../system/system_utils.h"
 #include "../json_helper.h"
+#include "../GameEngine.h"
 #include "../third_party/imgui/imgui.h"
+#include "../third_party/imgui/backends/imgui_impl_sdl3.h"
+#include "../third_party/imgui/backends/imgui_impl_sdlrenderer3.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <ctime>
@@ -37,6 +40,7 @@ AnimationEditorWindow::AnimationEditorWindow()
 
 AnimationEditorWindow::~AnimationEditorWindow()
 {
+    DestroySeparateWindow();
     SYSTEM_LOG << "AnimationEditorWindow: Destroyed\n";
 }
 
@@ -50,6 +54,18 @@ void AnimationEditorWindow::Toggle()
     
     if (m_isOpen)
     {
+        // Create separate window if it doesn't exist
+        if (!m_separateWindow)
+        {
+            CreateSeparateWindow();
+        }
+        
+        // Show the window
+        if (m_separateWindow)
+        {
+            SDL_ShowWindow(m_separateWindow);
+        }
+        
         SYSTEM_LOG << "AnimationEditorWindow: Opened\n";
         
         // Load initial bank if no bank is loaded
@@ -65,6 +81,12 @@ void AnimationEditorWindow::Toggle()
     }
     else
     {
+        // Hide the window
+        if (m_separateWindow)
+        {
+            SDL_HideWindow(m_separateWindow);
+        }
+        
         SYSTEM_LOG << "AnimationEditorWindow: Closed\n";
         
         // Prompt for unsaved changes
@@ -1306,6 +1328,151 @@ bool AnimationEditorWindow::PromptUnsavedChanges()
 void AnimationEditorWindow::UpdateWindowTitle()
 {
     // Title is set in Render() with m_isDirty flag
+}
+
+// ========================================================================
+// Standalone Window Management
+// ========================================================================
+
+void AnimationEditorWindow::CreateSeparateWindow()
+{
+    if (m_separateWindow) 
+    {
+        SYSTEM_LOG << "[AnimationEditor] Separate window already exists\n";
+        return; // Already created
+    }
+    
+    // Save current context
+    ImGuiContext* mainContext = ImGui::GetCurrentContext();
+    
+    // Create SDL window (1280x720, resizable)
+    if (!SDL_CreateWindowAndRenderer(
+        "Animation Editor - Olympe Engine",
+        1280,
+        720,
+        SDL_WINDOW_RESIZABLE,
+        &m_separateWindow,
+        &m_separateRenderer))
+    {
+        SYSTEM_LOG << "[AnimationEditor] Failed to create window: " << SDL_GetError() << "\n";
+        return;
+    }
+    
+    // Create separate ImGui context
+    m_separateImGuiContext = ImGui::CreateContext();
+    ImGui::SetCurrentContext(m_separateImGuiContext);
+    
+    // Setup ImGui style
+    ImGui::StyleColorsDark();
+    
+    // Initialize ImGui backends
+    ImGui_ImplSDL3_InitForSDLRenderer(m_separateWindow, m_separateRenderer);
+    ImGui_ImplSDLRenderer3_Init(m_separateRenderer);
+    
+    // Restore main context
+    ImGui::SetCurrentContext(mainContext);
+    
+    SYSTEM_LOG << "[AnimationEditor] Standalone window created\n";
+}
+
+void AnimationEditorWindow::DestroySeparateWindow()
+{
+    if (!m_separateWindow)
+        return;
+    
+    // Save current context
+    ImGuiContext* mainContext = ImGui::GetCurrentContext();
+    
+    if (m_separateImGuiContext)
+    {
+        ImGui::SetCurrentContext(m_separateImGuiContext);
+        ImGui_ImplSDLRenderer3_Shutdown();
+        ImGui_ImplSDL3_Shutdown();
+        ImGui::DestroyContext(m_separateImGuiContext);
+        m_separateImGuiContext = nullptr;
+    }
+    
+    // Restore main context
+    ImGui::SetCurrentContext(mainContext);
+    
+    if (m_separateRenderer)
+    {
+        SDL_DestroyRenderer(m_separateRenderer);
+        m_separateRenderer = nullptr;
+    }
+    
+    if (m_separateWindow)
+    {
+        SDL_DestroyWindow(m_separateWindow);
+        m_separateWindow = nullptr;
+    }
+    
+    SYSTEM_LOG << "[AnimationEditor] Separate window destroyed\n";
+}
+
+void AnimationEditorWindow::RenderSeparateWindow()
+{
+    if (!m_separateWindow || !m_separateRenderer) 
+        return;
+    
+    // Switch to separate ImGui context
+    ImGuiContext* mainContext = ImGui::GetCurrentContext();
+    ImGui::SetCurrentContext(m_separateImGuiContext);
+    
+    // Clear window
+    SDL_SetRenderDrawColor(m_separateRenderer, 45, 45, 48, 255);
+    SDL_RenderClear(m_separateRenderer);
+    
+    // ImGui frame
+    ImGui_ImplSDLRenderer3_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    ImGui::NewFrame();
+    
+    // Render Animation Editor UI
+    Render();
+    
+    // Present
+    ImGui::Render();
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_separateRenderer);
+    SDL_RenderPresent(m_separateRenderer);
+    
+    // Restore main context
+    ImGui::SetCurrentContext(mainContext);
+}
+
+void AnimationEditorWindow::ProcessEvent(SDL_Event* event)
+{
+    if (!m_separateWindow || !m_isOpen) 
+        return;
+    
+    // Check if event is for our window
+    if (event->type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
+    {
+        Uint32 windowID = SDL_GetWindowID(m_separateWindow);
+        if (event->window.windowID == windowID)
+        {
+            Toggle(); // Close window
+            return;
+        }
+    }
+    
+    // Forward event to ImGui (separate context)
+    ImGuiContext* mainContext = ImGui::GetCurrentContext();
+    ImGui::SetCurrentContext(m_separateImGuiContext);
+    ImGui_ImplSDL3_ProcessEvent(event);
+    ImGui::SetCurrentContext(mainContext);
+}
+
+void AnimationEditorWindow::Update(float deltaTime)
+{
+    if (!m_isOpen) 
+        return;
+    
+    // Update preview animation
+    UpdatePreview(deltaTime);
+    
+    // Render separate window
+    RenderSeparateWindow();
 }
 
 } // namespace Olympe
