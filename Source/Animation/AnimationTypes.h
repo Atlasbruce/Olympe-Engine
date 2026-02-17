@@ -96,7 +96,7 @@ namespace OlympeAnimation
         ParameterType type = ParameterType::Float;
         union
         {
-            bool boolValue;
+            bool boolValue = false;
             float floatValue;
             int intValue;
         };

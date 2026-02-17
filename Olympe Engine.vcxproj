@@ -61,6 +61,7 @@
     <ClCompile Include="Source\ECS_Systems_Animation.cpp" />
     <ClCompile Include="Source\ECS_Systems_Camera.cpp" />
     <ClCompile Include="Source\ECS_Systems_Rendering_Camera.cpp" />
+    <ClCompile Include="Source\Editor\AnimationEditorWindow.cpp" />
     <ClCompile Include="Source\engine_utils.cpp" />
     <ClCompile Include="Source\InputConfigLoader.cpp" />
     <ClCompile Include="Source\InputDevice.cpp" />
@@ -115,6 +116,7 @@
     <ClInclude Include="Source\Animation\AnimationBank.h" />
     <ClInclude Include="Source\Animation\AnimationErrorHandler.h" />
     <ClInclude Include="Source\Animation\AnimationGraph.h" />
+    <ClInclude Include="Source\Animation\AnimationHelpers.h" />
     <ClInclude Include="Source\Animation\AnimationManager.h" />
     <ClInclude Include="Source\Animation\AnimationTypes.h" />
     <ClInclude Include="Source\BlueprintEditor\AdditionalEditorPlugins.h" />
@@ -154,6 +156,7 @@
     <ClInclude Include="Source\ECS_Systems_Animation.h" />
     <ClInclude Include="Source\ECS_Systems_Camera.h" />
     <ClInclude Include="Source\ECS_Systems_Rendering_Camera.h" />
+    <ClInclude Include="Source\Editor\AnimationEditorWindow.h" />
     <ClInclude Include="Source\engine_utils.h" />
     <ClInclude Include="Source\DataManager.h" />
     <ClInclude Include="Source\GameEngine.h" />

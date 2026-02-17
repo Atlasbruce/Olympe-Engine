@@ -348,7 +348,7 @@ void AnimationEditorWindow::RenderSpritesheetPanel()
         
         // ID
         char idBuf[256];
-        strncpy(idBuf, sheet.id.c_str(), sizeof(idBuf) - 1);
+        strncpy_s(idBuf, sheet.id.c_str(), sizeof(idBuf) - 1);
         idBuf[sizeof(idBuf) - 1] = '\0';
         if (ImGui::InputText("ID", idBuf, sizeof(idBuf)))
         {
@@ -358,7 +358,7 @@ void AnimationEditorWindow::RenderSpritesheetPanel()
         
         // Path
         char pathBuf[512];
-        strncpy(pathBuf, sheet.path.c_str(), sizeof(pathBuf) - 1);
+        strncpy_s(pathBuf, sheet.path.c_str(), sizeof(pathBuf) - 1);
         pathBuf[sizeof(pathBuf) - 1] = '\0';
         if (ImGui::InputText("Path", pathBuf, sizeof(pathBuf)))
         {
@@ -368,7 +368,7 @@ void AnimationEditorWindow::RenderSpritesheetPanel()
         
         // Description
         char descBuf[512];
-        strncpy(descBuf, sheet.description.c_str(), sizeof(descBuf) - 1);
+        strncpy_s(descBuf, sheet.description.c_str(), sizeof(descBuf) - 1);
         descBuf[sizeof(descBuf) - 1] = '\0';
         if (ImGui::InputText("Description", descBuf, sizeof(descBuf)))
         {
@@ -440,8 +440,8 @@ void AnimationEditorWindow::RenderSpritesheetPanel()
         if (tex)
         {
             // Get texture dimensions
-            int texW = 0;
-            int texH = 0;
+            float texW = 0.f;
+            float texH = 0.f;
             SDL_GetTextureSize(tex, &texW, &texH);
             
             // Calculate preview size
@@ -542,7 +542,7 @@ void AnimationEditorWindow::RenderSequencePanel()
         
         // Name
         char nameBuf[256];
-        strncpy(nameBuf, seq.name.c_str(), sizeof(nameBuf) - 1);
+        strncpy_s(nameBuf, sizeof(nameBuf), seq.name.c_str(), _TRUNCATE);
         nameBuf[sizeof(nameBuf) - 1] = '\0';
         if (ImGui::InputText("Name", nameBuf, sizeof(nameBuf)))
         {
@@ -552,11 +552,12 @@ void AnimationEditorWindow::RenderSequencePanel()
             // Update key in map
             if (oldName != seq.name)
             {
-                auto nodeHandle = m_currentBank.animations.extract(oldName);
-                if (!nodeHandle.empty())
+                auto findIt = m_currentBank.animations.find(oldName);
+                if (findIt != m_currentBank.animations.end())
                 {
-                    nodeHandle.key() = seq.name;
-                    m_currentBank.animations.insert(std::move(nodeHandle));
+                    AnimationSequence moved = std::move(findIt->second);
+                    m_currentBank.animations.erase(findIt);
+                    m_currentBank.animations[seq.name] = std::move(moved);
                 }
             }
             
@@ -621,7 +622,7 @@ void AnimationEditorWindow::RenderSequencePanel()
         
         // Next animation
         char nextAnimBuf[256];
-        strncpy(nextAnimBuf, seq.nextAnimation.c_str(), sizeof(nextAnimBuf) - 1);
+        strncpy_s(nextAnimBuf, sizeof(nextAnimBuf), seq.nextAnimation.c_str(), _TRUNCATE);
         nextAnimBuf[sizeof(nextAnimBuf) - 1] = '\0';
         if (ImGui::InputText("Next Animation", nextAnimBuf, sizeof(nextAnimBuf)))
         {
@@ -744,8 +745,8 @@ void AnimationEditorWindow::RenderPreviewFrame()
     float srcH = static_cast<float>(sheet->frameHeight);
     
     // Get texture dimensions for UV calculation
-    int texW = 0;
-    int texH = 0;
+    float texW = 0.f;
+    float texH = 0.f;
     SDL_GetTextureSize(tex, &texW, &texH);
     
     // Calculate UV coordinates
@@ -779,7 +780,7 @@ void AnimationEditorWindow::RenderPropertiesPanel()
     
     // Bank ID
     char bankIdBuf[256];
-    strncpy(bankIdBuf, m_currentBank.bankId.c_str(), sizeof(bankIdBuf) - 1);
+    strncpy_s(bankIdBuf, m_currentBank.bankId.c_str(), sizeof(bankIdBuf) - 1);
     bankIdBuf[sizeof(bankIdBuf) - 1] = '\0';
     if (ImGui::InputText("Bank ID", bankIdBuf, sizeof(bankIdBuf)))
     {
@@ -789,7 +790,7 @@ void AnimationEditorWindow::RenderPropertiesPanel()
     
     // Description
     char descBuf[1024];
-    strncpy(descBuf, m_currentBank.description.c_str(), sizeof(descBuf) - 1);
+    strncpy_s(descBuf, m_currentBank.description.c_str(), sizeof(descBuf) - 1);
     descBuf[sizeof(descBuf) - 1] = '\0';
     if (ImGui::InputTextMultiline("Description", descBuf, sizeof(descBuf), ImVec2(-1, 80)))
     {
@@ -799,7 +800,7 @@ void AnimationEditorWindow::RenderPropertiesPanel()
     
     // Author
     char authorBuf[256];
-    strncpy(authorBuf, m_currentBank.author.c_str(), sizeof(authorBuf) - 1);
+    strncpy_s(authorBuf, m_currentBank.author.c_str(), sizeof(authorBuf) - 1);
     authorBuf[sizeof(authorBuf) - 1] = '\0';
     if (ImGui::InputText("Author", authorBuf, sizeof(authorBuf)))
     {
@@ -831,7 +832,9 @@ void AnimationEditorWindow::NewBank()
     // Set created date
     time_t now = time(nullptr);
     char dateBuf[64];
-    strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%dT%H:%M:%SZ", gmtime(&now));
+    struct tm timeInfo;
+    gmtime_s(&timeInfo, &now);
+    strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%dT%H:%M:%SZ", &timeInfo);
     m_currentBank.createdDate = dateBuf;
     m_currentBank.lastModifiedDate = dateBuf;
     
@@ -884,18 +887,18 @@ void AnimationEditorWindow::ImportBankJSON(const std::string& filepath)
     try
     {
         AnimationBank bank;
-        
+
         // Parse basic info
-        bank.bankId = json_get_string(j, "bankId", "unknown");
-        bank.description = json_get_string(j, "description", "");
-        
+        bank.bankId = JsonHelper::GetString(j, "bankId", "unknown");
+        bank.description = JsonHelper::GetString(j, "description", "");
+
         // Parse metadata
         if (j.contains("metadata"))
         {
             const json& meta = j["metadata"];
-            bank.author = json_get_string(meta, "author", "");
-            bank.createdDate = json_get_string(meta, "created", "");
-            bank.lastModifiedDate = json_get_string(meta, "lastModified", "");
+            bank.author = JsonHelper::GetString(meta, "author", "");
+            bank.createdDate = JsonHelper::GetString(meta, "created", "");
+            bank.lastModifiedDate = JsonHelper::GetString(meta, "lastModified", "");
             
             if (meta.contains("tags") && meta["tags"].is_array())
             {
@@ -915,21 +918,21 @@ void AnimationEditorWindow::ImportBankJSON(const std::string& filepath)
             for (const auto& sheetJson : j["spritesheets"])
             {
                 SpritesheetInfo sheet;
-                sheet.id = json_get_string(sheetJson, "id", "");
-                sheet.path = json_get_string(sheetJson, "path", "");
-                sheet.description = json_get_string(sheetJson, "description", "");
-                sheet.frameWidth = json_get_int(sheetJson, "frameWidth", 32);
-                sheet.frameHeight = json_get_int(sheetJson, "frameHeight", 32);
-                sheet.columns = json_get_int(sheetJson, "columns", 1);
-                sheet.rows = json_get_int(sheetJson, "rows", 1);
-                sheet.totalFrames = json_get_int(sheetJson, "totalFrames", 1);
-                sheet.spacing = json_get_int(sheetJson, "spacing", 0);
-                sheet.margin = json_get_int(sheetJson, "margin", 0);
-                
+                sheet.id = JsonHelper::GetString(sheetJson, "id", "");
+                sheet.path = JsonHelper::GetString(sheetJson, "path", "");
+                sheet.description = JsonHelper::GetString(sheetJson, "description", "");
+                sheet.frameWidth = JsonHelper::GetInt(sheetJson, "frameWidth", 32);
+                sheet.frameHeight = JsonHelper::GetInt(sheetJson, "frameHeight", 32);
+                sheet.columns = JsonHelper::GetInt(sheetJson, "columns", 1);
+                sheet.rows = JsonHelper::GetInt(sheetJson, "rows", 1);
+                sheet.totalFrames = JsonHelper::GetInt(sheetJson, "totalFrames", 1);
+                sheet.spacing = JsonHelper::GetInt(sheetJson, "spacing", 0);
+                sheet.margin = JsonHelper::GetInt(sheetJson, "margin", 0);
+
                 if (sheetJson.contains("hotspot"))
                 {
-                    sheet.hotspot.x = json_get_float(sheetJson["hotspot"], "x", 0.0f);
-                    sheet.hotspot.y = json_get_float(sheetJson["hotspot"], "y", 0.0f);
+                    sheet.hotspot.x = JsonHelper::GetFloat(sheetJson["hotspot"], "x", 0.0f);
+                    sheet.hotspot.y = JsonHelper::GetFloat(sheetJson["hotspot"], "y", 0.0f);
                 }
                 
                 bank.spritesheets.push_back(sheet);
@@ -942,19 +945,19 @@ void AnimationEditorWindow::ImportBankJSON(const std::string& filepath)
             for (const auto& seqJson : j["sequences"])
             {
                 AnimationSequence seq;
-                seq.name = json_get_string(seqJson, "name", "");
-                seq.spritesheetId = json_get_string(seqJson, "spritesheetId", "");
-                
+                seq.name = JsonHelper::GetString(seqJson, "name", "");
+                seq.spritesheetId = JsonHelper::GetString(seqJson, "spritesheetId", "");
+
                 if (seqJson.contains("frames"))
                 {
-                    seq.startFrame = json_get_int(seqJson["frames"], "start", 0);
-                    seq.frameCount = json_get_int(seqJson["frames"], "count", 1);
+                    seq.startFrame = JsonHelper::GetInt(seqJson["frames"], "start", 0);
+                    seq.frameCount = JsonHelper::GetInt(seqJson["frames"], "count", 1);
                 }
-                
-                seq.frameDuration = json_get_float(seqJson, "frameDuration", 0.1f);
-                seq.loop = json_get_bool(seqJson, "loop", true);
-                seq.speed = json_get_float(seqJson, "speed", 1.0f);
-                seq.nextAnimation = json_get_string(seqJson, "nextAnimation", "");
+
+                seq.frameDuration = JsonHelper::GetFloat(seqJson, "frameDuration", 0.1f);
+                seq.loop = JsonHelper::GetBool(seqJson, "loop", true);
+                seq.speed = JsonHelper::GetFloat(seqJson, "speed", 1.0f);
+                seq.nextAnimation = JsonHelper::GetString(seqJson, "nextAnimation", "");
                 
                 bank.animations[seq.name] = seq;
             }
@@ -994,7 +997,9 @@ void AnimationEditorWindow::ExportBankJSON(const std::string& filepath)
         // Update last modified date
         time_t now = time(nullptr);
         char dateBuf[64];
-        strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%dT%H:%M:%SZ", gmtime(&now));
+        struct tm timeInfo;
+        gmtime_s(&timeInfo, &now);
+        strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%dT%H:%M:%SZ", &timeInfo);
         meta["lastModified"] = dateBuf;
         m_currentBank.lastModifiedDate = dateBuf;
         
@@ -1157,10 +1162,12 @@ void AnimationEditorWindow::AutoDetectGrid(SpritesheetInfo& sheet)
         return;
     }
     
-    int texW = 0;
-    int texH = 0;
-    SDL_GetTextureSize(tex, &texW, &texH);
-    
+    float texWf = 0.f;
+    float texHf = 0.f;
+    SDL_GetTextureSize(tex, &texWf, &texHf);
+    int texW = static_cast<int>(texWf);
+    int texH = static_cast<int>(texHf);
+
     // Try to calculate columns/rows based on frame size
     if (sheet.frameWidth > 0 && sheet.frameHeight > 0)
     {
@@ -1180,7 +1187,8 @@ SDL_Texture* AnimationEditorWindow::LoadSpritesheetTexture(const std::string& pa
         return nullptr;
     
     // Use DataManager to load texture
-    return DataManager::Get().Load_Texture(path);
+    auto* sprite = DataManager::Get().GetSprite(path, path);
+    return sprite ? sprite : nullptr;
 }
 
 // ========================================================================
@@ -1271,13 +1279,6 @@ void AnimationEditorWindow::ResetPreview()
     
     m_previewCurrentFrame = seq.startFrame;
     m_previewFrameTimer = 0.0f;
-}
-
-void AnimationEditorWindow::RenderPreviewFrame()
-{
-    // Note: This method is intentionally empty as the rendering logic
-    // is directly embedded in RenderPreviewPanel() for better cohesion
-    // with the preview controls and UI layout.
 }
 
 // ========================================================================

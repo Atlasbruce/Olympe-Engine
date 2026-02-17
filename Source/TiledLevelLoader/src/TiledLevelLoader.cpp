@@ -1067,7 +1067,7 @@ namespace Tiled {
                             uint32_t gid = static_cast<uint32_t>(std::stoul(token));
                             layer.data.push_back(gid);
                         } catch (const std::exception& e) {
-                            SYSTEM_LOG << "TiledLevelLoader: Failed to parse CSV token: " << token << std::endl;
+                            SYSTEM_LOG << "TiledLevelLoader: Failed to parse CSV token: " << token << " Error : " << e.what() << std::endl;
                         }
                     }
                     

@@ -342,6 +342,9 @@
     <ClCompile Include="Source\Animation\AnimationGraph.cpp">
       <Filter>Fichiers d%27en-t�te\Animation</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Editor\AnimationEditorWindow.cpp">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -672,6 +675,12 @@
       <Filter>Fichiers d%27en-t�te\Animation</Filter>
     </ClInclude>
     <ClInclude Include="Source\Animation\AnimationErrorHandler.h">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Animation\AnimationHelpers.h">
+      <Filter>Fichiers d%27en-t�te\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Editor\AnimationEditorWindow.h">
       <Filter>Fichiers d%27en-t�te\Animation</Filter>
     </ClInclude>
   </ItemGroup>

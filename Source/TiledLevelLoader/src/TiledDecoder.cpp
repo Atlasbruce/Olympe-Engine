@@ -173,11 +173,11 @@ namespace Tiled {
                 } catch (const std::invalid_argument& e) {
                     ++errorCount;
                     SYSTEM_LOG << "TiledDecoder: ERROR - Invalid CSV token at position " << tokenCount 
-                              << ": '" << token << "' (not a valid number)" << std::endl;
+                              << ": '" << token << "' (not a valid number). Error : " << e.what() << std::endl;
                 } catch (const std::out_of_range& e) {
                     ++errorCount;
                     SYSTEM_LOG << "TiledDecoder: ERROR - CSV token out of range at position " << tokenCount 
-                              << ": '" << token << "' (exceeds uint32_t maximum)" << std::endl;
+                              << ": '" << token << "' (exceeds uint32_t maximum). Error " << e.what() << std::endl;
                 } catch (...) {
                     ++errorCount;
                     SYSTEM_LOG << "TiledDecoder: ERROR - Failed to parse CSV token at position " << tokenCount 

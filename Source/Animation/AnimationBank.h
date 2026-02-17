@@ -32,6 +32,8 @@ namespace OlympeAnimation
         int columns = 1;             // Number of columns in the sheet
         int rows = 1;                // Number of rows in the sheet
         int totalFrames = 1;         // Total number of frames
+        int spacing = 0;             // Spacing between frames (inner padding)
+        int margin = 0;              // Margin around spritesheet edges (outer padding)
         
         Hotspot hotspot;             // Center point for rendering (default: center)
 

@@ -209,10 +209,7 @@ void GameEventConsumeSystem::Process()
 {
     // Get all Gameplay domain events from the EventQueue
     const EventQueue& queue = EventQueue::Get();
-    
-    // Forward declaration to access VideoGame
-    extern class VideoGame;
-    
+   
     // Process each gameplay event
     queue.ForEachDomainEvent(EventDomain::Gameplay, [](const Message& msg) {
         
@@ -309,9 +306,6 @@ void UIEventConsumeSystem::Process()
 {
     // Get all UI domain events from the EventQueue
     const EventQueue& queue = EventQueue::Get();
-    
-    // Forward declaration to access GameMenu
-    extern class GameMenu;
     
     // Process keyboard events from Input domain for menu toggle (ESC key)
     queue.ForEachDomainEvent(EventDomain::Input, [](const Message& msg) {

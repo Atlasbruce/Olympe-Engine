@@ -91,12 +91,12 @@ void AnimationSystem::UpdateEntity(EntityID entity, VisualAnimation_data& animDa
         // NEW FORMAT: Use spritesheet + frame range
         
         // Get animation bank
-        const Olympe::AnimationBank* bank = OlympeAnimation::AnimationManager::Get().GetBank(animData.bankId);
+        const OlympeAnimation::AnimationBank* bank = OlympeAnimation::AnimationManager::Get().GetBank(animData.bankId);
         if (!bank)
             return;
         
         // Get spritesheet
-        const Olympe::SpritesheetInfo* sheet = bank->GetSpritesheet(sequence->spritesheetId);
+        const OlympeAnimation::SpriteSheet* sheet = bank->GetSpriteSheet(sequence->spritesheetId);
         if (!sheet)
         {
             SYSTEM_LOG << "AnimationSystem: Spritesheet not found: " << sequence->spritesheetId << "\n";
@@ -155,7 +155,7 @@ void AnimationSystem::UpdateEntity(EntityID entity, VisualAnimation_data& animDa
         spriteData.srcRect.h = static_cast<float>(sheet->frameHeight);
         
         // Update hotspot
-        spriteData.hotSpot = sheet->hotspot;
+        spriteData.hotSpot = { sheet->hotspot.x, sheet->hotspot.y };
         
         // Load sprite texture if needed
         if (!spriteData.sprite && !sheet->path.empty())

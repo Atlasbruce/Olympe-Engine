@@ -14,6 +14,8 @@
 #include <vector>
 #include <cstdint>
 
+#define MINIZ_NO_DLLIMPORT
+
 namespace Olympe {
 namespace Tiled {
 

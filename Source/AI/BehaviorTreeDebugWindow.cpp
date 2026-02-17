@@ -624,7 +624,7 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::RenderEntityEntry(const EntityDebugInfo& info)
     {
-        ImGui::PushID(info.entityId);
+        ImGui::PushID((unsigned int)info.entityId);
 
         const char* statusIcon = info.isActive ? "●" : "○";
         ImVec4 statusColor = info.isActive ? ImVec4(0.0f, 1.0f, 0.0f, 1.0f) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
@@ -990,7 +990,7 @@ namespace Olympe
                     {
                         if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
                         {
-                            int childIndex = parent->childIds.size();
+                            int childIndex = (int) parent->childIds.size();
                             parent->childIds.push_back(childId);
 
                             EditorAction action;
@@ -1052,7 +1052,7 @@ namespace Olympe
                             auto childIt = std::find(parent->childIds.begin(), parent->childIds.end(), childId);
                             if (childIt != parent->childIds.end())
                             {
-                                int childIndex = std::distance(parent->childIds.begin(), childIt);
+                                int childIndex = (int) std::distance(parent->childIds.begin(), childIt);
                                 parent->childIds.erase(childIt);
 
                                 EditorAction action;
