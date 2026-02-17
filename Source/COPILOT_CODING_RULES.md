@@ -7,6 +7,8 @@
 - **Warnings**: 0 toléré, compilation avec `-Wall -Wextra`
 - **Namespace**: TOUT le code dans `namespace Olympe { }`
 - **Validation**: Compilation mentale obligatoire avant soumission
+- **Log 1/2**: Utiliser la macro SYSTEM_LOG plutot que std::cout ou std::cerr
+- **Log 2/2**: ne pas utiliser les emojis ou caractères ASCII étendus dans les chaines de sortie : utiliser l'ASCII simple
 
 ---
 
@@ -490,10 +492,6 @@ struct Data {
 ```
 
 ---
-
-## 🔧 COMMANDE À RAPPELER
-
-**"CRITICAL: C++14 strict. Use json_get_*() helpers. All code in namespace Olympe. Declare before use. Initialize all members. Use localtime_s with #ifdef. Verify API signatures. Mental compilation mandatory."**
 
 ---
 
