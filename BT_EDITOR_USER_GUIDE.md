@@ -1,5 +1,7 @@
 # Behavior Tree Editor - User Guide
 
+> **📖 Latest Documentation**: For the most up-to-date version of this guide, visit the [official Olympe Engine documentation site](https://atlasbruce.github.io/Olympe-Engine/editors/bt-graph-editor).
+
 ## Overview
 
 The Behavior Tree (BT) Editor is an interactive visual editor integrated into the BT Debugger window. It allows you to create, modify, and test behavior trees directly in the engine without manually editing JSON files.

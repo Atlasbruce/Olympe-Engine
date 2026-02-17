@@ -452,4 +452,4 @@ enum class InputLogLevel {
 
 - [INPUT_USER_GUIDE.md](INPUT_USER_GUIDE.md) - User-facing documentation
 - [INPUT_SCHEMAS.md](INPUT_SCHEMAS.md) - JSON schema reference
-- [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) - Upgrading from v1.x input system
+- [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) - Upgrading from v1.x input system *(coming soon)*

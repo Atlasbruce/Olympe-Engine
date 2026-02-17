@@ -43,6 +43,14 @@ const sidebars: SidebarsConfig = {
       items: [
         {
           type: 'category',
+          label: 'Editors',
+          items: [
+            'editors/bt-graph-editor',
+            'editors/animation-editor',
+          ],
+        },
+        {
+          type: 'category',
           label: 'Tiled Editor',
           items: [
             'user-guide/tiled-editor/tiled-introduction',
@@ -98,6 +106,16 @@ const sidebars: SidebarsConfig = {
             'technical-reference/behavior-trees/bt-nodes',
             'technical-reference/behavior-trees/bt-custom-nodes',
             'technical-reference/behavior-trees/behavior-tree-dependency-loading',
+            'technical-reference/behavior-trees/bt-editor-architecture',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Animation',
+          items: [
+            'technical-reference/animation/animation-system',
+            'technical-reference/animation/animation-editor-architecture',
+            'technical-reference/animation/api-reference',
           ],
         },
         {
