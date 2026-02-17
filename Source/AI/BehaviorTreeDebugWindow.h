@@ -15,6 +15,7 @@
 
 #include "../ECS_Entity.h"
 #include "../vector.h"
+#include "../json_helper.h"
 #include "BTGraphLayoutEngine.h"
 #include "BehaviorTree.h"
 #include "BTEditorCommand.h"
