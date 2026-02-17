@@ -2166,21 +2166,28 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::SaveEditedTree()
     {
-        if (!m_treeModified)
+        // Determine filename
+        std::string filename;
+        if (!m_currentFilePath.empty())
         {
-            std::cout << "[BTEditor] No changes to save" << std::endl;
-            return;
+            filename = m_currentFilePath;
+        }
+        else
+        {
+            filename = "Blueprints/AI/" + m_editingTree.name + ".json";
         }
 
-        json treeJson;
+        // Create v2 JSON structure
+        json treeJson = json::object();
         treeJson["schema_version"] = 2;
         treeJson["type"] = "BehaviorTree";
         treeJson["blueprintType"] = "BehaviorTree";
         treeJson["name"] = m_editingTree.name;
         treeJson["description"] = "Edited in BT Editor";
 
-        json metadata;
-        metadata["author"] = "BT Editor";
+        // Metadata
+        json metadata = json::object();
+        metadata["author"] = "Atlasbruce";
 
         auto now = std::time(nullptr);
         char timestamp[32];
@@ -2192,33 +2199,39 @@ namespace Olympe
         localtime_r(&now, &timeInfo);
 #endif
 
-        std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%S", &timeInfo);
+        std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%SZ", &timeInfo);
         metadata["created"] = timestamp;
         metadata["lastModified"] = timestamp;
 
         json tagsArray = json::array();
         tagsArray.push_back("AI");
         tagsArray.push_back("BehaviorTree");
-        tagsArray.push_back("Edited");
         metadata["tags"] = tagsArray;
 
         treeJson["metadata"] = metadata;
 
-        json editorState;
-        editorState["zoom"] = 1.0;
-        editorState["scrollOffset"] = { {"x", 0}, {"y", 0} };
+        // Editor state
+        json editorState = json::object();
+        editorState["zoom"] = static_cast<double>(m_currentZoom);
+        json scrollOffset = json::object();
+        scrollOffset["x"] = 0.0;
+        scrollOffset["y"] = 0.0;
+        editorState["scrollOffset"] = scrollOffset;
         treeJson["editorState"] = editorState;
 
-        json dataSection;
+        // Data section
+        json dataSection = json::object();
         dataSection["rootNodeId"] = static_cast<int>(m_editingTree.rootNodeId);
 
+        // Nodes array
         json nodesArray = json::array();
         for (const auto& node : m_editingTree.nodes)
         {
-            json nodeJson;
+            json nodeJson = json::object();
             nodeJson["id"] = static_cast<int>(node.id);
             nodeJson["name"] = node.name;
 
+            // Type string
             switch (node.type)
             {
             case BTNodeType::Selector: nodeJson["type"] = "Selector"; break;
@@ -2229,8 +2242,35 @@ namespace Olympe
             case BTNodeType::Repeater: nodeJson["type"] = "Repeater"; break;
             }
 
-            nodeJson["position"] = { {"x", 0.0}, {"y", 0.0} };
+            // Position (get from layout engine if available)
+            const BTNodeLayout* layout = m_layoutEngine.GetNodeLayout(node.id);
+            if (layout)
+            {
+                json posObj = json::object();
+                posObj["x"] = static_cast<double>(layout->position.x);
+                posObj["y"] = static_cast<double>(layout->position.y);
+                nodeJson["position"] = posObj;
+            }
+            else
+            {
+                json posObj = json::object();
+                posObj["x"] = 0.0;
+                posObj["y"] = 0.0;
+                nodeJson["position"] = posObj;
+            }
 
+            // Children array (uniform for all node types)
+            json childrenArray = json::array();
+            for (uint32_t cid : node.childIds)
+            {
+                childrenArray.push_back(static_cast<int>(cid));
+            }
+            nodeJson["children"] = childrenArray;
+
+            // Parameters object
+            json params = json::object();
+
+            // Type-specific fields
             if (node.type == BTNodeType::Condition)
             {
                 const char* conditionTypeStr = "TargetVisible";
@@ -2251,11 +2291,7 @@ namespace Olympe
 
                 if (node.conditionParam != 0.0f)
                 {
-                    nodeJson["parameters"] = { {"param", node.conditionParam} };
-                }
-                else
-                {
-                    nodeJson["parameters"] = json::object();
+                    params["param"] = static_cast<double>(node.conditionParam);
                 }
             }
             else if (node.type == BTNodeType::Action)
@@ -2278,27 +2314,34 @@ namespace Olympe
                 }
                 nodeJson["actionType"] = actionTypeStr;
 
-                json params = json::object();
-                if (node.actionParam1 != 0.0f) params["param1"] = node.actionParam1;
-                if (node.actionParam2 != 0.0f) params["param2"] = node.actionParam2;
-                nodeJson["parameters"] = params;
+                if (node.actionParam1 != 0.0f)
+                {
+                    params["param1"] = static_cast<double>(node.actionParam1);
+                }
+                if (node.actionParam2 != 0.0f)
+                {
+                    params["param2"] = static_cast<double>(node.actionParam2);
+                }
             }
             else if (node.type == BTNodeType::Repeater)
             {
                 nodeJson["repeatCount"] = node.repeatCount;
+                // Backward compatibility: write decoratorChildId
+                if (node.decoratorChildId != 0)
+                {
+                    nodeJson["decoratorChildId"] = static_cast<int>(node.decoratorChildId);
+                }
+            }
+            else if (node.type == BTNodeType::Inverter)
+            {
+                // Backward compatibility: write decoratorChildId
+                if (node.decoratorChildId != 0)
+                {
+                    nodeJson["decoratorChildId"] = static_cast<int>(node.decoratorChildId);
+                }
             }
 
-            if (!node.childIds.empty())
-            {
-                json childIdsArray = json::array();
-                for (uint32_t cid : node.childIds)
-                    childIdsArray.push_back(static_cast<int>(cid));
-                nodeJson["childIds"] = childIdsArray;
-            }
-            if (node.decoratorChildId != 0)
-            {
-                nodeJson["decoratorChildId"] = static_cast<int>(node.decoratorChildId);
-            }
+            nodeJson["parameters"] = params;
 
             nodesArray.push_back(nodeJson);
         }
@@ -2306,27 +2349,16 @@ namespace Olympe
         dataSection["nodes"] = nodesArray;
         treeJson["data"] = dataSection;
 
-        std::string filename = "Blueprints/AI/" + m_editingTree.name + "_edited.json";
-
-        try
+        // Save to file using JsonHelper
+        if (JsonHelper::SaveJsonToFile(filename, treeJson, 2))
         {
-            std::ofstream file(filename);
-            if (file.is_open())
-            {
-                file << treeJson.dump(2);
-                file.close();
-
-                m_treeModified = false;
-                std::cout << "[BTEditor] Tree saved to: " << filename << std::endl;
-            }
-            else
-            {
-                std::cerr << "[BTEditor] ERROR: Failed to open file for writing: " << filename << std::endl;
-            }
+            m_isDirty = false;
+            m_treeModified = false;
+            SYSTEM_LOG << "[BTEditor] Tree saved to: " << filename << "\n";
         }
-        catch (const std::exception& e)
+        else
         {
-            std::cerr << "[BTEditor] ERROR: Exception during save: " << e.what() << std::endl;
+            SYSTEM_LOG << "[BTEditor] ERROR: Failed to save tree to: " << filename << "\n";
         }
     }
 
