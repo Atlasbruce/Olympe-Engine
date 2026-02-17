@@ -140,17 +140,29 @@ void AnimationEditorWindow::Render()
     if (!m_isOpen)
         return;
     
-    // Set window size and position
-    ImGui::SetNextWindowSize(ImVec2(1400, 800), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowPos(ImVec2(100, 100), ImGuiCond_FirstUseEver);
+    // ===== CORRECTION: Follow BT Debugger pattern =====
+    // Force ImGui window to fill entire SDL window
+    ImGuiIO& io = ImGui::GetIO();
     
-    // Window flags
-    ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar;
+    // Position (0, 0) and size = SDL window size
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(io.DisplaySize);
+    
+    // Flags to remove borders and make window "invisible" (no title bar)
+    ImGuiWindowFlags windowFlags = 
+        ImGuiWindowFlags_NoTitleBar |              // No title bar
+        ImGuiWindowFlags_NoResize |                // Not resizable (follows SDL window)
+        ImGuiWindowFlags_NoMove |                  // Not movable
+        ImGuiWindowFlags_NoCollapse |              // No collapse button
+        ImGuiWindowFlags_NoBringToFrontOnFocus |   // No automatic focus
+        ImGuiWindowFlags_MenuBar;                  // Menu bar at top
+    
+    // Add unsaved document flag if dirty
     if (m_isDirty)
         windowFlags |= ImGuiWindowFlags_UnsavedDocument;
     
     // Begin main window
-    if (!ImGui::Begin("Animation Editor [F9]", &m_isOpen, windowFlags))
+    if (!ImGui::Begin("Animation Editor", nullptr, windowFlags))
     {
         ImGui::End();
         return;
