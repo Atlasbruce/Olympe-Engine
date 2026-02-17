@@ -2668,7 +2668,7 @@ namespace Olympe
             
             // Editable name
             char nameBuf[256];
-            strncpy(nameBuf, node->name.c_str(), sizeof(nameBuf) - 1);
+            strncpy_s(nameBuf, node->name.c_str(), sizeof(nameBuf) - 1);
             nameBuf[sizeof(nameBuf) - 1] = '\0';
             
             if (ImGui::InputText("Name", nameBuf, sizeof(nameBuf)))
@@ -2824,15 +2824,15 @@ namespace Olympe
         
         // Data
         json data = json::object();
-        data["rootNodeId"] = tree.rootNodeId;
+        data["rootNodeId"] = json(static_cast<int>(tree.rootNodeId));
         
         json nodesArray = json::array();
         for (const auto& node : tree.nodes)
         {
             json nodeJson = json::object();
-            nodeJson["id"] = node.id;
+            nodeJson["id"] = json(static_cast<int>(node.id));
             nodeJson["name"] = node.name;
-            
+
             // Node type
             const char* typeStr = "";
             switch (node.type)
@@ -2845,7 +2845,7 @@ namespace Olympe
                 case BTNodeType::Repeater: typeStr = "Repeater"; break;
             }
             nodeJson["type"] = typeStr;
-            
+
             // Position (placeholder - would need to get from layout)
             json pos = json::object();
             pos["x"] = 200.0f;
@@ -2858,7 +2858,7 @@ namespace Olympe
                 json children = json::array();
                 for (uint32_t childId : node.childIds)
                 {
-                    children.push_back(childId);
+                    children.push_back(json(static_cast<int>(childId)));
                 }
                 nodeJson["children"] = children;
             }
@@ -2868,7 +2868,7 @@ namespace Olympe
             {
                 if (node.decoratorChildId != 0)
                 {
-                    nodeJson["decoratorChildId"] = node.decoratorChildId;
+                    nodeJson["decoratorChildId"] = json(static_cast<int>(node.decoratorChildId));
                 }
                 
                 if (node.type == BTNodeType::Repeater)
