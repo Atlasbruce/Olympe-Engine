@@ -30,13 +30,6 @@ struct SDL_Renderer;
 union SDL_Event;
 struct ImGuiContext;
 
-// Forward declaration for JSON
-namespace nlohmann {
-    template<typename T, typename SFINAE> class basic_json;
-    using json = basic_json<std::map, std::vector, std::string, bool, int64_t, uint64_t, double, std::allocator, void, void>;
-}
-using json = nlohmann::json;
-
 namespace Olympe
 {
     /**
