@@ -335,7 +335,7 @@ Use separate action maps with proper priorities:
 ## Support
 
 For issues, questions, or contributions:
-1. Check the [Documentation](../Documentation/Input/)
+1. Check the [Documentation](./)
 2. Review log output (`input_log_level: "debug"`)
 3. Create an issue with complete configuration and logs
 

@@ -2,7 +2,17 @@
 
 ## Overview
 
-The Olympe Engine Animation System provides a complete 2D sprite animation framework with state machine-based animation control. It supports multi-frame spritesheets, animation events, and parameter-driven state transitions.
+The Olympe Engine Animation System provides a complete 2D sprite animation framework with state machine-based animation control. It supports **multi-spritesheet** animation banks, animation events, and parameter-driven state transitions.
+
+**New in V2**:
+- **Multi-Spritesheet Support**: Single animation bank can reference multiple spritesheets
+- **Animation Editor** (F9): Visual editor for creating and editing animation banks
+- **Advanced AnimationGraph**: Parameter-based state machine with smooth transitions
+- **Unified Schema v2**: New JSON format with backward compatibility
+
+> 📝 **See Also**: 
+> - [Animation Editor User Guide](Animation_Editor_User_Guide.md) - Visual animation authoring
+> - [Animation Editor Architecture](Developer/Animation_Editor_Architecture.md) - Technical details
 
 ## Architecture
 
@@ -10,11 +20,26 @@ The animation system consists of several key components:
 
 ### Core Components
 
-1. **AnimationBank** - Contains animation data (spritesheets, frames, events)
-2. **AnimationGraph** - State machine for controlling animation transitions
-3. **AnimationManager** - Singleton manager for loading and caching animation resources
-4. **AnimationErrorHandler** - Handles error logging with de-duplication
-5. **VisualAnimation_data** - ECS component for entity animation state
+1. **AnimationBank** (`AnimationTypes.h`) - Collection of spritesheets and animation sequences
+   - **NEW**: Multi-spritesheet support (multiple `SpritesheetInfo` objects per bank)
+   - **NEW**: Range-based sequences (startFrame, frameCount) instead of individual frames
+   - **DEPRECATED**: Old single-spritesheet fields for backward compatibility
+
+2. **AnimationGraph** - Two implementations:
+   - **Simple FSM** (`Olympe::AnimationGraph`) - Basic state transitions with `CanTransition()` method
+   - **Advanced FSM** (`OlympeAnimation::AnimationGraph`) - Parameter-driven conditions, blend modes, transition types
+   
+3. **AnimationEditor** (`AnimationEditorWindow`) - Visual editor for creating animation banks (F9 hotkey)
+   - Multi-spritesheet management
+   - Animation sequence editor
+   - Real-time preview with playback controls
+   - Grid auto-detection for spritesheets
+   
+4. **AnimationManager** - Singleton manager for loading and caching animation resources
+
+5. **AnimationErrorHandler** - Handles error logging with de-duplication
+
+6. **VisualAnimation_data** - ECS component for entity animation state
 
 ### Data Flow
 
