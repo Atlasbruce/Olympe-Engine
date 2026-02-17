@@ -134,7 +134,7 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 {
     if (!event) return SDL_APP_CONTINUE;
 
-    // ===== Route events to Animation Editor separate window FIRST =====
+    // ===== Route events to Animation Editor separate window =====
     if (animationEditorWindow != nullptr)
     {
         animationEditorWindow->ProcessEvent(event);

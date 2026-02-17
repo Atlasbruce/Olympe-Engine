@@ -1392,11 +1392,8 @@ void AnimationEditorWindow::DestroySeparateWindow()
         m_separateImGuiContext = nullptr;
     }
     
-    // Restore main context if needed
-    if (mainContext != m_separateImGuiContext && mainContext != nullptr)
-    {
-        ImGui::SetCurrentContext(mainContext);
-    }
+    // Restore main context
+    ImGui::SetCurrentContext(mainContext);
     
     if (m_separateRenderer)
     {
