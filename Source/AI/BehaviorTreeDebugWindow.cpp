@@ -2008,35 +2008,6 @@ namespace Olympe
         m_validationMessages = m_editingTree.ValidateTreeFull();
     }
 
-                for (auto& node : m_editingTree.nodes)
-                {
-                    auto childIt = std::find(node.childIds.begin(), node.childIds.end(), nodeId);
-                    if (childIt != node.childIds.end())
-                    {
-                        node.childIds.erase(childIt);
-                    }
-
-                    if (node.decoratorChildId == nodeId)
-                    {
-                        node.decoratorChildId = 0;
-                    }
-                }
-
-                std::cout << "[BTEditor] Deleted node ID: " << nodeId << std::endl;
-            }
-        }
-
-        m_selectedNodes.clear();
-        m_isDirty = true;
-        m_treeModified = true;
-
-        // Update layout
-        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
-        
-        // Run validation
-        m_validationMessages = m_editingTree.ValidateTreeFull();
-    }
-
     void BehaviorTreeDebugWindow::HandleNodeDuplication()
     {
         if (m_selectedNodes.empty() || !m_editorMode)
@@ -2077,17 +2048,6 @@ namespace Olympe
 
         m_selectedNodes = newNodes;
         m_isDirty = true;
-        m_treeModified = true;
-
-        // Update layout
-        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
-    }
-
-                std::cout << "[BTEditor] Duplicated node: " << duplicate.name << " (ID: " << duplicate.id << ")" << std::endl;
-            }
-        }
-
-        m_selectedNodes = newNodes;
         m_treeModified = true;
 
         // Update layout
