@@ -24,6 +24,9 @@
 
 // Forward declarations
 struct SDL_Texture;
+struct SDL_Window;
+struct SDL_Renderer;
+struct ImGuiContext;
 
 namespace Olympe
 {
@@ -32,7 +35,7 @@ namespace Olympe
      * @brief Main animation editor window
      *
      * Provides UI for creating and editing animation banks with multi-spritesheet support.
-     * Opens with F9 hotkey. Renders using ImGui.
+     * Opens with F9 hotkey. Renders in standalone SDL3 window (like BT Debugger).
      */
     class AnimationEditorWindow
     {
@@ -49,6 +52,18 @@ namespace Olympe
          * @brief Check if window is open
          */
         bool IsOpen() const { return m_isOpen; }
+
+        /**
+         * @brief Update and render the editor window (separate window)
+         * @param deltaTime Time elapsed since last frame in seconds
+         */
+        void Update(float deltaTime);
+
+        /**
+         * @brief Process SDL events for the separate window
+         * @param event SDL event to process
+         */
+        void ProcessEvent(SDL_Event* event);
 
         /**
          * @brief Update preview animation (call every frame with deltaTime)
@@ -147,6 +162,15 @@ namespace Olympe
         char m_inputSpritesheetId[256] = "";
         char m_inputSpritesheetPath[512] = "";
         char m_inputSequenceName[256] = "";
+
+        // ===== Standalone Window Management =====
+        SDL_Window* m_separateWindow = nullptr;
+        SDL_Renderer* m_separateRenderer = nullptr;
+        ImGuiContext* m_separateImGuiContext = nullptr;
+        
+        void CreateSeparateWindow();
+        void DestroySeparateWindow();
+        void RenderSeparateWindow();
     };
 
 } // namespace Olympe
