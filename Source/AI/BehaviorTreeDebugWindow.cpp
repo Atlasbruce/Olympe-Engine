@@ -24,7 +24,7 @@
 #include <unordered_set>
 #include <set>
 
-using json = nlohmann::json;
+// Note: json type is already defined in json_helper.h (included above)
 
 namespace Olympe
 {
@@ -1119,16 +1119,7 @@ namespace Olympe
                 HandleNodeDuplication();
             }
 
-            if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z))
-            {
-                UndoLastAction();
-            }
-
-            if (ImGui::GetIO().KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Y) ||
-                (ImGui::GetIO().KeyShift && ImGui::IsKeyPressed(ImGuiKey_Z))))
-            {
-                RedoLastAction();
-            }
+            // Note: Undo/Redo shortcuts (Ctrl+Z/Ctrl+Y) are handled globally at lines 426-443
         }
 
 		// ImNodes::EndNodeEditor(); // remove second call to EndNodeEditor TO BE REMOVED it causes crashes when interacting with the graph, but is needed to render the minimap correctly. Need to refactor rendering flow to avoid this hack
