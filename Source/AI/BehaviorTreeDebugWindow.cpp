@@ -811,8 +811,7 @@ namespace Olympe
                 m_editingTree = *originalTree;
                 m_treeModified = false;
                 m_selectedNodes.clear();
-                m_undoStack.clear();
-                m_redoStack.clear();
+                m_commandStack.Clear();
                 m_nextNodeId = 1000;
                 m_nextLinkId = 100000;
 
@@ -947,8 +946,7 @@ namespace Olympe
                         m_editingTree = *originalTree;
                         m_treeModified = false;
                         m_selectedNodes.clear();
-                        m_undoStack.clear();
-                        m_redoStack.clear();
+                        m_commandStack.Clear();
                     }
                 }
 
@@ -1044,47 +1042,20 @@ namespace Olympe
 
                 if (ValidateConnection(parentId, childId))
                 {
-                    BTNode* parent = m_editingTree.GetNode(parentId);
-                    if (parent)
-                    {
-                        if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
-                        {
-                            int childIndex = (int) parent->childIds.size();
-                            parent->childIds.push_back(childId);
+                    // Use command pattern for connection
+                    auto cmd = std::make_unique<ConnectNodesCommand>(&m_editingTree, parentId, childId);
+                    m_commandStack.Execute(std::move(cmd));
+                    
+                    m_isDirty = true;
+                    m_treeModified = true;
+                    
+                    // Update layout
+                    m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                    
+                    // Run validation
+                    m_validationMessages = m_editingTree.ValidateTreeFull();
 
-                            EditorAction action;
-                            action.type = EditorAction::AddConnection;
-                            action.parentId = parentId;
-                            action.childId = childId;
-                            action.childIndex = childIndex;
-                            m_undoStack.push_back(action);
-                            if (m_undoStack.size() > kMaxUndoStackSize)
-                            {
-                                m_undoStack.erase(m_undoStack.begin());
-                            }
-                            m_redoStack.clear();
-                            m_treeModified = true;
-                        }
-                        else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
-                        {
-                            parent->decoratorChildId = childId;
-
-                            EditorAction action;
-                            action.type = EditorAction::AddConnection;
-                            action.parentId = parentId;
-                            action.childId = childId;
-                            action.childIndex = 0;
-                            m_undoStack.push_back(action);
-                            if (m_undoStack.size() > kMaxUndoStackSize)
-                            {
-                                m_undoStack.erase(m_undoStack.begin());
-                            }
-                            m_redoStack.clear();
-                            m_treeModified = true;
-                        }
-
-                        std::cout << "[BTEditor] Connection created: " << parentId << " -> " << childId << std::endl;
-                    }
+                    std::cout << "[BTEditor] Connection created: " << parentId << " -> " << childId << std::endl;
                 }
                 else
                 {
@@ -1103,49 +1074,20 @@ namespace Olympe
                     uint32_t parentId = it->parentId;
                     uint32_t childId = it->childId;
 
-                    BTNode* parent = m_editingTree.GetNode(parentId);
-                    if (parent)
-                    {
-                        if (parent->type == BTNodeType::Selector || parent->type == BTNodeType::Sequence)
-                        {
-                            auto childIt = std::find(parent->childIds.begin(), parent->childIds.end(), childId);
-                            if (childIt != parent->childIds.end())
-                            {
-                                int childIndex = (int) std::distance(parent->childIds.begin(), childIt);
-                                parent->childIds.erase(childIt);
-
-                                EditorAction action;
-                                action.type = EditorAction::DeleteConnection;
-                                action.parentId = parentId;
-                                action.childId = childId;
-                                action.childIndex = childIndex;
-                                m_undoStack.push_back(action);
-                                if (m_undoStack.size() > kMaxUndoStackSize)
-                                {
-                                    m_undoStack.erase(m_undoStack.begin());
-                                }
-                                m_redoStack.clear();
-                            }
-                        }
-                        else if (parent->type == BTNodeType::Inverter || parent->type == BTNodeType::Repeater)
-                        {
-                            parent->decoratorChildId = 0;
-
-                            EditorAction action;
-                            action.type = EditorAction::DeleteConnection;
-                            action.parentId = parentId;
-                            action.childId = childId;
-                            m_undoStack.push_back(action);
-                            if (m_undoStack.size() > kMaxUndoStackSize)
-                            {
-                                m_undoStack.erase(m_undoStack.begin());
-                            }
-                            m_redoStack.clear();
-                        }
-
-                        m_treeModified = true;
-                        std::cout << "[BTEditor] Connection deleted: " << parentId << " -> " << childId << std::endl;
-                    }
+                    // Use command pattern for disconnection
+                    auto cmd = std::make_unique<DisconnectNodesCommand>(&m_editingTree, parentId, childId);
+                    m_commandStack.Execute(std::move(cmd));
+                    
+                    m_isDirty = true;
+                    m_treeModified = true;
+                    
+                    // Update layout
+                    m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                    
+                    // Run validation
+                    m_validationMessages = m_editingTree.ValidateTreeFull();
+                    
+                    std::cout << "[BTEditor] Connection deleted: " << parentId << " -> " << childId << std::endl;
                 }
             }
 
@@ -2094,10 +2036,14 @@ namespace Olympe
         }
 
         m_selectedNodes.clear();
-        m_redoStack.clear();
+        m_isDirty = true;
         m_treeModified = true;
 
+        // Update layout
         m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+        
+        // Run validation
+        m_validationMessages = m_editingTree.ValidateTreeFull();
     }
 
     void BehaviorTreeDebugWindow::HandleNodeDuplication()
@@ -2151,10 +2097,13 @@ namespace Olympe
         }
 
         m_selectedNodes = newNodes;
-        m_redoStack.clear();
         m_treeModified = true;
 
+        // Update layout
         m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+        
+        // Run validation  
+        m_validationMessages = m_editingTree.ValidateTreeFull();
     }
 
     bool BehaviorTreeDebugWindow::ValidateConnection(uint32_t parentId, uint32_t childId) const
