@@ -72,76 +72,166 @@ void AnimationSystem::UpdateEntity(EntityID entity, VisualAnimation_data& animDa
     }
     
     const Olympe::AnimationSequence* sequence = animData.currentSequence;
-    if (!sequence || sequence->frames.empty())
+    if (!sequence)
         return;
+    
+    // Check if using new spritesheet-based format or old frame-based format
+    bool useNewFormat = (!sequence->spritesheetId.empty() && sequence->frameCount > 0);
+    bool useOldFormat = (!sequence->frames.empty());
+    
+    if (!useNewFormat && !useOldFormat)
+        return; // No valid animation data
     
     // Accumulate frame timer
     float deltaTime = GameEngine::fDt * animData.playbackSpeed * sequence->speed;
     animData.frameTimer += deltaTime;
     
-    // Get current frame data
-    if (animData.currentFrame < 0 || animData.currentFrame >= static_cast<int>(sequence->frames.size()))
+    if (useNewFormat)
     {
-        animData.currentFrame = 0;
-    }
-    
-    const Olympe::AnimationFrame& currentFrame = sequence->frames[animData.currentFrame];
-    
-    // Check if frame duration has elapsed
-    if (animData.frameTimer >= currentFrame.duration)
-    {
-        animData.frameTimer = 0.0f;
-        animData.currentFrame++;
+        // NEW FORMAT: Use spritesheet + frame range
         
-        // Check if animation has finished
-        if (animData.currentFrame >= static_cast<int>(sequence->frames.size()))
+        // Get animation bank
+        const Olympe::AnimationBank* bank = OlympeAnimation::AnimationManager::Get().GetBank(animData.bankId);
+        if (!bank)
+            return;
+        
+        // Get spritesheet
+        const Olympe::SpritesheetInfo* sheet = bank->GetSpritesheet(sequence->spritesheetId);
+        if (!sheet)
         {
-            if (sequence->loop || animData.loop)
+            SYSTEM_LOG << "AnimationSystem: Spritesheet not found: " << sequence->spritesheetId << "\n";
+            return;
+        }
+        
+        // Check if frame duration has elapsed
+        if (animData.frameTimer >= sequence->frameDuration)
+        {
+            animData.frameTimer = 0.0f;
+            animData.currentFrame++;
+            
+            int maxFrame = sequence->startFrame + sequence->frameCount - 1;
+            
+            // Check if animation has finished
+            if (animData.currentFrame > maxFrame)
             {
-                // Loop back to start
-                animData.currentFrame = 0;
-                animData.loopCount++;
-            }
-            else
-            {
-                // Animation finished
-                animData.currentFrame = static_cast<int>(sequence->frames.size()) - 1;
-                animData.animationJustFinished = true;
-                
-                // Check for next animation
-                if (!sequence->nextAnimation.empty())
+                if (sequence->loop || animData.loop)
                 {
-                    PlayAnimation(entity, sequence->nextAnimation, true);
-                    return;
+                    // Loop back to start
+                    animData.currentFrame = sequence->startFrame;
+                    animData.loopCount++;
                 }
                 else
                 {
-                    // Stay on last frame
-                    animData.isPlaying = false;
+                    // Animation finished
+                    animData.currentFrame = maxFrame;
+                    animData.animationJustFinished = true;
+                    
+                    // Check for next animation
+                    if (!sequence->nextAnimation.empty())
+                    {
+                        PlayAnimation(entity, sequence->nextAnimation, true);
+                        return;
+                    }
+                    else
+                    {
+                        // Stay on last frame
+                        animData.isPlaying = false;
+                    }
                 }
             }
         }
-    }
-    
-    // Update sprite srcRect with current frame
-    if (animData.currentFrame >= 0 && animData.currentFrame < static_cast<int>(sequence->frames.size()))
-    {
-        const Olympe::AnimationFrame& frame = sequence->frames[animData.currentFrame];
-        spriteData.srcRect = frame.srcRect;
         
-        // Update hotspot if specified
-        if (frame.hotSpot.x != 0.0f || frame.hotSpot.y != 0.0f)
+        // Calculate srcRect from spritesheet grid
+        int frameIndex = animData.currentFrame;
+        if (frameIndex < 0) frameIndex = 0;
+        if (frameIndex >= sheet->totalFrames) frameIndex = sheet->totalFrames - 1;
+        
+        int row = frameIndex / sheet->columns;
+        int col = frameIndex % sheet->columns;
+        
+        spriteData.srcRect.x = static_cast<float>(sheet->margin + col * (sheet->frameWidth + sheet->spacing));
+        spriteData.srcRect.y = static_cast<float>(sheet->margin + row * (sheet->frameHeight + sheet->spacing));
+        spriteData.srcRect.w = static_cast<float>(sheet->frameWidth);
+        spriteData.srcRect.h = static_cast<float>(sheet->frameHeight);
+        
+        // Update hotspot
+        spriteData.hotSpot = sheet->hotspot;
+        
+        // Load sprite texture if needed
+        if (!spriteData.sprite && !sheet->path.empty())
         {
-            spriteData.hotSpot.x = frame.hotSpot.x;
-            spriteData.hotSpot.y = frame.hotSpot.y;
+            std::string textureId = animData.bankId + "_" + sequence->spritesheetId;
+            spriteData.sprite = DataManager::Get().GetSprite(textureId, sheet->path);
         }
     }
-    
-    // Load sprite texture if needed
-    if (!spriteData.sprite && !sequence->spritesheetPath.empty())
+    else
     {
-        std::string textureId = animData.bankId + "_" + animData.currentAnimName;
-        spriteData.sprite = DataManager::Get().GetSprite(textureId, sequence->spritesheetPath);
+        // OLD FORMAT: Use frame-by-frame data (backward compatibility)
+        
+        // Get current frame data
+        if (animData.currentFrame < 0 || animData.currentFrame >= static_cast<int>(sequence->frames.size()))
+        {
+            animData.currentFrame = 0;
+        }
+        
+        const Olympe::AnimationFrame& currentFrame = sequence->frames[animData.currentFrame];
+        
+        // Check if frame duration has elapsed
+        if (animData.frameTimer >= currentFrame.duration)
+        {
+            animData.frameTimer = 0.0f;
+            animData.currentFrame++;
+            
+            // Check if animation has finished
+            if (animData.currentFrame >= static_cast<int>(sequence->frames.size()))
+            {
+                if (sequence->loop || animData.loop)
+                {
+                    // Loop back to start
+                    animData.currentFrame = 0;
+                    animData.loopCount++;
+                }
+                else
+                {
+                    // Animation finished
+                    animData.currentFrame = static_cast<int>(sequence->frames.size()) - 1;
+                    animData.animationJustFinished = true;
+                    
+                    // Check for next animation
+                    if (!sequence->nextAnimation.empty())
+                    {
+                        PlayAnimation(entity, sequence->nextAnimation, true);
+                        return;
+                    }
+                    else
+                    {
+                        // Stay on last frame
+                        animData.isPlaying = false;
+                    }
+                }
+            }
+        }
+        
+        // Update sprite srcRect with current frame
+        if (animData.currentFrame >= 0 && animData.currentFrame < static_cast<int>(sequence->frames.size()))
+        {
+            const Olympe::AnimationFrame& frame = sequence->frames[animData.currentFrame];
+            spriteData.srcRect = frame.srcRect;
+            
+            // Update hotspot if specified
+            if (frame.hotSpot.x != 0.0f || frame.hotSpot.y != 0.0f)
+            {
+                spriteData.hotSpot.x = frame.hotSpot.x;
+                spriteData.hotSpot.y = frame.hotSpot.y;
+            }
+        }
+        
+        // Load sprite texture if needed
+        if (!spriteData.sprite && !sequence->spritesheetPath.empty())
+        {
+            std::string textureId = animData.bankId + "_" + animData.currentAnimName;
+            spriteData.sprite = DataManager::Get().GetSprite(textureId, sequence->spritesheetPath);
+        }
     }
 }
 
