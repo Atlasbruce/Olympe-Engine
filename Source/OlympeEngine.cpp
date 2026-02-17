@@ -134,7 +134,13 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 {
     if (!event) return SDL_APP_CONTINUE;
 
-    // ===== NEW: Route events to BT Debugger separate window FIRST =====
+    // ===== Route events to Animation Editor separate window FIRST =====
+    if (animationEditorWindow != nullptr)
+    {
+        animationEditorWindow->ProcessEvent(event);
+    }
+
+    // ===== Route events to BT Debugger separate window =====
     if (g_btDebugWindow != nullptr)
     {
         g_btDebugWindow->ProcessEvent(event);
@@ -398,12 +404,6 @@ SDL_AppResult SDL_AppIterate(void* appstate)
         ImGui_ImplSDLRenderer3_NewFrame();
         ImGui::NewFrame();
 
-        // Update Animation Editor preview (before rendering)
-        if (animationEditorWindow && animationEditorWindow->IsOpen())
-        {
-            animationEditorWindow->UpdatePreview(GameEngine::fDt);
-        }
-
         blueprintEditorGUI->Render(); // BeginMainMenuBar() est maintenant sûr
         
         // Render Behavior Tree Debug Window
@@ -412,10 +412,10 @@ SDL_AppResult SDL_AppIterate(void* appstate)
             g_btDebugWindow->Render();
         }
         
-        // Render Animation Editor Window
-        if (animationEditorWindow && animationEditorWindow->IsOpen())
+        // Update Animation Editor (separate window)
+        if (animationEditorWindow)
         {
-            animationEditorWindow->Render();
+            animationEditorWindow->Update(GameEngine::fDt);
         }
         
         // Render Tiled Level Loader menu (F3)
