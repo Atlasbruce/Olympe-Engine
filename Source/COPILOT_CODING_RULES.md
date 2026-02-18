@@ -42,6 +42,15 @@
 
 ## 📦 GESTION JSON (nlohmann/json)
 
+## ⚠️ JSON HELPERS - RÈGLE ABSOLUE
+
+**INTERDIT ABSOLU** :
+```cpp
+// ❌ JAMAIS UTILISER
+int x = json["key"].get<int>();
+std::string s = json["key"].get<std::string>();
+if (json.contains("key")) { }
+
 ### **INTERDICTIONS**
 - ❌ Accès direct: `json["key"].get<T>()`
 - ❌ Vérification manuelle: `if (json.contains("key"))`
