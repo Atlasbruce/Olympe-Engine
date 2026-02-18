@@ -19,12 +19,12 @@
  * for test reporting purposes. Production code uses SYSTEM_LOG.
  */
 
-#include "AIEditor/AIEditorGUI.h"
-#include "AIGraphPlugin_BT/BTNodeRegistry.h"
-#include "AIGraphPlugin_BT/BTGraphValidator.h"
-#include "NodeGraphCore/NodeGraphManager.h"
-#include "NodeGraphCore/GraphDocument.h"
-#include "NodeGraphCore/Commands/CreateNodeCommand.h"
+#include "../AIEditor/AIEditorGUI.h"
+#include "../AIGraphPlugin_BT/BTNodeRegistry.h"
+#include "../AIGraphPlugin_BT/BTGraphValidator.h"
+#include "../../NodeGraphCore/NodeGraphManager.h"
+#include "../../NodeGraphCore/GraphDocument.h"
+#include "../../NodeGraphCore/Commands/CreateNodeCommand.h"
 
 #include <iostream>
 #include <cassert>

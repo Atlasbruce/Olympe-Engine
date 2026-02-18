@@ -15,12 +15,12 @@
  * for test reporting purposes. Production code uses SYSTEM_LOG.
  */
 
-#include "AI/AIGraphPlugin_BT/BTNodeRegistry.h"
-#include "AI/AIGraphPlugin_BT/BTGraphValidator.h"
-#include "AI/AIGraphPlugin_BT/BTGraphCompiler.h"
-#include "AI/AIGraphPlugin_BT/BTNodePalette.h"
-#include "NodeGraphCore/GraphDocument.h"
-#include "AI/BehaviorTree.h"
+#include "../AIGraphPlugin_BT/BTNodeRegistry.h"
+#include "../AIGraphPlugin_BT/BTGraphValidator.h"
+#include "../AIGraphPlugin_BT/BTGraphCompiler.h"
+#include "../AIGraphPlugin_BT/BTNodePalette.h"
+#include "../../NodeGraphCore/GraphDocument.h"../
+#include "../BehaviorTree.h"
 
 #include <iostream>
 #include <cassert>

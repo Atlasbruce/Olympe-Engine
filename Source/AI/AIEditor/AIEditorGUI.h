@@ -37,6 +37,9 @@ namespace AI {
  */
 class AIEditorGUI {
 public:
+    // Friend class to allow menu access
+    friend class AIEditorMenus;
+    
     AIEditorGUI();
     ~AIEditorGUI();
     

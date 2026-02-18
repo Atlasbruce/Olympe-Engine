@@ -375,6 +375,30 @@
     <ClCompile Include="Source\BlueprintEditor\BTNodeGraphManager.cpp">
       <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
+    <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTGraphCompiler.cpp">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTGraphValidator.cpp">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTNodePalette.cpp">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTNodeRegistry.cpp">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\AIEditor\AIEditorGUI.cpp">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\AIEditor\AIEditorMenus.cpp">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\AIEditor\AIEditorNodeRenderer.cpp">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\AIEditor\AIEditorPanels.cpp">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -745,6 +769,30 @@
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\BTNodeGraphManager.h">
       <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTGraphCompiler.h">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTGraphValidator.h">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTNodePalette.h">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTNodeRegistry.h">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\AIEditor\AIEditorGUI.h">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\AIEditor\AIEditorMenus.h">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\AIEditor\AIEditorNodeRenderer.h">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\AIEditor\AIEditorPanels.h">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
