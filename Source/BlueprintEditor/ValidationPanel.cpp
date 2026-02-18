@@ -3,7 +3,7 @@
  */
 
 #include "ValidationPanel.h"
-#include "NodeGraphManager.h"
+#include "BTNodeGraphManager.h"
 #include "BlueprintEditor.h"
 #include "../third_party/imgui/imgui.h"
 #include <iostream>

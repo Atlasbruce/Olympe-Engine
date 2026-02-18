@@ -306,7 +306,7 @@ json GraphDocument::ToJson() const
     json selectedJson = json::array();
     for (const auto& nodeId : editorState.selectedNodes)
     {
-        selectedJson.push_back(nodeId.value);
+        selectedJson.push_back(static_cast<int>(nodeId.value));
     }
     editorStateJson["selectedNodes"] = selectedJson;
     editorStateJson["layoutDirection"] = editorState.layoutDirection;
@@ -315,14 +315,14 @@ json GraphDocument::ToJson() const
     
     // Data section
     json dataJson = json::object();
-    dataJson["rootNodeId"] = rootNodeId.value;
+    dataJson["rootNodeId"] = static_cast<int>(rootNodeId.value);
     
     // Nodes
     json nodesJson = json::array();
     for (const auto& node : m_nodes)
     {
         json nodeJson = json::object();
-        nodeJson["id"] = node.id.value;
+        nodeJson["id"] = static_cast<int>(node.id.value);
         nodeJson["type"] = node.type;
         nodeJson["name"] = node.name;
         
@@ -335,7 +335,7 @@ json GraphDocument::ToJson() const
         json childrenJson = json::array();
         for (const auto& childId : node.children)
         {
-            childrenJson.push_back(childId.value);
+            childrenJson.push_back(static_cast<int>(childId.value));
         }
         nodeJson["children"] = childrenJson;
         
@@ -350,7 +350,7 @@ json GraphDocument::ToJson() const
         // Decorator child
         if (node.decoratorChild.value != 0)
         {
-            nodeJson["decoratorChildId"] = node.decoratorChild.value;
+            nodeJson["decoratorChildId"] = static_cast<int>(node.decoratorChild.value);
         }
         
         nodesJson.push_back(nodeJson);
@@ -362,15 +362,15 @@ json GraphDocument::ToJson() const
     for (const auto& link : m_links)
     {
         json linkJson = json::object();
-        linkJson["id"] = link.id.value;
+        linkJson["id"] = static_cast<int>(link.id.value);
         
         json fromPinJson = json::object();
-        fromPinJson["nodeId"] = link.fromPin.value;
+        fromPinJson["nodeId"] = static_cast<int>(link.fromPin.value);
         fromPinJson["pinId"] = "output";
         linkJson["fromPin"] = fromPinJson;
         
         json toPinJson = json::object();
-        toPinJson["nodeId"] = link.toPin.value;
+        toPinJson["nodeId"] = static_cast<int>(link.toPin.value);
         toPinJson["pinId"] = "input";
         linkJson["toPin"] = toPinJson;
         

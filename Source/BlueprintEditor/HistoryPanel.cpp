@@ -4,7 +4,7 @@
 
 #include "HistoryPanel.h"
 #include "BlueprintEditor.h"
-#include "CommandSystem.h"
+#include "BPCommandSystem.h"
 #include "../third_party/imgui/imgui.h"
 
 namespace Olympe

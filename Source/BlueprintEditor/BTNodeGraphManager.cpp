@@ -2,7 +2,7 @@
  * Olympe Blueprint Editor - Node Graph Manager Implementation
  */
 
-#include "NodeGraphManager.h"
+#include "BTNodeGraphManager.h"
 #include "../json_helper.h"
 #include <fstream>
 #include <iostream>

@@ -2,8 +2,8 @@
  * Olympe Blueprint Editor - Command System Implementation
  */
 
-#include "CommandSystem.h"
-#include "NodeGraphManager.h"
+#include "BPCommandSystem.h"
+#include "BTNodeGraphManager.h"
 #include <iostream>
 
 namespace Olympe

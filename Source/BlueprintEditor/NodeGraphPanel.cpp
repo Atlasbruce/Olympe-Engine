@@ -6,9 +6,9 @@
 #include "BlueprintEditor.h"
 #include "EditorContext.h"
 #include "EntityInspectorManager.h"
-#include "NodeGraphManager.h"
+#include "BTNodeGraphManager.h"
 #include "EnumCatalogManager.h"
-#include "CommandSystem.h"
+#include "BPCommandSystem.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
 #include <iostream>

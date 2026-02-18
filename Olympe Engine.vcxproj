@@ -34,14 +34,14 @@
     <ClCompile Include="Source\BlueprintEditor\BlueprintEditorGUI.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlueprintMigrator.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlueprintValidator.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\CommandSystem.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\BPCommandSystem.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\BTNodeGraphManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EditorContext.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityBlueprint.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Graph.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EnumCatalogManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\HistoryPanel.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\NodeGraphManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityInspectorManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\TemplateBrowserPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\TemplateManager.cpp" />
@@ -71,6 +71,14 @@
     <ClCompile Include="Source\DataManager.cpp" />
     <ClCompile Include="Source\GameEngine.cpp" />
     <ClCompile Include="Source\GameState.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\CommandSystem.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\Commands\ConnectPinsCommand.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\Commands\CreateNodeCommand.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\Commands\DeleteNodeCommand.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\Commands\MoveNodeCommand.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\GraphDocument.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\GraphMigrator.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\NodeGraphManager.cpp" />
     <ClCompile Include="Source\OlympeEngine.cpp" />
     <ClCompile Include="Source\PanelManager.cpp" />
     <ClCompile Include="Source\ParameterResolver.cpp" />
@@ -130,14 +138,14 @@
     <ClInclude Include="Source\BlueprintEditor\BlueprintEditorPlugin.h" />
     <ClInclude Include="Source\BlueprintEditor\BlueprintMigrator.h" />
     <ClInclude Include="Source\BlueprintEditor\BlueprintValidator.h" />
-    <ClInclude Include="Source\BlueprintEditor\CommandSystem.h" />
+    <ClInclude Include="Source\BlueprintEditor\BPCommandSystem.h" />
+    <ClInclude Include="Source\BlueprintEditor\BTNodeGraphManager.h" />
     <ClInclude Include="Source\BlueprintEditor\EditorContext.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityBlueprint.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.h" />
     <ClInclude Include="Source\BlueprintEditor\Graph.h" />
     <ClInclude Include="Source\BlueprintEditor\EnumCatalogManager.h" />
     <ClInclude Include="Source\BlueprintEditor\HistoryPanel.h" />
-    <ClInclude Include="Source\BlueprintEditor\NodeGraphManager.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityInspectorManager.h" />
     <ClInclude Include="Source\BlueprintEditor\NodeGraphPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\EntitiesPanel.h" />
@@ -170,6 +178,16 @@
     <ClInclude Include="Source\InputsManager.h" />
     <ClInclude Include="Source\json_helper.h" />
     <ClInclude Include="Source\Level.h" />
+    <ClInclude Include="Source\NodeGraphCore\CommandSystem.h" />
+    <ClInclude Include="Source\NodeGraphCore\Commands\ConnectPinsCommand.h" />
+    <ClInclude Include="Source\NodeGraphCore\Commands\CreateNodeCommand.h" />
+    <ClInclude Include="Source\NodeGraphCore\Commands\DeleteNodeCommand.h" />
+    <ClInclude Include="Source\NodeGraphCore\Commands\MoveNodeCommand.h" />
+    <ClInclude Include="Source\NodeGraphCore\GraphDocument.h" />
+    <ClInclude Include="Source\NodeGraphCore\GraphMigrator.h" />
+    <ClInclude Include="Source\NodeGraphCore\ILayoutEngine.h" />
+    <ClInclude Include="Source\NodeGraphCore\NodeGraphCore.h" />
+    <ClInclude Include="Source\NodeGraphCore\NodeGraphManager.h" />
     <ClInclude Include="Source\Objective.h" />
     <ClInclude Include="Source\OptionsManager.h" />
     <ClInclude Include="Source\PanelManager.h" />
@@ -226,6 +244,7 @@
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
     <None Include="olympe.ini" />
+    <None Include="Source\NodeGraphCore\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\olympe.ico" />

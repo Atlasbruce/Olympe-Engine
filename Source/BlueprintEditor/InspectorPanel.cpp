@@ -5,7 +5,7 @@
 #include "InspectorPanel.h"
 #include "BlueprintEditor.h"
 #include "EntityInspectorManager.h"
-#include "NodeGraphManager.h"
+#include "BTNodeGraphManager.h"
 #include "EnumCatalogManager.h"
 #include "../third_party/imgui/imgui.h"
 #include <iostream>

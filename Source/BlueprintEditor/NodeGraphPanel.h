@@ -9,7 +9,7 @@
 
 #include <string>
 #include <vector>
-#include "NodeGraphManager.h"
+#include "BTNodeGraphManager.h"
 
 namespace Olympe
 {
