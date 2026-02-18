@@ -55,9 +55,6 @@
     <Filter Include="imnodes">
       <UniqueIdentifier>{9031e2fa-cd66-445b-b70d-ee6b9391db2b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Blueprint Editor">
-      <UniqueIdentifier>{1ec5b006-a25a-4ac8-8b82-0866c5cbec44}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Fichiers d%27en-t�te\Engine Systems\System Helpers\Json">
       <UniqueIdentifier>{46cf309b-682a-4e95-b594-f42fbd3eb6d8}</UniqueIdentifier>
     </Filter>
@@ -81,6 +78,9 @@
     </Filter>
     <Filter Include="Fichiers d%27en-t�te\Animation">
       <UniqueIdentifier>{4fb54ad4-494c-4b63-9e60-8ec2fb3c715d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers d%27en-t�te\Blueprint Editor">
+      <UniqueIdentifier>{1ec5b006-a25a-4ac8-8b82-0866c5cbec44}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -172,22 +172,22 @@
       <Filter>ImGui</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\AssetInfoPanel.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\BlueprintEditorGUI.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\EntityBlueprint.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\Graph.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\BlueprintEditor.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\AssetBrowser.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\third_party\imgui\imgui_demo.cpp">
       <Filter>ImGui</Filter>
@@ -199,61 +199,61 @@
       <Filter>Fichiers d%27en-t�te\Engine Rendering\SDL3</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\EntitiesPanel.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\EntityInspectorManager.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\EnumCatalogManager.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\InspectorPanel.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\NodeGraphManager.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\NodeGraphPanel.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\WorldBridge.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\ECS_Systems_AI.cpp">
       <Filter>Fichiers d%27en-t�te\AI</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\TemplateBrowserPanel.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\TemplateManager.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\CommandSystem.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\HistoryPanel.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\AdditionalEditorPlugins.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\ValidationPanel.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\BehaviorTreeEditorPlugin.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\BlueprintMigrator.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\BlueprintValidator.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\EditorContext.cpp">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\TiledLevelLoader\src\IsometricProjection.cpp">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
@@ -501,22 +501,22 @@
       <Filter>Fichiers d%27en-t�te\Engine Systems\System Helpers\Json</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\AssetBrowser.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\AssetInfoPanel.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\BlueprintEditorGUI.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\EntityBlueprint.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\Graph.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\BlueprintEditor.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\third_party\imgui\imconfig.h">
       <Filter>ImGui</Filter>
@@ -528,25 +528,25 @@
       <Filter>Fichiers d%27en-t�te\Engine Rendering\SDL3</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\EntitiesPanel.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\EntityInspectorManager.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\EnumCatalogManager.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\InspectorPanel.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\NodeGraphManager.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\NodeGraphPanel.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\WorldBridge.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\ECS_Components_AI.h">
       <Filter>Fichiers d%27en-t�te\AI</Filter>
@@ -555,40 +555,40 @@
       <Filter>Fichiers d%27en-t�te\AI</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\TemplateBrowserPanel.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\TemplateManager.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\CommandSystem.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\HistoryPanel.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\AdditionalEditorPlugins.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\ValidationPanel.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\BehaviorTreeEditorPlugin.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\BlueprintEditorPlugin.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\BlueprintMigrator.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\BlueprintValidator.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\EditorContext.h">
-      <Filter>Blueprint Editor</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\TiledLevelLoader\include\IsometricProjection.h">
       <Filter>Fichiers d%27en-t�te\TileLevel</Filter>
