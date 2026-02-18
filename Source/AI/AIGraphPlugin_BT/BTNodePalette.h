@@ -11,13 +11,11 @@
 
 #pragma once
 
+#include "BTNodeRegistry.h"
 #include <string>
 
 namespace Olympe {
 namespace AI {
-
-// Forward declarations
-enum class BTNodeCategory : uint8_t;
 
 /**
  * @class BTNodePalette
