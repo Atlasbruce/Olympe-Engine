@@ -10,6 +10,9 @@
  * - BTGraphValidator (all 7 validation rules)
  * - BTGraphCompiler (compilation, error handling)
  * - BTNodePalette (basic instantiation)
+ * 
+ * @note This is a test file. Test output uses std::cout which is acceptable
+ * for test reporting purposes. Production code uses SYSTEM_LOG.
  */
 
 #include "AI/AIGraphPlugin_BT/BTNodeRegistry.h"
