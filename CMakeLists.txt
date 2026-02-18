@@ -25,6 +25,10 @@ file(GLOB_RECURSE IMGUI_SOURCES
     "Source/third_party/imgui/backends/imgui_impl_sdlrenderer3.cpp"
 )
 file(GLOB_RECURSE IMNODES_SOURCES "Source/third_party/imnodes/*.cpp")
+file(GLOB_RECURSE NODEGRAPHCORE_SOURCES 
+    "Source/NodeGraphCore/*.cpp"
+    "Source/NodeGraphCore/Commands/*.cpp"
+)
 file(GLOB_RECURSE ENGINE_CORE_SOURCES 
     "Source/AI/*.cpp"
     "Source/system/*.cpp"
@@ -41,6 +45,7 @@ add_library(OlympeCore STATIC
     ${BLUEPRINT_EDITOR_SOURCES}
     ${IMGUI_SOURCES}
     ${IMNODES_SOURCES}
+    ${NODEGRAPHCORE_SOURCES}
     Source/AI/BehaviorTree.cpp
     Source/AI/BehaviorTreeDependencyScanner.cpp
     Source/DataManager.cpp
