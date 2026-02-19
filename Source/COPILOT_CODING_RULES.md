@@ -551,6 +551,7 @@ if (it != map.end()) {
 
 ### **COMPILATION OBLIGATOIRE PRÉ-SOUMISSION**
 - ❌ **La "compilation mentale" seule n'est PAS suffisante**
+- ✅ **OBLIGATOIRE** : Ajouter dans la solution les fichiers crées (.vcproj etc...)
 - ✅ **OBLIGATOIRE** : Compiler avec MSVC (Windows) **ET** GCC/Clang (Linux si disponible)
 - ✅ **OBLIGATOIRE** : Fournir le **build log complet** dans la description de PR
 - ✅ **OBLIGATOIRE** : 0 erreurs, 0 warnings autorisés
