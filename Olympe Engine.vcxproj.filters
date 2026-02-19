@@ -91,6 +91,9 @@
     <Filter Include="Fichiers d%27en-t�te\NodeGraphCore\Commands">
       <UniqueIdentifier>{67f380a2-9d3d-4129-93b2-888186ec7516}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers d%27en-t�te\NFD">
+      <UniqueIdentifier>{37174abd-9642-4cfe-ae34-95f75fb371eb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\GameEngine.cpp">
@@ -407,6 +410,12 @@
     </ClCompile>
     <ClCompile Include="Source\NodeGraphCore\Commands\MoveNodeCommand.cpp">
       <Filter>Fichiers d%27en-t�te\NodeGraphCore\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\third_party\nfd\nfd_win.cpp">
+      <Filter>Fichiers d%27en-t�te\NFD</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\AIEditor\AIEditorFileDialog.cpp">
+      <Filter>Fichiers d%27en-t�te\NFD</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -808,6 +817,15 @@
     </ClInclude>
     <ClInclude Include="Source\NodeGraphCore\Commands\MoveNodeCommand.h">
       <Filter>Fichiers d%27en-t�te\NodeGraphCore\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\AIEditor\AIEditorFileDialog.h">
+      <Filter>Fichiers d%27en-t�te\NFD</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\third_party\nfd\nfd.h">
+      <Filter>Fichiers d%27en-t�te\NFD</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\third_party\nfd\nfd.hpp">
+      <Filter>Fichiers d%27en-t�te\NFD</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
