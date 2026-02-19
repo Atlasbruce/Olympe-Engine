@@ -309,6 +309,9 @@ void AIEditorGUI::RenderMenuBar()
             if (ImGui::MenuItem("Reset Layout")) {
                 MenuAction_ResetLayout();
             }
+            if (ImGui::MenuItem("Auto Layout")) {
+                MenuAction_AutoLayout();
+            }
             ImGui::EndMenu();
         }
         
@@ -727,6 +730,50 @@ void AIEditorGUI::MenuAction_SaveAs()
         if (!error.empty()) {
             SYSTEM_LOG << "[AIEditorGUI] ERROR: " << error << std::endl;
         }
+    }
+}
+
+void AIEditorGUI::MenuAction_AutoLayout()
+{
+    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
+    NodeGraph::GraphId activeId = mgr.GetActiveGraphId();
+    
+    if (activeId.value == 0)
+    {
+        SYSTEM_LOG << "[AIEditorGUI] Auto-layout failed: No active graph" << std::endl;
+        return;
+    }
+    
+    NodeGraph::GraphDocument* doc = mgr.GetGraphDocument(activeId);
+    if (doc == nullptr)
+    {
+        SYSTEM_LOG << "[AIEditorGUI] Auto-layout failed: Document not found" << std::endl;
+        return;
+    }
+    
+    // Create layout configuration
+    NodeGraph::AutoLayoutConfig config;
+    config.direction = NodeGraph::LayoutDirection::TopToBottom;
+    config.horizontalSpacing = 150.0f;
+    config.verticalSpacing = 100.0f;
+    config.nodeWidth = 120.0f;
+    config.nodeHeight = 60.0f;
+    config.paddingX = 50.0f;
+    config.paddingY = 50.0f;
+    
+    // Apply auto-layout
+    bool success = doc->AutoLayout(config);
+    
+    if (success)
+    {
+        SYSTEM_LOG << "[AIEditorGUI] Auto-layout applied successfully" << std::endl;
+        
+        // Mark document as dirty (needs save)
+        doc->SetDirty(true);
+    }
+    else
+    {
+        SYSTEM_LOG << "[AIEditorGUI] Auto-layout failed - check graph has root node" << std::endl;
     }
 }
 

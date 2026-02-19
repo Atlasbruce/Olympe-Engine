@@ -116,5 +116,30 @@ struct EditorState {
     std::string layoutDirection = "TopToBottom";
 };
 
+// ============================================================================
+// Layout Direction
+// ============================================================================
+
+enum class LayoutDirection : uint8_t {
+    TopToBottom = 0,
+    BottomToTop = 1,
+    LeftToRight = 2,
+    RightToLeft = 3
+};
+
+// ============================================================================
+// Auto-Layout Configuration
+// ============================================================================
+
+struct AutoLayoutConfig {
+    LayoutDirection direction = LayoutDirection::TopToBottom;
+    float horizontalSpacing = 150.0f;  // Spacing between sibling nodes
+    float verticalSpacing = 100.0f;    // Spacing between tree levels
+    float nodeWidth = 120.0f;          // Estimated node width
+    float nodeHeight = 60.0f;          // Estimated node height
+    float paddingX = 50.0f;            // Left/right padding
+    float paddingY = 50.0f;            // Top/bottom padding
+};
+
 } // namespace NodeGraph
 } // namespace Olympe
