@@ -6,6 +6,7 @@
  */
 
 #include "AIEditorGUI.h"
+#include "AIEditorClipboard.h"
 #include "../../system/system_utils.h"
 #include "../../third_party/imgui/imgui.h"
 #include "../../third_party/imnodes/imnodes.h"
@@ -95,8 +96,77 @@ void AIEditorGUI::Shutdown()
 
 void AIEditorGUI::Update(float deltaTime)
 {
-    // Update logic here if needed
     (void)deltaTime;
+    
+    if (!m_isActive) {
+        return;
+    }
+    
+    // Handle keyboard shortcuts
+    ImGuiIO& io = ImGui::GetIO();
+    bool ctrlPressed = io.KeyCtrl;
+    bool shiftPressed = io.KeyShift;
+    
+    // Ctrl+Z - Undo
+    if (ctrlPressed && !shiftPressed && ImGui::IsKeyPressed(ImGuiKey_Z)) {
+        MenuAction_Undo();
+    }
+    
+    // Ctrl+Y or Ctrl+Shift+Z - Redo
+    if ((ctrlPressed && ImGui::IsKeyPressed(ImGuiKey_Y)) ||
+        (ctrlPressed && shiftPressed && ImGui::IsKeyPressed(ImGuiKey_Z))) {
+        MenuAction_Redo();
+    }
+    
+    // Ctrl+C - Copy
+    if (ctrlPressed && !shiftPressed && ImGui::IsKeyPressed(ImGuiKey_C)) {
+        MenuAction_Copy();
+    }
+    
+    // Ctrl+X - Cut
+    if (ctrlPressed && !shiftPressed && ImGui::IsKeyPressed(ImGuiKey_X)) {
+        MenuAction_Cut();
+    }
+    
+    // Ctrl+V - Paste
+    if (ctrlPressed && !shiftPressed && ImGui::IsKeyPressed(ImGuiKey_V)) {
+        MenuAction_Paste();
+    }
+    
+    // Delete - Delete selected
+    if (ImGui::IsKeyPressed(ImGuiKey_Delete)) {
+        MenuAction_Delete();
+    }
+    
+    // Ctrl+A - Select All
+    if (ctrlPressed && !shiftPressed && ImGui::IsKeyPressed(ImGuiKey_A)) {
+        MenuAction_SelectAll();
+    }
+    
+    // Ctrl+N - New BT
+    if (ctrlPressed && !shiftPressed && ImGui::IsKeyPressed(ImGuiKey_N)) {
+        MenuAction_NewBT();
+    }
+    
+    // Ctrl+S - Save
+    if (ctrlPressed && !shiftPressed && ImGui::IsKeyPressed(ImGuiKey_S)) {
+        MenuAction_Save();
+    }
+    
+    // Ctrl+Shift+S - Save As
+    if (ctrlPressed && shiftPressed && ImGui::IsKeyPressed(ImGuiKey_S)) {
+        MenuAction_SaveAs();
+    }
+    
+    // Ctrl+O - Open
+    if (ctrlPressed && !shiftPressed && ImGui::IsKeyPressed(ImGuiKey_O)) {
+        MenuAction_Open();
+    }
+    
+    // Ctrl+W - Close
+    if (ctrlPressed && !shiftPressed && ImGui::IsKeyPressed(ImGuiKey_W)) {
+        MenuAction_Close();
+    }
 }
 
 void AIEditorGUI::Render()
@@ -557,17 +627,76 @@ void AIEditorGUI::MenuAction_NewHFSM()
 
 void AIEditorGUI::MenuAction_Open()
 {
-    SYSTEM_LOG << "[AIEditorGUI] Open file dialog (not yet implemented)" << std::endl;
+    // Note: In a full implementation, this would use NFD (NativeFileDialog-Extended)
+    // For now, use a simplified approach with NodeGraphManager
+    
+    SYSTEM_LOG << "[AIEditorGUI] Open file dialog" << std::endl;
+    SYSTEM_LOG << "[AIEditorGUI] Note: Full NFD integration requires build system changes" << std::endl;
+    SYSTEM_LOG << "[AIEditorGUI] Use NodeGraphManager::LoadGraph() for programmatic loading" << std::endl;
+    
+    // Example: Load a test file if it exists
+    // NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
+    // NodeGraph::GraphId id = mgr.LoadGraph("Blueprints/AI/test_bt.json");
+    // if (id.value != 0) {
+    //     mgr.SetActiveGraph(id);
+    //     SYSTEM_LOG << "[AIEditorGUI] Loaded graph successfully" << std::endl;
+    // }
 }
 
 void AIEditorGUI::MenuAction_Save()
 {
-    SYSTEM_LOG << "[AIEditorGUI] Save current graph (not yet implemented)" << std::endl;
+    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
+    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
+    
+    if (doc == nullptr) {
+        SYSTEM_LOG << "[AIEditorGUI] No active graph to save" << std::endl;
+        return;
+    }
+    
+    NodeGraph::GraphId activeId = mgr.GetActiveGraphId();
+    
+    // Try to save with existing filepath
+    // In a real implementation, this would use the graph's stored filepath
+    // For now, save to a default location
+    std::string filepath = "Blueprints/AI/autosave_bt.json";
+    
+    bool success = mgr.SaveGraph(activeId, filepath);
+    
+    if (success) {
+        SYSTEM_LOG << "[AIEditorGUI] Saved to: " << filepath << std::endl;
+    } else {
+        SYSTEM_LOG << "[AIEditorGUI] ERROR: Save failed" << std::endl;
+    }
 }
 
 void AIEditorGUI::MenuAction_SaveAs()
 {
-    SYSTEM_LOG << "[AIEditorGUI] Save As dialog (not yet implemented)" << std::endl;
+    // Note: In a full implementation, this would use NFD (NativeFileDialog-Extended)
+    // For now, use a simplified approach
+    
+    SYSTEM_LOG << "[AIEditorGUI] Save As dialog" << std::endl;
+    SYSTEM_LOG << "[AIEditorGUI] Note: Full NFD integration requires build system changes" << std::endl;
+    SYSTEM_LOG << "[AIEditorGUI] Use NodeGraphManager::SaveGraph() with custom filepath" << std::endl;
+    
+    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
+    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
+    
+    if (doc == nullptr) {
+        SYSTEM_LOG << "[AIEditorGUI] No active graph to save" << std::endl;
+        return;
+    }
+    
+    // For demonstration, save to a different location
+    NodeGraph::GraphId activeId = mgr.GetActiveGraphId();
+    std::string filepath = "Blueprints/AI/saved_bt.json";
+    
+    bool success = mgr.SaveGraph(activeId, filepath);
+    
+    if (success) {
+        SYSTEM_LOG << "[AIEditorGUI] Saved as: " << filepath << std::endl;
+    } else {
+        SYSTEM_LOG << "[AIEditorGUI] ERROR: Save failed" << std::endl;
+    }
 }
 
 void AIEditorGUI::MenuAction_Close()
@@ -599,27 +728,136 @@ void AIEditorGUI::MenuAction_Redo()
 
 void AIEditorGUI::MenuAction_Cut()
 {
-    SYSTEM_LOG << "[AIEditorGUI] Cut (not yet implemented)" << std::endl;
+    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
+    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
+    if (doc == nullptr) {
+        SYSTEM_LOG << "[AIEditorGUI] No active graph for cut" << std::endl;
+        return;
+    }
+    
+    // Get selected nodes
+    std::vector<NodeGraph::NodeId> selectedNodes;
+    for (size_t i = 0; i < m_selectedNodeIds.size(); ++i) {
+        NodeGraph::NodeId nodeId;
+        nodeId.value = static_cast<uint32_t>(m_selectedNodeIds[i]);
+        selectedNodes.push_back(nodeId);
+    }
+    
+    if (selectedNodes.empty()) {
+        SYSTEM_LOG << "[AIEditorGUI] No nodes selected for cut" << std::endl;
+        return;
+    }
+    
+    // Cut via clipboard
+    AIEditorClipboard::Get().Cut(selectedNodes, doc);
+    
+    // Clear selection
+    m_selectedNodeIds.clear();
+    
+    SYSTEM_LOG << "[AIEditorGUI] Cut " << selectedNodes.size() << " nodes" << std::endl;
 }
 
 void AIEditorGUI::MenuAction_Copy()
 {
-    SYSTEM_LOG << "[AIEditorGUI] Copy (not yet implemented)" << std::endl;
+    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
+    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
+    if (doc == nullptr) {
+        SYSTEM_LOG << "[AIEditorGUI] No active graph for copy" << std::endl;
+        return;
+    }
+    
+    // Get selected nodes
+    std::vector<NodeGraph::NodeId> selectedNodes;
+    for (size_t i = 0; i < m_selectedNodeIds.size(); ++i) {
+        NodeGraph::NodeId nodeId;
+        nodeId.value = static_cast<uint32_t>(m_selectedNodeIds[i]);
+        selectedNodes.push_back(nodeId);
+    }
+    
+    if (selectedNodes.empty()) {
+        SYSTEM_LOG << "[AIEditorGUI] No nodes selected for copy" << std::endl;
+        return;
+    }
+    
+    // Copy via clipboard
+    AIEditorClipboard::Get().Copy(selectedNodes, doc);
+    
+    SYSTEM_LOG << "[AIEditorGUI] Copied " << selectedNodes.size() << " nodes" << std::endl;
 }
 
 void AIEditorGUI::MenuAction_Paste()
 {
-    SYSTEM_LOG << "[AIEditorGUI] Paste (not yet implemented)" << std::endl;
+    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
+    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
+    if (doc == nullptr) {
+        SYSTEM_LOG << "[AIEditorGUI] No active graph for paste" << std::endl;
+        return;
+    }
+    
+    if (AIEditorClipboard::Get().IsEmpty()) {
+        SYSTEM_LOG << "[AIEditorGUI] Clipboard is empty" << std::endl;
+        return;
+    }
+    
+    // Paste with 50px offset
+    Vector pasteOffset(50.0f, 50.0f);
+    std::vector<NodeGraph::NodeId> newNodeIds = AIEditorClipboard::Get().Paste(doc, pasteOffset);
+    
+    // Select pasted nodes
+    m_selectedNodeIds.clear();
+    for (size_t i = 0; i < newNodeIds.size(); ++i) {
+        m_selectedNodeIds.push_back(static_cast<int>(newNodeIds[i].value));
+    }
+    
+    SYSTEM_LOG << "[AIEditorGUI] Pasted " << newNodeIds.size() << " nodes" << std::endl;
 }
 
 void AIEditorGUI::MenuAction_Delete()
 {
-    SYSTEM_LOG << "[AIEditorGUI] Delete selected nodes (not yet implemented)" << std::endl;
+    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
+    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
+    if (doc == nullptr) {
+        SYSTEM_LOG << "[AIEditorGUI] No active graph for delete" << std::endl;
+        return;
+    }
+    
+    if (m_selectedNodeIds.empty()) {
+        SYSTEM_LOG << "[AIEditorGUI] No nodes selected for deletion" << std::endl;
+        return;
+    }
+    
+    // Delete selected nodes
+    for (size_t i = 0; i < m_selectedNodeIds.size(); ++i) {
+        NodeGraph::NodeId nodeId;
+        nodeId.value = static_cast<uint32_t>(m_selectedNodeIds[i]);
+        doc->DeleteNode(nodeId);
+    }
+    
+    SYSTEM_LOG << "[AIEditorGUI] Deleted " << m_selectedNodeIds.size() << " nodes" << std::endl;
+    
+    // Clear selection
+    m_selectedNodeIds.clear();
 }
 
 void AIEditorGUI::MenuAction_SelectAll()
 {
-    SYSTEM_LOG << "[AIEditorGUI] Select All (not yet implemented)" << std::endl;
+    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
+    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
+    if (doc == nullptr) {
+        SYSTEM_LOG << "[AIEditorGUI] No active graph for select all" << std::endl;
+        return;
+    }
+    
+    // Clear current selection
+    m_selectedNodeIds.clear();
+    
+    // Select all nodes
+    const std::vector<NodeGraph::NodeData>& nodes = doc->GetNodes();
+    for (size_t i = 0; i < nodes.size(); ++i) {
+        m_selectedNodeIds.push_back(static_cast<int>(nodes[i].id.value));
+    }
+    
+    SYSTEM_LOG << "[AIEditorGUI] Selected all " << m_selectedNodeIds.size() << " nodes" << std::endl;
 }
 
 void AIEditorGUI::MenuAction_ResetLayout()
