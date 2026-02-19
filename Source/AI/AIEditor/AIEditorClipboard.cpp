@@ -150,11 +150,10 @@ std::vector<NodeGraph::NodeId> AIEditorClipboard::Paste(
     std::map<uint32_t, NodeGraph::NodeId> idMap;
     
     // Create nodes
-    for (size_t i = 0; i < m_nodes.size(); ++i) {
-        Vector pos(
-            m_nodes[i].position.x + pasteOffset.x,
-            m_nodes[i].position.y + pasteOffset.y
-        );
+    for (size_t i = 0; i < m_nodes.size(); ++i)
+    {        
+		Vector pos ( m_nodes[i].position.x + pasteOffset.x, m_nodes[i].position.y + pasteOffset.y);
+        
         
         NodeGraph::NodeId newId = doc->CreateNode(m_nodes[i].type, pos);
         

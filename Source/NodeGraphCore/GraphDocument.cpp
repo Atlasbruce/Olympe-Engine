@@ -121,6 +121,34 @@ const NodeData* GraphDocument::GetNode(NodeId id) const
     return nullptr;
 }
 
+bool GraphDocument::UpdateNode(NodeId nodeId, const NodeData& newData)
+{
+    // Find node in document
+    for (size_t i = 0; i < m_nodes.size(); ++i)
+    {
+        if (m_nodes[i].id.value == nodeId.value)
+        {
+            // Update node data while preserving ID
+            NodeId originalId = m_nodes[i].id;
+            m_nodes[i] = newData;
+            m_nodes[i].id = originalId; // Preserve original ID
+
+            SYSTEM_LOG << "[GraphDocument] Updated node ID="
+                << nodeId.value
+                << " type=" << newData.type
+                << " pos=(" << newData.position.x
+                << "," << newData.position.y << ")"
+                << std::endl;
+
+            return true;
+        }
+    }
+
+    SYSTEM_LOG << "[GraphDocument] WARNING: UpdateNode failed - node ID="
+        << nodeId.value << " not found" << std::endl;
+    return false;
+}
+
 // ============================================================================
 // CRUD Operations - Links
 // ============================================================================

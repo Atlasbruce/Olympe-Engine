@@ -82,6 +82,14 @@ public:
      */
     NodeData* GetNode(NodeId id);
     const NodeData* GetNode(NodeId id) const;
+
+    /**
+     * @brief Update an existing node's data
+     * @param nodeId The node to update
+     * @param newData New node data (position, type, parameters)
+     * @return true if node was found and updated, false otherwise
+     */
+    bool UpdateNode(NodeId nodeId, const NodeData& newData);
     
     // ========================================================================
     // CRUD Operations - Links

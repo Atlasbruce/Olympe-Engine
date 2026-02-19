@@ -82,8 +82,14 @@
     <Filter Include="Fichiers d%27en-t�te\Blueprint Editor">
       <UniqueIdentifier>{1ec5b006-a25a-4ac8-8b82-0866c5cbec44}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Fichiers d%27en-t�te\GraphNodeCore">
+    <Filter Include="Fichiers d%27en-t�te\AI\GraphPlugin_BT">
+      <UniqueIdentifier>{050080ca-2dcd-47d4-b832-dac21966565a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers d%27en-t�te\NodeGraphCore">
       <UniqueIdentifier>{be26199a-1835-4408-8d6d-2366d0bda1ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fichiers d%27en-t�te\NodeGraphCore\Commands">
+      <UniqueIdentifier>{67f380a2-9d3d-4129-93b2-888186ec7516}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -346,46 +352,22 @@
       <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
     </ClCompile>
     <ClCompile Include="Source\NodeGraphCore\CommandSystem.cpp">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\NodeGraphCore\Commands\ConnectPinsCommand.cpp">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\NodeGraphCore\Commands\CreateNodeCommand.cpp">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\NodeGraphCore\Commands\DeleteNodeCommand.cpp">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
     </ClCompile>
     <ClCompile Include="Source\NodeGraphCore\GraphDocument.cpp">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
     </ClCompile>
     <ClCompile Include="Source\NodeGraphCore\GraphMigrator.cpp">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\NodeGraphCore\Commands\MoveNodeCommand.cpp">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
     </ClCompile>
     <ClCompile Include="Source\NodeGraphCore\NodeGraphManager.cpp">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\BPCommandSystem.cpp">
       <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\BTNodeGraphManager.cpp">
       <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTGraphCompiler.cpp">
-      <Filter>Fichiers d%27en-t�te\AI</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTGraphValidator.cpp">
-      <Filter>Fichiers d%27en-t�te\AI</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTNodePalette.cpp">
-      <Filter>Fichiers d%27en-t�te\AI</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTNodeRegistry.cpp">
-      <Filter>Fichiers d%27en-t�te\AI</Filter>
     </ClCompile>
     <ClCompile Include="Source\AI\AIEditor\AIEditorGUI.cpp">
       <Filter>Fichiers d%27en-t�te\AI</Filter>
@@ -398,6 +380,33 @@
     </ClCompile>
     <ClCompile Include="Source\AI\AIEditor\AIEditorPanels.cpp">
       <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\AIEditor\AIEditorClipboard.cpp">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTGraphCompiler.cpp">
+      <Filter>Fichiers d%27en-t�te\AI\GraphPlugin_BT</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTGraphValidator.cpp">
+      <Filter>Fichiers d%27en-t�te\AI\GraphPlugin_BT</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTNodePalette.cpp">
+      <Filter>Fichiers d%27en-t�te\AI\GraphPlugin_BT</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTNodeRegistry.cpp">
+      <Filter>Fichiers d%27en-t�te\AI\GraphPlugin_BT</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NodeGraphCore\Commands\ConnectPinsCommand.cpp">
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NodeGraphCore\Commands\CreateNodeCommand.cpp">
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NodeGraphCore\Commands\DeleteNodeCommand.cpp">
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NodeGraphCore\Commands\MoveNodeCommand.cpp">
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore\Commands</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -735,52 +744,28 @@
       <Filter>Fichiers d%27en-t�te\Blueprint Visual Debug</Filter>
     </ClInclude>
     <ClInclude Include="Source\NodeGraphCore\CommandSystem.h">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\NodeGraphCore\Commands\ConnectPinsCommand.h">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\NodeGraphCore\Commands\CreateNodeCommand.h">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\NodeGraphCore\Commands\DeleteNodeCommand.h">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
     </ClInclude>
     <ClInclude Include="Source\NodeGraphCore\GraphDocument.h">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
     </ClInclude>
     <ClInclude Include="Source\NodeGraphCore\GraphMigrator.h">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
     </ClInclude>
     <ClInclude Include="Source\NodeGraphCore\ILayoutEngine.h">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\NodeGraphCore\Commands\MoveNodeCommand.h">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
     </ClInclude>
     <ClInclude Include="Source\NodeGraphCore\NodeGraphCore.h">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
     </ClInclude>
     <ClInclude Include="Source\NodeGraphCore\NodeGraphManager.h">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\BPCommandSystem.h">
       <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\BTNodeGraphManager.h">
       <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTGraphCompiler.h">
-      <Filter>Fichiers d%27en-t�te\AI</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTGraphValidator.h">
-      <Filter>Fichiers d%27en-t�te\AI</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTNodePalette.h">
-      <Filter>Fichiers d%27en-t�te\AI</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTNodeRegistry.h">
-      <Filter>Fichiers d%27en-t�te\AI</Filter>
     </ClInclude>
     <ClInclude Include="Source\AI\AIEditor\AIEditorGUI.h">
       <Filter>Fichiers d%27en-t�te\AI</Filter>
@@ -793,6 +778,36 @@
     </ClInclude>
     <ClInclude Include="Source\AI\AIEditor\AIEditorPanels.h">
       <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\AIEditor\AIEditorClipboard.h">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTGraphCompiler.h">
+      <Filter>Fichiers d%27en-t�te\AI\GraphPlugin_BT</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTGraphValidator.h">
+      <Filter>Fichiers d%27en-t�te\AI\GraphPlugin_BT</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTNodePalette.h">
+      <Filter>Fichiers d%27en-t�te\AI\GraphPlugin_BT</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTNodeRegistry.h">
+      <Filter>Fichiers d%27en-t�te\AI\GraphPlugin_BT</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\AI\BehaviorTreeDependencyScanner.h">
+      <Filter>Fichiers d%27en-t�te</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphCore\Commands\ConnectPinsCommand.h">
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphCore\Commands\CreateNodeCommand.h">
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphCore\Commands\DeleteNodeCommand.h">
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphCore\Commands\MoveNodeCommand.h">
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore\Commands</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -811,7 +826,7 @@
       <Filter>Fichiers sources</Filter>
     </None>
     <None Include="Source\NodeGraphCore\README.md">
-      <Filter>Fichiers d%27en-t�te\GraphNodeCore</Filter>
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

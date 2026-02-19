@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "../vector.h"
 
 namespace Olympe {
 namespace NodeGraph {
@@ -60,13 +61,14 @@ struct LinkId {
 // Basic Structures
 // ============================================================================
 
-struct Vector2 {
+using Vector2 = Vector; // Assuming Vector2 is defined in a common math library
+/*struct Vector2 {
     float x = 0.0f;
     float y = 0.0f;
     
     Vector2() = default;
     Vector2(float inX, float inY) : x(inX), y(inY) {}
-};
+};/**/
 
 // ============================================================================
 // Node Data

@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\AI\AIEditor\AIEditorClipboard.cpp" />
     <ClCompile Include="Source\AI\AIEditor\AIEditorGUI.cpp" />
     <ClCompile Include="Source\AI\AIEditor\AIEditorMenus.cpp" />
     <ClCompile Include="Source\AI\AIEditor\AIEditorNodeRenderer.cpp" />
@@ -126,6 +127,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Source\AI\AIEditor\AIEditorClipboard.h" />
     <ClInclude Include="Source\AI\AIEditor\AIEditorGUI.h" />
     <ClInclude Include="Source\AI\AIEditor\AIEditorMenus.h" />
     <ClInclude Include="Source\AI\AIEditor\AIEditorNodeRenderer.h" />
@@ -137,6 +139,7 @@
     <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTNodeRegistry.h" />
     <ClInclude Include="Source\AI\BehaviorTree.h" />
     <ClInclude Include="Source\AI\BehaviorTreeDebugWindow.h" />
+    <ClInclude Include="Source\AI\BehaviorTreeDependencyScanner.h" />
     <ClInclude Include="Source\AI\BTEditorCommand.h" />
     <ClInclude Include="Source\AI\BTGraphLayoutEngine.h" />
     <ClInclude Include="Source\Animation\AnimationBank.h" />
