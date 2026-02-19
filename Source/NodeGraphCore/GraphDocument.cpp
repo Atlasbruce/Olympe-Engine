@@ -566,5 +566,157 @@ GraphDocument GraphDocument::FromJson(const json& j)
     return doc;
 }
 
+// ============================================================================
+// Auto-Layout
+// ============================================================================
+
+bool GraphDocument::AutoLayout(const AutoLayoutConfig& config)
+{
+    // Validate layout direction
+    if (config.direction == LayoutDirection::LeftToRight || 
+        config.direction == LayoutDirection::RightToLeft)
+    {
+        SYSTEM_LOG << "[GraphDocument] AutoLayout failed: LeftToRight and RightToLeft not yet implemented" << std::endl;
+        return false;
+    }
+    
+    // Validate graph has root node
+    if (rootNodeId.value == 0)
+    {
+        SYSTEM_LOG << "[GraphDocument] AutoLayout failed: No root node defined" << std::endl;
+        return false;
+    }
+    
+    if (m_nodes.empty())
+    {
+        SYSTEM_LOG << "[GraphDocument] AutoLayout failed: Graph is empty" << std::endl;
+        return false;
+    }
+    
+    // Check root node exists
+    const NodeData* rootNode = GetNode(rootNodeId);
+    if (rootNode == nullptr)
+    {
+        SYSTEM_LOG << "[GraphDocument] AutoLayout failed: Root node not found" << std::endl;
+        return false;
+    }
+    
+    SYSTEM_LOG << "[GraphDocument] Starting auto-layout from root node ID=" << rootNodeId.value << std::endl;
+    
+    // Track visited nodes for cycle detection
+    std::map<NodeId, bool> visited;
+    
+    // Start layout from root
+    AutoLayoutNode(rootNodeId, config, config.paddingX, config.paddingY, 0, visited);
+    
+    // Mark document as modified
+    m_isDirty = true;
+    
+    SYSTEM_LOG << "[GraphDocument] Auto-layout completed successfully" << std::endl;
+    return true;
+}
+
+float GraphDocument::AutoLayoutNode(
+    NodeId nodeId,
+    const AutoLayoutConfig& config,
+    float startX,
+    float startY,
+    int depth,
+    std::map<NodeId, bool>& visited)
+{
+    // Cycle detection
+    auto it = visited.find(nodeId);
+    if (it != visited.end() && it->second)
+    {
+        SYSTEM_LOG << "[GraphDocument] AutoLayout: Cycle detected at node ID=" << nodeId.value << std::endl;
+        return config.nodeWidth + config.horizontalSpacing;
+    }
+    
+    visited[nodeId] = true;
+    
+    // Get node data
+    NodeData* node = GetNode(nodeId);
+    if (node == nullptr)
+    {
+        return config.nodeWidth + config.horizontalSpacing;
+    }
+    
+    // Calculate Y position based on depth
+    float nodeY = 0.0f;
+    if (config.direction == LayoutDirection::TopToBottom)
+    {
+        nodeY = startY + static_cast<float>(depth) * config.verticalSpacing;
+    }
+    else // BottomToTop
+    {
+        nodeY = startY - static_cast<float>(depth) * config.verticalSpacing;
+    }
+    
+    // Calculate total width of children
+    float totalChildrenWidth = 0.0f;
+    float childX = startX;
+    
+    for (size_t i = 0; i < node->children.size(); ++i)
+    {
+        float childWidth = AutoLayoutNode(
+            node->children[i],
+            config,
+            childX,
+            startY,
+            depth + 1,
+            visited
+        );
+        
+        totalChildrenWidth += childWidth;
+        childX += childWidth;
+    }
+    
+    // Calculate X position for this node
+    float nodeX = 0.0f;
+    if (node->children.empty())
+    {
+        // Leaf node - use startX
+        nodeX = startX;
+    }
+    else
+    {
+        // Center above children
+        // Each child returns (width + spacing), so last child has trailing spacing
+        // Subtract one spacing to get the actual span occupied by children
+        float childrenSpan = totalChildrenWidth - config.horizontalSpacing;
+        nodeX = startX + childrenSpan * 0.5f - config.nodeWidth * 0.5f;
+    }
+    
+    // Apply position to node
+    Vector2 newPos;
+    newPos.x = nodeX;
+    newPos.y = nodeY;
+    UpdateNodePosition(nodeId, newPos);
+    
+    // Handle decorator child (place to the right of parent)
+    if (node->decoratorChild.value != 0)
+    {
+        float decoratorX = nodeX + config.nodeWidth + config.horizontalSpacing;
+        AutoLayoutNode(
+            node->decoratorChild,
+            config,
+            decoratorX,
+            nodeY,
+            depth,
+            visited
+        );
+    }
+    
+    // Return width consumed by this subtree
+    if (totalChildrenWidth > 0.0f)
+    {
+        return totalChildrenWidth;
+    }
+    else
+    {
+        return config.nodeWidth + config.horizontalSpacing;
+    }
+}
+
 } // namespace NodeGraph
 } // namespace Olympe
