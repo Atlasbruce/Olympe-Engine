@@ -7,7 +7,6 @@
 #include "../system/system_utils.h"
 #include <queue>
 #include <algorithm>
-#include <cmath>
 
 namespace Olympe
 {
@@ -21,6 +20,11 @@ namespace Olympe
         float nodeSpacingY,
         float zoomFactor)
     {
+        // Suppress unused parameter warnings (fixed grid is used)
+        static_cast<void>(nodeSpacingX);
+        static_cast<void>(nodeSpacingY);
+        static_cast<void>(zoomFactor);
+
         if (!tree || tree->nodes.empty())
         {
             return {};
@@ -35,68 +39,16 @@ namespace Olympe
         // Phase 1: Assign nodes to layers via BFS
         AssignLayers(tree);
 
-        // Phase 2: Initial ordering within layers
-        InitialOrdering();
+        // Phase 2: Place nodes on fixed 400x200 grid (horizontal layout)
+        // layers become columns (x-axis), order within layer becomes rows (y-axis)
+        const float gridColumnSpacing = 400.0f;  // pixels between adjacent layers (columns)
+        const float gridRowSpacing    = 200.0f;  // pixels between nodes in the same layer (rows)
 
-        // Phase 3: Reduce crossings (10 passes)
-        ReduceCrossings(tree);
-
-        // Phase 4: Apply Buchheim-Walker optimal layout for better parent centering
-        // This sets position.x in abstract units (0, 1, 2, etc.)
-        ApplyBuchheimWalkerLayout(tree);
-        
-        // Phase 5: Force-directed collision resolution with generous padding
-        // This works in abstract unit space
-        const float nodePadding = 3.5f;  // 3.5 abstract units of padding for better breathing room
-        const int maxIterations = 50;    // 50 iterations for better convergence
-        ResolveNodeCollisionsForceDirected(nodePadding, maxIterations);
-
-        // Apply zoom factor to spacing to get final pixel coordinates
-        float finalSpacingX = nodeSpacingX * zoomFactor;
-        float finalSpacingY = nodeSpacingY * zoomFactor;
-
-        SYSTEM_LOG << "[BTGraphLayout] Using spacing: "
-                   << finalSpacingX << "px x " << finalSpacingY << "px"
-                   << " (base: " << nodeSpacingX << " x " << nodeSpacingY
-                   << ", zoom: " << static_cast<int>(zoomFactor * 100) << "%)"
-                   << std::endl;
-
-        // Convert from abstract units to world coordinates and apply layout direction
-        SYSTEM_LOG << "[LAYOUT][PixelSpace] BEGIN" << std::endl;
-        if (m_layoutDirection == BTLayoutDirection::TopToBottom)
+        for (auto& layout : m_layouts)
         {
-            // Vertical layout (default): layers go top-to-bottom
-            for (auto& layout : m_layouts)
-            {
-                // Convert abstract X position to world coordinates with zoomed spacing
-                layout.position.x *= finalSpacingX;
-                
-                // Convert layer index to vertical world position with zoomed spacing
-                layout.position.y = layout.layer * finalSpacingY;
-            }
+            layout.position.x = layout.layer * gridColumnSpacing;
+            layout.position.y = layout.orderInLayer * gridRowSpacing;
         }
-        else  // LeftToRight
-        {
-            // Horizontal layout: rotate 90° clockwise
-            // Layers become left-to-right, abstract X units become vertical positions
-            for (auto& layout : m_layouts)
-            {
-                float abstractX = layout.position.x;
-                // Layers become horizontal position
-                layout.position.x = layout.layer * finalSpacingY;
-                // Abstract X units become vertical position
-                layout.position.y = abstractX * finalSpacingX;
-            }
-        }
-
-        for (const auto& layout : m_layouts)
-        {
-            SYSTEM_LOG << "[LAYOUT][PixelSpace] NodeID=" << layout.nodeId
-                       << " Layer=" << layout.layer
-                       << " FinalPos=(" << layout.position.x << "," << layout.position.y << ")"
-                       << std::endl;
-        }
-        SYSTEM_LOG << "[LAYOUT][PixelSpace] END" << std::endl;
 
         SYSTEM_LOG << "[BTGraphLayout] Layout complete: " << m_layouts.size()
                    << " nodes positioned" << std::endl;
@@ -140,7 +92,7 @@ namespace Olympe
             BTNodeLayout layout;
             layout.nodeId = nodeId;
             layout.layer = layer;
-            layout.orderInLayer = 0;  // Will be set in InitialOrdering
+            layout.orderInLayer = 0;  // Will be set below
 
             size_t idx = m_layouts.size();
             m_layouts.push_back(layout);
@@ -161,230 +113,28 @@ namespace Olympe
             }
         }
 
-        // Organize nodes into layers
+        // Organize nodes into layers and set orderInLayer
         m_layers.resize(maxLayer + 1);
         for (const auto& layout : m_layouts)
         {
             m_layers[layout.layer].push_back(layout.nodeId);
         }
 
-        // Build parent map for later phases
-        BuildParentMap(tree);
-    }
-
-    void BTGraphLayoutEngine::InitialOrdering()
-    {
-        // Simple initial ordering: maintain order from BFS
         for (size_t layerIdx = 0; layerIdx < m_layers.size(); ++layerIdx)
         {
-            auto& layer = m_layers[layerIdx];
+            const auto& layer = m_layers[layerIdx];
             for (size_t i = 0; i < layer.size(); ++i)
             {
-                uint32_t nodeId = layer[i];
-                auto it = m_nodeIdToIndex.find(nodeId);
+                auto it = m_nodeIdToIndex.find(layer[i]);
                 if (it != m_nodeIdToIndex.end())
                 {
                     m_layouts[it->second].orderInLayer = static_cast<int>(i);
                 }
             }
         }
-    }
 
-    void BTGraphLayoutEngine::ReduceCrossings(const BehaviorTreeAsset* tree)
-    {
-        // Barycenter heuristic - 20 passes alternating between forward and backward (doubled from 10)
-        const int numPasses = 20;
-
-        for (int pass = 0; pass < numPasses; ++pass)
-        {
-            // Forward pass (top to bottom)
-            if (pass % 2 == 0)
-            {
-                for (size_t layerIdx = 1; layerIdx < m_layers.size(); ++layerIdx)
-                {
-                    auto& layer = m_layers[layerIdx];
-                    
-                    // Calculate barycenter for each node based on parents
-                    std::vector<std::pair<float, uint32_t>> barycenters;
-                    for (uint32_t nodeId : layer)
-                    {
-                        auto parentIt = m_parentMap.find(nodeId);
-                        if (parentIt != m_parentMap.end() && !parentIt->second.empty())
-                        {
-                            // Get parent layouts
-                            std::vector<BTNodeLayout*> parents;
-                            for (uint32_t parentId : parentIt->second)
-                            {
-                                auto it = m_nodeIdToIndex.find(parentId);
-                                if (it != m_nodeIdToIndex.end())
-                                {
-                                    parents.push_back(&m_layouts[it->second]);
-                                }
-                            }
-                            
-                            float barycenter = CalculateBarycenter(nodeId, parents);
-                            barycenters.push_back({barycenter, nodeId});
-                        }
-                        else
-                        {
-                            // No parents, keep current order
-                            auto it = m_nodeIdToIndex.find(nodeId);
-                            if (it != m_nodeIdToIndex.end())
-                            {
-                                float currentOrder = static_cast<float>(m_layouts[it->second].orderInLayer);
-                                barycenters.push_back({currentOrder, nodeId});
-                            }
-                        }
-                    }
-
-                    // Sort by barycenter
-                    std::sort(barycenters.begin(), barycenters.end());
-
-                    // Update order
-                    layer.clear();
-                    for (size_t i = 0; i < barycenters.size(); ++i)
-                    {
-                        uint32_t nodeId = barycenters[i].second;
-                        layer.push_back(nodeId);
-                        auto it = m_nodeIdToIndex.find(nodeId);
-                        if (it != m_nodeIdToIndex.end())
-                        {
-                            m_layouts[it->second].orderInLayer = static_cast<int>(i);
-                        }
-                    }
-                }
-            }
-            else  // Backward pass (bottom to top)
-            {
-                for (int layerIdx = static_cast<int>(m_layers.size()) - 2; layerIdx >= 0; --layerIdx)
-                {
-                    auto& layer = m_layers[layerIdx];
-                    
-                    // Calculate barycenter for each node based on children
-                    std::vector<std::pair<float, uint32_t>> barycenters;
-                    for (uint32_t nodeId : layer)
-                    {
-                        auto it = m_nodeIdToIndex.find(nodeId);
-                        if (it == m_nodeIdToIndex.end())
-                            continue;
-
-                        const BTNode* node = tree->GetNode(nodeId);
-                        if (!node)
-                            continue;
-
-                        auto children = GetChildren(node);
-                        if (!children.empty())
-                        {
-                            // Get child layouts
-                            std::vector<BTNodeLayout*> childLayouts;
-                            for (uint32_t childId : children)
-                            {
-                                auto childIt = m_nodeIdToIndex.find(childId);
-                                if (childIt != m_nodeIdToIndex.end())
-                                {
-                                    childLayouts.push_back(&m_layouts[childIt->second]);
-                                }
-                            }
-                            
-                            float barycenter = CalculateBarycenter(nodeId, childLayouts);
-                            barycenters.push_back({barycenter, nodeId});
-                        }
-                        else
-                        {
-                            float currentOrder = static_cast<float>(m_layouts[it->second].orderInLayer);
-                            barycenters.push_back({currentOrder, nodeId});
-                        }
-                    }
-
-                    // Sort by barycenter
-                    std::sort(barycenters.begin(), barycenters.end());
-
-                    // Update order
-                    layer.clear();
-                    for (size_t i = 0; i < barycenters.size(); ++i)
-                    {
-                        uint32_t nodeId = barycenters[i].second;
-                        layer.push_back(nodeId);
-                        auto it = m_nodeIdToIndex.find(nodeId);
-                        if (it != m_nodeIdToIndex.end())
-                        {
-                            m_layouts[it->second].orderInLayer = static_cast<int>(i);
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Debug output to verify crossing reduction effectiveness
-        #ifdef DEBUG_BT_LAYOUT
-        int totalCrossings = CountEdgeCrossings(tree);
-        SYSTEM_LOG << "[BTGraphLayout] Edge crossings after reduction: "
-                   << totalCrossings << std::endl;
-        #endif
-    }
-
-    void BTGraphLayoutEngine::AssignXCoordinates(float nodeSpacingX)
-    {
-        // Assign X coordinates based on order in layer
-        for (const auto& layer : m_layers)
-        {
-            float totalWidth = (layer.size() - 1) * nodeSpacingX;
-            float startX = -totalWidth / 2.0f;  // Center around 0
-
-            for (size_t i = 0; i < layer.size(); ++i)
-            {
-                uint32_t nodeId = layer[i];
-                auto it = m_nodeIdToIndex.find(nodeId);
-                if (it != m_nodeIdToIndex.end())
-                {
-                    m_layouts[it->second].position.x = startX + i * nodeSpacingX;
-                }
-            }
-        }
-    }
-
-    void BTGraphLayoutEngine::ResolveCollisions(float nodeSpacingX)
-    {
-        // Simple collision resolution: expand spacing if nodes are too close
-        const float minSpacing = nodeSpacingX * 0.8f;
-
-        for (auto& layer : m_layers)
-        {
-            if (layer.size() < 2)
-                continue;
-
-            // Sort nodes by X coordinate
-            std::sort(layer.begin(), layer.end(), [this](uint32_t a, uint32_t b) {
-                auto itA = m_nodeIdToIndex.find(a);
-                auto itB = m_nodeIdToIndex.find(b);
-                if (itA == m_nodeIdToIndex.end() || itB == m_nodeIdToIndex.end())
-                    return false;
-                return m_layouts[itA->second].position.x < m_layouts[itB->second].position.x;
-            });
-
-            // Check for collisions and adjust
-            for (size_t i = 1; i < layer.size(); ++i)
-            {
-                uint32_t prevNodeId = layer[i - 1];
-                uint32_t currNodeId = layer[i];
-
-                auto itPrev = m_nodeIdToIndex.find(prevNodeId);
-                auto itCurr = m_nodeIdToIndex.find(currNodeId);
-
-                if (itPrev == m_nodeIdToIndex.end() || itCurr == m_nodeIdToIndex.end())
-                    continue;
-
-                BTNodeLayout& prevLayout = m_layouts[itPrev->second];
-                BTNodeLayout& currLayout = m_layouts[itCurr->second];
-
-                float distance = currLayout.position.x - prevLayout.position.x;
-                if (distance < minSpacing)
-                {
-                    // Push current node to the right
-                    currLayout.position.x = prevLayout.position.x + minSpacing;
-                }
-            }
-        }
+        // Build parent map for reference
+        BuildParentMap(tree);
     }
 
     std::vector<uint32_t> BTGraphLayoutEngine::GetChildren(const BTNode* node) const
@@ -425,307 +175,4 @@ namespace Olympe
         }
     }
 
-    float BTGraphLayoutEngine::CalculateBarycenter(uint32_t nodeId, const std::vector<BTNodeLayout*>& neighbors) const
-    {
-        if (neighbors.empty())
-            return 0.0f;
-
-        float sum = 0.0f;
-        for (const BTNodeLayout* neighbor : neighbors)
-        {
-            sum += neighbor->orderInLayer;
-        }
-
-        return sum / neighbors.size();
-    }
-
-    void BTGraphLayoutEngine::ApplyBuchheimWalkerLayout(const BehaviorTreeAsset* tree)
-    {
-        /*
-         * Buchheim-Walker Algorithm (2002)
-         * Reference: "Improving Walker's Algorithm to Run in Linear Time"
-         * 
-         * Guarantees:
-         * 1. Parents centered on their children
-         * 2. No collisions between sibling subtrees
-         * 3. Optimal horizontal space usage
-         * 4. Linear time complexity O(n)
-         */
-
-        if (!tree || m_layers.empty() || m_layouts.empty())
-            return;
-
-        SYSTEM_LOG << "[LAYOUT][Walker] BEGIN" << std::endl;
-
-        // Start from root and recursively place subtrees
-        if (!m_layers.empty() && !m_layers[0].empty())
-        {
-            uint32_t rootId = m_layers[0][0];
-            float startX = 0.0f;
-            PlaceSubtree(rootId, tree, 0, startX);
-        }
-
-        SYSTEM_LOG << "[LAYOUT][Walker] END" << std::endl;
-    }
-
-    void BTGraphLayoutEngine::PlaceSubtree(uint32_t nodeId, const BehaviorTreeAsset* tree, int depth, float& nextAvailableX)
-    {
-        const BTNode* node = tree->GetNode(nodeId);
-        if (!node)
-            return;
-
-        auto itLayout = m_nodeIdToIndex.find(nodeId);
-        if (itLayout == m_nodeIdToIndex.end())
-            return;
-
-        BTNodeLayout& layout = m_layouts[itLayout->second];
-        auto children = GetChildren(node);
-
-        if (children.empty())
-        {
-            // Leaf: place at next available position
-            layout.position.x = nextAvailableX;
-            nextAvailableX += 1.0f;  // Reserve 1 unit
-            SYSTEM_LOG << "[LAYOUT][Walker] NodeID=" << nodeId
-                       << " Layer=" << layout.layer
-                       << " Order=" << layout.orderInLayer
-                       << " WalkerPos=(" << layout.position.x << "," << layout.position.y << ")"
-                       << std::endl;
-            return;
-        }
-
-        // Recursively place all children
-        float childrenStartX = nextAvailableX;
-        for (uint32_t childId : children)
-        {
-            PlaceSubtree(childId, tree, depth + 1, nextAvailableX);
-        }
-        float childrenEndX = nextAvailableX;
-
-        // Center parent on children
-        // Note: Position values are in abstract units where each leaf occupies 1.0 unit.
-        // childrenStartX = position where first child starts (e.g., 0)
-        // childrenEndX = nextAvailableX after all children placed (e.g., 2 for two children)
-        // Since nextAvailableX is one past the last child's position, we subtract 1.0
-        // Example: Two children at 0 and 1 -> midpoint = (0 + 2 - 1) / 2 = 0.5 ✓
-        // Example: One child at 0 -> midpoint = (0 + 1 - 1) / 2 = 0 ✓
-        float childrenMidpoint = (childrenStartX + childrenEndX - 1.0f) / 2.0f;
-        layout.position.x = childrenMidpoint;
-
-        // If parent position collides with previous sibling's subtree, shift everything
-        if (layout.position.x < childrenStartX)
-        {
-            float shift = childrenStartX - layout.position.x;
-            layout.position.x += shift;
-            
-            // Shift all children by the same amount
-            for (uint32_t childId : children)
-            {
-                ShiftSubtree(childId, tree, shift);
-            }
-        }
-
-        SYSTEM_LOG << "[LAYOUT][Walker] NodeID=" << nodeId
-                   << " Layer=" << layout.layer
-                   << " Order=" << layout.orderInLayer
-                   << " WalkerPos=(" << layout.position.x << "," << layout.position.y << ")"
-                   << std::endl;
-    }
-
-    void BTGraphLayoutEngine::ShiftSubtree(uint32_t nodeId, const BehaviorTreeAsset* tree, float offset)
-    {
-        auto itLayout = m_nodeIdToIndex.find(nodeId);
-        if (itLayout == m_nodeIdToIndex.end())
-            return;
-
-        m_layouts[itLayout->second].position.x += offset;
-
-        const BTNode* node = tree->GetNode(nodeId);
-        if (!node)
-            return;
-
-        auto children = GetChildren(node);
-        for (uint32_t childId : children)
-        {
-            ShiftSubtree(childId, tree, offset);
-        }
-    }
-
-    void BTGraphLayoutEngine::ResolveNodeCollisionsForceDirected(float nodePadding, int maxIterations)
-    {
-        SYSTEM_LOG << "[LAYOUT][ResolveCollisions] BEGIN" << std::endl;
-
-        for (int iter = 0; iter < maxIterations; ++iter)
-        {
-            bool hadCollision = false;
-
-            // Check all pairs within each layer
-            for (size_t layerIdx = 0; layerIdx < m_layers.size(); ++layerIdx)
-            {
-                auto& layer = m_layers[layerIdx];
-
-                for (size_t i = 0; i < layer.size(); ++i)
-                {
-                    for (size_t j = i + 1; j < layer.size(); ++j)
-                    {
-                        uint32_t nodeA = layer[i];
-                        uint32_t nodeB = layer[j];
-
-                        auto itA = m_nodeIdToIndex.find(nodeA);
-                        auto itB = m_nodeIdToIndex.find(nodeB);
-
-                        if (itA == m_nodeIdToIndex.end() || itB == m_nodeIdToIndex.end())
-                            continue;
-
-                        BTNodeLayout& layoutA = m_layouts[itA->second];
-                        BTNodeLayout& layoutB = m_layouts[itB->second];
-
-                        if (DoNodesOverlap(layoutA, layoutB, nodePadding))
-                        {
-                            PushNodeApart(nodeA, nodeB, nodePadding);
-                            hadCollision = true;
-                        }
-                    }
-                }
-            }
-
-            if (!hadCollision)
-            {
-                // Converged early
-                break;
-            }
-        }
-
-        SYSTEM_LOG << "[LAYOUT][ResolveCollisions] END" << std::endl;
-    }
-
-    bool BTGraphLayoutEngine::DoNodesOverlap(const BTNodeLayout& a, const BTNodeLayout& b, float padding) const
-    {
-        // Note: During collision resolution, positions are in abstract units (0, 1, 2, etc.)
-        // We treat each node as occupying 1.0 abstract unit width
-        // Height is not relevant since we only check horizontal collisions within the same layer
-        
-        const float abstractNodeWidth = 1.0f;  // Each node occupies 1 abstract unit
-        
-        float aLeft = a.position.x - abstractNodeWidth / 2.0f - padding;
-        float aRight = a.position.x + abstractNodeWidth / 2.0f + padding;
-
-        float bLeft = b.position.x - abstractNodeWidth / 2.0f;
-        float bRight = b.position.x + abstractNodeWidth / 2.0f;
-
-        // Check horizontal overlap (vertical not relevant since both nodes in same layer)
-        return !(aRight < bLeft || aLeft > bRight);
-    }
-
-    void BTGraphLayoutEngine::PushNodeApart(uint32_t nodeA, uint32_t nodeB, float minDistance)
-    {
-        auto itA = m_nodeIdToIndex.find(nodeA);
-        auto itB = m_nodeIdToIndex.find(nodeB);
-
-        if (itA == m_nodeIdToIndex.end() || itB == m_nodeIdToIndex.end())
-            return;
-
-        BTNodeLayout& layoutA = m_layouts[itA->second];
-        BTNodeLayout& layoutB = m_layouts[itB->second];
-
-        // Note: Positions are in abstract units where each node occupies 1.0 unit
-        const float abstractNodeWidth = 1.0f;
-        
-        // Calculate center-to-center distance
-        float dx = layoutB.position.x - layoutA.position.x;
-        float centerDistance = std::abs(dx);
-        
-        // Minimum center-to-center distance needed = abstractNodeWidth + minDistance
-        float requiredCenterDistance = abstractNodeWidth + minDistance;
-        
-        if (centerDistance < requiredCenterDistance)
-        {
-            SYSTEM_LOG << "[LAYOUT][ResolveCollisions] Collision NodeID=" << nodeA
-                       << " <-> NodeID=" << nodeB
-                       << " distance=" << centerDistance
-                       << " min=" << requiredCenterDistance
-                       << std::endl;
-
-            // Calculate how much total separation is needed
-            float totalPushNeeded = requiredCenterDistance - centerDistance;
-            // Each node moves half the distance
-            float pushAmount = totalPushNeeded / 2.0f;
-
-            // Push nodes apart in the direction they're already separated
-            // If B is to the right of A (dx > 0), push A left and B right
-            // If B is to the left of A (dx < 0), push A right and B left
-            if (dx > 0)
-            {
-                layoutA.position.x -= pushAmount;
-                layoutB.position.x += pushAmount;
-            }
-            else if (dx < 0)
-            {
-                layoutA.position.x += pushAmount;
-                layoutB.position.x -= pushAmount;
-            }
-            // If dx == 0 (nodes at same X), push them apart arbitrarily
-            else
-            {
-                layoutA.position.x -= pushAmount;
-                layoutB.position.x += pushAmount;
-            }
-        }
-    }
-    
-    int BTGraphLayoutEngine::CountEdgeCrossings(const BehaviorTreeAsset* tree) const
-    {
-        int crossingCount = 0;
-        
-        // Check all pairs of edges between adjacent layers
-        for (size_t layerIdx = 0; layerIdx + 1 < m_layers.size(); ++layerIdx)
-        {
-            const auto& upperLayer = m_layers[layerIdx];
-            const auto& lowerLayer = m_layers[layerIdx + 1];
-            
-            // Get all edges from upper to lower layer
-            std::vector<std::pair<int, int>> edges;  // C++14: use std::pair explicitly
-            
-            for (size_t i = 0; i < upperLayer.size(); ++i)
-            {
-                uint32_t parentId = upperLayer[i];
-                const BTNode* parentNode = tree->GetNode(parentId);
-                if (!parentNode)
-                    continue;
-                
-                auto children = GetChildren(parentNode);
-                for (uint32_t childId : children)
-                {
-                    // Find child position in lower layer
-                    auto childIt = std::find(lowerLayer.begin(), lowerLayer.end(), childId);
-                    if (childIt != lowerLayer.end())
-                    {
-                        int childPos = static_cast<int>(std::distance(lowerLayer.begin(), childIt));
-                        edges.push_back(std::make_pair(static_cast<int>(i), childPos));
-                    }
-                }
-            }
-            
-            // Count crossings between all edge pairs
-            for (size_t i = 0; i < edges.size(); ++i)
-            {
-                for (size_t j = i + 1; j < edges.size(); ++j)
-                {
-                    // C++14: use explicit variable names instead of structured bindings
-                    int a1 = edges[i].first;
-                    int a2 = edges[i].second;
-                    int b1 = edges[j].first;
-                    int b2 = edges[j].second;
-                    
-                    // Check if edges cross: (a1 < b1 && a2 > b2) || (a1 > b1 && a2 < b2)
-                    if ((a1 < b1 && a2 > b2) || (a1 > b1 && a2 < b2))
-                    {
-                        crossingCount++;
-                    }
-                }
-            }
-        }
-        
-        return crossingCount;
-    }
-}
+} // namespace Olympe
