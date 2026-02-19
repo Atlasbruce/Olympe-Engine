@@ -547,13 +547,162 @@ if (it != map.end()) {
 }
 ```
 
+## 🏗️ COMPILATION ET VALIDATION
+
+### **COMPILATION OBLIGATOIRE PRÉ-SOUMISSION**
+- ❌ **La "compilation mentale" seule n'est PAS suffisante**
+- ✅ **OBLIGATOIRE** : Compiler avec MSVC (Windows) **ET** GCC/Clang (Linux si disponible)
+- ✅ **OBLIGATOIRE** : Fournir le **build log complet** dans la description de PR
+- ✅ **OBLIGATOIRE** : 0 erreurs, 0 warnings autorisés
+
+### **COMMANDES DE BUILD OBLIGATOIRES**
+
+#### Windows (MSVC)
+```batch
+# Visual Studio 2019/2022 - Debug
+msbuild OlympeEngine.sln /p:Configuration=Debug /t:Build /v:minimal
+
+# Visual Studio 2019/2022 - Release
+msbuild OlympeEngine.sln /p:Configuration=Release /t:Build /v:minimal
+
+# Vérifier le résultat
+echo Build completed: %ERRORLEVEL%
+# DOIT afficher: Build completed: 0
+```
+
+#### Linux (GCC/Clang)
+```bash
+# CMake build
+cmake -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build -- -j4
+
+# Make build (si CMakeLists.txt existe)
+make clean
+make -j4 CXXFLAGS="-Wall -Wextra -Werror"
+
+# Vérifier le résultat
+echo "Build exit code: $?"
+# DOIT afficher: Build exit code: 0
+```
+
+### **FORMAT BUILD LOG REQUIS**
+
+Chaque PR **DOIT** contenir cette section dans la description :
+
+```markdown
+## 🏗️ BUILD VERIFICATION
+
+### Windows MSVC Build
+- **Status**: ✅ SUCCESS / ❌ FAILED
+- **Configuration**: Debug + Release
+- **Warnings**: 0
+- **Errors**: 0
+- **Build Time**: XX seconds
+- **Log**: (joindre build.log ou coller output)
+
+### Linux GCC Build (si applicable)
+- **Status**: ✅ SUCCESS / ❌ FAILED
+- **Configuration**: Debug
+- **Warnings**: 0
+- **Errors**: 0
+- **Build Time**: XX seconds
+- **Log**: (joindre build.log ou coller output)
+```
+
+### **ERREURS FRÉQUENTES DÉTECTÉES UNIQUEMENT À LA COMPILATION**
+
+| **Erreur** | **Exemple** | **Détection** |
+|------------|-------------|---------------|
+| **Symbole non défini** | `UpdateNode()` appelée mais non implémentée | **Linker error** ✅ |
+| **Forward declaration manquante** | `class Foo;` utilisée mais jamais définie | **Linker error** ✅ |
+| **Type incompatible** | `Vector2` vs `Vector` | **Compiler error** ✅ |
+| **Namespace manquant** | Code hors `namespace Olympe` | **Compiler warning** ⚠️ |
+| **Include manquant** | `#include <vector>` oublié | **Compiler error** ✅ |
+
+### **VALIDATION PRÉ-PR (AGENT COPILOT)**
+
+Avant de soumettre une PR, l'agent **DOIT** :
+
+1. ✅ Générer le code complet (headers + implementations)
+2. ✅ Compiler localement avec MSVC (Windows)
+3. ✅ Capturer le **build log** complet
+4. ✅ Vérifier **0 errors, 0 warnings**
+5. ✅ Lister tous les **nouveaux symboles** (classes, fonctions, structures)
+6. ✅ Vérifier que **tous les symboles appelés sont implémentés**
+7. ✅ Inclure le build log dans la PR description
+
+### **EXEMPLE BUILD LOG ACCEPTABLE**
+
+```
+Microsoft (R) Build Engine version 17.4.0+18d5aef85
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+  Checking Build System
+  Building Custom Rule Source/CMakeLists.txt
+  NodeGraphCore.cpp
+  GraphDocument.cpp
+  NodeGraphManager.cpp
+  CommandSystem.cpp
+  AIEditorClipboard.cpp
+  AIEditorGUI.cpp
+  
+  Linking...
+  OlympeEngine.exe
+  
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:23.45
+```
+
+### **ACTIONS EN CAS D'ÉCHEC BUILD**
+
+Si la compilation échoue :
+
+1. ❌ **NE PAS merger** la PR
+2. 🔍 Analyser le **premier** error message (ignorer les erreurs en cascade)
+3. 🛠️ Fixer l'erreur racine
+4. 🔄 Re-compiler jusqu'à **0 errors**
+5. ✅ Mettre à jour le build log dans la PR
+
 ---
 
-**🎯 RÈGLE D'OR**: Si tu doutes, vérifie dans la doc C++14, compile mentalement, et teste sur papier!
+## 📊 TEMPLATE PR DESCRIPTION
+
+```markdown
+## Description
+[Description des changements]
+
+## 🏗️ BUILD VERIFICATION
+- **Windows MSVC**: ✅ SUCCESS (0 errors, 0 warnings)
+- **Build Time**: 45 seconds
+- **Build Log**: Voir ci-dessous
+
+<details>
+<summary>Build Log (click to expand)</summary>
+
+```
+[Coller le build log complet ici]
+```
+</details>
+
+## ✅ Checklist
+- [x] Code C++14 strict
+- [x] Tout dans namespace Olympe::*
+- [x] JSON helpers utilisés
+- [x] SYSTEM_LOG utilisé
+- [x] Pas d'emojis dans logs
+- [x] **Build SUCCESS (0 errors, 0 warnings)**
+- [x] Build log fourni
+- [x] Tests unitaires ajoutés
+```
 
 ---
 
-## 📝 HISTORIQUE DES RÉVISIONS
+## 🚨 RÈGLE D'OR
 
-- **2025-02-16**: Création initiale après analyse des erreurs PR #267
-- Objectif: Empêcher récurrence des erreurs de compilation C++17/namespace/JSON
+> **"Si ça ne compile pas, ça ne merge pas."**  
+> **"Si le build log n'est pas fourni, la PR est rejetée."**
+
+---
