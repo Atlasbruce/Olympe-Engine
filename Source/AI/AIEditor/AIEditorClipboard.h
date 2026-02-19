@@ -22,6 +22,12 @@
 namespace Olympe {
 namespace AI {
 
+// Pin ID Convention Constants
+// These match the convention used in AIEditorNodeRenderer.cpp
+constexpr uint32_t PIN_ID_MULTIPLIER = 1000;  ///< Multiplier for pin IDs from node IDs
+constexpr uint32_t PIN_ID_INPUT_OFFSET = 0;   ///< Offset for input pin: nodeId * 1000 + 0
+constexpr uint32_t PIN_ID_OUTPUT_OFFSET = 1;  ///< Offset for output pin: nodeId * 1000 + 1
+
 /**
  * @struct ClipboardNode
  * @brief Represents a node in the clipboard

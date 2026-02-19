@@ -89,9 +89,9 @@ void AIEditorClipboard::Copy(
         const NodeGraph::LinkData& link = allLinks[i];
         
         // Get source and target node IDs from pins
-        // Pin ID convention: nodeId * 1000 for input, nodeId * 1000 + 1 for output
-        uint32_t fromNodeId = link.fromPin.value / 1000;
-        uint32_t toNodeId = link.toPin.value / 1000;
+        // Pin ID convention: nodeId * PIN_ID_MULTIPLIER + offset
+        uint32_t fromNodeId = link.fromPin.value / PIN_ID_MULTIPLIER;
+        uint32_t toNodeId = link.toPin.value / PIN_ID_MULTIPLIER;
         
         // Check if both nodes are in the copied set
         auto fromIt = nodeIdSet.find(fromNodeId);
@@ -177,14 +177,14 @@ std::vector<NodeGraph::NodeId> AIEditorClipboard::Paste(
         auto childIt = idMap.find(m_links[i].childOriginalId);
         
         if (parentIt != idMap.end() && childIt != idMap.end()) {
-            // Create pins from node IDs
-            // Output pin: nodeId * 1000 + 1
-            // Input pin: nodeId * 1000
+            // Create pins from node IDs using the pin ID convention
+            // Output pin: nodeId * PIN_ID_MULTIPLIER + PIN_ID_OUTPUT_OFFSET
+            // Input pin: nodeId * PIN_ID_MULTIPLIER + PIN_ID_INPUT_OFFSET
             NodeGraph::PinId fromPin;
-            fromPin.value = parentIt->second.value * 1000 + 1;
+            fromPin.value = parentIt->second.value * PIN_ID_MULTIPLIER + PIN_ID_OUTPUT_OFFSET;
             
             NodeGraph::PinId toPin;
-            toPin.value = childIt->second.value * 1000;
+            toPin.value = childIt->second.value * PIN_ID_MULTIPLIER + PIN_ID_INPUT_OFFSET;
             
             doc->ConnectPins(fromPin, toPin);
         }

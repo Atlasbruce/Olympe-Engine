@@ -313,7 +313,7 @@ void Test11_ClipboardCopyPaste() {
     bool step2 = (AIEditorClipboard::Get().GetNodeCount() == 2);
     
     // Paste nodes
-    std::vector<NodeId> pastedNodes = AIEditorClipboard::Get().Paste(doc, Vector(50, 50));
+    std::vector<NodeId> pastedNodes = AIEditorClipboard::Get().Paste(doc, Vector(50.0f, 50.0f));
     
     bool step3 = (pastedNodes.size() == 2);
     bool step4 = (doc->GetNodes().size() == 4); // 2 original + 2 pasted
@@ -353,7 +353,7 @@ void Test12_ClipboardCut() {
     bool step3 = (doc->GetNodes().size() == 1); // node1 deleted, node2 remains
     
     // Paste
-    AIEditorClipboard::Get().Paste(doc, Vector(50, 50));
+    AIEditorClipboard::Get().Paste(doc, Vector(50.0f, 50.0f));
     bool step4 = (doc->GetNodes().size() == 2); // node2 + pasted node
     
     bool passed = step1 && step2 && step3 && step4;
@@ -397,7 +397,7 @@ void Test13_ClipboardLinkPreservation() {
     AIEditorClipboard::Get().Copy(nodesToCopy, doc);
     
     // Paste
-    AIEditorClipboard::Get().Paste(doc, Vector(300, 0));
+    AIEditorClipboard::Get().Paste(doc, Vector(300.0f, 0.0f));
     
     size_t linksAfter = doc->GetLinks().size();
     bool step2 = (linksAfter == 2); // Original link + pasted link

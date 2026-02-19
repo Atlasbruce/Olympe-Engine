@@ -98,6 +98,8 @@ void AIEditorGUI::Update(float deltaTime)
 {
     (void)deltaTime;
     
+    // Early exit if editor is not active
+    // When m_isActive is false, the editor is minimized or closed and should not process input
     if (!m_isActive) {
         return;
     }
