@@ -73,13 +73,25 @@
                  "x":189,
                  "y":324
                 }, 
-                {
+				{
                  "height":0,
                  "id":3,
                  "name":"npc_2",
                  "point":true,
                  "rotation":0,
-                 "type":"Guard",
+                 "type":"Npc",
+                 "visible":true,
+                 "width":0,
+                 "x":489,
+                 "y":124
+                }, 
+                {
+                 "height":0,
+                 "id":4,
+                 "name":"npc_3",
+                 "point":true,
+                 "rotation":0,
+                 "type":"Zombie",
                  "visible":true,
                  "width":0,
                  "x":567,

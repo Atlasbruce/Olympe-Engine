@@ -1175,14 +1175,14 @@ namespace Olympe
             }
         }
 
-        for (const auto& node : tree->nodes)
+       /* for (const auto& node : tree->nodes)
         {
             const BTNodeLayout* layout = m_layoutEngine.GetNodeLayout(node.id);
             if (layout)
             {
                 RenderNodePins(&node, layout);
             }
-        }
+        }/**/
     }
 
     void BehaviorTreeDebugWindow::RenderNode(const BTNode* node, const BTNodeLayout* layout, bool isCurrentNode)

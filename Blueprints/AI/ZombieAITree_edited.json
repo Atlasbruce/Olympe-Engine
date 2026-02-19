@@ -1,0 +1,211 @@
+{
+  "blueprintType": "BehaviorTree",
+  "data": {
+    "nodes": [
+      {
+        "children": [
+          2,
+          10
+        ],
+        "id": 1,
+        "name": "Root Selector",
+        "parameters": {},
+        "position": {
+          "x": 200,
+          "y": 100
+        },
+        "type": "Selector"
+      },
+      {
+        "children": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "id": 2,
+        "name": "Combat Branch",
+        "parameters": {},
+        "position": {
+          "x": 200,
+          "y": 200
+        },
+        "type": "Sequence"
+      },
+      {
+        "conditionType": "TargetVisible",
+        "id": 3,
+        "name": "Check AIMode == Combat",
+        "parameters": {
+          "param": 0
+        },
+        "position": {
+          "x": 200,
+          "y": 300
+        },
+        "type": "Condition"
+      },
+      {
+        "conditionType": "TargetVisible",
+        "id": 4,
+        "name": "Has Target?",
+        "parameters": {
+          "param": 0
+        },
+        "position": {
+          "x": 200,
+          "y": 400
+        },
+        "type": "Condition"
+      },
+      {
+        "actionType": "SetMoveGoalToTarget",
+        "id": 5,
+        "name": "Move to Target",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 200,
+          "y": 500
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "AttackIfClose",
+        "id": 6,
+        "name": "Attack",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 200,
+          "y": 600
+        },
+        "type": "Action"
+      },
+      {
+        "children": [
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "id": 10,
+        "name": "Wander Branch",
+        "parameters": {},
+        "position": {
+          "x": 200,
+          "y": 1000
+        },
+        "type": "Sequence"
+      },
+      {
+        "conditionType": "TargetVisible",
+        "id": 11,
+        "name": "Check AIMode == Idle",
+        "parameters": {
+          "param": 0
+        },
+        "position": {
+          "x": 200,
+          "y": 1100
+        },
+        "type": "Condition"
+      },
+      {
+        "actionType": "WaitRandomTime",
+        "id": 12,
+        "name": "Wait",
+        "parameters": {
+          "param1": 3,
+          "param2": 8
+        },
+        "position": {
+          "x": 200,
+          "y": 1200
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "ChooseRandomNavigablePoint",
+        "id": 13,
+        "name": "Choose Random Point",
+        "parameters": {
+          "param1": 400,
+          "param2": 10
+        },
+        "position": {
+          "x": 200,
+          "y": 1300
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "RequestPathfinding",
+        "id": 14,
+        "name": "Request Pathfinding",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 200,
+          "y": 1400
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "FollowPath",
+        "id": 15,
+        "name": "Follow Path",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 200,
+          "y": 1500
+        },
+        "type": "Action"
+      },
+      {
+        "conditionType": "TargetVisible",
+        "id": 16,
+        "name": "New Condition",
+        "parameters": {
+          "param": 0
+        },
+        "position": {
+          "x": 200,
+          "y": 1600
+        },
+        "type": "Condition"
+      }
+    ],
+    "rootNodeId": 1
+  },
+  "description": "",
+  "editorState": {
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-02-20T00:04:44Z",
+    "lastModified": "2026-02-20T00:04:44Z",
+    "tags": [
+      "AI",
+      "BehaviorTree"
+    ]
+  },
+  "name": "ZombieAITree",
+  "schema_version": 2,
+  "type": "BehaviorTree"
+}
