@@ -7,6 +7,7 @@
 
 #include "AIEditorGUI.h"
 #include "AIEditorClipboard.h"
+#include "AIEditorFileDialog.h"
 #include "../../system/system_utils.h"
 #include "../../third_party/imgui/imgui.h"
 #include "../../third_party/imnodes/imnodes.h"
@@ -14,6 +15,10 @@
 #include "../../NodeGraphCore/Commands/CreateNodeCommand.h"
 #include "../../NodeGraphCore/Commands/ConnectPinsCommand.h"
 #include <cstring>
+
+using Olympe::AI::DEFAULT_AI_GRAPH_FILTER;
+using Olympe::AI::DEFAULT_AI_GRAPH_NAME;
+using Olympe::AI::DEFAULT_AI_GRAPH_EXT;
 
 namespace Olympe {
 namespace AI {
@@ -629,20 +634,32 @@ void AIEditorGUI::MenuAction_NewHFSM()
 
 void AIEditorGUI::MenuAction_Open()
 {
-    // Note: In a full implementation, this would use NFD (NativeFileDialog-Extended)
-    // For now, use a simplified approach with NodeGraphManager
-    
     SYSTEM_LOG << "[AIEditorGUI] Open file dialog" << std::endl;
-    SYSTEM_LOG << "[AIEditorGUI] Note: Full NFD integration requires build system changes" << std::endl;
-    SYSTEM_LOG << "[AIEditorGUI] Use NodeGraphManager::LoadGraph() for programmatic loading" << std::endl;
     
-    // Example: Load a test file if it exists
-    // NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    // NodeGraph::GraphId id = mgr.LoadGraph("Blueprints/AI/test_bt.json");
-    // if (id.value != 0) {
-    //     mgr.SetActiveGraph(id);
-    //     SYSTEM_LOG << "[AIEditorGUI] Loaded graph successfully" << std::endl;
-    // }
+    // Open native file dialog
+    std::string filepath = AIEditorFileDialog::OpenFile(DEFAULT_AI_GRAPH_FILTER, m_lastOpenPath);
+    
+    if (!filepath.empty()) {
+        // Load the graph
+        NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
+        NodeGraph::GraphId id = mgr.LoadGraph(filepath);
+        
+        if (id.value != 0) {
+            mgr.SetActiveGraph(id);
+            m_lastOpenPath = ExtractDirectory(filepath);
+            SYSTEM_LOG << "[AIEditorGUI] Loaded graph: " << filepath << std::endl;
+        }
+        else {
+            SYSTEM_LOG << "[AIEditorGUI] ERROR: Failed to load graph from " << filepath << std::endl;
+        }
+    }
+    else {
+        // Check if there was an error (not just cancel)
+        std::string error = AIEditorFileDialog::GetLastError();
+        if (!error.empty()) {
+            SYSTEM_LOG << "[AIEditorGUI] ERROR: " << error << std::endl;
+        }
+    }
 }
 
 void AIEditorGUI::MenuAction_Save()
@@ -673,12 +690,7 @@ void AIEditorGUI::MenuAction_Save()
 
 void AIEditorGUI::MenuAction_SaveAs()
 {
-    // Note: In a full implementation, this would use NFD (NativeFileDialog-Extended)
-    // For now, use a simplified approach
-    
     SYSTEM_LOG << "[AIEditorGUI] Save As dialog" << std::endl;
-    SYSTEM_LOG << "[AIEditorGUI] Note: Full NFD integration requires build system changes" << std::endl;
-    SYSTEM_LOG << "[AIEditorGUI] Use NodeGraphManager::SaveGraph() with custom filepath" << std::endl;
     
     NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
     NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
@@ -688,16 +700,33 @@ void AIEditorGUI::MenuAction_SaveAs()
         return;
     }
     
-    // For demonstration, save to a different location
-    NodeGraph::GraphId activeId = mgr.GetActiveGraphId();
-    std::string filepath = "Blueprints/AI/saved_bt.json";
+    // Open native save dialog
+    std::string filepath = AIEditorFileDialog::SaveFile(DEFAULT_AI_GRAPH_FILTER, m_lastSavePath, DEFAULT_AI_GRAPH_NAME);
     
-    bool success = mgr.SaveGraph(activeId, filepath);
-    
-    if (success) {
-        SYSTEM_LOG << "[AIEditorGUI] Saved as: " << filepath << std::endl;
-    } else {
-        SYSTEM_LOG << "[AIEditorGUI] ERROR: Save failed" << std::endl;
+    if (!filepath.empty()) {
+        // Ensure file has proper extension
+        if (!EndsWith(filepath, ".json") && !EndsWith(filepath, ".btree")) {
+            filepath += DEFAULT_AI_GRAPH_EXT;
+        }
+        
+        // Save the graph
+        NodeGraph::GraphId activeId = mgr.GetActiveGraphId();
+        bool success = mgr.SaveGraph(activeId, filepath);
+        
+        if (success) {
+            m_lastSavePath = ExtractDirectory(filepath);
+            SYSTEM_LOG << "[AIEditorGUI] Saved graph: " << filepath << std::endl;
+        }
+        else {
+            SYSTEM_LOG << "[AIEditorGUI] ERROR: Save failed" << std::endl;
+        }
+    }
+    else {
+        // Check if there was an error (not just cancel)
+        std::string error = AIEditorFileDialog::GetLastError();
+        if (!error.empty()) {
+            SYSTEM_LOG << "[AIEditorGUI] ERROR: " << error << std::endl;
+        }
     }
 }
 
@@ -896,6 +925,53 @@ void AIEditorGUI::MenuAction_ShowRuntimeDebug()
 void AIEditorGUI::MenuAction_About()
 {
     SYSTEM_LOG << "[AIEditorGUI] About dialog (not yet implemented)" << std::endl;
+}
+
+// ============================================================================
+// Helper Methods
+// ============================================================================
+
+std::string AIEditorGUI::ExtractDirectory(const std::string& filepath)
+{
+    size_t lastSlash = filepath.find_last_of("/\\");
+    if (lastSlash != std::string::npos) {
+        return filepath.substr(0, lastSlash);
+    }
+    return std::string();
+}
+
+std::string AIEditorGUI::ExtractFilename(const std::string& filepath)
+{
+    size_t lastSlash = filepath.find_last_of("/\\");
+    if (lastSlash != std::string::npos) {
+        return filepath.substr(lastSlash + 1);
+    }
+    return filepath;
+}
+
+bool AIEditorGUI::EndsWith(const std::string& str, const std::string& suffix)
+{
+    if (suffix.size() > str.size()) {
+        return false;
+    }
+    
+    // Case-insensitive comparison for file extensions
+    std::string strLower = str.substr(str.size() - suffix.size());
+    std::string suffixLower = suffix;
+    
+    // Convert to lowercase
+    for (size_t i = 0; i < strLower.size(); ++i) {
+        if (strLower[i] >= 'A' && strLower[i] <= 'Z') {
+            strLower[i] = strLower[i] + ('a' - 'A');
+        }
+    }
+    for (size_t i = 0; i < suffixLower.size(); ++i) {
+        if (suffixLower[i] >= 'A' && suffixLower[i] <= 'Z') {
+            suffixLower[i] = suffixLower[i] + ('a' - 'A');
+        }
+    }
+    
+    return strLower == suffixLower;
 }
 
 } // namespace AI
