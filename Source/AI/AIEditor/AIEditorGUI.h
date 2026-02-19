@@ -18,8 +18,11 @@
 #include "../../NodeGraphCore/GraphDocument.h"
 #include "../../NodeGraphCore/NodeGraphManager.h"
 #include "../../NodeGraphCore/CommandSystem.h"
+#include "../../NodeGraphCore/Commands/ToggleNodeBreakpointCommand.h"
+#include "../../NodeGraphCore/BlackboardSystem.h"
 #include "../AIGraphPlugin_BT/BTNodeRegistry.h"
 #include "../AIGraphPlugin_BT/BTNodePalette.h"
+#include "BlackboardPanel.h"
 #include <string>
 #include <memory>
 #include <vector>
@@ -246,6 +249,9 @@ private:
     
     // Node palette
     std::unique_ptr<BTNodePalette> m_nodePalette;
+    
+    // Blackboard panel (Phase 2.1)
+    BlackboardPanel m_blackboardPanel;
     
     // Command system for undo/redo
     NodeGraph::CommandStack m_commandStack;

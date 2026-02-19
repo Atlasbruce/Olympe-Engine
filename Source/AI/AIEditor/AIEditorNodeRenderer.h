@@ -6,11 +6,13 @@
  *
  * @details
  * Converts NodeGraphCore NodeData to ImNodes rendering with BT styling.
+ * Phase 2.0: Supports breakpoint and comment annotation rendering.
  */
 
 #pragma once
 
 #include "../../NodeGraphCore/NodeGraphCore.h"
+#include "../../NodeGraphCore/NodeAnnotations.h"
 #include "../AIGraphPlugin_BT/BTNodeRegistry.h"
 
 namespace Olympe {
@@ -27,11 +29,13 @@ public:
      * @param nodeData Node data to render
      * @param isSelected Whether node is selected
      * @param isExecuting Whether node is currently executing (runtime debug)
+     * @param annotation Optional annotation for this node (may be nullptr)
      */
     static void RenderNode(
         const NodeGraph::NodeData& nodeData,
         bool isSelected = false,
-        bool isExecuting = false
+        bool isExecuting = false,
+        const NodeGraph::NodeAnnotation* annotation = nullptr
     );
     
     /**

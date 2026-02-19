@@ -408,6 +408,12 @@ json GraphDocument::ToJson() const
     
     j["data"] = dataJson;
     
+    // Phase 2.0 - Annotations
+    j["annotations"] = m_nodeAnnotations.ToJson();
+    
+    // Phase 2.1 - Blackboard
+    j["blackboard"] = m_blackboard.ToJson();
+    
     return j;
 }
 
@@ -560,6 +566,18 @@ GraphDocument GraphDocument::FromJson(const json& j)
                 }
             }
         }
+    }
+    
+    // Phase 2.0 - Annotations (backward compatible: missing key = no annotations)
+    if (j.contains("annotations") && j["annotations"].is_array())
+    {
+        doc.m_nodeAnnotations.FromJson(j["annotations"]);
+    }
+    
+    // Phase 2.1 - Blackboard (backward compatible: missing key = empty blackboard)
+    if (j.contains("blackboard") && j["blackboard"].is_array())
+    {
+        doc.m_blackboard.FromJson(j["blackboard"]);
     }
     
     doc.m_isDirty = false;

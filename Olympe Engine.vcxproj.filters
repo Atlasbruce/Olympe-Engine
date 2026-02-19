@@ -387,6 +387,9 @@
     <ClCompile Include="Source\AI\AIEditor\AIEditorClipboard.cpp">
       <Filter>Fichiers d%27en-t�te\AI</Filter>
     </ClCompile>
+    <ClCompile Include="Source\AI\AIEditor\BlackboardPanel.cpp">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClCompile>
     <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTGraphCompiler.cpp">
       <Filter>Fichiers d%27en-t�te\AI\GraphPlugin_BT</Filter>
     </ClCompile>
@@ -410,6 +413,15 @@
     </ClCompile>
     <ClCompile Include="Source\NodeGraphCore\Commands\MoveNodeCommand.cpp">
       <Filter>Fichiers d%27en-t�te\NodeGraphCore\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.cpp">
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NodeGraphCore\NodeAnnotations.cpp">
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NodeGraphCore\BlackboardSystem.cpp">
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
     </ClCompile>
     <ClCompile Include="Source\third_party\nfd\nfd_win.cpp">
       <Filter>Fichiers d%27en-t�te\NFD</Filter>
@@ -791,6 +803,9 @@
     <ClInclude Include="Source\AI\AIEditor\AIEditorClipboard.h">
       <Filter>Fichiers d%27en-t�te\AI</Filter>
     </ClInclude>
+    <ClInclude Include="Source\AI\AIEditor\BlackboardPanel.h">
+      <Filter>Fichiers d%27en-t�te\AI</Filter>
+    </ClInclude>
     <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTGraphCompiler.h">
       <Filter>Fichiers d%27en-t�te\AI\GraphPlugin_BT</Filter>
     </ClInclude>
@@ -817,6 +832,15 @@
     </ClInclude>
     <ClInclude Include="Source\NodeGraphCore\Commands\MoveNodeCommand.h">
       <Filter>Fichiers d%27en-t�te\NodeGraphCore\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.h">
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphCore\NodeAnnotations.h">
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphCore\BlackboardSystem.h">
+      <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
     </ClInclude>
     <ClInclude Include="Source\AI\AIEditor\AIEditorFileDialog.h">
       <Filter>Fichiers d%27en-t�te\NFD</Filter>

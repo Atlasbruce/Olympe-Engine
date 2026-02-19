@@ -25,6 +25,7 @@
     <ClCompile Include="Source\AI\AIEditor\AIEditorMenus.cpp" />
     <ClCompile Include="Source\AI\AIEditor\AIEditorNodeRenderer.cpp" />
     <ClCompile Include="Source\AI\AIEditor\AIEditorPanels.cpp" />
+    <ClCompile Include="Source\AI\AIEditor\BlackboardPanel.cpp" />
     <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTGraphCompiler.cpp" />
     <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTGraphValidator.cpp" />
     <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTNodePalette.cpp" />
@@ -86,6 +87,9 @@
     <ClCompile Include="Source\NodeGraphCore\Commands\CreateNodeCommand.cpp" />
     <ClCompile Include="Source\NodeGraphCore\Commands\DeleteNodeCommand.cpp" />
     <ClCompile Include="Source\NodeGraphCore\Commands\MoveNodeCommand.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\BlackboardSystem.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\NodeAnnotations.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GraphDocument.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GraphMigrator.cpp" />
     <ClCompile Include="Source\NodeGraphCore\NodeGraphManager.cpp" />
@@ -135,6 +139,7 @@
     <ClInclude Include="Source\AI\AIEditor\AIEditorMenus.h" />
     <ClInclude Include="Source\AI\AIEditor\AIEditorNodeRenderer.h" />
     <ClInclude Include="Source\AI\AIEditor\AIEditorPanels.h" />
+    <ClInclude Include="Source\AI\AIEditor\BlackboardPanel.h" />
     <ClInclude Include="Source\AI\AIEvents.h" />
     <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTGraphCompiler.h" />
     <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTGraphValidator.h" />
@@ -205,6 +210,9 @@
     <ClInclude Include="Source\NodeGraphCore\Commands\CreateNodeCommand.h" />
     <ClInclude Include="Source\NodeGraphCore\Commands\DeleteNodeCommand.h" />
     <ClInclude Include="Source\NodeGraphCore\Commands\MoveNodeCommand.h" />
+    <ClInclude Include="Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.h" />
+    <ClInclude Include="Source\NodeGraphCore\BlackboardSystem.h" />
+    <ClInclude Include="Source\NodeGraphCore\NodeAnnotations.h" />
     <ClInclude Include="Source\NodeGraphCore\GraphDocument.h" />
     <ClInclude Include="Source\NodeGraphCore\GraphMigrator.h" />
     <ClInclude Include="Source\NodeGraphCore\ILayoutEngine.h" />

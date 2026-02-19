@@ -8,12 +8,14 @@
 #include "AIEditorGUI.h"
 #include "AIEditorClipboard.h"
 #include "AIEditorFileDialog.h"
+#include "AIEditorNodeRenderer.h"
 #include "../../system/system_utils.h"
 #include "../../third_party/imgui/imgui.h"
 #include "../../third_party/imnodes/imnodes.h"
 #include "../AIGraphPlugin_BT/BTGraphValidator.h"
 #include "../../NodeGraphCore/Commands/CreateNodeCommand.h"
 #include "../../NodeGraphCore/Commands/ConnectPinsCommand.h"
+#include "../../NodeGraphCore/Commands/ToggleNodeBreakpointCommand.h"
 #include <cstring>
 
 using Olympe::AI::DEFAULT_AI_GRAPH_FILTER;
@@ -173,6 +175,21 @@ void AIEditorGUI::Update(float deltaTime)
     // Ctrl+W - Close
     if (ctrlPressed && !shiftPressed && ImGui::IsKeyPressed(ImGuiKey_W)) {
         MenuAction_Close();
+    }
+    
+    // F9 - Toggle breakpoint on selected node (Phase 2.0)
+    if (ImGui::IsKeyPressed(ImGuiKey_F9) && !m_selectedNodeIds.empty())
+    {
+        NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
+        NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
+        if (doc != nullptr)
+        {
+            int nodeId = m_selectedNodeIds[0];
+            auto cmd = std::unique_ptr<NodeGraph::ICommand>(
+                new NodeGraph::ToggleNodeBreakpointCommand(
+                    &doc->GetNodeAnnotations(), nodeId));
+            m_commandStack.ExecuteCommand(std::move(cmd));
+        }
     }
 }
 
@@ -436,53 +453,20 @@ void AIEditorGUI::RenderNode(NodeGraph::NodeId nodeId)
         return;
     }
     
-    // Get node type info
-    BTNodeRegistry& registry = BTNodeRegistry::Get();
-    const BTNodeTypeInfo* typeInfo = registry.GetNodeTypeInfo(nodeData->type);
+    // Get annotation for this node (Phase 2.0)
+    const NodeGraph::NodeAnnotation* annotation =
+        doc->GetNodeAnnotations().GetAnnotation(static_cast<int>(nodeId.value));
     
-    if (typeInfo == nullptr) {
-        return;
+    // Render using dedicated renderer
+    bool isSelected = false;
+    for (size_t i = 0; i < m_selectedNodeIds.size(); ++i) {
+        if (m_selectedNodeIds[i] == static_cast<int>(nodeId.value)) {
+            isSelected = true;
+            break;
+        }
     }
     
-    // Begin node
-    int iNodeId = static_cast<int>(nodeData->id.value);
-    ImNodes::BeginNode(iNodeId);
-    
-    // Title bar with color
-    ImNodes::BeginNodeTitleBar();
-    uint32_t color = typeInfo->color;
-    ImGui::TextColored(
-        ImVec4(
-            ((color >> 16) & 0xFF) / 255.0f,
-            ((color >> 8) & 0xFF) / 255.0f,
-            ((color >> 0) & 0xFF) / 255.0f,
-            ((color >> 24) & 0xFF) / 255.0f
-        ),
-        "%s %s", typeInfo->icon.c_str(), nodeData->name.c_str()
-    );
-    ImNodes::EndNodeTitleBar();
-    
-    // Input pin
-    int inputPinId = iNodeId * 1000;
-    ImNodes::BeginInputAttribute(inputPinId);
-    ImGui::Text("In");
-    ImNodes::EndInputAttribute();
-    
-    // Parameters
-    for (auto it = nodeData->parameters.begin(); it != nodeData->parameters.end(); ++it) {
-        ImGui::Text("%s: %s", it->first.c_str(), it->second.c_str());
-    }
-    
-    // Output pin
-    int outputPinId = iNodeId * 1000 + 1;
-    ImNodes::BeginOutputAttribute(outputPinId);
-    ImGui::Text("Out");
-    ImNodes::EndOutputAttribute();
-    
-    ImNodes::EndNode();
-    
-    // Set node position
-    ImNodes::SetNodeGridSpacePos(iNodeId, ImVec2(nodeData->position.x, nodeData->position.y));
+    AIEditorNodeRenderer::RenderNode(*nodeData, isSelected, false, annotation);
 }
 
 void AIEditorGUI::RenderConnections()
@@ -576,15 +560,11 @@ void AIEditorGUI::RenderInspector()
 
 void AIEditorGUI::RenderBlackboardPanel()
 {
-    ImGui::Begin("Blackboard", &m_showBlackboardPanel);
+    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
+    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
+    NodeGraph::BlackboardSystem* blackboard = (doc != nullptr) ? &doc->GetBlackboard() : nullptr;
     
-    ImGui::Text("Blackboard Variables");
-    ImGui::Separator();
-    
-    // TODO: Implement blackboard variable list
-    ImGui::Text("(Not yet implemented)");
-    
-    ImGui::End();
+    m_blackboardPanel.Render(blackboard, &m_showBlackboardPanel);
 }
 
 void AIEditorGUI::RenderSensesPanel()

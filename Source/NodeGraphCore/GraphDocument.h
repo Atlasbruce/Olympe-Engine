@@ -12,6 +12,8 @@
 #pragma once
 
 #include "NodeGraphCore.h"
+#include "NodeAnnotations.h"
+#include "BlackboardSystem.h"
 #include "../json_helper.h"
 #include <memory>
 
@@ -171,6 +173,34 @@ public:
     
     bool IsDirty() const { return m_isDirty; }
     void SetDirty(bool dirty) { m_isDirty = dirty; }
+
+    // ========================================================================
+    // Annotations (Phase 2.0)
+    // ========================================================================
+
+    /**
+     * @brief Get node annotations manager (non-const)
+     */
+    NodeAnnotationsManager& GetNodeAnnotations() { return m_nodeAnnotations; }
+
+    /**
+     * @brief Get node annotations manager (const)
+     */
+    const NodeAnnotationsManager& GetNodeAnnotations() const { return m_nodeAnnotations; }
+
+    // ========================================================================
+    // Blackboard (Phase 2.1)
+    // ========================================================================
+
+    /**
+     * @brief Get blackboard system (non-const)
+     */
+    BlackboardSystem& GetBlackboard() { return m_blackboard; }
+
+    /**
+     * @brief Get blackboard system (const)
+     */
+    const BlackboardSystem& GetBlackboard() const { return m_blackboard; }
     
 private:
     // Data members
@@ -180,6 +210,12 @@ private:
     uint32_t m_nextNodeId = 1;
     uint32_t m_nextLinkId = 1;
     bool m_isDirty = false;
+
+    // Phase 2.0 - Node annotations
+    NodeAnnotationsManager m_nodeAnnotations;
+
+    // Phase 2.1 - Blackboard system
+    BlackboardSystem m_blackboard;
     
     // Helper methods
     bool HasCyclesHelper(NodeId nodeId, std::vector<NodeId>& visited, std::vector<NodeId>& recursionStack) const;
