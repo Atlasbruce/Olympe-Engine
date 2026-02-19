@@ -1,0 +1,76 @@
+DOCUMENT DE GAME DESIGN : PROTOTYPE "THE MATRIMANDIR BREACH"
+Projet : Infernal Escape
+
+Genre : Infiltration / Puzzle 2D
+
+Ambiance : 2084 - Biopunk / Cyber-Tech
+
+1. OBJECTIF DU PROTOTYPE
+Infiltrer la zone sécurisée du Matrimandir, pirater un terminal de sécurité pour obtenir un code, et déverrouiller l'accès souterrain vers le complexe Helix.
+
+2. CORE GAMEPLAY LOOP (Boucle de jeu)
+Observation : Analyser les patrouilles et les cônes de vision (FOV).
+
+Infiltration : Se déplacer sans être détecté.
+
+Action : Pirater/Interagir avec les terminaux.
+
+Progression : Utiliser le code pour ouvrir la porte finale.
+
+3. MÉCANIQUES DU JOUEUR (GORDON)
+Mouvement : Déplacement multidirectionnel (Haut, Bas, Gauche, Droite).
+
+Mode Discrétion (Stealth) : Réduit la vitesse de déplacement mais réduit la portée du bruit et permet de se cacher derrière des éléments de décor bas.
+
+Interaction (Action) : Touche [E] pour pirater un terminal ou ouvrir une porte.
+
+Inventaire de Code : Système passif. Une fois le terminal lu, le code est stocké dans l'UI.
+
+4. SYSTÈMES D'OBSTACLES (IA & SÉCURITÉ)
+A. Gardes Mobiles (IA Patrouille)
+États de l'IA (FSM) :
+
+Patrouille : Suit un chemin de nœuds (Waypoints).
+
+Suspicion : S'arrête si Gordon entre brièvement dans le FOV ou fait du bruit.
+
+Alerte : Poursuit le joueur si la détection est complète (Game Over ou retour au checkpoint).
+
+Cône de Vision (FOV) : Angle de 60°, portée de 5 unités. Divisé en deux zones :
+
+Zone Claire (Périphérie) : Détection lente.
+
+Zone Sombre (Centre) : Détection instantanée.
+
+B. Caméras de Surveillance (IA Statique)
+Mouvement : Rotation cyclique de gauche à droite sur 90°.
+
+Détection : Cône de vision visible au sol (feedback visuel nécessaire). Si Gordon reste plus de 1.5s dans le champ, l'alerte est donnée.
+
+C. Le Terminal de Sécurité
+Fonction : Nécessite une interaction de 3 secondes. Délivre le "Code HELIX".
+
+5. LEVEL DESIGN (Structure du Prototype)
+Phase 1 : Le Périmètre (Extérieur)
+Décor : Végétation dense (Auroville).
+
+Challenge : Contourner une caméra fixe pour atteindre le poste de sécurité.
+
+Phase 2 : Le Poste de Sécurité (Hub)
+Challenge : Un garde patrouille en boucle carrée. Le joueur doit attendre qu'il ait le dos tourné pour interagir avec le terminal central.
+
+Récompense : Variable bool_HasCode = true.
+
+Phase 3 : L'Entrée Secrète (Matrimandir)
+Décor : Sous le dôme. Une trappe hi-tech dissimulée dans le sol.
+
+Condition de victoire : Si bool_HasCode est vrai, l'interaction avec la trappe déclenche la fin du prototype (Transition vers l'ascenseur).
+
+6. SPÉCIFICATIONS TECHNIQUES (Pour les Programmeurs)
+Système de Vision : Utiliser des Raycasts pour la détection (bloqués par les murs/obstacles).
+
+Feedback Visuel : * Cône de vision vert (Calme), Jaune (Suspicion), Rouge (Alerte).
+
+Barre de détection au-dessus de la tête du joueur.
+
+Système de Bruit : Rayon de collision circulaire autour de Gordon qui s'agrandit s'il court, alertant les gardes à proximité.
