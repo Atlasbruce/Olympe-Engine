@@ -357,7 +357,7 @@ namespace Olympe
                             const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
                             if (tree)
                             {
-                                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                                 std::cout << "[BTDebugger] Graph reorganized with current settings" << std::endl;
                             }
                         }
@@ -719,7 +719,7 @@ namespace Olympe
             const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(info.treeId);
             if (tree)
             {
-                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                 m_needsLayoutUpdate = false;
 
                 if (m_autoFitOnLoad)
@@ -874,13 +874,13 @@ namespace Olympe
         if (layoutChanged)
         {
             m_layoutEngine.SetLayoutDirection(m_layoutDirection);
-            m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+            m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
             m_needsLayoutUpdate = false;
         }
 
         if (m_needsLayoutUpdate && tree)
         {
-            m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+            m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
             m_needsLayoutUpdate = false;
         }
 
@@ -980,7 +980,7 @@ namespace Olympe
 
                 if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
                 {
-                    m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                    m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                     ApplyZoomToStyle();
 
                     std::cout << "[BTDebugger] Zoom: " << (int)(m_currentZoom * 100)
@@ -1012,7 +1012,7 @@ namespace Olympe
 
                 if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
                 {
-                    m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                    m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                     ApplyZoomToStyle();
                 }
             }
@@ -1024,7 +1024,7 @@ namespace Olympe
 
                 if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
                 {
-                    m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                    m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                     ApplyZoomToStyle();
                 }
             }
@@ -1055,7 +1055,7 @@ namespace Olympe
                     m_treeModified = true;
                     
                     // Update layout
-                    m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                    m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                     
                     // Run validation
                     m_validationMessages = m_editingTree.ValidateTreeFull();
@@ -1087,7 +1087,7 @@ namespace Olympe
                     m_treeModified = true;
                     
                     // Update layout
-                    m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                    m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                     
                     // Run validation
                     m_validationMessages = m_editingTree.ValidateTreeFull();
@@ -1727,7 +1727,7 @@ namespace Olympe
             if (tree)
             {
                 m_currentZoom = 1.0f;
-                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+                m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                 ApplyZoomToStyle();
 
                 std::cout << "[BTDebugger] Reset zoom to 100% (layout recomputed)" << std::endl;
@@ -1847,7 +1847,7 @@ namespace Olympe
         {
             m_commandStack.Undo();
             m_isDirty = true;
-            m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+            m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
             m_validationMessages = m_editingTree.ValidateTreeFull();
         }
         if (!canUndo) ImGui::EndDisabled();
@@ -1859,7 +1859,7 @@ namespace Olympe
         {
             m_commandStack.Redo();
             m_isDirty = true;
-            m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+            m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
             m_validationMessages = m_editingTree.ValidateTreeFull();
         }
         if (!canRedo) ImGui::EndDisabled();
@@ -1980,7 +1980,7 @@ namespace Olympe
         m_treeModified = true;
 
         // Update layout
-        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
         
         // Run validation
         m_validationMessages = m_editingTree.ValidateTreeFull();
@@ -2007,7 +2007,7 @@ namespace Olympe
         m_treeModified = true;
 
         // Update layout
-        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
         
         // Run validation
         m_validationMessages = m_editingTree.ValidateTreeFull();
@@ -2056,7 +2056,7 @@ namespace Olympe
         m_treeModified = true;
 
         // Update layout
-        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
         
         // Run validation  
         m_validationMessages = m_editingTree.ValidateTreeFull();
@@ -2310,7 +2310,7 @@ namespace Olympe
         m_treeModified = true;
 
         // Update layout
-        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
         
         // Run validation
         m_validationMessages = m_editingTree.ValidateTreeFull();
@@ -2329,7 +2329,7 @@ namespace Olympe
         m_treeModified = true;
 
         // Update layout
-        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, m_currentZoom);
+        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
         
         // Run validation
         m_validationMessages = m_editingTree.ValidateTreeFull();
