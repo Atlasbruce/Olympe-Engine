@@ -7,6 +7,7 @@
 
 #include "AIEditorGUI.h"
 #include "AIEditorClipboard.h"
+#include "AIEditorFileDialog.h"
 #include "../../system/system_utils.h"
 #include "../../third_party/imgui/imgui.h"
 #include "../../third_party/imnodes/imnodes.h"
@@ -629,20 +630,32 @@ void AIEditorGUI::MenuAction_NewHFSM()
 
 void AIEditorGUI::MenuAction_Open()
 {
-    // Note: In a full implementation, this would use NFD (NativeFileDialog-Extended)
-    // For now, use a simplified approach with NodeGraphManager
-    
     SYSTEM_LOG << "[AIEditorGUI] Open file dialog" << std::endl;
-    SYSTEM_LOG << "[AIEditorGUI] Note: Full NFD integration requires build system changes" << std::endl;
-    SYSTEM_LOG << "[AIEditorGUI] Use NodeGraphManager::LoadGraph() for programmatic loading" << std::endl;
     
-    // Example: Load a test file if it exists
-    // NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    // NodeGraph::GraphId id = mgr.LoadGraph("Blueprints/AI/test_bt.json");
-    // if (id.value != 0) {
-    //     mgr.SetActiveGraph(id);
-    //     SYSTEM_LOG << "[AIEditorGUI] Loaded graph successfully" << std::endl;
-    // }
+    // Open native file dialog
+    std::string filepath = AIEditorFileDialog::OpenFile("json,btree", m_lastOpenPath);
+    
+    if (!filepath.empty()) {
+        // Load the graph
+        NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
+        NodeGraph::GraphId id = mgr.LoadGraph(filepath);
+        
+        if (id.value != 0) {
+            mgr.SetActiveGraph(id);
+            m_lastOpenPath = ExtractDirectory(filepath);
+            SYSTEM_LOG << "[AIEditorGUI] Loaded graph: " << filepath << std::endl;
+        }
+        else {
+            SYSTEM_LOG << "[AIEditorGUI] ERROR: Failed to load graph from " << filepath << std::endl;
+        }
+    }
+    else {
+        // Check if there was an error (not just cancel)
+        std::string error = AIEditorFileDialog::GetLastError();
+        if (!error.empty()) {
+            SYSTEM_LOG << "[AIEditorGUI] ERROR: " << error << std::endl;
+        }
+    }
 }
 
 void AIEditorGUI::MenuAction_Save()
@@ -673,12 +686,7 @@ void AIEditorGUI::MenuAction_Save()
 
 void AIEditorGUI::MenuAction_SaveAs()
 {
-    // Note: In a full implementation, this would use NFD (NativeFileDialog-Extended)
-    // For now, use a simplified approach
-    
     SYSTEM_LOG << "[AIEditorGUI] Save As dialog" << std::endl;
-    SYSTEM_LOG << "[AIEditorGUI] Note: Full NFD integration requires build system changes" << std::endl;
-    SYSTEM_LOG << "[AIEditorGUI] Use NodeGraphManager::SaveGraph() with custom filepath" << std::endl;
     
     NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
     NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
@@ -688,16 +696,37 @@ void AIEditorGUI::MenuAction_SaveAs()
         return;
     }
     
-    // For demonstration, save to a different location
+    // Get current path and extract default name
     NodeGraph::GraphId activeId = mgr.GetActiveGraphId();
-    std::string filepath = "Blueprints/AI/saved_bt.json";
+    std::string currentPath = std::string(); // TODO: Get from graph metadata
+    std::string defaultName = currentPath.empty() ? "new_ai_graph.json" : ExtractFilename(currentPath);
     
-    bool success = mgr.SaveGraph(activeId, filepath);
+    // Open native save dialog
+    std::string filepath = AIEditorFileDialog::SaveFile("json,btree", m_lastSavePath, defaultName);
     
-    if (success) {
-        SYSTEM_LOG << "[AIEditorGUI] Saved as: " << filepath << std::endl;
-    } else {
-        SYSTEM_LOG << "[AIEditorGUI] ERROR: Save failed" << std::endl;
+    if (!filepath.empty()) {
+        // Ensure file has proper extension
+        if (!EndsWith(filepath, ".json") && !EndsWith(filepath, ".btree")) {
+            filepath += ".json";
+        }
+        
+        // Save the graph
+        bool success = mgr.SaveGraph(activeId, filepath);
+        
+        if (success) {
+            m_lastSavePath = ExtractDirectory(filepath);
+            SYSTEM_LOG << "[AIEditorGUI] Saved graph: " << filepath << std::endl;
+        }
+        else {
+            SYSTEM_LOG << "[AIEditorGUI] ERROR: Save failed" << std::endl;
+        }
+    }
+    else {
+        // Check if there was an error (not just cancel)
+        std::string error = AIEditorFileDialog::GetLastError();
+        if (!error.empty()) {
+            SYSTEM_LOG << "[AIEditorGUI] ERROR: " << error << std::endl;
+        }
     }
 }
 
@@ -896,6 +925,36 @@ void AIEditorGUI::MenuAction_ShowRuntimeDebug()
 void AIEditorGUI::MenuAction_About()
 {
     SYSTEM_LOG << "[AIEditorGUI] About dialog (not yet implemented)" << std::endl;
+}
+
+// ============================================================================
+// Helper Methods
+// ============================================================================
+
+std::string AIEditorGUI::ExtractDirectory(const std::string& filepath)
+{
+    size_t lastSlash = filepath.find_last_of("/\\");
+    if (lastSlash != std::string::npos) {
+        return filepath.substr(0, lastSlash);
+    }
+    return std::string();
+}
+
+std::string AIEditorGUI::ExtractFilename(const std::string& filepath)
+{
+    size_t lastSlash = filepath.find_last_of("/\\");
+    if (lastSlash != std::string::npos) {
+        return filepath.substr(lastSlash + 1);
+    }
+    return filepath;
+}
+
+bool AIEditorGUI::EndsWith(const std::string& str, const std::string& suffix)
+{
+    if (suffix.size() > str.size()) {
+        return false;
+    }
+    return str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 
 } // namespace AI

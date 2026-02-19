@@ -200,6 +200,32 @@ private:
     void RenderAssetEntry(const std::string& filename, const std::string& fullPath);
     
     // ========================================================================
+    // Helper Methods
+    // ========================================================================
+    
+    /**
+     * @brief Extract directory from filepath
+     * @param filepath Full file path
+     * @return Directory path without filename
+     */
+    static std::string ExtractDirectory(const std::string& filepath);
+    
+    /**
+     * @brief Extract filename from filepath
+     * @param filepath Full file path
+     * @return Filename without directory
+     */
+    static std::string ExtractFilename(const std::string& filepath);
+    
+    /**
+     * @brief Check if string ends with suffix
+     * @param str String to check
+     * @param suffix Suffix to look for
+     * @return true if str ends with suffix
+     */
+    static bool EndsWith(const std::string& str, const std::string& suffix);
+    
+    // ========================================================================
     // State
     // ========================================================================
     
@@ -212,6 +238,10 @@ private:
     // Panel state
     char m_assetSearchFilter[256];
     std::vector<std::string> m_assetFiles;
+    
+    // File dialog state
+    std::string m_lastOpenPath;
+    std::string m_lastSavePath;
     
     // Node palette
     std::unique_ptr<BTNodePalette> m_nodePalette;

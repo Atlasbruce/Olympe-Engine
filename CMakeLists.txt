@@ -52,6 +52,7 @@ add_library(OlympeCore STATIC
     Source/drawing.cpp
     Source/PrefabScanner.cpp
     Source/ComponentDefinition.cpp
+    Source/third_party/nfd/nfd_win.cpp
 )
 
 target_include_directories(OlympeCore PUBLIC
@@ -60,10 +61,17 @@ target_include_directories(OlympeCore PUBLIC
     ${CMAKE_SOURCE_DIR}/Source/third_party/imgui
     ${CMAKE_SOURCE_DIR}/Source/third_party/imnodes
     ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+    ${CMAKE_SOURCE_DIR}/Source/third_party/nfd
     ${SDL3_INCLUDE_DIRS}
 )
 
 target_link_libraries(OlympeCore PUBLIC SDL3::SDL3 TiledLevelLoader)
+
+# Add NFD platform-specific linker flags
+if(WIN32)
+    target_link_libraries(OlympeCore PUBLIC Comctl32 Ole32 Shell32)
+endif()
+
 target_compile_definitions(OlympeCore PUBLIC OLYMPE_BLUEPRINT_EDITOR_ENABLED)
 
 # C++14 standard
