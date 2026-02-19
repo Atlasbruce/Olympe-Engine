@@ -647,15 +647,9 @@ float GraphDocument::AutoLayoutNode(
     {
         nodeY = startY + static_cast<float>(depth) * config.verticalSpacing;
     }
-    else if (config.direction == LayoutDirection::BottomToTop)
+    else // BottomToTop
     {
         nodeY = startY - static_cast<float>(depth) * config.verticalSpacing;
-    }
-    else
-    {
-        // LeftToRight and RightToLeft not fully implemented
-        // For now, treat as TopToBottom to avoid layout errors
-        nodeY = startY + static_cast<float>(depth) * config.verticalSpacing;
     }
     
     // Calculate total width of children
@@ -687,7 +681,8 @@ float GraphDocument::AutoLayoutNode(
     else
     {
         // Center above children
-        // Subtract the trailing spacing after the last child to get the actual occupied span
+        // Each child returns (width + spacing), so last child has trailing spacing
+        // Subtract one spacing to get the actual span occupied by children
         float childrenSpan = totalChildrenWidth - config.horizontalSpacing;
         nodeX = startX + childrenSpan * 0.5f - config.nodeWidth * 0.5f;
     }
