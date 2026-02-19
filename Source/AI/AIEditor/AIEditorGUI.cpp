@@ -953,7 +953,24 @@ bool AIEditorGUI::EndsWith(const std::string& str, const std::string& suffix)
     if (suffix.size() > str.size()) {
         return false;
     }
-    return str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+    
+    // Case-insensitive comparison for file extensions
+    std::string strLower = str.substr(str.size() - suffix.size());
+    std::string suffixLower = suffix;
+    
+    // Convert to lowercase
+    for (size_t i = 0; i < strLower.size(); ++i) {
+        if (strLower[i] >= 'A' && strLower[i] <= 'Z') {
+            strLower[i] = strLower[i] + ('a' - 'A');
+        }
+    }
+    for (size_t i = 0; i < suffixLower.size(); ++i) {
+        if (suffixLower[i] >= 'A' && suffixLower[i] <= 'Z') {
+            suffixLower[i] = suffixLower[i] + ('a' - 'A');
+        }
+    }
+    
+    return strLower == suffixLower;
 }
 
 } // namespace AI
