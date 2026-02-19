@@ -696,10 +696,8 @@ void AIEditorGUI::MenuAction_SaveAs()
         return;
     }
     
-    // Get current path and extract default name
-    NodeGraph::GraphId activeId = mgr.GetActiveGraphId();
-    std::string currentPath = std::string(); // TODO: Get from graph metadata
-    std::string defaultName = currentPath.empty() ? "new_ai_graph.json" : ExtractFilename(currentPath);
+    // Use default name for now (graph metadata filepath not yet implemented)
+    std::string defaultName = "new_ai_graph.json";
     
     // Open native save dialog
     std::string filepath = AIEditorFileDialog::SaveFile("json,btree", m_lastSavePath, defaultName);
@@ -711,6 +709,7 @@ void AIEditorGUI::MenuAction_SaveAs()
         }
         
         // Save the graph
+        NodeGraph::GraphId activeId = mgr.GetActiveGraphId();
         bool success = mgr.SaveGraph(activeId, filepath);
         
         if (success) {

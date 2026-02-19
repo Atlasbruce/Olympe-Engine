@@ -118,18 +118,25 @@ std::string AIEditorFileDialog::OpenFile(
     // Convert filter list
     std::string nfdFilters = ConvertFiltersToNFD(filterList);
     
-    // Create filter items
+    // Create filter items and persistent strings
     std::vector<nfdnfilteritem_t> filterItems;
+#ifdef _WIN32
+    std::wstring filterName;
+    std::wstring filterSpec;
+#else
+    std::string filterSpec;
+#endif
+    
     if (!nfdFilters.empty()) {
         nfdnfilteritem_t item;
 #ifdef _WIN32
-        std::wstring filterName = L"AI Graphs";
-        std::wstring filterSpec = ToNFDString(nfdFilters);
+        filterName = L"AI Graphs";
+        filterSpec = ToNFDString(nfdFilters);
         item.name = filterName.c_str();
         item.spec = filterSpec.c_str();
 #else
         item.name = "AI Graphs";
-        std::string filterSpec = nfdFilters;
+        filterSpec = nfdFilters;
         item.spec = filterSpec.c_str();
 #endif
         filterItems.push_back(item);
@@ -190,18 +197,25 @@ std::string AIEditorFileDialog::SaveFile(
     // Convert filter list
     std::string nfdFilters = ConvertFiltersToNFD(filterList);
     
-    // Create filter items
+    // Create filter items and persistent strings
     std::vector<nfdnfilteritem_t> filterItems;
+#ifdef _WIN32
+    std::wstring filterName;
+    std::wstring filterSpec;
+#else
+    std::string filterSpec;
+#endif
+    
     if (!nfdFilters.empty()) {
         nfdnfilteritem_t item;
 #ifdef _WIN32
-        std::wstring filterName = L"AI Graphs";
-        std::wstring filterSpec = ToNFDString(nfdFilters);
+        filterName = L"AI Graphs";
+        filterSpec = ToNFDString(nfdFilters);
         item.name = filterName.c_str();
         item.spec = filterSpec.c_str();
 #else
         item.name = "AI Graphs";
-        std::string filterSpec = nfdFilters;
+        filterSpec = nfdFilters;
         item.spec = filterSpec.c_str();
 #endif
         filterItems.push_back(item);
