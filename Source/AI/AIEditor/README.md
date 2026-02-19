@@ -4,9 +4,18 @@
 
 AIEditorGUI is the main UI layer for the AI Editor, integrating NodeGraphCore and AIGraphPlugin_BT to provide a complete WYSIWYG editor for Behavior Trees and HFSM.
 
-**Phase**: 1.3  
+**Phase**: 1.4  
 **Status**: Implementation Complete  
 **Dependencies**: NodeGraphCore (Phase 1.1), AIGraphPlugin_BT (Phase 1.2)
+
+## Recent Updates (Phase 1.4)
+
+### New Features
+1. **Clipboard System** - Full Cut/Copy/Paste support with link preservation
+2. **Enhanced File Operations** - Improved Save/Load integration with NodeGraphManager
+3. **Keyboard Shortcuts** - Complete shortcut support for all operations
+4. **Layout Engine** - Existing Buchheim-Walker algorithm documented
+5. **Extended Tests** - 15 integration tests (5 new tests added)
 
 ## Architecture
 
@@ -54,6 +63,114 @@ AIEditorGUI is the main UI layer for the AI Editor, integrating NodeGraphCore an
 - Real-time graph validation using BTGraphValidator
 - Error/warning messages displayed in UI
 - Prevents compilation of invalid graphs
+
+## Phase 1.4 Features
+
+### Clipboard System
+
+The clipboard system provides full Cut/Copy/Paste functionality with link preservation.
+
+#### Copy
+```cpp
+// Get selected nodes
+std::vector<NodeId> selectedNodes = GetSelectedNodes();
+
+// Copy to clipboard
+AIEditorClipboard::Get().Copy(selectedNodes, doc);
+```
+
+#### Cut
+```cpp
+// Cut removes nodes after copying
+AIEditorClipboard::Get().Cut(selectedNodes, doc);
+```
+
+#### Paste
+```cpp
+// Paste with offset
+Vector pasteOffset(50.0f, 50.0f);
+std::vector<NodeId> pastedNodes = AIEditorClipboard::Get().Paste(doc, pasteOffset);
+```
+
+#### Link Preservation
+When you copy or cut connected nodes, the connections between them are automatically preserved. When pasting, the connections are recreated between the new nodes.
+
+### Layout Engine (BTGraphLayoutEngine)
+
+The layout engine uses the **Buchheim-Walker algorithm** for optimal hierarchical layout:
+
+#### Algorithm Phases
+1. **Layering (BFS)** - Assigns nodes to layers based on depth from root
+2. **Initial Ordering** - Orders nodes within each layer
+3. **Crossing Reduction** - Uses barycenter heuristic to minimize edge crossings
+4. **Buchheim-Walker Layout** - Optimal parent centering in abstract unit space
+5. **Force-Directed Collision** - Iterative overlap elimination
+
+#### Key Features
+- **No Overlaps** - Collision detection prevents node overlap
+- **Parent Centering** - Parents are automatically centered over their children
+- **Minimal Crossings** - Barycenter heuristic reduces visual complexity
+- **Adaptive Spacing** - Automatically adjusts spacing for large trees
+
+#### Usage
+```cpp
+BTGraphLayoutEngine layoutEngine;
+std::vector<BTNodeLayout> layouts = layoutEngine.ComputeLayout(
+    behaviorTree,
+    nodeSpacingX,  // 180px default
+    nodeSpacingY,  // 120px default
+    zoomFactor     // 1.0 default
+);
+
+// Apply layouts to nodes
+for (const auto& layout : layouts) {
+    UpdateNodePosition(layout.nodeId, layout.position);
+}
+```
+
+### File Operations
+
+Enhanced file operations with NodeGraphManager integration:
+
+#### Save
+```cpp
+// Auto-save current graph
+editor.MenuAction_Save();
+
+// Or programmatically
+NodeGraphManager& mgr = NodeGraphManager::Get();
+mgr.SaveGraph(graphId, "path/to/file.json");
+```
+
+#### Load
+```cpp
+// Load graph programmatically
+GraphId id = mgr.LoadGraph("path/to/file.json");
+mgr.SetActiveGraph(id);
+```
+
+**Note**: Full native file dialog support (NFD) requires build system integration. The current implementation uses programmatic file operations through NodeGraphManager.
+
+### Keyboard Shortcuts (Complete)
+
+All operations now support keyboard shortcuts:
+
+| Shortcut | Action | Implementation |
+|----------|--------|----------------|
+| Ctrl+C | Copy | ✅ Implemented |
+| Ctrl+X | Cut | ✅ Implemented |
+| Ctrl+V | Paste | ✅ Implemented |
+| Delete | Delete Selected | ✅ Implemented |
+| Ctrl+A | Select All | ✅ Implemented |
+| Ctrl+Z | Undo | ✅ Implemented |
+| Ctrl+Y | Redo | ✅ Implemented |
+| Ctrl+N | New BT | ✅ Implemented |
+| Ctrl+S | Save | ✅ Implemented |
+| Ctrl+Shift+S | Save As | ✅ Implemented |
+| Ctrl+O | Open | ✅ Implemented |
+| Ctrl+W | Close | ✅ Implemented |
+
+Shortcuts are handled in `AIEditorGUI::Update()` and work globally when the editor is active.
 
 ## Usage
 
@@ -186,7 +303,7 @@ for (const auto& msg : messages) {
 
 Run `TestAIEditorGUI.cpp` for integration tests:
 
-### Test Suite
+### Test Suite (Phase 1.4 - 15 tests)
 - **Test 1**: Initialize AIEditorGUI
 - **Test 2**: Create New BT Graph
 - **Test 3**: Load Existing BT
@@ -197,11 +314,16 @@ Run `TestAIEditorGUI.cpp` for integration tests:
 - **Test 8**: Multi-Graph Tabs
 - **Test 9**: Blackboard Panel
 - **Test 10**: Node Palette Integration
+- **Test 11**: Clipboard Copy/Paste ✨ NEW
+- **Test 12**: Clipboard Cut ✨ NEW
+- **Test 13**: Clipboard Link Preservation ✨ NEW
+- **Test 14**: Layout Engine (Existing Implementation) ✨ NEW
+- **Test 15**: Save/Load Integration ✨ NEW
 
 ### Running Tests
 ```bash
 # Build tests
-g++ -std=c++14 TestAIEditorGUI.cpp AIEditorGUI.cpp ...
+g++ -std=c++14 TestAIEditorGUI.cpp AIEditorGUI.cpp AIEditorClipboard.cpp ...
 
 # Run tests
 ./TestAIEditorGUI
@@ -210,16 +332,16 @@ g++ -std=c++14 TestAIEditorGUI.cpp AIEditorGUI.cpp ...
 Expected output:
 ```
 ========================================
-AIEditorGUI Integration Tests (Phase 1.3)
+AIEditorGUI Integration Tests (Phase 1.4)
 ========================================
 
 [PASS] Test 1: Initialize AIEditorGUI
 [PASS] Test 2: Create New BT Graph
 ...
-[PASS] Test 10: Node Palette Integration
+[PASS] Test 15: Save/Load Integration
 
 ========================================
-Results: 10 passed, 0 failed
+Results: 15 passed, 0 failed
 ========================================
 ```
 
@@ -229,13 +351,15 @@ Results: 10 passed, 0 failed
 Source/AI/AIEditor/
 ├── AIEditorGUI.h              # Main GUI class header
 ├── AIEditorGUI.cpp            # Main GUI implementation
+├── AIEditorClipboard.h        # Clipboard system header ✨ NEW
+├── AIEditorClipboard.cpp      # Clipboard implementation ✨ NEW
 ├── AIEditorPanels.h           # Specialized panels header
 ├── AIEditorPanels.cpp         # Panels implementation
 ├── AIEditorMenus.h            # Menu handlers header
 ├── AIEditorMenus.cpp          # Menu implementation
 ├── AIEditorNodeRenderer.h     # Node rendering header
 ├── AIEditorNodeRenderer.cpp   # Node rendering implementation
-├── TestAIEditorGUI.cpp        # Integration tests
+├── TestAIEditorGUI.cpp        # Integration tests (15 tests)
 └── README.md                  # This file
 ```
 
@@ -397,6 +521,15 @@ All rights reserved.
 
 ## Changelog
 
+### v1.1 (2026-02-19) - Phase 1.4
+- **Clipboard System**: Full Cut/Copy/Paste with link preservation
+- **AIEditorClipboard**: New singleton clipboard manager
+- **Enhanced File Operations**: Improved Save/Load integration
+- **Keyboard Shortcuts**: Complete shortcut handling in Update()
+- **Extended Tests**: Added 5 new tests (11-15) for clipboard and file operations
+- **Documentation**: Comprehensive Phase 1.4 feature documentation
+- **Layout Engine**: Documented existing Buchheim-Walker implementation
+
 ### v1.0 (2026-02-18) - Phase 1.3
 - Initial implementation of AIEditorGUI
 - 3-panel layout with Asset Browser, Node Graph, Inspector
@@ -417,6 +550,6 @@ For questions or issues related to AIEditorGUI:
 
 ---
 
-**Last Updated**: 2026-02-18  
-**Phase**: 1.3  
+**Last Updated**: 2026-02-19  
+**Phase**: 1.4  
 **Status**: Complete
