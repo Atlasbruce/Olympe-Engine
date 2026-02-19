@@ -64,6 +64,11 @@ namespace Olympe
 
         ApplyConfigToLayout();
 
+        // Force horizontal layout for behavior trees (industry standard)
+        m_layoutEngine.SetLayoutDirection(BTLayoutDirection::LeftToRight);
+        m_layoutDirection = BTLayoutDirection::LeftToRight;
+        SYSTEM_LOG << "[BTDebugger] Layout forced to LeftToRight for readability" << std::endl;
+
         m_isInitialized = true;
 
         std::cout << "[BTDebugger] Initialized (window will be created on first F10)" << std::endl;
@@ -295,8 +300,8 @@ namespace Olympe
 
                 if (ImGui::Button("Reset Spacing to Defaults"))
                 {
-                    m_nodeSpacingX = 180.0f;
-                    m_nodeSpacingY = 120.0f;
+                    m_nodeSpacingX = 320.0f;
+                    m_nodeSpacingY = 180.0f;
                     m_needsLayoutUpdate = true;
                 }
 

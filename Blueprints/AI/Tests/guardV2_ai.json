@@ -1,0 +1,219 @@
+{
+  "schema_version": 2,
+  "type": "BehaviorTree",
+  "blueprintType": "BehaviorTree",
+  "name": "GuardAI_V2_Complex",
+  "description": "Advanced Guard AI with Health Management, Combat, Investigation (Noise/Lost Target), and Patrol loops.",
+  "metadata": {
+    "author": "OlympeEngineUser",
+    "created": "2026-02-19T20:00:00Z",
+    "tags": ["AI", "Guard", "Complex", "StressTest"]
+  },
+  "editorState": {
+    "zoom": 0.8,
+    "scrollOffset": { "x": 500, "y": 0 }
+  },
+  "data": {
+    "rootNodeId": 1,
+    "nodes": [
+      {
+        "id": 1,
+        "name": "Root Priority Selector",
+        "type": "Selector",
+        "position": { "x": 0.0, "y": 0.0 },
+        "children": [10, 20, 30, 50],
+        "parameters": {}
+      },
+
+      
+      {
+        "id": 10,
+        "name": "Self Preservation Sequence",
+        "type": "Sequence",
+        "description": "Interrupts everything if health is critical",
+        "position": { "x": -600.0, "y": 200.0 },
+        "children": [11, 12, 13],
+        "parameters": {}
+      },
+      {
+        "id": 11,
+        "name": "Is Health Critical?",
+        "type": "Condition",
+        "position": { "x": -650.0, "y": 400.0 },
+        "conditionType": "CheckStats",
+        "parameters": { "stat": "Health", "operator": "Less", "value": 20 }
+      },
+      {
+        "id": 12,
+        "name": "Find Safe Cover",
+        "type": "Action",
+        "position": { "x": -650.0, "y": 600.0 },
+        "actionType": "FindCover",
+        "parameters": { "radius": 30.0 }
+      },
+      {
+        "id": 13,
+        "name": "Apply Bandage/Heal",
+        "type": "Action",
+        "position": { "x": -650.0, "y": 800.0 },
+        "actionType": "HealSelf",
+        "parameters": { "amount": 50, "duration": 3.0 }
+      },
+
+      
+      {
+        "id": 20,
+        "name": "Combat Engagement",
+        "type": "Sequence",
+        "position": { "x": -200.0, "y": 200.0 },
+        "children": [21, 22, 23],
+        "parameters": {}
+      },
+      {
+        "id": 21,
+        "name": "Can See Enemy?",
+        "type": "Condition",
+        "position": { "x": -250.0, "y": 400.0 },
+        "conditionType": "PerceptionCheck",
+        "parameters": { "type": "Visual", "target": "Player" }
+      },
+      {
+        "id": 22,
+        "name": "Face Enemy",
+        "type": "Action",
+        "position": { "x": -250.0, "y": 600.0 },
+        "actionType": "RotateToTarget",
+        "parameters": {}
+      },
+      {
+        "id": 23,
+        "name": "Shoot Weapon",
+        "type": "Action",
+        "position": { "x": -250.0, "y": 800.0 },
+        "actionType": "AttackRange",
+        "parameters": { "burst": 3 }
+      },
+
+      
+      {
+        "id": 30,
+        "name": "Investigation Selector",
+        "type": "Selector",
+        "description": "Handles noise or lost targets",
+        "position": { "x": 300.0, "y": 200.0 },
+        "children": [31, 40],
+        "parameters": {}
+      },
+
+      
+      {
+        "id": 31,
+        "name": "Noise Reaction",
+        "type": "Sequence",
+        "position": { "x": 150.0, "y": 400.0 },
+        "children": [32, 33, 34, 35],
+        "parameters": {}
+      },
+      {
+        "id": 32,
+        "name": "Heard Suspicious Noise?",
+        "type": "Condition",
+        "position": { "x": 150.0, "y": 600.0 },
+        "conditionType": "PerceptionCheck",
+        "parameters": { "type": "Audio" }
+      },
+      {
+        "id": 33,
+        "name": "Set Noise Source as Target",
+        "type": "Action",
+        "position": { "x": 150.0, "y": 800.0 },
+        "actionType": "SetTargetToNoiseSource",
+        "parameters": {}
+      },
+      {
+        "id": 34,
+        "name": "Investigate Location",
+        "type": "Action",
+        "position": { "x": 150.0, "y": 1000.0 },
+        "actionType": "MoveToTarget",
+        "parameters": { "speed": "Walk" }
+      },
+      {
+        "id": 35,
+        "name": "Look Around (Scan)",
+        "type": "Action",
+        "position": { "x": 150.0, "y": 1200.0 },
+        "actionType": "PlayAnimation",
+        "parameters": { "anim": "LookAround", "duration": 4.0 }
+      },
+
+      
+      {
+        "id": 40,
+        "name": "Lost Target Search",
+        "type": "Sequence",
+        "position": { "x": 450.0, "y": 400.0 },
+        "children": [41, 42, 43],
+        "parameters": {}
+      },
+      {
+        "id": 41,
+        "name": "Has Last Known Position?",
+        "type": "Condition",
+        "position": { "x": 450.0, "y": 600.0 },
+        "conditionType": "CheckBlackboard",
+        "parameters": { "key": "LastKnownEnemyPos", "exists": true }
+      },
+      {
+        "id": 42,
+        "name": "Rush to LKP",
+        "type": "Action",
+        "position": { "x": 450.0, "y": 800.0 },
+        "actionType": "MoveToLocation",
+        "parameters": { "key": "LastKnownEnemyPos", "speed": "Run" }
+      },
+      {
+        "id": 43,
+        "name": "Search Pattern",
+        "type": "Action",
+        "position": { "x": 450.0, "y": 1000.0 },
+        "actionType": "WanderAroundPoint",
+        "parameters": { "radius": 10.0, "duration": 10.0 }
+      },
+
+      
+      {
+        "id": 50,
+        "name": "Default Patrol",
+        "type": "Sequence",
+        "position": { "x": 800.0, "y": 200.0 },
+        "children": [51, 52, 53],
+        "parameters": {}
+      },
+      {
+        "id": 51,
+        "name": "Get Next Waypoint",
+        "type": "Action",
+        "position": { "x": 800.0, "y": 400.0 },
+        "actionType": "NextWaypoint",
+        "parameters": { "loop": true }
+      },
+      {
+        "id": 52,
+        "name": "Move To Waypoint",
+        "type": "Action",
+        "position": { "x": 800.0, "y": 600.0 },
+        "actionType": "MoveToLocation",
+        "parameters": { "key": "CurrentWaypoint", "speed": "Walk" }
+      },
+      {
+        "id": 53,
+        "name": "Idle at Waypoint",
+        "type": "Action",
+        "position": { "x": 800.0, "y": 800.0 },
+        "actionType": "Wait",
+        "parameters": { "time": 2.0 }
+      }
+    ]
+  }
+}
