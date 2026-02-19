@@ -767,9 +767,6 @@ void AIEditorGUI::MenuAction_AutoLayout()
     if (success)
     {
         SYSTEM_LOG << "[AIEditorGUI] Auto-layout applied successfully" << std::endl;
-        
-        // Mark document as dirty (needs save)
-        doc->SetDirty(true);
     }
     else
     {

@@ -645,8 +645,9 @@ float GraphDocument::AutoLayoutNode(
     }
     else
     {
-        // Left-to-right or right-to-left (treat Y as horizontal)
-        nodeY = startY;
+        // LeftToRight and RightToLeft not fully implemented
+        // For now, treat as TopToBottom to avoid layout errors
+        nodeY = startY + static_cast<float>(depth) * config.verticalSpacing;
     }
     
     // Calculate total width of children
@@ -678,7 +679,9 @@ float GraphDocument::AutoLayoutNode(
     else
     {
         // Center above children
-        nodeX = startX + (totalChildrenWidth - config.horizontalSpacing) * 0.5f - config.nodeWidth * 0.5f;
+        // totalChildrenWidth includes spacing, so we subtract one spacing to get actual span
+        float childrenSpan = totalChildrenWidth - config.horizontalSpacing;
+        nodeX = startX + childrenSpan * 0.5f - config.nodeWidth * 0.5f;
     }
     
     // Apply position to node
@@ -695,7 +698,7 @@ float GraphDocument::AutoLayoutNode(
             node->decoratorChild,
             config,
             decoratorX,
-            startY,
+            nodeY,
             depth,
             visited
         );
