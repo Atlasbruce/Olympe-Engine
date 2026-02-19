@@ -23,6 +23,7 @@
 #include <vector>
 #include <deque>
 #include <map>
+#include <unordered_map>
 #include <cstdint>
 
  // Forward declarations for SDL3
@@ -223,6 +224,10 @@ namespace Olympe
         
         // Node properties editor
         void RenderNodeProperties();
+        void RenderNodePropertiesSection();
+        void ApplyModifiedParameters();
+        uint32_t GenerateUniqueNodeId();
+        BTNode* GetMutableNodeById(uint32_t nodeId);
         
         // Save system
         void Save();
@@ -370,6 +375,7 @@ namespace Olympe
         // Node properties
         uint32_t m_inspectedNodeId = 0;
         bool m_showNodeProperties = false;
+        std::unordered_map<uint32_t, json> m_modifiedParameters;
         
         // New BT dialog
         bool m_showNewBTDialog = false;
