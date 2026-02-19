@@ -19,7 +19,8 @@ namespace AI {
 void AIEditorNodeRenderer::RenderNode(
     const NodeGraph::NodeData& nodeData,
     bool isSelected,
-    bool isExecuting)
+    bool isExecuting,
+    const NodeGraph::NodeAnnotation* annotation)
 {
     BTNodeRegistry& registry = BTNodeRegistry::Get();
     const BTNodeTypeInfo* typeInfo = registry.GetNodeTypeInfo(nodeData.type);
@@ -53,6 +54,25 @@ void AIEditorNodeRenderer::RenderNode(
     
     if (isExecuting) {
         ImGui::PopStyleColor();
+    }
+    
+    // Phase 2.0 - Breakpoint indicator (red dot) and comment badge
+    if (annotation != nullptr)
+    {
+        if (annotation->hasBreakpoint)
+        {
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(1.0f, 0.15f, 0.15f, 1.0f), "[B]");
+        }
+        if (!annotation->comment.empty())
+        {
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.4f, 1.0f), "[C]");
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("%s", annotation->comment.c_str());
+            }
+        }
     }
     
     ImNodes::EndNodeTitleBar();
