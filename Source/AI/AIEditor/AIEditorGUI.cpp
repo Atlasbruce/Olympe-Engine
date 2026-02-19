@@ -744,7 +744,7 @@ void AIEditorGUI::MenuAction_AutoLayout()
         return;
     }
     
-    NodeGraph::GraphDocument* doc = mgr.GetGraphDocument(activeId);
+    NodeGraph::GraphDocument* doc = mgr.GetGraph(activeId);
     if (doc == nullptr)
     {
         SYSTEM_LOG << "[AIEditorGUI] Auto-layout failed: Document not found" << std::endl;
