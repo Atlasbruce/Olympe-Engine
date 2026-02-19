@@ -4,8 +4,8 @@
     "defaultDirection": "horizontal",
     "gridSize": 16.0,
     "gridSnappingEnabled": true,
-    "horizontalSpacing": 280.0,
-    "verticalSpacing": 120.0
+    "horizontalSpacing": 320.0,
+    "verticalSpacing": 180.0
   },
   "rendering": {
     "pinRadius": 6.0,

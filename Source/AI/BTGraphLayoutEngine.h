@@ -77,15 +77,15 @@ namespace Olympe
         /**
          * @brief Compute layout for a behavior tree
          * @param tree The behavior tree asset to layout
-         * @param nodeSpacingX Horizontal spacing between nodes (default: 180px, reduced from 250px)
-         * @param nodeSpacingY Vertical spacing between layers (default: 120px, reduced from 180px)
+         * @param nodeSpacingX Horizontal spacing between nodes (default: 320px)
+         * @param nodeSpacingY Vertical spacing between layers (default: 180px)
          * @param zoomFactor Zoom multiplier applied to final positions (default: 1.0)
          * @return Vector of node layouts with computed positions
          */
         std::vector<BTNodeLayout> ComputeLayout(
             const BehaviorTreeAsset* tree,
-            float nodeSpacingX = 180.0f,
-            float nodeSpacingY = 120.0f,
+            float nodeSpacingX = 320.0f,
+            float nodeSpacingY = 180.0f,
             float zoomFactor = 1.0f
         );
 

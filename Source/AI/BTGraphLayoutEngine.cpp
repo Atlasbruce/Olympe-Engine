@@ -8,7 +8,6 @@
 #include <queue>
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 
 namespace Olympe
 {
@@ -48,45 +47,19 @@ namespace Olympe
         
         // Phase 5: Force-directed collision resolution with generous padding
         // This works in abstract unit space
-        const float nodePadding = 2.5f;  // 2.5 abstract units of padding (increased from 1.5 for better spacing)
-        const int maxIterations = 30;    // 30 iterations for better convergence (doubled from 15)
+        const float nodePadding = 3.5f;  // 3.5 abstract units of padding for better breathing room
+        const int maxIterations = 50;    // 50 iterations for better convergence
         ResolveNodeCollisionsForceDirected(nodePadding, maxIterations);
 
-        // Use the spacing values passed from UI sliders
-        float baseSpacingX = nodeSpacingX;  // ✅ Respects UI slider
-        float baseSpacingY = nodeSpacingY;  // ✅ Respects UI slider
+        // Apply zoom factor to spacing to get final pixel coordinates
+        float finalSpacingX = nodeSpacingX * zoomFactor;
+        float finalSpacingY = nodeSpacingY * zoomFactor;
 
-        // Optional adaptive scaling (only if needed)
-        size_t maxNodesInLayer = 1;
-        for (const auto& layer : m_layers)
-        {
-            maxNodesInLayer = std::max(maxNodesInLayer, layer.size());
-        }
-
-        // Scale up ONLY for very wide/deep trees
-        constexpr size_t WIDE_TREE_THRESHOLD = 8;   // Increased from 5
-        constexpr size_t DEEP_TREE_THRESHOLD = 8;   // Increased from 5
-        constexpr float SPACING_INCREASE_FACTOR = 1.15f;  // Reduced from 1.2
-
-        if (maxNodesInLayer > WIDE_TREE_THRESHOLD)
-        {
-            baseSpacingX *= SPACING_INCREASE_FACTOR;  // +15% only for very wide trees
-        }
-
-        if (m_layers.size() > DEEP_TREE_THRESHOLD)
-        {
-            baseSpacingY *= SPACING_INCREASE_FACTOR;  // +15% only for very deep trees
-        }
-
-        // Apply zoom factor to spacing BEFORE converting to pixels
-        float finalSpacingX = baseSpacingX * zoomFactor;
-        float finalSpacingY = baseSpacingY * zoomFactor;
-
-        std::cout << "[BTGraphLayout] Using spacing: " 
-                  << finalSpacingX << "px × " << finalSpacingY << "px" 
-                  << " (base: " << baseSpacingX << " × " << baseSpacingY 
-                  << ", zoom: " << (int)(zoomFactor * 100) << "%)" 
-                  << std::endl;
+        SYSTEM_LOG << "[BTGraphLayout] Using spacing: "
+                   << finalSpacingX << "px x " << finalSpacingY << "px"
+                   << " (base: " << nodeSpacingX << " x " << nodeSpacingY
+                   << ", zoom: " << static_cast<int>(zoomFactor * 100) << "%)"
+                   << std::endl;
 
         // Convert from abstract units to world coordinates and apply layout direction
         SYSTEM_LOG << "[LAYOUT][PixelSpace] BEGIN" << std::endl;
@@ -125,20 +98,8 @@ namespace Olympe
         }
         SYSTEM_LOG << "[LAYOUT][PixelSpace] END" << std::endl;
 
-        // ok -  NEW: Debug output - verify positions are in pixel range (hundreds, not 0-1)
-        if (!m_layouts.empty())
-        {
-            std::cout << "[BTGraphLayout] Sample node positions (should be 100s-1000s of pixels):" << std::endl;
-            for (size_t i = 0; i < std::min(size_t(3), m_layouts.size()); ++i)
-            {
-                std::cout << "  Node " << m_layouts[i].nodeId 
-                          << " at (" << m_layouts[i].position.x 
-                          << ", " << m_layouts[i].position.y << ")" << std::endl;
-            }
-        }
-
-        std::cout << "[BTGraphLayout] Layout complete: " << m_layouts.size() 
-                  << " nodes positioned" << std::endl;
+        SYSTEM_LOG << "[BTGraphLayout] Layout complete: " << m_layouts.size()
+                   << " nodes positioned" << std::endl;
 
         return m_layouts;
     }
@@ -357,8 +318,8 @@ namespace Olympe
         // Debug output to verify crossing reduction effectiveness
         #ifdef DEBUG_BT_LAYOUT
         int totalCrossings = CountEdgeCrossings(tree);
-        std::cout << "[BTGraphLayout] Edge crossings after reduction: " 
-                  << totalCrossings << std::endl;
+        SYSTEM_LOG << "[BTGraphLayout] Edge crossings after reduction: "
+                   << totalCrossings << std::endl;
         #endif
     }
 
