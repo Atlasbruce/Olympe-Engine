@@ -16,6 +16,7 @@ NodeGraphCore is a generic, reusable node graph system for the Olympe Engine. It
 - **Undo/Redo System**: Command pattern implementation for all operations
 - **JSON v2 Schema**: Unified serialization format with automatic migration from legacy formats
 - **Validation**: Graph structure validation and cycle detection
+- **Auto-Layout System**: Hierarchical node arrangement with configurable spacing (Phase 1.6)
 - **Layout Engine Interface**: Abstract interface for pluggable layout algorithms
 
 ## Architecture
@@ -30,6 +31,8 @@ Basic data structures:
 - `PinData`: Pin information for connections
 - `LinkData`: Link between two pins
 - `EditorState`: Viewport state (zoom, scroll, selection)
+- `LayoutDirection`: Enum for layout direction (TopToBottom, BottomToTop, LeftToRight, RightToLeft)
+- `AutoLayoutConfig`: Configuration for auto-layout (spacing, padding, node dimensions)
 
 #### 2. GraphDocument
 Main document class for a single graph:
@@ -48,9 +51,24 @@ doc.UpdateNodePosition(id, Vector2(150, 150));
 std::string error;
 bool valid = doc.ValidateGraph(error);
 
+// Auto-layout nodes hierarchically
+AutoLayoutConfig config;
+config.direction = LayoutDirection::TopToBottom;
+config.horizontalSpacing = 150.0f;
+config.verticalSpacing = 100.0f;
+bool success = doc.AutoLayout(config);
+
 // Serialize
 json j = doc.ToJson();
 ```
+
+**Auto-Layout System (Phase 1.6)**:
+- `AutoLayout()`: Automatically arranges nodes hierarchically without overlapping
+- Supports `TopToBottom` and `BottomToTop` directions
+- Configurable spacing, padding, and node dimensions via `AutoLayoutConfig`
+- Validates graph has root node before layout
+- Detects and logs cycles
+- Handles decorator children placement
 
 #### 3. NodeGraphManager
 Singleton for managing multiple graphs:
