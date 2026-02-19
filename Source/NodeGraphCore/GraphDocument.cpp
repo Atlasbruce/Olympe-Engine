@@ -572,6 +572,14 @@ GraphDocument GraphDocument::FromJson(const json& j)
 
 bool GraphDocument::AutoLayout(const AutoLayoutConfig& config)
 {
+    // Validate layout direction
+    if (config.direction == LayoutDirection::LeftToRight || 
+        config.direction == LayoutDirection::RightToLeft)
+    {
+        SYSTEM_LOG << "[GraphDocument] AutoLayout failed: LeftToRight and RightToLeft not yet implemented" << std::endl;
+        return false;
+    }
+    
     // Validate graph has root node
     if (rootNodeId.value == 0)
     {
@@ -679,7 +687,7 @@ float GraphDocument::AutoLayoutNode(
     else
     {
         // Center above children
-        // totalChildrenWidth includes spacing, so we subtract one spacing to get actual span
+        // Subtract the trailing spacing after the last child to get the actual occupied span
         float childrenSpan = totalChildrenWidth - config.horizontalSpacing;
         nodeX = startX + childrenSpan * 0.5f - config.nodeWidth * 0.5f;
     }

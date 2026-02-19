@@ -751,15 +751,8 @@ void AIEditorGUI::MenuAction_AutoLayout()
         return;
     }
     
-    // Create layout configuration
+    // Use default layout configuration
     NodeGraph::AutoLayoutConfig config;
-    config.direction = NodeGraph::LayoutDirection::TopToBottom;
-    config.horizontalSpacing = 150.0f;
-    config.verticalSpacing = 100.0f;
-    config.nodeWidth = 120.0f;
-    config.nodeHeight = 60.0f;
-    config.paddingX = 50.0f;
-    config.paddingY = 50.0f;
     
     // Apply auto-layout
     bool success = doc->AutoLayout(config);
