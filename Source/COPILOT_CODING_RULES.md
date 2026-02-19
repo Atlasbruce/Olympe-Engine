@@ -707,3 +707,19 @@ Si la compilation échoue :
 > **"Si le build log n'est pas fourni, la PR est rejetée."**
 
 ---
+
+## 🔍 API VERIFICATION CHECKLIST
+
+Before approving PR, verify:
+
+1. [ ] **Read ALL referenced .h files** for method signatures
+2. [ ] **Search codebase** for existing usage patterns (lexical search)
+3. [ ] **Verify each external API call** exists in declared classes
+4. [ ] **Check parameter types** match exactly
+5. [ ] **Confirm return types** match variable assignments
+6. [ ] **Validate namespace qualifiers** are correct
+
+### Tools to Use:
+- `lexical-code-search`: Find method definitions
+- `semantic-code-search`: Find usage examples
+- `githubread`: Read header files line-by-line
