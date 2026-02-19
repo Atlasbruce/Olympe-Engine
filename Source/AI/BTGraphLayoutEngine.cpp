@@ -4,6 +4,7 @@
  */
 
 #include "BTGraphLayoutEngine.h"
+#include "../system/system_utils.h"
 #include <queue>
 #include <algorithm>
 #include <cmath>
@@ -81,7 +82,6 @@ namespace Olympe
         float finalSpacingX = baseSpacingX * zoomFactor;
         float finalSpacingY = baseSpacingY * zoomFactor;
 
-        // Debug output to verify
         std::cout << "[BTGraphLayout] Using spacing: " 
                   << finalSpacingX << "px × " << finalSpacingY << "px" 
                   << " (base: " << baseSpacingX << " × " << baseSpacingY 
@@ -89,6 +89,7 @@ namespace Olympe
                   << std::endl;
 
         // Convert from abstract units to world coordinates and apply layout direction
+        SYSTEM_LOG << "[LAYOUT][PixelSpace] BEGIN" << std::endl;
         if (m_layoutDirection == BTLayoutDirection::TopToBottom)
         {
             // Vertical layout (default): layers go top-to-bottom
@@ -114,6 +115,15 @@ namespace Olympe
                 layout.position.y = abstractX * finalSpacingX;
             }
         }
+
+        for (const auto& layout : m_layouts)
+        {
+            SYSTEM_LOG << "[LAYOUT][PixelSpace] NodeID=" << layout.nodeId
+                       << " Layer=" << layout.layer
+                       << " FinalPos=(" << layout.position.x << "," << layout.position.y << ")"
+                       << std::endl;
+        }
+        SYSTEM_LOG << "[LAYOUT][PixelSpace] END" << std::endl;
 
         // ok -  NEW: Debug output - verify positions are in pixel range (hundreds, not 0-1)
         if (!m_layouts.empty())
@@ -484,6 +494,8 @@ namespace Olympe
         if (!tree || m_layers.empty() || m_layouts.empty())
             return;
 
+        SYSTEM_LOG << "[LAYOUT][Walker] BEGIN" << std::endl;
+
         // Start from root and recursively place subtrees
         if (!m_layers.empty() && !m_layers[0].empty())
         {
@@ -491,6 +503,8 @@ namespace Olympe
             float startX = 0.0f;
             PlaceSubtree(rootId, tree, 0, startX);
         }
+
+        SYSTEM_LOG << "[LAYOUT][Walker] END" << std::endl;
     }
 
     void BTGraphLayoutEngine::PlaceSubtree(uint32_t nodeId, const BehaviorTreeAsset* tree, int depth, float& nextAvailableX)
@@ -511,6 +525,11 @@ namespace Olympe
             // Leaf: place at next available position
             layout.position.x = nextAvailableX;
             nextAvailableX += 1.0f;  // Reserve 1 unit
+            SYSTEM_LOG << "[LAYOUT][Walker] NodeID=" << nodeId
+                       << " Layer=" << layout.layer
+                       << " Order=" << layout.orderInLayer
+                       << " WalkerPos=(" << layout.position.x << "," << layout.position.y << ")"
+                       << std::endl;
             return;
         }
 
@@ -544,6 +563,12 @@ namespace Olympe
                 ShiftSubtree(childId, tree, shift);
             }
         }
+
+        SYSTEM_LOG << "[LAYOUT][Walker] NodeID=" << nodeId
+                   << " Layer=" << layout.layer
+                   << " Order=" << layout.orderInLayer
+                   << " WalkerPos=(" << layout.position.x << "," << layout.position.y << ")"
+                   << std::endl;
     }
 
     void BTGraphLayoutEngine::ShiftSubtree(uint32_t nodeId, const BehaviorTreeAsset* tree, float offset)
@@ -567,6 +592,8 @@ namespace Olympe
 
     void BTGraphLayoutEngine::ResolveNodeCollisionsForceDirected(float nodePadding, int maxIterations)
     {
+        SYSTEM_LOG << "[LAYOUT][ResolveCollisions] BEGIN" << std::endl;
+
         for (int iter = 0; iter < maxIterations; ++iter)
         {
             bool hadCollision = false;
@@ -607,6 +634,8 @@ namespace Olympe
                 break;
             }
         }
+
+        SYSTEM_LOG << "[LAYOUT][ResolveCollisions] END" << std::endl;
     }
 
     bool BTGraphLayoutEngine::DoNodesOverlap(const BTNodeLayout& a, const BTNodeLayout& b, float padding) const
@@ -650,6 +679,12 @@ namespace Olympe
         
         if (centerDistance < requiredCenterDistance)
         {
+            SYSTEM_LOG << "[LAYOUT][ResolveCollisions] Collision NodeID=" << nodeA
+                       << " <-> NodeID=" << nodeB
+                       << " distance=" << centerDistance
+                       << " min=" << requiredCenterDistance
+                       << std::endl;
+
             // Calculate how much total separation is needed
             float totalPushNeeded = requiredCenterDistance - centerDistance;
             // Each node moves half the distance
