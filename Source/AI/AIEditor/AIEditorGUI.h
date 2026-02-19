@@ -128,6 +128,7 @@ private:
     void MenuAction_ShowSensesPanel();
     void MenuAction_ShowRuntimeDebug();
     void MenuAction_About();
+    void MenuAction_AutoLayout();
     
     // ========================================================================
     // Node Graph Rendering

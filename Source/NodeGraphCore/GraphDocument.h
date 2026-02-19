@@ -152,6 +152,13 @@ public:
      */
     static GraphDocument FromJson(const json& j);
     
+    /**
+     * @brief Automatically layout nodes in a hierarchical arrangement
+     * @param config Layout configuration (direction, spacing, etc.)
+     * @return true if layout was applied, false if graph is empty/invalid
+     */
+    bool AutoLayout(const AutoLayoutConfig& config);
+    
     // ========================================================================
     // Data Access
     // ========================================================================
@@ -176,6 +183,25 @@ private:
     
     // Helper methods
     bool HasCyclesHelper(NodeId nodeId, std::vector<NodeId>& visited, std::vector<NodeId>& recursionStack) const;
+    
+    /**
+     * @brief Helper to recursively layout a node and its children
+     * @param nodeId Node to layout
+     * @param config Layout configuration
+     * @param startX Starting X position
+     * @param startY Starting Y position
+     * @param depth Current depth in tree (0 = root)
+     * @param visited Map to track visited nodes (cycle detection)
+     * @return Total width consumed by this subtree
+     */
+    float AutoLayoutNode(
+        NodeId nodeId,
+        const AutoLayoutConfig& config,
+        float startX,
+        float startY,
+        int depth,
+        std::map<NodeId, bool>& visited
+    );
 };
 
 } // namespace NodeGraph
