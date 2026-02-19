@@ -16,6 +16,11 @@
 namespace Olympe {
 namespace AI {
 
+// Default file extensions for AI graphs
+const char* const DEFAULT_AI_GRAPH_FILTER = "json,btree";
+const char* const DEFAULT_AI_GRAPH_NAME = "new_ai_graph.json";
+const char* const DEFAULT_AI_GRAPH_EXT = ".json";
+
 /**
  * @class AIEditorFileDialog
  * @brief Wrapper for native file dialog operations

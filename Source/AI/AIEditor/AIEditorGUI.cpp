@@ -16,6 +16,10 @@
 #include "../../NodeGraphCore/Commands/ConnectPinsCommand.h"
 #include <cstring>
 
+using Olympe::AI::DEFAULT_AI_GRAPH_FILTER;
+using Olympe::AI::DEFAULT_AI_GRAPH_NAME;
+using Olympe::AI::DEFAULT_AI_GRAPH_EXT;
+
 namespace Olympe {
 namespace AI {
 
@@ -633,7 +637,7 @@ void AIEditorGUI::MenuAction_Open()
     SYSTEM_LOG << "[AIEditorGUI] Open file dialog" << std::endl;
     
     // Open native file dialog
-    std::string filepath = AIEditorFileDialog::OpenFile("json,btree", m_lastOpenPath);
+    std::string filepath = AIEditorFileDialog::OpenFile(DEFAULT_AI_GRAPH_FILTER, m_lastOpenPath);
     
     if (!filepath.empty()) {
         // Load the graph
@@ -696,16 +700,13 @@ void AIEditorGUI::MenuAction_SaveAs()
         return;
     }
     
-    // Use default name for now (graph metadata filepath not yet implemented)
-    std::string defaultName = "new_ai_graph.json";
-    
     // Open native save dialog
-    std::string filepath = AIEditorFileDialog::SaveFile("json,btree", m_lastSavePath, defaultName);
+    std::string filepath = AIEditorFileDialog::SaveFile(DEFAULT_AI_GRAPH_FILTER, m_lastSavePath, DEFAULT_AI_GRAPH_NAME);
     
     if (!filepath.empty()) {
         // Ensure file has proper extension
         if (!EndsWith(filepath, ".json") && !EndsWith(filepath, ".btree")) {
-            filepath += ".json";
+            filepath += DEFAULT_AI_GRAPH_EXT;
         }
         
         // Save the graph
