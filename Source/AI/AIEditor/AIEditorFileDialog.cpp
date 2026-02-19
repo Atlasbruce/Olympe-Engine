@@ -169,7 +169,7 @@ std::string AIEditorFileDialog::OpenFile(
         SYSTEM_LOG << "[AIEditorFileDialog] Selected file: " << selectedPath << std::endl;
     }
     else if (result == NFD_CANCEL) {
-        SYSTEM_LOG << "[AIEditorFileDialog] User canceled file selection" << std::endl;
+        // User canceled - this is normal, no need to log
     }
     else {
         const char* error = NFD::GetError();
@@ -252,7 +252,7 @@ std::string AIEditorFileDialog::SaveFile(
         SYSTEM_LOG << "[AIEditorFileDialog] Save to: " << selectedPath << std::endl;
     }
     else if (result == NFD_CANCEL) {
-        SYSTEM_LOG << "[AIEditorFileDialog] User canceled save dialog" << std::endl;
+        // User canceled - this is normal, no need to log
     }
     else {
         const char* error = NFD::GetError();
@@ -296,7 +296,7 @@ std::string AIEditorFileDialog::OpenFolder(const std::string& defaultPath)
         SYSTEM_LOG << "[AIEditorFileDialog] Selected folder: " << selectedPath << std::endl;
     }
     else if (result == NFD_CANCEL) {
-        SYSTEM_LOG << "[AIEditorFileDialog] User canceled folder selection" << std::endl;
+        // User canceled - this is normal, no need to log
     }
     else {
         const char* error = NFD::GetError();
