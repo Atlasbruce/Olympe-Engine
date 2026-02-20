@@ -1037,6 +1037,19 @@ namespace Olympe
 
         ImNodes::EndNodeEditor();
 
+        // Double-click detection for node inspection in Inspector panel
+        int hoveredNodeId = -1;
+        if (ImNodes::IsNodeHovered(&hoveredNodeId) && hoveredNodeId != -1)
+        {
+            if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            {
+                m_inspectedNodeId = static_cast<uint32_t>(hoveredNodeId);
+                m_showNodeProperties = true;
+                SYSTEM_LOG << "[BTDebugger] Node " << hoveredNodeId
+                           << " double-clicked, opening in Inspector" << std::endl;
+            }
+        }
+
         if (m_editorMode)
         {
             int startAttrId, endAttrId;
@@ -1373,6 +1386,16 @@ namespace Olympe
 
         ImGui::Text("Inspector");
         ImGui::Separator();
+
+        // Node Properties section (shown when a node is double-clicked, in any mode)
+        if (m_inspectedNodeId != 0 && m_showNodeProperties)
+        {
+            if (ImGui::CollapsingHeader("Node Properties", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                RenderNodePropertiesSection();
+            }
+            ImGui::Separator();
+        }
         
         // Editor mode panels
         if (m_editorMode)
@@ -1380,14 +1403,6 @@ namespace Olympe
             if (ImGui::CollapsingHeader("Validation", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 RenderValidationPanel();
-            }
-            
-            if (m_inspectedNodeId != 0)
-            {
-                if (ImGui::CollapsingHeader("Node Properties", ImGuiTreeNodeFlags_DefaultOpen))
-                {
-                    RenderNodeProperties();
-                }
             }
         }
 
@@ -1995,11 +2010,18 @@ namespace Olympe
 
         for (uint32_t nodeId : m_selectedNodes)
         {
+            // Protect root node from deletion
+            if (nodeId == m_editingTree.rootNodeId)
+            {
+                SYSTEM_LOG << "[BTDebugger] Cannot delete root node!" << std::endl;
+                continue;
+            }
+
             // Use command pattern
             auto cmd = std::make_unique<DeleteNodeCommand>(&m_editingTree, nodeId);
             m_commandStack.Execute(std::move(cmd));
             
-            std::cout << "[BTEditor] Deleted node ID: " << nodeId << std::endl;
+            SYSTEM_LOG << "[BTDebugger] Deleted node " << nodeId << std::endl;
         }
 
         m_selectedNodes.clear();
@@ -2774,6 +2796,181 @@ namespace Olympe
     }
     
     // =============================================================================
+    // Node Parameter Editor (CRUD Feature)
+    // =============================================================================
+
+    BTNode* BehaviorTreeDebugWindow::GetMutableNodeById(uint32_t nodeId)
+    {
+        return m_editingTree.GetNode(nodeId);
+    }
+
+    uint32_t BehaviorTreeDebugWindow::GenerateUniqueNodeId()
+    {
+        uint32_t maxId = 0;
+        for (const auto& node : m_editingTree.nodes)
+        {
+            if (node.id > maxId)
+                maxId = node.id;
+        }
+        return maxId + 1;
+    }
+
+    void BehaviorTreeDebugWindow::ApplyModifiedParameters()
+    {
+        // Note: parameters are edited directly in RenderNodePropertiesSection(),
+        // so m_modifiedParameters serves as a change log rather than a pending queue.
+        // This function logs each modified node and clears the tracking map.
+        for (auto nodeIt = m_modifiedParameters.begin();
+             nodeIt != m_modifiedParameters.end(); ++nodeIt)
+        {
+            uint32_t nodeId = nodeIt->first;
+            BTNode* node = GetMutableNodeById(nodeId);
+            if (!node)
+                continue;
+
+            SYSTEM_LOG << "[BTDebugger] Applied modified parameters for node "
+                       << nodeId << std::endl;
+        }
+        m_modifiedParameters.clear();
+    }
+
+    void BehaviorTreeDebugWindow::RenderNodePropertiesSection()
+    {
+        // In editor mode use editable tree; in debug mode use runtime tree (read-only)
+        bool isEditable = m_editorMode;
+        BTNode* editableNode = nullptr;
+        const BTNode* readOnlyNode = nullptr;
+
+        if (m_editorMode)
+        {
+            editableNode = GetMutableNodeById(m_inspectedNodeId);
+            if (!editableNode)
+            {
+                m_inspectedNodeId = 0;
+                m_showNodeProperties = false;
+                return;
+            }
+            readOnlyNode = editableNode;
+        }
+        else
+        {
+            if (m_selectedEntity != 0)
+            {
+                auto& world = World::Get();
+                if (world.HasComponent<BehaviorTreeRuntime_data>(m_selectedEntity))
+                {
+                    const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
+                    const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
+                    if (tree)
+                        readOnlyNode = tree->GetNode(m_inspectedNodeId);
+                }
+            }
+            if (!readOnlyNode)
+            {
+                m_inspectedNodeId = 0;
+                m_showNodeProperties = false;
+                return;
+            }
+        }
+
+        ImGui::Text("ID: %u", readOnlyNode->id);
+        ImGui::Text("Name: %s", readOnlyNode->name.c_str());
+        ImGui::Text("Type: %d", static_cast<int>(readOnlyNode->type));
+
+        ImGui::Separator();
+        ImGui::Text("Parameters:");
+
+        bool modified = false;
+
+        if (isEditable && editableNode)
+        {
+            // Editable string parameters
+            for (auto it = editableNode->stringParams.begin();
+                 it != editableNode->stringParams.end(); ++it)
+            {
+                const std::string& paramName = it->first;
+                std::string& paramValue = it->second;
+
+                ImGui::PushID(paramName.c_str());
+                char buffer[256];
+                strncpy_s(buffer, paramValue.c_str(), sizeof(buffer) - 1);
+                buffer[sizeof(buffer) - 1] = '\0';
+                if (ImGui::InputText(paramName.c_str(), buffer, sizeof(buffer)))
+                {
+                    paramValue = std::string(buffer);
+                    m_modifiedParameters[editableNode->id][paramName] = paramValue;
+                    modified = true;
+                }
+                ImGui::PopID();
+            }
+
+            // Editable int parameters
+            for (auto it = editableNode->intParams.begin();
+                 it != editableNode->intParams.end(); ++it)
+            {
+                const std::string& paramName = it->first;
+                int& paramValue = it->second;
+
+                ImGui::PushID(paramName.c_str());
+                if (ImGui::InputInt(paramName.c_str(), &paramValue))
+                {
+                    m_modifiedParameters[editableNode->id][paramName] = paramValue;
+                    modified = true;
+                }
+                ImGui::PopID();
+            }
+
+            // Editable float parameters
+            for (auto it = editableNode->floatParams.begin();
+                 it != editableNode->floatParams.end(); ++it)
+            {
+                const std::string& paramName = it->first;
+                float& paramValue = it->second;
+
+                ImGui::PushID(paramName.c_str());
+                if (ImGui::InputFloat(paramName.c_str(), &paramValue))
+                {
+                    m_modifiedParameters[editableNode->id][paramName] = paramValue;
+                    modified = true;
+                }
+                ImGui::PopID();
+            }
+        }
+        else
+        {
+            // Read-only display in debug mode
+            for (auto it = readOnlyNode->stringParams.begin();
+                 it != readOnlyNode->stringParams.end(); ++it)
+                ImGui::Text("%s: %s", it->first.c_str(), it->second.c_str());
+            for (auto it = readOnlyNode->intParams.begin();
+                 it != readOnlyNode->intParams.end(); ++it)
+                ImGui::Text("%s: %d", it->first.c_str(), it->second);
+            for (auto it = readOnlyNode->floatParams.begin();
+                 it != readOnlyNode->floatParams.end(); ++it)
+                ImGui::Text("%s: %.3f", it->first.c_str(), it->second);
+        }
+
+        if (readOnlyNode->stringParams.empty() &&
+            readOnlyNode->intParams.empty() &&
+            readOnlyNode->floatParams.empty())
+        {
+            ImGui::TextDisabled("No parameters");
+        }
+
+        if (modified)
+        {
+            m_isDirty = true;
+            m_treeModified = true;
+        }
+
+        if (ImGui::Button("Close"))
+        {
+            m_showNodeProperties = false;
+            m_inspectedNodeId = 0;
+        }
+    }
+
+    // =============================================================================
     // JSON Save System
     // =============================================================================
     
@@ -2975,6 +3172,9 @@ namespace Olympe
             std::cout << "[BTEditor] Cannot save: tree has validation errors" << std::endl;
             return;
         }
+        
+        // Apply any pending parameter modifications before serialization
+        ApplyModifiedParameters();
         
         // Serialize and save
         json j = SerializeTreeToJson(m_editingTree);
