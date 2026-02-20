@@ -10,6 +10,7 @@
 - **Log 1/2**: Utiliser la macro SYSTEM_LOG plutot que std::cout ou std::cerr
 - **Log 2/2**: ne pas utiliser les emojis ou caractères ASCII étendus dans les chaines de sortie : utiliser l'ASCII simple
 
+Attention pour les type ImVec2, Vecteur2 et Vecteur3 : il faut privilégier la classe Vector en priorité (pour eviter d'utiliser des struct ou classes differentes et non compatibles entre elles). si besoin enrichir la classe Vector (vector.h) avec des API ou des helpers (et documenter).
 ---
 
 ## 🚫 INTERDICTIONS C++17/20

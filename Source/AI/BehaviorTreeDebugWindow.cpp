@@ -2695,7 +2695,8 @@ namespace Olympe
             
             // Editable name
             char nameBuf[256];
-            strncpy_s(nameBuf, node->name.c_str(), sizeof(nameBuf) - 1);
+            // Correct strncpy_s usage: (dest, destsz, src, count/_TRUNCATE)
+            strncpy_s(nameBuf, sizeof(nameBuf), node->name.c_str(), _TRUNCATE);
             nameBuf[sizeof(nameBuf) - 1] = '\0';
             
             if (ImGui::InputText("Name", nameBuf, sizeof(nameBuf)))
@@ -2893,7 +2894,8 @@ namespace Olympe
 
                 ImGui::PushID(paramName.c_str());
                 char buffer[256];
-                strncpy_s(buffer, paramValue.c_str(), sizeof(buffer) - 1);
+                // Correct strncpy_s usage to avoid source/size swap and buffer overflow
+                strncpy_s(buffer, sizeof(buffer), paramValue.c_str(), _TRUNCATE);
                 buffer[sizeof(buffer) - 1] = '\0';
                 if (ImGui::InputText(paramName.c_str(), buffer, sizeof(buffer)))
                 {
