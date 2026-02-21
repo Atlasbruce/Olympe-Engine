@@ -20,8 +20,8 @@
 #include <stdexcept>
 #include <cstdint>
 
-#include "vector.h"
-#include "ECS_Entity.h"
+#include "../vector.h"
+#include "../ECS_Entity.h"
 
 namespace Olympe {
 

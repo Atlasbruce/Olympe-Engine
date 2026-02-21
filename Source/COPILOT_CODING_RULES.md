@@ -12,7 +12,7 @@
 
 - Attention pour les type ImVec2, Vecteur2 et Vecteur3 : il faut privilégier la classe Vector en priorité (pour eviter d'utiliser des struct ou classes differentes et non compatibles entre elles). si besoin enrichir la classe Vector (vector.h) avec des API ou des helpers (et documenter).
 - TOUJOURS Déclarer et ajouter les nouveaux fichier dans le .vcproj de la solution et reciproquement retirer déréferencer les  fihiers qui sont décommisionnés
-
+- verifier les chemins relatifs des #includes par exemple #include "./../system/system_utils.h" si le fichier cpp en cours est située dans un répertoire "./repertoire/monfichier.cpp"
 ---
 
 ## 🚫 INTERDICTIONS C++17/20
