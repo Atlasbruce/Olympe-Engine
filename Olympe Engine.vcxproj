@@ -93,6 +93,9 @@
     <ClCompile Include="Source\NodeGraphCore\GraphDocument.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GraphMigrator.cpp" />
     <ClCompile Include="Source\NodeGraphCore\NodeGraphManager.cpp" />
+    <ClCompile Include="Source\TaskSystem\LocalBlackboard.cpp" />
+    <ClCompile Include="Source\TaskSystem\TaskGraphTemplate.cpp" />
+    <ClCompile Include="Source\TaskSystem\TaskGraphTypes.cpp" />
     <ClCompile Include="Source\OlympeEngine.cpp" />
     <ClCompile Include="Source\PanelManager.cpp" />
     <ClCompile Include="Source\ParameterResolver.cpp" />
@@ -218,6 +221,9 @@
     <ClInclude Include="Source\NodeGraphCore\ILayoutEngine.h" />
     <ClInclude Include="Source\NodeGraphCore\NodeGraphCore.h" />
     <ClInclude Include="Source\NodeGraphCore\NodeGraphManager.h" />
+    <ClInclude Include="Source\TaskSystem\LocalBlackboard.h" />
+    <ClInclude Include="Source\TaskSystem\TaskGraphTemplate.h" />
+    <ClInclude Include="Source\TaskSystem\TaskGraphTypes.h" />
     <ClInclude Include="Source\Objective.h" />
     <ClInclude Include="Source\OptionsManager.h" />
     <ClInclude Include="Source\PanelManager.h" />

@@ -94,6 +94,9 @@
     <Filter Include="Fichiers d%27en-t�te\NFD">
       <UniqueIdentifier>{37174abd-9642-4cfe-ae34-95f75fb371eb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers d%27en-t�te\TaskSystem">
+      <UniqueIdentifier>{a1b2c3d4-e5f6-7890-abcd-ef1234567890}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\GameEngine.cpp">
@@ -428,6 +431,15 @@
     </ClCompile>
     <ClCompile Include="Source\AI\AIEditor\AIEditorFileDialog.cpp">
       <Filter>Fichiers d%27en-t�te\NFD</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TaskSystem\LocalBlackboard.cpp">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TaskSystem\TaskGraphTemplate.cpp">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TaskSystem\TaskGraphTypes.cpp">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -850,6 +862,15 @@
     </ClInclude>
     <ClInclude Include="Source\third_party\nfd\nfd.hpp">
       <Filter>Fichiers d%27en-t�te\NFD</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskSystem\LocalBlackboard.h">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskSystem\TaskGraphTemplate.h">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskSystem\TaskGraphTypes.h">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
