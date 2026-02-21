@@ -104,8 +104,10 @@ bool TaskGraphLoader::ValidateJson(const json& data,
             valid = false;
         }
 
-        // Must have rootNodeId
-        if (!dataSection.contains("rootNodeId"))
+        // Must have rootNodeId.
+        // Node IDs are always >= 1 in all supported schemas; -1 is the sentinel
+        // returned by GetInt when the key is absent or invalid.
+        if (JsonHelper::GetInt(dataSection, "rootNodeId", -1) < 0)
         {
             outErrors.push_back("Missing required 'rootNodeId' in data section");
             valid = false;
@@ -141,8 +143,8 @@ TaskGraphTemplate* TaskGraphLoader::ParseSchemaV2(const json& data,
 
     const json& dataSection = data["data"];
 
-    // Root node ID
-    tmpl->RootNodeID = JsonHelper::GetInt(dataSection, "rootNodeId", -1);
+    // Root node ID: prefer top-level "rootNodeId" if present, fall back to data section
+    tmpl->RootNodeID = ResolveRootNodeId(data, dataSection);
 
     // Parse nodes array
     JsonHelper::ForEachInArray(dataSection, "nodes", [&](const json& nodeJson, size_t /*index*/)
@@ -205,7 +207,8 @@ TaskGraphTemplate* TaskGraphLoader::ParseSchemaV3(const json& data,
 
     const json& dataSection = data["data"];
 
-    tmpl->RootNodeID = JsonHelper::GetInt(dataSection, "rootNodeId", -1);
+    // Root node ID: prefer top-level "rootNodeId" if present, fall back to data section
+    tmpl->RootNodeID = ResolveRootNodeId(data, dataSection);
 
     // Parse nodes array
     JsonHelper::ForEachInArray(dataSection, "nodes", [&](const json& nodeJson, size_t /*index*/)
@@ -454,9 +457,10 @@ void TaskGraphLoader::ParseParameters(const json& paramsJson,
             {
                 // Literal binding with nested value
                 binding.Type = ParameterBindingType::Literal;
-                if (paramValue.contains("value"))
+                json valueJson;
+                if (GetChildValue(paramValue, "value", valueJson))
                 {
-                    binding.LiteralValue = ParsePrimitiveValue(paramValue["value"]);
+                    binding.LiteralValue = ParsePrimitiveValue(valueJson);
                 }
             }
         }
@@ -496,6 +500,36 @@ TaskValue TaskGraphLoader::ParsePrimitiveValue(const json& val)
 
     // Unsupported type: return default (None)
     return TaskValue();
+}
+
+// ============================================================================
+// Safe child-value accessor
+// ============================================================================
+
+bool TaskGraphLoader::GetChildValue(const json& obj, const std::string& key, json& outVal)
+{
+    if (obj.contains(key))
+    {
+        outVal = obj[key];
+        return true;
+    }
+    return false;
+}
+
+// ============================================================================
+// Root node ID resolution
+// ============================================================================
+
+int TaskGraphLoader::ResolveRootNodeId(const json& data, const json& dataSection)
+{
+    // Prefer top-level "rootNodeId" when present (some schemas place it at document root)
+    int topLevelRoot = JsonHelper::GetInt(data, "rootNodeId", -1);
+    if (topLevelRoot >= 0)
+    {
+        return topLevelRoot;
+    }
+    // Fall back to standard location inside the data section
+    return JsonHelper::GetInt(dataSection, "rootNodeId", -1);
 }
 
 } // namespace Olympe
