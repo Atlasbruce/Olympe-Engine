@@ -10,7 +10,9 @@
 - **Log 1/2**: Utiliser la macro SYSTEM_LOG plutot que std::cout ou std::cerr
 - **Log 2/2**: ne pas utiliser les emojis ou caractères ASCII étendus dans les chaines de sortie : utiliser l'ASCII simple
 
-Attention pour les type ImVec2, Vecteur2 et Vecteur3 : il faut privilégier la classe Vector en priorité (pour eviter d'utiliser des struct ou classes differentes et non compatibles entre elles). si besoin enrichir la classe Vector (vector.h) avec des API ou des helpers (et documenter).
+- Attention pour les type ImVec2, Vecteur2 et Vecteur3 : il faut privilégier la classe Vector en priorité (pour eviter d'utiliser des struct ou classes differentes et non compatibles entre elles). si besoin enrichir la classe Vector (vector.h) avec des API ou des helpers (et documenter).
+- TOUJOURS Déclarer et ajouter les nouveaux fichier dans le .vcproj de la solution et reciproquement retirer déréferencer les  fihiers qui sont décommisionnés
+
 ---
 
 ## 🚫 INTERDICTIONS C++17/20
@@ -602,14 +604,6 @@ Chaque PR **DOIT** contenir cette section dans la description :
 - **Build Time**: XX seconds
 - **Log**: (joindre build.log ou coller output)
 
-### Linux GCC Build (si applicable)
-- **Status**: ✅ SUCCESS / ❌ FAILED
-- **Configuration**: Debug
-- **Warnings**: 0
-- **Errors**: 0
-- **Build Time**: XX seconds
-- **Log**: (joindre build.log ou coller output)
-```
 
 ### **ERREURS FRÉQUENTES DÉTECTÉES UNIQUEMENT À LA COMPILATION**
 
