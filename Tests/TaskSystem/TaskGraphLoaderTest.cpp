@@ -265,7 +265,7 @@ static void TestC_InlineSchemaV3()
     atomicNode["atomicTaskId"] = "MoveToTarget";
 
     json atomicParams = json::object();
-    atomicParams["speed"] = 5.0f;
+    atomicParams["speed"] = 5.0;
     atomicNode["parameters"] = atomicParams;
 
     nodesArr.push_back(rootNode);

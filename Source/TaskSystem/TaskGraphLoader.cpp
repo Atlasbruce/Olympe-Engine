@@ -489,11 +489,6 @@ TaskValue TaskGraphLoader::ParsePrimitiveValue(const json& val)
     {
         return TaskValue(static_cast<float>(val.get<double>()));
     }
-    if (val.is_number())
-    {
-        // Catch-all for any other numeric type: try int first, then float
-        return TaskValue(val.get<int>());
-    }
     if (val.is_string())
     {
         return TaskValue(val.get<std::string>());
