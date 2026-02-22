@@ -10,7 +10,9 @@
  * that participates in the Atomic Task System.
  *
  * The TaskSystem reads and updates this component every frame to advance
- * execution through the bound task graph.
+ * execution through the bound task graph.  activeTask stores the IAtomicTask
+ * instance currently executing so that multi-frame Running tasks can be
+ * re-ticked and cleanly Abort()ed when needed.
  *
  * C++14 compliant - no C++17/20 features.
  */
@@ -18,11 +20,16 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
-#include "../Core/AssetManager.h"  ///< Provides AssetID and INVALID_ASSET_ID
+#include "Core/AssetManager.h"  ///< Provides AssetID and INVALID_ASSET_ID
 
 namespace Olympe {
+
+// Forward declaration: full type is only required in TaskRunnerComponent.cpp
+// where the destructor is defined (unique_ptr delete requires the complete type).
+class IAtomicTask;
 
 /**
  * @struct TaskRunnerComponent
@@ -35,6 +42,10 @@ namespace Olympe {
  *   - StateTimer          : Accumulated time (seconds) spent in the current node.
  *   - LocalBlackboardData : Raw byte buffer for per-entity blackboard state.
  *   - LastStatus          : Result of the most recently completed node execution.
+ *   - activeTask          : Owning pointer to the IAtomicTask instance currently
+ *                           executing (nullptr when no task is in flight).
+ *
+ * @note TaskRunnerComponent is move-only because activeTask is a unique_ptr.
  */
 struct TaskRunnerComponent
 {
@@ -75,13 +86,26 @@ struct TaskRunnerComponent
     /// @brief Status returned by the last completed node execution.
     TaskStatus LastStatus = TaskStatus::Success;
 
+    /// @brief Owning pointer to the IAtomicTask instance that is currently
+    ///        executing for this runner.  nullptr when no task is in flight.
+    ///        Persisted across frames so that tasks returning Running are
+    ///        re-ticked on the next Process() call.  Replaced (old task
+    ///        Abort()ed) when the system advances to a different node.
+    std::unique_ptr<IAtomicTask> activeTask;
+
     // -----------------------------------------------------------------------
-    // Constructors (rule of zero - all members self-initialise)
+    // Constructors
     // -----------------------------------------------------------------------
 
-    TaskRunnerComponent() = default;
-    TaskRunnerComponent(const TaskRunnerComponent&) = default;
-    TaskRunnerComponent& operator=(const TaskRunnerComponent&) = default;
+    TaskRunnerComponent();
+    ~TaskRunnerComponent();
+
+    // Move only (unique_ptr member makes copy ill-formed).
+    TaskRunnerComponent(TaskRunnerComponent&&) = default;
+    TaskRunnerComponent& operator=(TaskRunnerComponent&&) = default;
+
+    TaskRunnerComponent(const TaskRunnerComponent&) = delete;
+    TaskRunnerComponent& operator=(const TaskRunnerComponent&) = delete;
 };
 
 } // namespace Olympe

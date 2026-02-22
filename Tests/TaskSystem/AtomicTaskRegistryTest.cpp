@@ -69,6 +69,11 @@ public:
         wasCalled = true;
         return Olympe::TaskStatus::Success;
     }
+
+    void Abort() override
+    {
+        // No in-progress state to clean up for this test stub.
+    }
 };
 
 } // anonymous namespace
