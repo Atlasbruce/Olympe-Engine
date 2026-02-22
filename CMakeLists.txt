@@ -241,6 +241,7 @@ if(BUILD_TESTS)
         Tests/TaskSystem/TaskSystemTest.cpp
         Tests/TestStubs.cpp
         Source/TaskSystem/TaskSystem.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
         Source/ECS/Components/TaskRunnerComponent.cpp
         Source/Core/AssetManager.cpp
         Source/TaskSystem/TaskGraphLoader.cpp
@@ -321,6 +322,39 @@ if(BUILD_TESTS)
     add_test(
         NAME AtomicTaskRegistryTest
         COMMAND OlympeAtomicTaskRegistryTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
+    # -------------------------------------------------------------------------
+    # OlympeTaskSystemRunningTests - Phase 2.C: AtomicTask lifecycle & Abort()
+    # -------------------------------------------------------------------------
+    add_executable(OlympeTaskSystemRunningTests
+        Tests/TaskSystem/TaskSystemRunningTest.cpp
+        Tests/TestStubs.cpp
+        Source/TaskSystem/TaskSystem.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/ECS/Components/TaskRunnerComponent.cpp
+        Source/Core/AssetManager.cpp
+        Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+    )
+
+    target_include_directories(OlympeTaskSystemRunningTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeTaskSystemRunningTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME TaskSystemRunningTest
+        COMMAND OlympeTaskSystemRunningTests
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 

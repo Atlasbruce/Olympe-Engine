@@ -12,8 +12,22 @@
  * TaskGraphTemplate via AssetManager, and delegates to ExecuteNode() to
  * advance execution.
  *
- * Phase 1.4 provides a minimal skeleton.  Full atomic-task dispatch and
- * World-integrated component retrieval will be added in Phase 1.5+.
+ * ### AtomicTask lifecycle (Phase 2.C)
+ * ExecuteNode() implements the following lifecycle for AtomicTask nodes:
+ *
+ *  1. On first entry to a node, create the IAtomicTask instance via
+ *     AtomicTaskRegistry::Create() and store it in runner.activeTask.
+ *  2. Each tick, call runner.activeTask->Execute(params).
+ *  3. If Execute returns TaskStatus::Running, keep activeTask and return -
+ *     the task will be ticked again on the next frame.
+ *  4. If Execute returns Success or Failure, destroy activeTask (reset the
+ *     unique_ptr), set runner.LastStatus, reset runner.StateTimer, and
+ *     advance runner.CurrentNodeIndex to NextOnSuccess / NextOnFailure.
+ *     NODE_INDEX_NONE is used as the sentinel "graph complete" value.
+ *  5. If runner.CurrentNodeIndex is set to NODE_INDEX_NONE externally while
+ *     a task is Running (e.g. the entity is removed or the graph is
+ *     interrupted), the next call to ExecuteNode() calls activeTask->Abort()
+ *     before releasing the instance.
  *
  * C++14 compliant - no C++17/20 features.
  */
@@ -64,14 +78,35 @@ public:
      * @brief Processes all entities registered with this system for one frame.
      *
      * For each entity in m_entities:
-     *  1. Retrieves the TaskRunnerComponent.
+     *  1. Retrieves the TaskRunnerComponent (TODO Phase 1.5: from World).
      *  2. Looks up the bound TaskGraphTemplate via AssetManager::Get().
      *  3. Skips the entity if no valid template is found.
      *  4. Calls ExecuteNode() to advance task graph execution.
-     *
-     * @note Phase 1.4: component retrieval from World is deferred (TODO Phase 1.5).
      */
     virtual void Process() override;
+
+    // -----------------------------------------------------------------------
+    // Core execution (public to allow direct invocation in unit tests)
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Advances execution of one node in the task graph for the given entity.
+     *
+     * @details
+     * Implements the AtomicTask lifecycle described in the class documentation.
+     * runner.CurrentNodeIndex is treated as a NodeID (looked up via
+     * TaskGraphTemplate::GetNode()).  NODE_INDEX_NONE (-1) means there is no
+     * active node; any lingering activeTask is Abort()ed and released.
+     *
+     * @param entity  The entity being processed.
+     * @param runner  Reference to the entity's TaskRunnerComponent.
+     * @param tmpl    Non-null pointer to the resolved TaskGraphTemplate.
+     * @param dt      Delta-time in seconds for the current frame.
+     */
+    void ExecuteNode(EntityID entity,
+                     TaskRunnerComponent& runner,
+                     const TaskGraphTemplate* tmpl,
+                     float dt);
 
 private:
 
@@ -80,20 +115,35 @@ private:
     // -----------------------------------------------------------------------
 
     /**
-     * @brief Advances execution of one node in the task graph for the given entity.
+     * @brief Executes one tick of an AtomicTask node.
+     *
+     * Creates runner.activeTask on first call for this node, ticks it, and
+     * handles Running / completion transitions.
      *
      * @param entity  The entity being processed.
      * @param runner  Reference to the entity's TaskRunnerComponent.
-     * @param tmpl    Non-null pointer to the resolved TaskGraphTemplate.
+     * @param node    The current AtomicTask node definition.
      * @param dt      Delta-time in seconds for the current frame.
-     *
-     * @note Phase 1.4 skeleton: logs the current node and returns immediately.
-     *       Full atomic-task dispatch will be implemented in Phase 1.5+.
      */
-    void ExecuteNode(EntityID entity,
-                     TaskRunnerComponent& runner,
-                     const TaskGraphTemplate* tmpl,
-                     float dt);
+    void ExecuteAtomicTask(EntityID entity,
+                           TaskRunnerComponent& runner,
+                           const TaskNodeDefinition& node,
+                           float dt);
+
+    /**
+     * @brief Advances runner.CurrentNodeIndex after a node completes.
+     *
+     * Sets runner.CurrentNodeIndex to node.NextOnSuccess if @p success is
+     * true, or node.NextOnFailure otherwise.  NODE_INDEX_NONE signals that
+     * the graph has finished.  Also resets runner.StateTimer to 0.
+     *
+     * @param runner   The runner component to update.
+     * @param node     The node that just completed.
+     * @param success  true if the node succeeded, false if it failed.
+     */
+    void TransitionToNextNode(TaskRunnerComponent& runner,
+                              const TaskNodeDefinition& node,
+                              bool success);
 };
 
 } // namespace Olympe

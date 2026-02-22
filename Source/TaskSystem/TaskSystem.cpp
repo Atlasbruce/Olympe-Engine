@@ -1,18 +1,30 @@
 /**
  * @file TaskSystem.cpp
- * @brief Implementation of TaskSystem: Phase 1.4 skeleton.
+ * @brief Implementation of TaskSystem: Phase 2.C AtomicTask lifecycle.
  * @author Olympe Engine
  * @date 2026-02-22
  *
  * @details
- * This file provides the minimal skeleton required by Phase 1.4.
- * Full implementation (World-integrated component retrieval, atomic-task
- * dispatch, blackboard management) is deferred to Phase 1.5+.
+ * Implements the AtomicTask lifecycle in TaskSystem so that multi-frame tasks
+ * (returning TaskStatus::Running) are handled correctly across frames using
+ * runner.activeTask, and Abort() is invoked when a running task is cancelled.
+ *
+ * ### Lifecycle summary
+ *  - At node entry, if runner.activeTask == nullptr, a task instance is created
+ *    via AtomicTaskRegistry::Create(node.AtomicTaskID) and stored in activeTask.
+ *  - Each tick calls activeTask->Execute(params).
+ *  - Running  => keep activeTask; accumulate StateTimer; return.
+ *  - Success/Failure => reset activeTask; set LastStatus; reset StateTimer;
+ *    advance CurrentNodeIndex via TransitionToNextNode().
+ *  - If CurrentNodeIndex is NODE_INDEX_NONE when ExecuteNode() is called and
+ *    activeTask is non-null, activeTask->Abort() is called before resetting.
  *
  * C++14 compliant - no C++17/20 features.
  */
 
 #include "TaskSystem.h"
+#include "AtomicTaskRegistry.h"
+#include "IAtomicTask.h"
 #include "../system/system_utils.h"
 
 namespace Olympe {
@@ -46,7 +58,7 @@ void TaskSystem::Process()
         //   TaskRunnerComponent& runner =
         //       World::GetInstance().GetComponent<TaskRunnerComponent>(entity);
         //
-        // For the Phase 1.4 skeleton, a default-constructed runner is used so
+        // For the Phase 2.C skeleton, a default-constructed runner is used so
         // that the code path can be exercised without a full World dependency.
         TaskRunnerComponent runner;
 
@@ -66,7 +78,7 @@ void TaskSystem::Process()
 }
 
 // ============================================================================
-// ExecuteNode (stub)
+// ExecuteNode
 // ============================================================================
 
 void TaskSystem::ExecuteNode(EntityID entity,
@@ -74,15 +86,124 @@ void TaskSystem::ExecuteNode(EntityID entity,
                               const TaskGraphTemplate* tmpl,
                               float dt)
 {
-    // TODO(Phase 1.5): Dispatch to atomic tasks, update runner.LastStatus,
-    // advance runner.CurrentNodeIndex, and manage runner.StateTimer.
-    SYSTEM_LOG << "[TaskSystem] ExecuteNode entity=" << entity
-               << " node=" << runner.CurrentNodeIndex
-               << " template=" << tmpl->Name
-               << "\n";
+    // NODE_INDEX_NONE signals that there is no active node (graph finished or
+    // externally interrupted).  Abort any lingering task and return.
+    if (runner.CurrentNodeIndex == NODE_INDEX_NONE)
+    {
+        if (runner.activeTask)
+        {
+            SYSTEM_LOG << "[TaskSystem] Entity " << entity
+                       << ": node index is NODE_INDEX_NONE with active task"
+                       << " - calling Abort()\n";
+            runner.activeTask->Abort();
+            runner.activeTask.reset();
+        }
+        return;
+    }
 
-    // Suppress unused-parameter warning for dt in the skeleton.
-    (void)dt;
+    // Look up the current node by its NodeID.
+    const TaskNodeDefinition* node = tmpl->GetNode(runner.CurrentNodeIndex);
+    if (node == nullptr)
+    {
+        SYSTEM_LOG << "[TaskSystem] Entity " << entity
+                   << ": node ID " << runner.CurrentNodeIndex
+                   << " not found in template '" << tmpl->Name << "'\n";
+        // Abort any active task associated with the missing node.
+        if (runner.activeTask)
+        {
+            runner.activeTask->Abort();
+            runner.activeTask.reset();
+        }
+        return;
+    }
+
+    // Dispatch to the appropriate node type.
+    switch (node->Type)
+    {
+        case TaskNodeType::AtomicTask:
+            ExecuteAtomicTask(entity, runner, *node, dt);
+            break;
+
+        default:
+            // Sequence / Selector / Parallel control nodes are not fully
+            // implemented in Phase 2.C.  Log and skip.
+            SYSTEM_LOG << "[TaskSystem] Entity " << entity
+                       << ": control-flow node type "
+                       << static_cast<int>(node->Type)
+                       << " not yet supported in Phase 2.C\n";
+            break;
+    }
+}
+
+// ============================================================================
+// ExecuteAtomicTask (private)
+// ============================================================================
+
+void TaskSystem::ExecuteAtomicTask(EntityID entity,
+                                    TaskRunnerComponent& runner,
+                                    const TaskNodeDefinition& node,
+                                    float dt)
+{
+    // Create the task instance on first entry to this node.
+    if (!runner.activeTask)
+    {
+        runner.activeTask = AtomicTaskRegistry::Get().Create(node.AtomicTaskID);
+        if (!runner.activeTask)
+        {
+            SYSTEM_LOG << "[TaskSystem] Entity " << entity
+                       << ": unknown AtomicTaskID '" << node.AtomicTaskID << "'\n";
+            runner.LastStatus = TaskRunnerComponent::TaskStatus::Failure;
+            TransitionToNextNode(runner, node, false);
+            return;
+        }
+    }
+
+    // Build parameter map from the node's literal bindings.
+    // LocalVariable bindings require LocalBlackboard integration (Phase 2.D+).
+    IAtomicTask::ParameterMap params;
+    for (const auto& kv : node.Parameters)
+    {
+        if (kv.second.Type == ParameterBindingType::Literal)
+        {
+            params[kv.first] = kv.second.LiteralValue;
+        }
+    }
+
+    // Tick the task for this frame.
+    TaskStatus status = runner.activeTask->Execute(params);
+
+    // Accumulate time spent in this node on every tick.
+    runner.StateTimer += dt;
+
+    if (status == TaskStatus::Running)
+    {
+        // Task is still in progress: keep activeTask for the next frame.
+        return;
+    }
+
+    // Task completed (Success or Failure): clean up and transition.
+    runner.activeTask.reset();
+
+    runner.LastStatus = (status == TaskStatus::Success)
+                            ? TaskRunnerComponent::TaskStatus::Success
+                            : TaskRunnerComponent::TaskStatus::Failure;
+
+    TransitionToNextNode(runner, node, status == TaskStatus::Success);
+}
+
+// ============================================================================
+// TransitionToNextNode (private)
+// ============================================================================
+
+void TaskSystem::TransitionToNextNode(TaskRunnerComponent& runner,
+                                       const TaskNodeDefinition& node,
+                                       bool success)
+{
+    // Advance to the next NodeID.  NODE_INDEX_NONE means the graph is complete.
+    runner.CurrentNodeIndex = success ? node.NextOnSuccess : node.NextOnFailure;
+
+    // Reset the per-node timer on every transition.
+    runner.StateTimer = 0.0f;
 }
 
 } // namespace Olympe
