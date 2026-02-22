@@ -55,6 +55,7 @@ add_library(OlympeCore STATIC
     ${IMNODES_SOURCES}
     ${NODEGRAPHCORE_SOURCES}
     ${TASKSYSTEM_SOURCES}
+    Source/ECS/Components/TaskRunnerComponent.cpp
     Source/AI/BehaviorTree.cpp
     Source/AI/BehaviorTreeDependencyScanner.cpp
     Source/DataManager.cpp
@@ -240,6 +241,7 @@ if(BUILD_TESTS)
         Tests/TaskSystem/TaskSystemTest.cpp
         Tests/TestStubs.cpp
         Source/TaskSystem/TaskSystem.cpp
+        Source/ECS/Components/TaskRunnerComponent.cpp
         Source/Core/AssetManager.cpp
         Source/TaskSystem/TaskGraphLoader.cpp
         Source/TaskSystem/TaskGraphTemplate.cpp

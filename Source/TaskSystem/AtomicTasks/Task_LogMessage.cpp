@@ -40,6 +40,12 @@ public:
 
         return TaskStatus::Success;
     }
+
+    void Abort() override
+    {
+        // Task_LogMessage is instantaneous (always returns Success on first
+        // Execute() call), so there is no in-progress state to clean up.
+    }
 };
 
 REGISTER_ATOMIC_TASK(Task_LogMessage, "Task_LogMessage")

@@ -26,6 +26,18 @@
 namespace Olympe {
 
 // ============================================================================
+// Sentinel constants
+// ============================================================================
+
+/**
+ * @brief Sentinel value for "no node" in node index / ID fields.
+ *
+ * Use instead of the magic value -1 wherever a node index or node ID is
+ * absent (similar to Unreal Engine's INDEX_NONE).
+ */
+constexpr int32_t NODE_INDEX_NONE = -1;
+
+// ============================================================================
 // Enumerations
 // ============================================================================
 

@@ -55,7 +55,7 @@ struct ParameterBinding {
  * @brief Full description of a single node in the task graph.
  */
 struct TaskNodeDefinition {
-    int32_t     NodeID       = -1;                  ///< Unique ID within this template
+    int32_t     NodeID       = NODE_INDEX_NONE;     ///< Unique ID within this template
     std::string NodeName;                           ///< Human-readable name
     TaskNodeType Type        = TaskNodeType::AtomicTask; ///< Node role
 
@@ -68,8 +68,8 @@ struct TaskNodeDefinition {
     /// Named parameter bindings passed to the atomic task
     std::unordered_map<std::string, ParameterBinding> Parameters;
 
-    int32_t NextOnSuccess = -1;  ///< ID of next node on success  (-1 = none)
-    int32_t NextOnFailure = -1;  ///< ID of next node on failure  (-1 = none)
+    int32_t NextOnSuccess = NODE_INDEX_NONE;  ///< ID of next node on success  (NODE_INDEX_NONE = none)
+    int32_t NextOnFailure = NODE_INDEX_NONE;  ///< ID of next node on failure  (NODE_INDEX_NONE = none)
 };
 
 // ============================================================================
@@ -98,7 +98,7 @@ public:
     std::vector<VariableDefinition> LocalVariables; ///< Blackboard schema
     std::vector<TaskNodeDefinition> Nodes;          ///< All graph nodes
 
-    int32_t RootNodeID = -1;  ///< ID of the root node (must exist in Nodes)
+    int32_t RootNodeID = NODE_INDEX_NONE;  ///< ID of the root node (must exist in Nodes)
 
     // -----------------------------------------------------------------------
     // Operations

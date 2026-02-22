@@ -144,6 +144,10 @@ static void TestD_TaskRunnerComponentDefaults()
         passed = false;
     }
 
+    TEST_ASSERT(runner.activeTask == nullptr,
+                "activeTask should default to nullptr");
+    if (runner.activeTask != nullptr) { passed = false; }
+
     ReportTest("TestD_TaskRunnerComponentDefaults", passed);
 }
 
