@@ -11,8 +11,8 @@ ECS Systems purpose: Define systems that operate on entities with specific compo
 
 #pragma once
 
-#include "Ecs_Entity.h"
-#include "Ecs_Components.h"
+#include "ECS_Entity.h"
+#include "ECS_Components.h"
 #include <set>
 #include <SDL3/SDL.h>
 #include "vector.h"

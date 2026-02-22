@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "Ecs_Entity.h"
+#include "ECS_Entity.h"
 #include <string>
 #include <unordered_map>
 #include "vector.h"
