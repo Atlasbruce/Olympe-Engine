@@ -58,7 +58,8 @@ public:
      * @return Pointer to a newly allocated TaskGraphTemplate on success,
      *         or nullptr if the file cannot be read, parsed, or validated.
      *
-     * @note The caller is responsible for deleting the returned pointer.
+     * @note The caller (or AssetManager) owns the returned pointer and is responsible
+     *       for deleting it when no longer needed.
      */
     static TaskGraphTemplate* LoadFromFile(const std::string& path,
                                            std::vector<std::string>& outErrors);
@@ -140,6 +141,31 @@ private:
      * @return The corresponding TaskValue, or a default TaskValue if type is unsupported.
      */
     static TaskValue ParsePrimitiveValue(const json& val);
+
+    /**
+     * @brief Safely retrieves a child JSON value by key and copies it to @p outVal.
+     *
+     * Encapsulates the contains() + operator[] pattern so call sites do not need
+     * to use the raw JSON API directly.
+     *
+     * @param obj    JSON object to query.
+     * @param key    Key to look up.
+     * @param outVal Receives the value when the key is present.
+     * @return true if the key exists; false otherwise.
+     */
+    static bool GetChildValue(const json& obj, const std::string& key, json& outVal);
+
+    /**
+     * @brief Resolves the root node ID with fallback: checks top-level first, then data section.
+     *
+     * Some schemas store rootNodeId at the document root; others nest it under "data".
+     * This helper prefers the top-level location and falls back to data section.
+     *
+     * @param data        Root JSON document.
+     * @param dataSection The "data" sub-object.
+     * @return The resolved root node ID, or -1 if absent from both locations.
+     */
+    static int ResolveRootNodeId(const json& data, const json& dataSection);
 
     // Prevent instantiation
     TaskGraphLoader() {}
