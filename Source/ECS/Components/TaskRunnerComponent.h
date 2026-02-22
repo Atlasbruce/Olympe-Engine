@@ -23,7 +23,7 @@
 #include <memory>
 #include <vector>
 
-#include "Core/AssetManager.h"  ///< Provides AssetID and INVALID_ASSET_ID
+#include "../../Core/AssetManager.h"  ///< Provides AssetID and INVALID_ASSET_ID
 
 namespace Olympe {
 

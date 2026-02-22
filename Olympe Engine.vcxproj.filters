@@ -456,6 +456,9 @@
     <ClCompile Include="Source\TaskSystem\TaskGraphLoader.cpp">
       <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
     </ClCompile>
+    <ClCompile Include="Source\ECS\Components\TaskRunnerComponent.cpp">
+      <Filter>Fichiers d%27en-t�te\ECS\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">

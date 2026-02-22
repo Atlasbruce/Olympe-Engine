@@ -65,6 +65,7 @@
     <ClCompile Include="Source\ComponentDefinition.cpp" />
     <ClCompile Include="Source\Core\AssetManager.cpp" />
     <ClCompile Include="Source\drawing.cpp" />
+    <ClCompile Include="Source\ECS\Components\TaskRunnerComponent.cpp" />
     <ClCompile Include="Source\ECS_Components_Registration.cpp" />
     <ClCompile Include="source\ECS_Register.h" />
     <ClCompile Include="Source\AI\BehaviorTree.cpp" />
