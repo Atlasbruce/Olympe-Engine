@@ -444,6 +444,12 @@
     <ClCompile Include="Source\TaskSystem\TaskSystem.cpp">
       <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
     </ClCompile>
+    <ClCompile Include="Source\TaskSystem\AtomicTaskRegistry.cpp">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Task_LogMessage.cpp">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Core\AssetManager.cpp">
       <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
     </ClCompile>
@@ -882,6 +888,12 @@
       <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
     </ClInclude>
     <ClInclude Include="Source\TaskSystem\TaskSystem.h">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskSystem\IAtomicTask.h">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskSystem\AtomicTaskRegistry.h">
       <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
     </ClInclude>
     <ClInclude Include="Source\ECS\Components\TaskRunnerComponent.h">

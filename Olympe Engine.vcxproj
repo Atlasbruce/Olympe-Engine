@@ -99,6 +99,8 @@
     <ClCompile Include="Source\TaskSystem\TaskGraphTemplate.cpp" />
     <ClCompile Include="Source\TaskSystem\TaskGraphTypes.cpp" />
     <ClCompile Include="Source\TaskSystem\TaskSystem.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTaskRegistry.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Task_LogMessage.cpp" />
     <ClCompile Include="Source\OlympeEngine.cpp" />
     <ClCompile Include="Source\PanelManager.cpp" />
     <ClCompile Include="Source\ParameterResolver.cpp" />
@@ -230,6 +232,8 @@
     <ClInclude Include="Source\TaskSystem\TaskGraphTemplate.h" />
     <ClInclude Include="Source\TaskSystem\TaskGraphTypes.h" />
     <ClInclude Include="Source\TaskSystem\TaskSystem.h" />
+    <ClInclude Include="Source\TaskSystem\IAtomicTask.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTaskRegistry.h" />
     <ClInclude Include="Source\ECS\Components\TaskRunnerComponent.h" />
     <ClInclude Include="Source\Objective.h" />
     <ClInclude Include="Source\OptionsManager.h" />

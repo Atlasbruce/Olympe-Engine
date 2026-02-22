@@ -293,6 +293,35 @@ if(BUILD_TESTS)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 
+    # -------------------------------------------------------------------------
+    # OlympeAtomicTaskRegistryTests - Phase 2.B: AtomicTask API & Registry
+    # -------------------------------------------------------------------------
+    add_executable(OlympeAtomicTaskRegistryTests
+        Tests/TaskSystem/AtomicTaskRegistryTest.cpp
+        Tests/TestStubs.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/TaskSystem/AtomicTasks/Task_LogMessage.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+    )
+
+    target_include_directories(OlympeAtomicTaskRegistryTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeAtomicTaskRegistryTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME AtomicTaskRegistryTest
+        COMMAND OlympeAtomicTaskRegistryTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
     message(STATUS "  Unit Tests: ON")
 else()
     message(STATUS "  Unit Tests: OFF (enable with -DBUILD_TESTS=ON)")
