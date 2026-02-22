@@ -441,6 +441,9 @@
     <ClCompile Include="Source\TaskSystem\TaskGraphTypes.cpp">
       <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
     </ClCompile>
+    <ClCompile Include="Source\TaskSystem\TaskSystem.cpp">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -871,6 +874,12 @@
     </ClInclude>
     <ClInclude Include="Source\TaskSystem\TaskGraphTypes.h">
       <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskSystem\TaskSystem.h">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\ECS\Components\TaskRunnerComponent.h">
+      <Filter>Fichiers d%27en-t�te\ECS\Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
