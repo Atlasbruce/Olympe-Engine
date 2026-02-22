@@ -1,0 +1,64 @@
+{
+  "schema_version": 2,
+  "type": "BehaviorTree",
+  "blueprintType": "BehaviorTree",
+  "name": "NPCSimpleMoveTree",
+  "description": "NPC simple IA: avance de 100px dans sa direction, puis change sa direction de +/-15° et recommence en boucle.",
+  "metadata": {
+    "author": "OlympeEngineUser",
+    "created": "2026-02-22T14:30:00Z",
+    "lastModified": "2026-02-22T14:30:00Z",
+    "tags": ["AI", "BehaviorTree", "SimpleMove", "DirectionStep"]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "data": {
+    "rootNodeId": 1,
+    "nodes": [
+      {
+        "id": 1,
+        "name": "Simple Move Loop (Repeater)",
+        "type": "Repeater",
+        "position": { "x": 200.0, "y": 100.0 },
+        "decoratorChildId": 2,
+        "repeatCount": -1,
+        "parameters": {}
+      },
+      {
+        "id": 2,
+        "name": "Step Move Sequence",
+        "type": "Sequence",
+        "position": { "x": 200.0, "y": 300.0 },
+        "children": [3, 4],
+        "parameters": {}
+      },
+      {
+        "id": 3,
+        "name": "Move 100px Forward",
+        "type": "Action",
+        "position": { "x": 550.0, "y": 300.0 },
+        "actionType": "MoveForwardDistance",
+        "parameters": {
+          "distance": 100.0,
+          "speed": "Walk"
+        }
+      },
+      {
+        "id": 4,
+        "name": "Rotate Direction +/-15°",
+        "type": "Action",
+        "position": { "x": 550.0, "y": 550.0 },
+        "actionType": "RotateDirectionRandomRange",
+        "parameters": {
+          "minDeltaDeg": -15.0,
+          "maxDeltaDeg": 15.0
+        }
+      }
+    ]
+  }
+}
