@@ -206,6 +206,33 @@ if(BUILD_TESTS)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 
+    add_executable(OlympeAssetManagerTests
+        Tests/TaskSystem/AssetManagerTaskGraphTest.cpp
+        Tests/TestStubs.cpp
+        Source/Core/AssetManager.cpp
+        Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+    )
+
+    target_include_directories(OlympeAssetManagerTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeAssetManagerTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME AssetManagerTaskGraphTest
+        COMMAND OlympeAssetManagerTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
     message(STATUS "  Unit Tests: ON")
 else()
     message(STATUS "  Unit Tests: OFF (enable with -DBUILD_TESTS=ON)")
