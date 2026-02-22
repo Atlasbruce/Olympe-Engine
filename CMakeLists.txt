@@ -6,6 +6,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(BUILD_RUNTIME_ENGINE "Build runtime engine executable" ON)
 option(BUILD_BLUEPRINT_EDITOR_STANDALONE "Build Blueprint Editor Standalone executable" ON)
+option(BUILD_TESTS "Build unit tests" OFF)
+
+# SDL3 and the shared OlympeCore library are required only for engine targets.
+# When BUILD_TESTS=ON with both engine options OFF the build works without SDL3.
+if(BUILD_RUNTIME_ENGINE OR BUILD_BLUEPRINT_EDITOR_STANDALONE)
 
 # Find SDL3
 find_package(SDL3 REQUIRED)
@@ -83,6 +88,8 @@ set_target_properties(OlympeCore PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
 )
+
+endif() # BUILD_RUNTIME_ENGINE OR BUILD_BLUEPRINT_EDITOR_STANDALONE
 
 # ============================================================================
 # Exécutable 1: Runtime Engine (OlympeEngine.exe)
@@ -164,6 +171,44 @@ if(BUILD_BLUEPRINT_EDITOR_STANDALONE)
         ${CMAKE_SOURCE_DIR}/Blueprints
         $<TARGET_FILE_DIR:OlympeBlueprintEditor>/Blueprints
     )
+endif()
+
+# ============================================================================
+# Unit Tests (opt-in; no platform-specific link dependencies required)
+# ============================================================================
+
+if(BUILD_TESTS)
+    enable_testing()
+
+    add_executable(OlympeTests
+        Tests/TaskSystem/TaskGraphLoaderTest.cpp
+        Tests/TestStubs.cpp
+        Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+    )
+
+    target_include_directories(OlympeTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME TaskGraphLoaderTest
+        COMMAND OlympeTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
+    message(STATUS "  Unit Tests: ON")
+else()
+    message(STATUS "  Unit Tests: OFF (enable with -DBUILD_TESTS=ON)")
 endif()
 
 # ============================================================================

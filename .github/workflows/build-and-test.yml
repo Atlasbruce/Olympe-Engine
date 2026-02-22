@@ -1,0 +1,33 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ "main", "master", "copilot/**" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  test:
+    name: Unit Tests (Linux)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure CMake (tests only)
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTS=ON \
+            -DBUILD_RUNTIME_ENGINE=OFF \
+            -DBUILD_BLUEPRINT_EDITOR_STANDALONE=OFF
+
+      - name: Build tests
+        run: cmake --build build --target OlympeTests --parallel
+
+      - name: Run tests
+        working-directory: ${{ github.workspace }}
+        run: ctest --test-dir build --output-on-failure
