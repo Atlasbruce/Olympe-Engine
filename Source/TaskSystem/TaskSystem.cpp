@@ -12,8 +12,8 @@
  * C++14 compliant - no C++17/20 features.
  */
 
-#include "TaskSystem/TaskSystem.h"
-#include "system/system_utils.h"
+#include "TaskSystem.h"
+#include "../system/system_utils.h"
 
 namespace Olympe {
 

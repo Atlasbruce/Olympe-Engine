@@ -20,10 +20,10 @@
 
 #pragma once
 
-#include "ECS_Systems.h"
-#include "ECS/Components/TaskRunnerComponent.h"
-#include "TaskSystem/TaskGraphTemplate.h"
-#include "Core/AssetManager.h"
+#include "../ECS_Systems.h"
+#include "../ECS/Components/TaskRunnerComponent.h"
+#include "TaskGraphTemplate.h"
+#include "../Core/AssetManager.h"
 
 namespace Olympe {
 

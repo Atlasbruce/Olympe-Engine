@@ -31,7 +31,7 @@
 #include <memory>
 #include <cstdint>
 
-#include "TaskSystem/TaskGraphTemplate.h"
+#include "../TaskSystem/TaskGraphTemplate.h"
 
 namespace Olympe {
 

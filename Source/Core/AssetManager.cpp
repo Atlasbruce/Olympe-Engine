@@ -5,10 +5,10 @@
  * @date 2026-02-22
  */
 
-#include "Core/AssetManager.h"
+#include "../Core/AssetManager.h"
 
-#include "TaskSystem/TaskGraphLoader.h"
-#include "system/system_utils.h"
+#include "../TaskSystem/TaskGraphLoader.h"
+#include "../system/system_utils.h"
 
 namespace Olympe {
 
