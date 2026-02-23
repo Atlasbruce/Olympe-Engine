@@ -242,6 +242,7 @@ if(BUILD_TESTS)
         Tests/TestStubs.cpp
         Source/TaskSystem/TaskSystem.cpp
         Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
         Source/ECS/Components/TaskRunnerComponent.cpp
         Source/Core/AssetManager.cpp
         Source/TaskSystem/TaskGraphLoader.cpp
@@ -333,6 +334,7 @@ if(BUILD_TESTS)
         Tests/TestStubs.cpp
         Source/TaskSystem/TaskSystem.cpp
         Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
         Source/ECS/Components/TaskRunnerComponent.cpp
         Source/Core/AssetManager.cpp
         Source/TaskSystem/TaskGraphLoader.cpp

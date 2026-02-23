@@ -108,6 +108,18 @@ public:
                      const TaskGraphTemplate* tmpl,
                      float dt);
 
+    /**
+     * @brief Aborts the active atomic task on a runner, if any.
+     *
+     * @details
+     * Calls Abort() on runner.activeTask (if non-null), resets the unique_ptr,
+     * and sets runner.LastStatus to TaskRunnerComponent::TaskStatus::Aborted.
+     * Safe to call when runner.activeTask is nullptr (no-op).
+     *
+     * @param runner  Reference to the entity's TaskRunnerComponent.
+     */
+    void AbortActiveTask(TaskRunnerComponent& runner);
+
 private:
 
     // -----------------------------------------------------------------------
@@ -123,11 +135,14 @@ private:
      * @param entity  The entity being processed.
      * @param runner  Reference to the entity's TaskRunnerComponent.
      * @param node    The current AtomicTask node definition.
+     * @param tmpl    Non-null pointer to the resolved TaskGraphTemplate (used
+     *                to resolve LocalVariable bindings).
      * @param dt      Delta-time in seconds for the current frame.
      */
     void ExecuteAtomicTask(EntityID entity,
                            TaskRunnerComponent& runner,
                            const TaskNodeDefinition& node,
+                           const TaskGraphTemplate* tmpl,
                            float dt);
 
     /**

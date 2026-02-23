@@ -25,6 +25,7 @@
 #include "TaskSystem.h"
 #include "AtomicTaskRegistry.h"
 #include "IAtomicTask.h"
+#include "LocalBlackboard.h"
 #include "../system/system_utils.h"
 
 namespace Olympe {
@@ -121,7 +122,7 @@ void TaskSystem::ExecuteNode(EntityID entity,
     switch (node->Type)
     {
         case TaskNodeType::AtomicTask:
-            ExecuteAtomicTask(entity, runner, *node, dt);
+            ExecuteAtomicTask(entity, runner, *node, tmpl, dt);
             break;
 
         default:
@@ -142,6 +143,7 @@ void TaskSystem::ExecuteNode(EntityID entity,
 void TaskSystem::ExecuteAtomicTask(EntityID entity,
                                     TaskRunnerComponent& runner,
                                     const TaskNodeDefinition& node,
+                                    const TaskGraphTemplate* tmpl,
                                     float dt)
 {
     // Create the task instance on first entry to this node.
@@ -158,14 +160,39 @@ void TaskSystem::ExecuteAtomicTask(EntityID entity,
         }
     }
 
-    // Build parameter map from the node's literal bindings.
-    // LocalVariable bindings require LocalBlackboard integration (Phase 2.D+).
+    // Build parameter map from the node's literal and LocalVariable bindings.
     IAtomicTask::ParameterMap params;
+
+    // Lazily-initialized blackboard for LocalVariable bindings; shared across
+    // all LocalVariable parameters in this node to avoid repeated initialization.
+    LocalBlackboard bb;
+    bool bbInitialized = false;
+
     for (const auto& kv : node.Parameters)
     {
         if (kv.second.Type == ParameterBindingType::Literal)
         {
             params[kv.first] = kv.second.LiteralValue;
+        }
+        else if (kv.second.Type == ParameterBindingType::LocalVariable)
+        {
+            // Read the default value from a LocalBlackboard seeded from the template.
+            // Full per-entity persistence of LocalBlackboardData is deferred to a later PR.
+            if (!bbInitialized)
+            {
+                bb.Initialize(*tmpl);
+                bbInitialized = true;
+            }
+            if (bb.HasVariable(kv.second.VariableName))
+            {
+                params[kv.first] = bb.GetValue(kv.second.VariableName);
+            }
+            else
+            {
+                SYSTEM_LOG << "[TaskSystem] Entity " << entity
+                           << ": LocalVariable '" << kv.second.VariableName
+                           << "' not found in template '" << tmpl->Name << "' - skipping binding\n";
+            }
         }
     }
 
@@ -204,6 +231,20 @@ void TaskSystem::TransitionToNextNode(TaskRunnerComponent& runner,
 
     // Reset the per-node timer on every transition.
     runner.StateTimer = 0.0f;
+}
+
+// ============================================================================
+// AbortActiveTask (public)
+// ============================================================================
+
+void TaskSystem::AbortActiveTask(TaskRunnerComponent& runner)
+{
+    if (runner.activeTask)
+    {
+        runner.activeTask->Abort();
+        runner.activeTask.reset();
+        runner.LastStatus = TaskRunnerComponent::TaskStatus::Aborted;
+    }
 }
 
 } // namespace Olympe
