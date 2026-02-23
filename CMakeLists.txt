@@ -389,6 +389,78 @@ if(BUILD_TESTS)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 
+    # -------------------------------------------------------------------------
+    # OlympeMoveToLocalBBTests - Phase 3.1: Task_MoveToLocation headless tests
+    # -------------------------------------------------------------------------
+    add_executable(OlympeMoveToLocalBBTests
+        Tests/TaskSystem/Task_MoveToLocation_LocalBBTest.cpp
+        Tests/TestStubs.cpp
+        Source/TaskSystem/TaskSystem.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/ECS/Components/TaskRunnerComponent.cpp
+        Source/Core/AssetManager.cpp
+        Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp
+    )
+
+    target_include_directories(OlympeMoveToLocalBBTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeMoveToLocalBBTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME MoveToLocalBBTest
+        COMMAND OlympeMoveToLocalBBTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
+    # -------------------------------------------------------------------------
+    # OlympeTaskSystemE2ETests - Phase 3.1: MoveTo->Wait->SetVariable E2E test
+    # -------------------------------------------------------------------------
+    add_executable(OlympeTaskSystemE2ETests
+        Tests/TaskSystem/TaskSystem_E2E_ExampleGraph.cpp
+        Tests/TestStubs.cpp
+        Source/TaskSystem/TaskSystem.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/ECS/Components/TaskRunnerComponent.cpp
+        Source/Core/AssetManager.cpp
+        Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp
+        Source/TaskSystem/AtomicTasks/Utility/Task_Wait.cpp
+        Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp
+    )
+
+    target_include_directories(OlympeTaskSystemE2ETests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeTaskSystemE2ETests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME TaskSystemE2ETest
+        COMMAND OlympeTaskSystemE2ETests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
     message(STATUS "  Unit Tests: ON")
 else()
     message(STATUS "  Unit Tests: OFF (enable with -DBUILD_TESTS=ON)")
