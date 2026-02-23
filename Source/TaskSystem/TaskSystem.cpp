@@ -26,7 +26,7 @@
 #include "AtomicTaskRegistry.h"
 #include "IAtomicTask.h"
 #include "LocalBlackboard.h"
-#include "TaskSystem/AtomicTaskContext.h"
+#include "../TaskSystem/AtomicTaskContext.h"
 #include "../system/system_utils.h"
 
 namespace Olympe {

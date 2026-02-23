@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "ECS_Entity.h"
+#include "../ECS_Entity.h"
 
 namespace Olympe {
 
