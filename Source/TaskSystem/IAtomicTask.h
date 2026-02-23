@@ -11,6 +11,13 @@
  * or running (for multi-frame tasks).  If the system needs to interrupt
  * a running task it calls Abort() so the task can clean up any state.
  *
+ * ### Backwards-compatible context API (Phase 3.0)
+ * ExecuteWithContext() is a non-breaking addition that provides richer
+ * runtime context (World*, LocalBlackboard*, EntityID, dt, StateTimer).
+ * The default implementation forwards to the legacy Execute(params) so
+ * existing tasks continue to work without any changes.  New tasks may
+ * override ExecuteWithContext() instead of Execute() to access the context.
+ *
  * C++14 compliant - no C++17/20 features.
  */
 
@@ -20,6 +27,7 @@
 #include <unordered_map>
 
 #include "TaskGraphTypes.h"
+#include "AtomicTaskContext.h"
 
 namespace Olympe {
 
@@ -68,6 +76,26 @@ public:
      *         Returning Running causes the task to be ticked again next frame.
      */
     virtual TaskStatus Execute(const ParameterMap& params) = 0;
+
+    /**
+     * @brief Executes the atomic task for one frame with full runtime context.
+     *
+     * @details
+     * New tasks should override this method to access the richer context
+     * (World pointer, LocalBlackboard, EntityID, dt, StateTimer).  The
+     * default implementation simply forwards to Execute(params) so all
+     * existing tasks remain compatible without any changes.
+     *
+     * @param ctx     Runtime context for this tick (Entity, World*, LocalBB, dt, StateTimer).
+     * @param params  Named parameters provided by the task graph node.
+     * @return TaskStatus::Success, Failure, or Running.
+     */
+    virtual TaskStatus ExecuteWithContext(const AtomicTaskContext& ctx,
+                                          const ParameterMap& params)
+    {
+        (void)ctx; // suppress unused-parameter warning for legacy tasks
+        return Execute(params);
+    }
 
     /**
      * @brief Aborts the task, releasing any in-progress state.

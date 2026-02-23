@@ -26,6 +26,7 @@
 #include "AtomicTaskRegistry.h"
 #include "IAtomicTask.h"
 #include "LocalBlackboard.h"
+#include "TaskSystem/AtomicTaskContext.h"
 #include "../system/system_utils.h"
 
 namespace Olympe {
@@ -197,7 +198,14 @@ void TaskSystem::ExecuteAtomicTask(EntityID entity,
     }
 
     // Tick the task for this frame.
-    TaskStatus status = runner.activeTask->Execute(params);
+    AtomicTaskContext ctx;
+    ctx.Entity     = entity;
+    ctx.WorldPtr   = nullptr; // World integration deferred to Phase 1.5
+    ctx.LocalBB    = &bb;
+    ctx.DeltaTime  = dt;
+    ctx.StateTimer = runner.StateTimer;
+
+    TaskStatus status = runner.activeTask->ExecuteWithContext(ctx, params);
 
     // Persist LocalBlackboard state so values survive across frames.
     bb.Serialize(runner.LocalBlackboardData);
