@@ -160,13 +160,20 @@ void TaskSystem::ExecuteAtomicTask(EntityID entity,
         }
     }
 
+    // Initialize LocalBlackboard: restore persisted state or seed from template defaults.
+    LocalBlackboard bb;
+    if (!runner.LocalBlackboardData.empty())
+    {
+        bb.Initialize(*tmpl);
+        bb.Deserialize(runner.LocalBlackboardData);
+    }
+    else
+    {
+        bb.Initialize(*tmpl);
+    }
+
     // Build parameter map from the node's literal and LocalVariable bindings.
     IAtomicTask::ParameterMap params;
-
-    // Lazily-initialized blackboard for LocalVariable bindings; shared across
-    // all LocalVariable parameters in this node to avoid repeated initialization.
-    LocalBlackboard bb;
-    bool bbInitialized = false;
 
     for (const auto& kv : node.Parameters)
     {
@@ -176,13 +183,6 @@ void TaskSystem::ExecuteAtomicTask(EntityID entity,
         }
         else if (kv.second.Type == ParameterBindingType::LocalVariable)
         {
-            // Read the default value from a LocalBlackboard seeded from the template.
-            // Full per-entity persistence of LocalBlackboardData is deferred to a later PR.
-            if (!bbInitialized)
-            {
-                bb.Initialize(*tmpl);
-                bbInitialized = true;
-            }
             if (bb.HasVariable(kv.second.VariableName))
             {
                 params[kv.first] = bb.GetValue(kv.second.VariableName);
@@ -198,6 +198,9 @@ void TaskSystem::ExecuteAtomicTask(EntityID entity,
 
     // Tick the task for this frame.
     TaskStatus status = runner.activeTask->Execute(params);
+
+    // Persist LocalBlackboard state so values survive across frames.
+    bb.Serialize(runner.LocalBlackboardData);
 
     // Accumulate time spent in this node on every tick.
     runner.StateTimer += dt;
