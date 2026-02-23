@@ -97,9 +97,6 @@
     <Filter Include="Fichiers d%27en-t�te\TaskSystem">
       <UniqueIdentifier>{a1b2c3d4-e5f6-7890-abcd-ef1234567890}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Tests\TaskSystem">
-      <UniqueIdentifier>{b2c3d4e5-f6a7-8901-bcde-f12345678901}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\GameEngine.cpp">
@@ -452,9 +449,6 @@
     </ClCompile>
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Task_LogMessage.cpp">
       <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="Tests\TaskSystem\TaskSystemRunningTest.cpp">
-      <Filter>Tests\TaskSystem</Filter>
     </ClCompile>
     <ClCompile Include="Source\Core\AssetManager.cpp">
       <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>

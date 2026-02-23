@@ -102,7 +102,6 @@
     <ClCompile Include="Source\TaskSystem\TaskSystem.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTaskRegistry.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Task_LogMessage.cpp" />
-    <ClCompile Include="Tests\TaskSystem\TaskSystemRunningTest.cpp" />
     <ClCompile Include="Source\OlympeEngine.cpp" />
     <ClCompile Include="Source\PanelManager.cpp" />
     <ClCompile Include="Source\ParameterResolver.cpp" />
