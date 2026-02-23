@@ -435,6 +435,9 @@
     <ClCompile Include="Source\TaskSystem\LocalBlackboard.cpp">
       <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
     </ClCompile>
+    <ClCompile Include="Tests\TaskSystem\LocalBlackboardPersistenceTest.cpp">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClCompile>
     <ClCompile Include="Source\TaskSystem\TaskGraphTemplate.cpp">
       <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
     </ClCompile>

@@ -298,6 +298,35 @@ if(BUILD_TESTS)
     )
 
     # -------------------------------------------------------------------------
+    # OlympeLocalBlackboardPersistenceTests - Phase 2.D: Serialize/Deserialize
+    # -------------------------------------------------------------------------
+    add_executable(OlympeLocalBlackboardPersistenceTests
+        Tests/TaskSystem/LocalBlackboardPersistenceTest.cpp
+        Tests/TestStubs.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+    )
+
+    target_include_directories(OlympeLocalBlackboardPersistenceTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeLocalBlackboardPersistenceTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME LocalBlackboardPersistenceTest
+        COMMAND OlympeLocalBlackboardPersistenceTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
+    # -------------------------------------------------------------------------
     # OlympeAtomicTaskRegistryTests - Phase 2.B: AtomicTask API & Registry
     # -------------------------------------------------------------------------
     add_executable(OlympeAtomicTaskRegistryTests
