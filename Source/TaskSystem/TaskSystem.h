@@ -38,8 +38,24 @@
 #include "../ECS/Components/TaskRunnerComponent.h"
 #include "TaskGraphTemplate.h"
 #include "../Core/AssetManager.h"
+#include "LocalBlackboard.h"
 
 namespace Olympe {
+
+/**
+ * @brief Signature of the editor publish callback.
+ *
+ * Called by TaskSystem each frame while an AtomicTask node is Running.
+ * The editor registers a function of this type via
+ * TaskSystem::SetEditorPublishCallback() to receive live runtime info
+ * without creating a compile-time dependency on editor code.
+ *
+ * @param entity     ID of the entity currently executing the task.
+ * @param nodeIndex  Local node index (CurrentNodeIndex) being executed.
+ * @param bb         Non-owning pointer to the LocalBlackboard for this tick.
+ *                   Only valid for the duration of the callback invocation.
+ */
+using TaskEditorPublishFn = void(*)(EntityID entity, int nodeIndex, const LocalBlackboard* bb);
 
 /**
  * @class TaskSystem
@@ -69,6 +85,22 @@ public:
      *       registration API is fully wired up in Phase 1.5.
      */
     TaskSystem();
+
+    // -----------------------------------------------------------------------
+    // Editor runtime wiring
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Register a callback that receives live task-runner state each
+     *        frame while a task is executing.
+     *
+     * Pass nullptr to unregister.  The callback is invoked from
+     * ExecuteAtomicTask() after ticking the task when the task is Running.
+     * It is safe to call this from any thread before the first Process().
+     *
+     * @param fn  Function matching TaskEditorPublishFn, or nullptr.
+     */
+    static void SetEditorPublishCallback(TaskEditorPublishFn fn);
 
     // -----------------------------------------------------------------------
     // ECS_System interface
@@ -159,6 +191,9 @@ private:
     void TransitionToNextNode(TaskRunnerComponent& runner,
                               const TaskNodeDefinition& node,
                               bool success);
+
+    /// Callback registered by the editor to receive live runtime info.
+    static TaskEditorPublishFn s_EditorPublishFn;
 };
 
 } // namespace Olympe

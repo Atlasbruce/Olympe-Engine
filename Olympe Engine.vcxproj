@@ -60,6 +60,7 @@
     <ClCompile Include="Source\BlueprintEditor\ValidationPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\WorldBridge.cpp" />
     <ClCompile Include="Source\BlueprintEditor\NodeGraphPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Clipboard.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntitiesPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\InspectorPanel.cpp" />
     <ClCompile Include="Source\CollisionMap.cpp" />
@@ -191,6 +192,7 @@
     <ClInclude Include="Source\BlueprintEditor\HistoryPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityInspectorManager.h" />
     <ClInclude Include="Source\BlueprintEditor\NodeGraphPanel.h" />
+    <ClInclude Include="Source\BlueprintEditor\Clipboard.h" />
     <ClInclude Include="Source\BlueprintEditor\EntitiesPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\InspectorPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\NodeStyleRegistry.h" />

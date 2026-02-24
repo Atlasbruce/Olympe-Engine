@@ -23,4 +23,17 @@ void NotifyEditorEntityDestroyed(uint64_t entity);
 
 #ifdef __cplusplus
 }
+
+namespace Olympe
+{
+    /**
+     * @brief Register the TaskSystem publish callback that routes live
+     *        task-runner state to NodeGraphPanel and InspectorPanel.
+     *
+     * Call once during editor initialization.
+     */
+    void WorldBridge_RegisterTaskCallback();
+
+} // namespace Olympe
+
 #endif
