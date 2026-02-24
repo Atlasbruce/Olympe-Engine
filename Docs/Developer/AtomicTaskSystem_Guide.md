@@ -152,3 +152,109 @@ ctest --output-on-failure
 | `Task_SetVariable` | `VarName` (String), `Value` (any) | – | `VarName` | Writes a value to the BB. |
 | `Task_Compare` | `VarName` (String), `Value` (any) | `VarName` | – | Succeeds if BB value matches. |
 | `Task_RequestPathfinding` | `Target` (Vector), `AsyncDelay` (Float) | `Position` | `Path` | Async path request via PathfindingManager. |
+
+
+---
+
+## Task ID Migration: Legacy vs. Short IDs (Phase 4)
+
+### Background
+
+Prior to Phase 4, all atomic tasks were registered and referenced by their full
+class name prefixed with `Task_` (e.g., `"Task_MoveToLocation"`).  Starting
+with Phase 4, the editor and new task graphs may use the shorter, prefix-free
+identifiers (e.g., `"MoveToLocation"`).
+
+### How the Migration Works
+
+`AtomicTaskRegistry::Create()` performs a two-way fallback lookup:
+
+1. **Direct match** — The requested ID is found in the registry as-is.
+2. **Legacy → Short** — If the ID starts with `"Task_"` and is not found
+   directly, the loader retries without the prefix.
+3. **Short → Legacy** — If the ID does *not* start with `"Task_"` and is not
+   found directly, the loader retries with `"Task_"` prepended.
+
+This means **no asset migration is required**: existing graphs that use
+`"Task_MoveToLocation"` continue to work unchanged, while new graphs may use
+`"MoveToLocation"`.
+
+### Updating an Existing Graph (Optional)
+
+If you want to update a stored JSON graph to use short IDs, simply replace the
+`atomicTaskId` value in each `AtomicTask` node:
+
+```json
+// Before
+{ "type": "AtomicTask", "atomicTaskId": "Task_MoveToLocation", ... }
+
+// After (equivalent, shorter form)
+{ "type": "AtomicTask", "atomicTaskId": "MoveToLocation", ... }
+```
+
+Both forms are permanently supported, so this is purely cosmetic.
+
+---
+
+## Task_MoveToLocation: World (ECS) Mode (Phase 4)
+
+### Overview
+
+`Task_MoveToLocation` now supports two execution modes selected automatically
+at runtime:
+
+| Mode | Condition | Behaviour |
+|------|-----------|-----------|
+| **World mode** | `ctx.ComponentFacade` is set with valid `Position` and `Movement` pointers | Reads `PositionComponent::Position`; writes `MovementComponent::Velocity = dir * speed`. A physics/movement ECS system integrates the velocity. |
+| **Headless mode** | `ctx.ComponentFacade` is null or either component pointer is null | Reads/writes the `"Position"` key in `ctx.LocalBB`, integrating position analytically using `ctx.DeltaTime`. |
+
+### New Components
+
+| Header | Struct | Members |
+|--------|--------|---------|
+| `Source/ECS/Components/PositionComponent.h` | `Olympe::PositionComponent` | `Vector Position` — world-space position. |
+| `Source/ECS/Components/MovementComponent.h` | `Olympe::MovementComponent` | `Vector Velocity` — current velocity (units/s); `float MaxSpeed` — maximum speed (0 = unconstrained). |
+
+### TaskWorldFacade
+
+`Source/TaskSystem/TaskWorldFacade.h` defines a lightweight bridge struct:
+
+```cpp
+struct TaskWorldFacade {
+    PositionComponent* Position = nullptr;
+    MovementComponent* Movement = nullptr;
+};
+```
+
+An ECS system that drives task execution populates a `TaskWorldFacade` from
+the World and sets `ctx.ComponentFacade = &facade` before calling
+`TaskSystem::ExecuteNode()`.
+
+### Unit-Testing World Mode
+
+Because `TaskWorldFacade` does not require a live `World` or SDL, World-mode
+behaviour can be verified in lightweight unit tests:
+
+```cpp
+Olympe::PositionComponent posComp;
+posComp.Position = ::Vector(0.0f, 0.0f, 0.0f);
+
+Olympe::MovementComponent moveComp;
+
+Olympe::TaskWorldFacade facade;
+facade.Position = &posComp;
+facade.Movement = &moveComp;
+
+Olympe::AtomicTaskContext ctx;
+ctx.Entity          = 1u;
+ctx.ComponentFacade = &facade;
+ctx.DeltaTime       = 0.016f;
+
+Olympe::Task_MoveToLocation task;
+// ... set params["Target"] and params["Speed"] ...
+Olympe::TaskStatus s = task.ExecuteWithContext(ctx, params);
+// s == TaskStatus::Running; moveComp.Velocity is set.
+```
+
+See `Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.cpp` for complete
+examples.

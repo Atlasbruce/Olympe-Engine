@@ -284,6 +284,144 @@ static void TestE2E_NodesVisitedInOrder()
 }
 
 // ---------------------------------------------------------------------------
+// E2E Test: short IDs ("MoveToLocation", "Wait", "SetVariable") are accepted
+// ---------------------------------------------------------------------------
+
+static Olympe::TaskGraphTemplate MakeE2ETemplateShortIds()
+{
+    Olympe::TaskGraphTemplate tmpl;
+    tmpl.Name       = "E2E_ShortIds";
+    tmpl.RootNodeID = 0;
+
+    // BB vars
+    {
+        Olympe::VariableDefinition v;
+        v.Name         = "Position";
+        v.Type         = Olympe::VariableType::Vector;
+        v.DefaultValue = Olympe::TaskValue(::Vector(0.0f, 0.0f, 0.0f));
+        v.IsLocal      = true;
+        tmpl.LocalVariables.push_back(v);
+    }
+    {
+        Olympe::VariableDefinition v;
+        v.Name         = "Done";
+        v.Type         = Olympe::VariableType::Bool;
+        v.DefaultValue = Olympe::TaskValue(false);
+        v.IsLocal      = true;
+        tmpl.LocalVariables.push_back(v);
+    }
+
+    // Node 0: short ID "MoveToLocation"
+    {
+        Olympe::TaskNodeDefinition node;
+        node.NodeID        = 0;
+        node.NodeName      = "MoveTo";
+        node.Type          = Olympe::TaskNodeType::AtomicTask;
+        node.AtomicTaskID  = "MoveToLocation"; // short ID
+        node.NextOnSuccess = 1;
+        node.NextOnFailure = Olympe::NODE_INDEX_NONE;
+
+        Olympe::ParameterBinding targetB;
+        targetB.Type         = Olympe::ParameterBindingType::Literal;
+        targetB.LiteralValue = Olympe::TaskValue(::Vector(5.0f, 0.0f, 0.0f));
+        node.Parameters["Target"] = targetB;
+
+        Olympe::ParameterBinding speedB;
+        speedB.Type         = Olympe::ParameterBindingType::Literal;
+        speedB.LiteralValue = Olympe::TaskValue(200.0f);
+        node.Parameters["Speed"] = speedB;
+
+        tmpl.Nodes.push_back(node);
+    }
+
+    // Node 1: short ID "Wait"
+    {
+        Olympe::TaskNodeDefinition node;
+        node.NodeID        = 1;
+        node.NodeName      = "Wait";
+        node.Type          = Olympe::TaskNodeType::AtomicTask;
+        node.AtomicTaskID  = "Wait"; // short ID
+        node.NextOnSuccess = 2;
+        node.NextOnFailure = Olympe::NODE_INDEX_NONE;
+
+        Olympe::ParameterBinding durB;
+        durB.Type         = Olympe::ParameterBindingType::Literal;
+        durB.LiteralValue = Olympe::TaskValue(0.05f);
+        node.Parameters["Duration"] = durB;
+
+        tmpl.Nodes.push_back(node);
+    }
+
+    // Node 2: short ID "SetVariable"
+    {
+        Olympe::TaskNodeDefinition node;
+        node.NodeID        = 2;
+        node.NodeName      = "SetDone";
+        node.Type          = Olympe::TaskNodeType::AtomicTask;
+        node.AtomicTaskID  = "SetVariable"; // short ID
+        node.NextOnSuccess = Olympe::NODE_INDEX_NONE;
+        node.NextOnFailure = Olympe::NODE_INDEX_NONE;
+
+        Olympe::ParameterBinding nameB;
+        nameB.Type         = Olympe::ParameterBindingType::Literal;
+        nameB.LiteralValue = Olympe::TaskValue(std::string("Done"));
+        node.Parameters["VarName"] = nameB;
+
+        Olympe::ParameterBinding valueB;
+        valueB.Type         = Olympe::ParameterBindingType::Literal;
+        valueB.LiteralValue = Olympe::TaskValue(true);
+        node.Parameters["Value"] = valueB;
+
+        tmpl.Nodes.push_back(node);
+    }
+
+    tmpl.BuildLookupCache();
+    return tmpl;
+}
+
+static void TestE2E_ShortIdsAccepted()
+{
+    std::cout << "E2E: Short IDs (MoveToLocation/Wait/SetVariable) accepted..." << std::endl;
+
+    bool passed = true;
+
+    Olympe::TaskGraphTemplate   tmpl   = MakeE2ETemplateShortIds();
+    Olympe::TaskSystem          system;
+    Olympe::TaskRunnerComponent runner;
+
+    const float dt       = 0.016f;
+    const int   maxTicks = 300;
+    int         completedAt = -1;
+
+    for (int tick = 0; tick < maxTicks; ++tick)
+    {
+        system.ExecuteNode(1u, runner, &tmpl, dt);
+
+        if (runner.CurrentNodeIndex == Olympe::NODE_INDEX_NONE)
+        {
+            completedAt = tick;
+            break;
+        }
+    }
+
+    TEST_ASSERT(completedAt >= 0,
+                "Graph using short IDs should complete within tick budget");
+    if (completedAt < 0) passed = false;
+
+    TEST_ASSERT(runner.LastStatus == Olympe::TaskRunnerComponent::TaskStatus::Success,
+                "Final status should be Success with short IDs");
+    if (runner.LastStatus != Olympe::TaskRunnerComponent::TaskStatus::Success) passed = false;
+
+    if (completedAt >= 0)
+    {
+        std::cout << "  Graph with short IDs completed at tick " << completedAt
+                  << std::endl;
+    }
+
+    ReportTest("TestE2E_ShortIdsAccepted", passed);
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -293,6 +431,7 @@ int main()
 
     TestE2E_GraphCompletesSuccessfully();
     TestE2E_NodesVisitedInOrder();
+    TestE2E_ShortIdsAccepted();
 
     std::cout << std::endl;
     std::cout << "Results: " << s_passCount << " passed, "

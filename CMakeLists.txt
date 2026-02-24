@@ -501,6 +501,69 @@ if(BUILD_TESTS)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 
+    # -------------------------------------------------------------------------
+    # OlympeMoveToWorldModeTests - Phase 4: Task_MoveToLocation ECS (World) mode
+    # -------------------------------------------------------------------------
+    add_executable(OlympeMoveToWorldModeTests
+        Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.cpp
+        Tests/TestStubs.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp
+        Source/ECS/Components/PositionComponent.cpp
+        Source/ECS/Components/MovementComponent.cpp
+    )
+
+    target_include_directories(OlympeMoveToWorldModeTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeMoveToWorldModeTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME MoveToWorldModeTest
+        COMMAND OlympeMoveToWorldModeTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
+    # -------------------------------------------------------------------------
+    # OlympeSetVariableTests - Phase 4: Task_SetVariable error paths + short ID
+    # -------------------------------------------------------------------------
+    add_executable(OlympeSetVariableTests
+        Tests/TaskSystem/Task_SetVariable_Test.cpp
+        Tests/TestStubs.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp
+    )
+
+    target_include_directories(OlympeSetVariableTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeSetVariableTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME SetVariableTest
+        COMMAND OlympeSetVariableTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
     message(STATUS "  Unit Tests: ON")
 else()
     message(STATUS "  Unit Tests: OFF (enable with -DBUILD_TESTS=ON)")
