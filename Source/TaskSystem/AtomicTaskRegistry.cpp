@@ -95,18 +95,18 @@ bool AtomicTaskRegistry::IsRegistered(const std::string& id) const
 }
 
 // ============================================================================
-// NormalizeTaskID
+// GetAllTaskIDs
 // ============================================================================
 
-std::string AtomicTaskRegistry::NormalizeTaskID(const std::string& id)
+std::vector<std::string> AtomicTaskRegistry::GetAllTaskIDs() const
 {
-    static const std::string prefix = "Task_";
-    if (id.size() > prefix.size()
-        && id.compare(0, prefix.size(), prefix) == 0)
+    std::vector<std::string> ids;
+    ids.reserve(m_factories.size());
+    for (auto it = m_factories.begin(); it != m_factories.end(); ++it)
     {
-        return id.substr(prefix.size());
+        ids.push_back(it->first);
     }
-    return id;
+    return ids;
 }
 
 } // namespace Olympe

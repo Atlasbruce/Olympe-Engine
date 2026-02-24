@@ -9,12 +9,16 @@
 #include "BTNodeGraphManager.h"
 #include "EnumCatalogManager.h"
 #include "BPCommandSystem.h"
+#include "NodeStyleRegistry.h"
+#include "../TaskSystem/AtomicTaskRegistry.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
 #include <iostream>
 #include <vector>
 #include <cstring>
 #include <cmath>
+#include <algorithm>
+#include <cctype>
 
 // Use Blueprint namespace for command classes
 using namespace Olympe::Blueprint;
@@ -48,6 +52,8 @@ namespace Olympe
 {
     NodeGraphPanel::NodeGraphPanel()
     {
+        m_NodeNameBuffer[0] = '\0';
+        m_ContextMenuSearch[0] = '\0';
     }
 
     NodeGraphPanel::~NodeGraphPanel()
@@ -470,42 +476,33 @@ namespace Olympe
             // Set node position BEFORE rendering (ImNodes requirement)
             ImNodes::SetNodeGridSpacePos(globalNodeUID, ImVec2(node->posX, node->posY));
 
+            // Apply per-type title-bar colours from NodeStyleRegistry
+            const NodeStyle& style = NodeStyleRegistry::Get().GetStyle(node->type);
+
+            // Debug overlay: tint the active node bright yellow
+            ImU32 headerColor         = style.headerColor;
+            ImU32 headerHoveredColor  = style.headerHoveredColor;
+            ImU32 headerSelectedColor = style.headerSelectedColor;
+            if (m_ActiveDebugNodeId == node->id)
+            {
+                headerColor         = IM_COL32(200, 180, 20, 255);
+                headerHoveredColor  = IM_COL32(220, 200, 40, 255);
+                headerSelectedColor = IM_COL32(240, 220, 60, 255);
+            }
+
+            ImNodes::PushColorStyle(ImNodesCol_TitleBar,         headerColor);
+            ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered,  headerHoveredColor);
+            ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, headerSelectedColor);
+
             ImNodes::BeginNode(globalNodeUID);
 
-            // Title bar
-            ImNodes::BeginNodeTitleBar();
-            ImGui::TextUnformatted(node->name.c_str());
-            ImNodes::EndNodeTitleBar();
-
-            // Input attribute with UID based on globalNodeUID
-            int inputAttrUID = globalNodeUID * ATTR_ID_MULTIPLIER + 1;
-            ImNodes::BeginInputAttribute(inputAttrUID);
-            ImGui::Text("In");
-            ImNodes::EndInputAttribute();
-
-            // Node content based on type
-            ImGui::Text("Type: %s", NodeTypeToString(node->type));
-
-            if (node->type == NodeType::BT_Action && !node->actionType.empty())
-            {
-                ImGui::Text("Action: %s", node->actionType.c_str());
-            }
-            else if (node->type == NodeType::BT_Condition && !node->conditionType.empty())
-            {
-                ImGui::Text("Condition: %s", node->conditionType.c_str());
-            }
-            else if (node->type == NodeType::BT_Decorator && !node->decoratorType.empty())
-            {
-                ImGui::Text("Decorator: %s", node->decoratorType.c_str());
-            }
-
-            // Output attribute with UID based on globalNodeUID
-            int outputAttrUID = globalNodeUID * ATTR_ID_MULTIPLIER + 2;
-            ImNodes::BeginOutputAttribute(outputAttrUID);
-            ImGui::Text("Out");
-            ImNodes::EndOutputAttribute();
+            RenderNodePinsAndContent(node, globalNodeUID, graphID);
 
             ImNodes::EndNode();
+
+            ImNodes::PopColorStyle();
+            ImNodes::PopColorStyle();
+            ImNodes::PopColorStyle();
         }
 
         // Render all links with global UIDs
@@ -859,90 +856,210 @@ namespace Olympe
         }
     }
 
+    // =========================================================================
+    // RenderTypedPin
+    // =========================================================================
+
+    void NodeGraphPanel::RenderTypedPin(int attrId, const char* label,
+                                        bool isInput, bool isExec)
+    {
+        // Determine pin shape: exec flow uses triangle; data uses filled circle.
+        ImNodesPinShape shape = isExec ? ImNodesPinShape_TriangleFilled
+                                       : ImNodesPinShape_CircleFilled;
+
+        if (isInput)
+        {
+            ImNodes::BeginInputAttribute(attrId, shape);
+            ImGui::TextUnformatted(label);
+            ImNodes::EndInputAttribute();
+        }
+        else
+        {
+            ImNodes::BeginOutputAttribute(attrId, shape);
+            ImGui::TextUnformatted(label);
+            ImNodes::EndOutputAttribute();
+        }
+    }
+
+    // =========================================================================
+    // RenderNodePinsAndContent
+    // =========================================================================
+
+    void NodeGraphPanel::RenderNodePinsAndContent(GraphNode* node, int globalNodeUID,
+                                                  int /*graphID*/)
+    {
+        // ----- Title bar (icon + name) --------------------------------------
+        const NodeStyle& style = NodeStyleRegistry::Get().GetStyle(node->type);
+
+        ImNodes::BeginNodeTitleBar();
+        if (style.icon[0] != '\0')
+            ImGui::Text("[%s] %s", style.icon, node->name.c_str());
+        else
+            ImGui::TextUnformatted(node->name.c_str());
+        ImNodes::EndNodeTitleBar();
+
+        // ----- Exec pins: triangle shape -----------------------------------
+        // Sequence and Selector are "composite" flow-control nodes -> exec pins.
+        // All others use data (circle) pins.
+        bool isExec = (node->type == NodeType::BT_Sequence ||
+                       node->type == NodeType::BT_Selector);
+
+        int inputAttrUID  = globalNodeUID * ATTR_ID_MULTIPLIER + 1;
+        int outputAttrUID = globalNodeUID * ATTR_ID_MULTIPLIER + 2;
+
+        RenderTypedPin(inputAttrUID,  "In",  true,  isExec);
+
+        // ----- Node content ------------------------------------------------
+        if (node->type == NodeType::BT_Action && !node->actionType.empty())
+            ImGui::Text("%s", node->actionType.c_str());
+        else if (node->type == NodeType::BT_Condition && !node->conditionType.empty())
+            ImGui::Text("%s", node->conditionType.c_str());
+        else if (node->type == NodeType::BT_Decorator && !node->decoratorType.empty())
+            ImGui::Text("%s", node->decoratorType.c_str());
+        else
+            ImGui::Text("%s", NodeTypeToString(node->type));
+
+        RenderTypedPin(outputAttrUID, "Out", false, isExec);
+    }
+
     void NodeGraphPanel::RenderContextMenu()
     {
         if (ImGui::BeginPopup("NodeCreationMenu"))
         {
+            // Reset search buffer when popup first opens
             ImGui::Text("Create Node");
             ImGui::Separator();
 
-            if (ImGui::BeginMenu("Composite"))
+            // Fuzzy search filter
+            ImGui::SetNextItemWidth(-1.0f);
+            ImGui::InputText("##search", m_ContextMenuSearch, sizeof(m_ContextMenuSearch));
+            ImGui::SameLine(0.0f, 0.0f);
+            ImGui::TextDisabled(" (search)");
+            ImGui::Separator();
+
+            // Build lowercase search string for case-insensitive matching
+            std::string searchLower(m_ContextMenuSearch);
+            for (size_t i = 0; i < searchLower.size(); ++i)
+                searchLower[i] = static_cast<char>(std::tolower(static_cast<unsigned char>(searchLower[i])));
+
+            // Helper: returns true when item matches the search filter (empty = show all)
+            auto matchesFilter = [&](const std::string& name) -> bool
             {
-                if (ImGui::MenuItem("Sequence"))
-                    CreateNewNode("Sequence", m_ContextMenuPosX, m_ContextMenuPosY);
-                if (ImGui::MenuItem("Selector"))
-                    CreateNewNode("Selector", m_ContextMenuPosX, m_ContextMenuPosY);
-                ImGui::EndMenu();
+                if (searchLower.empty())
+                    return true;
+                std::string nameLower = name;
+                for (size_t i = 0; i < nameLower.size(); ++i)
+                    nameLower[i] = static_cast<char>(std::tolower(static_cast<unsigned char>(nameLower[i])));
+                return nameLower.find(searchLower) != std::string::npos;
+            };
+
+            // ----- Built-in BT composite nodes ----------------------------
+            if (searchLower.empty())
+            {
+                if (ImGui::BeginMenu("Composite"))
+                {
+                    if (ImGui::MenuItem("Sequence"))
+                        CreateNewNode("Sequence", m_ContextMenuPosX, m_ContextMenuPosY);
+                    if (ImGui::MenuItem("Selector"))
+                        CreateNewNode("Selector", m_ContextMenuPosX, m_ContextMenuPosY);
+                    ImGui::EndMenu();
+                }
+
+                if (ImGui::BeginMenu("Action"))
+                {
+                    auto actionTypes = EnumCatalogManager::Get().GetActionTypes();
+                    for (const auto& actionType : actionTypes)
+                    {
+                        if (ImGui::MenuItem(actionType.c_str()))
+                        {
+                            CreateNewNode("Action", m_ContextMenuPosX, m_ContextMenuPosY);
+                            NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
+                            if (graph)
+                            {
+                                auto allNodes = graph->GetAllNodes();
+                                if (!allNodes.empty())
+                                    allNodes.back()->actionType = actionType;
+                            }
+                        }
+                    }
+                    ImGui::EndMenu();
+                }
+
+                if (ImGui::BeginMenu("Condition"))
+                {
+                    auto conditionTypes = EnumCatalogManager::Get().GetConditionTypes();
+                    for (const auto& conditionType : conditionTypes)
+                    {
+                        if (ImGui::MenuItem(conditionType.c_str()))
+                        {
+                            CreateNewNode("Condition", m_ContextMenuPosX, m_ContextMenuPosY);
+                            NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
+                            if (graph)
+                            {
+                                auto allNodes = graph->GetAllNodes();
+                                if (!allNodes.empty())
+                                    allNodes.back()->conditionType = conditionType;
+                            }
+                        }
+                    }
+                    ImGui::EndMenu();
+                }
+
+                if (ImGui::BeginMenu("Decorator"))
+                {
+                    auto decoratorTypes = EnumCatalogManager::Get().GetDecoratorTypes();
+                    for (const auto& decoratorType : decoratorTypes)
+                    {
+                        if (ImGui::MenuItem(decoratorType.c_str()))
+                        {
+                            CreateNewNode("Decorator", m_ContextMenuPosX, m_ContextMenuPosY);
+                            NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
+                            if (graph)
+                            {
+                                auto allNodes = graph->GetAllNodes();
+                                if (!allNodes.empty())
+                                    allNodes.back()->decoratorType = decoratorType;
+                            }
+                        }
+                    }
+                    ImGui::EndMenu();
+                }
+
+                ImGui::Separator();
+                ImGui::TextDisabled("-- Atomic Tasks --");
             }
 
-            if (ImGui::BeginMenu("Action"))
+            // ----- AtomicTaskRegistry nodes (with fuzzy filter) -----------
             {
-                auto actionTypes = EnumCatalogManager::Get().GetActionTypes();
-                for (const auto& actionType : actionTypes)
+                std::vector<std::string> taskIds = AtomicTaskRegistry::Get().GetAllTaskIDs();
+                // Sort for deterministic order
+                std::sort(taskIds.begin(), taskIds.end());
+
+                bool anyShown = false;
+                for (const auto& taskId : taskIds)
                 {
-                    if (ImGui::MenuItem(actionType.c_str()))
+                    if (!matchesFilter(taskId))
+                        continue;
+                    anyShown = true;
+                    if (ImGui::MenuItem(taskId.c_str()))
                     {
                         CreateNewNode("Action", m_ContextMenuPosX, m_ContextMenuPosY);
-                        // Set action type on the created node
                         NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
                         if (graph)
                         {
-                            auto nodes = graph->GetAllNodes();
-                            if (!nodes.empty())
-                            {
-                                nodes.back()->actionType = actionType;
-                            }
+                            auto allNodes = graph->GetAllNodes();
+                            if (!allNodes.empty())
+                                allNodes.back()->actionType = taskId;
                         }
                     }
                 }
-                ImGui::EndMenu();
+                if (!anyShown && !searchLower.empty())
+                    ImGui::TextDisabled("No results for \"%s\"", m_ContextMenuSearch);
             }
 
-            if (ImGui::BeginMenu("Condition"))
-            {
-                auto conditionTypes = EnumCatalogManager::Get().GetConditionTypes();
-                for (const auto& conditionType : conditionTypes)
-                {
-                    if (ImGui::MenuItem(conditionType.c_str()))
-                    {
-                        CreateNewNode("Condition", m_ContextMenuPosX, m_ContextMenuPosY);
-                        // Set condition type on the created node
-                        NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
-                        if (graph)
-                        {
-                            auto nodes = graph->GetAllNodes();
-                            if (!nodes.empty())
-                            {
-                                nodes.back()->conditionType = conditionType;
-                            }
-                        }
-                    }
-                }
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginMenu("Decorator"))
-            {
-                auto decoratorTypes = EnumCatalogManager::Get().GetDecoratorTypes();
-                for (const auto& decoratorType : decoratorTypes)
-                {
-                    if (ImGui::MenuItem(decoratorType.c_str()))
-                    {
-                        CreateNewNode("Decorator", m_ContextMenuPosX, m_ContextMenuPosY);
-                        // Set decorator type on the created node
-                        NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
-                        if (graph)
-                        {
-                            auto nodes = graph->GetAllNodes();
-                            if (!nodes.empty())
-                            {
-                                nodes.back()->decoratorType = decoratorType;
-                            }
-                        }
-                    }
-                }
-                ImGui::EndMenu();
-            }
+            // Clear search when popup closes
+            if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
+                m_ContextMenuSearch[0] = '\0';
 
             ImGui::EndPopup();
         }
@@ -1019,6 +1136,12 @@ namespace Olympe
                     BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
                 }
             }
+        }
+
+        // Ctrl+0: Reset panning to origin (fit view)
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_0))
+        {
+            ImNodes::EditorContextResetPanning(ImVec2(0.0f, 0.0f));
         }
     }
 
