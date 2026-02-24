@@ -91,9 +91,6 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
     {
         ImGui::Begin("Node Graph Editor");
 
-        // Sync active debug node from static (set by WorldBridge / TaskSystem callback).
-        m_ActiveDebugNodeId = s_ActiveDebugNodeId;
-
         // Handle keyboard shortcuts
         HandleKeyboardShortcuts();
 
@@ -128,9 +125,9 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         ImGui::SameLine();
 
         // Debug info when runtime overlay is active
-        if (m_ActiveDebugNodeId >= 0)
+        if (s_ActiveDebugNodeId >= 0)
         {
-            ImGui::TextColored(ImVec4(1.0f, 0.9f, 0.2f, 1.0f), "  [DBG node %d]", m_ActiveDebugNodeId);
+            ImGui::TextColored(ImVec4(1.0f, 0.9f, 0.2f, 1.0f), "  [DBG node %d]", s_ActiveDebugNodeId);
         }
 
         ImGui::Separator();
@@ -526,7 +523,7 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             ImU32 headerColor         = style.headerColor;
             ImU32 headerHoveredColor  = style.headerHoveredColor;
             ImU32 headerSelectedColor = style.headerSelectedColor;
-            if (m_ActiveDebugNodeId == node->id)
+            if (s_ActiveDebugNodeId == node->id)
             {
                 headerColor         = IM_COL32(200, 180, 20, 255);
                 headerHoveredColor  = IM_COL32(220, 200, 40, 255);
@@ -567,9 +564,9 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             int globalLinkUID = (graphID * LINK_ID_MULTIPLIER) + (int)i + 1;
 
             // Glow tint when link is part of the active execution path.
-            bool isActive = (m_ActiveDebugNodeId >= 0 &&
-                             (link.fromNode == m_ActiveDebugNodeId ||
-                              link.toNode   == m_ActiveDebugNodeId));
+            bool isActive = (s_ActiveDebugNodeId >= 0 &&
+                             (link.fromNode == s_ActiveDebugNodeId ||
+                              link.toNode   == s_ActiveDebugNodeId));
             if (isActive)
             {
                 // Pulse between amber and bright yellow using time.
@@ -988,7 +985,7 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             auto it = node->parameters.find("text");
             std::string commentText = (it != node->parameters.end()) ? it->second : "";
             ImGui::SetNextItemWidth(180.0f);
-            char commentBuf[512];
+            char commentBuf[1024];
             std::strncpy(commentBuf, commentText.c_str(), sizeof(commentBuf) - 1);
             commentBuf[sizeof(commentBuf) - 1] = '\0';
             std::string inputId = std::string("##comment") + std::to_string(node->id);

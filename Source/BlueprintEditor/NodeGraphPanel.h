@@ -108,10 +108,6 @@ namespace Olympe
         // Context-menu fuzzy search buffer
         char m_ContextMenuSearch[128];
 
-        // Runtime debug overlay: local node ID currently executing (-1 = none).
-        // Written via SetActiveDebugNode(); read every frame during rendering.
-        int m_ActiveDebugNodeId = -1;
-
         // -----------------------------------------------------------------------
         // Minimap
         // -----------------------------------------------------------------------
@@ -131,7 +127,8 @@ namespace Olympe
         float m_SnapGridSize = 16.0f;
 
     private:
-        /// Backing storage for SetActiveDebugNode / m_ActiveDebugNodeId.
+        /// Backing storage for SetActiveDebugNode: the local node ID currently
+        /// executing (-1 = none).  Shared across all panel instances.
         static int s_ActiveDebugNodeId;
     };
 }
