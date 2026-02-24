@@ -78,6 +78,32 @@ public:
      */
     bool IsRegistered(const std::string& id) const;
 
+    /**
+     * @brief Normalizes a task ID to its short (prefix-free) form.
+     *
+     * If @p id starts with the legacy prefix "Task_", the prefix is stripped
+     * and the remainder is returned.  Otherwise @p id is returned unchanged.
+     *
+     * This helper is used internally by Create() and is exposed publicly so
+     * that loaders or migration utilities can canonicalize IDs without
+     * instantiating a task.
+     *
+     * An ID that consists only of the prefix with no following characters
+     * (i.e. exactly "Task_") is returned unchanged because an empty short ID
+     * would be meaningless.
+     *
+     * Examples:
+     * @code
+     *   NormalizeTaskID("Task_MoveToLocation") == "MoveToLocation"
+     *   NormalizeTaskID("MoveToLocation")      == "MoveToLocation"
+     *   NormalizeTaskID("Task_")               == "Task_"   // no suffix
+     * @endcode
+     *
+     * @param id Task type identifier (with or without "Task_" prefix).
+     * @return Short-form identifier with no "Task_" prefix.
+     */
+    static std::string NormalizeTaskID(const std::string& id);
+
 private:
 
     AtomicTaskRegistry() = default;
