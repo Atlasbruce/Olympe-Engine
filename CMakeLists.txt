@@ -461,6 +461,46 @@ if(BUILD_TESTS)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 
+    # -------------------------------------------------------------------------
+    # OlympeRequestPathfindingTests - Phase 3.2: Async PathfindingManager tests
+    # -------------------------------------------------------------------------
+    add_executable(OlympeRequestPathfindingTests
+        Tests/TaskSystem/Task_RequestPathfindingTest.cpp
+        Tests/TestStubs.cpp
+        Source/TaskSystem/TaskSystem.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/ECS/Components/TaskRunnerComponent.cpp
+        Source/Core/AssetManager.cpp
+        Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/AtomicTasks/AI/Task_RequestPathfinding.cpp
+        Source/TaskSystem/Pathfinding/PathfindingManager.cpp
+    )
+
+    target_include_directories(OlympeRequestPathfindingTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeRequestPathfindingTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    if(UNIX)
+        target_link_libraries(OlympeRequestPathfindingTests PRIVATE pthread)
+    endif()
+
+    add_test(
+        NAME RequestPathfindingTest
+        COMMAND OlympeRequestPathfindingTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
     message(STATUS "  Unit Tests: ON")
 else()
     message(STATUS "  Unit Tests: OFF (enable with -DBUILD_TESTS=ON)")
