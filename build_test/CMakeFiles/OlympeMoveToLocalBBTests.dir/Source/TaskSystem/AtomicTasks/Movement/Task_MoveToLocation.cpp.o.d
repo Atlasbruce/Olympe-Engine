@@ -186,6 +186,9 @@ CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/AtomicTasks/Movement/T
  /usr/include/c++/13/bits/vector.tcc /usr/include/c++/13/functional \
  /usr/include/c++/13/bits/std_function.h \
  /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTasks/Movement/../../AtomicTaskContext.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTasks/Movement/../../TaskWorldFacade.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTasks/Movement/../../../ECS/Components/PositionComponent.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTasks/Movement/../../../ECS/Components/MovementComponent.h \
  /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTasks/Movement/../../AtomicTaskRegistry.h \
  /usr/include/c++/13/memory /usr/include/c++/13/bits/stl_tempbuf.h \
  /usr/include/c++/13/bits/stl_raw_storage_iter.h \

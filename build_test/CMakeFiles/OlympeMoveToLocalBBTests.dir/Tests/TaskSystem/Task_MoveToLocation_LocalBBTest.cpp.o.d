@@ -266,5 +266,8 @@ CMakeFiles/OlympeMoveToLocalBBTests.dir/Tests/TaskSystem/Task_MoveToLocation_Loc
  /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTaskRegistry.h \
  /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/IAtomicTask.h \
  /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTaskContext.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/TaskWorldFacade.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/../ECS/Components/PositionComponent.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/../ECS/Components/MovementComponent.h \
  /usr/include/c++/13/iostream /usr/include/c++/13/istream \
  /usr/include/c++/13/bits/istream.tcc

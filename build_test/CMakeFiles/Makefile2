@@ -73,6 +73,8 @@ all: CMakeFiles/OlympeTaskSystemRunningTests.dir/all
 all: CMakeFiles/OlympeMoveToLocalBBTests.dir/all
 all: CMakeFiles/OlympeTaskSystemE2ETests.dir/all
 all: CMakeFiles/OlympeRequestPathfindingTests.dir/all
+all: CMakeFiles/OlympeMoveToWorldModeTests.dir/all
+all: CMakeFiles/OlympeSetVariableTests.dir/all
 .PHONY : all
 
 # The main recursive "codegen" target.
@@ -86,6 +88,8 @@ codegen: CMakeFiles/OlympeTaskSystemRunningTests.dir/codegen
 codegen: CMakeFiles/OlympeMoveToLocalBBTests.dir/codegen
 codegen: CMakeFiles/OlympeTaskSystemE2ETests.dir/codegen
 codegen: CMakeFiles/OlympeRequestPathfindingTests.dir/codegen
+codegen: CMakeFiles/OlympeMoveToWorldModeTests.dir/codegen
+codegen: CMakeFiles/OlympeSetVariableTests.dir/codegen
 .PHONY : codegen
 
 # The main recursive "preinstall" target.
@@ -103,6 +107,8 @@ clean: CMakeFiles/OlympeTaskSystemRunningTests.dir/clean
 clean: CMakeFiles/OlympeMoveToLocalBBTests.dir/clean
 clean: CMakeFiles/OlympeTaskSystemE2ETests.dir/clean
 clean: CMakeFiles/OlympeRequestPathfindingTests.dir/clean
+clean: CMakeFiles/OlympeMoveToWorldModeTests.dir/clean
+clean: CMakeFiles/OlympeSetVariableTests.dir/clean
 .PHONY : clean
 
 #=============================================================================
@@ -112,7 +118,7 @@ clean: CMakeFiles/OlympeRequestPathfindingTests.dir/clean
 CMakeFiles/OlympeTests.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTests.dir/build.make CMakeFiles/OlympeTests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTests.dir/build.make CMakeFiles/OlympeTests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=87,88,89,90,91,92 "Built target OlympeTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=95,96,97,98,99,100 "Built target OlympeTests"
 .PHONY : CMakeFiles/OlympeTests.dir/all
 
 # Build rule for subdir invocation for target.
@@ -129,7 +135,7 @@ OlympeTests: CMakeFiles/OlympeTests.dir/rule
 # codegen rule for target.
 CMakeFiles/OlympeTests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTests.dir/build.make CMakeFiles/OlympeTests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=87,88,89,90,91,92 "Finished codegen for target OlympeTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=95,96,97,98,99,100 "Finished codegen for target OlympeTests"
 .PHONY : CMakeFiles/OlympeTests.dir/codegen
 
 # clean rule for target.
@@ -144,12 +150,12 @@ CMakeFiles/OlympeTests.dir/clean:
 CMakeFiles/OlympeAssetManagerTests.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeAssetManagerTests.dir/build.make CMakeFiles/OlympeAssetManagerTests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeAssetManagerTests.dir/build.make CMakeFiles/OlympeAssetManagerTests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=1,2,3,4,5,6,7 "Built target OlympeAssetManagerTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=1,2,3,4,5,6 "Built target OlympeAssetManagerTests"
 .PHONY : CMakeFiles/OlympeAssetManagerTests.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/OlympeAssetManagerTests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 7
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 6
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/OlympeAssetManagerTests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 0
 .PHONY : CMakeFiles/OlympeAssetManagerTests.dir/rule
@@ -161,7 +167,7 @@ OlympeAssetManagerTests: CMakeFiles/OlympeAssetManagerTests.dir/rule
 # codegen rule for target.
 CMakeFiles/OlympeAssetManagerTests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeAssetManagerTests.dir/build.make CMakeFiles/OlympeAssetManagerTests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=1,2,3,4,5,6,7 "Finished codegen for target OlympeAssetManagerTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=1,2,3,4,5,6 "Finished codegen for target OlympeAssetManagerTests"
 .PHONY : CMakeFiles/OlympeAssetManagerTests.dir/codegen
 
 # clean rule for target.
@@ -176,12 +182,12 @@ CMakeFiles/OlympeAssetManagerTests.dir/clean:
 CMakeFiles/OlympeTaskSystemTests.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemTests.dir/build.make CMakeFiles/OlympeTaskSystemTests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemTests.dir/build.make CMakeFiles/OlympeTaskSystemTests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=76,77,78,79,80,81,82,83,84,85,86 "Built target OlympeTaskSystemTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=85,86,87,88,89,90,91,92,93,94 "Built target OlympeTaskSystemTests"
 .PHONY : CMakeFiles/OlympeTaskSystemTests.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/OlympeTaskSystemTests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 11
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 10
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/OlympeTaskSystemTests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 0
 .PHONY : CMakeFiles/OlympeTaskSystemTests.dir/rule
@@ -193,7 +199,7 @@ OlympeTaskSystemTests: CMakeFiles/OlympeTaskSystemTests.dir/rule
 # codegen rule for target.
 CMakeFiles/OlympeTaskSystemTests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemTests.dir/build.make CMakeFiles/OlympeTaskSystemTests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=76,77,78,79,80,81,82,83,84,85,86 "Finished codegen for target OlympeTaskSystemTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=85,86,87,88,89,90,91,92,93,94 "Finished codegen for target OlympeTaskSystemTests"
 .PHONY : CMakeFiles/OlympeTaskSystemTests.dir/codegen
 
 # clean rule for target.
@@ -208,12 +214,12 @@ CMakeFiles/OlympeTaskSystemTests.dir/clean:
 CMakeFiles/OlympeLocalBlackboardTests.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeLocalBlackboardTests.dir/build.make CMakeFiles/OlympeLocalBlackboardTests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeLocalBlackboardTests.dir/build.make CMakeFiles/OlympeLocalBlackboardTests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=20,21,22,23,24,25 "Built target OlympeLocalBlackboardTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=18,19,20,21,22 "Built target OlympeLocalBlackboardTests"
 .PHONY : CMakeFiles/OlympeLocalBlackboardTests.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/OlympeLocalBlackboardTests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 6
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 5
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/OlympeLocalBlackboardTests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 0
 .PHONY : CMakeFiles/OlympeLocalBlackboardTests.dir/rule
@@ -225,7 +231,7 @@ OlympeLocalBlackboardTests: CMakeFiles/OlympeLocalBlackboardTests.dir/rule
 # codegen rule for target.
 CMakeFiles/OlympeLocalBlackboardTests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeLocalBlackboardTests.dir/build.make CMakeFiles/OlympeLocalBlackboardTests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=20,21,22,23,24,25 "Finished codegen for target OlympeLocalBlackboardTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=18,19,20,21,22 "Finished codegen for target OlympeLocalBlackboardTests"
 .PHONY : CMakeFiles/OlympeLocalBlackboardTests.dir/codegen
 
 # clean rule for target.
@@ -240,7 +246,7 @@ CMakeFiles/OlympeLocalBlackboardTests.dir/clean:
 CMakeFiles/OlympeLocalBlackboardPersistenceTests.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeLocalBlackboardPersistenceTests.dir/build.make CMakeFiles/OlympeLocalBlackboardPersistenceTests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeLocalBlackboardPersistenceTests.dir/build.make CMakeFiles/OlympeLocalBlackboardPersistenceTests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=14,15,16,17,18,19 "Built target OlympeLocalBlackboardPersistenceTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=12,13,14,15,16,17 "Built target OlympeLocalBlackboardPersistenceTests"
 .PHONY : CMakeFiles/OlympeLocalBlackboardPersistenceTests.dir/all
 
 # Build rule for subdir invocation for target.
@@ -257,7 +263,7 @@ OlympeLocalBlackboardPersistenceTests: CMakeFiles/OlympeLocalBlackboardPersisten
 # codegen rule for target.
 CMakeFiles/OlympeLocalBlackboardPersistenceTests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeLocalBlackboardPersistenceTests.dir/build.make CMakeFiles/OlympeLocalBlackboardPersistenceTests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=14,15,16,17,18,19 "Finished codegen for target OlympeLocalBlackboardPersistenceTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=12,13,14,15,16,17 "Finished codegen for target OlympeLocalBlackboardPersistenceTests"
 .PHONY : CMakeFiles/OlympeLocalBlackboardPersistenceTests.dir/codegen
 
 # clean rule for target.
@@ -272,12 +278,12 @@ CMakeFiles/OlympeLocalBlackboardPersistenceTests.dir/clean:
 CMakeFiles/OlympeAtomicTaskRegistryTests.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeAtomicTaskRegistryTests.dir/build.make CMakeFiles/OlympeAtomicTaskRegistryTests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeAtomicTaskRegistryTests.dir/build.make CMakeFiles/OlympeAtomicTaskRegistryTests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=8,9,10,11,12,13 "Built target OlympeAtomicTaskRegistryTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=7,8,9,10,11 "Built target OlympeAtomicTaskRegistryTests"
 .PHONY : CMakeFiles/OlympeAtomicTaskRegistryTests.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/OlympeAtomicTaskRegistryTests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 6
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 5
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/OlympeAtomicTaskRegistryTests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 0
 .PHONY : CMakeFiles/OlympeAtomicTaskRegistryTests.dir/rule
@@ -289,7 +295,7 @@ OlympeAtomicTaskRegistryTests: CMakeFiles/OlympeAtomicTaskRegistryTests.dir/rule
 # codegen rule for target.
 CMakeFiles/OlympeAtomicTaskRegistryTests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeAtomicTaskRegistryTests.dir/build.make CMakeFiles/OlympeAtomicTaskRegistryTests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=8,9,10,11,12,13 "Finished codegen for target OlympeAtomicTaskRegistryTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=7,8,9,10,11 "Finished codegen for target OlympeAtomicTaskRegistryTests"
 .PHONY : CMakeFiles/OlympeAtomicTaskRegistryTests.dir/codegen
 
 # clean rule for target.
@@ -304,12 +310,12 @@ CMakeFiles/OlympeAtomicTaskRegistryTests.dir/clean:
 CMakeFiles/OlympeTaskSystemRunningTests.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemRunningTests.dir/build.make CMakeFiles/OlympeTaskSystemRunningTests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemRunningTests.dir/build.make CMakeFiles/OlympeTaskSystemRunningTests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=65,66,67,68,69,70,71,72,73,74,75 "Built target OlympeTaskSystemRunningTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=75,76,77,78,79,80,81,82,83,84 "Built target OlympeTaskSystemRunningTests"
 .PHONY : CMakeFiles/OlympeTaskSystemRunningTests.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/OlympeTaskSystemRunningTests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 11
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 10
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/OlympeTaskSystemRunningTests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 0
 .PHONY : CMakeFiles/OlympeTaskSystemRunningTests.dir/rule
@@ -321,7 +327,7 @@ OlympeTaskSystemRunningTests: CMakeFiles/OlympeTaskSystemRunningTests.dir/rule
 # codegen rule for target.
 CMakeFiles/OlympeTaskSystemRunningTests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemRunningTests.dir/build.make CMakeFiles/OlympeTaskSystemRunningTests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=65,66,67,68,69,70,71,72,73,74,75 "Finished codegen for target OlympeTaskSystemRunningTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=75,76,77,78,79,80,81,82,83,84 "Finished codegen for target OlympeTaskSystemRunningTests"
 .PHONY : CMakeFiles/OlympeTaskSystemRunningTests.dir/codegen
 
 # clean rule for target.
@@ -336,12 +342,12 @@ CMakeFiles/OlympeTaskSystemRunningTests.dir/clean:
 CMakeFiles/OlympeMoveToLocalBBTests.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=26,27,28,29,30,31,32,33,34,35,36,37 "Built target OlympeMoveToLocalBBTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=23,24,25,26,27,28,29,30,31,32,33 "Built target OlympeMoveToLocalBBTests"
 .PHONY : CMakeFiles/OlympeMoveToLocalBBTests.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/OlympeMoveToLocalBBTests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 12
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 11
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/OlympeMoveToLocalBBTests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 0
 .PHONY : CMakeFiles/OlympeMoveToLocalBBTests.dir/rule
@@ -353,7 +359,7 @@ OlympeMoveToLocalBBTests: CMakeFiles/OlympeMoveToLocalBBTests.dir/rule
 # codegen rule for target.
 CMakeFiles/OlympeMoveToLocalBBTests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=26,27,28,29,30,31,32,33,34,35,36,37 "Finished codegen for target OlympeMoveToLocalBBTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=23,24,25,26,27,28,29,30,31,32,33 "Finished codegen for target OlympeMoveToLocalBBTests"
 .PHONY : CMakeFiles/OlympeMoveToLocalBBTests.dir/codegen
 
 # clean rule for target.
@@ -368,12 +374,12 @@ CMakeFiles/OlympeMoveToLocalBBTests.dir/clean:
 CMakeFiles/OlympeTaskSystemE2ETests.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=51,52,53,54,55,56,57,58,59,60,61,62,63,64 "Built target OlympeTaskSystemE2ETests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=62,63,64,65,66,67,68,69,70,71,72,73,74 "Built target OlympeTaskSystemE2ETests"
 .PHONY : CMakeFiles/OlympeTaskSystemE2ETests.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/OlympeTaskSystemE2ETests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 14
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 13
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/OlympeTaskSystemE2ETests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 0
 .PHONY : CMakeFiles/OlympeTaskSystemE2ETests.dir/rule
@@ -385,7 +391,7 @@ OlympeTaskSystemE2ETests: CMakeFiles/OlympeTaskSystemE2ETests.dir/rule
 # codegen rule for target.
 CMakeFiles/OlympeTaskSystemE2ETests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=51,52,53,54,55,56,57,58,59,60,61,62,63,64 "Finished codegen for target OlympeTaskSystemE2ETests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=62,63,64,65,66,67,68,69,70,71,72,73,74 "Finished codegen for target OlympeTaskSystemE2ETests"
 .PHONY : CMakeFiles/OlympeTaskSystemE2ETests.dir/codegen
 
 # clean rule for target.
@@ -400,12 +406,12 @@ CMakeFiles/OlympeTaskSystemE2ETests.dir/clean:
 CMakeFiles/OlympeRequestPathfindingTests.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=38,39,40,41,42,43,44,45,46,47,48,49,50 "Built target OlympeRequestPathfindingTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=43,44,45,46,47,48,49,50,51,52,53,54 "Built target OlympeRequestPathfindingTests"
 .PHONY : CMakeFiles/OlympeRequestPathfindingTests.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/OlympeRequestPathfindingTests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 13
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 12
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/OlympeRequestPathfindingTests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 0
 .PHONY : CMakeFiles/OlympeRequestPathfindingTests.dir/rule
@@ -417,13 +423,77 @@ OlympeRequestPathfindingTests: CMakeFiles/OlympeRequestPathfindingTests.dir/rule
 # codegen rule for target.
 CMakeFiles/OlympeRequestPathfindingTests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=38,39,40,41,42,43,44,45,46,47,48,49,50 "Finished codegen for target OlympeRequestPathfindingTests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=43,44,45,46,47,48,49,50,51,52,53,54 "Finished codegen for target OlympeRequestPathfindingTests"
 .PHONY : CMakeFiles/OlympeRequestPathfindingTests.dir/codegen
 
 # clean rule for target.
 CMakeFiles/OlympeRequestPathfindingTests.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/clean
 .PHONY : CMakeFiles/OlympeRequestPathfindingTests.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/OlympeMoveToWorldModeTests.dir
+
+# All Build rule for target.
+CMakeFiles/OlympeMoveToWorldModeTests.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=34,35,36,37,38,39,40,41,42 "Built target OlympeMoveToWorldModeTests"
+.PHONY : CMakeFiles/OlympeMoveToWorldModeTests.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/OlympeMoveToWorldModeTests.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 9
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/OlympeMoveToWorldModeTests.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 0
+.PHONY : CMakeFiles/OlympeMoveToWorldModeTests.dir/rule
+
+# Convenience name for target.
+OlympeMoveToWorldModeTests: CMakeFiles/OlympeMoveToWorldModeTests.dir/rule
+.PHONY : OlympeMoveToWorldModeTests
+
+# codegen rule for target.
+CMakeFiles/OlympeMoveToWorldModeTests.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=34,35,36,37,38,39,40,41,42 "Finished codegen for target OlympeMoveToWorldModeTests"
+.PHONY : CMakeFiles/OlympeMoveToWorldModeTests.dir/codegen
+
+# clean rule for target.
+CMakeFiles/OlympeMoveToWorldModeTests.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/clean
+.PHONY : CMakeFiles/OlympeMoveToWorldModeTests.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/OlympeSetVariableTests.dir
+
+# All Build rule for target.
+CMakeFiles/OlympeSetVariableTests.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=55,56,57,58,59,60,61 "Built target OlympeSetVariableTests"
+.PHONY : CMakeFiles/OlympeSetVariableTests.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/OlympeSetVariableTests.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 7
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/OlympeSetVariableTests.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles 0
+.PHONY : CMakeFiles/OlympeSetVariableTests.dir/rule
+
+# Convenience name for target.
+OlympeSetVariableTests: CMakeFiles/OlympeSetVariableTests.dir/rule
+.PHONY : OlympeSetVariableTests
+
+# codegen rule for target.
+CMakeFiles/OlympeSetVariableTests.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles --progress-num=55,56,57,58,59,60,61 "Finished codegen for target OlympeSetVariableTests"
+.PHONY : CMakeFiles/OlympeSetVariableTests.dir/codegen
+
+# clean rule for target.
+CMakeFiles/OlympeSetVariableTests.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/clean
+.PHONY : CMakeFiles/OlympeSetVariableTests.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

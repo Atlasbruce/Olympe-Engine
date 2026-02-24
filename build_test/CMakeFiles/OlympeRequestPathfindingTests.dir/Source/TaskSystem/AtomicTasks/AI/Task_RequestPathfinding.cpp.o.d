@@ -185,6 +185,9 @@ CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/AtomicTasks/AI/Ta
  /usr/include/c++/13/bits/vector.tcc /usr/include/c++/13/functional \
  /usr/include/c++/13/bits/std_function.h \
  /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTasks/AI/../../AtomicTaskContext.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTasks/AI/../../TaskWorldFacade.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTasks/AI/../../../ECS/Components/PositionComponent.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTasks/AI/../../../ECS/Components/MovementComponent.h \
  /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTasks/AI/../../Pathfinding/PathfindingManager.h \
  /usr/include/c++/13/atomic /usr/include/c++/13/bits/atomic_base.h \
  /usr/include/c++/13/bits/atomic_lockfree_defines.h \

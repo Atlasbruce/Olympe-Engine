@@ -20,6 +20,7 @@
 #pragma once
 
 #include "../ECS_Entity.h"
+#include "TaskWorldFacade.h"
 
 namespace Olympe {
 
@@ -38,6 +39,13 @@ struct AtomicTaskContext
 
     /// Pointer to the active World.  May be nullptr in headless / test contexts.
     World*          WorldPtr   = nullptr;
+
+    /// Optional ECS component accessor populated by the driving ECS system.
+    /// When non-null and both Position and Movement members are set, tasks that
+    /// support World mode (e.g. Task_MoveToLocation) read/write these components
+    /// instead of using LocalBlackboard.  May be nullptr in headless / test
+    /// contexts that do not provide ECS components.
+    TaskWorldFacade* ComponentFacade = nullptr;
 
     /// Pointer to the task node's LocalBlackboard for this tick.  Never nullptr.
     LocalBlackboard* LocalBB   = nullptr;

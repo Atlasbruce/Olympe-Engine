@@ -198,4 +198,7 @@ CMakeFiles/OlympeRequestPathfindingTests.dir/Source/ECS/Components/TaskRunnerCom
  /usr/include/c++/13/bitset /usr/include/c++/13/functional \
  /usr/include/c++/13/bits/std_function.h \
  /home/runner/work/Olympe-Engine/Olympe-Engine/Source/ECS/Components/../../TaskSystem/IAtomicTask.h \
- /home/runner/work/Olympe-Engine/Olympe-Engine/Source/ECS/Components/../../TaskSystem/AtomicTaskContext.h
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/ECS/Components/../../TaskSystem/AtomicTaskContext.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/ECS/Components/../../TaskSystem/TaskWorldFacade.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/ECS/Components/../../TaskSystem/../ECS/Components/PositionComponent.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/ECS/Components/../../TaskSystem/../ECS/Components/MovementComponent.h

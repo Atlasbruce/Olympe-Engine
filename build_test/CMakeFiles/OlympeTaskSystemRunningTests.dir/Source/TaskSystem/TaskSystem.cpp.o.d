@@ -266,6 +266,9 @@ CMakeFiles/OlympeTaskSystemRunningTests.dir/Source/TaskSystem/TaskSystem.cpp.o: 
  /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTaskRegistry.h \
  /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/IAtomicTask.h \
  /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTaskContext.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/TaskWorldFacade.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/../ECS/Components/PositionComponent.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/../ECS/Components/MovementComponent.h \
  /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/LocalBlackboard.h \
  /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/../system/system_utils.h \
  /usr/include/c++/13/fstream /usr/include/c++/13/istream \

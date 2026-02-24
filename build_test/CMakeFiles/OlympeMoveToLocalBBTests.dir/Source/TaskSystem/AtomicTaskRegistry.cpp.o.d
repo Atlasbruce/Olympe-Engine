@@ -197,4 +197,75 @@ CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp
  /usr/include/c++/13/bits/stl_vector.h \
  /usr/include/c++/13/bits/stl_bvector.h \
  /usr/include/c++/13/bits/vector.tcc \
- /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTaskContext.h
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTaskContext.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/TaskWorldFacade.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/../ECS/Components/PositionComponent.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/../ECS/Components/MovementComponent.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/../system/system_utils.h \
+ /usr/include/c++/13/fstream /usr/include/c++/13/istream \
+ /usr/include/c++/13/bits/istream.tcc /usr/include/c++/13/bits/codecvt.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/basic_file.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/c++io.h \
+ /usr/include/c++/13/bits/fstream.tcc /usr/include/c++/13/mutex \
+ /usr/include/c++/13/bits/chrono.h /usr/include/c++/13/ratio \
+ /usr/include/c++/13/limits /usr/include/c++/13/ctime \
+ /usr/include/c++/13/bits/parse_numbers.h \
+ /usr/include/c++/13/bits/std_mutex.h \
+ /usr/include/c++/13/bits/unique_lock.h /usr/include/c++/13/iostream \
+ /usr/include/c++/13/sstream /usr/include/c++/13/bits/sstream.tcc \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/../system/system_consts.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_assert.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_asyncio.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_atomic.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_audio.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_endian.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_mutex.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_thread.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_properties.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_iostream.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_bits.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_blendmode.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_camera.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_pixels.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_surface.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_rect.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_clipboard.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_cpuinfo.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_dialog.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_video.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_events.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_gamepad.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_guid.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_joystick.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_power.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_sensor.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_keyboard.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_keycode.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_scancode.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_mouse.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_pen.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_touch.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_filesystem.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_gpu.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_haptic.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_hidapi.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_hints.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_init.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_loadso.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_locale.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_log.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_messagebox.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_metal.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_misc.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_platform.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_process.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_render.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_storage.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_system.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_time.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_timer.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_tray.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_version.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3/SDL_oldnames.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/../system/log_sink.h

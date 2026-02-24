@@ -1,11 +1,13 @@
-TaskGraphLoaderTest 1 0.00392004
-AssetManagerTaskGraphTest 1 0.00586951
-TaskSystemTest 1 0.0016059
-LocalBlackboardTest 1 0.00170573
-LocalBlackboardPersistenceTest 1 0.00183304
-AtomicTaskRegistryTest 1 0.00162645
-TaskSystemRunningTest 1 0.00165957
-MoveToLocalBBTest 1 0.00259568
-TaskSystemE2ETest 1 0.00191846
-RequestPathfindingTest 1 0.00182986
+TaskGraphLoaderTest 2 0.0019069
+AssetManagerTaskGraphTest 2 0.00293232
+TaskSystemTest 2 0.000803294
+LocalBlackboardTest 2 0.000829854
+LocalBlackboardPersistenceTest 2 0.000762954
+AtomicTaskRegistryTest 2 0.000729387
+TaskSystemRunningTest 2 0.000767612
+MoveToLocalBBTest 2 0.000976708
+TaskSystemE2ETest 2 0.00105517
+RequestPathfindingTest 2 0.00102369
+MoveToWorldModeTest 1 0.00172799
+SetVariableTest 1 0.00159682
 ---

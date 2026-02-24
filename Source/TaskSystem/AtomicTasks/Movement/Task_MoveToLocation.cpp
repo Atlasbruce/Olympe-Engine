@@ -5,9 +5,18 @@
  * @date 2026-02-23
  *
  * @details
- * Dual-mode movement task.  In headless (LocalBlackboard) mode it reads
- * "Position" (Vector) from the blackboard, moves toward "Target" at "Speed"
- * units/s using ctx.DeltaTime, then writes the updated position back.
+ * Dual-mode movement task.
+ *
+ * World mode (ctx.ComponentFacade with Position and Movement set):
+ *   Reads the entity's PositionComponent and writes to its MovementComponent.
+ *   Sets Velocity = dir * speed while the entity is farther than
+ *   ARRIVAL_TOLERANCE from the target; zeroes Velocity and returns Success
+ *   once it arrives.  A physics/movement ECS system is responsible for
+ *   integrating the velocity.
+ *
+ * Headless mode (ctx.ComponentFacade is nullptr or components are absent):
+ *   Reads and writes the "Position" key in ctx.LocalBB, integrating position
+ *   analytically using ctx.DeltaTime.
  *
  * C++14 compliant - no C++17/20 features.
  */
@@ -15,6 +24,7 @@
 #include "Task_MoveToLocation.h"
 #include "../../AtomicTaskRegistry.h"
 #include "../../LocalBlackboard.h"
+#include "../../TaskWorldFacade.h"
 #include "../../../system/system_utils.h"
 
 #include <cmath>
@@ -81,6 +91,41 @@ TaskStatus Task_MoveToLocation::ExecuteWithContext(const AtomicTaskContext& ctx,
             if (speed <= 0.0f) speed = DEFAULT_SPEED;
         }
     }
+
+    // -----------------------------------------------------------------------
+    // World mode: use ECS PositionComponent + MovementComponent when available
+    // -----------------------------------------------------------------------
+    if (ctx.ComponentFacade
+        && ctx.ComponentFacade->Position
+        && ctx.ComponentFacade->Movement)
+    {
+        ::Vector& pos      = ctx.ComponentFacade->Position->Position;
+        ::Vector& velocity = ctx.ComponentFacade->Movement->Velocity;
+
+        ::Vector delta = target - pos;
+        float dist     = delta.Norm();
+
+        SYSTEM_LOG << "[Task_MoveToLocation] (WorldMode) Entity " << ctx.Entity
+                   << " pos=(" << pos.x << "," << pos.y << ")"
+                   << " target=(" << target.x << "," << target.y << ")"
+                   << " dist=" << dist << "\n";
+
+        if (dist <= ARRIVAL_TOLERANCE)
+        {
+            velocity = ::Vector(0.0f, 0.0f, 0.0f);
+            SYSTEM_LOG << "[Task_MoveToLocation] (WorldMode) Entity " << ctx.Entity
+                       << " reached target - Success\n";
+            return TaskStatus::Success;
+        }
+
+        ::Vector dir = delta * (1.0f / dist);
+        velocity     = dir * speed;
+        return TaskStatus::Running;
+    }
+
+    // -----------------------------------------------------------------------
+    // Headless mode: read / write "Position" via LocalBlackboard
+    // -----------------------------------------------------------------------
 
     // --- Read current position from LocalBlackboard ---
     if (!ctx.LocalBB || !ctx.LocalBB->HasVariable(BB_KEY_POSITION))

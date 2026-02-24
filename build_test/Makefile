@@ -256,6 +256,32 @@ OlympeRequestPathfindingTests/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/build
 .PHONY : OlympeRequestPathfindingTests/fast
 
+#=============================================================================
+# Target rules for targets named OlympeMoveToWorldModeTests
+
+# Build rule for target.
+OlympeMoveToWorldModeTests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 OlympeMoveToWorldModeTests
+.PHONY : OlympeMoveToWorldModeTests
+
+# fast build rule for target.
+OlympeMoveToWorldModeTests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/build
+.PHONY : OlympeMoveToWorldModeTests/fast
+
+#=============================================================================
+# Target rules for targets named OlympeSetVariableTests
+
+# Build rule for target.
+OlympeSetVariableTests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 OlympeSetVariableTests
+.PHONY : OlympeSetVariableTests
+
+# fast build rule for target.
+OlympeSetVariableTests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/build
+.PHONY : OlympeSetVariableTests/fast
+
 Source/Core/AssetManager.o: Source/Core/AssetManager.cpp.o
 .PHONY : Source/Core/AssetManager.o
 
@@ -294,6 +320,54 @@ Source/Core/AssetManager.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/Core/AssetManager.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/Core/AssetManager.cpp.s
 .PHONY : Source/Core/AssetManager.cpp.s
+
+Source/ECS/Components/MovementComponent.o: Source/ECS/Components/MovementComponent.cpp.o
+.PHONY : Source/ECS/Components/MovementComponent.o
+
+# target to build an object file
+Source/ECS/Components/MovementComponent.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/ECS/Components/MovementComponent.cpp.o
+.PHONY : Source/ECS/Components/MovementComponent.cpp.o
+
+Source/ECS/Components/MovementComponent.i: Source/ECS/Components/MovementComponent.cpp.i
+.PHONY : Source/ECS/Components/MovementComponent.i
+
+# target to preprocess a source file
+Source/ECS/Components/MovementComponent.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/ECS/Components/MovementComponent.cpp.i
+.PHONY : Source/ECS/Components/MovementComponent.cpp.i
+
+Source/ECS/Components/MovementComponent.s: Source/ECS/Components/MovementComponent.cpp.s
+.PHONY : Source/ECS/Components/MovementComponent.s
+
+# target to generate assembly for a file
+Source/ECS/Components/MovementComponent.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/ECS/Components/MovementComponent.cpp.s
+.PHONY : Source/ECS/Components/MovementComponent.cpp.s
+
+Source/ECS/Components/PositionComponent.o: Source/ECS/Components/PositionComponent.cpp.o
+.PHONY : Source/ECS/Components/PositionComponent.o
+
+# target to build an object file
+Source/ECS/Components/PositionComponent.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/ECS/Components/PositionComponent.cpp.o
+.PHONY : Source/ECS/Components/PositionComponent.cpp.o
+
+Source/ECS/Components/PositionComponent.i: Source/ECS/Components/PositionComponent.cpp.i
+.PHONY : Source/ECS/Components/PositionComponent.i
+
+# target to preprocess a source file
+Source/ECS/Components/PositionComponent.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/ECS/Components/PositionComponent.cpp.i
+.PHONY : Source/ECS/Components/PositionComponent.cpp.i
+
+Source/ECS/Components/PositionComponent.s: Source/ECS/Components/PositionComponent.cpp.s
+.PHONY : Source/ECS/Components/PositionComponent.s
+
+# target to generate assembly for a file
+Source/ECS/Components/PositionComponent.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/ECS/Components/PositionComponent.cpp.s
+.PHONY : Source/ECS/Components/PositionComponent.cpp.s
 
 Source/ECS/Components/TaskRunnerComponent.o: Source/ECS/Components/TaskRunnerComponent.cpp.o
 .PHONY : Source/ECS/Components/TaskRunnerComponent.o
@@ -342,6 +416,8 @@ Source/TaskSystem/AtomicTaskRegistry.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.o
 .PHONY : Source/TaskSystem/AtomicTaskRegistry.cpp.o
 
 Source/TaskSystem/AtomicTaskRegistry.i: Source/TaskSystem/AtomicTaskRegistry.cpp.i
@@ -355,6 +431,8 @@ Source/TaskSystem/AtomicTaskRegistry.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.i
 .PHONY : Source/TaskSystem/AtomicTaskRegistry.cpp.i
 
 Source/TaskSystem/AtomicTaskRegistry.s: Source/TaskSystem/AtomicTaskRegistry.cpp.s
@@ -368,6 +446,8 @@ Source/TaskSystem/AtomicTaskRegistry.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.s
 .PHONY : Source/TaskSystem/AtomicTaskRegistry.cpp.s
 
 Source/TaskSystem/AtomicTasks/AI/Task_RequestPathfinding.o: Source/TaskSystem/AtomicTasks/AI/Task_RequestPathfinding.cpp.o
@@ -400,6 +480,7 @@ Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.o: Source/TaskSystem/A
 # target to build an object file
 Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp.o
 .PHONY : Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp.o
 
 Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.i: Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp.i
@@ -408,6 +489,7 @@ Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.i: Source/TaskSystem/A
 # target to preprocess a source file
 Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp.i
 .PHONY : Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp.i
 
 Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.s: Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp.s
@@ -416,6 +498,7 @@ Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.s: Source/TaskSystem/A
 # target to generate assembly for a file
 Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp.s
 .PHONY : Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp.s
 
 Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.o: Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.o
@@ -425,6 +508,7 @@ Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.o: Source/TaskSystem/
 Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.o
 .PHONY : Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.o
 
 Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.i: Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.i
@@ -434,6 +518,7 @@ Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.i: Source/TaskSystem/
 Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.i
 .PHONY : Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.i
 
 Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.s: Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.s
@@ -443,6 +528,7 @@ Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.s: Source/TaskSystem/
 Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.s
 .PHONY : Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp.s
 
 Source/TaskSystem/AtomicTasks/Task_LogMessage.o: Source/TaskSystem/AtomicTasks/Task_LogMessage.cpp.o
@@ -505,6 +591,8 @@ Source/TaskSystem/LocalBlackboard.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/LocalBlackboard.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/LocalBlackboard.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/LocalBlackboard.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/LocalBlackboard.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/LocalBlackboard.cpp.o
 .PHONY : Source/TaskSystem/LocalBlackboard.cpp.o
 
 Source/TaskSystem/LocalBlackboard.i: Source/TaskSystem/LocalBlackboard.cpp.i
@@ -519,6 +607,8 @@ Source/TaskSystem/LocalBlackboard.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/LocalBlackboard.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/LocalBlackboard.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/LocalBlackboard.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/LocalBlackboard.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/LocalBlackboard.cpp.i
 .PHONY : Source/TaskSystem/LocalBlackboard.cpp.i
 
 Source/TaskSystem/LocalBlackboard.s: Source/TaskSystem/LocalBlackboard.cpp.s
@@ -533,6 +623,8 @@ Source/TaskSystem/LocalBlackboard.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/LocalBlackboard.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/LocalBlackboard.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/LocalBlackboard.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/LocalBlackboard.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/LocalBlackboard.cpp.s
 .PHONY : Source/TaskSystem/LocalBlackboard.cpp.s
 
 Source/TaskSystem/Pathfinding/PathfindingManager.o: Source/TaskSystem/Pathfinding/PathfindingManager.cpp.o
@@ -615,6 +707,7 @@ Source/TaskSystem/TaskGraphTemplate.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.o
 .PHONY : Source/TaskSystem/TaskGraphTemplate.cpp.o
 
 Source/TaskSystem/TaskGraphTemplate.i: Source/TaskSystem/TaskGraphTemplate.cpp.i
@@ -631,6 +724,7 @@ Source/TaskSystem/TaskGraphTemplate.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.i
 .PHONY : Source/TaskSystem/TaskGraphTemplate.cpp.i
 
 Source/TaskSystem/TaskGraphTemplate.s: Source/TaskSystem/TaskGraphTemplate.cpp.s
@@ -647,6 +741,7 @@ Source/TaskSystem/TaskGraphTemplate.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.s
 .PHONY : Source/TaskSystem/TaskGraphTemplate.cpp.s
 
 Source/TaskSystem/TaskGraphTypes.o: Source/TaskSystem/TaskGraphTypes.cpp.o
@@ -664,6 +759,8 @@ Source/TaskSystem/TaskGraphTypes.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/TaskGraphTypes.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.o
 .PHONY : Source/TaskSystem/TaskGraphTypes.cpp.o
 
 Source/TaskSystem/TaskGraphTypes.i: Source/TaskSystem/TaskGraphTypes.cpp.i
@@ -681,6 +778,8 @@ Source/TaskSystem/TaskGraphTypes.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/TaskGraphTypes.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.i
 .PHONY : Source/TaskSystem/TaskGraphTypes.cpp.i
 
 Source/TaskSystem/TaskGraphTypes.s: Source/TaskSystem/TaskGraphTypes.cpp.s
@@ -698,6 +797,8 @@ Source/TaskSystem/TaskGraphTypes.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/TaskGraphTypes.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.s
 .PHONY : Source/TaskSystem/TaskGraphTypes.cpp.s
 
 Source/TaskSystem/TaskSystem.o: Source/TaskSystem/TaskSystem.cpp.o
@@ -952,6 +1053,30 @@ Tests/TaskSystem/Task_MoveToLocation_LocalBBTest.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Tests/TaskSystem/Task_MoveToLocation_LocalBBTest.cpp.s
 .PHONY : Tests/TaskSystem/Task_MoveToLocation_LocalBBTest.cpp.s
 
+Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.o: Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.cpp.o
+.PHONY : Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.o
+
+# target to build an object file
+Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.cpp.o
+.PHONY : Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.cpp.o
+
+Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.i: Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.cpp.i
+.PHONY : Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.i
+
+# target to preprocess a source file
+Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.cpp.i
+.PHONY : Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.cpp.i
+
+Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.s: Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.cpp.s
+.PHONY : Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.s
+
+# target to generate assembly for a file
+Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.cpp.s
+.PHONY : Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.cpp.s
+
 Tests/TaskSystem/Task_RequestPathfindingTest.o: Tests/TaskSystem/Task_RequestPathfindingTest.cpp.o
 .PHONY : Tests/TaskSystem/Task_RequestPathfindingTest.o
 
@@ -976,6 +1101,30 @@ Tests/TaskSystem/Task_RequestPathfindingTest.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Tests/TaskSystem/Task_RequestPathfindingTest.cpp.s
 .PHONY : Tests/TaskSystem/Task_RequestPathfindingTest.cpp.s
 
+Tests/TaskSystem/Task_SetVariable_Test.o: Tests/TaskSystem/Task_SetVariable_Test.cpp.o
+.PHONY : Tests/TaskSystem/Task_SetVariable_Test.o
+
+# target to build an object file
+Tests/TaskSystem/Task_SetVariable_Test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Tests/TaskSystem/Task_SetVariable_Test.cpp.o
+.PHONY : Tests/TaskSystem/Task_SetVariable_Test.cpp.o
+
+Tests/TaskSystem/Task_SetVariable_Test.i: Tests/TaskSystem/Task_SetVariable_Test.cpp.i
+.PHONY : Tests/TaskSystem/Task_SetVariable_Test.i
+
+# target to preprocess a source file
+Tests/TaskSystem/Task_SetVariable_Test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Tests/TaskSystem/Task_SetVariable_Test.cpp.i
+.PHONY : Tests/TaskSystem/Task_SetVariable_Test.cpp.i
+
+Tests/TaskSystem/Task_SetVariable_Test.s: Tests/TaskSystem/Task_SetVariable_Test.cpp.s
+.PHONY : Tests/TaskSystem/Task_SetVariable_Test.s
+
+# target to generate assembly for a file
+Tests/TaskSystem/Task_SetVariable_Test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Tests/TaskSystem/Task_SetVariable_Test.cpp.s
+.PHONY : Tests/TaskSystem/Task_SetVariable_Test.cpp.s
+
 Tests/TestStubs.o: Tests/TestStubs.cpp.o
 .PHONY : Tests/TestStubs.o
 
@@ -991,6 +1140,8 @@ Tests/TestStubs.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Tests/TestStubs.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Tests/TestStubs.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Tests/TestStubs.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Tests/TestStubs.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Tests/TestStubs.cpp.o
 .PHONY : Tests/TestStubs.cpp.o
 
 Tests/TestStubs.i: Tests/TestStubs.cpp.i
@@ -1008,6 +1159,8 @@ Tests/TestStubs.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Tests/TestStubs.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Tests/TestStubs.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Tests/TestStubs.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Tests/TestStubs.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Tests/TestStubs.cpp.i
 .PHONY : Tests/TestStubs.cpp.i
 
 Tests/TestStubs.s: Tests/TestStubs.cpp.s
@@ -1025,6 +1178,8 @@ Tests/TestStubs.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Tests/TestStubs.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Tests/TestStubs.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Tests/TestStubs.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Tests/TestStubs.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Tests/TestStubs.cpp.s
 .PHONY : Tests/TestStubs.cpp.s
 
 # Help Target
@@ -1041,7 +1196,9 @@ help:
 	@echo "... OlympeLocalBlackboardPersistenceTests"
 	@echo "... OlympeLocalBlackboardTests"
 	@echo "... OlympeMoveToLocalBBTests"
+	@echo "... OlympeMoveToWorldModeTests"
 	@echo "... OlympeRequestPathfindingTests"
+	@echo "... OlympeSetVariableTests"
 	@echo "... OlympeTaskSystemE2ETests"
 	@echo "... OlympeTaskSystemRunningTests"
 	@echo "... OlympeTaskSystemTests"
@@ -1049,6 +1206,12 @@ help:
 	@echo "... Source/Core/AssetManager.o"
 	@echo "... Source/Core/AssetManager.i"
 	@echo "... Source/Core/AssetManager.s"
+	@echo "... Source/ECS/Components/MovementComponent.o"
+	@echo "... Source/ECS/Components/MovementComponent.i"
+	@echo "... Source/ECS/Components/MovementComponent.s"
+	@echo "... Source/ECS/Components/PositionComponent.o"
+	@echo "... Source/ECS/Components/PositionComponent.i"
+	@echo "... Source/ECS/Components/PositionComponent.s"
 	@echo "... Source/ECS/Components/TaskRunnerComponent.o"
 	@echo "... Source/ECS/Components/TaskRunnerComponent.i"
 	@echo "... Source/ECS/Components/TaskRunnerComponent.s"
@@ -1115,9 +1278,15 @@ help:
 	@echo "... Tests/TaskSystem/Task_MoveToLocation_LocalBBTest.o"
 	@echo "... Tests/TaskSystem/Task_MoveToLocation_LocalBBTest.i"
 	@echo "... Tests/TaskSystem/Task_MoveToLocation_LocalBBTest.s"
+	@echo "... Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.o"
+	@echo "... Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.i"
+	@echo "... Tests/TaskSystem/Task_MoveToLocation_WorldMode_Test.s"
 	@echo "... Tests/TaskSystem/Task_RequestPathfindingTest.o"
 	@echo "... Tests/TaskSystem/Task_RequestPathfindingTest.i"
 	@echo "... Tests/TaskSystem/Task_RequestPathfindingTest.s"
+	@echo "... Tests/TaskSystem/Task_SetVariable_Test.o"
+	@echo "... Tests/TaskSystem/Task_SetVariable_Test.i"
+	@echo "... Tests/TaskSystem/Task_SetVariable_Test.s"
 	@echo "... Tests/TestStubs.o"
 	@echo "... Tests/TestStubs.i"
 	@echo "... Tests/TestStubs.s"

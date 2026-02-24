@@ -24,3 +24,7 @@ add_test(TaskSystemE2ETest "/home/runner/work/Olympe-Engine/Olympe-Engine/build_
 set_tests_properties(TaskSystemE2ETest PROPERTIES  WORKING_DIRECTORY "/home/runner/work/Olympe-Engine/Olympe-Engine" _BACKTRACE_TRIPLES "/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;458;add_test;/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;0;")
 add_test(RequestPathfindingTest "/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/OlympeRequestPathfindingTests")
 set_tests_properties(RequestPathfindingTest PROPERTIES  WORKING_DIRECTORY "/home/runner/work/Olympe-Engine/Olympe-Engine" _BACKTRACE_TRIPLES "/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;498;add_test;/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;0;")
+add_test(MoveToWorldModeTest "/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/OlympeMoveToWorldModeTests")
+set_tests_properties(MoveToWorldModeTest PROPERTIES  WORKING_DIRECTORY "/home/runner/work/Olympe-Engine/Olympe-Engine" _BACKTRACE_TRIPLES "/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;530;add_test;/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;0;")
+add_test(SetVariableTest "/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/OlympeSetVariableTests")
+set_tests_properties(SetVariableTest PROPERTIES  WORKING_DIRECTORY "/home/runner/work/Olympe-Engine/Olympe-Engine" _BACKTRACE_TRIPLES "/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;561;add_test;/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;0;")

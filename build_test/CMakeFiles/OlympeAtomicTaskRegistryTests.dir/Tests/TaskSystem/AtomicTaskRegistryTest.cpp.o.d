@@ -198,6 +198,9 @@ CMakeFiles/OlympeAtomicTaskRegistryTests.dir/Tests/TaskSystem/AtomicTaskRegistry
  /usr/include/c++/13/bits/stl_bvector.h \
  /usr/include/c++/13/bits/vector.tcc \
  /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/AtomicTaskContext.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/TaskWorldFacade.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/../ECS/Components/PositionComponent.h \
+ /home/runner/work/Olympe-Engine/Olympe-Engine/Source/TaskSystem/../ECS/Components/MovementComponent.h \
  /usr/include/c++/13/iostream /usr/include/c++/13/istream \
  /usr/include/c++/13/bits/istream.tcc /usr/include/c++/13/cassert \
  /usr/include/assert.h
