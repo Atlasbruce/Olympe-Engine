@@ -54,6 +54,7 @@
     <ClCompile Include="Source\BlueprintEditor\EnumCatalogManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\HistoryPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityInspectorManager.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\NodeStyleRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\TemplateBrowserPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\TemplateManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ValidationPanel.cpp" />
@@ -192,6 +193,7 @@
     <ClInclude Include="Source\BlueprintEditor\NodeGraphPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\EntitiesPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\InspectorPanel.h" />
+    <ClInclude Include="Source\BlueprintEditor\NodeStyleRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\TemplateBrowserPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\TemplateManager.h" />
     <ClInclude Include="Source\BlueprintEditor\ValidationPanel.h" />
