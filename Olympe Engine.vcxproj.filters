@@ -477,6 +477,9 @@
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.cpp">
       <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
     </ClCompile>
+    <ClCompile Include="Source\TaskSystem\Pathfinding\PathfindingManager.cpp">
+      <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -939,6 +942,9 @@
       <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
     </ClInclude>
     <ClInclude Include="Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.h">
+      <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskSystem\Pathfinding\PathfindingManager.h">
       <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
     </ClInclude>
   </ItemGroup>

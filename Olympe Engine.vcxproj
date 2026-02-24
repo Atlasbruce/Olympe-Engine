@@ -101,6 +101,7 @@
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Utility\Task_Wait.cpp" />
     <ClCompile Include="Source\TaskSystem\LocalBlackboard.cpp" />
+    <ClCompile Include="Source\TaskSystem\Pathfinding\PathfindingManager.cpp" />
     <ClCompile Include="Source\TaskSystem\TaskGraphLoader.cpp" />
     <ClCompile Include="Source\TaskSystem\TaskGraphTemplate.cpp" />
     <ClCompile Include="Source\TaskSystem\TaskGraphTypes.cpp" />
@@ -239,6 +240,7 @@
     <ClInclude Include="Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTasks\Utility\Task_Wait.h" />
     <ClInclude Include="Source\TaskSystem\LocalBlackboard.h" />
+    <ClInclude Include="Source\TaskSystem\Pathfinding\PathfindingManager.h" />
     <ClInclude Include="Source\TaskSystem\TaskGraphLoader.h" />
     <ClInclude Include="Source\TaskSystem\TaskGraphTemplate.h" />
     <ClInclude Include="Source\TaskSystem\TaskGraphTypes.h" />
