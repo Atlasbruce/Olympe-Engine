@@ -32,6 +32,21 @@
 namespace Olympe {
 
 // ============================================================================
+// Static member definitions
+// ============================================================================
+
+TaskEditorPublishFn TaskSystem::s_EditorPublishFn = nullptr;
+
+// ============================================================================
+// SetEditorPublishCallback
+// ============================================================================
+
+void TaskSystem::SetEditorPublishCallback(TaskEditorPublishFn fn)
+{
+    s_EditorPublishFn = fn;
+}
+
+// ============================================================================
 // Constructor
 // ============================================================================
 
@@ -216,6 +231,11 @@ void TaskSystem::ExecuteAtomicTask(EntityID entity,
     if (status == TaskStatus::Running)
     {
         // Task is still in progress: keep activeTask for the next frame.
+        // Publish live runtime info to the editor if a callback is registered.
+        if (s_EditorPublishFn != nullptr)
+        {
+            s_EditorPublishFn(entity, runner.CurrentNodeIndex, &bb);
+        }
         return;
     }
 

@@ -4,6 +4,7 @@
 
 #include "NodeGraphPanel.h"
 #include "BlueprintEditor.h"
+#include "Clipboard.h"
 #include "EditorContext.h"
 #include "EntityInspectorManager.h"
 #include "BTNodeGraphManager.h"
@@ -50,6 +51,22 @@ namespace
 
 namespace Olympe
 {
+
+// ============================================================================
+// Static member definitions
+// ============================================================================
+
+int NodeGraphPanel::s_ActiveDebugNodeId = -1;
+
+// ============================================================================
+// SetActiveDebugNode
+// ============================================================================
+
+void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
+{
+    s_ActiveDebugNodeId = localNodeId;
+}
+
     NodeGraphPanel::NodeGraphPanel()
     {
         m_NodeNameBuffer[0] = '\0';
@@ -90,6 +107,29 @@ namespace Olympe
             ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.9f, 1.0f), 
                 "Editing BehaviorTree Asset (no entity context)");
         }
+        ImGui::Separator();
+
+        // View toggles: Snap-to-grid and Minimap
+        ImGui::Checkbox("Snap", &m_SnapToGrid);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Snap-to-grid (Ctrl+G)");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(60.0f);
+        ImGui::DragFloat("Grid", &m_SnapGridSize, 1.0f, 4.0f, 128.0f, "%.0f");
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Grid cell size");
+        ImGui::SameLine();
+        ImGui::Checkbox("Map", &m_ShowMinimap);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Minimap (Ctrl+M)");
+        ImGui::SameLine();
+
+        // Debug info when runtime overlay is active
+        if (s_ActiveDebugNodeId >= 0)
+        {
+            ImGui::TextColored(ImVec4(1.0f, 0.9f, 0.2f, 1.0f), "  [DBG node %d]", s_ActiveDebugNodeId);
+        }
+
         ImGui::Separator();
         
         // Toolbar with Save/Save As buttons
@@ -483,7 +523,7 @@ namespace Olympe
             ImU32 headerColor         = style.headerColor;
             ImU32 headerHoveredColor  = style.headerHoveredColor;
             ImU32 headerSelectedColor = style.headerSelectedColor;
-            if (m_ActiveDebugNodeId == node->id)
+            if (s_ActiveDebugNodeId == node->id)
             {
                 headerColor         = IM_COL32(200, 180, 20, 255);
                 headerHoveredColor  = IM_COL32(220, 200, 40, 255);
@@ -505,7 +545,9 @@ namespace Olympe
             ImNodes::PopColorStyle();
         }
 
-        // Render all links with global UIDs
+        // Render all links with global UIDs.
+        // Links connecting to/from the active debug node are rendered with a
+        // glow colour so the user can see live execution flow.
         auto links = graph->GetAllLinks();
         for (size_t i = 0; i < links.size(); ++i)
         {
@@ -520,8 +562,37 @@ namespace Olympe
             
             // Link ID must also be unique globally
             int globalLinkUID = (graphID * LINK_ID_MULTIPLIER) + (int)i + 1;
-            
+
+            // Glow tint when link is part of the active execution path.
+            bool isActive = (s_ActiveDebugNodeId >= 0 &&
+                             (link.fromNode == s_ActiveDebugNodeId ||
+                              link.toNode   == s_ActiveDebugNodeId));
+            if (isActive)
+            {
+                // Pulse between amber and bright yellow using time.
+                float t = 0.5f + 0.5f * std::sin(static_cast<float>(ImGui::GetTime()) * 4.0f);
+                ImU32 r = static_cast<ImU32>(180 + static_cast<int>(t * 75.0f));
+                ImU32 g = static_cast<ImU32>(140 + static_cast<int>(t * 115.0f));
+                ImU32 b = static_cast<ImU32>(10);
+                ImNodes::PushColorStyle(ImNodesCol_Link,         IM_COL32(r, g, b, 255));
+                ImNodes::PushColorStyle(ImNodesCol_LinkHovered,  IM_COL32(r, g, b, 200));
+                ImNodes::PushColorStyle(ImNodesCol_LinkSelected, IM_COL32(r, g, b, 220));
+            }
+
             ImNodes::Link(globalLinkUID, fromAttrUID, toAttrUID);
+
+            if (isActive)
+            {
+                ImNodes::PopColorStyle();
+                ImNodes::PopColorStyle();
+                ImNodes::PopColorStyle();
+            }
+        }
+
+        // Minimap (rendered before EndNodeEditor as required by ImNodes API).
+        if (m_ShowMinimap)
+        {
+            ImNodes::MiniMap(0.15f, ImNodesMiniMapLocation_BottomRight);
         }
 
         ImNodes::EndNodeEditor();
@@ -801,6 +872,15 @@ namespace Olympe
             {
                 int globalNodeUID = (graphID * GRAPH_ID_MULTIPLIER) + node->id;
                 ImVec2 pos = ImNodes::GetNodeGridSpacePos(globalNodeUID);
+
+                // Apply snap-to-grid when enabled.
+                if (m_SnapToGrid && m_SnapGridSize > 0.0f)
+                {
+                    pos.x = std::roundf(pos.x / m_SnapGridSize) * m_SnapGridSize;
+                    pos.y = std::roundf(pos.y / m_SnapGridSize) * m_SnapGridSize;
+                    // Push snapped position back so the node visually snaps.
+                    ImNodes::SetNodeGridSpacePos(globalNodeUID, pos);
+                }
                 
                 // Check if position changed
                 if (node->posX != pos.x || node->posY != pos.y)
@@ -898,6 +978,28 @@ namespace Olympe
             ImGui::TextUnformatted(node->name.c_str());
         ImNodes::EndNodeTitleBar();
 
+        // ---- Comment box: no pins, just an editable text area -------------
+        if (node->type == NodeType::Comment)
+        {
+            // Provide a fixed-size text display; the text is stored in parameters["text"].
+            auto it = node->parameters.find("text");
+            std::string commentText = (it != node->parameters.end()) ? it->second : "";
+            ImGui::SetNextItemWidth(180.0f);
+            char commentBuf[1024];
+            std::strncpy(commentBuf, commentText.c_str(), sizeof(commentBuf) - 1);
+            commentBuf[sizeof(commentBuf) - 1] = '\0';
+            std::string inputId = std::string("##comment") + std::to_string(node->id);
+            if (ImGui::InputTextMultiline(inputId.c_str(), commentBuf, sizeof(commentBuf),
+                                          ImVec2(180.0f, 60.0f)))
+            {
+                node->parameters["text"] = commentBuf;
+                NodeGraph* g = NodeGraphManager::Get().GetActiveGraph();
+                if (g) g->MarkDirty();
+            }
+            // Comment boxes have no exec/data pins.
+            return;
+        }
+
         // ----- Exec pins: triangle shape -----------------------------------
         // Sequence and Selector are "composite" flow-control nodes -> exec pins.
         // All others use data (circle) pins.
@@ -920,6 +1022,18 @@ namespace Olympe
             ImGui::Text("%s", NodeTypeToString(node->type));
 
         RenderTypedPin(outputAttrUID, "Out", false, isExec);
+    }
+
+    // =========================================================================
+    // RenderActiveLinks
+    // =========================================================================
+
+    void NodeGraphPanel::RenderActiveLinks(NodeGraph* /*graph*/, int /*graphID*/)
+    {
+        // Active-link glow is implemented inline in RenderGraph() via
+        // ImNodes::PushColorStyle / PopColorStyle before each ImNodes::Link()
+        // call so that ImNodes handles the actual line rendering.
+        // This method is reserved for future custom ImDrawList overlay work.
     }
 
     void NodeGraphPanel::RenderContextMenu()
@@ -1027,6 +1141,20 @@ namespace Olympe
 
                 ImGui::Separator();
                 ImGui::TextDisabled("-- Atomic Tasks --");
+
+                if (ImGui::MenuItem("Comment Box"))
+                {
+                    NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
+                    if (graph)
+                    {
+                        ImVec2 canvasPos = ScreenSpaceToGridSpace(ImVec2(m_ContextMenuPosX, m_ContextMenuPosY));
+                        int nodeId = graph->CreateNode(NodeType::Comment, canvasPos.x, canvasPos.y, "Comment");
+                        GraphNode* cnode = graph->GetNode(nodeId);
+                        if (cnode)
+                            cnode->parameters["text"] = "// Enter comment here";
+                    }
+                    ImGui::CloseCurrentPopup();
+                }
             }
 
             // ----- AtomicTaskRegistry nodes (with fuzzy filter) -----------
@@ -1138,12 +1266,46 @@ namespace Olympe
             }
         }
 
+        // Ctrl+C: Copy selected nodes to system clipboard
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_C))
+        {
+            NodeGraph* g = NodeGraphManager::Get().GetActiveGraph();
+            int gid = NodeGraphManager::Get().GetActiveGraphId();
+            if (g != nullptr)
+                NodeGraphClipboard::Get().CopySelectedNodes(g, gid);
+        }
+
+        // Ctrl+V: Paste nodes from system clipboard under the mouse cursor
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_V))
+        {
+            NodeGraph* g = NodeGraphManager::Get().GetActiveGraph();
+            if (g != nullptr)
+            {
+                ImVec2 mousePos = ImGui::GetMousePos();
+                ImVec2 gridPos  = ScreenSpaceToGridSpace(mousePos);
+                NodeGraphClipboard::Get().PasteNodes(g, gridPos.x, gridPos.y);
+            }
+        }
+
+        // Ctrl+G: Toggle snap-to-grid
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_G))
+        {
+            m_SnapToGrid = !m_SnapToGrid;
+        }
+
+        // Ctrl+M: Toggle minimap
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_M))
+        {
+            m_ShowMinimap = !m_ShowMinimap;
+        }
+
         // Ctrl+0: Reset panning to origin (fit view)
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_0))
         {
             ImNodes::EditorContextResetPanning(ImVec2(0.0f, 0.0f));
         }
     }
+
 
     void NodeGraphPanel::RenderNodeEditModal()
     {

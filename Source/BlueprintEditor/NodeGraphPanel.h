@@ -53,6 +53,18 @@ namespace Olympe
          */
         void RenderTypedPin(int attrId, const char* label, bool isInput, bool isExec);
 
+        /**
+         * @brief Overlay glow-coloured lines on links that connect to/from the
+         *        active debug node, giving a visual "active link" indicator.
+         *
+         * Must be called AFTER ImNodes::EndNodeEditor() so that node screen-space
+         * positions are valid.
+         *
+         * @param graph    Active NodeGraph.
+         * @param graphID  Active graph ID.
+         */
+        void RenderActiveLinks(NodeGraph* graph, int graphID);
+
         // Node creation helpers
         void CreateNewNode(const char* nodeType, float x, float y);
         
@@ -61,6 +73,18 @@ namespace Olympe
         {
             return globalUID - (graphID * 10000);  // 10000 is GRAPH_ID_MULTIPLIER
         }
+
+        // -----------------------------------------------------------------------
+        // Runtime debug overlay
+        // -----------------------------------------------------------------------
+
+        /**
+         * @brief Set the local node ID that is currently executing.
+         *        Pass -1 to clear the highlight.
+         *        The value is stored in a static so it is visible to all panel
+         *        instances and to the WorldBridge callback.
+         */
+        static void SetActiveDebugNode(int localNodeId);
 
         // ImNodes state
         int m_SelectedNodeId = -1;
@@ -84,8 +108,27 @@ namespace Olympe
         // Context-menu fuzzy search buffer
         char m_ContextMenuSearch[128];
 
-        // Runtime debug overlay: set to the local node ID that is currently
-        // executing (-1 means none).  Highlighted with a coloured title bar tint.
-        int m_ActiveDebugNodeId = -1;
+        // -----------------------------------------------------------------------
+        // Minimap
+        // -----------------------------------------------------------------------
+
+        /// When true the built-in ImNodes minimap is rendered in the bottom-right
+        /// corner of the node editor canvas.
+        bool m_ShowMinimap = true;
+
+        // -----------------------------------------------------------------------
+        // Snap-to-grid
+        // -----------------------------------------------------------------------
+
+        /// When true node positions are rounded to the nearest grid cell on move.
+        bool m_SnapToGrid = false;
+
+        /// Grid cell size in canvas units used when snap-to-grid is enabled.
+        float m_SnapGridSize = 16.0f;
+
+    private:
+        /// Backing storage for SetActiveDebugNode: the local node ID currently
+        /// executing (-1 = none).  Shared across all panel instances.
+        static int s_ActiveDebugNodeId;
     };
 }
