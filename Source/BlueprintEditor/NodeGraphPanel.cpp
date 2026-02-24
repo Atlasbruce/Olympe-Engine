@@ -986,7 +986,7 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             std::string commentText = (it != node->parameters.end()) ? it->second : "";
             ImGui::SetNextItemWidth(180.0f);
             char commentBuf[1024];
-            std::strncpy(commentBuf, commentText.c_str(), sizeof(commentBuf) - 1);
+            strncpy_s(commentBuf, commentText.c_str(), sizeof(commentBuf) - 1);
             commentBuf[sizeof(commentBuf) - 1] = '\0';
             std::string inputId = std::string("##comment") + std::to_string(node->id);
             if (ImGui::InputTextMultiline(inputId.c_str(), commentBuf, sizeof(commentBuf),

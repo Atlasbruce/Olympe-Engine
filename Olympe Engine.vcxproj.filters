@@ -483,6 +483,9 @@
     <ClCompile Include="Source\BlueprintEditor\NodeStyleRegistry.cpp">
       <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
+    <ClCompile Include="Source\BlueprintEditor\Clipboard.cpp">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -951,6 +954,9 @@
       <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\NodeStyleRegistry.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\BlueprintEditor\Clipboard.h">
       <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
   </ItemGroup>
