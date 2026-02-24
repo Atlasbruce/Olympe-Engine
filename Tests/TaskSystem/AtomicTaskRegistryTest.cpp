@@ -223,6 +223,82 @@ static void TestF_LogMessageNoParams()
 }
 
 // ---------------------------------------------------------------------------
+// Test g: Legacy ID ("Task_X") resolves to short-registered ID ("X")
+//
+// Registers only the short form "AlwaysSuccessShort", then verifies that
+// Create("Task_AlwaysSuccessShort") still returns a valid task via the
+// legacy->short fallback in AtomicTaskRegistry::Create().
+// ---------------------------------------------------------------------------
+
+static void TestG_LegacyIdResolvesToShortRegistered()
+{
+    std::cout << "Test G: Legacy 'Task_' ID resolves to short-registered ID..." << std::endl;
+
+    bool passed = true;
+
+    const std::string shortId  = "AlwaysSuccessShort";
+    const std::string legacyId = "Task_AlwaysSuccessShort";
+
+    // Register only the short form.
+    Olympe::AtomicTaskRegistry::Get().Register(shortId,
+        []() -> std::unique_ptr<Olympe::IAtomicTask> {
+            return std::unique_ptr<Olympe::IAtomicTask>(new Task_AlwaysSuccess());
+        });
+
+    TEST_ASSERT(!Olympe::AtomicTaskRegistry::Get().IsRegistered(legacyId),
+                "Legacy ID should NOT be directly registered");
+
+    // Create with the legacy form: must fall back to the short form.
+    std::unique_ptr<Olympe::IAtomicTask> task =
+        Olympe::AtomicTaskRegistry::Get().Create(legacyId);
+
+    TEST_ASSERT(task != nullptr,
+                "Create(legacyId) should resolve to the short-registered task");
+    if (!task) { passed = false; }
+
+    ReportTest("TestG_LegacyIdResolvesToShortRegistered", passed);
+}
+
+// ---------------------------------------------------------------------------
+// Test h: NormalizeTaskID() strips "Task_" prefix correctly
+// ---------------------------------------------------------------------------
+
+static void TestH_NormalizeTaskID()
+{
+    std::cout << "Test H: NormalizeTaskID() strips 'Task_' prefix..." << std::endl;
+
+    bool passed = true;
+
+    // ID with prefix: should strip it.
+    std::string norm1 = Olympe::AtomicTaskRegistry::NormalizeTaskID("Task_MoveToLocation");
+    TEST_ASSERT(norm1 == "MoveToLocation",
+                "NormalizeTaskID('Task_MoveToLocation') should return 'MoveToLocation'");
+    if (norm1 != "MoveToLocation") { passed = false; }
+
+    // ID without prefix: should return unchanged.
+    std::string norm2 = Olympe::AtomicTaskRegistry::NormalizeTaskID("MoveToLocation");
+    TEST_ASSERT(norm2 == "MoveToLocation",
+                "NormalizeTaskID('MoveToLocation') should return 'MoveToLocation'");
+    if (norm2 != "MoveToLocation") { passed = false; }
+
+    // Edge case: "Task_" alone has nothing after the prefix; require at least one
+    // character after "Task_" before stripping, so "Task_" is returned unchanged
+    // (an empty short ID would be meaningless and could match unrelated entries).
+    std::string norm3 = Olympe::AtomicTaskRegistry::NormalizeTaskID("Task_");
+    TEST_ASSERT(norm3 == "Task_",
+                "NormalizeTaskID('Task_') should return 'Task_' (no suffix - not stripped)");
+    if (norm3 != "Task_") { passed = false; }
+
+    // Edge case: empty string.
+    std::string norm4 = Olympe::AtomicTaskRegistry::NormalizeTaskID("");
+    TEST_ASSERT(norm4 == "",
+                "NormalizeTaskID('') should return ''");
+    if (norm4 != "") { passed = false; }
+
+    ReportTest("TestH_NormalizeTaskID", passed);
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -236,6 +312,8 @@ int main()
     TestD_LogMessageAutoRegistered();
     TestE_LogMessageExecuteSuccess();
     TestF_LogMessageNoParams();
+    TestG_LegacyIdResolvesToShortRegistered();
+    TestH_NormalizeTaskID();
 
     std::cout << std::endl;
     std::cout << "Results: " << s_passCount << " passed, "
