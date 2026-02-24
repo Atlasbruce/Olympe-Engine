@@ -95,6 +95,11 @@
     <ClCompile Include="Source\NodeGraphCore\GraphDocument.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GraphMigrator.cpp" />
     <ClCompile Include="Source\NodeGraphCore\NodeGraphManager.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_SetVariable.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Utility\Task_Wait.cpp" />
     <ClCompile Include="Source\TaskSystem\LocalBlackboard.cpp" />
     <ClCompile Include="Source\TaskSystem\TaskGraphLoader.cpp" />
     <ClCompile Include="Source\TaskSystem\TaskGraphTemplate.cpp" />
@@ -228,6 +233,11 @@
     <ClInclude Include="Source\NodeGraphCore\ILayoutEngine.h" />
     <ClInclude Include="Source\NodeGraphCore\NodeGraphCore.h" />
     <ClInclude Include="Source\NodeGraphCore\NodeGraphManager.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_SetVariable.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Utility\Task_Wait.h" />
     <ClInclude Include="Source\TaskSystem\LocalBlackboard.h" />
     <ClInclude Include="Source\TaskSystem\TaskGraphLoader.h" />
     <ClInclude Include="Source\TaskSystem\TaskGraphTemplate.h" />

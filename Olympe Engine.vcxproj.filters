@@ -97,6 +97,9 @@
     <Filter Include="Fichiers d%27en-t�te\TaskSystem">
       <UniqueIdentifier>{a1b2c3d4-e5f6-7890-abcd-ef1234567890}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers d%27en-t�te\AI\AtomicTasks">
+      <UniqueIdentifier>{adb66f9c-5198-49d4-bf2b-9cd861e40d11}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\GameEngine.cpp">
@@ -458,6 +461,21 @@
     </ClCompile>
     <ClCompile Include="Source\ECS\Components\TaskRunnerComponent.cpp">
       <Filter>Fichiers d%27en-t�te\ECS\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Utility\Task_Wait.cpp">
+      <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.cpp">
+      <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.cpp">
+      <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_SetVariable.cpp">
+      <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.cpp">
+      <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -907,6 +925,21 @@
     </ClInclude>
     <ClInclude Include="Source\TaskSystem\TaskGraphLoader.h">
       <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Utility\Task_Wait.h">
+      <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.h">
+      <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.h">
+      <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_SetVariable.h">
+      <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.h">
+      <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
