@@ -1,0 +1,13 @@
+TaskGraphLoaderTest 1 0.00360576
+AssetManagerTaskGraphTest 1 0.00568211
+TaskSystemTest 1 0.00147112
+LocalBlackboardTest 1 0.00156133
+LocalBlackboardPersistenceTest 1 0.00156716
+AtomicTaskRegistryTest 2 0.000720382
+TaskSystemRunningTest 1 0.00151344
+MoveToLocalBBTest 1 0.00198311
+TaskSystemE2ETest 1 0.00213895
+RequestPathfindingTest 1 0.00179479
+MoveToWorldModeTest 1 0.00166225
+SetVariableTest 1 0.00151807
+---

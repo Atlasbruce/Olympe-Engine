@@ -78,6 +78,16 @@ public:
      */
     bool IsRegistered(const std::string& id) const;
 
+    /**
+     * @brief Returns a vector of all registered task IDs.
+     *
+     * The order of IDs in the returned vector is unspecified.
+     * Useful for editor enumeration (e.g. context menus, palette panels).
+     *
+     * @return Vector of every ID that has been passed to Register().
+     */
+    std::vector<std::string> GetAllTaskIDs() const;
+
 private:
 
     AtomicTaskRegistry() = default;

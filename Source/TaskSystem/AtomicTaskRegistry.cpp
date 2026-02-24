@@ -94,4 +94,19 @@ bool AtomicTaskRegistry::IsRegistered(const std::string& id) const
     return m_factories.find(id) != m_factories.end();
 }
 
+// ============================================================================
+// GetAllTaskIDs
+// ============================================================================
+
+std::vector<std::string> AtomicTaskRegistry::GetAllTaskIDs() const
+{
+    std::vector<std::string> ids;
+    ids.reserve(m_factories.size());
+    for (auto it = m_factories.begin(); it != m_factories.end(); ++it)
+    {
+        ids.push_back(it->first);
+    }
+    return ids;
+}
+
 } // namespace Olympe

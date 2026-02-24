@@ -223,6 +223,59 @@ static void TestF_LogMessageNoParams()
 }
 
 // ---------------------------------------------------------------------------
+// Test g: GetAllTaskIDs() returns all registered IDs
+// ---------------------------------------------------------------------------
+
+static void TestG_GetAllTaskIDs()
+{
+    std::cout << "Test G: GetAllTaskIDs() returns all registered IDs..." << std::endl;
+
+    bool passed = true;
+
+    // Register two fresh IDs that are unique to this test
+    const std::string idX = "Test_GetAll_X";
+    const std::string idY = "Test_GetAll_Y";
+
+    Olympe::AtomicTaskRegistry::Get().Register(idX,
+        []() -> std::unique_ptr<Olympe::IAtomicTask> {
+            return std::unique_ptr<Olympe::IAtomicTask>(new Task_AlwaysSuccess());
+        });
+    Olympe::AtomicTaskRegistry::Get().Register(idY,
+        []() -> std::unique_ptr<Olympe::IAtomicTask> {
+            return std::unique_ptr<Olympe::IAtomicTask>(new Task_AlwaysSuccess());
+        });
+
+    std::vector<std::string> ids = Olympe::AtomicTaskRegistry::Get().GetAllTaskIDs();
+
+    // ids must be non-empty
+    TEST_ASSERT(!ids.empty(), "GetAllTaskIDs() should return non-empty vector");
+    if (ids.empty()) { passed = false; }
+
+    // Both freshly registered IDs must appear in the list
+    bool foundX = false;
+    bool foundY = false;
+    for (const auto& id : ids)
+    {
+        if (id == idX) foundX = true;
+        if (id == idY) foundY = true;
+    }
+    TEST_ASSERT(foundX, "GetAllTaskIDs() should contain the first registered ID");
+    TEST_ASSERT(foundY, "GetAllTaskIDs() should contain the second registered ID");
+    if (!foundX || !foundY) { passed = false; }
+
+    // Task_LogMessage (auto-registered) must also be present
+    bool foundLogMessage = false;
+    for (const auto& id : ids)
+    {
+        if (id == "Task_LogMessage") { foundLogMessage = true; break; }
+    }
+    TEST_ASSERT(foundLogMessage, "GetAllTaskIDs() should include auto-registered Task_LogMessage");
+    if (!foundLogMessage) { passed = false; }
+
+    ReportTest("TestG_GetAllTaskIDs", passed);
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -236,6 +289,7 @@ int main()
     TestD_LogMessageAutoRegistered();
     TestE_LogMessageExecuteSuccess();
     TestF_LogMessageNoParams();
+    TestG_GetAllTaskIDs();
 
     std::cout << std::endl;
     std::cout << "Results: " << s_passCount << " passed, "

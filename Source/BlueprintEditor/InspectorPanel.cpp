@@ -7,6 +7,8 @@
 #include "EntityInspectorManager.h"
 #include "BTNodeGraphManager.h"
 #include "EnumCatalogManager.h"
+#include "../TaskSystem/LocalBlackboard.h"
+#include "../TaskSystem/TaskGraphTypes.h"
 #include "../third_party/imgui/imgui.h"
 #include <iostream>
 #include <string>
@@ -14,6 +16,14 @@
 
 namespace Olympe
 {
+    // Static member definition
+    const LocalBlackboard* InspectorPanel::s_DebugBlackboard = nullptr;
+
+    void InspectorPanel::SetDebugBlackboard(const LocalBlackboard* bb)
+    {
+        s_DebugBlackboard = bb;
+    }
+
     InspectorPanel::InspectorPanel()
     {
     }
@@ -58,6 +68,9 @@ namespace Olympe
             ImGui::TextWrapped("Select an entity or asset file to inspect its properties.");
             break;
         }
+
+        // Runtime debug overlay: always shown when a debug blackboard is registered
+        RenderDebugBlackboard();
 
         ImGui::End();
     }
@@ -289,5 +302,59 @@ namespace Olympe
         // Full file path at the bottom
         ImGui::Separator();
         ImGui::TextDisabled("Path: %s", selectedAssetPath.c_str());
+    }
+
+    // =========================================================================
+    // RenderDebugBlackboard
+    // =========================================================================
+
+    void InspectorPanel::RenderDebugBlackboard()
+    {
+        if (s_DebugBlackboard == nullptr)
+            return;
+
+        ImGui::Separator();
+        ImGui::TextColored(ImVec4(0.4f, 0.9f, 0.4f, 1.0f), "Runtime Blackboard");
+        ImGui::Separator();
+
+        std::vector<std::string> varNames = s_DebugBlackboard->GetVariableNames();
+        if (varNames.empty())
+        {
+            ImGui::TextDisabled("(no variables)");
+            return;
+        }
+
+        for (const auto& varName : varNames)
+        {
+            TaskValue val = s_DebugBlackboard->GetValue(varName);
+            switch (val.GetType())
+            {
+            case VariableType::Bool:
+                ImGui::Text("  %s: %s", varName.c_str(), val.AsBool() ? "true" : "false");
+                break;
+            case VariableType::Int:
+                ImGui::Text("  %s: %d", varName.c_str(), val.AsInt());
+                break;
+            case VariableType::Float:
+                ImGui::Text("  %s: %.4f", varName.c_str(), val.AsFloat());
+                break;
+            case VariableType::String:
+                ImGui::Text("  %s: \"%s\"", varName.c_str(), val.AsString().c_str());
+                break;
+            case VariableType::EntityID:
+                ImGui::Text("  %s: entity(%llu)", varName.c_str(),
+                    static_cast<unsigned long long>(val.AsEntityID()));
+                break;
+            case VariableType::Vector:
+            {
+                ::Vector v = val.AsVector();
+                ImGui::Text("  %s: (%.2f, %.2f, %.2f)", varName.c_str(), v.x, v.y, v.z);
+                break;
+            }
+            default:
+                ImGui::Text("  %s: (none)", varName.c_str());
+                break;
+            }
+        }
     }
 }
