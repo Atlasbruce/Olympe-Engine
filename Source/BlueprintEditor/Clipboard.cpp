@@ -140,7 +140,8 @@ void NodeGraphClipboard::CopySelectedNodes(NodeGraph* graph, int graphID)
 // PasteNodes
 // ============================================================================
 
-void NodeGraphClipboard::PasteNodes(NodeGraph* graph, float mousePosX, float mousePosY)
+void NodeGraphClipboard::PasteNodes(NodeGraph* graph, float mousePosX, float mousePosY,
+                                     bool snapToGrid, float snapGridSize)
 {
     if (graph == nullptr)
         return;
@@ -208,6 +209,13 @@ void NodeGraphClipboard::PasteNodes(NodeGraph* graph, float mousePosX, float mou
         NodeType ntype = StringToNodeType(typeStr);
         float pasteX   = mousePosX + dx;
         float pasteY   = mousePosY + dy;
+
+        // Apply snap-to-grid to each pasted node individually.
+        if (snapToGrid && snapGridSize > 0.0f)
+        {
+            pasteX = std::roundf(pasteX / snapGridSize) * snapGridSize;
+            pasteY = std::roundf(pasteY / snapGridSize) * snapGridSize;
+        }
 
         int newId = graph->CreateNode(ntype, pasteX, pasteY, nodeName.empty() ? typeStr : nodeName);
         GraphNode* newNode = graph->GetNode(newId);

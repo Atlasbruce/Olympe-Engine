@@ -59,13 +59,17 @@ public:
      * @brief Read the system clipboard, deserialise nodes and create them in
      *        the active graph under the current mouse cursor.
      *
-     * @param graph    Active NodeGraph (destination).
-     * @param mousePosX  Paste anchor X in canvas (grid) space.
-     * @param mousePosY  Paste anchor Y in canvas (grid) space.
+     * @param graph       Active NodeGraph (destination).
+     * @param mousePosX   Paste anchor X in canvas (grid) space.
+     * @param mousePosY   Paste anchor Y in canvas (grid) space.
+     * @param snapToGrid  When true, each pasted node position is snapped to the
+     *                    nearest grid cell of size @p snapGridSize.
+     * @param snapGridSize Grid cell size used when @p snapToGrid is true.
      *
      * If the clipboard does not contain a valid Olympe payload this is a no-op.
      */
-    void PasteNodes(NodeGraph* graph, float mousePosX, float mousePosY);
+    void PasteNodes(NodeGraph* graph, float mousePosX, float mousePosY,
+                    bool snapToGrid = false, float snapGridSize = 16.0f);
 
 private:
     NodeGraphClipboard() = default;
