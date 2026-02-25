@@ -201,6 +201,7 @@ namespace Olympe
         void RenderNode(const BTNode* node, const BTNodeLayout* layout, bool isCurrentNode);
         void RenderNodeConnections(const BTNode* node, const BTNodeLayout* layout, const BehaviorTreeAsset* tree);
         void RenderBezierConnection(const Vector& start, const Vector& end, uint32_t color, float thickness, float tangent);
+        void RenderActiveLinkGlow(const Vector& start, const Vector& end, float tangent);
         void RenderNodePins(const BTNode* node, const BTNodeLayout* layout);
         uint32_t GetNodeColor(BTNodeType type) const;
         uint32_t GetNodeColorByStatus(BTNodeType type, BTStatus status) const;
