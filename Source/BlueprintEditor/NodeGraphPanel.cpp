@@ -1328,12 +1328,13 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         // Ctrl+V: Paste nodes from system clipboard under the mouse cursor
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_V))
         {
-            NodeGraph* g = NodeGraphManager::Get().GetActiveGraph();
+            NodeGraph* g  = NodeGraphManager::Get().GetActiveGraph();
+            int        gid = NodeGraphManager::Get().GetActiveGraphId();
             if (g != nullptr)
             {
                 ImVec2 mousePos = ImGui::GetMousePos();
                 ImVec2 gridPos  = ScreenSpaceToGridSpace(mousePos);
-                NodeGraphClipboard::Get().PasteNodes(g, gridPos.x, gridPos.y,
+                NodeGraphClipboard::Get().PasteNodes(g, gid, gridPos.x, gridPos.y,
                                                      m_SnapToGrid, m_SnapGridSize);
             }
         }

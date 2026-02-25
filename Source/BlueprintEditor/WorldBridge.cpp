@@ -81,4 +81,13 @@ void WorldBridge_RegisterTaskCallback()
     );
 }
 
+/**
+ * @brief Unregisters the TaskExecutionBridge so that TaskSystem no longer
+ *        publishes live state to the editor panels after shutdown.
+ */
+void WorldBridge_UnregisterTaskCallback()
+{
+    TaskExecutionBridge::Uninstall();
+}
+
 } // namespace Olympe

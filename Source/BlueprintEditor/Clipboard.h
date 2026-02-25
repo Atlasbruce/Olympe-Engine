@@ -60,6 +60,8 @@ public:
      *        the active graph under the current mouse cursor.
      *
      * @param graph       Active NodeGraph (destination).
+     * @param graphID     Active graph ID used to set ImNodes node positions via
+     *                    ImNodes::SetNodeGridSpacePos immediately after creation.
      * @param mousePosX   Paste anchor X in canvas (grid) space.
      * @param mousePosY   Paste anchor Y in canvas (grid) space.
      * @param snapToGrid  When true, each pasted node position is snapped to the
@@ -68,7 +70,7 @@ public:
      *
      * If the clipboard does not contain a valid Olympe payload this is a no-op.
      */
-    void PasteNodes(NodeGraph* graph, float mousePosX, float mousePosY,
+    void PasteNodes(NodeGraph* graph, int graphID, float mousePosX, float mousePosY,
                     bool snapToGrid = false, float snapGridSize = 16.0f);
 
 private:

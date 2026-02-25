@@ -140,7 +140,8 @@ void NodeGraphClipboard::CopySelectedNodes(NodeGraph* graph, int graphID)
 // PasteNodes
 // ============================================================================
 
-void NodeGraphClipboard::PasteNodes(NodeGraph* graph, float mousePosX, float mousePosY,
+void NodeGraphClipboard::PasteNodes(NodeGraph* graph, int graphID,
+                                     float mousePosX, float mousePosY,
                                      bool snapToGrid, float snapGridSize)
 {
     if (graph == nullptr)
@@ -221,6 +222,11 @@ void NodeGraphClipboard::PasteNodes(NodeGraph* graph, float mousePosX, float mou
         GraphNode* newNode = graph->GetNode(newId);
         if (newNode == nullptr)
             continue;
+
+        // Apply immediate ImNodes position so the node appears at the correct
+        // grid location this frame (before the next RenderGraph pass).
+        int globalUID = graphID * CLIP_GRAPH_ID_MULTIPLIER + newId;
+        ImNodes::SetNodeGridSpacePos(globalUID, ImVec2(pasteX, pasteY));
 
         newNode->actionType    = actionType;
         newNode->conditionType = conditionType;

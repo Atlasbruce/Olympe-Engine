@@ -28,3 +28,7 @@ add_test(MoveToWorldModeTest "/home/runner/work/Olympe-Engine/Olympe-Engine/buil
 set_tests_properties(MoveToWorldModeTest PROPERTIES  WORKING_DIRECTORY "/home/runner/work/Olympe-Engine/Olympe-Engine" _BACKTRACE_TRIPLES "/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;530;add_test;/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;0;")
 add_test(SetVariableTest "/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/OlympeSetVariableTests")
 set_tests_properties(SetVariableTest PROPERTIES  WORKING_DIRECTORY "/home/runner/work/Olympe-Engine/Olympe-Engine" _BACKTRACE_TRIPLES "/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;561;add_test;/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;0;")
+add_test(EditorRuntimeBridgeTest "/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/OlympeEditorBridgeTests")
+set_tests_properties(EditorRuntimeBridgeTest PROPERTIES  WORKING_DIRECTORY "/home/runner/work/Olympe-Engine/Olympe-Engine" _BACKTRACE_TRIPLES "/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;596;add_test;/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;0;")
+add_test(ClipboardCopyPasteTest "/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/OlympeClipboardTests")
+set_tests_properties(ClipboardCopyPasteTest PROPERTIES  WORKING_DIRECTORY "/home/runner/work/Olympe-Engine/Olympe-Engine" _BACKTRACE_TRIPLES "/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;624;add_test;/home/runner/work/Olympe-Engine/Olympe-Engine/CMakeLists.txt;0;")

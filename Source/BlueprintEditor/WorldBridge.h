@@ -34,6 +34,14 @@ namespace Olympe
      */
     void WorldBridge_RegisterTaskCallback();
 
+    /**
+     * @brief Unregister the TaskSystem publish callback.
+     *
+     * Call during editor shutdown to prevent dangling callbacks into
+     * destroyed editor panels.
+     */
+    void WorldBridge_UnregisterTaskCallback();
+
 } // namespace Olympe
 
 #endif
