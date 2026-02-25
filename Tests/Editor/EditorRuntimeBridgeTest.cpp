@@ -12,6 +12,8 @@
  *   d) Double Uninstall() is safe (no crash).
  *   e) Install() with null hooks is accepted.
  *   f) Re-install replaces hooks.
+ *   g) SetEditorPublishCallback is invoked and the BB hook receives data when
+ *      ExecuteAtomicTask causes a Running status.
  *
  * No SDL3, ImGui or Editor dependency — only TaskSystem headers are used.
  *
@@ -21,9 +23,15 @@
 #include "TaskSystem/TaskExecutionBridge.h"
 #include "TaskSystem/TaskSystem.h"
 #include "TaskSystem/LocalBlackboard.h"
+#include "TaskSystem/AtomicTaskRegistry.h"
+#include "TaskSystem/IAtomicTask.h"
+#include "TaskSystem/TaskGraphTemplate.h"
+#include "TaskSystem/TaskGraphTypes.h"
+#include "ECS/Components/TaskRunnerComponent.h"
 
 #include <iostream>
 #include <string>
+#include <memory>
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -228,6 +236,91 @@ static void TestF_InstallUninstallCycle()
 }
 
 // ---------------------------------------------------------------------------
+// Test G: SetEditorPublishCallback is invoked and hooks fire when an
+//         AtomicTask causes a Running status (end-to-end bridge test).
+// ---------------------------------------------------------------------------
+
+namespace {
+
+/// AtomicTask that always returns Running.
+class Task_AlwaysRunning : public Olympe::IAtomicTask
+{
+public:
+    Olympe::TaskStatus Execute(const ParameterMap& /*params*/) override
+    {
+        return Olympe::TaskStatus::Running;
+    }
+    void Abort() override {}
+};
+
+} // anonymous namespace
+
+static const char* TASK_ALWAYS_RUNNING_ID = "Task_AlwaysRunning_BridgeTest_G";
+
+static Olympe::TaskGraphTemplate MakeSingleNodeTemplate()
+{
+    Olympe::TaskGraphTemplate tmpl;
+    tmpl.Name       = "BridgeTestTemplate";
+    tmpl.RootNodeID = 0;
+
+    Olympe::TaskNodeDefinition node;
+    node.NodeID        = 0;
+    node.NodeName      = "AlwaysRunningNode";
+    node.Type          = Olympe::TaskNodeType::AtomicTask;
+    node.AtomicTaskID  = TASK_ALWAYS_RUNNING_ID;
+    node.NextOnSuccess = Olympe::NODE_INDEX_NONE;
+    node.NextOnFailure = Olympe::NODE_INDEX_NONE;
+
+    tmpl.Nodes.push_back(node);
+    tmpl.BuildLookupCache();
+    return tmpl;
+}
+
+static void TestG_CallbackFiredOnRunningTask()
+{
+    std::cout << "Test G: SetEditorPublishCallback invoked and hooks fire on Running task..."
+              << std::endl;
+
+    ResetStubs();
+
+    // Register the always-running task.
+    Olympe::AtomicTaskRegistry::Get().Register(
+        TASK_ALWAYS_RUNNING_ID,
+        []() -> std::unique_ptr<Olympe::IAtomicTask> {
+            return std::unique_ptr<Olympe::IAtomicTask>(new Task_AlwaysRunning());
+        });
+
+    // Install bridge with our stub hooks.
+    Olympe::TaskExecutionBridge::Install(&StubNodeHook, &StubBBHook);
+
+    // Execute one tick of the graph — task returns Running so the publish callback fires.
+    Olympe::TaskGraphTemplate   tmpl   = MakeSingleNodeTemplate();
+    Olympe::TaskSystem          system;
+    Olympe::TaskRunnerComponent runner;
+
+    system.ExecuteNode(1u, runner, &tmpl, 0.016f);
+
+    bool passed = true;
+
+    TEST_ASSERT(g_nodeFnCalled,
+                "Node hook should be called when task is Running");
+    if (!g_nodeFnCalled) { passed = false; }
+
+    TEST_ASSERT(g_bbFnCalled,
+                "BB hook should be called with live blackboard when task is Running");
+    if (!g_bbFnCalled) { passed = false; }
+
+    TEST_ASSERT(g_receivedNodeIndex == 0,
+                "Node hook should receive the current node index (0)");
+    if (g_receivedNodeIndex != 0) { passed = false; }
+
+    // Clean up.
+    Olympe::TaskExecutionBridge::Uninstall();
+
+    ReportTest("TestG_CallbackFiredOnRunningTask", passed);
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -241,6 +334,7 @@ int main()
     TestD_Reinstall();
     TestE_UninstallClearsState();
     TestF_InstallUninstallCycle();
+    TestG_CallbackFiredOnRunningTask();
 
     std::cout << std::endl;
     std::cout << "Results: " << s_passCount << " passed, "

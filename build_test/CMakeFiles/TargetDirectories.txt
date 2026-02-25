@@ -10,6 +10,8 @@
 /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles/OlympeRequestPathfindingTests.dir
 /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles/OlympeMoveToWorldModeTests.dir
 /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles/OlympeSetVariableTests.dir
+/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles/OlympeEditorBridgeTests.dir
+/home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles/OlympeClipboardTests.dir
 /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles/test.dir
 /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles/edit_cache.dir
 /home/runner/work/Olympe-Engine/Olympe-Engine/build_test/CMakeFiles/rebuild_cache.dir

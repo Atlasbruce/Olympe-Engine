@@ -369,6 +369,77 @@ static void TestH_DirtyFlag()
 }
 
 // ---------------------------------------------------------------------------
+// Test I: Copy/paste roundtrip — node count increases and parameter preserved
+// ---------------------------------------------------------------------------
+
+static void TestI_CopyPasteRoundTripCountAndParam()
+{
+    std::cout << "Test I: Copy/paste roundtrip increases node count and preserves parameter..."
+              << std::endl;
+
+    bool passed = true;
+
+    // ----- Source graph (simulates what is copied) -----
+    Olympe::NodeGraph src;
+    int srcId1 = src.CreateNode(Olympe::NodeType::BT_Sequence, 0.0f,   0.0f, "Parent");
+    int srcId2 = src.CreateNode(Olympe::NodeType::BT_Action,  200.0f,  0.0f, "Child");
+    src.SetNodeParameter(srcId2, "speed", "7.5");
+    src.SetNodeParameter(srcId2, "target", "EnemyA");
+    src.LinkNodes(srcId1, srcId2);
+
+    // ----- Destination graph (simulates the graph being pasted into) -----
+    Olympe::NodeGraph dest;
+    int beforeCount = (int)dest.GetAllNodes().size();
+
+    // Simulate the paste: iterate source nodes and create them in dest at offset.
+    const float pasteOffsetX = 300.0f;
+    const float pasteOffsetY = 100.0f;
+    int lastPastedId = -1;
+    auto srcNodes = src.GetAllNodes();
+    for (auto* node : srcNodes)
+    {
+        int newId = dest.CreateNode(node->type,
+                                    node->posX + pasteOffsetX,
+                                    node->posY + pasteOffsetY,
+                                    node->name);
+        Olympe::GraphNode* newNode = dest.GetNode(newId);
+        TEST_ASSERT(newNode != nullptr, "Pasted node should exist");
+        if (newNode == nullptr) { passed = false; continue; }
+
+        // Copy parameters (mirrors what Clipboard::PasteNodes does).
+        for (auto it = node->parameters.begin(); it != node->parameters.end(); ++it)
+            dest.SetNodeParameter(newId, it->first, it->second);
+
+        if (node->name == "Child")
+            lastPastedId = newId;
+    }
+
+    // ----- Verify node count increased -----
+    int afterCount = (int)dest.GetAllNodes().size();
+    TEST_ASSERT(afterCount > beforeCount, "Node count should increase after paste");
+    if (afterCount <= beforeCount) { passed = false; }
+
+    TEST_ASSERT((afterCount - beforeCount) == (int)srcNodes.size(),
+                "Pasted node count should match source selection size");
+    if ((afterCount - beforeCount) != (int)srcNodes.size()) { passed = false; }
+
+    // ----- Verify parameter was preserved -----
+    TEST_ASSERT(lastPastedId != -1, "Child node should have been pasted");
+    if (lastPastedId != -1)
+    {
+        std::string speed  = dest.GetNodeParameter(lastPastedId, "speed");
+        std::string target = dest.GetNodeParameter(lastPastedId, "target");
+
+        TEST_ASSERT(speed  == "7.5",    "speed parameter should be preserved after paste");
+        TEST_ASSERT(target == "EnemyA", "target parameter should be preserved after paste");
+
+        if (speed != "7.5" || target != "EnemyA") { passed = false; }
+    }
+
+    ReportTest("TestI_CopyPasteRoundTripCountAndParam", passed);
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -384,6 +455,7 @@ int main()
     TestF_JsonRoundTrip();
     TestG_PasteAtOffset();
     TestH_DirtyFlag();
+    TestI_CopyPasteRoundTripCountAndParam();
 
     std::cout << std::endl;
     std::cout << "Results: " << s_passCount << " passed, "

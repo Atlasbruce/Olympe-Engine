@@ -66,4 +66,6 @@ set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/OlympeRequestPathfindingTests.dir/DependInfo.cmake"
   "CMakeFiles/OlympeMoveToWorldModeTests.dir/DependInfo.cmake"
   "CMakeFiles/OlympeSetVariableTests.dir/DependInfo.cmake"
+  "CMakeFiles/OlympeEditorBridgeTests.dir/DependInfo.cmake"
+  "CMakeFiles/OlympeClipboardTests.dir/DependInfo.cmake"
   )

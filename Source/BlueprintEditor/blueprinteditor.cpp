@@ -8,6 +8,7 @@
 #include "BlueprintEditor.h"
 #include "EntityBlueprint.h"
 #include "EditorContext.h"
+#include "WorldBridge.h"
 #include "EnumCatalogManager.h"
 #include "BTNodeGraphManager.h"
 #include "EntityInspectorManager.h"
@@ -112,6 +113,10 @@ namespace Olympe
 
     void BlueprintEditor::Shutdown()
     {
+        // Unregister the task callback before shutting down panels so that
+        // TaskSystem cannot fire callbacks into already-destroyed editor objects.
+        WorldBridge_UnregisterTaskCallback();
+
         // Shutdown managers in reverse order
         if (m_CommandStack)
         {
