@@ -18,10 +18,10 @@
 BUILD_BLUEPRINT_EDITOR_STANDALONE:BOOL=OFF
 
 //Build runtime engine executable
-BUILD_RUNTIME_ENGINE:BOOL=OFF
+BUILD_RUNTIME_ENGINE:BOOL=ON
 
 //Build unit tests
-BUILD_TESTS:BOOL=ON
+BUILD_TESTS:BOOL=OFF
 
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
@@ -247,6 +247,9 @@ OlympeEngine_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
 OlympeEngine_SOURCE_DIR:STATIC=/home/runner/work/Olympe-Engine/Olympe-Engine
+
+//The directory containing a CMake configuration file for SDL3.
+SDL3_DIR:PATH=SDL3_DIR-NOTFOUND
 
 
 ########################
