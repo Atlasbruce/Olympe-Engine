@@ -564,6 +564,69 @@ if(BUILD_TESTS)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 
+    # -------------------------------------------------------------------------
+    # OlympeEditorBridgeTests - Phase 4: TaskExecutionBridge install/uninstall
+    # -------------------------------------------------------------------------
+    add_executable(OlympeEditorBridgeTests
+        Tests/Editor/EditorRuntimeBridgeTest.cpp
+        Tests/TestStubs.cpp
+        Source/TaskSystem/TaskExecutionBridge.cpp
+        Source/TaskSystem/TaskSystem.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/ECS/Components/TaskRunnerComponent.cpp
+        Source/Core/AssetManager.cpp
+        Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+    )
+
+    target_include_directories(OlympeEditorBridgeTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeEditorBridgeTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME EditorRuntimeBridgeTest
+        COMMAND OlympeEditorBridgeTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
+    # -------------------------------------------------------------------------
+    # OlympeClipboardTests - Phase 4: NodeGraph CRUD / paste round-trip
+    # -------------------------------------------------------------------------
+    add_executable(OlympeClipboardTests
+        Tests/Editor/ClipboardCopyPasteTest.cpp
+        Tests/TestStubs.cpp
+        Source/BlueprintEditor/BTNodeGraphManager.cpp
+    )
+
+    target_include_directories(OlympeClipboardTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/BlueprintEditor
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeClipboardTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME ClipboardCopyPasteTest
+        COMMAND OlympeClipboardTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
     message(STATUS "  Unit Tests: ON")
 else()
     message(STATUS "  Unit Tests: OFF (enable with -DBUILD_TESTS=ON)")
