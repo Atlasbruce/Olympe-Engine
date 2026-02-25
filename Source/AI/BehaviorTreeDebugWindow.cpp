@@ -1037,6 +1037,46 @@ namespace Olympe
 
         ImNodes::EndNodeEditor();
 
+        // Overlay Bezier glow for links connected to the active debug node.
+        // Must be called after EndNodeEditor() so screen-space positions are valid.
+        if (!m_editorMode && btRuntime.isActive && tree)
+        {
+            uint32_t activeNodeId = btRuntime.AICurrentNodeIndex;
+            if (activeNodeId != 0)
+            {
+                for (const auto& node : tree->nodes)
+                {
+                    auto renderGlowForLink = [&](uint32_t parentId, uint32_t childId)
+                    {
+                        if (parentId != activeNodeId && childId != activeNodeId)
+                            return;
+
+                        ImVec2 pPos = ImNodes::GetNodeScreenSpacePos(static_cast<int>(parentId));
+                        ImVec2 pDim = ImNodes::GetNodeDimensions(static_cast<int>(parentId));
+                        ImVec2 cPos = ImNodes::GetNodeScreenSpacePos(static_cast<int>(childId));
+                        ImVec2 cDim = ImNodes::GetNodeDimensions(static_cast<int>(childId));
+
+                        // Output pin at bottom-centre of parent; input at top-centre of child (top-to-bottom layout).
+                        Vector start(pPos.x + pDim.x * 0.5f, pPos.y + pDim.y, 0.0f);
+                        Vector end(cPos.x  + cDim.x  * 0.5f, cPos.y,          0.0f);
+                        float tangent = std::max(50.0f, std::abs(end.y - start.y) * 0.4f);
+                        RenderActiveLinkGlow(start, end, tangent);
+                    };
+
+                    if (node.type == BTNodeType::Selector || node.type == BTNodeType::Sequence)
+                    {
+                        for (uint32_t childId : node.childIds)
+                            renderGlowForLink(node.id, childId);
+                    }
+                    else if ((node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater) &&
+                             node.decoratorChildId != 0)
+                    {
+                        renderGlowForLink(node.id, node.decoratorChildId);
+                    }
+                }
+            }
+        }
+
         // Double-click detection for node inspection in Inspector panel
         int hoveredNodeId = -1;
         if (ImNodes::IsNodeHovered(&hoveredNodeId) && hoveredNodeId != -1)
@@ -2513,6 +2553,35 @@ namespace Olympe
         ImVec2 cp2(p2.x - tangent, p2.y);
 
         ImGui::GetWindowDrawList()->AddBezierCubic(p1, cp1, cp2, p2, color, thickness);
+    }
+
+    void BehaviorTreeDebugWindow::RenderActiveLinkGlow(const Vector& start, const Vector& end, float tangent)
+    {
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        if (!drawList)
+            return;
+
+        // Pulsing amber/yellow glow using m_pulseTimer (updated each frame).
+        float t = 0.5f + 0.5f * sinf(m_pulseTimer * 2.0f * 3.14159265f);
+        float alpha = 0.6f + 0.4f * t;
+
+        ImVec2 p1(start.x, start.y);
+        ImVec2 p4(end.x,   end.y);
+        // Vertical tangents for top-to-bottom BT layout.
+        ImVec2 p2(p1.x, p1.y + tangent);
+        ImVec2 p3(p4.x, p4.y - tangent);
+
+        // Wide transparent halo.
+        ImU32 glowWide = IM_COL32(255, 200, 50, static_cast<int>(alpha * 80.0f));
+        // Narrow bright core pulsing between amber and bright yellow.
+        ImU32 glowCore = IM_COL32(
+            static_cast<int>(180.0f + t * 75.0f),
+            static_cast<int>(140.0f + t * 115.0f),
+            10,
+            static_cast<int>(alpha * 255.0f));
+
+        drawList->AddBezierCubic(p1, p2, p3, p4, glowWide, 6.0f);
+        drawList->AddBezierCubic(p1, p2, p3, p4, glowCore, 2.0f);
     }
 
     void BehaviorTreeDebugWindow::RenderNodePins(const BTNode* node, const BTNodeLayout* layout)

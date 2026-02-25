@@ -8,6 +8,7 @@
 #include "AIEditorNodeRenderer.h"
 #include "../../third_party/imgui/imgui.h"
 #include "../../third_party/imnodes/imnodes.h"
+#include <cmath>
 
 namespace Olympe {
 namespace AI {
@@ -31,6 +32,19 @@ void AIEditorNodeRenderer::RenderNode(
     
     // Begin node
     int iNodeId = static_cast<int>(nodeData.id.value);
+
+    // Pulsed amber/yellow outline when the node is currently executing.
+    if (isExecuting) {
+        float t = 0.5f + 0.5f * std::sin(static_cast<float>(ImGui::GetTime()) * 4.0f);
+        float alpha = 0.6f + 0.4f * t;
+        ImU32 pulseColor = IM_COL32(
+            static_cast<int>(180.0f + t * 75.0f),
+            static_cast<int>(140.0f + t * 115.0f),
+            10,
+            static_cast<int>(alpha * 255.0f));
+        ImNodes::PushColorStyle(ImNodesCol_NodeOutline, pulseColor);
+    }
+
     ImNodes::BeginNode(iNodeId);
     
     // Title bar with color
@@ -101,7 +115,12 @@ void AIEditorNodeRenderer::RenderNode(
     }
     
     ImNodes::EndNode();
-    
+
+    // Pop pulsed outline style pushed before BeginNode.
+    if (isExecuting) {
+        ImNodes::PopColorStyle();
+    }
+
     // Set node position
     ImNodes::SetNodeGridSpacePos(iNodeId, ImVec2(nodeData.position.x, nodeData.position.y));
     
