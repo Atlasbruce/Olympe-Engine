@@ -597,6 +597,10 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
 
         ImNodes::EndNodeEditor();
 
+        // Overlay Bezier glow for links connected to the active debug node.
+        // Must be called after EndNodeEditor() so screen-space positions are valid.
+        RenderActiveLinks(graph, graphID);
+
         // Handle node interactions with UID mapping
         HandleNodeInteractions(graphID);
 
@@ -1028,12 +1032,58 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
     // RenderActiveLinks
     // =========================================================================
 
-    void NodeGraphPanel::RenderActiveLinks(NodeGraph* /*graph*/, int /*graphID*/)
+    void NodeGraphPanel::RenderActiveLinks(NodeGraph* graph, int graphID)
     {
-        // Active-link glow is implemented inline in RenderGraph() via
-        // ImNodes::PushColorStyle / PopColorStyle before each ImNodes::Link()
-        // call so that ImNodes handles the actual line rendering.
-        // This method is reserved for future custom ImDrawList overlay work.
+        if (s_ActiveDebugNodeId < 0 || graph == nullptr)
+            return;
+
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        if (drawList == nullptr)
+            return;
+
+        // Pulsing amber/yellow: oscillate alpha and colour over time.
+        float t = 0.5f + 0.5f * std::sin(static_cast<float>(ImGui::GetTime()) * 4.0f);
+        float alpha = 0.6f + 0.4f * t;
+
+        ImU32 glowWide = IM_COL32(255, 200, 50, static_cast<int>(alpha * 80.0f));
+        ImU32 glowCore = IM_COL32(
+            static_cast<int>(180.0f + t * 75.0f),
+            static_cast<int>(140.0f + t * 115.0f),
+            10,
+            static_cast<int>(alpha * 255.0f));
+
+        auto links = graph->GetAllLinks();
+        for (size_t i = 0; i < links.size(); ++i)
+        {
+            const GraphLink& link = links[i];
+            bool isActive = (link.fromNode == s_ActiveDebugNodeId ||
+                             link.toNode   == s_ActiveDebugNodeId);
+            if (!isActive)
+                continue;
+
+            int fromUID = graphID * 10000 + link.fromNode;
+            int toUID   = graphID * 10000 + link.toNode;
+
+            ImVec2 fromPos = ImNodes::GetNodeScreenSpacePos(fromUID);
+            ImVec2 fromDim = ImNodes::GetNodeDimensions(fromUID);
+            ImVec2 toPos   = ImNodes::GetNodeScreenSpacePos(toUID);
+            ImVec2 toDim   = ImNodes::GetNodeDimensions(toUID);
+
+            // Output pin: right-centre of the source node.
+            ImVec2 p1 = ImVec2(fromPos.x + fromDim.x, fromPos.y + fromDim.y * 0.5f);
+            // Input pin: left-centre of the destination node.
+            ImVec2 p4 = ImVec2(toPos.x,               toPos.y   + toDim.y   * 0.5f);
+
+            // Horizontal tangents give the classic node-graph S-curve shape.
+            float curve = (p4.x - p1.x) * 0.4f;
+            if (curve < 50.0f) curve = 50.0f;
+            ImVec2 p2 = ImVec2(p1.x + curve, p1.y);
+            ImVec2 p3 = ImVec2(p4.x - curve, p4.y);
+
+            // Wide transparent halo + narrow bright core.
+            drawList->AddBezierCubic(p1, p2, p3, p4, glowWide, 6.0f);
+            drawList->AddBezierCubic(p1, p2, p3, p4, glowCore, 2.0f);
+        }
     }
 
     void NodeGraphPanel::RenderContextMenu()
@@ -1283,7 +1333,8 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             {
                 ImVec2 mousePos = ImGui::GetMousePos();
                 ImVec2 gridPos  = ScreenSpaceToGridSpace(mousePos);
-                NodeGraphClipboard::Get().PasteNodes(g, gridPos.x, gridPos.y);
+                NodeGraphClipboard::Get().PasteNodes(g, gridPos.x, gridPos.y,
+                                                     m_SnapToGrid, m_SnapGridSize);
             }
         }
 
