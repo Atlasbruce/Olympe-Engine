@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -19,6 +19,25 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Source\AI\AIEditor\AIEditorClipboard.cpp" />
+    <ClCompile Include="..\Source\AI\AIEditor\AIEditorFileDialog.cpp" />
+    <ClCompile Include="..\Source\AI\AIEditor\AIEditorGUI.cpp" />
+    <ClCompile Include="..\Source\AI\AIEditor\AIEditorMenus.cpp" />
+    <ClCompile Include="..\Source\AI\AIEditor\AIEditorNodeRenderer.cpp" />
+    <ClCompile Include="..\Source\AI\AIEditor\AIEditorPanels.cpp" />
+    <ClCompile Include="..\Source\AI\AIEditor\BlackboardPanel.cpp" />
+    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTGraphCompiler.cpp" />
+    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTGraphValidator.cpp" />
+    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTNodePalette.cpp" />
+    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTNodeRegistry.cpp" />
+    <ClCompile Include="..\Source\AI\BehaviorTreeDebugWindow.cpp" />
+    <ClCompile Include="..\Source\AI\BehaviorTreeDependencyScanner.cpp" />
+    <ClCompile Include="..\Source\AI\BTEditorCommand.cpp" />
+    <ClCompile Include="..\Source\AI\BTGraphLayoutEngine.cpp" />
+    <ClCompile Include="..\Source\Animation\AnimationBank.cpp" />
+    <ClCompile Include="..\Source\Animation\AnimationErrorHandler.cpp" />
+    <ClCompile Include="..\Source\Animation\AnimationGraph.cpp" />
+    <ClCompile Include="..\Source\Animation\AnimationManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditorStandalone\BlueprintEditorStandaloneMain.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\AdditionalEditorPlugins.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\AssetBrowser.cpp" />
@@ -28,15 +47,17 @@
     <ClCompile Include="..\Source\BlueprintEditor\BlueprintEditorGUI.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BlueprintMigrator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BlueprintValidator.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\CommandSystem.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BPCommandSystem.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BTNodeGraphManager.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Clipboard.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EditorContext.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityBlueprint.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\Graph.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EnumCatalogManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\HistoryPanel.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\NodeGraphManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityInspectorManager.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\NodeStyleRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\TemplateBrowserPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\TemplateManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\ValidationPanel.cpp" />
@@ -44,11 +65,53 @@
     <ClCompile Include="..\Source\BlueprintEditor\NodeGraphPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntitiesPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\InspectorPanel.cpp" />
+    <ClCompile Include="..\Source\CollisionMap.cpp" />
+    <ClCompile Include="..\Source\ComponentDefinition.cpp" />
+    <ClCompile Include="..\Source\Core\AssetManager.cpp" />
     <ClCompile Include="..\Source\drawing.cpp" />
     <ClCompile Include="..\Source\AI\BehaviorTree.cpp" />
     <ClCompile Include="..\Source\DataManager.cpp" />
+    <ClCompile Include="..\Source\ECS\Components\MovementComponent.cpp" />
+    <ClCompile Include="..\Source\ECS\Components\PositionComponent.cpp" />
+    <ClCompile Include="..\Source\ECS\Components\TaskRunnerComponent.cpp" />
+    <ClCompile Include="..\Source\ECS_Systems_Animation.cpp" />
     <ClCompile Include="..\Source\GameEngine.cpp" />
     <ClCompile Include="..\Source\GameState.cpp" />
+    <ClCompile Include="..\Source\InputConfigLoader.cpp" />
+    <ClCompile Include="..\Source\InputDevice.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\BlackboardSystem.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\CommandSystem.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\Commands\ConnectPinsCommand.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\Commands\CreateNodeCommand.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\Commands\DeleteNodeCommand.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\Commands\MoveNodeCommand.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\GraphDocument.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\GraphMigrator.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\NodeAnnotations.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\NodeGraphManager.cpp" />
+    <ClCompile Include="..\Source\OlympeTilemapEditor\src\EditorState.cpp" />
+    <ClCompile Include="..\Source\OlympeTilemapEditor\src\LevelManager.cpp" />
+    <ClCompile Include="..\Source\OlympeTilemapEditor\src\TilemapEditorApp.cpp" />
+    <ClCompile Include="..\Source\ParameterResolver.cpp" />
+    <ClCompile Include="..\Source\ParameterSchema.cpp" />
+    <ClCompile Include="..\Source\PrefabFactory.cpp" />
+    <ClCompile Include="..\Source\PrefabScanner.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\AtomicTaskRegistry.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Blackboard\Task_SetVariable.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Task_LogMessage.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Utility\Task_Wait.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\LocalBlackboard.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\Pathfinding\PathfindingManager.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\TaskExecutionBridge.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\TaskGraphLoader.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\TaskGraphTemplate.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\TaskGraphTypes.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\TaskSystem.cpp" />
+    <ClCompile Include="..\Source\third_party\nfd\nfd_win.cpp" />
     <ClCompile Include="..\Source\VideoGame.cpp" />
     <ClCompile Include="..\Source\engine_utils.cpp" />
     <ClCompile Include="..\Source\vector.cpp" />
@@ -73,17 +136,42 @@
     <ClCompile Include="..\Source\third_party\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\Source\third_party\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\Source\third_party\imgui\imgui_tables.cpp" />
-    <ClCompile Include="..\Source\third_party\imgui\imgui_widgets.cpp" />    <ClCompile Include="..\Source\third_party\imnodes\imnodes.cpp" />
+    <ClCompile Include="..\Source\third_party\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\Source\third_party\imnodes\imnodes.cpp" />
     <ClCompile Include="..\Source\TiledLevelLoader\src\TiledLevelLoader.cpp" />
     <ClCompile Include="..\Source\TiledLevelLoader\src\TiledToOlympe.cpp" />
     <ClCompile Include="..\Source\TiledLevelLoader\src\ParallaxLayerManager.cpp" />
-    <ClCompile Include="..\Source\TiledLevelLoader\src\IsometricProjection.cpp" />    <ClCompile Include="..\Source\TiledLevelLoader\src\TilesetCache.cpp" />
-    <ClCompile Include="..\Source\TiledLevelLoader\src\TilesetParser.cpp" />    <ClCompile Include="..\Source\TiledLevelLoader\src\TiledDecoder.cpp" />    <ClCompile Include="..\Source\TiledLevelLoader\third_party\tinyxml2\tinyxml2.cpp" />
+    <ClCompile Include="..\Source\TiledLevelLoader\src\IsometricProjection.cpp" />
+    <ClCompile Include="..\Source\TiledLevelLoader\src\TilesetCache.cpp" />
+    <ClCompile Include="..\Source\TiledLevelLoader\src\TilesetParser.cpp" />
+    <ClCompile Include="..\Source\TiledLevelLoader\src\TiledDecoder.cpp" />
+    <ClCompile Include="..\Source\TiledLevelLoader\third_party\tinyxml2\tinyxml2.cpp" />
     <ClCompile Include="..\Source\TiledLevelLoader\third_party\miniz\miniz.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Source\AI\AIEditor\AIEditorClipboard.h" />
+    <ClInclude Include="..\Source\AI\AIEditor\AIEditorFileDialog.h" />
+    <ClInclude Include="..\Source\AI\AIEditor\AIEditorGUI.h" />
+    <ClInclude Include="..\Source\AI\AIEditor\AIEditorMenus.h" />
+    <ClInclude Include="..\Source\AI\AIEditor\AIEditorNodeRenderer.h" />
+    <ClInclude Include="..\Source\AI\AIEditor\AIEditorPanels.h" />
+    <ClInclude Include="..\Source\AI\AIEditor\BlackboardPanel.h" />
     <ClInclude Include="..\Source\AI\AIEvents.h" />
+    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTGraphCompiler.h" />
+    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTGraphValidator.h" />
+    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTNodePalette.h" />
+    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTNodeRegistry.h" />
     <ClInclude Include="..\Source\AI\BehaviorTree.h" />
+    <ClInclude Include="..\Source\AI\BehaviorTreeDebugWindow.h" />
+    <ClInclude Include="..\Source\AI\BehaviorTreeDependencyScanner.h" />
+    <ClInclude Include="..\Source\AI\BTEditorCommand.h" />
+    <ClInclude Include="..\Source\AI\BTGraphLayoutEngine.h" />
+    <ClInclude Include="..\Source\Animation\AnimationBank.h" />
+    <ClInclude Include="..\Source\Animation\AnimationErrorHandler.h" />
+    <ClInclude Include="..\Source\Animation\AnimationGraph.h" />
+    <ClInclude Include="..\Source\Animation\AnimationHelpers.h" />
+    <ClInclude Include="..\Source\Animation\AnimationManager.h" />
+    <ClInclude Include="..\Source\Animation\AnimationTypes.h" />
     <ClInclude Include="..\Source\BlueprintEditor\AdditionalEditorPlugins.h" />
     <ClInclude Include="..\Source\BlueprintEditor\AssetBrowser.h" />
     <ClInclude Include="..\Source\BlueprintEditor\AssetInfoPanel.h" />
@@ -93,26 +181,76 @@
     <ClInclude Include="..\Source\BlueprintEditor\BlueprintEditorPlugin.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BlueprintMigrator.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BlueprintValidator.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\CommandSystem.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BPCommandSystem.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BTNodeGraphManager.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Clipboard.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EditorContext.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityBlueprint.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditorPlugin.h" />
     <ClInclude Include="..\Source\BlueprintEditor\Graph.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EnumCatalogManager.h" />
     <ClInclude Include="..\Source\BlueprintEditor\HistoryPanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\NodeGraphManager.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityInspectorManager.h" />
     <ClInclude Include="..\Source\BlueprintEditor\NodeGraphPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntitiesPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\InspectorPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\NodeStyleRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\TemplateBrowserPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\TemplateManager.h" />
     <ClInclude Include="..\Source\BlueprintEditor\ValidationPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\WorldBridge.h" />
+    <ClInclude Include="..\Source\CollisionMap.h" />
+    <ClInclude Include="..\Source\ComponentDefinition.h" />
+    <ClInclude Include="..\Source\ComponentRegistry.h" />
+    <ClInclude Include="..\Source\Core\AssetManager.h" />
     <ClInclude Include="..\Source\drawing.h" />
     <ClInclude Include="..\Source\DataManager.h" />
+    <ClInclude Include="..\Source\ECS\Components\MovementComponent.h" />
+    <ClInclude Include="..\Source\ECS\Components\PositionComponent.h" />
+    <ClInclude Include="..\Source\ECS\Components\TaskRunnerComponent.h" />
+    <ClInclude Include="..\Source\ECS_Systems_Animation.h" />
+    <ClInclude Include="..\Source\InputConfigLoader.h" />
+    <ClInclude Include="..\Source\InputDevice.h" />
     <ClInclude Include="..\Source\json_helper.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\BlackboardSystem.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\CommandSystem.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\Commands\ConnectPinsCommand.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\Commands\CreateNodeCommand.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\Commands\DeleteNodeCommand.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\Commands\MoveNodeCommand.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\GraphDocument.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\GraphMigrator.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\ILayoutEngine.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\NodeAnnotations.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\NodeGraphManager.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\NodeGraphCore.h" />
+    <ClInclude Include="..\Source\OlympeTilemapEditor\include\EditorState.h" />
+    <ClInclude Include="..\Source\OlympeTilemapEditor\include\LevelManager.h" />
+    <ClInclude Include="..\Source\OlympeTilemapEditor\include\TilemapEditorApp.h" />
+    <ClInclude Include="..\Source\ParameterResolver.h" />
+    <ClInclude Include="..\Source\ParameterSchema.h" />
+    <ClInclude Include="..\Source\prefabfactory.h" />
+    <ClInclude Include="..\Source\PrefabScanner.h" />
     <ClInclude Include="..\Source\resource.h" />
+    <ClInclude Include="..\Source\TaskSystem\AtomicTaskContext.h" />
+    <ClInclude Include="..\Source\TaskSystem\AtomicTaskRegistry.h" />
+    <ClInclude Include="..\Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.h" />
+    <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.h" />
+    <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Blackboard\Task_SetVariable.h" />
+    <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.h" />
+    <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Utility\Task_Wait.h" />
+    <ClInclude Include="..\Source\TaskSystem\IAtomicTask.h" />
+    <ClInclude Include="..\Source\TaskSystem\LocalBlackboard.h" />
+    <ClInclude Include="..\Source\TaskSystem\Pathfinding\PathfindingManager.h" />
+    <ClInclude Include="..\Source\TaskSystem\TaskExecutionBridge.h" />
+    <ClInclude Include="..\Source\TaskSystem\TaskGraphLoader.h" />
+    <ClInclude Include="..\Source\TaskSystem\TaskGraphTemplate.h" />
+    <ClInclude Include="..\Source\TaskSystem\TaskGraphTypes.h" />
+    <ClInclude Include="..\Source\TaskSystem\TaskSystem.h" />
+    <ClInclude Include="..\Source\TaskSystem\TaskWorldFacade.h" />
+    <ClInclude Include="..\Source\third_party\nfd\nfd.h" />
+    <ClInclude Include="..\Source\third_party\nfd\nfd.hpp" />
     <ClInclude Include="..\Source\vector.h" />
     <ClInclude Include="..\Source\World.h" />
     <ClInclude Include="..\Source\ECS_Entity.h" />
@@ -145,11 +283,13 @@
     <ClInclude Include="..\Source\third_party\imgui\imgui_internal.h" />
     <ClInclude Include="..\Source\third_party\imnodes\imnodes.h" />
     <ClInclude Include="..\Source\third_party\imnodes\imnodes_internal.h" />
-    <ClInclude Include="..\Source\third_party\nlohmann\json.hpp" />    <ClInclude Include="resource.h" />
+    <ClInclude Include="..\Source\third_party\nlohmann\json.hpp" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="..\Source\TiledLevelLoader\include\TiledLevelLoader.h" />
     <ClInclude Include="..\Source\TiledLevelLoader\include\TiledToOlympe.h" />
     <ClInclude Include="..\Source\TiledLevelLoader\include\ParallaxLayerManager.h" />
-    <ClInclude Include="..\Source\TiledLevelLoader\include\IsometricProjection.h" />    <ClInclude Include="..\Source\TiledLevelLoader\include\TilesetCache.h" />
+    <ClInclude Include="..\Source\TiledLevelLoader\include\IsometricProjection.h" />
+    <ClInclude Include="..\Source\TiledLevelLoader\include\TilesetCache.h" />
     <ClInclude Include="..\Source\TiledLevelLoader\include\TilesetParser.h" />
     <ClInclude Include="..\Source\TiledLevelLoader\include\TiledDecoder.h" />
   </ItemGroup>
@@ -224,8 +364,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>OlympeBlueprintEditor_d</TargetName>
-    <OutDir>$(SolutionDir)\</OutDir>
+    <OutDir>..\</OutDir>
     <IntDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\Intermediate\</IntDir>
+    <PublicIncludeDirectories>..\Source;..\Source\AI;..\Source\BlueprintEditor;..\Source\BlueprintEditorStandalone;..\Source\Core;..\Source\ECS;..\Source\Editor;..\Source\NodeGraphCore;..\Source\TaskSystem;..\Source\NodeGraphCore\Commands;..\Source\third_party\nfd;$(PublicIncludeDirectories)</PublicIncludeDirectories>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>OlympeBlueprintEditor</TargetName>
@@ -272,7 +413,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;OLYMPE_BLUEPRINT_EDITOR_ENABLED;OLYMPE_BLUEPRINT_EDITOR_STANDALONE_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\SDL\include\SDL3_image;..\SDL\include\SDL3;..\SDL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\SDL\include\SDL3_image;..\SDL\include\SDL3;..\SDL\include;..\Source;..\Source\BlueprintEditor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
@@ -304,3 +445,4 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+

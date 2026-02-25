@@ -14,10 +14,14 @@
 #include "../third_party/imgui/backends/imgui_impl_sdlrenderer3.h"
 #include "../BlueprintEditor/blueprinteditor.h"
 #include "../BlueprintEditor/BlueprintEditorGUI.h"
+#include "../AI/BehaviorTreeDebugWindow.h"
 #include <iostream>
 
 // This provides the platform-specific entry point implementation for SDL3
 #include <SDL3/SDL_main_impl.h>
+
+// Global BT debugger instance (required by ECS_Systems_AI)
+Olympe::BehaviorTreeDebugWindow* g_btDebugWindow = nullptr;
 
 static SDL_Window* g_BlueprintEditorWindow = nullptr;
 static SDL_Renderer* g_BlueprintEditorRenderer = nullptr;

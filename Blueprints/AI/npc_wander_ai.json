@@ -1,98 +1,115 @@
 {
-  "schema_version": 2,
-  "type": "BehaviorTree",
   "blueprintType": "BehaviorTree",
-  "name": "NPCWanderTree",
-  "description": "NPC wander behavior with random pathfinding movement",
-  "metadata": {
-    "author": "Atlasbruce",
-    "created": "2026-02-12T00:00:00Z",
-    "lastModified": "2026-02-12T00:00:00Z",
-    "tags": ["AI", "BehaviorTree", "Wander", "Pathfinding"]
+  "data": {
+    "nodes": [
+      {
+        "children": [
+          3
+        ],
+        "id": 1,
+        "name": "Wander Loop (Repeater)",
+        "parameters": {},
+        "position": {
+          "x": 200,
+          "y": 100
+        },
+        "type": "Action"
+      },
+      {
+        "children": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "id": 2,
+        "name": "Wander Sequence",
+        "parameters": {},
+        "position": {
+          "x": 200,
+          "y": 300
+        },
+        "type": "Sequence"
+      },
+      {
+        "actionType": "WaitRandomTime",
+        "children": [
+          4
+        ],
+        "id": 3,
+        "name": "Wait Random Time (2-6s)",
+        "parameters": {
+          "param1": "2",
+          "param2": "6"
+        },
+        "position": {
+          "x": 550,
+          "y": 300
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "ChooseRandomNavigablePoint",
+        "children": [
+          5
+        ],
+        "id": 4,
+        "name": "Choose Random Navigable Point",
+        "parameters": {
+          "param1": "500",
+          "param2": "10"
+        },
+        "position": {
+          "x": 550,
+          "y": 550
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "RequestPathfinding",
+        "children": [
+          6
+        ],
+        "id": 5,
+        "name": "Request Pathfinding",
+        "parameters": {},
+        "position": {
+          "x": 550,
+          "y": 800
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "FollowPath",
+        "children": [
+          1
+        ],
+        "id": 6,
+        "name": "Follow Path",
+        "parameters": {},
+        "position": {
+          "x": 550,
+          "y": 1050
+        },
+        "type": "Action"
+      }
+    ],
+    "rootNodeId": 1
   },
+  "description": "",
   "editorState": {
-    "zoom": 1.0,
     "scrollOffset": {
       "x": 0,
       "y": 0
-    }
+    },
+    "zoom": 1
   },
-  "data": {
-    "rootNodeId": 1,
-    "nodes": [
-      {
-        "id": 1,
-        "name": "Wander Loop (Repeater)",
-        "type": "Repeater",
-        "position": {
-          "x": 200.0,
-          "y": 100.0
-        },
-        "decoratorChildId": 2,
-        "repeatCount": -1,
-        "parameters": {}
-      },
-      {
-        "id": 2,
-        "name": "Wander Sequence",
-        "type": "Sequence",
-        "position": {
-          "x": 200.0,
-          "y": 300.0
-        },
-        "children": [3, 4, 5, 6],
-        "parameters": {}
-      },
-      {
-        "id": 3,
-        "name": "Wait Random Time (2-6s)",
-        "type": "Action",
-        "position": {
-          "x": 550.0,
-          "y": 300.0
-        },
-        "actionType": "WaitRandomTime",
-        "parameters": {
-          "param1": 2.0,
-          "param2": 6.0
-        }
-      },
-      {
-        "id": 4,
-        "name": "Choose Random Navigable Point",
-        "type": "Action",
-        "position": {
-          "x": 550.0,
-          "y": 550.0
-        },
-        "actionType": "ChooseRandomNavigablePoint",
-        "parameters": {
-          "param1": 500.0,
-          "param2": 10.0
-        }
-      },
-      {
-        "id": 5,
-        "name": "Request Pathfinding",
-        "type": "Action",
-        "position": {
-          "x": 550.0,
-          "y": 800.0
-        },
-        "actionType": "RequestPathfinding",
-        "parameters": {}
-      },
-      {
-        "id": 6,
-        "name": "Follow Path",
-        "type": "Action",
-        "position": {
-          "x": 550.0,
-          "y": 1050.0
-        },
-        "actionType": "FollowPath",
-        "parameters": {}
-      }
-    ]
-  }
+  "metadata": {
+    "author": "User",
+    "created": "",
+    "lastModified": "2026-02-25T23:45:15",
+    "tags": []
+  },
+  "name": "NPCWanderTree",
+  "schema_version": 2
 }
