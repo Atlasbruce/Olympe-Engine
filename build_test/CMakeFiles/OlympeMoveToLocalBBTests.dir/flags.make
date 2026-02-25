@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/home/runner/work/Olympe-Engine/Olympe-Engine/Source -I/home/runner/work/Olympe-Engine/Olympe-Engine/Source/third_party/nlohmann -I/home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include -I/home/runner/work/Olympe-Engine/Olympe-Engine/SDL/include/SDL3
 
-CXX_FLAGS = -std=gnu++14
+CXX_FLAGS = -g -std=gnu++14
 

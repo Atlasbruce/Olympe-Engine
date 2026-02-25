@@ -282,6 +282,56 @@ OlympeSetVariableTests/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/build
 .PHONY : OlympeSetVariableTests/fast
 
+#=============================================================================
+# Target rules for targets named OlympeEditorBridgeTests
+
+# Build rule for target.
+OlympeEditorBridgeTests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 OlympeEditorBridgeTests
+.PHONY : OlympeEditorBridgeTests
+
+# fast build rule for target.
+OlympeEditorBridgeTests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/build
+.PHONY : OlympeEditorBridgeTests/fast
+
+#=============================================================================
+# Target rules for targets named OlympeClipboardTests
+
+# Build rule for target.
+OlympeClipboardTests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 OlympeClipboardTests
+.PHONY : OlympeClipboardTests
+
+# fast build rule for target.
+OlympeClipboardTests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeClipboardTests.dir/build.make CMakeFiles/OlympeClipboardTests.dir/build
+.PHONY : OlympeClipboardTests/fast
+
+Source/BlueprintEditor/BTNodeGraphManager.o: Source/BlueprintEditor/BTNodeGraphManager.cpp.o
+.PHONY : Source/BlueprintEditor/BTNodeGraphManager.o
+
+# target to build an object file
+Source/BlueprintEditor/BTNodeGraphManager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeClipboardTests.dir/build.make CMakeFiles/OlympeClipboardTests.dir/Source/BlueprintEditor/BTNodeGraphManager.cpp.o
+.PHONY : Source/BlueprintEditor/BTNodeGraphManager.cpp.o
+
+Source/BlueprintEditor/BTNodeGraphManager.i: Source/BlueprintEditor/BTNodeGraphManager.cpp.i
+.PHONY : Source/BlueprintEditor/BTNodeGraphManager.i
+
+# target to preprocess a source file
+Source/BlueprintEditor/BTNodeGraphManager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeClipboardTests.dir/build.make CMakeFiles/OlympeClipboardTests.dir/Source/BlueprintEditor/BTNodeGraphManager.cpp.i
+.PHONY : Source/BlueprintEditor/BTNodeGraphManager.cpp.i
+
+Source/BlueprintEditor/BTNodeGraphManager.s: Source/BlueprintEditor/BTNodeGraphManager.cpp.s
+.PHONY : Source/BlueprintEditor/BTNodeGraphManager.s
+
+# target to generate assembly for a file
+Source/BlueprintEditor/BTNodeGraphManager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeClipboardTests.dir/build.make CMakeFiles/OlympeClipboardTests.dir/Source/BlueprintEditor/BTNodeGraphManager.cpp.s
+.PHONY : Source/BlueprintEditor/BTNodeGraphManager.cpp.s
+
 Source/Core/AssetManager.o: Source/Core/AssetManager.cpp.o
 .PHONY : Source/Core/AssetManager.o
 
@@ -293,6 +343,7 @@ Source/Core/AssetManager.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/Core/AssetManager.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/Core/AssetManager.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/Core/AssetManager.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/Core/AssetManager.cpp.o
 .PHONY : Source/Core/AssetManager.cpp.o
 
 Source/Core/AssetManager.i: Source/Core/AssetManager.cpp.i
@@ -306,6 +357,7 @@ Source/Core/AssetManager.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/Core/AssetManager.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/Core/AssetManager.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/Core/AssetManager.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/Core/AssetManager.cpp.i
 .PHONY : Source/Core/AssetManager.cpp.i
 
 Source/Core/AssetManager.s: Source/Core/AssetManager.cpp.s
@@ -319,6 +371,7 @@ Source/Core/AssetManager.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/Core/AssetManager.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/Core/AssetManager.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/Core/AssetManager.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/Core/AssetManager.cpp.s
 .PHONY : Source/Core/AssetManager.cpp.s
 
 Source/ECS/Components/MovementComponent.o: Source/ECS/Components/MovementComponent.cpp.o
@@ -379,6 +432,7 @@ Source/ECS/Components/TaskRunnerComponent.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/ECS/Components/TaskRunnerComponent.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/ECS/Components/TaskRunnerComponent.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/ECS/Components/TaskRunnerComponent.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/ECS/Components/TaskRunnerComponent.cpp.o
 .PHONY : Source/ECS/Components/TaskRunnerComponent.cpp.o
 
 Source/ECS/Components/TaskRunnerComponent.i: Source/ECS/Components/TaskRunnerComponent.cpp.i
@@ -391,6 +445,7 @@ Source/ECS/Components/TaskRunnerComponent.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/ECS/Components/TaskRunnerComponent.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/ECS/Components/TaskRunnerComponent.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/ECS/Components/TaskRunnerComponent.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/ECS/Components/TaskRunnerComponent.cpp.i
 .PHONY : Source/ECS/Components/TaskRunnerComponent.cpp.i
 
 Source/ECS/Components/TaskRunnerComponent.s: Source/ECS/Components/TaskRunnerComponent.cpp.s
@@ -403,6 +458,7 @@ Source/ECS/Components/TaskRunnerComponent.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/ECS/Components/TaskRunnerComponent.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/ECS/Components/TaskRunnerComponent.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/ECS/Components/TaskRunnerComponent.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/ECS/Components/TaskRunnerComponent.cpp.s
 .PHONY : Source/ECS/Components/TaskRunnerComponent.cpp.s
 
 Source/TaskSystem/AtomicTaskRegistry.o: Source/TaskSystem/AtomicTaskRegistry.cpp.o
@@ -418,6 +474,7 @@ Source/TaskSystem/AtomicTaskRegistry.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.o
 .PHONY : Source/TaskSystem/AtomicTaskRegistry.cpp.o
 
 Source/TaskSystem/AtomicTaskRegistry.i: Source/TaskSystem/AtomicTaskRegistry.cpp.i
@@ -433,6 +490,7 @@ Source/TaskSystem/AtomicTaskRegistry.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.i
 .PHONY : Source/TaskSystem/AtomicTaskRegistry.cpp.i
 
 Source/TaskSystem/AtomicTaskRegistry.s: Source/TaskSystem/AtomicTaskRegistry.cpp.s
@@ -448,6 +506,7 @@ Source/TaskSystem/AtomicTaskRegistry.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/AtomicTaskRegistry.cpp.s
 .PHONY : Source/TaskSystem/AtomicTaskRegistry.cpp.s
 
 Source/TaskSystem/AtomicTasks/AI/Task_RequestPathfinding.o: Source/TaskSystem/AtomicTasks/AI/Task_RequestPathfinding.cpp.o
@@ -593,6 +652,7 @@ Source/TaskSystem/LocalBlackboard.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/LocalBlackboard.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/LocalBlackboard.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/LocalBlackboard.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/LocalBlackboard.cpp.o
 .PHONY : Source/TaskSystem/LocalBlackboard.cpp.o
 
 Source/TaskSystem/LocalBlackboard.i: Source/TaskSystem/LocalBlackboard.cpp.i
@@ -609,6 +669,7 @@ Source/TaskSystem/LocalBlackboard.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/LocalBlackboard.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/LocalBlackboard.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/LocalBlackboard.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/LocalBlackboard.cpp.i
 .PHONY : Source/TaskSystem/LocalBlackboard.cpp.i
 
 Source/TaskSystem/LocalBlackboard.s: Source/TaskSystem/LocalBlackboard.cpp.s
@@ -625,6 +686,7 @@ Source/TaskSystem/LocalBlackboard.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/LocalBlackboard.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/LocalBlackboard.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/LocalBlackboard.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/LocalBlackboard.cpp.s
 .PHONY : Source/TaskSystem/LocalBlackboard.cpp.s
 
 Source/TaskSystem/Pathfinding/PathfindingManager.o: Source/TaskSystem/Pathfinding/PathfindingManager.cpp.o
@@ -651,6 +713,30 @@ Source/TaskSystem/Pathfinding/PathfindingManager.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/Pathfinding/PathfindingManager.cpp.s
 .PHONY : Source/TaskSystem/Pathfinding/PathfindingManager.cpp.s
 
+Source/TaskSystem/TaskExecutionBridge.o: Source/TaskSystem/TaskExecutionBridge.cpp.o
+.PHONY : Source/TaskSystem/TaskExecutionBridge.o
+
+# target to build an object file
+Source/TaskSystem/TaskExecutionBridge.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/TaskExecutionBridge.cpp.o
+.PHONY : Source/TaskSystem/TaskExecutionBridge.cpp.o
+
+Source/TaskSystem/TaskExecutionBridge.i: Source/TaskSystem/TaskExecutionBridge.cpp.i
+.PHONY : Source/TaskSystem/TaskExecutionBridge.i
+
+# target to preprocess a source file
+Source/TaskSystem/TaskExecutionBridge.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/TaskExecutionBridge.cpp.i
+.PHONY : Source/TaskSystem/TaskExecutionBridge.cpp.i
+
+Source/TaskSystem/TaskExecutionBridge.s: Source/TaskSystem/TaskExecutionBridge.cpp.s
+.PHONY : Source/TaskSystem/TaskExecutionBridge.s
+
+# target to generate assembly for a file
+Source/TaskSystem/TaskExecutionBridge.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/TaskExecutionBridge.cpp.s
+.PHONY : Source/TaskSystem/TaskExecutionBridge.cpp.s
+
 Source/TaskSystem/TaskGraphLoader.o: Source/TaskSystem/TaskGraphLoader.cpp.o
 .PHONY : Source/TaskSystem/TaskGraphLoader.o
 
@@ -663,6 +749,7 @@ Source/TaskSystem/TaskGraphLoader.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/TaskGraphLoader.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/TaskGraphLoader.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskGraphLoader.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/TaskGraphLoader.cpp.o
 .PHONY : Source/TaskSystem/TaskGraphLoader.cpp.o
 
 Source/TaskSystem/TaskGraphLoader.i: Source/TaskSystem/TaskGraphLoader.cpp.i
@@ -677,6 +764,7 @@ Source/TaskSystem/TaskGraphLoader.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/TaskGraphLoader.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/TaskGraphLoader.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskGraphLoader.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/TaskGraphLoader.cpp.i
 .PHONY : Source/TaskSystem/TaskGraphLoader.cpp.i
 
 Source/TaskSystem/TaskGraphLoader.s: Source/TaskSystem/TaskGraphLoader.cpp.s
@@ -691,6 +779,7 @@ Source/TaskSystem/TaskGraphLoader.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/TaskGraphLoader.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/TaskGraphLoader.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskGraphLoader.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/TaskGraphLoader.cpp.s
 .PHONY : Source/TaskSystem/TaskGraphLoader.cpp.s
 
 Source/TaskSystem/TaskGraphTemplate.o: Source/TaskSystem/TaskGraphTemplate.cpp.o
@@ -708,6 +797,7 @@ Source/TaskSystem/TaskGraphTemplate.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.o
 .PHONY : Source/TaskSystem/TaskGraphTemplate.cpp.o
 
 Source/TaskSystem/TaskGraphTemplate.i: Source/TaskSystem/TaskGraphTemplate.cpp.i
@@ -725,6 +815,7 @@ Source/TaskSystem/TaskGraphTemplate.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.i
 .PHONY : Source/TaskSystem/TaskGraphTemplate.cpp.i
 
 Source/TaskSystem/TaskGraphTemplate.s: Source/TaskSystem/TaskGraphTemplate.cpp.s
@@ -742,6 +833,7 @@ Source/TaskSystem/TaskGraphTemplate.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/TaskGraphTemplate.cpp.s
 .PHONY : Source/TaskSystem/TaskGraphTemplate.cpp.s
 
 Source/TaskSystem/TaskGraphTypes.o: Source/TaskSystem/TaskGraphTypes.cpp.o
@@ -761,6 +853,7 @@ Source/TaskSystem/TaskGraphTypes.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.o
 .PHONY : Source/TaskSystem/TaskGraphTypes.cpp.o
 
 Source/TaskSystem/TaskGraphTypes.i: Source/TaskSystem/TaskGraphTypes.cpp.i
@@ -780,6 +873,7 @@ Source/TaskSystem/TaskGraphTypes.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.i
 .PHONY : Source/TaskSystem/TaskGraphTypes.cpp.i
 
 Source/TaskSystem/TaskGraphTypes.s: Source/TaskSystem/TaskGraphTypes.cpp.s
@@ -799,6 +893,7 @@ Source/TaskSystem/TaskGraphTypes.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/TaskGraphTypes.cpp.s
 .PHONY : Source/TaskSystem/TaskGraphTypes.cpp.s
 
 Source/TaskSystem/TaskSystem.o: Source/TaskSystem/TaskSystem.cpp.o
@@ -811,6 +906,7 @@ Source/TaskSystem/TaskSystem.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/TaskSystem.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/TaskSystem.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskSystem.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/TaskSystem.cpp.o
 .PHONY : Source/TaskSystem/TaskSystem.cpp.o
 
 Source/TaskSystem/TaskSystem.i: Source/TaskSystem/TaskSystem.cpp.i
@@ -823,6 +919,7 @@ Source/TaskSystem/TaskSystem.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/TaskSystem.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/TaskSystem.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskSystem.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/TaskSystem.cpp.i
 .PHONY : Source/TaskSystem/TaskSystem.cpp.i
 
 Source/TaskSystem/TaskSystem.s: Source/TaskSystem/TaskSystem.cpp.s
@@ -835,7 +932,56 @@ Source/TaskSystem/TaskSystem.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToLocalBBTests.dir/build.make CMakeFiles/OlympeMoveToLocalBBTests.dir/Source/TaskSystem/TaskSystem.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeTaskSystemE2ETests.dir/build.make CMakeFiles/OlympeTaskSystemE2ETests.dir/Source/TaskSystem/TaskSystem.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Source/TaskSystem/TaskSystem.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Source/TaskSystem/TaskSystem.cpp.s
 .PHONY : Source/TaskSystem/TaskSystem.cpp.s
+
+Tests/Editor/ClipboardCopyPasteTest.o: Tests/Editor/ClipboardCopyPasteTest.cpp.o
+.PHONY : Tests/Editor/ClipboardCopyPasteTest.o
+
+# target to build an object file
+Tests/Editor/ClipboardCopyPasteTest.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeClipboardTests.dir/build.make CMakeFiles/OlympeClipboardTests.dir/Tests/Editor/ClipboardCopyPasteTest.cpp.o
+.PHONY : Tests/Editor/ClipboardCopyPasteTest.cpp.o
+
+Tests/Editor/ClipboardCopyPasteTest.i: Tests/Editor/ClipboardCopyPasteTest.cpp.i
+.PHONY : Tests/Editor/ClipboardCopyPasteTest.i
+
+# target to preprocess a source file
+Tests/Editor/ClipboardCopyPasteTest.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeClipboardTests.dir/build.make CMakeFiles/OlympeClipboardTests.dir/Tests/Editor/ClipboardCopyPasteTest.cpp.i
+.PHONY : Tests/Editor/ClipboardCopyPasteTest.cpp.i
+
+Tests/Editor/ClipboardCopyPasteTest.s: Tests/Editor/ClipboardCopyPasteTest.cpp.s
+.PHONY : Tests/Editor/ClipboardCopyPasteTest.s
+
+# target to generate assembly for a file
+Tests/Editor/ClipboardCopyPasteTest.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeClipboardTests.dir/build.make CMakeFiles/OlympeClipboardTests.dir/Tests/Editor/ClipboardCopyPasteTest.cpp.s
+.PHONY : Tests/Editor/ClipboardCopyPasteTest.cpp.s
+
+Tests/Editor/EditorRuntimeBridgeTest.o: Tests/Editor/EditorRuntimeBridgeTest.cpp.o
+.PHONY : Tests/Editor/EditorRuntimeBridgeTest.o
+
+# target to build an object file
+Tests/Editor/EditorRuntimeBridgeTest.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Tests/Editor/EditorRuntimeBridgeTest.cpp.o
+.PHONY : Tests/Editor/EditorRuntimeBridgeTest.cpp.o
+
+Tests/Editor/EditorRuntimeBridgeTest.i: Tests/Editor/EditorRuntimeBridgeTest.cpp.i
+.PHONY : Tests/Editor/EditorRuntimeBridgeTest.i
+
+# target to preprocess a source file
+Tests/Editor/EditorRuntimeBridgeTest.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Tests/Editor/EditorRuntimeBridgeTest.cpp.i
+.PHONY : Tests/Editor/EditorRuntimeBridgeTest.cpp.i
+
+Tests/Editor/EditorRuntimeBridgeTest.s: Tests/Editor/EditorRuntimeBridgeTest.cpp.s
+.PHONY : Tests/Editor/EditorRuntimeBridgeTest.s
+
+# target to generate assembly for a file
+Tests/Editor/EditorRuntimeBridgeTest.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Tests/Editor/EditorRuntimeBridgeTest.cpp.s
+.PHONY : Tests/Editor/EditorRuntimeBridgeTest.cpp.s
 
 Tests/TaskSystem/AssetManagerTaskGraphTest.o: Tests/TaskSystem/AssetManagerTaskGraphTest.cpp.o
 .PHONY : Tests/TaskSystem/AssetManagerTaskGraphTest.o
@@ -1142,6 +1288,8 @@ Tests/TestStubs.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Tests/TestStubs.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Tests/TestStubs.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Tests/TestStubs.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Tests/TestStubs.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeClipboardTests.dir/build.make CMakeFiles/OlympeClipboardTests.dir/Tests/TestStubs.cpp.o
 .PHONY : Tests/TestStubs.cpp.o
 
 Tests/TestStubs.i: Tests/TestStubs.cpp.i
@@ -1161,6 +1309,8 @@ Tests/TestStubs.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Tests/TestStubs.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Tests/TestStubs.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Tests/TestStubs.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Tests/TestStubs.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeClipboardTests.dir/build.make CMakeFiles/OlympeClipboardTests.dir/Tests/TestStubs.cpp.i
 .PHONY : Tests/TestStubs.cpp.i
 
 Tests/TestStubs.s: Tests/TestStubs.cpp.s
@@ -1180,6 +1330,8 @@ Tests/TestStubs.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeRequestPathfindingTests.dir/build.make CMakeFiles/OlympeRequestPathfindingTests.dir/Tests/TestStubs.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeMoveToWorldModeTests.dir/build.make CMakeFiles/OlympeMoveToWorldModeTests.dir/Tests/TestStubs.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeSetVariableTests.dir/build.make CMakeFiles/OlympeSetVariableTests.dir/Tests/TestStubs.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeEditorBridgeTests.dir/build.make CMakeFiles/OlympeEditorBridgeTests.dir/Tests/TestStubs.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/OlympeClipboardTests.dir/build.make CMakeFiles/OlympeClipboardTests.dir/Tests/TestStubs.cpp.s
 .PHONY : Tests/TestStubs.cpp.s
 
 # Help Target
@@ -1193,6 +1345,8 @@ help:
 	@echo "... test"
 	@echo "... OlympeAssetManagerTests"
 	@echo "... OlympeAtomicTaskRegistryTests"
+	@echo "... OlympeClipboardTests"
+	@echo "... OlympeEditorBridgeTests"
 	@echo "... OlympeLocalBlackboardPersistenceTests"
 	@echo "... OlympeLocalBlackboardTests"
 	@echo "... OlympeMoveToLocalBBTests"
@@ -1203,6 +1357,9 @@ help:
 	@echo "... OlympeTaskSystemRunningTests"
 	@echo "... OlympeTaskSystemTests"
 	@echo "... OlympeTests"
+	@echo "... Source/BlueprintEditor/BTNodeGraphManager.o"
+	@echo "... Source/BlueprintEditor/BTNodeGraphManager.i"
+	@echo "... Source/BlueprintEditor/BTNodeGraphManager.s"
 	@echo "... Source/Core/AssetManager.o"
 	@echo "... Source/Core/AssetManager.i"
 	@echo "... Source/Core/AssetManager.s"
@@ -1239,6 +1396,9 @@ help:
 	@echo "... Source/TaskSystem/Pathfinding/PathfindingManager.o"
 	@echo "... Source/TaskSystem/Pathfinding/PathfindingManager.i"
 	@echo "... Source/TaskSystem/Pathfinding/PathfindingManager.s"
+	@echo "... Source/TaskSystem/TaskExecutionBridge.o"
+	@echo "... Source/TaskSystem/TaskExecutionBridge.i"
+	@echo "... Source/TaskSystem/TaskExecutionBridge.s"
 	@echo "... Source/TaskSystem/TaskGraphLoader.o"
 	@echo "... Source/TaskSystem/TaskGraphLoader.i"
 	@echo "... Source/TaskSystem/TaskGraphLoader.s"
@@ -1251,6 +1411,12 @@ help:
 	@echo "... Source/TaskSystem/TaskSystem.o"
 	@echo "... Source/TaskSystem/TaskSystem.i"
 	@echo "... Source/TaskSystem/TaskSystem.s"
+	@echo "... Tests/Editor/ClipboardCopyPasteTest.o"
+	@echo "... Tests/Editor/ClipboardCopyPasteTest.i"
+	@echo "... Tests/Editor/ClipboardCopyPasteTest.s"
+	@echo "... Tests/Editor/EditorRuntimeBridgeTest.o"
+	@echo "... Tests/Editor/EditorRuntimeBridgeTest.i"
+	@echo "... Tests/Editor/EditorRuntimeBridgeTest.s"
 	@echo "... Tests/TaskSystem/AssetManagerTaskGraphTest.o"
 	@echo "... Tests/TaskSystem/AssetManagerTaskGraphTest.i"
 	@echo "... Tests/TaskSystem/AssetManagerTaskGraphTest.s"
