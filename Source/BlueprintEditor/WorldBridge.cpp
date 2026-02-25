@@ -13,6 +13,7 @@
 #include "../ECS_Entity.h"
 #include "../TaskSystem/LocalBlackboard.h"
 #include "../TaskSystem/TaskSystem.h"
+#include "../TaskSystem/TaskExecutionBridge.h"
 #include <cstdint>  // Pour uint64_t
 
 // Bridge functions called by World (via extern declarations)
@@ -45,13 +46,28 @@ extern "C" void NotifyEditorEntityDestroyed(uint64_t entity)
 namespace Olympe
 {
 
-// Static frame-local copy of the blackboard snapshot published by TaskSystem.
-// Updated once per frame in the TaskEditorPublishFn lambda below.
+// Static frame-local copy of the blackboard snapshot published by the bridge.
 // InspectorPanel holds a non-owning pointer to this instance.
 static LocalBlackboard s_FrameBlackboard;
 
+// ---------------------------------------------------------------------------
+// Editor-side BB hook called by TaskExecutionBridge
+// ---------------------------------------------------------------------------
+static void WorldBridge_SetBlackboard(const LocalBlackboard* bb)
+{
+    if (bb != nullptr)
+    {
+        s_FrameBlackboard = *bb;
+        InspectorPanel::SetDebugBlackboard(&s_FrameBlackboard);
+    }
+    else
+    {
+        InspectorPanel::SetDebugBlackboard(nullptr);
+    }
+}
+
 /**
- * @brief Registers the WorldBridge task-running callback with TaskSystem.
+ * @brief Registers the TaskExecutionBridge with TaskSystem.
  *
  * Call once during editor startup so that TaskSystem publishes live state
  * to the editor panels (NodeGraphPanel active-node highlight and
@@ -59,24 +75,10 @@ static LocalBlackboard s_FrameBlackboard;
  */
 void WorldBridge_RegisterTaskCallback()
 {
-    TaskSystem::SetEditorPublishCallback(
-        [](EntityID /*entity*/, int nodeIndex, const LocalBlackboard* bb)
-        {
-            // Copy blackboard snapshot; the pointer from TaskSystem is only
-            // valid for the duration of this call.
-            if (bb != nullptr)
-            {
-                s_FrameBlackboard = *bb;
-                InspectorPanel::SetDebugBlackboard(&s_FrameBlackboard);
-            }
-            else
-            {
-                InspectorPanel::SetDebugBlackboard(nullptr);
-            }
-
-            // Highlight the executing node in the NodeGraph panel.
-            NodeGraphPanel::SetActiveDebugNode(nodeIndex);
-        });
+    TaskExecutionBridge::Install(
+        &NodeGraphPanel::SetActiveDebugNode,
+        &WorldBridge_SetBlackboard
+    );
 }
 
 } // namespace Olympe
