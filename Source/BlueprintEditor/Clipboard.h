@@ -69,7 +69,8 @@ public:
      * If the clipboard does not contain a valid Olympe payload this is a no-op.
      */
     void PasteNodes(NodeGraph* graph, float mousePosX, float mousePosY,
-                    bool snapToGrid = false, float snapGridSize = 16.0f);
+                    bool snapToGrid = true, float snapGridSize = 16.0f,
+                    int graphID = 0);
 
 private:
     NodeGraphClipboard() = default;

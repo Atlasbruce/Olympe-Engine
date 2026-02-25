@@ -1329,12 +1329,13 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_V))
         {
             NodeGraph* g = NodeGraphManager::Get().GetActiveGraph();
+            int gid = NodeGraphManager::Get().GetActiveGraphId();
             if (g != nullptr)
             {
                 ImVec2 mousePos = ImGui::GetMousePos();
                 ImVec2 gridPos  = ScreenSpaceToGridSpace(mousePos);
                 NodeGraphClipboard::Get().PasteNodes(g, gridPos.x, gridPos.y,
-                                                     m_SnapToGrid, m_SnapGridSize);
+                                                     m_SnapToGrid, m_SnapGridSize, gid);
             }
         }
 

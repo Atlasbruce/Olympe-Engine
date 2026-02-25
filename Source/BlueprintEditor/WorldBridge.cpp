@@ -81,4 +81,9 @@ void WorldBridge_RegisterTaskCallback()
     );
 }
 
+void WorldBridge_UnregisterTaskCallback()
+{
+    TaskExecutionBridge::Uninstall();
+}
+
 } // namespace Olympe

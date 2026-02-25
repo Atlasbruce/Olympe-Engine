@@ -7,6 +7,7 @@
 #include "BlueprintEditor.h"
 #include "TemplateBrowserPanel.h"
 #include "HistoryPanel.h"
+#include "WorldBridge.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
 #include <iostream>
@@ -108,6 +109,8 @@ namespace Olympe
         m_InspectorPanel.Shutdown();
         m_EntitiesPanel.Shutdown();
         m_NodeGraphPanel.Shutdown();
+
+        WorldBridge_UnregisterTaskCallback();
         
         ImNodes::DestroyContext();
     }
