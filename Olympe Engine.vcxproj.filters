@@ -450,9 +450,6 @@
     <ClCompile Include="Source\TaskSystem\AtomicTaskRegistry.cpp">
       <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
     </ClCompile>
-    <ClCompile Include="Source\TaskSystem\AtomicTasks\Task_LogMessage.cpp">
-      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Core\AssetManager.cpp">
       <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
     </ClCompile>
@@ -485,6 +482,12 @@
     </ClCompile>
     <ClCompile Include="Source\BlueprintEditor\Clipboard.cpp">
       <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TaskSystem\TaskExecutionBridge.cpp">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Task_LogMessage.cpp">
+      <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -958,6 +961,15 @@
     </ClInclude>
     <ClInclude Include="Source\BlueprintEditor\Clipboard.h">
       <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskSystem\AtomicTaskContext.h">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskSystem\TaskExecutionBridge.h">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TaskSystem\TaskWorldFacade.h">
+      <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
