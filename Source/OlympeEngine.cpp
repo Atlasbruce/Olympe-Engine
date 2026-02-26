@@ -189,12 +189,12 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
     {
         case SDL_EVENT_KEY_DOWN:
         
-        // F2 toggles minimal runtime Blueprint panel (full editor is opened explicitly from within the panel)
+        // F2 toggles Tiled Level Loader menu
         if (event->key.key == SDLK_F2)
         {
-            GameMenu::Get().ToggleRuntimeBlueprintPanel();
-            SYSTEM_LOG << "Runtime Blueprint Panel "
-                      << (GameMenu::Get().IsRuntimeBlueprintPanelOpen() ? "opened" : "closed")
+            GameMenu::Get().ToggleF2Menu();
+            SYSTEM_LOG << "Tiled Level Loader (F2) "
+                      << (GameMenu::Get().IsF2MenuOpen() ? "opened" : "closed")
                       << endl;
             return SDL_APP_CONTINUE; // Early return to avoid ESC dialog below
         }
@@ -417,10 +417,10 @@ SDL_AppResult SDL_AppIterate(void* appstate)
             animationEditorWindow->Update(GameEngine::fDt);
         }
         
-        // Render Tiled Level Loader menu (F3)
+        // Render Tiled Level Loader menu (F2)
         GameMenu::Get().RenderF2Menu();
 
-        // Render minimal runtime Blueprint panel (F2)
+        // Render minimal runtime Blueprint panel (accessible via UI)
         GameMenu::Get().RenderRuntimeBlueprintPanel();
 
         ImGui::Render();
