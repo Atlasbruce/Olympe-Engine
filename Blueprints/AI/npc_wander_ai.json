@@ -16,12 +16,7 @@
         "type": "Action"
       },
       {
-        "children": [
-          3,
-          4,
-          5,
-          6
-        ],
+        "children": [],
         "id": 2,
         "name": "Wander Sequence",
         "parameters": {},

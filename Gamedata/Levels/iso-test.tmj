@@ -79,7 +79,7 @@
                  "name":"npc_2",
                  "point":true,
                  "rotation":0,
-                 "type":"Npc",
+                 "type":"NpcEntity",
                  "visible":true,
                  "width":0,
                  "x":489,

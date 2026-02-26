@@ -372,7 +372,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     // Render Blueprint Editor GUI if active
     // NOTE: Requires ImGui to be initialized and integrated into main engine
     // TODO: Add ImGui initialization in SDL_AppInit and ImGui NewFrame/Render calls here
-    if (Olympe::BlueprintEditor::Get().IsActive() && blueprintEditorGUI)
+    if ((Olympe::BlueprintEditor::Get().IsActive() && blueprintEditorGUI) || GameMenu::Get().IsF2MenuOpen())
     {
         // ===== FIX: Synchronize ImGui DisplaySize with window size =====
         // This fixes mouse coordinates in fullscreen mode

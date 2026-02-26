@@ -187,7 +187,7 @@ void GameMenu::ScanForTiledMaps(const std::string& directory)
             else
             {
                 // Check if file has .tmj extension
-                if (fileName.size() > 4 && fileName.substr(fileName.size() - 4) == ".tmj")
+                if (fileName.size() > 4 && (fileName.substr(fileName.size() - 4) == ".tmj" || fileName.substr(fileName.size() - 4) == ".tmx"))
                 {
                     m_tiledMapPaths.push_back(fullPath);
                 }
