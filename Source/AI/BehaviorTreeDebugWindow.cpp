@@ -15,6 +15,7 @@
 #include "../third_party/imgui/backends/imgui_impl_sdl3.h"
 #include "../third_party/imgui/backends/imgui_impl_sdlrenderer3.h"
 #include "../third_party/nlohmann/json.hpp"
+#include "../BlueprintEditor/NodeStyleRegistry.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <cstring>
@@ -32,6 +33,25 @@ namespace Olympe
     constexpr float MIN_ZOOM = 0.3f;
     constexpr float MAX_ZOOM = 3.0f;
     constexpr float ZOOM_EPSILON = 0.001f;
+
+    // ---------------------------------------------------------------------------
+    // Map BTNodeType (runtime AI enum) to NodeType (Blueprint Editor enum) so
+    // the F10 debug window uses the same NodeStyleRegistry colours as the
+    // standalone Blueprint Editor, ensuring visual consistency.
+    // ---------------------------------------------------------------------------
+    static inline NodeType BTNodeTypeToEditorNodeType(BTNodeType type)
+    {
+        switch (type)
+        {
+        case BTNodeType::Selector:  return NodeType::BT_Selector;
+        case BTNodeType::Sequence:  return NodeType::BT_Sequence;
+        case BTNodeType::Condition: return NodeType::BT_Condition;
+        case BTNodeType::Action:    return NodeType::BT_Action;
+        case BTNodeType::Inverter:  return NodeType::BT_Decorator;
+        case BTNodeType::Repeater:  return NodeType::BT_Decorator;
+        default:                    return NodeType::BT_Action;
+        }
+    }
 
     BehaviorTreeDebugWindow::BehaviorTreeDebugWindow()
         : m_separateWindow(nullptr)
@@ -1259,14 +1279,28 @@ namespace Olympe
 
         ImNodes::BeginNodeTitleBar();
 
-        BTStatus nodeStatus = isCurrentNode ? BTStatus::Running : BTStatus::Idle;
+        // Use NodeStyleRegistry colours to match the standalone Blueprint Editor.
+        // When the node is currently executing, override the header with the same
+        // animated amber/yellow glow used by NodeGraphPanel for active debug nodes.
+        const NodeStyle& style = NodeStyleRegistry::Get().GetStyle(BTNodeTypeToEditorNodeType(node->type));
+        ImU32 headerColor         = style.headerColor;
+        ImU32 headerHoveredColor  = style.headerHoveredColor;
+        ImU32 headerSelectedColor = style.headerSelectedColor;
+        if (isCurrentNode)
+        {
+            float t = 0.5f + 0.5f * sinf(m_pulseTimer * 2.0f * 3.14159265f * 2.0f);
+            ImU32 r = static_cast<ImU32>(180 + static_cast<int>(t * 75.0f));
+            ImU32 g = static_cast<ImU32>(140 + static_cast<int>(t * 115.0f));
+            ImU32 b = static_cast<ImU32>(10);
+            headerColor         = IM_COL32(r, g, b, 255);
+            headerHoveredColor  = IM_COL32(r, g, b, 230);
+            headerSelectedColor = IM_COL32(r, g, b, 210);
+        }
+        ImNodes::PushColorStyle(ImNodesCol_TitleBar,         headerColor);
+        ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered,  headerHoveredColor);
+        ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, headerSelectedColor);
 
-        uint32_t color = GetNodeColorByStatus(node->type, nodeStatus);
-        ImNodes::PushColorStyle(ImNodesCol_TitleBar, color);
-        ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, color);
-        ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, color);
-
-        const char* icon = GetNodeIcon(node->type);
+        const char* icon = style.icon;
         ImGui::Text("%s %s", icon, node->name.c_str());
 
         ImNodes::PopColorStyle();

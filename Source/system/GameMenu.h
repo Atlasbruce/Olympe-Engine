@@ -63,14 +63,23 @@ public:
     void ToggleF2Menu();
     void SetF2MenuOpen(bool open);
 
+    // Minimal runtime blueprint panel (F2 key) — lists loaded blueprints
+    // and provides a button to open the full Blueprint Editor explicitly.
+    void ToggleRuntimeBlueprintPanel();
+    bool IsRuntimeBlueprintPanelOpen() const { return m_runtimeBlueprintOpen; }
+    void RenderRuntimeBlueprintPanel();
+
 private:
     std::string name;
     bool m_active = false;
     std::vector<std::string> m_entries;
     int m_selected = MenuOption::Resume;  // Default to Resume
     
-    // F2 menu state
+    // F2 menu state (Tiled Level Loader — toggled by F3)
     bool m_f2MenuOpen = false;
+
+    // Runtime blueprint panel state (toggled by F2)
+    bool m_runtimeBlueprintOpen = false;
     std::vector<std::string> m_tiledMapPaths;
     int m_selectedMapIndex = -1;
     bool m_hasScannedTiledMaps = false;

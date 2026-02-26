@@ -7,6 +7,7 @@
 
 #ifdef OLYMPE_BLUEPRINT_EDITOR_ENABLED
 #include "../third_party/imgui/imgui.h"
+#include "../BlueprintEditor/blueprinteditor.h"
 #endif
 
 // C++14 compatible directory traversal (no std::filesystem)
@@ -104,6 +105,60 @@ void GameMenu::SetF2MenuOpen(bool open)
     {
         RefreshTiledMapList();
     }
+}
+
+void GameMenu::ToggleRuntimeBlueprintPanel()
+{
+    m_runtimeBlueprintOpen = !m_runtimeBlueprintOpen;
+    SYSTEM_LOG << "GameMenu: Runtime Blueprint Panel "
+               << (m_runtimeBlueprintOpen ? "opened" : "closed") << "\n";
+}
+
+void GameMenu::RenderRuntimeBlueprintPanel()
+{
+#ifdef OLYMPE_BLUEPRINT_EDITOR_ENABLED
+    if (!m_runtimeBlueprintOpen) return;
+
+    ImGui::SetNextWindowSize(ImVec2(480, 320), ImGuiCond_FirstUseEver);
+    if (ImGui::Begin("Blueprints (F2)", &m_runtimeBlueprintOpen))
+    {
+        ImGui::TextDisabled("Loaded blueprint assets");
+        ImGui::Separator();
+
+        // List all blueprint assets from the backend
+        auto& editor = Olympe::BlueprintEditor::Get();
+        const auto assets = editor.GetAllAssets();
+
+        if (assets.empty())
+        {
+            ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "(no blueprints found in asset root)");
+        }
+        else
+        {
+            ImGui::BeginChild("BPList", ImVec2(0, -40), true);
+            for (const auto& asset : assets)
+            {
+                if (asset.isDirectory) continue;
+                ImGui::BulletText("[%s] %s", asset.type.c_str(), asset.name.c_str());
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("%s", asset.filepath.c_str());
+            }
+            ImGui::EndChild();
+        }
+
+        ImGui::Separator();
+        // Provide an explicit button to open the full node-graph editor
+        if (ImGui::Button("Open in Blueprint Editor", ImVec2(-1, 0)))
+        {
+            editor.SetActive(true);
+            m_runtimeBlueprintOpen = false;
+            SYSTEM_LOG << "GameMenu: opened full Blueprint Editor from runtime panel\n";
+        }
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Opens the full node-graph Blueprint Editor");
+    }
+    ImGui::End();
+#endif
 }
 
 void GameMenu::ScanForTiledMaps(const std::string& directory)

@@ -113,7 +113,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     // Create Animation Editor Window
     animationEditorWindow = new Olympe::AnimationEditorWindow();
     
-    SYSTEM_LOG << "BlueprintEditor initialized in Runtime mode (toggle with F2)" << endl;
+    SYSTEM_LOG << "Runtime Blueprint Panel initialized (toggle with F2; opens full Blueprint Editor from panel)" << endl;
     SYSTEM_LOG << "BehaviorTree Debugger initialized (toggle with F10)" << endl;
     SYSTEM_LOG << "Animation Editor initialized (toggle with F9)" << endl;
 
@@ -189,14 +189,13 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
     {
         case SDL_EVENT_KEY_DOWN:
         
-        // F2 toggles Blueprint Editor (always process, even if ImGui is capturing)
+        // F2 toggles minimal runtime Blueprint panel (full editor is opened explicitly from within the panel)
         if (event->key.key == SDLK_F2)
         {
-            Olympe::BlueprintEditor::Get().ToggleActive();
-            SYSTEM_LOG << "BlueprintEditor " 
-                      << (Olympe::BlueprintEditor::Get().IsActive() ? "activated" : "deactivated") 
+            GameMenu::Get().ToggleRuntimeBlueprintPanel();
+            SYSTEM_LOG << "Runtime Blueprint Panel "
+                      << (GameMenu::Get().IsRuntimeBlueprintPanelOpen() ? "opened" : "closed")
                       << endl;
-            GameMenu::Get().SetF2MenuOpen(Olympe::BlueprintEditor::Get().IsActive());
             return SDL_APP_CONTINUE; // Early return to avoid ESC dialog below
         }
         
@@ -420,6 +419,9 @@ SDL_AppResult SDL_AppIterate(void* appstate)
         
         // Render Tiled Level Loader menu (F3)
         GameMenu::Get().RenderF2Menu();
+
+        // Render minimal runtime Blueprint panel (F2)
+        GameMenu::Get().RenderRuntimeBlueprintPanel();
 
         ImGui::Render();
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
