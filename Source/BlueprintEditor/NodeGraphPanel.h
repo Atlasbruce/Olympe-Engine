@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include "BTNodeGraphManager.h"
+#include "../EditorCommon/EditorAutosaveManager.h"
 
 namespace Olympe
 {
@@ -130,5 +131,8 @@ namespace Olympe
         /// Backing storage for SetActiveDebugNode: the local node ID currently
         /// executing (-1 = none).  Shared across all panel instances.
         static int s_ActiveDebugNodeId;
+
+        /// Async autosave manager – persists node positions without blocking the UI.
+        EditorAutosaveManager m_autosave;
     };
 }

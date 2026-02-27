@@ -24,7 +24,9 @@
 #include <deque>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <cstdint>
+#include "../EditorCommon/EditorAutosaveManager.h"
 
  // Forward declarations for SDL3
 struct SDL_Window;
@@ -199,7 +201,7 @@ namespace Olympe
         // Node graph helpers
         void RenderBehaviorTreeGraph();
         void RenderNode(const BTNode* node, const BTNodeLayout* layout, bool isCurrentNode);
-        void RenderNodeConnections(const BTNode* node, const BTNodeLayout* layout, const BehaviorTreeAsset* tree);
+        void RenderNodeConnections(const BTNode* node, const BTNodeLayout* layout, const BehaviorTreeAsset* tree, uint32_t activeNodeId = 0);
         void RenderBezierConnection(const Vector& start, const Vector& end, uint32_t color, float thickness, float tangent);
         void RenderActiveLinkGlow(const Vector& start, const Vector& end, float tangent);
         void RenderNodePins(const BTNode* node, const BTNodeLayout* layout);
@@ -382,5 +384,13 @@ namespace Olympe
         bool m_showNewBTDialog = false;
         char m_newBTName[256] = "";
         int m_selectedTemplate = 0;
+
+        // Async autosave – persists node positions without blocking the UI.
+        EditorAutosaveManager m_autosave;
+
+        // Set of node IDs already pushed to ImNodes; used to avoid overwriting
+        // user-dragged positions on subsequent frames.  Cleared whenever the
+        // layout is recomputed so nodes snap back to the new computed positions.
+        std::unordered_set<uint32_t> m_positionedNodes;
     };
 }

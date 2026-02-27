@@ -80,16 +80,31 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
     void NodeGraphPanel::Initialize()
     {
         std::cout << "[NodeGraphPanel] Initialized\n";
+
+        // Set up async autosave: debounce 1.5s, periodic flush every 60s.
+        m_autosave.Init([this]()
+        {
+            NodeGraph* g = NodeGraphManager::Get().GetActiveGraph();
+            if (g && g->HasFilepath() && g->IsDirty())
+            {
+                int gid = NodeGraphManager::Get().GetActiveGraphId();
+                NodeGraphManager::Get().SaveGraph(gid, g->GetFilepath());
+            }
+        }, 1.5f, 60.0f);
     }
 
     void NodeGraphPanel::Shutdown()
     {
+        m_autosave.Flush();
         std::cout << "[NodeGraphPanel] Shutdown\n";
     }
 
     void NodeGraphPanel::Render()
     {
         ImGui::Begin("Node Graph Editor");
+
+        // Advance autosave timers each frame.
+        m_autosave.Tick(static_cast<double>(ImGui::GetTime()));
 
         // Handle keyboard shortcuts
         HandleKeyboardShortcuts();
@@ -546,8 +561,8 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         }
 
         // Render all links with global UIDs.
-        // Links connecting to/from the active debug node are rendered with a
-        // glow colour so the user can see live execution flow.
+        // Pass 1: draw only inactive links (baseline blue).
+        // Active links are skipped here; RenderActiveLinks() draws them with glow.
         auto links = graph->GetAllLinks();
         for (size_t i = 0; i < links.size(); ++i)
         {
@@ -563,30 +578,15 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             // Link ID must also be unique globally
             int globalLinkUID = (graphID * LINK_ID_MULTIPLIER) + (int)i + 1;
 
-            // Glow tint when link is part of the active execution path.
+            // Skip active links in this baseline pass to avoid double-draw;
+            // RenderActiveLinks() will overlay the glow for them.
             bool isActive = (s_ActiveDebugNodeId >= 0 &&
                              (link.fromNode == s_ActiveDebugNodeId ||
                               link.toNode   == s_ActiveDebugNodeId));
             if (isActive)
-            {
-                // Pulse between amber and bright yellow using time.
-                float t = 0.5f + 0.5f * std::sin(static_cast<float>(ImGui::GetTime()) * 4.0f);
-                ImU32 r = static_cast<ImU32>(180 + static_cast<int>(t * 75.0f));
-                ImU32 g = static_cast<ImU32>(140 + static_cast<int>(t * 115.0f));
-                ImU32 b = static_cast<ImU32>(10);
-                ImNodes::PushColorStyle(ImNodesCol_Link,         IM_COL32(r, g, b, 255));
-                ImNodes::PushColorStyle(ImNodesCol_LinkHovered,  IM_COL32(r, g, b, 200));
-                ImNodes::PushColorStyle(ImNodesCol_LinkSelected, IM_COL32(r, g, b, 220));
-            }
+                continue;
 
             ImNodes::Link(globalLinkUID, fromAttrUID, toAttrUID);
-
-            if (isActive)
-            {
-                ImNodes::PopColorStyle();
-                ImNodes::PopColorStyle();
-                ImNodes::PopColorStyle();
-            }
         }
 
         // Minimap (rendered before EndNodeEditor as required by ImNodes API).
@@ -895,6 +895,9 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
                     // Mark graph as dirty when node is moved
                     if (graph)
                         graph->MarkDirty();
+
+                    // Schedule an async autosave after the debounce delay.
+                    m_autosave.ScheduleSave(static_cast<double>(ImGui::GetTime()));
                 }
             }
         }

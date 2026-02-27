@@ -34,6 +34,9 @@ namespace Olympe
     constexpr float MAX_ZOOM = 3.0f;
     constexpr float ZOOM_EPSILON = 0.001f;
 
+    // Minimum position delta (grid units) to treat a node as having been moved.
+    constexpr float NODE_POSITION_CHANGE_THRESHOLD = 0.5f;
+
     // ---------------------------------------------------------------------------
     // Map BTNodeType (runtime AI enum) to NodeType (Blueprint Editor enum) so
     // the F10 debug window uses the same NodeStyleRegistry colours as the
@@ -91,11 +94,20 @@ namespace Olympe
 
         m_isInitialized = true;
 
+        // Set up async autosave: debounce 1.5s, periodic flush every 60s.
+        // Only applies in editor mode when a file path is set.
+        m_autosave.Init([this]()
+        {
+            if (m_editorMode && !m_currentFilePath.empty() && m_isDirty)
+                Save();
+        }, 1.5f, 60.0f);
+
         std::cout << "[BTDebugger] Initialized (window will be created on first F10)" << std::endl;
     }
 
     void BehaviorTreeDebugWindow::Shutdown()
     {
+        m_autosave.Flush();
         DestroySeparateWindow();
 
         if (m_imnodesInitialized)
@@ -377,6 +389,7 @@ namespace Olympe
                             const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
                             if (tree)
                             {
+                                m_positionedNodes.clear();
                                 m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                                 std::cout << "[BTDebugger] Graph reorganized with current settings" << std::endl;
                             }
@@ -739,6 +752,7 @@ namespace Olympe
             const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(info.treeId);
             if (tree)
             {
+                m_positionedNodes.clear();
                 m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                 m_needsLayoutUpdate = false;
 
@@ -894,12 +908,14 @@ namespace Olympe
         if (layoutChanged)
         {
             m_layoutEngine.SetLayoutDirection(m_layoutDirection);
+            m_positionedNodes.clear();
             m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
             m_needsLayoutUpdate = false;
         }
 
         if (m_needsLayoutUpdate && tree)
         {
+            m_positionedNodes.clear();
             m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
             m_needsLayoutUpdate = false;
         }
@@ -1000,6 +1016,7 @@ namespace Olympe
 
                 if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
                 {
+                    m_positionedNodes.clear();
                     m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                     ApplyZoomToStyle();
 
@@ -1032,6 +1049,7 @@ namespace Olympe
 
                 if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
                 {
+                    m_positionedNodes.clear();
                     m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                     ApplyZoomToStyle();
                 }
@@ -1044,6 +1062,7 @@ namespace Olympe
 
                 if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
                 {
+                    m_positionedNodes.clear();
                     m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                     ApplyZoomToStyle();
                 }
@@ -1056,6 +1075,37 @@ namespace Olympe
             RenderMinimap();
 
         ImNodes::EndNodeEditor();
+
+        // After EndNodeEditor(), read back any user-dragged node positions and
+        // update the layout engine.  Also advance the autosave timers.
+        {
+            double now = static_cast<double>(ImGui::GetTime());
+            m_autosave.Tick(now);
+
+            const BehaviorTreeAsset* activeTree = m_editorMode ? &m_editingTree : tree;
+            if (activeTree)
+            {
+                for (const auto& node : activeTree->nodes)
+                {
+                    if (m_positionedNodes.find(node.id) != m_positionedNodes.end())
+                    {
+                        ImVec2 pos = ImNodes::GetNodeGridSpacePos(static_cast<int>(node.id));
+                        const BTNodeLayout* layout = m_layoutEngine.GetNodeLayout(node.id);
+                        if (layout &&
+                            (std::abs(pos.x - layout->position.x) > NODE_POSITION_CHANGE_THRESHOLD ||
+                             std::abs(pos.y - layout->position.y) > NODE_POSITION_CHANGE_THRESHOLD))
+                        {
+                            m_layoutEngine.UpdateNodePosition(node.id, pos.x, pos.y);
+                            if (m_editorMode)
+                            {
+                                m_isDirty = true;
+                                m_autosave.ScheduleSave(now);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         // Overlay Bezier glow for links connected to the active debug node.
         // Must be called after EndNodeEditor() so screen-space positions are valid.
@@ -1128,6 +1178,7 @@ namespace Olympe
                     m_treeModified = true;
                     
                     // Update layout
+                    m_positionedNodes.clear();
                     m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                     
                     // Run validation
@@ -1160,6 +1211,7 @@ namespace Olympe
                     m_treeModified = true;
                     
                     // Update layout
+                    m_positionedNodes.clear();
                     m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                     
                     // Run validation
@@ -1244,7 +1296,7 @@ namespace Olympe
             const BTNodeLayout* layout = m_layoutEngine.GetNodeLayout(node.id);
             if (layout)
             {
-                RenderNodeConnections(&node, layout, tree);
+                RenderNodeConnections(&node, layout, tree, currentNodeId);
             }
         }
 
@@ -1273,7 +1325,12 @@ namespace Olympe
             printedNodeIds.insert(node->id);
         }
 
-        ImNodes::SetNodeGridSpacePos(node->id, ImVec2(layout->position.x, layout->position.y));
+        // Set the ImNodes position only on first render so subsequent drags are preserved.
+        if (m_positionedNodes.find(node->id) == m_positionedNodes.end())
+        {
+            ImNodes::SetNodeGridSpacePos(node->id, ImVec2(layout->position.x, layout->position.y));
+            m_positionedNodes.insert(node->id);
+        }
 
         ImNodes::BeginNode(node->id);
 
@@ -1357,11 +1414,9 @@ namespace Olympe
         {
             ImNodes::PopColorStyle();
         }
-
-        ImNodes::SetNodeGridSpacePos(node->id, ImVec2(layout->position.x, layout->position.y));
     }
 
-    void BehaviorTreeDebugWindow::RenderNodeConnections(const BTNode* node, const BTNodeLayout* layout, const BehaviorTreeAsset* tree)
+    void BehaviorTreeDebugWindow::RenderNodeConnections(const BTNode* node, const BTNodeLayout* layout, const BehaviorTreeAsset* tree, uint32_t activeNodeId)
     {
         static int lastFrameCleared = -1;
         static int currentFrame = 0;
@@ -1377,6 +1432,11 @@ namespace Olympe
         {
             for (uint32_t childId : node->childIds)
             {
+                // Skip active links in baseline pass; RenderActiveLinkGlow() draws them.
+                if (!m_editorMode && activeNodeId != 0 &&
+                    (node->id == activeNodeId || childId == activeNodeId))
+                    continue;
+
                 int linkId = m_nextLinkId++;
                 ImNodes::Link(linkId, node->id * 10000 + 1, childId * 10000);
 
@@ -1393,16 +1453,21 @@ namespace Olympe
         else if ((node->type == BTNodeType::Inverter || node->type == BTNodeType::Repeater) &&
             node->decoratorChildId != 0)
         {
-            int linkId = m_nextLinkId++;
-            ImNodes::Link(linkId, node->id * 10000 + 1, node->decoratorChildId * 10000);
-
-            if (m_editorMode)
+            // Skip active links in baseline pass; RenderActiveLinkGlow() draws them.
+            if (m_editorMode || activeNodeId == 0 ||
+                (node->id != activeNodeId && node->decoratorChildId != activeNodeId))
             {
-                LinkInfo info;
-                info.linkId = linkId;
-                info.parentId = node->id;
-                info.childId = node->decoratorChildId;
-                m_linkMap.push_back(info);
+                int linkId = m_nextLinkId++;
+                ImNodes::Link(linkId, node->id * 10000 + 1, node->decoratorChildId * 10000);
+
+                if (m_editorMode)
+                {
+                    LinkInfo info;
+                    info.linkId = linkId;
+                    info.parentId = node->id;
+                    info.childId = node->decoratorChildId;
+                    m_linkMap.push_back(info);
+                }
             }
         }
     }
@@ -1816,6 +1881,7 @@ namespace Olympe
             if (tree)
             {
                 m_currentZoom = 1.0f;
+                m_positionedNodes.clear();
                 m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
                 ApplyZoomToStyle();
 
@@ -1936,6 +2002,7 @@ namespace Olympe
         {
             m_commandStack.Undo();
             m_isDirty = true;
+            m_positionedNodes.clear();
             m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
             m_validationMessages = m_editingTree.ValidateTreeFull();
         }
@@ -1948,6 +2015,7 @@ namespace Olympe
         {
             m_commandStack.Redo();
             m_isDirty = true;
+            m_positionedNodes.clear();
             m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
             m_validationMessages = m_editingTree.ValidateTreeFull();
         }
@@ -2069,6 +2137,7 @@ namespace Olympe
         m_treeModified = true;
 
         // Update layout
+        m_positionedNodes.clear();
         m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
         
         // Run validation
@@ -2103,6 +2172,7 @@ namespace Olympe
         m_treeModified = true;
 
         // Update layout
+        m_positionedNodes.clear();
         m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
         
         // Run validation
@@ -2152,6 +2222,7 @@ namespace Olympe
         m_treeModified = true;
 
         // Update layout
+        m_positionedNodes.clear();
         m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
         
         // Run validation  
@@ -2406,6 +2477,7 @@ namespace Olympe
         m_treeModified = true;
 
         // Update layout
+        m_positionedNodes.clear();
         m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
         
         // Run validation
@@ -2425,6 +2497,7 @@ namespace Olympe
         m_treeModified = true;
 
         // Update layout
+        m_positionedNodes.clear();
         m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
         
         // Run validation
@@ -3153,10 +3226,19 @@ namespace Olympe
             }
             nodeJson["type"] = typeStr;
 
-            // Position (placeholder - would need to get from layout)
+            // Position – use actual layout engine value if available.
             json pos = json::object();
-            pos["x"] = 200.0f;
-            pos["y"] = 100.0f * static_cast<float>(node.id);
+            const BTNodeLayout* nodeLayout = m_layoutEngine.GetNodeLayout(node.id);
+            if (nodeLayout)
+            {
+                pos["x"] = nodeLayout->position.x;
+                pos["y"] = nodeLayout->position.y;
+            }
+            else
+            {
+                pos["x"] = 200.0f;
+                pos["y"] = 100.0f * static_cast<float>(node.id);
+            }
             nodeJson["position"] = pos;
             
             // Children array (for composites)
