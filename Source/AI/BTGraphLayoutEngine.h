@@ -92,6 +92,15 @@ namespace Olympe
          */
         const BTNodeLayout* GetNodeLayout(uint32_t nodeId) const;
 
+        /**
+         * @brief Update the stored position for a node (e.g. after user drag).
+         * @param nodeId The BT node ID.
+         * @param x      New X position in canvas (grid) units.
+         * @param y      New Y position in canvas (grid) units.
+         * @return true if the node was found and updated, false otherwise.
+         */
+        bool UpdateNodePosition(uint32_t nodeId, float x, float y);
+
     private:
         // Phase 1: Assign nodes to layers via BFS from root
         void AssignLayers(const BehaviorTreeAsset* tree);

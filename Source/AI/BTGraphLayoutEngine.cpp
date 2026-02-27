@@ -66,6 +66,16 @@ namespace Olympe
         return nullptr;
     }
 
+    bool BTGraphLayoutEngine::UpdateNodePosition(uint32_t nodeId, float x, float y)
+    {
+        auto it = m_nodeIdToIndex.find(nodeId);
+        if (it == m_nodeIdToIndex.end())
+            return false;
+        m_layouts[it->second].position.x = x;
+        m_layouts[it->second].position.y = y;
+        return true;
+    }
+
     void BTGraphLayoutEngine::AssignLayers(const BehaviorTreeAsset* tree)
     {
         // BFS from root to assign layers

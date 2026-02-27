@@ -42,6 +42,9 @@ file(GLOB_RECURSE ENGINE_CORE_SOURCES
     "Source/InputsManager.cpp"
     "Source/PrefabScanner.cpp"
 )
+file(GLOB_RECURSE EDITOR_COMMON_SOURCES
+    "Source/EditorCommon/*.cpp"
+)
 file(GLOB_RECURSE TASKSYSTEM_SOURCES
     "Source/TaskSystem/*.cpp"
 )
@@ -55,6 +58,7 @@ add_library(OlympeCore STATIC
     ${IMNODES_SOURCES}
     ${NODEGRAPHCORE_SOURCES}
     ${TASKSYSTEM_SOURCES}
+    ${EDITOR_COMMON_SOURCES}
     Source/ECS/Components/TaskRunnerComponent.cpp
     Source/AI/BehaviorTree.cpp
     Source/AI/BehaviorTreeDependencyScanner.cpp
