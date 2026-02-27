@@ -489,6 +489,9 @@
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Task_LogMessage.cpp">
       <Filter>Fichiers d%27en-t�te\AI\AtomicTasks</Filter>
     </ClCompile>
+    <ClCompile Include="Source\EditorCommon\EditorAutosaveManager.cpp">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -970,6 +973,9 @@
     </ClInclude>
     <ClInclude Include="Source\TaskSystem\TaskWorldFacade.h">
       <Filter>Fichiers d%27en-t�te\TaskSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\EditorCommon\EditorAutosaveManager.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

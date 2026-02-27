@@ -403,6 +403,15 @@
     <ClCompile Include="..\Source\ECS_Systems_Animation.cpp">
       <Filter>Source Files\Animation</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\NodeGraphCore\CommandSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\NodeGraphCore\NodeGraphManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\EditorCommon\EditorAutosaveManager.cpp">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -827,6 +836,11 @@
     </ClInclude>
     <ClInclude Include="..\Source\ECS_Systems_Animation.h">
       <Filter>Source Files\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\NodeGraphCore\CommandSystem.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\NodeGraphManager.h" />
+    <ClInclude Include="..\Source\EditorCommon\EditorAutosaveManager.h">
+      <Filter>Source Files\BlueprintEditor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
