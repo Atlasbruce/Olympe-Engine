@@ -81,16 +81,10 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
     {
         std::cout << "[NodeGraphPanel] Initialized\n";
 
-        // Set up async autosave: debounce 1.5s, periodic flush every 60s.
-        m_autosave.Init([this]()
-        {
-            NodeGraph* g = NodeGraphManager::Get().GetActiveGraph();
-            if (g && g->HasFilepath() && g->IsDirty())
-            {
-                int gid = NodeGraphManager::Get().GetActiveGraphId();
-                NodeGraphManager::Get().SaveGraph(gid, g->GetFilepath());
-            }
-        }, 1.5f, 60.0f);
+        // Set up autosave timing only.  The per-save lambda overload of
+        // ScheduleSave() is used at each change site so that serialization
+        // happens on the UI thread and the background task only does I/O.
+        m_autosave.Init(nullptr, 1.5f, 60.0f);
     }
 
     void NodeGraphPanel::Shutdown()
@@ -521,6 +515,15 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
 
         // Render all nodes
         auto nodes = graph->GetAllNodes();
+
+        // Clear positioned-nodes tracking when the active graph changes so that
+        // the initial positions of a newly-opened graph are applied correctly.
+        if (graphID != m_lastActiveGraphId)
+        {
+            m_positionedNodes.clear();
+            m_lastActiveGraphId = graphID;
+        }
+
         for (GraphNode* node : nodes)
         {
             // Generate a global unique UID for ImNodes
@@ -528,8 +531,13 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             // This ensures no node from different graphs has the same UID
             int globalNodeUID = (graphID * GRAPH_ID_MULTIPLIER) + node->id;
 
-            // Set node position BEFORE rendering (ImNodes requirement)
-            ImNodes::SetNodeGridSpacePos(globalNodeUID, ImVec2(node->posX, node->posY));
+            // Set node position BEFORE rendering (ImNodes requirement), but only
+            // once per node so that subsequent user drags are not overridden.
+            if (m_positionedNodes.find(globalNodeUID) == m_positionedNodes.end())
+            {
+                ImNodes::SetNodeGridSpacePos(globalNodeUID, ImVec2(node->posX, node->posY));
+                m_positionedNodes.insert(globalNodeUID);
+            }
 
             // Apply per-type title-bar colours from NodeStyleRegistry
             const NodeStyle& style = NodeStyleRegistry::Get().GetStyle(node->type);
@@ -896,8 +904,24 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
                     if (graph)
                         graph->MarkDirty();
 
-                    // Schedule an async autosave after the debounce delay.
-                    m_autosave.ScheduleSave(static_cast<double>(ImGui::GetTime()));
+                    // Schedule an autosave.  Serialization runs on the UI thread
+                    // inside Tick(); the background task only writes the file.
+                    {
+                        int capturedGid    = graphID;
+                        std::string fp     = (graph && graph->HasFilepath())
+                                                 ? graph->GetFilepath() : "";
+                        m_autosave.ScheduleSave(
+                            static_cast<double>(ImGui::GetTime()),
+                            [capturedGid]() -> std::string
+                            {
+                                NodeGraph* g = NodeGraphManager::Get().GetGraph(capturedGid);
+                                if (g && g->IsDirty())
+                                    return g->ToJson().dump(2);
+                                return std::string();
+                            },
+                            fp,
+                            "GameData/AI/autosave_");
+                    }
                 }
             }
         }
@@ -1064,18 +1088,19 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             if (!isActive)
                 continue;
 
-            int fromUID = graphID * 10000 + link.fromNode;
-            int toUID   = graphID * 10000 + link.toNode;
+            int fromUID = graphID * GRAPH_ID_MULTIPLIER + link.fromNode;
+            int toUID   = graphID * GRAPH_ID_MULTIPLIER + link.toNode;
 
             ImVec2 fromPos = ImNodes::GetNodeScreenSpacePos(fromUID);
             ImVec2 fromDim = ImNodes::GetNodeDimensions(fromUID);
             ImVec2 toPos   = ImNodes::GetNodeScreenSpacePos(toUID);
             ImVec2 toDim   = ImNodes::GetNodeDimensions(toUID);
 
-            // Output pin: right-centre of the source node.
-            ImVec2 p1 = ImVec2(fromPos.x + fromDim.x, fromPos.y + fromDim.y * 0.5f);
-            // Input pin: left-centre of the destination node.
-            ImVec2 p4 = ImVec2(toPos.x,               toPos.y   + toDim.y   * 0.5f);
+            // Pin-center anchors: output pin is at the right edge + PinOffset,
+            // input pin is at the left edge - PinOffset.  Both at centre height.
+            const float po = ImNodes::GetStyle().PinOffset;
+            ImVec2 p1 = ImVec2(fromPos.x + fromDim.x + po, fromPos.y + fromDim.y * 0.5f);
+            ImVec2 p4 = ImVec2(toPos.x             - po, toPos.y   + toDim.y   * 0.5f);
 
             // Horizontal tangents give the classic node-graph S-curve shape.
             float curve = (p4.x - p1.x) * 0.4f;
