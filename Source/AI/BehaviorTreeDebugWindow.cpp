@@ -1384,6 +1384,38 @@ namespace Olympe
         ImNodes::PopColorStyle();
 
         ImNodes::EndNodeTitleBar();
+        // Place connection pins immediately under the title so "In" and "Out"
+        // are aligned on the same horizontal level just below the header.
+        // Input attribute (left side)
+        if (node->id != 0)
+        {
+            ImNodes::BeginInputAttribute(node->id * 10000);
+            ImGui::Text("In");
+            ImNodes::EndInputAttribute();
+        }
+
+        // Output attribute (right side) - position cursor to the right edge
+        if (node->type == BTNodeType::Selector || node->type == BTNodeType::Sequence ||
+            node->type == BTNodeType::Inverter || node->type == BTNodeType::Repeater)
+        {
+            // Move cursor near the right edge of the node so the output pin
+            // vertically aligns with the input pin (same row).
+            float startX = ImGui::GetCursorPosX();
+            // Use the computed layout width for the node rather than the
+            // available content region which can be large (viewport sized)
+            // and causes the node to expand to the full width. This keeps
+            // the output attribute positioned relative to the node's own
+            // width.
+            float nodeInnerWidth = layout ? layout->width : ImGui::GetContentRegionAvail().x;
+            // Reserve space for the output label/circle (configurable)
+            float reserve = m_config.pinOutputReserve;
+            float targetX = startX + std::max(0.0f, nodeInnerWidth - reserve);
+            ImGui::SetCursorPosX(targetX);
+
+            ImNodes::BeginOutputAttribute(node->id * 10000 + 1);
+            ImGui::Text("Out");
+            ImNodes::EndOutputAttribute();
+        }
 
         ImGui::PushItemWidth(200);
 
@@ -1404,21 +1436,7 @@ namespace Olympe
         ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
         ImGui::PopItemWidth();
-
-        if (node->id != 0)
-        {
-            ImNodes::BeginInputAttribute(node->id * 10000);
-            ImGui::Text("In");
-            ImNodes::EndInputAttribute();
-        }
-
-        if (node->type == BTNodeType::Selector || node->type == BTNodeType::Sequence ||
-            node->type == BTNodeType::Inverter || node->type == BTNodeType::Repeater)
-        {
-            ImNodes::BeginOutputAttribute(node->id * 10000 + 1);
-            ImGui::Text("Out");
-            ImNodes::EndOutputAttribute();
-        }
+        
 
         if (isCurrentNode)
         {
@@ -2550,6 +2568,8 @@ namespace Olympe
             const auto& rendering = configJson["rendering"];
             m_config.pinRadius = JsonHelper::GetFloat(rendering, "pinRadius", 6.0f);
             m_config.pinOutlineThickness = JsonHelper::GetFloat(rendering, "pinOutlineThickness", 2.0f);
+            m_config.pinHeaderHeight = JsonHelper::GetFloat(rendering, "pinHeaderHeight", 20.0f);
+            m_config.pinOutputReserve = JsonHelper::GetFloat(rendering, "pinOutputReserve", 40.0f);
             m_config.bezierTangent = JsonHelper::GetFloat(rendering, "bezierTangent", 80.0f);
             m_config.connectionThickness = JsonHelper::GetFloat(rendering, "connectionThickness", 2.0f);
         }
@@ -2654,6 +2674,22 @@ namespace Olympe
         m_nodeSpacingX = m_config.horizontalSpacing;
         m_nodeSpacingY = m_config.verticalSpacing;
 
+        // Apply rendering-related settings to ImNodes style so pins and
+        // spacing reflect config values immediately when config is loaded.
+        if (m_imnodesInitialized)
+        {
+            ImNodesStyle& s = ImNodes::GetStyle();
+            // PinOffset determines the horizontal offset used when anchoring
+            // links to node pin centers. Set it relative to pin radius + outline.
+            s.PinOffset = m_config.pinRadius + m_config.pinOutlineThickness + 2.0f;
+
+            // Grid spacing can reflect configured grid size (scaled)
+            s.GridSpacing = std::max(8.0f, m_config.gridSize * 2.0f);
+
+            // Optionally adjust node padding based on current zoom
+            s.NodePadding = ImVec2(8.0f * m_currentZoom, 8.0f * m_currentZoom);
+        }
+
         std::cout << "[BTDebugger] Applied configuration to layout engine" << std::endl;
     }
 
@@ -2684,7 +2720,7 @@ namespace Olympe
     {
         // Horizontal tangents (classic S-curve)
         float curve = tangent;
-        if (curve < 50.0f) curve = 50.0f;
+        if (curve < m_config.bezierTangent) curve = m_config.bezierTangent;
         cp1 = ImVec2(p1.x + curve, p1.y);
         cp2 = ImVec2(p4.x - curve, p4.y);
     }
@@ -2692,7 +2728,7 @@ namespace Olympe
     {
         // Vertical tangents (top-to-bottom layout)
         float curve = tangent;
-        if (curve < 30.0f) curve = 30.0f;
+        if (curve < m_config.bezierTangent) curve = m_config.bezierTangent;
         cp1 = ImVec2(p1.x, p1.y + curve);
         cp2 = ImVec2(p4.x, p4.y - curve);
     }
@@ -2721,14 +2757,14 @@ namespace Olympe
     if (m_layoutDirection == BTLayoutDirection::LeftToRight)
     {
         float curve = tangent;
-        if (curve < 50.0f) curve = 50.0f;
+        if (curve < m_config.bezierTangent) curve = m_config.bezierTangent;
         p2 = ImVec2(p1.x + curve, p1.y);
         p3 = ImVec2(p4.x - curve, p4.y);
     }
     else
     {
         float curve = tangent;
-        if (curve < 30.0f) curve = 30.0f;
+        if (curve < m_config.bezierTangent) curve = m_config.bezierTangent;
         p2 = ImVec2(p1.x, p1.y + curve);
         p3 = ImVec2(p4.x, p4.y - curve);
     }
@@ -2755,9 +2791,15 @@ namespace Olympe
 
         ImDrawList* drawList = ImGui::GetWindowDrawList();
 
+        // Align pins just below the title/header of the node so they sit on
+        // a consistent row. Calculate top Y of node and offset by header.
+        float halfHeight = layout->height / 2.0f;
+        const float headerHeight = m_config.pinHeaderHeight; // pixels from top to pins
+        float pinY = layout->position.y - halfHeight + headerHeight;
+
         if (node->id != 0)
         {
-            Vector inputPinPos(layout->position.x - halfWidth, layout->position.y, 0.0f);
+            Vector inputPinPos(layout->position.x - halfWidth, pinY, 0.0f);
             ImVec2 pinCenter(inputPinPos.x, inputPinPos.y);
             uint32_t pinColor = IM_COL32(200, 200, 200, 255);
             uint32_t outlineColor = IM_COL32(80, 80, 80, 255);
@@ -2769,7 +2811,7 @@ namespace Olympe
         if (node->type == BTNodeType::Selector || node->type == BTNodeType::Sequence ||
             node->type == BTNodeType::Inverter || node->type == BTNodeType::Repeater)
         {
-            Vector outputPinPos(layout->position.x + halfWidth, layout->position.y, 0.0f);
+            Vector outputPinPos(layout->position.x + halfWidth, pinY, 0.0f);
             ImVec2 pinCenter(outputPinPos.x, outputPinPos.y);
             uint32_t pinColor = IM_COL32(200, 200, 200, 255);
             uint32_t outlineColor = IM_COL32(80, 80, 80, 255);

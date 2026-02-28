@@ -74,6 +74,10 @@ namespace Olympe
         // Rendering settings
         float pinRadius = 6.0f;
         float pinOutlineThickness = 2.0f;
+        // Vertical offset (pixels) from top of node to pin row (below header)
+        float pinHeaderHeight = 20.0f;
+        // Horizontal reserve (pixels) from right edge to place output label/pin
+        float pinOutputReserve = 40.0f;
         float bezierTangent = 80.0f;
         float connectionThickness = 2.0f;
 

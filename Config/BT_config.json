@@ -10,6 +10,8 @@
   "rendering": {
     "pinRadius": 6.0,
     "pinOutlineThickness": 2.0,
+    "pinHeaderHeight": 20.0,
+    "pinOutputReserve": 40.0,
     "bezierTangent": 80.0,
     "connectionThickness": 2.0
   },

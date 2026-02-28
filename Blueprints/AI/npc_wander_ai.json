@@ -16,7 +16,9 @@
         "type": "Action"
       },
       {
-        "children": [],
+        "children": [
+          3
+        ],
         "id": 2,
         "name": "Wander Sequence",
         "parameters": {},
@@ -102,7 +104,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-02-25T23:45:15",
+    "lastModified": "2026-02-28T10:18:11",
     "tags": []
   },
   "name": "NPCWanderTree",
