@@ -94,13 +94,11 @@ namespace Olympe
 
         m_isInitialized = true;
 
-        // Set up async autosave: debounce 1.5s, periodic flush every 60s.
-        // Only applies in editor mode when a file path is set.
-        m_autosave.Init([this]()
-        {
-            if (m_editorMode && !m_currentFilePath.empty() && m_isDirty)
-                Save();
-        }, 1.5f, 60.0f);
+        // Set up autosave timing only.  The per-save lambda overload of
+        // ScheduleSave() is used at each change site so that validation and
+        // serialization happen on the UI thread and the background task only
+        // does I/O.
+        m_autosave.Init(nullptr, 1.5f, 60.0f);
 
         std::cout << "[BTDebugger] Initialized (window will be created on first F10)" << std::endl;
     }
@@ -1099,7 +1097,24 @@ namespace Olympe
                             if (m_editorMode)
                             {
                                 m_isDirty = true;
-                                m_autosave.ScheduleSave(now);
+                                // Serialize on the UI thread; background task only writes.
+                                m_autosave.ScheduleSave(now,
+                                    [this]() -> std::string
+                                    {
+                                        if (!m_editorMode || !m_isDirty)
+                                            return std::string();
+                                        // Validate before serializing.
+                                        auto msgs = m_editingTree.ValidateTreeFull();
+                                        for (const auto& msg : msgs)
+                                        {
+                                            if (msg.severity == BTValidationMessage::Severity::Error)
+                                                return std::string();
+                                        }
+                                        ApplyModifiedParameters();
+                                        return SerializeTreeToJson(m_editingTree).dump(2);
+                                    },
+                                    m_currentFilePath,
+                                    "GameData/AI/autosave_");
                             }
                         }
                     }
@@ -1126,10 +1141,14 @@ namespace Olympe
                         ImVec2 cPos = ImNodes::GetNodeScreenSpacePos(static_cast<int>(childId));
                         ImVec2 cDim = ImNodes::GetNodeDimensions(static_cast<int>(childId));
 
-                        // Output pin at bottom-centre of parent; input at top-centre of child (top-to-bottom layout).
-                        Vector start(pPos.x + pDim.x * 0.5f, pPos.y + pDim.y, 0.0f);
-                        Vector end(cPos.x  + cDim.x  * 0.5f, cPos.y,          0.0f);
-                        float tangent = std::max(50.0f, std::abs(end.y - start.y) * 0.4f);
+                        // Pin-center anchors for LeftToRight layout:
+                        // output pin is at right-centre of parent; input at left-centre of child.
+                        // Tangent uses the horizontal (X-axis) distance because the layout
+                        // direction is LeftToRight (set in Initialize()).
+                        const float po = ImNodes::GetStyle().PinOffset;
+                        Vector start(pPos.x + pDim.x + po, pPos.y + pDim.y * 0.5f, 0.0f);
+                        Vector end(cPos.x           - po, cPos.y + cDim.y * 0.5f, 0.0f);
+                        float tangent = std::max(50.0f, std::abs(end.x - start.x) * 0.4f);
                         RenderActiveLinkGlow(start, end, tangent);
                     };
 

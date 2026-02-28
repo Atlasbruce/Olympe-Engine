@@ -9,6 +9,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_set>
 #include "BTNodeGraphManager.h"
 #include "../EditorCommon/EditorAutosaveManager.h"
 
@@ -134,5 +135,14 @@ namespace Olympe
 
         /// Async autosave manager – persists node positions without blocking the UI.
         EditorAutosaveManager m_autosave;
+
+        /// Tracks which global node UIDs have already had their ImNodes position
+        /// initialised.  Prevents SetNodeGridSpacePos() from overriding user drags
+        /// on subsequent frames.  Cleared whenever the active graph changes.
+        std::unordered_set<int> m_positionedNodes;
+
+        /// Graph ID that was active last frame; used to detect graph switches so
+        /// m_positionedNodes can be cleared.
+        int m_lastActiveGraphId = -1;
     };
 }
