@@ -2672,13 +2672,32 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::RenderBezierConnection(const Vector& start, const Vector& end, uint32_t color, float thickness, float tangent)
     {
-        ImVec2 p1(start.x, start.y);
-        ImVec2 p2(end.x, end.y);
+    ImVec2 p1(start.x, start.y);
+    ImVec2 p4(end.x, end.y);
 
-        ImVec2 cp1(p1.x + tangent, p1.y);
-        ImVec2 cp2(p2.x - tangent, p2.y);
+    ImVec2 cp1;
+    ImVec2 cp2;
 
-        ImGui::GetWindowDrawList()->AddBezierCubic(p1, cp1, cp2, p2, color, thickness);
+    // Choose tangent orientation based on current layout direction so the
+    // baseline connection matches the layout (horizontal or vertical).
+    if (m_layoutDirection == BTLayoutDirection::LeftToRight)
+    {
+        // Horizontal tangents (classic S-curve)
+        float curve = tangent;
+        if (curve < 50.0f) curve = 50.0f;
+        cp1 = ImVec2(p1.x + curve, p1.y);
+        cp2 = ImVec2(p4.x - curve, p4.y);
+    }
+    else
+    {
+        // Vertical tangents (top-to-bottom layout)
+        float curve = tangent;
+        if (curve < 30.0f) curve = 30.0f;
+        cp1 = ImVec2(p1.x, p1.y + curve);
+        cp2 = ImVec2(p4.x, p4.y - curve);
+    }
+
+    ImGui::GetWindowDrawList()->AddBezierCubic(p1, cp1, cp2, p4, color, thickness);
     }
 
     void BehaviorTreeDebugWindow::RenderActiveLinkGlow(const Vector& start, const Vector& end, float tangent)
@@ -2691,11 +2710,28 @@ namespace Olympe
         float t = 0.5f + 0.5f * sinf(m_pulseTimer * 2.0f * 3.14159265f);
         float alpha = 0.6f + 0.4f * t;
 
-        ImVec2 p1(start.x, start.y);
-        ImVec2 p4(end.x,   end.y);
-        // Vertical tangents for top-to-bottom BT layout.
-        ImVec2 p2(p1.x, p1.y + tangent);
-        ImVec2 p3(p4.x, p4.y - tangent);
+    ImVec2 p1(start.x, start.y);
+    ImVec2 p4(end.x,   end.y);
+
+    ImVec2 p2;
+    ImVec2 p3;
+
+    // Use the same tangent orientation as baseline connections so the glow
+    // overlays match the non-active link curves.
+    if (m_layoutDirection == BTLayoutDirection::LeftToRight)
+    {
+        float curve = tangent;
+        if (curve < 50.0f) curve = 50.0f;
+        p2 = ImVec2(p1.x + curve, p1.y);
+        p3 = ImVec2(p4.x - curve, p4.y);
+    }
+    else
+    {
+        float curve = tangent;
+        if (curve < 30.0f) curve = 30.0f;
+        p2 = ImVec2(p1.x, p1.y + curve);
+        p3 = ImVec2(p4.x, p4.y - curve);
+    }
 
         // Wide transparent halo.
         ImU32 glowWide = IM_COL32(255, 200, 50, static_cast<int>(alpha * 80.0f));
