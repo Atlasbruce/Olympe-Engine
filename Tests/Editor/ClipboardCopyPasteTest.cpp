@@ -25,6 +25,7 @@
  */
 
 #include "BlueprintEditor/BTNodeGraphManager.h"
+#include "BlueprintEditor/BPCommandSystem.h"
 #include "../Source/third_party/nlohmann/json.hpp"
 
 #include <iostream>
@@ -437,6 +438,46 @@ static void TestI_CopyPasteRoundTripCountAndParam()
     }
 
     ReportTest("TestI_CopyPasteRoundTripCountAndParam", passed);
+}
+
+// ---------------------------------------------------------------------------
+// Test J: CreateNodeCommand via CommandStack populates outCreatedId
+// ---------------------------------------------------------------------------
+
+static void TestJ_CreateNodeCommand()
+{
+    std::cout << "Test J: CreateNodeCommand via CommandStack..." << std::endl;
+    bool passed = true;
+
+    // Create a graph via manager
+    auto& mgr = Olympe::NodeGraph::NodeGraphManager::Get();
+    auto gid = mgr.CreateGraph("UnitTestGraph", "BehaviorTree");
+
+    Olympe::Blueprint::CommandStack stack;
+    int createdId = -1;
+    {
+        auto cmd = std::make_unique<Olympe::Blueprint::CreateNodeCommand>(std::to_string(static_cast<int>(gid)), "BT_Action", 10.0f, 20.0f, "CmdNode", &createdId);
+        stack.ExecuteCommand(std::move(cmd));
+    }
+
+    TEST_ASSERT(createdId > 0, "CreateNodeCommand should set createdId > 0");
+    if (!(createdId > 0)) passed = false;
+
+    // Verify node exists in the created graph
+    auto graph = mgr.GetGraph(static_cast<int>(gid));
+    TEST_ASSERT(graph != nullptr, "Graph should exist after CreateGraph");
+    if (graph)
+    {
+        auto node = graph->GetNode(createdId);
+        TEST_ASSERT(node != nullptr, "Created node should be retrievable from graph");
+        if (node && node->name != "CmdNode")
+        {
+            TEST_ASSERT(false, "Created node name mismatch");
+            passed = false;
+        }
+    }
+
+    ReportTest("TestJ_CreateNodeCommand", passed);
 }
 
 // ---------------------------------------------------------------------------

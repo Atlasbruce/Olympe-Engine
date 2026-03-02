@@ -1,0 +1,354 @@
+{
+  "blueprintType": "BehaviorTree",
+  "data": {
+    "nodes": [
+      {
+        "children": [
+          10,
+          20,
+          30,
+          50
+        ],
+        "id": 1,
+        "name": "Root Priority Selector",
+        "parameters": {},
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "type": "Selector"
+      },
+      {
+        "children": [
+          11,
+          12,
+          13
+        ],
+        "id": 10,
+        "name": "Self Preservation Sequence",
+        "parameters": {},
+        "position": {
+          "x": 400,
+          "y": 0
+        },
+        "type": "Sequence"
+      },
+      {
+        "conditionType": "TargetVisible",
+        "id": 11,
+        "name": "Is Health Critical?",
+        "parameters": {
+          "param": 0
+        },
+        "position": {
+          "x": 800,
+          "y": 0
+        },
+        "type": "Condition"
+      },
+      {
+        "actionType": "Idle",
+        "id": 12,
+        "name": "Find Safe Cover",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 800,
+          "y": 200
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "Idle",
+        "id": 13,
+        "name": "Apply Bandage/Heal",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 800,
+          "y": 400
+        },
+        "type": "Action"
+      },
+      {
+        "children": [
+          21,
+          22,
+          23
+        ],
+        "id": 20,
+        "name": "Combat Engagement",
+        "parameters": {},
+        "position": {
+          "x": 400,
+          "y": 200
+        },
+        "type": "Sequence"
+      },
+      {
+        "conditionType": "TargetVisible",
+        "id": 21,
+        "name": "Can See Enemy?",
+        "parameters": {
+          "param": 0
+        },
+        "position": {
+          "x": 800,
+          "y": 600
+        },
+        "type": "Condition"
+      },
+      {
+        "actionType": "Idle",
+        "id": 22,
+        "name": "Face Enemy",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 800,
+          "y": 800
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "Idle",
+        "id": 23,
+        "name": "Shoot Weapon",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 800,
+          "y": 1000
+        },
+        "type": "Action"
+      },
+      {
+        "children": [
+          31,
+          40
+        ],
+        "id": 30,
+        "name": "Investigation Selector",
+        "parameters": {},
+        "position": {
+          "x": 400,
+          "y": 400
+        },
+        "type": "Selector"
+      },
+      {
+        "children": [
+          32,
+          33,
+          34,
+          35
+        ],
+        "id": 31,
+        "name": "Noise Reaction",
+        "parameters": {},
+        "position": {
+          "x": 800,
+          "y": 1200
+        },
+        "type": "Sequence"
+      },
+      {
+        "conditionType": "TargetVisible",
+        "id": 32,
+        "name": "Heard Suspicious Noise?",
+        "parameters": {
+          "param": 0
+        },
+        "position": {
+          "x": 1200,
+          "y": 0
+        },
+        "type": "Condition"
+      },
+      {
+        "actionType": "Idle",
+        "id": 33,
+        "name": "Set Noise Source as Target",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 1200,
+          "y": 200
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "Idle",
+        "id": 34,
+        "name": "Investigate Location",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 1200,
+          "y": 400
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "Idle",
+        "id": 35,
+        "name": "Look Around (Scan)",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 1200,
+          "y": 600
+        },
+        "type": "Action"
+      },
+      {
+        "children": [
+          41,
+          42,
+          43
+        ],
+        "id": 40,
+        "name": "Lost Target Search",
+        "parameters": {},
+        "position": {
+          "x": 800,
+          "y": 1400
+        },
+        "type": "Sequence"
+      },
+      {
+        "conditionType": "TargetVisible",
+        "id": 41,
+        "name": "Has Last Known Position?",
+        "parameters": {
+          "param": 0
+        },
+        "position": {
+          "x": 1200,
+          "y": 800
+        },
+        "type": "Condition"
+      },
+      {
+        "actionType": "Idle",
+        "id": 42,
+        "name": "Rush to LKP",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 1200,
+          "y": 1000
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "Idle",
+        "id": 43,
+        "name": "Search Pattern",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 1200,
+          "y": 1200
+        },
+        "type": "Action"
+      },
+      {
+        "children": [
+          51,
+          52,
+          53
+        ],
+        "id": 50,
+        "name": "Default Patrol",
+        "parameters": {},
+        "position": {
+          "x": 400,
+          "y": 600
+        },
+        "type": "Sequence"
+      },
+      {
+        "actionType": "Idle",
+        "id": 51,
+        "name": "Get Next Waypoint",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 800,
+          "y": 1600
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "Idle",
+        "id": 52,
+        "name": "Move To Waypoint",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 800,
+          "y": 1800
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "Idle",
+        "id": 53,
+        "name": "Idle at Waypoint",
+        "parameters": {
+          "param1": 0,
+          "param2": 0
+        },
+        "position": {
+          "x": 800,
+          "y": 2000
+        },
+        "type": "Action"
+      }
+    ],
+    "rootNodeId": 1
+  },
+  "description": "",
+  "editorState": {
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
+  "metadata": {
+    "author": "BT Editor",
+    "created": "2026-03-02T20:04:40Z",
+    "lastModified": "2026-03-02T20:04:40Z",
+    "tags": [
+      "AI",
+      "BehaviorTree"
+    ]
+  },
+  "name": "GuardAI_V2_Complex",
+  "schema_version": 2,
+  "type": "BehaviorTree"
+}

@@ -12,10 +12,15 @@
 #include "../json_helper.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
+#include "../NodeGraphShared/NodeGraphShared.h"
 #include "../third_party/imgui/backends/imgui_impl_sdl3.h"
 #include "../third_party/imgui/backends/imgui_impl_sdlrenderer3.h"
 #include "../third_party/nlohmann/json.hpp"
 #include "../BlueprintEditor/NodeStyleRegistry.h"
+#include "../NodeGraphShared/BehaviorTreeAdapter.h"
+#include "../NodeGraphShared/Serializer.h"
+#include "../NodeGraphShared/CommandAdapter.h"
+#include "../NodeGraphShared/Renderer.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <cstring>
@@ -907,14 +912,19 @@ namespace Olympe
         {
             m_layoutEngine.SetLayoutDirection(m_layoutDirection);
             m_positionedNodes.clear();
-            m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
+            // Use adapter to compute layout so runtime and standalone use same path
+            {
+                NodeGraphShared::BehaviorTreeAdapter adapter(tree, &m_layoutEngine);
+                m_currentLayout = adapter.ComputeLayout(m_nodeSpacingX, m_nodeSpacingY, 1.0f);
+            }
             m_needsLayoutUpdate = false;
         }
 
         if (m_needsLayoutUpdate && tree)
         {
             m_positionedNodes.clear();
-            m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
+            NodeGraphShared::BehaviorTreeAdapter adapter(tree, &m_layoutEngine);
+            m_currentLayout = adapter.ComputeLayout(m_nodeSpacingX, m_nodeSpacingY, 1.0f);
             m_needsLayoutUpdate = false;
         }
 
@@ -1097,21 +1107,30 @@ namespace Olympe
             const BehaviorTreeAsset* activeTree = m_editorMode ? &m_editingTree : tree;
             if (activeTree)
             {
+                NodeGraphShared::BehaviorTreeAdapter adapter(activeTree, &m_layoutEngine);
+
                 for (const auto& node : activeTree->nodes)
                 {
                     if (m_positionedNodes.find(node.id) != m_positionedNodes.end())
                     {
                         ImVec2 pos = ImNodes::GetNodeGridSpacePos(static_cast<int>(node.id));
-                        const BTNodeLayout* layout = m_layoutEngine.GetNodeLayout(node.id);
+                        const BTNodeLayout* layout = adapter.GetNodeLayout(node.id);
                         if (layout &&
                             (std::abs(pos.x - layout->position.x) > NODE_POSITION_CHANGE_THRESHOLD ||
                              std::abs(pos.y - layout->position.y) > NODE_POSITION_CHANGE_THRESHOLD))
                         {
-                            m_layoutEngine.UpdateNodePosition(node.id, pos.x, pos.y);
+                            // If in editor mode, record the move via command stack so undo/redo is available.
                             if (m_editorMode)
                             {
+                                NodeGraphShared::CommandAdapter cmdAdapter(&m_commandStack, &m_editingTree);
+                                // Use previous layout position as oldPos
+                                Vector oldPos(layout->position.x, layout->position.y, 0.0f);
+                                Vector newPos(pos.x, pos.y, 0.0f);
+                                cmdAdapter.MoveNode(node.id, oldPos, newPos);
+
                                 m_isDirty = true;
-                                // Serialize on the UI thread; background task only writes.
+
+                                // Schedule autosave (UI thread serializes)
                                 m_autosave.ScheduleSave(now,
                                     [this]() -> std::string
                                     {
@@ -1129,6 +1148,11 @@ namespace Olympe
                                     },
                                     m_currentFilePath,
                                     "GameData/AI/autosave_");
+                            }
+                            else
+                            {
+                                // Runtime: just update layout engine positions
+                                adapter.UpdateNodePosition(node.id, pos.x, pos.y);
                             }
                         }
                     }
@@ -1203,17 +1227,20 @@ namespace Olympe
 
                 if (ValidateConnection(parentId, childId))
                 {
-                    // Use command pattern for connection
-                    auto cmd = std::make_unique<ConnectNodesCommand>(&m_editingTree, parentId, childId);
-                    m_commandStack.Execute(std::move(cmd));
-                    
+                    // Use adapter wrapper to execute command via existing stack
+                    NodeGraphShared::CommandAdapter cmdAdapter(&m_commandStack, &m_editingTree);
+                    cmdAdapter.ConnectNodes(parentId, childId);
+
                     m_isDirty = true;
                     m_treeModified = true;
-                    
-                    // Update layout
+
+                    // Update layout (use adapter to centralize layout logic)
                     m_positionedNodes.clear();
-                    m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
-                    
+                    {
+                        NodeGraphShared::BehaviorTreeAdapter adapter(&m_editingTree, &m_layoutEngine);
+                        m_currentLayout = adapter.ComputeLayout(m_nodeSpacingX, m_nodeSpacingY, 1.0f);
+                    }
+
                     // Run validation
                     m_validationMessages = m_editingTree.ValidateTreeFull();
 
@@ -1236,20 +1263,23 @@ namespace Olympe
                     uint32_t parentId = it->parentId;
                     uint32_t childId = it->childId;
 
-                    // Use command pattern for disconnection
-                    auto cmd = std::make_unique<DisconnectNodesCommand>(&m_editingTree, parentId, childId);
-                    m_commandStack.Execute(std::move(cmd));
-                    
+                    // Use adapter wrapper to execute command via existing stack
+                    NodeGraphShared::CommandAdapter cmdAdapter(&m_commandStack, &m_editingTree);
+                    cmdAdapter.DisconnectNodes(parentId, childId);
+
                     m_isDirty = true;
                     m_treeModified = true;
-                    
+
                     // Update layout
                     m_positionedNodes.clear();
-                    m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
-                    
+                    {
+                        NodeGraphShared::BehaviorTreeAdapter adapter(&m_editingTree, &m_layoutEngine);
+                        m_currentLayout = adapter.ComputeLayout(m_nodeSpacingX, m_nodeSpacingY, 1.0f);
+                    }
+
                     // Run validation
                     m_validationMessages = m_editingTree.ValidateTreeFull();
-                    
+
                     std::cout << "[BTEditor] Connection deleted: " << parentId << " -> " << childId << std::endl;
                 }
             }
@@ -1314,16 +1344,18 @@ namespace Olympe
 
         uint32_t currentNodeId = btRuntime.AICurrentNodeIndex;
 
+        // Render nodes via shared renderer
         for (const auto& node : tree->nodes)
         {
             const BTNodeLayout* layout = m_layoutEngine.GetNodeLayout(node.id);
             if (layout)
             {
                 bool isCurrentNode = (node.id == currentNodeId) && btRuntime.isActive && !m_editorMode;
-                RenderNode(&node, layout, isCurrentNode);
+                NodeGraphShared::RenderBTNode(&node, layout, isCurrentNode, m_currentZoom, m_pulseTimer, m_config, m_positionedNodes);
             }
         }
 
+        // Render connections (ImNodes::Link) so editor interactions work
         for (const auto& node : tree->nodes)
         {
             const BTNodeLayout* layout = m_layoutEngine.GetNodeLayout(node.id);
@@ -2227,21 +2259,24 @@ namespace Olympe
             }
         }
 
-        // Use command pattern
-        auto cmd = std::make_unique<AddNodeCommand>(&m_editingTree, nodeType, nodeName, m_nodeCreationPos);
-        m_commandStack.Execute(std::move(cmd));
-        
+        // Use command adapter to execute AddNode via existing stack
+        NodeGraphShared::CommandAdapter cmdAdapter(&m_commandStack, &m_editingTree);
+        uint32_t createdId = cmdAdapter.AddNode(nodeType, nodeName, m_nodeCreationPos);
+
         m_isDirty = true;
         m_treeModified = true;
 
         // Update layout
         m_positionedNodes.clear();
-        m_currentLayout = m_layoutEngine.ComputeLayout(&m_editingTree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
-        
+        {
+            NodeGraphShared::BehaviorTreeAdapter adapter(&m_editingTree, &m_layoutEngine);
+            m_currentLayout = adapter.ComputeLayout(m_nodeSpacingX, m_nodeSpacingY, 1.0f);
+        }
+
         // Run validation
         m_validationMessages = m_editingTree.ValidateTreeFull();
 
-        std::cout << "[BTEditor] Created node: " << nodeName << std::endl;
+        std::cout << "[BTEditor] Created node: " << nodeName << " id=" << createdId << std::endl;
     }
 
     void BehaviorTreeDebugWindow::HandleNodeDeletion()
@@ -2258,10 +2293,10 @@ namespace Olympe
                 continue;
             }
 
-            // Use command pattern
-            auto cmd = std::make_unique<DeleteNodeCommand>(&m_editingTree, nodeId);
-            m_commandStack.Execute(std::move(cmd));
-            
+            // Use command adapter to delete node via existing stack
+            NodeGraphShared::CommandAdapter cmdAdapter(&m_commandStack, &m_editingTree);
+            cmdAdapter.DeleteNode(nodeId);
+
             SYSTEM_LOG << "[BTDebugger] Deleted node " << nodeId << std::endl;
         }
 
@@ -2291,13 +2326,13 @@ namespace Olympe
             if (original)
             {
                 std::string newName = original->name + " (Copy)";
-                auto cmd = std::make_unique<AddNodeCommand>(&m_editingTree, original->type, newName, Vector());
-                m_commandStack.Execute(std::move(cmd));
-                
-                // Get the newly created node to copy parameters
-                if (!m_editingTree.nodes.empty())
+                NodeGraphShared::CommandAdapter cmdAdapter(&m_commandStack, &m_editingTree);
+                uint32_t newId = cmdAdapter.AddNode(original->type, newName, Vector());
+
+                // Copy parameters into the newly created node (if present)
+                BTNode* newNode = m_editingTree.GetNode(newId);
+                if (newNode)
                 {
-                    BTNode* newNode = &m_editingTree.nodes.back();
                     newNode->actionType = original->actionType;
                     newNode->actionParam1 = original->actionParam1;
                     newNode->actionParam2 = original->actionParam2;
@@ -2307,7 +2342,7 @@ namespace Olympe
                     newNode->stringParams = original->stringParams;
                     newNode->intParams = original->intParams;
                     newNode->floatParams = original->floatParams;
-                    
+
                     newNodes.push_back(newNode->id);
                 }
 
@@ -3328,166 +3363,7 @@ namespace Olympe
     
     json BehaviorTreeDebugWindow::SerializeTreeToJson(const BehaviorTreeAsset& tree) const
     {
-        json j = json::object();
-        
-        j["schema_version"] = 2;
-        j["type"] = "BehaviorTree";
-        j["blueprintType"] = "BehaviorTree";
-        j["name"] = tree.name;
-        j["description"] = "";
-        
-        // Metadata
-        json metadata = json::object();
-        metadata["author"] = "Atlasbruce";
-        metadata["created"] = GetCurrentTimestamp();
-        metadata["lastModified"] = GetCurrentTimestamp();
-        
-        json tags = json::array();
-        tags.push_back("AI");
-        tags.push_back("BehaviorTree");
-        metadata["tags"] = tags;
-        
-        j["metadata"] = metadata;
-        
-        // Editor state
-        json editorState = json::object();
-        editorState["zoom"] = 1.0f;
-        
-        json scrollOffset = json::object();
-        scrollOffset["x"] = 0.0f;
-        scrollOffset["y"] = 0.0f;
-        editorState["scrollOffset"] = scrollOffset;
-        
-        j["editorState"] = editorState;
-        
-        // Data
-        json data = json::object();
-        data["rootNodeId"] = json(static_cast<int>(tree.rootNodeId));
-        
-        json nodesArray = json::array();
-        for (const auto& node : tree.nodes)
-        {
-            json nodeJson = json::object();
-            nodeJson["id"] = json(static_cast<int>(node.id));
-            nodeJson["name"] = node.name;
-
-            // Node type
-            const char* typeStr = "";
-            switch (node.type)
-            {
-                case BTNodeType::Selector: typeStr = "Selector"; break;
-                case BTNodeType::Sequence: typeStr = "Sequence"; break;
-                case BTNodeType::Condition: typeStr = "Condition"; break;
-                case BTNodeType::Action: typeStr = "Action"; break;
-                case BTNodeType::Inverter: typeStr = "Inverter"; break;
-                case BTNodeType::Repeater: typeStr = "Repeater"; break;
-            }
-            nodeJson["type"] = typeStr;
-
-            // Position – use actual layout engine value if available.
-            json pos = json::object();
-            const BTNodeLayout* nodeLayout = m_layoutEngine.GetNodeLayout(node.id);
-            if (nodeLayout)
-            {
-                pos["x"] = nodeLayout->position.x;
-                pos["y"] = nodeLayout->position.y;
-            }
-            else
-            {
-                pos["x"] = 200.0f;
-                pos["y"] = 100.0f * static_cast<float>(node.id);
-            }
-            nodeJson["position"] = pos;
-            
-            // Children array (for composites)
-            if (node.type == BTNodeType::Selector || node.type == BTNodeType::Sequence)
-            {
-                json children = json::array();
-                for (uint32_t childId : node.childIds)
-                {
-                    children.push_back(json(static_cast<int>(childId)));
-                }
-                nodeJson["children"] = children;
-            }
-            
-            // Decorator child
-            if (node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater)
-            {
-                if (node.decoratorChildId != 0)
-                {
-                    nodeJson["decoratorChildId"] = json(static_cast<int>(node.decoratorChildId));
-                }
-                
-                if (node.type == BTNodeType::Repeater)
-                {
-                    nodeJson["repeatCount"] = node.repeatCount;
-                }
-            }
-            
-            // Action type and parameters
-            if (node.type == BTNodeType::Action)
-            {
-                const char* actionTypeStr = "";
-                switch (node.actionType)
-                {
-                    case BTActionType::SetMoveGoalToLastKnownTargetPos: actionTypeStr = "SetMoveGoalToLastKnownTargetPos"; break;
-                    case BTActionType::SetMoveGoalToTarget: actionTypeStr = "SetMoveGoalToTarget"; break;
-                    case BTActionType::SetMoveGoalToPatrolPoint: actionTypeStr = "SetMoveGoalToPatrolPoint"; break;
-                    case BTActionType::MoveToGoal: actionTypeStr = "MoveToGoal"; break;
-                    case BTActionType::AttackIfClose: actionTypeStr = "AttackIfClose"; break;
-                    case BTActionType::PatrolPickNextPoint: actionTypeStr = "PatrolPickNextPoint"; break;
-                    case BTActionType::ClearTarget: actionTypeStr = "ClearTarget"; break;
-                    case BTActionType::Idle: actionTypeStr = "Idle"; break;
-                    case BTActionType::WaitRandomTime: actionTypeStr = "WaitRandomTime"; break;
-                    case BTActionType::ChooseRandomNavigablePoint: actionTypeStr = "ChooseRandomNavigablePoint"; break;
-                    case BTActionType::RequestPathfinding: actionTypeStr = "RequestPathfinding"; break;
-                    case BTActionType::FollowPath: actionTypeStr = "FollowPath"; break;
-                }
-                nodeJson["actionType"] = actionTypeStr;
-                
-                json params = json::object();
-                params["param1"] = node.actionParam1;
-                params["param2"] = node.actionParam2;
-                nodeJson["parameters"] = params;
-            }
-            
-            // Condition type and parameters
-            if (node.type == BTNodeType::Condition)
-            {
-                const char* conditionTypeStr = "";
-                switch (node.conditionType)
-                {
-                    case BTConditionType::TargetVisible: conditionTypeStr = "TargetVisible"; break;
-                    case BTConditionType::TargetInRange: conditionTypeStr = "TargetInRange"; break;
-                    case BTConditionType::HealthBelow: conditionTypeStr = "HealthBelow"; break;
-                    case BTConditionType::HasMoveGoal: conditionTypeStr = "HasMoveGoal"; break;
-                    case BTConditionType::CanAttack: conditionTypeStr = "CanAttack"; break;
-                    case BTConditionType::HeardNoise: conditionTypeStr = "HeardNoise"; break;
-                    case BTConditionType::IsWaitTimerExpired: conditionTypeStr = "IsWaitTimerExpired"; break;
-                    case BTConditionType::HasNavigableDestination: conditionTypeStr = "HasNavigableDestination"; break;
-                    case BTConditionType::HasValidPath: conditionTypeStr = "HasValidPath"; break;
-                    case BTConditionType::HasReachedDestination: conditionTypeStr = "HasReachedDestination"; break;
-                }
-                nodeJson["conditionType"] = conditionTypeStr;
-                
-                json params = json::object();
-                params["param"] = node.conditionParam;
-                nodeJson["parameters"] = params;
-            }
-            
-            // Default empty parameters if not set
-            if (!nodeJson.contains("parameters"))
-            {
-                nodeJson["parameters"] = json::object();
-            }
-            
-            nodesArray.push_back(nodeJson);
-        }
-        
-        data["nodes"] = nodesArray;
-        j["data"] = data;
-        
-        return j;
+        return NodeGraphShared::SerializeBehaviorTreeToJson(tree, &m_layoutEngine);
     }
     
     void BehaviorTreeDebugWindow::Save()

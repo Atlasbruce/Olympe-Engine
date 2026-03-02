@@ -983,6 +983,21 @@
     <ClInclude Include="Source\NodeGraphShared\NodeGraphShared.h">
       <Filter>Fichiers d%27en-t�te</Filter>
     </ClInclude>
+    <ClInclude Include="Source\NodeGraphShared\BehaviorTreeAdapter.h">
+      <Filter>Fichiers d%27en-t�te</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphShared\Serializer.h">
+      <Filter>Fichiers d%27en-t�te</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphShared\CommandAdapter.h">
+      <Filter>Fichiers d%27en-t�te</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphShared\Renderer.h">
+      <Filter>Fichiers d%27en-t�te</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphShared\BlueprintAdapter.h">
+      <Filter>Fichiers d%27en-t�te</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc">
@@ -1002,6 +1017,8 @@
     <None Include="Source\NodeGraphCore\README.md">
       <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
     </None>
+    <None Include="Docs\Developer\NodeGraphShared_Migration.md" />
+    <None Include="PR_DESCRIPTION.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

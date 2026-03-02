@@ -95,8 +95,9 @@ namespace Olympe
         class CreateNodeCommand : public EditorCommand
         {
         public:
+            // Optional outCreatedId allows caller to receive the created node id
             CreateNodeCommand(const std::string& graphId, const std::string& nodeType,
-                float posX, float posY, const std::string& nodeName = "");
+                float posX, float posY, const std::string& nodeName = "", int* outCreatedId = nullptr);
 
             void Execute() override;
             void Undo() override;
@@ -109,6 +110,7 @@ namespace Olympe
             float m_PosX;
             float m_PosY;
             int m_CreatedNodeId;  // Set during Execute
+            int* m_OutCreatedId;
         };
 
         /**

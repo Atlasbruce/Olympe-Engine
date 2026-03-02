@@ -149,14 +149,17 @@ namespace Olympe
         CreateNodeCommand::CreateNodeCommand(const std::string& graphId,
             const std::string& nodeType,
             float posX, float posY,
-            const std::string& nodeName)
+            const std::string& nodeName, int* outCreatedId)
             : m_GraphId(graphId)
             , m_NodeType(nodeType)
             , m_NodeName(nodeName)
             , m_PosX(posX)
             , m_PosY(posY)
             , m_CreatedNodeId(-1)
+            , m_OutCreatedId(outCreatedId)
         {
+            if (m_OutCreatedId)
+                *m_OutCreatedId = -1;
         }
 
         void CreateNodeCommand::Execute()
@@ -172,6 +175,8 @@ namespace Olympe
             // Create the node
             NodeType type = StringToNodeType(m_NodeType);
             m_CreatedNodeId = graph->CreateNode(type, m_PosX, m_PosY, m_NodeName);
+            if (m_OutCreatedId)
+                *m_OutCreatedId = m_CreatedNodeId;
         }
 
         void CreateNodeCommand::Undo()

@@ -20,6 +20,7 @@
 #include <cmath>
 #include <algorithm>
 #include <cctype>
+#include "../NodeGraphShared/BlueprintAdapter.h"
 
 // Use Blueprint namespace for command classes
 using namespace Olympe::Blueprint;
@@ -714,9 +715,10 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             {
                 if (ImGui::MenuItem("Duplicate", "Ctrl+D"))
                 {
-                    std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
-                    auto cmd = std::make_unique<DuplicateNodeCommand>(graphId, m_SelectedNodeId);
-                    BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+                    Blueprint::CommandStack* stack = BlueprintEditor::Get().GetCommandStack();
+                    int graphId = NodeGraphManager::Get().GetActiveGraphId();
+                    NodeGraphShared::BlueprintAdapter adapter(stack, graphId);
+                    adapter.DuplicateNode(m_SelectedNodeId);
                 }
             }
 
@@ -960,10 +962,10 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             int startNodeLocalID = GlobalUIDToLocalNodeID(startNodeGlobalUID, graphID);
             int endNodeLocalID = GlobalUIDToLocalNodeID(endNodeGlobalUID, graphID);
             
-            // Create the link with local IDs
-            std::string graphId = std::to_string(graphID);
-            auto cmd = std::make_unique<LinkNodesCommand>(graphId, startNodeLocalID, endNodeLocalID);
-            BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+            // Create the link with local IDs via adapter
+            Blueprint::CommandStack* stack = BlueprintEditor::Get().GetCommandStack();
+            NodeGraphShared::BlueprintAdapter adapter(stack, graphID);
+            adapter.ConnectNodes(startNodeLocalID, endNodeLocalID);
         }
     }
 
@@ -997,7 +999,7 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
     // =========================================================================
 
     void NodeGraphPanel::RenderNodePinsAndContent(GraphNode* node, int globalNodeUID,
-                                                  int /*graphID*/)
+                                                  int graphID)
     {
         // ----- Title bar (icon + name) --------------------------------------
         const NodeStyle& style = NodeStyleRegistry::Get().GetStyle(node->type);
@@ -1290,13 +1292,27 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             return;
         }
         
-        std::cout << "[NodeGraphPanel] Creating " << nodeType << " at canvas pos (" 
+        std::cout << "[NodeGraphPanel] Creating " << nodeType << " at canvas pos ("
                   << canvasPos.x << ", " << canvasPos.y << ")\n";
 
-        NodeType type = StringToNodeType(nodeType);
-        int nodeId = graph->CreateNode(type, canvasPos.x, canvasPos.y, nodeType);
+        // Use BlueprintAdapter to execute create node command through the editor stack
+        Blueprint::CommandStack* stack = BlueprintEditor::Get().GetCommandStack();
+        int graphId = NodeGraphManager::Get().GetActiveGraphId();
+        NodeGraphShared::BlueprintAdapter adapter(stack, graphId);
+        int createdId = adapter.CreateNode(nodeType, canvasPos.x, canvasPos.y, nodeType);
 
-        std::cout << "[NodeGraphPanel] Created node " << nodeId << " of type " << nodeType << "\n";
+        std::cout << "[NodeGraphPanel] Requested create node of type " << nodeType << " via command stack, id=" << createdId << "\n";
+
+        // If node created, select it in ImNodes and update internal selection state
+        if (createdId > 0)
+        {
+            int globalUID = graphId * GRAPH_ID_MULTIPLIER + createdId;
+            ImNodes::ClearNodeSelection();
+            ImNodes::SelectNode(globalUID);
+            m_SelectedNodeId = createdId;
+            // Move editor view to the newly created node so it is visible to the user
+            ImNodes::EditorContextMoveToNode(globalUID);
+        }
     }
 
     void NodeGraphPanel::RenderNodeProperties()
