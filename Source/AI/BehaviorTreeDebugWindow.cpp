@@ -1047,8 +1047,16 @@ namespace Olympe
 
                 if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
                 {
-                    m_positionedNodes.clear();
-                    m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
+                    if (m_positionedNodes.empty())
+                    {
+                        m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
+                        std::cout << "[BTDebugger] Zoom: " << (int)(m_currentZoom * 100)
+                                  << "% (layout recomputed)" << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "[BTDebugger] Zoom changed via shortcut: preserving user node positions" << std::endl;
+                    }
                     ApplyZoomToStyle();
                 }
             }
@@ -1060,8 +1068,14 @@ namespace Olympe
 
                 if (std::abs(m_currentZoom - oldZoom) > ZOOM_EPSILON && tree)
                 {
-                    m_positionedNodes.clear();
-                    m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
+                    if (m_positionedNodes.empty())
+                    {
+                        m_currentLayout = m_layoutEngine.ComputeLayout(tree, m_nodeSpacingX, m_nodeSpacingY, 1.0f);
+                    }
+                    else
+                    {
+                        std::cout << "[BTDebugger] Zoom changed via shortcut: preserving user node positions" << std::endl;
+                    }
                     ApplyZoomToStyle();
                 }
             }
@@ -1389,9 +1403,17 @@ namespace Olympe
         // Input attribute (left side)
         if (node->id != 0)
         {
+            // Hide ImNodes default pin rendering (we draw custom pins) by
+            // pushing transparent pin colors for this attribute. This prevents
+            // the small white circles from being drawn while keeping the
+            // attribute behavior (linking) functional.
+            ImNodes::PushColorStyle(ImNodesCol_Pin, IM_COL32(0,0,0,0));
+            ImNodes::PushColorStyle(ImNodesCol_PinHovered, IM_COL32(0,0,0,0));
             ImNodes::BeginInputAttribute(node->id * 10000);
             ImGui::Text("In");
             ImNodes::EndInputAttribute();
+            ImNodes::PopColorStyle();
+            ImNodes::PopColorStyle();
         }
 
         // Output attribute (right side) - position cursor to the right edge
@@ -1412,9 +1434,16 @@ namespace Olympe
             float targetX = startX + std::max(0.0f, nodeInnerWidth - reserve);
             ImGui::SetCursorPosX(targetX);
 
+            // Hide ImNodes default output pin circle (we render our own blue
+            // pin inside the box). Push transparent pin colors for this
+            // attribute only.
+            ImNodes::PushColorStyle(ImNodesCol_Pin, IM_COL32(0,0,0,0));
+            ImNodes::PushColorStyle(ImNodesCol_PinHovered, IM_COL32(0,0,0,0));
             ImNodes::BeginOutputAttribute(node->id * 10000 + 1);
             ImGui::Text("Out");
             ImNodes::EndOutputAttribute();
+            ImNodes::PopColorStyle();
+            ImNodes::PopColorStyle();
         }
 
         ImGui::PushItemWidth(200);
@@ -1450,6 +1479,38 @@ namespace Olympe
         if (isCurrentNode)
         {
             ImNodes::PopColorStyle();
+        }
+
+        // Draw visual pin circles anchored to ImNodes attribute anchor
+        // positions (screen-space). This ensures pins line up exactly with
+        // link endpoints and the glow overlay which uses ImNodes screen
+        // positions and PinOffset.
+        {
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
+            if (drawList)
+            {
+                ImVec2 nPos = ImNodes::GetNodeScreenSpacePos(static_cast<int>(node->id));
+                ImVec2 nDim = ImNodes::GetNodeDimensions(static_cast<int>(node->id));
+                const float po = ImNodes::GetStyle().PinOffset;
+
+                // compute centers using shared helper
+                ImVec2 inputCenter = NodeGraphShared::ComputePinCenterScreen(static_cast<int>(node->id), layout, false, po, m_config.pinHeaderHeight, m_currentZoom);
+                ImVec2 outputCenter = NodeGraphShared::ComputePinCenterScreen(static_cast<int>(node->id), layout, true, po, m_config.pinHeaderHeight, m_currentZoom);
+
+                uint32_t pinColor = IM_COL32(66, 133, 244, 255); // bluish pin to match editor
+                uint32_t outlineColor = IM_COL32(40, 40, 40, 255);
+
+                if (node->id != 0)
+                {
+                    NodeGraphShared::DrawPinCircle(drawList, inputCenter, m_config.pinRadius, pinColor, outlineColor, m_config.pinOutlineThickness);
+                }
+
+                if (node->type == BTNodeType::Selector || node->type == BTNodeType::Sequence ||
+                    node->type == BTNodeType::Inverter || node->type == BTNodeType::Repeater)
+                {
+                    NodeGraphShared::DrawPinCircle(drawList, outputCenter, m_config.pinRadius, pinColor, outlineColor, m_config.pinOutlineThickness);
+                }
+            }
         }
     }
 

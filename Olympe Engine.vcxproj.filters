@@ -492,6 +492,9 @@
     <ClCompile Include="Source\EditorCommon\EditorAutosaveManager.cpp">
       <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
+    <ClCompile Include="Source\NodeGraphShared\NodeGraphShared.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\GameEngine.h">
@@ -976,6 +979,9 @@
     </ClInclude>
     <ClInclude Include="Source\EditorCommon\EditorAutosaveManager.h">
       <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphShared\NodeGraphShared.h">
+      <Filter>Fichiers d%27en-t�te</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -98,6 +98,7 @@
     <ClCompile Include="Source\NodeGraphCore\GraphDocument.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GraphMigrator.cpp" />
     <ClCompile Include="Source\NodeGraphCore\NodeGraphManager.cpp" />
+    <ClCompile Include="Source\NodeGraphShared\NodeGraphShared.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_SetVariable.cpp" />
@@ -241,6 +242,7 @@
     <ClInclude Include="Source\NodeGraphCore\ILayoutEngine.h" />
     <ClInclude Include="Source\NodeGraphCore\NodeGraphCore.h" />
     <ClInclude Include="Source\NodeGraphCore\NodeGraphManager.h" />
+    <ClInclude Include="Source\NodeGraphShared\NodeGraphShared.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTaskContext.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.h" />
