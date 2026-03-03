@@ -19,6 +19,8 @@
 #include "BTGraphLayoutEngine.h"
 #include "BehaviorTree.h"
 #include "BTEditorCommand.h"
+#include "../BlueprintEditor/NodeGraphPanel.h"
+#include "../BlueprintEditor/BTNodeGraphManager.h"
 #include <string>
 #include <vector>
 #include <deque>
@@ -396,5 +398,14 @@ namespace Olympe
         // user-dragged positions on subsequent frames.  Cleared whenever the
         // layout is recomputed so nodes snap back to the new computed positions.
         std::unordered_set<uint32_t> m_positionedNodes;
+
+        // --- Unified NodeGraph Debug Panel (Blueprint Editor pipeline) ---
+        void InitNodeGraphDebugMode();
+        void ShutdownNodeGraphDebugMode();
+        void RenderNodeGraphDebugPanel();
+
+        NodeGraphPanel  m_nodeGraphPanel;
+        int             m_debugGraphId    = -1;
+        uint32_t        m_lastDebugTreeId = 0;
     };
 }
