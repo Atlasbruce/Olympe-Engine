@@ -36,6 +36,7 @@ file(GLOB_RECURSE NODEGRAPHCORE_SOURCES
 )
 file(GLOB_RECURSE ENGINE_CORE_SOURCES 
     "Source/AI/*.cpp"
+    "Source/NodeGraphShared/*.cpp"
     "Source/system/*.cpp"
     "Source/DataManager.cpp"
     "Source/drawing.cpp"

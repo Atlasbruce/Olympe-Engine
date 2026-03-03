@@ -18,10 +18,10 @@
 BUILD_BLUEPRINT_EDITOR_STANDALONE:BOOL=OFF
 
 //Build runtime engine executable
-BUILD_RUNTIME_ENGINE:BOOL=ON
+BUILD_RUNTIME_ENGINE:BOOL=OFF
 
 //Build unit tests
-BUILD_TESTS:BOOL=OFF
+BUILD_TESTS:BOOL=ON
 
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
@@ -31,7 +31,7 @@ CMAKE_AR:FILEPATH=/usr/bin/ar
 
 //Choose the type of build, options are: None Debug Release RelWithDebInfo
 // MinSizeRel ...
-CMAKE_BUILD_TYPE:STRING=
+CMAKE_BUILD_TYPE:STRING=Release
 
 //Enable/Disable color output during build.
 CMAKE_COLOR_MAKEFILE:BOOL=ON
