@@ -101,6 +101,9 @@ namespace Olympe
         // does I/O.
         m_autosave.Init(nullptr, 1.5f, 60.0f);
 
+        // Initialize NodeGraph debug panel (Blueprint Editor pipeline, Runtime mode)
+        InitNodeGraphDebugMode();
+
         std::cout << "[BTDebugger] Initialized (window will be created on first F10)" << std::endl;
     }
 
@@ -108,6 +111,9 @@ namespace Olympe
     {
         m_autosave.Flush();
         DestroySeparateWindow();
+
+        // Shutdown NodeGraph debug panel before destroying the ImNodes context
+        ShutdownNodeGraphDebugMode();
 
         if (m_imnodesInitialized)
         {
@@ -509,7 +515,7 @@ namespace Olympe
 
         float centerWidth = windowWidth - m_entityListWidth - m_inspectorWidth - 20.0f;
         ImGui::BeginChild("NodeGraphPanel", ImVec2(centerWidth, windowHeight), true);
-        RenderNodeGraphPanel();
+        RenderNodeGraphDebugPanel();
         ImGui::EndChild();
 
         ImGui::SameLine();

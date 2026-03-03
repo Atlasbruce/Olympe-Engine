@@ -572,14 +572,18 @@ ResetZoom()                  (~10 LOC)
 - [x] Dépendances ECS listées
 - [x] Code legacy à supprimer identifié
 
-### Phase 4 — Implémentation (EN ATTENTE)
-- [ ] `BTGraphDocumentConverter::FromBehaviorTree()` vérifié (implémentation réelle)
-- [ ] `NodeGraphManager::LoadFromDocument()` vérifié ou alternative identifiée
-- [ ] `EditorContext` mode isolation vérifiée
-- [ ] `EnsureGraphDocument()` implémenté
-- [ ] `RenderNodeGraphPanel()` réécrit
-- [ ] Contexte ImGui/ImNodes géré correctement
-- [ ] Compilation sans erreurs ni warnings
+### Phase 4 — Implémentation (COMPLETÉE — PR soumise 2026-03-03)
+- [x] `BTGraphDocumentConverter::FromBehaviorTree()` implémenté (JSON round-trip via `NodeGraph::FromJson`)
+- [x] `NodeGraphManager::LoadFromDocument()` remplacé par `CreateGraph()` + `GetGraph()` + move-assign
+- [x] `EditorContext::Get().InitializeRuntime()` appelé pour mode lecture seule
+- [x] `InitNodeGraphDebugMode()` / `ShutdownNodeGraphDebugMode()` ajoutés à `BehaviorTreeDebugWindow`
+- [x] `RenderNodeGraphDebugPanel()` remplace l'appel `RenderNodeGraphPanel()` dans `RenderInSeparateWindow()`
+- [x] `NodeGraphPanel::RenderGraph()` utilisé (embedding inline, sans fenêtre flottante)
+- [x] `NodeGraphPanel::SetActiveDebugNode()` synchronise le highlight runtime chaque frame
+- [x] IDs BT préservés via JSON round-trip → highlight direct sans mapping supplémentaire
+- [x] Compilation C++14 conforme, pas de C++17
+- [x] Code legacy `RenderNodeGraphPanel()` / `RenderBehaviorTreeGraph()` préservé (nettoyage Phase 5)
+- [x] `CMakeLists.txt` mis à jour : `Source/NodeGraphShared/*.cpp` inclus dans `OlympeCore`
 - [ ] **⚠️ VALIDATION ATLASBRUCE REQUISE**
 
 ### Phase 5 — Nettoyage (EN ATTENTE)
@@ -596,4 +600,4 @@ ResetZoom()                  (~10 LOC)
 
 ---
 
-*Dernière mise à jour : 2026-03-03 — Phases 1-3 complétées, Phase 4 planifiée, en attente de validation.*
+*Dernière mise à jour : 2026-03-03 — Phases 1-4 complétées, Phase 5 (nettoyage legacy) en attente de validation.*
