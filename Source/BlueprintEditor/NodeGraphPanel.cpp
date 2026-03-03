@@ -68,33 +68,33 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
     s_ActiveDebugNodeId = localNodeId;
 }
 
-    NodeGraphPanel::NodeGraphPanel()
-    {
-        m_NodeNameBuffer[0] = '\0';
-        m_ContextMenuSearch[0] = '\0';
-    }
+NodeGraphPanel::NodeGraphPanel()
+{
+    m_NodeNameBuffer[0] = '\0';
+    m_ContextMenuSearch[0] = '\0';
+}
 
-    NodeGraphPanel::~NodeGraphPanel()
-    {
-    }
+NodeGraphPanel::~NodeGraphPanel()
+{
+}
 
-    void NodeGraphPanel::Initialize()
-    {
-        std::cout << "[NodeGraphPanel] Initialized\n";
+void NodeGraphPanel::Initialize()
+{
+    std::cout << "[NodeGraphPanel] Initialized\n";
 
-        // Set up autosave timing only.  The per-save lambda overload of
-        // ScheduleSave() is used at each change site so that serialization
-        // happens on the UI thread and the background task only does I/O.
-        m_autosave.Init(nullptr, 1.5f, 60.0f);
-    }
+    // Set up autosave timing only.  The per-save lambda overload of
+    // ScheduleSave() is used at each change site so that serialization
+    // happens on the UI thread and the background task only does I/O.
+    m_autosave.Init(nullptr, 1.5f, 60.0f);
+}
 
-    void NodeGraphPanel::Shutdown()
-    {
-        m_autosave.Flush();
-        std::cout << "[NodeGraphPanel] Shutdown\n";
-    }
+void NodeGraphPanel::Shutdown()
+{
+    m_autosave.Flush();
+    std::cout << "[NodeGraphPanel] Shutdown\n";
+}
 
-    void NodeGraphPanel::Render()
+void NodeGraphPanel::Render()
     {
         ImGui::Begin("Node Graph Editor");
 

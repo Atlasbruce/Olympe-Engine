@@ -27,10 +27,39 @@
 #define sscanf sscanf_s
 #endif
 
+// imnodes version stamp — bump when making API/behavior changes that must be
+// detected across binaries.
+#define IMNODES_VERSION_MAJOR 1
+#define IMNODES_VERSION_MINOR 0
+#define IMNODES_VERSION_PATCH 0
+#define IMNODES_VERSION_STRING "1.0.0"
+
 ImNodesContext* GImNodes = NULL;
 
 namespace IMNODES_NAMESPACE
 {
+// Forward declarations used by RAII helpers
+void BeginNode(const int node_id);
+void EndNode();
+void BeginNodeTitleBar();
+void EndNodeTitleBar();
+
+// Expose a version string at runtime to help detect mismatched binaries.
+static inline const char* ImNodesGetVersionString() { return IMNODES_VERSION_STRING; }
+
+// Small RAII helpers to ensure Begin/End are matched by callers that prefer C++ scope.
+struct ImNodesNodeScope
+{
+    explicit ImNodesNodeScope(int node_id) { BeginNode(node_id); }
+    ~ImNodesNodeScope() { EndNode(); }
+};
+
+struct ImNodesTitleBarScope
+{
+    ImNodesTitleBarScope() { BeginNodeTitleBar(); }
+    ~ImNodesTitleBarScope() { EndNodeTitleBar(); }
+};
+
 namespace
 {
 // [SECTION] bezier curve helpers
@@ -2010,6 +2039,17 @@ ImNodesContext* CreateContext()
     if (GImNodes == NULL)
         SetCurrentContext(ctx);
     Initialize(ctx);
+
+    // Runtime check: ensure the compiled imnodes version matches the expected
+    // version string. This helps detect cases where different builds are
+    // linking/using different copies of the library.
+    const char* v = ImNodesGetVersionString();
+    if (v == NULL || strcmp(v, IMNODES_VERSION_STRING) != 0)
+    {
+        // In debug builds assert; also print a warning for release diagnostics.
+        fprintf(stderr, "Warning: imnodes version mismatch: expected %s, got %s\n", IMNODES_VERSION_STRING, v ? v : "(null)");
+        IM_ASSERT(!"ImNodes version mismatch between compile units.");
+    }
     return ctx;
 }
 

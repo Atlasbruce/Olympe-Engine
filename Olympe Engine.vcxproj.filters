@@ -492,8 +492,24 @@
     <ClCompile Include="Source\EditorCommon\EditorAutosaveManager.cpp">
       <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
+    <ClCompile Include="Source\NodeGraphShared\BTDebugAdapter.cpp">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NodeGraphCore\Commands\DeleteLinkCommand.cpp">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClCompile>
+    </ClCompile>
+    <ClCompile Include="Source\NodeGraphCore\NodeGraphPanel.cpp">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NodeGraphCore\NodeGraphRenderer.cpp">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClCompile>
     <ClCompile Include="Source\NodeGraphShared\NodeGraphShared.cpp">
-      <Filter>Fichiers sources</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NodeGraphShared\RenderHelpers.cpp">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -884,9 +900,6 @@
     <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTNodeRegistry.h">
       <Filter>Fichiers d%27en-t�te\AI\GraphPlugin_BT</Filter>
     </ClInclude>
-    <ClInclude Include="Source\AI\BehaviorTreeDependencyScanner.h">
-      <Filter>Fichiers d%27en-t�te</Filter>
-    </ClInclude>
     <ClInclude Include="Source\NodeGraphCore\Commands\ConnectPinsCommand.h">
       <Filter>Fichiers d%27en-t�te\NodeGraphCore\Commands</Filter>
     </ClInclude>
@@ -980,23 +993,43 @@
     <ClInclude Include="Source\EditorCommon\EditorAutosaveManager.h">
       <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
-    <ClInclude Include="Source\NodeGraphShared\NodeGraphShared.h">
-      <Filter>Fichiers d%27en-t�te</Filter>
+    <ClInclude Include="Source\NodeGraphShared\Serializer.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\NodeGraphShared\BehaviorTreeAdapter.h">
-      <Filter>Fichiers d%27en-t�te</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
-    <ClInclude Include="Source\NodeGraphShared\Serializer.h">
-      <Filter>Fichiers d%27en-t�te</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\NodeGraphShared\CommandAdapter.h">
-      <Filter>Fichiers d%27en-t�te</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\NodeGraphShared\Renderer.h">
-      <Filter>Fichiers d%27en-t�te</Filter>
+    <ClInclude Include="Source\AI\BehaviorTreeDependencyScanner.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
     <ClInclude Include="Source\NodeGraphShared\BlueprintAdapter.h">
-      <Filter>Fichiers d%27en-t�te</Filter>
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphShared\BTDebugAdapter.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphShared\BTGraphDocumentConverter.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphShared\CommandAdapter.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphCore\Commands\DeleteLinkCommand.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClInclude>
+    </ClInclude>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphCore\NodeGraphRenderer.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphShared\NodeGraphShared.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphShared\Renderer.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\NodeGraphShared\RenderHelpers.h">
+      <Filter>Fichiers d%27en-t�te\Blueprint Editor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1017,8 +1050,9 @@
     <None Include="Source\NodeGraphCore\README.md">
       <Filter>Fichiers d%27en-t�te\NodeGraphCore</Filter>
     </None>
-    <None Include="Docs\Developer\NodeGraphShared_Migration.md" />
-    <None Include="PR_DESCRIPTION.md" />
+    <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
+    <None Include="BUILD_SUCCESS_FINAL.md" />
+    <None Include="BUILD_SKIPPED_RESOLVED.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

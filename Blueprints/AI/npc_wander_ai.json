@@ -10,8 +10,8 @@
         "name": "Wander Loop (Repeater)",
         "parameters": {},
         "position": {
-          "x": 200,
-          "y": 100
+          "x": 228,
+          "y": 167
         },
         "type": "Action"
       },
@@ -23,8 +23,8 @@
         "name": "Wander Sequence",
         "parameters": {},
         "position": {
-          "x": 200,
-          "y": 300
+          "x": 228.406,
+          "y": 253.033
         },
         "type": "Sequence"
       },
@@ -40,8 +40,8 @@
           "param2": "6"
         },
         "position": {
-          "x": 550,
-          "y": 300
+          "x": 530.998,
+          "y": 226.864
         },
         "type": "Action"
       },
@@ -57,8 +57,8 @@
           "param2": "10"
         },
         "position": {
-          "x": 550,
-          "y": 550
+          "x": 818.598,
+          "y": 244.823
         },
         "type": "Action"
       },
@@ -71,8 +71,8 @@
         "name": "Request Pathfinding",
         "parameters": {},
         "position": {
-          "x": 550,
-          "y": 800
+          "x": 1078,
+          "y": 294
         },
         "type": "Action"
       },
@@ -104,7 +104,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-02-28T10:18:11",
+    "lastModified": "",
     "tags": []
   },
   "name": "NPCWanderTree",

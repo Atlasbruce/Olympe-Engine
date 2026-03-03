@@ -90,6 +90,7 @@
     <ClCompile Include="Source\NodeGraphCore\CommandSystem.cpp" />
     <ClCompile Include="Source\NodeGraphCore\Commands\ConnectPinsCommand.cpp" />
     <ClCompile Include="Source\NodeGraphCore\Commands\CreateNodeCommand.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\Commands\DeleteLinkCommand.cpp" />
     <ClCompile Include="Source\NodeGraphCore\Commands\DeleteNodeCommand.cpp" />
     <ClCompile Include="Source\NodeGraphCore\Commands\MoveNodeCommand.cpp" />
     <ClCompile Include="Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.cpp" />
@@ -98,7 +99,10 @@
     <ClCompile Include="Source\NodeGraphCore\GraphDocument.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GraphMigrator.cpp" />
     <ClCompile Include="Source\NodeGraphCore\NodeGraphManager.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\NodeGraphRenderer.cpp" />
+    <ClCompile Include="Source\NodeGraphShared\BTDebugAdapter.cpp" />
     <ClCompile Include="Source\NodeGraphShared\NodeGraphShared.cpp" />
+    <ClCompile Include="Source\NodeGraphShared\RenderHelpers.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_SetVariable.cpp" />
@@ -232,6 +236,7 @@
     <ClInclude Include="Source\NodeGraphCore\CommandSystem.h" />
     <ClInclude Include="Source\NodeGraphCore\Commands\ConnectPinsCommand.h" />
     <ClInclude Include="Source\NodeGraphCore\Commands\CreateNodeCommand.h" />
+    <ClInclude Include="Source\NodeGraphCore\Commands\DeleteLinkCommand.h" />
     <ClInclude Include="Source\NodeGraphCore\Commands\DeleteNodeCommand.h" />
     <ClInclude Include="Source\NodeGraphCore\Commands\MoveNodeCommand.h" />
     <ClInclude Include="Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.h" />
@@ -242,11 +247,15 @@
     <ClInclude Include="Source\NodeGraphCore\ILayoutEngine.h" />
     <ClInclude Include="Source\NodeGraphCore\NodeGraphCore.h" />
     <ClInclude Include="Source\NodeGraphCore\NodeGraphManager.h" />
+    <ClInclude Include="Source\NodeGraphCore\NodeGraphRenderer.h" />
     <ClInclude Include="Source\NodeGraphShared\BehaviorTreeAdapter.h" />
     <ClInclude Include="Source\NodeGraphShared\BlueprintAdapter.h" />
+    <ClInclude Include="Source\NodeGraphShared\BTDebugAdapter.h" />
+    <ClInclude Include="Source\NodeGraphShared\BTGraphDocumentConverter.h" />
     <ClInclude Include="Source\NodeGraphShared\CommandAdapter.h" />
     <ClInclude Include="Source\NodeGraphShared\NodeGraphShared.h" />
     <ClInclude Include="Source\NodeGraphShared\Renderer.h" />
+    <ClInclude Include="Source\NodeGraphShared\RenderHelpers.h" />
     <ClInclude Include="Source\NodeGraphShared\Serializer.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTaskContext.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.h" />
@@ -321,10 +330,11 @@
     <ClInclude Include="Source\World.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="BUILD_SKIPPED_RESOLVED.md" />
+    <None Include="BUILD_SUCCESS_FINAL.md" />
     <None Include="ClassDiagram.cd" />
-    <None Include="Docs\Developer\NodeGraphShared_Migration.md" />
     <None Include="olympe.ini" />
-    <None Include="PR_DESCRIPTION.md" />
+    <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Source\NodeGraphCore\README.md" />
   </ItemGroup>
   <ItemGroup>
