@@ -330,11 +330,17 @@
     <ClInclude Include="Source\World.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="analyze_code.ps1" />
+    <None Include="analyze_codebase.ps1" />
+    <None Include="analyze_codebase_v2.ps1" />
     <None Include="BUILD_SKIPPED_RESOLVED.md" />
     <None Include="BUILD_SUCCESS_FINAL.md" />
     <None Include="ClassDiagram.cd" />
     <None Include="olympe.ini" />
+    <None Include="RAPPORT_AUDIT_FRANCAIS.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
+    <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
+    <None Include="Scripts\Interactive-Cleanup.ps1" />
     <None Include="Source\NodeGraphCore\README.md" />
   </ItemGroup>
   <ItemGroup>
