@@ -31,6 +31,7 @@
     <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTNodePalette.cpp" />
     <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTNodeRegistry.cpp" />
     <ClCompile Include="Source\AI\BehaviorTreeDebugWindow.cpp" />
+    <ClCompile Include="Source\AI\BehaviorTreeDebugWindow_NodeGraph.cpp" />
     <ClCompile Include="Source\AI\BTEditorCommand.cpp" />
     <ClCompile Include="Source\AI\BTGraphLayoutEngine.cpp" />
     <ClCompile Include="Source\Animation\AnimationBank.cpp" />
