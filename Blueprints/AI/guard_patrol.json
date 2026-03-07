@@ -12,8 +12,8 @@
         "name": "Root Sequence",
         "parameters": {},
         "position": {
-          "x": 200,
-          "y": 300
+          "x": 256,
+          "y": 512
         },
         "type": "Sequence"
       },
@@ -24,8 +24,8 @@
         "name": "Pick Next Patrol Point",
         "parameters": {},
         "position": {
-          "x": 550,
-          "y": 300
+          "x": 544,
+          "y": 432
         },
         "type": "Action"
       },
@@ -36,8 +36,8 @@
         "name": "Set Move Goal to Patrol Point",
         "parameters": {},
         "position": {
-          "x": 550,
-          "y": 550
+          "x": 544,
+          "y": 544
         },
         "type": "Action"
       },
@@ -50,8 +50,8 @@
           "param1": "0.5"
         },
         "position": {
-          "x": 550,
-          "y": 800
+          "x": 544,
+          "y": 656
         },
         "type": "Action"
       }
@@ -69,7 +69,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-03-07T11:23:50",
+    "lastModified": "2026-03-07T12:15:19",
     "tags": []
   },
   "name": "GuardPatrolTree",

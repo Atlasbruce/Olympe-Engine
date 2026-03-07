@@ -11,8 +11,8 @@
         "name": "Root Selector",
         "parameters": {},
         "position": {
-          "x": 201,
-          "y": 121
+          "x": 208,
+          "y": 144
         },
         "type": "Selector"
       },
@@ -27,8 +27,8 @@
         "name": "Combat Branch",
         "parameters": {},
         "position": {
-          "x": 456,
-          "y": 286
+          "x": 464,
+          "y": 224
         },
         "type": "Sequence"
       },
@@ -43,8 +43,8 @@
           "value": "3"
         },
         "position": {
-          "x": 746,
-          "y": 193
+          "x": 688,
+          "y": 224
         },
         "type": "Condition"
       },
@@ -55,8 +55,8 @@
         "name": "Has Target?",
         "parameters": {},
         "position": {
-          "x": 810.742,
-          "y": 371.683
+          "x": 688,
+          "y": 448
         },
         "type": "Condition"
       },
@@ -67,8 +67,8 @@
         "name": "Move to Target",
         "parameters": {},
         "position": {
-          "x": 948,
-          "y": 478
+          "x": 688,
+          "y": 560
         },
         "type": "Action"
       },
@@ -79,8 +79,8 @@
         "name": "Attack",
         "parameters": {},
         "position": {
-          "x": 994,
-          "y": 255
+          "x": 688,
+          "y": 336
         },
         "type": "Action"
       },
@@ -96,8 +96,8 @@
         "name": "Wander Branch",
         "parameters": {},
         "position": {
-          "x": 460,
-          "y": 14
+          "x": 448,
+          "y": 16
         },
         "type": "Sequence"
       },
@@ -112,8 +112,8 @@
           "value": "1"
         },
         "position": {
-          "x": 713.911,
-          "y": -430.115
+          "x": 720,
+          "y": -384
         },
         "type": "Condition"
       },
@@ -127,16 +127,14 @@
           "param2": "8"
         },
         "position": {
-          "x": 735.911,
-          "y": -317.115
+          "x": 720,
+          "y": -272
         },
         "type": "Action"
       },
       {
         "actionType": "ChooseRandomNavigablePoint",
-        "children": [
-          14
-        ],
+        "children": [],
         "id": 13,
         "name": "Choose Random Point",
         "parameters": {
@@ -144,22 +142,20 @@
           "param2": "10"
         },
         "position": {
-          "x": 727.099,
-          "y": -163.1
+          "x": 720,
+          "y": -160
         },
         "type": "Action"
       },
       {
         "actionType": "RequestPathfinding",
-        "children": [
-          15
-        ],
+        "children": [],
         "id": 14,
         "name": "Request Pathfinding",
         "parameters": {},
         "position": {
-          "x": 1000.91,
-          "y": -110.115
+          "x": 720,
+          "y": -48
         },
         "type": "Action"
       },
@@ -170,8 +166,8 @@
         "name": "Follow Path",
         "parameters": {},
         "position": {
-          "x": 1216.91,
-          "y": -129.115
+          "x": 720,
+          "y": 64
         },
         "type": "Action"
       }
@@ -189,7 +185,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-03-07T11:35:37",
+    "lastModified": "2026-03-07T12:16:50",
     "tags": []
   },
   "name": "ZombieAITree",

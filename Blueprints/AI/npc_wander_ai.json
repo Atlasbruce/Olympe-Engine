@@ -12,8 +12,8 @@
           "target": ""
         },
         "position": {
-          "x": 488.057,
-          "y": 362.481
+          "x": 496,
+          "y": 368
         },
         "type": "Action"
       },
@@ -26,8 +26,8 @@
         "name": "Wander Sequence",
         "parameters": {},
         "position": {
-          "x": 204.276,
-          "y": 261.03
+          "x": 208,
+          "y": 256
         },
         "type": "Sequence"
       },
@@ -43,8 +43,8 @@
           "param2": "6"
         },
         "position": {
-          "x": 483.605,
-          "y": 194.785
+          "x": 480,
+          "y": 192
         },
         "type": "Action"
       },
@@ -60,8 +60,8 @@
           "param2": "10"
         },
         "position": {
-          "x": 735.598,
-          "y": 194.823
+          "x": 736,
+          "y": 192
         },
         "type": "Action"
       },
@@ -74,8 +74,8 @@
         "name": "Request Pathfinding",
         "parameters": {},
         "position": {
-          "x": 1031,
-          "y": 196
+          "x": 1024,
+          "y": 192
         },
         "type": "Action"
       },
@@ -86,8 +86,8 @@
         "name": "Follow Path",
         "parameters": {},
         "position": {
-          "x": 1246.91,
-          "y": 195.549
+          "x": 1248,
+          "y": 192
         },
         "type": "Action"
       }
@@ -105,7 +105,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-03-07T11:49:02",
+    "lastModified": "2026-03-07T12:15:54",
     "tags": []
   },
   "name": "NPCWanderTree",

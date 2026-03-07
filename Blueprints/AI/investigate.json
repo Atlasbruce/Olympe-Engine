@@ -10,7 +10,7 @@
         "name": "Root Sequence",
         "parameters": {},
         "position": {
-          "x": 131,
+          "x": 128,
           "y": 96
         },
         "type": "Sequence"
@@ -24,8 +24,8 @@
         "name": "Heard Noise?",
         "parameters": {},
         "position": {
-          "x": 353,
-          "y": 89
+          "x": 352,
+          "y": 96
         },
         "type": "Condition"
       },
@@ -38,8 +38,8 @@
           "param1": "0.8"
         },
         "position": {
-          "x": 538,
-          "y": 87
+          "x": 544,
+          "y": 80
         },
         "type": "Action"
       }
@@ -57,7 +57,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-03-07T11:49:59",
+    "lastModified": "2026-03-07T12:15:39",
     "tags": []
   },
   "name": "InvestigateTree",
