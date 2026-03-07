@@ -450,7 +450,7 @@ static void TestJ_CreateNodeCommand()
     bool passed = true;
 
     // Create a graph via manager
-    auto& mgr = Olympe::NodeGraph::NodeGraphManager::Get();
+    auto& mgr = Olympe::NodeGraphManager::Get();
     auto gid = mgr.CreateGraph("UnitTestGraph", "BehaviorTree");
 
     Olympe::Blueprint::CommandStack stack;
