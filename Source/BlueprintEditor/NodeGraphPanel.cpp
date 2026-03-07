@@ -698,11 +698,19 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         // Context menu on node
         if (ImGui::BeginPopup("NodeContextMenu"))
         {
-            ImGui::Text("Node: %d", m_SelectedNodeId);
+            GraphNode* selectedNode = graph->GetNode(m_SelectedNodeId);
+            if (selectedNode)
+            {
+                ImGui::Text("Node: %s (ID: %d)", selectedNode->name.c_str(), m_SelectedNodeId);
+            }
+            else
+            {
+                ImGui::Text("Node: %d", m_SelectedNodeId);
+            }
             ImGui::Separator();
 
             // Edit is always available for viewing
-            if (ImGui::MenuItem("Edit", "Double-click"))
+            if (ImGui::MenuItem("Edit Properties", "Double-click"))
             {
                 m_EditingNodeId = m_SelectedNodeId;
                 GraphNode* node = graph->GetNode(m_SelectedNodeId);
@@ -712,9 +720,10 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
                     m_NodeNameBuffer[sizeof(m_NodeNameBuffer) - 1] = '\0';
                     m_ShowNodeEditModal = true;
                 }
+                ImGui::CloseCurrentPopup();
             }
 
-            // Duplicate and Delete only shown if allowed
+            // Duplicate only shown if allowed
             if (EditorContext::Get().CanEdit() && EditorContext::Get().CanCreate())
             {
                 if (ImGui::MenuItem("Duplicate", "Ctrl+D"))
@@ -723,171 +732,226 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
                     int graphId = NodeGraphManager::Get().GetActiveGraphId();
                     NodeGraphShared::BlueprintAdapter adapter(stack, graphId);
                     adapter.DuplicateNode(m_SelectedNodeId);
+                    ImGui::CloseCurrentPopup();
                 }
             }
 
             ImGui::Separator();
 
+            // Delete only shown if allowed
             if (EditorContext::Get().CanDelete())
             {
-                if (EditorContext::Get().CanDelete())
+                if (ImGui::MenuItem("Delete", "Del"))
                 {
-                    if (ImGui::MenuItem("Delete", "Del"))
-                    {
-                        std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
-                        auto cmd = std::make_unique<DeleteNodeCommand>(graphId, m_SelectedNodeId);
-                        BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
-                    }
+                    std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+                    auto cmd = std::make_unique<DeleteNodeCommand>(graphId, m_SelectedNodeId);
+                    BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+                    m_SelectedNodeId = -1;
+                    ImGui::CloseCurrentPopup();
                 }
-
-                ImGui::EndPopup();
             }
 
-            RenderContextMenu();
+            ImGui::EndPopup();
+        }
 
-            // Handle drag & drop from node palette
-            if (ImGui::BeginDragDropTarget())
+        // Right-click context menu on link
+        int hoveredLinkUID = -1;
+        if (ImNodes::IsLinkHovered(&hoveredLinkUID))
+        {
+            if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
             {
-                const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("NODE_TYPE");
+                m_SelectedLinkId = hoveredLinkUID;
+                ImGui::OpenPopup("LinkContextMenu");
+            }
+        }
 
-                // Validate payload safety
-                if (payload && payload->Data && payload->DataSize > 0)
+        // Context menu on link
+        if (ImGui::BeginPopup("LinkContextMenu"))
+        {
+            // Extract link information
+            int linkIndex = (m_SelectedLinkId - (graphID * LINK_ID_MULTIPLIER)) - 1;
+            auto links = graph->GetAllLinks();
+
+            if (linkIndex >= 0 && linkIndex < (int)links.size())
+            {
+                const GraphLink& link = links[linkIndex];
+                GraphNode* fromNode = graph->GetNode(link.fromNode);
+                GraphNode* toNode = graph->GetNode(link.toNode);
+
+                if (fromNode && toNode)
                 {
-                    // Copy payload data to local string with bounds checking
-                    size_t maxSize = 256;  // Reasonable max for node type strings
-                    size_t dataSize = (payload->DataSize < maxSize) ? payload->DataSize : maxSize;
+                    ImGui::Text("Link: %s -> %s", fromNode->name.c_str(), toNode->name.c_str());
+                }
+                else
+                {
+                    ImGui::Text("Link: %d -> %d", link.fromNode, link.toNode);
+                }
+                ImGui::Separator();
 
-                    std::string nodeTypeData;
-                    nodeTypeData.resize(dataSize);
-                    std::memcpy(&nodeTypeData[0], payload->Data, dataSize);
-
-                    // Ensure NUL-termination
-                    if (nodeTypeData.find('\0') == std::string::npos)
+                // Delete link
+                if (EditorContext::Get().CanDelete())
+                {
+                    if (ImGui::MenuItem("Delete Link", "Del"))
                     {
-                        // Truncate at first non-printable or add terminator
-                        size_t validLen = 0;
-                        for (size_t i = 0; i < nodeTypeData.size(); ++i)
-                        {
-                            if (nodeTypeData[i] == '\0' || nodeTypeData[i] < 32)
-                                break;
-                            validLen = i + 1;
-                        }
-                        nodeTypeData.resize(validLen);
+                        std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
+                        auto cmd = std::make_unique<UnlinkNodesCommand>(graphId, link.fromNode, link.toNode);
+                        BlueprintEditor::Get().GetCommandStack()->ExecuteCommand(std::move(cmd));
+                        m_SelectedLinkId = -1;
+                        ImGui::CloseCurrentPopup();
                     }
+                }
+            }
+            else
+            {
+                ImGui::Text("Invalid link");
+            }
 
-                    // Remove any trailing null bytes
-                    while (!nodeTypeData.empty() && nodeTypeData.back() == '\0')
-                        nodeTypeData.pop_back();
+            ImGui::EndPopup();
+        }
 
-                    // Convert screen space coordinates to grid space
-                    ImVec2 mouseScreenPos = ImGui::GetMousePos();
-                    ImVec2 canvasPos = ScreenSpaceToGridSpace(mouseScreenPos);
+        // Handle drag & drop from node palette
+        if (ImGui::BeginDragDropTarget())
+        {
+            const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("NODE_TYPE");
 
-                    bool validNode = false;
+            // Validate payload safety
+            if (payload && payload->Data && payload->DataSize > 0)
+            {
+                // Copy payload data to local string with bounds checking
+                size_t maxSize = 256;  // Reasonable max for node type strings
+                size_t dataSize = (payload->DataSize < maxSize) ? payload->DataSize : maxSize;
 
-                    // Parse the type and create appropriate node
-                    if (nodeTypeData.find("Action:") == 0)
+                std::string nodeTypeData;
+                nodeTypeData.resize(dataSize);
+                std::memcpy(&nodeTypeData[0], payload->Data, dataSize);
+
+                // Ensure NUL-termination
+                if (nodeTypeData.find('\0') == std::string::npos)
+                {
+                    // Truncate at first non-printable or add terminator
+                    size_t validLen = 0;
+                    for (size_t i = 0; i < nodeTypeData.size(); ++i)
                     {
-                        std::string actionType = nodeTypeData.substr(7);
-
-                        // Validate action type exists in catalog
-                        if (EnumCatalogManager::Get().IsValidActionType(actionType))
-                        {
-                            int nodeId = graph->CreateNode(NodeType::BT_Action, canvasPos.x, canvasPos.y, actionType);
-                            GraphNode* node = graph->GetNode(nodeId);
-                            if (node)
-                            {
-                                node->actionType = actionType;
-                                validNode = true;
-                                std::cout << "[NodeGraphPanel] Created Action node: " << actionType
-                                    << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
-                            }
-                        }
-                        else
-                        {
-                            std::cerr << "[NodeGraphPanel] ERROR: Invalid ActionType: " << actionType << "\n";
-                            ImGui::SetTooltip("Invalid ActionType: %s", actionType.c_str());
-                        }
+                        if (nodeTypeData[i] == '\0' || nodeTypeData[i] < 32)
+                            break;
+                        validLen = i + 1;
                     }
-                    else if (nodeTypeData.find("Condition:") == 0)
-                    {
-                        std::string conditionType = nodeTypeData.substr(10);
+                    nodeTypeData.resize(validLen);
+                }
 
-                        // Validate condition type exists in catalog
-                        if (EnumCatalogManager::Get().IsValidConditionType(conditionType))
-                        {
-                            int nodeId = graph->CreateNode(NodeType::BT_Condition, canvasPos.x, canvasPos.y, conditionType);
-                            GraphNode* node = graph->GetNode(nodeId);
-                            if (node)
-                            {
-                                node->conditionType = conditionType;
-                                validNode = true;
-                                std::cout << "[NodeGraphPanel] Created Condition node: " << conditionType
-                                    << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
-                            }
-                        }
-                        else
-                        {
-                            std::cerr << "[NodeGraphPanel] ERROR: Invalid ConditionType: " << conditionType << "\n";
-                            ImGui::SetTooltip("Invalid ConditionType: %s", conditionType.c_str());
-                        }
-                    }
-                    else if (nodeTypeData.find("Decorator:") == 0)
-                    {
-                        std::string decoratorType = nodeTypeData.substr(10);
+                // Remove any trailing null bytes
+                while (!nodeTypeData.empty() && nodeTypeData.back() == '\0')
+                    nodeTypeData.pop_back();
 
-                        // Validate decorator type exists in catalog
-                        if (EnumCatalogManager::Get().IsValidDecoratorType(decoratorType))
-                        {
-                            int nodeId = graph->CreateNode(NodeType::BT_Decorator, canvasPos.x, canvasPos.y, decoratorType);
-                            GraphNode* node = graph->GetNode(nodeId);
-                            if (node)
-                            {
-                                node->decoratorType = decoratorType;
-                                validNode = true;
-                                std::cout << "[NodeGraphPanel] Created Decorator node: " << decoratorType
-                                    << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
-                            }
-                        }
-                        else
-                        {
-                            std::cerr << "[NodeGraphPanel] ERROR: Invalid DecoratorType: " << decoratorType << "\n";
-                            ImGui::SetTooltip("Invalid DecoratorType: %s", decoratorType.c_str());
-                        }
-                    }
-                    else if (nodeTypeData == "Sequence" || nodeTypeData == "Selector")
+                // Convert screen space coordinates to grid space
+                ImVec2 mouseScreenPos = ImGui::GetMousePos();
+                ImVec2 canvasPos = ScreenSpaceToGridSpace(mouseScreenPos);
+
+                bool validNode = false;
+
+                // Parse the type and create appropriate node
+                if (nodeTypeData.find("Action:") == 0)
+                {
+                    std::string actionType = nodeTypeData.substr(7);
+
+                    // Validate action type exists in catalog
+                    if (EnumCatalogManager::Get().IsValidActionType(actionType))
                     {
-                        NodeType type = (nodeTypeData == "Sequence") ? NodeType::BT_Sequence : NodeType::BT_Selector;
-                        int nodeId = graph->CreateNode(type, canvasPos.x, canvasPos.y, nodeTypeData);
-                        if (nodeId > 0)
+                        int nodeId = graph->CreateNode(NodeType::BT_Action, canvasPos.x, canvasPos.y, actionType);
+                        GraphNode* node = graph->GetNode(nodeId);
+                        if (node)
                         {
+                            node->actionType = actionType;
                             validNode = true;
-                            std::cout << "[NodeGraphPanel] Created " << nodeTypeData << " node"
+                            std::cout << "[NodeGraphPanel] Created Action node: " << actionType
                                 << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
                         }
                     }
                     else
                     {
-                        std::cerr << "[NodeGraphPanel] ERROR: Unknown node type: " << nodeTypeData << "\n";
-                        ImGui::SetTooltip("Unknown node type: %s", nodeTypeData.c_str());
+                        std::cerr << "[NodeGraphPanel] ERROR: Invalid ActionType: " << actionType << "\n";
+                        ImGui::SetTooltip("Invalid ActionType: %s", actionType.c_str());
                     }
+                }
+                else if (nodeTypeData.find("Condition:") == 0)
+                {
+                    std::string conditionType = nodeTypeData.substr(10);
 
-                    if (!validNode)
+                    // Validate condition type exists in catalog
+                    if (EnumCatalogManager::Get().IsValidConditionType(conditionType))
                     {
-                        std::cerr << "[NodeGraphPanel] Failed to create node from DnD payload\n";
+                        int nodeId = graph->CreateNode(NodeType::BT_Condition, canvasPos.x, canvasPos.y, conditionType);
+                        GraphNode* node = graph->GetNode(nodeId);
+                        if (node)
+                        {
+                            node->conditionType = conditionType;
+                            validNode = true;
+                            std::cout << "[NodeGraphPanel] Created Condition node: " << conditionType
+                                << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                        }
+                    }
+                    else
+                    {
+                        std::cerr << "[NodeGraphPanel] ERROR: Invalid ConditionType: " << conditionType << "\n";
+                        ImGui::SetTooltip("Invalid ConditionType: %s", conditionType.c_str());
+                    }
+                }
+                else if (nodeTypeData.find("Decorator:") == 0)
+                {
+                    std::string decoratorType = nodeTypeData.substr(10);
+
+                    // Validate decorator type exists in catalog
+                    if (EnumCatalogManager::Get().IsValidDecoratorType(decoratorType))
+                    {
+                        int nodeId = graph->CreateNode(NodeType::BT_Decorator, canvasPos.x, canvasPos.y, decoratorType);
+                        GraphNode* node = graph->GetNode(nodeId);
+                        if (node)
+                        {
+                            node->decoratorType = decoratorType;
+                            validNode = true;
+                            std::cout << "[NodeGraphPanel] Created Decorator node: " << decoratorType
+                                << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                        }
+                    }
+                    else
+                    {
+                        std::cerr << "[NodeGraphPanel] ERROR: Invalid DecoratorType: " << decoratorType << "\n";
+                        ImGui::SetTooltip("Invalid DecoratorType: %s", decoratorType.c_str());
+                    }
+                }
+                else if (nodeTypeData == "Sequence" || nodeTypeData == "Selector")
+                {
+                    NodeType type = (nodeTypeData == "Sequence") ? NodeType::BT_Sequence : NodeType::BT_Selector;
+                    int nodeId = graph->CreateNode(type, canvasPos.x, canvasPos.y, nodeTypeData);
+                    if (nodeId > 0)
+                    {
+                        validNode = true;
+                        std::cout << "[NodeGraphPanel] Created " << nodeTypeData << " node"
+                            << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
                     }
                 }
                 else
                 {
-                    std::cerr << "[NodeGraphPanel] Invalid DnD payload received (null or empty)\n";
+                    std::cerr << "[NodeGraphPanel] ERROR: Unknown node type: " << nodeTypeData << "\n";
+                    ImGui::SetTooltip("Unknown node type: %s", nodeTypeData.c_str());
                 }
 
-                ImGui::EndDragDropTarget();
+                if (!validNode)
+                {
+                    std::cerr << "[NodeGraphPanel] Failed to create node from DnD payload\n";
+                }
+            }
+            else
+            {
+                std::cerr << "[NodeGraphPanel] Invalid DnD payload received (null or empty)\n";
             }
 
-            // Update node positions using global UIDs
-            for (GraphNode* node : nodes)
-            {
+            ImGui::EndDragDropTarget();
+        }
+
+        // Update node positions using global UIDs
+        for (GraphNode* node : nodes)
+        {
                 int globalNodeUID = (graphID * GRAPH_ID_MULTIPLIER) + node->id;
                 ImVec2 pos = ImNodes::GetNodeGridSpacePos(globalNodeUID);
 
@@ -929,11 +993,10 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
                             "GameData/AI/autosave_");
                     }
                 }
-            }
-        }
-    }
-
-    void NodeGraphPanel::SyncNodePositionsFromImNodes(int graphID)
+                    }
+                }
+            
+                void NodeGraphPanel::SyncNodePositionsFromImNodes(int graphID)
     {
         NodeGraph* graph = NodeGraphManager::Get().GetGraph(graphID);
         if (!graph)

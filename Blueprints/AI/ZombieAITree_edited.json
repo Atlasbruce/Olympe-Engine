@@ -11,8 +11,8 @@
         "name": "Root Selector",
         "parameters": {},
         "position": {
-          "x": 200,
-          "y": 100
+          "x": -608,
+          "y": 832
         },
         "type": "Selector"
       },
@@ -27,62 +27,66 @@
         "name": "Combat Branch",
         "parameters": {},
         "position": {
-          "x": 200,
-          "y": 200
+          "x": -368,
+          "y": 1072
         },
         "type": "Sequence"
       },
       {
+        "children": [],
         "conditionType": "TargetVisible",
         "id": 3,
         "name": "Check AIMode == Combat",
         "parameters": {
-          "param": 0
+          "param": "0"
         },
         "position": {
-          "x": 200,
-          "y": 300
+          "x": -160,
+          "y": 1072
         },
         "type": "Condition"
       },
       {
+        "children": [],
         "conditionType": "TargetVisible",
         "id": 4,
         "name": "Has Target?",
         "parameters": {
-          "param": 0
+          "param": "0"
         },
         "position": {
-          "x": 200,
-          "y": 400
+          "x": -160,
+          "y": 1168
         },
         "type": "Condition"
       },
       {
         "actionType": "SetMoveGoalToTarget",
+        "children": [],
         "id": 5,
         "name": "Move to Target",
         "parameters": {
-          "param1": 0,
-          "param2": 0
+          "param1": "0",
+          "param2": "0"
         },
         "position": {
-          "x": 200,
-          "y": 500
+          "x": -160,
+          "y": 1264
         },
         "type": "Action"
       },
       {
         "actionType": "AttackIfClose",
+        "children": [],
         "id": 6,
         "name": "Attack",
         "parameters": {
-          "param1": 0,
-          "param2": 0
+          "param1": "0",
+          "param2": "0"
         },
         "position": {
-          "x": 200,
-          "y": 600
+          "x": -160,
+          "y": 1376
         },
         "type": "Action"
       },
@@ -98,90 +102,96 @@
         "name": "Wander Branch",
         "parameters": {},
         "position": {
-          "x": 200,
-          "y": 1000
+          "x": -112,
+          "y": 864
         },
         "type": "Sequence"
       },
       {
+        "children": [],
         "conditionType": "TargetVisible",
         "id": 11,
         "name": "Check AIMode == Idle",
         "parameters": {
-          "param": 0
+          "param": "0"
         },
         "position": {
-          "x": 200,
-          "y": 1100
+          "x": 144,
+          "y": 880
         },
         "type": "Condition"
       },
       {
         "actionType": "WaitRandomTime",
+        "children": [],
         "id": 12,
         "name": "Wait",
         "parameters": {
-          "param1": 3,
-          "param2": 8
+          "param1": "3",
+          "param2": "8"
         },
         "position": {
-          "x": 200,
-          "y": 1200
+          "x": 144,
+          "y": 976
         },
         "type": "Action"
       },
       {
         "actionType": "ChooseRandomNavigablePoint",
+        "children": [],
         "id": 13,
         "name": "Choose Random Point",
         "parameters": {
-          "param1": 400,
-          "param2": 10
+          "param1": "400",
+          "param2": "10"
         },
         "position": {
-          "x": 200,
-          "y": 1300
+          "x": 144,
+          "y": 1072
         },
         "type": "Action"
       },
       {
         "actionType": "RequestPathfinding",
+        "children": [],
         "id": 14,
         "name": "Request Pathfinding",
         "parameters": {
-          "param1": 0,
-          "param2": 0
+          "param1": "0",
+          "param2": "0"
         },
         "position": {
-          "x": 200,
-          "y": 1400
+          "x": 144,
+          "y": 1184
         },
         "type": "Action"
       },
       {
         "actionType": "FollowPath",
+        "children": [],
         "id": 15,
         "name": "Follow Path",
         "parameters": {
-          "param1": 0,
-          "param2": 0
+          "param1": "0",
+          "param2": "0"
         },
         "position": {
-          "x": 200,
-          "y": 1500
+          "x": 144,
+          "y": 1280
         },
         "type": "Action"
       },
       {
+        "children": [],
         "conditionType": "TargetVisible",
         "id": 16,
         "name": "New Condition",
         "parameters": {
-          "param": 0
+          "param": "0"
         },
         "position": {
-          "x": 200,
-          "y": 1600
+          "x": -240,
+          "y": 608
         },
         "type": "Condition"
       }
@@ -197,15 +207,11 @@
     "zoom": 1
   },
   "metadata": {
-    "author": "Atlasbruce",
-    "created": "2026-02-20T00:04:44Z",
-    "lastModified": "2026-02-20T00:04:44Z",
-    "tags": [
-      "AI",
-      "BehaviorTree"
-    ]
+    "author": "User",
+    "created": "",
+    "lastModified": "2026-03-07T12:04:35",
+    "tags": []
   },
   "name": "ZombieAITree",
-  "schema_version": 2,
-  "type": "BehaviorTree"
+  "schema_version": 2
 }

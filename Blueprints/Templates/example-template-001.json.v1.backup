@@ -1,0 +1,56 @@
+{
+    "id": "example-template-001",
+    "name": "Basic Character Template",
+    "description": "A basic character with position, bounding box, and sprite",
+    "category": "Character",
+    "author": "System",
+    "version": "1.0",
+    "created": "2026-01-07T00:00:00Z",
+    "modified": "2026-01-07T00:00:00Z",
+    "thumbnailPath": "",
+    "blueprintData": {
+        "schema_version": 1,
+        "type": "EntityBlueprint",
+        "name": "BasicCharacter",
+        "description": "Basic character template",
+        "components": [
+            {
+                "type": "Position",
+                "properties": {
+                    "position": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                    }
+                }
+            },
+            {
+                "type": "BoundingBox",
+                "properties": {
+                    "boundingBox": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "w": 32.0,
+                        "h": 32.0
+                    }
+                }
+            },
+            {
+                "type": "VisualSprite",
+                "properties": {
+                    "spritePath": "Resources/entity_male.png",
+                    "srcRect": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "w": 32.0,
+                        "h": 32.0
+                    },
+                    "hotSpot": {
+                        "x": 16.0,
+                        "y": 16.0
+                    }
+                }
+            }
+        ]
+    }
+}

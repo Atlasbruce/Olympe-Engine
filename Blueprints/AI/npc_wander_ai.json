@@ -3,28 +3,31 @@
   "data": {
     "nodes": [
       {
-        "children": [
-          3
-        ],
+        "actionType": "MoveTo",
+        "children": [],
         "id": 1,
         "name": "Wander Loop (Repeater)",
-        "parameters": {},
+        "parameters": {
+          "speed": "",
+          "target": ""
+        },
         "position": {
-          "x": 228,
-          "y": 167
+          "x": 488.057,
+          "y": 362.481
         },
         "type": "Action"
       },
       {
         "children": [
-          3
+          3,
+          1
         ],
         "id": 2,
         "name": "Wander Sequence",
         "parameters": {},
         "position": {
-          "x": 228.406,
-          "y": 253.033
+          "x": 204.276,
+          "y": 261.03
         },
         "type": "Sequence"
       },
@@ -40,8 +43,8 @@
           "param2": "6"
         },
         "position": {
-          "x": 530.998,
-          "y": 226.864
+          "x": 483.605,
+          "y": 194.785
         },
         "type": "Action"
       },
@@ -57,8 +60,8 @@
           "param2": "10"
         },
         "position": {
-          "x": 818.598,
-          "y": 244.823
+          "x": 735.598,
+          "y": 194.823
         },
         "type": "Action"
       },
@@ -71,22 +74,20 @@
         "name": "Request Pathfinding",
         "parameters": {},
         "position": {
-          "x": 1078,
-          "y": 294
+          "x": 1031,
+          "y": 196
         },
         "type": "Action"
       },
       {
         "actionType": "FollowPath",
-        "children": [
-          1
-        ],
+        "children": [],
         "id": 6,
         "name": "Follow Path",
         "parameters": {},
         "position": {
-          "x": 550,
-          "y": 1050
+          "x": 1246.91,
+          "y": 195.549
         },
         "type": "Action"
       }
@@ -104,7 +105,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-03-07T11:22:03",
+    "lastModified": "2026-03-07T11:49:02",
     "tags": []
   },
   "name": "NPCWanderTree",

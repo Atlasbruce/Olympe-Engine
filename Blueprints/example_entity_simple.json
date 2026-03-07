@@ -1,45 +1,61 @@
 {
-    "schema_version": 1,
-    "type": "EntityBlueprint",
-    "name": "SimpleCharacter",
-    "description": "A basic character entity with position, bounding box, and sprite",
+  "blueprintType": "EntityPrefab",
+  "data": {
     "components": [
-        {
-            "type": "Position",
-            "properties": {
-                "position": {
-                    "x": 100.0,
-                    "y": 200.0,
-                    "z": 0.0
-                }
-            }
+      {
+        "properties": {
+          "position": {
+            "x": 100,
+            "y": 200,
+            "z": 0
+          }
         },
-        {
-            "type": "BoundingBox",
-            "properties": {
-                "boundingBox": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "w": 32.0,
-                    "h": 32.0
-                }
-            }
+        "type": "Position"
+      },
+      {
+        "properties": {
+          "boundingBox": {
+            "h": 32,
+            "w": 32,
+            "x": 0,
+            "y": 0
+          }
         },
-        {
-            "type": "VisualSprite",
-            "properties": {
-                "spritePath": "Resources/entity_male.png",
-                "srcRect": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "w": 32.0,
-                    "h": 32.0
-                },
-                "hotSpot": {
-                    "x": 16.0,
-                    "y": 16.0
-                }
-            }
-        }
-    ]
+        "type": "BoundingBox"
+      },
+      {
+        "properties": {
+          "hotSpot": {
+            "x": 16,
+            "y": 16
+          },
+          "spritePath": "Resources/entity_male.png",
+          "srcRect": {
+            "h": 32,
+            "w": 32,
+            "x": 0,
+            "y": 0
+          }
+        },
+        "type": "VisualSprite"
+      }
+    ],
+    "prefabName": "SimpleCharacter"
+  },
+  "description": "",
+  "editorState": {
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-03-07T11:57:13",
+    "lastModified": "2026-03-07T11:57:13",
+    "tags": []
+  },
+  "name": "SimpleCharacter",
+  "schema_version": 2
 }

@@ -8,8 +8,8 @@
         "name": "Simple Move Loop (Repeater)",
         "parameters": {},
         "position": {
-          "x": 200,
-          "y": 100
+          "x": 785,
+          "y": 292
         },
         "type": "Action"
       },
@@ -22,8 +22,8 @@
         "name": "Step Move Sequence",
         "parameters": {},
         "position": {
-          "x": 200,
-          "y": 300
+          "x": 260,
+          "y": 286
         },
         "type": "Sequence"
       },
@@ -39,8 +39,8 @@
           "speed": "Walk"
         },
         "position": {
-          "x": 550,
-          "y": 300
+          "x": 527,
+          "y": 183
         },
         "type": "Action"
       },
@@ -56,8 +56,8 @@
           "minDeltaDeg": "-15"
         },
         "position": {
-          "x": 550,
-          "y": 550
+          "x": 501,
+          "y": 406
         },
         "type": "Action"
       }
@@ -75,7 +75,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-03-07T11:25:38",
+    "lastModified": "2026-03-07T11:49:31",
     "tags": []
   },
   "name": "NPCSimpleMoveTree",

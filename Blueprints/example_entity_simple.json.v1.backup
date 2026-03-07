@@ -1,0 +1,45 @@
+{
+    "schema_version": 1,
+    "type": "EntityBlueprint",
+    "name": "SimpleCharacter",
+    "description": "A basic character entity with position, bounding box, and sprite",
+    "components": [
+        {
+            "type": "Position",
+            "properties": {
+                "position": {
+                    "x": 100.0,
+                    "y": 200.0,
+                    "z": 0.0
+                }
+            }
+        },
+        {
+            "type": "BoundingBox",
+            "properties": {
+                "boundingBox": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "w": 32.0,
+                    "h": 32.0
+                }
+            }
+        },
+        {
+            "type": "VisualSprite",
+            "properties": {
+                "spritePath": "Resources/entity_male.png",
+                "srcRect": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "w": 32.0,
+                    "h": 32.0
+                },
+                "hotSpot": {
+                    "x": 16.0,
+                    "y": 16.0
+                }
+            }
+        }
+    ]
+}

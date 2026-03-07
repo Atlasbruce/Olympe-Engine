@@ -3,16 +3,15 @@
   "data": {
     "nodes": [
       {
-        "decoratorChildId": 2,
+        "children": [],
         "id": 1,
         "name": "Wander Loop (Repeater)",
         "parameters": {},
         "position": {
-          "x": 200,
-          "y": 100
+          "x": 912,
+          "y": 256
         },
-        "repeatCount": -1,
-        "type": "Repeater"
+        "type": "Action"
       },
       {
         "children": [
@@ -25,64 +24,68 @@
         "name": "Wander Sequence",
         "parameters": {},
         "position": {
-          "x": 200,
-          "y": 200
+          "x": 208,
+          "y": 288
         },
         "type": "Sequence"
       },
       {
         "actionType": "WaitRandomTime",
+        "children": [],
         "id": 3,
         "name": "Wait Random Time (2-6s)",
         "parameters": {
-          "param1": 2,
-          "param2": 6
+          "param1": "2",
+          "param2": "6"
         },
         "position": {
-          "x": 200,
-          "y": 300
+          "x": 528,
+          "y": 144
         },
         "type": "Action"
       },
       {
         "actionType": "ChooseRandomNavigablePoint",
+        "children": [],
         "id": 4,
         "name": "Choose Random Navigable Point",
         "parameters": {
-          "param1": 500,
-          "param2": 10
+          "param1": "500",
+          "param2": "10"
         },
         "position": {
-          "x": 200,
-          "y": 400
+          "x": 528,
+          "y": 256
         },
         "type": "Action"
       },
       {
         "actionType": "RequestPathfinding",
+        "children": [],
         "id": 5,
         "name": "Request Pathfinding",
         "parameters": {
-          "param1": 0,
-          "param2": 0
+          "param1": "0",
+          "param2": "0"
         },
         "position": {
-          "x": 200,
-          "y": 500
+          "x": 528,
+          "y": 368
         },
         "type": "Action"
       },
       {
         "actionType": "FollowPath",
+        "children": [],
         "id": 6,
         "name": "Follow Path",
         "parameters": {
-          "param1": 0,
-          "param2": 0
+          "param1": "0",
+          "param2": "0"
         },
         "position": {
-          "x": 200,
-          "y": 600
+          "x": 528,
+          "y": 480
         },
         "type": "Action"
       }
@@ -98,15 +101,11 @@
     "zoom": 1
   },
   "metadata": {
-    "author": "Atlasbruce",
-    "created": "2026-02-19T16:57:57Z",
-    "lastModified": "2026-02-19T16:57:57Z",
-    "tags": [
-      "AI",
-      "BehaviorTree"
-    ]
+    "author": "User",
+    "created": "",
+    "lastModified": "2026-03-07T12:03:04",
+    "tags": []
   },
   "name": "NPCWanderTree",
-  "schema_version": 2,
-  "type": "BehaviorTree"
+  "schema_version": 2
 }

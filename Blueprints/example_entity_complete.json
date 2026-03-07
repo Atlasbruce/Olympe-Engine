@@ -1,111 +1,127 @@
 {
-    "schema_version": 1,
-    "type": "EntityBlueprint",
-    "name": "CompleteNPC",
-    "description": "A complete NPC entity with all major components - demonstrates full component property editing",
+  "blueprintType": "EntityPrefab",
+  "data": {
     "components": [
-        {
-            "type": "Position",
-            "properties": {
-                "position": {
-                    "x": 250.0,
-                    "y": 350.0,
-                    "z": 0.0
-                }
-            }
+      {
+        "properties": {
+          "position": {
+            "x": 250,
+            "y": 350,
+            "z": 0
+          }
         },
-        {
-            "type": "BoundingBox",
-            "properties": {
-                "boundingBox": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "w": 48.0,
-                    "h": 64.0
-                }
-            }
+        "type": "Position"
+      },
+      {
+        "properties": {
+          "boundingBox": {
+            "h": 64,
+            "w": 48,
+            "x": 0,
+            "y": 0
+          }
         },
-        {
-            "type": "VisualSprite",
-            "properties": {
-                "spritePath": "Resources/entity_female.png",
-                "srcRect": {
-                    "x": 0.0,
-                    "y": 0.0,
-                    "w": 48.0,
-                    "h": 64.0
-                },
-                "hotSpot": {
-                    "x": 24.0,
-                    "y": 32.0
-                }
-            }
+        "type": "BoundingBox"
+      },
+      {
+        "properties": {
+          "hotSpot": {
+            "x": 24,
+            "y": 32
+          },
+          "spritePath": "Resources/entity_female.png",
+          "srcRect": {
+            "h": 64,
+            "w": 48,
+            "x": 0,
+            "y": 0
+          }
         },
-        {
-            "type": "Movement",
-            "properties": {
-                "direction": {
-                    "x": 1.0,
-                    "y": 0.0
-                },
-                "velocity": {
-                    "x": 0.0,
-                    "y": 0.0
-                }
-            }
+        "type": "VisualSprite"
+      },
+      {
+        "properties": {
+          "direction": {
+            "x": 1,
+            "y": 0
+          },
+          "velocity": {
+            "x": 0,
+            "y": 0
+          }
         },
-        {
-            "type": "PhysicsBody",
-            "properties": {
-                "mass": 1.0,
-                "speed": 50.0
-            }
+        "type": "Movement"
+      },
+      {
+        "properties": {
+          "mass": 1,
+          "speed": 50
         },
-        {
-            "type": "Health",
-            "properties": {
-                "currentHealth": 100,
-                "maxHealth": 100
-            }
+        "type": "PhysicsBody"
+      },
+      {
+        "properties": {
+          "currentHealth": 100,
+          "maxHealth": 100
         },
-        {
-            "type": "AIBehavior",
-            "properties": {
-                "behaviorType": "patrol"
-            }
+        "type": "Health"
+      },
+      {
+        "properties": {
+          "behaviorType": "patrol"
         },
-        {
-            "type": "TriggerZone",
-            "properties": {
-                "radius": 50.0,
-                "triggered": false
-            }
+        "type": "AIBehavior"
+      },
+      {
+        "properties": {
+          "radius": 50,
+          "triggered": false
         },
-        {
-            "type": "Animation",
-            "properties": {
-                "animationID": "walk_cycle",
-                "currentFrame": 0,
-                "frameDuration": 0.1,
-                "elapsedTime": 0.0
-            }
+        "type": "TriggerZone"
+      },
+      {
+        "properties": {
+          "animationID": "walk_cycle",
+          "currentFrame": 0,
+          "elapsedTime": 0,
+          "frameDuration": 0.1
         },
-        {
-            "type": "AudioSource",
-            "properties": {
-                "soundEffectID": "footsteps",
-                "volume": 0.8
-            }
+        "type": "Animation"
+      },
+      {
+        "properties": {
+          "soundEffectID": "footsteps",
+          "volume": 0.8
         },
-        {
-            "type": "Inventory",
-            "properties": {
-                "items": [
-                    "sword_001",
-                    "shield_002",
-                    "potion_health"
-                ]
-            }
-        }
-    ]
+        "type": "AudioSource"
+      },
+      {
+        "properties": {
+          "items": [
+            "sword_001",
+            "shield_002",
+            "potion_health"
+          ]
+        },
+        "type": "Inventory"
+      }
+    ],
+    "prefabName": "CompleteNPC"
+  },
+  "description": "",
+  "editorState": {
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-03-07T11:57:13",
+    "lastModified": "2026-03-07T11:57:13",
+    "tags": []
+  },
+  "name": "CompleteNPC",
+  "schema_version": 2
 }

@@ -1,0 +1,111 @@
+{
+    "schema_version": 1,
+    "type": "EntityBlueprint",
+    "name": "CompleteNPC",
+    "description": "A complete NPC entity with all major components - demonstrates full component property editing",
+    "components": [
+        {
+            "type": "Position",
+            "properties": {
+                "position": {
+                    "x": 250.0,
+                    "y": 350.0,
+                    "z": 0.0
+                }
+            }
+        },
+        {
+            "type": "BoundingBox",
+            "properties": {
+                "boundingBox": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "w": 48.0,
+                    "h": 64.0
+                }
+            }
+        },
+        {
+            "type": "VisualSprite",
+            "properties": {
+                "spritePath": "Resources/entity_female.png",
+                "srcRect": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "w": 48.0,
+                    "h": 64.0
+                },
+                "hotSpot": {
+                    "x": 24.0,
+                    "y": 32.0
+                }
+            }
+        },
+        {
+            "type": "Movement",
+            "properties": {
+                "direction": {
+                    "x": 1.0,
+                    "y": 0.0
+                },
+                "velocity": {
+                    "x": 0.0,
+                    "y": 0.0
+                }
+            }
+        },
+        {
+            "type": "PhysicsBody",
+            "properties": {
+                "mass": 1.0,
+                "speed": 50.0
+            }
+        },
+        {
+            "type": "Health",
+            "properties": {
+                "currentHealth": 100,
+                "maxHealth": 100
+            }
+        },
+        {
+            "type": "AIBehavior",
+            "properties": {
+                "behaviorType": "patrol"
+            }
+        },
+        {
+            "type": "TriggerZone",
+            "properties": {
+                "radius": 50.0,
+                "triggered": false
+            }
+        },
+        {
+            "type": "Animation",
+            "properties": {
+                "animationID": "walk_cycle",
+                "currentFrame": 0,
+                "frameDuration": 0.1,
+                "elapsedTime": 0.0
+            }
+        },
+        {
+            "type": "AudioSource",
+            "properties": {
+                "soundEffectID": "footsteps",
+                "volume": 0.8
+            }
+        },
+        {
+            "type": "Inventory",
+            "properties": {
+                "items": [
+                    "sword_001",
+                    "shield_002",
+                    "potion_health"
+                ]
+            }
+        }
+    ]
+}
