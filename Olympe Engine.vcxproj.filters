@@ -325,14 +325,13 @@
     <None Include="ClassDiagram.cd" />
     <None Include="olympe.ini" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
-    <None Include="Source\NodeGraphCore\README.md" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
     <None Include="analyze_codebase.ps1" />
     <None Include="analyze_codebase_v2.ps1" />
     <None Include="analyze_code.ps1" />
-    <None Include="RAPPORT_AUDIT_FRANCAIS.md" />
     <None Include="DETAILED_FILE_ANALYSIS.md" />
+    <None Include="Docs\Blueprint Editor Features.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

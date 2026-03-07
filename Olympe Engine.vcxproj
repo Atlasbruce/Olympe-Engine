@@ -339,12 +339,11 @@
     <None Include="BUILD_SUCCESS_FINAL.md" />
     <None Include="ClassDiagram.cd" />
     <None Include="DETAILED_FILE_ANALYSIS.md" />
+    <None Include="Docs\Blueprint Editor Features.md" />
     <None Include="olympe.ini" />
-    <None Include="RAPPORT_AUDIT_FRANCAIS.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
-    <None Include="Source\NodeGraphCore\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\olympe.ico" />
