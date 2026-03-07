@@ -69,7 +69,10 @@ namespace Olympe
 
         // Node creation helpers
         void CreateNewNode(const char* nodeType, float x, float y);
-        
+
+        // Synchronize node positions from ImNodes to the graph data
+        void SyncNodePositionsFromImNodes(int graphID);
+
         // Helper for converting global UID to local node ID
         int GlobalUIDToLocalNodeID(int globalUID, int graphID) const
         {

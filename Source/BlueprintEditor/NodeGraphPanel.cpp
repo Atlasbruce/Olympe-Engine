@@ -163,6 +163,8 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
                 else
                 {
                     int graphId = NodeGraphManager::Get().GetActiveGraphId();
+                    // Sync node positions from ImNodes before saving
+                    SyncNodePositionsFromImNodes(graphId);
                     const std::string& filepath = activeGraph->GetFilepath();
                     if (NodeGraphManager::Get().SaveGraph(graphId, filepath))
                     {
@@ -239,8 +241,10 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
                             // Ensure .json extension (check that it ends with .json)
                             if (filepath.size() < 5 || filepath.substr(filepath.size() - 5) != ".json")
                                 filepath += ".json";
-                                
+
                             int graphId = NodeGraphManager::Get().GetActiveGraphId();
+                            // Sync node positions from ImNodes before saving
+                            SyncNodePositionsFromImNodes(graphId);
                             if (NodeGraphManager::Get().SaveGraph(graphId, filepath))
                             {
                                 std::cout << "[NodeGraphPanel] Saved graph as: " << filepath << std::endl;
@@ -925,6 +929,29 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
                             "GameData/AI/autosave_");
                     }
                 }
+            }
+        }
+    }
+
+    void NodeGraphPanel::SyncNodePositionsFromImNodes(int graphID)
+    {
+        NodeGraph* graph = NodeGraphManager::Get().GetGraph(graphID);
+        if (!graph)
+            return;
+
+        std::vector<GraphNode*> nodes = graph->GetAllNodes();
+
+        // Update all node positions from ImNodes
+        for (GraphNode* node : nodes)
+        {
+            int globalNodeUID = (graphID * GRAPH_ID_MULTIPLIER) + node->id;
+            ImVec2 pos = ImNodes::GetNodeGridSpacePos(globalNodeUID);
+
+            // Update the node's position in the graph data
+            if (node->posX != pos.x || node->posY != pos.y)
+            {
+                node->posX = pos.x;
+                node->posY = pos.y;
             }
         }
     }
