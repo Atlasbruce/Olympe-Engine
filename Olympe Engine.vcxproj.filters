@@ -320,8 +320,6 @@
     <Image Include="Resources\olympe.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="BUILD_SKIPPED_RESOLVED.md" />
-    <None Include="BUILD_SUCCESS_FINAL.md" />
     <None Include="ClassDiagram.cd" />
     <None Include="olympe.ini" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
@@ -330,7 +328,6 @@
     <None Include="analyze_codebase.ps1" />
     <None Include="analyze_codebase_v2.ps1" />
     <None Include="analyze_code.ps1" />
-    <None Include="DETAILED_FILE_ANALYSIS.md" />
     <None Include="Docs\Blueprint Editor Features.md" />
   </ItemGroup>
   <ItemGroup>
