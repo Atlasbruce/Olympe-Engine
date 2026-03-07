@@ -98,33 +98,34 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     // Attach panels/menu to main SDL window (Windows only)
     PanelManager::Get().AttachToSDLWindow(window);
 
+    // Initialize ImGui context BEFORE creating debug windows
+    // This ensures the main context exists when separate windows create their own contexts
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+
+    ImGui::StyleColorsDark();
+    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer3_Init(renderer);
+
     // Initialize Blueprint Editor Backend
     Olympe::BlueprintEditor::Get().Initialize();
     Olympe::BlueprintEditor::Get().InitializeRuntimeEditor();
-    
+
     // Create Blueprint Editor GUI
     blueprintEditorGUI = new Olympe::BlueprintEditorGUI();
     blueprintEditorGUI->Initialize();
-    
-    // Create Behavior Tree Debug Window
+
+    // Create Behavior Tree Debug Window (now ImGui context exists)
     g_btDebugWindow = new Olympe::BehaviorTreeDebugWindow();
     g_btDebugWindow->Initialize();
-    
+
     // Create Animation Editor Window
     animationEditorWindow = new Olympe::AnimationEditorWindow();
-    
+
     SYSTEM_LOG << "Runtime Blueprint Panel initialized (toggle with F2; opens full Blueprint Editor from panel)" << endl;
     SYSTEM_LOG << "BehaviorTree Debugger initialized (toggle with F10)" << endl;
     SYSTEM_LOG << "Animation Editor initialized (toggle with F9)" << endl;
-
-    // Initialisation (à l'initialisation de l'application)
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    
-    ImGui::StyleColorsDark();
-    // Initialiser vos implémentations (ex. SDL + renderer)
-    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
-    ImGui_ImplSDLRenderer3_Init(renderer);
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
@@ -378,18 +379,18 @@ SDL_AppResult SDL_AppIterate(void* appstate)
         // This fixes mouse coordinates in fullscreen mode
         int windowWidth, windowHeight;
         SDL_GetWindowSize(window, &windowWidth, &windowHeight);
-        
+
         ImGuiIO& io = ImGui::GetIO();
-        
+
         // Update DisplaySize if window size changed
         if (io.DisplaySize.x != (float)windowWidth || io.DisplaySize.y != (float)windowHeight)
         {
             io.DisplaySize = ImVec2((float)windowWidth, (float)windowHeight);
-            
+
             // Update framebuffer scale for High DPI support
             int displayWidth, displayHeight;
             SDL_GetWindowSizeInPixels(window, &displayWidth, &displayHeight);
-            
+
             if (windowWidth > 0 && windowHeight > 0)
             {
                 io.DisplayFramebufferScale = ImVec2(
@@ -398,25 +399,13 @@ SDL_AppResult SDL_AppIterate(void* appstate)
                 );
             }
         }
-        
+
         ImGui_ImplSDL3_NewFrame();
         ImGui_ImplSDLRenderer3_NewFrame();
         ImGui::NewFrame();
 
         blueprintEditorGUI->Render(); // BeginMainMenuBar() est maintenant sûr
-        
-        // Render Behavior Tree Debug Window
-        if (g_btDebugWindow)
-        {
-            g_btDebugWindow->Render();
-        }
-        
-        // Update Animation Editor (separate window)
-        if (animationEditorWindow)
-        {
-            animationEditorWindow->Update(GameEngine::fDt);
-        }
-        
+
         // Render Tiled Level Loader menu (F2)
         GameMenu::Get().RenderF2Menu();
 
@@ -425,6 +414,19 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 
         ImGui::Render();
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
+    }
+
+    // Render Behavior Tree Debug Window (F10) - Independent separate window
+    // This is rendered outside the main ImGui frame as it has its own SDL window and ImGui context
+    if (g_btDebugWindow)
+    {
+        g_btDebugWindow->Render();
+    }
+
+    // Update Animation Editor (F9) - Independent separate window
+    if (animationEditorWindow)
+    {
+        animationEditorWindow->Update(GameEngine::fDt);
     }
 
     SDL_RenderPresent(renderer);  /* put it all on the screen! */
