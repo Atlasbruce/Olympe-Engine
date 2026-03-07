@@ -136,6 +136,8 @@
     <ClCompile Include="Source\vector.cpp" />
     <ClCompile Include="source\VideoGame.cpp" />
     <ClCompile Include="Source\World.cpp" />
+    <ClCompile Include="Source\AI\BehaviorTreeDebugWindow_NodeGraph.cpp" />
+    <ClCompile Include="Source\NodeGraphShared\BTGraphDocumentConverter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -330,6 +332,7 @@
     <None Include="analyze_codebase_v2.ps1" />
     <None Include="analyze_code.ps1" />
     <None Include="RAPPORT_AUDIT_FRANCAIS.md" />
+    <None Include="DETAILED_FILE_ANALYSIS.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

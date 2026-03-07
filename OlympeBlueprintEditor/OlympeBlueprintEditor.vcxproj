@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -31,9 +31,11 @@
     <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTNodePalette.cpp" />
     <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTNodeRegistry.cpp" />
     <ClCompile Include="..\Source\AI\BehaviorTreeDebugWindow.cpp" />
+    <ClCompile Include="..\Source\AI\BehaviorTreeDebugWindow_NodeGraph.cpp" />
     <ClCompile Include="..\Source\AI\BehaviorTreeDependencyScanner.cpp" />
     <ClCompile Include="..\Source\AI\BTEditorCommand.cpp" />
     <ClCompile Include="..\Source\AI\BTGraphLayoutEngine.cpp" />
+    <ClCompile Include="..\Source\NodeGraphShared\BTGraphDocumentConverter.cpp" />
     <ClCompile Include="..\Source\NodeGraphShared\RenderHelpers.cpp" />
     <ClCompile Include="..\Source\Animation\AnimationBank.cpp" />
     <ClCompile Include="..\Source\Animation\AnimationErrorHandler.cpp" />

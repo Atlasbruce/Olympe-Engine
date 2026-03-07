@@ -31,6 +31,7 @@
     <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTNodePalette.cpp" />
     <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTNodeRegistry.cpp" />
     <ClCompile Include="Source\AI\BehaviorTreeDebugWindow.cpp" />
+    <ClCompile Include="Source\AI\BehaviorTreeDebugWindow_NodeGraph.cpp" />
     <ClCompile Include="Source\AI\BTEditorCommand.cpp" />
     <ClCompile Include="Source\AI\BTGraphLayoutEngine.cpp" />
     <ClCompile Include="Source\Animation\AnimationBank.cpp" />
@@ -101,6 +102,7 @@
     <ClCompile Include="Source\NodeGraphCore\NodeGraphManager.cpp" />
     <ClCompile Include="Source\NodeGraphCore\NodeGraphRenderer.cpp" />
     <ClCompile Include="Source\NodeGraphShared\BTDebugAdapter.cpp" />
+    <ClCompile Include="Source\NodeGraphShared\BTGraphDocumentConverter.cpp" />
     <ClCompile Include="Source\NodeGraphShared\NodeGraphShared.cpp" />
     <ClCompile Include="Source\NodeGraphShared\RenderHelpers.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.cpp" />
@@ -336,6 +338,7 @@
     <None Include="BUILD_SKIPPED_RESOLVED.md" />
     <None Include="BUILD_SUCCESS_FINAL.md" />
     <None Include="ClassDiagram.cd" />
+    <None Include="DETAILED_FILE_ANALYSIS.md" />
     <None Include="olympe.ini" />
     <None Include="RAPPORT_AUDIT_FRANCAIS.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
