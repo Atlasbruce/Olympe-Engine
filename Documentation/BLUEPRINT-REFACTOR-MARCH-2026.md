@@ -206,30 +206,33 @@ EditorContext::CreateDebugger()   // Read-only + showRuntimeState = true
 
 ## 3. Phase 2 — Analyse du Debugger Runtime F10
 
-> **Statut : COMPLETEE — 2026-03-03**
+> **Statut : COMPLETEE — 2026-03-07**
 
 ### 3.1 Localisation et taille
 
 | Fichier | LOC | Type |
 |---------|-----|------|
-| `Source/AI/BehaviorTreeDebugWindow.h` | ~400 | Header complet |
+| `Source/AI/BehaviorTreeDebugWindow.h` | ~411 | Header |
 | `Source/AI/BehaviorTreeDebugWindow.cpp` | ~3606 | Implémentation |
+| `Source/AI/BehaviorTreeDebugWindow_NodeGraph.cpp` | ~130 | Nouveau — pipeline BP Editor |
+| `Source/NodeGraphShared/BTGraphDocumentConverter.h` | ~60 | Header convertisseur |
+| `Source/NodeGraphShared/BTGraphDocumentConverter.cpp` | ~120 | Implémentation convertisseur |
 
-### 3.2 Architecture actuelle (F10 trigger)
+### 3.2 Architecture actuelle F10 — après refonte Phase 2
 
 ```
-GameEngine -> input F10 -> BehaviorTreeDebugWindow::ToggleVisibility()
-                              |
-                    CreateSeparateWindow()  <- Fenêtre SDL3 native indépendante
-                    ImGui::CreateContext()  <- ImGui context séparé
-                    ImNodes::CreateContext()
-                              |
-                    Render() [chaque frame]
-                              |
-                    RenderInSeparateWindow()
-                       |-- RenderEntityListPanel()   [col gauche]
-                       |-- RenderNodeGraphPanel()    [col centre]
-                       +-- RenderInspectorPanel()    [col droite]
+GameEngine → F10 → BehaviorTreeDebugWindow::ToggleVisibility()
+                     └── CreateSeparateWindow() [SDL3 window]
+                         └── RenderInSeparateWindow()
+                             ├── RenderEntityListPanel()        [ECS World query]
+                             ├── RenderNodeGraphDebugPanel()    [NOUVEAU — pipeline BP Editor]
+                             │     BTGraphDocumentConverter::FromBehaviorTree()
+                             │     → NodeGraphManager::SetActiveGraph()
+                             │     → NodeGraphPanel::SetActiveDebugNode()
+                             │     → m_nodeGraphPanel.RenderGraph()
+                             │         → NodeStyleRegistry (couleurs BP Editor)
+                             │         → EditorContext::Runtime (read-only)
+                             └── RenderInspectorPanel()         [AddExecutionEntry, log]
 ```
 
 ### 3.3 Fenêtre SDL3 séparée — spécificité majeure
@@ -299,213 +302,50 @@ World::Get().GetComponent<AIBlackboard_data>(entity)         // hasTarget, targe
 
 ## 4. Phase 3 — Inventaire des dépendances et spécificités
 
-> **Statut : COMPLETEE — 2026-03-03**
+> **Statut : COMPLETEE — 2026-03-07**
 
-### 4.1 APIs Blueprint Editor disponibles et réutilisables
+### 4.1 Dépendances conservées (runtime engine uniquement)
+- `World::Get().HasComponent<BehaviorTreeRuntime_data>()` — query ECS
+- `BehaviorTreeManager::Get().GetTreeByAnyId()` — accès asset BT
+- `AddExecutionEntry()` — appelé depuis `ECS_Systems_AI.cpp::BehaviorTreeSystem::Process()`
+- `m_separateImGuiContext` / SDL3 window séparée — fenêtre indépendante
 
-| API | Fichier | Statut |
-|-----|---------|--------|
-| `NodeStyleRegistry::GetStyle(NodeType)` | `BlueprintEditor/NodeStyleRegistry.h` | Déjà utilisé |
-| `NodeGraphShared::RenderBTNode()` | `NodeGraphShared/Renderer.h` | À utiliser |
-| `NodeGraphShared::DrawPinCircle()` | `NodeGraphShared/NodeGraphShared.h` | Déjà utilisé |
-| `NodeGraphShared::ComputePinCenterScreen()` | `NodeGraphShared/NodeGraphShared.h` | Déjà utilisé |
-| `BTGraphDocumentConverter::FromBehaviorTree()` | `NodeGraphShared/BTGraphDocumentConverter.h` | À adopter |
-| `EditorContext::CreateDebugger()` | `NodeGraphCore/EditorContext.cpp` | À utiliser |
-| `GraphDocument` (source de vérité) | `NodeGraphCore/GraphDocument.h` | À adopter |
-| `NodeGraphPanel::SetActiveDebugNode()` + `Render()` | `BlueprintEditor/NodeGraphPanel.h` | À utiliser |
-
-### 4.2 Spécificités du debugger à préserver
-
-| Spécificité | Raison | Décision |
-|-------------|--------|----------|
-| Fenêtre SDL3 séparée | 2e moniteur | CONSERVER |
-| ImGui/ImNodes context séparé | Isolation | CONSERVER avec push/pop |
-| Source de données ECS runtime | Accès live | CONSERVER |
-| Filtres/tri entités | UX debugger | CONSERVER |
-| Execution Log (deque) | Historique runtime | CONSERVER |
-| Blackboard panel | Inspection ECS live | CONSERVER |
-| `m_pulseTimer` animation | Animation runtime | CONSERVER |
-| `BTNodeTypeToEditorNodeType()` mapping | Conversion enum | CONSERVER |
-
-### 4.3 Code legacy à supprimer après migration
-
-| Méthode | LOC est. | Remplacement |
-|---------|---------|--------------|
-| `RenderBehaviorTreeGraph()` | ~30 | `NodeGraphPanel::Render()` |
-| `RenderNode()` | ~150 | `NodeGraphShared::Renderer.h::RenderBTNode()` |
-| `RenderNodeConnections()` | ~60 | `ImNodes::Link` dans NodeGraphPanel |
-| `GetNodeColor()`, `GetNodeIcon()` | ~40 | `NodeStyleRegistry` |
-| `m_editingTree` (BehaviorTreeAsset local) | — | `GraphDocument` |
-| `BTCommandStack m_commandStack` | — | `CommandSystem` NodeGraphCore |
-| Custom `RenderMinimap()` | ~30 | `ImNodes::MiniMap()` |
-| `ApplyZoomToStyle()` | ~10 | ImNodes natif |
-| `FitGraphToView()`, `CenterViewOnGraph()`, `ResetZoom()` | ~60 | `NodeGraphPanel` |
-
-**Total estimé supprimé : ~380 LOC** (sur ~3606 — le reste étant ECS/Inspector qui reste).
+### 4.2 Pipeline rendu unifié Blueprint Editor
+- `NodeGraphManager` — gestionnaire de graphes (partagé BE + debugger)
+- `NodeGraphPanel::RenderGraph()` — rendu ImNodes complet
+- `NodeStyleRegistry` — couleurs par type de nœud (config JSON)
+- `EditorContext::InitializeRuntime()` — mode read-only (pas de création/édition/suppression)
+- `BTGraphDocumentConverter` — pont BehaviorTreeAsset → NodeGraph
 
 ---
 
 ## 5. Phase 4 — Plan de re-implémentation
 
-> **Statut : PLANIFIEE — 2026-03-03 | VALIDATION REQUISE**
+> **Statut : COMPLETEE — 2026-03-07**
 
-### 5.1 Architecture cible
-
-```
-[F10 Input]
-     |
-BehaviorTreeDebugWindow::ToggleVisibility()
-     | (Fenêtre SDL3 séparée inchangée)
-RenderInSeparateWindow()
-     |
-     |-- [LEFT]   RenderEntityListPanel()            <-- INCHANGÉ (scan ECS)
-     |
-     |-- [CENTER] RenderNodeGraphPanel() (nouvelle)  <-- REFACTORÉ
-     |                |
-     |           EnsureGraphDocument(tree)
-     |               BTGraphDocumentConverter::FromBehaviorTree(tree) -> GraphDocument* (cache par treeId)
-     |                |
-     |           NodeGraphManager::Get().SetActiveGraph(m_cachedGraphMgrId)
-     |                |
-     |           NodeGraphPanel::SetActiveDebugNode(btRuntime.AICurrentNodeIndex)
-     |                |
-     |           m_nodeGraphPanel.Render()  <-- PIPELINE COMPLET BP EDITOR
-     |
-     +-- [RIGHT]  RenderInspectorPanel()             <-- INCHANGÉ (données ECS)
-```
-
-### 5.2 Étapes d'implémentation détaillées
-
-#### Étape 4.1 — Modifications de BehaviorTreeDebugWindow.h
-
-```cpp
-// Nouveaux includes
-#include "../NodeGraphShared/BTGraphDocumentConverter.h"
-#include "../NodeGraphCore/GraphDocument.h"
-#include "../BlueprintEditor/NodeGraphPanel.h"
-#include "../NodeGraphCore/EditorContext.h"
-
-// Nouveaux membres (à ajouter dans la classe)
-NodeGraphPanel   m_nodeGraphPanel;
-EditorContext    m_editorContext;          // = EditorContext::CreateDebugger()
-GraphDocument*   m_cachedGraphDoc = nullptr;
-uint32_t         m_cachedTreeId = 0;      // Cache invalidation
-int              m_cachedGraphMgrId = -1; // ID dans NodeGraphManager
-
-// Membres à supprimer après validation
-// BehaviorTreeAsset m_editingTree;      -> remplacé par GraphDocument
-// BTCommandStack    m_commandStack;     -> remplacé par CommandSystem
-// BTGraphLayoutEngine m_layoutEngine;   -> remplacé par AutoLayout GraphDocument (ou conservé pour init)
-```
-
-#### Étape 4.2 — EnsureGraphDocument() (nouveau)
-
-```cpp
-void BehaviorTreeDebugWindow::EnsureGraphDocument(const BehaviorTreeAsset* tree)
-{
-    if (tree == nullptr) return;
-    if (m_cachedTreeId == tree->id && m_cachedGraphDoc != nullptr)
-        return; // Cache valide, rien à faire
-
-    // Invalider cache et reconvertir
-    if (m_cachedGraphMgrId >= 0)
-        NodeGraphManager::Get().CloseGraph(m_cachedGraphMgrId);
-
-    delete m_cachedGraphDoc;
-    m_cachedGraphDoc = BTGraphDocumentConverter::FromBehaviorTree(tree);
-    m_cachedTreeId = tree->id;
-
-    // Enregistrer dans NodeGraphManager pour que NodeGraphPanel puisse le trouver
-    m_cachedGraphMgrId = NodeGraphManager::Get().LoadFromDocument(m_cachedGraphDoc, tree->name);
-    NodeGraphManager::Get().SetActiveGraph(m_cachedGraphMgrId);
-
-    SYSTEM_LOG << "[BTDebugWindow] GraphDocument refreshed for tree: " << tree->name << std::endl;
-}
-```
-
-#### Étape 4.3 — RenderNodeGraphPanel() réécrit
-
-```cpp
-void BehaviorTreeDebugWindow::RenderNodeGraphPanel()
-{
-    if (m_selectedEntity == 0)
-    {
-        ImGui::Text("Select an entity from the list to view its behavior tree");
-        return;
-    }
-
-    auto& world = World::Get();
-    if (!world.HasComponent<BehaviorTreeRuntime_data>(m_selectedEntity))
-    {
-        ImGui::Text("Selected entity no longer has a behavior tree");
-        m_selectedEntity = 0;
-        return;
-    }
-
-    const auto& btRuntime = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
-    const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTreeByAnyId(btRuntime.AITreeAssetId);
-
-    if (!tree)
-    {
-        ImGui::TextColored(ImVec4(1,0.5f,0,1), "Behavior Tree asset not found (ID: %u)", btRuntime.AITreeAssetId);
-        if (ImGui::Button("Show All Loaded Trees"))
-            BehaviorTreeManager::Get().DebugPrintLoadedTrees();
-        return;
-    }
-
-    // 1. Convertir/mettre à jour le GraphDocument (cache par treeId)
-    EnsureGraphDocument(tree);
-
-    // 2. Notifier le NodeGraphPanel du nœud actif courant
-    uint32_t activeNodeId = btRuntime.isActive ? btRuntime.AICurrentNodeIndex : (uint32_t)-1;
-    NodeGraphPanel::SetActiveDebugNode(static_cast<int>(activeNodeId));
-
-    // 3. Rendre via le pipeline complet du Blueprint Editor
-    m_nodeGraphPanel.Render();
-}
-```
-
-#### Étape 4.4 — Gestion contexte ImGui/ImNodes (CRITIQUE)
-
-```cpp
-void BehaviorTreeDebugWindow::Render()
-{
-    if (!m_isVisible || !m_windowCreated) return;
-
-    ImGuiContext* prevImGuiCtx = ImGui::GetCurrentContext();
-    // ImNodesContext* prevImNodesCtx = ImNodes::GetCurrentContext(); // si API disponible
-
-    ImGui::SetCurrentContext(m_separateImGuiContext);
-    // ImNodes::SetCurrentContext(m_separateImNodesCtx); // si API disponible
-
-    ImGui_ImplSDLRenderer3_NewFrame();
-    ImGui_ImplSDL3_NewFrame();
-    ImGui::NewFrame();
-
-    RenderInSeparateWindow();
-
-    ImGui::Render();
-    SDL_SetRenderDrawColor(m_separateRenderer, 18, 18, 20, 255);
-    SDL_RenderClear(m_separateRenderer);
-    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_separateRenderer);
-    SDL_RenderPresent(m_separateRenderer);
-
-    ImGui::SetCurrentContext(prevImGuiCtx);
-    // ImNodes::SetCurrentContext(prevImNodesCtx); // si API disponible
-}
-```
+### 5.1 Statut (Mars 2026)
+- [x] Phase 1 : Analyse Blueprint Editor pipeline (AIEditorGUI, NodeGraphPanel)
+- [x] Phase 2 : Analyse debugger F10 legacy (BehaviorTreeDebugWindow)
+- [x] Phase 3 : Inventaire dépendances
+- [x] Phase 4.1 : BTGraphDocumentConverter.h créé
+- [x] Phase 4.2 : BehaviorTreeDebugWindow_NodeGraph.cpp — méthodes skeleton
+- [x] Phase 4.3 : BTGraphDocumentConverter.cpp implémenté
+- [x] Phase 4.4 : RenderNodeGraphDebugPanel() complété — pipeline BP Editor
+- [x] Phase 4.5 : RenderInSeparateWindow() branché sur RenderNodeGraphDebugPanel()
+- [ ] Phase 5 : Nettoyage legacy (après validation utilisateur)
 
 ---
 
-## 6. Phase 5 — Nettoyage et archivage legacy
+## 6. Phase 5 — Nettoyage et archivage legacy (APRÈS VALIDATION)
 
-> **Statut : EN ATTENTE DE VALIDATION (étape 4)**
+> ⚠️ **Ne pas exécuter avant validation explicite du rendu**
 
 ### 6.1 Fichiers à archiver dans `Source/_deprecated/`
 
 | Source | Archive |
 |--------|---------|
 | Méthodes legacy de `BehaviorTreeDebugWindow.cpp` | `Source/_deprecated/BTDebugWindow_LegacyRenderer_2026-03.cpp` |
+| `Source/AI/BTGraphLayoutEngine.h` / `.cpp` (si plus référencé) | `Source/_deprecated/` |
 
 ### 6.2 Méthodes à supprimer de BehaviorTreeDebugWindow
 
@@ -529,17 +369,14 @@ ResetZoom()                  (~10 LOC)
 
 ## 7. Décisions d'architecture
 
-| # | Décision | Justification |
-|---|----------|---------------|
-| D1 | Conserver la fenêtre SDL3 séparée | Fonctionnalité 2e moniteur, aucun équivalent BP Editor |
-| D2 | `BTGraphDocumentConverter::FromBehaviorTree()` | Conversion standard, testée, réutilise le même code que l'éditeur |
-| D3 | Source de vérité → `GraphDocument` | Unification avec pipeline BP Editor |
-| D4 | `NodeStyleRegistry` pour tous les styles | Cohérence visuelle entre les deux éditeurs |
-| D5 | `EditorContext::CreateDebugger()` | Read-only + `showRuntimeState = true` |
-| D6 | `NodeGraphPanel::SetActiveDebugNode()` | Réutilise logique existante amber pulse, zéro duplication |
-| D7 | Cache `GraphDocument` invalidé par `treeId` | Évite reconversion chaque frame, conserve les positions |
-| D8 | Conserver Execution Log, Blackboard, Runtime Info | Données exclusivement ECS runtime — hors scope Blueprint Editor |
-| D9 | Nettoyage conditionnel à validation étape 4 | Sécurité : ne pas supprimer avant validation fonctionnelle |
+| Décision | Justification |
+|----------|---------------|
+| Fenêtre SDL3 séparée conservée | Indépendance de l'engine window, contexte ImGui isolé |
+| `EditorContext::InitializeRuntime()` | Désactive create/edit/delete dans NodeGraphPanel |
+| `NodeGraphPanel::RenderGraph()` (pas `Render()`) | Évite le toolbar Save/SaveAs/Tabs (inutile en debug) |
+| `BTGraphDocumentConverter` séparé | Séparation claire du pont BT↔NodeGraph, testable indépendamment |
+| `m_lastDebugTreeId` cache | Évite reconstruction coûteuse du NodeGraph à chaque frame |
+| `NodeGraphPanel::SetActiveDebugNode(btRuntime.AICurrentNodeIndex)` | Réutilise le highlight jaune existant de NodeGraphPanel |
 
 ---
 
@@ -572,7 +409,7 @@ ResetZoom()                  (~10 LOC)
 - [x] Dépendances ECS listées
 - [x] Code legacy à supprimer identifié
 
-### Phase 4 — Implémentation (COMPLETÉE — PR soumise 2026-03-03)
+### Phase 4 — Implémentation (COMPLETÉE — PR soumise 2026-03-07)
 - [x] `BTGraphDocumentConverter::FromBehaviorTree()` implémenté (JSON round-trip via `NodeGraph::FromJson`)
 - [x] `NodeGraphManager::LoadFromDocument()` remplacé par `CreateGraph()` + `GetGraph()` + move-assign
 - [x] `EditorContext::Get().InitializeRuntime()` appelé pour mode lecture seule
@@ -600,4 +437,4 @@ ResetZoom()                  (~10 LOC)
 
 ---
 
-*Dernière mise à jour : 2026-03-03 — Phases 1-4 complétées, Phase 5 (nettoyage legacy) en attente de validation.*
+*Dernière mise à jour : 2026-03-07 — Phases 1-4 complétées, Phase 5 (nettoyage legacy) en attente de validation.*
