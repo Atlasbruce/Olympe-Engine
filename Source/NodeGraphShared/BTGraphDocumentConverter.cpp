@@ -56,7 +56,32 @@ NodeGraph* BTGraphDocumentConverter::FromBehaviorTree(const BehaviorTreeAsset* t
         return emptyGraph;
     }
 
-    // Compute layout positions (BTNode has no position data; BTGraphLayoutEngine always runs)
+    // Priority 1: Load directly from the JSON source file so that the saved visual
+    // positions are preserved — identical to the Blueprint Editor standalone view.
+    const std::string filepath = BehaviorTreeManager::Get().GetTreePathFromId(tree->id);
+    if (!filepath.empty() && filepath.rfind("TreeName:", 0) != 0)
+    {
+        const int tempId = NodeGraphManager::Get().LoadGraph(filepath);
+        if (tempId != -1)
+        {
+            NodeGraph* loadedGraph = NodeGraphManager::Get().GetGraph(tempId);
+            if (loadedGraph)
+            {
+                // Clone the graph so we can close the temporary slot immediately.
+                NodeGraph* result = new NodeGraph(*loadedGraph);
+                // The debugger is read-only: clear dirty so no accidental saves.
+                result->ClearDirty();
+                NodeGraphManager::Get().CloseGraph(tempId);
+                std::cout << "[BTGraphDocumentConverter] Loaded BT '" << tree->name
+                          << "' from JSON (saved positions preserved)\n";
+                return result;
+            }
+            NodeGraphManager::Get().CloseGraph(tempId);
+        }
+    }
+
+    // Priority 2: Fallback — filepath unknown or LoadGraph failed.
+    // Compute BFS layout positions and build the graph from the runtime asset.
     BTGraphLayoutEngine layoutEngine;
     layoutEngine.ComputeLayout(tree);
 
@@ -114,7 +139,7 @@ NodeGraph* BTGraphDocumentConverter::FromBehaviorTree(const BehaviorTreeAsset* t
     NodeGraph* result = new NodeGraph(std::move(converted));
 
     std::cout << "[BTGraphDocumentConverter] Converted BT '" << tree->name
-              << "': " << tree->nodes.size() << " nodes\n";
+              << "': " << tree->nodes.size() << " nodes (BFS fallback layout)\n";
 
     return result;
 }

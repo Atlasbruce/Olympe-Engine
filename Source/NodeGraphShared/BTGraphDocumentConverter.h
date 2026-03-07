@@ -31,9 +31,20 @@ class BTGraphDocumentConverter
 public:
     /**
      * @brief Converts a BehaviorTreeAsset into a heap-allocated NodeGraph.
+     *
+     * @details Two-priority loading strategy:
+     *  1. **JSON source file** (preferred): queries `BehaviorTreeManager::GetTreePathFromId()`
+     *     to obtain the asset path, then calls `NodeGraphManager::LoadGraph()` to parse the
+     *     file.  This preserves the visual positions saved in the JSON, making the debugger
+     *     layout identical to the Blueprint Editor standalone view.  `ClearDirty()` is called
+     *     on the resulting graph because the debugger is read-only.  The temporary graph slot
+     *     in `NodeGraphManager` is closed immediately after cloning.
+     *  2. **BFS fallback**: used when the path is unknown (prefixed `"TreeName:"`) or when
+     *     `LoadGraph` returns -1.  Positions are computed by `BTGraphLayoutEngine`.
+     *
      * @param tree  BehaviorTree asset to convert (non-null).
      * @return Newly allocated NodeGraph (caller takes ownership).
-     *         Returns nullptr if tree is null or empty.
+     *         Returns nullptr if @p tree is null.
      */
     static NodeGraph* FromBehaviorTree(const BehaviorTreeAsset* tree);
 

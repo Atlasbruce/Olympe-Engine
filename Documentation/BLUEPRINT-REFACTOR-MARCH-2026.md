@@ -438,3 +438,31 @@ ResetZoom()                  (~10 LOC)
 ---
 
 *Dernière mise à jour : 2026-03-07 — Phases 1-4 complétées, Phase 5 (nettoyage legacy) en attente de validation.*
+
+---
+
+## Journal — 2026-03-07 : Correction des positions dans le debugger F10
+
+### Problème diagnostiqué
+
+Le debugger runtime (`BehaviorTreeDebugWindow`, raccourci F10) affichait les nodes avec un layout BFS automatique au lieu des positions visuelles sauvegardées dans les fichiers JSON source.
+
+**Cause racine** : `BTGraphDocumentConverter::FromBehaviorTree()` recevait un `BehaviorTreeAsset*` (structure runtime sans positions visuelles) et appelait systématiquement `BTGraphLayoutEngine::ComputeLayout()`, écrasant ainsi toute position JSON sauvegardée.
+
+Le Blueprint Editor standalone, lui, appelle `NodeGraphManager::LoadGraph(filepath)` → `NodeGraph::FromJson()` → lit `position.x / position.y` depuis le JSON → positions correctes.
+
+### Correction apportée — `BTGraphDocumentConverter::FromBehaviorTree()`
+
+La méthode applique désormais une stratégie à deux priorités :
+
+1. **Priorité 1 — Chargement JSON source** : interroge `BehaviorTreeManager::Get().GetTreePathFromId(tree->id)`. Si le chemin est connu (ne commence pas par `"TreeName:"`), appelle `NodeGraphManager::Get().LoadGraph(filepath)`. En cas de succès :
+   - Clone le `NodeGraph` chargé (`new NodeGraph(*loadedGraph)`)
+   - Appelle `ClearDirty()` (le debugger est read-only)
+   - Ferme le slot temporaire (`CloseGraph(tempId)`)
+   - Retourne le clone avec les positions JSON préservées
+
+2. **Priorité 2 — Fallback BFS** : utilisé si le chemin est inconnu (préfixe `"TreeName:"`) ou si `LoadGraph` retourne `-1`. Conserve le comportement antérieur via `BTGraphLayoutEngine`.
+
+### Résultat
+
+Le debugger F10 utilise désormais **exactement le même chemin de chargement** que le Blueprint Editor standalone pour tout fichier dont le path est enregistré dans `BehaviorTreeManager`. L'affichage visuel est identique entre les deux vues.
