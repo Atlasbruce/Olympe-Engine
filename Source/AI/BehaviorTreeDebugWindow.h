@@ -16,9 +16,7 @@
 #include "../ECS_Entity.h"
 #include "../vector.h"
 #include "../json_helper.h"
-#include "BTGraphLayoutEngine.h"
 #include "BehaviorTree.h"
-#include "BTEditorCommand.h"
 #include "../BlueprintEditor/NodeGraphPanel.h"
 #include "../BlueprintEditor/BTNodeGraphManager.h"
 #include <string>
@@ -38,69 +36,6 @@ struct ImGuiContext;
 
 namespace Olympe
 {
-    /**
-     * @enum PinType
-     * @brief Type of connection pin on a node
-     */
-    enum class PinType
-    {
-        Input,      ///< Input pin (left side of node in horizontal layout)
-        Output      ///< Output pin (right side of node in horizontal layout)
-    };
-
-    /**
-     * @struct NodePin
-     * @brief Visual connection pin on a behavior tree node
-     */
-    struct NodePin
-    {
-        uint32_t nodeId = 0;                    ///< ID of the node this pin belongs to
-        PinType type = PinType::Input;          ///< Pin type (input or output)
-        Vector worldPos;                         ///< World position of the pin
-        std::vector<uint32_t> connectedTo;      ///< IDs of connected nodes
-    };
-
-    /**
-     * @struct BTConfig
-     * @brief Configuration loaded from BT_config.json
-     */
-    struct BTConfig
-    {
-        // Layout settings
-        bool defaultHorizontal = true;
-        float gridSize = 16.0f;
-        bool gridSnappingEnabled = true;
-        float horizontalSpacing = 280.0f;
-        float verticalSpacing = 120.0f;
-
-        // Rendering settings
-        float pinRadius = 6.0f;
-        float pinOutlineThickness = 2.0f;
-        // Vertical offset (pixels) from top of node to pin row (below header)
-        float pinHeaderHeight = 20.0f;
-        // Horizontal reserve (pixels) from right edge to place output label/pin
-        float pinOutputReserve = 40.0f;
-        float bezierTangent = 80.0f;
-        float connectionThickness = 2.0f;
-
-        // Node colors by type and status (RGBA values 0-255)
-        // nodeColors[nodeType][status] = {r, g, b, a}
-        struct Color { uint8_t r, g, b, a; };
-        std::map<std::string, std::map<std::string, Color>> nodeColors;
-    };
-
-    /**
-     * @struct BTColor
-     * @brief RGBA color value (0-255 range)
-     */
-    struct BTColor
-    {
-        uint8_t r = 255;
-        uint8_t g = 255;
-        uint8_t b = 255;
-        uint8_t a = 255;
-    };
-
     /**
      * @struct ExecutionLogEntry
      * @brief Single entry in the execution log
@@ -190,7 +125,6 @@ namespace Olympe
     private:
         // Main panel rendering
         void RenderEntityListPanel();
-        void RenderNodeGraphPanel();
         void RenderInspectorPanel();
 
         // Separate window management
@@ -204,89 +138,15 @@ namespace Olympe
         void UpdateEntitySorting();
         void RenderEntityEntry(const EntityDebugInfo& info);
 
-        // Node graph helpers
-        void RenderBehaviorTreeGraph();
-        void RenderNode(const BTNode* node, const BTNodeLayout* layout, bool isCurrentNode);
-        void RenderNodeConnections(const BTNode* node, const BTNodeLayout* layout, const BehaviorTreeAsset* tree, uint32_t activeNodeId = 0);
-        void RenderBezierConnection(const Vector& start, const Vector& end, uint32_t color, float thickness, float tangent);
-        void RenderActiveLinkGlow(const Vector& start, const Vector& end, float tangent);
-        void RenderNodePins(const BTNode* node, const BTNodeLayout* layout);
-        uint32_t GetNodeColor(BTNodeType type) const;
-        uint32_t GetNodeColorByStatus(BTNodeType type, BTStatus status) const;
-        const char* GetNodeIcon(BTNodeType type) const;
-
-        // Editor mode helpers
-        void RenderNodePalette();
-        void RenderEditorToolbar();
-        void HandleNodeCreation(BTNodeType nodeType);
-        void HandleNodeDeletion();
-        void HandleNodeDuplication();
-        bool ValidateConnection(uint32_t parentId, uint32_t childId) const;
-        void SaveEditedTree();
-        void UndoLastAction();
-        void RedoLastAction();
-        
-        // Validation helpers
-        void RenderValidationPanel();
-        uint32_t GetPinColor(uint32_t nodeId, PinType pinType) const;
-        bool IsConnectionValid(uint32_t parentId, uint32_t childId) const;
-        
-        // Node properties editor
-        void RenderNodeProperties();
-        void RenderNodePropertiesSection();
-        void ApplyModifiedParameters();
-        uint32_t GenerateUniqueNodeId();
-        BTNode* GetMutableNodeById(uint32_t nodeId);
-        
-        // Save system
-        void Save();
-        void SaveAs();
-        void RenderFileMenu();
-        json SerializeTreeToJson(const BehaviorTreeAsset& tree) const;
-        std::string GetCurrentTimestamp() const;
-        
-        // New BT creation
-        void RenderNewBTDialog();
-        BehaviorTreeAsset CreateFromTemplate(int templateIndex, const std::string& name);
-        
-        // Edit menu
-        void RenderEditMenu();
-
-        // Configuration helpers
-        void LoadBTConfig();
-        void ApplyConfigToLayout();
-        Vector SnapToGrid(const Vector& pos) const;
-
         // Inspector helpers
         void RenderRuntimeInfo();
         void RenderBlackboardSection();
         void RenderExecutionLog();
 
-        // Camera control helpers
-        void FitGraphToView();
-        void CenterViewOnGraph();
-        void ResetZoom();
-        void RenderMinimap();
-
-        // Camera helper utilities
-        void ApplyZoomToStyle();
-        void GetGraphBounds(Vector& outMin, Vector& outMax) const;
-        float GetSafeZoom() const;
-        Vector CalculatePanOffset(const Vector& graphCenter, const Vector& viewportSize) const;
-
         // Data management
         std::vector<EntityDebugInfo> m_entities;
         std::vector<EntityDebugInfo> m_filteredEntities;
         EntityID m_selectedEntity = 0;
-
-        // Layout engine
-        BTGraphLayoutEngine m_layoutEngine;
-        std::vector<BTNodeLayout> m_currentLayout;
-
-        // Camera state tracking
-        EntityID m_lastCenteredEntity = 0;  // Track which entity was last centered
-        float m_currentZoom = 1.0f;         // Current zoom level (0.3 to 3.0)
-        bool m_showMinimap = true;          // Show minimap overlay
 
         // Execution log (circular buffer with max 100 entries)
         std::deque<ExecutionLogEntry> m_executionLog;
@@ -316,27 +176,9 @@ namespace Olympe
         // Panel layout
         float m_entityListWidth = 250.0f;
         float m_inspectorWidth = 350.0f;
-        float m_nodeSpacingX = 320.0f;
-        float m_nodeSpacingY = 180.0f;
 
-        // Graph view state
+        // ImNodes context flag (shared with NodeGraphPanel rendering pipeline)
         bool m_imnodesInitialized = false;
-        int m_imnodesEditorContext = -1;
-        BTLayoutDirection m_layoutDirection = BTLayoutDirection::TopToBottom;
-
-        // Animation
-        float m_pulseTimer = 0.0f;
-
-        // Layout update flags
-        bool m_needsLayoutUpdate = false;
-        bool m_autoFitOnLoad = true;
-
-        // Configuration
-        BTConfig m_config;
-        bool m_configLoaded = false;
-
-        // Node colors by type and status (loaded from BT_config.json)
-        std::map<BTNodeType, std::map<BTStatus, BTColor>> m_nodeColors;
 
         // Separate SDL3 window for debugger
         SDL_Window* m_separateWindow;
@@ -346,58 +188,8 @@ namespace Olympe
         // Separate ImGui context for this window
         ImGuiContext* m_separateImGuiContext;
 
-        // Editor mode state
-        bool m_editorMode = false;
-        bool m_treeModified = false;
-        bool m_isDirty = false;
-        BehaviorTreeAsset m_editingTree;
-        uint32_t m_nextNodeId = 1000;
-        std::string m_currentFilePath;
-
-        // Editor interaction state
-        std::vector<uint32_t> m_selectedNodes;
-        bool m_showNodePalette = false;
-        Vector m_nodeCreationPos;
-        
-        // Pin dragging for connections
-        bool m_isDraggingPin = false;
-        uint32_t m_dragSourceNodeId = 0;
-        PinType m_dragSourcePinType = PinType::Output;
-        Vector m_dragEndPos;
-
-        // Undo/Redo system (command pattern)
-        BTCommandStack m_commandStack;
-
-        // Link ID tracking for connection deletion
-        struct LinkInfo {
-            int linkId;
-            uint32_t parentId;
-            uint32_t childId;
-        };
-        std::vector<LinkInfo> m_linkMap;
-        int m_nextLinkId = 100000;
-        
-        // Validation
-        std::vector<BTValidationMessage> m_validationMessages;
-        bool m_showValidationPanel = true;
-        
-        // Node properties
-        uint32_t m_inspectedNodeId = 0;
-        bool m_showNodeProperties = false;
-        std::unordered_map<uint32_t, json> m_modifiedParameters;
-        
-        // New BT dialog
-        bool m_showNewBTDialog = false;
-        char m_newBTName[256] = "";
-        int m_selectedTemplate = 0;
-
         // Async autosave – persists node positions without blocking the UI.
         EditorAutosaveManager m_autosave;
-
-        // Set of node IDs already pushed to ImNodes; used to avoid overwriting
-        // user-dragged positions on subsequent frames.  Cleared whenever the
-        // layout is recomputed so nodes snap back to the new computed positions.
-        std::unordered_set<uint32_t> m_positionedNodes;
 
         // --- Unified NodeGraph Debug Panel (Blueprint Editor pipeline) ---
         void InitNodeGraphDebugMode();
