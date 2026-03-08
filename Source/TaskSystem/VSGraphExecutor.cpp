@@ -720,6 +720,9 @@ int32_t VSGraphExecutor::HandleAtomicTask(EntityID entity,
     }
 
     // Build context and tick.
+    // Note: worldPtr may be nullptr (valid in tests and Phase 2).
+    // AtomicTaskContext documents that WorldPtr may be null; concrete tasks
+    // that need World access must guard against null themselves.
     AtomicTaskContext ctx;
     ctx.Entity     = entity;
     ctx.WorldPtr   = worldPtr;
