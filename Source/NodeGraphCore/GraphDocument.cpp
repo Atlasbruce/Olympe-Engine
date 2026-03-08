@@ -411,8 +411,8 @@ json GraphDocument::ToJson() const
     // Phase 2.0 - Annotations
     j["annotations"] = m_nodeAnnotations.ToJson();
     
-    // Phase 2.1 - Blackboard
-    j["blackboard"] = m_blackboard.ToJson();
+    // ATS Phase 1.4 - Local blackboard (per-graph variables)
+    j["localBlackboard"] = m_blackboard.ToJson();
     
     return j;
 }
@@ -574,8 +574,13 @@ GraphDocument GraphDocument::FromJson(const json& j)
         doc.m_nodeAnnotations.FromJson(j["annotations"]);
     }
     
-    // Phase 2.1 - Blackboard (backward compatible: missing key = empty blackboard)
-    if (j.contains("blackboard") && j["blackboard"].is_array())
+    // ATS Phase 1.4 - Local blackboard (backward compatible)
+    // Prefer "localBlackboard" key; fall back to legacy "blackboard" key for older files
+    if (j.contains("localBlackboard") && j["localBlackboard"].is_array())
+    {
+        doc.m_blackboard.FromJson(j["localBlackboard"]);
+    }
+    else if (j.contains("blackboard") && j["blackboard"].is_array())
     {
         doc.m_blackboard.FromJson(j["blackboard"]);
     }

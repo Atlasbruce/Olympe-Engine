@@ -1,0 +1,20 @@
+{
+  "schema_version": 2,
+  "type": "GlobalBlackboard",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-03-08T00:00:00",
+    "lastModified": "2026-03-08T00:00:00",
+    "description": "Variables globales partagées entre tous les graphes ATS"
+  },
+  "variables": [
+    { "name": "player_health",      "type": "Float",  "value": 100.0 },
+    { "name": "player_position",    "type": "Vector", "x": 0.0, "y": 0.0 },
+    { "name": "current_level",      "type": "String", "value": "level_01" },
+    { "name": "is_combat_active",   "type": "Bool",   "value": false },
+    { "name": "wave_count",         "type": "Int",    "value": 0 },
+    { "name": "enemy_alert_range",  "type": "Float",  "value": 150.0 },
+    { "name": "active_enemy_count", "type": "Int",    "value": 0 },
+    { "name": "last_checkpoint",    "type": "String", "value": "" }
+  ]
+}

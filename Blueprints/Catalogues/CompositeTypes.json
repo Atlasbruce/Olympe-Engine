@@ -1,0 +1,97 @@
+{
+  "schema_version": 2,
+  "catalogType": "Composites",
+  "version": "2.0",
+  "types": [
+    {
+      "id": "Sequence",
+      "name": "Sequence",
+      "category": "Composite",
+      "description": "Exécute les enfants en ordre, s'arrête au premier Failure (ET ordonné)",
+      "tooltip": "Tous les enfants doivent réussir pour que le Sequence réussisse",
+      "color": "#3A7D44",
+      "pins": {
+        "inputs": [
+          { "id": "exec_in", "label": "", "type": "Exec", "required": true }
+        ],
+        "outputs": [
+          { "id": "exec_out", "label": "Children", "type": "Exec" }
+        ]
+      },
+      "parameters": []
+    },
+    {
+      "id": "Selector",
+      "name": "Selector",
+      "category": "Composite",
+      "description": "Exécute les enfants en ordre, s'arrête au premier Success (OU ordonné)",
+      "tooltip": "Un seul enfant doit réussir pour que le Selector réussisse",
+      "color": "#1E6091",
+      "pins": {
+        "inputs": [
+          { "id": "exec_in", "label": "", "type": "Exec", "required": true }
+        ],
+        "outputs": [
+          { "id": "exec_out", "label": "Children", "type": "Exec" }
+        ]
+      },
+      "parameters": []
+    },
+    {
+      "id": "Parallel",
+      "name": "Parallel",
+      "category": "Composite",
+      "description": "Exécute tous les enfants simultanément",
+      "tooltip": "Les seuils de succès et d'échec contrôlent le résultat global",
+      "color": "#7D3A7D",
+      "pins": {
+        "inputs": [
+          { "id": "exec_in", "label": "", "type": "Exec", "required": true },
+          { "id": "success_threshold", "label": "Success Threshold", "type": "Int", "required": false },
+          { "id": "failure_threshold", "label": "Failure Threshold", "type": "Int", "required": false }
+        ],
+        "outputs": [
+          { "id": "exec_out", "label": "Children", "type": "Exec" }
+        ]
+      },
+      "parameters": [
+        { "name": "success_threshold", "type": "Int", "required": false, "default": "1", "description": "Nombre de succès enfants requis" },
+        { "name": "failure_threshold", "type": "Int", "required": false, "default": "1", "description": "Nombre d'échecs enfants tolérés" }
+      ]
+    },
+    {
+      "id": "RandomSequence",
+      "name": "Random Sequence",
+      "category": "Composite",
+      "description": "Sequence avec ordre d'exécution aléatoire",
+      "tooltip": "Mélange aléatoire les enfants avant exécution, s'arrête au premier Failure",
+      "color": "#2D6B3A",
+      "pins": {
+        "inputs": [
+          { "id": "exec_in", "label": "", "type": "Exec", "required": true }
+        ],
+        "outputs": [
+          { "id": "exec_out", "label": "Children", "type": "Exec" }
+        ]
+      },
+      "parameters": []
+    },
+    {
+      "id": "RandomSelector",
+      "name": "Random Selector",
+      "category": "Composite",
+      "description": "Selector avec ordre d'exécution aléatoire",
+      "tooltip": "Mélange aléatoire les enfants avant exécution, s'arrête au premier Success",
+      "color": "#154F7A",
+      "pins": {
+        "inputs": [
+          { "id": "exec_in", "label": "", "type": "Exec", "required": true }
+        ],
+        "outputs": [
+          { "id": "exec_out", "label": "Children", "type": "Exec" }
+        ]
+      },
+      "parameters": []
+    }
+  ]
+}

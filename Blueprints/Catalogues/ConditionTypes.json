@@ -1,20 +1,121 @@
 {
-  "blueprintType": "Unknown",
-  "data": {},
-  "description": "",
-  "editorState": {
-    "scrollOffset": {
-      "x": 0,
-      "y": 0
+  "schema_version": 2,
+  "catalogType": "Conditions",
+  "version": "2.0",
+  "types": [
+    {
+      "id": "CompareVar",
+      "name": "Compare Var",
+      "category": "Logic",
+      "description": "Compare une variable du blackboard avec une valeur",
+      "tooltip": "Opérateurs supportés : ==, !=, <, >, <=, >=",
+      "color": "#C0392B",
+      "pins": {
+        "inputs": [
+          { "id": "var_name", "label": "Var Name", "type": "String", "required": true },
+          { "id": "operator", "label": "Operator", "type": "String", "required": true },
+          { "id": "value", "label": "Value", "type": "Any", "required": true }
+        ],
+        "outputs": [
+          { "id": "result", "label": "Result", "type": "Bool" }
+        ]
+      },
+      "parameters": [
+        { "name": "var_name", "type": "String", "required": true, "default": "", "description": "Nom de la variable blackboard" },
+        { "name": "operator", "type": "String", "required": true, "default": "==", "description": "Opérateur de comparaison : ==, !=, <, >, <=, >=" },
+        { "name": "value", "type": "String", "required": true, "default": "", "description": "Valeur de comparaison (string, sera castée selon le type)" }
+      ]
     },
-    "zoom": 1
-  },
-  "metadata": {
-    "author": "Atlasbruce",
-    "created": "2026-03-07T11:57:13",
-    "lastModified": "2026-03-07T11:57:13",
-    "tags": []
-  },
-  "name": "Unnamed",
-  "schema_version": 2
+    {
+      "id": "BlackboardCheck",
+      "name": "Blackboard Check",
+      "category": "Logic",
+      "description": "Vérifie qu'une variable blackboard existe et est truthy",
+      "tooltip": "Retourne true si la variable existe et est non-nulle/non-vide",
+      "color": "#C0392B",
+      "pins": {
+        "inputs": [
+          { "id": "var_name", "label": "Var Name", "type": "String", "required": true }
+        ],
+        "outputs": [
+          { "id": "result", "label": "Result", "type": "Bool" }
+        ]
+      },
+      "parameters": [
+        { "name": "var_name", "type": "String", "required": true, "default": "", "description": "Nom de la variable blackboard à vérifier" }
+      ]
+    },
+    {
+      "id": "IsInRange",
+      "name": "Is In Range",
+      "category": "Logic",
+      "description": "Vérifie si une entité est dans un rayon donné",
+      "tooltip": "Calcule la distance euclidienne entre l'entité courante et la cible",
+      "color": "#C0392B",
+      "pins": {
+        "inputs": [
+          { "id": "target", "label": "Target", "type": "EntityRef", "required": true },
+          { "id": "range", "label": "Range", "type": "Float", "required": true }
+        ],
+        "outputs": [
+          { "id": "result", "label": "Result", "type": "Bool" }
+        ]
+      },
+      "parameters": [
+        { "name": "range", "type": "Float", "required": true, "default": "100.0", "description": "Rayon de détection" }
+      ]
+    },
+    {
+      "id": "HasLineOfSight",
+      "name": "Has Line Of Sight",
+      "category": "Logic",
+      "description": "Vérifie la ligne de vue vers une cible",
+      "tooltip": "Lance un rayon entre l'entité et la cible pour détecter les obstacles",
+      "color": "#C0392B",
+      "pins": {
+        "inputs": [
+          { "id": "target", "label": "Target", "type": "EntityRef", "required": true }
+        ],
+        "outputs": [
+          { "id": "result", "label": "Result", "type": "Bool" }
+        ]
+      },
+      "parameters": []
+    },
+    {
+      "id": "IsAnimationFinished",
+      "name": "Is Animation Finished",
+      "category": "Logic",
+      "description": "Vérifie si l'animation courante est terminée",
+      "tooltip": "Retourne true si l'animation en cours a atteint sa dernière frame",
+      "color": "#C0392B",
+      "pins": {
+        "inputs": [],
+        "outputs": [
+          { "id": "result", "label": "Result", "type": "Bool" }
+        ]
+      },
+      "parameters": []
+    },
+    {
+      "id": "IsAtPosition",
+      "name": "Is At Position",
+      "category": "Logic",
+      "description": "Vérifie si l'entité est à une position donnée",
+      "tooltip": "Retourne true si la distance à la position cible est inférieure à la tolérance",
+      "color": "#C0392B",
+      "pins": {
+        "inputs": [
+          { "id": "pos", "label": "Position", "type": "Vector", "required": true },
+          { "id": "tolerance", "label": "Tolerance", "type": "Float", "required": false }
+        ],
+        "outputs": [
+          { "id": "result", "label": "Result", "type": "Bool" }
+        ]
+      },
+      "parameters": [
+        { "name": "tolerance", "type": "Float", "required": false, "default": "5.0", "description": "Tolérance de distance en pixels" }
+      ]
+    }
+  ]
 }

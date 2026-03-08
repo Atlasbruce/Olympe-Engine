@@ -189,16 +189,31 @@ public:
     const NodeAnnotationsManager& GetNodeAnnotations() const { return m_nodeAnnotations; }
 
     // ========================================================================
-    // Blackboard (Phase 2.1)
+    // Blackboard (Phase 2.1 / ATS Phase 1.4)
     // ========================================================================
 
     /**
-     * @brief Get blackboard system (non-const)
+     * @brief Get local blackboard system (non-const)
+     *
+     * The local blackboard holds variables scoped to this graph only.
+     * For globally shared variables, use GlobalBlackboard::Get().
+     */
+    BlackboardSystem& GetLocalBlackboard() { return m_blackboard; }
+
+    /**
+     * @brief Get local blackboard system (const)
+     */
+    const BlackboardSystem& GetLocalBlackboard() const { return m_blackboard; }
+
+    /**
+     * @brief Get blackboard system (non-const) — alias for GetLocalBlackboard()
+     * @deprecated Prefer GetLocalBlackboard() for clarity
      */
     BlackboardSystem& GetBlackboard() { return m_blackboard; }
 
     /**
-     * @brief Get blackboard system (const)
+     * @brief Get blackboard system (const) — alias for GetLocalBlackboard()
+     * @deprecated Prefer GetLocalBlackboard() for clarity
      */
     const BlackboardSystem& GetBlackboard() const { return m_blackboard; }
     
@@ -214,7 +229,7 @@ private:
     // Phase 2.0 - Node annotations
     NodeAnnotationsManager m_nodeAnnotations;
 
-    // Phase 2.1 - Blackboard system
+    // Phase 2.1 / ATS Phase 1.4 - Local blackboard (per-graph variables)
     BlackboardSystem m_blackboard;
     
     // Helper methods

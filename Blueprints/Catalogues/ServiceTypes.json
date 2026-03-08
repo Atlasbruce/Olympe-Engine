@@ -1,0 +1,85 @@
+{
+  "schema_version": 2,
+  "catalogType": "Services",
+  "version": "2.0",
+  "types": [
+    {
+      "id": "UpdateBlackboard",
+      "name": "Update Blackboard",
+      "category": "Service",
+      "description": "Met à jour une variable blackboard à intervalle régulier",
+      "tooltip": "S'exécute en parallèle du tick du composite attaché",
+      "color": "#5D6D7E",
+      "pins": {
+        "inputs": [
+          { "id": "var_name", "label": "Var Name", "type": "String", "required": true },
+          { "id": "source", "label": "Source", "type": "String", "required": true },
+          { "id": "interval", "label": "Interval", "type": "Float", "required": false }
+        ],
+        "outputs": []
+      },
+      "parameters": [
+        { "name": "var_name", "type": "String", "required": true, "default": "", "description": "Nom de la variable blackboard à mettre à jour" },
+        { "name": "source", "type": "String", "required": true, "default": "", "description": "Source de la donnée (ex: nom d'entité, chemin de propriété)" },
+        { "name": "interval", "type": "Float", "required": false, "default": "0.1", "description": "Intervalle de mise à jour en secondes" }
+      ]
+    },
+    {
+      "id": "TickTimer",
+      "name": "Tick Timer",
+      "category": "Service",
+      "description": "Incrémente un compteur blackboard à intervalle régulier",
+      "tooltip": "Utile pour suivre le temps écoulé pendant qu'un composite est actif",
+      "color": "#5D6D7E",
+      "pins": {
+        "inputs": [
+          { "id": "var_name", "label": "Var Name", "type": "String", "required": true },
+          { "id": "interval", "label": "Interval", "type": "Float", "required": false }
+        ],
+        "outputs": []
+      },
+      "parameters": [
+        { "name": "var_name", "type": "String", "required": true, "default": "", "description": "Nom du compteur blackboard à incrémenter" },
+        { "name": "interval", "type": "Float", "required": false, "default": "1.0", "description": "Intervalle d'incrémentation en secondes" }
+      ]
+    },
+    {
+      "id": "TrackTarget",
+      "name": "Track Target",
+      "category": "Service",
+      "description": "Met à jour la position d'une cible dans le blackboard",
+      "tooltip": "Suit en continu la position d'une entité cible",
+      "color": "#5D6D7E",
+      "pins": {
+        "inputs": [
+          { "id": "target_var", "label": "Target Var", "type": "String", "required": true },
+          { "id": "interval", "label": "Interval", "type": "Float", "required": false }
+        ],
+        "outputs": []
+      },
+      "parameters": [
+        { "name": "target_var", "type": "String", "required": true, "default": "", "description": "Clé blackboard contenant la référence de la cible" },
+        { "name": "interval", "type": "Float", "required": false, "default": "0.1", "description": "Intervalle de mise à jour en secondes" }
+      ]
+    },
+    {
+      "id": "PlayLoopedAnimation",
+      "name": "Play Looped Animation",
+      "category": "Service",
+      "description": "Joue une animation en boucle tant que le composite est actif",
+      "tooltip": "Lance et maintient une animation pendant toute la durée d'activité du composite",
+      "color": "#5D6D7E",
+      "pins": {
+        "inputs": [
+          { "id": "anim_ref", "label": "Animation", "type": "AnimRef", "required": true },
+          { "id": "interval", "label": "Interval", "type": "Float", "required": false }
+        ],
+        "outputs": []
+      },
+      "parameters": [
+        { "name": "anim_ref", "type": "AnimRef", "required": true, "default": "", "description": "Référence ou id de l'animation à jouer" },
+        { "name": "interval", "type": "Float", "required": false, "default": "0.0", "description": "Intervalle de vérification (0 = chaque frame)" }
+      ]
+    }
+  ]
+}

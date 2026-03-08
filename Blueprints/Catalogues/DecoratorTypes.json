@@ -1,20 +1,162 @@
 {
-  "blueprintType": "Unknown",
-  "data": {},
-  "description": "",
-  "editorState": {
-    "scrollOffset": {
-      "x": 0,
-      "y": 0
+  "schema_version": 2,
+  "catalogType": "Decorators",
+  "version": "2.0",
+  "types": [
+    {
+      "id": "Inverter",
+      "name": "Inverter",
+      "category": "Logic",
+      "description": "Inverse le résultat Success/Failure du nœud enfant",
+      "tooltip": "Success devient Failure et vice-versa",
+      "color": "#8E44AD",
+      "pins": {
+        "inputs": [
+          { "id": "exec_in", "label": "", "type": "Exec", "required": true }
+        ],
+        "outputs": [
+          { "id": "exec_out", "label": "", "type": "Exec" }
+        ]
+      },
+      "parameters": []
     },
-    "zoom": 1
-  },
-  "metadata": {
-    "author": "Atlasbruce",
-    "created": "2026-03-07T11:57:13",
-    "lastModified": "2026-03-07T11:57:13",
-    "tags": []
-  },
-  "name": "Unnamed",
-  "schema_version": 2
+    {
+      "id": "ForceSuccess",
+      "name": "Force Success",
+      "category": "Logic",
+      "description": "Force le retour Success quels que soient les résultats de l'enfant",
+      "tooltip": "L'enfant est exécuté mais le résultat est toujours Success",
+      "color": "#8E44AD",
+      "pins": {
+        "inputs": [
+          { "id": "exec_in", "label": "", "type": "Exec", "required": true }
+        ],
+        "outputs": [
+          { "id": "exec_out", "label": "", "type": "Exec" }
+        ]
+      },
+      "parameters": []
+    },
+    {
+      "id": "ForceFailure",
+      "name": "Force Failure",
+      "category": "Logic",
+      "description": "Force le retour Failure quels que soient les résultats de l'enfant",
+      "tooltip": "L'enfant est exécuté mais le résultat est toujours Failure",
+      "color": "#8E44AD",
+      "pins": {
+        "inputs": [
+          { "id": "exec_in", "label": "", "type": "Exec", "required": true }
+        ],
+        "outputs": [
+          { "id": "exec_out", "label": "", "type": "Exec" }
+        ]
+      },
+      "parameters": []
+    },
+    {
+      "id": "Cooldown",
+      "name": "Cooldown",
+      "category": "Flow",
+      "description": "Bloque le nœud pendant N secondes après exécution",
+      "tooltip": "Empêche la réexécution de l'enfant avant la fin du délai",
+      "color": "#2980B9",
+      "pins": {
+        "inputs": [
+          { "id": "exec_in", "label": "", "type": "Exec", "required": true },
+          { "id": "duration", "label": "Duration", "type": "Float", "required": true }
+        ],
+        "outputs": [
+          { "id": "exec_out", "label": "", "type": "Exec" }
+        ]
+      },
+      "parameters": [
+        { "name": "duration", "type": "Float", "required": true, "default": "1.0", "description": "Délai de rechargement en secondes" }
+      ]
+    },
+    {
+      "id": "Loop",
+      "name": "Loop",
+      "category": "Flow",
+      "description": "Répète le nœud enfant N fois (-1 = infini)",
+      "tooltip": "Boucle sur l'enfant jusqu'à atteindre le nombre d'itérations",
+      "color": "#2980B9",
+      "pins": {
+        "inputs": [
+          { "id": "exec_in", "label": "", "type": "Exec", "required": true },
+          { "id": "count", "label": "Count", "type": "Int", "required": false }
+        ],
+        "outputs": [
+          { "id": "exec_out", "label": "", "type": "Exec" }
+        ]
+      },
+      "parameters": [
+        { "name": "count", "type": "Int", "required": false, "default": "-1", "description": "Nombre de répétitions (-1 = infini)" }
+      ]
+    },
+    {
+      "id": "TimeLimit",
+      "name": "Time Limit",
+      "category": "Flow",
+      "description": "Abandonne l'exécution de l'enfant après N secondes",
+      "tooltip": "Interrompt l'enfant si le temps limite est dépassé",
+      "color": "#2980B9",
+      "pins": {
+        "inputs": [
+          { "id": "exec_in", "label": "", "type": "Exec", "required": true },
+          { "id": "time_limit", "label": "Time Limit", "type": "Float", "required": true }
+        ],
+        "outputs": [
+          { "id": "exec_out", "label": "", "type": "Exec" }
+        ]
+      },
+      "parameters": [
+        { "name": "time_limit", "type": "Float", "required": true, "default": "5.0", "description": "Temps limite en secondes" }
+      ]
+    },
+    {
+      "id": "ConditionalLoop",
+      "name": "Conditional Loop",
+      "category": "Condition",
+      "description": "Répète l'enfant tant que la condition blackboard est vraie",
+      "tooltip": "Évalue la condition à chaque itération avant d'exécuter l'enfant",
+      "color": "#16A085",
+      "pins": {
+        "inputs": [
+          { "id": "exec_in", "label": "", "type": "Exec", "required": true },
+          { "id": "var_name", "label": "Var Name", "type": "String", "required": true },
+          { "id": "operator", "label": "Operator", "type": "String", "required": true },
+          { "id": "value", "label": "Value", "type": "Any", "required": true }
+        ],
+        "outputs": [
+          { "id": "exec_out", "label": "", "type": "Exec" }
+        ]
+      },
+      "parameters": [
+        { "name": "var_name", "type": "String", "required": true, "default": "", "description": "Variable blackboard à évaluer" },
+        { "name": "operator", "type": "String", "required": true, "default": "==", "description": "Opérateur : ==, !=, <, >, <=, >=" },
+        { "name": "value", "type": "String", "required": true, "default": "", "description": "Valeur de comparaison" }
+      ]
+    },
+    {
+      "id": "CheckBlackboard",
+      "name": "Check Blackboard",
+      "category": "Condition",
+      "description": "N'exécute l'enfant que si la variable blackboard est truthy",
+      "tooltip": "Garde conditionnel : exécute l'enfant uniquement si la variable est non-nulle/non-vide",
+      "color": "#16A085",
+      "pins": {
+        "inputs": [
+          { "id": "exec_in", "label": "", "type": "Exec", "required": true },
+          { "id": "var_name", "label": "Var Name", "type": "String", "required": true }
+        ],
+        "outputs": [
+          { "id": "exec_out", "label": "", "type": "Exec" }
+        ]
+      },
+      "parameters": [
+        { "name": "var_name", "type": "String", "required": true, "default": "", "description": "Variable blackboard à vérifier" }
+      ]
+    }
+  ]
 }
