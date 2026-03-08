@@ -1,0 +1,60 @@
+{
+    "schema_version": 4,
+    "graphType": "VisualScript",
+    "name": "GuardBehaviour",
+    "description": "AI guard graph: entity watches for targets in range and attacks; returns to guard stance otherwise.",
+    "localBlackboard": [
+        { "Key": "Position",     "Type": "Vector",   "Default": [0.0, 0.0, 0.0], "IsGlobal": false },
+        { "Key": "Target",       "Type": "EntityID", "Default": 0,               "IsGlobal": false },
+        { "Key": "AlertRange",   "Type": "Float",    "Default": 150.0,           "IsGlobal": false },
+        { "Key": "CurrentState", "Type": "String",   "Default": "Guard",         "IsGlobal": false },
+        { "Key": "Health",       "Type": "Float",    "Default": 100.0,           "IsGlobal": false }
+    ],
+    "nodes": [
+        {
+            "nodeID": 1,
+            "nodeType": "EntryPoint",
+            "nodeName": "Start"
+        },
+        {
+            "nodeID": 2,
+            "nodeType": "Branch",
+            "nodeName": "IsTargetInRange",
+            "ConditionID": "IsInRange"
+        },
+        {
+            "nodeID": 3,
+            "nodeType": "AtomicTask",
+            "nodeName": "AttackTarget",
+            "AtomicTaskID": "Task_Attack",
+            "parameters": {
+                "Damage": { "Type": "Literal", "LiteralValue": 20.0 },
+                "Range":  { "Type": "LocalVariable", "VariableName": "AlertRange" }
+            }
+        },
+        {
+            "nodeID": 4,
+            "nodeType": "Delay",
+            "nodeName": "AttackCooldown",
+            "DelaySeconds": 1.0
+        },
+        {
+            "nodeID": 5,
+            "nodeType": "AtomicTask",
+            "nodeName": "ReturnToGuard",
+            "AtomicTaskID": "Task_ChangeState",
+            "parameters": {
+                "NewState": { "Type": "Literal", "LiteralValue": "Guard" }
+            }
+        }
+    ],
+    "ExecConnections": [
+        { "SourceNodeID": 1, "SourcePinName": "Out",       "TargetNodeID": 2, "TargetPinName": "In" },
+        { "SourceNodeID": 2, "SourcePinName": "Then",       "TargetNodeID": 3, "TargetPinName": "In" },
+        { "SourceNodeID": 2, "SourcePinName": "Else",       "TargetNodeID": 5, "TargetPinName": "In" },
+        { "SourceNodeID": 3, "SourcePinName": "Out",        "TargetNodeID": 4, "TargetPinName": "In" },
+        { "SourceNodeID": 4, "SourcePinName": "Completed",  "TargetNodeID": 2, "TargetPinName": "In" },
+        { "SourceNodeID": 5, "SourcePinName": "Out",        "TargetNodeID": 2, "TargetPinName": "In" }
+    ],
+    "DataConnections": []
+}
