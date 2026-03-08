@@ -82,7 +82,7 @@ struct TaskRunnerComponent
     AssetID GraphTemplateID = INVALID_ASSET_ID;
 
     /// @brief ID of the currently active node (replaces CurrentNodeIndex).
-    int32_t CurrentNodeID    = NODE_INDEX_NONE;  ///< ID du node actif (remplace CurrentNodeIndex)
+    int32_t CurrentNodeID    = NODE_INDEX_NONE;
 
     /// @deprecated Use CurrentNodeID instead.
     int32_t CurrentNodeIndex = 0;

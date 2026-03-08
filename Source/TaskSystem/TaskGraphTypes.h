@@ -107,17 +107,17 @@ enum class ParameterBindingType : uint8_t {
 
 // Extended TaskNodeType — appended values (existing values 0-5 unchanged)
 // EntryPoint   : unique entry node (replaces Root for VS graphs)
-// Branch       : If/Else conditionnel (2 exec outputs : Then / Else)
-// Switch       : Multi-branches sur valeur (N exec outputs)
-// VSSequence   : Execute N outputs in order (Sequence ATS VS, distinct du BT Sequence)
-// While        : Boucle conditionnelle (Loop / Completed)
-// ForEach      : Itération sur liste BB (Loop Body / Completed)
-// DoOnce       : Exécution unique (remis à zéro par Reset pin)
-// Delay        : Timer (Completed exec output après N secondes)
-// GetBBValue   : Data node – lit une clé Blackboard
-// SetBBValue   : Data node – écrit une clé Blackboard
-// MathOp       : Data node – opération mathématique (+, -, *, /)
-// SubGraph     : Appel d'un sous-graphe (SubTask)
+// Branch       : If/Else conditional (2 exec outputs: Then / Else)
+// Switch       : Multi-branch on value (N exec outputs)
+// VSSequence   : Execute N outputs in order (VS Sequence, distinct from BT Sequence)
+// While        : Conditional loop (Loop / Completed)
+// ForEach      : Iterate over BB list (Loop Body / Completed)
+// DoOnce       : Single-fire execution (reset via Reset pin)
+// Delay        : Timer (Completed exec output after N seconds)
+// GetBBValue   : Data node – reads a Blackboard key
+// SetBBValue   : Data node – writes a Blackboard key
+// MathOp       : Data node – arithmetic operation (+, -, *, /)
+// SubGraph     : Sub-graph call (SubTask)
 
 // NOTE: TaskNodeType enum values 0-5 (AtomicTask..Root) are unchanged.
 // The following values extend the enum in TaskGraphTypes.h but cannot be
