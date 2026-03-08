@@ -90,7 +90,75 @@ void TaskSystem::Process()
             continue;
         }
 
-        ExecuteNode(entity, runner, tmpl, dt);
+        if (tmpl->GraphType == "VisualScript")
+        {
+            ExecuteVSFrame(entity, runner, tmpl, dt);
+        }
+        else
+        {
+            ExecuteNode(entity, runner, tmpl, dt);
+        }
+    }
+}
+
+// ============================================================================
+// ExecuteVSFrame (public)
+// ============================================================================
+
+void TaskSystem::ExecuteVSFrame(EntityID entity,
+                                 TaskRunnerComponent& runner,
+                                 const TaskGraphTemplate* tmpl,
+                                 float dt)
+{
+    // Initialize LocalBlackboard from Blackboard entries if not yet populated.
+    // Heuristic: if runner.LocalBlackboard is empty AND tmpl->Blackboard is not empty.
+    if (runner.LocalBlackboard.empty() && !tmpl->Blackboard.empty())
+    {
+        for (size_t i = 0; i < tmpl->Blackboard.size(); ++i)
+        {
+            const BlackboardEntry& entry = tmpl->Blackboard[i];
+            runner.LocalBlackboard[entry.Key] = entry.Default;
+        }
+    }
+
+    // Build a LocalBlackboard instance for VSGraphExecutor, bridging from
+    // runner.LocalBlackboard (unordered_map) to the typed LocalBlackboard class.
+    LocalBlackboard localBB;
+    localBB.InitializeFromEntries(tmpl->Blackboard);
+
+    // Populate localBB with current runner values (override defaults).
+    for (auto it = runner.LocalBlackboard.begin();
+         it != runner.LocalBlackboard.end(); ++it)
+    {
+        if (localBB.HasVariable(it->first))
+        {
+            try
+            {
+                localBB.SetValue(it->first, it->second);
+            }
+            catch (...)
+            {
+                // Type mismatch or unknown variable — silently skip.
+            }
+        }
+    }
+
+    World* worldPtr = nullptr; // TODO Phase 3: inject real World
+
+    VSGraphExecutor::ExecuteFrame(entity, runner, *tmpl, localBB, worldPtr, dt);
+
+    // Resync runner.LocalBlackboard from localBB after execution.
+    const std::vector<std::string>& keys = localBB.GetVariableNames();
+    for (size_t i = 0; i < keys.size(); ++i)
+    {
+        try
+        {
+            runner.LocalBlackboard[keys[i]] = localBB.GetValue(keys[i]);
+        }
+        catch (...)
+        {
+            // Skip variables that fail to read.
+        }
     }
 }
 

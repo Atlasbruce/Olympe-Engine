@@ -246,6 +246,7 @@ if(BUILD_TESTS)
         Tests/TaskSystem/TaskSystemTest.cpp
         Tests/TestStubs.cpp
         Source/TaskSystem/TaskSystem.cpp
+        Source/TaskSystem/VSGraphExecutor.cpp
         Source/TaskSystem/AtomicTaskRegistry.cpp
         Source/TaskSystem/LocalBlackboard.cpp
         Source/ECS/Components/TaskRunnerComponent.cpp
@@ -367,6 +368,7 @@ if(BUILD_TESTS)
         Tests/TaskSystem/TaskSystemRunningTest.cpp
         Tests/TestStubs.cpp
         Source/TaskSystem/TaskSystem.cpp
+        Source/TaskSystem/VSGraphExecutor.cpp
         Source/TaskSystem/AtomicTaskRegistry.cpp
         Source/TaskSystem/LocalBlackboard.cpp
         Source/ECS/Components/TaskRunnerComponent.cpp
@@ -401,6 +403,7 @@ if(BUILD_TESTS)
         Tests/TaskSystem/Task_MoveToLocation_LocalBBTest.cpp
         Tests/TestStubs.cpp
         Source/TaskSystem/TaskSystem.cpp
+        Source/TaskSystem/VSGraphExecutor.cpp
         Source/TaskSystem/AtomicTaskRegistry.cpp
         Source/TaskSystem/LocalBlackboard.cpp
         Source/ECS/Components/TaskRunnerComponent.cpp
@@ -436,6 +439,7 @@ if(BUILD_TESTS)
         Tests/TaskSystem/TaskSystem_E2E_ExampleGraph.cpp
         Tests/TestStubs.cpp
         Source/TaskSystem/TaskSystem.cpp
+        Source/TaskSystem/VSGraphExecutor.cpp
         Source/TaskSystem/AtomicTaskRegistry.cpp
         Source/TaskSystem/LocalBlackboard.cpp
         Source/ECS/Components/TaskRunnerComponent.cpp
@@ -473,6 +477,7 @@ if(BUILD_TESTS)
         Tests/TaskSystem/Task_RequestPathfindingTest.cpp
         Tests/TestStubs.cpp
         Source/TaskSystem/TaskSystem.cpp
+        Source/TaskSystem/VSGraphExecutor.cpp
         Source/TaskSystem/AtomicTaskRegistry.cpp
         Source/TaskSystem/LocalBlackboard.cpp
         Source/ECS/Components/TaskRunnerComponent.cpp
@@ -577,6 +582,7 @@ if(BUILD_TESTS)
         Tests/TestStubs.cpp
         Source/TaskSystem/TaskExecutionBridge.cpp
         Source/TaskSystem/TaskSystem.cpp
+        Source/TaskSystem/VSGraphExecutor.cpp
         Source/TaskSystem/AtomicTaskRegistry.cpp
         Source/TaskSystem/LocalBlackboard.cpp
         Source/ECS/Components/TaskRunnerComponent.cpp

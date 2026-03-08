@@ -21,11 +21,9 @@
 #include <stdexcept>
 
 #include "TaskGraphTypes.h"
+#include "TaskGraphTemplate.h"
 
 namespace Olympe {
-
-// Forward declaration
-class TaskGraphTemplate;
 
 /**
  * @class LocalBlackboard
@@ -140,6 +138,36 @@ public:
      * @param inBytes Byte buffer previously produced by Serialize().
      */
     void Deserialize(const std::vector<uint8_t>& inBytes);
+
+    // -----------------------------------------------------------------------
+    // ATS Visual Scripting extensions (Phase 2)
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Initializes the blackboard from a vector of BlackboardEntry (ATS VS schema v4).
+     *
+     * Companion to Initialize(const TaskGraphTemplate&) for VS graphs that use
+     * the BlackboardEntry schema instead of VariableDefinition.
+     *
+     * @param entries  Blackboard entries from TaskGraphTemplate::Blackboard.
+     */
+    void InitializeFromEntries(const std::vector<BlackboardEntry>& entries);
+
+    /**
+     * @brief Sets a value using a scoped key (prefix "local:" is stripped).
+     * Silently ignores "global:" scope (not yet implemented).
+     * @param scopedKey  Key with optional "local:" or "global:" prefix.
+     * @param value      Value to set.
+     */
+    void SetValueScoped(const std::string& scopedKey, const TaskValue& value);
+
+    /**
+     * @brief Gets a value using a scoped key (prefix "local:" is stripped).
+     * Returns TaskValue() (None) for "global:" scope.
+     * @param scopedKey  Key with optional prefix.
+     * @return Stored value or default TaskValue() if not found.
+     */
+    TaskValue GetValueScoped(const std::string& scopedKey) const;
 
 private:
 

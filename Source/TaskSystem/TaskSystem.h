@@ -39,6 +39,7 @@
 #include "TaskGraphTemplate.h"
 #include "../Core/AssetManager.h"
 #include "LocalBlackboard.h"
+#include "VSGraphExecutor.h"
 
 namespace Olympe {
 
@@ -139,6 +140,20 @@ public:
                      TaskRunnerComponent& runner,
                      const TaskGraphTemplate* tmpl,
                      float dt);
+
+    /**
+     * @brief Dispatches VS-graph execution to VSGraphExecutor.
+     * Called from Process() when tmpl->GraphType == "VisualScript".
+     *
+     * @param entity  The entity being processed.
+     * @param runner  Reference to the entity's TaskRunnerComponent.
+     * @param tmpl    Non-null pointer to the resolved TaskGraphTemplate.
+     * @param dt      Delta-time in seconds for the current frame.
+     */
+    void ExecuteVSFrame(EntityID entity,
+                        TaskRunnerComponent& runner,
+                        const TaskGraphTemplate* tmpl,
+                        float dt);
 
     /**
      * @brief Aborts the active atomic task on a runner, if any.

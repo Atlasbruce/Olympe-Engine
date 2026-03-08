@@ -78,6 +78,17 @@ public:
      */
     const NodeStyle& GetStyleByTaskID(const std::string& taskId) const;
 
+    /**
+     * @brief Returns the style for a VS node type identified by string.
+     *
+     * Used by the VS graph renderer which uses TaskNodeType, not the legacy
+     * NodeType enum.
+     *
+     * @param vsTypeName  String form of TaskNodeType (e.g. "EntryPoint", "Branch", "Delay").
+     * @return NodeStyle for the given type, or default grey if unknown.
+     */
+    const NodeStyle& GetStyleByVSTypeName(const std::string& vsTypeName) const;
+
     /// Colour for execution-flow (exec) pins — white.
     static ImU32 GetExecPinColor();
 
@@ -91,6 +102,9 @@ private:
 
     /// Key is the underlying int value of NodeType.
     std::unordered_map<int, NodeStyle> m_styles;
+
+    /// Key is the VS type name string (TaskNodeType as string).
+    std::unordered_map<std::string, NodeStyle> m_vsStyles;
 };
 
 } // namespace Olympe
