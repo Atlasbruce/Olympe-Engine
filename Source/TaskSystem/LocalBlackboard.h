@@ -155,7 +155,7 @@ public:
 
     /**
      * @brief Sets a value using a scoped key (prefix "local:" is stripped).
-     * Silently ignores "global:" scope (not yet implemented).
+     * Forwards "global:" scope to GlobalBlackboard singleton.
      * @param scopedKey  Key with optional "local:" or "global:" prefix.
      * @param value      Value to set.
      */
@@ -163,7 +163,7 @@ public:
 
     /**
      * @brief Gets a value using a scoped key (prefix "local:" is stripped).
-     * Returns TaskValue() (None) for "global:" scope.
+     * Forwards "global:" scope to GlobalBlackboard singleton.
      * @param scopedKey  Key with optional prefix.
      * @return Stored value or default TaskValue() if not found.
      */
