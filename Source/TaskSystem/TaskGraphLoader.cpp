@@ -1,11 +1,19 @@
 /**
  * @file TaskGraphLoader.cpp
- * @brief Implementation of TaskGraphLoader for the Atomic Task System
+ * @brief Clean schema v4 parser for ATS Visual Script task graphs.
  * @author Olympe Engine
- * @date 2026-02-21
+ * @date 2026-03-08
+ *
+ * @details
+ * Primary path: schema v4 flat ATS VisualScript JSON.
+ * For schema v3: delegates to TaskGraphMigrator_v3_to_v4, then parses v4.
+ * For schema v2/legacy: minimal BehaviorTree-style parsing for backward compat.
+ *
+ * C++14 compliant - no std::filesystem, no C++17/20 features.
  */
 
 #include "TaskGraphLoader.h"
+#include "TaskGraphMigrator_v3_to_v4.h"
 
 #include <string>
 #include <vector>
@@ -17,7 +25,7 @@
 namespace Olympe {
 
 // ============================================================================
-// Public API
+// Public: LoadFromFile
 // ============================================================================
 
 TaskGraphTemplate* TaskGraphLoader::LoadFromFile(const std::string& path,
@@ -28,39 +36,61 @@ TaskGraphTemplate* TaskGraphLoader::LoadFromFile(const std::string& path,
     json data;
     if (!JsonHelper::LoadJsonFromFile(path, data))
     {
-        std::string msg = "Failed to open or parse JSON file: " + path;
-        outErrors.push_back(msg);
-        SYSTEM_LOG << "[TaskGraphLoader] ERROR: " << msg << std::endl;
+        outErrors.push_back("Failed to open or parse JSON file: " + path);
+        SYSTEM_LOG << "[TaskGraphLoader] ERROR: Failed to open or parse: " << path << std::endl;
         return nullptr;
     }
 
     return LoadFromJson(data, outErrors);
 }
 
-// ----------------------------------------------------------------------------
+// ============================================================================
+// Public: LoadFromJson
+// ============================================================================
 
 TaskGraphTemplate* TaskGraphLoader::LoadFromJson(const json& data,
                                                   std::vector<std::string>& outErrors)
 {
-    // Detect schema version; default to 2 if not present
-    int schemaVersion = JsonHelper::GetInt(data, "schema_version", 2);
-
+    const int schemaVersion = JsonHelper::GetInt(data, "schema_version", 2);
     SYSTEM_LOG << "[TaskGraphLoader] Schema version: " << schemaVersion << std::endl;
 
     TaskGraphTemplate* tmpl = nullptr;
 
-    if (schemaVersion == 3)
+    if (schemaVersion == 4)
     {
-        tmpl = ParseSchemaV3(data, outErrors);
-    }
-    else if (schemaVersion == 4)
-    {
+        // Primary path: parse v4 flat ATS VS format directly.
         tmpl = ParseSchemaV4(data, outErrors);
+    }
+    else if (schemaVersion == 3)
+    {
+        // Delegate v3 to migrator, then parse the resulting v4 JSON.
+        // The migrator expects flat nodes with NextOnSuccess/NextOnFailure fields.
+        // If the v3 JSON uses the older BT-style "data.nodes" structure instead,
+        // the migrator will produce 0 nodes, and we fall back to direct legacy parsing.
+        std::vector<std::string> migrateErrors;
+        json v4data = TaskGraphMigrator_v3_to_v4::MigrateJson(data, migrateErrors);
+
+        bool migratorProducedNodes = !v4data.empty()
+            && v4data.contains("nodes")
+            && v4data["nodes"].is_array()
+            && !v4data["nodes"].empty();
+
+        if (!migratorProducedNodes)
+        {
+            // Migrator produced no nodes — fall back to direct legacy parsing.
+            SYSTEM_LOG << "[TaskGraphLoader] v3 migrator produced no nodes; "
+                          "using direct legacy parse\n";
+            tmpl = ParseSchemaLegacy(data, outErrors);
+        }
+        else
+        {
+            tmpl = ParseSchemaV4(v4data, outErrors);
+        }
     }
     else
     {
-        // Treat anything else (including 2 and absent) as schema v2
-        tmpl = ParseSchemaV2(data, outErrors);
+        // Schema v2 / unknown: legacy BehaviorTree-style parsing for backward compat.
+        tmpl = ParseSchemaLegacy(data, outErrors);
     }
 
     if (tmpl == nullptr)
@@ -68,7 +98,6 @@ TaskGraphTemplate* TaskGraphLoader::LoadFromJson(const json& data,
         return nullptr;
     }
 
-    // Build lookup cache and run validation
     tmpl->BuildLookupCache();
 
     if (!tmpl->Validate())
@@ -78,40 +107,39 @@ TaskGraphTemplate* TaskGraphLoader::LoadFromJson(const json& data,
         return nullptr;
     }
 
-    SYSTEM_LOG << "[TaskGraphLoader] Successfully loaded template '" << tmpl->Name
-               << "' with " << tmpl->Nodes.size() << " nodes" << std::endl;
-
+    SYSTEM_LOG << "[TaskGraphLoader] Loaded '" << tmpl->Name
+               << "' (" << tmpl->Nodes.size() << " nodes)\n";
     return tmpl;
 }
 
-// ----------------------------------------------------------------------------
+// ============================================================================
+// Public: ValidateJson
+// ============================================================================
 
 bool TaskGraphLoader::ValidateJson(const json& data,
                                    std::vector<std::string>& outErrors)
 {
     bool valid = true;
 
-    // Must have a data section
-    if (!JsonHelper::IsObject(data, "data"))
+    // Check for nodes array: flat (v4) or nested (v2/v3).
+    bool hasNodes = JsonHelper::IsArray(data, "nodes");
+    bool hasDataSection = JsonHelper::IsObject(data, "data");
+
+    if (!hasNodes && !hasDataSection)
     {
-        outErrors.push_back("Missing required 'data' object in JSON");
+        outErrors.push_back("Missing required 'data' object or 'nodes' array in JSON");
         valid = false;
     }
-    else
+    else if (!hasNodes && hasDataSection)
     {
         const json& dataSection = data["data"];
-
-        // Must have nodes array
         if (!JsonHelper::IsArray(dataSection, "nodes"))
         {
             outErrors.push_back("Missing required 'nodes' array in data section");
             valid = false;
         }
-
-        // Must have rootNodeId.
-        // Node IDs are always >= 1 in all supported schemas; -1 is the sentinel
-        // returned by GetInt when the key is absent or invalid.
-        if (JsonHelper::GetInt(dataSection, "rootNodeId", -1) < 0)
+        if (JsonHelper::GetInt(dataSection, "rootNodeId", -1) < 0 &&
+            JsonHelper::GetInt(data, "rootNodeId", -1) < 0)
         {
             outErrors.push_back("Missing required 'rootNodeId' in data section");
             valid = false;
@@ -122,395 +150,568 @@ bool TaskGraphLoader::ValidateJson(const json& data,
 }
 
 // ============================================================================
-// Schema v2 parsing
+// v4 parsing: ParseSchemaV4
 // ============================================================================
 
-TaskGraphTemplate* TaskGraphLoader::ParseSchemaV2(const json& data,
+TaskGraphTemplate* TaskGraphLoader::ParseSchemaV4(const json& data,
                                                    std::vector<std::string>& outErrors)
 {
-    // Validate structure first
-    std::vector<std::string> validationErrors;
-    if (!ValidateJson(data, validationErrors))
+    // Determine if JSON uses flat format (nodes at root) or nested (data.nodes).
+    const bool flatFormat = JsonHelper::IsArray(data, "nodes");
+    const json* rootForNodes = flatFormat ? &data : nullptr;
+
+    // If not flat, try nested data section for backward compat with old assets.
+    if (!flatFormat)
     {
-        for (size_t i = 0; i < validationErrors.size(); ++i)
+        if (!JsonHelper::IsObject(data, "data"))
         {
-            outErrors.push_back(validationErrors[i]);
+            outErrors.push_back("[v4] Missing 'nodes' array or 'data' object in JSON");
+            return nullptr;
         }
-        return nullptr;
+        const json& dataSection = data["data"];
+        if (!JsonHelper::IsArray(dataSection, "nodes"))
+        {
+            outErrors.push_back("[v4] Missing 'nodes' array in data section");
+            return nullptr;
+        }
+        rootForNodes = &dataSection;
     }
 
     TaskGraphTemplate* tmpl = new TaskGraphTemplate();
 
-    // Top-level metadata
-    tmpl->Name        = JsonHelper::GetString(data, "name", "Unnamed");
-    tmpl->Description = JsonHelper::GetString(data, "description", "");
+    // Read metadata — accept both camelCase and PascalCase field names.
+    tmpl->Name      = JsonHelper::GetString(data, "name", "Unnamed");
+    tmpl->GraphType = JsonHelper::GetString(data, "graphType",
+                      JsonHelper::GetString(data, "graph_type", "VisualScript"));
 
-    const json& dataSection = data["data"];
-
-    // Root node ID: prefer top-level "rootNodeId" if present, fall back to data section
-    tmpl->RootNodeID = ResolveRootNodeId(data, dataSection);
-
-    // Parse nodes array
-    JsonHelper::ForEachInArray(dataSection, "nodes", [&](const json& nodeJson, size_t /*index*/)
+    // Entry point ID (flat v4) or rootNodeId (legacy nested).
+    if (flatFormat)
     {
-        TaskNodeDefinition nodeDef = ParseNodeV2(nodeJson, outErrors);
-        tmpl->Nodes.push_back(nodeDef);
+        // For the flat v4 format, the first EntryPoint node implicitly is the root.
+        // entryPointId is optional; if missing, VSGraphExecutor scans for EntryPoint node.
+        tmpl->EntryPointID = JsonHelper::GetInt(data, "entryPointId", NODE_INDEX_NONE);
+        tmpl->RootNodeID   = tmpl->EntryPointID;
+    }
+    else
+    {
+        const json& ds = data["data"];
+        tmpl->EntryPointID = JsonHelper::GetInt(ds, "entryPointId", NODE_INDEX_NONE);
+        tmpl->RootNodeID   = ResolveRootNodeId(data, ds);
+        if (tmpl->RootNodeID == NODE_INDEX_NONE && tmpl->EntryPointID != NODE_INDEX_NONE)
+        {
+            tmpl->RootNodeID = tmpl->EntryPointID;
+        }
+    }
+
+    // Parse nodes.
+    JsonHelper::ForEachInArray(*rootForNodes, "nodes",
+        [&](const json& nodeJson, size_t /*idx*/)
+    {
+        TaskNodeDefinition nd = ParseNodeV4(nodeJson, tmpl->GraphType, outErrors);
+        tmpl->Nodes.push_back(nd);
+        // First EntryPoint node sets the root if not already set.
+        if (tmpl->RootNodeID == NODE_INDEX_NONE &&
+            nd.Type == TaskNodeType::EntryPoint)
+        {
+            tmpl->RootNodeID   = nd.NodeID;
+            tmpl->EntryPointID = nd.NodeID;
+        }
     });
 
-    // Parse local variables (optional in v2)
-    if (JsonHelper::IsArray(dataSection, "localVariables"))
-    {
-        JsonHelper::ForEachInArray(dataSection, "localVariables",
-            [&](const json& varJson, size_t /*index*/)
-        {
-            VariableDefinition varDef;
-            varDef.Name    = JsonHelper::GetString(varJson, "name", "");
-            varDef.IsLocal = JsonHelper::GetBool(varJson, "isLocal", true);
+    // Parse blackboard.
+    ParseBlackboardV4(data, tmpl, outErrors);
 
-            std::string typeStr = JsonHelper::GetString(varJson, "type", "None");
-            if      (typeStr == "Bool")     { varDef.Type = VariableType::Bool; }
-            else if (typeStr == "Int")      { varDef.Type = VariableType::Int; }
-            else if (typeStr == "Float")    { varDef.Type = VariableType::Float; }
-            else if (typeStr == "Vector")   { varDef.Type = VariableType::Vector; }
-            else if (typeStr == "EntityID") { varDef.Type = VariableType::EntityID; }
-            else if (typeStr == "String")   { varDef.Type = VariableType::String; }
-            else                            { varDef.Type = VariableType::None; }
+    // Parse exec connections (handles camelCase, PascalCase, and nested variants).
+    ParseExecConnectionsV4(data, tmpl);
 
-            if (!varDef.Name.empty())
-            {
-                tmpl->LocalVariables.push_back(varDef);
-            }
-        });
-    }
+    // Parse data connections.
+    ParseDataConnectionsV4(data, tmpl);
 
     return tmpl;
 }
 
 // ============================================================================
-// Schema v3 parsing
+// v4 node parsing
 // ============================================================================
 
-TaskGraphTemplate* TaskGraphLoader::ParseSchemaV3(const json& data,
-                                                   std::vector<std::string>& outErrors)
-{
-    // Validate structure first
-    std::vector<std::string> validationErrors;
-    if (!ValidateJson(data, validationErrors))
-    {
-        for (size_t i = 0; i < validationErrors.size(); ++i)
-        {
-            outErrors.push_back(validationErrors[i]);
-        }
-        return nullptr;
-    }
-
-    TaskGraphTemplate* tmpl = new TaskGraphTemplate();
-
-    tmpl->Name        = JsonHelper::GetString(data, "name", "Unnamed");
-    tmpl->Description = JsonHelper::GetString(data, "description", "");
-
-    const json& dataSection = data["data"];
-
-    // Root node ID: prefer top-level "rootNodeId" if present, fall back to data section
-    tmpl->RootNodeID = ResolveRootNodeId(data, dataSection);
-
-    // Parse nodes array
-    JsonHelper::ForEachInArray(dataSection, "nodes", [&](const json& nodeJson, size_t /*index*/)
-    {
-        TaskNodeDefinition nodeDef = ParseNodeV3(nodeJson, outErrors);
-        tmpl->Nodes.push_back(nodeDef);
-    });
-
-    // Parse local variables (optional)
-    if (JsonHelper::IsArray(dataSection, "localVariables"))
-    {
-        JsonHelper::ForEachInArray(dataSection, "localVariables",
-            [&](const json& varJson, size_t /*index*/)
-        {
-            VariableDefinition varDef;
-            varDef.Name    = JsonHelper::GetString(varJson, "name", "");
-            varDef.IsLocal = JsonHelper::GetBool(varJson, "isLocal", true);
-
-            std::string typeStr = JsonHelper::GetString(varJson, "type", "None");
-            if      (typeStr == "Bool")     { varDef.Type = VariableType::Bool; }
-            else if (typeStr == "Int")      { varDef.Type = VariableType::Int; }
-            else if (typeStr == "Float")    { varDef.Type = VariableType::Float; }
-            else if (typeStr == "Vector")   { varDef.Type = VariableType::Vector; }
-            else if (typeStr == "EntityID") { varDef.Type = VariableType::EntityID; }
-            else if (typeStr == "String")   { varDef.Type = VariableType::String; }
-            else                            { varDef.Type = VariableType::None; }
-
-            if (!varDef.Name.empty())
-            {
-                tmpl->LocalVariables.push_back(varDef);
-            }
-        });
-    }
-
-    return tmpl;
-}
-
-// ============================================================================
-// Node parsing - schema v2
-// ============================================================================
-
-TaskNodeDefinition TaskGraphLoader::ParseNodeV2(const json& nodeJson,
+TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
+                                                 const std::string& graphType,
                                                  std::vector<std::string>& outErrors)
 {
-    TaskNodeDefinition nodeDef;
+    TaskNodeDefinition nd;
 
-    nodeDef.NodeID   = JsonHelper::GetInt(nodeJson, "id", -1);
-    nodeDef.NodeName = JsonHelper::GetString(nodeJson, "name", "");
+    // Accept both new ("id") and legacy ("nodeID") field names.
+    nd.NodeID = JsonHelper::GetInt(nodeJson, "id",
+                JsonHelper::GetInt(nodeJson, "nodeID", -1));
 
-    std::string typeStr = JsonHelper::GetString(nodeJson, "type", "");
+    // Accept "label", "name", or "nodeName".
+    nd.NodeName = JsonHelper::GetString(nodeJson, "label",
+                  JsonHelper::GetString(nodeJson, "name",
+                  JsonHelper::GetString(nodeJson, "nodeName", "")));
 
-    if (typeStr == "Selector")
+    // Node type: accept "type" (new) or "nodeType" (legacy).
+    const std::string typeStr = JsonHelper::GetString(nodeJson, "type",
+                                JsonHelper::GetString(nodeJson, "nodeType", ""));
+    bool typeOk = true;
+    nd.Type = StringToNodeType(typeStr, graphType, typeOk);
+    if (!typeOk)
     {
-        nodeDef.Type = TaskNodeType::Selector;
+        outErrors.push_back("Node " + std::to_string(nd.NodeID) +
+                            " has unknown type '" + typeStr + "'");
     }
-    else if (typeStr == "Sequence")
+
+    // AtomicTask type name: "taskType" (new) or "AtomicTaskID"/"atomicTaskId" (legacy).
+    nd.AtomicTaskID = JsonHelper::GetString(nodeJson, "taskType",
+                      JsonHelper::GetString(nodeJson, "AtomicTaskID",
+                      JsonHelper::GetString(nodeJson, "atomicTaskId", "")));
+
+    // VS-specific node fields (new flat format).
+    nd.DelaySeconds = JsonHelper::GetFloat(nodeJson, "delaySeconds", 0.0f);
+    nd.BBKey        = JsonHelper::GetString(nodeJson, "bbKey", "");
+    nd.SubGraphPath = JsonHelper::GetString(nodeJson, "subGraphPath", "");
+    nd.ConditionID  = JsonHelper::GetString(nodeJson, "conditionKey",
+                      JsonHelper::GetString(nodeJson, "conditionId", ""));
+
+    // Math operation fields.
+    nd.MathOperator = JsonHelper::GetString(nodeJson, "mathOp", "");
+
+    // Parse parameters: accept "params" (new) or "parameters" (legacy).
+    if (JsonHelper::IsObject(nodeJson, "params"))
     {
-        nodeDef.Type = TaskNodeType::Sequence;
+        ParseParameters(nodeJson["params"], nd.Parameters);
     }
-    else if (typeStr == "Parallel")
+    else if (JsonHelper::IsObject(nodeJson, "parameters"))
     {
-        nodeDef.Type = TaskNodeType::Parallel;
+        ParseParameters(nodeJson["parameters"], nd.Parameters);
+
+        // Legacy nested fields inside parameters block.
+        const json& params = nodeJson["parameters"];
+        if (nd.BBKey.empty())
+        {
+            nd.BBKey = JsonHelper::GetString(params, "key", "");
+        }
+        if (nd.MathOperator.empty())
+        {
+            nd.MathOperator = JsonHelper::GetString(params, "operator", "");
+        }
+        if (nd.DelaySeconds == 0.0f)
+        {
+            nd.DelaySeconds = JsonHelper::GetFloat(params, "delaySeconds", 0.0f);
+        }
+        if (nd.SubGraphPath.empty())
+        {
+            nd.SubGraphPath = JsonHelper::GetString(params, "subGraphPath", "");
+        }
+    }
+
+    // Legacy DelaySeconds at node level (patrol.json uses "DelaySeconds").
+    if (nd.DelaySeconds == 0.0f)
+    {
+        nd.DelaySeconds = JsonHelper::GetFloat(nodeJson, "DelaySeconds", 0.0f);
+    }
+
+    // Switch cases.
+    if (JsonHelper::IsArray(nodeJson, "switch_cases"))
+    {
+        JsonHelper::ForEachInArray(nodeJson, "switch_cases",
+            [&](const json& c, size_t /*i*/) {
+                if (c.is_string()) nd.SwitchCases.push_back(c.get<std::string>());
+            });
+    }
+
+    // Backward-compat children array (BT-style, may appear in migrated v3).
+    if (JsonHelper::IsArray(nodeJson, "children"))
+    {
+        const json& ch = nodeJson["children"];
+        for (size_t i = 0; i < ch.size(); ++i)
+        {
+            if (ch[i].is_number()) nd.ChildrenIDs.push_back(ch[i].get<int>());
+        }
+    }
+
+    // Compat flow fields.
+    nd.NextOnSuccess = JsonHelper::GetInt(nodeJson, "nextOnSuccess", NODE_INDEX_NONE);
+    nd.NextOnFailure = JsonHelper::GetInt(nodeJson, "nextOnFailure", NODE_INDEX_NONE);
+
+    return nd;
+}
+
+// ============================================================================
+// v4 blackboard parsing
+// ============================================================================
+
+void TaskGraphLoader::ParseBlackboardV4(const json& root,
+                                         TaskGraphTemplate* tmpl,
+                                         std::vector<std::string>& /*outErrors*/)
+{
+    // Accept "blackboard" (new), "localBlackboard" (legacy), or "data.blackboard".
+    const json* bbArray = nullptr;
+
+    if (JsonHelper::IsArray(root, "blackboard"))
+    {
+        bbArray = &root["blackboard"];
+    }
+    else if (JsonHelper::IsArray(root, "localBlackboard"))
+    {
+        bbArray = &root["localBlackboard"];
+    }
+    else if (JsonHelper::IsObject(root, "data"))
+    {
+        const json& ds = root["data"];
+        if (JsonHelper::IsArray(ds, "blackboard"))
+        {
+            bbArray = &ds["blackboard"];
+        }
+        else if (JsonHelper::IsArray(ds, "localBlackboard"))
+        {
+            bbArray = &ds["localBlackboard"];
+        }
+    }
+
+    if (bbArray == nullptr) return;
+
+    for (const json& entryJson : *bbArray)
+    {
+        BlackboardEntry entry;
+
+        // Accept "key" (new) or "Key" (PascalCase legacy).
+        entry.Key = JsonHelper::GetString(entryJson, "key",
+                    JsonHelper::GetString(entryJson, "Key", ""));
+
+        // Accept "type" (new) or "Type" (PascalCase legacy).
+        const std::string typeStr = JsonHelper::GetString(entryJson, "type",
+                                    JsonHelper::GetString(entryJson, "Type", "None"));
+        entry.Type = StringToVariableType(typeStr);
+
+        // Accept "value" (new) or "default"/"Default" (legacy) for initial value.
+        json defaultVal;
+        bool hasDefault = GetChildValue(entryJson, "value", defaultVal)
+                       || GetChildValue(entryJson, "default", defaultVal)
+                       || GetChildValue(entryJson, "Default", defaultVal);
+        if (hasDefault)
+        {
+            entry.Default = ParsePrimitiveValue(defaultVal);
+        }
+
+        entry.IsGlobal = JsonHelper::GetBool(entryJson, "global",
+                         JsonHelper::GetBool(entryJson, "IsGlobal", false));
+
+        if (!entry.Key.empty())
+        {
+            tmpl->Blackboard.push_back(entry);
+        }
+    }
+}
+
+// ============================================================================
+// v4 exec connections parsing
+// ============================================================================
+
+void TaskGraphLoader::ParseExecConnectionsV4(const json& root,
+                                              TaskGraphTemplate* tmpl)
+{
+    const json* arr = nullptr;
+
+    // Priority: camelCase new → PascalCase legacy → nested data section.
+    if (JsonHelper::IsArray(root, "execConnections"))
+    {
+        arr = &root["execConnections"];
+    }
+    else if (JsonHelper::IsArray(root, "ExecConnections"))
+    {
+        arr = &root["ExecConnections"];
+    }
+    else if (JsonHelper::IsObject(root, "data"))
+    {
+        const json& ds = root["data"];
+        if (JsonHelper::IsArray(ds, "exec_connections"))
+        {
+            arr = &ds["exec_connections"];
+        }
+        else if (JsonHelper::IsArray(ds, "ExecConnections"))
+        {
+            arr = &ds["ExecConnections"];
+        }
+    }
+
+    if (arr == nullptr) return;
+
+    for (const json& c : *arr)
+    {
+        ExecPinConnection conn;
+
+        // New format: fromNode/fromPin/toNode.
+        // Legacy format: SourceNodeID/SourcePinName/TargetNodeID/TargetPinName.
+        conn.SourceNodeID  = JsonHelper::GetInt(c, "fromNode",
+                             JsonHelper::GetInt(c, "SourceNodeID", NODE_INDEX_NONE));
+        conn.SourcePinName = JsonHelper::GetString(c, "fromPin",
+                             JsonHelper::GetString(c, "SourcePinName", ""));
+        conn.TargetNodeID  = JsonHelper::GetInt(c, "toNode",
+                             JsonHelper::GetInt(c, "TargetNodeID", NODE_INDEX_NONE));
+        conn.TargetPinName = JsonHelper::GetString(c, "toPin",
+                             JsonHelper::GetString(c, "TargetPinName", "In"));
+
+        if (conn.SourceNodeID != NODE_INDEX_NONE && conn.TargetNodeID != NODE_INDEX_NONE)
+        {
+            tmpl->ExecConnections.push_back(conn);
+        }
+    }
+}
+
+// ============================================================================
+// v4 data connections parsing
+// ============================================================================
+
+void TaskGraphLoader::ParseDataConnectionsV4(const json& root,
+                                              TaskGraphTemplate* tmpl)
+{
+    const json* arr = nullptr;
+
+    if (JsonHelper::IsArray(root, "dataConnections"))
+    {
+        arr = &root["dataConnections"];
+    }
+    else if (JsonHelper::IsArray(root, "DataConnections"))
+    {
+        arr = &root["DataConnections"];
+    }
+    else if (JsonHelper::IsObject(root, "data"))
+    {
+        const json& ds = root["data"];
+        if (JsonHelper::IsArray(ds, "data_connections"))
+        {
+            arr = &ds["data_connections"];
+        }
+        else if (JsonHelper::IsArray(ds, "DataConnections"))
+        {
+            arr = &ds["DataConnections"];
+        }
+    }
+
+    if (arr == nullptr) return;
+
+    for (const json& c : *arr)
+    {
+        DataPinConnection conn;
+        conn.SourceNodeID  = JsonHelper::GetInt(c, "fromNode",
+                             JsonHelper::GetInt(c, "SourceNodeID", NODE_INDEX_NONE));
+        conn.SourcePinName = JsonHelper::GetString(c, "fromPin",
+                             JsonHelper::GetString(c, "SourcePinName", ""));
+        conn.TargetNodeID  = JsonHelper::GetInt(c, "toNode",
+                             JsonHelper::GetInt(c, "TargetNodeID", NODE_INDEX_NONE));
+        conn.TargetPinName = JsonHelper::GetString(c, "toPin",
+                             JsonHelper::GetString(c, "TargetPinName", ""));
+
+        if (conn.SourceNodeID != NODE_INDEX_NONE && conn.TargetNodeID != NODE_INDEX_NONE)
+        {
+            tmpl->DataConnections.push_back(conn);
+        }
+    }
+}
+
+// ============================================================================
+// Legacy parsing (schema v2 / BehaviorTree-style)
+// ============================================================================
+
+TaskGraphTemplate* TaskGraphLoader::ParseSchemaLegacy(const json& data,
+                                                       std::vector<std::string>& outErrors)
+{
+    // Require a "data" section.
+    if (!JsonHelper::IsObject(data, "data"))
+    {
+        outErrors.push_back("Missing required 'data' object in JSON");
+        return nullptr;
+    }
+
+    const json& dataSection = data["data"];
+
+    if (!JsonHelper::IsArray(dataSection, "nodes"))
+    {
+        outErrors.push_back("Missing required 'nodes' array in data section");
+        return nullptr;
+    }
+
+    TaskGraphTemplate* tmpl = new TaskGraphTemplate();
+    tmpl->Name        = JsonHelper::GetString(data, "name", "Unnamed");
+    tmpl->Description = JsonHelper::GetString(data, "description", "");
+    tmpl->RootNodeID  = ResolveRootNodeId(data, dataSection);
+
+    JsonHelper::ForEachInArray(dataSection, "nodes",
+        [&](const json& nodeJson, size_t /*idx*/)
+    {
+        TaskNodeDefinition nd = ParseNodeLegacy(nodeJson, outErrors);
+        tmpl->Nodes.push_back(nd);
+    });
+
+    // Parse local variables if present.
+    if (JsonHelper::IsArray(dataSection, "localVariables"))
+    {
+        JsonHelper::ForEachInArray(dataSection, "localVariables",
+            [&](const json& varJson, size_t /*idx*/)
+        {
+            VariableDefinition vd;
+            vd.Name    = JsonHelper::GetString(varJson, "name", "");
+            vd.IsLocal = JsonHelper::GetBool(varJson, "isLocal", true);
+            vd.Type    = StringToVariableType(JsonHelper::GetString(varJson, "type", "None"));
+            if (!vd.Name.empty()) tmpl->LocalVariables.push_back(vd);
+        });
+    }
+
+    return tmpl;
+}
+
+// ============================================================================
+// Legacy node parsing
+// ============================================================================
+
+TaskNodeDefinition TaskGraphLoader::ParseNodeLegacy(const json& nodeJson,
+                                                     std::vector<std::string>& outErrors)
+{
+    TaskNodeDefinition nd;
+    nd.NodeID   = JsonHelper::GetInt(nodeJson, "id", -1);
+    nd.NodeName = JsonHelper::GetString(nodeJson, "name",
+                  JsonHelper::GetString(nodeJson, "nodeName", ""));
+
+    const std::string typeStr = JsonHelper::GetString(nodeJson, "type",
+                                JsonHelper::GetString(nodeJson, "nodeType", ""));
+
+    if (typeStr == "Selector")        { nd.Type = TaskNodeType::Selector; }
+    else if (typeStr == "Sequence")   { nd.Type = TaskNodeType::Sequence; }
+    else if (typeStr == "Parallel")   { nd.Type = TaskNodeType::Parallel; }
+    else if (typeStr == "Root")       { nd.Type = TaskNodeType::Root; }
+    else if (typeStr == "Decorator")
+    {
+        nd.Type = TaskNodeType::Decorator;
+        int childId = JsonHelper::GetInt(nodeJson, "decoratorChildId", -1);
+        if (childId >= 0) nd.ChildrenIDs.push_back(childId);
+        int rc = JsonHelper::GetInt(nodeJson, "repeatCount", 1);
+        ParameterBinding rb;
+        rb.Type = ParameterBindingType::Literal;
+        rb.LiteralValue = TaskValue(rc);
+        nd.Parameters["repeatCount"] = rb;
     }
     else if (typeStr == "Repeater")
     {
-        nodeDef.Type = TaskNodeType::Decorator;
-
-        // Repeater wraps a single child via decoratorChildId
+        nd.Type = TaskNodeType::Decorator;
         int childId = JsonHelper::GetInt(nodeJson, "decoratorChildId", -1);
-        if (childId >= 0)
-        {
-            nodeDef.ChildrenIDs.push_back(childId);
-        }
-
-        // Store repeatCount as a Literal int parameter
-        int repeatCount = JsonHelper::GetInt(nodeJson, "repeatCount", 1);
-        ParameterBinding repeatBinding;
-        repeatBinding.Type         = ParameterBindingType::Literal;
-        repeatBinding.LiteralValue = TaskValue(repeatCount);
-        nodeDef.Parameters["repeatCount"] = repeatBinding;
+        if (childId >= 0) nd.ChildrenIDs.push_back(childId);
+        int rc = JsonHelper::GetInt(nodeJson, "repeatCount", 1);
+        ParameterBinding rb;
+        rb.Type = ParameterBindingType::Literal;
+        rb.LiteralValue = TaskValue(rc);
+        nd.Parameters["repeatCount"] = rb;
     }
     else if (typeStr == "Action")
     {
-        nodeDef.Type         = TaskNodeType::AtomicTask;
-        nodeDef.AtomicTaskID = JsonHelper::GetString(nodeJson, "actionType", "");
+        nd.Type         = TaskNodeType::AtomicTask;
+        nd.AtomicTaskID = JsonHelper::GetString(nodeJson, "actionType", "");
     }
     else if (typeStr == "Condition")
     {
-        nodeDef.Type         = TaskNodeType::AtomicTask;
-        nodeDef.AtomicTaskID = JsonHelper::GetString(nodeJson, "conditionType", "");
-    }
-    else
-    {
-        // Unknown node type: warn and create AtomicTask with ID "unknown"
-        std::string warnMsg = "Node " + std::to_string(nodeDef.NodeID)
-                            + " has unknown type '" + typeStr + "'; treating as AtomicTask(unknown)";
-        SYSTEM_LOG << "[TaskGraphLoader] WARNING: " << warnMsg << std::endl;
-        outErrors.push_back(warnMsg);
-        nodeDef.Type         = TaskNodeType::AtomicTask;
-        nodeDef.AtomicTaskID = "unknown";
-    }
-
-    // Parse children array (for composite nodes); skip for Repeater (handled above)
-    if (typeStr != "Repeater" && JsonHelper::IsArray(nodeJson, "children"))
-    {
-        const json& children = nodeJson["children"];
-        for (size_t i = 0; i < children.size(); ++i)
-        {
-            if (children[i].is_number())
-            {
-                nodeDef.ChildrenIDs.push_back(children[i].get<int>());
-            }
-        }
-    }
-
-    // Parse parameters object
-    if (JsonHelper::IsObject(nodeJson, "parameters"))
-    {
-        ParseParameters(nodeJson["parameters"], nodeDef.Parameters);
-    }
-
-    // nextOnSuccess / nextOnFailure (optional flow overrides in v2)
-    nodeDef.NextOnSuccess = JsonHelper::GetInt(nodeJson, "nextOnSuccess", -1);
-    nodeDef.NextOnFailure = JsonHelper::GetInt(nodeJson, "nextOnFailure", -1);
-
-    return nodeDef;
-}
-
-// ============================================================================
-// Node parsing - schema v3
-// ============================================================================
-
-TaskNodeDefinition TaskGraphLoader::ParseNodeV3(const json& nodeJson,
-                                                 std::vector<std::string>& outErrors)
-{
-    TaskNodeDefinition nodeDef;
-
-    nodeDef.NodeID   = JsonHelper::GetInt(nodeJson, "id", -1);
-    nodeDef.NodeName = JsonHelper::GetString(nodeJson, "name", "");
-
-    std::string typeStr = JsonHelper::GetString(nodeJson, "type", "");
-
-    if (typeStr == "Selector")
-    {
-        nodeDef.Type = TaskNodeType::Selector;
-    }
-    else if (typeStr == "Sequence")
-    {
-        nodeDef.Type = TaskNodeType::Sequence;
-    }
-    else if (typeStr == "Parallel")
-    {
-        nodeDef.Type = TaskNodeType::Parallel;
-    }
-    else if (typeStr == "Decorator")
-    {
-        nodeDef.Type = TaskNodeType::Decorator;
-    }
-    else if (typeStr == "Root")
-    {
-        nodeDef.Type = TaskNodeType::Root;
+        nd.Type         = TaskNodeType::AtomicTask;
+        nd.AtomicTaskID = JsonHelper::GetString(nodeJson, "conditionType", "");
     }
     else if (typeStr == "AtomicTask")
     {
-        nodeDef.Type         = TaskNodeType::AtomicTask;
-        nodeDef.AtomicTaskID = JsonHelper::GetString(nodeJson, "atomicTaskId", "");
+        nd.Type         = TaskNodeType::AtomicTask;
+        nd.AtomicTaskID = JsonHelper::GetString(nodeJson, "atomicTaskId",
+                          JsonHelper::GetString(nodeJson, "AtomicTaskID", ""));
     }
     else
     {
-        // Unknown type: warn and treat as AtomicTask
-        std::string warnMsg = "Node " + std::to_string(nodeDef.NodeID)
-                            + " has unknown type '" + typeStr + "'; treating as AtomicTask(unknown)";
-        SYSTEM_LOG << "[TaskGraphLoader] WARNING: " << warnMsg << std::endl;
-        outErrors.push_back(warnMsg);
-        nodeDef.Type         = TaskNodeType::AtomicTask;
-        nodeDef.AtomicTaskID = "unknown";
+        outErrors.push_back("Node " + std::to_string(nd.NodeID) +
+                            " has unknown type '" + typeStr + "'");
+        nd.Type         = TaskNodeType::AtomicTask;
+        nd.AtomicTaskID = "unknown";
     }
 
-    // Parse children array
-    if (JsonHelper::IsArray(nodeJson, "children"))
+    // Children array (composite nodes).
+    if (typeStr != "Repeater" && typeStr != "Decorator" &&
+        JsonHelper::IsArray(nodeJson, "children"))
     {
-        const json& children = nodeJson["children"];
-        for (size_t i = 0; i < children.size(); ++i)
+        const json& ch = nodeJson["children"];
+        for (size_t i = 0; i < ch.size(); ++i)
         {
-            if (children[i].is_number())
-            {
-                nodeDef.ChildrenIDs.push_back(children[i].get<int>());
-            }
+            if (ch[i].is_number()) nd.ChildrenIDs.push_back(ch[i].get<int>());
         }
     }
 
-    // Decorator child (v3 may also use decoratorChildId)
-    if (typeStr == "Decorator")
-    {
-        int childId = JsonHelper::GetInt(nodeJson, "decoratorChildId", -1);
-        if (childId >= 0 && nodeDef.ChildrenIDs.empty())
-        {
-            nodeDef.ChildrenIDs.push_back(childId);
-        }
-
-        int repeatCount = JsonHelper::GetInt(nodeJson, "repeatCount", 1);
-        ParameterBinding repeatBinding;
-        repeatBinding.Type         = ParameterBindingType::Literal;
-        repeatBinding.LiteralValue = TaskValue(repeatCount);
-        nodeDef.Parameters["repeatCount"] = repeatBinding;
-    }
-
-    // Parse parameters
     if (JsonHelper::IsObject(nodeJson, "parameters"))
     {
-        ParseParameters(nodeJson["parameters"], nodeDef.Parameters);
+        ParseParameters(nodeJson["parameters"], nd.Parameters);
     }
 
-    nodeDef.NextOnSuccess = JsonHelper::GetInt(nodeJson, "nextOnSuccess", -1);
-    nodeDef.NextOnFailure = JsonHelper::GetInt(nodeJson, "nextOnFailure", -1);
+    nd.NextOnSuccess = JsonHelper::GetInt(nodeJson, "nextOnSuccess", -1);
+    nd.NextOnFailure = JsonHelper::GetInt(nodeJson, "nextOnFailure", -1);
 
-    return nodeDef;
+    return nd;
 }
 
 // ============================================================================
-// Parameter parsing
+// Shared helpers
 // ============================================================================
 
 void TaskGraphLoader::ParseParameters(const json& paramsJson,
                                       std::unordered_map<std::string, ParameterBinding>& outParams)
 {
-    // Iterate over all key-value pairs in the parameters object
     for (auto it = paramsJson.begin(); it != paramsJson.end(); ++it)
     {
-        std::string paramName  = it.key();
-        const json& paramValue = it.value();
+        const std::string& key = it.key();
+        const json& val        = it.value();
 
         ParameterBinding binding;
 
-        if (paramValue.is_object())
+        if (val.is_object())
         {
-            // Structured binding: check for bindingType field
-            std::string bindingType = JsonHelper::GetString(paramValue, "bindingType", "Literal");
+            // Structured binding — check "bindingType" / "Type" field.
+            std::string btype = JsonHelper::GetString(val, "bindingType",
+                                JsonHelper::GetString(val, "Type", "Literal"));
 
-            if (bindingType == "Variable" || bindingType == "LocalVariable")
+            if (btype == "Variable" || btype == "LocalVariable")
             {
                 binding.Type         = ParameterBindingType::LocalVariable;
-                binding.VariableName = JsonHelper::GetString(paramValue, "variableName", "");
+                binding.VariableName = JsonHelper::GetString(val, "variableName",
+                                       JsonHelper::GetString(val, "VariableName", ""));
             }
             else
             {
-                // Literal binding with nested value
+                // Literal binding with nested value.
                 binding.Type = ParameterBindingType::Literal;
-                json valueJson;
-                if (GetChildValue(paramValue, "value", valueJson))
+                json vj;
+                if (GetChildValue(val, "value", vj) ||
+                    GetChildValue(val, "LiteralValue", vj))
                 {
-                    binding.LiteralValue = ParsePrimitiveValue(valueJson);
+                    binding.LiteralValue = ParsePrimitiveValue(vj);
                 }
             }
         }
         else
         {
-            // Primitive value: create Literal binding
+            // Primitive value: Literal binding.
             binding.Type         = ParameterBindingType::Literal;
-            binding.LiteralValue = ParsePrimitiveValue(paramValue);
+            binding.LiteralValue = ParsePrimitiveValue(val);
         }
 
-        outParams[paramName] = binding;
+        outParams[key] = binding;
     }
 }
 
-// ============================================================================
-// Primitive value parsing
 // ============================================================================
 
 TaskValue TaskGraphLoader::ParsePrimitiveValue(const json& val)
 {
-    if (val.is_boolean())
-    {
-        return TaskValue(val.get<bool>());
-    }
-    if (val.is_number_integer())
-    {
-        return TaskValue(val.get<int>());
-    }
-    if (val.is_number_float())
-    {
-        return TaskValue(static_cast<float>(val.get<double>()));
-    }
-    if (val.is_string())
-    {
-        return TaskValue(val.get<std::string>());
-    }
-
-    // Unsupported type: return default (None)
-    return TaskValue();
+    if (val.is_boolean())        return TaskValue(val.get<bool>());
+    if (val.is_number_integer()) return TaskValue(val.get<int>());
+    if (val.is_number_float())   return TaskValue(static_cast<float>(val.get<double>()));
+    if (val.is_string())         return TaskValue(val.get<std::string>());
+    return TaskValue(); // None
 }
 
 // ============================================================================
-// Safe child-value accessor
-// ============================================================================
 
-bool TaskGraphLoader::GetChildValue(const json& obj, const std::string& key, json& outVal)
+bool TaskGraphLoader::GetChildValue(const json& obj,
+                                    const std::string& key,
+                                    json& outVal)
 {
     if (obj.contains(key))
     {
@@ -521,269 +722,16 @@ bool TaskGraphLoader::GetChildValue(const json& obj, const std::string& key, jso
 }
 
 // ============================================================================
-// Root node ID resolution
-// ============================================================================
 
 int TaskGraphLoader::ResolveRootNodeId(const json& data, const json& dataSection)
 {
-    // Prefer top-level "rootNodeId" when present (some schemas place it at document root)
-    int topLevelRoot = JsonHelper::GetInt(data, "rootNodeId", -1);
-    if (topLevelRoot >= 0)
-    {
-        return topLevelRoot;
-    }
-    // Fall back to standard location inside the data section
+    int top = JsonHelper::GetInt(data, "rootNodeId", -1);
+    if (top >= 0) return top;
     return JsonHelper::GetInt(dataSection, "rootNodeId", -1);
 }
 
 // ============================================================================
-// Schema v4 parsing (ATS Visual Scripting – Phase 1)
-// ============================================================================
-
-TaskGraphTemplate* TaskGraphLoader::ParseSchemaV4(const json& data,
-                                                   std::vector<std::string>& outErrors)
-{
-    // v4 does not require rootNodeId (uses entryPointId instead).
-    // Only check that nodes array exists.
-    if (!JsonHelper::IsObject(data, "data"))
-    {
-        outErrors.push_back("[v4] Missing required 'data' object in JSON");
-        return nullptr;
-    }
-
-    const json& dataSection = data["data"];
-
-    if (!JsonHelper::IsArray(dataSection, "nodes"))
-    {
-        outErrors.push_back("[v4] Missing required 'nodes' array in data section");
-        return nullptr;
-    }
-
-    TaskGraphTemplate* tmpl = new TaskGraphTemplate();
-
-    tmpl->Name        = JsonHelper::GetString(data, "name", "Unnamed");
-    tmpl->Description = JsonHelper::GetString(data, "description", "");
-    tmpl->GraphType   = JsonHelper::GetString(data, "graph_type", "VisualScript");
-
-    // Entry point ID
-    tmpl->EntryPointID = JsonHelper::GetInt(dataSection, "entryPointId", NODE_INDEX_NONE);
-
-    // For backward-compat: if rootNodeId is present, read it too
-    tmpl->RootNodeID = ResolveRootNodeId(data, dataSection);
-    // For VS graphs, entry point is the root
-    if (tmpl->RootNodeID == NODE_INDEX_NONE && tmpl->EntryPointID != NODE_INDEX_NONE)
-    {
-        tmpl->RootNodeID = tmpl->EntryPointID;
-    }
-
-    // Parse nodes
-    JsonHelper::ForEachInArray(dataSection, "nodes",
-        [&](const json& nodeJson, size_t /*index*/)
-    {
-        TaskNodeDefinition nodeDef = ParseNodeV4(nodeJson, tmpl->GraphType, outErrors);
-        tmpl->Nodes.push_back(nodeDef);
-    });
-
-    // Parse blackboard
-    ParseBlackboard(dataSection, tmpl, outErrors);
-
-    // Parse exec connections
-    ParseExecConnections(dataSection, tmpl);
-
-    // Parse data connections
-    ParseDataConnections(dataSection, tmpl);
-
-    return tmpl;
-}
-
-// ----------------------------------------------------------------------------
-
-TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
-                                                 const std::string& graphType,
-                                                 std::vector<std::string>& outErrors)
-{
-    TaskNodeDefinition nodeDef;
-
-    nodeDef.NodeID   = JsonHelper::GetInt(nodeJson, "id", -1);
-    nodeDef.NodeName = JsonHelper::GetString(nodeJson, "name", "");
-
-    std::string typeStr = JsonHelper::GetString(nodeJson, "type", "");
-
-    bool typeOk = true;
-    nodeDef.Type = StringToNodeType(typeStr, graphType, typeOk);
-
-    if (!typeOk)
-    {
-        std::string warnMsg = "Node " + std::to_string(nodeDef.NodeID)
-                            + " has unknown type '" + typeStr + "'; treating as AtomicTask(unknown)";
-        SYSTEM_LOG << "[TaskGraphLoader] WARNING: " << warnMsg << std::endl;
-        outErrors.push_back(warnMsg);
-        nodeDef.AtomicTaskID = "unknown";
-    }
-
-    // Parse exec pins (informational in Phase 1)
-    ParseExecPins(nodeJson, nodeDef);
-
-    // Parse data pins
-    ParseDataPins(nodeJson, nodeDef);
-
-    // Parse parameters object
-    if (JsonHelper::IsObject(nodeJson, "parameters"))
-    {
-        ParseParameters(nodeJson["parameters"], nodeDef.Parameters);
-
-        // Extract VS-specific fields from parameters
-        const json& params = nodeJson["parameters"];
-        nodeDef.ConditionID    = JsonHelper::GetString(nodeJson, "conditionId", "");
-        nodeDef.BBKey          = JsonHelper::GetString(params, "key", "");
-        nodeDef.MathOperator   = JsonHelper::GetString(params, "operator", "");
-        nodeDef.DelaySeconds   = JsonHelper::GetFloat(params, "delaySeconds", 0.0f);
-        nodeDef.SubGraphPath   = JsonHelper::GetString(params, "subGraphPath", "");
-    }
-
-    // conditionId may also be at the node level
-    if (nodeDef.ConditionID.empty())
-    {
-        nodeDef.ConditionID = JsonHelper::GetString(nodeJson, "conditionId", "");
-    }
-
-    // Switch cases
-    if (JsonHelper::IsArray(nodeJson, "switch_cases"))
-    {
-        JsonHelper::ForEachInArray(nodeJson, "switch_cases",
-            [&](const json& caseJson, size_t /*idx*/)
-        {
-            if (caseJson.is_string())
-            {
-                nodeDef.SwitchCases.push_back(caseJson.get<std::string>());
-            }
-        });
-    }
-
-    // nextOnSuccess / nextOnFailure (optional compat fields)
-    nodeDef.NextOnSuccess = JsonHelper::GetInt(nodeJson, "nextOnSuccess", NODE_INDEX_NONE);
-    nodeDef.NextOnFailure = JsonHelper::GetInt(nodeJson, "nextOnFailure", NODE_INDEX_NONE);
-
-    return nodeDef;
-}
-
-// ----------------------------------------------------------------------------
-
-void TaskGraphLoader::ParseExecPins(const json& nodeJson, TaskNodeDefinition& /*nodeDef*/)
-{
-    // Exec pins are informational in Phase 1; the runtime will use ExecConnections
-    // to navigate. No storage needed in NodeDefinition for exec pins at this stage.
-    (void)nodeJson;
-}
-
-// ----------------------------------------------------------------------------
-
-void TaskGraphLoader::ParseDataPins(const json& nodeJson, TaskNodeDefinition& nodeDef)
-{
-    if (!JsonHelper::IsArray(nodeJson, "data_pins"))
-    {
-        return;
-    }
-
-    JsonHelper::ForEachInArray(nodeJson, "data_pins",
-        [&](const json& pinJson, size_t /*idx*/)
-    {
-        DataPinDefinition pin;
-        pin.PinName = JsonHelper::GetString(pinJson, "name", "");
-        pin.PinType = StringToVariableType(JsonHelper::GetString(pinJson, "type", "None"));
-        pin.Dir     = StringToDataPinDir(JsonHelper::GetString(pinJson, "dir", "Input"));
-
-        if (JsonHelper::IsObject(pinJson, "default") || pinJson.contains("default"))
-        {
-            json defaultVal;
-            if (GetChildValue(pinJson, "default", defaultVal))
-            {
-                pin.Default = ParsePrimitiveValue(defaultVal);
-            }
-        }
-
-        nodeDef.DataPins.push_back(pin);
-    });
-}
-
-// ----------------------------------------------------------------------------
-
-void TaskGraphLoader::ParseBlackboard(const json& dataSection,
-                                      TaskGraphTemplate* tmpl,
-                                      std::vector<std::string>& /*outErrors*/)
-{
-    if (!JsonHelper::IsArray(dataSection, "blackboard"))
-    {
-        return;
-    }
-
-    JsonHelper::ForEachInArray(dataSection, "blackboard",
-        [&](const json& entryJson, size_t /*idx*/)
-    {
-        BlackboardEntry entry;
-        entry.Key      = JsonHelper::GetString(entryJson, "key", "");
-        entry.Type     = StringToVariableType(JsonHelper::GetString(entryJson, "type", "None"));
-        entry.IsGlobal = JsonHelper::GetBool(entryJson, "global", false);
-
-        json defaultVal;
-        if (GetChildValue(entryJson, "default", defaultVal))
-        {
-            entry.Default = ParsePrimitiveValue(defaultVal);
-        }
-
-        if (!entry.Key.empty())
-        {
-            tmpl->Blackboard.push_back(entry);
-        }
-    });
-}
-
-// ----------------------------------------------------------------------------
-
-void TaskGraphLoader::ParseExecConnections(const json& dataSection,
-                                           TaskGraphTemplate* tmpl)
-{
-    if (!JsonHelper::IsArray(dataSection, "exec_connections"))
-    {
-        return;
-    }
-
-    JsonHelper::ForEachInArray(dataSection, "exec_connections",
-        [&](const json& connJson, size_t /*idx*/)
-    {
-        ExecPinConnection conn;
-        conn.SourceNodeID  = JsonHelper::GetInt(connJson, "from_node", NODE_INDEX_NONE);
-        conn.SourcePinName = JsonHelper::GetString(connJson, "from_pin", "");
-        conn.TargetNodeID  = JsonHelper::GetInt(connJson, "to_node", NODE_INDEX_NONE);
-        conn.TargetPinName = JsonHelper::GetString(connJson, "to_pin", "");
-        tmpl->ExecConnections.push_back(conn);
-    });
-}
-
-// ----------------------------------------------------------------------------
-
-void TaskGraphLoader::ParseDataConnections(const json& dataSection,
-                                           TaskGraphTemplate* tmpl)
-{
-    if (!JsonHelper::IsArray(dataSection, "data_connections"))
-    {
-        return;
-    }
-
-    JsonHelper::ForEachInArray(dataSection, "data_connections",
-        [&](const json& connJson, size_t /*idx*/)
-    {
-        DataPinConnection conn;
-        conn.SourceNodeID  = JsonHelper::GetInt(connJson, "from_node", NODE_INDEX_NONE);
-        conn.SourcePinName = JsonHelper::GetString(connJson, "from_pin", "");
-        conn.TargetNodeID  = JsonHelper::GetInt(connJson, "to_node", NODE_INDEX_NONE);
-        conn.TargetPinName = JsonHelper::GetString(connJson, "to_pin", "");
-        tmpl->DataConnections.push_back(conn);
-    });
-}
-
-// ============================================================================
-// String → enum conversion helpers
+// String → enum helpers
 // ============================================================================
 
 TaskNodeType TaskGraphLoader::StringToNodeType(const std::string& s,
@@ -792,75 +740,70 @@ TaskNodeType TaskGraphLoader::StringToNodeType(const std::string& s,
 {
     outOk = true;
 
-    if (s == "EntryPoint")  { return TaskNodeType::EntryPoint; }
-    if (s == "Branch")      { return TaskNodeType::Branch; }
-    if (s == "Switch")      { return TaskNodeType::Switch; }
+    if (s == "EntryPoint")  return TaskNodeType::EntryPoint;
+    if (s == "Branch")      return TaskNodeType::Branch;
+    if (s == "Switch")      return TaskNodeType::Switch;
+    if (s == "While")       return TaskNodeType::While;
+    if (s == "ForEach")     return TaskNodeType::ForEach;
+    if (s == "DoOnce")      return TaskNodeType::DoOnce;
+    if (s == "Delay")       return TaskNodeType::Delay;
+    if (s == "GetBBValue")  return TaskNodeType::GetBBValue;
+    if (s == "SetBBValue")  return TaskNodeType::SetBBValue;
+    if (s == "Math" || s == "MathOp") return TaskNodeType::MathOp;
+    if (s == "SubGraph")    return TaskNodeType::SubGraph;
+    if (s == "AtomicTask")  return TaskNodeType::AtomicTask;
+    if (s == "Action")      return TaskNodeType::AtomicTask;
+    if (s == "Condition")   return TaskNodeType::AtomicTask;
+
     if (s == "Sequence")
     {
-        // In a VisualScript graph, "Sequence" maps to VSSequence to avoid
-        // confusion with BehaviorTree Sequence semantics.
-        if (graphType == "VisualScript")
-        {
-            return TaskNodeType::VSSequence;
-        }
-        return TaskNodeType::Sequence;
+        return (graphType == "VisualScript")
+               ? TaskNodeType::VSSequence
+               : TaskNodeType::Sequence;
     }
-    if (s == "While")       { return TaskNodeType::While; }
-    if (s == "ForEach")     { return TaskNodeType::ForEach; }
-    if (s == "DoOnce")      { return TaskNodeType::DoOnce; }
-    if (s == "Delay")       { return TaskNodeType::Delay; }
-    if (s == "GetBBValue")  { return TaskNodeType::GetBBValue; }
-    if (s == "SetBBValue")  { return TaskNodeType::SetBBValue; }
-    if (s == "Math")        { return TaskNodeType::MathOp; }
-    if (s == "SubGraph")    { return TaskNodeType::SubGraph; }
-
-    // Compat with v2 type strings
-    if (s == "Action")      { return TaskNodeType::AtomicTask; }
-    if (s == "Condition")   { return TaskNodeType::AtomicTask; }
-    if (s == "AtomicTask")  { return TaskNodeType::AtomicTask; }
-
-    // v3 / shared type strings
-    if (s == "Selector")    { return TaskNodeType::Selector; }
-    if (s == "Parallel")    { return TaskNodeType::Parallel; }
-    if (s == "Decorator")   { return TaskNodeType::Decorator; }
-    if (s == "Root")        { return TaskNodeType::Root; }
+    if (s == "VSSequence")  return TaskNodeType::VSSequence;
+    if (s == "Selector")    return TaskNodeType::Selector;
+    if (s == "Parallel")    return TaskNodeType::Parallel;
+    if (s == "Decorator")   return TaskNodeType::Decorator;
+    if (s == "Repeater")    return TaskNodeType::Decorator;
+    if (s == "Root")        return TaskNodeType::Root;
 
     outOk = false;
     return TaskNodeType::AtomicTask;
 }
 
-// ----------------------------------------------------------------------------
+// ============================================================================
 
 VariableType TaskGraphLoader::StringToVariableType(const std::string& s)
 {
-    if (s == "Bool")      { return VariableType::Bool; }
-    if (s == "Int")       { return VariableType::Int; }
-    if (s == "Float")     { return VariableType::Float; }
-    if (s == "Vector")    { return VariableType::Vector; }
-    if (s == "EntityID")  { return VariableType::EntityID; }
-    if (s == "String")    { return VariableType::String; }
-    if (s == "List")      { return VariableType::List; }
-    if (s == "GlobalRef") { return VariableType::GlobalRef; }
+    if (s == "Bool")      return VariableType::Bool;
+    if (s == "Int")       return VariableType::Int;
+    if (s == "Float")     return VariableType::Float;
+    if (s == "Vector")    return VariableType::Vector;
+    if (s == "EntityID")  return VariableType::EntityID;
+    if (s == "String")    return VariableType::String;
+    if (s == "List")      return VariableType::List;
+    if (s == "GlobalRef") return VariableType::GlobalRef;
     return VariableType::None;
 }
 
-// ----------------------------------------------------------------------------
+// ============================================================================
 
 DataPinDir TaskGraphLoader::StringToDataPinDir(const std::string& s)
 {
-    if (s == "Output") { return DataPinDir::Output; }
+    if (s == "Output") return DataPinDir::Output;
     return DataPinDir::Input;
 }
 
-// ----------------------------------------------------------------------------
+// ============================================================================
 
 ExecPinRole TaskGraphLoader::StringToExecPinRole(const std::string& s)
 {
-    if (s == "Out")          { return ExecPinRole::Out; }
-    if (s == "OutElse")      { return ExecPinRole::OutElse; }
-    if (s == "OutLoop")      { return ExecPinRole::OutLoop; }
-    if (s == "OutCompleted") { return ExecPinRole::OutCompleted; }
-    if (s == "OutCase")      { return ExecPinRole::OutCase; }
+    if (s == "Out")          return ExecPinRole::Out;
+    if (s == "OutElse")      return ExecPinRole::OutElse;
+    if (s == "OutLoop")      return ExecPinRole::OutLoop;
+    if (s == "OutCompleted") return ExecPinRole::OutCompleted;
+    if (s == "OutCase")      return ExecPinRole::OutCase;
     return ExecPinRole::In;
 }
 

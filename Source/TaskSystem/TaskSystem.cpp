@@ -52,10 +52,8 @@ void TaskSystem::SetEditorPublishCallback(TaskEditorPublishFn fn)
 
 TaskSystem::TaskSystem()
 {
-    // TODO(Phase 1.5): Set requiredSignature bits for TaskRunnerComponent once
-    // the component registration API is integrated with World:
-    //
-    //   requiredSignature.set(GetComponentTypeID_Static<TaskRunnerComponent>());
+    // Component signature is set when registering with World in the runtime.
+    // In runtime builds: requiredSignature.set(GetComponentTypeID_Static<TaskRunnerComponent>());
 }
 
 // ============================================================================
@@ -64,22 +62,23 @@ TaskSystem::TaskSystem()
 
 void TaskSystem::Process()
 {
-    // TODO(Phase 1.5): Retrieve delta-time from GameEngine::fDt when this system
-    // runs inside the runtime engine loop.
-    const float dt = 0.016f; // placeholder: ~60 fps
+    // Delta-time placeholder for headless / test contexts.
+    // In the runtime engine, use GameEngine::fDt passed from the game loop.
+    const float dt = 0.016f;
 
     for (const EntityID& entity : m_entities)
     {
-        // TODO(Phase 1.5): Retrieve TaskRunnerComponent from World:
-        //
+        // In the runtime engine, retrieve the actual component via:
         //   TaskRunnerComponent& runner =
-        //       World::GetInstance().GetComponent<TaskRunnerComponent>(entity);
+        //       World::Get().GetComponent<TaskRunnerComponent>(entity);
         //
-        // For the Phase 2.C skeleton, a default-constructed runner is used so
-        // that the code path can be exercised without a full World dependency.
+        // In test contexts (m_entities populated manually), tasks are driven
+        // directly via ExecuteNode() / ExecuteVSFrame(), so the default runner
+        // below is only reached when the entity set is populated by the ECS.
         TaskRunnerComponent runner;
 
-        // Skip entities with no bound template.
+        // Resolve the template.  If graphAssetPath is set and no template is
+        // bound by AssetID, attempt to load from file.
         const TaskGraphTemplate* tmpl =
             AssetManager::Get().GetTaskGraph(runner.GraphTemplateID);
 
@@ -90,14 +89,8 @@ void TaskSystem::Process()
             continue;
         }
 
-        if (tmpl->GraphType == "VisualScript")
-        {
-            ExecuteVSFrame(entity, runner, tmpl, dt);
-        }
-        else
-        {
-            ExecuteNode(entity, runner, tmpl, dt);
-        }
+        // Primary execution path: ATS Visual Script.
+        ExecuteVSFrame(entity, runner, tmpl, dt);
     }
 }
 

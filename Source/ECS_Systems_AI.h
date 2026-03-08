@@ -55,6 +55,7 @@ private:
 // --- BehaviorTreeSystem ---
 // Ticks data-driven Behavior Trees loaded from JSON and writes intents (MoveIntent/AttackIntent)
 // and/or blackboard updates
+// TODO Phase 4: migrer vers TaskRunnerComponent + ATS VS (utiliser TaskSystem + VSGraphExecutor)
 class BehaviorTreeSystem : public ECS_System
 {
 public:

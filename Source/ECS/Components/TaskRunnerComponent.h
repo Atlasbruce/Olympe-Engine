@@ -81,6 +81,12 @@ struct TaskRunnerComponent
     ///        Set to INVALID_ASSET_ID when no template is bound.
     AssetID GraphTemplateID = INVALID_ASSET_ID;
 
+    /// @brief Path to the ATS Visual Script JSON asset file (.json).
+    ///        When set, TaskSystem can load the template from this path via
+    ///        TaskGraphLoader::LoadFromFile() if GraphTemplateID is not yet
+    ///        resolved by AssetManager.
+    std::string graphAssetPath;
+
     /// @brief ID of the currently active node (replaces CurrentNodeIndex).
     int32_t CurrentNodeID    = NODE_INDEX_NONE;
 
