@@ -181,6 +181,6 @@ TaskStatus Task_Flee::ExecuteWithContext(const AtomicTaskContext& ctx,
     return TaskStatus::Running;
 }
 
-REGISTER_ATOMIC_TASK(Task_Flee, "Task_Flee_AI")
+REGISTER_ATOMIC_TASK(Task_Flee, "Task_Flee")
 
 } // namespace Olympe

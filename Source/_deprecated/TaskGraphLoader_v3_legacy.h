@@ -4,8 +4,8 @@
 /**
  * @file TaskGraphLoader_v3_legacy.h
  * @brief [DEPRECATED] Legacy parsers for schema v2 and v3 task graph JSON.
- * @deprecated Use Source/TaskSystem/TaskGraphLoader.h for schema v4 parsing.
- * @brief Parses JSON task graphs and legacy BehaviorTree JSON into TaskGraphTemplate
+ *        Use Source/TaskSystem/TaskGraphLoader.h for schema v4 parsing.
+ * @deprecated Moved to _deprecated. Use TaskGraphLoader instead.
  * @author Olympe Engine
  * @date 2026-02-21
  *
