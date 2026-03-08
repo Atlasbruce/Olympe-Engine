@@ -334,4 +334,113 @@ void LocalBlackboard::Deserialize(const std::vector<uint8_t>& inBytes)
     SYSTEM_LOG << "[LocalBlackboard] Deserialized " << count << " entries\n";
 }
 
+// ============================================================================
+// InitializeFromEntries (ATS VS Phase 2)
+// ============================================================================
+
+void LocalBlackboard::InitializeFromEntries(const std::vector<BlackboardEntry>& entries)
+{
+    m_variables.clear();
+    m_defaults.clear();
+    m_types.clear();
+
+    for (size_t i = 0; i < entries.size(); ++i)
+    {
+        const BlackboardEntry& entry = entries[i];
+
+        // Skip global entries — they are not stored in the local blackboard.
+        if (entry.IsGlobal)
+        {
+            continue;
+        }
+
+        m_variables[entry.Key] = entry.Default;
+        m_defaults[entry.Key]  = entry.Default;
+        m_types[entry.Key]     = entry.Type;
+    }
+
+    SYSTEM_LOG << "[LocalBlackboard] InitializeFromEntries: registered "
+               << m_variables.size() << " local variables\n";
+}
+
+// ============================================================================
+// SetValueScoped (ATS VS Phase 2)
+// ============================================================================
+
+void LocalBlackboard::SetValueScoped(const std::string& scopedKey, const TaskValue& value)
+{
+    static const std::string localPrefix  = "local:";
+    static const std::string globalPrefix = "global:";
+
+    if (scopedKey.compare(0, localPrefix.size(), localPrefix) == 0)
+    {
+        const std::string key = scopedKey.substr(localPrefix.size());
+        try
+        {
+            SetValue(key, value);
+        }
+        catch (const std::exception& e)
+        {
+            SYSTEM_LOG << "[LocalBlackboard] SetValueScoped: " << e.what() << "\n";
+        }
+    }
+    else if (scopedKey.compare(0, globalPrefix.size(), globalPrefix) == 0)
+    {
+        SYSTEM_LOG << "[LocalBlackboard] SetValueScoped: global BB not yet implemented"
+                   << " (key='" << scopedKey << "')\n";
+    }
+    else
+    {
+        // No prefix — treat as local key for legacy compatibility.
+        try
+        {
+            SetValue(scopedKey, value);
+        }
+        catch (const std::exception& e)
+        {
+            SYSTEM_LOG << "[LocalBlackboard] SetValueScoped: " << e.what() << "\n";
+        }
+    }
+}
+
+// ============================================================================
+// GetValueScoped (ATS VS Phase 2)
+// ============================================================================
+
+TaskValue LocalBlackboard::GetValueScoped(const std::string& scopedKey) const
+{
+    static const std::string localPrefix  = "local:";
+    static const std::string globalPrefix = "global:";
+
+    if (scopedKey.compare(0, globalPrefix.size(), globalPrefix) == 0)
+    {
+        SYSTEM_LOG << "[LocalBlackboard] GetValueScoped: global BB not yet implemented"
+                   << " (key='" << scopedKey << "') — returning None\n";
+        return TaskValue();
+    }
+
+    if (scopedKey.compare(0, localPrefix.size(), localPrefix) == 0)
+    {
+        const std::string key = scopedKey.substr(localPrefix.size());
+        try
+        {
+            return GetValue(key);
+        }
+        catch (...)
+        {
+            return TaskValue();
+        }
+    }
+
+    // No prefix — treat as local key for legacy compatibility.
+    try
+    {
+        return GetValue(scopedKey);
+    }
+    catch (...)
+    {
+        return TaskValue();
+    }
+}
+
 } // namespace Olympe
