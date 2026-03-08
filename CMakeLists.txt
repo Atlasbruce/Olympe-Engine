@@ -638,6 +638,52 @@ if(BUILD_TESTS)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 
+    # -------------------------------------------------------------------------
+    # OlympeVSGraphExecutorTests - Phase 3: VSGraphExecutor 8-test suite
+    # -------------------------------------------------------------------------
+    add_executable(OlympeVSGraphExecutorTests
+        Tests/TaskSystem/VSGraphExecutorTest.cpp
+        Tests/TestStubs.cpp
+        Source/TaskSystem/VSGraphExecutor.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/AtomicTasks/Task_LogMessage.cpp
+        Source/TaskSystem/AtomicTasks/Utility/Task_Wait.cpp
+        Source/TaskSystem/AtomicTasks/Blackboard/Task_Compare.cpp
+        Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp
+        Source/TaskSystem/AtomicTasks/State/Task_ChangeState.cpp
+        Source/TaskSystem/AtomicTasks/System/Task_SetPosition.cpp
+        Source/TaskSystem/AtomicTasks/System/Task_GetDeltaTime.cpp
+        Source/TaskSystem/AtomicTasks/System/Task_GetWorldInstance.cpp
+        Source/TaskSystem/AtomicTasks/Rendering/Task_SetSprite.cpp
+        Source/TaskSystem/AtomicTasks/Rendering/Task_PlayAnimation.cpp
+        Source/TaskSystem/AtomicTasks/Combat/Task_Attack.cpp
+        Source/TaskSystem/AtomicTasks/Combat/Task_Flee.cpp
+        Source/NodeGraphCore/GlobalBlackboard.cpp
+        Source/NodeGraphCore/BlackboardSystem.cpp
+        Source/ECS/Components/TaskRunnerComponent.cpp
+    )
+
+    target_include_directories(OlympeVSGraphExecutorTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeVSGraphExecutorTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME VSGraphExecutorTest
+        COMMAND OlympeVSGraphExecutorTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
     message(STATUS "  Unit Tests: ON")
 else()
     message(STATUS "  Unit Tests: OFF (enable with -DBUILD_TESTS=ON)")

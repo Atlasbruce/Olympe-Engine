@@ -7,6 +7,7 @@
 
 #include "LocalBlackboard.h"
 #include "TaskGraphTemplate.h"
+#include "../NodeGraphCore/GlobalBlackboard.h"
 
 #include <stdexcept>
 #include <string>
@@ -386,8 +387,8 @@ void LocalBlackboard::SetValueScoped(const std::string& scopedKey, const TaskVal
     }
     else if (scopedKey.compare(0, globalPrefix.size(), globalPrefix) == 0)
     {
-        SYSTEM_LOG << "[LocalBlackboard] SetValueScoped: global BB not yet implemented"
-                   << " (key='" << scopedKey << "')\n";
+        const std::string key = scopedKey.substr(globalPrefix.size());
+        GlobalBlackboard::Get().SetVar(key, value);
     }
     else
     {
@@ -414,9 +415,8 @@ TaskValue LocalBlackboard::GetValueScoped(const std::string& scopedKey) const
 
     if (scopedKey.compare(0, globalPrefix.size(), globalPrefix) == 0)
     {
-        SYSTEM_LOG << "[LocalBlackboard] GetValueScoped: global BB not yet implemented"
-                   << " (key='" << scopedKey << "') — returning None\n";
-        return TaskValue();
+        const std::string key = scopedKey.substr(globalPrefix.size());
+        return GlobalBlackboard::Get().GetVar(key);
     }
 
     if (scopedKey.compare(0, localPrefix.size(), localPrefix) == 0)
