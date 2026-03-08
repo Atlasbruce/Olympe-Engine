@@ -53,6 +53,10 @@ TaskGraphTemplate* TaskGraphLoader::LoadFromJson(const json& data,
     {
         tmpl = ParseSchemaV3(data, outErrors);
     }
+    else if (schemaVersion == 4)
+    {
+        tmpl = ParseSchemaV4(data, outErrors);
+    }
     else
     {
         // Treat anything else (including 2 and absent) as schema v2
@@ -530,6 +534,334 @@ int TaskGraphLoader::ResolveRootNodeId(const json& data, const json& dataSection
     }
     // Fall back to standard location inside the data section
     return JsonHelper::GetInt(dataSection, "rootNodeId", -1);
+}
+
+// ============================================================================
+// Schema v4 parsing (ATS Visual Scripting – Phase 1)
+// ============================================================================
+
+TaskGraphTemplate* TaskGraphLoader::ParseSchemaV4(const json& data,
+                                                   std::vector<std::string>& outErrors)
+{
+    // v4 does not require rootNodeId (uses entryPointId instead).
+    // Only check that nodes array exists.
+    if (!JsonHelper::IsObject(data, "data"))
+    {
+        outErrors.push_back("[v4] Missing required 'data' object in JSON");
+        return nullptr;
+    }
+
+    const json& dataSection = data["data"];
+
+    if (!JsonHelper::IsArray(dataSection, "nodes"))
+    {
+        outErrors.push_back("[v4] Missing required 'nodes' array in data section");
+        return nullptr;
+    }
+
+    TaskGraphTemplate* tmpl = new TaskGraphTemplate();
+
+    tmpl->Name        = JsonHelper::GetString(data, "name", "Unnamed");
+    tmpl->Description = JsonHelper::GetString(data, "description", "");
+    tmpl->GraphType   = JsonHelper::GetString(data, "graph_type", "VisualScript");
+
+    // Entry point ID
+    tmpl->EntryPointID = JsonHelper::GetInt(dataSection, "entryPointId", NODE_INDEX_NONE);
+
+    // For backward-compat: if rootNodeId is present, read it too
+    tmpl->RootNodeID = ResolveRootNodeId(data, dataSection);
+    // For VS graphs, entry point is the root
+    if (tmpl->RootNodeID == NODE_INDEX_NONE && tmpl->EntryPointID != NODE_INDEX_NONE)
+    {
+        tmpl->RootNodeID = tmpl->EntryPointID;
+    }
+
+    // Parse nodes
+    JsonHelper::ForEachInArray(dataSection, "nodes",
+        [&](const json& nodeJson, size_t /*index*/)
+    {
+        TaskNodeDefinition nodeDef = ParseNodeV4(nodeJson, tmpl->GraphType, outErrors);
+        tmpl->Nodes.push_back(nodeDef);
+    });
+
+    // Parse blackboard
+    ParseBlackboard(dataSection, tmpl, outErrors);
+
+    // Parse exec connections
+    ParseExecConnections(dataSection, tmpl);
+
+    // Parse data connections
+    ParseDataConnections(dataSection, tmpl);
+
+    return tmpl;
+}
+
+// ----------------------------------------------------------------------------
+
+TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
+                                                 const std::string& graphType,
+                                                 std::vector<std::string>& outErrors)
+{
+    TaskNodeDefinition nodeDef;
+
+    nodeDef.NodeID   = JsonHelper::GetInt(nodeJson, "id", -1);
+    nodeDef.NodeName = JsonHelper::GetString(nodeJson, "name", "");
+
+    std::string typeStr = JsonHelper::GetString(nodeJson, "type", "");
+
+    bool typeOk = true;
+    nodeDef.Type = StringToNodeType(typeStr, graphType, typeOk);
+
+    if (!typeOk)
+    {
+        std::string warnMsg = "Node " + std::to_string(nodeDef.NodeID)
+                            + " has unknown type '" + typeStr + "'; treating as AtomicTask(unknown)";
+        SYSTEM_LOG << "[TaskGraphLoader] WARNING: " << warnMsg << std::endl;
+        outErrors.push_back(warnMsg);
+        nodeDef.AtomicTaskID = "unknown";
+    }
+
+    // Parse exec pins (informational in Phase 1)
+    ParseExecPins(nodeJson, nodeDef);
+
+    // Parse data pins
+    ParseDataPins(nodeJson, nodeDef);
+
+    // Parse parameters object
+    if (JsonHelper::IsObject(nodeJson, "parameters"))
+    {
+        ParseParameters(nodeJson["parameters"], nodeDef.Parameters);
+
+        // Extract VS-specific fields from parameters
+        const json& params = nodeJson["parameters"];
+        nodeDef.ConditionID    = JsonHelper::GetString(nodeJson, "conditionId", "");
+        nodeDef.BBKey          = JsonHelper::GetString(params, "key", "");
+        nodeDef.MathOperator   = JsonHelper::GetString(params, "operator", "");
+        nodeDef.DelaySeconds   = JsonHelper::GetFloat(params, "delaySeconds", 0.0f);
+        nodeDef.SubGraphPath   = JsonHelper::GetString(params, "subGraphPath", "");
+    }
+
+    // conditionId may also be at the node level
+    if (nodeDef.ConditionID.empty())
+    {
+        nodeDef.ConditionID = JsonHelper::GetString(nodeJson, "conditionId", "");
+    }
+
+    // Switch cases
+    if (JsonHelper::IsArray(nodeJson, "switch_cases"))
+    {
+        JsonHelper::ForEachInArray(nodeJson, "switch_cases",
+            [&](const json& caseJson, size_t /*idx*/)
+        {
+            if (caseJson.is_string())
+            {
+                nodeDef.SwitchCases.push_back(caseJson.get<std::string>());
+            }
+        });
+    }
+
+    // nextOnSuccess / nextOnFailure (optional compat fields)
+    nodeDef.NextOnSuccess = JsonHelper::GetInt(nodeJson, "nextOnSuccess", NODE_INDEX_NONE);
+    nodeDef.NextOnFailure = JsonHelper::GetInt(nodeJson, "nextOnFailure", NODE_INDEX_NONE);
+
+    return nodeDef;
+}
+
+// ----------------------------------------------------------------------------
+
+void TaskGraphLoader::ParseExecPins(const json& nodeJson, TaskNodeDefinition& /*nodeDef*/)
+{
+    // Exec pins are informational in Phase 1; the runtime will use ExecConnections
+    // to navigate. No storage needed in NodeDefinition for exec pins at this stage.
+    (void)nodeJson;
+}
+
+// ----------------------------------------------------------------------------
+
+void TaskGraphLoader::ParseDataPins(const json& nodeJson, TaskNodeDefinition& nodeDef)
+{
+    if (!JsonHelper::IsArray(nodeJson, "data_pins"))
+    {
+        return;
+    }
+
+    JsonHelper::ForEachInArray(nodeJson, "data_pins",
+        [&](const json& pinJson, size_t /*idx*/)
+    {
+        DataPinDefinition pin;
+        pin.PinName = JsonHelper::GetString(pinJson, "name", "");
+        pin.PinType = StringToVariableType(JsonHelper::GetString(pinJson, "type", "None"));
+        pin.Dir     = StringToDataPinDir(JsonHelper::GetString(pinJson, "dir", "Input"));
+
+        if (JsonHelper::IsObject(pinJson, "default") || pinJson.contains("default"))
+        {
+            json defaultVal;
+            if (GetChildValue(pinJson, "default", defaultVal))
+            {
+                pin.Default = ParsePrimitiveValue(defaultVal);
+            }
+        }
+
+        nodeDef.DataPins.push_back(pin);
+    });
+}
+
+// ----------------------------------------------------------------------------
+
+void TaskGraphLoader::ParseBlackboard(const json& dataSection,
+                                      TaskGraphTemplate* tmpl,
+                                      std::vector<std::string>& /*outErrors*/)
+{
+    if (!JsonHelper::IsArray(dataSection, "blackboard"))
+    {
+        return;
+    }
+
+    JsonHelper::ForEachInArray(dataSection, "blackboard",
+        [&](const json& entryJson, size_t /*idx*/)
+    {
+        BlackboardEntry entry;
+        entry.Key      = JsonHelper::GetString(entryJson, "key", "");
+        entry.Type     = StringToVariableType(JsonHelper::GetString(entryJson, "type", "None"));
+        entry.IsGlobal = JsonHelper::GetBool(entryJson, "global", false);
+
+        json defaultVal;
+        if (GetChildValue(entryJson, "default", defaultVal))
+        {
+            entry.Default = ParsePrimitiveValue(defaultVal);
+        }
+
+        if (!entry.Key.empty())
+        {
+            tmpl->Blackboard.push_back(entry);
+        }
+    });
+}
+
+// ----------------------------------------------------------------------------
+
+void TaskGraphLoader::ParseExecConnections(const json& dataSection,
+                                           TaskGraphTemplate* tmpl)
+{
+    if (!JsonHelper::IsArray(dataSection, "exec_connections"))
+    {
+        return;
+    }
+
+    JsonHelper::ForEachInArray(dataSection, "exec_connections",
+        [&](const json& connJson, size_t /*idx*/)
+    {
+        ExecPinConnection conn;
+        conn.SourceNodeID  = JsonHelper::GetInt(connJson, "from_node", NODE_INDEX_NONE);
+        conn.SourcePinName = JsonHelper::GetString(connJson, "from_pin", "");
+        conn.TargetNodeID  = JsonHelper::GetInt(connJson, "to_node", NODE_INDEX_NONE);
+        conn.TargetPinName = JsonHelper::GetString(connJson, "to_pin", "");
+        tmpl->ExecConnections.push_back(conn);
+    });
+}
+
+// ----------------------------------------------------------------------------
+
+void TaskGraphLoader::ParseDataConnections(const json& dataSection,
+                                           TaskGraphTemplate* tmpl)
+{
+    if (!JsonHelper::IsArray(dataSection, "data_connections"))
+    {
+        return;
+    }
+
+    JsonHelper::ForEachInArray(dataSection, "data_connections",
+        [&](const json& connJson, size_t /*idx*/)
+    {
+        DataPinConnection conn;
+        conn.SourceNodeID  = JsonHelper::GetInt(connJson, "from_node", NODE_INDEX_NONE);
+        conn.SourcePinName = JsonHelper::GetString(connJson, "from_pin", "");
+        conn.TargetNodeID  = JsonHelper::GetInt(connJson, "to_node", NODE_INDEX_NONE);
+        conn.TargetPinName = JsonHelper::GetString(connJson, "to_pin", "");
+        tmpl->DataConnections.push_back(conn);
+    });
+}
+
+// ============================================================================
+// String → enum conversion helpers
+// ============================================================================
+
+TaskNodeType TaskGraphLoader::StringToNodeType(const std::string& s,
+                                               const std::string& graphType,
+                                               bool& outOk)
+{
+    outOk = true;
+
+    if (s == "EntryPoint")  { return TaskNodeType::EntryPoint; }
+    if (s == "Branch")      { return TaskNodeType::Branch; }
+    if (s == "Switch")      { return TaskNodeType::Switch; }
+    if (s == "Sequence")
+    {
+        // In a VisualScript graph, "Sequence" maps to VSSequence to avoid
+        // confusion with BehaviorTree Sequence semantics.
+        if (graphType == "VisualScript")
+        {
+            return TaskNodeType::VSSequence;
+        }
+        return TaskNodeType::Sequence;
+    }
+    if (s == "While")       { return TaskNodeType::While; }
+    if (s == "ForEach")     { return TaskNodeType::ForEach; }
+    if (s == "DoOnce")      { return TaskNodeType::DoOnce; }
+    if (s == "Delay")       { return TaskNodeType::Delay; }
+    if (s == "GetBBValue")  { return TaskNodeType::GetBBValue; }
+    if (s == "SetBBValue")  { return TaskNodeType::SetBBValue; }
+    if (s == "Math")        { return TaskNodeType::MathOp; }
+    if (s == "SubGraph")    { return TaskNodeType::SubGraph; }
+
+    // Compat with v2 type strings
+    if (s == "Action")      { return TaskNodeType::AtomicTask; }
+    if (s == "Condition")   { return TaskNodeType::AtomicTask; }
+    if (s == "AtomicTask")  { return TaskNodeType::AtomicTask; }
+
+    // v3 / shared type strings
+    if (s == "Selector")    { return TaskNodeType::Selector; }
+    if (s == "Parallel")    { return TaskNodeType::Parallel; }
+    if (s == "Decorator")   { return TaskNodeType::Decorator; }
+    if (s == "Root")        { return TaskNodeType::Root; }
+
+    outOk = false;
+    return TaskNodeType::AtomicTask;
+}
+
+// ----------------------------------------------------------------------------
+
+VariableType TaskGraphLoader::StringToVariableType(const std::string& s)
+{
+    if (s == "Bool")      { return VariableType::Bool; }
+    if (s == "Int")       { return VariableType::Int; }
+    if (s == "Float")     { return VariableType::Float; }
+    if (s == "Vector")    { return VariableType::Vector; }
+    if (s == "EntityID")  { return VariableType::EntityID; }
+    if (s == "String")    { return VariableType::String; }
+    if (s == "List")      { return VariableType::List; }
+    if (s == "GlobalRef") { return VariableType::GlobalRef; }
+    return VariableType::None;
+}
+
+// ----------------------------------------------------------------------------
+
+DataPinDir TaskGraphLoader::StringToDataPinDir(const std::string& s)
+{
+    if (s == "Output") { return DataPinDir::Output; }
+    return DataPinDir::Input;
+}
+
+// ----------------------------------------------------------------------------
+
+ExecPinRole TaskGraphLoader::StringToExecPinRole(const std::string& s)
+{
+    if (s == "Out")          { return ExecPinRole::Out; }
+    if (s == "OutElse")      { return ExecPinRole::OutElse; }
+    if (s == "OutLoop")      { return ExecPinRole::OutLoop; }
+    if (s == "OutCompleted") { return ExecPinRole::OutCompleted; }
+    if (s == "OutCase")      { return ExecPinRole::OutCase; }
+    return ExecPinRole::In;
 }
 
 } // namespace Olympe

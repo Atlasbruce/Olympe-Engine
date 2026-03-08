@@ -44,19 +44,39 @@ constexpr int32_t NODE_INDEX_NONE = -1;
 /**
  * @enum TaskNodeType
  * @brief Identifies the role of a node in the task graph.
+ *
+ * Values 0-5 are the original BehaviorTree node types (unchanged).
+ * Values 6-17 are ATS Visual Scripting node types (Phase 1 - 2026-03-08).
  */
 enum class TaskNodeType : uint8_t {
-    AtomicTask,    ///< Leaf node that executes a single atomic task
-    Sequence,      ///< Executes children in order; stops on first failure
-    Selector,      ///< Executes children in order; stops on first success
-    Parallel,      ///< Executes all children simultaneously
-    Decorator,     ///< Wraps a single child and modifies its behaviour
-    Root           ///< Entry point of the graph (exactly one per template)
+    AtomicTask  = 0,  ///< Leaf node that executes a single atomic task
+    Sequence    = 1,  ///< Executes children in order; stops on first failure
+    Selector    = 2,  ///< Executes children in order; stops on first success
+    Parallel    = 3,  ///< Executes all children simultaneously
+    Decorator   = 4,  ///< Wraps a single child and modifies its behaviour
+    Root        = 5,  ///< Entry point of the graph (exactly one per template)
+
+    // ATS Visual Scripting node types (Phase 1)
+    EntryPoint  = 6,  ///< Unique entry node for VS graphs (replaces Root)
+    Branch      = 7,  ///< If/Else conditional (Then / Else exec outputs)
+    Switch      = 8,  ///< Multi-branch on value (N exec outputs)
+    VSSequence  = 9,  ///< Execute N outputs in order ("VS" prefix avoids collision with BT Sequence=1)
+    While       = 10, ///< Conditional loop (Loop / Completed exec outputs)
+    ForEach     = 11, ///< Iterate over BB list (Loop Body / Completed exec outputs)
+    DoOnce      = 12, ///< Single-fire execution (reset via Reset pin)
+    Delay       = 13, ///< Timer (Completed exec output after N seconds)
+    GetBBValue  = 14, ///< Data node – reads a Blackboard key
+    SetBBValue  = 15, ///< Data node – writes a Blackboard key
+    MathOp      = 16, ///< Data node – arithmetic operation (+, -, *, /)
+    SubGraph    = 17  ///< Sub-graph call (SubTask)
 };
 
 /**
  * @enum VariableType
  * @brief Type tags used by TaskValue to identify stored data.
+ *
+ * Values 0-6 are the original types (unchanged).
+ * Values 7-8 are ATS Visual Scripting extensions (Phase 1 - 2026-03-08).
  */
 enum class VariableType : uint8_t {
     None,       ///< Uninitialized / empty value
@@ -65,7 +85,11 @@ enum class VariableType : uint8_t {
     Float,      ///< Single-precision float
     Vector,     ///< 3-component vector (Vector from vector.h)
     EntityID,   ///< Entity identifier (uint64_t)
-    String      ///< std::string
+    String,     ///< std::string
+
+    // ATS Visual Scripting extensions (Phase 1)
+    List      = 7, ///< std::vector<TaskValue> (used by ForEach node)
+    GlobalRef = 8  ///< Reference to a global blackboard key (scope "global:")
 };
 
 /**
@@ -75,6 +99,51 @@ enum class VariableType : uint8_t {
 enum class ParameterBindingType : uint8_t {
     Literal,        ///< Value is embedded directly in the template
     LocalVariable   ///< Value is read from the local blackboard at runtime
+};
+
+// ============================================================================
+// ATS Visual Scripting – Node Types (Phase 1 - 2026-03-08)
+// ============================================================================
+
+// Extended TaskNodeType — appended values (existing values 0-5 unchanged)
+// EntryPoint   : unique entry node (replaces Root for VS graphs)
+// Branch       : If/Else conditionnel (2 exec outputs : Then / Else)
+// Switch       : Multi-branches sur valeur (N exec outputs)
+// VSSequence   : Execute N outputs in order (Sequence ATS VS, distinct du BT Sequence)
+// While        : Boucle conditionnelle (Loop / Completed)
+// ForEach      : Itération sur liste BB (Loop Body / Completed)
+// DoOnce       : Exécution unique (remis à zéro par Reset pin)
+// Delay        : Timer (Completed exec output après N secondes)
+// GetBBValue   : Data node – lit une clé Blackboard
+// SetBBValue   : Data node – écrit une clé Blackboard
+// MathOp       : Data node – opération mathématique (+, -, *, /)
+// SubGraph     : Appel d'un sous-graphe (SubTask)
+
+// NOTE: TaskNodeType enum values 0-5 (AtomicTask..Root) are unchanged.
+// The following values extend the enum in TaskGraphTypes.h but cannot be
+// added inline here without modifying the enum definition above.
+// See the extended enum in TaskGraphTypes.h (values 6-17).
+
+/**
+ * @enum DataPinDir
+ * @brief Direction of a data pin on a Visual Script node.
+ */
+enum class DataPinDir : uint8_t {
+    Input,   ///< Value consumed by the node
+    Output   ///< Value produced by the node
+};
+
+/**
+ * @enum ExecPinRole
+ * @brief Role of an exec pin on a Visual Script node.
+ */
+enum class ExecPinRole : uint8_t {
+    In,           ///< Triggers execution of the node
+    Out,          ///< Normal output / Then
+    OutElse,      ///< Else output (Branch)
+    OutLoop,      ///< Loop body output (While, ForEach)
+    OutCompleted, ///< End-of-loop output (While, ForEach, Delay, DoOnce)
+    OutCase       ///< Switch case output (dynamically named)
 };
 
 // ============================================================================
@@ -211,6 +280,22 @@ private:
     std::string m_stringValue;
 
     VariableType m_type;
+};
+
+// ============================================================================
+// ATS Visual Scripting – DataPinDefinition (Phase 1 - 2026-03-08)
+// Declared after TaskValue because it uses TaskValue as a member.
+// ============================================================================
+
+/**
+ * @struct DataPinDefinition
+ * @brief Describes a data pin declared on a Visual Script node.
+ */
+struct DataPinDefinition {
+    std::string  PinName;                          ///< Pin name ("Value", "Result", etc.)
+    VariableType PinType  = VariableType::None;    ///< Type of the data
+    DataPinDir   Dir      = DataPinDir::Input;     ///< Direction
+    TaskValue    Default;                          ///< Default value when not connected
 };
 
 } // namespace Olympe

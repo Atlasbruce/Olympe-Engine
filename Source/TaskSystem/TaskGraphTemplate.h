@@ -50,6 +50,45 @@ struct ParameterBinding {
     std::string          VariableName;              ///< Used when Type == LocalVariable
 };
 
+// ============================================================================
+// ATS Visual Scripting – Template data structures (Phase 1 - 2026-03-08)
+// ============================================================================
+
+/**
+ * @struct ExecPinConnection
+ * @brief Explicit connection between a named exec-out pin of a source node
+ *        and the exec-in pin of a target node.
+ */
+struct ExecPinConnection {
+    int32_t     SourceNodeID  = NODE_INDEX_NONE;
+    std::string SourcePinName;   ///< e.g. "Then", "Else", "Loop", "Completed"
+    int32_t     TargetNodeID  = NODE_INDEX_NONE;
+    std::string TargetPinName;   ///< e.g. "In"
+};
+
+/**
+ * @struct DataPinConnection
+ * @brief Explicit connection between an output data pin of a source node
+ *        and an input data pin of a target node.
+ */
+struct DataPinConnection {
+    int32_t     SourceNodeID  = NODE_INDEX_NONE;
+    std::string SourcePinName;
+    int32_t     TargetNodeID  = NODE_INDEX_NONE;
+    std::string TargetPinName;
+};
+
+/**
+ * @struct BlackboardEntry
+ * @brief Single entry in the graph's declared blackboard schema (local or global).
+ */
+struct BlackboardEntry {
+    std::string  Key;
+    VariableType Type       = VariableType::None;
+    TaskValue    Default;
+    bool         IsGlobal   = false;  ///< false = local scope, true = global BB
+};
+
 /**
  * @struct TaskNodeDefinition
  * @brief Full description of a single node in the task graph.
@@ -70,6 +109,15 @@ struct TaskNodeDefinition {
 
     int32_t NextOnSuccess = NODE_INDEX_NONE;  ///< ID of next node on success  (NODE_INDEX_NONE = none)
     int32_t NextOnFailure = NODE_INDEX_NONE;  ///< ID of next node on failure  (NODE_INDEX_NONE = none)
+
+    // ATS VS extensions (Phase 1)
+    std::vector<DataPinDefinition> DataPins;       ///< Data pins declared on this node
+    std::string                    ConditionID;    ///< For Branch/While/Switch: ATS condition ID
+    std::string                    BBKey;          ///< For GetBBValue/SetBBValue: BB key (scope:key)
+    std::string                    SubGraphPath;   ///< For SubGraph: path to the sub-graph JSON
+    std::vector<std::string>       SwitchCases;    ///< For Switch: ordered case labels
+    float                          DelaySeconds = 0.0f; ///< For Delay: duration in seconds
+    std::string                    MathOperator;   ///< For MathOp: "+", "-", "*", "/"
 };
 
 // ============================================================================
@@ -99,6 +147,21 @@ public:
     std::vector<TaskNodeDefinition> Nodes;          ///< All graph nodes
 
     int32_t RootNodeID = NODE_INDEX_NONE;  ///< ID of the root node (must exist in Nodes)
+
+    // ATS VS extensions (Phase 1)
+    int32_t EntryPointID = NODE_INDEX_NONE;  ///< ID of the EntryPoint node (for VS graphs)
+
+    /// Graph type: "BehaviorTree" (legacy) or "VisualScript" (ATS VS)
+    std::string GraphType = "BehaviorTree";
+
+    /// Local blackboard declared in this graph
+    std::vector<BlackboardEntry> Blackboard;
+
+    /// Explicit exec connections (ATS VS only)
+    std::vector<ExecPinConnection> ExecConnections;
+
+    /// Explicit data connections (ATS VS only)
+    std::vector<DataPinConnection> DataConnections;
 
     // -----------------------------------------------------------------------
     // Operations

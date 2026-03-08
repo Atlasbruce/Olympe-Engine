@@ -21,9 +21,12 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
-#include "../../Core/AssetManager.h"  ///< Provides AssetID and INVALID_ASSET_ID
+#include "../../Core/AssetManager.h"             ///< Provides AssetID and INVALID_ASSET_ID
+#include "../../TaskSystem/TaskGraphTypes.h"     ///< Provides TaskValue and NODE_INDEX_NONE
 
 namespace Olympe {
 
@@ -38,12 +41,17 @@ class IAtomicTask;
  * @details
  * Fields:
  *   - GraphTemplateID     : Identifies which TaskGraphTemplate drives this runner.
- *   - CurrentNodeIndex    : Index into the template's Nodes vector of the active node.
+ *   - CurrentNodeID       : ID of the currently active node (replaces CurrentNodeIndex).
+ *   - CurrentNodeIndex    : @deprecated Index into Nodes vector; use CurrentNodeID instead.
  *   - StateTimer          : Accumulated time (seconds) spent in the current node.
- *   - LocalBlackboardData : Raw byte buffer for per-entity blackboard state.
+ *   - LocalBlackboard     : Typed per-entity blackboard state (replaces LocalBlackboardData).
+ *   - LocalBlackboardData : @deprecated Raw byte buffer; kept for transitional compatibility.
  *   - LastStatus          : Result of the most recently completed node execution.
- *   - activeTask          : Owning pointer to the IAtomicTask instance currently
- *                           executing (nullptr when no task is in flight).
+ *   - activeTask          : Owning pointer to the IAtomicTask instance currently executing.
+ *   - ActiveExecPinName   : Name of the active exec pin on the current node.
+ *   - SequenceChildIndex  : For VSSequence: index of the next child to execute.
+ *   - DoOnceFlags         : Per-node "already fired" flag (for DoOnce nodes).
+ *   - DataPinCache        : Frame-local cache of computed data pin values.
  *
  * @note TaskRunnerComponent is move-only because activeTask is a unique_ptr.
  */
@@ -73,14 +81,19 @@ struct TaskRunnerComponent
     ///        Set to INVALID_ASSET_ID when no template is bound.
     AssetID GraphTemplateID = INVALID_ASSET_ID;
 
-    /// @brief Index of the currently active node in the template's Nodes vector.
+    /// @brief ID of the currently active node (replaces CurrentNodeIndex).
+    int32_t CurrentNodeID    = NODE_INDEX_NONE;  ///< ID du node actif (remplace CurrentNodeIndex)
+
+    /// @deprecated Use CurrentNodeID instead.
     int32_t CurrentNodeIndex = 0;
 
     /// @brief Accumulated time (in seconds) spent in the current node state.
     float StateTimer = 0.0f;
 
-    /// @brief Raw byte buffer for per-entity local blackboard data.
-    ///        The schema and layout are defined by the bound TaskGraphTemplate.
+    /// @brief Typed local blackboard for per-entity state (replaces LocalBlackboardData raw bytes).
+    std::unordered_map<std::string, Olympe::TaskValue> LocalBlackboard;
+
+    /// @deprecated Raw byte buffer – kept for transitional compatibility, will be removed in Phase 2.
     std::vector<uint8_t> LocalBlackboardData;
 
     /// @brief Status returned by the last completed node execution.
@@ -92,6 +105,18 @@ struct TaskRunnerComponent
     ///        re-ticked on the next Process() call.  Replaced (old task
     ///        Abort()ed) when the system advances to a different node.
     std::unique_ptr<IAtomicTask> activeTask;
+
+    /// @brief Name of the active exec pin on the current node (e.g. "Then", "Else", "Loop").
+    std::string ActiveExecPinName;
+
+    /// @brief For VSSequence: index of the next child to execute.
+    int32_t SequenceChildIndex = 0;
+
+    /// @brief Per-node "already fired" flag for DoOnce nodes (key = nodeID).
+    std::unordered_map<int32_t, bool> DoOnceFlags;
+
+    /// @brief Frame-local cache of computed data pin values (key = "nodeID:pinName").
+    std::unordered_map<std::string, Olympe::TaskValue> DataPinCache;
 
     // -----------------------------------------------------------------------
     // Constructors
