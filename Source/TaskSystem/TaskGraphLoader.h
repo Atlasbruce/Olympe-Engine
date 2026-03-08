@@ -11,6 +11,7 @@
  * Supported schema versions:
  *   - schema_version == 2  : legacy BehaviorTree JSON (NodeGraphCore v2 format)
  *   - schema_version == 3  : native TaskGraph JSON format
+ *   - schema_version == 4  : ATS Visual Scripting JSON format (Phase 1)
  *   - schema_version absent: treated as version 2
  *
  * Node type mapping (schema v2):
@@ -104,6 +105,88 @@ private:
      */
     static TaskGraphTemplate* ParseSchemaV3(const json& data,
                                             std::vector<std::string>& outErrors);
+
+    // -----------------------------------------------------------------------
+    // ATS VS schema v4 parsers (Phase 1)
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Parses a schema v4 (ATS Visual Scripting) JSON into a TaskGraphTemplate.
+     */
+    static TaskGraphTemplate* ParseSchemaV4(const json& data,
+                                            std::vector<std::string>& outErrors);
+
+    /**
+     * @brief Parses a single node JSON object (schema v4) into a TaskNodeDefinition.
+     * @param nodeJson   The JSON object for one node.
+     * @param graphType  Graph type string (used to resolve "Sequence" vs "VSSequence").
+     * @param outErrors  Error/warning collector.
+     * @return A populated TaskNodeDefinition.
+     */
+    static TaskNodeDefinition ParseNodeV4(const json& nodeJson,
+                                          const std::string& graphType,
+                                          std::vector<std::string>& outErrors);
+
+    /**
+     * @brief Parses the exec_pins array of a node JSON (informational in Phase 1).
+     */
+    static void ParseExecPins(const json& nodeJson, TaskNodeDefinition& nodeDef);
+
+    /**
+     * @brief Parses the data_pins array of a node JSON and fills nodeDef.DataPins.
+     */
+    static void ParseDataPins(const json& nodeJson, TaskNodeDefinition& nodeDef);
+
+    /**
+     * @brief Parses the blackboard array in the data section and fills tmpl->Blackboard.
+     */
+    static void ParseBlackboard(const json& dataSection,
+                                TaskGraphTemplate* tmpl,
+                                std::vector<std::string>& outErrors);
+
+    /**
+     * @brief Parses exec_connections in the data section and fills tmpl->ExecConnections.
+     */
+    static void ParseExecConnections(const json& dataSection,
+                                     TaskGraphTemplate* tmpl);
+
+    /**
+     * @brief Parses data_connections in the data section and fills tmpl->DataConnections.
+     */
+    static void ParseDataConnections(const json& dataSection,
+                                     TaskGraphTemplate* tmpl);
+
+    // -----------------------------------------------------------------------
+    // Conversion helpers (string → enum)
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Converts a node type string to a TaskNodeType enum value.
+     * @param s         String representation of the node type.
+     * @param graphType Graph type string ("VisualScript" or "BehaviorTree").
+     * @param outOk     Set to false if the string is unrecognised.
+     * @return The corresponding TaskNodeType, or TaskNodeType::AtomicTask on failure.
+     */
+    static TaskNodeType  StringToNodeType(const std::string& s,
+                                          const std::string& graphType,
+                                          bool& outOk);
+
+    /**
+     * @brief Converts a variable type string to a VariableType enum value.
+     * @param s  String representation ("Bool", "Int", "Float", etc.).
+     * @return The corresponding VariableType, or VariableType::None if unknown.
+     */
+    static VariableType  StringToVariableType(const std::string& s);
+
+    /**
+     * @brief Converts a data pin direction string ("Input"/"Output") to DataPinDir.
+     */
+    static DataPinDir    StringToDataPinDir(const std::string& s);
+
+    /**
+     * @brief Converts an exec pin role string to ExecPinRole.
+     */
+    static ExecPinRole   StringToExecPinRole(const std::string& s);
 
     /**
      * @brief Parses a single node JSON object (schema v2) into a TaskNodeDefinition.
