@@ -134,6 +134,7 @@
     <ClCompile Include="Source\system\SystemMenu.cpp" />
     <ClCompile Include="source\system\system_utils.cpp" />
     <ClCompile Include="Source\system\ViewportManager.cpp" />
+    <ClCompile Include="Source\TaskSystem\VSGraphExecutor.cpp" />
     <ClCompile Include="Source\third_party\imgui\backends\imgui_impl_sdl3.cpp" />
     <ClCompile Include="Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.cpp" />
     <ClCompile Include="Source\third_party\imgui\imgui.cpp" />
@@ -303,6 +304,7 @@
     <ClInclude Include="Source\system\ViewportManager.h" />
     <ClInclude Include="Source\Task.h" />
     <ClInclude Include="Source\TaskSystem\TaskWorldFacade.h" />
+    <ClInclude Include="Source\TaskSystem\VSGraphExecutor.h" />
     <ClInclude Include="Source\third_party\imgui\backends\imgui_impl_sdl3.h" />
     <ClInclude Include="Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.h" />
     <ClInclude Include="Source\third_party\imgui\imconfig.h" />

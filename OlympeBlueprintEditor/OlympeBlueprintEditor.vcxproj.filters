@@ -412,6 +412,18 @@
     <ClCompile Include="..\Source\EditorCommon\EditorAutosaveManager.cpp">
       <Filter>Source Files\BlueprintEditor</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\AI\BehaviorTreeDebugWindow_NodeGraph.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\NodeGraphShared\BTGraphDocumentConverter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\NodeGraphShared\RenderHelpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\TaskSystem\VSGraphExecutor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -842,6 +854,8 @@
     <ClInclude Include="..\Source\EditorCommon\EditorAutosaveManager.h">
       <Filter>Source Files\BlueprintEditor</Filter>
     </ClInclude>
+    <ClInclude Include="..\Source\NodeGraphShared\RenderHelpers.h" />
+    <ClInclude Include="..\Source\TaskSystem\VSGraphExecutor.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />

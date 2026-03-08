@@ -115,6 +115,7 @@
     <ClCompile Include="..\Source\TaskSystem\TaskGraphTemplate.cpp" />
     <ClCompile Include="..\Source\TaskSystem\TaskGraphTypes.cpp" />
     <ClCompile Include="..\Source\TaskSystem\TaskSystem.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\VSGraphExecutor.cpp" />
     <ClCompile Include="..\Source\third_party\nfd\nfd_win.cpp" />
     <ClCompile Include="..\Source\VideoGame.cpp" />
     <ClCompile Include="..\Source\engine_utils.cpp" />
@@ -255,6 +256,7 @@
     <ClInclude Include="..\Source\TaskSystem\TaskGraphTypes.h" />
     <ClInclude Include="..\Source\TaskSystem\TaskSystem.h" />
     <ClInclude Include="..\Source\TaskSystem\TaskWorldFacade.h" />
+    <ClInclude Include="..\Source\TaskSystem\VSGraphExecutor.h" />
     <ClInclude Include="..\Source\third_party\nfd\nfd.h" />
     <ClInclude Include="..\Source\third_party\nfd\nfd.hpp" />
     <ClInclude Include="..\Source\vector.h" />

@@ -138,6 +138,7 @@
     <ClCompile Include="Source\World.cpp" />
     <ClCompile Include="Source\AI\BehaviorTreeDebugWindow_NodeGraph.cpp" />
     <ClCompile Include="Source\NodeGraphShared\BTGraphDocumentConverter.cpp" />
+    <ClCompile Include="Source\TaskSystem\VSGraphExecutor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -312,6 +313,7 @@
     <ClInclude Include="Source\vector.h" />
     <ClInclude Include="Source\VideoGame.h" />
     <ClInclude Include="Source\World.h" />
+    <ClInclude Include="Source\TaskSystem\VSGraphExecutor.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
