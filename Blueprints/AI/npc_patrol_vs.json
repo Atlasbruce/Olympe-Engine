@@ -1,0 +1,62 @@
+{
+  "schema_version": 4,
+  "id": "npc-patrol-001",
+  "name": "NPC Patrol",
+  "graphType": "VisualScript",
+  "blackboard": [
+    { "key": "waypoint_index", "type": "Int",    "value": 0 },
+    { "key": "patrol_speed",   "type": "Float",  "value": 150.0 },
+    { "key": "current_state",  "type": "String", "value": "Idle" }
+  ],
+  "nodes": [
+    {
+      "id": 0,
+      "type": "EntryPoint",
+      "position": { "x": 50, "y": 200 }
+    },
+    {
+      "id": 1,
+      "type": "AtomicTask",
+      "taskType": "Task_ChangeState",
+      "params": { "StateName": "Patrolling" },
+      "position": { "x": 250, "y": 200 }
+    },
+    {
+      "id": 2,
+      "type": "AtomicTask",
+      "taskType": "Task_GotoPosition",
+      "params": { "TargetX": 100.0, "TargetY": 100.0, "Speed": 150.0 },
+      "position": { "x": 450, "y": 200 }
+    },
+    {
+      "id": 3,
+      "type": "AtomicTask",
+      "taskType": "Task_Wait",
+      "params": { "Duration": 1.0 },
+      "position": { "x": 650, "y": 200 }
+    },
+    {
+      "id": 4,
+      "type": "AtomicTask",
+      "taskType": "Task_GotoPosition",
+      "params": { "TargetX": 400.0, "TargetY": 100.0, "Speed": 150.0 },
+      "position": { "x": 450, "y": 350 }
+    },
+    {
+      "id": 5,
+      "type": "AtomicTask",
+      "taskType": "Task_Wait",
+      "params": { "Duration": 1.0 },
+      "position": { "x": 650, "y": 350 }
+    }
+  ],
+  "execConnections": [
+    { "fromNode": 0, "fromPin": "Exec",      "toNode": 1 },
+    { "fromNode": 1, "fromPin": "Completed", "toNode": 2 },
+    { "fromNode": 2, "fromPin": "Completed", "toNode": 3 },
+    { "fromNode": 3, "fromPin": "Completed", "toNode": 4 },
+    { "fromNode": 4, "fromPin": "Completed", "toNode": 5 },
+    { "fromNode": 5, "fromPin": "Completed", "toNode": 2 }
+  ],
+  "dataConnections": []
+}

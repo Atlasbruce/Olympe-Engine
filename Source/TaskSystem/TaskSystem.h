@@ -1,33 +1,36 @@
 /**
  * @file TaskSystem.h
  * @brief ECS system that iterates TaskRunnerComponent entities and drives
- *        task graph execution each frame.
+ *        ATS Visual Script graph execution each frame.
  * @author Olympe Engine
- * @date 2026-02-22
+ * @date 2026-02-22 (refactored Phase 4 - 2026-03-08)
  *
  * @details
  * TaskSystem inherits from ECS_System and is registered in the World alongside
  * all other runtime systems.  Each frame, Process() iterates the set of
  * entities that own a TaskRunnerComponent, retrieves the bound
- * TaskGraphTemplate via AssetManager, and delegates to ExecuteNode() to
- * advance execution.
+ * TaskGraphTemplate via AssetManager, and delegates to ExecuteVSFrame() to
+ * advance Visual Script graph execution.
  *
- * ### AtomicTask lifecycle (Phase 2.C)
+ * ### Execution paths (Phase 4)
+ * - VS graphs (graphType == "VisualScript"): dispatched via ExecuteVSFrame()
+ *   which calls VSGraphExecutor::ExecuteFrame().  This is the PRIMARY path.
+ * - Legacy BT-style graphs: ExecuteNode() is retained for direct invocation
+ *   by unit tests; Process() no longer calls it (VS is the only path in the
+ *   main loop).
+ *
+ * ### AtomicTask lifecycle (Phase 2.C / Phase 4)
  * ExecuteNode() implements the following lifecycle for AtomicTask nodes:
- *
  *  1. On first entry to a node, create the IAtomicTask instance via
  *     AtomicTaskRegistry::Create() and store it in runner.activeTask.
- *  2. Each tick, call runner.activeTask->Execute(params).
- *  3. If Execute returns TaskStatus::Running, keep activeTask and return -
- *     the task will be ticked again on the next frame.
- *  4. If Execute returns Success or Failure, destroy activeTask (reset the
- *     unique_ptr), set runner.LastStatus, reset runner.StateTimer, and
- *     advance runner.CurrentNodeIndex to NextOnSuccess / NextOnFailure.
- *     NODE_INDEX_NONE is used as the sentinel "graph complete" value.
- *  5. If runner.CurrentNodeIndex is set to NODE_INDEX_NONE externally while
- *     a task is Running (e.g. the entity is removed or the graph is
- *     interrupted), the next call to ExecuteNode() calls activeTask->Abort()
- *     before releasing the instance.
+ *  2. Each tick, call runner.activeTask->ExecuteWithContext(ctx, params).
+ *  3. Running => keep activeTask; accumulate StateTimer; return.
+ *  4. Success/Failure => reset activeTask; set LastStatus; reset StateTimer;
+ *     advance CurrentNodeIndex via TransitionToNextNode().
+ *     NODE_INDEX_NONE signals that the graph is complete.
+ *  5. If runner.CurrentNodeIndex is set to NODE_INDEX_NONE while a task is
+ *     Running, the next call to ExecuteNode() calls activeTask->Abort() before
+ *     releasing the instance.
  *
  * C++14 compliant - no C++17/20 features.
  */

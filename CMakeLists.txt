@@ -190,6 +190,7 @@ if(BUILD_TESTS)
         Tests/TaskSystem/TaskGraphLoaderTest.cpp
         Tests/TestStubs.cpp
         Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphMigrator_v3_to_v4.cpp
         Source/TaskSystem/TaskGraphTemplate.cpp
         Source/TaskSystem/TaskGraphTypes.cpp
     )
@@ -217,6 +218,7 @@ if(BUILD_TESTS)
         Tests/TestStubs.cpp
         Source/Core/AssetManager.cpp
         Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphMigrator_v3_to_v4.cpp
         Source/TaskSystem/TaskGraphTemplate.cpp
         Source/TaskSystem/TaskGraphTypes.cpp
     )
@@ -252,6 +254,7 @@ if(BUILD_TESTS)
         Source/ECS/Components/TaskRunnerComponent.cpp
         Source/Core/AssetManager.cpp
         Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphMigrator_v3_to_v4.cpp
         Source/TaskSystem/TaskGraphTemplate.cpp
         Source/TaskSystem/TaskGraphTypes.cpp
     )
@@ -374,6 +377,7 @@ if(BUILD_TESTS)
         Source/ECS/Components/TaskRunnerComponent.cpp
         Source/Core/AssetManager.cpp
         Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphMigrator_v3_to_v4.cpp
         Source/TaskSystem/TaskGraphTemplate.cpp
         Source/TaskSystem/TaskGraphTypes.cpp
     )
@@ -409,6 +413,7 @@ if(BUILD_TESTS)
         Source/ECS/Components/TaskRunnerComponent.cpp
         Source/Core/AssetManager.cpp
         Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphMigrator_v3_to_v4.cpp
         Source/TaskSystem/TaskGraphTemplate.cpp
         Source/TaskSystem/TaskGraphTypes.cpp
         Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp
@@ -445,6 +450,7 @@ if(BUILD_TESTS)
         Source/ECS/Components/TaskRunnerComponent.cpp
         Source/Core/AssetManager.cpp
         Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphMigrator_v3_to_v4.cpp
         Source/TaskSystem/TaskGraphTemplate.cpp
         Source/TaskSystem/TaskGraphTypes.cpp
         Source/TaskSystem/AtomicTasks/Movement/Task_MoveToLocation.cpp
@@ -483,6 +489,7 @@ if(BUILD_TESTS)
         Source/ECS/Components/TaskRunnerComponent.cpp
         Source/Core/AssetManager.cpp
         Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphMigrator_v3_to_v4.cpp
         Source/TaskSystem/TaskGraphTemplate.cpp
         Source/TaskSystem/TaskGraphTypes.cpp
         Source/TaskSystem/AtomicTasks/AI/Task_RequestPathfinding.cpp
@@ -588,6 +595,7 @@ if(BUILD_TESTS)
         Source/ECS/Components/TaskRunnerComponent.cpp
         Source/Core/AssetManager.cpp
         Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphMigrator_v3_to_v4.cpp
         Source/TaskSystem/TaskGraphTemplate.cpp
         Source/TaskSystem/TaskGraphTypes.cpp
     )
