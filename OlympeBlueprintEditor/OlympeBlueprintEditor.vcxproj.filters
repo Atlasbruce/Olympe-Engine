@@ -424,6 +424,9 @@
     <ClCompile Include="..\Source\TaskSystem\VSGraphExecutor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\TaskSystem\TaskGraphMigrator_v3_to_v4.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -856,6 +859,7 @@
     </ClInclude>
     <ClInclude Include="..\Source\NodeGraphShared\RenderHelpers.h" />
     <ClInclude Include="..\Source\TaskSystem\VSGraphExecutor.h" />
+    <ClInclude Include="..\Source\TaskSystem\TaskGraphMigrator_v3_to_v4.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />

@@ -65,17 +65,21 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::Shutdown()
     {
+        // 1. Flush autosave first
         m_autosave.Flush();
-        DestroySeparateWindow();
 
-        // Shutdown NodeGraph debug panel before destroying the ImNodes context
+        // 2. Shutdown NodeGraph BEFORE destroying window (needs ImGui/ImNodes contexts alive)
         ShutdownNodeGraphDebugMode();
 
+        // 3. Destroy ImNodes context BEFORE destroying ImGui context
         if (m_imnodesInitialized)
         {
             ImNodes::DestroyContext();
             m_imnodesInitialized = false;
         }
+
+        // 4. Destroy window and ImGui context LAST
+        DestroySeparateWindow();
 
         m_isInitialized = false;
     }
@@ -160,15 +164,21 @@ namespace Olympe
         if (m_separateImGuiContext != nullptr)
         {
             ImGui::SetCurrentContext(m_separateImGuiContext);
+
+            // Shutdown backends BEFORE destroying context
             ImGui_ImplSDLRenderer3_Shutdown();
             ImGui_ImplSDL3_Shutdown();
+
+            // Destroy ImGui context
             ImGui::DestroyContext(m_separateImGuiContext);
             m_separateImGuiContext = nullptr;
         }
 
-        if (previousContext != m_separateImGuiContext)
+        // Restore context BEFORE destroying SDL resources
+        if (previousContext != nullptr && previousContext != m_separateImGuiContext)
             ImGui::SetCurrentContext(previousContext);
 
+        // Destroy SDL resources LAST
         if (m_separateRenderer != nullptr)
         {
             SDL_DestroyRenderer(m_separateRenderer);

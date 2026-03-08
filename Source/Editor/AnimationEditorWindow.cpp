@@ -1391,34 +1391,40 @@ void AnimationEditorWindow::DestroySeparateWindow()
 {
     if (!m_separateWindow)
         return;
-    
+
     // Save current context
     ImGuiContext* mainContext = ImGui::GetCurrentContext();
-    
+
     if (m_separateImGuiContext)
     {
         ImGui::SetCurrentContext(m_separateImGuiContext);
+
+        // Shutdown backends BEFORE destroying context
         ImGui_ImplSDLRenderer3_Shutdown();
         ImGui_ImplSDL3_Shutdown();
+
+        // Destroy ImGui context
         ImGui::DestroyContext(m_separateImGuiContext);
         m_separateImGuiContext = nullptr;
     }
-    
-    // Restore main context
-    ImGui::SetCurrentContext(mainContext);
-    
+
+    // Restore main context BEFORE destroying SDL resources
+    if (mainContext != nullptr && mainContext != m_separateImGuiContext)
+        ImGui::SetCurrentContext(mainContext);
+
+    // Destroy SDL resources LAST
     if (m_separateRenderer)
     {
         SDL_DestroyRenderer(m_separateRenderer);
         m_separateRenderer = nullptr;
     }
-    
+
     if (m_separateWindow)
     {
         SDL_DestroyWindow(m_separateWindow);
         m_separateWindow = nullptr;
     }
-    
+
     SYSTEM_LOG << "[AnimationEditor] Separate window destroyed\n";
 }
 
