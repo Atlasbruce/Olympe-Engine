@@ -7,6 +7,9 @@
 #include "BlueprintEditor.h"
 #include "TemplateBrowserPanel.h"
 #include "HistoryPanel.h"
+#include "VisualScriptEditorPanel.h"
+#include "DebugPanel.h"
+#include "ProfilerPanel.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
 #include <iostream>
@@ -32,10 +35,16 @@ namespace Olympe
         , m_ShowPropertyPanel(false)   // Deprecated - merged into Inspector
         , m_ShowTemplateBrowser(false)
         , m_ShowHistory(false)
+        , m_ShowDebugger(false)
+        , m_ShowProfiler(false)
+        , m_ShowVSEditor(false)
         , m_ShowPreferences(false)
         , m_ShowShortcuts(false)
         , m_TemplateBrowserPanel(nullptr)
         , m_HistoryPanel(nullptr)
+        , m_VSEditorPanel(nullptr)
+        , m_DebugPanel(nullptr)
+        , m_ProfilerPanel(nullptr)
     {
         m_NewBlueprintNameBuffer[0] = '\0';
         m_FilepathBuffer[0] = '\0';
@@ -43,6 +52,24 @@ namespace Olympe
 
     BlueprintEditorGUI::~BlueprintEditorGUI()
     {
+        if (m_ProfilerPanel)
+        {
+            delete m_ProfilerPanel;
+            m_ProfilerPanel = nullptr;
+        }
+
+        if (m_DebugPanel)
+        {
+            delete m_DebugPanel;
+            m_DebugPanel = nullptr;
+        }
+
+        if (m_VSEditorPanel)
+        {
+            delete m_VSEditorPanel;
+            m_VSEditorPanel = nullptr;
+        }
+
         if (m_HistoryPanel)
         {
             delete m_HistoryPanel;
@@ -86,10 +113,42 @@ namespace Olympe
         // Initialize history panel
         m_HistoryPanel = new HistoryPanel();
         m_HistoryPanel->Initialize();
+
+        // Phase 5: Initialize VS editor, debugger, and profiler panels
+        m_VSEditorPanel = new VisualScriptEditorPanel();
+        m_VSEditorPanel->Initialize();
+
+        m_DebugPanel = new DebugPanel();
+        m_DebugPanel->Initialize();
+
+        m_ProfilerPanel = new ProfilerPanel();
+        m_ProfilerPanel->Initialize();
     }
 
     void BlueprintEditorGUI::Shutdown()
     {
+        // Phase 5: Shutdown VS editor, debugger, and profiler panels
+        if (m_ProfilerPanel)
+        {
+            m_ProfilerPanel->Shutdown();
+            delete m_ProfilerPanel;
+            m_ProfilerPanel = nullptr;
+        }
+
+        if (m_DebugPanel)
+        {
+            m_DebugPanel->Shutdown();
+            delete m_DebugPanel;
+            m_DebugPanel = nullptr;
+        }
+
+        if (m_VSEditorPanel)
+        {
+            m_VSEditorPanel->Shutdown();
+            delete m_VSEditorPanel;
+            m_VSEditorPanel = nullptr;
+        }
+
         // Shutdown panels
         if (m_HistoryPanel)
         {
@@ -317,6 +376,9 @@ namespace Olympe
                 ImGui::Separator();
                 ImGui::MenuItem("Template Browser", nullptr, &m_ShowTemplateBrowser);  // Phase 5
                 ImGui::MenuItem("History", nullptr, &m_ShowHistory);  // Phase 6
+                ImGui::MenuItem("VS Graph Editor", nullptr, &m_ShowVSEditor);    // Phase 5 (new)
+                ImGui::MenuItem("Debugger", nullptr, &m_ShowDebugger);           // Phase 5 (new)
+                ImGui::MenuItem("Profiler", nullptr, &m_ShowProfiler);           // Phase 5 (new)
                 
                 ImGui::Separator();
                 
@@ -384,6 +446,18 @@ namespace Olympe
         // === Phase 6: History Panel (optional) ===
         if (m_ShowHistory && m_HistoryPanel)
             m_HistoryPanel->Render();
+
+        // === Phase 5 (new): VS Graph Editor ===
+        if (m_ShowVSEditor && m_VSEditorPanel)
+            m_VSEditorPanel->Render();
+
+        // === Phase 5 (new): Debugger Panel ===
+        if (m_ShowDebugger && m_DebugPanel)
+            m_DebugPanel->Render();
+
+        // === Phase 5 (new): Profiler Panel ===
+        if (m_ShowProfiler && m_ProfilerPanel)
+            m_ProfilerPanel->Render();
 
         // Status bar at bottom
         RenderStatusBar();
