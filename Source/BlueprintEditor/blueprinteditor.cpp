@@ -19,6 +19,7 @@
 #include "BehaviorTreeEditorPlugin.h"
 #include "EntityPrefabEditorPlugin.h"
 #include "AdditionalEditorPlugins.h"
+#include "SubgraphMigrator.h"
 #include "../json_helper.h"
 #include <algorithm>
 #include <iostream>
@@ -1122,7 +1123,8 @@ namespace Olympe
     {
         std::cout << "BlueprintEditor: Starting migration..." << std::endl;
         
-        BlueprintMigrator migrator;
+        BlueprintMigrator v1Migrator;
+        SubgraphMigrator  sgMigrator;
         int successCount = 0;
         int failCount = 0;
         int skippedCount = 0;
@@ -1133,24 +1135,27 @@ namespace Olympe
         {
             try
             {
-                json v1;
-                if (!JsonHelper::LoadJsonFromFile(path, v1))
+                json blueprint;
+                if (!JsonHelper::LoadJsonFromFile(path, blueprint))
                 {
                     std::cerr << "Failed to load: " << path << std::endl;
                     failCount++;
                     continue;
                 }
-                
-                // Check if already v2
-                if (migrator.IsV2(v1))
+
+                bool needsV2Migration = !v1Migrator.IsV2(blueprint);
+                bool needsSGMigration = sgMigrator.NeedsMigration(
+                    needsV2Migration ? v1Migrator.MigrateToV2(blueprint) : blueprint);
+
+                if (!needsV2Migration && !needsSGMigration)
                 {
-                    std::cout << "Skipping (already v2): " << path << std::endl;
+                    std::cout << "Skipping (already current format): " << path << std::endl;
                     skippedCount++;
                     continue;
                 }
                 
-                // Create backup
-                std::string backupPath = path + ".v1.backup";
+                // Create backup before any write.
+                std::string backupPath = path + ".pre_v5.backup";
                 try
                 {
                     fs::copy_file(path, backupPath, fs::copy_options::overwrite_existing);
@@ -1162,10 +1167,21 @@ namespace Olympe
                     continue;
                 }
                 
-                // Migrate
-                json v2 = migrator.MigrateToV2(v1);
-                
-                // Save
+                // Step 1: v1 → v2 if needed.
+                if (needsV2Migration)
+                {
+                    blueprint = v1Migrator.MigrateToV2(blueprint);
+                    std::cout << "[Migration] v1→v2: " << path << std::endl;
+                }
+
+                // Step 2: legacy v2 → Phase 8 flat-dictionary format if needed.
+                if (sgMigrator.NeedsMigration(blueprint))
+                {
+                    blueprint = sgMigrator.Migrate(blueprint);
+                    std::cout << "[Migration] v2→v5 (subgraph): " << path << std::endl;
+                }
+
+                // Save final result.
                 std::ofstream file(path);
                 if (!file.is_open())
                 {
@@ -1174,7 +1190,7 @@ namespace Olympe
                     continue;
                 }
                 
-                file << v2.dump(2);
+                file << blueprint.dump(2);
                 file.close();
                 
                 std::cout << "Migrated: " << path << std::endl;

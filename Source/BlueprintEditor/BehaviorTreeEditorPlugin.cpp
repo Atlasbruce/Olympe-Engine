@@ -3,6 +3,7 @@
  */
 
 #include "BehaviorTreeEditorPlugin.h"
+#include "SubgraphMigrator.h"
 #include "../../Source/third_party/imgui/imgui.h"
 #include <chrono>
 #include <sstream>
@@ -165,6 +166,15 @@ namespace Olympe
                         }
                     }
                 }
+            }
+        }
+
+        // Phase 8: validate subgraph references and circular dependencies.
+        {
+            std::string subgraphError;
+            if (!SubgraphMigrator::ValidateSubgraphReferences(blueprint, subgraphError))
+            {
+                errors.push_back(ValidationError(-1, "", subgraphError, ErrorSeverity::Error));
             }
         }
         

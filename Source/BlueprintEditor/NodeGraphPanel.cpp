@@ -72,6 +72,11 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
     {
         m_NodeNameBuffer[0] = '\0';
         m_ContextMenuSearch[0] = '\0';
+        m_NewSubgraphNameBuffer[0] = '\0';
+
+        // Phase 8: seed the tab list with the root graph tab.
+        m_SubgraphTabs.emplace_back("root", "Root", "root");
+        m_ActiveSubgraphTabIndex = 0;
     }
 
     NodeGraphPanel::~NodeGraphPanel()
@@ -1680,4 +1685,153 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             ImGui::EndPopup();
         }
     }
+
+// ============================================================================
+// Phase 8: Subgraph tab system
+// ============================================================================
+
+    void NodeGraphPanel::RenderSubgraphTabBar()
+    {
+        if (ImGui::BeginTabBar("SubgraphTabs"))
+        {
+            for (int i = 0; i < (int)m_SubgraphTabs.size(); ++i)
+            {
+                GraphTab& tab = m_SubgraphTabs[i];
+
+                // Build label (add dirty marker when modified).
+                std::string label = tab.displayName;
+                if (tab.isDirty)
+                    label += " *";
+
+                ImGuiTabItemFlags flags = ImGuiTabItemFlags_None;
+                if (i == m_ActiveSubgraphTabIndex)
+                    flags |= ImGuiTabItemFlags_SetSelected;
+
+                // Root tab cannot be closed; subgraph tabs show an X button.
+                bool tabOpen = true;
+                bool* pOpen = (i == 0) ? nullptr : &tabOpen;
+
+                if (ImGui::BeginTabItem(label.c_str(), pOpen, flags))
+                {
+                    m_ActiveSubgraphTabIndex = i;
+                    ImGui::EndTabItem();
+                }
+
+                if (pOpen && !tabOpen)
+                    CloseSubgraphTab(i);
+            }
+
+            // "+ New SubGraph" trailing button.
+            if (ImGui::TabItemButton("+ New SubGraph", ImGuiTabItemFlags_Trailing))
+                ImGui::OpenPopup("NewSubgraphPopup");
+
+            ImGui::EndTabBar();
+        }
+
+        // New SubGraph name popup.
+        if (ImGui::BeginPopup("NewSubgraphPopup"))
+        {
+            ImGui::Text("SubGraph name:");
+            ImGui::SetNextItemWidth(200.0f);
+            ImGui::InputText("##newsgname", m_NewSubgraphNameBuffer,
+                             sizeof(m_NewSubgraphNameBuffer));
+
+            if (ImGui::Button("Create") ||
+                (ImGui::IsItemFocused() &&
+                 ImGui::IsKeyPressed(ImGuiKey_Enter)))
+            {
+                std::string name(m_NewSubgraphNameBuffer);
+                if (!name.empty())
+                {
+                    CreateEmptySubgraph(name);
+                    m_NewSubgraphNameBuffer[0] = '\0';
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel"))
+            {
+                m_NewSubgraphNameBuffer[0] = '\0';
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        }
+    }
+
+    void NodeGraphPanel::OpenSubgraphTab(const std::string& subgraphUUID,
+                                          const std::string& displayName)
+    {
+        // Check whether the tab is already open.
+        for (int i = 0; i < (int)m_SubgraphTabs.size(); ++i)
+        {
+            if (m_SubgraphTabs[i].tabID == subgraphUUID)
+            {
+                m_ActiveSubgraphTabIndex = i;
+                return;
+            }
+        }
+
+        // Not open yet — create a new tab.
+        std::string path = "subgraphs/" + subgraphUUID;
+        m_SubgraphTabs.emplace_back(subgraphUUID, displayName, path);
+        m_ActiveSubgraphTabIndex = (int)m_SubgraphTabs.size() - 1;
+
+        std::cout << "[NodeGraphPanel] Opened subgraph tab: " << displayName
+                  << " (" << subgraphUUID << ")\n";
+    }
+
+    void NodeGraphPanel::CloseSubgraphTab(int index)
+    {
+        // Index 0 is the root graph — never close it.
+        if (index <= 0 || index >= (int)m_SubgraphTabs.size())
+            return;
+        std::cout << "[NodeGraphPanel] Closed subgraph tab: "
+                  << m_SubgraphTabs[index].displayName << "\n";
+
+        m_SubgraphTabs.erase(m_SubgraphTabs.begin() + index);
+
+        // Clamp active index.
+        if (m_ActiveSubgraphTabIndex >= (int)m_SubgraphTabs.size())
+            m_ActiveSubgraphTabIndex = (int)m_SubgraphTabs.size() - 1;
+        if (m_ActiveSubgraphTabIndex < 0)
+            m_ActiveSubgraphTabIndex = 0;
+    }
+
+    void NodeGraphPanel::CreateEmptySubgraph(const std::string& name)
+    {
+        // Use a monotonically-increasing counter to ensure UUIDs remain unique
+        // even when subgraph tabs are closed and new ones are created later.
+        static int s_SubgraphCounter = 0;
+        ++s_SubgraphCounter;
+
+        std::string uuid = "sg_" + std::to_string(s_SubgraphCounter) + "_" + name;
+        // Replace spaces with underscores for a valid key.
+        std::replace(uuid.begin(), uuid.end(), ' ', '_');
+
+        std::cout << "[NodeGraphPanel] Created empty subgraph '" << name
+                  << "' with UUID: " << uuid << "\n";
+
+        // Open it in a new tab.
+        OpenSubgraphTab(uuid, name);
+    }
+
+    const GraphTab* NodeGraphPanel::GetActiveTab() const
+    {
+        if (m_ActiveSubgraphTabIndex >= 0 &&
+            m_ActiveSubgraphTabIndex < (int)m_SubgraphTabs.size())
+        {
+            return &m_SubgraphTabs[m_ActiveSubgraphTabIndex];
+        }
+        return nullptr;
+    }
+
+    std::string NodeGraphPanel::GetActiveSubgraphUUID() const
+    {
+        const GraphTab* tab = GetActiveTab();
+        if (tab && tab->tabID != "root")
+            return tab->tabID;
+        return "";
+    }
+
 }

@@ -24,11 +24,13 @@ namespace Olympe
         BT_Action,
         BT_Condition,
         BT_Decorator,
-        
+        BT_SubGraph,        ///< Phase 8: references a subgraph by UUID (BehaviorTree)
+
         // HFSM nodes
         HFSM_State,
         HFSM_Transition,
-        
+        HFSM_SubGraph,      ///< Phase 8: references a subgraph by UUID (HFSM)
+
         // Generic
         Comment
     };
@@ -43,8 +45,10 @@ namespace Olympe
             case NodeType::BT_Action: return "Action";
             case NodeType::BT_Condition: return "Condition";
             case NodeType::BT_Decorator: return "Decorator";
+            case NodeType::BT_SubGraph: return "SubGraph";
             case NodeType::HFSM_State: return "State";
             case NodeType::HFSM_Transition: return "Transition";
+            case NodeType::HFSM_SubGraph: return "HFSMSubGraph";
             case NodeType::Comment: return "Comment";
             default: return "Unknown";
         }
@@ -58,8 +62,10 @@ namespace Olympe
         if (str == "Action") return NodeType::BT_Action;
         if (str == "Condition") return NodeType::BT_Condition;
         if (str == "Decorator") return NodeType::BT_Decorator;
+        if (str == "SubGraph") return NodeType::BT_SubGraph;
         if (str == "State") return NodeType::HFSM_State;
         if (str == "Transition") return NodeType::HFSM_Transition;
+        if (str == "HFSMSubGraph") return NodeType::HFSM_SubGraph;
         if (str == "Comment") return NodeType::Comment;
         return NodeType::BT_Action; // Default
     }
@@ -82,6 +88,10 @@ namespace Olympe
         // For Decorator nodes
         std::string decoratorType;
         
+        // Phase 8: UUID reference for BT_SubGraph / HFSM_SubGraph nodes.
+        // Empty string means this node is not a subgraph reference.
+        std::string subgraphUUID;
+
         // Generic parameters (key-value pairs)
         std::map<std::string, std::string> parameters;
         
