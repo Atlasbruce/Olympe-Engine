@@ -45,6 +45,25 @@ TaskGraphTemplate* TaskGraphLoader::LoadFromFile(const std::string& path,
 }
 
 // ============================================================================
+// Public: LoadFromJsonString
+// ============================================================================
+
+TaskGraphTemplate* TaskGraphLoader::LoadFromJsonString(const std::string& jsonStr,
+                                                       std::vector<std::string>& outErrors)
+{
+    try
+    {
+        json data = json::parse(jsonStr);
+        return LoadFromJson(data, outErrors);
+    }
+    catch (const std::exception& ex)
+    {
+        outErrors.push_back(std::string("JSON parse error: ") + ex.what());
+        return nullptr;
+    }
+}
+
+// ============================================================================
 // Public: LoadFromJson
 // ============================================================================
 

@@ -1,0 +1,25 @@
+{
+  "schema_version": 4,
+  "graphType": "VisualScript",
+  "name": "TestSubGraph",
+  "isSubGraph": true,
+  "inputParameters": [
+    { "name": "InputValue", "type": "Int" }
+  ],
+  "outputParameters": [
+    { "name": "OutputValue", "type": "Int" }
+  ],
+  "blackboard": [
+    { "key": "InputValue",  "type": "Int", "default": 0 },
+    { "key": "OutputValue", "type": "Int", "default": 0 }
+  ],
+  "nodes": [
+    {
+      "id": 1,
+      "type": "EntryPoint",
+      "label": "Start"
+    }
+  ],
+  "execConnections": [],
+  "dataConnections": []
+}

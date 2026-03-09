@@ -1,264 +1,308 @@
 {
-  "blueprintType": "BehaviorTree",
-  "data": {
-    "nodes": [
-      {
-        "children": [
-          2,
-          10,
-          20
-        ],
-        "id": 1,
-        "name": "Root Selector",
-        "parameters": {},
-        "position": {
-          "x": -48,
-          "y": 208
-        },
-        "type": "Selector"
-      },
-      {
-        "children": [
-          3,
-          4,
-          5,
-          6
-        ],
-        "id": 2,
-        "name": "Combat Mode Branch",
-        "parameters": {},
-        "position": {
-          "x": 224,
-          "y": 384
-        },
-        "type": "Sequence"
-      },
-      {
-        "children": [],
-        "conditionType": "CheckBlackboardValue",
-        "id": 3,
-        "name": "Check AIMode == Combat",
-        "parameters": {
-          "key": "AIMode",
-          "operator": "Equals",
-          "value": "3"
-        },
-        "position": {
-          "x": 480,
-          "y": 368
-        },
-        "type": "Condition"
-      },
-      {
-        "children": [],
-        "conditionType": "HasTarget",
-        "id": 4,
-        "name": "Has Target?",
-        "parameters": {},
-        "position": {
-          "x": 480,
-          "y": 480
-        },
-        "type": "Condition"
-      },
-      {
-        "actionType": "SetMoveGoalToTarget",
-        "children": [],
-        "id": 5,
-        "name": "Move To Target",
-        "parameters": {},
-        "position": {
-          "x": 480,
-          "y": 592
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "AttackIfClose",
-        "children": [],
-        "id": 6,
-        "name": "Attack Target",
-        "parameters": {},
-        "position": {
-          "x": 480,
-          "y": 704
-        },
-        "type": "Action"
-      },
-      {
-        "children": [
-          11,
-          12,
-          13,
-          14
-        ],
-        "id": 10,
-        "name": "Patrol Mode Branch",
-        "parameters": {},
-        "position": {
-          "x": 672,
-          "y": 224
-        },
-        "type": "Sequence"
-      },
-      {
-        "children": [],
-        "conditionType": "CheckBlackboardValue",
-        "id": 11,
-        "name": "Check AIMode == Patrol",
-        "parameters": {
-          "key": "AIMode",
-          "operator": "Equals",
-          "value": "2"
-        },
-        "position": {
-          "x": 912,
-          "y": 64
-        },
-        "type": "Condition"
-      },
-      {
-        "actionType": "PatrolPickNextPoint",
-        "children": [],
-        "id": 12,
-        "name": "Get Next Patrol Point",
-        "parameters": {},
-        "position": {
-          "x": 912,
-          "y": 176
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "SetMoveGoalToPatrolPoint",
-        "children": [],
-        "id": 13,
-        "name": "Set Move Goal to Patrol Point",
-        "parameters": {},
-        "position": {
-          "x": 912,
-          "y": 288
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "MoveToGoal",
-        "children": [],
-        "id": 14,
-        "name": "Move To Goal",
-        "parameters": {
-          "param1": "0.5"
-        },
-        "position": {
-          "x": 912,
-          "y": 400
-        },
-        "type": "Action"
-      },
-      {
-        "children": [
-          21,
-          22,
-          23,
-          24,
-          25
-        ],
-        "id": 20,
-        "name": "Idle/Wander Mode Branch",
-        "parameters": {},
-        "position": {
-          "x": 256,
-          "y": -64
-        },
-        "type": "Sequence"
-      },
-      {
-        "children": [],
-        "conditionType": "CheckBlackboardValue",
-        "id": 21,
-        "name": "Check AIMode == Idle",
-        "parameters": {
-          "key": "AIMode",
-          "operator": "Equals",
-          "value": "1"
-        },
-        "position": {
-          "x": 608,
-          "y": -480
-        },
-        "type": "Condition"
-      },
-      {
-        "actionType": "WaitRandomTime",
-        "children": [],
-        "id": 22,
-        "name": "Wait Random Time",
-        "parameters": {
-          "param1": "2",
-          "param2": "6"
-        },
-        "position": {
-          "x": 608,
-          "y": -368
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "ChooseRandomNavigablePoint",
-        "children": [],
-        "id": 23,
-        "name": "Choose Random Point",
-        "parameters": {
-          "param1": "500",
-          "param2": "10"
-        },
-        "position": {
-          "x": 608,
-          "y": -256
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "RequestPathfinding",
-        "children": [],
-        "id": 24,
-        "name": "Request Pathfinding",
-        "parameters": {},
-        "position": {
-          "x": 608,
-          "y": -144
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "FollowPath",
-        "children": [],
-        "id": 25,
-        "name": "Follow Path",
-        "parameters": {},
-        "position": {
-          "x": 608,
-          "y": -32
-        },
-        "type": "Action"
+  "schema_version": 4,
+  "id": "guardaitree",
+  "name": "GuardAITree",
+  "graphType": "VisualScript",
+  "entryPointId": 1,
+  "blackboard": [],
+  "nodes": [
+    {
+      "id": 1,
+      "type": "Selector",
+      "label": "Root Selector",
+      "position": {
+        "x": -48,
+        "y": 208
       }
-    ],
-    "rootNodeId": 1
-  },
-  "description": "",
-  "editorState": {
-    "scrollOffset": {
-      "x": 0,
-      "y": 0
     },
-    "zoom": 1
-  },
+    {
+      "id": 2,
+      "type": "VSSequence",
+      "label": "Combat Mode Branch",
+      "position": {
+        "x": 224,
+        "y": 384
+      }
+    },
+    {
+      "id": 3,
+      "type": "AtomicTask",
+      "label": "Check AIMode == Combat",
+      "position": {
+        "x": 480,
+        "y": 368
+      },
+      "params": {
+        "key": "AIMode",
+        "operator": "Equals",
+        "value": "3"
+      },
+      "taskType": "CheckBlackboardValue"
+    },
+    {
+      "id": 4,
+      "type": "AtomicTask",
+      "label": "Has Target?",
+      "position": {
+        "x": 480,
+        "y": 480
+      },
+      "taskType": "HasTarget"
+    },
+    {
+      "id": 5,
+      "type": "AtomicTask",
+      "label": "Move To Target",
+      "position": {
+        "x": 480,
+        "y": 592
+      },
+      "taskType": "SetMoveGoalToTarget"
+    },
+    {
+      "id": 6,
+      "type": "AtomicTask",
+      "label": "Attack Target",
+      "position": {
+        "x": 480,
+        "y": 704
+      },
+      "taskType": "AttackIfClose"
+    },
+    {
+      "id": 10,
+      "type": "VSSequence",
+      "label": "Patrol Mode Branch",
+      "position": {
+        "x": 672,
+        "y": 224
+      }
+    },
+    {
+      "id": 11,
+      "type": "AtomicTask",
+      "label": "Check AIMode == Patrol",
+      "position": {
+        "x": 912,
+        "y": 64
+      },
+      "params": {
+        "key": "AIMode",
+        "operator": "Equals",
+        "value": "2"
+      },
+      "taskType": "CheckBlackboardValue"
+    },
+    {
+      "id": 12,
+      "type": "AtomicTask",
+      "label": "Get Next Patrol Point",
+      "position": {
+        "x": 912,
+        "y": 176
+      },
+      "taskType": "PatrolPickNextPoint"
+    },
+    {
+      "id": 13,
+      "type": "AtomicTask",
+      "label": "Set Move Goal to Patrol Point",
+      "position": {
+        "x": 912,
+        "y": 288
+      },
+      "taskType": "SetMoveGoalToPatrolPoint"
+    },
+    {
+      "id": 14,
+      "type": "AtomicTask",
+      "label": "Move To Goal",
+      "position": {
+        "x": 912,
+        "y": 400
+      },
+      "taskType": "MoveToGoal",
+      "params": {
+        "param1": "0.5"
+      }
+    },
+    {
+      "id": 20,
+      "type": "VSSequence",
+      "label": "Idle/Wander Mode Branch",
+      "position": {
+        "x": 256,
+        "y": -64
+      }
+    },
+    {
+      "id": 21,
+      "type": "AtomicTask",
+      "label": "Check AIMode == Idle",
+      "position": {
+        "x": 608,
+        "y": -480
+      },
+      "params": {
+        "key": "AIMode",
+        "operator": "Equals",
+        "value": "1"
+      },
+      "taskType": "CheckBlackboardValue"
+    },
+    {
+      "id": 22,
+      "type": "AtomicTask",
+      "label": "Wait Random Time",
+      "position": {
+        "x": 608,
+        "y": -368
+      },
+      "taskType": "WaitRandomTime",
+      "params": {
+        "param1": "2",
+        "param2": "6"
+      }
+    },
+    {
+      "id": 23,
+      "type": "AtomicTask",
+      "label": "Choose Random Point",
+      "position": {
+        "x": 608,
+        "y": -256
+      },
+      "taskType": "ChooseRandomNavigablePoint",
+      "params": {
+        "param1": "500",
+        "param2": "10"
+      }
+    },
+    {
+      "id": 24,
+      "type": "AtomicTask",
+      "label": "Request Pathfinding",
+      "position": {
+        "x": 608,
+        "y": -144
+      },
+      "taskType": "RequestPathfinding"
+    },
+    {
+      "id": 25,
+      "type": "AtomicTask",
+      "label": "Follow Path",
+      "position": {
+        "x": 608,
+        "y": -32
+      },
+      "taskType": "FollowPath"
+    }
+  ],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Option0",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 1,
+      "fromPin": "Option1",
+      "toNode": 10,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 1,
+      "fromPin": "Option2",
+      "toNode": 20,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Start",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "Completed",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Completed",
+      "toNode": 5,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 5,
+      "fromPin": "Completed",
+      "toNode": 6,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 10,
+      "fromPin": "Start",
+      "toNode": 11,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 11,
+      "fromPin": "Completed",
+      "toNode": 12,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 12,
+      "fromPin": "Completed",
+      "toNode": 13,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 13,
+      "fromPin": "Completed",
+      "toNode": 14,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 20,
+      "fromPin": "Start",
+      "toNode": 21,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 21,
+      "fromPin": "Completed",
+      "toNode": 22,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 22,
+      "fromPin": "Completed",
+      "toNode": 23,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 23,
+      "fromPin": "Completed",
+      "toNode": 24,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 24,
+      "fromPin": "Completed",
+      "toNode": 25,
+      "toPin": "In"
+    }
+  ],
+  "dataConnections": [],
+  "description": "",
   "metadata": {
     "author": "User",
     "created": "",
     "lastModified": "2026-03-07T12:14:12",
     "tags": []
-  },
-  "name": "GuardAITree",
-  "schema_version": 2
+  }
 }

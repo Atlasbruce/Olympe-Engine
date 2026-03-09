@@ -99,6 +99,19 @@ public:
                                            std::vector<std::string>& outErrors);
 
     /**
+     * @brief Parses a JSON string and loads a TaskGraphTemplate.
+     *
+     * Convenience wrapper over LoadFromJson() for in-memory JSON strings (e.g., tests).
+     *
+     * @param jsonStr   UTF-8 encoded JSON string.
+     * @param outErrors Receives human-readable error messages if loading fails.
+     * @return Pointer to a newly allocated TaskGraphTemplate on success,
+     *         or nullptr if parsing or validation fails.
+     */
+    static TaskGraphTemplate* LoadFromJsonString(const std::string& jsonStr,
+                                                 std::vector<std::string>& outErrors);
+
+    /**
      * @brief Validates a JSON object against the expected task graph schema.
      *
      * For v4 flat format: checks for top-level "nodes" array.

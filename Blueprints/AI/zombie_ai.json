@@ -1,193 +1,221 @@
 {
-  "blueprintType": "BehaviorTree",
-  "data": {
-    "nodes": [
-      {
-        "children": [
-          2,
-          10
-        ],
-        "id": 1,
-        "name": "Root Selector",
-        "parameters": {},
-        "position": {
-          "x": 208,
-          "y": 144
-        },
-        "type": "Selector"
-      },
-      {
-        "children": [
-          3,
-          4,
-          5,
-          6
-        ],
-        "id": 2,
-        "name": "Combat Branch",
-        "parameters": {},
-        "position": {
-          "x": 464,
-          "y": 224
-        },
-        "type": "Sequence"
-      },
-      {
-        "children": [],
-        "conditionType": "CheckBlackboardValue",
-        "id": 3,
-        "name": "Check AIMode == Combat",
-        "parameters": {
-          "key": "AIMode",
-          "operator": "Equals",
-          "value": "3"
-        },
-        "position": {
-          "x": 688,
-          "y": 224
-        },
-        "type": "Condition"
-      },
-      {
-        "children": [],
-        "conditionType": "HasTarget",
-        "id": 4,
-        "name": "Has Target?",
-        "parameters": {},
-        "position": {
-          "x": 688,
-          "y": 448
-        },
-        "type": "Condition"
-      },
-      {
-        "actionType": "SetMoveGoalToTarget",
-        "children": [],
-        "id": 5,
-        "name": "Move to Target",
-        "parameters": {},
-        "position": {
-          "x": 688,
-          "y": 560
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "AttackIfClose",
-        "children": [],
-        "id": 6,
-        "name": "Attack",
-        "parameters": {},
-        "position": {
-          "x": 688,
-          "y": 336
-        },
-        "type": "Action"
-      },
-      {
-        "children": [
-          11,
-          12,
-          13,
-          14,
-          15
-        ],
-        "id": 10,
-        "name": "Wander Branch",
-        "parameters": {},
-        "position": {
-          "x": 448,
-          "y": 16
-        },
-        "type": "Sequence"
-      },
-      {
-        "children": [],
-        "conditionType": "CheckBlackboardValue",
-        "id": 11,
-        "name": "Check AIMode == Idle",
-        "parameters": {
-          "key": "AIMode",
-          "operator": "Equals",
-          "value": "1"
-        },
-        "position": {
-          "x": 720,
-          "y": -384
-        },
-        "type": "Condition"
-      },
-      {
-        "actionType": "WaitRandomTime",
-        "children": [],
-        "id": 12,
-        "name": "Wait",
-        "parameters": {
-          "param1": "3",
-          "param2": "8"
-        },
-        "position": {
-          "x": 720,
-          "y": -272
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "ChooseRandomNavigablePoint",
-        "children": [],
-        "id": 13,
-        "name": "Choose Random Point",
-        "parameters": {
-          "param1": "400",
-          "param2": "10"
-        },
-        "position": {
-          "x": 720,
-          "y": -160
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "RequestPathfinding",
-        "children": [],
-        "id": 14,
-        "name": "Request Pathfinding",
-        "parameters": {},
-        "position": {
-          "x": 720,
-          "y": -48
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "FollowPath",
-        "children": [],
-        "id": 15,
-        "name": "Follow Path",
-        "parameters": {},
-        "position": {
-          "x": 720,
-          "y": 64
-        },
-        "type": "Action"
+  "schema_version": 4,
+  "id": "zombieaitree",
+  "name": "ZombieAITree",
+  "graphType": "VisualScript",
+  "entryPointId": 1,
+  "blackboard": [],
+  "nodes": [
+    {
+      "id": 1,
+      "type": "Selector",
+      "label": "Root Selector",
+      "position": {
+        "x": 208,
+        "y": 144
       }
-    ],
-    "rootNodeId": 1
-  },
-  "description": "",
-  "editorState": {
-    "scrollOffset": {
-      "x": 0,
-      "y": 0
     },
-    "zoom": 1
-  },
+    {
+      "id": 2,
+      "type": "VSSequence",
+      "label": "Combat Branch",
+      "position": {
+        "x": 464,
+        "y": 224
+      }
+    },
+    {
+      "id": 3,
+      "type": "AtomicTask",
+      "label": "Check AIMode == Combat",
+      "position": {
+        "x": 688,
+        "y": 224
+      },
+      "params": {
+        "key": "AIMode",
+        "operator": "Equals",
+        "value": "3"
+      },
+      "taskType": "CheckBlackboardValue"
+    },
+    {
+      "id": 4,
+      "type": "AtomicTask",
+      "label": "Has Target?",
+      "position": {
+        "x": 688,
+        "y": 448
+      },
+      "taskType": "HasTarget"
+    },
+    {
+      "id": 5,
+      "type": "AtomicTask",
+      "label": "Move to Target",
+      "position": {
+        "x": 688,
+        "y": 560
+      },
+      "taskType": "SetMoveGoalToTarget"
+    },
+    {
+      "id": 6,
+      "type": "AtomicTask",
+      "label": "Attack",
+      "position": {
+        "x": 688,
+        "y": 336
+      },
+      "taskType": "AttackIfClose"
+    },
+    {
+      "id": 10,
+      "type": "VSSequence",
+      "label": "Wander Branch",
+      "position": {
+        "x": 448,
+        "y": 16
+      }
+    },
+    {
+      "id": 11,
+      "type": "AtomicTask",
+      "label": "Check AIMode == Idle",
+      "position": {
+        "x": 720,
+        "y": -384
+      },
+      "params": {
+        "key": "AIMode",
+        "operator": "Equals",
+        "value": "1"
+      },
+      "taskType": "CheckBlackboardValue"
+    },
+    {
+      "id": 12,
+      "type": "AtomicTask",
+      "label": "Wait",
+      "position": {
+        "x": 720,
+        "y": -272
+      },
+      "taskType": "WaitRandomTime",
+      "params": {
+        "param1": "3",
+        "param2": "8"
+      }
+    },
+    {
+      "id": 13,
+      "type": "AtomicTask",
+      "label": "Choose Random Point",
+      "position": {
+        "x": 720,
+        "y": -160
+      },
+      "taskType": "ChooseRandomNavigablePoint",
+      "params": {
+        "param1": "400",
+        "param2": "10"
+      }
+    },
+    {
+      "id": 14,
+      "type": "AtomicTask",
+      "label": "Request Pathfinding",
+      "position": {
+        "x": 720,
+        "y": -48
+      },
+      "taskType": "RequestPathfinding"
+    },
+    {
+      "id": 15,
+      "type": "AtomicTask",
+      "label": "Follow Path",
+      "position": {
+        "x": 720,
+        "y": 64
+      },
+      "taskType": "FollowPath"
+    }
+  ],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Option0",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 1,
+      "fromPin": "Option1",
+      "toNode": 10,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Start",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "Completed",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Completed",
+      "toNode": 5,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 5,
+      "fromPin": "Completed",
+      "toNode": 6,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 10,
+      "fromPin": "Start",
+      "toNode": 11,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 11,
+      "fromPin": "Completed",
+      "toNode": 12,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 12,
+      "fromPin": "Completed",
+      "toNode": 13,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 13,
+      "fromPin": "Completed",
+      "toNode": 14,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 14,
+      "fromPin": "Completed",
+      "toNode": 15,
+      "toPin": "In"
+    }
+  ],
+  "dataConnections": [],
+  "description": "",
   "metadata": {
     "author": "User",
     "created": "",
     "lastModified": "2026-03-07T12:16:50",
     "tags": []
-  },
-  "name": "ZombieAITree",
-  "schema_version": 2
+  }
 }
