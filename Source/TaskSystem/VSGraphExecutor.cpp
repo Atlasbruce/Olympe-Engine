@@ -11,6 +11,7 @@
 #include "VSGraphExecutor.h"
 #include "AtomicTaskRegistry.h"
 #include "IAtomicTask.h"
+#include "../Core/AssetManager.h"
 #include "../system/system_utils.h"
 
 #include <sstream>
@@ -112,8 +113,11 @@ void VSGraphExecutor::ExecuteFrame(EntityID entity,
                 break;
 
             case TaskNodeType::SubGraph:
-                nextID = HandleSubGraph(entity, currentID, runner, tmpl, worldPtr, dt, 0);
+            {
+                static thread_local SubGraphCallStack s_callStack;
+                nextID = HandleSubGraph(entity, currentID, runner, tmpl, localBB, worldPtr, dt, s_callStack);
                 break;
+            }
 
             default:
                 // Unhandled node type: log and end frame.
@@ -764,21 +768,16 @@ int32_t VSGraphExecutor::HandleSubGraph(EntityID entity,
                                         int32_t nodeID,
                                         TaskRunnerComponent& runner,
                                         const TaskGraphTemplate& tmpl,
+                                        LocalBlackboard& localBB,
                                         World* worldPtr,
                                         float dt,
-                                        int depth)
+                                        SubGraphCallStack& callStack)
 {
-    if (depth >= MAX_SUBGRAPH_DEPTH)
-    {
-        SYSTEM_LOG << "[VSGraphExecutor] Entity " << entity
-                   << ": SubGraph depth limit (" << MAX_SUBGRAPH_DEPTH
-                   << ") exceeded at node " << nodeID << " — skipping\n";
-        return NODE_INDEX_NONE;
-    }
-
     const TaskNodeDefinition* node = tmpl.GetNode(nodeID);
     if (node == nullptr)
     {
+        SYSTEM_LOG << "[VSGraphExecutor][ERROR] HandleSubGraph: node " << nodeID
+                   << " not found in template '" << tmpl.Name << "'\n";
         return NODE_INDEX_NONE;
     }
 
@@ -790,13 +789,113 @@ int32_t VSGraphExecutor::HandleSubGraph(EntityID entity,
         return FindExecTarget(nodeID, "Out", tmpl);
     }
 
-    // SubGraph loading and recursive execution is a Phase 3 feature.
-    // For now, log and skip to the Out pin.
-    SYSTEM_LOG << "[VSGraphExecutor] Entity " << entity
-               << ": SubGraph '" << node->SubGraphPath
-               << "' at node " << nodeID
-               << " — SubGraph loading not yet implemented (Phase 3)\n";
+    // 1. Check depth limit
+    if (callStack.Depth >= MAX_SUBGRAPH_DEPTH)
+    {
+        SYSTEM_LOG << "[VSGraphExecutor][ERROR] SubGraph recursion depth exceeded (max "
+                   << MAX_SUBGRAPH_DEPTH << "): '" << node->SubGraphPath << "'\n";
+        return FindExecTarget(nodeID, "Out", tmpl);
+    }
 
+    // 2. Check for cycles (self-reference or circular dependency)
+    if (callStack.Contains(node->SubGraphPath))
+    {
+        SYSTEM_LOG << "[VSGraphExecutor][ERROR] SubGraph cycle detected: '";
+        for (size_t i = 0; i < callStack.PathStack.size(); ++i)
+        {
+            SYSTEM_LOG << callStack.PathStack[i];
+            if (i + 1 < callStack.PathStack.size()) SYSTEM_LOG << " -> ";
+        }
+        SYSTEM_LOG << " -> " << node->SubGraphPath << "'\n";
+        return FindExecTarget(nodeID, "Out", tmpl);
+    }
+
+    // 3. Load SubGraph template
+    std::vector<std::string> loadErrors;
+    const TaskGraphTemplate* subGraphTmpl =
+        AssetManager::Get().LoadTaskGraphFromFile(node->SubGraphPath, loadErrors);
+
+    if (subGraphTmpl == nullptr)
+    {
+        SYSTEM_LOG << "[VSGraphExecutor][ERROR] SubGraph file not found or invalid: '"
+                   << node->SubGraphPath << "'\n";
+        for (size_t i = 0; i < loadErrors.size(); ++i)
+        {
+            SYSTEM_LOG << "  - " << loadErrors[i] << "\n";
+        }
+        return FindExecTarget(nodeID, "Out", tmpl);
+    }
+
+    // 4. Create child LocalBlackboard and bind input parameters
+    LocalBlackboard childBB;
+    childBB.InitializeFromEntries(subGraphTmpl->Blackboard);
+
+    for (auto it = node->InputParams.begin(); it != node->InputParams.end(); ++it)
+    {
+        const std::string& paramName = it->first;
+        const ParameterBinding& binding = it->second;
+
+        TaskValue value;
+        if (binding.Type == ParameterBindingType::Literal)
+        {
+            value = binding.LiteralValue;
+        }
+        else if (binding.Type == ParameterBindingType::LocalVariable)
+        {
+            if (localBB.HasVariable(binding.VariableName))
+            {
+                value = localBB.GetValue(binding.VariableName);
+            }
+            else
+            {
+                SYSTEM_LOG << "[VSGraphExecutor] SubGraph input param '" << paramName
+                           << "': LocalVariable '" << binding.VariableName
+                           << "' not found in parent BB — using default\n";
+            }
+        }
+
+        if (childBB.HasVariable(paramName))
+        {
+            try { childBB.SetValue(paramName, value); }
+            catch (...) { /* type mismatch — skip */ }
+        }
+    }
+
+    // 5. Push call stack
+    callStack.Push(node->SubGraphPath);
+
+    // 6. Create temporary TaskRunnerComponent for subgraph execution
+    TaskRunnerComponent childRunner;
+    childRunner.CurrentNodeID = subGraphTmpl->EntryPointID;
+
+    // 7. Execute SubGraph (single frame step)
+    ExecuteFrame(entity, childRunner, *subGraphTmpl, childBB, worldPtr, dt);
+
+    // 8. Pop call stack
+    callStack.Pop();
+
+    // 9. Extract output parameters back to parent blackboard
+    for (auto it = node->OutputParams.begin(); it != node->OutputParams.end(); ++it)
+    {
+        const std::string& paramName = it->first;
+        const std::string& targetBBKey = it->second;
+
+        if (childBB.HasVariable(paramName))
+        {
+            try
+            {
+                TaskValue outputValue = childBB.GetValue(paramName);
+                localBB.SetValueScoped(targetBBKey, outputValue);
+            }
+            catch (...)
+            {
+                SYSTEM_LOG << "[VSGraphExecutor] SubGraph output param '" << paramName
+                           << "': failed to write to '" << targetBBKey << "'\n";
+            }
+        }
+    }
+
+    // 10. Continue execution in parent graph
     return FindExecTarget(nodeID, "Out", tmpl);
 }
 

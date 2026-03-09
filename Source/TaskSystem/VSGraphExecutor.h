@@ -48,6 +48,40 @@ namespace Olympe {
 class World;
 
 /**
+ * @struct SubGraphCallStack
+ * @brief Tracks the SubGraph call chain to detect cycles and enforce depth limits.
+ *
+ * @details
+ * Each SubGraph invocation pushes its file path onto PathStack before executing
+ * and pops it after.  This allows O(n) cycle detection (n = depth) and
+ * guarantees that HandleSubGraph never recurses deeper than MAX_SUBGRAPH_DEPTH.
+ */
+struct SubGraphCallStack {
+    std::vector<std::string> PathStack; ///< Stack of SubGraph file paths currently executing
+    int32_t Depth = 0;                  ///< Current recursion depth
+
+    bool Contains(const std::string& path) const {
+        for (size_t i = 0; i < PathStack.size(); ++i)
+        {
+            if (PathStack[i] == path) return true;
+        }
+        return false;
+    }
+
+    void Push(const std::string& path) {
+        PathStack.push_back(path);
+        ++Depth;
+    }
+
+    void Pop() {
+        if (!PathStack.empty()) {
+            PathStack.pop_back();
+            --Depth;
+        }
+    }
+};
+
+/**
  * @class VSGraphExecutor
  * @brief Exécute un graphe ATS Visual Scripting pour une entité sur un frame.
  */
@@ -153,14 +187,16 @@ private:
                                     World* worldPtr,
                                     float dt);
 
-    // SubGraph est depth-limited (max 4 niveaux) — retourne NODE_INDEX_NONE en cas de dépassement
+    // SubGraph: depth-limited recursive execution with cycle detection.
+    // callStack tracks the currently active SubGraph paths to detect cycles.
     static int32_t HandleSubGraph(EntityID entity,
                                   int32_t nodeID,
                                   TaskRunnerComponent& runner,
                                   const TaskGraphTemplate& tmpl,
+                                  LocalBlackboard& localBB,
                                   World* worldPtr,
                                   float dt,
-                                  int depth);
+                                  SubGraphCallStack& callStack);
 
     // Limite de récursion pour SubGraph
     static const int MAX_SUBGRAPH_DEPTH = 4;

@@ -118,6 +118,10 @@ struct TaskNodeDefinition {
     std::vector<std::string>       SwitchCases;    ///< For Switch: ordered case labels
     float                          DelaySeconds = 0.0f; ///< For Delay: duration in seconds
     std::string                    MathOperator;   ///< For MathOp: "+", "-", "*", "/"
+
+    // SubGraph-specific (Phase 3)
+    std::unordered_map<std::string, ParameterBinding> InputParams;  ///< Input parameter bindings
+    std::unordered_map<std::string, std::string>      OutputParams; ///< Output param → BB key mapping
 };
 
 // ============================================================================
@@ -162,6 +166,11 @@ public:
 
     /// Explicit data connections (ATS VS only)
     std::vector<DataPinConnection> DataConnections;
+
+    // SubGraph metadata (Phase 3)
+    bool IsSubGraph = false;                                ///< True if this template is a SubGraph
+    std::vector<SubGraphParameterDef> InputParameters;     ///< Declared inputs (for subgraphs)
+    std::vector<SubGraphParameterDef> OutputParameters;    ///< Declared outputs (for subgraphs)
 
     // -----------------------------------------------------------------------
     // Operations

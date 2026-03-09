@@ -26,9 +26,9 @@
  *  2. Each tick, call runner.activeTask->ExecuteWithContext(ctx, params).
  *  3. Running => keep activeTask; accumulate StateTimer; return.
  *  4. Success/Failure => reset activeTask; set LastStatus; reset StateTimer;
- *     advance CurrentNodeIndex via TransitionToNextNode().
+ *     advance CurrentNodeID via TransitionToNextNode().
  *     NODE_INDEX_NONE signals that the graph is complete.
- *  5. If runner.CurrentNodeIndex is set to NODE_INDEX_NONE while a task is
+ *  5. If runner.CurrentNodeID is set to NODE_INDEX_NONE while a task is
  *     Running, the next call to ExecuteNode() calls activeTask->Abort() before
  *     releasing the instance.
  *
@@ -55,7 +55,7 @@ namespace Olympe {
  * without creating a compile-time dependency on editor code.
  *
  * @param entity     ID of the entity currently executing the task.
- * @param nodeIndex  Local node index (CurrentNodeIndex) being executed.
+ * @param nodeIndex  Current node ID being executed.
  * @param bb         Non-owning pointer to the LocalBlackboard for this tick.
  *                   Only valid for the duration of the callback invocation.
  */
@@ -130,7 +130,7 @@ public:
      *
      * @details
      * Implements the AtomicTask lifecycle described in the class documentation.
-     * runner.CurrentNodeIndex is treated as a NodeID (looked up via
+     * runner.CurrentNodeID is treated as a NodeID (looked up via
      * TaskGraphTemplate::GetNode()).  NODE_INDEX_NONE (-1) means there is no
      * active node; any lingering activeTask is Abort()ed and released.
      *
@@ -196,9 +196,9 @@ private:
                            float dt);
 
     /**
-     * @brief Advances runner.CurrentNodeIndex after a node completes.
+     * @brief Advances runner.CurrentNodeID after a node completes.
      *
-     * Sets runner.CurrentNodeIndex to node.NextOnSuccess if @p success is
+     * Sets runner.CurrentNodeID to node.NextOnSuccess if @p success is
      * true, or node.NextOnFailure otherwise.  NODE_INDEX_NONE signals that
      * the graph has finished.  Also resets runner.StateTimer to 0.
      *

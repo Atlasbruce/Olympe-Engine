@@ -298,4 +298,20 @@ struct DataPinDefinition {
     TaskValue    Default;                          ///< Default value when not connected
 };
 
+// ============================================================================
+// ATS Visual Scripting – SubGraphParameterDef (Phase 3 - 2026-03-09)
+// ============================================================================
+
+/**
+ * @struct SubGraphParameterDef
+ * @brief Describes an input or output parameter declared on a SubGraph file.
+ *
+ * Used in TaskGraphTemplate::InputParameters and TaskGraphTemplate::OutputParameters
+ * to describe the interface of a sub-graph that can receive and return values.
+ */
+struct SubGraphParameterDef {
+    std::string  Name;                             ///< Parameter name (must match binding keys)
+    VariableType Type = VariableType::None;        ///< Expected variable type
+};
+
 } // namespace Olympe

@@ -41,11 +41,9 @@ class IAtomicTask;
  * @details
  * Fields:
  *   - GraphTemplateID     : Identifies which TaskGraphTemplate drives this runner.
- *   - CurrentNodeID       : ID of the currently active node (replaces CurrentNodeIndex).
- *   - CurrentNodeIndex    : @deprecated Index into Nodes vector; use CurrentNodeID instead.
+ *   - CurrentNodeID       : ID of the currently active node.
  *   - StateTimer          : Accumulated time (seconds) spent in the current node.
- *   - LocalBlackboard     : Typed per-entity blackboard state (replaces LocalBlackboardData).
- *   - LocalBlackboardData : @deprecated Raw byte buffer; kept for transitional compatibility.
+ *   - LocalBlackboard     : Typed per-entity blackboard state.
  *   - LastStatus          : Result of the most recently completed node execution.
  *   - activeTask          : Owning pointer to the IAtomicTask instance currently executing.
  *   - ActiveExecPinName   : Name of the active exec pin on the current node.
@@ -87,20 +85,14 @@ struct TaskRunnerComponent
     ///        resolved by AssetManager.
     std::string graphAssetPath;
 
-    /// @brief ID of the currently active node (replaces CurrentNodeIndex).
+    /// @brief ID of the currently active node.
     int32_t CurrentNodeID    = NODE_INDEX_NONE;
-
-    /// @deprecated Use CurrentNodeID instead.
-    int32_t CurrentNodeIndex = 0;
 
     /// @brief Accumulated time (in seconds) spent in the current node state.
     float StateTimer = 0.0f;
 
-    /// @brief Typed local blackboard for per-entity state (replaces LocalBlackboardData raw bytes).
+    /// @brief Typed local blackboard for per-entity state.
     std::unordered_map<std::string, Olympe::TaskValue> LocalBlackboard;
-
-    /// @deprecated Raw byte buffer – kept for transitional compatibility, will be removed in Phase 2.
-    std::vector<uint8_t> LocalBlackboardData;
 
     /// @brief Status returned by the last completed node execution.
     TaskStatus LastStatus = TaskStatus::Success;

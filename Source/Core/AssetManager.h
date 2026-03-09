@@ -102,6 +102,22 @@ public:
     const TaskGraphTemplate* GetTaskGraph(AssetID id) const;
 
     /**
+     * @brief Loads a TaskGraphTemplate from @p path and returns a direct pointer.
+     *
+     * Convenience wrapper around LoadTaskGraph() + GetTaskGraph() for use in
+     * code that needs a template pointer without managing AssetIDs (e.g.,
+     * SubGraph execution in VSGraphExecutor).
+     *
+     * @param path      Absolute or relative path to the JSON task graph file.
+     * @param outErrors Receives human-readable error messages on failure.
+     * @return Non-owning pointer to the template, or nullptr on failure.
+     *
+     * @note AssetManager retains ownership.  Do NOT delete the returned pointer.
+     */
+    const TaskGraphTemplate* LoadTaskGraphFromFile(const std::string& path,
+                                                   std::vector<std::string>& outErrors);
+
+    /**
      * @brief Releases the cached TaskGraphTemplate for @p id.
      *
      * After this call, any raw pointers previously obtained from

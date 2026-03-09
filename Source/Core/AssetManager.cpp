@@ -104,6 +104,17 @@ const TaskGraphTemplate* AssetManager::GetTaskGraph(AssetID id) const
     return it->second.get();
 }
 
+const TaskGraphTemplate* AssetManager::LoadTaskGraphFromFile(const std::string& path,
+                                                              std::vector<std::string>& outErrors)
+{
+    AssetID id = LoadTaskGraph(path, outErrors);
+    if (id == INVALID_ASSET_ID)
+    {
+        return nullptr;
+    }
+    return GetTaskGraph(id);
+}
+
 void AssetManager::UnloadTaskGraph(AssetID id)
 {
     auto it = m_taskGraphs.find(id);

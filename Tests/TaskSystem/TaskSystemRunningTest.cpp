@@ -8,7 +8,7 @@
  * Tests cover:
  *   a) A multi-frame task (Task_CountToN) persists across ticks while Running,
  *      and transitions to Success after N calls to Execute().
- *   b) Setting runner.CurrentNodeIndex to NODE_INDEX_NONE while a task is
+ *   b) Setting runner.CurrentNodeID to NODE_INDEX_NONE while a task is
  *      Running causes the next ExecuteNode() call to invoke Abort() and reset
  *      activeTask.
  *
@@ -161,7 +161,8 @@ static void TestA_RunningTaskPersistsAndSucceeds()
     Olympe::TaskSystem        system;
     Olympe::TaskRunnerComponent runner;
 
-    // runner.CurrentNodeIndex defaults to 0, which matches node.NodeID = 0.
+    // Set initial node ID to match node.NodeID = 0.
+    runner.CurrentNodeID = 0;
 
     bool passed = true;
     const float dt = 0.016f;
@@ -175,9 +176,9 @@ static void TestA_RunningTaskPersistsAndSucceeds()
                     "activeTask should be non-null while Running");
         if (!runner.activeTask) { passed = false; }
 
-        TEST_ASSERT(runner.CurrentNodeIndex == 0,
-                    "CurrentNodeIndex should stay at 0 while Running");
-        if (runner.CurrentNodeIndex != 0) { passed = false; }
+        TEST_ASSERT(runner.CurrentNodeID == 0,
+                    "CurrentNodeID should stay at 0 while Running");
+        if (runner.CurrentNodeID != 0) { passed = false; }
     }
 
     // --- Tick N: task should return Success ---
@@ -192,10 +193,10 @@ static void TestA_RunningTaskPersistsAndSucceeds()
     if (runner.LastStatus != Olympe::TaskRunnerComponent::TaskStatus::Success)
     { passed = false; }
 
-    // NextOnSuccess was NODE_INDEX_NONE, so CurrentNodeIndex should be NODE_INDEX_NONE.
-    TEST_ASSERT(runner.CurrentNodeIndex == Olympe::NODE_INDEX_NONE,
-                "CurrentNodeIndex should be NODE_INDEX_NONE after final transition");
-    if (runner.CurrentNodeIndex != Olympe::NODE_INDEX_NONE) { passed = false; }
+    // NextOnSuccess was NODE_INDEX_NONE, so CurrentNodeID should be NODE_INDEX_NONE.
+    TEST_ASSERT(runner.CurrentNodeID == Olympe::NODE_INDEX_NONE,
+                "CurrentNodeID should be NODE_INDEX_NONE after final transition");
+    if (runner.CurrentNodeID != Olympe::NODE_INDEX_NONE) { passed = false; }
 
     TEST_ASSERT(g_executeCount == TASK_N,
                 "Execute() should have been called exactly N times");
@@ -209,7 +210,7 @@ static void TestA_RunningTaskPersistsAndSucceeds()
 }
 
 // ---------------------------------------------------------------------------
-// Test B: Abort() is called when CurrentNodeIndex is set to NODE_INDEX_NONE
+// Test B: Abort() is called when CurrentNodeID is set to NODE_INDEX_NONE
 //         while a task is Running
 // ---------------------------------------------------------------------------
 
@@ -227,6 +228,7 @@ static void TestB_AbortCalledOnExternalInterrupt()
     Olympe::TaskGraphTemplate   tmpl = MakeMinimalTemplate();
     Olympe::TaskSystem          system;
     Olympe::TaskRunnerComponent runner;
+    runner.CurrentNodeID = 0;
 
     bool passed = true;
     const float dt = 0.016f;
@@ -241,8 +243,8 @@ static void TestB_AbortCalledOnExternalInterrupt()
                 "activeTask should be non-null before interrupt");
     if (!runner.activeTask) { passed = false; }
 
-    // --- External interrupt: set CurrentNodeIndex to NODE_INDEX_NONE ---
-    runner.CurrentNodeIndex = Olympe::NODE_INDEX_NONE;
+    // --- External interrupt: set CurrentNodeID to NODE_INDEX_NONE ---
+    runner.CurrentNodeID = Olympe::NODE_INDEX_NONE;
 
     // --- Next tick: ExecuteNode should detect NODE_INDEX_NONE and call Abort() ---
     system.ExecuteNode(2u, runner, &tmpl, dt);
