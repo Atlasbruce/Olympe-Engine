@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -68,6 +68,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\TemplateBrowserPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\PerformanceProfiler.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\ProfilerPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\SubgraphMigrator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptNodeRenderer.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\TemplateManager.cpp" />
@@ -214,6 +215,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\EntitiesPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\InspectorPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\NodeStyleRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\SubgraphMigrator.h" />
     <ClInclude Include="..\Source\BlueprintEditor\TemplateBrowserPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\PerformanceProfiler.h" />
     <ClInclude Include="..\Source\BlueprintEditor\ProfilerPanel.h" />
