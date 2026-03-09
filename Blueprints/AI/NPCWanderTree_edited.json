@@ -3,7 +3,7 @@
   "data": {
     "nodes": [
       {
-        "children": [],
+        "children": [3],
         "id": 1,
         "name": "Wander Loop (Repeater)",
         "parameters": {},
