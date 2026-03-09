@@ -108,6 +108,9 @@ namespace Olympe
         bool m_ShowPropertyPanel;
         bool m_ShowTemplateBrowser;  // Phase 5
         bool m_ShowHistory;          // Phase 6
+        bool m_ShowVSEditor;         // Phase 5 (new)
+        bool m_ShowDebugger;         // Phase 5 (new)
+        bool m_ShowProfiler;         // Phase 5 (new)
         
         // D) Additional dialog flags
         bool m_ShowPreferences;
@@ -127,5 +130,10 @@ namespace Olympe
         
         // Phase 6: History panel UI
         class HistoryPanel* m_HistoryPanel;
+        
+        // Phase 5 (new): VS Editor, Debugger, Profiler panels
+        class VisualScriptEditorPanel* m_VSEditorPanel;
+        class DebugPanel* m_DebugPanel;
+        class ProfilerPanel* m_ProfilerPanel;
     };
 }

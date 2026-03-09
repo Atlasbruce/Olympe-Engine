@@ -1,19 +1,48 @@
 {
+  "imguiSettings": {
+    "windows": {
+      "Asset Browser": {
+        "collapsed": false,
+        "height": 255,
+        "width": 598,
+        "x": 60,
+        "y": 60
+      },
+      "Debug##Default": {
+        "collapsed": false,
+        "height": 400,
+        "width": 400,
+        "x": 60,
+        "y": 60
+      },
+      "Inspector": {
+        "collapsed": false,
+        "height": 390,
+        "width": 100,
+        "x": 60,
+        "y": 60
+      },
+      "Node Graph Editor": {
+        "collapsed": false,
+        "height": 142,
+        "width": 346,
+        "x": 60,
+        "y": 60
+      }
+    }
+  },
   "panelVisibility": {
     "showAssetBrowser": true,
+    "showHistory": false,
     "showInspector": true,
     "showNodeGraph": true,
-    "showTemplateBrowser": false,
-    "showHistory": false
+    "showTemplateBrowser": false
   },
   "preferences": {
-    "gridLinesEnabled": true,
     "autoSaveEnabled": true,
     "autoSaveIntervalSeconds": 300,
-    "panningSpeed": 1.0,
+    "gridLinesEnabled": true,
+    "panningSpeed": 1,
     "zoomSpeed": 0.1
-  },
-  "imguiSettings": {
-    "windows": {}
   }
 }

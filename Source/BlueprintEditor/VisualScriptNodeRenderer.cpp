@@ -228,7 +228,8 @@ void VisualScriptNodeRenderer::RenderNode(
     ImNodes::PopColorStyle(); // TitleBar
 
     // Hover tooltip
-    if (!tooltip.empty() && ImNodes::IsNodeHovered())
+    int hoveredNode = -1;
+    if (!tooltip.empty() && ImNodes::IsNodeHovered(&hoveredNode) && hoveredNode == nodeUID)
     {
         ImGui::BeginTooltip();
         ImGui::TextUnformatted(tooltip.c_str());

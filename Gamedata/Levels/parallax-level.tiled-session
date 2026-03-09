@@ -49,8 +49,8 @@
             "scale": 0.75,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 874.6666666666666,
-                "y": 518.6666666666666
+                "x": 889.3333333333333,
+                "y": 518.6666666666667
             }
         },
         "iso-test.tmx": {
@@ -66,14 +66,14 @@
         },
         "isometric_quest.tmx": {
             "expandedObjectLayers": [
-                6,
-                10
+                10,
+                6
             ],
             "scale": 1,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 5036,
-                "y": 1677
+                "x": 5050,
+                "y": 1607
             }
         },
         "map_forest.tmj": {
@@ -105,7 +105,7 @@
             "scale": 0.25,
             "selectedLayer": 10,
             "viewCenter": {
-                "x": 2572,
+                "x": 2276,
                 "y": 228
             }
         },
@@ -150,7 +150,7 @@
             "selectedLayer": 6,
             "viewCenter": {
                 "x": 449.3333333333333,
-                "y": 392
+                "y": 391.99999999999994
             }
         },
         "tiles-iso-1.tsx": {
@@ -175,7 +175,7 @@
     "lastUsedTilesetExportFilter": "Fichiers de jeu de tuiles JSON (*.tsj *.json)",
     "map.fixedSize": true,
     "map.lastUsedExportFilter": "Fichiers de carte JSON (*.tmj *.json)",
-    "map.lastUsedFormat": "tmx",
+    "map.lastUsedFormat": "json",
     "map.orientation": "2",
     "map.renderOrder": "3",
     "map.tileHeight": 64,

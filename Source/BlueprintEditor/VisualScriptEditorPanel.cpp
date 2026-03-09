@@ -368,7 +368,7 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
             case VariableType::Int:      e["type"] = "Int";      e["value"] = entry.Default.AsInt();      break;
             case VariableType::Float:    e["type"] = "Float";    e["value"] = entry.Default.AsFloat();    break;
             case VariableType::String:   e["type"] = "String";   e["value"] = entry.Default.AsString();   break;
-            case VariableType::EntityID: e["type"] = "EntityID"; e["value"] = static_cast<uint64_t>(entry.Default.AsEntityID()); break;
+            case VariableType::EntityID: e["type"] = "EntityID"; e["value"] = std::to_string(entry.Default.AsEntityID()); break;
             default:                     e["type"] = "None";     e["value"] = nullptr;                    break;
         }
         bbArray.push_back(e);
@@ -579,10 +579,10 @@ void VisualScriptEditorPanel::RenderCanvas()
         for (size_t p = 0; p < eNode.def.DataPins.size(); ++p)
         {
             const DataPinDefinition& pin = eNode.def.DataPins[p];
-            if (pin.IsInput)
-                dataIn.push_back({pin.Name, pin.Type});
+            if (pin.Dir == DataPinDir::Input)
+                dataIn.push_back({pin.PinName, pin.PinType});
             else
-                dataOut.push_back({pin.Name, pin.Type});
+                dataOut.push_back({pin.PinName, pin.PinType});
         }
 
         VisualScriptNodeRenderer::RenderNode(
@@ -772,8 +772,7 @@ void VisualScriptEditorPanel::RenderProperties()
 
     // Node name — use a local (non-static) buffer initialized from the current def
     char nameBuf[128];
-    std::strncpy(nameBuf, def.NodeName.c_str(), sizeof(nameBuf) - 1);
-    nameBuf[sizeof(nameBuf) - 1] = '\0';
+    strncpy_s(nameBuf, sizeof(nameBuf), def.NodeName.c_str(), _TRUNCATE);
     if (ImGui::InputText("Name##vsname", nameBuf, sizeof(nameBuf)))
     {
         def.NodeName = nameBuf;
@@ -796,8 +795,7 @@ void VisualScriptEditorPanel::RenderProperties()
         case TaskNodeType::AtomicTask:
         {
             char taskBuf[128];
-            std::strncpy(taskBuf, def.AtomicTaskID.c_str(), sizeof(taskBuf) - 1);
-            taskBuf[sizeof(taskBuf) - 1] = '\0';
+            strncpy_s(taskBuf, sizeof(taskBuf), def.AtomicTaskID.c_str(), _TRUNCATE);
             if (ImGui::InputText("TaskType##vstask", taskBuf, sizeof(taskBuf)))
             {
                 def.AtomicTaskID = taskBuf;
@@ -819,8 +817,7 @@ void VisualScriptEditorPanel::RenderProperties()
         case TaskNodeType::SetBBValue:
         {
             char bbKeyBuf[128];
-            std::strncpy(bbKeyBuf, def.BBKey.c_str(), sizeof(bbKeyBuf) - 1);
-            bbKeyBuf[sizeof(bbKeyBuf) - 1] = '\0';
+            strncpy_s(bbKeyBuf, sizeof(bbKeyBuf), def.BBKey.c_str(), _TRUNCATE);
             if (ImGui::InputText("BB Key##vsbbkey", bbKeyBuf, sizeof(bbKeyBuf)))
             {
                 def.BBKey = bbKeyBuf;
@@ -832,8 +829,7 @@ void VisualScriptEditorPanel::RenderProperties()
         case TaskNodeType::While:
         {
             char condBuf[128];
-            std::strncpy(condBuf, def.ConditionID.c_str(), sizeof(condBuf) - 1);
-            condBuf[sizeof(condBuf) - 1] = '\0';
+            strncpy_s(condBuf, sizeof(condBuf), def.ConditionID.c_str(), _TRUNCATE);
             if (ImGui::InputText("ConditionID##vscond", condBuf, sizeof(condBuf)))
             {
                 def.ConditionID = condBuf;
@@ -844,8 +840,7 @@ void VisualScriptEditorPanel::RenderProperties()
         case TaskNodeType::SubGraph:
         {
             char sgPathBuf[256];
-            std::strncpy(sgPathBuf, def.SubGraphPath.c_str(), sizeof(sgPathBuf) - 1);
-            sgPathBuf[sizeof(sgPathBuf) - 1] = '\0';
+            strncpy_s(sgPathBuf, sizeof(sgPathBuf), def.SubGraphPath.c_str(), _TRUNCATE);
             if (ImGui::InputText("SubGraph Path##vssg", sgPathBuf, sizeof(sgPathBuf)))
             {
                 def.SubGraphPath = sgPathBuf;
@@ -856,8 +851,7 @@ void VisualScriptEditorPanel::RenderProperties()
         case TaskNodeType::MathOp:
         {
             char mathOpBuf[8];
-            std::strncpy(mathOpBuf, def.MathOperator.c_str(), sizeof(mathOpBuf) - 1);
-            mathOpBuf[sizeof(mathOpBuf) - 1] = '\0';
+            strncpy_s(mathOpBuf, sizeof(mathOpBuf), def.MathOperator.c_str(), _TRUNCATE);
             if (ImGui::InputText("Operator (+,-,*,/)##vsmath", mathOpBuf, sizeof(mathOpBuf)))
             {
                 def.MathOperator = mathOpBuf;
@@ -906,8 +900,7 @@ void VisualScriptEditorPanel::RenderBlackboard()
 
         // Use a local (non-static) buffer per iteration to avoid sharing across entries
         char keyBuf[64];
-        std::strncpy(keyBuf, entry.Key.c_str(), sizeof(keyBuf) - 1);
-        keyBuf[sizeof(keyBuf) - 1] = '\0';
+        strncpy_s(keyBuf, sizeof(keyBuf), entry.Key.c_str(), _TRUNCATE);
         ImGui::SetNextItemWidth(120.0f);
         if (ImGui::InputText("##bbkey", keyBuf, sizeof(keyBuf)))
         {

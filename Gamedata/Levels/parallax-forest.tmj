@@ -1,6 +1,14 @@
 { "compressionlevel":-1,
+ "editorsettings":
+    {
+     "export":
+        {
+         "format":"json",
+         "target":"parallax-forext..tmj"
+        }
+    },
  "height":20,
- "infinite":true,
+ "infinite":false,
  "layers":[
         {
          "id":14,
@@ -8,8 +16,6 @@
          "imageheight":1080,
          "imagewidth":1980,
          "name":"Layer_background_4",
-         "offsetx":-1000,
-         "offsety":0,
          "opacity":1,
          "parallaxx":0,
          "type":"imagelayer",
@@ -91,8 +97,6 @@
          "imageheight":512,
          "imagewidth":512,
          "name":"Layer_ground_house",
-         "offsetx":2200,
-         "offsety":520,
          "opacity":1,
          "type":"imagelayer",
          "visible":true,
@@ -105,8 +109,6 @@
          "imageheight":1080,
          "imagewidth":1980,
          "name":"Layer_foreground_light",
-         "offsetx":-1000,
-         "offsety":0,
          "opacity":1,
          "parallaxx":0,
          "type":"imagelayer",
@@ -124,10 +126,10 @@
                  "id":12,
                  "name":"Sector_1",
                  "rotation":0,
-                 "type":"Sector",
+                 "type":"sector",
                  "visible":true,
                  "width":5504,
-                 "x":-2624,
+                 "x":-128,
                  "y":0
                 }],
          "opacity":1,
@@ -150,7 +152,7 @@
                  "type":"Player",
                  "visible":true,
                  "width":0,
-                 "x":33.3333,
+                 "x":2529.33,
                  "y":887.879
                 }, 
                 {
@@ -158,10 +160,10 @@
                  "id":2,
                  "name":"collision_ground",
                  "rotation":0,
-                 "type":"CCollision",
+                 "type":"Collision",
                  "visible":true,
                  "width":5312,
-                 "x":-2496,
+                 "x":0,
                  "y":954.173
                 }, 
                 {
@@ -172,7 +174,7 @@
                  "type":"Collision",
                  "visible":true,
                  "width":64,
-                 "x":-2496,
+                 "x":0,
                  "y":512
                 }, 
                 {
@@ -183,7 +185,7 @@
                  "type":"Collision",
                  "visible":true,
                  "width":64,
-                 "x":2752,
+                 "x":5248,
                  "y":512
                 }, 
                 {
@@ -195,7 +197,7 @@
                  "type":"Key",
                  "visible":true,
                  "width":0,
-                 "x":-2069.7,
+                 "x":426.3,
                  "y":900
                 }, 
                 {
@@ -207,7 +209,7 @@
                  "type":"Zombie",
                  "visible":true,
                  "width":0,
-                 "x":-1075.76,
+                 "x":1420.24,
                  "y":848.485
                 }, 
                 {
@@ -219,7 +221,7 @@
                  "type":"Zombie",
                  "visible":true,
                  "width":0,
-                 "x":1566.67,
+                 "x":4062.67,
                  "y":887.879
                 }, 
                 {
@@ -231,7 +233,7 @@
                  "type":"Door",
                  "visible":true,
                  "width":0,
-                 "x":2354,
+                 "x":4850,
                  "y":928
                 }],
          "opacity":1,
@@ -239,8 +241,33 @@
          "visible":true,
          "x":0,
          "y":0
+        }, 
+        {
+         "compression":"zlib",
+         "data":"eJzt0lEKgCAQBFA\/i8D7Hzc6gSgT2fIezN+u6GBrAACQ07++QBG96TJFlzk7dXm9PL+yNzM72+Xo7NX3VbDTv\/w7XeY8PZ4SyyGxALXdIzQGig==",
+         "encoding":"base64",
+         "height":20,
+         "id":18,
+         "name":"Layer_ground_tiles",
+         "opacity":1,
+         "properties":[
+                {
+                 "name":"isTilesetWalkable",
+                 "type":"bool",
+                 "value":false
+                }, 
+                {
+                 "name":"useTilesetBorder",
+                 "type":"bool",
+                 "value":false
+                }],
+         "type":"tilelayer",
+         "visible":true,
+         "width":83,
+         "x":0,
+         "y":0
         }],
- "nextlayerid":18,
+ "nextlayerid":19,
  "nextobjectid":13,
  "orientation":"orthogonal",
  "renderorder":"left-up",
@@ -250,9 +277,30 @@
         {
          "firstgid":1,
          "source":"parallax_forest.tsx"
+        }, 
+        {
+         "columns":3,
+         "firstgid":8,
+         "grid":
+            {
+             "height":260,
+             "orientation":"orthogonal",
+             "width":260
+            },
+         "image":"tileset 2D ortho.png",
+         "imageheight":260,
+         "imagewidth":261,
+         "margin":0,
+         "name":"tileset 2D ortho",
+         "objectalignment":"topleft",
+         "spacing":3,
+         "tilecount":9,
+         "tileheight":64,
+         "tilewidth":64,
+         "transparentcolor":"#000000"
         }],
  "tilewidth":64,
  "type":"map",
  "version":"1.10",
- "width":30
+ "width":83
 }
