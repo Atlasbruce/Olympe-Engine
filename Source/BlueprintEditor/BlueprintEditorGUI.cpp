@@ -7,6 +7,9 @@
 #include "BlueprintEditor.h"
 #include "TemplateBrowserPanel.h"
 #include "HistoryPanel.h"
+#include "VisualScriptEditorPanel.h"
+#include "DebugPanel.h"
+#include "ProfilerPanel.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
 #include <iostream>
@@ -32,10 +35,16 @@ namespace Olympe
         , m_ShowPropertyPanel(false)   // Deprecated - merged into Inspector
         , m_ShowTemplateBrowser(false)
         , m_ShowHistory(false)
+        , m_ShowDebugger(false)
+        , m_ShowProfiler(false)
+        , m_ShowVSEditor(false)
         , m_ShowPreferences(false)
         , m_ShowShortcuts(false)
         , m_TemplateBrowserPanel(nullptr)
         , m_HistoryPanel(nullptr)
+        , m_VSEditorPanel(nullptr)
+        , m_DebugPanel(nullptr)
+        , m_ProfilerPanel(nullptr)
     {
         m_NewBlueprintNameBuffer[0] = '\0';
         m_FilepathBuffer[0] = '\0';
@@ -43,6 +52,24 @@ namespace Olympe
 
     BlueprintEditorGUI::~BlueprintEditorGUI()
     {
+        if (m_ProfilerPanel)
+        {
+            delete m_ProfilerPanel;
+            m_ProfilerPanel = nullptr;
+        }
+
+        if (m_DebugPanel)
+        {
+            delete m_DebugPanel;
+            m_DebugPanel = nullptr;
+        }
+
+        if (m_VSEditorPanel)
+        {
+            delete m_VSEditorPanel;
+            m_VSEditorPanel = nullptr;
+        }
+
         if (m_HistoryPanel)
         {
             delete m_HistoryPanel;
@@ -65,10 +92,7 @@ namespace Olympe
         // Configure ImNodes style
         ImNodesStyle& style = ImNodes::GetStyle();
         style.Flags |= ImNodesStyleFlags_GridLines;
-
-        // Load editor configuration from JSON
-        LoadEditorConfig();
-
+        
         // Initialize Asset Browser with Blueprints directory
         m_AssetBrowser.Initialize("Blueprints");
         
@@ -89,12 +113,41 @@ namespace Olympe
         // Initialize history panel
         m_HistoryPanel = new HistoryPanel();
         m_HistoryPanel->Initialize();
+
+        // Phase 5: Initialize VS editor, debugger, and profiler panels
+        m_VSEditorPanel = new VisualScriptEditorPanel();
+        m_VSEditorPanel->Initialize();
+
+        m_DebugPanel = new DebugPanel();
+        m_DebugPanel->Initialize();
+
+        m_ProfilerPanel = new ProfilerPanel();
+        m_ProfilerPanel->Initialize();
     }
 
     void BlueprintEditorGUI::Shutdown()
     {
-        // Save editor configuration before shutting down
-        SaveEditorConfig();
+        // Phase 5: Shutdown VS editor, debugger, and profiler panels
+        if (m_ProfilerPanel)
+        {
+            m_ProfilerPanel->Shutdown();
+            delete m_ProfilerPanel;
+            m_ProfilerPanel = nullptr;
+        }
+
+        if (m_DebugPanel)
+        {
+            m_DebugPanel->Shutdown();
+            delete m_DebugPanel;
+            m_DebugPanel = nullptr;
+        }
+
+        if (m_VSEditorPanel)
+        {
+            m_VSEditorPanel->Shutdown();
+            delete m_VSEditorPanel;
+            m_VSEditorPanel = nullptr;
+        }
 
         // Shutdown panels
         if (m_HistoryPanel)
@@ -103,18 +156,18 @@ namespace Olympe
             delete m_HistoryPanel;
             m_HistoryPanel = nullptr;
         }
-
+        
         if (m_TemplateBrowserPanel)
         {
             m_TemplateBrowserPanel->Shutdown();
             delete m_TemplateBrowserPanel;
             m_TemplateBrowserPanel = nullptr;
         }
-
+        
         m_InspectorPanel.Shutdown();
         m_EntitiesPanel.Shutdown();
         m_NodeGraphPanel.Shutdown();
-
+        
         ImNodes::DestroyContext();
     }
 
@@ -323,6 +376,9 @@ namespace Olympe
                 ImGui::Separator();
                 ImGui::MenuItem("Template Browser", nullptr, &m_ShowTemplateBrowser);  // Phase 5
                 ImGui::MenuItem("History", nullptr, &m_ShowHistory);  // Phase 6
+                ImGui::MenuItem("VS Graph Editor", nullptr, &m_ShowVSEditor);    // Phase 5 (new)
+                ImGui::MenuItem("Debugger", nullptr, &m_ShowDebugger);           // Phase 5 (new)
+                ImGui::MenuItem("Profiler", nullptr, &m_ShowProfiler);           // Phase 5 (new)
                 
                 ImGui::Separator();
                 
@@ -390,6 +446,18 @@ namespace Olympe
         // === Phase 6: History Panel (optional) ===
         if (m_ShowHistory && m_HistoryPanel)
             m_HistoryPanel->Render();
+
+        // === Phase 5 (new): VS Graph Editor ===
+        if (m_ShowVSEditor && m_VSEditorPanel)
+            m_VSEditorPanel->Render();
+
+        // === Phase 5 (new): Debugger Panel ===
+        if (m_ShowDebugger && m_DebugPanel)
+            m_DebugPanel->Render();
+
+        // === Phase 5 (new): Profiler Panel ===
+        if (m_ShowProfiler && m_ProfilerPanel)
+            m_ProfilerPanel->Render();
 
         // Status bar at bottom
         RenderStatusBar();
@@ -1025,59 +1093,6 @@ namespace Olympe
             {
                 m_ShowTemplateBrowser = true;
             }
-        }
-    }
-
-    void BlueprintEditorGUI::LoadEditorConfig()
-    {
-        EditorConfigManager& config = EditorConfigManager::Get();
-
-        // Load configuration from JSON file
-        if (config.LoadConfig("./config/ATS-VS-editor-config.json"))
-        {
-            // Apply panel visibility settings
-            const PanelVisibility& visibility = config.GetPanelVisibility();
-            m_ShowAssetBrowser = visibility.showAssetBrowser;
-            m_ShowInspector = visibility.showInspector;
-            m_ShowNodeGraph = visibility.showNodeGraph;
-            m_ShowTemplateBrowser = visibility.showTemplateBrowser;
-            m_ShowHistory = visibility.showHistory;
-
-            // Apply preferences to ImNodes
-            config.ApplyToImGui();
-
-            std::cout << "[BlueprintEditorGUI] Editor configuration loaded from JSON" << std::endl;
-        }
-        else
-        {
-            std::cout << "[BlueprintEditorGUI] Using default editor configuration" << std::endl;
-        }
-    }
-
-    void BlueprintEditorGUI::SaveEditorConfig()
-    {
-        EditorConfigManager& config = EditorConfigManager::Get();
-
-        // Capture current ImGui window positions and sizes
-        config.CaptureFromImGui();
-
-        // Update panel visibility in config
-        PanelVisibility visibility;
-        visibility.showAssetBrowser = m_ShowAssetBrowser;
-        visibility.showInspector = m_ShowInspector;
-        visibility.showNodeGraph = m_ShowNodeGraph;
-        visibility.showTemplateBrowser = m_ShowTemplateBrowser;
-        visibility.showHistory = m_ShowHistory;
-        config.SetPanelVisibility(visibility);
-
-        // Save configuration to JSON file
-        if (config.SaveConfig("./config/ATS-VS-editor-config.json"))
-        {
-            std::cout << "[BlueprintEditorGUI] Editor configuration saved to JSON" << std::endl;
-        }
-        else
-        {
-            std::cerr << "[BlueprintEditorGUI] Failed to save editor configuration" << std::endl;
         }
     }
 }
