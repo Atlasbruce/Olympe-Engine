@@ -121,6 +121,7 @@ static void TestA_MoveToSucceeds()
     Olympe::TaskGraphTemplate   tmpl   = MakeMoveToTemplate(start, target, speed);
     Olympe::TaskSystem          system;
     Olympe::TaskRunnerComponent runner;
+    runner.CurrentNodeID = 0;
 
     bool reachedSuccess = false;
 
@@ -129,7 +130,7 @@ static void TestA_MoveToSucceeds()
     {
         system.ExecuteNode(1u, runner, &tmpl, dt);
 
-        if (runner.CurrentNodeIndex == Olympe::NODE_INDEX_NONE)
+        if (runner.CurrentNodeID == Olympe::NODE_INDEX_NONE)
         {
             reachedSuccess = (runner.LastStatus ==
                               Olympe::TaskRunnerComponent::TaskStatus::Success);
@@ -167,6 +168,7 @@ static void TestB_MoveToIsRunningThenSucceeds()
     Olympe::TaskGraphTemplate   tmpl   = MakeMoveToTemplate(start, target, speed);
     Olympe::TaskSystem          system;
     Olympe::TaskRunnerComponent runner;
+    runner.CurrentNodeID = 0;
 
     int runningTicks = 0;
 
@@ -174,7 +176,7 @@ static void TestB_MoveToIsRunningThenSucceeds()
     {
         system.ExecuteNode(1u, runner, &tmpl, dt);
 
-        if (runner.CurrentNodeIndex == Olympe::NODE_INDEX_NONE)
+        if (runner.CurrentNodeID == Olympe::NODE_INDEX_NONE)
         {
             break;
         }
@@ -228,6 +230,7 @@ static void TestC_MissingTargetReturnsFailure()
 
     Olympe::TaskSystem          system;
     Olympe::TaskRunnerComponent runner;
+    runner.CurrentNodeID = 0;
 
     system.ExecuteNode(1u, runner, &tmpl, 0.016f);
 
@@ -271,6 +274,7 @@ static void TestD_MissingPositionBBKeyReturnsFailure()
 
     Olympe::TaskSystem          system;
     Olympe::TaskRunnerComponent runner;
+    runner.CurrentNodeID = 0;
 
     system.ExecuteNode(1u, runner, &tmpl, 0.016f);
 

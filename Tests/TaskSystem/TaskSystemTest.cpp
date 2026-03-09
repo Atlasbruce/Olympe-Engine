@@ -125,17 +125,13 @@ static void TestD_TaskRunnerComponentDefaults()
                 "GraphTemplateID should default to INVALID_ASSET_ID");
     if (runner.GraphTemplateID != Olympe::INVALID_ASSET_ID) { passed = false; }
 
-    TEST_ASSERT(runner.CurrentNodeIndex == 0,
-                "CurrentNodeIndex should default to 0");
-    if (runner.CurrentNodeIndex != 0) { passed = false; }
+    TEST_ASSERT(runner.CurrentNodeID == Olympe::NODE_INDEX_NONE,
+                "CurrentNodeID should default to NODE_INDEX_NONE");
+    if (runner.CurrentNodeID != Olympe::NODE_INDEX_NONE) { passed = false; }
 
     TEST_ASSERT(runner.StateTimer == 0.0f,
                 "StateTimer should default to 0.0f");
     if (runner.StateTimer != 0.0f) { passed = false; }
-
-    TEST_ASSERT(runner.LocalBlackboardData.empty(),
-                "LocalBlackboardData should be empty by default");
-    if (!runner.LocalBlackboardData.empty()) { passed = false; }
 
     TEST_ASSERT(runner.LastStatus == Olympe::TaskRunnerComponent::TaskStatus::Success,
                 "LastStatus should default to Success");

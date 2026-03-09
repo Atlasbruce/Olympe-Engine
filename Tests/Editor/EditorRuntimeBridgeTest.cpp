@@ -297,6 +297,7 @@ static void TestG_CallbackFiredOnRunningTask()
     Olympe::TaskGraphTemplate   tmpl   = MakeSingleNodeTemplate();
     Olympe::TaskSystem          system;
     Olympe::TaskRunnerComponent runner;
+    runner.CurrentNodeID = 0;
 
     system.ExecuteNode(1u, runner, &tmpl, 0.016f);
 

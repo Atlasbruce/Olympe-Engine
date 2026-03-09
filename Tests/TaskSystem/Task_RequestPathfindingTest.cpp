@@ -139,6 +139,7 @@ static void TestA_PathfindingSucceeds()
     Olympe::TaskGraphTemplate   tmpl   = MakePathfindingTemplate(start, target, 0.0f);
     Olympe::TaskSystem          system;
     Olympe::TaskRunnerComponent runner;
+    runner.CurrentNodeID = 0;
 
     bool reachedSuccess = false;
 
@@ -147,7 +148,7 @@ static void TestA_PathfindingSucceeds()
     {
         system.ExecuteNode(1u, runner, &tmpl, 0.016f);
 
-        if (runner.CurrentNodeIndex == Olympe::NODE_INDEX_NONE)
+        if (runner.CurrentNodeID == Olympe::NODE_INDEX_NONE)
         {
             reachedSuccess = (runner.LastStatus ==
                               Olympe::TaskRunnerComponent::TaskStatus::Success);
@@ -182,14 +183,15 @@ static void TestB_FirstTickReturnsRunning()
     Olympe::TaskGraphTemplate   tmpl   = MakePathfindingTemplate(start, target, 60.0f);
     Olympe::TaskSystem          system;
     Olympe::TaskRunnerComponent runner;
+    runner.CurrentNodeID = 0;
 
     // Execute exactly one tick.
     system.ExecuteNode(1u, runner, &tmpl, 0.016f);
 
     // The task should be Running (not yet complete).
-    TEST_ASSERT(runner.CurrentNodeIndex == 0,
+    TEST_ASSERT(runner.CurrentNodeID == 0,
                 "After first tick, node should still be 0 (Running)");
-    if (runner.CurrentNodeIndex != 0) passed = false;
+    if (runner.CurrentNodeID != 0) passed = false;
 
     // Abort to release the pending request.
     if (runner.activeTask)
@@ -249,6 +251,7 @@ static void TestC_MissingTargetReturnsFailure()
 
     Olympe::TaskSystem          system;
     Olympe::TaskRunnerComponent runner;
+    runner.CurrentNodeID = 0;
 
     system.ExecuteNode(1u, runner, &tmpl, 0.016f);
 
@@ -292,6 +295,7 @@ static void TestD_MissingPositionBBKeyReturnsFailure()
 
     Olympe::TaskSystem          system;
     Olympe::TaskRunnerComponent runner;
+    runner.CurrentNodeID = 0;
 
     system.ExecuteNode(1u, runner, &tmpl, 0.016f);
 
