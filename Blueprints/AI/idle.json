@@ -1,36 +1,44 @@
 {
-  "blueprintType": "BehaviorTree",
-  "data": {
-    "nodes": [
-      {
-        "actionType": "Idle",
-        "children": [],
-        "id": 1,
-        "name": "Idle Action",
-        "parameters": {},
-        "position": {
-          "x": 208,
-          "y": 304
-        },
-        "type": "Action"
-      }
-    ],
-    "rootNodeId": 1
-  },
+  "schema_version": 4,
+  "graphType": "VisualScript",
+  "name": "IdleTree",
   "description": "",
+  "blackboard": [],
+  "nodes": [
+    {
+      "id": 2,
+      "type": "EntryPoint",
+      "name": "Start",
+      "position": {
+        "x": 0,
+        "y": 200
+      }
+    },
+    {
+      "id": 1,
+      "type": "AtomicTask",
+      "name": "Idle Action",
+      "position": {
+        "x": 208,
+        "y": 304
+      },
+      "taskType": "Task_Wait"
+    }
+  ],
+  "execConnections": [
+    {
+      "fromNode": 2,
+      "fromPin": "Out",
+      "toNode": 1,
+      "toPin": "In"
+    }
+  ],
+  "dataConnections": [],
   "editorState": {
     "scrollOffset": {
       "x": 0,
       "y": 0
     },
     "zoom": 1
-  },
-  "metadata": {
-    "author": "User",
-    "created": "",
-    "lastModified": "2026-03-07T12:15:32",
-    "tags": []
-  },
-  "name": "IdleTree",
-  "schema_version": 2
+  }
 }

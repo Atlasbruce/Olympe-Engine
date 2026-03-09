@@ -60,7 +60,9 @@ static void ReportTest(const std::string& name, bool passed)
 
 static void TestA_LoadGuardV2()
 {
-    std::cout << "Test A: Load guardV2_ai.json..." << std::endl;
+    // guardV2_ai.json has been migrated to schema_version 4 (VisualScript).
+    // These assertions verify the v4 structure produced by the migration.
+    std::cout << "Test A: Load guardV2_ai.json (v4 VisualScript)..." << std::endl;
 
     std::vector<std::string> errors;
     Olympe::TaskGraphTemplate* tmpl =
@@ -80,28 +82,38 @@ static void TestA_LoadGuardV2()
         return;
     }
 
-    // RootNodeID must be 1
-    TEST_ASSERT(tmpl->RootNodeID == 1, "RootNodeID should be 1");
-    if (tmpl->RootNodeID != 1) { passed = false; }
+    // v4 VisualScript: graphType must be VisualScript
+    TEST_ASSERT(tmpl->GraphType == "VisualScript", "GraphType should be 'VisualScript'");
+    if (tmpl->GraphType != "VisualScript") { passed = false; }
 
-    // Nodes must not be empty
+    // Must have nodes
     TEST_ASSERT(!tmpl->Nodes.empty(), "Nodes should not be empty");
     if (tmpl->Nodes.empty()) { passed = false; }
 
-    // Lookup cache should work
-    const Olympe::TaskNodeDefinition* rootNode = tmpl->GetNode(1);
-    TEST_ASSERT(rootNode != nullptr, "Root node (id=1) must be found in lookup cache");
-    if (rootNode == nullptr) { passed = false; }
-
-    if (rootNode != nullptr)
+    // Must have an EntryPoint node
+    bool hasEntryPoint = false;
+    for (size_t i = 0; i < tmpl->Nodes.size(); ++i)
     {
-        // Root is a Selector in this file
-        TEST_ASSERT(rootNode->Type == Olympe::TaskNodeType::Selector,
-                    "Root node (id=1) type should be Selector");
-        if (rootNode->Type != Olympe::TaskNodeType::Selector) { passed = false; }
+        if (tmpl->Nodes[i].Type == Olympe::TaskNodeType::EntryPoint)
+        {
+            hasEntryPoint = true;
+            break;
+        }
     }
+    TEST_ASSERT(hasEntryPoint, "v4 graph must have an EntryPoint node");
+    if (!hasEntryPoint) { passed = false; }
 
-    // Verify at least one Action node maps to AtomicTask
+    // RootNodeID must be valid and point to an existing node
+    TEST_ASSERT(tmpl->RootNodeID != Olympe::NODE_INDEX_NONE, "RootNodeID must be set");
+    if (tmpl->RootNodeID != Olympe::NODE_INDEX_NONE)
+    {
+        const Olympe::TaskNodeDefinition* root = tmpl->GetNode(tmpl->RootNodeID);
+        TEST_ASSERT(root != nullptr, "Root node must be reachable via GetNode()");
+        if (root == nullptr) { passed = false; }
+    }
+    else { passed = false; }
+
+    // At least one AtomicTask node with a non-empty taskType
     bool foundAction = false;
     for (size_t i = 0; i < tmpl->Nodes.size(); ++i)
     {
@@ -112,24 +124,8 @@ static void TestA_LoadGuardV2()
             break;
         }
     }
-    TEST_ASSERT(foundAction, "At least one AtomicTask node should exist with a non-empty AtomicTaskID");
+    TEST_ASSERT(foundAction, "At least one AtomicTask node should have a non-empty AtomicTaskID");
     if (!foundAction) { passed = false; }
-
-    // Verify Condition nodes are mapped to AtomicTask
-    bool conditionsMapped = true;
-    for (size_t i = 0; i < tmpl->Nodes.size(); ++i)
-    {
-        // There should be no leftover "Condition" type; all must be AtomicTask
-        if (tmpl->Nodes[i].NodeName.find("?") != std::string::npos)
-        {
-            if (tmpl->Nodes[i].Type != Olympe::TaskNodeType::AtomicTask)
-            {
-                conditionsMapped = false;
-            }
-        }
-    }
-    TEST_ASSERT(conditionsMapped, "Condition nodes should be mapped to AtomicTask");
-    if (!conditionsMapped) { passed = false; }
 
     delete tmpl;
     ReportTest("TestA_LoadGuardV2", passed);

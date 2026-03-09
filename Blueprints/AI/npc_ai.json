@@ -1,83 +1,97 @@
 {
-  "blueprintType": "BehaviorTree",
-  "data": {
-    "nodes": [
-      {
-        "children": [],
-        "id": 1,
-        "name": "Simple Move Loop (Repeater)",
-        "parameters": {},
-        "position": {
-          "x": 784,
-          "y": 288
-        },
-        "type": "Action"
-      },
-      {
-        "children": [
-          3,
-          4
-        ],
-        "id": 2,
-        "name": "Step Move Sequence",
-        "parameters": {},
-        "position": {
-          "x": 256,
-          "y": 288
-        },
-        "type": "Sequence"
-      },
-      {
-        "actionType": "MoveForwardDistance",
-        "children": [
-          1
-        ],
-        "id": 3,
-        "name": "Move 100px Forward",
-        "parameters": {
-          "distance": "100",
-          "speed": "Walk"
-        },
-        "position": {
-          "x": 528,
-          "y": 176
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "RotateDirectionRandomRange",
-        "children": [
-          1
-        ],
-        "id": 4,
-        "name": "Rotate Direction +/-15°",
-        "parameters": {
-          "maxDeltaDeg": "15",
-          "minDeltaDeg": "-15"
-        },
-        "position": {
-          "x": 496,
-          "y": 400
-        },
-        "type": "Action"
-      }
-    ],
-    "rootNodeId": 1
-  },
+  "schema_version": 4,
+  "graphType": "VisualScript",
+  "name": "NPCSimpleMoveTree",
   "description": "",
+  "blackboard": [],
+  "nodes": [
+    {
+      "id": 5,
+      "type": "EntryPoint",
+      "name": "Start",
+      "position": {
+        "x": 0,
+        "y": 200
+      }
+    },
+    {
+      "id": 1,
+      "type": "AtomicTask",
+      "name": "Simple Move Loop (Repeater)",
+      "position": {
+        "x": 784,
+        "y": 288
+      },
+      "taskType": "Task_Wait"
+    },
+    {
+      "id": 2,
+      "type": "VSSequence",
+      "name": "Step Move Sequence",
+      "position": {
+        "x": 256,
+        "y": 288
+      },
+      "children": [
+        3,
+        4
+      ]
+    },
+    {
+      "id": 3,
+      "type": "AtomicTask",
+      "name": "Move 100px Forward",
+      "position": {
+        "x": 528,
+        "y": 176
+      },
+      "taskType": "Task_MoveForward",
+      "params": {
+        "distance": "100",
+        "speed": "Walk"
+      }
+    },
+    {
+      "id": 4,
+      "type": "AtomicTask",
+      "name": "Rotate Direction +/-15\u00b0",
+      "position": {
+        "x": 496,
+        "y": 400
+      },
+      "taskType": "Task_Rotate",
+      "params": {
+        "maxDeltaDeg": "15",
+        "minDeltaDeg": "-15"
+      }
+    }
+  ],
+  "execConnections": [
+    {
+      "fromNode": 5,
+      "fromPin": "Out",
+      "toNode": 1,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "Out",
+      "toNode": 1,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Out",
+      "toNode": 1,
+      "toPin": "In"
+    }
+  ],
+  "dataConnections": [],
   "editorState": {
     "scrollOffset": {
       "x": 0,
       "y": 0
     },
     "zoom": 1
-  },
-  "metadata": {
-    "author": "User",
-    "created": "",
-    "lastModified": "2026-03-07T12:15:47",
-    "tags": []
-  },
-  "name": "NPCSimpleMoveTree",
-  "schema_version": 2
+  }
 }

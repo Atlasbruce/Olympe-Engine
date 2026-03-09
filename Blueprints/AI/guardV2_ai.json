@@ -1,361 +1,402 @@
 {
-  "blueprintType": "BehaviorTree",
-  "data": {
-    "nodes": [
-      {
-        "children": [
-          10,
-          20,
-          30,
-          50
-        ],
-        "id": 1,
-        "name": "Root Priority Selector",
-        "parameters": {},
-        "position": {
-          "x": -151,
-          "y": 29
-        },
-        "type": "Selector"
-      },
-      {
-        "children": [
-          11,
-          12,
-          13
-        ],
-        "id": 10,
-        "name": "Self Preservation Sequence",
-        "parameters": {},
-        "position": {
-          "x": 233.87,
-          "y": 60.1385
-        },
-        "type": "Sequence"
-      },
-      {
-        "children": [],
-        "conditionType": "CheckStats",
-        "id": 11,
-        "name": "Is Health Critical?",
-        "parameters": {
-          "operator": "Less",
-          "stat": "Health",
-          "value": "20"
-        },
-        "position": {
-          "x": 498.804,
-          "y": -6.46622
-        },
-        "type": "Condition"
-      },
-      {
-        "actionType": "FindCover",
-        "children": [],
-        "id": 12,
-        "name": "Find Safe Cover",
-        "parameters": {
-          "radius": "30"
-        },
-        "position": {
-          "x": 498.804,
-          "y": 106.534
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "HealSelf",
-        "children": [],
-        "id": 13,
-        "name": "Apply Bandage/Heal",
-        "parameters": {
-          "amount": "50",
-          "duration": "3"
-        },
-        "position": {
-          "x": 491.804,
-          "y": 227.534
-        },
-        "type": "Action"
-      },
-      {
-        "children": [
-          21,
-          22,
-          23
-        ],
-        "id": 20,
-        "name": "Combat Engagement",
-        "parameters": {},
-        "position": {
-          "x": 315.69,
-          "y": 600.288
-        },
-        "type": "Sequence"
-      },
-      {
-        "children": [],
-        "conditionType": "PerceptionCheck",
-        "id": 21,
-        "name": "Can See Enemy?",
-        "parameters": {
-          "target": "Player",
-          "type": "Visual"
-        },
-        "position": {
-          "x": 550.439,
-          "y": 517.134
-        },
-        "type": "Condition"
-      },
-      {
-        "actionType": "RotateToTarget",
-        "children": [],
-        "id": 22,
-        "name": "Face Enemy",
-        "parameters": {},
-        "position": {
-          "x": 551.439,
-          "y": 635.134
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "AttackRange",
-        "children": [],
-        "id": 23,
-        "name": "Shoot Weapon",
-        "parameters": {
-          "burst": "3"
-        },
-        "position": {
-          "x": 548.439,
-          "y": 772.134
-        },
-        "type": "Action"
-      },
-      {
-        "children": [
-          31,
-          40
-        ],
-        "id": 30,
-        "name": "Investigation Selector",
-        "parameters": {},
-        "position": {
-          "x": 129.169,
-          "y": -405.582
-        },
-        "type": "Selector"
-      },
-      {
-        "children": [
-          32,
-          34,
-          35,
-          33
-        ],
-        "id": 31,
-        "name": "Noise Reaction",
-        "parameters": {},
-        "position": {
-          "x": 450,
-          "y": -409
-        },
-        "type": "Sequence"
-      },
-      {
-        "children": [],
-        "conditionType": "PerceptionCheck",
-        "id": 32,
-        "name": "Heard Suspicious Noise?",
-        "parameters": {
-          "type": "Audio"
-        },
-        "position": {
-          "x": 694,
-          "y": -647
-        },
-        "type": "Condition"
-      },
-      {
-        "actionType": "SetTargetToNoiseSource",
-        "children": [],
-        "id": 33,
-        "name": "Set Noise Source as Target",
-        "parameters": {},
-        "position": {
-          "x": 738.864,
-          "y": -525.344
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "MoveToTarget",
-        "children": [],
-        "id": 34,
-        "name": "Investigate Location",
-        "parameters": {
-          "speed": "Walk"
-        },
-        "position": {
-          "x": 714.963,
-          "y": -388.067
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "PlayAnimation",
-        "children": [],
-        "id": 35,
-        "name": "Look Around (Scan)",
-        "parameters": {
-          "anim": "LookAround",
-          "animationName": "",
-          "duration": "4",
-          "loop": ""
-        },
-        "position": {
-          "x": 789.424,
-          "y": -273.911
-        },
-        "type": "Action"
-      },
-      {
-        "children": [
-          41,
-          42,
-          43
-        ],
-        "id": 40,
-        "name": "Lost Target Search",
-        "parameters": {},
-        "position": {
-          "x": 496,
-          "y": -164
-        },
-        "type": "Sequence"
-      },
-      {
-        "children": [],
-        "conditionType": "CheckBlackboard",
-        "id": 41,
-        "name": "Has Last Known Position?",
-        "parameters": {
-          "exists": "true",
-          "key": "LastKnownEnemyPos"
-        },
-        "position": {
-          "x": 744,
-          "y": -129
-        },
-        "type": "Condition"
-      },
-      {
-        "actionType": "MoveToLocation",
-        "children": [],
-        "id": 42,
-        "name": "Rush to LKP",
-        "parameters": {
-          "key": "LastKnownEnemyPos",
-          "speed": "Run"
-        },
-        "position": {
-          "x": 767,
-          "y": -15
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "WanderAroundPoint",
-        "children": [],
-        "id": 43,
-        "name": "Search Pattern",
-        "parameters": {
-          "duration": "10",
-          "radius": "10"
-        },
-        "position": {
-          "x": 766,
-          "y": 111
-        },
-        "type": "Action"
-      },
-      {
-        "children": [
-          51,
-          52,
-          53
-        ],
-        "id": 50,
-        "name": "Default Patrol",
-        "parameters": {},
-        "position": {
-          "x": 551.368,
-          "y": 381.62
-        },
-        "type": "Sequence"
-      },
-      {
-        "actionType": "NextWaypoint",
-        "children": [],
-        "id": 51,
-        "name": "Get Next Waypoint",
-        "parameters": {
-          "loop": "true"
-        },
-        "position": {
-          "x": 753.368,
-          "y": 284.62
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "MoveToLocation",
-        "children": [],
-        "id": 52,
-        "name": "Move To Waypoint",
-        "parameters": {
-          "key": "CurrentWaypoint",
-          "speed": "Walk"
-        },
-        "position": {
-          "x": 754.368,
-          "y": 402.62
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "Wait",
-        "children": [],
-        "id": 53,
-        "name": "Idle at Waypoint",
-        "parameters": {
-          "time": "2"
-        },
-        "position": {
-          "x": 747.368,
-          "y": 535.62
-        },
-        "type": "Action"
-      }
-    ],
-    "rootNodeId": 1
-  },
+  "schema_version": 4,
+  "graphType": "VisualScript",
+  "name": "GuardAI_V2_Complex",
   "description": "",
+  "blackboard": [],
+  "nodes": [
+    {
+      "id": 54,
+      "type": "EntryPoint",
+      "name": "Start",
+      "position": {
+        "x": 0,
+        "y": 200
+      }
+    },
+    {
+      "id": 1,
+      "type": "Branch",
+      "name": "Root Priority Selector",
+      "position": {
+        "x": -151,
+        "y": 29
+      }
+    },
+    {
+      "id": 153,
+      "type": "Branch",
+      "name": "Selector_Branch_153",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 154,
+      "type": "Branch",
+      "name": "Selector_Branch_154",
+      "position": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 10,
+      "type": "VSSequence",
+      "name": "Self Preservation Sequence",
+      "position": {
+        "x": 233.87,
+        "y": 60.1385
+      },
+      "children": [
+        11,
+        12,
+        13
+      ]
+    },
+    {
+      "id": 11,
+      "type": "Branch",
+      "name": "Is Health Critical?",
+      "position": {
+        "x": 498.804,
+        "y": -6.46622
+      },
+      "conditionKey": "CheckStats",
+      "params": {
+        "operator": "Less",
+        "stat": "Health",
+        "value": "20"
+      }
+    },
+    {
+      "id": 12,
+      "type": "AtomicTask",
+      "name": "Find Safe Cover",
+      "position": {
+        "x": 498.804,
+        "y": 106.534
+      },
+      "taskType": "Task_FindCover",
+      "params": {
+        "radius": "30"
+      }
+    },
+    {
+      "id": 13,
+      "type": "AtomicTask",
+      "name": "Apply Bandage/Heal",
+      "position": {
+        "x": 491.804,
+        "y": 227.534
+      },
+      "taskType": "Task_HealSelf",
+      "params": {
+        "amount": "50",
+        "duration": "3"
+      }
+    },
+    {
+      "id": 20,
+      "type": "VSSequence",
+      "name": "Combat Engagement",
+      "position": {
+        "x": 315.69,
+        "y": 600.288
+      },
+      "children": [
+        21,
+        22,
+        23
+      ]
+    },
+    {
+      "id": 21,
+      "type": "Branch",
+      "name": "Can See Enemy?",
+      "position": {
+        "x": 550.439,
+        "y": 517.134
+      },
+      "conditionKey": "PerceptionCheck",
+      "params": {
+        "target": "Player",
+        "type": "Visual"
+      }
+    },
+    {
+      "id": 22,
+      "type": "AtomicTask",
+      "name": "Face Enemy",
+      "position": {
+        "x": 551.439,
+        "y": 635.134
+      },
+      "taskType": "Task_RotateToTarget"
+    },
+    {
+      "id": 23,
+      "type": "AtomicTask",
+      "name": "Shoot Weapon",
+      "position": {
+        "x": 548.439,
+        "y": 772.134
+      },
+      "taskType": "Task_AttackRange",
+      "params": {
+        "burst": "3"
+      }
+    },
+    {
+      "id": 30,
+      "type": "Branch",
+      "name": "Investigation Selector",
+      "position": {
+        "x": 129.169,
+        "y": -405.582
+      }
+    },
+    {
+      "id": 31,
+      "type": "VSSequence",
+      "name": "Noise Reaction",
+      "position": {
+        "x": 450,
+        "y": -409
+      },
+      "children": [
+        32,
+        34,
+        35,
+        33
+      ]
+    },
+    {
+      "id": 32,
+      "type": "Branch",
+      "name": "Heard Suspicious Noise?",
+      "position": {
+        "x": 694,
+        "y": -647
+      },
+      "conditionKey": "PerceptionCheck",
+      "params": {
+        "type": "Audio"
+      }
+    },
+    {
+      "id": 33,
+      "type": "AtomicTask",
+      "name": "Set Noise Source as Target",
+      "position": {
+        "x": 738.864,
+        "y": -525.344
+      },
+      "taskType": "Task_SetTargetToNoiseSource"
+    },
+    {
+      "id": 34,
+      "type": "AtomicTask",
+      "name": "Investigate Location",
+      "position": {
+        "x": 714.963,
+        "y": -388.067
+      },
+      "taskType": "Task_MoveToLocation",
+      "params": {
+        "speed": "Walk"
+      }
+    },
+    {
+      "id": 35,
+      "type": "AtomicTask",
+      "name": "Look Around (Scan)",
+      "position": {
+        "x": 789.424,
+        "y": -273.911
+      },
+      "taskType": "Task_PlayAnimation",
+      "params": {
+        "anim": "LookAround",
+        "animationName": "",
+        "duration": "4",
+        "loop": ""
+      }
+    },
+    {
+      "id": 40,
+      "type": "VSSequence",
+      "name": "Lost Target Search",
+      "position": {
+        "x": 496,
+        "y": -164
+      },
+      "children": [
+        41,
+        42,
+        43
+      ]
+    },
+    {
+      "id": 41,
+      "type": "Branch",
+      "name": "Has Last Known Position?",
+      "position": {
+        "x": 744,
+        "y": -129
+      },
+      "conditionKey": "CheckBlackboard",
+      "params": {
+        "exists": "true",
+        "key": "LastKnownEnemyPos"
+      }
+    },
+    {
+      "id": 42,
+      "type": "AtomicTask",
+      "name": "Rush to LKP",
+      "position": {
+        "x": 767,
+        "y": -15
+      },
+      "taskType": "Task_MoveToLocation",
+      "params": {
+        "key": "LastKnownEnemyPos",
+        "speed": "Run"
+      }
+    },
+    {
+      "id": 43,
+      "type": "AtomicTask",
+      "name": "Search Pattern",
+      "position": {
+        "x": 766,
+        "y": 111
+      },
+      "taskType": "Task_WanderAroundPoint",
+      "params": {
+        "duration": "10",
+        "radius": "10"
+      }
+    },
+    {
+      "id": 50,
+      "type": "VSSequence",
+      "name": "Default Patrol",
+      "position": {
+        "x": 551.368,
+        "y": 381.62
+      },
+      "children": [
+        51,
+        52,
+        53
+      ]
+    },
+    {
+      "id": 51,
+      "type": "AtomicTask",
+      "name": "Get Next Waypoint",
+      "position": {
+        "x": 753.368,
+        "y": 284.62
+      },
+      "taskType": "Task_NextWaypoint",
+      "params": {
+        "loop": "true"
+      }
+    },
+    {
+      "id": 52,
+      "type": "AtomicTask",
+      "name": "Move To Waypoint",
+      "position": {
+        "x": 754.368,
+        "y": 402.62
+      },
+      "taskType": "Task_MoveToLocation",
+      "params": {
+        "key": "CurrentWaypoint",
+        "speed": "Walk"
+      }
+    },
+    {
+      "id": 53,
+      "type": "AtomicTask",
+      "name": "Idle at Waypoint",
+      "position": {
+        "x": 747.368,
+        "y": 535.62
+      },
+      "taskType": "Task_Wait",
+      "params": {
+        "time": "2"
+      }
+    }
+  ],
+  "execConnections": [
+    {
+      "fromNode": 54,
+      "fromPin": "Out",
+      "toNode": 1,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 1,
+      "fromPin": "Then",
+      "toNode": 10,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 1,
+      "fromPin": "Else",
+      "toNode": 153,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 153,
+      "fromPin": "Then",
+      "toNode": 20,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 153,
+      "fromPin": "Else",
+      "toNode": 154,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 154,
+      "fromPin": "Then",
+      "toNode": 30,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 154,
+      "fromPin": "Else",
+      "toNode": 50,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 30,
+      "fromPin": "Then",
+      "toNode": 31,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 30,
+      "fromPin": "Else",
+      "toNode": 40,
+      "toPin": "In"
+    }
+  ],
+  "dataConnections": [],
   "editorState": {
     "scrollOffset": {
       "x": 500,
       "y": 0
     },
     "zoom": 0.8
-  },
-  "metadata": {
-    "author": "User",
-    "created": "",
-    "lastModified": "2026-03-07T11:56:59",
-    "tags": []
-  },
-  "name": "GuardAI_V2_Complex",
-  "schema_version": 2
+  }
 }
