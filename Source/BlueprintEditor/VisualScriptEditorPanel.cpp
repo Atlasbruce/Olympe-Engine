@@ -770,8 +770,8 @@ void VisualScriptEditorPanel::RenderProperties()
 
     TaskNodeDefinition& def = eNode->def;
 
-    // Node name
-    static char nameBuf[128];
+    // Node name — use a local (non-static) buffer initialized from the current def
+    char nameBuf[128];
     std::strncpy(nameBuf, def.NodeName.c_str(), sizeof(nameBuf) - 1);
     nameBuf[sizeof(nameBuf) - 1] = '\0';
     if (ImGui::InputText("Name##vsname", nameBuf, sizeof(nameBuf)))
@@ -789,12 +789,13 @@ void VisualScriptEditorPanel::RenderProperties()
         m_dirty = true;
     }
 
-    // Type-specific fields
+    // Type-specific fields — all buffers are local (non-static) to avoid
+    // stale data when switching between selected nodes.
     switch (def.Type)
     {
         case TaskNodeType::AtomicTask:
         {
-            static char taskBuf[128];
+            char taskBuf[128];
             std::strncpy(taskBuf, def.AtomicTaskID.c_str(), sizeof(taskBuf) - 1);
             taskBuf[sizeof(taskBuf) - 1] = '\0';
             if (ImGui::InputText("TaskType##vstask", taskBuf, sizeof(taskBuf)))
@@ -817,7 +818,7 @@ void VisualScriptEditorPanel::RenderProperties()
         case TaskNodeType::GetBBValue:
         case TaskNodeType::SetBBValue:
         {
-            static char bbKeyBuf[128];
+            char bbKeyBuf[128];
             std::strncpy(bbKeyBuf, def.BBKey.c_str(), sizeof(bbKeyBuf) - 1);
             bbKeyBuf[sizeof(bbKeyBuf) - 1] = '\0';
             if (ImGui::InputText("BB Key##vsbbkey", bbKeyBuf, sizeof(bbKeyBuf)))
@@ -830,7 +831,7 @@ void VisualScriptEditorPanel::RenderProperties()
         case TaskNodeType::Branch:
         case TaskNodeType::While:
         {
-            static char condBuf[128];
+            char condBuf[128];
             std::strncpy(condBuf, def.ConditionID.c_str(), sizeof(condBuf) - 1);
             condBuf[sizeof(condBuf) - 1] = '\0';
             if (ImGui::InputText("ConditionID##vscond", condBuf, sizeof(condBuf)))
@@ -842,7 +843,7 @@ void VisualScriptEditorPanel::RenderProperties()
         }
         case TaskNodeType::SubGraph:
         {
-            static char sgPathBuf[256];
+            char sgPathBuf[256];
             std::strncpy(sgPathBuf, def.SubGraphPath.c_str(), sizeof(sgPathBuf) - 1);
             sgPathBuf[sizeof(sgPathBuf) - 1] = '\0';
             if (ImGui::InputText("SubGraph Path##vssg", sgPathBuf, sizeof(sgPathBuf)))
@@ -854,7 +855,7 @@ void VisualScriptEditorPanel::RenderProperties()
         }
         case TaskNodeType::MathOp:
         {
-            static char mathOpBuf[8];
+            char mathOpBuf[8];
             std::strncpy(mathOpBuf, def.MathOperator.c_str(), sizeof(mathOpBuf) - 1);
             mathOpBuf[sizeof(mathOpBuf) - 1] = '\0';
             if (ImGui::InputText("Operator (+,-,*,/)##vsmath", mathOpBuf, sizeof(mathOpBuf)))
@@ -903,7 +904,8 @@ void VisualScriptEditorPanel::RenderBlackboard()
 
         ImGui::PushID(idx);
 
-        static char keyBuf[64];
+        // Use a local (non-static) buffer per iteration to avoid sharing across entries
+        char keyBuf[64];
         std::strncpy(keyBuf, entry.Key.c_str(), sizeof(keyBuf) - 1);
         keyBuf[sizeof(keyBuf) - 1] = '\0';
         ImGui::SetNextItemWidth(120.0f);

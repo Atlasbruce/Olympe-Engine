@@ -92,14 +92,14 @@ void ProfilerPanel::RenderControls()
         // Build timestamp filename
         std::time_t t = std::time(nullptr);
         char timeBuf[32];
-        // strftime is C++11 compliant
 #ifdef _WIN32
         struct tm tmInfo;
         localtime_s(&tmInfo, &t);
         std::strftime(timeBuf, sizeof(timeBuf), "%Y%m%d_%H%M%S", &tmInfo);
 #else
-        struct tm* tmInfo = std::localtime(&t);
-        std::strftime(timeBuf, sizeof(timeBuf), "%Y%m%d_%H%M%S", tmInfo);
+        struct tm tmInfo;
+        localtime_r(&t, &tmInfo);
+        std::strftime(timeBuf, sizeof(timeBuf), "%Y%m%d_%H%M%S", &tmInfo);
 #endif
         std::string csvPath = std::string("profiler_export_") + timeBuf + ".csv";
         if (prof.SaveToFile(csvPath))

@@ -82,8 +82,8 @@ static void Test_InitialState_IsNotDebugging()
 {
     ResetController();
     DebugController& dc = DebugController::Get();
+    int prevFail = s_failCount;
 
-    bool passed = true;
     TEST_ASSERT(dc.GetState() == DebugState::NotDebugging,
                 "Initial state should be NotDebugging");
     TEST_ASSERT(!dc.IsDebugging(),
@@ -94,9 +94,7 @@ static void Test_InitialState_IsNotDebugging()
                 "GetCurrentNodeID() should be -1 initially");
 
     ReportTest("DebugController_InitialState_IsNotDebugging",
-               s_failCount == 0);
-    passed = (s_failCount == 0);
-    (void)passed;
+               s_failCount == prevFail);
 }
 
 static void Test_StartDebugging_TransitionsToRunning()
