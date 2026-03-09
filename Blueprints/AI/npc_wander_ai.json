@@ -12,8 +12,8 @@
           "repeatCount": "5"
         },
         "position": {
-          "x": 133.197,
-          "y": 278.892
+          "x": 156.197,
+          "y": 261.892
         },
         "type": "Action"
       },
@@ -28,8 +28,8 @@
         "name": "Wander Sequence",
         "parameters": {},
         "position": {
-          "x": 409.144,
-          "y": 292.327
+          "x": 373.144,
+          "y": 279.327
         },
         "type": "Sequence"
       },
@@ -43,8 +43,8 @@
           "radius": "500"
         },
         "position": {
-          "x": 714.364,
-          "y": 161.517
+          "x": 659.364,
+          "y": 167.517
         },
         "type": "Action"
       },
@@ -55,8 +55,8 @@
         "name": "Set Move Goal",
         "parameters": {},
         "position": {
-          "x": 672,
-          "y": 304
+          "x": 663,
+          "y": 299
         },
         "type": "Action"
       },

@@ -1,12 +1,4 @@
 { "compressionlevel":-1,
- "editorsettings":
-    {
-     "export":
-        {
-         "format":"json",
-         "target":"parallax-forext..tmj"
-        }
-    },
  "height":20,
  "infinite":false,
  "layers":[
@@ -97,6 +89,8 @@
          "imageheight":512,
          "imagewidth":512,
          "name":"Layer_ground_house",
+         "offsetx":4692.5,
+         "offsety":526,
          "opacity":1,
          "type":"imagelayer",
          "visible":true,
@@ -109,6 +103,8 @@
          "imageheight":1080,
          "imagewidth":1980,
          "name":"Layer_foreground_light",
+         "offsetx":-912,
+         "offsety":0,
          "opacity":1,
          "parallaxx":0,
          "type":"imagelayer",

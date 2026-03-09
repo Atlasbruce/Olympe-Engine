@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="Source\AI\AIEditor\AIEditorClipboard.cpp" />
@@ -13,6 +13,7 @@
     <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTNodePalette.cpp" />
     <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTNodeRegistry.cpp" />
     <ClCompile Include="Source\AI\BehaviorTreeDebugWindow.cpp" />
+    <ClCompile Include="Source\AI\BehaviorTreeDebugWindow_NodeGraph.cpp" />
     <ClCompile Include="Source\AI\BTEditorCommand.cpp" />
     <ClCompile Include="Source\AI\BTGraphLayoutEngine.cpp" />
     <ClCompile Include="Source\Animation\AnimationBank.cpp" />
@@ -29,8 +30,9 @@
     <ClCompile Include="Source\BlueprintEditor\BlueprintValidator.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BPCommandSystem.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BTNodeGraphManager.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\DebugPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\DebugController.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\DebugPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EditorConfigManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EditorContext.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityBlueprint.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp" />
@@ -39,13 +41,13 @@
     <ClCompile Include="Source\BlueprintEditor\HistoryPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityInspectorManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\NodeStyleRegistry.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\ProfilerPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\PerformanceProfiler.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\ProfilerPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\TemplateBrowserPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\TemplateManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ValidationPanel.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptNodeRenderer.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\WorldBridge.cpp" />
     <ClCompile Include="Source\BlueprintEditor\NodeGraphPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Clipboard.cpp" />
@@ -83,23 +85,34 @@
     <ClCompile Include="Source\NodeGraphCore\Commands\MoveNodeCommand.cpp" />
     <ClCompile Include="Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.cpp" />
     <ClCompile Include="Source\NodeGraphCore\BlackboardSystem.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\GlobalBlackboard.cpp" />
     <ClCompile Include="Source\NodeGraphCore\NodeAnnotations.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GraphDocument.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GraphMigrator.cpp" />
     <ClCompile Include="Source\NodeGraphCore\NodeGraphManager.cpp" />
     <ClCompile Include="Source\NodeGraphCore\NodeGraphRenderer.cpp" />
     <ClCompile Include="Source\NodeGraphShared\BTDebugAdapter.cpp" />
+    <ClCompile Include="Source\NodeGraphShared\BTGraphDocumentConverter.cpp" />
     <ClCompile Include="Source\NodeGraphShared\NodeGraphShared.cpp" />
     <ClCompile Include="Source\NodeGraphShared\RenderHelpers.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_SetVariable.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Combat\Task_Attack.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Combat\Task_Flee.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Rendering\Task_PlayAnimation.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Rendering\Task_SetSprite.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\State\Task_ChangeState.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\System\Task_GetDeltaTime.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\System\Task_GetWorldInstance.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\System\Task_SetPosition.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Utility\Task_Wait.cpp" />
     <ClCompile Include="Source\TaskSystem\LocalBlackboard.cpp" />
     <ClCompile Include="Source\TaskSystem\Pathfinding\PathfindingManager.cpp" />
     <ClCompile Include="Source\TaskSystem\TaskExecutionBridge.cpp" />
     <ClCompile Include="Source\TaskSystem\TaskGraphLoader.cpp" />
+    <ClCompile Include="Source\TaskSystem\TaskGraphMigrator_v3_to_v4.cpp" />
     <ClCompile Include="Source\TaskSystem\TaskGraphTemplate.cpp" />
     <ClCompile Include="Source\TaskSystem\TaskGraphTypes.cpp" />
     <ClCompile Include="Source\TaskSystem\TaskSystem.cpp" />
@@ -120,6 +133,7 @@
     <ClCompile Include="Source\system\SystemMenu.cpp" />
     <ClCompile Include="source\system\system_utils.cpp" />
     <ClCompile Include="Source\system\ViewportManager.cpp" />
+    <ClCompile Include="Source\TaskSystem\VSGraphExecutor.cpp" />
     <ClCompile Include="Source\third_party\imgui\backends\imgui_impl_sdl3.cpp" />
     <ClCompile Include="Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.cpp" />
     <ClCompile Include="Source\third_party\imgui\imgui.cpp" />
@@ -142,25 +156,11 @@
     <ClCompile Include="Source\vector.cpp" />
     <ClCompile Include="source\VideoGame.cpp" />
     <ClCompile Include="Source\World.cpp" />
-    <ClCompile Include="Source\AI\BehaviorTreeDebugWindow_NodeGraph.cpp" />
-    <ClCompile Include="Source\NodeGraphShared\BTGraphDocumentConverter.cpp" />
-    <ClCompile Include="Source\TaskSystem\VSGraphExecutor.cpp" />
-    <ClCompile Include="Source\NodeGraphCore\GlobalBlackboard.cpp" />
-    <ClCompile Include="Source\TaskSystem\AtomicTasks\Combat\Task_Attack.cpp" />
-    <ClCompile Include="Source\TaskSystem\AtomicTasks\Combat\Task_Flee.cpp" />
-    <ClCompile Include="Source\TaskSystem\AtomicTasks\Rendering\Task_PlayAnimation.cpp" />
-    <ClCompile Include="Source\TaskSystem\AtomicTasks\Rendering\Task_SetSprite.cpp" />
-    <ClCompile Include="Source\TaskSystem\AtomicTasks\State\Task_ChangeState.cpp" />
-    <ClCompile Include="Source\TaskSystem\AtomicTasks\System\Task_GetDeltaTime.cpp" />
-    <ClCompile Include="Source\TaskSystem\AtomicTasks\System\Task_GetWorldInstance.cpp" />
-    <ClCompile Include="Source\TaskSystem\AtomicTasks\System\Task_SetPosition.cpp" />
-    <ClCompile Include="Source\TaskSystem\TaskGraphMigrator_v3_to_v4.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\EditorConfigManager.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\BTtoVSMigrator.cpp" />
   </ItemGroup>
+  <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="Source\AI\AIEditor\AIEditorClipboard.h" />
-    <ClInclude Include="Source\BlueprintEditor\DebugPanel.h" />
-    <ClInclude Include="Source\BlueprintEditor\DebugController.h" />
     <ClInclude Include="Source\AI\AIEditor\AIEditorFileDialog.h" />
     <ClInclude Include="Source\AI\AIEditor\AIEditorGUI.h" />
     <ClInclude Include="Source\AI\AIEditor\AIEditorMenus.h" />
@@ -194,6 +194,7 @@
     <ClInclude Include="Source\BlueprintEditor\BlueprintValidator.h" />
     <ClInclude Include="Source\BlueprintEditor\BPCommandSystem.h" />
     <ClInclude Include="Source\BlueprintEditor\BTNodeGraphManager.h" />
+    <ClInclude Include="Source\BlueprintEditor\EditorConfigManager.h" />
     <ClInclude Include="Source\BlueprintEditor\EditorContext.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityBlueprint.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.h" />
@@ -203,6 +204,8 @@
     <ClInclude Include="Source\BlueprintEditor\EntityInspectorManager.h" />
     <ClInclude Include="Source\BlueprintEditor\NodeGraphPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\Clipboard.h" />
+    <ClInclude Include="Source\BlueprintEditor\DebugPanel.h" />
+    <ClInclude Include="Source\BlueprintEditor\DebugController.h" />
     <ClInclude Include="Source\BlueprintEditor\EntitiesPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\InspectorPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\NodeStyleRegistry.h" />
@@ -211,8 +214,8 @@
     <ClInclude Include="Source\BlueprintEditor\TemplateBrowserPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\TemplateManager.h" />
     <ClInclude Include="Source\BlueprintEditor\ValidationPanel.h" />
-    <ClInclude Include="Source\BlueprintEditor\VisualScriptEditorPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\VisualScriptNodeRenderer.h" />
+    <ClInclude Include="Source\BlueprintEditor\VisualScriptEditorPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\WorldBridge.h" />
     <ClInclude Include="Source\CollisionMap.h" />
     <ClInclude Include="Source\ComponentDefinition.h" />
@@ -248,6 +251,7 @@
     <ClInclude Include="Source\NodeGraphCore\Commands\MoveNodeCommand.h" />
     <ClInclude Include="Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.h" />
     <ClInclude Include="Source\NodeGraphCore\BlackboardSystem.h" />
+    <ClInclude Include="Source\NodeGraphCore\GlobalBlackboard.h" />
     <ClInclude Include="Source\NodeGraphCore\NodeAnnotations.h" />
     <ClInclude Include="Source\NodeGraphCore\GraphDocument.h" />
     <ClInclude Include="Source\NodeGraphCore\GraphMigrator.h" />
@@ -268,12 +272,21 @@
     <ClInclude Include="Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_SetVariable.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Combat\Task_Attack.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Combat\Task_Flee.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Rendering\Task_PlayAnimation.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Rendering\Task_SetSprite.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\State\Task_ChangeState.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\System\Task_GetDeltaTime.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\System\Task_GetWorldInstance.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\System\Task_SetPosition.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTasks\Utility\Task_Wait.h" />
     <ClInclude Include="Source\TaskSystem\LocalBlackboard.h" />
     <ClInclude Include="Source\TaskSystem\Pathfinding\PathfindingManager.h" />
     <ClInclude Include="Source\TaskSystem\TaskExecutionBridge.h" />
     <ClInclude Include="Source\TaskSystem\TaskGraphLoader.h" />
+    <ClInclude Include="Source\TaskSystem\TaskGraphMigrator_v3_to_v4.h" />
     <ClInclude Include="Source\TaskSystem\TaskGraphTemplate.h" />
     <ClInclude Include="Source\TaskSystem\TaskGraphTypes.h" />
     <ClInclude Include="Source\TaskSystem\TaskSystem.h" />
@@ -308,6 +321,7 @@
     <ClInclude Include="Source\system\ViewportManager.h" />
     <ClInclude Include="Source\Task.h" />
     <ClInclude Include="Source\TaskSystem\TaskWorldFacade.h" />
+    <ClInclude Include="Source\TaskSystem\VSGraphExecutor.h" />
     <ClInclude Include="Source\third_party\imgui\backends\imgui_impl_sdl3.h" />
     <ClInclude Include="Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.h" />
     <ClInclude Include="Source\third_party\imgui\imconfig.h" />
@@ -335,29 +349,27 @@
     <ClInclude Include="Source\vector.h" />
     <ClInclude Include="Source\VideoGame.h" />
     <ClInclude Include="Source\World.h" />
-    <ClInclude Include="Source\TaskSystem\VSGraphExecutor.h" />
-    <ClInclude Include="Source\NodeGraphCore\GlobalBlackboard.h" />
-    <ClInclude Include="Source\TaskSystem\AtomicTasks\Combat\Task_Attack.h" />
-    <ClInclude Include="Source\TaskSystem\AtomicTasks\Combat\Task_Flee.h" />
-    <ClInclude Include="Source\TaskSystem\AtomicTasks\Rendering\Task_PlayAnimation.h" />
-    <ClInclude Include="Source\TaskSystem\AtomicTasks\Rendering\Task_SetSprite.h" />
-    <ClInclude Include="Source\TaskSystem\AtomicTasks\State\Task_ChangeState.h" />
-    <ClInclude Include="Source\TaskSystem\AtomicTasks\System\Task_GetDeltaTime.h" />
-    <ClInclude Include="Source\TaskSystem\AtomicTasks\System\Task_GetWorldInstance.h" />
-    <ClInclude Include="Source\TaskSystem\AtomicTasks\System\Task_SetPosition.h" />
-    <ClInclude Include="Source\TaskSystem\TaskGraphMigrator_v3_to_v4.h" />
-    <ClInclude Include="Source\BlueprintEditor\EditorConfigManager.h" />
+    <ClInclude Include="Source\BlueprintEditor\BTtoVSMigrator.h" />
+  </ItemGroup>
+  <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
+  </ItemGroup>
+  <ItemGroup>
     <Image Include="Resources\olympe.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="analyze_code.ps1" />
+    <None Include="analyze_codebase.ps1" />
+    <None Include="analyze_codebase_v2.ps1" />
     <None Include="ClassDiagram.cd" />
+    <None Include="config\ATS-VS-editor-config.json" />
+    <None Include="Docs\Blueprint Editor Features.md" />
     <None Include="olympe.ini" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
-    <None Include="analyze_codebase.ps1" />
-    <None Include="analyze_codebase_v2.ps1" />
-    <None Include="analyze_code.ps1" />
-    <None Include="Docs\Blueprint Editor Features.md" />
-    <None Include="config\ATS-VS-editor-config.json" />
+  </ItemGroup>
+  <ItemGroup>
     <Text Include="credits.txt" />
+  </ItemGroup>
 </Project>

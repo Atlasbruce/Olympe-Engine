@@ -427,6 +427,30 @@
     <ClCompile Include="..\Source\TaskSystem\TaskGraphMigrator_v3_to_v4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\EditorConfigManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\DebugController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\DebugPanel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\PerformanceProfiler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\ProfilerPanel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptNodeRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\BTtoVSMigrator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -860,6 +884,14 @@
     <ClInclude Include="..\Source\NodeGraphShared\RenderHelpers.h" />
     <ClInclude Include="..\Source\TaskSystem\VSGraphExecutor.h" />
     <ClInclude Include="..\Source\TaskSystem\TaskGraphMigrator_v3_to_v4.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EditorConfigManager.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\DebugController.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\DebugPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\PerformanceProfiler.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\ProfilerPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\VisualScriptNodeRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\VisualScriptEditorPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BTtoVSMigrator.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />

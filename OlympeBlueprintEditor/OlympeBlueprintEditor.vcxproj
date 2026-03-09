@@ -35,6 +35,7 @@
     <ClCompile Include="..\Source\AI\BehaviorTreeDependencyScanner.cpp" />
     <ClCompile Include="..\Source\AI\BTEditorCommand.cpp" />
     <ClCompile Include="..\Source\AI\BTGraphLayoutEngine.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BTtoVSMigrator.cpp" />
     <ClCompile Include="..\Source\NodeGraphShared\BTGraphDocumentConverter.cpp" />
     <ClCompile Include="..\Source\NodeGraphShared\RenderHelpers.cpp" />
     <ClCompile Include="..\Source\Animation\AnimationBank.cpp" />
@@ -179,6 +180,7 @@
     <ClInclude Include="..\Source\AI\BehaviorTreeDependencyScanner.h" />
     <ClInclude Include="..\Source\AI\BTEditorCommand.h" />
     <ClInclude Include="..\Source\AI\BTGraphLayoutEngine.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BTtoVSMigrator.h" />
     <ClInclude Include="..\Source\NodeGraphShared\RenderHelpers.h" />
     <ClInclude Include="..\Source\Animation\AnimationBank.h" />
     <ClInclude Include="..\Source\Animation\AnimationErrorHandler.h" />
