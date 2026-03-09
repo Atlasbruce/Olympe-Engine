@@ -1,0 +1,274 @@
+{
+  "schema_version": 4,
+  "graphType": "VisualScript",
+  "name": "example_subgraph_demo",
+  "description": "SubGraph demo: 2 nested SubGraphs (patrol and health check) composed in a top-level Sequence.",
+  "blackboard": {
+    "local": {
+      "Health": { "type": "float", "value": "100.0" },
+      "PatrolSpeed": { "type": "float", "value": "3.5" },
+      "WaypointA": { "type": "string", "value": "wp_a" },
+      "WaypointB": { "type": "string", "value": "wp_b" },
+      "CycleCount": { "type": "int", "value": "0" },
+      "MaxCycles": { "type": "int", "value": "10" }
+    },
+    "global": {}
+  },
+  "nodes": [
+    {
+      "id": 1,
+      "type": "EntryPoint",
+      "name": "Start",
+      "comment": "Top-level graph entry",
+      "posX": 100,
+      "posY": 300,
+      "parameters": {}
+    },
+    {
+      "id": 2,
+      "type": "AtomicTask",
+      "name": "InitLog",
+      "comment": "Log start of demo",
+      "posX": 320,
+      "posY": 300,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "SubGraph demo starting"
+      }
+    },
+    {
+      "id": 3,
+      "type": "Sequence",
+      "name": "MainLoop",
+      "comment": "Main execution sequence",
+      "posX": 540,
+      "posY": 300,
+      "parameters": {}
+    },
+    {
+      "id": 4,
+      "type": "SubGraph",
+      "name": "HealthSubGraph",
+      "comment": "Nested SubGraph 1: health check with retreat logic",
+      "posX": 760,
+      "posY": 200,
+      "parameters": {
+        "subGraphPath": "Blueprints/AI/Examples/example_health_check.json"
+      }
+    },
+    {
+      "id": 5,
+      "type": "AtomicTask",
+      "name": "PostHealthLog",
+      "comment": "Log after health check completes",
+      "posX": 980,
+      "posY": 200,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "Health check SubGraph complete"
+      }
+    },
+    {
+      "id": 6,
+      "type": "SubGraph",
+      "name": "PatrolSubGraph",
+      "comment": "Nested SubGraph 2: patrol between waypoints",
+      "posX": 760,
+      "posY": 400,
+      "parameters": {
+        "subGraphPath": "Blueprints/AI/Examples/example_patrol_basic.json"
+      }
+    },
+    {
+      "id": 7,
+      "type": "AtomicTask",
+      "name": "PostPatrolLog",
+      "comment": "Log after patrol SubGraph completes",
+      "posX": 980,
+      "posY": 400,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "Patrol SubGraph complete"
+      }
+    },
+    {
+      "id": 8,
+      "type": "AtomicTask",
+      "name": "IncrCycle",
+      "comment": "Increment cycle counter",
+      "posX": 1200,
+      "posY": 300,
+      "parameters": {
+        "taskType": "SetVariable",
+        "targetKey": "CycleCount",
+        "expression": "CycleCount + 1"
+      }
+    },
+    {
+      "id": 9,
+      "type": "Branch",
+      "name": "MaxCycleCheck",
+      "comment": "Stop after MaxCycles iterations",
+      "posX": 1420,
+      "posY": 300,
+      "parameters": {
+        "conditionKey": "CycleCount",
+        "operator": ">=",
+        "threshold": "MaxCycles"
+      }
+    },
+    {
+      "id": 10,
+      "type": "AtomicTask",
+      "name": "DoneLog",
+      "comment": "Log completion when cycles exhausted",
+      "posX": 1640,
+      "posY": 200,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "SubGraph demo complete - max cycles reached"
+      }
+    },
+    {
+      "id": 11,
+      "type": "Repeat",
+      "name": "ContinueLoop",
+      "comment": "Continue looping until max cycles",
+      "posX": 1640,
+      "posY": 380,
+      "parameters": {
+        "count": "-1"
+      }
+    },
+    {
+      "id": 12,
+      "type": "AtomicTask",
+      "name": "LoopLog",
+      "comment": "Log each loop iteration",
+      "posX": 1860,
+      "posY": 380,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "Demo loop iteration"
+      }
+    },
+    {
+      "id": 13,
+      "type": "AtomicTask",
+      "name": "RestLog",
+      "comment": "Brief pause between cycles",
+      "posX": 760,
+      "posY": 560,
+      "parameters": {
+        "taskType": "Wait",
+        "duration": "0.1"
+      }
+    },
+    {
+      "id": 14,
+      "type": "AtomicTask",
+      "name": "DiagLog",
+      "comment": "Print diagnostics to log",
+      "posX": 540,
+      "posY": 500,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "Cycle diagnostics logged"
+      }
+    },
+    {
+      "id": 15,
+      "type": "AtomicTask",
+      "name": "FinalCleanup",
+      "comment": "Reset CycleCount on finish",
+      "posX": 1860,
+      "posY": 200,
+      "parameters": {
+        "taskType": "SetVariable",
+        "targetKey": "CycleCount",
+        "value": "0"
+      }
+    },
+    {
+      "id": 16,
+      "type": "AtomicTask",
+      "name": "ShutdownLog",
+      "comment": "Log clean shutdown",
+      "posX": 2080,
+      "posY": 200,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "SubGraph demo shutdown"
+      }
+    },
+    {
+      "id": 17,
+      "type": "AtomicTask",
+      "name": "IterLog",
+      "comment": "Log current iteration number",
+      "posX": 320,
+      "posY": 480,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "Starting new iteration"
+      }
+    },
+    {
+      "id": 18,
+      "type": "AtomicTask",
+      "name": "SyncBB",
+      "comment": "Synchronize blackboard state",
+      "posX": 320,
+      "posY": 160,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "Blackboard synchronized"
+      }
+    },
+    {
+      "id": 19,
+      "type": "AtomicTask",
+      "name": "PrePatrolLog",
+      "comment": "Log before patrol sub-graph",
+      "posX": 540,
+      "posY": 420,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "Starting patrol sub-graph"
+      }
+    },
+    {
+      "id": 20,
+      "type": "AtomicTask",
+      "name": "PreHealthLog",
+      "comment": "Log before health sub-graph",
+      "posX": 540,
+      "posY": 180,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "Starting health-check sub-graph"
+      }
+    }
+  ],
+  "connections": [
+    { "id": 1,  "type": "exec", "fromNode": 1,  "fromPin": "out",    "toNode": 18, "toPin": "in" },
+    { "id": 2,  "type": "exec", "fromNode": 18, "fromPin": "out",    "toNode": 2,  "toPin": "in" },
+    { "id": 3,  "type": "exec", "fromNode": 2,  "fromPin": "out",    "toNode": 3,  "toPin": "in" },
+    { "id": 4,  "type": "exec", "fromNode": 3,  "fromPin": "child0", "toNode": 20, "toPin": "in" },
+    { "id": 5,  "type": "exec", "fromNode": 20, "fromPin": "out",    "toNode": 4,  "toPin": "in" },
+    { "id": 6,  "type": "exec", "fromNode": 4,  "fromPin": "out",    "toNode": 5,  "toPin": "in" },
+    { "id": 7,  "type": "exec", "fromNode": 3,  "fromPin": "child1", "toNode": 19, "toPin": "in" },
+    { "id": 8,  "type": "exec", "fromNode": 19, "fromPin": "out",    "toNode": 6,  "toPin": "in" },
+    { "id": 9,  "type": "exec", "fromNode": 6,  "fromPin": "out",    "toNode": 7,  "toPin": "in" },
+    { "id": 10, "type": "exec", "fromNode": 3,  "fromPin": "child2", "toNode": 14, "toPin": "in" },
+    { "id": 11, "type": "exec", "fromNode": 14, "fromPin": "out",    "toNode": 13, "toPin": "in" },
+    { "id": 12, "type": "exec", "fromNode": 3,  "fromPin": "out",    "toNode": 8,  "toPin": "in" },
+    { "id": 13, "type": "exec", "fromNode": 8,  "fromPin": "out",    "toNode": 9,  "toPin": "in" },
+    { "id": 14, "type": "exec", "fromNode": 9,  "fromPin": "true",   "toNode": 10, "toPin": "in" },
+    { "id": 15, "type": "exec", "fromNode": 10, "fromPin": "out",    "toNode": 15, "toPin": "in" },
+    { "id": 16, "type": "exec", "fromNode": 15, "fromPin": "out",    "toNode": 16, "toPin": "in" },
+    { "id": 17, "type": "exec", "fromNode": 9,  "fromPin": "false",  "toNode": 11, "toPin": "in" },
+    { "id": 18, "type": "exec", "fromNode": 11, "fromPin": "out",    "toNode": 12, "toPin": "in" },
+    { "id": 19, "type": "exec", "fromNode": 12, "fromPin": "out",    "toNode": 17, "toPin": "in" }
+  ]
+}

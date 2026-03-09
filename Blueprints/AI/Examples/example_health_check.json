@@ -1,0 +1,166 @@
+{
+  "schema_version": 4,
+  "graphType": "VisualScript",
+  "name": "example_health_check",
+  "description": "Health check: Branch on Health < 20 to trigger retreat, else continue patrol.",
+  "blackboard": {
+    "local": {
+      "Health": { "type": "float", "value": "100.0" },
+      "LowHealthThreshold": { "type": "float", "value": "20.0" },
+      "IsLowHealth": { "type": "bool", "value": "false" },
+      "RetreatTarget": { "type": "string", "value": "base_spawn" }
+    },
+    "global": {
+      "global:TeamAlert": { "type": "bool", "value": "false" }
+    }
+  },
+  "nodes": [
+    {
+      "id": 1,
+      "type": "EntryPoint",
+      "name": "Start",
+      "comment": "Entry point",
+      "posX": 100,
+      "posY": 200,
+      "parameters": {}
+    },
+    {
+      "id": 2,
+      "type": "Sequence",
+      "name": "HealthCheckSequence",
+      "comment": "Update health flag then branch",
+      "posX": 320,
+      "posY": 200,
+      "parameters": {}
+    },
+    {
+      "id": 3,
+      "type": "AtomicTask",
+      "name": "EvalHealth",
+      "comment": "Compare Health to threshold and write IsLowHealth",
+      "posX": 540,
+      "posY": 200,
+      "parameters": {
+        "taskType": "SetVariable",
+        "targetKey": "IsLowHealth",
+        "expression": "Health < LowHealthThreshold"
+      }
+    },
+    {
+      "id": 4,
+      "type": "Branch",
+      "name": "LowHealthBranch",
+      "comment": "Branch: true = low health, false = healthy",
+      "posX": 760,
+      "posY": 200,
+      "parameters": {
+        "conditionKey": "IsLowHealth"
+      }
+    },
+    {
+      "id": 5,
+      "type": "Sequence",
+      "name": "RetreatSequence",
+      "comment": "NPC retreats to base when low health",
+      "posX": 980,
+      "posY": 100,
+      "parameters": {}
+    },
+    {
+      "id": 6,
+      "type": "AtomicTask",
+      "name": "LogRetreat",
+      "comment": "Log retreat event",
+      "posX": 1200,
+      "posY": 60,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "Health critical - retreating to base"
+      }
+    },
+    {
+      "id": 7,
+      "type": "AtomicTask",
+      "name": "AlertTeam",
+      "comment": "Set global team alert flag",
+      "posX": 1200,
+      "posY": 140,
+      "parameters": {
+        "taskType": "SetVariable",
+        "targetKey": "global:TeamAlert",
+        "value": "true"
+      }
+    },
+    {
+      "id": 8,
+      "type": "AtomicTask",
+      "name": "MoveToBase",
+      "comment": "Move NPC to retreat target",
+      "posX": 1420,
+      "posY": 100,
+      "parameters": {
+        "taskType": "MoveToLocation",
+        "targetKey": "RetreatTarget",
+        "speed": "6.0"
+      }
+    },
+    {
+      "id": 9,
+      "type": "Sequence",
+      "name": "ContinuePatrol",
+      "comment": "NPC continues patrol when healthy",
+      "posX": 980,
+      "posY": 300,
+      "parameters": {}
+    },
+    {
+      "id": 10,
+      "type": "AtomicTask",
+      "name": "LogHealthy",
+      "comment": "Log healthy status",
+      "posX": 1200,
+      "posY": 280,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "Health OK - continuing patrol"
+      }
+    },
+    {
+      "id": 11,
+      "type": "AtomicTask",
+      "name": "PatrolStep",
+      "comment": "Single patrol move step",
+      "posX": 1200,
+      "posY": 360,
+      "parameters": {
+        "taskType": "MoveToLocation",
+        "targetKey": "WaypointA",
+        "speed": "3.5"
+      }
+    },
+    {
+      "id": 12,
+      "type": "Repeat",
+      "name": "HealthLoop",
+      "comment": "Repeat health check every cycle",
+      "posX": 1640,
+      "posY": 200,
+      "parameters": {
+        "count": "-1"
+      }
+    }
+  ],
+  "connections": [
+    { "id": 1,  "type": "exec", "fromNode": 1,  "fromPin": "out",    "toNode": 2,  "toPin": "in" },
+    { "id": 2,  "type": "exec", "fromNode": 2,  "fromPin": "child0", "toNode": 3,  "toPin": "in" },
+    { "id": 3,  "type": "exec", "fromNode": 3,  "fromPin": "out",    "toNode": 4,  "toPin": "in" },
+    { "id": 4,  "type": "exec", "fromNode": 4,  "fromPin": "true",   "toNode": 5,  "toPin": "in" },
+    { "id": 5,  "type": "exec", "fromNode": 5,  "fromPin": "child0", "toNode": 6,  "toPin": "in" },
+    { "id": 6,  "type": "exec", "fromNode": 6,  "fromPin": "out",    "toNode": 7,  "toPin": "in" },
+    { "id": 7,  "type": "exec", "fromNode": 7,  "fromPin": "out",    "toNode": 8,  "toPin": "in" },
+    { "id": 8,  "type": "exec", "fromNode": 4,  "fromPin": "false",  "toNode": 9,  "toPin": "in" },
+    { "id": 9,  "type": "exec", "fromNode": 9,  "fromPin": "child0", "toNode": 10, "toPin": "in" },
+    { "id": 10, "type": "exec", "fromNode": 10, "fromPin": "out",    "toNode": 11, "toPin": "in" },
+    { "id": 11, "type": "exec", "fromNode": 2,  "fromPin": "out",    "toNode": 12, "toPin": "in" }
+  ]
+}

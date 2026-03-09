@@ -10,8 +10,14 @@
 #include "VisualScriptEditorPanel.h"
 #include "DebugPanel.h"
 #include "ProfilerPanel.h"
+#include "BTtoVSMigrator.h"
+#include "../TaskSystem/TaskGraphLoader.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
+#include "../third_party/nlohmann/json.hpp"
+#include "../system/system_utils.h"
+#include <fstream>
+#include <sstream>
 #include <iostream>
 
 using namespace Olympe::Blueprint;
@@ -784,7 +790,66 @@ namespace Olympe
 
     void BlueprintEditorGUI::LoadBlueprint(const std::string& filepath)
     {
-        // Delegate to backend
+        // ------------------------------------------------------------------
+        // Phase 7: Unified router — detect schema and dispatch to the correct
+        // editor panel automatically.
+        // ------------------------------------------------------------------
+        nlohmann::json fileJson;
+        {
+            std::ifstream ifs(filepath);
+            if (ifs.good())
+            {
+                try { fileJson = nlohmann::json::parse(ifs); }
+                catch (...) { fileJson = nlohmann::json::object(); }
+            }
+        }
+
+        int schemaVersion = 0;
+        std::string graphType;
+        std::string blueprintType;
+
+        if (fileJson.is_object())
+        {
+            if (fileJson.contains("schema_version") && fileJson["schema_version"].is_number())
+                schemaVersion = fileJson["schema_version"].get<int>();
+            if (fileJson.contains("graphType") && fileJson["graphType"].is_string())
+                graphType = fileJson["graphType"].get<std::string>();
+            if (fileJson.contains("blueprintType") && fileJson["blueprintType"].is_string())
+                blueprintType = fileJson["blueprintType"].get<std::string>();
+        }
+
+        // VS v4 graph — load directly into VisualScriptEditorPanel
+        if (schemaVersion == 4 && graphType == "VisualScript")
+        {
+            if (m_VSEditorPanel)
+            {
+                TaskGraphTemplate* tmpl = TaskGraphLoader::LoadFromJson(fileJson);
+                if (tmpl)
+                {
+                    m_VSEditorPanel->LoadTemplate(tmpl, filepath);
+                    m_ShowVSEditor = true;
+                    SYSTEM_LOG << "[BlueprintEditorGUI] Loaded VS v4 graph: " << filepath << "\n";
+                    delete tmpl;
+                }
+            }
+            return;
+        }
+
+        // Legacy BT v2 — auto-migrate then load into VisualScriptEditorPanel
+        if (blueprintType == "BehaviorTree")
+        {
+            if (m_VSEditorPanel)
+            {
+                std::vector<std::string> migrationErrors;
+                TaskGraphTemplate converted = BTtoVSMigrator::Convert(fileJson, migrationErrors);
+                m_VSEditorPanel->LoadTemplate(&converted, filepath);
+                m_ShowVSEditor = true;
+                SYSTEM_LOG << "[BlueprintEditorGUI] Auto-migrated BT v2 -> VS v4: " << filepath << "\n";
+            }
+            return;
+        }
+
+        // Fallback: delegate to legacy backend (entity blueprints, etc.)
         if (BlueprintEditor::Get().LoadBlueprint(filepath))
         {
             // Reset UI state on successful load

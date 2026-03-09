@@ -1,0 +1,81 @@
+{
+  "schema_version": 4,
+  "graphType": "VisualScript",
+  "templateName": "health_check",
+  "description": "Health check template: evaluates a Health key and branches to retreat or continue.",
+  "blackboard": {
+    "local": {
+      "Health": { "type": "float", "value": "100.0" },
+      "HealthThreshold": { "type": "float", "value": "20.0" },
+      "IsLowHealth": { "type": "bool", "value": "false" },
+      "RetreatTarget": { "type": "string", "value": "safe_zone" }
+    },
+    "global": {}
+  },
+  "nodes": [
+    {
+      "id": 1,
+      "type": "EntryPoint",
+      "name": "Start",
+      "comment": "Health check template - configure HealthThreshold and RetreatTarget",
+      "posX": 100,
+      "posY": 200,
+      "parameters": {}
+    },
+    {
+      "id": 2,
+      "type": "AtomicTask",
+      "name": "EvalHealth",
+      "comment": "Compare Health to HealthThreshold - write result to IsLowHealth",
+      "posX": 320,
+      "posY": 200,
+      "parameters": {
+        "taskType": "SetVariable",
+        "targetKey": "IsLowHealth",
+        "expression": "Health < HealthThreshold"
+      }
+    },
+    {
+      "id": 3,
+      "type": "Branch",
+      "name": "HealthBranch",
+      "comment": "true = low health -> retreat; false = healthy -> continue",
+      "posX": 540,
+      "posY": 200,
+      "parameters": {
+        "conditionKey": "IsLowHealth"
+      }
+    },
+    {
+      "id": 4,
+      "type": "AtomicTask",
+      "name": "Retreat",
+      "comment": "Move to retreat target (low health path)",
+      "posX": 760,
+      "posY": 100,
+      "parameters": {
+        "taskType": "MoveToLocation",
+        "targetKey": "RetreatTarget",
+        "speed": "6.0"
+      }
+    },
+    {
+      "id": 5,
+      "type": "AtomicTask",
+      "name": "ContinueAction",
+      "comment": "Placeholder: replace with your healthy-state logic",
+      "posX": 760,
+      "posY": 300,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "Health OK - continuing"
+      }
+    }
+  ],
+  "connections": [
+    { "id": 1, "type": "exec", "fromNode": 1, "fromPin": "out",   "toNode": 2, "toPin": "in" },
+    { "id": 2, "type": "exec", "fromNode": 2, "fromPin": "out",   "toNode": 3, "toPin": "in" },
+    { "id": 3, "type": "exec", "fromNode": 3, "fromPin": "true",  "toNode": 4, "toPin": "in" },
+    { "id": 4, "type": "exec", "fromNode": 3, "fromPin": "false", "toNode": 5, "toPin": "in" }
+  ]
+}

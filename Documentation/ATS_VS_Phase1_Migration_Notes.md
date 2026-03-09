@@ -168,3 +168,27 @@ pour ne pas casser les includes existants pendant la migration.
 - [ ] Implémenter les nodes de boucle (While, ForEach) dans le runtime
 - [ ] Implémenter les nodes data (GetBBValue, SetBBValue, MathOp) dans le runtime
 - [ ] Implémenter les nodes de contrôle (DoOnce, Delay, SubGraph) dans le runtime
+
+
+---
+
+## Deprecation Final (Phase 7)
+
+All legacy BT v2 files have been removed or superseded.
+
+### Files Removed in Earlier Phases
+| File | Removed In | Replacement |
+|------|-----------|-------------|
+| `Source/BlueprintEditor/Graph_legacy.h/.cpp` | Phase 4 | `Source/BlueprintEditor/Graph.h/.cpp` (VS v4) |
+| `Source/TaskSystem/TaskGraphLoader_v3_legacy.h/.cpp` | Phase 4 | `Source/TaskSystem/TaskGraphLoader.h/.cpp` |
+| `Source/_deprecated/BehaviorTreeParser_v1.cpp` | Phase 4 | `BTtoVSMigrator` |
+
+### NodeGraphPanel Status
+`Source/BlueprintEditor/NodeGraphPanel.h/.cpp` is **deprecated** but retained for
+`BehaviorTreeDebugWindow` (BT debug visualisation).  New VS v4 code should use
+`VisualScriptEditorPanel`.
+
+### Migration Complete
+All 11 Blueprints/AI/*.json assets are now schema v4 VisualScript format.
+Auto-migration is supported via `BTtoVSMigrator` and the unified router in
+`BlueprintEditorGUI::LoadBlueprint()`.
