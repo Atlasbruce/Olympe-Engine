@@ -19,6 +19,31 @@
 
 namespace Olympe
 {
+    // -------------------------------------------------------------------------
+    // Phase 8: Subgraph tab descriptor
+    // -------------------------------------------------------------------------
+
+    /**
+     * @struct GraphTab
+     * @brief Represents one open tab in the NodeGraphPanel tab bar.
+     *
+     * The root graph always has graphPath == "root".
+     * A subgraph tab has graphPath == "subgraphs/<uuid>".
+     */
+    struct GraphTab
+    {
+        std::string tabID;        ///< Unique identifier (UUID or "root")
+        std::string displayName;  ///< Label shown on the tab ("Root" or subgraph name)
+        std::string graphPath;    ///< "root" or "subgraphs/<uuid>"
+        bool        isDirty;      ///< True when the graph has unsaved changes
+
+        GraphTab() : isDirty(false) {}
+        GraphTab(const std::string& id,
+                 const std::string& name,
+                 const std::string& path)
+            : tabID(id), displayName(name), graphPath(path), isDirty(false) {}
+    };
+
     /**
      * NodeGraphPanel - ImGui/ImNodes panel for node graph editing
      * Provides visual editor for behavior trees and state machines
@@ -41,8 +66,54 @@ namespace Olympe
         void HandleKeyboardShortcuts();
         void HandleNodeInteractions(int graphID);
 
+        // -----------------------------------------------------------------------
+        // Phase 8: Subgraph tab system
+        // -----------------------------------------------------------------------
+
         /**
-         * Render a single node with a coloured title bar, icon, and typed pins.
+         * @brief Renders the subgraph-aware tab bar above the graph canvas.
+         *
+         * Shows one tab per open subgraph plus the root graph.  A "+ New SubGraph"
+         * button at the end creates an empty subgraph and opens it.
+         */
+        void RenderSubgraphTabBar();
+
+        /**
+         * @brief Opens (or focuses) the subgraph identified by @p subgraphUUID
+         *        in a new tab.  Called on double-click of a BT_SubGraph node.
+         *
+         * @param subgraphUUID  UUID key in data.subgraphs.
+         * @param displayName   Name shown on the tab.
+         */
+        void OpenSubgraphTab(const std::string& subgraphUUID,
+                             const std::string& displayName);
+
+        /**
+         * @brief Closes the tab at @p index.  The root tab (index 0) cannot be closed.
+         */
+        void CloseSubgraphTab(int index);
+
+        /**
+         * @brief Creates an empty subgraph, inserts it into the active blueprint's
+         *        data.subgraphs dict, and opens it in a new tab.
+         *
+         * @param name  Human-readable name for the new subgraph.
+         */
+        void CreateEmptySubgraph(const std::string& name);
+
+        /**
+         * @brief Returns the GraphTab for the currently active tab.
+         */
+        const GraphTab* GetActiveTab() const;
+
+        /**
+         * @brief Returns the subgraph UUID for the active tab, or empty string
+         *        if the root graph is active.
+         */
+        std::string GetActiveSubgraphUUID() const;
+
+        /**
+         * @brief Render a single node with a coloured title bar, icon, and typed pins.
          * Called from RenderGraph() for every node in the active graph.
          * @param node         Pointer to the graph node to render.
          * @param globalNodeUID ImNodes global unique ID for the node.
@@ -51,7 +122,7 @@ namespace Olympe
         void RenderNodePinsAndContent(GraphNode* node, int globalNodeUID, int graphID);
 
         /**
-         * Render a single typed attribute pin using ImDrawList shapes.
+         * @brief Render a single typed attribute pin using ImDrawList shapes.
          * @param attrId  ImNodes attribute ID.
          * @param label   Text label shown next to the pin.
          * @param isInput True for input (left) attribute; false for output (right).
@@ -151,5 +222,18 @@ namespace Olympe
         /// Graph ID that was active last frame; used to detect graph switches so
         /// m_positionedNodes can be cleared.
         int m_lastActiveGraphId = -1;
+
+        // -----------------------------------------------------------------------
+        // Phase 8: Subgraph tab state
+        // -----------------------------------------------------------------------
+
+        /// Ordered list of open subgraph tabs.  Index 0 is always the root graph.
+        std::vector<GraphTab> m_SubgraphTabs;
+
+        /// Index into m_SubgraphTabs of the currently visible tab.
+        int m_ActiveSubgraphTabIndex = 0;
+
+        /// Buffer used by the "New SubGraph" name input popup.
+        char m_NewSubgraphNameBuffer[128];
     };
 }

@@ -166,6 +166,7 @@ if(BUILD_TESTS)
         Tests/Editor/ClipboardCopyPasteTest.cpp
         Source/BlueprintEditor/BTNodeGraphManager.cpp
         Source/BlueprintEditor/BPCommandSystem.cpp
+        Source/BlueprintEditor/SubgraphMigrator.cpp
         ${TEST_STUBS}
     )
     target_include_directories(OlympeClipboardTests PRIVATE ${COMMON_INCLUDES})
@@ -385,5 +386,16 @@ if(BUILD_TESTS)
     )
     target_include_directories(OlympePhase7Tests PRIVATE ${COMMON_INCLUDES})
     add_test(NAME OlympePhase7Tests COMMAND OlympePhase7Tests)
+
+    # -----------------------------------------------------------------------
+    # OlympePhase8Tests  (Phase 8 — SubgraphMigrator)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase8Tests
+        Tests/BlueprintEditor/Phase8Test.cpp
+        Source/BlueprintEditor/SubgraphMigrator.cpp
+        ${TEST_STUBS}
+    )
+    target_include_directories(OlympePhase8Tests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase8Tests COMMAND OlympePhase8Tests)
 
 endif() # BUILD_TESTS

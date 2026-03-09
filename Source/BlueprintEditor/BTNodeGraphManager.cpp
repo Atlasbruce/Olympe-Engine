@@ -3,6 +3,7 @@
  */
 
 #include "BTNodeGraphManager.h"
+#include "SubgraphMigrator.h"
 #include "../json_helper.h"
 #include <fstream>
 #include <iostream>
@@ -251,6 +252,8 @@ namespace Olympe
                 nj["conditionType"] = node.conditionType;
             if (!node.decoratorType.empty())
                 nj["decoratorType"] = node.decoratorType;
+            if (!node.subgraphUUID.empty())
+                nj["subgraphUUID"] = node.subgraphUUID;
 
             // Parameters as nested object (v2 format)
             nj["parameters"] = json::object();
@@ -289,10 +292,22 @@ namespace Olympe
             
             if (isV2 && j.contains("data"))
             {
-                dataSection = &j["data"];
+                const json& dataObj = j["data"];
                 graph.name = JsonHelper::GetString(j, "name", "Untitled Graph");
                 graph.type = JsonHelper::GetString(j, "blueprintType", "BehaviorTree");
                 std::cout << "[NodeGraph::FromJson] Extracted 'data' section from v2" << std::endl;
+
+                // Phase 8: support the flat-dictionary subgraph format where
+                // nodes live in data.rootGraph rather than directly in data.
+                if (dataObj.contains("rootGraph") && dataObj["rootGraph"].is_object())
+                {
+                    dataSection = &dataObj["rootGraph"];
+                    std::cout << "[NodeGraph::FromJson] Using data.rootGraph (Phase 8 format)" << std::endl;
+                }
+                else
+                {
+                    dataSection = &dataObj;
+                }
             }
             else
             {
@@ -346,6 +361,9 @@ namespace Olympe
                 node.actionType = JsonHelper::GetString(nj, "actionType", "");
                 node.conditionType = JsonHelper::GetString(nj, "conditionType", "");
                 node.decoratorType = JsonHelper::GetString(nj, "decoratorType", "");
+
+                // Phase 8: load subgraph UUID reference for BT_SubGraph / HFSM_SubGraph nodes.
+                node.subgraphUUID = JsonHelper::GetString(nj, "subgraphUUID", "");
 
                 // Load parameters - v2 has nested "parameters" object, v1 has flat structure
                 if (nj.contains("parameters") && nj["parameters"].is_object())
@@ -807,12 +825,37 @@ namespace Olympe
                 return -1;
             }
 
+            // 3b. Phase 8: auto-migrate legacy format to flat-dictionary subgraph format.
+            {
+                SubgraphMigrator migrator;
+                if (migrator.NeedsMigration(j))
+                {
+                    std::cout << "[NodeGraphManager] Applying Phase 8 subgraph migration..." << std::endl;
+                    j = migrator.Migrate(j);
+
+                    // Persist the migrated file immediately so it is not re-migrated next load.
+                    try {
+                        std::ofstream migOut(filepath);
+                        if (migOut.is_open())
+                        {
+                            migOut << j.dump(2);
+                            migOut.close();
+                            std::cout << "[NodeGraphManager] Migrated file saved: " << filepath << std::endl;
+                        }
+                    } catch (const std::exception& saveEx) {
+                        std::cerr << "[NodeGraphManager] WARNING: Could not save migrated file: "
+                                  << saveEx.what() << std::endl;
+                    }
+                }
+            }
+
             // 4. Detect version
             std::cout << "[NodeGraphManager] Step 4: Detecting version..." << std::endl;
-            bool isV2 = j.contains("schema_version") && j["schema_version"].get<int>() == 2;
+            bool isV2 = j.contains("schema_version") &&
+                        (j["schema_version"].get<int>() >= 2);
             bool isV1 = !isV2 && (j.contains("nodes") || j.contains("rootNodeId"));
             
-            std::cout << "[NodeGraphManager] Version: " << (isV2 ? "v2" : (isV1 ? "v1" : "Unknown")) << std::endl;
+            std::cout << "[NodeGraphManager] Version: " << (isV2 ? "v2+" : (isV1 ? "v1" : "Unknown")) << std::endl;
 
             if (!isV1 && !isV2)
             {
