@@ -799,7 +799,7 @@ namespace Olympe
             std::ifstream ifs(filepath);
             if (ifs.good())
             {
-                try { fileJson = nlohmann::json::parse(ifs); }
+                try { ifs >> fileJson; }
                 catch (...) { fileJson = nlohmann::json::object(); }
             }
         }
@@ -823,7 +823,8 @@ namespace Olympe
         {
             if (m_VSEditorPanel)
             {
-                TaskGraphTemplate* tmpl = TaskGraphLoader::LoadFromJson(fileJson);
+                std::vector<std::string> loadErrors;
+                TaskGraphTemplate* tmpl = TaskGraphLoader::LoadFromJson(fileJson, loadErrors);
                 if (tmpl)
                 {
                     m_VSEditorPanel->LoadTemplate(tmpl, filepath);
