@@ -88,7 +88,7 @@ public:
      * Dispatch logic:
      *   - schema_version == 4: ParseSchemaV4 (flat ATS VS format).
      *   - schema_version == 3: run TaskGraphMigrator_v3_to_v4::MigrateJson(), then ParseSchemaV4.
-     *   - schema_version <= 2 or absent: ParseSchemaLegacy (BT-style, backward compat).
+     *   - schema_version <= 2 or absent: ParseSchemaV4 with nested data.nodes support.
      *
      * @param data      Root JSON object.
      * @param outErrors Receives human-readable error messages if loading fails.
@@ -165,22 +165,6 @@ private:
      */
     static void ParseDataConnectionsV4(const json& root,
                                        TaskGraphTemplate* tmpl);
-
-    // -----------------------------------------------------------------------
-    // Legacy (v2 / BehaviorTree) – backward-compat path
-    // -----------------------------------------------------------------------
-
-    /**
-     * @brief Minimal BehaviorTree-style parser (schema v2 and below).
-     *
-     * Retained for backward compatibility with existing JSON assets that do
-     * not carry schema_version == 3 or 4.  New assets should use v4 format.
-     */
-    static TaskGraphTemplate* ParseSchemaLegacy(const json& data,
-                                                std::vector<std::string>& outErrors);
-
-    static TaskNodeDefinition ParseNodeLegacy(const json& nodeJson,
-                                              std::vector<std::string>& outErrors);
 
     // -----------------------------------------------------------------------
     // Shared helpers

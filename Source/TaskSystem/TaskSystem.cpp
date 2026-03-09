@@ -15,8 +15,8 @@
  *  - Each tick calls activeTask->Execute(params).
  *  - Running  => keep activeTask; accumulate StateTimer; return.
  *  - Success/Failure => reset activeTask; set LastStatus; reset StateTimer;
- *    advance CurrentNodeIndex via TransitionToNextNode().
- *  - If CurrentNodeIndex is NODE_INDEX_NONE when ExecuteNode() is called and
+ *    advance CurrentNodeID via TransitionToNextNode().
+ *  - If CurrentNodeID is NODE_INDEX_NONE when ExecuteNode() is called and
  *    activeTask is non-null, activeTask->Abort() is called before resetting.
  *
  * C++14 compliant - no C++17/20 features.
@@ -166,7 +166,7 @@ void TaskSystem::ExecuteNode(EntityID entity,
 {
     // NODE_INDEX_NONE signals that there is no active node (graph finished or
     // externally interrupted).  Abort any lingering task and return.
-    if (runner.CurrentNodeIndex == NODE_INDEX_NONE)
+    if (runner.CurrentNodeID == NODE_INDEX_NONE)
     {
         if (runner.activeTask)
         {
@@ -180,11 +180,11 @@ void TaskSystem::ExecuteNode(EntityID entity,
     }
 
     // Look up the current node by its NodeID.
-    const TaskNodeDefinition* node = tmpl->GetNode(runner.CurrentNodeIndex);
+    const TaskNodeDefinition* node = tmpl->GetNode(runner.CurrentNodeID);
     if (node == nullptr)
     {
         SYSTEM_LOG << "[TaskSystem] Entity " << entity
-                   << ": node ID " << runner.CurrentNodeIndex
+                   << ": node ID " << runner.CurrentNodeID
                    << " not found in template '" << tmpl->Name << "'\n";
         // Abort any active task associated with the missing node.
         if (runner.activeTask)
@@ -237,16 +237,18 @@ void TaskSystem::ExecuteAtomicTask(EntityID entity,
         }
     }
 
-    // Initialize LocalBlackboard: restore persisted state or seed from template defaults.
+    // Initialize LocalBlackboard from template defaults.
     LocalBlackboard bb;
-    if (!runner.LocalBlackboardData.empty())
+    bb.Initialize(*tmpl);
+
+    // Populate from runner.LocalBlackboard (typed per-entity state).
+    for (auto it = runner.LocalBlackboard.begin(); it != runner.LocalBlackboard.end(); ++it)
     {
-        bb.Initialize(*tmpl);
-        bb.Deserialize(runner.LocalBlackboardData);
-    }
-    else
-    {
-        bb.Initialize(*tmpl);
+        if (bb.HasVariable(it->first))
+        {
+            try { bb.SetValue(it->first, it->second); }
+            catch (...) { /* type mismatch — skip */ }
+        }
     }
 
     // Build parameter map from the node's literal and LocalVariable bindings.
@@ -284,7 +286,12 @@ void TaskSystem::ExecuteAtomicTask(EntityID entity,
     TaskStatus status = runner.activeTask->ExecuteWithContext(ctx, params);
 
     // Persist LocalBlackboard state so values survive across frames.
-    bb.Serialize(runner.LocalBlackboardData);
+    const std::vector<std::string>& keys = bb.GetVariableNames();
+    for (size_t i = 0; i < keys.size(); ++i)
+    {
+        try { runner.LocalBlackboard[keys[i]] = bb.GetValue(keys[i]); }
+        catch (...) {}
+    }
 
     // Accumulate time spent in this node on every tick.
     runner.StateTimer += dt;
@@ -295,7 +302,7 @@ void TaskSystem::ExecuteAtomicTask(EntityID entity,
         // Publish live runtime info to the editor if a callback is registered.
         if (s_EditorPublishFn != nullptr)
         {
-            s_EditorPublishFn(entity, runner.CurrentNodeIndex, &bb);
+            s_EditorPublishFn(entity, runner.CurrentNodeID, &bb);
         }
         return;
     }
@@ -319,7 +326,7 @@ void TaskSystem::TransitionToNextNode(TaskRunnerComponent& runner,
                                        bool success)
 {
     // Advance to the next NodeID.  NODE_INDEX_NONE means the graph is complete.
-    runner.CurrentNodeIndex = success ? node.NextOnSuccess : node.NextOnFailure;
+    runner.CurrentNodeID = success ? node.NextOnSuccess : node.NextOnFailure;
 
     // Reset the per-node timer on every transition.
     runner.StateTimer = 0.0f;

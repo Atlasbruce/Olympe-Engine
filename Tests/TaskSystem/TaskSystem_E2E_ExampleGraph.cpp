@@ -13,13 +13,13 @@
  *     |
  *   Node 2  Task_SetVariable     (Success immediately, sets "Done"=true)
  *     |
- *   [graph complete: CurrentNodeIndex == NODE_INDEX_NONE]
+ *   [graph complete: CurrentNodeID == NODE_INDEX_NONE]
  *
  * Assertions:
  *   - Graph completes within the allowed tick budget.
  *   - Final runner.LastStatus == Success.
  *   - Each node is visited in order (tracked via SYSTEM_LOG side-effects and
- *     CurrentNodeIndex transitions).
+ *     CurrentNodeID transitions).
  *
  * Runs in headless mode (ctx.WorldPtr == nullptr).
  *
@@ -179,27 +179,28 @@ static void TestE2E_GraphCompletesSuccessfully()
     Olympe::TaskGraphTemplate   tmpl   = MakeE2ETemplate();
     Olympe::TaskSystem          system;
     Olympe::TaskRunnerComponent runner;
+    runner.CurrentNodeID = 0;
 
     const float dt           = 0.016f;
     const int   maxTicks     = 300;
     int         completedAt  = -1;
 
     // Track node transitions for diagnostic output.
-    int prevNode = runner.CurrentNodeIndex;
+    int prevNode = runner.CurrentNodeID;
 
     for (int tick = 0; tick < maxTicks; ++tick)
     {
         system.ExecuteNode(1u, runner, &tmpl, dt);
 
-        if (runner.CurrentNodeIndex != prevNode)
+        if (runner.CurrentNodeID != prevNode)
         {
             std::cout << "  tick " << tick
                       << ": node " << prevNode
-                      << " -> " << runner.CurrentNodeIndex << std::endl;
-            prevNode = runner.CurrentNodeIndex;
+                      << " -> " << runner.CurrentNodeID << std::endl;
+            prevNode = runner.CurrentNodeID;
         }
 
-        if (runner.CurrentNodeIndex == Olympe::NODE_INDEX_NONE)
+        if (runner.CurrentNodeID == Olympe::NODE_INDEX_NONE)
         {
             completedAt = tick;
             break;
@@ -239,26 +240,27 @@ static void TestE2E_NodesVisitedInOrder()
     Olympe::TaskGraphTemplate   tmpl   = MakeE2ETemplate();
     Olympe::TaskSystem          system;
     Olympe::TaskRunnerComponent runner;
+    runner.CurrentNodeID = 0;
 
     const float dt       = 0.016f;
     const int   maxTicks = 300;
 
     std::vector<int> transitions;
-    transitions.push_back(runner.CurrentNodeIndex); // initial = 0
+    transitions.push_back(runner.CurrentNodeID); // initial = 0
 
-    int prev = runner.CurrentNodeIndex;
+    int prev = runner.CurrentNodeID;
 
     for (int tick = 0; tick < maxTicks; ++tick)
     {
         system.ExecuteNode(1u, runner, &tmpl, dt);
 
-        if (runner.CurrentNodeIndex != prev)
+        if (runner.CurrentNodeID != prev)
         {
-            transitions.push_back(runner.CurrentNodeIndex);
-            prev = runner.CurrentNodeIndex;
+            transitions.push_back(runner.CurrentNodeID);
+            prev = runner.CurrentNodeID;
         }
 
-        if (runner.CurrentNodeIndex == Olympe::NODE_INDEX_NONE)
+        if (runner.CurrentNodeID == Olympe::NODE_INDEX_NONE)
         {
             break;
         }
@@ -388,6 +390,7 @@ static void TestE2E_ShortIdsAccepted()
     Olympe::TaskGraphTemplate   tmpl   = MakeE2ETemplateShortIds();
     Olympe::TaskSystem          system;
     Olympe::TaskRunnerComponent runner;
+    runner.CurrentNodeID = 0;
 
     const float dt       = 0.016f;
     const int   maxTicks = 300;
@@ -397,7 +400,7 @@ static void TestE2E_ShortIdsAccepted()
     {
         system.ExecuteNode(1u, runner, &tmpl, dt);
 
-        if (runner.CurrentNodeIndex == Olympe::NODE_INDEX_NONE)
+        if (runner.CurrentNodeID == Olympe::NODE_INDEX_NONE)
         {
             completedAt = tick;
             break;
