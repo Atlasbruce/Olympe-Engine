@@ -367,4 +367,23 @@ if(BUILD_TESTS)
     target_include_directories(OlympeSetVariableTests PRIVATE ${COMMON_INCLUDES})
     add_test(NAME OlympeSetVariableTests COMMAND OlympeSetVariableTests)
 
+    # -----------------------------------------------------------------------
+    # OlympePhase7Tests  (Phase 7)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase7Tests
+        Tests/BlueprintEditor/Phase7Test.cpp
+        Source/BlueprintEditor/NodeSearchPalette.cpp
+        Source/BlueprintEditor/MinimapWidget.cpp
+        Source/BlueprintEditor/GridSnapping.cpp
+        Source/BlueprintEditor/FileWatcher.cpp
+        Source/BlueprintEditor/GraphValidationPanel.cpp
+        Source/BlueprintEditor/Optimizations/ViewportCulling.cpp
+        Source/BlueprintEditor/Optimizations/ConnectionCache.cpp
+        Source/BlueprintEditor/Optimizations/AsyncJSONLoader.cpp
+        ${TASK_SYSTEM_SOURCES}
+        ${TEST_STUBS}
+    )
+    target_include_directories(OlympePhase7Tests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase7Tests COMMAND OlympePhase7Tests)
+
 endif() # BUILD_TESTS
