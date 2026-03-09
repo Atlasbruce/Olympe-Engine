@@ -650,7 +650,7 @@ if(BUILD_TESTS)
     # OlympeSubGraphTests - Phase 4: SubGraph E2E test suite (6 tests)
     # -------------------------------------------------------------------------
     add_executable(OlympeSubGraphTests
-        Tests/TaskSystem/test_subgraph_complete.cpp
+        Tests/TaskSystem/SubGraphCompleteTest.cpp
         Tests/TestStubs.cpp
         Source/TaskSystem/VSGraphExecutor.cpp
         Source/TaskSystem/AtomicTaskRegistry.cpp

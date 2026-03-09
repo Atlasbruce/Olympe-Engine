@@ -22,7 +22,7 @@
         "x": 784,
         "y": 288
       },
-      "taskType": "Task_Unknown"
+      "taskType": "Task_Wait"
     },
     {
       "id": 2,
@@ -54,7 +54,7 @@
     {
       "id": 4,
       "type": "AtomicTask",
-      "name": "Rotate Direction +/-15°",
+      "name": "Rotate Direction +/-15\u00b0",
       "position": {
         "x": 496,
         "y": 400

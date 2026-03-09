@@ -183,7 +183,19 @@ def convert_v2_to_v4(data):
 
         if bt_type == "Action":
             action_type = n.get("actionType", "")
-            task_id = ACTION_TYPE_MAP.get(action_type, "Task_" + action_type if action_type else "Task_Unknown")
+            task_id = ACTION_TYPE_MAP.get(action_type, None)
+            if task_id is None:
+                if action_type:
+                    # Unmapped action type: construct a Task_ prefixed fallback and warn
+                    task_id = "Task_" + action_type
+                    print("  WARNING: Unmapped actionType '{}' for node '{}' — "
+                          "using fallback '{}'. Add to ACTION_TYPE_MAP if needed.".format(
+                              action_type, node_name, task_id))
+                else:
+                    # No actionType at all: use Task_Wait as a safe no-op default
+                    task_id = "Task_Wait"
+                    print("  WARNING: Node '{}' (id={}) has no actionType — "
+                          "defaulting to 'Task_Wait'.".format(node_name, node_id))
             result["taskType"] = task_id
             if params:
                 result["params"] = params
@@ -378,7 +390,15 @@ def convert_v2_to_v4(data):
 # Blackboard extractor: finds unique BB keys from node parameters
 # ---------------------------------------------------------------------------
 def extract_blackboard(v2_nodes):
-    """Best-effort extraction of blackboard variables from node parameters."""
+    """
+    Best-effort extraction of blackboard variables from node parameters.
+
+    NOTE: This function only extracts keys explicitly declared in
+    'CheckBlackboardValue' condition nodes. Variables referenced by other
+    node types (e.g. custom tasks, GetBBValue) will NOT be detected here.
+    Always verify the generated blackboard manually after migration and add
+    any missing entries by hand.
+    """
     bb_keys = {}  # key -> type hint
 
     for n in v2_nodes:
