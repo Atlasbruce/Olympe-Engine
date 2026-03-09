@@ -54,6 +54,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\BTNodeGraphManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\Clipboard.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EditorContext.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EditorConfigManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityBlueprint.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\Graph.cpp" />
@@ -192,6 +193,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\BTNodeGraphManager.h" />
     <ClInclude Include="..\Source\BlueprintEditor\Clipboard.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EditorContext.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EditorConfigManager.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityBlueprint.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditorPlugin.h" />
     <ClInclude Include="..\Source\BlueprintEditor\Graph.h" />

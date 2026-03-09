@@ -15,6 +15,7 @@
 #include "NodeGraphPanel.h"
 #include "EntitiesPanel.h"
 #include "InspectorPanel.h"
+#include "EditorConfigManager.h"
 
 // Forward declare ImVec2
 struct ImVec2;
@@ -45,10 +46,14 @@ namespace Olympe
 
         void Initialize();
         void Shutdown();
-        
+
         // Render the editor UI
         // Only renders if BlueprintEditor backend is active
         void Render();
+
+        // Configuration management
+        void LoadEditorConfig();
+        void SaveEditorConfig();
 
     private:
         void RenderMenuBar();

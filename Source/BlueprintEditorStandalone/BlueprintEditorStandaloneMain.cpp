@@ -65,13 +65,16 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         return SDL_APP_FAILURE;
     }
     
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	// io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // does not exist in SDL3 imgui backend yet
-    
-    ImGui::StyleColorsDark();
+
+	// Disable imgui.ini - we use JSON config instead
+	io.IniFilename = nullptr;
+
+	ImGui::StyleColorsDark();
     
     ImGuiStyle& style = ImGui::GetStyle();
     style.Colors[ImGuiCol_WindowBg] = ImVec4(0.12f, 0.12f, 0.14f, 1.00f);

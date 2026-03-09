@@ -65,7 +65,10 @@ namespace Olympe
         // Configure ImNodes style
         ImNodesStyle& style = ImNodes::GetStyle();
         style.Flags |= ImNodesStyleFlags_GridLines;
-        
+
+        // Load editor configuration from JSON
+        LoadEditorConfig();
+
         // Initialize Asset Browser with Blueprints directory
         m_AssetBrowser.Initialize("Blueprints");
         
@@ -90,6 +93,9 @@ namespace Olympe
 
     void BlueprintEditorGUI::Shutdown()
     {
+        // Save editor configuration before shutting down
+        SaveEditorConfig();
+
         // Shutdown panels
         if (m_HistoryPanel)
         {
@@ -97,18 +103,18 @@ namespace Olympe
             delete m_HistoryPanel;
             m_HistoryPanel = nullptr;
         }
-        
+
         if (m_TemplateBrowserPanel)
         {
             m_TemplateBrowserPanel->Shutdown();
             delete m_TemplateBrowserPanel;
             m_TemplateBrowserPanel = nullptr;
         }
-        
+
         m_InspectorPanel.Shutdown();
         m_EntitiesPanel.Shutdown();
         m_NodeGraphPanel.Shutdown();
-        
+
         ImNodes::DestroyContext();
     }
 
@@ -1019,6 +1025,59 @@ namespace Olympe
             {
                 m_ShowTemplateBrowser = true;
             }
+        }
+    }
+
+    void BlueprintEditorGUI::LoadEditorConfig()
+    {
+        EditorConfigManager& config = EditorConfigManager::Get();
+
+        // Load configuration from JSON file
+        if (config.LoadConfig("./config/ATS-VS-editor-config.json"))
+        {
+            // Apply panel visibility settings
+            const PanelVisibility& visibility = config.GetPanelVisibility();
+            m_ShowAssetBrowser = visibility.showAssetBrowser;
+            m_ShowInspector = visibility.showInspector;
+            m_ShowNodeGraph = visibility.showNodeGraph;
+            m_ShowTemplateBrowser = visibility.showTemplateBrowser;
+            m_ShowHistory = visibility.showHistory;
+
+            // Apply preferences to ImNodes
+            config.ApplyToImGui();
+
+            std::cout << "[BlueprintEditorGUI] Editor configuration loaded from JSON" << std::endl;
+        }
+        else
+        {
+            std::cout << "[BlueprintEditorGUI] Using default editor configuration" << std::endl;
+        }
+    }
+
+    void BlueprintEditorGUI::SaveEditorConfig()
+    {
+        EditorConfigManager& config = EditorConfigManager::Get();
+
+        // Capture current ImGui window positions and sizes
+        config.CaptureFromImGui();
+
+        // Update panel visibility in config
+        PanelVisibility visibility;
+        visibility.showAssetBrowser = m_ShowAssetBrowser;
+        visibility.showInspector = m_ShowInspector;
+        visibility.showNodeGraph = m_ShowNodeGraph;
+        visibility.showTemplateBrowser = m_ShowTemplateBrowser;
+        visibility.showHistory = m_ShowHistory;
+        config.SetPanelVisibility(visibility);
+
+        // Save configuration to JSON file
+        if (config.SaveConfig("./config/ATS-VS-editor-config.json"))
+        {
+            std::cout << "[BlueprintEditorGUI] Editor configuration saved to JSON" << std::endl;
+        }
+        else
+        {
+            std::cerr << "[BlueprintEditorGUI] Failed to save editor configuration" << std::endl;
         }
     }
 }

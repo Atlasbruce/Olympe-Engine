@@ -3,26 +3,33 @@
   "data": {
     "nodes": [
       {
-        "children": [2],
+        "children": [
+          2
+        ],
         "id": 1,
         "name": "Repeater",
         "parameters": {
           "repeatCount": "5"
         },
         "position": {
-          "x": 208,
-          "y": 304
+          "x": 133.197,
+          "y": 278.892
         },
-        "type": "Repeater"
+        "type": "Action"
       },
       {
-        "children": [3, 4, 5, 6],
+        "children": [
+          3,
+          4,
+          5,
+          6
+        ],
         "id": 2,
         "name": "Wander Sequence",
         "parameters": {},
         "position": {
-          "x": 432,
-          "y": 304
+          "x": 409.144,
+          "y": 292.327
         },
         "type": "Sequence"
       },
@@ -32,12 +39,12 @@
         "id": 3,
         "name": "Choose Random Point",
         "parameters": {
-          "radius": "500",
-          "minDistance": "50"
+          "minDistance": "50",
+          "radius": "500"
         },
         "position": {
-          "x": 672,
-          "y": 192
+          "x": 714.364,
+          "y": 161.517
         },
         "type": "Action"
       },
@@ -80,7 +87,7 @@
     ],
     "rootNodeId": 1
   },
-  "description": "NPC random wander behavior using repeater loop",
+  "description": "",
   "editorState": {
     "scrollOffset": {
       "x": 0,
@@ -91,7 +98,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-03-09T12:00:00",
+    "lastModified": "",
     "tags": []
   },
   "name": "NpcWanderTree",

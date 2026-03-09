@@ -48,6 +48,7 @@
     <ClCompile Include="Source\BlueprintEditor\BlueprintValidator.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BPCommandSystem.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BTNodeGraphManager.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EditorConfigManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EditorContext.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityBlueprint.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp" />
@@ -204,6 +205,7 @@
     <ClInclude Include="Source\BlueprintEditor\BlueprintValidator.h" />
     <ClInclude Include="Source\BlueprintEditor\BPCommandSystem.h" />
     <ClInclude Include="Source\BlueprintEditor\BTNodeGraphManager.h" />
+    <ClInclude Include="Source\BlueprintEditor\EditorConfigManager.h" />
     <ClInclude Include="Source\BlueprintEditor\EditorContext.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityBlueprint.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.h" />
@@ -358,6 +360,7 @@
     <None Include="analyze_codebase.ps1" />
     <None Include="analyze_codebase_v2.ps1" />
     <None Include="ClassDiagram.cd" />
+    <None Include="config\ATS-VS-editor-config.json" />
     <None Include="Docs\Blueprint Editor Features.md" />
     <None Include="olympe.ini" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />

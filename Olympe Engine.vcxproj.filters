@@ -139,6 +139,17 @@
     <ClCompile Include="Source\AI\BehaviorTreeDebugWindow_NodeGraph.cpp" />
     <ClCompile Include="Source\NodeGraphShared\BTGraphDocumentConverter.cpp" />
     <ClCompile Include="Source\TaskSystem\VSGraphExecutor.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\GlobalBlackboard.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Combat\Task_Attack.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Combat\Task_Flee.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Rendering\Task_PlayAnimation.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\Rendering\Task_SetSprite.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\State\Task_ChangeState.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\System\Task_GetDeltaTime.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\System\Task_GetWorldInstance.cpp" />
+    <ClCompile Include="Source\TaskSystem\AtomicTasks\System\Task_SetPosition.cpp" />
+    <ClCompile Include="Source\TaskSystem\TaskGraphMigrator_v3_to_v4.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EditorConfigManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -314,6 +325,17 @@
     <ClInclude Include="Source\VideoGame.h" />
     <ClInclude Include="Source\World.h" />
     <ClInclude Include="Source\TaskSystem\VSGraphExecutor.h" />
+    <ClInclude Include="Source\NodeGraphCore\GlobalBlackboard.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Combat\Task_Attack.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Combat\Task_Flee.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Rendering\Task_PlayAnimation.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\Rendering\Task_SetSprite.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\State\Task_ChangeState.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\System\Task_GetDeltaTime.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\System\Task_GetWorldInstance.h" />
+    <ClInclude Include="Source\TaskSystem\AtomicTasks\System\Task_SetPosition.h" />
+    <ClInclude Include="Source\TaskSystem\TaskGraphMigrator_v3_to_v4.h" />
+    <ClInclude Include="Source\BlueprintEditor\EditorConfigManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -331,6 +353,7 @@
     <None Include="analyze_codebase_v2.ps1" />
     <None Include="analyze_code.ps1" />
     <None Include="Docs\Blueprint Editor Features.md" />
+    <None Include="config\ATS-VS-editor-config.json" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

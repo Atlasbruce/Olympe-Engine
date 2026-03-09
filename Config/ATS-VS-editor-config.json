@@ -1,0 +1,19 @@
+{
+  "panelVisibility": {
+    "showAssetBrowser": true,
+    "showInspector": true,
+    "showNodeGraph": true,
+    "showTemplateBrowser": false,
+    "showHistory": false
+  },
+  "preferences": {
+    "gridLinesEnabled": true,
+    "autoSaveEnabled": true,
+    "autoSaveIntervalSeconds": 300,
+    "panningSpeed": 1.0,
+    "zoomSpeed": 0.1
+  },
+  "imguiSettings": {
+    "windows": {}
+  }
+}
