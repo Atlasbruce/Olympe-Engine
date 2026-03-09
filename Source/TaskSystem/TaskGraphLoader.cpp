@@ -14,6 +14,7 @@
 
 #include "TaskGraphLoader.h"
 #include "TaskGraphMigrator_v3_to_v4.h"
+#include "../BlueprintEditor/BTtoVSMigrator.h"
 
 #include <string>
 #include <vector>
@@ -89,9 +90,29 @@ TaskGraphTemplate* TaskGraphLoader::LoadFromJson(const json& data,
     }
     else
     {
-        // Schema v2 / unknown: redirect to ParseSchemaV4 which handles both the
-        // flat format and the nested "data.nodes" format used by legacy assets.
-        tmpl = ParseSchemaV4(data, outErrors);
+        // Schema v2: route through BTtoVSMigrator only for doubly-nested
+        // BT v2 documents (data.data.nodes).  Singly-nested documents
+        // (data.nodes) are handled by ParseSchemaV4, which already understands
+        // both formats and preserves BT node types (Sequence, Decorator, etc.).
+        bool doublyNested = data.contains("data") &&
+                            data["data"].is_object() &&
+                            data["data"].contains("data");
+
+        if (BTtoVSMigrator::IsBTv2(data) && doublyNested)
+        {
+            std::vector<std::string> migrateErrors;
+            TaskGraphTemplate migrated = BTtoVSMigrator::Convert(data, migrateErrors);
+            for (const auto& e : migrateErrors)
+                outErrors.push_back(e);
+
+            tmpl = new TaskGraphTemplate(migrated);
+        }
+        else
+        {
+            // Flat, singly-nested, or unknown v2 format: use ParseSchemaV4
+            // which already handles data.nodes and preserves BT structure.
+            tmpl = ParseSchemaV4(data, outErrors);
+        }
     }
 
     if (tmpl == nullptr)
@@ -299,6 +320,15 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
     {
         outErrors.push_back("Node " + std::to_string(nd.NodeID) +
                             " has unknown type '" + typeStr + "'");
+    }
+
+    // Name-based Decorator detection for BT-style assets.
+    // Some BT v2 files encode Decorator nodes as type "Action" with a
+    // descriptive name.  IsDecoratorName() centralises this heuristic.
+    if (nd.Type == TaskNodeType::AtomicTask &&
+        BTtoVSMigrator::IsDecoratorName(nd.NodeName))
+    {
+        nd.Type = TaskNodeType::Decorator;
     }
 
     // AtomicTask type name: "taskType" (new) or "AtomicTaskID"/"atomicTaskId"/"actionType"/"conditionType" (legacy).
