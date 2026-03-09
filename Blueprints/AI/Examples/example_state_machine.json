@@ -1,0 +1,198 @@
+{
+  "schema_version": 4,
+  "graphType": "VisualScript",
+  "name": "example_state_machine",
+  "description": "4-state HFSM: Idle, Patrol, Alert, Combat. Transitions driven by Blackboard keys.",
+  "blackboard": {
+    "local": {
+      "CurrentState": { "type": "string", "value": "Idle" },
+      "EnemyVisible": { "type": "bool", "value": "false" },
+      "EnemyClose": { "type": "bool", "value": "false" },
+      "Health": { "type": "float", "value": "100.0" },
+      "AlertTimer": { "type": "float", "value": "0.0" }
+    },
+    "global": {}
+  },
+  "nodes": [
+    {
+      "id": 1,
+      "type": "EntryPoint",
+      "name": "Start",
+      "comment": "Entry point of the state machine",
+      "posX": 100,
+      "posY": 300,
+      "parameters": {}
+    },
+    {
+      "id": 2,
+      "type": "Selector",
+      "name": "StateSelector",
+      "comment": "Select first succeeding state branch",
+      "posX": 320,
+      "posY": 300,
+      "parameters": {}
+    },
+    {
+      "id": 3,
+      "type": "Branch",
+      "name": "CombatCheck",
+      "comment": "Enter Combat if enemy is close",
+      "posX": 540,
+      "posY": 100,
+      "parameters": {
+        "conditionKey": "EnemyClose"
+      }
+    },
+    {
+      "id": 4,
+      "type": "SubGraph",
+      "name": "CombatState",
+      "comment": "Combat state: attack or flee",
+      "posX": 760,
+      "posY": 100,
+      "parameters": {
+        "subGraphPath": "Blueprints/AI/Examples/example_combat_ai.json"
+      }
+    },
+    {
+      "id": 5,
+      "type": "Branch",
+      "name": "AlertCheck",
+      "comment": "Enter Alert if enemy visible",
+      "posX": 540,
+      "posY": 260,
+      "parameters": {
+        "conditionKey": "EnemyVisible"
+      }
+    },
+    {
+      "id": 6,
+      "type": "Sequence",
+      "name": "AlertState",
+      "comment": "Alert state: face enemy and wait",
+      "posX": 760,
+      "posY": 260,
+      "parameters": {}
+    },
+    {
+      "id": 7,
+      "type": "AtomicTask",
+      "name": "FaceEnemy",
+      "comment": "Rotate NPC toward enemy",
+      "posX": 980,
+      "posY": 220,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "State: Alert - Facing enemy"
+      }
+    },
+    {
+      "id": 8,
+      "type": "AtomicTask",
+      "name": "AlertWait",
+      "comment": "Wait 2s in alert state",
+      "posX": 1200,
+      "posY": 220,
+      "parameters": {
+        "taskType": "Wait",
+        "duration": "2.0"
+      }
+    },
+    {
+      "id": 9,
+      "type": "Branch",
+      "name": "PatrolCheck",
+      "comment": "Patrol if health is adequate",
+      "posX": 540,
+      "posY": 420,
+      "parameters": {
+        "conditionKey": "Health",
+        "operator": ">",
+        "threshold": "20.0"
+      }
+    },
+    {
+      "id": 10,
+      "type": "SubGraph",
+      "name": "PatrolState",
+      "comment": "Patrol state: walk between waypoints",
+      "posX": 760,
+      "posY": 420,
+      "parameters": {
+        "subGraphPath": "Blueprints/AI/Examples/example_patrol_basic.json"
+      }
+    },
+    {
+      "id": 11,
+      "type": "Sequence",
+      "name": "IdleState",
+      "comment": "Idle state: stand and log",
+      "posX": 540,
+      "posY": 580,
+      "parameters": {}
+    },
+    {
+      "id": 12,
+      "type": "AtomicTask",
+      "name": "IdleLog",
+      "comment": "Log idle state",
+      "posX": 760,
+      "posY": 580,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "State: Idle"
+      }
+    },
+    {
+      "id": 13,
+      "type": "AtomicTask",
+      "name": "IdleWait",
+      "comment": "Wait 0.5s in idle",
+      "posX": 980,
+      "posY": 580,
+      "parameters": {
+        "taskType": "Wait",
+        "duration": "0.5"
+      }
+    },
+    {
+      "id": 14,
+      "type": "Repeat",
+      "name": "StateMachineLoop",
+      "comment": "Loop the state machine every tick",
+      "posX": 1400,
+      "posY": 300,
+      "parameters": {
+        "count": "-1"
+      }
+    },
+    {
+      "id": 15,
+      "type": "AtomicTask",
+      "name": "UpdateState",
+      "comment": "Update CurrentState blackboard key",
+      "posX": 1600,
+      "posY": 300,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "State machine tick complete"
+      }
+    }
+  ],
+  "connections": [
+    { "id": 1,  "type": "exec", "fromNode": 1,  "fromPin": "out",    "toNode": 2,  "toPin": "in" },
+    { "id": 2,  "type": "exec", "fromNode": 2,  "fromPin": "child0", "toNode": 3,  "toPin": "in" },
+    { "id": 3,  "type": "exec", "fromNode": 3,  "fromPin": "true",   "toNode": 4,  "toPin": "in" },
+    { "id": 4,  "type": "exec", "fromNode": 2,  "fromPin": "child1", "toNode": 5,  "toPin": "in" },
+    { "id": 5,  "type": "exec", "fromNode": 5,  "fromPin": "true",   "toNode": 6,  "toPin": "in" },
+    { "id": 6,  "type": "exec", "fromNode": 6,  "fromPin": "child0", "toNode": 7,  "toPin": "in" },
+    { "id": 7,  "type": "exec", "fromNode": 7,  "fromPin": "out",    "toNode": 8,  "toPin": "in" },
+    { "id": 8,  "type": "exec", "fromNode": 2,  "fromPin": "child2", "toNode": 9,  "toPin": "in" },
+    { "id": 9,  "type": "exec", "fromNode": 9,  "fromPin": "true",   "toNode": 10, "toPin": "in" },
+    { "id": 10, "type": "exec", "fromNode": 2,  "fromPin": "child3", "toNode": 11, "toPin": "in" },
+    { "id": 11, "type": "exec", "fromNode": 11, "fromPin": "child0", "toNode": 12, "toPin": "in" },
+    { "id": 12, "type": "exec", "fromNode": 12, "fromPin": "out",    "toNode": 13, "toPin": "in" },
+    { "id": 13, "type": "exec", "fromNode": 2,  "fromPin": "out",    "toNode": 14, "toPin": "in" },
+    { "id": 14, "type": "exec", "fromNode": 14, "fromPin": "out",    "toNode": 15, "toPin": "in" }
+  ]
+}

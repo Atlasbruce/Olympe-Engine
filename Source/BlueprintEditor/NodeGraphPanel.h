@@ -3,6 +3,10 @@
  * 
  * GUI panel for visual node graph editing using ImNodes
  * Supports Behavior Trees and HFSM editing
+ *
+ * @deprecated (Phase 7) NodeGraphPanel is the legacy BT v2 editor.
+ *   For new VS v4 graphs use VisualScriptEditorPanel.
+ *   NodeGraphPanel is retained for BehaviorTreeDebugWindow (BT debug visualisation).
  */
 
 #pragma once

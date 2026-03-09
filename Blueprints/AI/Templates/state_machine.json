@@ -1,0 +1,112 @@
+{
+  "schema_version": 4,
+  "graphType": "VisualScript",
+  "templateName": "state_machine",
+  "description": "State machine template: Selector-based HFSM with 3 placeholder states (Combat, Patrol, Idle).",
+  "blackboard": {
+    "local": {
+      "State_Combat":  { "type": "bool", "value": "false" },
+      "State_Patrol":  { "type": "bool", "value": "true"  },
+      "State_Idle":    { "type": "bool", "value": "false" }
+    },
+    "global": {}
+  },
+  "nodes": [
+    {
+      "id": 1,
+      "type": "EntryPoint",
+      "name": "Start",
+      "comment": "State machine template - add condition keys to blackboard",
+      "posX": 100,
+      "posY": 300,
+      "parameters": {}
+    },
+    {
+      "id": 2,
+      "type": "Selector",
+      "name": "StateSelector",
+      "comment": "Tries each state branch in priority order",
+      "posX": 320,
+      "posY": 300,
+      "parameters": {}
+    },
+    {
+      "id": 3,
+      "type": "Branch",
+      "name": "CombatCondition",
+      "comment": "High-priority: enter Combat state",
+      "posX": 540,
+      "posY": 100,
+      "parameters": {
+        "conditionKey": "State_Combat"
+      }
+    },
+    {
+      "id": 4,
+      "type": "AtomicTask",
+      "name": "CombatState",
+      "comment": "Combat state placeholder - replace with combat SubGraph",
+      "posX": 760,
+      "posY": 100,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "State: Combat"
+      }
+    },
+    {
+      "id": 5,
+      "type": "Branch",
+      "name": "PatrolCondition",
+      "comment": "Medium-priority: enter Patrol state",
+      "posX": 540,
+      "posY": 300,
+      "parameters": {
+        "conditionKey": "State_Patrol"
+      }
+    },
+    {
+      "id": 6,
+      "type": "AtomicTask",
+      "name": "PatrolState",
+      "comment": "Patrol state placeholder - replace with patrol SubGraph",
+      "posX": 760,
+      "posY": 300,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "State: Patrol"
+      }
+    },
+    {
+      "id": 7,
+      "type": "AtomicTask",
+      "name": "IdleState",
+      "comment": "Fallback idle state - always succeeds",
+      "posX": 540,
+      "posY": 500,
+      "parameters": {
+        "taskType": "LogMessage",
+        "message": "State: Idle"
+      }
+    },
+    {
+      "id": 8,
+      "type": "Repeat",
+      "name": "StateMachineLoop",
+      "comment": "Loop the state machine every tick",
+      "posX": 980,
+      "posY": 300,
+      "parameters": {
+        "count": "-1"
+      }
+    }
+  ],
+  "connections": [
+    { "id": 1, "type": "exec", "fromNode": 1, "fromPin": "out",    "toNode": 2, "toPin": "in" },
+    { "id": 2, "type": "exec", "fromNode": 2, "fromPin": "child0", "toNode": 3, "toPin": "in" },
+    { "id": 3, "type": "exec", "fromNode": 3, "fromPin": "true",   "toNode": 4, "toPin": "in" },
+    { "id": 4, "type": "exec", "fromNode": 2, "fromPin": "child1", "toNode": 5, "toPin": "in" },
+    { "id": 5, "type": "exec", "fromNode": 5, "fromPin": "true",   "toNode": 6, "toPin": "in" },
+    { "id": 6, "type": "exec", "fromNode": 2, "fromPin": "child2", "toNode": 7, "toPin": "in" },
+    { "id": 7, "type": "exec", "fromNode": 2, "fromPin": "out",    "toNode": 8, "toPin": "in" }
+  ]
+}
