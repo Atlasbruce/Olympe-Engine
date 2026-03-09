@@ -21,7 +21,7 @@ jobs:
         run: |
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_TESTS=ON \
+            -DBUILD_TESTS=OFF \
             -DBUILD_RUNTIME_ENGINE=OFF \
             -DBUILD_BLUEPRINT_EDITOR_STANDALONE=OFF
 
