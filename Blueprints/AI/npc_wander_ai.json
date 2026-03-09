@@ -1,0 +1,99 @@
+{
+  "blueprintType": "BehaviorTree",
+  "data": {
+    "nodes": [
+      {
+        "children": [2],
+        "id": 1,
+        "name": "Repeater",
+        "parameters": {
+          "repeatCount": "5"
+        },
+        "position": {
+          "x": 208,
+          "y": 304
+        },
+        "type": "Repeater"
+      },
+      {
+        "children": [3, 4, 5, 6],
+        "id": 2,
+        "name": "Wander Sequence",
+        "parameters": {},
+        "position": {
+          "x": 432,
+          "y": 304
+        },
+        "type": "Sequence"
+      },
+      {
+        "actionType": "ChooseRandomNavigablePoint",
+        "children": [],
+        "id": 3,
+        "name": "Choose Random Point",
+        "parameters": {
+          "radius": "500",
+          "minDistance": "50"
+        },
+        "position": {
+          "x": 672,
+          "y": 192
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "SetMoveGoalToPatrolPoint",
+        "children": [],
+        "id": 4,
+        "name": "Set Move Goal",
+        "parameters": {},
+        "position": {
+          "x": 672,
+          "y": 304
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "RequestPathfinding",
+        "children": [],
+        "id": 5,
+        "name": "Request Pathfinding",
+        "parameters": {},
+        "position": {
+          "x": 672,
+          "y": 416
+        },
+        "type": "Action"
+      },
+      {
+        "actionType": "FollowPath",
+        "children": [],
+        "id": 6,
+        "name": "Follow Path",
+        "parameters": {},
+        "position": {
+          "x": 672,
+          "y": 528
+        },
+        "type": "Action"
+      }
+    ],
+    "rootNodeId": 1
+  },
+  "description": "NPC random wander behavior using repeater loop",
+  "editorState": {
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
+  "metadata": {
+    "author": "User",
+    "created": "",
+    "lastModified": "2026-03-09T12:00:00",
+    "tags": []
+  },
+  "name": "NpcWanderTree",
+  "schema_version": 2
+}

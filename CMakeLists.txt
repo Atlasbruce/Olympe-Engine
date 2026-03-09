@@ -647,16 +647,18 @@ if(BUILD_TESTS)
     )
 
     # -------------------------------------------------------------------------
-    # OlympeVSGraphExecutorTests - Phase 3: VSGraphExecutor 8-test suite
+    # OlympeSubGraphTests - Phase 4: SubGraph E2E test suite (6 tests)
     # -------------------------------------------------------------------------
-    add_executable(OlympeVSGraphExecutorTests
-        Tests/TaskSystem/VSGraphExecutorTest.cpp
+    add_executable(OlympeSubGraphTests
+        Tests/TaskSystem/test_subgraph_complete.cpp
         Tests/TestStubs.cpp
         Source/TaskSystem/VSGraphExecutor.cpp
         Source/TaskSystem/AtomicTaskRegistry.cpp
         Source/TaskSystem/LocalBlackboard.cpp
         Source/TaskSystem/TaskGraphTemplate.cpp
         Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphMigrator_v3_to_v4.cpp
         Source/TaskSystem/AtomicTasks/Task_LogMessage.cpp
         Source/TaskSystem/AtomicTasks/Utility/Task_Wait.cpp
         Source/TaskSystem/AtomicTasks/Blackboard/Task_Compare.cpp
@@ -672,6 +674,56 @@ if(BUILD_TESTS)
         Source/NodeGraphCore/GlobalBlackboard.cpp
         Source/NodeGraphCore/BlackboardSystem.cpp
         Source/ECS/Components/TaskRunnerComponent.cpp
+        Source/Core/AssetManager.cpp
+    )
+
+    target_include_directories(OlympeSubGraphTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeSubGraphTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME SubGraphCompleteTest
+        COMMAND OlympeSubGraphTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
+    # -------------------------------------------------------------------------
+    # OlympeVSGraphExecutorTests - Phase 3: VSGraphExecutor 8-test suite
+    # -------------------------------------------------------------------------
+    add_executable(OlympeVSGraphExecutorTests
+        Tests/TaskSystem/VSGraphExecutorTest.cpp
+        Tests/TestStubs.cpp
+        Source/TaskSystem/VSGraphExecutor.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphMigrator_v3_to_v4.cpp
+        Source/TaskSystem/AtomicTasks/Task_LogMessage.cpp
+        Source/TaskSystem/AtomicTasks/Utility/Task_Wait.cpp
+        Source/TaskSystem/AtomicTasks/Blackboard/Task_Compare.cpp
+        Source/TaskSystem/AtomicTasks/Blackboard/Task_SetVariable.cpp
+        Source/TaskSystem/AtomicTasks/State/Task_ChangeState.cpp
+        Source/TaskSystem/AtomicTasks/System/Task_SetPosition.cpp
+        Source/TaskSystem/AtomicTasks/System/Task_GetDeltaTime.cpp
+        Source/TaskSystem/AtomicTasks/System/Task_GetWorldInstance.cpp
+        Source/TaskSystem/AtomicTasks/Rendering/Task_SetSprite.cpp
+        Source/TaskSystem/AtomicTasks/Rendering/Task_PlayAnimation.cpp
+        Source/TaskSystem/AtomicTasks/Combat/Task_Attack.cpp
+        Source/TaskSystem/AtomicTasks/Combat/Task_Flee.cpp
+        Source/NodeGraphCore/GlobalBlackboard.cpp
+        Source/NodeGraphCore/BlackboardSystem.cpp
+        Source/ECS/Components/TaskRunnerComponent.cpp
+        Source/Core/AssetManager.cpp
     )
 
     target_include_directories(OlympeVSGraphExecutorTests PRIVATE

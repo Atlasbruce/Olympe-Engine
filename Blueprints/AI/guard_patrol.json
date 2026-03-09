@@ -1,77 +1,81 @@
 {
-  "blueprintType": "BehaviorTree",
-  "data": {
-    "nodes": [
-      {
-        "children": [
-          2,
-          3,
-          4
-        ],
-        "id": 1,
-        "name": "Root Sequence",
-        "parameters": {},
-        "position": {
-          "x": 256,
-          "y": 512
-        },
-        "type": "Sequence"
-      },
-      {
-        "actionType": "PatrolPickNextPoint",
-        "children": [],
-        "id": 2,
-        "name": "Pick Next Patrol Point",
-        "parameters": {},
-        "position": {
-          "x": 544,
-          "y": 432
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "SetMoveGoalToPatrolPoint",
-        "children": [],
-        "id": 3,
-        "name": "Set Move Goal to Patrol Point",
-        "parameters": {},
-        "position": {
-          "x": 544,
-          "y": 544
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "MoveToGoal",
-        "children": [],
-        "id": 4,
-        "name": "Move to Goal",
-        "parameters": {
-          "param1": "0.5"
-        },
-        "position": {
-          "x": 544,
-          "y": 656
-        },
-        "type": "Action"
-      }
-    ],
-    "rootNodeId": 1
-  },
+  "schema_version": 4,
+  "graphType": "VisualScript",
+  "name": "GuardPatrolTree",
   "description": "",
+  "blackboard": [],
+  "nodes": [
+    {
+      "id": 5,
+      "type": "EntryPoint",
+      "name": "Start",
+      "position": {
+        "x": 0,
+        "y": 200
+      }
+    },
+    {
+      "id": 1,
+      "type": "VSSequence",
+      "name": "Root Sequence",
+      "position": {
+        "x": 256,
+        "y": 512
+      },
+      "children": [
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "id": 2,
+      "type": "AtomicTask",
+      "name": "Pick Next Patrol Point",
+      "position": {
+        "x": 544,
+        "y": 432
+      },
+      "taskType": "Task_PatrolPickPoint"
+    },
+    {
+      "id": 3,
+      "type": "AtomicTask",
+      "name": "Set Move Goal to Patrol Point",
+      "position": {
+        "x": 544,
+        "y": 544
+      },
+      "taskType": "Task_SetMoveGoal"
+    },
+    {
+      "id": 4,
+      "type": "AtomicTask",
+      "name": "Move to Goal",
+      "position": {
+        "x": 544,
+        "y": 656
+      },
+      "taskType": "Task_MoveToLocation",
+      "params": {
+        "param1": "0.5"
+      }
+    }
+  ],
+  "execConnections": [
+    {
+      "fromNode": 5,
+      "fromPin": "Out",
+      "toNode": 1,
+      "toPin": "In"
+    }
+  ],
+  "dataConnections": [],
   "editorState": {
     "scrollOffset": {
       "x": 0,
       "y": 0
     },
     "zoom": 1
-  },
-  "metadata": {
-    "author": "User",
-    "created": "",
-    "lastModified": "2026-03-07T12:15:19",
-    "tags": []
-  },
-  "name": "GuardPatrolTree",
-  "schema_version": 2
+  }
 }

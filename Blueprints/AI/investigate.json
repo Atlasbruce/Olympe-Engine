@@ -1,65 +1,75 @@
 {
-  "blueprintType": "BehaviorTree",
-  "data": {
-    "nodes": [
-      {
-        "children": [
-          2
-        ],
-        "id": 1,
-        "name": "Root Sequence",
-        "parameters": {},
-        "position": {
-          "x": 128,
-          "y": 96
-        },
-        "type": "Sequence"
-      },
-      {
-        "children": [
-          3
-        ],
-        "conditionType": "HeardNoise",
-        "id": 2,
-        "name": "Heard Noise?",
-        "parameters": {},
-        "position": {
-          "x": 352,
-          "y": 96
-        },
-        "type": "Condition"
-      },
-      {
-        "actionType": "MoveToGoal",
-        "children": [],
-        "id": 3,
-        "name": "Move to Last Known Position",
-        "parameters": {
-          "param1": "0.8"
-        },
-        "position": {
-          "x": 544,
-          "y": 80
-        },
-        "type": "Action"
-      }
-    ],
-    "rootNodeId": 1
-  },
+  "schema_version": 4,
+  "graphType": "VisualScript",
+  "name": "InvestigateTree",
   "description": "",
+  "blackboard": [],
+  "nodes": [
+    {
+      "id": 4,
+      "type": "EntryPoint",
+      "name": "Start",
+      "position": {
+        "x": 0,
+        "y": 200
+      }
+    },
+    {
+      "id": 1,
+      "type": "VSSequence",
+      "name": "Root Sequence",
+      "position": {
+        "x": 128,
+        "y": 96
+      },
+      "children": [
+        2
+      ]
+    },
+    {
+      "id": 2,
+      "type": "Branch",
+      "name": "Heard Noise?",
+      "position": {
+        "x": 352,
+        "y": 96
+      },
+      "conditionKey": "HeardNoise"
+    },
+    {
+      "id": 3,
+      "type": "AtomicTask",
+      "name": "Move to Last Known Position",
+      "position": {
+        "x": 544,
+        "y": 80
+      },
+      "taskType": "Task_MoveToLocation",
+      "params": {
+        "param1": "0.8"
+      }
+    }
+  ],
+  "execConnections": [
+    {
+      "fromNode": 4,
+      "fromPin": "Out",
+      "toNode": 1,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Then",
+      "toNode": 3,
+      "toPin": "In"
+    }
+  ],
+  "dataConnections": [],
   "editorState": {
     "scrollOffset": {
       "x": 0,
       "y": 0
     },
     "zoom": 1
-  },
-  "metadata": {
-    "author": "User",
-    "created": "",
-    "lastModified": "2026-03-07T12:15:39",
-    "tags": []
-  },
-  "name": "InvestigateTree",
-  "schema_version": 2
+  }
 }
