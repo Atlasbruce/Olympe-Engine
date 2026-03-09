@@ -744,6 +744,94 @@ if(BUILD_TESTS)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 
+    # -------------------------------------------------------------------------
+    # OlympeDebuggerTests - Phase 5: DebugController unit tests
+    # -------------------------------------------------------------------------
+    add_executable(OlympeDebuggerTests
+        Tests/BlueprintEditor/DebuggerTest.cpp
+        Tests/TestStubs.cpp
+        Source/BlueprintEditor/DebugController.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+    )
+
+    target_include_directories(OlympeDebuggerTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeDebuggerTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME DebuggerTest
+        COMMAND OlympeDebuggerTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
+    # -------------------------------------------------------------------------
+    # OlympeProfilerTests - Phase 5: PerformanceProfiler unit tests
+    # -------------------------------------------------------------------------
+    add_executable(OlympeProfilerTests
+        Tests/BlueprintEditor/ProfilerTest.cpp
+        Tests/TestStubs.cpp
+        Source/BlueprintEditor/PerformanceProfiler.cpp
+    )
+
+    target_include_directories(OlympeProfilerTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeProfilerTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME ProfilerTest
+        COMMAND OlympeProfilerTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
+    # -------------------------------------------------------------------------
+    # OlympeVSEditorTests - Phase 5: VS graph template / serialization tests
+    # -------------------------------------------------------------------------
+    add_executable(OlympeVSEditorTests
+        Tests/BlueprintEditor/VisualScriptEditorTest.cpp
+        Tests/TestStubs.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/TaskGraphLoader.cpp
+        Source/TaskSystem/TaskGraphMigrator_v3_to_v4.cpp
+        Source/Core/AssetManager.cpp
+    )
+
+    target_include_directories(OlympeVSEditorTests PRIVATE
+        ${CMAKE_SOURCE_DIR}/Source
+        ${CMAKE_SOURCE_DIR}/Source/third_party/nlohmann
+        ${CMAKE_SOURCE_DIR}/SDL/include
+        ${CMAKE_SOURCE_DIR}/SDL/include/SDL3
+    )
+
+    set_target_properties(OlympeVSEditorTests PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+    )
+
+    add_test(
+        NAME VSEditorTest
+        COMMAND OlympeVSEditorTests
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+
     message(STATUS "  Unit Tests: ON")
 else()
     message(STATUS "  Unit Tests: OFF (enable with -DBUILD_TESTS=ON)")
