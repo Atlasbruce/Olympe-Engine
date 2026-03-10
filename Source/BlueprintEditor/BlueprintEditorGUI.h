@@ -75,7 +75,8 @@ namespace Olympe
         void HandleKeyboardShortcuts();
 
         // File operations (delegate to backend)
-        void NewBlueprint();
+        void NewBlueprint();  // Legacy - creates EntityBlueprint
+        void NewVisualScriptGraph();  // VS v4 - creates empty graph
         void LoadBlueprint(const std::string& filepath);
         void SaveBlueprint();
         void SaveBlueprintAs();

@@ -55,10 +55,10 @@ namespace Olympe
     private:
         // Render tree node recursively (uses backend data)
         void RenderTreeNode(const std::shared_ptr<AssetNode>& node);
-        
-        // Render runtime entities section (B)
-        void RenderRuntimeEntities();
-        
+
+        // LEGACY METHOD - No longer used (Runtime Entities tab removed)
+        // void RenderRuntimeEntities();
+
         // Render node palette tab (F)
         void RenderNodePalette();
         

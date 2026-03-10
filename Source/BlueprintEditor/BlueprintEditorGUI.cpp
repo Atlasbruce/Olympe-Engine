@@ -229,72 +229,43 @@ namespace Olympe
             // ===== D) FILE MENU =====
             if (ImGui::BeginMenu("File"))
             {
-                // New Blueprint submenu with all types
-                if (ImGui::BeginMenu("New Blueprint"))
+                // Primary: New Visual Script (VS v4 - current system)
+                if (ImGui::MenuItem("New Visual Script", "Ctrl+N"))
                 {
-                    if (ImGui::BeginMenu("AI"))
-                    {
-                        if (ImGui::MenuItem("Behavior Tree", "Ctrl+Shift+B"))
-                        {
-                            // TODO: Create new BehaviorTree
-                            std::cout << "Creating new Behavior Tree..." << std::endl;
-                        }
-                        if (ImGui::MenuItem("Hierarchical FSM", "Ctrl+Shift+H"))
-                        {
-                            std::cout << "Creating new HFSM..." << std::endl;
-                        }
-                        ImGui::EndMenu();
-                    }
-                    
-                    ImGui::Separator();
-                    
-                    if (ImGui::MenuItem("Entity Prefab", "Ctrl+Shift+E"))
-                    {
-                        std::cout << "Creating new Entity Prefab..." << std::endl;
-                    }
-                    
-                    if (ImGui::MenuItem("Animation Graph", "Ctrl+Shift+A"))
-                    {
-                        std::cout << "Creating new Animation Graph..." << std::endl;
-                    }
-                    
-                    if (ImGui::MenuItem("Scripted Event", "Ctrl+Shift+S"))
-                    {
-                        std::cout << "Creating new Scripted Event..." << std::endl;
-                    }
-                    
-                    ImGui::Separator();
-                    
-                    if (ImGui::MenuItem("Level Definition", "Ctrl+Shift+L"))
-                    {
-                        std::cout << "Creating new Level Definition..." << std::endl;
-                    }
-                    
-                    if (ImGui::MenuItem("UI Menu", "Ctrl+Shift+U"))
-                    {
-                        std::cout << "Creating new UI Menu..." << std::endl;
-                    }
-                    
-                    ImGui::EndMenu();
+                    NewVisualScriptGraph();
                 }
-                
-                if (ImGui::MenuItem("New Blueprint (Legacy)", "Ctrl+N"))
-                    NewBlueprint();
-                
+
                 if (ImGui::MenuItem("Open Blueprint...", "Ctrl+O"))
                 {
                     // TODO: File dialog - for now use example
                     LoadBlueprint("Blueprints/AI/guard_patrol.json");
                 }
-                
+
                 ImGui::Separator();
-                
+
                 if (ImGui::MenuItem("Save", "Ctrl+S", false, backend.HasBlueprint()))
                     SaveBlueprint();
-                
+
                 if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false, backend.HasBlueprint()))
                     SaveBlueprintAs();
-                
+
+                ImGui::Separator();
+
+                // Legacy submenu (collapsed by default)
+                if (ImGui::BeginMenu("Legacy Blueprints"))
+                {
+                    if (ImGui::MenuItem("New Entity Blueprint (Legacy)"))
+                    {
+                        NewBlueprint();
+                    }
+
+                    ImGui::Separator();
+                    ImGui::TextDisabled("Old BehaviorTree v2 system");
+                    ImGui::TextDisabled("Use 'New Visual Script' instead");
+
+                    ImGui::EndMenu();
+                }
+
                 ImGui::Separator();
                 
                 // Phase 5: Template menu items
@@ -903,10 +874,41 @@ namespace Olympe
     {
         // Delegate to backend
         BlueprintEditor::Get().NewBlueprint("NewBlueprint", "A new entity blueprint");
-        
+
         // Reset UI state
         m_SelectedComponentIndex = -1;
         m_NodePositions.clear();
+    }
+
+    void BlueprintEditorGUI::NewVisualScriptGraph()
+    {
+        // Create empty VS v4 graph template
+        TaskGraphTemplate emptyTemplate;
+        emptyTemplate.Name = "NewVisualScript";
+        emptyTemplate.Description = "New Visual Script Graph";
+        emptyTemplate.GraphType = "VisualScript";
+        emptyTemplate.RootNodeID = -1;  // No root node yet (VS uses EntryPoint instead)
+        emptyTemplate.EntryPointID = -1; // Will be set when EntryPoint node is added
+
+        // Initialize empty collections
+        emptyTemplate.Nodes.clear();
+        emptyTemplate.ExecConnections.clear();
+        emptyTemplate.DataConnections.clear();
+        emptyTemplate.Blackboard.clear();
+        emptyTemplate.LocalVariables.clear();
+
+        // Load into VisualScriptEditorPanel
+        if (m_VSEditorPanel)
+        {
+            m_VSEditorPanel->LoadTemplate(&emptyTemplate, "");  // Empty filepath = new unsaved graph
+            m_ShowVSEditor = true;
+            m_ShowNodeGraph = false;  // Hide legacy NodeGraphPanel
+            std::cout << "[BlueprintEditorGUI] Created new Visual Script graph" << std::endl;
+        }
+        else
+        {
+            std::cerr << "[BlueprintEditorGUI] ERROR: VisualScriptEditorPanel not initialized" << std::endl;
+        }
     }
 
     void BlueprintEditorGUI::LoadBlueprint(const std::string& filepath)
@@ -1259,13 +1261,13 @@ namespace Olympe
                 SaveBlueprintAs();
             }
         }
-        
-        // Ctrl+N : New Blueprint
+
+        // Ctrl+N : New Visual Script
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_N))
         {
-            NewBlueprint();
+            NewVisualScriptGraph();
         }
-        
+
         // Ctrl+O : Open Blueprint
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_O))
         {

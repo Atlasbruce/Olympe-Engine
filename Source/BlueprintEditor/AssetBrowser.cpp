@@ -7,6 +7,7 @@
 #include "BlueprintEditor.h"
 #include "EntityInspectorManager.h"
 #include "EnumCatalogManager.h"
+#include "../TaskSystem/TaskGraphTypes.h"
 #include "../third_party/imgui/imgui.h"
 #include <algorithm>
 #include <iostream>
@@ -246,18 +247,7 @@ namespace Olympe
                 ImGui::EndTabItem();
             }
 
-            // ===== TAB 2: Runtime Entities =====
-            if (ImGui::BeginTabItem("Runtime Entities"))
-            {
-                ImGui::Text("Active Entities: %zu", BlueprintEditor::Get().GetRuntimeEntityCount());
-                ImGui::Separator();
-
-                RenderRuntimeEntities();
-
-                ImGui::EndTabItem();
-            }
-
-            // ===== TAB 3: Node Palette =====
+            // ===== TAB 2: Node Palette =====
             if (ImGui::BeginTabItem("Nodes"))
             {
                 RenderNodePalette();
@@ -268,18 +258,20 @@ namespace Olympe
         }
     }
     
+    /*
+    // LEGACY METHOD - No longer used (Runtime Entities tab removed)
     void AssetBrowser::RenderRuntimeEntities()
     {
         // Get runtime entities from BlueprintEditor backend
         const auto& entities = BlueprintEditor::Get().GetRuntimeEntities();
-        
+
         if (entities.empty())
         {
             ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No runtime entities.");
             ImGui::TextWrapped("Create entities with World::CreateEntity() to see them here.");
             return;
         }
-        
+
         // Use EntityInspectorManager to get entity names and info
         const auto& inspector = Olympe::EntityInspectorManager::Get();
         if (!inspector.IsInitialized())
@@ -288,17 +280,17 @@ namespace Olympe
                 "Inspector not initialized.");
             return;
         }
-        
+
         // Get current selection
         uint64_t selectedEntity = BlueprintEditor::Get().GetSelectedEntity();
-        
+
         // Render each entity as a selectable item
         ImGui::BeginChild("RuntimeEntitiesScroll", ImVec2(0, 200), true);
-        
+
         for (uint64_t entityId : entities)
         {
             bool isSelected = (selectedEntity == entityId);
-            
+
             // Get entity info from inspector
             EntityInfo info = inspector.GetEntityInfo(entityId);
             std::string displayName = info.name;
@@ -306,16 +298,16 @@ namespace Olympe
             {
                 displayName = "Entity_" + std::to_string(entityId);
             }
-            
+
             // Add component count badge
             displayName += " (" + std::to_string(info.componentTypes.size()) + " comp)";
-            
+
             // Selectable item
             if (ImGui::Selectable(displayName.c_str(), isSelected))
             {
                 BlueprintEditor::Get().SetSelectedEntity(entityId);
             }
-            
+
             // Tooltip on hover
             if (ImGui::IsItemHovered())
             {
@@ -333,172 +325,72 @@ namespace Olympe
                 ImGui::EndTooltip();
             }
         }
-        
+
         ImGui::EndChild();
     }
+    */
 
     void AssetBrowser::RenderNodePalette()
     {
         ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), 
             "Drag nodes to the graph to add them");
         ImGui::Separator();
-        
-        // ===== Composite Nodes =====
-        if (ImGui::CollapsingHeader("Composites", ImGuiTreeNodeFlags_DefaultOpen))
+
+        // Helper lambda for creating draggable node items
+        auto RenderDraggableNode = [](const char* label, TaskNodeType nodeType, const char* tooltip) {
+            ImGui::Selectable(label);
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+            {
+                uint8_t enumValue = static_cast<uint8_t>(nodeType);
+                ImGui::SetDragDropPayload("VS_NODE_TYPE_ENUM", &enumValue, sizeof(uint8_t));
+                ImGui::Text("%s", label);
+                ImGui::EndDragDropSource();
+            }
+
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::SetTooltip("%s", tooltip);
+            }
+        };
+
+        // ===== Flow Control Nodes =====
+        if (ImGui::CollapsingHeader("Flow Control", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            const char* compositeNodes[] = {"Sequence", "Selector"};
-            const char* compositeTooltips[] = {
-                "Executes children in order until one fails",
-                "Executes children in order until one succeeds"
-            };
-            
-            for (int i = 0; i < 2; i++)
-            {
-                ImGui::Selectable(compositeNodes[i]);
-                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
-                {
-                    const char* nodeType = compositeNodes[i];
-                    ImGui::SetDragDropPayload("NODE_TYPE", nodeType, strlen(nodeType) + 1);
-                    ImGui::Text("%s", compositeNodes[i]);
-                    ImGui::EndDragDropSource();
-                }
-                
-                if (ImGui::IsItemHovered())
-                {
-                    ImGui::SetTooltip("%s", compositeTooltips[i]);
-                }
-            }
+            RenderDraggableNode("EntryPoint", TaskNodeType::EntryPoint, "Entry point of the graph (required)");
+            RenderDraggableNode("Branch", TaskNodeType::Branch, "If/Else conditional branch");
+            RenderDraggableNode("Sequence", TaskNodeType::VSSequence, "Execute pins in sequential order");
+            RenderDraggableNode("While", TaskNodeType::While, "Conditional loop");
+            RenderDraggableNode("ForEach", TaskNodeType::ForEach, "Iterate over blackboard list");
+            RenderDraggableNode("DoOnce", TaskNodeType::DoOnce, "Execute only once (until reset)");
+            RenderDraggableNode("Delay", TaskNodeType::Delay, "Wait for N seconds");
+            RenderDraggableNode("Switch", TaskNodeType::Switch, "Multi-branch on value");
         }
-        
-        // ===== Action Nodes =====
-        if (ImGui::CollapsingHeader("Actions", ImGuiTreeNodeFlags_DefaultOpen))
+
+        // ===== Task Nodes =====
+        if (ImGui::CollapsingHeader("Tasks", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            auto actionTypes = EnumCatalogManager::Get().GetActionTypes();
-            
-            if (actionTypes.empty())
-            {
-                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
-                    "No actions available");
-            }
-            else
-            {
-                for (const auto& actionType : actionTypes)
-                {
-                    ImGui::Selectable(actionType.c_str());
-                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
-                    {
-                        std::string payload = "Action:" + actionType;
-                        ImGui::SetDragDropPayload("NODE_TYPE", payload.c_str(), payload.size() + 1);
-                        ImGui::Text("%s", actionType.c_str());
-                        ImGui::EndDragDropSource();
-                    }
-                    
-                    // Show tooltip with action info
-                    const CatalogType* actionDef = EnumCatalogManager::Get().FindActionType(actionType);
-                    if (actionDef && ImGui::IsItemHovered())
-                    {
-                        ImGui::BeginTooltip();
-                        ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "%s", actionDef->name.c_str());
-                        if (!actionDef->description.empty())
-                        {
-                            ImGui::TextWrapped("%s", actionDef->description.c_str());
-                        }
-                        if (!actionDef->parameters.empty())
-                        {
-                            ImGui::Separator();
-                            ImGui::Text("Parameters:");
-                            for (const auto& param : actionDef->parameters)
-                            {
-                                ImGui::BulletText("%s: %s %s", 
-                                    param.name.c_str(), 
-                                    param.type.c_str(),
-                                    param.required ? "(required)" : "");
-                            }
-                        }
-                        ImGui::EndTooltip();
-                    }
-                }
-            }
+            RenderDraggableNode("AtomicTask", TaskNodeType::AtomicTask, "Execute an atomic task");
         }
-        
-        // ===== Condition Nodes =====
-        if (ImGui::CollapsingHeader("Conditions", ImGuiTreeNodeFlags_DefaultOpen))
+
+        // ===== Blackboard Nodes =====
+        if (ImGui::CollapsingHeader("Blackboard", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            auto conditionTypes = EnumCatalogManager::Get().GetConditionTypes();
-            
-            if (conditionTypes.empty())
-            {
-                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
-                    "No conditions available");
-            }
-            else
-            {
-                for (const auto& conditionType : conditionTypes)
-                {
-                    ImGui::Selectable(conditionType.c_str());
-                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
-                    {
-                        std::string payload = "Condition:" + conditionType;
-                        ImGui::SetDragDropPayload("NODE_TYPE", payload.c_str(), payload.size() + 1);
-                        ImGui::Text("%s", conditionType.c_str());
-                        ImGui::EndDragDropSource();
-                    }
-                    
-                    // Show tooltip with condition info
-                    const CatalogType* conditionDef = EnumCatalogManager::Get().FindConditionType(conditionType);
-                    if (conditionDef && ImGui::IsItemHovered())
-                    {
-                        ImGui::BeginTooltip();
-                        ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "%s", conditionDef->name.c_str());
-                        if (!conditionDef->description.empty())
-                        {
-                            ImGui::TextWrapped("%s", conditionDef->description.c_str());
-                        }
-                        ImGui::EndTooltip();
-                    }
-                }
-            }
+            RenderDraggableNode("GetBBValue", TaskNodeType::GetBBValue, "Read a blackboard variable");
+            RenderDraggableNode("SetBBValue", TaskNodeType::SetBBValue, "Write a blackboard variable");
         }
-        
-        // ===== Decorator Nodes =====
-        if (ImGui::CollapsingHeader("Decorators"))
+
+        // ===== Math & Logic Nodes =====
+        if (ImGui::CollapsingHeader("Math & Logic", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            auto decoratorTypes = EnumCatalogManager::Get().GetDecoratorTypes();
-            
-            if (decoratorTypes.empty())
-            {
-                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
-                    "No decorators available");
-            }
-            else
-            {
-                for (const auto& decoratorType : decoratorTypes)
-                {
-                    ImGui::Selectable(decoratorType.c_str());
-                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
-                    {
-                        std::string payload = "Decorator:" + decoratorType;
-                        ImGui::SetDragDropPayload("NODE_TYPE", payload.c_str(), payload.size() + 1);
-                        ImGui::Text("%s", decoratorType.c_str());
-                        ImGui::EndDragDropSource();
-                    }
-                    
-                    // Show tooltip with decorator info
-                    const CatalogType* decoratorDef = EnumCatalogManager::Get().FindDecoratorType(decoratorType);
-                    if (decoratorDef && ImGui::IsItemHovered())
-                    {
-                        ImGui::BeginTooltip();
-                        ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), "%s", decoratorDef->name.c_str());
-                        if (!decoratorDef->description.empty())
-                        {
-                            ImGui::TextWrapped("%s", decoratorDef->description.c_str());
-                        }
-                        ImGui::EndTooltip();
-                    }
-                }
-            }
+            RenderDraggableNode("MathOp", TaskNodeType::MathOp, "Arithmetic operation (+, -, *, /)");
         }
-        
+
+        // ===== Advanced Nodes =====
+        if (ImGui::CollapsingHeader("Advanced", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            RenderDraggableNode("SubGraph", TaskNodeType::SubGraph, "Call another graph as a subgraph");
+        }
+
         ImGui::Separator();
         ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
             "Tip: Drag & drop nodes onto the graph canvas");

@@ -620,6 +620,36 @@ void VisualScriptEditorPanel::RenderCanvas()
 
     ImNodes::EndNodeEditor();
 
+    // Handle drag & drop from Asset Browser node palette
+    if (ImGui::BeginDragDropTarget())
+    {
+        const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("VS_NODE_TYPE_ENUM");
+        if (payload && payload->Data && payload->DataSize == sizeof(uint8_t))
+        {
+            uint8_t enumValue = *static_cast<const uint8_t*>(payload->Data);
+            TaskNodeType nodeType = static_cast<TaskNodeType>(enumValue);
+
+            // Get mouse position in canvas space
+            ImVec2 mousePos = ImGui::GetMousePos();
+            ImVec2 canvasPos = ImNodes::EditorContextGetPanning();
+            float zoom = 1.0f;  // ImNodes doesn't expose zoom yet, assume 1.0
+
+            // Convert screen space to canvas space
+            ImVec2 windowPos = ImGui::GetWindowPos();
+            float canvasX = (mousePos.x - windowPos.x - canvasPos.x) / zoom;
+            float canvasY = (mousePos.y - windowPos.y - canvasPos.y) / zoom;
+
+            // Add the node at drop position
+            AddNode(nodeType, canvasX, canvasY);
+            m_dirty = true;
+
+            std::cout << "[VisualScriptEditorPanel] Node dropped: type=" 
+                     << static_cast<int>(nodeType) << " at (" 
+                     << canvasX << ", " << canvasY << ")" << std::endl;
+        }
+        ImGui::EndDragDropTarget();
+    }
+
     // Sync positions back from ImNodes after rendering
     for (size_t i = 0; i < m_editorNodes.size(); ++i)
     {
