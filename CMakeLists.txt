@@ -398,4 +398,22 @@ if(BUILD_TESTS)
     target_include_directories(OlympePhase8Tests PRIVATE ${COMMON_INCLUDES})
     add_test(NAME OlympePhase8Tests COMMAND OlympePhase8Tests)
 
+    # -----------------------------------------------------------------------
+    # OlympePhase9Tests  (Phase 9 — Advanced Node Features)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase9Tests
+        Tests/BlueprintEditor/Phase9Test.cpp
+        Source/NodeGraphCore/GraphComment.cpp
+        Source/NodeGraphCore/NodeGroup.cpp
+        Source/NodeGraphCore/NodeValidator.cpp
+        Source/NodeGraphCore/LinkCache.cpp
+        Source/BlueprintEditor/NodeSearchPanel.cpp
+        Source/BlueprintEditor/MiniMapPanel.cpp
+        Source/BlueprintEditor/NodePresets.cpp
+        ${TASK_SYSTEM_SOURCES}
+        ${TEST_STUBS}
+    )
+    target_include_directories(OlympePhase9Tests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase9Tests COMMAND OlympePhase9Tests)
+
 endif() # BUILD_TESTS
