@@ -1,0 +1,60 @@
+{
+  "blueprintType": "BehaviorTree",
+  "schema_version": 2,
+  "name": "Guard_PatrolLoop",
+  "description": "Boucle de patrouille : suit les waypoints en boucle à vitesse Walk",
+  "metadata": {
+    "author": "Tutorial",
+    "created": "2026-03-09T00:00:00",
+    "lastModified": "2026-03-09T00:00:00",
+    "tags": ["infiltration", "matrimandir"]
+  },
+  "data": {
+    "rootNodeId": 1,
+    "nodes": [
+      {
+        "id": 1,
+        "type": "Sequence",
+        "name": "Patrol Sequence",
+        "position": { "x": 0, "y": 0 },
+        "children": [2, 3, 4],
+        "parameters": {}
+      },
+      {
+        "id": 2,
+        "type": "NextWaypoint",
+        "name": "Next Waypoint",
+        "position": { "x": 400, "y": 0 },
+        "children": [],
+        "parameters": {
+          "loop": true
+        }
+      },
+      {
+        "id": 3,
+        "type": "MoveToLocation",
+        "name": "Move To Waypoint",
+        "position": { "x": 800, "y": 0 },
+        "children": [],
+        "parameters": {
+          "key":   "CurrentWaypoint",
+          "speed": "Walk"
+        }
+      },
+      {
+        "id": 4,
+        "type": "Wait",
+        "name": "Wait At Waypoint",
+        "position": { "x": 1200, "y": 0 },
+        "children": [],
+        "parameters": {
+          "time": 2.0
+        }
+      }
+    ]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": { "x": 0, "y": 0 }
+  }
+}

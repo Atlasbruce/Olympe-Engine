@@ -1,0 +1,68 @@
+{
+  "blueprintType": "BehaviorTree",
+  "schema_version": 2,
+  "name": "Guard_Chase",
+  "description": "Poursuite en alerte : poursuit le joueur activement et attaque",
+  "metadata": {
+    "author": "Tutorial",
+    "created": "2026-03-09T00:00:00",
+    "lastModified": "2026-03-09T00:00:00",
+    "tags": ["infiltration", "matrimandir"]
+  },
+  "data": {
+    "rootNodeId": 1,
+    "nodes": [
+      {
+        "id": 1,
+        "type": "Sequence",
+        "name": "Chase Sequence",
+        "position": { "x": 0, "y": 0 },
+        "children": [2, 3, 4, 5],
+        "parameters": {}
+      },
+      {
+        "id": 2,
+        "type": "PerceptionCheck",
+        "name": "Can See Player",
+        "position": { "x": 400, "y": 0 },
+        "children": [],
+        "parameters": {
+          "target": "Player",
+          "type":   "Visual"
+        }
+      },
+      {
+        "id": 3,
+        "type": "RotateToTarget",
+        "name": "Face Player",
+        "position": { "x": 800, "y": 0 },
+        "children": [],
+        "parameters": {}
+      },
+      {
+        "id": 4,
+        "type": "MoveToTarget",
+        "name": "Chase Player",
+        "position": { "x": 1200, "y": 0 },
+        "children": [],
+        "parameters": {
+          "speed": "Run"
+        }
+      },
+      {
+        "id": 5,
+        "type": "AttackRange",
+        "name": "Attack Player",
+        "position": { "x": 1600, "y": 0 },
+        "children": [],
+        "parameters": {
+          "burst": 3
+        }
+      }
+    ]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": { "x": 0, "y": 0 }
+  }
+}

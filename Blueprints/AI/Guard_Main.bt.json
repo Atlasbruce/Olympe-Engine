@@ -1,0 +1,99 @@
+{
+  "blueprintType": "BehaviorTree",
+  "schema_version": 2,
+  "name": "Guard_Main",
+  "description": "FSM principale du garde avec switch sur état (Patrol / Suspicion / Alerte)",
+  "metadata": {
+    "author": "Tutorial",
+    "created": "2026-03-09T00:00:00",
+    "lastModified": "2026-03-09T00:00:00",
+    "tags": ["infiltration", "matrimandir"]
+  },
+  "blackboard": [
+    { "key": "CurrentState",    "type": "String",    "defaultValue": "Patrol" },
+    { "key": "TargetActor",     "type": "EntityRef", "defaultValue": null },
+    { "key": "TargetDistance",  "type": "Float",     "defaultValue": 9999 },
+    { "key": "isPlayerVisible", "type": "Bool",      "defaultValue": false },
+    { "key": "PatrolRoute",     "type": "String",    "defaultValue": "RouteA" }
+  ],
+  "data": {
+    "rootNodeId": 1,
+    "nodes": [
+      {
+        "id": 1,
+        "type": "Selector",
+        "name": "Root State Selector",
+        "position": { "x": 0, "y": 0 },
+        "children": [2, 4, 6],
+        "parameters": {}
+      },
+      {
+        "id": 2,
+        "type": "Sequence",
+        "name": "Patrol Branch",
+        "position": { "x": 400, "y": -300 },
+        "children": [3],
+        "parameters": {}
+      },
+      {
+        "id": 3,
+        "type": "CheckBlackboard",
+        "name": "IsPatrolState",
+        "position": { "x": 800, "y": -300 },
+        "children": [],
+        "parameters": {
+          "key":      "CurrentState",
+          "operator": "Equals",
+          "value":    "Patrol",
+          "subtree":  "Guard_PatrolLoop"
+        }
+      },
+      {
+        "id": 4,
+        "type": "Sequence",
+        "name": "Suspicion Branch",
+        "position": { "x": 400, "y": 0 },
+        "children": [5],
+        "parameters": {}
+      },
+      {
+        "id": 5,
+        "type": "CheckBlackboard",
+        "name": "IsSuspicionState",
+        "position": { "x": 800, "y": 0 },
+        "children": [],
+        "parameters": {
+          "key":      "CurrentState",
+          "operator": "Equals",
+          "value":    "Suspicion",
+          "subtree":  "Guard_Investigate"
+        }
+      },
+      {
+        "id": 6,
+        "type": "Sequence",
+        "name": "Alert Branch",
+        "position": { "x": 400, "y": 300 },
+        "children": [7],
+        "parameters": {}
+      },
+      {
+        "id": 7,
+        "type": "CheckBlackboard",
+        "name": "IsAlertState",
+        "position": { "x": 800, "y": 300 },
+        "children": [],
+        "parameters": {
+          "key":      "CurrentState",
+          "operator": "Equals",
+          "value":    "Alerte",
+          "subtree":  "Guard_Chase"
+        }
+      }
+    ]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": { "x": 0, "y": 0 }
+  }
+}

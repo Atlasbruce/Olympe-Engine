@@ -1,0 +1,85 @@
+{
+  "blueprintType": "BehaviorTree",
+  "schema_version": 2,
+  "name": "Camera_Rotating",
+  "description": "Caméra de sécurité : rotation + détection avec timer 1.5s avant déclenchement d'alerte",
+  "metadata": {
+    "author": "Tutorial",
+    "created": "2026-03-09T00:00:00",
+    "lastModified": "2026-03-09T00:00:00",
+    "tags": ["infiltration", "matrimandir"]
+  },
+  "blackboard": [
+    { "key": "PlayerInFOV_time", "type": "Float", "defaultValue": 0 }
+  ],
+  "data": {
+    "rootNodeId": 1,
+    "nodes": [
+      {
+        "id": 1,
+        "type": "Repeater",
+        "name": "Camera Loop",
+        "position": { "x": 0, "y": 0 },
+        "children": [2],
+        "parameters": {
+          "infinite": true
+        }
+      },
+      {
+        "id": 2,
+        "type": "Sequence",
+        "name": "Camera Detection Sequence",
+        "position": { "x": 400, "y": 0 },
+        "children": [3, 4, 5, 6],
+        "parameters": {}
+      },
+      {
+        "id": 3,
+        "type": "RotateCameraLeftRight",
+        "name": "Rotate Camera",
+        "position": { "x": 800, "y": 0 },
+        "children": [],
+        "parameters": {
+          "angle": 90
+        }
+      },
+      {
+        "id": 4,
+        "type": "CheckBlackboard",
+        "name": "Player In FOV Long Enough",
+        "position": { "x": 1200, "y": 0 },
+        "children": [],
+        "parameters": {
+          "key":      "PlayerInFOV_time",
+          "operator": "Greater",
+          "value":    1.5
+        }
+      },
+      {
+        "id": 5,
+        "type": "SetGlobalAlert",
+        "name": "Increment Global Alert",
+        "position": { "x": 1600, "y": 0 },
+        "children": [],
+        "parameters": {
+          "key":       "GlobalAlert",
+          "increment": 1
+        }
+      },
+      {
+        "id": 6,
+        "type": "Wait",
+        "name": "Frame Cooldown",
+        "position": { "x": 2000, "y": 0 },
+        "children": [],
+        "parameters": {
+          "time": 0.1
+        }
+      }
+    ]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": { "x": 0, "y": 0 }
+  }
+}

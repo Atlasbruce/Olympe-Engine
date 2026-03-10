@@ -1,0 +1,77 @@
+{
+  "blueprintType": "BehaviorTree",
+  "schema_version": 2,
+  "name": "Terminal_Interaction",
+  "description": "Terminal de sécurité : interaction 3s puis déverrouille le code d'accès",
+  "metadata": {
+    "author": "Tutorial",
+    "created": "2026-03-09T00:00:00",
+    "lastModified": "2026-03-09T00:00:00",
+    "tags": ["infiltration", "matrimandir"]
+  },
+  "data": {
+    "rootNodeId": 1,
+    "nodes": [
+      {
+        "id": 1,
+        "type": "Sequence",
+        "name": "Terminal Interaction Sequence",
+        "position": { "x": 0, "y": 0 },
+        "children": [2, 3, 4, 5, 6],
+        "parameters": {}
+      },
+      {
+        "id": 2,
+        "type": "IsPlayerInteracting",
+        "name": "Is Player Interacting",
+        "position": { "x": 400, "y": 0 },
+        "children": [],
+        "parameters": {}
+      },
+      {
+        "id": 3,
+        "type": "ShowProgressBar",
+        "name": "Show Hack Progress Bar",
+        "position": { "x": 800, "y": 0 },
+        "children": [],
+        "parameters": {
+          "duration": 3.0
+        }
+      },
+      {
+        "id": 4,
+        "type": "Wait",
+        "name": "Interaction Wait",
+        "position": { "x": 1200, "y": 0 },
+        "children": [],
+        "parameters": {
+          "time": 3.0
+        }
+      },
+      {
+        "id": 5,
+        "type": "SetBlackboardValue",
+        "name": "Unlock Access Code",
+        "position": { "x": 1600, "y": 0 },
+        "children": [],
+        "parameters": {
+          "global": true,
+          "key":    "bool_HasCode",
+          "value":  true
+        }
+      },
+      {
+        "id": 6,
+        "type": "ShowCodeUI",
+        "name": "Show Code UI",
+        "position": { "x": 2000, "y": 0 },
+        "children": [],
+        "parameters": {}
+      }
+    ]
+  },
+  "editorState": {
+    "zoom": 1.0,
+    "scrollOffset": { "x": 0, "y": 0 }
+  }
+}
