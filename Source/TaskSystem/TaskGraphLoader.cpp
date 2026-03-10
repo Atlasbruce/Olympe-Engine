@@ -19,6 +19,17 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <fstream>
+#include <algorithm>
+
+#ifdef _WIN32
+#   ifndef WIN32_LEAN_AND_MEAN
+#       define WIN32_LEAN_AND_MEAN
+#   endif
+#   include <windows.h>
+#else
+#   include <dirent.h>
+#endif
 
 #include "../system/system_utils.h"
 #include "../json_helper.h"
@@ -33,6 +44,18 @@ TaskGraphTemplate* TaskGraphLoader::LoadFromFile(const std::string& path,
                                                   std::vector<std::string>& outErrors)
 {
     SYSTEM_LOG << "[TaskGraphLoader] Loading from file: " << path << std::endl;
+
+    // Warn if the file does not carry the expected .ats extension.
+    {
+        const size_t dotPos = path.find_last_of('.');
+        const bool hasAtsExt = (dotPos != std::string::npos)
+                               && (path.substr(dotPos + 1) == "ats");
+        if (!hasAtsExt)
+        {
+            SYSTEM_LOG << "[TaskGraphLoader] WARNING: Expected .ats extension for: "
+                       << path << std::endl;
+        }
+    }
 
     json data;
     if (!JsonHelper::LoadJsonFromFile(path, data))
@@ -784,6 +807,86 @@ ExecPinRole TaskGraphLoader::StringToExecPinRole(const std::string& s)
     if (s == "OutCompleted") return ExecPinRole::OutCompleted;
     if (s == "OutCase")      return ExecPinRole::OutCase;
     return ExecPinRole::In;
+}
+
+// ============================================================================
+// Public: FileExists
+// ============================================================================
+
+bool TaskGraphLoader::FileExists(const std::string& path)
+{
+    std::ifstream f(path);
+    return f.good();
+}
+
+// ============================================================================
+// Public: ScanTaskGraphDirectory
+// ============================================================================
+
+std::vector<std::string> TaskGraphLoader::ScanTaskGraphDirectory(const std::string& dir)
+{
+    std::vector<std::string> result;
+
+#ifdef _WIN32
+    WIN32_FIND_DATAA findData;
+    std::string searchPath = dir + "\\*";
+    HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        SYSTEM_LOG << "[TaskGraphLoader] WARNING: Directory not found: " << dir << std::endl;
+        return result;
+    }
+
+    do
+    {
+        std::string name = findData.cFileName;
+        if (name == "." || name == "..") continue;
+
+        std::string fullPath = dir + "/" + name;
+        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            std::vector<std::string> sub = ScanTaskGraphDirectory(fullPath);
+            result.insert(result.end(), sub.begin(), sub.end());
+        }
+        else if (name.size() > 4 && name.substr(name.size() - 4) == ".ats")
+        {
+            result.push_back(fullPath);
+        }
+    } while (FindNextFileA(hFind, &findData));
+
+    FindClose(hFind);
+
+#else
+    DIR* d = opendir(dir.c_str());
+    if (!d)
+    {
+        SYSTEM_LOG << "[TaskGraphLoader] WARNING: Directory not found: " << dir << std::endl;
+        return result;
+    }
+
+    struct dirent* entry;
+    while ((entry = readdir(d)) != nullptr)
+    {
+        std::string name = entry->d_name;
+        if (name == "." || name == "..") continue;
+
+        std::string fullPath = dir + "/" + name;
+        if (entry->d_type == DT_DIR)
+        {
+            std::vector<std::string> sub = ScanTaskGraphDirectory(fullPath);
+            result.insert(result.end(), sub.begin(), sub.end());
+        }
+        else if (name.size() > 4 && name.substr(name.size() - 4) == ".ats")
+        {
+            result.push_back(fullPath);
+        }
+    }
+
+    closedir(d);
+#endif
+
+    std::sort(result.begin(), result.end());
+    return result;
 }
 
 } // namespace Olympe

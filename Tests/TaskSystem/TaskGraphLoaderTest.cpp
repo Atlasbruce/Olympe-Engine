@@ -407,6 +407,145 @@ static void TestE_ValidateJsonMissingData()
 }
 
 // ---------------------------------------------------------------------------
+// Test f: Load a valid .ats file from Gamedata/TaskGraph/Examples/
+// ---------------------------------------------------------------------------
+
+static void TestF_LoadValidAtsFile()
+{
+    std::cout << "Test F: Load valid .ats file (simple_patrol.ats)..." << std::endl;
+
+    std::vector<std::string> errors;
+    Olympe::TaskGraphTemplate* tmpl =
+        Olympe::TaskGraphLoader::LoadFromFile(
+            "Gamedata/TaskGraph/Examples/simple_patrol.ats", errors);
+
+    bool passed = true;
+
+    if (tmpl == nullptr)
+    {
+        std::cout << "  FAIL: LoadFromFile returned nullptr" << std::endl;
+        for (size_t i = 0; i < errors.size(); ++i)
+        {
+            std::cout << "  Error[" << i << "]: " << errors[i] << std::endl;
+        }
+        passed = false;
+    }
+    else
+    {
+        TEST_ASSERT(tmpl->Name == "SimplePatrol",
+                    "Graph name should be 'SimplePatrol'");
+        if (tmpl->Name != "SimplePatrol") { passed = false; }
+
+        TEST_ASSERT(tmpl->Nodes.size() == 3u,
+                    "simple_patrol.ats should have 3 nodes");
+        if (tmpl->Nodes.size() != 3u) { passed = false; }
+
+        TEST_ASSERT(errors.empty(), "No errors expected for valid file");
+        if (!errors.empty()) { passed = false; }
+
+        delete tmpl;
+    }
+
+    ReportTest("TestF_LoadValidAtsFile", passed);
+}
+
+// ---------------------------------------------------------------------------
+// Test g: Loading a missing .ats file returns nullptr (no crash)
+// ---------------------------------------------------------------------------
+
+static void TestG_LoadMissingAtsFile()
+{
+    std::cout << "Test G: Load missing .ats file returns nullptr..." << std::endl;
+
+    std::vector<std::string> errors;
+    Olympe::TaskGraphTemplate* tmpl =
+        Olympe::TaskGraphLoader::LoadFromFile(
+            "Gamedata/TaskGraph/nonexistent.ats", errors);
+
+    bool passed = true;
+
+    TEST_ASSERT(tmpl == nullptr,
+                "LoadFromFile should return nullptr for missing file");
+    if (tmpl != nullptr)
+    {
+        passed = false;
+        delete tmpl;
+    }
+
+    TEST_ASSERT(!errors.empty(),
+                "outErrors should not be empty for missing file");
+    if (errors.empty()) { passed = false; }
+
+    ReportTest("TestG_LoadMissingAtsFile", passed);
+}
+
+// ---------------------------------------------------------------------------
+// Test h: FileExists utility
+// ---------------------------------------------------------------------------
+
+static void TestH_FileExists()
+{
+    std::cout << "Test H: FileExists utility..." << std::endl;
+
+    bool passed = true;
+
+    TEST_ASSERT(
+        Olympe::TaskGraphLoader::FileExists(
+            "Gamedata/TaskGraph/Examples/simple_patrol.ats"),
+        "FileExists should return true for simple_patrol.ats");
+    if (!Olympe::TaskGraphLoader::FileExists(
+            "Gamedata/TaskGraph/Examples/simple_patrol.ats"))
+    {
+        passed = false;
+    }
+
+    TEST_ASSERT(
+        !Olympe::TaskGraphLoader::FileExists(
+            "Gamedata/TaskGraph/nonexistent.ats"),
+        "FileExists should return false for a non-existent file");
+    if (Olympe::TaskGraphLoader::FileExists(
+            "Gamedata/TaskGraph/nonexistent.ats"))
+    {
+        passed = false;
+    }
+
+    ReportTest("TestH_FileExists", passed);
+}
+
+// ---------------------------------------------------------------------------
+// Test i: ScanTaskGraphDirectory finds the example .ats files
+// ---------------------------------------------------------------------------
+
+static void TestI_ScanTaskGraphDirectory()
+{
+    std::cout << "Test I: ScanTaskGraphDirectory finds .ats files..." << std::endl;
+
+    std::vector<std::string> files =
+        Olympe::TaskGraphLoader::ScanTaskGraphDirectory("Gamedata/TaskGraph");
+
+    bool passed = true;
+
+    TEST_ASSERT(!files.empty(),
+                "ScanTaskGraphDirectory should find at least one .ats file");
+    if (files.empty()) { passed = false; }
+
+    // All returned paths must end in ".ats"
+    for (const auto& f : files)
+    {
+        bool isAts = f.size() > 4 && f.substr(f.size() - 4) == ".ats";
+        TEST_ASSERT(isAts, ("Non-.ats file returned: " + f).c_str());
+        if (!isAts) { passed = false; }
+    }
+
+    // Should find at least the three example files
+    TEST_ASSERT(files.size() >= 3u,
+                "Should find at least 3 example .ats files");
+    if (files.size() < 3u) { passed = false; }
+
+    ReportTest("TestI_ScanTaskGraphDirectory", passed);
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -419,6 +558,10 @@ int main()
     TestC_InlineSchemaV3();
     TestD_InvalidMissingChild();
     TestE_ValidateJsonMissingData();
+    TestF_LoadValidAtsFile();
+    TestG_LoadMissingAtsFile();
+    TestH_FileExists();
+    TestI_ScanTaskGraphDirectory();
 
     std::cout << std::endl;
     std::cout << "Results: " << s_passCount << " passed, "

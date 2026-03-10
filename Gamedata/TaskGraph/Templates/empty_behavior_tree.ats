@@ -1,0 +1,22 @@
+{
+  "schema_version": 4,
+  "graphType": "BehaviorTree",
+  "name": "NewBehaviorTree",
+  "description": "Empty behavior tree template",
+  "metadata": {
+    "author": "YourName",
+    "created": "2026-03-10",
+    "tags": []
+  },
+  "entryPointId": 1,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "Selector",
+      "name": "Root",
+      "children": []
+    }
+  ],
+  "execConnections": [],
+  "dataConnections": []
+}
