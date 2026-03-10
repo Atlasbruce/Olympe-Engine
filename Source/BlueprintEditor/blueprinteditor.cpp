@@ -21,6 +21,7 @@
 #include "AdditionalEditorPlugins.h"
 #include "SubgraphMigrator.h"
 #include "../TaskSystem/TaskGraphLoader.h"
+#include "../Core/AssetManager.h"
 #include "../json_helper.h"
 #include <algorithm>
 #include <iostream>
@@ -481,13 +482,12 @@ namespace Olympe
         int loaded = 0;
         int failed  = 0;
 
-        // Collect .ats files from both directories.
+        // Collect .ats files from the already-scanned asset tree (BFS).
         std::vector<std::string> atsFiles;
 
         auto collectAts = [&atsFiles](const std::shared_ptr<AssetNode>& root)
         {
             if (!root) return;
-            // Iterative BFS over the already-scanned asset tree.
             std::vector<std::shared_ptr<AssetNode>> stack;
             stack.push_back(root);
             while (!stack.empty())
@@ -497,7 +497,6 @@ namespace Olympe
                 if (!node) continue;
                 if (!node->isDirectory)
                 {
-                    // Check for .ats extension.
                     const std::string& p = node->fullPath;
                     if (p.size() > 4 && p.substr(p.size() - 4) == ".ats")
                     {
@@ -511,15 +510,15 @@ namespace Olympe
 
         collectAts(m_AssetTreeRoot);
 
-        // Load and validate each .ats file.
+        // Load and cache each .ats file via AssetManager so that the template
+        // remains resident in memory and can be retrieved without further I/O.
         for (const auto& path : atsFiles)
         {
             std::vector<std::string> errors;
-            TaskGraphTemplate* tmpl = TaskGraphLoader::LoadFromFile(path, errors);
-            if (tmpl != nullptr)
+            AssetID id = AssetManager::Get().LoadTaskGraph(path, errors);
+            if (id != INVALID_ASSET_ID)
             {
                 std::cout << "[BlueprintEditor] PreloadATSGraphs: OK  " << path << std::endl;
-                delete tmpl;
                 ++loaded;
             }
             else
