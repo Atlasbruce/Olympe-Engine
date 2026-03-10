@@ -111,6 +111,27 @@ public:
     static bool ValidateJson(const json& data,
                              std::vector<std::string>& outErrors);
 
+    /**
+     * @brief Returns true if the given file path exists and can be opened.
+     *
+     * C++14 compatible implementation using std::ifstream.
+     *
+     * @param path File path to check.
+     * @return true if the file can be opened for reading.
+     */
+    static bool FileExists(const std::string& path);
+
+    /**
+     * @brief Recursively scans a directory for .ats task graph files.
+     *
+     * C++14 compatible — uses POSIX dirent.h on non-Windows, and Win32 API
+     * on Windows. Logs a warning if the directory does not exist.
+     *
+     * @param dir  Directory to scan (absolute or relative to working dir).
+     * @return Sorted list of full paths to every .ats file found.
+     */
+    static std::vector<std::string> ScanTaskGraphDirectory(const std::string& dir);
+
 private:
 
     // -----------------------------------------------------------------------

@@ -113,8 +113,12 @@ namespace Olympe
         void SetAssetRootPath(const std::string& path);
         
         // Asset scanning and retrieval
-        void RefreshAssets();  // Rescan asset directory
+        void RefreshAssets();  // Rescan asset directories (Blueprints + Gamedata)
         std::shared_ptr<AssetNode> GetAssetTree() const { return m_AssetTreeRoot; }
+        
+        // Pre-load all ATS graphs found under Blueprints/ and Gamedata/ into
+        // TaskGraphLoader. Called automatically by InitializeStandaloneEditor().
+        void PreloadATSGraphs();
         
         // Asset queries
         std::vector<AssetMetadata> GetAllAssets() const;
@@ -219,7 +223,8 @@ namespace Olympe
         std::string m_CurrentFilepath;
         
         // Asset paths and tree
-        std::string m_AssetRootPath;
+        std::string m_AssetRootPath;     // Blueprints directory (default: "Blueprints")
+        std::string m_GamedataRootPath;  // Gamedata directory (default: "Gamedata")
         std::shared_ptr<AssetNode> m_AssetTreeRoot;
         
         // Error handling

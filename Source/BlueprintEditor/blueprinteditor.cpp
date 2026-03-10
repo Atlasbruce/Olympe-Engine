@@ -20,6 +20,8 @@
 #include "EntityPrefabEditorPlugin.h"
 #include "AdditionalEditorPlugins.h"
 #include "SubgraphMigrator.h"
+#include "../TaskSystem/TaskGraphLoader.h"
+#include "../Core/AssetManager.h"
 #include "../json_helper.h"
 #include <algorithm>
 #include <iostream>
@@ -49,6 +51,7 @@ namespace Olympe
         : m_IsActive(false)
         , m_HasUnsavedChanges(false)
         , m_AssetRootPath("Blueprints")
+        , m_GamedataRootPath("Gamedata")
         , m_SelectedEntity(0)  // 0 = INVALID_ENTITY_ID
         , m_CommandStack(nullptr)
         , m_ShowMigrationDialog(false)
@@ -110,6 +113,10 @@ namespace Olympe
         std::cout << "[BlueprintEditor] Initializing Standalone Editor mode\n";
         // Initialize the EditorContext in Standalone mode
         EditorContext::Get().InitializeStandalone();
+
+        // Pre-load all ATS graphs found in Blueprints/ and Gamedata/ so that
+        // they are validated and ready for the asset browser and graph panels.
+        PreloadATSGraphs();
     }
 
     void BlueprintEditor::Shutdown()
@@ -239,29 +246,58 @@ namespace Olympe
             m_AssetTreeRoot = nullptr;
             return;
         }
-        
+
+        // Build a virtual root node that holds both Blueprints/ and Gamedata/ trees.
+        auto virtualRoot = std::make_shared<AssetNode>("Assets", ".", true);
+
         std::cout << "BlueprintEditor: Scanning assets directory: " << m_AssetRootPath << std::endl;
-        
+
         try
         {
             if (fs::exists(m_AssetRootPath) && fs::is_directory(m_AssetRootPath))
             {
-                m_AssetTreeRoot = ScanDirectory(m_AssetRootPath);
-                std::cout << "BlueprintEditor: Asset scan complete" << std::endl;
+                auto blueprintsTree = ScanDirectory(m_AssetRootPath);
+                virtualRoot->children.push_back(blueprintsTree);
+                std::cout << "BlueprintEditor: Blueprints scan complete" << std::endl;
             }
             else
             {
-                m_LastError = "Asset directory not found: " + m_AssetRootPath;
-                std::cerr << "BlueprintEditor: " << m_LastError << std::endl;
-                m_AssetTreeRoot = nullptr;
+                std::cerr << "BlueprintEditor: Blueprints directory not found: "
+                          << m_AssetRootPath << std::endl;
             }
         }
         catch (const std::exception& e)
         {
-            m_LastError = std::string("Error scanning assets: ") + e.what();
+            m_LastError = std::string("Error scanning blueprints: ") + e.what();
             std::cerr << "BlueprintEditor: " << m_LastError << std::endl;
-            m_AssetTreeRoot = nullptr;
         }
+
+        // Also scan the Gamedata directory (contains .ats ATS task graphs).
+        if (!m_GamedataRootPath.empty())
+        {
+            std::cout << "BlueprintEditor: Scanning gamedata directory: "
+                      << m_GamedataRootPath << std::endl;
+            try
+            {
+                if (fs::exists(m_GamedataRootPath) && fs::is_directory(m_GamedataRootPath))
+                {
+                    auto gamedataTree = ScanDirectory(m_GamedataRootPath);
+                    virtualRoot->children.push_back(gamedataTree);
+                    std::cout << "BlueprintEditor: Gamedata scan complete" << std::endl;
+                }
+                else
+                {
+                    std::cerr << "BlueprintEditor: Gamedata directory not found: "
+                              << m_GamedataRootPath << std::endl;
+                }
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << "BlueprintEditor: Error scanning gamedata: " << e.what() << std::endl;
+            }
+        }
+
+        m_AssetTreeRoot = virtualRoot;
     }
     
     std::shared_ptr<AssetNode> BlueprintEditor::ScanDirectory(const std::string& path)
@@ -291,8 +327,9 @@ namespace Olympe
                 }
                 else if (fs::is_regular_file(entry.path()))
                 {
-                    // Check if it's a JSON file
-                    if (entry.path().extension() == ".json")
+                    // Accept .json blueprint files and .ats ATS task graph files.
+                    const std::string ext = entry.path().extension().string();
+                    if (ext == ".json" || ext == ".ats")
                     {
                         auto fileNode = std::make_shared<AssetNode>(
                             filename,
@@ -329,6 +366,21 @@ namespace Olympe
     {
         try
         {
+            // .ats files are ATS task graphs — detect type from their graphType field
+            // without going through the full blueprint type-detection logic.
+            const std::string ext = fs::path(filepath).extension().string();
+            if (ext == ".ats")
+            {
+                json j;
+                if (!JsonHelper::LoadJsonFromFile(filepath, j))
+                    return "TaskGraph";
+
+                if (j.contains("graphType"))
+                    return j["graphType"].get<std::string>();
+
+                return "TaskGraph";
+            }
+
             json j;
             if (!JsonHelper::LoadJsonFromFile(filepath, j))
                 return "Unknown";
@@ -415,6 +467,71 @@ namespace Olympe
             std::cerr << "Error detecting asset type in " << filename << ": " << e.what() << std::endl;
             return "Unknown";
         }
+    }
+
+    // ========================================================================
+    // PreloadATSGraphs – recursively load all .ats files from Blueprints/ and
+    // Gamedata/ to validate them and warm up any caches.
+    // ========================================================================
+
+    void BlueprintEditor::PreloadATSGraphs()
+    {
+        std::cout << "[BlueprintEditor] PreloadATSGraphs: scanning "
+                  << m_AssetRootPath << " and " << m_GamedataRootPath << std::endl;
+
+        int loaded = 0;
+        int failed  = 0;
+
+        // Collect .ats files from the already-scanned asset tree (BFS).
+        std::vector<std::string> atsFiles;
+
+        auto collectAts = [&atsFiles](const std::shared_ptr<AssetNode>& root)
+        {
+            if (!root) return;
+            std::vector<std::shared_ptr<AssetNode>> stack;
+            stack.push_back(root);
+            while (!stack.empty())
+            {
+                auto node = stack.back();
+                stack.pop_back();
+                if (!node) continue;
+                if (!node->isDirectory)
+                {
+                    const std::string& p = node->fullPath;
+                    if (p.size() > 4 && p.substr(p.size() - 4) == ".ats")
+                    {
+                        atsFiles.push_back(p);
+                    }
+                }
+                for (const auto& child : node->children)
+                    stack.push_back(child);
+            }
+        };
+
+        collectAts(m_AssetTreeRoot);
+
+        // Load and cache each .ats file via AssetManager so that the template
+        // remains resident in memory and can be retrieved without further I/O.
+        for (const auto& path : atsFiles)
+        {
+            std::vector<std::string> errors;
+            AssetID id = AssetManager::Get().LoadTaskGraph(path, errors);
+            if (id != INVALID_ASSET_ID)
+            {
+                std::cout << "[BlueprintEditor] PreloadATSGraphs: OK  " << path << std::endl;
+                ++loaded;
+            }
+            else
+            {
+                std::cerr << "[BlueprintEditor] PreloadATSGraphs: FAIL " << path << std::endl;
+                for (const auto& err : errors)
+                    std::cerr << "  " << err << std::endl;
+                ++failed;
+            }
+        }
+
+        std::cout << "[BlueprintEditor] PreloadATSGraphs complete: "
+                  << loaded << " loaded, " << failed << " failed" << std::endl;
     }
     
     std::vector<AssetMetadata> BlueprintEditor::GetAllAssets() const

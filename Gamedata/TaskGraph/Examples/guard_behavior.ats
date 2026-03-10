@@ -1,0 +1,58 @@
+{
+  "schema_version": 4,
+  "graphType": "BehaviorTree",
+  "name": "GuardBehavior",
+  "description": "Guard that patrols and chases enemies",
+  "metadata": {
+    "author": "Olympe Engine",
+    "created": "2026-03-10",
+    "tags": ["guard", "chase", "intermediate"]
+  },
+  "entryPointId": 1,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "Selector",
+      "name": "Root",
+      "children": [2, 7]
+    },
+    {
+      "id": 2,
+      "type": "Sequence",
+      "name": "Chase",
+      "children": [3, 4]
+    },
+    {
+      "id": 3,
+      "type": "AtomicTask",
+      "name": "EnemyVisible",
+      "taskType": "CheckBlackboardKey",
+      "params": {
+        "key": "enemyEntity",
+        "operation": "exists"
+      }
+    },
+    {
+      "id": 4,
+      "type": "AtomicTask",
+      "name": "ChaseEnemy",
+      "taskType": "MoveToEntity",
+      "params": {
+        "targetEntityKey": "enemyEntity",
+        "speed": "5.0"
+      }
+    },
+    {
+      "id": 7,
+      "type": "AtomicTask",
+      "name": "Patrol",
+      "taskType": "PatrolWaypoints",
+      "params": {
+        "waypointsKey": "patrolPoints",
+        "speed": "2.0"
+      }
+    }
+  ],
+  "execConnections": [],
+  "dataConnections": []
+}

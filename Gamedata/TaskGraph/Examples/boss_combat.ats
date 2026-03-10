@@ -1,0 +1,77 @@
+{
+  "schema_version": 4,
+  "graphType": "BehaviorTree",
+  "name": "BossCombat",
+  "description": "Complex boss AI with subgraphs",
+  "metadata": {
+    "author": "Olympe Engine",
+    "created": "2026-03-10",
+    "tags": ["boss", "combat", "subgraph", "advanced"]
+  },
+  "entryPointId": 1,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "Selector",
+      "name": "Root",
+      "children": [2, 5, 8]
+    },
+    {
+      "id": 2,
+      "type": "Sequence",
+      "name": "Phase1",
+      "children": [3, 4]
+    },
+    {
+      "id": 3,
+      "type": "AtomicTask",
+      "name": "HealthAbove50",
+      "taskType": "CompareValue",
+      "params": {
+        "key": "health",
+        "operation": ">",
+        "value": "50"
+      }
+    },
+    {
+      "id": 4,
+      "type": "SubGraph",
+      "name": "BasicAttacks",
+      "subGraphPath": "Gamedata/TaskGraph/Examples/boss_phase1_attacks.ats"
+    },
+    {
+      "id": 5,
+      "type": "Sequence",
+      "name": "Phase2",
+      "children": [6, 7]
+    },
+    {
+      "id": 6,
+      "type": "AtomicTask",
+      "name": "HealthBelow50",
+      "taskType": "CompareValue",
+      "params": {
+        "key": "health",
+        "operation": "<",
+        "value": "50"
+      }
+    },
+    {
+      "id": 7,
+      "type": "SubGraph",
+      "name": "AdvancedAttacks",
+      "subGraphPath": "Gamedata/TaskGraph/Examples/boss_phase2_attacks.ats"
+    },
+    {
+      "id": 8,
+      "type": "AtomicTask",
+      "name": "Idle",
+      "taskType": "Wait",
+      "params": {
+        "duration": "1.0"
+      }
+    }
+  ],
+  "execConnections": [],
+  "dataConnections": []
+}
