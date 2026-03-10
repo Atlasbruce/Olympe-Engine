@@ -604,6 +604,9 @@ void VisualScriptEditorPanel::RenderCanvas()
             VisualScriptNodeRenderer::RenderBreakpointIndicator(eNode.nodeID);
         if (isActive)
             VisualScriptNodeRenderer::RenderActiveNodeGlow(eNode.nodeID);
+
+        // Mark this node as rendered so position sync is safe
+        m_positionedNodes.insert(eNode.nodeID);
     }
 
     // Render links
@@ -638,8 +641,11 @@ void VisualScriptEditorPanel::RenderCanvas()
             float canvasX = (mousePos.x - windowPos.x - canvasPos.x) / zoom;
             float canvasY = (mousePos.y - windowPos.y - canvasPos.y) / zoom;
 
-            // Add the node at drop position
-            AddNode(nodeType, canvasX, canvasY);
+            // Add the node at drop position and pre-register its position with
+            // ImNodes so the position-sync loop this frame does not assert on
+            // a node that has never been through BeginNode/EndNode yet.
+            int newNodeID = AddNode(nodeType, canvasX, canvasY);
+            ImNodes::SetNodeEditorSpacePos(newNodeID, ImVec2(canvasX, canvasY));
             m_dirty = true;
 
             std::cout << "[VisualScriptEditorPanel] Node dropped: type=" 
@@ -649,10 +655,15 @@ void VisualScriptEditorPanel::RenderCanvas()
         ImGui::EndDragDropTarget();
     }
 
-    // Sync positions back from ImNodes after rendering
+    // Sync positions back from ImNodes after rendering.
+    // Only sync nodes that were actually rendered this frame (i.e., went through
+    // ImNodes BeginNode/EndNode) to avoid the "node_idx != -1" assertion for
+    // nodes that were just added via drag-and-drop in the same frame.
     for (size_t i = 0; i < m_editorNodes.size(); ++i)
     {
         VSEditorNode& eNode = m_editorNodes[i];
+        if (m_positionedNodes.count(eNode.nodeID) == 0)
+            continue;  // Node was added this frame; position will sync next frame
         ImVec2 pos = ImNodes::GetNodeEditorSpacePos(eNode.nodeID);
         eNode.posX = pos.x;
         eNode.posY = pos.y;

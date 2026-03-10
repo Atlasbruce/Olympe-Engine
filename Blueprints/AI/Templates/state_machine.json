@@ -1,13 +1,22 @@
 {
   "schema_version": 4,
+  "type": "VisualScript",
   "graphType": "VisualScript",
-  "templateName": "state_machine",
   "description": "State machine template: Selector-based HFSM with 3 placeholder states (Combat, Patrol, Idle).",
   "blackboard": {
     "local": {
-      "State_Combat":  { "type": "bool", "value": "false" },
-      "State_Patrol":  { "type": "bool", "value": "true"  },
-      "State_Idle":    { "type": "bool", "value": "false" }
+      "State_Combat": {
+        "type": "bool",
+        "value": "false"
+      },
+      "State_Patrol": {
+        "type": "bool",
+        "value": "true"
+      },
+      "State_Idle": {
+        "type": "bool",
+        "value": "false"
+      }
     },
     "global": {}
   },
@@ -100,13 +109,50 @@
       }
     }
   ],
-  "connections": [
-    { "id": 1, "type": "exec", "fromNode": 1, "fromPin": "out",    "toNode": 2, "toPin": "in" },
-    { "id": 2, "type": "exec", "fromNode": 2, "fromPin": "child0", "toNode": 3, "toPin": "in" },
-    { "id": 3, "type": "exec", "fromNode": 3, "fromPin": "true",   "toNode": 4, "toPin": "in" },
-    { "id": 4, "type": "exec", "fromNode": 2, "fromPin": "child1", "toNode": 5, "toPin": "in" },
-    { "id": 5, "type": "exec", "fromNode": 5, "fromPin": "true",   "toNode": 6, "toPin": "in" },
-    { "id": 6, "type": "exec", "fromNode": 2, "fromPin": "child2", "toNode": 7, "toPin": "in" },
-    { "id": 7, "type": "exec", "fromNode": 2, "fromPin": "out",    "toNode": 8, "toPin": "in" }
-  ]
+  "name": "state_machine",
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "out",
+      "toNode": 2,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "child0",
+      "toNode": 3,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "true",
+      "toNode": 4,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "child1",
+      "toNode": 5,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 5,
+      "fromPin": "true",
+      "toNode": 6,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "child2",
+      "toNode": 7,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "out",
+      "toNode": 8,
+      "toPin": "in"
+    }
+  ],
+  "dataConnections": []
 }

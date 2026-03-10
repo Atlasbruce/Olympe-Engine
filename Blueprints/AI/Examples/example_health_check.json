@@ -1,17 +1,33 @@
 {
   "schema_version": 4,
+  "type": "VisualScript",
   "graphType": "VisualScript",
   "name": "example_health_check",
   "description": "Health check: Branch on Health < 20 to trigger retreat, else continue patrol.",
   "blackboard": {
     "local": {
-      "Health": { "type": "float", "value": "100.0" },
-      "LowHealthThreshold": { "type": "float", "value": "20.0" },
-      "IsLowHealth": { "type": "bool", "value": "false" },
-      "RetreatTarget": { "type": "string", "value": "base_spawn" }
+      "Health": {
+        "type": "float",
+        "value": "100.0"
+      },
+      "LowHealthThreshold": {
+        "type": "float",
+        "value": "20.0"
+      },
+      "IsLowHealth": {
+        "type": "bool",
+        "value": "false"
+      },
+      "RetreatTarget": {
+        "type": "string",
+        "value": "base_spawn"
+      }
     },
     "global": {
-      "global:TeamAlert": { "type": "bool", "value": "false" }
+      "global:TeamAlert": {
+        "type": "bool",
+        "value": "false"
+      }
     }
   },
   "nodes": [
@@ -150,17 +166,73 @@
       }
     }
   ],
-  "connections": [
-    { "id": 1,  "type": "exec", "fromNode": 1,  "fromPin": "out",    "toNode": 2,  "toPin": "in" },
-    { "id": 2,  "type": "exec", "fromNode": 2,  "fromPin": "child0", "toNode": 3,  "toPin": "in" },
-    { "id": 3,  "type": "exec", "fromNode": 3,  "fromPin": "out",    "toNode": 4,  "toPin": "in" },
-    { "id": 4,  "type": "exec", "fromNode": 4,  "fromPin": "true",   "toNode": 5,  "toPin": "in" },
-    { "id": 5,  "type": "exec", "fromNode": 5,  "fromPin": "child0", "toNode": 6,  "toPin": "in" },
-    { "id": 6,  "type": "exec", "fromNode": 6,  "fromPin": "out",    "toNode": 7,  "toPin": "in" },
-    { "id": 7,  "type": "exec", "fromNode": 7,  "fromPin": "out",    "toNode": 8,  "toPin": "in" },
-    { "id": 8,  "type": "exec", "fromNode": 4,  "fromPin": "false",  "toNode": 9,  "toPin": "in" },
-    { "id": 9,  "type": "exec", "fromNode": 9,  "fromPin": "child0", "toNode": 10, "toPin": "in" },
-    { "id": 10, "type": "exec", "fromNode": 10, "fromPin": "out",    "toNode": 11, "toPin": "in" },
-    { "id": 11, "type": "exec", "fromNode": 2,  "fromPin": "out",    "toNode": 12, "toPin": "in" }
-  ]
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "out",
+      "toNode": 2,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "child0",
+      "toNode": 3,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "out",
+      "toNode": 4,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "true",
+      "toNode": 5,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 5,
+      "fromPin": "child0",
+      "toNode": 6,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 6,
+      "fromPin": "out",
+      "toNode": 7,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 7,
+      "fromPin": "out",
+      "toNode": 8,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "false",
+      "toNode": 9,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 9,
+      "fromPin": "child0",
+      "toNode": 10,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 10,
+      "fromPin": "out",
+      "toNode": 11,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "out",
+      "toNode": 12,
+      "toPin": "in"
+    }
+  ],
+  "dataConnections": []
 }

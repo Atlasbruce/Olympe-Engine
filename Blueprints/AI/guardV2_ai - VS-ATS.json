@@ -1,5 +1,6 @@
 {
   "schema_version": 4,
+  "type": "VisualScript",
   "graphType": "VisualScript",
   "name": "GuardAI_V2_Complex_VS-ATS",
   "description": "",

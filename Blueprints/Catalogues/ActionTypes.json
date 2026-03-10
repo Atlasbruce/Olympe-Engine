@@ -1,20 +1,70 @@
 {
-  "blueprintType": "Unknown",
-  "data": {},
-  "description": "",
-  "editorState": {
-    "scrollOffset": {
-      "x": 0,
-      "y": 0
+  "type": "ActionCatalog",
+  "version": 1,
+  "actions": [
+    {
+      "id": "Task_Wait",
+      "displayName": "Wait",
+      "category": "Timing",
+      "description": "Pauses execution for a duration",
+      "parameters": [
+        {"name": "duration", "type": "Float", "default": 1.0}
+      ]
     },
-    "zoom": 1
-  },
-  "metadata": {
-    "author": "Atlasbruce",
-    "created": "2026-03-07T11:57:13",
-    "lastModified": "2026-03-07T11:57:13",
-    "tags": []
-  },
-  "name": "Unnamed",
-  "schema_version": 2
+    {
+      "id": "Task_MoveToLocation",
+      "displayName": "Move To Location",
+      "category": "Movement",
+      "description": "Moves entity to target position",
+      "parameters": [
+        {"name": "targetKey", "type": "String", "default": "TargetPosition"},
+        {"name": "speed", "type": "Float", "default": 3.5}
+      ]
+    },
+    {
+      "id": "Task_Attack",
+      "displayName": "Attack",
+      "category": "Combat",
+      "description": "Attacks target entity",
+      "parameters": [
+        {"name": "targetKey", "type": "String", "default": "TargetActor"},
+        {"name": "damage", "type": "Float", "default": 10.0}
+      ]
+    },
+    {
+      "id": "Task_Flee",
+      "displayName": "Flee",
+      "category": "Movement",
+      "description": "Flees away from threat",
+      "parameters": [
+        {"name": "awayFromKey", "type": "String", "default": "ThreatPosition"},
+        {"name": "speed", "type": "Float", "default": 6.0}
+      ]
+    },
+    {
+      "id": "Task_ChangeState",
+      "displayName": "Change State",
+      "category": "AI",
+      "description": "Changes AI state",
+      "parameters": [
+        {"name": "newState", "type": "String", "default": "Idle"}
+      ]
+    },
+    {
+      "id": "Task_PatrolPickPoint",
+      "displayName": "Pick Patrol Point",
+      "category": "Patrol",
+      "description": "Selects next waypoint",
+      "parameters": []
+    },
+    {
+      "id": "Task_SetMoveGoal",
+      "displayName": "Set Move Goal",
+      "category": "Movement",
+      "description": "Sets movement target",
+      "parameters": [
+        {"name": "goalKey", "type": "String", "default": "MoveGoal"}
+      ]
+    }
+  ]
 }

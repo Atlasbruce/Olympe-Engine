@@ -1,5 +1,6 @@
 {
   "schema_version": 4,
+  "type": "VisualScript",
   "id": "npc-patrol-001",
   "name": "NPC Patrol",
   "graphType": "VisualScript",

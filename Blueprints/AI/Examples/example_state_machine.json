@@ -1,15 +1,31 @@
 {
   "schema_version": 4,
+  "type": "VisualScript",
   "graphType": "VisualScript",
   "name": "example_state_machine",
   "description": "4-state HFSM: Idle, Patrol, Alert, Combat. Transitions driven by Blackboard keys.",
   "blackboard": {
     "local": {
-      "CurrentState": { "type": "string", "value": "Idle" },
-      "EnemyVisible": { "type": "bool", "value": "false" },
-      "EnemyClose": { "type": "bool", "value": "false" },
-      "Health": { "type": "float", "value": "100.0" },
-      "AlertTimer": { "type": "float", "value": "0.0" }
+      "CurrentState": {
+        "type": "string",
+        "value": "Idle"
+      },
+      "EnemyVisible": {
+        "type": "bool",
+        "value": "false"
+      },
+      "EnemyClose": {
+        "type": "bool",
+        "value": "false"
+      },
+      "Health": {
+        "type": "float",
+        "value": "100.0"
+      },
+      "AlertTimer": {
+        "type": "float",
+        "value": "0.0"
+      }
     },
     "global": {}
   },
@@ -179,20 +195,91 @@
       }
     }
   ],
-  "connections": [
-    { "id": 1,  "type": "exec", "fromNode": 1,  "fromPin": "out",    "toNode": 2,  "toPin": "in" },
-    { "id": 2,  "type": "exec", "fromNode": 2,  "fromPin": "child0", "toNode": 3,  "toPin": "in" },
-    { "id": 3,  "type": "exec", "fromNode": 3,  "fromPin": "true",   "toNode": 4,  "toPin": "in" },
-    { "id": 4,  "type": "exec", "fromNode": 2,  "fromPin": "child1", "toNode": 5,  "toPin": "in" },
-    { "id": 5,  "type": "exec", "fromNode": 5,  "fromPin": "true",   "toNode": 6,  "toPin": "in" },
-    { "id": 6,  "type": "exec", "fromNode": 6,  "fromPin": "child0", "toNode": 7,  "toPin": "in" },
-    { "id": 7,  "type": "exec", "fromNode": 7,  "fromPin": "out",    "toNode": 8,  "toPin": "in" },
-    { "id": 8,  "type": "exec", "fromNode": 2,  "fromPin": "child2", "toNode": 9,  "toPin": "in" },
-    { "id": 9,  "type": "exec", "fromNode": 9,  "fromPin": "true",   "toNode": 10, "toPin": "in" },
-    { "id": 10, "type": "exec", "fromNode": 2,  "fromPin": "child3", "toNode": 11, "toPin": "in" },
-    { "id": 11, "type": "exec", "fromNode": 11, "fromPin": "child0", "toNode": 12, "toPin": "in" },
-    { "id": 12, "type": "exec", "fromNode": 12, "fromPin": "out",    "toNode": 13, "toPin": "in" },
-    { "id": 13, "type": "exec", "fromNode": 2,  "fromPin": "out",    "toNode": 14, "toPin": "in" },
-    { "id": 14, "type": "exec", "fromNode": 14, "fromPin": "out",    "toNode": 15, "toPin": "in" }
-  ]
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "out",
+      "toNode": 2,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "child0",
+      "toNode": 3,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "true",
+      "toNode": 4,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "child1",
+      "toNode": 5,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 5,
+      "fromPin": "true",
+      "toNode": 6,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 6,
+      "fromPin": "child0",
+      "toNode": 7,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 7,
+      "fromPin": "out",
+      "toNode": 8,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "child2",
+      "toNode": 9,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 9,
+      "fromPin": "true",
+      "toNode": 10,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "child3",
+      "toNode": 11,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 11,
+      "fromPin": "child0",
+      "toNode": 12,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 12,
+      "fromPin": "out",
+      "toNode": 13,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "out",
+      "toNode": 14,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 14,
+      "fromPin": "out",
+      "toNode": 15,
+      "toPin": "in"
+    }
+  ],
+  "dataConnections": []
 }

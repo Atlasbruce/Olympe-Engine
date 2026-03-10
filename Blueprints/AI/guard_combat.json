@@ -1,5 +1,6 @@
 {
   "schema_version": 4,
+  "type": "VisualScript",
   "graphType": "VisualScript",
   "name": "GuardCombatTree",
   "description": "",

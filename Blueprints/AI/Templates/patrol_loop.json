@@ -1,13 +1,22 @@
 {
   "schema_version": 4,
+  "type": "VisualScript",
   "graphType": "VisualScript",
-  "templateName": "patrol_loop",
   "description": "Ready-to-use patrol loop template: NPC moves between two configurable waypoints.",
   "blackboard": {
     "local": {
-      "WaypointA": { "type": "string", "value": "wp_a" },
-      "WaypointB": { "type": "string", "value": "wp_b" },
-      "PatrolSpeed": { "type": "float", "value": "3.5" }
+      "WaypointA": {
+        "type": "string",
+        "value": "wp_a"
+      },
+      "WaypointB": {
+        "type": "string",
+        "value": "wp_b"
+      },
+      "PatrolSpeed": {
+        "type": "float",
+        "value": "3.5"
+      }
     },
     "global": {}
   },
@@ -68,10 +77,32 @@
       }
     }
   ],
-  "connections": [
-    { "id": 1, "type": "exec", "fromNode": 1, "fromPin": "out",    "toNode": 2, "toPin": "in" },
-    { "id": 2, "type": "exec", "fromNode": 2, "fromPin": "child0", "toNode": 3, "toPin": "in" },
-    { "id": 3, "type": "exec", "fromNode": 2, "fromPin": "child1", "toNode": 4, "toPin": "in" },
-    { "id": 4, "type": "exec", "fromNode": 2, "fromPin": "out",    "toNode": 5, "toPin": "in" }
-  ]
+  "name": "patrol_loop",
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "out",
+      "toNode": 2,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "child0",
+      "toNode": 3,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "child1",
+      "toNode": 4,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "out",
+      "toNode": 5,
+      "toPin": "in"
+    }
+  ],
+  "dataConnections": []
 }

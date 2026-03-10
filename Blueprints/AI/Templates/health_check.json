@@ -1,14 +1,26 @@
 {
   "schema_version": 4,
+  "type": "VisualScript",
   "graphType": "VisualScript",
-  "templateName": "health_check",
   "description": "Health check template: evaluates a Health key and branches to retreat or continue.",
   "blackboard": {
     "local": {
-      "Health": { "type": "float", "value": "100.0" },
-      "HealthThreshold": { "type": "float", "value": "20.0" },
-      "IsLowHealth": { "type": "bool", "value": "false" },
-      "RetreatTarget": { "type": "string", "value": "safe_zone" }
+      "Health": {
+        "type": "float",
+        "value": "100.0"
+      },
+      "HealthThreshold": {
+        "type": "float",
+        "value": "20.0"
+      },
+      "IsLowHealth": {
+        "type": "bool",
+        "value": "false"
+      },
+      "RetreatTarget": {
+        "type": "string",
+        "value": "safe_zone"
+      }
     },
     "global": {}
   },
@@ -72,10 +84,32 @@
       }
     }
   ],
-  "connections": [
-    { "id": 1, "type": "exec", "fromNode": 1, "fromPin": "out",   "toNode": 2, "toPin": "in" },
-    { "id": 2, "type": "exec", "fromNode": 2, "fromPin": "out",   "toNode": 3, "toPin": "in" },
-    { "id": 3, "type": "exec", "fromNode": 3, "fromPin": "true",  "toNode": 4, "toPin": "in" },
-    { "id": 4, "type": "exec", "fromNode": 3, "fromPin": "false", "toNode": 5, "toPin": "in" }
-  ]
+  "name": "health_check",
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "out",
+      "toNode": 2,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "out",
+      "toNode": 3,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "true",
+      "toNode": 4,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "false",
+      "toNode": 5,
+      "toPin": "in"
+    }
+  ],
+  "dataConnections": []
 }
