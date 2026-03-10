@@ -321,6 +321,10 @@ void VisualScriptEditorPanel::LoadTemplate(const TaskGraphTemplate* tmpl,
     m_template    = *tmpl;
     m_currentPath = path;
     m_dirty       = false;
+
+    // Rebuild lookup cache after copy (pointers from old template are now invalid)
+    m_template.BuildLookupCache();
+
     SyncCanvasFromTemplate();
 }
 
@@ -562,14 +566,6 @@ void VisualScriptEditorPanel::RenderCanvas()
     {
         VSEditorNode& eNode = m_editorNodes[i];
 
-        // Set position on first render
-        if (m_positionedNodes.find(eNode.nodeID) == m_positionedNodes.end())
-        {
-            ImNodes::SetNodeEditorSpacePos(eNode.nodeID,
-                                           ImVec2(eNode.posX, eNode.posY));
-            m_positionedNodes.insert(eNode.nodeID);
-        }
-
         bool hasBreakpoint = DebugController::Get().HasBreakpoint(
             0 /* graphID placeholder */, eNode.nodeID);
         bool isActive = (eNode.nodeID == activeNodeID &&
@@ -599,6 +595,14 @@ void VisualScriptEditorPanel::RenderCanvas()
             execIn, execOut,
             dataIn, dataOut,
             GetNodeTypeLabel(eNode.def.Type));
+
+        // Set position AFTER rendering (so ImNodes knows about the node)
+        if (m_positionedNodes.find(eNode.nodeID) == m_positionedNodes.end())
+        {
+            ImNodes::SetNodeEditorSpacePos(eNode.nodeID,
+                                           ImVec2(eNode.posX, eNode.posY));
+            m_positionedNodes.insert(eNode.nodeID);
+        }
 
         // Breakpoint / active overlays
         if (hasBreakpoint)
