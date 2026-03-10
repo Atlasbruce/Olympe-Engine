@@ -457,6 +457,13 @@ namespace Olympe
                 return "HFSM";
             }
 
+            // Priority 5: Structural detection for Visual Script graphs
+            if (j.contains("schema_version") || j.contains("ExecConnections") || j.contains("DataConnections"))
+            {
+                logStructuralDetection("VisualScript");
+                return "VisualScript";
+            }
+
             if (j.contains("components"))
             {
                 logStructuralDetection("EntityBlueprint");

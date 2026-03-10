@@ -1,69 +1,66 @@
 {
   "blueprintType": "BehaviorTree",
   "data": {
-    "rootGraph": {
-      "nodes": [
-        {
-          "children": [
-            2,
-            3,
-            4
-          ],
-          "id": 1,
-          "name": "Patrol Sequence",
-          "parameters": {},
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "type": "Sequence"
+    "nodes": [
+      {
+        "children": [
+          2,
+          3,
+          4
+        ],
+        "id": 1,
+        "name": "Patrol Sequence",
+        "parameters": {},
+        "position": {
+          "x": 0,
+          "y": 0
         },
-        {
-          "children": [],
-          "id": 2,
-          "name": "Next Waypoint",
-          "parameters": {
-            "loop": true
-          },
-          "position": {
-            "x": 400,
-            "y": 0
-          },
-          "type": "NextWaypoint"
+        "type": "Sequence"
+      },
+      {
+        "children": [],
+        "id": 2,
+        "name": "Next Waypoint",
+        "parameters": {
+          "loop": "true"
         },
-        {
-          "children": [],
-          "id": 3,
-          "name": "Move To Waypoint",
-          "parameters": {
-            "key": "CurrentWaypoint",
-            "speed": "Walk"
-          },
-          "position": {
-            "x": 800,
-            "y": 0
-          },
-          "type": "MoveToLocation"
+        "position": {
+          "x": 228,
+          "y": -269
         },
-        {
-          "children": [],
-          "id": 4,
-          "name": "Wait At Waypoint",
-          "parameters": {
-            "time": 2
-          },
-          "position": {
-            "x": 1200,
-            "y": 0
-          },
-          "type": "Wait"
-        }
-      ],
-      "rootNodeId": 1
-    },
-    "subgraphs": {}
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 3,
+        "name": "Move To Waypoint",
+        "parameters": {
+          "key": "CurrentWaypoint",
+          "speed": "Walk"
+        },
+        "position": {
+          "x": 274,
+          "y": -121
+        },
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 4,
+        "name": "Wait At Waypoint",
+        "parameters": {
+          "time": "2"
+        },
+        "position": {
+          "x": 276,
+          "y": 20
+        },
+        "type": "Action"
+      }
+    ],
+    "rootNodeId": 1
   },
-  "description": "Boucle de patrouille : suit les waypoints en boucle à vitesse Walk",
+  "description": "",
   "editorState": {
     "scrollOffset": {
       "x": 0,
@@ -72,14 +69,11 @@
     "zoom": 1
   },
   "metadata": {
-    "author": "Tutorial",
-    "created": "2026-03-09T00:00:00",
-    "lastModified": "2026-03-09T00:00:00",
-    "tags": [
-      "infiltration",
-      "matrimandir"
-    ]
+    "author": "User",
+    "created": "",
+    "lastModified": "2026-03-10T14:59:49",
+    "tags": []
   },
   "name": "Guard_PatrolLoop",
-  "schema_version": 5
+  "schema_version": 2
 }

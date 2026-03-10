@@ -35,7 +35,9 @@ bool TaskGraphTemplate::Validate() const
     }
 
     // Rule 2: RootNodeID must reference an existing node
-    if (validIds.find(RootNodeID) == validIds.end())
+    // EXCEPTION: Allow RootNodeID = -1 for legacy/template files (schema v2)
+    // These can still be loaded and edited, just not executed
+    if (RootNodeID != -1 && validIds.find(RootNodeID) == validIds.end())
     {
         SYSTEM_LOG << "[TaskGraphTemplate] Validate failed: RootNodeID " << RootNodeID
                    << " does not reference a known node" << std::endl;

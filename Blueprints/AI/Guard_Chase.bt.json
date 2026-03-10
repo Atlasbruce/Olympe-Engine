@@ -1,68 +1,91 @@
 {
   "blueprintType": "BehaviorTree",
-  "schema_version": 2,
-  "name": "Guard_Chase",
-  "description": "Poursuite en alerte : poursuit le joueur activement et attaque",
-  "metadata": {
-    "author": "Tutorial",
-    "created": "2026-03-09T00:00:00",
-    "lastModified": "2026-03-09T00:00:00",
-    "tags": ["infiltration", "matrimandir"]
-  },
   "data": {
-    "rootNodeId": 1,
     "nodes": [
       {
+        "children": [
+          2,
+          3,
+          4,
+          5
+        ],
         "id": 1,
-        "type": "Sequence",
         "name": "Chase Sequence",
-        "position": { "x": 0, "y": 0 },
-        "children": [2, 3, 4, 5],
-        "parameters": {}
+        "parameters": {},
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "type": "Sequence"
       },
       {
-        "id": 2,
-        "type": "PerceptionCheck",
-        "name": "Can See Player",
-        "position": { "x": 400, "y": 0 },
         "children": [],
+        "id": 2,
+        "name": "Can See Player",
         "parameters": {
           "target": "Player",
-          "type":   "Visual"
-        }
+          "type": "Visual"
+        },
+        "position": {
+          "x": 207,
+          "y": -176
+        },
+        "type": "Action"
       },
       {
+        "children": [],
         "id": 3,
-        "type": "RotateToTarget",
         "name": "Face Player",
-        "position": { "x": 800, "y": 0 },
-        "children": [],
-        "parameters": {}
+        "parameters": {},
+        "position": {
+          "x": 214,
+          "y": 264
+        },
+        "type": "Action"
       },
       {
-        "id": 4,
-        "type": "MoveToTarget",
-        "name": "Chase Player",
-        "position": { "x": 1200, "y": 0 },
         "children": [],
+        "id": 4,
+        "name": "Chase Player",
         "parameters": {
           "speed": "Run"
-        }
+        },
+        "position": {
+          "x": 232,
+          "y": 143
+        },
+        "type": "Action"
       },
       {
-        "id": 5,
-        "type": "AttackRange",
-        "name": "Attack Player",
-        "position": { "x": 1600, "y": 0 },
         "children": [],
+        "id": 5,
+        "name": "Attack Player",
         "parameters": {
-          "burst": 3
-        }
+          "burst": "3"
+        },
+        "position": {
+          "x": 219.929,
+          "y": -28.2466
+        },
+        "type": "Action"
       }
-    ]
+    ],
+    "rootNodeId": 1
   },
+  "description": "",
   "editorState": {
-    "zoom": 1.0,
-    "scrollOffset": { "x": 0, "y": 0 }
-  }
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
+  "metadata": {
+    "author": "User",
+    "created": "",
+    "lastModified": "2026-03-10T14:59:00",
+    "tags": []
+  },
+  "name": "Guard_Chase",
+  "schema_version": 2
 }

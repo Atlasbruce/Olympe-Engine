@@ -1,77 +1,104 @@
 {
   "blueprintType": "BehaviorTree",
-  "schema_version": 2,
-  "name": "Terminal_Interaction",
-  "description": "Terminal de sécurité : interaction 3s puis déverrouille le code d'accès",
-  "metadata": {
-    "author": "Tutorial",
-    "created": "2026-03-09T00:00:00",
-    "lastModified": "2026-03-09T00:00:00",
-    "tags": ["infiltration", "matrimandir"]
-  },
   "data": {
-    "rootNodeId": 1,
     "nodes": [
       {
+        "children": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
         "id": 1,
-        "type": "Sequence",
         "name": "Terminal Interaction Sequence",
-        "position": { "x": 0, "y": 0 },
-        "children": [2, 3, 4, 5, 6],
-        "parameters": {}
+        "parameters": {},
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "type": "Sequence"
       },
       {
+        "children": [],
         "id": 2,
-        "type": "IsPlayerInteracting",
         "name": "Is Player Interacting",
-        "position": { "x": 400, "y": 0 },
-        "children": [],
-        "parameters": {}
+        "parameters": {},
+        "position": {
+          "x": 326,
+          "y": -150
+        },
+        "type": "Action"
       },
       {
+        "children": [],
         "id": 3,
-        "type": "ShowProgressBar",
         "name": "Show Hack Progress Bar",
-        "position": { "x": 800, "y": 0 },
-        "children": [],
         "parameters": {
-          "duration": 3.0
-        }
+          "duration": "3"
+        },
+        "position": {
+          "x": 348,
+          "y": -45
+        },
+        "type": "Action"
       },
       {
+        "children": [],
         "id": 4,
-        "type": "Wait",
         "name": "Interaction Wait",
-        "position": { "x": 1200, "y": 0 },
-        "children": [],
         "parameters": {
-          "time": 3.0
-        }
+          "time": "3"
+        },
+        "position": {
+          "x": 363,
+          "y": 84
+        },
+        "type": "Action"
       },
       {
+        "children": [],
         "id": 5,
-        "type": "SetBlackboardValue",
         "name": "Unlock Access Code",
-        "position": { "x": 1600, "y": 0 },
-        "children": [],
         "parameters": {
-          "global": true,
-          "key":    "bool_HasCode",
-          "value":  true
-        }
+          "global": "true",
+          "key": "bool_HasCode",
+          "value": "true"
+        },
+        "position": {
+          "x": 370.028,
+          "y": 229.532
+        },
+        "type": "Action"
       },
       {
-        "id": 6,
-        "type": "ShowCodeUI",
-        "name": "Show Code UI",
-        "position": { "x": 2000, "y": 0 },
         "children": [],
-        "parameters": {}
+        "id": 6,
+        "name": "Show Code UI",
+        "parameters": {},
+        "position": {
+          "x": 348.297,
+          "y": 339.583
+        },
+        "type": "Action"
       }
-    ]
+    ],
+    "rootNodeId": 1
   },
+  "description": "",
   "editorState": {
-    "zoom": 1.0,
-    "scrollOffset": { "x": 0, "y": 0 }
-  }
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
+  "metadata": {
+    "author": "User",
+    "created": "",
+    "lastModified": "2026-03-10T15:00:23",
+    "tags": []
+  },
+  "name": "Terminal_Interaction",
+  "schema_version": 2
 }

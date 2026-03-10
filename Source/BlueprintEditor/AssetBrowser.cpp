@@ -154,11 +154,13 @@ namespace Olympe
             if (!node->isDirectory)
             {
                 std::cout << "AssetBrowser: Double-clicked asset: " << node->fullPath << std::endl;
-                
-                // Check if this is a BehaviorTree or HFSM - open in Node Graph Editor
-                if (node->type == "BehaviorTree" || node->type == "HFSM")
+
+                // Check if this is a graph type - open in appropriate editor
+                if (node->type == "BehaviorTree" || node->type == "HFSM" || 
+                    node->type == "VisualScript" || node->type == "TaskGraph" ||
+                    node->type == "Generic")  // Allow opening Generic files to fix them
                 {
-                    std::cout << "AssetBrowser: Opening " << node->type << " in Node Graph Editor" << std::endl;
+                    std::cout << "AssetBrowser: Opening " << node->type << " in editor" << std::endl;
                     BlueprintEditor::Get().OpenGraphInEditor(node->fullPath);
                 }
                 // Otherwise, use the legacy callback if set (for EntityBlueprint, etc.)
@@ -169,13 +171,15 @@ namespace Olympe
                 }
             }
         }
-        
+
         // Tooltip for double-click action
         if (ImGui::IsItemHovered())
         {
-            if (node->type == "BehaviorTree" || node->type == "HFSM")
+            if (node->type == "BehaviorTree" || node->type == "HFSM" || 
+                node->type == "VisualScript" || node->type == "TaskGraph" ||
+                node->type == "Generic")
             {
-                ImGui::SetTooltip("Double-click to open in Node Graph Editor");
+                ImGui::SetTooltip("Double-click to open in editor");
             }
             else if (!node->isDirectory)
             {

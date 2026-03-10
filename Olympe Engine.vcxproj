@@ -392,6 +392,7 @@
     <None Include="Docs\Blueprint_Editor_Advanced_Systems.md" />
     <None Include="Docs\Blueprint_Editor_Documentation_Complete.md" />
     <None Include="Docs\BLUEPRINT_EDITOR_FIXED_LAYOUT_IMPLEMENTATION.md" />
+    <None Include="Docs\BLUEPRINT_EDITOR_LOADING_FIXES.md" />
     <None Include="Docs\Blueprint_Editor_Pipeline_Summary.md" />
     <None Include="Docs\Blueprint_Editor_Quick_Start_FR.md" />
     <None Include="Docs\Blueprint_Editor_User_Guide_v4.md" />

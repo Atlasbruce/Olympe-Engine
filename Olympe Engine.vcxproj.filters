@@ -391,6 +391,7 @@
     <None Include="Docs\DOCUMENTATION_v4_FINAL_SUMMARY.md" />
     <None Include="blueprint_editor_config.json" />
     <None Include="Docs\BLUEPRINT_EDITOR_FIXED_LAYOUT_IMPLEMENTATION.md" />
+    <None Include="Docs\BLUEPRINT_EDITOR_LOADING_FIXES.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
