@@ -136,10 +136,9 @@ void VisualScriptNodeRenderer::RenderNode(
     const std::vector<std::string>&               execInputPins,
     const std::vector<std::string>&               execOutputPins,
     const std::vector<std::pair<std::string, VariableType>>& dataInputPins,
-    const std::vector<std::pair<std::string, VariableType>>& dataOutputPins,
-    const std::string&                            tooltip)
+    const std::vector<std::pair<std::string, VariableType>>& dataOutputPins)
 {
-    (void)nodeID; (void)graphID; // used for future per-node UID derivation
+    (void)nodeID; (void)graphID; // reserved for future per-node UID derivation
 
     VSNodeStyle style = GetNodeStyle(type);
 
@@ -226,15 +225,6 @@ void VisualScriptNodeRenderer::RenderNode(
     ImNodes::PopColorStyle(); // TitleBarSelected
     ImNodes::PopColorStyle(); // TitleBarHovered
     ImNodes::PopColorStyle(); // TitleBar
-
-    // Hover tooltip
-    int hoveredNode = -1;
-    if (!tooltip.empty() && ImNodes::IsNodeHovered(&hoveredNode) && hoveredNode == nodeUID)
-    {
-        ImGui::BeginTooltip();
-        ImGui::TextUnformatted(tooltip.c_str());
-        ImGui::EndTooltip();
-    }
 }
 
 void VisualScriptNodeRenderer::RenderBreakpointIndicator(int nodeUID)
