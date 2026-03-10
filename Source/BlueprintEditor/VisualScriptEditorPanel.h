@@ -91,6 +91,11 @@ public:
      */
     void Render();
 
+    /**
+     * @brief Renders panel content without window wrapper - for fixed layout.
+     */
+    void RenderContent();
+
     /** @brief Returns true if the panel window is visible. */
     bool IsVisible() const { return m_visible; }
 

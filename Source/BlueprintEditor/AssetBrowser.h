@@ -39,7 +39,10 @@ namespace Olympe
         
         // Render the asset browser panel with ImGui
         void Render();
-        
+
+        // Render content only (without window wrapper) - for fixed layout
+        void RenderContent();
+
         // Get currently selected asset path (empty if none selected)
         std::string GetSelectedAssetPath() const;
         

@@ -298,6 +298,12 @@ namespace Olympe
         bool ShowMigrationDialog() const { return m_ShowMigrationDialog; }
         void SetShowMigrationDialog(bool show) { m_ShowMigrationDialog = show; }
 
+        // ===== Configuration System =====
+        bool LoadConfig(const std::string& configPath = "blueprint_editor_config.json");
+        bool SaveConfig(const std::string& configPath = "blueprint_editor_config.json");
+        const json& GetConfig() const { return m_Config; }
+        json& GetConfigMutable() { return m_Config; }
+
     private:
         // Private constructor/destructor for singleton
         BlueprintEditor();
@@ -350,5 +356,8 @@ namespace Olympe
         // ===== Migration System =====
         bool m_ShowMigrationDialog;
         std::vector<std::string> m_BlueprintsToMigrate;
+
+        // ===== Configuration System =====
+        json m_Config;  // Editor configuration (loaded from JSON)
     };
 }

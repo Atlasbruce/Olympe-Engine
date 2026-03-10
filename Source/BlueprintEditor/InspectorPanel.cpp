@@ -45,7 +45,12 @@ namespace Olympe
     void InspectorPanel::Render()
     {
         ImGui::Begin("Inspector");
+        RenderContent();
+        ImGui::End();
+    }
 
+    void InspectorPanel::RenderContent()
+    {
         InspectorContext context = DetermineContext();
 
         switch (context)
@@ -71,8 +76,6 @@ namespace Olympe
 
         // Runtime debug overlay: always shown when a debug blackboard is registered
         RenderDebugBlackboard();
-
-        ImGui::End();
     }
 
     InspectorContext InspectorPanel::DetermineContext()

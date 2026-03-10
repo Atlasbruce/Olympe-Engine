@@ -102,7 +102,12 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
     void NodeGraphPanel::Render()
     {
         ImGui::Begin("Node Graph Editor");
+        RenderContent();
+        ImGui::End();
+    }
 
+    void NodeGraphPanel::RenderContent()
+    {
         // Advance autosave timers each frame.
         m_autosave.Tick(static_cast<double>(ImGui::GetTime()));
 
@@ -326,8 +331,6 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
 
         // Render node edit modal
         RenderNodeEditModal();
-
-        ImGui::End();
     }
 
     void NodeGraphPanel::RenderGraphTabs()

@@ -1,95 +1,98 @@
 {
   "blueprintType": "BehaviorTree",
   "data": {
-    "nodes": [
-      {
-        "children": [
-          2
-        ],
-        "id": 1,
-        "name": "Camera Loop",
-        "parameters": {
-          "infinite": "true"
+    "rootGraph": {
+      "nodes": [
+        {
+          "children": [
+            2
+          ],
+          "id": 1,
+          "name": "Camera Loop",
+          "parameters": {
+            "infinite": "true"
+          },
+          "position": {
+            "x": 182,
+            "y": -3
+          },
+          "type": "Action"
         },
-        "position": {
-          "x": 182,
-          "y": -3
+        {
+          "children": [
+            3,
+            4,
+            5,
+            6
+          ],
+          "id": 2,
+          "name": "Camera Detection Sequence",
+          "parameters": {},
+          "position": {
+            "x": 400,
+            "y": 0
+          },
+          "type": "Sequence"
         },
-        "type": "Action"
-      },
-      {
-        "children": [
-          3,
-          4,
-          5,
-          6
-        ],
-        "id": 2,
-        "name": "Camera Detection Sequence",
-        "parameters": {},
-        "position": {
-          "x": 400,
-          "y": 0
+        {
+          "children": [],
+          "id": 3,
+          "name": "Rotate Camera",
+          "parameters": {
+            "angle": "90"
+          },
+          "position": {
+            "x": 692,
+            "y": 141
+          },
+          "type": "Action"
         },
-        "type": "Sequence"
-      },
-      {
-        "children": [],
-        "id": 3,
-        "name": "Rotate Camera",
-        "parameters": {
-          "angle": "90"
+        {
+          "children": [],
+          "id": 4,
+          "name": "Player In FOV Long Enough",
+          "parameters": {
+            "key": "PlayerInFOV_time",
+            "operator": "Greater",
+            "value": "1.5"
+          },
+          "position": {
+            "x": 729,
+            "y": -223
+          },
+          "type": "Action"
         },
-        "position": {
-          "x": 692,
-          "y": 141
+        {
+          "children": [],
+          "id": 5,
+          "name": "Increment Global Alert",
+          "parameters": {
+            "increment": "1",
+            "key": "GlobalAlert"
+          },
+          "position": {
+            "x": 734,
+            "y": -99
+          },
+          "type": "Action"
         },
-        "type": "Action"
-      },
-      {
-        "children": [],
-        "id": 4,
-        "name": "Player In FOV Long Enough",
-        "parameters": {
-          "key": "PlayerInFOV_time",
-          "operator": "Greater",
-          "value": "1.5"
-        },
-        "position": {
-          "x": 729,
-          "y": -223
-        },
-        "type": "Action"
-      },
-      {
-        "children": [],
-        "id": 5,
-        "name": "Increment Global Alert",
-        "parameters": {
-          "increment": "1",
-          "key": "GlobalAlert"
-        },
-        "position": {
-          "x": 734,
-          "y": -99
-        },
-        "type": "Action"
-      },
-      {
-        "children": [],
-        "id": 6,
-        "name": "Frame Cooldown",
-        "parameters": {
-          "time": "0.1"
-        },
-        "position": {
-          "x": 747.565,
-          "y": 18.865
-        },
-        "type": "Action"
-      }
-    ],
-    "rootNodeId": 1
+        {
+          "children": [],
+          "id": 6,
+          "name": "Frame Cooldown",
+          "parameters": {
+            "time": "0.1"
+          },
+          "position": {
+            "x": 747.565,
+            "y": 18.865
+          },
+          "type": "Action"
+        }
+      ],
+      "rootNodeId": 1
+    },
+    "subgraphs": {}
   },
   "description": "",
   "editorState": {
@@ -106,5 +109,5 @@
     "tags": []
   },
   "name": "Camera_Rotating",
-  "schema_version": 2
+  "schema_version": 5
 }

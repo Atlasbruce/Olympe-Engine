@@ -69,7 +69,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	// io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // does not exist in SDL3 imgui backend yet
+	// Note: ImGuiConfigFlags_DockingEnable is not available in this ImGui version
+	// We use manual layout with ImGui::BeginChild instead
 
 	// Disable imgui.ini - we use JSON config instead
 	io.IniFilename = nullptr;

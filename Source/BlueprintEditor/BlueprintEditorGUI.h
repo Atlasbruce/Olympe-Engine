@@ -62,7 +62,10 @@ namespace Olympe
         void RenderPropertyPanel();
         void RenderStatusBar();
         void RenderComponentAddDialog();
-        
+
+        // Fixed layout rendering
+        void RenderFixedLayout();
+
         // D) Additional dialog methods
         void RenderPreferencesDialog();
         void RenderShortcutsDialog();
@@ -135,5 +138,11 @@ namespace Olympe
         class VisualScriptEditorPanel* m_VSEditorPanel;
         class DebugPanel* m_DebugPanel;
         class ProfilerPanel* m_ProfilerPanel;
+
+        // Fixed layout panel widths
+        float m_AssetBrowserWidth;
+        float m_InspectorWidth;
+        float m_MinPanelWidth;
+        float m_SplitterSize;
     };
 }

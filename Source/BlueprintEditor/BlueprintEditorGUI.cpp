@@ -51,6 +51,10 @@ namespace Olympe
         , m_VSEditorPanel(nullptr)
         , m_DebugPanel(nullptr)
         , m_ProfilerPanel(nullptr)
+        , m_AssetBrowserWidth(400.0f)
+        , m_InspectorWidth(400.0f)
+        , m_MinPanelWidth(200.0f)
+        , m_SplitterSize(8.0f)
     {
         m_NewBlueprintNameBuffer[0] = '\0';
         m_FilepathBuffer[0] = '\0';
@@ -129,10 +133,37 @@ namespace Olympe
 
         m_ProfilerPanel = new ProfilerPanel();
         m_ProfilerPanel->Initialize();
+
+        // Load layout configuration from backend
+        auto& backend = BlueprintEditor::Get();
+        const auto& config = backend.GetConfig();
+        if (config.contains("layout"))
+        {
+            const auto& layout = config["layout"];
+            if (layout.contains("asset_browser_width"))
+                m_AssetBrowserWidth = layout["asset_browser_width"].get<float>();
+            if (layout.contains("inspector_width"))
+                m_InspectorWidth = layout["inspector_width"].get<float>();
+            if (layout.contains("min_panel_width"))
+                m_MinPanelWidth = layout["min_panel_width"].get<float>();
+            if (layout.contains("splitter_size"))
+                m_SplitterSize = layout["splitter_size"].get<float>();
+        }
     }
 
     void BlueprintEditorGUI::Shutdown()
     {
+        // Save layout configuration to backend
+        auto& backend = BlueprintEditor::Get();
+        auto& config = backend.GetConfigMutable();
+        if (!config.contains("layout"))
+            config["layout"] = json::object();
+
+        config["layout"]["asset_browser_width"] = m_AssetBrowserWidth;
+        config["layout"]["inspector_width"] = m_InspectorWidth;
+        config["layout"]["min_panel_width"] = m_MinPanelWidth;
+        config["layout"]["splitter_size"] = m_SplitterSize;
+
         // Phase 5: Shutdown VS editor, debugger, and profiler panels
         if (m_ProfilerPanel)
         {
@@ -431,42 +462,11 @@ namespace Olympe
             ImGui::EndMainMenuBar();
         }
 
-        // D) Render panels conditionally based on visibility flags
-        
-        // === Main Panel 1: Asset Browser (with tabs for files + runtime entities) ===
-        if (m_ShowAssetBrowser)
-            m_AssetBrowser.Render();
-        
-        // === Main Panel 2: Node Graph Editor ===
-        if (m_ShowNodeGraph)
-            m_NodeGraphPanel.Render();
-        
-        // === Main Panel 3: Inspector (contextual - entity OR asset) ===
-        if (m_ShowInspector)
-            m_InspectorPanel.Render();
-        
-        // === Phase 5: Template Browser (optional) ===
-        if (m_ShowTemplateBrowser && m_TemplateBrowserPanel)
-            m_TemplateBrowserPanel->Render();
-        
-        // === Phase 6: History Panel (optional) ===
-        if (m_ShowHistory && m_HistoryPanel)
-            m_HistoryPanel->Render();
+        // Render fixed docked layout (like BehaviorTreeDebugWindow)
+        RenderFixedLayout();
 
-        // === Phase 5 (new): VS Graph Editor ===
-        if (m_ShowVSEditor && m_VSEditorPanel)
-            m_VSEditorPanel->Render();
-
-        // === Phase 5 (new): Debugger Panel ===
-        if (m_ShowDebugger && m_DebugPanel)
-            m_DebugPanel->Render();
-
-        // === Phase 5 (new): Profiler Panel ===
-        if (m_ShowProfiler && m_ProfilerPanel)
-            m_ProfilerPanel->Render();
-
-        // Status bar at bottom
-        RenderStatusBar();
+        // Status bar at bottom - DISABLED (not needed in standalone editor)
+        // RenderStatusBar();
 
         // Dialogs
         if (m_ShowAddComponentDialog)
@@ -513,6 +513,127 @@ namespace Olympe
         // Demo window for testing
         if (m_ShowDemoWindow)
             ImGui::ShowDemoWindow(&m_ShowDemoWindow);
+    }
+
+    void BlueprintEditorGUI::RenderFixedLayout()
+    {
+        // Get backend reference
+        auto& backend = BlueprintEditor::Get();
+
+        // Create a fullscreen window for the fixed layout
+        ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetFrameHeight()));  // Below menu bar
+        ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, 
+                                        ImGui::GetIO().DisplaySize.y - ImGui::GetFrameHeight()));
+
+        ImGuiWindowFlags windowFlags = 
+            ImGuiWindowFlags_NoTitleBar |
+            ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_NoBringToFrontOnFocus |
+            ImGuiWindowFlags_NoBackground;
+
+        if (!ImGui::Begin("##FixedLayoutWindow", nullptr, windowFlags))
+        {
+            ImGui::End();
+            return;
+        }
+
+        float windowWidth = ImGui::GetContentRegionAvail().x;
+        float windowHeight = ImGui::GetContentRegionAvail().y;
+
+        // Calculate center panel width (what's left after left and right panels)
+        float centerWidth = windowWidth - m_AssetBrowserWidth - m_InspectorWidth - m_SplitterSize * 2;
+
+        // Ensure minimum widths
+        if (m_AssetBrowserWidth < m_MinPanelWidth)
+            m_AssetBrowserWidth = m_MinPanelWidth;
+        if (m_InspectorWidth < m_MinPanelWidth)
+            m_InspectorWidth = m_MinPanelWidth;
+        if (centerWidth < m_MinPanelWidth)
+            centerWidth = m_MinPanelWidth;
+
+        // === LEFT PANEL: Asset Browser ===
+        ImGui::BeginChild("AssetBrowserPanel", ImVec2(m_AssetBrowserWidth, windowHeight), true);
+        if (m_ShowAssetBrowser)
+        {
+            // Render asset browser content inline (without ImGui::Begin/End wrapper)
+            m_AssetBrowser.RenderContent();
+        }
+        ImGui::EndChild();
+
+        // Left splitter
+        ImGui::SameLine();
+        ImGui::Button("##LeftSplitter", ImVec2(m_SplitterSize, windowHeight));
+        if (ImGui::IsItemActive())
+        {
+            m_AssetBrowserWidth += ImGui::GetIO().MouseDelta.x;
+            if (m_AssetBrowserWidth < m_MinPanelWidth)
+                m_AssetBrowserWidth = m_MinPanelWidth;
+            if (m_AssetBrowserWidth > windowWidth - m_InspectorWidth - m_MinPanelWidth - m_SplitterSize * 2)
+                m_AssetBrowserWidth = windowWidth - m_InspectorWidth - m_MinPanelWidth - m_SplitterSize * 2;
+        }
+        if (ImGui::IsItemHovered())
+            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+
+        // === CENTER PANEL: Node Graph Editor or VS Editor ===
+        ImGui::SameLine();
+        ImGui::BeginChild("CenterPanel", ImVec2(centerWidth, windowHeight), true);
+
+        // Choose which editor to show
+        if (m_ShowVSEditor && m_VSEditorPanel)
+        {
+            m_VSEditorPanel->RenderContent();
+        }
+        else if (m_ShowNodeGraph)
+        {
+            m_NodeGraphPanel.RenderContent();
+        }
+        else
+        {
+            ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), 
+                             "No blueprint loaded.\nSelect an entity or asset file to inspect its properties.");
+        }
+
+        ImGui::EndChild();
+
+        // Right splitter
+        ImGui::SameLine();
+        ImGui::Button("##RightSplitter", ImVec2(m_SplitterSize, windowHeight));
+        if (ImGui::IsItemActive())
+        {
+            m_InspectorWidth -= ImGui::GetIO().MouseDelta.x;
+            if (m_InspectorWidth < m_MinPanelWidth)
+                m_InspectorWidth = m_MinPanelWidth;
+            if (m_InspectorWidth > windowWidth - m_AssetBrowserWidth - m_MinPanelWidth - m_SplitterSize * 2)
+                m_InspectorWidth = windowWidth - m_AssetBrowserWidth - m_MinPanelWidth - m_SplitterSize * 2;
+        }
+        if (ImGui::IsItemHovered())
+            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+
+        // === RIGHT PANEL: Inspector ===
+        ImGui::SameLine();
+        ImGui::BeginChild("InspectorPanel", ImVec2(m_InspectorWidth, windowHeight), true);
+        if (m_ShowInspector)
+        {
+            m_InspectorPanel.RenderContent();
+        }
+        ImGui::EndChild();
+
+        ImGui::End();
+
+        // Render floating/optional panels separately (they can be closed)
+        if (m_ShowTemplateBrowser && m_TemplateBrowserPanel)
+            m_TemplateBrowserPanel->Render();
+
+        if (m_ShowHistory && m_HistoryPanel)
+            m_HistoryPanel->Render();
+
+        if (m_ShowDebugger && m_DebugPanel)
+            m_DebugPanel->Render();
+
+        if (m_ShowProfiler && m_ProfilerPanel)
+            m_ProfilerPanel->Render();
     }
 
     // Menu bar is now integrated in the main Render() function

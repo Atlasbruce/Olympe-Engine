@@ -1,0 +1,59 @@
+{
+  "editor_mode": "standalone",
+  "last_modified": "2026-03-12",
+  "layout": {
+    "asset_browser_width": 400,
+    "inspector_width": 400,
+    "min_panel_width": 200,
+    "mode": "fixed",
+    "splitter_size": 8
+  },
+  "panels": {
+    "asset_browser": {
+      "position": "left",
+      "visible": true,
+      "width": 400
+    },
+    "debugger": {
+      "visible": false
+    },
+    "history": {
+      "visible": false
+    },
+    "inspector": {
+      "position": "right",
+      "visible": true,
+      "width": 400
+    },
+    "node_graph": {
+      "position": "center",
+      "visible": true
+    },
+    "profiler": {
+      "visible": false
+    },
+    "template_browser": {
+      "visible": false
+    },
+    "vs_editor": {
+      "visible": false
+    }
+  },
+  "preferences": {
+    "auto_save": true,
+    "auto_save_interval": 60,
+    "dark_theme": true,
+    "font_size": 14,
+    "grid_size": 16,
+    "show_grid": true,
+    "snap_to_grid": true
+  },
+  "recent_files": [],
+  "version": "1.0",
+  "window": {
+    "height": 1080,
+    "maximized": true,
+    "vsync": true,
+    "width": 1920
+  }
+}

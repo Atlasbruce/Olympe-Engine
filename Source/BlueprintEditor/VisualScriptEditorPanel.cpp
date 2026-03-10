@@ -466,7 +466,12 @@ void VisualScriptEditorPanel::Render()
         return;
 
     ImGui::Begin("VS Graph Editor", &m_visible);
+    RenderContent();
+    ImGui::End();
+}
 
+void VisualScriptEditorPanel::RenderContent()
+{
     RenderToolbar();
     ImGui::Separator();
 
@@ -487,8 +492,6 @@ void VisualScriptEditorPanel::Render()
     ImGui::Separator();
     RenderBlackboard();
     ImGui::EndChild();
-
-    ImGui::End();
 }
 
 void VisualScriptEditorPanel::RenderToolbar()

@@ -389,6 +389,8 @@
     <None Include="Docs\Archive\README_ARCHIVE.md" />
     <None Include="Docs\DOCUMENTATION_UPDATE_SUMMARY.md" />
     <None Include="Docs\DOCUMENTATION_v4_FINAL_SUMMARY.md" />
+    <None Include="blueprint_editor_config.json" />
+    <None Include="Docs\BLUEPRINT_EDITOR_FIXED_LAYOUT_IMPLEMENTATION.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

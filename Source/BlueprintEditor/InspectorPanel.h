@@ -43,6 +43,7 @@ namespace Olympe
         void Initialize();
         void Shutdown();
         void Render();
+        void RenderContent();  // Render without window wrapper - for fixed layout
 
         /**
          * @brief Register a live LocalBlackboard to display in the inspector.

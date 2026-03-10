@@ -198,65 +198,70 @@ namespace Olympe
     {
         if (ImGui::Begin("Asset Browser"))
         {
-            // ===== USE TABS TO SEPARATE FILES AND RUNTIME ENTITIES =====
-            if (ImGui::BeginTabBar("AssetBrowserTabs"))
+            RenderContent();
+        }
+        ImGui::End();
+    }
+
+    void AssetBrowser::RenderContent()
+    {
+        // ===== USE TABS TO SEPARATE FILES AND RUNTIME ENTITIES =====
+        if (ImGui::BeginTabBar("AssetBrowserTabs"))
+        {
+            // ===== TAB 1: Blueprint Files =====
+            if (ImGui::BeginTabItem("Blueprint Files"))
             {
-                // ===== TAB 1: Blueprint Files =====
-                if (ImGui::BeginTabItem("Blueprint Files"))
+                RenderFilterUI();
+
+                ImGui::Separator();
+
+                // Get asset tree from backend
+                auto rootNode = BlueprintEditor::Get().GetAssetTree();
+
+                if (rootNode)
                 {
-                    RenderFilterUI();
-                    
-                    ImGui::Separator();
-                    
-                    // Get asset tree from backend
-                    auto rootNode = BlueprintEditor::Get().GetAssetTree();
-                    
-                    if (rootNode)
+                    // Render the tree starting from children (skip root "Blueprints" node)
+                    for (const auto& child : rootNode->children)
+                        RenderTreeNode(child);
+                }
+                else
+                {
+                    // Check if backend has an error
+                    if (BlueprintEditor::Get().HasError())
                     {
-                        // Render the tree starting from children (skip root "Blueprints" node)
-                        for (const auto& child : rootNode->children)
-                            RenderTreeNode(child);
+                        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), 
+                            "Error: %s", BlueprintEditor::Get().GetLastError().c_str());
                     }
                     else
                     {
-                        // Check if backend has an error
-                        if (BlueprintEditor::Get().HasError())
-                        {
-                            ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), 
-                                "Error: %s", BlueprintEditor::Get().GetLastError().c_str());
-                        }
-                        else
-                        {
-                            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
-                                "No blueprint files found.");
-                        }
+                        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
+                            "No blueprint files found.");
                     }
-                    
-                    ImGui::EndTabItem();
                 }
-                
-                // ===== TAB 2: Runtime Entities =====
-                if (ImGui::BeginTabItem("Runtime Entities"))
-                {
-                    ImGui::Text("Active Entities: %zu", BlueprintEditor::Get().GetRuntimeEntityCount());
-                    ImGui::Separator();
-                    
-                    RenderRuntimeEntities();
-                    
-                    ImGui::EndTabItem();
-                }
-                
-                // ===== TAB 3: Node Palette =====
-                if (ImGui::BeginTabItem("Nodes"))
-                {
-                    RenderNodePalette();
-                    ImGui::EndTabItem();
-                }
-                
-                ImGui::EndTabBar();
+
+                ImGui::EndTabItem();
             }
+
+            // ===== TAB 2: Runtime Entities =====
+            if (ImGui::BeginTabItem("Runtime Entities"))
+            {
+                ImGui::Text("Active Entities: %zu", BlueprintEditor::Get().GetRuntimeEntityCount());
+                ImGui::Separator();
+
+                RenderRuntimeEntities();
+
+                ImGui::EndTabItem();
+            }
+
+            // ===== TAB 3: Node Palette =====
+            if (ImGui::BeginTabItem("Nodes"))
+            {
+                RenderNodePalette();
+                ImGui::EndTabItem();
+            }
+
+            ImGui::EndTabBar();
         }
-        ImGui::End();
     }
     
     void AssetBrowser::RenderRuntimeEntities()

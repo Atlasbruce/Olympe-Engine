@@ -384,12 +384,14 @@
     <None Include="analyze_code.ps1" />
     <None Include="analyze_codebase.ps1" />
     <None Include="analyze_codebase_v2.ps1" />
+    <None Include="blueprint_editor_config.json" />
     <None Include="ClassDiagram.cd" />
     <None Include="config\ATS-VS-editor-config.json" />
     <None Include="Docs\Archive\README_ARCHIVE.md" />
     <None Include="Docs\Blueprint Editor Features.md" />
     <None Include="Docs\Blueprint_Editor_Advanced_Systems.md" />
     <None Include="Docs\Blueprint_Editor_Documentation_Complete.md" />
+    <None Include="Docs\BLUEPRINT_EDITOR_FIXED_LAYOUT_IMPLEMENTATION.md" />
     <None Include="Docs\Blueprint_Editor_Pipeline_Summary.md" />
     <None Include="Docs\Blueprint_Editor_Quick_Start_FR.md" />
     <None Include="Docs\Blueprint_Editor_User_Guide_v4.md" />

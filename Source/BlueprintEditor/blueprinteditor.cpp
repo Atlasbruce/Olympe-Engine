@@ -96,7 +96,10 @@ namespace Olympe
         
         // Initialize plugin system
         InitializePlugins();
-        
+
+        // Load configuration
+        LoadConfig("blueprint_editor_config.json");
+
         // Scan assets on initialization
         RefreshAssets();
     }
@@ -121,6 +124,9 @@ namespace Olympe
 
     void BlueprintEditor::Shutdown()
     {
+        // Save configuration before shutting down
+        SaveConfig("blueprint_editor_config.json");
+
         // Unregister the task callback before shutting down panels so that
         // TaskSystem cannot fire callbacks into already-destroyed editor objects.
         WorldBridge_UnregisterTaskCallback();
@@ -1322,9 +1328,92 @@ namespace Olympe
         
         std::cout << "Migration complete: " << successCount << " success, " 
                   << skippedCount << " skipped, " << failCount << " failed" << std::endl;
-        
+
         // Refresh assets after migration
         RefreshAssets();
+    }
+
+    // ========================================================================
+    // Configuration System Implementation
+    // ========================================================================
+
+    bool BlueprintEditor::LoadConfig(const std::string& configPath)
+    {
+        try
+        {
+            std::ifstream file(configPath);
+            if (!file.is_open())
+            {
+                std::cout << "[BlueprintEditor] Config file not found: " << configPath 
+                          << ", creating default config" << std::endl;
+
+                // Create default config
+                m_Config = json::object();
+                m_Config["version"] = "1.0";
+                m_Config["editor_mode"] = "standalone";
+
+                m_Config["window"] = json::object();
+                m_Config["window"]["width"] = 1920;
+                m_Config["window"]["height"] = 1080;
+                m_Config["window"]["maximized"] = true;
+
+                m_Config["panels"] = json::object();
+                m_Config["panels"]["asset_browser"] = json::object();
+                m_Config["panels"]["asset_browser"]["visible"] = true;
+                m_Config["panels"]["asset_browser"]["width"] = 400;
+                m_Config["panels"]["node_graph"] = json::object();
+                m_Config["panels"]["node_graph"]["visible"] = true;
+                m_Config["panels"]["inspector"] = json::object();
+                m_Config["panels"]["inspector"]["visible"] = true;
+                m_Config["panels"]["inspector"]["width"] = 400;
+
+                m_Config["layout"] = json::object();
+                m_Config["layout"]["mode"] = "fixed";
+                m_Config["layout"]["asset_browser_width"] = 400.0f;
+                m_Config["layout"]["inspector_width"] = 400.0f;
+                m_Config["layout"]["min_panel_width"] = 200.0f;
+                m_Config["layout"]["splitter_size"] = 8.0f;
+
+                SaveConfig(configPath);
+                return true;
+            }
+
+            file >> m_Config;
+            file.close();
+
+            std::cout << "[BlueprintEditor] Loaded config from: " << configPath << std::endl;
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "[BlueprintEditor] Error loading config: " << e.what() << std::endl;
+            return false;
+        }
+    }
+
+    bool BlueprintEditor::SaveConfig(const std::string& configPath)
+    {
+        try
+        {
+            std::ofstream file(configPath);
+            if (!file.is_open())
+            {
+                std::cerr << "[BlueprintEditor] Failed to open config file for writing: " 
+                          << configPath << std::endl;
+                return false;
+            }
+
+            file << m_Config.dump(2);  // Pretty print with 2-space indent
+            file.close();
+
+            std::cout << "[BlueprintEditor] Saved config to: " << configPath << std::endl;
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "[BlueprintEditor] Error saving config: " << e.what() << std::endl;
+            return false;
+        }
     }
 
 } // namespace Olympe

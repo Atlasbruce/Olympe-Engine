@@ -57,6 +57,7 @@ namespace Olympe
         void Initialize();
         void Shutdown();
         void Render();
+        void RenderContent();  // Render without window wrapper - for fixed layout
 
         void RenderGraphTabs();
         void RenderGraph();
