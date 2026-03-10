@@ -1,42 +1,60 @@
 {
-  "schema_version": 4,
-  "graphType": "BehaviorTree",
-  "name": "SimplePatrol",
-  "description": "Basic patrol between waypoints",
-  "metadata": {
-    "author": "Olympe Engine",
-    "created": "2026-03-10",
-    "tags": ["patrol", "basic", "example"]
+  "blueprintType": "BehaviorTree",
+  "data": {
+    "nodes": [
+      {
+        "children": [
+          2,
+          3
+        ],
+        "id": 1,
+        "name": "Root",
+        "parameters": {},
+        "position": {
+          "x": -87,
+          "y": -19
+        },
+        "type": "Sequence"
+      },
+      {
+        "children": [],
+        "id": 2,
+        "name": "MoveToWaypoint",
+        "parameters": {},
+        "position": {
+          "x": 161,
+          "y": 99
+        },
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 3,
+        "name": "NextWaypoint",
+        "parameters": {},
+        "position": {
+          "x": 163,
+          "y": -78
+        },
+        "type": "Action"
+      }
+    ],
+    "rootNodeId": -1
   },
-  "entryPointId": 1,
-  "nodes": [
-    {
-      "id": 1,
-      "type": "Sequence",
-      "name": "Root",
-      "children": [2, 3]
+  "description": "",
+  "editorState": {
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
     },
-    {
-      "id": 2,
-      "type": "AtomicTask",
-      "name": "MoveToWaypoint",
-      "taskType": "MoveToLocation",
-      "params": {
-        "targetKey": "currentWaypoint",
-        "speed": "3.0"
-      }
-    },
-    {
-      "id": 3,
-      "type": "AtomicTask",
-      "name": "NextWaypoint",
-      "taskType": "IncrementValue",
-      "params": {
-        "key": "waypointIndex",
-        "wrapAt": "4"
-      }
-    }
-  ],
-  "execConnections": [],
-  "dataConnections": []
+    "zoom": 1
+  },
+  "metadata": {
+    "author": "User",
+    "created": "",
+    "lastModified": "2026-03-10T12:32:11",
+    "tags": []
+  },
+  "name": "SimplePatrol",
+  "schema_version": 2
 }

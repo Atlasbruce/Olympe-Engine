@@ -379,6 +379,16 @@
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
+    <None Include="Docs\Blueprint_Editor_User_Guide_v4.md" />
+    <None Include="Docs\Blueprint_Editor_Advanced_Systems.md" />
+    <None Include="Docs\Blueprint_Editor_Visual_Diagrams.md" />
+    <None Include="Docs\README_Documentation_Index.md" />
+    <None Include="Docs\Blueprint_Editor_Pipeline_Summary.md" />
+    <None Include="Docs\Blueprint_Editor_Quick_Start_FR.md" />
+    <None Include="Docs\Blueprint_Editor_Documentation_Complete.md" />
+    <None Include="Docs\Archive\README_ARCHIVE.md" />
+    <None Include="Docs\DOCUMENTATION_UPDATE_SUMMARY.md" />
+    <None Include="Docs\DOCUMENTATION_v4_FINAL_SUMMARY.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

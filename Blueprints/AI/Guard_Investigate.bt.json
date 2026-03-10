@@ -1,83 +1,116 @@
 {
   "blueprintType": "BehaviorTree",
-  "schema_version": 2,
-  "name": "Guard_Investigate",
+  "data": {
+    "rootGraph": {
+      "nodes": [
+        {
+          "children": [
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "id": 1,
+          "name": "Investigate Sequence",
+          "parameters": {},
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "type": "Sequence"
+        },
+        {
+          "children": [],
+          "id": 2,
+          "name": "Has Last Known Position",
+          "parameters": {
+            "exists": true,
+            "key": "LastKnownEnemyPos"
+          },
+          "position": {
+            "x": 400,
+            "y": 0
+          },
+          "type": "CheckBlackboard"
+        },
+        {
+          "children": [],
+          "id": 3,
+          "name": "Move To Last Known Position",
+          "parameters": {
+            "key": "LastKnownEnemyPos",
+            "speed": "Walk"
+          },
+          "position": {
+            "x": 800,
+            "y": 0
+          },
+          "type": "MoveToLocation"
+        },
+        {
+          "children": [],
+          "id": 4,
+          "name": "Look Around",
+          "parameters": {
+            "anim": "LookAround",
+            "duration": 4
+          },
+          "position": {
+            "x": 1200,
+            "y": 0
+          },
+          "type": "PlayAnimation"
+        },
+        {
+          "children": [],
+          "id": 5,
+          "name": "Wait Before Resume",
+          "parameters": {
+            "time": 3
+          },
+          "position": {
+            "x": 1600,
+            "y": 0
+          },
+          "type": "Wait"
+        },
+        {
+          "children": [],
+          "id": 6,
+          "name": "Return To Patrol",
+          "parameters": {
+            "key": "CurrentState",
+            "value": "Patrol"
+          },
+          "position": {
+            "x": 2000,
+            "y": 0
+          },
+          "type": "SetBlackboardValue"
+        }
+      ],
+      "rootNodeId": 1
+    },
+    "subgraphs": {}
+  },
   "description": "Comportement Suspicion : se déplace vers la dernière position connue puis retourne en patrouille",
+  "editorState": {
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
   "metadata": {
     "author": "Tutorial",
     "created": "2026-03-09T00:00:00",
     "lastModified": "2026-03-09T00:00:00",
-    "tags": ["infiltration", "matrimandir"]
-  },
-  "data": {
-    "rootNodeId": 1,
-    "nodes": [
-      {
-        "id": 1,
-        "type": "Sequence",
-        "name": "Investigate Sequence",
-        "position": { "x": 0, "y": 0 },
-        "children": [2, 3, 4, 5, 6],
-        "parameters": {}
-      },
-      {
-        "id": 2,
-        "type": "CheckBlackboard",
-        "name": "Has Last Known Position",
-        "position": { "x": 400, "y": 0 },
-        "children": [],
-        "parameters": {
-          "key":    "LastKnownEnemyPos",
-          "exists": true
-        }
-      },
-      {
-        "id": 3,
-        "type": "MoveToLocation",
-        "name": "Move To Last Known Position",
-        "position": { "x": 800, "y": 0 },
-        "children": [],
-        "parameters": {
-          "key":   "LastKnownEnemyPos",
-          "speed": "Walk"
-        }
-      },
-      {
-        "id": 4,
-        "type": "PlayAnimation",
-        "name": "Look Around",
-        "position": { "x": 1200, "y": 0 },
-        "children": [],
-        "parameters": {
-          "anim":     "LookAround",
-          "duration": 4.0
-        }
-      },
-      {
-        "id": 5,
-        "type": "Wait",
-        "name": "Wait Before Resume",
-        "position": { "x": 1600, "y": 0 },
-        "children": [],
-        "parameters": {
-          "time": 3.0
-        }
-      },
-      {
-        "id": 6,
-        "type": "SetBlackboardValue",
-        "name": "Return To Patrol",
-        "position": { "x": 2000, "y": 0 },
-        "children": [],
-        "parameters": {
-          "key":   "CurrentState",
-          "value": "Patrol"
-        }
-      }
+    "tags": [
+      "infiltration",
+      "matrimandir"
     ]
   },
-  "editorState": {
-    "zoom": 1.0,
-    "scrollOffset": { "x": 0, "y": 0 }
-  }
+  "name": "Guard_Investigate",
+  "schema_version": 5
 }

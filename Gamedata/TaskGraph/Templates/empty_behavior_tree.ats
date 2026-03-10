@@ -1,22 +1,35 @@
 {
-  "schema_version": 4,
-  "graphType": "BehaviorTree",
-  "name": "NewBehaviorTree",
-  "description": "Empty behavior tree template",
+  "blueprintType": "BehaviorTree",
+  "data": {
+    "nodes": [
+      {
+        "children": [],
+        "id": 1,
+        "name": "Root",
+        "parameters": {},
+        "position": {
+          "x": 1.99997,
+          "y": 35
+        },
+        "type": "Selector"
+      }
+    ],
+    "rootNodeId": -1
+  },
+  "description": "",
+  "editorState": {
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
   "metadata": {
-    "author": "YourName",
-    "created": "2026-03-10",
+    "author": "User",
+    "created": "",
+    "lastModified": "",
     "tags": []
   },
-  "entryPointId": 1,
-  "nodes": [
-    {
-      "id": 1,
-      "type": "Selector",
-      "name": "Root",
-      "children": []
-    }
-  ],
-  "execConnections": [],
-  "dataConnections": []
+  "name": "NewBehaviorTree",
+  "schema_version": 2
 }
