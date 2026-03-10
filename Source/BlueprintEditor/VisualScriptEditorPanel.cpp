@@ -815,13 +815,13 @@ void VisualScriptEditorPanel::RenderCanvas()
         int endOffset   = endAttr   % 10000;
 
         // Classify pin directions by offset range:
-        //   0–99   → exec-in  (Input)
+        //   0      → exec-in  (Input)
         //   100–199 → exec-out (Output)
         //   200–299 → data-in  (Input)
         //   300–399 → data-out (Output)
         bool startIsOutput = (startOffset >= 100 && startOffset < 200) ||
                              (startOffset >= 300 && startOffset < 400);
-        bool endIsInput    = (endOffset < 100) ||
+        bool endIsInput    = (endOffset == 0) ||
                              (endOffset >= 200 && endOffset < 300);
 
         // Auto-swap if user dragged backwards (Input → Output)
