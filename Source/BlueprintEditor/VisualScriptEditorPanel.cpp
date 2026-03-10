@@ -596,8 +596,7 @@ void VisualScriptEditorPanel::RenderCanvas()
             hasBreakpoint,
             isActive,
             execIn, execOut,
-            dataIn, dataOut,
-            GetNodeTypeLabel(eNode.def.Type));
+            dataIn, dataOut);
 
         // Breakpoint / active overlays
         if (hasBreakpoint)
@@ -622,7 +621,11 @@ void VisualScriptEditorPanel::RenderCanvas()
 
     ImNodes::EndNodeEditor();
 
-    // Handle drag & drop from Asset Browser node palette
+    // ========================================================================
+    // PHASE 1: Detect drag & drop (store pending node creation).
+    // AddNode() must NOT be called here — ImNodes' internal state is still
+    // being finalised at this point and SetNodeEditorSpacePos would assert.
+    // ========================================================================
     if (ImGui::BeginDragDropTarget())
     {
         const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("VS_NODE_TYPE_ENUM");
@@ -632,27 +635,46 @@ void VisualScriptEditorPanel::RenderCanvas()
             TaskNodeType nodeType = static_cast<TaskNodeType>(enumValue);
 
             // Get mouse position in canvas space
-            ImVec2 mousePos = ImGui::GetMousePos();
+            ImVec2 mousePos  = ImGui::GetMousePos();
             ImVec2 canvasPos = ImNodes::EditorContextGetPanning();
-            float zoom = 1.0f;  // ImNodes doesn't expose zoom yet, assume 1.0
+            float  zoom      = 1.0f;  // ImNodes doesn't expose zoom yet
 
             // Convert screen space to canvas space
             ImVec2 windowPos = ImGui::GetWindowPos();
             float canvasX = (mousePos.x - windowPos.x - canvasPos.x) / zoom;
             float canvasY = (mousePos.y - windowPos.y - canvasPos.y) / zoom;
 
-            // Add the node at drop position and pre-register its position with
-            // ImNodes so the position-sync loop this frame does not assert on
-            // a node that has never been through BeginNode/EndNode yet.
-            int newNodeID = AddNode(nodeType, canvasX, canvasY);
-            ImNodes::SetNodeEditorSpacePos(newNodeID, ImVec2(canvasX, canvasY));
-            m_dirty = true;
-
-            std::cout << "[VisualScriptEditorPanel] Node dropped: type=" 
-                     << static_cast<int>(nodeType) << " at (" 
-                     << canvasX << ", " << canvasY << ")" << std::endl;
+            // CRITICAL: Don't call AddNode() here — just store the request.
+            // The node will be created in Phase 2 below, safely outside the
+            // ImNodes editor scope.
+            m_pendingNodeDrop = true;
+            m_pendingNodeType = nodeType;
+            m_pendingNodeX    = canvasX;
+            m_pendingNodeY    = canvasY;
         }
         ImGui::EndDragDropTarget();
+    }
+
+    // ========================================================================
+    // PHASE 2: Process pending node creation (outside editor scope).
+    // AddNode() and SetNodeEditorSpacePos() are both safe here — the editor
+    // context is fully closed (ImNodesScope_None).
+    // ========================================================================
+    if (m_pendingNodeDrop)
+    {
+        int newNodeID = AddNode(m_pendingNodeType, m_pendingNodeX, m_pendingNodeY);
+
+        // Pre-register the position so ImNodes places the node correctly
+        // on the very first frame it is rendered (next frame).
+        ImNodes::SetNodeEditorSpacePos(newNodeID, ImVec2(m_pendingNodeX, m_pendingNodeY));
+
+        m_dirty           = true;
+        m_pendingNodeDrop = false;
+
+        std::cout << "[VisualScriptEditorPanel] Node created: ID=" << newNodeID
+                  << " type=" << static_cast<int>(m_pendingNodeType)
+                  << " at (" << m_pendingNodeX << ", " << m_pendingNodeY << ")"
+                  << std::endl;
     }
 
     // Sync positions back from ImNodes after rendering.
@@ -667,6 +689,30 @@ void VisualScriptEditorPanel::RenderCanvas()
         ImVec2 pos = ImNodes::GetNodeEditorSpacePos(eNode.nodeID);
         eNode.posX = pos.x;
         eNode.posY = pos.y;
+    }
+
+    // Hover tooltip — ImNodes::IsNodeHovered() requires ImNodesScope_None,
+    // so it must be called here (after EndNodeEditor), never inside the
+    // BeginNodeEditor/EndNodeEditor block.
+    {
+        int hoveredNode = -1;
+        if (ImNodes::IsNodeHovered(&hoveredNode))
+        {
+            auto it = std::find_if(m_editorNodes.begin(), m_editorNodes.end(),
+                                   [hoveredNode](const VSEditorNode& n) {
+                                       return n.nodeID == hoveredNode;
+                                   });
+            if (it != m_editorNodes.end())
+            {
+                const char* tip = GetNodeTypeLabel(it->def.Type);
+                if (tip && tip[0] != '\0')
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::TextUnformatted(tip);
+                    ImGui::EndTooltip();
+                }
+            }
+        }
     }
 
     // Handle new link creation

@@ -100,7 +100,9 @@ public:
      * @param execOutputPins Names of exec-out pins (e.g. {"Then","Else"}).
      * @param dataInputPins  (name, type) pairs for data-in pins.
      * @param dataOutputPins (name, type) pairs for data-out pins.
-     * @param tooltip      Optional tooltip text shown on hover.
+     *
+     * @note Tooltip display is handled by the caller after EndNodeEditor()
+     *       because ImNodes::IsNodeHovered() requires ImNodesScope_None.
      */
     static void RenderNode(
         int                                           nodeUID,
@@ -113,8 +115,7 @@ public:
         const std::vector<std::string>&               execInputPins,
         const std::vector<std::string>&               execOutputPins,
         const std::vector<std::pair<std::string, VariableType>>& dataInputPins,
-        const std::vector<std::pair<std::string, VariableType>>& dataOutputPins,
-        const std::string&                            tooltip = "");
+        const std::vector<std::pair<std::string, VariableType>>& dataOutputPins);
 
     /**
      * @brief Renders a breakpoint indicator (red circle) next to a node.

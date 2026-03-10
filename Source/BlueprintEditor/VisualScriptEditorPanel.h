@@ -263,6 +263,18 @@ private:
     /// Right-click paste position
     float m_contextMenuX = 0.0f;
     float m_contextMenuY = 0.0f;
+
+    // -----------------------------------------------------------------------
+    // Drag & drop pending state (two-phase node creation)
+    // Phase 1: detect drop inside BeginDragDropTarget, store params
+    // Phase 2: create node after EndNodeEditor (outside editor scope)
+    // -----------------------------------------------------------------------
+
+    /// True when a node drop is pending processing this frame
+    bool          m_pendingNodeDrop  = false;
+    TaskNodeType  m_pendingNodeType  = TaskNodeType::EntryPoint;
+    float         m_pendingNodeX     = 0.0f;
+    float         m_pendingNodeY     = 0.0f;
 };
 
 } // namespace Olympe
