@@ -157,6 +157,12 @@
     <ClCompile Include="source\VideoGame.cpp" />
     <ClCompile Include="Source\World.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BTtoVSMigrator.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\SubgraphMigrator.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\NodeSearchPalette.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\LinkCache.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\NodeGroup.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\NodeValidator.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\GraphComment.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -350,6 +356,11 @@
     <ClInclude Include="Source\VideoGame.h" />
     <ClInclude Include="Source\World.h" />
     <ClInclude Include="Source\BlueprintEditor\BTtoVSMigrator.h" />
+    <ClInclude Include="Source\BlueprintEditor\SubgraphMigrator.h" />
+    <ClInclude Include="Source\NodeGraphCore\GraphComment.h" />
+    <ClInclude Include="Source\NodeGraphCore\LinkCache.h" />
+    <ClInclude Include="Source\NodeGraphCore\NodeGroup.h" />
+    <ClInclude Include="Source\NodeGraphCore\NodeValidator.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />

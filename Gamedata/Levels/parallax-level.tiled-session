@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "isometric_quest.tmx",
+    "activeFile": "parallax-forest.tmj",
     "expandedProjectPaths": [
         "."
     ],
@@ -97,6 +97,21 @@
                 "y": 422.25
             }
         },
+        "parallax-forest.tmj": {
+            "expandedObjectLayers": [
+                17,
+                2
+            ],
+            "scale": 0.25,
+            "selectedLayer": 7,
+            "viewCenter": {
+                "x": 1192,
+                "y": 440
+            }
+        },
+        "parallax-forest.tmj#tileset 2D ortho": {
+            "scaleInDock": 1
+        },
         "parallax-forest.tmx": {
             "expandedObjectLayers": [
                 17,
@@ -182,25 +197,25 @@
     "map.tileWidth": 64,
     "openFiles": [
         "isometric_quest.tmx",
-        "parallax-forest.tmx",
+        "parallax-forest.tmj",
         "pnc-quest.tmx",
         "hexa-quest.tmx"
     ],
     "project": "parallax-level.tiled-project",
     "property.type": "bool",
     "recentFiles": [
-        "Trees.tsx",
+        "isometric_quest.tmx",
         "hexa-quest.tmx",
         "pnc-quest.tmx",
+        "parallax-forest.tmj",
+        "Trees.tsx",
         "parallax-forest.tmx",
-        "isometric_quest.tmx",
         "Tiles iso cube..tsj",
         "Trees.tsj",
         "tileset 2D ortho.tsx",
         "Hexa-tiles_1.tsx",
         "parallax-forext..tmj",
-        "map_forest.tmx",
-        "Tiles iso cube.tsx"
+        "map_forest.tmx"
     ],
     "tileset.lastUsedFilter": "Fichiers de jeu de tuiles Tiled (*.tsx *.xml)",
     "tileset.lastUsedFormat": "tsx",

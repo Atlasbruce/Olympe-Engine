@@ -1,91 +1,94 @@
 {
   "blueprintType": "BehaviorTree",
   "data": {
-    "nodes": [
-      {
-        "children": [
-          2
-        ],
-        "id": 1,
-        "name": "Repeater",
-        "parameters": {
-          "repeatCount": "5"
+    "rootGraph": {
+      "nodes": [
+        {
+          "children": [
+            2
+          ],
+          "id": 1,
+          "name": "Repeater",
+          "parameters": {
+            "repeatCount": "5"
+          },
+          "position": {
+            "x": 156.197,
+            "y": 261.892
+          },
+          "type": "Action"
         },
-        "position": {
-          "x": 156.197,
-          "y": 261.892
+        {
+          "children": [
+            3,
+            4,
+            5,
+            6
+          ],
+          "id": 2,
+          "name": "Wander Sequence",
+          "parameters": {},
+          "position": {
+            "x": 373.144,
+            "y": 279.327
+          },
+          "type": "Sequence"
         },
-        "type": "Action"
-      },
-      {
-        "children": [
-          3,
-          4,
-          5,
-          6
-        ],
-        "id": 2,
-        "name": "Wander Sequence",
-        "parameters": {},
-        "position": {
-          "x": 373.144,
-          "y": 279.327
+        {
+          "actionType": "ChooseRandomNavigablePoint",
+          "children": [],
+          "id": 3,
+          "name": "Choose Random Point",
+          "parameters": {
+            "minDistance": "50",
+            "radius": "500"
+          },
+          "position": {
+            "x": 659.364,
+            "y": 167.517
+          },
+          "type": "Action"
         },
-        "type": "Sequence"
-      },
-      {
-        "actionType": "ChooseRandomNavigablePoint",
-        "children": [],
-        "id": 3,
-        "name": "Choose Random Point",
-        "parameters": {
-          "minDistance": "50",
-          "radius": "500"
+        {
+          "actionType": "SetMoveGoalToPatrolPoint",
+          "children": [],
+          "id": 4,
+          "name": "Set Move Goal",
+          "parameters": {},
+          "position": {
+            "x": 663,
+            "y": 299
+          },
+          "type": "Action"
         },
-        "position": {
-          "x": 659.364,
-          "y": 167.517
+        {
+          "actionType": "RequestPathfinding",
+          "children": [],
+          "id": 5,
+          "name": "Request Pathfinding",
+          "parameters": {},
+          "position": {
+            "x": 672,
+            "y": 416
+          },
+          "type": "Action"
         },
-        "type": "Action"
-      },
-      {
-        "actionType": "SetMoveGoalToPatrolPoint",
-        "children": [],
-        "id": 4,
-        "name": "Set Move Goal",
-        "parameters": {},
-        "position": {
-          "x": 663,
-          "y": 299
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "RequestPathfinding",
-        "children": [],
-        "id": 5,
-        "name": "Request Pathfinding",
-        "parameters": {},
-        "position": {
-          "x": 672,
-          "y": 416
-        },
-        "type": "Action"
-      },
-      {
-        "actionType": "FollowPath",
-        "children": [],
-        "id": 6,
-        "name": "Follow Path",
-        "parameters": {},
-        "position": {
-          "x": 672,
-          "y": 528
-        },
-        "type": "Action"
-      }
-    ],
-    "rootNodeId": 1
+        {
+          "actionType": "FollowPath",
+          "children": [],
+          "id": 6,
+          "name": "Follow Path",
+          "parameters": {},
+          "position": {
+            "x": 672,
+            "y": 528
+          },
+          "type": "Action"
+        }
+      ],
+      "rootNodeId": 1
+    },
+    "subgraphs": {}
   },
   "description": "",
   "editorState": {
@@ -102,5 +105,5 @@
     "tags": []
   },
   "name": "NpcWanderTree",
-  "schema_version": 2
+  "schema_version": 5
 }

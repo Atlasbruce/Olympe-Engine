@@ -59,6 +59,7 @@
     <ClCompile Include="Source\BlueprintEditor\EnumCatalogManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\HistoryPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityInspectorManager.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\NodeSearchPalette.cpp" />
     <ClCompile Include="Source\BlueprintEditor\NodeStyleRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\PerformanceProfiler.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ProfilerPanel.cpp" />
@@ -106,11 +107,15 @@
     <ClCompile Include="Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.cpp" />
     <ClCompile Include="Source\NodeGraphCore\BlackboardSystem.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GlobalBlackboard.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\GraphComment.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\LinkCache.cpp" />
     <ClCompile Include="Source\NodeGraphCore\NodeAnnotations.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GraphDocument.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GraphMigrator.cpp" />
     <ClCompile Include="Source\NodeGraphCore\NodeGraphManager.cpp" />
     <ClCompile Include="Source\NodeGraphCore\NodeGraphRenderer.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\NodeGroup.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\NodeValidator.cpp" />
     <ClCompile Include="Source\NodeGraphShared\BTDebugAdapter.cpp" />
     <ClCompile Include="Source\NodeGraphShared\BTGraphDocumentConverter.cpp" />
     <ClCompile Include="Source\NodeGraphShared\NodeGraphShared.cpp" />
@@ -273,6 +278,8 @@
     <ClInclude Include="Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.h" />
     <ClInclude Include="Source\NodeGraphCore\BlackboardSystem.h" />
     <ClInclude Include="Source\NodeGraphCore\GlobalBlackboard.h" />
+    <ClInclude Include="Source\NodeGraphCore\GraphComment.h" />
+    <ClInclude Include="Source\NodeGraphCore\LinkCache.h" />
     <ClInclude Include="Source\NodeGraphCore\NodeAnnotations.h" />
     <ClInclude Include="Source\NodeGraphCore\GraphDocument.h" />
     <ClInclude Include="Source\NodeGraphCore\GraphMigrator.h" />
@@ -280,6 +287,8 @@
     <ClInclude Include="Source\NodeGraphCore\NodeGraphCore.h" />
     <ClInclude Include="Source\NodeGraphCore\NodeGraphManager.h" />
     <ClInclude Include="Source\NodeGraphCore\NodeGraphRenderer.h" />
+    <ClInclude Include="Source\NodeGraphCore\NodeGroup.h" />
+    <ClInclude Include="Source\NodeGraphCore\NodeValidator.h" />
     <ClInclude Include="Source\NodeGraphShared\BehaviorTreeAdapter.h" />
     <ClInclude Include="Source\NodeGraphShared\BlueprintAdapter.h" />
     <ClInclude Include="Source\NodeGraphShared\BTDebugAdapter.h" />
