@@ -136,7 +136,9 @@ int VisualScriptEditorPanel::AddNode(TaskNodeType type, float x, float y)
     eNode.nodeID = newID;
     eNode.posX   = x;
     eNode.posY   = y;
-    eNode.positionSet = false;  // Node has not been rendered yet, cannot position
+    // Note: ImNodes will position the node at (0,0) on first render.
+    // User must manually drag it to desired position, or we implement
+    // a custom positioning system in VisualScriptNodeRenderer.
 
     eNode.def.NodeID   = newID;
     eNode.def.Type     = type;
@@ -596,23 +598,6 @@ void VisualScriptEditorPanel::RenderCanvas()
             execIn, execOut,
             dataIn, dataOut,
             GetNodeTypeLabel(eNode.def.Type));
-
-        // Position node ONLY if it has been rendered at least once before
-        // (ImNodes needs to know about the node before we can set its position)
-        // First render: skip positioning, let ImNodes use default
-        // Second render onwards: now we can safely set the position
-        if (eNode.positionSet && m_positionedNodes.find(eNode.nodeID) == m_positionedNodes.end())
-        {
-            ImNodes::SetNodeEditorSpacePos(eNode.nodeID,
-                                           ImVec2(eNode.posX, eNode.posY));
-            m_positionedNodes.insert(eNode.nodeID);
-        }
-
-        // Mark node as having been rendered (allows positioning in next frame)
-        if (!eNode.positionSet)
-        {
-            eNode.positionSet = true;
-        }
 
         // Breakpoint / active overlays
         if (hasBreakpoint)
