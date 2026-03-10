@@ -184,6 +184,7 @@ private:
     // -----------------------------------------------------------------------
 
     void RenderToolbar();
+    void RenderSaveAsDialog();
     void RenderCanvas();
     void RenderNodePalette();
     void RenderProperties();
@@ -281,6 +282,17 @@ private:
     TaskNodeType  m_pendingNodeType  = TaskNodeType::EntryPoint;
     float         m_pendingNodeX     = 0.0f;
     float         m_pendingNodeY     = 0.0f;
+
+    // -----------------------------------------------------------------------
+    // Save As dialog state
+    // -----------------------------------------------------------------------
+
+    /// True when the "Save As" modal should be opened next frame
+    bool        m_showSaveAsDialog  = false;
+    /// Buffer for the user-entered filename (without extension)
+    char        m_saveAsFilename[256];
+    /// Currently selected destination directory
+    std::string m_saveAsDirectory   = "Blueprints/AI";
 };
 
 } // namespace Olympe
