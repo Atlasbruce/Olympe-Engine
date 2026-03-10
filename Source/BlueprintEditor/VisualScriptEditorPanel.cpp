@@ -124,6 +124,27 @@ std::vector<std::string> VisualScriptEditorPanel::GetExecOutputPins(TaskNodeType
     }
 }
 
+std::vector<std::string> VisualScriptEditorPanel::GetDataInputPins(TaskNodeType type)
+{
+    switch (type)
+    {
+        case TaskNodeType::SetBBValue:  return {"Value"};
+        case TaskNodeType::MathOp:      return {"A", "B"};
+        case TaskNodeType::Branch:      return {"Condition"};
+        default:                        return {};
+    }
+}
+
+std::vector<std::string> VisualScriptEditorPanel::GetDataOutputPins(TaskNodeType type)
+{
+    switch (type)
+    {
+        case TaskNodeType::GetBBValue:  return {"Value"};
+        case TaskNodeType::MathOp:      return {"Result"};
+        default:                        return {};
+    }
+}
+
 // ============================================================================
 // Node management
 // ============================================================================
@@ -298,14 +319,85 @@ void VisualScriptEditorPanel::RebuildLinks()
         m_editorLinks.push_back(link);
     }
 
-    // Data links (simplified — pin index 0 for now)
+    // Data links — resolve pin indices from stored pin names
     for (size_t i = 0; i < m_template.DataConnections.size(); ++i)
     {
         const DataPinConnection& conn = m_template.DataConnections[i];
+
+        // Determine data-out pin index for source
+        int srcPinIdx = 0;
+        const TaskNodeDefinition* srcNode = m_template.GetNode(conn.SourceNodeID);
+        if (srcNode != nullptr)
+        {
+            // Try static list first
+            auto outPins = GetDataOutputPins(srcNode->Type);
+            bool found = false;
+            for (size_t p = 0; p < outPins.size(); ++p)
+            {
+                if (outPins[p] == conn.SourcePinName)
+                {
+                    srcPinIdx = static_cast<int>(p);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                // Fall back to DataPins vector
+                int outIdx = 0;
+                for (size_t p = 0; p < srcNode->DataPins.size(); ++p)
+                {
+                    if (srcNode->DataPins[p].Dir == DataPinDir::Output)
+                    {
+                        if (srcNode->DataPins[p].PinName == conn.SourcePinName)
+                        {
+                            srcPinIdx = outIdx;
+                            break;
+                        }
+                        ++outIdx;
+                    }
+                }
+            }
+        }
+
+        // Determine data-in pin index for destination
+        int dstPinIdx = 0;
+        const TaskNodeDefinition* dstNode = m_template.GetNode(conn.TargetNodeID);
+        if (dstNode != nullptr)
+        {
+            auto inPins = GetDataInputPins(dstNode->Type);
+            bool found = false;
+            for (size_t p = 0; p < inPins.size(); ++p)
+            {
+                if (inPins[p] == conn.TargetPinName)
+                {
+                    dstPinIdx = static_cast<int>(p);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                int inIdx = 0;
+                for (size_t p = 0; p < dstNode->DataPins.size(); ++p)
+                {
+                    if (dstNode->DataPins[p].Dir == DataPinDir::Input)
+                    {
+                        if (dstNode->DataPins[p].PinName == conn.TargetPinName)
+                        {
+                            dstPinIdx = inIdx;
+                            break;
+                        }
+                        ++inIdx;
+                    }
+                }
+            }
+        }
+
         VSEditorLink link;
         link.linkID    = AllocLinkID();
-        link.srcAttrID = DataOutAttrUID(conn.SourceNodeID, 0);
-        link.dstAttrID = DataInAttrUID(conn.TargetNodeID, 0);
+        link.srcAttrID = DataOutAttrUID(conn.SourceNodeID, srcPinIdx);
+        link.dstAttrID = DataInAttrUID(conn.TargetNodeID,  dstPinIdx);
         link.isData    = true;
         m_editorLinks.push_back(link);
     }
@@ -719,12 +811,145 @@ void VisualScriptEditorPanel::RenderCanvas()
     int startAttr = -1, endAttr = -1;
     if (ImNodes::IsLinkCreated(&startAttr, &endAttr))
     {
-        // Determine if exec or data link from attribute UID pattern
-        // (just create an exec link for simplicity — full routing is in sync)
-        int srcNodeID = startAttr / 10000;
-        int dstNodeID = endAttr   / 10000;
-        ConnectExec(srcNodeID, "Out", dstNodeID, "In");
-        m_dirty = true;
+        int startOffset = startAttr % 10000;
+        int endOffset   = endAttr   % 10000;
+
+        // Classify pin directions by offset range:
+        //   0–99   → exec-in  (Input)
+        //   100–199 → exec-out (Output)
+        //   200–299 → data-in  (Input)
+        //   300–399 → data-out (Output)
+        bool startIsOutput = (startOffset >= 100 && startOffset < 200) ||
+                             (startOffset >= 300 && startOffset < 400);
+        bool endIsInput    = (endOffset < 100) ||
+                             (endOffset >= 200 && endOffset < 300);
+
+        // Auto-swap if user dragged backwards (Input → Output)
+        if (!startIsOutput && endIsInput)
+        {
+            std::swap(startAttr, endAttr);
+            startOffset   = startAttr % 10000;
+            endOffset     = endAttr   % 10000;
+            startIsOutput = true;
+            endIsInput    = true;
+            std::cout << "[VisualScriptEditorPanel] Link direction swapped\n";
+        }
+
+        if (startIsOutput && endIsInput)
+        {
+            const bool isExecLink = (startOffset >= 100 && startOffset < 200);
+            const bool isDataLink = (startOffset >= 300 && startOffset < 400);
+            const int  srcNodeID  = startAttr / 10000;
+            const int  dstNodeID  = endAttr   / 10000;
+
+            if (isExecLink)
+            {
+                // Resolve source exec-out pin name from its index
+                const int srcPinIndex = startOffset - 100;
+                std::string srcPinName = "Out";
+
+                auto srcIt = std::find_if(m_editorNodes.begin(), m_editorNodes.end(),
+                                          [srcNodeID](const VSEditorNode& n) {
+                                              return n.nodeID == srcNodeID;
+                                          });
+                if (srcIt != m_editorNodes.end())
+                {
+                    auto outPins = GetExecOutputPins(srcIt->def.Type);
+                    if (srcPinIndex < static_cast<int>(outPins.size()))
+                        srcPinName = outPins[srcPinIndex];
+                }
+
+                ConnectExec(srcNodeID, srcPinName, dstNodeID, "In");
+                std::cout << "[VisualScriptEditorPanel] Created exec link: node"
+                          << srcNodeID << "." << srcPinName
+                          << " -> node" << dstNodeID << ".In\n";
+                m_dirty = true;
+            }
+            else if (isDataLink)
+            {
+                // Resolve source data-out and destination data-in pin names
+                const int srcPinIndex = startOffset - 300;
+                const int dstPinIndex = endOffset   - 200;
+                std::string srcPinName = "Value";
+                std::string dstPinName = "Value";
+
+                auto srcIt = std::find_if(m_editorNodes.begin(), m_editorNodes.end(),
+                                          [srcNodeID](const VSEditorNode& n) {
+                                              return n.nodeID == srcNodeID;
+                                          });
+                auto dstIt = std::find_if(m_editorNodes.begin(), m_editorNodes.end(),
+                                          [dstNodeID](const VSEditorNode& n) {
+                                              return n.nodeID == dstNodeID;
+                                          });
+
+                if (srcIt != m_editorNodes.end())
+                {
+                    // Try static pin list first, then fall back to DataPins vector
+                    auto outPins = GetDataOutputPins(srcIt->def.Type);
+                    if (srcPinIndex < static_cast<int>(outPins.size()))
+                    {
+                        srcPinName = outPins[srcPinIndex];
+                    }
+                    else
+                    {
+                        int outIdx = 0;
+                        for (size_t p = 0; p < srcIt->def.DataPins.size(); ++p)
+                        {
+                            if (srcIt->def.DataPins[p].Dir == DataPinDir::Output)
+                            {
+                                if (outIdx == srcPinIndex)
+                                {
+                                    srcPinName = srcIt->def.DataPins[p].PinName;
+                                    break;
+                                }
+                                ++outIdx;
+                            }
+                        }
+                    }
+                }
+
+                if (dstIt != m_editorNodes.end())
+                {
+                    auto inPins = GetDataInputPins(dstIt->def.Type);
+                    if (dstPinIndex < static_cast<int>(inPins.size()))
+                    {
+                        dstPinName = inPins[dstPinIndex];
+                    }
+                    else
+                    {
+                        int inIdx = 0;
+                        for (size_t p = 0; p < dstIt->def.DataPins.size(); ++p)
+                        {
+                            if (dstIt->def.DataPins[p].Dir == DataPinDir::Input)
+                            {
+                                if (inIdx == dstPinIndex)
+                                {
+                                    dstPinName = dstIt->def.DataPins[p].PinName;
+                                    break;
+                                }
+                                ++inIdx;
+                            }
+                        }
+                    }
+                }
+
+                ConnectData(srcNodeID, srcPinName, dstNodeID, dstPinName);
+                std::cout << "[VisualScriptEditorPanel] Created data link: node"
+                          << srcNodeID << "." << srcPinName
+                          << " -> node" << dstNodeID << "." << dstPinName << "\n";
+                m_dirty = true;
+            }
+            else
+            {
+                std::cerr << "[VisualScriptEditorPanel] Cannot create link"
+                             " — incompatible pin types (exec/data mismatch)\n";
+            }
+        }
+        else
+        {
+            std::cerr << "[VisualScriptEditorPanel] Cannot create link"
+                         " — incompatible pin types (both inputs or both outputs)\n";
+        }
     }
 
     // Handle link deletion

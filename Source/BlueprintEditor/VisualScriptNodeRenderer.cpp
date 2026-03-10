@@ -167,21 +167,26 @@ void VisualScriptNodeRenderer::RenderNode(
     ImGui::TextUnformatted(nodeName.c_str());
     ImNodes::EndNodeTitleBar();
 
+    // Attribute UIDs use the same scheme as VisualScriptEditorPanel helpers:
+    //   nodeUID * 10000 + offset
+    //   offset 0–99   → exec-in  (Input)
+    //   offset 100–199 → exec-out (Output)
+    //   offset 200–299 → data-in  (Input)
+    //   offset 300–399 → data-out (Output)
+
     // Exec input pins (left side triangles)
     for (size_t i = 0; i < execInputPins.size(); ++i)
     {
-        // Each exec pin gets a unique attribute ID derived from nodeUID
-        int attrID = nodeUID * 1000 + static_cast<int>(i);
+        int attrID = nodeUID * 10000 + static_cast<int>(i);
         ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_Triangle);
         ImGui::Text("%s", execInputPins[i].c_str());
         ImNodes::EndInputAttribute();
     }
 
-    // Data input pins (left side circles)
-    int dataPinOffset = 100; // offset to avoid collision with exec pins
+    // Data input pins (left side circles)  — offset 200–299
     for (size_t i = 0; i < dataInputPins.size(); ++i)
     {
-        int attrID = nodeUID * 1000 + dataPinOffset + static_cast<int>(i);
+        int attrID = nodeUID * 10000 + 200 + static_cast<int>(i);
         ImNodes::PushColorStyle(ImNodesCol_Pin,
                                 GetDataPinColor(dataInputPins[i].second));
         ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_Circle);
@@ -190,11 +195,10 @@ void VisualScriptNodeRenderer::RenderNode(
         ImNodes::PopColorStyle();
     }
 
-    // Exec output pins (right side triangles)
-    int execOutOffset = 200;
+    // Exec output pins (right side triangles) — offset 100–199
     for (size_t i = 0; i < execOutputPins.size(); ++i)
     {
-        int attrID = nodeUID * 1000 + execOutOffset + static_cast<int>(i);
+        int attrID = nodeUID * 10000 + 100 + static_cast<int>(i);
         ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_TriangleFilled);
         ImGui::Indent(60.0f);
         ImGui::Text("%s", execOutputPins[i].c_str());
@@ -202,11 +206,10 @@ void VisualScriptNodeRenderer::RenderNode(
         ImNodes::EndOutputAttribute();
     }
 
-    // Data output pins (right side circles)
-    int dataOutOffset = 300;
+    // Data output pins (right side circles) — offset 300–399
     for (size_t i = 0; i < dataOutputPins.size(); ++i)
     {
-        int attrID = nodeUID * 1000 + dataOutOffset + static_cast<int>(i);
+        int attrID = nodeUID * 10000 + 300 + static_cast<int>(i);
         ImNodes::PushColorStyle(ImNodesCol_Pin,
                                 GetDataPinColor(dataOutputPins[i].second));
         ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_CircleFilled);
