@@ -303,60 +303,41 @@ ForEach(EnemiesInRange) → ApplyDamage → Completed → NextAction
 - Schema v4 fully operational
 - Backward compatibility maintained
 
-### ⚠️ Current Issue: File Loading Errors
+### ✅ Current Issue: RESOLVED (Phase 9 Complete)
 
-**Symptom**: Log shows errors when loading ATS graph files during engine initialization
+**Issues Fixed** (Phase 9 — 2026-03-10):
 
-**Probable Root Causes**:
-1. **Missing Directory**: No `Gamedata/TaskGraph/` directory exists
-   - Solution: Create directory or update search paths
+1. **ImNodes Assertion Crash** — Fixed in `VisualScriptEditorPanel.cpp`
+   - Nodes dropped via drag-and-drop now pre-register their position with
+     `ImNodes::SetNodeEditorSpacePos()` to avoid the `node_idx != -1` assertion.
+   - Position-sync loop skips nodes that haven't been rendered yet this frame
+     using the `m_positionedNodes` tracking set.
 
-2. **File Path Resolution**: 
-   - Engine may be looking in wrong location
-   - Relative path resolution issue
-   - Working directory mismatch
+2. **Inconsistent JSON Schema** — Fixed across all Blueprints/AI files
+   - Added root-level `"type"` field (equal to `"graphType"`) to all 22 v4 files.
+   - Migrated `patrol.json` and `guard.json` from legacy `nodeID`/`nodeType`/
+     `localBlackboard`/`ExecConnections` fields to the standard v4 schema.
+   - Normalized `connections` → `execConnections`/`dataConnections` in Examples
+     and Templates directories.
 
-3. **File Format Issues**:
-   - Existing JSON files may have syntax errors
-   - Schema version mismatch
-   - Missing required fields
+3. **Missing Catalogs** — Fixed in `Blueprints/Catalogues/`
+   - `ActionTypes.json` now contains 7 action definitions (Wait, MoveToLocation,
+     Attack, Flee, ChangeState, PatrolPickPoint, SetMoveGoal).
+   - `ConditionTypes.json` now contains 4 condition definitions (CheckBlackboardValue,
+     TargetInRange, TargetVisible, HasTarget).
 
-4. **Prefab Scanner Integration**:
-   - PrefabScanner may need to recognize task graphs
-   - Registration mechanism incomplete
+4. **Reference Test Graph** — Created `Gamedata/TaskGraph/Examples/reference_complete_v4.ats`
+   - Exercises all 11 v4 node types: EntryPoint, VSSequence, Branch, AtomicTask,
+     GetBBValue, SetBBValue, MathOp, DoOnce, While, Delay, SubGraph.
 
-**Diagnostic Steps Needed**:
-1. Check if `Gamedata/TaskGraph/` directory exists
-2. Verify file paths in TaskGraphLoader::LoadFromFile()
-3. Review component_registry.log for clues
-4. Add debug logging to TaskGraphLoader
-5. Verify JSON file syntax
+5. **Integration Test** — Added `OlympeATSReferenceV4Tests` (26th test target)
+   - Validates loading, node count, all node types, blackboard variables,
+     and one-frame execution.
+
+6. **Validation Script** — Created `Tools/validate_ats_v4.py`
+   - Reports 0 errors for all 22 v4 files in `Blueprints/AI/`.
 
 ## Next Steps
-
-### Phase 9: Runtime Execution & Debugging 🔄
-**Priority**: HIGH (Blocked by loading issue)
-
-**Objectives**:
-- Fix file loading errors
-- Implement runtime graph execution
-- Add debugging tools
-
-**Tasks**:
-1. **Fix Loading System**
-   - Create Gamedata/TaskGraph/ directory if missing
-   - Update TaskGraphLoader search paths
-   - Add comprehensive error reporting
-   
-2. **Runtime Execution**
-   - TaskGraphRuntime class implementation
-   - Node execution dispatcher
-   - Execution state management
-   
-3. **Debugging Tools**
-   - Visual graph debugger in Blueprint Editor
-   - Breakpoint support
-   - Variable inspection
 
 ### Phase 10: Blueprint Editor Integration 📅
 **Status**: PLANNED
@@ -597,5 +578,5 @@ class TaskGraphRuntime {
 ---
 
 **Document Version**: 1.0  
-**Last Updated**: 2026-03-10 15:05:07  
-**Status**: CURRENT - Awaiting Phase 9 (Loading Issue Fix)
+**Last Updated**: 2026-03-10 17:27:00  
+**Status**: ✅ Fully Operational — Phase 9 COMPLETE

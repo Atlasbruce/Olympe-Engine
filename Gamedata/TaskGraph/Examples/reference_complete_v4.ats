@@ -1,0 +1,200 @@
+{
+  "schema_version": 4,
+  "type": "VisualScript",
+  "graphType": "VisualScript",
+  "name": "ReferenceCompleteV4",
+  "description": "Reference graph exercising all v4 node types: EntryPoint, VSSequence, Branch, AtomicTask, GetBBValue, SetBBValue, MathOp, DoOnce, While, Delay, SubGraph.",
+  "blackboard": [
+    {
+      "key": "Counter",
+      "type": "Int",
+      "value": 0,
+      "global": false
+    },
+    {
+      "key": "MaxCount",
+      "type": "Int",
+      "value": 3,
+      "global": false
+    },
+    {
+      "key": "IsActive",
+      "type": "Bool",
+      "value": false,
+      "global": false
+    },
+    {
+      "key": "Score",
+      "type": "Float",
+      "value": 0.0,
+      "global": false
+    },
+    {
+      "key": "Label",
+      "type": "String",
+      "value": "init",
+      "global": false
+    },
+    {
+      "key": "global:TotalRuns",
+      "type": "Int",
+      "value": 0,
+      "global": true
+    }
+  ],
+  "nodes": [
+    {
+      "id": 1,
+      "type": "EntryPoint",
+      "name": "Start",
+      "position": {"x": 0, "y": 200}
+    },
+    {
+      "id": 2,
+      "type": "VSSequence",
+      "name": "Main Sequence",
+      "position": {"x": 200, "y": 200},
+      "children": [3, 5, 7, 9, 11, 13, 15]
+    },
+    {
+      "id": 3,
+      "type": "DoOnce",
+      "name": "Init Once",
+      "position": {"x": 400, "y": 0}
+    },
+    {
+      "id": 4,
+      "type": "SetBBValue",
+      "name": "Set IsActive True",
+      "position": {"x": 600, "y": 0},
+      "targetKey": "IsActive",
+      "value": "true"
+    },
+    {
+      "id": 5,
+      "type": "GetBBValue",
+      "name": "Read Counter",
+      "position": {"x": 400, "y": 160},
+      "sourceKey": "Counter"
+    },
+    {
+      "id": 6,
+      "type": "MathOp",
+      "name": "Increment Counter",
+      "position": {"x": 600, "y": 160},
+      "operation": "Add",
+      "operandA": "Counter",
+      "operandB": "1",
+      "resultKey": "Counter"
+    },
+    {
+      "id": 7,
+      "type": "Branch",
+      "name": "Counter < MaxCount?",
+      "position": {"x": 400, "y": 320},
+      "conditionKey": "CheckBlackboardValue",
+      "params": {
+        "key": "Counter",
+        "operator": "LessThan",
+        "value": "MaxCount"
+      }
+    },
+    {
+      "id": 8,
+      "type": "AtomicTask",
+      "name": "Do Work",
+      "position": {"x": 600, "y": 280},
+      "taskType": "Task_Wait",
+      "params": {"duration": "0.5"}
+    },
+    {
+      "id": 9,
+      "type": "While",
+      "name": "While IsActive",
+      "position": {"x": 400, "y": 480},
+      "conditionKey": "IsActive"
+    },
+    {
+      "id": 10,
+      "type": "AtomicTask",
+      "name": "Loop Body",
+      "position": {"x": 600, "y": 440},
+      "taskType": "Task_Wait",
+      "params": {"duration": "0.1"}
+    },
+    {
+      "id": 11,
+      "type": "Delay",
+      "name": "Pause 1s",
+      "position": {"x": 400, "y": 640},
+      "duration": 1.0
+    },
+    {
+      "id": 12,
+      "type": "MathOp",
+      "name": "Add Score",
+      "position": {"x": 600, "y": 640},
+      "operation": "Add",
+      "operandA": "Score",
+      "operandB": "10.0",
+      "resultKey": "Score"
+    },
+    {
+      "id": 13,
+      "type": "SetBBValue",
+      "name": "Set Label Done",
+      "position": {"x": 400, "y": 800},
+      "targetKey": "Label",
+      "value": "done"
+    },
+    {
+      "id": 14,
+      "type": "GetBBValue",
+      "name": "Read Score",
+      "position": {"x": 600, "y": 800},
+      "sourceKey": "Score"
+    },
+    {
+      "id": 15,
+      "type": "SubGraph",
+      "name": "Sub Routine",
+      "position": {"x": 400, "y": 960},
+      "subGraphPath": "Gamedata/TaskGraph/Templates/empty_utility_ai.ats"
+    },
+    {
+      "id": 16,
+      "type": "AtomicTask",
+      "name": "Final Cleanup",
+      "position": {"x": 600, "y": 960},
+      "taskType": "Task_ChangeState",
+      "params": {"newState": "Idle"}
+    }
+  ],
+  "execConnections": [
+    {"fromNode": 1,  "fromPin": "Out",       "toNode": 2,  "toPin": "In"},
+    {"fromNode": 2,  "fromPin": "Out",        "toNode": 3,  "toPin": "In"},
+    {"fromNode": 3,  "fromPin": "Completed",  "toNode": 4,  "toPin": "In"},
+    {"fromNode": 4,  "fromPin": "Completed",  "toNode": 5,  "toPin": "In"},
+    {"fromNode": 5,  "fromPin": "Out",        "toNode": 6,  "toPin": "In"},
+    {"fromNode": 6,  "fromPin": "Completed",  "toNode": 7,  "toPin": "In"},
+    {"fromNode": 7,  "fromPin": "Then",       "toNode": 8,  "toPin": "In"},
+    {"fromNode": 7,  "fromPin": "Else",       "toNode": 9,  "toPin": "In"},
+    {"fromNode": 8,  "fromPin": "Completed",  "toNode": 9,  "toPin": "In"},
+    {"fromNode": 9,  "fromPin": "Loop",       "toNode": 10, "toPin": "In"},
+    {"fromNode": 9,  "fromPin": "Completed",  "toNode": 11, "toPin": "In"},
+    {"fromNode": 10, "fromPin": "Completed",  "toNode": 9,  "toPin": "In"},
+    {"fromNode": 11, "fromPin": "Completed",  "toNode": 12, "toPin": "In"},
+    {"fromNode": 12, "fromPin": "Completed",  "toNode": 13, "toPin": "In"},
+    {"fromNode": 13, "fromPin": "Completed",  "toNode": 14, "toPin": "In"},
+    {"fromNode": 14, "fromPin": "Out",        "toNode": 15, "toPin": "In"},
+    {"fromNode": 15, "fromPin": "Completed",  "toNode": 16, "toPin": "In"}
+  ],
+  "dataConnections": [
+    {"fromNode": 5, "fromPin": "Value", "toNode": 6,  "toPin": "OperandA"},
+    {"fromNode": 14, "fromPin": "Value", "toNode": 12, "toPin": "OperandA"}
+  ],
+  "editorState": {
+    "scrollOffset": {"x": 0, "y": 0},
+    "zoom": 1
+  }
+}

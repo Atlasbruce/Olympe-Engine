@@ -1,13 +1,23 @@
 {
   "schema_version": 4,
+  "type": "VisualScript",
   "graphType": "VisualScript",
   "name": "example_patrol_basic",
   "description": "Basic patrol loop: NPC moves between two waypoints in a Sequence.",
   "blackboard": {
     "local": {
-      "WaypointA": { "type": "string", "value": "wp_a" },
-      "WaypointB": { "type": "string", "value": "wp_b" },
-      "PatrolSpeed": { "type": "float", "value": "3.5" }
+      "WaypointA": {
+        "type": "string",
+        "value": "wp_a"
+      },
+      "WaypointB": {
+        "type": "string",
+        "value": "wp_b"
+      },
+      "PatrolSpeed": {
+        "type": "float",
+        "value": "3.5"
+      }
     },
     "global": {}
   },
@@ -104,13 +114,49 @@
       }
     }
   ],
-  "connections": [
-    { "id": 1, "type": "exec", "fromNode": 1, "fromPin": "out", "toNode": 2, "toPin": "in" },
-    { "id": 2, "type": "exec", "fromNode": 2, "fromPin": "child0", "toNode": 3, "toPin": "in" },
-    { "id": 3, "type": "exec", "fromNode": 3, "fromPin": "out", "toNode": 4, "toPin": "in" },
-    { "id": 4, "type": "exec", "fromNode": 2, "fromPin": "child1", "toNode": 5, "toPin": "in" },
-    { "id": 5, "type": "exec", "fromNode": 5, "fromPin": "out", "toNode": 6, "toPin": "in" },
-    { "id": 6, "type": "exec", "fromNode": 2, "fromPin": "out", "toNode": 7, "toPin": "in" },
-    { "id": 7, "type": "exec", "fromNode": 7, "fromPin": "out", "toNode": 8, "toPin": "in" }
-  ]
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "out",
+      "toNode": 2,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "child0",
+      "toNode": 3,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "out",
+      "toNode": 4,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "child1",
+      "toNode": 5,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 5,
+      "fromPin": "out",
+      "toNode": 6,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "out",
+      "toNode": 7,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 7,
+      "fromPin": "out",
+      "toNode": 8,
+      "toPin": "in"
+    }
+  ],
+  "dataConnections": []
 }

@@ -416,4 +416,16 @@ if(BUILD_TESTS)
     target_include_directories(OlympePhase9Tests PRIVATE ${COMMON_INCLUDES})
     add_test(NAME OlympePhase9Tests COMMAND OlympePhase9Tests)
 
+    # -----------------------------------------------------------------------
+    # OlympeATSReferenceV4Tests  (Integration — reference_complete_v4.ats)
+    # -----------------------------------------------------------------------
+    add_executable(OlympeATSReferenceV4Tests
+        Tests/Integration/ATSReferenceV4Test.cpp
+        ${TASK_SYSTEM_RUNTIME_SOURCES}
+        ${TEST_STUBS}
+    )
+    target_include_directories(OlympeATSReferenceV4Tests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympeATSReferenceV4Tests COMMAND OlympeATSReferenceV4Tests
+             WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+
 endif() # BUILD_TESTS

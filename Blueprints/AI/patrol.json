@@ -1,68 +1,159 @@
 {
-    "schema_version": 4,
-    "graphType": "VisualScript",
-    "name": "PatrolBehaviour",
-    "description": "AI patrol graph: entity moves between waypoints, briefly idles, then resumes.",
-    "localBlackboard": [
-        { "Key": "Position",      "Type": "Vector",  "Default": [0.0, 0.0, 0.0], "IsGlobal": false },
-        { "Key": "WaypointIndex", "Type": "Int",     "Default": 0,               "IsGlobal": false },
-        { "Key": "PatrolSpeed",   "Type": "Float",   "Default": 100.0,           "IsGlobal": false },
-        { "Key": "CurrentState",  "Type": "String",  "Default": "Patrolling",    "IsGlobal": false }
-    ],
-    "nodes": [
-        {
-            "nodeID": 1,
-            "nodeType": "EntryPoint",
-            "nodeName": "Start"
-        },
-        {
-            "nodeID": 2,
-            "nodeType": "AtomicTask",
-            "nodeName": "MoveToWaypoint",
-            "AtomicTaskID": "Task_MoveToLocation",
-            "parameters": {
-                "Target": { "Type": "LocalVariable", "VariableName": "Position" },
-                "Speed":  { "Type": "LocalVariable", "VariableName": "PatrolSpeed" }
-            }
-        },
-        {
-            "nodeID": 3,
-            "nodeType": "Branch",
-            "nodeName": "IsAtPosition"
-        },
-        {
-            "nodeID": 4,
-            "nodeType": "AtomicTask",
-            "nodeName": "SetIdleState",
-            "AtomicTaskID": "Task_ChangeState",
-            "parameters": {
-                "NewState": { "Type": "Literal", "LiteralValue": "Idle" }
-            }
-        },
-        {
-            "nodeID": 5,
-            "nodeType": "Delay",
-            "nodeName": "IdleWait",
-            "DelaySeconds": 2.0
-        },
-        {
-            "nodeID": 6,
-            "nodeType": "AtomicTask",
-            "nodeName": "SetPatrollingState",
-            "AtomicTaskID": "Task_ChangeState",
-            "parameters": {
-                "NewState": { "Type": "Literal", "LiteralValue": "Patrolling" }
-            }
-        }
-    ],
-    "ExecConnections": [
-        { "SourceNodeID": 1, "SourcePinName": "Out",       "TargetNodeID": 2, "TargetPinName": "In" },
-        { "SourceNodeID": 2, "SourcePinName": "Out",        "TargetNodeID": 3, "TargetPinName": "In" },
-        { "SourceNodeID": 3, "SourcePinName": "Then",       "TargetNodeID": 4, "TargetPinName": "In" },
-        { "SourceNodeID": 3, "SourcePinName": "Else",       "TargetNodeID": 2, "TargetPinName": "In" },
-        { "SourceNodeID": 4, "SourcePinName": "Out",        "TargetNodeID": 5, "TargetPinName": "In" },
-        { "SourceNodeID": 5, "SourcePinName": "Completed",  "TargetNodeID": 6, "TargetPinName": "In" },
-        { "SourceNodeID": 6, "SourcePinName": "Out",        "TargetNodeID": 2, "TargetPinName": "In" }
-    ],
-    "DataConnections": []
+  "schema_version": 4,
+  "type": "VisualScript",
+  "graphType": "VisualScript",
+  "name": "PatrolBehaviour",
+  "description": "AI patrol graph: entity moves between waypoints, briefly idles, then resumes.",
+  "blackboard": [
+    {
+      "key": "Position",
+      "type": "Vector",
+      "value": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "global": false
+    },
+    {
+      "key": "WaypointIndex",
+      "type": "Int",
+      "value": 0,
+      "global": false
+    },
+    {
+      "key": "PatrolSpeed",
+      "type": "Float",
+      "value": 100.0,
+      "global": false
+    },
+    {
+      "key": "CurrentState",
+      "type": "String",
+      "value": "Patrolling",
+      "global": false
+    }
+  ],
+  "nodes": [
+    {
+      "id": 1,
+      "type": "EntryPoint",
+      "name": "Start",
+      "position": {
+        "x": 0,
+        "y": 200
+      }
+    },
+    {
+      "id": 2,
+      "type": "AtomicTask",
+      "name": "MoveToWaypoint",
+      "position": {
+        "x": 200,
+        "y": 200
+      },
+      "taskType": "Task_MoveToLocation",
+      "params": {
+        "target": "Position",
+        "speed": "PatrolSpeed"
+      }
+    },
+    {
+      "id": 3,
+      "type": "Branch",
+      "name": "IsAtPosition",
+      "position": {
+        "x": 400,
+        "y": 200
+      }
+    },
+    {
+      "id": 4,
+      "type": "AtomicTask",
+      "name": "SetIdleState",
+      "position": {
+        "x": 600,
+        "y": 200
+      },
+      "taskType": "Task_ChangeState",
+      "params": {
+        "newstate": "Idle"
+      }
+    },
+    {
+      "id": 5,
+      "type": "Delay",
+      "name": "IdleWait",
+      "position": {
+        "x": 800,
+        "y": 200
+      },
+      "duration": 2.0
+    },
+    {
+      "id": 6,
+      "type": "AtomicTask",
+      "name": "SetPatrollingState",
+      "position": {
+        "x": 1000,
+        "y": 200
+      },
+      "taskType": "Task_ChangeState",
+      "params": {
+        "newstate": "Patrolling"
+      }
+    }
+  ],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "Then",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "Else",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Out",
+      "toNode": 5,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 5,
+      "fromPin": "Completed",
+      "toNode": 6,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 6,
+      "fromPin": "Out",
+      "toNode": 2,
+      "toPin": "In"
+    }
+  ],
+  "dataConnections": [],
+  "editorState": {
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  }
 }

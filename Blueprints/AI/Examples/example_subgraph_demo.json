@@ -1,16 +1,35 @@
 {
   "schema_version": 4,
+  "type": "VisualScript",
   "graphType": "VisualScript",
   "name": "example_subgraph_demo",
   "description": "SubGraph demo: 2 nested SubGraphs (patrol and health check) composed in a top-level Sequence.",
   "blackboard": {
     "local": {
-      "Health": { "type": "float", "value": "100.0" },
-      "PatrolSpeed": { "type": "float", "value": "3.5" },
-      "WaypointA": { "type": "string", "value": "wp_a" },
-      "WaypointB": { "type": "string", "value": "wp_b" },
-      "CycleCount": { "type": "int", "value": "0" },
-      "MaxCycles": { "type": "int", "value": "10" }
+      "Health": {
+        "type": "float",
+        "value": "100.0"
+      },
+      "PatrolSpeed": {
+        "type": "float",
+        "value": "3.5"
+      },
+      "WaypointA": {
+        "type": "string",
+        "value": "wp_a"
+      },
+      "WaypointB": {
+        "type": "string",
+        "value": "wp_b"
+      },
+      "CycleCount": {
+        "type": "int",
+        "value": "0"
+      },
+      "MaxCycles": {
+        "type": "int",
+        "value": "10"
+      }
     },
     "global": {}
   },
@@ -250,25 +269,121 @@
       }
     }
   ],
-  "connections": [
-    { "id": 1,  "type": "exec", "fromNode": 1,  "fromPin": "out",    "toNode": 18, "toPin": "in" },
-    { "id": 2,  "type": "exec", "fromNode": 18, "fromPin": "out",    "toNode": 2,  "toPin": "in" },
-    { "id": 3,  "type": "exec", "fromNode": 2,  "fromPin": "out",    "toNode": 3,  "toPin": "in" },
-    { "id": 4,  "type": "exec", "fromNode": 3,  "fromPin": "child0", "toNode": 20, "toPin": "in" },
-    { "id": 5,  "type": "exec", "fromNode": 20, "fromPin": "out",    "toNode": 4,  "toPin": "in" },
-    { "id": 6,  "type": "exec", "fromNode": 4,  "fromPin": "out",    "toNode": 5,  "toPin": "in" },
-    { "id": 7,  "type": "exec", "fromNode": 3,  "fromPin": "child1", "toNode": 19, "toPin": "in" },
-    { "id": 8,  "type": "exec", "fromNode": 19, "fromPin": "out",    "toNode": 6,  "toPin": "in" },
-    { "id": 9,  "type": "exec", "fromNode": 6,  "fromPin": "out",    "toNode": 7,  "toPin": "in" },
-    { "id": 10, "type": "exec", "fromNode": 3,  "fromPin": "child2", "toNode": 14, "toPin": "in" },
-    { "id": 11, "type": "exec", "fromNode": 14, "fromPin": "out",    "toNode": 13, "toPin": "in" },
-    { "id": 12, "type": "exec", "fromNode": 3,  "fromPin": "out",    "toNode": 8,  "toPin": "in" },
-    { "id": 13, "type": "exec", "fromNode": 8,  "fromPin": "out",    "toNode": 9,  "toPin": "in" },
-    { "id": 14, "type": "exec", "fromNode": 9,  "fromPin": "true",   "toNode": 10, "toPin": "in" },
-    { "id": 15, "type": "exec", "fromNode": 10, "fromPin": "out",    "toNode": 15, "toPin": "in" },
-    { "id": 16, "type": "exec", "fromNode": 15, "fromPin": "out",    "toNode": 16, "toPin": "in" },
-    { "id": 17, "type": "exec", "fromNode": 9,  "fromPin": "false",  "toNode": 11, "toPin": "in" },
-    { "id": 18, "type": "exec", "fromNode": 11, "fromPin": "out",    "toNode": 12, "toPin": "in" },
-    { "id": 19, "type": "exec", "fromNode": 12, "fromPin": "out",    "toNode": 17, "toPin": "in" }
-  ]
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "out",
+      "toNode": 18,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 18,
+      "fromPin": "out",
+      "toNode": 2,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "out",
+      "toNode": 3,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "child0",
+      "toNode": 20,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 20,
+      "fromPin": "out",
+      "toNode": 4,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "out",
+      "toNode": 5,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "child1",
+      "toNode": 19,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 19,
+      "fromPin": "out",
+      "toNode": 6,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 6,
+      "fromPin": "out",
+      "toNode": 7,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "child2",
+      "toNode": 14,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 14,
+      "fromPin": "out",
+      "toNode": 13,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "out",
+      "toNode": 8,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 8,
+      "fromPin": "out",
+      "toNode": 9,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 9,
+      "fromPin": "true",
+      "toNode": 10,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 10,
+      "fromPin": "out",
+      "toNode": 15,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 15,
+      "fromPin": "out",
+      "toNode": 16,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 9,
+      "fromPin": "false",
+      "toNode": 11,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 11,
+      "fromPin": "out",
+      "toNode": 12,
+      "toPin": "in"
+    },
+    {
+      "fromNode": 12,
+      "fromPin": "out",
+      "toNode": 17,
+      "toPin": "in"
+    }
+  ],
+  "dataConnections": []
 }
