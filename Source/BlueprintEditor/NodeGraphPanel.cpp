@@ -12,6 +12,7 @@
 #include "BPCommandSystem.h"
 #include "NodeStyleRegistry.h"
 #include "../TaskSystem/AtomicTaskRegistry.h"
+#include "../TaskSystem/TaskGraphTypes.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
 #include <iostream>
@@ -820,138 +821,196 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         // Handle drag & drop from node palette
         if (ImGui::BeginDragDropTarget())
         {
-            const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("NODE_TYPE");
-
-            // Validate payload safety
-            if (payload && payload->Data && payload->DataSize > 0)
+            // Handle BT node palette payload (NODE_TYPE = string-based type)
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("NODE_TYPE"))
             {
-                // Copy payload data to local string with bounds checking
-                size_t maxSize = 256;  // Reasonable max for node type strings
-                size_t dataSize = (payload->DataSize < maxSize) ? payload->DataSize : maxSize;
-
-                std::string nodeTypeData;
-                nodeTypeData.resize(dataSize);
-                std::memcpy(&nodeTypeData[0], payload->Data, dataSize);
-
-                // Ensure NUL-termination
-                if (nodeTypeData.find('\0') == std::string::npos)
+                if (!payload->Data || payload->DataSize == 0)
                 {
-                    // Truncate at first non-printable or add terminator
-                    size_t validLen = 0;
-                    for (size_t i = 0; i < nodeTypeData.size(); ++i)
+                    std::cerr << "[NodeGraphPanel] ERROR: NODE_TYPE payload has null or empty data\n";
+                }
+                else
+                {
+                    // Copy payload data to local string with bounds checking
+                    size_t maxSize = 256;  // Reasonable max for node type strings
+                    size_t dataSize = (payload->DataSize < maxSize) ? payload->DataSize : maxSize;
+
+                    std::string nodeTypeData;
+                    nodeTypeData.resize(dataSize);
+                    std::memcpy(&nodeTypeData[0], payload->Data, dataSize);
+
+                    // Ensure NUL-termination
+                    if (nodeTypeData.find('\0') == std::string::npos)
                     {
-                        if (nodeTypeData[i] == '\0' || nodeTypeData[i] < 32)
+                        // Truncate at first non-printable or add terminator
+                        size_t validLen = 0;
+                        for (size_t i = 0; i < nodeTypeData.size(); ++i)
+                        {
+                            if (nodeTypeData[i] == '\0' || nodeTypeData[i] < 32)
+                                break;
+                            validLen = i + 1;
+                        }
+                        nodeTypeData.resize(validLen);
+                    }
+
+                    // Remove any trailing null bytes
+                    while (!nodeTypeData.empty() && nodeTypeData.back() == '\0')
+                        nodeTypeData.pop_back();
+
+                    std::cout << "[NodeGraphPanel] Received NODE_TYPE payload: " << nodeTypeData << "\n";
+
+                    // Convert screen space coordinates to grid space
+                    ImVec2 mouseScreenPos = ImGui::GetMousePos();
+                    ImVec2 canvasPos = ScreenSpaceToGridSpace(mouseScreenPos);
+
+                    bool validNode = false;
+
+                    // Parse the type and create appropriate node
+                    if (nodeTypeData.find("Action:") == 0)
+                    {
+                        std::string actionType = nodeTypeData.substr(7);
+
+                        // Validate action type exists in catalog
+                        if (EnumCatalogManager::Get().IsValidActionType(actionType))
+                        {
+                            int nodeId = graph->CreateNode(NodeType::BT_Action, canvasPos.x, canvasPos.y, actionType);
+                            GraphNode* node = graph->GetNode(nodeId);
+                            if (node)
+                            {
+                                node->actionType = actionType;
+                                validNode = true;
+                                std::cout << "[NodeGraphPanel] Created Action node: " << actionType
+                                    << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                            }
+                        }
+                        else
+                        {
+                            std::cerr << "[NodeGraphPanel] ERROR: Invalid ActionType: " << actionType << "\n";
+                            ImGui::SetTooltip("Invalid ActionType: %s", actionType.c_str());
+                        }
+                    }
+                    else if (nodeTypeData.find("Condition:") == 0)
+                    {
+                        std::string conditionType = nodeTypeData.substr(10);
+
+                        // Validate condition type exists in catalog
+                        if (EnumCatalogManager::Get().IsValidConditionType(conditionType))
+                        {
+                            int nodeId = graph->CreateNode(NodeType::BT_Condition, canvasPos.x, canvasPos.y, conditionType);
+                            GraphNode* node = graph->GetNode(nodeId);
+                            if (node)
+                            {
+                                node->conditionType = conditionType;
+                                validNode = true;
+                                std::cout << "[NodeGraphPanel] Created Condition node: " << conditionType
+                                    << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                            }
+                        }
+                        else
+                        {
+                            std::cerr << "[NodeGraphPanel] ERROR: Invalid ConditionType: " << conditionType << "\n";
+                            ImGui::SetTooltip("Invalid ConditionType: %s", conditionType.c_str());
+                        }
+                    }
+                    else if (nodeTypeData.find("Decorator:") == 0)
+                    {
+                        std::string decoratorType = nodeTypeData.substr(10);
+
+                        // Validate decorator type exists in catalog
+                        if (EnumCatalogManager::Get().IsValidDecoratorType(decoratorType))
+                        {
+                            int nodeId = graph->CreateNode(NodeType::BT_Decorator, canvasPos.x, canvasPos.y, decoratorType);
+                            GraphNode* node = graph->GetNode(nodeId);
+                            if (node)
+                            {
+                                node->decoratorType = decoratorType;
+                                validNode = true;
+                                std::cout << "[NodeGraphPanel] Created Decorator node: " << decoratorType
+                                    << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                            }
+                        }
+                        else
+                        {
+                            std::cerr << "[NodeGraphPanel] ERROR: Invalid DecoratorType: " << decoratorType << "\n";
+                            ImGui::SetTooltip("Invalid DecoratorType: %s", decoratorType.c_str());
+                        }
+                    }
+                    else if (nodeTypeData == "Sequence" || nodeTypeData == "Selector")
+                    {
+                        NodeType type = (nodeTypeData == "Sequence") ? NodeType::BT_Sequence : NodeType::BT_Selector;
+                        int nodeId = graph->CreateNode(type, canvasPos.x, canvasPos.y, nodeTypeData);
+                        if (nodeId > 0)
+                        {
+                            validNode = true;
+                            std::cout << "[NodeGraphPanel] Created " << nodeTypeData << " node"
+                                << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                        }
+                    }
+                    else
+                    {
+                        std::cerr << "[NodeGraphPanel] ERROR: Unknown node type: " << nodeTypeData << "\n";
+                        ImGui::SetTooltip("Unknown node type: %s", nodeTypeData.c_str());
+                    }
+
+                    if (!validNode)
+                    {
+                        std::cerr << "[NodeGraphPanel] Failed to create node from DnD payload\n";
+                    }
+                }
+            }
+            // Handle VS node palette payload (VS_NODE_TYPE_ENUM = TaskNodeType enum as uint8_t)
+            else if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("VS_NODE_TYPE_ENUM"))
+            {
+                if (payload->Data && payload->DataSize == sizeof(uint8_t))
+                {
+                    uint8_t enumValue = *static_cast<const uint8_t*>(payload->Data);
+                    TaskNodeType nodeType = static_cast<TaskNodeType>(enumValue);
+
+                    std::cout << "[NodeGraphPanel] Received VS_NODE_TYPE_ENUM payload: "
+                              << static_cast<int>(enumValue) << "\n";
+
+                    std::string nodeTypeName;
+                    switch (nodeType)
+                    {
+                        case TaskNodeType::EntryPoint:  nodeTypeName = "EntryPoint";  break;
+                        case TaskNodeType::Branch:      nodeTypeName = "Branch";      break;
+                        case TaskNodeType::VSSequence:  nodeTypeName = "Sequence";    break;
+                        case TaskNodeType::While:       nodeTypeName = "While";       break;
+                        case TaskNodeType::ForEach:     nodeTypeName = "ForEach";     break;
+                        case TaskNodeType::DoOnce:      nodeTypeName = "DoOnce";      break;
+                        case TaskNodeType::Delay:       nodeTypeName = "Delay";       break;
+                        case TaskNodeType::Switch:      nodeTypeName = "Switch";      break;
+                        case TaskNodeType::AtomicTask:  nodeTypeName = "AtomicTask";  break;
+                        case TaskNodeType::GetBBValue:  nodeTypeName = "GetBBValue";  break;
+                        case TaskNodeType::SetBBValue:  nodeTypeName = "SetBBValue";  break;
+                        case TaskNodeType::MathOp:      nodeTypeName = "MathOp";      break;
+                        case TaskNodeType::SubGraph:    nodeTypeName = "SubGraph";    break;
+                        default:
+                            std::cerr << "[NodeGraphPanel] ERROR: Unhandled TaskNodeType enum: "
+                                      << static_cast<int>(enumValue) << "\n";
                             break;
-                        validLen = i + 1;
                     }
-                    nodeTypeData.resize(validLen);
-                }
 
-                // Remove any trailing null bytes
-                while (!nodeTypeData.empty() && nodeTypeData.back() == '\0')
-                    nodeTypeData.pop_back();
-
-                // Convert screen space coordinates to grid space
-                ImVec2 mouseScreenPos = ImGui::GetMousePos();
-                ImVec2 canvasPos = ScreenSpaceToGridSpace(mouseScreenPos);
-
-                bool validNode = false;
-
-                // Parse the type and create appropriate node
-                if (nodeTypeData.find("Action:") == 0)
-                {
-                    std::string actionType = nodeTypeData.substr(7);
-
-                    // Validate action type exists in catalog
-                    if (EnumCatalogManager::Get().IsValidActionType(actionType))
+                    if (!nodeTypeName.empty())
                     {
-                        int nodeId = graph->CreateNode(NodeType::BT_Action, canvasPos.x, canvasPos.y, actionType);
-                        GraphNode* node = graph->GetNode(nodeId);
-                        if (node)
-                        {
-                            node->actionType = actionType;
-                            validNode = true;
-                            std::cout << "[NodeGraphPanel] Created Action node: " << actionType
-                                << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
-                        }
+                        ImVec2 mousePos = ImGui::GetMousePos();
+                        // CreateNewNode expects screen coordinates; it converts to canvas space internally
+                        CreateNewNode(nodeTypeName.c_str(), mousePos.x, mousePos.y);
+                        std::cout << "[NodeGraphPanel] Created VS node from palette: " << nodeTypeName << "\n";
                     }
                     else
                     {
-                        std::cerr << "[NodeGraphPanel] ERROR: Invalid ActionType: " << actionType << "\n";
-                        ImGui::SetTooltip("Invalid ActionType: %s", actionType.c_str());
-                    }
-                }
-                else if (nodeTypeData.find("Condition:") == 0)
-                {
-                    std::string conditionType = nodeTypeData.substr(10);
-
-                    // Validate condition type exists in catalog
-                    if (EnumCatalogManager::Get().IsValidConditionType(conditionType))
-                    {
-                        int nodeId = graph->CreateNode(NodeType::BT_Condition, canvasPos.x, canvasPos.y, conditionType);
-                        GraphNode* node = graph->GetNode(nodeId);
-                        if (node)
-                        {
-                            node->conditionType = conditionType;
-                            validNode = true;
-                            std::cout << "[NodeGraphPanel] Created Condition node: " << conditionType
-                                << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
-                        }
-                    }
-                    else
-                    {
-                        std::cerr << "[NodeGraphPanel] ERROR: Invalid ConditionType: " << conditionType << "\n";
-                        ImGui::SetTooltip("Invalid ConditionType: %s", conditionType.c_str());
-                    }
-                }
-                else if (nodeTypeData.find("Decorator:") == 0)
-                {
-                    std::string decoratorType = nodeTypeData.substr(10);
-
-                    // Validate decorator type exists in catalog
-                    if (EnumCatalogManager::Get().IsValidDecoratorType(decoratorType))
-                    {
-                        int nodeId = graph->CreateNode(NodeType::BT_Decorator, canvasPos.x, canvasPos.y, decoratorType);
-                        GraphNode* node = graph->GetNode(nodeId);
-                        if (node)
-                        {
-                            node->decoratorType = decoratorType;
-                            validNode = true;
-                            std::cout << "[NodeGraphPanel] Created Decorator node: " << decoratorType
-                                << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
-                        }
-                    }
-                    else
-                    {
-                        std::cerr << "[NodeGraphPanel] ERROR: Invalid DecoratorType: " << decoratorType << "\n";
-                        ImGui::SetTooltip("Invalid DecoratorType: %s", decoratorType.c_str());
-                    }
-                }
-                else if (nodeTypeData == "Sequence" || nodeTypeData == "Selector")
-                {
-                    NodeType type = (nodeTypeData == "Sequence") ? NodeType::BT_Sequence : NodeType::BT_Selector;
-                    int nodeId = graph->CreateNode(type, canvasPos.x, canvasPos.y, nodeTypeData);
-                    if (nodeId > 0)
-                    {
-                        validNode = true;
-                        std::cout << "[NodeGraphPanel] Created " << nodeTypeData << " node"
-                            << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+                        std::cerr << "[NodeGraphPanel] Failed to create node from VS_NODE_TYPE_ENUM payload\n";
                     }
                 }
                 else
                 {
-                    std::cerr << "[NodeGraphPanel] ERROR: Unknown node type: " << nodeTypeData << "\n";
-                    ImGui::SetTooltip("Unknown node type: %s", nodeTypeData.c_str());
+                    std::cerr << "[NodeGraphPanel] ERROR: Invalid VS_NODE_TYPE_ENUM payload - ";
+                    if (!payload->Data)
+                        std::cerr << "null data\n";
+                    else
+                        std::cerr << "wrong size (expected " << sizeof(uint8_t)
+                                  << ", got " << payload->DataSize << ")\n";
                 }
-
-                if (!validNode)
-                {
-                    std::cerr << "[NodeGraphPanel] Failed to create node from DnD payload\n";
-                }
-            }
-            else
-            {
-                std::cerr << "[NodeGraphPanel] Invalid DnD payload received (null or empty)\n";
             }
 
             ImGui::EndDragDropTarget();
