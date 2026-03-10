@@ -213,6 +213,12 @@ private:
     /** Returns the exec-in pin names for a node type. */
     static std::vector<std::string> GetExecInputPins(TaskNodeType type);
 
+    /** Returns the data-in pin names for a node type. */
+    static std::vector<std::string> GetDataInputPins(TaskNodeType type);
+
+    /** Returns the data-out pin names for a node type. */
+    static std::vector<std::string> GetDataOutputPins(TaskNodeType type);
+
     /** Builds the in-memory TaskGraphTemplate from the editor nodes/links. */
     void SyncTemplateFromCanvas();
 
