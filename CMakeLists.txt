@@ -417,6 +417,18 @@ if(BUILD_TESTS)
     add_test(NAME OlympePhase9Tests COMMAND OlympePhase9Tests)
 
     # -----------------------------------------------------------------------
+    # OlympePhase10Tests  (Phase 10 — Blueprint Editor Tab System Fixes)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase10Tests
+        Tests/BlueprintEditor/Phase10Test.cpp
+        Source/BlueprintEditor/UndoRedoStack.cpp
+        ${TASK_SYSTEM_SOURCES}
+        ${TEST_STUBS}
+    )
+    target_include_directories(OlympePhase10Tests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase10Tests COMMAND OlympePhase10Tests)
+
+    # -----------------------------------------------------------------------
     # OlympeATSReferenceV4Tests  (Integration — reference_complete_v4.ats)
     # -----------------------------------------------------------------------
     add_executable(OlympeATSReferenceV4Tests
