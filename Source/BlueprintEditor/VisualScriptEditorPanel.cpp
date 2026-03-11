@@ -832,8 +832,7 @@ void VisualScriptEditorPanel::RenderSaveAsDialog()
             if (dotPos != std::string::npos)
                 fname = fname.substr(0, dotPos);
 
-            strncpy(m_saveAsFilename, fname.c_str(), sizeof(m_saveAsFilename) - 1);
-            m_saveAsFilename[sizeof(m_saveAsFilename) - 1] = '\0';
+            strncpy_s(m_saveAsFilename, sizeof(m_saveAsFilename), fname.c_str(), _TRUNCATE);
         }
         // else: keep whatever is already in the buffer (set in constructor or
         //       carried over from a previous dialog invocation).

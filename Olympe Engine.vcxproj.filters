@@ -166,6 +166,7 @@
     <ClCompile Include="Source\BlueprintEditor\VisualScriptRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BehaviorTreeRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\TabManager.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\UndoRedoStack.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -368,6 +369,7 @@
     <ClInclude Include="Source\BlueprintEditor\VisualScriptRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\BehaviorTreeRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\IGraphRenderer.h" />
+    <ClInclude Include="Source\BlueprintEditor\UndoRedoStack.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />

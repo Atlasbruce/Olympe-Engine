@@ -487,6 +487,9 @@
     <ClCompile Include="..\Source\BlueprintEditor\TabManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\UndoRedoStack.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -941,6 +944,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.h" />
     <ClInclude Include="..\Source\BlueprintEditor\IGraphRenderer.h" />
     <ClInclude Include="..\Source\BlueprintEditor\TabManager.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\UndoRedoStack.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />

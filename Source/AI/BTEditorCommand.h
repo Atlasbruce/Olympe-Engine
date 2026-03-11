@@ -99,13 +99,13 @@ namespace Olympe
     };
 
     /**
-     * @class AddNodeCommand
+     * @class BTAddNodeCommand
      * @brief Command to add a node to the tree
      */
-    class AddNodeCommand : public BTEditorCommand
+    class BTAddNodeCommand : public BTEditorCommand
     {
     public:
-        AddNodeCommand(BehaviorTreeAsset* tree, BTNodeType type, const std::string& name, const Vector& position);
+        BTAddNodeCommand(BehaviorTreeAsset* tree, BTNodeType type, const std::string& name, const Vector& position);
         
         void Execute() override;
         void Undo() override;
@@ -120,13 +120,13 @@ namespace Olympe
     };
 
     /**
-     * @class DeleteNodeCommand
+     * @class BTDeleteNodeCommand
      * @brief Command to delete a node from the tree
      */
-    class DeleteNodeCommand : public BTEditorCommand
+    class BTDeleteNodeCommand : public BTEditorCommand
     {
     public:
-        DeleteNodeCommand(BehaviorTreeAsset* tree, uint32_t nodeId);
+        BTDeleteNodeCommand(BehaviorTreeAsset* tree, uint32_t nodeId);
         
         void Execute() override;
         void Undo() override;
@@ -146,13 +146,13 @@ namespace Olympe
     };
 
     /**
-     * @class MoveNodeCommand
+     * @class BTMoveNodeCommand
      * @brief Command to move a node
      */
-    class MoveNodeCommand : public BTEditorCommand
+    class BTMoveNodeCommand : public BTEditorCommand
     {
     public:
-        MoveNodeCommand(BehaviorTreeAsset* tree, uint32_t nodeId, const Vector& oldPos, const Vector& newPos);
+        BTMoveNodeCommand(BehaviorTreeAsset* tree, uint32_t nodeId, const Vector& oldPos, const Vector& newPos);
         
         void Execute() override;
         void Undo() override;
@@ -166,13 +166,13 @@ namespace Olympe
     };
 
     /**
-     * @class ConnectNodesCommand
+     * @class BTConnectNodesCommand
      * @brief Command to connect two nodes
      */
-    class ConnectNodesCommand : public BTEditorCommand
+    class BTConnectNodesCommand : public BTEditorCommand
     {
     public:
-        ConnectNodesCommand(BehaviorTreeAsset* tree, uint32_t parentId, uint32_t childId);
+        BTConnectNodesCommand(BehaviorTreeAsset* tree, uint32_t parentId, uint32_t childId);
         
         void Execute() override;
         void Undo() override;
@@ -185,13 +185,13 @@ namespace Olympe
     };
 
     /**
-     * @class DisconnectNodesCommand
+     * @class BTDisconnectNodesCommand
      * @brief Command to disconnect two nodes
      */
-    class DisconnectNodesCommand : public BTEditorCommand
+    class BTDisconnectNodesCommand : public BTEditorCommand
     {
     public:
-        DisconnectNodesCommand(BehaviorTreeAsset* tree, uint32_t parentId, uint32_t childId);
+        BTDisconnectNodesCommand(BehaviorTreeAsset* tree, uint32_t parentId, uint32_t childId);
         
         void Execute() override;
         void Undo() override;
@@ -204,15 +204,15 @@ namespace Olympe
     };
 
     /**
-     * @class EditParameterCommand
+     * @class BTEditParameterCommand
      * @brief Command to edit a node parameter
      */
-    class EditParameterCommand : public BTEditorCommand
+    class BTEditParameterCommand : public BTEditorCommand
     {
     public:
         enum class ParamType { String, Int, Float };
-        
-        EditParameterCommand(BehaviorTreeAsset* tree, uint32_t nodeId,
+
+        BTEditParameterCommand(BehaviorTreeAsset* tree, uint32_t nodeId,
                            const std::string& paramName, const std::string& oldValue,
                            const std::string& newValue, ParamType type);
         
