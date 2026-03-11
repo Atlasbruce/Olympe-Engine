@@ -7,6 +7,7 @@
 
 #include "AIEditorMenus.h"
 #include "AIEditorGUI.h"
+#include "../../Core/IconsFontAwesome6.h"
 #include "../../third_party/imgui/imgui.h"
 #include "../../system/system_utils.h"
 
@@ -19,25 +20,25 @@ namespace AI {
 
 void AIEditorMenus::RenderFileMenu(AIEditorGUI* editor)
 {
-    if (ImGui::BeginMenu("File")) {
-        if (ImGui::MenuItem("New Behavior Tree", "Ctrl+N")) {
+    if (ImGui::BeginMenu(ICON_FA_FILE " File")) {
+        if (ImGui::MenuItem(ICON_FA_BRAIN " New Behavior Tree", "Ctrl+N")) {
             editor->MenuAction_NewBT();
         }
-        if (ImGui::MenuItem("New HFSM", "Ctrl+Shift+N")) {
+        if (ImGui::MenuItem(ICON_FA_DIAGRAM_PROJECT " New HFSM", "Ctrl+Shift+N")) {
             editor->MenuAction_NewHFSM();
         }
         ImGui::Separator();
-        if (ImGui::MenuItem("Open", "Ctrl+O")) {
+        if (ImGui::MenuItem(ICON_FA_FOLDER_OPEN " Open", "Ctrl+O")) {
             editor->MenuAction_Open();
         }
-        if (ImGui::MenuItem("Save", "Ctrl+S")) {
+        if (ImGui::MenuItem(ICON_FA_FLOPPY_DISK " Save", "Ctrl+S")) {
             editor->MenuAction_Save();
         }
-        if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
+        if (ImGui::MenuItem(ICON_FA_FLOPPY_DISK " Save As", "Ctrl+Shift+S")) {
             editor->MenuAction_SaveAs();
         }
         ImGui::Separator();
-        if (ImGui::MenuItem("Close", "Ctrl+W")) {
+        if (ImGui::MenuItem(ICON_FA_XMARK " Close", "Ctrl+W")) {
             editor->MenuAction_Close();
         }
         ImGui::EndMenu();
@@ -46,31 +47,31 @@ void AIEditorMenus::RenderFileMenu(AIEditorGUI* editor)
 
 void AIEditorMenus::RenderEditMenu(AIEditorGUI* editor)
 {
-    if (ImGui::BeginMenu("Edit")) {
+    if (ImGui::BeginMenu(ICON_FA_PEN_TO_SQUARE " Edit")) {
         bool canUndo = editor->GetCommandStack().CanUndo();
         bool canRedo = editor->GetCommandStack().CanRedo();
-        
-        if (ImGui::MenuItem("Undo", "Ctrl+Z", false, canUndo)) {
+
+        if (ImGui::MenuItem(ICON_FA_ROTATE_LEFT " Undo", "Ctrl+Z", false, canUndo)) {
             editor->MenuAction_Undo();
         }
-        if (ImGui::MenuItem("Redo", "Ctrl+Y", false, canRedo)) {
+        if (ImGui::MenuItem(ICON_FA_ROTATE_RIGHT " Redo", "Ctrl+Y", false, canRedo)) {
             editor->MenuAction_Redo();
         }
         ImGui::Separator();
-        if (ImGui::MenuItem("Cut", "Ctrl+X")) {
+        if (ImGui::MenuItem(ICON_FA_SCISSORS " Cut", "Ctrl+X")) {
             editor->MenuAction_Cut();
         }
-        if (ImGui::MenuItem("Copy", "Ctrl+C")) {
+        if (ImGui::MenuItem(ICON_FA_COPY " Copy", "Ctrl+C")) {
             editor->MenuAction_Copy();
         }
-        if (ImGui::MenuItem("Paste", "Ctrl+V")) {
+        if (ImGui::MenuItem(ICON_FA_CLIPBOARD " Paste", "Ctrl+V")) {
             editor->MenuAction_Paste();
         }
-        if (ImGui::MenuItem("Delete", "Delete")) {
+        if (ImGui::MenuItem(ICON_FA_TRASH_CAN " Delete", "Delete")) {
             editor->MenuAction_Delete();
         }
         ImGui::Separator();
-        if (ImGui::MenuItem("Select All", "Ctrl+A")) {
+        if (ImGui::MenuItem(ICON_FA_CHECK " Select All", "Ctrl+A")) {
             editor->MenuAction_SelectAll();
         }
         ImGui::EndMenu();
@@ -79,21 +80,21 @@ void AIEditorMenus::RenderEditMenu(AIEditorGUI* editor)
 
 void AIEditorMenus::RenderViewMenu(AIEditorGUI* editor)
 {
-    if (ImGui::BeginMenu("View")) {
-        if (ImGui::MenuItem("Show Node Palette")) {
+    if (ImGui::BeginMenu(ICON_FA_EYE " View")) {
+        if (ImGui::MenuItem(ICON_FA_CUBES " Show Node Palette")) {
             editor->MenuAction_ShowNodePalette();
         }
-        if (ImGui::MenuItem("Show Blackboard")) {
+        if (ImGui::MenuItem(ICON_FA_TABLE " Show Blackboard")) {
             editor->MenuAction_ShowBlackboard();
         }
-        if (ImGui::MenuItem("Show Senses Panel")) {
+        if (ImGui::MenuItem(ICON_FA_MICROCHIP " Show Senses Panel")) {
             editor->MenuAction_ShowSensesPanel();
         }
-        if (ImGui::MenuItem("Show Runtime Debug")) {
+        if (ImGui::MenuItem(ICON_FA_BUG " Show Runtime Debug")) {
             editor->MenuAction_ShowRuntimeDebug();
         }
         ImGui::Separator();
-        if (ImGui::MenuItem("Reset Layout")) {
+        if (ImGui::MenuItem(ICON_FA_WINDOW_RESTORE " Reset Layout")) {
             editor->MenuAction_ResetLayout();
         }
         ImGui::EndMenu();
@@ -102,8 +103,8 @@ void AIEditorMenus::RenderViewMenu(AIEditorGUI* editor)
 
 void AIEditorMenus::RenderHelpMenu(AIEditorGUI* editor)
 {
-    if (ImGui::BeginMenu("Help")) {
-        if (ImGui::MenuItem("About")) {
+    if (ImGui::BeginMenu(ICON_FA_CIRCLE_QUESTION " Help")) {
+        if (ImGui::MenuItem(ICON_FA_CIRCLE_INFO " About")) {
             editor->MenuAction_About();
         }
         ImGui::EndMenu();

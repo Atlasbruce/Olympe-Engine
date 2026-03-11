@@ -13,6 +13,7 @@
 #include "BTtoVSMigrator.h"
 #include "TabManager.h"
 #include "../TaskSystem/TaskGraphLoader.h"
+#include "../Core/FontManager.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
 #include "../third_party/nlohmann/json.hpp"
@@ -100,11 +101,15 @@ namespace Olympe
         // Initialize ImNodes
         ImNodes::CreateContext();
         ImNodes::StyleColorsDark();
-        
+
         // Configure ImNodes style
         ImNodesStyle& style = ImNodes::GetStyle();
         style.Flags |= ImNodesStyleFlags_GridLines;
-        
+
+        // Initialize Font Manager and load Font Awesome
+        FontManager::Get().Initialize();
+        FontManager::Get().LoadFontAwesome("Assets/Fonts/fa-solid-900.otf", 16.0f);
+
         // Initialize Asset Browser with Blueprints directory
         m_AssetBrowser.Initialize("Blueprints");
         
@@ -229,16 +234,16 @@ namespace Olympe
         if (ImGui::BeginMainMenuBar())
         {
             // ===== D) FILE MENU =====
-            if (ImGui::BeginMenu("File"))
+            if (ImGui::BeginMenu(ICON_FA_FILE " File"))
             {
                 // Tab-based graph creation
-                if (ImGui::MenuItem("New Visual Script", "Ctrl+N"))
+                if (ImGui::MenuItem(ICON_FA_CODE " New Visual Script", "Ctrl+N"))
                     TabManager::Get().CreateNewTab("VisualScript");
 
-                if (ImGui::MenuItem("New Behavior Tree", "Ctrl+Shift+N"))
+                if (ImGui::MenuItem(ICON_FA_BRAIN " New Behavior Tree", "Ctrl+Shift+N"))
                     TabManager::Get().CreateNewTab("BehaviorTree");
 
-                if (ImGui::MenuItem("Open Blueprint...", "Ctrl+O"))
+                if (ImGui::MenuItem(ICON_FA_FOLDER_OPEN " Open Blueprint...", "Ctrl+O"))
                 {
                     // Legacy fallback when no file dialog exists
                     LoadBlueprint("Blueprints/AI/guard_patrol.json");
@@ -247,26 +252,26 @@ namespace Olympe
                 ImGui::Separator();
 
                 bool hasActiveTab = !TabManager::Get().IsEmpty();
-                if (ImGui::MenuItem("Save", "Ctrl+S", false, hasActiveTab))
+                if (ImGui::MenuItem(ICON_FA_FLOPPY_DISK " Save", "Ctrl+S", false, hasActiveTab))
                     TabManager::Get().SaveActiveTab();
 
-                if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false, hasActiveTab))
+                if (ImGui::MenuItem(ICON_FA_FLOPPY_DISK " Save As...", "Ctrl+Shift+S", false, hasActiveTab))
                     TabManager::Get().SaveActiveTabAs("");
 
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("Close Tab", "Ctrl+W", false, hasActiveTab))
+                if (ImGui::MenuItem(ICON_FA_XMARK " Close Tab", "Ctrl+W", false, hasActiveTab))
                     TabManager::Get().CloseTab(TabManager::Get().GetActiveTabID());
 
-                if (ImGui::MenuItem("Close All Tabs", "Ctrl+Shift+W", false, hasActiveTab))
+                if (ImGui::MenuItem(ICON_FA_XMARK " Close All Tabs", "Ctrl+Shift+W", false, hasActiveTab))
                     TabManager::Get().CloseAllTabs();
 
                 ImGui::Separator();
 
                 // Legacy submenu (collapsed by default)
-                if (ImGui::BeginMenu("Legacy Blueprints"))
+                if (ImGui::BeginMenu(ICON_FA_CLOCK " Legacy Blueprints"))
                 {
-                    if (ImGui::MenuItem("New Entity Blueprint (Legacy)"))
+                    if (ImGui::MenuItem(ICON_FA_FILE_CODE " New Entity Blueprint (Legacy)"))
                         NewBlueprint();
 
                     ImGui::Separator();
@@ -277,131 +282,131 @@ namespace Olympe
                 }
 
                 ImGui::Separator();
-                
+
                 // Phase 5: Template menu items
-                if (ImGui::MenuItem("Save as Template...", "Ctrl+Shift+T", false, backend.HasBlueprint()))
+                if (ImGui::MenuItem(ICON_FA_BOOKMARK " Save as Template...", "Ctrl+Shift+T", false, backend.HasBlueprint()))
                 {
                     if (m_TemplateBrowserPanel)
                         m_ShowTemplateBrowser = true;
                 }
-                
-                if (ImGui::MenuItem("Template Browser", nullptr, &m_ShowTemplateBrowser))
+
+                if (ImGui::MenuItem(ICON_FA_BOOK " Template Browser", nullptr, &m_ShowTemplateBrowser))
                 {
                     // Toggle template browser visibility
                 }
-                
+
                 ImGui::Separator();
-                
-                if (ImGui::MenuItem("Reload Assets"))
+
+                if (ImGui::MenuItem(ICON_FA_ARROW_ROTATE_RIGHT " Reload Assets"))
                     backend.RefreshAssets();
-                
+
                 ImGui::Separator();
-                
-                if (ImGui::MenuItem("Exit Editor", "F2"))
+
+                if (ImGui::MenuItem(ICON_FA_ARROW_RIGHT " Exit Editor", "F2"))
                     backend.SetActive(false);
-                
+
                 ImGui::EndMenu();
             }
 
             // ===== D) EDIT MENU =====
-            if (ImGui::BeginMenu("Edit"))
+            if (ImGui::BeginMenu(ICON_FA_PEN_TO_SQUARE " Edit"))
             {
                 // Phase 6: Undo/Redo
                 bool canUndo = backend.CanUndo();
                 bool canRedo = backend.CanRedo();
-                
-                std::string undoLabel = "Undo";
+
+                std::string undoLabel = ICON_FA_ROTATE_LEFT " Undo";
                 if (canUndo)
                 {
                     undoLabel += ": " + backend.GetLastCommandDescription();
                 }
-                
+
                 if (ImGui::MenuItem(undoLabel.c_str(), "Ctrl+Z", false, canUndo))
                 {
                     backend.Undo();
                 }
-                
-                std::string redoLabel = "Redo";
+
+                std::string redoLabel = ICON_FA_ROTATE_RIGHT " Redo";
                 if (canRedo)
                 {
                     redoLabel += ": " + backend.GetNextRedoDescription();
                 }
-                
+
                 if (ImGui::MenuItem(redoLabel.c_str(), "Ctrl+Y", false, canRedo))
                 {
                     backend.Redo();
                 }
-                
+
                 ImGui::Separator();
-                
+
                 // Component operations
-                if (ImGui::MenuItem("Add Component", "Insert", false, backend.HasBlueprint()))
+                if (ImGui::MenuItem(ICON_FA_PLUS " Add Component", "Insert", false, backend.HasBlueprint()))
                     m_ShowAddComponentDialog = true;
-                
-                if (ImGui::MenuItem("Remove Component", "Delete", false, 
+
+                if (ImGui::MenuItem(ICON_FA_TRASH_CAN " Remove Component", "Delete", false, 
                     m_SelectedComponentIndex >= 0))
                 {
                     RemoveComponent(m_SelectedComponentIndex);
                 }
-                
+
                 ImGui::Separator();
-                
-                if (ImGui::MenuItem("Preferences..."))
+
+                if (ImGui::MenuItem(ICON_FA_GEAR " Preferences..."))
                 {
                     m_ShowPreferences = true;
                 }
-                
+
                 ImGui::EndMenu();
             }
 
             // ===== TOOLS MENU =====
-            if (ImGui::BeginMenu("Tools"))
+            if (ImGui::BeginMenu(ICON_FA_WRENCH " Tools"))
             {
-                if (ImGui::MenuItem("Migrate Blueprints v1 -> v2"))
+                if (ImGui::MenuItem(ICON_FA_ARROW_RIGHT " Migrate Blueprints v1 -> v2"))
                 {
                     backend.SetShowMigrationDialog(true);
                 }
-                
+
                 ImGui::Separator();
-                
-                if (ImGui::MenuItem("Validate All Blueprints"))
+
+                if (ImGui::MenuItem(ICON_FA_CHECK " Validate All Blueprints"))
                 {
                     std::cout << "Validating all blueprints..." << std::endl;
                 }
-                
+
                 ImGui::EndMenu();
             }
 
             // ===== D) VIEW MENU =====
-            if (ImGui::BeginMenu("View"))
+            if (ImGui::BeginMenu(ICON_FA_EYE " View"))
             {
                 ImGui::Text("Main Panels:");
                 ImGui::Separator();
-                
+
                 // Three main panels only
-                ImGui::MenuItem("Asset Browser", nullptr, &m_ShowAssetBrowser);
-                ImGui::MenuItem("Node Graph Editor", nullptr, &m_ShowNodeGraph);
-                ImGui::MenuItem("Inspector", nullptr, &m_ShowInspector);
-                
+                ImGui::MenuItem(ICON_FA_FOLDER " Asset Browser", nullptr, &m_ShowAssetBrowser);
+                ImGui::MenuItem(ICON_FA_DIAGRAM_PROJECT " Node Graph Editor", nullptr, &m_ShowNodeGraph);
+                ImGui::MenuItem(ICON_FA_LIST " Inspector", nullptr, &m_ShowInspector);
+
                 ImGui::Separator();
-                
+
                 ImGui::Text("Additional:");
                 ImGui::Separator();
-                ImGui::MenuItem("Template Browser", nullptr, &m_ShowTemplateBrowser);  // Phase 5
-                ImGui::MenuItem("History", nullptr, &m_ShowHistory);  // Phase 6
-                ImGui::MenuItem("VS Graph Editor", nullptr, &m_ShowVSEditor);    // Phase 5 (new)
-                ImGui::MenuItem("Debugger", nullptr, &m_ShowDebugger);           // Phase 5 (new)
-                ImGui::MenuItem("Profiler", nullptr, &m_ShowProfiler);           // Phase 5 (new)
-                
+                ImGui::MenuItem(ICON_FA_BOOK " Template Browser", nullptr, &m_ShowTemplateBrowser);  // Phase 5
+                ImGui::MenuItem(ICON_FA_CLOCK " History", nullptr, &m_ShowHistory);  // Phase 6
+                ImGui::MenuItem(ICON_FA_CODE " VS Graph Editor", nullptr, &m_ShowVSEditor);    // Phase 5 (new)
+                ImGui::MenuItem(ICON_FA_BUG " Debugger", nullptr, &m_ShowDebugger);           // Phase 5 (new)
+                ImGui::MenuItem(ICON_FA_GAUGE " Profiler", nullptr, &m_ShowProfiler);           // Phase 5 (new)
+
                 ImGui::Separator();
-                
+
                 ImGui::Text("Debug:");
                 ImGui::Separator();
-                ImGui::MenuItem("ImGui Demo", nullptr, &m_ShowDemoWindow);
-                
+                ImGui::MenuItem(ICON_FA_LIGHTBULB " ImGui Demo", nullptr, &m_ShowDemoWindow);
+
                 ImGui::Separator();
-                
-                if (ImGui::MenuItem("Reset Layout"))
+
+                if (ImGui::MenuItem(ICON_FA_WINDOW_RESTORE " Reset Layout"))
                 {
                     // Reset main panels to visible
                     m_ShowAssetBrowser = true;
@@ -409,29 +414,29 @@ namespace Olympe
                     m_ShowInspector = true;
                     // Keep optional panels in their current state
                 }
-                
+
                 ImGui::EndMenu();
             }
 
             // ===== D) HELP MENU =====
-            if (ImGui::BeginMenu("Help"))
+            if (ImGui::BeginMenu(ICON_FA_CIRCLE_QUESTION " Help"))
             {
-                if (ImGui::MenuItem("Documentation"))
+                if (ImGui::MenuItem(ICON_FA_BOOK " Documentation"))
                 {
                     // TODO: Open documentation URL or local help
                     std::cout << "Opening documentation..." << std::endl;
                 }
-                
-                if (ImGui::MenuItem("Keyboard Shortcuts"))
+
+                if (ImGui::MenuItem(ICON_FA_SLIDERS " Keyboard Shortcuts"))
                 {
                     m_ShowShortcuts = true;
                 }
-                
+
                 ImGui::Separator();
-                
-                if (ImGui::MenuItem("About Olympe Engine"))
+
+                if (ImGui::MenuItem(ICON_FA_CIRCLE_INFO " About Olympe Engine"))
                     m_ShowAboutDialog = true;
-                
+
                 ImGui::EndMenu();
             }
 

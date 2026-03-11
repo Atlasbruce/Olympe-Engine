@@ -167,6 +167,7 @@
     <ClCompile Include="Source\BlueprintEditor\BehaviorTreeRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\TabManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\UndoRedoStack.cpp" />
+    <ClCompile Include="Source\Core\FontManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -370,6 +371,8 @@
     <ClInclude Include="Source\BlueprintEditor\BehaviorTreeRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\IGraphRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\UndoRedoStack.h" />
+    <ClInclude Include="Source\Core\IconsFontAwesome6.h" />
+    <ClInclude Include="Source\Core\FontManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -401,6 +404,9 @@
     <None Include="blueprint_editor_config.json" />
     <None Include="Docs\BLUEPRINT_EDITOR_FIXED_LAYOUT_IMPLEMENTATION.md" />
     <None Include="Docs\BLUEPRINT_EDITOR_LOADING_FIXES.md" />
+    <None Include="Assets\Fonts\README.md" />
+    <None Include="Docs\FONT_AWESOME_INTEGRATION.md" />
+    <None Include="Docs\FONT_AWESOME_SETUP.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

@@ -1,0 +1,83 @@
+{
+  "blackboard": [],
+  "dataConnections": [],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Then",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "Completed",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Else",
+      "toNode": 5,
+      "toPin": "In"
+    }
+  ],
+  "graphType": "VisualScript",
+  "name": "",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "EntryPoint",
+      "position": {
+        "x": 91,
+        "y": 134
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 2,
+      "label": "Branch",
+      "position": {
+        "x": 259,
+        "y": 134
+      },
+      "type": "Branch"
+    },
+    {
+      "delaySeconds": 0,
+      "id": 3,
+      "label": "Delay",
+      "position": {
+        "x": 454,
+        "y": 68
+      },
+      "type": "Delay"
+    },
+    {
+      "id": 4,
+      "label": "AtomicTask",
+      "position": {
+        "x": 655,
+        "y": 145
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 5,
+      "label": "AtomicTask",
+      "position": {
+        "x": 457,
+        "y": 260
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    }
+  ],
+  "schema_version": 4
+}

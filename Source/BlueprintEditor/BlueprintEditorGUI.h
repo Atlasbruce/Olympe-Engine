@@ -17,6 +17,7 @@
 #include "InspectorPanel.h"
 #include "EditorConfigManager.h"
 #include "TabManager.h"
+#include "../Core/IconsFontAwesome6.h"
 
 // Forward declare ImVec2
 struct ImVec2;

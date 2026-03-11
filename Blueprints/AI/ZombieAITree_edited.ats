@@ -1,0 +1,165 @@
+{
+  "blackboard": [],
+  "dataConnections": [],
+  "execConnections": [
+    {
+      "fromNode": 17,
+      "fromPin": "Out",
+      "toNode": 1,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 1,
+      "fromPin": "Then",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 1,
+      "fromPin": "Else",
+      "toNode": 10,
+      "toPin": "In"
+    }
+  ],
+  "graphType": "VisualScript",
+  "name": "ZombieAITree",
+  "nodes": [
+    {
+      "id": 17,
+      "label": "Start",
+      "position": {
+        "x": -186.519,
+        "y": 155.575
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 1,
+      "label": "Root Selector",
+      "position": {
+        "x": -1.51927,
+        "y": 145.575
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 2,
+      "label": "Combat Branch",
+      "position": {
+        "x": 149.481,
+        "y": 99.575
+      },
+      "type": "Sequence"
+    },
+    {
+      "conditionKey": "TargetVisible",
+      "id": 3,
+      "label": "Check AIMode == Combat",
+      "position": {
+        "x": 336.481,
+        "y": 88.575
+      },
+      "type": "Branch"
+    },
+    {
+      "conditionKey": "TargetVisible",
+      "id": 4,
+      "label": "Has Target?",
+      "position": {
+        "x": 350.481,
+        "y": 256.575
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 5,
+      "label": "Move to Target",
+      "position": {
+        "x": 347,
+        "y": 433
+      },
+      "taskType": "Task_SetMoveGoal",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 6,
+      "label": "Attack",
+      "position": {
+        "x": 998.481,
+        "y": 145.575
+      },
+      "taskType": "Task_Attack",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 10,
+      "label": "Wander Branch",
+      "position": {
+        "x": 1198.48,
+        "y": 145.575
+      },
+      "type": "Sequence"
+    },
+    {
+      "conditionKey": "TargetVisible",
+      "id": 11,
+      "label": "Check AIMode == Idle",
+      "position": {
+        "x": 1398.48,
+        "y": 145.575
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 12,
+      "label": "Wait",
+      "position": {
+        "x": 1598.48,
+        "y": 145.575
+      },
+      "taskType": "Task_Wait",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 13,
+      "label": "Choose Random Point",
+      "position": {
+        "x": 1798.48,
+        "y": 145.575
+      },
+      "taskType": "Task_ChooseRandomPoint",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 14,
+      "label": "Request Pathfinding",
+      "position": {
+        "x": 1998.48,
+        "y": 145.575
+      },
+      "taskType": "Task_RequestPathfinding",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 15,
+      "label": "Follow Path",
+      "position": {
+        "x": 2198.48,
+        "y": 145.575
+      },
+      "taskType": "Task_FollowPath",
+      "type": "AtomicTask"
+    },
+    {
+      "conditionKey": "TargetVisible",
+      "id": 16,
+      "label": "New Condition",
+      "position": {
+        "x": 2398.48,
+        "y": 145.575
+      },
+      "type": "Branch"
+    }
+  ],
+  "schema_version": 4
+}

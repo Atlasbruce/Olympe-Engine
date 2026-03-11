@@ -490,6 +490,9 @@
     <ClCompile Include="..\Source\BlueprintEditor\UndoRedoStack.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\Core\FontManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -945,6 +948,8 @@
     <ClInclude Include="..\Source\BlueprintEditor\IGraphRenderer.h" />
     <ClInclude Include="..\Source\BlueprintEditor\TabManager.h" />
     <ClInclude Include="..\Source\BlueprintEditor\UndoRedoStack.h" />
+    <ClInclude Include="..\Source\Core\FontManager.h" />
+    <ClInclude Include="..\Source\Core\IconsFontAwesome6.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />

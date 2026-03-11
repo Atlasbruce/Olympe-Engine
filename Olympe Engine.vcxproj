@@ -81,6 +81,7 @@
     <ClCompile Include="Source\CollisionMap.cpp" />
     <ClCompile Include="Source\ComponentDefinition.cpp" />
     <ClCompile Include="Source\Core\AssetManager.cpp" />
+    <ClCompile Include="Source\Core\FontManager.cpp" />
     <ClCompile Include="Source\drawing.cpp" />
     <ClCompile Include="Source\ECS\Components\TaskRunnerComponent.cpp" />
     <ClCompile Include="Source\ECS_Components_Registration.cpp" />
@@ -255,6 +256,8 @@
     <ClInclude Include="Source\CollisionMap.h" />
     <ClInclude Include="Source\ComponentDefinition.h" />
     <ClInclude Include="Source\Core\AssetManager.h" />
+    <ClInclude Include="Source\Core\FontManager.h" />
+    <ClInclude Include="Source\Core\IconsFontAwesome6.h" />
     <ClInclude Include="Source\drawing.h" />
     <ClInclude Include="source\ECS_Components.h" />
     <ClInclude Include="Source\ECS_Components_AI.h" />
@@ -393,6 +396,7 @@
     <None Include="analyze_code.ps1" />
     <None Include="analyze_codebase.ps1" />
     <None Include="analyze_codebase_v2.ps1" />
+    <None Include="Assets\Fonts\README.md" />
     <None Include="blueprint_editor_config.json" />
     <None Include="ClassDiagram.cd" />
     <None Include="config\ATS-VS-editor-config.json" />
@@ -408,6 +412,8 @@
     <None Include="Docs\Blueprint_Editor_Visual_Diagrams.md" />
     <None Include="Docs\DOCUMENTATION_UPDATE_SUMMARY.md" />
     <None Include="Docs\DOCUMENTATION_v4_FINAL_SUMMARY.md" />
+    <None Include="Docs\FONT_AWESOME_INTEGRATION.md" />
+    <None Include="Docs\FONT_AWESOME_SETUP.md" />
     <None Include="Docs\README_Documentation_Index.md" />
     <None Include="olympe.ini" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
