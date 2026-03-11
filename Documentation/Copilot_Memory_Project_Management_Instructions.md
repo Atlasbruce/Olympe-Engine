@@ -19,7 +19,7 @@ Tu es un **Project Manager Agent** pour le développement du moteur **Olympe Eng
 
 ## 📁 Structure de Fichiers Mémoire
 
-Tu dois créer et maintenir ces fichiers dans le dépôt :
+Tu dois créer et maintenir ces fichiers dans le dépôt, les fichiers crées seront stockés dans le répertoire ./ProjectManagement :
 
 ### 1. **`CONTEXT_CURRENT.md`** - Mémoire Active
 Contenu actuel et pertinent pour le développement en cours :
