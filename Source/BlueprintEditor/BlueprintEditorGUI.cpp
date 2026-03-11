@@ -56,6 +56,7 @@ namespace Olympe
         , m_InspectorWidth(400.0f)
         , m_MinPanelWidth(200.0f)
         , m_SplitterSize(8.0f)
+        , m_LeftPanelSplitHeight(0.0f)   // 0 = use default 60 % on first frame
     {
         m_NewBlueprintNameBuffer[0] = '\0';
         m_FilepathBuffer[0] = '\0';
@@ -529,16 +530,35 @@ namespace Olympe
         {
             float leftHeight = ImGui::GetContentRegionAvail().y;
 
-            // Asset Browser: top portion
+            // Default asset-browser height: 60 % of the left column on the first frame.
+            if (m_LeftPanelSplitHeight <= 0.0f)
+                m_LeftPanelSplitHeight = leftHeight * 0.60f;
+
+            // Clamp so both the asset-browser section and the inspector section
+            // remain tall enough to be usable (at least 60 px each).
+            const float kMinSectionHeight = 60.0f;
+            if (m_LeftPanelSplitHeight < kMinSectionHeight)
+                m_LeftPanelSplitHeight = kMinSectionHeight;
+            if (m_LeftPanelSplitHeight > leftHeight - kMinSectionHeight - m_SplitterSize)
+                m_LeftPanelSplitHeight = leftHeight - kMinSectionHeight - m_SplitterSize;
+
+            // Asset Browser: upper section
             ImGui::BeginChild("AssetBrowserSection",
-                              ImVec2(0, leftHeight * 0.60f), true);
+                              ImVec2(0, m_LeftPanelSplitHeight), true);
             if (m_ShowAssetBrowser)
                 m_AssetBrowser.RenderContent();
             ImGui::EndChild();
 
-            ImGui::Spacing();
+            // Horizontal splitter between Asset Browser and Inspector
+            ImGui::Button("##LeftHSplitter", ImVec2(-1.0f, m_SplitterSize));
+            if (ImGui::IsItemActive())
+            {
+                m_LeftPanelSplitHeight += ImGui::GetIO().MouseDelta.y;
+            }
+            if (ImGui::IsItemHovered())
+                ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
 
-            // Inspector: bottom portion
+            // Inspector: lower section (fills remaining space)
             ImGui::BeginChild("InspectorSection", ImVec2(0, 0), true);
             if (m_ShowInspector)
                 m_InspectorPanel.RenderContent();

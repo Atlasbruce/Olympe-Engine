@@ -38,11 +38,19 @@ VisualScriptEditorPanel::~VisualScriptEditorPanel()
 
 void VisualScriptEditorPanel::Initialize()
 {
-    // Nothing to initialize beyond the constructor.
+    // Create a dedicated ImNodes editor context for this panel instance.
+    // This ensures that node positions and canvas panning are tracked
+    // independently for each open tab (switching tabs preserves layout).
+    m_imnodesContext = ImNodes::EditorContextCreate();
 }
 
 void VisualScriptEditorPanel::Shutdown()
 {
+    if (m_imnodesContext)
+    {
+        ImNodes::EditorContextFree(m_imnodesContext);
+        m_imnodesContext = nullptr;
+    }
     m_editorNodes.clear();
     m_editorLinks.clear();
     m_positionedNodes.clear();
@@ -275,6 +283,9 @@ void VisualScriptEditorPanel::SyncCanvasFromTemplate()
     }
 
     RebuildLinks();
+    // Request position restore on the next RenderCanvas() call so that
+    // ImNodes places each node at its stored (posX, posY) coordinates.
+    m_needsPositionSync = true;
 }
 
 void VisualScriptEditorPanel::SyncTemplateFromCanvas()
@@ -741,6 +752,24 @@ void VisualScriptEditorPanel::RenderSaveAsDialog()
 
 void VisualScriptEditorPanel::RenderCanvas()
 {
+    // Switch to this panel's dedicated ImNodes context so that node positions
+    // and canvas panning are preserved independently for each open tab.
+    if (m_imnodesContext)
+        ImNodes::EditorContextSet(m_imnodesContext);
+
+    // On the first render after LoadTemplate(), push the stored (posX, posY)
+    // of each node into ImNodes so the canvas matches the saved layout.
+    if (m_needsPositionSync)
+    {
+        for (size_t i = 0; i < m_editorNodes.size(); ++i)
+        {
+            ImNodes::SetNodeEditorSpacePos(
+                m_editorNodes[i].nodeID,
+                ImVec2(m_editorNodes[i].posX, m_editorNodes[i].posY));
+        }
+        m_needsPositionSync = false;
+    }
+
     ImNodes::BeginNodeEditor();
 
     // Context menu for node palette
