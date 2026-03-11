@@ -122,6 +122,11 @@ struct TaskNodeDefinition {
     // SubGraph-specific (Phase 3)
     std::unordered_map<std::string, ParameterBinding> InputParams;  ///< Input parameter bindings
     std::unordered_map<std::string, std::string>      OutputParams; ///< Output param → BB key mapping
+
+    // Editor-only metadata (not used by runtime AI execution)
+    float EditorPosX    = 0.0f;   ///< Canvas X position loaded from JSON
+    float EditorPosY    = 0.0f;   ///< Canvas Y position loaded from JSON
+    bool  HasEditorPos  = false;  ///< True when EditorPosX/Y were loaded from JSON
 };
 
 // ============================================================================

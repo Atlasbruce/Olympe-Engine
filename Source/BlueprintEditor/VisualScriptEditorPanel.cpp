@@ -257,8 +257,18 @@ void VisualScriptEditorPanel::SyncCanvasFromTemplate()
         VSEditorNode eNode;
         eNode.nodeID = def.NodeID;
         eNode.def    = def;
-        eNode.posX   = 200.0f * static_cast<float>(i);  // Default auto-layout
-        eNode.posY   = 100.0f;
+
+        // Use position loaded from JSON if available; otherwise fall back to auto-layout.
+        if (def.HasEditorPos)
+        {
+            eNode.posX = def.EditorPosX;
+            eNode.posY = def.EditorPosY;
+        }
+        else
+        {
+            eNode.posX = 200.0f * static_cast<float>(i);  // Default auto-layout
+            eNode.posY = 100.0f;
+        }
 
         if (def.NodeID >= m_nextNodeID)
             m_nextNodeID = def.NodeID + 1;
