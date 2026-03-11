@@ -24,6 +24,10 @@
 #include "../TaskSystem/LocalBlackboard.h"
 #include "VisualScriptNodeRenderer.h"
 
+// Forward-declare ImNodes context type (defined in imnodes.h) in the global
+// namespace so it can be referenced from within the Olympe namespace below.
+struct ImNodesEditorContext;
+
 namespace Olympe {
 
 /**
@@ -239,6 +243,16 @@ private:
     bool m_visible        = true;
     bool m_dirty          = false;
     bool m_paletteOpen    = false;
+
+    // Per-instance ImNodes editor context.
+    // Created in Initialize() and destroyed in Shutdown().
+    // Set as the active context at the start of every RenderCanvas() call so
+    // that node positions / panning are preserved independently per tab.
+    ImNodesEditorContext* m_imnodesContext = nullptr;
+
+    // True after LoadTemplate() until the first RenderCanvas() call that
+    // applies SetNodeEditorSpacePos for all loaded nodes.
+    bool m_needsPositionSync = false;
 
     std::string m_currentPath;
 

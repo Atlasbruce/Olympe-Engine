@@ -146,5 +146,10 @@ namespace Olympe
         float m_InspectorWidth;
         float m_MinPanelWidth;
         float m_SplitterSize;
+
+        // Height of the asset-browser section within the left column.
+        // The inspector occupies the remaining space below it.
+        // Resizable via a horizontal splitter between the two sections.
+        float m_LeftPanelSplitHeight;
     };
 }
