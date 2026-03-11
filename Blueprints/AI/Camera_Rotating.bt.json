@@ -12,8 +12,8 @@
           "infinite": "true"
         },
         "position": {
-          "x": -251,
-          "y": 28
+          "x": 0,
+          "y": 0
         },
         "type": "Action"
       },
@@ -28,8 +28,8 @@
         "name": "Camera Detection Sequence",
         "parameters": {},
         "position": {
-          "x": -73,
-          "y": 29
+          "x": 0,
+          "y": 0
         },
         "type": "Sequence"
       },
@@ -41,8 +41,8 @@
           "angle": "90"
         },
         "position": {
-          "x": 401,
-          "y": 78
+          "x": 0,
+          "y": 0
         },
         "type": "Action"
       },
@@ -56,8 +56,8 @@
           "value": "1.5"
         },
         "position": {
-          "x": 350,
-          "y": -7
+          "x": 0,
+          "y": 0
         },
         "type": "Action"
       },
@@ -70,8 +70,8 @@
           "key": "GlobalAlert"
         },
         "position": {
-          "x": 219,
-          "y": 180
+          "x": 0,
+          "y": 0
         },
         "type": "Action"
       },
@@ -83,8 +83,8 @@
           "time": "0.1"
         },
         "position": {
-          "x": 182,
-          "y": -146
+          "x": 0,
+          "y": 0
         },
         "type": "Action"
       }
@@ -102,7 +102,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-03-11T13:22:13",
+    "lastModified": "2026-03-11T14:22:23",
     "tags": []
   },
   "name": "Camera_Rotating",

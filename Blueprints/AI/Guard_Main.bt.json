@@ -12,8 +12,8 @@
         "name": "Root State Selector",
         "parameters": {},
         "position": {
-          "x": -78,
-          "y": -161
+          "x": 0,
+          "y": 0
         },
         "type": "Selector"
       },
@@ -25,8 +25,8 @@
         "name": "Patrol Branch",
         "parameters": {},
         "position": {
-          "x": 202,
-          "y": -279
+          "x": 0,
+          "y": 0
         },
         "type": "Sequence"
       },
@@ -41,8 +41,8 @@
           "value": "Patrol"
         },
         "position": {
-          "x": 440,
-          "y": -280
+          "x": 0,
+          "y": 0
         },
         "type": "Action"
       },
@@ -54,8 +54,8 @@
         "name": "Suspicion Branch",
         "parameters": {},
         "position": {
-          "x": 190,
-          "y": -138
+          "x": 0,
+          "y": 0
         },
         "type": "Sequence"
       },
@@ -70,8 +70,8 @@
           "value": "Suspicion"
         },
         "position": {
-          "x": 419,
-          "y": -135
+          "x": 0,
+          "y": 0
         },
         "type": "Action"
       },
@@ -83,8 +83,8 @@
         "name": "Alert Branch",
         "parameters": {},
         "position": {
-          "x": 210,
-          "y": 5
+          "x": 0,
+          "y": 0
         },
         "type": "Sequence"
       },
@@ -99,8 +99,8 @@
           "value": "Alerte"
         },
         "position": {
-          "x": 441,
-          "y": 11
+          "x": 0,
+          "y": 0
         },
         "type": "Action"
       }
@@ -118,7 +118,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-03-11T13:17:42",
+    "lastModified": "",
     "tags": []
   },
   "name": "Guard_Main",

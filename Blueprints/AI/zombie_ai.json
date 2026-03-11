@@ -26,6 +26,24 @@
       "fromPin": "Else",
       "toNode": 10,
       "toPin": "In"
+    },
+    {
+      "fromNode": 10,
+      "fromPin": "Out",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Then",
+      "toNode": 5,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 5,
+      "fromPin": "Completed",
+      "toNode": 6,
+      "toPin": "In"
     }
   ],
   "graphType": "VisualScript",
@@ -35,8 +53,8 @@
       "id": 16,
       "label": "Start",
       "position": {
-        "x": 199.124,
-        "y": 293.444
+        "x": -182.439,
+        "y": 363.653
       },
       "type": "EntryPoint"
     },
@@ -44,8 +62,8 @@
       "id": 1,
       "label": "Root Selector",
       "position": {
-        "x": 418.124,
-        "y": 279.444
+        "x": 17.5609,
+        "y": 363.653
       },
       "type": "Branch"
     },
@@ -53,8 +71,8 @@
       "id": 2,
       "label": "Combat Branch",
       "position": {
-        "x": 754.124,
-        "y": 155.444
+        "x": 182.561,
+        "y": 310.653
       },
       "type": "Sequence"
     },
@@ -63,8 +81,8 @@
       "id": 3,
       "label": "Check AIMode == Combat",
       "position": {
-        "x": 163.124,
-        "y": 409.444
+        "x": 363.561,
+        "y": 240.653
       },
       "type": "Branch"
     },
@@ -73,8 +91,8 @@
       "id": 4,
       "label": "Has Target?",
       "position": {
-        "x": 726.124,
-        "y": 385.444
+        "x": 350.561,
+        "y": 469.653
       },
       "type": "Branch"
     },
@@ -82,8 +100,8 @@
       "id": 5,
       "label": "Move to Target",
       "position": {
-        "x": 649.124,
-        "y": 262.444
+        "x": 545.561,
+        "y": 420.653
       },
       "taskType": "Task_SetMoveGoal",
       "type": "AtomicTask"
@@ -92,8 +110,8 @@
       "id": 6,
       "label": "Attack",
       "position": {
-        "x": 425.124,
-        "y": 419.444
+        "x": 727.561,
+        "y": 428.653
       },
       "taskType": "Task_Attack",
       "type": "AtomicTask"
@@ -102,8 +120,8 @@
       "id": 10,
       "label": "Wander Branch",
       "position": {
-        "x": 571.124,
-        "y": 359.444
+        "x": 180.561,
+        "y": 474.653
       },
       "type": "Sequence"
     },
@@ -112,8 +130,8 @@
       "id": 11,
       "label": "Check AIMode == Idle",
       "position": {
-        "x": 770.124,
-        "y": 557.444
+        "x": 393.213,
+        "y": -69.6216
       },
       "type": "Branch"
     },
@@ -121,8 +139,8 @@
       "id": 12,
       "label": "Wait",
       "position": {
-        "x": 384.124,
-        "y": 79.444
+        "x": 568.213,
+        "y": -100.622
       },
       "taskType": "Task_Wait",
       "type": "AtomicTask"
@@ -131,8 +149,8 @@
       "id": 13,
       "label": "Choose Random Point",
       "position": {
-        "x": 654.124,
-        "y": 574.444
+        "x": 580.213,
+        "y": 20.3784
       },
       "taskType": "Task_ChooseRandomPoint",
       "type": "AtomicTask"
@@ -141,8 +159,8 @@
       "id": 14,
       "label": "Request Pathfinding",
       "position": {
-        "x": 254.124,
-        "y": 197.444
+        "x": 688.213,
+        "y": 163.378
       },
       "taskType": "Task_RequestPathfinding",
       "type": "AtomicTask"
@@ -151,8 +169,8 @@
       "id": 15,
       "label": "Follow Path",
       "position": {
-        "x": 528.124,
-        "y": 114.444
+        "x": 723.213,
+        "y": 276.378
       },
       "taskType": "Task_FollowPath",
       "type": "AtomicTask"

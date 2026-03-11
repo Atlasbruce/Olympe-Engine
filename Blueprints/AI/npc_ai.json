@@ -1,72 +1,6 @@
 {
-  "schema_version": 4,
-  "type": "VisualScript",
-  "graphType": "VisualScript",
-  "name": "NPCSimpleMoveTree",
-  "description": "",
   "blackboard": [],
-  "nodes": [
-    {
-      "id": 5,
-      "type": "EntryPoint",
-      "name": "Start",
-      "position": {
-        "x": 0,
-        "y": 200
-      }
-    },
-    {
-      "id": 1,
-      "type": "AtomicTask",
-      "name": "Simple Move Loop (Repeater)",
-      "position": {
-        "x": 784,
-        "y": 288
-      },
-      "taskType": "Task_Wait"
-    },
-    {
-      "id": 2,
-      "type": "VSSequence",
-      "name": "Step Move Sequence",
-      "position": {
-        "x": 256,
-        "y": 288
-      },
-      "children": [
-        3,
-        4
-      ]
-    },
-    {
-      "id": 3,
-      "type": "AtomicTask",
-      "name": "Move 100px Forward",
-      "position": {
-        "x": 528,
-        "y": 176
-      },
-      "taskType": "Task_MoveForward",
-      "params": {
-        "distance": "100",
-        "speed": "Walk"
-      }
-    },
-    {
-      "id": 4,
-      "type": "AtomicTask",
-      "name": "Rotate Direction +/-15\u00b0",
-      "position": {
-        "x": 496,
-        "y": 400
-      },
-      "taskType": "Task_Rotate",
-      "params": {
-        "maxDeltaDeg": "15",
-        "minDeltaDeg": "-15"
-      }
-    }
-  ],
+  "dataConnections": [],
   "execConnections": [
     {
       "fromNode": 5,
@@ -87,12 +21,57 @@
       "toPin": "In"
     }
   ],
-  "dataConnections": [],
-  "editorState": {
-    "scrollOffset": {
-      "x": 0,
-      "y": 0
+  "graphType": "VisualScript",
+  "name": "NPCSimpleMoveTree",
+  "nodes": [
+    {
+      "id": 5,
+      "label": "Start",
+      "position": {
+        "x": 0,
+        "y": 100
+      },
+      "type": "EntryPoint"
     },
-    "zoom": 1
-  }
+    {
+      "id": 1,
+      "label": "Simple Move Loop (Repeater)",
+      "position": {
+        "x": 534,
+        "y": 122
+      },
+      "taskType": "Task_Wait",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 2,
+      "label": "Step Move Sequence",
+      "position": {
+        "x": 455,
+        "y": 438
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 3,
+      "label": "Move 100px Forward",
+      "position": {
+        "x": 234,
+        "y": 32
+      },
+      "taskType": "Task_MoveForward",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 4,
+      "label": "Rotate Direction +/-15u00b0",
+      "position": {
+        "x": 220,
+        "y": 198
+      },
+      "taskType": "Task_Rotate",
+      "type": "AtomicTask"
+    }
+  ],
+  "schema_version": 4
 }

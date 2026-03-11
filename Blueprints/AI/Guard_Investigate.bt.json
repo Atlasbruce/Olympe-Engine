@@ -1,98 +1,95 @@
 {
   "blueprintType": "BehaviorTree",
   "data": {
-    "rootGraph": {
-      "nodes": [
-        {
-          "children": [
-            2,
-            3,
-            4,
-            5,
-            6
-          ],
-          "id": 1,
-          "name": "Investigate Sequence",
-          "parameters": {},
-          "position": {
-            "x": 112,
-            "y": 121
-          },
-          "type": "Sequence"
+    "nodes": [
+      {
+        "children": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "id": 1,
+        "name": "Investigate Sequence",
+        "parameters": {},
+        "position": {
+          "x": 0,
+          "y": 0
         },
-        {
-          "children": [],
-          "id": 2,
-          "name": "Has Last Known Position",
-          "parameters": {
-            "exists": "true",
-            "key": "LastKnownEnemyPos"
-          },
-          "position": {
-            "x": 400,
-            "y": 0
-          },
-          "type": "Action"
+        "type": "Sequence"
+      },
+      {
+        "children": [],
+        "id": 2,
+        "name": "Has Last Known Position",
+        "parameters": {
+          "exists": "true",
+          "key": "LastKnownEnemyPos"
         },
-        {
-          "children": [],
-          "id": 3,
-          "name": "Move To Last Known Position",
-          "parameters": {
-            "key": "LastKnownEnemyPos",
-            "speed": "Walk"
-          },
-          "position": {
-            "x": 394,
-            "y": 111
-          },
-          "type": "Action"
+        "position": {
+          "x": 0,
+          "y": 0
         },
-        {
-          "children": [],
-          "id": 4,
-          "name": "Look Around",
-          "parameters": {
-            "anim": "LookAround",
-            "duration": "4"
-          },
-          "position": {
-            "x": 402,
-            "y": 220
-          },
-          "type": "Action"
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 3,
+        "name": "Move To Last Known Position",
+        "parameters": {
+          "key": "LastKnownEnemyPos",
+          "speed": "Walk"
         },
-        {
-          "children": [],
-          "id": 5,
-          "name": "Wait Before Resume",
-          "parameters": {
-            "time": "3"
-          },
-          "position": {
-            "x": 409,
-            "y": 329
-          },
-          "type": "Action"
+        "position": {
+          "x": 0,
+          "y": 0
         },
-        {
-          "children": [],
-          "id": 6,
-          "name": "Return To Patrol",
-          "parameters": {
-            "key": "CurrentState",
-            "value": "Patrol"
-          },
-          "position": {
-            "x": 407,
-            "y": 441
-          },
-          "type": "Action"
-        }
-      ],
-      "rootNodeId": 1
-    },
-    "subgraphs": {}
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 4,
+        "name": "Look Around",
+        "parameters": {
+          "anim": "LookAround",
+          "duration": "4"
+        },
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 5,
+        "name": "Wait Before Resume",
+        "parameters": {
+          "time": "3"
+        },
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 6,
+        "name": "Return To Patrol",
+        "parameters": {
+          "key": "CurrentState",
+          "value": "Patrol"
+        },
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "type": "Action"
+      }
+    ],
+    "rootNodeId": 1
   },
   "description": "",
   "editorState": {
@@ -105,9 +102,9 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-03-10T14:59:26",
+    "lastModified": "",
     "tags": []
   },
   "name": "Guard_Investigate",
-  "schema_version": 5
+  "schema_version": 2
 }
