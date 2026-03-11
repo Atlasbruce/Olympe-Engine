@@ -566,19 +566,30 @@ void VisualScriptEditorPanel::LoadTemplate(const TaskGraphTemplate* tmpl,
 
 bool VisualScriptEditorPanel::Save()
 {
+    SYSTEM_LOG << "[VisualScriptEditorPanel] Save() called. m_currentPath='"
+               << m_currentPath << "'\n";
+
     if (m_currentPath.empty())
+    {
+        SYSTEM_LOG << "[VisualScriptEditorPanel] Save() aborted: m_currentPath is empty\n";
         return false;
+    }
 
     // CRITICAL FIX: Sync node positions from ImNodes BEFORE serialization.
     // RenderToolbar() (which calls Save) executes before RenderCanvas() syncs
     // positions, so we must pull fresh positions here to avoid stale data.
     SyncNodePositionsFromImNodes();
 
-    return SerializeAndWrite(m_currentPath);
+    bool ok = SerializeAndWrite(m_currentPath);
+    SYSTEM_LOG << "[VisualScriptEditorPanel] Save() "
+               << (ok ? "succeeded" : "FAILED") << ": '" << m_currentPath << "'\n";
+    return ok;
 }
 
 bool VisualScriptEditorPanel::SaveAs(const std::string& path)
 {
+    SYSTEM_LOG << "[VisualScriptEditorPanel] SaveAs() called. path='" << path << "'\n";
+
     if (path.empty())
         return false;
 
@@ -591,6 +602,11 @@ bool VisualScriptEditorPanel::SaveAs(const std::string& path)
     {
         m_currentPath = path;
         m_dirty       = false;
+        SYSTEM_LOG << "[VisualScriptEditorPanel] SaveAs() succeeded: '" << path << "'\n";
+    }
+    else
+    {
+        SYSTEM_LOG << "[VisualScriptEditorPanel] SaveAs() FAILED: '" << path << "'\n";
     }
     return ok;
 }
@@ -614,6 +630,8 @@ void VisualScriptEditorPanel::SyncNodePositionsFromImNodes()
 
 bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
 {
+    SYSTEM_LOG << "[VisualScriptEditorPanel] SerializeAndWrite: writing to '" << path << "'\n";
+
     SyncTemplateFromCanvas();
 
     json root;
@@ -712,15 +730,20 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
     root["dataConnections"] = dataArray;
 
     // Write file
+    SYSTEM_LOG << "[VisualScriptEditorPanel] SerializeAndWrite: opening '"
+               << path << "' for writing\n";
     std::ofstream ofs(path);
     if (!ofs.is_open())
     {
         std::cerr << "[VisualScriptEditorPanel] Cannot open file for write: " << path << std::endl;
+        SYSTEM_LOG << "[VisualScriptEditorPanel] SerializeAndWrite FAILED: cannot open '"
+                   << path << "'\n";
         return false;
     }
     ofs << root.dump(2);
     ofs.close();
     m_dirty = false;
+    SYSTEM_LOG << "[VisualScriptEditorPanel] SerializeAndWrite succeeded: '" << path << "'\n";
     return true;
 }
 
@@ -774,6 +797,8 @@ void VisualScriptEditorPanel::RenderToolbar()
     ImGui::SameLine();
     if (ImGui::Button("Save"))
     {
+        SYSTEM_LOG << "[VisualScriptEditorPanel] Save button clicked. m_currentPath='"
+                   << m_currentPath << "'\n";
         if (m_currentPath.empty())
         {
             m_showSaveAsDialog = true;
@@ -808,6 +833,8 @@ void VisualScriptEditorPanel::RenderToolbar()
         if (ImGui::IsKeyPressed(ImGuiKey_S) &&
             ImGui::GetIO().KeyCtrl)
         {
+            SYSTEM_LOG << "[VisualScriptEditorPanel] Ctrl+S pressed. m_currentPath='"
+                       << m_currentPath << "'\n";
             Save();
         }
 
@@ -846,6 +873,17 @@ void VisualScriptEditorPanel::RenderSaveAsDialog()
     {
         ImGui::OpenPopup("SaveAsDialog");
         m_showSaveAsDialog = false;
+
+        // Derive the save extension from the currently loaded file so we
+        // preserve .json files as .json (instead of silently renaming to .ats).
+        // Fall back to .ats for new/untitled graphs.
+        m_saveAsExtension = ".ats";
+        if (!m_currentPath.empty())
+        {
+            size_t dotPos = m_currentPath.rfind('.');
+            if (dotPos != std::string::npos)
+                m_saveAsExtension = m_currentPath.substr(dotPos);
+        }
 
         // Pre-fill the filename from the current path so the user doesn't have
         // to retype a name they already gave the graph.
@@ -899,9 +937,10 @@ void VisualScriptEditorPanel::RenderSaveAsDialog()
         ImGui::InputText("##FileName", m_saveAsFilename, sizeof(m_saveAsFilename));
 
         // Full path preview
-        ImGui::TextDisabled("Full path: %s/%s.ats",
+        ImGui::TextDisabled("Full path: %s/%s%s",
                             m_saveAsDirectory.c_str(),
-                            m_saveAsFilename);
+                            m_saveAsFilename,
+                            m_saveAsExtension.c_str());
 
         ImGui::Separator();
 
@@ -912,7 +951,9 @@ void VisualScriptEditorPanel::RenderSaveAsDialog()
         if (ImGui::Button("Save", ImVec2(120, 0)))
         {
             std::string fullPath = m_saveAsDirectory + "/" +
-                                   std::string(m_saveAsFilename) + ".ats";
+                                   std::string(m_saveAsFilename) + m_saveAsExtension;
+            SYSTEM_LOG << "[VisualScriptEditorPanel] SaveAs dialog confirmed. fullPath='"
+                       << fullPath << "'\n";
             if (SaveAs(fullPath))
             {
                 std::cout << "[VisualScriptEditorPanel] Saved to: " << fullPath << std::endl;
@@ -1030,6 +1071,14 @@ void VisualScriptEditorPanel::RenderCanvas()
     }
 
     ImNodes::EndNodeEditor();
+
+    // FIX: Eagerly sync node positions back into m_editorNodes immediately
+    // after every canvas render.  This ensures that when Save() is invoked
+    // from RenderToolbar() at the START of the next frame (before RenderCanvas
+    // runs again), m_editorNodes already holds the latest drag positions.
+    // The SyncNodePositionsFromImNodes() call inside Save()/SaveAs() then acts
+    // as a lightweight double-check rather than the sole sync point.
+    SyncNodePositionsFromImNodes();
 
     // ========================================================================
     // Context menu dispatch (requires ImNodesScope_None, i.e. after EndNodeEditor)
