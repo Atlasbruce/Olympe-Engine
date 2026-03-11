@@ -492,10 +492,6 @@ namespace Olympe
 
     void BlueprintEditorGUI::RenderFixedLayout()
     {
-        // Get backend reference (kept for legacy panels)
-        auto& backend = BlueprintEditor::Get();
-        (void)backend;
-
         // Create a fullscreen window for the fixed layout
         ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetFrameHeight()));  // Below menu bar
         ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, 

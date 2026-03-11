@@ -210,8 +210,9 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
     else if (graphType == "BehaviorTree")
     {
         // BehaviorTreeRenderer needs a NodeGraphPanel reference.
-        // We use a lazily initialised static panel here since BT rendering
-        // relies on the singleton NodeGraphManager anyway.
+        // The editor is single-threaded, so the static is safe here.
+        // All BT tabs share the same backing panel since they rely on the
+        // singleton NodeGraphManager; each renderer switches the active graph.
         static NodeGraphPanel s_btPanel;
         static bool s_btPanelInit = false;
         if (!s_btPanelInit)
@@ -296,7 +297,7 @@ void TabManager::DestroyTab(size_t index)
     const std::string closedID = m_tabs[index].tabID;
     delete m_tabs[index].renderer;
     m_tabs[index].renderer = nullptr;
-    m_tabs.erase(m_tabs.begin() + static_cast<int>(index));
+    m_tabs.erase(m_tabs.begin() + static_cast<std::vector<EditorTab>::difference_type>(index));
 
     // Update active tab
     if (m_activeTabID == closedID)
@@ -327,19 +328,11 @@ bool TabManager::CloseTab(const std::string& tabID)
 
         if (m_tabs[i].isDirty)
         {
-            int choice = ShowUnsavedDialog(m_tabs[i]);
-            if (choice == 1)
-            {
-                // Save
-                if (!SaveActiveTabAs(m_tabs[i].filePath.empty() ? "" : m_tabs[i].filePath))
-                    return false; // Save failed or user cancelled Save As
-            }
-            else if (choice == -1)
-            {
-                // Cancel
-                return false;
-            }
-            // choice == 0 → Don't Save, fall through to close
+            // Dirty tabs get a deferred modal handled by RenderTabBar().
+            // Set m_pendingCloseTabID so the modal fires on the next frame.
+            if (m_pendingCloseTabID.empty())
+                m_pendingCloseTabID = tabID;
+            return false; // Actual close deferred to modal callback
         }
 
         DestroyTab(i);
@@ -641,19 +634,18 @@ void TabManager::RenderActiveCanvas()
 
 int TabManager::ShowUnsavedDialog(const EditorTab& tab)
 {
-    // In immediate-mode GUI we can't block, so we open a popup and return a
-    // sentinel (-2) meaning "pending". The actual choice is handled inside
-    // RenderTabBar's popup rendering path.  For synchronous call-sites (like
-    // CloseAllTabs), we use a simplified inline approach.
-
-    // This method is called outside the render loop, so we use ImGui::OpenPopup
-    // indirectly by setting state and returning a non-blocking result.
-    // For the tab-bar close button flow, the modal in RenderTabBar handles it.
-    // For CloseAllTabs, we can't show a real modal here without a render frame,
-    // so we treat dirty as "Don't Save" for the bulk close path.
-    // A real application would implement a proper event-driven close mechanism.
+    // NOTE: ImGui is immediate-mode; true blocking modal dialogs cannot be
+    // shown outside a render frame.  Interactive unsaved-change prompts are
+    // handled by the deferred modal inside RenderTabBar() (triggered by the
+    // [X] close button).
+    //
+    // This fallback is only reached by CloseAllTabs(), which is called from
+    // keyboard shortcuts and File > Close All.  In that context there is no
+    // safe way to block for user input, so we discard unsaved changes.
+    // CloseTab() (single tab) always uses the deferred RenderTabBar modal and
+    // therefore never calls this method for dirty tabs.
     (void)tab;
-    return 0; // Don't Save (safe default for bulk operations)
+    return 0; // Don't Save
 }
 
 } // namespace Olympe
