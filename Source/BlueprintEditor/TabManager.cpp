@@ -393,11 +393,18 @@ bool TabManager::SaveActiveTab()
         return false; // Will complete when dialog is confirmed
     }
 
+    SYSTEM_LOG << "[TabManager] SaveActiveTab: saving tab '" << tab->displayName
+               << "' to '" << tab->filePath << "'\n";
     bool ok = tab->renderer->Save(tab->filePath);
     if (ok)
     {
         tab->isDirty     = false;
         tab->displayName = DisplayNameFromPath(tab->filePath);
+        SYSTEM_LOG << "[TabManager] SaveActiveTab: succeeded for '" << tab->filePath << "'\n";
+    }
+    else
+    {
+        SYSTEM_LOG << "[TabManager] SaveActiveTab: FAILED for '" << tab->filePath << "'\n";
     }
     return ok;
 }

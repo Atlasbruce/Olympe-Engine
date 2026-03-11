@@ -337,6 +337,8 @@ private:
     char        m_saveAsFilename[256];
     /// Currently selected destination directory
     std::string m_saveAsDirectory   = "Blueprints/AI";
+    /// Extension to append when saving (derived from m_currentPath; defaults to ".ats")
+    std::string m_saveAsExtension   = ".ats";
 };
 
 } // namespace Olympe

@@ -396,7 +396,16 @@ namespace Olympe
             // Extract filename once for warning messages
             std::string filename = fs::path(filepath).filename().string();
 
-            // Priority 1: Check explicit "type" field (v1 + v2 standardized)
+            // Priority 1: Check explicit "graphType" field (VS v4 / ATS format).
+            // This is the canonical field for schema_version 4 graphs stored as .json.
+            // Must be checked before the legacy "type" field to avoid falling through
+            // to structural detection and emitting a spurious WARNING.
+            if (j.contains("graphType") && j["graphType"].is_string())
+            {
+                return j["graphType"].get<std::string>();
+            }
+
+            // Priority 2: Check explicit "type" field (v1 + v2 standardized)
             if (j.contains("type"))
             {
                 std::string type = j["type"].get<std::string>();
@@ -415,7 +424,7 @@ namespace Olympe
                 return type;
             }
             
-            // Priority 2: FALLBACK - Check "blueprintType" for old v2 files
+            // Priority 3: FALLBACK - Check "blueprintType" for old v2 files
             if (j.contains("blueprintType"))
             {
                 std::string type = j["blueprintType"].get<std::string>();
@@ -430,7 +439,7 @@ namespace Olympe
                          << ", using structural detection (detected: " << detectedType << ")" << std::endl;
             };
 
-            // Priority 3: Structural detection for schema v2 (data wrapper)
+            // Priority 4: Structural detection for schema v2 (data wrapper)
             if (j.contains("data"))
             {
                 const json& data = j["data"];
@@ -446,7 +455,7 @@ namespace Olympe
                 }
             }
 
-            // Priority 4: Structural detection for schema v1 (direct fields)
+            // Priority 5: Structural detection for schema v1 (direct fields)
             if (j.contains("rootNodeId") && j.contains("nodes"))
             {
                 logStructuralDetection("BehaviorTree");
@@ -459,7 +468,7 @@ namespace Olympe
                 return "HFSM";
             }
 
-            // Priority 5: Structural detection for Visual Script graphs
+            // Priority 6: Structural detection for Visual Script graphs
             if (j.contains("schema_version") || j.contains("ExecConnections") || j.contains("DataConnections"))
             {
                 logStructuralDetection("VisualScript");

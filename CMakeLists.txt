@@ -429,6 +429,15 @@ if(BUILD_TESTS)
     add_test(NAME OlympePhase10Tests COMMAND OlympePhase10Tests)
 
     # -----------------------------------------------------------------------
+    # OlympePhase11Tests  (Phase 11 — VS Editor Save Fixes)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase11Tests
+        Tests/BlueprintEditor/Phase11Test.cpp
+    )
+    target_include_directories(OlympePhase11Tests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase11Tests COMMAND OlympePhase11Tests)
+
+    # -----------------------------------------------------------------------
     # OlympeATSReferenceV4Tests  (Integration — reference_complete_v4.ats)
     # -----------------------------------------------------------------------
     add_executable(OlympeATSReferenceV4Tests
