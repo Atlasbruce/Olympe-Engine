@@ -20,9 +20,11 @@
 #include "EntityPrefabEditorPlugin.h"
 #include "AdditionalEditorPlugins.h"
 #include "SubgraphMigrator.h"
+#include "TabManager.h"
 #include "../TaskSystem/TaskGraphLoader.h"
 #include "../Core/AssetManager.h"
 #include "../json_helper.h"
+#include "../system/system_utils.h"
 #include <algorithm>
 #include <iostream>
 #include <fstream>
@@ -1000,32 +1002,42 @@ namespace Olympe
     
     void BlueprintEditor::OpenGraphInEditor(const std::string& assetPath)
     {
-        std::cout << "BlueprintEditor: Opening graph " << assetPath << " in Node Graph Editor" << std::endl;
+        SYSTEM_LOG << "BlueprintEditor: Opening graph " << assetPath << " in editor\n";
         
         // Detect asset type
         std::string assetType = DetectAssetType(assetPath);
-        
-        // Only open BehaviorTree and HFSM types
+
+        // Route all graph types through TabManager
+        if (assetType == "VisualScript" || assetType == "BehaviorTree" ||
+            assetType == "HFSM"         || assetType == "TaskGraph"    ||
+            assetType == "Generic")
+        {
+            std::string tabID = TabManager::Get().OpenFileInTab(assetPath);
+            if (tabID.empty())
+            {
+                SYSTEM_LOG << "BlueprintEditor: TabManager failed to open: " << assetPath << "\n";
+                m_LastError = "Failed to open graph file: " + assetPath;
+            }
+            return;
+        }
+
+        // Fallback: legacy BehaviorTree directly via NodeGraphManager
         if (assetType != "BehaviorTree" && assetType != "HFSM")
         {
-            std::cerr << "BlueprintEditor: Cannot open asset type '" << assetType 
-                     << "' in Node Graph Editor (only BehaviorTree and HFSM supported)" << std::endl;
-            m_LastError = "Asset type '" + assetType + "' cannot be opened in Node Graph Editor";
+            SYSTEM_LOG << "BlueprintEditor: Cannot open asset type '" << assetType << "'\n";
+            m_LastError = "Asset type '" + assetType + "' cannot be opened in editor";
             return;
         }
         
-        // Use NodeGraphManager to load the graph
+        // Use NodeGraphManager to load the graph (legacy path)
         int graphId = NodeGraphManager::Get().LoadGraph(assetPath);
-        
         if (graphId < 0)
         {
-            std::cerr << "BlueprintEditor: Failed to load graph from " << assetPath << std::endl;
+            SYSTEM_LOG << "BlueprintEditor: Failed to load graph from " << assetPath << "\n";
             m_LastError = "Failed to load graph file: " + assetPath;
             return;
         }
-        
-        // Graph is now loaded and active in NodeGraphManager
-        std::cout << "BlueprintEditor: Graph loaded with ID " << graphId << std::endl;
+        SYSTEM_LOG << "BlueprintEditor: Graph loaded with ID " << graphId << "\n";
     }
 
     // ========================================================================
