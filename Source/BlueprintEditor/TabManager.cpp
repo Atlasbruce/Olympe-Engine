@@ -573,6 +573,19 @@ void TabManager::RenderTabBar()
             if (tab.renderer)
                 tab.isDirty = tab.renderer->IsDirty();
 
+            // Sync file path and display name from renderer.
+            // This covers the case where the panel's own Save/Save As dialog
+            // was used directly (not via TabManager::SaveActiveTab).
+            if (tab.renderer)
+            {
+                std::string rendererPath = tab.renderer->GetCurrentPath();
+                if (!rendererPath.empty() && rendererPath != tab.filePath)
+                {
+                    tab.filePath    = rendererPath;
+                    tab.displayName = DisplayNameFromPath(rendererPath);
+                }
+            }
+
             // Build label: "name *" when dirty
             std::string label = tab.displayName;
             if (tab.isDirty)

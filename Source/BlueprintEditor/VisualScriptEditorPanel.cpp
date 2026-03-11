@@ -163,17 +163,10 @@ int VisualScriptEditorPanel::AddNode(TaskNodeType type, float x, float y)
 {
     int newID = AllocNodeID();
 
-    VSEditorNode eNode;
-    eNode.nodeID = newID;
-    eNode.posX   = x;
-    eNode.posY   = y;
-    // Note: ImNodes will position the node at (0,0) on first render.
-    // User must manually drag it to desired position, or we implement
-    // a custom positioning system in VisualScriptNodeRenderer.
-
-    eNode.def.NodeID   = newID;
-    eNode.def.Type     = type;
-    eNode.def.NodeName = GetNodeTypeLabel(type);
+    TaskNodeDefinition def;
+    def.NodeID   = newID;
+    def.Type     = type;
+    def.NodeName = GetNodeTypeLabel(type);
 
     // EntryPoint is special
     if (type == TaskNodeType::EntryPoint && m_template.EntryPointID == NODE_INDEX_NONE)
@@ -182,46 +175,36 @@ int VisualScriptEditorPanel::AddNode(TaskNodeType type, float x, float y)
         m_template.RootNodeID   = newID;
     }
 
+    // Editor-side node (tracks canvas position independently of the template)
+    VSEditorNode eNode;
+    eNode.nodeID = newID;
+    eNode.posX   = x;
+    eNode.posY   = y;
+    eNode.def    = def;
     m_editorNodes.push_back(eNode);
-    m_template.Nodes.push_back(eNode.def);
-    m_template.BuildLookupCache();
+
+    // Command adds the node to m_template.Nodes and rebuilds the lookup cache
+    m_undoStack.PushCommand(
+        std::unique_ptr<ICommand>(new AddNodeCommand(def)),
+        m_template);
+
     m_dirty = true;
     return newID;
 }
 
 void VisualScriptEditorPanel::RemoveNode(int nodeID)
 {
-    // Remove from editor nodes
+    // Remove from editor nodes (canvas-side)
     m_editorNodes.erase(
         std::remove_if(m_editorNodes.begin(), m_editorNodes.end(),
                        [nodeID](const VSEditorNode& n) { return n.nodeID == nodeID; }),
         m_editorNodes.end());
 
-    // Remove from template nodes
-    m_template.Nodes.erase(
-        std::remove_if(m_template.Nodes.begin(), m_template.Nodes.end(),
-                       [nodeID](const TaskNodeDefinition& n) { return n.NodeID == nodeID; }),
-        m_template.Nodes.end());
+    // Command removes the node + all associated connections from m_template
+    m_undoStack.PushCommand(
+        std::unique_ptr<ICommand>(new DeleteNodeCommand(nodeID)),
+        m_template);
 
-    // Remove associated exec connections
-    m_template.ExecConnections.erase(
-        std::remove_if(m_template.ExecConnections.begin(),
-                       m_template.ExecConnections.end(),
-                       [nodeID](const ExecPinConnection& c) {
-                           return c.SourceNodeID == nodeID || c.TargetNodeID == nodeID;
-                       }),
-        m_template.ExecConnections.end());
-
-    // Remove associated data connections
-    m_template.DataConnections.erase(
-        std::remove_if(m_template.DataConnections.begin(),
-                       m_template.DataConnections.end(),
-                       [nodeID](const DataPinConnection& c) {
-                           return c.SourceNodeID == nodeID || c.TargetNodeID == nodeID;
-                       }),
-        m_template.DataConnections.end());
-
-    m_template.BuildLookupCache();
     RebuildLinks();
     m_dirty = true;
 }
@@ -417,6 +400,148 @@ void VisualScriptEditorPanel::RebuildLinks()
 }
 
 // ============================================================================
+// Undo/Redo helpers
+// ============================================================================
+
+void VisualScriptEditorPanel::SyncEditorNodesFromTemplate()
+{
+    // Default grid spacing used when a node has no recorded canvas position
+    // (e.g. after a Redo restores a previously-deleted node).
+    static const float DEFAULT_NODE_X_OFFSET  =  50.0f;
+    static const float DEFAULT_NODE_X_SPACING = 200.0f;
+    static const float DEFAULT_NODE_Y         = 100.0f;
+
+    // Preserve canvas positions for nodes that still exist
+    std::unordered_map<int, std::pair<float, float> > savedPos;
+    for (size_t i = 0; i < m_editorNodes.size(); ++i)
+    {
+        savedPos[m_editorNodes[i].nodeID] =
+            std::make_pair(m_editorNodes[i].posX, m_editorNodes[i].posY);
+    }
+
+    m_editorNodes.clear();
+    m_positionedNodes.clear();
+
+    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+    {
+        const TaskNodeDefinition& def = m_template.Nodes[i];
+
+        VSEditorNode eNode;
+        eNode.nodeID = def.NodeID;
+        eNode.def    = def;
+
+        auto it = savedPos.find(def.NodeID);
+        if (it != savedPos.end())
+        {
+            // Restore previously known position
+            eNode.posX = it->second.first;
+            eNode.posY = it->second.second;
+        }
+        else
+        {
+            // New node (e.g. restored by Redo) – use a default spread position
+            eNode.posX = DEFAULT_NODE_X_OFFSET +
+                         DEFAULT_NODE_X_SPACING * static_cast<float>(i);
+            eNode.posY = DEFAULT_NODE_Y;
+        }
+
+        if (def.NodeID >= m_nextNodeID)
+            m_nextNodeID = def.NodeID + 1;
+
+        m_editorNodes.push_back(eNode);
+    }
+
+    // Request a position-restore pass on the next RenderCanvas() call
+    m_needsPositionSync = true;
+}
+
+void VisualScriptEditorPanel::RemoveLink(int linkID)
+{
+    // Find the link descriptor
+    VSEditorLink* link = nullptr;
+    for (size_t i = 0; i < m_editorLinks.size(); ++i)
+    {
+        if (m_editorLinks[i].linkID == linkID)
+        {
+            link = &m_editorLinks[i];
+            break;
+        }
+    }
+    if (!link)
+        return;
+
+    if (link->isData)
+    {
+        // Decode data-out → data-in
+        int srcNodeID = link->srcAttrID / 10000;
+        int srcPinIdx = link->srcAttrID % 10000 - 300; // data-out range 300-399
+        int dstNodeID = link->dstAttrID / 10000;
+        int dstPinIdx = link->dstAttrID % 10000 - 200; // data-in  range 200-299
+
+        std::string srcPinName = "Value";
+        std::string dstPinName = "Value";
+
+        const TaskNodeDefinition* srcNode = m_template.GetNode(srcNodeID);
+        const TaskNodeDefinition* dstNode = m_template.GetNode(dstNodeID);
+
+        if (srcNode)
+        {
+            auto pins = GetDataOutputPins(srcNode->Type);
+            if (srcPinIdx >= 0 && srcPinIdx < static_cast<int>(pins.size()))
+                srcPinName = pins[static_cast<size_t>(srcPinIdx)];
+        }
+        if (dstNode)
+        {
+            auto pins = GetDataInputPins(dstNode->Type);
+            if (dstPinIdx >= 0 && dstPinIdx < static_cast<int>(pins.size()))
+                dstPinName = pins[static_cast<size_t>(dstPinIdx)];
+        }
+
+        m_template.DataConnections.erase(
+            std::remove_if(m_template.DataConnections.begin(),
+                           m_template.DataConnections.end(),
+                           [&](const DataPinConnection& c) {
+                               return c.SourceNodeID  == srcNodeID &&
+                                      c.TargetNodeID  == dstNodeID &&
+                                      c.SourcePinName == srcPinName &&
+                                      c.TargetPinName == dstPinName;
+                           }),
+            m_template.DataConnections.end());
+    }
+    else
+    {
+        // Decode exec-out → exec-in
+        int srcNodeID = link->srcAttrID / 10000;
+        int srcPinIdx = link->srcAttrID % 10000 - 100; // exec-out range 100-199
+        int dstNodeID = link->dstAttrID / 10000;
+
+        std::string srcPinName = "Out";
+
+        const TaskNodeDefinition* srcNode = m_template.GetNode(srcNodeID);
+        if (srcNode)
+        {
+            auto pins = GetExecOutputPins(srcNode->Type);
+            if (srcPinIdx >= 0 && srcPinIdx < static_cast<int>(pins.size()))
+                srcPinName = pins[static_cast<size_t>(srcPinIdx)];
+        }
+
+        m_template.ExecConnections.erase(
+            std::remove_if(m_template.ExecConnections.begin(),
+                           m_template.ExecConnections.end(),
+                           [&](const ExecPinConnection& c) {
+                               return c.SourceNodeID  == srcNodeID &&
+                                      c.TargetNodeID  == dstNodeID &&
+                                      c.SourcePinName == srcPinName;
+                           }),
+            m_template.ExecConnections.end());
+    }
+
+    m_template.BuildLookupCache();
+    RebuildLinks();
+    m_dirty = true;
+}
+
+// ============================================================================
 // Load / Save
 // ============================================================================
 
@@ -432,6 +557,9 @@ void VisualScriptEditorPanel::LoadTemplate(const TaskGraphTemplate* tmpl,
 
     // Rebuild lookup cache after copy (pointers from old template are now invalid)
     m_template.BuildLookupCache();
+
+    // Clear undo/redo history — a freshly loaded graph has no pending operations
+    m_undoStack.Clear();
 
     SyncCanvasFromTemplate();
 }
@@ -654,6 +782,26 @@ void VisualScriptEditorPanel::RenderToolbar()
         {
             Save();
         }
+
+        // Undo (Ctrl+Z)
+        if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z) &&
+            m_undoStack.CanUndo())
+        {
+            m_undoStack.Undo(m_template);
+            SyncEditorNodesFromTemplate();
+            RebuildLinks();
+            m_dirty = true;
+        }
+
+        // Redo (Ctrl+Y)
+        if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y) &&
+            m_undoStack.CanRedo())
+        {
+            m_undoStack.Redo(m_template);
+            SyncEditorNodesFromTemplate();
+            RebuildLinks();
+            m_dirty = true;
+        }
     }
 
     if (ImGui::BeginPopup("SaveError"))
@@ -670,6 +818,25 @@ void VisualScriptEditorPanel::RenderSaveAsDialog()
     {
         ImGui::OpenPopup("SaveAsDialog");
         m_showSaveAsDialog = false;
+
+        // Pre-fill the filename from the current path so the user doesn't have
+        // to retype a name they already gave the graph.
+        if (!m_currentPath.empty())
+        {
+            size_t lastSlash = m_currentPath.find_last_of("/\\");
+            std::string fname = (lastSlash != std::string::npos)
+                                ? m_currentPath.substr(lastSlash + 1)
+                                : m_currentPath;
+            // Strip extension
+            size_t dotPos = fname.rfind('.');
+            if (dotPos != std::string::npos)
+                fname = fname.substr(0, dotPos);
+
+            strncpy(m_saveAsFilename, fname.c_str(), sizeof(m_saveAsFilename) - 1);
+            m_saveAsFilename[sizeof(m_saveAsFilename) - 1] = '\0';
+        }
+        // else: keep whatever is already in the buffer (set in constructor or
+        //       carried over from a previous dialog invocation).
     }
 
     if (ImGui::BeginPopupModal("SaveAsDialog", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
@@ -772,15 +939,10 @@ void VisualScriptEditorPanel::RenderCanvas()
 
     ImNodes::BeginNodeEditor();
 
-    // Context menu for node palette
-    if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
-    {
-        ImGui::OpenPopup("VSNodePalette");
-        ImVec2 mp = ImGui::GetMousePos();
-        ImVec2 wp = ImGui::GetWindowPos();
-        m_contextMenuX = mp.x - wp.x;
-        m_contextMenuY = mp.y - wp.y;
-    }
+    // NOTE: Right-click context menu detection is deferred until after
+    // ImNodes::EndNodeEditor() below so that IsNodeHovered() / IsLinkHovered()
+    // (which require ImNodesScope_None) can be used to determine what was clicked.
+
     RenderNodePalette();
 
     // Render all nodes
@@ -841,6 +1003,60 @@ void VisualScriptEditorPanel::RenderCanvas()
     }
 
     ImNodes::EndNodeEditor();
+
+    // ========================================================================
+    // Context menu dispatch (requires ImNodesScope_None, i.e. after EndNodeEditor)
+    // Priority: node hover > link hover > canvas background.
+    // ========================================================================
+    {
+        int  hoveredNode = -1;
+        int  hoveredLink = -1;
+        bool nodeHovered = ImNodes::IsNodeHovered(&hoveredNode);
+        bool linkHovered = ImNodes::IsLinkHovered(&hoveredLink);
+
+        if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+        {
+            if (nodeHovered)
+            {
+                m_contextNodeID = hoveredNode;
+                ImGui::OpenPopup("VSNodeContextMenu");
+            }
+            else if (linkHovered)
+            {
+                m_contextLinkID = hoveredLink;
+                ImGui::OpenPopup("VSLinkContextMenu");
+            }
+            else
+            {
+                // Canvas background — open the node-palette popup
+                ImVec2 mp = ImGui::GetMousePos();
+                ImVec2 wp = ImGui::GetWindowPos();
+                m_contextMenuX = mp.x - wp.x;
+                m_contextMenuY = mp.y - wp.y;
+                ImGui::OpenPopup("VSNodePalette");
+            }
+        }
+
+        // Node context menu
+        if (ImGui::BeginPopup("VSNodeContextMenu"))
+        {
+            if (ImGui::MenuItem("Delete Node"))
+            {
+                RemoveNode(m_contextNodeID);
+                if (m_selectedNodeID == m_contextNodeID)
+                    m_selectedNodeID = -1;
+            }
+            ImGui::EndPopup();
+        }
+
+        // Link context menu
+        if (ImGui::BeginPopup("VSLinkContextMenu"))
+        {
+            if (ImGui::MenuItem("Delete Connection"))
+                RemoveLink(m_contextLinkID);
+            ImGui::EndPopup();
+        }
+    }
 
     // ========================================================================
     // PHASE 1: Detect drag & drop (store pending node creation).

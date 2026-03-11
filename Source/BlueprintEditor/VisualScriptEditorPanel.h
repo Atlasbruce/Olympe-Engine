@@ -23,6 +23,7 @@
 #include "../TaskSystem/TaskGraphTemplate.h"
 #include "../TaskSystem/LocalBlackboard.h"
 #include "VisualScriptNodeRenderer.h"
+#include "UndoRedoStack.h"
 
 // Forward-declare ImNodes context type (defined in imnodes.h) in the global
 // namespace so it can be referenced from within the Olympe namespace below.
@@ -233,6 +234,18 @@ private:
     /** Rebuilds ImNodes exec/data link arrays from the template. */
     void RebuildLinks();
 
+    /**
+     * @brief Rebuilds m_editorNodes from m_template, preserving existing node positions.
+     * Called after Undo/Redo to synchronise the canvas with the template state.
+     */
+    void SyncEditorNodesFromTemplate();
+
+    /**
+     * @brief Removes an ImNodes link (and its underlying template connection) by link ID.
+     * @param linkID  The ImNodes link UID to remove.
+     */
+    void RemoveLink(int linkID);
+
     /** Serializes the template to JSON v4 and writes to a file. */
     bool SerializeAndWrite(const std::string& path);
 
@@ -284,6 +297,15 @@ private:
     /// Right-click paste position
     float m_contextMenuX = 0.0f;
     float m_contextMenuY = 0.0f;
+
+    /// Node ID captured at the moment a right-click context menu was opened on a node
+    int m_contextNodeID = -1;
+
+    /// Link ID captured at the moment a right-click context menu was opened on a link
+    int m_contextLinkID = -1;
+
+    /// Undo/Redo command stack for reversible graph editing operations
+    UndoRedoStack m_undoStack;
 
     // -----------------------------------------------------------------------
     // Drag & drop pending state (two-phase node creation)
