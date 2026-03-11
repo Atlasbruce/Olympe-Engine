@@ -473,6 +473,14 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
         }
     }
 
+    // Editor position (schema v4 only — ignored at runtime).
+    if (JsonHelper::IsObject(nodeJson, "position"))
+    {
+        nd.EditorPosX   = JsonHelper::GetFloat(nodeJson["position"], "x", 0.0f);
+        nd.EditorPosY   = JsonHelper::GetFloat(nodeJson["position"], "y", 0.0f);
+        nd.HasEditorPos = true;
+    }
+
     return nd;
 }
 
