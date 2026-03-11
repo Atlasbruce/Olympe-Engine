@@ -190,6 +190,11 @@ private:
     int                    m_nextTabNum;      ///< Counter for "Untitled-N" names
     int                    m_nextTabIDNum;    ///< Counter for unique tab IDs
 
+    // One-shot programmatic tab selection request.
+    // Set by SetActiveTab(); applied as ImGuiTabItemFlags_SetSelected for ONE frame,
+    // then cleared so that user-initiated tab clicks are not overridden.
+    std::string m_pendingSelectTabID;
+
     // Pending close state (for deferred close when dialog is shown)
     std::string m_pendingCloseTabID;
 

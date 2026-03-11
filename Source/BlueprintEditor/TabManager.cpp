@@ -257,7 +257,11 @@ void TabManager::SetActiveTab(const std::string& tabID)
 {
     for (size_t i = 0; i < m_tabs.size(); ++i)
         m_tabs[i].isActive = (m_tabs[i].tabID == tabID);
-    m_activeTabID = tabID;
+    m_activeTabID         = tabID;
+    // Request a one-shot programmatic selection for this tab.
+    // The flag is consumed (cleared) during the very next RenderTabBar() call
+    // so that subsequent user-initiated tab clicks are not overridden.
+    m_pendingSelectTabID  = tabID;
 }
 
 std::string TabManager::GetActiveTabID() const
@@ -576,10 +580,16 @@ void TabManager::RenderTabBar()
             label += "###tab_";
             label += tab.tabID;
 
-            // Use ImGuiTabItemFlags_SetSelected when this tab becomes active
+            // Apply ImGuiTabItemFlags_SetSelected only once (one-shot) when
+            // this tab was programmatically activated.  The flag is cleared
+            // immediately after use so that subsequent user-initiated tab
+            // clicks are not suppressed.
             ImGuiTabItemFlags flags = 0;
-            if (tab.isActive)
+            if (tab.tabID == m_pendingSelectTabID)
+            {
                 flags |= ImGuiTabItemFlags_SetSelected;
+                m_pendingSelectTabID = ""; // consume the one-shot request
+            }
 
             // Close button
             bool open = true;
