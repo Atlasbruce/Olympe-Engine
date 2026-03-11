@@ -11,6 +11,7 @@
 #include "DebugPanel.h"
 #include "ProfilerPanel.h"
 #include "BTtoVSMigrator.h"
+#include "TabManager.h"
 #include "../TaskSystem/TaskGraphLoader.h"
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
@@ -229,25 +230,35 @@ namespace Olympe
             // ===== D) FILE MENU =====
             if (ImGui::BeginMenu("File"))
             {
-                // Primary: New Visual Script (VS v4 - current system)
+                // Tab-based graph creation
                 if (ImGui::MenuItem("New Visual Script", "Ctrl+N"))
-                {
-                    NewVisualScriptGraph();
-                }
+                    TabManager::Get().CreateNewTab("VisualScript");
+
+                if (ImGui::MenuItem("New Behavior Tree", "Ctrl+Shift+N"))
+                    TabManager::Get().CreateNewTab("BehaviorTree");
 
                 if (ImGui::MenuItem("Open Blueprint...", "Ctrl+O"))
                 {
-                    // TODO: File dialog - for now use example
+                    // Legacy fallback when no file dialog exists
                     LoadBlueprint("Blueprints/AI/guard_patrol.json");
                 }
 
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("Save", "Ctrl+S", false, backend.HasBlueprint()))
-                    SaveBlueprint();
+                bool hasActiveTab = !TabManager::Get().IsEmpty();
+                if (ImGui::MenuItem("Save", "Ctrl+S", false, hasActiveTab))
+                    TabManager::Get().SaveActiveTab();
 
-                if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false, backend.HasBlueprint()))
-                    SaveBlueprintAs();
+                if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false, hasActiveTab))
+                    TabManager::Get().SaveActiveTabAs("");
+
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("Close Tab", "Ctrl+W", false, hasActiveTab))
+                    TabManager::Get().CloseTab(TabManager::Get().GetActiveTabID());
+
+                if (ImGui::MenuItem("Close All Tabs", "Ctrl+Shift+W", false, hasActiveTab))
+                    TabManager::Get().CloseAllTabs();
 
                 ImGui::Separator();
 
@@ -255,9 +266,7 @@ namespace Olympe
                 if (ImGui::BeginMenu("Legacy Blueprints"))
                 {
                     if (ImGui::MenuItem("New Entity Blueprint (Legacy)"))
-                    {
                         NewBlueprint();
-                    }
 
                     ImGui::Separator();
                     ImGui::TextDisabled("Old BehaviorTree v2 system");
@@ -272,10 +281,7 @@ namespace Olympe
                 if (ImGui::MenuItem("Save as Template...", "Ctrl+Shift+T", false, backend.HasBlueprint()))
                 {
                     if (m_TemplateBrowserPanel)
-                    {
                         m_ShowTemplateBrowser = true;
-                        // Trigger the modal by accessing the panel
-                    }
                 }
                 
                 if (ImGui::MenuItem("Template Browser", nullptr, &m_ShowTemplateBrowser))
@@ -286,9 +292,7 @@ namespace Olympe
                 ImGui::Separator();
                 
                 if (ImGui::MenuItem("Reload Assets"))
-                {
                     backend.RefreshAssets();
-                }
                 
                 ImGui::Separator();
                 
@@ -488,9 +492,6 @@ namespace Olympe
 
     void BlueprintEditorGUI::RenderFixedLayout()
     {
-        // Get backend reference
-        auto& backend = BlueprintEditor::Get();
-
         // Create a fullscreen window for the fixed layout
         ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetFrameHeight()));  // Below menu bar
         ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, 
@@ -510,30 +511,42 @@ namespace Olympe
             return;
         }
 
-        float windowWidth = ImGui::GetContentRegionAvail().x;
+        float windowWidth  = ImGui::GetContentRegionAvail().x;
         float windowHeight = ImGui::GetContentRegionAvail().y;
 
-        // Calculate center panel width (what's left after left and right panels)
-        float centerWidth = windowWidth - m_AssetBrowserWidth - m_InspectorWidth - m_SplitterSize * 2;
-
-        // Ensure minimum widths
+        // Ensure minimum left panel width
         if (m_AssetBrowserWidth < m_MinPanelWidth)
             m_AssetBrowserWidth = m_MinPanelWidth;
-        if (m_InspectorWidth < m_MinPanelWidth)
-            m_InspectorWidth = m_MinPanelWidth;
+
+        float centerWidth = windowWidth - m_AssetBrowserWidth - m_SplitterSize;
         if (centerWidth < m_MinPanelWidth)
             centerWidth = m_MinPanelWidth;
 
-        // === LEFT PANEL: Asset Browser ===
-        ImGui::BeginChild("AssetBrowserPanel", ImVec2(m_AssetBrowserWidth, windowHeight), true);
-        if (m_ShowAssetBrowser)
+        // =====================================================================
+        // LEFT COLUMN: Asset Browser (top 60%) + Inspector (bottom 40%)
+        // =====================================================================
+        ImGui::BeginChild("LeftColumn", ImVec2(m_AssetBrowserWidth, windowHeight), false);
         {
-            // Render asset browser content inline (without ImGui::Begin/End wrapper)
-            m_AssetBrowser.RenderContent();
+            float leftHeight = ImGui::GetContentRegionAvail().y;
+
+            // Asset Browser: top portion
+            ImGui::BeginChild("AssetBrowserSection",
+                              ImVec2(0, leftHeight * 0.60f), true);
+            if (m_ShowAssetBrowser)
+                m_AssetBrowser.RenderContent();
+            ImGui::EndChild();
+
+            ImGui::Spacing();
+
+            // Inspector: bottom portion
+            ImGui::BeginChild("InspectorSection", ImVec2(0, 0), true);
+            if (m_ShowInspector)
+                m_InspectorPanel.RenderContent();
+            ImGui::EndChild();
         }
         ImGui::EndChild();
 
-        // Left splitter
+        // Vertical splitter between left column and center
         ImGui::SameLine();
         ImGui::Button("##LeftSplitter", ImVec2(m_SplitterSize, windowHeight));
         if (ImGui::IsItemActive())
@@ -541,53 +554,26 @@ namespace Olympe
             m_AssetBrowserWidth += ImGui::GetIO().MouseDelta.x;
             if (m_AssetBrowserWidth < m_MinPanelWidth)
                 m_AssetBrowserWidth = m_MinPanelWidth;
-            if (m_AssetBrowserWidth > windowWidth - m_InspectorWidth - m_MinPanelWidth - m_SplitterSize * 2)
-                m_AssetBrowserWidth = windowWidth - m_InspectorWidth - m_MinPanelWidth - m_SplitterSize * 2;
+            float maxLeft = windowWidth - m_MinPanelWidth - m_SplitterSize;
+            if (m_AssetBrowserWidth > maxLeft)
+                m_AssetBrowserWidth = maxLeft;
         }
         if (ImGui::IsItemHovered())
             ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
 
-        // === CENTER PANEL: Node Graph Editor or VS Editor ===
+        // =====================================================================
+        // CENTER COLUMN: Tab bar + Active graph canvas
+        // =====================================================================
         ImGui::SameLine();
-        ImGui::BeginChild("CenterPanel", ImVec2(centerWidth, windowHeight), true);
+        ImGui::BeginChild("CenterColumn", ImVec2(0, windowHeight), false);
+        {
+            // Tab bar (handles unsaved dialogs and tab switching)
+            TabManager::Get().RenderTabBar();
 
-        // Choose which editor to show
-        if (m_ShowVSEditor && m_VSEditorPanel)
-        {
-            m_VSEditorPanel->RenderContent();
-        }
-        else if (m_ShowNodeGraph)
-        {
-            m_NodeGraphPanel.RenderContent();
-        }
-        else
-        {
-            ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), 
-                             "No blueprint loaded.\nSelect an entity or asset file to inspect its properties.");
-        }
+            ImGui::Separator();
 
-        ImGui::EndChild();
-
-        // Right splitter
-        ImGui::SameLine();
-        ImGui::Button("##RightSplitter", ImVec2(m_SplitterSize, windowHeight));
-        if (ImGui::IsItemActive())
-        {
-            m_InspectorWidth -= ImGui::GetIO().MouseDelta.x;
-            if (m_InspectorWidth < m_MinPanelWidth)
-                m_InspectorWidth = m_MinPanelWidth;
-            if (m_InspectorWidth > windowWidth - m_AssetBrowserWidth - m_MinPanelWidth - m_SplitterSize * 2)
-                m_InspectorWidth = windowWidth - m_AssetBrowserWidth - m_MinPanelWidth - m_SplitterSize * 2;
-        }
-        if (ImGui::IsItemHovered())
-            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-
-        // === RIGHT PANEL: Inspector ===
-        ImGui::SameLine();
-        ImGui::BeginChild("InspectorPanel", ImVec2(m_InspectorWidth, windowHeight), true);
-        if (m_ShowInspector)
-        {
-            m_InspectorPanel.RenderContent();
+            // Active graph canvas
+            TabManager::Get().RenderActiveCanvas();
         }
         ImGui::EndChild();
 
@@ -882,94 +868,21 @@ namespace Olympe
 
     void BlueprintEditorGUI::NewVisualScriptGraph()
     {
-        // Create empty VS v4 graph template
-        TaskGraphTemplate emptyTemplate;
-        emptyTemplate.Name = "NewVisualScript";
-        emptyTemplate.Description = "New Visual Script Graph";
-        emptyTemplate.GraphType = "VisualScript";
-        emptyTemplate.RootNodeID = -1;  // No root node yet (VS uses EntryPoint instead)
-        emptyTemplate.EntryPointID = -1; // Will be set when EntryPoint node is added
-
-        // Initialize empty collections
-        emptyTemplate.Nodes.clear();
-        emptyTemplate.ExecConnections.clear();
-        emptyTemplate.DataConnections.clear();
-        emptyTemplate.Blackboard.clear();
-        emptyTemplate.LocalVariables.clear();
-
-        // Load into VisualScriptEditorPanel
-        if (m_VSEditorPanel)
-        {
-            m_VSEditorPanel->LoadTemplate(&emptyTemplate, "");  // Empty filepath = new unsaved graph
-            m_ShowVSEditor = true;
-            m_ShowNodeGraph = false;  // Hide legacy NodeGraphPanel
-            std::cout << "[BlueprintEditorGUI] Created new Visual Script graph" << std::endl;
-        }
-        else
-        {
-            std::cerr << "[BlueprintEditorGUI] ERROR: VisualScriptEditorPanel not initialized" << std::endl;
-        }
+        // Create a new tab via TabManager (replaces direct panel creation)
+        TabManager::Get().CreateNewTab("VisualScript");
+        SYSTEM_LOG << "[BlueprintEditorGUI] Created new Visual Script graph via TabManager\n";
     }
 
     void BlueprintEditorGUI::LoadBlueprint(const std::string& filepath)
     {
         // ------------------------------------------------------------------
-        // Phase 7: Unified router — detect schema and dispatch to the correct
-        // editor panel automatically.
+        // Route graph files through TabManager; fall back to legacy backend
+        // for entity blueprints and other non-graph files.
         // ------------------------------------------------------------------
-        nlohmann::json fileJson;
+        std::string tabID = TabManager::Get().OpenFileInTab(filepath);
+        if (!tabID.empty())
         {
-            std::ifstream ifs(filepath);
-            if (ifs.good())
-            {
-                try { ifs >> fileJson; }
-                catch (...) { fileJson = nlohmann::json::object(); }
-            }
-        }
-
-        int schemaVersion = 0;
-        std::string graphType;
-        std::string blueprintType;
-
-        if (fileJson.is_object())
-        {
-            if (fileJson.contains("schema_version") && fileJson["schema_version"].is_number())
-                schemaVersion = fileJson["schema_version"].get<int>();
-            if (fileJson.contains("graphType") && fileJson["graphType"].is_string())
-                graphType = fileJson["graphType"].get<std::string>();
-            if (fileJson.contains("blueprintType") && fileJson["blueprintType"].is_string())
-                blueprintType = fileJson["blueprintType"].get<std::string>();
-        }
-
-        // VS v4 graph — load directly into VisualScriptEditorPanel
-        if (schemaVersion == 4 && graphType == "VisualScript")
-        {
-            if (m_VSEditorPanel)
-            {
-                std::vector<std::string> loadErrors;
-                TaskGraphTemplate* tmpl = TaskGraphLoader::LoadFromJson(fileJson, loadErrors);
-                if (tmpl)
-                {
-                    m_VSEditorPanel->LoadTemplate(tmpl, filepath);
-                    m_ShowVSEditor = true;
-                    SYSTEM_LOG << "[BlueprintEditorGUI] Loaded VS v4 graph: " << filepath << "\n";
-                    delete tmpl;
-                }
-            }
-            return;
-        }
-
-        // Legacy BT v2 — auto-migrate then load into VisualScriptEditorPanel
-        if (blueprintType == "BehaviorTree")
-        {
-            if (m_VSEditorPanel)
-            {
-                std::vector<std::string> migrationErrors;
-                TaskGraphTemplate converted = BTtoVSMigrator::Convert(fileJson, migrationErrors);
-                m_VSEditorPanel->LoadTemplate(&converted, filepath);
-                m_ShowVSEditor = true;
-                SYSTEM_LOG << "[BlueprintEditorGUI] Auto-migrated BT v2 -> VS v4: " << filepath << "\n";
-            }
+            // Successfully opened in TabManager
             return;
         }
 
@@ -1221,17 +1134,13 @@ namespace Olympe
         
         // Don't process shortcuts if typing in a text field
         if (io.WantTextInput)
-        {
             return;
-        }
         
         // Ctrl+Z : Undo
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z) && !io.KeyShift)
         {
             if (backend.CanUndo())
-            {
                 backend.Undo();
-            }
         }
         
         // Ctrl+Y or Ctrl+Shift+Z : Redo
@@ -1239,34 +1148,45 @@ namespace Olympe
             (io.KeyCtrl && io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_Z)))
         {
             if (backend.CanRedo())
-            {
                 backend.Redo();
-            }
         }
         
-        // Ctrl+S : Save
+        // Ctrl+S : Save active tab
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S) && !io.KeyShift)
         {
-            if (backend.HasBlueprint())
-            {
+            if (!TabManager::Get().IsEmpty())
+                TabManager::Get().SaveActiveTab();
+            else if (backend.HasBlueprint())
                 SaveBlueprint();
-            }
         }
         
         // Ctrl+Shift+S : Save As
         if (io.KeyCtrl && io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_S))
         {
-            if (backend.HasBlueprint())
-            {
+            if (!TabManager::Get().IsEmpty())
+                TabManager::Get().SaveActiveTabAs("");
+            else if (backend.HasBlueprint())
                 SaveBlueprintAs();
-            }
         }
 
-        // Ctrl+N : New Visual Script
-        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_N))
+        // Ctrl+N : New Visual Script tab
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_N) && !io.KeyShift)
+            TabManager::Get().CreateNewTab("VisualScript");
+
+        // Ctrl+Shift+N : New Behavior Tree tab
+        if (io.KeyCtrl && io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_N))
+            TabManager::Get().CreateNewTab("BehaviorTree");
+
+        // Ctrl+W : Close active tab
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_W) && !io.KeyShift)
         {
-            NewVisualScriptGraph();
+            if (!TabManager::Get().IsEmpty())
+                TabManager::Get().CloseTab(TabManager::Get().GetActiveTabID());
         }
+
+        // Ctrl+Shift+W : Close all tabs
+        if (io.KeyCtrl && io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_W))
+            TabManager::Get().CloseAllTabs();
 
         // Ctrl+O : Open Blueprint
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_O))
@@ -1279,9 +1199,7 @@ namespace Olympe
         if (io.KeyCtrl && io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_T))
         {
             if (backend.HasBlueprint())
-            {
                 m_ShowTemplateBrowser = true;
-            }
         }
     }
 }

@@ -16,6 +16,7 @@
 #include "EntitiesPanel.h"
 #include "InspectorPanel.h"
 #include "EditorConfigManager.h"
+#include "TabManager.h"
 
 // Forward declare ImVec2
 struct ImVec2;

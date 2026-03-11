@@ -924,15 +924,20 @@ void VisualScriptEditorPanel::RenderCanvas()
         bool endIsInput    = (endOffset == 0) ||
                              (endOffset >= 200 && endOffset < 300);
 
-        // Auto-swap if user dragged backwards (Input → Output)
+        // Auto-swap if user dragged backwards (Input -> Output).
+        // ImNodes normalises the direction automatically (Output pin is always
+        // returned as startAttr), so this branch fires only in edge cases where
+        // the pin type could not be determined by ImNodes.
         if (!startIsOutput && endIsInput)
         {
             std::swap(startAttr, endAttr);
             startOffset   = startAttr % 10000;
             endOffset     = endAttr   % 10000;
-            startIsOutput = true;
-            endIsInput    = true;
-            std::cout << "[VisualScriptEditorPanel] Link direction swapped\n";
+            // Recalculate flags from the new offsets after swap.
+            startIsOutput = (startOffset >= 100 && startOffset < 200) ||
+                            (startOffset >= 300 && startOffset < 400);
+            endIsInput    = (endOffset == 0) ||
+                            (endOffset >= 200 && endOffset < 300);
         }
 
         if (startIsOutput && endIsInput)
