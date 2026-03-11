@@ -249,6 +249,14 @@ private:
     /** Serializes the template to JSON v4 and writes to a file. */
     bool SerializeAndWrite(const std::string& path);
 
+    /**
+     * @brief Pulls the current node positions from ImNodes into m_editorNodes.
+     * Only nodes that have been rendered at least once (present in
+     * m_positionedNodes) are updated to avoid ImNodes assertions.
+     * Must be called before serialization to capture user-moved positions.
+     */
+    void SyncNodePositionsFromImNodes();
+
     // -----------------------------------------------------------------------
     // State
     // -----------------------------------------------------------------------

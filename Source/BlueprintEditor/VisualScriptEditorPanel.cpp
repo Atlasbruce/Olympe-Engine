@@ -568,6 +568,12 @@ bool VisualScriptEditorPanel::Save()
 {
     if (m_currentPath.empty())
         return false;
+
+    // CRITICAL FIX: Sync node positions from ImNodes BEFORE serialization.
+    // RenderToolbar() (which calls Save) executes before RenderCanvas() syncs
+    // positions, so we must pull fresh positions here to avoid stale data.
+    SyncNodePositionsFromImNodes();
+
     return SerializeAndWrite(m_currentPath);
 }
 
@@ -575,6 +581,11 @@ bool VisualScriptEditorPanel::SaveAs(const std::string& path)
 {
     if (path.empty())
         return false;
+
+    // CRITICAL FIX: Same position sync as Save() — ensure fresh positions
+    // before serialization regardless of when in the frame SaveAs is called.
+    SyncNodePositionsFromImNodes();
+
     bool ok = SerializeAndWrite(path);
     if (ok)
     {
@@ -582,6 +593,23 @@ bool VisualScriptEditorPanel::SaveAs(const std::string& path)
         m_dirty       = false;
     }
     return ok;
+}
+
+void VisualScriptEditorPanel::SyncNodePositionsFromImNodes()
+{
+    for (size_t i = 0; i < m_editorNodes.size(); ++i)
+    {
+        VSEditorNode& eNode = m_editorNodes[i];
+        // Only query nodes that have been rendered at least once to avoid
+        // an ImNodes assertion for nodes that have not yet gone through
+        // BeginNode()/EndNode() this session.
+        if (m_positionedNodes.count(eNode.nodeID) > 0)
+        {
+            ImVec2 pos = ImNodes::GetNodeEditorSpacePos(eNode.nodeID);
+            eNode.posX = pos.x;
+            eNode.posY = pos.y;
+        }
+    }
 }
 
 bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
