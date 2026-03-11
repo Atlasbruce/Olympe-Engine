@@ -28,8 +28,8 @@
       "id": 1,
       "label": "EntryPoint",
       "position": {
-        "x": 137,
-        "y": 192
+        "x": 174.36,
+        "y": 442.317
       },
       "type": "EntryPoint"
     },
@@ -37,8 +37,8 @@
       "id": 2,
       "label": "Branch",
       "position": {
-        "x": 305,
-        "y": 192
+        "x": 403.264,
+        "y": 425.024
       },
       "type": "Branch"
     },
@@ -46,8 +46,8 @@
       "id": 3,
       "label": "AtomicTask",
       "position": {
-        "x": 521,
-        "y": 122
+        "x": 600.264,
+        "y": 368.024
       },
       "taskType": "",
       "type": "AtomicTask"
@@ -56,8 +56,8 @@
       "id": 4,
       "label": "AtomicTask",
       "position": {
-        "x": 524,
-        "y": 294
+        "x": 596.264,
+        "y": 485.024
       },
       "taskType": "",
       "type": "AtomicTask"
@@ -66,8 +66,8 @@
       "id": 5,
       "label": "GetBBValue",
       "position": {
-        "x": 267,
-        "y": 337
+        "x": 567.264,
+        "y": 265.024
       },
       "type": "GetBBValue"
     }

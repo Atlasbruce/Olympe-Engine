@@ -478,6 +478,15 @@
     <ClCompile Include="..\Source\NodeGraphCore\NodeValidator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\TabManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -928,6 +937,10 @@
     <ClInclude Include="..\Source\NodeGraphCore\LinkCache.h" />
     <ClInclude Include="..\Source\NodeGraphCore\NodeGroup.h" />
     <ClInclude Include="..\Source\NodeGraphCore\NodeValidator.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\VisualScriptRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\IGraphRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\TabManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />

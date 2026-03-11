@@ -14,8 +14,8 @@
           "name": "Chase Sequence",
           "parameters": {},
           "position": {
-            "x": 0,
-            "y": 0
+            "x": -41,
+            "y": -2
           },
           "type": "Sequence"
         },
@@ -28,8 +28,8 @@
             "type": "Visual"
           },
           "position": {
-            "x": 207,
-            "y": -176
+            "x": 311,
+            "y": 66
           },
           "type": "Action"
         },
@@ -39,8 +39,8 @@
           "name": "Face Player",
           "parameters": {},
           "position": {
-            "x": 214,
-            "y": 264
+            "x": 311,
+            "y": 184
           },
           "type": "Action"
         },
@@ -52,8 +52,8 @@
             "speed": "Run"
           },
           "position": {
-            "x": 232,
-            "y": 143
+            "x": 254,
+            "y": -211
           },
           "type": "Action"
         },
@@ -65,8 +65,8 @@
             "burst": "3"
           },
           "position": {
-            "x": 219.929,
-            "y": -28.2466
+            "x": 309,
+            "y": -58
           },
           "type": "Action"
         }
@@ -86,7 +86,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-03-10T14:59:00",
+    "lastModified": "2026-03-11T13:17:08",
     "tags": []
   },
   "name": "Guard_Chase",

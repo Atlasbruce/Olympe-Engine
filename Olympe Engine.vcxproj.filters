@@ -163,6 +163,9 @@
     <ClCompile Include="Source\NodeGraphCore\NodeGroup.cpp" />
     <ClCompile Include="Source\NodeGraphCore\NodeValidator.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GraphComment.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptRenderer.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\BehaviorTreeRenderer.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\TabManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -361,6 +364,10 @@
     <ClInclude Include="Source\NodeGraphCore\LinkCache.h" />
     <ClInclude Include="Source\NodeGraphCore\NodeGroup.h" />
     <ClInclude Include="Source\NodeGraphCore\NodeValidator.h" />
+    <ClInclude Include="Source\BlueprintEditor\TabManager.h" />
+    <ClInclude Include="Source\BlueprintEditor\VisualScriptRenderer.h" />
+    <ClInclude Include="Source\BlueprintEditor\BehaviorTreeRenderer.h" />
+    <ClInclude Include="Source\BlueprintEditor\IGraphRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />

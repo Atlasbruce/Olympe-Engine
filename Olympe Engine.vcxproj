@@ -42,6 +42,7 @@
     <ClCompile Include="Source\BlueprintEditor\AssetBrowser.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AssetInfoPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BehaviorTreeEditorPlugin.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\BehaviorTreeRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlueprintEditor.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlueprintEditorGUI.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlueprintMigrator.cpp" />
@@ -64,11 +65,13 @@
     <ClCompile Include="Source\BlueprintEditor\PerformanceProfiler.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ProfilerPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\SubgraphMigrator.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\TabManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\TemplateBrowserPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\TemplateManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ValidationPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptNodeRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\WorldBridge.cpp" />
     <ClCompile Include="Source\BlueprintEditor\NodeGraphPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Clipboard.cpp" />
@@ -211,6 +214,7 @@
     <ClInclude Include="Source\BlueprintEditor\AssetBrowser.h" />
     <ClInclude Include="Source\BlueprintEditor\AssetInfoPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\BehaviorTreeEditorPlugin.h" />
+    <ClInclude Include="Source\BlueprintEditor\BehaviorTreeRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\BlueprintEditor.h" />
     <ClInclude Include="Source\BlueprintEditor\BlueprintEditorGUI.h" />
     <ClInclude Include="Source\BlueprintEditor\BlueprintEditorPlugin.h" />
@@ -227,6 +231,7 @@
     <ClInclude Include="Source\BlueprintEditor\EnumCatalogManager.h" />
     <ClInclude Include="Source\BlueprintEditor\HistoryPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityInspectorManager.h" />
+    <ClInclude Include="Source\BlueprintEditor\IGraphRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\NodeGraphPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\Clipboard.h" />
     <ClInclude Include="Source\BlueprintEditor\DebugPanel.h" />
@@ -237,11 +242,13 @@
     <ClInclude Include="Source\BlueprintEditor\SubgraphMigrator.h" />
     <ClInclude Include="Source\BlueprintEditor\ProfilerPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\PerformanceProfiler.h" />
+    <ClInclude Include="Source\BlueprintEditor\TabManager.h" />
     <ClInclude Include="Source\BlueprintEditor\TemplateBrowserPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\TemplateManager.h" />
     <ClInclude Include="Source\BlueprintEditor\ValidationPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\VisualScriptNodeRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\VisualScriptEditorPanel.h" />
+    <ClInclude Include="Source\BlueprintEditor\VisualScriptRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\WorldBridge.h" />
     <ClInclude Include="Source\CollisionMap.h" />
     <ClInclude Include="Source\ComponentDefinition.h" />

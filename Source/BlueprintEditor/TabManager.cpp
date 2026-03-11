@@ -384,7 +384,7 @@ bool TabManager::SaveActiveTab()
         // Need Save As
         m_showSaveAsDialog = true;
         m_saveAsTabID = tab->tabID;
-        std::strncpy(m_saveAsBuffer, tab->displayName.c_str(), sizeof(m_saveAsBuffer) - 1);
+        strncpy_s(m_saveAsBuffer, sizeof(m_saveAsBuffer), tab->displayName.c_str(), _TRUNCATE);
         m_saveAsBuffer[sizeof(m_saveAsBuffer) - 1] = '\0';
         return false; // Will complete when dialog is confirmed
     }
@@ -409,7 +409,7 @@ bool TabManager::SaveActiveTabAs(const std::string& path)
         // Show save-as dialog
         m_showSaveAsDialog = true;
         m_saveAsTabID = tab->tabID;
-        std::strncpy(m_saveAsBuffer, tab->displayName.c_str(), sizeof(m_saveAsBuffer) - 1);
+        strncpy_s(m_saveAsBuffer, sizeof(m_saveAsBuffer), tab->displayName.c_str(), _TRUNCATE);
         m_saveAsBuffer[sizeof(m_saveAsBuffer) - 1] = '\0';
         return false;
     }
