@@ -1,89 +1,92 @@
 {
   "blueprintType": "BehaviorTree",
   "data": {
-    "nodes": [
-      {
-        "children": [
-          2,
-          3,
-          4,
-          5,
-          6
-        ],
-        "id": 1,
-        "name": "Terminal Interaction Sequence",
-        "parameters": {},
-        "position": {
-          "x": 0,
-          "y": 0
+    "rootGraph": {
+      "nodes": [
+        {
+          "children": [
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "id": 1,
+          "name": "Terminal Interaction Sequence",
+          "parameters": {},
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "type": "Sequence"
         },
-        "type": "Sequence"
-      },
-      {
-        "children": [],
-        "id": 2,
-        "name": "Is Player Interacting",
-        "parameters": {},
-        "position": {
-          "x": 326,
-          "y": -150
+        {
+          "children": [],
+          "id": 2,
+          "name": "Is Player Interacting",
+          "parameters": {},
+          "position": {
+            "x": 326,
+            "y": -150
+          },
+          "type": "Action"
         },
-        "type": "Action"
-      },
-      {
-        "children": [],
-        "id": 3,
-        "name": "Show Hack Progress Bar",
-        "parameters": {
-          "duration": "3"
+        {
+          "children": [],
+          "id": 3,
+          "name": "Show Hack Progress Bar",
+          "parameters": {
+            "duration": "3"
+          },
+          "position": {
+            "x": 348,
+            "y": -45
+          },
+          "type": "Action"
         },
-        "position": {
-          "x": 348,
-          "y": -45
+        {
+          "children": [],
+          "id": 4,
+          "name": "Interaction Wait",
+          "parameters": {
+            "time": "3"
+          },
+          "position": {
+            "x": 363,
+            "y": 84
+          },
+          "type": "Action"
         },
-        "type": "Action"
-      },
-      {
-        "children": [],
-        "id": 4,
-        "name": "Interaction Wait",
-        "parameters": {
-          "time": "3"
+        {
+          "children": [],
+          "id": 5,
+          "name": "Unlock Access Code",
+          "parameters": {
+            "global": "true",
+            "key": "bool_HasCode",
+            "value": "true"
+          },
+          "position": {
+            "x": 370.028,
+            "y": 229.532
+          },
+          "type": "Action"
         },
-        "position": {
-          "x": 363,
-          "y": 84
-        },
-        "type": "Action"
-      },
-      {
-        "children": [],
-        "id": 5,
-        "name": "Unlock Access Code",
-        "parameters": {
-          "global": "true",
-          "key": "bool_HasCode",
-          "value": "true"
-        },
-        "position": {
-          "x": 370.028,
-          "y": 229.532
-        },
-        "type": "Action"
-      },
-      {
-        "children": [],
-        "id": 6,
-        "name": "Show Code UI",
-        "parameters": {},
-        "position": {
-          "x": 348.297,
-          "y": 339.583
-        },
-        "type": "Action"
-      }
-    ],
-    "rootNodeId": 1
+        {
+          "children": [],
+          "id": 6,
+          "name": "Show Code UI",
+          "parameters": {},
+          "position": {
+            "x": 348.297,
+            "y": 339.583
+          },
+          "type": "Action"
+        }
+      ],
+      "rootNodeId": 1
+    },
+    "subgraphs": {}
   },
   "description": "",
   "editorState": {
@@ -100,5 +103,5 @@
     "tags": []
   },
   "name": "Terminal_Interaction",
-  "schema_version": 2
+  "schema_version": 5
 }

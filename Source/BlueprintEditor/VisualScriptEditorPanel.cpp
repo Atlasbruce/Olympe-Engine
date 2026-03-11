@@ -29,7 +29,7 @@ namespace Olympe {
 VisualScriptEditorPanel::VisualScriptEditorPanel()
 {
     std::memset(m_saveAsFilename, 0, sizeof(m_saveAsFilename));
-    std::strcpy(m_saveAsFilename, "untitled_graph");
+    strcpy_s(m_saveAsFilename, sizeof(m_saveAsFilename), "untitled_graph");
 }
 
 VisualScriptEditorPanel::~VisualScriptEditorPanel()

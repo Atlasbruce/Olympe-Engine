@@ -1,0 +1,76 @@
+{
+  "blackboard": [],
+  "dataConnections": [],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Then",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Else",
+      "toNode": 4,
+      "toPin": "In"
+    }
+  ],
+  "graphType": "VisualScript",
+  "name": "NewVisualScript",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "EntryPoint",
+      "position": {
+        "x": 137,
+        "y": 192
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 2,
+      "label": "Branch",
+      "position": {
+        "x": 305,
+        "y": 192
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 3,
+      "label": "AtomicTask",
+      "position": {
+        "x": 521,
+        "y": 122
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 4,
+      "label": "AtomicTask",
+      "position": {
+        "x": 524,
+        "y": 294
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 5,
+      "label": "GetBBValue",
+      "position": {
+        "x": 267,
+        "y": 337
+      },
+      "type": "GetBBValue"
+    }
+  ],
+  "schema_version": 4
+}
