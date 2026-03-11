@@ -473,6 +473,17 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
         }
     }
 
+    // Editor canvas position (VS graphs only; absent in legacy BT v2 files).
+    if (JsonHelper::IsObject(nodeJson, "position"))
+    {
+        const json& posObj = nodeJson["position"];
+        if (posObj.contains("x") && posObj["x"].is_number())
+            nd.EditorPosX = posObj["x"].get<float>();
+        if (posObj.contains("y") && posObj["y"].is_number())
+            nd.EditorPosY = posObj["y"].get<float>();
+        nd.HasEditorPosition = true;
+    }
+
     return nd;
 }
 

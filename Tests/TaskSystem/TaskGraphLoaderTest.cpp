@@ -546,6 +546,110 @@ static void TestI_ScanTaskGraphDirectory()
 }
 
 // ---------------------------------------------------------------------------
+// Test j: ParseNodeV4 reads "position" field into EditorPosX / EditorPosY
+// ---------------------------------------------------------------------------
+
+static void TestJ_ParseNodeV4Position()
+{
+    std::cout << "Test J: ParseNodeV4 reads position field..." << std::endl;
+
+    bool passed = true;
+
+    // --- Case 1: node with a "position" object ---
+    {
+        json nodeWithPos = json::object();
+        nodeWithPos["id"]    = 10;
+        nodeWithPos["label"] = "TestNode";
+        nodeWithPos["type"]  = "EntryPoint";
+
+        json pos = json::object();
+        pos["x"] = -60.0f;
+        pos["y"] = 125.0f;
+        nodeWithPos["position"] = pos;
+
+        json root = json::object();
+        root["schema_version"] = 4;
+        root["graphType"]      = "VisualScript";
+        json nodesArr = json::array();
+        nodesArr.push_back(nodeWithPos);
+        root["nodes"] = nodesArr;
+
+        std::vector<std::string> errors;
+        Olympe::TaskGraphTemplate* tmpl =
+            Olympe::TaskGraphLoader::LoadFromJson(root, errors);
+
+        TEST_ASSERT(tmpl != nullptr, "J.1: LoadFromJson should succeed");
+        if (tmpl != nullptr)
+        {
+            const Olympe::TaskNodeDefinition* nd = tmpl->GetNode(10);
+            TEST_ASSERT(nd != nullptr, "J.1: Node id=10 must exist");
+            if (nd != nullptr)
+            {
+                TEST_ASSERT(nd->HasEditorPosition,
+                            "J.1: HasEditorPosition should be true");
+                if (!nd->HasEditorPosition) { passed = false; }
+
+                TEST_ASSERT(nd->EditorPosX == -60.0f,
+                            "J.1: EditorPosX should be -60");
+                if (nd->EditorPosX != -60.0f) { passed = false; }
+
+                TEST_ASSERT(nd->EditorPosY == 125.0f,
+                            "J.1: EditorPosY should be 125");
+                if (nd->EditorPosY != 125.0f) { passed = false; }
+            }
+            else { passed = false; }
+            delete tmpl;
+        }
+        else { passed = false; }
+    }
+
+    // --- Case 2: node without a "position" field → EditorPosX/Y default to 0 ---
+    {
+        json nodeNoPos = json::object();
+        nodeNoPos["id"]    = 20;
+        nodeNoPos["label"] = "NoPos";
+        nodeNoPos["type"]  = "AtomicTask";
+
+        json root = json::object();
+        root["schema_version"] = 4;
+        root["graphType"]      = "VisualScript";
+        json nodesArr = json::array();
+        nodesArr.push_back(nodeNoPos);
+        root["nodes"] = nodesArr;
+
+        std::vector<std::string> errors;
+        Olympe::TaskGraphTemplate* tmpl =
+            Olympe::TaskGraphLoader::LoadFromJson(root, errors);
+
+        TEST_ASSERT(tmpl != nullptr, "J.2: LoadFromJson should succeed");
+        if (tmpl != nullptr)
+        {
+            const Olympe::TaskNodeDefinition* nd = tmpl->GetNode(20);
+            TEST_ASSERT(nd != nullptr, "J.2: Node id=20 must exist");
+            if (nd != nullptr)
+            {
+                TEST_ASSERT(!nd->HasEditorPosition,
+                            "J.2: HasEditorPosition should be false");
+                if (nd->HasEditorPosition) { passed = false; }
+
+                TEST_ASSERT(nd->EditorPosX == 0.0f,
+                            "J.2: EditorPosX should default to 0");
+                if (nd->EditorPosX != 0.0f) { passed = false; }
+
+                TEST_ASSERT(nd->EditorPosY == 0.0f,
+                            "J.2: EditorPosY should default to 0");
+                if (nd->EditorPosY != 0.0f) { passed = false; }
+            }
+            else { passed = false; }
+            delete tmpl;
+        }
+        else { passed = false; }
+    }
+
+    ReportTest("TestJ_ParseNodeV4Position", passed);
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -562,6 +666,7 @@ int main()
     TestG_LoadMissingAtsFile();
     TestH_FileExists();
     TestI_ScanTaskGraphDirectory();
+    TestJ_ParseNodeV4Position();
 
     std::cout << std::endl;
     std::cout << "Results: " << s_passCount << " passed, "
