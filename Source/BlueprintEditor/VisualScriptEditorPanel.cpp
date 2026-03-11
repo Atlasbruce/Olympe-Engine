@@ -28,6 +28,8 @@ namespace Olympe {
 
 VisualScriptEditorPanel::VisualScriptEditorPanel()
 {
+    std::memset(m_saveAsFilename, 0, sizeof(m_saveAsFilename));
+    std::strcpy(m_saveAsFilename, "untitled_graph");
 }
 
 VisualScriptEditorPanel::~VisualScriptEditorPanel()
@@ -572,6 +574,7 @@ void VisualScriptEditorPanel::Render()
 void VisualScriptEditorPanel::RenderContent()
 {
     RenderToolbar();
+    RenderSaveAsDialog();
     ImGui::Separator();
 
     // Two-column layout: canvas (left) | properties + blackboard (right)
@@ -604,8 +607,19 @@ void VisualScriptEditorPanel::RenderToolbar()
     ImGui::SameLine();
     if (ImGui::Button("Save"))
     {
-        if (!Save())
+        if (m_currentPath.empty())
+        {
+            m_showSaveAsDialog = true;
+        }
+        else if (!Save())
+        {
             ImGui::OpenPopup("SaveError");
+        }
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Save As"))
+    {
+        m_showSaveAsDialog = true;
     }
     ImGui::SameLine();
     if (ImGui::Button("New Graph"))
@@ -635,6 +649,92 @@ void VisualScriptEditorPanel::RenderToolbar()
     {
         ImGui::TextColored(ImVec4(1,0,0,1), "Save failed — check file path.");
         if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+}
+
+void VisualScriptEditorPanel::RenderSaveAsDialog()
+{
+    if (m_showSaveAsDialog)
+    {
+        ImGui::OpenPopup("SaveAsDialog");
+        m_showSaveAsDialog = false;
+    }
+
+    if (ImGui::BeginPopupModal("SaveAsDialog", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Save Visual Script As");
+        ImGui::Separator();
+
+        // Directory dropdown
+        ImGui::Text("Directory:");
+        ImGui::SameLine();
+        if (ImGui::BeginCombo("##SaveDir", m_saveAsDirectory.c_str()))
+        {
+            static const char* dirs[] = {
+                "Blueprints/AI",
+                "Blueprints/AI/Tests",
+                "Gamedata/TaskGraph/Examples",
+                "Gamedata/TaskGraph/Templates"
+            };
+            for (int i = 0; i < static_cast<int>(sizeof(dirs) / sizeof(dirs[0])); ++i)
+            {
+                bool selected = (m_saveAsDirectory == dirs[i]);
+                if (ImGui::Selectable(dirs[i], selected))
+                    m_saveAsDirectory = dirs[i];
+                if (selected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
+        // Filename input
+        ImGui::Text("Filename:");
+        ImGui::SameLine();
+        ImGui::InputText("##FileName", m_saveAsFilename, sizeof(m_saveAsFilename));
+
+        // Full path preview
+        ImGui::TextDisabled("Full path: %s/%s.ats",
+                            m_saveAsDirectory.c_str(),
+                            m_saveAsFilename);
+
+        ImGui::Separator();
+
+        // Save / Cancel buttons
+        bool filenameEmpty = (std::strlen(m_saveAsFilename) == 0);
+        if (filenameEmpty)
+            ImGui::BeginDisabled();
+        if (ImGui::Button("Save", ImVec2(120, 0)))
+        {
+            std::string fullPath = m_saveAsDirectory + "/" +
+                                   std::string(m_saveAsFilename) + ".ats";
+            if (SaveAs(fullPath))
+            {
+                std::cout << "[VisualScriptEditorPanel] Saved to: " << fullPath << std::endl;
+                ImGui::CloseCurrentPopup();
+            }
+            else
+            {
+                ImGui::OpenPopup("SaveAsError");
+            }
+        }
+        if (filenameEmpty)
+            ImGui::EndDisabled();
+
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+        // Nested error popup
+        if (ImGui::BeginPopupModal("SaveAsError", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::TextColored(ImVec4(1, 0, 0, 1), "Save failed — check directory and permissions.");
+            if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+        }
+
         ImGui::EndPopup();
     }
 }
