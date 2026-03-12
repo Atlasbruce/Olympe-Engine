@@ -885,20 +885,30 @@ void VisualScriptEditorPanel::RenderToolbar()
         if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z) &&
             m_undoStack.CanUndo())
         {
+            std::string desc = m_undoStack.PeekUndoDescription();
+            SYSTEM_LOG << "[VSEditor] UNDO: " << desc << "\n";
             m_undoStack.Undo(m_template);
             SyncEditorNodesFromTemplate();
             RebuildLinks();
             m_dirty = true;
+            SYSTEM_LOG << "[VSEditor] Undo complete. Template now has "
+                       << m_template.Nodes.size() << " nodes, "
+                       << m_template.ExecConnections.size() << " exec connections\n";
         }
 
         // Redo (Ctrl+Y)
         if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y) &&
             m_undoStack.CanRedo())
         {
+            std::string desc = m_undoStack.PeekRedoDescription();
+            SYSTEM_LOG << "[VSEditor] REDO: " << desc << "\n";
             m_undoStack.Redo(m_template);
             SyncEditorNodesFromTemplate();
             RebuildLinks();
             m_dirty = true;
+            SYSTEM_LOG << "[VSEditor] Redo complete. Template now has "
+                       << m_template.Nodes.size() << " nodes, "
+                       << m_template.ExecConnections.size() << " exec connections\n";
         }
     }
 
@@ -1139,11 +1149,13 @@ void VisualScriptEditorPanel::RenderCanvas()
             {
                 m_contextNodeID = hoveredNode;
                 ImGui::OpenPopup("VSNodeContextMenu");
+                SYSTEM_LOG << "[VSEditor] Opened context menu on NODE #" << hoveredNode << "\n";
             }
             else if (linkHovered)
             {
                 m_contextLinkID = hoveredLink;
                 ImGui::OpenPopup("VSLinkContextMenu");
+                SYSTEM_LOG << "[VSEditor] Opened context menu on LINK #" << hoveredLink << "\n";
             }
             else
             {
@@ -1153,18 +1165,31 @@ void VisualScriptEditorPanel::RenderCanvas()
                 m_contextMenuX = mp.x - wp.x;
                 m_contextMenuY = mp.y - wp.y;
                 ImGui::OpenPopup("VSNodePalette");
+                SYSTEM_LOG << "[VSEditor] Opened context menu on CANVAS at ("
+                           << m_contextMenuX << ", " << m_contextMenuY << ")\n";
             }
         }
 
         // Node context menu
         if (ImGui::BeginPopup("VSNodeContextMenu"))
         {
+            if (ImGui::MenuItem("Edit Properties"))
+            {
+                m_selectedNodeID = m_contextNodeID;
+                SYSTEM_LOG << "[VSEditor] Selected node #" << m_contextNodeID
+                           << " for editing\n";
+            }
+
+            ImGui::Separator();
+
             if (ImGui::MenuItem("Delete Node"))
             {
                 RemoveNode(m_contextNodeID);
                 if (m_selectedNodeID == m_contextNodeID)
                     m_selectedNodeID = -1;
                 m_dirty = true;
+                SYSTEM_LOG << "[VSEditor] Deleted node #" << m_contextNodeID
+                           << " via context menu\n";
             }
 
             ImGui::Separator();
@@ -1176,6 +1201,9 @@ void VisualScriptEditorPanel::RenderCanvas()
                     DebugController::Get().ToggleBreakpoint(0, m_contextNodeID,
                                                             m_template.Name,
                                                             "Node " + std::to_string(m_contextNodeID));
+                    SYSTEM_LOG << "[VSEditor] Toggled breakpoint on node #"
+                               << m_contextNodeID << " -> "
+                               << (hasBP ? "OFF" : "ON") << "\n";
                 }
             }
 
@@ -1220,7 +1248,12 @@ void VisualScriptEditorPanel::RenderCanvas()
         if (ImGui::BeginPopup("VSLinkContextMenu"))
         {
             if (ImGui::MenuItem("Delete Connection"))
+            {
                 RemoveLink(m_contextLinkID);
+                m_dirty = true;
+                SYSTEM_LOG << "[VSEditor] Deleted link #" << m_contextLinkID
+                           << " via context menu\n";
+            }
             ImGui::EndPopup();
         }
     }
@@ -1335,8 +1368,10 @@ void VisualScriptEditorPanel::RenderCanvas()
                                                     startX, startY,
                                                     pos.x,  pos.y)),
                             m_template);
-                        SYSTEM_LOG << "[VSEditor] Node " << eNode.nodeID
-                                   << " moved to (" << pos.x << "," << pos.y << ")\n";
+                        SYSTEM_LOG << "[VSEditor] Node #" << eNode.nodeID
+                                   << " moved: (" << startX << "," << startY
+                                   << ") -> (" << pos.x << "," << pos.y
+                                   << ") [UNDOABLE]\n";
                         m_dirty = true;
                     }
                     m_nodeDragStartPositions.erase(startIt);
