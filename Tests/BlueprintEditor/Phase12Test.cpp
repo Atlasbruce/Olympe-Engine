@@ -64,6 +64,8 @@ static void ReportTest(const std::string& name, bool passed)
 struct MockNode {
     int         nodeID   = -1;
     std::string name;
+    float       posX     = 0.0f;
+    float       posY     = 0.0f;
 };
 
 struct MockExecConn {
@@ -434,8 +436,176 @@ static void Test9_BatchDeleteNodeAndLink()
 }
 
 // ---------------------------------------------------------------------------
-// main
+// Test10: Move node → Undo restores position → Redo re-applies move
 // ---------------------------------------------------------------------------
+
+/**
+ * @brief Minimal mock that simulates position tracking and a simple undo/redo
+ *        stack for MoveNode commands.
+ *
+ * Mirrors the state captured by the real MoveNodeCommand class
+ * (Source/BlueprintEditor/UndoRedoStack.h): the node ID together with the
+ * old and new canvas positions.  Using a plain struct here keeps Phase12Test
+ * free of ImGui/ImNodes dependencies while still exercising the same
+ * Execute/Undo/Redo transitions.
+ */
+struct MockMoveRecord {
+    int   nodeID = -1;
+    float oldX   = 0.0f;
+    float oldY   = 0.0f;
+    float newX   = 0.0f;
+    float newY   = 0.0f;
+};
+
+static void SimulateMoveExecute(MockGraph& g, MockMoveRecord& rec)
+{
+    for (size_t i = 0; i < g.nodes.size(); ++i)
+    {
+        if (g.nodes[i].nodeID == rec.nodeID)
+        {
+            g.nodes[i].posX = rec.newX;
+            g.nodes[i].posY = rec.newY;
+            return;
+        }
+    }
+}
+
+static void SimulateMoveUndo(MockGraph& g, MockMoveRecord& rec)
+{
+    for (size_t i = 0; i < g.nodes.size(); ++i)
+    {
+        if (g.nodes[i].nodeID == rec.nodeID)
+        {
+            g.nodes[i].posX = rec.oldX;
+            g.nodes[i].posY = rec.oldY;
+            return;
+        }
+    }
+}
+
+static float GetNodePosX(const MockGraph& g, int nodeID)
+{
+    for (size_t i = 0; i < g.nodes.size(); ++i)
+        if (g.nodes[i].nodeID == nodeID)
+            return g.nodes[i].posX;
+    return 0.0f;
+}
+
+static float GetNodePosY(const MockGraph& g, int nodeID)
+{
+    for (size_t i = 0; i < g.nodes.size(); ++i)
+        if (g.nodes[i].nodeID == nodeID)
+            return g.nodes[i].posY;
+    return 0.0f;
+}
+
+static void Test10_MoveNode_UndoRedo()
+{
+    int prevFail = s_failCount;
+
+    // Extend MockNode with position fields for this test
+    // Use the graph helper to add a positioned node
+    MockGraph g;
+    {
+        MockNode n; n.nodeID = 1; n.name = "Print1";
+        n.posX = 100.0f; n.posY = 100.0f;
+        g.nodes.push_back(n);
+    }
+
+    // Verify initial position
+    TEST_ASSERT(GetNodePosX(g, 1) == 100.0f, "Initial posX should be 100");
+    TEST_ASSERT(GetNodePosY(g, 1) == 100.0f, "Initial posY should be 100");
+
+    // Simulate MoveNodeCommand::Execute (node 1 from 100,100 to 200,200)
+    MockMoveRecord moveCmd;
+    moveCmd.nodeID = 1;
+    moveCmd.oldX   = 100.0f;
+    moveCmd.oldY   = 100.0f;
+    moveCmd.newX   = 200.0f;
+    moveCmd.newY   = 200.0f;
+
+    SimulateMoveExecute(g, moveCmd);
+    TEST_ASSERT(GetNodePosX(g, 1) == 200.0f, "After move: posX should be 200");
+    TEST_ASSERT(GetNodePosY(g, 1) == 200.0f, "After move: posY should be 200");
+
+    // Simulate Undo
+    SimulateMoveUndo(g, moveCmd);
+    TEST_ASSERT(GetNodePosX(g, 1) == 100.0f, "After undo: posX should be 100");
+    TEST_ASSERT(GetNodePosY(g, 1) == 100.0f, "After undo: posY should be 100");
+
+    // Simulate Redo (re-apply Execute)
+    SimulateMoveExecute(g, moveCmd);
+    TEST_ASSERT(GetNodePosX(g, 1) == 200.0f, "After redo: posX should be 200");
+    TEST_ASSERT(GetNodePosY(g, 1) == 200.0f, "After redo: posY should be 200");
+
+    ReportTest("MoveNode_UndoRedo_PositionRestored", s_failCount == prevFail);
+}
+
+// ---------------------------------------------------------------------------
+// Test11: Delete node → Undo restores node + visual links
+// ---------------------------------------------------------------------------
+
+static void Test11_DeleteUndo_LinksRestored()
+{
+    int prevFail = s_failCount;
+
+    MockGraph g;
+    g.AddNode(1, "EntryPoint");
+    g.AddNode(2, "Branch");
+    g.AddNode(3, "AtomicTask");
+
+    g.AddExecConn(1, "Out",  2, "In");
+    g.AddExecConn(2, "Then", 3, "In");
+    g.AddEditorLink(100, 1, 2, false /*exec*/);
+    g.AddEditorLink(101, 2, 3, false /*exec*/);
+
+    // Snapshot before delete
+    size_t initialLinks = g.editorLinks.size();
+    TEST_ASSERT(initialLinks == 2, "Should have 2 editor links before delete");
+    TEST_ASSERT(g.HasExecConn(1, 2), "ExecConn 1->2 exists before delete");
+    TEST_ASSERT(g.HasExecConn(2, 3), "ExecConn 2->3 exists before delete");
+
+    // Simulate DeleteNodeCommand::Execute for node 2:
+    // Save state for undo
+    std::vector<MockExecConn> savedExec;
+    std::vector<MockEditorLink> savedLinks;
+    for (size_t i = 0; i < g.execConnections.size(); ++i)
+    {
+        if (g.execConnections[i].srcNodeID == 2 || g.execConnections[i].dstNodeID == 2)
+            savedExec.push_back(g.execConnections[i]);
+    }
+    for (size_t i = 0; i < g.editorLinks.size(); ++i)
+    {
+        if (g.editorLinks[i].srcNodeID == 2 || g.editorLinks[i].dstNodeID == 2)
+            savedLinks.push_back(g.editorLinks[i]);
+    }
+
+    g.RemoveNode(2);
+
+    TEST_ASSERT(!g.HasNode(2),         "Node 2 gone after delete");
+    TEST_ASSERT(!g.HasExecConn(1, 2),  "ExecConn 1->2 gone after delete");
+    TEST_ASSERT(!g.HasExecConn(2, 3),  "ExecConn 2->3 gone after delete");
+    TEST_ASSERT(g.editorLinks.size() == 0, "All editor links gone after delete");
+
+    // Simulate DeleteNodeCommand::Undo: restore node, connections, and editor links
+    {
+        MockNode restored; restored.nodeID = 2; restored.name = "Branch";
+        g.nodes.push_back(restored);
+    }
+    for (size_t i = 0; i < savedExec.size(); ++i)
+        g.execConnections.push_back(savedExec[i]);
+    for (size_t i = 0; i < savedLinks.size(); ++i)
+        g.editorLinks.push_back(savedLinks[i]);
+
+    TEST_ASSERT(g.HasNode(2),                         "Node 2 restored after undo");
+    TEST_ASSERT(g.HasExecConn(1, 2),                  "ExecConn 1->2 restored after undo");
+    TEST_ASSERT(g.HasExecConn(2, 3),                  "ExecConn 2->3 restored after undo");
+    TEST_ASSERT(g.editorLinks.size() == initialLinks, "Editor links restored after undo");
+
+    ReportTest("DeleteUndo_LinksRestored", s_failCount == prevFail);
+}
+
+
 
 int main()
 {
@@ -450,6 +620,8 @@ int main()
     Test7_WarningThresholdNotExceeded();
     Test8_ContextMenuDeleteSetsNodeCountToZero();
     Test9_BatchDeleteNodeAndLink();
+    Test10_MoveNode_UndoRedo();
+    Test11_DeleteUndo_LinksRestored();
 
     std::cout << std::endl;
     std::cout << "Results: " << s_passCount << " passed, "
