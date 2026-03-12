@@ -315,6 +315,11 @@ private:
     /// Undo/Redo command stack for reversible graph editing operations
     UndoRedoStack m_undoStack;
 
+    /// Per-node drag-start positions used to record a single MoveNodeCommand
+    /// per drag gesture instead of one command per frame.
+    /// Key: nodeID  Value: (posX, posY) at the moment the drag was detected.
+    std::unordered_map<int, std::pair<float, float> > m_nodeDragStartPositions;
+
     // -----------------------------------------------------------------------
     // Drag & drop pending state (two-phase node creation)
     // Phase 1: detect drop inside BeginDragDropTarget, store params
