@@ -136,6 +136,22 @@ private:
 };
 
 /**
+ * @class AddDataConnectionCommand
+ * @brief Records an "add data connection" operation for undo/redo.
+ */
+class AddDataConnectionCommand : public ICommand {
+public:
+    explicit AddDataConnectionCommand(const DataPinConnection& conn);
+
+    void Execute(TaskGraphTemplate& graph) override;
+    void Undo(TaskGraphTemplate& graph) override;
+    std::string GetDescription() const override;
+
+private:
+    DataPinConnection m_conn;
+};
+
+/**
  * @class DeleteLinkCommand
  * @brief Records a "delete link" operation for undo/redo.
  *
