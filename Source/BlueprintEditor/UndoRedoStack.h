@@ -135,6 +135,29 @@ private:
     ExecPinConnection m_conn;
 };
 
+/**
+ * @class DeleteLinkCommand
+ * @brief Records a "delete link" operation for undo/redo.
+ *
+ * @details
+ * Supports both exec and data connections.  On Execute() the connection is
+ * removed from the graph.  On Undo() it is restored.
+ */
+class DeleteLinkCommand : public ICommand {
+public:
+    explicit DeleteLinkCommand(const ExecPinConnection& conn);
+    explicit DeleteLinkCommand(const DataPinConnection& conn);
+
+    void Execute(TaskGraphTemplate& graph) override;
+    void Undo(TaskGraphTemplate& graph) override;
+    std::string GetDescription() const override;
+
+private:
+    bool              m_isExecConn = true;
+    ExecPinConnection m_savedExecConn;
+    DataPinConnection m_savedDataConn;
+};
+
 // ============================================================================
 // UndoRedoStack
 // ============================================================================
