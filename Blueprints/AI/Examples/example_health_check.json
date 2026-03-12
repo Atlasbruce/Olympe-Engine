@@ -1,171 +1,6 @@
 {
-  "schema_version": 4,
-  "type": "VisualScript",
-  "graphType": "VisualScript",
-  "name": "example_health_check",
-  "description": "Health check: Branch on Health < 20 to trigger retreat, else continue patrol.",
-  "blackboard": {
-    "local": {
-      "Health": {
-        "type": "float",
-        "value": "100.0"
-      },
-      "LowHealthThreshold": {
-        "type": "float",
-        "value": "20.0"
-      },
-      "IsLowHealth": {
-        "type": "bool",
-        "value": "false"
-      },
-      "RetreatTarget": {
-        "type": "string",
-        "value": "base_spawn"
-      }
-    },
-    "global": {
-      "global:TeamAlert": {
-        "type": "bool",
-        "value": "false"
-      }
-    }
-  },
-  "nodes": [
-    {
-      "id": 1,
-      "type": "EntryPoint",
-      "name": "Start",
-      "comment": "Entry point",
-      "posX": 100,
-      "posY": 200,
-      "parameters": {}
-    },
-    {
-      "id": 2,
-      "type": "Sequence",
-      "name": "HealthCheckSequence",
-      "comment": "Update health flag then branch",
-      "posX": 320,
-      "posY": 200,
-      "parameters": {}
-    },
-    {
-      "id": 3,
-      "type": "AtomicTask",
-      "name": "EvalHealth",
-      "comment": "Compare Health to threshold and write IsLowHealth",
-      "posX": 540,
-      "posY": 200,
-      "parameters": {
-        "taskType": "SetVariable",
-        "targetKey": "IsLowHealth",
-        "expression": "Health < LowHealthThreshold"
-      }
-    },
-    {
-      "id": 4,
-      "type": "Branch",
-      "name": "LowHealthBranch",
-      "comment": "Branch: true = low health, false = healthy",
-      "posX": 760,
-      "posY": 200,
-      "parameters": {
-        "conditionKey": "IsLowHealth"
-      }
-    },
-    {
-      "id": 5,
-      "type": "Sequence",
-      "name": "RetreatSequence",
-      "comment": "NPC retreats to base when low health",
-      "posX": 980,
-      "posY": 100,
-      "parameters": {}
-    },
-    {
-      "id": 6,
-      "type": "AtomicTask",
-      "name": "LogRetreat",
-      "comment": "Log retreat event",
-      "posX": 1200,
-      "posY": 60,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Health critical - retreating to base"
-      }
-    },
-    {
-      "id": 7,
-      "type": "AtomicTask",
-      "name": "AlertTeam",
-      "comment": "Set global team alert flag",
-      "posX": 1200,
-      "posY": 140,
-      "parameters": {
-        "taskType": "SetVariable",
-        "targetKey": "global:TeamAlert",
-        "value": "true"
-      }
-    },
-    {
-      "id": 8,
-      "type": "AtomicTask",
-      "name": "MoveToBase",
-      "comment": "Move NPC to retreat target",
-      "posX": 1420,
-      "posY": 100,
-      "parameters": {
-        "taskType": "MoveToLocation",
-        "targetKey": "RetreatTarget",
-        "speed": "6.0"
-      }
-    },
-    {
-      "id": 9,
-      "type": "Sequence",
-      "name": "ContinuePatrol",
-      "comment": "NPC continues patrol when healthy",
-      "posX": 980,
-      "posY": 300,
-      "parameters": {}
-    },
-    {
-      "id": 10,
-      "type": "AtomicTask",
-      "name": "LogHealthy",
-      "comment": "Log healthy status",
-      "posX": 1200,
-      "posY": 280,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Health OK - continuing patrol"
-      }
-    },
-    {
-      "id": 11,
-      "type": "AtomicTask",
-      "name": "PatrolStep",
-      "comment": "Single patrol move step",
-      "posX": 1200,
-      "posY": 360,
-      "parameters": {
-        "taskType": "MoveToLocation",
-        "targetKey": "WaypointA",
-        "speed": "3.5"
-      }
-    },
-    {
-      "id": 12,
-      "type": "Repeat",
-      "name": "HealthLoop",
-      "comment": "Repeat health check every cycle",
-      "posX": 1640,
-      "posY": 200,
-      "parameters": {
-        "count": "-1"
-      }
-    }
-  ],
+  "blackboard": [],
+  "dataConnections": [],
   "execConnections": [
     {
       "fromNode": 1,
@@ -234,5 +69,124 @@
       "toPin": "in"
     }
   ],
-  "dataConnections": []
+  "graphType": "VisualScript",
+  "name": "example_health_check",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "Start",
+      "position": {
+        "x": 26.3335,
+        "y": 424.161
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 2,
+      "label": "HealthCheckSequence",
+      "position": {
+        "x": 181.333,
+        "y": 421.161
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 3,
+      "label": "EvalHealth",
+      "position": {
+        "x": 408.333,
+        "y": 367.161
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 4,
+      "label": "LowHealthBranch",
+      "position": {
+        "x": 636.333,
+        "y": 353.161
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 5,
+      "label": "RetreatSequence",
+      "position": {
+        "x": 816.333,
+        "y": 255.161
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 6,
+      "label": "LogRetreat",
+      "position": {
+        "x": 984.333,
+        "y": 260.161
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 7,
+      "label": "AlertTeam",
+      "position": {
+        "x": 1163.33,
+        "y": 264.161
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 8,
+      "label": "MoveToBase",
+      "position": {
+        "x": 1363.33,
+        "y": 264.161
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 9,
+      "label": "ContinuePatrol",
+      "position": {
+        "x": 814.094,
+        "y": 404.672
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 10,
+      "label": "LogHealthy",
+      "position": {
+        "x": 963.041,
+        "y": 401.165
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 11,
+      "label": "PatrolStep",
+      "position": {
+        "x": 1142.04,
+        "y": 407.165
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 12,
+      "label": "HealthLoop",
+      "position": {
+        "x": 396.532,
+        "y": 530.484
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    }
+  ],
+  "schema_version": 4
 }

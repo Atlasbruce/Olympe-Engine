@@ -1,274 +1,6 @@
 {
-  "schema_version": 4,
-  "type": "VisualScript",
-  "graphType": "VisualScript",
-  "name": "example_subgraph_demo",
-  "description": "SubGraph demo: 2 nested SubGraphs (patrol and health check) composed in a top-level Sequence.",
-  "blackboard": {
-    "local": {
-      "Health": {
-        "type": "float",
-        "value": "100.0"
-      },
-      "PatrolSpeed": {
-        "type": "float",
-        "value": "3.5"
-      },
-      "WaypointA": {
-        "type": "string",
-        "value": "wp_a"
-      },
-      "WaypointB": {
-        "type": "string",
-        "value": "wp_b"
-      },
-      "CycleCount": {
-        "type": "int",
-        "value": "0"
-      },
-      "MaxCycles": {
-        "type": "int",
-        "value": "10"
-      }
-    },
-    "global": {}
-  },
-  "nodes": [
-    {
-      "id": 1,
-      "type": "EntryPoint",
-      "name": "Start",
-      "comment": "Top-level graph entry",
-      "posX": 100,
-      "posY": 300,
-      "parameters": {}
-    },
-    {
-      "id": 2,
-      "type": "AtomicTask",
-      "name": "InitLog",
-      "comment": "Log start of demo",
-      "posX": 320,
-      "posY": 300,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "SubGraph demo starting"
-      }
-    },
-    {
-      "id": 3,
-      "type": "Sequence",
-      "name": "MainLoop",
-      "comment": "Main execution sequence",
-      "posX": 540,
-      "posY": 300,
-      "parameters": {}
-    },
-    {
-      "id": 4,
-      "type": "SubGraph",
-      "name": "HealthSubGraph",
-      "comment": "Nested SubGraph 1: health check with retreat logic",
-      "posX": 760,
-      "posY": 200,
-      "parameters": {
-        "subGraphPath": "Blueprints/AI/Examples/example_health_check.json"
-      }
-    },
-    {
-      "id": 5,
-      "type": "AtomicTask",
-      "name": "PostHealthLog",
-      "comment": "Log after health check completes",
-      "posX": 980,
-      "posY": 200,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Health check SubGraph complete"
-      }
-    },
-    {
-      "id": 6,
-      "type": "SubGraph",
-      "name": "PatrolSubGraph",
-      "comment": "Nested SubGraph 2: patrol between waypoints",
-      "posX": 760,
-      "posY": 400,
-      "parameters": {
-        "subGraphPath": "Blueprints/AI/Examples/example_patrol_basic.json"
-      }
-    },
-    {
-      "id": 7,
-      "type": "AtomicTask",
-      "name": "PostPatrolLog",
-      "comment": "Log after patrol SubGraph completes",
-      "posX": 980,
-      "posY": 400,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Patrol SubGraph complete"
-      }
-    },
-    {
-      "id": 8,
-      "type": "AtomicTask",
-      "name": "IncrCycle",
-      "comment": "Increment cycle counter",
-      "posX": 1200,
-      "posY": 300,
-      "parameters": {
-        "taskType": "SetVariable",
-        "targetKey": "CycleCount",
-        "expression": "CycleCount + 1"
-      }
-    },
-    {
-      "id": 9,
-      "type": "Branch",
-      "name": "MaxCycleCheck",
-      "comment": "Stop after MaxCycles iterations",
-      "posX": 1420,
-      "posY": 300,
-      "parameters": {
-        "conditionKey": "CycleCount",
-        "operator": ">=",
-        "threshold": "MaxCycles"
-      }
-    },
-    {
-      "id": 10,
-      "type": "AtomicTask",
-      "name": "DoneLog",
-      "comment": "Log completion when cycles exhausted",
-      "posX": 1640,
-      "posY": 200,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "SubGraph demo complete - max cycles reached"
-      }
-    },
-    {
-      "id": 11,
-      "type": "Repeat",
-      "name": "ContinueLoop",
-      "comment": "Continue looping until max cycles",
-      "posX": 1640,
-      "posY": 380,
-      "parameters": {
-        "count": "-1"
-      }
-    },
-    {
-      "id": 12,
-      "type": "AtomicTask",
-      "name": "LoopLog",
-      "comment": "Log each loop iteration",
-      "posX": 1860,
-      "posY": 380,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Demo loop iteration"
-      }
-    },
-    {
-      "id": 13,
-      "type": "AtomicTask",
-      "name": "RestLog",
-      "comment": "Brief pause between cycles",
-      "posX": 760,
-      "posY": 560,
-      "parameters": {
-        "taskType": "Wait",
-        "duration": "0.1"
-      }
-    },
-    {
-      "id": 14,
-      "type": "AtomicTask",
-      "name": "DiagLog",
-      "comment": "Print diagnostics to log",
-      "posX": 540,
-      "posY": 500,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Cycle diagnostics logged"
-      }
-    },
-    {
-      "id": 15,
-      "type": "AtomicTask",
-      "name": "FinalCleanup",
-      "comment": "Reset CycleCount on finish",
-      "posX": 1860,
-      "posY": 200,
-      "parameters": {
-        "taskType": "SetVariable",
-        "targetKey": "CycleCount",
-        "value": "0"
-      }
-    },
-    {
-      "id": 16,
-      "type": "AtomicTask",
-      "name": "ShutdownLog",
-      "comment": "Log clean shutdown",
-      "posX": 2080,
-      "posY": 200,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "SubGraph demo shutdown"
-      }
-    },
-    {
-      "id": 17,
-      "type": "AtomicTask",
-      "name": "IterLog",
-      "comment": "Log current iteration number",
-      "posX": 320,
-      "posY": 480,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Starting new iteration"
-      }
-    },
-    {
-      "id": 18,
-      "type": "AtomicTask",
-      "name": "SyncBB",
-      "comment": "Synchronize blackboard state",
-      "posX": 320,
-      "posY": 160,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Blackboard synchronized"
-      }
-    },
-    {
-      "id": 19,
-      "type": "AtomicTask",
-      "name": "PrePatrolLog",
-      "comment": "Log before patrol sub-graph",
-      "posX": 540,
-      "posY": 420,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Starting patrol sub-graph"
-      }
-    },
-    {
-      "id": 20,
-      "type": "AtomicTask",
-      "name": "PreHealthLog",
-      "comment": "Log before health sub-graph",
-      "posX": 540,
-      "posY": 180,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Starting health-check sub-graph"
-      }
-    }
-  ],
+  "blackboard": [],
+  "dataConnections": [],
   "execConnections": [
     {
       "fromNode": 1,
@@ -385,5 +117,207 @@
       "toPin": "in"
     }
   ],
-  "dataConnections": []
+  "graphType": "VisualScript",
+  "name": "example_subgraph_demo",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "Start",
+      "position": {
+        "x": -116.573,
+        "y": 389.174
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 2,
+      "label": "InitLog",
+      "position": {
+        "x": 207.427,
+        "y": 382.174
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 3,
+      "label": "MainLoop",
+      "position": {
+        "x": 399.427,
+        "y": 369.174
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 4,
+      "label": "HealthSubGraph",
+      "position": {
+        "x": 812.193,
+        "y": 651.145
+      },
+      "subGraphPath": "Blueprints/AI/Examples/example_health_check.json",
+      "type": "SubGraph"
+    },
+    {
+      "id": 5,
+      "label": "PostHealthLog",
+      "position": {
+        "x": 979.193,
+        "y": 650.145
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 6,
+      "label": "PatrolSubGraph",
+      "position": {
+        "x": 809.427,
+        "y": 517.174
+      },
+      "subGraphPath": "Blueprints/AI/Examples/example_patrol_basic.json",
+      "type": "SubGraph"
+    },
+    {
+      "id": 7,
+      "label": "PostPatrolLog",
+      "position": {
+        "x": 971.427,
+        "y": 519.174
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 8,
+      "label": "IncrCycle",
+      "position": {
+        "x": 619.427,
+        "y": 139.174
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 9,
+      "label": "MaxCycleCheck",
+      "mathOp": ">=",
+      "position": {
+        "x": 772.488,
+        "y": 133.211
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 10,
+      "label": "DoneLog",
+      "position": {
+        "x": 944.488,
+        "y": 264.211
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 11,
+      "label": "ContinueLoop",
+      "position": {
+        "x": 907.488,
+        "y": 95.2109
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 12,
+      "label": "LoopLog",
+      "position": {
+        "x": 1081.49,
+        "y": 94.2109
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 13,
+      "label": "RestLog",
+      "position": {
+        "x": 791.938,
+        "y": 376.798
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 14,
+      "label": "DiagLog",
+      "position": {
+        "x": 621.063,
+        "y": 375.18
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 15,
+      "label": "FinalCleanup",
+      "position": {
+        "x": 1119.59,
+        "y": 262.844
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 16,
+      "label": "ShutdownLog",
+      "position": {
+        "x": 1319.59,
+        "y": 262.844
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 17,
+      "label": "IterLog",
+      "position": {
+        "x": 1280.82,
+        "y": 97.6851
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 18,
+      "label": "SyncBB",
+      "position": {
+        "x": 37.8618,
+        "y": 377.149
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 19,
+      "label": "PrePatrolLog",
+      "position": {
+        "x": 645.862,
+        "y": 506.149
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 20,
+      "label": "PreHealthLog",
+      "position": {
+        "x": 642.632,
+        "y": 640.278
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    }
+  ],
+  "schema_version": 4
 }

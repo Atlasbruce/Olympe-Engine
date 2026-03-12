@@ -1,119 +1,6 @@
 {
-  "schema_version": 4,
-  "type": "VisualScript",
-  "graphType": "VisualScript",
-  "name": "example_patrol_basic",
-  "description": "Basic patrol loop: NPC moves between two waypoints in a Sequence.",
-  "blackboard": {
-    "local": {
-      "WaypointA": {
-        "type": "string",
-        "value": "wp_a"
-      },
-      "WaypointB": {
-        "type": "string",
-        "value": "wp_b"
-      },
-      "PatrolSpeed": {
-        "type": "float",
-        "value": "3.5"
-      }
-    },
-    "global": {}
-  },
-  "nodes": [
-    {
-      "id": 1,
-      "type": "EntryPoint",
-      "name": "Start",
-      "comment": "Graph entry point",
-      "posX": 100,
-      "posY": 200,
-      "parameters": {}
-    },
-    {
-      "id": 2,
-      "type": "Sequence",
-      "name": "PatrolSequence",
-      "comment": "Execute patrol steps in order",
-      "posX": 320,
-      "posY": 200,
-      "parameters": {}
-    },
-    {
-      "id": 3,
-      "type": "AtomicTask",
-      "name": "MoveToA",
-      "comment": "Move NPC to waypoint A",
-      "posX": 540,
-      "posY": 120,
-      "parameters": {
-        "taskType": "MoveToLocation",
-        "targetKey": "WaypointA",
-        "speedKey": "PatrolSpeed"
-      }
-    },
-    {
-      "id": 4,
-      "type": "AtomicTask",
-      "name": "WaitAtA",
-      "comment": "Pause at waypoint A for 1 second",
-      "posX": 760,
-      "posY": 120,
-      "parameters": {
-        "taskType": "Wait",
-        "duration": "1.0"
-      }
-    },
-    {
-      "id": 5,
-      "type": "AtomicTask",
-      "name": "MoveToB",
-      "comment": "Move NPC to waypoint B",
-      "posX": 540,
-      "posY": 280,
-      "parameters": {
-        "taskType": "MoveToLocation",
-        "targetKey": "WaypointB",
-        "speedKey": "PatrolSpeed"
-      }
-    },
-    {
-      "id": 6,
-      "type": "AtomicTask",
-      "name": "WaitAtB",
-      "comment": "Pause at waypoint B for 1 second",
-      "posX": 760,
-      "posY": 280,
-      "parameters": {
-        "taskType": "Wait",
-        "duration": "1.0"
-      }
-    },
-    {
-      "id": 7,
-      "type": "Repeat",
-      "name": "LoopForever",
-      "comment": "Repeat patrol indefinitely",
-      "posX": 980,
-      "posY": 200,
-      "parameters": {
-        "count": "-1"
-      }
-    },
-    {
-      "id": 8,
-      "type": "AtomicTask",
-      "name": "LogPatrol",
-      "comment": "Log patrol cycle completion",
-      "posX": 1200,
-      "posY": 200,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Patrol cycle complete"
-      }
-    }
-  ],
+  "blackboard": [],
+  "dataConnections": [],
   "execConnections": [
     {
       "fromNode": 1,
@@ -158,5 +45,87 @@
       "toPin": "in"
     }
   ],
-  "dataConnections": []
+  "graphType": "VisualScript",
+  "name": "example_patrol_basic",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "Start",
+      "position": {
+        "x": 145.979,
+        "y": 278.562
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 2,
+      "label": "PatrolSequence",
+      "position": {
+        "x": 328.979,
+        "y": 273.562
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 3,
+      "label": "MoveToA",
+      "position": {
+        "x": 502.979,
+        "y": 172.562
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 4,
+      "label": "WaitAtA",
+      "position": {
+        "x": 689.979,
+        "y": 177.562
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 5,
+      "label": "MoveToB",
+      "position": {
+        "x": 509.979,
+        "y": 321.562
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 6,
+      "label": "WaitAtB",
+      "position": {
+        "x": 678.979,
+        "y": 326.562
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 7,
+      "label": "LoopForever",
+      "position": {
+        "x": 518.874,
+        "y": 455.339
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 8,
+      "label": "LogPatrol",
+      "position": {
+        "x": 692.105,
+        "y": 467.223
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    }
+  ],
+  "schema_version": 4
 }

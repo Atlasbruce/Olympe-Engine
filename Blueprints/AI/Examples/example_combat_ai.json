@@ -1,462 +1,6 @@
 {
-  "schema_version": 4,
-  "type": "VisualScript",
-  "graphType": "VisualScript",
-  "name": "example_combat_ai",
-  "description": "Combat AI: Selector chooses Attack or Flee based on health and enemy distance. 35 nodes.",
-  "blackboard": {
-    "local": {
-      "Health": {
-        "type": "float",
-        "value": "100.0"
-      },
-      "EnemyDistance": {
-        "type": "float",
-        "value": "999.0"
-      },
-      "AttackRange": {
-        "type": "float",
-        "value": "5.0"
-      },
-      "FleeThreshold": {
-        "type": "float",
-        "value": "25.0"
-      },
-      "IsInAttackRange": {
-        "type": "bool",
-        "value": "false"
-      },
-      "ShouldFlee": {
-        "type": "bool",
-        "value": "false"
-      },
-      "AttackTarget": {
-        "type": "string",
-        "value": ""
-      },
-      "FleeTarget": {
-        "type": "string",
-        "value": "safe_zone"
-      },
-      "AttackCooldown": {
-        "type": "float",
-        "value": "0.0"
-      },
-      "DamageDealt": {
-        "type": "float",
-        "value": "0.0"
-      }
-    },
-    "global": {
-      "global:TotalKills": {
-        "type": "int",
-        "value": "0"
-      }
-    }
-  },
-  "nodes": [
-    {
-      "id": 1,
-      "type": "EntryPoint",
-      "name": "Start",
-      "comment": "Combat AI entry",
-      "posX": 100,
-      "posY": 400,
-      "parameters": {}
-    },
-    {
-      "id": 2,
-      "type": "Sequence",
-      "name": "UpdateFlags",
-      "comment": "Update combat flags",
-      "posX": 320,
-      "posY": 400,
-      "parameters": {}
-    },
-    {
-      "id": 3,
-      "type": "AtomicTask",
-      "name": "CheckRange",
-      "comment": "Set IsInAttackRange flag",
-      "posX": 540,
-      "posY": 340,
-      "parameters": {
-        "taskType": "SetVariable",
-        "targetKey": "IsInAttackRange",
-        "expression": "EnemyDistance <= AttackRange"
-      }
-    },
-    {
-      "id": 4,
-      "type": "AtomicTask",
-      "name": "CheckFlee",
-      "comment": "Set ShouldFlee flag",
-      "posX": 540,
-      "posY": 440,
-      "parameters": {
-        "taskType": "SetVariable",
-        "targetKey": "ShouldFlee",
-        "expression": "Health < FleeThreshold"
-      }
-    },
-    {
-      "id": 5,
-      "type": "Selector",
-      "name": "CombatSelector",
-      "comment": "Try flee first, then attack",
-      "posX": 760,
-      "posY": 400,
-      "parameters": {}
-    },
-    {
-      "id": 6,
-      "type": "Branch",
-      "name": "FleeBranch",
-      "comment": "Flee if health critical",
-      "posX": 980,
-      "posY": 200,
-      "parameters": {
-        "conditionKey": "ShouldFlee"
-      }
-    },
-    {
-      "id": 7,
-      "type": "Sequence",
-      "name": "FleeSequence",
-      "comment": "Execute flee behavior",
-      "posX": 1200,
-      "posY": 100,
-      "parameters": {}
-    },
-    {
-      "id": 8,
-      "type": "AtomicTask",
-      "name": "LogFlee",
-      "comment": "Log flee event",
-      "posX": 1420,
-      "posY": 60,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Combat: Fleeing - health critical"
-      }
-    },
-    {
-      "id": 9,
-      "type": "AtomicTask",
-      "name": "MoveToSafeZone",
-      "comment": "Move to safe zone",
-      "posX": 1420,
-      "posY": 140,
-      "parameters": {
-        "taskType": "MoveToLocation",
-        "targetKey": "FleeTarget",
-        "speed": "7.0"
-      }
-    },
-    {
-      "id": 10,
-      "type": "AtomicTask",
-      "name": "HealAtBase",
-      "comment": "Heal at safe zone",
-      "posX": 1640,
-      "posY": 100,
-      "parameters": {
-        "taskType": "Wait",
-        "duration": "3.0"
-      }
-    },
-    {
-      "id": 11,
-      "type": "AtomicTask",
-      "name": "RestoreHealth",
-      "comment": "Restore health to 50",
-      "posX": 1860,
-      "posY": 100,
-      "parameters": {
-        "taskType": "SetVariable",
-        "targetKey": "Health",
-        "value": "50.0"
-      }
-    },
-    {
-      "id": 12,
-      "type": "Branch",
-      "name": "AttackRangeBranch",
-      "comment": "Attack only if in range",
-      "posX": 980,
-      "posY": 400,
-      "parameters": {
-        "conditionKey": "IsInAttackRange"
-      }
-    },
-    {
-      "id": 13,
-      "type": "Sequence",
-      "name": "AttackSequence",
-      "comment": "Execute attack behavior",
-      "posX": 1200,
-      "posY": 300,
-      "parameters": {}
-    },
-    {
-      "id": 14,
-      "type": "AtomicTask",
-      "name": "LogAttack",
-      "comment": "Log attack start",
-      "posX": 1420,
-      "posY": 260,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Combat: Attacking enemy"
-      }
-    },
-    {
-      "id": 15,
-      "type": "AtomicTask",
-      "name": "DealDamage",
-      "comment": "Deal 10 damage to enemy",
-      "posX": 1420,
-      "posY": 340,
-      "parameters": {
-        "taskType": "SetVariable",
-        "targetKey": "DamageDealt",
-        "value": "10.0"
-      }
-    },
-    {
-      "id": 16,
-      "type": "AtomicTask",
-      "name": "AttackCooldown",
-      "comment": "Wait 1s attack cooldown",
-      "posX": 1640,
-      "posY": 300,
-      "parameters": {
-        "taskType": "Wait",
-        "duration": "1.0"
-      }
-    },
-    {
-      "id": 17,
-      "type": "Branch",
-      "name": "EnemyDeadCheck",
-      "comment": "Check if enemy is defeated",
-      "posX": 1860,
-      "posY": 300,
-      "parameters": {
-        "conditionKey": "EnemyDefeated"
-      }
-    },
-    {
-      "id": 18,
-      "type": "AtomicTask",
-      "name": "IncrKills",
-      "comment": "Increment global kill count",
-      "posX": 2080,
-      "posY": 260,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Enemy defeated - kill counted"
-      }
-    },
-    {
-      "id": 19,
-      "type": "AtomicTask",
-      "name": "SearchNextTarget",
-      "comment": "Search for next enemy",
-      "posX": 2080,
-      "posY": 340,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Searching for next target"
-      }
-    },
-    {
-      "id": 20,
-      "type": "Sequence",
-      "name": "ApproachSequence",
-      "comment": "Move closer if not in range",
-      "posX": 1200,
-      "posY": 500,
-      "parameters": {}
-    },
-    {
-      "id": 21,
-      "type": "AtomicTask",
-      "name": "LogApproach",
-      "comment": "Log approach event",
-      "posX": 1420,
-      "posY": 460,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Combat: Approaching enemy"
-      }
-    },
-    {
-      "id": 22,
-      "type": "AtomicTask",
-      "name": "MoveToEnemy",
-      "comment": "Move toward attack target",
-      "posX": 1420,
-      "posY": 540,
-      "parameters": {
-        "taskType": "MoveToLocation",
-        "targetKey": "AttackTarget",
-        "speed": "4.0"
-      }
-    },
-    {
-      "id": 23,
-      "type": "AtomicTask",
-      "name": "UpdateDistance",
-      "comment": "Recalculate enemy distance",
-      "posX": 1640,
-      "posY": 500,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Distance updated"
-      }
-    },
-    {
-      "id": 24,
-      "type": "Sequence",
-      "name": "DefendSequence",
-      "comment": "Fallback: defensive stance",
-      "posX": 980,
-      "posY": 600,
-      "parameters": {}
-    },
-    {
-      "id": 25,
-      "type": "AtomicTask",
-      "name": "LogDefend",
-      "comment": "Log defensive action",
-      "posX": 1200,
-      "posY": 580,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Combat: Defensive stance"
-      }
-    },
-    {
-      "id": 26,
-      "type": "AtomicTask",
-      "name": "DefendWait",
-      "comment": "Wait 0.5s in defense",
-      "posX": 1200,
-      "posY": 660,
-      "parameters": {
-        "taskType": "Wait",
-        "duration": "0.5"
-      }
-    },
-    {
-      "id": 27,
-      "type": "Repeat",
-      "name": "CombatLoop",
-      "comment": "Loop combat until resolved",
-      "posX": 2300,
-      "posY": 400,
-      "parameters": {
-        "count": "-1"
-      }
-    },
-    {
-      "id": 28,
-      "type": "AtomicTask",
-      "name": "CombatTick",
-      "comment": "End-of-tick bookkeeping",
-      "posX": 2520,
-      "posY": 400,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Combat tick"
-      }
-    },
-    {
-      "id": 29,
-      "type": "AtomicTask",
-      "name": "LogCooldown",
-      "comment": "Log current cooldown",
-      "posX": 760,
-      "posY": 560,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Cooldown active"
-      }
-    },
-    {
-      "id": 30,
-      "type": "Branch",
-      "name": "CooldownBranch",
-      "comment": "Skip attack if on cooldown",
-      "posX": 760,
-      "posY": 640,
-      "parameters": {
-        "conditionKey": "CooldownActive"
-      }
-    },
-    {
-      "id": 31,
-      "type": "AtomicTask",
-      "name": "WaitCooldown",
-      "comment": "Wait remaining cooldown",
-      "posX": 980,
-      "posY": 680,
-      "parameters": {
-        "taskType": "Wait",
-        "duration": "0.25"
-      }
-    },
-    {
-      "id": 32,
-      "type": "AtomicTask",
-      "name": "LogStateEntry",
-      "comment": "Log entering combat state",
-      "posX": 100,
-      "posY": 100,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Entering combat AI"
-      }
-    },
-    {
-      "id": 33,
-      "type": "AtomicTask",
-      "name": "InitCombat",
-      "comment": "Initialise combat variables",
-      "posX": 320,
-      "posY": 100,
-      "parameters": {
-        "taskType": "SetVariable",
-        "targetKey": "DamageDealt",
-        "value": "0.0"
-      }
-    },
-    {
-      "id": 34,
-      "type": "AtomicTask",
-      "name": "PostCombatLog",
-      "comment": "Log combat cycle end",
-      "posX": 2520,
-      "posY": 500,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Combat cycle end"
-      }
-    },
-    {
-      "id": 35,
-      "type": "AtomicTask",
-      "name": "UpdateGlobalKill",
-      "comment": "Update global kill counter",
-      "posX": 2520,
-      "posY": 300,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Kill stats updated"
-      }
-    }
-  ],
+  "blackboard": [],
+  "dataConnections": [],
   "execConnections": [
     {
       "fromNode": 1,
@@ -645,5 +189,348 @@
       "toPin": "in"
     }
   ],
-  "dataConnections": []
+  "graphType": "VisualScript",
+  "name": "example_combat_ai",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "Start",
+      "position": {
+        "x": 111.827,
+        "y": 319.14
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 2,
+      "label": "UpdateFlags",
+      "position": {
+        "x": 742.65,
+        "y": 311.22
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 3,
+      "label": "CheckRange",
+      "position": {
+        "x": 887.328,
+        "y": 205.762
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 4,
+      "label": "CheckFlee",
+      "position": {
+        "x": 883.65,
+        "y": 325.219
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 5,
+      "label": "CombatSelector",
+      "position": {
+        "x": 898.65,
+        "y": 442.219
+      },
+      "type": "Unknown"
+    },
+    {
+      "id": 6,
+      "label": "FleeBranch",
+      "position": {
+        "x": 1082.65,
+        "y": 635.219
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 7,
+      "label": "FleeSequence",
+      "position": {
+        "x": 1242.65,
+        "y": 593.219
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 8,
+      "label": "LogFlee",
+      "position": {
+        "x": 1376.65,
+        "y": 605.219
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 9,
+      "label": "MoveToSafeZone",
+      "position": {
+        "x": 1563.65,
+        "y": 610.219
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 10,
+      "label": "HealAtBase",
+      "position": {
+        "x": 1745.97,
+        "y": 607.025
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 11,
+      "label": "RestoreHealth",
+      "position": {
+        "x": 1934.97,
+        "y": 607.025
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 12,
+      "label": "AttackRangeBranch",
+      "position": {
+        "x": 1172.98,
+        "y": 404.253
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 13,
+      "label": "AttackSequence",
+      "position": {
+        "x": 1330.98,
+        "y": 433.253
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 14,
+      "label": "LogAttack",
+      "position": {
+        "x": 1530.98,
+        "y": 433.253
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 15,
+      "label": "DealDamage",
+      "position": {
+        "x": 1730.98,
+        "y": 433.253
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 16,
+      "label": "AttackCooldown",
+      "position": {
+        "x": 1930.98,
+        "y": 433.253
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 17,
+      "label": "EnemyDeadCheck",
+      "position": {
+        "x": 2130.98,
+        "y": 433.253
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 18,
+      "label": "IncrKills",
+      "position": {
+        "x": 2300.98,
+        "y": 443.253
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 19,
+      "label": "SearchNextTarget",
+      "position": {
+        "x": 2299.98,
+        "y": 353.253
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 20,
+      "label": "ApproachSequence",
+      "position": {
+        "x": 1366.72,
+        "y": 287.926
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 21,
+      "label": "LogApproach",
+      "position": {
+        "x": 1522.72,
+        "y": 285.926
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 22,
+      "label": "MoveToEnemy",
+      "position": {
+        "x": 1722.72,
+        "y": 285.926
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 23,
+      "label": "UpdateDistance",
+      "position": {
+        "x": 1922.72,
+        "y": 285.926
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 24,
+      "label": "DefendSequence",
+      "position": {
+        "x": 1220.08,
+        "y": 39.2416
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 25,
+      "label": "LogDefend",
+      "position": {
+        "x": 1378.81,
+        "y": 39.2656
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 26,
+      "label": "DefendWait",
+      "position": {
+        "x": 1562.81,
+        "y": 43.2656
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 27,
+      "label": "CombatLoop",
+      "position": {
+        "x": 1206.1,
+        "y": 147.504
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 28,
+      "label": "CombatTick",
+      "position": {
+        "x": 1384.1,
+        "y": 142.504
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 29,
+      "label": "LogCooldown",
+      "position": {
+        "x": 429.014,
+        "y": 496.291
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 30,
+      "label": "CooldownBranch",
+      "position": {
+        "x": 629.014,
+        "y": 496.291
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 31,
+      "label": "WaitCooldown",
+      "position": {
+        "x": 614.014,
+        "y": 631.291
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 32,
+      "label": "LogStateEntry",
+      "position": {
+        "x": 321.987,
+        "y": 295.223
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 33,
+      "label": "InitCombat",
+      "position": {
+        "x": 533.987,
+        "y": 304.223
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 34,
+      "label": "PostCombatLog",
+      "position": {
+        "x": 1762.6,
+        "y": 146.863
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 35,
+      "label": "UpdateGlobalKill",
+      "position": {
+        "x": 1561.43,
+        "y": 150.36
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    }
+  ],
+  "schema_version": 4
 }

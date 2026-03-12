@@ -1,83 +1,6 @@
 {
-  "schema_version": 4,
-  "type": "VisualScript",
-  "graphType": "VisualScript",
-  "description": "Ready-to-use patrol loop template: NPC moves between two configurable waypoints.",
-  "blackboard": {
-    "local": {
-      "WaypointA": {
-        "type": "string",
-        "value": "wp_a"
-      },
-      "WaypointB": {
-        "type": "string",
-        "value": "wp_b"
-      },
-      "PatrolSpeed": {
-        "type": "float",
-        "value": "3.5"
-      }
-    },
-    "global": {}
-  },
-  "nodes": [
-    {
-      "id": 1,
-      "type": "EntryPoint",
-      "name": "Start",
-      "comment": "Patrol loop entry - configure WaypointA, WaypointB, PatrolSpeed in blackboard",
-      "posX": 100,
-      "posY": 200,
-      "parameters": {}
-    },
-    {
-      "id": 2,
-      "type": "Sequence",
-      "name": "PatrolSequence",
-      "comment": "A->B->A->B patrol sequence",
-      "posX": 320,
-      "posY": 200,
-      "parameters": {}
-    },
-    {
-      "id": 3,
-      "type": "AtomicTask",
-      "name": "MoveToA",
-      "comment": "Move to waypoint A - set WaypointA in blackboard",
-      "posX": 540,
-      "posY": 120,
-      "parameters": {
-        "taskType": "MoveToLocation",
-        "targetKey": "WaypointA",
-        "speedKey": "PatrolSpeed"
-      }
-    },
-    {
-      "id": 4,
-      "type": "AtomicTask",
-      "name": "MoveToB",
-      "comment": "Move to waypoint B - set WaypointB in blackboard",
-      "posX": 540,
-      "posY": 280,
-      "parameters": {
-        "taskType": "MoveToLocation",
-        "targetKey": "WaypointB",
-        "speedKey": "PatrolSpeed"
-      }
-    },
-    {
-      "id": 5,
-      "type": "Repeat",
-      "name": "LoopForever",
-      "comment": "Repeat indefinitely (count=-1) or set to a fixed number",
-      "posX": 760,
-      "posY": 200,
-      "parameters": {
-        "count": "-1"
-      }
-    }
-  ],
-  "name": "patrol_loop",
+  "blackboard": [],
+  "dataConnections": [],
   "execConnections": [
     {
       "fromNode": 1,
@@ -104,5 +27,57 @@
       "toPin": "in"
     }
   ],
-  "dataConnections": []
+  "graphType": "VisualScript",
+  "name": "patrol_loop",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "Start",
+      "position": {
+        "x": 217,
+        "y": 318
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 2,
+      "label": "PatrolSequence",
+      "position": {
+        "x": 403,
+        "y": 309
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 3,
+      "label": "MoveToA",
+      "position": {
+        "x": 589,
+        "y": 224
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 4,
+      "label": "MoveToB",
+      "position": {
+        "x": 602,
+        "y": 390
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 5,
+      "label": "LoopForever",
+      "position": {
+        "x": 606,
+        "y": 527
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    }
+  ],
+  "schema_version": 4
 }

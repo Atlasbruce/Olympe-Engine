@@ -1,79 +1,76 @@
 {
   "blueprintType": "BehaviorTree",
   "data": {
-    "rootGraph": {
-      "nodes": [
-        {
-          "children": [
-            2,
-            3,
-            4,
-            5
-          ],
-          "id": 1,
-          "name": "Chase Sequence",
-          "parameters": {},
-          "position": {
-            "x": -41,
-            "y": -2
-          },
-          "type": "Sequence"
+    "nodes": [
+      {
+        "children": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "id": 1,
+        "name": "Chase Sequence",
+        "parameters": {},
+        "position": {
+          "x": 24,
+          "y": 60
         },
-        {
-          "children": [],
-          "id": 2,
-          "name": "Can See Player",
-          "parameters": {
-            "target": "Player",
-            "type": "Visual"
-          },
-          "position": {
-            "x": 311,
-            "y": 66
-          },
-          "type": "Action"
+        "type": "Sequence"
+      },
+      {
+        "children": [],
+        "id": 2,
+        "name": "Can See Player",
+        "parameters": {
+          "target": "Player",
+          "type": "Visual"
         },
-        {
-          "children": [],
-          "id": 3,
-          "name": "Face Player",
-          "parameters": {},
-          "position": {
-            "x": 311,
-            "y": 184
-          },
-          "type": "Action"
+        "position": {
+          "x": 254,
+          "y": 243
         },
-        {
-          "children": [],
-          "id": 4,
-          "name": "Chase Player",
-          "parameters": {
-            "speed": "Run"
-          },
-          "position": {
-            "x": 254,
-            "y": -211
-          },
-          "type": "Action"
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 3,
+        "name": "Face Player",
+        "parameters": {},
+        "position": {
+          "x": 252.877,
+          "y": -106.655
         },
-        {
-          "children": [],
-          "id": 5,
-          "name": "Attack Player",
-          "parameters": {
-            "burst": "3"
-          },
-          "position": {
-            "x": 309,
-            "y": -58
-          },
-          "type": "Action"
-        }
-      ],
-      "rootNodeId": 1
-    },
-    "subgraphs": {}
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 4,
+        "name": "Chase Player",
+        "parameters": {
+          "speed": "Run"
+        },
+        "position": {
+          "x": 262,
+          "y": 141
+        },
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 5,
+        "name": "Attack Player",
+        "parameters": {
+          "burst": "3"
+        },
+        "position": {
+          "x": 256,
+          "y": 18
+        },
+        "type": "Action"
+      }
+    ],
+    "rootNodeId": 1
   },
   "description": "",
   "editorState": {
@@ -86,9 +83,9 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-03-11T13:17:08",
+    "lastModified": "2026-03-12T09:42:25",
     "tags": []
   },
   "name": "Guard_Chase",
-  "schema_version": 5
+  "schema_version": 2
 }

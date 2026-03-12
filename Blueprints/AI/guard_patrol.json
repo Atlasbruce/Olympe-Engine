@@ -7,6 +7,24 @@
       "fromPin": "Out",
       "toNode": 1,
       "toPin": "In"
+    },
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 4,
+      "toPin": "In"
     }
   ],
   "graphType": "VisualScript",
@@ -16,8 +34,8 @@
       "id": 5,
       "label": "Start",
       "position": {
-        "x": 180.64,
-        "y": 175.137
+        "x": 93.3774,
+        "y": 179.795
       },
       "type": "EntryPoint"
     },
@@ -25,8 +43,8 @@
       "id": 1,
       "label": "Root Sequence",
       "position": {
-        "x": 380.64,
-        "y": 175.137
+        "x": 281.377,
+        "y": 178.795
       },
       "type": "Sequence"
     },
@@ -34,8 +52,8 @@
       "id": 2,
       "label": "Pick Next Patrol Point",
       "position": {
-        "x": 342,
-        "y": 316
+        "x": 494.737,
+        "y": 66.6584
       },
       "taskType": "Task_PatrolPickPoint",
       "type": "AtomicTask"
@@ -44,8 +62,8 @@
       "id": 3,
       "label": "Set Move Goal to Patrol Point",
       "position": {
-        "x": 342.64,
-        "y": 414.137
+        "x": 495.377,
+        "y": 178.795
       },
       "taskType": "Task_SetMoveGoal",
       "type": "AtomicTask"
@@ -54,8 +72,8 @@
       "id": 4,
       "label": "Move to Goal",
       "position": {
-        "x": 337.64,
-        "y": 506.137
+        "x": 500.377,
+        "y": 303.795
       },
       "taskType": "Task_MoveToLocation",
       "type": "AtomicTask"

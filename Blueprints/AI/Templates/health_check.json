@@ -1,90 +1,6 @@
 {
-  "schema_version": 4,
-  "type": "VisualScript",
-  "graphType": "VisualScript",
-  "description": "Health check template: evaluates a Health key and branches to retreat or continue.",
-  "blackboard": {
-    "local": {
-      "Health": {
-        "type": "float",
-        "value": "100.0"
-      },
-      "HealthThreshold": {
-        "type": "float",
-        "value": "20.0"
-      },
-      "IsLowHealth": {
-        "type": "bool",
-        "value": "false"
-      },
-      "RetreatTarget": {
-        "type": "string",
-        "value": "safe_zone"
-      }
-    },
-    "global": {}
-  },
-  "nodes": [
-    {
-      "id": 1,
-      "type": "EntryPoint",
-      "name": "Start",
-      "comment": "Health check template - configure HealthThreshold and RetreatTarget",
-      "posX": 100,
-      "posY": 200,
-      "parameters": {}
-    },
-    {
-      "id": 2,
-      "type": "AtomicTask",
-      "name": "EvalHealth",
-      "comment": "Compare Health to HealthThreshold - write result to IsLowHealth",
-      "posX": 320,
-      "posY": 200,
-      "parameters": {
-        "taskType": "SetVariable",
-        "targetKey": "IsLowHealth",
-        "expression": "Health < HealthThreshold"
-      }
-    },
-    {
-      "id": 3,
-      "type": "Branch",
-      "name": "HealthBranch",
-      "comment": "true = low health -> retreat; false = healthy -> continue",
-      "posX": 540,
-      "posY": 200,
-      "parameters": {
-        "conditionKey": "IsLowHealth"
-      }
-    },
-    {
-      "id": 4,
-      "type": "AtomicTask",
-      "name": "Retreat",
-      "comment": "Move to retreat target (low health path)",
-      "posX": 760,
-      "posY": 100,
-      "parameters": {
-        "taskType": "MoveToLocation",
-        "targetKey": "RetreatTarget",
-        "speed": "6.0"
-      }
-    },
-    {
-      "id": 5,
-      "type": "AtomicTask",
-      "name": "ContinueAction",
-      "comment": "Placeholder: replace with your healthy-state logic",
-      "posX": 760,
-      "posY": 300,
-      "parameters": {
-        "taskType": "LogMessage",
-        "message": "Health OK - continuing"
-      }
-    }
-  ],
-  "name": "health_check",
+  "blackboard": [],
+  "dataConnections": [],
   "execConnections": [
     {
       "fromNode": 1,
@@ -111,5 +27,57 @@
       "toPin": "in"
     }
   ],
-  "dataConnections": []
+  "graphType": "VisualScript",
+  "name": "health_check",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "Start",
+      "position": {
+        "x": 177,
+        "y": 281
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 2,
+      "label": "EvalHealth",
+      "position": {
+        "x": 352,
+        "y": 276
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 3,
+      "label": "HealthBranch",
+      "position": {
+        "x": 563,
+        "y": 284
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 4,
+      "label": "Retreat",
+      "position": {
+        "x": 757,
+        "y": 246
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 5,
+      "label": "ContinueAction",
+      "position": {
+        "x": 767,
+        "y": 388
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    }
+  ],
+  "schema_version": 4
 }
