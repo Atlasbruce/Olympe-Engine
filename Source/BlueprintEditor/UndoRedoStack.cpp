@@ -210,6 +210,78 @@ std::string AddConnectionCommand::GetDescription() const
 }
 
 // ============================================================================
+// DeleteLinkCommand
+// ============================================================================
+
+DeleteLinkCommand::DeleteLinkCommand(const ExecPinConnection& conn)
+    : m_isExecConn(true), m_savedExecConn(conn), m_savedDataConn()
+{
+}
+
+DeleteLinkCommand::DeleteLinkCommand(const DataPinConnection& conn)
+    : m_isExecConn(false), m_savedExecConn(), m_savedDataConn(conn)
+{
+}
+
+void DeleteLinkCommand::Execute(TaskGraphTemplate& graph)
+{
+    if (m_isExecConn)
+    {
+        auto it = std::remove_if(graph.ExecConnections.begin(), graph.ExecConnections.end(),
+            [this](const ExecPinConnection& ec)
+            {
+                return ec.SourceNodeID  == m_savedExecConn.SourceNodeID  &&
+                       ec.TargetNodeID  == m_savedExecConn.TargetNodeID  &&
+                       ec.SourcePinName == m_savedExecConn.SourcePinName &&
+                       ec.TargetPinName == m_savedExecConn.TargetPinName;
+            });
+        graph.ExecConnections.erase(it, graph.ExecConnections.end());
+    }
+    else
+    {
+        auto it = std::remove_if(graph.DataConnections.begin(), graph.DataConnections.end(),
+            [this](const DataPinConnection& dc)
+            {
+                return dc.SourceNodeID  == m_savedDataConn.SourceNodeID  &&
+                       dc.TargetNodeID  == m_savedDataConn.TargetNodeID  &&
+                       dc.SourcePinName == m_savedDataConn.SourcePinName &&
+                       dc.TargetPinName == m_savedDataConn.TargetPinName;
+            });
+        graph.DataConnections.erase(it, graph.DataConnections.end());
+    }
+    graph.BuildLookupCache();
+}
+
+void DeleteLinkCommand::Undo(TaskGraphTemplate& graph)
+{
+    if (m_isExecConn)
+        graph.ExecConnections.push_back(m_savedExecConn);
+    else
+        graph.DataConnections.push_back(m_savedDataConn);
+    graph.BuildLookupCache();
+}
+
+std::string DeleteLinkCommand::GetDescription() const
+{
+    std::ostringstream ss;
+    if (m_isExecConn)
+    {
+        ss << "Delete Exec Link " << m_savedExecConn.SourceNodeID
+           << "." << m_savedExecConn.SourcePinName
+           << " -> " << m_savedExecConn.TargetNodeID
+           << "." << m_savedExecConn.TargetPinName;
+    }
+    else
+    {
+        ss << "Delete Data Link " << m_savedDataConn.SourceNodeID
+           << "." << m_savedDataConn.SourcePinName
+           << " -> " << m_savedDataConn.TargetNodeID
+           << "." << m_savedDataConn.TargetPinName;
+    }
+    return ss.str();
+}
+
+// ============================================================================
 // UndoRedoStack
 // ============================================================================
 

@@ -605,11 +605,102 @@ static void Test11_DeleteUndo_LinksRestored()
     ReportTest("DeleteUndo_LinksRestored", s_failCount == prevFail);
 }
 
+// ---------------------------------------------------------------------------
+// Test12: Context menu delete node → Undo restores node
+// ---------------------------------------------------------------------------
+
+static void Test12_ContextMenuDeleteNode_UndoRestores()
+{
+    int prevFail = s_failCount;
+
+    MockGraph g;
+    g.AddNode(1, "EntryPoint");
+    g.AddNode(2, "Branch");
+    g.AddNode(3, "Print");
+
+    // Simulate context menu "Delete Node #2"
+    g.RemoveNode(2);
+
+    TEST_ASSERT(!g.HasNode(2), "Node 2 deleted via context menu");
+    TEST_ASSERT(g.HasNode(1),  "Node 1 still exists");
+    TEST_ASSERT(g.HasNode(3),  "Node 3 still exists");
+
+    // Simulate Undo (restore node 2)
+    MockNode restored;
+    restored.nodeID = 2;
+    restored.name = "Branch";
+    g.nodes.push_back(restored);
+
+    TEST_ASSERT(g.HasNode(2), "Node 2 restored after undo");
+
+    ReportTest("ContextMenuDeleteNode_UndoRestores", s_failCount == prevFail);
+}
+
+// ---------------------------------------------------------------------------
+// Test13: Context menu duplicate node → new ID assigned, original intact
+// ---------------------------------------------------------------------------
+
+static void Test13_ContextMenuDuplicateNode_NewIDAssigned()
+{
+    int prevFail = s_failCount;
+
+    MockGraph g;
+    g.AddNode(1, "Print");
+
+    // Simulate context menu "Duplicate Node #1": clone with new ID and offset
+    MockNode duplicate = g.nodes[0];
+    duplicate.nodeID = 2;
+    duplicate.name   = "Print (Copy)";
+    duplicate.posX  += 50.0f;
+    duplicate.posY  += 50.0f;
+    g.nodes.push_back(duplicate);
+
+    TEST_ASSERT(g.HasNode(1),       "Original node 1 exists");
+    TEST_ASSERT(g.HasNode(2),       "Duplicate node 2 exists");
+    TEST_ASSERT(g.NodeCount() == 2, "2 nodes after duplicate");
+
+    ReportTest("ContextMenuDuplicateNode_NewIDAssigned", s_failCount == prevFail);
+}
+
+// ---------------------------------------------------------------------------
+// Test14: Context menu delete link → Undo restores link
+// ---------------------------------------------------------------------------
+
+static void Test14_ContextMenuDeleteLink_UndoRestores()
+{
+    int prevFail = s_failCount;
+
+    MockGraph g;
+    g.AddNode(1, "EntryPoint");
+    g.AddNode(2, "Branch");
+    g.AddExecConn(1, "Out", 2, "In");
+    g.AddEditorLink(100, 1, 2, false /*exec*/);
+
+    TEST_ASSERT(g.HasExecConn(1, 2), "Link 1->2 exists before delete");
+    TEST_ASSERT(g.HasLink(100),      "Editor link 100 exists before delete");
+
+    // Simulate context menu "Delete Link #100"
+    MockExecConn savedConn = g.execConnections[0];
+    MockEditorLink savedLink = g.editorLinks[0];
+    g.RemoveLink(100);
+
+    TEST_ASSERT(!g.HasExecConn(1, 2), "Link 1->2 deleted");
+    TEST_ASSERT(!g.HasLink(100),      "Editor link 100 deleted");
+
+    // Simulate Undo (restore exec connection and editor link)
+    g.execConnections.push_back(savedConn);
+    g.editorLinks.push_back(savedLink);
+
+    TEST_ASSERT(g.HasExecConn(1, 2), "Link 1->2 restored after undo");
+    TEST_ASSERT(g.HasLink(100),      "Editor link 100 restored after undo");
+
+    ReportTest("ContextMenuDeleteLink_UndoRestores", s_failCount == prevFail);
+}
 
 
 int main()
 {
-    std::cout << "=== Phase12Test: Delete Nodes/Links & Context Menu Fixes ===" << std::endl;
+    std::cout << "=== Phase12Test: Delete Nodes/Links & Context Menus ===" << std::endl;
 
     Test1_DeleteSingleNode();
     Test2_DeleteMultipleNodes();
@@ -622,6 +713,9 @@ int main()
     Test9_BatchDeleteNodeAndLink();
     Test10_MoveNode_UndoRedo();
     Test11_DeleteUndo_LinksRestored();
+    Test12_ContextMenuDeleteNode_UndoRestores();
+    Test13_ContextMenuDuplicateNode_NewIDAssigned();
+    Test14_ContextMenuDeleteLink_UndoRestores();
 
     std::cout << std::endl;
     std::cout << "Results: " << s_passCount << " passed, "

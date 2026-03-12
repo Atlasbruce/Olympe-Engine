@@ -534,16 +534,14 @@ void VisualScriptEditorPanel::RemoveLink(int linkID)
                 dstPinName = pins[static_cast<size_t>(dstPinIdx)];
         }
 
-        m_template.DataConnections.erase(
-            std::remove_if(m_template.DataConnections.begin(),
-                           m_template.DataConnections.end(),
-                           [&](const DataPinConnection& c) {
-                               return c.SourceNodeID  == srcNodeID &&
-                                      c.TargetNodeID  == dstNodeID &&
-                                      c.SourcePinName == srcPinName &&
-                                      c.TargetPinName == dstPinName;
-                           }),
-            m_template.DataConnections.end());
+        DataPinConnection conn;
+        conn.SourceNodeID  = srcNodeID;
+        conn.SourcePinName = srcPinName;
+        conn.TargetNodeID  = dstNodeID;
+        conn.TargetPinName = dstPinName;
+        m_undoStack.PushCommand(
+            std::unique_ptr<ICommand>(new DeleteLinkCommand(conn)),
+            m_template);
     }
     else
     {
@@ -551,8 +549,10 @@ void VisualScriptEditorPanel::RemoveLink(int linkID)
         int srcNodeID = link->srcAttrID / 10000;
         int srcPinIdx = link->srcAttrID % 10000 - 100; // exec-out range 100-199
         int dstNodeID = link->dstAttrID / 10000;
+        int dstPinIdx = link->dstAttrID % 10000;        // exec-in  range 0-99
 
         std::string srcPinName = "Out";
+        std::string dstPinName = "In";
 
         const TaskNodeDefinition* srcNode = m_template.GetNode(srcNodeID);
         if (srcNode)
@@ -562,18 +562,24 @@ void VisualScriptEditorPanel::RemoveLink(int linkID)
                 srcPinName = pins[static_cast<size_t>(srcPinIdx)];
         }
 
-        m_template.ExecConnections.erase(
-            std::remove_if(m_template.ExecConnections.begin(),
-                           m_template.ExecConnections.end(),
-                           [&](const ExecPinConnection& c) {
-                               return c.SourceNodeID  == srcNodeID &&
-                                      c.TargetNodeID  == dstNodeID &&
-                                      c.SourcePinName == srcPinName;
-                           }),
-            m_template.ExecConnections.end());
+        const TaskNodeDefinition* dstNode = m_template.GetNode(dstNodeID);
+        if (dstNode)
+        {
+            auto pins = GetExecInputPins(dstNode->Type);
+            if (dstPinIdx >= 0 && dstPinIdx < static_cast<int>(pins.size()))
+                dstPinName = pins[static_cast<size_t>(dstPinIdx)];
+        }
+
+        ExecPinConnection conn;
+        conn.SourceNodeID  = srcNodeID;
+        conn.SourcePinName = srcPinName;
+        conn.TargetNodeID  = dstNodeID;
+        conn.TargetPinName = dstPinName;
+        m_undoStack.PushCommand(
+            std::unique_ptr<ICommand>(new DeleteLinkCommand(conn)),
+            m_template);
     }
 
-    m_template.BuildLookupCache();
     RebuildLinks();
     m_dirty = true;
 }
@@ -1177,8 +1183,34 @@ void VisualScriptEditorPanel::RenderCanvas()
 
             if (ImGui::MenuItem("Duplicate"))
             {
-                // TODO: Future PR
-                std::cout << "[VSEditor] Duplicate not implemented yet" << std::endl;
+                auto it = std::find_if(m_editorNodes.begin(), m_editorNodes.end(),
+                    [this](const VSEditorNode& n) { return n.nodeID == m_contextNodeID; });
+                if (it != m_editorNodes.end())
+                {
+                    TaskNodeDefinition newDef = it->def;
+                    newDef.NodeID    = AllocNodeID();
+                    newDef.NodeName += " (Copy)";
+                    newDef.EditorPosX = it->posX + 50.0f;
+                    newDef.EditorPosY = it->posY + 50.0f;
+                    newDef.HasEditorPos = true;
+                    // Pin definitions are preserved; the new node has no
+                    // connections since those live in m_template.ExecConnections
+                    // and m_template.DataConnections which only reference it by ID.
+
+                    VSEditorNode eNew;
+                    eNew.nodeID = newDef.NodeID;
+                    eNew.posX   = newDef.EditorPosX;
+                    eNew.posY   = newDef.EditorPosY;
+                    eNew.def    = newDef;
+                    m_editorNodes.push_back(eNew);
+
+                    m_undoStack.PushCommand(
+                        std::unique_ptr<ICommand>(new AddNodeCommand(newDef)),
+                        m_template);
+                    m_dirty = true;
+                    SYSTEM_LOG << "[VSEditor] Node " << m_contextNodeID
+                               << " duplicated as #" << newDef.NodeID << "\n";
+                }
             }
 
             ImGui::EndPopup();
