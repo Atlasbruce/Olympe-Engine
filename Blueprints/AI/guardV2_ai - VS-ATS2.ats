@@ -64,8 +64,8 @@
       "id": 54,
       "label": "Start",
       "position": {
-        "x": -60,
-        "y": 125
+        "x": -167.675,
+        "y": 432.737
       },
       "type": "EntryPoint"
     },
@@ -73,8 +73,8 @@
       "id": 1,
       "label": "Root Priority Selector",
       "position": {
-        "x": 118,
-        "y": 92
+        "x": -20.6749,
+        "y": 432.737
       },
       "type": "Branch"
     },
@@ -82,8 +82,8 @@
       "id": 153,
       "label": "Selector_Branch_153",
       "position": {
-        "x": 167,
-        "y": 285
+        "x": 196.325,
+        "y": 553.737
       },
       "type": "Branch"
     },
@@ -91,8 +91,8 @@
       "id": 154,
       "label": "Selector_Branch_154",
       "position": {
-        "x": 372,
-        "y": 458
+        "x": 446.325,
+        "y": 720.737
       },
       "type": "Branch"
     },
@@ -100,8 +100,8 @@
       "id": 10,
       "label": "Self Preservation Sequence",
       "position": {
-        "x": 468,
-        "y": 90
+        "x": 329.325,
+        "y": 430.737
       },
       "type": "Sequence"
     },
@@ -110,8 +110,8 @@
       "id": 11,
       "label": "Is Health Critical?",
       "position": {
-        "x": 720,
-        "y": 90
+        "x": 581.325,
+        "y": 430.737
       },
       "type": "Branch"
     },
@@ -119,8 +119,8 @@
       "id": 12,
       "label": "Find Safe Cover",
       "position": {
-        "x": 1140,
-        "y": 125
+        "x": 767.325,
+        "y": 118.737
       },
       "taskType": "Task_FindCover",
       "type": "AtomicTask"
@@ -129,8 +129,8 @@
       "id": 13,
       "label": "Apply Bandage/Heal",
       "position": {
-        "x": 1340,
-        "y": 125
+        "x": 755.325,
+        "y": 210.737
       },
       "taskType": "Task_HealSelf",
       "type": "AtomicTask"
@@ -139,8 +139,8 @@
       "id": 20,
       "label": "Combat Engagement",
       "position": {
-        "x": 1540,
-        "y": 125
+        "x": 613.325,
+        "y": 561.737
       },
       "type": "Sequence"
     },
@@ -149,8 +149,8 @@
       "id": 21,
       "label": "Can See Enemy?",
       "position": {
-        "x": 1740,
-        "y": 125
+        "x": 602.343,
+        "y": 140.498
       },
       "type": "Branch"
     },
@@ -158,8 +158,8 @@
       "id": 22,
       "label": "Face Enemy",
       "position": {
-        "x": 1940,
-        "y": 125
+        "x": 582.343,
+        "y": 39.4977
       },
       "taskType": "Task_RotateToTarget",
       "type": "AtomicTask"
@@ -168,8 +168,8 @@
       "id": 23,
       "label": "Shoot Weapon",
       "position": {
-        "x": 2140,
-        "y": 125
+        "x": 594.343,
+        "y": 238.498
       },
       "taskType": "Task_AttackRange",
       "type": "AtomicTask"
@@ -178,8 +178,8 @@
       "id": 30,
       "label": "Investigation Selector",
       "position": {
-        "x": 2340,
-        "y": 125
+        "x": 626.98,
+        "y": 674.69
       },
       "type": "Branch"
     },
@@ -187,8 +187,8 @@
       "id": 31,
       "label": "Noise Reaction",
       "position": {
-        "x": 2540,
-        "y": 125
+        "x": 859.98,
+        "y": 627.69
       },
       "type": "Sequence"
     },
@@ -197,8 +197,8 @@
       "id": 32,
       "label": "Heard Suspicious Noise?",
       "position": {
-        "x": 2740,
-        "y": 125
+        "x": 392.407,
+        "y": 200.389
       },
       "type": "Branch"
     },
@@ -206,8 +206,8 @@
       "id": 33,
       "label": "Set Noise Source as Target",
       "position": {
-        "x": 2940,
-        "y": 125
+        "x": 958.412,
+        "y": 295.039
       },
       "taskType": "Task_SetTargetToNoiseSource",
       "type": "AtomicTask"
@@ -216,8 +216,8 @@
       "id": 34,
       "label": "Investigate Location",
       "position": {
-        "x": 3140,
-        "y": 125
+        "x": 977.412,
+        "y": 206.039
       },
       "taskType": "Task_MoveToLocation",
       "type": "AtomicTask"
@@ -226,8 +226,8 @@
       "id": 35,
       "label": "Look Around (Scan)",
       "position": {
-        "x": 3340,
-        "y": 125
+        "x": 970.412,
+        "y": 110.039
       },
       "taskType": "Task_PlayAnimation",
       "type": "AtomicTask"
@@ -236,8 +236,8 @@
       "id": 40,
       "label": "Lost Target Search",
       "position": {
-        "x": 3540,
-        "y": 125
+        "x": 860.319,
+        "y": 731.699
       },
       "type": "Sequence"
     },
@@ -246,8 +246,8 @@
       "id": 41,
       "label": "Has Last Known Position?",
       "position": {
-        "x": 3740,
-        "y": 125
+        "x": 939.465,
+        "y": 4.99661
       },
       "type": "Branch"
     },
@@ -255,8 +255,8 @@
       "id": 42,
       "label": "Rush to LKP",
       "position": {
-        "x": 3940,
-        "y": 125
+        "x": 1399.95,
+        "y": 101.97
       },
       "taskType": "Task_MoveToLocation",
       "type": "AtomicTask"
@@ -265,8 +265,8 @@
       "id": 43,
       "label": "Search Pattern",
       "position": {
-        "x": 4140,
-        "y": 125
+        "x": 1395.95,
+        "y": 9.96973
       },
       "taskType": "Task_WanderAroundPoint",
       "type": "AtomicTask"
@@ -275,8 +275,8 @@
       "id": 50,
       "label": "Default Patrol",
       "position": {
-        "x": 4340,
-        "y": 125
+        "x": 642.062,
+        "y": 800.752
       },
       "type": "Sequence"
     },
@@ -284,8 +284,8 @@
       "id": 51,
       "label": "Get Next Waypoint",
       "position": {
-        "x": 4540,
-        "y": 125
+        "x": 1213.41,
+        "y": -54.0701
       },
       "taskType": "Task_NextWaypoint",
       "type": "AtomicTask"
@@ -294,8 +294,8 @@
       "id": 52,
       "label": "Move To Waypoint",
       "position": {
-        "x": 4740,
-        "y": 125
+        "x": 1208.41,
+        "y": 67.9299
       },
       "taskType": "Task_MoveToLocation",
       "type": "AtomicTask"
@@ -304,8 +304,8 @@
       "id": 53,
       "label": "Idle at Waypoint",
       "position": {
-        "x": 4940,
-        "y": 125
+        "x": 1203.41,
+        "y": 173.93
       },
       "taskType": "Task_Wait",
       "type": "AtomicTask"

@@ -1,56 +1,6 @@
 {
-  "schema_version": 4,
-  "type": "VisualScript",
-  "graphType": "VisualScript",
-  "name": "InvestigateTree",
-  "description": "",
   "blackboard": [],
-  "nodes": [
-    {
-      "id": 4,
-      "type": "EntryPoint",
-      "name": "Start",
-      "position": {
-        "x": 0,
-        "y": 200
-      }
-    },
-    {
-      "id": 1,
-      "type": "VSSequence",
-      "name": "Root Sequence",
-      "position": {
-        "x": 128,
-        "y": 96
-      },
-      "children": [
-        2
-      ]
-    },
-    {
-      "id": 2,
-      "type": "Branch",
-      "name": "Heard Noise?",
-      "position": {
-        "x": 352,
-        "y": 96
-      },
-      "conditionKey": "HeardNoise"
-    },
-    {
-      "id": 3,
-      "type": "AtomicTask",
-      "name": "Move to Last Known Position",
-      "position": {
-        "x": 544,
-        "y": 80
-      },
-      "taskType": "Task_MoveToLocation",
-      "params": {
-        "param1": "0.8"
-      }
-    }
-  ],
+  "dataConnections": [],
   "execConnections": [
     {
       "fromNode": 4,
@@ -63,14 +13,55 @@
       "fromPin": "Then",
       "toNode": 3,
       "toPin": "In"
+    },
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 2,
+      "toPin": "In"
     }
   ],
-  "dataConnections": [],
-  "editorState": {
-    "scrollOffset": {
-      "x": 0,
-      "y": 0
+  "graphType": "VisualScript",
+  "name": "InvestigateTree",
+  "nodes": [
+    {
+      "id": 4,
+      "label": "Start",
+      "position": {
+        "x": 3,
+        "y": 148
+      },
+      "type": "EntryPoint"
     },
-    "zoom": 1
-  }
+    {
+      "id": 1,
+      "label": "Root Sequence",
+      "position": {
+        "x": 172,
+        "y": 90
+      },
+      "type": "Sequence"
+    },
+    {
+      "conditionKey": "HeardNoise",
+      "id": 2,
+      "label": "Heard Noise?",
+      "position": {
+        "x": 352,
+        "y": 96
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 3,
+      "label": "Move to Last Known Position",
+      "position": {
+        "x": 544,
+        "y": 80
+      },
+      "taskType": "Task_MoveToLocation",
+      "type": "AtomicTask"
+    }
+  ],
+  "schema_version": 4
 }

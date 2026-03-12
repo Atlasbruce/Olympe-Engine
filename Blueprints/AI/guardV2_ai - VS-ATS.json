@@ -64,8 +64,8 @@
       "id": 54,
       "label": "Start",
       "position": {
-        "x": 12.3982,
-        "y": 127.481
+        "x": 88.4946,
+        "y": 408.192
       },
       "type": "EntryPoint"
     },
@@ -73,8 +73,8 @@
       "id": 1,
       "label": "Root Priority Selector",
       "position": {
-        "x": 177.398,
-        "y": 142.481
+        "x": 253.494,
+        "y": 423.192
       },
       "type": "Branch"
     },
@@ -82,8 +82,8 @@
       "id": 153,
       "label": "Selector_Branch_153",
       "position": {
-        "x": 413.398,
-        "y": 249.481
+        "x": 489.494,
+        "y": 530.192
       },
       "type": "Branch"
     },
@@ -91,8 +91,8 @@
       "id": 154,
       "label": "Selector_Branch_154",
       "position": {
-        "x": 593.398,
-        "y": 300.481
+        "x": 669.494,
+        "y": 581.192
       },
       "type": "Branch"
     },
@@ -100,8 +100,8 @@
       "id": 10,
       "label": "Self Preservation Sequence",
       "position": {
-        "x": 400.398,
-        "y": 60.4809
+        "x": 476.494,
+        "y": 341.192
       },
       "type": "Sequence"
     },
@@ -110,8 +110,8 @@
       "id": 11,
       "label": "Is Health Critical?",
       "position": {
-        "x": 1012.4,
-        "y": 127.481
+        "x": 1011.5,
+        "y": 337.192
       },
       "type": "Branch"
     },
@@ -119,8 +119,8 @@
       "id": 12,
       "label": "Find Safe Cover",
       "position": {
-        "x": 1212.4,
-        "y": 127.481
+        "x": 1200.5,
+        "y": 352.192
       },
       "taskType": "Task_FindCover",
       "type": "AtomicTask"
@@ -129,8 +129,8 @@
       "id": 13,
       "label": "Apply Bandage/Heal",
       "position": {
-        "x": 1412.4,
-        "y": 127.481
+        "x": 724.253,
+        "y": 0.304871
       },
       "taskType": "Task_HealSelf",
       "type": "AtomicTask"
@@ -139,8 +139,8 @@
       "id": 20,
       "label": "Combat Engagement",
       "position": {
-        "x": 594.552,
-        "y": 185.304
+        "x": 670.648,
+        "y": 466.015
       },
       "type": "Sequence"
     },
@@ -149,8 +149,8 @@
       "id": 21,
       "label": "Can See Enemy?",
       "position": {
-        "x": 1812.4,
-        "y": 127.481
+        "x": 803.253,
+        "y": 233.305
       },
       "type": "Branch"
     },
@@ -158,8 +158,8 @@
       "id": 22,
       "label": "Face Enemy",
       "position": {
-        "x": 2012.4,
-        "y": 127.481
+        "x": 1003.25,
+        "y": 233.305
       },
       "taskType": "Task_RotateToTarget",
       "type": "AtomicTask"
@@ -168,8 +168,8 @@
       "id": 23,
       "label": "Shoot Weapon",
       "position": {
-        "x": 2212.4,
-        "y": 127.481
+        "x": 1203.25,
+        "y": 233.305
       },
       "taskType": "Task_AttackRange",
       "type": "AtomicTask"
@@ -178,8 +178,8 @@
       "id": 30,
       "label": "Investigation Selector",
       "position": {
-        "x": 838.112,
-        "y": 263.705
+        "x": 914.208,
+        "y": 544.416
       },
       "type": "Branch"
     },
@@ -187,8 +187,8 @@
       "id": 31,
       "label": "Noise Reaction",
       "position": {
-        "x": 1084.11,
-        "y": 216.705
+        "x": 1160.21,
+        "y": 497.416
       },
       "type": "Sequence"
     },
@@ -197,8 +197,8 @@
       "id": 32,
       "label": "Heard Suspicious Noise?",
       "position": {
-        "x": 2812.4,
-        "y": 127.481
+        "x": 668.382,
+        "y": 107.142
       },
       "type": "Branch"
     },
@@ -206,8 +206,8 @@
       "id": 33,
       "label": "Set Noise Source as Target",
       "position": {
-        "x": 3012.4,
-        "y": 127.481
+        "x": 868.382,
+        "y": 107.142
       },
       "taskType": "Task_SetTargetToNoiseSource",
       "type": "AtomicTask"
@@ -216,8 +216,8 @@
       "id": 34,
       "label": "Investigate Location",
       "position": {
-        "x": 3212.4,
-        "y": 127.481
+        "x": 1068.38,
+        "y": 107.142
       },
       "taskType": "Task_MoveToLocation",
       "type": "AtomicTask"
@@ -226,8 +226,8 @@
       "id": 35,
       "label": "Look Around (Scan)",
       "position": {
-        "x": 3412.4,
-        "y": 127.481
+        "x": 1268.38,
+        "y": 107.142
       },
       "taskType": "Task_PlayAnimation",
       "type": "AtomicTask"
@@ -236,8 +236,8 @@
       "id": 40,
       "label": "Lost Target Search",
       "position": {
-        "x": 1065.16,
-        "y": 326.335
+        "x": 1141.26,
+        "y": 607.046
       },
       "type": "Sequence"
     },
@@ -246,8 +246,8 @@
       "id": 41,
       "label": "Has Last Known Position?",
       "position": {
-        "x": 3548.4,
-        "y": 367.481
+        "x": 3624.5,
+        "y": 648.192
       },
       "type": "Branch"
     },
@@ -255,8 +255,8 @@
       "id": 42,
       "label": "Rush to LKP",
       "position": {
-        "x": 4012.4,
-        "y": 127.481
+        "x": 994.721,
+        "y": -10.1244
       },
       "taskType": "Task_MoveToLocation",
       "type": "AtomicTask"
@@ -265,8 +265,8 @@
       "id": 43,
       "label": "Search Pattern",
       "position": {
-        "x": 4212.4,
-        "y": 127.481
+        "x": 1194.72,
+        "y": -10.1244
       },
       "taskType": "Task_WanderAroundPoint",
       "type": "AtomicTask"
@@ -275,8 +275,8 @@
       "id": 50,
       "label": "Default Patrol",
       "position": {
-        "x": 1294.89,
-        "y": 622.619
+        "x": 914.986,
+        "y": 699.33
       },
       "type": "Sequence"
     },
@@ -284,8 +284,8 @@
       "id": 51,
       "label": "Get Next Waypoint",
       "position": {
-        "x": 4612.4,
-        "y": 127.481
+        "x": 836.368,
+        "y": -123.007
       },
       "taskType": "Task_NextWaypoint",
       "type": "AtomicTask"
@@ -294,8 +294,8 @@
       "id": 52,
       "label": "Move To Waypoint",
       "position": {
-        "x": 4812.4,
-        "y": 127.481
+        "x": 1036.37,
+        "y": -123.007
       },
       "taskType": "Task_MoveToLocation",
       "type": "AtomicTask"
@@ -304,8 +304,8 @@
       "id": 53,
       "label": "Idle at Waypoint",
       "position": {
-        "x": 5012.4,
-        "y": 127.481
+        "x": 1236.37,
+        "y": -123.007
       },
       "taskType": "Task_Wait",
       "type": "AtomicTask"

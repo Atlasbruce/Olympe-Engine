@@ -8,8 +8,8 @@
         "name": "Root",
         "parameters": {},
         "position": {
-          "x": 1.99997,
-          "y": 35
+          "x": 99,
+          "y": 125
         },
         "type": "Selector"
       }
@@ -27,7 +27,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "",
+    "lastModified": "2026-03-12T14:50:48",
     "tags": []
   },
   "name": "NewBehaviorTree",

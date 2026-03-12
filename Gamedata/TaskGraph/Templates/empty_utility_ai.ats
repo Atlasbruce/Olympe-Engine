@@ -1,21 +1,19 @@
 {
-  "schema_version": 4,
+  "blackboard": [],
+  "dataConnections": [],
+  "execConnections": [],
   "graphType": "VisualScript",
   "name": "NewUtilityAI",
-  "description": "Empty utility AI template",
-  "metadata": {
-    "author": "YourName",
-    "created": "2026-03-10",
-    "tags": []
-  },
   "nodes": [
     {
       "id": 1,
-      "type": "EntryPoint",
       "label": "Entry",
-      "name": "Entry"
+      "position": {
+        "x": 146,
+        "y": 202
+      },
+      "type": "EntryPoint"
     }
   ],
-  "execConnections": [],
-  "dataConnections": []
+  "schema_version": 4
 }

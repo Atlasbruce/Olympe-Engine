@@ -1,104 +1,116 @@
 {
-  "schema_version": 2,
-  "type": "AnimationGraph",
   "blueprintType": "AnimationGraph",
-  "name": "GuardAnimations",
+  "data": {
+    "rootGraph": {
+      "initialState": "Idle",
+      "states": [
+        {
+          "animationClip": "guard_idle",
+          "blendTime": 0.2,
+          "looping": true,
+          "name": "Idle",
+          "position": {
+            "x": 200,
+            "y": 300
+          }
+        },
+        {
+          "animationClip": "guard_walk",
+          "blendTime": 0.15,
+          "looping": true,
+          "name": "Walk",
+          "position": {
+            "x": 550,
+            "y": 200
+          }
+        },
+        {
+          "animationClip": "guard_run",
+          "blendTime": 0.2,
+          "looping": true,
+          "name": "Run",
+          "position": {
+            "x": 550,
+            "y": 400
+          }
+        },
+        {
+          "animationClip": "guard_attack",
+          "blendTime": 0.1,
+          "looping": false,
+          "name": "Attack",
+          "position": {
+            "x": 900,
+            "y": 300
+          }
+        }
+      ],
+      "transitions": [
+        {
+          "condition": "velocity > 0.1",
+          "duration": 0.15,
+          "from": "Idle",
+          "to": "Walk"
+        },
+        {
+          "condition": "velocity < 0.1",
+          "duration": 0.2,
+          "from": "Walk",
+          "to": "Idle"
+        },
+        {
+          "condition": "velocity > 100.0",
+          "duration": 0.15,
+          "from": "Walk",
+          "to": "Run"
+        },
+        {
+          "condition": "velocity < 100.0",
+          "duration": 0.2,
+          "from": "Run",
+          "to": "Walk"
+        },
+        {
+          "condition": "attackTriggered",
+          "duration": 0.1,
+          "from": "Idle",
+          "to": "Attack"
+        },
+        {
+          "condition": "attackTriggered",
+          "duration": 0.1,
+          "from": "Walk",
+          "to": "Attack"
+        },
+        {
+          "condition": "animationComplete",
+          "duration": 0.2,
+          "from": "Attack",
+          "to": "Idle"
+        }
+      ]
+    },
+    "subgraphs": {}
+  },
   "description": "Animation state machine for guard character",
+  "editorState": {
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
   "metadata": {
     "author": "Atlasbruce",
     "created": "2026-01-08T10:00:00Z",
     "lastModified": "2026-01-08T10:00:00Z",
-    "tags": ["Animation", "Guard", "StateMachine"]
+    "tags": [
+      "Animation",
+      "Guard",
+      "StateMachine"
+    ]
   },
-  "editorState": {
-    "zoom": 1.0,
-    "scrollOffset": {"x": 0, "y": 0}
-  },
-  "data": {
-    "initialState": "Idle",
-    "states": [
-      {
-        "name": "Idle",
-        "position": {"x": 200, "y": 300},
-        "animationClip": "guard_idle",
-        "looping": true,
-        "blendTime": 0.2
-      },
-      {
-        "name": "Walk",
-        "position": {"x": 550, "y": 200},
-        "animationClip": "guard_walk",
-        "looping": true,
-        "blendTime": 0.15
-      },
-      {
-        "name": "Run",
-        "position": {"x": 550, "y": 400},
-        "animationClip": "guard_run",
-        "looping": true,
-        "blendTime": 0.2
-      },
-      {
-        "name": "Attack",
-        "position": {"x": 900, "y": 300},
-        "animationClip": "guard_attack",
-        "looping": false,
-        "blendTime": 0.1
-      }
-    ],
-    "transitions": [
-      {
-        "from": "Idle",
-        "to": "Walk",
-        "condition": "velocity > 0.1",
-        "duration": 0.15
-      },
-      {
-        "from": "Walk",
-        "to": "Idle",
-        "condition": "velocity < 0.1",
-        "duration": 0.2
-      },
-      {
-        "from": "Walk",
-        "to": "Run",
-        "condition": "velocity > 100.0",
-        "duration": 0.15
-      },
-      {
-        "from": "Run",
-        "to": "Walk",
-        "condition": "velocity < 100.0",
-        "duration": 0.2
-      },
-      {
-        "from": "Idle",
-        "to": "Attack",
-        "condition": "attackTriggered",
-        "duration": 0.1
-      },
-      {
-        "from": "Walk",
-        "to": "Attack",
-        "condition": "attackTriggered",
-        "duration": 0.1
-      },
-      {
-        "from": "Attack",
-        "to": "Idle",
-        "condition": "animationComplete",
-        "duration": 0.2
-      }
-    ],
-    "parameters": {
-      "velocity": {
-        "type": "float",
-        "default": 0.0
-      },
-      "attackTriggered": {
-        "type": "bool",
-        "default": false
-      }
-    }
-  }
+  "name": "GuardAnimations",
+  "schema_version": 5,
+  "type": "AnimationGraph"
 }
