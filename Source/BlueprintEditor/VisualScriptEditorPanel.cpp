@@ -1132,7 +1132,29 @@ void VisualScriptEditorPanel::RenderCanvas()
                 RemoveNode(m_contextNodeID);
                 if (m_selectedNodeID == m_contextNodeID)
                     m_selectedNodeID = -1;
+                m_dirty = true;
             }
+
+            ImGui::Separator();
+
+            {
+                bool hasBP = DebugController::Get().HasBreakpoint(0, m_contextNodeID);
+                if (ImGui::MenuItem(hasBP ? "Remove Breakpoint (F9)" : "Add Breakpoint (F9)"))
+                {
+                    DebugController::Get().ToggleBreakpoint(0, m_contextNodeID,
+                                                            m_template.Name,
+                                                            "Node " + std::to_string(m_contextNodeID));
+                }
+            }
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Duplicate"))
+            {
+                // TODO: Future PR
+                std::cout << "[VSEditor] Duplicate not implemented yet" << std::endl;
+            }
+
             ImGui::EndPopup();
         }
 
@@ -1420,6 +1442,48 @@ void VisualScriptEditorPanel::RenderCanvas()
         DebugController::Get().ToggleBreakpoint(0, m_selectedNodeID,
                                                 m_template.Name,
                                                 "Node " + std::to_string(m_selectedNodeID));
+    }
+
+    // Delete key = remove all selected nodes and links
+    if (ImGui::IsKeyPressed(ImGuiKey_Delete) && ImGui::IsWindowFocused())
+    {
+        int numSelectedNodes = ImNodes::NumSelectedNodes();
+        if (numSelectedNodes > 0)
+        {
+            if (numSelectedNodes > 5)
+            {
+                std::cout << "[VSEditor] Warning: Deleting " << numSelectedNodes
+                          << " nodes" << std::endl;
+            }
+
+            std::vector<int> selectedNodes(static_cast<size_t>(numSelectedNodes));
+            ImNodes::GetSelectedNodes(selectedNodes.data());
+
+            for (int nodeID : selectedNodes)
+            {
+                if (m_selectedNodeID == nodeID)
+                    m_selectedNodeID = -1;
+                RemoveNode(nodeID);
+                std::cout << "[VSEditor] Deleted node " << nodeID << std::endl;
+            }
+
+            m_dirty = true;
+        }
+
+        int numSelectedLinks = ImNodes::NumSelectedLinks();
+        if (numSelectedLinks > 0)
+        {
+            std::vector<int> selectedLinks(static_cast<size_t>(numSelectedLinks));
+            ImNodes::GetSelectedLinks(selectedLinks.data());
+
+            for (int linkID : selectedLinks)
+            {
+                RemoveLink(linkID);
+                std::cout << "[VSEditor] Deleted link " << linkID << std::endl;
+            }
+
+            m_dirty = true;
+        }
     }
 
     RenderValidationOverlay();
