@@ -438,6 +438,15 @@ if(BUILD_TESTS)
     add_test(NAME OlympePhase11Tests COMMAND OlympePhase11Tests)
 
     # -----------------------------------------------------------------------
+    # OlympePhase12Tests  (Phase 12 — Delete Nodes/Links & Context Menu Fixes)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase12Tests
+        Tests/BlueprintEditor/Phase12Test.cpp
+    )
+    target_include_directories(OlympePhase12Tests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase12Tests COMMAND OlympePhase12Tests)
+
+    # -----------------------------------------------------------------------
     # OlympeATSReferenceV4Tests  (Integration — reference_complete_v4.ats)
     # -----------------------------------------------------------------------
     add_executable(OlympeATSReferenceV4Tests
