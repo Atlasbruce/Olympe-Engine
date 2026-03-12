@@ -210,6 +210,41 @@ std::string AddConnectionCommand::GetDescription() const
 }
 
 // ============================================================================
+// AddDataConnectionCommand
+// ============================================================================
+
+AddDataConnectionCommand::AddDataConnectionCommand(const DataPinConnection& conn)
+    : m_conn(conn)
+{
+}
+
+void AddDataConnectionCommand::Execute(TaskGraphTemplate& graph)
+{
+    graph.DataConnections.push_back(m_conn);
+}
+
+void AddDataConnectionCommand::Undo(TaskGraphTemplate& graph)
+{
+    auto it = std::remove_if(graph.DataConnections.begin(), graph.DataConnections.end(),
+        [this](const DataPinConnection& dc)
+        {
+            return dc.SourceNodeID  == m_conn.SourceNodeID  &&
+                   dc.TargetNodeID  == m_conn.TargetNodeID  &&
+                   dc.SourcePinName == m_conn.SourcePinName &&
+                   dc.TargetPinName == m_conn.TargetPinName;
+        });
+    graph.DataConnections.erase(it, graph.DataConnections.end());
+}
+
+std::string AddDataConnectionCommand::GetDescription() const
+{
+    std::ostringstream ss;
+    ss << "Add Data Connection #" << m_conn.SourceNodeID << "." << m_conn.SourcePinName
+       << " -> #" << m_conn.TargetNodeID << "." << m_conn.TargetPinName;
+    return ss.str();
+}
+
+// ============================================================================
 // DeleteLinkCommand
 // ============================================================================
 

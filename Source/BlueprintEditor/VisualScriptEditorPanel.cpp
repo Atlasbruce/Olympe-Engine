@@ -177,6 +177,19 @@ int VisualScriptEditorPanel::AddNode(TaskNodeType type, float x, float y)
         m_template.RootNodeID   = newID;
     }
 
+    // Persist the spawn position in Parameters so that redo (re-executing
+    // AddNodeCommand) restores the node at its original position rather than
+    // falling back to the default grid layout.
+    {
+        ParameterBinding bx, by;
+        bx.Type         = ParameterBindingType::Literal;
+        bx.LiteralValue = TaskValue(x);
+        by.Type         = ParameterBindingType::Literal;
+        by.LiteralValue = TaskValue(y);
+        def.Parameters["__posX"] = bx;
+        def.Parameters["__posY"] = by;
+    }
+
     // Editor-side node (tracks canvas position independently of the template)
     VSEditorNode eNode;
     eNode.nodeID = newID;
@@ -221,7 +234,11 @@ void VisualScriptEditorPanel::ConnectExec(int srcNodeID,
     conn.SourcePinName = srcPinName;
     conn.TargetNodeID  = dstNodeID;
     conn.TargetPinName = dstPinName;
-    m_template.ExecConnections.push_back(conn);
+    // Push to undo stack so link creation can be reversed via Ctrl+Z.
+    // AddConnectionCommand::Execute() calls graph.ExecConnections.push_back().
+    m_undoStack.PushCommand(
+        std::unique_ptr<ICommand>(new AddConnectionCommand(conn)),
+        m_template);
     RebuildLinks();
     m_dirty = true;
 }
@@ -236,7 +253,11 @@ void VisualScriptEditorPanel::ConnectData(int srcNodeID,
     conn.SourcePinName = srcPinName;
     conn.TargetNodeID  = dstNodeID;
     conn.TargetPinName = dstPinName;
-    m_template.DataConnections.push_back(conn);
+    // Push to undo stack so data link creation can be reversed via Ctrl+Z.
+    // AddDataConnectionCommand::Execute() calls graph.DataConnections.push_back().
+    m_undoStack.PushCommand(
+        std::unique_ptr<ICommand>(new AddDataConnectionCommand(conn)),
+        m_template);
     RebuildLinks();
     m_dirty = true;
 }
@@ -601,8 +622,11 @@ void VisualScriptEditorPanel::LoadTemplate(const TaskGraphTemplate* tmpl,
     // Rebuild lookup cache after copy (pointers from old template are now invalid)
     m_template.BuildLookupCache();
 
-    // Clear undo/redo history — a freshly loaded graph has no pending operations
-    m_undoStack.Clear();
+    // NOTE: Do NOT clear the undo stack here.  Each VisualScriptEditorPanel
+    // instance owns its own stack (one per tab), so there is no cross-tab
+    // contamination.  Preserving the stack lets the user undo edits made
+    // before saving and reloading, and is required for undo to function
+    // correctly after opening a file from the Blueprint Files browser.
 
     SyncCanvasFromTemplate();
 }
@@ -667,6 +691,26 @@ void VisualScriptEditorPanel::SyncNodePositionsFromImNodes()
             ImVec2 pos = ImNodes::GetNodeEditorSpacePos(eNode.nodeID);
             eNode.posX = pos.x;
             eNode.posY = pos.y;
+
+            // Keep the template's Parameters in sync so that
+            // SyncEditorNodesFromTemplate() (called on undo/redo) can always
+            // find the live canvas position in Parameters["__posX/__posY"],
+            // even for nodes that were loaded from file and have never been
+            // moved via an explicit MoveNodeCommand.
+            for (size_t j = 0; j < m_template.Nodes.size(); ++j)
+            {
+                if (m_template.Nodes[j].NodeID == eNode.nodeID)
+                {
+                    ParameterBinding bx, by;
+                    bx.Type         = ParameterBindingType::Literal;
+                    bx.LiteralValue = TaskValue(pos.x);
+                    by.Type         = ParameterBindingType::Literal;
+                    by.LiteralValue = TaskValue(pos.y);
+                    m_template.Nodes[j].Parameters["__posX"] = bx;
+                    m_template.Nodes[j].Parameters["__posY"] = by;
+                    break;
+                }
+            }
         }
     }
 }
@@ -1556,17 +1600,18 @@ void VisualScriptEditorPanel::RenderCanvas()
         }
     }
 
-    // Handle link deletion
+    // Handle link deletion (triggered when the user Ctrl+clicks a link in ImNodes)
     int destroyedLink = -1;
     if (ImNodes::IsLinkDestroyed(&destroyedLink))
     {
-        m_editorLinks.erase(
-            std::remove_if(m_editorLinks.begin(), m_editorLinks.end(),
-                           [destroyedLink](const VSEditorLink& l) {
-                               return l.linkID == destroyedLink;
-                           }),
-            m_editorLinks.end());
-        m_dirty = true;
+        // Delegate to RemoveLink() so that:
+        //   1. The underlying template connection is removed (not just the
+        //      visual m_editorLinks entry).  Without this the connection would
+        //      reappear as a "ghost" link the next time RebuildLinks() is called
+        //      (e.g. after any undo/redo).
+        //   2. A DeleteLinkCommand is pushed onto the undo stack, making the
+        //      deletion reversible via Ctrl+Z.
+        RemoveLink(destroyedLink);
     }
 
     // Handle node selection
