@@ -208,6 +208,13 @@ private:
     void RenderSaveAsDialog();
     void RenderCanvas();
     void RenderNodePalette();
+
+    /**
+     * @brief Render node/link context menus opened by right-click detection.
+     * Must be called AFTER EndNodeEditor() so popups are in correct ImGui scope.
+     */
+    void RenderContextMenus();
+
     void RenderProperties();
     void RenderBlackboard();
     void RenderValidationOverlay();
@@ -295,6 +302,11 @@ private:
     /// so that the positions applied by SyncEditorNodesFromTemplate() are not overwritten
     /// by stale ImNodes state before the new positions have been rendered once.
     bool m_skipPositionSyncNextFrame = false;
+
+    /// Set to true immediately after Undo/Redo; blocks node movement tracking
+    /// for 1 frame to allow ImNodes to render the new positions before resuming
+    /// normal position sync. Prevents stale drag-start positions.
+    bool m_justPerformedUndoRedo = false;
 
     std::string m_currentPath;
 

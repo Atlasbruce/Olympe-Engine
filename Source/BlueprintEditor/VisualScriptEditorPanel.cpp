@@ -867,10 +867,22 @@ void VisualScriptEditorPanel::PerformUndo()
     m_undoStack.Undo(m_template);
     SyncEditorNodesFromTemplate();
     RebuildLinks();
-    // Prevent SyncNodePositionsFromImNodes() from overwriting the correct
-    // positions set by SyncEditorNodesFromTemplate() before ImNodes has
-    // rendered the new positions even once.
-    m_skipPositionSyncNextFrame = true;
+
+    // Force-push the restored positions into ImNodes so that the next
+    // BeginNode()/EndNode() cycle renders them at the correct location.
+    for (size_t i = 0; i < m_editorNodes.size(); ++i)
+    {
+        ImNodes::SetNodeEditorSpacePos(
+            m_editorNodes[i].nodeID,
+            ImVec2(m_editorNodes[i].posX, m_editorNodes[i].posY));
+    }
+
+    // Block position sync and movement tracking for 1 frame so that stale
+    // ImNodes state cannot overwrite the correct undo-target positions before
+    // ImNodes has rendered the new layout at least once.
+    m_justPerformedUndoRedo      = true;
+    m_skipPositionSyncNextFrame  = true;
+    m_nodeDragStartPositions.clear();
     m_dirty = true;
     SYSTEM_LOG << "[VSEditor] Undo complete. Template now has "
                << m_template.Nodes.size() << " nodes, "
@@ -887,8 +899,18 @@ void VisualScriptEditorPanel::PerformRedo()
     m_undoStack.Redo(m_template);
     SyncEditorNodesFromTemplate();
     RebuildLinks();
-    // Same as PerformUndo — skip position sync on the next frame.
-    m_skipPositionSyncNextFrame = true;
+
+    // Same treatment as PerformUndo().
+    for (size_t i = 0; i < m_editorNodes.size(); ++i)
+    {
+        ImNodes::SetNodeEditorSpacePos(
+            m_editorNodes[i].nodeID,
+            ImVec2(m_editorNodes[i].posX, m_editorNodes[i].posY));
+    }
+
+    m_justPerformedUndoRedo      = true;
+    m_skipPositionSyncNextFrame  = true;
+    m_nodeDragStartPositions.clear();
     m_dirty = true;
     SYSTEM_LOG << "[VSEditor] Redo complete. Template now has "
                << m_template.Nodes.size() << " nodes, "
@@ -1210,18 +1232,11 @@ void VisualScriptEditorPanel::RenderCanvas()
 
     ImNodes::EndNodeEditor();
 
-    // FIX: Eagerly sync node positions back into m_editorNodes immediately
-    // after every canvas render.  This ensures that when Save() is invoked
-    // from RenderToolbar() at the START of the next frame (before RenderCanvas
-    // runs again), m_editorNodes already holds the latest drag positions.
-    // The SyncNodePositionsFromImNodes() call inside Save()/SaveAs() then acts
-    // as a lightweight double-check rather than the sole sync point.
-    //
-    // FIX 4: Skip position sync if undo/redo just executed.  SyncEditorNodesFromTemplate()
-    // has already written the correct undo-target positions into m_editorNodes and
-    // m_needsPositionSync will push them to ImNodes before BeginNodeEditor().
-    // Reading them back here (before ImNodes has rendered the new positions once)
-    // would overwrite the correct values with stale ImNodes state.
+    // FIX 4: Skip position sync if undo/redo just executed.  
+    // SyncEditorNodesFromTemplate() has already written the correct undo-target 
+    // positions into m_editorNodes and SetNodeEditorSpacePos() has pushed them 
+    // to ImNodes. Reading them back here (before ImNodes has rendered the new 
+    // positions once) would overwrite the correct values with stale ImNodes state.
     if (m_skipPositionSyncNextFrame)
     {
         m_skipPositionSyncNextFrame = false;
@@ -1241,7 +1256,10 @@ void VisualScriptEditorPanel::RenderCanvas()
         bool nodeHovered = ImNodes::IsNodeHovered(&hoveredNode);
         bool linkHovered = ImNodes::IsLinkHovered(&hoveredLink);
 
-        if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+        // PHASE 1: Detect right-click and open the appropriate popup.
+        // Use ImNodes::IsEditorHovered() for canvas background detection so
+        // that the check works even when ImNodes has captured mouse focus.
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
         {
             if (nodeHovered)
             {
@@ -1255,105 +1273,24 @@ void VisualScriptEditorPanel::RenderCanvas()
                 ImGui::OpenPopup("VSLinkContextMenu");
                 SYSTEM_LOG << "[VSEditor] Opened context menu on LINK #" << hoveredLink << "\n";
             }
-            else
+            else if (ImNodes::IsEditorHovered())
             {
-                // Canvas background — open the node-palette popup
-                ImVec2 mp = ImGui::GetMousePos();
-                ImVec2 wp = ImGui::GetWindowPos();
-                m_contextMenuX = mp.x - wp.x;
-                m_contextMenuY = mp.y - wp.y;
+                // Convert screen-space mouse position to canvas-space by
+                // subtracting the ImNodes canvas panning offset.
+                // Note: ImNodes 0.4 does not expose a zoom accessor, so zoom=1.0f.
+                ImVec2 mp          = ImGui::GetMousePos();
+                ImVec2 canvasOrigin = ImNodes::EditorContextGetPanning();
+                float  zoom        = 1.0f;
+                m_contextMenuX = (mp.x - canvasOrigin.x) / zoom;
+                m_contextMenuY = (mp.y - canvasOrigin.y) / zoom;
                 ImGui::OpenPopup("VSNodePalette");
                 SYSTEM_LOG << "[VSEditor] Opened context menu on CANVAS at ("
                            << m_contextMenuX << ", " << m_contextMenuY << ")\n";
             }
         }
 
-        // Node context menu
-        if (ImGui::BeginPopup("VSNodeContextMenu"))
-        {
-            if (ImGui::MenuItem("Edit Properties"))
-            {
-                m_selectedNodeID = m_contextNodeID;
-                SYSTEM_LOG << "[VSEditor] Selected node #" << m_contextNodeID
-                           << " for editing\n";
-            }
-
-            ImGui::Separator();
-
-            if (ImGui::MenuItem("Delete Node"))
-            {
-                RemoveNode(m_contextNodeID);
-                if (m_selectedNodeID == m_contextNodeID)
-                    m_selectedNodeID = -1;
-                m_dirty = true;
-                SYSTEM_LOG << "[VSEditor] Deleted node #" << m_contextNodeID
-                           << " via context menu\n";
-            }
-
-            ImGui::Separator();
-
-            {
-                bool hasBP = DebugController::Get().HasBreakpoint(0, m_contextNodeID);
-                if (ImGui::MenuItem(hasBP ? "Remove Breakpoint (F9)" : "Add Breakpoint (F9)"))
-                {
-                    DebugController::Get().ToggleBreakpoint(0, m_contextNodeID,
-                                                            m_template.Name,
-                                                            "Node " + std::to_string(m_contextNodeID));
-                    SYSTEM_LOG << "[VSEditor] Toggled breakpoint on node #"
-                               << m_contextNodeID << " -> "
-                               << (hasBP ? "OFF" : "ON") << "\n";
-                }
-            }
-
-            ImGui::Separator();
-
-            if (ImGui::MenuItem("Duplicate"))
-            {
-                auto it = std::find_if(m_editorNodes.begin(), m_editorNodes.end(),
-                    [this](const VSEditorNode& n) { return n.nodeID == m_contextNodeID; });
-                if (it != m_editorNodes.end())
-                {
-                    TaskNodeDefinition newDef = it->def;
-                    newDef.NodeID    = AllocNodeID();
-                    newDef.NodeName += " (Copy)";
-                    newDef.EditorPosX = it->posX + 50.0f;
-                    newDef.EditorPosY = it->posY + 50.0f;
-                    newDef.HasEditorPos = true;
-                    // Pin definitions are preserved; the new node has no
-                    // connections since those live in m_template.ExecConnections
-                    // and m_template.DataConnections which only reference it by ID.
-
-                    VSEditorNode eNew;
-                    eNew.nodeID = newDef.NodeID;
-                    eNew.posX   = newDef.EditorPosX;
-                    eNew.posY   = newDef.EditorPosY;
-                    eNew.def    = newDef;
-                    m_editorNodes.push_back(eNew);
-
-                    m_undoStack.PushCommand(
-                        std::unique_ptr<ICommand>(new AddNodeCommand(newDef)),
-                        m_template);
-                    m_dirty = true;
-                    SYSTEM_LOG << "[VSEditor] Node " << m_contextNodeID
-                               << " duplicated as #" << newDef.NodeID << "\n";
-                }
-            }
-
-            ImGui::EndPopup();
-        }
-
-        // Link context menu
-        if (ImGui::BeginPopup("VSLinkContextMenu"))
-        {
-            if (ImGui::MenuItem("Delete Connection"))
-            {
-                RemoveLink(m_contextLinkID);
-                m_dirty = true;
-                SYSTEM_LOG << "[VSEditor] Deleted link #" << m_contextLinkID
-                           << " via context menu\n";
-            }
-            ImGui::EndPopup();
-        }
+        // PHASE 2: Render popups in the same ImGui window scope.
+        RenderContextMenus();
     }
 
     // ========================================================================
@@ -1421,6 +1358,15 @@ void VisualScriptEditorPanel::RenderCanvas()
     // Only query nodes that have been rendered at least once (present in
     // m_positionedNodes) to avoid ImNodes assertions for brand-new nodes.
     {
+        // Skip movement detection for one frame immediately after an undo/redo
+        // so that stale ImNodes positions (not yet updated by the new render
+        // cycle) are not mistaken for user-initiated drag-start positions.
+        if (m_justPerformedUndoRedo)
+        {
+            m_justPerformedUndoRedo = false;
+        }
+        else
+        {
         const bool mouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
 
         for (size_t i = 0; i < m_editorNodes.size(); ++i)
@@ -1478,6 +1424,7 @@ void VisualScriptEditorPanel::RenderCanvas()
                 eNode.posY = pos.y;
             }
         }
+        } // end !m_justPerformedUndoRedo
     }
 
     // Hover tooltip — ImNodes::IsNodeHovered() requires ImNodesScope_None,
@@ -1802,6 +1749,97 @@ void VisualScriptEditorPanel::RenderNodePalette()
     }
 
     ImGui::EndPopup();
+}
+
+void VisualScriptEditorPanel::RenderContextMenus()
+{
+    // ========================================================================
+    // Node context menu
+    // ========================================================================
+    if (ImGui::BeginPopup("VSNodeContextMenu"))
+    {
+        if (ImGui::MenuItem("Edit Properties"))
+        {
+            m_selectedNodeID = m_contextNodeID;
+            SYSTEM_LOG << "[VSEditor] Selected node #" << m_contextNodeID
+                       << " for editing\n";
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Delete Node"))
+        {
+            RemoveNode(m_contextNodeID);
+            if (m_selectedNodeID == m_contextNodeID)
+                m_selectedNodeID = -1;
+            m_dirty = true;
+            SYSTEM_LOG << "[VSEditor] Deleted node #" << m_contextNodeID
+                       << " via context menu\n";
+        }
+
+        ImGui::Separator();
+
+        {
+            bool hasBP = DebugController::Get().HasBreakpoint(0, m_contextNodeID);
+            if (ImGui::MenuItem(hasBP ? "Remove Breakpoint (F9)" : "Add Breakpoint (F9)"))
+            {
+                DebugController::Get().ToggleBreakpoint(0, m_contextNodeID,
+                                                        m_template.Name,
+                                                        "Node " + std::to_string(m_contextNodeID));
+                SYSTEM_LOG << "[VSEditor] Toggled breakpoint on node #"
+                           << m_contextNodeID << " -> "
+                           << (hasBP ? "OFF" : "ON") << "\n";
+            }
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Duplicate"))
+        {
+            auto it = std::find_if(m_editorNodes.begin(), m_editorNodes.end(),
+                [this](const VSEditorNode& n) { return n.nodeID == m_contextNodeID; });
+            if (it != m_editorNodes.end())
+            {
+                TaskNodeDefinition newDef = it->def;
+                newDef.NodeID    = AllocNodeID();
+                newDef.NodeName += " (Copy)";
+                newDef.EditorPosX = it->posX + 50.0f;
+                newDef.EditorPosY = it->posY + 50.0f;
+                newDef.HasEditorPos = true;
+
+                VSEditorNode eNew;
+                eNew.nodeID = newDef.NodeID;
+                eNew.posX   = newDef.EditorPosX;
+                eNew.posY   = newDef.EditorPosY;
+                eNew.def    = newDef;
+                m_editorNodes.push_back(eNew);
+
+                m_undoStack.PushCommand(
+                    std::unique_ptr<ICommand>(new AddNodeCommand(newDef)),
+                    m_template);
+                m_dirty = true;
+                SYSTEM_LOG << "[VSEditor] Node " << m_contextNodeID
+                           << " duplicated as #" << newDef.NodeID << "\n";
+            }
+        }
+
+        ImGui::EndPopup();
+    }
+
+    // ========================================================================
+    // Link context menu
+    // ========================================================================
+    if (ImGui::BeginPopup("VSLinkContextMenu"))
+    {
+        if (ImGui::MenuItem("Delete Connection"))
+        {
+            RemoveLink(m_contextLinkID);
+            m_dirty = true;
+            SYSTEM_LOG << "[VSEditor] Deleted link #" << m_contextLinkID
+                       << " via context menu\n";
+        }
+        ImGui::EndPopup();
+    }
 }
 
 void VisualScriptEditorPanel::RenderProperties()
