@@ -275,6 +275,11 @@ private:
     // applies SetNodeEditorSpacePos for all loaded nodes.
     bool m_needsPositionSync = false;
 
+    /// Set to true by Undo/Redo; causes next frame to skip SyncNodePositionsFromImNodes()
+    /// so that the positions applied by SyncEditorNodesFromTemplate() are not overwritten
+    /// by stale ImNodes state before the new positions have been rendered once.
+    bool m_skipPositionSyncNextFrame = false;
+
     std::string m_currentPath;
 
     /// The template currently being edited

@@ -463,6 +463,22 @@ if(BUILD_TESTS)
     add_test(NAME OlympePhase13Tests COMMAND OlympePhase13Tests)
 
     # -----------------------------------------------------------------------
+    # OlympePhase14Tests  (Phase 14 — Fix Undo/Redo Completeness)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase14Tests
+        Tests/BlueprintEditor/Phase14Test.cpp
+        Source/BlueprintEditor/UndoRedoStack.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/NodeGraphCore/GlobalBlackboard.cpp
+        Tests/TestStubs.cpp
+    )
+    target_include_directories(OlympePhase14Tests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase14Tests COMMAND OlympePhase14Tests)
+
+    # -----------------------------------------------------------------------
     # OlympeATSReferenceV4Tests  (Integration — reference_complete_v4.ats)
     # -----------------------------------------------------------------------
     add_executable(OlympeATSReferenceV4Tests
