@@ -1,48 +1,48 @@
-# 📊 Olympe Engine — État des Lieux
+# Olympe Engine — Etat des Lieux
 
 **Date :** 2026-03-13
 
 ---
 
-## 🟢 Composants Fonctionnels
+## Composants Fonctionnels
 
-- ✅ **Blueprint Editor — Add Node** : Drag & drop depuis palette → `AddNodeCommand` (undoable)
-- ✅ **Blueprint Editor — Delete Node** : Touche Delete / menu contextuel → `DeleteNodeCommand` (undoable)
-- ✅ **Blueprint Editor — Move Node** : Drag sur canvas → `MoveNodeCommand` (undoable) *(Phase 19 fix — snapshot-at-click)*
-- ✅ **Blueprint Editor — Add Exec Link** : Drag pin à pin → `AddConnectionCommand` (undoable)
-- ✅ **Blueprint Editor — Add Data Link** : Drag pin données → `AddDataConnectionCommand` (undoable)
-- ✅ **Blueprint Editor — Delete Link** : Ctrl+click ou menu contextuel → `DeleteLinkCommand` (undoable)
-- ✅ **Blueprint Editor — Undo/Redo** : Ctrl+Z / Ctrl+Y via `PerformUndo()` / `PerformRedo()`
-- ✅ **Blueprint Editor — Save/Load** : Sérialisation JSON avec positions `__posX/__posY`
-- ✅ **Blueprint Editor — Context Menus** : Node, Link, Canvas (right-click)
-- ✅ **Blueprint Editor — Ghost Links Fix** : `RebuildLinks()` après undo/redo
-- ✅ **ECS System** : Composants auto-enregistrés
-- ✅ **AI System** : Behavior Tree + Debugger
-- ✅ **Animation System** : Animation Editor standalone
+- **Blueprint Editor — Add Node** : Drag & drop depuis palette -> `AddNodeCommand` (undoable)
+- **Blueprint Editor — Delete Node** : Touche Delete / menu contextuel -> `DeleteNodeCommand` (undoable)
+- **Blueprint Editor — Move Node** : Drag sur canvas -> `MoveNodeCommand` (undoable) *(Phase 19 fix)*
+- **Blueprint Editor — Add Exec Link** : Drag pin a pin -> `AddConnectionCommand` (undoable)
+- **Blueprint Editor — Add Data Link** : Drag pin donnees -> `AddDataConnectionCommand` (undoable)
+- **Blueprint Editor — Delete Link** : Ctrl+click ou menu contextuel -> `DeleteLinkCommand` (undoable)
+- **Blueprint Editor — Undo/Redo** : Ctrl+Z / Ctrl+Y via `PerformUndo()` / `PerformRedo()` — 100% fonctionnel
+- **Blueprint Editor — Save/Load** : Serialisation JSON avec positions `__posX/__posY`
+- **Blueprint Editor — Context Menus** : Node, Link, Canvas (right-click)
+- **Blueprint Editor — Ghost Links Fix** : `RebuildLinks()` apres undo/redo
+- **ECS System** : Composants auto-enregistres
+- **AI System** : Behavior Tree + Debugger
+- **Animation System** : Animation Editor standalone
 
-## 🟡 Composants En Développement
+## Composants En Developpement
 
-- 🚧 **Blueprint Editor — Phase 19** : Fix drag detection (snapshot-at-click, PR en cours)
-- 🚧 **Blueprint Editor — Context Menus Polish** : Smart editors (blackboard, enums), Phase 19 à planifier
+- **Blueprint Editor — Phase 20** : Validation des connexions (a planifier)
+- **Blueprint Editor — Phase 21** : Edition avancee parametres nodes (panel Properties)
 
-## 🔴 Problèmes Connus
+## Problemes Connus
 
-- ❌ Aucun problème P0 connu après Phase 18
+- Aucun probleme P0 connu
 
 ---
 
-## 📈 Progression Globale
+## Progression Globale
 
 - **Architecture globale :** ~80% (core engine stable)
-- **Blueprint Editor :** ~90% (undo/redo complet après Phase 18, polish UI restant)
+- **Blueprint Editor :** ~92% (undo/redo 100% complet depuis Phase 19, polish UI restant)
 - **ECS System :** ~85% (fonctionnel, extensions possibles)
 - **AI System :** ~75% (BT + debugger, extensions pathfinding)
 
-## 🧠 Charge Contextuelle
+## Charge Contextuelle
 
-- **Conversations actives :** 1 (Phase 18 fix)
-- **Sujets non archivés :** Phase 12–17 (voir CONTEXT_ARCHIVE.md)
-- **Dernière purge :** 2026-03-13
+- **Conversations actives :** 1 (Phase 20 planification)
+- **Sujets non archives :** Phase 18-19 (a archiver)
+- **Derniere purge :** 2026-03-13
 
 ---
 
