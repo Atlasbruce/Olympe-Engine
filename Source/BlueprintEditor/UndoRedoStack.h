@@ -249,6 +249,31 @@ private:
 };
 
 // ============================================================================
+// AddDynamicPinCommand
+// ============================================================================
+
+/**
+ * @class AddDynamicPinCommand
+ * @brief Records "add dynamic exec-out pin" on a VSSequence node for undo/redo.
+ *
+ * Execute() adds a new pin name (e.g. "Out_2") to the node's
+ * DynamicExecOutputPins vector and rebuilds the lookup cache.
+ * Undo() removes the last pin.
+ */
+class AddDynamicPinCommand : public ICommand {
+public:
+    AddDynamicPinCommand(int32_t nodeID, const std::string& pinName);
+
+    void Execute(TaskGraphTemplate& graph) override;
+    void Undo(TaskGraphTemplate& graph)    override;
+    std::string GetDescription()     const override;
+
+private:
+    int32_t     m_nodeID;
+    std::string m_pinName;
+};
+
+// ============================================================================
 // UndoRedoStack
 // ============================================================================
 
