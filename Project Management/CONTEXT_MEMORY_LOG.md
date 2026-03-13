@@ -2,6 +2,27 @@
 
 ---
 
+## 2026-03-13 — IMPLEMENTATION Phase 19
+
+**Fichier modifié :** `Source/BlueprintEditor/VisualScriptEditorPanel.cpp`
+**Fonction :** `RenderCanvas()` — bloc drag tracking (après `EndNodeEditor()`)
+
+**Root cause :** L'approche `posChanged && mouseDown` ne fonctionnait jamais car `SyncNodePositionsFromImNodes()` met à jour `eNode.posX/Y` chaque frame depuis les positions ImNodes. Ainsi, quand `mouseDown` est vrai, `eNode.posX` a déjà la valeur courante d'ImNodes → `posChanged` est toujours faux → `m_nodeDragStartPositions` n'est jamais peuplé → `MoveNodeCommand` n'est jamais poussé → Ctrl+Z inopérant après drag.
+
+**Fix appliqué (Phase 19 — snapshot-at-click) :**
+- `IsMouseClicked` : snapshot de toutes les positions des nodes positionnés dans `m_nodeDragStartPositions`
+- `IsMouseDown` : mise à jour de `eNode.posX/Y` depuis ImNodes (support live Save)
+- `IsMouseReleased` : pour chaque entrée snapshot, push `MoveNodeCommand` si delta > 1px; log `[VSEditor] MoveNodeCommand pushed node #N (...) -> (...) [UNDOABLE]` ou `[VSEditor] Node #N not moved (delta < 1px), skipping`
+
+**Guard `m_justPerformedUndoRedo` préservé** autour du bloc entier.
+
+**Compliance C++14 :**
+- Itérateur explicite `std::unordered_map<int, std::pair<float,float> >::iterator`
+- `static_cast<size_t>(...)` pour le log du nombre de snapshots
+- Aucun emoji dans les logs, aucun `std::string_view`, aucun `auto& [k,v]`
+
+---
+
 ## 2026-03-13 — ARCHIVAGE
 
 **Élément archivé :** Phases 12 à 17 du Blueprint Editor

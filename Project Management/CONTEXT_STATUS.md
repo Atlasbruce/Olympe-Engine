@@ -8,7 +8,7 @@
 
 - ✅ **Blueprint Editor — Add Node** : Drag & drop depuis palette → `AddNodeCommand` (undoable)
 - ✅ **Blueprint Editor — Delete Node** : Touche Delete / menu contextuel → `DeleteNodeCommand` (undoable)
-- ✅ **Blueprint Editor — Move Node** : Drag sur canvas → `MoveNodeCommand` (undoable) *(Phase 18 fix)*
+- ✅ **Blueprint Editor — Move Node** : Drag sur canvas → `MoveNodeCommand` (undoable) *(Phase 19 fix — snapshot-at-click)*
 - ✅ **Blueprint Editor — Add Exec Link** : Drag pin à pin → `AddConnectionCommand` (undoable)
 - ✅ **Blueprint Editor — Add Data Link** : Drag pin données → `AddDataConnectionCommand` (undoable)
 - ✅ **Blueprint Editor — Delete Link** : Ctrl+click ou menu contextuel → `DeleteLinkCommand` (undoable)
@@ -22,7 +22,7 @@
 
 ## 🟡 Composants En Développement
 
-- 🚧 **Blueprint Editor — Phase 18** : Fix drag undo/redo (PR en cours)
+- 🚧 **Blueprint Editor — Phase 19** : Fix drag detection (snapshot-at-click, PR en cours)
 - 🚧 **Blueprint Editor — Context Menus Polish** : Smart editors (blackboard, enums), Phase 19 à planifier
 
 ## 🔴 Problèmes Connus
