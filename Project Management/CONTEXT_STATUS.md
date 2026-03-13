@@ -16,16 +16,16 @@
 - **Blueprint Editor — Save/Load** : Serialisation JSON avec positions `__posX/__posY`
 - **Blueprint Editor — Context Menus** : Node, Link, Canvas (right-click)
 - **Blueprint Editor — Ghost Links Fix** : `RebuildLinks()` apres undo/redo
-- **Blueprint Editor — Connection Validation** : `VSConnectionValidator` bloque self-loops, duplicate pins, cycles *(Phase 20-B)*
-- **Blueprint Editor — Undo/Redo Properties Panel** : `EditNodePropertyCommand` (Phase 21)
+- **Blueprint Editor — Connection Validation** : `VSConnectionValidator` bloque self-loops, duplicate pins, cycles *(Phase 20-A)*
+- **Blueprint Editor — Properties Undo/Redo** : `EditNodePropertyCommand` + commit-on-release pour tous les champs *(Phase 20-B)*
 - **ECS System** : Composants auto-enregistres
 - **AI System** : Behavior Tree + Debugger
 - **Animation System** : Animation Editor standalone
 
 ## Composants En Developpement
 
-- **Blueprint Editor — Phase 22** : Templates BT preconfigures (Empty, Patrol, Combat...)
-- **Blueprint Editor — Phase 23** : Refonte affichage nodes inline (parametres inline dans le canvas)
+- **Blueprint Editor — Phase 20-C** : Refonte affichage nodes (parametres inline + Add[+] Sequence)
+- **Blueprint Editor — Phase 20-D** : Templates BT preconfigures (Empty, Patrol, Combat...)
 
 ## Problemes Connus
 
@@ -36,14 +36,14 @@
 ## Progression Globale
 
 - **Architecture globale :** ~80% (core engine stable)
-- **Blueprint Editor :** ~96% (Undo/Redo Properties Panel complete depuis Phase 21)
+- **Blueprint Editor :** ~96% (properties undo/redo complete depuis Phase 20-B)
 - **ECS System :** ~85% (fonctionnel, extensions possibles)
 - **AI System :** ~75% (BT + debugger, extensions pathfinding)
 
 ## Charge Contextuelle
 
-- **Conversations actives :** 1 (Phase 21 complete)
-- **Sujets non archives :** Phase 21 (a archiver)
+- **Conversations actives :** 1 (Phase 20-B complete)
+- **Sujets non archives :** Phase 20-B (a archiver)
 - **Derniere purge :** 2026-03-13
 
 ---

@@ -361,6 +361,7 @@ void EditNodePropertyCommand::Execute(TaskGraphTemplate& graph)
             break;
         }
     }
+    graph.BuildLookupCache();
 }
 
 void EditNodePropertyCommand::Undo(TaskGraphTemplate& graph)
@@ -373,6 +374,7 @@ void EditNodePropertyCommand::Undo(TaskGraphTemplate& graph)
             break;
         }
     }
+    graph.BuildLookupCache();
 }
 
 std::string EditNodePropertyCommand::GetDescription() const

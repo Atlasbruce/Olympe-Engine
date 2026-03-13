@@ -201,6 +201,11 @@ struct PropertyValue {
     {
         PropertyValue v; v.kind = Kind::Float; v.floatVal = f; return v;
     }
+
+    static PropertyValue FromInt(int i)
+    {
+        PropertyValue v; v.kind = Kind::Int; v.intVal = i; return v;
+    }
 };
 
 // ============================================================================
