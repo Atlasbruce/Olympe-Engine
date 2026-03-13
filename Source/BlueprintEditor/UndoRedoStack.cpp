@@ -317,6 +317,72 @@ std::string DeleteLinkCommand::GetDescription() const
 }
 
 // ============================================================================
+// EditNodePropertyCommand
+// ============================================================================
+
+EditNodePropertyCommand::EditNodePropertyCommand(int32_t              nodeID,
+                                                  const std::string&   propertyKey,
+                                                  const PropertyValue& oldValue,
+                                                  const PropertyValue& newValue)
+    : m_nodeID(nodeID)
+    , m_propertyKey(propertyKey)
+    , m_oldValue(oldValue)
+    , m_newValue(newValue)
+{
+}
+
+void EditNodePropertyCommand::ApplyValue(TaskNodeDefinition&  node,
+                                          const std::string&   key,
+                                          const PropertyValue& value)
+{
+    if (key == "NodeName")
+        node.NodeName = value.strVal;
+    else if (key == "AtomicTaskID")
+        node.AtomicTaskID = value.strVal;
+    else if (key == "ConditionID")
+        node.ConditionID = value.strVal;
+    else if (key == "BBKey")
+        node.BBKey = value.strVal;
+    else if (key == "MathOperator")
+        node.MathOperator = value.strVal;
+    else if (key == "SubGraphPath")
+        node.SubGraphPath = value.strVal;
+    else if (key == "DelaySeconds")
+        node.DelaySeconds = value.floatVal;
+}
+
+void EditNodePropertyCommand::Execute(TaskGraphTemplate& graph)
+{
+    for (size_t i = 0; i < graph.Nodes.size(); ++i)
+    {
+        if (graph.Nodes[i].NodeID == m_nodeID)
+        {
+            ApplyValue(graph.Nodes[i], m_propertyKey, m_newValue);
+            break;
+        }
+    }
+}
+
+void EditNodePropertyCommand::Undo(TaskGraphTemplate& graph)
+{
+    for (size_t i = 0; i < graph.Nodes.size(); ++i)
+    {
+        if (graph.Nodes[i].NodeID == m_nodeID)
+        {
+            ApplyValue(graph.Nodes[i], m_propertyKey, m_oldValue);
+            break;
+        }
+    }
+}
+
+std::string EditNodePropertyCommand::GetDescription() const
+{
+    std::ostringstream ss;
+    ss << "Edit Node #" << m_nodeID << " " << m_propertyKey;
+    return ss.str();
+}
+
+// ============================================================================
 // UndoRedoStack
 // ============================================================================
 

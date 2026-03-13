@@ -2,14 +2,14 @@
 
 **Date**: 2026-03-13
 **User**: @Atlasbruce
-**Status**: Phase 20-B — Validation des connexions (complete)
+**Status**: Phase 21 — Undo/Redo Panel Properties (complete)
 
 ---
 
 ## Developpement en Cours
 
-- **Fonctionnalite actuelle :** Blueprint Editor stable — toutes les operations undo/redo fonctionnelles
-- **Objectif immediat :** Phase 20-B terminee — validation des connexions exec en temps reel implementee
+- **Fonctionnalite actuelle :** Blueprint Editor stable — Undo/Redo Panel Properties implemente
+- **Objectif immediat :** Phase 21 terminee — toutes modifications du panel Properties undo-ables
 - **Blocages connus :** Aucun
 
 ---
@@ -17,42 +17,38 @@
 ## Composants Actifs
 
 - **Modules touches :** BlueprintEditor
-- **Fichiers modifies (Phase 20-B) :**
-  - `Source/BlueprintEditor/VSConnectionValidator.h` — NOUVEAU : validateur stateless
-  - `Source/BlueprintEditor/VSConnectionValidator.cpp` — NOUVEAU : 3 checks (self-loop, duplicate pin, cycle DFS)
-  - `Source/BlueprintEditor/VisualScriptEditorPanel.h` — ajout include VSConnectionValidator.h
-  - `Source/BlueprintEditor/VisualScriptEditorPanel.cpp` — guard ConnectExec() avec VSConnectionValidator
-  - `Tests/BlueprintEditor/Phase20Test.cpp` — NOUVEAU : 4 tests de validation
-  - `CMakeLists.txt` — ajout cible OlympePhase20Tests
-- **Dependencies :** `TaskGraphTemplate.h` (ExecPinConnection, ExecConnections) — stable
+- **Fichiers modifies (Phase 21) :**
+  - `Source/BlueprintEditor/UndoRedoStack.h` — ajout EditNodePropertyCommand + PropertyValue
+  - `Source/BlueprintEditor/UndoRedoStack.cpp` — implementation EditNodePropertyCommand
+  - `Source/BlueprintEditor/VisualScriptEditorPanel.h` — ajout membres snapshot m_propEditOld*
+  - `Source/BlueprintEditor/VisualScriptEditorPanel.cpp` — RenderProperties() refactor "commit on release"
+- **Dependencies :** `TaskGraphTemplate.h` (TaskNodeDefinition) — stable
 
 ---
 
 ## Decisions Recentes
 
-- **2026-03-13 (Phase 20-B)** : Implementation de la validation en temps reel des connexions exec.
-  - `VSConnectionValidator::IsExecConnectionValid()` : 3 checks avant creation d'un lien
-    - Check A : self-loop (srcNodeID == dstNodeID)
-    - Check B : duplicate output pin (meme source pin deja connectee)
-    - Check C : cycle detection via DFS iteratif
-  - Architecture extraite dans classe stateless `VSConnectionValidator` (testable sans ImNodes/ImGui)
-  - `RenderCanvas()` appelle `VSConnectionValidator::IsExecConnectionValid()` avant `ConnectExec()`
-  - `std::cout` remplace par `SYSTEM_LOG` dans le bloc exec link creation
+- **2026-03-13 (Phase 20-B)** : VSConnectionValidator stateless — validation connexions exec (self-loop, duplicate, cycle DFS)
+- **2026-03-13 (Phase 21)** : EditNodePropertyCommand generique avec PropertyValue (String/Float)
+  - Pattern "commit on release" : IsItemActivated() pour snapshot, IsItemDeactivatedAfterEdit() pour push undo
+  - Couvre : NodeName, AtomicTaskID, DelaySeconds, ConditionID, BBKey, MathOperator, SubGraphPath
+  - Architecture extensible pour futurs dropdowns (push undo immediat sur Combo)
 
 ---
 
 ## Notes Techniques Importantes
 
-- **Architecture stateless** : `VSConnectionValidator` n'a pas d'etat propre — 100% testable sans contexte editeur.
-- **C++14 strict** : pas de structured bindings, std::optional, std::string_view.
-- **Iterateurs explicites** : `std::map<int, std::vector<int> >::const_iterator` pour la DFS.
-- **SYSTEM_LOG** : tous les logs de rejet utilisent SYSTEM_LOG, pas std::cout.
+- **C++14 strict** : PropertyValue utilise union manuelle (pas std::variant)
+- **Pattern commit-on-release** : un seul undo entry par champ edite (pas 50 entrees pour une frappe)
+- **Idempotence Execute()** : PushCommand() appelle Execute() — valeur deja synchronisee live
+- **SYSTEM_LOG** : tous les logs utilisent SYSTEM_LOG, pas std::cout
 
 ---
 
 ## Prochaines Etapes
 
-1. Phase 21 : edition avancee des parametres de nodes (panel Properties)
-2. Phase 22 : templates BT preconfigures (Empty, Patrol, Combat...)
+1. Phase 22 : Templates BT preconfigures (Empty, Patrol, Combat...)
+2. Phase 23 : Refonte affichage nodes inline (parametres inline dans le canvas)
 
 ---
+

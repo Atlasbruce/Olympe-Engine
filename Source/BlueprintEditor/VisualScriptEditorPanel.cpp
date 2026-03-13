@@ -1892,26 +1892,49 @@ void VisualScriptEditorPanel::RenderProperties()
 
     TaskNodeDefinition& def = eNode->def;
 
-    // Node name — use a local (non-static) buffer initialized from the current def
-    char nameBuf[128];
-    strncpy_s(nameBuf, sizeof(nameBuf), def.NodeName.c_str(), _TRUNCATE);
-    if (ImGui::InputText("Name##vsname", nameBuf, sizeof(nameBuf)))
+    // Reset focus-node tracking when the selected node changes.
+    // Old-value snapshots do NOT need explicit resetting here — they are
+    // naturally overwritten by the next IsItemActivated() event.
+    m_propEditNodeIDOnFocus = m_selectedNodeID;
+
+    // ---- NodeName (present for all node types) ----
     {
-        def.NodeName = nameBuf;
-        // Sync back to template
-        for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+        char nameBuf[128];
+        strncpy_s(nameBuf, sizeof(nameBuf), def.NodeName.c_str(), _TRUNCATE);
+        if (ImGui::InputText("Name##vsname", nameBuf, sizeof(nameBuf)))
         {
-            if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+            def.NodeName = nameBuf;
+            // Sync live to template for immediate canvas display and serialization
+            for (size_t i = 0; i < m_template.Nodes.size(); ++i)
             {
-                m_template.Nodes[i].NodeName = def.NodeName;
-                break;
+                if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                {
+                    m_template.Nodes[i].NodeName = def.NodeName;
+                    break;
+                }
             }
+            m_dirty = true;
         }
-        m_dirty = true;
+        if (ImGui::IsItemActivated())
+        {
+            m_propEditOldName       = def.NodeName;
+            m_propEditNodeIDOnFocus = m_selectedNodeID;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit() &&
+            m_propEditNodeIDOnFocus == m_selectedNodeID &&
+            def.NodeName != m_propEditOldName)
+        {
+            m_undoStack.PushCommand(
+                std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                    m_selectedNodeID, "NodeName",
+                    PropertyValue::FromString(m_propEditOldName),
+                    PropertyValue::FromString(def.NodeName))),
+                m_template);
+        }
     }
 
-    // Type-specific fields — all buffers are local (non-static) to avoid
-    // stale data when switching between selected nodes.
+    // ---- Type-specific fields — all buffers are local (non-static) to avoid
+    //      stale data when switching between selected nodes. ----
     switch (def.Type)
     {
         case TaskNodeType::AtomicTask:
@@ -1921,7 +1944,31 @@ void VisualScriptEditorPanel::RenderProperties()
             if (ImGui::InputText("TaskType##vstask", taskBuf, sizeof(taskBuf)))
             {
                 def.AtomicTaskID = taskBuf;
+                for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                {
+                    if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                    {
+                        m_template.Nodes[i].AtomicTaskID = def.AtomicTaskID;
+                        break;
+                    }
+                }
                 m_dirty = true;
+            }
+            if (ImGui::IsItemActivated())
+            {
+                m_propEditOldTaskID     = def.AtomicTaskID;
+                m_propEditNodeIDOnFocus = m_selectedNodeID;
+            }
+            if (ImGui::IsItemDeactivatedAfterEdit() &&
+                m_propEditNodeIDOnFocus == m_selectedNodeID &&
+                def.AtomicTaskID != m_propEditOldTaskID)
+            {
+                m_undoStack.PushCommand(
+                    std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                        m_selectedNodeID, "AtomicTaskID",
+                        PropertyValue::FromString(m_propEditOldTaskID),
+                        PropertyValue::FromString(def.AtomicTaskID))),
+                    m_template);
             }
             break;
         }
@@ -1931,7 +1978,31 @@ void VisualScriptEditorPanel::RenderProperties()
             if (ImGui::InputFloat("Delay (s)##vsdelay", &delay, 0.1f, 1.0f))
             {
                 def.DelaySeconds = delay;
+                for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                {
+                    if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                    {
+                        m_template.Nodes[i].DelaySeconds = def.DelaySeconds;
+                        break;
+                    }
+                }
                 m_dirty = true;
+            }
+            if (ImGui::IsItemActivated())
+            {
+                m_propEditOldDelay      = def.DelaySeconds;
+                m_propEditNodeIDOnFocus = m_selectedNodeID;
+            }
+            if (ImGui::IsItemDeactivatedAfterEdit() &&
+                m_propEditNodeIDOnFocus == m_selectedNodeID &&
+                def.DelaySeconds != m_propEditOldDelay)
+            {
+                m_undoStack.PushCommand(
+                    std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                        m_selectedNodeID, "DelaySeconds",
+                        PropertyValue::FromFloat(m_propEditOldDelay),
+                        PropertyValue::FromFloat(def.DelaySeconds))),
+                    m_template);
             }
             break;
         }
@@ -1943,7 +2014,31 @@ void VisualScriptEditorPanel::RenderProperties()
             if (ImGui::InputText("BB Key##vsbbkey", bbKeyBuf, sizeof(bbKeyBuf)))
             {
                 def.BBKey = bbKeyBuf;
+                for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                {
+                    if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                    {
+                        m_template.Nodes[i].BBKey = def.BBKey;
+                        break;
+                    }
+                }
                 m_dirty = true;
+            }
+            if (ImGui::IsItemActivated())
+            {
+                m_propEditOldBBKey      = def.BBKey;
+                m_propEditNodeIDOnFocus = m_selectedNodeID;
+            }
+            if (ImGui::IsItemDeactivatedAfterEdit() &&
+                m_propEditNodeIDOnFocus == m_selectedNodeID &&
+                def.BBKey != m_propEditOldBBKey)
+            {
+                m_undoStack.PushCommand(
+                    std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                        m_selectedNodeID, "BBKey",
+                        PropertyValue::FromString(m_propEditOldBBKey),
+                        PropertyValue::FromString(def.BBKey))),
+                    m_template);
             }
             break;
         }
@@ -1955,7 +2050,31 @@ void VisualScriptEditorPanel::RenderProperties()
             if (ImGui::InputText("ConditionID##vscond", condBuf, sizeof(condBuf)))
             {
                 def.ConditionID = condBuf;
+                for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                {
+                    if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                    {
+                        m_template.Nodes[i].ConditionID = def.ConditionID;
+                        break;
+                    }
+                }
                 m_dirty = true;
+            }
+            if (ImGui::IsItemActivated())
+            {
+                m_propEditOldConditionID = def.ConditionID;
+                m_propEditNodeIDOnFocus  = m_selectedNodeID;
+            }
+            if (ImGui::IsItemDeactivatedAfterEdit() &&
+                m_propEditNodeIDOnFocus == m_selectedNodeID &&
+                def.ConditionID != m_propEditOldConditionID)
+            {
+                m_undoStack.PushCommand(
+                    std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                        m_selectedNodeID, "ConditionID",
+                        PropertyValue::FromString(m_propEditOldConditionID),
+                        PropertyValue::FromString(def.ConditionID))),
+                    m_template);
             }
             break;
         }
@@ -1966,7 +2085,31 @@ void VisualScriptEditorPanel::RenderProperties()
             if (ImGui::InputText("SubGraph Path##vssg", sgPathBuf, sizeof(sgPathBuf)))
             {
                 def.SubGraphPath = sgPathBuf;
+                for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                {
+                    if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                    {
+                        m_template.Nodes[i].SubGraphPath = def.SubGraphPath;
+                        break;
+                    }
+                }
                 m_dirty = true;
+            }
+            if (ImGui::IsItemActivated())
+            {
+                m_propEditOldSubGraphPath = def.SubGraphPath;
+                m_propEditNodeIDOnFocus   = m_selectedNodeID;
+            }
+            if (ImGui::IsItemDeactivatedAfterEdit() &&
+                m_propEditNodeIDOnFocus == m_selectedNodeID &&
+                def.SubGraphPath != m_propEditOldSubGraphPath)
+            {
+                m_undoStack.PushCommand(
+                    std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                        m_selectedNodeID, "SubGraphPath",
+                        PropertyValue::FromString(m_propEditOldSubGraphPath),
+                        PropertyValue::FromString(def.SubGraphPath))),
+                    m_template);
             }
             break;
         }
@@ -1977,7 +2120,31 @@ void VisualScriptEditorPanel::RenderProperties()
             if (ImGui::InputText("Operator (+,-,*,/)##vsmath", mathOpBuf, sizeof(mathOpBuf)))
             {
                 def.MathOperator = mathOpBuf;
+                for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                {
+                    if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                    {
+                        m_template.Nodes[i].MathOperator = def.MathOperator;
+                        break;
+                    }
+                }
                 m_dirty = true;
+            }
+            if (ImGui::IsItemActivated())
+            {
+                m_propEditOldMathOp     = def.MathOperator;
+                m_propEditNodeIDOnFocus = m_selectedNodeID;
+            }
+            if (ImGui::IsItemDeactivatedAfterEdit() &&
+                m_propEditNodeIDOnFocus == m_selectedNodeID &&
+                def.MathOperator != m_propEditOldMathOp)
+            {
+                m_undoStack.PushCommand(
+                    std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                        m_selectedNodeID, "MathOperator",
+                        PropertyValue::FromString(m_propEditOldMathOp),
+                        PropertyValue::FromString(def.MathOperator))),
+                    m_template);
             }
             break;
         }

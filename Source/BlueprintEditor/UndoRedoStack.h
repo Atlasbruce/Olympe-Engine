@@ -175,6 +175,75 @@ private:
 };
 
 // ============================================================================
+// PropertyValue — typed value union for EditNodePropertyCommand (C++14)
+// ============================================================================
+
+/**
+ * @struct PropertyValue
+ * @brief Discriminated union of property value types (String / Float).
+ *
+ * C++14 compliant — no std::variant, no std::optional.
+ */
+struct PropertyValue {
+    enum class Kind { String, Float, Int } kind;
+    std::string strVal;
+    float       floatVal;
+    int         intVal;
+
+    PropertyValue() : kind(Kind::String), floatVal(0.0f), intVal(0) {}
+
+    static PropertyValue FromString(const std::string& s)
+    {
+        PropertyValue v; v.kind = Kind::String; v.strVal = s; return v;
+    }
+
+    static PropertyValue FromFloat(float f)
+    {
+        PropertyValue v; v.kind = Kind::Float; v.floatVal = f; return v;
+    }
+};
+
+// ============================================================================
+// EditNodePropertyCommand
+// ============================================================================
+
+/**
+ * @class EditNodePropertyCommand
+ * @brief Records a property edit on a single node for undo/redo.
+ *
+ * @details
+ * Covers all editable fields exposed by the Properties panel:
+ * NodeName, AtomicTaskID, DelaySeconds, ConditionID, BBKey,
+ * MathOperator, SubGraphPath.
+ *
+ * Uses the "commit on release" pattern: the command is pushed only when the
+ * ImGui widget loses focus after an edit (IsItemDeactivatedAfterEdit), so
+ * a single undo entry is created per editing session, not one per keystroke.
+ */
+class EditNodePropertyCommand : public ICommand {
+public:
+    EditNodePropertyCommand(int32_t             nodeID,
+                            const std::string&  propertyKey,
+                            const PropertyValue& oldValue,
+                            const PropertyValue& newValue);
+
+    void Execute(TaskGraphTemplate& graph) override;
+    void Undo(TaskGraphTemplate& graph)    override;
+    std::string GetDescription()     const override;
+
+private:
+    int32_t       m_nodeID;
+    std::string   m_propertyKey;
+    PropertyValue m_oldValue;
+    PropertyValue m_newValue;
+
+    /// Applies @p value to the named field of @p node.
+    static void ApplyValue(TaskNodeDefinition&  node,
+                           const std::string&   key,
+                           const PropertyValue& value);
+};
+
+// ============================================================================
 // UndoRedoStack
 // ============================================================================
 
