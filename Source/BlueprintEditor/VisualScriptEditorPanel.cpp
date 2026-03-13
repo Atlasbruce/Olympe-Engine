@@ -509,6 +509,10 @@ void VisualScriptEditorPanel::SyncEditorNodesFromTemplate()
         m_editorNodes.push_back(eNode);
     }
 
+    // FIX 1: Rebuild links from template so that ghost links (links that
+    // belong to a deleted node) are removed from m_editorLinks after undo/redo.
+    RebuildLinks();
+
     // Request a position-restore pass on the next RenderCanvas() call
     m_needsPositionSync = true;
 }
@@ -629,6 +633,17 @@ void VisualScriptEditorPanel::LoadTemplate(const TaskGraphTemplate* tmpl,
     // correctly after opening a file from the Blueprint Files browser.
 
     SyncCanvasFromTemplate();
+
+    // FIX 2: Pre-populate drag-start positions from the loaded node positions.
+    // Without this, the first drag after loading a file would have no "before"
+    // state in m_nodeDragStartPositions, causing MoveNodeCommand to receive
+    // (0,0) as the start position and undo to delete-and-recreate the node.
+    m_nodeDragStartPositions.clear();
+    for (size_t i = 0; i < m_editorNodes.size(); ++i)
+    {
+        m_nodeDragStartPositions[m_editorNodes[i].nodeID] =
+            std::make_pair(m_editorNodes[i].posX, m_editorNodes[i].posY);
+    }
 }
 
 bool VisualScriptEditorPanel::Save()
@@ -934,6 +949,10 @@ void VisualScriptEditorPanel::RenderToolbar()
             m_undoStack.Undo(m_template);
             SyncEditorNodesFromTemplate();
             RebuildLinks();
+            // FIX 4: Prevent SyncNodePositionsFromImNodes() from overwriting the
+            // correct positions set by SyncEditorNodesFromTemplate() before ImNodes
+            // has rendered the new positions even once.
+            m_skipPositionSyncNextFrame = true;
             m_dirty = true;
             SYSTEM_LOG << "[VSEditor] Undo complete. Template now has "
                        << m_template.Nodes.size() << " nodes, "
@@ -949,6 +968,8 @@ void VisualScriptEditorPanel::RenderToolbar()
             m_undoStack.Redo(m_template);
             SyncEditorNodesFromTemplate();
             RebuildLinks();
+            // FIX 4: Same as Undo — skip position sync on the next frame.
+            m_skipPositionSyncNextFrame = true;
             m_dirty = true;
             SYSTEM_LOG << "[VSEditor] Redo complete. Template now has "
                        << m_template.Nodes.size() << " nodes, "
@@ -1175,7 +1196,20 @@ void VisualScriptEditorPanel::RenderCanvas()
     // runs again), m_editorNodes already holds the latest drag positions.
     // The SyncNodePositionsFromImNodes() call inside Save()/SaveAs() then acts
     // as a lightweight double-check rather than the sole sync point.
-    SyncNodePositionsFromImNodes();
+    //
+    // FIX 4: Skip position sync if undo/redo just executed.  SyncEditorNodesFromTemplate()
+    // has already written the correct undo-target positions into m_editorNodes and
+    // m_needsPositionSync will push them to ImNodes before BeginNodeEditor().
+    // Reading them back here (before ImNodes has rendered the new positions once)
+    // would overwrite the correct values with stale ImNodes state.
+    if (m_skipPositionSyncNextFrame)
+    {
+        m_skipPositionSyncNextFrame = false;
+    }
+    else
+    {
+        SyncNodePositionsFromImNodes();
+    }
 
     // ========================================================================
     // Context menu dispatch (requires ImNodesScope_None, i.e. after EndNodeEditor)
