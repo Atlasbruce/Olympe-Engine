@@ -17,14 +17,15 @@
 - **Blueprint Editor — Context Menus** : Node, Link, Canvas (right-click)
 - **Blueprint Editor — Ghost Links Fix** : `RebuildLinks()` apres undo/redo
 - **Blueprint Editor — Connection Validation** : `VSConnectionValidator` bloque self-loops, duplicate pins, cycles *(Phase 20-B)*
+- **Blueprint Editor — Undo/Redo Properties Panel** : `EditNodePropertyCommand` (Phase 21)
 - **ECS System** : Composants auto-enregistres
 - **AI System** : Behavior Tree + Debugger
 - **Animation System** : Animation Editor standalone
 
 ## Composants En Developpement
 
-- **Blueprint Editor — Phase 21** : Edition avancee parametres nodes (panel Properties)
 - **Blueprint Editor — Phase 22** : Templates BT preconfigures (Empty, Patrol, Combat...)
+- **Blueprint Editor — Phase 23** : Refonte affichage nodes inline (parametres inline dans le canvas)
 
 ## Problemes Connus
 
@@ -35,16 +36,17 @@
 ## Progression Globale
 
 - **Architecture globale :** ~80% (core engine stable)
-- **Blueprint Editor :** ~94% (validation connexions complete depuis Phase 20-B)
+- **Blueprint Editor :** ~96% (Undo/Redo Properties Panel complete depuis Phase 21)
 - **ECS System :** ~85% (fonctionnel, extensions possibles)
 - **AI System :** ~75% (BT + debugger, extensions pathfinding)
 
 ## Charge Contextuelle
 
-- **Conversations actives :** 1 (Phase 20-B complete)
-- **Sujets non archives :** Phase 20-B (a archiver)
+- **Conversations actives :** 1 (Phase 21 complete)
+- **Sujets non archives :** Phase 21 (a archiver)
 - **Derniere purge :** 2026-03-13
 
 ---
 
 **Last Updated**: 2026-03-13
+

@@ -346,6 +346,24 @@ private:
     /// Link ID captured at the moment a right-click context menu was opened on a link
     int m_contextLinkID = -1;
 
+    // -----------------------------------------------------------------------
+    // Properties panel — undo snapshot state
+    // "commit on release" pattern: snapshot the field value when the widget
+    // receives focus (IsItemActivated), push undo only on IsItemDeactivatedAfterEdit.
+    // -----------------------------------------------------------------------
+
+    /// Node ID that was selected when RenderProperties() last entered focus
+    int m_propEditNodeIDOnFocus = -1;
+
+    /// Snapshot values captured at focus time for each editable field
+    std::string m_propEditOldName;
+    std::string m_propEditOldTaskID;
+    std::string m_propEditOldConditionID;
+    std::string m_propEditOldBBKey;
+    std::string m_propEditOldMathOp;
+    std::string m_propEditOldSubGraphPath;
+    float       m_propEditOldDelay = 0.0f;
+
     /// Undo/Redo command stack for reversible graph editing operations
     UndoRedoStack m_undoStack;
 
