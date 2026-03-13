@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "parallax-forest.tmj",
+    "activeFile": "isometric_quest.tmx",
     "expandedProjectPaths": [
         "."
     ],
@@ -49,7 +49,7 @@
             "scale": 0.75,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 889.3333333333333,
+                "x": 904,
                 "y": 518.6666666666667
             }
         },
@@ -70,10 +70,10 @@
                 6
             ],
             "scale": 1,
-            "selectedLayer": 1,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 5050,
-                "y": 1607
+                "x": 5082.5,
+                "y": 1537
             }
         },
         "map_forest.tmj": {
@@ -99,14 +99,14 @@
         },
         "parallax-forest.tmj": {
             "expandedObjectLayers": [
-                17,
-                2
+                2,
+                17
             ],
             "scale": 0.25,
             "selectedLayer": 7,
             "viewCenter": {
-                "x": 1192,
-                "y": 440
+                "x": 1322,
+                "y": 160
             }
         },
         "parallax-forest.tmj#tileset 2D ortho": {
@@ -204,10 +204,10 @@
     "project": "parallax-level.tiled-project",
     "property.type": "bool",
     "recentFiles": [
-        "isometric_quest.tmx",
         "hexa-quest.tmx",
         "pnc-quest.tmx",
         "parallax-forest.tmj",
+        "isometric_quest.tmx",
         "Trees.tsx",
         "parallax-forest.tmx",
         "Tiles iso cube..tsj",
