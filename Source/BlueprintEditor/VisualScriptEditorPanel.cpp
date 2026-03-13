@@ -1353,10 +1353,11 @@ void VisualScriptEditorPanel::RenderCanvas()
     }
 
     // Track node moves for undo/redo using MoveNodeCommand.
-    // Strategy: record the drag-start position on the first frame a move is
-    // detected while the mouse button is held, then push a single
-    // MoveNodeCommand when the drag ends (mouse released).
-    // This ensures one undoable command per drag gesture, not one per frame.
+    // Phase 19 — snapshot-at-click approach:
+    //   Step 1 (MouseClicked)  : snapshot current eNode.posX/Y for all positioned nodes.
+    //   Step 2 (MouseDown)     : keep eNode.posX/Y in sync with ImNodes live positions.
+    //   Step 3 (MouseReleased) : for each snapshotted node, push MoveNodeCommand if
+    //                            final position differs from snapshot by more than 1px.
     //
     // Only query nodes that have been rendered at least once (present in
     // m_positionedNodes) to avoid ImNodes assertions for brand-new nodes.
@@ -1370,72 +1371,81 @@ void VisualScriptEditorPanel::RenderCanvas()
         }
         else
         {
-        const bool mouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
-
-        for (size_t i = 0; i < m_editorNodes.size(); ++i)
+        // Step 1: on the initial click, snapshot positions of all positioned nodes.
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
         {
-            VSEditorNode& eNode = m_editorNodes[i];
-            if (m_positionedNodes.count(eNode.nodeID) == 0)
-                continue;  // Node was added this frame; position will sync next frame
-
-            const ImVec2 pos = ImNodes::GetNodeEditorSpacePos(eNode.nodeID);
-            const bool posChanged = (std::abs(pos.x - eNode.posX) > 0.5f ||
-                                     std::abs(pos.y - eNode.posY) > 0.5f);
-
-            if (mouseDown)
+            m_nodeDragStartPositions.clear();
+            for (size_t i = 0; i < m_editorNodes.size(); ++i)
             {
-                if (posChanged)
-                {
-                    // Drag started: record start pos ONLY ONCE per drag gesture.
-                    // eNode.posX/Y holds the position from the previous frame
-                    // (before the current move delta), so it is the correct
-                    // "position before this drag".
-                    if (m_nodeDragStartPositions.find(eNode.nodeID) ==
-                        m_nodeDragStartPositions.end())
-                    {
-                        m_nodeDragStartPositions[eNode.nodeID] =
-                            std::make_pair(eNode.posX, eNode.posY);
-                        SYSTEM_LOG << "[VSEditor] Drag start node #" << eNode.nodeID
-                                   << " at (" << eNode.posX << "," << eNode.posY << ")\n";
-                    }
-                }
-                // Always keep eNode.posX/Y current so Save() returns live positions
+                const VSEditorNode& eNode = m_editorNodes[i];
+                if (m_positionedNodes.count(eNode.nodeID) == 0)
+                    continue;
+                m_nodeDragStartPositions[eNode.nodeID] =
+                    std::make_pair(eNode.posX, eNode.posY);
+            }
+            SYSTEM_LOG << "[VSEditor] Mouse clicked: snapshot "
+                       << static_cast<size_t>(m_nodeDragStartPositions.size())
+                       << " node positions\n";
+        }
+
+        // Step 2: while mouse is held, keep eNode.posX/Y current (live Save support).
+        if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+        {
+            for (size_t i = 0; i < m_editorNodes.size(); ++i)
+            {
+                VSEditorNode& eNode = m_editorNodes[i];
+                if (m_positionedNodes.count(eNode.nodeID) == 0)
+                    continue;
+                const ImVec2 pos = ImNodes::GetNodeEditorSpacePos(eNode.nodeID);
                 eNode.posX = pos.x;
                 eNode.posY = pos.y;
             }
-            else
+        }
+
+        // Step 3: on release, push MoveNodeCommand for any node that moved > 1px.
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+        {
+            for (const auto& entry : m_nodeDragStartPositions)
             {
-                // Mouse released: commit any completed drag as an undoable command
-                auto startIt = m_nodeDragStartPositions.find(eNode.nodeID);
-                if (startIt != m_nodeDragStartPositions.end())
+                const int   nodeID = entry.first;
+                const float startX = entry.second.first;
+                const float startY = entry.second.second;
+
+                const ImVec2 finalPos = ImNodes::GetNodeEditorSpacePos(nodeID);
+
+                // Update eNode with final position
+                for (size_t i = 0; i < m_editorNodes.size(); ++i)
                 {
-                    const float startX = startIt->second.first;
-                    const float startY = startIt->second.second;
-                    if (std::abs(pos.x - startX) > 0.5f ||
-                        std::abs(pos.y - startY) > 0.5f)
+                    if (m_editorNodes[i].nodeID == nodeID)
                     {
-                        m_undoStack.PushCommand(
-                            std::unique_ptr<ICommand>(
-                                new MoveNodeCommand(eNode.nodeID,
-                                                    startX, startY,
-                                                    pos.x,  pos.y)),
-                            m_template);
-                        SYSTEM_LOG << "[VSEditor] MoveNodeCommand pushed node #" << eNode.nodeID
-                                   << " (" << startX << "," << startY
-                                   << ") -> (" << pos.x << "," << pos.y
-                                   << ") [UNDOABLE]\n";
-                        m_dirty = true;
+                        m_editorNodes[i].posX = finalPos.x;
+                        m_editorNodes[i].posY = finalPos.y;
+                        break;
                     }
-                    else
-                    {
-                        SYSTEM_LOG << "[VSEditor] Node #" << eNode.nodeID
-                                   << " drag cancelled (moved < 0.5px)\n";
-                    }
-                    m_nodeDragStartPositions.erase(startIt);
                 }
-                eNode.posX = pos.x;
-                eNode.posY = pos.y;
+
+                if (std::abs(finalPos.x - startX) > 1.0f ||
+                    std::abs(finalPos.y - startY) > 1.0f)
+                {
+                    m_undoStack.PushCommand(
+                        std::unique_ptr<ICommand>(
+                            new MoveNodeCommand(nodeID,
+                                                startX,    startY,
+                                                finalPos.x, finalPos.y)),
+                        m_template);
+                    SYSTEM_LOG << "[VSEditor] MoveNodeCommand pushed node #" << nodeID
+                               << " (" << startX << "," << startY
+                               << ") -> (" << finalPos.x << "," << finalPos.y
+                               << ") [UNDOABLE]\n";
+                    m_dirty = true;
+                }
+                else
+                {
+                    SYSTEM_LOG << "[VSEditor] Node #" << nodeID
+                               << " not moved (delta < 1px), skipping\n";
+                }
             }
+            m_nodeDragStartPositions.clear();
         }
         } // end !m_justPerformedUndoRedo
     }
