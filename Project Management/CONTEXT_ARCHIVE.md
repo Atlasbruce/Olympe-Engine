@@ -66,3 +66,22 @@
 ## 🧪 Expérimentations Abandonnées
 
 - Aucune expérimentation abandonnée à ce jour.
+
+### Phase 18 — Fix LoadTemplate + Commentaires
+- **Objectif :** Nettoyer `LoadTemplate()` — supprimer le bloc de pre-population de `m_nodeDragStartPositions`
+- **Implementation :** Suppression du bloc "FIX 2" dans `LoadTemplate()`, ajout de commentaires explicatifs
+- **Fichiers concernes :** `VisualScriptEditorPanel.cpp`
+- **Archive le :** 2026-03-13
+- **Raison :** Termine — PR #373 mergee
+
+### Phase 19 — Fix Drag Detection (Snapshot-at-Click)
+- **Objectif :** Corriger la detection du drag de nodes pour que `MoveNodeCommand` soit pousse sur l'undo stack
+- **Root cause :** Guard `posChanged` toujours false car `eNode.posX/Y` mis a jour chaque frame pendant `mouseDown`
+- **Implementation :**
+  - `IsMouseClicked(Left)` : snapshot de toutes les positions dans `m_nodeDragStartPositions`
+  - `IsMouseDown(Left)` : mise a jour live de `eNode.posX/Y` pour Save()
+  - `IsMouseReleased(Left)` : creation de `MoveNodeCommand` si delta > 1px, clear du snapshot
+  - Logs `[VSEditor] Drag start node #N` et `[VSEditor] MoveNodeCommand pushed` operationnels
+- **Fichiers concernes :** `VisualScriptEditorPanel.cpp`
+- **Archive le :** 2026-03-13
+- **Raison :** Termine — PR #374 mergee. Undo/redo 100% fonctionnel.

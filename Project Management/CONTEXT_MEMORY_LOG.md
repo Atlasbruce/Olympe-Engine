@@ -54,3 +54,36 @@
 **Changements :**
 - Suppression du contexte obsolète Phase 12 (déjà résolu)
 - Ajout contexte Phase 18 avec root cause et fix identifié
+
+---
+
+## 2026-03-13 — IMPLEMENTATION Phase 19 (PR #374 mergee)
+
+**Demande par :** @Atlasbruce
+**Action :** Fix drag detection dans `RenderCanvas()` — approche snapshot-at-click
+**Root cause resolue :** `eNode.posX/Y` mis a jour chaque frame pendant `mouseDown` rendait `posChanged` toujours false
+**Fix :** Snapshot de toutes les positions a `IsMouseClicked`, commit de `MoveNodeCommand` a `IsMouseReleased`
+**Resultat :** Undo/redo 100% fonctionnel pour toutes les operations du Blueprint Editor
+
+---
+
+## 2026-03-13 — ARCHIVAGE Phases 18-19
+
+**Elements archives :** Phase 18 (LoadTemplate cleanup) et Phase 19 (drag detection fix)
+**Raison :** Terminees — PRs #373 et #374 mergees
+**Destination :** `Project Management/CONTEXT_ARCHIVE.md`
+
+---
+
+## 2026-03-13 — NETTOYAGE BASE DOCUMENTAIRE
+
+**Action :** Deplacement des fichiers .md deprecies vers `docs/archive/`
+**Fichiers deplaces :**
+- `Documentation/ATS_VS_Phase2_RuntimeNotes.md`
+- `Documentation/ATS_VS_Phase4_Complete.md`
+- `Documentation/ATS_VS_Phase5_VisualEditor.md`
+- `Documentation/ATS_Refactoring_Master_Plan.md`
+- `Documentation/CONCEPTION-ATS-VISUAL-SCRIPTING-v2.md`
+- `Documentation/Olympe_ATS_Editor_Spec.md`
+- `Documentation/PHASE14_UNDO_REDO_FIXES.md`
+**Raison :** Contenu obsolete — phases anterieures completees

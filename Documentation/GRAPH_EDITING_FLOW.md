@@ -1,7 +1,7 @@
 # Blueprint Graph Editing Flow
 
-**Phase 15 — Complete Undo/Redo + Context Menus**
-*Last updated: 2026-03-13*
+**Phase 19 — Drag Detection Fix (Snapshot-at-Click)**
+*Last updated: 2026-03-13 (Phase 19)*
 
 ---
 
@@ -28,10 +28,11 @@
      - Creates `VSEditorNode` in `m_editorNodes`
    - `ImNodes::SetNodeEditorSpacePos()` sets visual position
 
-4. User moves node (drag with mouse):
-   - `RenderCanvas()` tracks `ImNodes::GetNodeEditorSpacePos()` changes
-   - First frame of drag: `m_nodeDragStartPositions[nodeID] = (oldX, oldY)`
-   - On mouse release: pushes `MoveNodeCommand` onto `m_undoStack`
+4. User moves node (drag with mouse) — Phase 19 snapshot-at-click approach:
+   - At `IsMouseClicked(Left)`: snapshot of ALL node positions into `m_nodeDragStartPositions`
+   - During `IsMouseDown(Left)`: live update of `eNode.posX/Y` from ImNodes (supports live Save)
+   - At `IsMouseReleased(Left)`: for each snapshot entry, push `MoveNodeCommand` if delta > 1px; clear snapshot
+   - Guard `m_justPerformedUndoRedo` protects the whole block against false triggers after undo/redo
 
 5. User creates link (drag pin to pin):
    - ImNodes fires `ImNodes::IsLinkCreated(&srcAttr, &dstAttr)`
