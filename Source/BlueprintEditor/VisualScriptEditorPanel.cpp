@@ -853,6 +853,48 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
 // Rendering
 // ============================================================================
 
+// ============================================================================
+// Undo/Redo wrappers
+// ============================================================================
+
+void VisualScriptEditorPanel::PerformUndo()
+{
+    if (!m_undoStack.CanUndo())
+        return;
+
+    std::string desc = m_undoStack.PeekUndoDescription();
+    SYSTEM_LOG << "[VSEditor] UNDO: " << desc << "\n";
+    m_undoStack.Undo(m_template);
+    SyncEditorNodesFromTemplate();
+    RebuildLinks();
+    // Prevent SyncNodePositionsFromImNodes() from overwriting the correct
+    // positions set by SyncEditorNodesFromTemplate() before ImNodes has
+    // rendered the new positions even once.
+    m_skipPositionSyncNextFrame = true;
+    m_dirty = true;
+    SYSTEM_LOG << "[VSEditor] Undo complete. Template now has "
+               << m_template.Nodes.size() << " nodes, "
+               << m_template.ExecConnections.size() << " exec connections\n";
+}
+
+void VisualScriptEditorPanel::PerformRedo()
+{
+    if (!m_undoStack.CanRedo())
+        return;
+
+    std::string desc = m_undoStack.PeekRedoDescription();
+    SYSTEM_LOG << "[VSEditor] REDO: " << desc << "\n";
+    m_undoStack.Redo(m_template);
+    SyncEditorNodesFromTemplate();
+    RebuildLinks();
+    // Same as PerformUndo — skip position sync on the next frame.
+    m_skipPositionSyncNextFrame = true;
+    m_dirty = true;
+    SYSTEM_LOG << "[VSEditor] Redo complete. Template now has "
+               << m_template.Nodes.size() << " nodes, "
+               << m_template.ExecConnections.size() << " exec connections\n";
+}
+
 void VisualScriptEditorPanel::Render()
 {
     if (!m_visible)
@@ -944,36 +986,14 @@ void VisualScriptEditorPanel::RenderToolbar()
         if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z) &&
             m_undoStack.CanUndo())
         {
-            std::string desc = m_undoStack.PeekUndoDescription();
-            SYSTEM_LOG << "[VSEditor] UNDO: " << desc << "\n";
-            m_undoStack.Undo(m_template);
-            SyncEditorNodesFromTemplate();
-            RebuildLinks();
-            // FIX 4: Prevent SyncNodePositionsFromImNodes() from overwriting the
-            // correct positions set by SyncEditorNodesFromTemplate() before ImNodes
-            // has rendered the new positions even once.
-            m_skipPositionSyncNextFrame = true;
-            m_dirty = true;
-            SYSTEM_LOG << "[VSEditor] Undo complete. Template now has "
-                       << m_template.Nodes.size() << " nodes, "
-                       << m_template.ExecConnections.size() << " exec connections\n";
+            PerformUndo();
         }
 
         // Redo (Ctrl+Y)
         if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y) &&
             m_undoStack.CanRedo())
         {
-            std::string desc = m_undoStack.PeekRedoDescription();
-            SYSTEM_LOG << "[VSEditor] REDO: " << desc << "\n";
-            m_undoStack.Redo(m_template);
-            SyncEditorNodesFromTemplate();
-            RebuildLinks();
-            // FIX 4: Same as Undo — skip position sync on the next frame.
-            m_skipPositionSyncNextFrame = true;
-            m_dirty = true;
-            SYSTEM_LOG << "[VSEditor] Redo complete. Template now has "
-                       << m_template.Nodes.size() << " nodes, "
-                       << m_template.ExecConnections.size() << " exec connections\n";
+            PerformRedo();
         }
     }
 
