@@ -87,3 +87,19 @@
 - `Documentation/Olympe_ATS_Editor_Spec.md`
 - `Documentation/PHASE14_UNDO_REDO_FIXES.md`
 **Raison :** Contenu obsolete — phases anterieures completees
+
+---
+
+## 2026-03-13 — IMPLEMENTATION Phase 20-B (PR ouverte)
+
+**Demande par :** @Atlasbruce
+**Action :** Ajout validation temps reel des connexions exec dans `RenderCanvas()`
+**Architecture :** Classe stateless `VSConnectionValidator` extractee pour testabilite sans ImNodes/ImGui
+**3 checks implantes :**
+  - Check A : self-loop (srcNodeID == dstNodeID)
+  - Check B : duplicate output pin (source pin deja connectee)
+  - Check C : cycle detection via DFS iteratif sur adjacency list
+**Fichiers crees :** `VSConnectionValidator.h/.cpp`, `Tests/BlueprintEditor/Phase20Test.cpp`
+**Fichiers modifies :** `VisualScriptEditorPanel.h` (include), `VisualScriptEditorPanel.cpp` (guard ConnectExec), `CMakeLists.txt` (OlympePhase20Tests)
+**Tests :** 4/4 passes (self-loop, duplicate, cycle, valid)
+**Conformite :** C++14 strict, SYSTEM_LOG, namespace Olympe, pas d'emoji dans les logs

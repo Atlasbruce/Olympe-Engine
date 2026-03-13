@@ -24,6 +24,7 @@
 #include "../TaskSystem/LocalBlackboard.h"
 #include "VisualScriptNodeRenderer.h"
 #include "UndoRedoStack.h"
+#include "VSConnectionValidator.h"
 
 // Forward-declare ImNodes context type (defined in imnodes.h) in the global
 // namespace so it can be referenced from within the Olympe namespace below.
