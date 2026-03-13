@@ -495,6 +495,22 @@ if(BUILD_TESTS)
     add_test(NAME OlympePhase15Tests COMMAND OlympePhase15Tests)
 
     # -----------------------------------------------------------------------
+    # OlympePhase20Tests  (Phase 20-B — Real-Time Connection Validation)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase20Tests
+        Tests/BlueprintEditor/Phase20Test.cpp
+        Source/BlueprintEditor/VSConnectionValidator.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/NodeGraphCore/GlobalBlackboard.cpp
+        Tests/TestStubs.cpp
+    )
+    target_include_directories(OlympePhase20Tests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase20Tests COMMAND OlympePhase20Tests)
+
+    # -----------------------------------------------------------------------
     # OlympeATSReferenceV4Tests  (Integration — reference_complete_v4.ats)
     # -----------------------------------------------------------------------
     add_executable(OlympeATSReferenceV4Tests

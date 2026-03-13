@@ -1531,11 +1531,13 @@ void VisualScriptEditorPanel::RenderCanvas()
                         srcPinName = outPins[srcPinIndex];
                 }
 
-                ConnectExec(srcNodeID, srcPinName, dstNodeID, "In");
-                std::cout << "[VisualScriptEditorPanel] Created exec link: node"
-                          << srcNodeID << "." << srcPinName
-                          << " -> node" << dstNodeID << ".In\n";
-                m_dirty = true;
+                if (VSConnectionValidator::IsExecConnectionValid(m_template, srcNodeID, srcPinName, dstNodeID))
+                {
+                    ConnectExec(srcNodeID, srcPinName, dstNodeID, "In");
+                    SYSTEM_LOG << "[VSEditor] Created exec link: node #" << srcNodeID
+                               << "." << srcPinName << " -> node #" << dstNodeID << ".In\n";
+                    m_dirty = true;
+                }
             }
             else if (isDataLink)
             {
