@@ -38,6 +38,8 @@ using Olympe::AddNodeCommand;
 using Olympe::DeleteNodeCommand;
 using Olympe::MoveNodeCommand;
 using Olympe::AddConnectionCommand;
+using Olympe::EditNodePropertyCommand;
+using Olympe::PropertyValue;
 using Olympe::NODE_INDEX_NONE;
 using Olympe::ParameterBindingType;
 using Olympe::TaskValue;
@@ -373,6 +375,105 @@ static void Test10_StackOverflow_OldestEntryDropped()
 }
 
 // ---------------------------------------------------------------------------
+// Test 11: EditNodePropertyCommand — NodeName string field
+// ---------------------------------------------------------------------------
+
+static void Test11_EditNodeProperty_NodeName()
+{
+    int prevFail = s_failCount;
+
+    UndoRedoStack stack;
+    TaskGraphTemplate graph;
+    TaskNodeDefinition def = MakeNode(1, "OldName");
+    graph.Nodes.push_back(def);
+    graph.BuildLookupCache();
+
+    auto cmd = std::unique_ptr<Olympe::ICommand>(
+        new EditNodePropertyCommand(1, "NodeName",
+            PropertyValue::FromString("OldName"),
+            PropertyValue::FromString("NewName")));
+    stack.PushCommand(std::move(cmd), graph);
+
+    const Olympe::TaskNodeDefinition* n = graph.GetNode(1);
+    TEST_ASSERT(n != nullptr, "Node 1 should exist");
+    if (n)
+        TEST_ASSERT(n->NodeName == "NewName", "After Execute: NodeName should be 'NewName'");
+
+    stack.Undo(graph);
+    n = graph.GetNode(1);
+    TEST_ASSERT(n != nullptr, "Node 1 should still exist after undo");
+    if (n)
+        TEST_ASSERT(n->NodeName == "OldName", "After Undo: NodeName should be 'OldName'");
+
+    stack.Redo(graph);
+    n = graph.GetNode(1);
+    TEST_ASSERT(n != nullptr, "Node 1 should still exist after redo");
+    if (n)
+        TEST_ASSERT(n->NodeName == "NewName", "After Redo: NodeName should be 'NewName'");
+
+    ReportTest("Test11_EditNodeProperty_NodeName", s_failCount == prevFail);
+}
+
+// ---------------------------------------------------------------------------
+// Test 12: EditNodePropertyCommand — DelaySeconds float field
+// ---------------------------------------------------------------------------
+
+static void Test12_EditNodeProperty_DelaySeconds()
+{
+    int prevFail = s_failCount;
+
+    UndoRedoStack stack;
+    TaskGraphTemplate graph;
+    TaskNodeDefinition def = MakeNode(2, "DelayNode", TaskNodeType::Delay);
+    def.DelaySeconds = 1.0f;
+    graph.Nodes.push_back(def);
+    graph.BuildLookupCache();
+
+    auto cmd = std::unique_ptr<Olympe::ICommand>(
+        new EditNodePropertyCommand(2, "DelaySeconds",
+            PropertyValue::FromFloat(1.0f),
+            PropertyValue::FromFloat(3.5f)));
+    stack.PushCommand(std::move(cmd), graph);
+
+    const Olympe::TaskNodeDefinition* n = graph.GetNode(2);
+    TEST_ASSERT(n != nullptr, "Node 2 should exist");
+    if (n)
+        TEST_ASSERT(n->DelaySeconds > 3.49f && n->DelaySeconds < 3.51f,
+                    "After Execute: DelaySeconds should be ~3.5");
+
+    stack.Undo(graph);
+    n = graph.GetNode(2);
+    TEST_ASSERT(n != nullptr, "Node 2 should still exist after undo");
+    if (n)
+        TEST_ASSERT(n->DelaySeconds > 0.99f && n->DelaySeconds < 1.01f,
+                    "After Undo: DelaySeconds should be ~1.0");
+
+    ReportTest("Test12_EditNodeProperty_DelaySeconds", s_failCount == prevFail);
+}
+
+// ---------------------------------------------------------------------------
+// Test 13: EditNodePropertyCommand — GetDescription returns expected string
+// ---------------------------------------------------------------------------
+
+static void Test13_EditNodeProperty_GetDescription()
+{
+    int prevFail = s_failCount;
+
+    EditNodePropertyCommand cmd(42, "NodeName",
+        PropertyValue::FromString("A"),
+        PropertyValue::FromString("B"));
+
+    std::string desc = cmd.GetDescription();
+    TEST_ASSERT(!desc.empty(), "GetDescription should return non-empty string");
+    TEST_ASSERT(desc.find("42") != std::string::npos,
+                "GetDescription should contain node ID");
+    TEST_ASSERT(desc.find("NodeName") != std::string::npos,
+                "GetDescription should contain property key");
+
+    ReportTest("Test13_EditNodeProperty_GetDescription", s_failCount == prevFail);
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -392,6 +493,9 @@ int main()
     Test8_UndoAddConnection_ConnectionRemoved();
     Test9_PushMove_PositionUpdated();
     Test10_StackOverflow_OldestEntryDropped();
+    Test11_EditNodeProperty_NodeName();
+    Test12_EditNodeProperty_DelaySeconds();
+    Test13_EditNodeProperty_GetDescription();
 
     std::cout << "=============================" << std::endl;
     std::cout << "Results: " << s_passCount << " passed, "
