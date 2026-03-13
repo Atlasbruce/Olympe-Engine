@@ -185,6 +185,22 @@ public:
 private:
 
     // -----------------------------------------------------------------------
+    // Undo/Redo wrappers
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Undoes the last command and syncs the canvas (nodes + links).
+     * Calls SyncEditorNodesFromTemplate() + RebuildLinks() so that ghost
+     * links are eliminated and node positions are restored correctly.
+     */
+    void PerformUndo();
+
+    /**
+     * @brief Re-applies the last undone command and syncs the canvas.
+     */
+    void PerformRedo();
+
+    // -----------------------------------------------------------------------
     // Rendering sub-sections
     // -----------------------------------------------------------------------
 
