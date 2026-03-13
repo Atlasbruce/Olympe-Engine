@@ -119,6 +119,10 @@ struct TaskNodeDefinition {
     float                          DelaySeconds = 0.0f; ///< For Delay: duration in seconds
     std::string                    MathOperator;   ///< For MathOp: "+", "-", "*", "/"
 
+    /// For VSSequence: dynamically-added exec-out pins beyond the default "Out".
+    /// Each entry is a pin name (e.g. "Out_1", "Out_2"...).
+    std::vector<std::string> DynamicExecOutputPins;
+
     // SubGraph-specific (Phase 3)
     std::unordered_map<std::string, ParameterBinding> InputParams;  ///< Input parameter bindings
     std::unordered_map<std::string, std::string>      OutputParams; ///< Output param → BB key mapping

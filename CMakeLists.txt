@@ -495,11 +495,12 @@ if(BUILD_TESTS)
     add_test(NAME OlympePhase15Tests COMMAND OlympePhase15Tests)
 
     # -----------------------------------------------------------------------
-    # OlympePhase20Tests  (Phase 20-B — Real-Time Connection Validation)
+    # OlympePhase20Tests  (Phase 20-B — Real-Time Connection Validation + Phase 20-C — Dynamic Pins)
     # -----------------------------------------------------------------------
     add_executable(OlympePhase20Tests
         Tests/BlueprintEditor/Phase20Test.cpp
         Source/BlueprintEditor/VSConnectionValidator.cpp
+        Source/BlueprintEditor/UndoRedoStack.cpp
         Source/TaskSystem/TaskGraphTypes.cpp
         Source/TaskSystem/TaskGraphTemplate.cpp
         Source/TaskSystem/LocalBlackboard.cpp

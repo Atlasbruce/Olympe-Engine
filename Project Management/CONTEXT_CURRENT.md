@@ -2,14 +2,14 @@
 
 **Date**: 2026-03-13
 **User**: @Atlasbruce
-**Status**: Phase 20-B — Undo/Redo Properties Panel (complete)
+**Status**: Phase 20-C — Affichage inline des paramètres nodes + Add[+] VSSequence (complete)
 
 ---
 
 ## Developpement en Cours
 
-- **Fonctionnalite actuelle :** Blueprint Editor stable — toutes les operations undo/redo fonctionnelles y compris le panel Properties
-- **Objectif immediat :** Phase 20-B terminee — EditNodePropertyCommand + pattern commit-on-release implemente
+- **Fonctionnalite actuelle :** Blueprint Editor — paramètres affichés inline dans les nœuds canvas
+- **Objectif immediat :** Phase 20-C terminee — inline display + dynamic pins VSSequence implementes
 - **Blocages connus :** Aucun
 
 ---
@@ -17,39 +17,42 @@
 ## Composants Actifs
 
 - **Modules touches :** BlueprintEditor
-- **Fichiers modifies (Phase 20-B) :**
-  - `Source/BlueprintEditor/UndoRedoStack.h` — MODIFIE : ajout PropertyValue + EditNodePropertyCommand
-  - `Source/BlueprintEditor/UndoRedoStack.cpp` — MODIFIE : implementation EditNodePropertyCommand
-  - `Source/BlueprintEditor/VisualScriptEditorPanel.h` — MODIFIE : ajout membres snapshot m_prop*
-  - `Source/BlueprintEditor/VisualScriptEditorPanel.cpp` — MODIFIE : RenderProperties() avec undo commit-on-release
-- **Dependencies :** `TaskGraphTemplate.h` (TaskNodeDefinition) — stable
+- **Fichiers modifies (Phase 20-C) :**
+  - `Source/TaskSystem/TaskGraphTemplate.h` — ajout `DynamicExecOutputPins` dans `TaskNodeDefinition`
+  - `Source/BlueprintEditor/VisualScriptNodeRenderer.h` — nouvelle surcharge `RenderNode` avec `TaskNodeDefinition` + callback `onAddPin`
+  - `Source/BlueprintEditor/VisualScriptNodeRenderer.cpp` — implem inline display + bouton [+] VSSequence
+  - `Source/BlueprintEditor/UndoRedoStack.h` — ajout `AddDynamicPinCommand`
+  - `Source/BlueprintEditor/UndoRedoStack.cpp` — implem `AddDynamicPinCommand`
+  - `Source/BlueprintEditor/VisualScriptEditorPanel.h` — ajout `m_pendingAddPin`, `m_pendingAddPinNodeID`, `GetExecOutputPinsForNode()`
+  - `Source/BlueprintEditor/VisualScriptEditorPanel.cpp` — RenderCanvas two-phase add pin, RebuildLinks dynamicPins, SerializeAndWrite dynamicExecPins
+  - `Source/TaskSystem/TaskGraphLoader.cpp` — chargement `dynamicExecPins`
+  - `Tests/BlueprintEditor/Phase20Test.cpp` — Test_AddDynamicPin_UndoRedo
+- **Dependencies :** `TaskGraphTemplate.h`, `UndoRedoStack.h`, `VisualScriptNodeRenderer.h` — stables
 
 ---
 
 ## Decisions Recentes
 
-- **2026-03-13 (Phase 20-B)** : Implementation de l'undo/redo du panel Properties.
-  - `PropertyValue` : struct generique (String/Float/Int) C++14 — pas de std::variant
-  - `EditNodePropertyCommand` : commande generique couvrant NodeName, AtomicTaskID, DelaySeconds, ConditionID, BBKey, MathOperator, SubGraphPath
-  - Pattern "commit on release" via `IsItemDeactivatedAfterEdit()` — 1 undo entry par edit, pas par keystroke
-  - Snapshot capture via `IsItemActivated()` apres chaque widget
-  - Reset automatique du snapshot quand le noeud selectionne change (m_propSnapshotNodeID)
-  - Architecture extensible pour futurs dropdowns (Combo retourne true immediatement, pas besoin de commit-on-release)
+- **2026-03-13 (Phase 20-C)** : Inline node parameter display + VSSequence dynamic pins.
+  - Nouvelle surcharge `RenderNode(…, const TaskNodeDefinition& def, …, onAddPin callback)`
+  - Champs affichés inline : AtomicTaskID, DelaySeconds, BBKey, ConditionID, SubGraphPath (basename), MathOperator
+  - `AddDynamicPinCommand` : Execute push / Undo pop sur `DynamicExecOutputPins`
+  - Pattern two-phase pour le callback [+] (comme drag-drop node creation)
+  - `DynamicExecOutputPins` sérialisé dans JSON sous clé `dynamicExecPins`
 
 ---
 
 ## Notes Techniques Importantes
 
-- **C++14 strict** : PropertyValue utilise un enum class + membres explicites, pas std::variant
-- **IsItemActivated/IsItemDeactivatedAfterEdit** : appeles APRES le widget ImGui correspondant
-- **Snapshot double** : le snapshot est pris une fois avant ET apres le widget pour garantir la capture au focus meme si le widget est rendu pour la premiere fois
-- **SYSTEM_LOG** : tous les logs d'undo utilisent SYSTEM_LOG
+- **C++14 strict** : pas de structured bindings, std::optional, std::string_view.
+- **Callback C** : `void (*onAddPin)(int, void*)` — pas de `std::function` pour C++14 compatibility
+- **SYSTEM_LOG** : tous les logs utilisent SYSTEM_LOG.
+- **Two-phase** : le callback [+] stocke la requête, traitée après EndNodeEditor()
 
 ---
 
 ## Prochaines Etapes
 
-1. Phase 20-C : Refonte affichage nodes — parametres inline + bouton Add[+] pour Sequence
-2. Phase 20-D : Templates BT preconfigures (Empty, Patrol, Combat...)
+1. Phase 21 : Templates BT préconfigurés (Empty, Patrol, Combat...)
 
 ---

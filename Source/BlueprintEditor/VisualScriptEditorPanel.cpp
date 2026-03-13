@@ -136,6 +136,18 @@ std::vector<std::string> VisualScriptEditorPanel::GetExecOutputPins(TaskNodeType
     }
 }
 
+std::vector<std::string> VisualScriptEditorPanel::GetExecOutputPinsForNode(
+    const TaskNodeDefinition& def) const
+{
+    std::vector<std::string> pins = GetExecOutputPins(def.Type);
+    if (def.Type == TaskNodeType::VSSequence)
+    {
+        for (size_t i = 0; i < def.DynamicExecOutputPins.size(); ++i)
+            pins.push_back(def.DynamicExecOutputPins[i]);
+    }
+    return pins;
+}
+
 std::vector<std::string> VisualScriptEditorPanel::GetDataInputPins(TaskNodeType type)
 {
     switch (type)
@@ -328,7 +340,14 @@ void VisualScriptEditorPanel::RebuildLinks()
         std::vector<std::string> outPins;
         const TaskNodeDefinition* srcNode = m_template.GetNode(conn.SourceNodeID);
         if (srcNode != nullptr)
+        {
             outPins = GetExecOutputPins(srcNode->Type);
+            if (srcNode->Type == TaskNodeType::VSSequence)
+            {
+                for (size_t d = 0; d < srcNode->DynamicExecOutputPins.size(); ++d)
+                    outPins.push_back(srcNode->DynamicExecOutputPins[d]);
+            }
+        }
 
         int pinIdx = 0;
         for (size_t p = 0; p < outPins.size(); ++p)
@@ -586,6 +605,11 @@ void VisualScriptEditorPanel::RemoveLink(int linkID)
         if (srcNode)
         {
             auto pins = GetExecOutputPins(srcNode->Type);
+            if (srcNode->Type == TaskNodeType::VSSequence)
+            {
+                for (size_t d = 0; d < srcNode->DynamicExecOutputPins.size(); ++d)
+                    pins.push_back(srcNode->DynamicExecOutputPins[d]);
+            }
             if (srcPinIdx >= 0 && srcPinIdx < static_cast<int>(pins.size()))
                 srcPinName = pins[static_cast<size_t>(srcPinIdx)];
         }
@@ -788,6 +812,15 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
             n["conditionKey"] = def.ConditionID;
         if (!def.MathOperator.empty())
             n["mathOp"] = def.MathOperator;
+
+        // Dynamic exec-out pins (VSSequence)
+        if (def.Type == TaskNodeType::VSSequence && !def.DynamicExecOutputPins.empty())
+        {
+            json dynPins = json::array();
+            for (size_t p = 0; p < def.DynamicExecOutputPins.size(); ++p)
+                dynPins.push_back(def.DynamicExecOutputPins[p]);
+            n["dynamicExecPins"] = dynPins;
+        }
 
         // Position from editor node
         for (size_t j = 0; j < m_editorNodes.size(); ++j)
@@ -1189,7 +1222,7 @@ void VisualScriptEditorPanel::RenderCanvas()
                          DebugController::Get().IsDebugging());
 
         auto execIn  = GetExecInputPins(eNode.def.Type);
-        auto execOut = GetExecOutputPins(eNode.def.Type);
+        auto execOut = GetExecOutputPinsForNode(eNode.def);
 
         std::vector<std::pair<std::string, VariableType>> dataIn, dataOut;
         for (size_t p = 0; p < eNode.def.DataPins.size(); ++p)
@@ -1205,12 +1238,18 @@ void VisualScriptEditorPanel::RenderCanvas()
             eNode.nodeID,
             eNode.nodeID,
             0 /* graphID placeholder */,
-            eNode.def.NodeName,
-            eNode.def.Type,
+            eNode.def,
             hasBreakpoint,
             isActive,
             execIn, execOut,
-            dataIn, dataOut);
+            dataIn, dataOut,
+            [](int nid, void* ud) {
+                VisualScriptEditorPanel* panel =
+                    static_cast<VisualScriptEditorPanel*>(ud);
+                panel->m_pendingAddPin       = true;
+                panel->m_pendingAddPinNodeID = nid;
+            },
+            this);
 
         // Breakpoint / active overlays
         if (hasBreakpoint)
@@ -1350,6 +1389,48 @@ void VisualScriptEditorPanel::RenderCanvas()
                   << " type=" << static_cast<int>(m_pendingNodeType)
                   << " at (" << m_pendingNodeX << ", " << m_pendingNodeY << ")"
                   << std::endl;
+    }
+
+    // ========================================================================
+    // PHASE 2: Process pending dynamic pin addition (outside editor scope).
+    // The [+] button callback on VSSequence stores the request here; we
+    // process it after EndNodeEditor so that AddDynamicPinCommand can safely
+    // modify the template and trigger RebuildLinks().
+    // ========================================================================
+    if (m_pendingAddPin)
+    {
+        m_pendingAddPin = false;
+
+        VSEditorNode* eNode = nullptr;
+        for (size_t i = 0; i < m_editorNodes.size(); ++i)
+        {
+            if (m_editorNodes[i].nodeID == m_pendingAddPinNodeID)
+            {
+                eNode = &m_editorNodes[i];
+                break;
+            }
+        }
+        if (eNode != nullptr && eNode->def.Type == TaskNodeType::VSSequence)
+        {
+            // Compute pin number: existing dynamic pins are Out_1..Out_N,
+            // new one is Out_(N+1). This preserves "Out" as the default (index 0).
+            int pinIdx = static_cast<int>(eNode->def.DynamicExecOutputPins.size()) + 1;
+            std::string pinName = "Out_" + std::to_string(pinIdx);
+
+            // Update editor-side def immediately
+            eNode->def.DynamicExecOutputPins.push_back(pinName);
+
+            // Push undo command (also updates template)
+            m_undoStack.PushCommand(
+                std::unique_ptr<ICommand>(
+                    new AddDynamicPinCommand(m_pendingAddPinNodeID, pinName)),
+                m_template);
+
+            RebuildLinks();
+            m_dirty = true;
+            SYSTEM_LOG << "[VSEditor] AddDynamicPin: node #" << m_pendingAddPinNodeID
+                       << " added pin '" << pinName << "'\n";
+        }
     }
 
     // Track node moves for undo/redo using MoveNodeCommand.
@@ -1526,7 +1607,7 @@ void VisualScriptEditorPanel::RenderCanvas()
                                           });
                 if (srcIt != m_editorNodes.end())
                 {
-                    auto outPins = GetExecOutputPins(srcIt->def.Type);
+                    auto outPins = GetExecOutputPinsForNode(srcIt->def);
                     if (srcPinIndex < static_cast<int>(outPins.size()))
                         srcPinName = outPins[srcPinIndex];
                 }

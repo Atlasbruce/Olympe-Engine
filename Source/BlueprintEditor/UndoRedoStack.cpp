@@ -385,6 +385,49 @@ std::string EditNodePropertyCommand::GetDescription() const
 }
 
 // ============================================================================
+// AddDynamicPinCommand
+// ============================================================================
+
+AddDynamicPinCommand::AddDynamicPinCommand(int32_t nodeID, const std::string& pinName)
+    : m_nodeID(nodeID)
+    , m_pinName(pinName)
+{
+}
+
+void AddDynamicPinCommand::Execute(TaskGraphTemplate& graph)
+{
+    for (size_t i = 0; i < graph.Nodes.size(); ++i)
+    {
+        if (graph.Nodes[i].NodeID == m_nodeID)
+        {
+            graph.Nodes[i].DynamicExecOutputPins.push_back(m_pinName);
+            break;
+        }
+    }
+    graph.BuildLookupCache();
+}
+
+void AddDynamicPinCommand::Undo(TaskGraphTemplate& graph)
+{
+    for (size_t i = 0; i < graph.Nodes.size(); ++i)
+    {
+        if (graph.Nodes[i].NodeID == m_nodeID)
+        {
+            std::vector<std::string>& pins = graph.Nodes[i].DynamicExecOutputPins;
+            if (!pins.empty() && pins.back() == m_pinName)
+                pins.pop_back();
+            break;
+        }
+    }
+    graph.BuildLookupCache();
+}
+
+std::string AddDynamicPinCommand::GetDescription() const
+{
+    return "Add Pin " + m_pinName + " to node #" + std::to_string(m_nodeID);
+}
+
+// ============================================================================
 // UndoRedoStack
 // ============================================================================
 

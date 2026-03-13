@@ -14,7 +14,10 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <utility>
 #include "../TaskSystem/TaskGraphTypes.h"
+#include "../TaskSystem/TaskGraphTemplate.h"
 
 // Forward declarations (avoid pulling in heavy headers)
 struct ImVec2;
@@ -116,6 +119,40 @@ public:
         const std::vector<std::string>&               execOutputPins,
         const std::vector<std::pair<std::string, VariableType>>& dataInputPins,
         const std::vector<std::pair<std::string, VariableType>>& dataOutputPins);
+
+    /**
+     * @brief Extended RenderNode with inline parameter display and optional Add[+] callback.
+     *
+     * Displays key parameters inline in the node body (between title bar and pins).
+     * For VSSequence nodes, renders a [+] button that invokes onAddPin(nodeID, userData).
+     *
+     * @param nodeUID        Global ImNodes node UID.
+     * @param nodeID         Graph-local node ID.
+     * @param graphID        Graph ID (breakpoint lookup).
+     * @param def            Full node definition (for inline parameter display).
+     * @param hasBreakpoint  Whether a breakpoint is set on this node.
+     * @param isActive       Whether this node is executing (debug).
+     * @param execInputPins  Names of exec-in pins.
+     * @param execOutputPins Names of exec-out pins (includes dynamic ones for VSSequence).
+     * @param dataInputPins  (name, type) pairs for data-in pins.
+     * @param dataOutputPins (name, type) pairs for data-out pins.
+     * @param onAddPin       Optional callback invoked when user clicks [+] on a VSSequence.
+     *                       Receives the nodeID and onAddPinUserData. Pass nullptr to disable.
+     * @param onAddPinUserData  User data passed to onAddPin.
+     */
+    static void RenderNode(
+        int                                                      nodeUID,
+        int                                                      nodeID,
+        int                                                      graphID,
+        const TaskNodeDefinition&                                def,
+        bool                                                     hasBreakpoint,
+        bool                                                     isActive,
+        const std::vector<std::string>&                          execInputPins,
+        const std::vector<std::string>&                          execOutputPins,
+        const std::vector<std::pair<std::string, VariableType>>& dataInputPins,
+        const std::vector<std::pair<std::string, VariableType>>& dataOutputPins,
+        void (*onAddPin)(int nodeID, void* userData),
+        void* onAddPinUserData);
 
     /**
      * @brief Renders a breakpoint indicator (red circle) next to a node.

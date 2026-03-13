@@ -415,6 +415,19 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
             });
     }
 
+    // Dynamic exec-out pins (VSSequence, Phase 20-C).
+    if (nd.Type == TaskNodeType::VSSequence &&
+        nodeJson.contains("dynamicExecPins") &&
+        nodeJson["dynamicExecPins"].is_array())
+    {
+        const json& dynPins = nodeJson["dynamicExecPins"];
+        for (size_t p = 0; p < dynPins.size(); ++p)
+        {
+            if (dynPins[p].is_string())
+                nd.DynamicExecOutputPins.push_back(dynPins[p].get<std::string>());
+        }
+    }
+
     // Backward-compat children array (BT-style, may appear in migrated v3).
     if (JsonHelper::IsArray(nodeJson, "children"))
     {

@@ -230,6 +230,170 @@ void VisualScriptNodeRenderer::RenderNode(
     ImNodes::PopColorStyle(); // TitleBar
 }
 
+// ============================================================================
+// VisualScriptNodeRenderer::RenderNode — extended overload with inline params
+// ============================================================================
+
+void VisualScriptNodeRenderer::RenderNode(
+    int                                                      nodeUID,
+    int                                                      nodeID,
+    int                                                      graphID,
+    const TaskNodeDefinition&                                def,
+    bool                                                     hasBreakpoint,
+    bool                                                     isActive,
+    const std::vector<std::string>&                          execInputPins,
+    const std::vector<std::string>&                          execOutputPins,
+    const std::vector<std::pair<std::string, VariableType>>& dataInputPins,
+    const std::vector<std::pair<std::string, VariableType>>& dataOutputPins,
+    void (*onAddPin)(int nodeID, void* userData),
+    void* onAddPinUserData)
+{
+    (void)graphID;
+
+    VSNodeStyle style = GetNodeStyle(def.Type);
+
+    unsigned int titleCol        = hasBreakpoint
+                                   ? IM_COL32(200, 30, 30, 255)
+                                   : GetNodeTitleColor(style);
+    unsigned int titleHoveredCol = hasBreakpoint
+                                   ? IM_COL32(240, 50, 50, 255)
+                                   : GetNodeTitleHoveredColor(style);
+    unsigned int titleSelectedCol = IM_COL32(255, 220, 50, 255);
+
+    ImNodes::PushColorStyle(ImNodesCol_TitleBar,         titleCol);
+    ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered,  titleHoveredCol);
+    ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, titleSelectedCol);
+
+    if (isActive)
+        ImNodes::PushColorStyle(ImNodesCol_NodeOutline, IM_COL32(80, 255, 80, 255));
+
+    ImNodes::BeginNode(nodeUID);
+
+    // Title bar
+    ImNodes::BeginNodeTitleBar();
+    ImGui::TextUnformatted(def.NodeName.c_str());
+    ImNodes::EndNodeTitleBar();
+
+    // ---- Inline parameter display ----
+    switch (def.Type)
+    {
+        case TaskNodeType::AtomicTask:
+            if (!def.AtomicTaskID.empty())
+                ImGui::TextDisabled("  %s", def.AtomicTaskID.c_str());
+            break;
+
+        case TaskNodeType::Delay:
+            ImGui::TextDisabled("  %.2f s", def.DelaySeconds);
+            break;
+
+        case TaskNodeType::GetBBValue:
+        case TaskNodeType::SetBBValue:
+            if (!def.BBKey.empty())
+                ImGui::TextDisabled("  %s", def.BBKey.c_str());
+            break;
+
+        case TaskNodeType::Branch:
+        case TaskNodeType::While:
+            if (!def.ConditionID.empty())
+                ImGui::TextDisabled("  %s", def.ConditionID.c_str());
+            break;
+
+        case TaskNodeType::SubGraph:
+        {
+            if (!def.SubGraphPath.empty())
+            {
+                // Extract basename without path or extension
+                const std::string& p = def.SubGraphPath;
+                size_t slashPos = p.find_last_of("/\\");
+                std::string base = (slashPos != std::string::npos)
+                                   ? p.substr(slashPos + 1)
+                                   : p;
+                size_t dotPos = base.rfind('.');
+                if (dotPos != std::string::npos)
+                    base = base.substr(0, dotPos);
+                ImGui::TextDisabled("  %s", base.c_str());
+            }
+            break;
+        }
+
+        case TaskNodeType::MathOp:
+            if (!def.MathOperator.empty())
+                ImGui::TextDisabled("  %s", def.MathOperator.c_str());
+            break;
+
+        case TaskNodeType::VSSequence:
+        {
+            // [+] button to add a dynamic exec-out pin
+            ImGui::PushID(nodeUID);
+            if (ImGui::SmallButton("[+]"))
+            {
+                if (onAddPin)
+                    onAddPin(nodeID, onAddPinUserData);
+            }
+            ImGui::PopID();
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    // Exec input pins (left side triangles) — offset 0–99
+    for (size_t i = 0; i < execInputPins.size(); ++i)
+    {
+        int attrID = nodeUID * 10000 + static_cast<int>(i);
+        ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_Triangle);
+        ImGui::Text("%s", execInputPins[i].c_str());
+        ImNodes::EndInputAttribute();
+    }
+
+    // Data input pins (left side circles) — offset 200–299
+    for (size_t i = 0; i < dataInputPins.size(); ++i)
+    {
+        int attrID = nodeUID * 10000 + 200 + static_cast<int>(i);
+        ImNodes::PushColorStyle(ImNodesCol_Pin,
+                                GetDataPinColor(dataInputPins[i].second));
+        ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_Circle);
+        ImGui::Text("%s", dataInputPins[i].first.c_str());
+        ImNodes::EndInputAttribute();
+        ImNodes::PopColorStyle();
+    }
+
+    // Exec output pins (right side triangles) — offset 100–199
+    for (size_t i = 0; i < execOutputPins.size(); ++i)
+    {
+        int attrID = nodeUID * 10000 + 100 + static_cast<int>(i);
+        ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_TriangleFilled);
+        ImGui::Indent(60.0f);
+        ImGui::Text("%s", execOutputPins[i].c_str());
+        ImGui::Unindent(60.0f);
+        ImNodes::EndOutputAttribute();
+    }
+
+    // Data output pins (right side circles) — offset 300–399
+    for (size_t i = 0; i < dataOutputPins.size(); ++i)
+    {
+        int attrID = nodeUID * 10000 + 300 + static_cast<int>(i);
+        ImNodes::PushColorStyle(ImNodesCol_Pin,
+                                GetDataPinColor(dataOutputPins[i].second));
+        ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_CircleFilled);
+        ImGui::Indent(60.0f);
+        ImGui::Text("%s", dataOutputPins[i].first.c_str());
+        ImGui::Unindent(60.0f);
+        ImNodes::EndOutputAttribute();
+        ImNodes::PopColorStyle();
+    }
+
+    ImNodes::EndNode();
+
+    if (isActive)
+        ImNodes::PopColorStyle();
+
+    ImNodes::PopColorStyle(); // TitleBarSelected
+    ImNodes::PopColorStyle(); // TitleBarHovered
+    ImNodes::PopColorStyle(); // TitleBar
+}
+
 void VisualScriptNodeRenderer::RenderBreakpointIndicator(int nodeUID)
 {
     ImVec2 nodePos = ImNodes::GetNodeEditorSpacePos(nodeUID);

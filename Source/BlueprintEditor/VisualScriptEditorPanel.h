@@ -240,6 +240,12 @@ private:
     /** Returns the exec-out pin names for a node type. */
     static std::vector<std::string> GetExecOutputPins(TaskNodeType type);
 
+    /**
+     * @brief Returns exec-out pin names for a node definition,
+     *        including any dynamically-added pins (VSSequence).
+     */
+    std::vector<std::string> GetExecOutputPinsForNode(const TaskNodeDefinition& def) const;
+
     /** Returns the exec-in pin names for a node type. */
     static std::vector<std::string> GetExecInputPins(TaskNodeType type);
 
@@ -366,6 +372,10 @@ private:
 
     /// Undo/Redo command stack for reversible graph editing operations
     UndoRedoStack m_undoStack;
+
+    /// Pending dynamic pin addition (from [+] button clicked in canvas)
+    bool        m_pendingAddPin       = false;
+    int         m_pendingAddPinNodeID = -1;
 
     /// Per-node drag-start positions used to record a single MoveNodeCommand
     /// per drag gesture instead of one command per frame.

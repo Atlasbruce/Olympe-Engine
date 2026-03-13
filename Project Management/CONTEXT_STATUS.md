@@ -18,14 +18,15 @@
 - **Blueprint Editor — Ghost Links Fix** : `RebuildLinks()` apres undo/redo
 - **Blueprint Editor — Connection Validation** : `VSConnectionValidator` bloque self-loops, duplicate pins, cycles *(Phase 20-A)*
 - **Blueprint Editor — Properties Undo/Redo** : `EditNodePropertyCommand` + commit-on-release pour tous les champs *(Phase 20-B)*
+- **Blueprint Editor — Inline Node Display** : Paramètres clés affichés directement sur le canvas *(Phase 20-C)*
+- **Blueprint Editor — VSSequence Dynamic Pins** : Bouton [+] pour ajouter des sorties exec sur VSSequence (undoable) *(Phase 20-C)*
 - **ECS System** : Composants auto-enregistres
 - **AI System** : Behavior Tree + Debugger
 - **Animation System** : Animation Editor standalone
 
 ## Composants En Developpement
 
-- **Blueprint Editor — Phase 20-C** : Refonte affichage nodes (parametres inline + Add[+] Sequence)
-- **Blueprint Editor — Phase 20-D** : Templates BT preconfigures (Empty, Patrol, Combat...)
+- **Blueprint Editor — Phase 21** : Templates BT préconfigurés (Empty, Patrol, Combat...)
 
 ## Problemes Connus
 
@@ -36,7 +37,7 @@
 ## Progression Globale
 
 - **Architecture globale :** ~80% (core engine stable)
-- **Blueprint Editor :** ~96% (properties undo/redo complete depuis Phase 20-B)
+- **Blueprint Editor :** ~97% (inline node display + VSSequence dynamic pins depuis Phase 20-C)
 - **ECS System :** ~85% (fonctionnel, extensions possibles)
 - **AI System :** ~75% (BT + debugger, extensions pathfinding)
 
