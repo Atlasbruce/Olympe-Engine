@@ -506,6 +506,9 @@ void VisualScriptEditorPanel::SyncEditorNodesFromTemplate()
         if (def.NodeID >= m_nextNodeID)
             m_nextNodeID = def.NodeID + 1;
 
+        SYSTEM_LOG << "[VSEditor] SyncEditorNodesFromTemplate: node #" << eNode.nodeID
+                   << " restored to (" << eNode.posX << "," << eNode.posY << ")\n";
+
         m_editorNodes.push_back(eNode);
     }
 
@@ -634,16 +637,16 @@ void VisualScriptEditorPanel::LoadTemplate(const TaskGraphTemplate* tmpl,
 
     SyncCanvasFromTemplate();
 
-    // FIX 2: Pre-populate drag-start positions from the loaded node positions.
-    // Without this, the first drag after loading a file would have no "before"
-    // state in m_nodeDragStartPositions, causing MoveNodeCommand to receive
-    // (0,0) as the start position and undo to delete-and-recreate the node.
+    // Phase 18: Do NOT pre-populate m_nodeDragStartPositions here.
+    // The former "FIX 2" block pre-populated every node's drag-start position
+    // with its loaded position.  Because the guard in the drag-tracking loop is
+    // "insert only if key is absent", the pre-populated value was never
+    // overwritten.  On the first drag after load the key already existed, so no
+    // new start position was recorded — eNode.posX/Y (kept current each frame
+    // while mouseDown) serves as the correct "position before this drag" and is
+    // used when the key is absent.  Keeping m_nodeDragStartPositions empty here
+    // allows the tracking loop to record the true pre-drag position.
     m_nodeDragStartPositions.clear();
-    for (size_t i = 0; i < m_editorNodes.size(); ++i)
-    {
-        m_nodeDragStartPositions[m_editorNodes[i].nodeID] =
-            std::make_pair(m_editorNodes[i].posX, m_editorNodes[i].posY);
-    }
 }
 
 bool VisualScriptEditorPanel::Save()
@@ -1383,12 +1386,17 @@ void VisualScriptEditorPanel::RenderCanvas()
             {
                 if (posChanged)
                 {
-                    // Drag started (or continuing): record start pos once
+                    // Drag started: record start pos ONLY ONCE per drag gesture.
+                    // eNode.posX/Y holds the position from the previous frame
+                    // (before the current move delta), so it is the correct
+                    // "position before this drag".
                     if (m_nodeDragStartPositions.find(eNode.nodeID) ==
                         m_nodeDragStartPositions.end())
                     {
                         m_nodeDragStartPositions[eNode.nodeID] =
                             std::make_pair(eNode.posX, eNode.posY);
+                        SYSTEM_LOG << "[VSEditor] Drag start node #" << eNode.nodeID
+                                   << " at (" << eNode.posX << "," << eNode.posY << ")\n";
                     }
                 }
                 // Always keep eNode.posX/Y current so Save() returns live positions
@@ -1412,11 +1420,16 @@ void VisualScriptEditorPanel::RenderCanvas()
                                                     startX, startY,
                                                     pos.x,  pos.y)),
                             m_template);
-                        SYSTEM_LOG << "[VSEditor] Node #" << eNode.nodeID
-                                   << " moved: (" << startX << "," << startY
+                        SYSTEM_LOG << "[VSEditor] MoveNodeCommand pushed node #" << eNode.nodeID
+                                   << " (" << startX << "," << startY
                                    << ") -> (" << pos.x << "," << pos.y
                                    << ") [UNDOABLE]\n";
                         m_dirty = true;
+                    }
+                    else
+                    {
+                        SYSTEM_LOG << "[VSEditor] Node #" << eNode.nodeID
+                                   << " drag cancelled (moved < 0.5px)\n";
                     }
                     m_nodeDragStartPositions.erase(startIt);
                 }

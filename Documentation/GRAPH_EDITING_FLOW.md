@@ -66,7 +66,7 @@
      - Creates `VSEditorNode` for each `m_template.Nodes[]`
      - Reads `__posX/__posY` from `Parameters`
      - Creates `VSEditorLink` for exec + data connections
-   - Pre-populates `m_nodeDragStartPositions` with loaded positions (Phase 14 fix)
+   - Pre-populates `m_nodeDragStartPositions` with loaded positions (Phase 14 fix — **removed Phase 18**)
    - Sets `m_needsPositionSync = true`
 
 3. First `RenderCanvas()` after load:
@@ -241,3 +241,52 @@ current template connections, ensuring the visual state matches the data model.
 - `Source/BlueprintEditor/UndoRedoStack.h/.cpp` — Command pattern
 - `Documentation/PHASE14_UNDO_REDO_FIXES.md` — Phase 14 context
 - `Tests/BlueprintEditor/Phase15Test.cpp` — Unit tests for this phase
+
+---
+
+## 8. Phase 18 — Fix Drag Undo/Redo (2026-03-13)
+
+### Problem
+
+`LoadTemplate()` pre-populated `m_nodeDragStartPositions` with every node's loaded
+position (the "FIX 2" block from Phase 14).  Because the drag-tracking guard in
+`RenderCanvas()` only inserts a key when it is **absent**, that pre-populated value
+was never overwritten.  As a result:
+
+1. On the first drag after loading a file, the guard `find == end()` was **always
+   false** — the drag-start was never re-recorded with the correct "position before
+   this specific drag".
+2. On the first idle frame after load (nodes now in `m_positionedNodes`), the
+   `else` (mouse-up) branch found all pre-populated keys, compared positions, and
+   erased them — the pre-population provided no reliable benefit.
+3. Any scenario where the stored start position differed from the actual pre-drag
+   position (e.g., multiple loads without a prior drag, or positions that drifted
+   from stale ImNodes state) caused `MoveNodeCommand` to receive wrong coordinates.
+
+### Fix
+
+**Remove the pre-population block from `LoadTemplate()`.**
+
+`eNode.posX/Y` is kept up-to-date every frame while `mouseDown == true` (line
+`eNode.posX = pos.x`).  When the drag-start guard fires (`key absent`) for the
+first time in a drag gesture, `eNode.posX/Y` holds the position **from the
+previous frame** — i.e., the position **before** the current move delta.  This is
+exactly the correct "start of drag" value.  No pre-population is needed.
+
+### Logging Added (Phase 18)
+
+| Location | Log message |
+|----------|-------------|
+| `RenderCanvas()` drag start | `[VSEditor] Drag start node #X at (posX,posY)` |
+| `RenderCanvas()` drag commit | `[VSEditor] MoveNodeCommand pushed node #X (startX,startY) -> (endX,endY) [UNDOABLE]` |
+| `RenderCanvas()` drag cancel | `[VSEditor] Node #X drag cancelled (moved < 0.5px)` |
+| `SyncEditorNodesFromTemplate()` | `[VSEditor] SyncEditorNodesFromTemplate: node #X restored to (posX,posY)` |
+
+### Expected Log Sequence (Happy Path)
+
+```
+[VSEditor] Drag start node #3 at (100.0,100.0)
+[VSEditor] MoveNodeCommand pushed node #3 (100.0,100.0) -> (400.0,250.0) [UNDOABLE]
+[VSEditor] UNDO: Move Node #3 (100.0,100.0) -> (400.0,250.0)
+[VSEditor] SyncEditorNodesFromTemplate: node #3 restored to (100.0,100.0)
+```
