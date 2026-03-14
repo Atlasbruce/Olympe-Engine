@@ -254,9 +254,9 @@ private:
 
 /**
  * @class AddDynamicPinCommand
- * @brief Records "add dynamic exec-out pin" on a VSSequence node for undo/redo.
+ * @brief Records "add dynamic exec-out pin" on a VSSequence or VSSwitch node for undo/redo.
  *
- * Execute() adds a new pin name (e.g. "Out_2") to the node's
+ * Execute() adds a new pin name (e.g. "Out_2" or "Case_2") to the node's
  * DynamicExecOutputPins vector and rebuilds the lookup cache.
  * Undo() removes the last pin.
  */
@@ -271,6 +271,47 @@ public:
 private:
     int32_t     m_nodeID;
     std::string m_pinName;
+};
+
+// ============================================================================
+// RemoveExecPinCommand
+// ============================================================================
+
+/**
+ * @class RemoveExecPinCommand
+ * @brief Records "remove dynamic exec-out pin" on a VSSequence or VSSwitch node for undo/redo.
+ *
+ * Execute() removes the pin from DynamicExecOutputPins at the stored index,
+ * and removes any ExecConnection originating from that pin.
+ * Undo() re-inserts the pin at its original index and restores any saved
+ * connection.
+ *
+ * @details
+ * Stored data:
+ *   - m_nodeID              : owning node
+ *   - m_pinName             : pin name (e.g. "Out_1", "Case_2")
+ *   - m_pinIndex            : 0-based index within DynamicExecOutputPins
+ *   - m_linkedTargetNodeID  : target node of the outgoing link, or -1 if none
+ *   - m_linkedTargetPinName : target pin name of the outgoing link
+ */
+class RemoveExecPinCommand : public ICommand {
+public:
+    RemoveExecPinCommand(int32_t            nodeID,
+                         const std::string& pinName,
+                         int                pinIndex,
+                         int32_t            linkedTargetNodeID,
+                         const std::string& linkedTargetPinName);
+
+    void Execute(TaskGraphTemplate& graph) override;
+    void Undo(TaskGraphTemplate& graph)    override;
+    std::string GetDescription()     const override;
+
+private:
+    int32_t     m_nodeID;
+    std::string m_pinName;
+    int         m_pinIndex;
+    int32_t     m_linkedTargetNodeID;   ///< -1 if no outgoing link was present
+    std::string m_linkedTargetPinName;
 };
 
 // ============================================================================

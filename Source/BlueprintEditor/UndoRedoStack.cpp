@@ -428,6 +428,85 @@ std::string AddDynamicPinCommand::GetDescription() const
 }
 
 // ============================================================================
+// RemoveExecPinCommand
+// ============================================================================
+
+RemoveExecPinCommand::RemoveExecPinCommand(int32_t            nodeID,
+                                            const std::string& pinName,
+                                            int                pinIndex,
+                                            int32_t            linkedTargetNodeID,
+                                            const std::string& linkedTargetPinName)
+    : m_nodeID(nodeID)
+    , m_pinName(pinName)
+    , m_pinIndex(pinIndex)
+    , m_linkedTargetNodeID(linkedTargetNodeID)
+    , m_linkedTargetPinName(linkedTargetPinName)
+{
+}
+
+void RemoveExecPinCommand::Execute(TaskGraphTemplate& graph)
+{
+    // Remove pin from DynamicExecOutputPins
+    for (size_t i = 0; i < graph.Nodes.size(); ++i)
+    {
+        if (graph.Nodes[i].NodeID == m_nodeID)
+        {
+            std::vector<std::string>& pins = graph.Nodes[i].DynamicExecOutputPins;
+            if (m_pinIndex >= 0 && m_pinIndex < static_cast<int>(pins.size()))
+                pins.erase(pins.begin() + m_pinIndex);
+            break;
+        }
+    }
+
+    // Remove any ExecConnection originating from this pin
+    auto it = std::remove_if(graph.ExecConnections.begin(), graph.ExecConnections.end(),
+        [this](const ExecPinConnection& ec)
+        {
+            return ec.SourceNodeID == m_nodeID && ec.SourcePinName == m_pinName;
+        });
+    graph.ExecConnections.erase(it, graph.ExecConnections.end());
+
+    graph.BuildLookupCache();
+}
+
+void RemoveExecPinCommand::Undo(TaskGraphTemplate& graph)
+{
+    // Re-insert pin at its original index
+    for (size_t i = 0; i < graph.Nodes.size(); ++i)
+    {
+        if (graph.Nodes[i].NodeID == m_nodeID)
+        {
+            std::vector<std::string>& pins = graph.Nodes[i].DynamicExecOutputPins;
+            int insertAt = m_pinIndex;
+            if (insertAt < 0)
+                insertAt = 0;
+            if (insertAt > static_cast<int>(pins.size()))
+                insertAt = static_cast<int>(pins.size());
+            pins.insert(pins.begin() + insertAt, m_pinName);
+            break;
+        }
+    }
+
+    // Restore the outgoing link if one existed
+    if (m_linkedTargetNodeID != -1)
+    {
+        ExecPinConnection conn;
+        conn.SourceNodeID  = m_nodeID;
+        conn.SourcePinName = m_pinName;
+        conn.TargetNodeID  = m_linkedTargetNodeID;
+        conn.TargetPinName = m_linkedTargetPinName;
+        graph.ExecConnections.push_back(conn);
+    }
+
+    graph.BuildLookupCache();
+}
+
+std::string RemoveExecPinCommand::GetDescription() const
+{
+    return "Remove Pin " + m_pinName + " from node #" + std::to_string(m_nodeID);
+}
+
+// ============================================================================
 // UndoRedoStack
 // ============================================================================
 

@@ -127,7 +127,7 @@ std::vector<std::string> VisualScriptEditorPanel::GetExecOutputPins(TaskNodeType
         case TaskNodeType::Delay:       return {"Completed"};
         case TaskNodeType::SubGraph:    return {"Completed"};
         case TaskNodeType::VSSequence:  return {"Out"};
-        case TaskNodeType::Switch:      return {"Default"};
+        case TaskNodeType::Switch:      return {"Case_0"};
         case TaskNodeType::AtomicTask:  return {"Completed"};
         case TaskNodeType::GetBBValue:  return {"Out"};
         case TaskNodeType::SetBBValue:  return {"Out"};
@@ -140,7 +140,7 @@ std::vector<std::string> VisualScriptEditorPanel::GetExecOutputPinsForNode(
     const TaskNodeDefinition& def) const
 {
     std::vector<std::string> pins = GetExecOutputPins(def.Type);
-    if (def.Type == TaskNodeType::VSSequence)
+    if (def.Type == TaskNodeType::VSSequence || def.Type == TaskNodeType::Switch)
     {
         for (size_t i = 0; i < def.DynamicExecOutputPins.size(); ++i)
             pins.push_back(def.DynamicExecOutputPins[i]);
@@ -346,7 +346,8 @@ void VisualScriptEditorPanel::RebuildLinks()
         if (srcNode != nullptr)
         {
             outPins = GetExecOutputPins(srcNode->Type);
-            if (srcNode->Type == TaskNodeType::VSSequence)
+            if (srcNode->Type == TaskNodeType::VSSequence ||
+                srcNode->Type == TaskNodeType::Switch)
             {
                 for (size_t d = 0; d < srcNode->DynamicExecOutputPins.size(); ++d)
                     outPins.push_back(srcNode->DynamicExecOutputPins[d]);
@@ -609,7 +610,8 @@ void VisualScriptEditorPanel::RemoveLink(int linkID)
         if (srcNode)
         {
             auto pins = GetExecOutputPins(srcNode->Type);
-            if (srcNode->Type == TaskNodeType::VSSequence)
+            if (srcNode->Type == TaskNodeType::VSSequence ||
+                srcNode->Type == TaskNodeType::Switch)
             {
                 for (size_t d = 0; d < srcNode->DynamicExecOutputPins.size(); ++d)
                     pins.push_back(srcNode->DynamicExecOutputPins[d]);
@@ -819,8 +821,9 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
         if (!def.MathOperator.empty())
             n["mathOp"] = def.MathOperator;
 
-        // Dynamic exec-out pins (VSSequence)
-        if (def.Type == TaskNodeType::VSSequence && !def.DynamicExecOutputPins.empty())
+        // Dynamic exec-out pins (VSSequence and Switch)
+        if ((def.Type == TaskNodeType::VSSequence || def.Type == TaskNodeType::Switch) &&
+            !def.DynamicExecOutputPins.empty())
         {
             json dynPins = json::array();
             for (size_t p = 0; p < def.DynamicExecOutputPins.size(); ++p)
@@ -1325,6 +1328,14 @@ void VisualScriptEditorPanel::RenderCanvas()
                 panel->m_pendingAddPin       = true;
                 panel->m_pendingAddPinNodeID = nid;
             },
+            this,
+            [](int nid, int dynIdx, void* ud) {
+                VisualScriptEditorPanel* panel =
+                    static_cast<VisualScriptEditorPanel*>(ud);
+                panel->m_pendingRemovePin       = true;
+                panel->m_pendingRemovePinNodeID = nid;
+                panel->m_pendingRemovePinDynIdx = dynIdx;
+            },
             this);
 
         if (hasVerifError)
@@ -1476,7 +1487,7 @@ void VisualScriptEditorPanel::RenderCanvas()
 
     // ========================================================================
     // PHASE 2: Process pending dynamic pin addition (outside editor scope).
-    // The [+] button callback on VSSequence stores the request here; we
+    // The [+] button callback on VSSequence/Switch stores the request here; we
     // process it after EndNodeEditor so that AddDynamicPinCommand can safely
     // modify the template and trigger RebuildLinks().
     // ========================================================================
@@ -1493,12 +1504,16 @@ void VisualScriptEditorPanel::RenderCanvas()
                 break;
             }
         }
-        if (eNode != nullptr && eNode->def.Type == TaskNodeType::VSSequence)
+        if (eNode != nullptr &&
+            (eNode->def.Type == TaskNodeType::VSSequence ||
+             eNode->def.Type == TaskNodeType::Switch))
         {
-            // Compute pin number: existing dynamic pins are Out_1..Out_N,
-            // new one is Out_(N+1). This preserves "Out" as the default (index 0).
             int pinIdx = static_cast<int>(eNode->def.DynamicExecOutputPins.size()) + 1;
-            std::string pinName = "Out_" + std::to_string(pinIdx);
+            std::string pinName;
+            if (eNode->def.Type == TaskNodeType::VSSequence)
+                pinName = "Out_" + std::to_string(pinIdx);
+            else
+                pinName = "Case_" + std::to_string(pinIdx);
 
             // Update editor-side def immediately
             eNode->def.DynamicExecOutputPins.push_back(pinName);
@@ -1513,6 +1528,68 @@ void VisualScriptEditorPanel::RenderCanvas()
             m_dirty = true;
             SYSTEM_LOG << "[VSEditor] AddDynamicPin: node #" << m_pendingAddPinNodeID
                        << " added pin '" << pinName << "'\n";
+        }
+    }
+
+    // ========================================================================
+    // PHASE 2: Process pending dynamic pin removal (outside editor scope).
+    // The [-] button callback on dynamic pins stores the request here; we
+    // process it after EndNodeEditor so that RemoveExecPinCommand can safely
+    // modify the template and trigger RebuildLinks().
+    // ========================================================================
+    if (m_pendingRemovePin)
+    {
+        m_pendingRemovePin = false;
+
+        VSEditorNode* eNode = nullptr;
+        for (size_t i = 0; i < m_editorNodes.size(); ++i)
+        {
+            if (m_editorNodes[i].nodeID == m_pendingRemovePinNodeID)
+            {
+                eNode = &m_editorNodes[i];
+                break;
+            }
+        }
+        if (eNode != nullptr &&
+            m_pendingRemovePinDynIdx >= 0 &&
+            m_pendingRemovePinDynIdx < static_cast<int>(eNode->def.DynamicExecOutputPins.size()))
+        {
+            const std::string pinName =
+                eNode->def.DynamicExecOutputPins[static_cast<size_t>(m_pendingRemovePinDynIdx)];
+
+            // Find any outgoing link from this pin in the template
+            int32_t linkedTargetNodeID = -1;
+            std::string linkedTargetPinName;
+            for (size_t c = 0; c < m_template.ExecConnections.size(); ++c)
+            {
+                const ExecPinConnection& ec = m_template.ExecConnections[c];
+                if (ec.SourceNodeID == m_pendingRemovePinNodeID &&
+                    ec.SourcePinName == pinName)
+                {
+                    linkedTargetNodeID  = ec.TargetNodeID;
+                    linkedTargetPinName = ec.TargetPinName;
+                    break;
+                }
+            }
+
+            // Update editor-side def immediately
+            eNode->def.DynamicExecOutputPins.erase(
+                eNode->def.DynamicExecOutputPins.begin() + m_pendingRemovePinDynIdx);
+
+            // Push undo command (also updates template)
+            m_undoStack.PushCommand(
+                std::unique_ptr<ICommand>(
+                    new RemoveExecPinCommand(m_pendingRemovePinNodeID,
+                                             pinName,
+                                             m_pendingRemovePinDynIdx,
+                                             linkedTargetNodeID,
+                                             linkedTargetPinName)),
+                m_template);
+
+            RebuildLinks();
+            m_dirty = true;
+            SYSTEM_LOG << "[VSEditor] RemoveDynamicPin: node #" << m_pendingRemovePinNodeID
+                       << " removed pin '" << pinName << "'\n";
         }
     }
 

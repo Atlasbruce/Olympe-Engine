@@ -397,6 +397,11 @@ private:
     bool        m_pendingAddPin       = false;
     int         m_pendingAddPinNodeID = -1;
 
+    /// Pending dynamic pin removal (from [-] button clicked in canvas)
+    bool        m_pendingRemovePin       = false;
+    int         m_pendingRemovePinNodeID = -1;
+    int         m_pendingRemovePinDynIdx = -1;  ///< 0-based index in DynamicExecOutputPins
+
     /// Per-node drag-start positions used to record a single MoveNodeCommand
     /// per drag gesture instead of one command per frame.
     /// Key: nodeID  Value: (posX, posY) at the moment the drag was detected.

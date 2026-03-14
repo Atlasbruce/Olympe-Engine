@@ -246,7 +246,9 @@ void VisualScriptNodeRenderer::RenderNode(
     const std::vector<std::pair<std::string, VariableType>>& dataInputPins,
     const std::vector<std::pair<std::string, VariableType>>& dataOutputPins,
     void (*onAddPin)(int nodeID, void* userData),
-    void* onAddPinUserData)
+    void* onAddPinUserData,
+    void (*onRemovePin)(int nodeID, int dynamicPinIndex, void* userData),
+    void* onRemovePinUserData)
 {
     (void)graphID;
 
@@ -321,19 +323,6 @@ void VisualScriptNodeRenderer::RenderNode(
                 ImGui::TextDisabled("  %s", def.MathOperator.c_str());
             break;
 
-        case TaskNodeType::VSSequence:
-        {
-            // [+] button to add a dynamic exec-out pin
-            ImGui::PushID(nodeUID);
-            if (ImGui::SmallButton("[+]"))
-            {
-                if (onAddPin)
-                    onAddPin(nodeID, onAddPinUserData);
-            }
-            ImGui::PopID();
-            break;
-        }
-
         default:
             break;
     }
@@ -359,15 +348,60 @@ void VisualScriptNodeRenderer::RenderNode(
         ImNodes::PopColorStyle();
     }
 
+    // Determine how many static (non-removable) exec-out pins this node has.
+    // Dynamic pins start at index numStaticPins in execOutputPins.
+    const bool hasDynamicPins = (def.Type == TaskNodeType::VSSequence ||
+                                  def.Type == TaskNodeType::Switch);
+    const int numStaticPins = hasDynamicPins
+        ? static_cast<int>(execOutputPins.size()) -
+          static_cast<int>(def.DynamicExecOutputPins.size())
+        : static_cast<int>(execOutputPins.size());
+
     // Exec output pins (right side triangles) — offset 100–199
+    // Dynamic pins render with an inline [-] remove button.
     for (size_t i = 0; i < execOutputPins.size(); ++i)
     {
         int attrID = nodeUID * 10000 + 100 + static_cast<int>(i);
         ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_TriangleFilled);
         ImGui::Indent(60.0f);
         ImGui::Text("%s", execOutputPins[i].c_str());
+
+        // [-] button for removable (dynamic) pins only
+        if (hasDynamicPins && static_cast<int>(i) >= numStaticPins && onRemovePin)
+        {
+            int dynIdx = static_cast<int>(i) - numStaticPins;
+            ImGui::SameLine();
+            ImGui::PushID(nodeUID * 10000 + 5000 + static_cast<int>(i));
+            ImGui::PushStyleColor(ImGuiCol_Button,        IM_COL32(140, 30, 30, 200));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(200, 50, 50, 220));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive,  IM_COL32(230, 80, 80, 240));
+            if (ImGui::SmallButton("[-]"))
+                onRemovePin(nodeID, dynIdx, onRemovePinUserData);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Remove Execution Output");
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
+        }
+
         ImGui::Unindent(60.0f);
         ImNodes::EndOutputAttribute();
+    }
+
+    // [+] button — below the last exec-out pin, for VSSequence and Switch
+    if (hasDynamicPins && onAddPin)
+    {
+        ImGui::PushID(nodeUID);
+        ImGui::PushStyleColor(ImGuiCol_Button,        IM_COL32(30, 100, 30, 200));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(50, 160, 50, 220));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive,  IM_COL32(80, 200, 80, 240));
+        ImGui::Indent(60.0f);
+        if (ImGui::SmallButton("[+]"))
+            onAddPin(nodeID, onAddPinUserData);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Add Execution Output");
+        ImGui::Unindent(60.0f);
+        ImGui::PopStyleColor(3);
+        ImGui::PopID();
     }
 
     // Data output pins (right side circles) — offset 300–399

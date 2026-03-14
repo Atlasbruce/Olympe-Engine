@@ -544,6 +544,22 @@ if(BUILD_TESTS)
     add_test(NAME OlympePhase21BTests COMMAND OlympePhase21BTests)
 
     # -----------------------------------------------------------------------
+    # OlympePhase21DTests  (Phase 21-D — Dynamic Pins Sequence/Switch)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase21DTests
+        Tests/BlueprintEditor/Phase21DTest.cpp
+        Source/BlueprintEditor/UndoRedoStack.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/NodeGraphCore/GlobalBlackboard.cpp
+        Tests/TestStubs.cpp
+    )
+    target_include_directories(OlympePhase21DTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase21DTests COMMAND OlympePhase21DTests)
+
+    # -----------------------------------------------------------------------
     # OlympeATSReferenceV4Tests  (Integration — reference_complete_v4.ats)
     # -----------------------------------------------------------------------
     add_executable(OlympeATSReferenceV4Tests
