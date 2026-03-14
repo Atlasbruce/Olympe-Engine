@@ -71,6 +71,9 @@ struct VSVerificationResult {
  *   E007 — Inverted pin direction (output connected to output, or input to input)
  *   E008 — Unknown Blackboard key in GetBBValue/SetBBValue
  *   E009 — Blackboard type mismatch
+ *   E010 — Switch node missing switchVariable
+ *   E011 — Switch node has duplicate case values
+ *   E012 — Switch node has a case with empty pin name
  *   W001 — AtomicTask with empty AtomicTaskID
  *   W002 — Delay with DelaySeconds <= 0
  *   W003 — SubGraph with empty SubGraphPath
@@ -101,6 +104,9 @@ private:
     // Blackboard rules
     static void CheckBlackboardKeys(const TaskGraphTemplate& g, VSVerificationResult& r);
     static void CheckBlackboardTypes(const TaskGraphTemplate& g, VSVerificationResult& r);
+
+    // Switch rules (Phase 22-A)
+    static void CheckSwitchNodes(const TaskGraphTemplate& g, VSVerificationResult& r);
 
     // Warning rules
     static void CheckNodeParameterWarnings(const TaskGraphTemplate& g, VSVerificationResult& r);

@@ -390,6 +390,10 @@ private:
     std::string m_propEditOldSubGraphPath;
     float       m_propEditOldDelay = 0.0f;
 
+    // Switch-specific edit state (Phase 22-A)
+    std::string                       m_propEditSwitchVar;    ///< Live buffer for switchVariable field
+    std::vector<SwitchCaseDefinition> m_propEditSwitchCases;  ///< Per-case label edit buffers
+
     /// Undo/Redo command stack for reversible graph editing operations
     UndoRedoStack m_undoStack;
 

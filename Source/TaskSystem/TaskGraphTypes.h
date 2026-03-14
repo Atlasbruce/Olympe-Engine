@@ -314,4 +314,31 @@ struct SubGraphParameterDef {
     VariableType Type = VariableType::None;        ///< Expected variable type
 };
 
+// ============================================================================
+// ATS Visual Scripting – SwitchCaseDefinition (Phase 22-A - 2026-03-14)
+// ============================================================================
+
+/**
+ * @struct SwitchCaseDefinition
+ * @brief Describes a single case branch on a Switch node.
+ *
+ * Each case maps a match value to a named exec-out pin.
+ * An optional custom label can be set by the user for readability
+ * (e.g. "Patrol" instead of "Case_5").
+ */
+struct SwitchCaseDefinition {
+    std::string value;        ///< The value to match (int as decimal string or raw string)
+    std::string pinName;      ///< The exec-out pin name used internally (e.g. "Case_0")
+    std::string customLabel;  ///< User-defined display label (empty = use pinName)
+
+    /**
+     * @brief Returns the display name shown in the editor.
+     * Returns customLabel if non-empty, otherwise pinName.
+     */
+    const std::string& GetDisplayName() const
+    {
+        return customLabel.empty() ? pinName : customLabel;
+    }
+};
+
 } // namespace Olympe
