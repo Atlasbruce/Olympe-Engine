@@ -1,6 +1,6 @@
 # Olympe Engine — Etat des Lieux
 
-**Date :** 2026-03-13
+**Date :** 2026-03-14
 
 ---
 
@@ -20,13 +20,18 @@
 - **Blueprint Editor — Properties Undo/Redo** : `EditNodePropertyCommand` + commit-on-release pour tous les champs *(Phase 20-B)*
 - **Blueprint Editor — Inline Node Display** : Paramètres clés affichés directement sur le canvas *(Phase 20-C)*
 - **Blueprint Editor — VSSequence Dynamic Pins** : Bouton [+] pour ajouter des sorties exec sur VSSequence (undoable) *(Phase 20-C)*
+- **Blueprint Editor — VSGraphVerifier** : `VSGraphVerifier::Verify()` — 14 règles globales (E001-E009, W001-W004, I001) *(Phase 21-A)*
 - **ECS System** : Composants auto-enregistres
 - **AI System** : Behavior Tree + Debugger
 - **Animation System** : Animation Editor standalone
 
 ## Composants En Developpement
 
-- **Blueprint Editor — Phase 21** : Templates BT préconfigurés (Empty, Patrol, Combat...)
+- **Blueprint Editor — Phase 21-B** : Intégration UI VSGraphVerifier (overlay panel issues dans l'éditeur)
+- **Blueprint Editor — Phase 21-C** : GVS dans Save() — blocage sauvegarde si erreurs P0
+- **Blueprint Editor — Phase 22** : Design & Icons Font Awesome (Initiative B)
+- **Blueprint Editor — Phase 23** : Diversification types de graphes (Animation, Level Script, Cinématique...)
+- **Blueprint Editor — Phase 24** : Runtime Execution & Debugger multi-instances
 
 ## Problemes Connus
 
@@ -37,17 +42,16 @@
 ## Progression Globale
 
 - **Architecture globale :** ~80% (core engine stable)
-- **Blueprint Editor :** ~97% (inline node display + VSSequence dynamic pins depuis Phase 20-C)
+- **Blueprint Editor :** ~97% (VSGraphVerifier 14 règles depuis Phase 21-A)
 - **ECS System :** ~85% (fonctionnel, extensions possibles)
 - **AI System :** ~75% (BT + debugger, extensions pathfinding)
 
 ## Charge Contextuelle
 
-- **Conversations actives :** 1 (Phase 20-B complete)
-- **Sujets non archives :** Phase 20-B (a archiver)
-- **Derniere purge :** 2026-03-13
+- **Conversations actives :** 1 (Phase 21-A mergée)
+- **Sujets non archives :** Phase 21-A (a archiver)
+- **Derniere purge :** 2026-03-14
 
 ---
 
-**Last Updated**: 2026-03-13
-
+**Last Updated**: 2026-03-14
