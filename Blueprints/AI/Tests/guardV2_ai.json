@@ -10,20 +10,8 @@
     },
     {
       "fromNode": 1,
-      "fromPin": "Then",
-      "toNode": 10,
-      "toPin": "In"
-    },
-    {
-      "fromNode": 1,
       "fromPin": "Else",
       "toNode": 153,
-      "toPin": "In"
-    },
-    {
-      "fromNode": 153,
-      "fromPin": "Then",
-      "toNode": 20,
       "toPin": "In"
     },
     {
@@ -45,15 +33,123 @@
       "toPin": "In"
     },
     {
-      "fromNode": 30,
-      "fromPin": "Else",
-      "toNode": 40,
+      "fromNode": 10,
+      "fromPin": "Out",
+      "toNode": 12,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 10,
+      "fromPin": "Out_1",
+      "toNode": 13,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 1,
+      "fromPin": "Then",
+      "toNode": 11,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 11,
+      "fromPin": "Then",
+      "toNode": 10,
       "toPin": "In"
     },
     {
       "fromNode": 30,
       "fromPin": "Then",
+      "toNode": 32,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 32,
+      "fromPin": "Then",
       "toNode": 31,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 31,
+      "fromPin": "Out",
+      "toNode": 33,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 50,
+      "fromPin": "Out_1",
+      "toNode": 52,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 30,
+      "fromPin": "Else",
+      "toNode": 41,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 50,
+      "fromPin": "Out",
+      "toNode": 51,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 50,
+      "fromPin": "Out_2",
+      "toNode": 53,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 41,
+      "fromPin": "Else",
+      "toNode": 40,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 41,
+      "fromPin": "Then",
+      "toNode": 42,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 40,
+      "fromPin": "Out",
+      "toNode": 35,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 40,
+      "fromPin": "Out_1",
+      "toNode": 34,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 42,
+      "fromPin": "Completed",
+      "toNode": 43,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 153,
+      "fromPin": "Then",
+      "toNode": 21,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 21,
+      "fromPin": "Then",
+      "toNode": 20,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 20,
+      "fromPin": "Out",
+      "toNode": 22,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 20,
+      "fromPin": "Out_1",
+      "toNode": 23,
       "toPin": "In"
     }
   ],
@@ -64,8 +160,8 @@
       "id": 54,
       "label": "Start",
       "position": {
-        "x": -648.498,
-        "y": 289.466
+        "x": -521.44,
+        "y": 196.721
       },
       "type": "EntryPoint"
     },
@@ -73,8 +169,8 @@
       "id": 1,
       "label": "Root Priority Selector",
       "position": {
-        "x": -502.049,
-        "y": 289.942
+        "x": -373.991,
+        "y": 194.197
       },
       "type": "Branch"
     },
@@ -82,8 +178,8 @@
       "id": 153,
       "label": "Selector_Branch_153",
       "position": {
-        "x": -254.049,
-        "y": 436.942
+        "x": -101.991,
+        "y": 529.197
       },
       "type": "Branch"
     },
@@ -91,36 +187,31 @@
       "id": 154,
       "label": "Selector_Branch_154",
       "position": {
-        "x": -73.394,
-        "y": 536.122
+        "x": 78.664,
+        "y": 628.377
       },
       "type": "Branch"
     },
     {
+      "dynamicExecPins": [
+        "Out_1",
+        "Out_2",
+        "Out_3"
+      ],
       "id": 10,
       "label": "Self Preservation Sequence",
       "position": {
-        "x": -244.049,
-        "y": 217.942
+        "x": 62.009,
+        "y": -66.8027
       },
       "type": "Sequence"
-    },
-    {
-      "conditionKey": "CheckStats",
-      "id": 11,
-      "label": "Is Health Critical?",
-      "position": {
-        "x": 328.951,
-        "y": -253.058
-      },
-      "type": "Branch"
     },
     {
       "id": 12,
       "label": "Find Safe Cover",
       "position": {
-        "x": 328.951,
-        "y": -141.058
+        "x": 322.009,
+        "y": -133.803
       },
       "taskType": "Task_FindCover",
       "type": "AtomicTask"
@@ -129,18 +220,21 @@
       "id": 13,
       "label": "Apply Bandage/Heal",
       "position": {
-        "x": 328.951,
-        "y": -29.058
+        "x": 321.009,
+        "y": -12.8027
       },
       "taskType": "Task_HealSelf",
       "type": "AtomicTask"
     },
     {
+      "dynamicExecPins": [
+        "Out_1"
+      ],
       "id": 20,
       "label": "Combat Engagement",
       "position": {
-        "x": -59.049,
-        "y": 400.942
+        "x": 327.009,
+        "y": 213.197
       },
       "type": "Sequence"
     },
@@ -149,8 +243,8 @@
       "id": 21,
       "label": "Can See Enemy?",
       "position": {
-        "x": 269.951,
-        "y": 80.942
+        "x": 123.009,
+        "y": 238.197
       },
       "type": "Branch"
     },
@@ -158,8 +252,8 @@
       "id": 22,
       "label": "Face Enemy",
       "position": {
-        "x": 232.951,
-        "y": 210.942
+        "x": 513.009,
+        "y": 173.197
       },
       "taskType": "Task_RotateToTarget",
       "type": "AtomicTask"
@@ -168,8 +262,8 @@
       "id": 23,
       "label": "Shoot Weapon",
       "position": {
-        "x": 198.951,
-        "y": 315.942
+        "x": 519.009,
+        "y": 297.197
       },
       "taskType": "Task_AttackRange",
       "type": "AtomicTask"
@@ -178,17 +272,20 @@
       "id": 30,
       "label": "Investigation Selector",
       "position": {
-        "x": 134.951,
-        "y": 478.942
+        "x": 287.009,
+        "y": 571.197
       },
       "type": "Branch"
     },
     {
+      "dynamicExecPins": [
+        "Out_1"
+      ],
       "id": 31,
       "label": "Noise Reaction",
       "position": {
-        "x": 373.951,
-        "y": 427.942
+        "x": 740.009,
+        "y": 422.197
       },
       "type": "Sequence"
     },
@@ -197,8 +294,8 @@
       "id": 32,
       "label": "Heard Suspicious Noise?",
       "position": {
-        "x": 665.95,
-        "y": 212.942
+        "x": 517.008,
+        "y": 465.197
       },
       "type": "Branch"
     },
@@ -206,8 +303,8 @@
       "id": 33,
       "label": "Set Noise Source as Target",
       "position": {
-        "x": 719.95,
-        "y": 368.942
+        "x": 923.01,
+        "y": 347.197
       },
       "taskType": "Task_SetTargetToNoiseSource",
       "type": "AtomicTask"
@@ -216,8 +313,8 @@
       "id": 34,
       "label": "Investigate Location",
       "position": {
-        "x": 777.95,
-        "y": 452.942
+        "x": 955.7,
+        "y": 842.594
       },
       "taskType": "Task_MoveToLocation",
       "type": "AtomicTask"
@@ -226,18 +323,21 @@
       "id": 35,
       "label": "Look Around (Scan)",
       "position": {
-        "x": 773.95,
-        "y": 570.942
+        "x": 955.12,
+        "y": 729.501
       },
       "taskType": "Task_PlayAnimation",
       "type": "AtomicTask"
     },
     {
+      "dynamicExecPins": [
+        "Out_1"
+      ],
       "id": 40,
       "label": "Lost Target Search",
       "position": {
-        "x": 375.951,
-        "y": 553.942
+        "x": 761.009,
+        "y": 742.197
       },
       "type": "Sequence"
     },
@@ -246,8 +346,8 @@
       "id": 41,
       "label": "Has Last Known Position?",
       "position": {
-        "x": 678.57,
-        "y": 41.421
+        "x": 519.17,
+        "y": 620.949
       },
       "type": "Branch"
     },
@@ -255,8 +355,8 @@
       "id": 42,
       "label": "Rush to LKP",
       "position": {
-        "x": 648.95,
-        "y": 978.94
+        "x": 747.008,
+        "y": 599.195
       },
       "taskType": "Task_MoveToLocation",
       "type": "AtomicTask"
@@ -265,18 +365,22 @@
       "id": 43,
       "label": "Search Pattern",
       "position": {
-        "x": 648.95,
-        "y": 1090.94
+        "x": 958.01,
+        "y": 603.195
       },
       "taskType": "Task_WanderAroundPoint",
       "type": "AtomicTask"
     },
     {
+      "dynamicExecPins": [
+        "Out_1",
+        "Out_2"
+      ],
       "id": 50,
       "label": "Default Patrol",
       "position": {
-        "x": 118.486,
-        "y": 648.177
+        "x": 322.544,
+        "y": 871.432
       },
       "type": "Sequence"
     },
@@ -284,8 +388,8 @@
       "id": 51,
       "label": "Get Next Waypoint",
       "position": {
-        "x": 151.951,
-        "y": -102.058
+        "x": 510.627,
+        "y": 823.55
       },
       "taskType": "Task_NextWaypoint",
       "type": "AtomicTask"
@@ -294,8 +398,8 @@
       "id": 52,
       "label": "Move To Waypoint",
       "position": {
-        "x": 507.951,
-        "y": 336.942
+        "x": 511.009,
+        "y": 941.197
       },
       "taskType": "Task_MoveToLocation",
       "type": "AtomicTask"
@@ -304,11 +408,21 @@
       "id": 53,
       "label": "Idle at Waypoint",
       "position": {
-        "x": 473.951,
-        "y": 119.942
+        "x": 516.661,
+        "y": 1048.02
       },
       "taskType": "Task_Wait",
       "type": "AtomicTask"
+    },
+    {
+      "conditionKey": "CheckStats",
+      "id": 11,
+      "label": "Is Health Critical?",
+      "position": {
+        "x": -162.991,
+        "y": 84.1973
+      },
+      "type": "Branch"
     }
   ],
   "schema_version": 4
