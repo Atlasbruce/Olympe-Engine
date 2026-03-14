@@ -596,4 +596,88 @@ std::string UndoRedoStack::PeekRedoDescription() const
     return m_redoStack.back()->GetDescription();
 }
 
+// ============================================================================
+// EditParameterCommand (Phase 22-C)
+// ============================================================================
+
+EditParameterCommand::EditParameterCommand(int32_t nodeID,
+                                           const std::string& paramName,
+                                           const ParameterBinding& oldBinding,
+                                           const ParameterBinding& newBinding)
+    : m_nodeID(nodeID)
+    , m_paramName(paramName)
+    , m_oldBinding(oldBinding)
+    , m_newBinding(newBinding)
+{}
+
+void EditParameterCommand::Execute(TaskGraphTemplate& graph)
+{
+    for (size_t i = 0; i < graph.Nodes.size(); ++i)
+    {
+        if (graph.Nodes[i].NodeID == m_nodeID)
+        {
+            graph.Nodes[i].Parameters[m_paramName] = m_newBinding;
+            break;
+        }
+    }
+}
+
+void EditParameterCommand::Undo(TaskGraphTemplate& graph)
+{
+    for (size_t i = 0; i < graph.Nodes.size(); ++i)
+    {
+        if (graph.Nodes[i].NodeID == m_nodeID)
+        {
+            graph.Nodes[i].Parameters[m_paramName] = m_oldBinding;
+            break;
+        }
+    }
+}
+
+std::string EditParameterCommand::GetDescription() const
+{
+    return "Edit parameter '" + m_paramName + "' on node #" + std::to_string(m_nodeID);
+}
+
+// ============================================================================
+// EditNodePropertiesCommand (Phase 22-C)
+// ============================================================================
+
+EditNodePropertiesCommand::EditNodePropertiesCommand(int32_t nodeID,
+                                                     const ParameterMap& oldParams,
+                                                     const ParameterMap& newParams)
+    : m_nodeID(nodeID)
+    , m_oldParams(oldParams)
+    , m_newParams(newParams)
+{}
+
+void EditNodePropertiesCommand::Execute(TaskGraphTemplate& graph)
+{
+    for (size_t i = 0; i < graph.Nodes.size(); ++i)
+    {
+        if (graph.Nodes[i].NodeID == m_nodeID)
+        {
+            graph.Nodes[i].Parameters = m_newParams;
+            break;
+        }
+    }
+}
+
+void EditNodePropertiesCommand::Undo(TaskGraphTemplate& graph)
+{
+    for (size_t i = 0; i < graph.Nodes.size(); ++i)
+    {
+        if (graph.Nodes[i].NodeID == m_nodeID)
+        {
+            graph.Nodes[i].Parameters = m_oldParams;
+            break;
+        }
+    }
+}
+
+std::string EditNodePropertiesCommand::GetDescription() const
+{
+    return "Edit node properties on node #" + std::to_string(m_nodeID);
+}
+
 } // namespace Olympe

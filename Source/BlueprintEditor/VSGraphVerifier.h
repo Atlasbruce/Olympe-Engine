@@ -108,6 +108,20 @@ private:
     // Switch rules (Phase 22-A)
     static void CheckSwitchNodes(const TaskGraphTemplate& g, VSVerificationResult& r);
 
+    // Registry rules (Phase 22-C)
+    // W005 — AtomicTask: taskType not in AtomicTaskUIRegistry (warning, custom tasks may not have UI metadata)
+    static void CheckAtomicTaskIDs(const TaskGraphTemplate& g, VSVerificationResult& r);
+    // E021 — Branch/While: conditionType not in ConditionRegistry
+    static void CheckConditionIDs(const TaskGraphTemplate& g, VSVerificationResult& r);
+    // E023 — MathOp: operation is not a valid math operator
+    static void CheckMathOperators(const TaskGraphTemplate& g, VSVerificationResult& r);
+    // E024 — SubGraph: subGraphPath is empty
+    static void CheckSubGraphPaths(const TaskGraphTemplate& g, VSVerificationResult& r);
+    // E025 — Condition: required parameter missing on Branch/While node
+    static void CheckConditionParams(const TaskGraphTemplate& g, VSVerificationResult& r);
+    // W010 — BBKey type incompatible with node expectations
+    static void CheckBBKeyCompatibility(const TaskGraphTemplate& g, VSVerificationResult& r);
+
     // Warning rules
     static void CheckNodeParameterWarnings(const TaskGraphTemplate& g, VSVerificationResult& r);
 

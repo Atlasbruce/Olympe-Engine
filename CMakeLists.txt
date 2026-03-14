@@ -77,6 +77,15 @@ set(TASK_SYSTEM_RUNTIME_SOURCES
     ${TASK_GRAPH_LOADER_SOURCES}
 )
 
+# Phase 22-C registry sources (needed by VSGraphVerifier and editor panel)
+set(PARAM_REGISTRY_SOURCES
+    Source/BlueprintEditor/OperatorRegistry.cpp
+    Source/BlueprintEditor/AtomicTaskUIRegistry.cpp
+    Source/BlueprintEditor/ConditionRegistry.cpp
+    Source/BlueprintEditor/BBVariableRegistry.cpp
+    Source/BlueprintEditor/ParameterEditorRegistry.cpp
+)
+
 # Test stubs (provides SystemLogSink::AppendToLogWindow)
 set(TEST_STUBS "${CMAKE_SOURCE_DIR}/Tests/TestStubs.cpp")
 
@@ -517,6 +526,7 @@ if(BUILD_TESTS)
     add_executable(OlympePhase21ATests
         Tests/BlueprintEditor/Phase21ATest.cpp
         Source/BlueprintEditor/VSGraphVerifier.cpp
+        ${PARAM_REGISTRY_SOURCES}
         Source/TaskSystem/TaskGraphTypes.cpp
         Source/TaskSystem/TaskGraphTemplate.cpp
         Source/TaskSystem/LocalBlackboard.cpp
@@ -533,6 +543,7 @@ if(BUILD_TESTS)
     add_executable(OlympePhase21BTests
         Tests/BlueprintEditor/Phase21BTest.cpp
         Source/BlueprintEditor/VSGraphVerifier.cpp
+        ${PARAM_REGISTRY_SOURCES}
         Source/TaskSystem/TaskGraphTypes.cpp
         Source/TaskSystem/TaskGraphTemplate.cpp
         Source/TaskSystem/LocalBlackboard.cpp
@@ -570,5 +581,26 @@ if(BUILD_TESTS)
     target_include_directories(OlympeATSReferenceV4Tests PRIVATE ${COMMON_INCLUDES})
     add_test(NAME OlympeATSReferenceV4Tests COMMAND OlympeATSReferenceV4Tests
              WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+
+    # -----------------------------------------------------------------------
+    # OlympePhase22CTests  (Phase 22-C — Parameter Dropdowns & Registries)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase22CTests
+        Tests/BlueprintEditor/Phase22CTest.cpp
+        Source/BlueprintEditor/OperatorRegistry.cpp
+        Source/BlueprintEditor/AtomicTaskUIRegistry.cpp
+        Source/BlueprintEditor/ConditionRegistry.cpp
+        Source/BlueprintEditor/BBVariableRegistry.cpp
+        Source/BlueprintEditor/ParameterEditorRegistry.cpp
+        Source/BlueprintEditor/UndoRedoStack.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/NodeGraphCore/GlobalBlackboard.cpp
+        Tests/TestStubs.cpp
+    )
+    target_include_directories(OlympePhase22CTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase22CTests COMMAND OlympePhase22CTests)
 
 endif() # BUILD_TESTS

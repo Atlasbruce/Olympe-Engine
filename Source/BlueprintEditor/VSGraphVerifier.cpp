@@ -12,6 +12,9 @@
  */
 
 #include "VSGraphVerifier.h"
+#include "AtomicTaskUIRegistry.h"
+#include "ConditionRegistry.h"
+#include "OperatorRegistry.h"
 #include "../system/system_utils.h"
 
 #include <map>
@@ -97,6 +100,14 @@ VSVerificationResult VSGraphVerifier::Verify(const TaskGraphTemplate& graph)
 
     // Switch rules (Phase 22-A)
     CheckSwitchNodes(graph, result);
+
+    // Registry rules (Phase 22-C)
+    CheckAtomicTaskIDs(graph, result);
+    CheckConditionIDs(graph, result);
+    CheckMathOperators(graph, result);
+    CheckSubGraphPaths(graph, result);
+    CheckConditionParams(graph, result);
+    CheckBBKeyCompatibility(graph, result);
 
     // Warning rules
     CheckNodeParameterWarnings(graph, result);
@@ -749,6 +760,193 @@ void VSGraphVerifier::CheckReachability(const TaskGraphTemplate& g, VSVerificati
             AddIssue(r, VSVerificationSeverity::Info, node.NodeID,
                      "I001_UnreachableNode",
                      oss.str());
+        }
+    }
+}
+
+// ============================================================================
+// E020 — AtomicTask: taskType not registered in AtomicTaskUIRegistry
+// ============================================================================
+
+void VSGraphVerifier::CheckAtomicTaskIDs(const TaskGraphTemplate& g, VSVerificationResult& r)
+{
+    const AtomicTaskUIRegistry& reg = AtomicTaskUIRegistry::Get();
+
+    for (size_t i = 0; i < g.Nodes.size(); ++i)
+    {
+        const TaskNodeDefinition& node = g.Nodes[i];
+        if (node.Type != TaskNodeType::AtomicTask)
+            continue;
+
+        if (node.AtomicTaskID.empty())
+            continue; // W001 handles empty IDs separately
+
+        if (reg.GetTaskSpec(node.AtomicTaskID) == nullptr)
+        {
+            std::ostringstream oss;
+            oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                << "'): AtomicTaskID '" << node.AtomicTaskID
+                << "' is not registered in AtomicTaskUIRegistry (no display metadata).";
+            AddIssue(r, VSVerificationSeverity::Warning, node.NodeID,
+                     "W005_UnknownAtomicTaskID", oss.str());
+        }
+    }
+}
+
+// ============================================================================
+// E021 — Branch/While: conditionType not registered in ConditionRegistry
+// ============================================================================
+
+void VSGraphVerifier::CheckConditionIDs(const TaskGraphTemplate& g, VSVerificationResult& r)
+{
+    const ConditionRegistry& reg = ConditionRegistry::Get();
+
+    for (size_t i = 0; i < g.Nodes.size(); ++i)
+    {
+        const TaskNodeDefinition& node = g.Nodes[i];
+        if (node.Type != TaskNodeType::Branch && node.Type != TaskNodeType::While)
+            continue;
+
+        if (node.ConditionID.empty())
+            continue; // W003 handles empty condition IDs
+
+        if (reg.GetConditionSpec(node.ConditionID) == nullptr)
+        {
+            std::ostringstream oss;
+            oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                << "'): ConditionID '" << node.ConditionID
+                << "' is not registered in ConditionRegistry.";
+            AddIssue(r, VSVerificationSeverity::Error, node.NodeID,
+                     "E021_UnknownConditionID", oss.str());
+        }
+    }
+}
+
+// ============================================================================
+// E023 — MathOp: operation is not a valid math operator
+// ============================================================================
+
+void VSGraphVerifier::CheckMathOperators(const TaskGraphTemplate& g, VSVerificationResult& r)
+{
+    for (size_t i = 0; i < g.Nodes.size(); ++i)
+    {
+        const TaskNodeDefinition& node = g.Nodes[i];
+        if (node.Type != TaskNodeType::MathOp)
+            continue;
+
+        if (node.MathOperator.empty())
+            continue; // W004 handles empty MathOperator
+
+        if (!OperatorRegistry::IsValidMathOperator(node.MathOperator))
+        {
+            std::ostringstream oss;
+            oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                << "'): MathOperator '" << node.MathOperator
+                << "' is not a valid operator. Expected one of: +, -, *, /, %.";
+            AddIssue(r, VSVerificationSeverity::Error, node.NodeID,
+                     "E023_InvalidMathOperator", oss.str());
+        }
+    }
+}
+
+// ============================================================================
+// E024 — SubGraph: subGraphPath is empty
+// ============================================================================
+
+void VSGraphVerifier::CheckSubGraphPaths(const TaskGraphTemplate& g, VSVerificationResult& r)
+{
+    for (size_t i = 0; i < g.Nodes.size(); ++i)
+    {
+        const TaskNodeDefinition& node = g.Nodes[i];
+        if (node.Type != TaskNodeType::SubGraph)
+            continue;
+
+        if (node.SubGraphPath.empty())
+        {
+            std::ostringstream oss;
+            oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                << "'): SubGraphPath is empty. Set a valid .ats file path.";
+            AddIssue(r, VSVerificationSeverity::Error, node.NodeID,
+                     "E024_EmptySubGraphPath", oss.str());
+        }
+    }
+}
+
+// ============================================================================
+// E025 — Condition: required parameter missing on Branch/While node
+// ============================================================================
+
+void VSGraphVerifier::CheckConditionParams(const TaskGraphTemplate& g, VSVerificationResult& r)
+{
+    const ConditionRegistry& reg = ConditionRegistry::Get();
+
+    for (size_t i = 0; i < g.Nodes.size(); ++i)
+    {
+        const TaskNodeDefinition& node = g.Nodes[i];
+        if (node.Type != TaskNodeType::Branch && node.Type != TaskNodeType::While)
+            continue;
+
+        if (node.ConditionID.empty())
+            continue;
+
+        const ConditionSpec* spec = reg.GetConditionSpec(node.ConditionID);
+        if (!spec)
+            continue; // E021 already reported this
+
+        for (size_t p = 0; p < spec->parameters.size(); ++p)
+        {
+            const ConditionParamSpec& param = spec->parameters[p];
+            if (!param.required)
+                continue;
+
+            // Check if the parameter is present in the node's Parameters map
+            auto it = node.Parameters.find(param.name);
+            bool present = (it != node.Parameters.end());
+
+            if (!present)
+            {
+                std::ostringstream oss;
+                oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                    << "'): Required parameter '" << param.name
+                    << "' is missing for condition '" << node.ConditionID << "'.";
+                AddIssue(r, VSVerificationSeverity::Error, node.NodeID,
+                         "E025_MissingConditionParam", oss.str());
+            }
+        }
+    }
+}
+
+// ============================================================================
+// W010 — BBKey type incompatible with node expectations
+// ============================================================================
+
+void VSGraphVerifier::CheckBBKeyCompatibility(const TaskGraphTemplate& g, VSVerificationResult& r)
+{
+    // Build a map of BB key → declared type for fast lookup
+    std::unordered_map<std::string, VariableType> bbTypes;
+    for (size_t i = 0; i < g.Blackboard.size(); ++i)
+    {
+        bbTypes[g.Blackboard[i].Key] = g.Blackboard[i].Type;
+    }
+
+    for (size_t i = 0; i < g.Nodes.size(); ++i)
+    {
+        const TaskNodeDefinition& node = g.Nodes[i];
+
+        // ForEach: bbKey should be a List type
+        if (node.Type == TaskNodeType::ForEach && !node.BBKey.empty())
+        {
+            auto it = bbTypes.find(node.BBKey);
+            if (it != bbTypes.end() && it->second != VariableType::List)
+            {
+                std::ostringstream oss;
+                oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                    << "'): ForEach expects a List variable, but '"
+                    << node.BBKey << "' is declared as "
+                    << static_cast<int>(it->second) << ".";
+                AddIssue(r, VSVerificationSeverity::Warning, node.NodeID,
+                         "W010_BBKeyTypeIncompatible", oss.str());
+            }
         }
     }
 }
