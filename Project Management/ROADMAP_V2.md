@@ -1,19 +1,19 @@
 # Olympe Engine — Roadmap V2
 
-**Date :** 2026-03-14 07:09:00
-**Auteur :** @Atlasbruce
-**Statut :** Planification active — mise a jour apres session Phase 20 complete + 4 initiatives documentees + Initiative E ajoutee (Dynamic Pins Sequence/Switch)
+**Date :** 2026-03-14  
+**Auteur :** @Atlasbruce  
+**Statut :** Planification active — Phase 21-D specifiee (PRIORITAIRE)
 
 ---
 
 ## Vue d'ensemble
 
-La Roadmap V2 definit les 5 initiatives majeures post-Phase 20 pour le Blueprint Editor et l'engine.
+La Roadmap V2 definit les initiatives majeures post-Phase 20 pour le Blueprint Editor et l'engine.
 
 | Initiative | Titre | Priorite | Statut |
 |---|---|---|---|
 | A | Graph Verification System (GVS) | P0 | Phase 21 — EN COURS |
-| E | Dynamic Pins Sequence/Switch — Add [+] / Remove [-] + Undo/Redo | P0 | Phase 21-D — PRIORITAIRE |
+| E | Dynamic Pins Sequence/Switch (UX) | P0 PRIORITAIRE | Phase 21-D — A IMPLEMENTER |
 | B | Design & Icons Font Awesome | P1 | En attente spec design |
 | C | Diversification Types de Graphes | P2 | Phase 23+ |
 | D | Runtime Execution & Debugger | P3 | Phase 24+ |
@@ -32,7 +32,7 @@ du graphe et de produire des messages d'erreur/warning exploitables dans l'edite
 
 Fournie par @Atlasbruce le 2026-03-14.
 
-### Phase 21-A — VSGraphVerifier stateless (TERMINEE — PR #380 mergee)
+### Phase 21-A — VSGraphVerifier stateless (TERMINEE — PR #380)
 
 Nouveaux fichiers :
 - Source/BlueprintEditor/VSGraphVerifier.h
@@ -74,78 +74,57 @@ Pre-exec : Blocage si ERROR, avertissement log si WARNING seulement.
 
 ---
 
-## Initiative E — Dynamic Pins Sequence/Switch : Add [+] / Remove [-] + Undo/Redo (PRIORITAIRE)
+## Initiative E — Dynamic Pins Sequence/Switch (UX) — P0 PRIORITAIRE
 
 ### Contexte
 
-Les nodes de type **VSSequence** et **VSSwitch** disposent actuellement d'un bouton [+] pour ajouter
-des sorties exec (introduit Phase 20-C). Cette initiative etend et corrige le comportement
-pour fournir une UX complete et un support Undo/Redo exhaustif.
+Les nodes VSSequence et VSSwitch doivent permettre a l'utilisateur d'ajouter et
+retirer des pins exec out dynamiquement depuis le canvas, avec un rendu UX
+coherent (bouton [+] en bas, [-] par pin), et une couverture Undo/Redo complete.
 
-### Spec fonctionnelle (fournie par @Atlasbruce le 2026-03-14)
+### Spec validee par @Atlasbruce — 2026-03-14
 
-**Regles UX :**
+#### Comportement UX
 
-1. Le bouton **[+]** (tooltip : "Add Execution Output") doit TOUJOURS etre positionne EN DESSOUS
-du dernier pin out exec sur le canvas (jamais au-dessus, jamais intercale).
+| Element | Position | Tooltip |
+|---|---|---|
+| Bouton [+] | Toujours EN DESSOUS du dernier pin exec out | "Add Execution Output" |
+| Bouton [-] | Inline a droite de chaque pin exec out (sauf pin de base) | "Remove Execution Output" |
 
-2. Pour chaque pin out exec (au-dela du pin de base), afficher un bouton **[-]** inline
-a droite du label du pin (tooltip : "Remove Execution Output").
-   - Si le pin supprime possede un lien actif, le lien est retire automatiquement
-     (suppression propre, pas de ghost link).
-   - Le pin de base (Out / premier pin / Case_0) n'est PAS supprimable.
+**Regles :**
+- Le pin de base (Out pour Sequence, Case_0 pour Switch) n'est PAS supprimable (pas de bouton [-])
+- L'ajout cree un nouveau pin nomme automatiquement : Out_1, Out_2... (Sequence) ou Case_1, Case_2... (Switch)
+- La suppression d'un pin connecte retire automatiquement la liaison (equivalente a DeleteLinkCommand)
+- Apres add/remove : `RebuildLinks()` appele pour synchroniser ImNodes
 
-4. Toute action Add pin et Remove pin est couverte par le systeme Undo/Redo :
-   - Add : AddExecPinCommand pousse sur l'undo stack — Ctrl+Z retire le pin ajoute.
-   - Remove : RemoveExecPinCommand pousse sur l'undo stack — Ctrl+Z restaure le pin
-     et son lien si existant.
+#### Couverture Undo/Redo
 
-### Nodes concernes
+| Action | Command | Undo | Redo |
+|---|---|---|---|
+| Add pin exec | `AddExecPinCommand` | Retire le pin ajoute + retire lien si cree | Re-ajoute le pin |
+| Remove pin exec | `RemoveExecPinCommand` | Re-ajoute le pin + restaure lien si existait | Retire le pin + lien |
 
-- **VSSequence** : pins Out, Out_1, Out_2, Out_N (N dynamique)
-- **VSSwitch** : pins Case_0, Case_1, Case_N (N dynamique)
+**RemoveExecPinCommand stocke :**
+- `nodeID`, `pinName`, `pinIndex` (position dans la liste)
+- `linkedTargetNodeID`, `linkedTargetPinName` (si pin avait un lien, -1 sinon)
 
-### Phase 21-D — Implementation Dynamic Pins Add/Remove (PROCHAINE apres 21-B)
+#### Fichiers impactes
 
-#### Nouveaux fichiers prevus
-
-- Source/BlueprintEditor/Commands/AddExecPinCommand.h
-- Source/BlueprintEditor/Commands/AddExecPinCommand.cpp
-- Source/BlueprintEditor/Commands/RemoveExecPinCommand.h
-- Source/BlueprintEditor/Commands/RemoveExecPinCommand.cpp
-- Tests/BlueprintEditor/Phase21DTest.cpp
-- Mise a jour CMakeLists.txt
-
-#### Fichiers modifies prevus
-
-- Source/BlueprintEditor/VisualScriptEditorPanel.cpp :
-  - RenderNode() ou equivalent : rendu bouton [+] apres les pins out exec (toujours en dernier)
-  - RenderNode() : rendu bouton [-] par pin out exec supprimable, inline avec le label
-  - Gestion suppression de lien associe lors de RemoveExecPin + RebuildLinks()
-- Source/BlueprintEditor/VisualScriptEditorPanel.h : declarations si nouvelles methodes
-
-#### Contraintes techniques
-
-- C++14 strict : pas de structured bindings, pas de std::optional, pas de std::string_view.
-- SYSTEM_LOG pour tous les logs (pas d'emoji dans les chaines).
-- Undo/Redo : AddExecPinCommand et RemoveExecPinCommand heritent de IUndoRedoCommand.
-- RemoveExecPinCommand : stocke l'etat du lien (nodeID src + nodeID dst + pin IDs) pour le restaurer au Undo.
-- Pas de ghost links : RebuildLinks() appele apres chaque Remove.
-- Ordre visuel : bouton [+] rendu EN DERNIER dans la liste des pins du node, jamais intercale.
-- Tooltips ASCII : "Add Execution Output" et "Remove Execution Output".
-
-#### Tests prevus (Phase21DTest.cpp)
-
-| Test | Description |
+| Fichier | Modification |
 |---|---|
-| AddPin_Sequence_CreatesPin | Ajouter un pin sur VSSequence -> pin present dans le template |
-| RemovePin_Sequence_RemovesPin | Supprimer un pin -> pin absent du template |
-| RemovePin_WithLink_RemovesLink | Supprimer un pin avec lien -> lien absent du template |
-| Undo_AddPin_RestoresState | Ctrl+Z apres Add -> pin disparu |
-| Undo_RemovePin_RestoresPin | Ctrl+Z apres Remove -> pin restaure |
-| Undo_RemovePin_WithLink_RestoresLink | Ctrl+Z apres Remove avec lien -> lien restaure |
-| RedoAddPin | Ctrl+Y apres Undo Add -> pin re-ajoute |
-| PinBaseNotRemovable | Le pin de base (Out / Case_0) ne peut pas etre supprime |
+| `Source/BlueprintEditor/VisualScriptNodeRenderer.h/.cpp` | Rendu [+] apres pins out, [-] inline par pin |
+| `Source/BlueprintEditor/VisualScriptEditorPanel.cpp` | Logique add/remove + appel commands |
+| `Source/BlueprintEditor/UndoRedoStack.h/.cpp` | AddExecPinCommand + RemoveExecPinCommand |
+| `Tests/BlueprintEditor/Phase21DTest.cpp` | NOUVEAU — tests headless |
+| `CMakeLists.txt` | Ajout cible OlympePhase21DTests |
+
+#### Tests requis (Phase 21-D)
+
+1. Add pin sur Sequence -> pin cree, undoable, redoable
+2. Remove pin sans lien -> pin retire, undoable, redoable
+3. Remove pin avec lien -> pin retire + lien retire, undo restaure les deux
+4. Add puis Remove -> etat initial restaure apres double undo
+5. Pin de base non supprimable (pas de bouton [-])
 
 ---
 
@@ -201,20 +180,20 @@ Phases prevues :
 
 ## Calendrier indicatif
 
-| Phase | Initiative | Estimation |
-|---|---|---|
-| 21-A | GVS — VSGraphVerifier | TERMINEE |
-| 21-B | GVS — Panel Validation UI | ~1 session (EN COURS) |
-| 21-C | GVS — Pre-save/Pre-exec | ~0.5 session |
-| 21-D | Dynamic Pins Add[+]/Remove[-] Undo/Redo (Sequence/Switch) | ~1 session (PRIORITAIRE) |
-| 22 | Font Awesome Icons | ~2 sessions (apres spec) |
-| 23-A | AnimGraph | ~2 sessions |
-| 23-B | LevelScript + Cinematic | ~2 sessions |
-| 23-C | MenuGraph + GlobalRules | ~2 sessions |
-| 24-A | Runtime Instance | ~2 sessions |
-| 24-B | Debugger Multi-instances | ~2 sessions |
-| 24-C | Thread safety | ~1 session |
+| Phase | Initiative | Estimation | Statut |
+|---|---|---|---|
+| 21-A | GVS — VSGraphVerifier | ~1 session | TERMINEE (PR #380) |
+| 21-B | GVS — Panel Validation UI | ~1 session | EN COURS |
+| 21-C | GVS — Pre-save/Pre-exec | ~0.5 session | A venir |
+| 21-D | Dynamic Pins Sequence/Switch | ~1 session | PRIORITAIRE — A implementer |
+| 22 | Font Awesome Icons | ~2 sessions (apres spec) | En attente |
+| 23-A | AnimGraph | ~2 sessions | Phase 23+ |
+| 23-B | LevelScript + Cinematic | ~2 sessions | Phase 23+ |
+| 23-C | MenuGraph + GlobalRules | ~2 sessions | Phase 23+ |
+| 24-A | Runtime Instance | ~2 sessions | Phase 24+ |
+| 24-B | Debugger Multi-instances | ~2 sessions | Phase 24+ |
+| 24-C | Thread safety | ~1 session | Phase 24+ |
 
 ---
 
-**Last Updated**: 2026-03-14 12:00:00
+**Last Updated**: 2026-03-14 14:26:00
