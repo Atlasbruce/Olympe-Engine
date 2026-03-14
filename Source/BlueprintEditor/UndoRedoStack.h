@@ -315,6 +315,64 @@ private:
 };
 
 // ============================================================================
+// EditParameterCommand (Phase 22-C)
+// ============================================================================
+
+/**
+ * @class EditParameterCommand
+ * @brief Records an edit to a single named parameter binding on a node.
+ *
+ * Stores the old and new ParameterBinding (type + literal value + variable name)
+ * so that the change can be reversed via Undo() and re-applied via Execute().
+ */
+class EditParameterCommand : public ICommand {
+public:
+    EditParameterCommand(int32_t               nodeID,
+                         const std::string&    paramName,
+                         const ParameterBinding& oldBinding,
+                         const ParameterBinding& newBinding);
+
+    void Execute(TaskGraphTemplate& graph) override;
+    void Undo(TaskGraphTemplate& graph)    override;
+    std::string GetDescription()     const override;
+
+private:
+    int32_t          m_nodeID;
+    std::string      m_paramName;
+    ParameterBinding m_oldBinding;
+    ParameterBinding m_newBinding;
+};
+
+// ============================================================================
+// EditNodePropertiesCommand (Phase 22-C)
+// ============================================================================
+
+/**
+ * @class EditNodePropertiesCommand
+ * @brief Records a batch edit of all parameter bindings on a node.
+ *
+ * Suitable for snapshotting the full parameter map before a complex edit and
+ * restoring it atomically on Undo().
+ */
+class EditNodePropertiesCommand : public ICommand {
+public:
+    using ParameterMap = std::unordered_map<std::string, ParameterBinding>;
+
+    EditNodePropertiesCommand(int32_t               nodeID,
+                              const ParameterMap&   oldParams,
+                              const ParameterMap&   newParams);
+
+    void Execute(TaskGraphTemplate& graph) override;
+    void Undo(TaskGraphTemplate& graph)    override;
+    std::string GetDescription()     const override;
+
+private:
+    int32_t      m_nodeID;
+    ParameterMap m_oldParams;
+    ParameterMap m_newParams;
+};
+
+// ============================================================================
 // UndoRedoStack
 // ============================================================================
 

@@ -95,10 +95,20 @@ enum class VariableType : uint8_t {
 /**
  * @enum ParameterBindingType
  * @brief Describes how a parameter value is provided to a task node.
+ *
+ * Values 0-1 are the original binding types (unchanged).
+ * Values 2-6 are Phase 22-C extensions for dropdown-driven parameter editors.
  */
 enum class ParameterBindingType : uint8_t {
-    Literal,        ///< Value is embedded directly in the template
-    LocalVariable   ///< Value is read from the local blackboard at runtime
+    Literal        = 0, ///< Value is embedded directly in the template
+    LocalVariable  = 1, ///< Value is read from the local blackboard at runtime
+
+    // Phase 22-C extensions — dropdown-driven parameter types
+    AtomicTaskID   = 2, ///< ID of an atomic task (from AtomicTaskUIRegistry)
+    ConditionID    = 3, ///< ID of a condition type (from ConditionRegistry)
+    MathOperator   = 4, ///< Math operator symbol (+, -, *, /, %) (from OperatorRegistry)
+    ComparisonOp   = 5, ///< Comparison operator (==, !=, <, <=, >, >=) (from OperatorRegistry)
+    SubGraphPath   = 6  ///< File path to a sub-graph .ats file
 };
 
 // ============================================================================

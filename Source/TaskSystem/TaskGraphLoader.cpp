@@ -522,6 +522,36 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
                 binding.Type = ParameterBindingType::LocalVariable;
                 binding.VariableName = JsonHelper::GetString(bindingJson, "VariableName", "");
             }
+            else if (bindingType == "AtomicTaskID")
+            {
+                binding.Type         = ParameterBindingType::AtomicTaskID;
+                binding.VariableName = JsonHelper::GetString(bindingJson, "value",
+                                       JsonHelper::GetString(bindingJson, "VariableName", ""));
+            }
+            else if (bindingType == "ConditionID")
+            {
+                binding.Type         = ParameterBindingType::ConditionID;
+                binding.VariableName = JsonHelper::GetString(bindingJson, "value",
+                                       JsonHelper::GetString(bindingJson, "VariableName", ""));
+            }
+            else if (bindingType == "MathOperator")
+            {
+                binding.Type         = ParameterBindingType::MathOperator;
+                binding.VariableName = JsonHelper::GetString(bindingJson, "value",
+                                       JsonHelper::GetString(bindingJson, "VariableName", ""));
+            }
+            else if (bindingType == "ComparisonOp")
+            {
+                binding.Type         = ParameterBindingType::ComparisonOp;
+                binding.VariableName = JsonHelper::GetString(bindingJson, "value",
+                                       JsonHelper::GetString(bindingJson, "VariableName", ""));
+            }
+            else if (bindingType == "SubGraphPath")
+            {
+                binding.Type         = ParameterBindingType::SubGraphPath;
+                binding.VariableName = JsonHelper::GetString(bindingJson, "value",
+                                       JsonHelper::GetString(bindingJson, "VariableName", ""));
+            }
 
             nd.InputParams[paramName] = binding;
         }
@@ -749,6 +779,36 @@ void TaskGraphLoader::ParseParameters(const json& paramsJson,
             {
                 binding.Type         = ParameterBindingType::LocalVariable;
                 binding.VariableName = JsonHelper::GetString(val, "variableName",
+                                       JsonHelper::GetString(val, "VariableName", ""));
+            }
+            else if (btype == "AtomicTaskID")
+            {
+                binding.Type         = ParameterBindingType::AtomicTaskID;
+                binding.VariableName = JsonHelper::GetString(val, "value",
+                                       JsonHelper::GetString(val, "VariableName", ""));
+            }
+            else if (btype == "ConditionID")
+            {
+                binding.Type         = ParameterBindingType::ConditionID;
+                binding.VariableName = JsonHelper::GetString(val, "value",
+                                       JsonHelper::GetString(val, "VariableName", ""));
+            }
+            else if (btype == "MathOperator")
+            {
+                binding.Type         = ParameterBindingType::MathOperator;
+                binding.VariableName = JsonHelper::GetString(val, "value",
+                                       JsonHelper::GetString(val, "VariableName", ""));
+            }
+            else if (btype == "ComparisonOp")
+            {
+                binding.Type         = ParameterBindingType::ComparisonOp;
+                binding.VariableName = JsonHelper::GetString(val, "value",
+                                       JsonHelper::GetString(val, "VariableName", ""));
+            }
+            else if (btype == "SubGraphPath")
+            {
+                binding.Type         = ParameterBindingType::SubGraphPath;
+                binding.VariableName = JsonHelper::GetString(val, "value",
                                        JsonHelper::GetString(val, "VariableName", ""));
             }
             else

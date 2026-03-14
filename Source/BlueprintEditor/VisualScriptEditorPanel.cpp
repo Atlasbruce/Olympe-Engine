@@ -9,6 +9,10 @@
 
 #include "VisualScriptEditorPanel.h"
 #include "DebugController.h"
+#include "AtomicTaskUIRegistry.h"
+#include "ConditionRegistry.h"
+#include "OperatorRegistry.h"
+#include "BBVariableRegistry.h"
 #include "../system/system_utils.h"
 
 #include "../third_party/imgui/imgui.h"
@@ -2203,36 +2207,72 @@ void VisualScriptEditorPanel::RenderProperties()
     {
         case TaskNodeType::AtomicTask:
         {
-            char taskBuf[128];
-            strncpy_s(taskBuf, sizeof(taskBuf), def.AtomicTaskID.c_str(), _TRUNCATE);
-            if (ImGui::InputText("TaskType##vstask", taskBuf, sizeof(taskBuf)))
-            {
-                def.AtomicTaskID = taskBuf;
-                for (size_t i = 0; i < m_template.Nodes.size(); ++i)
-                {
-                    if (m_template.Nodes[i].NodeID == m_selectedNodeID)
-                    {
-                        m_template.Nodes[i].AtomicTaskID = def.AtomicTaskID;
-                        break;
-                    }
-                }
-                m_dirty = true;
-            }
+            // --- AtomicTaskID dropdown ---
+            const std::vector<TaskSpec> tasks = AtomicTaskUIRegistry::Get().GetSortedForUI();
+            const std::string& currentTask = def.AtomicTaskID;
+            const char* previewLabel = currentTask.empty() ? "(select task...)" : currentTask.c_str();
+
             if (ImGui::IsItemActivated())
             {
                 m_propEditOldTaskID     = def.AtomicTaskID;
                 m_propEditNodeIDOnFocus = m_selectedNodeID;
             }
-            if (ImGui::IsItemDeactivatedAfterEdit() &&
-                m_propEditNodeIDOnFocus == m_selectedNodeID &&
-                def.AtomicTaskID != m_propEditOldTaskID)
+
+            if (ImGui::BeginCombo("TaskType##vstask", previewLabel))
             {
-                m_undoStack.PushCommand(
-                    std::unique_ptr<ICommand>(new EditNodePropertyCommand(
-                        m_selectedNodeID, "AtomicTaskID",
-                        PropertyValue::FromString(m_propEditOldTaskID),
-                        PropertyValue::FromString(def.AtomicTaskID))),
-                    m_template);
+                if (m_propEditOldTaskID != def.AtomicTaskID)
+                {
+                    m_propEditOldTaskID     = def.AtomicTaskID;
+                    m_propEditNodeIDOnFocus = m_selectedNodeID;
+                }
+                std::string lastCat;
+                for (size_t ti = 0; ti < tasks.size(); ++ti)
+                {
+                    const TaskSpec& spec = tasks[ti];
+                    // Show category header separator when category changes
+                    if (spec.category != lastCat)
+                    {
+                        if (!lastCat.empty())
+                            ImGui::Separator();
+                        ImGui::TextDisabled("%s", spec.category.c_str());
+                        lastCat = spec.category;
+                    }
+                    bool selected = (spec.id == currentTask);
+                    std::string label = "  " + spec.displayName + "##" + spec.id;
+                    if (ImGui::Selectable(label.c_str(), selected))
+                    {
+                        const std::string oldTaskID = def.AtomicTaskID;
+                        def.AtomicTaskID = spec.id;
+                        for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                        {
+                            if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                            {
+                                m_template.Nodes[i].AtomicTaskID = def.AtomicTaskID;
+                                break;
+                            }
+                        }
+                        if (def.AtomicTaskID != oldTaskID)
+                        {
+                            m_undoStack.PushCommand(
+                                std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                                    m_selectedNodeID, "AtomicTaskID",
+                                    PropertyValue::FromString(oldTaskID),
+                                    PropertyValue::FromString(def.AtomicTaskID))),
+                                m_template);
+                        }
+                        m_dirty = true;
+                    }
+                    if (selected)
+                        ImGui::SetItemDefaultFocus();
+                    // Tooltip with description
+                    if (ImGui::IsItemHovered() && !spec.description.empty())
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::TextUnformatted(spec.description.c_str());
+                        ImGui::EndTooltip();
+                    }
+                }
+                ImGui::EndCombo();
             }
             break;
         }
@@ -2273,72 +2313,108 @@ void VisualScriptEditorPanel::RenderProperties()
         case TaskNodeType::GetBBValue:
         case TaskNodeType::SetBBValue:
         {
-            char bbKeyBuf[128];
-            strncpy_s(bbKeyBuf, sizeof(bbKeyBuf), def.BBKey.c_str(), _TRUNCATE);
-            if (ImGui::InputText("BB Key##vsbbkey", bbKeyBuf, sizeof(bbKeyBuf)))
+            // --- BBKey dropdown populated from the graph's blackboard ---
+            BBVariableRegistry bbReg;
+            bbReg.LoadFromTemplate(m_template);
+            const std::vector<VarSpec>& vars = bbReg.GetAllVariables();
+            const std::string& curKey = def.BBKey;
+            const char* previewLabel  = curKey.empty() ? "(select key...)" : curKey.c_str();
+
+            if (ImGui::BeginCombo("BB Key##vsbbkey", previewLabel))
             {
-                def.BBKey = bbKeyBuf;
-                for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                if (m_propEditOldBBKey != curKey ||
+                    m_propEditNodeIDOnFocus != m_selectedNodeID)
                 {
-                    if (m_template.Nodes[i].NodeID == m_selectedNodeID)
-                    {
-                        m_template.Nodes[i].BBKey = def.BBKey;
-                        break;
-                    }
+                    m_propEditOldBBKey      = curKey;
+                    m_propEditNodeIDOnFocus = m_selectedNodeID;
                 }
-                m_dirty = true;
-            }
-            if (ImGui::IsItemActivated())
-            {
-                m_propEditOldBBKey      = def.BBKey;
-                m_propEditNodeIDOnFocus = m_selectedNodeID;
-            }
-            if (ImGui::IsItemDeactivatedAfterEdit() &&
-                m_propEditNodeIDOnFocus == m_selectedNodeID &&
-                def.BBKey != m_propEditOldBBKey)
-            {
-                m_undoStack.PushCommand(
-                    std::unique_ptr<ICommand>(new EditNodePropertyCommand(
-                        m_selectedNodeID, "BBKey",
-                        PropertyValue::FromString(m_propEditOldBBKey),
-                        PropertyValue::FromString(def.BBKey))),
-                    m_template);
+                for (size_t vi = 0; vi < vars.size(); ++vi)
+                {
+                    const VarSpec& v = vars[vi];
+                    bool selected    = (v.name == curKey);
+                    if (ImGui::Selectable(v.displayLabel.c_str(), selected))
+                    {
+                        const std::string oldKey = def.BBKey;
+                        def.BBKey = v.name;
+                        for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                        {
+                            if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                            {
+                                m_template.Nodes[i].BBKey = def.BBKey;
+                                break;
+                            }
+                        }
+                        if (def.BBKey != oldKey)
+                        {
+                            m_undoStack.PushCommand(
+                                std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                                    m_selectedNodeID, "BBKey",
+                                    PropertyValue::FromString(oldKey),
+                                    PropertyValue::FromString(def.BBKey))),
+                                m_template);
+                        }
+                        m_dirty = true;
+                    }
+                    if (selected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
             }
             break;
         }
         case TaskNodeType::Branch:
         case TaskNodeType::While:
         {
-            char condBuf[128];
-            strncpy_s(condBuf, sizeof(condBuf), def.ConditionID.c_str(), _TRUNCATE);
-            if (ImGui::InputText("ConditionID##vscond", condBuf, sizeof(condBuf)))
+            // --- ConditionID dropdown ---
+            const std::vector<ConditionSpec> conditions = ConditionRegistry::Get().GetAllConditions();
+            const std::string& curCond = def.ConditionID;
+            const char* previewCond    = curCond.empty() ? "(select condition...)" : curCond.c_str();
+
+            if (ImGui::BeginCombo("ConditionID##vscond", previewCond))
             {
-                def.ConditionID = condBuf;
-                for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                if (m_propEditOldConditionID != curCond ||
+                    m_propEditNodeIDOnFocus != m_selectedNodeID)
                 {
-                    if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                    m_propEditOldConditionID = curCond;
+                    m_propEditNodeIDOnFocus  = m_selectedNodeID;
+                }
+                for (size_t ci = 0; ci < conditions.size(); ++ci)
+                {
+                    const ConditionSpec& cs = conditions[ci];
+                    bool selected = (cs.id == curCond);
+                    if (ImGui::Selectable(cs.displayName.c_str(), selected))
                     {
-                        m_template.Nodes[i].ConditionID = def.ConditionID;
-                        break;
+                        const std::string oldCond = def.ConditionID;
+                        def.ConditionID = cs.id;
+                        for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                        {
+                            if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                            {
+                                m_template.Nodes[i].ConditionID = def.ConditionID;
+                                break;
+                            }
+                        }
+                        if (def.ConditionID != oldCond)
+                        {
+                            m_undoStack.PushCommand(
+                                std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                                    m_selectedNodeID, "ConditionID",
+                                    PropertyValue::FromString(oldCond),
+                                    PropertyValue::FromString(def.ConditionID))),
+                                m_template);
+                        }
+                        m_dirty = true;
+                    }
+                    if (selected)
+                        ImGui::SetItemDefaultFocus();
+                    if (ImGui::IsItemHovered() && !cs.description.empty())
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::TextUnformatted(cs.description.c_str());
+                        ImGui::EndTooltip();
                     }
                 }
-                m_dirty = true;
-            }
-            if (ImGui::IsItemActivated())
-            {
-                m_propEditOldConditionID = def.ConditionID;
-                m_propEditNodeIDOnFocus  = m_selectedNodeID;
-            }
-            if (ImGui::IsItemDeactivatedAfterEdit() &&
-                m_propEditNodeIDOnFocus == m_selectedNodeID &&
-                def.ConditionID != m_propEditOldConditionID)
-            {
-                m_undoStack.PushCommand(
-                    std::unique_ptr<ICommand>(new EditNodePropertyCommand(
-                        m_selectedNodeID, "ConditionID",
-                        PropertyValue::FromString(m_propEditOldConditionID),
-                        PropertyValue::FromString(def.ConditionID))),
-                    m_template);
+                ImGui::EndCombo();
             }
             break;
         }
@@ -2379,36 +2455,53 @@ void VisualScriptEditorPanel::RenderProperties()
         }
         case TaskNodeType::MathOp:
         {
-            char mathOpBuf[8];
-            strncpy_s(mathOpBuf, sizeof(mathOpBuf), def.MathOperator.c_str(), _TRUNCATE);
-            if (ImGui::InputText("Operator (+,-,*,/)##vsmath", mathOpBuf, sizeof(mathOpBuf)))
+            // --- MathOperator dropdown ---
+            const std::vector<std::string>& ops = OperatorRegistry::GetMathOperators();
+            const std::string& curOp = def.MathOperator;
+            std::string previewOp    = curOp.empty()
+                                       ? "(select operator...)"
+                                       : OperatorRegistry::GetDisplayName(curOp);
+
+            if (ImGui::BeginCombo("Operator##vsmath", previewOp.c_str()))
             {
-                def.MathOperator = mathOpBuf;
-                for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                if (m_propEditOldMathOp != curOp ||
+                    m_propEditNodeIDOnFocus != m_selectedNodeID)
                 {
-                    if (m_template.Nodes[i].NodeID == m_selectedNodeID)
-                    {
-                        m_template.Nodes[i].MathOperator = def.MathOperator;
-                        break;
-                    }
+                    m_propEditOldMathOp     = curOp;
+                    m_propEditNodeIDOnFocus = m_selectedNodeID;
                 }
-                m_dirty = true;
-            }
-            if (ImGui::IsItemActivated())
-            {
-                m_propEditOldMathOp     = def.MathOperator;
-                m_propEditNodeIDOnFocus = m_selectedNodeID;
-            }
-            if (ImGui::IsItemDeactivatedAfterEdit() &&
-                m_propEditNodeIDOnFocus == m_selectedNodeID &&
-                def.MathOperator != m_propEditOldMathOp)
-            {
-                m_undoStack.PushCommand(
-                    std::unique_ptr<ICommand>(new EditNodePropertyCommand(
-                        m_selectedNodeID, "MathOperator",
-                        PropertyValue::FromString(m_propEditOldMathOp),
-                        PropertyValue::FromString(def.MathOperator))),
-                    m_template);
+                for (size_t oi = 0; oi < ops.size(); ++oi)
+                {
+                    const std::string& op = ops[oi];
+                    bool selected = (op == curOp);
+                    std::string label = OperatorRegistry::GetDisplayName(op);
+                    if (ImGui::Selectable(label.c_str(), selected))
+                    {
+                        const std::string oldOp = def.MathOperator;
+                        def.MathOperator = op;
+                        for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                        {
+                            if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                            {
+                                m_template.Nodes[i].MathOperator = def.MathOperator;
+                                break;
+                            }
+                        }
+                        if (def.MathOperator != oldOp)
+                        {
+                            m_undoStack.PushCommand(
+                                std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                                    m_selectedNodeID, "MathOperator",
+                                    PropertyValue::FromString(oldOp),
+                                    PropertyValue::FromString(def.MathOperator))),
+                                m_template);
+                        }
+                        m_dirty = true;
+                    }
+                    if (selected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
             }
             break;
         }
@@ -2431,14 +2524,30 @@ void VisualScriptEditorPanel::RenderProperties()
 
             // ---- Switch Variable ----
             {
-                char varBuf[128];
-                strncpy_s(varBuf, sizeof(varBuf), def.switchVariable.c_str(), _TRUNCATE);
-                if (ImGui::InputText("Switch Var (BB key)##vsswitchvar", varBuf, sizeof(varBuf)))
+                // Dropdown populated from the graph's blackboard
+                BBVariableRegistry bbReg;
+                bbReg.LoadFromTemplate(m_template);
+                const std::vector<VarSpec>& vars = bbReg.GetAllVariables();
+                const std::string& curVar   = def.switchVariable;
+                const char* previewVar      = curVar.empty() ? "(select variable...)" : curVar.c_str();
+
+                if (ImGui::BeginCombo("Switch Var##vsswitchvar", previewVar))
                 {
-                    def.switchVariable = varBuf;
-                    if (tmplNode)
-                        tmplNode->switchVariable = def.switchVariable;
-                    m_dirty = true;
+                    for (size_t vi = 0; vi < vars.size(); ++vi)
+                    {
+                        const VarSpec& v = vars[vi];
+                        bool selected    = (v.name == curVar);
+                        if (ImGui::Selectable(v.displayLabel.c_str(), selected))
+                        {
+                            def.switchVariable = v.name;
+                            if (tmplNode)
+                                tmplNode->switchVariable = def.switchVariable;
+                            m_dirty = true;
+                        }
+                        if (selected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
                 }
             }
 
