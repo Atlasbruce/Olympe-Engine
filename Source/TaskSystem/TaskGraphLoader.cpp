@@ -415,8 +415,8 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
             });
     }
 
-    // Dynamic exec-out pins (VSSequence, Phase 20-C).
-    if (nd.Type == TaskNodeType::VSSequence &&
+    // Dynamic exec-out pins (VSSequence and Switch, Phase 20-C / Phase 21-D).
+    if ((nd.Type == TaskNodeType::VSSequence || nd.Type == TaskNodeType::Switch) &&
         nodeJson.contains("dynamicExecPins") &&
         nodeJson["dynamicExecPins"].is_array())
     {

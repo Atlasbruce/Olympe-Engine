@@ -121,10 +121,13 @@ public:
         const std::vector<std::pair<std::string, VariableType>>& dataOutputPins);
 
     /**
-     * @brief Extended RenderNode with inline parameter display and optional Add[+] callback.
+     * @brief Extended RenderNode with inline parameter display and optional Add[+]/Remove[-] callbacks.
      *
      * Displays key parameters inline in the node body (between title bar and pins).
-     * For VSSequence nodes, renders a [+] button that invokes onAddPin(nodeID, userData).
+     * For VSSequence and Switch nodes, renders a [+] button below the last exec-out pin
+     * that invokes onAddPin(nodeID, onAddPinUserData).
+     * For each dynamic exec-out pin (all but the base pin), renders a [-] button inline
+     * that invokes onRemovePin(nodeID, dynamicPinIndex, onRemovePinUserData).
      *
      * @param nodeUID        Global ImNodes node UID.
      * @param nodeID         Graph-local node ID.
@@ -133,12 +136,16 @@ public:
      * @param hasBreakpoint  Whether a breakpoint is set on this node.
      * @param isActive       Whether this node is executing (debug).
      * @param execInputPins  Names of exec-in pins.
-     * @param execOutputPins Names of exec-out pins (includes dynamic ones for VSSequence).
+     * @param execOutputPins Names of exec-out pins (includes dynamic ones for VSSequence/Switch).
      * @param dataInputPins  (name, type) pairs for data-in pins.
      * @param dataOutputPins (name, type) pairs for data-out pins.
-     * @param onAddPin       Optional callback invoked when user clicks [+] on a VSSequence.
+     * @param onAddPin       Optional callback invoked when user clicks [+] on a VSSequence/Switch.
      *                       Receives the nodeID and onAddPinUserData. Pass nullptr to disable.
      * @param onAddPinUserData  User data passed to onAddPin.
+     * @param onRemovePin    Optional callback invoked when user clicks [-] on a dynamic pin.
+     *                       Receives nodeID, 0-based dynamic pin index, and onRemovePinUserData.
+     *                       Pass nullptr to disable.
+     * @param onRemovePinUserData  User data passed to onRemovePin.
      */
     static void RenderNode(
         int                                                      nodeUID,
@@ -152,7 +159,9 @@ public:
         const std::vector<std::pair<std::string, VariableType>>& dataInputPins,
         const std::vector<std::pair<std::string, VariableType>>& dataOutputPins,
         void (*onAddPin)(int nodeID, void* userData),
-        void* onAddPinUserData);
+        void* onAddPinUserData,
+        void (*onRemovePin)(int nodeID, int dynamicPinIndex, void* userData) = nullptr,
+        void* onRemovePinUserData = nullptr);
 
     /**
      * @brief Renders a breakpoint indicator (red circle) next to a node.
