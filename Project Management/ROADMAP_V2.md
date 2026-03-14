@@ -178,22 +178,87 @@ Phases prevues :
 
 ---
 
-## Calendrier indicatif
+## Phase 22 — Node Enhancement & UI Improvements
 
-| Phase | Initiative | Estimation | Statut |
-|---|---|---|---|
-| 21-A | GVS — VSGraphVerifier | ~1 session | TERMINEE (PR #380) |
-| 21-B | GVS — Panel Validation UI | ~1 session | EN COURS |
-| 21-C | GVS — Pre-save/Pre-exec | ~0.5 session | A venir |
-| 21-D | Dynamic Pins Sequence/Switch | ~1 session | PRIORITAIRE — A implementer |
-| 22 | Font Awesome Icons | ~2 sessions (apres spec) | En attente |
-| 23-A | AnimGraph | ~2 sessions | Phase 23+ |
-| 23-B | LevelScript + Cinematic | ~2 sessions | Phase 23+ |
-| 23-C | MenuGraph + GlobalRules | ~2 sessions | Phase 23+ |
-| 24-A | Runtime Instance | ~2 sessions | Phase 24+ |
-| 24-B | Debugger Multi-instances | ~2 sessions | Phase 24+ |
-| 24-C | Thread safety | ~1 session | Phase 24+ |
+### Phase 22-A — Switch Node Enhancement (COMPLETED ✅)
+
+**Status:** PR #384 MERGED  
+**Date Completed:** 2026-03-14  
+**Changes:**
+- Dynamic switch case labels ("Combat", "Patrol" etc.)
+- Right-aligned pin labels (fixes center-alignment with long names)
+- Runtime variable display (var: bb_ai_mode = 5)
+- No backward compatibility (Switch v1 → v2)
+
+**Tests:** 10/10 passing ✅
 
 ---
 
-**Last Updated**: 2026-03-14 14:26:00
+### Phase 22-C — Parameter Dropdowns & Registries (ACTIVE 🔧)
+
+**Status:** Implementation in Progress  
+**Priority:** P0 CRITICAL  
+**Date Started:** 2026-03-14 22:45:00 UTC  
+**Expected Duration:** ~12-16 hours  
+**Next Status Update:** Next session
+
+**Why This Phase?** 
+Users had no way to discover available:
+- AtomicTask IDs
+- Condition types
+- Blackboard variables
+- Math/Comparison operators
+- SubGraph paths
+
+Result: Impossible to author graphs without documentation/guessing.
+
+**Solution:**
+- 5 centralized registries (AtomicTask, Condition, BBVar, Operator, Master)
+- Dropdown UI for all parameters (no more text fields)
+- Extended ParameterBindingType (6 types)
+- Intelligent filtering and categorization
+
+**Deliverables:**
+- 10 new source files (registries + UI)
+- 2 new Undo/Redo commands
+- Updated JSON serialization (v4)
+- 8 new validation rules (E020-E025, W010-W011)
+- 30+ test cases
+
+---
+
+### Phase 22-B — Font Awesome Icons & Design (DEFERRED → P2)
+
+**Status:** Awaiting design specifications  
+**Priority:** P2 (MEDIUM)  
+**Estimated Duration:** ~2 sessions (after spec)  
+**Blocker:** Design spec document from @Atlasbruce
+
+**Scope:**
+- Icons by node type in palette and canvas
+- Icons for pins (exec=triangle, data=circle)
+- Icons in Properties panel and toolbar
+- FontAwesome TTF embedded, C++14 compatible
+
+---
+
+## Updated Calendrier
+
+| Phase | Initiative | Estimation | Statut | Priority |
+|---|---|---|---|---|
+| 21-A | GVS — VSGraphVerifier | ~1 session | ✅ COMPLETED (PR #380) | — |
+| 22-A | Switch Node Enhancement | ~1 session | ✅ COMPLETED (PR #384) | — |
+| **22-C** | **Parameter Dropdowns & Registries** | **~1 session** | **🔧 IN PROGRESS** | **P0** |
+| 21-B | GVS — Panel Validation UI | ~1 session | ⏳ NEXT | P1 |
+| 21-C | GVS — Pre-save/Pre-exec Validation | ~0.5 session | Planned | P1 |
+| 22-B | Font Awesome Icons & Design | ~2 sessions | ⏳ Deferred | P2 |
+| 23-A | AnimGraph Infrastructure | ~2 sessions | Planned | — |
+| 23-B | LevelScript + Cinematic | ~2 sessions | Planned | — |
+| 23-C | MenuGraph + GlobalRules | ~2 sessions | Planned | — |
+| 24-A | Runtime Instance | ~2 sessions | Future | — |
+| 24-B | Debugger Multi-instances | ~2 sessions | Future | — |
+| 24-C | Thread Safety | ~1 session | Future | — |
+
+---
+
+**Last Updated**: 2026-03-14 22:45:00
