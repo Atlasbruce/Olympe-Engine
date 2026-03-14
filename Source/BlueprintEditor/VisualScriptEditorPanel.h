@@ -25,6 +25,7 @@
 #include "VisualScriptNodeRenderer.h"
 #include "UndoRedoStack.h"
 #include "VSConnectionValidator.h"
+#include "VSGraphVerifier.h"
 
 // Forward-declare ImNodes context type (defined in imnodes.h) in the global
 // namespace so it can be referenced from within the Olympe namespace below.
@@ -221,6 +222,12 @@ private:
     void RenderValidationOverlay();
     void RenderBreakpoints();
 
+    /** @brief Renders the verification results panel (Phase 21-B). */
+    void RenderVerificationPanel();
+
+    /** @brief Runs VSGraphVerifier on the current graph and stores the result. */
+    void RunVerification();
+
     // -----------------------------------------------------------------------
     // Canvas helpers
     // -----------------------------------------------------------------------
@@ -341,6 +348,19 @@ private:
     /// Validation messages (rebuilt each frame)
     std::vector<std::string> m_validationWarnings;
     std::vector<std::string> m_validationErrors;
+
+    // -----------------------------------------------------------------------
+    // Phase 21-B — Graph Verification
+    // -----------------------------------------------------------------------
+
+    /// Latest verification result (produced by RunVerification())
+    VSVerificationResult m_verificationResult;
+
+    /// True once RunVerification() has been called at least once for the current graph
+    bool m_verificationDone = false;
+
+    /// Node ID to focus/scroll to on next RenderCanvas() frame (-1 = none)
+    int m_focusNodeID = -1;
 
     /// Right-click paste position
     float m_contextMenuX = 0.0f;
