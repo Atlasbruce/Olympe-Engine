@@ -45,6 +45,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\UndoRedoStack.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptRenderer.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VSConnectionValidator.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\VSGraphVerifier.cpp" />
     <ClCompile Include="..\Source\Core\FontManager.cpp" />
     <ClCompile Include="..\Source\NodeGraphCore\GraphComment.cpp" />
     <ClCompile Include="..\Source\NodeGraphCore\LinkCache.cpp" />
@@ -206,6 +207,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\UndoRedoStack.h" />
     <ClInclude Include="..\Source\BlueprintEditor\VisualScriptRenderer.h" />
     <ClInclude Include="..\Source\BlueprintEditor\VSConnectionValidator.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\VSGraphVerifier.h" />
     <ClInclude Include="..\Source\Core\FontManager.h" />
     <ClInclude Include="..\Source\Core\IconsFontAwesome6.h" />
     <ClInclude Include="..\Source\NodeGraphCore\GraphComment.h" />

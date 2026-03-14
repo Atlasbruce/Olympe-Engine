@@ -169,6 +169,7 @@
     <ClCompile Include="Source\BlueprintEditor\UndoRedoStack.cpp" />
     <ClCompile Include="Source\Core\FontManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VSConnectionValidator.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VSGraphVerifier.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -375,6 +376,7 @@
     <ClInclude Include="Source\Core\IconsFontAwesome6.h" />
     <ClInclude Include="Source\Core\FontManager.h" />
     <ClInclude Include="Source\BlueprintEditor\VSConnectionValidator.h" />
+    <ClInclude Include="Source\BlueprintEditor\VSGraphVerifier.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />

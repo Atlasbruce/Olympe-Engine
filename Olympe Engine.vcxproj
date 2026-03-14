@@ -74,6 +74,7 @@
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VSConnectionValidator.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VSGraphVerifier.cpp" />
     <ClCompile Include="Source\BlueprintEditor\WorldBridge.cpp" />
     <ClCompile Include="Source\BlueprintEditor\NodeGraphPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Clipboard.cpp" />
@@ -254,6 +255,7 @@
     <ClInclude Include="Source\BlueprintEditor\VisualScriptEditorPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\VisualScriptRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\VSConnectionValidator.h" />
+    <ClInclude Include="Source\BlueprintEditor\VSGraphVerifier.h" />
     <ClInclude Include="Source\BlueprintEditor\WorldBridge.h" />
     <ClInclude Include="Source\CollisionMap.h" />
     <ClInclude Include="Source\ComponentDefinition.h" />
