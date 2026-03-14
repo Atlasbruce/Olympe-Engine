@@ -170,6 +170,11 @@
     <ClCompile Include="Source\Core\FontManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VSConnectionValidator.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VSGraphVerifier.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\AtomicTaskUIRegistry.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\BBVariableRegistry.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\ConditionRegistry.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\OperatorRegistry.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\ParameterEditorRegistry.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -377,6 +382,11 @@
     <ClInclude Include="Source\Core\FontManager.h" />
     <ClInclude Include="Source\BlueprintEditor\VSConnectionValidator.h" />
     <ClInclude Include="Source\BlueprintEditor\VSGraphVerifier.h" />
+    <ClInclude Include="Source\BlueprintEditor\AtomicTaskUIRegistry.h" />
+    <ClInclude Include="Source\BlueprintEditor\BBVariableRegistry.h" />
+    <ClInclude Include="Source\BlueprintEditor\ConditionRegistry.h" />
+    <ClInclude Include="Source\BlueprintEditor\OperatorRegistry.h" />
+    <ClInclude Include="Source\BlueprintEditor\ParameterEditorRegistry.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />

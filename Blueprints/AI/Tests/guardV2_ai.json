@@ -127,6 +127,12 @@
       "fromPin": "Out_3",
       "toNode": 32,
       "toPin": "In"
+    },
+    {
+      "fromNode": 156,
+      "fromPin": "Out_4",
+      "toNode": 155,
+      "toPin": "In"
     }
   ],
   "graphType": "VisualScript",
@@ -136,8 +142,8 @@
       "id": 54,
       "label": "Start",
       "position": {
-        "x": 129.779,
-        "y": 427.959
+        "x": -369.532,
+        "y": 45.3971
       },
       "type": "EntryPoint"
     },
@@ -148,8 +154,8 @@
       "id": 10,
       "label": "Self Preservation Sequence",
       "position": {
-        "x": 726.228,
-        "y": 744.435
+        "x": 741.433,
+        "y": 221.781
       },
       "type": "Sequence"
     },
@@ -157,8 +163,8 @@
       "id": 12,
       "label": "Find Safe Cover",
       "position": {
-        "x": 986.23,
-        "y": 677.435
+        "x": 1001.43,
+        "y": 154.781
       },
       "taskType": "Task_FindCover",
       "type": "AtomicTask"
@@ -167,8 +173,8 @@
       "id": 13,
       "label": "Apply Bandage/Heal",
       "position": {
-        "x": 985.23,
-        "y": 798.435
+        "x": 1000.43,
+        "y": 275.781
       },
       "taskType": "Task_HealSelf",
       "type": "AtomicTask"
@@ -180,8 +186,8 @@
       "id": 20,
       "label": "Combat Engagement",
       "position": {
-        "x": 998.21,
-        "y": 290.55
+        "x": 494.899,
+        "y": -282.012
       },
       "type": "Sequence"
     },
@@ -190,8 +196,8 @@
       "id": 21,
       "label": "Can See Enemy?",
       "position": {
-        "x": 554.21,
-        "y": 349.55
+        "x": 284.899,
+        "y": -218.012
       },
       "type": "Branch"
     },
@@ -199,8 +205,8 @@
       "id": 22,
       "label": "Face Enemy",
       "position": {
-        "x": 1184.21,
-        "y": 250.55
+        "x": 730.899,
+        "y": -330.012
       },
       "taskType": "Task_RotateToTarget",
       "type": "AtomicTask"
@@ -209,8 +215,8 @@
       "id": 23,
       "label": "Shoot Weapon",
       "position": {
-        "x": 1190.21,
-        "y": 374.55
+        "x": 736.899,
+        "y": -206.012
       },
       "taskType": "Task_AttackRange",
       "type": "AtomicTask"
@@ -220,8 +226,8 @@
       "id": 32,
       "label": "Heard Suspicious Noise?",
       "position": {
-        "x": 533.438,
-        "y": 966.43
+        "x": 521.127,
+        "y": 395.868
       },
       "type": "Branch"
     },
@@ -229,8 +235,8 @@
       "id": 33,
       "label": "Set Noise Source as Target",
       "position": {
-        "x": 786.44,
-        "y": 951.43
+        "x": 774.129,
+        "y": 380.868
       },
       "taskType": "Task_SetTargetToNoiseSource",
       "type": "AtomicTask"
@@ -239,8 +245,8 @@
       "id": 34,
       "label": "Investigate Location",
       "position": {
-        "x": 788.13,
-        "y": 1073.83
+        "x": 775.819,
+        "y": 503.268
       },
       "taskType": "Task_MoveToLocation",
       "type": "AtomicTask"
@@ -249,8 +255,8 @@
       "id": 35,
       "label": "Look Around (Scan)",
       "position": {
-        "x": 1401.32,
-        "y": 619.854
+        "x": 948.009,
+        "y": 39.2921
       },
       "taskType": "Task_PlayAnimation",
       "type": "AtomicTask"
@@ -262,8 +268,8 @@
       "id": 40,
       "label": "Lost Target Search",
       "position": {
-        "x": 1207.21,
-        "y": 632.55
+        "x": 753.899,
+        "y": 51.988
       },
       "type": "Sequence"
     },
@@ -272,8 +278,8 @@
       "id": 41,
       "label": "Has Last Known Position?",
       "position": {
-        "x": 965.37,
-        "y": 511.302
+        "x": 512.059,
+        "y": -69.2599
       },
       "type": "Branch"
     },
@@ -281,8 +287,8 @@
       "id": 42,
       "label": "Rush to LKP",
       "position": {
-        "x": 1193.21,
-        "y": 489.548
+        "x": 739.899,
+        "y": -91.0139
       },
       "taskType": "Task_MoveToLocation",
       "type": "AtomicTask"
@@ -291,8 +297,8 @@
       "id": 43,
       "label": "Search Pattern",
       "position": {
-        "x": 1404.21,
-        "y": 493.548
+        "x": 950.899,
+        "y": -87.0139
       },
       "taskType": "Task_WanderAroundPoint",
       "type": "AtomicTask"
@@ -305,8 +311,8 @@
       "id": 50,
       "label": "Default Patrol",
       "position": {
-        "x": 596.192,
-        "y": 109.597
+        "x": 276.881,
+        "y": -425.965
       },
       "type": "Sequence"
     },
@@ -314,8 +320,8 @@
       "id": 51,
       "label": "Get Next Waypoint",
       "position": {
-        "x": 843.275,
-        "y": -39.285
+        "x": 493.357,
+        "y": -598.966
       },
       "taskType": "Task_NextWaypoint",
       "type": "AtomicTask"
@@ -324,8 +330,8 @@
       "id": 52,
       "label": "Move To Waypoint",
       "position": {
-        "x": 844.657,
-        "y": 62.3625
+        "x": 494.739,
+        "y": -497.318
       },
       "taskType": "Task_MoveToLocation",
       "type": "AtomicTask"
@@ -334,8 +340,8 @@
       "id": 53,
       "label": "Idle at Waypoint",
       "position": {
-        "x": 844.309,
-        "y": 168.186
+        "x": 494.391,
+        "y": -391.495
       },
       "taskType": "Task_Wait",
       "type": "AtomicTask"
@@ -345,22 +351,21 @@
       "id": 11,
       "label": "Is Health Critical?",
       "position": {
-        "x": 520.228,
-        "y": 753.435
+        "x": 535.433,
+        "y": 230.781
       },
       "type": "Branch"
     },
     {
       "dynamicExecPins": [
         "Case_1",
-        "Case_2",
-        "Case_3"
+        "Case_2"
       ],
       "id": 155,
-      "label": "Switch",
+      "label": "Switch 123456789123456789123456789",
       "position": {
-        "x": 564.789,
-        "y": 514.974
+        "x": 138.478,
+        "y": 563.412
       },
       "type": "Switch"
     },
@@ -372,10 +377,10 @@
         "Out_4"
       ],
       "id": 156,
-      "label": "Sequence",
+      "label": "Sequence 123456789123456789",
       "position": {
-        "x": 270.545,
-        "y": 381.259
+        "x": -228.766,
+        "y": -1.30295
       },
       "type": "Sequence"
     }

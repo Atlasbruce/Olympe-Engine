@@ -499,6 +499,21 @@
     <ClCompile Include="..\Source\BlueprintEditor\VSGraphVerifier.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\AtomicTaskUIRegistry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\BBVariableRegistry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\ConditionRegistry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\OperatorRegistry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\ParameterEditorRegistry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -958,6 +973,11 @@
     <ClInclude Include="..\Source\Core\IconsFontAwesome6.h" />
     <ClInclude Include="..\Source\BlueprintEditor\VSConnectionValidator.h" />
     <ClInclude Include="..\Source\BlueprintEditor\VSGraphVerifier.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\AtomicTaskUIRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BBVariableRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\ConditionRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\OperatorRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\ParameterEditorRegistry.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />

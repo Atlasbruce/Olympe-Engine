@@ -41,6 +41,8 @@
     <ClCompile Include="Source\BlueprintEditor\AdditionalEditorPlugins.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AssetBrowser.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AssetInfoPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\AtomicTaskUIRegistry.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\BBVariableRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BehaviorTreeEditorPlugin.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BehaviorTreeRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlueprintEditor.cpp" />
@@ -50,6 +52,7 @@
     <ClCompile Include="Source\BlueprintEditor\BPCommandSystem.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BTNodeGraphManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BTtoVSMigrator.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\ConditionRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\DebugController.cpp" />
     <ClCompile Include="Source\BlueprintEditor\DebugPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EditorConfigManager.cpp" />
@@ -62,6 +65,8 @@
     <ClCompile Include="Source\BlueprintEditor\EntityInspectorManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\NodeSearchPalette.cpp" />
     <ClCompile Include="Source\BlueprintEditor\NodeStyleRegistry.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\OperatorRegistry.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\ParameterEditorRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\PerformanceProfiler.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ProfilerPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\SubgraphMigrator.cpp" />
@@ -217,6 +222,8 @@
     <ClInclude Include="Source\BlueprintEditor\AdditionalEditorPlugins.h" />
     <ClInclude Include="Source\BlueprintEditor\AssetBrowser.h" />
     <ClInclude Include="Source\BlueprintEditor\AssetInfoPanel.h" />
+    <ClInclude Include="Source\BlueprintEditor\AtomicTaskUIRegistry.h" />
+    <ClInclude Include="Source\BlueprintEditor\BBVariableRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\BehaviorTreeEditorPlugin.h" />
     <ClInclude Include="Source\BlueprintEditor\BehaviorTreeRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\BlueprintEditor.h" />
@@ -227,6 +234,7 @@
     <ClInclude Include="Source\BlueprintEditor\BPCommandSystem.h" />
     <ClInclude Include="Source\BlueprintEditor\BTNodeGraphManager.h" />
     <ClInclude Include="Source\BlueprintEditor\BTtoVSMigrator.h" />
+    <ClInclude Include="Source\BlueprintEditor\ConditionRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\EditorConfigManager.h" />
     <ClInclude Include="Source\BlueprintEditor\EditorContext.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityBlueprint.h" />
@@ -243,6 +251,8 @@
     <ClInclude Include="Source\BlueprintEditor\EntitiesPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\InspectorPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\NodeStyleRegistry.h" />
+    <ClInclude Include="Source\BlueprintEditor\OperatorRegistry.h" />
+    <ClInclude Include="Source\BlueprintEditor\ParameterEditorRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\SubgraphMigrator.h" />
     <ClInclude Include="Source\BlueprintEditor\ProfilerPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\PerformanceProfiler.h" />
