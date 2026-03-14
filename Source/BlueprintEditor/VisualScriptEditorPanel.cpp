@@ -216,6 +216,7 @@ int VisualScriptEditorPanel::AddNode(TaskNodeType type, float x, float y)
         m_template);
 
     m_dirty = true;
+    m_verificationDone = false;
     return newID;
 }
 
@@ -234,6 +235,7 @@ void VisualScriptEditorPanel::RemoveNode(int nodeID)
 
     RebuildLinks();
     m_dirty = true;
+    m_verificationDone = false;
 }
 
 void VisualScriptEditorPanel::ConnectExec(int srcNodeID,
@@ -253,6 +255,7 @@ void VisualScriptEditorPanel::ConnectExec(int srcNodeID,
         m_template);
     RebuildLinks();
     m_dirty = true;
+    m_verificationDone = false;
 }
 
 void VisualScriptEditorPanel::ConnectData(int srcNodeID,
@@ -272,6 +275,7 @@ void VisualScriptEditorPanel::ConnectData(int srcNodeID,
         m_template);
     RebuildLinks();
     m_dirty = true;
+    m_verificationDone = false;
 }
 
 // ============================================================================
@@ -634,6 +638,7 @@ void VisualScriptEditorPanel::RemoveLink(int linkID)
 
     RebuildLinks();
     m_dirty = true;
+    m_verificationDone = false;
 }
 
 // ============================================================================
@@ -671,6 +676,7 @@ void VisualScriptEditorPanel::LoadTemplate(const TaskGraphTemplate* tmpl,
     // used when the key is absent.  Keeping m_nodeDragStartPositions empty here
     // allows the tracking loop to record the true pre-drag position.
     m_nodeDragStartPositions.clear();
+    m_verificationDone = false;
 }
 
 bool VisualScriptEditorPanel::Save()
@@ -920,6 +926,7 @@ void VisualScriptEditorPanel::PerformUndo()
     m_skipPositionSyncNextFrame  = true;
     m_nodeDragStartPositions.clear();
     m_dirty = true;
+    m_verificationDone = false;
     SYSTEM_LOG << "[VSEditor] Undo complete. Template now has "
                << m_template.Nodes.size() << " nodes, "
                << m_template.ExecConnections.size() << " exec connections\n";
@@ -948,6 +955,7 @@ void VisualScriptEditorPanel::PerformRedo()
     m_skipPositionSyncNextFrame  = true;
     m_nodeDragStartPositions.clear();
     m_dirty = true;
+    m_verificationDone = false;
     SYSTEM_LOG << "[VSEditor] Redo complete. Template now has "
                << m_template.Nodes.size() << " nodes, "
                << m_template.ExecConnections.size() << " exec connections\n";
@@ -1027,6 +1035,34 @@ void VisualScriptEditorPanel::RenderToolbar()
         m_nextLinkID    = 1;
         m_dirty         = false;
         m_template.GraphType = "VisualScript";
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Verify##gvs"))
+    {
+        RunVerification();
+    }
+    ImGui::SameLine();
+    if (m_verificationDone)
+    {
+        if (m_verificationResult.HasErrors())
+        {
+            int errorCount = 0;
+            for (size_t i = 0; i < m_verificationResult.issues.size(); ++i)
+            {
+                if (m_verificationResult.issues[i].severity == VSVerificationSeverity::Error)
+                    ++errorCount;
+            }
+            ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f),
+                               "[%d error(s)]", errorCount);
+        }
+        else if (m_verificationResult.HasWarnings())
+        {
+            ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), "[OK - warnings]");
+        }
+        else
+        {
+            ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "[OK]");
+        }
     }
 
     // Keyboard shortcuts
@@ -1201,6 +1237,22 @@ void VisualScriptEditorPanel::RenderCanvas()
         m_needsPositionSync = false;
     }
 
+    // Phase 21-B: focus/scroll to a node requested from the verification panel
+    if (m_focusNodeID >= 0)
+    {
+        for (size_t i = 0; i < m_editorNodes.size(); ++i)
+        {
+            if (m_editorNodes[i].nodeID == m_focusNodeID)
+            {
+                ImNodes::SetNodeEditorSpacePos(
+                    m_focusNodeID,
+                    ImVec2(m_editorNodes[i].posX, m_editorNodes[i].posY));
+                break;
+            }
+        }
+        m_focusNodeID = -1;
+    }
+
     ImNodes::BeginNodeEditor();
 
     // NOTE: Right-click context menu detection is deferred until after
@@ -1220,6 +1272,30 @@ void VisualScriptEditorPanel::RenderCanvas()
             0 /* graphID placeholder */, eNode.nodeID);
         bool isActive = (eNode.nodeID == activeNodeID &&
                          DebugController::Get().IsDebugging());
+
+        // Phase 21-B: highlight nodes that have Error issues in the verification result
+        bool hasVerifError = false;
+        if (m_verificationDone)
+        {
+            for (size_t vi = 0; vi < m_verificationResult.issues.size(); ++vi)
+            {
+                if (m_verificationResult.issues[vi].nodeID == eNode.nodeID &&
+                    m_verificationResult.issues[vi].severity == VSVerificationSeverity::Error)
+                {
+                    hasVerifError = true;
+                    break;
+                }
+            }
+        }
+        if (hasVerifError)
+        {
+            ImNodes::PushColorStyle(ImNodesCol_NodeBackground,
+                                    IM_COL32(120, 30, 30, 230));
+            ImNodes::PushColorStyle(ImNodesCol_NodeBackgroundHovered,
+                                    IM_COL32(120, 30, 30, 230));
+            ImNodes::PushColorStyle(ImNodesCol_NodeBackgroundSelected,
+                                    IM_COL32(120, 30, 30, 230));
+        }
 
         auto execIn  = GetExecInputPins(eNode.def.Type);
         auto execOut = GetExecOutputPinsForNode(eNode.def);
@@ -1250,6 +1326,13 @@ void VisualScriptEditorPanel::RenderCanvas()
                 panel->m_pendingAddPinNodeID = nid;
             },
             this);
+
+        if (hasVerifError)
+        {
+            ImNodes::PopColorStyle();
+            ImNodes::PopColorStyle();
+            ImNodes::PopColorStyle();
+        }
 
         // Breakpoint / active overlays
         if (hasBreakpoint)
@@ -2241,6 +2324,8 @@ void VisualScriptEditorPanel::RenderProperties()
                                                 m_template.Name,
                                                 def.NodeName);
     }
+
+    RenderVerificationPanel();
 }
 
 void VisualScriptEditorPanel::RenderBlackboard()
@@ -2342,6 +2427,101 @@ void VisualScriptEditorPanel::RenderValidationOverlay()
             m_validationWarnings.push_back(
                 "Node " + std::to_string(eNode.nodeID) +
                 " (SubGraph): SubGraphPath is empty");
+        }
+    }
+}
+
+// ============================================================================
+// Phase 21-B — Graph Verification
+// ============================================================================
+
+void VisualScriptEditorPanel::RunVerification()
+{
+    SYSTEM_LOG << "[VisualScriptEditorPanel] RunVerification() called for graph '"
+               << m_template.Name << "'\n";
+    m_verificationResult = VSGraphVerifier::Verify(m_template);
+    m_verificationDone   = true;
+    SYSTEM_LOG << "[VisualScriptEditorPanel] RunVerification() done: "
+               << m_verificationResult.issues.size() << " issue(s), "
+               << "errors=" << (m_verificationResult.HasErrors()   ? "yes" : "no") << ", "
+               << "warnings=" << (m_verificationResult.HasWarnings() ? "yes" : "no") << "\n";
+}
+
+void VisualScriptEditorPanel::RenderVerificationPanel()
+{
+    ImGui::Separator();
+    ImGui::TextDisabled("Graph Verification");
+
+    if (!m_verificationDone)
+    {
+        ImGui::TextDisabled("Click 'Verify' in toolbar to run verification.");
+        return;
+    }
+
+    // Global status line
+    if (m_verificationResult.HasErrors())
+    {
+        int errorCount = 0;
+        for (size_t i = 0; i < m_verificationResult.issues.size(); ++i)
+        {
+            if (m_verificationResult.issues[i].severity == VSVerificationSeverity::Error)
+                ++errorCount;
+        }
+        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f),
+                           "Errors found: %d", errorCount);
+    }
+    else if (m_verificationResult.HasWarnings())
+    {
+        ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), "OK — warnings present");
+    }
+    else
+    {
+        ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "OK — no issues");
+    }
+
+    if (m_verificationResult.issues.empty())
+        return;
+
+    // List issues grouped: Errors first, then Warnings, then Info
+    const VSVerificationSeverity orderedSev[3] = {
+        VSVerificationSeverity::Error,
+        VSVerificationSeverity::Warning,
+        VSVerificationSeverity::Info
+    };
+
+    for (int s = 0; s < 3; ++s)
+    {
+        VSVerificationSeverity sev = orderedSev[s];
+        for (size_t i = 0; i < m_verificationResult.issues.size(); ++i)
+        {
+            const VSVerificationIssue& issue = m_verificationResult.issues[i];
+            if (issue.severity != sev)
+                continue;
+
+            ImGui::PushID(static_cast<int>(i));
+
+            if (sev == VSVerificationSeverity::Error)
+                ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "[E]");
+            else if (sev == VSVerificationSeverity::Warning)
+                ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), "[W]");
+            else
+                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "[I]");
+
+            ImGui::SameLine();
+            ImGui::Text("%s: %s", issue.ruleID.c_str(), issue.message.c_str());
+
+            if (issue.nodeID >= 0)
+            {
+                ImGui::SameLine();
+                std::string btnLabel = "Go##go" + std::to_string(i);
+                if (ImGui::SmallButton(btnLabel.c_str()))
+                {
+                    m_focusNodeID    = issue.nodeID;
+                    m_selectedNodeID = issue.nodeID;
+                }
+            }
+
+            ImGui::PopID();
         }
     }
 }
