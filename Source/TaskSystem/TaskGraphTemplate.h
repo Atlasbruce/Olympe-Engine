@@ -115,9 +115,13 @@ struct TaskNodeDefinition {
     std::string                    ConditionID;    ///< For Branch/While/Switch: ATS condition ID
     std::string                    BBKey;          ///< For GetBBValue/SetBBValue: BB key (scope:key)
     std::string                    SubGraphPath;   ///< For SubGraph: path to the sub-graph JSON
-    std::vector<std::string>       SwitchCases;    ///< For Switch: ordered case labels
+    std::vector<std::string>       SwitchCases;    ///< For Switch: ordered case labels (legacy; prefer switchCases)
     float                          DelaySeconds = 0.0f; ///< For Delay: duration in seconds
     std::string                    MathOperator;   ///< For MathOp: "+", "-", "*", "/"
+
+    // ATS VS Switch enhancements (Phase 22-A - 2026-03-14)
+    std::string                          switchVariable; ///< For Switch: BB key of the variable to switch on
+    std::vector<SwitchCaseDefinition>    switchCases;   ///< For Switch: structured case definitions
 
     /// For VSSequence: dynamically-added exec-out pins beyond the default "Out".
     /// Each entry is a pin name (e.g. "Out_1", "Out_2"...).

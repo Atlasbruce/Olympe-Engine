@@ -415,6 +415,61 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
             });
     }
 
+    // Switch variable (Phase 22-A) — the BB key whose value is switched on.
+    if (nd.Type == TaskNodeType::Switch)
+    {
+        nd.switchVariable = JsonHelper::GetString(nodeJson, "switchVariable", "");
+    }
+
+    // Structured switch cases (Phase 22-A).
+    if (nd.Type == TaskNodeType::Switch && JsonHelper::IsArray(nodeJson, "switchCases"))
+    {
+        std::unordered_map<std::string, size_t> seenValues; // E011: duplicate value check
+        JsonHelper::ForEachInArray(nodeJson, "switchCases",
+            [&](const json& c, size_t idx) {
+                if (!c.is_object())
+                    return;
+                SwitchCaseDefinition scd;
+                scd.value       = JsonHelper::GetString(c, "value", "");
+                scd.pinName     = JsonHelper::GetString(c, "pin", "");
+                scd.customLabel = JsonHelper::GetString(c, "label", "");
+
+                // E011 — duplicate case value
+                if (!scd.value.empty())
+                {
+                    auto it = seenValues.find(scd.value);
+                    if (it != seenValues.end())
+                    {
+                        std::string msg = "[E011] Switch node #"
+                            + std::to_string(nd.NodeID)
+                            + ": duplicate case value '" + scd.value
+                            + "' at index " + std::to_string(idx)
+                            + " (first seen at index "
+                            + std::to_string(it->second) + ")";
+                        outErrors.push_back(msg);
+                        SYSTEM_LOG << "[TaskGraphLoader] " << msg << "\n";
+                    }
+                    else
+                    {
+                        seenValues[scd.value] = idx;
+                    }
+                }
+
+                // E012 — pin name must match expected pattern (non-empty)
+                if (scd.pinName.empty())
+                {
+                    std::string msg = "[E012] Switch node #"
+                        + std::to_string(nd.NodeID)
+                        + ": switchCases[" + std::to_string(idx)
+                        + "] has empty pin name";
+                    outErrors.push_back(msg);
+                    SYSTEM_LOG << "[TaskGraphLoader] " << msg << "\n";
+                }
+
+                nd.switchCases.push_back(scd);
+            });
+    }
+
     // Dynamic exec-out pins (VSSequence and Switch, Phase 20-C / Phase 21-D).
     if ((nd.Type == TaskNodeType::VSSequence || nd.Type == TaskNodeType::Switch) &&
         nodeJson.contains("dynamicExecPins") &&

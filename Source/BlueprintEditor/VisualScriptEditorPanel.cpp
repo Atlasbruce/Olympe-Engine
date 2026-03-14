@@ -821,6 +821,29 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
         if (!def.MathOperator.empty())
             n["mathOp"] = def.MathOperator;
 
+        // Switch enhancements (Phase 22-A)
+        if (def.Type == TaskNodeType::Switch)
+        {
+            if (!def.switchVariable.empty())
+                n["switchVariable"] = def.switchVariable;
+
+            if (!def.switchCases.empty())
+            {
+                json casesArray = json::array();
+                for (size_t c = 0; c < def.switchCases.size(); ++c)
+                {
+                    const SwitchCaseDefinition& sc = def.switchCases[c];
+                    json caseObj;
+                    caseObj["value"] = sc.value;
+                    caseObj["pin"]   = sc.pinName;
+                    if (!sc.customLabel.empty())
+                        caseObj["label"] = sc.customLabel;
+                    casesArray.push_back(caseObj);
+                }
+                n["switchCases"] = casesArray;
+            }
+        }
+
         // Dynamic exec-out pins (VSSequence and Switch)
         if ((def.Type == TaskNodeType::VSSequence || def.Type == TaskNodeType::Switch) &&
             !def.DynamicExecOutputPins.empty())
@@ -2386,6 +2409,73 @@ void VisualScriptEditorPanel::RenderProperties()
                         PropertyValue::FromString(m_propEditOldMathOp),
                         PropertyValue::FromString(def.MathOperator))),
                     m_template);
+            }
+            break;
+        }
+        case TaskNodeType::Switch:
+        {
+            // Sync m_propEditSwitchCases with the node's switchCases when node changes
+            if (m_propEditNodeIDOnFocus != m_selectedNodeID)
+                m_propEditSwitchCases = def.switchCases;
+
+            // Find the corresponding template node once for all edits below
+            TaskNodeDefinition* tmplNode = nullptr;
+            for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+            {
+                if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                {
+                    tmplNode = &m_template.Nodes[i];
+                    break;
+                }
+            }
+
+            // ---- Switch Variable ----
+            {
+                char varBuf[128];
+                strncpy_s(varBuf, sizeof(varBuf), def.switchVariable.c_str(), _TRUNCATE);
+                if (ImGui::InputText("Switch Var (BB key)##vsswitchvar", varBuf, sizeof(varBuf)))
+                {
+                    def.switchVariable = varBuf;
+                    if (tmplNode)
+                        tmplNode->switchVariable = def.switchVariable;
+                    m_dirty = true;
+                }
+            }
+
+            // ---- Case Labels ----
+            if (!def.switchCases.empty())
+            {
+                ImGui::Separator();
+                ImGui::TextDisabled("Case Labels");
+            }
+
+            // Ensure our edit buffer stays in sync
+            if (m_propEditSwitchCases.size() != def.switchCases.size())
+                m_propEditSwitchCases = def.switchCases;
+
+            for (size_t ci = 0; ci < def.switchCases.size(); ++ci)
+            {
+                // Show pin name as read-only, allow editing the custom label
+                const std::string pinLabel = def.switchCases[ci].pinName
+                    + " (val=" + def.switchCases[ci].value + ")";
+                ImGui::TextUnformatted(pinLabel.c_str());
+                ImGui::SameLine();
+
+                char labelBuf[64];
+                const std::string& curLabel = m_propEditSwitchCases[ci].customLabel;
+                strncpy_s(labelBuf, sizeof(labelBuf), curLabel.c_str(), _TRUNCATE);
+
+                // Unique widget ID per case index
+                std::string widgetID = "##vscaselabel" + std::to_string(ci);
+                if (ImGui::InputText(widgetID.c_str(), labelBuf, sizeof(labelBuf)))
+                {
+                    m_propEditSwitchCases[ci].customLabel = labelBuf;
+                    // Apply to the live def and template immediately
+                    def.switchCases[ci].customLabel = labelBuf;
+                    if (tmplNode && ci < tmplNode->switchCases.size())
+                        tmplNode->switchCases[ci].customLabel = labelBuf;
+                    m_dirty = true;
+                }
             }
             break;
         }

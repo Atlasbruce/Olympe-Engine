@@ -5,7 +5,7 @@
  * @date 2026-03-14
  *
  * @details
- * Implements 14 verification rules (E001-E009, W001-W004, I001) on a
+ * Implements 17 verification rules (E001-E012, W001-W004, I001) on a
  * TaskGraphTemplate. Fully stateless — no ImGui/ImNodes dependency.
  *
  * C++14 compliant — no std::optional, structured bindings, std::filesystem.
@@ -16,6 +16,7 @@
 
 #include <map>
 #include <vector>
+#include <unordered_map>
 #include <unordered_set>
 #include <sstream>
 
@@ -93,6 +94,9 @@ VSVerificationResult VSGraphVerifier::Verify(const TaskGraphTemplate& graph)
     // Blackboard rules
     CheckBlackboardKeys(graph, result);
     CheckBlackboardTypes(graph, result);
+
+    // Switch rules (Phase 22-A)
+    CheckSwitchNodes(graph, result);
 
     // Warning rules
     CheckNodeParameterWarnings(graph, result);
@@ -561,6 +565,73 @@ void VSGraphVerifier::CheckBlackboardTypes(const TaskGraphTemplate& g, VSVerific
 // ============================================================================
 // Warning rules — W001–W004
 // ============================================================================
+
+// ============================================================================
+// E010–E012 — Switch node validation (Phase 22-A)
+// ============================================================================
+
+void VSGraphVerifier::CheckSwitchNodes(const TaskGraphTemplate& g, VSVerificationResult& r)
+{
+    for (size_t i = 0; i < g.Nodes.size(); ++i)
+    {
+        const TaskNodeDefinition& node = g.Nodes[i];
+        if (node.Type != TaskNodeType::Switch)
+            continue;
+
+        // E010 — Switch node missing switchVariable
+        if (node.switchVariable.empty())
+        {
+            std::ostringstream oss;
+            oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                << "') is a Switch node with no switchVariable assigned."
+                   " Assign a Blackboard key to switch on.";
+            AddIssue(r, VSVerificationSeverity::Error, node.NodeID,
+                     "E010_SwitchMissingVariable",
+                     oss.str());
+        }
+
+        // E011 — duplicate case values
+        std::unordered_map<std::string, size_t> seenValues;
+        for (size_t ci = 0; ci < node.switchCases.size(); ++ci)
+        {
+            const SwitchCaseDefinition& sc = node.switchCases[ci];
+            if (sc.value.empty())
+                continue;
+            auto it = seenValues.find(sc.value);
+            if (it != seenValues.end())
+            {
+                std::ostringstream oss;
+                oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                    << "') has duplicate switch case value '" << sc.value
+                    << "' at index " << ci
+                    << " (first seen at index " << it->second << ").";
+                AddIssue(r, VSVerificationSeverity::Error, node.NodeID,
+                         "E011_SwitchDuplicateCaseValue",
+                         oss.str());
+            }
+            else
+            {
+                seenValues[sc.value] = ci;
+            }
+        }
+
+        // E012 — case with empty pin name
+        for (size_t ci = 0; ci < node.switchCases.size(); ++ci)
+        {
+            const SwitchCaseDefinition& sc = node.switchCases[ci];
+            if (sc.pinName.empty())
+            {
+                std::ostringstream oss;
+                oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                    << "') has a switch case at index " << ci
+                    << " with an empty pin name.";
+                AddIssue(r, VSVerificationSeverity::Error, node.NodeID,
+                         "E012_SwitchEmptyPinName",
+                         oss.str());
+            }
+        }
+    }
+}
 
 void VSGraphVerifier::CheckNodeParameterWarnings(const TaskGraphTemplate& g, VSVerificationResult& r)
 {
