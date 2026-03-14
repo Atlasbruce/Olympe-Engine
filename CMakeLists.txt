@@ -512,6 +512,22 @@ if(BUILD_TESTS)
     add_test(NAME OlympePhase20Tests COMMAND OlympePhase20Tests)
 
     # -----------------------------------------------------------------------
+    # OlympePhase21ATests  (Phase 21-A — VSGraphVerifier global graph verifier)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase21ATests
+        Tests/BlueprintEditor/Phase21ATest.cpp
+        Source/BlueprintEditor/VSGraphVerifier.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/NodeGraphCore/GlobalBlackboard.cpp
+        Tests/TestStubs.cpp
+    )
+    target_include_directories(OlympePhase21ATests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase21ATests COMMAND OlympePhase21ATests)
+
+    # -----------------------------------------------------------------------
     # OlympeATSReferenceV4Tests  (Integration — reference_complete_v4.ats)
     # -----------------------------------------------------------------------
     add_executable(OlympeATSReferenceV4Tests
