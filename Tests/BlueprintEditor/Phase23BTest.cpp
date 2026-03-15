@@ -637,20 +637,22 @@ static void Test_BUG002_VariableTypeToString()
     const std::string name = "BUG002_VariableTypeToString";
     int prevFail = s_failCount;
 
-    TEST_ASSERT(VariableTypeToString(VariableType::Bool)     == "Bool",     "Bool maps to 'Bool'");
-    TEST_ASSERT(VariableTypeToString(VariableType::Int)      == "Int",      "Int maps to 'Int'");
-    TEST_ASSERT(VariableTypeToString(VariableType::Float)    == "Float",    "Float maps to 'Float'");
-    TEST_ASSERT(VariableTypeToString(VariableType::Vector)   == "Vector",   "Vector maps to 'Vector'");
-    TEST_ASSERT(VariableTypeToString(VariableType::EntityID) == "EntityID", "EntityID maps to 'EntityID'");
-    TEST_ASSERT(VariableTypeToString(VariableType::String)   == "String",   "String maps to 'String'");
-    TEST_ASSERT(VariableTypeToString(VariableType::None)     == "None",     "None maps to 'None'");
+    TEST_ASSERT(VariableTypeToString(VariableType::Bool)      == "Bool",      "Bool maps to 'Bool'");
+    TEST_ASSERT(VariableTypeToString(VariableType::Int)       == "Int",       "Int maps to 'Int'");
+    TEST_ASSERT(VariableTypeToString(VariableType::Float)     == "Float",     "Float maps to 'Float'");
+    TEST_ASSERT(VariableTypeToString(VariableType::Vector)    == "Vector",    "Vector maps to 'Vector'");
+    TEST_ASSERT(VariableTypeToString(VariableType::EntityID)  == "EntityID",  "EntityID maps to 'EntityID'");
+    TEST_ASSERT(VariableTypeToString(VariableType::String)    == "String",    "String maps to 'String'");
+    TEST_ASSERT(VariableTypeToString(VariableType::None)      == "None",      "None maps to 'None'");
+    TEST_ASSERT(VariableTypeToString(VariableType::List)      == "List",      "List maps to 'List'");
+    TEST_ASSERT(VariableTypeToString(VariableType::GlobalRef) == "GlobalRef", "GlobalRef maps to 'GlobalRef'");
 
     // All results must be non-empty (no garbage)
     bool allNonEmpty = true;
     VariableType allTypes[] = {
         VariableType::Bool, VariableType::Int,  VariableType::Float,
         VariableType::Vector, VariableType::EntityID, VariableType::String,
-        VariableType::None
+        VariableType::None, VariableType::List, VariableType::GlobalRef
     };
     for (size_t i = 0; i < sizeof(allTypes)/sizeof(allTypes[0]); ++i)
     {
