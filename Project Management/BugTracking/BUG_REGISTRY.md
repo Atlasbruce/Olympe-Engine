@@ -137,7 +137,7 @@ Bloquant pour toute utilisation du Blackboard dans le Blueprint Editor. Impossib
 
 | Module | Bugs Total | Bugs Actifs | Dernière régression |
 |--------|-----------|-------------|---------------------|
-| — | — | — | — |
+| BlueprintEditor — Blackboard Serialization | 1 | 0 | 2026-03-15 (BUG-001, FIXED) |
 
 ---
 
@@ -153,7 +153,11 @@ Temps de résolution: Xh
 Résumé: [Description courte de la cause et du fix]
 ```
 
-*Aucun bug archivé.*
+**[BUG-001]** — Crash on Blackboard Save: abort() on VariableType::None
+Sévérité: P0 | Phase: 22-C (régression) | PR Fix: #387
+Découvert: 2026-03-15 14:30:00 UTC | Résolu: 2026-03-15 15:30:00 UTC
+Temps de résolution: ~1h
+Résumé: abort() lors de la sauvegarde d'un Blackboard contenant une entrée avec VariableType::None ou Key="". Fix: validation pré-save + initialisation safe (Key="NewVariable", Type=Int) + warning UX. 5/5 regression tests.
 
 ---
 

@@ -1,10 +1,29 @@
 # Context Archive — Historical Phases
 
+## Phase 22-C — Parameter Dropdowns & Registries
+
+**Date Completed:** 2026-03-14 21:59:19 UTC
+**PR:** #386
+**Status:** ✅ MERGED
+
+### Summary
+5 registries centralisées (AtomicTask, Condition, BBVar, Operator, Master), dropdowns guides pour tous les paramètres, ParameterBindingType étendu (7 types), 8 nouvelles règles VSGraphVerifier (E020-E025, W010-W011).
+
+### Test Coverage
+32+ tests passing
+
+### Impact
+Sélection intelligente des paramètres — plus besoin de deviner les IDs/clés.
+
+**Feature Context:** [feature_context_22_C.md](./Features/feature_context_22_C.md)
+
+---
+
 ## Phase 22-A — Switch Node Enhancement
 
-**Date Completed:** 2026-03-14  
-**PR:** #384  
-**Status:** ✅ MERGED  
+**Date Completed:** 2026-03-14 18:46:14 UTC
+**PR:** #384
+**Status:** ✅ MERGED
 
 ### Summary
 Enhanced the VSSwitch node with dynamic case labels and improved UI:
@@ -20,21 +39,43 @@ Enhanced the VSSwitch node with dynamic case labels and improved UI:
 ### Impact
 Switch nodes now properly editable with intuitive UX.
 
+**Feature Context:** [feature_context_22_A.md](./Features/feature_context_22_A.md)
+
 ---
 
 ## Phase 21-D — Dynamic Pins for Sequence/Switch
 
-**Status:** ✅ COMPLETED (referenced in 22-A dependencies)
+**Date Completed:** 2026-03-14 16:54:08 UTC
+**PR:** #382
+**Status:** ✅ COMPLETED
 
-Dynamic execution pins on control flow nodes.
+Dynamic execution pins on control flow nodes. Boutons [+]/[-] sur VSSequence et VSSwitch, AddExecPinCommand + RemoveExecPinCommand (Undo/Redo complet), 25+ tests passants.
+
+**Feature Context:** [feature_context_21_D.md](./Features/feature_context_21_D.md)
+
+---
+
+## Phase 21-B — GVS Panel Validation UI
+
+**Date Completed:** 2026-03-14 10:03:09 UTC
+**PR:** #381
+**Status:** ✅ COMPLETED
+
+Panel scrollable d'issues + badge toolbar + auto-verify + navigation noeud.
+
+**Feature Context:** [feature_context_21_B.md](./Features/feature_context_21_B.md)
 
 ---
 
 ## Phase 21-A — Graph Verifier (VSGraphVerifier)
 
+**Date Completed:** 2026-03-14
+**PR:** #380
 **Status:** ✅ COMPLETED (PR #380)
 
-Graph validation system with error/warning registry.
+Graph validation system with error/warning registry. 14 règles de validation globales.
+
+**Feature Context:** [feature_context_21_A.md](./Features/feature_context_21_A.md)
 
 ---
 

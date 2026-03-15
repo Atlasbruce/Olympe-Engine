@@ -49,23 +49,24 @@
 - 32 tests passants
 - 8 nouvelles regles VSGraphVerifier (E020-E025, W010-W011)
 
-### Phase 22-A — Switch Node Enhancement
-- **PR :** [#384](https://github.com/Atlasbruce/Olympe-Engine/pull/384) — MERGED
-- **Date de merge :** 2026-03-14 18:46:14 UTC
-- Labels personnalises par case, alignement droite, runtime variable display
-- 10/10 tests passants
+### HOTFIX P0 — Blackboard Save Crash (BUG-001)
+- **PR :** [#387](https://github.com/Atlasbruce/Olympe-Engine/pull/387) — MERGED
+- **Date de merge :** 2026-03-15 15:30:00 UTC
+- Validation pre-save (skip entries invalides)
+- Init safe a la creation (Key="NewVariable", Type=Int)
+- Warning UX si variables invalides
+- 5 regression tests passants
 
-### Phase 21-D — Dynamic Pins Sequence/Switch
-- **PR :** [#382](https://github.com/Atlasbruce/Olympe-Engine/pull/382) — MERGED
-- **Date de merge :** 2026-03-14 16:54:08 UTC
-- Boutons [+]/[-] sur VSSequence et VSSwitch
-- AddExecPinCommand + RemoveExecPinCommand (Undo/Redo complet)
-- 25 tests passants
-
-### Phase 21-B — GVS Panel Validation UI
-- **PR :** [#381](https://github.com/Atlasbruce/Olympe-Engine/pull/381) — MERGED
-- **Date de merge :** 2026-03-14 10:03:09 UTC
-- Panel scrollable d'issues + badge toolbar + auto-verify + navigation noeud
+### Phase 23-B — Full Blackboard Properties (SPEC FINALIZED)
+- **Spec PR :** [#388](https://github.com/Atlasbruce/Olympe-Engine/pull/388) — SPEC IN_REVIEW (implementation PR pending post-merge)
+- **Date de creation spec :** 2026-03-15 15:30:00 UTC
+- Registry + JSON config (preset variables) + 2-section UI
+- Section "Available Variables" (depuis config preset) + Section "Declared Variables" (locales)
+- [+ Create Local Variable] dialog
+- 15 variables pre-declarees dans config preset
+- 15 headless tests
+- Feature context complet (1200+ lignes)
+- Reponses @Atlasbruce integrees
 
 ---
 
@@ -76,7 +77,7 @@
 - Phase 23-B UI Integration — 2-section Blackboard panel
 
 **P2 :**
-- Phase 22-B — Font Awesome Icons & Design (en attente spec design @Atlasbruce)
+- Phase 22-B — Font Awesome Icons & Design (en attente spec design)
 - Phase 23-A — AnimGraph Infrastructure
 
 ---

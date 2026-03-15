@@ -2,8 +2,8 @@
 
 **Date :** 2026-03-15  
 **Auteur :** @Atlasbruce  
-**Derniere mise a jour :** 2026-03-15 10:26:37 UTC  
-**Statut :** Planification active — Phase 21-C NEXT (P1)
+**Derniere mise a jour :** 2026-03-15 15:45:00 UTC  
+**Statut :** Planification active — Phase 23-B SPEC DONE (P1) + Phase 21-C QUEUED (P1)
 
 ---
 
@@ -250,7 +250,13 @@ Result: Impossible to author graphs without documentation/guessing.
 - Icons in Properties panel and toolbar
 - FontAwesome TTF embedded, C++14 compatible
 
----
+## Phase 23-B — Full Blackboard Properties (SPEC FINALIZED — Implementation Pending)
+
+**Feature Context:** (in progress — PR #388)
+
+**Status:** ⏳ SPEC DONE → CODING
+**Priority:** P1
+**Date Spec Finalized:** 2026-03-15 15:30:00 UTC
 
 ## Phase 23 — Blackboard & Extended Graph Features
 
