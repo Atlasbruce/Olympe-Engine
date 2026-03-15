@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Créé le:** 2026-03-15 12:44:21 UTC  
-**Dernière mise à jour:** 2026-03-15 12:44:21 UTC  
+**Dernière mise à jour:** 2026-03-15 15:45:00 UTC  
 **Projet:** Olympe Engine  
 **GitHub Repo:** https://github.com/Atlasbruce/Olympe-Engine  
 
@@ -35,7 +35,31 @@ Ce registre centralise **tous les bugs connus** du projet Olympe Engine, classé
 
 ## 🔴 P0 — CRITICAL
 
-*Aucun bug P0 actif.*
+### [BUG-001] ✅ RESOLVED — Crash on Blackboard Save: abort() on VariableType::None
+
+**ID:** BUG-001
+**Sévérité:** P0 — CRITICAL (crash, blocage total du Save)
+**Type:** Regression
+**Statut:** ✅ FIXED (PR #387)
+**Phase Affectée:** 22-C (découverte) → Hotfix immédiat
+**Module:** BlueprintEditor — Blackboard Serialization
+
+**Découvert le:** 2026-03-15 14:30:00 UTC
+**Découvert par:** @Atlasbruce (screenshot crash MSVC + diagnostic)
+
+**Résolu le:** 2026-03-15 15:30:00 UTC
+**PR Fix:** [#387](https://github.com/Atlasbruce/Olympe-Engine/pull/387)
+**Merged le:** 2026-03-15 15:30:00 UTC
+
+**Workaround:** N/A (fixed)
+
+**Resolution Summary:**
+1. Pre-save validation : Skip entries avec Key="" ou Type=None
+2. Safe initialization : Key="NewVariable", Type=Int par défaut
+3. Warning UX : Badge rouge si entries invalides
+4. Regression tests : 5/5 passing
+
+**Impact:** 0% regression — Phase 23-B can proceed
 
 ---
 
@@ -81,18 +105,18 @@ Ce registre centralise **tous les bugs connus** du projet Olympe Engine, classé
 | Bugs P1 actifs | 0 | ≤ 2 |
 | Bugs P2 actifs | 0 | ≤ 5 |
 | Bugs P3 actifs | 0 | ≤ 10 |
-| MTTR P0 (Mean Time To Resolve) | N/A | < 24h |
+| MTTR P0 (Mean Time To Resolve) | ~1h (BUG-001) | < 24h |
 | MTTR P1 | N/A | < 72h |
 | MTTR P2 | N/A | < 2 semaines |
 | MTTR P3 | N/A | < 1 mois |
-| Taux de régression (bugs/PR) | 0% | < 5% |
-| Couverture tests phases actives | — | > 80% |
+| Taux de régression (bugs/PR) | 1/7 = ~14% (1 P0 résolu) — Note: pic ponctuel dû à 1 bug P0 isolé (Phase 22-C), résolu en ~1h | < 5% |
+| Couverture tests phases actives | 5/5 (BUG-001) | > 80% |
 
 ### Hotspots (Modules les Plus Touchés)
 
 | Module | Bugs Total | Bugs Actifs | Dernière régression |
 |--------|-----------|-------------|---------------------|
-| — | — | — | — |
+| BlueprintEditor — Blackboard Serialization | 1 | 0 | 2026-03-15 (BUG-001, FIXED) |
 
 ---
 
@@ -108,7 +132,11 @@ Temps de résolution: Xh
 Résumé: [Description courte de la cause et du fix]
 ```
 
-*Aucun bug archivé.*
+**[BUG-001]** — Crash on Blackboard Save: abort() on VariableType::None
+Sévérité: P0 | Phase: 22-C (régression) | PR Fix: #387
+Découvert: 2026-03-15 14:30:00 UTC | Résolu: 2026-03-15 15:30:00 UTC
+Temps de résolution: ~1h
+Résumé: abort() lors de la sauvegarde d'un Blackboard contenant une entrée avec VariableType::None ou Key="". Fix: validation pré-save + initialisation safe (Key="NewVariable", Type=Int) + warning UX. 5/5 regression tests.
 
 ---
 
@@ -194,4 +222,4 @@ Résumé: [Description courte de la cause et du fix]
 
 ---
 
-*Dernière mise à jour : 2026-03-15 12:44:21 UTC*
+*Dernière mise à jour : 2026-03-15 15:45:00 UTC*

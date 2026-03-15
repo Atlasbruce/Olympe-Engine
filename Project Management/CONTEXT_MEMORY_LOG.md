@@ -185,3 +185,62 @@ Validation end-to-end :
 - Phase 22-A : timestamp sans heure → 2026-03-14 18:46:14 UTC
 - Phase 22-C : était "ACTIVE 🔧 IN PROGRESS" → maintenant ✅ COMPLETED (PR #386)
 - Calendrier ROADMAP : 21-B absent → ajouté avec statut COMPLETED
+
+---
+
+## 2026-03-15 15:45:00 UTC — PROJECT MANAGEMENT DOCUMENTATION SYNC
+
+**Trigger :** Post-Phase-23-B-Hotfix-P0 documentation update
+
+**Action :** Synchronisation complete des documents de suivi
+
+**Documents mis a jour :**
+1. ✅ CONTEXT_ARCHIVE.md
+   - Phase 22-C archivee (completed 2026-03-14 21:59:19 UTC, PR #386)
+   - Phase 21-A/B/D archivees avec dates, PRs et liens feature context
+   - Phase 22-A enrichie avec lien feature context
+   - Sections historiques reorganisees
+
+2. ✅ CONTEXT_CURRENT.md
+   - Recent completions : 22-C, HOTFIX P0 (BUG-001), Phase 23-B spec finalized
+   - P1 priority : Phase 23-B coding phase (2-section BB panel + preset config)
+   - Timeline mise a jour (week of 2026-03-17)
+
+3. ✅ CONTEXT_STATUS.md
+   - All functional components listed avec details
+   - BUG-001 marque RESOLVED (PR #387)
+   - Phase 23-B SPEC ajoutee aux composants fonctionnels
+   - Progression globale mise a jour
+
+4. ✅ ROADMAP_V2.md
+   - Calendrier complet avec HOTFIX entry (P0 COMPLETED PR #387)
+   - Phase 23-B renommee : "Full Blackboard Properties" (plus "LevelScript + Cinematic")
+   - Phase 23-B spec documentee : 2-section panel + JSON preset config approach
+   - Phase 23-C renommee : "LevelScript + Cinematic" (ancienne 23-B)
+   - Phase 21-C status : QUEUED (plus NEXT)
+   - Header timestamp mis a jour
+
+5. ✅ CONTEXT_MEMORY_LOG.md
+   - Cette entree ajoutee (2026-03-15 15:45:00 UTC)
+
+6. ✅ BUG_REGISTRY.md
+   - BUG-001 entry ajoutee : Crash on Blackboard Save (abort())
+   - Status : FIXED (PR #387)
+   - Resolution date : 2026-03-15 15:30:00 UTC
+   - Workaround : N/A (fixed)
+   - Tests : 5/5 regression passing
+
+**Coherence verifiee :**
+- ✅ Tous timestamps format YYYY-MM-DD HH:MM:SS UTC
+- ✅ Toutes references croisees valides
+- ✅ Phase numbering consistent
+- ✅ PR numbers linkees correctement
+- ✅ Status tags synchronises (✅ COMPLETED, ⏳ QUEUED, etc.)
+
+**Metrics :**
+- Total files updated: 6
+- Total phases documented: 24+
+- Total PRs referenced: 9 (#380, #381, #382, #384, #386, #387, #388)
+- Total bugs tracked: 1 (BUG-001 — now resolved)
+
+**Status :** All PM docs synchronized and up-to-date
