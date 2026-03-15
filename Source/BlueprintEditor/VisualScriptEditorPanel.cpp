@@ -781,10 +781,22 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
     root["graphType"]      = "VisualScript";
 
     // Blackboard
+    // BUG-001 Hotfix: skip invalid entries (empty key or VariableType::None)
+    // to prevent save crash caused by unhandled None type during serialization.
+    int bbSkipped = 0;
     json bbArray = json::array();
     for (size_t i = 0; i < m_template.Blackboard.size(); ++i)
     {
         const BlackboardEntry& entry = m_template.Blackboard[i];
+
+        if (entry.Key.empty() || entry.Type == VariableType::None)
+        {
+            SYSTEM_LOG << "[VisualScriptEditorPanel] SerializeAndWrite: skipping invalid blackboard entry"
+                       << " (key='" << entry.Key << "', type=None)\n";
+            ++bbSkipped;
+            continue;
+        }
+
         json e;
         e["key"]      = entry.Key;
         e["isGlobal"] = entry.IsGlobal;
@@ -799,6 +811,11 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
             default:                     e["type"] = "None";     e["value"] = nullptr;                    break;
         }
         bbArray.push_back(e);
+    }
+    if (bbSkipped > 0)
+    {
+        SYSTEM_LOG << "[VisualScriptEditorPanel] SerializeAndWrite: " << bbSkipped
+                   << " invalid blackboard entries skipped (BUG-001)\n";
     }
     root["blackboard"] = bbArray;
 
@@ -2609,12 +2626,30 @@ void VisualScriptEditorPanel::RenderBlackboard()
     ImGui::TextDisabled("Local Blackboard");
     ImGui::Separator();
 
-    // Add entry button
+    // BUG-001 Hotfix: warn user if invalid entries exist (key empty or type None)
+    bool hasInvalid = false;
+    for (size_t i = 0; i < m_template.Blackboard.size(); ++i)
+    {
+        const BlackboardEntry& entry = m_template.Blackboard[static_cast<size_t>(i)];
+        if (entry.Key.empty() || entry.Type == VariableType::None)
+        {
+            hasInvalid = true;
+            break;
+        }
+    }
+    if (hasInvalid)
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+        ImGui::TextUnformatted("[!] Invalid entries will be skipped on save");
+        ImGui::PopStyleColor();
+    }
+
+    // Add entry button — BUG-001 Hotfix: init with safe defaults (non-empty key, Int type)
     if (ImGui::Button("+##vsbbAdd"))
     {
         BlackboardEntry entry;
-        entry.Key      = "newKey";
-        entry.Type     = VariableType::Float;
+        entry.Key      = "NewVariable";
+        entry.Type     = VariableType::Int;
         entry.IsGlobal = false;
         m_template.Blackboard.push_back(entry);
         m_dirty = true;

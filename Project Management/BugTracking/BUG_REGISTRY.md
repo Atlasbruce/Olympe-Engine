@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Créé le:** 2026-03-15 12:44:21 UTC  
-**Dernière mise à jour:** 2026-03-15 15:45:00 UTC  
+**Dernière mise à jour:** 2026-03-15 15:30:00 UTC  
 **Projet:** Olympe Engine  
 **GitHub Repo:** https://github.com/Atlasbruce/Olympe-Engine  
 
@@ -35,31 +35,9 @@ Ce registre centralise **tous les bugs connus** du projet Olympe Engine, classé
 
 ## 🔴 P0 — CRITICAL
 
-### [BUG-001] ✅ RESOLVED — Crash on Blackboard Save: abort() on VariableType::None
+### BUG-001 — Crash Save Blackboard (VariableType::None) — IN_PROGRESS 🔧
 
-**ID:** BUG-001
-**Sévérité:** P0 — CRITICAL (crash, blocage total du Save)
-**Type:** Regression
-**Statut:** ✅ FIXED (PR #387)
-**Phase Affectée:** 22-C (découverte) → Hotfix immédiat
-**Module:** BlueprintEditor — Blackboard Serialization
-
-**Découvert le:** 2026-03-15 14:30:00 UTC
-**Découvert par:** @Atlasbruce (screenshot crash MSVC + diagnostic)
-
-**Résolu le:** 2026-03-15 15:30:00 UTC
-**PR Fix:** [#387](https://github.com/Atlasbruce/Olympe-Engine/pull/387)
-**Merged le:** 2026-03-15 15:30:00 UTC
-
-**Workaround:** N/A (fixed)
-
-**Resolution Summary:**
-1. Pre-save validation : Skip entries avec Key="" ou Type=None
-2. Safe initialization : Key="NewVariable", Type=Int par défaut
-3. Warning UX : Badge rouge si entries invalides
-4. Regression tests : 5/5 passing
-
-**Impact:** 0% regression — Phase 23-B can proceed
+Voir fiche détaillée dans la section **Fiches Détaillées — Bugs Actifs** ci-dessous.
 
 ---
 
@@ -85,13 +63,56 @@ Ce registre centralise **tous les bugs connus** du projet Olympe Engine, classé
 
 | ID | Titre | Sévérité | Phase | PR | Statut | Découvert | Assigné |
 |----|-------|----------|-------|----|--------|-----------|---------|
-| — | Aucun bug actif | — | — | — | — | — | — |
+| BUG-001 | Crash Save Blackboard (VariableType::None) | P0 CRITICAL | 23-B | En cours | IN_PROGRESS | 2026-03-15 15:30:00 UTC | @Atlasbruce |
 
 ---
 
 ## 📝 Fiches Détaillées — Bugs Actifs
 
-*Aucun bug actif actuellement.*
+### [BUG-001] — Crash Save Blackboard (VariableType::None)
+
+**ID:** BUG-001  
+**Sévérité:** P0 — CRITICAL  
+**Type:** Crash  
+**Statut:** IN_PROGRESS  
+**Phase Affectée:** 23-B — Full Blackboard Properties  
+**Module:** VisualScriptEditorPanel  
+
+**Découvert le:** 2026-03-15 15:30:00 UTC  
+**Découvert par:** @Atlasbruce  
+**Assigné à:** @Atlasbruce  
+
+**Description:**  
+L'éditeur crashe avec `abort()` lors du Save après l'ajout d'une variable Blackboard via le bouton `[+]` dans le panel. Le crash est reproductible à chaque save après ajout sans modification du type.
+
+**Étapes de Reproduction:**
+1. Ouvrir un graphe VS dans le Blueprint Editor
+2. Dans le panel Blackboard, cliquer `[+]` pour ajouter une variable
+3. Ne pas modifier le type (laisse `None` ou `Float` selon la version)
+4. Appuyer sur Save (Ctrl+S)
+5. L'éditeur crashe avec `abort()`
+
+**Comportement Attendu:**  
+Le graphe est sauvegardé normalement, les variables Blackboard valides sont persistées.
+
+**Comportement Observé:**  
+Crash `abort()` dans la sérialisation JSON. Le fichier graphe peut être corrompu ou non écrit.
+
+**Impact:**  
+Bloquant pour toute utilisation du Blackboard dans le Blueprint Editor. Impossible de sauvegarder un graphe après ajout de variable.
+
+**Cause Racine:**  
+- `VariableType::None` non géré dans le `switch` de `SerializeAndWrite()` → default case écrit `"type": "None"` mais lors du reload, le deserializer ne gère pas ce type → crash potentiel
+- Clé vide non validée : `entry.Key = "newKey"` peut être effacée par l'utilisateur, laissant une clé vide qui corrompt le JSON
+- Buffer ImGui potentiellement corrompu lors de realloc du vecteur `m_template.Blackboard`
+
+**Workaround:** Toujours assigner un type valide et une clé non-vide avant de sauvegarder. Contournement fragile.
+
+**GitHub Issue:** N/A  
+**PR Fix:** Phase 23-B (en cours)  
+**Feature Context:** [feature_context_23_B.md](../Features/feature_context_23_B.md)  
+
+**Tests de Régression Ajoutés:** Oui — `Tests/BlueprintEditor/Phase23BTest.cpp` (5 tests BUG-001)
 
 ---
 
@@ -101,16 +122,16 @@ Ce registre centralise **tous les bugs connus** du projet Olympe Engine, classé
 
 | Métrique | Valeur | Cible |
 |---------|--------|-------|
-| Bugs P0 actifs | 0 | 0 |
+| Bugs P0 actifs | 1 (BUG-001) | 0 |
 | Bugs P1 actifs | 0 | ≤ 2 |
 | Bugs P2 actifs | 0 | ≤ 5 |
 | Bugs P3 actifs | 0 | ≤ 10 |
-| MTTR P0 (Mean Time To Resolve) | ~1h (BUG-001) | < 24h |
+| MTTR P0 (Mean Time To Resolve) | En cours | < 24h |
 | MTTR P1 | N/A | < 72h |
 | MTTR P2 | N/A | < 2 semaines |
 | MTTR P3 | N/A | < 1 mois |
-| Taux de régression (bugs/PR) | 1/7 = ~14% (1 P0 résolu) — Note: pic ponctuel dû à 1 bug P0 isolé (Phase 22-C), résolu en ~1h | < 5% |
-| Couverture tests phases actives | 5/5 (BUG-001) | > 80% |
+| Taux de régression (bugs/PR) | 0% | < 5% |
+| Couverture tests phases actives | 18/18 (Phase 23-B) | > 80% |
 
 ### Hotspots (Modules les Plus Touchés)
 
@@ -222,4 +243,4 @@ Résumé: abort() lors de la sauvegarde d'un Blackboard contenant une entrée av
 
 ---
 
-*Dernière mise à jour : 2026-03-15 15:45:00 UTC*
+*Dernière mise à jour : 2026-03-15 15:30:00 UTC*

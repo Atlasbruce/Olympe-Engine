@@ -603,4 +603,20 @@ if(BUILD_TESTS)
     target_include_directories(OlympePhase22CTests PRIVATE ${COMMON_INCLUDES})
     add_test(NAME OlympePhase22CTests COMMAND OlympePhase22CTests)
 
+    # -----------------------------------------------------------------------
+    # OlympePhase23BTests  (Phase 23-B — Full Blackboard Properties + BUG-001)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase23BTests
+        Tests/BlueprintEditor/Phase23BTest.cpp
+        Source/BlueprintEditor/BlackboardVariablePresetRegistry.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/NodeGraphCore/GlobalBlackboard.cpp
+        Tests/TestStubs.cpp
+    )
+    target_include_directories(OlympePhase23BTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase23BTests COMMAND OlympePhase23BTests)
+
 endif() # BUILD_TESTS

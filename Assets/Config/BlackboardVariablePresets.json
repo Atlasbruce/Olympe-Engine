@@ -1,0 +1,111 @@
+{
+  "version": "1.0",
+  "description": "Global pool of available blackboard variable presets for Olympe Engine",
+  "availableVariables": [
+    {
+      "name": "targetDistance",
+      "type": "Float",
+      "description": "Distance to the current target entity",
+      "category": "Targeting",
+      "default": "9999.0"
+    },
+    {
+      "name": "targetSeen",
+      "type": "Bool",
+      "description": "Whether the target is currently visible",
+      "category": "Targeting",
+      "default": "false"
+    },
+    {
+      "name": "targetEntityID",
+      "type": "EntityID",
+      "description": "Entity ID of the current target",
+      "category": "Targeting",
+      "default": "0"
+    },
+    {
+      "name": "moveSpeed",
+      "type": "Float",
+      "description": "Current movement speed of the entity",
+      "category": "Movement",
+      "default": "1.0"
+    },
+    {
+      "name": "patrolIndex",
+      "type": "Int",
+      "description": "Index of the current patrol waypoint",
+      "category": "Movement",
+      "default": "0"
+    },
+    {
+      "name": "destinationReached",
+      "type": "Bool",
+      "description": "Whether the entity has reached its destination",
+      "category": "Movement",
+      "default": "false"
+    },
+    {
+      "name": "currentState",
+      "type": "String",
+      "description": "Current AI state label (e.g. idle, patrol, chase)",
+      "category": "State",
+      "default": "idle"
+    },
+    {
+      "name": "alertLevel",
+      "type": "Int",
+      "description": "Alert level of the entity (0=calm, 1=suspicious, 2=alert)",
+      "category": "State",
+      "default": "0"
+    },
+    {
+      "name": "isAlive",
+      "type": "Bool",
+      "description": "Whether the entity is alive",
+      "category": "State",
+      "default": "true"
+    },
+    {
+      "name": "health",
+      "type": "Float",
+      "description": "Current health points of the entity",
+      "category": "Combat",
+      "default": "100.0"
+    },
+    {
+      "name": "lastAttacker",
+      "type": "EntityID",
+      "description": "Entity ID of the last entity that attacked this entity",
+      "category": "Combat",
+      "default": "0"
+    },
+    {
+      "name": "damageDealt",
+      "type": "Float",
+      "description": "Total damage dealt in the current encounter",
+      "category": "Combat",
+      "default": "0.0"
+    },
+    {
+      "name": "timerElapsed",
+      "type": "Float",
+      "description": "General-purpose elapsed timer in seconds",
+      "category": "Misc",
+      "default": "0.0"
+    },
+    {
+      "name": "loopCounter",
+      "type": "Int",
+      "description": "General-purpose loop counter",
+      "category": "Misc",
+      "default": "0"
+    },
+    {
+      "name": "customTag",
+      "type": "String",
+      "description": "General-purpose string tag for custom logic",
+      "category": "Misc",
+      "default": ""
+    }
+  ]
+}
