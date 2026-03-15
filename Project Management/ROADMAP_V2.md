@@ -1,8 +1,8 @@
 # Olympe Engine — Roadmap V2
 
-**Date :** 2026-03-14  
+**Date :** 2026-03-15  
 **Auteur :** @Atlasbruce  
-**Statut :** Planification active — Phase 21-D specifiee (PRIORITAIRE)
+**Statut :** Phase 21-C NEXT — Phases 21-B, 21-D, 22-A, 22-C COMPLETED
 
 ---
 
@@ -12,9 +12,9 @@ La Roadmap V2 definit les initiatives majeures post-Phase 20 pour le Blueprint E
 
 | Initiative | Titre | Priorite | Statut |
 |---|---|---|---|
-| A | Graph Verification System (GVS) | P0 | Phase 21 — EN COURS |
-| E | Dynamic Pins Sequence/Switch (UX) | P0 PRIORITAIRE | Phase 21-D — A IMPLEMENTER |
-| B | Design & Icons Font Awesome | P1 | En attente spec design |
+| A | Graph Verification System (GVS) | P0 | Phases 21-A/B COMPLETED — 21-C NEXT |
+| E | Dynamic Pins Sequence/Switch (UX) | P0 | Phase 21-D — COMPLETED (PR #382) |
+| B | Design & Icons Font Awesome | P2 | En attente spec design |
 | C | Diversification Types de Graphes | P2 | Phase 23+ |
 | D | Runtime Execution & Debugger | P3 | Phase 24+ |
 
@@ -59,7 +59,9 @@ Nouveaux fichiers :
 | W004 | WARNING | MathOp avec MathOperator vide |
 | I001 | INFO | Noeud non atteignable depuis EntryPoint |
 
-### Phase 21-B — Panel Validation UI (EN COURS)
+### Phase 21-B — Panel Validation UI (COMPLETED ✅ — PR #381)
+
+**Status:** PR #381 MERGED — 2026-03-14 10:03:09 UTC
 
 Fonctionnalites :
 - Panel scrollable listant tous les VSVerificationIssue avec icone couleur
@@ -194,13 +196,9 @@ Phases prevues :
 
 ---
 
-### Phase 22-C — Parameter Dropdowns & Registries (ACTIVE 🔧)
+### Phase 22-C — Parameter Dropdowns & Registries (COMPLETED ✅ — PR #386)
 
-**Status:** Implementation in Progress  
-**Priority:** P0 CRITICAL  
-**Date Started:** 2026-03-14 22:45:00 UTC  
-**Expected Duration:** ~12-16 hours  
-**Next Status Update:** Next session
+**Status:** PR #386 MERGED — 2026-03-14 21:59:19 UTC
 
 **Why This Phase?** 
 Users had no way to discover available:
@@ -247,10 +245,11 @@ Result: Impossible to author graphs without documentation/guessing.
 | Phase | Initiative | Estimation | Statut | Priority |
 |---|---|---|---|---|
 | 21-A | GVS — VSGraphVerifier | ~1 session | ✅ COMPLETED (PR #380) | — |
+| 21-B | GVS — Panel Validation UI | ~1 session | ✅ COMPLETED (PR #381) | — |
+| 21-D | Dynamic Pins Seq/Switch | ~1 session | ✅ COMPLETED (PR #382) | — |
 | 22-A | Switch Node Enhancement | ~1 session | ✅ COMPLETED (PR #384) | — |
-| **22-C** | **Parameter Dropdowns & Registries** | **~1 session** | **🔧 IN PROGRESS** | **P0** |
-| 21-B | GVS — Panel Validation UI | ~1 session | ⏳ NEXT | P1 |
-| 21-C | GVS — Pre-save/Pre-exec Validation | ~0.5 session | Planned | P1 |
+| 22-C | Parameter Dropdowns & Registries | ~1 session | ✅ COMPLETED (PR #386) | — |
+| **21-C** | **GVS — Pre-save/Pre-exec Validation** | **~0.5 session** | **⏳ NEXT** | **P1** |
 | 22-B | Font Awesome Icons & Design | ~2 sessions | ⏳ Deferred | P2 |
 | 23-A | AnimGraph Infrastructure | ~2 sessions | Planned | — |
 | 23-B | LevelScript + Cinematic | ~2 sessions | Planned | — |
@@ -261,4 +260,4 @@ Result: Impossible to author graphs without documentation/guessing.
 
 ---
 
-**Last Updated**: 2026-03-14 22:45:00
+**Last Updated**: 2026-03-15 09:51:59
