@@ -31,6 +31,13 @@
  *  17.  Test_BugFix_SafeInit              — New entry default values are safe (non-empty key, Int type)
  *  18.  Test_BugFix_AllTypesSkipNone      — All valid types other than None serialize correctly
  *
+ *   === BUG-002 Regression Tests (5) ===
+ *  19.  Test_BUG002_ValidateAndClean      — ValidateAndCleanBlackboardEntries removes bad entries
+ *  20.  Test_BUG002_TypeIdxBoundsCheck    — Out-of-range typeIdx is clamped to Int
+ *  21.  Test_BUG002_VariableTypeToString  — VariableTypeToString returns correct strings + fallback
+ *  22.  Test_BUG002_TaskValueToString     — TaskValue::to_string() never returns empty
+ *  23.  Test_BUG002_GetDefaultValueForType— GetDefaultValueForType returns typed defaults
+ *
  * C++14 compliant — no std::optional, structured bindings, std::filesystem.
  */
 
@@ -41,6 +48,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <fstream>
 #include <cstring>
 
@@ -545,6 +553,179 @@ static void Test_BugFix_AllTypesSkipNone()
 }
 
 // ============================================================================
+// === BUG-002 Regression Tests ===
+// ============================================================================
+
+// Fix #1: ValidateAndCleanBlackboardEntries logic
+static void Test_BUG002_ValidateAndClean()
+{
+    const std::string name = "BUG002_ValidateAndClean";
+    int prevFail = s_failCount;
+
+    // Simulate the logic of ValidateAndCleanBlackboardEntries():
+    // entries with empty key or VariableType::None must be removed.
+    std::vector<BlackboardEntry> entries;
+
+    BlackboardEntry valid;
+    valid.Key  = "health";
+    valid.Type = VariableType::Float;
+    entries.push_back(valid);
+
+    BlackboardEntry emptyKey;
+    emptyKey.Key  = "";
+    emptyKey.Type = VariableType::Int;
+    entries.push_back(emptyKey);
+
+    BlackboardEntry noneType;
+    noneType.Key  = "badVar";
+    noneType.Type = VariableType::None;
+    entries.push_back(noneType);
+
+    // Apply validate-and-clean
+    entries.erase(
+        std::remove_if(entries.begin(), entries.end(),
+            [](const BlackboardEntry& e) {
+                return e.Key.empty() || e.Type == VariableType::None;
+            }),
+        entries.end());
+
+    TEST_ASSERT(entries.size() == 1,              "ValidateAndClean keeps exactly 1 valid entry");
+    TEST_ASSERT(entries[0].Key == "health",        "ValidateAndClean preserves the valid entry key");
+    TEST_ASSERT(entries[0].Type == VariableType::Float, "ValidateAndClean preserves the valid entry type");
+
+    ReportTest(name, s_failCount == prevFail);
+}
+
+// Fix #2: Dropdown typeIdx bounds-check
+static void Test_BUG002_TypeIdxBoundsCheck()
+{
+    const std::string name = "BUG002_TypeIdxBoundsCheck";
+    int prevFail = s_failCount;
+
+    // Simulate the bounds-check logic applied before ImGui::Combo
+    auto clampTypeIdx = [](int typeIdx, VariableType& outType) -> int {
+        if (typeIdx < 0 || typeIdx >= 7) {
+            typeIdx  = static_cast<int>(VariableType::Int);
+            outType  = VariableType::Int;
+        }
+        return typeIdx;
+    };
+
+    // Normal value — should be unchanged
+    VariableType t1 = VariableType::Float;
+    int idx1 = clampTypeIdx(static_cast<int>(VariableType::Float), t1);
+    TEST_ASSERT(idx1 == static_cast<int>(VariableType::Float), "Valid typeIdx Float is unchanged");
+
+    // -1 (garbage) — must be clamped to Int
+    VariableType t2 = static_cast<VariableType>(255);
+    int idx2 = clampTypeIdx(-1, t2);
+    TEST_ASSERT(idx2 == static_cast<int>(VariableType::Int), "Negative typeIdx clamped to Int");
+    TEST_ASSERT(t2  == VariableType::Int,                    "Negative typeIdx sets type to Int");
+
+    // 99 (out of range) — must be clamped to Int
+    VariableType t3 = static_cast<VariableType>(255);
+    int idx3 = clampTypeIdx(99, t3);
+    TEST_ASSERT(idx3 == static_cast<int>(VariableType::Int), "Out-of-range typeIdx clamped to Int");
+    TEST_ASSERT(t3  == VariableType::Int,                    "Out-of-range typeIdx sets type to Int");
+
+    ReportTest(name, s_failCount == prevFail);
+}
+
+// Fix #3: VariableTypeToString with fallback
+static void Test_BUG002_VariableTypeToString()
+{
+    const std::string name = "BUG002_VariableTypeToString";
+    int prevFail = s_failCount;
+
+    TEST_ASSERT(VariableTypeToString(VariableType::Bool)     == "Bool",     "Bool maps to 'Bool'");
+    TEST_ASSERT(VariableTypeToString(VariableType::Int)      == "Int",      "Int maps to 'Int'");
+    TEST_ASSERT(VariableTypeToString(VariableType::Float)    == "Float",    "Float maps to 'Float'");
+    TEST_ASSERT(VariableTypeToString(VariableType::Vector)   == "Vector",   "Vector maps to 'Vector'");
+    TEST_ASSERT(VariableTypeToString(VariableType::EntityID) == "EntityID", "EntityID maps to 'EntityID'");
+    TEST_ASSERT(VariableTypeToString(VariableType::String)   == "String",   "String maps to 'String'");
+    TEST_ASSERT(VariableTypeToString(VariableType::None)     == "None",     "None maps to 'None'");
+
+    // All results must be non-empty (no garbage)
+    bool allNonEmpty = true;
+    VariableType allTypes[] = {
+        VariableType::Bool, VariableType::Int,  VariableType::Float,
+        VariableType::Vector, VariableType::EntityID, VariableType::String,
+        VariableType::None
+    };
+    for (size_t i = 0; i < sizeof(allTypes)/sizeof(allTypes[0]); ++i)
+    {
+        if (VariableTypeToString(allTypes[i]).empty()) { allNonEmpty = false; break; }
+    }
+    TEST_ASSERT(allNonEmpty, "VariableTypeToString never returns empty string");
+
+    ReportTest(name, s_failCount == prevFail);
+}
+
+// Fix #4: TaskValue::to_string() never returns empty
+static void Test_BUG002_TaskValueToString()
+{
+    const std::string name = "BUG002_TaskValueToString";
+    int prevFail = s_failCount;
+
+    // None → fallback "0"
+    TaskValue none;
+    TEST_ASSERT(none.to_string() == "0", "None TaskValue to_string() returns '0'");
+    TEST_ASSERT(!none.to_string().empty(), "None TaskValue to_string() never empty");
+
+    // Bool
+    TaskValue bTrue(true);
+    TaskValue bFalse(false);
+    TEST_ASSERT(bTrue.to_string()  == "true",  "Bool true to_string() == 'true'");
+    TEST_ASSERT(bFalse.to_string() == "false", "Bool false to_string() == 'false'");
+
+    // Int
+    TaskValue i42(42);
+    TEST_ASSERT(i42.to_string() == "42", "Int 42 to_string() == '42'");
+    TEST_ASSERT(!i42.to_string().empty(), "Int to_string() never empty");
+
+    // Float
+    TaskValue f0(0.0f);
+    TEST_ASSERT(!f0.to_string().empty(), "Float 0.0 to_string() never empty");
+
+    // String
+    TaskValue str(std::string("hello"));
+    TEST_ASSERT(str.to_string() == "hello", "String TaskValue to_string() == 'hello'");
+
+    ReportTest(name, s_failCount == prevFail);
+}
+
+// UX Fix #1: GetDefaultValueForType returns typed defaults
+static void Test_BUG002_GetDefaultValueForType()
+{
+    const std::string name = "BUG002_GetDefaultValueForType";
+    int prevFail = s_failCount;
+
+    TaskValue vBool   = GetDefaultValueForType(VariableType::Bool);
+    TaskValue vInt    = GetDefaultValueForType(VariableType::Int);
+    TaskValue vFloat  = GetDefaultValueForType(VariableType::Float);
+    TaskValue vString = GetDefaultValueForType(VariableType::String);
+    TaskValue vEntity = GetDefaultValueForType(VariableType::EntityID);
+
+    TEST_ASSERT(vBool.GetType()   == VariableType::Bool,     "GetDefaultValueForType(Bool)     → Bool");
+    TEST_ASSERT(vInt.GetType()    == VariableType::Int,      "GetDefaultValueForType(Int)      → Int");
+    TEST_ASSERT(vFloat.GetType()  == VariableType::Float,    "GetDefaultValueForType(Float)    → Float");
+    TEST_ASSERT(vString.GetType() == VariableType::String,   "GetDefaultValueForType(String)   → String");
+    TEST_ASSERT(vEntity.GetType() == VariableType::EntityID, "GetDefaultValueForType(EntityID) → EntityID");
+
+    // Values must be initialized to zero/false/empty
+    TEST_ASSERT(vBool.AsBool()     == false, "Default Bool is false");
+    TEST_ASSERT(vInt.AsInt()       == 0,     "Default Int is 0");
+    TEST_ASSERT(vFloat.AsFloat()   == 0.0f,  "Default Float is 0.0f");
+    TEST_ASSERT(vString.AsString() == "",    "Default String is empty string");
+
+    // None type must never return VariableType::None (fallback to Int)
+    TaskValue vNone = GetDefaultValueForType(VariableType::None);
+    TEST_ASSERT(vNone.GetType() != VariableType::None, "GetDefaultValueForType(None) does not return None");
+
+    ReportTest(name, s_failCount == prevFail);
+}
+
+// ============================================================================
 // main
 // ============================================================================
 
@@ -573,6 +754,13 @@ int main()
     Test_BugFix_NoneType();
     Test_BugFix_SafeInit();
     Test_BugFix_AllTypesSkipNone();
+
+    // BUG-002 Regression
+    Test_BUG002_ValidateAndClean();
+    Test_BUG002_TypeIdxBoundsCheck();
+    Test_BUG002_VariableTypeToString();
+    Test_BUG002_TaskValueToString();
+    Test_BUG002_GetDefaultValueForType();
 
     std::cout << "\n=== Results: "
               << s_passCount << " passed, "

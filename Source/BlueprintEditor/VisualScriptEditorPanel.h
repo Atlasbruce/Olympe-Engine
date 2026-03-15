@@ -228,6 +228,22 @@ private:
     /** @brief Runs VSGraphVerifier on the current graph and stores the result. */
     void RunVerification();
 
+    /**
+     * @brief Removes blackboard entries with empty keys or VariableType::None.
+     *
+     * Called before serialization (Fix #1) to guarantee the blackboard is clean.
+     * Logs each removed entry to SYSTEM_LOG.
+     */
+    void ValidateAndCleanBlackboardEntries();
+
+    /**
+     * @brief Commits any pending key-name edits stored in m_pendingBlackboardEdits.
+     *
+     * Flushes deferred InputText changes so that the template reflects the
+     * most recent user input before Save is attempted.
+     */
+    void CommitPendingBlackboardEdits();
+
     // -----------------------------------------------------------------------
     // Canvas helpers
     // -----------------------------------------------------------------------
@@ -435,6 +451,22 @@ private:
     std::string m_saveAsDirectory   = "Blueprints/AI";
     /// Extension to append when saving (derived from m_currentPath; defaults to ".ats")
     std::string m_saveAsExtension   = ".ats";
+
+    // -----------------------------------------------------------------------
+    // Blackboard edit state (BUG-002)
+    // -----------------------------------------------------------------------
+
+    /// Deferred key-name edits for blackboard entries: index → pending new key.
+    /// Committed in CommitPendingBlackboardEdits() before Save.
+    std::unordered_map<int, std::string> m_pendingBlackboardEdits;
+
+    // -----------------------------------------------------------------------
+    // Layout state (UX — resizable properties panel)
+    // -----------------------------------------------------------------------
+
+    /// Width of the properties+blackboard panel on the right.
+    /// Adjusted by the drag-to-resize handle between the canvas and the panel.
+    float m_propertiesPanelWidth = 0.0f;
 };
 
 } // namespace Olympe
