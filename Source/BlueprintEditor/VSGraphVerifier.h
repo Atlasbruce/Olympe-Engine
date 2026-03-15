@@ -79,6 +79,11 @@ struct VSVerificationResult {
  *   W003 — SubGraph with empty SubGraphPath
  *   W004 — MathOp with empty MathOperator
  *   I001 — Node not reachable from EntryPoint
+ *   E040 — Branch/While: Pin mode with empty pin reference
+ *   E041 — Branch/While: Variable mode but variable not in blackboard
+ *   E042 — Branch/While: Type mismatch between left and right operands
+ *   W015 — Branch/While: Const vs Const condition (always true/false — optimisation hint)
+ *   W016 — Branch/While: Pin mode selected but no DataConnection for that pin
  */
 class VSGraphVerifier {
 public:
@@ -121,6 +126,14 @@ private:
     static void CheckConditionParams(const TaskGraphTemplate& g, VSVerificationResult& r);
     // W010 — BBKey type incompatible with node expectations
     static void CheckBBKeyCompatibility(const TaskGraphTemplate& g, VSVerificationResult& r);
+
+    // Condition rules (Phase 23-B.4)
+    // E040 — Branch/While: Pin mode selected but pin reference is empty
+    // E041 — Branch/While: Variable mode selected but variable not in blackboard
+    // E042 — Branch/While: Type mismatch between left and right operands
+    // W015 — Branch/While: Const vs Const condition (always true/false)
+    // W016 — Branch/While: Pin mode selected but no DataConnection found for that pin
+    static void CheckConditionStructure(const TaskGraphTemplate& g, VSVerificationResult& r);
 
     // Warning rules
     static void CheckNodeParameterWarnings(const TaskGraphTemplate& g, VSVerificationResult& r);

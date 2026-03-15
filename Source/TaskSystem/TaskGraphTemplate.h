@@ -123,6 +123,9 @@ struct TaskNodeDefinition {
     std::string                          switchVariable; ///< For Switch: BB key of the variable to switch on
     std::vector<SwitchCaseDefinition>    switchCases;   ///< For Switch: structured case definitions
 
+    // ATS VS Unified Condition System (Phase 23-B.4 - 2026-03-15)
+    std::vector<Condition> conditions;  ///< For Branch/While: structured condition list (implicit AND)
+
     /// For VSSequence: dynamically-added exec-out pins beyond the default "Out".
     /// Each entry is a pin name (e.g. "Out_1", "Out_2"...).
     std::vector<std::string> DynamicExecOutputPins;

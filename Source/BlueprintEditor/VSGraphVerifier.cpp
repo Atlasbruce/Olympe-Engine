@@ -109,6 +109,9 @@ VSVerificationResult VSGraphVerifier::Verify(const TaskGraphTemplate& graph)
     CheckConditionParams(graph, result);
     CheckBBKeyCompatibility(graph, result);
 
+    // Condition structure rules (Phase 23-B.4)
+    CheckConditionStructure(graph, result);
+
     // Warning rules
     CheckNodeParameterWarnings(graph, result);
 
@@ -946,6 +949,279 @@ void VSGraphVerifier::CheckBBKeyCompatibility(const TaskGraphTemplate& g, VSVeri
                     << static_cast<int>(it->second) << ".";
                 AddIssue(r, VSVerificationSeverity::Warning, node.NodeID,
                          "W010_BBKeyTypeIncompatible", oss.str());
+            }
+        }
+    }
+}
+
+// ============================================================================
+// CheckConditionStructure (Phase 23-B.4)
+// E040, E041, E042, W015, W016
+// ============================================================================
+
+void VSGraphVerifier::CheckConditionStructure(const TaskGraphTemplate& g, VSVerificationResult& r)
+{
+    // Build BB key set for fast E041 lookup
+    std::unordered_map<std::string, VariableType> bbTypes;
+    for (size_t i = 0; i < g.Blackboard.size(); ++i)
+        bbTypes[g.Blackboard[i].Key] = g.Blackboard[i].Type;
+
+    // Build set of data connections (targetNode:pinName) for W016
+    // We use a simple set represented as a sorted vector of strings.
+    std::vector<std::string> dataConnectionKeys;
+    for (size_t i = 0; i < g.DataConnections.size(); ++i)
+    {
+        std::ostringstream k;
+        k << g.DataConnections[i].TargetNodeID << ":" << g.DataConnections[i].TargetPinName;
+        dataConnectionKeys.push_back(k.str());
+    }
+
+    for (size_t ni = 0; ni < g.Nodes.size(); ++ni)
+    {
+        const TaskNodeDefinition& node = g.Nodes[ni];
+        if (node.Type != TaskNodeType::Branch && node.Type != TaskNodeType::While)
+            continue;
+        if (node.conditions.empty())
+            continue;
+
+        for (size_t ci = 0; ci < node.conditions.size(); ++ci)
+        {
+            const Condition& cond = node.conditions[ci];
+            const std::string condIdx = std::to_string(ci);
+
+            // Helper lambda-equivalent: check one side (left or right)
+            // We repeat the logic for left and right using a small inline helper.
+
+            // Check LEFT side
+            {
+                const std::string& mode = cond.leftMode;
+                const std::string& pin  = cond.leftPin;
+                const std::string& var  = cond.leftVariable;
+
+                if (mode == "Pin")
+                {
+                    if (pin.empty())
+                    {
+                        // E040: Pin mode but empty reference
+                        std::ostringstream oss;
+                        oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                            << "'): condition[" << condIdx
+                            << "] left side: Pin mode selected but pin reference is empty.";
+                        AddIssue(r, VSVerificationSeverity::Error, node.NodeID,
+                                 "E040_ConditionPinEmpty", oss.str());
+                    }
+                    else
+                    {
+                        // W016: Pin mode but no DataConnection found for that pin
+                        // Parse "Node#<id>.<pinName>" → check DataConnections
+                        // We check source side: is there a DataConnection whose
+                        // source == "<id>:<pinName>"?
+                        const std::string prefix = "Node#";
+                        bool hasConnection = false;
+                        if (pin.substr(0, prefix.size()) == prefix)
+                        {
+                            const std::string rest = pin.substr(prefix.size());
+                            const size_t dotPos = rest.find('.');
+                            if (dotPos != std::string::npos)
+                            {
+                                const std::string idStr = rest.substr(0, dotPos);
+                                const std::string pName = rest.substr(dotPos + 1);
+                                for (size_t dc = 0; dc < g.DataConnections.size(); ++dc)
+                                {
+                                    std::ostringstream key;
+                                    key << g.DataConnections[dc].SourceNodeID
+                                        << ":" << g.DataConnections[dc].SourcePinName;
+                                    // Also check target side
+                                    std::ostringstream tkey;
+                                    tkey << idStr << ":" << pName;
+                                    if (key.str() == tkey.str())
+                                    {
+                                        hasConnection = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        (void)hasConnection; // W016 is informational; only warn if no connection
+                        // Note: we emit W016 only when no data connection is wired to that pin
+                        if (!hasConnection)
+                        {
+                            std::ostringstream oss;
+                            oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                                << "'): condition[" << condIdx
+                                << "] left side: Pin mode references '" << pin
+                                << "' but no DataConnection is wired from that pin.";
+                            AddIssue(r, VSVerificationSeverity::Warning, node.NodeID,
+                                     "W016_ConditionPinNotWired", oss.str());
+                        }
+                    }
+                }
+                else if (mode == "Variable")
+                {
+                    if (var.empty())
+                    {
+                        std::ostringstream oss;
+                        oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                            << "'): condition[" << condIdx
+                            << "] left side: Variable mode but variable name is empty (E041).";
+                        AddIssue(r, VSVerificationSeverity::Error, node.NodeID,
+                                 "E041_ConditionVariableNotFound", oss.str());
+                    }
+                    else if (bbTypes.find(var) == bbTypes.end())
+                    {
+                        // E041: variable not in blackboard
+                        std::ostringstream oss;
+                        oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                            << "'): condition[" << condIdx
+                            << "] left side: Variable '" << var
+                            << "' not declared in blackboard.";
+                        AddIssue(r, VSVerificationSeverity::Error, node.NodeID,
+                                 "E041_ConditionVariableNotFound", oss.str());
+                    }
+                }
+                // Const mode: always valid — no check needed
+            }
+
+            // Check RIGHT side
+            {
+                const std::string& mode = cond.rightMode;
+                const std::string& pin  = cond.rightPin;
+                const std::string& var  = cond.rightVariable;
+
+                if (mode == "Pin")
+                {
+                    if (pin.empty())
+                    {
+                        std::ostringstream oss;
+                        oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                            << "'): condition[" << condIdx
+                            << "] right side: Pin mode selected but pin reference is empty.";
+                        AddIssue(r, VSVerificationSeverity::Error, node.NodeID,
+                                 "E040_ConditionPinEmpty", oss.str());
+                    }
+                    else
+                    {
+                        const std::string prefix = "Node#";
+                        bool hasConnection = false;
+                        if (pin.substr(0, prefix.size()) == prefix)
+                        {
+                            const std::string rest = pin.substr(prefix.size());
+                            const size_t dotPos = rest.find('.');
+                            if (dotPos != std::string::npos)
+                            {
+                                const std::string idStr = rest.substr(0, dotPos);
+                                const std::string pName = rest.substr(dotPos + 1);
+                                for (size_t dc = 0; dc < g.DataConnections.size(); ++dc)
+                                {
+                                    std::ostringstream key;
+                                    key << g.DataConnections[dc].SourceNodeID
+                                        << ":" << g.DataConnections[dc].SourcePinName;
+                                    std::ostringstream tkey;
+                                    tkey << idStr << ":" << pName;
+                                    if (key.str() == tkey.str())
+                                    {
+                                        hasConnection = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (!hasConnection)
+                        {
+                            std::ostringstream oss;
+                            oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                                << "'): condition[" << condIdx
+                                << "] right side: Pin mode references '" << pin
+                                << "' but no DataConnection is wired from that pin.";
+                            AddIssue(r, VSVerificationSeverity::Warning, node.NodeID,
+                                     "W016_ConditionPinNotWired", oss.str());
+                        }
+                    }
+                }
+                else if (mode == "Variable")
+                {
+                    if (var.empty())
+                    {
+                        std::ostringstream oss;
+                        oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                            << "'): condition[" << condIdx
+                            << "] right side: Variable mode but variable name is empty (E041).";
+                        AddIssue(r, VSVerificationSeverity::Error, node.NodeID,
+                                 "E041_ConditionVariableNotFound", oss.str());
+                    }
+                    else if (bbTypes.find(var) == bbTypes.end())
+                    {
+                        std::ostringstream oss;
+                        oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                            << "'): condition[" << condIdx
+                            << "] right side: Variable '" << var
+                            << "' not declared in blackboard.";
+                        AddIssue(r, VSVerificationSeverity::Error, node.NodeID,
+                                 "E041_ConditionVariableNotFound", oss.str());
+                    }
+                }
+            }
+
+            // W015: Const vs Const — always true/false (optimisation hint)
+            if (cond.leftMode == "Const" && cond.rightMode == "Const")
+            {
+                std::ostringstream oss;
+                oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                    << "'): condition[" << condIdx
+                    << "] is Const vs Const — this will always evaluate to the same"
+                       " boolean value. Consider simplifying.";
+                AddIssue(r, VSVerificationSeverity::Warning, node.NodeID,
+                         "W015_ConstVsConstCondition", oss.str());
+            }
+
+            // E042: Type mismatch between operands (when both types are known)
+            {
+                VariableType leftType  = VariableType::None;
+                VariableType rightType = VariableType::None;
+
+                // Resolve left type
+                if (cond.leftMode == "Variable")
+                {
+                    auto it = bbTypes.find(cond.leftVariable);
+                    if (it != bbTypes.end()) leftType = it->second;
+                }
+                else if (cond.leftMode == "Const")
+                {
+                    leftType = cond.leftConstValue.GetType();
+                }
+
+                // Resolve right type
+                if (cond.rightMode == "Variable")
+                {
+                    auto it = bbTypes.find(cond.rightVariable);
+                    if (it != bbTypes.end()) rightType = it->second;
+                }
+                else if (cond.rightMode == "Const")
+                {
+                    rightType = cond.rightConstValue.GetType();
+                }
+
+                // Check for type mismatch (excluding None which means "unknown/pin")
+                if (leftType  != VariableType::None &&
+                    rightType != VariableType::None &&
+                    leftType  != rightType)
+                {
+                    // Int↔Float promotion is allowed
+                    const bool leftNumeric  = (leftType  == VariableType::Int  || leftType  == VariableType::Float);
+                    const bool rightNumeric = (rightType == VariableType::Int  || rightType == VariableType::Float);
+                    if (!(leftNumeric && rightNumeric))
+                    {
+                        std::ostringstream oss;
+                        oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                            << "'): condition[" << condIdx
+                            << "] type mismatch: left type="
+                            << static_cast<int>(leftType)
+                            << " right type=" << static_cast<int>(rightType)
+                            << " (E042). Comparison will fail at runtime.";
+                        AddIssue(r, VSVerificationSeverity::Error, node.NodeID,
+                                 "E042_ConditionTypeMismatch", oss.str());
+                    }
+                }
             }
         }
     }

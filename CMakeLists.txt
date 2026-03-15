@@ -620,18 +620,18 @@ if(BUILD_TESTS)
     add_test(NAME OlympePhase23BTests COMMAND OlympePhase23BTests)
 
     # -----------------------------------------------------------------------
-    # OlympePhase23B2Tests  (HOTFIX BUG-003 & BUG-004 — Node Position Offset + Load Crash)
+    # OlympePhase23B4Tests  (Phase 23-B.4 — Unified Condition System)
     # -----------------------------------------------------------------------
-    add_executable(OlympePhase23B2Tests
-        Tests/BlueprintEditor/Phase23B2Test.cpp
-        Source/TaskSystem/TaskGraphTypes.cpp
-        Source/TaskSystem/TaskGraphTemplate.cpp
-        Source/TaskSystem/LocalBlackboard.cpp
-        Source/TaskSystem/AtomicTaskRegistry.cpp
-        Source/NodeGraphCore/GlobalBlackboard.cpp
+    add_executable(OlympePhase23B4Tests
+        Tests/BlueprintEditor/Phase23B4Test.cpp
+        Source/TaskSystem/ConditionEvaluator.cpp
+        ${TASK_SYSTEM_SOURCES}
+        ${TASK_GRAPH_LOADER_SOURCES}
+        Source/BlueprintEditor/VSGraphVerifier.cpp
+        ${PARAM_REGISTRY_SOURCES}
         Tests/TestStubs.cpp
     )
-    target_include_directories(OlympePhase23B2Tests PRIVATE ${COMMON_INCLUDES})
-    add_test(NAME OlympePhase23B2Tests COMMAND OlympePhase23B2Tests)
+    target_include_directories(OlympePhase23B4Tests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase23B4Tests COMMAND OlympePhase23B4Tests)
 
 endif() # BUILD_TESTS

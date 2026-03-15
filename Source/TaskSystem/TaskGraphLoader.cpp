@@ -579,6 +579,90 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
         nd.HasEditorPos = true;
     }
 
+    // Structured conditions (Phase 23-B.4 — Branch/While).
+    // Also supports v4 legacy format: { "variable", "operator", "compareValue" }
+    if (JsonHelper::IsArray(nodeJson, "conditions"))
+    {
+        JsonHelper::ForEachInArray(nodeJson, "conditions",
+            [&](const json& cj, size_t /*idx*/)
+        {
+            if (!cj.is_object())
+                return;
+
+            Condition cond;
+
+            // -- Left side --
+            cond.leftMode     = JsonHelper::GetString(cj, "leftMode",     "Variable");
+            cond.leftPin      = JsonHelper::GetString(cj, "leftPin",      "");
+            cond.leftVariable = JsonHelper::GetString(cj, "leftVariable", "");
+            if (cj.contains("leftConstValue"))
+                cond.leftConstValue = ParsePrimitiveValue(cj["leftConstValue"]);
+
+            // v4 legacy: "variable" field → Variable mode
+            if (cond.leftMode == "Variable" && cond.leftVariable.empty())
+            {
+                const std::string legacyVar = JsonHelper::GetString(cj, "variable", "");
+                if (!legacyVar.empty())
+                {
+                    cond.leftVariable = legacyVar;
+                    SYSTEM_LOG << "[TaskGraphLoader] v4→v5 migration: condition "
+                               << "variable='" << legacyVar << "' mapped to leftVariable\n";
+                }
+            }
+
+            // -- Operator --
+            cond.operatorStr = JsonHelper::GetString(cj, "operator", "==");
+
+            // -- Right side --
+            cond.rightMode     = JsonHelper::GetString(cj, "rightMode",     "Const");
+            cond.rightPin      = JsonHelper::GetString(cj, "rightPin",      "");
+            cond.rightVariable = JsonHelper::GetString(cj, "rightVariable", "");
+            if (cj.contains("rightConstValue"))
+                cond.rightConstValue = ParsePrimitiveValue(cj["rightConstValue"]);
+
+            // v4 legacy: "compareValue" field → Const mode (or Variable if it's a bare name)
+            if (cond.rightMode == "Const" && cond.rightConstValue.IsNone())
+            {
+                if (cj.contains("compareValue"))
+                {
+                    const json& cv = cj["compareValue"];
+                    // Heuristic: if it's a string with no spaces → treat as Variable reference
+                    if (cv.is_string())
+                    {
+                        const std::string cvStr = cv.get<std::string>();
+                        bool hasSpace = false;
+                        for (size_t i = 0; i < cvStr.size(); ++i)
+                        {
+                            if (cvStr[i] == ' ') { hasSpace = true; break; }
+                        }
+                        if (!hasSpace && !cvStr.empty())
+                        {
+                            cond.rightMode     = "Variable";
+                            cond.rightVariable = cvStr;
+                            SYSTEM_LOG << "[TaskGraphLoader] v4→v5 migration: "
+                                       << "compareValue='" << cvStr
+                                       << "' looks like a variable name → rightMode=Variable\n";
+                        }
+                        else
+                        {
+                            cond.rightConstValue = ParsePrimitiveValue(cv);
+                        }
+                    }
+                    else
+                    {
+                        cond.rightConstValue = ParsePrimitiveValue(cv);
+                    }
+                }
+            }
+
+            // -- Type hint --
+            const std::string typeStr = JsonHelper::GetString(cj, "compareType", "None");
+            cond.compareType = StringToVariableType(typeStr);
+
+            nd.conditions.push_back(cond);
+        });
+    }
+
     return nd;
 }
 

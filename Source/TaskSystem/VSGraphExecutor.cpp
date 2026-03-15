@@ -11,6 +11,7 @@
 #include "VSGraphExecutor.h"
 #include "AtomicTaskRegistry.h"
 #include "IAtomicTask.h"
+#include "ConditionEvaluator.h"
 #include "../Core/AssetManager.h"
 #include "../system/system_utils.h"
 
@@ -261,7 +262,20 @@ int32_t VSGraphExecutor::HandleBranch(int32_t nodeID,
                                       const TaskGraphTemplate& tmpl,
                                       LocalBlackboard& localBB)
 {
-    // Build cache key for the Condition data pin.
+    const TaskNodeDefinition* node = tmpl.GetNode(nodeID);
+
+    // Phase 23-B.4: If structured conditions are defined, evaluate them first.
+    if (node != nullptr && !node->conditions.empty())
+    {
+        const bool condition = ConditionEvaluator::EvaluateAll(
+            node->conditions, localBB, runner.DataPinCache, nodeID);
+
+        return condition
+            ? FindExecTarget(nodeID, "Then", tmpl)
+            : FindExecTarget(nodeID, "Else", tmpl);
+    }
+
+    // Fallback: read the "Condition" data pin from DataPinCache.
     std::ostringstream condKey;
     condKey << nodeID << ":Condition";
     const std::string condKeyStr = condKey.str();
@@ -297,8 +311,7 @@ int32_t VSGraphExecutor::HandleBranch(int32_t nodeID,
     }
     else
     {
-        // No data pin connected: use ConditionID as fallback (not implemented here, default false).
-        const TaskNodeDefinition* node = tmpl.GetNode(nodeID);
+        // No data pin and no structured conditions: log fallback.
         if (node != nullptr && !node->ConditionID.empty())
         {
             SYSTEM_LOG << "[VSGraphExecutor] Branch node " << nodeID
