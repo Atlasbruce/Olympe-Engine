@@ -696,6 +696,12 @@ bool VisualScriptEditorPanel::Save()
         return false;
     }
 
+    // Fix #1: Commit any deferred key-name edits before save
+    CommitPendingBlackboardEdits();
+
+    // Fix #1: Remove invalid blackboard entries before save
+    ValidateAndCleanBlackboardEntries();
+
     // CRITICAL FIX: Sync node positions from ImNodes BEFORE serialization.
     // RenderToolbar() (which calls Save) executes before RenderCanvas() syncs
     // positions, so we must pull fresh positions here to avoid stale data.
@@ -713,6 +719,10 @@ bool VisualScriptEditorPanel::SaveAs(const std::string& path)
 
     if (path.empty())
         return false;
+
+    // Fix #1: Commit and validate before save
+    CommitPendingBlackboardEdits();
+    ValidateAndCleanBlackboardEntries();
 
     // CRITICAL FIX: Same position sync as Save() — ensure fresh positions
     // before serialization regardless of when in the frame SaveAs is called.
@@ -939,6 +949,54 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
 }
 
 // ============================================================================
+// Blackboard validation helpers (BUG-002 Fix #1)
+// ============================================================================
+
+void VisualScriptEditorPanel::ValidateAndCleanBlackboardEntries()
+{
+    std::vector<BlackboardEntry>& entries = m_template.Blackboard;
+    size_t before = entries.size();
+
+    entries.erase(
+        std::remove_if(entries.begin(), entries.end(),
+            [](const BlackboardEntry& e) {
+                if (e.Key.empty()) {
+                    SYSTEM_LOG << "[VSEditor] ValidateAndClean: removing entry with empty key\n";
+                    return true;
+                }
+                if (e.Type == VariableType::None) {
+                    SYSTEM_LOG << "[VSEditor] ValidateAndClean: removing entry '"
+                               << e.Key << "' with VariableType::None\n";
+                    return true;
+                }
+                return false;
+            }),
+        entries.end());
+
+    size_t removed = before - entries.size();
+    if (removed > 0)
+    {
+        SYSTEM_LOG << "[VSEditor] ValidateAndClean: removed " << removed
+                   << " invalid blackboard entries\n";
+        m_dirty = true;
+    }
+}
+
+void VisualScriptEditorPanel::CommitPendingBlackboardEdits()
+{
+    for (std::unordered_map<int, std::string>::iterator it = m_pendingBlackboardEdits.begin();
+         it != m_pendingBlackboardEdits.end(); ++it)
+    {
+        int idx = it->first;
+        if (idx >= 0 && idx < static_cast<int>(m_template.Blackboard.size()))
+        {
+            m_template.Blackboard[static_cast<size_t>(idx)].Key = it->second;
+        }
+    }
+    m_pendingBlackboardEdits.clear();
+}
+
+// ============================================================================
 // Rendering
 // ============================================================================
 
@@ -1024,10 +1082,19 @@ void VisualScriptEditorPanel::RenderContent()
     RenderSaveAsDialog();
     ImGui::Separator();
 
-    // Two-column layout: canvas (left) | properties + blackboard (right)
+    // Two-column layout: canvas (left) | resize handle | properties + blackboard (right)
     float totalWidth = ImGui::GetContentRegionAvail().x;
-    float canvasWidth = totalWidth * 0.72f;
-    float propsWidth  = totalWidth - canvasWidth - 8.0f;
+
+    // Initialize panel width to default 28% on first use
+    if (m_propertiesPanelWidth <= 0.0f)
+        m_propertiesPanelWidth = totalWidth * 0.28f;
+
+    // Clamp to a sensible range
+    if (m_propertiesPanelWidth < 200.0f) m_propertiesPanelWidth = 200.0f;
+    if (m_propertiesPanelWidth > totalWidth * 0.60f) m_propertiesPanelWidth = totalWidth * 0.60f;
+
+    float handleWidth = 6.0f;
+    float canvasWidth = totalWidth - m_propertiesPanelWidth - handleWidth;
 
     ImGui::BeginChild("VSCanvas", ImVec2(canvasWidth, 0), false,
                       ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
@@ -1036,7 +1103,24 @@ void VisualScriptEditorPanel::RenderContent()
 
     ImGui::SameLine();
 
-    ImGui::BeginChild("VSProps", ImVec2(propsWidth, 0), true);
+    // UX Fix #3: Drag-to-resize handle between canvas and properties panel
+    ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.35f, 0.35f, 0.35f, 0.5f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.55f, 0.55f, 0.55f, 0.8f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.70f, 0.70f, 0.70f, 1.0f));
+    ImGui::Button("##vsresize", ImVec2(handleWidth, -1.0f));
+    if (ImGui::IsItemHovered())
+        ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+    if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+    {
+        m_propertiesPanelWidth -= ImGui::GetIO().MouseDelta.x;
+        if (m_propertiesPanelWidth < 200.0f)          m_propertiesPanelWidth = 200.0f;
+        if (m_propertiesPanelWidth > totalWidth * 0.60f) m_propertiesPanelWidth = totalWidth * 0.60f;
+    }
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
+
+    ImGui::BeginChild("VSProps", ImVec2(m_propertiesPanelWidth, 0), true);
     RenderProperties();
     ImGui::Separator();
     RenderBlackboard();
@@ -2650,6 +2734,7 @@ void VisualScriptEditorPanel::RenderBlackboard()
         BlackboardEntry entry;
         entry.Key      = "NewVariable";
         entry.Type     = VariableType::Int;
+        entry.Default  = GetDefaultValueForType(VariableType::Int);  // UX Fix #1
         entry.IsGlobal = false;
         m_template.Blackboard.push_back(entry);
         m_dirty = true;
@@ -2675,14 +2760,21 @@ void VisualScriptEditorPanel::RenderBlackboard()
         }
         ImGui::SameLine();
 
-        // Type selector
+        // Fix #2: Type selector with bounds-check on typeIdx
         const char* typeLabels[] = {"None","Bool","Int","Float","Vector","EntityID","String"};
         int typeIdx = static_cast<int>(entry.Type);
+        if (typeIdx < 0 || typeIdx >= 7)
+        {
+            typeIdx    = static_cast<int>(VariableType::Int);
+            entry.Type = VariableType::Int;
+        }
         ImGui::SetNextItemWidth(80.0f);
         if (ImGui::Combo("##bbtype", &typeIdx, typeLabels, 7))
         {
-            entry.Type = static_cast<VariableType>(typeIdx);
-            m_dirty    = true;
+            VariableType newType = static_cast<VariableType>(typeIdx);
+            entry.Type    = newType;
+            entry.Default = GetDefaultValueForType(newType);  // UX Fix #1: sync default
+            m_dirty       = true;
         }
         ImGui::SameLine();
 
@@ -2694,9 +2786,65 @@ void VisualScriptEditorPanel::RenderBlackboard()
         if (ImGui::SmallButton("x##bbdel"))
         {
             m_template.Blackboard.erase(m_template.Blackboard.begin() + idx);
+            m_pendingBlackboardEdits.erase(idx);
             m_dirty = true;
             ImGui::PopID();
             continue;
+        }
+
+        // UX Fix #2: Default value editor (type-specific input field)
+        ImGui::TextDisabled("Default:");
+        ImGui::SameLine();
+        switch (entry.Type)
+        {
+            case VariableType::Bool:
+            {
+                bool bVal = entry.Default.IsNone() ? false : entry.Default.AsBool();
+                if (ImGui::Checkbox("##bbval", &bVal))
+                {
+                    entry.Default = TaskValue(bVal);
+                    m_dirty       = true;
+                }
+                break;
+            }
+            case VariableType::Int:
+            {
+                int iVal = entry.Default.IsNone() ? 0 : entry.Default.AsInt();
+                ImGui::SetNextItemWidth(70.0f);
+                if (ImGui::InputInt("##bbval", &iVal))
+                {
+                    entry.Default = TaskValue(iVal);
+                    m_dirty       = true;
+                }
+                break;
+            }
+            case VariableType::Float:
+            {
+                float fVal = entry.Default.IsNone() ? 0.0f : entry.Default.AsFloat();
+                ImGui::SetNextItemWidth(70.0f);
+                if (ImGui::InputFloat("##bbval", &fVal, 0.0f, 0.0f, "%.3f"))
+                {
+                    entry.Default = TaskValue(fVal);
+                    m_dirty       = true;
+                }
+                break;
+            }
+            case VariableType::String:
+            {
+                std::string sVal = entry.Default.IsNone() ? "" : entry.Default.AsString();
+                char sBuf[128];
+                strncpy_s(sBuf, sizeof(sBuf), sVal.c_str(), _TRUNCATE);
+                ImGui::SetNextItemWidth(100.0f);
+                if (ImGui::InputText("##bbval", sBuf, sizeof(sBuf)))
+                {
+                    entry.Default = TaskValue(std::string(sBuf));
+                    m_dirty       = true;
+                }
+                break;
+            }
+            default:
+                ImGui::TextDisabled("(n/a)");
+                break;
         }
 
         ImGui::PopID();

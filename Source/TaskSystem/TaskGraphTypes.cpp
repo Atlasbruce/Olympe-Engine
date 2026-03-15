@@ -9,6 +9,9 @@
 
 #include <stdexcept>
 #include <string>
+#include <sstream>
+
+#include "../system/system_utils.h"
 
 namespace Olympe {
 
@@ -142,6 +145,74 @@ VariableType TaskValue::GetType() const
 bool TaskValue::IsNone() const
 {
     return m_type == VariableType::None;
+}
+
+// ============================================================================
+// TaskValue - String conversion (Fix #4 — never return empty)
+// ============================================================================
+
+std::string TaskValue::to_string() const
+{
+    switch (m_type)
+    {
+        case VariableType::Bool:
+            return m_data.boolValue ? "true" : "false";
+        case VariableType::Int:
+            return std::to_string(m_data.intValue);
+        case VariableType::Float:
+        {
+            std::ostringstream oss;
+            oss << m_data.floatValue;
+            return oss.str();
+        }
+        case VariableType::EntityID:
+            return std::to_string(static_cast<unsigned long long>(m_data.entityValue));
+        case VariableType::String:
+            return m_stringValue.empty() ? "" : m_stringValue;
+        case VariableType::None:
+        default:
+            SYSTEM_LOG << "[TaskValue] WARNING: to_string() called on None/unknown type, returning '0'\n";
+            return "0";
+    }
+}
+
+// ============================================================================
+// Free functions
+// ============================================================================
+
+// Fix #3: VariableTypeToString — never returns garbage (fallback to "Int")
+std::string VariableTypeToString(VariableType t)
+{
+    switch (t)
+    {
+        case VariableType::Bool:      return "Bool";
+        case VariableType::Int:       return "Int";
+        case VariableType::Float:     return "Float";
+        case VariableType::Vector:    return "Vector";
+        case VariableType::EntityID:  return "EntityID";
+        case VariableType::String:    return "String";
+        case VariableType::None:      return "None";
+        case VariableType::List:      return "List";
+        case VariableType::GlobalRef: return "GlobalRef";
+        default:
+            SYSTEM_LOG << "[VariableTypeToString] ERROR: Unknown type, defaulting to Int\n";
+            return "Int";
+    }
+}
+
+// UX Fix #1: GetDefaultValueForType — returns a type-consistent default value
+TaskValue GetDefaultValueForType(VariableType type)
+{
+    switch (type)
+    {
+        case VariableType::Bool:     return TaskValue(false);
+        case VariableType::Int:      return TaskValue(0);
+        case VariableType::Float:    return TaskValue(0.0f);
+        case VariableType::EntityID: return TaskValue(static_cast<EntityID>(0));
+        case VariableType::String:   return TaskValue(std::string(""));
+        case VariableType::Vector:   return TaskValue(::Vector());
+        default:                     return TaskValue(0);
+    }
 }
 
 } // namespace Olympe

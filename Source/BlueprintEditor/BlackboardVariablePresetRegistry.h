@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <mutex>
 
 namespace Olympe {
 
@@ -72,6 +73,9 @@ public:
 
     /**
      * @brief Returns all loaded presets, sorted by name.
+     *
+     * Thread-safe: protected by an internal mutex so that concurrent calls
+     * from a FileWatcher thread and the Save path cannot race.
      * @return Const reference to the internal preset list.
      */
     const std::vector<BlackboardVariablePreset>& GetAllPresets() const;
@@ -116,6 +120,7 @@ private:
 
     BlackboardVariablePresetRegistry() = default;
 
+    mutable std::mutex                                       m_mutex;   ///< Guards m_presets during concurrent access
     std::vector<BlackboardVariablePreset>                    m_presets;
     std::unordered_map<std::string, size_t>                  m_nameIndex;  ///< name → index in m_presets
 };

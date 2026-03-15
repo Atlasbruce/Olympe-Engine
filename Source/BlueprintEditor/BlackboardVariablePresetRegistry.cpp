@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <mutex>
 
 namespace Olympe {
 
@@ -113,6 +114,7 @@ bool BlackboardVariablePresetRegistry::LoadFromFile(const std::string& filePath)
 const std::vector<BlackboardVariablePreset>&
 BlackboardVariablePresetRegistry::GetAllPresets() const
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     return m_presets;
 }
 

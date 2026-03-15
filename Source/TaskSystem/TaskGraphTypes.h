@@ -93,6 +93,13 @@ enum class VariableType : uint8_t {
 };
 
 /**
+ * @brief Converts a VariableType to its canonical string representation.
+ * @param t  The VariableType to convert.
+ * @return String name (e.g. "Bool", "Int").  Falls back to "Int" for unknown values.
+ */
+std::string VariableTypeToString(VariableType t);
+
+/**
  * @enum ParameterBindingType
  * @brief Describes how a parameter value is provided to a task node.
  *
@@ -273,6 +280,15 @@ public:
      */
     bool IsNone() const;
 
+    /**
+     * @brief Converts the stored value to a string representation.
+     *
+     * Never returns an empty string — falls back to "0" for None or empty values.
+     * This prevents JSON builder failures when serializing uninitialized entries.
+     * @return String representation of the value.
+     */
+    std::string to_string() const;
+
 private:
 
     // POD storage (bool, int, float, EntityID share a union)
@@ -296,6 +312,16 @@ private:
 // ATS Visual Scripting – DataPinDefinition (Phase 1 - 2026-03-08)
 // Declared after TaskValue because it uses TaskValue as a member.
 // ============================================================================
+
+/**
+ * @brief Returns a correctly-typed default TaskValue for the given VariableType.
+ *
+ * Used when a new blackboard variable is created or when its type is changed,
+ * to ensure the Default field is always type-consistent.
+ * @param type  The VariableType to create a default value for.
+ * @return A TaskValue of the matching type, initialized to a zero/false/empty value.
+ */
+TaskValue GetDefaultValueForType(VariableType type);
 
 /**
  * @struct DataPinDefinition
