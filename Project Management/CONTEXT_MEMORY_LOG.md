@@ -156,3 +156,32 @@ Validation end-to-end :
 
 **Tests requis :** `Tests/BlueprintEditor/Phase20ETest.cpp` (round-trip, dropdown valide/invalide, execution)
 **Destination roadmap :** Initiative F — Phase 20-E
+
+---
+
+## 2026-03-15 10:26:37 UTC — CRÉATION SYSTÈME PM V2
+
+**Demandé par :** @Atlasbruce (via issue GitHub)
+**Action :** Création du système de gestion de projet automatisé complet
+
+**Fichiers créés :**
+- `Project Management/Copilot_Memory_Project_Management_Instructions_V2.md` — Instructions PM V2 avec workflow automatisé post-merge
+- `Project Management/FEATURE_LAUNCH_CHECKLIST.md` — Checklist de validation (18 questions, 7 sections)
+- `Project Management/Features/FEATURE_CONTEXT_TEMPLATE.md` — Template standardisé pour les feature docs
+- `Project Management/Features/feature_context_21_A.md` — VSGraphVerifier (retroactif, PR #380)
+- `Project Management/Features/feature_context_21_B.md` — GVS UI Integration (retroactif, PR #381)
+- `Project Management/Features/feature_context_21_D.md` — Dynamic Pins (retroactif, PR #382)
+- `Project Management/Features/feature_context_22_A.md` — VSSwitch Enhancement (retroactif, PR #384)
+- `Project Management/Features/feature_context_22_C.md` — Parameter Dropdowns (retroactif, PR #386)
+
+**Fichiers mis à jour :**
+- `Project Management/CONTEXT_CURRENT.md` — Corrigé : 22-C COMPLETED, 21-C NEXT
+- `Project Management/CONTEXT_STATUS.md` — Corrigé : 21-B/21-D/22-A/22-C en Fonctionnels
+- `Project Management/ROADMAP_V2.md` — Statuts COMPLETED pour toutes phases mergées + liens features
+
+**Incohérences corrigées :**
+- Phase 21-B : était "EN COURS" → maintenant ✅ COMPLETED (PR #381)
+- Phase 21-D : était "PRIORITAIRE P0 EN DEV" → maintenant ✅ COMPLETED (PR #382)
+- Phase 22-A : timestamp sans heure → 2026-03-14 18:46:14 UTC
+- Phase 22-C : était "ACTIVE 🔧 IN PROGRESS" → maintenant ✅ COMPLETED (PR #386)
+- Calendrier ROADMAP : 21-B absent → ajouté avec statut COMPLETED

@@ -1,63 +1,63 @@
-# Recent Completions & Active Development
+# Recent Completions & Next Priority
 
-**Last Updated:** 2026-03-15 09:51:59 UTC
+**Derniere mise a jour :** 2026-03-15 10:26:37 UTC
 
 ---
 
-## Just Completed ✅
+## Completions Recentes ✅
 
 ### Phase 22-C — Parameter Dropdowns & Registries
-- **PR:** #386 — Merged 2026-03-14 21:59:19 UTC
-- 5 centralized registries (AtomicTask, Condition, BBVar, Operator, Master)
-- ParameterBindingType extended to 7 types
-- Dropdown UI for 8+ node types (no more text fields)
-- 8 new validation rules (E020-E025, W010-W011)
-- 30+ test cases passing
+- **PR :** [#386](https://github.com/Atlasbruce/Olympe-Engine/pull/386) — MERGED
+- **Date de merge :** 2026-03-14 21:59:19 UTC
+- 5 registries centralisees (AtomicTask, Condition, BBVar, Operator, Master)
+- ParameterBindingType etendu (7 types)
+- 32 tests passants
+- 8 nouvelles regles VSGraphVerifier (E020-E025, W010-W011)
 
 ### Phase 22-A — Switch Node Enhancement
-- **PR:** #384 — Merged 2026-03-14 18:46:14 UTC
-- Dynamic case labels ("Combat", "Patrol" instead of "Case_5")
-- Right-aligned pin labels
-- Runtime variable display
-- 10/10 tests passing
+- **PR :** [#384](https://github.com/Atlasbruce/Olympe-Engine/pull/384) — MERGED
+- **Date de merge :** 2026-03-14 18:46:14 UTC
+- Labels personnalises par case, alignement droite, runtime variable display
+- 10/10 tests passants
 
-### Phase 21-D — Dynamic Pins for Sequence/Switch
-- **PR:** #382 — Merged 2026-03-14 16:54:08 UTC
-- Buttons [+]/[-] to add/remove exec out pins
-- AddExecPinCommand + RemoveExecPinCommand (full Undo/Redo)
-- Pin de base (Out/Case_0) non supprimable
-- RebuildLinks() synchronization
+### Phase 21-D — Dynamic Pins Sequence/Switch
+- **PR :** [#382](https://github.com/Atlasbruce/Olympe-Engine/pull/382) — MERGED
+- **Date de merge :** 2026-03-14 16:54:08 UTC
+- Boutons [+]/[-] sur VSSequence et VSSwitch
+- AddExecPinCommand + RemoveExecPinCommand (Undo/Redo complet)
+- 25 tests passants
 
 ### Phase 21-B — GVS Panel Validation UI
-- **PR:** #381 — Merged 2026-03-14 10:03:09 UTC
-- Scrollable issue panel with color icons
-- Click-to-select faulting node on canvas
-- Red badge on toolbar when errors present
-- Toggle Auto-verify after each PushCommand
+- **PR :** [#381](https://github.com/Atlasbruce/Olympe-Engine/pull/381) — MERGED
+- **Date de merge :** 2026-03-14 10:03:09 UTC
+- Panel scrollable d'issues + badge toolbar + auto-verify + navigation noeud
 
 ---
 
-## Next Priority (P1)
+## Priorite Suivante (P1)
 
 ### Phase 21-C — GVS Pre-save/Pre-exec Validation
-- **Status:** ⏳ NEXT
-- **Priority:** P1
-- **Scope:**
-  - Pre-save: confirmation dialog if errors present
-  - Pre-exec: block execution if ERROR, log warning if WARNING only
-- **Estimated Duration:** ~0.5 session
-- **Depends on:** Phase 21-B (✅ merged)
+- **Statut :** ⏳ NEXT (non demarree)
+- **Priorite :** P1
+- **Estimation :** ~0.5 session
+
+**Comportement attendu :**
+- Pre-save : Dialog de confirmation si des erreurs (ERROR) sont presentes dans le graphe
+- Pre-exec : Blocage de l'execution si ERROR, avertissement log si WARNING seulement
+- Appel a VSGraphVerifier::Verify() avant SaveGraph() et avant RunGraph()
+- Logique dans VisualScriptEditorPanel (Save/Run callbacks)
 
 ---
 
-## Prioritization
+## Priorites Suivantes
 
-**P1 (HIGH):**
-- Phase 21-C — Pre-save/Pre-exec Validation (NEXT)
+**P2 :**
+- Phase 22-B — Font Awesome Icons & Design (en attente spec design @Atlasbruce)
+- Phase 23-A — AnimGraph Infrastructure
 
-**P2 (MEDIUM):**
-- Phase 22-B — Font Awesome Icons (awaiting design spec)
-- Phase 23-A — AnimGraph Infrastructure (future)
+**P3+ :**
+- Phase 24-A/B/C — Runtime Execution & Debugger multi-instances
 
-**P3 (LOW):**
-- Phase 24 — Runtime Execution & Debugger Multi-Instances (future)
+---
+
+_Last updated: 2026-03-15 10:26:37 UTC_
