@@ -202,7 +202,44 @@ Toolbar  ──────────── [Verify Button]  [🔴 Badge si ER
 
 ---
 
-## 10. 🔗 Références
+## 10. 🐛 Problèmes Connus & Régressions
+
+> **Statut de la Phase :** ✅ COMPLÉTÉE — PR [#381](https://github.com/Atlasbruce/Olympe-Engine/pull/381) mergée le 2026-03-15 UTC
+
+### 10.1 Bugs Actifs
+
+*Aucun bug actif sur cette phase.*
+
+| ID | Titre | Sévérité | Statut | Workaround |
+|----|-------|----------|--------|-----------|
+| — | Aucun | — | — | — |
+
+### 10.2 Problèmes Connus Non Classifiés
+
+- Le toggle "Auto-verify" est désactivable par l'utilisateur — si désactivé, les issues ne se mettent plus à jour en temps réel (comportement documenté et voulu, mais peut surprendre les nouveaux utilisateurs).
+
+### 10.3 Bugs Corrigés Durant Cette Phase
+
+*Aucun bug corrigé documenté (phase initiale du panneau UI).*
+
+| ID | Titre | Sévérité | PR Fix | Résolu le |
+|----|-------|----------|--------|-----------|
+| — | — | — | — | — |
+
+### 10.4 Tests de Régression
+
+- **Couverture :** Intégration UI testée via tests d'intégration panel (headless)
+- **Dépendance :** Requiert les résultats de Phase 21-A (VSGraphVerifier) pour les tests end-to-end
+- **Point de vigilance :** Toute modification de l'API `VSVerificationIssue` dans Phase 21-A est une régression potentielle pour cette phase
+
+### 10.5 Références Bug Registry
+
+- [BUG_REGISTRY.md](../BugTracking/BUG_REGISTRY.md) — Registre centralisé
+- [BUG_PROTOCOL.md](../BugTracking/BUG_PROTOCOL.md) — Protocole de gestion
+
+---
+
+## 11. 🔗 Références
 
 - **PR GitHub :** [#381](https://github.com/Atlasbruce/Olympe-Engine/pull/381)
 - **ROADMAP_V2.md :** Section Initiative A — Phase 21-B
@@ -213,4 +250,4 @@ Toolbar  ──────────── [Verify Button]  [🔴 Badge si ER
 ---
 
 *Feature context généré le : 2026-03-15 10:26:37 UTC*  
-*Dernière mise à jour : 2026-03-15 10:26:37 UTC*
+*Dernière mise à jour : 2026-03-15 12:44:21 UTC*

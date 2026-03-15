@@ -239,7 +239,45 @@ Données stockées par la commande :
 
 ---
 
-## 10. 🔗 Références
+## 10. 🐛 Problèmes Connus & Régressions
+
+> **Statut de la Phase :** ✅ COMPLÉTÉE — PR [#382](https://github.com/Atlasbruce/Olympe-Engine/pull/382) mergée le 2026-03-15 UTC
+
+### 10.1 Bugs Actifs
+
+*Aucun bug actif sur cette phase.*
+
+| ID | Titre | Sévérité | Statut | Workaround |
+|----|-------|----------|--------|-----------|
+| — | Aucun | — | — | — |
+
+### 10.2 Problèmes Connus Non Classifiés
+
+- L'appel à `RebuildLinks()` est obligatoire après toute modification de pins — si omis dans un futur développement, les désynchronisations ImNodes sont difficiles à déboguer. Point de vigilance pour les phases suivantes utilisant les pins dynamiques.
+- L'ordre visuel des pins dépend de l'index de position stocké dans `RemoveExecPinCommand` — tout bug dans la gestion de cet index peut produire un Undo qui restaure les pins dans un ordre incorrect.
+
+### 10.3 Bugs Corrigés Durant Cette Phase
+
+*Aucun bug corrigé documenté (phase initiale des dynamic pins).*
+
+| ID | Titre | Sévérité | PR Fix | Résolu le |
+|----|-------|----------|--------|-----------|
+| — | — | — | — | — |
+
+### 10.4 Tests de Régression
+
+- **Couverture :** Undo/Redo pour `AddExecPinCommand` et `RemoveExecPinCommand` testés
+- **Point de vigilance :** Toute modification de la structure `VSNode` impactant les pins est une régression potentielle pour cette phase et pour Phase 22-A (qui réutilise les dynamic pins)
+- **Dépendances de test :** Phase 22-A dépend des dynamic pins — ses tests couvrent aussi indirectement cette phase
+
+### 10.5 Références Bug Registry
+
+- [BUG_REGISTRY.md](../BugTracking/BUG_REGISTRY.md) — Registre centralisé
+- [BUG_PROTOCOL.md](../BugTracking/BUG_PROTOCOL.md) — Protocole de gestion
+
+---
+
+## 11. 🔗 Références
 
 - **PR GitHub :** [#382](https://github.com/Atlasbruce/Olympe-Engine/pull/382)
 - **ROADMAP_V2.md :** Section Initiative E — Phase 21-D
@@ -250,4 +288,4 @@ Données stockées par la commande :
 ---
 
 *Feature context généré le : 2026-03-15 10:26:37 UTC*  
-*Dernière mise à jour : 2026-03-15 10:26:37 UTC*
+*Dernière mise à jour : 2026-03-15 12:44:21 UTC*

@@ -236,7 +236,44 @@ VisualScriptEditorPanel
 
 ---
 
-## 10. 🔗 Références
+## 10. 🐛 Problèmes Connus & Régressions
+
+> **Statut de la Phase :** ✅ COMPLÉTÉE — PR [#380](https://github.com/Atlasbruce/Olympe-Engine/pull/380) mergée le 2026-03-15 UTC
+
+### 10.1 Bugs Actifs
+
+*Aucun bug actif sur cette phase.*
+
+| ID | Titre | Sévérité | Statut | Workaround |
+|----|-------|----------|--------|-----------|
+| — | Aucun | — | — | — |
+
+### 10.2 Problèmes Connus Non Classifiés
+
+*Aucun problème connu non classifié.*
+
+### 10.3 Bugs Corrigés Durant Cette Phase
+
+*Aucun bug corrigé documenté pour cette phase (phase initiale).*
+
+| ID | Titre | Sévérité | PR Fix | Résolu le |
+|----|-------|----------|--------|-----------|
+| — | — | — | — | — |
+
+### 10.4 Tests de Régression
+
+- **Couverture :** 14 règles de validation testées (E001–E009, W001–W004, I001) — 100% des règles couvertes
+- **Fichier de tests :** `Tests/BlueprintEditor/` (voir répertoire Tests pour les fichiers de test Phase 21-A)
+- **Tests headless :** Oui — pas de dépendance à l'UI ou à SDL
+
+### 10.5 Références Bug Registry
+
+- [BUG_REGISTRY.md](../BugTracking/BUG_REGISTRY.md) — Registre centralisé
+- [BUG_PROTOCOL.md](../BugTracking/BUG_PROTOCOL.md) — Protocole de gestion
+
+---
+
+## 11. 🔗 Références
 
 - **PR GitHub :** [#380](https://github.com/Atlasbruce/Olympe-Engine/pull/380)
 - **ROADMAP_V2.md :** Section Initiative A — Phase 21-A
@@ -248,4 +285,4 @@ VisualScriptEditorPanel
 ---
 
 *Feature context généré le : 2026-03-15 10:26:37 UTC*  
-*Dernière mise à jour : 2026-03-15 10:26:37 UTC*
+*Dernière mise à jour : 2026-03-15 12:44:21 UTC*
