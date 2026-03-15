@@ -1,6 +1,6 @@
 # Olympe Engine — Etat des Lieux
 
-**Date :** 2026-03-15 15:45:00 UTC
+**Date :** 2026-03-15 22:17:00 UTC
 
 ---
 
@@ -34,26 +34,32 @@
 - **Blueprint Editor — Add Data Link** : Drag pin donnees -> AddDataConnectionCommand (undoable)
 - **Blueprint Editor — Delete Link** : Ctrl+click ou menu contextuel -> DeleteLinkCommand (undoable)
 - **Blueprint Editor — Undo/Redo** : Ctrl+Z / Ctrl+Y via PerformUndo() / PerformRedo() — 100% fonctionnel
-- **Blueprint Editor — Save/Load** : Serialisation JSON avec positions __posX/__posY (v4 depuis Phase 22-C)
+- **Blueprint Editor — Save/Load** : Serialisation JSON avec positions grid-space (BUG-003/004 FIXED)
 - **Blueprint Editor — Context Menus** : Node, Link, Canvas (right-click)
 - **Blueprint Editor — Connection Validation** : VSConnectionValidator bloque self-loops, duplicate pins, cycles
 - **Blueprint Editor — Properties Undo/Redo** : EditNodePropertyCommand + commit-on-release pour tous les champs
 - **Blueprint Editor — Inline Node Display** : Parametres cles affiches directement sur le canvas
+- **Blueprint Editor — Blackboard Panel** : Default value editor (Bool, Int, Float, String); Vector/EntityID read-only
+- **Blueprint Editor — Resizable Properties Panel** : Drag handle entre canvas et panel droite
+- **Blueprint Editor — Type-Filtered Dropdowns** : GetVariablesByType() utility
 - **ECS System** : Composants auto-enregistres
 - **AI System** : Behavior Tree + Debugger
 - **Animation System** : Animation Editor standalone
 
 ---
 
+## Problemes Connus
+
+*Aucun bug P0 actif — BUG-001/002/003/004 tous FIXED.*
+
+---
+
 ## Composants En Developpement
 
-- **Blueprint Editor — Phase 23-B (P1) : Full Blackboard Properties** — SPEC FINALIZED (PR #388 spec in review), implementation a venir
-  - Registry singleton + JSON config preset (variables disponibles)
-  - 2-section panel : Available Variables (preset) + Declared Variables (locales)
-  - [+ Create Local Variable] dialog
-  - 15 headless tests planifies
+- **Blueprint Editor — Phase 23-B.3 (P1)** : Variable Value Assignment in Properties Panel
+  - Afficher/editer la valeur par defaut d'une variable BB quand un noeud GetBB/SetBB est selectionne
+  - Effort: ~0.5 session
 - **Blueprint Editor — Phase 21-C (P1)** : GVS Pre-save/Pre-exec — blocage sauvegarde si erreurs P0, avertissement log si WARNING
-- **Blueprint Editor — Phase 23-B (P1)** : Full Blackboard Properties — SPEC DONE, coding a venir
 - **Blueprint Editor — Phase 22-B** : Design & Icons Font Awesome — EN ATTENTE spec design
 - **Blueprint Editor — Phase 23-A** : AnimGraph Infrastructure
 - **Blueprint Editor — Phase 24** : Runtime Execution & Debugger multi-instances

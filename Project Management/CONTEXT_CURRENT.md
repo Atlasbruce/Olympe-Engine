@@ -1,45 +1,72 @@
 # Recent Completions & Next Priority
 
-**Derniere mise a jour :** 2026-03-15 15:30:00 UTC
+**Derniere mise a jour :** 2026-03-15 22:17:00 UTC
 
 ---
 
-## P0 HOTFIX — BUG-001 (IN PROGRESS 🔧)
+## ✅ HOTFIX P0 — BUG-003 & BUG-004 (FIXED)
 
-### BUG-001 — Crash Save Blackboard (VariableType::None)
-- **Sévérité :** P0 CRITICAL — Crash abort() lors du Save après ajout variable Blackboard
-- **Root cause :** `VariableType::None` non géré en sérialisation, clé vide non validée
-- **Statut :** 🔧 IN PROGRESS (PR en cours — Phase 23-B)
+### BUG-003 — Node Positions Offset on Save (ImNodes Viewport)
+- **Sévérité :** P0 CRITICAL — Offset constant (-24px X, +114px Y) sur toutes les positions après Save
+- **Root cause :** `SyncNodePositionsFromImNodes()` utilisait `GetNodeEditorSpacePos()` (= Origin + Panning) au lieu de `GetNodeGridSpacePos()` (= Origin pur, pan-indépendant)
+- **Statut :** ✅ FIXED (PR #401)
 - **Fix :**
-  - `SerializeAndWrite()` : skip entrées invalides (clé vide ou type None) + log SYSTEM_LOG
-  - `RenderBlackboard()` : init sécurisé `Key="NewVariable"`, `Type=Int`
-  - Warning UX : badge rouge si entrées invalides dans le panel Blackboard
-  - 5 tests régression dédiés
+  - `SyncNodePositionsFromImNodes()` : `GetNodeEditorSpacePos` → `GetNodeGridSpacePos`
+  - `PerformUndo/Redo()` : `SetNodeEditorSpacePos` → `SetNodeGridSpacePos`
+  - `RenderCanvas()` position sync : `SetNodeEditorSpacePos` → `SetNodeGridSpacePos`
+  - `ResetViewportBeforeSave()` + `AfterSave()` ajoutés (safety measure + UX continuity)
+  - `ScreenToCanvasPos()` utilitaire de conversion coordonnées ajouté
+  - 8 regression tests (Phase23B2Test.cpp)
+
+### BUG-004 — Crash on Load After Save
+- **Sévérité :** P0 CRITICAL — Crash à `RebuildLinks()` après reload d'un graphe sauvegardé navigué
+- **Root cause :** Causé par BUG-003 (double-offset lors de la restauration)
+- **Statut :** ✅ FIXED (résolu par fix BUG-003)
 
 ---
 
-## P1 — Phase 23-B : Full Blackboard Properties (IN PROGRESS 🔧)
+## ✅ UX Enhancements (PR #401)
 
-- **Statut :** 🔧 IN PROGRESS
-- **Date de début :** 2026-03-15 15:30:00 UTC
-- **Priorité :** P0 (hotfix) + P1 (feature)
-- **Feature Context :** [feature_context_23_B.md](./Features/feature_context_23_B.md)
+### Enhancement #1 — Vector Type Read-Only
+- `RenderBlackboard()` : case `VariableType::Vector` → DragFloat3 disabled + label "(auto from entity position)"
 
-**Deliverables réalisés :**
-- ✅ BUG-001 hotfix (SerializeAndWrite + RenderBlackboard)
-- ✅ `BlackboardVariablePresetRegistry` singleton C++14
-- ✅ `Assets/Config/BlackboardVariablePresets.json` (15 vars, 5 categories)
-- ✅ 18 tests headless passants (13 registry + 5 BUG-001 regression)
-- ✅ `OlympePhase23BTests` target dans CMakeLists.txt
+### Enhancement #2 — EntityID Type Read-Only
+- `RenderBlackboard()` : case `VariableType::EntityID` → InputInt disabled + label "(assigned at runtime)"
 
-**En attente (post-merge) :**
-- Intégration UI : `RenderBlackboard()` → 2 sections (Available + Declared)
-- Boutons `[+ Add to Local]` connectés au registry
-- Section Global Blackboard (R/W)
+### Enhancement #3 — Type-Filtered Variable Dropdowns
+- `GetVariablesByType()` utility ajouté (méthode statique VisualScriptEditorPanel)
+- Utilisable pour filtrer les dropdowns variable par type attendu
+
+---
+
+## P1 — Phase 23-B.3 : Variable Value Assignment in Properties Panel (PLANNED ⏳)
+
+- **Statut :** ⏳ PLANNED — Priorité P1
+- **Description :** Affichage / édition de la valeur courante/par défaut d'une variable Blackboard dans le panel Properties quand un noeud GetBBValue/SetBBValue est sélectionné
+- **Effort estimé :** ~0.5 session
 
 ---
 
 ## Completions Recentes ✅
+
+### HOTFIX BUG-003/004 — Node Position Offset + Load Crash
+- **PR :** #401 — MERGED
+- **Date :** 2026-03-15 22:17:00 UTC
+- Grid-space positions pour Save/Load (GetNodeGridSpacePos / SetNodeGridSpacePos)
+- ResetViewportBeforeSave() + AfterSave()
+- ScreenToCanvasPos() utilitaire
+- Vector/EntityID read-only display
+- GetVariablesByType() utility
+- 8 regression tests Phase23B2Test.cpp
+
+### Phase 23-B — Full Blackboard Properties + BUG-001/002
+- **PR :** #400 — MERGED
+- **Date :** 2026-03-15 17:30:00 UTC
+- BlackboardVariablePresetRegistry singleton + JSON config
+- 2-section Blackboard panel
+- Default value editor (Bool, Int, Float, String)
+- Resizable properties panel (drag handle)
+- 18 tests Phase23BTest.cpp
 
 ### Phase 22-C — Parameter Dropdowns & Registries
 - **PR :** [#386](https://github.com/Atlasbruce/Olympe-Engine/pull/386) — MERGED
@@ -49,32 +76,13 @@
 - 32 tests passants
 - 8 nouvelles regles VSGraphVerifier (E020-E025, W010-W011)
 
-### HOTFIX P0 — Blackboard Save Crash (BUG-001)
-- **PR :** [#387](https://github.com/Atlasbruce/Olympe-Engine/pull/387) — MERGED
-- **Date de merge :** 2026-03-15 15:30:00 UTC
-- Validation pre-save (skip entries invalides)
-- Init safe a la creation (Key="NewVariable", Type=Int)
-- Warning UX si variables invalides
-- 5 regression tests passants
-
-### Phase 23-B — Full Blackboard Properties (SPEC FINALIZED)
-- **Spec PR :** [#388](https://github.com/Atlasbruce/Olympe-Engine/pull/388) — SPEC IN_REVIEW (implementation PR pending post-merge)
-- **Date de creation spec :** 2026-03-15 15:30:00 UTC
-- Registry + JSON config (preset variables) + 2-section UI
-- Section "Available Variables" (depuis config preset) + Section "Declared Variables" (locales)
-- [+ Create Local Variable] dialog
-- 15 variables pre-declarees dans config preset
-- 15 headless tests
-- Feature context complet (1200+ lignes)
-- Reponses @Atlasbruce integrees
-
 ---
 
-## Priorites Suivantes (Post-Merge 23-B)
+## Priorites Suivantes (Post-Merge #401)
 
 **P1 :**
+- Phase 23-B.3 — Variable Value Assignment in Properties Panel (~0.5 session)
 - Phase 21-C — GVS Pre-save/Pre-exec Validation
-- Phase 23-B UI Integration — 2-section Blackboard panel
 
 **P2 :**
 - Phase 22-B — Font Awesome Icons & Design (en attente spec design)
@@ -82,4 +90,4 @@
 
 ---
 
-_Last updated: 2026-03-15 15:30:00 UTC_
+_Last updated: 2026-03-15 22:17:00 UTC_

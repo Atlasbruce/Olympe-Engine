@@ -2,6 +2,44 @@
 
 ---
 
+## 2026-03-15 22:17:00 UTC — HOTFIX BUG-003 & BUG-004 + UX ENHANCEMENTS
+
+**Contexte :** PR #401 — HOTFIX Node Position Offset + Load Crash (ImNodes Viewport Fix)
+
+**BUG-003 Résolu :**
+- Root cause : `SyncNodePositionsFromImNodes()` utilisait `GetNodeEditorSpacePos()` (= `Origin + Panning`) au lieu de `GetNodeGridSpacePos()` (= `Origin` pur, pan-indépendant)
+- Fix : `GetNodeEditorSpacePos` → `GetNodeGridSpacePos` dans `SyncNodePositionsFromImNodes()`
+- Fix : `SetNodeEditorSpacePos` → `SetNodeGridSpacePos` pour tous les restore de positions (Undo/Redo, load, focus)
+- Fix safety : `ResetViewportBeforeSave()` + `AfterSave()` (ceinture + bretelles)
+- Utilitaire : `ScreenToCanvasPos(ImVec2)` ajouté
+
+**BUG-004 Résolu :**
+- Root cause : Causé par BUG-003 (double-offset viewport lors de la restauration)
+- Fix : résolu automatiquement par la correction BUG-003
+
+**UX Enhancements :**
+- `VariableType::Vector` : affichage read-only `DragFloat3` + label "(auto from entity position)"
+- `VariableType::EntityID` : affichage read-only `InputInt` + label "(assigned at runtime)"
+- `GetVariablesByType()` : méthode statique utilitaire pour filtrer variables par type
+
+**Tests ajoutés :**
+- `Tests/BlueprintEditor/Phase23B2Test.cpp` : 8 tests headless (8/8 ✅)
+- `OlympePhase23B2Tests` target ajouté dans `CMakeLists.txt`
+
+**PM mis à jour :**
+- `BUG_REGISTRY.md` : BUG-001/002/003/004 archivés FIXED, tableau de bord vidé
+- `ROADMAP_V2.md` : HOTFIX BUG-003/004 + Phase 23-B.3 Variable Assignment + calendrier
+- `CONTEXT_CURRENT.md` : statut complet des fixes + prochaines priorités
+- `CONTEXT_STATUS.md` : composants fonctionnels mis à jour
+
+**Métriques :**
+- Bugs P0 actifs : 4 → 0
+- Tests total : 23 → 31 (+ 8 Phase23B2Test)
+- Fichiers modifiés : 6 (VisualScriptEditorPanel.h/.cpp, CMakeLists.txt, 3 PM docs)
+- Fichiers créés : 1 (Phase23B2Test.cpp)
+
+---
+
 ## 2026-03-15 15:30:00 UTC — BUG-001 HOTFIX + Phase 23-B IMPLEMENTATION
 
 **Contexte :** PR Phase 23-B — Full Blackboard Properties + BUG-001 P0 Hotfix

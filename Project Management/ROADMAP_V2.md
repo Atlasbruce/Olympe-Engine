@@ -297,7 +297,11 @@ Result: Impossible to author graphs without documentation/guessing.
 | 21-D | Dynamic Pins Seq/Switch | ~1 session | ✅ COMPLETED (PR #382) | — |
 | 22-A | Switch Node Enhancement | ~1 session | ✅ COMPLETED (PR #384) | — |
 | 22-C | Parameter Dropdowns & Registries | ~1 session | ✅ COMPLETED (PR #386) | — |
-| **23-B** | **Full Blackboard Properties + BUG-001** | **~1 session** | **🔧 IN PROGRESS** | **P0+P1** |
+| **HOTFIX** | **BUG-001/002 Blackboard Save Crash** | **~1h** | **✅ FIXED (PR #387/#400)** | **P0** |
+| **23-B** | **Full Blackboard Properties + UX** | **~1-2 sessions** | **✅ MERGED (PR #400/401)** | **P0+P1** |
+| **HOTFIX** | **BUG-003/004 Node Position Offset + Load Crash** | **~0.5 session** | **✅ FIXED (PR #401)** | **P0** |
+| **23-B.3** | **Variable Value Assignment in Properties Panel** | **~0.5 session** | **⏳ PLANNED** | **P1** |
+| **23-B.4** | **Resizable Properties Panel (width drag handle)** | **~0.5 session** | **✅ DONE (PR #400)** | **P2** |
 | 21-C | GVS — Pre-save/Pre-exec Validation | ~0.5 session | ⏳ NEXT | P1 |
 | 22-B | Font Awesome Icons & Design | ~2 sessions | ⏳ Deferred (spec needed) | P2 |
 | 23-A | AnimGraph Infrastructure | ~2 sessions | Planned | — |
@@ -308,4 +312,23 @@ Result: Impossible to author graphs without documentation/guessing.
 
 ---
 
-**Last Updated**: 2026-03-15 15:30:00 UTC
+## Phase 23-B.3 — Variable Value Assignment in Properties Panel (PLANNED ⏳)
+
+**Status:** ⏳ PLANNED — Priorité P1  
+**Date Planned:** Post-merge PR #401  
+**Motivation:** Variables created in the Blackboard panel have no way to view or edit their
+current/default value in the Properties panel (right side).  This is a major UX gap: users
+must return to the Blackboard panel to change a value, breaking the workflow.
+
+**Scope:**
+- Properties panel: when a `GetBBValue` / `SetBBValue` node is selected, show the
+  current default value of the bound blackboard variable (read or edit depending on type)
+- Inline value display for Bool, Int, Float, String entries
+- Vector and EntityID remain read-only with descriptive label (auto-populated at runtime)
+- Optional: "Jump to declaration" link to highlight the entry in the Blackboard panel
+
+**Estimated effort:** ~0.5 session
+
+---
+
+**Last Updated**: 2026-03-15 22:17:00 UTC
