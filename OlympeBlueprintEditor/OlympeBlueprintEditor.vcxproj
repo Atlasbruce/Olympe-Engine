@@ -38,6 +38,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\AtomicTaskUIRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BBVariableRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BTtoVSMigrator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\ConditionRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\MiniMapPanel.cpp" />
@@ -204,6 +205,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\AtomicTaskUIRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BBVariableRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BTtoVSMigrator.h" />
     <ClInclude Include="..\Source\BlueprintEditor\ConditionRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\IGraphRenderer.h" />

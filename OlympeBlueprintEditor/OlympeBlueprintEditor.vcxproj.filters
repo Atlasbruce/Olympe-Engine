@@ -514,6 +514,9 @@
     <ClCompile Include="..\Source\BlueprintEditor\ParameterEditorRegistry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -978,6 +981,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\ConditionRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\OperatorRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\ParameterEditorRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />

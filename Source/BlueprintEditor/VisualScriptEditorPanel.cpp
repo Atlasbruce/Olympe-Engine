@@ -1024,7 +1024,7 @@ void VisualScriptEditorPanel::CommitPendingBlackboardEdits()
 void VisualScriptEditorPanel::ResetViewportBeforeSave()
 {
     SYSTEM_LOG << "[VSEditor] ResetViewportBeforeSave: saving current panning\n";
-    m_lastViewportPanning = ImNodes::EditorContextGetPanning();
+    m_lastViewportPanning = Vector::FromImVec2(ImNodes::EditorContextGetPanning());
     m_viewportResetDone   = true;
 
     // Reset panning to (0, 0) so that any residual editor-space offset from
@@ -1042,7 +1042,7 @@ void VisualScriptEditorPanel::AfterSave()
         return;
 
     // Restore the viewport so the canvas does not visually jump for the user.
-    ImNodes::EditorContextResetPanning(m_lastViewportPanning);
+    ImNodes::EditorContextResetPanning(m_lastViewportPanning.ToImVec2());
     m_viewportResetDone = false;
     SYSTEM_LOG << "[VSEditor] AfterSave: viewport panning restored to ("
                << m_lastViewportPanning.x << "," << m_lastViewportPanning.y << ")\n";
@@ -2508,7 +2508,7 @@ void VisualScriptEditorPanel::RenderProperties()
             BBVariableRegistry bbReg;
             bbReg.LoadFromTemplate(m_template);
             const std::vector<VarSpec>& vars = bbReg.GetAllVariables();
-            const std::string& curKey = def.BBKey;
+            const std::string& curKey   = def.BBKey;
             const char* previewLabel  = curKey.empty() ? "(select key...)" : curKey.c_str();
 
             if (ImGui::BeginCombo("BB Key##vsbbkey", previewLabel))
@@ -2801,6 +2801,7 @@ void VisualScriptEditorPanel::RenderBlackboard()
     ImGui::Separator();
 
     // BUG-001 Hotfix: warn user if invalid entries exist (key empty or type None)
+    // to prevent save crash caused by unhandled None type during serialization.
     bool hasInvalid = false;
     for (size_t i = 0; i < m_template.Blackboard.size(); ++i)
     {

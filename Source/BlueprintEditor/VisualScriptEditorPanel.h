@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "../third_party/imgui/imgui.h"
 #include "../TaskSystem/TaskGraphTemplate.h"
 #include "../TaskSystem/LocalBlackboard.h"
 #include "VisualScriptNodeRenderer.h"
@@ -516,7 +517,7 @@ private:
     // -----------------------------------------------------------------------
 
     /// Canvas panning saved by ResetViewportBeforeSave() for restoration in AfterSave().
-    ImVec2 m_lastViewportPanning = ImVec2(0.0f, 0.0f);
+    Vector m_lastViewportPanning;
 
     /// True after ResetViewportBeforeSave() has been called and before AfterSave().
     bool m_viewportResetDone = false;
