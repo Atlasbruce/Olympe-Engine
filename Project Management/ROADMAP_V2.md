@@ -2,8 +2,8 @@
 
 **Date :** 2026-03-15  
 **Auteur :** @Atlasbruce  
-**Derniere mise a jour :** 2026-03-15 10:26:37 UTC  
-**Statut :** Planification active — Phase 21-C NEXT (P1)
+**Derniere mise a jour :** 2026-03-15 15:45:00 UTC  
+**Statut :** Planification active — Phase 23-B SPEC DONE (P1) + Phase 21-C QUEUED (P1)
 
 ---
 
@@ -250,9 +250,35 @@ Result: Impossible to author graphs without documentation/guessing.
 - Icons in Properties panel and toolbar
 - FontAwesome TTF embedded, C++14 compatible
 
----
+## Phase 23-B — Full Blackboard Properties (SPEC FINALIZED — Implementation Pending)
 
-## Updated Calendrier
+**Feature Context:** (in progress — PR #388)
+
+**Status:** ⏳ SPEC DONE → CODING
+**Priority:** P1
+**Date Spec Finalized:** 2026-03-15 15:30:00 UTC
+
+**Why This Phase?**
+Users starting a new graph face an empty Blackboard with no guidance on available variables.
+Instead of a discovery panel, variables are pre-declared via a JSON config preset file that populates
+the "Available Variables" list at the top of the Blackboard panel.
+
+**Solution:**
+- JSON config preset file listing all available blackboard variable templates (name, type, default)
+- 2-section Blackboard panel:
+  - Section 1 (top): Available Variables (from preset config, read-only reference)
+  - Section 2 (bottom): Declared/Local Variables (created by user, editable)
+- [+ Create Local Variable] button to instantiate a new local variable
+- 15 variables pre-declared in config preset
+- 15 headless tests
+
+**Deliverables:**
+- BlackboardPresetConfig (JSON loader + registry)
+- Refactored RenderBlackboardPanel() → 2-section layout
+- [+ Create Local Variable] dialog
+- Config file: Assets/Config/BlackboardPreset.json
+
+---
 
 | Phase | Initiative | Estimation | Statut | Priority |
 |---|---|---|---|---|
@@ -261,15 +287,16 @@ Result: Impossible to author graphs without documentation/guessing.
 | 21-D | Dynamic Pins Seq/Switch | ~1 session | ✅ COMPLETED (PR #382) | — |
 | 22-A | Switch Node Enhancement | ~1 session | ✅ COMPLETED (PR #384) | — |
 | 22-C | Parameter Dropdowns & Registries | ~1 session | ✅ COMPLETED (PR #386) | — |
-| **21-C** | **GVS — Pre-save/Pre-exec Validation** | **~0.5 session** | **⏳ NEXT** | **P1** |
+| **HOTFIX** | **P0 Crash Blackboard Save (BUG-001)** | **~2h** | **✅ COMPLETED (PR #387)** | **P0** |
+| **21-C** | **GVS — Pre-save/Pre-exec Validation** | **~0.5 session** | **⏳ QUEUED** | **P1** |
+| **23-B** | **Full Blackboard Properties** | **2-2.5 sessions** | **⏳ SPEC DONE → CODING** | **P1** |
 | 22-B | Font Awesome Icons & Design | ~2 sessions | ⏳ Deferred (spec needed) | P2 |
 | 23-A | AnimGraph Infrastructure | ~2 sessions | Planned | — |
-| 23-B | LevelScript + Cinematic | ~2 sessions | Planned | — |
-| 23-C | MenuGraph + GlobalRules | ~2 sessions | Planned | — |
+| 23-C | LevelScript + Cinematic | ~2 sessions | Planned | — |
 | 24-A | Runtime Instance | ~2 sessions | Future | — |
 | 24-B | Debugger Multi-instances | ~2 sessions | Future | — |
 | 24-C | Thread Safety | ~1 session | Future | — |
 
 ---
 
-**Last Updated**: 2026-03-15 10:26:37 UTC
+**Last Updated**: 2026-03-15 15:45:00 UTC
