@@ -36,7 +36,7 @@
 - Bugs P0 actifs : 4 → 0
 - Tests total : 23 → 31 (+ 8 Phase23B2Test)
 - Fichiers modifiés : 6 (VisualScriptEditorPanel.h/.cpp, CMakeLists.txt, 3 PM docs)
-- Fichiers créés : 2 (Phase23B2Test.cpp, Phase23B2Test.cpp)
+- Fichiers créés : 1 (Phase23B2Test.cpp)
 
 ---
 
