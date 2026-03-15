@@ -1,8 +1,8 @@
 # 📋 COPILOT PROJECT MANAGER — Instructions V2 (Automatisées)
 
-**Version:** 2.1  
+**Version:** 2.2  
 **Date de création:** 2026-03-15 10:26:37 UTC  
-**Dernière mise à jour:** 2026-03-15 10:26:37 UTC  
+**Dernière mise à jour:** 2026-03-15 12:44:21 UTC  
 **Projet:** Olympe Engine  
 **GitHub Repo:** https://github.com/Atlasbruce/Olympe-Engine  
 
@@ -37,6 +37,9 @@ Project Management/
 ├── ROADMAP_V2.md                                         ← Feuille de route
 ├── COPILOT_CODING_RULES.md                               ← Règles de code C++14
 ├── COPILOT_QUICK_REFERENCE.md                            ← Patterns rapides
+├── BugTracking/
+│   ├── BUG_REGISTRY.md                                   ← Registre centralisé des bugs
+│   └── BUG_PROTOCOL.md                                   ← Protocole cycle de vie des bugs
 └── Features/
     ├── FEATURE_CONTEXT_TEMPLATE.md                       ← Modèle de feature doc
     ├── feature_context_21_A.md                           ← VSGraphVerifier
@@ -94,6 +97,16 @@ Project Management/
 1. Ajouter une entrée avec timestamp UTC ISO 8601
 2. Référencer la PR, les fichiers mis à jour, les phases archivées
 
+### Étape 8 — Vérifier et Mettre à Jour le BUG_REGISTRY.md
+1. Vérifier si des bugs actifs dans `BugTracking/BUG_REGISTRY.md` sont liés à cette phase
+2. Si la PR fixe un bug → mettre à jour le statut → `FIXED` + lien PR + timestamp de résolution
+3. Archiver les bugs résolus dans la section Archive du BUG_REGISTRY
+4. Si la PR introduit une régression détectée (test fail, comportement cassé) :
+   - Créer immédiatement une fiche BUG dans BUG_REGISTRY.md
+   - Classifier la sévérité (P0/P1/P2/P3) selon le BUG_PROTOCOL.md
+   - Mettre à jour la section "Known Issues & Regressions" du feature_context concerné
+5. Mettre à jour les métriques (MTTR, regression rate)
+
 ### ⚠️ Règle Absolue : Aucun fichier context ne peut rester incohérent après une mise à jour
 
 ```
@@ -104,6 +117,7 @@ VÉRIFICATION SYSTÉMATIQUE après chaque mise à jour :
 □ ROADMAP_V2.md       → statut COMPLETED dans calendrier ?
 □ Features/feature_context_XX_Y.md → créé ou mis à jour ?
 □ CONTEXT_MEMORY_LOG.md → opération loggée ?
+□ BugTracking/BUG_REGISTRY.md → bugs liés vérifiés / régressions documentées ?
 ```
 
 ---
@@ -378,6 +392,102 @@ YYYY-MM-DD HH:MM:SS UTC
 ```
 → Vérifier la cohérence entre les fichiers context ET le code source réel
 
+**Commande 11 : Statut des bugs actifs**
+```
+@copilot bug-status
+```
+→ Lister tous les bugs actifs par sévérité depuis BUG_REGISTRY.md avec leur statut et phase
+
+**Commande 12 : Déclarer un nouveau bug**
+```
+@copilot nouveau-bug [description courte]
+Phase: XX-Y
+Sévérité: P0/P1/P2/P3
+PR: #XXX (optionnel, si régression)
+```
+→ Créer une fiche BUG dans BUG_REGISTRY.md, mettre à jour le feature_context concerné
+
+**Commande 13 : Mettre à jour un bug**
+```
+@copilot update-bug BUG-XXX
+Statut: [INVESTIGATING|IN_PROGRESS|FIXED]
+Cause: [description si identifiée]
+```
+→ Mettre à jour la fiche bug dans BUG_REGISTRY.md
+
+**Commande 14 : Vérifier les bugs d'une phase**
+```
+@copilot bug-check-phase XX-Y
+```
+→ Lire BUG_REGISTRY.md et feature_context_XX_Y.md et présenter tous les bugs associés
+
+**Commande 15 : Post-mortem bug**
+```
+@copilot post-mortem BUG-XXX
+```
+→ Remplir le template post-mortem depuis BUG_PROTOCOL.md avec les informations disponibles
+
+---
+
+## 🚀 Protocole de Démarrage (Startup Pre-Flight)
+
+### Déclencheur
+
+À exécuter **au début de chaque nouvelle session** de travail (nouvelle conversation Copilot).
+
+### Pre-Flight Bug Severity Check
+
+**Avant toute autre activité, vérifier le statut des bugs actifs :**
+
+```
+PRE-FLIGHT CHECK — YYYY-MM-DD HH:MM:SS UTC
+
+🐛 BUGS ACTIFS (depuis BUG_REGISTRY.md) :
+┌─ P0 CRITICAL : X bug(s) → [liste IDs ou "Aucun"]
+├─ P1 HIGH     : X bug(s) → [liste IDs ou "Aucun"]
+├─ P2 MEDIUM   : X bug(s) → [liste IDs ou "Aucun"]
+└─ P3 LOW      : X bug(s) → [liste IDs ou "Aucun"]
+
+📦 PHASE ACTIVE : XX-Y — [Nom de la phase]
+🔴 ISSUES CONNUES SUR LA PHASE ACTIVE :
+  → [liste depuis section "Known Issues & Regressions" du feature_context]
+
+🔁 RÉGRESSIONS RÉCENTES (PRs < 72h) :
+  → [PR#XXX mergée le YYYY-MM-DD : régression détectée ? OUI/NON]
+
+⚡ DÉCISION D'ESCALADE :
+  → P0 actif → 🚨 ESCALADE IMMÉDIATE à @Atlasbruce REQUISE
+  → P1 actif depuis > 48h → ⚠️ ESCALADE à @Atlasbruce
+  → P1 actif < 48h → ✅ Continuer avec priorité bug
+  → P2/P3 uniquement → ✅ Continuer développement normal
+
+📊 MÉTRIQUES RAPIDES :
+  → MTTR P0 ce mois : Xh (cible < 24h)
+  → Taux de régression : X% (cible < 5%)
+```
+
+### Règles d'Escalade Startup
+
+1. **Si P0 actif** → Stopper tout développement, notifier @Atlasbruce en priorité absolue
+2. **Si P1 actif depuis > 48h** → Présenter le bug à @Atlasbruce avant de continuer
+3. **Si régression détectée sur la PR la plus récente (< 72h)** → Proposer investigation immédiate
+4. **Si aucun bug P0/P1** → Continuer le workflow normal avec mention des P2/P3 en cours
+
+### Format de Rapport Startup
+
+```
+## 🚀 DÉMARRAGE SESSION — YYYY-MM-DD HH:MM:SS UTC
+
+### 🐛 Statut Bugs
+[Résumé pre-flight check ci-dessus]
+
+### 📦 Phase Active
+[Nom et statut de la phase en cours depuis CONTEXT_CURRENT.md]
+
+### ⏭️ Prochaine Action Recommandée
+[Bug à traiter en priorité / ou prochaine étape de développement]
+```
+
 ---
 
 ## 🧹 Critères de Purge Automatique
@@ -462,4 +572,4 @@ CONTEXT_CURRENT.md
 
 ---
 
-*Dernière mise à jour : 2026-03-15 10:26:37 UTC*
+*Dernière mise à jour : 2026-03-15 12:44:21 UTC*

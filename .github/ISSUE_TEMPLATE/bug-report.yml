@@ -1,0 +1,142 @@
+name: 🐛 Bug Report
+description: Signaler un bug ou une régression dans Olympe Engine
+title: "[BUG-XXX] [Description courte du bug]"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🐛 Rapport de Bug — Olympe Engine
+        Merci de remplir ce formulaire avec le plus de détails possible.
+        Consultez le [BUG_PROTOCOL.md](../../Project%20Management/BugTracking/BUG_PROTOCOL.md) pour le processus complet.
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 🔴 Sévérité
+      description: Évaluez l'impact du bug sur le projet
+      options:
+        - "P0 — CRITICAL (Crash / perte de données / blocage total)"
+        - "P1 — HIGH (Fonctionnalité majeure cassée, pas de workaround)"
+        - "P2 — MEDIUM (Fonctionnalité dégradée, workaround possible)"
+        - "P3 — LOW (Mineur / cosmétique / edge case rare)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: bug-type
+    attributes:
+      label: 🏷️ Type de Bug
+      description: Quelle catégorie de bug est-ce ?
+      options:
+        - "Regression (fonctionnait avant, cassé après une PR)"
+        - "New Bug (bug dans une feature nouvellement développée)"
+        - "Edge Case (scénario limite non couvert par les tests)"
+        - "Performance (dégradation des performances)"
+        - "Crash (crash / segfault / exception non gérée)"
+    validations:
+      required: true
+
+  - type: input
+    id: phase
+    attributes:
+      label: 📦 Phase / Composant Affecté
+      description: Quelle phase ou quel composant est impacté ?
+      placeholder: "ex: Phase 22-C — Parameter Dropdowns | VSGraphVerifier | Blueprint Editor"
+    validations:
+      required: true
+
+  - type: input
+    id: regression-pr
+    attributes:
+      label: 🔗 PR Ayant Introduit la Régression
+      description: Si c'est une régression, quelle PR l'a introduite ?
+      placeholder: "ex: #386 — ou N/A si pas une régression"
+    validations:
+      required: false
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 🔁 Étapes de Reproduction
+      description: Comment reproduire le bug de manière fiable ?
+      placeholder: |
+        1. Ouvrir le Blueprint Editor
+        2. Créer un nœud de type AtomicTask
+        3. Ouvrir le panneau Properties
+        4. Cliquer sur le dropdown "taskType"
+        5. Résultat observé: [...]
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: ✅ Comportement Attendu
+      description: Que devrait-il se passer ?
+      placeholder: "Le dropdown affiche la liste des AtomicTasks disponibles."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: ❌ Comportement Observé
+      description: Que se passe-t-il réellement ?
+      placeholder: "Le dropdown est vide / crash / rien ne se passe."
+    validations:
+      required: true
+
+  - type: textarea
+    id: root-cause
+    attributes:
+      label: 🔬 Cause Racine (si identifiée)
+      description: Si vous avez déjà investigué, quelle est la cause ?
+      placeholder: "À remplir après investigation — laisser vide si inconnu."
+    validations:
+      required: false
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: 🛠️ Workaround Disponible
+      description: Existe-t-il un contournement temporaire ?
+      placeholder: "ex: Utiliser l'InputText en fallback / ou 'Aucun'"
+    validations:
+      required: false
+
+  - type: input
+    id: discovery-date
+    attributes:
+      label: 📅 Date de Découverte (UTC ISO 8601)
+      description: Quand le bug a-t-il été découvert ?
+      placeholder: "YYYY-MM-DD HH:MM:SS UTC"
+    validations:
+      required: true
+
+  - type: input
+    id: bug-registry-id
+    attributes:
+      label: 🗂️ ID BUG_REGISTRY
+      description: Référence dans BUG_REGISTRY.md
+      placeholder: "BUG-XXX (à remplir lors de la création dans le registre)"
+    validations:
+      required: false
+
+  - type: input
+    id: feature-context
+    attributes:
+      label: 📄 Feature Context Associé
+      description: Lien vers le fichier feature_context concerné
+      placeholder: "ex: Project Management/Features/feature_context_22_C.md"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 📝 Contexte Additionnel
+      description: Informations supplémentaires, logs, screenshots, config
+      placeholder: "Logs de la console, configuration du système, captures d'écran..."
+    validations:
+      required: false

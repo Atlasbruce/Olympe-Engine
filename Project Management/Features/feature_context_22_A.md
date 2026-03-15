@@ -223,7 +223,45 @@ Properties Panel
 
 ---
 
-## 10. 🔗 Références
+## 10. 🐛 Problèmes Connus & Régressions
+
+> **Statut de la Phase :** ✅ COMPLÉTÉE — PR [#384](https://github.com/Atlasbruce/Olympe-Engine/pull/384) mergée le 2026-03-15 UTC
+
+### 10.1 Bugs Actifs
+
+*Aucun bug actif sur cette phase.*
+
+| ID | Titre | Sévérité | Statut | Workaround |
+|----|-------|----------|--------|-----------|
+| — | Aucun | — | — | — |
+
+### 10.2 Problèmes Connus Non Classifiés
+
+- L'alignement à droite des labels de case repose sur des offsets ImGui calculés manuellement — si la largeur du nœud change (nouveau type, police différente), les labels peuvent être mal alignés. Non bloquant mais à surveiller.
+- Le mécanisme "commit-on-release" pour les champs de texte Properties est crucial pour l'UX Undo/Redo — tout champ de texte futur dans le Properties Panel doit implémenter ce pattern (risque de régression si oublié).
+
+### 10.3 Bugs Corrigés Durant Cette Phase
+
+*Aucun bug corrigé documenté (phase initiale VSSwitch).*
+
+| ID | Titre | Sévérité | PR Fix | Résolu le |
+|----|-------|----------|--------|-----------|
+| — | — | — | — | — |
+
+### 10.4 Tests de Régression
+
+- **Couverture :** Labels de case, Undo/Redo `SetSwitchCaseLabelCommand`, fallback "Case_N" (migration v1→v2)
+- **Dépendances :** Réutilise les dynamic pins de Phase 21-D — toute régression sur 21-D est une régression potentielle ici
+- **Dépendance aval :** Phase 22-C utilise `BBVariableRegistry` pour le runtime display de VSSwitch — à tester si Phase 22-C est modifiée
+
+### 10.5 Références Bug Registry
+
+- [BUG_REGISTRY.md](../BugTracking/BUG_REGISTRY.md) — Registre centralisé
+- [BUG_PROTOCOL.md](../BugTracking/BUG_PROTOCOL.md) — Protocole de gestion
+
+---
+
+## 11. 🔗 Références
 
 - **PR GitHub :** [#384](https://github.com/Atlasbruce/Olympe-Engine/pull/384)
 - **ROADMAP_V2.md :** Section Phase 22-A
@@ -235,4 +273,4 @@ Properties Panel
 ---
 
 *Feature context généré le : 2026-03-15 10:26:37 UTC*  
-*Dernière mise à jour : 2026-03-15 10:26:37 UTC*
+*Dernière mise à jour : 2026-03-15 12:44:21 UTC*
