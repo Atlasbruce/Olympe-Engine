@@ -252,6 +252,36 @@ Result: Impossible to author graphs without documentation/guessing.
 
 ---
 
+## Phase 23 — Blackboard & Extended Graph Features
+
+### Phase 23-B — Full Blackboard Properties (IN PROGRESS 🔧)
+
+**Feature Context :** [feature_context_23_B.md](./Features/feature_context_23_B.md)
+
+**Status:** PR en cours  
+**Priority:** P0 (BUG-001 hotfix) + P1 (feature)  
+**Date Started:** 2026-03-15 15:30:00 UTC
+
+**Includes BUG-001 P0 Hotfix:**
+- Save crash resolved : skip invalid entries (empty key, VariableType::None) in SerializeAndWrite()
+- Safe init : new entries created with `Key="NewVariable"`, `Type=Int`
+- UX warning : red badge in Blackboard panel when invalid entries detected
+- 5 regression tests
+
+**Phase 23-B Feature:**
+- `BlackboardVariablePresetRegistry` singleton (O(1) lookup, C++14)
+- `Assets/Config/BlackboardVariablePresets.json` — 15 variables, 5 categories
+- Category filtering + GetAllCategories()
+- Duplicate prevention + graceful error handling
+- 18 headless tests (13 registry + 5 BUG-001 regression)
+
+**Deliverables:**
+- 5 files created (JSON config, registry .h/.cpp, test, feature context)
+- 2 files modified (VisualScriptEditorPanel.cpp, CMakeLists.txt)
+- 18/18 tests passing
+
+---
+
 ## Updated Calendrier
 
 | Phase | Initiative | Estimation | Statut | Priority |
@@ -261,10 +291,10 @@ Result: Impossible to author graphs without documentation/guessing.
 | 21-D | Dynamic Pins Seq/Switch | ~1 session | ✅ COMPLETED (PR #382) | — |
 | 22-A | Switch Node Enhancement | ~1 session | ✅ COMPLETED (PR #384) | — |
 | 22-C | Parameter Dropdowns & Registries | ~1 session | ✅ COMPLETED (PR #386) | — |
-| **21-C** | **GVS — Pre-save/Pre-exec Validation** | **~0.5 session** | **⏳ NEXT** | **P1** |
+| **23-B** | **Full Blackboard Properties + BUG-001** | **~1 session** | **🔧 IN PROGRESS** | **P0+P1** |
+| 21-C | GVS — Pre-save/Pre-exec Validation | ~0.5 session | ⏳ NEXT | P1 |
 | 22-B | Font Awesome Icons & Design | ~2 sessions | ⏳ Deferred (spec needed) | P2 |
 | 23-A | AnimGraph Infrastructure | ~2 sessions | Planned | — |
-| 23-B | LevelScript + Cinematic | ~2 sessions | Planned | — |
 | 23-C | MenuGraph + GlobalRules | ~2 sessions | Planned | — |
 | 24-A | Runtime Instance | ~2 sessions | Future | — |
 | 24-B | Debugger Multi-instances | ~2 sessions | Future | — |
@@ -272,4 +302,4 @@ Result: Impossible to author graphs without documentation/guessing.
 
 ---
 
-**Last Updated**: 2026-03-15 10:26:37 UTC
+**Last Updated**: 2026-03-15 15:30:00 UTC

@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Créé le:** 2026-03-15 12:44:21 UTC  
-**Dernière mise à jour:** 2026-03-15 12:44:21 UTC  
+**Dernière mise à jour:** 2026-03-15 15:30:00 UTC  
 **Projet:** Olympe Engine  
 **GitHub Repo:** https://github.com/Atlasbruce/Olympe-Engine  
 
@@ -35,7 +35,9 @@ Ce registre centralise **tous les bugs connus** du projet Olympe Engine, classé
 
 ## 🔴 P0 — CRITICAL
 
-*Aucun bug P0 actif.*
+### BUG-001 — Crash Save Blackboard (VariableType::None) — IN_PROGRESS 🔧
+
+Voir fiche détaillée dans la section **Fiches Détaillées — Bugs Actifs** ci-dessous.
 
 ---
 
@@ -61,13 +63,56 @@ Ce registre centralise **tous les bugs connus** du projet Olympe Engine, classé
 
 | ID | Titre | Sévérité | Phase | PR | Statut | Découvert | Assigné |
 |----|-------|----------|-------|----|--------|-----------|---------|
-| — | Aucun bug actif | — | — | — | — | — | — |
+| BUG-001 | Crash Save Blackboard (VariableType::None) | P0 CRITICAL | 23-B | En cours | IN_PROGRESS | 2026-03-15 15:30:00 UTC | @Atlasbruce |
 
 ---
 
 ## 📝 Fiches Détaillées — Bugs Actifs
 
-*Aucun bug actif actuellement.*
+### [BUG-001] — Crash Save Blackboard (VariableType::None)
+
+**ID:** BUG-001  
+**Sévérité:** P0 — CRITICAL  
+**Type:** Crash  
+**Statut:** IN_PROGRESS  
+**Phase Affectée:** 23-B — Full Blackboard Properties  
+**Module:** VisualScriptEditorPanel  
+
+**Découvert le:** 2026-03-15 15:30:00 UTC  
+**Découvert par:** @Atlasbruce  
+**Assigné à:** @Atlasbruce  
+
+**Description:**  
+L'éditeur crashe avec `abort()` lors du Save après l'ajout d'une variable Blackboard via le bouton `[+]` dans le panel. Le crash est reproductible à chaque save après ajout sans modification du type.
+
+**Étapes de Reproduction:**
+1. Ouvrir un graphe VS dans le Blueprint Editor
+2. Dans le panel Blackboard, cliquer `[+]` pour ajouter une variable
+3. Ne pas modifier le type (laisse `None` ou `Float` selon la version)
+4. Appuyer sur Save (Ctrl+S)
+5. L'éditeur crashe avec `abort()`
+
+**Comportement Attendu:**  
+Le graphe est sauvegardé normalement, les variables Blackboard valides sont persistées.
+
+**Comportement Observé:**  
+Crash `abort()` dans la sérialisation JSON. Le fichier graphe peut être corrompu ou non écrit.
+
+**Impact:**  
+Bloquant pour toute utilisation du Blackboard dans le Blueprint Editor. Impossible de sauvegarder un graphe après ajout de variable.
+
+**Cause Racine:**  
+- `VariableType::None` non géré dans le `switch` de `SerializeAndWrite()` → default case écrit `"type": "None"` mais lors du reload, le deserializer ne gère pas ce type → crash potentiel
+- Clé vide non validée : `entry.Key = "newKey"` peut être effacée par l'utilisateur, laissant une clé vide qui corrompt le JSON
+- Buffer ImGui potentiellement corrompu lors de realloc du vecteur `m_template.Blackboard`
+
+**Workaround:** Toujours assigner un type valide et une clé non-vide avant de sauvegarder. Contournement fragile.
+
+**GitHub Issue:** N/A  
+**PR Fix:** Phase 23-B (en cours)  
+**Feature Context:** [feature_context_23_B.md](../Features/feature_context_23_B.md)  
+
+**Tests de Régression Ajoutés:** Oui — `Tests/BlueprintEditor/Phase23BTest.cpp` (5 tests BUG-001)
 
 ---
 
@@ -77,16 +122,16 @@ Ce registre centralise **tous les bugs connus** du projet Olympe Engine, classé
 
 | Métrique | Valeur | Cible |
 |---------|--------|-------|
-| Bugs P0 actifs | 0 | 0 |
+| Bugs P0 actifs | 1 (BUG-001) | 0 |
 | Bugs P1 actifs | 0 | ≤ 2 |
 | Bugs P2 actifs | 0 | ≤ 5 |
 | Bugs P3 actifs | 0 | ≤ 10 |
-| MTTR P0 (Mean Time To Resolve) | N/A | < 24h |
+| MTTR P0 (Mean Time To Resolve) | En cours | < 24h |
 | MTTR P1 | N/A | < 72h |
 | MTTR P2 | N/A | < 2 semaines |
 | MTTR P3 | N/A | < 1 mois |
 | Taux de régression (bugs/PR) | 0% | < 5% |
-| Couverture tests phases actives | — | > 80% |
+| Couverture tests phases actives | 18/18 (Phase 23-B) | > 80% |
 
 ### Hotspots (Modules les Plus Touchés)
 
@@ -194,4 +239,4 @@ Résumé: [Description courte de la cause et du fix]
 
 ---
 
-*Dernière mise à jour : 2026-03-15 12:44:21 UTC*
+*Dernière mise à jour : 2026-03-15 15:30:00 UTC*

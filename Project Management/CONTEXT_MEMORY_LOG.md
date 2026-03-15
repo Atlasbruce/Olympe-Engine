@@ -2,6 +2,31 @@
 
 ---
 
+## 2026-03-15 15:30:00 UTC — BUG-001 HOTFIX + Phase 23-B IMPLEMENTATION
+
+**Contexte :** PR Phase 23-B — Full Blackboard Properties + BUG-001 P0 Hotfix
+
+**BUG-001 Résolu :**
+- Root cause : `VariableType::None` non géré dans `SerializeAndWrite()` → abort() au save
+- Fix : skip des entrées invalides (clé vide ou type None) + log SYSTEM_LOG
+- Init sécurisé : `Key="NewVariable"`, `Type=Int` (était `"newKey"` + Float)
+- Warning UX : badge rouge dans `RenderBlackboard()` si entrées invalides
+- 5 tests régression ajoutés (Phase23BTest.cpp)
+
+**Phase 23-B Implémentée :**
+- `BlackboardVariablePresetRegistry` : singleton C++14, O(1) lookup, JSON loading
+- `Assets/Config/BlackboardVariablePresets.json` : 15 variables, 5 catégories
+- `Tests/BlueprintEditor/Phase23BTest.cpp` : 18 tests headless (18/18 ✅)
+- `CMakeLists.txt` : ajout target `OlympePhase23BTests`
+
+**Métriques :**
+- Fichiers créés : 5 (JSON config, registry .h/.cpp, test, feature context)
+- Fichiers modifiés : 4 (VisualScriptEditorPanel.cpp, CMakeLists.txt, ROADMAP_V2.md, CONTEXT_CURRENT.md)
+- Tests : 18/18 passants
+- Status : IN PROGRESS (PR en cours)
+
+---
+
 ## 2026-03-13 — IMPLEMENTATION Phase 19
 
 **Fichier modifié :** `Source/BlueprintEditor/VisualScriptEditorPanel.cpp`
