@@ -696,6 +696,12 @@ bool VisualScriptEditorPanel::Save()
         return false;
     }
 
+    // BUG-003 Fix: Reset viewport panning BEFORE syncing positions so that
+    // any residual editor-space offset from navigation is neutralised.
+    // Positions are stored in grid space (GetNodeGridSpacePos), so this is
+    // belt-and-suspenders safety; panning is restored by AfterSave().
+    ResetViewportBeforeSave();
+
     // Fix #1: Commit any deferred key-name edits before save
     CommitPendingBlackboardEdits();
 
@@ -708,6 +714,10 @@ bool VisualScriptEditorPanel::Save()
     SyncNodePositionsFromImNodes();
 
     bool ok = SerializeAndWrite(m_currentPath);
+
+    // BUG-003 Fix #5: Restore viewport so the canvas does not visually jump.
+    AfterSave();
+
     SYSTEM_LOG << "[VisualScriptEditorPanel] Save() "
                << (ok ? "succeeded" : "FAILED") << ": '" << m_currentPath << "'\n";
     return ok;
@@ -720,6 +730,9 @@ bool VisualScriptEditorPanel::SaveAs(const std::string& path)
     if (path.empty())
         return false;
 
+    // BUG-003 Fix: Reset viewport before position sync (same as Save()).
+    ResetViewportBeforeSave();
+
     // Fix #1: Commit and validate before save
     CommitPendingBlackboardEdits();
     ValidateAndCleanBlackboardEntries();
@@ -729,6 +742,10 @@ bool VisualScriptEditorPanel::SaveAs(const std::string& path)
     SyncNodePositionsFromImNodes();
 
     bool ok = SerializeAndWrite(path);
+
+    // BUG-003 Fix #5: Restore viewport.
+    AfterSave();
+
     if (ok)
     {
         m_currentPath = path;
@@ -752,7 +769,11 @@ void VisualScriptEditorPanel::SyncNodePositionsFromImNodes()
         // BeginNode()/EndNode() this session.
         if (m_positionedNodes.count(eNode.nodeID) > 0)
         {
-            ImVec2 pos = ImNodes::GetNodeEditorSpacePos(eNode.nodeID);
+            // BUG-003 Fix: use GetNodeGridSpacePos() (pan-independent grid
+            // coordinates) instead of GetNodeEditorSpacePos() which returns
+            // Origin + Panning.  Storing grid-space positions means the saved
+            // values are never corrupted by the current viewport pan offset.
+            ImVec2 pos = ImNodes::GetNodeGridSpacePos(eNode.nodeID);
             eNode.posX = pos.x;
             eNode.posY = pos.y;
 
@@ -1055,6 +1076,68 @@ void VisualScriptEditorPanel::CommitPendingBlackboardEdits()
 }
 
 // ============================================================================
+// BUG-003 Viewport helpers
+// ============================================================================
+
+void VisualScriptEditorPanel::ResetViewportBeforeSave()
+{
+    SYSTEM_LOG << "[VSEditor] ResetViewportBeforeSave: saving current panning\n";
+    m_lastViewportPanning = Vector::FromImVec2(ImNodes::EditorContextGetPanning());
+    m_viewportResetDone   = true;
+
+    // Reset panning to (0, 0) so that any residual editor-space offset from
+    // user navigation is zeroed out before SyncNodePositionsFromImNodes reads
+    // GetNodeGridSpacePos (which is already pan-independent, but this ensures
+    // no subtle ImNodes internal state leaks into the saved positions).
+    ImNodes::EditorContextResetPanning(ImVec2(0.0f, 0.0f));
+    SYSTEM_LOG << "[VSEditor] ResetViewportBeforeSave: panning reset to (0,0) "
+               << "(was " << m_lastViewportPanning.x << "," << m_lastViewportPanning.y << ")\n";
+}
+
+void VisualScriptEditorPanel::AfterSave()
+{
+    if (!m_viewportResetDone)
+        return;
+
+    // Restore the viewport so the canvas does not visually jump for the user.
+    ImNodes::EditorContextResetPanning(m_lastViewportPanning.ToImVec2());
+    m_viewportResetDone = false;
+    SYSTEM_LOG << "[VSEditor] AfterSave: viewport panning restored to ("
+               << m_lastViewportPanning.x << "," << m_lastViewportPanning.y << ")\n";
+}
+
+ImVec2 VisualScriptEditorPanel::ScreenToCanvasPos(ImVec2 screenPos) const
+{
+    // Convert absolute screen-space position to ImNodes editor (canvas) space.
+    // Editor space = grid space + panning, so:
+    //   editorX = screenX - canvasOrigin.x - windowPos.x
+    // ImNodes 0.4 has no zoom API; zoom is implicitly 1.0f.
+    ImVec2 canvasPanning = ImNodes::EditorContextGetPanning();
+    ImVec2 windowPos     = ImGui::GetWindowPos();
+    return ImVec2(
+        screenPos.x - windowPos.x - canvasPanning.x,
+        screenPos.y - windowPos.y - canvasPanning.y);
+}
+
+// ============================================================================
+// UX Enhancement #3 — Type-filtered variable utility
+// ============================================================================
+
+/*static*/
+std::vector<BlackboardEntry> VisualScriptEditorPanel::GetVariablesByType(
+    const std::vector<BlackboardEntry>& allVars,
+    VariableType expectedType)
+{
+    std::vector<BlackboardEntry> filtered;
+    for (size_t i = 0; i < allVars.size(); ++i)
+    {
+        if (allVars[i].Type == expectedType)
+            filtered.push_back(allVars[i]);
+    }
+    return filtered;
+}
+
+// ============================================================================
 // Rendering
 // ============================================================================
 
@@ -1075,9 +1158,12 @@ void VisualScriptEditorPanel::PerformUndo()
 
     // Force-push the restored positions into ImNodes so that the next
     // BeginNode()/EndNode() cycle renders them at the correct location.
+    // BUG-003 Fix: positions stored in m_editorNodes are grid-space
+    // (written by SyncNodePositionsFromImNodes via GetNodeGridSpacePos),
+    // so use SetNodeGridSpacePos to restore them pan-independently.
     for (size_t i = 0; i < m_editorNodes.size(); ++i)
     {
-        ImNodes::SetNodeEditorSpacePos(
+        ImNodes::SetNodeGridSpacePos(
             m_editorNodes[i].nodeID,
             ImVec2(m_editorNodes[i].posX, m_editorNodes[i].posY));
     }
@@ -1107,9 +1193,10 @@ void VisualScriptEditorPanel::PerformRedo()
     RebuildLinks();
 
     // Same treatment as PerformUndo().
+    // BUG-003 Fix: use SetNodeGridSpacePos (grid-space) for pan-independent restore.
     for (size_t i = 0; i < m_editorNodes.size(); ++i)
     {
-        ImNodes::SetNodeEditorSpacePos(
+        ImNodes::SetNodeGridSpacePos(
             m_editorNodes[i].nodeID,
             ImVec2(m_editorNodes[i].posX, m_editorNodes[i].posY));
     }
@@ -1415,11 +1502,13 @@ void VisualScriptEditorPanel::RenderCanvas()
 
     // On the first render after LoadTemplate(), push the stored (posX, posY)
     // of each node into ImNodes so the canvas matches the saved layout.
+    // BUG-003 Fix: positions are stored in grid space; use SetNodeGridSpacePos
+    // to restore them pan-independently (avoids double-offset with viewport pan).
     if (m_needsPositionSync)
     {
         for (size_t i = 0; i < m_editorNodes.size(); ++i)
         {
-            ImNodes::SetNodeEditorSpacePos(
+            ImNodes::SetNodeGridSpacePos(
                 m_editorNodes[i].nodeID,
                 ImVec2(m_editorNodes[i].posX, m_editorNodes[i].posY));
         }
@@ -1433,7 +1522,8 @@ void VisualScriptEditorPanel::RenderCanvas()
         {
             if (m_editorNodes[i].nodeID == m_focusNodeID)
             {
-                ImNodes::SetNodeEditorSpacePos(
+                // BUG-003 Fix: restore in grid space for pan-independent positioning.
+                ImNodes::SetNodeGridSpacePos(
                     m_focusNodeID,
                     ImVec2(m_editorNodes[i].posX, m_editorNodes[i].posY));
                 break;
@@ -2476,7 +2566,7 @@ void VisualScriptEditorPanel::RenderProperties()
             BBVariableRegistry bbReg;
             bbReg.LoadFromTemplate(m_template);
             const std::vector<VarSpec>& vars = bbReg.GetAllVariables();
-            const std::string& curKey = def.BBKey;
+            const std::string& curKey   = def.BBKey;
             const char* previewLabel  = curKey.empty() ? "(select key...)" : curKey.c_str();
 
             if (ImGui::BeginCombo("BB Key##vsbbkey", previewLabel))
@@ -2769,6 +2859,7 @@ void VisualScriptEditorPanel::RenderBlackboard()
     ImGui::Separator();
 
     // BUG-001 Hotfix: warn user if invalid entries exist (key empty or type None)
+    // to prevent save crash caused by unhandled None type during serialization.
     bool hasInvalid = false;
     for (size_t i = 0; i < m_template.Blackboard.size(); ++i)
     {
@@ -2898,6 +2989,32 @@ void VisualScriptEditorPanel::RenderBlackboard()
                     entry.Default = TaskValue(std::string(sBuf));
                     m_dirty       = true;
                 }
+                break;
+            }
+            case VariableType::Vector:
+            {
+                // UX Enhancement #1: Vector is auto-sourced from entity position at runtime.
+                // Display as read-only to prevent user from entering a value that will be
+                // overwritten anyway.
+                ImGui::BeginDisabled(true);
+                float vecVal[3] = { 0.0f, 0.0f, 0.0f };
+                ImGui::SetNextItemWidth(140.0f);
+                ImGui::DragFloat3("##bbval", vecVal, 0.1f);
+                ImGui::EndDisabled();
+                ImGui::SameLine();
+                ImGui::TextDisabled("(auto from entity position)");
+                break;
+            }
+            case VariableType::EntityID:
+            {
+                // UX Enhancement #2: EntityID is assigned at runtime; read-only display.
+                ImGui::BeginDisabled(true);
+                int entityId = 0;
+                ImGui::SetNextItemWidth(70.0f);
+                ImGui::InputInt("##bbval", &entityId);
+                ImGui::EndDisabled();
+                ImGui::SameLine();
+                ImGui::TextDisabled("(assigned at runtime)");
                 break;
             }
             default:

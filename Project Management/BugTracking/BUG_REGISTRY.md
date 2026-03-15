@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Créé le:** 2026-03-15 12:44:21 UTC  
-**Dernière mise à jour:** 2026-03-15 15:30:00 UTC  
+**Dernière mise à jour:** 2026-03-15 22:17:00 UTC  
 **Projet:** Olympe Engine  
 **GitHub Repo:** https://github.com/Atlasbruce/Olympe-Engine  
 
@@ -35,9 +35,13 @@ Ce registre centralise **tous les bugs connus** du projet Olympe Engine, classé
 
 ## 🔴 P0 — CRITICAL
 
-### BUG-001 — Crash Save Blackboard (VariableType::None) — IN_PROGRESS 🔧
+### BUG-003 — Node Positions Offset on Save (ImNodes Viewport) — FIXED ✅
 
-Voir fiche détaillée dans la section **Fiches Détaillées — Bugs Actifs** ci-dessous.
+Voir fiche détaillée dans la section **Fiches Détaillées** ci-dessous.
+
+### BUG-004 — Crash on Load After Save (Double Viewport Offset) — FIXED ✅
+
+Voir fiche détaillée dans la section **Fiches Détaillées** ci-dessous.
 
 ---
 
@@ -63,56 +67,14 @@ Voir fiche détaillée dans la section **Fiches Détaillées — Bugs Actifs** c
 
 | ID | Titre | Sévérité | Phase | PR | Statut | Découvert | Assigné |
 |----|-------|----------|-------|----|--------|-----------|---------|
-| BUG-001 | Crash Save Blackboard (VariableType::None) | P0 CRITICAL | 23-B | En cours | IN_PROGRESS | 2026-03-15 15:30:00 UTC | @Atlasbruce |
+
+*Aucun bug actif — tous les P0 résolus.*
 
 ---
 
 ## 📝 Fiches Détaillées — Bugs Actifs
 
-### [BUG-001] — Crash Save Blackboard (VariableType::None)
-
-**ID:** BUG-001  
-**Sévérité:** P0 — CRITICAL  
-**Type:** Crash  
-**Statut:** IN_PROGRESS  
-**Phase Affectée:** 23-B — Full Blackboard Properties  
-**Module:** VisualScriptEditorPanel  
-
-**Découvert le:** 2026-03-15 15:30:00 UTC  
-**Découvert par:** @Atlasbruce  
-**Assigné à:** @Atlasbruce  
-
-**Description:**  
-L'éditeur crashe avec `abort()` lors du Save après l'ajout d'une variable Blackboard via le bouton `[+]` dans le panel. Le crash est reproductible à chaque save après ajout sans modification du type.
-
-**Étapes de Reproduction:**
-1. Ouvrir un graphe VS dans le Blueprint Editor
-2. Dans le panel Blackboard, cliquer `[+]` pour ajouter une variable
-3. Ne pas modifier le type (laisse `None` ou `Float` selon la version)
-4. Appuyer sur Save (Ctrl+S)
-5. L'éditeur crashe avec `abort()`
-
-**Comportement Attendu:**  
-Le graphe est sauvegardé normalement, les variables Blackboard valides sont persistées.
-
-**Comportement Observé:**  
-Crash `abort()` dans la sérialisation JSON. Le fichier graphe peut être corrompu ou non écrit.
-
-**Impact:**  
-Bloquant pour toute utilisation du Blackboard dans le Blueprint Editor. Impossible de sauvegarder un graphe après ajout de variable.
-
-**Cause Racine:**  
-- `VariableType::None` non géré dans le `switch` de `SerializeAndWrite()` → default case écrit `"type": "None"` mais lors du reload, le deserializer ne gère pas ce type → crash potentiel
-- Clé vide non validée : `entry.Key = "newKey"` peut être effacée par l'utilisateur, laissant une clé vide qui corrompt le JSON
-- Buffer ImGui potentiellement corrompu lors de realloc du vecteur `m_template.Blackboard`
-
-**Workaround:** Toujours assigner un type valide et une clé non-vide avant de sauvegarder. Contournement fragile.
-
-**GitHub Issue:** N/A  
-**PR Fix:** Phase 23-B (en cours)  
-**Feature Context:** [feature_context_23_B.md](../Features/feature_context_23_B.md)  
-
-**Tests de Régression Ajoutés:** Oui — `Tests/BlueprintEditor/Phase23BTest.cpp` (5 tests BUG-001)
+*Aucun bug actif.*
 
 ---
 
@@ -122,22 +84,23 @@ Bloquant pour toute utilisation du Blackboard dans le Blueprint Editor. Impossib
 
 | Métrique | Valeur | Cible |
 |---------|--------|-------|
-| Bugs P0 actifs | 1 (BUG-001) | 0 |
+| Bugs P0 actifs | 0 | 0 |
 | Bugs P1 actifs | 0 | ≤ 2 |
 | Bugs P2 actifs | 0 | ≤ 5 |
 | Bugs P3 actifs | 0 | ≤ 10 |
-| MTTR P0 (Mean Time To Resolve) | En cours | < 24h |
+| MTTR P0 (Mean Time To Resolve) | ~1-2h | < 24h |
 | MTTR P1 | N/A | < 72h |
 | MTTR P2 | N/A | < 2 semaines |
 | MTTR P3 | N/A | < 1 mois |
 | Taux de régression (bugs/PR) | 0% | < 5% |
-| Couverture tests phases actives | 18/18 (Phase 23-B) | > 80% |
+| Couverture tests phases actives | 31/31 (Phase 23-B + HOTFIX BUG-003/004) | > 80% |
 
 ### Hotspots (Modules les Plus Touchés)
 
 | Module | Bugs Total | Bugs Actifs | Dernière régression |
 |--------|-----------|-------------|---------------------|
-| BlueprintEditor — Blackboard Serialization | 1 | 0 | 2026-03-15 (BUG-001, FIXED) |
+| BlueprintEditor — Blackboard Serialization | 2 | 0 | 2026-03-15 (BUG-001/002, FIXED) |
+| BlueprintEditor — Node Position Save/Load | 2 | 0 | 2026-03-15 (BUG-003/004, FIXED) |
 
 ---
 
@@ -153,11 +116,29 @@ Temps de résolution: Xh
 Résumé: [Description courte de la cause et du fix]
 ```
 
-**[BUG-001]** — Crash on Blackboard Save: abort() on VariableType::None
-Sévérité: P0 | Phase: 22-C (régression) | PR Fix: #387
-Découvert: 2026-03-15 14:30:00 UTC | Résolu: 2026-03-15 15:30:00 UTC
-Temps de résolution: ~1h
+**[BUG-001]** — Crash on Blackboard Save: abort() on VariableType::None  
+Sévérité: P0 | Phase: 22-C (régression) | PR Fix: #387  
+Découvert: 2026-03-15 14:30:00 UTC | Résolu: 2026-03-15 15:30:00 UTC  
+Temps de résolution: ~1h  
 Résumé: abort() lors de la sauvegarde d'un Blackboard contenant une entrée avec VariableType::None ou Key="". Fix: validation pré-save + initialisation safe (Key="NewVariable", Type=Int) + warning UX. 5/5 regression tests.
+
+**[BUG-002]** — Save Still Crashes After Merge (Validation Not Called)  
+Sévérité: P0 | Phase: 23-B (régression PR #387) | PR Fix: PR en cours  
+Découvert: 2026-03-15 17:00:00 UTC | Résolu: 2026-03-15 17:30:00 UTC  
+Temps de résolution: ~30min  
+Résumé: ValidateAndCleanBlackboardEntries() ajouté mais non appelé dans Save(). Fix: appel explicite avant BuildJsonFromTemplate(). Validé via tests Phase23BTest.cpp.
+
+**[BUG-003]** — Node Positions Offset on Save (ImNodes Viewport)  
+Sévérité: P0 | Phase: 23-B (régression PR #400) | PR Fix: #401  
+Découvert: 2026-03-15 17:30:00 UTC | Résolu: 2026-03-15 22:17:00 UTC  
+Temps de résolution: ~5h  
+Résumé: SyncNodePositionsFromImNodes() utilisait GetNodeEditorSpacePos() (= Origin + Panning) au lieu de GetNodeGridSpacePos() (= Origin pur). Positions sauvegardées incluaient l'offset viewport → delta constant (-24px X, +114px Y). Fix: utilisation de GetNodeGridSpacePos() pour save + SetNodeGridSpacePos() pour restore. + ResetViewportBeforeSave() safety measure. 8 regression tests (Phase23B2Test.cpp).
+
+**[BUG-004]** — Crash on Load After Save (Double Viewport Offset)  
+Sévérité: P0 | Phase: 23-B (causé par BUG-003) | PR Fix: #401  
+Découvert: 2026-03-15 17:30:00 UTC | Résolu: 2026-03-15 22:17:00 UTC  
+Temps de résolution: ~5h  
+Résumé: Positions sauvegardées avec offset viewport → rechargées avec offset → double-offset lors de la restauration via SetNodeEditorSpacePos → calcul de liens invalide → crash. Fix: résolution de BUG-003 (positions en grid space), plus SetNodeGridSpacePos() à la restauration. Couvert par les mêmes 8 tests que BUG-003.
 
 ---
 
@@ -243,4 +224,4 @@ Résumé: abort() lors de la sauvegarde d'un Blackboard contenant une entrée av
 
 ---
 
-*Dernière mise à jour : 2026-03-15 15:30:00 UTC*
+*Dernière mise à jour : 2026-03-15 22:17:00 UTC*

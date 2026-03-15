@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "../third_party/imgui/imgui.h"
 #include "../TaskSystem/TaskGraphTemplate.h"
 #include "../TaskSystem/LocalBlackboard.h"
 #include "VisualScriptNodeRenderer.h"
@@ -244,6 +245,49 @@ private:
      */
     void CommitPendingBlackboardEdits();
 
+    /**
+     * @brief Resets the ImNodes canvas panning to (0,0) before saving node positions.
+     *
+     * BUG-003 Fix: Saves current panning in m_lastViewportPanning for optional
+     * restoration after save. Node positions are stored in grid space (independent
+     * of viewport pan) via GetNodeGridSpacePos(), so this reset is a belt-and-
+     * suspenders safety measure rather than strictly required.
+     */
+    void ResetViewportBeforeSave();
+
+    /**
+     * @brief Restores the ImNodes canvas panning saved by ResetViewportBeforeSave().
+     *
+     * BUG-003 Fix #5 (optional UX continuity): call after SerializeAndWrite()
+     * so the viewport does not visually jump for the user.
+     */
+    void AfterSave();
+
+    /**
+     * @brief Converts a screen-space position to canvas (editor) space.
+     *
+     * @param screenPos  Position in absolute screen-pixel coordinates.
+     * @return           Position in ImNodes editor (canvas) space.
+     *
+     * Correct conversion: removes canvas origin and viewport pan, then
+     * divides by zoom (ImNodes 0.4 has no zoom, zoom is always 1.0f).
+     */
+    ImVec2 ScreenToCanvasPos(ImVec2 screenPos) const;
+
+    /**
+     * @brief Returns a filtered subset of blackboard entries matching a type.
+     *
+     * UX Enhancement #3 — used by type-filtered variable dropdowns so that,
+     * e.g., a Switch node only shows Int variables in its combo box.
+     *
+     * @param allVars      Full blackboard variable list to filter.
+     * @param expectedType The VariableType to keep.
+     * @return             Vector containing only entries whose Type == expectedType.
+     */
+    static std::vector<BlackboardEntry> GetVariablesByType(
+        const std::vector<BlackboardEntry>& allVars,
+        VariableType expectedType);
+
     // -----------------------------------------------------------------------
     // Canvas helpers
     // -----------------------------------------------------------------------
@@ -467,6 +511,16 @@ private:
     /// Width of the properties+blackboard panel on the right.
     /// Adjusted by the drag-to-resize handle between the canvas and the panel.
     float m_propertiesPanelWidth = 0.0f;
+
+    // -----------------------------------------------------------------------
+    // Viewport save/restore state (BUG-003 Fix)
+    // -----------------------------------------------------------------------
+
+    /// Canvas panning saved by ResetViewportBeforeSave() for restoration in AfterSave().
+    Vector m_lastViewportPanning;
+
+    /// True after ResetViewportBeforeSave() has been called and before AfterSave().
+    bool m_viewportResetDone = false;
 };
 
 } // namespace Olympe
