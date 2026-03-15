@@ -1,5 +1,12 @@
 {
-  "blackboard": [],
+  "blackboard": [
+    {
+      "isGlobal": false,
+      "key": "AI_Mode",
+      "type": "Int",
+      "value": 0
+    }
+  ],
   "dataConnections": [],
   "execConnections": [
     {
@@ -367,6 +374,7 @@
         "x": 138.478,
         "y": 563.412
       },
+      "switchVariable": "AI_Mode",
       "type": "Switch"
     },
     {
