@@ -289,6 +289,76 @@ private:
         VariableType expectedType);
 
     // -----------------------------------------------------------------------
+    // Phase 23-B.4 — Condition Editor UI helpers
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Renders the full editor UI for one Condition entry on a Branch/While node.
+     *
+     * Shows left/right mode selectors (Pin | Variable | Const), value inputs,
+     * an operator combo, and a live preview line.
+     *
+     * @param condition      Reference to the condition being edited (modified in place).
+     * @param conditionIndex 0-based index used for ImGui PushID uniqueness.
+     * @param allVars        Full blackboard entry list for variable dropdowns.
+     * @param availablePins  List of available pin references for Pin mode.
+     */
+    void RenderConditionEditor(Condition& condition,
+                               int conditionIndex,
+                               const std::vector<BlackboardEntry>& allVars,
+                               const std::vector<std::string>& availablePins);
+
+    /**
+     * @brief Renders a type-filtered variable selector combo box.
+     *
+     * Only variables whose Type matches expectedType are shown.
+     *
+     * @param selectedVar  Currently selected variable name (modified on change).
+     * @param allVars      Full blackboard entry list to filter.
+     * @param expectedType VariableType used to filter entries.
+     * @param label        ImGui widget label.
+     */
+    void RenderVariableSelector(std::string& selectedVar,
+                                const std::vector<BlackboardEntry>& allVars,
+                                VariableType expectedType,
+                                const char* label);
+
+    /**
+     * @brief Renders a type-aware const value input widget.
+     *
+     * Bool → Checkbox, Int → InputInt, Float → InputFloat,
+     * String → InputText, Vector → InputFloat3.
+     *
+     * @param value    TaskValue to edit (modified on change).
+     * @param varType  Determines which widget to display.
+     * @param label    ImGui widget label.
+     */
+    void RenderConstValueInput(TaskValue& value,
+                               VariableType varType,
+                               const char* label);
+
+    /**
+     * @brief Renders a pin selector combo box.
+     *
+     * @param selectedPin   Currently selected pin reference (modified on change).
+     * @param availablePins List of available pin reference strings.
+     * @param label         ImGui widget label.
+     */
+    void RenderPinSelector(std::string& selectedPin,
+                           const std::vector<std::string>& availablePins,
+                           const char* label);
+
+    /**
+     * @brief Builds a human-readable preview string for a condition.
+     *
+     * Format: "[Left] <op> [Right]", e.g. "[Var: health] > [Const: 50]".
+     *
+     * @param cond  The condition to describe.
+     * @return      Preview string.
+     */
+    static std::string BuildConditionPreview(const Condition& cond);
+
+    // -----------------------------------------------------------------------
     // Canvas helpers
     // -----------------------------------------------------------------------
 

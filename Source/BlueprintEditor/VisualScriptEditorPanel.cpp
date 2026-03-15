@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <sstream>
 
 namespace Olympe {
 
@@ -2614,7 +2615,7 @@ void VisualScriptEditorPanel::RenderProperties()
         case TaskNodeType::Branch:
         case TaskNodeType::While:
         {
-            // --- ConditionID dropdown ---
+            // --- ConditionID dropdown (legacy pre-built conditions) ---
             const std::vector<ConditionSpec> conditions = ConditionRegistry::Get().GetAllConditions();
             const std::string& curCond = def.ConditionID;
             const char* previewCond    = curCond.empty() ? "(select condition...)" : curCond.c_str();
@@ -2665,6 +2666,80 @@ void VisualScriptEditorPanel::RenderProperties()
                 }
                 ImGui::EndCombo();
             }
+
+            // --- Structured Conditions (Phase 23-B.4) ---
+            ImGui::Separator();
+            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.4f, 1.0f), "Structured Conditions");
+            ImGui::TextDisabled("(evaluated with implicit AND)");
+
+            // Build available pin references from nodes with data outputs
+            std::vector<std::string> availablePins;
+            {
+                std::ostringstream oss;
+                for (size_t ni = 0; ni < m_editorNodes.size(); ++ni)
+                {
+                    const VSEditorNode& en = m_editorNodes[ni];
+                    if (en.nodeID == m_selectedNodeID)
+                        continue;
+                    std::vector<std::string> outPins = GetDataOutputPins(en.def.Type);
+                    for (size_t pi = 0; pi < outPins.size(); ++pi)
+                    {
+                        oss.str("");
+                        oss.clear();
+                        oss << "Node#" << en.nodeID << "." << outPins[pi];
+                        availablePins.push_back(oss.str());
+                    }
+                }
+            }
+
+            // Find the node in m_template.Nodes to get a writable reference
+            TaskNodeDefinition* nodeDef = nullptr;
+            for (size_t ni = 0; ni < m_template.Nodes.size(); ++ni)
+            {
+                if (m_template.Nodes[ni].NodeID == m_selectedNodeID)
+                {
+                    nodeDef = &m_template.Nodes[ni];
+                    break;
+                }
+            }
+
+            if (nodeDef != nullptr)
+            {
+                // Render each condition
+                for (int ci = 0; ci < static_cast<int>(nodeDef->conditions.size()); ++ci)
+                {
+                    ImGui::PushID(ci);
+                    RenderConditionEditor(nodeDef->conditions[static_cast<size_t>(ci)],
+                                          ci,
+                                          m_template.Blackboard,
+                                          availablePins);
+
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton("Remove##condrem"))
+                    {
+                        nodeDef->conditions.erase(
+                            nodeDef->conditions.begin() + ci);
+                        // Also sync back to def (the local copy used above)
+                        def.conditions = nodeDef->conditions;
+                        m_dirty = true;
+                        ImGui::PopID();
+                        break;  // iterator invalidated — restart next frame
+                    }
+                    ImGui::PopID();
+                }
+
+                if (ImGui::Button("+ Add Condition"))
+                {
+                    Condition newCond;
+                    newCond.leftMode  = "Variable";
+                    newCond.operatorStr = "==";
+                    newCond.rightMode = "Const";
+                    nodeDef->conditions.push_back(newCond);
+                    def.conditions = nodeDef->conditions;
+                    m_dirty = true;
+                }
+            }
+
             break;
         }
         case TaskNodeType::SubGraph:
@@ -3158,6 +3233,312 @@ void VisualScriptEditorPanel::RenderVerificationPanel()
             ImGui::PopID();
         }
     }
+}
+
+// ============================================================================
+// Phase 23-B.4 — Condition Editor UI helpers
+// ============================================================================
+
+void VisualScriptEditorPanel::RenderConditionEditor(
+    Condition& condition,
+    int conditionIndex,
+    const std::vector<BlackboardEntry>& allVars,
+    const std::vector<std::string>& availablePins)
+{
+    ImGui::PushID(conditionIndex);
+    ImGui::Separator();
+    ImGui::Text("Condition #%d", conditionIndex + 1);
+
+    // -- LEFT SIDE --
+    ImGui::Text("Left:");
+    ImGui::SameLine();
+
+    const bool isLeftPin   = (condition.leftMode == "Pin");
+    const bool isLeftVar   = (condition.leftMode == "Variable");
+    const bool isLeftConst = (condition.leftMode == "Const");
+
+    if (ImGui::Button(isLeftPin ? "[PIN]" : "Pin", ImVec2(55, 0)))
+    {
+        condition.leftMode = "Pin";
+        condition.leftPin  = "";
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(isLeftVar ? "[VAR]" : "Var", ImVec2(55, 0)))
+    {
+        condition.leftMode     = "Variable";
+        condition.leftVariable = "";
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(isLeftConst ? "[CST]" : "Const", ImVec2(55, 0)))
+        condition.leftMode = "Const";
+
+    ImGui::Indent();
+    if (condition.leftMode == "Pin")
+        RenderPinSelector(condition.leftPin, availablePins, "##leftpin");
+    else if (condition.leftMode == "Variable")
+        RenderVariableSelector(condition.leftVariable, allVars,
+                               condition.compareType, "##leftvar");
+    else
+        RenderConstValueInput(condition.leftConstValue,
+                              condition.compareType, "##leftconst");
+    ImGui::Unindent();
+
+    // -- OPERATOR --
+    ImGui::Text("Op:");
+    ImGui::SameLine();
+    const char* operators[] = { "==", "!=", "<", ">", "<=", ">=" };
+    int opIdx = 0;
+    for (int i = 0; i < 6; ++i)
+    {
+        if (condition.operatorStr == operators[i])
+        {
+            opIdx = i;
+            break;
+        }
+    }
+    ImGui::SetNextItemWidth(70.0f);
+    if (ImGui::Combo("##op", &opIdx, operators, 6))
+        condition.operatorStr = operators[opIdx];
+
+    // -- RIGHT SIDE --
+    ImGui::Text("Right:");
+    ImGui::SameLine();
+
+    const bool isRightPin   = (condition.rightMode == "Pin");
+    const bool isRightVar   = (condition.rightMode == "Variable");
+    const bool isRightConst = (condition.rightMode == "Const");
+
+    if (ImGui::Button(isRightPin ? "[PIN]" : "Pin##r", ImVec2(55, 0)))
+    {
+        condition.rightMode = "Pin";
+        condition.rightPin  = "";
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(isRightVar ? "[VAR]" : "Var##r", ImVec2(55, 0)))
+    {
+        condition.rightMode     = "Variable";
+        condition.rightVariable = "";
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(isRightConst ? "[CST]" : "Const##r", ImVec2(55, 0)))
+        condition.rightMode = "Const";
+
+    ImGui::Indent();
+    if (condition.rightMode == "Pin")
+        RenderPinSelector(condition.rightPin, availablePins, "##rightpin");
+    else if (condition.rightMode == "Variable")
+        RenderVariableSelector(condition.rightVariable, allVars,
+                               condition.compareType, "##rightvar");
+    else
+        RenderConstValueInput(condition.rightConstValue,
+                              condition.compareType, "##rightconst");
+    ImGui::Unindent();
+
+    // -- TYPE HINT --
+    ImGui::Text("Type:");
+    ImGui::SameLine();
+    const char* types[] = { "None", "Bool", "Int", "Float", "String", "Vector" };
+    const VariableType typeValues[] = {
+        VariableType::None, VariableType::Bool, VariableType::Int,
+        VariableType::Float, VariableType::String, VariableType::Vector
+    };
+    int typeIdx = 0;
+    for (int i = 0; i < 6; ++i)
+    {
+        if (condition.compareType == typeValues[i])
+        {
+            typeIdx = i;
+            break;
+        }
+    }
+    ImGui::SetNextItemWidth(80.0f);
+    if (ImGui::Combo("##cmptype", &typeIdx, types, 6))
+        condition.compareType = typeValues[typeIdx];
+
+    // -- PREVIEW --
+    const std::string preview = BuildConditionPreview(condition);
+    ImGui::TextColored(ImVec4(0.7f, 1.0f, 0.7f, 1.0f),
+                       "Preview: %s", preview.c_str());
+
+    ImGui::PopID();
+}
+
+// ----------------------------------------------------------------------------
+
+void VisualScriptEditorPanel::RenderVariableSelector(
+    std::string& selectedVar,
+    const std::vector<BlackboardEntry>& allVars,
+    VariableType expectedType,
+    const char* label)
+{
+    // Filter by type (if a type is specified)
+    std::vector<std::string> names;
+    for (size_t i = 0; i < allVars.size(); ++i)
+    {
+        if (expectedType == VariableType::None || allVars[i].Type == expectedType)
+        {
+            if (!allVars[i].Key.empty())
+                names.push_back(allVars[i].Key);
+        }
+    }
+
+    if (names.empty())
+    {
+        ImGui::TextDisabled("(no variables)");
+        return;
+    }
+
+    int selected = 0;
+    for (int i = 0; i < static_cast<int>(names.size()); ++i)
+    {
+        if (names[static_cast<size_t>(i)] == selectedVar)
+        {
+            selected = i;
+            break;
+        }
+    }
+
+    std::vector<const char*> cstrs;
+    cstrs.reserve(names.size());
+    for (size_t i = 0; i < names.size(); ++i)
+        cstrs.push_back(names[i].c_str());
+
+    ImGui::SetNextItemWidth(120.0f);
+    if (ImGui::Combo(label, &selected, cstrs.data(), static_cast<int>(cstrs.size())))
+        selectedVar = names[static_cast<size_t>(selected)];
+}
+
+// ----------------------------------------------------------------------------
+
+void VisualScriptEditorPanel::RenderConstValueInput(
+    TaskValue& value,
+    VariableType varType,
+    const char* label)
+{
+    switch (varType)
+    {
+        case VariableType::Bool:
+        {
+            bool bVal = value.IsNone() ? false : value.AsBool();
+            if (ImGui::Checkbox(label, &bVal))
+                value = TaskValue(bVal);
+            break;
+        }
+        case VariableType::Int:
+        {
+            int iVal = value.IsNone() ? 0 : value.AsInt();
+            ImGui::SetNextItemWidth(80.0f);
+            if (ImGui::InputInt(label, &iVal))
+                value = TaskValue(iVal);
+            break;
+        }
+        case VariableType::Float:
+        {
+            float fVal = value.IsNone() ? 0.0f : value.AsFloat();
+            ImGui::SetNextItemWidth(80.0f);
+            if (ImGui::InputFloat(label, &fVal, 0.0f, 0.0f, "%.3f"))
+                value = TaskValue(fVal);
+            break;
+        }
+        case VariableType::String:
+        {
+            const std::string sVal = value.IsNone() ? "" : value.AsString();
+            char sBuf[256];
+            strncpy_s(sBuf, sizeof(sBuf), sVal.c_str(), _TRUNCATE);
+            ImGui::SetNextItemWidth(120.0f);
+            if (ImGui::InputText(label, sBuf, sizeof(sBuf)))
+                value = TaskValue(std::string(sBuf));
+            break;
+        }
+        case VariableType::Vector:
+        {
+            ::Vector vVal = value.IsNone() ? ::Vector{0.f, 0.f, 0.f} : value.AsVector();
+            float v[3] = { vVal.x, vVal.y, vVal.z };
+            ImGui::SetNextItemWidth(160.0f);
+            if (ImGui::InputFloat3(label, v))
+                value = TaskValue(::Vector{ v[0], v[1], v[2] });
+            break;
+        }
+        default:
+        {
+            // No type set yet — show a hint
+            ImGui::TextDisabled("(set Type first)");
+            break;
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+void VisualScriptEditorPanel::RenderPinSelector(
+    std::string& selectedPin,
+    const std::vector<std::string>& availablePins,
+    const char* label)
+{
+    if (availablePins.empty())
+    {
+        ImGui::TextDisabled("(no data-output pins in graph)");
+        return;
+    }
+
+    ImGui::SetNextItemWidth(160.0f);
+    if (ImGui::BeginCombo(label, selectedPin.empty() ? "(select pin)" : selectedPin.c_str()))
+    {
+        for (size_t i = 0; i < availablePins.size(); ++i)
+        {
+            const bool isSelected = (selectedPin == availablePins[i]);
+            if (ImGui::Selectable(availablePins[i].c_str(), isSelected))
+                selectedPin = availablePins[i];
+            if (isSelected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+/*static*/
+std::string VisualScriptEditorPanel::BuildConditionPreview(const Condition& cond)
+{
+    auto descSide = [](const std::string& mode,
+                       const std::string& pin,
+                       const std::string& var,
+                       const TaskValue& constValue) -> std::string
+    {
+        if (mode == "Pin")
+            return "[Pin: " + (pin.empty() ? "?" : pin) + "]";
+        if (mode == "Variable")
+            return "[Var: " + (var.empty() ? "?" : var) + "]";
+
+        // Const — try to format value
+        if (!constValue.IsNone())
+        {
+            std::ostringstream oss;
+            switch (constValue.GetType())
+            {
+                case VariableType::Bool:   oss << (constValue.AsBool() ? "true" : "false"); break;
+                case VariableType::Int:    oss << constValue.AsInt();   break;
+                case VariableType::Float:  oss << constValue.AsFloat(); break;
+                case VariableType::String: oss << '"' << constValue.AsString() << '"'; break;
+                case VariableType::Vector:
+                {
+                    const ::Vector v = constValue.AsVector();
+                    oss << "(" << v.x << "," << v.y << "," << v.z << ")";
+                    break;
+                }
+                default: oss << "?"; break;
+            }
+            return "[Const: " + oss.str() + "]";
+        }
+        return "[Const: ?]";
+    };
+
+    const std::string left  = descSide(cond.leftMode,  cond.leftPin,  cond.leftVariable,  cond.leftConstValue);
+    const std::string right = descSide(cond.rightMode, cond.rightPin, cond.rightVariable, cond.rightConstValue);
+    const std::string op    = cond.operatorStr.empty() ? "?" : cond.operatorStr;
+
+    return left + " " + op + " " + right;
 }
 
 } // namespace Olympe
