@@ -1,3 +1,43 @@
+# Context Archive — Historical Phases
+
+## Phase 22-A — Switch Node Enhancement
+
+**Date Completed:** 2026-03-14  
+**PR:** #384  
+**Status:** ✅ MERGED  
+
+### Summary
+Enhanced the VSSwitch node with dynamic case labels and improved UI:
+- Cases now support custom labels ("Combat", "Patrol" etc. instead of "Case_5")
+- Pin labels right-aligned dynamically (no center-alignment issues)
+- Runtime variable display (e.g., "var: bb_ai_mode = 5")
+- Full Undo/Redo support
+- Validation rules E010, E011, E012
+
+### Test Coverage
+10/10 tests passing
+
+### Impact
+Switch nodes now properly editable with intuitive UX.
+
+---
+
+## Phase 21-D — Dynamic Pins for Sequence/Switch
+
+**Status:** ✅ COMPLETED (referenced in 22-A dependencies)
+
+Dynamic execution pins on control flow nodes.
+
+---
+
+## Phase 21-A — Graph Verifier (VSGraphVerifier)
+
+**Status:** ✅ COMPLETED (PR #380)
+
+Graph validation system with error/warning registry.
+
+---
+
 # 📦 Olympe Engine — Contexte Archivé
 
 **Dernière mise à jour :** 2026-03-13

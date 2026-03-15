@@ -1,8 +1,9 @@
 # Olympe Engine — Roadmap V2
 
-**Date :** 2026-03-14  
+**Date :** 2026-03-15  
 **Auteur :** @Atlasbruce  
-**Statut :** Planification active — Phase 21-D specifiee (PRIORITAIRE)
+**Derniere mise a jour :** 2026-03-15 10:26:37 UTC  
+**Statut :** Planification active — Phase 21-C NEXT (P1)
 
 ---
 
@@ -12,9 +13,9 @@ La Roadmap V2 definit les initiatives majeures post-Phase 20 pour le Blueprint E
 
 | Initiative | Titre | Priorite | Statut |
 |---|---|---|---|
-| A | Graph Verification System (GVS) | P0 | Phase 21 — EN COURS |
-| E | Dynamic Pins Sequence/Switch (UX) | P0 PRIORITAIRE | Phase 21-D — A IMPLEMENTER |
-| B | Design & Icons Font Awesome | P1 | En attente spec design |
+| A | Graph Verification System (GVS) | P0 | Phase 21-A/B ✅ DONE — 21-C NEXT |
+| E | Dynamic Pins Sequence/Switch (UX) | P0 | Phase 21-D ✅ DONE (PR #382) |
+| B | Design & Icons Font Awesome | P2 | En attente spec design |
 | C | Diversification Types de Graphes | P2 | Phase 23+ |
 | D | Runtime Execution & Debugger | P3 | Phase 24+ |
 
@@ -33,6 +34,8 @@ du graphe et de produire des messages d'erreur/warning exploitables dans l'edite
 Fournie par @Atlasbruce le 2026-03-14.
 
 ### Phase 21-A — VSGraphVerifier stateless (TERMINEE — PR #380)
+
+**Feature Context :** [feature_context_21_A.md](./Features/feature_context_21_A.md)
 
 Nouveaux fichiers :
 - Source/BlueprintEditor/VSGraphVerifier.h
@@ -59,7 +62,9 @@ Nouveaux fichiers :
 | W004 | WARNING | MathOp avec MathOperator vide |
 | I001 | INFO | Noeud non atteignable depuis EntryPoint |
 
-### Phase 21-B — Panel Validation UI (EN COURS)
+### Phase 21-B — Panel Validation UI (TERMINEE — PR #381)
+
+**Feature Context :** [feature_context_21_B.md](./Features/feature_context_21_B.md)
 
 Fonctionnalites :
 - Panel scrollable listant tous les VSVerificationIssue avec icone couleur
@@ -74,7 +79,9 @@ Pre-exec : Blocage si ERROR, avertissement log si WARNING seulement.
 
 ---
 
-## Initiative E — Dynamic Pins Sequence/Switch (UX) — P0 PRIORITAIRE
+## Initiative E — Dynamic Pins Sequence/Switch (UX) — TERMINEE (PR #382)
+
+**Feature Context :** [feature_context_21_D.md](./Features/feature_context_21_D.md)
 
 ### Contexte
 
@@ -178,22 +185,91 @@ Phases prevues :
 
 ---
 
-## Calendrier indicatif
+## Phase 22 — Node Enhancement & UI Improvements
 
-| Phase | Initiative | Estimation | Statut |
-|---|---|---|---|
-| 21-A | GVS — VSGraphVerifier | ~1 session | TERMINEE (PR #380) |
-| 21-B | GVS — Panel Validation UI | ~1 session | EN COURS |
-| 21-C | GVS — Pre-save/Pre-exec | ~0.5 session | A venir |
-| 21-D | Dynamic Pins Sequence/Switch | ~1 session | PRIORITAIRE — A implementer |
-| 22 | Font Awesome Icons | ~2 sessions (apres spec) | En attente |
-| 23-A | AnimGraph | ~2 sessions | Phase 23+ |
-| 23-B | LevelScript + Cinematic | ~2 sessions | Phase 23+ |
-| 23-C | MenuGraph + GlobalRules | ~2 sessions | Phase 23+ |
-| 24-A | Runtime Instance | ~2 sessions | Phase 24+ |
-| 24-B | Debugger Multi-instances | ~2 sessions | Phase 24+ |
-| 24-C | Thread safety | ~1 session | Phase 24+ |
+### Phase 22-A — Switch Node Enhancement (COMPLETED ✅)
+
+**Feature Context :** [feature_context_22_A.md](./Features/feature_context_22_A.md)
+
+**Status:** PR #384 MERGED  
+**Date Completed:** 2026-03-14 18:46:14 UTC  
+**Changes:**
+- Dynamic switch case labels ("Combat", "Patrol" etc.)
+- Right-aligned pin labels (fixes center-alignment with long names)
+- Runtime variable display (var: bb_ai_mode = 5)
+- No backward compatibility (Switch v1 → v2)
+
+**Tests:** 10/10 passing ✅
 
 ---
 
-**Last Updated**: 2026-03-14 14:26:00
+### Phase 22-C — Parameter Dropdowns & Registries (COMPLETED ✅)
+
+**Feature Context :** [feature_context_22_C.md](./Features/feature_context_22_C.md)
+
+**Status:** PR #386 MERGED  
+**Priority:** P0 CRITICAL (completed)  
+**Date Started:** 2026-03-14 22:45:00 UTC  
+**Date Completed:** 2026-03-14 21:59:19 UTC
+
+**Why This Phase?** 
+Users had no way to discover available:
+- AtomicTask IDs
+- Condition types
+- Blackboard variables
+- Math/Comparison operators
+- SubGraph paths
+
+Result: Impossible to author graphs without documentation/guessing.
+
+**Solution:**
+- 5 centralized registries (AtomicTask, Condition, BBVar, Operator, Master)
+- Dropdown UI for all parameters (no more text fields)
+- Extended ParameterBindingType (6 types)
+- Intelligent filtering and categorization
+
+**Deliverables:**
+- 10 new source files (registries + UI)
+- 2 new Undo/Redo commands
+- Updated JSON serialization (v4)
+- 8 new validation rules (E020-E025, W010-W011)
+- 30+ test cases
+
+---
+
+### Phase 22-B — Font Awesome Icons & Design (DEFERRED → P2)
+
+**Status:** Awaiting design specifications  
+**Priority:** P2 (MEDIUM)  
+**Estimated Duration:** ~2 sessions (after spec)  
+**Blocker:** Design spec document from @Atlasbruce
+
+**Scope:**
+- Icons by node type in palette and canvas
+- Icons for pins (exec=triangle, data=circle)
+- Icons in Properties panel and toolbar
+- FontAwesome TTF embedded, C++14 compatible
+
+---
+
+## Updated Calendrier
+
+| Phase | Initiative | Estimation | Statut | Priority |
+|---|---|---|---|---|
+| 21-A | GVS — VSGraphVerifier | ~1 session | ✅ COMPLETED (PR #380) | — |
+| 21-B | GVS — Panel Validation UI | ~1 session | ✅ COMPLETED (PR #381) | — |
+| 21-D | Dynamic Pins Seq/Switch | ~1 session | ✅ COMPLETED (PR #382) | — |
+| 22-A | Switch Node Enhancement | ~1 session | ✅ COMPLETED (PR #384) | — |
+| 22-C | Parameter Dropdowns & Registries | ~1 session | ✅ COMPLETED (PR #386) | — |
+| **21-C** | **GVS — Pre-save/Pre-exec Validation** | **~0.5 session** | **⏳ NEXT** | **P1** |
+| 22-B | Font Awesome Icons & Design | ~2 sessions | ⏳ Deferred (spec needed) | P2 |
+| 23-A | AnimGraph Infrastructure | ~2 sessions | Planned | — |
+| 23-B | LevelScript + Cinematic | ~2 sessions | Planned | — |
+| 23-C | MenuGraph + GlobalRules | ~2 sessions | Planned | — |
+| 24-A | Runtime Instance | ~2 sessions | Future | — |
+| 24-B | Debugger Multi-instances | ~2 sessions | Future | — |
+| 24-C | Thread Safety | ~1 session | Future | — |
+
+---
+
+**Last Updated**: 2026-03-15 10:26:37 UTC
