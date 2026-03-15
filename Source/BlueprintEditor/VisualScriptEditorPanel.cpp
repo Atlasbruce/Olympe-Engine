@@ -875,6 +875,64 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
             }
         }
 
+        // Structured conditions (Phase 23-B.4 — Branch/While)
+        if ((def.Type == TaskNodeType::Branch || def.Type == TaskNodeType::While) &&
+            !def.conditions.empty())
+        {
+            json condArray = json::array();
+            for (size_t ci = 0; ci < def.conditions.size(); ++ci)
+            {
+                const Condition& cond = def.conditions[ci];
+                json cj;
+
+                // Left side
+                cj["leftMode"]     = cond.leftMode;
+                if (!cond.leftPin.empty())
+                    cj["leftPin"]  = cond.leftPin;
+                if (!cond.leftVariable.empty())
+                    cj["leftVariable"] = cond.leftVariable;
+                if (cond.leftMode == "Const" && !cond.leftConstValue.IsNone())
+                {
+                    const TaskValue& lv = cond.leftConstValue;
+                    switch (lv.GetType()) {
+                        case VariableType::Bool:   cj["leftConstValue"] = lv.AsBool();  break;
+                        case VariableType::Int:    cj["leftConstValue"] = lv.AsInt();   break;
+                        case VariableType::Float:  cj["leftConstValue"] = lv.AsFloat(); break;
+                        case VariableType::String: cj["leftConstValue"] = lv.AsString();break;
+                        default: break;
+                    }
+                }
+
+                // Operator
+                cj["operator"] = cond.operatorStr;
+
+                // Right side
+                cj["rightMode"]    = cond.rightMode;
+                if (!cond.rightPin.empty())
+                    cj["rightPin"] = cond.rightPin;
+                if (!cond.rightVariable.empty())
+                    cj["rightVariable"] = cond.rightVariable;
+                if (cond.rightMode == "Const" && !cond.rightConstValue.IsNone())
+                {
+                    const TaskValue& rv = cond.rightConstValue;
+                    switch (rv.GetType()) {
+                        case VariableType::Bool:   cj["rightConstValue"] = rv.AsBool();  break;
+                        case VariableType::Int:    cj["rightConstValue"] = rv.AsInt();   break;
+                        case VariableType::Float:  cj["rightConstValue"] = rv.AsFloat(); break;
+                        case VariableType::String: cj["rightConstValue"] = rv.AsString();break;
+                        default: break;
+                    }
+                }
+
+                // Type hint
+                if (cond.compareType != VariableType::None)
+                    cj["compareType"] = VariableTypeToString(cond.compareType);
+
+                condArray.push_back(cj);
+            }
+            n["conditions"] = condArray;
+        }
+
         // Dynamic exec-out pins (VSSequence and Switch)
         if ((def.Type == TaskNodeType::VSSequence || def.Type == TaskNodeType::Switch) &&
             !def.DynamicExecOutputPins.empty())

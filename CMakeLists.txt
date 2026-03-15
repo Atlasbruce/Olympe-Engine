@@ -619,4 +619,19 @@ if(BUILD_TESTS)
     target_include_directories(OlympePhase23BTests PRIVATE ${COMMON_INCLUDES})
     add_test(NAME OlympePhase23BTests COMMAND OlympePhase23BTests)
 
+    # -----------------------------------------------------------------------
+    # OlympePhase23B4Tests  (Phase 23-B.4 — Unified Condition System)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase23B4Tests
+        Tests/BlueprintEditor/Phase23B4Test.cpp
+        Source/TaskSystem/ConditionEvaluator.cpp
+        ${TASK_SYSTEM_SOURCES}
+        ${TASK_GRAPH_LOADER_SOURCES}
+        Source/BlueprintEditor/VSGraphVerifier.cpp
+        ${PARAM_REGISTRY_SOURCES}
+        Tests/TestStubs.cpp
+    )
+    target_include_directories(OlympePhase23B4Tests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase23B4Tests COMMAND OlympePhase23B4Tests)
+
 endif() # BUILD_TESTS

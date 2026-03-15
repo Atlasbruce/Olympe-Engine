@@ -351,6 +351,45 @@ struct SubGraphParameterDef {
 };
 
 // ============================================================================
+// ATS Visual Scripting – Condition (Phase 23-B.4 - 2026-03-15)
+// ============================================================================
+
+/**
+ * @struct Condition
+ * @brief Describes a single condition expression for Branch/While nodes.
+ *
+ * @details
+ * Supports 6 combinations:
+ *   Variable vs Variable  (health < max_health)
+ *   Variable vs Const     (health > 50)
+ *   Variable vs Pin       (health == Node#42.Out)
+ *   Pin vs Pin            (Node#42.Out > Node#43.Out)
+ *   Pin vs Const          (Node#42.Out >= threshold)
+ *   Const vs Const        (50 < 100, for testing — W015 warning)
+ *
+ * Multiple conditions on one node are evaluated with implicit AND.
+ */
+struct Condition {
+    // -- Left side value source --
+    std::string leftMode;       ///< "Pin" | "Variable" | "Const"
+    std::string leftPin;        ///< If Pin mode: e.g. "Node#42.Out"
+    std::string leftVariable;   ///< If Variable mode: e.g. "health"
+    TaskValue   leftConstValue; ///< If Const mode: e.g. TaskValue(50)
+
+    // -- Comparison operator --
+    std::string operatorStr;    ///< "==", "!=", "<", ">", "<=", ">="
+
+    // -- Right side value source --
+    std::string rightMode;      ///< "Pin" | "Variable" | "Const"
+    std::string rightPin;       ///< If Pin mode: e.g. "Node#43.Out"
+    std::string rightVariable;  ///< If Variable mode: e.g. "max_health"
+    TaskValue   rightConstValue;///< If Const mode: e.g. TaskValue(100)
+
+    // -- Type hint for validation --
+    VariableType compareType = VariableType::None; ///< Int, Float, Bool, String, Vector
+};
+
+// ============================================================================
 // ATS Visual Scripting – SwitchCaseDefinition (Phase 22-A - 2026-03-14)
 // ============================================================================
 
