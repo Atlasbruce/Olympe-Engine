@@ -517,7 +517,7 @@ private:
     // -----------------------------------------------------------------------
 
     /// Canvas panning saved by ResetViewportBeforeSave() for restoration in AfterSave().
-    Vector m_lastViewportPanning;
+    ImVec2 m_lastViewportPanning = ImVec2(0.0f, 0.0f);
 
     /// True after ResetViewportBeforeSave() has been called and before AfterSave().
     bool m_viewportResetDone = false;

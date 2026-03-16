@@ -176,6 +176,7 @@
     <ClCompile Include="Source\BlueprintEditor\OperatorRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ParameterEditorRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlackboardVariablePresetRegistry.cpp" />
+    <ClCompile Include="Source\TaskSystem\ConditionEvaluator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -389,6 +390,7 @@
     <ClInclude Include="Source\BlueprintEditor\OperatorRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\ParameterEditorRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\BlackboardVariablePresetRegistry.h" />
+    <ClInclude Include="Source\TaskSystem\ConditionEvaluator.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />

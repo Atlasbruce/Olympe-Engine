@@ -146,6 +146,7 @@
     <ClCompile Include="Source\TaskSystem\AtomicTasks\System\Task_GetWorldInstance.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\System\Task_SetPosition.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Utility\Task_Wait.cpp" />
+    <ClCompile Include="Source\TaskSystem\ConditionEvaluator.cpp" />
     <ClCompile Include="Source\TaskSystem\LocalBlackboard.cpp" />
     <ClCompile Include="Source\TaskSystem\Pathfinding\PathfindingManager.cpp" />
     <ClCompile Include="Source\TaskSystem\TaskExecutionBridge.cpp" />
@@ -340,6 +341,7 @@
     <ClInclude Include="Source\TaskSystem\AtomicTasks\System\Task_GetWorldInstance.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTasks\System\Task_SetPosition.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTasks\Utility\Task_Wait.h" />
+    <ClInclude Include="Source\TaskSystem\ConditionEvaluator.h" />
     <ClInclude Include="Source\TaskSystem\LocalBlackboard.h" />
     <ClInclude Include="Source\TaskSystem\Pathfinding\PathfindingManager.h" />
     <ClInclude Include="Source\TaskSystem\TaskExecutionBridge.h" />

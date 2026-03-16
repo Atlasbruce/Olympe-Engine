@@ -233,8 +233,8 @@
       "id": 32,
       "label": "Heard Suspicious Noise?",
       "position": {
-        "x": 521.127,
-        "y": 395.868
+        "x": 522.127,
+        "y": 403.868
       },
       "type": "Branch"
     },
