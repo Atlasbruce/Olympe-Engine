@@ -66,8 +66,8 @@
       "id": 5,
       "label": "GetBBValue",
       "position": {
-        "x": 92,
-        "y": 236
+        "x": 645,
+        "y": 220
       },
       "type": "GetBBValue"
     }

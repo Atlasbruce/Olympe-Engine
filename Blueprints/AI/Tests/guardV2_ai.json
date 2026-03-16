@@ -9,8 +9,40 @@
     {
       "isGlobal": false,
       "key": "Position",
-      "type": "None",
-      "value": null
+      "type": "Vector",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "isGlobal": false,
+      "key": "mHealth",
+      "type": "Float",
+      "value": 0
+    },
+    {
+      "isGlobal": false,
+      "key": "EntityID",
+      "type": "EntityID",
+      "value": "0"
+    },
+    {
+      "isGlobal": false,
+      "key": "mSpeed",
+      "type": "Float",
+      "value": 0
+    },
+    {
+      "isGlobal": false,
+      "key": "Acceleration",
+      "type": "Vector",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
     }
   ],
   "dataConnections": [],
@@ -155,8 +187,8 @@
       "id": 54,
       "label": "Start",
       "position": {
-        "x": -369.532,
-        "y": 45.3971
+        "x": -150.532,
+        "y": -209.603
       },
       "type": "EntryPoint"
     },
@@ -292,7 +324,7 @@
       "label": "Has Last Known Position?",
       "position": {
         "x": 512.059,
-        "y": -69.2599
+        "y": -70.2599
       },
       "type": "Branch"
     },
@@ -360,7 +392,14 @@
       "type": "AtomicTask"
     },
     {
-      "conditionKey": "CheckStats",
+      "conditionKey": "CompareValue",
+      "conditions": [
+        {
+          "leftMode": "Variable",
+          "operator": "==",
+          "rightMode": "Const"
+        }
+      ],
       "id": 11,
       "label": "Is Health Critical?",
       "position": {
@@ -377,8 +416,8 @@
       "id": 155,
       "label": "Switch 123456789123456789123456789",
       "position": {
-        "x": 138.478,
-        "y": 563.412
+        "x": 494.478,
+        "y": 608.412
       },
       "switchVariable": "AI_Mode",
       "type": "Switch"
@@ -393,8 +432,8 @@
       "id": 156,
       "label": "Sequence 123456789123456789",
       "position": {
-        "x": -228.766,
-        "y": -1.30295
+        "x": -4.76599,
+        "y": -209.303
       },
       "type": "Sequence"
     }
