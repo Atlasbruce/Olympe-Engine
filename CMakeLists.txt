@@ -650,4 +650,16 @@ if(BUILD_TESTS)
     target_include_directories(OlympePhase23B4Tests PRIVATE ${COMMON_INCLUDES})
     add_test(NAME OlympePhase23B4Tests COMMAND OlympePhase23B4Tests)
 
+    # OlympePhase23B5Tests  (Phase 23-B.5 — BUG-028 Float Serialization & BUG-029 Preview)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase23B5Tests
+        Tests/BlueprintEditor/Phase23B5Test.cpp
+        ${TASK_SYSTEM_SOURCES}
+        ${TASK_GRAPH_LOADER_SOURCES}
+        ${PARAM_REGISTRY_SOURCES}
+        Tests/TestStubs.cpp
+    )
+    target_include_directories(OlympePhase23B5Tests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase23B5Tests COMMAND OlympePhase23B5Tests)
+
 endif() # BUILD_TESTS
