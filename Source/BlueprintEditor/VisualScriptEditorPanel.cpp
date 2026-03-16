@@ -833,14 +833,57 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
         e["key"]      = entry.Key;
         e["isGlobal"] = entry.IsGlobal;
 
+        // Guard each accessor against type mismatch: if Default was not
+        // initialised to the right type (e.g. loaded as Int when Float was
+        // expected), fall back to a zero-value rather than throwing.
         switch (entry.Type)
         {
-            case VariableType::Bool:     e["type"] = "Bool";     e["value"] = entry.Default.AsBool();     break;
-            case VariableType::Int:      e["type"] = "Int";      e["value"] = entry.Default.AsInt();      break;
-            case VariableType::Float:    e["type"] = "Float";    e["value"] = entry.Default.AsFloat();    break;
-            case VariableType::String:   e["type"] = "String";   e["value"] = entry.Default.AsString();   break;
-            case VariableType::EntityID: e["type"] = "EntityID"; e["value"] = std::to_string(entry.Default.AsEntityID()); break;
-            default:                     e["type"] = "None";     e["value"] = nullptr;                    break;
+            case VariableType::Bool:
+                e["type"]  = "Bool";
+                e["value"] = (entry.Default.GetType() == VariableType::Bool)
+                             ? entry.Default.AsBool() : false;
+                break;
+            case VariableType::Int:
+                e["type"]  = "Int";
+                e["value"] = (entry.Default.GetType() == VariableType::Int)
+                             ? entry.Default.AsInt() : 0;
+                break;
+            case VariableType::Float:
+                e["type"]  = "Float";
+                e["value"] = (entry.Default.GetType() == VariableType::Float)
+                             ? entry.Default.AsFloat() : 0.0f;
+                break;
+            case VariableType::String:
+                e["type"]  = "String";
+                e["value"] = (entry.Default.GetType() == VariableType::String)
+                             ? entry.Default.AsString() : std::string("");
+                break;
+            case VariableType::EntityID:
+                e["type"]  = "EntityID";
+                e["value"] = std::to_string(
+                             (entry.Default.GetType() == VariableType::EntityID)
+                             ? entry.Default.AsEntityID() : 0);
+                break;
+            case VariableType::Vector:
+            {
+                // Vector default is auto-assigned at runtime from entity position.
+                // Persist as a zero-initialised object so the type tag is preserved
+                // across save/load and does not degrade to "None".
+                const ::Vector v = (entry.Default.GetType() == VariableType::Vector)
+                                   ? entry.Default.AsVector()
+                                   : ::Vector{0.f, 0.f, 0.f};
+                json vec;
+                vec["x"] = v.x;
+                vec["y"] = v.y;
+                vec["z"] = v.z;
+                e["type"]  = "Vector";
+                e["value"] = vec;
+                break;
+            }
+            default:
+                e["type"]  = "None";
+                e["value"] = nullptr;
+                break;
         }
         bbArray.push_back(e);
     }
@@ -2984,18 +3027,20 @@ void VisualScriptEditorPanel::RenderBlackboard()
         }
         ImGui::SameLine();
 
-        // Fix #2: Type selector with bounds-check on typeIdx
-        const char* typeLabels[] = {"None","Bool","Int","Float","Vector","EntityID","String"};
-        int typeIdx = static_cast<int>(entry.Type);
-        if (typeIdx < 0 || typeIdx >= 7)
+        // Fix #2: Type selector — "None" is excluded to prevent invalid entries.
+        // Enum layout: None=0, Bool=1, Int=2, Float=3, Vector=4, EntityID=5, String=6.
+        // typeIdx maps to enum value minus 1 (offset by 1 to skip None).
+        const char* typeLabels[] = {"Bool","Int","Float","Vector","EntityID","String"};
+        int typeIdx = static_cast<int>(entry.Type) - 1; // offset: Bool->0, Int->1, ...
+        if (typeIdx < 0 || typeIdx >= 6)
         {
-            typeIdx    = static_cast<int>(VariableType::Int);
+            typeIdx    = 1; // default to "Int" (array index 1; maps to VariableType::Int via typeIdx+1)
             entry.Type = VariableType::Int;
         }
         ImGui::SetNextItemWidth(80.0f);
-        if (ImGui::Combo("##bbtype", &typeIdx, typeLabels, 7))
+        if (ImGui::Combo("##bbtype", &typeIdx, typeLabels, 6))
         {
-            VariableType newType = static_cast<VariableType>(typeIdx);
+            VariableType newType = static_cast<VariableType>(typeIdx + 1); // +1 to skip None
             entry.Type    = newType;
             entry.Default = GetDefaultValueForType(newType);  // UX Fix #1: sync default
             m_dirty       = true;

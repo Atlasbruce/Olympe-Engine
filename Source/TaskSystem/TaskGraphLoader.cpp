@@ -723,6 +723,18 @@ void TaskGraphLoader::ParseBlackboardV4(const json& root,
             entry.Default = ParsePrimitiveValue(defaultVal);
         }
 
+        // Coerce: ensure the stored default value type matches the declared entry
+        // type.  Mismatches arise when (a) the value field is absent, (b) a JSON
+        // integer literal like "0" was used instead of "0.0" for a Float entry, or
+        // (c) a Vector entry was serialised as a JSON object that ParsePrimitiveValue
+        // cannot convert.  Replacing with GetDefaultValueForType guarantees that
+        // subsequent AsFloat() / AsInt() / AsVector() calls will not throw.
+        if (entry.Type != VariableType::None &&
+            (entry.Default.IsNone() || entry.Default.GetType() != entry.Type))
+        {
+            entry.Default = GetDefaultValueForType(entry.Type);
+        }
+
         entry.IsGlobal = JsonHelper::GetBool(entryJson, "global",
                          JsonHelper::GetBool(entryJson, "IsGlobal", false));
 
