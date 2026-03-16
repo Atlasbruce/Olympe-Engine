@@ -3375,21 +3375,21 @@ void VisualScriptEditorPanel::RenderConditionEditor(
     const bool isRightVar   = (condition.rightMode == "Variable");
     const bool isRightConst = (condition.rightMode == "Const");
 
-    if (ImGui::Button(isRightPin ? "[PIN]" : "Pin##r", ImVec2(55, 0)))
+    if (ImGui::Button(isRightPin ? "[PIN]##r" : "Pin##r", ImVec2(55, 0)))
     {
         condition.rightMode = "Pin";
         condition.rightPin  = "";
         m_dirty = true;
     }
     ImGui::SameLine();
-    if (ImGui::Button(isRightVar ? "[VAR]" : "Var##r", ImVec2(55, 0)))
+    if (ImGui::Button(isRightVar ? "[VAR]##r" : "Var##r", ImVec2(55, 0)))
     {
         condition.rightMode     = "Variable";
         condition.rightVariable = "";
         m_dirty = true;
     }
     ImGui::SameLine();
-    if (ImGui::Button(isRightConst ? "[CST]" : "Const##r", ImVec2(55, 0)))
+    if (ImGui::Button(isRightConst ? "[CST]##r" : "Const##r", ImVec2(55, 0)))
     {
         condition.rightMode = "Const";
         m_dirty = true;
