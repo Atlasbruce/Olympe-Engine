@@ -1,6 +1,47 @@
 # Recent Completions & Next Priority
 
-**Derniere mise a jour :** 2026-03-15 22:17:00 UTC
+**Derniere mise a jour :** 2026-03-16 14:48:07 UTC
+
+---
+
+## 🔴 Phase 23-B.5 — Visual Script Editor Polish (IN PROGRESS — BLOQUÉE)
+
+### Statut : 🟠 20% — Bloquée par Issue #414
+
+**Découvert post-merge PR #408 :** 4 bugs bloquant l'UX de l'éditeur de conditions.
+
+### BUG-024 — Type Filtering Missing in Variable Dropdowns (P1)
+- **Root cause :** `GetVariablesByType()` non utilisé dans le rendu des dropdowns de l'éditeur de conditions / Switch nodes
+- **Impact :** Switch nodes voient toutes les variables (attendu : Int uniquement). Condition nodes non filtrées par type.
+- **Statut :** OPEN — GitHub Issue [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414)
+
+### BUG-025 — Const Value Not Persisted on Save (P1)
+- **Root cause :** Valeur opérande constante non liée au widget ImGui ; non sérialisée dans `SerializeAndWrite()`
+- **Impact :** Risque de perte de données. Mode "Const" de l'éditeur de conditions entièrement inutilisable.
+- **Statut :** OPEN — GitHub Issue [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414)
+
+### BUG-026 — Save Button Inconsistent Behavior (P1)
+- **Root cause :** Bouton Save (`OnSaveButtonClicked()`) et Ctrl+S suivent des code paths différents
+- **Impact :** Comportement non déterministe : bouton Save peut marquer le graphe dirty après save.
+- **Workaround :** Toujours utiliser Ctrl+S
+- **Statut :** OPEN — GitHub Issue [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414)
+
+### BUG-027 — Dropdown Lists Not Filtering by Operator Type (P2)
+- **Root cause :** Mapping opérateur → types compatibles absent dans le rendu des dropdowns
+- **Impact :** UX dégradée : sélections invalides type/opérateur possibles.
+- **Statut :** OPEN — GitHub Issue [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414)
+
+---
+
+## Priorites Immédiates — Phase 23-B.5 (Issue #414)
+
+**P1 — Bloqueurs critiques :**
+1. BUG-024 : Implémenter le filtrage de types dans les dropdowns de variables (2-3h)
+2. BUG-025 : Lier la valeur constante au widget ImGui + sérialisation (3-4h)
+3. BUG-026 : Unifier le code path du bouton Save avec Ctrl+S (1-2h)
+
+**P2 — UX polish :**
+4. BUG-027 : Mapping opérateur → types compatibles pour filtrage dynamique (1-2h)
 
 ---
 
@@ -78,16 +119,21 @@
 
 ---
 
-## Priorites Suivantes (Post-Merge #401)
+## Priorites Suivantes (Post-Merge #408)
 
-**P1 :**
-- Phase 23-B.3 — Variable Value Assignment in Properties Panel (~0.5 session)
-- Phase 21-C — GVS Pre-save/Pre-exec Validation
+**P1 — Phase 23-B.5 (BLOQUÉE — Issue #414) :**
+- BUG-024 : Type filtering dans les dropdowns de variables (~2-3h)
+- BUG-025 : Persistance des valeurs constantes (~3-4h)
+- BUG-026 : Unification Save button + Ctrl+S (~1-2h)
 
 **P2 :**
+- BUG-027 : Filtrage dropdown par type d'opérateur (~1-2h)
+- Phase 21-C — GVS Pre-save/Pre-exec Validation
+
+**Déféré :**
 - Phase 22-B — Font Awesome Icons & Design (en attente spec design)
 - Phase 23-A — AnimGraph Infrastructure
 
 ---
 
-_Last updated: 2026-03-15 22:17:00 UTC_
+_Last updated: 2026-03-16 14:48:07 UTC_
