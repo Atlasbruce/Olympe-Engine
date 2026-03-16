@@ -662,4 +662,15 @@ if(BUILD_TESTS)
     target_include_directories(OlympePhase23B5Tests PRIVATE ${COMMON_INCLUDES})
     add_test(NAME OlympePhase23B5Tests COMMAND OlympePhase23B5Tests)
 
+    # OlympePhase23B6Tests  (Phase 23-B.6 — BUG-030 ImGui Conflicting ID in Condition Builder)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase23B6Tests
+        Tests/BlueprintEditor/Phase23B6Test.cpp
+        ${TASK_SYSTEM_SOURCES}
+        ${PARAM_REGISTRY_SOURCES}
+        Tests/TestStubs.cpp
+    )
+    target_include_directories(OlympePhase23B6Tests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase23B6Tests COMMAND OlympePhase23B6Tests)
+
 endif() # BUILD_TESTS
