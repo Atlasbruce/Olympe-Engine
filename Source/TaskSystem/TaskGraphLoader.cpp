@@ -725,14 +725,30 @@ void TaskGraphLoader::ParseBlackboardV4(const json& root,
 
         // Coerce: ensure the stored default value type matches the declared entry
         // type.  Mismatches arise when (a) the value field is absent, (b) a JSON
-        // integer literal like "0" was used instead of "0.0" for a Float entry, or
+        // integer literal like "100" was used instead of "100.0" for a Float entry
+        // (nlohmann parses integer-looking numbers as number_integer), or
         // (c) a Vector entry was serialised as a JSON object that ParsePrimitiveValue
-        // cannot convert.  Replacing with GetDefaultValueForType guarantees that
-        // subsequent AsFloat() / AsInt() / AsVector() calls will not throw.
+        // cannot convert.
+        //
+        // BUG-028 Fix: For Float entries whose parsed default is an Int (case b),
+        // coerce the int value to float to preserve the actual numeric value instead
+        // of falling back to 0.0f.  All other mismatches fall back to the type
+        // default so that subsequent AsFloat() / AsInt() / AsVector() calls do not
+        // throw.
         if (entry.Type != VariableType::None &&
             (entry.Default.IsNone() || entry.Default.GetType() != entry.Type))
         {
-            entry.Default = GetDefaultValueForType(entry.Type);
+            if (entry.Type == VariableType::Float &&
+                !entry.Default.IsNone() &&
+                entry.Default.GetType() == VariableType::Int)
+            {
+                // Preserve numeric value: int literal in JSON for a Float field
+                entry.Default = TaskValue(static_cast<float>(entry.Default.AsInt()));
+            }
+            else
+            {
+                entry.Default = GetDefaultValueForType(entry.Type);
+            }
         }
 
         entry.IsGlobal = JsonHelper::GetBool(entryJson, "global",

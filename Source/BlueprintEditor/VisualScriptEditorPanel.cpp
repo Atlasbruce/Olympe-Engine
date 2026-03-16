@@ -3463,6 +3463,16 @@ void VisualScriptEditorPanel::RenderVariableSelector(
         return;
     }
 
+    // BUG-029 Fix: auto-initialise to the first available variable when the
+    // selection is empty (e.g. right after switching to Variable mode).
+    // Without this the combo visually shows the first item but selectedVar
+    // remains "" so BuildConditionPreview displays "[Var: ?]".
+    if (selectedVar.empty())
+    {
+        selectedVar = names[0];
+        m_dirty = true;
+    }
+
     int selected = 0;
     for (int i = 0; i < static_cast<int>(names.size()); ++i)
     {
@@ -3493,6 +3503,25 @@ void VisualScriptEditorPanel::RenderConstValueInput(
     VariableType varType,
     const char* label)
 {
+    // BUG-029 Fix: auto-initialise to a typed default when value is None and
+    // a type is known.  Without this the preview always shows "[Const: ?]"
+    // until the user explicitly edits the field, because BuildConditionPreview
+    // only formats the value when !IsNone().
+    if (value.IsNone() && varType != VariableType::None)
+    {
+        switch (varType)
+        {
+            case VariableType::Bool:   value = TaskValue(false);                      break;
+            case VariableType::Int:    value = TaskValue(0);                          break;
+            case VariableType::Float:  value = TaskValue(0.0f);                       break;
+            case VariableType::String: value = TaskValue(std::string(""));            break;
+            case VariableType::Vector: value = TaskValue(::Vector{0.f, 0.f, 0.f});   break;
+            default: break;
+        }
+        if (!value.IsNone())
+            m_dirty = true;
+    }
+
     switch (varType)
     {
         case VariableType::Bool:
