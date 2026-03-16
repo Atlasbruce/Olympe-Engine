@@ -1,8 +1,8 @@
 # 🐛 BUG REGISTRY — Olympe Engine
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Créé le:** 2026-03-15 12:44:21 UTC  
-**Dernière mise à jour:** 2026-03-15 22:17:00 UTC  
+**Dernière mise à jour:** 2026-03-16 14:48:07 UTC  
 **Projet:** Olympe Engine  
 **GitHub Repo:** https://github.com/Atlasbruce/Olympe-Engine  
 
@@ -47,13 +47,189 @@ Voir fiche détaillée dans la section **Fiches Détaillées** ci-dessous.
 
 ## 🟠 P1 — HIGH
 
-*Aucun bug P1 actif.*
+### BUG-024 — Type Filtering Missing in Variable Dropdowns — OPEN 🔴
+
+**ID:** BUG-024  
+**Sévérité:** P1 — HIGH  
+**Type:** Regression  
+**Statut:** OPEN  
+**Phase Affectée:** 23-B.5 — Visual Script Editor Polish  
+**Module:** BlueprintEditor — Condition Editor / Variable Dropdowns  
+
+**Découvert le:** 2026-03-16 14:48:07 UTC  
+**Découvert par:** @Atlasbruce (post-merge PR #408)  
+**Assigné à:** Non assigné  
+
+**Description:**  
+Les sélecteurs de variables (dropdowns) dans l'éditeur de conditions et les noeuds Switch n'appliquent aucun filtre de type. Toutes les variables du Blackboard sont affichées quel que soit le contexte, au lieu de n'afficher que les variables du type compatible avec l'opérateur sélectionné.
+
+**Étapes de Reproduction:**
+1. Créer un graphe avec des variables de types variés (Int, Float, Vector, Bool, EntityID)
+2. Ouvrir un noeud Switch → Inspecter le dropdown de sélection de variable
+3. Observer : toutes les variables sont affichées (attendu : Int uniquement)
+4. Ouvrir un noeud Condition → Inspecter le dropdown de l'opérande droite après avoir sélectionné une variable Vector à gauche
+5. Observer : toutes les variables sont affichées (attendu : Vector uniquement)
+
+**Comportement Attendu:**  
+Switch node → filtre Int uniquement. Condition node → opérande droite filtrée par type de l'opérande gauche.
+
+**Comportement Observé:**  
+Toutes les variables du Blackboard apparaissent dans tous les dropdowns sans filtrage.
+
+**Impact:**  
+Les noeuds Switch peuvent sélectionner des variables non-Int, les éditeurs de conditions présentent des combinaisons invalides — source d'erreurs silencieuses à l'exécution.
+
+**Cause Racine:**  
+`GetVariablesByType()` existe (ajouté en PR #401) mais n'est pas utilisé dans le rendu des dropdowns de l'éditeur de conditions ni dans les noeuds Switch.
+
+**Workaround:** Vérification manuelle par l'utilisateur.
+
+**GitHub Issue:** [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414)  
+**PR Introduisant la Régression:** [#408](https://github.com/Atlasbruce/Olympe-Engine/pull/408)  
+**Feature Context:** [feature_context_23_B.md](../Features/feature_context_23_B.md)  
+
+**Estimation Fix:** 2-3 heures  
+**Tests de Régression Ajoutés:** Non (à faire après fix)
+
+---
+
+### BUG-025 — Const Value Not Persisted on Save — OPEN 🔴
+
+**ID:** BUG-025  
+**Sévérité:** P1 — HIGH  
+**Type:** Regression  
+**Statut:** OPEN  
+**Phase Affectée:** 23-B.5 — Visual Script Editor Polish  
+**Module:** BlueprintEditor — Condition Editor / Serialization  
+
+**Découvert le:** 2026-03-16 14:48:07 UTC  
+**Découvert par:** @Atlasbruce (post-merge PR #408)  
+**Assigné à:** Non assigné  
+
+**Description:**  
+Lorsqu'un utilisateur sélectionne le mode "Const" pour un opérande dans l'éditeur de conditions, entre une valeur constante, puis sauvegarde et recharge le graphe, la valeur constante est perdue. Le type se réinitialise à "None" et la valeur saisie est effacée.
+
+**Étapes de Reproduction:**
+1. Ouvrir un noeud Condition dans le panel Properties
+2. Sélectionner mode "Const" pour l'opérande droite
+3. Choisir type "Int" et entrer la valeur 42
+4. Sauvegarder le graphe (Ctrl+S)
+5. Fermer et rouvrir le graphe
+6. Observer : la valeur "42" et le type "Int" sont perdus, type reset à "None"
+
+**Comportement Attendu:**  
+La valeur constante (type + valeur) est persistée dans le JSON et restaurée correctement au rechargement.
+
+**Comportement Observé:**  
+Valeur reset à "None" après rechargement. La constante saisie est perdue — fonctionnalité inutilisable.
+
+**Impact:**  
+Risque de perte de données. La fonctionnalité "Const operand" de l'éditeur de conditions est entièrement inutilisable.
+
+**Cause Racine:**  
+La valeur de l'opérande constante n'est pas liée au widget ImGui (non capturée dans la structure de données). Le type se réinitialise à "None" car l'opérande n'est pas sérialisée correctement dans `SerializeAndWrite()`.
+
+**Workaround:** Aucun — fonctionnalité inutilisable en l'état.
+
+**GitHub Issue:** [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414)  
+**PR Introduisant la Régression:** [#408](https://github.com/Atlasbruce/Olympe-Engine/pull/408)  
+**Feature Context:** [feature_context_23_B.md](../Features/feature_context_23_B.md)  
+
+**Estimation Fix:** 3-4 heures  
+**Tests de Régression Ajoutés:** Non (à faire après fix)
+
+---
+
+### BUG-026 — Save Button Inconsistent Behavior — OPEN 🔴
+
+**ID:** BUG-026  
+**Sévérité:** P1 — HIGH  
+**Type:** Regression  
+**Statut:** OPEN  
+**Phase Affectée:** 23-B.5 — Visual Script Editor Polish  
+**Module:** BlueprintEditor — Save / VisualScriptEditorPanel  
+
+**Découvert le:** 2026-03-16 14:48:07 UTC  
+**Découvert par:** @Atlasbruce (post-merge PR #408)  
+**Assigné à:** Non assigné  
+
+**Description:**  
+Le bouton Save de la toolbar et le raccourci Ctrl+S produisent des comportements différents. Le bouton Save peut marquer le graphe comme "dirty" (modifié non sauvegardé) après la sauvegarde, contrairement à Ctrl+S qui marque correctement le graphe comme "clean".
+
+**Étapes de Reproduction:**
+1. Ouvrir un graphe existant
+2. Ne faire aucune modification
+3. Cliquer sur le bouton Save de la toolbar
+4. Observer : l'indicateur de graphe dirty peut s'activer de façon inattendue
+5. Comparer avec Ctrl+S : comportement correct (dirty flag non activé)
+
+**Comportement Attendu:**  
+Le bouton Save et Ctrl+S suivent exactement le même code path et produisent un résultat identique.
+
+**Comportement Observé:**  
+Le bouton Save peut marquer le graphe comme dirty après save. Comportement non déterministe.
+
+**Impact:**  
+Fiabilité de la sauvegarde compromise. L'utilisateur ne peut pas se fier au bouton toolbar pour sauvegarder en toute confiance.
+
+**Cause Racine:**  
+Le handler du bouton Save (`OnSaveButtonClicked()`) et Ctrl+S utilisent deux code paths différents. Le bouton ne passe pas par `PerformSaveOperation()` ou appelle des étapes supplémentaires qui modifient l'état du graphe.
+
+**Workaround:** Toujours utiliser Ctrl+S au lieu du bouton Save.
+
+**GitHub Issue:** [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414)  
+**PR Introduisant la Régression:** [#408](https://github.com/Atlasbruce/Olympe-Engine/pull/408)  
+**Feature Context:** [feature_context_23_B.md](../Features/feature_context_23_B.md)  
+
+**Estimation Fix:** 1-2 heures  
+**Tests de Régression Ajoutés:** Non (à faire après fix)
 
 ---
 
 ## 🟡 P2 — MEDIUM
 
-*Aucun bug P2 actif.*
+### BUG-027 — Dropdown Lists Not Filtering by Operator Type — OPEN 🟡
+
+**ID:** BUG-027  
+**Sévérité:** P2 — MEDIUM  
+**Type:** Regression  
+**Statut:** OPEN  
+**Phase Affectée:** 23-B.5 — Visual Script Editor Polish  
+**Module:** BlueprintEditor — Condition Editor / Operator Dropdowns  
+
+**Découvert le:** 2026-03-16 14:48:07 UTC  
+**Découvert par:** @Atlasbruce (post-merge PR #408)  
+**Assigné à:** Non assigné  
+
+**Description:**  
+Les dropdowns de sélection de variables ne sont pas filtrés en fonction de l'opérateur sélectionné. Par exemple, un opérateur de comparaison numérique (`<`, `>`, `<=`, `>=`) devrait restreindre la sélection aux variables numériques uniquement, mais affiche toutes les variables.
+
+**Étapes de Reproduction:**
+1. Ouvrir un noeud Condition
+2. Sélectionner un opérateur numérique (ex: `<`)
+3. Inspecter le dropdown de variable pour l'opérande gauche
+4. Observer : toutes les variables (y compris Bool, String, EntityID) sont affichées
+
+**Comportement Attendu:**  
+Les dropdowns de variables sont filtrés dynamiquement en fonction de l'opérateur sélectionné (mapping opérateur → types compatibles).
+
+**Comportement Observé:**  
+Toutes les variables apparaissent dans tous les contextes.
+
+**Impact:**  
+UX dégradée : l'utilisateur peut sélectionner des combinaisons invalides type/opérateur. Détectable uniquement à l'exécution.
+
+**Cause Racine:**  
+Pas de mapping opérateur → type compatible dans le rendu des dropdowns. `GetVariablesByType()` non utilisé en combinaison avec l'opérateur sélectionné.
+
+**Workaround:** Vérification manuelle par l'utilisateur.
+
+**GitHub Issue:** [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414)  
+**PR Introduisant la Régression:** [#408](https://github.com/Atlasbruce/Olympe-Engine/pull/408)  
+**Feature Context:** [feature_context_23_B.md](../Features/feature_context_23_B.md)  
+
+**Estimation Fix:** 1-2 heures  
+**Tests de Régression Ajoutés:** Non (à faire après fix)
 
 ---
 
@@ -67,14 +243,16 @@ Voir fiche détaillée dans la section **Fiches Détaillées** ci-dessous.
 
 | ID | Titre | Sévérité | Phase | PR | Statut | Découvert | Assigné |
 |----|-------|----------|-------|----|--------|-----------|---------|
-
-*Aucun bug actif — tous les P0 résolus.*
+| BUG-024 | Type Filtering Missing in Variable Dropdowns | P1 HIGH | 23-B.5 | #408 | OPEN | 2026-03-16 | Non assigné |
+| BUG-025 | Const Value Not Persisted on Save | P1 HIGH | 23-B.5 | #408 | OPEN | 2026-03-16 | Non assigné |
+| BUG-026 | Save Button Inconsistent Behavior | P1 HIGH | 23-B.5 | #408 | OPEN | 2026-03-16 | Non assigné |
+| BUG-027 | Dropdown Lists Not Filtering by Operator Type | P2 MEDIUM | 23-B.5 | #408 | OPEN | 2026-03-16 | Non assigné |
 
 ---
 
 ## 📝 Fiches Détaillées — Bugs Actifs
 
-*Aucun bug actif.*
+Voir fiches complètes dans les sections **P1** et **P2** ci-dessus (BUG-024 à BUG-027).
 
 ---
 
@@ -85,14 +263,14 @@ Voir fiche détaillée dans la section **Fiches Détaillées** ci-dessous.
 | Métrique | Valeur | Cible |
 |---------|--------|-------|
 | Bugs P0 actifs | 0 | 0 |
-| Bugs P1 actifs | 0 | ≤ 2 |
-| Bugs P2 actifs | 0 | ≤ 5 |
+| Bugs P1 actifs | 3 | ≤ 2 |
+| Bugs P2 actifs | 1 | ≤ 5 |
 | Bugs P3 actifs | 0 | ≤ 10 |
 | MTTR P0 (Mean Time To Resolve) | ~1-2h | < 24h |
-| MTTR P1 | N/A | < 72h |
-| MTTR P2 | N/A | < 2 semaines |
+| MTTR P1 | En cours (Issue #414) | < 72h |
+| MTTR P2 | En cours (Issue #414) | < 2 semaines |
 | MTTR P3 | N/A | < 1 mois |
-| Taux de régression (bugs/PR) | 0% | < 5% |
+| Taux de régression (bugs/PR) | 4 bugs / PR #408 | < 5% |
 | Couverture tests phases actives | 31/31 (Phase 23-B + HOTFIX BUG-003/004) | > 80% |
 
 ### Hotspots (Modules les Plus Touchés)
@@ -101,6 +279,9 @@ Voir fiche détaillée dans la section **Fiches Détaillées** ci-dessous.
 |--------|-----------|-------------|---------------------|
 | BlueprintEditor — Blackboard Serialization | 2 | 0 | 2026-03-15 (BUG-001/002, FIXED) |
 | BlueprintEditor — Node Position Save/Load | 2 | 0 | 2026-03-15 (BUG-003/004, FIXED) |
+| BlueprintEditor — Condition Editor Dropdowns | 2 | 2 | 2026-03-16 (BUG-024, BUG-027, OPEN) |
+| BlueprintEditor — Condition Editor Serialization | 1 | 1 | 2026-03-16 (BUG-025, OPEN) |
+| BlueprintEditor — Save Pipeline | 1 | 1 | 2026-03-16 (BUG-026, OPEN) |
 
 ---
 
@@ -224,4 +405,4 @@ Résumé: Positions sauvegardées avec offset viewport → rechargées avec offs
 
 ---
 
-*Dernière mise à jour : 2026-03-15 22:17:00 UTC*
+*Dernière mise à jour : 2026-03-16 14:48:07 UTC*

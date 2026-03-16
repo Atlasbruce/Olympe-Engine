@@ -1,6 +1,27 @@
 # Olympe Engine — Etat des Lieux
 
-**Date :** 2026-03-15 22:17:00 UTC
+**Date :** 2026-03-16 14:48:07 UTC
+
+---
+
+## 🚧 Phase 23-B.5 — Visual Script Editor Polish (EN COURS — BLOQUÉE)
+
+**Statut :** 🟠 IN PROGRESS — Bloquée par Issue [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414)  
+**PR Référence :** Post-merge PR #408  
+**Avancement :** ~20%
+
+### Bugs Actifs (Issue #414)
+
+- ❌ **BUG-024** (P1) — Type Filtering Missing in Variable Dropdowns → noeuds Switch voient toutes les variables
+- ❌ **BUG-025** (P1) — Const Value Not Persisted on Save → valeurs constantes perdues au reload
+- ❌ **BUG-026** (P1) — Save Button Inconsistent Behavior → bouton Save ≠ Ctrl+S
+- ❌ **BUG-027** (P2) — Dropdown Lists Not Filtering by Operator Type → UX dégradée
+
+### Composants Bloqués
+
+- Condition Editor : operandes Const inutilisables (BUG-025)
+- Switch Node : sélection de variable non filtrée (BUG-024)
+- Fiabilité Save : comportement non déterministe (BUG-026)
 
 ---
 
@@ -50,19 +71,25 @@
 
 ## Problemes Connus
 
-*Aucun bug P0 actif — BUG-001/002/003/004 tous FIXED.*
+**Phase 23-B.5 — 4 bugs actifs (Issue #414) :**
+
+- ⚠️ **BUG-024** (P1) — Type filtering missing in variable dropdowns (Switch + Condition nodes)
+- ⚠️ **BUG-025** (P1) — Const value not persisted on save (data loss risk)
+- ⚠️ **BUG-026** (P1) — Save button inconsistent with Ctrl+S (use Ctrl+S as workaround)
+- ⚠️ **BUG-027** (P2) — Dropdown lists not filtering by operator type (UX issue)
+
+Voir [BUG_REGISTRY.md](./BugTracking/BUG_REGISTRY.md) pour les fiches détaillées.
 
 ---
 
 ## Composants En Developpement
 
-- **Blueprint Editor — Phase 23-B.3 (P1)** : Variable Value Assignment in Properties Panel
-  - Afficher/editer la valeur par defaut d'une variable BB quand un noeud GetBB/SetBB est selectionne
-  - Effort: ~0.5 session
-- **Blueprint Editor — Phase 21-C (P1)** : GVS Pre-save/Pre-exec — blocage sauvegarde si erreurs P0, avertissement log si WARNING
-- **Blueprint Editor — Phase 22-B** : Design & Icons Font Awesome — EN ATTENTE spec design
-- **Blueprint Editor — Phase 23-A** : AnimGraph Infrastructure
-- **Blueprint Editor — Phase 24** : Runtime Execution & Debugger multi-instances
+- **Blueprint Editor — Phase 23-B.5 (BLOQUÉE)** : Visual Script Editor Polish
+  - Fix BUG-024 : type filtering dans les dropdowns variables
+  - Fix BUG-025 : persistance valeurs constantes
+  - Fix BUG-026 : unification Save button + Ctrl+S
+  - Fix BUG-027 : filtrage dropdown par type d'opérateur
+  - Effort estimé : ~1 semaine — Issue #414
 
 ---
 
@@ -76,6 +103,12 @@
 - **Status :** MERGED 2026-03-15 15:30:00 UTC
 - **Regression Tests :** 5/5 passing
 
+### BUG-024 / BUG-025 / BUG-026 / BUG-027 🔴 OPEN (Issue #414)
+- **Severite :** P1/P2 — post-PR #408
+- **Issue :** Condition editor UX blockers (type filtering, const persistence, save consistency)
+- **Status :** OPEN — fixs planifiés Phase 23-B.5
+- Voir [BUG_REGISTRY.md](./BugTracking/BUG_REGISTRY.md) pour les fiches détaillées
+
 ### Aucun autre P0 connu
 
 ---
@@ -83,7 +116,7 @@
 ## Progression Globale
 
 - **Architecture globale :** ~82% (core engine stable)
-- **Blueprint Editor :** ~98% (22 regles de validation, dropdowns guides, dynamic pins, Switch enhanced, BB crash fixed)
+- **Blueprint Editor :** ~96% (22 regles de validation, dropdowns guides, dynamic pins, Switch enhanced, BB crash fixed — bloqué sur condition editor polish par Issue #414)
 - **ECS System :** ~85% (fonctionnel, extensions possibles)
 - **AI System :** ~75% (BT + debugger, extensions pathfinding)
 
@@ -97,4 +130,4 @@
 
 ---
 
-**Last Updated**: 2026-03-15 15:45:00 UTC
+**Last Updated**: 2026-03-16 14:48:07 UTC
