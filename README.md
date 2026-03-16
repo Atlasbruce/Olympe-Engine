@@ -8,8 +8,9 @@
 Tiled integration, windowed multiplayer workflow, and flexible 2D rendering targets.**
 
 [![Status](https://img.shields.io/badge/status-active%20development-brightgreen)](#status)
-[![Phase](https://img.shields.io/badge/phase-22--C%20Parameter%20Dropdowns%20%26%20Registries-blue)](#status)
+[![Phase](https://img.shields.io/badge/phase-23--B.5%20Visual%20Script%20Editor%20Polish-orange)](#status)
 [![Language](https://img.shields.io/badge/language-C%2B%2B-orange)](#tech-highlights)
+[![Issues](https://img.shields.io/badge/blocking%20issues-4%20(Issue%20%23414)-red)](https://github.com/Atlasbruce/Olympe-Engine/issues/414)
 
 </div>
 
@@ -154,12 +155,24 @@ Comprehensive docs index: [`Documentation/README.md`](Documentation/README.md)
 | Graph Verification System (GVS) | ✅ Merged (Phase 21-A, PR #380) |
 | Dynamic Pins (Sequence/Switch) | ✅ Completed |
 | Switch Node Enhancement | ✅ Merged (Phase 22-A, PR #384) |
-| **Parameter Dropdowns & Registries** | 🔧 **Active — Phase 22-C (P0 Critical)** |
+| Parameter Dropdowns & Registries | ✅ Merged (Phase 22-C, PR #386) |
+| Full Blackboard Properties | ✅ Merged (Phase 23-B, PR #400/401) |
+| Condition Editor (structured) | ✅ Merged (Phase 23-B.4, PR #408) |
+| **Visual Script Editor Polish** | 🔴 **Blocked — Phase 23-B.5 (Issue #414)** |
 | Tiled Level Pipeline | ✅ Documented |
 | Windowed Multiplayer Workflow | ✅ Implemented |
 | Runtime Execution & Debugger | ⏳ Planned (Phase 24+) |
 
-> Active development is currently focused on **Phase 22-C — Parameter Dropdowns & Registries**, started 2026-03-14.
+> Active development is currently focused on **Phase 23-B.5 — Visual Script Editor Polish**, resolving 4 blocking issues from Issue [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414).
+
+### ⚠️ Known Blocking Issues (Issue #414)
+
+- **BUG-024** (P1) — Type filtering missing in variable dropdowns
+- **BUG-025** (P1) — Const values not persisted on save/reload
+- **BUG-026** (P1) — Save button inconsistent with Ctrl+S (workaround: use Ctrl+S)
+- **BUG-027** (P2) — Dropdown lists not filtering by operator type
+
+See [Project Management/BugTracking/BUG_REGISTRY.md](Project%20Management/BugTracking/BUG_REGISTRY.md) for detailed issue cards.
 
 ---
 
@@ -167,7 +180,8 @@ Comprehensive docs index: [`Documentation/README.md`](Documentation/README.md)
 
 PRs and UX feedback are welcome! Current focus areas:
 
-- Blueprint Editor registries and dropdown authoring
+- Phase 23-B.5 bug fixes (see [Issue #414](https://github.com/Atlasbruce/Olympe-Engine/issues/414))
+- Blueprint Editor condition editor UX polish
 - Graph validation and error UX
 - Level design pipeline (Tiled import)
 - Runtime execution and debugger
@@ -186,6 +200,10 @@ Please open an issue or pull request describing your change. For larger contribu
 | Tiled Isometric Integration | [`Documentation/TILED_ISOMETRIC.md`](Documentation/TILED_ISOMETRIC.md) |
 | ATS Visual Scripting | [`Documentation/UserManual_ATS_VisualScripting.md`](Documentation/UserManual_ATS_VisualScripting.md) |
 | Project Roadmap | [`Project Management/ROADMAP_V2.md`](Project%20Management/ROADMAP_V2.md) |
+| Bug Registry | [`Project Management/BugTracking/BUG_REGISTRY.md`](Project%20Management/BugTracking/BUG_REGISTRY.md) |
+| Project Status | [`Project Management/CONTEXT_STATUS.md`](Project%20Management/CONTEXT_STATUS.md) |
+| Testing Protocol | [`Project Management/TESTING_PROTOCOL.md`](Project%20Management/TESTING_PROTOCOL.md) |
+| Phase 23-B Feature Context | [`Project Management/Features/feature_context_23_B.md`](Project%20Management/Features/feature_context_23_B.md) |
 
 ---
 

@@ -1,9 +1,9 @@
 # 📄 Feature Context — Phase 23-B : Full Blackboard Properties
 
 > **Créé le:** 2026-03-15 15:30:00 UTC  
-> **Dernière mise à jour:** 2026-03-15 15:30:00 UTC  
-> **Statut:** 🔧 EN COURS  
-> **PR:** En cours  
+> **Dernière mise à jour:** 2026-03-16 14:48:07 UTC  
+> **Statut:** 🟠 EN COURS — Phase 23-B.5 BLOQUÉE (Issue #414)  
+> **PR:** #400, #401, #404, #406, #408 (mergés) — Phase 23-B.5 en cours  
 > **Références croisées:** [feature_context_22_C.md](./feature_context_22_C.md)
 
 ---
@@ -206,4 +206,95 @@ BLACKBOARD PANEL (3 sections)
 
 ---
 
-*Dernière mise à jour : 2026-03-15 15:30:00 UTC*
+*Dernière mise à jour : 2026-03-16 14:48:07 UTC*
+
+---
+
+## Phase 23-B.5 — Visual Script Editor Polish (EN COURS — BLOQUÉE)
+
+> **Statut :** 🟠 IN PROGRESS (20%) — Bloquée par Issue [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414)  
+> **Démarré le :** 2026-03-16 14:48:07 UTC  
+> **PR Référence :** Post-merge PR #408
+
+### Sous-phases Complétées (23-B.1 → 23-B.4)
+
+- ✅ **23-B.1** : Implémentation des noeuds de conditions de base
+- ✅ **23-B.2** : Intégration du système de types de variables
+- ✅ **23-B.3** : Panneaux UI du builder de conditions (PR #404)
+- ✅ **23-B.4** : Éditeur de conditions structuré (PR #406, #408)
+
+### Sous-phase Courante : 23-B.5 — Fixs Post-Merge et UX Polish
+
+**Objectif :** Résoudre les bugs bloquants découverts post-merge PR #408 et finaliser l'UX de l'éditeur de conditions.
+
+#### Blockers Critiques (Issue #414)
+
+| Bug | Sévérité | Titre | Estimation |
+|-----|----------|-------|-----------|
+| BUG-024 | P1 HIGH | Type Filtering Missing in Variable Dropdowns | 2-3h |
+| BUG-025 | P1 HIGH | Const Value Not Persisted on Save | 3-4h |
+| BUG-026 | P1 HIGH | Save Button Inconsistent Behavior | 1-2h |
+| BUG-027 | P2 MEDIUM | Dropdown Lists Not Filtering by Operator Type | 1-2h |
+
+#### Critères de Succès (Phase 23-B.5)
+
+- [ ] Tous les dropdowns de variables filtrés par type/contexte
+- [ ] Valeurs constantes persistées avec type correct (serialisation aller-retour)
+- [ ] Bouton Save et Ctrl+S unifiés (même code path)
+- [ ] Les 6 combinaisons d'opérandes testables (Variable vs Variable, Variable vs Const, Variable vs Pin, Pin vs Variable, Pin vs Const, Pin vs Pin)
+- [ ] Aucun crash au reload avec des blackboards complexes
+- [ ] Champs Vector x,y,z correctement affichés et persistés
+- [ ] EntityID : indicateur readonly clairement visible
+
+#### Matrice de Tests (Phase 23-B.5)
+
+```
+Tests de Conditions :
+├─ Variable vs Variable  ✅ (fonctionnel)
+├─ Variable vs Const     ❌ (bloqué par BUG-025)
+├─ Variable vs Pin       ❌
+├─ Pin vs Variable       ❌
+├─ Pin vs Const          ❌
+└─ Pin vs Pin            ❌
+
+Tests de Filtrage de Types :
+├─ Switch affiche Int uniquement     ❌ (bloqué par BUG-024)
+├─ Condition opérande gauche (Numeric+Bool+Vector)  ❌
+├─ Condition opérande droite filtrée par type gauche  ❌
+└─ Type Vector affiche champs x,y,z  ✅
+```
+
+#### Architecture Cible (Save Pipeline Unifié)
+
+```
+Clic Bouton Save  OU  Ctrl+S
+       ↓
+PerformSaveOperation()  ← point d'entrée unique
+       ↓
+ValidateGraph()
+       ↓
+SerializeToJSON()
+  ├─ SerializeNodes()
+  ├─ SerializeConnections()
+  ├─ SerializeBlackboard()
+  └─ SerializeViewport()
+       ↓
+WriteToFile()  ← écriture atomique (.tmp puis rename)
+       ↓
+MarkGraphClean()
+```
+
+#### Système de Filtrage de Types (À Implémenter)
+
+```
+Contexte de Sélection de Variable
+  ├─ Noeud Switch
+  │  └─ Filtre : Int uniquement
+  ├─ Noeud Condition
+  │  ├─ Opérande gauche : Numeric + Bool + Vector
+  │  └─ Opérande droite : Correspond au type de l'opérande gauche
+  ├─ Opérateur de Comparaison
+  │  └─ Filtre dynamique selon l'opérateur (mapping opérateur→types)
+  └─ Dropdown Générique
+     └─ Pas de filtre (afficher tout)
+```

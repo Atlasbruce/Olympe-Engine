@@ -1,6 +1,13 @@
 # Olympe Engine — Etat des Lieux
 
-**Date :** 2026-03-14
+**Date :** 2026-03-16 14:48:07 UTC
+
+> ⚠️ **Ce fichier est maintenu pour compatibilité.** La version à jour se trouve dans :  
+> 📋 [`Project Management/CONTEXT_STATUS.md`](Project%20Management/CONTEXT_STATUS.md)
+
+**Phase Courante :** Phase 23-B.5 — Visual Script Editor Polish 🟠 BLOQUÉE (Issue [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414))  
+**Dernières PRs Mergées :** #400, #401, #404, #406, #408  
+**Bugs Actifs :** BUG-024, BUG-025, BUG-026 (P1), BUG-027 (P2)
 
 ---
 

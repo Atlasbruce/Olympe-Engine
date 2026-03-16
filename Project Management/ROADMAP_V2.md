@@ -298,6 +298,7 @@ Result: Impossible to author graphs without documentation/guessing.
 | 22-A | Switch Node Enhancement | ~1 session | ✅ COMPLETED (PR #384) | — |
 | 22-C | Parameter Dropdowns & Registries | ~1 session | ✅ COMPLETED (PR #386) | — |
 | **HOTFIX** | **BUG-001/002 Blackboard Save Crash** | **~1h** | **✅ FIXED (PR #387/#400)** | **P0** |
+| **23-B.5** | **Visual Script Editor Polish (Condition Editor Blockers)** | **~1 semaine** | **🟠 IN PROGRESS (20%) — BLOQUÉE** | **P1** |
 | **23-B** | **Full Blackboard Properties + UX** | **~1-2 sessions** | **✅ MERGED (PR #400/401)** | **P0+P1** |
 | **HOTFIX** | **BUG-003/004 Node Position Offset + Load Crash** | **~0.5 session** | **✅ FIXED (PR #401)** | **P0** |
 | **23-B.3** | **Variable Value Assignment in Properties Panel** | **~0.5 session** | **⏳ PLANNED** | **P1** |
@@ -331,4 +332,4 @@ must return to the Blackboard panel to change a value, breaking the workflow.
 
 ---
 
-**Last Updated**: 2026-03-15 22:17:00 UTC
+**Last Updated**: 2026-03-16 14:48:07 UTC
