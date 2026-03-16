@@ -40,6 +40,9 @@
  *  20.  Test_Serialization_VarVsConst  — load JSON with Variable/Const condition
  *  21.  Test_Serialization_V4Migration — load v4 legacy format (variable + compareValue)
  *  22.  Test_Serialization_PinVsVar    — load JSON with Pin/Variable condition
+ *  26.  Test_Serialization_ConstValueRoundTrip — all 4 const types (Int/Float/Bool/String)
+ *                                                round-trip through JSON without data loss
+ *                                                (Issue #409 Fix: const value persistence)
  *
  *   === VSGraphVerifier rules ===
  *  23.  Test_Verifier_E040_EmptyPin    — Pin mode with empty reference → E040
@@ -1017,6 +1020,183 @@ static void Test25_Verifier_W015_ConstConst()
 }
 
 // ===========================================================================
+// Test 26 -- Const value serialization round-trip (Issue #409 Fix #2)
+//
+// Verifies that all supported const value types (Int, Float, Bool, String)
+// round-trip correctly through JSON serialization and deserialization.
+// This guards against the bug where leftConstValue/rightConstValue was
+// discarded when compareType was None (showed "[Const: ?]" after reload).
+// ===========================================================================
+
+static const char* k_condConstRTPath = "/tmp/phase23b4_const_rt.ats";
+
+static void Test26_Serialization_ConstValueRoundTrip()
+{
+    bool ok = true;
+
+    // Graph with four Branch nodes, each using a different const type on both sides
+    const char* json = R"({
+  "schema_version": 4,
+  "graphType": "VisualScript",
+  "name": "ConstRTGraph",
+  "entryPointId": 1,
+  "nodes": [
+    { "id": 1, "type": "EntryPoint" },
+    { "id": 2, "type": "Branch",
+      "conditions": [
+        {
+          "leftMode": "Const",
+          "leftConstValue": 42,
+          "operator": "==",
+          "rightMode": "Const",
+          "rightConstValue": 42,
+          "compareType": "Int"
+        }
+      ]
+    },
+    { "id": 3, "type": "Branch",
+      "conditions": [
+        {
+          "leftMode": "Const",
+          "leftConstValue": 3.14,
+          "operator": "<",
+          "rightMode": "Const",
+          "rightConstValue": 6.28,
+          "compareType": "Float"
+        }
+      ]
+    },
+    { "id": 4, "type": "Branch",
+      "conditions": [
+        {
+          "leftMode": "Const",
+          "leftConstValue": true,
+          "operator": "==",
+          "rightMode": "Const",
+          "rightConstValue": false,
+          "compareType": "Bool"
+        }
+      ]
+    },
+    { "id": 5, "type": "Branch",
+      "conditions": [
+        {
+          "leftMode": "Const",
+          "leftConstValue": "hello",
+          "operator": "==",
+          "rightMode": "Const",
+          "rightConstValue": "world",
+          "compareType": "String"
+        }
+      ]
+    },
+    { "id": 6, "type": "AtomicTask", "taskType": "Task_LogMessage" },
+    { "id": 7, "type": "AtomicTask", "taskType": "Task_LogMessage" }
+  ],
+  "blackboard": [],
+  "execConnections": [
+    { "fromNode": 1, "fromPin": "Out",  "toNode": 2, "toPin": "In" },
+    { "fromNode": 2, "fromPin": "Then", "toNode": 3, "toPin": "In" },
+    { "fromNode": 2, "fromPin": "Else", "toNode": 6, "toPin": "In" },
+    { "fromNode": 3, "fromPin": "Then", "toNode": 4, "toPin": "In" },
+    { "fromNode": 3, "fromPin": "Else", "toNode": 6, "toPin": "In" },
+    { "fromNode": 4, "fromPin": "Then", "toNode": 5, "toPin": "In" },
+    { "fromNode": 4, "fromPin": "Else", "toNode": 6, "toPin": "In" },
+    { "fromNode": 5, "fromPin": "Then", "toNode": 7, "toPin": "In" },
+    { "fromNode": 5, "fromPin": "Else", "toNode": 6, "toPin": "In" }
+  ],
+  "dataConnections": []
+})";
+
+    TEST_ASSERT(WriteFile(k_condConstRTPath, json),
+                "Could not write const round-trip JSON");
+
+    std::vector<std::string> errors;
+    TaskGraphTemplate* tmpl = TaskGraphLoader::LoadFromFile(k_condConstRTPath, errors);
+    TEST_ASSERT(tmpl != nullptr, "LoadFromFile should succeed for const round-trip graph");
+    if (!tmpl) { ReportTest("Serialization_ConstValueRoundTrip", false); return; }
+
+    // Helper: find branch node by ID
+    auto findBranch = [&](int nodeID) -> const Condition*
+    {
+        for (size_t i = 0; i < tmpl->Nodes.size(); ++i)
+        {
+            if (tmpl->Nodes[i].NodeID == nodeID &&
+                !tmpl->Nodes[i].conditions.empty())
+                return &tmpl->Nodes[i].conditions[0];
+        }
+        return nullptr;
+    };
+
+    // --- Node 2: Int const (42 == 42) ---
+    {
+        const Condition* c = findBranch(2);
+        TEST_ASSERT(c != nullptr,                           "Node 2 should have condition");
+        if (c)
+        {
+            TEST_ASSERT(c->leftMode  == "Const",            "Node2 leftMode should be Const");
+            TEST_ASSERT(c->rightMode == "Const",            "Node2 rightMode should be Const");
+            TEST_ASSERT(c->compareType == VariableType::Int,"Node2 compareType should be Int");
+            TEST_ASSERT(!c->leftConstValue.IsNone(),        "Node2 leftConstValue should not be None");
+            TEST_ASSERT(!c->rightConstValue.IsNone(),       "Node2 rightConstValue should not be None");
+            TEST_ASSERT(c->leftConstValue.GetType()  == VariableType::Int,
+                        "Node2 leftConstValue type should be Int");
+            TEST_ASSERT(c->rightConstValue.GetType() == VariableType::Int,
+                        "Node2 rightConstValue type should be Int");
+            TEST_ASSERT(c->leftConstValue.AsInt()  == 42,  "Node2 leftConstValue should be 42");
+            TEST_ASSERT(c->rightConstValue.AsInt() == 42,  "Node2 rightConstValue should be 42");
+        }
+    }
+
+    // --- Node 3: Float const (3.14 < 6.28) ---
+    {
+        const Condition* c = findBranch(3);
+        TEST_ASSERT(c != nullptr,                             "Node 3 should have condition");
+        if (c)
+        {
+            TEST_ASSERT(c->compareType == VariableType::Float,"Node3 compareType should be Float");
+            TEST_ASSERT(!c->leftConstValue.IsNone(),          "Node3 leftConstValue should not be None");
+            TEST_ASSERT(!c->rightConstValue.IsNone(),         "Node3 rightConstValue should not be None");
+        }
+    }
+
+    // --- Node 4: Bool const (true == false) ---
+    {
+        const Condition* c = findBranch(4);
+        TEST_ASSERT(c != nullptr,                             "Node 4 should have condition");
+        if (c)
+        {
+            TEST_ASSERT(c->compareType == VariableType::Bool, "Node4 compareType should be Bool");
+            TEST_ASSERT(!c->leftConstValue.IsNone(),          "Node4 leftConstValue should not be None");
+            TEST_ASSERT(c->leftConstValue.GetType()  == VariableType::Bool,
+                        "Node4 leftConstValue type should be Bool");
+            TEST_ASSERT(c->leftConstValue.AsBool() == true,   "Node4 leftConstValue should be true");
+            TEST_ASSERT(c->rightConstValue.GetType() == VariableType::Bool,
+                        "Node4 rightConstValue type should be Bool");
+            TEST_ASSERT(c->rightConstValue.AsBool() == false, "Node4 rightConstValue should be false");
+        }
+    }
+
+    // --- Node 5: String const ("hello" == "world") ---
+    {
+        const Condition* c = findBranch(5);
+        TEST_ASSERT(c != nullptr,                               "Node 5 should have condition");
+        if (c)
+        {
+            TEST_ASSERT(c->compareType == VariableType::String, "Node5 compareType should be String");
+            TEST_ASSERT(!c->leftConstValue.IsNone(),            "Node5 leftConstValue should not be None");
+            TEST_ASSERT(c->leftConstValue.GetType()  == VariableType::String,
+                        "Node5 leftConstValue type should be String");
+            TEST_ASSERT(c->leftConstValue.AsString()  == "hello", "Node5 leftConstValue should be 'hello'");
+            TEST_ASSERT(c->rightConstValue.AsString() == "world", "Node5 rightConstValue should be 'world'");
+        }
+    }
+
+    delete tmpl;
+    ReportTest("Serialization_ConstValueRoundTrip", ok);
+}
+
+// ===========================================================================
 // main
 // ===========================================================================
 
@@ -1055,6 +1235,7 @@ int main()
     Test20_Serialization_VarVsConst();
     Test21_Serialization_V4Migration();
     Test22_Serialization_PinVsVar();
+    Test26_Serialization_ConstValueRoundTrip();
 
     // VSGraphVerifier rules
     Test23_Verifier_E040_EmptyPin();

@@ -1393,7 +1393,14 @@ void VisualScriptEditorPanel::RenderToolbar()
         {
             SYSTEM_LOG << "[VisualScriptEditorPanel] Ctrl+S pressed. m_currentPath='"
                        << m_currentPath << "'\n";
-            Save();
+            if (m_currentPath.empty())
+            {
+                m_showSaveAsDialog = true;
+            }
+            else if (!Save())
+            {
+                ImGui::OpenPopup("SaveError");
+            }
         }
 
         // Undo (Ctrl+Z)
@@ -2748,11 +2755,15 @@ void VisualScriptEditorPanel::RenderProperties()
 
             if (nodeDef != nullptr)
             {
-                // Render each condition
-                for (int ci = 0; ci < static_cast<int>(nodeDef->conditions.size()); ++ci)
+                // Render each condition.
+                // Use def.conditions (the editor-node def) as the primary data
+                // source so that all edits -- including const value changes -- are
+                // preserved through SyncTemplateFromCanvas(), which rebuilds
+                // m_template.Nodes from m_editorNodes[i].def on every save.
+                for (int ci = 0; ci < static_cast<int>(def.conditions.size()); ++ci)
                 {
                     ImGui::PushID(ci);
-                    RenderConditionEditor(nodeDef->conditions[static_cast<size_t>(ci)],
+                    RenderConditionEditor(def.conditions[static_cast<size_t>(ci)],
                                           ci,
                                           m_template.Blackboard,
                                           availablePins);
@@ -2760,10 +2771,10 @@ void VisualScriptEditorPanel::RenderProperties()
                     ImGui::SameLine();
                     if (ImGui::SmallButton("Remove##condrem"))
                     {
-                        nodeDef->conditions.erase(
-                            nodeDef->conditions.begin() + ci);
-                        // Also sync back to def (the local copy used above)
-                        def.conditions = nodeDef->conditions;
+                        def.conditions.erase(def.conditions.begin() + ci);
+                        // Keep template node in sync so in-frame reads are consistent
+                        if (nodeDef)
+                            nodeDef->conditions = def.conditions;
                         m_dirty = true;
                         ImGui::PopID();
                         break;  // iterator invalidated — restart next frame
@@ -2777,8 +2788,10 @@ void VisualScriptEditorPanel::RenderProperties()
                     newCond.leftMode  = "Variable";
                     newCond.operatorStr = "==";
                     newCond.rightMode = "Const";
-                    nodeDef->conditions.push_back(newCond);
-                    def.conditions = nodeDef->conditions;
+                    def.conditions.push_back(newCond);
+                    // Keep template node in sync
+                    if (nodeDef)
+                        nodeDef->conditions = def.conditions;
                     m_dirty = true;
                 }
             }
@@ -2891,10 +2904,11 @@ void VisualScriptEditorPanel::RenderProperties()
 
             // ---- Switch Variable ----
             {
-                // Dropdown populated from the graph's blackboard
+                // Dropdown populated from Int-typed blackboard variables only
+                // (Switch node evaluates an Int variable against integer case values)
                 BBVariableRegistry bbReg;
                 bbReg.LoadFromTemplate(m_template);
-                const std::vector<VarSpec>& vars = bbReg.GetAllVariables();
+                const std::vector<VarSpec> vars = bbReg.GetVariablesByType(VariableType::Int);
                 const std::string& curVar   = def.switchVariable;
                 const char* previewVar      = curVar.empty() ? "(select variable...)" : curVar.c_str();
 
@@ -3306,16 +3320,21 @@ void VisualScriptEditorPanel::RenderConditionEditor(
     {
         condition.leftMode = "Pin";
         condition.leftPin  = "";
+        m_dirty = true;
     }
     ImGui::SameLine();
     if (ImGui::Button(isLeftVar ? "[VAR]" : "Var", ImVec2(55, 0)))
     {
         condition.leftMode     = "Variable";
         condition.leftVariable = "";
+        m_dirty = true;
     }
     ImGui::SameLine();
     if (ImGui::Button(isLeftConst ? "[CST]" : "Const", ImVec2(55, 0)))
+    {
         condition.leftMode = "Const";
+        m_dirty = true;
+    }
 
     ImGui::Indent();
     if (condition.leftMode == "Pin")
@@ -3343,7 +3362,10 @@ void VisualScriptEditorPanel::RenderConditionEditor(
     }
     ImGui::SetNextItemWidth(70.0f);
     if (ImGui::Combo("##op", &opIdx, operators, 6))
+    {
         condition.operatorStr = operators[opIdx];
+        m_dirty = true;
+    }
 
     // -- RIGHT SIDE --
     ImGui::Text("Right:");
@@ -3357,16 +3379,21 @@ void VisualScriptEditorPanel::RenderConditionEditor(
     {
         condition.rightMode = "Pin";
         condition.rightPin  = "";
+        m_dirty = true;
     }
     ImGui::SameLine();
     if (ImGui::Button(isRightVar ? "[VAR]" : "Var##r", ImVec2(55, 0)))
     {
         condition.rightMode     = "Variable";
         condition.rightVariable = "";
+        m_dirty = true;
     }
     ImGui::SameLine();
     if (ImGui::Button(isRightConst ? "[CST]" : "Const##r", ImVec2(55, 0)))
+    {
         condition.rightMode = "Const";
+        m_dirty = true;
+    }
 
     ImGui::Indent();
     if (condition.rightMode == "Pin")
@@ -3398,7 +3425,10 @@ void VisualScriptEditorPanel::RenderConditionEditor(
     }
     ImGui::SetNextItemWidth(80.0f);
     if (ImGui::Combo("##cmptype", &typeIdx, types, 6))
+    {
         condition.compareType = typeValues[typeIdx];
+        m_dirty = true;
+    }
 
     // -- PREVIEW --
     const std::string preview = BuildConditionPreview(condition);
@@ -3450,7 +3480,10 @@ void VisualScriptEditorPanel::RenderVariableSelector(
 
     ImGui::SetNextItemWidth(120.0f);
     if (ImGui::Combo(label, &selected, cstrs.data(), static_cast<int>(cstrs.size())))
+    {
         selectedVar = names[static_cast<size_t>(selected)];
+        m_dirty = true;
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -3466,7 +3499,10 @@ void VisualScriptEditorPanel::RenderConstValueInput(
         {
             bool bVal = value.IsNone() ? false : value.AsBool();
             if (ImGui::Checkbox(label, &bVal))
+            {
                 value = TaskValue(bVal);
+                m_dirty = true;
+            }
             break;
         }
         case VariableType::Int:
@@ -3474,7 +3510,10 @@ void VisualScriptEditorPanel::RenderConstValueInput(
             int iVal = value.IsNone() ? 0 : value.AsInt();
             ImGui::SetNextItemWidth(80.0f);
             if (ImGui::InputInt(label, &iVal))
+            {
                 value = TaskValue(iVal);
+                m_dirty = true;
+            }
             break;
         }
         case VariableType::Float:
@@ -3482,7 +3521,10 @@ void VisualScriptEditorPanel::RenderConstValueInput(
             float fVal = value.IsNone() ? 0.0f : value.AsFloat();
             ImGui::SetNextItemWidth(80.0f);
             if (ImGui::InputFloat(label, &fVal, 0.0f, 0.0f, "%.3f"))
+            {
                 value = TaskValue(fVal);
+                m_dirty = true;
+            }
             break;
         }
         case VariableType::String:
@@ -3492,7 +3534,10 @@ void VisualScriptEditorPanel::RenderConstValueInput(
             strncpy_s(sBuf, sizeof(sBuf), sVal.c_str(), _TRUNCATE);
             ImGui::SetNextItemWidth(120.0f);
             if (ImGui::InputText(label, sBuf, sizeof(sBuf)))
+            {
                 value = TaskValue(std::string(sBuf));
+                m_dirty = true;
+            }
             break;
         }
         case VariableType::Vector:
@@ -3501,7 +3546,10 @@ void VisualScriptEditorPanel::RenderConstValueInput(
             float v[3] = { vVal.x, vVal.y, vVal.z };
             ImGui::SetNextItemWidth(160.0f);
             if (ImGui::InputFloat3(label, v))
+            {
                 value = TaskValue(::Vector{ v[0], v[1], v[2] });
+                m_dirty = true;
+            }
             break;
         }
         default:
