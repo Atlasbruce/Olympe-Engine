@@ -673,4 +673,40 @@ if(BUILD_TESTS)
     target_include_directories(OlympePhase23B6Tests PRIVATE ${COMMON_INCLUDES})
     add_test(NAME OlympePhase23B6Tests COMMAND OlympePhase23B6Tests)
 
+    # -----------------------------------------------------------------------
+    # OlympePhase24_1_LibraryPanelTests  (Phase 24.1 — ConditionPresetLibraryPanel)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_1_LibraryPanelTests
+        Tests/Editor/Panels/ConditionPresetLibraryPanelTest.cpp
+        Source/BlueprintEditor/ConditionPreset.cpp
+        Source/Editor/Panels/ConditionPresetLibraryPanel.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/NodeGraphCore/GlobalBlackboard.cpp
+        Tests/TestStubs.cpp
+    )
+    target_compile_definitions(OlympePhase24_1_LibraryPanelTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_1_LibraryPanelTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_1_LibraryPanelTests COMMAND OlympePhase24_1_LibraryPanelTests)
+
+    # -----------------------------------------------------------------------
+    # OlympePhase24_1_EditDialogTests  (Phase 24.1 — ConditionPresetEditDialog)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_1_EditDialogTests
+        Tests/Editor/Dialogs/ConditionPresetEditDialogTest.cpp
+        Source/BlueprintEditor/ConditionPreset.cpp
+        Source/Editor/Dialogs/ConditionPresetEditDialog.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/NodeGraphCore/GlobalBlackboard.cpp
+        Tests/TestStubs.cpp
+    )
+    target_compile_definitions(OlympePhase24_1_EditDialogTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_1_EditDialogTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_1_EditDialogTests COMMAND OlympePhase24_1_EditDialogTests)
+
 endif() # BUILD_TESTS
