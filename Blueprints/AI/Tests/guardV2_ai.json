@@ -5,6 +5,12 @@
       "key": "AI_Mode",
       "type": "Int",
       "value": 0
+    },
+    {
+      "isGlobal": false,
+      "key": "Position",
+      "type": "None",
+      "value": null
     }
   ],
   "dataConnections": [],
