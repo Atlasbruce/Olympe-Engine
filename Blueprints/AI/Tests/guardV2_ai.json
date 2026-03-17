@@ -4,7 +4,7 @@
       "isGlobal": false,
       "key": "AI_Mode",
       "type": "Int",
-      "value": 0
+      "value": 2
     },
     {
       "isGlobal": false,
@@ -19,8 +19,8 @@
     {
       "isGlobal": false,
       "key": "mHealth",
-      "type": "Float",
-      "value": 0
+      "type": "Int",
+      "value": 10
     },
     {
       "isGlobal": false,
@@ -32,7 +32,7 @@
       "isGlobal": false,
       "key": "mSpeed",
       "type": "Float",
-      "value": 0
+      "value": 100
     },
     {
       "isGlobal": false,
@@ -43,6 +43,18 @@
         "y": 0,
         "z": 0
       }
+    },
+    {
+      "isGlobal": false,
+      "key": "HasTarget",
+      "type": "Bool",
+      "value": true
+    },
+    {
+      "isGlobal": false,
+      "key": "mVelocity",
+      "type": "Float",
+      "value": 40
     }
   ],
   "dataConnections": [],
@@ -396,15 +408,40 @@
       "conditions": [
         {
           "leftMode": "Variable",
-          "operator": "==",
+          "leftVariable": "mHealth",
+          "operator": "<=",
+          "rightConstValue": 2,
           "rightMode": "Const"
+        },
+        {
+          "compareType": "Int",
+          "leftMode": "Variable",
+          "leftVariable": "AI_Mode",
+          "operator": "==",
+          "rightConstValue": 3,
+          "rightMode": "Const"
+        },
+        {
+          "leftMode": "Variable",
+          "leftVariable": "mSpeed",
+          "operator": ">=",
+          "rightMode": "Variable",
+          "rightVariable": "mVelocity"
+        },
+        {
+          "compareType": "Int",
+          "leftMode": "Pin",
+          "leftVariable": "Position",
+          "operator": "!=",
+          "rightMode": "Pin",
+          "rightVariable": "mHealth"
         }
       ],
       "id": 11,
       "label": "Is Health Critical?",
       "position": {
-        "x": 535.433,
-        "y": 230.781
+        "x": 530.433,
+        "y": 195.781
       },
       "type": "Branch"
     },

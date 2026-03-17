@@ -103,6 +103,11 @@
     <ClCompile Include="Source\ECS_Systems_Rendering_Camera.cpp" />
     <ClCompile Include="Source\EditorCommon\EditorAutosaveManager.cpp" />
     <ClCompile Include="Source\Editor\AnimationEditorWindow.cpp" />
+    <ClCompile Include="Source\Editor\ConditionPreset\ConditionPreset.cpp" />
+    <ClCompile Include="Source\Editor\ConditionPreset\ConditionPresetRegistry.cpp" />
+    <ClCompile Include="Source\Editor\ConditionPreset\DynamicDataPin.cpp" />
+    <ClCompile Include="Source\Editor\ConditionPreset\NodeConditionRef.cpp" />
+    <ClCompile Include="Source\Editor\ConditionPreset\Operand.cpp" />
     <ClCompile Include="Source\engine_utils.cpp" />
     <ClCompile Include="Source\InputConfigLoader.cpp" />
     <ClCompile Include="Source\InputDevice.cpp" />
@@ -287,6 +292,11 @@
     <ClInclude Include="Source\ECS_Systems_Rendering_Camera.h" />
     <ClInclude Include="Source\EditorCommon\EditorAutosaveManager.h" />
     <ClInclude Include="Source\Editor\AnimationEditorWindow.h" />
+    <ClInclude Include="Source\Editor\ConditionPreset\ConditionPreset.h" />
+    <ClInclude Include="Source\Editor\ConditionPreset\ConditionPresetRegistry.h" />
+    <ClInclude Include="Source\Editor\ConditionPreset\DynamicDataPin.h" />
+    <ClInclude Include="Source\Editor\ConditionPreset\NodeConditionRef.h" />
+    <ClInclude Include="Source\Editor\ConditionPreset\Operand.h" />
     <ClInclude Include="Source\engine_utils.h" />
     <ClInclude Include="Source\DataManager.h" />
     <ClInclude Include="Source\GameEngine.h" />

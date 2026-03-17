@@ -22,8 +22,8 @@
 #include <cstdint>
 
 #include "TaskGraphTypes.h"
-#include "Editor/ConditionPreset/NodeConditionRef.h"
-#include "Editor/ConditionPreset/DynamicDataPin.h"
+#include "../Editor/ConditionPreset/NodeConditionRef.h"
+#include "../Editor/ConditionPreset/DynamicDataPin.h"
 
 namespace Olympe {
 

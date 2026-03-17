@@ -53,6 +53,11 @@
     <ClCompile Include="..\Source\BlueprintEditor\VSConnectionValidator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VSGraphVerifier.cpp" />
     <ClCompile Include="..\Source\Core\FontManager.cpp" />
+    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPreset.cpp" />
+    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPresetRegistry.cpp" />
+    <ClCompile Include="..\Source\Editor\ConditionPreset\DynamicDataPin.cpp" />
+    <ClCompile Include="..\Source\Editor\ConditionPreset\NodeConditionRef.cpp" />
+    <ClCompile Include="..\Source\Editor\ConditionPreset\Operand.cpp" />
     <ClCompile Include="..\Source\NodeGraphCore\GraphComment.cpp" />
     <ClCompile Include="..\Source\NodeGraphCore\LinkCache.cpp" />
     <ClCompile Include="..\Source\NodeGraphCore\NodeGroup.cpp" />
@@ -223,6 +228,11 @@
     <ClInclude Include="..\Source\BlueprintEditor\VSGraphVerifier.h" />
     <ClInclude Include="..\Source\Core\FontManager.h" />
     <ClInclude Include="..\Source\Core\IconsFontAwesome6.h" />
+    <ClInclude Include="..\Source\Editor\ConditionPreset\ConditionPreset.h" />
+    <ClInclude Include="..\Source\Editor\ConditionPreset\ConditionPresetRegistry.h" />
+    <ClInclude Include="..\Source\Editor\ConditionPreset\DynamicDataPin.h" />
+    <ClInclude Include="..\Source\Editor\ConditionPreset\NodeConditionRef.h" />
+    <ClInclude Include="..\Source\Editor\ConditionPreset\Operand.h" />
     <ClInclude Include="..\Source\NodeGraphCore\GraphComment.h" />
     <ClInclude Include="..\Source\NodeGraphCore\LinkCache.h" />
     <ClInclude Include="..\Source\NodeGraphCore\NodeGroup.h" />
