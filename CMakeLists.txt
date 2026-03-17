@@ -674,6 +674,57 @@ if(BUILD_TESTS)
     add_test(NAME OlympePhase23B6Tests COMMAND OlympePhase23B6Tests)
 
     # -----------------------------------------------------------------------
+    # OlympePhase24_0_OperandTests  (Phase 24.0 — Operand)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_0_OperandTests
+        Tests/Editor/ConditionPreset/OperandTest.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
+        Tests/TestStubs.cpp
+    )
+    target_compile_definitions(OlympePhase24_0_OperandTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_0_OperandTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_0_OperandTests COMMAND OlympePhase24_0_OperandTests)
+
+    # -----------------------------------------------------------------------
+    # OlympePhase24_0_ConditionPresetTests  (Phase 24.0 — ConditionPreset)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_0_ConditionPresetTests
+        Tests/Editor/ConditionPreset/ConditionPresetTest.cpp
+        Source/Editor/ConditionPreset/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
+        Tests/TestStubs.cpp
+    )
+    target_compile_definitions(OlympePhase24_0_ConditionPresetTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_0_ConditionPresetTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_0_ConditionPresetTests COMMAND OlympePhase24_0_ConditionPresetTests)
+
+    # -----------------------------------------------------------------------
+    # OlympePhase24_0_RegistryTests  (Phase 24.0 — ConditionPresetRegistry)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_0_RegistryTests
+        Tests/Editor/ConditionPreset/ConditionPresetRegistryTest.cpp
+        Source/Editor/ConditionPreset/ConditionPresetRegistry.cpp
+        Source/Editor/ConditionPreset/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
+        Tests/TestStubs.cpp
+    )
+    target_compile_definitions(OlympePhase24_0_RegistryTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_0_RegistryTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_0_RegistryTests COMMAND OlympePhase24_0_RegistryTests)
+
+    # -----------------------------------------------------------------------
+    # OlympePhase24_0_DynamicDataPinTests  (Phase 24.0 — DynamicDataPin)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_0_DynamicDataPinTests
+        Tests/Editor/ConditionPreset/DynamicDataPinTest.cpp
+        Source/Editor/ConditionPreset/DynamicDataPin.cpp
+        Tests/TestStubs.cpp
+    )
+    target_compile_definitions(OlympePhase24_0_DynamicDataPinTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_0_DynamicDataPinTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_0_DynamicDataPinTests COMMAND OlympePhase24_0_DynamicDataPinTests)
+
+    # -----------------------------------------------------------------------
     # OlympePhase24_1_LibraryPanelTests  (Phase 24.1 — ConditionPresetLibraryPanel)
     # -----------------------------------------------------------------------
     add_executable(OlympePhase24_1_LibraryPanelTests
@@ -708,5 +759,57 @@ if(BUILD_TESTS)
     target_compile_definitions(OlympePhase24_1_EditDialogTests PRIVATE OLYMPE_HEADLESS)
     target_include_directories(OlympePhase24_1_EditDialogTests PRIVATE ${COMMON_INCLUDES})
     add_test(NAME OlympePhase24_1_EditDialogTests COMMAND OlympePhase24_1_EditDialogTests)
+
+    # -----------------------------------------------------------------------
+    # OlympePhase24_2_NodeConditionsPanelTests  (Phase 24.2 — NodeConditionsPanel)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_2_NodeConditionsPanelTests
+        Tests/Editor/Panels/NodeConditionsPanelTest.cpp
+        Source/Editor/Panels/NodeConditionsPanel.cpp
+        Source/Editor/ConditionPreset/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/ConditionPresetRegistry.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
+        Source/Editor/ConditionPreset/NodeConditionRef.cpp
+        Source/Editor/ConditionPreset/DynamicDataPin.cpp
+        Tests/TestStubs.cpp
+    )
+    target_compile_definitions(OlympePhase24_2_NodeConditionsPanelTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_2_NodeConditionsPanelTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_2_NodeConditionsPanelTests COMMAND OlympePhase24_2_NodeConditionsPanelTests)
+
+    # -----------------------------------------------------------------------
+    # OlympePhase24_3_DynamicDataPinManagerTests  (Phase 24.3 — DynamicDataPinManager)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_3_DynamicDataPinManagerTests
+        Tests/Editor/ConditionPreset/DynamicDataPinManagerTest.cpp
+        Source/Editor/ConditionPreset/DynamicDataPinManager.cpp
+        Source/Editor/ConditionPreset/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/ConditionPresetRegistry.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
+        Source/Editor/ConditionPreset/NodeConditionRef.cpp
+        Source/Editor/ConditionPreset/DynamicDataPin.cpp
+        Tests/TestStubs.cpp
+    )
+    target_compile_definitions(OlympePhase24_3_DynamicDataPinManagerTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_3_DynamicDataPinManagerTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_3_DynamicDataPinManagerTests COMMAND OlympePhase24_3_DynamicDataPinManagerTests)
+
+    # -----------------------------------------------------------------------
+    # OlympePhase24_4_NodeBranchRendererTests  (Phase 24.4 — NodeBranchRenderer)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_4_NodeBranchRendererTests
+        Tests/Editor/Nodes/NodeBranchRendererTest.cpp
+        Source/Editor/Nodes/NodeBranchRenderer.cpp
+        Source/Editor/ConditionPreset/DynamicDataPinManager.cpp
+        Source/Editor/ConditionPreset/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/ConditionPresetRegistry.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
+        Source/Editor/ConditionPreset/NodeConditionRef.cpp
+        Source/Editor/ConditionPreset/DynamicDataPin.cpp
+        Tests/TestStubs.cpp
+    )
+    target_compile_definitions(OlympePhase24_4_NodeBranchRendererTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_4_NodeBranchRendererTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_4_NodeBranchRendererTests COMMAND OlympePhase24_4_NodeBranchRendererTests)
 
 endif() # BUILD_TESTS
