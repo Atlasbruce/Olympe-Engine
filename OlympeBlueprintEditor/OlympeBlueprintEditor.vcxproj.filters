@@ -520,12 +520,6 @@
     <ClCompile Include="..\Source\TaskSystem\ConditionEvaluator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPreset.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPresetRegistry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\Source\Editor\ConditionPreset\DynamicDataPin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -535,13 +529,25 @@
     <ClCompile Include="..\Source\Editor\ConditionPreset\Operand.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\ConditionPreset.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\Editor\Panels\ConditionPresetLibraryPanel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPreset.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPresetRegistry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Editor\ConditionPreset\DynamicDataPinManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Editor\Nodes\NodeBranchRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Editor\Panels\NodeConditionsPanel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1015,9 +1021,11 @@
     <ClInclude Include="..\Source\Editor\ConditionPreset\DynamicDataPin.h" />
     <ClInclude Include="..\Source\Editor\ConditionPreset\NodeConditionRef.h" />
     <ClInclude Include="..\Source\Editor\ConditionPreset\Operand.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\ConditionPreset.h" />
     <ClInclude Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.h" />
     <ClInclude Include="..\Source\Editor\Panels\ConditionPresetLibraryPanel.h" />
+    <ClInclude Include="..\Source\Editor\ConditionPreset\DynamicDataPinManager.h" />
+    <ClInclude Include="..\Source\Editor\Nodes\NodeBranchRenderer.h" />
+    <ClInclude Include="..\Source\Editor\Panels\NodeConditionsPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />
