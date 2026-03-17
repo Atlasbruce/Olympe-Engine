@@ -1,11 +1,11 @@
 /**
- * @file ConditionEvaluator.cpp
- * @brief Implementation of ConditionEvaluator.
+ * @file ConditionPresetEvaluator.cpp
+ * @brief Implementation of ConditionPresetEvaluator.
  * @author Olympe Engine
  * @date 2026-03-17
  */
 
-#include "ConditionEvaluator.h"
+#include "ConditionPresetEvaluator.h"
 
 #include <cmath>
 #include <string>
@@ -18,7 +18,7 @@ namespace Olympe {
 // ---------------------------------------------------------------------------
 
 /*static*/
-bool ConditionEvaluator::Evaluate(
+bool ConditionPresetEvaluator::Evaluate(
     const ConditionPreset& preset,
     RuntimeEnvironment&    env,
     std::string&           outErrorMsg)
@@ -42,7 +42,7 @@ bool ConditionEvaluator::Evaluate(
 // ---------------------------------------------------------------------------
 
 /*static*/
-bool ConditionEvaluator::ResolveOperand(
+bool ConditionPresetEvaluator::ResolveOperand(
     const Operand&      operand,
     RuntimeEnvironment& env,
     std::string&        outErrorMsg,
@@ -59,7 +59,7 @@ bool ConditionEvaluator::ResolveOperand(
         float v = 0.0f;
         if (!env.GetBlackboardVariable(operand.stringValue, v))
         {
-            outErrorMsg = "ConditionEvaluator: Blackboard variable not found: '"
+            outErrorMsg = "ConditionPresetEvaluator: Blackboard variable not found: '"
                         + operand.stringValue + "'";
             return false;
         }
@@ -72,7 +72,7 @@ bool ConditionEvaluator::ResolveOperand(
         float v = 0.0f;
         if (!env.GetDynamicPinValue(operand.stringValue, v))
         {
-            outErrorMsg = "ConditionEvaluator: Dynamic pin value not found for pin: '"
+            outErrorMsg = "ConditionPresetEvaluator: Dynamic pin value not found for pin: '"
                         + operand.stringValue + "'";
             return false;
         }
@@ -81,13 +81,13 @@ bool ConditionEvaluator::ResolveOperand(
     }
 
     default:
-        outErrorMsg = "ConditionEvaluator: Unknown operand mode.";
+        outErrorMsg = "ConditionPresetEvaluator: Unknown operand mode.";
         return false;
     }
 }
 
 /*static*/
-bool ConditionEvaluator::EvaluateOperator(
+bool ConditionPresetEvaluator::EvaluateOperator(
     float        left,
     ComparisonOp op,
     float        right,
@@ -102,9 +102,10 @@ bool ConditionEvaluator::EvaluateOperator(
     case ComparisonOp::Greater:      return left >  right;
     case ComparisonOp::GreaterEqual: return left >= right;
     default:
-        outErrorMsg = "ConditionEvaluator: Unknown ComparisonOp.";
+        outErrorMsg = "ConditionPresetEvaluator: Unknown ComparisonOp.";
         return false;
     }
 }
 
 } // namespace Olympe
+

@@ -550,6 +550,15 @@
     <ClCompile Include="..\Source\Editor\Panels\NodeConditionsPanel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\Runtime\ConditionEvaluator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Runtime\GraphRuntimeInstance.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Runtime\RuntimeEnvironment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -1026,6 +1035,9 @@
     <ClInclude Include="..\Source\Editor\ConditionPreset\DynamicDataPinManager.h" />
     <ClInclude Include="..\Source\Editor\Nodes\NodeBranchRenderer.h" />
     <ClInclude Include="..\Source\Editor\Panels\NodeConditionsPanel.h" />
+    <ClInclude Include="..\Source\Runtime\ConditionEvaluator.h" />
+    <ClInclude Include="..\Source\Runtime\GraphRuntimeInstance.h" />
+    <ClInclude Include="..\Source\Runtime\RuntimeEnvironment.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />

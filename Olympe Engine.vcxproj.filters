@@ -186,6 +186,9 @@
     <ClCompile Include="Source\Editor\ConditionPreset\DynamicDataPinManager.cpp" />
     <ClCompile Include="Source\Editor\Nodes\NodeBranchRenderer.cpp" />
     <ClCompile Include="Source\Editor\Panels\NodeConditionsPanel.cpp" />
+    <ClCompile Include="Source\Runtime\GraphRuntimeInstance.cpp" />
+    <ClCompile Include="Source\Runtime\RuntimeEnvironment.cpp" />
+    <ClCompile Include="Source\Runtime\ConditionPresetEvaluator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -410,6 +413,9 @@
     <ClInclude Include="Source\Editor\ConditionPreset\DynamicDataPinManager.h" />
     <ClInclude Include="Source\Editor\Nodes\NodeBranchRenderer.h" />
     <ClInclude Include="Source\Editor\Panels\NodeConditionsPanel.h" />
+    <ClInclude Include="Source\Runtime\GraphRuntimeInstance.h" />
+    <ClInclude Include="Source\Runtime\RuntimeEnvironment.h" />
+    <ClInclude Include="Source\Runtime\ConditionPresetEvaluator.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />

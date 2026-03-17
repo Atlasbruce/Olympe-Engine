@@ -1,11 +1,11 @@
 /**
- * @file ConditionEvaluator.h
+ * @file ConditionPresetEvaluator.h
  * @brief Stateless runtime evaluator for ConditionPreset expressions.
  * @author Olympe Engine
  * @date 2026-03-17
  *
  * @details
- * ConditionEvaluator is a fully stateless utility class.  All methods are
+ * ConditionPresetEvaluator is a fully stateless utility class.  All methods are
  * static.  It evaluates a ConditionPreset by:
  *
  *   1. Resolving the left Operand to a float (via the RuntimeEnvironment).
@@ -33,7 +33,7 @@
 namespace Olympe {
 
 /**
- * @class ConditionEvaluator
+ * @class ConditionPresetEvaluator
  * @brief Evaluates a ConditionPreset against a RuntimeEnvironment.
  *
  * @details
@@ -48,11 +48,11 @@ namespace Olympe {
  *       Operand::CreateConst(2.0));
  *
  *   std::string error;
- *   bool result = ConditionEvaluator::Evaluate(preset, env, error);
+ *   bool result = ConditionPresetEvaluator::Evaluate(preset, env, error);
  *   // result == true, error == ""
  * @endcode
  */
-class ConditionEvaluator {
+class ConditionPresetEvaluator {
 public:
 
     /**
@@ -104,3 +104,4 @@ private:
 };
 
 } // namespace Olympe
+

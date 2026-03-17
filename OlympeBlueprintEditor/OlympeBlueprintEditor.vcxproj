@@ -141,6 +141,9 @@
     <ClCompile Include="..\Source\ParameterSchema.cpp" />
     <ClCompile Include="..\Source\PrefabFactory.cpp" />
     <ClCompile Include="..\Source\PrefabScanner.cpp" />
+    <ClCompile Include="..\Source\Runtime\ConditionPresetEvaluator.cpp" />
+    <ClCompile Include="..\Source\Runtime\GraphRuntimeInstance.cpp" />
+    <ClCompile Include="..\Source\Runtime\RuntimeEnvironment.cpp" />
     <ClCompile Include="..\Source\TaskSystem\AtomicTaskRegistry.cpp" />
     <ClCompile Include="..\Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.cpp" />
     <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.cpp" />
@@ -324,6 +327,9 @@
     <ClInclude Include="..\Source\prefabfactory.h" />
     <ClInclude Include="..\Source\PrefabScanner.h" />
     <ClInclude Include="..\Source\resource.h" />
+    <ClInclude Include="..\Source\Runtime\ConditionPresetEvaluator.h" />
+    <ClInclude Include="..\Source\Runtime\GraphRuntimeInstance.h" />
+    <ClInclude Include="..\Source\Runtime\RuntimeEnvironment.h" />
     <ClInclude Include="..\Source\TaskSystem\AtomicTaskContext.h" />
     <ClInclude Include="..\Source\TaskSystem\AtomicTaskRegistry.h" />
     <ClInclude Include="..\Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.h" />
