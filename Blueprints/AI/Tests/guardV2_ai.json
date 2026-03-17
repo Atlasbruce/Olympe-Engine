@@ -440,7 +440,7 @@
       "id": 11,
       "label": "Is Health Critical?",
       "position": {
-        "x": 530.433,
+        "x": 522.433,
         "y": 195.781
       },
       "type": "Branch"

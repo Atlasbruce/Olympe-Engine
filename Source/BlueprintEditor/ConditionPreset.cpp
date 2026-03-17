@@ -7,7 +7,7 @@
  * C++14 compliant — no std::optional, structured bindings, std::filesystem.
  */
 
-#include "BlueprintEditor/ConditionPreset.h"
+#include "ConditionPreset.h"
 
 #include <algorithm>
 #include <sstream>
@@ -15,7 +15,7 @@
 #include <cctype>
 #include <iostream>
 
-#include "third_party/nlohmann/json.hpp"
+#include "../third_party/nlohmann/json.hpp"
 
 using json = nlohmann::json;
 
@@ -60,6 +60,115 @@ std::string ConditionPreset::GetPreview() const
                                : condition.operatorStr;
 
     return left + " " + op + " " + right;
+}
+
+// ============================================================================
+// ConditionPreset — Serialization
+// ============================================================================
+
+json ConditionPreset::ToJson() const
+{
+    json entry;
+    entry["id"]   = id;
+    entry["name"] = name;
+
+    // Left side
+    json left;
+    left["mode"]     = condition.leftMode;
+    left["variable"] = condition.leftVariable;
+    left["pin"]      = condition.leftPin;
+    if (condition.leftMode == "Const")
+    {
+        left["constType"]  = VariableTypeToString(condition.leftConstValue.GetType());
+        left["constValue"] = condition.leftConstValue.to_string();
+    }
+    entry["left"] = left;
+
+    entry["operator"] = condition.operatorStr;
+
+    // Right side
+    json right;
+    right["mode"]     = condition.rightMode;
+    right["variable"] = condition.rightVariable;
+    right["pin"]      = condition.rightPin;
+    if (condition.rightMode == "Const")
+    {
+        right["constType"]  = VariableTypeToString(condition.rightConstValue.GetType());
+        right["constValue"] = condition.rightConstValue.to_string();
+    }
+    entry["right"] = right;
+
+    return entry;
+}
+
+ConditionPreset ConditionPreset::FromJson(const json& j)
+{
+    ConditionPreset p;
+    p.id   = j.value("id",   "");
+    p.name = j.value("name", "");
+
+    // Left side
+    if (j.contains("left") && j["left"].is_object())
+    {
+        const auto& left = j["left"];
+        p.condition.leftMode     = left.value("mode",     "");
+        p.condition.leftVariable = left.value("variable", "");
+        p.condition.leftPin      = left.value("pin",      "");
+
+        const std::string leftType  = left.value("constType", "");
+        const std::string leftValue = left.value("constValue", "");
+
+        if (leftType == "Int")
+        {
+            p.condition.leftConstValue = TaskValue(std::stoi(leftValue.empty() ? "0" : leftValue));
+        }
+        else if (leftType == "Float")
+        {
+            p.condition.leftConstValue = TaskValue(std::stof(leftValue.empty() ? "0" : leftValue));
+        }
+        else if (leftType == "Bool")
+        {
+            p.condition.leftConstValue = TaskValue(leftValue == "true");
+        }
+        else if (leftType == "String")
+        {
+            p.condition.leftConstValue = TaskValue(leftValue);
+        }
+    }
+
+    // Operator
+    p.condition.operatorStr = j.value("operator", "");
+
+    // Right side
+    if (j.contains("right") && j["right"].is_object())
+    {
+        const auto& right = j["right"];
+        p.condition.rightMode     = right.value("mode",     "");
+        p.condition.rightVariable = right.value("variable", "");
+        p.condition.rightPin      = right.value("pin",      "");
+
+        const std::string rightType  = right.value("constType",  "");
+        const std::string rightValue = right.value("constValue", "");
+
+        if (rightType == "Int")
+        {
+            p.condition.rightConstValue = TaskValue(std::stoi(rightValue.empty() ? "0" : rightValue));
+        }
+        else if (rightType == "Float")
+        {
+            p.condition.rightConstValue = TaskValue(std::stof(rightValue.empty() ? "0" : rightValue));
+        }
+        else if (rightType == "Bool")
+        {
+            p.condition.rightConstValue = TaskValue(rightValue == "true");
+        }
+        else if (rightType == "String")
+        {
+            p.condition.rightConstValue = TaskValue(rightValue);
+        }
+    }
+
+    return p;
 }
 
 // ============================================================================

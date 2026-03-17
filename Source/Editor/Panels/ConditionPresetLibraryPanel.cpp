@@ -7,14 +7,14 @@
  * C++14 compliant — no std::optional, structured bindings, std::filesystem.
  */
 
-#include "Editor/Panels/ConditionPresetLibraryPanel.h"
+#include "ConditionPresetLibraryPanel.h"
 
 #include <algorithm>
 
 // ImGui is only included when building the full editor (not in tests).
 // Tests exercise the logic methods directly without rendering.
 #ifndef OLYMPE_HEADLESS
-#  include "third_party/imgui/imgui.h"
+#  include "../../third_party/imgui/imgui.h"
 #endif
 
 namespace Olympe {

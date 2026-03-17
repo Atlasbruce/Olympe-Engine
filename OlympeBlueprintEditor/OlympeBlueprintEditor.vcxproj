@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -40,6 +40,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BTtoVSMigrator.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\ConditionPreset.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\ConditionRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\MiniMapPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\MinimapWidget.cpp" />
@@ -53,11 +54,12 @@
     <ClCompile Include="..\Source\BlueprintEditor\VSConnectionValidator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VSGraphVerifier.cpp" />
     <ClCompile Include="..\Source\Core\FontManager.cpp" />
-    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPreset.cpp" />
-    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPresetRegistry.cpp" />
+
     <ClCompile Include="..\Source\Editor\ConditionPreset\DynamicDataPin.cpp" />
     <ClCompile Include="..\Source\Editor\ConditionPreset\NodeConditionRef.cpp" />
     <ClCompile Include="..\Source\Editor\ConditionPreset\Operand.cpp" />
+    <ClCompile Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.cpp" />
+    <ClCompile Include="..\Source\Editor\Panels\ConditionPresetLibraryPanel.cpp" />
     <ClCompile Include="..\Source\NodeGraphCore\GraphComment.cpp" />
     <ClCompile Include="..\Source\NodeGraphCore\LinkCache.cpp" />
     <ClCompile Include="..\Source\NodeGraphCore\NodeGroup.cpp" />
@@ -213,6 +215,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BTtoVSMigrator.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\ConditionPreset.h" />
     <ClInclude Include="..\Source\BlueprintEditor\ConditionRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\IGraphRenderer.h" />
     <ClInclude Include="..\Source\BlueprintEditor\MiniMapPanel.h" />
@@ -233,6 +236,8 @@
     <ClInclude Include="..\Source\Editor\ConditionPreset\DynamicDataPin.h" />
     <ClInclude Include="..\Source\Editor\ConditionPreset\NodeConditionRef.h" />
     <ClInclude Include="..\Source\Editor\ConditionPreset\Operand.h" />
+    <ClInclude Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.h" />
+    <ClInclude Include="..\Source\Editor\Panels\ConditionPresetLibraryPanel.h" />
     <ClInclude Include="..\Source\NodeGraphCore\GraphComment.h" />
     <ClInclude Include="..\Source\NodeGraphCore\LinkCache.h" />
     <ClInclude Include="..\Source\NodeGraphCore\NodeGroup.h" />
@@ -529,3 +534,4 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+

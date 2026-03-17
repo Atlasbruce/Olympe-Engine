@@ -53,6 +53,7 @@
     <ClCompile Include="Source\BlueprintEditor\BPCommandSystem.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BTNodeGraphManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BTtoVSMigrator.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\ConditionPreset.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ConditionRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\DebugController.cpp" />
     <ClCompile Include="Source\BlueprintEditor\DebugPanel.cpp" />
@@ -103,11 +104,11 @@
     <ClCompile Include="Source\ECS_Systems_Rendering_Camera.cpp" />
     <ClCompile Include="Source\EditorCommon\EditorAutosaveManager.cpp" />
     <ClCompile Include="Source\Editor\AnimationEditorWindow.cpp" />
-    <ClCompile Include="Source\Editor\ConditionPreset\ConditionPreset.cpp" />
-    <ClCompile Include="Source\Editor\ConditionPreset\ConditionPresetRegistry.cpp" />
     <ClCompile Include="Source\Editor\ConditionPreset\DynamicDataPin.cpp" />
     <ClCompile Include="Source\Editor\ConditionPreset\NodeConditionRef.cpp" />
     <ClCompile Include="Source\Editor\ConditionPreset\Operand.cpp" />
+    <ClCompile Include="Source\Editor\Dialogs\ConditionPresetEditDialog.cpp" />
+    <ClCompile Include="Source\Editor\Panels\ConditionPresetLibraryPanel.cpp" />
     <ClCompile Include="Source\engine_utils.cpp" />
     <ClCompile Include="Source\InputConfigLoader.cpp" />
     <ClCompile Include="Source\InputDevice.cpp" />
@@ -242,6 +243,7 @@
     <ClInclude Include="Source\BlueprintEditor\BPCommandSystem.h" />
     <ClInclude Include="Source\BlueprintEditor\BTNodeGraphManager.h" />
     <ClInclude Include="Source\BlueprintEditor\BTtoVSMigrator.h" />
+    <ClInclude Include="Source\BlueprintEditor\ConditionPreset.h" />
     <ClInclude Include="Source\BlueprintEditor\ConditionRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\EditorConfigManager.h" />
     <ClInclude Include="Source\BlueprintEditor\EditorContext.h" />
@@ -297,6 +299,8 @@
     <ClInclude Include="Source\Editor\ConditionPreset\DynamicDataPin.h" />
     <ClInclude Include="Source\Editor\ConditionPreset\NodeConditionRef.h" />
     <ClInclude Include="Source\Editor\ConditionPreset\Operand.h" />
+    <ClInclude Include="Source\Editor\Dialogs\ConditionPresetEditDialog.h" />
+    <ClInclude Include="Source\Editor\Panels\ConditionPresetLibraryPanel.h" />
     <ClInclude Include="Source\engine_utils.h" />
     <ClInclude Include="Source\DataManager.h" />
     <ClInclude Include="Source\GameEngine.h" />

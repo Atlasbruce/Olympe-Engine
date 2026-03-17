@@ -535,6 +535,15 @@
     <ClCompile Include="..\Source\Editor\ConditionPreset\Operand.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\ConditionPreset.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Editor\Panels\ConditionPresetLibraryPanel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -1006,6 +1015,9 @@
     <ClInclude Include="..\Source\Editor\ConditionPreset\DynamicDataPin.h" />
     <ClInclude Include="..\Source\Editor\ConditionPreset\NodeConditionRef.h" />
     <ClInclude Include="..\Source\Editor\ConditionPreset\Operand.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\ConditionPreset.h" />
+    <ClInclude Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.h" />
+    <ClInclude Include="..\Source\Editor\Panels\ConditionPresetLibraryPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />

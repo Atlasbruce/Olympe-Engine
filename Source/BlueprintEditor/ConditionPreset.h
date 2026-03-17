@@ -23,9 +23,12 @@
 #include <map>
 #include <functional>
 
-#include "TaskSystem/TaskGraphTypes.h"
+#include "../TaskSystem/TaskGraphTypes.h"
+#include "../third_party/nlohmann/json.hpp"
 
 namespace Olympe {
+
+using json = nlohmann::json;
 
 // ============================================================================
 // LogicalOp — logical operator between consecutive condition references
@@ -68,6 +71,19 @@ struct ConditionPreset {
      * @return Formatted preview string.
      */
     std::string GetPreview() const;
+
+    /**
+     * @brief Serializes this preset to JSON.
+     * @return JSON object representing this preset.
+     */
+    json ToJson() const;
+
+    /**
+     * @brief Deserializes a preset from JSON.
+     * @param j JSON object to deserialize.
+     * @return A new ConditionPreset loaded from j.
+     */
+    static ConditionPreset FromJson(const json& j);
 };
 
 // ============================================================================

@@ -35,7 +35,7 @@
 #include <functional>
 #include <map>
 
-#include "BlueprintEditor/ConditionPreset.h"
+#include "../../BlueprintEditor/ConditionPreset.h"
 
 namespace Olympe {
 

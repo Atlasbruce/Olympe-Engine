@@ -177,11 +177,12 @@
     <ClCompile Include="Source\BlueprintEditor\ParameterEditorRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlackboardVariablePresetRegistry.cpp" />
     <ClCompile Include="Source\TaskSystem\ConditionEvaluator.cpp" />
-    <ClCompile Include="Source\Editor\ConditionPreset\ConditionPreset.cpp" />
-    <ClCompile Include="Source\Editor\ConditionPreset\ConditionPresetRegistry.cpp" />
     <ClCompile Include="Source\Editor\ConditionPreset\DynamicDataPin.cpp" />
     <ClCompile Include="Source\Editor\ConditionPreset\NodeConditionRef.cpp" />
     <ClCompile Include="Source\Editor\ConditionPreset\Operand.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\ConditionPreset.cpp" />
+    <ClCompile Include="Source\Editor\Dialogs\ConditionPresetEditDialog.cpp" />
+    <ClCompile Include="Source\Editor\Panels\ConditionPresetLibraryPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -401,6 +402,9 @@
     <ClInclude Include="Source\Editor\ConditionPreset\DynamicDataPin.h" />
     <ClInclude Include="Source\Editor\ConditionPreset\NodeConditionRef.h" />
     <ClInclude Include="Source\Editor\ConditionPreset\Operand.h" />
+    <ClInclude Include="Source\BlueprintEditor\ConditionPreset.h" />
+    <ClInclude Include="Source\Editor\Dialogs\ConditionPresetEditDialog.h" />
+    <ClInclude Include="Source\Editor\Panels\ConditionPresetLibraryPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />

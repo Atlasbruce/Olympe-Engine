@@ -7,12 +7,12 @@
  * C++14 compliant — no std::optional, structured bindings, std::filesystem.
  */
 
-#include "Editor/Dialogs/ConditionPresetEditDialog.h"
+#include "ConditionPresetEditDialog.h"
 
 #include <algorithm>
 
 #ifndef OLYMPE_HEADLESS
-#  include "third_party/imgui/imgui.h"
+#include "../../third_party/imgui/imgui.h"
 #endif
 
 namespace Olympe {

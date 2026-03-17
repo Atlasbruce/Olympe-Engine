@@ -37,7 +37,7 @@
 #include <string>
 #include <vector>
 
-#include "BlueprintEditor/ConditionPreset.h"
+#include "../../BlueprintEditor/ConditionPreset.h"
 
 namespace Olympe {
 
