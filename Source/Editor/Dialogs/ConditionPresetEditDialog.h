@@ -37,7 +37,7 @@
 #include <string>
 #include <vector>
 
-#include "../../BlueprintEditor/ConditionPreset.h"
+#include "../ConditionPreset/ConditionPreset.h"
 
 namespace Olympe {
 
@@ -117,22 +117,19 @@ public:
     // -----------------------------------------------------------------------
 
     /**
-     * @brief Returns the current left operand mode string.
-     * @return "Variable", "Const", or "Pin".
+     * @brief Returns the current left operand.
      */
-    const std::string& GetLeftMode()  const { return m_workingCopy.condition.leftMode; }
+    const Operand& GetLeftOperand() const { return m_workingCopy.left; }
 
     /**
-     * @brief Returns the current right operand mode string.
-     * @return "Variable", "Const", or "Pin".
+     * @brief Returns the current right operand.
      */
-    const std::string& GetRightMode() const { return m_workingCopy.condition.rightMode; }
+    const Operand& GetRightOperand() const { return m_workingCopy.right; }
 
     /**
-     * @brief Returns the current comparison operator string.
-     * @return One of "==", "!=", "<", "<=", ">", ">=".
+     * @brief Returns the current comparison operator.
      */
-    const std::string& GetOperator()  const { return m_workingCopy.condition.operatorStr; }
+    ComparisonOp GetOperator() const { return m_workingCopy.op; }
 
     // -----------------------------------------------------------------------
     // Programmatic setters (for testing and host-driven pre-population)
@@ -150,12 +147,12 @@ public:
     void SetLeftVariable(const std::string& varName);
 
     /**
-     * @brief Sets the left constant value (relevant when leftMode == "Const").
+     * @brief Sets the left constant value.
      */
-    void SetLeftConst(const TaskValue& value);
+    void SetLeftConst(double value);
 
     /**
-     * @brief Sets the left pin reference (relevant when leftMode == "Pin").
+     * @brief Sets the left pin reference.
      */
     void SetLeftPin(const std::string& pinRef);
 
@@ -172,14 +169,14 @@ public:
     void SetRightMode(const std::string& mode);
 
     /**
-     * @brief Sets the right variable name (relevant when rightMode == "Variable").
+     * @brief Sets the right variable name.
      */
     void SetRightVariable(const std::string& varName);
 
     /**
-     * @brief Sets the right constant value (relevant when rightMode == "Const").
+     * @brief Sets the right constant value.
      */
-    void SetRightConst(const TaskValue& value);
+    void SetRightConst(double value);
 
     /**
      * @brief Sets the right pin reference (relevant when rightMode == "Pin").
@@ -261,11 +258,8 @@ private:
     /** @brief Returns true if the given mode string is recognised. */
     static bool IsValidMode(const std::string& mode);
 
-    /** @brief Returns true if the operand part (mode + values) is sufficiently filled. */
-    static bool IsOperandFilled(const std::string& mode,
-                                 const std::string& variable,
-                                 const std::string& pin,
-                                 const TaskValue&   constVal);
+    /** @brief Returns true if the operand is sufficiently filled. */
+    static bool IsOperandFilled(const Operand& operand);
 
     // -----------------------------------------------------------------------
     // State

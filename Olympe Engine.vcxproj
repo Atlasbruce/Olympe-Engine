@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -53,7 +53,6 @@
     <ClCompile Include="Source\BlueprintEditor\BPCommandSystem.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BTNodeGraphManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BTtoVSMigrator.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\ConditionPreset.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ConditionRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\DebugController.cpp" />
     <ClCompile Include="Source\BlueprintEditor\DebugPanel.cpp" />
@@ -110,7 +109,6 @@
     <ClCompile Include="Source\Editor\ConditionPreset\DynamicDataPinManager.cpp" />
     <ClCompile Include="Source\Editor\ConditionPreset\NodeConditionRef.cpp" />
     <ClCompile Include="Source\Editor\ConditionPreset\Operand.cpp" />
-    <ClCompile Include="Source\Editor\Dialogs\ConditionPresetEditDialog.cpp" />
     <ClCompile Include="Source\Editor\Nodes\NodeBranchRenderer.cpp" />
     <ClCompile Include="Source\Editor\Panels\ConditionPresetLibraryPanel.cpp" />
     <ClCompile Include="Source\Editor\Panels\NodeConditionsPanel.cpp" />
@@ -248,7 +246,6 @@
     <ClInclude Include="Source\BlueprintEditor\BPCommandSystem.h" />
     <ClInclude Include="Source\BlueprintEditor\BTNodeGraphManager.h" />
     <ClInclude Include="Source\BlueprintEditor\BTtoVSMigrator.h" />
-    <ClInclude Include="Source\BlueprintEditor\ConditionPreset.h" />
     <ClInclude Include="Source\BlueprintEditor\ConditionRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\EditorConfigManager.h" />
     <ClInclude Include="Source\BlueprintEditor\EditorContext.h" />

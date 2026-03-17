@@ -124,6 +124,30 @@ ConditionPresetRegistry::FindPresetsByName(const std::string& substring) const
     return result;
 }
 
+std::vector<ConditionPreset>
+ConditionPresetRegistry::GetFilteredPresets(const std::string& filter) const
+{
+    std::vector<ConditionPreset> result;
+
+    for (const auto& id : m_order)
+    {
+        auto it = m_presets.find(id);
+        if (it == m_presets.end())
+            continue;
+
+        const ConditionPreset& preset = it->second;
+
+        // If filter is empty, include all presets
+        // Otherwise, check if the preset name contains the filter substring
+        if (filter.empty() || preset.name.find(filter) != std::string::npos)
+        {
+            result.push_back(preset);
+        }
+    }
+
+    return result;
+}
+
 // ============================================================================
 // Validation
 // ============================================================================

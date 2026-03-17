@@ -1,10 +1,10 @@
-/**
+﻿/**
  * @file ConditionPresetEditDialog.cpp
  * @brief Implementation of ConditionPresetEditDialog (Phase 24.1).
  * @author Olympe Engine
  * @date 2026-03-16
  *
- * C++14 compliant — no std::optional, structured bindings, std::filesystem.
+ * C++14 compliant - no std::optional, structured bindings, std::filesystem.
  */
 
 #include "ConditionPresetEditDialog.h"
@@ -16,10 +16,6 @@
 #endif
 
 namespace Olympe {
-
-// ============================================================================
-// Static helpers
-// ============================================================================
 
 namespace {
 
@@ -37,17 +33,12 @@ const std::vector<std::string>& GetValidModes()
 
 } // anonymous namespace
 
-// ============================================================================
-// Construction
-// ============================================================================
-
 ConditionPresetEditDialog::ConditionPresetEditDialog()
     : m_mode(Mode::Create)
 {
-    // Default: Variable == Const
-    m_workingCopy.condition.leftMode    = "Variable";
-    m_workingCopy.condition.operatorStr = "==";
-    m_workingCopy.condition.rightMode   = "Const";
+    m_workingCopy.left = Operand::CreateVariable("");
+    m_workingCopy.op = ComparisonOp::Equal;
+    m_workingCopy.right = Operand::CreateConst(0.0);
 }
 
 ConditionPresetEditDialog::ConditionPresetEditDialog(Mode mode,
@@ -60,69 +51,70 @@ ConditionPresetEditDialog::ConditionPresetEditDialog(Mode mode,
     }
     else
     {
-        // Default blank form
-        m_workingCopy.condition.leftMode    = "Variable";
-        m_workingCopy.condition.operatorStr = "==";
-        m_workingCopy.condition.rightMode   = "Const";
+        m_workingCopy.left = Operand::CreateVariable("");
+        m_workingCopy.op = ComparisonOp::Equal;
+        m_workingCopy.right = Operand::CreateConst(0.0);
     }
 }
-
-// ============================================================================
-// Result
-// ============================================================================
 
 ConditionPreset ConditionPresetEditDialog::GetResult() const
 {
     return m_workingCopy;
 }
 
-// ============================================================================
-// Setters
-// ============================================================================
-
 void ConditionPresetEditDialog::SetLeftMode(const std::string& mode)
 {
-    m_workingCopy.condition.leftMode = mode;
+    if (mode == "Variable")
+        m_workingCopy.left = Operand::CreateVariable("");
+    else if (mode == "Const")
+        m_workingCopy.left = Operand::CreateConst(0.0);
+    else if (mode == "Pin")
+        m_workingCopy.left = Operand::CreatePin("");
 }
 
 void ConditionPresetEditDialog::SetLeftVariable(const std::string& varName)
 {
-    m_workingCopy.condition.leftVariable = varName;
+    m_workingCopy.left = Operand::CreateVariable(varName);
 }
 
-void ConditionPresetEditDialog::SetLeftConst(const TaskValue& value)
+void ConditionPresetEditDialog::SetLeftConst(double value)
 {
-    m_workingCopy.condition.leftConstValue = value;
+    m_workingCopy.left = Operand::CreateConst(value);
 }
 
 void ConditionPresetEditDialog::SetLeftPin(const std::string& pinRef)
 {
-    m_workingCopy.condition.leftPin = pinRef;
+    m_workingCopy.left = Operand::CreatePin(pinRef);
 }
 
 void ConditionPresetEditDialog::SetOperator(const std::string& op)
 {
-    m_workingCopy.condition.operatorStr = op;
+    m_workingCopy.op = ConditionPreset::OpFromString(op);
 }
 
 void ConditionPresetEditDialog::SetRightMode(const std::string& mode)
 {
-    m_workingCopy.condition.rightMode = mode;
+    if (mode == "Variable")
+        m_workingCopy.right = Operand::CreateVariable("");
+    else if (mode == "Const")
+        m_workingCopy.right = Operand::CreateConst(0.0);
+    else if (mode == "Pin")
+        m_workingCopy.right = Operand::CreatePin("");
 }
 
 void ConditionPresetEditDialog::SetRightVariable(const std::string& varName)
 {
-    m_workingCopy.condition.rightVariable = varName;
+    m_workingCopy.right = Operand::CreateVariable(varName);
 }
 
-void ConditionPresetEditDialog::SetRightConst(const TaskValue& value)
+void ConditionPresetEditDialog::SetRightConst(double value)
 {
-    m_workingCopy.condition.rightConstValue = value;
+    m_workingCopy.right = Operand::CreateConst(value);
 }
 
 void ConditionPresetEditDialog::SetRightPin(const std::string& pinRef)
 {
-    m_workingCopy.condition.rightPin = pinRef;
+    m_workingCopy.right = Operand::CreatePin(pinRef);
 }
 
 void ConditionPresetEditDialog::SetName(const std::string& name)
@@ -130,18 +122,10 @@ void ConditionPresetEditDialog::SetName(const std::string& name)
     m_workingCopy.name = name;
 }
 
-// ============================================================================
-// Preview
-// ============================================================================
-
 std::string ConditionPresetEditDialog::GetPreview() const
 {
     return m_workingCopy.GetPreview();
 }
-
-// ============================================================================
-// Validation
-// ============================================================================
 
 bool ConditionPresetEditDialog::IsValidOperator(const std::string& op)
 {
@@ -155,40 +139,25 @@ bool ConditionPresetEditDialog::IsValidMode(const std::string& mode)
     return std::find(modes.begin(), modes.end(), mode) != modes.end();
 }
 
-bool ConditionPresetEditDialog::IsOperandFilled(const std::string& mode,
-                                                 const std::string& variable,
-                                                 const std::string& pin,
-                                                 const TaskValue&   constVal)
+bool ConditionPresetEditDialog::IsOperandFilled(const Operand& operand)
 {
-    if (mode == "Variable") { return !variable.empty(); }
-    if (mode == "Pin")      { return !pin.empty();      }
-    if (mode == "Const")    { return !constVal.IsNone(); }
+    if (operand.IsVariable())
+        return !operand.stringValue.empty();
+    if (operand.IsPin())
+        return !operand.stringValue.empty();
+    if (operand.IsConst())
+        return true;
     return false;
 }
 
 bool ConditionPresetEditDialog::IsValid() const
 {
-    const Condition& c = m_workingCopy.condition;
-
-    if (!IsValidMode(c.leftMode))  { return false; }
-    if (!IsValidMode(c.rightMode)) { return false; }
-    if (!IsValidOperator(c.operatorStr)) { return false; }
-
-    if (!IsOperandFilled(c.leftMode, c.leftVariable, c.leftPin, c.leftConstValue))
-    {
+    if (!IsOperandFilled(m_workingCopy.left))
         return false;
-    }
-    if (!IsOperandFilled(c.rightMode, c.rightVariable, c.rightPin, c.rightConstValue))
-    {
+    if (!IsOperandFilled(m_workingCopy.right))
         return false;
-    }
-
     return true;
 }
-
-// ============================================================================
-// Programmatic confirmation
-// ============================================================================
 
 bool ConditionPresetEditDialog::Confirm()
 {
@@ -198,10 +167,6 @@ bool ConditionPresetEditDialog::Confirm()
     m_isOpen      = false;
     return true;
 }
-
-// ============================================================================
-// Render (ImGui — skipped in headless builds / tests)
-// ============================================================================
 
 void ConditionPresetEditDialog::Render()
 {
@@ -218,7 +183,6 @@ void ConditionPresetEditDialog::Render()
     if (ImGui::BeginPopupModal(title, &m_isOpen,
                                ImGuiWindowFlags_AlwaysAutoResize))
     {
-        // Preset name
         char nameBuf[128] = {};
         if (m_workingCopy.name.size() < sizeof(nameBuf))
         {
@@ -231,9 +195,9 @@ void ConditionPresetEditDialog::Render()
 
         ImGui::Separator();
 
-        RenderOperandSelector("Left", /*isLeft=*/true);
+        RenderOperandSelector("Left", true);
         RenderOperatorSelector();
-        RenderOperandSelector("Right", /*isLeft=*/false);
+        RenderOperandSelector("Right", false);
 
         ImGui::Separator();
         RenderPreview();
@@ -245,69 +209,65 @@ void ConditionPresetEditDialog::Render()
 #endif
 }
 
-// ============================================================================
-// ImGui rendering helpers
-// ============================================================================
-
 void ConditionPresetEditDialog::RenderOperandSelector(const char* label, bool isLeft)
 {
 #ifndef OLYMPE_HEADLESS
-    std::string& mode     = isLeft ? m_workingCopy.condition.leftMode
-                                   : m_workingCopy.condition.rightMode;
-    std::string& variable = isLeft ? m_workingCopy.condition.leftVariable
-                                   : m_workingCopy.condition.rightVariable;
-    std::string& pin      = isLeft ? m_workingCopy.condition.leftPin
-                                   : m_workingCopy.condition.rightPin;
-    TaskValue&   constVal = isLeft ? m_workingCopy.condition.leftConstValue
-                                   : m_workingCopy.condition.rightConstValue;
+    Operand& operand = isLeft ? m_workingCopy.left : m_workingCopy.right;
 
     ImGui::PushID(label);
     ImGui::Text("%s:", label);
 
-    // Mode selector (combo)
     const char* const modeItems[] = { "Variable", "Const", "Pin" };
     int modeIdx = 0;
-    if (mode == "Const") { modeIdx = 1; }
-    else if (mode == "Pin") { modeIdx = 2; }
+    if (operand.IsConst()) { modeIdx = 1; }
+    else if (operand.IsPin()) { modeIdx = 2; }
 
     ImGui::SetNextItemWidth(90.f);
     if (ImGui::Combo("##mode", &modeIdx, modeItems, 3))
     {
-        mode = modeItems[modeIdx];
+        if (modeIdx == 0)
+            operand = Operand::CreateVariable("");
+        else if (modeIdx == 1)
+            operand = Operand::CreateConst(0.0);
+        else if (modeIdx == 2)
+            operand = Operand::CreatePin("");
     }
 
     ImGui::SameLine();
 
-    if (mode == "Variable")
+    if (operand.IsVariable())
     {
         char buf[64] = {};
-        if (variable.size() < sizeof(buf)) { variable.copy(buf, variable.size()); }
+        if (operand.stringValue.size() < sizeof(buf))
+        {
+            operand.stringValue.copy(buf, operand.stringValue.size());
+        }
         ImGui::SetNextItemWidth(120.f);
         if (ImGui::InputText("##var", buf, sizeof(buf)))
         {
-            variable = buf;
+            operand.stringValue = buf;
         }
     }
-    else if (mode == "Const")
+    else if (operand.IsConst())
     {
-        // Float input (simplified — full implementation would pick type)
-        float fval = 0.f;
-        if (constVal.GetType() == VariableType::Float) { fval = constVal.AsFloat(); }
-        else if (constVal.GetType() == VariableType::Int) { fval = static_cast<float>(constVal.AsInt()); }
+        float fval = static_cast<float>(operand.constValue);
         ImGui::SetNextItemWidth(80.f);
         if (ImGui::InputFloat("##const", &fval, 0.f, 0.f, "%.2f"))
         {
-            constVal = TaskValue(fval);
+            operand.constValue = static_cast<double>(fval);
         }
     }
-    else if (mode == "Pin")
+    else if (operand.IsPin())
     {
         char buf[64] = {};
-        if (pin.size() < sizeof(buf)) { pin.copy(buf, pin.size()); }
+        if (operand.stringValue.size() < sizeof(buf))
+        {
+            operand.stringValue.copy(buf, operand.stringValue.size());
+        }
         ImGui::SetNextItemWidth(120.f);
         if (ImGui::InputText("##pin", buf, sizeof(buf)))
         {
-            pin = buf;
+            operand.stringValue = buf;
         }
     }
 
@@ -319,7 +279,7 @@ void ConditionPresetEditDialog::RenderOperatorSelector()
 {
 #ifndef OLYMPE_HEADLESS
     const auto& ops = GetValidOperators();
-    const std::string& current = m_workingCopy.condition.operatorStr;
+    std::string current = ConditionPreset::OpToString(m_workingCopy.op);
 
     int opIdx = 0;
     for (int i = 0; i < static_cast<int>(ops.size()); ++i)
@@ -327,12 +287,11 @@ void ConditionPresetEditDialog::RenderOperatorSelector()
         if (ops[i] == current) { opIdx = i; break; }
     }
 
-    // Build C-string array for ImGui::Combo
     const char* items[] = { "==", "!=", "<", "<=", ">", ">=" };
     ImGui::SetNextItemWidth(70.f);
     if (ImGui::Combo("Operator", &opIdx, items, static_cast<int>(ops.size())))
     {
-        m_workingCopy.condition.operatorStr = ops[opIdx];
+        m_workingCopy.op = ConditionPreset::OpFromString(ops[opIdx]);
     }
 #endif
 }

@@ -100,12 +100,13 @@ ConditionPresetLibraryPanel::GetReferencingNodes(const std::string& presetID) co
 std::string ConditionPresetLibraryPanel::OnAddPresetClicked()
 {
     ConditionPreset newPreset;
-    // Default: empty condition with Variable/==Const structure
-    newPreset.condition.leftMode  = "Variable";
-    newPreset.condition.operatorStr = "==";
-    newPreset.condition.rightMode = "Const";
+    // Default: empty condition with default values
+    newPreset.name = "New Condition";
+    newPreset.left = Operand::CreateVariable("");
+    newPreset.op = ComparisonOp::Equal;
+    newPreset.right = Operand::CreateConst(0.0);
 
-    const std::string id = m_registry.AddPreset(newPreset);
+    const std::string id = m_registry.CreatePreset(newPreset);
 
     if (OnPresetCreated)
     {
@@ -142,7 +143,7 @@ void ConditionPresetLibraryPanel::OnDeleteConfirmed(const std::string& presetID)
         return;
     }
 
-    m_registry.RemovePreset(presetID);
+    m_registry.DeletePreset(presetID);
 
     if (m_selectedPresetID == presetID)
     {

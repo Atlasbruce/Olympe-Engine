@@ -180,7 +180,6 @@
     <ClCompile Include="Source\Editor\ConditionPreset\DynamicDataPin.cpp" />
     <ClCompile Include="Source\Editor\ConditionPreset\NodeConditionRef.cpp" />
     <ClCompile Include="Source\Editor\ConditionPreset\Operand.cpp" />
-    <ClCompile Include="Source\Editor\Dialogs\ConditionPresetEditDialog.cpp" />
     <ClCompile Include="Source\Editor\Panels\ConditionPresetLibraryPanel.cpp" />
     <ClCompile Include="Source\Editor\ConditionPreset\ConditionPreset.cpp" />
     <ClCompile Include="Source\Editor\ConditionPreset\ConditionPresetRegistry.cpp" />

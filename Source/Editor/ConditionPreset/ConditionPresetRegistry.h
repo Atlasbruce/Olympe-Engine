@@ -133,6 +133,16 @@ public:
      */
     std::vector<std::string> FindPresetsByName(const std::string& substring) const;
 
+    /**
+     * @brief Returns all presets whose name contains the filter substring.
+     *
+     * If filter is empty, returns all presets in display order.
+     * Case-sensitive search.
+     * @param filter Search string (empty = match all).
+     * @return Vector of matching ConditionPreset objects.
+     */
+    std::vector<ConditionPreset> GetFilteredPresets(const std::string& filter) const;
+
     // -----------------------------------------------------------------------
     // Validation
     // -----------------------------------------------------------------------
