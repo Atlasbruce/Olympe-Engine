@@ -674,52 +674,39 @@ if(BUILD_TESTS)
     add_test(NAME OlympePhase23B6Tests COMMAND OlympePhase23B6Tests)
 
     # -----------------------------------------------------------------------
-    # Phase 24.0 — Core Data Model & Serialization (Condition Preset System)
+    # OlympePhase24_1_LibraryPanelTests  (Phase 24.1 — ConditionPresetLibraryPanel)
     # -----------------------------------------------------------------------
-
-    set(CONDITION_PRESET_SOURCES
-        "${SRC_DIR}/Editor/ConditionPreset/Operand.cpp"
-        "${SRC_DIR}/Editor/ConditionPreset/ConditionPreset.cpp"
-        "${SRC_DIR}/Editor/ConditionPreset/DynamicDataPin.cpp"
-        "${SRC_DIR}/Editor/ConditionPreset/NodeConditionRef.cpp"
-        "${SRC_DIR}/Editor/ConditionPreset/ConditionPresetRegistry.cpp"
-    )
-
-    # OlympePhase24OperandTests
-    add_executable(OlympePhase24OperandTests
-        Tests/Editor/ConditionPreset/OperandTest.cpp
-        "${SRC_DIR}/Editor/ConditionPreset/Operand.cpp"
+    add_executable(OlympePhase24_1_LibraryPanelTests
+        Tests/Editor/Panels/ConditionPresetLibraryPanelTest.cpp
+        Source/BlueprintEditor/ConditionPreset.cpp
+        Source/Editor/Panels/ConditionPresetLibraryPanel.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/NodeGraphCore/GlobalBlackboard.cpp
         Tests/TestStubs.cpp
     )
-    target_include_directories(OlympePhase24OperandTests PRIVATE ${COMMON_INCLUDES})
-    add_test(NAME OlympePhase24OperandTests COMMAND OlympePhase24OperandTests)
+    target_compile_definitions(OlympePhase24_1_LibraryPanelTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_1_LibraryPanelTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_1_LibraryPanelTests COMMAND OlympePhase24_1_LibraryPanelTests)
 
-    # OlympePhase24ConditionPresetTests
-    add_executable(OlympePhase24ConditionPresetTests
-        Tests/Editor/ConditionPreset/ConditionPresetTest.cpp
-        "${SRC_DIR}/Editor/ConditionPreset/Operand.cpp"
-        "${SRC_DIR}/Editor/ConditionPreset/ConditionPreset.cpp"
+    # -----------------------------------------------------------------------
+    # OlympePhase24_1_EditDialogTests  (Phase 24.1 — ConditionPresetEditDialog)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_1_EditDialogTests
+        Tests/Editor/Dialogs/ConditionPresetEditDialogTest.cpp
+        Source/BlueprintEditor/ConditionPreset.cpp
+        Source/Editor/Dialogs/ConditionPresetEditDialog.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/TaskSystem/LocalBlackboard.cpp
+        Source/TaskSystem/AtomicTaskRegistry.cpp
+        Source/NodeGraphCore/GlobalBlackboard.cpp
         Tests/TestStubs.cpp
     )
-    target_include_directories(OlympePhase24ConditionPresetTests PRIVATE ${COMMON_INCLUDES})
-    add_test(NAME OlympePhase24ConditionPresetTests COMMAND OlympePhase24ConditionPresetTests)
-
-    # OlympePhase24DynamicDataPinTests
-    add_executable(OlympePhase24DynamicDataPinTests
-        Tests/Editor/ConditionPreset/DynamicDataPinTest.cpp
-        "${SRC_DIR}/Editor/ConditionPreset/DynamicDataPin.cpp"
-        Tests/TestStubs.cpp
-    )
-    target_include_directories(OlympePhase24DynamicDataPinTests PRIVATE ${COMMON_INCLUDES})
-    add_test(NAME OlympePhase24DynamicDataPinTests COMMAND OlympePhase24DynamicDataPinTests)
-
-    # OlympePhase24RegistryTests
-    add_executable(OlympePhase24RegistryTests
-        Tests/Editor/ConditionPreset/ConditionPresetRegistryTest.cpp
-        ${CONDITION_PRESET_SOURCES}
-        Tests/TestStubs.cpp
-    )
-    target_include_directories(OlympePhase24RegistryTests PRIVATE ${COMMON_INCLUDES})
-    add_test(NAME OlympePhase24RegistryTests COMMAND OlympePhase24RegistryTests)
+    target_compile_definitions(OlympePhase24_1_EditDialogTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_1_EditDialogTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_1_EditDialogTests COMMAND OlympePhase24_1_EditDialogTests)
 
 endif() # BUILD_TESTS
