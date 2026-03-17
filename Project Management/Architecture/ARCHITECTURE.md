@@ -1,6 +1,6 @@
 # Olympe Engine — Architecture
 
-**Last Updated:** 2026-03-16 22:49:08 UTC  
+**Last Updated:** 2026-03-17 13:37:54 UTC  
 **Author:** @Atlasbruce
 
 ---
@@ -200,15 +200,45 @@ DynamicDataPin
 
 ---
 
+### Module Compilation Status (Phase 24.0–24.4)
+
+> **Last checked:** 2026-03-17 13:37:54 UTC — Post-merge PR #432
+
+| Status | Project | Details |
+|---|---|---|
+| ✅ FIXED | `Olympe Engine` | Stale `Source\BlueprintEditor\ConditionPreset.cpp/.h` entries removed from `.vcxproj.filters` (MSB8027 resolved) |
+| ✅ FIXED | `OlympeBlueprintEditor` | LNK2005 / LNK4042 duplicate-symbol linker errors resolved (single TU per translation unit) |
+| 🔶 DRAFT | Both | Include path fix for `ConditionPresetLibraryPanel.h/.cpp` tracked in **PR #430** (pending merge) |
+
+#### Root Cause Summary
+
+| # | Error | File | Cause | Fix |
+|---|---|---|---|---|
+| 1 | MSB8027 | `Olympe Engine.vcxproj.filters` | Stale `<ClCompile>` entry referencing deleted `Source\BlueprintEditor\ConditionPreset.cpp` | Removed stale entry from `.filters` |
+| 2 | LNK4042 / LNK2005 | `ConditionPreset.obj` | Same `.cpp` compiled twice → duplicate constructor symbol | Removing stale entry eliminates duplicate TU |
+| 3 | C2061 / C2143 | `ConditionPresetLibraryPanel.h` | Missing `#include "../../Editor/ConditionPreset/ConditionPresetRegistry.h"` | PR #430 |
+| 4 | C7550 / C2065 | `ConditionPresetLibraryPanel.cpp` | Cascade of C2061 (unresolved type) | Resolved with PR #430 |
+| 5 | C1083 | `.vcxproj` | Stale file reference in project (consequence of MSB8027) | Resolved with `.filters` cleanup |
+
+---
+
 ### Module Implications
 
-| Module | Impact |
-|---|---|
-| `VisualScriptEditorPanel` | New panel for Global Preset Manager; updated node properties rendering |
-| `VisualScriptNodeRenderer` | Updated `NodeBranch` rendering with dynamic pins |
-| `UndoRedoStack` | New commands: `AddPresetCommand`, `EditPresetCommand`, `DeletePresetCommand`, `AssignPresetToNodeCommand` |
-| `TaskGraphLoader` | Updated deserialization to handle Phase 24 node JSON format |
-| `VSGraphVerifier` | New validation rules for unresolved preset references and dangling pin IDs |
+| Module | File(s) | Implementation Status |
+|---|---|---|
+| `ConditionPresetRegistry` | `Source/Editor/ConditionPreset/ConditionPresetRegistry.h/.cpp` | ✅ Merged PR #422 — singleton, CRUD, Load/Save JSON |
+| `ConditionPreset` | `Source/Editor/ConditionPreset/ConditionPreset.h/.cpp` | ✅ Merged PR #422 — struct + ComparisonOp + ToJson/FromJson |
+| `Operand` | `Source/Editor/ConditionPreset/Operand.h/.cpp` | ✅ Merged PR #422 — Variable/Const/Pin modes |
+| `DynamicDataPin` | `Source/Editor/ConditionPreset/DynamicDataPin.h/.cpp` | ✅ Merged PR #422 — UUID-based pin descriptor |
+| `NodeConditionRef` | `Source/Editor/ConditionPreset/NodeConditionRef.h/.cpp` | ✅ Merged PR #422 — presetID + logicalOp + pin IDs |
+| `ConditionPresetLibraryPanel` | `Source/Editor/Panels/ConditionPresetLibraryPanel.h/.cpp` | ✅ Merged PR #424 — global preset manager panel |
+| `ConditionPresetEditDialog` | `Source/Editor/Dialogs/ConditionPresetEditDialog.h/.cpp` | ✅ Merged PR #424 — create/edit modal dialog |
+| `NodeConditionsPanel` | `Source/Editor/Panels/NodeConditionsPanel.h/.cpp` | ✅ Merged PR #432 — per-node condition assignment UI |
+| `DynamicDataPinManager` | `Source/Editor/ConditionPreset/DynamicDataPinManager.h/.cpp` | ✅ Merged PR #432 — auto-generate pins from condition refs |
+| `NodeBranchRenderer` | `Source/Editor/Nodes/NodeBranchRenderer.h/.cpp` | ✅ Merged PR #432 — updated NodeBranch canvas rendering |
+| `TaskGraphLoader` | `Source/TaskSystem/TaskGraphLoader.cpp` | 🔶 Phase 24.5 — deserialize Phase 24 node JSON format |
+| `VSGraphVerifier` | `Source/BlueprintEditor/VSGraphVerifier.cpp` | 🔶 Phase 24.5 — new rules E030–E032, W020–W021 |
+| `UndoRedoStack` | `Source/BlueprintEditor/UndoRedoStack.h/.cpp` | 🔶 Phase 24.6 — preset CRUD commands |
 
 ---
 
@@ -273,4 +303,4 @@ IEditorCommand
 
 ---
 
-**Last Updated:** 2026-03-16 22:49:08 UTC
+**Last Updated:** 2026-03-17 13:37:54 UTC

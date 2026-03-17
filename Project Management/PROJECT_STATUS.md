@@ -1,18 +1,18 @@
 # Olympe Engine — Project Status
 
-**Last Updated:** 2026-03-16 22:49:08 UTC  
+**Last Updated:** 2026-03-17 13:37:54 UTC  
 **Author:** @Atlasbruce
 
 ---
 
 ## 🚨 CURRENT PHASE: 24 (TOP PRIORITY)
 
-**Status:** 🔴 ACTIVE - CRITICAL PATH  
+**Status:** 🟠 ACTIVE — Build fix required before Phase 24.5  
 **Title:** Global Condition Preset System Refactor  
 **Duration:** 45-55 hours (1.5-2 weeks)  
 **Start Date:** 2026-03-16  
 **Projected Completion:** 2026-03-30  
-**Progress:** 0% → 5% (Phase 24.0 in progress)
+**Progress:** ~55% (Phases 24.0–24.4 COMPLETED ✅)
 
 > ⚠️ **All other phases paused until Phase 24 complete**
 
@@ -20,81 +20,79 @@
 
 ### Sub-phases
 
-| Sub-phase | Title | Duration | Status |
-|---|---|---|---|
-| 24.0 | Core Data Models | 3-4h | 🔴 IN PROGRESS |
-| 24.1 | Global Presets UI | 6-8h | 🟡 QUEUED |
-| 24.2 | Node Properties UI | 5-6h | 🟤 PENDING |
-| 24.3 | Dynamic Pins Manager | 8-10h | 🟤 PENDING |
-| 24.4 | Node Rendering | 5-6h | 🟤 PENDING |
-| 24.5 | Runtime Evaluation | 5-6h | 🟤 PENDING |
-| 24.6 | Undo/Redo Integration | 6-7h | 🟤 PENDING |
-| 24.7 | Testing & Polish | 8-10h | 🟤 PENDING |
-| 24.8 | Final Documentation | 4-5h | 🟤 PENDING |
+| Sub-phase | Title | Duration | Status | PR |
+|---|---|---|---|---|
+| 24.0 | Core Data Models | 3-4h | ✅ COMPLETED | #422 |
+| 24.1 | Global Presets UI | 6-8h | ✅ COMPLETED | #424 |
+| 24.2 | Docs (ARCHITECTURE + PROJECT_STATUS) | 2-3h | ✅ COMPLETED | #426 |
+| 24.3 | Version Stamp System | 2-3h | ✅ COMPLETED | #428 |
+| 24.4 | NodeConditionsPanel, DynPinMgr, BranchRenderer | 5-6h | ✅ COMPLETED | #432 |
+| 24.5 | Runtime Evaluation | 5-6h | ⏭️ NEXT (blocked on PR #430) | — |
+| 24.6 | Undo/Redo Integration | 6-7h | 🟤 PENDING | — |
+| 24.7 | Testing & Polish | 8-10h | 🟤 PENDING | — |
+| 24.8 | Final Documentation | 4-5h | 🟤 PENDING | — |
+
+> ⚠️ **Compilation errors from PR #432** — see [`BugStatus/bug_status_phase24.md`](./BugStatus/bug_status_phase24.md)  
+> Fix tracked in **PR #430** (DRAFT — pending merge after validation)
 
 ---
 
 ### Phase 24.0-24.8 Breakdown
 
-#### Phase 24.0 — Core Data Models (3-4h) 🔴 IN PROGRESS
-- Define `ConditionPreset` struct (id, name, left operand, operator, right operand)
-- Define `ConditionPresetRegistry` singleton
-- Define `NodeConditionRef` (presetID, logicalOp, leftPinID, rightPinID)
-- Define `DynamicDataPin` struct
-- JSON serialization/deserialization for preset registry
-- **Tests:** 31 tests planned
+#### Phase 24.0 — Core Data Models ✅ COMPLETED (PR #422)
+- [x] Define `Operand` struct (Variable/Const/Pin modes)
+- [x] Define `ConditionPreset` struct (id, name, left/op/right) + `ComparisonOp`
+- [x] Define `ConditionPresetRegistry` singleton + CRUD + Load/Save JSON
+- [x] Define `NodeConditionRef` (presetID, logicalOp, leftPinID, rightPinID)
+- [x] Define `DynamicDataPin` struct (UUID pinID, label, dataType)
+- [x] JSON serialization/deserialization for all types
+- **Tests:** 31 tests passing ✅
 
-#### Phase 24.1 — Global Presets UI (6-8h) 🟡 QUEUED
-- New panel: Global Condition Preset Manager
-- CRUD operations (add/edit/delete presets)
-- Live preview of preset conditions
-- Validation (duplicate names, incomplete operands)
-- **Tests:** 18 tests planned
+#### Phase 24.1 — Global Presets UI ✅ COMPLETED (PR #424)
+- [x] `ConditionPresetLibraryPanel` — global CRUD panel with search + preview
+- [x] `ConditionPresetEditDialog` — create/edit modal (Create + Edit modes)
+- [x] Validation (duplicate names, incomplete operands)
+- **Tests:** 18 tests passing ✅
+- **Known issue:** Include path fix tracked in PR #430 (DRAFT)
 
-#### Phase 24.2 — Node Properties UI (5-6h) 🟤 PENDING
-- Update node properties panel for Phase 24 architecture
-- Preset selector (dropdown from global registry)
-- Logical operator selector (AND/OR per condition ref)
-- Pin mapping display
+#### Phase 24.2 — Documentation ✅ COMPLETED (PR #426)
+- [x] Updated `ARCHITECTURE.md` with Phase 24 system design
+- [x] Updated `PROJECT_STATUS.md`
+
+#### Phase 24.3 — Version Stamp System ✅ COMPLETED (PR #428)
+- [x] Build metadata + version stamping
+
+#### Phase 24.4 — Node UI + Dynamic Pins + Branch Rendering ✅ COMPLETED (PR #432)
+- [x] `NodeConditionsPanel` — per-node condition assignment UI
+- [x] `DynamicDataPinManager` — auto-generate data pins from condition refs
+- [x] `NodeBranchRenderer` — updated NodeBranch canvas rendering with dynamic pins
+- **⚠️ Post-merge build issues** — see `BugStatus/bug_status_phase24.md`
+
+#### Phase 24.5 — Runtime Evaluation ⏭️ NEXT
+- [ ] Evaluate conditions from preset registry at runtime
+- [ ] Resolve pin-mapped operand values at evaluation time
+- [ ] Support all operators (==, !=, <, <=, >, >=)
+- **Blocked by:** PR #430 merge (include path fix)
 - **Tests:** TBD
 
-#### Phase 24.3 — Dynamic Pins Manager (8-10h) 🟤 PENDING
-- Auto-generate data input pins from condition refs
-- Pin naming: `In #ConditionIndex(L|R): [condition_preview]`
-- UUID-based pin IDs (globally unique)
-- Rebuild pins on preset changes
+#### Phase 24.6 — Undo/Redo Integration 🟤 PENDING
+- [ ] Undo/Redo for all preset CRUD operations
+- [ ] Undo/Redo for condition ref changes on nodes
+- [ ] Undo/Redo for dynamic pin add/remove
 - **Tests:** TBD
 
-#### Phase 24.4 — Node Rendering (5-6h) 🟤 PENDING
-- Update `NodeBranch` canvas rendering for Phase 24
-- Display condition refs with preset name
-- Dynamic pin rendering
-- **Tests:** TBD
-
-#### Phase 24.5 — Runtime Evaluation (5-6h) 🟤 PENDING
-- Evaluate conditions from preset registry at runtime
-- Resolve pin-mapped operand values
-- Support all operators (==, !=, <, <=, >, >=)
-- **Tests:** TBD
-
-#### Phase 24.6 — Undo/Redo Integration (6-7h) 🟤 PENDING
-- Undo/Redo for all preset CRUD operations
-- Undo/Redo for condition ref changes on nodes
-- Undo/Redo for dynamic pin add/remove
-- **Tests:** TBD
-
-#### Phase 24.7 — Testing & Polish (8-10h) 🟤 PENDING
-- Full regression suite for Phase 24 (cumulative coverage across 24.0-24.6)
-- Edge case coverage
-- Performance profiling (dynamic pin rebuild)
-- UX polish pass
+#### Phase 24.7 — Testing & Polish 🟤 PENDING
+- [ ] Full regression suite for Phase 24 (cumulative coverage across 24.0-24.6)
+- [ ] Edge case coverage
+- [ ] Performance profiling (dynamic pin rebuild)
+- [ ] UX polish pass
 - **Tests:** TBD (full regression count defined after 24.0-24.6 complete)
 
-#### Phase 24.8 — Final Documentation (4-5h) 🟤 PENDING
-- Update ARCHITECTURE.md with final Phase 24 details
-- Update ROADMAP_V2.md
-- Update CONTEXT_STATUS.md
-- Feature context file: `feature_context_24.md`
+#### Phase 24.8 — Final Documentation 🟤 PENDING
+- [ ] Update ARCHITECTURE.md with final Phase 24 details
+- [ ] Update ROADMAP_V2.md
+- [ ] Update CONTEXT_STATUS.md
+- [ ] Feature context file: `feature_context_24.md`
 
 ---
 
@@ -102,15 +100,15 @@
 
 | Sub-phase | Planned Tests | Passing |
 |---|---|---|
-| 24.0 | 31 | 0 (in progress) |
-| 24.1 | 18 | 0 (queued) |
-| 24.2 | TBD | — |
-| 24.3 | TBD | — |
+| 24.0 | 31 | ✅ 31 |
+| 24.1 | 18 | ✅ 18 |
+| 24.2 | — | — |
+| 24.3 | — | — |
 | 24.4 | TBD | — |
 | 24.5 | TBD | — |
 | 24.6 | TBD | — |
 | 24.7 | TBD | — |
-| 24.8 | TBD | — |
+| 24.8 | — | — |
 
 ---
 
@@ -137,10 +135,13 @@
 
 ### Next Actions
 
-1. Complete Phase 24.0 (core models)
-2. Review & merge Phase 24.0 PR
-3. Execute Phase 24.1 (global UI)
-4. Continue phases 24.2-24.8
+1. ~~Complete Phase 24.0 (core models)~~ ✅ DONE (PR #422)
+2. ~~Review & merge Phase 24.0 PR~~ ✅ DONE
+3. ~~Execute Phase 24.1 (global UI)~~ ✅ DONE (PR #424)
+4. ~~Execute Phase 24.2–24.4~~ ✅ DONE (PR #426, #428, #432)
+5. **Merge PR #430** — include path fix (unblocks Phase 24.5)
+6. **Execute Phase 24.5** — Runtime Evaluation
+7. Continue phases 24.6–24.8
 
 ---
 
@@ -155,6 +156,11 @@
 | 22-C | Parameter Dropdowns & Registries | ✅ COMPLETED | #386 | 2026-03-14 21:59:19 UTC |
 | 23-B | Full Blackboard Properties + BUG-001/002 | ✅ MERGED | #400/#401 | 2026-03-15 |
 | HOTFIX | BUG-003/004 Node Position + Load Crash | ✅ FIXED | #401 | 2026-03-15 |
+| **24.0** | **Condition Preset — Core Data Models** | **✅ COMPLETED** | **#422** | **2026-03-17** |
+| **24.1** | **Condition Preset — Global Presets UI** | **✅ COMPLETED** | **#424** | **2026-03-17** |
+| **24.2** | **Condition Preset — Docs** | **✅ COMPLETED** | **#426** | **2026-03-17** |
+| **24.3** | **Condition Preset — Version Stamp** | **✅ COMPLETED** | **#428** | **2026-03-17** |
+| **24.4** | **Condition Preset — NodeConditionsPanel, DynPinMgr, BranchRenderer** | **✅ COMPLETED** | **#432** | **2026-03-17** |
 
 ---
 
@@ -169,4 +175,4 @@
 
 ---
 
-**Last Updated:** 2026-03-16 22:49:08 UTC
+**Last Updated:** 2026-03-17 13:37:54 UTC

@@ -288,6 +288,69 @@ Result: Impossible to author graphs without documentation/guessing.
 
 ---
 
+## Phase 24 — Global Condition Preset System Refactor
+
+### Phase 24.0 — Core Data Models (COMPLETED ✅ — PR #422)
+
+**Status:** ✅ MERGED — PR #422  
+**Date Completed:** 2026-03-17  
+**Description:** Foundational data structures for the Condition Preset System.
+
+**Deliverables:**
+- `Source/Editor/ConditionPreset/Operand.h/.cpp` — Operand struct (Variable/Const/Pin modes)
+- `Source/Editor/ConditionPreset/ConditionPreset.h/.cpp` — ConditionPreset struct + ComparisonOp
+- `Source/Editor/ConditionPreset/DynamicDataPin.h/.cpp` — DynamicDataPin struct
+- `Source/Editor/ConditionPreset/NodeConditionRef.h/.cpp` — NodeConditionRef struct
+- `Source/Editor/ConditionPreset/ConditionPresetRegistry.h/.cpp` — Global registry singleton
+
+---
+
+### Phase 24.1 — Global Condition Preset Library UI (COMPLETED ✅ — PR #424)
+
+**Status:** ✅ MERGED — PR #424  
+**Date Completed:** 2026-03-17  
+**Description:** Editor panels for managing global condition presets.
+
+**Deliverables:**
+- `Source/Editor/Panels/ConditionPresetLibraryPanel.h/.cpp` — Global preset library panel
+- `Source/Editor/Dialogs/ConditionPresetEditDialog.h/.cpp` — Create/edit modal dialog
+- Include path fix tracked in PR #430 (DRAFT — pending validation)
+
+---
+
+### Phase 24.2-24.4 — NodeConditionsPanel, DynamicDataPinManager, NodeBranchRenderer (COMPLETED ✅ — PR #432)
+
+**Status:** ✅ MERGED — PR #432  
+**Date Completed:** 2026-03-17  
+**Description:** Node-level UI, dynamic pin management, and updated branch node rendering.
+
+**Deliverables:**
+- `Source/Editor/Panels/NodeConditionsPanel.h/.cpp` — Node-level condition assignment panel
+- `Source/Editor/ConditionPreset/DynamicDataPinManager.h/.cpp` — Auto-generate data input pins
+- `Source/Editor/Nodes/NodeBranchRenderer.h/.cpp` — Updated NodeBranch canvas rendering
+
+> ⚠️ **Known post-merge compilation errors from PR #432** — see [bug_status_phase24.md](../BugStatus/bug_status_phase24.md)  
+> Fix tracked in PR #430 (DRAFT — pending merge after validation)
+
+---
+
+### Phase 24.3 — Version Stamp & Initialization (COMPLETED ✅ — PR #426, PR #428)
+
+**Status:** ✅ MERGED — PR #426, PR #428  
+**Date Completed:** 2026-03-17  
+**Description:** PROJECT_STATUS.md + ARCHITECTURE.md (PR #426) and version stamp system (PR #428).
+
+---
+
+### Phase 24.5 — Runtime Evaluation (NEXT ⏭️)
+
+**Status:** ⏭️ NEXT PRIORITY  
+**Description:** Evaluate conditions from the preset registry at runtime; resolve pin-mapped operand values.
+
+**Blocked by:** Successful build (PR #430 merge required)
+
+---
+
 ## Updated Calendrier
 
 | Phase | Initiative | Estimation | Statut | Priority |
@@ -303,13 +366,16 @@ Result: Impossible to author graphs without documentation/guessing.
 | **HOTFIX** | **BUG-003/004 Node Position Offset + Load Crash** | **~0.5 session** | **✅ FIXED (PR #401)** | **P0** |
 | **23-B.3** | **Variable Value Assignment in Properties Panel** | **~0.5 session** | **⏳ PLANNED** | **P1** |
 | **23-B.4** | **Resizable Properties Panel (width drag handle)** | **~0.5 session** | **✅ DONE (PR #400)** | **P2** |
+| **24.0** | **Condition Preset — Core Data Models** | **~1 session** | **✅ COMPLETED (PR #422)** | **P0** |
+| **24.1** | **Condition Preset — Global Presets UI** | **~1 session** | **✅ COMPLETED (PR #424)** | **P0** |
+| **24.2** | **Condition Preset — Docs (ARCHITECTURE + PROJECT_STATUS)** | **~0.5 session** | **✅ COMPLETED (PR #426)** | **P0** |
+| **24.3** | **Condition Preset — Version Stamp System** | **~0.5 session** | **✅ COMPLETED (PR #428)** | **P0** |
+| **24.4** | **Condition Preset — NodeConditionsPanel, DynPinMgr, BranchRenderer** | **~1 session** | **✅ COMPLETED (PR #432)** | **P0** |
+| **24.5** | **Condition Preset — Runtime Evaluation** | **~1 session** | **⏭️ NEXT (blocked on PR #430)** | **P0** |
 | 21-C | GVS — Pre-save/Pre-exec Validation | ~0.5 session | ⏳ NEXT | P1 |
 | 22-B | Font Awesome Icons & Design | ~2 sessions | ⏳ Deferred (spec needed) | P2 |
 | 23-A | AnimGraph Infrastructure | ~2 sessions | Planned | — |
 | 23-C | MenuGraph + GlobalRules | ~2 sessions | Planned | — |
-| 24-A | Runtime Instance | ~2 sessions | Future | — |
-| 24-B | Debugger Multi-instances | ~2 sessions | Future | — |
-| 24-C | Thread Safety | ~1 session | Future | — |
 
 ---
 
@@ -332,4 +398,4 @@ must return to the Blackboard panel to change a value, breaking the workflow.
 
 ---
 
-**Last Updated**: 2026-03-16 14:48:07 UTC
+**Last Updated**: 2026-03-17 13:37:54 UTC
