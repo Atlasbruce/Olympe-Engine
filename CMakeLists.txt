@@ -674,11 +674,60 @@ if(BUILD_TESTS)
     add_test(NAME OlympePhase23B6Tests COMMAND OlympePhase23B6Tests)
 
     # -----------------------------------------------------------------------
+    # OlympePhase24OperandTests  (Phase 24.0 — Operand)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24OperandTests
+        Tests/Editor/ConditionPreset/OperandTest.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
+    )
+    target_compile_definitions(OlympePhase24OperandTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24OperandTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24OperandTests COMMAND OlympePhase24OperandTests)
+
+    # -----------------------------------------------------------------------
+    # OlympePhase24ConditionPresetTests  (Phase 24.0 — ConditionPreset)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24ConditionPresetTests
+        Tests/Editor/ConditionPreset/ConditionPresetTest.cpp
+        Source/Editor/ConditionPreset/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
+    )
+    target_compile_definitions(OlympePhase24ConditionPresetTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24ConditionPresetTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24ConditionPresetTests COMMAND OlympePhase24ConditionPresetTests)
+
+    # -----------------------------------------------------------------------
+    # OlympePhase24DynamicDataPinTests  (Phase 24.0 — DynamicDataPin)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24DynamicDataPinTests
+        Tests/Editor/ConditionPreset/DynamicDataPinTest.cpp
+        Source/Editor/ConditionPreset/DynamicDataPin.cpp
+    )
+    target_compile_definitions(OlympePhase24DynamicDataPinTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24DynamicDataPinTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24DynamicDataPinTests COMMAND OlympePhase24DynamicDataPinTests)
+
+    # -----------------------------------------------------------------------
+    # OlympePhase24RegistryTests  (Phase 24.0 — ConditionPresetRegistry)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24RegistryTests
+        Tests/Editor/ConditionPreset/ConditionPresetRegistryTest.cpp
+        Source/Editor/ConditionPreset/ConditionPresetRegistry.cpp
+        Source/Editor/ConditionPreset/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
+    )
+    target_compile_definitions(OlympePhase24RegistryTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24RegistryTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24RegistryTests COMMAND OlympePhase24RegistryTests)
+
+    # -----------------------------------------------------------------------
     # OlympePhase24_1_LibraryPanelTests  (Phase 24.1 — ConditionPresetLibraryPanel)
     # -----------------------------------------------------------------------
     add_executable(OlympePhase24_1_LibraryPanelTests
         Tests/Editor/Panels/ConditionPresetLibraryPanelTest.cpp
-        Source/BlueprintEditor/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/ConditionPresetRegistry.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
         Source/Editor/Panels/ConditionPresetLibraryPanel.cpp
         Source/TaskSystem/TaskGraphTypes.cpp
         Source/TaskSystem/TaskGraphTemplate.cpp
@@ -696,7 +745,9 @@ if(BUILD_TESTS)
     # -----------------------------------------------------------------------
     add_executable(OlympePhase24_1_EditDialogTests
         Tests/Editor/Dialogs/ConditionPresetEditDialogTest.cpp
-        Source/BlueprintEditor/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/ConditionPresetRegistry.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
         Source/Editor/Dialogs/ConditionPresetEditDialog.cpp
         Source/TaskSystem/TaskGraphTypes.cpp
         Source/TaskSystem/TaskGraphTemplate.cpp

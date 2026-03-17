@@ -37,7 +37,9 @@
 #include <string>
 #include <vector>
 
-#include "../../BlueprintEditor/ConditionPreset.h"
+#include "../ConditionPreset/ConditionPreset.h"
+#include "../ConditionPreset/Operand.h"
+#include "../../TaskSystem/TaskGraphTypes.h"
 
 namespace Olympe {
 
@@ -120,19 +122,19 @@ public:
      * @brief Returns the current left operand mode string.
      * @return "Variable", "Const", or "Pin".
      */
-    const std::string& GetLeftMode()  const { return m_workingCopy.condition.leftMode; }
+    std::string GetLeftMode()  const;
 
     /**
      * @brief Returns the current right operand mode string.
      * @return "Variable", "Const", or "Pin".
      */
-    const std::string& GetRightMode() const { return m_workingCopy.condition.rightMode; }
+    std::string GetRightMode() const;
 
     /**
      * @brief Returns the current comparison operator string.
      * @return One of "==", "!=", "<", "<=", ">", ">=".
      */
-    const std::string& GetOperator()  const { return m_workingCopy.condition.operatorStr; }
+    std::string GetOperator()  const;
 
     // -----------------------------------------------------------------------
     // Programmatic setters (for testing and host-driven pre-population)
@@ -258,21 +260,22 @@ private:
     /** @brief Returns true if the given operator string is recognised. */
     static bool IsValidOperator(const std::string& op);
 
-    /** @brief Returns true if the given mode string is recognised. */
-    static bool IsValidMode(const std::string& mode);
+    /** @brief Returns true if the operand is sufficiently filled to be valid. */
+    static bool IsOperandFilled(const Operand& operand);
 
-    /** @brief Returns true if the operand part (mode + values) is sufficiently filled. */
-    static bool IsOperandFilled(const std::string& mode,
-                                 const std::string& variable,
-                                 const std::string& pin,
-                                 const TaskValue&   constVal);
+    /** @brief Translates OperandMode enum to its string label. */
+    static std::string ModeToString(OperandMode mode);
+
+    /** @brief Parses a mode string to OperandMode; returns Variable on unknown input. */
+    static OperandMode ModeFromString(const std::string& mode);
 
     // -----------------------------------------------------------------------
     // State
     // -----------------------------------------------------------------------
 
     Mode            m_mode;
-    ConditionPreset m_workingCopy; ///< In-progress edits
+    ConditionPreset m_workingCopy;  ///< In-progress edits (Operand-based)
+    std::string     m_operatorStr;  ///< Raw operator string (for validation)
     bool            m_isOpen      = false;
     bool            m_isConfirmed = false;
 };
