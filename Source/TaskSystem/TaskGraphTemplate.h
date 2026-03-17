@@ -22,6 +22,8 @@
 #include <cstdint>
 
 #include "TaskGraphTypes.h"
+#include "Editor/ConditionPreset/NodeConditionRef.h"
+#include "Editor/ConditionPreset/DynamicDataPin.h"
 
 namespace Olympe {
 
@@ -125,6 +127,10 @@ struct TaskNodeDefinition {
 
     // ATS VS Unified Condition System (Phase 23-B.4 - 2026-03-15)
     std::vector<Condition> conditions;  ///< For Branch/While: structured condition list (implicit AND)
+
+    // Phase 24.0 — Condition Preset System
+    std::vector<NodeConditionRef> conditionRefs; ///< Multi-condition refs to global presets (Phase 24)
+    std::vector<DynamicDataPin>   dynamicPins;   ///< Dynamic data-input pins for Pin-mode operands (Phase 24)
 
     /// For VSSequence: dynamically-added exec-out pins beyond the default "Out".
     /// Each entry is a pin name (e.g. "Out_1", "Out_2"...).
