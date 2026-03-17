@@ -21,7 +21,8 @@
  * C++14 compliant — no std::optional, structured bindings, std::filesystem.
  */
 
-#include "BlueprintEditor/ConditionPreset.h"
+#include "Editor/ConditionPreset/ConditionPreset.h"
+#include "Editor/ConditionPreset/Operand.h"
 #include "Editor/Dialogs/ConditionPresetEditDialog.h"
 
 #include <iostream>
@@ -68,11 +69,9 @@ static ConditionPreset MakeValidPreset()
     ConditionPreset p;
     p.id   = "test_preset_001";
     p.name = "Health Check";
-    p.condition.leftMode      = "Variable";
-    p.condition.leftVariable  = "mHealth";
-    p.condition.operatorStr   = "<=";
-    p.condition.rightMode     = "Const";
-    p.condition.rightConstValue = TaskValue(2);
+    p.left = Operand::CreateVariable("mHealth");
+    p.op   = ComparisonOp::LessEqual;
+    p.right = Operand::CreateConst(2.0);
     return p;
 }
 
@@ -97,7 +96,6 @@ static void Test_Dialog_CreateMode()
     TEST_ASSERT(dlg.GetOperator()  == "==",       "Default operator is ==");
     TEST_ASSERT(dlg.GetRightMode() == "Const",    "Default right mode is Const");
 
-    // Working copy name is empty by default
     const ConditionPreset result = dlg.GetResult();
     TEST_ASSERT(result.id.empty(),   "Create mode should start with empty ID");
 
@@ -131,7 +129,7 @@ static void Test_Dialog_EditMode()
     const ConditionPreset result = dlg.GetResult();
     TEST_ASSERT(result.id   == "test_preset_001", "ID preserved from existing preset");
     TEST_ASSERT(result.name == "Health Check",    "Name preserved from existing preset");
-    TEST_ASSERT(result.condition.leftVariable == "mHealth",
+    TEST_ASSERT(result.left.stringValue == "mHealth",
                 "Left variable preserved from existing preset");
 
     ReportTest(name, s_failCount == prevFail);
@@ -152,7 +150,7 @@ static void Test_Dialog_OperandSelectorVariable()
     dlg.SetLeftVariable("mSpeed");
 
     TEST_ASSERT(dlg.GetLeftMode() == "Variable",    "Left mode is Variable");
-    TEST_ASSERT(dlg.GetResult().condition.leftVariable == "mSpeed",
+    TEST_ASSERT(dlg.GetResult().left.stringValue == "mSpeed",
                 "Left variable set correctly");
 
     // Preview should contain [mSpeed]
@@ -220,8 +218,8 @@ static void Test_Dialog_OperandSelectorPin()
     TEST_ASSERT(dlg.GetRightMode() == "Pin", "Right mode is Pin");
 
     const ConditionPreset result = dlg.GetResult();
-    TEST_ASSERT(result.condition.leftPin  == "Node#1.Out", "Left pin set correctly");
-    TEST_ASSERT(result.condition.rightPin == "Node#2.Out", "Right pin set correctly");
+    TEST_ASSERT(result.left.stringValue  == "Node#1.Out", "Left pin set correctly");
+    TEST_ASSERT(result.right.stringValue == "Node#2.Out", "Right pin set correctly");
 
     const std::string preview = dlg.GetPreview();
     TEST_ASSERT(preview.find("Node#1.Out") != std::string::npos,
@@ -351,9 +349,9 @@ static void Test_Dialog_SaveValidCondition()
 
     const ConditionPreset result = dlg.GetResult();
     TEST_ASSERT(result.name == "My Preset",        "Name preserved in result");
-    TEST_ASSERT(result.condition.leftVariable == "mSpeed",
+    TEST_ASSERT(result.left.stringValue == "mSpeed",
                 "Left variable preserved in result");
-    TEST_ASSERT(result.condition.operatorStr == ">=",
+    TEST_ASSERT(ConditionPreset::OpToString(result.op) == ">=",
                 "Operator preserved in result");
 
     // Invalid condition → Confirm() returns false
