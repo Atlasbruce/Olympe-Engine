@@ -100,11 +100,6 @@ bool GraphRuntimeInstance::StepExecution()
     {
         m_executionStack.push_back(nextID);
     }
-    else
-    {
-        // No successor — execution is complete.
-        m_isExecuting = m_executionStack.empty() ? false : true;
-    }
 
     m_isExecuting = !m_executionStack.empty();
     return m_isExecuting;
