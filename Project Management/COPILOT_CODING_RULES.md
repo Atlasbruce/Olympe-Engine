@@ -718,3 +718,130 @@ Before approving PR, verify:
 - `lexical-code-search`: Find method definitions
 - `semantic-code-search`: Find usage examples
 - `githubread`: Read header files line-by-line
+
+---
+
+## VERSION STAMP INTEGRATION
+
+### Inclusion Obligatoire
+
+`version.h` est le seul fichier qui **doit** inclure `system_utils.h` de façon directe dans un header.
+Tous les autres headers du projet doivent se conformer aux règles d'include habituelles.
+
+```cpp
+// Source/System/version.h — seule exception d'include dans header
+#include "../system/system_utils.h"
+```
+
+### Champs Obligatoires de VersionStamp
+
+Tous les champs suivants **doivent** être présents et à jour dans `Source/System/version.h` :
+
+| Champ | Type | Format | Exemple |
+|-------|------|--------|---------|
+| `MAJOR` | `constexpr const char*` | Entier | `"0"` |
+| `MINOR` | `constexpr const char*` | Entier | `"24"` |
+| `PATCH` | `constexpr const char*` | Entier | `"0"` |
+| `BUILD_TIMESTAMP` | `constexpr const char*` | `YYYY-MM-DD HH:MM:SS UTC` | `"2026-03-17 10:07:51 UTC"` |
+| `GIT_COMMIT_SHA` | `constexpr const char*` | 40 hex chars | `"0000000000000000000000000000000000000000"` |
+| `GIT_BRANCH` | `constexpr const char*` | string | `"master"` |
+| `PR_NUMBER` | `constexpr const char*` | `#NNN` | `"#388"` |
+| `PHASE` | `constexpr const char*` | `XX-Y-Feature` | `"24-0-VersionStamp"` |
+| `BUILD_CONFIG` | `constexpr const char*` | `Debug` ou `Release` | `"Debug"` |
+| `FULL_VERSION_STRING` | `constexpr const char*` | Ligne continue | Voir ci-dessous |
+
+### Structure de version.h — Exemple
+
+```cpp
+#pragma once
+#include "../system/system_utils.h"
+
+namespace Olympe
+{
+    struct VersionStamp
+    {
+        static constexpr const char* MAJOR          = "0";
+        static constexpr const char* MINOR          = "24";
+        static constexpr const char* PATCH          = "0";
+        static constexpr const char* BUILD_TIMESTAMP = "2026-03-17 10:07:51 UTC";
+        static constexpr const char* GIT_COMMIT_SHA  = "0000000000000000000000000000000000000000";
+        static constexpr const char* GIT_BRANCH      = "master";
+        static constexpr const char* PR_NUMBER       = "#000";
+        static constexpr const char* PHASE           = "24-0-VersionStamp";
+        static constexpr const char* BUILD_CONFIG    = "Debug";
+        static constexpr const char* FULL_VERSION_STRING =
+            "OLYMPE_VERSION:0.24.0|BUILD:2026-03-17 10:07:51 UTC"
+            "|SHA:0000000000000000000000000000000000000000"
+            "|BRANCH:master|PR:#000|PHASE:24-0-VersionStamp|CONFIG:Debug";
+
+        static void PrintVersionInfo()
+        {
+            SYSTEM_LOG << "[VersionStamp] Olympe Engine v"
+                       << MAJOR << "." << MINOR << "." << PATCH << std::endl;
+            SYSTEM_LOG << "[VersionStamp] Build timestamp : " << BUILD_TIMESTAMP  << std::endl;
+            SYSTEM_LOG << "[VersionStamp] Git commit SHA  : " << GIT_COMMIT_SHA   << std::endl;
+            SYSTEM_LOG << "[VersionStamp] Git branch      : " << GIT_BRANCH       << std::endl;
+            SYSTEM_LOG << "[VersionStamp] PR reference    : " << PR_NUMBER        << std::endl;
+            SYSTEM_LOG << "[VersionStamp] Phase           : " << PHASE            << std::endl;
+            SYSTEM_LOG << "[VersionStamp] Build config    : " << BUILD_CONFIG     << std::endl;
+            SYSTEM_LOG << "[VersionStamp] Full version    : " << FULL_VERSION_STRING << std::endl;
+        }
+    };
+} // namespace Olympe
+```
+
+### Exigences de Logging
+
+- `PrintVersionInfo()` doit être appelé **en premier** dans `main()`, avant tout autre log
+- Utiliser **exclusivement** `SYSTEM_LOG` (jamais `std::cout` ni `std::cerr`)
+- Aucun emoji ni caractère ASCII étendu dans les chaînes de log
+
+### Procédure de Mise à Jour après chaque PR Merge
+
+1. Extraire les métadonnées : `git rev-parse HEAD`, `date -u "+%Y-%m-%d %H:%M:%S UTC"`
+2. Mettre à jour **tous** les champs dans `Source/System/version.h`
+3. Mettre à jour `Project Management/VERSION_STAMP.md` (version actuelle + historique)
+4. Compiler et vérifier 0 erreurs, 0 warnings
+5. Vérifier avec `strings <exe> | grep OLYMPE_VERSION`
+
+### Checklist Compilation version.h
+
+- [ ] Aucune fonctionnalité C++17/20 utilisée
+- [ ] Tous les champs sont `static constexpr const char*`
+- [ ] `FULL_VERSION_STRING` est une seule ligne continue (binary searchable)
+- [ ] `GIT_COMMIT_SHA` est exactement 40 caractères hexadécimaux
+- [ ] `BUILD_TIMESTAMP` respecte le format `YYYY-MM-DD HH:MM:SS UTC`
+- [ ] `PrintVersionInfo()` utilise uniquement `SYSTEM_LOG`
+- [ ] Aucun emoji ni caractère ASCII étendu dans les chaînes de log
+- [ ] Code dans `namespace Olympe { }` avec commentaire de fermeture
+- [ ] Include relatif correct : `"../system/system_utils.h"`
+- [ ] Compilation 0 erreurs, 0 warnings (MSVC + GCC/Clang)
+- [ ] `strings <exe> | grep OLYMPE_VERSION` retourne la valeur attendue
+
+### Vérification Binaire
+
+```bash
+# Après build, vérifier que la version est embarquée dans l'exécutable :
+strings OlympeEngine.exe | grep OLYMPE_VERSION
+# Résultat attendu (une seule ligne) :
+# OLYMPE_VERSION:0.24.0|BUILD:2026-03-17 10:07:51 UTC|SHA:0000000000000000000000000000000000000000|BRANCH:master|PR:#000|PHASE:24-0-VersionStamp|CONFIG:Debug
+```
+
+### Template Section PR — Version Stamp
+
+Chaque PR **DOIT** inclure cette section dans sa description :
+
+```markdown
+## Version Stamp
+
+- **Version**: X.Y.Z
+- **Phase**: XX-Y-NomFeature
+- **PR**: #NNN
+- **Build Timestamp**: YYYY-MM-DD HH:MM:SS UTC
+- **Git SHA**: <40-char-sha>
+- **Branch**: master
+- **FULL_VERSION_STRING**: `OLYMPE_VERSION:X.Y.Z|BUILD:...|SHA:...|BRANCH:master|PR:#NNN|PHASE:...|CONFIG:Debug`
+- **version.h updated**: YES/NO
+- **VERSION_STAMP.md updated**: YES/NO
+- **Binary verification**: `strings OlympeEngine.exe | grep OLYMPE_VERSION` -> OK
+```

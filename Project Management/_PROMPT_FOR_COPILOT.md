@@ -99,3 +99,97 @@ Options :
 3. Continuer phase en cours
 4. Affiner spec d'une feature existante
 5. Autre ?
+
+---
+
+## VERSION STAMP MANAGEMENT
+
+### Responsabilités Copilot après chaque PR Mergée
+
+Après chaque PR mergée sur `master`, le Copilot **DOIT** mettre à jour le système de version stamp :
+
+#### 1. Extraire les Métadonnées de Build
+
+```bash
+# Commit SHA complet (40 caractères)
+git rev-parse HEAD
+
+# Branche courante
+git branch --show-current
+
+# Timestamp UTC du merge (format YYYY-MM-DD HH:MM:SS UTC)
+date -u "+%Y-%m-%d %H:%M:%S UTC"
+```
+
+#### 2. Mettre à Jour `Source/System/version.h`
+
+Mettre à jour **tous** les champs `constexpr const char*` :
+
+```cpp
+static constexpr const char* MAJOR          = "X";
+static constexpr const char* MINOR          = "Y";
+static constexpr const char* PATCH          = "Z";
+static constexpr const char* BUILD_TIMESTAMP = "YYYY-MM-DD HH:MM:SS UTC";
+static constexpr const char* GIT_COMMIT_SHA  = "<40-char-sha>";
+static constexpr const char* GIT_BRANCH      = "master";
+static constexpr const char* PR_NUMBER       = "#NNN";
+static constexpr const char* PHASE           = "XX-Y-NomFeature";
+static constexpr const char* BUILD_CONFIG    = "Debug";   // ou "Release"
+static constexpr const char* FULL_VERSION_STRING =
+    "OLYMPE_VERSION:X.Y.Z|BUILD:YYYY-MM-DD HH:MM:SS UTC"
+    "|SHA:<40-char-sha>"
+    "|BRANCH:master|PR:#NNN|PHASE:XX-Y-NomFeature|CONFIG:Debug";
+```
+
+#### 3. Mettre à Jour `Project Management/VERSION_STAMP.md`
+
+- Mettre à jour la section **Version Actuelle** avec les nouvelles valeurs
+- Ajouter une ligne dans la section **Historique des Versions**
+
+Format ligne historique :
+```
+| X.Y.Z | YYYY-MM-DD HH:MM:SS UTC | `<7-char-sha>` | #NNN | XX-Y-NomFeature | Debug |
+```
+
+#### 4. Vérification et Compilation
+
+- [ ] `version.h` compile avec 0 erreurs, 0 warnings
+- [ ] `FULL_VERSION_STRING` est une seule ligne continue (binary searchable)
+- [ ] `GIT_COMMIT_SHA` est exactement 40 caractères hexadécimaux
+- [ ] `BUILD_TIMESTAMP` respecte le format `YYYY-MM-DD HH:MM:SS UTC`
+- [ ] `strings <exe> | grep OLYMPE_VERSION` retourne la nouvelle valeur
+
+### Format Timestamp Obligatoire
+
+**Toujours UTC ISO 8601 sans T ni Z :**
+
+```
+YYYY-MM-DD HH:MM:SS UTC
+```
+
+Exemple : `2026-03-17 10:07:51 UTC`
+
+### Exigences de Logging
+
+- `PrintVersionInfo()` doit être le **premier appel** dans `main()`, avant tout autre log
+- Utiliser **exclusivement** `SYSTEM_LOG` (jamais `std::cout` ni `std::cerr`)
+- Aucun emoji ni caractère ASCII étendu dans les chaînes de log
+
+### Template Section PR — Version Stamp
+
+Chaque PR **DOIT** inclure cette section dans sa description :
+
+```markdown
+## Version Stamp
+
+- **Version**: X.Y.Z
+- **Phase**: XX-Y-NomFeature
+- **PR**: #NNN
+- **Build Timestamp**: YYYY-MM-DD HH:MM:SS UTC
+- **Git SHA**: <40-char-sha>
+- **Branch**: master
+- **FULL_VERSION_STRING**: `OLYMPE_VERSION:X.Y.Z|BUILD:...|SHA:...|BRANCH:master|PR:#NNN|PHASE:...|CONFIG:Debug`
+- **version.h updated**: ✅
+- **VERSION_STAMP.md updated**: ✅
+- **Binary verification**: `strings OlympeEngine.exe | grep OLYMPE_VERSION` -> ✅
+```
