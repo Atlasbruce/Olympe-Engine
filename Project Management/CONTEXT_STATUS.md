@@ -1,6 +1,30 @@
 # Olympe Engine — Etat des Lieux
 
-**Date :** 2026-03-16 14:48:07 UTC
+**Date :** 2026-03-17 13:37:54 UTC
+
+---
+
+## ✅ Phase 24 — Condition Preset System (PHASES 24.0–24.4 COMPLÉTÉES)
+
+**Statut :** 🟠 ACTIVE — Phase 24.5 Runtime Evaluation NEXT (bloquée par PR #430)  
+**Référence :** [feature_context_24.md](./Features/feature_context_24.md) | [bug_status_phase24.md](./BugStatus/bug_status_phase24.md)
+
+### Composants mergés
+
+| Sub-phase | Composants | PR | Statut |
+|---|---|---|---|
+| 24.0 | `Operand`, `ConditionPreset`, `ConditionPresetRegistry`, `NodeConditionRef`, `DynamicDataPin` | #422 | ✅ MERGED |
+| 24.1 | `ConditionPresetLibraryPanel`, `ConditionPresetEditDialog` | #424 | ✅ MERGED |
+| 24.2 | Docs ARCHITECTURE.md + PROJECT_STATUS.md | #426 | ✅ MERGED |
+| 24.3 | Version Stamp System | #428 | ✅ MERGED |
+| 24.4 | `NodeConditionsPanel`, `DynamicDataPinManager`, `NodeBranchRenderer` | #432 | ✅ MERGED |
+
+### Prochain : Phase 24.5
+
+- **Objectif :** Runtime Evaluation — évaluer les conditions depuis le registry à l'exécution
+- **Bloqué par :** PR #430 (include path fix — DRAFT, pending merge)
+
+> ⚠️ Erreurs de compilation post-PR #432 résolues — voir [bug_status_phase24.md](./BugStatus/bug_status_phase24.md)
 
 ---
 
@@ -130,4 +154,4 @@ Voir [BUG_REGISTRY.md](./BugTracking/BUG_REGISTRY.md) pour les fiches détaillé
 
 ---
 
-**Last Updated**: 2026-03-16 14:48:07 UTC
+**Last Updated**: 2026-03-17 13:37:54 UTC
