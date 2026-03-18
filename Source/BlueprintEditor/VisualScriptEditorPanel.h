@@ -225,6 +225,23 @@ private:
     void RenderContextMenus();
 
     void RenderProperties();
+
+    /**
+     * @brief Renders the Properties panel content for a selected Branch (or While) node.
+     *
+     * @details
+     * Displays a blue header with the node name (matching the canvas Section 1 title
+     * bar styling), then delegates to NodeConditionsPanel::Render() for the compact
+     * structured-conditions list, and finishes with a Breakpoint checkbox.
+     *
+     * The caller (RenderProperties) must @c return immediately after this call to
+     * prevent the legacy condition UI from also rendering.
+     *
+     * @param eNode  Reference to the selected editor node (modified when dirty).
+     * @param def    Reference to the node's TaskNodeDefinition (modified when dirty).
+     */
+    void RenderBranchNodeProperties(VSEditorNode& eNode, TaskNodeDefinition& def);
+
     void RenderBlackboard();
     void RenderValidationOverlay();
     void RenderBreakpoints();

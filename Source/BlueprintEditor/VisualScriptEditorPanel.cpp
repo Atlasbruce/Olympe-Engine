@@ -2480,7 +2480,81 @@ void VisualScriptEditorPanel::RenderContextMenus()
     }
 }
 
-void VisualScriptEditorPanel::RenderProperties()
+// ============================================================================
+// Branch / While node — dedicated Properties panel renderer
+// ============================================================================
+
+void VisualScriptEditorPanel::RenderBranchNodeProperties(VSEditorNode& eNode,
+                                                         TaskNodeDefinition& def)
+{
+    // ── Blue header: node name (matches canvas Section 1 title bar) ──────────
+    ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.0f, 0.4f, 0.8f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.0f, 0.5f, 0.9f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive,  ImVec4(0.0f, 0.3f, 0.7f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text,          ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+    ImGui::Selectable(def.NodeName.c_str(), true,
+                      ImGuiSelectableFlags_None, ImVec2(0.f, 28.f));
+    ImGui::PopStyleColor(4);
+
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    // ── Structured Conditions (Phase 24 — NodeConditionsPanel) ───────────────
+    if (m_conditionsPanel)
+    {
+        // Reload the panel when the selected node changes.
+        if (m_condPanelNodeID != eNode.nodeID)
+        {
+            m_condPanelNodeID = eNode.nodeID;
+            m_conditionsPanel->SetNodeName(def.NodeName);
+            m_conditionsPanel->SetConditionRefs(def.conditionRefs);
+            m_conditionsPanel->SetDynamicPins(def.dynamicPins);
+            m_conditionsPanel->ClearDirty();
+        }
+        else
+        {
+            // Keep node name in sync with any in-frame name edits.
+            m_conditionsPanel->SetNodeName(def.NodeName);
+        }
+
+        m_conditionsPanel->Render();
+
+        if (m_conditionsPanel->IsDirty())
+        {
+            def.conditionRefs = m_conditionsPanel->GetConditionRefs();
+
+            // Keep m_template in sync for serialization.
+            for (size_t ti = 0; ti < m_template.Nodes.size(); ++ti)
+            {
+                if (m_template.Nodes[ti].NodeID == m_selectedNodeID)
+                {
+                    m_template.Nodes[ti].conditionRefs = def.conditionRefs;
+                    break;
+                }
+            }
+            m_conditionsPanel->ClearDirty();
+            m_dirty = true;
+        }
+    }
+
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    // ── Breakpoint checkbox (F9) ─────────────────────────────────────────────
+    bool hasBP = DebugController::Get().HasBreakpoint(0, m_selectedNodeID);
+    if (ImGui::Checkbox("Breakpoint (F9)##vsbp_branch", &hasBP))
+    {
+        DebugController::Get().ToggleBreakpoint(0, m_selectedNodeID,
+                                                m_template.Name,
+                                                def.NodeName);
+    }
+
+    RenderVerificationPanel();
+
+    (void)eNode; // suppress unused-warning when branches have no eNode-specific fields
+}
+
+
 {
     ImGui::TextDisabled("Properties");
 
@@ -2710,184 +2784,11 @@ void VisualScriptEditorPanel::RenderProperties()
         case TaskNodeType::Branch:
         case TaskNodeType::While:
         {
-            // ── Phase 24: Condition Presets (NodeConditionsPanel) ────────────
-            ImGui::Separator();
-            ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f),
-                               "Condition Presets (Phase 24)");
-
-            if (m_conditionsPanel)
-            {
-                // Reload the panel when the selected node changes.
-                if (m_condPanelNodeID != m_selectedNodeID)
-                {
-                    m_condPanelNodeID = m_selectedNodeID;
-                    m_conditionsPanel->SetNodeName(def.NodeName);
-                    m_conditionsPanel->SetConditionRefs(def.conditionRefs);
-                    m_conditionsPanel->SetDynamicPins(def.dynamicPins);
-                    m_conditionsPanel->ClearDirty();
-                }
-                else
-                {
-                    // Keep node name in sync with any in-frame name edits.
-                    m_conditionsPanel->SetNodeName(def.NodeName);
-                }
-
-                m_conditionsPanel->Render();
-
-                if (m_conditionsPanel->IsDirty())
-                {
-                    def.conditionRefs = m_conditionsPanel->GetConditionRefs();
-
-                    // Keep m_template in sync for serialization.
-                    for (size_t ti = 0; ti < m_template.Nodes.size(); ++ti)
-                    {
-                        if (m_template.Nodes[ti].NodeID == m_selectedNodeID)
-                        {
-                            m_template.Nodes[ti].conditionRefs = def.conditionRefs;
-                            break;
-                        }
-                    }
-                    m_conditionsPanel->ClearDirty();
-                    m_dirty = true;
-                }
-            }
-
-            // ── Legacy: ConditionID dropdown (Phase 23 and earlier) ──────────
-            ImGui::Separator();
-            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.4f, 1.0f),
-                               "Legacy Condition (Phase 23)");
-
-            const std::vector<ConditionSpec> conditions = ConditionRegistry::Get().GetAllConditions();
-            const std::string& curCond = def.ConditionID;
-            const char* previewCond    = curCond.empty() ? "(select condition...)" : curCond.c_str();
-
-            if (ImGui::BeginCombo("ConditionID##vscond", previewCond))
-            {
-                if (m_propEditOldConditionID != curCond ||
-                    m_propEditNodeIDOnFocus != m_selectedNodeID)
-                {
-                    m_propEditOldConditionID = curCond;
-                    m_propEditNodeIDOnFocus  = m_selectedNodeID;
-                }
-                for (size_t ci = 0; ci < conditions.size(); ++ci)
-                {
-                    const ConditionSpec& cs = conditions[ci];
-                    bool selected = (cs.id == curCond);
-                    if (ImGui::Selectable(cs.displayName.c_str(), selected))
-                    {
-                        const std::string oldCond = def.ConditionID;
-                        def.ConditionID = cs.id;
-                        for (size_t i = 0; i < m_template.Nodes.size(); ++i)
-                        {
-                            if (m_template.Nodes[i].NodeID == m_selectedNodeID)
-                            {
-                                m_template.Nodes[i].ConditionID = def.ConditionID;
-                                break;
-                            }
-                        }
-                        if (def.ConditionID != oldCond)
-                        {
-                            m_undoStack.PushCommand(
-                                std::unique_ptr<ICommand>(new EditNodePropertyCommand(
-                                    m_selectedNodeID, "ConditionID",
-                                    PropertyValue::FromString(oldCond),
-                                    PropertyValue::FromString(def.ConditionID))),
-                                m_template);
-                        }
-                        m_dirty = true;
-                    }
-                    if (selected)
-                        ImGui::SetItemDefaultFocus();
-                    if (ImGui::IsItemHovered() && !cs.description.empty())
-                    {
-                        ImGui::BeginTooltip();
-                        ImGui::TextUnformatted(cs.description.c_str());
-                        ImGui::EndTooltip();
-                    }
-                }
-                ImGui::EndCombo();
-            }
-
-            // ── Legacy: Structured Conditions (Phase 23-B.4) ─────────────────
-            ImGui::Separator();
-            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.4f, 1.0f), "Structured Conditions");
-            ImGui::TextDisabled("(evaluated with implicit AND)");
-
-            // Build available pin references from nodes with data outputs
-            std::vector<std::string> availablePins;
-            {
-                std::ostringstream oss;
-                for (size_t ni = 0; ni < m_editorNodes.size(); ++ni)
-                {
-                    const VSEditorNode& en = m_editorNodes[ni];
-                    if (en.nodeID == m_selectedNodeID)
-                        continue;
-                    std::vector<std::string> outPins = GetDataOutputPins(en.def.Type);
-                    for (size_t pi = 0; pi < outPins.size(); ++pi)
-                    {
-                        oss.str("");
-                        oss.clear();
-                        oss << "Node#" << en.nodeID << "." << outPins[pi];
-                        availablePins.push_back(oss.str());
-                    }
-                }
-            }
-
-            // Find the node in m_template.Nodes to get a writable reference
-            TaskNodeDefinition* nodeDef = nullptr;
-            for (size_t ni = 0; ni < m_template.Nodes.size(); ++ni)
-            {
-                if (m_template.Nodes[ni].NodeID == m_selectedNodeID)
-                {
-                    nodeDef = &m_template.Nodes[ni];
-                    break;
-                }
-            }
-
-            if (nodeDef != nullptr)
-            {
-                // Render each condition.
-                // Use def.conditions (the editor-node def) as the primary data
-                // source so that all edits -- including const value changes -- are
-                // preserved through SyncTemplateFromCanvas(), which rebuilds
-                // m_template.Nodes from m_editorNodes[i].def on every save.
-                for (int ci = 0; ci < static_cast<int>(def.conditions.size()); ++ci)
-                {
-                    ImGui::PushID(ci);
-                    RenderConditionEditor(def.conditions[static_cast<size_t>(ci)],
-                                          ci,
-                                          m_template.Blackboard,
-                                          availablePins);
-
-                    ImGui::SameLine();
-                    if (ImGui::SmallButton("Remove##condrem"))
-                    {
-                        def.conditions.erase(def.conditions.begin() + ci);
-                        // Keep template node in sync so in-frame reads are consistent
-                        if (nodeDef)
-                            nodeDef->conditions = def.conditions;
-                        m_dirty = true;
-                        ImGui::PopID();
-                        break;  // iterator invalidated — restart next frame
-                    }
-                    ImGui::PopID();
-                }
-
-                if (ImGui::Button("+ Add Condition"))
-                {
-                    Condition newCond;
-                    newCond.leftMode  = "Variable";
-                    newCond.operatorStr = "==";
-                    newCond.rightMode = "Const";
-                    def.conditions.push_back(newCond);
-                    // Keep template node in sync
-                    if (nodeDef)
-                        nodeDef->conditions = def.conditions;
-                    m_dirty = true;
-                }
-            }
-
-            break;
+            // Delegate to the dedicated Phase 24-Rendering branch properties renderer.
+            // This shows: blue header → NodeConditionsPanel → Breakpoint checkbox.
+            // The return prevents any legacy condition UI from also rendering.
+            RenderBranchNodeProperties(*eNode, def);
+            return;
         }
         case TaskNodeType::SubGraph:
         {
