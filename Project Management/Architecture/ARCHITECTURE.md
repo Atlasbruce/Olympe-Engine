@@ -305,6 +305,54 @@ IEditorCommand
 
 ## UI/UX Rendering Architecture (Phase 24-Rendering)
 
+### VisualScriptEditorPanel — Integration (Phase 24-Rendering PR #444)
+
+`VisualScriptEditorPanel` is the main editor panel that hosts the canvas (via ImNodes) and
+the Properties panel. As of Phase 24-Rendering, it integrates the Phase 24 UI directly.
+
+#### New Phase 24 Members
+
+| Member | Type | Purpose |
+|--------|------|---------|
+| `m_presetRegistry` | `ConditionPresetRegistry` | Loaded from `Blueprints/Presets/condition_presets.json` on `Initialize()` |
+| `m_pinManager` | `unique_ptr<DynamicDataPinManager>` | Regenerates dynamic pins when conditions change |
+| `m_conditionsPanel` | `unique_ptr<NodeConditionsPanel>` | 4-section Properties panel for the selected Branch node |
+| `m_condPanelNodeID` | `int` | Tracks which node is loaded into `m_conditionsPanel` |
+
+#### Canvas Rendering (`VisualScriptNodeRenderer::RenderNode`)
+
+For `TaskNodeType::Branch` (and `While`) nodes, the canvas now renders:
+
+1. **Section 3 — Conditions (green):** If `def.conditionRefs` is non-empty, each ref is
+   shown in green text with logical operator prefix (`And`/`Or`/indent). Falls back to
+   gray `ConditionID` text when no Phase 24 conditions are set.
+2. **Section 4 — Dynamic pins (yellow):** If `def.dynamicPins` is non-empty, a separator
+   is drawn and each pin label is shown in yellow `#FFD700` text.
+3. **ImNodes input attributes:** Dynamic pins are also registered as connectable ImNodes
+   input attributes (offset 400–499) with yellow pin color `IM_COL32(255,215,0,255)`.
+
+#### Properties Panel (`VisualScriptEditorPanel::RenderProperties`)
+
+For Branch/While nodes, `RenderProperties()` now shows **two sections**:
+
+1. **Phase 24 — Condition Presets (blue header):**
+   Renders `NodeConditionsPanel::Render()` for the selected node. The panel is
+   automatically reloaded when the node selection changes (`m_condPanelNodeID != m_selectedNodeID`).
+   Dirty changes are committed back to `def.conditionRefs` and `m_template`.
+
+2. **Legacy — ConditionID + Structured Conditions (yellow headers):**
+   The Phase 23 / Phase 23-B.4 condition editors are preserved below for backward
+   compatibility with existing nodes that use the old system.
+
+#### Pin Regeneration Callback
+
+`m_conditionsPanel->OnDynamicPinsNeedRegeneration` is wired in `Initialize()`:
+- Calls `m_pinManager->RegeneratePinsFromConditions(conditionRefs)`
+- Updates `eNode.def.dynamicPins` in the editor node
+- Syncs back to `m_template.Nodes[i].dynamicPins`
+- Calls `m_conditionsPanel->SetDynamicPins(...)` to refresh the panel display
+- Sets `m_dirty = true`
+
 ### NodeBranchRenderer — 4-Section Canvas Node
 
 The canvas node uses `ImGui::Selectable` with explicit style colors:
@@ -352,4 +400,4 @@ Uses `ImGui::BeginPopupModal` (600×400 default, resizable). Visual elements:
 
 ---
 
-**Last Updated:** 2026-03-18 14:50:40 UTC
+**Last Updated:** 2026-03-18 18:40:00 UTC

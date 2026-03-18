@@ -49,6 +49,46 @@ void VisualScriptEditorPanel::Initialize()
     // This ensures that node positions and canvas panning are tracked
     // independently for each open tab (switching tabs preserves layout).
     m_imnodesContext = ImNodes::EditorContextCreate();
+
+    // Phase 24 — Condition Preset UI: create helpers bound to m_presetRegistry.
+    m_pinManager      = std::unique_ptr<DynamicDataPinManager>(
+                            new DynamicDataPinManager(m_presetRegistry));
+    m_conditionsPanel = std::unique_ptr<NodeConditionsPanel>(
+                            new NodeConditionsPanel(m_presetRegistry));
+
+    // Wire the pin-regeneration callback so the Edit-Conditions modal can
+    // trigger a canvas update when the user confirms changes.
+    m_conditionsPanel->OnDynamicPinsNeedRegeneration = [this]()
+    {
+        if (m_selectedNodeID < 0)
+            return;
+        for (size_t ni = 0; ni < m_editorNodes.size(); ++ni)
+        {
+            VSEditorNode& eNode = m_editorNodes[ni];
+            if (eNode.nodeID != m_selectedNodeID)
+                continue;
+
+            m_pinManager->RegeneratePinsFromConditions(eNode.def.conditionRefs);
+            eNode.def.dynamicPins = m_pinManager->GetAllPins();
+
+            // Keep m_template in sync for serialization.
+            for (size_t ti = 0; ti < m_template.Nodes.size(); ++ti)
+            {
+                if (m_template.Nodes[ti].NodeID == m_selectedNodeID)
+                {
+                    m_template.Nodes[ti].conditionRefs = eNode.def.conditionRefs;
+                    m_template.Nodes[ti].dynamicPins   = eNode.def.dynamicPins;
+                    break;
+                }
+            }
+            m_conditionsPanel->SetDynamicPins(eNode.def.dynamicPins);
+            m_dirty = true;
+            break;
+        }
+    };
+
+    // Try to load presets from the project's preset file (non-fatal if absent).
+    m_presetRegistry.Load("Blueprints/Presets/condition_presets.json");
 }
 
 void VisualScriptEditorPanel::Shutdown()
@@ -61,6 +101,11 @@ void VisualScriptEditorPanel::Shutdown()
     m_editorNodes.clear();
     m_editorLinks.clear();
     m_positionedNodes.clear();
+
+    // Phase 24 — release helpers before registry is destroyed.
+    m_conditionsPanel.reset();
+    m_pinManager.reset();
+    m_condPanelNodeID = -1;
 }
 
 // ============================================================================
@@ -2665,7 +2710,53 @@ void VisualScriptEditorPanel::RenderProperties()
         case TaskNodeType::Branch:
         case TaskNodeType::While:
         {
-            // --- ConditionID dropdown (legacy pre-built conditions) ---
+            // ── Phase 24: Condition Presets (NodeConditionsPanel) ────────────
+            ImGui::Separator();
+            ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f),
+                               "Condition Presets (Phase 24)");
+
+            if (m_conditionsPanel)
+            {
+                // Reload the panel when the selected node changes.
+                if (m_condPanelNodeID != m_selectedNodeID)
+                {
+                    m_condPanelNodeID = m_selectedNodeID;
+                    m_conditionsPanel->SetNodeName(def.NodeName);
+                    m_conditionsPanel->SetConditionRefs(def.conditionRefs);
+                    m_conditionsPanel->SetDynamicPins(def.dynamicPins);
+                    m_conditionsPanel->ClearDirty();
+                }
+                else
+                {
+                    // Keep node name in sync with any in-frame name edits.
+                    m_conditionsPanel->SetNodeName(def.NodeName);
+                }
+
+                m_conditionsPanel->Render();
+
+                if (m_conditionsPanel->IsDirty())
+                {
+                    def.conditionRefs = m_conditionsPanel->GetConditionRefs();
+
+                    // Keep m_template in sync for serialization.
+                    for (size_t ti = 0; ti < m_template.Nodes.size(); ++ti)
+                    {
+                        if (m_template.Nodes[ti].NodeID == m_selectedNodeID)
+                        {
+                            m_template.Nodes[ti].conditionRefs = def.conditionRefs;
+                            break;
+                        }
+                    }
+                    m_conditionsPanel->ClearDirty();
+                    m_dirty = true;
+                }
+            }
+
+            // ── Legacy: ConditionID dropdown (Phase 23 and earlier) ──────────
+            ImGui::Separator();
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.4f, 1.0f),
+                               "Legacy Condition (Phase 23)");
+
             const std::vector<ConditionSpec> conditions = ConditionRegistry::Get().GetAllConditions();
             const std::string& curCond = def.ConditionID;
             const char* previewCond    = curCond.empty() ? "(select condition...)" : curCond.c_str();
@@ -2717,7 +2808,7 @@ void VisualScriptEditorPanel::RenderProperties()
                 ImGui::EndCombo();
             }
 
-            // --- Structured Conditions (Phase 23-B.4) ---
+            // ── Legacy: Structured Conditions (Phase 23-B.4) ─────────────────
             ImGui::Separator();
             ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.4f, 1.0f), "Structured Conditions");
             ImGui::TextDisabled("(evaluated with implicit AND)");
