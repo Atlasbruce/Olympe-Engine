@@ -373,6 +373,7 @@ Result: Impossible to author graphs without documentation/guessing.
 | **24.4** | **Condition Preset — NodeConditionsPanel, DynPinMgr, BranchRenderer** | **~1 session** | **✅ COMPLETED (PR #432)** | **P0** |
 | **24-REFONTE** | **UI/UX Refonte — Dynamic Pin Management & Modal Integration** | **~1.5 sessions** | **✅ COMPLETED (PR #441)** | **P0** |
 | **24-RENDERING** | **UI/UX Rendering — Complete ImGui Visual Refactoring** | **~1.5 sessions** | **✅ COMPLETED (PR #442)** | **P0** |
+| **24-RENDERING-INT** | **UI/UX Rendering Integration — Canvas & Properties Pipeline** | **~1 session** | **✅ COMPLETED (PR #444)** | **P0** |
 | **24.5** | **Condition Preset — Runtime Evaluation** | **~1 session** | **⏭️ NEXT (blocked on PR #430)** | **P0** |
 | 21-C | GVS — Pre-save/Pre-exec Validation | ~0.5 session | ⏳ NEXT | P1 |
 | 22-B | Font Awesome Icons & Design | ~2 sessions | ⏳ Deferred (spec needed) | P2 |

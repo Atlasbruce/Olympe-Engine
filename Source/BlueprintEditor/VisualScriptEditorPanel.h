@@ -19,6 +19,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <memory>
 
 #include "../third_party/imgui/imgui.h"
 #include "../TaskSystem/TaskGraphTemplate.h"
@@ -27,6 +28,11 @@
 #include "UndoRedoStack.h"
 #include "VSConnectionValidator.h"
 #include "VSGraphVerifier.h"
+
+// Phase 24 — Condition Preset UI
+#include "../Editor/ConditionPreset/ConditionPresetRegistry.h"
+#include "../Editor/ConditionPreset/DynamicDataPinManager.h"
+#include "../Editor/Panels/NodeConditionsPanel.h"
 
 // Forward-declare ImNodes context type (defined in imnodes.h) in the global
 // namespace so it can be referenced from within the Olympe namespace below.
@@ -591,6 +597,23 @@ private:
 
     /// True after ResetViewportBeforeSave() has been called and before AfterSave().
     bool m_viewportResetDone = false;
+
+    // -----------------------------------------------------------------------
+    // Phase 24 — Condition Preset UI (NodeConditionsPanel integration)
+    // -----------------------------------------------------------------------
+
+    /// Global registry of ConditionPreset objects.  Loaded from
+    /// Blueprints/Presets/condition_presets.json on Initialize().
+    ConditionPresetRegistry m_presetRegistry;
+
+    /// Dynamic pin manager shared across all Branch nodes in this panel.
+    std::unique_ptr<DynamicDataPinManager> m_pinManager;
+
+    /// Properties-panel sub-widget for the selected Branch node.
+    std::unique_ptr<NodeConditionsPanel> m_conditionsPanel;
+
+    /// ID of the node currently loaded into m_conditionsPanel (-1 = none).
+    int m_condPanelNodeID = -1;
 };
 
 } // namespace Olympe

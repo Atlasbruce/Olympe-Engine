@@ -296,9 +296,40 @@ void VisualScriptNodeRenderer::RenderNode(
 
         case TaskNodeType::Branch:
         case TaskNodeType::While:
-            if (!def.ConditionID.empty())
+        {
+            // Phase 24 — render conditionRefs in green if available
+            if (!def.conditionRefs.empty())
+            {
+                const ImVec4 condColor(0.0f, 1.0f, 0.0f, 1.0f);
+                for (size_t ci = 0; ci < def.conditionRefs.size(); ++ci)
+                {
+                    const NodeConditionRef& ref = def.conditionRefs[ci];
+                    const char* opLabel =
+                        (ci == 0)                          ? "   " :
+                        (ref.logicalOp == LogicalOp::And)  ? "And" : "Or ";
+                    ImGui::PushStyleColor(ImGuiCol_Text, condColor);
+                    ImGui::Text("  %s %s", opLabel, ref.presetID.c_str());
+                    ImGui::PopStyleColor();
+                }
+            }
+            else if (!def.ConditionID.empty())
+            {
+                // Fallback: legacy ConditionID (Phase 23 / pre-Phase 24)
                 ImGui::TextDisabled("  %s", def.ConditionID.c_str());
+            }
+            // Phase 24 — render dynamic pins in yellow (Section 4 preview)
+            if (!def.dynamicPins.empty())
+            {
+                ImGui::Separator();
+                const ImVec4 pinColor(1.0f, 0.843f, 0.0f, 1.0f);
+                for (const auto& pin : def.dynamicPins)
+                {
+                    const std::string lbl = pin.GetDisplayLabel();
+                    ImGui::TextColored(pinColor, "  %s", lbl.c_str());
+                }
+            }
             break;
+        }
 
         case TaskNodeType::SubGraph:
         {
@@ -346,6 +377,22 @@ void VisualScriptNodeRenderer::RenderNode(
         ImGui::Text("%s", dataInputPins[i].first.c_str());
         ImNodes::EndInputAttribute();
         ImNodes::PopColorStyle();
+    }
+
+    // Phase 24 — Dynamic data pins from conditionRefs (yellow, offset 400–499)
+    if (def.Type == TaskNodeType::Branch || def.Type == TaskNodeType::While)
+    {
+        const ImVec4 pinColor(1.0f, 0.843f, 0.0f, 1.0f);
+        for (size_t i = 0; i < def.dynamicPins.size(); ++i)
+        {
+            int attrID = nodeUID * 10000 + 400 + static_cast<int>(i);
+            ImNodes::PushColorStyle(ImNodesCol_Pin, IM_COL32(255, 215, 0, 255));
+            ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_CircleFilled);
+            const std::string lbl = def.dynamicPins[i].GetDisplayLabel();
+            ImGui::TextColored(pinColor, "%s", lbl.c_str());
+            ImNodes::EndInputAttribute();
+            ImNodes::PopColorStyle();
+        }
     }
 
     // Determine how many static (non-removable) exec-out pins this node has.
