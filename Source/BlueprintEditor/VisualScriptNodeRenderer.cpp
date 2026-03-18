@@ -304,9 +304,13 @@ void VisualScriptNodeRenderer::RenderNode(
                 for (size_t ci = 0; ci < def.conditionRefs.size(); ++ci)
                 {
                     const NodeConditionRef& ref = def.conditionRefs[ci];
-                    const char* opLabel =
-                        (ci == 0)                          ? "   " :
-                        (ref.logicalOp == LogicalOp::And)  ? "And" : "Or ";
+                    const char* opLabel;
+                    if (ci == 0)
+                        opLabel = "   ";
+                    else if (ref.logicalOp == LogicalOp::And)
+                        opLabel = "And";
+                    else
+                        opLabel = "Or ";
                     ImGui::PushStyleColor(ImGuiCol_Text, condColor);
                     ImGui::Text("  %s %s", opLabel, ref.presetID.c_str());
                     ImGui::PopStyleColor();

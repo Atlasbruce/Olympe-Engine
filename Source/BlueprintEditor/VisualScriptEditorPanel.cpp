@@ -71,7 +71,7 @@ void VisualScriptEditorPanel::Initialize()
             m_pinManager->RegeneratePinsFromConditions(eNode.def.conditionRefs);
             eNode.def.dynamicPins = m_pinManager->GetAllPins();
 
-            // Keep m_template in sync for serialisation.
+            // Keep m_template in sync for serialization.
             for (size_t ti = 0; ti < m_template.Nodes.size(); ++ti)
             {
                 if (m_template.Nodes[ti].NodeID == m_selectedNodeID)
@@ -2738,7 +2738,7 @@ void VisualScriptEditorPanel::RenderProperties()
                 {
                     def.conditionRefs = m_conditionsPanel->GetConditionRefs();
 
-                    // Keep m_template in sync for serialisation.
+                    // Keep m_template in sync for serialization.
                     for (size_t ti = 0; ti < m_template.Nodes.size(); ++ti)
                     {
                         if (m_template.Nodes[ti].NodeID == m_selectedNodeID)
