@@ -1,13 +1,47 @@
 # Olympe Engine — Etat des Lieux
 
-**Date :** 2026-03-16 14:48:07 UTC
+**Date :** 2026-03-18 UTC
 
 > ⚠️ **Ce fichier est maintenu pour compatibilité.** La version à jour se trouve dans :  
 > 📋 [`Project Management/CONTEXT_STATUS.md`](Project%20Management/CONTEXT_STATUS.md)
 
-**Phase Courante :** Phase 23-B.5 — Visual Script Editor Polish 🟠 BLOQUÉE (Issue [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414))  
-**Dernières PRs Mergées :** #400, #401, #404, #406, #408  
-**Bugs Actifs :** BUG-024, BUG-025, BUG-026 (P1), BUG-027 (P2)
+**Phase Courante :** Phase 24 — Branch/While Node UI/UX 🟡 Phase 1: Documentation Baseline  
+**Statut Global :** ❌ NOT READY FOR PHASE 2
+
+---
+
+## Phase 24 — Branch/While Condition Node UI (Phase 1: Documentation Baseline)
+
+**Statut :** 🟡 Documentation baseline établie — implémentation incomplète
+
+### Référence
+
+- 📋 [PHASE_24_SPECIFICATION.md](Project%20Management/PHASE_24_SPECIFICATION.md) — Spécification technique complète
+- 📊 [IMPLEMENTATION_STATUS.md](Project%20Management/IMPLEMENTATION_STATUS.md) — Statut composant par composant
+- ✅ [QUALITY_STANDARDS.md](Project%20Management/QUALITY_STANDARDS.md) — Critères d'acceptation
+
+### Matrice de Composants
+
+| Composant | Requis | Implémenté | Fonctionnel | Couverture |
+|-----------|--------|------------|-------------|------------|
+| ConditionRef Data Structure | ✅ | ❌ | ❌ | 0% |
+| DynamicDataPinManager | ✅ | ⚠️ | ❌ | 30% |
+| Panel: Condition List | ✅ | ❌ | ❌ | 0% |
+| Panel: Logical Operators | ✅ | ❌ | ❌ | 0% |
+| Panel: Delete Buttons | ✅ | ❌ | ❌ | 0% |
+| Panel: Condition Preset | ✅ | ⚠️ | ❌ | 40% |
+| Canvas: Node Title | ✅ | ✅ | ✅ | 100% |
+| Canvas: Condition Preview | ✅ | ❌ | ❌ | 0% |
+| Canvas: In/Then/Else Pins | ✅ | ✅ | ✅ | 100% |
+| Canvas: Dynamic Pin Slots | ✅ | ❌ | ❌ | 0% |
+
+### Blockers Phase 2
+
+1. No ConditionRef → DynamicDataPin Mapping (Architecture)
+2. Panel Conditions Not Rendered (UI)
+3. No Logical Operators UI (UI)
+4. Node Condition Preview Empty (Rendering)
+5. No Pin Generation from Operands (Logic)
 
 ---
 

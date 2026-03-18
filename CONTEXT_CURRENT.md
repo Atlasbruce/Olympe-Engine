@@ -1,35 +1,53 @@
 # CONTEXT
 
-## Phase 24-Rendering FINAL CORRECTION (PR #449)
+## Phase 1: Documentation Baseline — Branch/While Node UI/UX
 
-**Root Cause Fixed:** PR #449 initial pass (#449 first commit) applied only minor
-visual tweaks. This correction implements the full scope:
-1. `RenderBranchNodeProperties()` — dedicated Properties panel method for Branch/While
-   nodes, rendering a blue title header, NodeConditionsPanel, and Breakpoint checkbox.
-   A `return;` prevents fallthrough to the legacy condition UI.
-2. Canvas NodeBranchRenderer — 150 px exec-pin offset, bullet prefix on dynamic pins,
-   structured hover tooltip, and `ImGui::Spacing()` between separators (all confirmed).
-3. Version stamp (version.h, VERSION_STAMP.md) updated to Phase 24-Rendering-FINAL-CORRECTION.
+**Status:** 🟡 IN PROGRESS — Phase 1: Documentation Baseline  
+**Last Updated:** 2026-03-18 UTC  
+**Overall:** ❌ NOT READY FOR PHASE 2
+
+### What Phase 1 Established
+
+After PRs #443, #445, #449, a documentation audit identified significant gaps between
+the current implementation and the target mockup design for Branch/While condition nodes.
+Phase 1 creates a clear, auditable baseline before Phase 2 implementation begins.
+
+**New documents created:**
+- [`Project Management/PHASE_24_SPECIFICATION.md`](Project%20Management/PHASE_24_SPECIFICATION.md) — Full design spec with mockup integration
+- [`Project Management/IMPLEMENTATION_STATUS.md`](Project%20Management/IMPLEMENTATION_STATUS.md) — Component-by-component status matrix
+- [`Project Management/QUALITY_STANDARDS.md`](Project%20Management/QUALITY_STANDARDS.md) — Non-negotiable acceptance criteria
+
+### Blocking Issues (Must Fix Before Phase 2)
+
+1. **No ConditionRef → DynamicDataPin Mapping** — Architecture gap; pins not wired to conditions
+2. **Panel Conditions Not Rendered** — No editing UI visible in Properties panel
+3. **No Logical Operators UI** — Cannot combine conditions with And/Or
+4. **Node Condition Preview Empty** — Canvas shows no condition info
+5. **No Pin Generation from Operands** — Pin-mode operands produce no dynamic pins
+
+### Phase 2 Entry Criteria
+
+Phase 2 implementation begins **only when**:
+- All 5 blocking issues above have accepted solutions (merged PRs)
+- `PHASE_24_SPECIFICATION.md` reviewed and approved by @Atlasbruce
+- All existing Phase 24 headless tests still pass (37+)
+
+---
+
+## Previous: Phase 24-Rendering FINAL CORRECTION (2026-03-18)
 
 **Status:** 🟢 COMPLETE — All Phase 24-Rendering headless tests pass (37+)
 
 **Key deliverables:**
 - `VisualScriptEditorPanel::RenderBranchNodeProperties()` — new dedicated method
-- `Source/System/version.h` — updated to PR #449, phase 24-Rendering-FINAL-CORRECTION
+- `Source/System/version.h` — updated to Phase 24-Rendering-FINAL-CORRECTION
 - `Project Management/VERSION_STAMP.md` — history row added
-- `Project Management/CONTEXT_CURRENT.md` — this file
 - `Project Management/ROADMAP_V2.md` — Phase 24-Rendering-FINAL-CORRECTION entry
 
-**Completed:** 2026-03-18 UTC
+### Previous: Phase 24-Rendering Integration Fix (2026-03-18)
 
-### Previous: Phase 24-Rendering Integration Fix (PR #444)
-
-**Status:** 🟢 COMPLETE — Integration tests created and passing (12/12). Merged 2026-03-18 UTC.
+**Status:** 🟢 COMPLETE — Integration tests created and passing (12/12).
 
 ### Previous: Phase 24-REFONTE
 
-**Dynamic Pin Management & Modal Integration** completed, merged to master as PR #441.
-
-### Next Steps
-
-Phase 24-Polish (final refinements, deployment validation).
+**Dynamic Pin Management & Modal Integration** completed and merged.
