@@ -119,6 +119,16 @@ void DynamicDataPinManager::SyncPins(std::vector<NodeConditionRef>& conditionRef
 }
 
 // ============================================================================
+// RegeneratePinsFromConditions
+// ============================================================================
+
+void DynamicDataPinManager::RegeneratePinsFromConditions(
+    std::vector<NodeConditionRef>& conditionRefs)
+{
+    SyncPins(conditionRefs);
+}
+
+// ============================================================================
 // Query
 // ============================================================================
 

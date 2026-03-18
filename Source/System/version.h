@@ -25,19 +25,19 @@ namespace Olympe
         static constexpr const char* PATCH = "0";
 
         // Build metadata — update after each PR merge
-        static constexpr const char* BUILD_TIMESTAMP   = "2026-03-17 23:57:43 UTC";
+        static constexpr const char* BUILD_TIMESTAMP   = "2026-03-18 14:08:14 UTC";
         static constexpr const char* GIT_COMMIT_SHA    = "0000000000000000000000000000000000000000";
-        static constexpr const char* GIT_BRANCH        = "copilot/p0-ui-ux-overhaul-node-condition-properties-panel";
-        static constexpr const char* PR_NUMBER         = "#000";
-        static constexpr const char* PHASE             = "24-REFONTE-NodeConditionPreset-Properties";
+        static constexpr const char* GIT_BRANCH        = "copilot/connect-dynamic-pin-management";
+        static constexpr const char* PR_NUMBER         = "#002";
+        static constexpr const char* PHASE             = "24-REFONTE-DynamicPins-V2";
         static constexpr const char* BUILD_CONFIG      = "Debug";
 
         // Single continuous line — binary searchable with: strings <exe> | grep OLYMPE_VERSION
         static constexpr const char* FULL_VERSION_STRING =
-            "OLYMPE_VERSION:0.24.0|BUILD:2026-03-17 23:57:43 UTC"
+            "OLYMPE_VERSION:0.24.0|BUILD:2026-03-18 14:08:14 UTC"
             "|SHA:0000000000000000000000000000000000000000"
-            "|BRANCH:copilot/p0-ui-ux-overhaul-node-condition-properties-panel"
-            "|PR:#000|PHASE:24-REFONTE-NodeConditionPreset-Properties|CONFIG:Debug";
+            "|BRANCH:copilot/connect-dynamic-pin-management"
+            "|PR:#002|PHASE:24-REFONTE-DynamicPins-V2|CONFIG:Debug";
 
         // Log all version fields via SYSTEM_LOG.
         // Call this as the very first operation in main() before any other logs.

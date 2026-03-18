@@ -835,6 +835,26 @@ if(BUILD_TESTS)
     add_test(NAME OlympePhase24_REFONTE_EditModalTests COMMAND OlympePhase24_REFONTE_EditModalTests)
 
     # -----------------------------------------------------------------------
+    # OlympePhase24_REFONTE_DynamicPinTests  (Phase 24-REFONTE — Dynamic Pin Integration)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_REFONTE_DynamicPinTests
+        Tests/Phase24/Phase24DynamicPinTest.cpp
+        Source/Editor/ConditionPreset/DynamicDataPinManager.cpp
+        Source/Editor/Modals/NodeConditionsEditModal.cpp
+        Source/Editor/Panels/NodeConditionsPanel.cpp
+        Source/Editor/Nodes/NodeBranchRenderer.cpp
+        Source/Editor/ConditionPreset/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/ConditionPresetRegistry.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
+        Source/Editor/ConditionPreset/NodeConditionRef.cpp
+        Source/Editor/ConditionPreset/DynamicDataPin.cpp
+        Tests/TestStubs.cpp
+    )
+    target_compile_definitions(OlympePhase24_REFONTE_DynamicPinTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_REFONTE_DynamicPinTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_REFONTE_DynamicPinTests COMMAND OlympePhase24_REFONTE_DynamicPinTests)
+
+    # -----------------------------------------------------------------------
     # OlympePhase24_5_RuntimeTests  (Phase 24.5 — Runtime Condition Evaluation)
     # -----------------------------------------------------------------------
     add_executable(OlympePhase24_5_RuntimeTests

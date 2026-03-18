@@ -98,6 +98,23 @@ public:
      */
     void SyncPins(std::vector<NodeConditionRef>& conditionRefs);
 
+    /**
+     * @brief Regenerates pins from the current condition list.
+     *
+     * Convenience alias for SyncPins().  Called by NodeBranchRenderer and
+     * NodeConditionsPanel after the user confirms changes in the edit modal.
+     *
+     * Walks every NodeConditionRef, looks up the ConditionPreset in the
+     * registry, and creates/destroys yellow DynamicDataPins for every
+     * operand whose BindingType is Pin.  Pre-existing pin UUIDs are reused
+     * so that graph connections survive minor edits.
+     *
+     * Also updates leftPinID / rightPinID inside each NodeConditionRef.
+     *
+     * @param conditionRefs  Node's condition list (modified in-place).
+     */
+    void RegeneratePinsFromConditions(std::vector<NodeConditionRef>& conditionRefs);
+
     // -----------------------------------------------------------------------
     // Query
     // -----------------------------------------------------------------------

@@ -165,8 +165,30 @@ public:
      * @brief Programmatically confirms the modal (equivalent to clicking Apply).
      *
      * Marks the modal as confirmed and closes it.  Always succeeds.
+     * Fires the OnApply callback (if set) before closing.
      */
     void Confirm();
+
+    // -----------------------------------------------------------------------
+    // Callbacks
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Optional callback fired when the user clicks "Apply" (Confirm).
+     *
+     * Set this before opening the modal.  The callback is invoked from within
+     * Confirm() after m_isConfirmed is set but before Close() is called,
+     * allowing the host to read GetConditionRefs() synchronously.
+     *
+     * Example:
+     * @code
+     *   modal.OnApply = [&]() {
+     *       node.conditionRefs = modal.GetConditionRefs();
+     *       pinManager.RegeneratePinsFromConditions(node.conditionRefs);
+     *   };
+     * @endcode
+     */
+    std::function<void()> OnApply;
 
     // -----------------------------------------------------------------------
     // Dropdown helper

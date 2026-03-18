@@ -160,6 +160,24 @@ public:
     void RenderDynamicPinsSection(const NodeBranchData& data);
 
     // -----------------------------------------------------------------------
+    // Pin regeneration (Modal-to-Canvas workflow)
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Regenerates dynamic data pins from an updated condition list.
+     *
+     * Call this after the user confirms changes in the edit modal so the
+     * canvas reflects the new pin set on the next render frame.
+     *
+     * Delegates to DynamicDataPinManager::RegeneratePinsFromConditions() so
+     * the host does not need a direct reference to the pin manager.
+     *
+     * @param conditionRefs  Node's condition list (modified in-place to store
+     *                       updated pin IDs).
+     */
+    void TriggerPinRegeneration(std::vector<NodeConditionRef>& conditionRefs);
+
+    // -----------------------------------------------------------------------
     // Interaction state
     // -----------------------------------------------------------------------
 

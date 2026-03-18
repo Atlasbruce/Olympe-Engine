@@ -174,6 +174,24 @@ public:
     std::function<void(const std::string&)> OnPresetChanged;
 
     /**
+     * @brief Fired after the edit modal is confirmed and condition refs are
+     *        updated, signalling that dynamic pins must be regenerated.
+     *
+     * The host should connect this to DynamicDataPinManager::RegeneratePinsFromConditions()
+     * or NodeBranchRenderer::TriggerPinRegeneration() so that the canvas
+     * updates immediately on the next render frame.
+     *
+     * Example:
+     * @code
+     *   panel.OnDynamicPinsNeedRegeneration = [&]() {
+     *       pinManager.RegeneratePinsFromConditions(node.conditionRefs);
+     *       node.dynamicPins = pinManager.GetAllPins();
+     *   };
+     * @endcode
+     */
+    std::function<void()> OnDynamicPinsNeedRegeneration;
+
+    /**
      * @brief Should be called by the host when a preset is deleted from the
      *        registry.  Removes any NodeConditionRef pointing to that preset.
      *
