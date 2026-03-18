@@ -167,6 +167,32 @@ public:
      */
     void Render();
 
+    /**
+     * @brief Renders all conditions inline as an editable list.
+     *
+     * Each condition is displayed as a row containing:
+     *   - Condition preview (green text, from ConditionPreset::GetPreview)
+     *   - Logical-operator dropdown ("And" / "Or") — skipped for the first row
+     *   - Delete button ("X") that removes the condition immediately
+     *
+     * Below the list a "[+ Add Condition]" button opens a popup that lets
+     * the user pick a preset from the registry (filtered by name).
+     *
+     * Modifications set the dirty flag so the host can sync via GetConditionRefs().
+     *
+     * Layout:
+     * @code
+     * ┌─ "Structured Conditions (evaluated with implicit AND)" ──┐
+     * │ [mHealth] <= [2]           [And▼] [X]                    │
+     * │ [mSpeed]  <= [100.00]      [Or▼]  [X]                    │
+     * │ [+ Add Condition]                                         │
+     * └──────────────────────────────────────────────────────────┘
+     * @endcode
+     *
+     * Guarded by `#ifndef OLYMPE_HEADLESS` — no-op in headless test builds.
+     */
+    void RenderConditionList();
+
     // -----------------------------------------------------------------------
     // Callbacks
     // -----------------------------------------------------------------------

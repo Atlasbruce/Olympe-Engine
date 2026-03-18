@@ -213,8 +213,8 @@ void NodeConditionsPanel::Render()
 
     ImGui::Separator();
 
-    // ── Section 3: Conditions preview + Edit button ──────────────────────────
-    RenderConditionsPreview();
+    // ── Section 3: Conditions — inline editable list ────────────────────────
+    RenderConditionList();
 
     // ── Section 4: Dynamic data pins (only if any) ──────────────────────────
     if (!m_dynamicPins.empty())
@@ -319,6 +319,133 @@ void NodeConditionsPanel::RenderConditionsPreview()
     }
 #endif
 }
+
+void NodeConditionsPanel::RenderConditionList()
+{
+#ifndef OLYMPE_HEADLESS
+    // UI layout constants
+    static const float  kOpComboWidth    = 60.f;  ///< Width of the And/Or combo
+    static const float  kDeleteBtnWidth  = 22.f;  ///< Width of the [X] delete button
+    static const size_t kFilterBufSize   = 256u;  ///< Max filter string length incl. NUL
+
+    // Collapsible section header — green tint to match condition colour convention
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.f, 0.9f, 0.f, 1.f));
+    const bool open = ImGui::CollapsingHeader(
+        "Structured Conditions (evaluated with implicit AND)",
+        ImGuiTreeNodeFlags_DefaultOpen);
+    ImGui::PopStyleColor();
+
+    if (!open)
+        return;
+
+    const ImVec4 condColor(0.f, 1.f, 0.f, 1.f);   // green for preview text
+
+    // Deferred-deletion index (avoids invalidating the iterator inside the loop)
+    size_t deleteIdx = static_cast<size_t>(-1);
+
+    for (size_t i = 0; i < m_conditionRefs.size(); ++i)
+    {
+        NodeConditionRef& ref = m_conditionRefs[i];
+        ImGui::PushID(static_cast<int>(i));
+
+        // ── Condition preview (green) ─────────────────────────────────────────
+        const ConditionPreset* preset = m_registry.GetPreset(ref.presetID);
+        ImGui::PushStyleColor(ImGuiCol_Text, condColor);
+        if (preset)
+            ImGui::TextUnformatted(preset->GetPreview().c_str());
+        else
+            ImGui::Text("(missing: %s)", ref.presetID.c_str());
+        ImGui::PopStyleColor();
+
+        // ── Logical-operator dropdown (And / Or) — first condition is always Start ──
+        ImGui::SameLine();
+        if (i > 0)
+        {
+            ImGui::SetNextItemWidth(kOpComboWidth);
+            const char* opLabel = (ref.logicalOp == LogicalOp::Or) ? "Or" : "And";
+            if (ImGui::BeginCombo("##op", opLabel, ImGuiComboFlags_NoArrowButton))
+            {
+                if (ImGui::Selectable("And", ref.logicalOp == LogicalOp::And))
+                {
+                    ref.logicalOp = LogicalOp::And;
+                    m_dirty = true;
+                }
+                if (ImGui::Selectable("Or", ref.logicalOp == LogicalOp::Or))
+                {
+                    ref.logicalOp = LogicalOp::Or;
+                    m_dirty = true;
+                }
+                ImGui::EndCombo();
+            }
+            ImGui::SameLine();
+        }
+        else
+        {
+            // Reserve the same horizontal space as the combo so [X] buttons align
+            ImGui::Dummy(ImVec2(kOpComboWidth, 0.f));
+            ImGui::SameLine();
+        }
+
+        // ── Delete button (X) ─────────────────────────────────────────────────
+        ImGui::SetNextItemWidth(kDeleteBtnWidth);
+        if (ImGui::SmallButton("X"))
+            deleteIdx = i;
+
+        ImGui::PopID();
+    }
+
+    // Apply deferred deletion outside the loop to avoid iterator invalidation
+    if (deleteIdx != static_cast<size_t>(-1))
+        RemoveCondition(deleteIdx);
+
+    // ── Empty-list placeholder ────────────────────────────────────────────────
+    if (m_conditionRefs.empty())
+        ImGui::TextDisabled("(no conditions — click [+ Add Condition] below)");
+
+    ImGui::Spacing();
+
+    // ── [+ Add Condition] button → opens preset-selector popup ───────────────
+    if (ImGui::Button("[+ Add Condition]", ImVec2(-1.f, 0.f)))
+        ImGui::OpenPopup("##AddCondPopup");
+
+    if (ImGui::BeginPopup("##AddCondPopup"))
+    {
+        // Filter input
+        char filterBuf[kFilterBufSize] = {};
+        {
+            const std::string& cur = m_dropdownFilter;
+            const size_t copyLen =
+                cur.size() < (kFilterBufSize - 1u) ? cur.size() : kFilterBufSize - 1u;
+            cur.copy(filterBuf, copyLen);
+        }
+        if (ImGui::InputText("Filter", filterBuf, kFilterBufSize))
+            SetDropdownFilter(filterBuf);
+
+        ImGui::Separator();
+
+        const auto presets = GetFilteredPresetsForDropdown();
+        for (const auto& p : presets)
+        {
+            const std::string rowLabel = p.name + "  —  " + p.GetPreview();
+            if (ImGui::Selectable(rowLabel.c_str()))
+            {
+                AddCondition(p.id);
+                SetDropdownFilter("");
+                ImGui::CloseCurrentPopup();
+
+                if (OnDynamicPinsNeedRegeneration)
+                    OnDynamicPinsNeedRegeneration();
+            }
+        }
+
+        if (presets.empty())
+            ImGui::TextDisabled("(no presets in registry)");
+
+        ImGui::EndPopup();
+    }
+#endif
+}
+
 
 void NodeConditionsPanel::RenderDynamicPinsSection()
 {

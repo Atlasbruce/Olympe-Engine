@@ -24,6 +24,7 @@
 #include "TaskGraphTypes.h"
 #include "../Editor/ConditionPreset/NodeConditionRef.h"
 #include "../Editor/ConditionPreset/DynamicDataPin.h"
+#include "../BlueprintEditor/ConditionRef.h"  // Phase 24: inline operand→pin mapping
 
 namespace Olympe {
 
@@ -131,6 +132,12 @@ struct TaskNodeDefinition {
     // Phase 24.0 — Condition Preset System
     std::vector<NodeConditionRef> conditionRefs; ///< Multi-condition refs to global presets (Phase 24)
     std::vector<DynamicDataPin>   dynamicPins;   ///< Dynamic data-input pins for Pin-mode operands (Phase 24)
+
+    // Phase 24 Milestone 1 — Condition references with operand→pin mapping
+    /// Parallel to conditions[]: each entry stores the OperandRef→DynamicDataPin
+    /// UUID mapping for the corresponding condition expression.
+    /// Populated by DynamicDataPinManager::RegeneratePinsFromConditions().
+    std::vector<ConditionRef> conditionOperandRefs;
 
     /// For VSSequence: dynamically-added exec-out pins beyond the default "Out".
     /// Each entry is a pin name (e.g. "Out_1", "Out_2"...).
