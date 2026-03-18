@@ -1043,6 +1043,83 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
             n["conditions"] = condArray;
         }
 
+        // Phase 24 Milestone 2.2 — conditionRefs serialization (new inline system)
+        // Saves OperandRef data including dynamicPinID for Pin-mode operands.
+        // Coexists with legacy def.conditions[] during transition.
+        if ((def.Type == TaskNodeType::Branch || def.Type == TaskNodeType::While) &&
+            !def.conditionRefs.empty())
+        {
+            json condRefsArray = json::array();
+
+            for (size_t i = 0; i < def.conditionRefs.size(); ++i)
+            {
+                const ConditionRef& ref = def.conditionRefs[i];
+                json refObj;
+                refObj["conditionIndex"] = static_cast<int>(i);
+
+                // Left operand
+                {
+                    json lj;
+                    switch (ref.leftOperand.mode)
+                    {
+                        case OperandRef::Mode::Variable:
+                            lj["mode"]         = "Variable";
+                            lj["variableName"] = ref.leftOperand.variableName;
+                            break;
+                        case OperandRef::Mode::Const:
+                            lj["mode"]       = "Const";
+                            lj["constValue"] = ref.leftOperand.constValue;
+                            break;
+                        case OperandRef::Mode::Pin:
+                            lj["mode"]         = "Pin";
+                            lj["dynamicPinID"] = ref.leftOperand.dynamicPinID;
+                            break;
+                        default:
+                            lj["mode"] = "Const";
+                            break;
+                    }
+                    refObj["leftOperand"] = lj;
+                }
+
+                refObj["operator"] = ref.operatorStr;
+
+                // Right operand
+                {
+                    json rj;
+                    switch (ref.rightOperand.mode)
+                    {
+                        case OperandRef::Mode::Variable:
+                            rj["mode"]         = "Variable";
+                            rj["variableName"] = ref.rightOperand.variableName;
+                            break;
+                        case OperandRef::Mode::Const:
+                            rj["mode"]       = "Const";
+                            rj["constValue"] = ref.rightOperand.constValue;
+                            break;
+                        case OperandRef::Mode::Pin:
+                            rj["mode"]         = "Pin";
+                            rj["dynamicPinID"] = ref.rightOperand.dynamicPinID;
+                            break;
+                        default:
+                            rj["mode"] = "Const";
+                            break;
+                    }
+                    refObj["rightOperand"] = rj;
+                }
+
+                if (ref.compareType != VariableType::None)
+                    refObj["compareType"] = VariableTypeToString(ref.compareType);
+
+                condRefsArray.push_back(refObj);
+            }
+
+            n["conditionRefs"] = condRefsArray;
+
+            SYSTEM_LOG << "[VisualScriptEditorPanel] SerializeAndWrite: Phase 24: serialized "
+                       << def.conditionRefs.size() << " conditionRefs for node "
+                       << def.NodeID << "\n";
+        }
+
         // Dynamic exec-out pins (VSSequence and Switch)
         if ((def.Type == TaskNodeType::VSSequence || def.Type == TaskNodeType::Switch) &&
             !def.DynamicExecOutputPins.empty())

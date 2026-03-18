@@ -46,6 +46,7 @@
 #include "../ConditionPreset/NodeConditionRef.h"
 #include "../ConditionPreset/DynamicDataPin.h"
 #include "../Modals/NodeConditionsEditModal.h"
+#include "../../BlueprintEditor/ConditionRef.h"
 
 namespace Olympe {
 
@@ -100,6 +101,25 @@ public:
      * @brief Returns the current (possibly modified) condition list.
      */
     const std::vector<NodeConditionRef>& GetConditionRefs() const;
+
+    /**
+     * @brief Replaces the panel's inline operand list (parallel to conditionRefs).
+     *
+     * Each entry corresponds 1:1 with a NodeConditionRef and stores the
+     * editable operand data (mode, variable name, const value, dynamicPinID).
+     * Typically called alongside SetConditionRefs() when a node is selected.
+     *
+     * @param refs  Inline operand refs from node.conditionOperandRefs.
+     */
+    void SetConditionOperandRefs(const std::vector<ConditionRef>& refs);
+
+    /**
+     * @brief Returns the current inline operand list.
+     *
+     * The host should read this after IsDirty() returns true and persist it
+     * to node.conditionOperandRefs.
+     */
+    const std::vector<ConditionRef>& GetConditionOperandRefs() const;
 
     /**
      * @brief Provides the read-only list of dynamic pins for display.
@@ -319,6 +339,33 @@ private:
     /** Section 4: dynamic data pins (yellow, only when non-empty). */
     void RenderDynamicPinsSection();
 
+    /**
+     * @brief Renders the operand mode selector + value field for one operand.
+     *
+     * Inline widget used inside RenderConditionList() for each condition row.
+     * Renders a three-button radio group (Variable | Const | Pin) followed by
+     * a mode-specific input:
+     *   - Variable: text field for the blackboard key (e.g. "mHealth")
+     *   - Const:    numeric text field (e.g. "100.0")
+     *   - Pin:      read-only label "Pin-in #N" (auto-assigned)
+     *
+     * @param cref   ConditionRef to modify (mode and value fields).
+     * @param isLeft True for the left operand, false for the right operand.
+     * @param pinLabel Short "Pin-in #N" label for Pin-mode display (may be empty).
+     */
+    void RenderOperandDropdown(ConditionRef& cref, bool isLeft,
+                               const std::string& pinLabel = "");
+
+    /**
+     * @brief Renders the operator combo box (==, !=, <, <=, >, >=).
+     *
+     * Inline widget used inside RenderConditionList() for each condition row.
+     * Updates `cref.operatorStr` on selection.
+     *
+     * @param cref  ConditionRef to modify.
+     */
+    void RenderOperatorDropdown(ConditionRef& cref);
+
     // -----------------------------------------------------------------------
     // Internal helpers
     // -----------------------------------------------------------------------
@@ -332,6 +379,7 @@ private:
 
     ConditionPresetRegistry&       m_registry;           ///< Shared global registry
     std::vector<NodeConditionRef>  m_conditionRefs;      ///< Current node's conditions
+    std::vector<ConditionRef>      m_conditionOperandRefs; ///< Inline operand data (parallel to m_conditionRefs)
     std::vector<DynamicDataPin>    m_dynamicPins;        ///< Read-only dynamic pins for display
     std::string                    m_nodeName;           ///< Node display name for title section
     bool                           m_dirty = false;      ///< Modification flag

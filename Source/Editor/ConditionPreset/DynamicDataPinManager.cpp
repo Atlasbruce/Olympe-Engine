@@ -93,7 +93,9 @@ void DynamicDataPinManager::SyncPins(std::vector<NodeConditionRef>& conditionRef
 
     for (size_t idx = 0; idx < m_pins.size(); ++idx)
     {
-        const DynamicDataPin& p = m_pins[idx];
+        DynamicDataPin& p = m_pins[idx];
+        // Assign 1-based sequence number for "Pin-in #N" short labels.
+        p.sequenceNumber = static_cast<int>(idx) + 1;
         m_idIndex[p.id]                                           = idx;
         m_keyIndex[MakePinKey(p.conditionIndex, p.position)]     = idx;
     }

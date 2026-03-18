@@ -663,7 +663,79 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
         });
     }
 
-    return nd;
+    // Phase 24 Milestone 2.2 — conditionRefs deserialization (new inline system).
+    // Reconstructs OperandRef data including dynamicPinID for Pin-mode operands.
+    if (JsonHelper::IsArray(nodeJson, "conditionRefs"))
+    {
+        JsonHelper::ForEachInArray(nodeJson, "conditionRefs",
+            [&](const json& refJson, size_t idx)
+        {
+            if (!refJson.is_object())
+                return;
+
+            ConditionRef ref;
+
+            if (refJson.contains("conditionIndex") && refJson["conditionIndex"].is_number_integer())
+                ref.conditionIndex = refJson["conditionIndex"].get<int>();
+            else
+                ref.conditionIndex = static_cast<int>(idx);
+
+            // Left operand
+            if (refJson.contains("leftOperand") && refJson["leftOperand"].is_object())
+            {
+                const json& lj = refJson["leftOperand"];
+                const std::string modeStr = JsonHelper::GetString(lj, "mode", "Const");
+                if (modeStr == "Variable")
+                {
+                    ref.leftOperand.mode = OperandRef::Mode::Variable;
+                    ref.leftOperand.variableName = JsonHelper::GetString(lj, "variableName", "");
+                }
+                else if (modeStr == "Pin")
+                {
+                    ref.leftOperand.mode = OperandRef::Mode::Pin;
+                    ref.leftOperand.dynamicPinID = JsonHelper::GetString(lj, "dynamicPinID", "");
+                }
+                else
+                {
+                    ref.leftOperand.mode = OperandRef::Mode::Const;
+                    ref.leftOperand.constValue = JsonHelper::GetString(lj, "constValue", "");
+                }
+            }
+
+            ref.operatorStr = JsonHelper::GetString(refJson, "operator", "==");
+
+            // Right operand
+            if (refJson.contains("rightOperand") && refJson["rightOperand"].is_object())
+            {
+                const json& rj = refJson["rightOperand"];
+                const std::string modeStr = JsonHelper::GetString(rj, "mode", "Const");
+                if (modeStr == "Variable")
+                {
+                    ref.rightOperand.mode = OperandRef::Mode::Variable;
+                    ref.rightOperand.variableName = JsonHelper::GetString(rj, "variableName", "");
+                }
+                else if (modeStr == "Pin")
+                {
+                    ref.rightOperand.mode = OperandRef::Mode::Pin;
+                    ref.rightOperand.dynamicPinID = JsonHelper::GetString(rj, "dynamicPinID", "");
+                }
+                else
+                {
+                    ref.rightOperand.mode = OperandRef::Mode::Const;
+                    ref.rightOperand.constValue = JsonHelper::GetString(rj, "constValue", "");
+                }
+            }
+
+            const std::string typeStr = JsonHelper::GetString(refJson, "compareType", "Float");
+            ref.compareType = StringToVariableType(typeStr);
+
+            nd.conditionRefs.push_back(ref);
+        });
+
+        SYSTEM_LOG << "[TaskGraphLoader] Phase 24: deserialized "
+                   << nd.conditionRefs.size() << " conditionRefs for node "
+                   << nd.NodeID << "\n";
+    }
 }
 
 // ============================================================================
