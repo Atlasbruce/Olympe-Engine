@@ -876,6 +876,26 @@ if(BUILD_TESTS)
     add_test(NAME OlympePhase24_Rendering_Tests COMMAND OlympePhase24_Rendering_Tests)
 
     # -----------------------------------------------------------------------
+    # OlympePhase24_Integration_Tests  (Phase 24-Rendering Integration — PR #444)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_Integration_Tests
+        Tests/Phase24Integration/Phase24IntegrationTest.cpp
+        Source/Editor/ConditionPreset/DynamicDataPinManager.cpp
+        Source/Editor/Modals/NodeConditionsEditModal.cpp
+        Source/Editor/Panels/NodeConditionsPanel.cpp
+        Source/Editor/Nodes/NodeBranchRenderer.cpp
+        Source/Editor/ConditionPreset/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/ConditionPresetRegistry.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
+        Source/Editor/ConditionPreset/NodeConditionRef.cpp
+        Source/Editor/ConditionPreset/DynamicDataPin.cpp
+        Tests/TestStubs.cpp
+    )
+    target_compile_definitions(OlympePhase24_Integration_Tests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_Integration_Tests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_Integration_Tests COMMAND OlympePhase24_Integration_Tests)
+
+    # -----------------------------------------------------------------------
     # OlympePhase24_5_RuntimeTests  (Phase 24.5 — Runtime Condition Evaluation)
     # -----------------------------------------------------------------------
     add_executable(OlympePhase24_5_RuntimeTests
