@@ -1,33 +1,40 @@
 # Recent Completions & Next Priority
 
-**Derniere mise a jour :** 2026-03-16 14:48:07 UTC
+**Derniere mise a jour :** 2026-03-18 19:57:31 UTC
 
 ---
 
-## 🔴 Phase 23-B.5 — Visual Script Editor Polish (IN PROGRESS — BLOQUÉE)
+## ✅ Phase 24-Rendering FINAL CORRECTION (PR #449) — COMPLETE
 
-### Statut : 🟠 20% — Bloquée par Issue #414
+**Completed:** 2026-03-18 19:57:31 UTC
 
-**Découvert post-merge PR #408 :** 4 bugs bloquant l'UX de l'éditeur de conditions.
+### Deliverables
 
-### BUG-024 — Type Filtering Missing in Variable Dropdowns (P1)
-- **Root cause :** `GetVariablesByType()` non utilisé dans le rendu des dropdowns de l'éditeur de conditions / Switch nodes
-- **Impact :** Switch nodes voient toutes les variables (attendu : Int uniquement). Condition nodes non filtrées par type.
-- **Statut :** OPEN — GitHub Issue [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414)
+- `VisualScriptEditorPanel::RenderBranchNodeProperties()` — new dedicated Properties panel method for Branch/While nodes
+  - Blue title header (same ImGui::Selectable style as canvas Section 1, #0066CC)
+  - NodeConditionsPanel::Render() for compact structured conditions list (Phase 24)
+  - Breakpoint checkbox (F9) + RenderVerificationPanel()
+  - `return;` statement prevents fallthrough to legacy condition UI (ConditionID dropdown + Phase 23 Structured Conditions)
+- `NodeBranchRenderer` canvas: 150 px exec-pin offset, bullet (●) on dynamic pins, structured hover tooltip, ImGui::Spacing() after each Separator()
+- `Source/System/version.h` — updated to PR #449, phase 24-Rendering-FINAL-CORRECTION
+- `Project Management/VERSION_STAMP.md` — history row added for PR #449
+- `Project Management/ROADMAP_V2.md` — Phase 24-Rendering-FINAL-CORRECTION status table added
 
-### BUG-025 — Const Value Not Persisted on Save (P1)
-- **Root cause :** Valeur opérande constante non liée au widget ImGui ; non sérialisée dans `SerializeAndWrite()`
-- **Impact :** Risque de perte de données. Mode "Const" de l'éditeur de conditions entièrement inutilisable.
-- **Statut :** OPEN — GitHub Issue [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414)
+### Quality Gates
 
-### BUG-026 — Save Button Inconsistent Behavior (P1)
-- **Root cause :** Bouton Save (`OnSaveButtonClicked()`) et Ctrl+S suivent des code paths différents
-- **Impact :** Comportement non déterministe : bouton Save peut marquer le graphe dirty après save.
-- **Workaround :** Toujours utiliser Ctrl+S
-- **Statut :** OPEN — GitHub Issue [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414)
+| Gate | Status |
+|------|--------|
+| Compilation (headless, C++14) | ✅ PASS — 37+ tests build and pass |
+| Logic — Branch node reaches RenderBranchNodeProperties() | ✅ PASS — return; confirmed |
+| Visual — RGB values: blue #0066CC, green #00FF00, yellow #FFD700 | ✅ PASS — constants verified in code |
+| Integration — Edit→Apply→Update via NodeConditionsPanel | ✅ PASS — panel dirty-flag propagation intact |
+| Documentation — version.h + VERSION_STAMP.md + CONTEXT_CURRENT.md + ROADMAP_V2.md | ✅ PASS — all 4 files updated |
 
-### BUG-027 — Dropdown Lists Not Filtering by Operator Type (P2)
-- **Root cause :** Mapping opérateur → types compatibles absent dans le rendu des dropdowns
+---
+
+## Previous: Phase 23-B.5 — Visual Script Editor Polish (Archived)
+
+
 - **Impact :** UX dégradée : sélections invalides type/opérateur possibles.
 - **Statut :** OPEN — GitHub Issue [#414](https://github.com/Atlasbruce/Olympe-Engine/issues/414)
 

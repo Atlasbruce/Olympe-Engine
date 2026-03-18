@@ -2,8 +2,8 @@
 
 **Date :** 2026-03-15  
 **Auteur :** @Atlasbruce  
-**Derniere mise a jour :** 2026-03-15 15:45:00 UTC  
-**Statut :** Planification active — Phase 23-B SPEC DONE (P1) + Phase 21-C QUEUED (P1)
+**Derniere mise a jour :** 2026-03-18 19:57:31 UTC  
+**Statut :** Phase 24-Rendering-FINAL-CORRECTION complete (PR #449) — Phase 24-Polish NEXT
 
 ---
 
@@ -18,6 +18,22 @@ La Roadmap V2 definit les initiatives majeures post-Phase 20 pour le Blueprint E
 | B | Design & Icons Font Awesome | P2 | En attente spec design |
 | C | Diversification Types de Graphes | P2 | Phase 23+ |
 | D | Runtime Execution & Debugger | P3 | Phase 24+ |
+
+### Phase 24-Rendering — FINAL CORRECTION (PR #449) ✅ DONE
+
+| Livrable | Statut |
+|---|---|
+| Canvas Section 1 — Blue title bar (0, 102, 204) | ✅ Confirmed |
+| Canvas Section 2 — Exec pins "In \| Then/Else" at 150 px | ✅ Confirmed |
+| Canvas Section 3 — Green conditions (0, 255, 0) with tooltip + click | ✅ Confirmed |
+| Canvas Section 4 — Yellow dynamic pins (255, 215, 0) with bullet + tooltip | ✅ Confirmed |
+| Canvas separators — `ImGui::Separator()` + `ImGui::Spacing()` between sections | ✅ Confirmed |
+| Properties panel — `RenderBranchNodeProperties()` blue header (unique, no duplication) | ✅ Implemented |
+| Properties panel — NodeConditionsPanel compact list via delegated Render() | ✅ Implemented |
+| Properties panel — Breakpoint checkbox (F9) | ✅ Implemented |
+| Properties panel — `return;` prevents legacy condition UI fallthrough | ✅ Implemented |
+| Version stamp — version.h updated to PR #449, phase 24-Rendering-FINAL-CORRECTION | ✅ Updated |
+| Version stamp — VERSION_STAMP.md history row added | ✅ Updated |
 
 ---
 
