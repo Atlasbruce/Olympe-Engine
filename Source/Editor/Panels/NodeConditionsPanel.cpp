@@ -323,6 +323,11 @@ void NodeConditionsPanel::RenderConditionsPreview()
 void NodeConditionsPanel::RenderConditionList()
 {
 #ifndef OLYMPE_HEADLESS
+    // UI layout constants
+    static const float  kOpComboWidth    = 60.f;  ///< Width of the And/Or combo
+    static const float  kDeleteBtnWidth  = 22.f;  ///< Width of the [X] delete button
+    static const size_t kFilterBufSize   = 256u;  ///< Max filter string length incl. NUL
+
     // Collapsible section header — green tint to match condition colour convention
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.f, 0.9f, 0.f, 1.f));
     const bool open = ImGui::CollapsingHeader(
@@ -334,8 +339,6 @@ void NodeConditionsPanel::RenderConditionList()
         return;
 
     const ImVec4 condColor(0.f, 1.f, 0.f, 1.f);   // green for preview text
-    const float  opComboWidth = 60.f;               // width of the And/Or combo
-    const float  xBtnWidth    = 22.f;               // width of the [X] button
 
     // Deferred-deletion index (avoids invalidating the iterator inside the loop)
     size_t deleteIdx = static_cast<size_t>(-1);
@@ -358,7 +361,7 @@ void NodeConditionsPanel::RenderConditionList()
         ImGui::SameLine();
         if (i > 0)
         {
-            ImGui::SetNextItemWidth(opComboWidth);
+            ImGui::SetNextItemWidth(kOpComboWidth);
             const char* opLabel = (ref.logicalOp == LogicalOp::Or) ? "Or" : "And";
             if (ImGui::BeginCombo("##op", opLabel, ImGuiComboFlags_NoArrowButton))
             {
@@ -379,12 +382,12 @@ void NodeConditionsPanel::RenderConditionList()
         else
         {
             // Reserve the same horizontal space as the combo so [X] buttons align
-            ImGui::Dummy(ImVec2(opComboWidth, 0.f));
+            ImGui::Dummy(ImVec2(kOpComboWidth, 0.f));
             ImGui::SameLine();
         }
 
         // ── Delete button (X) ─────────────────────────────────────────────────
-        ImGui::SetNextItemWidth(xBtnWidth);
+        ImGui::SetNextItemWidth(kDeleteBtnWidth);
         if (ImGui::SmallButton("X"))
             deleteIdx = i;
 
@@ -408,14 +411,14 @@ void NodeConditionsPanel::RenderConditionList()
     if (ImGui::BeginPopup("##AddCondPopup"))
     {
         // Filter input
-        char filterBuf[256] = {};
+        char filterBuf[kFilterBufSize] = {};
         {
             const std::string& cur = m_dropdownFilter;
             const size_t copyLen =
-                cur.size() < (sizeof(filterBuf) - 1) ? cur.size() : sizeof(filterBuf) - 1;
+                cur.size() < (kFilterBufSize - 1u) ? cur.size() : kFilterBufSize - 1u;
             cur.copy(filterBuf, copyLen);
         }
-        if (ImGui::InputText("Filter", filterBuf, sizeof(filterBuf)))
+        if (ImGui::InputText("Filter", filterBuf, kFilterBufSize))
             SetDropdownFilter(filterBuf);
 
         ImGui::Separator();
