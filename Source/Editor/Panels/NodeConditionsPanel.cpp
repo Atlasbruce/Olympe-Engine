@@ -25,6 +25,7 @@ namespace Olympe {
 
 NodeConditionsPanel::NodeConditionsPanel(ConditionPresetRegistry& registry)
     : m_registry(registry)
+    , m_editModal(registry)
 {
 }
 
@@ -222,6 +223,18 @@ void NodeConditionsPanel::Render()
         RenderDynamicPinsSection();
     }
 
+    // ── Modal polling (renders when open, handles confirmation) ─────────────
+    m_editModal.Render();
+    if (m_editModal.IsConfirmed())
+    {
+        SetConditionRefs(m_editModal.GetConditionRefs());
+        m_dirty = true;
+        m_editModal.Close();
+
+        if (OnDynamicPinsNeedRegeneration)
+            OnDynamicPinsNeedRegeneration();
+    }
+
     ImGui::PopID();
 #endif
 }
@@ -229,13 +242,14 @@ void NodeConditionsPanel::Render()
 void NodeConditionsPanel::RenderTitleSection()
 {
 #ifndef OLYMPE_HEADLESS
-    // Blue background for the title bar (matches ImGuiCol_Header)
-    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_Header));
+    // Blue background (#0066CC equivalent) with white text — matches canvas node
+    ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.0f, 0.4f, 0.8f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.0f, 0.5f, 0.9f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive,  ImVec4(0.0f, 0.3f, 0.7f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text,          ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
     const std::string& title = m_nodeName.empty() ? "Node" : m_nodeName;
-    ImGui::Selectable(title.c_str(), true, ImGuiSelectableFlags_None, ImVec2(0.f, 24.f));
-    ImGui::PopStyleColor();
-    ImGui::SameLine();
-    ImGui::TextDisabled("Name");
+    ImGui::Selectable(title.c_str(), true, ImGuiSelectableFlags_None, ImVec2(0.f, 28.f));
+    ImGui::PopStyleColor(4);
 #endif
 }
 
@@ -297,22 +311,30 @@ void NodeConditionsPanel::RenderConditionsPreview()
 
     ImGui::Spacing();
 
-    // "Edit Conditions" button opens the dedicated modal
-    if (ImGui::Button("Edit Conditions"))
+    // "Edit Conditions" button — full width — opens the owned modal
+    if (ImGui::Button("Edit Conditions", ImVec2(-1.f, 24.f)))
+    {
         m_editModalRequested = true;
+        m_editModal.Open(m_conditionRefs);
+    }
 #endif
 }
 
 void NodeConditionsPanel::RenderDynamicPinsSection()
 {
 #ifndef OLYMPE_HEADLESS
-    // Yellow color for dynamic pins
-    const ImVec4 pinColor(1.f, 1.f, 0.f, 1.f);
+    // Yellow color (#FFD700) for dynamic pins
+    const ImVec4 pinColor(1.0f, 0.843f, 0.0f, 1.0f);
     for (const auto& pin : m_dynamicPins)
     {
-        ImGui::PushStyleColor(ImGuiCol_Text, pinColor);
-        ImGui::BulletText("%s", pin.GetDisplayLabel().c_str());
-        ImGui::PopStyleColor();
+        const std::string displayLabel = pin.GetDisplayLabel();
+        ImGui::TextColored(pinColor, "%s", displayLabel.c_str());
+
+        // Hover tooltip shows full label
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("%s", displayLabel.c_str());
+        }
     }
 #endif
 }

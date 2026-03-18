@@ -25,19 +25,19 @@ namespace Olympe
         static constexpr const char* PATCH = "0";
 
         // Build metadata — update after each PR merge
-        static constexpr const char* BUILD_TIMESTAMP   = "2026-03-18 14:08:14 UTC";
+        static constexpr const char* BUILD_TIMESTAMP   = "2026-03-18 14:50:40 UTC";
         static constexpr const char* GIT_COMMIT_SHA    = "0000000000000000000000000000000000000000";
-        static constexpr const char* GIT_BRANCH        = "copilot/connect-dynamic-pin-management";
-        static constexpr const char* PR_NUMBER         = "#002";
-        static constexpr const char* PHASE             = "24-REFONTE-DynamicPins-V2";
+        static constexpr const char* GIT_BRANCH        = "copilot/implement-immediately-visuals";
+        static constexpr const char* PR_NUMBER         = "#442";
+        static constexpr const char* PHASE             = "24-RENDERING-Complete-V1";
         static constexpr const char* BUILD_CONFIG      = "Debug";
 
         // Single continuous line — binary searchable with: strings <exe> | grep OLYMPE_VERSION
         static constexpr const char* FULL_VERSION_STRING =
-            "OLYMPE_VERSION:0.24.0|BUILD:2026-03-18 14:08:14 UTC"
+            "OLYMPE_VERSION:0.24.0|BUILD:2026-03-18 14:50:40 UTC"
             "|SHA:0000000000000000000000000000000000000000"
-            "|BRANCH:copilot/connect-dynamic-pin-management"
-            "|PR:#002|PHASE:24-REFONTE-DynamicPins-V2|CONFIG:Debug";
+            "|BRANCH:copilot/implement-immediately-visuals"
+            "|PR:#442|PHASE:24-RENDERING-Complete-V1|CONFIG:Debug";
 
         // Log all version fields via SYSTEM_LOG.
         // Call this as the very first operation in main() before any other logs.

@@ -303,4 +303,53 @@ IEditorCommand
 
 ---
 
-**Last Updated:** 2026-03-17 13:37:54 UTC
+## UI/UX Rendering Architecture (Phase 24-Rendering)
+
+### NodeBranchRenderer — 4-Section Canvas Node
+
+The canvas node uses `ImGui::Selectable` with explicit style colors:
+
+| Section | Component | Color |
+|---------|-----------|-------|
+| 1 — Title bar | `ImGuiCol_Header` override | Blue `#0066CC` (`ImVec4(0,0.4,0.8,1)`) |
+| 1 — Title text | `ImGuiCol_Text` override | White `ImVec4(1,1,1,1)` |
+| 2 — Exec pins | `ImGui::Text` | Default text |
+| 3 — Conditions | `ImGui::PushStyleColor(ImGuiCol_Text, green)` | Green `ImVec4(0,1,0,1)` |
+| 4 — Dynamic pins | `ImGui::TextColored` | Yellow `#FFD700` (`ImVec4(1,0.843,0,1)`) |
+
+Section 4 is only rendered when `data.dynamicPins` is non-empty. Each dynamic pin
+shows a hover tooltip with its full label.
+
+### NodeConditionsPanel — Properties Panel
+
+Mirrors the canvas node 4-section layout. Key features:
+
+- **Section 1 (title):** Same blue background + white text as `NodeBranchRenderer`
+- **Section 3 (conditions):** Green text, READ-ONLY preview; "Edit Conditions" button
+  (full-width, `ImVec2(-1, 24)`) opens the owned `NodeConditionsEditModal`
+- **Modal integration:** Panel owns `NodeConditionsEditModal m_editModal` (initialized in
+  constructor). `Render()` calls `m_editModal.Render()` then checks `IsConfirmed()` to
+  apply changes and fire `OnDynamicPinsNeedRegeneration`
+
+### NodeConditionsEditModal — Edit Modal Dialog
+
+Uses `ImGui::BeginPopupModal` (600×400 default, resizable). Visual elements:
+
+- **Title:** Blue `ImGui::TextColored(ImVec4(0,0.8,1,1), "Edit Conditions")`
+- **Conditions list:** Scrollable child region (200px height), green text per row
+- **Logical operator:** `ImGui::Combo` (And/Or), disabled for index 0
+- **Footer buttons:** "Apply" / "Cancel" — 150px wide each
+
+### Color Reference (Phase 24-Rendering)
+
+| Element | Color | ImVec4 |
+|---------|-------|--------|
+| Title bar background | `#0066CC` | `(0.0, 0.4, 0.8, 1.0)` |
+| Title bar text | White | `(1.0, 1.0, 1.0, 1.0)` |
+| Conditions preview | `#00FF00` | `(0.0, 1.0, 0.0, 1.0)` |
+| Dynamic pins | `#FFD700` | `(1.0, 0.843, 0.0, 1.0)` |
+| Modal title | Cyan | `(0.0, 0.8, 1.0, 1.0)` |
+
+---
+
+**Last Updated:** 2026-03-18 14:50:40 UTC

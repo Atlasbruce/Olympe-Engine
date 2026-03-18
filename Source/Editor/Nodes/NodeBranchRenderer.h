@@ -160,6 +160,23 @@ public:
     void RenderDynamicPinsSection(const NodeBranchData& data);
 
     // -----------------------------------------------------------------------
+    // ImNodes connector setup
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Sets up ImNodes connectors for each dynamic pin.
+     *
+     * Call this within an ImNodes::BeginNode() / ImNodes::EndNode() block so
+     * each yellow dynamic pin becomes drag-connectable in the graph editor.
+     * Each pin receives a connector ID derived from pin.id.
+     *
+     * In headless / test builds this is a no-op.
+     *
+     * @param data  Node data (dynamicPins are iterated).
+     */
+    void SetupDynamicPinConnectors(const NodeBranchData& data);
+
+    // -----------------------------------------------------------------------
     // Pin regeneration (Modal-to-Canvas workflow)
     // -----------------------------------------------------------------------
 
@@ -231,6 +248,20 @@ public:
     void ClearRefreshPending() { m_refreshPending = false; }
 
 private:
+
+    // -----------------------------------------------------------------------
+    // ImGui color constants (matching mockup spec)
+    // -----------------------------------------------------------------------
+
+    /// @brief Blue title bar background color (#0066CC equivalent).
+    static constexpr float kTitleR = 0.0f;
+    static constexpr float kTitleG = 0.4f;
+    static constexpr float kTitleB = 0.8f;
+
+    /// @brief Yellow dynamic-pin label color (#FFD700 equivalent).
+    static constexpr float kDynPinR = 1.0f;
+    static constexpr float kDynPinG = 0.843f;
+    static constexpr float kDynPinB = 0.0f;
 
     // -----------------------------------------------------------------------
     // Section helpers

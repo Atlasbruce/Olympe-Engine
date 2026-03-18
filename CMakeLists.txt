@@ -771,6 +771,7 @@ if(BUILD_TESTS)
     add_executable(OlympePhase24_2_NodeConditionsPanelTests
         Tests/Editor/Panels/NodeConditionsPanelTest.cpp
         Source/Editor/Panels/NodeConditionsPanel.cpp
+        Source/Editor/Modals/NodeConditionsEditModal.cpp
         Source/Editor/ConditionPreset/ConditionPreset.cpp
         Source/Editor/ConditionPreset/ConditionPresetRegistry.cpp
         Source/Editor/ConditionPreset/Operand.cpp
@@ -853,6 +854,26 @@ if(BUILD_TESTS)
     target_compile_definitions(OlympePhase24_REFONTE_DynamicPinTests PRIVATE OLYMPE_HEADLESS)
     target_include_directories(OlympePhase24_REFONTE_DynamicPinTests PRIVATE ${COMMON_INCLUDES})
     add_test(NAME OlympePhase24_REFONTE_DynamicPinTests COMMAND OlympePhase24_REFONTE_DynamicPinTests)
+
+    # -----------------------------------------------------------------------
+    # OlympePhase24_Rendering_Tests  (Phase 24-Rendering — Visual Refactoring)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_Rendering_Tests
+        Tests/Phase24Rendering/Phase24RenderingTest.cpp
+        Source/Editor/ConditionPreset/DynamicDataPinManager.cpp
+        Source/Editor/Modals/NodeConditionsEditModal.cpp
+        Source/Editor/Panels/NodeConditionsPanel.cpp
+        Source/Editor/Nodes/NodeBranchRenderer.cpp
+        Source/Editor/ConditionPreset/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/ConditionPresetRegistry.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
+        Source/Editor/ConditionPreset/NodeConditionRef.cpp
+        Source/Editor/ConditionPreset/DynamicDataPin.cpp
+        Tests/TestStubs.cpp
+    )
+    target_compile_definitions(OlympePhase24_Rendering_Tests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_Rendering_Tests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_Rendering_Tests COMMAND OlympePhase24_Rendering_Tests)
 
     # -----------------------------------------------------------------------
     # OlympePhase24_5_RuntimeTests  (Phase 24.5 — Runtime Condition Evaluation)
