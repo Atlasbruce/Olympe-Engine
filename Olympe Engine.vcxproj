@@ -250,6 +250,7 @@
     <ClInclude Include="Source\BlueprintEditor\BPCommandSystem.h" />
     <ClInclude Include="Source\BlueprintEditor\BTNodeGraphManager.h" />
     <ClInclude Include="Source\BlueprintEditor\BTtoVSMigrator.h" />
+    <ClInclude Include="Source\BlueprintEditor\ConditionRef.h" />
     <ClInclude Include="Source\BlueprintEditor\ConditionRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\EditorConfigManager.h" />
     <ClInclude Include="Source\BlueprintEditor\EditorContext.h" />

@@ -189,6 +189,7 @@
     <ClCompile Include="Source\Runtime\GraphRuntimeInstance.cpp" />
     <ClCompile Include="Source\Runtime\RuntimeEnvironment.cpp" />
     <ClCompile Include="Source\Runtime\ConditionPresetEvaluator.cpp" />
+    <ClCompile Include="Source\Editor\Modals\NodeConditionsEditModal.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -416,6 +417,8 @@
     <ClInclude Include="Source\Runtime\GraphRuntimeInstance.h" />
     <ClInclude Include="Source\Runtime\RuntimeEnvironment.h" />
     <ClInclude Include="Source\Runtime\ConditionPresetEvaluator.h" />
+    <ClInclude Include="Source\Editor\Modals\NodeConditionsEditModal.h" />
+    <ClInclude Include="Source\BlueprintEditor\ConditionRef.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
