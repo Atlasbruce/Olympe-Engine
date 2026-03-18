@@ -98,7 +98,7 @@ void NodeBranchRenderer::RenderExecPinsSection(const NodeBranchData& /*data*/)
 #ifndef OLYMPE_HEADLESS
     // "In" on the left, "Then" and "Else" on the right.
     // These pins are STATIC and NEVER editable from the canvas node.
-    const float columnWidth = 120.f;
+    const float columnWidth = 150.f;
 
     ImGui::Text("In");
     ImGui::SameLine(columnWidth);
@@ -194,12 +194,19 @@ void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data)
     for (const auto& pin : data.dynamicPins)
     {
         const std::string displayLabel = pin.GetDisplayLabel();
-        ImGui::TextColored(pinColor, "%s", displayLabel.c_str());
+        // Prefix with bullet character as per mockup spec (UTF-8 literal)
+        ImGui::TextColored(pinColor, "\xe2\x97\x8f %s", displayLabel.c_str());
 
-        // Hover tooltip shows full label
+        // Hover tooltip: show Pin ID, condition index, and operand position
         if (ImGui::IsItemHovered())
         {
-            ImGui::SetTooltip("%s", displayLabel.c_str());
+            const char* posStr = (pin.position == OperandPosition::Left) ? "Left" : "Right";
+            ImGui::BeginTooltip();
+            ImGui::Text("Pin ID: %s", pin.id.c_str());
+            ImGui::Text("Condition index: %d", pin.conditionIndex);
+            ImGui::Text("Operand side: %s", posStr);
+            ImGui::Text("Label: %s", displayLabel.c_str());
+            ImGui::EndTooltip();
         }
     }
 #endif
@@ -254,6 +261,7 @@ void NodeBranchRenderer::RenderSectionSeparator()
 {
 #ifndef OLYMPE_HEADLESS
     ImGui::Separator();
+    ImGui::Spacing();
 #endif
 }
 
