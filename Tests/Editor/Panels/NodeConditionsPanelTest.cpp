@@ -308,6 +308,45 @@ static void Test10_DirtyFlag()
 }
 
 // ---------------------------------------------------------------------------
+// Test 11: NodeName
+// ---------------------------------------------------------------------------
+
+static void Test11_NodeName()
+{
+    int before = s_failCount;
+    ConditionPresetRegistry reg;
+    NodeConditionsPanel panel(reg);
+
+    TEST_ASSERT(panel.GetNodeName().empty(), "Node name should be empty by default");
+
+    panel.SetNodeName("Is Health Critical?");
+    TEST_ASSERT(panel.GetNodeName() == "Is Health Critical?",
+                "GetNodeName should return the set name");
+
+    ReportTest("Test11_NodeName", s_failCount == before);
+}
+
+// ---------------------------------------------------------------------------
+// Test 12: EditModalRequest
+// ---------------------------------------------------------------------------
+
+static void Test12_EditModalRequest()
+{
+    int before = s_failCount;
+    ConditionPresetRegistry reg;
+    NodeConditionsPanel panel(reg);
+
+    TEST_ASSERT(!panel.IsEditModalRequested(),
+                "Edit modal should not be requested initially");
+
+    panel.ClearEditModalRequest();
+    TEST_ASSERT(!panel.IsEditModalRequested(),
+                "ClearEditModalRequest should keep it false when already false");
+
+    ReportTest("Test12_EditModalRequest", s_failCount == before);
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -325,6 +364,8 @@ int main()
     Test8_IsValid_AllPresetsExist();
     Test9_IsValid_MissingPreset();
     Test10_DirtyFlag();
+    Test11_NodeName();
+    Test12_EditModalRequest();
 
     std::cout << "\nResults: "
               << s_passCount << " passed, "

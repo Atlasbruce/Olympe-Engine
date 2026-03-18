@@ -1,6 +1,6 @@
 /**
  * @file NodeBranchRenderer.cpp
- * @brief Implementation of NodeBranchRenderer (Phase 24.4).
+ * @brief Implementation of NodeBranchRenderer (Phase 24-REFONTE).
  * @author Olympe Engine
  * @date 2026-03-17
  *
@@ -41,97 +41,120 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
 
     ImGui::PushID(data.nodeID.c_str());
 
-    // Node title
-    ImGui::Text("Branch: %s", data.nodeName.c_str());
-    if (data.breakpoint)
-    {
-        ImGui::SameLine();
-        ImGui::TextColored(ImVec4(1.f, 0.3f, 0.3f, 1.f), "[BP]");
-    }
+    // ── Section 1: Title bar (blue background) ───────────────────────────────
+    RenderTitleSection(data);
 
     RenderSectionSeparator();
 
-    // ── Section 1: Static input pin ─────────────────────────────────────────
-    RenderStaticInputPin(data);
+    // ── Section 2: Static exec pins (In | Then / Else) ───────────────────────
+    RenderExecPinsSection(data);
 
     RenderSectionSeparator();
 
-    // ── Section 2: Conditions ────────────────────────────────────────────────
+    // ── Section 3: Conditions preview (green, read-only) ─────────────────────
     RenderConditionsSection(data);
 
-    RenderSectionSeparator();
-
-    // ── Section 3: Dynamic data pins ────────────────────────────────────────
-    RenderDynamicPinsSection(data);
-
-    RenderSectionSeparator();
-
-    // ── Section 4: Execution flow pins ──────────────────────────────────────
-    RenderExecutionFlowPins(data);
+    // ── Section 4: Dynamic data pins (yellow, only if any) ───────────────────
+    if (!data.dynamicPins.empty())
+    {
+        RenderSectionSeparator();
+        RenderDynamicPinsSection(data);
+    }
 
     ImGui::PopID();
 #endif
 }
 
 // ============================================================================
-// Section 1 — Static input pin
+// Section 1 — Title bar (blue background)
 // ============================================================================
 
-void NodeBranchRenderer::RenderStaticInputPin(const NodeBranchData& /*data*/)
+void NodeBranchRenderer::RenderTitleSection(const NodeBranchData& data)
 {
 #ifndef OLYMPE_HEADLESS
-    RenderSectionHeader("Inputs");
-    // Placeholder: actual ImNodes pin registration happens in the parent node
-    // renderer using the node ID.  Here we display the pin label only.
-    ImGui::BulletText("In (execution)");
+    // Blue background matching ImGuiCol_Header
+    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_Header));
+    ImGui::Selectable(data.nodeName.c_str(), true,
+                      ImGuiSelectableFlags_None, ImVec2(0.f, 24.f));
+    ImGui::PopStyleColor();
+
+    if (data.breakpoint)
+    {
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(1.f, 0.3f, 0.3f, 1.f), "[BP]");
+    }
 #endif
 }
 
 // ============================================================================
-// Section 2 — Conditions (read-only)
+// Section 2 — Static exec pins (In | Then / Else)
+// ============================================================================
+
+void NodeBranchRenderer::RenderExecPinsSection(const NodeBranchData& /*data*/)
+{
+#ifndef OLYMPE_HEADLESS
+    // "In" on the left, "Then" and "Else" on the right.
+    // These pins are STATIC and NEVER editable from the canvas node.
+    const float columnWidth = 120.f;
+
+    ImGui::Text("In");
+    ImGui::SameLine(columnWidth);
+    ImGui::Text("Then");
+
+    ImGui::Text("  ");        // empty left column
+    ImGui::SameLine(columnWidth);
+    ImGui::Text("Else");
+#endif
+}
+
+// ============================================================================
+// Section 3 — Conditions preview (green, read-only)
 // ============================================================================
 
 void NodeBranchRenderer::RenderConditionsSection(const NodeBranchData& data)
 {
 #ifndef OLYMPE_HEADLESS
-    RenderSectionHeader("Conditions");
-
     if (data.conditionRefs.empty())
     {
         ImGui::TextDisabled("(no conditions)");
         return;
     }
 
+    // Green color for condition preview text (bright green, monospace hint via indent)
+    const ImVec4 condColor(0.f, 1.f, 0.f, 1.f);
+
     for (int i = 0; i < static_cast<int>(data.conditionRefs.size()); ++i)
     {
         const NodeConditionRef& ref = data.conditionRefs[i];
 
         ImGui::PushID(i);
+        ImGui::PushStyleColor(ImGuiCol_Text, condColor);
 
-        // Logical operator label
+        // Logical operator label (left-aligned, fixed width)
+        const char* opLabel = "";
         if (i == 0)
-            ImGui::TextDisabled("Start");
+            opLabel = "   ";        // indent first condition (no combinator)
         else if (ref.logicalOp == LogicalOp::And)
-            ImGui::TextDisabled("And  ");
+            opLabel = "And";
         else
-            ImGui::TextDisabled("Or   ");
-
-        ImGui::SameLine();
+            opLabel = "Or ";
 
         // Condition preview
         const ConditionPreset* preset = m_registry.GetPreset(ref.presetID);
         if (preset)
         {
-            const std::string label = preset->GetPreview();
-            ImGui::Text("%s", label.c_str());
+            const std::string preview = preset->GetPreview();
+            ImGui::Text("%s %s", opLabel, preview.c_str());
 
-            // Hover tooltip
+            ImGui::PopStyleColor();
+
+            // Hover tooltip (drawn without green style)
             if (ImGui::IsItemHovered())
             {
                 ImGui::BeginTooltip();
                 ImGui::Text("Preset: %s", preset->name.c_str());
                 ImGui::Text("ID:     %s", preset->id.c_str());
-                ImGui::Text("Expr:   %s", label.c_str());
+                ImGui::Text("Expr:   %s", preview.c_str());
                 ImGui::EndTooltip();
             }
 
@@ -145,8 +168,9 @@ void NodeBranchRenderer::RenderConditionsSection(const NodeBranchData& data)
         }
         else
         {
+            ImGui::PopStyleColor();
             ImGui::TextColored(ImVec4(1.f, 0.3f, 0.3f, 1.f),
-                               "(missing: %s)", ref.presetID.c_str());
+                               "%s (missing: %s)", opLabel, ref.presetID.c_str());
         }
 
         ImGui::PopID();
@@ -155,20 +179,13 @@ void NodeBranchRenderer::RenderConditionsSection(const NodeBranchData& data)
 }
 
 // ============================================================================
-// Section 3 — Dynamic data pins (yellow)
+// Section 4 — Dynamic data pins (yellow, rendered only when non-empty)
 // ============================================================================
 
 void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data)
 {
 #ifndef OLYMPE_HEADLESS
-    RenderSectionHeader("Data Inputs");
-
-    if (data.dynamicPins.empty())
-    {
-        ImGui::TextDisabled("(none)");
-        return;
-    }
-
+    // Dynamic pins are always yellow
     float r, g, b, a;
     DynamicDataPinManager::GetDynamicPinColor(r, g, b, a);
     const ImVec4 pinColor(r, g, b, a);
@@ -179,19 +196,6 @@ void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data)
         ImGui::BulletText("%s", pin.GetDisplayLabel().c_str());
         ImGui::PopStyleColor();
     }
-#endif
-}
-
-// ============================================================================
-// Section 4 — Execution flow pins
-// ============================================================================
-
-void NodeBranchRenderer::RenderExecutionFlowPins(const NodeBranchData& /*data*/)
-{
-#ifndef OLYMPE_HEADLESS
-    RenderSectionHeader("Outputs");
-    ImGui::BulletText("Then (true branch)");
-    ImGui::BulletText("Else (false branch)");
 #endif
 }
 

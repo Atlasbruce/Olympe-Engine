@@ -1,29 +1,30 @@
 /**
  * @file NodeBranchRenderer.h
- * @brief ImGui renderer for NodeBranch nodes with 4 distinct sections (Phase 24.4).
+ * @brief ImGui renderer for NodeBranch nodes with 4 distinct sections (Phase 24-REFONTE).
  * @author Olympe Engine
  * @date 2026-03-17
  *
  * @details
  * NodeBranchRenderer draws a single NodeBranch inside the ImGui / ImNodes
  * graph canvas.  The node is divided into four visual sections separated by
- * horizontal dividers:
+ * horizontal dividers, matching the validated mockup:
  *
  * @code
  * ┌─────────────────────────────────────────────────┐
- * │  Section 1 — Static pins                        │
- * │    ● In (input execution)                       │
+ * │  Section 1 — Title bar (blue background)        │
+ * │    Is Health Critical?                          │
  * ├─────────────────────────────────────────────────┤
- * │  Section 2 — Conditions (read-only)             │
- * │    [Start] [mHealth] <= [2]  (Condition #1)     │
- * │    [And  ] [mSpeed]  > [0]   (Fast)             │
+ * │  Section 2 — Exec pins (static, never editable) │
+ * │    >> In                         Then >>        │
+ * │                                  Else >>        │
  * ├─────────────────────────────────────────────────┤
- * │  Section 3 — Dynamic data pins                  │
- * │    ● In #1L: [mHealth] <= [Pin:1]  (yellow)    │
+ * │  Section 3 — Conditions preview (READ-ONLY)     │
+ * │      [mHealth] <= [2]       (green, monospace)  │
+ * │  And [mSpeed] <= [100.00]                       │
+ * │  Or  [mSpeed] == [Pin : 1]                      │
  * ├─────────────────────────────────────────────────┤
- * │  Section 4 — Execution flow pins                │
- * │    ● Then (true branch)                         │
- * │    ● Else (false branch)                        │
+ * │  Section 4 — Dynamic data pins (yellow, cond.)  │
+ * │  * In #1: [mSpeed] == [Pin : 1]                │
  * └─────────────────────────────────────────────────┘
  * @endcode
  *
@@ -31,6 +32,7 @@
  *   - Hover over a condition row → tooltip showing preset details.
  *   - Click a condition row → fires OnConditionClicked(conditionIndex).
  *   - Dynamic pins support drag/connect via ImNodes.
+ *   - Section 4 is only rendered when at least one dynamic pin exists.
  *
  * Auto-update:
  *   Call NotifyPresetChanged(presetID) whenever a preset is updated so that
@@ -121,28 +123,41 @@ public:
     // -----------------------------------------------------------------------
 
     /**
-     * @brief Renders Section 1: static execution-input pin ("In").
+     * @brief Renders Section 1: title bar with blue background.
+     *
+     * Displays the node name on a blue-highlighted background row.
      * @param data  Node data.
      */
-    void RenderStaticInputPin(const NodeBranchData& data);
+    void RenderTitleSection(const NodeBranchData& data);
 
     /**
-     * @brief Renders Section 2: read-only condition list.
+     * @brief Renders Section 2: static exec pins (In / Then / Else).
+     *
+     * Shows "In" on the left and "Then" / "Else" on the right.
+     * These pins are NEVER editable from this section.
+     * @param data  Node data.
+     */
+    void RenderExecPinsSection(const NodeBranchData& data);
+
+    /**
+     * @brief Renders Section 3: read-only conditions preview (green text).
+     *
+     * Each condition is displayed in the format:
+     *   "    [mHealth] <= [2]"
+     *   "And [mSpeed] <= [100.00]"
+     * Hovering shows a tooltip; clicking fires OnConditionClicked.
      * @param data  Node data.
      */
     void RenderConditionsSection(const NodeBranchData& data);
 
     /**
-     * @brief Renders Section 3: dynamic data pins (yellow).
+     * @brief Renders Section 4: dynamic data pins (yellow, conditional).
+     *
+     * Only rendered when data.dynamicPins is non-empty.
+     * Format: "In #<idx>[L/R]: <condPreview>"
      * @param data  Node data.
      */
     void RenderDynamicPinsSection(const NodeBranchData& data);
-
-    /**
-     * @brief Renders Section 4: execution flow output pins (Then / Else).
-     * @param data  Node data.
-     */
-    void RenderExecutionFlowPins(const NodeBranchData& data);
 
     // -----------------------------------------------------------------------
     // Interaction state

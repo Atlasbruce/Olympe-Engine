@@ -103,5 +103,8 @@ private:
         std::string& outErrorMsg);
 };
 
+/// @brief Backward-compatible alias — use ConditionPresetEvaluator for new code.
+using ConditionEvaluator = ConditionPresetEvaluator;
+
 } // namespace Olympe
 

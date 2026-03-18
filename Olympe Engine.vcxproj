@@ -110,6 +110,7 @@
     <ClCompile Include="Source\Editor\ConditionPreset\NodeConditionRef.cpp" />
     <ClCompile Include="Source\Editor\ConditionPreset\Operand.cpp" />
     <ClCompile Include="Source\Editor\Nodes\NodeBranchRenderer.cpp" />
+    <ClCompile Include="Source\Editor\Modals\NodeConditionsEditModal.cpp" />
     <ClCompile Include="Source\Editor\Panels\ConditionPresetLibraryPanel.cpp" />
     <ClCompile Include="Source\Editor\Panels\NodeConditionsPanel.cpp" />
     <ClCompile Include="Source\engine_utils.cpp" />
@@ -307,6 +308,7 @@
     <ClInclude Include="Source\Editor\ConditionPreset\Operand.h" />
     <ClInclude Include="Source\Editor\Dialogs\ConditionPresetEditDialog.h" />
     <ClInclude Include="Source\Editor\Nodes\NodeBranchRenderer.h" />
+    <ClInclude Include="Source\Editor\Modals\NodeConditionsEditModal.h" />
     <ClInclude Include="Source\Editor\Panels\ConditionPresetLibraryPanel.h" />
     <ClInclude Include="Source\Editor\Panels\NodeConditionsPanel.h" />
     <ClInclude Include="Source\engine_utils.h" />

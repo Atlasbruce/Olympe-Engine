@@ -818,12 +818,29 @@ if(BUILD_TESTS)
     add_test(NAME OlympePhase24_4_NodeBranchRendererTests COMMAND OlympePhase24_4_NodeBranchRendererTests)
 
     # -----------------------------------------------------------------------
+    # OlympePhase24_REFONTE_EditModalTests  (Phase 24-REFONTE — NodeConditionsEditModal)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_REFONTE_EditModalTests
+        Tests/Editor/Modals/NodeConditionsEditModalTest.cpp
+        Source/Editor/Modals/NodeConditionsEditModal.cpp
+        Source/Editor/ConditionPreset/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/ConditionPresetRegistry.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
+        Source/Editor/ConditionPreset/NodeConditionRef.cpp
+        Source/Editor/ConditionPreset/DynamicDataPin.cpp
+        Tests/TestStubs.cpp
+    )
+    target_compile_definitions(OlympePhase24_REFONTE_EditModalTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_REFONTE_EditModalTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_REFONTE_EditModalTests COMMAND OlympePhase24_REFONTE_EditModalTests)
+
+    # -----------------------------------------------------------------------
     # OlympePhase24_5_RuntimeTests  (Phase 24.5 — Runtime Condition Evaluation)
     # -----------------------------------------------------------------------
     add_executable(OlympePhase24_5_RuntimeTests
         Tests/Runtime/Phase24RuntimeTest.cpp
         Source/Runtime/RuntimeEnvironment.cpp
-        Source/Runtime/ConditionEvaluator.cpp
+        Source/Runtime/ConditionPresetEvaluator.cpp
         Source/Runtime/GraphRuntimeInstance.cpp
         Source/Editor/ConditionPreset/ConditionPreset.cpp
         Source/Editor/ConditionPreset/ConditionPresetRegistry.cpp
