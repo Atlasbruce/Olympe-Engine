@@ -25,19 +25,19 @@ namespace Olympe
         static constexpr const char* PATCH = "0";
 
         // Build metadata — update after each PR merge
-        static constexpr const char* BUILD_TIMESTAMP   = "2026-03-18 19:57:31 UTC";
-        static constexpr const char* GIT_COMMIT_SHA    = "ee7638865351665048f6a1337ae6771214bc7f7b";
-        static constexpr const char* GIT_BRANCH        = "copilot/implement-canvas-node-rendering";
-        static constexpr const char* PR_NUMBER         = "#449";
-        static constexpr const char* PHASE             = "24-Rendering-FINAL-CORRECTION";
+        static constexpr const char* BUILD_TIMESTAMP   = "2026-03-18 20:31:22 UTC";
+        static constexpr const char* GIT_COMMIT_SHA    = "fecadedf207d35b70037277f646a03f43f5b6d1c";
+        static constexpr const char* GIT_BRANCH        = "copilot/fix-compilation-failure-syntax";
+        static constexpr const char* PR_NUMBER         = "#450";
+        static constexpr const char* PHASE             = "24-Rendering-HOTFIX";
         static constexpr const char* BUILD_CONFIG      = "Debug";
 
         // Single continuous line — binary searchable with: strings <exe> | grep OLYMPE_VERSION
         static constexpr const char* FULL_VERSION_STRING =
-            "OLYMPE_VERSION:0.24.0|BUILD:2026-03-18 19:57:31 UTC"
-            "|SHA:ee7638865351665048f6a1337ae6771214bc7f7b"
-            "|BRANCH:copilot/implement-canvas-node-rendering"
-            "|PR:#449|PHASE:24-Rendering-FINAL-CORRECTION|CONFIG:Debug";
+            "OLYMPE_VERSION:0.24.0|BUILD:2026-03-18 20:31:22 UTC"
+            "|SHA:fecadedf207d35b70037277f646a03f43f5b6d1c"
+            "|BRANCH:copilot/fix-compilation-failure-syntax"
+            "|PR:#450|PHASE:24-Rendering-HOTFIX|CONFIG:Debug";
 
         // Log all version fields via SYSTEM_LOG.
         // Call this as the very first operation in main() before any other logs.

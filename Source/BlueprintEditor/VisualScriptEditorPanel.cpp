@@ -2554,7 +2554,7 @@ void VisualScriptEditorPanel::RenderBranchNodeProperties(VSEditorNode& eNode,
     (void)eNode; // suppress unused-warning when branches have no eNode-specific fields
 }
 
-
+void VisualScriptEditorPanel::RenderProperties()
 {
     ImGui::TextDisabled("Properties");
 
