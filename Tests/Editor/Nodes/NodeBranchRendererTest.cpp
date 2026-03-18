@@ -243,6 +243,72 @@ static void Test8_EmptyConditions()
 }
 
 // ---------------------------------------------------------------------------
+// Test 9: SectionRenderNocrash_WithDynamicPins
+// ---------------------------------------------------------------------------
+
+static void Test9_SectionRenderNocrash_WithDynamicPins()
+{
+    int before = s_failCount;
+    ConditionPresetRegistry reg;
+
+    ConditionPreset p("p1",
+                      Operand::CreatePin("Pin:1"),
+                      ComparisonOp::Equal,
+                      Operand::CreateConst(5.0));
+    p.name = "PinSpeedCond";
+    reg.CreatePreset(p);
+
+    DynamicDataPinManager mgr(reg);
+    std::vector<NodeConditionRef> refs = { NodeConditionRef("p1", LogicalOp::Start) };
+    mgr.SyncPins(refs);
+
+    NodeBranchRenderer renderer(reg, mgr);
+
+    NodeBranchData data;
+    data.nodeID        = "node_dyn";
+    data.nodeName      = "Is Health Critical?";
+    data.conditionRefs = refs;
+    data.dynamicPins   = mgr.GetAllPins();
+
+    // In headless mode, all Render* are no-ops but must not crash.
+    renderer.RenderNode(data);
+    renderer.RenderTitleSection(data);
+    renderer.RenderExecPinsSection(data);
+    renderer.RenderConditionsSection(data);
+    renderer.RenderDynamicPinsSection(data);
+
+    TEST_ASSERT(mgr.GetPinCount() == 1u, "Should have 1 dynamic pin");
+    TEST_ASSERT(!data.dynamicPins.empty(), "Dynamic pins passed in data");
+
+    ReportTest("Test9_SectionRenderNocrash_WithDynamicPins", s_failCount == before);
+}
+
+// ---------------------------------------------------------------------------
+// Test 10: DynamicPinsSectionSkipped_WhenEmpty
+// ---------------------------------------------------------------------------
+
+static void Test10_DynamicPinsSectionSkipped_WhenEmpty()
+{
+    int before = s_failCount;
+    ConditionPresetRegistry reg;
+    DynamicDataPinManager   mgr(reg);
+    NodeBranchRenderer renderer(reg, mgr);
+
+    NodeBranchData data;
+    data.nodeID   = "node_nodyn";
+    data.nodeName = "NoPins";
+    // No conditions, no dynamic pins
+
+    // RenderNode should be safe even with empty dynamicPins (section is skipped)
+    renderer.RenderNode(data);
+
+    TEST_ASSERT(data.dynamicPins.empty(), "No dynamic pins in this test");
+    TEST_ASSERT(renderer.GetLastClickedConditionIndex() == -1, "No click recorded");
+
+    ReportTest("Test10_DynamicPinsSectionSkipped_WhenEmpty", s_failCount == before);
+}
+
+// ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
 
@@ -258,6 +324,8 @@ int main()
     Test6_IsRefreshPending_False();
     Test7_PinManagerIntegration();
     Test8_EmptyConditions();
+    Test9_SectionRenderNocrash_WithDynamicPins();
+    Test10_DynamicPinsSectionSkipped_WhenEmpty();
 
     std::cout << "\nResults: "
               << s_passCount << " passed, "

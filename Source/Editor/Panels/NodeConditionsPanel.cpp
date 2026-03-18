@@ -201,123 +201,118 @@ void NodeConditionsPanel::Render()
 {
 #ifndef OLYMPE_HEADLESS
     ImGui::PushID("NodeConditionsPanel");
-    ImGui::Text("Conditions");
+
+    // ── Section 1: Title bar ─────────────────────────────────────────────────
+    RenderTitleSection();
+
     ImGui::Separator();
 
-    for (size_t i = 0; i < m_conditionRefs.size(); ++i)
+    // ── Section 2: Static exec pins ─────────────────────────────────────────
+    RenderExecPinsSection();
+
+    ImGui::Separator();
+
+    // ── Section 3: Conditions preview + Edit button ──────────────────────────
+    RenderConditionsPreview();
+
+    // ── Section 4: Dynamic data pins (only if any) ──────────────────────────
+    if (!m_dynamicPins.empty())
     {
-        RenderConditionRow(i, m_conditionRefs[i]);
+        ImGui::Separator();
+        RenderDynamicPinsSection();
     }
-
-    RenderAddConditionDropdown();
-
-    ImGui::Separator();
-    RenderDynamicPinsSection();
 
     ImGui::PopID();
 #endif
 }
 
-void NodeConditionsPanel::RenderConditionRow(size_t index,
-                                              const NodeConditionRef& ref)
+void NodeConditionsPanel::RenderTitleSection()
 {
 #ifndef OLYMPE_HEADLESS
-    ImGui::PushID(static_cast<int>(index));
-
-    // Logical operator selector (radio buttons)
-    if (index == 0)
-    {
-        ImGui::TextDisabled("Start");
-    }
-    else
-    {
-        int op = (ref.logicalOp == LogicalOp::And) ? 0 : 1;
-        if (ImGui::RadioButton("And", op == 0))
-            SetLogicalOp(index, LogicalOp::And);
-        ImGui::SameLine();
-        if (ImGui::RadioButton("Or", op == 1))
-            SetLogicalOp(index, LogicalOp::Or);
-    }
-
+    // Blue background for the title bar (matches ImGuiCol_Header)
+    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_Header));
+    const std::string& title = m_nodeName.empty() ? "Node" : m_nodeName;
+    ImGui::Selectable(title.c_str(), true, ImGuiSelectableFlags_None, ImVec2(0.f, 24.f));
+    ImGui::PopStyleColor();
     ImGui::SameLine();
-
-    // Condition preview
-    const ConditionPreset* preset = m_registry.GetPreset(ref.presetID);
-    if (preset)
-    {
-        ImGui::Text("[%s] %s", preset->name.c_str(),
-                    preset->GetPreview().c_str());
-    }
-    else
-    {
-        ImGui::TextColored(ImVec4(1.f, 0.3f, 0.3f, 1.f),
-                           "(missing preset: %s)", ref.presetID.c_str());
-    }
-
-    ImGui::SameLine();
-
-    // Remove button
-    if (ImGui::SmallButton("X"))
-        RemoveCondition(index);
-
-    ImGui::PopID();
+    ImGui::TextDisabled("Name");
 #endif
 }
 
-void NodeConditionsPanel::RenderAddConditionDropdown()
+void NodeConditionsPanel::RenderExecPinsSection()
 {
 #ifndef OLYMPE_HEADLESS
+    // Static exec pins — never editable from this panel
+    const float columnWidth = 120.f;
+
+    ImGui::TextDisabled("In");
+    ImGui::SameLine(columnWidth);
+    ImGui::TextDisabled("Then");
+
+    ImGui::TextDisabled("  ");
+    ImGui::SameLine(columnWidth);
+    ImGui::TextDisabled("Else");
+#endif
+}
+
+void NodeConditionsPanel::RenderConditionsPreview()
+{
+#ifndef OLYMPE_HEADLESS
+    // Green text for condition previews (READ-ONLY)
+    const ImVec4 condColor(0.f, 1.f, 0.f, 1.f);
+
+    if (m_conditionRefs.empty())
+    {
+        ImGui::TextDisabled("(no conditions)");
+    }
+    else
+    {
+        for (size_t i = 0; i < m_conditionRefs.size(); ++i)
+        {
+            const NodeConditionRef& ref = m_conditionRefs[i];
+
+            ImGui::PushID(static_cast<int>(i));
+
+            // Logical operator column (fixed width)
+            const char* opLabel = "   ";
+            if (i > 0)
+            {
+                if (ref.logicalOp == LogicalOp::And)
+                    opLabel = "And";
+                else if (ref.logicalOp == LogicalOp::Or)
+                    opLabel = "Or ";
+            }
+
+            const ConditionPreset* preset = m_registry.GetPreset(ref.presetID);
+            ImGui::PushStyleColor(ImGuiCol_Text, condColor);
+            if (preset)
+                ImGui::Text("%s %s", opLabel, preset->GetPreview().c_str());
+            else
+                ImGui::Text("%s (missing: %s)", opLabel, ref.presetID.c_str());
+            ImGui::PopStyleColor();
+
+            ImGui::PopID();
+        }
+    }
+
     ImGui::Spacing();
 
-    if (ImGui::Button("+ Add Condition"))
-        m_dropdownOpen = !m_dropdownOpen;
-
-    if (m_dropdownOpen)
-    {
-        // Filter text
-        static char filterBuf[256] = {};
-        if (ImGui::InputText("##filter", filterBuf, sizeof(filterBuf)))
-            SetDropdownFilter(std::string(filterBuf));
-
-        const std::vector<ConditionPreset> presets = GetFilteredPresetsForDropdown();
-        for (const auto& preset : presets)
-        {
-            std::string label = preset.name + "  " + preset.GetPreview();
-            if (ImGui::Selectable(label.c_str()))
-            {
-                AddCondition(preset.id);
-                m_dropdownOpen = false;
-                // Reset filter buffer
-                filterBuf[0] = '\0';
-                SetDropdownFilter("");
-            }
-        }
-
-        if (presets.empty())
-            ImGui::TextDisabled("No presets found.");
-    }
+    // "Edit Conditions" button opens the dedicated modal
+    if (ImGui::Button("Edit Conditions"))
+        m_editModalRequested = true;
 #endif
 }
 
 void NodeConditionsPanel::RenderDynamicPinsSection()
 {
 #ifndef OLYMPE_HEADLESS
-    ImGui::Text("Dynamic Pins");
-    ImGui::Separator();
-
-    if (m_dynamicPins.empty())
+    // Yellow color for dynamic pins
+    const ImVec4 pinColor(1.f, 1.f, 0.f, 1.f);
+    for (const auto& pin : m_dynamicPins)
     {
-        ImGui::TextDisabled("(none)");
-    }
-    else
-    {
-        for (const auto& pin : m_dynamicPins)
-        {
-            // Yellow color for dynamic pins
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.f, 1.f, 0.f, 1.f));
-            ImGui::BulletText("%s", pin.GetDisplayLabel().c_str());
-            ImGui::PopStyleColor();
-        }
+        ImGui::PushStyleColor(ImGuiCol_Text, pinColor);
+        ImGui::BulletText("%s", pin.GetDisplayLabel().c_str());
+        ImGui::PopStyleColor();
     }
 #endif
 }
