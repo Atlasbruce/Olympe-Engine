@@ -114,6 +114,8 @@ void NodeConditionsEditModal::MoveConditionDown(size_t index)
 void NodeConditionsEditModal::Confirm()
 {
     m_isConfirmed = true;
+    if (OnApply)
+        OnApply();
     Close();
 }
 

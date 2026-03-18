@@ -200,6 +200,16 @@ void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data)
 }
 
 // ============================================================================
+// Pin regeneration (Modal-to-Canvas workflow)
+// ============================================================================
+
+void NodeBranchRenderer::TriggerPinRegeneration(
+    std::vector<NodeConditionRef>& conditionRefs)
+{
+    m_pinManager.RegeneratePinsFromConditions(conditionRefs);
+}
+
+// ============================================================================
 // Preset change notification
 // ============================================================================
 
