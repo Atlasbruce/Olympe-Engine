@@ -398,3 +398,5 @@ build_test/
 build_tests/
 build_test_run/
 build_core/
+/Gamedata/Levels/parallax-level.tiled-session
+/OlympeBlueprintEditor_d.exe
