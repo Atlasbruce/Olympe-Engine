@@ -193,3 +193,33 @@ Chaque PR **DOIT** inclure cette section dans sa description :
 - **VERSION_STAMP.md updated**: ✅
 - **Binary verification**: `strings OlympeEngine.exe | grep OLYMPE_VERSION` -> ✅
 ```
+
+---
+
+## 📋 Phase 24 — Branch/While Node UI (Phase 1: Documentation Baseline)
+
+**Documents de référence obligatoires pour toute PR Phase 24 :**
+
+| Document | Rôle |
+|----------|------|
+| [PHASE_24_SPECIFICATION.md](./PHASE_24_SPECIFICATION.md) | Spécification technique complète du design cible |
+| [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md) | Matrice de statut composant par composant |
+| [QUALITY_STANDARDS.md](./QUALITY_STANDARDS.md) | Critères d'acceptation non-négociables |
+
+### ⚠️ Discipline Obligatoire — Avant toute déclaration de complétion
+
+**Avant de déclarer un composant "DONE" ou une PR "prête à merger", tu DOIS :**
+
+1. Ouvrir `IMPLEMENTATION_STATUS.md`
+2. Vérifier le statut de chaque composant affecté par la PR
+3. Mettre à jour les colonnes `Implemented`, `Working`, `Coverage`
+4. Confirmer que les critères d'acceptation de `QUALITY_STANDARDS.md` Section 4 sont tous cochés
+5. Confirmer que l'implémentation correspond à `PHASE_24_SPECIFICATION.md`
+
+> ❌ **Il est interdit de déclarer "DONE" sans avoir vérifié contre IMPLEMENTATION_STATUS.md**
+
+### 🎯 État Phase 1 (Documentation Baseline)
+
+**Statut global :** ❌ NOT READY FOR PHASE 2
+
+Voir [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md) pour la liste complète des blockers.
