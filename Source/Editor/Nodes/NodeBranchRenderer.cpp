@@ -72,11 +72,14 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
 void NodeBranchRenderer::RenderTitleSection(const NodeBranchData& data)
 {
 #ifndef OLYMPE_HEADLESS
-    // Blue background matching ImGuiCol_Header
-    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_Header));
+    // Blue background (#0066CC equivalent) with white text
+    ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.0f, 0.4f, 0.8f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.0f, 0.5f, 0.9f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive,  ImVec4(0.0f, 0.3f, 0.7f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text,          ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
     ImGui::Selectable(data.nodeName.c_str(), true,
-                      ImGuiSelectableFlags_None, ImVec2(0.f, 24.f));
-    ImGui::PopStyleColor();
+                      ImGuiSelectableFlags_None, ImVec2(0.f, 28.f));
+    ImGui::PopStyleColor(4);
 
     if (data.breakpoint)
     {
@@ -185,17 +188,35 @@ void NodeBranchRenderer::RenderConditionsSection(const NodeBranchData& data)
 void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data)
 {
 #ifndef OLYMPE_HEADLESS
-    // Dynamic pins are always yellow
-    float r, g, b, a;
-    DynamicDataPinManager::GetDynamicPinColor(r, g, b, a);
-    const ImVec4 pinColor(r, g, b, a);
+    // Dynamic pins are always yellow (#FFD700)
+    const ImVec4 pinColor(1.0f, 0.843f, 0.0f, 1.0f);
 
     for (const auto& pin : data.dynamicPins)
     {
-        ImGui::PushStyleColor(ImGuiCol_Text, pinColor);
-        ImGui::BulletText("%s", pin.GetDisplayLabel().c_str());
-        ImGui::PopStyleColor();
+        const std::string displayLabel = pin.GetDisplayLabel();
+        ImGui::TextColored(pinColor, "%s", displayLabel.c_str());
+
+        // Hover tooltip shows full label
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::SetTooltip("%s", displayLabel.c_str());
+        }
     }
+#endif
+}
+
+// ============================================================================
+// Pin connector setup (ImNodes integration)
+// ============================================================================
+
+void NodeBranchRenderer::SetupDynamicPinConnectors(const NodeBranchData& data)
+{
+#ifndef OLYMPE_HEADLESS
+    // ImNodes header is included only in full editor builds.
+    // This method is intentionally left as a no-op here; the ImNodes integration
+    // is wired by the host application which controls the ImNodes frame.
+    // The yellow TextColored labels are rendered by RenderDynamicPinsSection.
+    (void)data;
 #endif
 }
 

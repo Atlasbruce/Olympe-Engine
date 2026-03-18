@@ -167,17 +167,21 @@ void NodeConditionsEditModal::Render()
 
     ImGui::OpenPopup("Edit Conditions##NodeConditionsEditModal");
 
-    ImGui::SetNextWindowSize(ImVec2(480.f, 400.f), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(600.f, 400.f), ImGuiCond_FirstUseEver);
     if (ImGui::BeginPopupModal("Edit Conditions##NodeConditionsEditModal",
-                               nullptr, ImGuiWindowFlags_NoResize))
+                               nullptr, ImGuiWindowFlags_None))
     {
-        ImGui::Text("Conditions");
+        // Blue title
+        ImGui::TextColored(ImVec4(0.0f, 0.8f, 1.0f, 1.0f), "Edit Conditions");
         ImGui::Separator();
 
+        ImGui::Text("Conditions:");
+        ImGui::BeginChild("ConditionsList", ImVec2(0.f, 200.f), true);
         for (size_t i = 0; i < m_workingCopy.size(); ++i)
         {
             RenderConditionRow(i, m_workingCopy[i]);
         }
+        ImGui::EndChild();
 
         ImGui::Spacing();
         RenderAddConditionPicker();
@@ -212,10 +216,11 @@ void NodeConditionsEditModal::RenderConditionRow(size_t index,
 
     ImGui::SameLine();
 
-    // Condition preset preview
+    // Condition preset preview — green text
     const ConditionPreset* preset = m_registry.GetPreset(ref.presetID);
     if (preset)
-        ImGui::Text("[%s] %s", preset->name.c_str(), preset->GetPreview().c_str());
+        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f),
+                           "[%s] %s", preset->name.c_str(), preset->GetPreview().c_str());
     else
         ImGui::TextColored(ImVec4(1.f, 0.3f, 0.3f, 1.f),
                            "(missing: %s)", ref.presetID.c_str());
@@ -276,12 +281,12 @@ void NodeConditionsEditModal::RenderAddConditionPicker()
 void NodeConditionsEditModal::RenderFooterButtons()
 {
 #ifndef OLYMPE_HEADLESS
-    if (ImGui::Button("Apply"))
+    if (ImGui::Button("Apply", ImVec2(150.f, 24.f)))
         Confirm();
 
     ImGui::SameLine();
 
-    if (ImGui::Button("Cancel"))
+    if (ImGui::Button("Cancel", ImVec2(150.f, 24.f)))
         Close();
 #endif
 }

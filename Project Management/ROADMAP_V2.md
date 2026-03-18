@@ -371,6 +371,8 @@ Result: Impossible to author graphs without documentation/guessing.
 | **24.2** | **Condition Preset — Docs (ARCHITECTURE + PROJECT_STATUS)** | **~0.5 session** | **✅ COMPLETED (PR #426)** | **P0** |
 | **24.3** | **Condition Preset — Version Stamp System** | **~0.5 session** | **✅ COMPLETED (PR #428)** | **P0** |
 | **24.4** | **Condition Preset — NodeConditionsPanel, DynPinMgr, BranchRenderer** | **~1 session** | **✅ COMPLETED (PR #432)** | **P0** |
+| **24-REFONTE** | **UI/UX Refonte — Dynamic Pin Management & Modal Integration** | **~1.5 sessions** | **✅ COMPLETED (PR #441)** | **P0** |
+| **24-RENDERING** | **UI/UX Rendering — Complete ImGui Visual Refactoring** | **~1.5 sessions** | **✅ COMPLETED (PR #442)** | **P0** |
 | **24.5** | **Condition Preset — Runtime Evaluation** | **~1 session** | **⏭️ NEXT (blocked on PR #430)** | **P0** |
 | 21-C | GVS — Pre-save/Pre-exec Validation | ~0.5 session | ⏳ NEXT | P1 |
 | 22-B | Font Awesome Icons & Design | ~2 sessions | ⏳ Deferred (spec needed) | P2 |
@@ -398,4 +400,4 @@ must return to the Blackboard panel to change a value, breaking the workflow.
 
 ---
 
-**Last Updated**: 2026-03-17 13:37:54 UTC
+**Last Updated**: 2026-03-18 14:50:40 UTC

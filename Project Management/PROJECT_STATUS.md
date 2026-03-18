@@ -1,6 +1,6 @@
 # Olympe Engine — Project Status
 
-**Last Updated:** 2026-03-17 13:37:54 UTC  
+**Last Updated:** 2026-03-18 14:50:40 UTC  
 **Author:** @Atlasbruce
 
 ---
@@ -161,6 +161,8 @@
 | **24.2** | **Condition Preset — Docs** | **✅ COMPLETED** | **#426** | **2026-03-17** |
 | **24.3** | **Condition Preset — Version Stamp** | **✅ COMPLETED** | **#428** | **2026-03-17** |
 | **24.4** | **Condition Preset — NodeConditionsPanel, DynPinMgr, BranchRenderer** | **✅ COMPLETED** | **#432** | **2026-03-17** |
+| **24-REFONTE** | **UI/UX Refonte — Dynamic Pin Management & Modal Integration** | **✅ COMPLETED** | **#441** | **2026-03-18** |
+| **24-RENDERING** | **UI/UX Rendering — Complete ImGui Visual Refactoring** | **✅ COMPLETED** | **#442** | **2026-03-18** |
 
 ---
 
@@ -175,4 +177,4 @@
 
 ---
 
-**Last Updated:** 2026-03-17 13:37:54 UTC
+**Last Updated:** 2026-03-18 14:50:40 UTC

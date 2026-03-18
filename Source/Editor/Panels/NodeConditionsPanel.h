@@ -45,6 +45,7 @@
 #include "../ConditionPreset/ConditionPresetRegistry.h"
 #include "../ConditionPreset/NodeConditionRef.h"
 #include "../ConditionPreset/DynamicDataPin.h"
+#include "../Modals/NodeConditionsEditModal.h"
 
 namespace Olympe {
 
@@ -309,6 +310,8 @@ private:
     std::string                    m_nodeName;           ///< Node display name for title section
     bool                           m_dirty = false;      ///< Modification flag
     bool                           m_editModalRequested = false; ///< Set when Edit button is clicked
+
+    NodeConditionsEditModal  m_editModal;         ///< Owned modal for condition editing
 
     std::string  m_dropdownFilter;    ///< Filter text for "Add Condition" dropdown
     bool         m_dropdownOpen = false; ///< Whether the add-dropdown is shown (legacy, kept for API compat)
