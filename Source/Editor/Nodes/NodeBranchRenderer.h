@@ -15,8 +15,8 @@
  * │    Is Health Critical?                          │
  * ├─────────────────────────────────────────────────┤
  * │  Section 2 — Exec pins (static, never editable) │
- * │    ➤ In                          Then ➤        │
- * │                                  Else ➤        │
+ * │    >> In                         Then >>        │
+ * │                                  Else >>        │
  * ├─────────────────────────────────────────────────┤
  * │  Section 3 — Conditions preview (READ-ONLY)     │
  * │      [mHealth] <= [2]       (green, monospace)  │
@@ -24,7 +24,7 @@
  * │  Or  [mSpeed] == [Pin : 1]                      │
  * ├─────────────────────────────────────────────────┤
  * │  Section 4 — Dynamic data pins (yellow, cond.)  │
- * │  🟡 In #1: [mSpeed] == [Pin : 1]               │
+ * │  * In #1: [mSpeed] == [Pin : 1]                │
  * └─────────────────────────────────────────────────┘
  * @endcode
  *
@@ -154,7 +154,7 @@ public:
      * @brief Renders Section 4: dynamic data pins (yellow, conditional).
      *
      * Only rendered when data.dynamicPins is non-empty.
-     * Format: "🟡 In #<idx>[L/R]: <condPreview>"
+     * Format: "In #<idx>[L/R]: <condPreview>"
      * @param data  Node data.
      */
     void RenderDynamicPinsSection(const NodeBranchData& data);

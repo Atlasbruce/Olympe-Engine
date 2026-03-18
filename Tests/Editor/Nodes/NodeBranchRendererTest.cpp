@@ -243,10 +243,10 @@ static void Test8_EmptyConditions()
 }
 
 // ---------------------------------------------------------------------------
-// Test 9: SectionRenderNocrash_WithDynamicPins
+// Test 9: SectionRenderNoCrash_WithDynamicPins
 // ---------------------------------------------------------------------------
 
-static void Test9_SectionRenderNocrash_WithDynamicPins()
+static void Test9_SectionRenderNoCrash_WithDynamicPins()
 {
     int before = s_failCount;
     ConditionPresetRegistry reg;
@@ -280,7 +280,7 @@ static void Test9_SectionRenderNocrash_WithDynamicPins()
     TEST_ASSERT(mgr.GetPinCount() == 1u, "Should have 1 dynamic pin");
     TEST_ASSERT(!data.dynamicPins.empty(), "Dynamic pins passed in data");
 
-    ReportTest("Test9_SectionRenderNocrash_WithDynamicPins", s_failCount == before);
+    ReportTest("Test9_SectionRenderNoCrash_WithDynamicPins", s_failCount == before);
 }
 
 // ---------------------------------------------------------------------------
@@ -324,7 +324,7 @@ int main()
     Test6_IsRefreshPending_False();
     Test7_PinManagerIntegration();
     Test8_EmptyConditions();
-    Test9_SectionRenderNocrash_WithDynamicPins();
+    Test9_SectionRenderNoCrash_WithDynamicPins();
     Test10_DynamicPinsSectionSkipped_WhenEmpty();
 
     std::cout << "\nResults: "

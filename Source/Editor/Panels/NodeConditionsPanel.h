@@ -15,8 +15,8 @@
  * ║    Is Health Critical?                     Name          ║
  * ╠══════════════════════════════════════════════════════════╣
  * ║  Section 2 — Exec pins (static, never editable)          ║
- * ║    ➤ In                         Then ➤                  ║
- * ║                                 Else ➤                  ║
+ * ║    >> In                        Then >>                  ║
+ * ║                                 Else >>                  ║
  * ╠══════════════════════════════════════════════════════════╣
  * ║  Section 3 — Conditions preview (READ-ONLY, green text)  ║
  * ║      [mHealth] <= [2]                                    ║
@@ -25,7 +25,7 @@
  * ║  [ Edit Conditions ]                                     ║
  * ╠══════════════════════════════════════════════════════════╣
  * ║  Section 4 — Dynamic data pins (yellow, only when used)  ║
- * ║  🟡 In #1: [mSpeed] == [Pin : 1]                        ║
+ * ║  * In #1: [mSpeed] == [Pin : 1]                         ║
  * ╚══════════════════════════════════════════════════════════╝
  * @endcode
  *

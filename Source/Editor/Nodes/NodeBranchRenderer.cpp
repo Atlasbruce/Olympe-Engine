@@ -120,7 +120,7 @@ void NodeBranchRenderer::RenderConditionsSection(const NodeBranchData& data)
         return;
     }
 
-    // Green colour for condition preview text (bright green, monospace hint via indent)
+    // Green color for condition preview text (bright green, monospace hint via indent)
     const ImVec4 condColor(0.f, 1.f, 0.f, 1.f);
 
     for (int i = 0; i < static_cast<int>(data.conditionRefs.size()); ++i)
