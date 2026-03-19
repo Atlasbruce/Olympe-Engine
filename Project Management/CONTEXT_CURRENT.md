@@ -1,6 +1,67 @@
 # Recent Completions & Next Priority
 
-**Derniere mise a jour :** 2026-03-18 19:57:31 UTC
+**Derniere mise a jour :** 2026-03-19 09:03:44 UTC
+
+---
+
+## 🔴 Phase 24 M2.2 — ConditionRef Structure (PR #457) — BLOCKED (Audit 2026-03-19)
+
+**Audit réalisé :** 2026-03-19 09:03:44 UTC  
+**Statut :** 🔴 BLOCKED — 6 corrections critiques requises avant merge  
+**Référence audit :** `Project Management/PROJECT_AUDIT_2026_03_19.md`
+
+### Résultat de l'audit Phase 24 M2.2
+
+L'audit post-PR #457 a identifié **6 problèmes critiques** non détectés lors de l'implémentation initiale :
+
+| # | Problème | Fichier(s) | Priorité |
+|---|----------|-----------|---------|
+| C1 | `conditionIndex` non persisté en JSON | `ConditionRef.h`, `TaskGraphLoader.cpp` | 🔴 CRITIQUE |
+| C2 | Pins Section 4 (ImNodes) non fonctionnels | `NodeBranchRenderer.cpp` | 🔴 CRITIQUE |
+| C3 | `dynamicPinID` non nettoyé lors des transitions de mode | `NodeConditionsPanel.cpp` | 🔴 CRITIQUE |
+| C4 | Source de vérité architecturale non validée | `ConditionRef.h` vs `NodeConditionRef.h` | 🔴 CRITIQUE |
+| C5 | Compatibilité format Phase 23 (legacy) non gérée | `TaskGraphLoader.cpp` | 🟡 IMPORTANT |
+| C6 | Test round-trip système absent | `Tests/Phase24/` | 🟡 IMPORTANT |
+
+### Root Cause Analysis — Pourquoi ces problèmes n'ont pas été détectés
+
+1. **Prompts isolés** — Les prompts CCA ne faisaient pas référence à l'architecture cross-fichier
+2. **Vérification cross-fichier absente** — Fonctions créées mais non intégrées dans le pipeline complet
+3. **Tests unitaires uniquement** — Les tests de composants isolés passaient ; les tests système échouaient
+4. **Critères Done non explicites** — Le CCA s'est arrêté prématurément sans vérification de round-trip
+
+### CCA Workflow Improvements (Appliqués à partir de 2026-03-19)
+
+- **5 étapes pré-code obligatoires** : validation architecture avant tout codage
+- **Checklists Done Criteria** : critères de complétion explicites pour chaque tâche
+- **5 règles de codage strictes** : source de vérité unique, cross-file grep, round-trip tests
+- **Compliance Report** : rapport de conformité obligatoire avant merge
+- **Procédure d'escalade** : que faire quand des contradictions sont trouvées
+
+### Phase 2 Entry Criteria — Statut mis à jour
+
+| Critère | Statut | Bloquant |
+|---------|--------|----------|
+| `conditionRefs` persistés en JSON (save/reload cycle) | 🔴 NON | OUI |
+| Section 4 ImNodes pins fonctionnels | 🔴 NON | OUI |
+| `dynamicPinID` stable entre sessions | 🔴 NON | OUI |
+| Backward compat format Phase 23 | 🔴 NON | OUI |
+| System round-trip test (8+ assertions) | 🔴 NON | OUI |
+
+**Phase 2 ne peut PAS démarrer avant que ces 5 critères soient verts.**
+
+### Prochaines Étapes CCA (Phase 24 M2.2 Corrected)
+
+1. Appliquer les 6 corrections selon `PROJECT_AUDIT_2026_03_19.md` Section 3
+2. Implémenter la sérialisation complète de `conditionRefs` (BLOCKER #6)
+3. Valider avec le round-trip test système (8+ tests)
+4. Soumettre nouvelle PR avec Compliance Report complet
+
+---
+
+## ✅ Phase 24 M2.1 — Documentation Baseline (PR #453) — MERGED
+
+**Completed:** 2026-03-18 19:57:31 UTC
 
 ---
 
