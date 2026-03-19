@@ -1,0 +1,93 @@
+{
+  "blackboard": [],
+  "dataConnections": [],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 5,
+      "fromPin": "Out",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out_1",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 6,
+      "fromPin": "Out",
+      "toNode": 4,
+      "toPin": "In"
+    }
+  ],
+  "graphType": "VisualScript",
+  "name": "",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "EntryPoint",
+      "position": {
+        "x": 126,
+        "y": 180
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "dynamicExecPins": [
+        "Out_1"
+      ],
+      "id": 2,
+      "label": "Sequence",
+      "position": {
+        "x": 301,
+        "y": 303
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 3,
+      "label": "AtomicTask",
+      "position": {
+        "x": 512,
+        "y": 439
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 4,
+      "label": "MathOp",
+      "position": {
+        "x": 481,
+        "y": 79
+      },
+      "type": "MathOp"
+    },
+    {
+      "id": 5,
+      "label": "GetBBValue",
+      "position": {
+        "x": 339,
+        "y": 24
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "id": 6,
+      "label": "GetBBValue",
+      "position": {
+        "x": 344,
+        "y": 129
+      },
+      "type": "GetBBValue"
+    }
+  ],
+  "schema_version": 4
+}

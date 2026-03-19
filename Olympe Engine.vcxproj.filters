@@ -190,6 +190,7 @@
     <ClCompile Include="Source\Runtime\RuntimeEnvironment.cpp" />
     <ClCompile Include="Source\Runtime\ConditionPresetEvaluator.cpp" />
     <ClCompile Include="Source\Editor\Modals\NodeConditionsEditModal.cpp" />
+    <ClCompile Include="Source\Editor\UIHelpers\PresetDropdownHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -419,6 +420,9 @@
     <ClInclude Include="Source\Runtime\ConditionPresetEvaluator.h" />
     <ClInclude Include="Source\Editor\Modals\NodeConditionsEditModal.h" />
     <ClInclude Include="Source\BlueprintEditor\ConditionRef.h" />
+    <ClInclude Include="Source\Editor\UIHelpers\PresetDropdownHelper.h" />
+    <ClInclude Include="Source\Editor\Phase24_ImplementationStatus.h" />
+    <ClInclude Include="Source\Editor\Phase24_FinalImplementationChecklist.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -453,8 +457,14 @@
     <None Include="Assets\Fonts\README.md" />
     <None Include="Docs\FONT_AWESOME_INTEGRATION.md" />
     <None Include="Docs\FONT_AWESOME_SETUP.md" />
+    <None Include="PHASE24_FINAL_AUDIT_REPORT_FR.md" />
+    <None Include="PHASE24_IMPLEMENTATION_PLAN.py" />
+    <None Include="PHASE24_INTEGRATION_COMPLETION_SUMMARY.md" />
+    <None Include="PHASE24_FINAL_STATUS_REPORT.md" />
+    <None Include="PHASE24_CRASH_FIX_TESTING.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
+    <Text Include="PHASE24_DOCUMENTATION_INDEX.txt" />
   </ItemGroup>
 </Project>

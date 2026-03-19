@@ -113,6 +113,7 @@
     <ClCompile Include="Source\Editor\Modals\NodeConditionsEditModal.cpp" />
     <ClCompile Include="Source\Editor\Panels\ConditionPresetLibraryPanel.cpp" />
     <ClCompile Include="Source\Editor\Panels\NodeConditionsPanel.cpp" />
+    <ClCompile Include="Source\Editor\UIHelpers\PresetDropdownHelper.cpp" />
     <ClCompile Include="Source\engine_utils.cpp" />
     <ClCompile Include="Source\InputConfigLoader.cpp" />
     <ClCompile Include="Source\InputDevice.cpp" />
@@ -312,6 +313,9 @@
     <ClInclude Include="Source\Editor\Modals\NodeConditionsEditModal.h" />
     <ClInclude Include="Source\Editor\Panels\ConditionPresetLibraryPanel.h" />
     <ClInclude Include="Source\Editor\Panels\NodeConditionsPanel.h" />
+    <ClInclude Include="Source\Editor\Phase24_FinalImplementationChecklist.h" />
+    <ClInclude Include="Source\Editor\Phase24_ImplementationStatus.h" />
+    <ClInclude Include="Source\Editor\UIHelpers\PresetDropdownHelper.h" />
     <ClInclude Include="Source\engine_utils.h" />
     <ClInclude Include="Source\DataManager.h" />
     <ClInclude Include="Source\GameEngine.h" />
@@ -462,6 +466,11 @@
     <None Include="Docs\FONT_AWESOME_SETUP.md" />
     <None Include="Docs\README_Documentation_Index.md" />
     <None Include="olympe.ini" />
+    <None Include="PHASE24_CRASH_FIX_TESTING.md" />
+    <None Include="PHASE24_FINAL_AUDIT_REPORT_FR.md" />
+    <None Include="PHASE24_FINAL_STATUS_REPORT.md" />
+    <None Include="PHASE24_IMPLEMENTATION_PLAN.py" />
+    <None Include="PHASE24_INTEGRATION_COMPLETION_SUMMARY.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
@@ -474,6 +483,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
+    <Text Include="PHASE24_DOCUMENTATION_INDEX.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

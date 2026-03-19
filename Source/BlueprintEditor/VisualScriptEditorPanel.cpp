@@ -53,8 +53,12 @@ void VisualScriptEditorPanel::Initialize()
     // Phase 24 — Condition Preset UI: create helpers bound to m_presetRegistry.
     m_pinManager      = std::unique_ptr<DynamicDataPinManager>(
                             new DynamicDataPinManager(m_presetRegistry));
+    m_branchRenderer  = std::unique_ptr<NodeBranchRenderer>(
+                            new NodeBranchRenderer(m_presetRegistry, *m_pinManager));
     m_conditionsPanel = std::unique_ptr<NodeConditionsPanel>(
                             new NodeConditionsPanel(m_presetRegistry));
+    m_libraryPanel    = std::unique_ptr<ConditionPresetLibraryPanel>(
+                            new ConditionPresetLibraryPanel(m_presetRegistry));
 
     // Wire the pin-regeneration callback so the Edit-Conditions modal can
     // trigger a canvas update when the user confirms changes.
@@ -104,6 +108,8 @@ void VisualScriptEditorPanel::Shutdown()
 
     // Phase 24 — release helpers before registry is destroyed.
     m_conditionsPanel.reset();
+    m_libraryPanel.reset();
+    m_branchRenderer.reset();
     m_pinManager.reset();
     m_condPanelNodeID = -1;
 }
@@ -1385,6 +1391,9 @@ void VisualScriptEditorPanel::Render()
     ImGui::Begin("VS Graph Editor", &m_visible);
     RenderContent();
     ImGui::End();
+
+    // Render the condition preset library panel (Phase 24 UI integration)
+    m_libraryPanel->Render();
 }
 
 void VisualScriptEditorPanel::RenderContent()
@@ -1482,6 +1491,11 @@ void VisualScriptEditorPanel::RenderToolbar()
     if (ImGui::Button("Verify##gvs"))
     {
         RunVerification();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Condition Presets"))
+    {
+        m_libraryPanel->Open();
     }
     ImGui::SameLine();
     if (m_verificationDone)
@@ -1762,30 +1776,51 @@ void VisualScriptEditorPanel::RenderCanvas()
                 dataOut.push_back({pin.PinName, pin.PinType});
         }
 
-        VisualScriptNodeRenderer::RenderNode(
-            eNode.nodeID,
-            eNode.nodeID,
-            0 /* graphID placeholder */,
-            eNode.def,
-            hasBreakpoint,
-            isActive,
-            execIn, execOut,
-            dataIn, dataOut,
-            [](int nid, void* ud) {
-                VisualScriptEditorPanel* panel =
-                    static_cast<VisualScriptEditorPanel*>(ud);
-                panel->m_pendingAddPin       = true;
-                panel->m_pendingAddPinNodeID = nid;
-            },
-            this,
-            [](int nid, int dynIdx, void* ud) {
-                VisualScriptEditorPanel* panel =
-                    static_cast<VisualScriptEditorPanel*>(ud);
-                panel->m_pendingRemovePin       = true;
-                panel->m_pendingRemovePinNodeID = nid;
-                panel->m_pendingRemovePinDynIdx = dynIdx;
-            },
-            this);
+        // Phase 24 — Dispatcher: Branch nodes use specialized renderer
+        if (eNode.def.Type == TaskNodeType::Branch && m_branchRenderer)
+        {
+            // Convert TaskNodeDefinition to NodeBranchData for specialized rendering
+            NodeBranchData branchData;
+            branchData.nodeID       = eNode.nodeID;
+            branchData.nodeName     = eNode.def.NodeName;
+            branchData.conditionRefs = eNode.def.conditionRefs;
+            branchData.dynamicPins  = eNode.def.dynamicPins;
+            branchData.breakpoint   = hasBreakpoint;
+
+            // Render via NodeBranchRenderer (4-section layout)
+            // Must be wrapped with ImNodes::BeginNode/EndNode just like generic renderer
+            ImNodes::BeginNode(eNode.nodeID);
+            m_branchRenderer->RenderNode(branchData);
+            ImNodes::EndNode();
+        }
+        else
+        {
+            // Use generic renderer for all other node types
+            VisualScriptNodeRenderer::RenderNode(
+                eNode.nodeID,
+                eNode.nodeID,
+                0 /* graphID placeholder */,
+                eNode.def,
+                hasBreakpoint,
+                isActive,
+                execIn, execOut,
+                dataIn, dataOut,
+                [](int nid, void* ud) {
+                    VisualScriptEditorPanel* panel =
+                        static_cast<VisualScriptEditorPanel*>(ud);
+                    panel->m_pendingAddPin       = true;
+                    panel->m_pendingAddPinNodeID = nid;
+                },
+                this,
+                [](int nid, int dynIdx, void* ud) {
+                    VisualScriptEditorPanel* panel =
+                        static_cast<VisualScriptEditorPanel*>(ud);
+                    panel->m_pendingRemovePin       = true;
+                    panel->m_pendingRemovePinNodeID = nid;
+                    panel->m_pendingRemovePinDynIdx = dynIdx;
+                },
+                this);
+        }
 
         if (hasVerifError)
         {

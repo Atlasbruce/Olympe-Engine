@@ -33,6 +33,8 @@
 #include "../Editor/ConditionPreset/ConditionPresetRegistry.h"
 #include "../Editor/ConditionPreset/DynamicDataPinManager.h"
 #include "../Editor/Panels/NodeConditionsPanel.h"
+#include "../Editor/Panels/ConditionPresetLibraryPanel.h"
+#include "../Editor/Nodes/NodeBranchRenderer.h"
 
 // Forward-declare ImNodes context type (defined in imnodes.h) in the global
 // namespace so it can be referenced from within the Olympe namespace below.
@@ -626,8 +628,14 @@ private:
     /// Dynamic pin manager shared across all Branch nodes in this panel.
     std::unique_ptr<DynamicDataPinManager> m_pinManager;
 
+    /// Specialized renderer for Branch nodes (4-section layout with conditions).
+    std::unique_ptr<NodeBranchRenderer> m_branchRenderer;
+
     /// Properties-panel sub-widget for the selected Branch node.
     std::unique_ptr<NodeConditionsPanel> m_conditionsPanel;
+
+    /// Global condition preset library panel (UI for creating/editing/deleting presets).
+    std::unique_ptr<ConditionPresetLibraryPanel> m_libraryPanel;
 
     /// ID of the node currently loaded into m_conditionsPanel (-1 = none).
     int m_condPanelNodeID = -1;
