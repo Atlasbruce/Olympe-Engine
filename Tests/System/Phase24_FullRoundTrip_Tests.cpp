@@ -23,6 +23,131 @@
  *
  * C++14 compliant — no std::optional, structured bindings, std::filesystem.
  * No ImGui / ImNodes required — safe to run headless.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * DATA FLOW DIAGRAM — Phase 24 Milestone 2.2.2 (conditionOperandRefs pipeline)
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ *  EDITOR (authoring time)
+ *  ───────────────────────
+ *
+ *   ┌─────────────────────────────────────────────────────────────┐
+ *   │  TaskNodeDefinition  (Type = Branch / While)                │
+ *   │                                                             │
+ *   │  conditionOperandRefs : vector<ConditionRef>                │
+ *   │  ┌──────────────────────────────────────────┐               │
+ *   │  │  ConditionRef [0]                        │               │
+ *   │  │    conditionIndex = 0                    │               │
+ *   │  │    leftOperand  : OperandRef             │               │
+ *   │  │      mode       = Variable               │               │
+ *   │  │      variableName = "mHealth"            │               │
+ *   │  │    operatorStr  = "<="                   │               │
+ *   │  │    rightOperand : OperandRef             │               │
+ *   │  │      mode       = Const                  │               │
+ *   │  │      constValue = "50"                   │               │
+ *   │  │    compareType  = Float                  │               │
+ *   │  └──────────────────────────────────────────┘               │
+ *   │  ┌──────────────────────────────────────────┐               │
+ *   │  │  ConditionRef [1]                        │               │
+ *   │  │    conditionIndex = 1                    │               │
+ *   │  │    leftOperand  : OperandRef             │               │
+ *   │  │      mode       = Const                  │               │
+ *   │  │      constValue = "100"                  │               │
+ *   │  │    operatorStr  = "=="                   │               │
+ *   │  │    rightOperand : OperandRef             │               │
+ *   │  │      mode       = Pin                    │               │
+ *   │  │      dynamicPinID = "pin_inst_<uuid>"    │◄──────────┐   │
+ *   │  │    compareType  = Float                  │           │   │
+ *   │  └──────────────────────────────────────────┘           │   │
+ *   └─────────────────────────────────────────────────────────┼───┘
+ *                                                             │
+ *                    ┌────────────────────────────────────────┘
+ *                    │  DynamicDataPinManager::RegeneratePinsFromConditions()
+ *                    │  walks conditionOperandRefs, creates DynamicDataPin
+ *                    │  for every Pin-mode operand, assigns stable UUIDs.
+ *                    │
+ *                    ▼
+ *   ┌──────────────────────────────────────────────────────┐
+ *   │  DynamicDataPinManager                               │
+ *   │  GetAllPins() → vector<DynamicDataPin>               │
+ *   │  ┌────────────────────────────────────────────────┐  │
+ *   │  │  DynamicDataPin                                │  │
+ *   │  │    id             = "pin_inst_<uuid>"          │  │
+ *   │  │    conditionIndex = 1                          │  │
+ *   │  │    side           = Right                      │  │
+ *   │  │    sequenceNumber = 1                          │  │
+ *   │  │    GetShortLabel() → "Pin-in #1"               │  │
+ *   │  └────────────────────────────────────────────────┘  │
+ *   └──────────────────────────────────────────────────────┘
+ *
+ *  SAVE  (editor → JSON file)
+ *  ──────────────────────────
+ *
+ *   ConditionRef::ToJson()
+ *       │
+ *       ├─ j["conditionIndex"] = 1           ← CRITICAL: preserves pin mapping
+ *       ├─ j["leftOperand"]    = { "mode":"Const", "constValue":"100", … }
+ *       ├─ j["operator"]       = "=="
+ *       ├─ j["rightOperand"]   = { "mode":"Pin",
+ *       │                          "dynamicPinID":"pin_inst_<uuid>", … }
+ *       └─ j["compareType"]    = "Float"
+ *       │
+ *       ▼
+ *   nlohmann::json object
+ *       │
+ *       ▼  json::dump()
+ *   ┌─────────────────────────────────────────────────────────────┐
+ *   │  JSON string / .json file on disk                           │
+ *   │  {                                                          │
+ *   │    "conditionIndex": 1,                                     │
+ *   │    "leftOperand":  { "mode": "Const", "constValue": "100" },│
+ *   │    "operator": "==",                                        │
+ *   │    "rightOperand": { "mode": "Pin",                         │
+ *   │                      "dynamicPinID": "pin_inst_<uuid>" },   │
+ *   │    "compareType": "Float"                                   │
+ *   │  }                                                          │
+ *   └─────────────────────────────────────────────────────────────┘
+ *
+ *  LOAD  (JSON file → editor)
+ *  ──────────────────────────
+ *
+ *   json::parse()
+ *       │
+ *       ▼
+ *   ConditionRef::FromJson()
+ *       │
+ *       ├─ ref.conditionIndex            = j["conditionIndex"]    (int)
+ *       ├─ ref.leftOperand               = OperandRef::FromJson(…)
+ *       │    .mode      = Mode::Const
+ *       │    .constValue = "100"
+ *       ├─ ref.operatorStr               = j["operator"]
+ *       ├─ ref.rightOperand              = OperandRef::FromJson(…)
+ *       │    .mode        = Mode::Pin
+ *       │    .dynamicPinID = "pin_inst_<uuid>"   ← UUID preserved verbatim
+ *       └─ ref.compareType               = VariableType::Float
+ *       │
+ *       ▼
+ *   TaskNodeDefinition (restored)
+ *   conditionOperandRefs[1] is byte-for-byte identical to original
+ *
+ *  PIN REGENERATION after load (optional, graph reconnection)
+ *  ──────────────────────────────────────────────────────────
+ *
+ *   DynamicDataPinManager::RegeneratePinsFromConditions()
+ *       │  (uses dynamicPinID from loaded ConditionRef to REUSE existing UUID
+ *       │   → graph data connections survive save/load unchanged)
+ *       ▼
+ *   DynamicDataPin  id = "pin_inst_<uuid>"   ← same as pre-save
+ *
+ *  TEST COVERAGE (this file)
+ *  ─────────────────────────
+ *
+ *   Test 1 ─ Variable/Const + Const/Pin   → validates the full 6-step pipeline
+ *   Test 2 ─ Var/Var + Pin/Const + Const/Pin → all mode combinations
+ *   Test 3 ─ conditionIndex 0…4           → index stability under serialization
+ *   Test 4 ─ UUID-style dynamicPinID      → verbatim string in raw JSON output
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
 #include "TaskSystem/TaskGraphTemplate.h"   // TaskNodeDefinition, TaskGraphTemplate
