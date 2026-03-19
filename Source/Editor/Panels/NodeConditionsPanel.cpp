@@ -295,18 +295,9 @@ void NodeConditionsPanel::Render()
 #ifndef OLYMPE_HEADLESS
     ImGui::PushID("NodeConditionsPanel");
 
-    // ── Section 1: Title bar ─────────────────────────────────────────────────
-    RenderTitleSection();
-
-    ImGui::Separator();
-
-    // ── Section 2: Static exec pins ─────────────────────────────────────────
-    RenderExecPinsSection();
-
-    ImGui::Separator();
-
-    // ── Section 3: Conditions — inline editable list ────────────────────────
-    RenderConditionList();
+    // Render the condition preview + "Edit Conditions" button
+    // This opens the modal where users can add/edit/delete conditions with full UI
+    RenderConditionsPreview();
 
     // ── Section 4: Dynamic data pins (only if any) ──────────────────────────
     if (!m_dynamicPins.empty())

@@ -248,6 +248,15 @@ private:
     void RenderValidationOverlay();
     void RenderBreakpoints();
 
+    /// Part A: Node Properties panel (top-left of right panel)
+    void RenderNodePropertiesPanel();
+
+    /// Part B: Preset Bank panel (middle of right panel)
+    void RenderPresetBankPanel();
+
+    /// Part C: Local Variables reference panel (bottom of right panel)
+    void RenderLocalVariablesPanel();
+
     /** @brief Renders the verification results panel (Phase 21-B). */
     void RenderVerificationPanel();
 
@@ -606,6 +615,14 @@ private:
     /// Width of the properties+blackboard panel on the right.
     /// Adjusted by the drag-to-resize handle between the canvas and the panel.
     float m_propertiesPanelWidth = 0.0f;
+
+    /// Height of the Node Properties panel (Part A) in the right panel.
+    /// Adjusted by the drag-to-resize handle between Part A and Part B.
+    float m_nodePropertiesPanelHeight = 0.0f;
+
+    /// Height of the Preset Bank panel (Part B) in the right panel.
+    /// Adjusted by the drag-to-resize handle between Part B and Part C.
+    float m_presetBankPanelHeight = 0.0f;
 
     // -----------------------------------------------------------------------
     // Viewport save/restore state (BUG-003 Fix)

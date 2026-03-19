@@ -1,5 +1,34 @@
 {
-  "blackboard": [],
+  "blackboard": [
+    {
+      "isGlobal": false,
+      "key": "mHealth",
+      "type": "Int",
+      "value": 100
+    },
+    {
+      "isGlobal": false,
+      "key": "mSpeed",
+      "type": "Float",
+      "value": 120
+    },
+    {
+      "isGlobal": false,
+      "key": "Position",
+      "type": "Vector",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "isGlobal": false,
+      "key": "mFatigue",
+      "type": "Int",
+      "value": 1
+    }
+  ],
   "dataConnections": [],
   "execConnections": [
     {
@@ -15,15 +44,33 @@
       "toPin": "In"
     },
     {
+      "fromNode": 6,
+      "fromPin": "Out",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 7,
+      "fromPin": "Then",
+      "toNode": 8,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 7,
+      "fromPin": "Else",
+      "toNode": 9,
+      "toPin": "In"
+    },
+    {
       "fromNode": 2,
-      "fromPin": "Out_1",
+      "fromPin": "Out",
       "toNode": 3,
       "toPin": "In"
     },
     {
-      "fromNode": 6,
-      "fromPin": "Out",
-      "toNode": 4,
+      "fromNode": 2,
+      "fromPin": "Out_1",
+      "toNode": 7,
       "toPin": "In"
     }
   ],
@@ -34,8 +81,8 @@
       "id": 1,
       "label": "EntryPoint",
       "position": {
-        "x": 126,
-        "y": 180
+        "x": 142,
+        "y": 319
       },
       "type": "EntryPoint"
     },
@@ -46,8 +93,8 @@
       "id": 2,
       "label": "Sequence",
       "position": {
-        "x": 301,
-        "y": 303
+        "x": 320,
+        "y": 322
       },
       "type": "Sequence"
     },
@@ -55,8 +102,8 @@
       "id": 3,
       "label": "AtomicTask",
       "position": {
-        "x": 512,
-        "y": 439
+        "x": 579,
+        "y": 281
       },
       "taskType": "",
       "type": "AtomicTask"
@@ -64,29 +111,60 @@
     {
       "id": 4,
       "label": "MathOp",
+      "mathOp": "-",
       "position": {
-        "x": 481,
-        "y": 79
+        "x": 405,
+        "y": 562
       },
       "type": "MathOp"
     },
     {
       "id": 5,
-      "label": "GetBBValue",
+      "label": "mHealth",
       "position": {
-        "x": 339,
-        "y": 24
+        "x": 253,
+        "y": 514
       },
       "type": "GetBBValue"
     },
     {
+      "bbKey": "mFatigue",
       "id": 6,
-      "label": "GetBBValue",
+      "label": "mFatigue",
       "position": {
-        "x": 344,
-        "y": 129
+        "x": 248,
+        "y": 629
       },
       "type": "GetBBValue"
+    },
+    {
+      "id": 7,
+      "label": "Is Health Critical?",
+      "position": {
+        "x": 589,
+        "y": 470
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 8,
+      "label": "Heal Myself",
+      "position": {
+        "x": 817,
+        "y": 456
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 9,
+      "label": "Probe for food",
+      "position": {
+        "x": 824.895,
+        "y": 576.454
+      },
+      "taskType": "",
+      "type": "AtomicTask"
     }
   ],
   "schema_version": 4

@@ -1402,7 +1402,7 @@ void VisualScriptEditorPanel::RenderContent()
     RenderSaveAsDialog();
     ImGui::Separator();
 
-    // Two-column layout: canvas (left) | resize handle | properties + blackboard (right)
+    // Two-column layout: canvas (left) | resize handle | properties panel (right, 3 sub-panels)
     float totalWidth = ImGui::GetContentRegionAvail().x;
 
     // Initialize panel width to default 28% on first use
@@ -1440,11 +1440,73 @@ void VisualScriptEditorPanel::RenderContent()
 
     ImGui::SameLine();
 
-    ImGui::BeginChild("VSProps", ImVec2(m_propertiesPanelWidth, 0), true);
-    RenderProperties();
-    ImGui::Separator();
-    RenderBlackboard();
+    // Right panel container with 3 vertical sub-panels (A: Node Props | B: Preset Bank | C: Local Vars)
+    ImGui::BeginChild("VSRightPanel", ImVec2(m_propertiesPanelWidth, 0), true);
+
+    float rightPanelHeight = ImGui::GetContentRegionAvail().y;
+    float splitterHeight = 4.0f;
+
+    // Initialize sub-panel heights on first use (equal thirds)
+    if (m_nodePropertiesPanelHeight <= 0.0f)
+    {
+        m_nodePropertiesPanelHeight = (rightPanelHeight - splitterHeight * 2) / 3.0f;
+        m_presetBankPanelHeight = (rightPanelHeight - splitterHeight * 2) / 3.0f;
+    }
+
+    // Clamp heights to reasonable ranges
+    float minPanelHeight = 50.0f;
+    if (m_nodePropertiesPanelHeight < minPanelHeight) m_nodePropertiesPanelHeight = minPanelHeight;
+    if (m_presetBankPanelHeight < minPanelHeight) m_presetBankPanelHeight = minPanelHeight;
+
+    float localVarHeight = rightPanelHeight - m_nodePropertiesPanelHeight - m_presetBankPanelHeight - splitterHeight * 2;
+    if (localVarHeight < minPanelHeight) localVarHeight = minPanelHeight;
+
+    // ---- Part A: Node Properties Panel ----
+    ImGui::BeginChild("Part_A_NodeProps", ImVec2(0, m_nodePropertiesPanelHeight), false,
+                      ImGuiWindowFlags_NoScrollbar);
+    RenderNodePropertiesPanel();
     ImGui::EndChild();
+
+    // ---- Splitter 1 (between Part A and Part B) ----
+    ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.35f, 0.35f, 0.35f, 0.5f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.55f, 0.55f, 0.55f, 0.8f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.70f, 0.70f, 0.70f, 1.0f));
+    ImGui::Button("##splitter1", ImVec2(-1.0f, splitterHeight));
+    if (ImGui::IsItemHovered())
+        ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+    if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+    {
+        m_nodePropertiesPanelHeight += ImGui::GetIO().MouseDelta.y;
+        if (m_nodePropertiesPanelHeight < minPanelHeight) m_nodePropertiesPanelHeight = minPanelHeight;
+    }
+    ImGui::PopStyleColor(3);
+
+    // ---- Part B: Preset Bank Panel ----
+    ImGui::BeginChild("Part_B_PresetBank", ImVec2(0, m_presetBankPanelHeight), false,
+                      ImGuiWindowFlags_NoScrollbar);
+    RenderPresetBankPanel();
+    ImGui::EndChild();
+
+    // ---- Splitter 2 (between Part B and Part C) ----
+    ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.35f, 0.35f, 0.35f, 0.5f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.55f, 0.55f, 0.55f, 0.8f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.70f, 0.70f, 0.70f, 1.0f));
+    ImGui::Button("##splitter2", ImVec2(-1.0f, splitterHeight));
+    if (ImGui::IsItemHovered())
+        ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+    if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+    {
+        m_presetBankPanelHeight += ImGui::GetIO().MouseDelta.y;
+        if (m_presetBankPanelHeight < minPanelHeight) m_presetBankPanelHeight = minPanelHeight;
+    }
+    ImGui::PopStyleColor(3);
+
+    // ---- Part C: Local Variables Reference Panel ----
+    ImGui::BeginChild("Part_C_LocalVars", ImVec2(0, 0), false);
+    RenderLocalVariablesPanel();
+    ImGui::EndChild();
+
+    ImGui::EndChild();  // End VSRightPanel
 }
 
 void VisualScriptEditorPanel::RenderToolbar()
@@ -1781,11 +1843,11 @@ void VisualScriptEditorPanel::RenderCanvas()
         {
             // Convert TaskNodeDefinition to NodeBranchData for specialized rendering
             NodeBranchData branchData;
-            branchData.nodeID       = eNode.nodeID;
-            branchData.nodeName     = eNode.def.NodeName;
+            branchData.nodeID        = eNode.nodeID;  // int nodeID for ImNodes attribute UIDs
+            branchData.nodeName      = eNode.def.NodeName;
             branchData.conditionRefs = eNode.def.conditionRefs;
-            branchData.dynamicPins  = eNode.def.dynamicPins;
-            branchData.breakpoint   = hasBreakpoint;
+            branchData.dynamicPins   = eNode.def.dynamicPins;
+            branchData.breakpoint    = hasBreakpoint;
 
             // Render via NodeBranchRenderer (4-section layout)
             // Must be wrapped with ImNodes::BeginNode/EndNode just like generic renderer
@@ -3765,6 +3827,263 @@ std::string VisualScriptEditorPanel::BuildConditionPreview(const Condition& cond
     const std::string op    = cond.operatorStr.empty() ? "?" : cond.operatorStr;
 
     return left + " " + op + " " + right;
+}
+
+// ============================================================================
+// PHASE 24 Panel Integration — Part A: Node Properties
+// ============================================================================
+
+void VisualScriptEditorPanel::RenderNodePropertiesPanel()
+{
+    ImGui::TextDisabled("Node Properties");
+
+    if (m_selectedNodeID < 0)
+    {
+        ImGui::TextDisabled("(select a node)");
+        return;
+    }
+
+    // Find the editor node
+    VSEditorNode* eNode = nullptr;
+    for (size_t i = 0; i < m_editorNodes.size(); ++i)
+    {
+        if (m_editorNodes[i].nodeID == m_selectedNodeID)
+        {
+            eNode = &m_editorNodes[i];
+            break;
+        }
+    }
+    if (eNode == nullptr)
+        return;
+
+    // For Branch nodes, render specialized condition panel
+    if (eNode->def.Type == TaskNodeType::Branch)
+    {
+        // Update condition panel with current node's data
+        if (m_condPanelNodeID != m_selectedNodeID)
+        {
+            m_conditionsPanel->SetConditionRefs(eNode->def.conditionRefs);
+            m_conditionsPanel->SetConditionOperandRefs(eNode->def.conditionOperandRefs);
+            m_conditionsPanel->SetDynamicPins(eNode->def.dynamicPins);
+            m_condPanelNodeID = m_selectedNodeID;
+        }
+
+        // Render the conditions panel
+        m_conditionsPanel->Render();
+
+        // Check if dirty and sync back to node
+        if (m_conditionsPanel->IsDirty())
+        {
+            eNode->def.conditionRefs = m_conditionsPanel->GetConditionRefs();
+            eNode->def.conditionOperandRefs = m_conditionsPanel->GetConditionOperandRefs();
+            m_conditionsPanel->ClearDirty();
+            m_dirty = true;
+
+            // Sync to template
+            for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+            {
+                if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                {
+                    m_template.Nodes[i].conditionRefs = eNode->def.conditionRefs;
+                    m_template.Nodes[i].conditionOperandRefs = eNode->def.conditionOperandRefs;
+                    break;
+                }
+            }
+        }
+    }
+    else
+    {
+        // For non-Branch nodes, render standard properties
+        RenderProperties();
+    }
+}
+
+// ============================================================================
+// PHASE 24 Panel Integration — Part B: Preset Bank
+// ============================================================================
+
+void VisualScriptEditorPanel::RenderPresetBankPanel()
+{
+    ImGui::TextDisabled("Preset Bank (Global)");
+    ImGui::Separator();
+
+    if (!m_libraryPanel)
+        return;
+
+    size_t presetCount = m_presetRegistry.GetPresetCount();
+
+    // Toolbar: Add preset + Manage button
+    if (ImGui::Button("+##addpreset", ImVec2(25, 0)))
+    {
+        // Open the library panel for adding new preset
+        m_libraryPanel->Open();
+    }
+    ImGui::SameLine();
+    ImGui::TextDisabled("Add Preset");
+
+    ImGui::SameLine(ImGui::GetWindowWidth() - 120.0f);
+    if (ImGui::Button("Manage Presets..."))
+    {
+        m_libraryPanel->Open();
+    }
+
+    ImGui::Separator();
+    ImGui::TextDisabled("Total: %zu preset(s)", presetCount);
+    ImGui::Separator();
+
+    // List all presets with expandable items
+    std::vector<ConditionPreset> allPresets = m_presetRegistry.GetFilteredPresets("");
+
+    static std::unordered_set<std::string> expandedPresets;  // Track which presets are expanded
+
+    for (size_t i = 0; i < allPresets.size(); ++i)
+    {
+        const ConditionPreset& preset = allPresets[i];
+        bool isExpanded = expandedPresets.find(preset.id) != expandedPresets.end();
+
+        ImGui::PushID(preset.id.c_str());
+
+        // Expandable tree node
+        bool treeOpen = ImGui::TreeNodeEx(
+            ("##preset_" + std::to_string(i)).c_str(),
+            ImGuiTreeNodeFlags_SpanAvailWidth | 
+            (isExpanded ? ImGuiTreeNodeFlags_DefaultOpen : 0),
+            "%s", preset.name.c_str()
+        );
+
+        // Update expanded state
+        if (isExpanded && !treeOpen)
+            expandedPresets.erase(preset.id);
+        else if (!isExpanded && treeOpen)
+            expandedPresets.insert(preset.id);
+
+        if (treeOpen)
+        {
+            // Display preset details in expanded form
+            ImGui::TextDisabled("Formula:");
+            ImGui::Indent();
+            ImGui::Text("%s", preset.GetPreview().c_str());
+            ImGui::Unindent();
+
+            ImGui::Separator();
+
+            // Display operands details
+            ImGui::TextDisabled("Left Operand:");
+            ImGui::Indent();
+            ImGui::Text("%s", preset.left.GetDisplayString().c_str());
+            ImGui::Unindent();
+
+            ImGui::TextDisabled("Operator:");
+            ImGui::Indent();
+            std::string opStr;
+            switch (preset.op)
+            {
+                case ComparisonOp::Equal:       opStr = "=="; break;
+                case ComparisonOp::NotEqual:    opStr = "!="; break;
+                case ComparisonOp::Less:        opStr = "<"; break;
+                case ComparisonOp::LessEqual:   opStr = "<="; break;
+                case ComparisonOp::Greater:     opStr = ">"; break;
+                case ComparisonOp::GreaterEqual: opStr = ">="; break;
+                default: opStr = "?"; break;
+            }
+            ImGui::Text("%s", opStr.c_str());
+            ImGui::Unindent();
+
+            ImGui::TextDisabled("Right Operand:");
+            ImGui::Indent();
+            ImGui::Text("%s", preset.right.GetDisplayString().c_str());
+            ImGui::Unindent();
+
+            ImGui::Separator();
+
+            // Action buttons
+            if (ImGui::Button("Edit##edit_preset", ImVec2(60, 0)))
+            {
+                // Would open edit dialog here
+                m_libraryPanel->Open();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Duplicate##dup_preset", ImVec2(75, 0)))
+            {
+                m_presetRegistry.DuplicatePreset(preset.id);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Delete##del_preset", ImVec2(55, 0)))
+            {
+                m_presetRegistry.DeletePreset(preset.id);
+            }
+
+            ImGui::TreePop();
+        }
+
+        ImGui::PopID();
+    }
+}
+
+// ============================================================================
+// PHASE 24 Panel Integration — Part C: Local Variables Reference
+// ============================================================================
+
+void VisualScriptEditorPanel::RenderLocalVariablesPanel()
+{
+    ImGui::TextDisabled("Local Variables Reference");
+
+    if (m_selectedNodeID < 0)
+    {
+        ImGui::TextDisabled("(select a node)");
+        return;
+    }
+
+    // Find the editor node
+    VSEditorNode* eNode = nullptr;
+    for (size_t i = 0; i < m_editorNodes.size(); ++i)
+    {
+        if (m_editorNodes[i].nodeID == m_selectedNodeID)
+        {
+            eNode = &m_editorNodes[i];
+            break;
+        }
+    }
+    if (eNode == nullptr)
+        return;
+
+    // For Branch nodes with condition references, show available local variables
+    if (eNode->def.Type == TaskNodeType::Branch && !eNode->def.conditionRefs.empty())
+    {
+        ImGui::Separator();
+
+        // Extract all variable names used in conditions
+        std::vector<std::string> usedVars;
+        for (const auto& ref : eNode->def.conditionRefs)
+        {
+            const ConditionPreset* preset = m_presetRegistry.GetPreset(ref.presetID);
+            if (preset)
+            {
+                if (preset->left.IsVariable())
+                    usedVars.push_back(preset->left.stringValue);
+                if (preset->right.IsVariable())
+                    usedVars.push_back(preset->right.stringValue);
+            }
+        }
+
+        if (!usedVars.empty())
+        {
+            ImGui::TextDisabled("Variables used in conditions:");
+            ImGui::Separator();
+            for (const auto& varName : usedVars)
+            {
+                ImGui::BulletText("%s", varName.c_str());
+            }
+        }
+        else
+        {
+            ImGui::TextDisabled("(no variables used in conditions)");
+        }
+    }
+    else
+    {
+        ImGui::TextDisabled("(no branch node selected or no conditions)");
+    }
 }
 
 } // namespace Olympe

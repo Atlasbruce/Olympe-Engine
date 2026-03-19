@@ -64,8 +64,8 @@ namespace Olympe {
  * each frame so it remains stateless with respect to node ownership.
  */
 struct NodeBranchData {
-    std::string                   nodeID;          ///< Unique node identifier
-    std::string                   nodeName;        ///< Display name (e.g. "Branch #3")
+    int                           nodeID;           ///< Numeric node identifier (for ImNodes attribute UIDs)
+    std::string                   nodeName;         ///< Display name (e.g. "Branch #3")
     std::vector<NodeConditionRef> conditionRefs;   ///< Ordered condition references
     std::vector<DynamicDataPin>   dynamicPins;     ///< Generated dynamic data pins
     bool                          breakpoint = false; ///< Whether a breakpoint is set

@@ -12,6 +12,7 @@
 // ImGui and ImNodes are only available in the full editor build.
 #ifndef OLYMPE_HEADLESS
 #  include "../../third_party/imgui/imgui.h"
+#  include "../../third_party/imnodes/imnodes.h"
 #endif
 
 namespace Olympe {
@@ -39,25 +40,47 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
     if (refreshing)
         m_refreshPending = false;
 
-    ImGui::PushID(data.nodeID.c_str());
+    ImGui::PushID(data.nodeID);
 
-    // ── Section 1: Title bar (blue background) ───────────────────────────────
-    RenderTitleSection(data);
+    // ── TITLE BAR (blue, styled via ImNodes) ──────────────────────────────────
+    ImNodes::BeginNodeTitleBar();
+    ImGui::TextUnformatted(data.nodeName.c_str());
+    if (data.breakpoint)
+    {
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(1.f, 0.3f, 0.3f, 1.f), "[BP]");
+    }
+    ImNodes::EndNodeTitleBar();
 
-    RenderSectionSeparator();
+    // ── EXEC PINS (In | Then / Else) ──────────────────────────────────────────
+    // Left: "In" exec input pin
+    int inAttrID = data.nodeID * 10000 + 0;  // offset 0 = exec-in
+    ImNodes::BeginInputAttribute(inAttrID, ImNodesPinShape_Triangle);
+    ImGui::Text("In");
+    ImNodes::EndInputAttribute();
 
-    // ── Section 2: Static exec pins (In | Then / Else) ───────────────────────
-    RenderExecPinsSection(data);
+    // Right: "Then" and "Else" exec output pins
+    int thenAttrID = data.nodeID * 10000 + 100;  // offset 100 = exec-out #0
+    int elseAttrID = data.nodeID * 10000 + 101;  // offset 101 = exec-out #1
 
-    RenderSectionSeparator();
+    ImNodes::BeginOutputAttribute(thenAttrID, ImNodesPinShape_TriangleFilled);
+    ImGui::Indent(60.0f);
+    ImGui::Text("Then");
+    ImGui::Unindent(60.0f);
+    ImNodes::EndOutputAttribute();
 
-    // ── Section 3: Conditions preview (green, read-only) ─────────────────────
+    ImNodes::BeginOutputAttribute(elseAttrID, ImNodesPinShape_TriangleFilled);
+    ImGui::Indent(60.0f);
+    ImGui::Text("Else");
+    ImGui::Unindent(60.0f);
+    ImNodes::EndOutputAttribute();
+
+    // ── CONDITIONS (green, read-only) ──────────────────────────────────────────
     RenderConditionsSection(data);
 
-    // ── Section 4: Dynamic data pins (yellow, only if any) ───────────────────
+    // ── DYNAMIC DATA PINS (only if any) ────────────────────────────────────────
     if (!data.dynamicPins.empty())
     {
-        RenderSectionSeparator();
         RenderDynamicPinsSection(data);
     }
 
@@ -77,8 +100,10 @@ void NodeBranchRenderer::RenderTitleSection(const NodeBranchData& data)
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.0f, 0.5f, 0.9f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_HeaderActive,  ImVec4(0.0f, 0.3f, 0.7f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_Text,          ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-    ImGui::Selectable(data.nodeName.c_str(), true,
-                      ImGuiSelectableFlags_None, ImVec2(0.f, 28.f));
+
+    // Use Selectable for proper styling but with no stretch
+    // Note: Pass negative width to auto-fit content, but don't stretch
+    ImGui::TextUnformatted(data.nodeName.c_str());
     ImGui::PopStyleColor(4);
 
     if (data.breakpoint)
@@ -111,7 +136,7 @@ void NodeBranchRenderer::RenderExecPinsSection(const NodeBranchData& /*data*/)
 }
 
 // ============================================================================
-// Section 3 — Conditions preview (green, read-only)
+// Section 3 — Conditions preview (green, read-only, with Pin highlighting)
 // ============================================================================
 
 void NodeBranchRenderer::RenderConditionsSection(const NodeBranchData& data)
@@ -123,17 +148,18 @@ void NodeBranchRenderer::RenderConditionsSection(const NodeBranchData& data)
         return;
     }
 
-    // Green color for condition preview text (bright green, monospace hint via indent)
+    // Green color for condition preview text
     const ImVec4 condColor(0.f, 1.f, 0.f, 1.f);
+    // Yellow color for Pin references (highlight)
+    const ImVec4 pinColor(1.0f, 0.843f, 0.0f, 1.0f);
 
     for (int i = 0; i < static_cast<int>(data.conditionRefs.size()); ++i)
     {
         const NodeConditionRef& ref = data.conditionRefs[i];
 
         ImGui::PushID(i);
-        ImGui::PushStyleColor(ImGuiCol_Text, condColor);
 
-        // Logical operator label (left-aligned, fixed width)
+        // Logical operator label
         const char* opLabel = "";
         if (i == 0)
             opLabel = "   ";        // indent first condition (no combinator)
@@ -142,22 +168,57 @@ void NodeBranchRenderer::RenderConditionsSection(const NodeBranchData& data)
         else
             opLabel = "Or ";
 
-        // Condition preview
+        // Condition preview with Pin highlighting
         const ConditionPreset* preset = m_registry.GetPreset(ref.presetID);
         if (preset)
         {
-            const std::string preview = preset->GetPreview();
-            ImGui::Text("%s %s", opLabel, preview.c_str());
+            // Build the condition display with highlighted Pin references
+            ImGui::Text("%s", opLabel);
+            ImGui::SameLine(0.0f, 0.0f);
 
-            ImGui::PopStyleColor();
+            // Left operand
+            if (preset->left.IsPin())
+            {
+                ImGui::TextColored(pinColor, "[%s]", preset->left.GetDisplayString().c_str());
+            }
+            else
+            {
+                ImGui::TextColored(condColor, "[%s]", preset->left.GetDisplayString().c_str());
+            }
+            ImGui::SameLine(0.0f, 4.0f);
 
-            // Hover tooltip (drawn without green style)
+            // Operator
+            std::string opStr;
+            switch (preset->op)
+            {
+                case ComparisonOp::Equal:       opStr = "=="; break;
+                case ComparisonOp::NotEqual:    opStr = "!="; break;
+                case ComparisonOp::Less:        opStr = "<"; break;
+                case ComparisonOp::LessEqual:   opStr = "<="; break;
+                case ComparisonOp::Greater:     opStr = ">"; break;
+                case ComparisonOp::GreaterEqual: opStr = ">="; break;
+                default: opStr = "?"; break;
+            }
+            ImGui::TextColored(condColor, "%s", opStr.c_str());
+            ImGui::SameLine(0.0f, 4.0f);
+
+            // Right operand
+            if (preset->right.IsPin())
+            {
+                ImGui::TextColored(pinColor, "[%s]", preset->right.GetDisplayString().c_str());
+            }
+            else
+            {
+                ImGui::TextColored(condColor, "[%s]", preset->right.GetDisplayString().c_str());
+            }
+
+            // Hover tooltip
             if (ImGui::IsItemHovered())
             {
                 ImGui::BeginTooltip();
                 ImGui::Text("Preset: %s", preset->name.c_str());
                 ImGui::Text("ID:     %s", preset->id.c_str());
-                ImGui::Text("Expr:   %s", preview.c_str());
+                ImGui::Text("Expr:   %s", preset->GetPreview().c_str());
                 ImGui::EndTooltip();
             }
 
@@ -171,7 +232,6 @@ void NodeBranchRenderer::RenderConditionsSection(const NodeBranchData& data)
         }
         else
         {
-            ImGui::PopStyleColor();
             ImGui::TextColored(ImVec4(1.f, 0.3f, 0.3f, 1.f),
                                "%s (missing: %s)", opLabel, ref.presetID.c_str());
         }
