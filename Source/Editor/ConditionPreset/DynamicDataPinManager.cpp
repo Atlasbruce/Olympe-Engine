@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include "../../BlueprintEditor/ConditionRef.h"  // For OperandRef mode info (Phase 24)
 
 namespace Olympe {
 
@@ -27,7 +28,8 @@ DynamicDataPinManager::DynamicDataPinManager(ConditionPresetRegistry& registry)
 // SyncPins
 // ============================================================================
 
-void DynamicDataPinManager::SyncPins(std::vector<NodeConditionRef>& conditionRefs)
+void DynamicDataPinManager::SyncPins(std::vector<NodeConditionRef>& conditionRefs,
+                                     const std::vector<ConditionRef>& operandRefs)
 {
     // Build the set of (conditionIndex, position) pairs that SHOULD exist
     // after this sync, and map each pair to the condition preview string.
@@ -47,7 +49,33 @@ void DynamicDataPinManager::SyncPins(std::vector<NodeConditionRef>& conditionRef
         if (!preset)
             continue;
 
-        std::string preview = preset->GetPreview();
+        // Phase 24: Build preview from ACTUAL operand data if available
+        // This ensures that when users switch operand modes (e.g., Const → Pin),
+        // the pin label reflects the CURRENT state, not the static preset.
+        std::string preview;
+        if (i < static_cast<int>(operandRefs.size()) && !operandRefs.empty())
+        {
+            const ConditionRef& cref = operandRefs[i];
+            std::ostringstream oss;
+            oss << "[" << (cref.leftOperand.mode == OperandRef::Mode::Variable 
+                           ? cref.leftOperand.variableName
+                           : (cref.leftOperand.mode == OperandRef::Mode::Pin
+                              ? "Pin"
+                              : cref.leftOperand.constValue))
+                << "] " << cref.operatorStr << " ["
+                << (cref.rightOperand.mode == OperandRef::Mode::Variable
+                    ? cref.rightOperand.variableName
+                    : (cref.rightOperand.mode == OperandRef::Mode::Pin
+                       ? "Pin"
+                       : cref.rightOperand.constValue))
+                << "]";
+            preview = oss.str();
+        }
+        else
+        {
+            // Fallback to static preset preview
+            preview = preset->GetPreview();
+        }
 
         if (preset->NeedsLeftPin())
             needed.push_back({i, OperandPosition::Left, preview, ref.presetID});
@@ -125,9 +153,13 @@ void DynamicDataPinManager::SyncPins(std::vector<NodeConditionRef>& conditionRef
 // ============================================================================
 
 void DynamicDataPinManager::RegeneratePinsFromConditions(
-    std::vector<NodeConditionRef>& conditionRefs)
+    std::vector<NodeConditionRef>& conditionRefs,
+    const std::vector<ConditionRef>& operandRefs)
 {
-    SyncPins(conditionRefs);
+    // Phase 24: Pass operandRefs to SyncPins so labels are built from ACTUAL
+    // operand data (not static preset preview). This fixes recursive label
+    // accumulation when users switch operand modes.
+    SyncPins(conditionRefs, operandRefs);
 }
 
 // ============================================================================

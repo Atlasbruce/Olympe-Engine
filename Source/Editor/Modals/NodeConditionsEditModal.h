@@ -88,7 +88,8 @@ public:
      *
      * @param currentRefs  Condition refs from the selected node.
      */
-    void Open(const std::vector<NodeConditionRef>& currentRefs);
+    void Open(const std::vector<NodeConditionRef>& currentRefs,
+              const std::vector<ConditionRef>& operandRefs = std::vector<ConditionRef>());
 
     /**
      * @brief Closes the modal without confirming changes.
@@ -112,6 +113,13 @@ public:
      * Only meaningful when IsConfirmed() is true.
      */
     const std::vector<NodeConditionRef>& GetConditionRefs() const;
+
+    /**
+     * @brief Returns the edited operand ref list (Phase 24).
+     *
+     * Only meaningful when IsConfirmed() is true.
+     */
+    const std::vector<ConditionRef>& GetConditionOperandRefs() const;
 
     // -----------------------------------------------------------------------
     // Condition management (testable without ImGui)

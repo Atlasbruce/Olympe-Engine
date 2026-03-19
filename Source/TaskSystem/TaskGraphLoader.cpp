@@ -737,6 +737,40 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
                    << nd.NodeID << "\n";
     }
 
+    // Phase 24 Milestone 2.3 — nodeConditionRefs deserialization (preset IDs + logical operators)
+    // Reconstructs NodeConditionRef objects (which preset is used and its logical operator)
+    if (JsonHelper::IsArray(nodeJson, "nodeConditionRefs"))
+    {
+        JsonHelper::ForEachInArray(nodeJson, "nodeConditionRefs",
+            [&](const json& nrefJson, size_t /*idx*/)
+        {
+            if (!nrefJson.is_object())
+                return;
+
+            NodeConditionRef ncref;
+
+            if (nrefJson.contains("presetID") && nrefJson["presetID"].is_string())
+                ncref.presetID = nrefJson["presetID"].get<std::string>();
+
+            if (nrefJson.contains("logicalOp") && nrefJson["logicalOp"].is_string())
+            {
+                const std::string opStr = nrefJson["logicalOp"].get<std::string>();
+                if (opStr == "And")
+                    ncref.logicalOp = LogicalOp::And;
+                else if (opStr == "Or")
+                    ncref.logicalOp = LogicalOp::Or;
+                else
+                    ncref.logicalOp = LogicalOp::Start;
+            }
+
+            nd.conditionRefs.push_back(ncref);
+        });
+
+        SYSTEM_LOG << "[TaskGraphLoader] Phase 24: deserialized "
+                   << nd.conditionRefs.size() << " nodeConditionRefs for node "
+                   << nd.NodeID << "\n";
+    }
+
     return nd;
 }
 

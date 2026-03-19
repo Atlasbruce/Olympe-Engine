@@ -73,7 +73,11 @@ void VisualScriptEditorPanel::Initialize()
             if (eNode.nodeID != m_selectedNodeID)
                 continue;
 
-            m_pinManager->RegeneratePinsFromConditions(eNode.def.conditionRefs);
+            // Phase 24: Pass BOTH conditionRefs AND operandRefs to regenerate pins
+            // This ensures pin labels are built from ACTUAL operand data (not static preset),
+            // fixing recursive label accumulation when users switch operand modes (Const → Pin)
+            m_pinManager->RegeneratePinsFromConditions(eNode.def.conditionRefs,
+                                                       eNode.def.conditionOperandRefs);
             eNode.def.dynamicPins = m_pinManager->GetAllPins();
 
             // Keep m_template in sync for serialization.
@@ -1124,6 +1128,24 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
 
             SYSTEM_LOG << "[VisualScriptEditorPanel] SerializeAndWrite: Phase 24: serialized "
                        << def.conditionOperandRefs.size() << " conditionRefs for node "
+                       << def.NodeID << "\n";
+        }
+
+        // Phase 24 Milestone 2.3 — Node condition references (preset IDs + logical operators)
+        // Save which presets are used and their logical operator chain
+        if ((def.Type == TaskNodeType::Branch || def.Type == TaskNodeType::While) &&
+            !def.conditionRefs.empty())
+        {
+            json nodeCondRefsArray = json::array();
+            for (const auto& ncref : def.conditionRefs)
+            {
+                json nobj = ncref.ToJson();
+                nodeCondRefsArray.push_back(nobj);
+            }
+            n["nodeConditionRefs"] = nodeCondRefsArray;
+
+            SYSTEM_LOG << "[VisualScriptEditorPanel] SerializeAndWrite: Phase 24: serialized "
+                       << def.conditionRefs.size() << " nodeConditionRefs for node "
                        << def.NodeID << "\n";
         }
 
@@ -4214,6 +4236,14 @@ bool VisualScriptEditorPanel::RenderOperandEditor(Operand& operand, const char* 
                 currentSelectionIdx = static_cast<int>(allOptions.size() - 1);
             }
         }
+
+        // If no pins are available, still show the [Pin-in] option as a category
+        if (allPins.empty())
+        {
+            allOptions.push_back("[Pin-in] (none available)");
+            optionTypes.push_back(2);  // Pin
+            optionValues.push_back("");  // Empty value for unavailable pin
+        }
     }
 
     // ── Add [Const] option SECOND ────────────────────────────────────────
@@ -4306,7 +4336,9 @@ bool VisualScriptEditorPanel::RenderOperandEditor(Operand& operand, const char* 
                         break;
                     case 2:  // Pin
                         operand.mode = OperandMode::Pin;
-                        operand.stringValue = optionValues[i];
+                        // For pins, store the pin label. If no specific pin selected (empty),
+                        // use a placeholder value that indicates "any available pin"
+                        operand.stringValue = optionValues[i].empty() ? "[Pin-in]" : optionValues[i];
                         break;
                 }
                 modified = true;
@@ -4320,7 +4352,7 @@ bool VisualScriptEditorPanel::RenderOperandEditor(Operand& operand, const char* 
     {
         ImGui::SameLine(0.0f, 4.0f);
         ImGui::SetNextItemWidth(60.0f);
-        if (ImGui::InputDouble("##const_value", &operand.constValue, 0.1, 1.0, "%.3f"))
+        if (ImGui::InputDouble("##const_value", &operand.constValue, 0.0, 0.0, "%.3f"))
         {
             modified = true;
         }

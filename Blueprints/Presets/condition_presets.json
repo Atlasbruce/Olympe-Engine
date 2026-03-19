@@ -10,7 +10,7 @@
             "op": "==",
             "right": {
                 "mode": "Const",
-                "value": 0
+                "value": 10
             }
         },
         {
@@ -37,6 +37,32 @@
             "right": {
                 "mode": "Variable",
                 "value": "mFatigue"
+            }
+        },
+        {
+            "id": "preset_9a023608-36ec-4493-856d-698ccb469df1",
+            "left": {
+                "mode": "Const",
+                "value": 0
+            },
+            "name": "Condition",
+            "op": "<",
+            "right": {
+                "mode": "Pin",
+                "value": "[Pin-in]"
+            }
+        },
+        {
+            "id": "preset_fa90103d-5905-4483-b1c3-ebcadc870d58",
+            "left": {
+                "mode": "Pin",
+                "value": "In #3R: [] == []"
+            },
+            "name": "Condition",
+            "op": "==",
+            "right": {
+                "mode": "Pin",
+                "value": "[Pin-in]"
             }
         }
     ],

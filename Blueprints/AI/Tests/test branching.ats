@@ -191,9 +191,29 @@
       ],
       "id": 7,
       "label": "Is Health Critical?",
+      "nodeConditionRefs": [
+        {
+          "leftPinID": "",
+          "logicalOp": "Start",
+          "presetID": "preset_bf9138e0-3f8d-431c-a6ca-8595d14718f9",
+          "rightPinID": ""
+        },
+        {
+          "leftPinID": "",
+          "logicalOp": "And",
+          "presetID": "preset_455dbd95-50c5-45bc-856a-2dff621fe880",
+          "rightPinID": ""
+        },
+        {
+          "leftPinID": "",
+          "logicalOp": "Or",
+          "presetID": "preset_9a023608-36ec-4493-856d-698ccb469df1",
+          "rightPinID": ""
+        }
+      ],
       "position": {
-        "x": 569,
-        "y": 474
+        "x": 605,
+        "y": 446
       },
       "type": "Branch"
     },

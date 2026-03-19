@@ -392,10 +392,50 @@ void NodeConditionsPanel::RenderConditionsPreview()
 
             // Format: "  If    Condition #1: [mHealth] <= [100.00]"
             // or:     "  And   Condition #2: [mSpeed] == [Pin-in #1]"
-            if (preset)
-                ImGui::Text("%sCondition #%zu: %s", linePrefix.c_str(), i + 1, preset->GetPreview().c_str());
+            // Phase 24: Build preview from ACTUAL operand data (ConditionRef), not static preset
+            // This ensures Pin-mode operands display correctly (e.g., "Pin-in #1" instead of old const value)
+            std::string conditionPreview;
+            if (preset && i < m_conditionOperandRefs.size())
+            {
+                const ConditionRef& cref = m_conditionOperandRefs[i];
+                std::ostringstream oss;
+
+                // Left operand
+                oss << "[";
+                if (cref.leftOperand.mode == OperandRef::Mode::Variable)
+                    oss << cref.leftOperand.variableName;
+                else if (cref.leftOperand.mode == OperandRef::Mode::Pin)
+                    oss << "Pin-in #" << (i + 1) << "L";
+                else
+                    oss << cref.leftOperand.constValue;
+                oss << "]";
+
+                // Operator
+                oss << " " << cref.operatorStr << " ";
+
+                // Right operand
+                oss << "[";
+                if (cref.rightOperand.mode == OperandRef::Mode::Variable)
+                    oss << cref.rightOperand.variableName;
+                else if (cref.rightOperand.mode == OperandRef::Mode::Pin)
+                    oss << "Pin-in #" << (i + 1) << "R";
+                else
+                    oss << cref.rightOperand.constValue;
+                oss << "]";
+
+                conditionPreview = oss.str();
+            }
+            else if (preset)
+            {
+                // Fallback to preset preview if operand data not available
+                conditionPreview = preset->GetPreview();
+            }
             else
-                ImGui::Text("%sCondition #%zu: (missing: %s)", linePrefix.c_str(), i + 1, ref.presetID.c_str());
+            {
+                conditionPreview = "(missing: " + ref.presetID + ")";
+            }
+
+            ImGui::Text("%sCondition #%zu: %s", linePrefix.c_str(), i + 1, conditionPreview.c_str());
             ImGui::PopStyleColor();
 
             ImGui::PopID();
@@ -608,7 +648,8 @@ void NodeConditionsPanel::RenderOperandDropdown(ConditionRef& cref, bool isLeft,
             if ((isLeft && pin.position == OperandPosition::Left) ||
                 (!isLeft && pin.position == OperandPosition::Right))
             {
-                allOptions.push_back("[Pin-in] " + pin.GetShortLabel());
+                // Phase 24: Show just the pin's short label, not duplicated "[Pin-in] Pin-in #N"
+                allOptions.push_back(pin.GetShortLabel());
                 optionTypes.push_back(2);  // Pin
                 optionValues.push_back(pin.id);
 
@@ -729,7 +770,7 @@ void NodeConditionsPanel::RenderOperandDropdown(ConditionRef& cref, bool isLeft,
             }
 
             ImGui::SetNextItemWidth(80.f);
-            if (ImGui::InputDouble("##constval", &doubleVal, 0.1, 1.0, "%.3f"))
+            if (ImGui::InputDouble("##constval", &doubleVal, 0.0, 0.0, "%.3f"))
             {
                 std::ostringstream oss;
                 oss << doubleVal;

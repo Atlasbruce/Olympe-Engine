@@ -43,6 +43,7 @@
 #include "ConditionPresetRegistry.h"
 #include "NodeConditionRef.h"
 #include "DynamicDataPin.h"
+#include "../../BlueprintEditor/ConditionRef.h"  // Phase 24: for operand data (Optional parameter)
 
 namespace Olympe {
 
@@ -93,10 +94,17 @@ public:
      * Also updates the `leftPinID` and `rightPinID` fields inside each
      * NodeConditionRef in the provided vector.
      *
+     * Phase 24: When operandRefs is provided, pin labels are built from the
+     * ACTUAL operand data (not the static preset preview), allowing dynamic
+     * updates when users change operand modes (e.g., Const → Pin).
+     *
      * @param conditionRefs  Node's condition list (modified in-place to store
      *                       assigned pin IDs).
+     * @param operandRefs    Optional: actual operand data for dynamic label building.
+     *                       If empty, falls back to preset preview.
      */
-    void SyncPins(std::vector<NodeConditionRef>& conditionRefs);
+    void SyncPins(std::vector<NodeConditionRef>& conditionRefs,
+                  const std::vector<ConditionRef>& operandRefs = std::vector<ConditionRef>());
 
     /**
      * @brief Regenerates pins from the current condition list.
@@ -111,9 +119,16 @@ public:
      *
      * Also updates leftPinID / rightPinID inside each NodeConditionRef.
      *
+     * Phase 24: When operandRefs is provided, pin labels are built from the
+     * ACTUAL operand data (not the static preset preview), allowing dynamic
+     * updates when users change operand modes (e.g., Const → Pin).
+     *
      * @param conditionRefs  Node's condition list (modified in-place).
+     * @param operandRefs    Optional: actual operand data for dynamic label building.
+     *                       If empty, falls back to preset preview.
      */
-    void RegeneratePinsFromConditions(std::vector<NodeConditionRef>& conditionRefs);
+    void RegeneratePinsFromConditions(std::vector<NodeConditionRef>& conditionRefs,
+                                      const std::vector<ConditionRef>& operandRefs = std::vector<ConditionRef>());
 
     // -----------------------------------------------------------------------
     // Query
