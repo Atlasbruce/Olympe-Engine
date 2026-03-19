@@ -729,13 +729,15 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
             const std::string typeStr = JsonHelper::GetString(refJson, "compareType", "Float");
             ref.compareType = StringToVariableType(typeStr);
 
-            nd.conditionRefs.push_back(ref);
+            nd.conditionOperandRefs.push_back(ref);
         });
 
         SYSTEM_LOG << "[TaskGraphLoader] Phase 24: deserialized "
-                   << nd.conditionRefs.size() << " conditionRefs for node "
+                   << nd.conditionOperandRefs.size() << " conditionRefs for node "
                    << nd.NodeID << "\n";
     }
+
+    return nd;
 }
 
 // ============================================================================

@@ -1047,13 +1047,13 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
         // Saves OperandRef data including dynamicPinID for Pin-mode operands.
         // Coexists with legacy def.conditions[] during transition.
         if ((def.Type == TaskNodeType::Branch || def.Type == TaskNodeType::While) &&
-            !def.conditionRefs.empty())
+            !def.conditionOperandRefs.empty())
         {
             json condRefsArray = json::array();
 
-            for (size_t i = 0; i < def.conditionRefs.size(); ++i)
+            for (size_t i = 0; i < def.conditionOperandRefs.size(); ++i)
             {
-                const ConditionRef& ref = def.conditionRefs[i];
+                const ConditionRef& ref = def.conditionOperandRefs[i];
                 json refObj;
                 refObj["conditionIndex"] = static_cast<int>(i);
 
@@ -1116,7 +1116,7 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
             n["conditionRefs"] = condRefsArray;
 
             SYSTEM_LOG << "[VisualScriptEditorPanel] SerializeAndWrite: Phase 24: serialized "
-                       << def.conditionRefs.size() << " conditionRefs for node "
+                       << def.conditionOperandRefs.size() << " conditionRefs for node "
                        << def.NodeID << "\n";
         }
 
