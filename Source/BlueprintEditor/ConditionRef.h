@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "../TaskSystem/TaskGraphTypes.h"  // VariableType
+#include "../third_party/nlohmann/json.hpp"
 
 namespace Olympe {
 
@@ -65,6 +66,16 @@ struct OperandRef
      * Empty string means no pin has been assigned yet.
      */
     std::string dynamicPinID;
+
+    // -----------------------------------------------------------------------
+    // Serialization
+    // -----------------------------------------------------------------------
+
+    /// @brief Serializes this OperandRef to a JSON object.
+    nlohmann::json ToJson() const;
+
+    /// @brief Deserializes an OperandRef from a JSON object.
+    static OperandRef FromJson(const nlohmann::json& data);
 };
 
 /**
@@ -92,6 +103,16 @@ struct ConditionRef
 
     // Type hint used for type-checking and pin dataType selection
     VariableType compareType = VariableType::Float; ///< Expected value type of both operands
+
+    // -----------------------------------------------------------------------
+    // Serialization
+    // -----------------------------------------------------------------------
+
+    /// @brief Serializes this ConditionRef to a JSON object.
+    nlohmann::json ToJson() const;
+
+    /// @brief Deserializes a ConditionRef from a JSON object.
+    static ConditionRef FromJson(const nlohmann::json& data);
 };
 
 } // namespace Olympe

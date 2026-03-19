@@ -37,12 +37,32 @@ void NodeConditionsPanel::SetConditionRefs(const std::vector<NodeConditionRef>& 
 {
     m_conditionRefs = refs;
     NormalizeLogicalOps();
+
+    // Resize the operand-ref list to stay in sync with conditionRefs.
+    // Preserve existing entries where possible; add defaults for new entries.
+    if (m_conditionOperandRefs.size() != m_conditionRefs.size())
+    {
+        m_conditionOperandRefs.resize(m_conditionRefs.size());
+        for (size_t i = 0; i < m_conditionOperandRefs.size(); ++i)
+            m_conditionOperandRefs[i].conditionIndex = static_cast<int>(i);
+    }
+
     m_dirty = false;
 }
 
 const std::vector<NodeConditionRef>& NodeConditionsPanel::GetConditionRefs() const
 {
     return m_conditionRefs;
+}
+
+void NodeConditionsPanel::SetConditionOperandRefs(const std::vector<ConditionRef>& refs)
+{
+    m_conditionOperandRefs = refs;
+}
+
+const std::vector<ConditionRef>& NodeConditionsPanel::GetConditionOperandRefs() const
+{
+    return m_conditionOperandRefs;
 }
 
 void NodeConditionsPanel::SetDynamicPins(const std::vector<DynamicDataPin>& pins)
@@ -62,6 +82,67 @@ void NodeConditionsPanel::AddCondition(const std::string& presetID)
     LogicalOp op = m_conditionRefs.empty() ? LogicalOp::Start : LogicalOp::And;
     m_conditionRefs.emplace_back(presetID, op);
     NormalizeLogicalOps();
+
+    // Add a matching ConditionRef initialized from the preset's default operands.
+    ConditionRef cref;
+    cref.conditionIndex = static_cast<int>(m_conditionRefs.size()) - 1;
+    const ConditionPreset* preset = m_registry.GetPreset(presetID);
+    if (preset)
+    {
+        // Initialize from the preset's left operand
+        switch (preset->left.mode)
+        {
+            case OperandMode::Variable:
+                cref.leftOperand.mode = OperandRef::Mode::Variable;
+                cref.leftOperand.variableName = preset->left.stringValue;
+                break;
+            case OperandMode::Pin:
+                cref.leftOperand.mode = OperandRef::Mode::Pin;
+                break;
+            case OperandMode::Const:
+            default:
+                cref.leftOperand.mode = OperandRef::Mode::Const;
+                {
+                    std::ostringstream oss;
+                    oss << preset->left.constValue;
+                    cref.leftOperand.constValue = oss.str();
+                }
+                break;
+        }
+        // Initialize operator string
+        switch (preset->op)
+        {
+            case ComparisonOp::Equal:        cref.operatorStr = "=="; break;
+            case ComparisonOp::NotEqual:     cref.operatorStr = "!="; break;
+            case ComparisonOp::Less:         cref.operatorStr = "<";  break;
+            case ComparisonOp::LessEqual:    cref.operatorStr = "<="; break;
+            case ComparisonOp::Greater:      cref.operatorStr = ">";  break;
+            case ComparisonOp::GreaterEqual: cref.operatorStr = ">="; break;
+            default:                         cref.operatorStr = "=="; break;
+        }
+        // Initialize from the preset's right operand
+        switch (preset->right.mode)
+        {
+            case OperandMode::Variable:
+                cref.rightOperand.mode = OperandRef::Mode::Variable;
+                cref.rightOperand.variableName = preset->right.stringValue;
+                break;
+            case OperandMode::Pin:
+                cref.rightOperand.mode = OperandRef::Mode::Pin;
+                break;
+            case OperandMode::Const:
+            default:
+                cref.rightOperand.mode = OperandRef::Mode::Const;
+                {
+                    std::ostringstream oss;
+                    oss << preset->right.constValue;
+                    cref.rightOperand.constValue = oss.str();
+                }
+                break;
+        }
+    }
+    m_conditionOperandRefs.push_back(cref);
+
     m_dirty = true;
 
     if (OnPresetChanged)
@@ -74,6 +155,17 @@ void NodeConditionsPanel::RemoveCondition(size_t index)
         return;
 
     m_conditionRefs.erase(m_conditionRefs.begin() + static_cast<int>(index));
+
+    // Keep operand refs in sync
+    if (index < m_conditionOperandRefs.size())
+    {
+        m_conditionOperandRefs.erase(
+            m_conditionOperandRefs.begin() + static_cast<int>(index));
+    }
+    // Re-index remaining operand refs
+    for (size_t i = index; i < m_conditionOperandRefs.size(); ++i)
+        m_conditionOperandRefs[i].conditionIndex = static_cast<int>(i);
+
     NormalizeLogicalOps();
     m_dirty = true;
 }
@@ -338,7 +430,8 @@ void NodeConditionsPanel::RenderConditionList()
     if (!open)
         return;
 
-    const ImVec4 condColor(0.f, 1.f, 0.f, 1.f);   // green for preview text
+    const ImVec4 condColor(0.f, 1.f, 0.f, 1.f);   // green for preview text (unused in list, kept for IDE compat)
+    (void)condColor;
 
     // Deferred-deletion index (avoids invalidating the iterator inside the loop)
     size_t deleteIdx = static_cast<size_t>(-1);
@@ -348,16 +441,43 @@ void NodeConditionsPanel::RenderConditionList()
         NodeConditionRef& ref = m_conditionRefs[i];
         ImGui::PushID(static_cast<int>(i));
 
-        // ── Condition preview (green) ─────────────────────────────────────────
-        const ConditionPreset* preset = m_registry.GetPreset(ref.presetID);
-        ImGui::PushStyleColor(ImGuiCol_Text, condColor);
-        if (preset)
-            ImGui::TextUnformatted(preset->GetPreview().c_str());
-        else
-            ImGui::Text("(missing: %s)", ref.presetID.c_str());
-        ImGui::PopStyleColor();
+        // ── Operand editors (left operand | operator | right operand) ─────────
+        // Ensure parallel operand-ref list is always in sync
+        if (i >= m_conditionOperandRefs.size())
+        {
+            ConditionRef newCref;
+            newCref.conditionIndex = static_cast<int>(i);
+            m_conditionOperandRefs.push_back(newCref);
+        }
+        ConditionRef& cref = m_conditionOperandRefs[i];
 
-        // ── Logical-operator dropdown (And / Or) — first condition is always Start ──
+        // Resolve short pin labels for Pin-mode operands
+        std::string leftPinLabel, rightPinLabel;
+        for (const auto& pin : m_dynamicPins)
+        {
+            if (pin.conditionIndex == static_cast<int>(i))
+            {
+                if (pin.position == OperandPosition::Left)
+                    leftPinLabel = pin.GetShortLabel();
+                else
+                    rightPinLabel = pin.GetShortLabel();
+            }
+        }
+
+        ImGui::PushID("left");
+        RenderOperandDropdown(cref, /*isLeft=*/true, leftPinLabel);
+        ImGui::PopID();
+
+        ImGui::SameLine();
+        ImGui::PushID("op");
+        RenderOperatorDropdown(cref);
+        ImGui::PopID();
+
+        ImGui::SameLine();
+        ImGui::PushID("right");
+        RenderOperandDropdown(cref, /*isLeft=*/false, rightPinLabel);
+        ImGui::PopID();
+
         ImGui::SameLine();
         if (i > 0)
         {
@@ -462,6 +582,134 @@ void NodeConditionsPanel::RenderDynamicPinsSection()
         {
             ImGui::SetTooltip("%s", displayLabel.c_str());
         }
+    }
+#endif
+}
+
+void NodeConditionsPanel::RenderOperandDropdown(ConditionRef& cref, bool isLeft,
+                                                 const std::string& pinLabel)
+{
+#ifndef OLYMPE_HEADLESS
+    OperandRef& op = isLeft ? cref.leftOperand : cref.rightOperand;
+    const char* modeLabels[] = { "Var", "Const", "Pin" };
+    int currentMode = 0;
+    switch (op.mode)
+    {
+        case OperandRef::Mode::Variable: currentMode = 0; break;
+        case OperandRef::Mode::Const:    currentMode = 1; break;
+        case OperandRef::Mode::Pin:      currentMode = 2; break;
+        default:                         currentMode = 1; break;
+    }
+
+    // Mode selector: small radio-style combo
+    ImGui::SetNextItemWidth(54.f);
+    if (ImGui::BeginCombo("##mode", modeLabels[currentMode], ImGuiComboFlags_NoArrowButton))
+    {
+        for (int m = 0; m < 3; ++m)
+        {
+            bool selected = (m == currentMode);
+            if (ImGui::Selectable(modeLabels[m], selected))
+            {
+                // Mode changed — clear stale data from the old mode
+                if (m == 0)
+                {
+                    op.mode = OperandRef::Mode::Variable;
+                    op.dynamicPinID.clear();
+                }
+                else if (m == 1)
+                {
+                    op.mode = OperandRef::Mode::Const;
+                    op.dynamicPinID.clear();
+                }
+                else
+                {
+                    op.mode = OperandRef::Mode::Pin;
+                }
+                m_dirty = true;
+                if (OnDynamicPinsNeedRegeneration)
+                    OnDynamicPinsNeedRegeneration();
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+    ImGui::SameLine();
+
+    // Value field for the selected mode
+    static const size_t kBufSize = 128u;
+    switch (op.mode)
+    {
+        case OperandRef::Mode::Variable:
+        {
+            char buf[kBufSize] = {};
+            const std::string& cur = op.variableName;
+            const size_t copyLen = cur.size() < (kBufSize - 1u) ? cur.size() : kBufSize - 1u;
+            cur.copy(buf, copyLen);
+            ImGui::SetNextItemWidth(80.f);
+            if (ImGui::InputText("##varname", buf, kBufSize))
+            {
+                op.variableName = buf;
+                m_dirty = true;
+            }
+            break;
+        }
+        case OperandRef::Mode::Const:
+        {
+            char buf[kBufSize] = {};
+            const std::string& cur = op.constValue;
+            const size_t copyLen = cur.size() < (kBufSize - 1u) ? cur.size() : kBufSize - 1u;
+            cur.copy(buf, copyLen);
+            ImGui::SetNextItemWidth(80.f);
+            if (ImGui::InputText("##constval", buf, kBufSize))
+            {
+                op.constValue = buf;
+                m_dirty = true;
+            }
+            break;
+        }
+        case OperandRef::Mode::Pin:
+        {
+            // Read-only: show the "Pin-in #N" label assigned by DynamicDataPinManager
+            const std::string display = pinLabel.empty() ? "(pin)" : pinLabel;
+            ImGui::SetNextItemWidth(80.f);
+            ImGui::TextDisabled("%s", display.c_str());
+            break;
+        }
+        default:
+            break;
+    }
+#endif
+}
+
+void NodeConditionsPanel::RenderOperatorDropdown(ConditionRef& cref)
+{
+#ifndef OLYMPE_HEADLESS
+    static const char* kOperators[] = { "==", "!=", "<", "<=", ">", ">=" };
+    static const int   kNumOps = 6;
+
+    int currentOp = 0;
+    for (int i = 0; i < kNumOps; ++i)
+    {
+        if (cref.operatorStr == kOperators[i])
+        {
+            currentOp = i;
+            break;
+        }
+    }
+
+    ImGui::SetNextItemWidth(44.f);
+    if (ImGui::BeginCombo("##op2", kOperators[currentOp], ImGuiComboFlags_NoArrowButton))
+    {
+        for (int i = 0; i < kNumOps; ++i)
+        {
+            bool selected = (i == currentOp);
+            if (ImGui::Selectable(kOperators[i], selected))
+            {
+                cref.operatorStr = kOperators[i];
+                m_dirty = true;
+            }
+        }
+        ImGui::EndCombo();
     }
 #endif
 }

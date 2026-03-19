@@ -51,6 +51,7 @@ struct DynamicDataPin {
     std::string     label;          ///< Display label (set at construction)
     std::string     nodePinID;      ///< ImGui/ImNodes pin ID (assigned at render time)
     float           dataValue;      ///< Runtime float value received from connected node
+    int             sequenceNumber; ///< 1-based sequence index across all pins on the node (for "Pin-in #N" label)
 
     // -----------------------------------------------------------------------
     // Constructors
@@ -74,6 +75,11 @@ struct DynamicDataPin {
     /// Format: "In #<condIdx+1><L|R>: <condPreview>"
     /// Example: "In #3L: [mSpeed] == [Pin:1]"
     std::string GetDisplayLabel() const;
+
+    /// @brief Returns the short label for use as a pin connector slot.
+    /// Format: "Pin-in #<sequenceNumber>"
+    /// Example: "Pin-in #1"
+    std::string GetShortLabel() const;
 
     /// @brief Generates a globally unique identifier string (UUID v4-style).
     static std::string GenerateUniqueID();

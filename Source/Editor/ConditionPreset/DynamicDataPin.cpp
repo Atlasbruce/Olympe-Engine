@@ -35,6 +35,7 @@ DynamicDataPin::DynamicDataPin()
     , label("")
     , nodePinID("")
     , dataValue(0.0f)
+    , sequenceNumber(0)
 {
 }
 
@@ -49,6 +50,7 @@ DynamicDataPin::DynamicDataPin(int condIdx, OperandPosition pos,
     , position(pos)
     , nodePinID("")
     , dataValue(0.0f)
+    , sequenceNumber(0)
 {
     // Build the label using the same format that GetDisplayLabel() produces.
     std::string side = (pos == OperandPosition::Left) ? "L" : "R";
@@ -64,6 +66,13 @@ DynamicDataPin::DynamicDataPin(int condIdx, OperandPosition pos,
 std::string DynamicDataPin::GetDisplayLabel() const
 {
     return label;
+}
+
+std::string DynamicDataPin::GetShortLabel() const
+{
+    std::ostringstream oss;
+    oss << "Pin-in #" << sequenceNumber;
+    return oss.str();
 }
 
 /*static*/
