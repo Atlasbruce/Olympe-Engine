@@ -382,10 +382,12 @@ void NodeConditionsPanel::RenderConditionsPreview()
 
             const ConditionPreset* preset = m_registry.GetPreset(ref.presetID);
             ImGui::PushStyleColor(ImGuiCol_Text, condColor);
+
+            // Format: "Condition #N: [preview]"
             if (preset)
-                ImGui::Text("%s %s", opLabel, preset->GetPreview().c_str());
+                ImGui::Text("Condition #%zu: %s %s", i + 1, opLabel, preset->GetPreview().c_str());
             else
-                ImGui::Text("%s (missing: %s)", opLabel, ref.presetID.c_str());
+                ImGui::Text("Condition #%zu: %s (missing: %s)", i + 1, opLabel, ref.presetID.c_str());
             ImGui::PopStyleColor();
 
             ImGui::PopID();

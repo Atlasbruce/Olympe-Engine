@@ -138,10 +138,38 @@
       "type": "GetBBValue"
     },
     {
+      "conditionRefs": [
+        {
+          "compareType": "Float",
+          "conditionIndex": 0,
+          "leftOperand": {
+            "constValue": "",
+            "mode": "Const"
+          },
+          "operator": "==",
+          "rightOperand": {
+            "constValue": "",
+            "mode": "Const"
+          }
+        },
+        {
+          "compareType": "Float",
+          "conditionIndex": 1,
+          "leftOperand": {
+            "constValue": "",
+            "mode": "Const"
+          },
+          "operator": "==",
+          "rightOperand": {
+            "constValue": "",
+            "mode": "Const"
+          }
+        }
+      ],
       "id": 7,
       "label": "Is Health Critical?",
       "position": {
-        "x": 589,
+        "x": 588,
         "y": 470
       },
       "type": "Branch"

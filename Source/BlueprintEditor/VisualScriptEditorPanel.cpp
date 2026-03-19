@@ -3856,15 +3856,144 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanel()
     if (eNode == nullptr)
         return;
 
-    // For Branch nodes, render specialized condition panel
-    if (eNode->def.Type == TaskNodeType::Branch)
+    TaskNodeDefinition& def = eNode->def;
+
+    // ---- ALL node types: standard fields ----
+    {
+        // Node Name
+        char nameBuf[128];
+        strncpy_s(nameBuf, sizeof(nameBuf), def.NodeName.c_str(), _TRUNCATE);
+        if (ImGui::InputText("Name##nodeprops_name", nameBuf, sizeof(nameBuf)))
+        {
+            def.NodeName = nameBuf;
+            for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+            {
+                if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                {
+                    m_template.Nodes[i].NodeName = def.NodeName;
+                    break;
+                }
+            }
+            m_dirty = true;
+        }
+
+        ImGui::Separator();
+    }
+
+    // ---- Type-specific fields (for non-Branch nodes) ----
+    // For Branch nodes, the specialized renderer is handled separately
+    if (def.Type != TaskNodeType::Branch)
+    {
+        // Call RenderProperties() which already handles all type-specific fields
+        // BUT we need to inline it here to avoid infinite recursion / double-rendering
+        // So instead, render just the critical type-specific parts:
+
+        switch (def.Type)
+        {
+            case TaskNodeType::AtomicTask:
+            {
+                const std::vector<TaskSpec> tasks = AtomicTaskUIRegistry::Get().GetSortedForUI();
+                const std::string& currentTask = def.AtomicTaskID;
+                const char* previewLabel = currentTask.empty() ? "(select task...)" : currentTask.c_str();
+
+                ImGui::SetNextItemWidth(-1.0f);
+                if (ImGui::BeginCombo("Task##nodeprops_task", previewLabel))
+                {
+                    for (const auto& spec : tasks)
+                    {
+                        bool selected = (spec.id == currentTask);
+                        if (ImGui::Selectable(spec.displayName.c_str(), selected))
+                        {
+                            def.AtomicTaskID = spec.id;
+                            for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                            {
+                                if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                                {
+                                    m_template.Nodes[i].AtomicTaskID = def.AtomicTaskID;
+                                    break;
+                                }
+                            }
+                            m_dirty = true;
+                        }
+                        if (selected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+                break;
+            }
+
+            case TaskNodeType::Delay:
+            {
+                float delay = def.DelaySeconds;
+                if (ImGui::InputFloat("Delay (s)##nodeprops_delay", &delay, 0.1f, 1.0f))
+                {
+                    def.DelaySeconds = delay;
+                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                    {
+                        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                        {
+                            m_template.Nodes[i].DelaySeconds = def.DelaySeconds;
+                            break;
+                        }
+                    }
+                    m_dirty = true;
+                }
+                break;
+            }
+
+            case TaskNodeType::Switch:
+            {
+                ImGui::TextDisabled("Switch node - edit via modal");
+                if (ImGui::Button("Edit Switch Cases"))
+                {
+                    // Open switch case editor if available
+                }
+                break;
+            }
+
+            case TaskNodeType::GetBBValue:
+            case TaskNodeType::SetBBValue:
+            {
+                const char* nodeType = (def.Type == TaskNodeType::GetBBValue) ? "Get" : "Set";
+                ImGui::TextDisabled("%s Blackboard Value", nodeType);
+                ImGui::TextDisabled("Key: %s", def.BBKey.c_str());
+                break;
+            }
+
+            case TaskNodeType::SubGraph:
+            {
+                ImGui::TextDisabled("SubGraph");
+                ImGui::TextDisabled("Path: %s", def.SubGraphPath.c_str());
+                break;
+            }
+
+            case TaskNodeType::Sequence:
+            case TaskNodeType::Selector:
+            case TaskNodeType::Parallel:
+            {
+                ImGui::TextDisabled("Control flow node");
+                break;
+            }
+
+            default:
+                ImGui::TextDisabled("(type-specific properties)");
+                break;
+        }
+
+        ImGui::Separator();
+    }
+
+    // ---- Branch-specific: Conditions panel ----
+    if (def.Type == TaskNodeType::Branch)
     {
         // Update condition panel with current node's data
         if (m_condPanelNodeID != m_selectedNodeID)
         {
-            m_conditionsPanel->SetConditionRefs(eNode->def.conditionRefs);
-            m_conditionsPanel->SetConditionOperandRefs(eNode->def.conditionOperandRefs);
-            m_conditionsPanel->SetDynamicPins(eNode->def.dynamicPins);
+            m_conditionsPanel->SetConditionRefs(def.conditionRefs);
+            m_conditionsPanel->SetConditionOperandRefs(def.conditionOperandRefs);
+            m_conditionsPanel->SetDynamicPins(def.dynamicPins);
+            m_conditionsPanel->SetNodeName(def.NodeName);
             m_condPanelNodeID = m_selectedNodeID;
         }
 
@@ -3874,8 +4003,8 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanel()
         // Check if dirty and sync back to node
         if (m_conditionsPanel->IsDirty())
         {
-            eNode->def.conditionRefs = m_conditionsPanel->GetConditionRefs();
-            eNode->def.conditionOperandRefs = m_conditionsPanel->GetConditionOperandRefs();
+            def.conditionRefs = m_conditionsPanel->GetConditionRefs();
+            def.conditionOperandRefs = m_conditionsPanel->GetConditionOperandRefs();
             m_conditionsPanel->ClearDirty();
             m_dirty = true;
 
@@ -3884,17 +4013,23 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanel()
             {
                 if (m_template.Nodes[i].NodeID == m_selectedNodeID)
                 {
-                    m_template.Nodes[i].conditionRefs = eNode->def.conditionRefs;
-                    m_template.Nodes[i].conditionOperandRefs = eNode->def.conditionOperandRefs;
+                    m_template.Nodes[i].conditionRefs = def.conditionRefs;
+                    m_template.Nodes[i].conditionOperandRefs = def.conditionOperandRefs;
                     break;
                 }
             }
         }
+
+        ImGui::Separator();
     }
-    else
+
+    // ---- ALL nodes: Breakpoint ----
+    bool hasBP = DebugController::Get().HasBreakpoint(0, m_selectedNodeID);
+    if (ImGui::Checkbox("Breakpoint (F9)##nodeprops_bp", &hasBP))
     {
-        // For non-Branch nodes, render standard properties
-        RenderProperties();
+        DebugController::Get().ToggleBreakpoint(0, m_selectedNodeID,
+                                                m_template.Name,
+                                                def.NodeName);
     }
 }
 
@@ -3915,14 +4050,13 @@ void VisualScriptEditorPanel::RenderPresetBankPanel()
     // Toolbar: Add preset + Manage button
     if (ImGui::Button("+##addpreset", ImVec2(25, 0)))
     {
-        // Open the library panel for adding new preset
-        m_libraryPanel->Open();
+        m_libraryPanel->OnAddPresetClicked();
     }
     ImGui::SameLine();
-    ImGui::TextDisabled("Add Preset");
+    ImGui::TextDisabled("New Preset");
 
-    ImGui::SameLine(ImGui::GetWindowWidth() - 120.0f);
-    if (ImGui::Button("Manage Presets..."))
+    ImGui::SameLine(ImGui::GetWindowWidth() - 100.0f);
+    if (ImGui::Button("Manage##managepresets"))
     {
         m_libraryPanel->Open();
     }
@@ -3931,93 +4065,259 @@ void VisualScriptEditorPanel::RenderPresetBankPanel()
     ImGui::TextDisabled("Total: %zu preset(s)", presetCount);
     ImGui::Separator();
 
-    // List all presets with expandable items
+    // List all presets in compact horizontal format
     std::vector<ConditionPreset> allPresets = m_presetRegistry.GetFilteredPresets("");
 
-    static std::unordered_set<std::string> expandedPresets;  // Track which presets are expanded
+    if (allPresets.empty())
+    {
+        ImGui::TextDisabled("(no presets - create one to get started)");
+    }
 
     for (size_t i = 0; i < allPresets.size(); ++i)
     {
         const ConditionPreset& preset = allPresets[i];
-        bool isExpanded = expandedPresets.find(preset.id) != expandedPresets.end();
-
         ImGui::PushID(preset.id.c_str());
-
-        // Expandable tree node
-        bool treeOpen = ImGui::TreeNodeEx(
-            ("##preset_" + std::to_string(i)).c_str(),
-            ImGuiTreeNodeFlags_SpanAvailWidth | 
-            (isExpanded ? ImGuiTreeNodeFlags_DefaultOpen : 0),
-            "%s", preset.name.c_str()
-        );
-
-        // Update expanded state
-        if (isExpanded && !treeOpen)
-            expandedPresets.erase(preset.id);
-        else if (!isExpanded && treeOpen)
-            expandedPresets.insert(preset.id);
-
-        if (treeOpen)
-        {
-            // Display preset details in expanded form
-            ImGui::TextDisabled("Formula:");
-            ImGui::Indent();
-            ImGui::Text("%s", preset.GetPreview().c_str());
-            ImGui::Unindent();
-
-            ImGui::Separator();
-
-            // Display operands details
-            ImGui::TextDisabled("Left Operand:");
-            ImGui::Indent();
-            ImGui::Text("%s", preset.left.GetDisplayString().c_str());
-            ImGui::Unindent();
-
-            ImGui::TextDisabled("Operator:");
-            ImGui::Indent();
-            std::string opStr;
-            switch (preset.op)
-            {
-                case ComparisonOp::Equal:       opStr = "=="; break;
-                case ComparisonOp::NotEqual:    opStr = "!="; break;
-                case ComparisonOp::Less:        opStr = "<"; break;
-                case ComparisonOp::LessEqual:   opStr = "<="; break;
-                case ComparisonOp::Greater:     opStr = ">"; break;
-                case ComparisonOp::GreaterEqual: opStr = ">="; break;
-                default: opStr = "?"; break;
-            }
-            ImGui::Text("%s", opStr.c_str());
-            ImGui::Unindent();
-
-            ImGui::TextDisabled("Right Operand:");
-            ImGui::Indent();
-            ImGui::Text("%s", preset.right.GetDisplayString().c_str());
-            ImGui::Unindent();
-
-            ImGui::Separator();
-
-            // Action buttons
-            if (ImGui::Button("Edit##edit_preset", ImVec2(60, 0)))
-            {
-                // Would open edit dialog here
-                m_libraryPanel->Open();
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Duplicate##dup_preset", ImVec2(75, 0)))
-            {
-                m_presetRegistry.DuplicatePreset(preset.id);
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Delete##del_preset", ImVec2(55, 0)))
-            {
-                m_presetRegistry.DeletePreset(preset.id);
-            }
-
-            ImGui::TreePop();
-        }
-
+        RenderPresetItemCompact(preset, i + 1);  // 1-indexed for display
         ImGui::PopID();
     }
+}
+
+void VisualScriptEditorPanel::RenderPresetItemCompact(const ConditionPreset& preset, size_t index)
+{
+#ifndef OLYMPE_HEADLESS
+    // Single-line horizontal layout matching mockup:
+    // [Index: Name (yellow)] [Left▼ mode] [value] [Op▼] [Right▼ mode] [value] [Edit] [Dup] [X]
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
+
+    // Get a mutable copy of the preset for editing
+    ConditionPreset editablePreset = preset;
+    bool presetModified = false;
+
+    // Preset name display with index (yellow)
+    ImGui::TextColored(ImVec4(1.0f, 0.843f, 0.0f, 1.0f), "Preset #%zu: %s##preset_name_%s", 
+                       index, editablePreset.name.c_str(), editablePreset.id.c_str());
+    ImGui::SameLine(0.0f, 12.0f);
+
+    // Left operand with dropdown selector and value editor
+    if (RenderOperandEditor(editablePreset.left, "##left_op"))
+    {
+        presetModified = true;
+    }
+    ImGui::SameLine(0.0f, 6.0f);
+
+    // Operator dropdown
+    std::string opStr;
+    switch (editablePreset.op)
+    {
+        case ComparisonOp::Equal:       opStr = "=="; break;
+        case ComparisonOp::NotEqual:    opStr = "!="; break;
+        case ComparisonOp::Less:        opStr = "<"; break;
+        case ComparisonOp::LessEqual:   opStr = "<="; break;
+        case ComparisonOp::Greater:     opStr = ">"; break;
+        case ComparisonOp::GreaterEqual: opStr = ">="; break;
+        default: opStr = "?"; break;
+    }
+
+    const char* opNames[] = { "==", "!=", "<", "<=", ">", ">=" };
+    const ComparisonOp opValues[] = {
+        ComparisonOp::Equal, ComparisonOp::NotEqual,
+        ComparisonOp::Less, ComparisonOp::LessEqual,
+        ComparisonOp::Greater, ComparisonOp::GreaterEqual
+    };
+    int curOpIdx = 0;
+    for (int i = 0; i < 6; ++i)
+    {
+        if (editablePreset.op == opValues[i])
+        {
+            curOpIdx = i;
+            break;
+        }
+    }
+
+    ImGui::SetNextItemWidth(50.0f);
+    if (ImGui::Combo("##op_type", &curOpIdx, opNames, 6))
+    {
+        editablePreset.op = opValues[curOpIdx];
+        presetModified = true;
+    }
+    ImGui::SameLine(0.0f, 6.0f);
+
+    // Right operand with dropdown selector and value editor
+    if (RenderOperandEditor(editablePreset.right, "##right_op"))
+    {
+        presetModified = true;
+    }
+    ImGui::SameLine(0.0f, 12.0f);
+
+    // Save modified preset if changed
+    if (presetModified)
+    {
+        m_presetRegistry.UpdatePreset(editablePreset.id, editablePreset);
+        m_dirty = true;
+    }
+
+    // Edit button - Opens LibraryPanel for full preset editing
+    if (ImGui::Button("Edit##edit_preset", ImVec2(45, 0)))
+    {
+        m_libraryPanel->Open();
+    }
+    ImGui::SameLine(0.0f, 4.0f);
+
+    // Duplicate button
+    if (ImGui::Button("Dup##dup_preset", ImVec2(40, 0)))
+    {
+        m_presetRegistry.DuplicatePreset(editablePreset.id);
+    }
+    ImGui::SameLine(0.0f, 4.0f);
+
+    // Delete button
+    if (ImGui::Button("X##del_preset", ImVec2(25, 0)))
+    {
+        m_presetRegistry.DeletePreset(editablePreset.id);
+        m_pinManager->InvalidatePreset(editablePreset.id);
+    }
+
+    ImGui::PopStyleColor(3);
+
+    // Add visual separator between presets
+    ImGui::Separator();
+#endif
+}
+
+bool VisualScriptEditorPanel::RenderOperandEditor(Operand& operand, const char* labelSuffix)
+{
+#ifndef OLYMPE_HEADLESS
+    bool modified = false;
+
+    // Convert mode enum to int for ImGui::Combo
+    const char* modeNames[] = { "Variable", "[Const]", "[Pin-in]" };
+    int modeIdx = static_cast<int>(operand.mode);
+
+    // Mode selector dropdown
+    ImGui::SetNextItemWidth(90.0f);
+    if (ImGui::Combo(labelSuffix, &modeIdx, modeNames, 3))
+    {
+        operand.mode = static_cast<OperandMode>(modeIdx);
+        modified = true;
+    }
+    ImGui::SameLine(0.0f, 4.0f);
+
+    // Value editor based on current mode
+    switch (operand.mode)
+    {
+        case OperandMode::Variable:
+        {
+            // Variable selector: list all blackboard entries
+            ImGui::SetNextItemWidth(100.0f);
+            std::vector<std::string> varNames;
+            for (const auto& entry : m_template.Blackboard)
+            {
+                if (entry.Type != VariableType::None && !entry.Key.empty())
+                    varNames.push_back(entry.Key);
+            }
+
+            // Find current selection index
+            int curVarIdx = 0;
+            for (size_t i = 0; i < varNames.size(); ++i)
+            {
+                if (varNames[i] == operand.stringValue)
+                {
+                    curVarIdx = static_cast<int>(i);
+                    break;
+                }
+            }
+
+            if (!varNames.empty())
+            {
+                // Create mutable array of C strings for ImGui
+                std::vector<const char*> varNamesCStr;
+                for (const auto& name : varNames)
+                    varNamesCStr.push_back(name.c_str());
+
+                std::string comboLabel = std::string("##var_") + labelSuffix;
+                if (ImGui::Combo(comboLabel.c_str(), &curVarIdx, varNamesCStr.data(), 
+                                static_cast<int>(varNamesCStr.size())))
+                {
+                    operand.stringValue = varNames[curVarIdx];
+                    modified = true;
+                }
+            }
+            else
+            {
+                ImGui::TextDisabled("(no variables)");
+            }
+            break;
+        }
+
+        case OperandMode::Const:
+        {
+            // Numeric input field only (no +/- buttons)
+            ImGui::SetNextItemWidth(80.0f);
+            std::string inputLabel = std::string("##const_") + labelSuffix;
+            if (ImGui::InputDouble(inputLabel.c_str(), &operand.constValue, 0.1, 1.0, "%.3f"))
+            {
+                modified = true;
+            }
+            break;
+        }
+
+        case OperandMode::Pin:
+        {
+            // Pin selector: list available pins from selected node's branch conditions
+            ImGui::SetNextItemWidth(100.0f);
+            std::vector<std::string> pinLabels;
+
+            // Get all pins from the pin manager
+            std::vector<DynamicDataPin> allPins = m_pinManager->GetAllPins();
+            for (const auto& pin : allPins)
+            {
+                pinLabels.push_back(pin.label);
+            }
+
+            // Find current selection index
+            int curPinIdx = 0;
+            for (size_t i = 0; i < pinLabels.size(); ++i)
+            {
+                if (pinLabels[i] == operand.stringValue)
+                {
+                    curPinIdx = static_cast<int>(i);
+                    break;
+                }
+            }
+
+            if (!pinLabels.empty())
+            {
+                std::vector<const char*> pinLabelsCStr;
+                for (const auto& label : pinLabels)
+                    pinLabelsCStr.push_back(label.c_str());
+
+                std::string comboLabel = std::string("##pin_") + labelSuffix;
+                if (ImGui::Combo(comboLabel.c_str(), &curPinIdx, pinLabelsCStr.data(),
+                                static_cast<int>(pinLabelsCStr.size())))
+                {
+                    operand.stringValue = pinLabels[curPinIdx];
+                    modified = true;
+                }
+            }
+            else
+            {
+                ImGui::TextDisabled("(no pins)");
+            }
+            break;
+        }
+
+        default:
+            ImGui::TextDisabled("(unknown mode)");
+            break;
+    }
+
+    return modified;
+#else
+    return false;
+#endif
 }
 
 // ============================================================================
@@ -4026,63 +4326,113 @@ void VisualScriptEditorPanel::RenderPresetBankPanel()
 
 void VisualScriptEditorPanel::RenderLocalVariablesPanel()
 {
-    ImGui::TextDisabled("Local Variables Reference");
+    ImGui::TextDisabled("Local Blackboard");
+    ImGui::Separator();
 
-    if (m_selectedNodeID < 0)
+    // BUG-001 Hotfix: warn user if invalid entries exist (key empty or type None)
+    // to prevent save crash caused by unhandled None type during serialization.
+    bool hasInvalid = false;
+    for (size_t i = 0; i < m_template.Blackboard.size(); ++i)
     {
-        ImGui::TextDisabled("(select a node)");
-        return;
-    }
-
-    // Find the editor node
-    VSEditorNode* eNode = nullptr;
-    for (size_t i = 0; i < m_editorNodes.size(); ++i)
-    {
-        if (m_editorNodes[i].nodeID == m_selectedNodeID)
+        const BlackboardEntry& entry = m_template.Blackboard[static_cast<size_t>(i)];
+        if (entry.Key.empty() || entry.Type == VariableType::None)
         {
-            eNode = &m_editorNodes[i];
+            hasInvalid = true;
             break;
         }
     }
-    if (eNode == nullptr)
-        return;
-
-    // For Branch nodes with condition references, show available local variables
-    if (eNode->def.Type == TaskNodeType::Branch && !eNode->def.conditionRefs.empty())
+    if (hasInvalid)
     {
-        ImGui::Separator();
-
-        // Extract all variable names used in conditions
-        std::vector<std::string> usedVars;
-        for (const auto& ref : eNode->def.conditionRefs)
-        {
-            const ConditionPreset* preset = m_presetRegistry.GetPreset(ref.presetID);
-            if (preset)
-            {
-                if (preset->left.IsVariable())
-                    usedVars.push_back(preset->left.stringValue);
-                if (preset->right.IsVariable())
-                    usedVars.push_back(preset->right.stringValue);
-            }
-        }
-
-        if (!usedVars.empty())
-        {
-            ImGui::TextDisabled("Variables used in conditions:");
-            ImGui::Separator();
-            for (const auto& varName : usedVars)
-            {
-                ImGui::BulletText("%s", varName.c_str());
-            }
-        }
-        else
-        {
-            ImGui::TextDisabled("(no variables used in conditions)");
-        }
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+        ImGui::TextUnformatted("[!] Invalid entries will be skipped on save");
+        ImGui::PopStyleColor();
     }
-    else
+
+    // Add entry button — BUG-001 Hotfix: init with safe defaults (non-empty key, Int type)
+    if (ImGui::Button("+##vsbbAdd"))
     {
-        ImGui::TextDisabled("(no branch node selected or no conditions)");
+        BlackboardEntry entry;
+        entry.Key      = "NewVariable";
+        entry.Type     = VariableType::Int;
+        entry.Default  = GetDefaultValueForType(VariableType::Int);  // UX Fix #1
+        entry.IsGlobal = false;
+        m_template.Blackboard.push_back(entry);
+        m_dirty = true;
+    }
+    ImGui::SameLine();
+    ImGui::TextDisabled("Add key");
+
+    // List existing entries
+    for (int idx = static_cast<int>(m_template.Blackboard.size()) - 1; idx >= 0; --idx)
+    {
+        BlackboardEntry& entry = m_template.Blackboard[static_cast<size_t>(idx)];
+
+        ImGui::PushID(idx);
+
+        // Use a local (non-static) buffer per iteration to avoid sharing across entries
+        char keyBuf[64];
+        strncpy_s(keyBuf, sizeof(keyBuf), entry.Key.c_str(), _TRUNCATE);
+
+        // ── Name (editable text field) ──
+        ImGui::SetNextItemWidth(140.0f);
+        if (ImGui::InputText("##bbkey", keyBuf, sizeof(keyBuf)))
+        {
+            entry.Key = keyBuf;
+            m_pendingBlackboardEdits[idx] = keyBuf;
+            m_dirty = true;
+        }
+
+        ImGui::SameLine();
+
+        // ── Type dropdown ──
+        const char* typeNames[] = { "None", "Bool", "Int", "Float", "String", "Vector" };
+        const VariableType typeValues[] = {
+            VariableType::None, VariableType::Bool, VariableType::Int,
+            VariableType::Float, VariableType::String, VariableType::Vector
+        };
+        int curTypeIdx = 0;
+        for (int ti = 0; ti < 6; ++ti)
+            if (entry.Type == typeValues[ti])
+            { curTypeIdx = ti; break; }
+
+        ImGui::SetNextItemWidth(80.0f);
+        if (ImGui::Combo("##bbtype", &curTypeIdx, typeNames, 6))
+        {
+            entry.Type = typeValues[curTypeIdx];
+            entry.Default = GetDefaultValueForType(entry.Type);
+            m_dirty = true;
+        }
+
+        // ── Default value (type-aware editor) ──
+        if (entry.Type != VariableType::None)
+        {
+            ImGui::SameLine();
+            ImGui::TextDisabled("Default:");
+            ImGui::SameLine();
+            RenderConstValueInput(entry.Default, entry.Type, "##bbdefault");
+        }
+
+        // ── Global toggle ──
+        ImGui::SameLine();
+        bool isGlobal = entry.IsGlobal;
+        if (ImGui::Checkbox("G##bbglobal", &isGlobal))
+        {
+            entry.IsGlobal = isGlobal;
+            m_dirty = true;
+        }
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Mark as global variable");
+
+        // ── Delete button ──
+        ImGui::SameLine();
+        if (ImGui::Button("X##bbdel"))
+        {
+            m_template.Blackboard.erase(m_template.Blackboard.begin() + idx);
+            m_pendingBlackboardEdits.erase(idx);
+            m_dirty = true;
+        }
+
+        ImGui::PopID();
     }
 }
 

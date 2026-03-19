@@ -254,6 +254,13 @@ private:
     /// Part B: Preset Bank panel (middle of right panel)
     void RenderPresetBankPanel();
 
+    /// Render a single preset item in compact horizontal format with index
+    void RenderPresetItemCompact(const ConditionPreset& preset, size_t index);
+
+    /// Render a single operand with dropdown for mode and value editor
+    /// Returns true if the operand was modified
+    bool RenderOperandEditor(Operand& operand, const char* labelSuffix);
+
     /// Part C: Local Variables reference panel (bottom of right panel)
     void RenderLocalVariablesPanel();
 
