@@ -958,4 +958,20 @@ if(BUILD_TESTS)
     target_include_directories(OlympePhase24_M22_ConditionSerializationTests PRIVATE ${COMMON_INCLUDES})
     add_test(NAME OlympePhase24_M22_ConditionSerializationTests COMMAND OlympePhase24_M22_ConditionSerializationTests)
 
+    # -----------------------------------------------------------------------
+    # OlympePhase24_M22_FullRoundTripTests  (Phase 24 M2.2.2 — Full Stack Round-Trip)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_M22_FullRoundTripTests
+        Tests/System/Phase24_FullRoundTrip_Tests.cpp
+        Source/BlueprintEditor/ConditionRef.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        Source/TaskSystem/TaskGraphTemplate.cpp
+        Source/Editor/ConditionPreset/NodeConditionRef.cpp
+        Source/Editor/ConditionPreset/DynamicDataPin.cpp
+        ${TEST_STUBS}
+    )
+    target_compile_definitions(OlympePhase24_M22_FullRoundTripTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_M22_FullRoundTripTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_M22_FullRoundTripTests COMMAND OlympePhase24_M22_FullRoundTripTests)
+
 endif() # BUILD_TESTS
