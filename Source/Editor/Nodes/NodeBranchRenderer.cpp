@@ -64,15 +64,15 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
     int elseAttrID = data.nodeID * 10000 + 101;  // offset 101 = exec-out #1
 
     ImNodes::BeginOutputAttribute(thenAttrID, ImNodesPinShape_TriangleFilled);
-    ImGui::Indent(60.0f);
+    ImGui::Indent(90.0f);  // Right-align the pin label
     ImGui::Text("Then");
-    ImGui::Unindent(60.0f);
+    ImGui::Unindent(90.0f);
     ImNodes::EndOutputAttribute();
 
     ImNodes::BeginOutputAttribute(elseAttrID, ImNodesPinShape_TriangleFilled);
-    ImGui::Indent(60.0f);
+    ImGui::Indent(90.0f);  // Right-align the pin label
     ImGui::Text("Else");
-    ImGui::Unindent(60.0f);
+    ImGui::Unindent(90.0f);
     ImNodes::EndOutputAttribute();
 
     // ── CONDITIONS (green, read-only) ──────────────────────────────────────────
@@ -169,48 +169,48 @@ void NodeBranchRenderer::RenderConditionsSection(const NodeBranchData& data)
             opLabel = "Or ";
 
         // Condition preview with Pin highlighting
-        const ConditionPreset* preset = m_registry.GetPreset(ref.presetID);
-        if (preset)
-        {
-            // Build the condition display with highlighted Pin references
-            ImGui::Text("%s", opLabel);
-            ImGui::SameLine(0.0f, 0.0f);
+         const ConditionPreset* preset = m_registry.GetPreset(ref.presetID);
+         if (preset)
+         {
+             // Build the condition display with highlighted Pin references
+             ImGui::Text("%s", opLabel);
+             ImGui::SameLine(0.0f, 0.0f);
 
-            // Left operand
-            if (preset->left.IsPin())
-            {
-                ImGui::TextColored(pinColor, "[%s]", preset->left.GetDisplayString().c_str());
-            }
-            else
-            {
-                ImGui::TextColored(condColor, "[%s]", preset->left.GetDisplayString().c_str());
-            }
-            ImGui::SameLine(0.0f, 4.0f);
+             // Left operand (GetDisplayString() already includes brackets)
+             if (preset->left.IsPin())
+             {
+                 ImGui::TextColored(pinColor, "%s", preset->left.GetDisplayString().c_str());
+             }
+             else
+             {
+                 ImGui::TextColored(condColor, "%s", preset->left.GetDisplayString().c_str());
+             }
+             ImGui::SameLine(0.0f, 4.0f);
 
-            // Operator
-            std::string opStr;
-            switch (preset->op)
-            {
-                case ComparisonOp::Equal:       opStr = "=="; break;
-                case ComparisonOp::NotEqual:    opStr = "!="; break;
-                case ComparisonOp::Less:        opStr = "<"; break;
-                case ComparisonOp::LessEqual:   opStr = "<="; break;
-                case ComparisonOp::Greater:     opStr = ">"; break;
-                case ComparisonOp::GreaterEqual: opStr = ">="; break;
-                default: opStr = "?"; break;
-            }
-            ImGui::TextColored(condColor, "%s", opStr.c_str());
-            ImGui::SameLine(0.0f, 4.0f);
+             // Operator
+             std::string opStr;
+             switch (preset->op)
+             {
+                 case ComparisonOp::Equal:       opStr = "=="; break;
+                 case ComparisonOp::NotEqual:    opStr = "!="; break;
+                 case ComparisonOp::Less:        opStr = "<"; break;
+                 case ComparisonOp::LessEqual:   opStr = "<="; break;
+                 case ComparisonOp::Greater:     opStr = ">"; break;
+                 case ComparisonOp::GreaterEqual: opStr = ">="; break;
+                 default: opStr = "?"; break;
+             }
+             ImGui::TextColored(condColor, "%s", opStr.c_str());
+             ImGui::SameLine(0.0f, 4.0f);
 
-            // Right operand
-            if (preset->right.IsPin())
-            {
-                ImGui::TextColored(pinColor, "[%s]", preset->right.GetDisplayString().c_str());
-            }
-            else
-            {
-                ImGui::TextColored(condColor, "[%s]", preset->right.GetDisplayString().c_str());
-            }
+             // Right operand (GetDisplayString() already includes brackets)
+             if (preset->right.IsPin())
+             {
+                 ImGui::TextColored(pinColor, "%s", preset->right.GetDisplayString().c_str());
+             }
+             else
+             {
+                 ImGui::TextColored(condColor, "%s", preset->right.GetDisplayString().c_str());
+             }
 
             // Hover tooltip
             if (ImGui::IsItemHovered())

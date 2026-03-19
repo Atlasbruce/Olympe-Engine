@@ -26,6 +26,7 @@
 #include <cmath>
 #include <cstring>
 #include <sstream>
+#include <iomanip>
 
 namespace Olympe {
 
@@ -4047,19 +4048,13 @@ void VisualScriptEditorPanel::RenderPresetBankPanel()
 
     size_t presetCount = m_presetRegistry.GetPresetCount();
 
-    // Toolbar: Add preset + Manage button
+    // Toolbar: Add preset button
     if (ImGui::Button("+##addpreset", ImVec2(25, 0)))
     {
         m_libraryPanel->OnAddPresetClicked();
     }
     ImGui::SameLine();
     ImGui::TextDisabled("New Preset");
-
-    ImGui::SameLine(ImGui::GetWindowWidth() - 100.0f);
-    if (ImGui::Button("Manage##managepresets"))
-    {
-        m_libraryPanel->Open();
-    }
 
     ImGui::Separator();
     ImGui::TextDisabled("Total: %zu preset(s)", presetCount);
@@ -4096,12 +4091,14 @@ void VisualScriptEditorPanel::RenderPresetItemCompact(const ConditionPreset& pre
     ConditionPreset editablePreset = preset;
     bool presetModified = false;
 
-    // Preset name display with index (yellow)
-    ImGui::TextColored(ImVec4(1.0f, 0.843f, 0.0f, 1.0f), "Preset #%zu: %s##preset_name_%s", 
-                       index, editablePreset.name.c_str(), editablePreset.id.c_str());
+    // Condition name display with index (yellow)
+    // Use PushID for unique identification, don't add UUID to visible text
+    ImGui::PushID(editablePreset.id.c_str());
+    ImGui::TextColored(ImVec4(1.0f, 0.843f, 0.0f, 1.0f), "Condition #%zu", index);
+    ImGui::PopID();
     ImGui::SameLine(0.0f, 12.0f);
 
-    // Left operand with dropdown selector and value editor
+    // Left operand with unified dropdown (mode + value combined)
     if (RenderOperandEditor(editablePreset.left, "##left_op"))
     {
         presetModified = true;
@@ -4145,7 +4142,7 @@ void VisualScriptEditorPanel::RenderPresetItemCompact(const ConditionPreset& pre
     }
     ImGui::SameLine(0.0f, 6.0f);
 
-    // Right operand with dropdown selector and value editor
+    // Right operand with unified dropdown (mode + value combined)
     if (RenderOperandEditor(editablePreset.right, "##right_op"))
     {
         presetModified = true;
@@ -4156,20 +4153,17 @@ void VisualScriptEditorPanel::RenderPresetItemCompact(const ConditionPreset& pre
     if (presetModified)
     {
         m_presetRegistry.UpdatePreset(editablePreset.id, editablePreset);
+        // Persist the modification to disk
+        m_presetRegistry.Save("Blueprints/Presets/condition_presets.json");
         m_dirty = true;
     }
-
-    // Edit button - Opens LibraryPanel for full preset editing
-    if (ImGui::Button("Edit##edit_preset", ImVec2(45, 0)))
-    {
-        m_libraryPanel->Open();
-    }
-    ImGui::SameLine(0.0f, 4.0f);
 
     // Duplicate button
     if (ImGui::Button("Dup##dup_preset", ImVec2(40, 0)))
     {
         m_presetRegistry.DuplicatePreset(editablePreset.id);
+        // Persist the duplication to disk
+        m_presetRegistry.Save("Blueprints/Presets/condition_presets.json");
     }
     ImGui::SameLine(0.0f, 4.0f);
 
@@ -4178,6 +4172,8 @@ void VisualScriptEditorPanel::RenderPresetItemCompact(const ConditionPreset& pre
     {
         m_presetRegistry.DeletePreset(editablePreset.id);
         m_pinManager->InvalidatePreset(editablePreset.id);
+        // Persist the deletion to disk
+        m_presetRegistry.Save("Blueprints/Presets/condition_presets.json");
     }
 
     ImGui::PopStyleColor(3);
@@ -4192,126 +4188,142 @@ bool VisualScriptEditorPanel::RenderOperandEditor(Operand& operand, const char* 
 #ifndef OLYMPE_HEADLESS
     bool modified = false;
 
-    // Convert mode enum to int for ImGui::Combo
-    const char* modeNames[] = { "Variable", "[Const]", "[Pin-in]" };
-    int modeIdx = static_cast<int>(operand.mode);
+    // Build a unified dropdown list with this ORDER:
+    // 1. [Pin-in #1], [Pin-in #2], ...
+    // 2. [Const] <value>
+    // 3. Variables (sorted alphabetically)
 
-    // Mode selector dropdown
-    ImGui::SetNextItemWidth(90.0f);
-    if (ImGui::Combo(labelSuffix, &modeIdx, modeNames, 3))
-    {
-        operand.mode = static_cast<OperandMode>(modeIdx);
-        modified = true;
-    }
-    ImGui::SameLine(0.0f, 4.0f);
+    std::vector<std::string> allOptions;
+    std::vector<int> optionTypes;  // 0=Variable, 1=Const, 2=Pin
+    std::vector<std::string> optionValues;  // Store the actual value for each option
 
-    // Value editor based on current mode
-    switch (operand.mode)
+    int currentSelectionIdx = -1;
+
+    // ── Add all available pins FIRST ─────────────────────────────────────
     {
-        case OperandMode::Variable:
+        std::vector<DynamicDataPin> allPins = m_pinManager->GetAllPins();
+        for (const auto& pin : allPins)
         {
-            // Variable selector: list all blackboard entries
-            ImGui::SetNextItemWidth(100.0f);
-            std::vector<std::string> varNames;
-            for (const auto& entry : m_template.Blackboard)
-            {
-                if (entry.Type != VariableType::None && !entry.Key.empty())
-                    varNames.push_back(entry.Key);
-            }
+            allOptions.push_back("[Pin-in] " + pin.label);
+            optionTypes.push_back(2);  // Pin
+            optionValues.push_back(pin.label);
 
-            // Find current selection index
-            int curVarIdx = 0;
-            for (size_t i = 0; i < varNames.size(); ++i)
+            if (operand.mode == OperandMode::Pin && 
+                operand.stringValue == pin.label)
             {
-                if (varNames[i] == operand.stringValue)
-                {
-                    curVarIdx = static_cast<int>(i);
-                    break;
-                }
+                currentSelectionIdx = static_cast<int>(allOptions.size() - 1);
             }
-
-            if (!varNames.empty())
-            {
-                // Create mutable array of C strings for ImGui
-                std::vector<const char*> varNamesCStr;
-                for (const auto& name : varNames)
-                    varNamesCStr.push_back(name.c_str());
-
-                std::string comboLabel = std::string("##var_") + labelSuffix;
-                if (ImGui::Combo(comboLabel.c_str(), &curVarIdx, varNamesCStr.data(), 
-                                static_cast<int>(varNamesCStr.size())))
-                {
-                    operand.stringValue = varNames[curVarIdx];
-                    modified = true;
-                }
-            }
-            else
-            {
-                ImGui::TextDisabled("(no variables)");
-            }
-            break;
         }
+    }
 
-        case OperandMode::Const:
+    // ── Add [Const] option SECOND ────────────────────────────────────────
+    {
+        std::string constLabel = "[Const] ";
+        std::ostringstream oss;
+        oss << std::fixed << std::setprecision(3) << operand.constValue;
+        std::string constVal = oss.str();
+        // Trim trailing zeros
+        size_t dot = constVal.find('.');
+        if (dot != std::string::npos)
         {
-            // Numeric input field only (no +/- buttons)
-            ImGui::SetNextItemWidth(80.0f);
-            std::string inputLabel = std::string("##const_") + labelSuffix;
-            if (ImGui::InputDouble(inputLabel.c_str(), &operand.constValue, 0.1, 1.0, "%.3f"))
+            size_t last = constVal.find_last_not_of('0');
+            if (last != std::string::npos && last > dot)
+                constVal = constVal.substr(0, last + 1);
+            else if (last == dot)
+                constVal = constVal.substr(0, dot);
+        }
+        constLabel += constVal;
+
+        allOptions.push_back(constLabel);
+        optionTypes.push_back(1);  // Const
+        optionValues.push_back(constVal);
+
+        if (operand.mode == OperandMode::Const)
+        {
+            currentSelectionIdx = static_cast<int>(allOptions.size() - 1);
+        }
+    }
+
+    // ── Add all local variables LAST (sorted alphabetically) ──────────────
+    {
+        std::vector<std::string> sortedVarNames;
+        for (const auto& entry : m_template.Blackboard)
+        {
+            if (entry.Type != VariableType::None && !entry.Key.empty())
             {
+                sortedVarNames.push_back(entry.Key);
+            }
+        }
+        // Sort alphabetically
+        std::sort(sortedVarNames.begin(), sortedVarNames.end());
+
+        for (const auto& varName : sortedVarNames)
+        {
+            allOptions.push_back(varName);
+            optionTypes.push_back(0);  // Variable
+            optionValues.push_back(varName);
+
+            // Check if this is the currently selected variable
+            if (operand.mode == OperandMode::Variable && 
+                operand.stringValue == varName)
+            {
+                currentSelectionIdx = static_cast<int>(allOptions.size() - 1);
+            }
+        }
+    }
+
+    // ── Render unified dropdown ──────────────────────────────────────────
+    ImGui::SetNextItemWidth(120.0f);
+
+    const char* displayText = (currentSelectionIdx >= 0) ? allOptions[currentSelectionIdx].c_str() : "(none)";
+
+    if (ImGui::BeginCombo(labelSuffix, displayText))
+    {
+        // Create mutable array of C strings for ImGui
+        std::vector<const char*> optionsCStr;
+        for (const auto& opt : allOptions)
+            optionsCStr.push_back(opt.c_str());
+
+        for (int i = 0; i < static_cast<int>(allOptions.size()); ++i)
+        {
+            bool selected = (i == currentSelectionIdx);
+            if (ImGui::Selectable(optionsCStr[i], selected))
+            {
+                // Update operand based on selected type
+                switch (optionTypes[i])
+                {
+                    case 0:  // Variable
+                        operand.mode = OperandMode::Variable;
+                        operand.stringValue = optionValues[i];
+                        break;
+                    case 1:  // Const
+                        operand.mode = OperandMode::Const;
+                        try {
+                            operand.constValue = std::stod(optionValues[i]);
+                        } catch (...) {
+                            operand.constValue = 0.0;
+                        }
+                        break;
+                    case 2:  // Pin
+                        operand.mode = OperandMode::Pin;
+                        operand.stringValue = optionValues[i];
+                        break;
+                }
                 modified = true;
             }
-            break;
         }
+        ImGui::EndCombo();
+    }
 
-        case OperandMode::Pin:
+    // ── Add numeric input field for Const mode ──────────────────────────────
+    if (operand.mode == OperandMode::Const)
+    {
+        ImGui::SameLine(0.0f, 4.0f);
+        ImGui::SetNextItemWidth(60.0f);
+        if (ImGui::InputDouble("##const_value", &operand.constValue, 0.1, 1.0, "%.3f"))
         {
-            // Pin selector: list available pins from selected node's branch conditions
-            ImGui::SetNextItemWidth(100.0f);
-            std::vector<std::string> pinLabels;
-
-            // Get all pins from the pin manager
-            std::vector<DynamicDataPin> allPins = m_pinManager->GetAllPins();
-            for (const auto& pin : allPins)
-            {
-                pinLabels.push_back(pin.label);
-            }
-
-            // Find current selection index
-            int curPinIdx = 0;
-            for (size_t i = 0; i < pinLabels.size(); ++i)
-            {
-                if (pinLabels[i] == operand.stringValue)
-                {
-                    curPinIdx = static_cast<int>(i);
-                    break;
-                }
-            }
-
-            if (!pinLabels.empty())
-            {
-                std::vector<const char*> pinLabelsCStr;
-                for (const auto& label : pinLabels)
-                    pinLabelsCStr.push_back(label.c_str());
-
-                std::string comboLabel = std::string("##pin_") + labelSuffix;
-                if (ImGui::Combo(comboLabel.c_str(), &curPinIdx, pinLabelsCStr.data(),
-                                static_cast<int>(pinLabelsCStr.size())))
-                {
-                    operand.stringValue = pinLabels[curPinIdx];
-                    modified = true;
-                }
-            }
-            else
-            {
-                ImGui::TextDisabled("(no pins)");
-            }
-            break;
+            modified = true;
         }
-
-        default:
-            ImGui::TextDisabled("(unknown mode)");
-            break;
     }
 
     return modified;

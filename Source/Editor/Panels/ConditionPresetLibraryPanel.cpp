@@ -101,12 +101,16 @@ std::string ConditionPresetLibraryPanel::OnAddPresetClicked()
 {
     ConditionPreset newPreset;
     // Default: empty condition with default values
-    newPreset.name = "New Condition";
+    // Use simple naming without suffix or "New Condition..." prefix
+    newPreset.name = "Condition";
     newPreset.left = Operand::CreateVariable("");
     newPreset.op = ComparisonOp::Equal;
     newPreset.right = Operand::CreateConst(0.0);
 
     const std::string id = m_registry.CreatePreset(newPreset);
+
+    // Persist the new preset to disk
+    m_registry.Save("Blueprints/Presets/condition_presets.json");
 
     if (OnPresetCreated)
     {
@@ -121,6 +125,9 @@ std::string ConditionPresetLibraryPanel::OnDuplicatePresetClicked(
         const std::string& presetID)
 {
     const std::string newID = m_registry.DuplicatePreset(presetID);
+
+    // Persist the duplication to disk
+    m_registry.Save("Blueprints/Presets/condition_presets.json");
 
     if (!newID.empty() && OnPresetCreated)
     {
@@ -144,6 +151,9 @@ void ConditionPresetLibraryPanel::OnDeleteConfirmed(const std::string& presetID)
     }
 
     m_registry.DeletePreset(presetID);
+
+    // Persist the deletion to disk
+    m_registry.Save("Blueprints/Presets/condition_presets.json");
 
     if (m_selectedPresetID == presetID)
     {

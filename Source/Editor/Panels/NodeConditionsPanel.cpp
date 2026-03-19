@@ -10,6 +10,7 @@
 #include "NodeConditionsPanel.h"
 
 #include <algorithm>
+#include <iomanip>
 #include <sstream>
 
 // ImGui is only compiled in the full editor build.
@@ -358,9 +359,11 @@ void NodeConditionsPanel::RenderConditionsPreview()
     // Green text for condition previews (READ-ONLY)
     const ImVec4 condColor(0.f, 1.f, 0.f, 1.f);
 
+    ImGui::TextDisabled("Conditions Preview:");
+
     if (m_conditionRefs.empty())
     {
-        ImGui::TextDisabled("(no conditions)");
+        ImGui::TextDisabled("  (no conditions)");
     }
     else
     {
@@ -370,24 +373,29 @@ void NodeConditionsPanel::RenderConditionsPreview()
 
             ImGui::PushID(static_cast<int>(i));
 
-            // Logical operator column (fixed width)
-            const char* opLabel = "   ";
+            // Format: "[LogicalOp] Condition #N: [preview]"
+            std::string linePrefix = "  ";  // Indentation
             if (i > 0)
             {
                 if (ref.logicalOp == LogicalOp::And)
-                    opLabel = "And";
+                    linePrefix += "And ";
                 else if (ref.logicalOp == LogicalOp::Or)
-                    opLabel = "Or ";
+                    linePrefix += "Or  ";
+            }
+            else
+            {
+                linePrefix += "If  ";
             }
 
             const ConditionPreset* preset = m_registry.GetPreset(ref.presetID);
             ImGui::PushStyleColor(ImGuiCol_Text, condColor);
 
-            // Format: "Condition #N: [preview]"
+            // Format: "  If    Condition #1: [mHealth] <= [100.00]"
+            // or:     "  And   Condition #2: [mSpeed] == [Pin-in #1]"
             if (preset)
-                ImGui::Text("Condition #%zu: %s %s", i + 1, opLabel, preset->GetPreview().c_str());
+                ImGui::Text("%sCondition #%zu: %s", linePrefix.c_str(), i + 1, preset->GetPreview().c_str());
             else
-                ImGui::Text("Condition #%zu: %s (missing: %s)", i + 1, opLabel, ref.presetID.c_str());
+                ImGui::Text("%sCondition #%zu: (missing: %s)", linePrefix.c_str(), i + 1, ref.presetID.c_str());
             ImGui::PopStyleColor();
 
             ImGui::PopID();
@@ -584,51 +592,115 @@ void NodeConditionsPanel::RenderOperandDropdown(ConditionRef& cref, bool isLeft,
 {
 #ifndef OLYMPE_HEADLESS
     OperandRef& op = isLeft ? cref.leftOperand : cref.rightOperand;
-    const char* modeLabels[] = { "Var", "Const", "Pin" };
-    int currentMode = 0;
-    switch (op.mode)
-    {
-        case OperandRef::Mode::Variable: currentMode = 0; break;
-        case OperandRef::Mode::Const:    currentMode = 1; break;
-        case OperandRef::Mode::Pin:      currentMode = 2; break;
-        default:                         currentMode = 1; break;
-    }
 
-    // Mode selector: small radio-style combo
-    ImGui::SetNextItemWidth(54.f);
-    if (ImGui::BeginCombo("##mode", modeLabels[currentMode], ImGuiComboFlags_NoArrowButton))
+    // Build unified dropdown: [Pin-in #1] [Pin-in #2] ... [Const] <value> ... Variables (sorted)
+    std::vector<std::string> allOptions;
+    std::vector<int> optionTypes;  // 0=Variable, 1=Const, 2=Pin
+    std::vector<std::string> optionValues;
+
+    int currentSelectionIdx = -1;
+
+    // ── Add all available pins FIRST ─────────────────────────────────────
+    for (const auto& pin : m_dynamicPins)
     {
-        for (int m = 0; m < 3; ++m)
+        if (pin.conditionIndex == cref.conditionIndex)
         {
-            bool selected = (m == currentMode);
-            if (ImGui::Selectable(modeLabels[m], selected))
+            if ((isLeft && pin.position == OperandPosition::Left) ||
+                (!isLeft && pin.position == OperandPosition::Right))
             {
-                // Mode changed — clear stale data from the old mode
-                if (m == 0)
+                allOptions.push_back("[Pin-in] " + pin.GetShortLabel());
+                optionTypes.push_back(2);  // Pin
+                optionValues.push_back(pin.id);
+
+                if (op.mode == OperandRef::Mode::Pin && op.dynamicPinID == pin.id)
                 {
-                    op.mode = OperandRef::Mode::Variable;
-                    op.dynamicPinID.clear();
+                    currentSelectionIdx = static_cast<int>(allOptions.size() - 1);
                 }
-                else if (m == 1)
-                {
-                    op.mode = OperandRef::Mode::Const;
-                    op.dynamicPinID.clear();
-                }
-                else
-                {
-                    op.mode = OperandRef::Mode::Pin;
-                }
-                m_dirty = true;
-                if (OnDynamicPinsNeedRegeneration)
-                    OnDynamicPinsNeedRegeneration();
             }
         }
+    }
+
+    // ── Add [Const] option SECOND ────────────────────────────────────────
+    {
+        std::string constLabel = "[Const] ";
+        std::ostringstream oss;
+        oss << std::fixed << std::setprecision(3) << std::stod(op.constValue);
+        std::string constVal = oss.str();
+        // Trim trailing zeros
+        size_t dot = constVal.find('.');
+        if (dot != std::string::npos)
+        {
+            size_t last = constVal.find_last_not_of('0');
+            if (last != std::string::npos && last > dot)
+                constVal = constVal.substr(0, last + 1);
+            else if (last == dot)
+                constVal = constVal.substr(0, dot);
+        }
+        constLabel += constVal;
+
+        allOptions.push_back(constLabel);
+        optionTypes.push_back(1);  // Const
+        optionValues.push_back(op.constValue);
+
+        if (op.mode == OperandRef::Mode::Const)
+        {
+            currentSelectionIdx = static_cast<int>(allOptions.size() - 1);
+        }
+    }
+
+    // ── Add all local variables LAST (sorted alphabetically) ──────────────
+    // Variables are stored as strings in the ConditionRef, not from blackboard
+    // So just show the current variableName as-is, or provide common names
+    // For now, we'll just show Variable mode with text input
+
+    ImGui::SetNextItemWidth(120.0f);
+    const char* displayText = (currentSelectionIdx >= 0) ? allOptions[currentSelectionIdx].c_str() : "Variable";
+
+    if (ImGui::BeginCombo("##operand_dropdown", displayText))
+    {
+        // Option 1: Variable (with text input)
+        if (ImGui::Selectable("Variable (custom)", op.mode == OperandRef::Mode::Variable))
+        {
+            op.mode = OperandRef::Mode::Variable;
+            m_dirty = true;
+            if (OnDynamicPinsNeedRegeneration)
+                OnDynamicPinsNeedRegeneration();
+        }
+
+        ImGui::Separator();
+
+        // Const options
+        for (int i = 0; i < static_cast<int>(allOptions.size()); ++i)
+        {
+            if (optionTypes[i] != 0)  // Show Const and Pin options
+            {
+                bool selected = (i == currentSelectionIdx);
+                if (ImGui::Selectable(allOptions[i].c_str(), selected))
+                {
+                    switch (optionTypes[i])
+                    {
+                        case 1:  // Const
+                            op.mode = OperandRef::Mode::Const;
+                            op.constValue = optionValues[i];
+                            break;
+                        case 2:  // Pin
+                            op.mode = OperandRef::Mode::Pin;
+                            op.dynamicPinID = optionValues[i];
+                            break;
+                    }
+                    m_dirty = true;
+                    if (OnDynamicPinsNeedRegeneration)
+                        OnDynamicPinsNeedRegeneration();
+                }
+            }
+        }
+
         ImGui::EndCombo();
     }
 
     ImGui::SameLine();
 
-    // Value field for the selected mode
+    // ── Input field based on current mode ────────────────────────────────
     static const size_t kBufSize = 128u;
     switch (op.mode)
     {
@@ -648,22 +720,28 @@ void NodeConditionsPanel::RenderOperandDropdown(ConditionRef& cref, bool isLeft,
         }
         case OperandRef::Mode::Const:
         {
-            char buf[kBufSize] = {};
-            const std::string& cur = op.constValue;
-            const size_t copyLen = cur.size() < (kBufSize - 1u) ? cur.size() : kBufSize - 1u;
-            cur.copy(buf, copyLen);
+            // Try to parse as double, but show as text in dropdown
+            double doubleVal = 0.0;
+            try {
+                doubleVal = std::stod(op.constValue);
+            } catch (...) {
+                // Parse failed, keep 0.0
+            }
+
             ImGui::SetNextItemWidth(80.f);
-            if (ImGui::InputText("##constval", buf, kBufSize))
+            if (ImGui::InputDouble("##constval", &doubleVal, 0.1, 1.0, "%.3f"))
             {
-                op.constValue = buf;
+                std::ostringstream oss;
+                oss << doubleVal;
+                op.constValue = oss.str();
                 m_dirty = true;
             }
             break;
         }
         case OperandRef::Mode::Pin:
         {
-            // Read-only: show the "Pin-in #N" label assigned by DynamicDataPinManager
-            const std::string display = pinLabel.empty() ? "(pin)" : pinLabel;
+            // Read-only: show the "Pin-in #N" label
+            const std::string display = pinLabel.empty() ? "[Pin-in]" : pinLabel;
             ImGui::SetNextItemWidth(80.f);
             ImGui::TextDisabled("%s", display.c_str());
             break;

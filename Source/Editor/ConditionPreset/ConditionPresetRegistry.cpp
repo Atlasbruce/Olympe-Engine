@@ -89,7 +89,8 @@ std::string ConditionPresetRegistry::DuplicatePreset(const std::string& id)
 
     ConditionPreset copy = *src;
     copy.id   = "";           // will be re-assigned
-    copy.name = src->name + " (Copy)";
+    // Keep the same name without " (Copy)" suffix for clean nomenclature
+    copy.name = src->name;
     return CreatePreset(copy);
 }
 

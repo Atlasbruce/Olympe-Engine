@@ -27,6 +27,16 @@
       "key": "mFatigue",
       "type": "Int",
       "value": 1
+    },
+    {
+      "isGlobal": false,
+      "key": "Podition_tmp",
+      "type": "Vector",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
     }
   ],
   "dataConnections": [],
@@ -164,13 +174,26 @@
             "constValue": "",
             "mode": "Const"
           }
+        },
+        {
+          "compareType": "Float",
+          "conditionIndex": 2,
+          "leftOperand": {
+            "constValue": "",
+            "mode": "Const"
+          },
+          "operator": "==",
+          "rightOperand": {
+            "constValue": "",
+            "mode": "Const"
+          }
         }
       ],
       "id": 7,
       "label": "Is Health Critical?",
       "position": {
-        "x": 588,
-        "y": 470
+        "x": 569,
+        "y": 474
       },
       "type": "Branch"
     },
@@ -178,8 +201,8 @@
       "id": 8,
       "label": "Heal Myself",
       "position": {
-        "x": 817,
-        "y": 456
+        "x": 897,
+        "y": 439
       },
       "taskType": "",
       "type": "AtomicTask"
@@ -188,8 +211,8 @@
       "id": 9,
       "label": "Probe for food",
       "position": {
-        "x": 824.895,
-        "y": 576.454
+        "x": 902.895,
+        "y": 613.454
       },
       "taskType": "",
       "type": "AtomicTask"

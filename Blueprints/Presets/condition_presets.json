@@ -1,0 +1,44 @@
+{
+    "presets": [
+        {
+            "id": "preset_bf9138e0-3f8d-431c-a6ca-8595d14718f9",
+            "left": {
+                "mode": "Variable",
+                "value": "mSpeed"
+            },
+            "name": "Condition",
+            "op": "==",
+            "right": {
+                "mode": "Const",
+                "value": 0
+            }
+        },
+        {
+            "id": "preset_f383b66a-9a91-44d2-a275-27c0171aab1a",
+            "left": {
+                "mode": "Variable",
+                "value": "Position"
+            },
+            "name": "Condition",
+            "op": "==",
+            "right": {
+                "mode": "Variable",
+                "value": "Podition_tmp"
+            }
+        },
+        {
+            "id": "preset_455dbd95-50c5-45bc-856a-2dff621fe880",
+            "left": {
+                "mode": "Variable",
+                "value": "mHealth"
+            },
+            "name": "Condition",
+            "op": "<",
+            "right": {
+                "mode": "Variable",
+                "value": "mFatigue"
+            }
+        }
+    ],
+    "version": 1
+}
