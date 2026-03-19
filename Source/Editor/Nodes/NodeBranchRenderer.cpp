@@ -193,11 +193,12 @@ void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data)
 
     for (const auto& pin : data.dynamicPins)
     {
-        const std::string displayLabel = pin.GetDisplayLabel();
-        // Prefix with bullet character as per mockup spec (UTF-8 literal)
-        ImGui::TextColored(pinColor, "\xe2\x97\x8f %s", displayLabel.c_str());
+        // Use GetShortLabel() ("Pin-in #N") for the slot label so it matches
+        // the canvas connector naming convention (spec Section 3.2 / Section 4).
+        const std::string shortLabel = pin.GetShortLabel();
+        ImGui::TextColored(pinColor, "\xe2\x97\x8f %s", shortLabel.c_str());
 
-        // Hover tooltip: show Pin ID, condition index, and operand position
+        // Hover tooltip: show Pin ID, condition index, operand position, and detail label
         if (ImGui::IsItemHovered())
         {
             const char* posStr = (pin.position == OperandPosition::Left) ? "Left" : "Right";
@@ -205,7 +206,7 @@ void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data)
             ImGui::Text("Pin ID: %s", pin.id.c_str());
             ImGui::Text("Condition index: %d", pin.conditionIndex);
             ImGui::Text("Operand side: %s", posStr);
-            ImGui::Text("Label: %s", displayLabel.c_str());
+            ImGui::Text("Detail: %s", pin.GetDisplayLabel().c_str());
             ImGui::EndTooltip();
         }
     }

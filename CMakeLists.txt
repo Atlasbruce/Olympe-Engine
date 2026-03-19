@@ -915,4 +915,47 @@ if(BUILD_TESTS)
     target_include_directories(OlympePhase24_5_RuntimeTests PRIVATE ${COMMON_INCLUDES})
     add_test(NAME OlympePhase24_5_RuntimeTests COMMAND OlympePhase24_5_RuntimeTests)
 
+    # -----------------------------------------------------------------------
+    # OlympePhase24_M22_ConditionRefTests  (Phase 24 M2.2 — ConditionRef/OperandRef)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_M22_ConditionRefTests
+        Tests/Editor/ConditionRef_Tests.cpp
+        Source/BlueprintEditor/ConditionRef.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        ${TEST_STUBS}
+    )
+    target_compile_definitions(OlympePhase24_M22_ConditionRefTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_M22_ConditionRefTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_M22_ConditionRefTests COMMAND OlympePhase24_M22_ConditionRefTests)
+
+    # -----------------------------------------------------------------------
+    # OlympePhase24_M22_DynPinManagerTests  (Phase 24 M2.2 — DynamicDataPinManager pin naming)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_M22_DynPinManagerTests
+        Tests/Editor/DynamicDataPinManager_Tests.cpp
+        Source/Editor/ConditionPreset/DynamicDataPinManager.cpp
+        Source/Editor/ConditionPreset/ConditionPreset.cpp
+        Source/Editor/ConditionPreset/ConditionPresetRegistry.cpp
+        Source/Editor/ConditionPreset/Operand.cpp
+        Source/Editor/ConditionPreset/NodeConditionRef.cpp
+        Source/Editor/ConditionPreset/DynamicDataPin.cpp
+        ${TEST_STUBS}
+    )
+    target_compile_definitions(OlympePhase24_M22_DynPinManagerTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_M22_DynPinManagerTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_M22_DynPinManagerTests COMMAND OlympePhase24_M22_DynPinManagerTests)
+
+    # -----------------------------------------------------------------------
+    # OlympePhase24_M22_ConditionSerializationTests  (Phase 24 M2.2 — JSON round-trip)
+    # -----------------------------------------------------------------------
+    add_executable(OlympePhase24_M22_ConditionSerializationTests
+        Tests/Editor/ConditionSerialization_Tests.cpp
+        Source/BlueprintEditor/ConditionRef.cpp
+        Source/TaskSystem/TaskGraphTypes.cpp
+        ${TEST_STUBS}
+    )
+    target_compile_definitions(OlympePhase24_M22_ConditionSerializationTests PRIVATE OLYMPE_HEADLESS)
+    target_include_directories(OlympePhase24_M22_ConditionSerializationTests PRIVATE ${COMMON_INCLUDES})
+    add_test(NAME OlympePhase24_M22_ConditionSerializationTests COMMAND OlympePhase24_M22_ConditionSerializationTests)
+
 endif() # BUILD_TESTS
