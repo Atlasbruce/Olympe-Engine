@@ -13,6 +13,7 @@
 #include "ConditionRegistry.h"
 #include "OperatorRegistry.h"
 #include "BBVariableRegistry.h"
+#include "MathOpOperand.h"
 #include "../system/system_utils.h"
 
 #include "../third_party/imgui/imgui.h"
@@ -58,6 +59,12 @@ void VisualScriptEditorPanel::Initialize()
                             new NodeBranchRenderer(m_presetRegistry, *m_pinManager));
     m_conditionsPanel = std::unique_ptr<NodeConditionsPanel>(
                             new NodeConditionsPanel(m_presetRegistry));
+    m_mathOpPanel     = std::unique_ptr<MathOpPropertyPanel>(
+                            new MathOpPropertyPanel(m_presetRegistry, *m_pinManager));
+    m_getBBPanel      = std::unique_ptr<GetBBValuePropertyPanel>(
+                            new GetBBValuePropertyPanel());
+    m_setBBPanel      = std::unique_ptr<SetBBValuePropertyPanel>(
+                            new SetBBValuePropertyPanel());
     m_libraryPanel    = std::unique_ptr<ConditionPresetLibraryPanel>(
                             new ConditionPresetLibraryPanel(m_presetRegistry));
 
@@ -73,11 +80,17 @@ void VisualScriptEditorPanel::Initialize()
             if (eNode.nodeID != m_selectedNodeID)
                 continue;
 
-            // Phase 24: Pass BOTH conditionRefs AND operandRefs to regenerate pins
-            // This ensures pin labels are built from ACTUAL operand data (not static preset),
-            // fixing recursive label accumulation when users switch operand modes (Const → Pin)
-            m_pinManager->RegeneratePinsFromConditions(eNode.def.conditionRefs,
-                                                       eNode.def.conditionOperandRefs);
+            // Phase 24: Get FRESH condition data from panel (not stale data from eNode)
+            // This ensures that edits via RenderConditionList dropdown are picked up
+            std::vector<NodeConditionRef> freshConditionRefs = m_conditionsPanel->GetConditionRefs();
+            std::vector<ConditionRef> freshOperandRefs = m_conditionsPanel->GetConditionOperandRefs();
+
+            // Sync fresh data to eNode
+            eNode.def.conditionRefs = freshConditionRefs;
+            eNode.def.conditionOperandRefs = freshOperandRefs;
+
+            // Regenerate pins with FRESH operand data
+            m_pinManager->RegeneratePinsFromConditions(freshConditionRefs, freshOperandRefs);
             eNode.def.dynamicPins = m_pinManager->GetAllPins();
 
             // Keep m_template in sync for serialization.
@@ -86,6 +99,7 @@ void VisualScriptEditorPanel::Initialize()
                 if (m_template.Nodes[ti].NodeID == m_selectedNodeID)
                 {
                     m_template.Nodes[ti].conditionRefs = eNode.def.conditionRefs;
+                    m_template.Nodes[ti].conditionOperandRefs = eNode.def.conditionOperandRefs;
                     m_template.Nodes[ti].dynamicPins   = eNode.def.dynamicPins;
                     break;
                 }
@@ -113,6 +127,9 @@ void VisualScriptEditorPanel::Shutdown()
 
     // Phase 24 — release helpers before registry is destroyed.
     m_conditionsPanel.reset();
+    m_mathOpPanel.reset();
+    m_getBBPanel.reset();
+    m_setBBPanel.reset();
     m_libraryPanel.reset();
     m_branchRenderer.reset();
     m_pinManager.reset();
@@ -215,7 +232,9 @@ std::vector<std::string> VisualScriptEditorPanel::GetDataInputPins(TaskNodeType 
     {
         case TaskNodeType::SetBBValue:  return {"Value"};
         case TaskNodeType::MathOp:      return {"A", "B"};
-        case TaskNodeType::Branch:      return {"Condition"};
+        // Phase 24: Branch nodes use ONLY dynamic data-in pins (Pin-in)
+        // No static "Condition" pin to avoid conflicts with dynamic pins
+        case TaskNodeType::Branch:      return {};
         default:                        return {};
     }
 }
@@ -248,6 +267,57 @@ int VisualScriptEditorPanel::AddNode(TaskNodeType type, float x, float y)
     {
         m_template.EntryPointID = newID;
         m_template.RootNodeID   = newID;
+    }
+
+    // Phase 24 FIX: Initialize DataPins for MathOp, GetBBValue, SetBBValue nodes
+    // Ensures data pins are rendered correctly with proper offsets
+    if (type == TaskNodeType::MathOp)
+    {
+        // Add input pins A and B
+        DataPinDefinition pinA;
+        pinA.PinName = "A";
+        pinA.Dir     = DataPinDir::Input;
+        pinA.PinType = VariableType::Float;
+        def.DataPins.push_back(pinA);
+
+        DataPinDefinition pinB;
+        pinB.PinName = "B";
+        pinB.Dir     = DataPinDir::Input;
+        pinB.PinType = VariableType::Float;
+        def.DataPins.push_back(pinB);
+
+        // Add output pin Result
+        DataPinDefinition pinResult;
+        pinResult.PinName = "Result";
+        pinResult.Dir     = DataPinDir::Output;
+        pinResult.PinType = VariableType::Float;
+        def.DataPins.push_back(pinResult);
+
+        // Phase 24 Milestone 2: Initialize MathOpRef with default operands
+        // left = Const "0", operator = "+", right = Const "0"
+        def.mathOpRef.leftOperand.mode = MathOpOperand::Mode::Const;
+        def.mathOpRef.leftOperand.constValue = "0";
+        def.mathOpRef.mathOperator = "+";
+        def.mathOpRef.rightOperand.mode = MathOpOperand::Mode::Const;
+        def.mathOpRef.rightOperand.constValue = "0";
+    }
+    else if (type == TaskNodeType::GetBBValue)
+    {
+        // Phase 24 Milestone 3: GetBBValue outputs a data pin (Value)
+        DataPinDefinition pinValue;
+        pinValue.PinName = "Value";
+        pinValue.Dir     = DataPinDir::Output;
+        pinValue.PinType = VariableType::None;  // Type determined by selected variable
+        def.DataPins.push_back(pinValue);
+    }
+    else if (type == TaskNodeType::SetBBValue)
+    {
+        // Phase 24 Milestone 3: SetBBValue inputs a data pin (Value)
+        DataPinDefinition pinValue;
+        pinValue.PinName = "Value";
+        pinValue.Dir     = DataPinDir::Input;
+        pinValue.PinType = VariableType::None;  // Type determined by target variable
+        def.DataPins.push_back(pinValue);
     }
 
     // Persist the spawn position in Parameters so that redo (re-executing
@@ -372,6 +442,26 @@ void VisualScriptEditorPanel::SyncCanvasFromTemplate()
         if (def.NodeID >= m_nextNodeID)
             m_nextNodeID = def.NodeID + 1;
 
+        // Phase 24: Regenerate dynamic pins for Branch nodes after load
+        // This ensures Pin-in connectors are available even if they weren't saved
+        // (they are derived from conditionRefs/conditionOperandRefs)
+        if (def.Type == TaskNodeType::Branch && (!def.conditionRefs.empty() || !def.conditionOperandRefs.empty()))
+        {
+            m_pinManager->RegeneratePinsFromConditions(eNode.def.conditionRefs,
+                                                       eNode.def.conditionOperandRefs);
+            eNode.def.dynamicPins = m_pinManager->GetAllPins();
+
+            // Also update template for consistency
+            for (size_t ti = 0; ti < m_template.Nodes.size(); ++ti)
+            {
+                if (m_template.Nodes[ti].NodeID == eNode.nodeID)
+                {
+                    m_template.Nodes[ti].dynamicPins = eNode.def.dynamicPins;
+                    break;
+                }
+            }
+        }
+
         m_editorNodes.push_back(eNode);
     }
 
@@ -479,30 +569,50 @@ void VisualScriptEditorPanel::RebuildLinks()
         const TaskNodeDefinition* dstNode = m_template.GetNode(conn.TargetNodeID);
         if (dstNode != nullptr)
         {
-            auto inPins = GetDataInputPins(dstNode->Type);
-            bool found = false;
-            for (size_t p = 0; p < inPins.size(); ++p)
+            // Phase 24: Check if destination is a Branch node with dynamic pins
+            bool foundDynamicPin = false;
+            if (dstNode->Type == TaskNodeType::Branch && !dstNode->dynamicPins.empty())
             {
-                if (inPins[p] == conn.TargetPinName)
+                // Try to find a matching dynamic pin ID
+                for (size_t p = 0; p < dstNode->dynamicPins.size(); ++p)
                 {
-                    dstPinIdx = static_cast<int>(p);
-                    found = true;
-                    break;
+                    if (dstNode->dynamicPins[p].id == conn.TargetPinName)
+                    {
+                        dstPinIdx = static_cast<int>(p);
+                        foundDynamicPin = true;
+                        break;
+                    }
                 }
             }
-            if (!found)
+
+            if (!foundDynamicPin)
             {
-                int inIdx = 0;
-                for (size_t p = 0; p < dstNode->DataPins.size(); ++p)
+                // Fall back to static data pins
+                auto inPins = GetDataInputPins(dstNode->Type);
+                bool found = false;
+                for (size_t p = 0; p < inPins.size(); ++p)
                 {
-                    if (dstNode->DataPins[p].Dir == DataPinDir::Input)
+                    if (inPins[p] == conn.TargetPinName)
                     {
-                        if (dstNode->DataPins[p].PinName == conn.TargetPinName)
+                        dstPinIdx = static_cast<int>(p);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    int inIdx = 0;
+                    for (size_t p = 0; p < dstNode->DataPins.size(); ++p)
+                    {
+                        if (dstNode->DataPins[p].Dir == DataPinDir::Input)
                         {
-                            dstPinIdx = inIdx;
-                            break;
+                            if (dstNode->DataPins[p].PinName == conn.TargetPinName)
+                            {
+                                dstPinIdx = inIdx;
+                                break;
+                            }
+                            ++inIdx;
                         }
-                        ++inIdx;
                     }
                 }
             }
@@ -764,6 +874,33 @@ bool VisualScriptEditorPanel::Save()
 
     // Fix #1: Remove invalid blackboard entries before save
     ValidateAndCleanBlackboardEntries();
+
+    // Phase 24: CRITICAL - Sync conditions from panel to template BEFORE serialization
+    // This ensures conditionRefs and conditionOperandRefs are up-to-date before save
+    if (m_selectedNodeID >= 0)
+    {
+        for (size_t ni = 0; ni < m_editorNodes.size(); ++ni)
+        {
+            if (m_editorNodes[ni].nodeID == m_selectedNodeID && 
+                m_editorNodes[ni].def.Type == TaskNodeType::Branch)
+            {
+                m_editorNodes[ni].def.conditionRefs = m_conditionsPanel->GetConditionRefs();
+                m_editorNodes[ni].def.conditionOperandRefs = m_conditionsPanel->GetConditionOperandRefs();
+
+                // Also sync to template
+                for (size_t ti = 0; ti < m_template.Nodes.size(); ++ti)
+                {
+                    if (m_template.Nodes[ti].NodeID == m_selectedNodeID)
+                    {
+                        m_template.Nodes[ti].conditionRefs = m_editorNodes[ni].def.conditionRefs;
+                        m_template.Nodes[ti].conditionOperandRefs = m_editorNodes[ni].def.conditionOperandRefs;
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
 
     // CRITICAL FIX: Sync node positions from ImNodes BEFORE serialization.
     // RenderToolbar() (which calls Save) executes before RenderCanvas() syncs
@@ -1851,6 +1988,32 @@ void VisualScriptEditorPanel::RenderCanvas()
         auto execIn  = GetExecInputPins(eNode.def.Type);
         auto execOut = GetExecOutputPinsForNode(eNode.def);
 
+        // Phase 24 FIX: Ensure MathOp nodes have DataPins initialized
+        // This handles both newly created nodes AND nodes loaded from blueprints
+        if (eNode.def.Type == TaskNodeType::MathOp && eNode.def.DataPins.empty())
+        {
+            // Initialize DataPins for this MathOp node if not already present
+            DataPinDefinition pinA;
+            pinA.PinName = "A";
+            pinA.Dir     = DataPinDir::Input;
+            pinA.PinType = VariableType::Float;
+            eNode.def.DataPins.push_back(pinA);
+
+            DataPinDefinition pinB;
+            pinB.PinName = "B";
+            pinB.Dir     = DataPinDir::Input;
+            pinB.PinType = VariableType::Float;
+            eNode.def.DataPins.push_back(pinB);
+
+            DataPinDefinition pinResult;
+            pinResult.PinName = "Result";
+            pinResult.Dir     = DataPinDir::Output;
+            pinResult.PinType = VariableType::Float;
+            eNode.def.DataPins.push_back(pinResult);
+
+            std::cerr << "[VSEditor] Initialized DataPins for MathOp node #" << eNode.nodeID << "\n";
+        }
+
         std::vector<std::pair<std::string, VariableType>> dataIn, dataOut;
         for (size_t p = 0; p < eNode.def.DataPins.size(); ++p)
         {
@@ -2324,6 +2487,38 @@ void VisualScriptEditorPanel::RenderCanvas()
             const int  srcNodeID  = startAttr / 10000;
             const int  dstNodeID  = endAttr   / 10000;
 
+            // Phase 24: CRITICAL - Prevent data links from connecting to exec-in pin (offset 0)
+            // If this is a data link and destination is exec-in, find the first available data-in pin instead
+            if (isDataLink && endOffset == 0)
+            {
+                // Data-to-exec mismatch detected. Try to find the first available data-in pin.
+                auto dstIt = std::find_if(m_editorNodes.begin(), m_editorNodes.end(),
+                                          [dstNodeID](const VSEditorNode& n) {
+                                              return n.nodeID == dstNodeID;
+                                          });
+
+                if (dstIt != m_editorNodes.end() && 
+                    dstIt->def.Type == TaskNodeType::Branch && 
+                    !dstIt->def.dynamicPins.empty())
+                {
+                    // Force endAttr to point to the first dynamic data-in pin (offset 200)
+                    endAttr = dstNodeID * 10000 + 200;
+                    endOffset = 200;
+                }
+                else
+                {
+                    // No valid data-in pins available, reject this link
+                    m_dirty = false;
+                    // Skip link creation
+                    startIsOutput = false;
+                    endIsInput = false;
+                }
+            }
+
+            // Only proceed if we still have valid pins to connect
+            if (!startIsOutput || !endIsInput)
+                return;
+
             if (isExecLink)
             {
                 // Resolve source exec-out pin name from its index
@@ -2352,8 +2547,8 @@ void VisualScriptEditorPanel::RenderCanvas()
             else if (isDataLink)
             {
                 // Resolve source data-out and destination data-in pin names
-                const int srcPinIndex = startOffset - 300;
-                const int dstPinIndex = endOffset   - 200;
+                int srcPinIndex = startOffset - 300;
+                int dstPinIndex = endOffset   - 200;
                 std::string srcPinName = "Value";
                 std::string dstPinName = "Value";
 
@@ -2394,24 +2589,53 @@ void VisualScriptEditorPanel::RenderCanvas()
 
                 if (dstIt != m_editorNodes.end())
                 {
-                    auto inPins = GetDataInputPins(dstIt->def.Type);
-                    if (dstPinIndex < static_cast<int>(inPins.size()))
+                    // Phase 24: Check if destination is a Branch node with dynamic pins
+                    if (dstIt->def.Type == TaskNodeType::Branch)
                     {
-                        dstPinName = inPins[dstPinIndex];
+                        // For Branch nodes, data-in pins start at offset 200
+                        // If dstPinIndex is negative or out of range, force it to 0 (first pin)
+                        if (dstPinIndex < 0 || dstPinIndex >= static_cast<int>(dstIt->def.dynamicPins.size()))
+                        {
+                            if (!dstIt->def.dynamicPins.empty())
+                            {
+                                dstPinIndex = 0;  // Force first available data-in pin
+                                std::cerr << "[VSEditor] Data-in pin index corrected to 0 (first available)\n";
+                            }
+                        }
+
+                        if (dstPinIndex >= 0 && dstPinIndex < static_cast<int>(dstIt->def.dynamicPins.size()))
+                        {
+                            // Use the dynamic pin's ID as the target pin name
+                            dstPinName = dstIt->def.dynamicPins[dstPinIndex].id;
+                        }
+                        else
+                        {
+                            std::cerr << "[VSEditor] Cannot find valid data-in pin on Branch node\n";
+                            return;  // Skip this link
+                        }
                     }
                     else
                     {
-                        int inIdx = 0;
-                        for (size_t p = 0; p < dstIt->def.DataPins.size(); ++p)
+                        // Fall back to static data pins
+                        auto inPins = GetDataInputPins(dstIt->def.Type);
+                        if (dstPinIndex < static_cast<int>(inPins.size()))
                         {
-                            if (dstIt->def.DataPins[p].Dir == DataPinDir::Input)
+                            dstPinName = inPins[dstPinIndex];
+                        }
+                        else
+                        {
+                            int inIdx = 0;
+                            for (size_t p = 0; p < dstIt->def.DataPins.size(); ++p)
                             {
-                                if (inIdx == dstPinIndex)
+                                if (dstIt->def.DataPins[p].Dir == DataPinDir::Input)
                                 {
-                                    dstPinName = dstIt->def.DataPins[p].PinName;
-                                    break;
+                                    if (inIdx == dstPinIndex)
+                                    {
+                                        dstPinName = dstIt->def.DataPins[p].PinName;
+                                        break;
+                                    }
+                                    ++inIdx;
                                 }
-                                ++inIdx;
                             }
                         }
                     }
@@ -2751,6 +2975,83 @@ void VisualScriptEditorPanel::RenderBranchNodeProperties(VSEditorNode& eNode,
     (void)eNode; // suppress unused-warning when branches have no eNode-specific fields
 }
 
+// ============================================================================
+// MathOp node — dedicated Properties panel renderer
+// ============================================================================
+
+void VisualScriptEditorPanel::RenderMathOpNodeProperties(VSEditorNode& eNode,
+                                                        TaskNodeDefinition& def)
+{
+    // ── Blue header: node name (matches canvas Section 1 title bar) ──────────
+    ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.0f, 0.4f, 0.8f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.0f, 0.5f, 0.9f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive,  ImVec4(0.0f, 0.3f, 0.7f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text,          ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+    ImGui::Selectable(def.NodeName.c_str(), true,
+                      ImGuiSelectableFlags_None, ImVec2(0.f, 28.f));
+    ImGui::PopStyleColor(4);
+
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    // ── Operand Editor (Phase 24 Milestone 2 — MathOpPropertyPanel) ───────────
+    if (m_mathOpPanel)
+    {
+        // Lazy-initialize the panel when node changes
+        if (!m_mathOpPanel)
+        {
+            m_mathOpPanel = std::unique_ptr<MathOpPropertyPanel>(
+                new MathOpPropertyPanel(m_presetRegistry, *m_pinManager));
+        }
+
+        m_mathOpPanel->SetNodeName(def.NodeName);
+        m_mathOpPanel->SetMathOpRef(def.mathOpRef);
+        m_mathOpPanel->SetDynamicPins(def.dynamicPins);
+
+        m_mathOpPanel->SetOnOperandChange([this]() {
+            // Callback when operands change: regenerate dynamic pins
+            if (m_pinManager && m_selectedNodeID >= 0)
+            {
+                for (size_t i = 0; i < m_editorNodes.size(); ++i)
+                {
+                    if (m_editorNodes[i].nodeID == m_selectedNodeID)
+                    {
+                        m_editorNodes[i].def.mathOpRef = m_mathOpPanel->GetMathOpRef();
+                        break;
+                    }
+                }
+                m_dirty = true;
+            }
+        });
+
+        m_mathOpPanel->Render();
+
+        if (m_mathOpPanel->IsDirty())
+        {
+            def.mathOpRef = m_mathOpPanel->GetMathOpRef();
+
+            // Keep m_template in sync for serialization
+            for (size_t ti = 0; ti < m_template.Nodes.size(); ++ti)
+            {
+                if (m_template.Nodes[ti].NodeID == m_selectedNodeID)
+                {
+                    m_template.Nodes[ti].mathOpRef = def.mathOpRef;
+                    break;
+                }
+            }
+            m_mathOpPanel->ClearDirty();
+            m_dirty = true;
+        }
+    }
+
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    RenderVerificationPanel();
+
+    (void)eNode; // suppress unused-warning
+}
+
 void VisualScriptEditorPanel::RenderProperties()
 {
     ImGui::TextDisabled("Properties");
@@ -2927,54 +3228,82 @@ void VisualScriptEditorPanel::RenderProperties()
             break;
         }
         case TaskNodeType::GetBBValue:
+        {
+            // Phase 24 Milestone 3: Delegate to dedicated GetBBValue properties renderer
+            if (m_getBBPanel)
+            {
+                m_getBBPanel->SetNodeName(def.NodeName);
+                m_getBBPanel->SetTemplate(&m_template);
+                m_getBBPanel->SetBBKey(def.BBKey);
+
+                m_getBBPanel->Render();
+
+                if (m_getBBPanel->IsDirty())
+                {
+                    const std::string oldKey = def.BBKey;
+                    def.BBKey = m_getBBPanel->GetBBKey();
+
+                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                    {
+                        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                        {
+                            m_template.Nodes[i].BBKey = def.BBKey;
+                            break;
+                        }
+                    }
+
+                    if (def.BBKey != oldKey)
+                    {
+                        m_undoStack.PushCommand(
+                            std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                                m_selectedNodeID, "BBKey",
+                                PropertyValue::FromString(oldKey),
+                                PropertyValue::FromString(def.BBKey))),
+                            m_template);
+                    }
+                    m_getBBPanel->ClearDirty();
+                    m_dirty = true;
+                }
+            }
+            break;
+        }
         case TaskNodeType::SetBBValue:
         {
-            // --- BBKey dropdown populated from the graph's blackboard ---
-            BBVariableRegistry bbReg;
-            bbReg.LoadFromTemplate(m_template);
-            const std::vector<VarSpec>& vars = bbReg.GetAllVariables();
-            const std::string& curKey   = def.BBKey;
-            const char* previewLabel  = curKey.empty() ? "(select key...)" : curKey.c_str();
-
-            if (ImGui::BeginCombo("BB Key##vsbbkey", previewLabel))
+            // Phase 24 Milestone 3: Delegate to dedicated SetBBValue properties renderer
+            if (m_setBBPanel)
             {
-                if (m_propEditOldBBKey != curKey ||
-                    m_propEditNodeIDOnFocus != m_selectedNodeID)
+                m_setBBPanel->SetNodeName(def.NodeName);
+                m_setBBPanel->SetTemplate(&m_template);
+                m_setBBPanel->SetBBKey(def.BBKey);
+
+                m_setBBPanel->Render();
+
+                if (m_setBBPanel->IsDirty())
                 {
-                    m_propEditOldBBKey      = curKey;
-                    m_propEditNodeIDOnFocus = m_selectedNodeID;
-                }
-                for (size_t vi = 0; vi < vars.size(); ++vi)
-                {
-                    const VarSpec& v = vars[vi];
-                    bool selected    = (v.name == curKey);
-                    if (ImGui::Selectable(v.displayLabel.c_str(), selected))
+                    const std::string oldKey = def.BBKey;
+                    def.BBKey = m_setBBPanel->GetBBKey();
+
+                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
                     {
-                        const std::string oldKey = def.BBKey;
-                        def.BBKey = v.name;
-                        for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
                         {
-                            if (m_template.Nodes[i].NodeID == m_selectedNodeID)
-                            {
-                                m_template.Nodes[i].BBKey = def.BBKey;
-                                break;
-                            }
+                            m_template.Nodes[i].BBKey = def.BBKey;
+                            break;
                         }
-                        if (def.BBKey != oldKey)
-                        {
-                            m_undoStack.PushCommand(
-                                std::unique_ptr<ICommand>(new EditNodePropertyCommand(
-                                    m_selectedNodeID, "BBKey",
-                                    PropertyValue::FromString(oldKey),
-                                    PropertyValue::FromString(def.BBKey))),
-                                m_template);
-                        }
-                        m_dirty = true;
                     }
-                    if (selected)
-                        ImGui::SetItemDefaultFocus();
+
+                    if (def.BBKey != oldKey)
+                    {
+                        m_undoStack.PushCommand(
+                            std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                                m_selectedNodeID, "BBKey",
+                                PropertyValue::FromString(oldKey),
+                                PropertyValue::FromString(def.BBKey))),
+                            m_template);
+                    }
+                    m_setBBPanel->ClearDirty();
+                    m_dirty = true;
                 }
-                ImGui::EndCombo();
             }
             break;
         }
@@ -3024,55 +3353,10 @@ void VisualScriptEditorPanel::RenderProperties()
         }
         case TaskNodeType::MathOp:
         {
-            // --- MathOperator dropdown ---
-            const std::vector<std::string>& ops = OperatorRegistry::GetMathOperators();
-            const std::string& curOp = def.MathOperator;
-            std::string previewOp    = curOp.empty()
-                                       ? "(select operator...)"
-                                       : OperatorRegistry::GetDisplayName(curOp);
-
-            if (ImGui::BeginCombo("Operator##vsmath", previewOp.c_str()))
-            {
-                if (m_propEditOldMathOp != curOp ||
-                    m_propEditNodeIDOnFocus != m_selectedNodeID)
-                {
-                    m_propEditOldMathOp     = curOp;
-                    m_propEditNodeIDOnFocus = m_selectedNodeID;
-                }
-                for (size_t oi = 0; oi < ops.size(); ++oi)
-                {
-                    const std::string& op = ops[oi];
-                    bool selected = (op == curOp);
-                    std::string label = OperatorRegistry::GetDisplayName(op);
-                    if (ImGui::Selectable(label.c_str(), selected))
-                    {
-                        const std::string oldOp = def.MathOperator;
-                        def.MathOperator = op;
-                        for (size_t i = 0; i < m_template.Nodes.size(); ++i)
-                        {
-                            if (m_template.Nodes[i].NodeID == m_selectedNodeID)
-                            {
-                                m_template.Nodes[i].MathOperator = def.MathOperator;
-                                break;
-                            }
-                        }
-                        if (def.MathOperator != oldOp)
-                        {
-                            m_undoStack.PushCommand(
-                                std::unique_ptr<ICommand>(new EditNodePropertyCommand(
-                                    m_selectedNodeID, "MathOperator",
-                                    PropertyValue::FromString(oldOp),
-                                    PropertyValue::FromString(def.MathOperator))),
-                                m_template);
-                        }
-                        m_dirty = true;
-                    }
-                    if (selected)
-                        ImGui::SetItemDefaultFocus();
-                }
-                ImGui::EndCombo();
-            }
-            break;
+            // Phase 24 Milestone 2: Delegate to the dedicated MathOp properties renderer.
+            // This shows: blue header → MathOpPropertyPanel → operand editors.
+            RenderMathOpNodeProperties(*eNode, def);
+            return;
         }
         case TaskNodeType::Switch:
         {

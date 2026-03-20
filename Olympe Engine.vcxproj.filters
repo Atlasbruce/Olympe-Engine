@@ -191,6 +191,10 @@
     <ClCompile Include="Source\Runtime\ConditionPresetEvaluator.cpp" />
     <ClCompile Include="Source\Editor\Modals\NodeConditionsEditModal.cpp" />
     <ClCompile Include="Source\Editor\UIHelpers\PresetDropdownHelper.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\MathOpOperand.cpp" />
+    <ClCompile Include="Source\Editor\Panels\MathOpPropertyPanel.cpp" />
+    <ClCompile Include="Source\Editor\Panels\GetBBValuePropertyPanel.cpp" />
+    <ClCompile Include="Source\Editor\Panels\SetBBValuePropertyPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -423,6 +427,10 @@
     <ClInclude Include="Source\Editor\UIHelpers\PresetDropdownHelper.h" />
     <ClInclude Include="Source\Editor\Phase24_ImplementationStatus.h" />
     <ClInclude Include="Source\Editor\Phase24_FinalImplementationChecklist.h" />
+    <ClInclude Include="Source\BlueprintEditor\MathOpOperand.h" />
+    <ClInclude Include="Source\Editor\Panels\MathOpPropertyPanel.h" />
+    <ClInclude Include="Source\Editor\Panels\GetBBValuePropertyPanel.h" />
+    <ClInclude Include="Source\Editor\Panels\SetBBValuePropertyPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -463,6 +471,10 @@
     <None Include="PHASE24_FINAL_STATUS_REPORT.md" />
     <None Include="PHASE24_CRASH_FIX_TESTING.md" />
     <None Include="Project Management\features\Condition Preset - Condition properties - Condition node - final design 18-03-26.md" />
+    <None Include="add_proj_entries.ps1" />
+    <None Include="add_bb_panels.ps1" />
+    <None Include="Phase24_Integration_Verification.md" />
+    <None Include="PHASE24_COMPLETION_REPORT.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

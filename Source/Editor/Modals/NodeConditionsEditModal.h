@@ -38,6 +38,7 @@
 #include <functional>
 
 #include "../ConditionPreset/ConditionPreset.h"
+#include "../../BlueprintEditor/ConditionRef.h"  // Phase 24: For operand data
 #include "../ConditionPreset/ConditionPresetRegistry.h"
 #include "../ConditionPreset/NodeConditionRef.h"
 
@@ -253,6 +254,7 @@ private:
 
     ConditionPresetRegistry&       m_registry;         ///< Shared global registry
     std::vector<NodeConditionRef>  m_workingCopy;       ///< Editable in-progress copy
+    std::vector<ConditionRef>      m_workingCopyOperandRefs; ///< Phase 24: Operand data
     bool                           m_isOpen      = false;
     bool                           m_isConfirmed = false;
 

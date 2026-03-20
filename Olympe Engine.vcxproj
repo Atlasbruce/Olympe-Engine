@@ -64,6 +64,7 @@
     <ClCompile Include="Source\BlueprintEditor\EnumCatalogManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\HistoryPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityInspectorManager.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\MathOpOperand.cpp" />
     <ClCompile Include="Source\BlueprintEditor\NodeSearchPalette.cpp" />
     <ClCompile Include="Source\BlueprintEditor\NodeStyleRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\OperatorRegistry.cpp" />
@@ -112,7 +113,10 @@
     <ClCompile Include="Source\Editor\Nodes\NodeBranchRenderer.cpp" />
     <ClCompile Include="Source\Editor\Modals\NodeConditionsEditModal.cpp" />
     <ClCompile Include="Source\Editor\Panels\ConditionPresetLibraryPanel.cpp" />
+    <ClCompile Include="Source\Editor\Panels\GetBBValuePropertyPanel.cpp" />
+    <ClCompile Include="Source\Editor\Panels\MathOpPropertyPanel.cpp" />
     <ClCompile Include="Source\Editor\Panels\NodeConditionsPanel.cpp" />
+    <ClCompile Include="Source\Editor\Panels\SetBBValuePropertyPanel.cpp" />
     <ClCompile Include="Source\Editor\UIHelpers\PresetDropdownHelper.cpp" />
     <ClCompile Include="Source\engine_utils.cpp" />
     <ClCompile Include="Source\InputConfigLoader.cpp" />
@@ -262,6 +266,7 @@
     <ClInclude Include="Source\BlueprintEditor\HistoryPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityInspectorManager.h" />
     <ClInclude Include="Source\BlueprintEditor\IGraphRenderer.h" />
+    <ClInclude Include="Source\BlueprintEditor\MathOpOperand.h" />
     <ClInclude Include="Source\BlueprintEditor\NodeGraphPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\Clipboard.h" />
     <ClInclude Include="Source\BlueprintEditor\DebugPanel.h" />
@@ -312,7 +317,10 @@
     <ClInclude Include="Source\Editor\Nodes\NodeBranchRenderer.h" />
     <ClInclude Include="Source\Editor\Modals\NodeConditionsEditModal.h" />
     <ClInclude Include="Source\Editor\Panels\ConditionPresetLibraryPanel.h" />
+    <ClInclude Include="Source\Editor\Panels\GetBBValuePropertyPanel.h" />
+    <ClInclude Include="Source\Editor\Panels\MathOpPropertyPanel.h" />
     <ClInclude Include="Source\Editor\Panels\NodeConditionsPanel.h" />
+    <ClInclude Include="Source\Editor\Panels\SetBBValuePropertyPanel.h" />
     <ClInclude Include="Source\Editor\Phase24_FinalImplementationChecklist.h" />
     <ClInclude Include="Source\Editor\Phase24_ImplementationStatus.h" />
     <ClInclude Include="Source\Editor\UIHelpers\PresetDropdownHelper.h" />
@@ -443,6 +451,8 @@
     <ClInclude Include="Source\World.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="add_bb_panels.ps1" />
+    <None Include="add_proj_entries.ps1" />
     <None Include="analyze_code.ps1" />
     <None Include="analyze_codebase.ps1" />
     <None Include="analyze_codebase_v2.ps1" />
@@ -466,11 +476,13 @@
     <None Include="Docs\FONT_AWESOME_SETUP.md" />
     <None Include="Docs\README_Documentation_Index.md" />
     <None Include="olympe.ini" />
+    <None Include="PHASE24_COMPLETION_REPORT.md" />
     <None Include="PHASE24_CRASH_FIX_TESTING.md" />
     <None Include="PHASE24_FINAL_AUDIT_REPORT_FR.md" />
     <None Include="PHASE24_FINAL_STATUS_REPORT.md" />
     <None Include="PHASE24_IMPLEMENTATION_PLAN.py" />
     <None Include="PHASE24_INTEGRATION_COMPLETION_SUMMARY.md" />
+    <None Include="Phase24_Integration_Verification.md" />
     <None Include="Project Management\features\Condition Preset - Condition properties - Condition node - final design 18-03-26.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />

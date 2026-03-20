@@ -213,6 +213,32 @@ public:
      */
     void RenderConditionList();
 
+    /**
+     * @brief Phase 24 UX Refactor: Renders condition editor inline (no modal popup).
+     *
+     * Replaces the modal-based editing with an inline collapsible section that
+     * allows users to add, edit, reorder, and delete conditions directly in the
+     * properties panel without opening a separate modal window.
+     *
+     * Guarded by `#ifndef OLYMPE_HEADLESS`.
+     */
+    void RenderInlineConditionEditor();
+
+    /**
+     * @brief Renders a single condition row with edit/move/delete controls.
+     *
+     * @param index  Index of the condition in m_conditionRefs
+     * @param ref    Reference to the NodeConditionRef being rendered
+     */
+    void RenderInlineConditionRow(size_t index, const NodeConditionRef& ref);
+
+    /**
+     * @brief Renders the "Add Condition" button and preset picker inline.
+     *
+     * When clicked, shows a filterable list of available presets from the registry.
+     */
+    void RenderInlineAddCondition();
+
     // -----------------------------------------------------------------------
     // Callbacks
     // -----------------------------------------------------------------------
@@ -384,6 +410,7 @@ private:
     std::string                    m_nodeName;           ///< Node display name for title section
     bool                           m_dirty = false;      ///< Modification flag
     bool                           m_editModalRequested = false; ///< Set when Edit button is clicked
+    bool                           m_pickerOpen = false; ///< Phase 24: Inline preset picker visibility
 
     NodeConditionsEditModal  m_editModal;         ///< Owned modal for condition editing
 

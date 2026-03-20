@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -198,6 +198,10 @@
     <ClCompile Include="..\Source\TiledLevelLoader\src\TiledDecoder.cpp" />
     <ClCompile Include="..\Source\TiledLevelLoader\third_party\tinyxml2\tinyxml2.cpp" />
     <ClCompile Include="..\Source\TiledLevelLoader\third_party\miniz\miniz.c" />
+    <ClCompile Include="..\Source\BlueprintEditor\MathOpOperand.cpp" />
+    <ClCompile Include="..\Source\Editor\Panels\MathOpPropertyPanel.cpp" />
+    <ClCompile Include="..\Source\Editor\Panels\GetBBValuePropertyPanel.cpp" />
+    <ClCompile Include="..\Source\Editor\Panels\SetBBValuePropertyPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEditor\AIEditorClipboard.h" />
@@ -395,6 +399,10 @@
     <ClInclude Include="..\Source\TiledLevelLoader\include\TilesetCache.h" />
     <ClInclude Include="..\Source\TiledLevelLoader\include\TilesetParser.h" />
     <ClInclude Include="..\Source\TiledLevelLoader\include\TiledDecoder.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\MathOpOperand.h" />
+    <ClInclude Include="..\Source\Editor\Panels\MathOpPropertyPanel.h" />
+    <ClInclude Include="..\Source\Editor\Panels\GetBBValuePropertyPanel.h" />
+    <ClInclude Include="..\Source\Editor\Panels\SetBBValuePropertyPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico" />

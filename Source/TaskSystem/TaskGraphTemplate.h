@@ -25,6 +25,7 @@
 #include "../Editor/ConditionPreset/NodeConditionRef.h"
 #include "../Editor/ConditionPreset/DynamicDataPin.h"
 #include "../BlueprintEditor/ConditionRef.h"  // Phase 24: inline operand→pin mapping
+#include "../BlueprintEditor/MathOpOperand.h"  // Phase 24: MathOp operand system
 
 namespace Olympe {
 
@@ -138,6 +139,12 @@ struct TaskNodeDefinition {
     /// UUID mapping for the corresponding condition expression.
     /// Populated by DynamicDataPinManager::RegeneratePinsFromConditions().
     std::vector<ConditionRef> conditionOperandRefs;
+
+    // Phase 24 Milestone 2 — MathOp operand system
+    /// For MathOp: complete operand configuration (left operand, operator, right operand).
+    /// Parallel to MathOp nodes; empty for all other node types.
+    /// Operands in Pin mode automatically generate DynamicDataPin entries.
+    MathOpRef mathOpRef;
 
     /// For VSSequence: dynamically-added exec-out pins beyond the default "Out".
     /// Each entry is a pin name (e.g. "Out_1", "Out_2"...).

@@ -33,6 +33,9 @@
 #include "../Editor/ConditionPreset/ConditionPresetRegistry.h"
 #include "../Editor/ConditionPreset/DynamicDataPinManager.h"
 #include "../Editor/Panels/NodeConditionsPanel.h"
+#include "../Editor/Panels/MathOpPropertyPanel.h"
+#include "../Editor/Panels/GetBBValuePropertyPanel.h"
+#include "../Editor/Panels/SetBBValuePropertyPanel.h"
 #include "../Editor/Panels/ConditionPresetLibraryPanel.h"
 #include "../Editor/Nodes/NodeBranchRenderer.h"
 
@@ -243,6 +246,21 @@ private:
      * @param def    Reference to the node's TaskNodeDefinition (modified when dirty).
      */
     void RenderBranchNodeProperties(VSEditorNode& eNode, TaskNodeDefinition& def);
+
+    /**
+     * @brief Renders the Properties panel content for a selected MathOp node.
+     *
+     * @details
+     * Displays a blue header with the node name, then delegates to MathOpPropertyPanel::Render()
+     * for operand and operator editing.
+     *
+     * The caller (RenderProperties) must @c return immediately after this call to
+     * prevent any legacy UI from also rendering.
+     *
+     * @param eNode  Reference to the selected editor node (modified when dirty).
+     * @param def    Reference to the node's TaskNodeDefinition (modified when dirty).
+     */
+    void RenderMathOpNodeProperties(VSEditorNode& eNode, TaskNodeDefinition& def);
 
     void RenderBlackboard();
     void RenderValidationOverlay();
@@ -657,6 +675,15 @@ private:
 
     /// Properties-panel sub-widget for the selected Branch node.
     std::unique_ptr<NodeConditionsPanel> m_conditionsPanel;
+
+    /// Properties-panel sub-widget for the selected MathOp node.
+    std::unique_ptr<MathOpPropertyPanel> m_mathOpPanel;
+
+    /// Properties-panel sub-widget for the selected GetBBValue node.
+    std::unique_ptr<GetBBValuePropertyPanel> m_getBBPanel;
+
+    /// Properties-panel sub-widget for the selected SetBBValue node.
+    std::unique_ptr<SetBBValuePropertyPanel> m_setBBPanel;
 
     /// Global condition preset library panel (UI for creating/editing/deleting presets).
     std::unique_ptr<ConditionPresetLibraryPanel> m_libraryPanel;

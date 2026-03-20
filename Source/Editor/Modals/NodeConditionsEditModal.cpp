@@ -32,9 +32,11 @@ NodeConditionsEditModal::NodeConditionsEditModal(ConditionPresetRegistry& regist
 // Visibility / lifecycle
 // ============================================================================
 
-void NodeConditionsEditModal::Open(const std::vector<NodeConditionRef>& currentRefs)
+void NodeConditionsEditModal::Open(const std::vector<NodeConditionRef>& currentRefs,
+                                   const std::vector<ConditionRef>& operandRefs)
 {
     m_workingCopy = currentRefs;
+    m_workingCopyOperandRefs = operandRefs;
     NormalizeLogicalOps();
     m_isOpen      = true;
     m_isConfirmed = false;
@@ -55,6 +57,11 @@ void NodeConditionsEditModal::Close()
 const std::vector<NodeConditionRef>& NodeConditionsEditModal::GetConditionRefs() const
 {
     return m_workingCopy;
+}
+
+const std::vector<ConditionRef>& NodeConditionsEditModal::GetConditionOperandRefs() const
+{
+    return m_workingCopyOperandRefs;
 }
 
 // ============================================================================

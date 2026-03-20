@@ -52,7 +52,33 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
     }
     ImNodes::EndNodeTitleBar();
 
+    // Phase 24 FIX: Render data-in pins FIRST so ImNodes prioritizes them on drop
+    // When user drops a data link, ImNodes searches pins in render order and picks the closest.
+    // By rendering data-in before exec-in, data-in gets priority and won't be skipped.
+    // ── DYNAMIC DATA PINS (rendered FIRST for ImNodes drop priority) ──
+    if (!data.dynamicPins.empty())
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.843f, 0.0f, 1.0f)); // Yellow header
+        ImGui::TextUnformatted("=== DATA INPUTS ===");
+        ImGui::PopStyleColor();
+        ImGui::Spacing();
+        ImGui::Spacing();  // Extra space to separate from exec-in
+        RenderDynamicPinsSection(data);
+        ImGui::Spacing();
+        ImGui::Spacing();
+        ImGui::Spacing();
+        ImGui::Separator();  // Heavy visual separation
+        ImGui::Spacing();
+        ImGui::Spacing();
+        ImGui::Spacing();
+    }
+
     // ── EXEC PINS (In | Then / Else) ──────────────────────────────────────────
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Grey header
+    ImGui::TextUnformatted("=== EXEC FLOW ===");
+    ImGui::PopStyleColor();
+    ImGui::Spacing();
+
     // Left: "In" exec input pin
     int inAttrID = data.nodeID * 10000 + 0;  // offset 0 = exec-in
     ImNodes::BeginInputAttribute(inAttrID, ImNodesPinShape_Triangle);
@@ -75,14 +101,13 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
     ImGui::Unindent(90.0f);
     ImNodes::EndOutputAttribute();
 
-    // ── CONDITIONS (green, read-only) ──────────────────────────────────────────
-    RenderConditionsSection(data);
+    // ── VISUAL SEPARATOR ──────────────────────────────────────────────────────
+    ImGui::Spacing();
+    ImGui::Spacing();
 
-    // ── DYNAMIC DATA PINS (only if any) ────────────────────────────────────────
-    if (!data.dynamicPins.empty())
-    {
-        RenderDynamicPinsSection(data);
-    }
+    // ── CONDITIONS (green, read-only) ──────────────────────────────────────────
+    ImGui::Spacing();
+    RenderConditionsSection(data);
 
     ImGui::PopID();
 #endif
@@ -251,12 +276,29 @@ void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data)
     // Dynamic pins are always yellow (#FFD700)
     const ImVec4 pinColor(1.0f, 0.843f, 0.0f, 1.0f);
 
-    for (const auto& pin : data.dynamicPins)
+    // Create a unique ID offset for dynamic pins to avoid conflicts with static pins
+    // Static pins use offsets 0, 100-101. Dynamic pins start at 200.
+    int dynamicPinIDBase = data.nodeID * 10000 + 200;
+
+    // IMPORTANT: Render data-in pins in a way that makes them clearly selectable by ImNodes
+    // Use separate ImGui groups for better hit detection
+    for (size_t i = 0; i < data.dynamicPins.size(); ++i)
     {
-        // Use GetShortLabel() ("Pin-in #N") for the slot label so it matches
-        // the canvas connector naming convention (spec Section 3.2 / Section 4).
+        const auto& pin = data.dynamicPins[i];
+
+        // Generate unique attribute ID for this pin
+        int attrID = dynamicPinIDBase + static_cast<int>(i);
+
+        // Register this pin as an input attribute in ImNodes
+        ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_Circle);
+
+        // Draw a more prominent yellow circle with the label
+        ImGui::TextColored(pinColor, "\xe2\x97\x8f");
+        ImGui::SameLine(0.0f, 4.0f);
+
+        // Use GetShortLabel() ("Pin-in #N") for the slot label
         const std::string shortLabel = pin.GetShortLabel();
-        ImGui::TextColored(pinColor, "\xe2\x97\x8f %s", shortLabel.c_str());
+        ImGui::TextColored(pinColor, "%s", shortLabel.c_str());
 
         // Hover tooltip: show Pin ID, condition index, operand position, and detail label
         if (ImGui::IsItemHovered())
@@ -269,6 +311,8 @@ void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data)
             ImGui::Text("Detail: %s", pin.GetDisplayLabel().c_str());
             ImGui::EndTooltip();
         }
+
+        ImNodes::EndInputAttribute();
     }
 #endif
 }

@@ -56,7 +56,7 @@
             "id": "preset_fa90103d-5905-4483-b1c3-ebcadc870d58",
             "left": {
                 "mode": "Pin",
-                "value": "In #3R: [] == []"
+                "value": "[Pin-in]"
             },
             "name": "Condition",
             "op": "==",

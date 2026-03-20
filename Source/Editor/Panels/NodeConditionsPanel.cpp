@@ -296,30 +296,179 @@ void NodeConditionsPanel::Render()
 #ifndef OLYMPE_HEADLESS
     ImGui::PushID("NodeConditionsPanel");
 
-    // Render the condition preview + "Edit Conditions" button
-    // This opens the modal where users can add/edit/delete conditions with full UI
-    RenderConditionsPreview();
+    // Phase 24 UX: Integrate condition editing INLINE (no modal popup)
+    // Render collapsible editor section directly in properties panel
+    RenderInlineConditionEditor();
 
-    // ── Section 4: Dynamic data pins (only if any) ──────────────────────────
-    if (!m_dynamicPins.empty())
+    ImGui::PopID();
+#endif
+}
+
+void NodeConditionsPanel::RenderInlineConditionEditor()
+{
+#ifndef OLYMPE_HEADLESS
+    // Phase 24 UX Refactor: Replace modal with inline collapsible editor
+    ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.0f, 0.7f, 0.4f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.0f, 0.8f, 0.5f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive,  ImVec4(0.0f, 0.6f, 0.3f, 1.0f));
+    const bool editorOpen = ImGui::CollapsingHeader(
+        "Conditions Editor (Inline)",
+        ImGuiTreeNodeFlags_DefaultOpen);
+    ImGui::PopStyleColor(3);
+
+    if (!editorOpen)
+        return;
+
+    ImGui::Indent(8.f);
+
+    // Conditions list with inline editing
+    ImGui::Text("Active Conditions:");
+    ImGui::BeginChild("ConditionsList##Inline", ImVec2(0.f, 120.f), true);
+
+    // Render each condition with edit controls
+    for (size_t i = 0; i < m_conditionRefs.size(); ++i)
     {
-        ImGui::Separator();
-        RenderDynamicPinsSection();
+        RenderInlineConditionRow(i, m_conditionRefs[i]);
     }
 
-    // ── Modal polling (renders when open, handles confirmation) ─────────────
-    m_editModal.Render();
-    if (m_editModal.IsConfirmed())
-    {
-        SetConditionRefs(m_editModal.GetConditionRefs());
-        m_dirty = true;
-        m_editModal.Close();
+    ImGui::EndChild();
+    ImGui::Spacing();
 
+    // Add condition button + preset picker inline
+    RenderInlineAddCondition();
+
+    ImGui::Unindent(8.f);
+#endif
+}
+
+void NodeConditionsPanel::RenderInlineConditionRow(size_t index,
+                                                    const NodeConditionRef& ref)
+{
+#ifndef OLYMPE_HEADLESS
+    ImGui::PushID(static_cast<int>(index));
+
+    // Logical operator dropdown (disabled for first entry)
+    if (index == 0)
+    {
+        ImGui::TextDisabled("     ");
+    }
+    else
+    {
+        const char* ops[] = { "And", "Or" };
+        int current = (ref.logicalOp == LogicalOp::And) ? 0 : 1;
+        ImGui::SetNextItemWidth(60.f);
+        if (ImGui::Combo("##op", &current, ops, 2))
+        {
+            SetLogicalOp(index, (current == 0) ? LogicalOp::And : LogicalOp::Or);
+            m_dirty = true;
+            if (OnDynamicPinsNeedRegeneration)
+                OnDynamicPinsNeedRegeneration();
+        }
+    }
+
+    ImGui::SameLine();
+
+    // Condition preset preview — green text
+    const ConditionPreset* preset = m_registry.GetPreset(ref.presetID);
+    if (preset)
+    {
+        ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f),
+                           "[%s] %s", preset->name.c_str(), preset->GetPreview().c_str());
+    }
+    else
+    {
+        ImGui::TextColored(ImVec4(1.f, 0.3f, 0.3f, 1.f),
+                           "(missing: %s)", ref.presetID.c_str());
+    }
+
+    ImGui::SameLine();
+
+    // Move up button
+    if (ImGui::SmallButton("^##up"))
+    {
+        if (index > 0)
+        {
+            std::swap(m_conditionRefs[index - 1], m_conditionRefs[index]);
+            m_dirty = true;
+        }
+    }
+
+    ImGui::SameLine();
+
+    // Move down button
+    if (ImGui::SmallButton("v##dn"))
+    {
+        if (index < m_conditionRefs.size() - 1)
+        {
+            std::swap(m_conditionRefs[index], m_conditionRefs[index + 1]);
+            m_dirty = true;
+        }
+    }
+
+    ImGui::SameLine();
+
+    // Delete button
+    if (ImGui::SmallButton("X##del"))
+    {
+        m_conditionRefs.erase(m_conditionRefs.begin() + static_cast<int>(index));
+        // Adjust operandRefs if they exist
+        if (index < m_conditionOperandRefs.size())
+            m_conditionOperandRefs.erase(m_conditionOperandRefs.begin() + static_cast<int>(index));
+        m_dirty = true;
         if (OnDynamicPinsNeedRegeneration)
             OnDynamicPinsNeedRegeneration();
     }
 
     ImGui::PopID();
+#endif
+}
+
+void NodeConditionsPanel::RenderInlineAddCondition()
+{
+#ifndef OLYMPE_HEADLESS
+    // Toggle button for preset picker
+    if (ImGui::Button("+ Add Condition", ImVec2(-1.f, 24.f)))
+        m_pickerOpen = !m_pickerOpen;
+
+    if (m_pickerOpen)
+    {
+        // Search filter
+        ImGui::Spacing();
+        ImGui::TextDisabled("Search presets:");
+        static char filterBuf[256] = {};
+        ImGui::InputText("##PresetFilter", filterBuf, sizeof(filterBuf));
+
+        // Get filtered preset list from registry
+        std::string filter = std::string(filterBuf);
+        std::vector<ConditionPreset> filteredPresets = m_registry.GetFilteredPresets(filter);
+
+        // Filtered preset list
+        ImGui::BeginChild("PresetPickerList##Inline", ImVec2(0.f, 150.f), true);
+
+        for (const auto& preset : filteredPresets)
+        {
+            const std::string label = preset.name + "  " + preset.GetPreview();
+            if (ImGui::Selectable(label.c_str()))
+            {
+                // Add new condition
+                LogicalOp op = m_conditionRefs.empty() ? LogicalOp::Start : LogicalOp::And;
+                m_conditionRefs.emplace_back(preset.id, op);
+                m_dirty = true;
+
+                // Clear filter and close picker
+                filterBuf[0] = '\0';
+                m_pickerOpen = false;
+
+                if (OnDynamicPinsNeedRegeneration)
+                    OnDynamicPinsNeedRegeneration();
+            }
+        }
+
+        if (filteredPresets.empty())
+            ImGui::TextDisabled("No presets found.");
+
+        ImGui::EndChild();
+    }
 #endif
 }
 
@@ -448,7 +597,8 @@ void NodeConditionsPanel::RenderConditionsPreview()
     if (ImGui::Button("Edit Conditions", ImVec2(-1.f, 24.f)))
     {
         m_editModalRequested = true;
-        m_editModal.Open(m_conditionRefs);
+        // Phase 24: Pass both conditionRefs AND operandRefs to the modal
+        m_editModal.Open(m_conditionRefs, m_conditionOperandRefs);
     }
 #endif
 }
