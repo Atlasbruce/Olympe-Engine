@@ -483,6 +483,7 @@
     <None Include="PHASE24_IMPLEMENTATION_PLAN.py" />
     <None Include="PHASE24_INTEGRATION_COMPLETION_SUMMARY.md" />
     <None Include="Phase24_Integration_Verification.md" />
+    <None Include="Project Management\Diary\DevDiary-20-03-2026.md" />
     <None Include="Project Management\features\Condition Preset - Condition properties - Condition node - final design 18-03-26.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />

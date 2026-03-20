@@ -475,6 +475,7 @@
     <None Include="add_bb_panels.ps1" />
     <None Include="Phase24_Integration_Verification.md" />
     <None Include="PHASE24_COMPLETION_REPORT.md" />
+    <None Include="Project Management\Diary\DevDiary-20-03-2026.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
