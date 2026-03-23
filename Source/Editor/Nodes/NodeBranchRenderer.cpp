@@ -92,6 +92,7 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
     // LEFT COLUMN: Empty spacer for row alignment
     ImGui::NextColumn();
     ImGui::Spacing();
+    ImGui::Spacing();
 
     // RIGHT COLUMN: "Else" exec output pin
     ImGui::NextColumn();
@@ -107,8 +108,8 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
     ImGui::Columns(1);  // End columns
 
     // ── CONDITIONS (green, read-only) ──────────────────────────────────────────
-    /*ImGui::Spacing();
-    ImGui::Separator();*/
+    ImGui::Spacing();
+    //ImGui::Separator();
     ImGui::Spacing();
     RenderConditionsSection(data);
     ImGui::Spacing();
