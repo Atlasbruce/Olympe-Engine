@@ -15,6 +15,7 @@
 #include "BBVariableRegistry.h"
 #include "MathOpOperand.h"
 #include "../system/system_utils.h"
+#include "../system/system_consts.h"
 
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
@@ -2092,10 +2093,11 @@ void VisualScriptEditorPanel::RenderCanvas()
     {
         const VSEditorLink& link = m_editorLinks[i];
         if (link.isData)
-            ImNodes::PushColorStyle(ImNodesCol_Link, IM_COL32(160, 160, 255, 200));
+            ImNodes::PushColorStyle(ImNodesCol_Link, SystemColors::DATA_CONNECTION_COLOR);
+        else
+            ImNodes::PushColorStyle(ImNodesCol_Link, SystemColors::EXEC_CONNECTION_COLOR);
         ImNodes::Link(link.linkID, link.srcAttrID, link.dstAttrID);
-        if (link.isData)
-            ImNodes::PopColorStyle();
+        ImNodes::PopColorStyle();
     }
 
     ImNodes::EndNodeEditor();

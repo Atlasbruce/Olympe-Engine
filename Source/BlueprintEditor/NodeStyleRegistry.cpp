@@ -284,7 +284,7 @@ ImU32 NodeStyleRegistry::GetExecPinColor()
 
 ImU32 NodeStyleRegistry::GetDataPinColor()
 {
-    return IM_COL32(100, 200, 100, 255);
+    return IM_COL32(180, 100, 200, 255);
 }
 
 } // namespace Olympe

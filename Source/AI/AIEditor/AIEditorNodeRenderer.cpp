@@ -90,7 +90,12 @@ void AIEditorNodeRenderer::RenderNode(
     }
     
     ImNodes::EndNodeTitleBar();
-    
+
+    // Use 2-column layout to align input pins (left) with output pins (right) on the same Y
+    ImGui::Columns(2, "ai_node_pins", false);
+    ImGui::SetColumnWidth(0, 80.0f);
+
+    // ---- LEFT COLUMN: Input Pins ----
     // Input pin (for composites and decorators)
     if (typeInfo->category == BTNodeCategory::Composite ||
         typeInfo->category == BTNodeCategory::Decorator) {
@@ -99,12 +104,15 @@ void AIEditorNodeRenderer::RenderNode(
         ImGui::Text("In");
         ImNodes::EndInputAttribute();
     }
-    
+
     // Parameters
     for (auto it = nodeData.parameters.begin(); it != nodeData.parameters.end(); ++it) {
         ImGui::Text("%s: %s", it->first.c_str(), it->second.c_str());
     }
-    
+
+    // ---- RIGHT COLUMN: Output Pins ----
+    ImGui::NextColumn();
+
     // Output pins (for nodes that can have children)
     if (typeInfo->category == BTNodeCategory::Composite ||
         typeInfo->category == BTNodeCategory::Decorator) {
@@ -113,6 +121,8 @@ void AIEditorNodeRenderer::RenderNode(
         ImGui::Text("Out");
         ImNodes::EndOutputAttribute();
     }
+
+    ImGui::Columns(1);  // End columns
     
     ImNodes::EndNode();
 

@@ -52,62 +52,68 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
     }
     ImNodes::EndNodeTitleBar();
 
-    // Phase 24 FIX: Render data-in pins FIRST so ImNodes prioritizes them on drop
-    // When user drops a data link, ImNodes searches pins in render order and picks the closest.
-    // By rendering data-in before exec-in, data-in gets priority and won't be skipped.
-    // ── DYNAMIC DATA PINS (rendered FIRST for ImNodes drop priority) ──
-    if (!data.dynamicPins.empty())
+    // ── EXEC PINS (In | Then / Else) ──────────────────────────────────────────
+    // Use columns to align input pins (left) with output pins (right) on the same Y
+    ImGui::Columns(2, "exec_pins", false);  // 2 columns, no border
+    ImGui::SetColumnWidth(0, 80.0f);
+
+    // LEFT COLUMN: "In" exec input pin
     {
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.843f, 0.0f, 1.0f)); // Yellow header
-        ImGui::TextUnformatted("=== DATA INPUTS ===");
-        ImGui::PopStyleColor();
-        ImGui::Spacing();
-        ImGui::Spacing();  // Extra space to separate from exec-in
-        RenderDynamicPinsSection(data);
-        ImGui::Spacing();
-        ImGui::Spacing();
-        ImGui::Spacing();
-        ImGui::Separator();  // Heavy visual separation
-        ImGui::Spacing();
-        ImGui::Spacing();
-        ImGui::Spacing();
+        int inAttrID = data.nodeID * 10000 + 0;  // offset 0 = exec-in
+        ImNodes::PushColorStyle(ImNodesCol_Pin, IM_COL32(255, 255, 255, 255));  // White for exec pins
+        ImNodes::BeginInputAttribute(inAttrID, ImNodesPinShape_Triangle);
+        ImGui::Text("In");
+        ImNodes::EndInputAttribute();
+        ImNodes::PopColorStyle();
     }
 
-    // ── EXEC PINS (In | Then / Else) ──────────────────────────────────────────
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // Grey header
-    ImGui::TextUnformatted("=== EXEC FLOW ===");
-    ImGui::PopStyleColor();
+    // RIGHT COLUMN: "Then" exec output pin
+    ImGui::NextColumn();
+    {
+        int thenAttrID = data.nodeID * 10000 + 100;  // offset 100 = exec-out #0
+        ImNodes::PushColorStyle(ImNodesCol_Pin, IM_COL32(255, 255, 255, 255));  // White for exec pins
+        ImNodes::BeginOutputAttribute(thenAttrID, ImNodesPinShape_TriangleFilled);
+        ImGui::Text("Then");
+        ImNodes::EndOutputAttribute();
+        ImNodes::PopColorStyle();
+    }
+
+    // LEFT COLUMN: Empty spacer for row alignment
+    ImGui::NextColumn();
     ImGui::Spacing();
 
-    // Left: "In" exec input pin
-    int inAttrID = data.nodeID * 10000 + 0;  // offset 0 = exec-in
-    ImNodes::BeginInputAttribute(inAttrID, ImNodesPinShape_Triangle);
-    ImGui::Text("In");
-    ImNodes::EndInputAttribute();
+    // RIGHT COLUMN: "Else" exec output pin
+    ImGui::NextColumn();
+    {
+        int elseAttrID = data.nodeID * 10000 + 101;  // offset 101 = exec-out #1
+        ImNodes::PushColorStyle(ImNodesCol_Pin, IM_COL32(255, 255, 255, 255));  // White for exec pins
+        ImNodes::BeginOutputAttribute(elseAttrID, ImNodesPinShape_TriangleFilled);
+        ImGui::Text("Else");
+        ImNodes::EndOutputAttribute();
+        ImNodes::PopColorStyle();
+    }
 
-    // Right: "Then" and "Else" exec output pins
-    int thenAttrID = data.nodeID * 10000 + 100;  // offset 100 = exec-out #0
-    int elseAttrID = data.nodeID * 10000 + 101;  // offset 101 = exec-out #1
-
-    ImNodes::BeginOutputAttribute(thenAttrID, ImNodesPinShape_TriangleFilled);
-    ImGui::Indent(90.0f);  // Right-align the pin label
-    ImGui::Text("Then");
-    ImGui::Unindent(90.0f);
-    ImNodes::EndOutputAttribute();
-
-    ImNodes::BeginOutputAttribute(elseAttrID, ImNodesPinShape_TriangleFilled);
-    ImGui::Indent(90.0f);  // Right-align the pin label
-    ImGui::Text("Else");
-    ImGui::Unindent(90.0f);
-    ImNodes::EndOutputAttribute();
-
-    // ── VISUAL SEPARATOR ──────────────────────────────────────────────────────
-    ImGui::Spacing();
-    ImGui::Spacing();
+    ImGui::Columns(1);  // End columns
 
     // ── CONDITIONS (green, read-only) ──────────────────────────────────────────
     ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
     RenderConditionsSection(data);
+    ImGui::Spacing();
+
+    // Phase 24 FIX: Render data-in pins LAST, below conditions for better UX
+    // ── DYNAMIC DATA PINS (rendered LAST, at bottom) ──
+    if (!data.dynamicPins.empty())
+    {
+        ImGui::Separator();
+        ImGui::Spacing();
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(180.0f / 255.0f, 100.0f / 255.0f, 200.0f / 255.0f, 1.0f)); // Violet header
+        ImGui::TextUnformatted("=== DATA INPUTS ===");
+        ImGui::PopStyleColor();
+        ImGui::Spacing();
+        RenderDynamicPinsSection(data);
+    }
 
     ImGui::PopID();
 #endif
@@ -273,8 +279,9 @@ void NodeBranchRenderer::RenderConditionsSection(const NodeBranchData& data)
 void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data)
 {
 #ifndef OLYMPE_HEADLESS
-    // Dynamic pins are always yellow (#FFD700)
-    const ImVec4 pinColor(1.0f, 0.843f, 0.0f, 1.0f);
+    // Dynamic data pins are violet (data pin color)
+    const ImVec4 pinColor(180.0f / 255.0f, 100.0f / 255.0f, 200.0f / 255.0f, 1.0f);  // Violet
+    const ImU32 pinColorImU32 = IM_COL32(180, 100, 200, 255);  // Violet
 
     // Create a unique ID offset for dynamic pins to avoid conflicts with static pins
     // Static pins use offsets 0, 100-101. Dynamic pins start at 200.
@@ -289,10 +296,11 @@ void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data)
         // Generate unique attribute ID for this pin
         int attrID = dynamicPinIDBase + static_cast<int>(i);
 
-        // Register this pin as an input attribute in ImNodes
+        // Register this pin as an input attribute in ImNodes with violet color
+        ImNodes::PushColorStyle(ImNodesCol_Pin, pinColorImU32);
         ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_Circle);
 
-        // Draw a more prominent yellow circle with the label
+        // Draw a more prominent violet circle with the label
         ImGui::TextColored(pinColor, "\xe2\x97\x8f");
         ImGui::SameLine(0.0f, 4.0f);
 
@@ -313,6 +321,7 @@ void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data)
         }
 
         ImNodes::EndInputAttribute();
+        ImNodes::PopColorStyle();
     }
 #endif
 }

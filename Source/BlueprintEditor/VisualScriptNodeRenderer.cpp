@@ -8,6 +8,7 @@
  */
 
 #include "VisualScriptNodeRenderer.h"
+#include "../system/system_consts.h"
 
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
@@ -70,18 +71,15 @@ unsigned int GetNodeTitleHoveredColor(VSNodeStyle style)
     }
 }
 
+unsigned int GetExecPinColor()
+{
+    return SystemColors::EXEC_PIN_COLOR;
+}
+
 unsigned int GetDataPinColor(VariableType type)
 {
-    switch (type)
-    {
-        case VariableType::Float:    return IM_COL32(60, 120, 220, 255);  // Blue
-        case VariableType::Int:      return IM_COL32(60, 180, 60, 255);   // Green
-        case VariableType::String:   return IM_COL32(220, 200, 40, 255);  // Yellow
-        case VariableType::Vector:   return IM_COL32(60, 200, 200, 255);  // Cyan
-        case VariableType::Bool:     return IM_COL32(200, 40, 200, 255);  // Magenta
-        case VariableType::EntityID: return IM_COL32(220, 40, 40, 255);   // Red
-        default:                     return IM_COL32(160, 160, 160, 255); // Gray
-    }
+    // All data pins use the same violet color regardless of type
+    return SystemColors::DATA_PIN_COLOR;
 }
 
 const char* GetNodeTypeLabel(TaskNodeType type)
@@ -174,13 +172,21 @@ void VisualScriptNodeRenderer::RenderNode(
     //   offset 200–299 → data-in  (Input)
     //   offset 300–399 → data-out (Output)
 
+    // Use 2-column layout to align input pins (left) with output pins (right) on the same Y
+    ImGui::Columns(2, "node_pins", false);
+    ImGui::SetColumnWidth(0, 80.0f);
+
+    // ---- LEFT COLUMN: Input Pins (Exec + Data) ----
+
     // Exec input pins (left side triangles)
     for (size_t i = 0; i < execInputPins.size(); ++i)
     {
         int attrID = nodeUID * 10000 + static_cast<int>(i);
+        ImNodes::PushColorStyle(ImNodesCol_Pin, GetExecPinColor());
         ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_Triangle);
         ImGui::Text("%s", execInputPins[i].c_str());
         ImNodes::EndInputAttribute();
+        ImNodes::PopColorStyle();
     }
 
     // Data input pins (left side circles)  — offset 200–299
@@ -195,15 +201,18 @@ void VisualScriptNodeRenderer::RenderNode(
         ImNodes::PopColorStyle();
     }
 
+    // ---- RIGHT COLUMN: Output Pins (Exec + Data) ----
+    ImGui::NextColumn();
+
     // Exec output pins (right side triangles) — offset 100–199
     for (size_t i = 0; i < execOutputPins.size(); ++i)
     {
         int attrID = nodeUID * 10000 + 100 + static_cast<int>(i);
+        ImNodes::PushColorStyle(ImNodesCol_Pin, GetExecPinColor());
         ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_TriangleFilled);
-        ImGui::Indent(60.0f);
         ImGui::Text("%s", execOutputPins[i].c_str());
-        ImGui::Unindent(60.0f);
         ImNodes::EndOutputAttribute();
+        ImNodes::PopColorStyle();
     }
 
     // Data output pins (right side circles) — offset 300–399
@@ -213,12 +222,12 @@ void VisualScriptNodeRenderer::RenderNode(
         ImNodes::PushColorStyle(ImNodesCol_Pin,
                                 GetDataPinColor(dataOutputPins[i].second));
         ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_CircleFilled);
-        ImGui::Indent(60.0f);
         ImGui::Text("%s", dataOutputPins[i].first.c_str());
-        ImGui::Unindent(60.0f);
         ImNodes::EndOutputAttribute();
         ImNodes::PopColorStyle();
     }
+
+    ImGui::Columns(1);  // End columns
 
     ImNodes::EndNode();
 
@@ -362,13 +371,21 @@ void VisualScriptNodeRenderer::RenderNode(
             break;
     }
 
+    // Use 2-column layout to align input pins (left) with output pins (right) on the same Y
+    ImGui::Columns(2, "node_pins_extended", false);
+    ImGui::SetColumnWidth(0, 80.0f);
+
+    // ---- LEFT COLUMN: Input Pins (Exec + Data) ----
+
     // Exec input pins (left side triangles) — offset 0–99
     for (size_t i = 0; i < execInputPins.size(); ++i)
     {
         int attrID = nodeUID * 10000 + static_cast<int>(i);
+        ImNodes::PushColorStyle(ImNodesCol_Pin, GetExecPinColor());
         ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_Triangle);
         ImGui::Text("%s", execInputPins[i].c_str());
         ImNodes::EndInputAttribute();
+        ImNodes::PopColorStyle();
     }
 
     // Data input pins (left side circles) — offset 200–299
@@ -383,21 +400,23 @@ void VisualScriptNodeRenderer::RenderNode(
         ImNodes::PopColorStyle();
     }
 
-    // Phase 24 — Dynamic data pins from conditionRefs (yellow, offset 400–499)
+    // Phase 24 — Dynamic data pins from conditionRefs (violet, offset 400–499)
     if (def.Type == TaskNodeType::Branch || def.Type == TaskNodeType::While)
     {
-        const ImVec4 pinColor(1.0f, 0.843f, 0.0f, 1.0f);
         for (size_t i = 0; i < def.dynamicPins.size(); ++i)
         {
             int attrID = nodeUID * 10000 + 400 + static_cast<int>(i);
-            ImNodes::PushColorStyle(ImNodesCol_Pin, IM_COL32(255, 215, 0, 255));
-            ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_CircleFilled);
+            ImNodes::PushColorStyle(ImNodesCol_Pin, SystemColors::DATA_PIN_COLOR);
+            ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_Circle);
             const std::string lbl = def.dynamicPins[i].GetDisplayLabel();
-            ImGui::TextColored(pinColor, "%s", lbl.c_str());
+            ImGui::Text("%s", lbl.c_str());
             ImNodes::EndInputAttribute();
             ImNodes::PopColorStyle();
         }
     }
+
+    // ---- RIGHT COLUMN: Output Pins (Exec + Data + Dynamic removal button) ----
+    ImGui::NextColumn();
 
     // Determine how many static (non-removable) exec-out pins this node has.
     // Dynamic pins start at index numStaticPins in execOutputPins.
@@ -413,8 +432,8 @@ void VisualScriptNodeRenderer::RenderNode(
     for (size_t i = 0; i < execOutputPins.size(); ++i)
     {
         int attrID = nodeUID * 10000 + 100 + static_cast<int>(i);
+        ImNodes::PushColorStyle(ImNodesCol_Pin, GetExecPinColor());
         ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_TriangleFilled);
-        ImGui::Indent(60.0f);
         ImGui::Text("%s", execOutputPins[i].c_str());
 
         // [-] button for removable (dynamic) pins only
@@ -434,8 +453,8 @@ void VisualScriptNodeRenderer::RenderNode(
             ImGui::PopID();
         }
 
-        ImGui::Unindent(60.0f);
         ImNodes::EndOutputAttribute();
+        ImNodes::PopColorStyle();
     }
 
     // [+] button — below the last exec-out pin, for VSSequence and Switch
@@ -445,12 +464,10 @@ void VisualScriptNodeRenderer::RenderNode(
         ImGui::PushStyleColor(ImGuiCol_Button,        IM_COL32(30, 100, 30, 200));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(50, 160, 50, 220));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive,  IM_COL32(80, 200, 80, 240));
-        ImGui::Indent(60.0f);
         if (ImGui::SmallButton("[+]"))
             onAddPin(nodeID, onAddPinUserData);
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Add Execution Output");
-        ImGui::Unindent(60.0f);
         ImGui::PopStyleColor(3);
         ImGui::PopID();
     }
@@ -462,12 +479,12 @@ void VisualScriptNodeRenderer::RenderNode(
         ImNodes::PushColorStyle(ImNodesCol_Pin,
                                 GetDataPinColor(dataOutputPins[i].second));
         ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_CircleFilled);
-        ImGui::Indent(60.0f);
         ImGui::Text("%s", dataOutputPins[i].first.c_str());
-        ImGui::Unindent(60.0f);
         ImNodes::EndOutputAttribute();
         ImNodes::PopColorStyle();
     }
+
+    ImGui::Columns(1);  // End columns
 
     ImNodes::EndNode();
 

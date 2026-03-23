@@ -98,8 +98,8 @@
       "id": 1,
       "label": "EntryPoint",
       "position": {
-        "x": 142,
-        "y": 319
+        "x": 131,
+        "y": 318
       },
       "type": "EntryPoint"
     },
@@ -110,19 +110,19 @@
       "id": 2,
       "label": "Sequence",
       "position": {
-        "x": 320,
-        "y": 322
+        "x": 314,
+        "y": 319
       },
       "type": "Sequence"
     },
     {
       "id": 3,
-      "label": "AtomicTask",
+      "label": "AtomicTask Log Message with a long name and title in order to test the caption length",
       "position": {
-        "x": 579,
-        "y": 281
+        "x": 554,
+        "y": 219
       },
-      "taskType": "",
+      "taskType": "log_message",
       "type": "AtomicTask"
     },
     {
@@ -130,8 +130,8 @@
       "label": "MathOp",
       "mathOp": "-",
       "position": {
-        "x": 405,
-        "y": 562
+        "x": 367,
+        "y": 528
       },
       "type": "MathOp"
     },
@@ -139,8 +139,8 @@
       "id": 5,
       "label": "mHealth",
       "position": {
-        "x": 253,
-        "y": 514
+        "x": 133,
+        "y": 488
       },
       "type": "GetBBValue"
     },
@@ -149,8 +149,8 @@
       "id": 6,
       "label": "mFatigue",
       "position": {
-        "x": 248,
-        "y": 629
+        "x": 136,
+        "y": 564
       },
       "type": "GetBBValue"
     },
@@ -215,18 +215,18 @@
           "leftPinID": "",
           "logicalOp": "Or",
           "presetID": "preset_9a023608-36ec-4493-856d-698ccb469df1",
-          "rightPinID": "pin_119bde63-1b8e-40e9-b3ff-8e3b5804a7bf"
+          "rightPinID": "pin_b07a8eef-27dd-4e30-9c0c-d1b989efea60"
         },
         {
-          "leftPinID": "pin_9e7aaeae-0953-47d5-a975-e9f4cec1138c",
+          "leftPinID": "pin_5b2f4925-4249-4f5e-bb36-8027d0699031",
           "logicalOp": "And",
           "presetID": "preset_fa90103d-5905-4483-b1c3-ebcadc870d58",
-          "rightPinID": "pin_1cc7725a-15fe-4962-b91b-f3e0ebc8e46d"
+          "rightPinID": "pin_4469b883-2992-49d4-8366-5c4e2ce3787c"
         }
       ],
       "position": {
-        "x": 597,
-        "y": 396
+        "x": 619,
+        "y": 415
       },
       "type": "Branch"
     },
@@ -234,10 +234,10 @@
       "id": 8,
       "label": "Heal Myself",
       "position": {
-        "x": 897,
-        "y": 439
+        "x": 900,
+        "y": 376
       },
-      "taskType": "",
+      "taskType": "take_cover",
       "type": "AtomicTask"
     },
     {
@@ -245,9 +245,9 @@
       "label": "Probe for food",
       "position": {
         "x": 902.895,
-        "y": 613.454
+        "y": 519.454
       },
-      "taskType": "",
+      "taskType": "patrol_path",
       "type": "AtomicTask"
     }
   ],

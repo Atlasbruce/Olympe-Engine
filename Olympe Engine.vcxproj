@@ -321,8 +321,6 @@
     <ClInclude Include="Source\Editor\Panels\MathOpPropertyPanel.h" />
     <ClInclude Include="Source\Editor\Panels\NodeConditionsPanel.h" />
     <ClInclude Include="Source\Editor\Panels\SetBBValuePropertyPanel.h" />
-    <ClInclude Include="Source\Editor\Phase24_FinalImplementationChecklist.h" />
-    <ClInclude Include="Source\Editor\Phase24_ImplementationStatus.h" />
     <ClInclude Include="Source\Editor\UIHelpers\PresetDropdownHelper.h" />
     <ClInclude Include="Source\engine_utils.h" />
     <ClInclude Include="Source\DataManager.h" />
@@ -456,35 +454,10 @@
     <None Include="analyze_code.ps1" />
     <None Include="analyze_codebase.ps1" />
     <None Include="analyze_codebase_v2.ps1" />
-    <None Include="Assets\Fonts\README.md" />
     <None Include="blueprint_editor_config.json" />
     <None Include="ClassDiagram.cd" />
     <None Include="config\ATS-VS-editor-config.json" />
-    <None Include="Docs\Archive\README_ARCHIVE.md" />
-    <None Include="Docs\Blueprint Editor Features.md" />
-    <None Include="Docs\Blueprint_Editor_Advanced_Systems.md" />
-    <None Include="Docs\Blueprint_Editor_Documentation_Complete.md" />
-    <None Include="Docs\BLUEPRINT_EDITOR_FIXED_LAYOUT_IMPLEMENTATION.md" />
-    <None Include="Docs\BLUEPRINT_EDITOR_LOADING_FIXES.md" />
-    <None Include="Docs\Blueprint_Editor_Pipeline_Summary.md" />
-    <None Include="Docs\Blueprint_Editor_Quick_Start_FR.md" />
-    <None Include="Docs\Blueprint_Editor_User_Guide_v4.md" />
-    <None Include="Docs\Blueprint_Editor_Visual_Diagrams.md" />
-    <None Include="Docs\DOCUMENTATION_UPDATE_SUMMARY.md" />
-    <None Include="Docs\DOCUMENTATION_v4_FINAL_SUMMARY.md" />
-    <None Include="Docs\FONT_AWESOME_INTEGRATION.md" />
-    <None Include="Docs\FONT_AWESOME_SETUP.md" />
-    <None Include="Docs\README_Documentation_Index.md" />
     <None Include="olympe.ini" />
-    <None Include="PHASE24_COMPLETION_REPORT.md" />
-    <None Include="PHASE24_CRASH_FIX_TESTING.md" />
-    <None Include="PHASE24_FINAL_AUDIT_REPORT_FR.md" />
-    <None Include="PHASE24_FINAL_STATUS_REPORT.md" />
-    <None Include="PHASE24_IMPLEMENTATION_PLAN.py" />
-    <None Include="PHASE24_INTEGRATION_COMPLETION_SUMMARY.md" />
-    <None Include="Phase24_Integration_Verification.md" />
-    <None Include="Project Management\Diary\DevDiary-20-03-2026.md" />
-    <None Include="Project Management\features\Condition Preset - Condition properties - Condition node - final design 18-03-26.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
@@ -497,7 +470,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
-    <Text Include="PHASE24_DOCUMENTATION_INDEX.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

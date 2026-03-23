@@ -1,6 +1,58 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#include <cstdint>
+
+namespace Olympe {
+
+// ============================================================================
+// PIN COLORS
+// ============================================================================
+
+namespace SystemColors {
+
+	/**
+	 * @brief White color for execution flow (exec) pins and connections.
+	 * Used for triangle-shaped pins representing control flow.
+	 */
+	constexpr uint32_t EXEC_PIN_COLOR = 0xFFFFFFFF;  // RGBA: White
+
+	/**
+	 * @brief Violet color for data pins and connections.
+	 * Used for circle-shaped pins representing data flow.
+	 */
+	constexpr uint32_t DATA_PIN_COLOR = 0xB464C8FF;  // RGBA: RGB(180, 100, 200)
+
+	/**
+	 * @brief Alternative white color for exec connections (Bezier curves).
+	 * Same as EXEC_PIN_COLOR but used explicitly for link rendering.
+	 */
+	constexpr uint32_t EXEC_CONNECTION_COLOR = 0xFFFFFFFF;  // White
+
+	/**
+	 * @brief Alternative violet color for data connections (Bezier curves).
+	 * Same as DATA_PIN_COLOR but used explicitly for link rendering.
+	 */
+	constexpr uint32_t DATA_CONNECTION_COLOR = 0xB464C8FF;  // Violet
+
+	/**
+	 * @brief Helper function to extract ImU32 color (ImGui format).
+	 * ImGui uses ABGR format, so we need to swizzle RGBA to ABGR.
+	 */
+	static inline uint32_t ToImU32_ABGR(uint32_t rgbaColor)
+	{
+		// Input: 0xRRGGBBAA
+		// Output: 0xAABBGGRR (ImGui expects ABGR)
+		uint8_t r = (rgbaColor >> 24) & 0xFF;
+		uint8_t g = (rgbaColor >> 16) & 0xFF;
+		uint8_t b = (rgbaColor >> 8) & 0xFF;
+		uint8_t a = rgbaColor & 0xFF;
+		return (a << 24) | (b << 16) | (g << 8) | r;
+	}
+
+} // namespace SystemColors
+
+} // namespace Olympe
 
 constexpr double k_PI = 3.14159265358979323846;
 
