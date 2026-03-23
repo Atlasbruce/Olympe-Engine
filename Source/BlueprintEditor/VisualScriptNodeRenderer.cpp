@@ -82,6 +82,8 @@ unsigned int GetDataPinColor(VariableType type)
     return SystemColors::DATA_PIN_COLOR;
 }
 
+
+
 const char* GetNodeTypeLabel(TaskNodeType type)
 {
     switch (type)
@@ -434,13 +436,11 @@ void VisualScriptNodeRenderer::RenderNode(
         int attrID = nodeUID * 10000 + 100 + static_cast<int>(i);
         ImNodes::PushColorStyle(ImNodesCol_Pin, GetExecPinColor());
         ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_TriangleFilled);
-        ImGui::Text("%s", execOutputPins[i].c_str());
 
-        // [-] button for removable (dynamic) pins only
+        // Handle dynamic pin removal button placement
         if (hasDynamicPins && static_cast<int>(i) >= numStaticPins && onRemovePin)
         {
             int dynIdx = static_cast<int>(i) - numStaticPins;
-            ImGui::SameLine();
             ImGui::PushID(nodeUID * 10000 + 5000 + static_cast<int>(i));
             ImGui::PushStyleColor(ImGuiCol_Button,        IM_COL32(140, 30, 30, 200));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(200, 50, 50, 220));
@@ -451,6 +451,12 @@ void VisualScriptNodeRenderer::RenderNode(
                 ImGui::SetTooltip("Remove Execution Output");
             ImGui::PopStyleColor(3);
             ImGui::PopID();
+            ImGui::SameLine(0.0f, 4.0f);
+            ImGui::Text("%s", execOutputPins[i].c_str());
+        }
+        else
+        {
+            ImGui::Text("%s", execOutputPins[i].c_str());
         }
 
         ImNodes::EndOutputAttribute();

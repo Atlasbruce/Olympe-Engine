@@ -119,8 +119,8 @@
       "id": 3,
       "label": "AtomicTask Log Message with a long name and title in order to test the caption length",
       "position": {
-        "x": 554,
-        "y": 219
+        "x": 617,
+        "y": 234
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -130,8 +130,8 @@
       "label": "MathOp",
       "mathOp": "-",
       "position": {
-        "x": 367,
-        "y": 528
+        "x": 371,
+        "y": 525
       },
       "type": "MathOp"
     },
@@ -139,8 +139,8 @@
       "id": 5,
       "label": "mHealth",
       "position": {
-        "x": 133,
-        "y": 488
+        "x": 173,
+        "y": 489
       },
       "type": "GetBBValue"
     },
@@ -149,8 +149,8 @@
       "id": 6,
       "label": "mFatigue",
       "position": {
-        "x": 136,
-        "y": 564
+        "x": 175,
+        "y": 573
       },
       "type": "GetBBValue"
     },
@@ -215,18 +215,18 @@
           "leftPinID": "",
           "logicalOp": "Or",
           "presetID": "preset_9a023608-36ec-4493-856d-698ccb469df1",
-          "rightPinID": "pin_b07a8eef-27dd-4e30-9c0c-d1b989efea60"
+          "rightPinID": ""
         },
         {
-          "leftPinID": "pin_5b2f4925-4249-4f5e-bb36-8027d0699031",
+          "leftPinID": "",
           "logicalOp": "And",
           "presetID": "preset_fa90103d-5905-4483-b1c3-ebcadc870d58",
-          "rightPinID": "pin_4469b883-2992-49d4-8366-5c4e2ce3787c"
+          "rightPinID": ""
         }
       ],
       "position": {
-        "x": 619,
-        "y": 415
+        "x": 617,
+        "y": 412
       },
       "type": "Branch"
     },
@@ -234,8 +234,8 @@
       "id": 8,
       "label": "Heal Myself",
       "position": {
-        "x": 900,
-        "y": 376
+        "x": 898,
+        "y": 427
       },
       "taskType": "take_cover",
       "type": "AtomicTask"
@@ -249,6 +249,43 @@
       },
       "taskType": "patrol_path",
       "type": "AtomicTask"
+    },
+    {
+      "delaySeconds": 0,
+      "id": 11,
+      "label": "Delay",
+      "position": {
+        "x": 183,
+        "y": 717
+      },
+      "type": "Delay"
+    },
+    {
+      "id": 12,
+      "label": "DoOnce",
+      "position": {
+        "x": 688,
+        "y": 723
+      },
+      "type": "DoOnce"
+    },
+    {
+      "id": 13,
+      "label": "ForEach",
+      "position": {
+        "x": 192,
+        "y": 871
+      },
+      "type": "ForEach"
+    },
+    {
+      "id": 14,
+      "label": "While",
+      "position": {
+        "x": 415,
+        "y": 874
+      },
+      "type": "While"
     }
   ],
   "schema_version": 4
