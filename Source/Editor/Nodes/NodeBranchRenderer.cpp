@@ -50,7 +50,7 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
     if (data.breakpoint)
     {
         ImGui::SameLine();
-        ImGui::TextColored(ImVec4(1.f, 0.3f, 0.3f, 1.f), "[BP]");
+        ImGui::TextColored(ImVec4(1.f, 0.3f, 0.3f, 1.f), "[◙]");
     }
     ImNodes::EndNodeTitleBar();
 
@@ -75,6 +75,15 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
         int thenAttrID = data.nodeID * 10000 + 100;  // offset 100 = exec-out #0
         ImNodes::PushColorStyle(ImNodesCol_Pin, IM_COL32(255, 255, 255, 255));  // White for exec pins
         ImNodes::BeginOutputAttribute(thenAttrID, ImNodesPinShape_TriangleFilled);
+        /*
+        // Récupérer la position du pin
+        ImVec2 pinRectMin = ImGui::GetItemRectMin();
+        ImVec2 pinRectMax = ImGui::GetItemRectMax();
+        ImVec2 pinSize = ImGui::GetItemRectSize();
+
+        // Position du pin avant à sa gauche
+        ImGui::SetCursorPosX(pinRectMin.x - pinSize.x); // -ImGui::CalcTextSize("Then").x - 4.0f));
+        /**/
         ImGui::Text("Then");
         ImNodes::EndOutputAttribute();
         ImNodes::PopColorStyle();
@@ -98,8 +107,8 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
     ImGui::Columns(1);  // End columns
 
     // ── CONDITIONS (green, read-only) ──────────────────────────────────────────
-    ImGui::Spacing();
-    ImGui::Separator();
+    /*ImGui::Spacing();
+    ImGui::Separator();*/
     ImGui::Spacing();
     RenderConditionsSection(data);
     ImGui::Spacing();
@@ -108,11 +117,11 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
     // ── DYNAMIC DATA PINS (rendered LAST, at bottom) ──
     if (!data.dynamicPins.empty())
     {
-        ImGui::Separator();
-        ImGui::Spacing();
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(180.0f / 255.0f, 100.0f / 255.0f, 200.0f / 255.0f, 1.0f)); // Violet header
-        ImGui::TextUnformatted("=== DATA INPUTS ===");
-        ImGui::PopStyleColor();
+        //ImGui::Separator();
+        //ImGui::Spacing();
+        //ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(180.0f / 255.0f, 100.0f / 255.0f, 200.0f / 255.0f, 1.0f)); // Violet header
+        //ImGui::TextUnformatted("=== DATA INPUTS ===");
+        //ImGui::PopStyleColor();
         ImGui::Spacing();
         RenderDynamicPinsSection(data);
     }
@@ -206,15 +215,16 @@ void NodeBranchRenderer::RenderConditionsSection(const NodeBranchData& data)
          if (preset)
          {
              // Build the condition display with highlighted Pin references
-             ImGui::Text("%s", opLabel);
+             ImGui::TextColored(condColor, "%s", opLabel);
+             //ImGui::Text("%s", opLabel);
              ImGui::SameLine(0.0f, 0.0f);
 
              // Left operand (GetDisplayString() already includes brackets)
-             if (preset->left.IsPin())
-             {
-                 ImGui::TextColored(pinColor, "%s", preset->left.GetDisplayString().c_str());
-             }
-             else
+             //if (preset->left.IsPin())
+             //{
+             //    ImGui::TextColored(pinColor, "%s", preset->left.GetDisplayString().c_str());
+             //}
+             //else
              {
                  ImGui::TextColored(condColor, "%s", preset->left.GetDisplayString().c_str());
              }
@@ -236,11 +246,11 @@ void NodeBranchRenderer::RenderConditionsSection(const NodeBranchData& data)
              ImGui::SameLine(0.0f, 4.0f);
 
              // Right operand (GetDisplayString() already includes brackets)
-             if (preset->right.IsPin())
-             {
-                 ImGui::TextColored(pinColor, "%s", preset->right.GetDisplayString().c_str());
-             }
-             else
+             //if (preset->right.IsPin())
+             //{
+             //    ImGui::TextColored(pinColor, "%s", preset->right.GetDisplayString().c_str());
+             //}
+             //else
              {
                  ImGui::TextColored(condColor, "%s", preset->right.GetDisplayString().c_str());
              }
