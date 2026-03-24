@@ -90,16 +90,6 @@
     {
       "id": 1,
       "label": "EntryPoint",
-      "params": {
-        "__posX": {
-          "LiteralValue": 131,
-          "Type": "Literal"
-        },
-        "__posY": {
-          "LiteralValue": 318,
-          "Type": "Literal"
-        }
-      },
       "position": {
         "x": 131,
         "y": 318
@@ -112,16 +102,6 @@
       ],
       "id": 2,
       "label": "Sequence",
-      "params": {
-        "__posX": {
-          "LiteralValue": 314,
-          "Type": "Literal"
-        },
-        "__posY": {
-          "LiteralValue": 319,
-          "Type": "Literal"
-        }
-      },
       "position": {
         "x": 314,
         "y": 319
@@ -131,20 +111,6 @@
     {
       "id": 3,
       "label": "Log Message",
-      "params": {
-        "__posX": {
-          "LiteralValue": 597,
-          "Type": "Literal"
-        },
-        "__posY": {
-          "LiteralValue": 211,
-          "Type": "Literal"
-        },
-        "message": {
-          "LiteralValue": "1st sequence task completed",
-          "Type": "Literal"
-        }
-      },
       "position": {
         "x": 597,
         "y": 211
@@ -153,19 +119,8 @@
       "type": "AtomicTask"
     },
     {
-      "bbKey": "mHealth",
       "id": 5,
       "label": "mHealth",
-      "params": {
-        "__posX": {
-          "LiteralValue": 198,
-          "Type": "Literal"
-        },
-        "__posY": {
-          "LiteralValue": 499,
-          "Type": "Literal"
-        }
-      },
       "position": {
         "x": 198,
         "y": 499
@@ -176,16 +131,6 @@
       "bbKey": "mFatigue",
       "id": 6,
       "label": "mFatigue",
-      "params": {
-        "__posX": {
-          "LiteralValue": 203,
-          "Type": "Literal"
-        },
-        "__posY": {
-          "LiteralValue": 602,
-          "Type": "Literal"
-        }
-      },
       "position": {
         "x": 203,
         "y": 602
@@ -216,20 +161,8 @@
           "logicalOp": "And",
           "presetID": "preset_455dbd95-50c5-45bc-856a-2dff621fe880",
           "rightPinID": ""
-        },
-        {
-          "leftPinID": "",
-          "logicalOp": "Or",
-          "presetID": "preset_9a023608-36ec-4493-856d-698ccb469df1",
-          "rightPinID": "pin_9318e264-6b21-4cd3-9403-128090c6aa5a"
-        },
-        {
-          "leftPinID": "",
-          "logicalOp": "And",
-          "presetID": "preset_fa90103d-5905-4483-b1c3-ebcadc870d58",
-          "rightPinID": ""
         }
-      },
+      ],
       "position": {
         "x": 598,
         "y": 396
@@ -239,16 +172,6 @@
     {
       "id": 8,
       "label": "Heal Myself",
-      "params": {
-        "__posX": {
-          "LiteralValue": 880,
-          "Type": "Literal"
-        },
-        "__posY": {
-          "LiteralValue": 328,
-          "Type": "Literal"
-        }
-      },
       "position": {
         "x": 880,
         "y": 328
@@ -259,16 +182,6 @@
     {
       "id": 9,
       "label": "Patrol Path",
-      "params": {
-        "__posX": {
-          "LiteralValue": 887,
-          "Type": "Literal"
-        },
-        "__posY": {
-          "LiteralValue": 446,
-          "Type": "Literal"
-        }
-      },
       "position": {
         "x": 887.895,
         "y": 446.454
@@ -279,20 +192,6 @@
     {
       "id": 15,
       "label": "Log Message",
-      "params": {
-        "__posX": {
-          "LiteralValue": 1080,
-          "Type": "Literal"
-        },
-        "__posY": {
-          "LiteralValue": 327,
-          "Type": "Literal"
-        },
-        "message": {
-          "LiteralValue": "Heal myselfaction completed",
-          "Type": "Literal"
-        }
-      },
       "position": {
         "x": 1080,
         "y": 327
@@ -303,20 +202,6 @@
     {
       "id": 16,
       "label": "Log Message",
-      "params": {
-        "__posX": {
-          "LiteralValue": 1081,
-          "Type": "Literal"
-        },
-        "__posY": {
-          "LiteralValue": 442,
-          "Type": "Literal"
-        },
-        "message": {
-          "LiteralValue": "Patrol Path completed",
-          "Type": "Literal"
-        }
-      },
       "position": {
         "x": 1081.43,
         "y": 442.142
@@ -327,33 +212,8 @@
     {
       "id": 17,
       "label": "MathOp",
-      "mathOpRef": {
-        "leftOperand": {
-          "constValue": "",
-          "dynamicPinID": "",
-          "mode": 1,
-          "variableName": ""
-        },
-        "mathOperator": "+",
-        "rightOperand": {
-          "constValue": "",
-          "dynamicPinID": "",
-          "mode": 1,
-          "variableName": ""
-        }
-      },
-      "params": {
-        "__posX": {
-          "LiteralValue": 395,
-          "Type": "Literal"
-        },
-        "__posY": {
-          "LiteralValue": 537,
-          "Type": "Literal"
-        }
-      },
       "position": {
-        "x": 394,
+        "x": 395,
         "y": 537
       },
       "type": "MathOp"

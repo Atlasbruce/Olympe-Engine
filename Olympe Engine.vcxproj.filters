@@ -195,6 +195,7 @@
     <ClCompile Include="Source\Editor\Panels\MathOpPropertyPanel.cpp" />
     <ClCompile Include="Source\Editor\Panels\GetBBValuePropertyPanel.cpp" />
     <ClCompile Include="Source\Editor\Panels\SetBBValuePropertyPanel.cpp" />
+    <ClCompile Include="Source\Editor\Panels\ActionParametersPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -429,6 +430,7 @@
     <ClInclude Include="Source\Editor\Panels\MathOpPropertyPanel.h" />
     <ClInclude Include="Source\Editor\Panels\GetBBValuePropertyPanel.h" />
     <ClInclude Include="Source\Editor\Panels\SetBBValuePropertyPanel.h" />
+    <ClInclude Include="Source\Editor\Panels\ActionParametersPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -449,6 +451,7 @@
     <None Include="blueprint_editor_config.json" />
     <None Include="add_proj_entries.ps1" />
     <None Include="add_bb_panels.ps1" />
+    <None Include="tests\Synthèse des approches testées pour l%27alignement à droite des labels de pins.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

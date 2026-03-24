@@ -1111,6 +1111,97 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
         if (!def.MathOperator.empty())
             n["mathOp"] = def.MathOperator;
 
+        // Serialize parameters (AtomicTask and other node types with parameters)
+        if (!def.Parameters.empty())
+        {
+            json paramsObj = json::object();
+            for (const auto& paramPair : def.Parameters)
+            {
+                const std::string& paramName = paramPair.first;
+                const ParameterBinding& binding = paramPair.second;
+
+                json bindingObj = json::object();
+
+                switch (binding.Type)
+                {
+                    case ParameterBindingType::Literal:
+                        bindingObj["Type"] = "Literal";
+                        // Serialize the literal value based on its type
+                        if (!binding.LiteralValue.IsNone())
+                        {
+                            switch (binding.LiteralValue.GetType())
+                            {
+                                case VariableType::Bool:
+                                    bindingObj["LiteralValue"] = binding.LiteralValue.AsBool();
+                                    break;
+                                case VariableType::Int:
+                                    bindingObj["LiteralValue"] = binding.LiteralValue.AsInt();
+                                    break;
+                                case VariableType::Float:
+                                    bindingObj["LiteralValue"] = binding.LiteralValue.AsFloat();
+                                    break;
+                                case VariableType::String:
+                                    bindingObj["LiteralValue"] = binding.LiteralValue.AsString();
+                                    break;
+                                case VariableType::Vector:
+                                {
+                                    const ::Vector v = binding.LiteralValue.AsVector();
+                                    json vec;
+                                    vec["x"] = v.x;
+                                    vec["y"] = v.y;
+                                    vec["z"] = v.z;
+                                    bindingObj["LiteralValue"] = vec;
+                                    break;
+                                }
+                                case VariableType::EntityID:
+                                    bindingObj["LiteralValue"] = std::to_string(binding.LiteralValue.AsEntityID());
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        break;
+
+                    case ParameterBindingType::LocalVariable:
+                        bindingObj["Type"] = "LocalVariable";
+                        bindingObj["VariableName"] = binding.VariableName;
+                        break;
+
+                    case ParameterBindingType::AtomicTaskID:
+                        bindingObj["Type"] = "AtomicTaskID";
+                        bindingObj["value"] = binding.VariableName;
+                        break;
+
+                    case ParameterBindingType::ConditionID:
+                        bindingObj["Type"] = "ConditionID";
+                        bindingObj["value"] = binding.VariableName;
+                        break;
+
+                    case ParameterBindingType::MathOperator:
+                        bindingObj["Type"] = "MathOperator";
+                        bindingObj["value"] = binding.VariableName;
+                        break;
+
+                    case ParameterBindingType::ComparisonOp:
+                        bindingObj["Type"] = "ComparisonOp";
+                        bindingObj["value"] = binding.VariableName;
+                        break;
+
+                    case ParameterBindingType::SubGraphPath:
+                        bindingObj["Type"] = "SubGraphPath";
+                        bindingObj["value"] = binding.VariableName;
+                        break;
+
+                    default:
+                        bindingObj["Type"] = "Literal";
+                        break;
+                }
+
+                paramsObj[paramName] = bindingObj;
+            }
+            n["params"] = paramsObj;
+        }
+
         // Switch enhancements (Phase 22-A)
         if (def.Type == TaskNodeType::Switch)
         {
@@ -1132,6 +1223,15 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
                 }
                 n["switchCases"] = casesArray;
             }
+        }
+
+        // Phase 24 Milestone 2 — MathOp operand serialization
+        // Serialize the complete MathOpRef (left operand, operator, right operand)
+        if (def.Type == TaskNodeType::MathOp && !def.mathOpRef.mathOperator.empty())
+        {
+            n["mathOpRef"] = def.mathOpRef.ToJson();
+            SYSTEM_LOG << "[VisualScriptEditorPanel] SerializeAndWrite: serialized mathOpRef for MathOp node "
+                       << def.NodeID << "\n";
         }
 
         // Structured conditions (Phase 23-B.4 — Branch/While)
@@ -1295,6 +1395,111 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
             for (size_t p = 0; p < def.DynamicExecOutputPins.size(); ++p)
                 dynPins.push_back(def.DynamicExecOutputPins[p]);
             n["dynamicExecPins"] = dynPins;
+        }
+
+        // SubGraph input and output parameters (Phase 3)
+        if (def.Type == TaskNodeType::SubGraph)
+        {
+            // Input parameters: map of name → ParameterBinding
+            if (!def.InputParams.empty())
+            {
+                json inputParamsObj = json::object();
+                for (const auto& paramPair : def.InputParams)
+                {
+                    const std::string& paramName = paramPair.first;
+                    const ParameterBinding& binding = paramPair.second;
+
+                    json bindingObj = json::object();
+
+                    switch (binding.Type)
+                    {
+                        case ParameterBindingType::Literal:
+                            bindingObj["Type"] = "Literal";
+                            if (!binding.LiteralValue.IsNone())
+                            {
+                                switch (binding.LiteralValue.GetType())
+                                {
+                                    case VariableType::Bool:
+                                        bindingObj["LiteralValue"] = binding.LiteralValue.AsBool();
+                                        break;
+                                    case VariableType::Int:
+                                        bindingObj["LiteralValue"] = binding.LiteralValue.AsInt();
+                                        break;
+                                    case VariableType::Float:
+                                        bindingObj["LiteralValue"] = binding.LiteralValue.AsFloat();
+                                        break;
+                                    case VariableType::String:
+                                        bindingObj["LiteralValue"] = binding.LiteralValue.AsString();
+                                        break;
+                                    case VariableType::Vector:
+                                    {
+                                        const ::Vector v = binding.LiteralValue.AsVector();
+                                        json vec;
+                                        vec["x"] = v.x;
+                                        vec["y"] = v.y;
+                                        vec["z"] = v.z;
+                                        bindingObj["LiteralValue"] = vec;
+                                        break;
+                                    }
+                                    case VariableType::EntityID:
+                                        bindingObj["LiteralValue"] = std::to_string(binding.LiteralValue.AsEntityID());
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            break;
+
+                        case ParameterBindingType::LocalVariable:
+                            bindingObj["Type"] = "LocalVariable";
+                            bindingObj["VariableName"] = binding.VariableName;
+                            break;
+
+                        case ParameterBindingType::AtomicTaskID:
+                            bindingObj["Type"] = "AtomicTaskID";
+                            bindingObj["value"] = binding.VariableName;
+                            break;
+
+                        case ParameterBindingType::ConditionID:
+                            bindingObj["Type"] = "ConditionID";
+                            bindingObj["value"] = binding.VariableName;
+                            break;
+
+                        case ParameterBindingType::MathOperator:
+                            bindingObj["Type"] = "MathOperator";
+                            bindingObj["value"] = binding.VariableName;
+                            break;
+
+                        case ParameterBindingType::ComparisonOp:
+                            bindingObj["Type"] = "ComparisonOp";
+                            bindingObj["value"] = binding.VariableName;
+                            break;
+
+                        case ParameterBindingType::SubGraphPath:
+                            bindingObj["Type"] = "SubGraphPath";
+                            bindingObj["value"] = binding.VariableName;
+                            break;
+
+                        default:
+                            bindingObj["Type"] = "Literal";
+                            break;
+                    }
+
+                    inputParamsObj[paramName] = bindingObj;
+                }
+                n["InputParams"] = inputParamsObj;
+            }
+
+            // Output parameters: map of name → blackboard key
+            if (!def.OutputParams.empty())
+            {
+                json outputParamsObj = json::object();
+                for (const auto& paramPair : def.OutputParams)
+                {
+                    outputParamsObj[paramPair.first] = paramPair.second;
+                }
+                n["OutputParams"] = outputParamsObj;
+            }
         }
 
         // Position from editor node
@@ -3054,6 +3259,187 @@ void VisualScriptEditorPanel::RenderMathOpNodeProperties(VSEditorNode& eNode,
     (void)eNode; // suppress unused-warning
 }
 
+void VisualScriptEditorPanel::RenderNodeDataParameters(TaskNodeDefinition& def)
+{
+    // Phase 24 — Generic parameter editor for data nodes (GetBBValue, SetBBValue, MathOp)
+    // Allows storing and serializing additional parameters on data nodes
+
+    // Filter out system parameters (those starting with __)
+    std::vector<std::string> userParams;
+    for (const auto& paramPair : def.Parameters)
+    {
+        const std::string& paramName = paramPair.first;
+        // Skip system parameters
+        if (paramName.length() >= 2 && paramName[0] == '_' && paramName[1] == '_')
+            continue;
+        userParams.push_back(paramName);
+    }
+
+    ImGui::Separator();
+    ImGui::TextColored(ImVec4(0.7f, 0.9f, 1.0f, 1.0f), "Node Parameters:");
+
+    if (userParams.empty())
+    {
+        ImGui::TextDisabled("(no user parameters - add one below)");
+    }
+
+    // Display user parameters
+    for (const auto& paramName : userParams)
+    {
+        auto paramIt = def.Parameters.find(paramName);
+        if (paramIt == def.Parameters.end())
+            continue;
+
+        ParameterBinding& binding = paramIt->second;
+
+        ImGui::PushID(paramName.c_str());
+
+        // Display parameter name
+        ImGui::TextColored(ImVec4(0.8f, 0.95f, 1.0f, 1.0f), "%s", paramName.c_str());
+
+        // Build a label showing the binding type
+        const char* typeLabel = "?";
+        switch (binding.Type)
+        {
+            case ParameterBindingType::Literal:       typeLabel = "Literal"; break;
+            case ParameterBindingType::LocalVariable:  typeLabel = "Variable"; break;
+            case ParameterBindingType::AtomicTaskID:   typeLabel = "AtomicTaskID"; break;
+            case ParameterBindingType::ConditionID:    typeLabel = "ConditionID"; break;
+            case ParameterBindingType::MathOperator:   typeLabel = "MathOp"; break;
+            case ParameterBindingType::ComparisonOp:   typeLabel = "CompOp"; break;
+            case ParameterBindingType::SubGraphPath:   typeLabel = "SubGraph"; break;
+        }
+        ImGui::SameLine();
+        ImGui::TextDisabled("(%s)", typeLabel);
+
+        // Input field for editing parameter value
+        if (binding.Type == ParameterBindingType::Literal)
+        {
+            // For literal values, show an input field
+            std::string currentValue;
+            if (!binding.LiteralValue.IsNone())
+            {
+                currentValue = binding.LiteralValue.AsString();
+            }
+
+            char buf[256];
+            strncpy_s(buf, sizeof(buf), currentValue.c_str(), _TRUNCATE);
+            ImGui::SetNextItemWidth(-1.0f);
+            if (ImGui::InputText(("##" + paramName + "_val").c_str(), buf, sizeof(buf)))
+            {
+                // Parse and store the value
+                std::string strVal(buf);
+                binding.LiteralValue = TaskValue(strVal);
+
+                // Keep template in sync
+                for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                {
+                    if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                    {
+                        m_template.Nodes[i].Parameters[paramName] = binding;
+                        break;
+                    }
+                }
+                m_dirty = true;
+            }
+        }
+        else if (binding.Type == ParameterBindingType::LocalVariable)
+        {
+            // For local variables, show a dropdown of available variables
+            BBVariableRegistry bbReg;
+            bbReg.LoadFromTemplate(m_template);
+            const std::vector<VarSpec> vars = bbReg.GetAllVariables();
+
+            const char* preview = binding.VariableName.empty() ? "(select...)" : binding.VariableName.c_str();
+            ImGui::SetNextItemWidth(-1.0f);
+            if (ImGui::BeginCombo(("##" + paramName + "_var").c_str(), preview))
+            {
+                for (const auto& var : vars)
+                {
+                    bool selected = (var.name == binding.VariableName);
+                    if (ImGui::Selectable(var.displayLabel.c_str(), selected))
+                    {
+                        binding.VariableName = var.name;
+
+                        // Keep template in sync
+                        for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                        {
+                            if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                            {
+                                m_template.Nodes[i].Parameters[paramName] = binding;
+                                break;
+                            }
+                        }
+                        m_dirty = true;
+                    }
+                    if (selected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+        }
+        else
+        {
+            // For other types, show a text field for the identifier
+            char buf[256];
+            strncpy_s(buf, sizeof(buf), binding.VariableName.c_str(), _TRUNCATE);
+            ImGui::SetNextItemWidth(-1.0f);
+            if (ImGui::InputText(("##" + paramName + "_id").c_str(), buf, sizeof(buf)))
+            {
+                binding.VariableName = buf;
+
+                // Keep template in sync
+                for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                {
+                    if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                    {
+                        m_template.Nodes[i].Parameters[paramName] = binding;
+                        break;
+                    }
+                }
+                m_dirty = true;
+            }
+        }
+
+        ImGui::PopID();
+    }
+
+    // Add parameter section
+    ImGui::Separator();
+    ImGui::TextColored(ImVec4(0.7f, 0.9f, 1.0f, 1.0f), "Add Parameter:");
+
+    static char paramNameBuf[256] = "";
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 80.0f);
+    ImGui::InputText("##new_param_name", paramNameBuf, sizeof(paramNameBuf), ImGuiInputTextFlags_CharsNoBlank);
+    ImGui::SameLine();
+    if (ImGui::Button("Add", ImVec2(70.0f, 0.0f)))
+    {
+        std::string newParamName(paramNameBuf);
+        if (!newParamName.empty() && def.Parameters.find(newParamName) == def.Parameters.end())
+        {
+            // Create new parameter with default Literal binding
+            ParameterBinding newBinding;
+            newBinding.Type = ParameterBindingType::Literal;
+            newBinding.LiteralValue = TaskValue("");
+
+            def.Parameters[newParamName] = newBinding;
+
+            // Keep template in sync
+            for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+            {
+                if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                {
+                    m_template.Nodes[i].Parameters[newParamName] = newBinding;
+                    break;
+                }
+            }
+
+            m_dirty = true;
+            paramNameBuf[0] = '\0';  // Clear the input field
+        }
+    }
+}
+
 void VisualScriptEditorPanel::RenderProperties()
 {
     ImGui::TextDisabled("Properties");
@@ -3162,11 +3548,14 @@ void VisualScriptEditorPanel::RenderProperties()
                     {
                         const std::string oldTaskID = def.AtomicTaskID;
                         def.AtomicTaskID = spec.id;
+                        // Auto-fill node name with the action's display name
+                        def.NodeName = spec.displayName;
                         for (size_t i = 0; i < m_template.Nodes.size(); ++i)
                         {
                             if (m_template.Nodes[i].NodeID == m_selectedNodeID)
                             {
                                 m_template.Nodes[i].AtomicTaskID = def.AtomicTaskID;
+                                m_template.Nodes[i].NodeName = def.NodeName;
                                 break;
                             }
                         }
@@ -3267,6 +3656,9 @@ void VisualScriptEditorPanel::RenderProperties()
                     m_dirty = true;
                 }
             }
+
+            // Render node parameters (Phase 24 — node data serialization)
+            RenderNodeDataParameters(def);
             break;
         }
         case TaskNodeType::SetBBValue:
@@ -3307,6 +3699,9 @@ void VisualScriptEditorPanel::RenderProperties()
                     m_dirty = true;
                 }
             }
+
+            // Render node parameters (Phase 24 — node data serialization)
+            RenderNodeDataParameters(def);
             break;
         }
         case TaskNodeType::Branch:
@@ -3358,6 +3753,9 @@ void VisualScriptEditorPanel::RenderProperties()
             // Phase 24 Milestone 2: Delegate to the dedicated MathOp properties renderer.
             // This shows: blue header → MathOpPropertyPanel → operand editors.
             RenderMathOpNodeProperties(*eNode, def);
+
+            // Render node parameters (Phase 24 — node data serialization)
+            RenderNodeDataParameters(def);
             return;
         }
         case TaskNodeType::Switch:
@@ -4214,11 +4612,14 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanel()
                         if (ImGui::Selectable(spec.displayName.c_str(), selected))
                         {
                             def.AtomicTaskID = spec.id;
+                            // Auto-fill node name with the action's display name
+                            def.NodeName = spec.displayName;
                             for (size_t i = 0; i < m_template.Nodes.size(); ++i)
                             {
                                 if (m_template.Nodes[i].NodeID == m_selectedNodeID)
                                 {
                                     m_template.Nodes[i].AtomicTaskID = def.AtomicTaskID;
+                                    m_template.Nodes[i].NodeName = def.NodeName;
                                     break;
                                 }
                             }
@@ -4228,6 +4629,154 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanel()
                             ImGui::SetItemDefaultFocus();
                     }
                     ImGui::EndCombo();
+                }
+
+                // Display task parameters
+                if (!currentTask.empty())
+                {
+                    const TaskSpec* taskSpec = AtomicTaskUIRegistry::Get().GetTaskSpec(currentTask);
+                    if (taskSpec && !taskSpec->parameters.empty())
+                    {
+                        ImGui::Separator();
+                        ImGui::TextColored(ImVec4(0.7f, 0.9f, 1.0f, 1.0f), "Parameters:");
+
+                        for (const auto& param : taskSpec->parameters)
+                        {
+                            ImGui::PushID(param.name.c_str());
+
+                            // Build label: parameter name + type hint
+                            std::string label = param.name + " (" + param.type + ")";
+
+                            // Get current value from def.Parameters if it exists
+                            std::string currentValue = param.defaultValue;
+                            auto paramIt = def.Parameters.find(param.name);
+                            if (paramIt != def.Parameters.end() && paramIt->second.Type == ParameterBindingType::Literal)
+                            {
+                                currentValue = paramIt->second.LiteralValue.AsString();
+                            }
+
+                            // Display parameter name with description as label
+                            ImGui::TextColored(ImVec4(0.8f, 0.95f, 1.0f, 1.0f), "%s", param.name.c_str());
+                            ImGui::SameLine();
+
+                            // Add help icon (?) next to parameter name for discoverability
+                            ImGui::TextDisabled("(?)");
+
+                            // Add tooltip with description if available (on parameter name or help icon)
+                            if (ImGui::IsItemHovered() && !param.description.empty())
+                            {
+                                ImGui::BeginTooltip();
+                                ImGui::TextWrapped("%s", param.description.c_str());
+                                ImGui::Separator();
+                                ImGui::TextDisabled("Type: %s", param.type.c_str());
+                                ImGui::TextDisabled("Default: %s", param.defaultValue.c_str());
+                                ImGui::EndTooltip();
+                            }
+
+                            // Add description text below the parameter name (smaller, grayed out) for immediate clarity
+                            if (!param.description.empty())
+                            {
+                                ImGui::TextDisabled("%s", param.description.c_str());
+                            }
+
+                            if (param.type == "Bool")
+                            {
+                                bool value = (currentValue == "true" || currentValue == "1");
+                                ImGui::SetNextItemWidth(-1.0f);
+                                if (ImGui::Checkbox(("##" + param.name + "_input").c_str(), &value))
+                                {
+                                    ParameterBinding binding;
+                                    binding.Type = ParameterBindingType::Literal;
+                                    binding.LiteralValue = TaskValue(value);
+                                    def.Parameters[param.name] = binding;
+
+                                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                                    {
+                                        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                                        {
+                                            m_template.Nodes[i].Parameters[param.name] = binding;
+                                            break;
+                                        }
+                                    }
+                                    m_dirty = true;
+                                }
+                            }
+                            else if (param.type == "Int")
+                            {
+                                int value = 0;
+                                try { value = std::stoi(currentValue); } catch (...) {}
+                                ImGui::SetNextItemWidth(-1.0f);
+                                if (ImGui::InputInt(("##" + param.name + "_input").c_str(), &value))
+                                {
+                                    ParameterBinding binding;
+                                    binding.Type = ParameterBindingType::Literal;
+                                    binding.LiteralValue = TaskValue(value);
+                                    def.Parameters[param.name] = binding;
+
+                                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                                    {
+                                        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                                        {
+                                            m_template.Nodes[i].Parameters[param.name] = binding;
+                                            break;
+                                        }
+                                    }
+                                    m_dirty = true;
+                                }
+                            }
+                            else if (param.type == "Float")
+                            {
+                                float value = 0.0f;
+                                try { value = std::stof(currentValue); } catch (...) {}
+                                ImGui::SetNextItemWidth(-1.0f);
+                                if (ImGui::InputFloat(("##" + param.name + "_input").c_str(), &value, 0.1f))
+                                {
+                                    ParameterBinding binding;
+                                    binding.Type = ParameterBindingType::Literal;
+                                    binding.LiteralValue = TaskValue(value);
+                                    def.Parameters[param.name] = binding;
+
+                                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                                    {
+                                        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                                        {
+                                            m_template.Nodes[i].Parameters[param.name] = binding;
+                                            break;
+                                        }
+                                    }
+                                    m_dirty = true;
+                                }
+                            }
+                            else if (param.type == "String")
+                            {
+                                static char buffer[512] = {0};
+                                strncpy_s(buffer, currentValue.c_str(), sizeof(buffer) - 1);
+                                buffer[sizeof(buffer) - 1] = '\0';
+
+                                ImGui::SetNextItemWidth(-1.0f);
+                                if (ImGui::InputText(("##" + param.name + "_input").c_str(), buffer, sizeof(buffer)))
+                                {
+                                    ParameterBinding binding;
+                                    binding.Type = ParameterBindingType::Literal;
+                                    binding.LiteralValue = TaskValue(std::string(buffer));
+                                    def.Parameters[param.name] = binding;
+
+                                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                                    {
+                                        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                                        {
+                                            m_template.Nodes[i].Parameters[param.name] = binding;
+                                            break;
+                                        }
+                                    }
+                                    m_dirty = true;
+                                }
+                            }
+
+                            ImGui::Spacing();
+                            ImGui::PopID();
+                        }
+                    }
                 }
                 break;
             }
@@ -4265,8 +4814,140 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanel()
             case TaskNodeType::SetBBValue:
             {
                 const char* nodeType = (def.Type == TaskNodeType::GetBBValue) ? "Get" : "Set";
-                ImGui::TextDisabled("%s Blackboard Value", nodeType);
-                ImGui::TextDisabled("Key: %s", def.BBKey.c_str());
+                ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), "%s Blackboard Value", nodeType);
+                ImGui::Separator();
+
+                // BBKey dropdown selector from local blackboard variables
+                BBVariableRegistry bbReg;
+                bbReg.LoadFromTemplate(m_template);
+                const std::vector<VarSpec> allVars = bbReg.GetAllVariables();
+
+                const char* previewLabel = def.BBKey.empty() ? "(select variable...)" : def.BBKey.c_str();
+
+                ImGui::SetNextItemWidth(-1.0f);
+                if (ImGui::BeginCombo("Blackboard Variable##bbkey_combo", previewLabel))
+                {
+                    for (const auto& var : allVars)
+                    {
+                        bool selected = (var.name == def.BBKey);
+                        if (ImGui::Selectable(var.displayLabel.c_str(), selected))
+                        {
+                            const std::string oldBBKey = def.BBKey;
+                            def.BBKey = var.name;
+
+                            // Sync to template
+                            for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                            {
+                                if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                                {
+                                    m_template.Nodes[i].BBKey = def.BBKey;
+                                    break;
+                                }
+                            }
+
+                            // Push undo command if changed
+                            if (def.BBKey != oldBBKey)
+                            {
+                                m_undoStack.PushCommand(
+                                    std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                                        m_selectedNodeID, "BBKey",
+                                        PropertyValue::FromString(oldBBKey),
+                                        PropertyValue::FromString(def.BBKey))),
+                                    m_template);
+                            }
+                            m_dirty = true;
+                        }
+                        if (selected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+
+                // Display node parameters (common for data nodes)
+                if (!def.Parameters.empty())
+                {
+                    ImGui::Separator();
+                    ImGui::TextColored(ImVec4(0.7f, 0.9f, 1.0f, 1.0f), "Parameters:");
+                    RenderNodeDataParameters(def);
+                }
+
+                break;
+            }
+
+            case TaskNodeType::MathOp:
+            {
+                ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), "Math Operation");
+                ImGui::Separator();
+
+                // MathOpRef operator editor
+                static const char* operators[] = { "+", "-", "*", "/", "%", "^" };
+                static int operatorIdx = 0;
+
+                if (!def.mathOpRef.mathOperator.empty())
+                {
+                    for (int i = 0; i < 6; ++i)
+                    {
+                        if (def.mathOpRef.mathOperator == operators[i])
+                        {
+                            operatorIdx = i;
+                            break;
+                        }
+                    }
+                }
+
+                ImGui::SetNextItemWidth(-1.0f);
+                if (ImGui::Combo("Operator##mathop", &operatorIdx, operators, 6))
+                {
+                    def.mathOpRef.mathOperator = operators[operatorIdx];
+                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                    {
+                        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                        {
+                            m_template.Nodes[i].mathOpRef.mathOperator = operators[operatorIdx];
+                            break;
+                        }
+                    }
+                    m_dirty = true;
+                }
+
+                // Display operation preview with actual operand values
+                ImGui::Separator();
+                ImGui::TextColored(ImVec4(1.0f, 0.843f, 0.0f, 1.0f), "Operation:");
+                ImGui::SameLine();
+
+                // Build left operand display string
+                std::string leftStr = "A";
+                if (def.mathOpRef.leftOperand.mode == MathOpOperand::Mode::Const)
+                    leftStr = def.mathOpRef.leftOperand.constValue;
+                else if (def.mathOpRef.leftOperand.mode == MathOpOperand::Mode::Variable)
+                    leftStr = "[" + def.mathOpRef.leftOperand.variableName + "]";
+                else if (def.mathOpRef.leftOperand.mode == MathOpOperand::Mode::Pin)
+                    leftStr = "[Pin]";
+
+                // Build right operand display string
+                std::string rightStr = "B";
+                if (def.mathOpRef.rightOperand.mode == MathOpOperand::Mode::Const)
+                    rightStr = def.mathOpRef.rightOperand.constValue;
+                else if (def.mathOpRef.rightOperand.mode == MathOpOperand::Mode::Variable)
+                    rightStr = "[" + def.mathOpRef.rightOperand.variableName + "]";
+                else if (def.mathOpRef.rightOperand.mode == MathOpOperand::Mode::Pin)
+                    rightStr = "[Pin]";
+
+                // Display final operation string in bright green
+                ImGui::TextColored(ImVec4(0.4f, 1.0f, 0.5f, 1.0f), 
+                                   "%s %s %s", 
+                                   leftStr.c_str(),
+                                   def.mathOpRef.mathOperator.empty() ? "?" : def.mathOpRef.mathOperator.c_str(),
+                                   rightStr.c_str());
+
+                // Display node parameters
+                if (!def.Parameters.empty())
+                {
+                    ImGui::Separator();
+                    ImGui::TextColored(ImVec4(0.7f, 0.9f, 1.0f, 1.0f), "Custom Parameters:");
+                    RenderNodeDataParameters(def);
+                }
+
                 break;
             }
 

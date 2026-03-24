@@ -112,6 +112,7 @@
     <ClCompile Include="Source\Editor\ConditionPreset\Operand.cpp" />
     <ClCompile Include="Source\Editor\Nodes\NodeBranchRenderer.cpp" />
     <ClCompile Include="Source\Editor\Modals\NodeConditionsEditModal.cpp" />
+    <ClCompile Include="Source\Editor\Panels\ActionParametersPanel.cpp" />
     <ClCompile Include="Source\Editor\Panels\ConditionPresetLibraryPanel.cpp" />
     <ClCompile Include="Source\Editor\Panels\GetBBValuePropertyPanel.cpp" />
     <ClCompile Include="Source\Editor\Panels\MathOpPropertyPanel.cpp" />
@@ -316,6 +317,7 @@
     <ClInclude Include="Source\Editor\Dialogs\ConditionPresetEditDialog.h" />
     <ClInclude Include="Source\Editor\Nodes\NodeBranchRenderer.h" />
     <ClInclude Include="Source\Editor\Modals\NodeConditionsEditModal.h" />
+    <ClInclude Include="Source\Editor\Panels\ActionParametersPanel.h" />
     <ClInclude Include="Source\Editor\Panels\ConditionPresetLibraryPanel.h" />
     <ClInclude Include="Source\Editor\Panels\GetBBValuePropertyPanel.h" />
     <ClInclude Include="Source\Editor\Panels\MathOpPropertyPanel.h" />
@@ -461,6 +463,7 @@
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
+    <None Include="tests\Synthèse des approches testées pour l%27alignement à droite des labels de pins.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\olympe.ico" />

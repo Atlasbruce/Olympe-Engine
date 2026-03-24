@@ -15,6 +15,7 @@
 #include "TaskGraphLoader.h"
 #include "TaskGraphMigrator_v3_to_v4.h"
 #include "../BlueprintEditor/BTtoVSMigrator.h"
+#include "../BlueprintEditor/MathOpOperand.h"
 
 #include <string>
 #include <vector>
@@ -370,6 +371,15 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
 
     // Math operation fields.
     nd.MathOperator = JsonHelper::GetString(nodeJson, "mathOp", "");
+
+    // Phase 24 Milestone 2 — MathOp operand deserialization
+    // Deserialize the complete MathOpRef (left operand, operator, right operand)
+    if (nd.Type == TaskNodeType::MathOp && JsonHelper::IsObject(nodeJson, "mathOpRef"))
+    {
+        nd.mathOpRef = MathOpRef::FromJson(nodeJson["mathOpRef"]);
+        SYSTEM_LOG << "[TaskGraphLoader] ParseNodeV4: deserialized mathOpRef for MathOp node "
+                   << nd.NodeID << "\n";
+    }
 
     // Parse parameters: accept "params" (new) or "parameters" (legacy).
     if (JsonHelper::IsObject(nodeJson, "params"))

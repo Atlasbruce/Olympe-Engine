@@ -262,6 +262,17 @@ private:
      */
     void RenderMathOpNodeProperties(VSEditorNode& eNode, TaskNodeDefinition& def);
 
+    /**
+     * @brief Renders node parameters for data nodes (GetBBValue, SetBBValue, MathOp).
+     *
+     * @details
+     * Displays a parameters section that allows editing generic parameters that can
+     * be stored and serialized alongside node-specific properties.
+     *
+     * @param def    Reference to the node's TaskNodeDefinition (modified when dirty).
+     */
+    void RenderNodeDataParameters(TaskNodeDefinition& def);
+
     void RenderBlackboard();
     void RenderValidationOverlay();
     void RenderBreakpoints();

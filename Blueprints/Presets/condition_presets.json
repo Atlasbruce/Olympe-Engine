@@ -64,6 +64,45 @@
                 "mode": "Pin",
                 "value": "[Pin-in]"
             }
+        },
+        {
+            "id": "preset_f2fd78df-1756-40ec-ae1a-f2817dbecbe8",
+            "left": {
+                "mode": "Pin",
+                "value": "In #3R: [] == []"
+            },
+            "name": "Condition",
+            "op": "!=",
+            "right": {
+                "mode": "Const",
+                "value": 0
+            }
+        },
+        {
+            "id": "preset_69606490-974c-4cef-be46-814ab0aaed80",
+            "left": {
+                "mode": "Variable",
+                "value": ""
+            },
+            "name": "Condition",
+            "op": "==",
+            "right": {
+                "mode": "Const",
+                "value": 10
+            }
+        },
+        {
+            "id": "preset_ba7318ac-9941-401f-8b4d-e0cd47876fb0",
+            "left": {
+                "mode": "Variable",
+                "value": ""
+            },
+            "name": "Condition",
+            "op": ">",
+            "right": {
+                "mode": "Variable",
+                "value": "mFatigue"
+            }
         }
     ],
     "version": 1
