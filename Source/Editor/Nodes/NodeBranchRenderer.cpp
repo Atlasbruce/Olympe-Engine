@@ -50,7 +50,7 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
     if (data.breakpoint)
     {
         ImGui::SameLine();
-        ImGui::TextColored(ImVec4(1.f, 0.3f, 0.3f, 1.f), "[◙]");
+        ImGui::TextColored(ImVec4(1.f, 0.3f, 0.3f, 1.f), "[\xe2\x97\x8f]");
     }
     ImNodes::EndNodeTitleBar();
 
@@ -69,20 +69,30 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
         ImNodes::PopColorStyle();
     }
 
+   /* // Obtenir les dimensions du nœud via son ID
+    ImVec2 nodeSize = ImNodes::GetNodeDimensions(data.nodeID);
+    float nodeWidth = nodeSize.x;
+    float nodeHeight = nodeSize.y;
+
+    // Obtenir la position du nœud (espace grille)
+    ImVec2 nodePos = ImNodes::GetNodeGridSpacePos(data.nodeID);
+    float posX = nodePos.x;
+    float posY = nodePos.y;/**/
+
     // RIGHT COLUMN: "Then" exec output pin
     ImGui::NextColumn();
     {
         int thenAttrID = data.nodeID * 10000 + 100;  // offset 100 = exec-out #0
         ImNodes::PushColorStyle(ImNodesCol_Pin, IM_COL32(255, 255, 255, 255));  // White for exec pins
         ImNodes::BeginOutputAttribute(thenAttrID, ImNodesPinShape_TriangleFilled);
-        /*
-        // Récupérer la position du pin
-        ImVec2 pinRectMin = ImGui::GetItemRectMin();
-        ImVec2 pinRectMax = ImGui::GetItemRectMax();
-        ImVec2 pinSize = ImGui::GetItemRectSize();
+        
+        //// Récupérer la position du pin
+        //ImVec2 pinRectMin = ImGui::GetItemRectMin();
+        //ImVec2 pinRectMax = ImGui::GetItemRectMax();
+        //ImVec2 pinSize = ImGui::GetItemRectSize();
 
         // Position du pin avant à sa gauche
-        ImGui::SetCursorPosX(pinRectMin.x - pinSize.x); // -ImGui::CalcTextSize("Then").x - 4.0f));
+        //ImGui::SetCursor(posX);// -nodeWidth - (ImGui::CalcTextSize("Then").x + 4.0f));
         /**/
         ImGui::Text("Then");
         ImNodes::EndOutputAttribute();
@@ -152,7 +162,7 @@ void NodeBranchRenderer::RenderTitleSection(const NodeBranchData& data)
     if (data.breakpoint)
     {
         ImGui::SameLine();
-        ImGui::TextColored(ImVec4(1.f, 0.3f, 0.3f, 1.f), "[BP]");
+        ImGui::TextColored(ImVec4(1.f, 0.3f, 0.3f, 1.f), "[\xe2\x97\x8f]");
     }
 #endif
 }
@@ -286,7 +296,7 @@ void NodeBranchRenderer::RenderConditionsSection(const NodeBranchData& data)
 }
 
 // ============================================================================
-// Section 4 — Dynamic data pins (yellow, rendered only when non-empty)
+// Section 4 — Dynamic data pins (rendered only when non-empty)
 // ============================================================================
 
 void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data)

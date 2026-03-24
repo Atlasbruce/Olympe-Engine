@@ -4,6 +4,8 @@
 
 #include "NodeGraphPanel.h"
 #include "BlueprintEditor.h"
+#include "InspectorPanel.h"
+#include "AtomicTaskUIRegistry.h"
 #include "Clipboard.h"
 #include "EditorContext.h"
 #include "EntityInspectorManager.h"
@@ -1098,12 +1100,40 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         {
             std::vector<int> selectedUIDs(numSelected);
             ImNodes::GetSelectedNodes(selectedUIDs.data());
-            
+
             // Convert the first global UID to local Node ID
             if (!selectedUIDs.empty())
             {
                 int selectedLocalNodeID = GlobalUIDToLocalNodeID(selectedUIDs[0], graphID);
                 m_SelectedNodeId = selectedLocalNodeID;
+
+                // NEW: If this is an AtomicTask node, display its parameters in the inspector
+                GraphNode* selectedNode = graph->GetNode(selectedLocalNodeID);
+                if (selectedNode && selectedNode->type == NodeType::BT_Action)
+                {
+                    // Get the task registry to find the task display name
+                    const TaskSpec* taskSpec = AtomicTaskUIRegistry::Get().GetTaskSpec(selectedNode->actionType);
+                    std::string displayName = (taskSpec) ? taskSpec->displayName : selectedNode->actionType;
+
+                    // Build empty parameters map (can be extended to read from node data)
+                    std::unordered_map<std::string, std::string> params;
+
+                    // Display in the inspector panel via singleton
+                    InspectorPanel* inspector = InspectorPanel::GetInstance();
+                    if (inspector)
+                    {
+                        inspector->SetSelectedActionNode(selectedNode->actionType, displayName, params);
+                    }
+                }
+                else
+                {
+                    // Not an action node - clear the action panel
+                    InspectorPanel* inspector = InspectorPanel::GetInstance();
+                    if (inspector)
+                    {
+                        inspector->ClearSelectedActionNode();
+                    }
+                }
             }
         }
 
@@ -1114,11 +1144,11 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             // Extract the global UIDs of nodes
             int startNodeGlobalUID = startAttrUID / ATTR_ID_MULTIPLIER;
             int endNodeGlobalUID = endAttrUID / ATTR_ID_MULTIPLIER;
-            
+
             // Convert to local IDs
             int startNodeLocalID = GlobalUIDToLocalNodeID(startNodeGlobalUID, graphID);
             int endNodeLocalID = GlobalUIDToLocalNodeID(endNodeGlobalUID, graphID);
-            
+
             // Create the link with local IDs via adapter
             Blueprint::CommandStack* stack = BlueprintEditor::Get().GetCommandStack();
             NodeGraphShared::BlueprintAdapter adapter(stack, graphID);

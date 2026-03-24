@@ -3162,11 +3162,14 @@ void VisualScriptEditorPanel::RenderProperties()
                     {
                         const std::string oldTaskID = def.AtomicTaskID;
                         def.AtomicTaskID = spec.id;
+                        // Auto-fill node name with the action's display name
+                        def.NodeName = spec.displayName;
                         for (size_t i = 0; i < m_template.Nodes.size(); ++i)
                         {
                             if (m_template.Nodes[i].NodeID == m_selectedNodeID)
                             {
                                 m_template.Nodes[i].AtomicTaskID = def.AtomicTaskID;
+                                m_template.Nodes[i].NodeName = def.NodeName;
                                 break;
                             }
                         }
@@ -4214,11 +4217,14 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanel()
                         if (ImGui::Selectable(spec.displayName.c_str(), selected))
                         {
                             def.AtomicTaskID = spec.id;
+                            // Auto-fill node name with the action's display name
+                            def.NodeName = spec.displayName;
                             for (size_t i = 0; i < m_template.Nodes.size(); ++i)
                             {
                                 if (m_template.Nodes[i].NodeID == m_selectedNodeID)
                                 {
                                     m_template.Nodes[i].AtomicTaskID = def.AtomicTaskID;
+                                    m_template.Nodes[i].NodeName = def.NodeName;
                                     break;
                                 }
                             }
@@ -4228,6 +4234,154 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanel()
                             ImGui::SetItemDefaultFocus();
                     }
                     ImGui::EndCombo();
+                }
+
+                // Display task parameters
+                if (!currentTask.empty())
+                {
+                    const TaskSpec* taskSpec = AtomicTaskUIRegistry::Get().GetTaskSpec(currentTask);
+                    if (taskSpec && !taskSpec->parameters.empty())
+                    {
+                        ImGui::Separator();
+                        ImGui::TextColored(ImVec4(0.7f, 0.9f, 1.0f, 1.0f), "Parameters:");
+
+                        for (const auto& param : taskSpec->parameters)
+                        {
+                            ImGui::PushID(param.name.c_str());
+
+                            // Build label: parameter name + type hint
+                            std::string label = param.name + " (" + param.type + ")";
+
+                            // Get current value from def.Parameters if it exists
+                            std::string currentValue = param.defaultValue;
+                            auto paramIt = def.Parameters.find(param.name);
+                            if (paramIt != def.Parameters.end() && paramIt->second.Type == ParameterBindingType::Literal)
+                            {
+                                currentValue = paramIt->second.LiteralValue.AsString();
+                            }
+
+                            // Display parameter name with description as label
+                            ImGui::TextColored(ImVec4(0.8f, 0.95f, 1.0f, 1.0f), "%s", param.name.c_str());
+                            ImGui::SameLine();
+
+                            // Add help icon (?) next to parameter name for discoverability
+                            ImGui::TextDisabled("(?)");
+
+                            // Add tooltip with description if available (on parameter name or help icon)
+                            if (ImGui::IsItemHovered() && !param.description.empty())
+                            {
+                                ImGui::BeginTooltip();
+                                ImGui::TextWrapped("%s", param.description.c_str());
+                                ImGui::Separator();
+                                ImGui::TextDisabled("Type: %s", param.type.c_str());
+                                ImGui::TextDisabled("Default: %s", param.defaultValue.c_str());
+                                ImGui::EndTooltip();
+                            }
+
+                            // Add description text below the parameter name (smaller, grayed out) for immediate clarity
+                            if (!param.description.empty())
+                            {
+                                ImGui::TextDisabled("%s", param.description.c_str());
+                            }
+
+                            if (param.type == "Bool")
+                            {
+                                bool value = (currentValue == "true" || currentValue == "1");
+                                ImGui::SetNextItemWidth(-1.0f);
+                                if (ImGui::Checkbox(("##" + param.name + "_input").c_str(), &value))
+                                {
+                                    ParameterBinding binding;
+                                    binding.Type = ParameterBindingType::Literal;
+                                    binding.LiteralValue = TaskValue(value);
+                                    def.Parameters[param.name] = binding;
+
+                                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                                    {
+                                        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                                        {
+                                            m_template.Nodes[i].Parameters[param.name] = binding;
+                                            break;
+                                        }
+                                    }
+                                    m_dirty = true;
+                                }
+                            }
+                            else if (param.type == "Int")
+                            {
+                                int value = 0;
+                                try { value = std::stoi(currentValue); } catch (...) {}
+                                ImGui::SetNextItemWidth(-1.0f);
+                                if (ImGui::InputInt(("##" + param.name + "_input").c_str(), &value))
+                                {
+                                    ParameterBinding binding;
+                                    binding.Type = ParameterBindingType::Literal;
+                                    binding.LiteralValue = TaskValue(value);
+                                    def.Parameters[param.name] = binding;
+
+                                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                                    {
+                                        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                                        {
+                                            m_template.Nodes[i].Parameters[param.name] = binding;
+                                            break;
+                                        }
+                                    }
+                                    m_dirty = true;
+                                }
+                            }
+                            else if (param.type == "Float")
+                            {
+                                float value = 0.0f;
+                                try { value = std::stof(currentValue); } catch (...) {}
+                                ImGui::SetNextItemWidth(-1.0f);
+                                if (ImGui::InputFloat(("##" + param.name + "_input").c_str(), &value, 0.1f))
+                                {
+                                    ParameterBinding binding;
+                                    binding.Type = ParameterBindingType::Literal;
+                                    binding.LiteralValue = TaskValue(value);
+                                    def.Parameters[param.name] = binding;
+
+                                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                                    {
+                                        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                                        {
+                                            m_template.Nodes[i].Parameters[param.name] = binding;
+                                            break;
+                                        }
+                                    }
+                                    m_dirty = true;
+                                }
+                            }
+                            else if (param.type == "String")
+                            {
+                                static char buffer[512] = {0};
+                                strncpy_s(buffer, currentValue.c_str(), sizeof(buffer) - 1);
+                                buffer[sizeof(buffer) - 1] = '\0';
+
+                                ImGui::SetNextItemWidth(-1.0f);
+                                if (ImGui::InputText(("##" + param.name + "_input").c_str(), buffer, sizeof(buffer)))
+                                {
+                                    ParameterBinding binding;
+                                    binding.Type = ParameterBindingType::Literal;
+                                    binding.LiteralValue = TaskValue(std::string(buffer));
+                                    def.Parameters[param.name] = binding;
+
+                                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                                    {
+                                        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                                        {
+                                            m_template.Nodes[i].Parameters[param.name] = binding;
+                                            break;
+                                        }
+                                    }
+                                    m_dirty = true;
+                                }
+                            }
+
+                            ImGui::Spacing();
+                            ImGui::PopID();
+                        }
+                    }
                 }
                 break;
             }

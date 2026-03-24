@@ -7,6 +7,7 @@
 #include "EntityInspectorManager.h"
 #include "BTNodeGraphManager.h"
 #include "EnumCatalogManager.h"
+#include "../Editor/Panels/ActionParametersPanel.h"
 #include "../TaskSystem/LocalBlackboard.h"
 #include "../TaskSystem/TaskGraphTypes.h"
 #include "../third_party/imgui/imgui.h"
@@ -16,8 +17,9 @@
 
 namespace Olympe
 {
-    // Static member definition
+    // Static member definitions
     const LocalBlackboard* InspectorPanel::s_DebugBlackboard = nullptr;
+    InspectorPanel* InspectorPanel::s_Instance = nullptr;
 
     void InspectorPanel::SetDebugBlackboard(const LocalBlackboard* bb)
     {
@@ -25,6 +27,8 @@ namespace Olympe
     }
 
     InspectorPanel::InspectorPanel()
+        : m_actionPanel(nullptr)
+        , m_hasSelectedAction(false)
     {
     }
 
@@ -34,11 +38,15 @@ namespace Olympe
 
     void InspectorPanel::Initialize()
     {
+        m_actionPanel = std::make_unique<ActionParametersPanel>();
+        InspectorPanel::SetInstance(this);
         std::cout << "[InspectorPanel] Initialized\n";
     }
 
     void InspectorPanel::Shutdown()
     {
+        InspectorPanel::SetInstance(nullptr);
+        m_actionPanel.reset();
         std::cout << "[InspectorPanel] Shutdown\n";
     }
 
@@ -49,8 +57,38 @@ namespace Olympe
         ImGui::End();
     }
 
+    void InspectorPanel::SetSelectedActionNode(const std::string& taskID,
+                                               const std::string& nodeName,
+                                               const std::unordered_map<std::string, std::string>& parameters)
+    {
+        if (!m_actionPanel)
+            return;
+
+        m_actionPanel->SetActionTaskID(taskID);
+        m_actionPanel->SetNodeName(nodeName);
+        m_actionPanel->SetParameters(parameters);
+        m_hasSelectedAction = true;
+    }
+
+    void InspectorPanel::ClearSelectedActionNode()
+    {
+        m_hasSelectedAction = false;
+        if (m_actionPanel)
+        {
+            m_actionPanel->SetActionTaskID("");
+            m_actionPanel->SetNodeName("");
+        }
+    }
+
     void InspectorPanel::RenderContent()
     {
+        // If an action node is selected, show its parameters
+        if (m_hasSelectedAction && m_actionPanel)
+        {
+            RenderActionNodeInspector();
+            return;
+        }
+
         InspectorContext context = DetermineContext();
 
         switch (context)
@@ -358,6 +396,23 @@ namespace Olympe
                 ImGui::Text("  %s: (none)", varName.c_str());
                 break;
             }
+        }
+    }
+
+    void InspectorPanel::RenderActionNodeInspector()
+    {
+        if (!m_actionPanel)
+            return;
+
+        ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f), "Action Node Properties");
+        ImGui::Separator();
+
+        m_actionPanel->Render();
+
+        ImGui::Spacing();
+        if (ImGui::Button("Clear Selection"))
+        {
+            ClearSelectedActionNode();
         }
     }
 }

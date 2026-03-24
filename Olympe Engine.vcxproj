@@ -112,6 +112,7 @@
     <ClCompile Include="Source\Editor\ConditionPreset\Operand.cpp" />
     <ClCompile Include="Source\Editor\Nodes\NodeBranchRenderer.cpp" />
     <ClCompile Include="Source\Editor\Modals\NodeConditionsEditModal.cpp" />
+    <ClCompile Include="Source\Editor\Panels\ActionParametersPanel.cpp" />
     <ClCompile Include="Source\Editor\Panels\ConditionPresetLibraryPanel.cpp" />
     <ClCompile Include="Source\Editor\Panels\GetBBValuePropertyPanel.cpp" />
     <ClCompile Include="Source\Editor\Panels\MathOpPropertyPanel.cpp" />
@@ -316,6 +317,7 @@
     <ClInclude Include="Source\Editor\Dialogs\ConditionPresetEditDialog.h" />
     <ClInclude Include="Source\Editor\Nodes\NodeBranchRenderer.h" />
     <ClInclude Include="Source\Editor\Modals\NodeConditionsEditModal.h" />
+    <ClInclude Include="Source\Editor\Panels\ActionParametersPanel.h" />
     <ClInclude Include="Source\Editor\Panels\ConditionPresetLibraryPanel.h" />
     <ClInclude Include="Source\Editor\Panels\GetBBValuePropertyPanel.h" />
     <ClInclude Include="Source\Editor\Panels\MathOpPropertyPanel.h" />
@@ -449,6 +451,7 @@
     <ClInclude Include="Source\World.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ACTION_PARAMETERS_FINAL_SUMMARY.md" />
     <None Include="add_bb_panels.ps1" />
     <None Include="add_proj_entries.ps1" />
     <None Include="analyze_code.ps1" />

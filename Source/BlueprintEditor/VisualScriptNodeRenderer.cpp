@@ -9,6 +9,7 @@
 
 #include "VisualScriptNodeRenderer.h"
 #include "../system/system_consts.h"
+#include "AtomicTaskUIRegistry.h"
 
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
@@ -287,93 +288,8 @@ void VisualScriptNodeRenderer::RenderNode(
     ImGui::TextUnformatted(def.NodeName.c_str());
     ImNodes::EndNodeTitleBar();
 
-    // ---- Inline parameter display ----
-    switch (def.Type)
-    {
-        case TaskNodeType::AtomicTask:
-            if (!def.AtomicTaskID.empty())
-                ImGui::TextDisabled("  %s", def.AtomicTaskID.c_str());
-            break;
-
-        case TaskNodeType::Delay:
-            ImGui::TextDisabled("  %.2f s", def.DelaySeconds);
-            break;
-
-        case TaskNodeType::GetBBValue:
-        case TaskNodeType::SetBBValue:
-            if (!def.BBKey.empty())
-                ImGui::TextDisabled("  %s", def.BBKey.c_str());
-            break;
-
-        case TaskNodeType::Branch:
-        case TaskNodeType::While:
-        {
-            // Phase 24 — render conditionRefs in green if available
-            if (!def.conditionRefs.empty())
-            {
-                const ImVec4 condColor(0.0f, 1.0f, 0.0f, 1.0f);
-                for (size_t ci = 0; ci < def.conditionRefs.size(); ++ci)
-                {
-                    const NodeConditionRef& ref = def.conditionRefs[ci];
-                    const char* opLabel;
-                    if (ci == 0)
-                        opLabel = "   ";
-                    else if (ref.logicalOp == LogicalOp::And)
-                        opLabel = "And";
-                    else
-                        opLabel = "Or ";
-                    ImGui::PushStyleColor(ImGuiCol_Text, condColor);
-                    ImGui::Text("  %s %s", opLabel, ref.presetID.c_str());
-                    ImGui::PopStyleColor();
-                }
-            }
-            else if (!def.ConditionID.empty())
-            {
-                // Fallback: legacy ConditionID (Phase 23 / pre-Phase 24)
-                ImGui::TextDisabled("  %s", def.ConditionID.c_str());
-            }
-            // Phase 24 — render dynamic pins in yellow (Section 4 preview)
-            if (!def.dynamicPins.empty())
-            {
-                ImGui::Separator();
-                const ImVec4 pinColor(1.0f, 0.843f, 0.0f, 1.0f);
-                for (const auto& pin : def.dynamicPins)
-                {
-                    const std::string lbl = pin.GetDisplayLabel();
-                    ImGui::TextColored(pinColor, "  %s", lbl.c_str());
-                }
-            }
-            break;
-        }
-
-        case TaskNodeType::SubGraph:
-        {
-            if (!def.SubGraphPath.empty())
-            {
-                // Extract basename without path or extension
-                const std::string& p = def.SubGraphPath;
-                size_t slashPos = p.find_last_of("/\\");
-                std::string base = (slashPos != std::string::npos)
-                                   ? p.substr(slashPos + 1)
-                                   : p;
-                size_t dotPos = base.rfind('.');
-                if (dotPos != std::string::npos)
-                    base = base.substr(0, dotPos);
-                ImGui::TextDisabled("  %s", base.c_str());
-            }
-            break;
-        }
-
-        case TaskNodeType::MathOp:
-            if (!def.MathOperator.empty())
-                ImGui::TextDisabled("  %s", def.MathOperator.c_str());
-            break;
-
-        default:
-            break;
-    }
-
     // Use 2-column layout to align input pins (left) with output pins (right) on the same Y
+    // PINS FIRST for better UX consistency
     ImGui::Columns(2, "node_pins_extended", false);
     ImGui::SetColumnWidth(0, 80.0f);
 
@@ -491,6 +407,121 @@ void VisualScriptNodeRenderer::RenderNode(
     }
 
     ImGui::Columns(1);  // End columns
+
+    // ---- Inline parameter display (AFTER pins for better UX consistency) ----
+    switch (def.Type)
+    {
+        case TaskNodeType::AtomicTask:
+        {
+            if (!def.AtomicTaskID.empty())
+            {
+                // Get task spec to retrieve parameters
+                const TaskSpec* taskSpec = AtomicTaskUIRegistry::Get().GetTaskSpec(def.AtomicTaskID);
+                if (taskSpec && !taskSpec->parameters.empty())
+                {
+                    // Display parameters in format: "paramName: value"
+                    for (const auto& param : taskSpec->parameters)
+                    {
+                        // Get parameter value from def.Parameters
+                        std::string paramValue = param.defaultValue;
+                        auto paramIt = def.Parameters.find(param.name);
+                        if (paramIt != def.Parameters.end() && 
+                            paramIt->second.Type == ParameterBindingType::Literal)
+                        {
+                            paramValue = paramIt->second.LiteralValue.AsString();
+                        }
+
+                        // Display as "paramName: value" in light color
+                        ImGui::TextColored(ImVec4(0.7f, 0.85f, 1.0f, 1.0f), 
+                                         "  %s: %s", param.name.c_str(), paramValue.c_str());
+                    }
+                }
+                else
+                {
+                    // Fallback if no parameters defined for this task
+                    ImGui::TextDisabled("  %s", def.AtomicTaskID.c_str());
+                }
+            }
+            break;
+        }
+
+        case TaskNodeType::Delay:
+            ImGui::TextDisabled("  %.2f s", def.DelaySeconds);
+            break;
+
+        case TaskNodeType::GetBBValue:
+        case TaskNodeType::SetBBValue:
+            if (!def.BBKey.empty())
+                ImGui::TextDisabled("  %s", def.BBKey.c_str());
+            break;
+
+        case TaskNodeType::Branch:
+        case TaskNodeType::While:
+        {
+            // Phase 24 — render conditionRefs in green if available
+            if (!def.conditionRefs.empty())
+            {
+                const ImVec4 condColor(0.0f, 1.0f, 0.0f, 1.0f);
+                for (size_t ci = 0; ci < def.conditionRefs.size(); ++ci)
+                {
+                    const NodeConditionRef& ref = def.conditionRefs[ci];
+                    const char* opLabel;
+                    if (ci == 0)
+                        opLabel = "   ";
+                    else if (ref.logicalOp == LogicalOp::And)
+                        opLabel = "And";
+                    else
+                        opLabel = "Or ";
+                    ImGui::PushStyleColor(ImGuiCol_Text, condColor);
+                    ImGui::Text("  %s %s", opLabel, ref.presetID.c_str());
+                    ImGui::PopStyleColor();
+                }
+            }
+            else if (!def.ConditionID.empty())
+            {
+                // Fallback: legacy ConditionID (Phase 23 / pre-Phase 24)
+                ImGui::TextDisabled("  %s", def.ConditionID.c_str());
+            }
+            // Phase 24 — render dynamic pins in yellow (Section 4 preview)
+            if (!def.dynamicPins.empty())
+            {
+                ImGui::Separator();
+                const ImVec4 pinColor(1.0f, 0.843f, 0.0f, 1.0f);
+                for (const auto& pin : def.dynamicPins)
+                {
+                    const std::string lbl = pin.GetDisplayLabel();
+                    ImGui::TextColored(pinColor, "  %s", lbl.c_str());
+                }
+            }
+            break;
+        }
+
+        case TaskNodeType::SubGraph:
+        {
+            if (!def.SubGraphPath.empty())
+            {
+                // Extract basename without path or extension
+                const std::string& p = def.SubGraphPath;
+                size_t slashPos = p.find_last_of("/\\");
+                std::string base = (slashPos != std::string::npos)
+                                   ? p.substr(slashPos + 1)
+                                   : p;
+                size_t dotPos = base.rfind('.');
+                if (dotPos != std::string::npos)
+                    base = base.substr(0, dotPos);
+                ImGui::TextDisabled("  %s", base.c_str());
+            }
+            break;
+        }
+
+        case TaskNodeType::MathOp:
+            if (!def.MathOperator.empty())
+                ImGui::TextDisabled("  %s", def.MathOperator.c_str());
+            break;
+
+        default:
+            break;
+    }
 
     ImNodes::EndNode();
 

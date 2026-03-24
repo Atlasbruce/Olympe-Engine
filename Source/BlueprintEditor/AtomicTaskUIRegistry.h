@@ -25,6 +25,17 @@
 namespace Olympe {
 
 /**
+ * @struct TaskParameter
+ * @brief Metadata for a parameter of an atomic task.
+ */
+struct TaskParameter {
+    std::string name;        ///< Parameter name (e.g., "message", "speed")
+    std::string type;        ///< Parameter type (String, Float, Int, Bool, etc.)
+    std::string defaultValue; ///< Default value
+    std::string description; ///< Tooltip/description for the parameter
+};
+
+/**
  * @struct TaskSpec
  * @brief Display metadata for a single atomic task type.
  */
@@ -33,6 +44,7 @@ struct TaskSpec {
     std::string displayName;  ///< Human-readable name (e.g. "Move To Goal")
     std::string category;     ///< Category for grouping (e.g. "Movement")
     std::string description;  ///< Short description for tooltip
+    std::vector<TaskParameter> parameters; ///< Parameters this task accepts
 };
 
 /**
