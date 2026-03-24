@@ -90,6 +90,16 @@
     {
       "id": 1,
       "label": "EntryPoint",
+      "params": {
+        "__posX": {
+          "LiteralValue": 131,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 318,
+          "Type": "Literal"
+        }
+      },
       "position": {
         "x": 131,
         "y": 318
@@ -102,6 +112,16 @@
       ],
       "id": 2,
       "label": "Sequence",
+      "params": {
+        "__posX": {
+          "LiteralValue": 314,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 319,
+          "Type": "Literal"
+        }
+      },
       "position": {
         "x": 314,
         "y": 319
@@ -111,6 +131,20 @@
     {
       "id": 3,
       "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 597,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 211,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "1st sequence task completed",
+          "Type": "Literal"
+        }
+      },
       "position": {
         "x": 597,
         "y": 211
@@ -119,8 +153,19 @@
       "type": "AtomicTask"
     },
     {
+      "bbKey": "mHealth",
       "id": 5,
       "label": "mHealth",
+      "params": {
+        "__posX": {
+          "LiteralValue": 198,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 499,
+          "Type": "Literal"
+        }
+      },
       "position": {
         "x": 198,
         "y": 499
@@ -131,6 +176,16 @@
       "bbKey": "mFatigue",
       "id": 6,
       "label": "mFatigue",
+      "params": {
+        "__posX": {
+          "LiteralValue": 203,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 602,
+          "Type": "Literal"
+        }
+      },
       "position": {
         "x": 203,
         "y": 602
@@ -163,6 +218,16 @@
           "rightPinID": ""
         }
       ],
+      "params": {
+        "__posX": {
+          "LiteralValue": 598,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 396,
+          "Type": "Literal"
+        }
+      },
       "position": {
         "x": 598,
         "y": 396
@@ -172,6 +237,16 @@
     {
       "id": 8,
       "label": "Heal Myself",
+      "params": {
+        "__posX": {
+          "LiteralValue": 880,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 328,
+          "Type": "Literal"
+        }
+      },
       "position": {
         "x": 880,
         "y": 328
@@ -182,6 +257,16 @@
     {
       "id": 9,
       "label": "Patrol Path",
+      "params": {
+        "__posX": {
+          "LiteralValue": 887,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 446,
+          "Type": "Literal"
+        }
+      },
       "position": {
         "x": 887.895,
         "y": 446.454
@@ -192,6 +277,20 @@
     {
       "id": 15,
       "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1080,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 327,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Heal myselfaction completed",
+          "Type": "Literal"
+        }
+      },
       "position": {
         "x": 1080,
         "y": 327
@@ -202,6 +301,20 @@
     {
       "id": 16,
       "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1081,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 442,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Patrol Path completed",
+          "Type": "Literal"
+        }
+      },
       "position": {
         "x": 1081.43,
         "y": 442.142
@@ -212,8 +325,33 @@
     {
       "id": 17,
       "label": "MathOp",
+      "mathOpRef": {
+        "leftOperand": {
+          "constValue": "",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        },
+        "mathOperator": "+",
+        "rightOperand": {
+          "constValue": "",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        }
+      },
+      "params": {
+        "__posX": {
+          "LiteralValue": 395,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 537,
+          "Type": "Literal"
+        }
+      },
       "position": {
-        "x": 395,
+        "x": 394,
         "y": 537
       },
       "type": "MathOp"

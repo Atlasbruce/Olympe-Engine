@@ -516,9 +516,53 @@ void VisualScriptNodeRenderer::RenderNode(
         }
 
         case TaskNodeType::MathOp:
-            if (!def.MathOperator.empty())
-                ImGui::TextDisabled("  %s", def.MathOperator.c_str());
+        {
+            // Phase 24 — Display algebraic expression: "A + B" in gray text
+            // Build left operand display
+            std::string leftStr = "A";
+            switch (def.mathOpRef.leftOperand.mode)
+            {
+                case MathOpOperand::Mode::Const:
+                    leftStr = def.mathOpRef.leftOperand.constValue;
+                    break;
+                case MathOpOperand::Mode::Variable:
+                    leftStr = "[" + def.mathOpRef.leftOperand.variableName + "]";
+                    break;
+                case MathOpOperand::Mode::Pin:
+                    leftStr = "[Pin]";
+                    break;
+                default:
+                    leftStr = "A";
+                    break;
+            }
+
+            // Build right operand display
+            std::string rightStr = "B";
+            switch (def.mathOpRef.rightOperand.mode)
+            {
+                case MathOpOperand::Mode::Const:
+                    rightStr = def.mathOpRef.rightOperand.constValue;
+                    break;
+                case MathOpOperand::Mode::Variable:
+                    rightStr = "[" + def.mathOpRef.rightOperand.variableName + "]";
+                    break;
+                case MathOpOperand::Mode::Pin:
+                    rightStr = "[Pin]";
+                    break;
+                default:
+                    rightStr = "B";
+                    break;
+            }
+
+            // Get operator (default to + if empty)
+            const std::string& op = def.mathOpRef.mathOperator.empty() 
+                                     ? std::string("+") 
+                                     : def.mathOpRef.mathOperator;
+
+            // Display expression in gray (same style as GetBBValue/SetBBValue)
+            ImGui::TextDisabled("  %s %s %s", leftStr.c_str(), op.c_str(), rightStr.c_str());
             break;
+        }
 
         default:
             break;
