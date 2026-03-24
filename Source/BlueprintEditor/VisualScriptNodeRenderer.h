@@ -100,7 +100,7 @@ public:
      * @param hasBreakpoint  Whether a breakpoint is set on this node.
      * @param isActive     Whether this node is currently executing (debug).
      * @param execInputPins  Names of exec-in pins (usually just {"In"}).
-     * @param execOutputPins Names of exec-out pins (e.g. {"Then","Else"}).
+     * @param execOutputPins Names of exec-out pins (e.g. {"True","False"}).
      * @param dataInputPins  (name, type) pairs for data-in pins.
      * @param dataOutputPins (name, type) pairs for data-out pins.
      *

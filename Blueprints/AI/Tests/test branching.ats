@@ -39,43 +39,12 @@
       }
     }
   ],
-  "dataConnections": [
-    {
-      "fromNode": 4,
-      "fromPin": "Result",
-      "toNode": 7,
-      "toPin": "pin_119bde63-1b8e-40e9-b3ff-8e3b5804a7bf"
-    },
-    {
-      "fromNode": 4,
-      "fromPin": "Result",
-      "toNode": 7,
-      "toPin": "pin_ed9be20a-ca50-4d87-87bd-a6bc38fac521"
-    },
-    {
-      "fromNode": 4,
-      "fromPin": "Result",
-      "toNode": 7,
-      "toPin": "pin_79961502-2b55-4c66-99f6-71fe8abb5fbb"
-    }
-  ],
+  "dataConnections": [],
   "execConnections": [
     {
       "fromNode": 1,
       "fromPin": "Out",
       "toNode": 2,
-      "toPin": "In"
-    },
-    {
-      "fromNode": 5,
-      "fromPin": "Out",
-      "toNode": 4,
-      "toPin": "In"
-    },
-    {
-      "fromNode": 6,
-      "fromPin": "Out",
-      "toNode": 4,
       "toPin": "In"
     },
     {
@@ -141,7 +110,7 @@
     },
     {
       "id": 3,
-      "label": "AtomicTask Log Message with a long name",
+      "label": "Log Message",
       "position": {
         "x": 597,
         "y": 211
@@ -150,21 +119,11 @@
       "type": "AtomicTask"
     },
     {
-      "id": 4,
-      "label": "MathOp",
-      "mathOp": "-",
-      "position": {
-        "x": 372,
-        "y": 511
-      },
-      "type": "MathOp"
-    },
-    {
       "id": 5,
       "label": "mHealth",
       "position": {
-        "x": 173,
-        "y": 489
+        "x": 198,
+        "y": 499
       },
       "type": "GetBBValue"
     },
@@ -173,8 +132,8 @@
       "id": 6,
       "label": "mFatigue",
       "position": {
-        "x": 175,
-        "y": 573
+        "x": 203,
+        "y": 602
       },
       "type": "GetBBValue"
     },
@@ -192,32 +151,6 @@
             "constValue": "",
             "mode": "Const"
           }
-        },
-        {
-          "compareType": "Float",
-          "conditionIndex": 1,
-          "leftOperand": {
-            "constValue": "",
-            "mode": "Const"
-          },
-          "operator": "==",
-          "rightOperand": {
-            "constValue": "",
-            "mode": "Const"
-          }
-        },
-        {
-          "compareType": "Float",
-          "conditionIndex": 2,
-          "leftOperand": {
-            "constValue": "",
-            "mode": "Const"
-          },
-          "operator": "==",
-          "rightOperand": {
-            "constValue": "",
-            "mode": "Const"
-          }
         }
       ],
       "id": 7,
@@ -225,50 +158,14 @@
       "nodeConditionRefs": [
         {
           "leftPinID": "",
-          "logicalOp": "Start",
-          "presetID": "preset_bf9138e0-3f8d-431c-a6ca-8595d14718f9",
-          "rightPinID": ""
-        },
-        {
-          "leftPinID": "",
           "logicalOp": "And",
           "presetID": "preset_455dbd95-50c5-45bc-856a-2dff621fe880",
-          "rightPinID": ""
-        },
-        {
-          "leftPinID": "",
-          "logicalOp": "Or",
-          "presetID": "preset_9a023608-36ec-4493-856d-698ccb469df1",
-          "rightPinID": "pin_b27fedcc-a5eb-4848-80ad-17bc1561eab8"
-        },
-        {
-          "leftPinID": "pin_8033706a-5e08-4865-858f-9e992057bd19",
-          "logicalOp": "And",
-          "presetID": "preset_fa90103d-5905-4483-b1c3-ebcadc870d58",
-          "rightPinID": "pin_b2ffeb5c-5c99-4a1a-bf53-c2e421acb54d"
-        },
-        {
-          "leftPinID": "pin_0e8a688a-e4c7-47d1-b5a0-888560875abc",
-          "logicalOp": "And",
-          "presetID": "preset_f2fd78df-1756-40ec-ae1a-f2817dbecbe8",
-          "rightPinID": ""
-        },
-        {
-          "leftPinID": "",
-          "logicalOp": "Or",
-          "presetID": "preset_69606490-974c-4cef-be46-814ab0aaed80",
-          "rightPinID": ""
-        },
-        {
-          "leftPinID": "",
-          "logicalOp": "Or",
-          "presetID": "preset_ba7318ac-9941-401f-8b4d-e0cd47876fb0",
           "rightPinID": ""
         }
       ],
       "position": {
-        "x": 617,
-        "y": 412
+        "x": 598,
+        "y": 396
       },
       "type": "Branch"
     },
@@ -293,43 +190,6 @@
       "type": "AtomicTask"
     },
     {
-      "delaySeconds": 0,
-      "id": 11,
-      "label": "Delay",
-      "position": {
-        "x": 183,
-        "y": 717
-      },
-      "type": "Delay"
-    },
-    {
-      "id": 12,
-      "label": "DoOnce",
-      "position": {
-        "x": 688,
-        "y": 723
-      },
-      "type": "DoOnce"
-    },
-    {
-      "id": 13,
-      "label": "ForEach",
-      "position": {
-        "x": 192,
-        "y": 871
-      },
-      "type": "ForEach"
-    },
-    {
-      "id": 14,
-      "label": "While",
-      "position": {
-        "x": 415,
-        "y": 874
-      },
-      "type": "While"
-    },
-    {
       "id": 15,
       "label": "Log Message",
       "position": {
@@ -341,13 +201,22 @@
     },
     {
       "id": 16,
-      "label": "Log Message (Copy)",
+      "label": "Log Message",
       "position": {
         "x": 1081.43,
         "y": 442.142
       },
       "taskType": "log_message",
       "type": "AtomicTask"
+    },
+    {
+      "id": 17,
+      "label": "MathOp",
+      "position": {
+        "x": 395,
+        "y": 537
+      },
+      "type": "MathOp"
     }
   ],
   "schema_version": 4

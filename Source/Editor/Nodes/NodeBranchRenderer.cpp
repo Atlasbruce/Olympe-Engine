@@ -92,9 +92,9 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
         //ImVec2 pinSize = ImGui::GetItemRectSize();
 
         // Position du pin avant à sa gauche
-        //ImGui::SetCursor(posX);// -nodeWidth - (ImGui::CalcTextSize("Then").x + 4.0f));
+        //ImGui::SetCursor(posX);// -nodeWidth - (ImGui::CalcTextSize("True").x + 4.0f));
         /**/
-        ImGui::Text("Then");
+        ImGui::Text("True");
         ImNodes::EndOutputAttribute();
         ImNodes::PopColorStyle();
     }
@@ -110,7 +110,7 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
         int elseAttrID = data.nodeID * 10000 + 101;  // offset 101 = exec-out #1
         ImNodes::PushColorStyle(ImNodesCol_Pin, IM_COL32(255, 255, 255, 255));  // White for exec pins
         ImNodes::BeginOutputAttribute(elseAttrID, ImNodesPinShape_TriangleFilled);
-        ImGui::Text("Else");
+        ImGui::Text("False");
         ImNodes::EndOutputAttribute();
         ImNodes::PopColorStyle();
     }
@@ -180,11 +180,11 @@ void NodeBranchRenderer::RenderExecPinsSection(const NodeBranchData& /*data*/)
 
     ImGui::Text("In");
     ImGui::SameLine(columnWidth);
-    ImGui::Text("Then");
+    ImGui::Text("True");
 
     ImGui::Text("  ");        // empty left column
     ImGui::SameLine(columnWidth);
-    ImGui::Text("Else");
+    ImGui::Text("False");
 #endif
 }
 
