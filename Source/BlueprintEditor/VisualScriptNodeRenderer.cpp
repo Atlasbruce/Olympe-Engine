@@ -19,9 +19,6 @@
 
 namespace Olympe {
 
-// ============================================================================
-// Colour helpers
-// ============================================================================
 
 VSNodeStyle GetNodeStyle(TaskNodeType type)
 {
@@ -216,7 +213,7 @@ void VisualScriptNodeRenderer::RenderNode(
         ImGui::Text("%s", execOutputPins[i].c_str());
         ImNodes::EndOutputAttribute();
         ImNodes::PopColorStyle();
-    }
+     }
 
     // Data output pins (right side circles) — offset 300–399
     for (size_t i = 0; i < dataOutputPins.size(); ++i)
@@ -224,7 +221,7 @@ void VisualScriptNodeRenderer::RenderNode(
         int attrID = nodeUID * 10000 + 300 + static_cast<int>(i);
         ImNodes::PushColorStyle(ImNodesCol_Pin,
                                 GetDataPinColor(dataOutputPins[i].second));
-        ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_CircleFilled);
+        ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_Circle);
         ImGui::Text("%s", dataOutputPins[i].first.c_str());
         ImNodes::EndOutputAttribute();
         ImNodes::PopColorStyle();
@@ -351,12 +348,14 @@ void VisualScriptNodeRenderer::RenderNode(
     {
         int attrID = nodeUID * 10000 + 100 + static_cast<int>(i);
         ImNodes::PushColorStyle(ImNodesCol_Pin, GetExecPinColor());
-        ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_TriangleFilled);
 
         // Handle dynamic pin removal button placement
         if (hasDynamicPins && static_cast<int>(i) >= numStaticPins && onRemovePin)
         {
             int dynIdx = static_cast<int>(i) - numStaticPins;
+
+            ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_TriangleFilled);
+
             ImGui::PushID(nodeUID * 10000 + 5000 + static_cast<int>(i));
             ImGui::PushStyleColor(ImGuiCol_Button,        IM_COL32(140, 30, 30, 200));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(200, 50, 50, 220));
@@ -367,15 +366,17 @@ void VisualScriptNodeRenderer::RenderNode(
                 ImGui::SetTooltip("Remove Execution Output");
             ImGui::PopStyleColor(3);
             ImGui::PopID();
-            ImGui::SameLine(0.0f, 4.0f);
-            ImGui::Text("%s", execOutputPins[i].c_str());
+
+            ImNodes::EndOutputAttribute();
         }
         else
         {
+            // Regular exec output pin
+            ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_TriangleFilled);
             ImGui::Text("%s", execOutputPins[i].c_str());
+            ImNodes::EndOutputAttribute();
         }
 
-        ImNodes::EndOutputAttribute();
         ImNodes::PopColorStyle();
     }
 
@@ -400,7 +401,7 @@ void VisualScriptNodeRenderer::RenderNode(
         int attrID = nodeUID * 10000 + 300 + static_cast<int>(i);
         ImNodes::PushColorStyle(ImNodesCol_Pin,
                                 GetDataPinColor(dataOutputPins[i].second));
-        ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_CircleFilled);
+        ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_Circle);
         ImGui::Text("%s", dataOutputPins[i].first.c_str());
         ImNodes::EndOutputAttribute();
         ImNodes::PopColorStyle();
