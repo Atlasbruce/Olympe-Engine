@@ -451,7 +451,6 @@
     <ClInclude Include="Source\World.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ACTION_PARAMETERS_FINAL_SUMMARY.md" />
     <None Include="add_bb_panels.ps1" />
     <None Include="add_proj_entries.ps1" />
     <None Include="analyze_code.ps1" />

@@ -451,7 +451,6 @@
     <None Include="blueprint_editor_config.json" />
     <None Include="add_proj_entries.ps1" />
     <None Include="add_bb_panels.ps1" />
-    <None Include="ACTION_PARAMETERS_FINAL_SUMMARY.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
