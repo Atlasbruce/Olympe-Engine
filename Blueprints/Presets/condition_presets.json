@@ -23,7 +23,7 @@
             "op": "==",
             "right": {
                 "mode": "Variable",
-                "value": "Podition_tmp"
+                "value": "Position_tmp"
             }
         },
         {
@@ -40,68 +40,16 @@
             }
         },
         {
-            "id": "preset_9a023608-36ec-4493-856d-698ccb469df1",
-            "left": {
-                "mode": "Const",
-                "value": 0
-            },
-            "name": "Condition",
-            "op": "<",
-            "right": {
-                "mode": "Pin",
-                "value": "[Pin-in]"
-            }
-        },
-        {
-            "id": "preset_fa90103d-5905-4483-b1c3-ebcadc870d58",
-            "left": {
-                "mode": "Pin",
-                "value": "[Pin-in]"
-            },
-            "name": "Condition",
-            "op": "==",
-            "right": {
-                "mode": "Pin",
-                "value": "[Pin-in]"
-            }
-        },
-        {
-            "id": "preset_f2fd78df-1756-40ec-ae1a-f2817dbecbe8",
-            "left": {
-                "mode": "Pin",
-                "value": "In #3R: [] == []"
-            },
-            "name": "Condition",
-            "op": "!=",
-            "right": {
-                "mode": "Const",
-                "value": 0
-            }
-        },
-        {
-            "id": "preset_69606490-974c-4cef-be46-814ab0aaed80",
+            "id": "preset_5ef334e4-294f-4d14-899c-3f33744a2bc9",
             "left": {
                 "mode": "Variable",
-                "value": ""
+                "value": "mHealth"
             },
             "name": "Condition",
-            "op": "==",
+            "op": "<=",
             "right": {
                 "mode": "Const",
                 "value": 10
-            }
-        },
-        {
-            "id": "preset_ba7318ac-9941-401f-8b4d-e0cd47876fb0",
-            "left": {
-                "mode": "Variable",
-                "value": ""
-            },
-            "name": "Condition",
-            "op": ">",
-            "right": {
-                "mode": "Variable",
-                "value": "mFatigue"
             }
         }
     ],

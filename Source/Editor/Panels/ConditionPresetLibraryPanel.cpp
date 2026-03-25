@@ -10,6 +10,7 @@
 #include "ConditionPresetLibraryPanel.h"
 
 #include <algorithm>
+#include "../../system/system_utils.h"
 
 // ImGui is only included when building the full editor (not in tests).
 // Tests exercise the logic methods directly without rendering.
@@ -110,7 +111,8 @@ std::string ConditionPresetLibraryPanel::OnAddPresetClicked()
     const std::string id = m_registry.CreatePreset(newPreset);
 
     // Persist the new preset to disk
-    m_registry.Save("Blueprints/Presets/condition_presets.json");
+    // Phase 24.2 — Use absolute path resolution to work in both IDE debug and built executable
+    m_registry.Save(ResolveResourcePath("Blueprints/Presets/condition_presets.json"));
 
     if (OnPresetCreated)
     {
@@ -127,7 +129,8 @@ std::string ConditionPresetLibraryPanel::OnDuplicatePresetClicked(
     const std::string newID = m_registry.DuplicatePreset(presetID);
 
     // Persist the duplication to disk
-    m_registry.Save("Blueprints/Presets/condition_presets.json");
+    // Phase 24.2 — Use absolute path resolution to work in both IDE debug and built executable
+    m_registry.Save(ResolveResourcePath("Blueprints/Presets/condition_presets.json"));
 
     if (!newID.empty() && OnPresetCreated)
     {
@@ -153,7 +156,8 @@ void ConditionPresetLibraryPanel::OnDeleteConfirmed(const std::string& presetID)
     m_registry.DeletePreset(presetID);
 
     // Persist the deletion to disk
-    m_registry.Save("Blueprints/Presets/condition_presets.json");
+    // Phase 24.2 — Use absolute path resolution to work in both IDE debug and built executable
+    m_registry.Save(ResolveResourcePath("Blueprints/Presets/condition_presets.json"));
 
     if (m_selectedPresetID == presetID)
     {

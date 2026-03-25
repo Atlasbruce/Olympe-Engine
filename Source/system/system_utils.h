@@ -267,3 +267,12 @@ static bool extract_json_bool(const std::string& json, const std::string& key, b
 // Load configuration from JSON file (keeps previous behavior)
 void LoadOlympeConfig(const char* filename);
 //-------------------------------------------------------------
+
+//-------------------------------------------------------------
+// Path resolution for resource files (Phase 24 - Condition Presets)
+// Resolves relative paths to absolute paths based on executable location.
+// This ensures resources can be found in both IDE debug mode (working dir = solution subdir)
+// and in built executable mode (working dir = parent dir).
+std::string ResolveResourcePath(const std::string& relativePath);
+//-------------------------------------------------------------
+

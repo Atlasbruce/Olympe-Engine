@@ -757,21 +757,9 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
             if (!nrefJson.is_object())
                 return;
 
-            NodeConditionRef ncref;
-
-            if (nrefJson.contains("presetID") && nrefJson["presetID"].is_string())
-                ncref.presetID = nrefJson["presetID"].get<std::string>();
-
-            if (nrefJson.contains("logicalOp") && nrefJson["logicalOp"].is_string())
-            {
-                const std::string opStr = nrefJson["logicalOp"].get<std::string>();
-                if (opStr == "And")
-                    ncref.logicalOp = LogicalOp::And;
-                else if (opStr == "Or")
-                    ncref.logicalOp = LogicalOp::Or;
-                else
-                    ncref.logicalOp = LogicalOp::Start;
-            }
+            // Use NodeConditionRef::FromJson() to properly deserialize all fields
+            // including leftPinID and rightPinID for dynamic data pins
+            NodeConditionRef ncref = NodeConditionRef::FromJson(nrefJson);
 
             nd.conditionRefs.push_back(ncref);
         });

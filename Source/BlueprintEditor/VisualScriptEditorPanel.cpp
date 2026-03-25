@@ -29,6 +29,7 @@
 #include <cstring>
 #include <sstream>
 #include <iomanip>
+#include <cstdlib>
 
 namespace Olympe {
 
@@ -112,7 +113,8 @@ void VisualScriptEditorPanel::Initialize()
     };
 
     // Try to load presets from the project's preset file (non-fatal if absent).
-    m_presetRegistry.Load("Blueprints/Presets/condition_presets.json");
+    // Phase 24.2 — Use absolute path resolution to work in both IDE debug and built executable
+    m_presetRegistry.Load(ResolveResourcePath("Blueprints/Presets/condition_presets.json"));
 }
 
 void VisualScriptEditorPanel::Shutdown()
@@ -256,6 +258,19 @@ std::vector<std::string> VisualScriptEditorPanel::GetDataOutputPins(TaskNodeType
 
 int VisualScriptEditorPanel::AddNode(TaskNodeType type, float x, float y)
 {
+    // Validate incoming position parameters to prevent garbage values
+    if (!std::isfinite(x) || !std::isfinite(y))
+    {
+        SYSTEM_LOG << "[VSEditor] AddNode: warning - non-finite position provided (x=" 
+                   << x << ", y=" << y << "), resetting to (0, 0)\n";
+        x = 0.0f;
+        y = 0.0f;
+    }
+
+    // Clamp to a reasonable range to prevent extreme coordinate values
+    if (x < -100000.0f || x > 100000.0f) x = 0.0f;
+    if (y < -100000.0f || y > 100000.0f) y = 0.0f;
+
     int newID = AllocNodeID();
 
     TaskNodeDefinition def;
@@ -431,8 +446,22 @@ void VisualScriptEditorPanel::SyncCanvasFromTemplate()
         // Use position loaded from JSON if available; otherwise fall back to auto-layout.
         if (def.HasEditorPos)
         {
-            eNode.posX = def.EditorPosX;
-            eNode.posY = def.EditorPosY;
+            // Validate loaded position to prevent garbage values from corrupted JSON
+            if (std::isfinite(def.EditorPosX) && std::isfinite(def.EditorPosY) &&
+                def.EditorPosX >= -100000.0f && def.EditorPosX <= 100000.0f &&
+                def.EditorPosY >= -100000.0f && def.EditorPosY <= 100000.0f)
+            {
+                eNode.posX = def.EditorPosX;
+                eNode.posY = def.EditorPosY;
+            }
+            else
+            {
+                SYSTEM_LOG << "[VSEditor] SyncCanvasFromTemplate: node #" << def.NodeID 
+                           << " had garbage position (" << def.EditorPosX << ", " << def.EditorPosY 
+                           << "), using auto-layout\n";
+                eNode.posX = 200.0f * static_cast<float>(i);
+                eNode.posY = 100.0f;
+            }
         }
         else
         {
@@ -644,8 +673,21 @@ void VisualScriptEditorPanel::SyncEditorNodesFromTemplate()
     std::unordered_map<int, std::pair<float, float> > savedPos;
     for (size_t i = 0; i < m_editorNodes.size(); ++i)
     {
-        savedPos[m_editorNodes[i].nodeID] =
-            std::make_pair(m_editorNodes[i].posX, m_editorNodes[i].posY);
+        float posX = m_editorNodes[i].posX;
+        float posY = m_editorNodes[i].posY;
+
+        // Validate saved positions before preserving them
+        if (!std::isfinite(posX) || !std::isfinite(posY) ||
+            posX < -100000.0f || posX > 100000.0f ||
+            posY < -100000.0f || posY > 100000.0f)
+        {
+            posX = DEFAULT_NODE_X_OFFSET;
+            posY = DEFAULT_NODE_Y;
+            SYSTEM_LOG << "[VSEditor] SyncEditorNodesFromTemplate: node #" << m_editorNodes[i].nodeID 
+                       << " had garbage position, reset to defaults\n";
+        }
+
+        savedPos[m_editorNodes[i].nodeID] = std::make_pair(posX, posY);
     }
 
     m_editorNodes.clear();
@@ -672,8 +714,39 @@ void VisualScriptEditorPanel::SyncEditorNodesFromTemplate()
             posXIt->second.Type == ParameterBindingType::Literal &&
             posYIt->second.Type == ParameterBindingType::Literal)
         {
-            eNode.posX = posXIt->second.LiteralValue.AsFloat();
-            eNode.posY = posYIt->second.LiteralValue.AsFloat();
+            float paramX = posXIt->second.LiteralValue.AsFloat();
+            float paramY = posYIt->second.LiteralValue.AsFloat();
+
+            // Validate parameter positions
+            if (std::isfinite(paramX) && std::isfinite(paramY) &&
+                paramX >= -100000.0f && paramX <= 100000.0f &&
+                paramY >= -100000.0f && paramY <= 100000.0f)
+            {
+                eNode.posX = paramX;
+                eNode.posY = paramY;
+            }
+            else
+            {
+                SYSTEM_LOG << "[VSEditor] SyncEditorNodesFromTemplate: node #" << def.NodeID 
+                           << " had garbage params (" << paramX << ", " << paramY 
+                           << "), falling back\n";
+                auto it = savedPos.find(def.NodeID);
+                if (it != savedPos.end())
+                {
+                    eNode.posX = it->second.first;
+                    eNode.posY = it->second.second;
+                }
+                else if (def.HasEditorPos)
+                {
+                    eNode.posX = def.EditorPosX;
+                    eNode.posY = def.EditorPosY;
+                }
+                else
+                {
+                    eNode.posX = DEFAULT_NODE_X_OFFSET + DEFAULT_NODE_X_SPACING * static_cast<float>(i);
+                    eNode.posY = DEFAULT_NODE_Y;
+                }
+            }
         }
         else
         {
@@ -686,15 +759,24 @@ void VisualScriptEditorPanel::SyncEditorNodesFromTemplate()
             }
             else if (def.HasEditorPos)
             {
-                // Position loaded from file (e.g. undo of delete-node)
-                eNode.posX = def.EditorPosX;
-                eNode.posY = def.EditorPosY;
+                // Validate file-loaded position
+                if (std::isfinite(def.EditorPosX) && std::isfinite(def.EditorPosY) &&
+                    def.EditorPosX >= -100000.0f && def.EditorPosX <= 100000.0f &&
+                    def.EditorPosY >= -100000.0f && def.EditorPosY <= 100000.0f)
+                {
+                    eNode.posX = def.EditorPosX;
+                    eNode.posY = def.EditorPosY;
+                }
+                else
+                {
+                    eNode.posX = DEFAULT_NODE_X_OFFSET + DEFAULT_NODE_X_SPACING * static_cast<float>(i);
+                    eNode.posY = DEFAULT_NODE_Y;
+                }
             }
             else
             {
                 // New node (e.g. restored by Redo) – use a default spread position
-                eNode.posX = DEFAULT_NODE_X_OFFSET +
-                             DEFAULT_NODE_X_SPACING * static_cast<float>(i);
+                eNode.posX = DEFAULT_NODE_X_OFFSET + DEFAULT_NODE_X_SPACING * static_cast<float>(i);
                 eNode.posY = DEFAULT_NODE_Y;
             }
         }
@@ -2409,18 +2491,30 @@ void VisualScriptEditorPanel::RenderCanvas()
     // ========================================================================
     if (m_pendingNodeDrop)
     {
-        int newNodeID = AddNode(m_pendingNodeType, m_pendingNodeX, m_pendingNodeY);
+        // Ensure positions are not garbage values (defend against FLT_MAX or corrupted memory)
+        float safeX = m_pendingNodeX;
+        float safeY = m_pendingNodeY;
+        if (!std::isfinite(safeX) || !std::isfinite(safeY) || 
+            safeX < -100000.0f || safeX > 100000.0f || 
+            safeY < -100000.0f || safeY > 100000.0f)
+        {
+            safeX = 0.0f;
+            safeY = 0.0f;
+            SYSTEM_LOG << "[VSEditor] Warning: pending node position was garbage; reset to (0, 0)\n";
+        }
+
+        int newNodeID = AddNode(m_pendingNodeType, safeX, safeY);
 
         // Pre-register the position so ImNodes places the node correctly
         // on the very first frame it is rendered (next frame).
-        ImNodes::SetNodeEditorSpacePos(newNodeID, ImVec2(m_pendingNodeX, m_pendingNodeY));
+        ImNodes::SetNodeEditorSpacePos(newNodeID, ImVec2(safeX, safeY));
 
         m_dirty           = true;
         m_pendingNodeDrop = false;
 
         std::cout << "[VisualScriptEditorPanel] Node created: ID=" << newNodeID
                   << " type=" << static_cast<int>(m_pendingNodeType)
-                  << " at (" << m_pendingNodeX << ", " << m_pendingNodeY << ")"
+                  << " at (" << safeX << ", " << safeY << ")"
                   << std::endl;
     }
 

@@ -429,7 +429,7 @@ void VisualScriptNodeRenderer::RenderNode(
                         if (paramIt != def.Parameters.end() && 
                             paramIt->second.Type == ParameterBindingType::Literal)
                         {
-                            paramValue = paramIt->second.LiteralValue.AsString();
+                            paramValue = paramIt->second.LiteralValue.to_string();
                         }
 
                         // Display as "paramName: value" in light color

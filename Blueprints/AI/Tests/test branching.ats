@@ -30,13 +30,19 @@
     },
     {
       "isGlobal": false,
-      "key": "Podition_tmp",
+      "key": "Position_tmp",
       "type": "Vector",
       "value": {
         "x": 0,
         "y": 0,
         "z": 0
       }
+    },
+    {
+      "isGlobal": false,
+      "key": "mFood",
+      "type": "Int",
+      "value": 4
     }
   ],
   "dataConnections": [],
@@ -173,9 +179,9 @@
       "type": "GetBBValue"
     },
     {
-      "bbKey": "mFatigue",
+      "bbKey": "mFood",
       "id": 6,
-      "label": "mFatigue",
+      "label": "mFood",
       "params": {
         "__posX": {
           "LiteralValue": 203,
@@ -193,28 +199,13 @@
       "type": "GetBBValue"
     },
     {
-      "conditionRefs": [
-        {
-          "compareType": "Float",
-          "conditionIndex": 0,
-          "leftOperand": {
-            "constValue": "",
-            "mode": "Const"
-          },
-          "operator": "==",
-          "rightOperand": {
-            "constValue": "",
-            "mode": "Const"
-          }
-        }
-      ],
       "id": 7,
       "label": "Is Health Critical?",
       "nodeConditionRefs": [
         {
           "leftPinID": "",
-          "logicalOp": "And",
-          "presetID": "preset_455dbd95-50c5-45bc-856a-2dff621fe880",
+          "logicalOp": "Start",
+          "presetID": "preset_5ef334e4-294f-4d14-899c-3f33744a2bc9",
           "rightPinID": ""
         }
       ],
@@ -351,8 +342,8 @@
         }
       },
       "position": {
-        "x": 394,
-        "y": 537
+        "x": 387,
+        "y": 543
       },
       "type": "MathOp"
     }

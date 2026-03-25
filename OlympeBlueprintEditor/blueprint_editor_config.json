@@ -1,0 +1,29 @@
+{
+  "editor_mode": "standalone",
+  "layout": {
+    "asset_browser_width": 400,
+    "inspector_width": 400,
+    "min_panel_width": 200,
+    "mode": "fixed",
+    "splitter_size": 8
+  },
+  "panels": {
+    "asset_browser": {
+      "visible": true,
+      "width": 400
+    },
+    "inspector": {
+      "visible": true,
+      "width": 400
+    },
+    "node_graph": {
+      "visible": true
+    }
+  },
+  "version": "1.0",
+  "window": {
+    "height": 1080,
+    "maximized": true,
+    "width": 1920
+  }
+}

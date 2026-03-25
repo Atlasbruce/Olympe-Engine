@@ -818,6 +818,15 @@ void BoxSelectorUpdateSelection(ImNodesEditorContext& editor, ImRect box_rect)
 
             const ImPinData& pin_start = editor.Pins.Pool[link.StartPinIdx];
             const ImPinData& pin_end = editor.Pins.Pool[link.EndPinIdx];
+
+            // Validation: Skip the link if either pin has an invalid type (not properly initialized).
+            // A pin with ImNodesAttributeType_None indicates it was never properly set via 
+            // BeginInputAttribute/BeginOutputAttribute.
+            if (pin_start.Type == ImNodesAttributeType_None || pin_end.Type == ImNodesAttributeType_None)
+            {
+                continue;
+            }
+
             const ImRect&    node_start_rect = editor.Nodes.Pool[pin_start.ParentNodeIdx].Rect;
             const ImRect&    node_end_rect = editor.Nodes.Pool[pin_end.ParentNodeIdx].Rect;
 
@@ -1284,6 +1293,13 @@ ImOptionalIndex ResolveHoveredLink(
         const ImPinData&  start_pin = pins.Pool[link.StartPinIdx];
         const ImPinData&  end_pin = pins.Pool[link.EndPinIdx];
 
+        // Validation: Skip processing the link if either pin has an invalid type.
+        // A pin with ImNodesAttributeType_None indicates it was never properly initialized.
+        if (start_pin.Type == ImNodesAttributeType_None || end_pin.Type == ImNodesAttributeType_None)
+        {
+            continue;
+        }
+
         // If there is a hovered pin links can only be considered hovered if they use that pin
         if (GImNodes->HoveredPinIdx.HasValue())
         {
@@ -1297,6 +1313,23 @@ ImOptionalIndex ResolveHoveredLink(
 
         // TODO: the calculated CubicBeziers could be cached since we generate them again when
         // rendering the links
+
+        // Validation: Skip processing the link if either pin hasn't been rendered yet.
+        // A pin that hasn't been rendered will have an empty AttributeRect and a position of (0, 0).
+        // This can happen if a node containing a pin is not rendered in the current frame.
+        // Without this check, uninitialized pin positions (garbage memory) can cause assertion failures
+        // in GetCubicBezier when computing link_length from corrupted coordinate values.
+        const bool start_pin_valid = (start_pin.AttributeRect.Max.x > start_pin.AttributeRect.Min.x ||
+                                       start_pin.AttributeRect.Max.y > start_pin.AttributeRect.Min.y ||
+                                       start_pin.Pos.x != 0.0f || start_pin.Pos.y != 0.0f);
+        const bool end_pin_valid = (end_pin.AttributeRect.Max.x > end_pin.AttributeRect.Min.x ||
+                                     end_pin.AttributeRect.Max.y > end_pin.AttributeRect.Min.y ||
+                                     end_pin.Pos.x != 0.0f || end_pin.Pos.y != 0.0f);
+
+        if (!start_pin_valid || !end_pin_valid)
+        {
+            continue;
+        }
 
         const CubicBezier cubic_bezier = GetCubicBezier(
             start_pin.Pos, end_pin.Pos, start_pin.Type, GImNodes->Style.LinkLineSegmentsPerLength);
@@ -1614,6 +1647,38 @@ void DrawLink(ImNodesEditorContext& editor, const int link_idx)
     const ImPinData&  start_pin = editor.Pins.Pool[link.StartPinIdx];
     const ImPinData&  end_pin = editor.Pins.Pool[link.EndPinIdx];
 
+    // It's possible for a link to be deleted in begin_link_interaction. A user
+    // may detach a link, resulting in the link wire snapping to the mouse
+    // position.
+    //
+    // In other words, skip rendering the link if it was deleted.
+    if (GImNodes->DeletedLinkIdx == link_idx)
+    {
+        return;
+    }
+
+    // Validation: Skip rendering the link if either pin has an invalid type.
+    // A pin with ImNodesAttributeType_None indicates it was never properly initialized.
+    if (start_pin.Type == ImNodesAttributeType_None || end_pin.Type == ImNodesAttributeType_None)
+    {
+        return;
+    }
+
+    // Validation: Skip rendering the link if either pin hasn't been rendered yet.
+    // A pin that hasn't been rendered will have an empty AttributeRect and a position of (0, 0).
+    // This can happen if a node containing a pin is not rendered in the current frame.
+    const bool start_pin_valid = (start_pin.AttributeRect.Max.x > start_pin.AttributeRect.Min.x ||
+                                   start_pin.AttributeRect.Max.y > start_pin.AttributeRect.Min.y ||
+                                   start_pin.Pos.x != 0.0f || start_pin.Pos.y != 0.0f);
+    const bool end_pin_valid = (end_pin.AttributeRect.Max.x > end_pin.AttributeRect.Min.x ||
+                                 end_pin.AttributeRect.Max.y > end_pin.AttributeRect.Min.y ||
+                                 end_pin.Pos.x != 0.0f || end_pin.Pos.y != 0.0f);
+
+    if (!start_pin_valid || !end_pin_valid)
+    {
+        return;
+    }
+
     const CubicBezier cubic_bezier = GetCubicBezier(
         start_pin.Pos, end_pin.Pos, start_pin.Type, GImNodes->Style.LinkLineSegmentsPerLength);
 
@@ -1624,16 +1689,6 @@ void DrawLink(ImNodesEditorContext& editor, const int link_idx)
     if (link_hovered)
     {
         GImNodes->HoveredLinkIdx = link_idx;
-    }
-
-    // It's possible for a link to be deleted in begin_link_interaction. A user
-    // may detach a link, resulting in the link wire snapping to the mouse
-    // position.
-    //
-    // In other words, skip rendering the link if it was deleted.
-    if (GImNodes->DeletedLinkIdx == link_idx)
-    {
-        return;
     }
 
     ImU32 link_color = link.ColorStyle.Base;

@@ -1,0 +1,325 @@
+{
+  "blackboard": [
+    {
+      "isGlobal": false,
+      "key": "mHealth",
+      "type": "Int",
+      "value": 10
+    },
+    {
+      "isGlobal": false,
+      "key": "mFatigue",
+      "type": "Int",
+      "value": 1
+    },
+    {
+      "isGlobal": false,
+      "key": "mFoodPortion",
+      "type": "Int",
+      "value": 4
+    }
+  ],
+  "dataConnections": [
+    {
+      "fromNode": 7,
+      "fromPin": "Value",
+      "toNode": 9,
+      "toPin": "A"
+    },
+    {
+      "fromNode": 8,
+      "fromPin": "Value",
+      "toNode": 9,
+      "toPin": "B"
+    },
+    {
+      "fromNode": 9,
+      "fromPin": "Result",
+      "toNode": 12,
+      "toPin": "Value"
+    }
+  ],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out_1",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "Else",
+      "toNode": 6,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 9,
+      "fromPin": "Out",
+      "toNode": 12,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 12,
+      "fromPin": "Out",
+      "toNode": 5,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "Then",
+      "toNode": 9,
+      "toPin": "In"
+    }
+  ],
+  "graphType": "VisualScript",
+  "name": "",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "EntryPoint",
+      "params": {
+        "__posX": {
+          "LiteralValue": 105,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 250,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 105,
+        "y": 250
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "dynamicExecPins": [
+        "Out_1"
+      ],
+      "id": 2,
+      "label": "Sequence",
+      "params": {
+        "__posX": {
+          "LiteralValue": 260,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 250,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 285,
+        "y": 248
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 3,
+      "label": "Need to eat?",
+      "nodeConditionRefs": [
+        {
+          "leftPinID": "",
+          "logicalOp": "And",
+          "presetID": "preset_5ef334e4-294f-4d14-899c-3f33744a2bc9",
+          "rightPinID": ""
+        }
+      ],
+      "params": {
+        "__posX": {
+          "LiteralValue": 444,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 409,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 492,
+        "y": 332
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 4,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 420,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 178,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Exec Sequence 1 completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 482,
+        "y": 159
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 5,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1351,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 311,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "I've Eaten Food",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1273.53,
+        "y": 223.809
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 6,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 630,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 705,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "I am good non need to eat",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 683,
+        "y": 622
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "bbKey": "mFoodPortion",
+      "id": 7,
+      "label": "mfoodPortion",
+      "params": {
+        "__posX": {
+          "LiteralValue": 772,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 404,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 790,
+        "y": 348
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "bbKey": "mHealth",
+      "id": 8,
+      "label": "mHealth",
+      "params": {
+        "__posX": {
+          "LiteralValue": 793,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 512,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 823,
+        "y": 440
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "id": 9,
+      "label": "MathOp",
+      "mathOpRef": {
+        "leftOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        },
+        "mathOperator": "+",
+        "rightOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        }
+      },
+      "params": {
+        "__posX": {
+          "LiteralValue": 989,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 300,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 996,
+        "y": 222
+      },
+      "type": "MathOp"
+    },
+    {
+      "bbKey": "mHealth",
+      "id": 12,
+      "label": "SetBBValue",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1197,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 312,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1130.06,
+        "y": 222.618
+      },
+      "type": "SetBBValue"
+    }
+  ],
+  "schema_version": 4
+}

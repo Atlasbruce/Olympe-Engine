@@ -452,6 +452,7 @@
     <None Include="add_proj_entries.ps1" />
     <None Include="add_bb_panels.ps1" />
     <None Include="tests\Synthèse des approches testées pour l%27alignement à droite des labels de pins.md" />
+    <None Include="FIXES_APPLIED.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
