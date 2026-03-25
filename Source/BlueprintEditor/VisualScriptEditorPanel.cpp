@@ -2648,9 +2648,7 @@ void VisualScriptEditorPanel::RenderCanvas()
                 m_nodeDragStartPositions[eNode.nodeID] =
                     std::make_pair(eNode.posX, eNode.posY);
             }
-            SYSTEM_LOG << "[VSEditor] Mouse clicked: snapshot "
-                       << static_cast<size_t>(m_nodeDragStartPositions.size())
-                       << " node positions\n";
+            //SYSTEM_LOG << "[VSEditor] Mouse clicked: snapshot " << static_cast<size_t>(m_nodeDragStartPositions.size()) << " node positions\n";
         }
 
         // Step 2: while mouse is held, keep eNode.posX/Y current (live Save support).
@@ -2704,17 +2702,17 @@ void VisualScriptEditorPanel::RenderCanvas()
                                                 startX,    startY,
                                                 finalPos.x, finalPos.y)),
                         m_template);
-                    SYSTEM_LOG << "[VSEditor] MoveNodeCommand pushed node #" << nodeID
-                               << " (" << startX << "," << startY
-                               << ") -> (" << finalPos.x << "," << finalPos.y
-                               << ") [UNDOABLE]\n";
+                    //SYSTEM_LOG << "[VSEditor] MoveNodeCommand pushed node #" << nodeID
+                    //           << " (" << startX << "," << startY
+                    //           << ") -> (" << finalPos.x << "," << finalPos.y
+                    //           << ") [UNDOABLE]\n";
                     m_dirty = true;
                 }
-                else
-                {
-                    SYSTEM_LOG << "[VSEditor] Node #" << nodeID
-                               << " not moved (delta < 1px), skipping\n";
-                }
+                //else
+                //{
+                //    SYSTEM_LOG << "[VSEditor] Node #" << nodeID
+                //               << " not moved (delta < 1px), skipping\n";
+                //}
             }
             m_nodeDragStartPositions.clear();
         }
