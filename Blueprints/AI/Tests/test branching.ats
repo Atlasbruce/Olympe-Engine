@@ -207,16 +207,18 @@
           "logicalOp": "Start",
           "presetID": "preset_5ef334e4-294f-4d14-899c-3f33744a2bc9",
           "rightPinID": ""
-        }
-      ],
-      "params": {
-        "__posX": {
-          "LiteralValue": 598,
-          "Type": "Literal"
         },
-        "__posY": {
-          "LiteralValue": 396,
-          "Type": "Literal"
+        {
+          "leftPinID": "",
+          "logicalOp": "Or",
+          "presetID": "preset_9a023608-36ec-4493-856d-698ccb469df1",
+          "rightPinID": "pin_9318e264-6b21-4cd3-9403-128090c6aa5a"
+        },
+        {
+          "leftPinID": "",
+          "logicalOp": "And",
+          "presetID": "preset_fa90103d-5905-4483-b1c3-ebcadc870d58",
+          "rightPinID": ""
         }
       },
       "position": {

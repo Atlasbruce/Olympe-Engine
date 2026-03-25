@@ -1,0 +1,337 @@
+{
+  "blackboard": [
+    {
+      "isGlobal": false,
+      "key": "Position",
+      "type": "Vector",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "isGlobal": false,
+      "key": "mHealth",
+      "type": "Int",
+      "value": 16
+    },
+    {
+      "isGlobal": false,
+      "key": "mSpeed",
+      "type": "Float",
+      "value": 0
+    },
+    {
+      "isGlobal": false,
+      "key": "mFatigue",
+      "type": "Int",
+      "value": 3
+    }
+  ],
+  "dataConnections": [
+    {
+      "fromNode": 8,
+      "fromPin": "Value",
+      "toNode": 7,
+      "toPin": "A"
+    },
+    {
+      "fromNode": 9,
+      "fromPin": "Value",
+      "toNode": 7,
+      "toPin": "B"
+    }
+  ],
+  "execConnections": [
+    {
+      "fromNode": 3,
+      "fromPin": "Out",
+      "toNode": 6,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "Out_1",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Then",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Else",
+      "toNode": 5,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Completed",
+      "toNode": 10,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 5,
+      "fromPin": "Completed",
+      "toNode": 11,
+      "toPin": "In"
+    }
+  ],
+  "graphType": "VisualScript",
+  "name": "",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "EntryPoint",
+      "params": {
+        "__posX": {
+          "LiteralValue": 96,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 130,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 96,
+        "y": 130
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 2,
+      "label": "Branch",
+      "params": {
+        "__posX": {
+          "LiteralValue": 397,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 225,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 504,
+        "y": 233
+      },
+      "type": "Branch"
+    },
+    {
+      "dynamicExecPins": [
+        "Out_1"
+      ],
+      "id": 3,
+      "label": "Sequence",
+      "params": {
+        "__posX": {
+          "LiteralValue": 319,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 130,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 319,
+        "y": 130
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 4,
+      "label": "Take Cover",
+      "params": {
+        "__posX": {
+          "LiteralValue": 685,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 130,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 741,
+        "y": 163
+      },
+      "taskType": "take_cover",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 5,
+      "label": "Patrol Path",
+      "params": {
+        "__posX": {
+          "LiteralValue": 677,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 261,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 742,
+        "y": 299
+      },
+      "taskType": "patrol_path",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 6,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 528,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 63,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 528,
+        "y": 63
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 7,
+      "label": "MathOp",
+      "mathOpRef": {
+        "leftOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        },
+        "mathOperator": "+",
+        "rightOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        }
+      },
+      "params": {
+        "__posX": {
+          "LiteralValue": 321,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 323,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 331,
+        "y": 390
+      },
+      "type": "MathOp"
+    },
+    {
+      "bbKey": "mFatigue",
+      "id": 8,
+      "label": "GetBBValue",
+      "params": {
+        "__posX": {
+          "LiteralValue": 164,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 330,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 148,
+        "y": 351
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "bbKey": "mHealth",
+      "id": 9,
+      "label": "GetBBValue",
+      "params": {
+        "__posX": {
+          "LiteralValue": 222,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 456,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 153,
+        "y": 467
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "id": 10,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 929,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 150,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Healing completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 952,
+        "y": 161
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 11,
+      "label": "Log Message (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": 929,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 150,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Patrol completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 914,
+        "y": 295
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    }
+  ],
+  "schema_version": 4
+}
