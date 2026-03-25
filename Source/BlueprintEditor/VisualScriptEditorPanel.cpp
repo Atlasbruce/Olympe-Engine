@@ -1894,7 +1894,7 @@ void VisualScriptEditorPanel::RenderContent()
     float rightPanelHeight = ImGui::GetContentRegionAvail().y;
     float splitterHeight = 4.0f;
 
-    // Initialize sub-panel heights on first use (equal thirds)
+    // Initialize sub-panel heights on first use (equal thirds for 3 panels)
     if (m_nodePropertiesPanelHeight <= 0.0f)
     {
         m_nodePropertiesPanelHeight = (rightPanelHeight - splitterHeight * 2) / 3.0f;
@@ -1950,7 +1950,8 @@ void VisualScriptEditorPanel::RenderContent()
     ImGui::PopStyleColor(3);
 
     // ---- Part C: Local Variables Reference Panel ----
-    ImGui::BeginChild("Part_C_LocalVars", ImVec2(0, 0), false);
+    ImGui::BeginChild("Part_C_LocalVars", ImVec2(0, localVarHeight), false,
+                      ImGuiWindowFlags_NoScrollbar);
     RenderLocalVariablesPanel();
     ImGui::EndChild();
 
@@ -1985,19 +1986,9 @@ void VisualScriptEditorPanel::RenderToolbar()
         m_showSaveAsDialog = true;
     }
     ImGui::SameLine();
-    if (ImGui::Button("New Graph"))
-    {
-        m_template      = TaskGraphTemplate();
-        m_currentPath.clear();
-        m_editorNodes.clear();
-        m_editorLinks.clear();
-        m_positionedNodes.clear();
-        m_nextNodeID    = 1;
-        m_nextLinkID    = 1;
-        m_dirty         = false;
-        m_template.GraphType = "VisualScript";
-    }
-    ImGui::SameLine();
+    // Phase 24.3 — Removed "New Graph" button as requested
+    // Users must create new graphs through the file browser instead
+
     if (ImGui::Button("Verify##gvs"))
     {
         RunVerification();
@@ -2684,6 +2675,12 @@ void VisualScriptEditorPanel::RenderCanvas()
                 const int   nodeID = entry.first;
                 const float startX = entry.second.first;
                 const float startY = entry.second.second;
+
+                // CRITICAL FIX: Check if node still exists before querying ImNodes
+                // The node could have been deleted or the canvas reloaded between mouse click and release.
+                // Without this check, GetNodeEditorSpacePos() will assert on a non-existent node.
+                if (m_positionedNodes.count(nodeID) == 0)
+                    continue;  // Skip this node, it was deleted or canvas state changed
 
                 const ImVec2 finalPos = ImNodes::GetNodeEditorSpacePos(nodeID);
 
@@ -4176,6 +4173,29 @@ void VisualScriptEditorPanel::RunVerification()
                << m_template.Name << "'\n";
     m_verificationResult = VSGraphVerifier::Verify(m_template);
     m_verificationDone   = true;
+
+    // Phase 24.3 — Populate verification logs for display in the output panel
+    m_verificationLogs.clear();
+    for (size_t i = 0; i < m_verificationResult.issues.size(); ++i)
+    {
+        const VSVerificationIssue& issue = m_verificationResult.issues[i];
+        std::string logEntry;
+
+        // Format: "[SEVERITY] message (Node: nodeID)"
+        if (issue.severity == VSVerificationSeverity::Error)
+            logEntry = "[ERROR] ";
+        else if (issue.severity == VSVerificationSeverity::Warning)
+            logEntry = "[WARN] ";
+        else
+            logEntry = "[INFO] ";
+
+        logEntry += issue.message;
+        if (issue.nodeID >= 0)
+            logEntry += " (Node: " + std::to_string(issue.nodeID) + ")";
+
+        m_verificationLogs.push_back(logEntry);
+    }
+
     SYSTEM_LOG << "[VisualScriptEditorPanel] RunVerification() done: "
                << m_verificationResult.issues.size() << " issue(s), "
                << "errors=" << (m_verificationResult.HasErrors()   ? "yes" : "no") << ", "
@@ -4259,6 +4279,103 @@ void VisualScriptEditorPanel::RenderVerificationPanel()
             ImGui::PopID();
         }
     }
+}
+
+// ============================================================================
+// Phase 24.3 — Verification Logs Panel
+// ============================================================================
+
+void VisualScriptEditorPanel::RenderVerificationLogsPanel()
+{
+    ImGui::TextDisabled("Verification Output");
+
+    if (!m_verificationDone)
+    {
+        ImGui::TextDisabled("(Click 'Verify' button to run verification)");
+        return;
+    }
+
+    // Display verification result summary
+    ImGui::Spacing();
+
+    // Status line with color coding
+    if (m_verificationResult.HasErrors())
+    {
+        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), 
+                          "[ERROR] Graph has %d error(s)", 
+                          (int)m_verificationLogs.size());
+    }
+    else if (m_verificationResult.HasWarnings())
+    {
+        ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), 
+                          "[WARNING] Graph is valid but has warnings");
+    }
+    else
+    {
+        ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), 
+                          "[OK] Graph is valid - no issues found");
+    }
+
+    ImGui::Separator();
+
+    // Display issues grouped by severity
+    ImGui::BeginChild("VerificationLogsChild", ImVec2(0, 0), true);
+
+    const VSVerificationSeverity orderedSev[3] = {
+        VSVerificationSeverity::Error,
+        VSVerificationSeverity::Warning,
+        VSVerificationSeverity::Info
+    };
+
+    const char* sevLabels[3] = { "[ERROR]", "[WARN]", "[INFO]" };
+    ImVec4      sevColors[3] = {
+        ImVec4(1.0f, 0.3f, 0.3f, 1.0f),  // Error: red
+        ImVec4(1.0f, 0.85f, 0.0f, 1.0f), // Warning: yellow
+        ImVec4(0.5f, 0.8f, 1.0f, 1.0f)   // Info: light blue
+    };
+
+    for (int s = 0; s < 3; ++s)
+    {
+        VSVerificationSeverity sev = orderedSev[s];
+        bool hasThisSeverity = false;
+
+        // Count issues of this severity
+        for (size_t i = 0; i < m_verificationResult.issues.size(); ++i)
+        {
+            if (m_verificationResult.issues[i].severity == sev)
+            {
+                hasThisSeverity = true;
+                break;
+            }
+        }
+
+        if (!hasThisSeverity)
+            continue;
+
+        // Display header for this severity level
+        ImGui::TextColored(sevColors[s], "%s", sevLabels[s]);
+
+        // Display all issues with this severity
+        for (size_t i = 0; i < m_verificationResult.issues.size(); ++i)
+        {
+            const VSVerificationIssue& issue = m_verificationResult.issues[i];
+            if (issue.severity != sev)
+                continue;
+
+            // Format message: "[SEVERITY] message (NodeID: xxx)"
+            std::string message = issue.message;
+            if (issue.nodeID >= 0)
+            {
+                message += " (Node: " + std::to_string(issue.nodeID) + ")";
+            }
+
+            ImGui::BulletText("%s", message.c_str());
+        }
+
+        ImGui::Spacing();
+    }
+
+    ImGui::EndChild();
 }
 
 // ============================================================================

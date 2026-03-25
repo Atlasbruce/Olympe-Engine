@@ -293,6 +293,10 @@ private:
     /// Part C: Local Variables reference panel (bottom of right panel)
     void RenderLocalVariablesPanel();
 
+    /// Part D: Verification Logs panel (very bottom of right panel)
+    /// Phase 24.3 — Displays verification output from the Verify button
+    void RenderVerificationLogsPanel();
+
     /** @brief Renders the verification results panel (Phase 21-B). */
     void RenderVerificationPanel();
 
@@ -559,6 +563,10 @@ private:
     /// True once RunVerification() has been called at least once for the current graph
     bool m_verificationDone = false;
 
+    /// Verification log messages (populated by RunVerification())
+    /// Phase 24.3 — for display in the verification output panel
+    std::vector<std::string> m_verificationLogs;
+
     /// Node ID to focus/scroll to on next RenderCanvas() frame (-1 = none)
     int m_focusNodeID = -1;
 
@@ -659,6 +667,11 @@ private:
     /// Height of the Preset Bank panel (Part B) in the right panel.
     /// Adjusted by the drag-to-resize handle between Part B and Part C.
     float m_presetBankPanelHeight = 0.0f;
+
+    /// Height of the Verification Logs panel in the left panel (Blueprint Files).
+    /// Adjusted by the drag-to-resize handle between Blueprint Files and Logs.
+    /// Phase 24.3 — Added for verification output logging in left panel
+    float m_verificationLogsPanelHeight = 0.0f;
 
     // -----------------------------------------------------------------------
     // Viewport save/restore state (BUG-003 Fix)

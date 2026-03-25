@@ -215,14 +215,10 @@ void ConditionPresetLibraryPanel::Render()
 void ConditionPresetLibraryPanel::RenderToolbar()
 {
 #ifndef OLYMPE_HEADLESS
-    if (ImGui::Button("+ Add Condition Preset"))
-    {
-        OnAddPresetClicked();
-    }
+    // Phase 24.3 — Removed "+ Add Condition Preset" button as requested
+    // The button to add presets has been hidden from the UI
 
-    ImGui::SameLine();
-
-    // Search box (right-aligned)
+    // Search box (left-aligned)
     char searchBuf[256] = {};
     if (m_searchFilter.size() < sizeof(searchBuf))
     {
