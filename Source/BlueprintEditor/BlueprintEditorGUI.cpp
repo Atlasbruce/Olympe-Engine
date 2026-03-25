@@ -8,6 +8,7 @@
 #include "TemplateBrowserPanel.h"
 #include "HistoryPanel.h"
 #include "VisualScriptEditorPanel.h"
+#include "VisualScriptRenderer.h"
 #include "DebugPanel.h"
 #include "ProfilerPanel.h"
 #include "BTtoVSMigrator.h"
@@ -57,7 +58,9 @@ namespace Olympe
         , m_InspectorWidth(400.0f)
         , m_MinPanelWidth(200.0f)
         , m_SplitterSize(8.0f)
-        , m_LeftPanelSplitHeight(0.0f)   // 0 = use default 60 % on first frame
+        , m_LeftPanelSplitHeight(0.0f)   // 0 = use default 40 % on first frame
+        , m_InspectorPanelHeight(0.0f)   // 0 = use default 40 % on first frame
+        , m_VerificationLogsPanelHeight(0.0f)   // 0 = use default 20 % on first frame
     {
         m_NewBlueprintNameBuffer[0] = '\0';
         m_FilepathBuffer[0] = '\0';
@@ -535,38 +538,89 @@ namespace Olympe
         {
             float leftHeight = ImGui::GetContentRegionAvail().y;
 
-            // Default asset-browser height: 60 % of the left column on the first frame.
+            // Default heights on first frame: 40% Asset Browser, 40% Inspector, 20% Logs
             if (m_LeftPanelSplitHeight <= 0.0f)
-                m_LeftPanelSplitHeight = leftHeight * 0.60f;
+                m_LeftPanelSplitHeight = leftHeight * 0.40f;
+            if (m_InspectorPanelHeight <= 0.0f)
+                m_InspectorPanelHeight = leftHeight * 0.40f;
 
-            // Clamp so both the asset-browser section and the inspector section
-            // remain tall enough to be usable (at least 60 px each).
             const float kMinSectionHeight = 60.0f;
+            const float kSplitterHeight = 4.0f;
+
+            // Clamp asset-browser height
             if (m_LeftPanelSplitHeight < kMinSectionHeight)
                 m_LeftPanelSplitHeight = kMinSectionHeight;
-            if (m_LeftPanelSplitHeight > leftHeight - kMinSectionHeight - m_SplitterSize)
-                m_LeftPanelSplitHeight = leftHeight - kMinSectionHeight - m_SplitterSize;
+            if (m_LeftPanelSplitHeight > leftHeight - kMinSectionHeight * 2 - kSplitterHeight * 2)
+                m_LeftPanelSplitHeight = leftHeight - kMinSectionHeight * 2 - kSplitterHeight * 2;
 
-            // Asset Browser: upper section
+            // Clamp inspector height
+            if (m_InspectorPanelHeight < kMinSectionHeight)
+                m_InspectorPanelHeight = kMinSectionHeight;
+            if (m_InspectorPanelHeight > leftHeight - m_LeftPanelSplitHeight - kMinSectionHeight - kSplitterHeight * 2)
+                m_InspectorPanelHeight = leftHeight - m_LeftPanelSplitHeight - kMinSectionHeight - kSplitterHeight * 2;
+
+            float logsHeight = leftHeight - m_LeftPanelSplitHeight - m_InspectorPanelHeight - kSplitterHeight * 2;
+            if (logsHeight < kMinSectionHeight)
+                logsHeight = kMinSectionHeight;
+
+            // ---- Part 1: Asset Browser (top) ----
             ImGui::BeginChild("AssetBrowserSection",
                               ImVec2(0, m_LeftPanelSplitHeight), true);
             if (m_ShowAssetBrowser)
                 m_AssetBrowser.RenderContent();
             ImGui::EndChild();
 
-            // Horizontal splitter between Asset Browser and Inspector
-            ImGui::Button("##LeftHSplitter", ImVec2(-1.0f, m_SplitterSize));
+            // ---- Splitter 1 (between Asset Browser and Inspector) ----
+            ImGui::Button("##LeftHSplitter1", ImVec2(-1.0f, kSplitterHeight));
             if (ImGui::IsItemActive())
-            {
                 m_LeftPanelSplitHeight += ImGui::GetIO().MouseDelta.y;
-            }
             if (ImGui::IsItemHovered())
                 ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
 
-            // Inspector: lower section (fills remaining space)
-            ImGui::BeginChild("InspectorSection", ImVec2(0, 0), true);
+            // ---- Part 2: Inspector (middle) ----
+            ImGui::BeginChild("InspectorSection", ImVec2(0, m_InspectorPanelHeight), true);
             if (m_ShowInspector)
                 m_InspectorPanel.RenderContent();
+            ImGui::EndChild();
+
+            // ---- Splitter 2 (between Inspector and Verification Logs) ----
+            ImGui::Button("##LeftHSplitter2", ImVec2(-1.0f, kSplitterHeight));
+            if (ImGui::IsItemActive())
+                m_InspectorPanelHeight += ImGui::GetIO().MouseDelta.y;
+            if (ImGui::IsItemHovered())
+                ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+
+            // ---- Part 3: Verification Logs (bottom) ----
+            ImGui::BeginChild("VerificationLogsSection", ImVec2(0, logsHeight), true);
+            {
+                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Verification Output");
+                ImGui::Separator();
+
+                // Get the active tab renderer and cast to VisualScriptRenderer
+                TabManager& tabMgr = TabManager::Get();
+                EditorTab* activeTab = tabMgr.GetActiveTab();
+
+                if (activeTab && activeTab->graphType == "VisualScript" && activeTab->renderer)
+                {
+                    // Safe cast to VisualScriptRenderer (which wraps VisualScriptEditorPanel)
+                    VisualScriptRenderer* vsRenderer = 
+                        dynamic_cast<VisualScriptRenderer*>(activeTab->renderer);
+
+                    if (vsRenderer)
+                    {
+                        // Access the wrapped panel via GetPanel() and render the verification logs
+                        vsRenderer->GetPanel().RenderVerificationLogsPanel();
+                    }
+                    else
+                    {
+                        ImGui::TextDisabled("(Unable to retrieve verification logs - renderer mismatch)");
+                    }
+                }
+                else
+                {
+                    ImGui::TextDisabled("(Open a VisualScript graph to see verification logs)");
+                }
+            }
             ImGui::EndChild();
         }
         ImGui::EndChild();

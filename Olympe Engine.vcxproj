@@ -460,6 +460,7 @@
     <None Include="ClassDiagram.cd" />
     <None Include="config\ATS-VS-editor-config.json" />
     <None Include="FIXES_APPLIED.md" />
+    <None Include="IMPLEMENTATION_SUMMARY.md" />
     <None Include="olympe.ini" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />

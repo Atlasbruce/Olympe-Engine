@@ -196,6 +196,14 @@ public:
      */
     const TaskGraphTemplate& GetTemplate() const { return m_template; }
 
+    /**
+     * @brief Public render method for verification logs panel.
+     * Called from BlueprintEditorGUI to display logs in the left panel.
+     *
+     * Phase 24.3 — For integration into the main layout's verification logs section.
+     */
+    void RenderVerificationLogsPanel();
+
 private:
 
     // -----------------------------------------------------------------------
@@ -292,10 +300,6 @@ private:
 
     /// Part C: Local Variables reference panel (bottom of right panel)
     void RenderLocalVariablesPanel();
-
-    /// Part D: Verification Logs panel (very bottom of right panel)
-    /// Phase 24.3 — Displays verification output from the Verify button
-    void RenderVerificationLogsPanel();
 
     /** @brief Renders the verification results panel (Phase 21-B). */
     void RenderVerificationPanel();

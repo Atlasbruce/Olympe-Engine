@@ -152,5 +152,11 @@ namespace Olympe
         // The inspector occupies the remaining space below it.
         // Resizable via a horizontal splitter between the two sections.
         float m_LeftPanelSplitHeight;
+
+        // Phase 24.3 — Height of the verification logs section.
+        // The left column is now split into 3: Asset Browser | Inspector | Verification Logs
+        // Resizable via horizontal splitters.
+        float m_InspectorPanelHeight;
+        float m_VerificationLogsPanelHeight;
     };
 }

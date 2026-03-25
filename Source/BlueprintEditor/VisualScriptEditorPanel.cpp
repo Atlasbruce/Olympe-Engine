@@ -4287,7 +4287,8 @@ void VisualScriptEditorPanel::RenderVerificationPanel()
 
 void VisualScriptEditorPanel::RenderVerificationLogsPanel()
 {
-    ImGui::TextDisabled("Verification Output");
+    // Note: The header "Verification Output" is rendered by the container (BlueprintEditorGUI),
+    // so we only render the content here (status + logs).
 
     if (!m_verificationDone)
     {
@@ -4298,12 +4299,15 @@ void VisualScriptEditorPanel::RenderVerificationLogsPanel()
     // Display verification result summary
     ImGui::Spacing();
 
+    // Debug: Show issue count
+    ImGui::TextDisabled("Issues found: %zu", m_verificationResult.issues.size());
+
     // Status line with color coding
     if (m_verificationResult.HasErrors())
     {
         ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), 
                           "[ERROR] Graph has %d error(s)", 
-                          (int)m_verificationLogs.size());
+                          (int)m_verificationResult.issues.size());
     }
     else if (m_verificationResult.HasWarnings())
     {
