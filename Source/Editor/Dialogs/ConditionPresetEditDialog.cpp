@@ -10,6 +10,7 @@
 #include "ConditionPresetEditDialog.h"
 
 #include <algorithm>
+#include "../../NodeGraphCore/GlobalTemplateBlackboard.h"
 
 #ifndef OLYMPE_HEADLESS
 #include "../../third_party/imgui/imgui.h"
@@ -237,15 +238,68 @@ void ConditionPresetEditDialog::RenderOperandSelector(const char* label, bool is
 
     if (operand.IsVariable())
     {
-        char buf[64] = {};
-        if (operand.stringValue.size() < sizeof(buf))
+        // Phase 24: Populate variable combo from both local and global variables
+        GlobalTemplateBlackboard& gtb = GlobalTemplateBlackboard::Get();
+        const std::vector<GlobalEntryDefinition>& globalVars = gtb.GetAllVariables();
+
+        // Build combined list: local variables first, then global variables
+        std::vector<std::string> allVarNames;
+        int currentIdx = -1;
+
+        // Add local variables
+        for (const auto& localVar : m_localVariables)
         {
-            operand.stringValue.copy(buf, operand.stringValue.size());
+            allVarNames.push_back(localVar.Key);
+            if (localVar.Key == operand.stringValue)
+                currentIdx = static_cast<int>(allVarNames.size()) - 1;
         }
-        ImGui::SetNextItemWidth(120.f);
-        if (ImGui::InputText("##var", buf, sizeof(buf)))
+
+        // Add separator if we have both local and global
+        if (!m_localVariables.empty() && !globalVars.empty())
         {
-            operand.stringValue = buf;
+            allVarNames.push_back("--- Global Variables ---");
+        }
+
+        // Add global variables
+        for (const auto& globalVar : globalVars)
+        {
+            allVarNames.push_back(globalVar.Key);
+            if (globalVar.Key == operand.stringValue)
+                currentIdx = static_cast<int>(allVarNames.size()) - 1;
+        }
+
+        // Convert to const char* for ImGui
+        std::vector<const char*> varNamePtrs;
+        for (const auto& name : allVarNames)
+        {
+            varNamePtrs.push_back(name.c_str());
+        }
+
+        if (allVarNames.empty())
+        {
+            ImGui::TextDisabled("(no variables)");
+        }
+        else
+        {
+            ImGui::SetNextItemWidth(120.f);
+            int selectedIdx = (currentIdx >= 0) ? currentIdx : 0;
+
+            // Skip separator when selecting
+            if (selectedIdx >= 0 && selectedIdx < static_cast<int>(allVarNames.size()) && 
+                allVarNames[selectedIdx] == "--- Global Variables ---")
+            {
+                selectedIdx = 0;
+            }
+
+            if (ImGui::Combo("##var", &selectedIdx, varNamePtrs.data(), static_cast<int>(varNamePtrs.size())))
+            {
+                // Don't select the separator
+                if (selectedIdx >= 0 && selectedIdx < static_cast<int>(allVarNames.size()) &&
+                    allVarNames[selectedIdx] != "--- Global Variables ---")
+                {
+                    operand.stringValue = allVarNames[selectedIdx];
+                }
+            }
         }
     }
     else if (operand.IsConst())

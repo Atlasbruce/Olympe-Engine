@@ -8,6 +8,7 @@
  */
 
 #include "BBVariableRegistry.h"
+#include "../NodeGraphCore/GlobalTemplateBlackboard.h"
 
 #include <algorithm>
 
@@ -42,6 +43,7 @@ void BBVariableRegistry::LoadFromTemplate(const TaskGraphTemplate& tmpl)
     m_vars.clear();
     m_vars.reserve(tmpl.Blackboard.size());
 
+    // Load local and global variables from the template
     for (size_t i = 0; i < tmpl.Blackboard.size(); ++i)
     {
         const BlackboardEntry& entry = tmpl.Blackboard[i];
@@ -56,6 +58,35 @@ void BBVariableRegistry::LoadFromTemplate(const TaskGraphTemplate& tmpl)
         m_vars.push_back(spec);
     }
 
+    // Phase 24: Also load global variables from GlobalTemplateBlackboard registry
+    GlobalTemplateBlackboard& gtb = GlobalTemplateBlackboard::Get();
+    const std::vector<GlobalEntryDefinition>& globalVars = gtb.GetAllVariables();
+
+    for (const auto& globalEntry : globalVars)
+    {
+        // Check if this global variable is already in the template (avoid duplicates)
+        bool alreadyExists = false;
+        for (const auto& existing : m_vars)
+        {
+            if (existing.name == globalEntry.Key && existing.isGlobal)
+            {
+                alreadyExists = true;
+                break;
+            }
+        }
+
+        if (!alreadyExists)
+        {
+            VarSpec spec;
+            spec.name         = globalEntry.Key;
+            spec.type         = globalEntry.Type;
+            spec.isGlobal     = true;
+            spec.displayLabel = FormatDisplayLabel(globalEntry.Key, globalEntry.Type, true);
+            m_vars.push_back(spec);
+        }
+    }
+
+    // Sort by name
     std::sort(m_vars.begin(), m_vars.end(),
               [](const VarSpec& a, const VarSpec& b) {
                   return a.name < b.name;

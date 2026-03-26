@@ -38,6 +38,7 @@
 #include <vector>
 
 #include "../ConditionPreset/ConditionPreset.h"
+#include "../../TaskSystem/LocalBlackboard.h"
 
 namespace Olympe {
 
@@ -237,6 +238,19 @@ public:
      */
     void Render();
 
+    // -----------------------------------------------------------------------
+    // Phase 24 Global Blackboard Integration
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Sets the list of local variables from EntityBlackboard.
+     * @param localVars Vector of local variable definitions.
+     */
+    void SetLocalVariables(const std::vector<BlackboardEntry>& localVars)
+    {
+        m_localVariables = localVars;
+    }
+
 private:
 
     // -----------------------------------------------------------------------
@@ -269,6 +283,7 @@ private:
     ConditionPreset m_workingCopy; ///< In-progress edits
     bool            m_isOpen      = false;
     bool            m_isConfirmed = false;
+    std::vector<BlackboardEntry> m_localVariables; ///< Local variables from entity (Phase 24)
 };
 
 } // namespace Olympe

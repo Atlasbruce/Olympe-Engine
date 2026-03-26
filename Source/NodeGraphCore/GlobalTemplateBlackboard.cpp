@@ -25,13 +25,30 @@ GlobalTemplateBlackboard& GlobalTemplateBlackboard::Get()
     if (!initialized)
     {
         initialized = true;
+
         if (instance.m_variables.empty())
         {
-            SYSTEM_LOG << "[GlobalTemplateBlackboard::Get] Auto-loading register from file\n";
-            if (!instance.LoadFromFile("./Config/global_blackboard_register.json"))
+            // Try multiple path variations
+            const std::vector<std::string> pathsToTry = {
+                "./Config/global_blackboard_register.json",
+                "Config/global_blackboard_register.json",
+                "../Config/global_blackboard_register.json",
+                "../../Config/global_blackboard_register.json"
+            };
+
+            bool loaded = false;
+            for (const auto& path : pathsToTry)
             {
-                SYSTEM_LOG << "[GlobalTemplateBlackboard::Get] WARNING: Failed to load register file\n";
-                // Don't fail - just start with empty registry
+                if (instance.LoadFromFile(path))
+                {
+                    loaded = true;
+                    break;
+                }
+            }
+
+            if (!loaded)
+            {
+                SYSTEM_LOG << "[GlobalTemplateBlackboard::Get] WARNING: Failed to load register from any path\n";
             }
         }
     }
@@ -41,13 +58,11 @@ GlobalTemplateBlackboard& GlobalTemplateBlackboard::Get()
 
 bool GlobalTemplateBlackboard::LoadFromFile(const std::string& configPath)
 {
-    SYSTEM_LOG << "[GlobalTemplateBlackboard] LoadFromFile: '" << configPath << "'\n";
     Clear();
 
     std::ifstream ifs(configPath);
     if (!ifs.is_open())
     {
-        SYSTEM_LOG << "[GlobalTemplateBlackboard] LoadFromFile FAILED: file not found\n";
         return false;
     }
 
@@ -59,11 +74,13 @@ bool GlobalTemplateBlackboard::LoadFromFile(const std::string& configPath)
 
         if (!root.contains("variables") || !root["variables"].is_array())
         {
-            SYSTEM_LOG << "[GlobalTemplateBlackboard] No variables array found\n";
             return true;
         }
 
         const json& varsArray = root["variables"];
+        SYSTEM_LOG << "[GlobalTemplateBlackboard::LoadFromFile] Found variables array with " << varsArray.size() << " entries\n";
+
+        int loadedCount = 0;
         for (const auto& varObj : varsArray)
         {
             if (!varObj.contains("key") || !varObj["key"].is_string())
@@ -176,14 +193,14 @@ bool GlobalTemplateBlackboard::LoadFromFile(const std::string& configPath)
                 isPersistent = varObj["persistent"].get<bool>();
 
             AddVariable(key, type, defaultValue, description, isPersistent);
+            loadedCount++;
         }
 
-        SYSTEM_LOG << "[GlobalTemplateBlackboard] Loaded " << m_variables.size() << " variables\n";
+        SYSTEM_LOG << "[GlobalTemplateBlackboard::LoadFromFile] Successfully loaded " << loadedCount << " variables\n";
         return true;
     }
     catch (const std::exception& e)
     {
-        SYSTEM_LOG << "[GlobalTemplateBlackboard] LoadFromFile EXCEPTION: " << e.what() << "\n";
         ifs.close();
         return false;
     }

@@ -4,6 +4,19 @@
             "id": "preset_ed2171ef-9ad8-4f83-9115-70da9a127130",
             "left": {
                 "mode": "Variable",
+                "value": "mHealth"
+            },
+            "name": "Condition",
+            "op": "<=",
+            "right": {
+                "mode": "Const",
+                "value": 4
+            }
+        },
+        {
+            "id": "preset_811533bf-1803-4b89-82ac-2449e1f25fac",
+            "left": {
+                "mode": "Variable",
                 "value": ""
             },
             "name": "Condition",

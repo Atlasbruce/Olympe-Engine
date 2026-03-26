@@ -41,6 +41,7 @@
 #include "../../BlueprintEditor/ConditionRef.h"  // Phase 24: For operand data
 #include "../ConditionPreset/ConditionPresetRegistry.h"
 #include "../ConditionPreset/NodeConditionRef.h"
+#include "../../TaskSystem/LocalBlackboard.h"
 
 namespace Olympe {
 
@@ -200,6 +201,19 @@ public:
     std::function<void()> OnApply;
 
     // -----------------------------------------------------------------------
+    // Phase 24 Global Blackboard Integration
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Sets the list of local variables for combo population.
+     * @param localVars Vector of local blackboard entries.
+     */
+    void SetLocalVariables(const std::vector<BlackboardEntry>& localVars)
+    {
+        m_localVariables = localVars;
+    }
+
+    // -----------------------------------------------------------------------
     // Dropdown helper
     // -----------------------------------------------------------------------
 
@@ -260,6 +274,7 @@ private:
 
     std::string  m_dropdownFilter;         ///< Preset-picker search filter
     bool         m_pickerOpen = false;     ///< Whether the add-preset picker is open
+    std::vector<BlackboardEntry>   m_localVariables;   ///< Phase 24: Local variables for combo
 };
 
 } // namespace Olympe
