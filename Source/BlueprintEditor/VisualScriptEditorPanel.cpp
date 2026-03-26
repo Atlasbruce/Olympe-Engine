@@ -112,9 +112,20 @@ void VisualScriptEditorPanel::Initialize()
         }
     };
 
-    // Try to load presets from the project's preset file (non-fatal if absent).
-    // Phase 24.2 — Use absolute path resolution to work in both IDE debug and built executable
-    m_presetRegistry.Load(ResolveResourcePath("Blueprints/Presets/condition_presets.json"));
+    // Phase 24 — Load presets from the graph (now embedded in blueprint JSON)
+    // instead of from an external file. This makes each blueprint self-contained.
+    // If the graph has presets, populate the registry; otherwise leave empty.
+    if (!m_template.Presets.empty())
+    {
+        m_presetRegistry.LoadFromPresetList(m_template.Presets);
+        SYSTEM_LOG << "[VSEditor] Initialize: loaded " << m_template.Presets.size()
+                   << " presets from graph '" << m_template.Name << "'\n";
+    }
+    else
+    {
+        SYSTEM_LOG << "[VSEditor] Initialize: graph '" << m_template.Name
+                   << "' has no embedded presets\n";
+    }
 }
 
 void VisualScriptEditorPanel::Shutdown()
@@ -914,6 +925,22 @@ void VisualScriptEditorPanel::LoadTemplate(const TaskGraphTemplate* tmpl,
     // Rebuild lookup cache after copy (pointers from old template are now invalid)
     m_template.BuildLookupCache();
 
+    // Phase 24 — Load embedded presets from the graph
+    // This replaces the old file-based approach with graph-embedded storage
+    if (!m_template.Presets.empty())
+    {
+        m_presetRegistry.LoadFromPresetList(m_template.Presets);
+        SYSTEM_LOG << "[VSEditor] LoadTemplate: loaded " << m_template.Presets.size()
+                   << " presets from graph '" << m_template.Name << "'\n";
+    }
+    else
+    {
+        // Clear registry if graph has no presets (fresh start)
+        m_presetRegistry.Clear();
+        SYSTEM_LOG << "[VSEditor] LoadTemplate: graph '" << m_template.Name
+                   << "' has no embedded presets - starting with empty bank\n";
+    }
+
     // NOTE: Do NOT clear the undo stack here.  Each VisualScriptEditorPanel
     // instance owns its own stack (one per tab), so there is no cross-tab
     // contamination.  Preserving the stack lets the user undo edits made
@@ -985,6 +1012,10 @@ bool VisualScriptEditorPanel::Save()
         }
     }
 
+    // Phase 24: CRITICAL - Sync presets from registry to template BEFORE serialization
+    // This ensures all presets (newly created, modified, duplicated) are included in save
+    SyncPresetsFromRegistryToTemplate();
+
     // CRITICAL FIX: Sync node positions from ImNodes BEFORE serialization.
     // RenderToolbar() (which calls Save) executes before RenderCanvas() syncs
     // positions, so we must pull fresh positions here to avoid stale data.
@@ -1013,6 +1044,10 @@ bool VisualScriptEditorPanel::SaveAs(const std::string& path)
     // Fix #1: Commit and validate before save
     CommitPendingBlackboardEdits();
     ValidateAndCleanBlackboardEntries();
+
+    // Phase 24: CRITICAL - Sync presets from registry to template BEFORE serialization
+    // This ensures all presets (newly created, modified, duplicated) are included in save
+    SyncPresetsFromRegistryToTemplate();
 
     // CRITICAL FIX: Same position sync as Save() — ensure fresh positions
     // before serialization regardless of when in the frame SaveAs is called.
@@ -1075,6 +1110,31 @@ void VisualScriptEditorPanel::SyncNodePositionsFromImNodes()
             }
         }
     }
+}
+
+void VisualScriptEditorPanel::SyncPresetsFromRegistryToTemplate()
+{
+    // Phase 24 FIX: Sync ALL presets from the registry to the template
+    // This ensures that presets created/modified via UI are included in the save
+    // Previously, only modified presets were synced, missing newly created ones
+
+    // Get all presets from the registry
+    std::vector<std::string> allPresetIDs = m_presetRegistry.GetAllPresetIDs();
+
+    // Clear template presets and rebuild from registry
+    m_template.Presets.clear();
+
+    for (const auto& presetID : allPresetIDs)
+    {
+        const ConditionPreset* preset = m_presetRegistry.GetPreset(presetID);
+        if (preset)
+        {
+            m_template.Presets.push_back(*preset);
+        }
+    }
+
+    SYSTEM_LOG << "[VisualScriptEditorPanel] SyncPresetsFromRegistryToTemplate: synced "
+               << m_template.Presets.size() << " presets from registry to template\n";
 }
 
 bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
@@ -1628,6 +1688,23 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
         dataArray.push_back(c);
     }
     root["dataConnections"] = dataArray;
+
+    // Phase 24 — Condition Preset Bank (embedded in graph JSON)
+    // Presets are now serialized as part of the graph, making blueprints self-contained.
+    if (!m_template.Presets.empty())
+    {
+        json presetsArray = json::array();
+        for (size_t i = 0; i < m_template.Presets.size(); ++i)
+        {
+            const ConditionPreset& preset = m_template.Presets[i];
+            json presetObj = preset.ToJson();  // Delegate serialization to preset's own method
+            presetsArray.push_back(presetObj);
+        }
+        root["presets"] = presetsArray;
+
+        SYSTEM_LOG << "[VisualScriptEditorPanel] SerializeAndWrite: Phase 24 - serialized "
+                   << m_template.Presets.size() << " embedded presets\n";
+    }
 
     // Write file
     SYSTEM_LOG << "[VisualScriptEditorPanel] SerializeAndWrite: opening '"
@@ -5355,17 +5432,37 @@ void VisualScriptEditorPanel::RenderPresetItemCompact(const ConditionPreset& pre
     if (presetModified)
     {
         m_presetRegistry.UpdatePreset(editablePreset.id, editablePreset);
-        // Persist the modification to disk
-        m_presetRegistry.Save("Blueprints/Presets/condition_presets.json");
+
+        // Phase 24 — Sync to template presets for graph serialization
+        // Update the preset in m_template.Presets so it gets saved with the graph
+        for (size_t pi = 0; pi < m_template.Presets.size(); ++pi)
+        {
+            if (m_template.Presets[pi].id == editablePreset.id)
+            {
+                m_template.Presets[pi] = editablePreset;
+                break;
+            }
+        }
+
         m_dirty = true;
     }
 
     // Duplicate button
     if (ImGui::Button("Dup##dup_preset", ImVec2(40, 0)))
     {
-        m_presetRegistry.DuplicatePreset(editablePreset.id);
-        // Persist the duplication to disk
-        m_presetRegistry.Save("Blueprints/Presets/condition_presets.json");
+        std::string newPresetID = m_presetRegistry.DuplicatePreset(editablePreset.id);
+
+        // Phase 24 — Add the duplicate to template presets as well
+        if (!newPresetID.empty())
+        {
+            const ConditionPreset* newPreset = m_presetRegistry.GetPreset(newPresetID);
+            if (newPreset)
+            {
+                m_template.Presets.push_back(*newPreset);
+            }
+        }
+
+        m_dirty = true;
     }
     ImGui::SameLine(0.0f, 4.0f);
 
@@ -5374,6 +5471,16 @@ void VisualScriptEditorPanel::RenderPresetItemCompact(const ConditionPreset& pre
     {
         m_presetRegistry.DeletePreset(editablePreset.id);
         m_pinManager->InvalidatePreset(editablePreset.id);
+
+        // Phase 24 — Remove from template presets as well
+        for (size_t pi = 0; pi < m_template.Presets.size(); ++pi)
+        {
+            if (m_template.Presets[pi].id == editablePreset.id)
+            {
+                m_template.Presets.erase(m_template.Presets.begin() + pi);
+                break;
+            }
+        }
         // Persist the deletion to disk
         m_presetRegistry.Save("Blueprints/Presets/condition_presets.json");
     }

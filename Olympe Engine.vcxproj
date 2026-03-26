@@ -451,6 +451,7 @@
     <ClInclude Include="Source\World.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include=".github\copilot-instructions.md" />
     <None Include="add_bb_panels.ps1" />
     <None Include="add_proj_entries.ps1" />
     <None Include="analyze_code.ps1" />

@@ -183,6 +183,17 @@ public:
     bool Load(const std::string& filepath);
 
     /**
+     * @brief Loads presets from a vector of ConditionPreset objects (clears existing data first).
+     *
+     * Phase 24 — Supports graph-embedded presets. This method is used when presets
+     * are deserialized from a blueprint JSON instead of from an external file.
+     * Each preset's UUID is preserved from the preset object itself.
+     *
+     * @param presets Vector of ConditionPreset objects to load.
+     */
+    void LoadFromPresetList(const std::vector<ConditionPreset>& presets);
+
+    /**
      * @brief Saves all presets to a JSON file.
      *
      * Creates the file if it does not exist; overwrites if it does.

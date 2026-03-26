@@ -257,6 +257,27 @@ bool ConditionPresetRegistry::Save(const std::string& filepath) const
 }
 
 // ============================================================================
+// Phase 24 — Load from preset list (graph-embedded presets)
+// ============================================================================
+
+void ConditionPresetRegistry::LoadFromPresetList(const std::vector<ConditionPreset>& presets)
+{
+    // Clear existing data
+    Clear();
+
+    // Add each preset to the registry
+    for (size_t i = 0; i < presets.size(); ++i)
+    {
+        const ConditionPreset& preset = presets[i];
+        if (!preset.id.empty())
+        {
+            m_presets[preset.id] = preset;
+            m_order.push_back(preset.id);
+        }
+    }
+}
+
+// ============================================================================
 // UUID generation
 // ============================================================================
 

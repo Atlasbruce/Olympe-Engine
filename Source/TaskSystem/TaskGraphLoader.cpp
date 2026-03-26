@@ -286,6 +286,25 @@ TaskGraphTemplate* TaskGraphLoader::ParseSchemaV4(const json& data,
     // Parse data connections.
     ParseDataConnectionsV4(data, tmpl);
 
+    // Phase 24 — Condition Preset Bank (embedded in graph JSON)
+    // Presets are now part of the graph, making blueprints self-contained.
+    // Deserialize the "presets" array if it exists.
+    if (JsonHelper::IsArray(data, "presets"))
+    {
+        JsonHelper::ForEachInArray(data, "presets",
+            [&](const json& presetJson, size_t /*idx*/)
+        {
+            ConditionPreset preset = ConditionPreset::FromJson(presetJson);
+            if (!preset.id.empty())  // Only add if preset has valid ID
+            {
+                tmpl->Presets.push_back(preset);
+            }
+        });
+
+        SYSTEM_LOG << "[TaskGraphLoader] ParseSchemaV4: Phase 24 - deserialized "
+                   << tmpl->Presets.size() << " embedded presets\n";
+    }
+
     // SubGraph metadata (Phase 3)
     tmpl->IsSubGraph = JsonHelper::GetBool(data, "isSubGraph", false);
 

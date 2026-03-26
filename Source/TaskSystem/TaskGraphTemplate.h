@@ -24,6 +24,7 @@
 #include "TaskGraphTypes.h"
 #include "../Editor/ConditionPreset/NodeConditionRef.h"
 #include "../Editor/ConditionPreset/DynamicDataPin.h"
+#include "../Editor/ConditionPreset/ConditionPreset.h"  // Phase 24: embedded preset bank
 #include "../BlueprintEditor/ConditionRef.h"  // Phase 24: inline operand→pin mapping
 #include "../BlueprintEditor/MathOpOperand.h"  // Phase 24: MathOp operand system
 
@@ -207,6 +208,12 @@ public:
     bool IsSubGraph = false;                                ///< True if this template is a SubGraph
     std::vector<SubGraphParameterDef> InputParameters;     ///< Declared inputs (for subgraphs)
     std::vector<SubGraphParameterDef> OutputParameters;    ///< Declared outputs (for subgraphs)
+
+    // Phase 24 — Condition Preset Bank (embedded in graph)
+    /// Presets are now stored in the graph JSON, not in external files.
+    /// This makes blueprints self-contained with no external file dependencies.
+    /// Populated during LoadTemplate() from "presets" array in graph JSON.
+    std::vector<ConditionPreset> Presets;
 
     // -----------------------------------------------------------------------
     // Operations

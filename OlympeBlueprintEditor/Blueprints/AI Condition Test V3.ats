@@ -133,8 +133,8 @@
       "nodeConditionRefs": [
         {
           "leftPinID": "",
-          "logicalOp": "And",
-          "presetID": "preset_5ef334e4-294f-4d14-899c-3f33744a2bc9",
+          "logicalOp": "Start",
+          "presetID": "preset_ed2171ef-9ad8-4f83-9115-70da9a127130",
           "rightPinID": ""
         }
       ],
@@ -149,8 +149,8 @@
         }
       },
       "position": {
-        "x": 492,
-        "y": 332
+        "x": 452,
+        "y": 331
       },
       "type": "Branch"
     },
@@ -319,6 +319,21 @@
         "y": 222.618
       },
       "type": "SetBBValue"
+    }
+  ],
+  "presets": [
+    {
+      "id": "preset_ed2171ef-9ad8-4f83-9115-70da9a127130",
+      "left": {
+        "mode": "Variable",
+        "value": "mHealth"
+      },
+      "name": "Condition",
+      "op": "<=",
+      "right": {
+        "mode": "Const",
+        "value": 4
+      }
     }
   ],
   "schema_version": 4

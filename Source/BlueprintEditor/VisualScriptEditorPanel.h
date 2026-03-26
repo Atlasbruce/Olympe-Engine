@@ -502,6 +502,14 @@ private:
      */
     void SyncNodePositionsFromImNodes();
 
+    /**
+     * @brief Syncs ALL presets from the registry to the template.
+     * Phase 24 FIX: Ensures that presets created/modified via UI are included in save.
+     * Previously, only presets modified via operand editor were synced; newly created
+     * presets were missed. Now called before serialization to guarantee completeness.
+     */
+    void SyncPresetsFromRegistryToTemplate();
+
     // -----------------------------------------------------------------------
     // State
     // -----------------------------------------------------------------------
