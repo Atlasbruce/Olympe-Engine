@@ -305,6 +305,16 @@ TaskGraphTemplate* TaskGraphLoader::ParseSchemaV4(const json& data,
                    << tmpl->Presets.size() << " embedded presets\n";
     }
 
+    // Phase 24 Global Blackboard Integration: Deserialize global variable overrides
+    // These are entity-specific values persisted with the graph (not templates)
+    if (JsonHelper::IsObject(data, "globalVariableValues"))
+    {
+        // Store the JSON object in the template for later restoration by EntityBlackboard
+        tmpl->GlobalVariableValues = data["globalVariableValues"];
+        SYSTEM_LOG << "[TaskGraphLoader] ParseSchemaV4: Phase 24 - loaded "
+                   << "globalVariableValues from graph\n";
+    }
+
     // SubGraph metadata (Phase 3)
     tmpl->IsSubGraph = JsonHelper::GetBool(data, "isSubGraph", false);
 

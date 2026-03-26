@@ -461,6 +461,10 @@
     <None Include="Project Management\Features\PROJECT_PROGRESS_SUMMARY.md" />
     <None Include="Project Management\QUICK_FIX_GUIDE.md" />
     <None Include="Project Management\DOCUMENTATION_INDEX.md" />
+    <None Include="Project Management\Features\PHASE_3_UI_ENHANCEMENTS.md" />
+    <None Include="Project Management\Features\PHASE_3_STATUS.md" />
+    <None Include="Project Management\PHASE_3_PROJECT_COMPLETE.md" />
+    <None Include="Config\global_blackboard_register.json" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

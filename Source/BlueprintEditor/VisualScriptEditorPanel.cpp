@@ -954,6 +954,14 @@ void VisualScriptEditorPanel::LoadTemplate(const TaskGraphTemplate* tmpl,
         SYSTEM_LOG << "[VSEditor] LoadTemplate: initialized EntityBlackboard with "
                    << m_entityBlackboard->GetLocalVariableCount() << " local + "
                    << m_entityBlackboard->GetGlobalVariableCount() << " global variables\n";
+
+        // Phase 24 Global Blackboard Integration: Restore entity-specific global variable values
+        // If the graph has stored global variable overrides, restore them now
+        if (!m_template.GlobalVariableValues.is_null() && !m_template.GlobalVariableValues.empty())
+        {
+            m_entityBlackboard->ImportGlobalsFromJson(m_template.GlobalVariableValues);
+            SYSTEM_LOG << "[VSEditor] LoadTemplate: restored global variable overrides from graph\n";
+        }
     }
 
     // NOTE: Do NOT clear the undo stack here.  Each VisualScriptEditorPanel
@@ -1031,6 +1039,13 @@ bool VisualScriptEditorPanel::Save()
     // This ensures all presets (newly created, modified, duplicated) are included in save
     SyncPresetsFromRegistryToTemplate();
 
+    // Phase 24 Global Blackboard Integration: Sync global variable values from EntityBlackboard to template
+    // This ensures entity-specific global variable overrides are included in save
+    if (m_entityBlackboard)
+    {
+        m_template.GlobalVariableValues = m_entityBlackboard->ExportGlobalsToJson();
+    }
+
     // CRITICAL FIX: Sync node positions from ImNodes BEFORE serialization.
     // RenderToolbar() (which calls Save) executes before RenderCanvas() syncs
     // positions, so we must pull fresh positions here to avoid stale data.
@@ -1063,6 +1078,13 @@ bool VisualScriptEditorPanel::SaveAs(const std::string& path)
     // Phase 24: CRITICAL - Sync presets from registry to template BEFORE serialization
     // This ensures all presets (newly created, modified, duplicated) are included in save
     SyncPresetsFromRegistryToTemplate();
+
+    // Phase 24 Global Blackboard Integration: Sync global variable values from EntityBlackboard to template
+    // This ensures entity-specific global variable overrides are included in save
+    if (m_entityBlackboard)
+    {
+        m_template.GlobalVariableValues = m_entityBlackboard->ExportGlobalsToJson();
+    }
 
     // CRITICAL FIX: Same position sync as Save() — ensure fresh positions
     // before serialization regardless of when in the frame SaveAs is called.
@@ -1704,6 +1726,15 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
     }
     root["dataConnections"] = dataArray;
 
+    // Phase 24 Global Blackboard Integration: Serialize global variable values
+    // These are entity-specific values stored in the template before serialization
+    if (!m_template.GlobalVariableValues.is_null() && !m_template.GlobalVariableValues.empty())
+    {
+        root["globalVariableValues"] = m_template.GlobalVariableValues;
+        SYSTEM_LOG << "[VisualScriptEditorPanel] SerializeAndWrite: Phase 24 - serialized "
+                   << "global variable values\n";
+    }
+
     // Phase 24 — Condition Preset Bank (embedded in graph JSON)
     // Presets are now serialized as part of the graph, making blueprints self-contained.
     if (!m_template.Presets.empty())
@@ -2041,10 +2072,24 @@ void VisualScriptEditorPanel::RenderContent()
     }
     ImGui::PopStyleColor(3);
 
-    // ---- Part C: Local Variables Reference Panel ----
-    ImGui::BeginChild("Part_C_LocalVars", ImVec2(0, localVarHeight), false,
+    // ---- Part C: Local/Global Variables Panel (with tab selection) ----
+    ImGui::BeginChild("Part_C_Blackboard", ImVec2(0, localVarHeight), false,
                       ImGuiWindowFlags_NoScrollbar);
-    RenderLocalVariablesPanel();
+
+    // Tab selector for Local vs Global variables
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 4.0f));
+    ImGui::RadioButton("Local Variables", &m_blackboardTabSelection, 0);
+    ImGui::SameLine(150.0f);
+    ImGui::RadioButton("Global Variables", &m_blackboardTabSelection, 1);
+    ImGui::PopStyleVar();
+    ImGui::Separator();
+
+    // Render appropriate panel based on tab selection
+    if (m_blackboardTabSelection == 0)
+        RenderLocalVariablesPanel();
+    else
+        RenderGlobalVariablesPanel();
+
     ImGui::EndChild();
 
     ImGui::EndChild();  // End VSRightPanel
@@ -5783,12 +5828,12 @@ void VisualScriptEditorPanel::RenderLocalVariablesPanel()
 }
 
 // ============================================================================
-// Phase 24 Global Blackboard Integration — RenderGlobalVariablesPanel
+// Phase 24 Global Blackboard Integration — RenderGlobalVariablesPanel (Enhanced)
 // ============================================================================
 
 void VisualScriptEditorPanel::RenderGlobalVariablesPanel()
 {
-    ImGui::TextDisabled("Global Blackboard");
+    ImGui::TextDisabled("Global Variables (Editor Instance)");
     ImGui::Separator();
 
     // Get reference to the global template registry
@@ -5802,74 +5847,187 @@ void VisualScriptEditorPanel::RenderGlobalVariablesPanel()
         return;
     }
 
-    ImGui::TextDisabled("Read-only view of global variables from project registry");
+    ImGui::TextDisabled("Global variables from project registry");
+    ImGui::TextDisabled("Values shown are editor-specific (persisted with graph)");
     ImGui::Separator();
 
-    // Display each global variable with current entity values
+    // Check if EntityBlackboard is initialized
+    if (!m_entityBlackboard)
+    {
+        ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "[ERROR] EntityBlackboard not initialized");
+        return;
+    }
+
+    // Display each global variable with editable entity-specific value
     for (size_t gi = 0; gi < globalVars.size(); ++gi)
     {
         const GlobalEntryDefinition& globalDef = globalVars[gi];
 
         ImGui::PushID(static_cast<int>(gi));
 
-        // Variable name (read-only)
-        ImGui::TextColored(ImVec4(0.8f, 0.95f, 1.0f, 1.0f), "%s", globalDef.Key.c_str());
-        ImGui::SameLine();
+        // ---- Variable name (read-only) with type label ----
+        ImGui::TextColored(ImVec4(0.8f, 0.95f, 1.0f, 1.0f), "(%s) %s",
+                          VariableTypeToString(globalDef.Type).c_str(),
+                          globalDef.Key.c_str());
 
-        // Type label (read-only)
-        ImGui::TextDisabled("(%s)", VariableTypeToString(globalDef.Type).c_str());
+        // ---- Description (if available) ----
+        if (!globalDef.Description.empty())
+        {
+            ImGui::TextDisabled("  %s", globalDef.Description.c_str());
+        }
 
-        // Current value display (type-specific, read-only for now)
+        ImGui::BeginTable("##GlobalVarTable", 2, ImGuiTableFlags_SizingStretchSame, ImVec2(0, 0));
+        ImGui::TableSetupColumn("Label", 0);
+        ImGui::TableSetupColumn("Value", 0);
+
+        // ---- Default Value (read-only) ----
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
         ImGui::TextDisabled("Default:");
-        ImGui::SameLine();
+        ImGui::TableSetColumnIndex(1);
 
         const TaskValue& defaultValue = globalDef.DefaultValue;
-        std::string valueStr;
+        std::string defaultStr;
         switch (globalDef.Type)
         {
             case VariableType::Bool:
-                valueStr = defaultValue.IsNone() ? "false" : (defaultValue.AsBool() ? "true" : "false");
+                defaultStr = defaultValue.IsNone() ? "false" : (defaultValue.AsBool() ? "true" : "false");
                 break;
             case VariableType::Int:
-                valueStr = defaultValue.IsNone() ? "0" : std::to_string(defaultValue.AsInt());
+                defaultStr = defaultValue.IsNone() ? "0" : std::to_string(defaultValue.AsInt());
                 break;
             case VariableType::Float:
             {
                 std::ostringstream oss;
                 oss << std::fixed << std::setprecision(2);
                 oss << (defaultValue.IsNone() ? 0.0f : defaultValue.AsFloat());
-                valueStr = oss.str();
+                defaultStr = oss.str();
                 break;
             }
             case VariableType::String:
-                valueStr = defaultValue.IsNone() ? "" : defaultValue.AsString();
+                defaultStr = defaultValue.IsNone() ? "" : defaultValue.AsString();
                 break;
             case VariableType::Vector:
-                valueStr = "(vector)";
+                defaultStr = "(vector)";
                 break;
             case VariableType::EntityID:
-                valueStr = defaultValue.IsNone() ? "0" : std::to_string(static_cast<int>(defaultValue.AsEntityID()));
+                defaultStr = defaultValue.IsNone() ? "0" : std::to_string(static_cast<int>(defaultValue.AsEntityID()));
                 break;
             default:
-                valueStr = "(unknown)";
+                defaultStr = "(unknown)";
+                break;
+        }
+        ImGui::TextDisabled("%s", defaultStr.c_str());
+
+        // ---- Current Value (editable with scope resolution) ----
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextDisabled("Current:");
+        ImGui::TableSetColumnIndex(1);
+
+        // Use scoped variable access to get/set entity-specific value
+        std::string scopedVarName = "(G)" + globalDef.Key;
+        TaskValue currentValue = m_entityBlackboard->GetValueScoped(scopedVarName);
+
+        // Create type-specific input widget
+        bool valueChanged = false;
+        switch (globalDef.Type)
+        {
+            case VariableType::Bool:
+            {
+                bool bVal = currentValue.IsNone() ? false : currentValue.AsBool();
+                if (ImGui::Checkbox("##bool_val", &bVal))
+                {
+                    m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(bVal));
+                    m_dirty = true;
+                    valueChanged = true;
+                }
+                break;
+            }
+            case VariableType::Int:
+            {
+                int iVal = currentValue.IsNone() ? 0 : currentValue.AsInt();
+                if (ImGui::InputInt("##int_val", &iVal))
+                {
+                    m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(iVal));
+                    m_dirty = true;
+                    valueChanged = true;
+                }
+                break;
+            }
+            case VariableType::Float:
+            {
+                float fVal = currentValue.IsNone() ? 0.0f : currentValue.AsFloat();
+                if (ImGui::InputFloat("##float_val", &fVal))
+                {
+                    m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(fVal));
+                    m_dirty = true;
+                    valueChanged = true;
+                }
+                break;
+            }
+            case VariableType::String:
+            {
+                static std::unordered_map<size_t, std::vector<char>> stringBuffers;
+                size_t bufKey = gi; // Use index as unique key for buffer storage
+                if (stringBuffers.find(bufKey) == stringBuffers.end())
+                {
+                    std::string initialStr = currentValue.IsNone() ? "" : currentValue.AsString();
+                    stringBuffers[bufKey] = std::vector<char>(initialStr.begin(), initialStr.end());
+                    stringBuffers[bufKey].push_back('\0');
+                    stringBuffers[bufKey].resize(256);  // Allocate buffer
+                }
+
+                ImGui::SetNextItemWidth(-1.0f);
+                if (ImGui::InputText("##string_val", stringBuffers[bufKey].data(), 256, ImGuiInputTextFlags_EnterReturnsTrue))
+                {
+                    std::string newStr(stringBuffers[bufKey].data());
+                    m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(newStr));
+                    m_dirty = true;
+                    valueChanged = true;
+                }
+                break;
+            }
+            case VariableType::Vector:
+            {
+                Vector vVal = currentValue.IsNone() ? Vector{0.0f, 0.0f, 0.0f} : currentValue.AsVector();
+                float vArray[3] = {vVal.x, vVal.y, vVal.z};
+                if (ImGui::InputFloat3("##vector_val", vArray))
+                {
+                    Vector newVec{vArray[0], vArray[1], vArray[2]};
+                    m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(newVec));
+                    m_dirty = true;
+                    valueChanged = true;
+                }
+                break;
+            }
+            case VariableType::EntityID:
+            {
+                int eID = currentValue.IsNone() ? 0 : static_cast<int>(currentValue.AsEntityID());
+                if (ImGui::InputInt("##entityid_val", &eID))
+                {
+                    m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(eID >= 0 ? eID : 0));
+                    m_dirty = true;
+                    valueChanged = true;
+                }
+                break;
+            }
+            default:
+                ImGui::TextDisabled("(unsupported type)");
                 break;
         }
 
-        ImGui::TextDisabled("%s", valueStr.c_str());
-
-        // Description (if available)
-        if (!globalDef.Description.empty())
-        {
-            ImGui::TextDisabled("  Desc: %s", globalDef.Description.c_str());
-        }
-
-        // Persistent flag
+        // ---- Persistent flag ----
         if (globalDef.IsPersistent)
         {
-            ImGui::SameLine();
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::TextDisabled("Flags:");
+            ImGui::TableSetColumnIndex(1);
             ImGui::TextColored(ImVec4(0.7f, 0.9f, 0.5f, 1.0f), "[Persistent]");
         }
 
+        ImGui::EndTable();
         ImGui::Separator();
         ImGui::PopID();
     }

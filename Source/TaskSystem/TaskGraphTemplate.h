@@ -27,6 +27,7 @@
 #include "../Editor/ConditionPreset/ConditionPreset.h"  // Phase 24: embedded preset bank
 #include "../BlueprintEditor/ConditionRef.h"  // Phase 24: inline operand→pin mapping
 #include "../BlueprintEditor/MathOpOperand.h"  // Phase 24: MathOp operand system
+#include "../json_helper.h"  // For json type in global variables storage
 
 namespace Olympe {
 
@@ -214,6 +215,13 @@ public:
     /// This makes blueprints self-contained with no external file dependencies.
     /// Populated during LoadTemplate() from "presets" array in graph JSON.
     std::vector<ConditionPreset> Presets;
+
+    // Phase 24 Global Blackboard Integration — Global Variable Values (entity-specific overrides)
+    /// Stores JSON representation of global variable values for this specific graph instance.
+    /// These are entity-specific values (different from global registry defaults).
+    /// Loaded from "globalVariableValues" in graph JSON during deserialization.
+    /// Restored to EntityBlackboard after initialization.
+    json GlobalVariableValues = json::object();
 
     // -----------------------------------------------------------------------
     // Operations
