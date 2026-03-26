@@ -1,0 +1,125 @@
+{
+  "blueprintType": "BehaviorTree",
+  "data": {
+    "rootGraph": {
+      "nodes": [
+        {
+          "children": [
+            2,
+            5,
+            8
+          ],
+          "id": 1,
+          "name": "Root",
+          "parameters": {},
+          "position": {
+            "x": -349.672,
+            "y": -180.53
+          },
+          "type": "Selector"
+        },
+        {
+          "children": [
+            3,
+            4
+          ],
+          "id": 2,
+          "name": "Phase1",
+          "parameters": {},
+          "position": {
+            "x": -55,
+            "y": 12
+          },
+          "type": "Sequence"
+        },
+        {
+          "children": [],
+          "id": 3,
+          "name": "HealthAbove50",
+          "parameters": {},
+          "position": {
+            "x": 75,
+            "y": -24
+          },
+          "type": "Action"
+        },
+        {
+          "children": [],
+          "id": 4,
+          "name": "BasicAttacks",
+          "parameters": {},
+          "position": {
+            "x": 122.29,
+            "y": 114.617
+          },
+          "type": "SubGraph"
+        },
+        {
+          "children": [
+            6,
+            7
+          ],
+          "id": 5,
+          "name": "Phase2",
+          "parameters": {},
+          "position": {
+            "x": -32,
+            "y": -218
+          },
+          "type": "Sequence"
+        },
+        {
+          "children": [],
+          "id": 6,
+          "name": "HealthBelow50",
+          "parameters": {},
+          "position": {
+            "x": 233,
+            "y": -221
+          },
+          "type": "Action"
+        },
+        {
+          "children": [],
+          "id": 7,
+          "name": "AdvancedAttacks",
+          "parameters": {},
+          "position": {
+            "x": 241.145,
+            "y": -114.989
+          },
+          "type": "SubGraph"
+        },
+        {
+          "children": [],
+          "id": 8,
+          "name": "Idle",
+          "parameters": {},
+          "position": {
+            "x": -81,
+            "y": 130
+          },
+          "type": "Action"
+        }
+      ],
+      "rootNodeId": -1
+    },
+    "subgraphs": {}
+  },
+  "description": "",
+  "editorState": {
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
+  "metadata": {
+    "author": "User",
+    "created": "",
+    "lastModified": "2026-03-12T14:51:23",
+    "tags": []
+  },
+  "name": "BossCombat",
+  "schema_version": 5
+}

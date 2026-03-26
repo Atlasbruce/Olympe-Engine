@@ -1,0 +1,88 @@
+{
+  "blueprintType": "BehaviorTree",
+  "data": {
+    "rootGraph": {
+      "nodes": [
+        {
+          "children": [
+            2,
+            7
+          ],
+          "id": 1,
+          "name": "Root",
+          "parameters": {},
+          "position": {
+            "x": -252,
+            "y": 20
+          },
+          "type": "Selector"
+        },
+        {
+          "children": [
+            3,
+            4
+          ],
+          "id": 2,
+          "name": "Chase",
+          "parameters": {},
+          "position": {
+            "x": -92,
+            "y": -95
+          },
+          "type": "Sequence"
+        },
+        {
+          "children": [],
+          "id": 3,
+          "name": "EnemyVisible",
+          "parameters": {},
+          "position": {
+            "x": 100,
+            "y": -46
+          },
+          "type": "Action"
+        },
+        {
+          "children": [],
+          "id": 4,
+          "name": "ChaseEnemy",
+          "parameters": {},
+          "position": {
+            "x": 82,
+            "y": -203
+          },
+          "type": "Action"
+        },
+        {
+          "children": [],
+          "id": 7,
+          "name": "Patrol",
+          "parameters": {},
+          "position": {
+            "x": -88,
+            "y": 111
+          },
+          "type": "Action"
+        }
+      ],
+      "rootNodeId": -1
+    },
+    "subgraphs": {}
+  },
+  "description": "",
+  "editorState": {
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
+  "metadata": {
+    "author": "User",
+    "created": "",
+    "lastModified": "2026-03-10T12:32:16",
+    "tags": []
+  },
+  "name": "GuardBehavior",
+  "schema_version": 5
+}

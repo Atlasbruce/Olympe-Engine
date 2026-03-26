@@ -451,7 +451,6 @@
     <ClInclude Include="Source\World.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include=".github\copilot-instructions.md" />
     <None Include="add_bb_panels.ps1" />
     <None Include="add_proj_entries.ps1" />
     <None Include="analyze_code.ps1" />
@@ -460,13 +459,10 @@
     <None Include="blueprint_editor_config.json" />
     <None Include="ClassDiagram.cd" />
     <None Include="config\ATS-VS-editor-config.json" />
-    <None Include="FIXES_APPLIED.md" />
-    <None Include="IMPLEMENTATION_SUMMARY.md" />
     <None Include="olympe.ini" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
-    <None Include="tests\Synthèse des approches testées pour l%27alignement à droite des labels de pins.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\olympe.ico" />

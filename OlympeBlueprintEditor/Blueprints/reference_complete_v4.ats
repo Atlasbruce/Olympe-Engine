@@ -1,0 +1,376 @@
+{
+  "blackboard": [
+    {
+      "isGlobal": false,
+      "key": "Counter",
+      "type": "Int",
+      "value": 0
+    },
+    {
+      "isGlobal": false,
+      "key": "MaxCount",
+      "type": "Int",
+      "value": 3
+    },
+    {
+      "isGlobal": false,
+      "key": "IsActive",
+      "type": "Bool",
+      "value": false
+    },
+    {
+      "isGlobal": false,
+      "key": "Score",
+      "type": "Float",
+      "value": 0
+    },
+    {
+      "isGlobal": false,
+      "key": "Label",
+      "type": "String",
+      "value": "init"
+    },
+    {
+      "isGlobal": true,
+      "key": "global:TotalRuns",
+      "type": "Int",
+      "value": 0
+    }
+  ],
+  "dataConnections": [
+    {
+      "fromNode": 5,
+      "fromPin": "Value",
+      "toNode": 6,
+      "toPin": "OperandA"
+    },
+    {
+      "fromNode": 14,
+      "fromPin": "Value",
+      "toNode": 12,
+      "toPin": "OperandA"
+    }
+  ],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "Completed",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Completed",
+      "toNode": 5,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 5,
+      "fromPin": "Out",
+      "toNode": 6,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 6,
+      "fromPin": "Completed",
+      "toNode": 7,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 7,
+      "fromPin": "Then",
+      "toNode": 8,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 7,
+      "fromPin": "Else",
+      "toNode": 9,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 8,
+      "fromPin": "Completed",
+      "toNode": 9,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 9,
+      "fromPin": "Loop",
+      "toNode": 10,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 9,
+      "fromPin": "Completed",
+      "toNode": 11,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 10,
+      "fromPin": "Completed",
+      "toNode": 9,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 11,
+      "fromPin": "Completed",
+      "toNode": 12,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 12,
+      "fromPin": "Completed",
+      "toNode": 13,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 13,
+      "fromPin": "Completed",
+      "toNode": 14,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 14,
+      "fromPin": "Out",
+      "toNode": 15,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 15,
+      "fromPin": "Completed",
+      "toNode": 16,
+      "toPin": "In"
+    }
+  ],
+  "graphType": "VisualScript",
+  "name": "ReferenceCompleteV4",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "Start",
+      "position": {
+        "x": 0,
+        "y": 200
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 2,
+      "label": "Main Sequence",
+      "position": {
+        "x": 200,
+        "y": 200
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 3,
+      "label": "Init Once",
+      "position": {
+        "x": 400,
+        "y": 0
+      },
+      "type": "DoOnce"
+    },
+    {
+      "id": 4,
+      "label": "Set IsActive True",
+      "position": {
+        "x": 563,
+        "y": 0
+      },
+      "type": "SetBBValue"
+    },
+    {
+      "id": 5,
+      "label": "Read Counter",
+      "position": {
+        "x": 732,
+        "y": 2
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "id": 6,
+      "label": "Increment Counter",
+      "mathOpRef": {
+        "leftOperand": {
+          "constValue": "",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        },
+        "mathOperator": "+",
+        "rightOperand": {
+          "constValue": "",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        }
+      },
+      "position": {
+        "x": 887,
+        "y": -2
+      },
+      "type": "MathOp"
+    },
+    {
+      "conditionKey": "CheckBlackboardValue",
+      "id": 7,
+      "label": "Counter < MaxCount?",
+      "params": {
+        "key": {
+          "LiteralValue": "Counter",
+          "Type": "Literal"
+        },
+        "operator": {
+          "LiteralValue": "LessThan",
+          "Type": "Literal"
+        },
+        "value": {
+          "LiteralValue": "MaxCount",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1084,
+        "y": -12
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 8,
+      "label": "Do Work",
+      "params": {
+        "duration": {
+          "LiteralValue": "0.5",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1306,
+        "y": -21
+      },
+      "taskType": "Task_Wait",
+      "type": "AtomicTask"
+    },
+    {
+      "conditionKey": "IsActive",
+      "id": 9,
+      "label": "While IsActive",
+      "position": {
+        "x": 1432,
+        "y": 51
+      },
+      "type": "While"
+    },
+    {
+      "id": 10,
+      "label": "Loop Body",
+      "params": {
+        "duration": {
+          "LiteralValue": "0.1",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1505.42,
+        "y": -81.0193
+      },
+      "taskType": "Task_Wait",
+      "type": "AtomicTask"
+    },
+    {
+      "delaySeconds": 0,
+      "id": 11,
+      "label": "Pause 1s",
+      "position": {
+        "x": 1616.83,
+        "y": 62.4894
+      },
+      "type": "Delay"
+    },
+    {
+      "id": 12,
+      "label": "Add Score",
+      "mathOpRef": {
+        "leftOperand": {
+          "constValue": "",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        },
+        "mathOperator": "+",
+        "rightOperand": {
+          "constValue": "",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        }
+      },
+      "position": {
+        "x": 1816.83,
+        "y": 62.4894
+      },
+      "type": "MathOp"
+    },
+    {
+      "id": 13,
+      "label": "Set Label Done",
+      "position": {
+        "x": 1966.83,
+        "y": 58.4894
+      },
+      "type": "SetBBValue"
+    },
+    {
+      "id": 14,
+      "label": "Read Score",
+      "position": {
+        "x": 2166.83,
+        "y": 58.4894
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "id": 15,
+      "label": "Sub Routine",
+      "position": {
+        "x": 2330.73,
+        "y": 58.0554
+      },
+      "subGraphPath": "Gamedata/TaskGraph/Templates/empty_utility_ai.ats",
+      "type": "SubGraph"
+    },
+    {
+      "id": 16,
+      "label": "Final Cleanup",
+      "params": {
+        "newState": {
+          "LiteralValue": "Idle",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 2530.73,
+        "y": 58.0554
+      },
+      "taskType": "Task_ChangeState",
+      "type": "AtomicTask"
+    }
+  ],
+  "schema_version": 4
+}
