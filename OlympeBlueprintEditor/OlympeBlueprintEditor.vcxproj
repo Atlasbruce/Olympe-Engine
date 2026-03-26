@@ -203,6 +203,8 @@
     <ClCompile Include="..\Source\Editor\Panels\GetBBValuePropertyPanel.cpp" />
     <ClCompile Include="..\Source\Editor\Panels\SetBBValuePropertyPanel.cpp" />
     <ClCompile Include="..\Source\Editor\Panels\ActionParametersPanel.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\EntityBlackboard.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\GlobalTemplateBlackboard.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEditor\AIEditorClipboard.h" />
@@ -558,3 +560,6 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+
+
+

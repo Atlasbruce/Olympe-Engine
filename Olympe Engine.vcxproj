@@ -464,6 +464,12 @@
     <None Include="ClassDiagram.cd" />
     <None Include="config\ATS-VS-editor-config.json" />
     <None Include="olympe.ini" />
+    <None Include="Project Management\DOCUMENTATION_INDEX.md" />
+    <None Include="Project Management\Features\PHASE_2_COMPLETE.md" />
+    <None Include="Project Management\Features\PHASE_2_STATUS.md" />
+    <None Include="Project Management\Features\PHASE_2_UI_INTEGRATION.md" />
+    <None Include="Project Management\Features\PROJECT_PROGRESS_SUMMARY.md" />
+    <None Include="Project Management\QUICK_FIX_GUIDE.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />

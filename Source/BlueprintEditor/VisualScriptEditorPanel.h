@@ -24,6 +24,8 @@
 #include "../third_party/imgui/imgui.h"
 #include "../TaskSystem/TaskGraphTemplate.h"
 #include "../TaskSystem/LocalBlackboard.h"
+#include "../TaskSystem/EntityBlackboard.h"
+#include "../NodeGraphCore/GlobalTemplateBlackboard.h"
 #include "VisualScriptNodeRenderer.h"
 #include "UndoRedoStack.h"
 #include "VSConnectionValidator.h"
@@ -238,6 +240,13 @@ private:
     void RenderContextMenus();
 
     void RenderProperties();
+
+    /**
+     * @brief Phase 24 Global Blackboard — Renders global variables panel.
+     * Shows variables from GlobalTemplateBlackboard with current entity values.
+     * Called from RenderContent() as part of tab-based blackboard UI.
+     */
+    void RenderGlobalVariablesPanel();
 
     /**
      * @brief Renders the Properties panel content for a selected Branch (or While) node.
@@ -726,6 +735,17 @@ private:
 
     /// ID of the node currently loaded into m_conditionsPanel (-1 = none).
     int m_condPanelNodeID = -1;
+
+    // -----------------------------------------------------------------------
+    // Phase 24 Global Blackboard Integration
+    // -----------------------------------------------------------------------
+
+    /// Per-entity blackboard instance (combines local + global variables)
+    /// Created in Initialize() and manages scope-aware access to both local and global vars.
+    std::unique_ptr<EntityBlackboard> m_entityBlackboard;
+
+    /// Current tab selection in the blackboard panel (0 = Local, 1 = Global)
+    int m_blackboardTabSelection = 0;  // 0 for Local, 1 for Global
 };
 
 } // namespace Olympe

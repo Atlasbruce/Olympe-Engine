@@ -70,6 +70,11 @@ void VisualScriptEditorPanel::Initialize()
     m_libraryPanel    = std::unique_ptr<ConditionPresetLibraryPanel>(
                             new ConditionPresetLibraryPanel(m_presetRegistry));
 
+    // Phase 24 Global Blackboard Integration: Create EntityBlackboard for managing
+    // both local and global variables in the editor context (entity ID 0)
+    m_entityBlackboard = std::unique_ptr<EntityBlackboard>(
+                            new EntityBlackboard(0));  // 0 = editor context entity
+
     // Wire the pin-regeneration callback so the Edit-Conditions modal can
     // trigger a canvas update when the user confirms changes.
     m_conditionsPanel->OnDynamicPinsNeedRegeneration = [this]()
@@ -939,6 +944,16 @@ void VisualScriptEditorPanel::LoadTemplate(const TaskGraphTemplate* tmpl,
         m_presetRegistry.Clear();
         SYSTEM_LOG << "[VSEditor] LoadTemplate: graph '" << m_template.Name
                    << "' has no embedded presets - starting with empty bank\n";
+    }
+
+    // Phase 24 Global Blackboard Integration: Initialize EntityBlackboard
+    // This merges local (from m_template.Blackboard) + global variables (from registry)
+    if (m_entityBlackboard)
+    {
+        m_entityBlackboard->Initialize(m_template);
+        SYSTEM_LOG << "[VSEditor] LoadTemplate: initialized EntityBlackboard with "
+                   << m_entityBlackboard->GetLocalVariableCount() << " local + "
+                   << m_entityBlackboard->GetGlobalVariableCount() << " global variables\n";
     }
 
     // NOTE: Do NOT clear the undo stack here.  Each VisualScriptEditorPanel
@@ -5763,6 +5778,99 @@ void VisualScriptEditorPanel::RenderLocalVariablesPanel()
             m_dirty = true;
         }
 
+        ImGui::PopID();
+    }
+}
+
+// ============================================================================
+// Phase 24 Global Blackboard Integration — RenderGlobalVariablesPanel
+// ============================================================================
+
+void VisualScriptEditorPanel::RenderGlobalVariablesPanel()
+{
+    ImGui::TextDisabled("Global Blackboard");
+    ImGui::Separator();
+
+    // Get reference to the global template registry
+    const GlobalTemplateBlackboard& gtb = GlobalTemplateBlackboard::Get();
+    const std::vector<GlobalEntryDefinition>& globalVars = gtb.GetAllVariables();
+
+    if (globalVars.empty())
+    {
+        ImGui::TextDisabled("(no global variables defined)");
+        ImGui::TextDisabled("To add globals, use the Global Config editor");
+        return;
+    }
+
+    ImGui::TextDisabled("Read-only view of global variables from project registry");
+    ImGui::Separator();
+
+    // Display each global variable with current entity values
+    for (size_t gi = 0; gi < globalVars.size(); ++gi)
+    {
+        const GlobalEntryDefinition& globalDef = globalVars[gi];
+
+        ImGui::PushID(static_cast<int>(gi));
+
+        // Variable name (read-only)
+        ImGui::TextColored(ImVec4(0.8f, 0.95f, 1.0f, 1.0f), "%s", globalDef.Key.c_str());
+        ImGui::SameLine();
+
+        // Type label (read-only)
+        ImGui::TextDisabled("(%s)", VariableTypeToString(globalDef.Type).c_str());
+
+        // Current value display (type-specific, read-only for now)
+        ImGui::TextDisabled("Default:");
+        ImGui::SameLine();
+
+        const TaskValue& defaultValue = globalDef.DefaultValue;
+        std::string valueStr;
+        switch (globalDef.Type)
+        {
+            case VariableType::Bool:
+                valueStr = defaultValue.IsNone() ? "false" : (defaultValue.AsBool() ? "true" : "false");
+                break;
+            case VariableType::Int:
+                valueStr = defaultValue.IsNone() ? "0" : std::to_string(defaultValue.AsInt());
+                break;
+            case VariableType::Float:
+            {
+                std::ostringstream oss;
+                oss << std::fixed << std::setprecision(2);
+                oss << (defaultValue.IsNone() ? 0.0f : defaultValue.AsFloat());
+                valueStr = oss.str();
+                break;
+            }
+            case VariableType::String:
+                valueStr = defaultValue.IsNone() ? "" : defaultValue.AsString();
+                break;
+            case VariableType::Vector:
+                valueStr = "(vector)";
+                break;
+            case VariableType::EntityID:
+                valueStr = defaultValue.IsNone() ? "0" : std::to_string(static_cast<int>(defaultValue.AsEntityID()));
+                break;
+            default:
+                valueStr = "(unknown)";
+                break;
+        }
+
+        ImGui::TextDisabled("%s", valueStr.c_str());
+
+        // Description (if available)
+        if (!globalDef.Description.empty())
+        {
+            ImGui::TextDisabled("  Desc: %s", globalDef.Description.c_str());
+        }
+
+        // Persistent flag
+        if (globalDef.IsPersistent)
+        {
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.7f, 0.9f, 0.5f, 1.0f), "[Persistent]");
+        }
+
+        ImGui::Separator();
         ImGui::PopID();
     }
 }

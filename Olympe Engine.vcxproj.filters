@@ -455,6 +455,12 @@
     <None Include="blueprint_editor_config.json" />
     <None Include="add_proj_entries.ps1" />
     <None Include="add_bb_panels.ps1" />
+    <None Include="Project Management\Features\PHASE_2_UI_INTEGRATION.md" />
+    <None Include="Project Management\Features\PHASE_2_STATUS.md" />
+    <None Include="Project Management\Features\PHASE_2_COMPLETE.md" />
+    <None Include="Project Management\Features\PROJECT_PROGRESS_SUMMARY.md" />
+    <None Include="Project Management\QUICK_FIX_GUIDE.md" />
+    <None Include="Project Management\DOCUMENTATION_INDEX.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
