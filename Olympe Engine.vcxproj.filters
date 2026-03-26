@@ -465,6 +465,9 @@
     <None Include="Project Management\Features\PHASE_3_STATUS.md" />
     <None Include="Project Management\PHASE_3_PROJECT_COMPLETE.md" />
     <None Include="Config\global_blackboard_register.json" />
+    <None Include="Project Management\Features\REGISTER_LOADING_FIXES.md" />
+    <None Include="Project Management\PHASE_3_PLUS_REGISTER_COMPLETE.md" />
+    <None Include="Project Management\PHASE_3_READY_FOR_PHASE_4.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

@@ -472,7 +472,10 @@
     <None Include="Project Management\Features\PHASE_3_STATUS.md" />
     <None Include="Project Management\Features\PHASE_3_UI_ENHANCEMENTS.md" />
     <None Include="Project Management\Features\PROJECT_PROGRESS_SUMMARY.md" />
+    <None Include="Project Management\Features\REGISTER_LOADING_FIXES.md" />
+    <None Include="Project Management\PHASE_3_PLUS_REGISTER_COMPLETE.md" />
     <None Include="Project Management\PHASE_3_PROJECT_COMPLETE.md" />
+    <None Include="Project Management\PHASE_3_READY_FOR_PHASE_4.md" />
     <None Include="Project Management\QUICK_FIX_GUIDE.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />

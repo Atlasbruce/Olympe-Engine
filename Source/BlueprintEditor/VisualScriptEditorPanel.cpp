@@ -5836,14 +5836,73 @@ void VisualScriptEditorPanel::RenderGlobalVariablesPanel()
     ImGui::TextDisabled("Global Variables (Editor Instance)");
     ImGui::Separator();
 
-    // Get reference to the global template registry
-    const GlobalTemplateBlackboard& gtb = GlobalTemplateBlackboard::Get();
+    // Get reference to the global template registry (non-const for Add)
+    GlobalTemplateBlackboard& gtb = GlobalTemplateBlackboard::Get();
     const std::vector<GlobalEntryDefinition>& globalVars = gtb.GetAllVariables();
+
+    // Add Global Variable button
+    if (ImGui::Button("+##globalVarAdd", ImVec2(30, 0)))
+    {
+        ImGui::OpenPopup("AddGlobalVariablePopup");
+    }
+    ImGui::SameLine();
+    ImGui::TextDisabled("Add global variable");
+
+    // Add Global Variable Modal Dialog
+    if (ImGui::BeginPopupModal("AddGlobalVariablePopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        static char newVarName[128] = "newGlobal";
+        static int newVarTypeIdx = 2;  // Default to Int
+        static char newVarDescription[256] = "Enter description...";
+
+        ImGui::InputText("Variable Name##new", newVarName, sizeof(newVarName));
+
+        const char* typeOptions[] = { "Bool", "Int", "Float", "String", "Vector", "EntityID" };
+        const VariableType typeValues[] = {
+            VariableType::Bool, VariableType::Int, VariableType::Float,
+            VariableType::String, VariableType::Vector, VariableType::EntityID
+        };
+        ImGui::Combo("Type##new", &newVarTypeIdx, typeOptions, 6);
+
+        ImGui::InputTextMultiline("Description##new", newVarDescription, sizeof(newVarDescription), ImVec2(0, 60));
+
+        if (ImGui::Button("Create", ImVec2(120, 0)))
+        {
+            if (strlen(newVarName) > 0 && !gtb.HasVariable(newVarName))
+            {
+                TaskValue defaultVal = GetDefaultValueForType(typeValues[newVarTypeIdx]);
+                if (gtb.AddVariable(newVarName, typeValues[newVarTypeIdx], defaultVal, newVarDescription, false))
+                {
+                    SYSTEM_LOG << "[VSEditor] Created new global variable: " << newVarName << "\n";
+                    gtb.SaveToFile("./Config/global_blackboard_register.json");
+                    m_dirty = true;
+
+                    // Reset form
+                    memset(newVarName, 0, sizeof(newVarName));
+                    strcpy_s(newVarName, sizeof(newVarName), "newGlobal");
+                    newVarTypeIdx = 2;
+                    memset(newVarDescription, 0, sizeof(newVarDescription));
+                    strcpy_s(newVarDescription, sizeof(newVarDescription), "Enter description...");
+
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+
+    ImGui::Separator();
 
     if (globalVars.empty())
     {
         ImGui::TextDisabled("(no global variables defined)");
-        ImGui::TextDisabled("To add globals, use the Global Config editor");
+        ImGui::TextDisabled("Click [+] above to create new global variables");
         return;
     }
 

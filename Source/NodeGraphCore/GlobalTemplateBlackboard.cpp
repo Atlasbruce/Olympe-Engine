@@ -19,6 +19,23 @@ namespace Olympe {
 GlobalTemplateBlackboard& GlobalTemplateBlackboard::Get()
 {
     static GlobalTemplateBlackboard instance;
+    static bool initialized = false;
+
+    // Auto-load register on first access
+    if (!initialized)
+    {
+        initialized = true;
+        if (instance.m_variables.empty())
+        {
+            SYSTEM_LOG << "[GlobalTemplateBlackboard::Get] Auto-loading register from file\n";
+            if (!instance.LoadFromFile("./Config/global_blackboard_register.json"))
+            {
+                SYSTEM_LOG << "[GlobalTemplateBlackboard::Get] WARNING: Failed to load register file\n";
+                // Don't fail - just start with empty registry
+            }
+        }
+    }
+
     return instance;
 }
 
@@ -104,13 +121,58 @@ bool GlobalTemplateBlackboard::LoadFromFile(const std::string& configPath)
                 }
                 catch (...) {}
             }
+            // Phase 24: Also check "value" field (backward compat with register file format)
+            else if (varObj.contains("value"))
+            {
+                try
+                {
+                    const auto& valNode = varObj["value"];
+                    switch (type)
+                    {
+                        case VariableType::Bool:
+                            if (valNode.is_boolean())
+                                defaultValue = TaskValue(valNode.get<bool>());
+                            break;
+                        case VariableType::Int:
+                            if (valNode.is_number_integer())
+                                defaultValue = TaskValue(valNode.get<int>());
+                            break;
+                        case VariableType::Float:
+                            if (valNode.is_number())
+                                defaultValue = TaskValue(static_cast<float>(valNode.get<double>()));
+                            break;
+                        case VariableType::String:
+                            if (valNode.is_string())
+                                defaultValue = TaskValue(valNode.get<std::string>());
+                            break;
+                        case VariableType::Vector:
+                            if (valNode.is_object() && valNode.contains("x") && valNode.contains("y") && valNode.contains("z"))
+                            {
+                                const float x = valNode["x"].get<float>();
+                                const float y = valNode["y"].get<float>();
+                                const float z = valNode["z"].get<float>();
+                                defaultValue = TaskValue(::Vector{x, y, z});
+                            }
+                            break;
+                        case VariableType::EntityID:
+                            if (valNode.is_number_integer())
+                                defaultValue = TaskValue(valNode.get<int>());
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                catch (...) {}
+            }
 
             std::string description;
             if (varObj.contains("description") && varObj["description"].is_string())
                 description = varObj["description"].get<std::string>();
 
             bool isPersistent = false;
-            if (varObj.contains("persistent") && varObj["persistent"].is_boolean())
+            if (varObj.contains("isPersistent") && varObj["isPersistent"].is_boolean())
+                isPersistent = varObj["isPersistent"].get<bool>();
+            else if (varObj.contains("persistent") && varObj["persistent"].is_boolean())
                 isPersistent = varObj["persistent"].get<bool>();
 
             AddVariable(key, type, defaultValue, description, isPersistent);
