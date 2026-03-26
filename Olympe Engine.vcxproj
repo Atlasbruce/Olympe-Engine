@@ -136,6 +136,7 @@
     <ClCompile Include="Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.cpp" />
     <ClCompile Include="Source\NodeGraphCore\BlackboardSystem.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GlobalBlackboard.cpp" />
+    <ClCompile Include="Source\NodeGraphCore\GlobalTemplateBlackboard.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GraphComment.cpp" />
     <ClCompile Include="Source\NodeGraphCore\LinkCache.cpp" />
     <ClCompile Include="Source\NodeGraphCore\NodeAnnotations.cpp" />
@@ -166,6 +167,7 @@
     <ClCompile Include="Source\TaskSystem\AtomicTasks\System\Task_SetPosition.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Utility\Task_Wait.cpp" />
     <ClCompile Include="Source\TaskSystem\ConditionEvaluator.cpp" />
+    <ClCompile Include="Source\TaskSystem\EntityBlackboard.cpp" />
     <ClCompile Include="Source\TaskSystem\LocalBlackboard.cpp" />
     <ClCompile Include="Source\TaskSystem\Pathfinding\PathfindingManager.cpp" />
     <ClCompile Include="Source\TaskSystem\TaskExecutionBridge.cpp" />
@@ -344,6 +346,7 @@
     <ClInclude Include="Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.h" />
     <ClInclude Include="Source\NodeGraphCore\BlackboardSystem.h" />
     <ClInclude Include="Source\NodeGraphCore\GlobalBlackboard.h" />
+    <ClInclude Include="Source\NodeGraphCore\GlobalTemplateBlackboard.h" />
     <ClInclude Include="Source\NodeGraphCore\GraphComment.h" />
     <ClInclude Include="Source\NodeGraphCore\LinkCache.h" />
     <ClInclude Include="Source\NodeGraphCore\NodeAnnotations.h" />
@@ -382,6 +385,7 @@
     <ClInclude Include="Source\TaskSystem\AtomicTasks\System\Task_SetPosition.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTasks\Utility\Task_Wait.h" />
     <ClInclude Include="Source\TaskSystem\ConditionEvaluator.h" />
+    <ClInclude Include="Source\TaskSystem\EntityBlackboard.h" />
     <ClInclude Include="Source\TaskSystem\LocalBlackboard.h" />
     <ClInclude Include="Source\TaskSystem\Pathfinding\PathfindingManager.h" />
     <ClInclude Include="Source\TaskSystem\TaskExecutionBridge.h" />
