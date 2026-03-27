@@ -484,6 +484,16 @@
     <None Include="Source\Runtime\00_README_PHASES_3-5.md" />
     <None Include="Source\Runtime\README.md" />
     <None Include="Source\Runtime\GLOBAL_VARIABLE_PERSISTENCE_FIX.md" />
+    <None Include="Project Management\Features\cleaning_redundancy_systems_27-03-2026.md" />
+    <None Include="Project Management\Features\CLEANUP_EXECUTIVE_SUMMARY_27-03-2026.md" />
+    <None Include="Project Management\Features\ARCHITECTURE_DIAGRAMS_27-03-2026.md" />
+    <None Include="Project Management\Features\TECHNICAL_CHECKLIST_27-03-2026.md" />
+    <None Include="Project Management\Features\DOCUMENTATION_INDEX_27-03-2026.md" />
+    <None Include="Project Management\Features\FILE_MANIFEST_27-03-2026.md" />
+    <None Include="Project Management\Features\QUICK_START_27-03-2026.md" />
+    <None Include="Project Management\Features\FINAL_SUMMARY_27-03-2026.md" />
+    <None Include="Project Management\Features\README_CLEANUP_27-03-2026.md" />
+    <None Include="Project Management\Features\MASTER_INDEX_27-03-2026.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
