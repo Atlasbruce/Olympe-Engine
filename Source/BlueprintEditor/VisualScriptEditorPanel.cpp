@@ -948,6 +948,10 @@ void VisualScriptEditorPanel::LoadTemplate(const TaskGraphTemplate* tmpl,
 
     // Phase 24 Global Blackboard Integration: Initialize EntityBlackboard
     // This merges local (from m_template.Blackboard) + global variables (from registry)
+
+    // Reload global variables from registry (in case they were modified outside this editor instance)
+    GlobalTemplateBlackboard::Reload();
+
     if (m_entityBlackboard)
     {
         m_entityBlackboard->Initialize(m_template);

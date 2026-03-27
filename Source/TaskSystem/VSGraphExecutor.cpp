@@ -254,6 +254,95 @@ int32_t VSGraphExecutor::HandleEntryPoint(int32_t nodeID,
 }
 
 // ============================================================================
+// Helper functions for Phase 24 Condition Preset Evaluation (private)
+// ============================================================================
+
+/**
+ * @brief Populates a RuntimeEnvironment with blackboard variables.
+ *
+ * Copies variable values from localBB into the RuntimeEnvironment for use by
+ * Operand resolution during ConditionPresetEvaluator::EvaluateConditionChain().
+ *
+ * @param env      Target RuntimeEnvironment to populate.
+ * @param localBB  Source LocalBlackboard.
+ */
+static void PopulateRuntimeEnvironmentFromBlackboard(
+    RuntimeEnvironment& env,
+    const LocalBlackboard& localBB)
+{
+    // Get all variable names from the blackboard
+    const std::vector<std::string>& variableNames = localBB.GetVariableNames();
+
+    for (size_t i = 0; i < variableNames.size(); ++i)
+    {
+        const std::string& varName = variableNames[i];
+        try
+        {
+            const TaskValue& value = localBB.GetValue(varName);
+
+            // Convert TaskValue to float for RuntimeEnvironment
+            float floatValue = 0.0f;
+            if (value.GetType() == VariableType::Float)
+            {
+                floatValue = value.AsFloat();
+            }
+            else if (value.GetType() == VariableType::Int)
+            {
+                floatValue = static_cast<float>(value.AsInt());
+            }
+            else if (value.GetType() == VariableType::Bool)
+            {
+                floatValue = value.AsBool() ? 1.0f : 0.0f;
+            }
+            // Other types (Vector, EntityID, String, List, GlobalRef) are not convertible to float
+
+            env.SetBlackboardVariable(varName, floatValue);
+        }
+        catch (...)
+        {
+            // Variable access failed; skip this variable
+        }
+    }
+}
+
+/**
+ * @brief Populates a RuntimeEnvironment with dynamic pin values.
+ *
+ * Copies resolved data pin values from DataPinCache into the RuntimeEnvironment
+ * for use by Pin-mode Operand resolution.
+ *
+ * @param env             Target RuntimeEnvironment to populate.
+ * @param dataPinCache    Source DataPinCache (map of "nodeID:pinName" -> TaskValue).
+ */
+static void PopulateRuntimeEnvironmentFromDataPins(
+    RuntimeEnvironment& env,
+    const std::unordered_map<std::string, TaskValue>& dataPinCache)
+{
+    for (auto it = dataPinCache.begin(); it != dataPinCache.end(); ++it)
+    {
+        const std::string& pinID = it->first;
+        const TaskValue& value = it->second;
+
+        // Convert TaskValue to float for RuntimeEnvironment
+        float floatValue = 0.0f;
+        if (value.GetType() == VariableType::Float)
+        {
+            floatValue = value.AsFloat();
+        }
+        else if (value.GetType() == VariableType::Int)
+        {
+            floatValue = static_cast<float>(value.AsInt());
+        }
+        else if (value.GetType() == VariableType::Bool)
+        {
+            floatValue = value.AsBool() ? 1.0f : 0.0f;
+        }
+
+        env.SetDynamicPinValue(pinID, floatValue);
+    }
+}
+
+// ============================================================================
 // HandleBranch (private)
 // ============================================================================
 
@@ -264,7 +353,51 @@ int32_t VSGraphExecutor::HandleBranch(int32_t nodeID,
 {
     const TaskNodeDefinition* node = tmpl.GetNode(nodeID);
 
-    // Phase 23-B.4: If structured conditions are defined, evaluate them first.
+    // Phase 24: If condition presets are defined, evaluate them with AND/OR operators.
+    // Priority 1: Check conditionRefs (Phase 24 Condition Presets with explicit AND/OR)
+    if (node != nullptr && !node->conditionRefs.empty())
+    {
+        // Build RuntimeEnvironment from current blackboard and pin states
+        RuntimeEnvironment env;
+        PopulateRuntimeEnvironmentFromBlackboard(env, localBB);
+        PopulateRuntimeEnvironmentFromDataPins(env, runner.DataPinCache);
+
+        // Get the global condition preset registry
+        // Note: In a production system, this would be obtained from a manager or singleton.
+        // For now, we create a temporary registry instance and try to load from the default location.
+        ConditionPresetRegistry registry;
+        try
+        {
+            // Attempt to load presets from the standard location
+            const std::string presetPath = "./Blueprints/Presets/condition_presets.json";
+            registry.Load(presetPath);
+        }
+        catch (...)
+        {
+            // If loading fails, proceed with empty registry
+            // This will result in "Preset not found" errors below, which is appropriate
+        }
+
+        // Evaluate the condition chain
+        std::string errorMsg;
+        const bool condition = ConditionPresetEvaluator::EvaluateConditionChain(
+            node->conditionRefs, registry, env, errorMsg);
+
+        if (!errorMsg.empty())
+        {
+            SYSTEM_LOG << "[VSGraphExecutor] Branch node " << nodeID
+                       << ": " << errorMsg << " — defaulting to Else\n";
+            // On error: execute Else branch (fail-safe)
+            return FindExecTarget(nodeID, "Else", tmpl);
+        }
+
+        return condition
+            ? FindExecTarget(nodeID, "Then", tmpl)
+            : FindExecTarget(nodeID, "Else", tmpl);
+    }
+
+    // Phase 23-B.4: If structured conditions are defined, evaluate them next.
+    // Priority 2: Check conditions (Phase 23-B.4 with implicit AND)
     if (node != nullptr && !node->conditions.empty())
     {
         const bool condition = ConditionEvaluator::EvaluateAll(

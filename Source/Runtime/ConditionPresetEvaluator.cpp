@@ -10,6 +10,7 @@
 #include <cmath>
 #include <string>
 #include <sstream>
+#include "../Editor/ConditionPreset/ConditionPresetRegistry.h"
 
 namespace Olympe {
 
@@ -36,6 +37,117 @@ bool ConditionPresetEvaluator::Evaluate(
 
     return EvaluateOperator(leftVal, preset.op, rightVal, outErrorMsg);
 }
+
+/*static*/
+bool ConditionPresetEvaluator::EvaluateConditionChain(
+    const std::vector<NodeConditionRef>& conditions,
+    const ConditionPresetRegistry&       registry,
+    RuntimeEnvironment&                  env,
+    std::string&                         outErrorMsg)
+{
+    outErrorMsg.clear();
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Validation
+    // ─────────────────────────────────────────────────────────────────────
+
+    if (conditions.empty())
+    {
+        outErrorMsg = "ConditionPresetEvaluator::EvaluateConditionChain: Empty condition chain.";
+        return false;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Evaluate each condition and combine with logical operators
+    // ─────────────────────────────────────────────────────────────────────
+
+    // Start with the first condition (LogicalOp::Start is ignored)
+    bool currentResult = true;
+    bool firstCondition = true;
+
+    for (size_t i = 0; i < conditions.size(); ++i)
+    {
+        const NodeConditionRef& condRef = conditions[i];
+
+        // ─────────────────────────────────────────────────────────────────
+        // Resolve the preset from the registry
+        // ─────────────────────────────────────────────────────────────────
+
+        const ConditionPreset* preset = registry.GetPreset(condRef.presetID);
+
+        if (preset == nullptr)
+        {
+            outErrorMsg = "ConditionPresetEvaluator::EvaluateConditionChain: "
+                         "Preset not found in registry: '" + condRef.presetID + "'";
+            return false;
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // Evaluate this condition
+        // ─────────────────────────────────────────────────────────────────
+
+        bool conditionResult = Evaluate(*preset, env, outErrorMsg);
+        if (!outErrorMsg.empty())
+        {
+            // Evaluation failed
+            return false;
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // Apply logical operator (short-circuit evaluation)
+        // ─────────────────────────────────────────────────────────────────
+
+        if (firstCondition)
+        {
+            // First condition: just use its result directly
+            currentResult = conditionResult;
+            firstCondition = false;
+        }
+        else
+        {
+            // Subsequent conditions: combine with logical operator
+            switch (condRef.logicalOp)
+            {
+            case LogicalOp::And:
+                // AND: short-circuit if current is false
+                currentResult = currentResult && conditionResult;
+                if (!currentResult)
+                {
+                    // Short-circuit: remaining conditions don't matter
+                    return false;
+                }
+                break;
+
+            case LogicalOp::Or:
+                // OR: short-circuit if current is true
+                currentResult = currentResult || conditionResult;
+                if (currentResult)
+                {
+                    // Short-circuit: remaining conditions don't matter
+                    return true;
+                }
+                break;
+
+            case LogicalOp::Start:
+                // Shouldn't occur for non-first conditions, but treat as AND
+                currentResult = currentResult && conditionResult;
+                if (!currentResult)
+                {
+                    return false;
+                }
+                break;
+
+            default:
+                outErrorMsg = "ConditionPresetEvaluator::EvaluateConditionChain: "
+                             "Unknown LogicalOp.";
+                return false;
+            }
+        }
+    }
+
+    return currentResult;
+}
+
 
 // ---------------------------------------------------------------------------
 // Private helpers

@@ -152,6 +152,7 @@
     <ClCompile Include="Source\NodeGraphShared\RenderHelpers.cpp" />
     <ClCompile Include="Source\Runtime\ConditionPresetEvaluator.cpp" />
     <ClCompile Include="Source\Runtime\GraphRuntimeInstance.cpp" />
+    <ClCompile Include="Source\Runtime\Phase4_ConditionEvaluation_Examples.cpp" />
     <ClCompile Include="Source\Runtime\RuntimeEnvironment.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.cpp" />
@@ -369,6 +370,7 @@
     <ClInclude Include="Source\NodeGraphShared\Serializer.h" />
     <ClInclude Include="Source\Runtime\ConditionPresetEvaluator.h" />
     <ClInclude Include="Source\Runtime\GraphRuntimeInstance.h" />
+    <ClInclude Include="Source\Runtime\PHASE4_QUICK_REFERENCE.h" />
     <ClInclude Include="Source\Runtime\RuntimeEnvironment.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTaskContext.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.h" />
@@ -465,6 +467,10 @@
     <None Include="config\ATS-VS-editor-config.json" />
     <None Include="Config\global_blackboard_register.json" />
     <None Include="olympe.ini" />
+    <None Include="PHASE4_COMPLETION_REPORT.md" />
+    <None Include="PHASE4_DELIVERY_SUMMARY.md" />
+    <None Include="PHASE4_INDEX.md" />
+    <None Include="PHASE4_QUICK_START.md" />
     <None Include="Project Management\DOCUMENTATION_INDEX.md" />
     <None Include="Project Management\Features\PHASE_2_COMPLETE.md" />
     <None Include="Project Management\Features\PHASE_2_STATUS.md" />
@@ -480,6 +486,16 @@
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
+    <None Include="Source\Runtime\00_README_PHASES_3-5.md" />
+    <None Include="Source\Runtime\COMPLETE_SESSION_SUMMARY.md" />
+    <None Include="Source\Runtime\GLOBAL_VARIABLE_PERSISTENCE_FIX.md" />
+    <None Include="Source\Runtime\PHASE4_CONDITION_EVALUATION.md" />
+    <None Include="Source\Runtime\PHASE5_CODE_CHANGES.md" />
+    <None Include="Source\Runtime\PHASE5_COMPLETION_REPORT.md" />
+    <None Include="Source\Runtime\PHASE5_INTEGRATION_PLAN.md" />
+    <None Include="Source\Runtime\PHASE5_QUICK_START.md" />
+    <None Include="Source\Runtime\PHASES_4-5_INDEX.md" />
+    <None Include="Source\Runtime\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\olympe.ico" />

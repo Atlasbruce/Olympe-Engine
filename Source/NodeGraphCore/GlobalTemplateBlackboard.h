@@ -83,6 +83,9 @@ class GlobalTemplateBlackboard {
 public:
     static GlobalTemplateBlackboard& Get();
 
+    /// Force reload of the registry from file (useful for hot reload)
+    static void Reload();
+
     bool LoadFromFile(const std::string& configPath = "./Config/global_blackboard_register.json");
     bool SaveToFile(const std::string& configPath = "./Config/global_blackboard_register.json") const;
     void Clear();

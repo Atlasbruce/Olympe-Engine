@@ -198,6 +198,7 @@
     <ClCompile Include="Source\Editor\Panels\ActionParametersPanel.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GlobalTemplateBlackboard.cpp" />
     <ClCompile Include="Source\TaskSystem\EntityBlackboard.cpp" />
+    <ClCompile Include="Source\Runtime\Phase4_ConditionEvaluation_Examples.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -435,6 +436,7 @@
     <ClInclude Include="Source\Editor\Panels\ActionParametersPanel.h" />
     <ClInclude Include="Source\NodeGraphCore\GlobalTemplateBlackboard.h" />
     <ClInclude Include="Source\TaskSystem\EntityBlackboard.h" />
+    <ClInclude Include="Source\Runtime\PHASE4_QUICK_REFERENCE.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -468,6 +470,20 @@
     <None Include="Project Management\Features\REGISTER_LOADING_FIXES.md" />
     <None Include="Project Management\PHASE_3_PLUS_REGISTER_COMPLETE.md" />
     <None Include="Project Management\PHASE_3_READY_FOR_PHASE_4.md" />
+    <None Include="Source\Runtime\PHASE4_CONDITION_EVALUATION.md" />
+    <None Include="PHASE4_COMPLETION_REPORT.md" />
+    <None Include="PHASE4_QUICK_START.md" />
+    <None Include="PHASE4_DELIVERY_SUMMARY.md" />
+    <None Include="PHASE4_INDEX.md" />
+    <None Include="Source\Runtime\PHASE5_INTEGRATION_PLAN.md" />
+    <None Include="Source\Runtime\PHASE5_COMPLETION_REPORT.md" />
+    <None Include="Source\Runtime\PHASE5_QUICK_START.md" />
+    <None Include="Source\Runtime\PHASES_4-5_INDEX.md" />
+    <None Include="Source\Runtime\COMPLETE_SESSION_SUMMARY.md" />
+    <None Include="Source\Runtime\PHASE5_CODE_CHANGES.md" />
+    <None Include="Source\Runtime\00_README_PHASES_3-5.md" />
+    <None Include="Source\Runtime\README.md" />
+    <None Include="Source\Runtime\GLOBAL_VARIABLE_PERSISTENCE_FIX.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

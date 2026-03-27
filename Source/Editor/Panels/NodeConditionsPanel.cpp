@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <sstream>
+#include "../../NodeGraphCore/GlobalTemplateBlackboard.h"
 
 // ImGui is only compiled in the full editor build.
 #ifndef OLYMPE_HEADLESS
@@ -839,32 +840,79 @@ void NodeConditionsPanel::RenderOperandDropdown(ConditionRef& cref, bool isLeft,
         }
     }
 
-    // ── Add all local variables LAST (sorted alphabetically) ──────────────
-    // Variables are stored as strings in the ConditionRef, not from blackboard
-    // So just show the current variableName as-is, or provide common names
-    // For now, we'll just show Variable mode with text input
+    // ── Add all variables (local + global) LAST (sorted alphabetically) ────
+    // Separate local and global variables with a visual separator
+    int variableStartIdx = static_cast<int>(allOptions.size());
+
+    // Add local variables first
+    for (const auto& localVar : m_localVariables)
+    {
+        allOptions.push_back(localVar.Key);
+        optionTypes.push_back(0);  // Variable
+        optionValues.push_back(localVar.Key);
+
+        if (op.mode == OperandRef::Mode::Variable && op.variableName == localVar.Key)
+        {
+            currentSelectionIdx = static_cast<int>(allOptions.size()) - 1;
+        }
+    }
+
+    // Add separator if we have both local and global variables
+    if (!m_localVariables.empty())
+    {
+        allOptions.push_back("--- Global Variables ---");
+        optionTypes.push_back(-1);  // Separator (non-selectable)
+        optionValues.push_back("");
+    }
+
+    // Add global variables
+    GlobalTemplateBlackboard& gtb = GlobalTemplateBlackboard::Get();
+    const std::vector<GlobalEntryDefinition>& globalVars = gtb.GetAllVariables();
+    for (const auto& globalVar : globalVars)
+    {
+        allOptions.push_back(globalVar.Key);
+        optionTypes.push_back(0);  // Variable
+        optionValues.push_back(globalVar.Key);
+
+        if (op.mode == OperandRef::Mode::Variable && op.variableName == globalVar.Key)
+        {
+            currentSelectionIdx = static_cast<int>(allOptions.size()) - 1;
+        }
+    }
 
     ImGui::SetNextItemWidth(120.0f);
-    const char* displayText = (currentSelectionIdx >= 0) ? allOptions[currentSelectionIdx].c_str() : "Variable";
+    const char* displayText = (currentSelectionIdx >= 0 && currentSelectionIdx < static_cast<int>(allOptions.size()))
+                              ? allOptions[currentSelectionIdx].c_str()
+                              : "Variable";
 
     if (ImGui::BeginCombo("##operand_dropdown", displayText))
     {
-        // Option 1: Variable (with text input)
-        if (ImGui::Selectable("Variable (custom)", op.mode == OperandRef::Mode::Variable))
-        {
-            op.mode = OperandRef::Mode::Variable;
-            m_dirty = true;
-            if (OnDynamicPinsNeedRegeneration)
-                OnDynamicPinsNeedRegeneration();
-        }
-
-        ImGui::Separator();
-
         // Const options
         for (int i = 0; i < static_cast<int>(allOptions.size()); ++i)
         {
-            if (optionTypes[i] != 0)  // Show Const and Pin options
+            if (optionTypes[i] == -1)
             {
+                // Separator (non-selectable)
+                ImGui::TextDisabled("%s", allOptions[i].c_str());
+                ImGui::Separator();
+            }
+            else if (optionTypes[i] == 0)
+            {
+                // Variable option
+                bool selected = (i == currentSelectionIdx);
+                if (ImGui::Selectable(allOptions[i].c_str(), selected))
+                {
+                    op.mode = OperandRef::Mode::Variable;
+                    op.variableName = allOptions[i];
+                    currentSelectionIdx = i;
+                    m_dirty = true;
+                    if (OnDynamicPinsNeedRegeneration)
+                        OnDynamicPinsNeedRegeneration();
+                }
+            }
+            else if (optionTypes[i] == 1 || optionTypes[i] == 2)
+            {
+                // Const or Pin option
                 bool selected = (i == currentSelectionIdx);
                 if (ImGui::Selectable(allOptions[i].c_str(), selected))
                 {
@@ -879,6 +927,7 @@ void NodeConditionsPanel::RenderOperandDropdown(ConditionRef& cref, bool isLeft,
                             op.dynamicPinID = optionValues[i];
                             break;
                     }
+                    currentSelectionIdx = i;
                     m_dirty = true;
                     if (OnDynamicPinsNeedRegeneration)
                         OnDynamicPinsNeedRegeneration();

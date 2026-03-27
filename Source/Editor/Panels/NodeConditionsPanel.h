@@ -47,6 +47,7 @@
 #include "../ConditionPreset/DynamicDataPin.h"
 #include "../Modals/NodeConditionsEditModal.h"
 #include "../../BlueprintEditor/ConditionRef.h"
+#include "../../TaskSystem/LocalBlackboard.h"
 
 namespace Olympe {
 
@@ -272,6 +273,19 @@ public:
      */
     void OnPresetDeleted(const std::string& deletedPresetID);
 
+    /**
+     * @brief Sets the list of local variables from EntityBlackboard (Phase 24).
+     *
+     * Used to populate variable dropdowns in the operand selector with both
+     * local and global variables.
+     *
+     * @param localVars  Vector of local variable definitions from the entity blackboard.
+     */
+    void SetLocalVariables(const std::vector<BlackboardEntry>& localVars)
+    {
+        m_localVariables = localVars;
+    }
+
     // -----------------------------------------------------------------------
     // Condition management (also testable without ImGui)
     // -----------------------------------------------------------------------
@@ -407,6 +421,7 @@ private:
     std::vector<NodeConditionRef>  m_conditionRefs;      ///< Current node's conditions
     std::vector<ConditionRef>      m_conditionOperandRefs; ///< Inline operand data (parallel to m_conditionRefs)
     std::vector<DynamicDataPin>    m_dynamicPins;        ///< Read-only dynamic pins for display
+    std::vector<BlackboardEntry>   m_localVariables;     ///< Local variables from entity (Phase 24)
     std::string                    m_nodeName;           ///< Node display name for title section
     bool                           m_dirty = false;      ///< Modification flag
     bool                           m_editModalRequested = false; ///< Set when Edit button is clicked

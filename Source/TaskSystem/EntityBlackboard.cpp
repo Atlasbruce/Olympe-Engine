@@ -135,6 +135,31 @@ TaskValue EntityBlackboard::GetGlobalValue(const std::string& globalKey) const
     auto it = m_globalVars.find(globalKey);
     if (it == m_globalVars.end())
     {
+        // Phase 24: Lazy-sync missing global variables from registry
+        // This handles the case where new global variables are added to the registry
+        // after this EntityBlackboard was initialized
+        const GlobalTemplateBlackboard& gtb = GlobalTemplateBlackboard::Get();
+        const GlobalEntryDefinition* globalDef = gtb.GetVariable(globalKey);
+
+        if (globalDef != nullptr)
+        {
+            // Variable exists in registry but not in this instance
+            // Add it with default value (using const_cast for lazy-sync mutation)
+            auto& mutableGlobalVars = const_cast<std::unordered_map<std::string, TaskValue>&>(m_globalVars);
+            auto& mutableGlobalTypes = const_cast<std::unordered_map<std::string, VariableType>&>(m_globalTypes);
+
+            mutableGlobalVars[globalKey] = globalDef->DefaultValue;
+            mutableGlobalTypes[globalKey] = globalDef->Type;
+
+            SYSTEM_LOG << "[EntityBlackboard] Lazy-synced missing global variable: '" << globalKey 
+                       << "' (type: " << VariableTypeToString(globalDef->Type) << ")\n";
+
+            // CRITICAL FIX: Re-find the newly added variable
+            // After insertion, the old iterator 'it' is stale. We must find the variable again.
+            it = m_globalVars.find(globalKey);
+            return it->second;
+        }
+
         SYSTEM_LOG << "[EntityBlackboard] ERROR: Global variable not found: '" << globalKey << "'\n";
         throw std::runtime_error("Global variable not found: " + globalKey);
     }
@@ -146,6 +171,24 @@ void EntityBlackboard::SetGlobalValue(const std::string& globalKey, const TaskVa
     auto typeIt = m_globalTypes.find(globalKey);
     if (typeIt == m_globalTypes.end())
     {
+        // Phase 24: Lazy-sync missing global variables from registry
+        // This handles the case where new global variables are added to the registry
+        // after this EntityBlackboard was initialized
+        const GlobalTemplateBlackboard& gtb = GlobalTemplateBlackboard::Get();
+        const GlobalEntryDefinition* globalDef = gtb.GetVariable(globalKey);
+
+        if (globalDef != nullptr)
+        {
+            // Variable exists in registry but not in this instance
+            // Add it with the provided value
+            m_globalTypes[globalKey] = globalDef->Type;
+            m_globalVars[globalKey] = value;
+
+            SYSTEM_LOG << "[EntityBlackboard] Lazy-synced missing global variable for set: '" << globalKey 
+                       << "' (type: " << VariableTypeToString(globalDef->Type) << ")\n";
+            return;
+        }
+
         SYSTEM_LOG << "[EntityBlackboard] ERROR: Global variable not found for set: '" << globalKey << "'\n";
         throw std::runtime_error("Global variable not found: " + globalKey);
     }

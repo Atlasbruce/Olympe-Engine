@@ -26,11 +26,16 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include "../Editor/ConditionPreset/ConditionPreset.h"
+#include "../Editor/ConditionPreset/NodeConditionRef.h"
 #include "../Editor/ConditionPreset/Operand.h"
 #include "RuntimeEnvironment.h"
 
 namespace Olympe {
+
+// Forward declaration
+class ConditionPresetRegistry;
 
 /**
  * @class ConditionPresetEvaluator
@@ -51,12 +56,21 @@ namespace Olympe {
  *   bool result = ConditionPresetEvaluator::Evaluate(preset, env, error);
  *   // result == true, error == ""
  * @endcode
+ *
+ * For multiple conditions with logical operators:
+ * @code
+ *   std::vector<NodeConditionRef> conditions;
+ *   // (populated with NodeConditionRef entries referencing presets)
+ *
+ *   bool result = ConditionPresetEvaluator::EvaluateConditionChain(
+ *       conditions, env, outErrorMsg);
+ * @endcode
  */
 class ConditionPresetEvaluator {
 public:
 
     /**
-     * @brief Evaluates a ConditionPreset and returns the boolean result.
+     * @brief Evaluates a single ConditionPreset and returns the boolean result.
      *
      * @param preset      The condition preset to evaluate.
      * @param env         Runtime environment providing variable and pin values.
@@ -69,6 +83,34 @@ public:
         const ConditionPreset& preset,
         RuntimeEnvironment&    env,
         std::string&           outErrorMsg);
+
+    /**
+     * @brief Evaluates a chain of conditions combined with logical operators (AND/OR).
+     *
+     * @details
+     * Implements short-circuit evaluation:
+     *   - For AND chains: stops and returns false at the first false condition
+     *   - For OR chains:  stops and returns true at the first true condition
+     *
+     * The first condition's LogicalOp is ignored (treated as Start).
+     *
+     * @param conditions  Vector of NodeConditionRef objects referencing presets.
+     *                    Each preset ID is resolved via the provided registry.
+     * @param registry    Registry containing the ConditionPreset objects.
+     * @param env         Runtime environment providing variable and pin values.
+     * @param outErrorMsg Receives a human-readable error description on failure.
+     *                    Empty on success.
+     * @return true when the combined condition chain evaluates to true;
+     *         false on evaluation failure or when conditions are empty.
+     *
+     * @pre conditions vector must not be empty.
+     * @pre registry must be valid (non-null).
+     */
+    static bool EvaluateConditionChain(
+        const std::vector<NodeConditionRef>& conditions,
+        const ConditionPresetRegistry&       registry,
+        RuntimeEnvironment&                  env,
+        std::string&                         outErrorMsg);
 
 private:
 
@@ -102,9 +144,6 @@ private:
         float        right,
         std::string& outErrorMsg);
 };
-
-/// @brief Backward-compatible alias — use ConditionPresetEvaluator for new code.
-using ConditionEvaluator = ConditionPresetEvaluator;
 
 } // namespace Olympe
 

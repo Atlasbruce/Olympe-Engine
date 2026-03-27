@@ -12,7 +12,7 @@
  * Modèle d'exécution :
  *   - Chaque frame, l'exécution repart depuis le node actif (CurrentNodeID).
  *   - Pour EntryPoint : avance immédiatement vers le premier successeur exec.
- *   - Pour Branch : évalue la condition via ConditionRegistry, suit True ou False.
+ *   - Pour Branch : évalue la condition via Phase 24 presets, Phase 23 conditions, ou data pins.
  *   - Pour VSSequence : exécute les ChildrenIDs dans l'ordre (SequenceChildIndex).
  *   - Pour AtomicTask : délègue à IAtomicTask::ExecuteWithContext(), gère Running.
  *   - Pour Delay : accumule StateTimer, émet Completed quand >= DelaySeconds.
@@ -28,6 +28,13 @@
  *   entrantes en parcourant les DataConnections du template et en peuplant
  *   runner.DataPinCache avec les valeurs des output pins des nodes sources.
  *
+ * Phase 24 - Condition Preset Integration (2026-03-17):
+ *   - HandleBranch evaluates node->conditionRefs with ConditionPresetEvaluator
+ *   - Supports AND/OR operators with short-circuit evaluation
+ *   - Falls back to Phase 23-B.4 conditions if no presets are defined
+ *   - Falls back to data pin evaluation as final fallback
+ *   - Fully backward compatible with existing task graphs
+ *
  * C++14 compliant.
  */
 
@@ -41,6 +48,14 @@
 #include "../ECS/Components/TaskRunnerComponent.h"
 #include "AtomicTaskContext.h"
 #include "LocalBlackboard.h"
+
+// Phase 23-B.4: Condition evaluation
+#include "ConditionEvaluator.h"
+
+// Phase 24: Condition preset evaluation (runtime integration)
+#include "../Runtime/ConditionPresetEvaluator.h"
+#include "../Runtime/RuntimeEnvironment.h"
+#include "../Editor/ConditionPreset/ConditionPresetRegistry.h"
 
 namespace Olympe {
 

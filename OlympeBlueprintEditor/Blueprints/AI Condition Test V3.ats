@@ -83,6 +83,54 @@
       "toPin": "In"
     }
   ],
+  "globalVariableValues": {
+    "alarmLevel": 0,
+    "ambientLight": 1,
+    "combatActive": false,
+    "combatMultiplier": 1,
+    "companionCount": 0,
+    "debugDrawColliders": false,
+    "debugShowFPS": false,
+    "deltaTime": 0.016,
+    "difficulty": 1,
+    "effectsVolume": 0.8,
+    "gameTime": 0,
+    "gravity": 9.81,
+    "inventoryCapacity": 20,
+    "isDebugMode": false,
+    "isPaused": false,
+    "lastEnemyCount": 0,
+    "mPosition": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "musicVolume": 0.6,
+    "playerDirection": 0,
+    "playerExperience": 0,
+    "playerHealth": 100,
+    "playerLevel": 1,
+    "playerMana": 50,
+    "playerMaxHealth": 100,
+    "playerMaxMana": 100,
+    "playerPosition": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "playerVelocity": 0,
+    "questsActive": 0,
+    "questsCompleted": 0,
+    "resourceGold": 0,
+    "resourceStone": 0,
+    "resourceWood": 0,
+    "soundVolume": 0.8,
+    "timeOfDay": 12,
+    "timeScale": 1,
+    "totalScore": 0,
+    "weatherType": "clear",
+    "windStrength": 0
+  },
   "graphType": "VisualScript",
   "name": "",
   "nodes": [
@@ -149,8 +197,8 @@
         }
       },
       "position": {
-        "x": 452,
-        "y": 331
+        "x": 479,
+        "y": 356
       },
       "type": "Branch"
     },
@@ -333,6 +381,19 @@
       "right": {
         "mode": "Const",
         "value": 4
+      }
+    },
+    {
+      "id": "preset_6635e4f2-2468-4333-8deb-bb00c79ec3c5",
+      "left": {
+        "mode": "Variable",
+        "value": ""
+      },
+      "name": "Condition",
+      "op": "==",
+      "right": {
+        "mode": "Const",
+        "value": 0
       }
     }
   ],

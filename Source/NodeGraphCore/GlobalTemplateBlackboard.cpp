@@ -56,6 +56,36 @@ GlobalTemplateBlackboard& GlobalTemplateBlackboard::Get()
     return instance;
 }
 
+void GlobalTemplateBlackboard::Reload()
+{
+    // Clear the current registry
+    Get().Clear();
+
+    // Force reload from file
+    const std::vector<std::string> pathsToTry = {
+        "./Config/global_blackboard_register.json",
+        "Config/global_blackboard_register.json",
+        "../Config/global_blackboard_register.json",
+        "../../Config/global_blackboard_register.json"
+    };
+
+    bool loaded = false;
+    for (const auto& path : pathsToTry)
+    {
+        if (Get().LoadFromFile(path))
+        {
+            SYSTEM_LOG << "[GlobalTemplateBlackboard::Reload] Successfully reloaded from: " << path << "\n";
+            loaded = true;
+            break;
+        }
+    }
+
+    if (!loaded)
+    {
+        SYSTEM_LOG << "[GlobalTemplateBlackboard::Reload] WARNING: Failed to reload registry from any path\n";
+    }
+}
+
 bool GlobalTemplateBlackboard::LoadFromFile(const std::string& configPath)
 {
     Clear();
