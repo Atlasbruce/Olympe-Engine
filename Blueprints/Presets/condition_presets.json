@@ -25,6 +25,19 @@
                 "mode": "Const",
                 "value": 0
             }
+        },
+        {
+            "id": "preset_e117d5ac-623d-47a7-9dc9-c92f3b147e8c",
+            "left": {
+                "mode": "Variable",
+                "value": ""
+            },
+            "name": "Condition",
+            "op": "==",
+            "right": {
+                "mode": "Const",
+                "value": 0
+            }
         }
     ],
     "version": 1

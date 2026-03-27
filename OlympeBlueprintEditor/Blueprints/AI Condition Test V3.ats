@@ -295,7 +295,7 @@
       "type": "GetBBValue"
     },
     {
-      "bbKey": "mHealth",
+      "bbKey": "mPosition",
       "id": 8,
       "label": "mHealth",
       "params": {
@@ -385,6 +385,19 @@
     },
     {
       "id": "preset_6635e4f2-2468-4333-8deb-bb00c79ec3c5",
+      "left": {
+        "mode": "Variable",
+        "value": ""
+      },
+      "name": "Condition",
+      "op": "==",
+      "right": {
+        "mode": "Const",
+        "value": 0
+      }
+    },
+    {
+      "id": "preset_e117d5ac-623d-47a7-9dc9-c92f3b147e8c",
       "left": {
         "mode": "Variable",
         "value": ""

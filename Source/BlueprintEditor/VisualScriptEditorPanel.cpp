@@ -5878,7 +5878,11 @@ void VisualScriptEditorPanel::RenderGlobalVariablesPanel()
                 if (gtb.AddVariable(newVarName, typeValues[newVarTypeIdx], defaultVal, newVarDescription, false))
                 {
                     SYSTEM_LOG << "[VSEditor] Created new global variable: " << newVarName << "\n";
-                    gtb.SaveToFile("./Config/global_blackboard_register.json");
+                    gtb.SaveToFile();  // Use last loaded path automatically
+
+                    // Phase 24: Hot reload to refresh registry and propagate to all panels
+                    GlobalTemplateBlackboard::Reload();
+
                     m_dirty = true;
 
                     // Reset form
@@ -5928,10 +5932,33 @@ void VisualScriptEditorPanel::RenderGlobalVariablesPanel()
 
         ImGui::PushID(static_cast<int>(gi));
 
-        // ---- Variable name (read-only) with type label ----
+        // ---- Variable name (read-only) with type label + Delete button ----
         ImGui::TextColored(ImVec4(0.8f, 0.95f, 1.0f, 1.0f), "(%s) %s",
                           VariableTypeToString(globalDef.Type).c_str(),
                           globalDef.Key.c_str());
+
+        ImGui::SameLine();
+        ImGui::TextDisabled("(%.1f KB)", 0.1f);  // Placeholder space
+        ImGui::SameLine();
+
+        // Delete button for global variable
+        if (ImGui::SmallButton("Delete##globalvar"))
+        {
+            // Mark for deletion (we'll process after the loop to avoid iterator invalidation)
+            std::string varToDelete = globalDef.Key;
+            if (gtb.RemoveVariable(varToDelete))
+            {
+                SYSTEM_LOG << "[VSEditor] Deleted global variable: " << varToDelete << "\n";
+                gtb.SaveToFile();  // Use last loaded path automatically
+
+                // Phase 24: Hot reload to refresh registry
+                GlobalTemplateBlackboard::Reload();
+
+                m_dirty = true;
+            }
+            ImGui::PopID();
+            continue;  // Skip rendering the rest of this variable's UI
+        }
 
         // ---- Description (if available) ----
         if (!globalDef.Description.empty())

@@ -87,7 +87,7 @@ public:
     static void Reload();
 
     bool LoadFromFile(const std::string& configPath = "./Config/global_blackboard_register.json");
-    bool SaveToFile(const std::string& configPath = "./Config/global_blackboard_register.json") const;
+    bool SaveToFile(const std::string& configPath = "") const;  // Empty = use last loaded path
     void Clear();
 
     bool AddVariable(const std::string& key,
@@ -125,6 +125,9 @@ private:
     GlobalTemplateBlackboard& operator=(GlobalTemplateBlackboard&&) = delete;
 
     static bool IsValidVariableName(const std::string& name);
+
+    /// Track the last successfully loaded path for consistent saves
+    mutable std::string m_lastLoadedPath;
 
     std::unordered_map<std::string, size_t> m_nameToIndex;
     std::vector<GlobalEntryDefinition> m_variables;

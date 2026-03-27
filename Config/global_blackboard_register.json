@@ -1,328 +1,282 @@
 {
-  "schema_version": 1,
-  "name": "Global Blackboard Register",
   "description": "Project-scope global variable definitions accessible to all entities",
-  "lastModified": "2026-03-26T12:00:00Z",
+  "lastModified": "2026-03-27T22:05:11Z",
+  "name": "Global Blackboard Register",
+  "schema_version": 1,
   "variables": [
     {
-      "key": "gameTime",
-      "type": "Float",
-      "value": 0.0,
       "description": "Current game elapsed time (seconds) since session start",
       "isPersistent": true,
-      "category": "System"
+      "key": "gameTime",
+      "type": "Float",
+      "value": 0
     },
     {
-      "key": "deltaTime",
-      "type": "Float",
-      "value": 0.016,
       "description": "Frame delta time in seconds (approximately 1/60th for 60 FPS)",
       "isPersistent": false,
-      "category": "System"
+      "key": "deltaTime",
+      "type": "Float",
+      "value": 0.016
     },
     {
-      "key": "isPaused",
-      "type": "Bool",
-      "value": false,
       "description": "Global game pause state affecting all entities",
       "isPersistent": true,
-      "category": "System"
+      "key": "isPaused",
+      "type": "Bool",
+      "value": false
     },
     {
-      "key": "timeScale",
-      "type": "Float",
-      "value": 1.0,
       "description": "Global time scale multiplier (0.5 = half speed, 2.0 = double speed)",
       "isPersistent": false,
-      "category": "System"
+      "key": "timeScale",
+      "type": "Float",
+      "value": 1
     },
     {
-      "key": "difficulty",
-      "type": "Int",
-      "value": 1,
       "description": "Game difficulty level (0=Easy, 1=Normal, 2=Hard, 3=Nightmare)",
       "isPersistent": true,
-      "category": "GameSettings"
+      "key": "difficulty",
+      "type": "Int",
+      "value": 1
     },
     {
-      "key": "playerLevel",
-      "type": "Int",
-      "value": 1,
       "description": "Main player/protagonist current level or progression stage",
       "isPersistent": true,
-      "category": "Player"
+      "key": "playerLevel",
+      "type": "Int",
+      "value": 1
     },
     {
-      "key": "playerHealth",
-      "type": "Int",
-      "value": 100,
       "description": "Main player current health points",
       "isPersistent": true,
-      "category": "Player"
+      "key": "playerHealth",
+      "type": "Int",
+      "value": 100
     },
     {
-      "key": "playerMaxHealth",
-      "type": "Int",
-      "value": 100,
       "description": "Main player maximum health capacity",
       "isPersistent": true,
-      "category": "Player"
+      "key": "playerMaxHealth",
+      "type": "Int",
+      "value": 100
     },
     {
-      "key": "playerExperience",
-      "type": "Int",
-      "value": 0,
       "description": "Main player accumulated experience points",
       "isPersistent": true,
-      "category": "Player"
+      "key": "playerExperience",
+      "type": "Int",
+      "value": 0
     },
     {
-      "key": "playerMana",
-      "type": "Int",
-      "value": 50,
       "description": "Main player current mana/magic points",
       "isPersistent": true,
-      "category": "Player"
+      "key": "playerMana",
+      "type": "Int",
+      "value": 50
     },
     {
-      "key": "playerMaxMana",
-      "type": "Int",
-      "value": 100,
       "description": "Main player maximum mana capacity",
       "isPersistent": true,
-      "category": "Player"
+      "key": "playerMaxMana",
+      "type": "Int",
+      "value": 100
     },
     {
-      "key": "playerPosition",
-      "type": "Vector",
-      "value": {"x": 0.0, "y": 0.0, "z": 0.0},
       "description": "Main player current world position",
       "isPersistent": true,
-      "category": "Player"
+      "key": "playerPosition",
+      "type": "Vector",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
     },
     {
-      "key": "playerVelocity",
-      "type": "Float",
-      "value": 0.0,
       "description": "Main player current movement speed (units per second)",
       "isPersistent": false,
-      "category": "Player"
+      "key": "playerVelocity",
+      "type": "Float",
+      "value": 0
     },
     {
-      "key": "playerDirection",
-      "type": "Float",
-      "value": 0.0,
       "description": "Main player facing direction angle in degrees (0-360)",
       "isPersistent": false,
-      "category": "Player"
+      "key": "playerDirection",
+      "type": "Float",
+      "value": 0
     },
     {
-      "key": "combatActive",
-      "type": "Bool",
-      "value": false,
       "description": "Is any entity currently in combat mode",
       "isPersistent": false,
-      "category": "Combat"
+      "key": "combatActive",
+      "type": "Bool",
+      "value": false
     },
     {
-      "key": "combatMultiplier",
-      "type": "Float",
-      "value": 1.0,
       "description": "Global damage multiplier during active combat situations",
       "isPersistent": false,
-      "category": "Combat"
+      "key": "combatMultiplier",
+      "type": "Float",
+      "value": 1
     },
     {
-      "key": "lastEnemyCount",
-      "type": "Int",
-      "value": 0,
       "description": "Number of enemies currently active in the world",
       "isPersistent": false,
-      "category": "Combat"
+      "key": "lastEnemyCount",
+      "type": "Int",
+      "value": 0
     },
     {
-      "key": "alarmLevel",
-      "type": "Int",
-      "value": 0,
       "description": "Global alert/alarm state (0=Safe, 1=Caution, 2=Alert, 3=Red Alert)",
       "isPersistent": false,
-      "category": "Combat"
+      "key": "alarmLevel",
+      "type": "Int",
+      "value": 0
     },
     {
-      "key": "weatherType",
-      "type": "String",
-      "value": "clear",
       "description": "Current weather condition (clear, rain, snow, fog, storm)",
       "isPersistent": true,
-      "category": "Environment"
+      "key": "weatherType",
+      "type": "String",
+      "value": "clear"
     },
     {
-      "key": "timeOfDay",
-      "type": "Float",
-      "value": 12.0,
       "description": "Current time in 24-hour format (0.0-24.0, 12.0=noon, 0.0=midnight)",
       "isPersistent": true,
-      "category": "Environment"
+      "key": "timeOfDay",
+      "type": "Float",
+      "value": 12
     },
     {
-      "key": "ambientLight",
-      "type": "Float",
-      "value": 1.0,
       "description": "Global ambient lighting multiplier (0.0-2.0)",
       "isPersistent": false,
-      "category": "Environment"
+      "key": "ambientLight",
+      "type": "Float",
+      "value": 1
     },
     {
-      "key": "gravity",
-      "type": "Float",
-      "value": 9.81,
       "description": "Global gravity acceleration (units/second²)",
       "isPersistent": true,
-      "category": "Physics"
+      "key": "gravity",
+      "type": "Float",
+      "value": 9.81
     },
     {
-      "key": "windStrength",
-      "type": "Float",
-      "value": 0.0,
       "description": "Global wind force intensity (0.0-1.0+)",
       "isPersistent": false,
-      "category": "Physics"
+      "key": "windStrength",
+      "type": "Float",
+      "value": 0
     },
     {
-      "key": "totalScore",
-      "type": "Int",
-      "value": 0,
       "description": "Cumulative player score across entire game session",
       "isPersistent": true,
-      "category": "GameState"
-    },
-    {
-      "key": "checkpointID",
-      "type": "EntityID",
-      "value": 0,
-      "description": "ID of the last checkpoint/save point reached",
-      "isPersistent": true,
-      "category": "GameState"
-    },
-    {
-      "key": "levelID",
-      "type": "EntityID",
-      "value": 0,
-      "description": "ID of the current level/area entity",
-      "isPersistent": true,
-      "category": "GameState"
-    },
-    {
-      "key": "bossEntityID",
-      "type": "EntityID",
-      "value": 0,
-      "description": "EntityID of current boss encounter target (0 if no active boss)",
-      "isPersistent": false,
-      "category": "Combat"
-    },
-    {
-      "key": "companionCount",
+      "key": "totalScore",
       "type": "Int",
-      "value": 0,
+      "value": 0
+    },
+    {
       "description": "Number of active companion/NPC allies following the player",
       "isPersistent": false,
-      "category": "Social"
+      "key": "companionCount",
+      "type": "Int",
+      "value": 0
     },
     {
-      "key": "questsActive",
-      "type": "Int",
-      "value": 0,
       "description": "Number of currently active quests in player's log",
       "isPersistent": true,
-      "category": "Quests"
+      "key": "questsActive",
+      "type": "Int",
+      "value": 0
     },
     {
-      "key": "questsCompleted",
-      "type": "Int",
-      "value": 0,
       "description": "Total number of quests completed by player",
       "isPersistent": true,
-      "category": "Quests"
+      "key": "questsCompleted",
+      "type": "Int",
+      "value": 0
     },
     {
-      "key": "resourceWood",
-      "type": "Int",
-      "value": 0,
       "description": "Player inventory: Wood resource count",
       "isPersistent": true,
-      "category": "Inventory"
+      "key": "resourceWood",
+      "type": "Int",
+      "value": 0
     },
     {
-      "key": "resourceStone",
-      "type": "Int",
-      "value": 0,
       "description": "Player inventory: Stone resource count",
       "isPersistent": true,
-      "category": "Inventory"
+      "key": "resourceStone",
+      "type": "Int",
+      "value": 0
     },
     {
-      "key": "resourceGold",
-      "type": "Int",
-      "value": 0,
       "description": "Player inventory: Gold/Currency count",
       "isPersistent": true,
-      "category": "Inventory"
+      "key": "resourceGold",
+      "type": "Int",
+      "value": 0
     },
     {
-      "key": "inventoryCapacity",
-      "type": "Int",
-      "value": 20,
       "description": "Maximum number of items player can carry",
       "isPersistent": true,
-      "category": "Inventory"
+      "key": "inventoryCapacity",
+      "type": "Int",
+      "value": 20
     },
     {
-      "key": "soundVolume",
-      "type": "Float",
-      "value": 0.8,
       "description": "Master audio volume level (0.0-1.0)",
       "isPersistent": true,
-      "category": "Audio"
+      "key": "soundVolume",
+      "type": "Float",
+      "value": 0.8
     },
     {
-      "key": "musicVolume",
-      "type": "Float",
-      "value": 0.6,
       "description": "Background music volume level (0.0-1.0)",
       "isPersistent": true,
-      "category": "Audio"
+      "key": "musicVolume",
+      "type": "Float",
+      "value": 0.6
     },
     {
-      "key": "effectsVolume",
-      "type": "Float",
-      "value": 0.8,
       "description": "Sound effects volume level (0.0-1.0)",
       "isPersistent": true,
-      "category": "Audio"
+      "key": "effectsVolume",
+      "type": "Float",
+      "value": 0.8
     },
     {
-      "key": "isDebugMode",
-      "type": "Bool",
-      "value": false,
       "description": "Toggle debug mode on/off across entire game",
       "isPersistent": false,
-      "category": "Debug"
+      "key": "isDebugMode",
+      "type": "Bool",
+      "value": false
     },
     {
-      "key": "debugDrawColliders",
-      "type": "Bool",
-      "value": false,
       "description": "Render collision shapes for debugging purposes",
       "isPersistent": false,
-      "category": "Debug"
+      "key": "debugDrawColliders",
+      "type": "Bool",
+      "value": false
     },
     {
-      "key": "debugShowFPS",
-      "type": "Bool",
-      "value": false,
       "description": "Display FPS counter on screen",
       "isPersistent": false,
-      "category": "Debug"
+      "key": "debugShowFPS",
+      "type": "Bool",
+      "value": false
+    },
+    {
+      "description": "Entity world position",
+      "isPersistent": false,
+      "key": "mPosition",
+      "type": "Vector",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
     }
   ]
 }

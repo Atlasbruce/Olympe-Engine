@@ -217,6 +217,7 @@
     <ClCompile Include="Source\vector.cpp" />
     <ClCompile Include="source\VideoGame.cpp" />
     <ClCompile Include="Source\World.cpp" />
+    <ClCompile Include="Tests\NodeGraphCore\GlobalTemplateBlackboardSerializationTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />

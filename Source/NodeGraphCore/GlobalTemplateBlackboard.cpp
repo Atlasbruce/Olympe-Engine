@@ -13,6 +13,8 @@
 #include <iostream>
 #include <algorithm>
 #include <cctype>
+#include <chrono>
+#include <ctime>
 
 namespace Olympe {
 
@@ -226,6 +228,9 @@ bool GlobalTemplateBlackboard::LoadFromFile(const std::string& configPath)
             loadedCount++;
         }
 
+        // Track the successfully loaded path for later saves
+        m_lastLoadedPath = configPath;
+
         SYSTEM_LOG << "[GlobalTemplateBlackboard::LoadFromFile] Successfully loaded " << loadedCount << " variables\n";
         return true;
     }
@@ -238,37 +243,102 @@ bool GlobalTemplateBlackboard::LoadFromFile(const std::string& configPath)
 
 bool GlobalTemplateBlackboard::SaveToFile(const std::string& configPath) const
 {
-    SYSTEM_LOG << "[GlobalTemplateBlackboard] SaveToFile: '" << configPath << "'\n";
+    // If no path provided, use the last loaded path
+    std::string pathToUse = configPath.empty() ? m_lastLoadedPath : configPath;
+
+    // If still no path, use default
+    if (pathToUse.empty())
+    {
+        pathToUse = "./Config/global_blackboard_register.json";
+    }
+
+    SYSTEM_LOG << "[GlobalTemplateBlackboard] SaveToFile: '" << pathToUse << "'\n";
 
     try
     {
         json root;
-        root["version"] = 1;
-        json varsArray = json::array();
 
+        // Try to preserve existing metadata from the file
+        std::ifstream existingFile(pathToUse);
+        if (existingFile.is_open())
+        {
+            try
+            {
+                json existingRoot;
+                existingFile >> existingRoot;
+                existingFile.close();
+
+                // Preserve schema_version, name, description from existing file
+                if (existingRoot.contains("schema_version"))
+                    root["schema_version"] = existingRoot["schema_version"];
+                else
+                    root["schema_version"] = 1;
+
+                if (existingRoot.contains("name"))
+                    root["name"] = existingRoot["name"];
+                else
+                    root["name"] = "Global Blackboard Register";
+
+                if (existingRoot.contains("description"))
+                    root["description"] = existingRoot["description"];
+                else
+                    root["description"] = "Project-scope global variable definitions accessible to all entities";
+            }
+            catch (...)
+            {
+                // If we can't parse existing file, start fresh
+                root["schema_version"] = 1;
+                root["name"] = "Global Blackboard Register";
+                root["description"] = "Project-scope global variable definitions accessible to all entities";
+            }
+        }
+        else
+        {
+            // New file - set defaults
+            root["schema_version"] = 1;
+            root["name"] = "Global Blackboard Register";
+            root["description"] = "Project-scope global variable definitions accessible to all entities";
+        }
+
+        // Get current timestamp in ISO8601 format
+        auto now = std::chrono::system_clock::now();
+        auto time_t_now = std::chrono::system_clock::to_time_t(now);
+        char timestamp[32];
+        std::tm tm_info;
+#ifdef _WIN32
+        gmtime_s(&tm_info, &time_t_now);
+#else
+        tm_info = *gmtime(&time_t_now);
+#endif
+        strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%SZ", &tm_info);
+        root["lastModified"] = std::string(timestamp);
+
+        // Build the variables array
+        json varsArray = json::array();
         for (const auto& var : m_variables)
         {
             json varObj;
             varObj["key"] = var.Key;
             varObj["type"] = VariableTypeToString(var.Type);
             varObj["description"] = var.Description;
-            varObj["persistent"] = var.IsPersistent;
+            varObj["isPersistent"] = var.IsPersistent;
 
+            // Use "value" field for backward compatibility with existing registry
             if (!var.DefaultValue.IsNone())
             {
                 switch (var.Type)
                 {
                     case VariableType::Bool:
-                        varObj["defaultValue"] = var.DefaultValue.AsBool();
+                        varObj["value"] = var.DefaultValue.AsBool();
                         break;
                     case VariableType::Int:
-                        varObj["defaultValue"] = var.DefaultValue.AsInt();
+                        varObj["value"] = var.DefaultValue.AsInt();
                         break;
                     case VariableType::Float:
-                        varObj["defaultValue"] = var.DefaultValue.AsFloat();
+                        varObj["value"] = var.DefaultValue.AsFloat();
                         break;
                     case VariableType::String:
-                        varObj["defaultValue"] = var.DefaultValue.AsString();
+                        varObj["value"] = var.DefaultValue.AsString();
                         break;
                     case VariableType::Vector:
                     {
@@ -277,11 +347,44 @@ bool GlobalTemplateBlackboard::SaveToFile(const std::string& configPath) const
                         vec["x"] = v.x;
                         vec["y"] = v.y;
                         vec["z"] = v.z;
-                        varObj["defaultValue"] = vec;
+                        varObj["value"] = vec;
                         break;
                     }
                     case VariableType::EntityID:
-                        varObj["defaultValue"] = static_cast<int>(var.DefaultValue.AsEntityID());
+                        varObj["value"] = static_cast<int>(var.DefaultValue.AsEntityID());
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else
+            {
+                // Set default value even if DefaultValue is None
+                switch (var.Type)
+                {
+                    case VariableType::Bool:
+                        varObj["value"] = false;
+                        break;
+                    case VariableType::Int:
+                        varObj["value"] = 0;
+                        break;
+                    case VariableType::Float:
+                        varObj["value"] = 0.0f;
+                        break;
+                    case VariableType::String:
+                        varObj["value"] = "";
+                        break;
+                    case VariableType::Vector:
+                    {
+                        json vec;
+                        vec["x"] = 0.0f;
+                        vec["y"] = 0.0f;
+                        vec["z"] = 0.0f;
+                        varObj["value"] = vec;
+                        break;
+                    }
+                    case VariableType::EntityID:
+                        varObj["value"] = 0;
                         break;
                     default:
                         break;
@@ -293,17 +396,17 @@ bool GlobalTemplateBlackboard::SaveToFile(const std::string& configPath) const
 
         root["variables"] = varsArray;
 
-        std::ofstream ofs(configPath);
+        std::ofstream ofs(pathToUse);
         if (!ofs.is_open())
         {
-            SYSTEM_LOG << "[GlobalTemplateBlackboard] SaveToFile FAILED\n";
+            SYSTEM_LOG << "[GlobalTemplateBlackboard] SaveToFile FAILED: Could not open file for writing\n";
             return false;
         }
 
         ofs << root.dump(2);
         ofs.close();
 
-        SYSTEM_LOG << "[GlobalTemplateBlackboard] SaveToFile SUCCESS\n";
+        SYSTEM_LOG << "[GlobalTemplateBlackboard] SaveToFile SUCCESS: Saved " << m_variables.size() << " variables to '" << pathToUse << "'\n";
         return true;
     }
     catch (const std::exception& e)
@@ -317,6 +420,7 @@ void GlobalTemplateBlackboard::Clear()
 {
     m_nameToIndex.clear();
     m_variables.clear();
+    m_lastLoadedPath.clear();  // Reset path when clearing
 }
 
 bool GlobalTemplateBlackboard::AddVariable(const std::string& key,
