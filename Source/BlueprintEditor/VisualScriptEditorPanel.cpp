@@ -5939,9 +5939,12 @@ void VisualScriptEditorPanel::RenderGlobalVariablesPanel()
             ImGui::TextDisabled("  %s", globalDef.Description.c_str());
         }
 
-        ImGui::BeginTable("##GlobalVarTable", 2, ImGuiTableFlags_SizingStretchSame, ImVec2(0, 0));
-        ImGui::TableSetupColumn("Label", 0);
-        ImGui::TableSetupColumn("Value", 0);
+        // Create unique table ID per global variable to avoid ImGui::BeginTable() failures
+        std::string tableId = "##GlobalVarTable_" + std::to_string(gi);
+        if (ImGui::BeginTable(tableId.c_str(), 2, ImGuiTableFlags_SizingStretchSame, ImVec2(0, 0)))
+        {
+            ImGui::TableSetupColumn("Label", 0);
+            ImGui::TableSetupColumn("Value", 0);
 
         // ---- Default Value (read-only) ----
         ImGui::TableNextRow();
