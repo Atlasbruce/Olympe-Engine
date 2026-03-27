@@ -16,6 +16,7 @@
 #include "MathOpOperand.h"
 #include "../system/system_utils.h"
 #include "../system/system_consts.h"
+#include "../NodeGraphCore/GlobalTemplateBlackboard.h"
 
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
@@ -5653,6 +5654,35 @@ bool VisualScriptEditorPanel::RenderOperandEditor(Operand& operand, const char* 
         }
     }
 
+    // ── Add all global variables (Phase 24) ───────────────────────────────
+    {
+        GlobalTemplateBlackboard& gtb = GlobalTemplateBlackboard::Get();
+        const std::vector<GlobalEntryDefinition>& globalVars = gtb.GetAllVariables();
+
+        // Add separator if we have both local and global
+        if (!m_template.Blackboard.empty() && !globalVars.empty())
+        {
+            allOptions.push_back("--- Global Variables ---");
+            optionTypes.push_back(-1);  // Separator (no type)
+            optionValues.push_back("");
+        }
+
+        // Add global variables
+        for (const auto& globalVar : globalVars)
+        {
+            allOptions.push_back(globalVar.Key);
+            optionTypes.push_back(0);  // Variable
+            optionValues.push_back(globalVar.Key);
+
+            // Check if this is the currently selected global variable
+            if (operand.mode == OperandMode::Variable && 
+                operand.stringValue == globalVar.Key)
+            {
+                currentSelectionIdx = static_cast<int>(allOptions.size() - 1);
+            }
+        }
+    }
+
     // ── Render unified dropdown ──────────────────────────────────────────
     ImGui::SetNextItemWidth(120.0f);
 
@@ -5668,6 +5698,14 @@ bool VisualScriptEditorPanel::RenderOperandEditor(Operand& operand, const char* 
         for (int i = 0; i < static_cast<int>(allOptions.size()); ++i)
         {
             bool selected = (i == currentSelectionIdx);
+
+            // Skip rendering separator as selectable
+            if (optionTypes[i] == -1)
+            {
+                ImGui::Separator();
+                continue;
+            }
+
             if (ImGui::Selectable(optionsCStr[i], selected))
             {
                 // Update operand based on selected type

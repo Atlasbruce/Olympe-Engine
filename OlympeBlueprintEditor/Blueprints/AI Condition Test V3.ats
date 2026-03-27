@@ -184,6 +184,12 @@
           "logicalOp": "Start",
           "presetID": "preset_ed2171ef-9ad8-4f83-9115-70da9a127130",
           "rightPinID": ""
+        },
+        {
+          "leftPinID": "",
+          "logicalOp": "And",
+          "presetID": "preset_e117d5ac-623d-47a7-9dc9-c92f3b147e8c",
+          "rightPinID": ""
         }
       ],
       "params": {
@@ -386,8 +392,8 @@
     {
       "id": "preset_6635e4f2-2468-4333-8deb-bb00c79ec3c5",
       "left": {
-        "mode": "Variable",
-        "value": ""
+        "mode": "Pin",
+        "value": "[Pin-in]"
       },
       "name": "Condition",
       "op": "==",
@@ -400,13 +406,13 @@
       "id": "preset_e117d5ac-623d-47a7-9dc9-c92f3b147e8c",
       "left": {
         "mode": "Variable",
-        "value": ""
+        "value": "timeScale"
       },
       "name": "Condition",
       "op": "==",
       "right": {
-        "mode": "Const",
-        "value": 0
+        "mode": "Variable",
+        "value": "mFatigue"
       }
     }
   ],
