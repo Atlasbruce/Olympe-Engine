@@ -5946,154 +5946,155 @@ void VisualScriptEditorPanel::RenderGlobalVariablesPanel()
             ImGui::TableSetupColumn("Label", 0);
             ImGui::TableSetupColumn("Value", 0);
 
-        // ---- Default Value (read-only) ----
-        ImGui::TableNextRow();
-        ImGui::TableSetColumnIndex(0);
-        ImGui::TextDisabled("Default:");
-        ImGui::TableSetColumnIndex(1);
-
-        const TaskValue& defaultValue = globalDef.DefaultValue;
-        std::string defaultStr;
-        switch (globalDef.Type)
-        {
-            case VariableType::Bool:
-                defaultStr = defaultValue.IsNone() ? "false" : (defaultValue.AsBool() ? "true" : "false");
-                break;
-            case VariableType::Int:
-                defaultStr = defaultValue.IsNone() ? "0" : std::to_string(defaultValue.AsInt());
-                break;
-            case VariableType::Float:
-            {
-                std::ostringstream oss;
-                oss << std::fixed << std::setprecision(2);
-                oss << (defaultValue.IsNone() ? 0.0f : defaultValue.AsFloat());
-                defaultStr = oss.str();
-                break;
-            }
-            case VariableType::String:
-                defaultStr = defaultValue.IsNone() ? "" : defaultValue.AsString();
-                break;
-            case VariableType::Vector:
-                defaultStr = "(vector)";
-                break;
-            case VariableType::EntityID:
-                defaultStr = defaultValue.IsNone() ? "0" : std::to_string(static_cast<int>(defaultValue.AsEntityID()));
-                break;
-            default:
-                defaultStr = "(unknown)";
-                break;
-        }
-        ImGui::TextDisabled("%s", defaultStr.c_str());
-
-        // ---- Current Value (editable with scope resolution) ----
-        ImGui::TableNextRow();
-        ImGui::TableSetColumnIndex(0);
-        ImGui::TextDisabled("Current:");
-        ImGui::TableSetColumnIndex(1);
-
-        // Use scoped variable access to get/set entity-specific value
-        std::string scopedVarName = "(G)" + globalDef.Key;
-        TaskValue currentValue = m_entityBlackboard->GetValueScoped(scopedVarName);
-
-        // Create type-specific input widget
-        bool valueChanged = false;
-        switch (globalDef.Type)
-        {
-            case VariableType::Bool:
-            {
-                bool bVal = currentValue.IsNone() ? false : currentValue.AsBool();
-                if (ImGui::Checkbox("##bool_val", &bVal))
-                {
-                    m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(bVal));
-                    m_dirty = true;
-                    valueChanged = true;
-                }
-                break;
-            }
-            case VariableType::Int:
-            {
-                int iVal = currentValue.IsNone() ? 0 : currentValue.AsInt();
-                if (ImGui::InputInt("##int_val", &iVal))
-                {
-                    m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(iVal));
-                    m_dirty = true;
-                    valueChanged = true;
-                }
-                break;
-            }
-            case VariableType::Float:
-            {
-                float fVal = currentValue.IsNone() ? 0.0f : currentValue.AsFloat();
-                if (ImGui::InputFloat("##float_val", &fVal))
-                {
-                    m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(fVal));
-                    m_dirty = true;
-                    valueChanged = true;
-                }
-                break;
-            }
-            case VariableType::String:
-            {
-                static std::unordered_map<size_t, std::vector<char>> stringBuffers;
-                size_t bufKey = gi; // Use index as unique key for buffer storage
-                if (stringBuffers.find(bufKey) == stringBuffers.end())
-                {
-                    std::string initialStr = currentValue.IsNone() ? "" : currentValue.AsString();
-                    stringBuffers[bufKey] = std::vector<char>(initialStr.begin(), initialStr.end());
-                    stringBuffers[bufKey].push_back('\0');
-                    stringBuffers[bufKey].resize(256);  // Allocate buffer
-                }
-
-                ImGui::SetNextItemWidth(-1.0f);
-                if (ImGui::InputText("##string_val", stringBuffers[bufKey].data(), 256, ImGuiInputTextFlags_EnterReturnsTrue))
-                {
-                    std::string newStr(stringBuffers[bufKey].data());
-                    m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(newStr));
-                    m_dirty = true;
-                    valueChanged = true;
-                }
-                break;
-            }
-            case VariableType::Vector:
-            {
-                Vector vVal = currentValue.IsNone() ? Vector{0.0f, 0.0f, 0.0f} : currentValue.AsVector();
-                float vArray[3] = {vVal.x, vVal.y, vVal.z};
-                if (ImGui::InputFloat3("##vector_val", vArray))
-                {
-                    Vector newVec{vArray[0], vArray[1], vArray[2]};
-                    m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(newVec));
-                    m_dirty = true;
-                    valueChanged = true;
-                }
-                break;
-            }
-            case VariableType::EntityID:
-            {
-                int eID = currentValue.IsNone() ? 0 : static_cast<int>(currentValue.AsEntityID());
-                if (ImGui::InputInt("##entityid_val", &eID))
-                {
-                    m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(eID >= 0 ? eID : 0));
-                    m_dirty = true;
-                    valueChanged = true;
-                }
-                break;
-            }
-            default:
-                ImGui::TextDisabled("(unsupported type)");
-                break;
-        }
-
-        // ---- Persistent flag ----
-        if (globalDef.IsPersistent)
-        {
+            // ---- Default Value (read-only) ----
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
-            ImGui::TextDisabled("Flags:");
+            ImGui::TextDisabled("Default:");
             ImGui::TableSetColumnIndex(1);
-            ImGui::TextColored(ImVec4(0.7f, 0.9f, 0.5f, 1.0f), "[Persistent]");
-        }
 
-        ImGui::EndTable();
+            const TaskValue& defaultValue = globalDef.DefaultValue;
+            std::string defaultStr;
+            switch (globalDef.Type)
+            {
+                case VariableType::Bool:
+                    defaultStr = defaultValue.IsNone() ? "false" : (defaultValue.AsBool() ? "true" : "false");
+                    break;
+                case VariableType::Int:
+                    defaultStr = defaultValue.IsNone() ? "0" : std::to_string(defaultValue.AsInt());
+                    break;
+                case VariableType::Float:
+                {
+                    std::ostringstream oss;
+                    oss << std::fixed << std::setprecision(2);
+                    oss << (defaultValue.IsNone() ? 0.0f : defaultValue.AsFloat());
+                    defaultStr = oss.str();
+                    break;
+                }
+                case VariableType::String:
+                    defaultStr = defaultValue.IsNone() ? "" : defaultValue.AsString();
+                    break;
+                case VariableType::Vector:
+                    defaultStr = "(vector)";
+                    break;
+                case VariableType::EntityID:
+                    defaultStr = defaultValue.IsNone() ? "0" : std::to_string(static_cast<int>(defaultValue.AsEntityID()));
+                    break;
+                default:
+                    defaultStr = "(unknown)";
+                    break;
+            }
+            ImGui::TextDisabled("%s", defaultStr.c_str());
+
+            // ---- Current Value (editable with scope resolution) ----
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::TextDisabled("Current:");
+            ImGui::TableSetColumnIndex(1);
+
+            // Use scoped variable access to get/set entity-specific value
+            std::string scopedVarName = "(G)" + globalDef.Key;
+            TaskValue currentValue = m_entityBlackboard->GetValueScoped(scopedVarName);
+
+            // Create type-specific input widget
+            bool valueChanged = false;
+            switch (globalDef.Type)
+            {
+                case VariableType::Bool:
+                {
+                    bool bVal = currentValue.IsNone() ? false : currentValue.AsBool();
+                    if (ImGui::Checkbox("##bool_val", &bVal))
+                    {
+                        m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(bVal));
+                        m_dirty = true;
+                        valueChanged = true;
+                    }
+                    break;
+                }
+                case VariableType::Int:
+                {
+                    int iVal = currentValue.IsNone() ? 0 : currentValue.AsInt();
+                    if (ImGui::InputInt("##int_val", &iVal))
+                    {
+                        m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(iVal));
+                        m_dirty = true;
+                        valueChanged = true;
+                    }
+                    break;
+                }
+                case VariableType::Float:
+                {
+                    float fVal = currentValue.IsNone() ? 0.0f : currentValue.AsFloat();
+                    if (ImGui::InputFloat("##float_val", &fVal))
+                    {
+                        m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(fVal));
+                        m_dirty = true;
+                        valueChanged = true;
+                    }
+                    break;
+                }
+                case VariableType::String:
+                {
+                    static std::unordered_map<size_t, std::vector<char>> stringBuffers;
+                    size_t bufKey = gi; // Use index as unique key for buffer storage
+                    if (stringBuffers.find(bufKey) == stringBuffers.end())
+                    {
+                        std::string initialStr = currentValue.IsNone() ? "" : currentValue.AsString();
+                        stringBuffers[bufKey] = std::vector<char>(initialStr.begin(), initialStr.end());
+                        stringBuffers[bufKey].push_back('\0');
+                        stringBuffers[bufKey].resize(256);  // Allocate buffer
+                    }
+
+                    ImGui::SetNextItemWidth(-1.0f);
+                    if (ImGui::InputText("##string_val", stringBuffers[bufKey].data(), 256, ImGuiInputTextFlags_EnterReturnsTrue))
+                    {
+                        std::string newStr(stringBuffers[bufKey].data());
+                        m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(newStr));
+                        m_dirty = true;
+                        valueChanged = true;
+                    }
+                    break;
+                }
+                case VariableType::Vector:
+                {
+                    Vector vVal = currentValue.IsNone() ? Vector{0.0f, 0.0f, 0.0f} : currentValue.AsVector();
+                    float vArray[3] = {vVal.x, vVal.y, vVal.z};
+                    if (ImGui::InputFloat3("##vector_val", vArray))
+                    {
+                        Vector newVec{vArray[0], vArray[1], vArray[2]};
+                        m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(newVec));
+                        m_dirty = true;
+                        valueChanged = true;
+                    }
+                    break;
+                }
+                case VariableType::EntityID:
+                {
+                    int eID = currentValue.IsNone() ? 0 : static_cast<int>(currentValue.AsEntityID());
+                    if (ImGui::InputInt("##entityid_val", &eID))
+                    {
+                        m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(eID >= 0 ? eID : 0));
+                        m_dirty = true;
+                        valueChanged = true;
+                    }
+                    break;
+                }
+                default:
+                    ImGui::TextDisabled("(unsupported type)");
+                    break;
+            }
+
+            // ---- Persistent flag ----
+            if (globalDef.IsPersistent)
+            {
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextDisabled("Flags:");
+                ImGui::TableSetColumnIndex(1);
+                ImGui::TextColored(ImVec4(0.7f, 0.9f, 0.5f, 1.0f), "[Persistent]");
+            }
+
+            ImGui::EndTable();
+        }
         ImGui::Separator();
         ImGui::PopID();
     }
