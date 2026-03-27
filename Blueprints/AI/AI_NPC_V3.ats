@@ -87,6 +87,54 @@
       "toPin": "In"
     }
   ],
+  "globalVariableValues": {
+    "alarmLevel": 0,
+    "ambientLight": 1,
+    "combatActive": false,
+    "combatMultiplier": 1,
+    "companionCount": 0,
+    "debugDrawColliders": false,
+    "debugShowFPS": false,
+    "deltaTime": 0.016,
+    "difficulty": 1,
+    "effectsVolume": 0.8,
+    "gameTime": 0,
+    "gravity": 9.81,
+    "inventoryCapacity": 20,
+    "isDebugMode": false,
+    "isPaused": false,
+    "lastEnemyCount": 0,
+    "mPosition": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "musicVolume": 0.6,
+    "playerDirection": 0,
+    "playerExperience": 0,
+    "playerHealth": 100,
+    "playerLevel": 1,
+    "playerMana": 50,
+    "playerMaxHealth": 100,
+    "playerMaxMana": 100,
+    "playerPosition": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "playerVelocity": 0,
+    "questsActive": 0,
+    "questsCompleted": 0,
+    "resourceGold": 0,
+    "resourceStone": 0,
+    "resourceWood": 0,
+    "soundVolume": 0.8,
+    "timeOfDay": 12,
+    "timeScale": 1,
+    "totalScore": 0,
+    "weatherType": "clear",
+    "windStrength": 0
+  },
   "graphType": "VisualScript",
   "name": "",
   "nodes": [
@@ -112,6 +160,14 @@
     {
       "id": 2,
       "label": "Branch",
+      "nodeConditionRefs": [
+        {
+          "leftPinID": "",
+          "logicalOp": "Start",
+          "presetID": "preset_dfc3003b-9f66-4db4-b468-e49600727fdf",
+          "rightPinID": ""
+        }
+      ],
       "params": {
         "__posX": {
           "LiteralValue": 397,
@@ -239,8 +295,8 @@
         }
       },
       "position": {
-        "x": 331,
-        "y": 390
+        "x": 301,
+        "y": 361
       },
       "type": "MathOp"
     },
@@ -326,11 +382,26 @@
         }
       },
       "position": {
-        "x": 914,
-        "y": 295
+        "x": 928,
+        "y": 306
       },
       "taskType": "log_message",
       "type": "AtomicTask"
+    }
+  ],
+  "presets": [
+    {
+      "id": "preset_dfc3003b-9f66-4db4-b468-e49600727fdf",
+      "left": {
+        "mode": "Variable",
+        "value": "mHealth"
+      },
+      "name": "Condition",
+      "op": "<=",
+      "right": {
+        "mode": "Const",
+        "value": 4
+      }
     }
   ],
   "schema_version": 4
