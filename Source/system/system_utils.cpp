@@ -22,7 +22,7 @@ void LoadOlympeConfig(const char* filename)
 
     std::ifstream ifs(filename);
     if (!ifs) {
-        SYSTEM_LOG << "Config file '" << filename << "' not found — using defaults " << GameEngine::screenWidth << "x" << GameEngine::screenHeight << "\n";
+        SYSTEM_LOG << "Config file '" << filename << "' not found \xe2\x80\x93 using defaults " << GameEngine::screenWidth << "x" << GameEngine::screenHeight << "\n";
         return;
     }
 
@@ -37,6 +37,31 @@ void LoadOlympeConfig(const char* filename)
 
     if (w > 0) GameEngine::screenWidth = w;
     if (h > 0) GameEngine::screenHeight = h;
+
+	// Configure SYSTEM_LOG output channels from config
+    {
+        bool logCout  = true;
+        bool logCerr  = true;
+        bool logFile  = true;
+        bool logPanel = true;
+
+        extract_json_bool(content, "log_cout",  logCout);
+        extract_json_bool(content, "log_cerr",  logCerr);
+        extract_json_bool(content, "log_file",  logFile);
+        extract_json_bool(content, "log_panel", logPanel);
+
+        unsigned flags = 0;
+        if (logCout)  flags |= Logging::Out_Cout;
+        if (logCerr)  flags |= Logging::Out_Cerr;
+        if (logPanel) flags |= Logging::Out_Panel;
+        // Out_File is activated by InitLogger() when the file opens successfully.
+        // Preserve that state unless the config explicitly disables it.
+        unsigned current = Logging::Logger().GetOutputs();
+        if (logFile && (current & Logging::Out_File))
+            flags |= Logging::Out_File;
+
+        Logging::Logger().SetOutputs(flags);
+    }
 
     SYSTEM_LOG << "Config loaded from '" << filename << "': " << GameEngine::screenWidth << "x" << GameEngine::screenHeight << "\n";
 

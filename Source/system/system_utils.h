@@ -28,7 +28,7 @@ namespace Logging
     enum Outputs : unsigned
     {
         Out_Cout  = 1u << 0,
-        Out_Clog  = 1u << 1,
+        Out_Cerr  = 1u << 1,
         Out_File  = 1u << 2,
         Out_Panel = 1u << 3
     };
@@ -37,7 +37,7 @@ namespace Logging
     class Log
     {
     public:
-        Log() : outputs_(Out_Cout | Out_Clog | Out_Panel), file_open_(false) {}
+        Log() : outputs_(Out_Cout | Out_Cerr | Out_Panel), file_open_(false) {}
 
         // Initialize file logging (optional). Safe to call multiple times.
         bool Init(const std::string& filename = "olympe.log")
@@ -45,7 +45,11 @@ namespace Logging
             std::lock_guard<std::mutex> lock(m_);
             if (file_open_) return true;
             file_.open(filename.c_str(), std::ios::app);
-            if (file_.is_open()) file_open_ = true;
+            if (file_.is_open())
+            {
+                file_open_ = true;
+                outputs_ |= Out_File;
+            }
             // ensure panel sink exists (log_sink handles buffering until UI attached)
             return true;
         }
@@ -112,10 +116,10 @@ namespace Logging
                 std::cout << s;
                 std::cout.flush();
             }
-            /*if (outputs_ & Out_Clog) {
-                std::clog << s;
-                std::clog.flush();
-            }/**/
+            if (outputs_ & Out_Cerr) {
+                std::cerr << s;
+                std::cerr.flush();
+            }
             if ((outputs_ & Out_File) && file_open_) {
                 file_ << s;
                 file_.flush();
@@ -170,11 +174,7 @@ namespace Logging
     // Convenience init/shutdown
     inline bool InitLogger(const std::string& filename = "olympe.log")
     {
-        bool res = Logger().Init(filename);
-        // enable file output only if file opened
-        if (!Logger().GetOutputs()) {}
-        // by default, keep cout, clog and panel enabled; file enabled if opened
-        return res;
+        return Logger().Init(filename);
     }
 
     inline void ShutdownLogger()
