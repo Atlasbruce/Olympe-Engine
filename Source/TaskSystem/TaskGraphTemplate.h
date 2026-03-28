@@ -257,6 +257,20 @@ public:
      */
     void BuildLookupCache();
 
+    /**
+     * @brief Phase 24.3 - Poka-Yoke: Sanitizes exec connections to remove invalid links.
+     *
+     * Detects and removes exec connections that violate the data-pure node constraints:
+     *   - Removes any exec-in connections TO data-pure nodes (GetBBValue, MathOp)
+     *   - Removes any exec-out connections FROM data-pure nodes
+     *
+     * Logs all removed connections to SYSTEM_LOG for debugging.
+     * Safe to call multiple times (idempotent).
+     *
+     * @return Number of invalid connections that were removed.
+     */
+    int SanitizeExecConnections();
+
 private:
 
     /// Fast lookup: node ID -> pointer into Nodes vector.

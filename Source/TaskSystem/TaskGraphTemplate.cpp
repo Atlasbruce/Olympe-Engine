@@ -91,4 +91,92 @@ void TaskGraphTemplate::BuildLookupCache()
                << " entries for template '" << Name << "'" << std::endl;
 }
 
+// ============================================================================
+// Phase 24.3 - Poka-Yoke: Sanitize exec connections
+// ============================================================================
+
+int TaskGraphTemplate::SanitizeExecConnections()
+{
+    int removedCount = 0;
+
+    // Helper: determine if a node type is data-pure (no exec pins)
+    auto IsDataPureNode = [](TaskNodeType type) -> bool {
+        return type == TaskNodeType::GetBBValue ||
+               type == TaskNodeType::MathOp;
+    };
+
+    // Helper: find node by ID
+    auto FindNode = [this](int32_t nodeID) -> TaskNodeDefinition* {
+        for (size_t i = 0; i < Nodes.size(); ++i)
+        {
+            if (Nodes[i].NodeID == nodeID)
+                return &Nodes[i];
+        }
+        return nullptr;
+    };
+
+    // Scan ExecConnections and remove invalid ones
+    std::vector<ExecPinConnection> validConnections;
+
+    for (size_t i = 0; i < ExecConnections.size(); ++i)
+    {
+        const ExecPinConnection& conn = ExecConnections[i];
+
+        TaskNodeDefinition* srcNode = FindNode(conn.SourceNodeID);
+        TaskNodeDefinition* dstNode = FindNode(conn.TargetNodeID);
+
+        // Check 1: Source node must exist
+        if (srcNode == nullptr)
+        {
+            SYSTEM_LOG << "[TaskGraphTemplate] SanitizeExecConnections: Removing connection with invalid source node #"
+                       << conn.SourceNodeID << "\n";
+            ++removedCount;
+            continue;
+        }
+
+        // Check 2: Destination node must exist
+        if (dstNode == nullptr)
+        {
+            SYSTEM_LOG << "[TaskGraphTemplate] SanitizeExecConnections: Removing connection with invalid destination node #"
+                       << conn.TargetNodeID << "\n";
+            ++removedCount;
+            continue;
+        }
+
+        // Check 3: Source node cannot be data-pure (data-pure nodes have no exec-out)
+        if (IsDataPureNode(srcNode->Type))
+        {
+            SYSTEM_LOG << "[TaskGraphTemplate] SanitizeExecConnections: Removing exec-out connection from data-pure node #"
+                       << conn.SourceNodeID << " (type=" << static_cast<int>(srcNode->Type)
+                       << "." << conn.SourcePinName << " -> node #" << conn.TargetNodeID << ")\n";
+            ++removedCount;
+            continue;
+        }
+
+        // Check 4: Destination node cannot be data-pure (data-pure nodes have no exec-in)
+        if (IsDataPureNode(dstNode->Type))
+        {
+            SYSTEM_LOG << "[TaskGraphTemplate] SanitizeExecConnections: Removing exec-in connection to data-pure node #"
+                       << conn.TargetNodeID << " (type=" << static_cast<int>(dstNode->Type)
+                       << " <- node #" << conn.SourceNodeID << "." << conn.SourcePinName << ")\n";
+            ++removedCount;
+            continue;
+        }
+
+        // Connection is valid, keep it
+        validConnections.push_back(conn);
+    }
+
+    // Replace with sanitized list
+    ExecConnections = validConnections;
+
+    if (removedCount > 0)
+    {
+        SYSTEM_LOG << "[TaskGraphTemplate] SanitizeExecConnections: Removed " << removedCount
+                   << " invalid exec connection(s) - graph is now clean\n";
+    }
+
+    return removedCount;
+}
+
 } // namespace Olympe

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -388,6 +388,8 @@
     <ClInclude Include="Source\TaskSystem\AtomicTasks\System\Task_SetPosition.h" />
     <ClInclude Include="Source\TaskSystem\AtomicTasks\Utility\Task_Wait.h" />
     <ClInclude Include="Source\TaskSystem\ConditionEvaluator.h" />
+    <ClInclude Include="Source\TaskSystem\DataPinEvaluator.h" />
+    <ClInclude Include="Source\TaskSystem\DataPinEvaluator_inline.h" />
     <ClInclude Include="Source\TaskSystem\EntityBlackboard.h" />
     <ClInclude Include="Source\TaskSystem\LocalBlackboard.h" />
     <ClInclude Include="Source\TaskSystem\Pathfinding\PathfindingManager.h" />
@@ -467,11 +469,16 @@
     <None Include="ClassDiagram.cd" />
     <None Include="config\ATS-VS-editor-config.json" />
     <None Include="Config\global_blackboard_register.json" />
+    <None Include="DATA_PIN_EVALUATION_USER_GUIDE.md" />
+    <None Include="DOCUMENTATION_INDEX.md" />
+    <None Include="IMPLEMENTATION_CHANGELOG.md" />
+    <None Include="IMPLEMENTATION_SPEC_DataPinStackEvaluation.md" />
     <None Include="olympe.ini" />
     <None Include="PHASE4_COMPLETION_REPORT.md" />
     <None Include="PHASE4_DELIVERY_SUMMARY.md" />
     <None Include="PHASE4_INDEX.md" />
     <None Include="PHASE4_QUICK_START.md" />
+    <None Include="PHASE_24_1_IMPLEMENTATION_REPORT.md" />
     <None Include="Project Management\DOCUMENTATION_INDEX.md" />
     <None Include="Project Management\Features\ARCHITECTURE_DIAGRAMS_27-03-2026.md" />
     <None Include="Project Management\Features\cleaning_redundancy_systems_27-03-2026.md" />
@@ -494,6 +501,7 @@
     <None Include="Project Management\PHASE_3_PROJECT_COMPLETE.md" />
     <None Include="Project Management\PHASE_3_READY_FOR_PHASE_4.md" />
     <None Include="Project Management\QUICK_FIX_GUIDE.md" />
+    <None Include="README_PHASE_24_1.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
@@ -507,6 +515,7 @@
     <None Include="Source\Runtime\PHASE5_QUICK_START.md" />
     <None Include="Source\Runtime\PHASES_4-5_INDEX.md" />
     <None Include="Source\Runtime\README.md" />
+    <None Include="VISUAL_ARCHITECTURE_DIAGRAMS.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\olympe.ico" />
@@ -516,6 +525,11 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
+  </ItemGroup>
+  <ItemGroup xmlns="">
+    <RuntimeDependency Include="SDL\lib\SDL3.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </RuntimeDependency>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

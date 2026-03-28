@@ -12,7 +12,7 @@
     "asset_browser": {
       "position": "left",
       "visible": true,
-      "width": 400
+      "width": 500
     },
     "debugger": {
       "visible": false

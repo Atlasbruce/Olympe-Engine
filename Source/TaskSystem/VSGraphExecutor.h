@@ -23,10 +23,18 @@
  *   - Pour Switch : évalue valeur BB, route vers le case correspondant.
  *   - Pour MathOp : calcule résultat via DataPinCache, stocke dans output pin.
  *
- * Résolution des Data Pins :
+ * Résolution des Data Pins (Phase 24.1 - Stack-based recursive evaluation):
  *   Avant d'exécuter un node, VSGraphExecutor résout toutes ses DataConnections
- *   entrantes en parcourant les DataConnections du template et en peuplant
- *   runner.DataPinCache avec les valeurs des output pins des nodes sources.
+ *   entrantes en utilisant DataPinEvaluator::EvaluateNodeInputPins().
+ *   
+ *   Ce système utilise une évaluation récursive en profondeur d'abord pour
+ *   évaluer les réseaux de data pins "data pure" (Variable, MathOp, GetBBValue).
+ *   Les dépendances sont résolues automatiquement avec détection de cycles et
+ *   limite de profondeur pour éviter les débordements de pile.
+ *   
+ *   Exemple:
+ *     SetBBValue.In("Value") ← MathOp.Out("Result") ← Variable.Out("mHealth") + Variable.Out("mFoodPortion")
+ *   L'exécution se fera: évaluer MathOp → évaluer ses deux Variables → calculer résultat → SetBBValue
  *
  * Phase 24 - Condition Preset Integration (2026-03-17):
  *   - HandleBranch evaluates node->conditionRefs with ConditionPresetEvaluator

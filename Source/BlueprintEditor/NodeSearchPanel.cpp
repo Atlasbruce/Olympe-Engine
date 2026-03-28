@@ -88,9 +88,11 @@ void NodeSearchPanel::InitNodeCatalogue()
     add("SetVariable",    "Set Variable",     "Actions", "Writes a value to the blackboard.");
     add("LogMessage",     "Log Message",      "Actions", "Emits a debug message.");
 
-    // ---- Data ----
-    add("GetVariable",      "Get Variable",      "Data", "Reads a value from the blackboard.");
-    add("SetBlackboardKey", "Set Blackboard Key","Data", "Sets a named blackboard key.");
+    // ---- Data (Phase 24.1) ----
+    add("Variable",         "Variable",         "Data", "Data pure node - reads a blackboard variable.");
+    add("MathOp",           "Math Operation",   "Data", "Data pure node - computes arithmetic operation.");
+    add("GetBBValue",       "Get BB Value",     "Data", "Reads a value from the blackboard.");
+    add("SetBBValue",       "Set BB Value",     "Data", "Writes a value to the blackboard.");
 
     SYSTEM_LOG << "[NodeSearchPanel] Catalogue initialised with "
                << static_cast<int>(m_Catalogue.size()) << " entries." << std::endl;

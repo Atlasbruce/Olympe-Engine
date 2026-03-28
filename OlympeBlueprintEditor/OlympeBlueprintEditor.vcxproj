@@ -202,6 +202,7 @@
     <ClCompile Include="..\Source\Editor\Panels\MathOpPropertyPanel.cpp" />
     <ClCompile Include="..\Source\Editor\Panels\GetBBValuePropertyPanel.cpp" />
     <ClCompile Include="..\Source\Editor\Panels\SetBBValuePropertyPanel.cpp" />
+    <ClCompile Include="..\Source\Editor\Panels\VariablePropertyPanel.cpp" />
     <ClCompile Include="..\Source\Editor\Panels\ActionParametersPanel.cpp" />
     <ClCompile Include="..\Source\TaskSystem\EntityBlackboard.cpp" />
     <ClCompile Include="..\Source\NodeGraphCore\GlobalTemplateBlackboard.cpp" />
@@ -406,6 +407,7 @@
     <ClInclude Include="..\Source\Editor\Panels\MathOpPropertyPanel.h" />
     <ClInclude Include="..\Source\Editor\Panels\GetBBValuePropertyPanel.h" />
     <ClInclude Include="..\Source\Editor\Panels\SetBBValuePropertyPanel.h" />
+    <ClInclude Include="..\Source\Editor\Panels\VariablePropertyPanel.h" />
     <ClInclude Include="..\Source\Editor\Panels\ActionParametersPanel.h" />
   </ItemGroup>
   <ItemGroup>
@@ -560,6 +562,8 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+
+
 
 
 

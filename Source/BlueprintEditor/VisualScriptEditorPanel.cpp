@@ -64,12 +64,14 @@ void VisualScriptEditorPanel::Initialize()
                             new NodeConditionsPanel(m_presetRegistry));
     m_mathOpPanel     = std::unique_ptr<MathOpPropertyPanel>(
                             new MathOpPropertyPanel(m_presetRegistry, *m_pinManager));
-    m_getBBPanel      = std::unique_ptr<GetBBValuePropertyPanel>(
-                            new GetBBValuePropertyPanel());
+     m_getBBPanel      = std::unique_ptr<GetBBValuePropertyPanel>(
+                             new GetBBValuePropertyPanel());
     m_setBBPanel      = std::unique_ptr<SetBBValuePropertyPanel>(
-                            new SetBBValuePropertyPanel());
+                             new SetBBValuePropertyPanel());
+    m_variablePanel   = std::unique_ptr<VariablePropertyPanel>(
+                             new VariablePropertyPanel());
     m_libraryPanel    = std::unique_ptr<ConditionPresetLibraryPanel>(
-                            new ConditionPresetLibraryPanel(m_presetRegistry));
+                             new ConditionPresetLibraryPanel(m_presetRegistry));
 
     // Phase 24 Global Blackboard Integration: Create EntityBlackboard for managing
     // both local and global variables in the editor context (entity ID 0)
@@ -150,6 +152,7 @@ void VisualScriptEditorPanel::Shutdown()
     m_mathOpPanel.reset();
     m_getBBPanel.reset();
     m_setBBPanel.reset();
+    m_variablePanel.reset();
     m_libraryPanel.reset();
     m_branchRenderer.reset();
     m_pinManager.reset();
@@ -208,6 +211,10 @@ std::vector<std::string> VisualScriptEditorPanel::GetExecInputPins(TaskNodeType 
     {
         case TaskNodeType::EntryPoint:
             return {};  // No exec-in on EntryPoint
+        case TaskNodeType::GetBBValue:
+            return {};  // Phase 24.2: Variable (GetBBValue) is data-pure (no execution pins)
+        case TaskNodeType::MathOp:
+            return {};  // Phase 24.2: MathOp is data-pure (no execution pins)
         default:
             return {"In"};
     }
@@ -227,9 +234,9 @@ std::vector<std::string> VisualScriptEditorPanel::GetExecOutputPins(TaskNodeType
         case TaskNodeType::VSSequence:  return {"Out"};
         case TaskNodeType::Switch:      return {"Case_0"};
         case TaskNodeType::AtomicTask:  return {"Completed"};
-        case TaskNodeType::GetBBValue:  return {"Out"};
-        case TaskNodeType::SetBBValue:  return {"Out"};
-        case TaskNodeType::MathOp:      return {"Out"};
+        case TaskNodeType::GetBBValue:  return {};  // Phase 24.2: Variable (GetBBValue) is data-pure (no execution pins)
+        case TaskNodeType::SetBBValue:  return {"Completed"};  // SetBBValue needs exec-out for control flow
+        case TaskNodeType::MathOp:      return {};  // Phase 24.2: MathOp is data-pure (no execution pins)
         default:                        return {"Out"};
     }
 }
@@ -2409,8 +2416,21 @@ void VisualScriptEditorPanel::RenderCanvas()
         auto execIn  = GetExecInputPins(eNode.def.Type);
         auto execOut = GetExecOutputPinsForNode(eNode.def);
 
-        // Phase 24 FIX: Ensure MathOp nodes have DataPins initialized
+        // Phase 24.2 FIX: Ensure data-pure nodes have DataPins initialized
         // This handles both newly created nodes AND nodes loaded from blueprints
+
+        // Initialize DataPins for GetBBValue (Variable) nodes
+        if (eNode.def.Type == TaskNodeType::GetBBValue && eNode.def.DataPins.empty())
+        {
+            DataPinDefinition pinOut;
+            pinOut.PinName = "Value";
+            pinOut.Dir     = DataPinDir::Output;
+            pinOut.PinType = VariableType::Float;  // Will be resolved at runtime based on actual variable
+            eNode.def.DataPins.push_back(pinOut);
+            std::cerr << "[VSEditor] Initialized DataPins for GetBBValue (Variable) node #" << eNode.nodeID << "\n";
+        }
+
+        // Initialize DataPins for MathOp nodes
         if (eNode.def.Type == TaskNodeType::MathOp && eNode.def.DataPins.empty())
         {
             // Initialize DataPins for this MathOp node if not already present
@@ -2433,6 +2453,17 @@ void VisualScriptEditorPanel::RenderCanvas()
             eNode.def.DataPins.push_back(pinResult);
 
             std::cerr << "[VSEditor] Initialized DataPins for MathOp node #" << eNode.nodeID << "\n";
+        }
+
+        // Initialize DataPins for SetBBValue nodes
+        if (eNode.def.Type == TaskNodeType::SetBBValue && eNode.def.DataPins.empty())
+        {
+            DataPinDefinition pinIn;
+            pinIn.PinName = "Value";
+            pinIn.Dir     = DataPinDir::Input;
+            pinIn.PinType = VariableType::Float;  // Will be resolved at runtime based on target variable
+            eNode.def.DataPins.push_back(pinIn);
+            std::cerr << "[VSEditor] Initialized DataPins for SetBBValue node #" << eNode.nodeID << "\n";
         }
 
         std::vector<std::pair<std::string, VariableType>> dataIn, dataOut;
@@ -2980,6 +3011,11 @@ void VisualScriptEditorPanel::RenderCanvas()
                     SYSTEM_LOG << "[VSEditor] Created exec link: node #" << srcNodeID
                                << "." << srcPinName << " -> node #" << dstNodeID << ".In\n";
                     m_dirty = true;
+                }
+                else
+                {
+                    SYSTEM_LOG << "[VSEditor] Exec link validation failed: node #" << srcNodeID
+                               << "." << srcPinName << " -> node #" << dstNodeID << ".In\n";
                 }
             }
             else if (isDataLink)
@@ -3851,19 +3887,20 @@ void VisualScriptEditorPanel::RenderProperties()
         }
         case TaskNodeType::GetBBValue:
         {
-            // Phase 24 Milestone 3: Delegate to dedicated GetBBValue properties renderer
-            if (m_getBBPanel)
+            // Phase 24.2: Variable node (data pure read node) - use dedicated renderer
+            // Variables are rendered with m_variablePanel instead of m_getBBPanel
+            if (m_variablePanel)
             {
-                m_getBBPanel->SetNodeName(def.NodeName);
-                m_getBBPanel->SetTemplate(&m_template);
-                m_getBBPanel->SetBBKey(def.BBKey);
+                m_variablePanel->SetNodeName(def.NodeName);
+                m_variablePanel->SetTemplate(&m_template);
+                m_variablePanel->SetBBKey(def.BBKey);
 
-                m_getBBPanel->Render();
+                m_variablePanel->Render();
 
-                if (m_getBBPanel->IsDirty())
+                if (m_variablePanel->IsDirty())
                 {
                     const std::string oldKey = def.BBKey;
-                    def.BBKey = m_getBBPanel->GetBBKey();
+                    def.BBKey = m_variablePanel->GetBBKey();
 
                     for (size_t i = 0; i < m_template.Nodes.size(); ++i)
                     {
@@ -3883,7 +3920,7 @@ void VisualScriptEditorPanel::RenderProperties()
                                 PropertyValue::FromString(def.BBKey))),
                             m_template);
                     }
-                    m_getBBPanel->ClearDirty();
+                    m_variablePanel->ClearDirty();
                     m_dirty = true;
                 }
             }

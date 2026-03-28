@@ -146,6 +146,14 @@ TaskGraphTemplate* TaskGraphLoader::LoadFromJson(const json& data,
 
     tmpl->BuildLookupCache();
 
+    // Phase 24.3 - Poka-Yoke: Clean up any invalid exec connections (e.g., to data-pure nodes)
+    int sanitizedCount = tmpl->SanitizeExecConnections();
+    if (sanitizedCount > 0)
+    {
+        SYSTEM_LOG << "[TaskGraphLoader] Sanitized " << sanitizedCount
+                   << " invalid exec connection(s) - graph is now consistent\n";
+    }
+
     if (!tmpl->Validate())
     {
         outErrors.push_back("TaskGraphTemplate::Validate() failed for template '" + tmpl->Name + "'");

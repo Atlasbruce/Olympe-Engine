@@ -12,6 +12,7 @@
 #include "AtomicTaskRegistry.h"
 #include "IAtomicTask.h"
 #include "ConditionEvaluator.h"
+#include "DataPinEvaluator.h"
 #include "../Core/AssetManager.h"
 #include "../system/system_utils.h"
 
@@ -179,55 +180,22 @@ void VSGraphExecutor::ResolveDataPins(int32_t nodeID,
                                       const TaskGraphTemplate& tmpl,
                                       LocalBlackboard& localBB)
 {
-    for (size_t i = 0; i < tmpl.DataConnections.size(); ++i)
+    // Phase 24.1: Use stack-based recursive evaluation for data pins
+    // This replaces the simple cache lookup with proper recursive evaluation
+    // of dependent nodes (Variable, MathOp, GetBBValue).
+
+    bool success = DataPinEvaluator::EvaluateNodeInputPins(nodeID, tmpl, runner, localBB);
+
+    if (!success)
     {
-        const DataPinConnection& conn = tmpl.DataConnections[i];
-        if (conn.TargetNodeID != nodeID)
-        {
-            continue;
-        }
-
-        // Build cache key for the source output pin.
-        std::ostringstream srcKey;
-        srcKey << conn.SourceNodeID << ":" << conn.SourcePinName;
-
-        const std::string srcKeyStr = srcKey.str();
-
-        // Build cache key for the target input pin.
-        std::ostringstream dstKey;
-        dstKey << nodeID << ":" << conn.TargetPinName;
-
-        const std::string dstKeyStr = dstKey.str();
-
-        // Try to get value from source node's output pin cache.
-        auto it = runner.DataPinCache.find(srcKeyStr);
-        if (it != runner.DataPinCache.end())
-        {
-            runner.DataPinCache[dstKeyStr] = it->second;
-        }
-        else
-        {
-            // Fallback: look for the default value in the target node's data pin definition.
-            const TaskNodeDefinition* targetNode = tmpl.GetNode(nodeID);
-            if (targetNode != nullptr)
-            {
-                for (size_t p = 0; p < targetNode->DataPins.size(); ++p)
-                {
-                    const DataPinDefinition& pin = targetNode->DataPins[p];
-                    if (pin.PinName == conn.TargetPinName && pin.Dir == DataPinDir::Input)
-                    {
-                        runner.DataPinCache[dstKeyStr] = pin.Default;
-                        break;
-                    }
-                }
-            }
-        }
+        SYSTEM_LOG << "[VSGraphExecutor] Warning: Failed to evaluate all input pins for node "
+                   << nodeID << " — some pins may use default values\n";
     }
 }
 
 // ============================================================================
 // ReadBBValue / WriteBBValue (private)
-// ============================================================================
+
 
 TaskValue VSGraphExecutor::ReadBBValue(const std::string& scopedKey,
                                        LocalBlackboard& localBB)

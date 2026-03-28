@@ -38,6 +38,7 @@
 #include "../Editor/Panels/MathOpPropertyPanel.h"
 #include "../Editor/Panels/GetBBValuePropertyPanel.h"
 #include "../Editor/Panels/SetBBValuePropertyPanel.h"
+#include "../Editor/Panels/VariablePropertyPanel.h"
 #include "../Editor/Panels/ConditionPresetLibraryPanel.h"
 #include "../Editor/Nodes/NodeBranchRenderer.h"
 
@@ -729,6 +730,9 @@ private:
 
     /// Properties-panel sub-widget for the selected SetBBValue node.
     std::unique_ptr<SetBBValuePropertyPanel> m_setBBPanel;
+
+    /// Properties-panel sub-widget for the selected Variable node (data pure).
+    std::unique_ptr<VariablePropertyPanel> m_variablePanel;
 
     /// Global condition preset library panel (UI for creating/editing/deleting presets).
     std::unique_ptr<ConditionPresetLibraryPanel> m_libraryPanel;
