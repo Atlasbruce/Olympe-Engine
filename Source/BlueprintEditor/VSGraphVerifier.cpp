@@ -170,6 +170,12 @@ void VSGraphVerifier::CheckDanglingNodes(const TaskGraphTemplate& g, VSVerificat
         if (node.Type == TaskNodeType::EntryPoint)
             continue;
 
+        // Phase 24.3 - CRITICAL: Skip data-pure nodes (GetBBValue, MathOp)
+        // These nodes have no exec pins and are connected via data pins instead
+        // They are NOT dangling — they are pure data computation nodes
+        if (node.Type == TaskNodeType::GetBBValue || node.Type == TaskNodeType::MathOp)
+            continue;
+
         bool hasExecIn  = false;
         bool hasExecOut = false;
 
@@ -755,6 +761,13 @@ void VSGraphVerifier::CheckReachability(const TaskGraphTemplate& g, VSVerificati
     for (size_t i = 0; i < g.Nodes.size(); ++i)
     {
         const TaskNodeDefinition& node = g.Nodes[i];
+
+        // Phase 24.3 - CRITICAL: Skip data-pure nodes (GetBBValue, MathOp)
+        // These nodes are connected via data pins, not exec connections
+        // They don't need to be reachable from EntryPoint via exec flow
+        if (node.Type == TaskNodeType::GetBBValue || node.Type == TaskNodeType::MathOp)
+            continue;
+
         if (visited.count(node.NodeID) == 0)
         {
             std::ostringstream oss;

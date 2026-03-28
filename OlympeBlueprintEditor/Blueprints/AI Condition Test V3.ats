@@ -142,8 +142,8 @@
         }
       },
       "position": {
-        "x": 105,
-        "y": 250
+        "x": 136,
+        "y": 125
       },
       "type": "EntryPoint"
     },
@@ -164,8 +164,8 @@
         }
       },
       "position": {
-        "x": 285,
-        "y": 248
+        "x": 316,
+        "y": 123
       },
       "type": "Sequence"
     },
@@ -268,8 +268,8 @@
         }
       },
       "position": {
-        "x": 683,
-        "y": 622
+        "x": 793,
+        "y": 611
       },
       "taskType": "log_message",
       "type": "AtomicTask"
