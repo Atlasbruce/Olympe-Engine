@@ -540,6 +540,20 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             m_lastActiveGraphId = graphID;
         }
 
+        // Build set of connected attribute IDs from all graph links so that
+        // connected pins render filled and unconnected pins render outlined.
+        std::unordered_set<int> connectedAttrIDs;
+        {
+            auto allLinks = graph->GetAllLinks();
+            for (size_t li = 0; li < allLinks.size(); ++li)
+            {
+                int fromUID = (graphID * GRAPH_ID_MULTIPLIER) + allLinks[li].fromNode;
+                int toUID   = (graphID * GRAPH_ID_MULTIPLIER) + allLinks[li].toNode;
+                connectedAttrIDs.insert(fromUID * ATTR_ID_MULTIPLIER + 2); // output attr
+                connectedAttrIDs.insert(toUID   * ATTR_ID_MULTIPLIER + 1); // input attr
+            }
+        }
+
         for (GraphNode* node : nodes)
         {
             // Generate a global unique UID for ImNodes
@@ -575,7 +589,7 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
 
             ImNodes::BeginNode(globalNodeUID);
 
-            RenderNodePinsAndContent(node, globalNodeUID, graphID);
+            RenderNodePinsAndContent(node, globalNodeUID, graphID, connectedAttrIDs);
 
             ImNodes::EndNode();
 
@@ -1161,11 +1175,14 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
     // =========================================================================
 
     void NodeGraphPanel::RenderTypedPin(int attrId, const char* label,
-                                        bool isInput, bool isExec)
+                                        bool isInput, bool isExec,
+                                        const std::unordered_set<int>& connectedAttrIDs)
     {
-        // Determine pin shape: exec flow uses triangle; data uses filled circle.
-        ImNodesPinShape shape = isExec ? ImNodesPinShape_TriangleFilled
-                                       : ImNodesPinShape_CircleFilled;
+        bool connected = connectedAttrIDs.count(attrId) > 0;
+        // Filled when connected, outlined when not.
+        ImNodesPinShape shape = isExec
+            ? (connected ? ImNodesPinShape_TriangleFilled : ImNodesPinShape_Triangle)
+            : (connected ? ImNodesPinShape_CircleFilled   : ImNodesPinShape_Circle);
 
         if (isInput)
         {
@@ -1186,7 +1203,8 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
     // =========================================================================
 
     void NodeGraphPanel::RenderNodePinsAndContent(GraphNode* node, int globalNodeUID,
-                                                  int graphID)
+                                                  int graphID,
+                                                  const std::unordered_set<int>& connectedAttrIDs)
     {
         // ----- Title bar (icon + name) --------------------------------------
         const NodeStyle& style = NodeStyleRegistry::Get().GetStyle(node->type);
@@ -1229,7 +1247,7 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         int inputAttrUID  = globalNodeUID * ATTR_ID_MULTIPLIER + 1;
         int outputAttrUID = globalNodeUID * ATTR_ID_MULTIPLIER + 2;
 
-        RenderTypedPin(inputAttrUID,  "In",  true,  isExec);
+        RenderTypedPin(inputAttrUID,  "In",  true,  isExec, connectedAttrIDs);
 
         // ----- Node content ------------------------------------------------
         if (node->type == NodeType::BT_Action && !node->actionType.empty())
@@ -1241,7 +1259,7 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         else
             ImGui::Text("%s", NodeTypeToString(node->type));
 
-        RenderTypedPin(outputAttrUID, "Out", false, isExec);
+        RenderTypedPin(outputAttrUID, "Out", false, isExec, connectedAttrIDs);
     }
 
     // =========================================================================

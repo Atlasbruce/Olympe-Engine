@@ -46,6 +46,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <unordered_set>
 
 #include "../ConditionPreset/ConditionPreset.h"
 #include "../ConditionPreset/ConditionPresetRegistry.h"
@@ -114,9 +115,12 @@ public:
      * Must be called between ImNodes::BeginNode() and ImNodes::EndNode().
      * In headless builds this is a no-op.
      *
-     * @param data  Current snapshot of the node's data.
+     * @param data             Current snapshot of the node's data.
+     * @param connectedAttrIDs Set of attribute IDs that are currently connected.
+     *                         Pins in this set are rendered filled; others outlined.
      */
-    void RenderNode(const NodeBranchData& data);
+    void RenderNode(const NodeBranchData& data,
+                    const std::unordered_set<int>& connectedAttrIDs = {});
 
     // -----------------------------------------------------------------------
     // Section renderers (also exposed for unit testing / partial renders)
@@ -155,9 +159,11 @@ public:
      *
      * Only rendered when data.dynamicPins is non-empty.
      * Format: "In #<idx>[L/R]: <condPreview>"
-     * @param data  Node data.
+     * @param data             Node data.
+     * @param connectedAttrIDs Set of connected attribute IDs (for filled/outlined shape).
      */
-    void RenderDynamicPinsSection(const NodeBranchData& data);
+    void RenderDynamicPinsSection(const NodeBranchData& data,
+                                   const std::unordered_set<int>& connectedAttrIDs = {});
 
     // -----------------------------------------------------------------------
     // ImNodes connector setup
