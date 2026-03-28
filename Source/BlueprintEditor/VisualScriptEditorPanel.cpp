@@ -31,6 +31,7 @@
 #include <sstream>
 #include <iomanip>
 #include <cstdlib>
+#include <unordered_set>
 
 namespace Olympe {
 
@@ -2377,6 +2378,16 @@ void VisualScriptEditorPanel::RenderCanvas()
 
     RenderNodePalette();
 
+    // Build connected attribute IDs set from current editor links.
+    // Pins whose attribute ID is in this set will be rendered filled;
+    // unconnected pins are rendered outlined (empty).
+    std::unordered_set<int> connectedAttrIDs;
+    for (size_t li = 0; li < m_editorLinks.size(); ++li)
+    {
+        connectedAttrIDs.insert(m_editorLinks[li].srcAttrID);
+        connectedAttrIDs.insert(m_editorLinks[li].dstAttrID);
+    }
+
     // Render all nodes
     int activeNodeID = DebugController::Get().GetCurrentNodeID();
 
@@ -2490,7 +2501,7 @@ void VisualScriptEditorPanel::RenderCanvas()
             // Render via NodeBranchRenderer (4-section layout)
             // Must be wrapped with ImNodes::BeginNode/EndNode just like generic renderer
             ImNodes::BeginNode(eNode.nodeID);
-            m_branchRenderer->RenderNode(branchData);
+            m_branchRenderer->RenderNode(branchData, connectedAttrIDs);
             ImNodes::EndNode();
         }
         else
@@ -2519,7 +2530,8 @@ void VisualScriptEditorPanel::RenderCanvas()
                     panel->m_pendingRemovePinNodeID = nid;
                     panel->m_pendingRemovePinDynIdx = dynIdx;
                 },
-                this);
+                this,
+                connectedAttrIDs);
         }
 
         if (hasVerifError)

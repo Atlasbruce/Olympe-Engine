@@ -34,7 +34,8 @@ NodeBranchRenderer::NodeBranchRenderer(ConditionPresetRegistry& registry,
 // Main render entry point
 // ============================================================================
 
-void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
+void NodeBranchRenderer::RenderNode(const NodeBranchData& data,
+                                     const std::unordered_set<int>& connectedAttrIDs)
 {
 #ifndef OLYMPE_HEADLESS
     // If a preset was changed since the last render, mark the pass as "refresh".
@@ -62,8 +63,9 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
     // LEFT COLUMN: "In" exec input pin
     {
         int inAttrID = data.nodeID * 10000 + 0;  // offset 0 = exec-in
+        bool connected = connectedAttrIDs.count(inAttrID) > 0;
         ImNodes::PushColorStyle(ImNodesCol_Pin, IM_COL32(255, 255, 255, 255));  // White for exec pins
-        ImNodes::BeginInputAttribute(inAttrID, ImNodesPinShape_Triangle);
+        ImNodes::BeginInputAttribute(inAttrID, connected ? ImNodesPinShape_TriangleFilled : ImNodesPinShape_Triangle);
         ImGui::Text("In");
         ImNodes::EndInputAttribute();
         ImNodes::PopColorStyle();
@@ -83,8 +85,9 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
     ImGui::NextColumn();
     {
         int thenAttrID = data.nodeID * 10000 + 100;  // offset 100 = exec-out #0
+        bool connected = connectedAttrIDs.count(thenAttrID) > 0;
         ImNodes::PushColorStyle(ImNodesCol_Pin, IM_COL32(255, 255, 255, 255));  // White for exec pins
-        ImNodes::BeginOutputAttribute(thenAttrID, ImNodesPinShape_TriangleFilled);
+        ImNodes::BeginOutputAttribute(thenAttrID, connected ? ImNodesPinShape_TriangleFilled : ImNodesPinShape_Triangle);
         
         //// Récupérer la position du pin
         //ImVec2 pinRectMin = ImGui::GetItemRectMin();
@@ -108,8 +111,9 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
     ImGui::NextColumn();
     {
         int elseAttrID = data.nodeID * 10000 + 101;  // offset 101 = exec-out #1
+        bool connected = connectedAttrIDs.count(elseAttrID) > 0;
         ImNodes::PushColorStyle(ImNodesCol_Pin, IM_COL32(255, 255, 255, 255));  // White for exec pins
-        ImNodes::BeginOutputAttribute(elseAttrID, ImNodesPinShape_TriangleFilled);
+        ImNodes::BeginOutputAttribute(elseAttrID, connected ? ImNodesPinShape_TriangleFilled : ImNodesPinShape_Triangle);
         ImGui::Text("False");
         ImNodes::EndOutputAttribute();
         ImNodes::PopColorStyle();
@@ -134,7 +138,7 @@ void NodeBranchRenderer::RenderNode(const NodeBranchData& data)
         //ImGui::TextUnformatted("=== DATA INPUTS ===");
         //ImGui::PopStyleColor();
         ImGui::Spacing();
-        RenderDynamicPinsSection(data);
+        RenderDynamicPinsSection(data, connectedAttrIDs);
     }
 
     ImGui::PopID();
@@ -299,7 +303,8 @@ void NodeBranchRenderer::RenderConditionsSection(const NodeBranchData& data)
 // Section 4 — Dynamic data pins (rendered only when non-empty)
 // ============================================================================
 
-void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data)
+void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data,
+                                                    const std::unordered_set<int>& connectedAttrIDs)
 {
 #ifndef OLYMPE_HEADLESS
     // Dynamic data pins are violet (data pin color)
@@ -318,10 +323,11 @@ void NodeBranchRenderer::RenderDynamicPinsSection(const NodeBranchData& data)
 
         // Generate unique attribute ID for this pin
         int attrID = dynamicPinIDBase + static_cast<int>(i);
+        bool connected = connectedAttrIDs.find(attrID) != connectedAttrIDs.end();
 
         // Register this pin as an input attribute in ImNodes with violet color
         ImNodes::PushColorStyle(ImNodesCol_Pin, pinColorImU32);
-        ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_Circle);
+        ImNodes::BeginInputAttribute(attrID, connected ? ImNodesPinShape_CircleFilled : ImNodesPinShape_Circle);
 
         // Draw a more prominent violet circle with the label
         ImGui::TextColored(pinColor, "\xe2\x97\x8f");

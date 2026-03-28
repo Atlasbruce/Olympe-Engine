@@ -116,20 +116,24 @@ namespace Olympe
         /**
          * @brief Render a single node with a coloured title bar, icon, and typed pins.
          * Called from RenderGraph() for every node in the active graph.
-         * @param node         Pointer to the graph node to render.
-         * @param globalNodeUID ImNodes global unique ID for the node.
-         * @param graphID      Active graph ID (used for debug-highlight check).
+         * @param node             Pointer to the graph node to render.
+         * @param globalNodeUID    ImNodes global unique ID for the node.
+         * @param graphID          Active graph ID (used for debug-highlight check).
+         * @param connectedAttrIDs Set of connected attribute IDs (for filled/outlined shapes).
          */
-        void RenderNodePinsAndContent(GraphNode* node, int globalNodeUID, int graphID);
+        void RenderNodePinsAndContent(GraphNode* node, int globalNodeUID, int graphID,
+                                      const std::unordered_set<int>& connectedAttrIDs = {});
 
         /**
          * @brief Render a single typed attribute pin using ImDrawList shapes.
-         * @param attrId  ImNodes attribute ID.
-         * @param label   Text label shown next to the pin.
-         * @param isInput True for input (left) attribute; false for output (right).
-         * @param isExec  True to use the exec (triangle) pin shape; false for data (circle).
+         * @param attrId           ImNodes attribute ID.
+         * @param label            Text label shown next to the pin.
+         * @param isInput          True for input (left) attribute; false for output (right).
+         * @param isExec           True to use the exec (triangle) pin shape; false for data (circle).
+         * @param connectedAttrIDs Set of connected attribute IDs (for filled/outlined shapes).
          */
-        void RenderTypedPin(int attrId, const char* label, bool isInput, bool isExec);
+        void RenderTypedPin(int attrId, const char* label, bool isInput, bool isExec,
+                            const std::unordered_set<int>& connectedAttrIDs = {});
 
         /**
          * @brief Overlay glow-coloured lines on links that connect to/from the

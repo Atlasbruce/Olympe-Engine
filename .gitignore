@@ -401,3 +401,4 @@ build_core/
 /Gamedata/Levels/parallax-level.tiled-session
 /OlympeBlueprintEditor_d.exe
 /SDL3.dll
+*.o

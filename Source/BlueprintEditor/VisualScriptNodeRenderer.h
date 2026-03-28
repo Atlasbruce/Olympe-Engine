@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <unordered_set>
 #include "../TaskSystem/TaskGraphTypes.h"
 #include "../TaskSystem/TaskGraphTemplate.h"
 
@@ -118,7 +119,8 @@ public:
         const std::vector<std::string>&               execInputPins,
         const std::vector<std::string>&               execOutputPins,
         const std::vector<std::pair<std::string, VariableType>>& dataInputPins,
-        const std::vector<std::pair<std::string, VariableType>>& dataOutputPins);
+        const std::vector<std::pair<std::string, VariableType>>& dataOutputPins,
+        const std::unordered_set<int>&                connectedAttrIDs = {});
 
     /**
      * @brief Extended RenderNode with inline parameter display and optional Add[+]/Remove[-] callbacks.
@@ -161,7 +163,8 @@ public:
         void (*onAddPin)(int nodeID, void* userData),
         void* onAddPinUserData,
         void (*onRemovePin)(int nodeID, int dynamicPinIndex, void* userData) = nullptr,
-        void* onRemovePinUserData = nullptr);
+        void* onRemovePinUserData = nullptr,
+        const std::unordered_set<int>& connectedAttrIDs = {});
 
     /**
      * @brief Renders a breakpoint indicator (red circle) next to a node.
