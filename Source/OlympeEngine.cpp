@@ -61,16 +61,18 @@ static Olympe::AnimationEditorWindow* animationEditorWindow = nullptr;
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 {
+    // Initialize the system logger first so all SYSTEM_LOG calls reach cout, cerr and olympe.log
+    Logging::InitLogger();
+
     SYSTEM_LOG << "----------- OLYMPE ENGINE V2 ------------" << endl;
     SYSTEM_LOG << "System Initialization\n" << endl;
 
     // Load configuration (JSON inside "olympe.ini"). Defaults used if not present.
+    // InitLogger() above enables cout, cerr, file, and panel by default; LoadOlympeConfig
+    // may then selectively disable channels via log_cout/log_cerr/log_file/log_panel keys.
     LoadOlympeConfig("olympe.ini");
 
     SDL_SetAppMetadata("Olympe Game Engine", "2.0", "com.googlesites.olympeengine");
-
-    // Initialize system logger so SYSTEM_LOG forwards to UI (if available)
-    Logging::InitLogger();
 
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_JOYSTICK | SDL_INIT_AUDIO | SDL_INIT_GAMEPAD)) {
