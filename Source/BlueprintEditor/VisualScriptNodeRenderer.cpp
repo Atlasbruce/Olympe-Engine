@@ -16,6 +16,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 namespace Olympe {
 
@@ -134,7 +135,8 @@ void VisualScriptNodeRenderer::RenderNode(
     const std::vector<std::string>&               execInputPins,
     const std::vector<std::string>&               execOutputPins,
     const std::vector<std::pair<std::string, VariableType>>& dataInputPins,
-    const std::vector<std::pair<std::string, VariableType>>& dataOutputPins)
+    const std::vector<std::pair<std::string, VariableType>>& dataOutputPins,
+    const std::unordered_set<int>&                connectedAttrIDs)
 {
     (void)nodeID; (void)graphID; // reserved for future per-node UID derivation
 
@@ -182,8 +184,9 @@ void VisualScriptNodeRenderer::RenderNode(
     for (size_t i = 0; i < execInputPins.size(); ++i)
     {
         int attrID = nodeUID * 10000 + static_cast<int>(i);
+        bool connected = connectedAttrIDs.find(attrID) != connectedAttrIDs.end();
         ImNodes::PushColorStyle(ImNodesCol_Pin, GetExecPinColor());
-        ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_Triangle);
+        ImNodes::BeginInputAttribute(attrID, connected ? ImNodesPinShape_TriangleFilled : ImNodesPinShape_Triangle);
         ImGui::Text("%s", execInputPins[i].c_str());
         ImNodes::EndInputAttribute();
         ImNodes::PopColorStyle();
@@ -193,9 +196,10 @@ void VisualScriptNodeRenderer::RenderNode(
     for (size_t i = 0; i < dataInputPins.size(); ++i)
     {
         int attrID = nodeUID * 10000 + 200 + static_cast<int>(i);
+        bool connected = connectedAttrIDs.find(attrID) != connectedAttrIDs.end();
         ImNodes::PushColorStyle(ImNodesCol_Pin,
                                 GetDataPinColor(dataInputPins[i].second));
-        ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_Circle);
+        ImNodes::BeginInputAttribute(attrID, connected ? ImNodesPinShape_CircleFilled : ImNodesPinShape_Circle);
         ImGui::Text("%s", dataInputPins[i].first.c_str());
         ImNodes::EndInputAttribute();
         ImNodes::PopColorStyle();
@@ -208,8 +212,9 @@ void VisualScriptNodeRenderer::RenderNode(
     for (size_t i = 0; i < execOutputPins.size(); ++i)
     {
         int attrID = nodeUID * 10000 + 100 + static_cast<int>(i);
+        bool connected = connectedAttrIDs.find(attrID) != connectedAttrIDs.end();
         ImNodes::PushColorStyle(ImNodesCol_Pin, GetExecPinColor());
-        ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_TriangleFilled);
+        ImNodes::BeginOutputAttribute(attrID, connected ? ImNodesPinShape_TriangleFilled : ImNodesPinShape_Triangle);
         ImGui::Text("%s", execOutputPins[i].c_str());
         ImNodes::EndOutputAttribute();
         ImNodes::PopColorStyle();
@@ -219,9 +224,10 @@ void VisualScriptNodeRenderer::RenderNode(
     for (size_t i = 0; i < dataOutputPins.size(); ++i)
     {
         int attrID = nodeUID * 10000 + 300 + static_cast<int>(i);
+        bool connected = connectedAttrIDs.find(attrID) != connectedAttrIDs.end();
         ImNodes::PushColorStyle(ImNodesCol_Pin,
                                 GetDataPinColor(dataOutputPins[i].second));
-        ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_Circle);
+        ImNodes::BeginOutputAttribute(attrID, connected ? ImNodesPinShape_CircleFilled : ImNodesPinShape_Circle);
         ImGui::Text("%s", dataOutputPins[i].first.c_str());
         ImNodes::EndOutputAttribute();
         ImNodes::PopColorStyle();
@@ -257,7 +263,8 @@ void VisualScriptNodeRenderer::RenderNode(
     void (*onAddPin)(int nodeID, void* userData),
     void* onAddPinUserData,
     void (*onRemovePin)(int nodeID, int dynamicPinIndex, void* userData),
-    void* onRemovePinUserData)
+    void* onRemovePinUserData,
+    const std::unordered_set<int>& connectedAttrIDs)
 {
     (void)graphID;
 
@@ -296,8 +303,9 @@ void VisualScriptNodeRenderer::RenderNode(
     for (size_t i = 0; i < execInputPins.size(); ++i)
     {
         int attrID = nodeUID * 10000 + static_cast<int>(i);
+        bool connected = connectedAttrIDs.find(attrID) != connectedAttrIDs.end();
         ImNodes::PushColorStyle(ImNodesCol_Pin, GetExecPinColor());
-        ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_Triangle);
+        ImNodes::BeginInputAttribute(attrID, connected ? ImNodesPinShape_TriangleFilled : ImNodesPinShape_Triangle);
         ImGui::Text("%s", execInputPins[i].c_str());
         ImNodes::EndInputAttribute();
         ImNodes::PopColorStyle();
@@ -307,9 +315,10 @@ void VisualScriptNodeRenderer::RenderNode(
     for (size_t i = 0; i < dataInputPins.size(); ++i)
     {
         int attrID = nodeUID * 10000 + 200 + static_cast<int>(i);
+        bool connected = connectedAttrIDs.find(attrID) != connectedAttrIDs.end();
         ImNodes::PushColorStyle(ImNodesCol_Pin,
                                 GetDataPinColor(dataInputPins[i].second));
-        ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_Circle);
+        ImNodes::BeginInputAttribute(attrID, connected ? ImNodesPinShape_CircleFilled : ImNodesPinShape_Circle);
         ImGui::Text("%s", dataInputPins[i].first.c_str());
         ImNodes::EndInputAttribute();
         ImNodes::PopColorStyle();
@@ -321,8 +330,9 @@ void VisualScriptNodeRenderer::RenderNode(
         for (size_t i = 0; i < def.dynamicPins.size(); ++i)
         {
             int attrID = nodeUID * 10000 + 400 + static_cast<int>(i);
+            bool connected = connectedAttrIDs.find(attrID) != connectedAttrIDs.end();
             ImNodes::PushColorStyle(ImNodesCol_Pin, SystemColors::DATA_PIN_COLOR);
-            ImNodes::BeginInputAttribute(attrID, ImNodesPinShape_Circle);
+            ImNodes::BeginInputAttribute(attrID, connected ? ImNodesPinShape_CircleFilled : ImNodesPinShape_Circle);
             const std::string lbl = def.dynamicPins[i].GetDisplayLabel();
             ImGui::Text("%s", lbl.c_str());
             ImNodes::EndInputAttribute();
@@ -347,6 +357,7 @@ void VisualScriptNodeRenderer::RenderNode(
     for (size_t i = 0; i < execOutputPins.size(); ++i)
     {
         int attrID = nodeUID * 10000 + 100 + static_cast<int>(i);
+        bool connected = connectedAttrIDs.find(attrID) != connectedAttrIDs.end();
         ImNodes::PushColorStyle(ImNodesCol_Pin, GetExecPinColor());
 
         // Handle dynamic pin removal button placement
@@ -354,7 +365,7 @@ void VisualScriptNodeRenderer::RenderNode(
         {
             int dynIdx = static_cast<int>(i) - numStaticPins;
 
-            ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_TriangleFilled);
+            ImNodes::BeginOutputAttribute(attrID, connected ? ImNodesPinShape_TriangleFilled : ImNodesPinShape_Triangle);
 
             ImGui::PushID(nodeUID * 10000 + 5000 + static_cast<int>(i));
             ImGui::PushStyleColor(ImGuiCol_Button,        IM_COL32(140, 30, 30, 200));
@@ -372,7 +383,7 @@ void VisualScriptNodeRenderer::RenderNode(
         else
         {
             // Regular exec output pin
-            ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_TriangleFilled);
+            ImNodes::BeginOutputAttribute(attrID, connected ? ImNodesPinShape_TriangleFilled : ImNodesPinShape_Triangle);
             ImGui::Text("%s", execOutputPins[i].c_str());
             ImNodes::EndOutputAttribute();
         }
@@ -399,9 +410,10 @@ void VisualScriptNodeRenderer::RenderNode(
     for (size_t i = 0; i < dataOutputPins.size(); ++i)
     {
         int attrID = nodeUID * 10000 + 300 + static_cast<int>(i);
+        bool connected = connectedAttrIDs.find(attrID) != connectedAttrIDs.end();
         ImNodes::PushColorStyle(ImNodesCol_Pin,
                                 GetDataPinColor(dataOutputPins[i].second));
-        ImNodes::BeginOutputAttribute(attrID, ImNodesPinShape_Circle);
+        ImNodes::BeginOutputAttribute(attrID, connected ? ImNodesPinShape_CircleFilled : ImNodesPinShape_Circle);
         ImGui::Text("%s", dataOutputPins[i].first.c_str());
         ImNodes::EndOutputAttribute();
         ImNodes::PopColorStyle();
