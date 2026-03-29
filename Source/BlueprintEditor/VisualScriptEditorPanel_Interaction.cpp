@@ -19,18 +19,28 @@
 #include "VisualScriptEditorPanel.h"
 #include "DebugController.h"
 #include "AtomicTaskUIRegistry.h"
+#include "ConditionRegistry.h"
 #include "OperatorRegistry.h"
+#include "BBVariableRegistry.h"
+#include "MathOpOperand.h"
 #include "../system/system_utils.h"
 #include "../system/system_consts.h"
-
+#include "../NodeGraphCore/GlobalTemplateBlackboard.h"
+#include "../third_party/imgui/imgui.h"
+#include "../third_party/imnodes/imnodes.h"
+#include "../json_helper.h"
+#include "../TaskSystem/TaskGraphLoader.h"
+#include <fstream>
+#include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <cstring>
+#include <sstream>
+#include <iomanip>
+#include <cstdlib>
+#include <unordered_set>
 
 namespace Olympe {
-
-// ============================================================================
-// Node Management: AddNode / RemoveNode
-// ============================================================================
 
 int VisualScriptEditorPanel::AddNode(TaskNodeType type, float x, float y)
 {
@@ -161,34 +171,72 @@ void VisualScriptEditorPanel::RemoveNode(int nodeID)
     m_verificationDone = false;
 }
 
-// ============================================================================
-// Undo / Redo
-// ============================================================================
 
 void VisualScriptEditorPanel::PerformUndo()
 {
+    if (!m_undoStack.CanUndo())
+        return;
+
+    std::string desc = m_undoStack.PeekUndoDescription();
+    SYSTEM_LOG << "[VSEditor] UNDO: " << desc << "\n";
     m_undoStack.Undo(m_template);
-    // After undo, rebuild the canvas from the reverted template state
     SyncEditorNodesFromTemplate();
     RebuildLinks();
-    // Flag to skip position sync on this frame (let new positions render before extracting)
-    m_skipPositionSyncNextFrame = true;
-    m_justPerformedUndoRedo = true;
+
+    // Force-push the restored positions into ImNodes so that the next
+    // BeginNode()/EndNode() cycle renders them at the correct location.
+    // BUG-003 Fix: positions stored in m_editorNodes are grid-space
+    // (written by SyncNodePositionsFromImNodes via GetNodeGridSpacePos),
+    // so use SetNodeGridSpacePos to restore them pan-independently.
+    for (size_t i = 0; i < m_editorNodes.size(); ++i)
+    {
+        ImNodes::SetNodeGridSpacePos(
+            m_editorNodes[i].nodeID,
+            ImVec2(m_editorNodes[i].posX, m_editorNodes[i].posY));
+    }
+
+    // Block position sync and movement tracking for 1 frame so that stale
+    // ImNodes state cannot overwrite the correct undo-target positions before
+    // ImNodes has rendered the new layout at least once.
+    m_justPerformedUndoRedo      = true;
+    m_skipPositionSyncNextFrame  = true;
+    m_nodeDragStartPositions.clear();
     m_dirty = true;
     m_verificationDone = false;
+    SYSTEM_LOG << "[VSEditor] Undo complete. Template now has "
+               << m_template.Nodes.size() << " nodes, "
+               << m_template.ExecConnections.size() << " exec connections\n";
 }
 
 void VisualScriptEditorPanel::PerformRedo()
 {
+    if (!m_undoStack.CanRedo())
+        return;
+
+    std::string desc = m_undoStack.PeekRedoDescription();
+    SYSTEM_LOG << "[VSEditor] REDO: " << desc << "\n";
     m_undoStack.Redo(m_template);
-    // After redo, rebuild the canvas from the re-applied template state
     SyncEditorNodesFromTemplate();
     RebuildLinks();
-    // Flag to skip position sync on this frame (let new positions render before extracting)
-    m_skipPositionSyncNextFrame = true;
-    m_justPerformedUndoRedo = true;
+
+    // Same treatment as PerformUndo().
+    // BUG-003 Fix: use SetNodeGridSpacePos (grid-space) for pan-independent restore.
+    for (size_t i = 0; i < m_editorNodes.size(); ++i)
+    {
+        ImNodes::SetNodeGridSpacePos(
+            m_editorNodes[i].nodeID,
+            ImVec2(m_editorNodes[i].posX, m_editorNodes[i].posY));
+    }
+
+    m_justPerformedUndoRedo      = true;
+    m_skipPositionSyncNextFrame  = true;
+    m_nodeDragStartPositions.clear();
     m_dirty = true;
     m_verificationDone = false;
+    SYSTEM_LOG << "[VSEditor] Redo complete. Template now has "
+               << m_template.Nodes.size() << " nodes, "
+               << m_template.ExecConnections.size() << " exec connections\n";
 }
+
 
 } // namespace Olympe

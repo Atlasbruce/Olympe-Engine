@@ -10,10 +10,6 @@
 // - RenderToolbar()               : Top toolbar with buttons
 // - RenderNodePalette()           : Node selection panel (drag-drop)
 // - RenderContextMenus()          : Right-click context menus
-// - RenderSaveAsDialog()          : (Moved to FileOps)
-// - RenderValidationOverlay()     : (Moved to Verification)
-// - RenderMainMenu()              : Main application menu
-// - RenderStatusBar()             : Bottom status bar
 //
 // Integration Points:
 // - ImGui rendering                : UI framework
@@ -23,308 +19,302 @@
 // ============================================================================
 
 #include "VisualScriptEditorPanel.h"
+#include "DebugController.h"
+#include "AtomicTaskUIRegistry.h"
+#include "ConditionRegistry.h"
+#include "OperatorRegistry.h"
+#include "BBVariableRegistry.h"
+#include "MathOpOperand.h"
+#include "../system/system_utils.h"
+#include "../system/system_consts.h"
+#include "../NodeGraphCore/GlobalTemplateBlackboard.h"
+#include "../third_party/imgui/imgui.h"
+#include "../third_party/imnodes/imnodes.h"
+#include "../json_helper.h"
+#include "../TaskSystem/TaskGraphLoader.h"
+#include <fstream>
+#include <iostream>
+#include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <sstream>
+#include <iomanip>
+#include <cstdlib>
+#include <unordered_set>
 
 namespace Olympe {
 
-// ============================================================================
-// Toolbar Rendering
-// ============================================================================
-
 void VisualScriptEditorPanel::RenderToolbar()
 {
-    // Toolbar buttons row
-    ImGui::BeginChild("Toolbar", ImVec2(0, 40), true);
+    // Title
+    const char* title = m_currentPath.empty()
+                        ? "Untitled VS Graph"
+                        : m_currentPath.c_str();
+    ImGui::TextDisabled("%s%s", title, m_dirty ? " *" : "");
 
-    ImGui::AlignTextToFramePadding();
-    ImGui::TextDisabled("File:");
     ImGui::SameLine();
-
-    // Load button
-    if (ImGui::Button("Load##vsload", ImVec2(50, 0)))
+    if (ImGui::Button("Save"))
     {
-        // Trigger file open dialog (platform-specific)
-        SYSTEM_LOG << "[VSEditor] Load button clicked\n";
+        SYSTEM_LOG << "[VisualScriptEditorPanel] Save button clicked. m_currentPath='"
+                   << m_currentPath << "'\n";
+        if (m_currentPath.empty())
+        {
+            m_showSaveAsDialog = true;
+        }
+        else if (!Save())
+        {
+            ImGui::OpenPopup("SaveError");
+        }
     }
     ImGui::SameLine();
-
-    // Save button
-    if (ImGui::Button("Save##vssave", ImVec2(50, 0)))
-    {
-        Save();
-    }
-    ImGui::SameLine();
-
-    // Save As button
-    if (ImGui::Button("Save As##vssaveas", ImVec2(70, 0)))
+    if (ImGui::Button("Save As"))
     {
         m_showSaveAsDialog = true;
-        ImGui::OpenPopup("Save As##vseditor");
     }
     ImGui::SameLine();
+    // Phase 24.3 — Removed "New Graph" button as requested
+    // Users must create new graphs through the file browser instead
 
-    ImGui::Separator();
-    ImGui::SameLine();
-
-    ImGui::AlignTextToFramePadding();
-    ImGui::TextDisabled("Edit:");
-    ImGui::SameLine();
-
-    // Undo button
-    if (ImGui::Button("Undo##vsundo", ImVec2(50, 0)))
-    {
-        PerformUndo();
-    }
-    ImGui::SameLine();
-
-    // Redo button
-    if (ImGui::Button("Redo##vsredo", ImVec2(50, 0)))
-    {
-        PerformRedo();
-    }
-    ImGui::SameLine();
-
-    ImGui::Separator();
-    ImGui::SameLine();
-
-    ImGui::AlignTextToFramePadding();
-    ImGui::TextDisabled("Verify:");
-    ImGui::SameLine();
-
-    // Verification button
-    if (ImGui::Button("Verify##vsverify", ImVec2(55, 0)))
+    if (ImGui::Button("Verify##gvs"))
     {
         RunVerification();
     }
     ImGui::SameLine();
-
-    // Test Execution button (Phase 24.3)
-    if (ImGui::Button("Test##vstest", ImVec2(50, 0)))
+    if (ImGui::Button("Condition Presets"))
     {
-        SYSTEM_LOG << "[VSEditor] Test Execution clicked\n";
-        // Would trigger ExecutionTestPanel rendering
+        m_libraryPanel->Open();
     }
-
-    ImGui::EndChild();
-}
-
-// ============================================================================
-// Node Palette - Drag-drop Node Creation
-// ============================================================================
-
-void VisualScriptEditorPanel::RenderNodePalette()
-{
-    ImGui::BeginChild("NodePalette", ImVec2(200, 0), true);
-
-    ImGui::TextDisabled("Node Palette");
-    ImGui::Separator();
-
-    // List of available node types
-    const char* nodeTypeNames[] = {
-        "Entry Point",
-        "Branch",
-        "Switch",
-        "While",
-        "ForEach",
-        "DoOnce",
-        "Delay",
-        "Sequence",
-        "SubGraph",
-        "Atomic Task",
-        "Get Variable",
-        "Set Variable",
-        "Math Op",
-    };
-
-    const TaskNodeType nodeTypeValues[] = {
-        TaskNodeType::EntryPoint,
-        TaskNodeType::Branch,
-        TaskNodeType::Switch,
-        TaskNodeType::While,
-        TaskNodeType::ForEach,
-        TaskNodeType::DoOnce,
-        TaskNodeType::Delay,
-        TaskNodeType::VSSequence,
-        TaskNodeType::SubGraph,
-        TaskNodeType::AtomicTask,
-        TaskNodeType::GetBBValue,
-        TaskNodeType::SetBBValue,
-        TaskNodeType::MathOp,
-    };
-
-    for (int i = 0; i < 13; ++i)
-    {
-        ImGui::PushID(i);
-
-        // Make selectable items draggable
-        if (ImGui::Selectable(nodeTypeNames[i]))
-        {
-            // Node selected (could trigger drag)
-        }
-
-        // Drag-drop support
-        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
-        {
-            TaskNodeType nodeType = nodeTypeValues[i];
-            ImGui::SetDragDropPayload("NODE_TYPE", &nodeType, sizeof(TaskNodeType));
-            ImGui::Text("Create: %s", nodeTypeNames[i]);
-            ImGui::EndDragDropSource();
-        }
-
-        ImGui::PopID();
-    }
-
-    ImGui::EndChild();
-}
-
-// ============================================================================
-// Context Menus - Right-click Actions
-// ============================================================================
-
-void VisualScriptEditorPanel::RenderContextMenus()
-{
-    // Node context menu
-    if (ImGui::BeginPopupContextItem("NodeContext##vsed"))
-    {
-        if (m_selectedNodeID >= 0)
-        {
-            ImGui::TextDisabled("Node %d", m_selectedNodeID);
-            ImGui::Separator();
-
-            if (ImGui::MenuItem("Duplicate"))
-            {
-                // Duplicate selected node
-            }
-            if (ImGui::MenuItem("Delete"))
-            {
-                RemoveNode(m_selectedNodeID);
-            }
-            if (ImGui::MenuItem("Goto properties"))
-            {
-                m_focusNodeID = m_selectedNodeID;
-            }
-        }
-
-        ImGui::EndPopup();
-    }
-
-    // Canvas context menu
-    if (ImGui::BeginPopupContextVoid("CanvasContext##vsed"))
-    {
-        if (ImGui::MenuItem("Add Node..."))
-        {
-            // Open node palette
-        }
-        if (ImGui::MenuItem("Paste"))
-        {
-            // Paste copied nodes
-        }
-
-        ImGui::EndPopup();
-    }
-}
-
-// ============================================================================
-// Main Menu
-// ============================================================================
-
-void VisualScriptEditorPanel::RenderMainMenu()
-{
-    if (ImGui::BeginMenuBar())
-    {
-        if (ImGui::BeginMenu("File"))
-        {
-            if (ImGui::MenuItem("Load"))
-            {
-                SYSTEM_LOG << "[VSEditor] Load menu clicked\n";
-            }
-            if (ImGui::MenuItem("Save", "Ctrl+S"))
-            {
-                Save();
-            }
-            if (ImGui::MenuItem("Save As", "Ctrl+Shift+S"))
-            {
-                m_showSaveAsDialog = true;
-            }
-            ImGui::Separator();
-            if (ImGui::MenuItem("Close"))
-            {
-                // Close current blueprint
-            }
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("Edit"))
-        {
-            if (ImGui::MenuItem("Undo", "Ctrl+Z"))
-            {
-                PerformUndo();
-            }
-            if (ImGui::MenuItem("Redo", "Ctrl+Y"))
-            {
-                PerformRedo();
-            }
-            ImGui::Separator();
-            if (ImGui::MenuItem("Select All", "Ctrl+A"))
-            {
-                // Select all nodes
-            }
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("View"))
-        {
-            ImGui::MenuItem("Node Palette", nullptr, &m_showNodePalette);
-            ImGui::MenuItem("Properties", nullptr, &m_showProperties);
-            ImGui::MenuItem("Verification", nullptr, &m_showVerification);
-            ImGui::EndMenu();
-        }
-
-        ImGui::EndMenuBar();
-    }
-}
-
-// ============================================================================
-// Status Bar
-// ============================================================================
-
-void VisualScriptEditorPanel::RenderStatusBar()
-{
-    ImGui::BeginChild("StatusBar", ImVec2(0, 25), true);
-
-    // Dirty indicator
-    if (m_dirty)
-    {
-        ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), "●");
-        ImGui::SameLine();
-    }
-
-    ImGui::TextDisabled("Nodes: %zu | Links: %zu",
-                       m_editorNodes.size(),
-                       m_editorLinks.size());
-
-    ImGui::SameLine(ImGui::GetWindowWidth() - 150);
-
+    ImGui::SameLine();
     if (m_verificationDone)
     {
         if (m_verificationResult.HasErrors())
         {
-            ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "❌ Errors");
+            int errorCount = 0;
+            for (size_t i = 0; i < m_verificationResult.issues.size(); ++i)
+            {
+                if (m_verificationResult.issues[i].severity == VSVerificationSeverity::Error)
+                    ++errorCount;
+            }
+            ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f),
+                               "[%d error(s)]", errorCount);
         }
         else if (m_verificationResult.HasWarnings())
         {
-            ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), "⚠ Warnings");
+            ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), "[OK - warnings]");
         }
         else
         {
-            ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "✓ OK");
+            ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "[OK]");
         }
     }
-    else
+
+    // Keyboard shortcuts
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
     {
-        ImGui::TextDisabled("(not verified)");
+        if (ImGui::IsKeyPressed(ImGuiKey_S) &&
+            ImGui::GetIO().KeyCtrl)
+        {
+            SYSTEM_LOG << "[VisualScriptEditorPanel] Ctrl+S pressed. m_currentPath='"
+                       << m_currentPath << "'\n";
+            if (m_currentPath.empty())
+            {
+                m_showSaveAsDialog = true;
+            }
+            else if (!Save())
+            {
+                ImGui::OpenPopup("SaveError");
+            }
+        }
+
+        // Undo (Ctrl+Z)
+        if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z) &&
+            m_undoStack.CanUndo())
+        {
+            PerformUndo();
+        }
+
+        // Redo (Ctrl+Y)
+        if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y) &&
+            m_undoStack.CanRedo())
+        {
+            PerformRedo();
+        }
     }
 
-    ImGui::EndChild();
+    if (ImGui::BeginPopup("SaveError"))
+    {
+        ImGui::TextColored(ImVec4(1,0,0,1), "Save failed — check file path.");
+        if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
 }
 
-}  // namespace Olympe
+
+void VisualScriptEditorPanel::RenderNodePalette()
+{
+    if (!ImGui::BeginPopup("VSNodePalette"))
+        return;
+
+    ImGui::TextDisabled("Add Node");
+    ImGui::Separator();
+
+    // Flow Control
+    if (ImGui::BeginMenu("Flow Control"))
+    {
+        auto addFlowNode = [&](TaskNodeType type, const char* label) {
+            if (ImGui::MenuItem(label))
+            {
+                AddNode(type, m_contextMenuX, m_contextMenuY);
+                ImGui::CloseCurrentPopup();
+            }
+        };
+        addFlowNode(TaskNodeType::EntryPoint, "EntryPoint");
+        addFlowNode(TaskNodeType::Branch,     "Branch");
+        addFlowNode(TaskNodeType::VSSequence, "Sequence");
+        addFlowNode(TaskNodeType::While,      "While");
+        addFlowNode(TaskNodeType::ForEach,    "ForEach");
+        addFlowNode(TaskNodeType::DoOnce,     "DoOnce");
+        addFlowNode(TaskNodeType::Delay,      "Delay");
+        ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Actions"))
+    {
+        if (ImGui::MenuItem("AtomicTask"))
+        {
+            AddNode(TaskNodeType::AtomicTask, m_contextMenuX, m_contextMenuY);
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Data"))
+    {
+        if (ImGui::MenuItem("GetBBValue"))
+        {
+            AddNode(TaskNodeType::GetBBValue, m_contextMenuX, m_contextMenuY);
+            ImGui::CloseCurrentPopup();
+        }
+        if (ImGui::MenuItem("SetBBValue"))
+        {
+            AddNode(TaskNodeType::SetBBValue, m_contextMenuX, m_contextMenuY);
+            ImGui::CloseCurrentPopup();
+        }
+        if (ImGui::MenuItem("MathOp"))
+        {
+            AddNode(TaskNodeType::MathOp, m_contextMenuX, m_contextMenuY);
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("SubGraph"))
+    {
+        if (ImGui::MenuItem("SubGraph"))
+        {
+            AddNode(TaskNodeType::SubGraph, m_contextMenuX, m_contextMenuY);
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndMenu();
+    }
+
+    ImGui::EndPopup();
+}
+
+void VisualScriptEditorPanel::RenderContextMenus()
+{
+    // ========================================================================
+    // Node context menu
+    // ========================================================================
+    if (ImGui::BeginPopup("VSNodeContextMenu"))
+    {
+        if (ImGui::MenuItem("Edit Properties"))
+        {
+            m_selectedNodeID = m_contextNodeID;
+            SYSTEM_LOG << "[VSEditor] Selected node #" << m_contextNodeID
+                       << " for editing\n";
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Delete Node"))
+        {
+            RemoveNode(m_contextNodeID);
+            if (m_selectedNodeID == m_contextNodeID)
+                m_selectedNodeID = -1;
+            m_dirty = true;
+            SYSTEM_LOG << "[VSEditor] Deleted node #" << m_contextNodeID
+                       << " via context menu\n";
+        }
+
+        ImGui::Separator();
+
+        {
+            bool hasBP = DebugController::Get().HasBreakpoint(0, m_contextNodeID);
+            if (ImGui::MenuItem(hasBP ? "Remove Breakpoint (F9)" : "Add Breakpoint (F9)"))
+            {
+                DebugController::Get().ToggleBreakpoint(0, m_contextNodeID,
+                                                        m_template.Name,
+                                                        "Node " + std::to_string(m_contextNodeID));
+                SYSTEM_LOG << "[VSEditor] Toggled breakpoint on node #"
+                           << m_contextNodeID << " -> "
+                           << (hasBP ? "OFF" : "ON") << "\n";
+            }
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Duplicate"))
+        {
+            auto it = std::find_if(m_editorNodes.begin(), m_editorNodes.end(),
+                [this](const VSEditorNode& n) { return n.nodeID == m_contextNodeID; });
+            if (it != m_editorNodes.end())
+            {
+                TaskNodeDefinition newDef = it->def;
+                newDef.NodeID    = AllocNodeID();
+                newDef.NodeName += " (Copy)";
+                newDef.EditorPosX = it->posX + 50.0f;
+                newDef.EditorPosY = it->posY + 50.0f;
+                newDef.HasEditorPos = true;
+
+                VSEditorNode eNew;
+                eNew.nodeID = newDef.NodeID;
+                eNew.posX   = newDef.EditorPosX;
+                eNew.posY   = newDef.EditorPosY;
+                eNew.def    = newDef;
+                m_editorNodes.push_back(eNew);
+
+                m_undoStack.PushCommand(
+                    std::unique_ptr<ICommand>(new AddNodeCommand(newDef)),
+                    m_template);
+                m_dirty = true;
+                SYSTEM_LOG << "[VSEditor] Node " << m_contextNodeID
+                           << " duplicated as #" << newDef.NodeID << "\n";
+            }
+        }
+
+        ImGui::EndPopup();
+    }
+
+    // ========================================================================
+    // Link context menu
+    // ========================================================================
+    if (ImGui::BeginPopup("VSLinkContextMenu"))
+    {
+        if (ImGui::MenuItem("Delete Connection"))
+        {
+            RemoveLink(m_contextLinkID);
+            m_dirty = true;
+            SYSTEM_LOG << "[VSEditor] Deleted link #" << m_contextLinkID
+                       << " via context menu\n";
+        }
+        ImGui::EndPopup();
+    }
+}
+
+// ============================================================================
+// Branch / While node — dedicated Properties panel renderer
+// ============================================================================
+
+
+} // namespace Olympe

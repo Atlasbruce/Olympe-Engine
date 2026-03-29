@@ -20,16 +20,30 @@
 // ============================================================================
 
 #include "VisualScriptEditorPanel.h"
+#include "DebugController.h"
+#include "AtomicTaskUIRegistry.h"
+#include "ConditionRegistry.h"
+#include "OperatorRegistry.h"
+#include "BBVariableRegistry.h"
+#include "MathOpOperand.h"
+#include "../system/system_utils.h"
+#include "../system/system_consts.h"
+#include "../NodeGraphCore/GlobalTemplateBlackboard.h"
+#include "../third_party/imgui/imgui.h"
+#include "../third_party/imnodes/imnodes.h"
+#include "../json_helper.h"
+#include "../TaskSystem/TaskGraphLoader.h"
+#include <fstream>
+#include <iostream>
 #include <algorithm>
+#include <cmath>
+#include <cstring>
 #include <sstream>
 #include <iomanip>
-#include <cmath>
+#include <cstdlib>
+#include <unordered_set>
 
 namespace Olympe {
-
-// ============================================================================
-// Preset Bank Panel - Main UI
-// ============================================================================
 
 void VisualScriptEditorPanel::RenderPresetBankPanel()
 {
@@ -70,9 +84,6 @@ void VisualScriptEditorPanel::RenderPresetBankPanel()
     }
 }
 
-// ============================================================================
-// Preset Item Compact - Single Preset Rendering
-// ============================================================================
 
 void VisualScriptEditorPanel::RenderPresetItemCompact(const ConditionPreset& preset, size_t index)
 {
@@ -210,9 +221,6 @@ void VisualScriptEditorPanel::RenderPresetItemCompact(const ConditionPreset& pre
 #endif
 }
 
-// ============================================================================
-// Operand Editor - Unified Mode/Value Dropdown
-// ============================================================================
 
 bool VisualScriptEditorPanel::RenderOperandEditor(Operand& operand, const char* labelSuffix)
 {
@@ -410,4 +418,9 @@ bool VisualScriptEditorPanel::RenderOperandEditor(Operand& operand, const char* 
 #endif
 }
 
-}  // namespace Olympe
+// ============================================================================
+// PHASE 24 Panel Integration — Part C: Local Variables Reference
+// ============================================================================
+
+
+} // namespace Olympe

@@ -11,27 +11,38 @@
 // - RunVerification()                  : Run full graph verification
 // - RenderVerificationPanel()          : Render verification UI panel
 // - RenderVerificationLogsPanel()      : Render verification logs output
-// - RenderConditionEditor()            : Condition expression editor
-// - RenderVariableSelector()           : Variable dropdown selector
-// - RenderConstValueInput()            : Const value input field
-// - RenderPinSelector()                : Pin selection dropdown
-// - BuildConditionPreview()            : Build human-readable condition preview
 //
 // Integration Points:
 // - VSGraphVerifier                   : Graph verification engine
-// - ExecutionTestPanel                : Phase 24.3 execution testing UI
 // - m_template                        : Graph to verify
 // - m_verificationResult              : Cached verification state
 // ============================================================================
 
 #include "VisualScriptEditorPanel.h"
+#include "DebugController.h"
+#include "AtomicTaskUIRegistry.h"
+#include "ConditionRegistry.h"
+#include "OperatorRegistry.h"
+#include "BBVariableRegistry.h"
+#include "MathOpOperand.h"
+#include "../system/system_utils.h"
+#include "../system/system_consts.h"
+#include "../NodeGraphCore/GlobalTemplateBlackboard.h"
+#include "../third_party/imgui/imgui.h"
+#include "../third_party/imnodes/imnodes.h"
+#include "../json_helper.h"
+#include "../TaskSystem/TaskGraphLoader.h"
+#include <fstream>
+#include <iostream>
+#include <algorithm>
+#include <cmath>
+#include <cstring>
 #include <sstream>
+#include <iomanip>
+#include <cstdlib>
+#include <unordered_set>
 
 namespace Olympe {
-
-// ============================================================================
-// Validation Overlay - Basic Checks
-// ============================================================================
 
 void VisualScriptEditorPanel::RenderValidationOverlay()
 {
@@ -73,8 +84,9 @@ void VisualScriptEditorPanel::RenderValidationOverlay()
 }
 
 // ============================================================================
-// Graph Verification - Phase 21-B
+// Phase 21-B — Graph Verification
 // ============================================================================
+
 
 void VisualScriptEditorPanel::RunVerification()
 {
@@ -111,9 +123,6 @@ void VisualScriptEditorPanel::RunVerification()
                << "warnings=" << (m_verificationResult.HasWarnings() ? "yes" : "no") << "\n";
 }
 
-// ============================================================================
-// Verification Panel - UI Display
-// ============================================================================
 
 void VisualScriptEditorPanel::RenderVerificationPanel()
 {
@@ -195,8 +204,9 @@ void VisualScriptEditorPanel::RenderVerificationPanel()
 }
 
 // ============================================================================
-// Verification Logs Panel - Phase 24.3
+// Phase 24.3 — Verification Logs Panel
 // ============================================================================
+
 
 void VisualScriptEditorPanel::RenderVerificationLogsPanel()
 {
@@ -296,207 +306,8 @@ void VisualScriptEditorPanel::RenderVerificationLogsPanel()
 }
 
 // ============================================================================
-// Condition Editor - Phase 23-B.4
+// Phase 23-B.4 — Condition Editor UI helpers
 // ============================================================================
 
-void VisualScriptEditorPanel::RenderConditionEditor(
-    Condition& condition,
-    int conditionIndex,
-    const std::vector<BlackboardEntry>& allVars,
-    const std::vector<std::string>& availablePins)
-{
-    ImGui::PushID(conditionIndex);
-    ImGui::Separator();
-    ImGui::Text("Condition #%d", conditionIndex + 1);
 
-    // -- LEFT SIDE --
-    ImGui::Text("Left:");
-    ImGui::SameLine();
-
-    const bool isLeftPin   = (condition.leftMode == "Pin");
-    const bool isLeftVar   = (condition.leftMode == "Variable");
-    const bool isLeftConst = (condition.leftMode == "Const");
-
-    if (ImGui::Button(isLeftPin ? "[PIN]" : "Pin", ImVec2(55, 0)))
-    {
-        condition.leftMode = "Pin";
-        condition.leftPin  = "";
-        m_dirty = true;
-    }
-    ImGui::SameLine();
-    if (ImGui::Button(isLeftVar ? "[VAR]" : "Var", ImVec2(55, 0)))
-    {
-        condition.leftMode     = "Variable";
-        condition.leftVariable = "";
-        m_dirty = true;
-    }
-    ImGui::SameLine();
-    if (ImGui::Button(isLeftConst ? "[CST]" : "Const", ImVec2(55, 0)))
-    {
-        condition.leftMode = "Const";
-        m_dirty = true;
-    }
-
-    ImGui::Indent();
-    if (condition.leftMode == "Pin")
-        RenderPinSelector(condition.leftPin, availablePins, "##leftpin");
-    else if (condition.leftMode == "Variable")
-        RenderVariableSelector(condition.leftVariable, allVars,
-                               condition.compareType, "##leftvar");
-    else
-        RenderConstValueInput(condition.leftConstValue,
-                              condition.compareType, "##leftconst");
-    ImGui::Unindent();
-
-    // -- OPERATOR --
-    ImGui::Text("Op:");
-    ImGui::SameLine();
-    const char* operators[] = { "==", "!=", "<", ">", "<=", ">=" };
-    int opIdx = 0;
-    for (int i = 0; i < 6; ++i)
-    {
-        if (condition.operatorStr == operators[i])
-        {
-            opIdx = i;
-            break;
-        }
-    }
-    ImGui::SetNextItemWidth(70.0f);
-    if (ImGui::Combo("##op", &opIdx, operators, 6))
-    {
-        condition.operatorStr = operators[opIdx];
-        m_dirty = true;
-    }
-
-    // -- RIGHT SIDE --
-    ImGui::Text("Right:");
-    ImGui::SameLine();
-
-    const bool isRightPin   = (condition.rightMode == "Pin");
-    const bool isRightVar   = (condition.rightMode == "Variable");
-    const bool isRightConst = (condition.rightMode == "Const");
-
-    if (ImGui::Button(isRightPin ? "[PIN]##r" : "Pin##r", ImVec2(55, 0)))
-    {
-        condition.rightMode = "Pin";
-        condition.rightPin  = "";
-        m_dirty = true;
-    }
-    ImGui::SameLine();
-    if (ImGui::Button(isRightVar ? "[VAR]##r" : "Var##r", ImVec2(55, 0)))
-    {
-        condition.rightMode     = "Variable";
-        condition.rightVariable = "";
-        m_dirty = true;
-    }
-    ImGui::SameLine();
-    if (ImGui::Button(isRightConst ? "[CST]##r" : "Const##r", ImVec2(55, 0)))
-    {
-        condition.rightMode = "Const";
-        m_dirty = true;
-    }
-
-    ImGui::Indent();
-    if (condition.rightMode == "Pin")
-        RenderPinSelector(condition.rightPin, availablePins, "##rightpin");
-    else if (condition.rightMode == "Variable")
-        RenderVariableSelector(condition.rightVariable, allVars,
-                               condition.compareType, "##rightvar");
-    else
-        RenderConstValueInput(condition.rightConstValue,
-                              condition.compareType, "##rightconst");
-    ImGui::Unindent();
-
-    // -- TYPE HINT --
-    ImGui::Text("Type:");
-    ImGui::SameLine();
-    const char* types[] = { "None", "Bool", "Int", "Float", "String", "Vector" };
-    const VariableType typeValues[] = {
-        VariableType::None, VariableType::Bool, VariableType::Int,
-        VariableType::Float, VariableType::String, VariableType::Vector
-    };
-    int typeIdx = 0;
-    for (int i = 0; i < 6; ++i)
-    {
-        if (condition.compareType == typeValues[i])
-        {
-            typeIdx = i;
-            break;
-        }
-    }
-    ImGui::SetNextItemWidth(80.0f);
-    if (ImGui::Combo("##cmptype", &typeIdx, types, 6))
-    {
-        condition.compareType = typeValues[typeIdx];
-        m_dirty = true;
-    }
-
-    // -- PREVIEW --
-    const std::string preview = BuildConditionPreview(condition);
-    ImGui::TextColored(ImVec4(0.7f, 1.0f, 0.7f, 1.0f),
-                       "Preview: %s", preview.c_str());
-
-    ImGui::PopID();
-}
-
-// ============================================================================
-// Variable Selector - Dropdown UI
-// ============================================================================
-
-void VisualScriptEditorPanel::RenderVariableSelector(
-    std::string& selectedVar,
-    const std::vector<BlackboardEntry>& allVars,
-    VariableType expectedType,
-    const char* label)
-{
-    // Filter by type (if a type is specified)
-    std::vector<std::string> names;
-    for (size_t i = 0; i < allVars.size(); ++i)
-    {
-        if (expectedType == VariableType::None || allVars[i].Type == expectedType)
-        {
-            if (!allVars[i].Key.empty())
-                names.push_back(allVars[i].Key);
-        }
-    }
-
-    if (names.empty())
-    {
-        ImGui::TextDisabled("(no variables)");
-        return;
-    }
-
-    // BUG-029 Fix: auto-initialise to the first available variable when the
-    // selection is empty (e.g. right after switching to Variable mode).
-    // Without this the combo visually shows the first item but selectedVar
-    // remains "" so BuildConditionPreview displays "[Var: ?]".
-    if (selectedVar.empty())
-    {
-        selectedVar = names[0];
-        m_dirty = true;
-    }
-
-    int selected = 0;
-    for (int i = 0; i < static_cast<int>(names.size()); ++i)
-    {
-        if (names[static_cast<size_t>(i)] == selectedVar)
-        {
-            selected = i;
-            break;
-        }
-    }
-
-    std::vector<const char*> cstrs;
-    cstrs.reserve(names.size());
-    for (size_t i = 0; i < names.size(); ++i)
-        cstrs.push_back(names[i].c_str());
-
-    ImGui::SetNextItemWidth(120.0f);
-    if (ImGui::Combo(label, &selected, cstrs.data(), static_cast<int>(cstrs.size())))
-    {
-        selectedVar = names[static_cast<size_t>(selected)];
-        m_dirty = true;
-    }
-}
-
-}  // namespace Olympe
+} // namespace Olympe

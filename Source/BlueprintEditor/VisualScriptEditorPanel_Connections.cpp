@@ -16,17 +16,30 @@
  */
 
 #include "VisualScriptEditorPanel.h"
-#include "VSConnectionValidator.h"
+#include "DebugController.h"
+#include "AtomicTaskUIRegistry.h"
+#include "ConditionRegistry.h"
+#include "OperatorRegistry.h"
+#include "BBVariableRegistry.h"
+#include "MathOpOperand.h"
 #include "../system/system_utils.h"
 #include "../system/system_consts.h"
-
+#include "../NodeGraphCore/GlobalTemplateBlackboard.h"
+#include "../third_party/imgui/imgui.h"
+#include "../third_party/imnodes/imnodes.h"
+#include "../json_helper.h"
+#include "../TaskSystem/TaskGraphLoader.h"
+#include <fstream>
+#include <iostream>
 #include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <sstream>
+#include <iomanip>
+#include <cstdlib>
+#include <unordered_set>
 
 namespace Olympe {
-
-// ============================================================================
-// Pin Name Queries
-// ============================================================================
 
 std::vector<std::string> VisualScriptEditorPanel::GetExecInputPins(TaskNodeType type)
 {
@@ -100,8 +113,9 @@ std::vector<std::string> VisualScriptEditorPanel::GetDataOutputPins(TaskNodeType
 }
 
 // ============================================================================
-// Link Management: Connect, Disconnect
+// Node management
 // ============================================================================
+
 
 void VisualScriptEditorPanel::ConnectExec(int srcNodeID,
                                           const std::string& srcPinName,
@@ -142,6 +156,161 @@ void VisualScriptEditorPanel::ConnectData(int srcNodeID,
     m_dirty = true;
     m_verificationDone = false;
 }
+
+// ============================================================================
+// Template / canvas sync
+// ============================================================================
+
+
+void VisualScriptEditorPanel::RebuildLinks()
+{
+    m_editorLinks.clear();
+
+    // Exec links
+    for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
+    {
+        const ExecPinConnection& conn = m_template.ExecConnections[i];
+
+        // Determine pin index for source
+        std::vector<std::string> outPins;
+        const TaskNodeDefinition* srcNode = m_template.GetNode(conn.SourceNodeID);
+        if (srcNode != nullptr)
+        {
+            outPins = GetExecOutputPins(srcNode->Type);
+            if (srcNode->Type == TaskNodeType::VSSequence ||
+                srcNode->Type == TaskNodeType::Switch)
+            {
+                for (size_t d = 0; d < srcNode->DynamicExecOutputPins.size(); ++d)
+                    outPins.push_back(srcNode->DynamicExecOutputPins[d]);
+            }
+        }
+
+        int pinIdx = 0;
+        for (size_t p = 0; p < outPins.size(); ++p)
+        {
+            if (outPins[p] == conn.SourcePinName)
+            {
+                pinIdx = static_cast<int>(p);
+                break;
+            }
+        }
+
+        VSEditorLink link;
+        link.linkID    = AllocLinkID();
+        link.srcAttrID = ExecOutAttrUID(conn.SourceNodeID, pinIdx);
+        link.dstAttrID = ExecInAttrUID(conn.TargetNodeID);
+        link.isData    = false;
+        m_editorLinks.push_back(link);
+    }
+
+    // Data links — resolve pin indices from stored pin names
+    for (size_t i = 0; i < m_template.DataConnections.size(); ++i)
+    {
+        const DataPinConnection& conn = m_template.DataConnections[i];
+
+        // Determine data-out pin index for source
+        int srcPinIdx = 0;
+        const TaskNodeDefinition* srcNode = m_template.GetNode(conn.SourceNodeID);
+        if (srcNode != nullptr)
+        {
+            // Try static list first
+            auto outPins = GetDataOutputPins(srcNode->Type);
+            bool found = false;
+            for (size_t p = 0; p < outPins.size(); ++p)
+            {
+                if (outPins[p] == conn.SourcePinName)
+                {
+                    srcPinIdx = static_cast<int>(p);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                // Fall back to DataPins vector
+                int outIdx = 0;
+                for (size_t p = 0; p < srcNode->DataPins.size(); ++p)
+                {
+                    if (srcNode->DataPins[p].Dir == DataPinDir::Output)
+                    {
+                        if (srcNode->DataPins[p].PinName == conn.SourcePinName)
+                        {
+                            srcPinIdx = outIdx;
+                            break;
+                        }
+                        ++outIdx;
+                    }
+                }
+            }
+        }
+
+        // Determine data-in pin index for destination
+        int dstPinIdx = 0;
+        const TaskNodeDefinition* dstNode = m_template.GetNode(conn.TargetNodeID);
+        if (dstNode != nullptr)
+        {
+            // Phase 24: Check if destination is a Branch node with dynamic pins
+            bool foundDynamicPin = false;
+            if (dstNode->Type == TaskNodeType::Branch && !dstNode->dynamicPins.empty())
+            {
+                // Try to find a matching dynamic pin ID
+                for (size_t p = 0; p < dstNode->dynamicPins.size(); ++p)
+                {
+                    if (dstNode->dynamicPins[p].id == conn.TargetPinName)
+                    {
+                        dstPinIdx = static_cast<int>(p);
+                        foundDynamicPin = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!foundDynamicPin)
+            {
+                // Fall back to static data pins
+                auto inPins = GetDataInputPins(dstNode->Type);
+                bool found = false;
+                for (size_t p = 0; p < inPins.size(); ++p)
+                {
+                    if (inPins[p] == conn.TargetPinName)
+                    {
+                        dstPinIdx = static_cast<int>(p);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    int inIdx = 0;
+                    for (size_t p = 0; p < dstNode->DataPins.size(); ++p)
+                    {
+                        if (dstNode->DataPins[p].Dir == DataPinDir::Input)
+                        {
+                            if (dstNode->DataPins[p].PinName == conn.TargetPinName)
+                            {
+                                dstPinIdx = inIdx;
+                                break;
+                            }
+                            ++inIdx;
+                        }
+                    }
+                }
+            }
+        }
+
+        VSEditorLink link;
+        link.linkID    = AllocLinkID();
+        link.srcAttrID = DataOutAttrUID(conn.SourceNodeID, srcPinIdx);
+        link.dstAttrID = DataInAttrUID(conn.TargetNodeID,  dstPinIdx);
+        link.isData    = true;
+        m_editorLinks.push_back(link);
+    }
+}
+
+// ============================================================================
+// Undo/Redo helpers
+// ============================================================================
+
 
 void VisualScriptEditorPanel::RemoveLink(int linkID)
 {
@@ -219,6 +388,14 @@ void VisualScriptEditorPanel::RemoveLink(int linkID)
                 srcPinName = pins[static_cast<size_t>(srcPinIdx)];
         }
 
+        const TaskNodeDefinition* dstNode = m_template.GetNode(dstNodeID);
+        if (dstNode)
+        {
+            auto pins = GetExecInputPins(dstNode->Type);
+            if (dstPinIdx >= 0 && dstPinIdx < static_cast<int>(pins.size()))
+                dstPinName = pins[static_cast<size_t>(dstPinIdx)];
+        }
+
         ExecPinConnection conn;
         conn.SourceNodeID  = srcNodeID;
         conn.SourcePinName = srcPinName;
@@ -229,122 +406,14 @@ void VisualScriptEditorPanel::RemoveLink(int linkID)
             m_template);
     }
 
+    RebuildLinks();
     m_dirty = true;
     m_verificationDone = false;
 }
 
 // ============================================================================
-// Link Rebuilding
+// Load / Save
 // ============================================================================
 
-void VisualScriptEditorPanel::RebuildLinks()
-{
-    m_editorLinks.clear();
-
-    // Rebuild from template exec connections
-    for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
-    {
-        const ExecPinConnection& conn = m_template.ExecConnections[i];
-
-        // Find exec-out pin index
-        std::vector<std::string> outPins;
-        const TaskNodeDefinition* srcNode = m_template.GetNode(conn.SourceNodeID);
-        if (srcNode)
-            outPins = GetExecOutputPinsForNode(*srcNode);
-
-        int pinIdx = 0;
-        for (int pi = 0; pi < static_cast<int>(outPins.size()); ++pi)
-        {
-            if (outPins[static_cast<size_t>(pi)] == conn.SourcePinName)
-            {
-                pinIdx = pi;
-                break;
-            }
-        }
-
-        VSEditorLink link;
-        link.linkID    = AllocLinkID();
-        link.srcAttrID = conn.SourceNodeID * 10000 + 100 + pinIdx;
-        link.dstAttrID = conn.TargetNodeID * 10000 + 0;  // exec-in is always 0
-        link.isData    = false;
-
-        m_editorLinks.push_back(link);
-    }
-
-    // Rebuild from template data connections
-    for (size_t i = 0; i < m_template.DataConnections.size(); ++i)
-    {
-        const DataPinConnection& conn = m_template.DataConnections[i];
-
-        // Find data-out pin index
-        int srcPinIdx = 0;
-        const TaskNodeDefinition* srcNode = m_template.GetNode(conn.SourceNodeID);
-        if (srcNode)
-        {
-            auto pins = GetDataOutputPins(srcNode->Type);
-            bool found = false;
-            for (int pi = 0; pi < static_cast<int>(pins.size()); ++pi)
-            {
-                if (pins[static_cast<size_t>(pi)] == conn.SourcePinName)
-                {
-                    srcPinIdx = pi;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found && srcNode->Type == TaskNodeType::Branch)
-            {
-                // Check dynamic pins for Branch
-                for (size_t d = 0; d < srcNode->dynamicPins.size(); ++d)
-                {
-                    if (srcNode->dynamicPins[d].PinName == conn.SourcePinName &&
-                        srcNode->dynamicPins[d].Dir == DataPinDir::Output)
-                    {
-                        srcPinIdx = static_cast<int>(d);
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Find data-in pin index
-        int dstPinIdx = 0;
-        const TaskNodeDefinition* dstNode = m_template.GetNode(conn.TargetNodeID);
-        if (dstNode)
-        {
-            auto pins = GetDataInputPins(dstNode->Type);
-            bool foundDynamicPin = false;
-            for (int pi = 0; pi < static_cast<int>(pins.size()); ++pi)
-            {
-                if (pins[static_cast<size_t>(pi)] == conn.TargetPinName)
-                {
-                    dstPinIdx = pi;
-                    foundDynamicPin = true;
-                    break;
-                }
-            }
-            if (!foundDynamicPin && dstNode->Type == TaskNodeType::Branch)
-            {
-                for (size_t d = 0; d < dstNode->dynamicPins.size(); ++d)
-                {
-                    if (dstNode->dynamicPins[d].PinName == conn.TargetPinName &&
-                        dstNode->dynamicPins[d].Dir == DataPinDir::Input)
-                    {
-                        dstPinIdx = static_cast<int>(d);
-                        break;
-                    }
-                }
-            }
-        }
-
-        VSEditorLink link;
-        link.linkID    = AllocLinkID();
-        link.srcAttrID = conn.SourceNodeID * 10000 + 300 + srcPinIdx;  // data-out range 300-399
-        link.dstAttrID = conn.TargetNodeID * 10000 + 200 + dstPinIdx;  // data-in range 200-299
-        link.isData    = true;
-
-        m_editorLinks.push_back(link);
-    }
-}
 
 } // namespace Olympe

@@ -159,6 +159,17 @@ void VisualScriptEditorPanel::Shutdown()
     m_editorNodes.clear();
     m_editorLinks.clear();
     m_positionedNodes.clear();
+
+    // Phase 24 — release helpers before registry is destroyed.
+    m_conditionsPanel.reset();
+    m_mathOpPanel.reset();
+    m_getBBPanel.reset();
+    m_setBBPanel.reset();
+    m_variablePanel.reset();
+    m_libraryPanel.reset();
+    m_branchRenderer.reset();
+    m_pinManager.reset();
+    m_condPanelNodeID = -1;
 }
 
 // ============================================================================
@@ -170,58 +181,141 @@ void VisualScriptEditorPanel::Render()
     if (!m_visible)
         return;
 
-    // Main panel window
-    if (ImGui::Begin("Visual Script Editor", &m_visible))
-    {
-        RenderContent();
-        ImGui::End();
-    }
+    ImGui::Begin("VS Graph Editor", &m_visible);
+    RenderContent();
+    ImGui::End();
+
+    // Render the condition preset library panel (Phase 24 UI integration)
+    m_libraryPanel->Render();
 }
 
 void VisualScriptEditorPanel::RenderContent()
 {
-    // Save viewport pan before any ImGui operations (BUG-003)
-    // This is done to preserve canvas panning across frames
-
-    // Render main editor layout:
-    // ┌─────────────────────────────────────────────────────────────┐
-    // │                      Toolbar                                 │
-    // ├──────────────────────┬──────────────────────────────────────┤
-    // │   Blueprint Files    │                                       │
-    // │   (left panel)       │      Canvas Area                      │
-    // │                      │      (center - ImNodes)               │
-    // │ Verification Logs    │                                       │
-    // │                      ├──────────────────────────────────────┤
-    // │ (Phase 24.3)         │ Node Properties (right panel, Part A)  │
-    // │                      │ Preset Bank (right panel, Part B)     │
-    // │                      │ Local Variables (right panel, Part C)  │
-    // └──────────────────────┴──────────────────────────────────────┘
-
     RenderToolbar();
-
-    // Main horizontal split: left panel (files/logs) + canvas + right panel (properties)
-    ImGui::SetNextItemWidth(-1.0f);
-
-    // Render main canvas
-    RenderCanvas();
-
-    // Render properties panel on the right
-    RenderProperties();
-
-    // Render blackboard panel
-    RenderBlackboard();
-
-    // Render validation overlay
-    RenderValidationOverlay();
-
-    // Render breakpoints
-    RenderBreakpoints();
-
-    // Render SaveAs dialog if open
     RenderSaveAsDialog();
+    ImGui::Separator();
 
-    // Render context menus (must be after EndNodeEditor)
-    RenderContextMenus();
+    // Two-column layout: canvas (left) | resize handle | properties panel (right, 3 sub-panels)
+    float totalWidth = ImGui::GetContentRegionAvail().x;
+
+    // Initialize panel width to default 28% on first use
+    if (m_propertiesPanelWidth <= 0.0f)
+        m_propertiesPanelWidth = totalWidth * 0.28f;
+
+    // Clamp to a sensible range
+    if (m_propertiesPanelWidth < 200.0f) m_propertiesPanelWidth = 200.0f;
+    if (m_propertiesPanelWidth > totalWidth * 0.60f) m_propertiesPanelWidth = totalWidth * 0.60f;
+
+    float handleWidth = 6.0f;
+    float canvasWidth = totalWidth - m_propertiesPanelWidth - handleWidth;
+
+    ImGui::BeginChild("VSCanvas", ImVec2(canvasWidth, 0), false,
+                      ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    RenderCanvas();
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+
+    // UX Fix #3: Drag-to-resize handle between canvas and properties panel
+    ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.35f, 0.35f, 0.35f, 0.5f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.55f, 0.55f, 0.55f, 0.8f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.70f, 0.70f, 0.70f, 1.0f));
+    ImGui::Button("##vsresize", ImVec2(handleWidth, -1.0f));
+    if (ImGui::IsItemHovered())
+        ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+    if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+    {
+        m_propertiesPanelWidth -= ImGui::GetIO().MouseDelta.x;
+        if (m_propertiesPanelWidth < 200.0f)          m_propertiesPanelWidth = 200.0f;
+        if (m_propertiesPanelWidth > totalWidth * 0.60f) m_propertiesPanelWidth = totalWidth * 0.60f;
+    }
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
+
+    // Right panel container with 3 vertical sub-panels (A: Node Props | B: Preset Bank | C: Local Vars)
+    ImGui::BeginChild("VSRightPanel", ImVec2(m_propertiesPanelWidth, 0), true);
+
+    float rightPanelHeight = ImGui::GetContentRegionAvail().y;
+    float splitterHeight = 4.0f;
+
+    // Initialize sub-panel heights on first use (equal thirds for 3 panels)
+    if (m_nodePropertiesPanelHeight <= 0.0f)
+    {
+        m_nodePropertiesPanelHeight = (rightPanelHeight - splitterHeight * 2) / 3.0f;
+        m_presetBankPanelHeight = (rightPanelHeight - splitterHeight * 2) / 3.0f;
+    }
+
+    // Clamp heights to reasonable ranges
+    float minPanelHeight = 50.0f;
+    if (m_nodePropertiesPanelHeight < minPanelHeight) m_nodePropertiesPanelHeight = minPanelHeight;
+    if (m_presetBankPanelHeight < minPanelHeight) m_presetBankPanelHeight = minPanelHeight;
+
+    float localVarHeight = rightPanelHeight - m_nodePropertiesPanelHeight - m_presetBankPanelHeight - splitterHeight * 2;
+    if (localVarHeight < minPanelHeight) localVarHeight = minPanelHeight;
+
+    // ---- Part A: Node Properties Panel ----
+    ImGui::BeginChild("Part_A_NodeProps", ImVec2(0, m_nodePropertiesPanelHeight), false,
+                      ImGuiWindowFlags_NoScrollbar);
+    RenderNodePropertiesPanel();
+    ImGui::EndChild();
+
+    // ---- Splitter 1 (between Part A and Part B) ----
+    ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.35f, 0.35f, 0.35f, 0.5f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.55f, 0.55f, 0.55f, 0.8f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.70f, 0.70f, 0.70f, 1.0f));
+    ImGui::Button("##splitter1", ImVec2(-1.0f, splitterHeight));
+    if (ImGui::IsItemHovered())
+        ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+    if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+    {
+        m_nodePropertiesPanelHeight += ImGui::GetIO().MouseDelta.y;
+        if (m_nodePropertiesPanelHeight < minPanelHeight) m_nodePropertiesPanelHeight = minPanelHeight;
+    }
+    ImGui::PopStyleColor(3);
+
+    // ---- Part B: Preset Bank Panel ----
+    ImGui::BeginChild("Part_B_PresetBank", ImVec2(0, m_presetBankPanelHeight), false,
+                      ImGuiWindowFlags_NoScrollbar);
+    RenderPresetBankPanel();
+    ImGui::EndChild();
+
+    // ---- Splitter 2 (between Part B and Part C) ----
+    ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.35f, 0.35f, 0.35f, 0.5f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.55f, 0.55f, 0.55f, 0.8f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.70f, 0.70f, 0.70f, 1.0f));
+    ImGui::Button("##splitter2", ImVec2(-1.0f, splitterHeight));
+    if (ImGui::IsItemHovered())
+        ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+    if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+    {
+        m_presetBankPanelHeight += ImGui::GetIO().MouseDelta.y;
+        if (m_presetBankPanelHeight < minPanelHeight) m_presetBankPanelHeight = minPanelHeight;
+    }
+    ImGui::PopStyleColor(3);
+
+    // ---- Part C: Local/Global Variables Panel (with tab selection) ----
+    ImGui::BeginChild("Part_C_Blackboard", ImVec2(0, localVarHeight), false,
+                      ImGuiWindowFlags_NoScrollbar);
+
+    // Tab selector for Local vs Global variables
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 4.0f));
+    ImGui::RadioButton("Local Variables", &m_blackboardTabSelection, 0);
+    ImGui::SameLine(150.0f);
+    ImGui::RadioButton("Global Variables", &m_blackboardTabSelection, 1);
+    ImGui::PopStyleVar();
+    ImGui::Separator();
+
+    // Render appropriate panel based on tab selection
+    if (m_blackboardTabSelection == 0)
+        RenderLocalVariablesPanel();
+    else
+        RenderGlobalVariablesPanel();
+
+    ImGui::EndChild();
+
+    ImGui::EndChild();  // End VSRightPanel
 }
+
 
 } // namespace Olympe
