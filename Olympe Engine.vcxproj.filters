@@ -204,10 +204,6 @@
     <ClCompile Include="Source\BlueprintEditor\ExecutionTestPanel.cpp" />
     <ClCompile Include="Source\TaskSystem\EntityBlackboard.cpp" />
     <ClCompile Include="Source\Editor\Panels\VariablePropertyPanel.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Helpers.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Viewport.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Validation.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Synchronizers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -472,7 +468,6 @@
     <None Include="add_proj_entries.ps1" />
     <None Include="add_bb_panels.ps1" />
     <None Include="Config\global_blackboard_register.json" />
-    <None Include="Source\BlueprintEditor\MIGRATION_PLAN.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
