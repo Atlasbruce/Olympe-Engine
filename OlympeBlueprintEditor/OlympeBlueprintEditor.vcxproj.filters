@@ -445,6 +445,9 @@
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptNodeRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\Source\BlueprintEditor\BTtoVSMigrator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -581,9 +584,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\NodeGraphCore\GlobalTemplateBlackboard.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1011,198 +1011,74 @@
     <ClInclude Include="..\Source\ECS_Systems_Animation.h">
       <Filter>Source Files\Animation</Filter>
     </ClInclude>
+    <ClInclude Include="..\Source\NodeGraphCore\CommandSystem.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\NodeGraphManager.h" />
     <ClInclude Include="..\Source\EditorCommon\EditorAutosaveManager.h">
       <Filter>Source Files\BlueprintEditor</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Editor\Panels\ActionParametersPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\AtomicTaskUIRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BBVariableRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BTtoVSMigrator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\CommandSystem.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\ConditionEvaluator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\ConditionPreset\ConditionPreset.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Runtime\ConditionPresetEvaluator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Panels\ConditionPresetLibraryPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\ConditionPreset\ConditionPresetRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\ConditionRef.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\ConditionRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\DebugController.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\DebugPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\ConditionPreset\DynamicDataPin.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\ConditionPreset\DynamicDataPinManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EditorConfigManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Core\FontManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Panels\GetBBValuePropertyPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\GraphComment.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Runtime\GraphRuntimeInstance.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Core\IconsFontAwesome6.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\IGraphRenderer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\LinkCache.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\MathOpOperand.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Panels\MathOpPropertyPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\MiniMapPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\MinimapWidget.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Nodes\NodeBranchRenderer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\ConditionPreset\NodeConditionRef.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Modals\NodeConditionsEditModal.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Panels\NodeConditionsPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\NodeGraphManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\NodeGroup.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\NodePresets.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\NodeSearchPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\NodeValidator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\ConditionPreset\Operand.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\OperatorRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\ParameterEditorRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\PerformanceProfiler.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\ProfilerPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphShared\RenderHelpers.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Runtime\RuntimeEnvironment.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Panels\SetBBValuePropertyPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\SubgraphMigrator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\TabManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\TaskGraphMigrator_v3_to_v4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\UndoRedoStack.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Panels\VariablePropertyPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\VisualScriptEditorPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\VisualScriptNodeRenderer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\VisualScriptRenderer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\VSConnectionValidator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\VSGraphExecutor.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\VSGraphVerifier.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
+    <ClInclude Include="..\Source\NodeGraphShared\RenderHelpers.h" />
+    <ClInclude Include="..\Source\TaskSystem\VSGraphExecutor.h" />
+    <ClInclude Include="..\Source\TaskSystem\TaskGraphMigrator_v3_to_v4.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EditorConfigManager.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\DebugController.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\DebugPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\PerformanceProfiler.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\ProfilerPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\VisualScriptNodeRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\VisualScriptEditorPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BTtoVSMigrator.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\SubgraphMigrator.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\MinimapWidget.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\NodePresets.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\NodeSearchPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\MiniMapPanel.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\GraphComment.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\LinkCache.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\NodeGroup.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\NodeValidator.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\VisualScriptRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\IGraphRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\TabManager.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\UndoRedoStack.h" />
+    <ClInclude Include="..\Source\Core\FontManager.h" />
+    <ClInclude Include="..\Source\Core\IconsFontAwesome6.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\VSConnectionValidator.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\VSGraphVerifier.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\AtomicTaskUIRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BBVariableRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\ConditionRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\OperatorRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\ParameterEditorRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.h" />
+    <ClInclude Include="..\Source\TaskSystem\ConditionEvaluator.h" />
+    <ClInclude Include="..\Source\Editor\ConditionPreset\ConditionPreset.h" />
+    <ClInclude Include="..\Source\Editor\ConditionPreset\ConditionPresetRegistry.h" />
+    <ClInclude Include="..\Source\Editor\ConditionPreset\DynamicDataPin.h" />
+    <ClInclude Include="..\Source\Editor\ConditionPreset\NodeConditionRef.h" />
+    <ClInclude Include="..\Source\Editor\ConditionPreset\Operand.h" />
+    <ClInclude Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.h" />
+    <ClInclude Include="..\Source\Editor\Panels\ConditionPresetLibraryPanel.h" />
+    <ClInclude Include="..\Source\Editor\ConditionPreset\DynamicDataPinManager.h" />
+    <ClInclude Include="..\Source\Editor\Nodes\NodeBranchRenderer.h" />
+    <ClInclude Include="..\Source\Editor\Panels\NodeConditionsPanel.h" />
+    <ClInclude Include="..\Source\Runtime\GraphRuntimeInstance.h" />
+    <ClInclude Include="..\Source\Runtime\RuntimeEnvironment.h" />
+    <ClInclude Include="..\Source\Editor\Modals\NodeConditionsEditModal.h" />
+    <ClInclude Include="..\Source\Runtime\ConditionPresetEvaluator.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\ConditionRef.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\MathOpOperand.h" />
+    <ClInclude Include="..\Source\Editor\Panels\MathOpPropertyPanel.h" />
+    <ClInclude Include="..\Source\Editor\Panels\GetBBValuePropertyPanel.h" />
+    <ClInclude Include="..\Source\Editor\Panels\SetBBValuePropertyPanel.h" />
+    <ClInclude Include="..\Source\Editor\Panels\VariablePropertyPanel.h" />
+    <ClInclude Include="..\Source\Editor\Panels\ActionParametersPanel.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="icon1.ico">
-      <Filter>Source Files</Filter>
-    </Image>
-    <Image Include="Resources\olympe.ico">
-      <Filter>Source Files</Filter>
-    </Image>
+    <ResourceCompile Include="OlympeBlueprintEditor.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="OlympeBlueprintEditor.rc">
-      <Filter>Source Files</Filter>
-    </ResourceCompile>
+    <Image Include="icon1.ico" />
+    <Image Include="Resources\olympe.ico" />
   </ItemGroup>
 </Project>

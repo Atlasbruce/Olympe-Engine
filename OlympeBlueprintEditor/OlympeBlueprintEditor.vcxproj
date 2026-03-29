@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -49,7 +49,6 @@
     <ClCompile Include="..\Source\BlueprintEditor\ParameterEditorRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\TabManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\UndoRedoStack.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptRenderer.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VSConnectionValidator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VSGraphVerifier.cpp" />
@@ -103,6 +102,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\ProfilerPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\SubgraphMigrator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptNodeRenderer.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\TemplateManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\ValidationPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\WorldBridge.cpp" />
