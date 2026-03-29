@@ -1386,7 +1386,7 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanel()
                             }
                             else if (param.type == "String")
                             {
-                                static char buffer[512] = {0};
+                                char buffer[512] = {0};
                                 strncpy_s(buffer, currentValue.c_str(), sizeof(buffer) - 1);
                                 buffer[sizeof(buffer) - 1] = '\0';
 

@@ -213,6 +213,7 @@ void VisualScriptEditorPanel::RenderPresetItemCompact(const ConditionPreset& pre
         // Phase 24: Presets are now embedded in graph JSON (via SyncPresetsFromRegistryToTemplate
         // called on Save). This legacy external file save is kept for backwards compatibility
         // with tools that may still read the old flat-file preset bank.
+        // TODO: Remove this legacy save once all external tools migrate to the embedded format.
         m_presetRegistry.Save("Blueprints/Presets/condition_presets.json");
     }
 
