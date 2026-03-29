@@ -6,7 +6,7 @@ nchereau@gmail.com
 This file is part of Olympe Engine V2.
 
 World purpose: Manage the lifecycle of Entities and their interaction with ECS Systems.
- 
+
 */
 #include "World.h"
 #include "CollisionMap.h"
