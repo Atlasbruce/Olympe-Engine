@@ -161,12 +161,121 @@ void VisualScriptEditorPanel::Shutdown()
 }
 
 // ============================================================================
-// UID helpers (MIGRATED TO: VisualScriptEditorPanel_Helpers.cpp - TIER 0)
+// UID helpers
 // ============================================================================
 
+int VisualScriptEditorPanel::AllocNodeID()
+{
+    return m_nextNodeID++;
+}
+
+int VisualScriptEditorPanel::AllocLinkID()
+{
+    return m_nextLinkID++;
+}
+
+// Attribute UIDs are built as:
+//   nodeID * 10000 + offset
+// The offsets are:
+//   0       → exec-in  "In"
+//   100–199 → exec-out pins (index 0-99)
+//   200–299 → data-in  pins (index 0-99)
+//   300–399 → data-out pins (index 0-99)
+
+int VisualScriptEditorPanel::ExecInAttrUID(int nodeID) const
+{
+    return nodeID * 10000 + 0;
+}
+
+int VisualScriptEditorPanel::ExecOutAttrUID(int nodeID, int pinIndex) const
+{
+    return nodeID * 10000 + 100 + pinIndex;
+}
+
+int VisualScriptEditorPanel::DataInAttrUID(int nodeID, int pinIndex) const
+{
+    return nodeID * 10000 + 200 + pinIndex;
+}
+
+int VisualScriptEditorPanel::DataOutAttrUID(int nodeID, int pinIndex) const
+{
+    return nodeID * 10000 + 300 + pinIndex;
+}
+
 // ============================================================================
-// Pin name helpers (MIGRATED TO: VisualScriptEditorPanel_Helpers.cpp - TIER 0)
+// Pin name helpers
 // ============================================================================
+
+std::vector<std::string> VisualScriptEditorPanel::GetExecInputPins(TaskNodeType type)
+{
+    switch (type)
+    {
+        case TaskNodeType::EntryPoint:
+            return {};  // No exec-in on EntryPoint
+        case TaskNodeType::GetBBValue:
+            return {};  // Phase 24.2: Variable (GetBBValue) is data-pure (no execution pins)
+        case TaskNodeType::MathOp:
+            return {};  // Phase 24.2: MathOp is data-pure (no execution pins)
+        default:
+            return {"In"};
+    }
+}
+
+std::vector<std::string> VisualScriptEditorPanel::GetExecOutputPins(TaskNodeType type)
+{
+    switch (type)
+    {
+        case TaskNodeType::EntryPoint:  return {"Out"};
+        case TaskNodeType::Branch:      return {"Then", "Else"};
+        case TaskNodeType::While:       return {"Loop", "Completed"};
+        case TaskNodeType::ForEach:     return {"Loop Body", "Completed"};
+        case TaskNodeType::DoOnce:      return {"Out"};
+        case TaskNodeType::Delay:       return {"Completed"};
+        case TaskNodeType::SubGraph:    return {"Completed"};
+        case TaskNodeType::VSSequence:  return {"Out"};
+        case TaskNodeType::Switch:      return {"Case_0"};
+        case TaskNodeType::AtomicTask:  return {"Completed"};
+        case TaskNodeType::GetBBValue:  return {};  // Phase 24.2: Variable (GetBBValue) is data-pure (no execution pins)
+        case TaskNodeType::SetBBValue:  return {"Completed"};  // SetBBValue needs exec-out for control flow
+        case TaskNodeType::MathOp:      return {};  // Phase 24.2: MathOp is data-pure (no execution pins)
+        default:                        return {"Out"};
+    }
+}
+
+std::vector<std::string> VisualScriptEditorPanel::GetExecOutputPinsForNode(
+    const TaskNodeDefinition& def) const
+{
+    std::vector<std::string> pins = GetExecOutputPins(def.Type);
+    if (def.Type == TaskNodeType::VSSequence || def.Type == TaskNodeType::Switch)
+    {
+        for (size_t i = 0; i < def.DynamicExecOutputPins.size(); ++i)
+            pins.push_back(def.DynamicExecOutputPins[i]);
+    }
+    return pins;
+}
+
+std::vector<std::string> VisualScriptEditorPanel::GetDataInputPins(TaskNodeType type)
+{
+    switch (type)
+    {
+        case TaskNodeType::SetBBValue:  return {"Value"};
+        case TaskNodeType::MathOp:      return {"A", "B"};
+        // Phase 24: Branch nodes use ONLY dynamic data-in pins (Pin-in)
+        // No static "Condition" pin to avoid conflicts with dynamic pins
+        case TaskNodeType::Branch:      return {};
+        default:                        return {};
+    }
+}
+
+std::vector<std::string> VisualScriptEditorPanel::GetDataOutputPins(TaskNodeType type)
+{
+    switch (type)
+    {
+        case TaskNodeType::GetBBValue:  return {"Value"};
+        case TaskNodeType::MathOp:      return {"Result"};
+        default:                        return {};
+    }
+}
 
 // ============================================================================
 // Node management
@@ -1675,16 +1784,114 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
 }
 
 // ============================================================================
-// Blackboard validation helpers (BUG-002 Fix #1) (MIGRATED TO: VisualScriptEditorPanel_Validation.cpp - TIER 0)
+// Blackboard validation helpers (BUG-002 Fix #1)
 // ============================================================================
 
-// ============================================================================
-// BUG-003 Viewport helpers (MIGRATED TO: VisualScriptEditorPanel_Viewport.cpp - TIER 0)
-// ============================================================================
+void VisualScriptEditorPanel::ValidateAndCleanBlackboardEntries()
+{
+    std::vector<BlackboardEntry>& entries = m_template.Blackboard;
+    size_t before = entries.size();
+
+    entries.erase(
+        std::remove_if(entries.begin(), entries.end(),
+            [](const BlackboardEntry& e) {
+                if (e.Key.empty()) {
+                    SYSTEM_LOG << "[VSEditor] ValidateAndClean: removing entry with empty key\n";
+                    return true;
+                }
+                if (e.Type == VariableType::None) {
+                    SYSTEM_LOG << "[VSEditor] ValidateAndClean: removing entry '"
+                               << e.Key << "' with VariableType::None\n";
+                    return true;
+                }
+                return false;
+            }),
+        entries.end());
+
+    size_t removed = before - entries.size();
+    if (removed > 0)
+    {
+        SYSTEM_LOG << "[VSEditor] ValidateAndClean: removed " << removed
+                   << " invalid blackboard entries\n";
+        m_dirty = true;
+    }
+}
+
+void VisualScriptEditorPanel::CommitPendingBlackboardEdits()
+{
+    for (std::unordered_map<int, std::string>::iterator it = m_pendingBlackboardEdits.begin();
+         it != m_pendingBlackboardEdits.end(); ++it)
+    {
+        int idx = it->first;
+        if (idx >= 0 && idx < static_cast<int>(m_template.Blackboard.size()))
+        {
+            m_template.Blackboard[static_cast<size_t>(idx)].Key = it->second;
+        }
+    }
+    m_pendingBlackboardEdits.clear();
+}
 
 // ============================================================================
-// UX Enhancement #3 — Type-filtered variable utility (MIGRATED TO: VisualScriptEditorPanel_Helpers.cpp - TIER 0)
+// BUG-003 Viewport helpers
 // ============================================================================
+
+void VisualScriptEditorPanel::ResetViewportBeforeSave()
+{
+    SYSTEM_LOG << "[VSEditor] ResetViewportBeforeSave: saving current panning\n";
+    m_lastViewportPanning = Vector::FromImVec2(ImNodes::EditorContextGetPanning());
+    m_viewportResetDone   = true;
+
+    // Reset panning to (0, 0) so that any residual editor-space offset from
+    // user navigation is zeroed out before SyncNodePositionsFromImNodes reads
+    // GetNodeGridSpacePos (which is already pan-independent, but this ensures
+    // no subtle ImNodes internal state leaks into the saved positions).
+    ImNodes::EditorContextResetPanning(ImVec2(0.0f, 0.0f));
+    SYSTEM_LOG << "[VSEditor] ResetViewportBeforeSave: panning reset to (0,0) "
+               << "(was " << m_lastViewportPanning.x << "," << m_lastViewportPanning.y << ")\n";
+}
+
+void VisualScriptEditorPanel::AfterSave()
+{
+    if (!m_viewportResetDone)
+        return;
+
+    // Restore the viewport so the canvas does not visually jump for the user.
+    ImNodes::EditorContextResetPanning(m_lastViewportPanning.ToImVec2());
+    m_viewportResetDone = false;
+    SYSTEM_LOG << "[VSEditor] AfterSave: viewport panning restored to ("
+               << m_lastViewportPanning.x << "," << m_lastViewportPanning.y << ")\n";
+}
+
+ImVec2 VisualScriptEditorPanel::ScreenToCanvasPos(ImVec2 screenPos) const
+{
+    // Convert absolute screen-space position to ImNodes editor (canvas) space.
+    // Editor space = grid space + panning, so:
+    //   editorX = screenX - canvasOrigin.x - windowPos.x
+    // ImNodes 0.4 has no zoom API; zoom is implicitly 1.0f.
+    ImVec2 canvasPanning = ImNodes::EditorContextGetPanning();
+    ImVec2 windowPos     = ImGui::GetWindowPos();
+    return ImVec2(
+        screenPos.x - windowPos.x - canvasPanning.x,
+        screenPos.y - windowPos.y - canvasPanning.y);
+}
+
+// ============================================================================
+// UX Enhancement #3 — Type-filtered variable utility
+// ============================================================================
+
+/*static*/
+std::vector<BlackboardEntry> VisualScriptEditorPanel::GetVariablesByType(
+    const std::vector<BlackboardEntry>& allVars,
+    VariableType expectedType)
+{
+    std::vector<BlackboardEntry> filtered;
+    for (size_t i = 0; i < allVars.size(); ++i)
+    {
+        if (allVars[i].Type == expectedType)
+            filtered.push_back(allVars[i]);
+    }
+    return filtered;
+}
 
 // ============================================================================
 // Rendering

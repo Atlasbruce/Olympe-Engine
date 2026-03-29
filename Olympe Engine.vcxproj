@@ -80,6 +80,10 @@
     <ClCompile Include="Source\BlueprintEditor\GraphExecutionTracer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\GraphExecutionSimulator.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ExecutionTestPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Helpers.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Synchronizers.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Validation.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Viewport.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptNodeRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptRenderer.cpp" />
@@ -481,6 +485,7 @@
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
+    <None Include="Source\BlueprintEditor\MIGRATION_PLAN.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\olympe.ico" />

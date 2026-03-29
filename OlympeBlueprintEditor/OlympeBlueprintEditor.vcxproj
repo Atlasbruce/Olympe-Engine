@@ -50,6 +50,9 @@
     <ClCompile Include="..\Source\BlueprintEditor\TabManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\UndoRedoStack.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Helpers.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Validation.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Viewport.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptRenderer.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VSConnectionValidator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VSGraphVerifier.cpp" />
