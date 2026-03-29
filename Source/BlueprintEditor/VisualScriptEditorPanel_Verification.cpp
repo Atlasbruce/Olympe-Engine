@@ -1,10 +1,10 @@
 // ============================================================================
 // VisualScriptEditorPanel_Verification.cpp
-// Phase 21-B: Graph Verification & Phase 24.3: Execution Testing
+// Phase 21-B: Graph Verification UI
 // ============================================================================
 //
-// This file contains graph validation, verification panel rendering, and
-// Phase 24.3 execution test integration for the Blueprint Editor.
+// This file contains graph validation and verification panel rendering.
+// Note: Phase 24.3 Execution Testing UI is in VisualScriptEditorPanel_ExecutionTest.cpp.
 //
 // Methods:
 // - RenderValidationOverlay()          : Overlay validation checks
