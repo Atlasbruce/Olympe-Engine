@@ -534,7 +534,7 @@
   <ItemGroup>
     <Text Include="credits.txt" />
   </ItemGroup>
-  <ItemGroup xmlns="">
+  <ItemGroup>
     <RuntimeDependency Include="SDL\lib\SDL3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </RuntimeDependency>
