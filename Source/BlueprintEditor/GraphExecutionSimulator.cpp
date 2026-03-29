@@ -74,10 +74,10 @@ std::vector<ValidationError> GraphExecutionSimulator::SimulateExecution(const Ta
         if (m_visitCount[currentNodeId] > 2)
         {
             std::string msg = "Potential infinite loop detected at node " + 
-                            (nodeDef->NodeName.empty() ? std::to_string(currentNodeId) : nodeDef->NodeName);
-            errors.push_back(ValidationError(currentNodeId, nodeDef->NodeName, msg,
+                            (nodeDef->Name.empty() ? std::to_string(currentNodeId) : nodeDef->Name);
+            errors.push_back(ValidationError(currentNodeId, nodeDef->Name, msg,
                                             ErrorSeverity::Warning, "Logic"));
-            outTracer.RecordError(currentNodeId, nodeDef->NodeName, msg, "Warning");
+            outTracer.RecordError(currentNodeId, nodeDef->Name, msg, "Warning");
             break;
         }
 
@@ -119,7 +119,7 @@ std::vector<ValidationError> GraphExecutionSimulator::SimulateExecution(const Ta
 
             case TaskNodeType::AtomicTask:
             {
-                outTracer.RecordNodeEntered(currentNodeId, nodeDef->NodeName, "AtomicTask");
+                outTracer.RecordNodeEntered(currentNodeId, nodeDef->Name, "AtomicTask");
                 nextNodeId = GetNextNodeId(tmpl, currentNodeId, "Completed");
                 if (nextNodeId == NODE_INDEX_NONE)
                 {
@@ -132,21 +132,21 @@ std::vector<ValidationError> GraphExecutionSimulator::SimulateExecution(const Ta
             case TaskNodeType::SetBBValue:
             case TaskNodeType::MathOp:
             {
-                outTracer.RecordNodeEntered(currentNodeId, nodeDef->NodeName, "DataNode");
+                outTracer.RecordNodeEntered(currentNodeId, nodeDef->Name, "DataNode");
                 nextNodeId = GetNextNodeId(tmpl, currentNodeId, "Then");
                 break;
             }
 
             case TaskNodeType::Delay:
             {
-                outTracer.RecordNodeEntered(currentNodeId, nodeDef->NodeName, "Delay");
+                outTracer.RecordNodeEntered(currentNodeId, nodeDef->Name, "Delay");
                 nextNodeId = GetNextNodeId(tmpl, currentNodeId, "Completed");
                 break;
             }
 
             case TaskNodeType::DoOnce:
             {
-                outTracer.RecordNodeEntered(currentNodeId, nodeDef->NodeName, "DoOnce");
+                outTracer.RecordNodeEntered(currentNodeId, nodeDef->Name, "DoOnce");
                 nextNodeId = GetNextNodeId(tmpl, currentNodeId, "Completed");
                 break;
             }
@@ -197,7 +197,7 @@ int32_t GraphExecutionSimulator::SimulateStep(const TaskGraphTemplate& tmpl,
     if (!node)
         return NODE_INDEX_NONE;
 
-    tracer.RecordNodeEntered(currentNodeId, node->NodeName, "");
+    tracer.RecordNodeEntered(currentNodeId, node->Name, "");
     return NODE_INDEX_NONE;
 }
 
@@ -210,7 +210,7 @@ int32_t GraphExecutionSimulator::HandleBranchSimulation(const TaskGraphTemplate&
     if (!node)
         return NODE_INDEX_NONE;
 
-    tracer.RecordNodeEntered(nodeId, node->NodeName, "Branch");
+    tracer.RecordNodeEntered(nodeId, node->Name, "Branch");
 
     // For simulation, we'll try the true branch by default
     // In a real scenario, we'd evaluate the condition
@@ -238,7 +238,7 @@ int32_t GraphExecutionSimulator::HandleSwitchSimulation(const TaskGraphTemplate&
     if (!node)
         return NODE_INDEX_NONE;
 
-    tracer.RecordNodeEntered(nodeId, node->NodeName, "Switch");
+    tracer.RecordNodeEntered(nodeId, node->Name, "Switch");
 
     // Get the default (first) case
     return GetNextNodeId(tmpl, nodeId, "Default");
@@ -253,7 +253,7 @@ int32_t GraphExecutionSimulator::HandleSequenceSimulation(const TaskGraphTemplat
     if (!node)
         return NODE_INDEX_NONE;
 
-    tracer.RecordNodeEntered(nodeId, node->NodeName, "VSSequence");
+    tracer.RecordNodeEntered(nodeId, node->Name, "VSSequence");
     return GetNextNodeId(tmpl, nodeId, "Then");
 }
 
@@ -266,7 +266,7 @@ int32_t GraphExecutionSimulator::HandleWhileSimulation(const TaskGraphTemplate& 
     if (!node)
         return NODE_INDEX_NONE;
 
-    tracer.RecordNodeEntered(nodeId, node->NodeName, "While");
+    tracer.RecordNodeEntered(nodeId, node->Name, "While");
     tracer.RecordBranchTaken(nodeId, "Loop", -1);
 
     return GetNextNodeId(tmpl, nodeId, "Loop");
@@ -307,7 +307,7 @@ bool GraphExecutionSimulator::ValidateAllBranches(const TaskGraphTemplate& tmpl,
 
             if (thenTarget == NODE_INDEX_NONE)
             {
-                outErrors.push_back(ValidationError(node.NodeID, node.NodeName,
+                outErrors.push_back(ValidationError(node.NodeID, node.Name,
                     "Branch node missing 'Then' connection",
                     ErrorSeverity::Error, "Link"));
                 allValid = false;
@@ -315,7 +315,7 @@ bool GraphExecutionSimulator::ValidateAllBranches(const TaskGraphTemplate& tmpl,
 
             if (elseTarget == NODE_INDEX_NONE)
             {
-                outErrors.push_back(ValidationError(node.NodeID, node.NodeName,
+                outErrors.push_back(ValidationError(node.NodeID, node.Name,
                     "Branch node missing 'Else' connection",
                     ErrorSeverity::Error, "Link"));
                 allValid = false;
@@ -373,7 +373,7 @@ std::vector<int32_t> GraphExecutionSimulator::FindUnreachableNodes(const TaskGra
             const TaskNodeDefinition* node = tmpl.GetNode(pair.first);
             if (node)
             {
-                outErrors.push_back(ValidationError(pair.first, node->NodeName,
+                outErrors.push_back(ValidationError(pair.first, node->Name,
                     "Node is unreachable from entry point",
                     ErrorSeverity::Warning, "Logic"));
             }
@@ -416,7 +416,7 @@ bool GraphExecutionSimulator::DetectPotentialInfiniteLoops(const TaskGraphTempla
             int32_t exitTarget = GetNextNodeId(tmpl, node.NodeID, "Completed");
             if (exitTarget == NODE_INDEX_NONE)
             {
-                outErrors.push_back(ValidationError(node.NodeID, node.NodeName,
+                outErrors.push_back(ValidationError(node.NodeID, node.Name,
                     "While loop has no 'Completed' exit path",
                     ErrorSeverity::Warning, "Logic"));
                 found = true;

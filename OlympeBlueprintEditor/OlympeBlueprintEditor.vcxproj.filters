@@ -562,30 +562,6 @@
     <ClCompile Include="..\Source\Runtime\ConditionPresetEvaluator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\MathOpOperand.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Panels\MathOpPropertyPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Panels\GetBBValuePropertyPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Panels\SetBBValuePropertyPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Panels\VariablePropertyPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Panels\ActionParametersPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\EntityBlackboard.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\GlobalTemplateBlackboard.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -1067,12 +1043,6 @@
     <ClInclude Include="..\Source\Editor\Modals\NodeConditionsEditModal.h" />
     <ClInclude Include="..\Source\Runtime\ConditionPresetEvaluator.h" />
     <ClInclude Include="..\Source\BlueprintEditor\ConditionRef.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\MathOpOperand.h" />
-    <ClInclude Include="..\Source\Editor\Panels\MathOpPropertyPanel.h" />
-    <ClInclude Include="..\Source\Editor\Panels\GetBBValuePropertyPanel.h" />
-    <ClInclude Include="..\Source\Editor\Panels\SetBBValuePropertyPanel.h" />
-    <ClInclude Include="..\Source\Editor\Panels\VariablePropertyPanel.h" />
-    <ClInclude Include="..\Source\Editor\Panels\ActionParametersPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />

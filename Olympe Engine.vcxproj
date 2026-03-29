@@ -82,6 +82,7 @@
     <ClCompile Include="Source\BlueprintEditor\ExecutionTestPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptNodeRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_ExecutionTest.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VSConnectionValidator.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VSGraphVerifier.cpp" />
@@ -121,7 +122,6 @@
     <ClCompile Include="Source\Editor\Panels\MathOpPropertyPanel.cpp" />
     <ClCompile Include="Source\Editor\Panels\NodeConditionsPanel.cpp" />
     <ClCompile Include="Source\Editor\Panels\SetBBValuePropertyPanel.cpp" />
-    <ClCompile Include="Source\Editor\Panels\VariablePropertyPanel.cpp" />
     <ClCompile Include="Source\Editor\UIHelpers\PresetDropdownHelper.cpp" />
     <ClCompile Include="Source\engine_utils.cpp" />
     <ClCompile Include="Source\InputConfigLoader.cpp" />
@@ -172,8 +172,8 @@
     <ClCompile Include="Source\TaskSystem\AtomicTasks\System\Task_SetPosition.cpp" />
     <ClCompile Include="Source\TaskSystem\AtomicTasks\Utility\Task_Wait.cpp" />
     <ClCompile Include="Source\TaskSystem\ConditionEvaluator.cpp" />
+    
     <!--  -->
-    <ClCompile Include="Source\TaskSystem\EntityBlackboard.cpp" />
     <ClCompile Include="Source\TaskSystem\LocalBlackboard.cpp" />
     <ClCompile Include="Source\TaskSystem\Pathfinding\PathfindingManager.cpp" />
     <ClCompile Include="Source\TaskSystem\TaskExecutionBridge.cpp" />
@@ -661,3 +661,4 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+
