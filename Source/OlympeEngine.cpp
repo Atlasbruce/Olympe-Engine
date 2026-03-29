@@ -87,7 +87,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     SDL_SetRenderLogicalPresentation(renderer, GameEngine::screenWidth, GameEngine::screenHeight, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
 	// Create and initialize PanelManager (for debug panels)
-	PanelManager::Get().Initialize();
+	//PanelManager::Get().Initialize();
 
     // Initialize DataManager (load system resources if needed)
 	DataManager::Get().Initialize(); // DataManager must be initialized before GameEngine to enable loading resources during GameEngine init
@@ -98,7 +98,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     GameEngine::Get().Initialize(); // initialize all submanagers
 
     // Attach panels/menu to main SDL window (Windows only)
-    PanelManager::Get().AttachToSDLWindow(window);
+    //PanelManager::Get().AttachToSDLWindow(window);
 
     // Initialize ImGui context BEFORE creating debug windows
     // This ensures the main context exists when separate windows create their own contexts
@@ -506,7 +506,7 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result)
         blueprintEditorGUI = nullptr;
     }
 
-    Olympe::BlueprintEditor::Get().Shutdown();
+    //Olympe::BlueprintEditor::Get().Shutdown();
 
     // Shutdown datamanager to ensure resources freed
     DataManager::Get().Shutdown();
