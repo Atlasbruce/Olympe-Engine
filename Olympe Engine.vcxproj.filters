@@ -197,9 +197,13 @@
     <ClCompile Include="Source\Editor\Panels\SetBBValuePropertyPanel.cpp" />
     <ClCompile Include="Source\Editor\Panels\ActionParametersPanel.cpp" />
     <ClCompile Include="Source\NodeGraphCore\GlobalTemplateBlackboard.cpp" />
-    <ClCompile Include="Source\TaskSystem\EntityBlackboard.cpp" />
     <ClCompile Include="Source\Runtime\Phase4_ConditionEvaluation_Examples.cpp" />
     <ClCompile Include="Tests\NodeGraphCore\GlobalTemplateBlackboardSerializationTest.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\GraphExecutionTracer.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\GraphExecutionSimulator.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\ExecutionTestPanel.cpp" />
+    <ClCompile Include="Source\TaskSystem\EntityBlackboard.cpp" />
+    <ClCompile Include="Source\Editor\Panels\VariablePropertyPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -440,6 +444,10 @@
     <ClInclude Include="Source\Runtime\PHASE4_QUICK_REFERENCE.h" />
     <ClInclude Include="Source\TaskSystem\DataPinEvaluator.h" />
     <ClInclude Include="Source\TaskSystem\DataPinEvaluator_inline.h" />
+    <ClInclude Include="Source\BlueprintEditor\GraphExecutionTracer.h" />
+    <ClInclude Include="Source\BlueprintEditor\GraphExecutionSimulator.h" />
+    <ClInclude Include="Source\BlueprintEditor\ExecutionTestPanel.h" />
+    <ClInclude Include="Source\Editor\Panels\VariablePropertyPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />

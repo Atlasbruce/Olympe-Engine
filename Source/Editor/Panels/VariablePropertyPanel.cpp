@@ -10,8 +10,8 @@
  */
 
 #include "VariablePropertyPanel.h"
-#include "../third_party/imgui/imgui.h"
-#include "../system/system_utils.h"
+#include "../../third_party/imgui/imgui.h"
+#include "../../system/system_utils.h"
 
 namespace Olympe {
 

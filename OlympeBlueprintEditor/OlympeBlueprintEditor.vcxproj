@@ -349,6 +349,7 @@
     <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.h" />
     <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Utility\Task_Wait.h" />
     <ClInclude Include="..\Source\TaskSystem\ConditionEvaluator.h" />
+    <ClInclude Include="..\Source\TaskSystem\EntityBlackboard.h" />
     <ClInclude Include="..\Source\TaskSystem\IAtomicTask.h" />
     <ClInclude Include="..\Source\TaskSystem\LocalBlackboard.h" />
     <ClInclude Include="..\Source\TaskSystem\Pathfinding\PathfindingManager.h" />
@@ -562,8 +563,3 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
-
-
-
-
-
