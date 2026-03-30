@@ -80,6 +80,7 @@
     <ClCompile Include="Source\BlueprintEditor\GraphExecutionTracer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\GraphExecutionSimulator.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ExecutionTestPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Canvas.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Core.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_FileOperations.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Helpers.cpp" />

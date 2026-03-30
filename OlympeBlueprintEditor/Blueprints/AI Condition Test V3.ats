@@ -176,13 +176,7 @@
         {
           "leftPinID": "",
           "logicalOp": "Start",
-          "presetID": "preset_ed2171ef-9ad8-4f83-9115-70da9a127130",
-          "rightPinID": ""
-        },
-        {
-          "leftPinID": "",
-          "logicalOp": "And",
-          "presetID": "preset_e117d5ac-623d-47a7-9dc9-c92f3b147e8c",
+          "presetID": "preset_91d62af4-b6bf-4427-b8a8-9e58c948460b",
           "rightPinID": ""
         }
       ],
@@ -197,8 +191,8 @@
         }
       },
       "position": {
-        "x": 490,
-        "y": 229
+        "x": 487,
+        "y": 190
       },
       "type": "Branch"
     },
@@ -407,6 +401,19 @@
       "right": {
         "mode": "Variable",
         "value": "mFatigue"
+      }
+    },
+    {
+      "id": "preset_91d62af4-b6bf-4427-b8a8-9e58c948460b",
+      "left": {
+        "mode": "Pin",
+        "value": "[Pin-in]"
+      },
+      "name": "Condition",
+      "op": "==",
+      "right": {
+        "mode": "Pin",
+        "value": "In #2L: [[Pin-in]] == [0]"
       }
     }
   ],

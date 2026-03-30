@@ -49,6 +49,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\ParameterEditorRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\TabManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\UndoRedoStack.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Canvas.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_FileOperations.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_RenderingCore.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptRenderer.cpp" />
