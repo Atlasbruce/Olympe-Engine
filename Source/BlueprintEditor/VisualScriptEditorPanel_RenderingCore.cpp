@@ -126,6 +126,13 @@ void VisualScriptEditorPanel::Render()
 
 void VisualScriptEditorPanel::RenderContent()
 {
+    // Auto-initialize verification on first render (Phase 24.3)
+    // This ensures logs panel displays without requiring "Verify" button click first
+    if (!m_verificationDone && m_template.Nodes.size() > 0)
+    {
+        RunVerification();
+    }
+
     RenderToolbar();
     RenderSaveAsDialog();
     ImGui::Separator();
@@ -286,6 +293,11 @@ void VisualScriptEditorPanel::RenderToolbar()
     if (ImGui::Button("Verify##gvs"))
     {
         RunVerification();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Run Graph##sim"))
+    {
+        RunGraphSimulation();
     }
     ImGui::SameLine();
     if (ImGui::Button("Condition Presets"))

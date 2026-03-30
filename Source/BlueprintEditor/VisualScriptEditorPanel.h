@@ -75,6 +75,20 @@ struct VSEditorLink {
     bool        isData    = false; ///< false = exec link, true = data link
 };
 
+/**
+ * @struct ExecutionToken
+ * @brief Represents a single execution point in graph simulation (Phase 24).
+ * Used for stack-based simulation of branching nodes (Sequence, Branch, etc.).
+ * Allows multiple parallel execution paths to be tracked and resumed.
+ */
+struct ExecutionToken {
+    int32_t nodeID = NODE_INDEX_NONE;  ///< Current node to execute
+    int     depth  = 0;                ///< Nesting depth (for indentation)
+
+    ExecutionToken() = default;
+    ExecutionToken(int32_t id, int d) : nodeID(id), depth(d) {}
+};
+
 // ============================================================================
 // VisualScriptEditorPanel
 // ============================================================================
@@ -316,6 +330,23 @@ private:
 
     /** @brief Runs VSGraphVerifier on the current graph and stores the result. */
     void RunVerification();
+
+    /** @brief Simulates runtime execution of the current graph and logs traces. */
+    void RunGraphSimulation();
+
+private:
+    // Phase 24 — Simulation helper methods
+
+    /**
+     * @brief Helper to recursively evaluate data nodes (MathOp, GetBBValue, etc.)
+     * and trace their execution. Used when data pins reference other nodes.
+     * @param nodeID      ID of the data node to evaluate
+     * @param depth       Current trace indentation depth
+     * @param indent      Indentation string prefix for logs
+     */
+    void EvaluateDataNode(int32_t nodeID, int depth, const std::string& indent);
+
+public:
 
     /**
      * @brief Removes blackboard entries with empty keys or VariableType::None.
@@ -588,6 +619,17 @@ private:
     /// Verification log messages (populated by RunVerification())
     /// Phase 24.3 — for display in the verification output panel
     std::vector<std::string> m_verificationLogs;
+
+    /// Simulation execution traces (populated by RunGraphSimulation())
+    /// Phase 24.4 — added to verification logs for display
+    std::vector<std::string> m_simulationTraces;
+
+    /// True if simulation has been run
+    bool m_simulationDone = false;
+
+    /// Phase 24.4 — Execution token stack for multi-branch simulation
+    /// Enables proper handling of Sequence nodes with multiple branches
+    std::vector<ExecutionToken> m_executionTokenStack;
 
     /// Node ID to focus/scroll to on next RenderCanvas() frame (-1 = none)
     int m_focusNodeID = -1;
