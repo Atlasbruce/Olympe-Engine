@@ -95,13 +95,24 @@ void VisualScriptEditorPanel::RunGraphSimulation()
 
     m_simulationTraces.push_back("[START] Entry point: Node #" + std::to_string(currentNodeID));
 
+    // Phase 24.4 — Token-based execution for multi-branch support
+    // Initialize execution token stack with entry point
+    m_executionTokenStack.clear();
+    m_executionTokenStack.push_back(ExecutionToken(currentNodeID, 0));
+
     // Simulate graph flow
     int stepCount = 0;
     int maxSteps = 100;
     std::unordered_set<int> visitedInPath;
 
-    while (currentNodeID != NODE_INDEX_NONE && stepCount < maxSteps)
+    while (!m_executionTokenStack.empty() && stepCount < maxSteps)
     {
+        // Pop execution token from stack
+        ExecutionToken currentToken = m_executionTokenStack.back();
+        m_executionTokenStack.pop_back();
+        int32_t currentNodeID = currentToken.nodeID;
+        int currentDepth = currentToken.depth;
+
         // Find node definition
         const TaskNodeDefinition* nodePtr = nullptr;
         for (size_t i = 0; i < m_template.Nodes.size(); ++i)
@@ -365,12 +376,13 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                     if (outNodePtr && !outNodePtr->NodeName.empty())
                         outTrace << " '" << outNodePtr->NodeName << "'";
                     m_simulationTraces.push_back(outTrace.str());
+                }
 
-                    // Set first output as next node (for linear simulation)
-                    if (oi == 0 && nextNodeID == NODE_INDEX_NONE)
-                    {
-                        nextNodeID = outConn.TargetNodeID;
-                    }
+                // Phase 24.4 — Push all branch tokens to stack in reverse order (LIFO)
+                for (int oi = static_cast<int>(sequenceOutputs.size()) - 1; oi >= 0; --oi)
+                {
+                    const ExecPinConnection& outConn = sequenceOutputs[oi];
+                    m_executionTokenStack.push_back(ExecutionToken(outConn.TargetNodeID, currentDepth + 1));
                 }
 
                 m_simulationTraces.push_back("  └─ [RESULT] Sequence with " + std::to_string(sequenceOutputs.size()) + " branches");
@@ -415,19 +427,27 @@ void VisualScriptEditorPanel::RunGraphSimulation()
             }
         }
 
-        // Trace node exit
-        if (nextNodeID != NODE_INDEX_NONE)
+        // Phase 24.4 — Token-based exit trace
+        // Trace node exit and token stack status
+        if (!m_executionTokenStack.empty())
         {
-            m_simulationTraces.push_back("[EXIT] → Next: Node #" + std::to_string(nextNodeID));
+            const ExecutionToken& nextToken = m_executionTokenStack.back();
+            m_simulationTraces.push_back("[EXIT] → Next token: Node #" + std::to_string(nextToken.nodeID) + 
+                                        " (stack depth: " + std::to_string(m_executionTokenStack.size()) + ")");
+        }
+        else if (nextNodeID != NODE_INDEX_NONE)
+        {
+            // If handler set nextNodeID (for non-Sequence nodes), push to stack
+            m_executionTokenStack.push_back(ExecutionToken(nextNodeID, currentDepth));
+            m_simulationTraces.push_back("[EXIT] → Pushed: Node #" + std::to_string(nextNodeID));
         }
         else
         {
-            m_simulationTraces.push_back("[EXIT] → Graph ends (no next node)");
+            m_simulationTraces.push_back("[EXIT] → Branch complete (resuming from stack)");
         }
 
         m_simulationTraces.push_back("");  // Blank line for readability
 
-        currentNodeID = nextNodeID;
         ++stepCount;
     }
 
@@ -437,9 +457,13 @@ void VisualScriptEditorPanel::RunGraphSimulation()
     {
         m_simulationTraces.push_back("[WARNING] Maximum steps reached (" + std::to_string(maxSteps) + ") - possible infinite loop");
     }
-    else if (currentNodeID == NODE_INDEX_NONE)
+    else if (m_executionTokenStack.empty())
     {
-        m_simulationTraces.push_back("[SUCCESS] Graph execution completed");
+        m_simulationTraces.push_back("[SUCCESS] Graph execution completed - all branches finished");
+    }
+    else
+    {
+        m_simulationTraces.push_back("[WARNING] Execution incomplete - " + std::to_string(m_executionTokenStack.size()) + " token(s) remaining on stack");
     }
     m_simulationTraces.push_back("Total steps executed: " + std::to_string(stepCount));
     m_simulationTraces.push_back("Blackboard entries evaluated: " + std::to_string(blackboard.size()));
