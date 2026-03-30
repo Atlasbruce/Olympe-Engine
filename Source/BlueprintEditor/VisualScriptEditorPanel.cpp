@@ -293,438 +293,70 @@ namespace Olympe {
 // Handles node name editing, type-specific field editing, breakpoint toggling, and undo/redo integration.
 // ============================================================================
 
-void VisualScriptEditorPanel::RenderBlackboard()
-{
-    ImGui::TextDisabled("Local Blackboard");
-    ImGui::Separator();
-
-    // BUG-001 Hotfix: warn user if invalid entries exist (key empty or type None)
-    // to prevent save crash caused by unhandled None type during serialization.
-    bool hasInvalid = false;
-    for (size_t i = 0; i < m_template.Blackboard.size(); ++i)
-    {
-        const BlackboardEntry& entry = m_template.Blackboard[static_cast<size_t>(i)];
-        if (entry.Key.empty() || entry.Type == VariableType::None)
-        {
-            hasInvalid = true;
-            break;
-        }
-    }
-    if (hasInvalid)
-    {
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
-        ImGui::TextUnformatted("[!] Invalid entries will be skipped on save");
-        ImGui::PopStyleColor();
-    }
-
-    // Add entry button — BUG-001 Hotfix: init with safe defaults (non-empty key, Int type)
-    if (ImGui::Button("+##vsbbAdd"))
-    {
-        BlackboardEntry entry;
-        entry.Key      = "NewVariable";
-        entry.Type     = VariableType::Int;
-        entry.Default  = GetDefaultValueForType(VariableType::Int);  // UX Fix #1
-        entry.IsGlobal = false;
-        m_template.Blackboard.push_back(entry);
-        m_dirty = true;
-    }
-    ImGui::SameLine();
-    ImGui::TextDisabled("Add key");
-
-    // List existing entries
-    for (int idx = static_cast<int>(m_template.Blackboard.size()) - 1; idx >= 0; --idx)
-    {
-        BlackboardEntry& entry = m_template.Blackboard[static_cast<size_t>(idx)];
-
-        ImGui::PushID(idx);
-
-        // Use a local (non-static) buffer per iteration to avoid sharing across entries
-        char keyBuf[64];
-        strncpy_s(keyBuf, sizeof(keyBuf), entry.Key.c_str(), _TRUNCATE);
-        ImGui::SetNextItemWidth(120.0f);
-        if (ImGui::InputText("##bbkey", keyBuf, sizeof(keyBuf)))
-        {
-            entry.Key = keyBuf;
-            m_dirty   = true;
-        }
-        ImGui::SameLine();
-
-        // Fix #2: Type selector — "None" is excluded to prevent invalid entries.
-        // Enum layout: None=0, Bool=1, Int=2, Float=3, Vector=4, EntityID=5, String=6.
-        // typeIdx maps to enum value minus 1 (offset by 1 to skip None).
-        const char* typeLabels[] = {"Bool","Int","Float","Vector","EntityID","String"};
-        int typeIdx = static_cast<int>(entry.Type) - 1; // offset: Bool->0, Int->1, ...
-        if (typeIdx < 0 || typeIdx >= 6)
-        {
-            typeIdx    = 1; // default to "Int" (array index 1; maps to VariableType::Int via typeIdx+1)
-            entry.Type = VariableType::Int;
-        }
-        ImGui::SetNextItemWidth(80.0f);
-        if (ImGui::Combo("##bbtype", &typeIdx, typeLabels, 6))
-        {
-            VariableType newType = static_cast<VariableType>(typeIdx + 1); // +1 to skip None
-            entry.Type    = newType;
-            entry.Default = GetDefaultValueForType(newType);  // UX Fix #1: sync default
-            m_dirty       = true;
-        }
-        ImGui::SameLine();
-
-        // IsGlobal checkbox
-        ImGui::Checkbox("G##bbglob", &entry.IsGlobal);
-        ImGui::SameLine();
-
-        // Remove button
-        if (ImGui::SmallButton("x##bbdel"))
-        {
-            m_template.Blackboard.erase(m_template.Blackboard.begin() + idx);
-            m_pendingBlackboardEdits.erase(idx);
-            m_dirty = true;
-            ImGui::PopID();
-            continue;
-        }
-
-        // UX Fix #2: Default value editor (type-specific input field)
-        ImGui::TextDisabled("Default:");
-        ImGui::SameLine();
-        switch (entry.Type)
-        {
-            case VariableType::Bool:
-            {
-                bool bVal = entry.Default.IsNone() ? false : entry.Default.AsBool();
-                if (ImGui::Checkbox("##bbval", &bVal))
-                {
-                    entry.Default = TaskValue(bVal);
-                    m_dirty       = true;
-                }
-                break;
-            }
-            case VariableType::Int:
-            {
-                int iVal = entry.Default.IsNone() ? 0 : entry.Default.AsInt();
-                ImGui::SetNextItemWidth(70.0f);
-                if (ImGui::InputInt("##bbval", &iVal))
-                {
-                    entry.Default = TaskValue(iVal);
-                    m_dirty       = true;
-                }
-                break;
-            }
-            case VariableType::Float:
-            {
-                float fVal = entry.Default.IsNone() ? 0.0f : entry.Default.AsFloat();
-                ImGui::SetNextItemWidth(70.0f);
-                if (ImGui::InputFloat("##bbval", &fVal, 0.0f, 0.0f, "%.3f"))
-                {
-                    entry.Default = TaskValue(fVal);
-                    m_dirty       = true;
-                }
-                break;
-            }
-            case VariableType::String:
-            {
-                std::string sVal = entry.Default.IsNone() ? "" : entry.Default.AsString();
-                char sBuf[128];
-                strncpy_s(sBuf, sizeof(sBuf), sVal.c_str(), _TRUNCATE);
-                ImGui::SetNextItemWidth(100.0f);
-                if (ImGui::InputText("##bbval", sBuf, sizeof(sBuf)))
-                {
-                    entry.Default = TaskValue(std::string(sBuf));
-                    m_dirty       = true;
-                }
-                break;
-            }
-            case VariableType::Vector:
-            {
-                // UX Enhancement #1: Vector is auto-sourced from entity position at runtime.
-                // Display as read-only to prevent user from entering a value that will be
-                // overwritten anyway.
-                ImGui::BeginDisabled(true);
-                float vecVal[3] = { 0.0f, 0.0f, 0.0f };
-                ImGui::SetNextItemWidth(140.0f);
-                ImGui::DragFloat3("##bbval", vecVal, 0.1f);
-                ImGui::EndDisabled();
-                ImGui::SameLine();
-                ImGui::TextDisabled("(auto from entity position)");
-                break;
-            }
-            case VariableType::EntityID:
-            {
-                // UX Enhancement #2: EntityID is assigned at runtime; read-only display.
-                ImGui::BeginDisabled(true);
-                int entityId = 0;
-                ImGui::SetNextItemWidth(70.0f);
-                ImGui::InputInt("##bbval", &entityId);
-                ImGui::EndDisabled();
-                ImGui::SameLine();
-                ImGui::TextDisabled("(assigned at runtime)");
-                break;
-            }
-            default:
-                ImGui::TextDisabled("(n/a)");
-                break;
-        }
-
-        ImGui::PopID();
-    }
-}
-
-void VisualScriptEditorPanel::RenderValidationOverlay()
-{
-    m_validationWarnings.clear();
-    m_validationErrors.clear();
-
-    // Check: every non-EntryPoint node should have at least one exec-in connection
-    for (size_t i = 0; i < m_editorNodes.size(); ++i)
-    {
-        const VSEditorNode& eNode = m_editorNodes[i];
-        if (eNode.def.Type == TaskNodeType::EntryPoint)
-            continue;
-
-        bool hasExecIn = false;
-        for (size_t c = 0; c < m_template.ExecConnections.size(); ++c)
-        {
-            if (m_template.ExecConnections[c].TargetNodeID == eNode.nodeID)
-            {
-                hasExecIn = true;
-                break;
-            }
-        }
-        if (!hasExecIn)
-        {
-            m_validationErrors.push_back(
-                "Node " + std::to_string(eNode.nodeID) + " (" +
-                eNode.def.NodeName + "): no exec-in connection");
-        }
-
-        // SubGraph path validation
-        if (eNode.def.Type == TaskNodeType::SubGraph &&
-            eNode.def.SubGraphPath.empty())
-        {
-            m_validationWarnings.push_back(
-                "Node " + std::to_string(eNode.nodeID) +
-                " (SubGraph): SubGraphPath is empty");
-        }
-    }
-}
-
 // ============================================================================
-// Phase 21-B — Graph Verification
+// PHASE 12 — RenderBlackboard() MIGRATED
+// ============================================================================
+// NOTE: This method has been MIGRATED to VisualScriptEditorPanel_Blackboard.cpp
+//       as part of Phase 12 (Blackboard Panel Extraction).
+//       See: Source/BlueprintEditor/VisualScriptEditorPanel_Blackboard.cpp
+//
+// Original signature:
+//   void VisualScriptEditorPanel::RenderBlackboard();
+//
+// Purpose: Render local blackboard with BUG-001 validation, variable editing.
 // ============================================================================
 
-void VisualScriptEditorPanel::RunVerification()
-{
-    SYSTEM_LOG << "[VisualScriptEditorPanel] RunVerification() called for graph '"
-               << m_template.Name << "'\n";
-    m_verificationResult = VSGraphVerifier::Verify(m_template);
-    m_verificationDone   = true;
-
-    // Phase 24.3 — Populate verification logs for display in the output panel
-    m_verificationLogs.clear();
-    for (size_t i = 0; i < m_verificationResult.issues.size(); ++i)
-    {
-        const VSVerificationIssue& issue = m_verificationResult.issues[i];
-        std::string logEntry;
-
-        // Format: "[SEVERITY] message (Node: nodeID)"
-        if (issue.severity == VSVerificationSeverity::Error)
-            logEntry = "[ERROR] ";
-        else if (issue.severity == VSVerificationSeverity::Warning)
-            logEntry = "[WARN] ";
-        else
-            logEntry = "[INFO] ";
-
-        logEntry += issue.message;
-        if (issue.nodeID >= 0)
-            logEntry += " (Node: " + std::to_string(issue.nodeID) + ")";
-
-        m_verificationLogs.push_back(logEntry);
-    }
-
-    SYSTEM_LOG << "[VisualScriptEditorPanel] RunVerification() done: "
-               << m_verificationResult.issues.size() << " issue(s), "
-               << "errors=" << (m_verificationResult.HasErrors()   ? "yes" : "no") << ", "
-               << "warnings=" << (m_verificationResult.HasWarnings() ? "yes" : "no") << "\n";
-}
-
-void VisualScriptEditorPanel::RenderVerificationPanel()
-{
-    ImGui::Separator();
-    ImGui::TextDisabled("Graph Verification");
-
-    if (!m_verificationDone)
-    {
-        ImGui::TextDisabled("Click 'Verify' in toolbar to run verification.");
-        return;
-    }
-
-    // Global status line
-    if (m_verificationResult.HasErrors())
-    {
-        int errorCount = 0;
-        for (size_t i = 0; i < m_verificationResult.issues.size(); ++i)
-        {
-            if (m_verificationResult.issues[i].severity == VSVerificationSeverity::Error)
-                ++errorCount;
-        }
-        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f),
-                           "Errors found: %d", errorCount);
-    }
-    else if (m_verificationResult.HasWarnings())
-    {
-        ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), "OK — warnings present");
-    }
-    else
-    {
-        ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), "OK — no issues");
-    }
-
-    if (m_verificationResult.issues.empty())
-        return;
-
-    // List issues grouped: Errors first, then Warnings, then Info
-    const VSVerificationSeverity orderedSev[3] = {
-        VSVerificationSeverity::Error,
-        VSVerificationSeverity::Warning,
-        VSVerificationSeverity::Info
-    };
-
-    for (int s = 0; s < 3; ++s)
-    {
-        VSVerificationSeverity sev = orderedSev[s];
-        for (size_t i = 0; i < m_verificationResult.issues.size(); ++i)
-        {
-            const VSVerificationIssue& issue = m_verificationResult.issues[i];
-            if (issue.severity != sev)
-                continue;
-
-            ImGui::PushID(static_cast<int>(i));
-
-            if (sev == VSVerificationSeverity::Error)
-                ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "[E]");
-            else if (sev == VSVerificationSeverity::Warning)
-                ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), "[W]");
-            else
-                ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "[I]");
-
-            ImGui::SameLine();
-            ImGui::Text("%s: %s", issue.ruleID.c_str(), issue.message.c_str());
-
-            if (issue.nodeID >= 0)
-            {
-                ImGui::SameLine();
-                std::string btnLabel = "Go##go" + std::to_string(i);
-                if (ImGui::SmallButton(btnLabel.c_str()))
-                {
-                    m_focusNodeID    = issue.nodeID;
-                    m_selectedNodeID = issue.nodeID;
-                }
-            }
-
-            ImGui::PopID();
-        }
-    }
-}
-
 // ============================================================================
-// Phase 24.3 — Verification Logs Panel
+// PHASE 12 — RenderValidationOverlay() MIGRATED
+// ============================================================================
+// NOTE: This method has been MIGRATED to VisualScriptEditorPanel_Verification.cpp
+//       as part of Phase 12 (Verification Panel Extraction).
+//       See: Source/BlueprintEditor/VisualScriptEditorPanel_Verification.cpp
+//
+// Original signature:
+//   void VisualScriptEditorPanel::RenderValidationOverlay();
+//
+// Purpose: Validate graph connections and SubGraph paths.
 // ============================================================================
 
-void VisualScriptEditorPanel::RenderVerificationLogsPanel()
-{
-    // Note: The header "Verification Output" is rendered by the container (BlueprintEditorGUI),
-    // so we only render the content here (status + logs).
+// ============================================================================
+// PHASE 12 — RunVerification() MIGRATED
+// ============================================================================
+// NOTE: This method has been MIGRATED to VisualScriptEditorPanel_Verification.cpp
+//       as part of Phase 12 (Verification Panel Extraction).
+//       See: Source/BlueprintEditor/VisualScriptEditorPanel_Verification.cpp
+//
+// Original signature:
+//   void VisualScriptEditorPanel::RunVerification();
+//
+// Purpose: Execute VSGraphVerifier and populate verification logs for display.
+// ============================================================================
 
-    if (!m_verificationDone)
-    {
-        ImGui::TextDisabled("(Click 'Verify' button to run verification)");
-        return;
-    }
+// ============================================================================
+// PHASE 12 — RenderVerificationPanel() MIGRATED
+// ============================================================================
+// NOTE: This method has been MIGRATED to VisualScriptEditorPanel_Verification.cpp
+//       as part of Phase 12 (Verification Panel Extraction).
+//       See: Source/BlueprintEditor/VisualScriptEditorPanel_Verification.cpp
+//
+// Original signature:
+//   void VisualScriptEditorPanel::RenderVerificationPanel();
+//
+// Purpose: Render verification panel with error/warning/info status and issue list.
+// ============================================================================
 
-    // Display verification result summary
-    ImGui::Spacing();
-
-    // Debug: Show issue count
-    ImGui::TextDisabled("Issues found: %zu", m_verificationResult.issues.size());
-
-    // Status line with color coding
-    if (m_verificationResult.HasErrors())
-    {
-        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), 
-                          "[ERROR] Graph has %d error(s)", 
-                          (int)m_verificationResult.issues.size());
-    }
-    else if (m_verificationResult.HasWarnings())
-    {
-        ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), 
-                          "[WARNING] Graph is valid but has warnings");
-    }
-    else
-    {
-        ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f), 
-                          "[OK] Graph is valid - no issues found");
-    }
-
-    ImGui::Separator();
-
-    // Display issues grouped by severity
-    ImGui::BeginChild("VerificationLogsChild", ImVec2(0, 0), true);
-
-    const VSVerificationSeverity orderedSev[3] = {
-        VSVerificationSeverity::Error,
-        VSVerificationSeverity::Warning,
-        VSVerificationSeverity::Info
-    };
-
-    const char* sevLabels[3] = { "[ERROR]", "[WARN]", "[INFO]" };
-    ImVec4      sevColors[3] = {
-        ImVec4(1.0f, 0.3f, 0.3f, 1.0f),  // Error: red
-        ImVec4(1.0f, 0.85f, 0.0f, 1.0f), // Warning: yellow
-        ImVec4(0.5f, 0.8f, 1.0f, 1.0f)   // Info: light blue
-    };
-
-    for (int s = 0; s < 3; ++s)
-    {
-        VSVerificationSeverity sev = orderedSev[s];
-        bool hasThisSeverity = false;
-
-        // Count issues of this severity
-        for (size_t i = 0; i < m_verificationResult.issues.size(); ++i)
-        {
-            if (m_verificationResult.issues[i].severity == sev)
-            {
-                hasThisSeverity = true;
-                break;
-            }
-        }
-
-        if (!hasThisSeverity)
-            continue;
-
-        // Display header for this severity level
-        ImGui::TextColored(sevColors[s], "%s", sevLabels[s]);
-
-        // Display all issues with this severity
-        for (size_t i = 0; i < m_verificationResult.issues.size(); ++i)
-        {
-            const VSVerificationIssue& issue = m_verificationResult.issues[i];
-            if (issue.severity != sev)
-                continue;
-
-            // Format message: "[SEVERITY] message (NodeID: xxx)"
-            std::string message = issue.message;
-            if (issue.nodeID >= 0)
-            {
-                message += " (Node: " + std::to_string(issue.nodeID) + ")";
-            }
-
-            ImGui::BulletText("%s", message.c_str());
-        }
-
-        ImGui::Spacing();
-    }
-
-    ImGui::EndChild();
-}
+// ============================================================================
+// PHASE 12 — RenderVerificationLogsPanel() MIGRATED
+// ============================================================================
+// NOTE: This method has been MIGRATED to VisualScriptEditorPanel_Verification.cpp
+//       as part of Phase 12 (Verification Panel Extraction).
+//       See: Source/BlueprintEditor/VisualScriptEditorPanel_Verification.cpp
+//
+// Original signature:
+//   void VisualScriptEditorPanel::RenderVerificationLogsPanel();
+//
+// Purpose: Render verification logs panel with severity-based issue grouping.
+// ============================================================================
 
 // ============================================================================
 // Phase 23-B.4 — Condition Editor UI helpers (MIGRATED to VisualScriptEditorPanel_ConditionUI.cpp)
@@ -746,183 +378,30 @@ void VisualScriptEditorPanel::RenderVerificationLogsPanel()
 // ============================================================================
 
 // ============================================================================
-// PHASE 24 Panel Integration — Part B: Preset Bank
+// PHASE 12 — RenderPresetBankPanel() MIGRATED
+// ============================================================================
+// NOTE: This method has been MIGRATED to VisualScriptEditorPanel_Verification.cpp
+//       as part of Phase 12 (Verification Panel Extraction).
+//       See: Source/BlueprintEditor/VisualScriptEditorPanel_Verification.cpp
+//
+// Original signature:
+//   void VisualScriptEditorPanel::RenderPresetBankPanel();
+//
+// Purpose: Render preset bank panel with add/list presets functionality.
 // ============================================================================
 
-void VisualScriptEditorPanel::RenderPresetBankPanel()
-{
-    ImGui::TextDisabled("Preset Bank (Global)");
-    ImGui::Separator();
-
-    if (!m_libraryPanel)
-        return;
-
-    size_t presetCount = m_presetRegistry.GetPresetCount();
-
-    // Toolbar: Add preset button
-    if (ImGui::Button("+##addpreset", ImVec2(25, 0)))
-    {
-        m_libraryPanel->OnAddPresetClicked();
-    }
-    ImGui::SameLine();
-    ImGui::TextDisabled("New Preset");
-
-    ImGui::Separator();
-    ImGui::TextDisabled("Total: %zu preset(s)", presetCount);
-    ImGui::Separator();
-
-    // List all presets in compact horizontal format
-    std::vector<ConditionPreset> allPresets = m_presetRegistry.GetFilteredPresets("");
-
-    if (allPresets.empty())
-    {
-        ImGui::TextDisabled("(no presets - create one to get started)");
-    }
-
-    for (size_t i = 0; i < allPresets.size(); ++i)
-    {
-        const ConditionPreset& preset = allPresets[i];
-        ImGui::PushID(preset.id.c_str());
-        RenderPresetItemCompact(preset, i + 1);  // 1-indexed for display
-        ImGui::PopID();
-    }
-}
-
-void VisualScriptEditorPanel::RenderPresetItemCompact(const ConditionPreset& preset, size_t index)
-{
-#ifndef OLYMPE_HEADLESS
-    // Single-line horizontal layout matching mockup:
-    // [Index: Name (yellow)] [Left▼ mode] [value] [Op▼] [Right▼ mode] [value] [Edit] [Dup] [X]
-
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
-
-    // Get a mutable copy of the preset for editing
-    ConditionPreset editablePreset = preset;
-    bool presetModified = false;
-
-    // Condition name display with index (yellow)
-    // Use PushID for unique identification, don't add UUID to visible text
-    ImGui::PushID(editablePreset.id.c_str());
-    ImGui::TextColored(ImVec4(1.0f, 0.843f, 0.0f, 1.0f), "Condition #%zu", index);
-    ImGui::PopID();
-    ImGui::SameLine(0.0f, 12.0f);
-
-    // Left operand with unified dropdown (mode + value combined)
-    if (RenderOperandEditor(editablePreset.left, "##left_op"))
-    {
-        presetModified = true;
-    }
-    ImGui::SameLine(0.0f, 6.0f);
-
-    // Operator dropdown
-    std::string opStr;
-    switch (editablePreset.op)
-    {
-        case ComparisonOp::Equal:       opStr = "=="; break;
-        case ComparisonOp::NotEqual:    opStr = "!="; break;
-        case ComparisonOp::Less:        opStr = "<"; break;
-        case ComparisonOp::LessEqual:   opStr = "<="; break;
-        case ComparisonOp::Greater:     opStr = ">"; break;
-        case ComparisonOp::GreaterEqual: opStr = ">="; break;
-        default: opStr = "?"; break;
-    }
-
-    const char* opNames[] = { "==", "!=", "<", "<=", ">", ">=" };
-    const ComparisonOp opValues[] = {
-        ComparisonOp::Equal, ComparisonOp::NotEqual,
-        ComparisonOp::Less, ComparisonOp::LessEqual,
-        ComparisonOp::Greater, ComparisonOp::GreaterEqual
-    };
-    int curOpIdx = 0;
-    for (int i = 0; i < 6; ++i)
-    {
-        if (editablePreset.op == opValues[i])
-        {
-            curOpIdx = i;
-            break;
-        }
-    }
-
-    ImGui::SetNextItemWidth(50.0f);
-    if (ImGui::Combo("##op_type", &curOpIdx, opNames, 6))
-    {
-        editablePreset.op = opValues[curOpIdx];
-        presetModified = true;
-    }
-    ImGui::SameLine(0.0f, 6.0f);
-
-    // Right operand with unified dropdown (mode + value combined)
-    if (RenderOperandEditor(editablePreset.right, "##right_op"))
-    {
-        presetModified = true;
-    }
-    ImGui::SameLine(0.0f, 12.0f);
-
-    // Save modified preset if changed
-    if (presetModified)
-    {
-        m_presetRegistry.UpdatePreset(editablePreset.id, editablePreset);
-
-        // Phase 24 — Sync to template presets for graph serialization
-        // Update the preset in m_template.Presets so it gets saved with the graph
-        for (size_t pi = 0; pi < m_template.Presets.size(); ++pi)
-        {
-            if (m_template.Presets[pi].id == editablePreset.id)
-            {
-                m_template.Presets[pi] = editablePreset;
-                break;
-            }
-        }
-
-        m_dirty = true;
-    }
-
-    // Duplicate button
-    if (ImGui::Button("Dup##dup_preset", ImVec2(40, 0)))
-    {
-        std::string newPresetID = m_presetRegistry.DuplicatePreset(editablePreset.id);
-
-        // Phase 24 — Add the duplicate to template presets as well
-        if (!newPresetID.empty())
-        {
-            const ConditionPreset* newPreset = m_presetRegistry.GetPreset(newPresetID);
-            if (newPreset)
-            {
-                m_template.Presets.push_back(*newPreset);
-            }
-        }
-
-        m_dirty = true;
-    }
-    ImGui::SameLine(0.0f, 4.0f);
-
-    // Delete button
-    if (ImGui::Button("X##del_preset", ImVec2(25, 0)))
-    {
-        m_presetRegistry.DeletePreset(editablePreset.id);
-        m_pinManager->InvalidatePreset(editablePreset.id);
-
-        // Phase 24 — Remove from template presets as well
-        for (size_t pi = 0; pi < m_template.Presets.size(); ++pi)
-        {
-            if (m_template.Presets[pi].id == editablePreset.id)
-            {
-                m_template.Presets.erase(m_template.Presets.begin() + pi);
-                break;
-            }
-        }
-        // Persist the deletion to disk
-        m_presetRegistry.Save("Blueprints/Presets/condition_presets.json");
-    }
-
-    ImGui::PopStyleColor(3);
-
-    // Add visual separator between presets
-    ImGui::Separator();
-#endif
-}
+// ============================================================================
+// PHASE 12 — RenderPresetItemCompact() MIGRATED
+// ============================================================================
+// NOTE: This method has been MIGRATED to VisualScriptEditorPanel_Verification.cpp
+//       as part of Phase 12 (Verification Panel Extraction).
+//       See: Source/BlueprintEditor/VisualScriptEditorPanel_Verification.cpp
+//
+// Original signature:
+//   void VisualScriptEditorPanel::RenderPresetItemCompact(const ConditionPreset& preset, size_t index);
+//
+// Purpose: Render single preset item in compact horizontal layout with edit/dup/delete buttons.
+// ============================================================================
 
 // NOTE: This method has been MIGRATED to VisualScriptEditorPanel_ConditionUI.cpp
 //       as part of Phase 11 (Condition UI Helpers Extraction).
@@ -936,412 +415,30 @@ void VisualScriptEditorPanel::RenderPresetItemCompact(const ConditionPreset& pre
 // PHASE 24 Panel Integration — Part C: Local Variables Reference
 // ============================================================================
 
-void VisualScriptEditorPanel::RenderLocalVariablesPanel()
-{
-    ImGui::TextDisabled("Local Blackboard");
-    ImGui::Separator();
-
-    // BUG-001 Hotfix: warn user if invalid entries exist (key empty or type None)
-    // to prevent save crash caused by unhandled None type during serialization.
-    bool hasInvalid = false;
-    for (size_t i = 0; i < m_template.Blackboard.size(); ++i)
-    {
-        const BlackboardEntry& entry = m_template.Blackboard[static_cast<size_t>(i)];
-        if (entry.Key.empty() || entry.Type == VariableType::None)
-        {
-            hasInvalid = true;
-            break;
-        }
-    }
-    if (hasInvalid)
-    {
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
-        ImGui::TextUnformatted("[!] Invalid entries will be skipped on save");
-        ImGui::PopStyleColor();
-    }
-
-    // Add entry button — BUG-001 Hotfix: init with safe defaults (non-empty key, Int type)
-    if (ImGui::Button("+##vsbbAdd"))
-    {
-        BlackboardEntry entry;
-        entry.Key      = "NewVariable";
-        entry.Type     = VariableType::Int;
-        entry.Default  = GetDefaultValueForType(VariableType::Int);  // UX Fix #1
-        entry.IsGlobal = false;
-        m_template.Blackboard.push_back(entry);
-        m_dirty = true;
-    }
-    ImGui::SameLine();
-    ImGui::TextDisabled("Add key");
-
-    // List existing entries
-    for (int idx = static_cast<int>(m_template.Blackboard.size()) - 1; idx >= 0; --idx)
-    {
-        BlackboardEntry& entry = m_template.Blackboard[static_cast<size_t>(idx)];
-
-        ImGui::PushID(idx);
-
-        // Use a local (non-static) buffer per iteration to avoid sharing across entries
-        char keyBuf[64];
-        strncpy_s(keyBuf, sizeof(keyBuf), entry.Key.c_str(), _TRUNCATE);
-
-        // ── Name (editable text field) ──
-        ImGui::SetNextItemWidth(140.0f);
-        if (ImGui::InputText("##bbkey", keyBuf, sizeof(keyBuf)))
-        {
-            entry.Key = keyBuf;
-            m_pendingBlackboardEdits[idx] = keyBuf;
-            m_dirty = true;
-        }
-
-        ImGui::SameLine();
-
-        // ── Type dropdown ──
-        const char* typeNames[] = { "None", "Bool", "Int", "Float", "String", "Vector" };
-        const VariableType typeValues[] = {
-            VariableType::None, VariableType::Bool, VariableType::Int,
-            VariableType::Float, VariableType::String, VariableType::Vector
-        };
-        int curTypeIdx = 0;
-        for (int ti = 0; ti < 6; ++ti)
-            if (entry.Type == typeValues[ti])
-            { curTypeIdx = ti; break; }
-
-        ImGui::SetNextItemWidth(80.0f);
-        if (ImGui::Combo("##bbtype", &curTypeIdx, typeNames, 6))
-        {
-            entry.Type = typeValues[curTypeIdx];
-            entry.Default = GetDefaultValueForType(entry.Type);
-            m_dirty = true;
-        }
-
-        // ── Default value (type-aware editor) ──
-        if (entry.Type != VariableType::None)
-        {
-            ImGui::SameLine();
-            ImGui::TextDisabled("Default:");
-            ImGui::SameLine();
-            RenderConstValueInput(entry.Default, entry.Type, "##bbdefault");
-        }
-
-        // ── Global toggle ──
-        ImGui::SameLine();
-        bool isGlobal = entry.IsGlobal;
-        if (ImGui::Checkbox("G##bbglobal", &isGlobal))
-        {
-            entry.IsGlobal = isGlobal;
-            m_dirty = true;
-        }
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Mark as global variable");
-
-        // ── Delete button ──
-        ImGui::SameLine();
-        if (ImGui::Button("X##bbdel"))
-        {
-            m_template.Blackboard.erase(m_template.Blackboard.begin() + idx);
-            m_pendingBlackboardEdits.erase(idx);
-            m_dirty = true;
-        }
-
-        ImGui::PopID();
-    }
-}
-
 // ============================================================================
-// Phase 24 Global Blackboard Integration — RenderGlobalVariablesPanel (Enhanced)
+// PHASE 12 — RenderLocalVariablesPanel() MIGRATED
+// ============================================================================
+// NOTE: This method has been MIGRATED to VisualScriptEditorPanel_Blackboard.cpp
+//       as part of Phase 12 (Blackboard Panel Extraction).
+//       See: Source/BlueprintEditor/VisualScriptEditorPanel_Blackboard.cpp
+//
+// Original signature:
+//   void VisualScriptEditorPanel::RenderLocalVariablesPanel();
+//
+// Purpose: Render local variables panel with BUG-001 validation and type-aware editing.
 // ============================================================================
 
-void VisualScriptEditorPanel::RenderGlobalVariablesPanel()
-{
-    ImGui::TextDisabled("Global Variables (Editor Instance)");
-    ImGui::Separator();
-
-    // Get reference to the global template registry (non-const for Add)
-    GlobalTemplateBlackboard& gtb = GlobalTemplateBlackboard::Get();
-    const std::vector<GlobalEntryDefinition>& globalVars = gtb.GetAllVariables();
-
-    // Add Global Variable button
-    if (ImGui::Button("+##globalVarAdd", ImVec2(30, 0)))
-    {
-        ImGui::OpenPopup("AddGlobalVariablePopup");
-    }
-    ImGui::SameLine();
-    ImGui::TextDisabled("Add global variable");
-
-    // Add Global Variable Modal Dialog
-    if (ImGui::BeginPopupModal("AddGlobalVariablePopup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        static char newVarName[128] = "newGlobal";
-        static int newVarTypeIdx = 2;  // Default to Int
-        static char newVarDescription[256] = "Enter description...";
-
-        ImGui::InputText("Variable Name##new", newVarName, sizeof(newVarName));
-
-        const char* typeOptions[] = { "Bool", "Int", "Float", "String", "Vector", "EntityID" };
-        const VariableType typeValues[] = {
-            VariableType::Bool, VariableType::Int, VariableType::Float,
-            VariableType::String, VariableType::Vector, VariableType::EntityID
-        };
-        ImGui::Combo("Type##new", &newVarTypeIdx, typeOptions, 6);
-
-        ImGui::InputTextMultiline("Description##new", newVarDescription, sizeof(newVarDescription), ImVec2(0, 60));
-
-        if (ImGui::Button("Create", ImVec2(120, 0)))
-        {
-            if (strlen(newVarName) > 0 && !gtb.HasVariable(newVarName))
-            {
-                TaskValue defaultVal = GetDefaultValueForType(typeValues[newVarTypeIdx]);
-                if (gtb.AddVariable(newVarName, typeValues[newVarTypeIdx], defaultVal, newVarDescription, false))
-                {
-                    SYSTEM_LOG << "[VSEditor] Created new global variable: " << newVarName << "\n";
-                    gtb.SaveToFile();  // Use last loaded path automatically
-
-                    // Phase 24: Hot reload to refresh registry and propagate to all panels
-                    GlobalTemplateBlackboard::Reload();
-
-                    m_dirty = true;
-
-                    // Reset form
-                    memset(newVarName, 0, sizeof(newVarName));
-                    strcpy_s(newVarName, sizeof(newVarName), "newGlobal");
-                    newVarTypeIdx = 2;
-                    memset(newVarDescription, 0, sizeof(newVarDescription));
-                    strcpy_s(newVarDescription, sizeof(newVarDescription), "Enter description...");
-
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0)))
-        {
-            ImGui::CloseCurrentPopup();
-        }
-
-        ImGui::EndPopup();
-    }
-
-    ImGui::Separator();
-
-    if (globalVars.empty())
-    {
-        ImGui::TextDisabled("(no global variables defined)");
-        ImGui::TextDisabled("Click [+] above to create new global variables");
-        return;
-    }
-
-    ImGui::TextDisabled("Global variables from project registry");
-    ImGui::TextDisabled("Values shown are editor-specific (persisted with graph)");
-    ImGui::Separator();
-
-    // Check if EntityBlackboard is initialized
-    if (!m_entityBlackboard)
-    {
-        ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "[ERROR] EntityBlackboard not initialized");
-        return;
-    }
-
-    // Display each global variable with editable entity-specific value
-    for (size_t gi = 0; gi < globalVars.size(); ++gi)
-    {
-        const GlobalEntryDefinition& globalDef = globalVars[gi];
-
-        ImGui::PushID(static_cast<int>(gi));
-
-        // ---- Variable name (read-only) with type label + Delete button ----
-        ImGui::TextColored(ImVec4(0.8f, 0.95f, 1.0f, 1.0f), "(%s) %s",
-                          VariableTypeToString(globalDef.Type).c_str(),
-                          globalDef.Key.c_str());
-
-        ImGui::SameLine();
-        ImGui::TextDisabled("(%.1f KB)", 0.1f);  // Placeholder space
-        ImGui::SameLine();
-
-        // Delete button for global variable
-        if (ImGui::SmallButton("Delete##globalvar"))
-        {
-            // Mark for deletion (we'll process after the loop to avoid iterator invalidation)
-            std::string varToDelete = globalDef.Key;
-            if (gtb.RemoveVariable(varToDelete))
-            {
-                SYSTEM_LOG << "[VSEditor] Deleted global variable: " << varToDelete << "\n";
-                gtb.SaveToFile();  // Use last loaded path automatically
-
-                // Phase 24: Hot reload to refresh registry
-                GlobalTemplateBlackboard::Reload();
-
-                m_dirty = true;
-            }
-            ImGui::PopID();
-            continue;  // Skip rendering the rest of this variable's UI
-        }
-
-        // ---- Description (if available) ----
-        if (!globalDef.Description.empty())
-        {
-            ImGui::TextDisabled("  %s", globalDef.Description.c_str());
-        }
-
-        // Create unique table ID per global variable to avoid ImGui::BeginTable() failures
-        std::string tableId = "##GlobalVarTable_" + std::to_string(gi);
-        if (ImGui::BeginTable(tableId.c_str(), 2, ImGuiTableFlags_SizingStretchSame, ImVec2(0, 0)))
-        {
-            ImGui::TableSetupColumn("Label", 0);
-            ImGui::TableSetupColumn("Value", 0);
-
-            // ---- Default Value (read-only) ----
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::TextDisabled("Default:");
-            ImGui::TableSetColumnIndex(1);
-
-            const TaskValue& defaultValue = globalDef.DefaultValue;
-            std::string defaultStr;
-            switch (globalDef.Type)
-            {
-                case VariableType::Bool:
-                    defaultStr = defaultValue.IsNone() ? "false" : (defaultValue.AsBool() ? "true" : "false");
-                    break;
-                case VariableType::Int:
-                    defaultStr = defaultValue.IsNone() ? "0" : std::to_string(defaultValue.AsInt());
-                    break;
-                case VariableType::Float:
-                {
-                    std::ostringstream oss;
-                    oss << std::fixed << std::setprecision(2);
-                    oss << (defaultValue.IsNone() ? 0.0f : defaultValue.AsFloat());
-                    defaultStr = oss.str();
-                    break;
-                }
-                case VariableType::String:
-                    defaultStr = defaultValue.IsNone() ? "" : defaultValue.AsString();
-                    break;
-                case VariableType::Vector:
-                    defaultStr = "(vector)";
-                    break;
-                case VariableType::EntityID:
-                    defaultStr = defaultValue.IsNone() ? "0" : std::to_string(static_cast<int>(defaultValue.AsEntityID()));
-                    break;
-                default:
-                    defaultStr = "(unknown)";
-                    break;
-            }
-            ImGui::TextDisabled("%s", defaultStr.c_str());
-
-            // ---- Current Value (editable with scope resolution) ----
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::TextDisabled("Current:");
-            ImGui::TableSetColumnIndex(1);
-
-            // Use scoped variable access to get/set entity-specific value
-            std::string scopedVarName = "(G)" + globalDef.Key;
-            TaskValue currentValue = m_entityBlackboard->GetValueScoped(scopedVarName);
-
-            // Create type-specific input widget
-            bool valueChanged = false;
-            switch (globalDef.Type)
-            {
-                case VariableType::Bool:
-                {
-                    bool bVal = currentValue.IsNone() ? false : currentValue.AsBool();
-                    if (ImGui::Checkbox("##bool_val", &bVal))
-                    {
-                        m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(bVal));
-                        m_dirty = true;
-                        valueChanged = true;
-                    }
-                    break;
-                }
-                case VariableType::Int:
-                {
-                    int iVal = currentValue.IsNone() ? 0 : currentValue.AsInt();
-                    if (ImGui::InputInt("##int_val", &iVal))
-                    {
-                        m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(iVal));
-                        m_dirty = true;
-                        valueChanged = true;
-                    }
-                    break;
-                }
-                case VariableType::Float:
-                {
-                    float fVal = currentValue.IsNone() ? 0.0f : currentValue.AsFloat();
-                    if (ImGui::InputFloat("##float_val", &fVal))
-                    {
-                        m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(fVal));
-                        m_dirty = true;
-                        valueChanged = true;
-                    }
-                    break;
-                }
-                case VariableType::String:
-                {
-                    static std::unordered_map<size_t, std::vector<char>> stringBuffers;
-                    size_t bufKey = gi; // Use index as unique key for buffer storage
-                    if (stringBuffers.find(bufKey) == stringBuffers.end())
-                    {
-                        std::string initialStr = currentValue.IsNone() ? "" : currentValue.AsString();
-                        stringBuffers[bufKey] = std::vector<char>(initialStr.begin(), initialStr.end());
-                        stringBuffers[bufKey].push_back('\0');
-                        stringBuffers[bufKey].resize(256);  // Allocate buffer
-                    }
-
-                    ImGui::SetNextItemWidth(-1.0f);
-                    if (ImGui::InputText("##string_val", stringBuffers[bufKey].data(), 256, ImGuiInputTextFlags_EnterReturnsTrue))
-                    {
-                        std::string newStr(stringBuffers[bufKey].data());
-                        m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(newStr));
-                        m_dirty = true;
-                        valueChanged = true;
-                    }
-                    break;
-                }
-                case VariableType::Vector:
-                {
-                    Vector vVal = currentValue.IsNone() ? Vector{0.0f, 0.0f, 0.0f} : currentValue.AsVector();
-                    float vArray[3] = {vVal.x, vVal.y, vVal.z};
-                    if (ImGui::InputFloat3("##vector_val", vArray))
-                    {
-                        Vector newVec{vArray[0], vArray[1], vArray[2]};
-                        m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(newVec));
-                        m_dirty = true;
-                        valueChanged = true;
-                    }
-                    break;
-                }
-                case VariableType::EntityID:
-                {
-                    int eID = currentValue.IsNone() ? 0 : static_cast<int>(currentValue.AsEntityID());
-                    if (ImGui::InputInt("##entityid_val", &eID))
-                    {
-                        m_entityBlackboard->SetValueScoped(scopedVarName, TaskValue(eID >= 0 ? eID : 0));
-                        m_dirty = true;
-                        valueChanged = true;
-                    }
-                    break;
-                }
-                default:
-                    ImGui::TextDisabled("(unsupported type)");
-                    break;
-            }
-
-            // ---- Persistent flag ----
-            if (globalDef.IsPersistent)
-            {
-                ImGui::TableNextRow();
-                ImGui::TableSetColumnIndex(0);
-                ImGui::TextDisabled("Flags:");
-                ImGui::TableSetColumnIndex(1);
-                ImGui::TextColored(ImVec4(0.7f, 0.9f, 0.5f, 1.0f), "[Persistent]");
-            }
-
-            ImGui::EndTable();
-        }
-        ImGui::Separator();
-        ImGui::PopID();
-    }
-}
+// ============================================================================
+// PHASE 12 — RenderGlobalVariablesPanel() MIGRATED
+// ============================================================================
+// NOTE: This method has been MIGRATED to VisualScriptEditorPanel_Blackboard.cpp
+//       as part of Phase 12 (Blackboard Panel Extraction).
+//       See: Source/BlueprintEditor/VisualScriptEditorPanel_Blackboard.cpp
+//
+// Original signature:
+//   void VisualScriptEditorPanel::RenderGlobalVariablesPanel();
+//
+// Purpose: Render global variables panel with Phase 24 registry integration.
+// ============================================================================
 
 } // namespace Olympe
