@@ -17,6 +17,12 @@
       "key": "mFoodPortion",
       "type": "Int",
       "value": 4
+    },
+    {
+      "isGlobal": false,
+      "key": "cst_",
+      "type": "Int",
+      "value": 0
     }
   ],
   "dataConnections": [
@@ -36,6 +42,18 @@
       "fromNode": 16,
       "fromPin": "Result",
       "toNode": 13,
+      "toPin": "Value"
+    },
+    {
+      "fromNode": 21,
+      "fromPin": "Value",
+      "toNode": 22,
+      "toPin": "A"
+    },
+    {
+      "fromNode": 22,
+      "fromPin": "Result",
+      "toNode": 20,
       "toPin": "Value"
     }
   ],
@@ -65,15 +83,27 @@
       "toPin": "In"
     },
     {
-      "fromNode": 13,
-      "fromPin": "Completed",
-      "toNode": 5,
+      "fromNode": 3,
+      "fromPin": "Then",
+      "toNode": 19,
       "toPin": "In"
     },
     {
-      "fromNode": 3,
-      "fromPin": "Then",
+      "fromNode": 19,
+      "fromPin": "Out",
       "toNode": 13,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 19,
+      "fromPin": "Out_1",
+      "toNode": 20,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 19,
+      "fromPin": "Out_2",
+      "toNode": 5,
       "toPin": "In"
     }
   ],
@@ -174,10 +204,10 @@
       "label": "Need to eat?",
       "nodeConditionRefs": [
         {
-          "leftPinID": "pin_99a0cd30-38ba-4f6d-ac94-9e2e6a203017",
+          "leftPinID": "",
           "logicalOp": "Start",
-          "presetID": "preset_91d62af4-b6bf-4427-b8a8-9e58c948460b",
-          "rightPinID": "pin_7af2eb92-db71-4925-989a-337a5fb12b1a"
+          "presetID": "preset_53cfd155-5b07-4d9d-a77c-152f60c26fdc",
+          "rightPinID": ""
         }
       ],
       "params": {
@@ -191,8 +221,8 @@
         }
       },
       "position": {
-        "x": 487,
-        "y": 190
+        "x": 444,
+        "y": 244
       },
       "type": "Branch"
     },
@@ -238,8 +268,8 @@
         }
       },
       "position": {
-        "x": 1460.53,
-        "y": 133.809
+        "x": 1314.53,
+        "y": 360.809
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -262,8 +292,8 @@
         }
       },
       "position": {
-        "x": 793,
-        "y": 611
+        "x": 913,
+        "y": 472
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -271,7 +301,7 @@
     {
       "bbKey": "mHealth",
       "id": 13,
-      "label": "Set mHealth value/test save phase 11",
+      "label": "Set mHealth value",
       "params": {
         "__posX": {
           "LiteralValue": 912,
@@ -283,8 +313,8 @@
         }
       },
       "position": {
-        "x": 1094,
-        "y": 229
+        "x": 1458.37,
+        "y": -274.759
       },
       "type": "SetBBValue"
     },
@@ -303,8 +333,8 @@
         }
       },
       "position": {
-        "x": 834,
-        "y": 329
+        "x": 1100.37,
+        "y": -259.759
       },
       "type": "GetBBValue"
     },
@@ -323,8 +353,8 @@
         }
       },
       "position": {
-        "x": 791.794,
-        "y": 450.124
+        "x": 1058.16,
+        "y": -138.635
       },
       "type": "GetBBValue"
     },
@@ -357,8 +387,105 @@
         }
       },
       "position": {
-        "x": 997,
-        "y": 331
+        "x": 1263.37,
+        "y": -257.759
+      },
+      "type": "MathOp"
+    },
+    {
+      "dynamicExecPins": [
+        "Out_1",
+        "Out_2"
+      ],
+      "id": 19,
+      "label": "Sequence Mheath & mFatigue",
+      "params": {
+        "__posX": {
+          "LiteralValue": 260,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 250,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 863.937,
+        "y": 72.8335
+      },
+      "type": "Sequence"
+    },
+    {
+      "bbKey": "mFatigue",
+      "id": 20,
+      "label": "Set mFatigue value",
+      "params": {
+        "__posX": {
+          "LiteralValue": 912,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 182,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1540.37,
+        "y": 83.9036
+      },
+      "type": "SetBBValue"
+    },
+    {
+      "bbKey": "mFatigue",
+      "id": 21,
+      "label": "GetBBValue",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1097.68,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 229.978,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1311.36,
+        "y": -81.0444
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "id": 22,
+      "label": "MathOp",
+      "mathOpRef": {
+        "leftOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        },
+        "mathOperator": "+",
+        "rightOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        }
+      },
+      "params": {
+        "__posX": {
+          "LiteralValue": 1221.68,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 208.978,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1434.52,
+        "y": -48.9556
       },
       "type": "MathOp"
     }
@@ -384,36 +511,23 @@
         "value": "[Pin-in]"
       },
       "name": "Condition",
-      "op": "==",
+      "op": ">=",
       "right": {
         "mode": "Const",
-        "value": 0
+        "value": 10
       }
     },
     {
-      "id": "preset_e117d5ac-623d-47a7-9dc9-c92f3b147e8c",
+      "id": "preset_53cfd155-5b07-4d9d-a77c-152f60c26fdc",
       "left": {
-        "mode": "Variable",
-        "value": "timeScale"
-      },
-      "name": "Condition",
-      "op": "==",
-      "right": {
         "mode": "Variable",
         "value": "mFatigue"
-      }
-    },
-    {
-      "id": "preset_91d62af4-b6bf-4427-b8a8-9e58c948460b",
-      "left": {
-        "mode": "Pin",
-        "value": "[Pin-in]"
       },
       "name": "Condition",
-      "op": "==",
+      "op": ">=",
       "right": {
-        "mode": "Pin",
-        "value": "In #2L: [[Pin-in]] == [0]"
+        "mode": "Const",
+        "value": 10
       }
     }
   ],

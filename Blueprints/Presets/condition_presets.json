@@ -20,27 +20,14 @@
                 "value": "[Pin-in]"
             },
             "name": "Condition",
-            "op": "==",
+            "op": ">=",
             "right": {
                 "mode": "Const",
-                "value": 0
+                "value": 10
             }
         },
         {
-            "id": "preset_e117d5ac-623d-47a7-9dc9-c92f3b147e8c",
-            "left": {
-                "mode": "Variable",
-                "value": "timeScale"
-            },
-            "name": "Condition",
-            "op": "==",
-            "right": {
-                "mode": "Variable",
-                "value": "mFatigue"
-            }
-        },
-        {
-            "id": "preset_91d62af4-b6bf-4427-b8a8-9e58c948460b",
+            "id": "preset_53cfd155-5b07-4d9d-a77c-152f60c26fdc",
             "left": {
                 "mode": "Variable",
                 "value": ""

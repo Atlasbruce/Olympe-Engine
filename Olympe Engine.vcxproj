@@ -488,10 +488,14 @@
     <None Include="analyze_codebase_v2.ps1" />
     <None Include="blueprint_editor_config.json" />
     <None Include="ClassDiagram.cd" />
+    <None Include="COMPREHENSIVE_VERIFICATION_REPORT.md" />
     <None Include="config\ATS-VS-editor-config.json" />
     <None Include="Config\global_blackboard_register.json" />
     <None Include="olympe.ini" />
     <None Include="OlympeBlueprintEditor.vcxproj" />
+    <None Include="PHASE_11_VERIFICATION_ConditionUI.md" />
+    <None Include="PHASE_12_VERIFICATION_Blackboard.md" />
+    <None Include="PHASE_9_VERIFICATION_Canvas.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
