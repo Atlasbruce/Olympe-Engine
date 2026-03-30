@@ -213,6 +213,7 @@
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_RenderingCore.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Canvas.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Properties.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_ConditionUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -480,6 +481,7 @@
     <None Include="Config\global_blackboard_register.json" />
     <None Include="OlympeBlueprintEditor.vcxproj" />
     <None Include="VERIFICATION_REPORT.md" />
+    <None Include="PHASE_11_COMPLETION_REPORT.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

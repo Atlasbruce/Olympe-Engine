@@ -174,10 +174,10 @@
       "label": "Need to eat?",
       "nodeConditionRefs": [
         {
-          "leftPinID": "",
+          "leftPinID": "pin_99a0cd30-38ba-4f6d-ac94-9e2e6a203017",
           "logicalOp": "Start",
           "presetID": "preset_91d62af4-b6bf-4427-b8a8-9e58c948460b",
-          "rightPinID": ""
+          "rightPinID": "pin_7af2eb92-db71-4925-989a-337a5fb12b1a"
         }
       ],
       "params": {
@@ -238,8 +238,8 @@
         }
       },
       "position": {
-        "x": 1350.53,
-        "y": 173.809
+        "x": 1460.53,
+        "y": 133.809
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -271,7 +271,7 @@
     {
       "bbKey": "mHealth",
       "id": 13,
-      "label": "Set mHealth value/test save2",
+      "label": "Set mHealth value/test save phase 11",
       "params": {
         "__posX": {
           "LiteralValue": 912,

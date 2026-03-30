@@ -81,6 +81,7 @@
     <ClCompile Include="Source\BlueprintEditor\GraphExecutionSimulator.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ExecutionTestPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Canvas.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_ConditionUI.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Core.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_FileOperations.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Helpers.cpp" />
@@ -489,6 +490,7 @@
     <None Include="Config\global_blackboard_register.json" />
     <None Include="olympe.ini" />
     <None Include="OlympeBlueprintEditor.vcxproj" />
+    <None Include="PHASE_11_COMPLETION_REPORT.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />

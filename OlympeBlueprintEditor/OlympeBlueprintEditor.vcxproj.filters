@@ -616,6 +616,9 @@
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Properties.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_ConditionUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
