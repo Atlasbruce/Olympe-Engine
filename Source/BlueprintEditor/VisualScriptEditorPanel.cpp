@@ -1462,112 +1462,23 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
 // ============================================================================
 // Blackboard validation helpers (BUG-002 Fix #1)
 // ============================================================================
-
-void VisualScriptEditorPanel::ValidateAndCleanBlackboardEntries()
-{
-    std::vector<BlackboardEntry>& entries = m_template.Blackboard;
-    size_t before = entries.size();
-
-    entries.erase(
-        std::remove_if(entries.begin(), entries.end(),
-            [](const BlackboardEntry& e) {
-                if (e.Key.empty()) {
-                    SYSTEM_LOG << "[VSEditor] ValidateAndClean: removing entry with empty key\n";
-                    return true;
-                }
-                if (e.Type == VariableType::None) {
-                    SYSTEM_LOG << "[VSEditor] ValidateAndClean: removing entry '"
-                               << e.Key << "' with VariableType::None\n";
-                    return true;
-                }
-                return false;
-            }),
-        entries.end());
-
-    size_t removed = before - entries.size();
-    if (removed > 0)
-    {
-        SYSTEM_LOG << "[VSEditor] ValidateAndClean: removed " << removed
-                   << " invalid blackboard entries\n";
-        m_dirty = true;
-    }
-}
-
-void VisualScriptEditorPanel::CommitPendingBlackboardEdits()
-{
-    for (std::unordered_map<int, std::string>::iterator it = m_pendingBlackboardEdits.begin();
-         it != m_pendingBlackboardEdits.end(); ++it)
-    {
-        int idx = it->first;
-        if (idx >= 0 && idx < static_cast<int>(m_template.Blackboard.size()))
-        {
-            m_template.Blackboard[static_cast<size_t>(idx)].Key = it->second;
-        }
-    }
-    m_pendingBlackboardEdits.clear();
-}
+// NOTE: ValidateAndCleanBlackboardEntries() and CommitPendingBlackboardEdits()
+// have been extracted to VisualScriptEditorPanel_Utilities.cpp (Phase 5).
+// See: Source/BlueprintEditor/VisualScriptEditorPanel_Utilities.cpp
 
 // ============================================================================
 // BUG-003 Viewport helpers
 // ============================================================================
-
-void VisualScriptEditorPanel::ResetViewportBeforeSave()
-{
-    SYSTEM_LOG << "[VSEditor] ResetViewportBeforeSave: saving current panning\n";
-    m_lastViewportPanning = Vector::FromImVec2(ImNodes::EditorContextGetPanning());
-    m_viewportResetDone   = true;
-
-    // Reset panning to (0, 0) so that any residual editor-space offset from
-    // user navigation is zeroed out before SyncNodePositionsFromImNodes reads
-    // GetNodeGridSpacePos (which is already pan-independent, but this ensures
-    // no subtle ImNodes internal state leaks into the saved positions).
-    ImNodes::EditorContextResetPanning(ImVec2(0.0f, 0.0f));
-    SYSTEM_LOG << "[VSEditor] ResetViewportBeforeSave: panning reset to (0,0) "
-               << "(was " << m_lastViewportPanning.x << "," << m_lastViewportPanning.y << ")\n";
-}
-
-void VisualScriptEditorPanel::AfterSave()
-{
-    if (!m_viewportResetDone)
-        return;
-
-    // Restore the viewport so the canvas does not visually jump for the user.
-    ImNodes::EditorContextResetPanning(m_lastViewportPanning.ToImVec2());
-    m_viewportResetDone = false;
-    SYSTEM_LOG << "[VSEditor] AfterSave: viewport panning restored to ("
-               << m_lastViewportPanning.x << "," << m_lastViewportPanning.y << ")\n";
-}
-
-ImVec2 VisualScriptEditorPanel::ScreenToCanvasPos(ImVec2 screenPos) const
-{
-    // Convert absolute screen-space position to ImNodes editor (canvas) space.
-    // Editor space = grid space + panning, so:
-    //   editorX = screenX - canvasOrigin.x - windowPos.x
-    // ImNodes 0.4 has no zoom API; zoom is implicitly 1.0f.
-    ImVec2 canvasPanning = ImNodes::EditorContextGetPanning();
-    ImVec2 windowPos     = ImGui::GetWindowPos();
-    return ImVec2(
-        screenPos.x - windowPos.x - canvasPanning.x,
-        screenPos.y - windowPos.y - canvasPanning.y);
-}
+// NOTE: ResetViewportBeforeSave(), AfterSave(), and ScreenToCanvasPos()
+// have been extracted to VisualScriptEditorPanel_Utilities.cpp (Phase 5).
+// See: Source/BlueprintEditor/VisualScriptEditorPanel_Utilities.cpp
 
 // ============================================================================
 // UX Enhancement #3 — Type-filtered variable utility
 // ============================================================================
-
-/*static*/
-std::vector<BlackboardEntry> VisualScriptEditorPanel::GetVariablesByType(
-    const std::vector<BlackboardEntry>& allVars,
-    VariableType expectedType)
-{
-    std::vector<BlackboardEntry> filtered;
-    for (size_t i = 0; i < allVars.size(); ++i)
-    {
-        if (allVars[i].Type == expectedType)
-            filtered.push_back(allVars[i]);
-    }
-    return filtered;
-}
+// NOTE: GetVariablesByType() has been extracted to 
+// VisualScriptEditorPanel_Utilities.cpp (Phase 5).
+// See: Source/BlueprintEditor/VisualScriptEditorPanel_Utilities.cpp
 
 // ============================================================================
 // Rendering
