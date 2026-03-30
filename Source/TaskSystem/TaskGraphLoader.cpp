@@ -414,6 +414,11 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
     if (nd.Type == TaskNodeType::MathOp && JsonHelper::IsObject(nodeJson, "mathOpRef"))
     {
         nd.mathOpRef = MathOpRef::FromJson(nodeJson["mathOpRef"]);
+        // Ensure MathOperator is updated from the deserialized mathOpRef
+        if (nd.MathOperator.empty() && !nd.mathOpRef.mathOperator.empty())
+        {
+            nd.MathOperator = nd.mathOpRef.mathOperator;
+        }
         SYSTEM_LOG << "[TaskGraphLoader] ParseNodeV4: deserialized mathOpRef for MathOp node "
                    << nd.NodeID << "\n";
     }
