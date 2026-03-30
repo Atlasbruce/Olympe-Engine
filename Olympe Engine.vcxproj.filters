@@ -203,6 +203,16 @@
     <ClCompile Include="Source\BlueprintEditor\ExecutionTestPanel.cpp" />
     <ClCompile Include="Source\TaskSystem\EntityBlackboard.cpp" />
     <ClCompile Include="Source\Editor\Panels\VariablePropertyPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Core.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Helpers.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_PinHelpers.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_NodeManagement.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Utilities.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_TemplateSync.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_FileOperations.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_RenderingCore.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Canvas.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Properties.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -468,6 +478,8 @@
     <None Include="add_proj_entries.ps1" />
     <None Include="add_bb_panels.ps1" />
     <None Include="Config\global_blackboard_register.json" />
+    <None Include="OlympeBlueprintEditor.vcxproj" />
+    <None Include="VERIFICATION_REPORT.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

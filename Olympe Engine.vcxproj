@@ -80,6 +80,16 @@
     <ClCompile Include="Source\BlueprintEditor\GraphExecutionTracer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\GraphExecutionSimulator.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ExecutionTestPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Canvas.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Core.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_FileOperations.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Helpers.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_NodeManagement.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_PinHelpers.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Properties.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_RenderingCore.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_TemplateSync.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Utilities.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptNodeRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptRenderer.cpp" />
@@ -478,9 +488,11 @@
     <None Include="config\ATS-VS-editor-config.json" />
     <None Include="Config\global_blackboard_register.json" />
     <None Include="olympe.ini" />
+    <None Include="OlympeBlueprintEditor.vcxproj" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
+    <None Include="VERIFICATION_REPORT.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\olympe.ico" />
