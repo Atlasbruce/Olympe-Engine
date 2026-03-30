@@ -82,6 +82,7 @@
     <ClCompile Include="Source\BlueprintEditor\ExecutionTestPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Core.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Helpers.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_PinHelpers.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptNodeRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptRenderer.cpp" />

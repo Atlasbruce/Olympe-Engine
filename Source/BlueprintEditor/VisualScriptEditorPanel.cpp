@@ -73,79 +73,34 @@ namespace Olympe {
 // Implementation file: Source/BlueprintEditor/VisualScriptEditorPanel_Helpers.cpp
 
 // ============================================================================
-// Pin name helpers
+// Pin Name Helpers
 // ============================================================================
-
-std::vector<std::string> VisualScriptEditorPanel::GetExecInputPins(TaskNodeType type)
-{
-    switch (type)
-    {
-        case TaskNodeType::EntryPoint:
-            return {};  // No exec-in on EntryPoint
-        case TaskNodeType::GetBBValue:
-            return {};  // Phase 24.2: Variable (GetBBValue) is data-pure (no execution pins)
-        case TaskNodeType::MathOp:
-            return {};  // Phase 24.2: MathOp is data-pure (no execution pins)
-        default:
-            return {"In"};
-    }
-}
-
-std::vector<std::string> VisualScriptEditorPanel::GetExecOutputPins(TaskNodeType type)
-{
-    switch (type)
-    {
-        case TaskNodeType::EntryPoint:  return {"Out"};
-        case TaskNodeType::Branch:      return {"Then", "Else"};
-        case TaskNodeType::While:       return {"Loop", "Completed"};
-        case TaskNodeType::ForEach:     return {"Loop Body", "Completed"};
-        case TaskNodeType::DoOnce:      return {"Out"};
-        case TaskNodeType::Delay:       return {"Completed"};
-        case TaskNodeType::SubGraph:    return {"Completed"};
-        case TaskNodeType::VSSequence:  return {"Out"};
-        case TaskNodeType::Switch:      return {"Case_0"};
-        case TaskNodeType::AtomicTask:  return {"Completed"};
-        case TaskNodeType::GetBBValue:  return {};  // Phase 24.2: Variable (GetBBValue) is data-pure (no execution pins)
-        case TaskNodeType::SetBBValue:  return {"Completed"};  // SetBBValue needs exec-out for control flow
-        case TaskNodeType::MathOp:      return {};  // Phase 24.2: MathOp is data-pure (no execution pins)
-        default:                        return {"Out"};
-    }
-}
-
-std::vector<std::string> VisualScriptEditorPanel::GetExecOutputPinsForNode(
-    const TaskNodeDefinition& def) const
-{
-    std::vector<std::string> pins = GetExecOutputPins(def.Type);
-    if (def.Type == TaskNodeType::VSSequence || def.Type == TaskNodeType::Switch)
-    {
-        for (size_t i = 0; i < def.DynamicExecOutputPins.size(); ++i)
-            pins.push_back(def.DynamicExecOutputPins[i]);
-    }
-    return pins;
-}
-
-std::vector<std::string> VisualScriptEditorPanel::GetDataInputPins(TaskNodeType type)
-{
-    switch (type)
-    {
-        case TaskNodeType::SetBBValue:  return {"Value"};
-        case TaskNodeType::MathOp:      return {"A", "B"};
-        // Phase 24: Branch nodes use ONLY dynamic data-in pins (Pin-in)
-        // No static "Condition" pin to avoid conflicts with dynamic pins
-        case TaskNodeType::Branch:      return {};
-        default:                        return {};
-    }
-}
-
-std::vector<std::string> VisualScriptEditorPanel::GetDataOutputPins(TaskNodeType type)
-{
-    switch (type)
-    {
-        case TaskNodeType::GetBBValue:  return {"Value"};
-        case TaskNodeType::MathOp:      return {"Result"};
-        default:                        return {};
-    }
-}
+// NOTE: 5 pin helper methods have been extracted to VisualScriptEditorPanel_PinHelpers.cpp
+// for better code organization and maintainability (Phase 24 refactoring).
+//
+// Methods included in VisualScriptEditorPanel_PinHelpers.cpp:
+//   - GetExecInputPins(TaskNodeType type) — Static exec input pins by node type
+//   - GetExecOutputPins(TaskNodeType type) — Static exec output pins by node type
+//   - GetExecOutputPinsForNode(const TaskNodeDefinition& def) — Inc. dynamic pins
+//   - GetDataInputPins(TaskNodeType type) — Static data input pins by node type
+//   - GetDataOutputPins(TaskNodeType type) — Static data output pins by node type
+//
+// Pin Categories (by node type):
+//   - EntryPoint: exec-out only {"Out"}
+//   - Branch: exec-out {"Then", "Else"} + dynamic data-in pins
+//   - While: exec-out {"Loop", "Completed"}
+//   - ForEach: exec-out {"Loop Body", "Completed"}
+//   - AtomicTask: exec-in/out {"In"} / {"Completed"}
+//   - MathOp: data-in {"A", "B"}, data-out {"Result"} (data-pure)
+//   - GetBBValue: data-out {"Value"} (data-pure)
+//   - SetBBValue: exec-in/out, data-in {"Value"}
+//   - SubGraph: exec-in/out
+//   - VSSequence: exec-out + dynamic pins
+//   - Switch: exec-out + dynamic pins
+//   - Delay: exec-in/out
+//   - DoOnce: exec-in/out
+//
+// Implementation file: Source/BlueprintEditor/VisualScriptEditorPanel_PinHelpers.cpp
 
 // ============================================================================
 // Node management

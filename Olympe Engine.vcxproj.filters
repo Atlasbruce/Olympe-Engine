@@ -205,6 +205,7 @@
     <ClCompile Include="Source\Editor\Panels\VariablePropertyPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Core.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Helpers.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_PinHelpers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
