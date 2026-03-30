@@ -86,6 +86,7 @@
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Helpers.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_NodeManagement.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_PinHelpers.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Properties.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_RenderingCore.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_TemplateSync.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Utilities.cpp" />
@@ -491,6 +492,7 @@
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
+    <None Include="VERIFICATION_REPORT.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\olympe.ico" />

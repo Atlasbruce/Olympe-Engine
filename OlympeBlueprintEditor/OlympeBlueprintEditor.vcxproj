@@ -51,6 +51,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\UndoRedoStack.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Canvas.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_FileOperations.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Properties.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_RenderingCore.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptRenderer.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VSConnectionValidator.cpp" />
