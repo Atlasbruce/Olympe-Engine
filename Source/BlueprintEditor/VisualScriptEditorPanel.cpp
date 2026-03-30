@@ -51,46 +51,26 @@ namespace Olympe {
 // Implementation file: Source/BlueprintEditor/VisualScriptEditorPanel_Core.cpp
 
 // ============================================================================
-// UID helpers
+// Helper Methods
 // ============================================================================
-
-int VisualScriptEditorPanel::AllocNodeID()
-{
-    return m_nextNodeID++;
-}
-
-int VisualScriptEditorPanel::AllocLinkID()
-{
-    return m_nextLinkID++;
-}
-
-// Attribute UIDs are built as:
-//   nodeID * 10000 + offset
-// The offsets are:
-//   0       → exec-in  "In"
-//   100–199 → exec-out pins (index 0-99)
-//   200–299 → data-in  pins (index 0-99)
-//   300–399 → data-out pins (index 0-99)
-
-int VisualScriptEditorPanel::ExecInAttrUID(int nodeID) const
-{
-    return nodeID * 10000 + 0;
-}
-
-int VisualScriptEditorPanel::ExecOutAttrUID(int nodeID, int pinIndex) const
-{
-    return nodeID * 10000 + 100 + pinIndex;
-}
-
-int VisualScriptEditorPanel::DataInAttrUID(int nodeID, int pinIndex) const
-{
-    return nodeID * 10000 + 200 + pinIndex;
-}
-
-int VisualScriptEditorPanel::DataOutAttrUID(int nodeID, int pinIndex) const
-{
-    return nodeID * 10000 + 300 + pinIndex;
-}
+// NOTE: 6 helper methods have been extracted to VisualScriptEditorPanel_Helpers.cpp
+// for better code organization and maintainability (Phase 24 refactoring).
+//
+// Methods included in VisualScriptEditorPanel_Helpers.cpp:
+//   - AllocNodeID() — Allocate unique node IDs
+//   - AllocLinkID() — Allocate unique link IDs
+//   - ExecInAttrUID(int nodeID) — UID for execution input pins
+//   - ExecOutAttrUID(int nodeID, int pinIndex) — UID for execution output pins
+//   - DataInAttrUID(int nodeID, int pinIndex) — UID for data input pins
+//   - DataOutAttrUID(int nodeID, int pinIndex) — UID for data output pins
+//
+// UID Scheme (nodeID * 10000 + offset):
+//   0–99:   Reserved for exec-in
+//   100–199: Exec-out pins
+//   200–299: Data-in pins
+//   300–399: Data-out pins
+//
+// Implementation file: Source/BlueprintEditor/VisualScriptEditorPanel_Helpers.cpp
 
 // ============================================================================
 // Pin name helpers
