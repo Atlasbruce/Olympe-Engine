@@ -244,8 +244,8 @@
         }
       },
       "position": {
-        "x": 1312.53,
-        "y": 227.809
+        "x": 1350.53,
+        "y": 173.809
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -277,7 +277,7 @@
     {
       "bbKey": "mHealth",
       "id": 13,
-      "label": "Set mHealth value",
+      "label": "Set mHealth value _ test save",
       "params": {
         "__posX": {
           "LiteralValue": 912,

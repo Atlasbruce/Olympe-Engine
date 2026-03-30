@@ -49,6 +49,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\ParameterEditorRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\TabManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\UndoRedoStack.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_FileOperations.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptRenderer.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VSConnectionValidator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\VSGraphVerifier.cpp" />
@@ -569,8 +570,3 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
-
-
-
-
-

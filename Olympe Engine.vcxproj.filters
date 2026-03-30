@@ -209,6 +209,7 @@
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_NodeManagement.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Utilities.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_TemplateSync.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_FileOperations.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
