@@ -474,6 +474,7 @@
     <None Include="add_proj_entries.ps1" />
     <None Include="add_bb_panels.ps1" />
     <None Include="Config\global_blackboard_register.json" />
+    <None Include="OlympeBlueprintEditor.vcxproj" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
