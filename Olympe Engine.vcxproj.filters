@@ -483,8 +483,6 @@
     <None Include="Config\global_blackboard_register.json" />
     <None Include="OlympeBlueprintEditor.vcxproj" />
     <None Include="VERIFICATION_REPORT.md" />
-    <None Include="PHASE_11_COMPLETION_REPORT.md" />
-    <None Include="PHASE_12_COMPLETION_REPORT.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

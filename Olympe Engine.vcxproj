@@ -492,8 +492,6 @@
     <None Include="Config\global_blackboard_register.json" />
     <None Include="olympe.ini" />
     <None Include="OlympeBlueprintEditor.vcxproj" />
-    <None Include="PHASE_11_COMPLETION_REPORT.md" />
-    <None Include="PHASE_12_COMPLETION_REPORT.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
