@@ -607,6 +607,9 @@
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_TemplateSync.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_RenderingCore.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
