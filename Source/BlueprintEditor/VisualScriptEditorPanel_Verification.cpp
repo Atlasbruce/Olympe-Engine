@@ -508,33 +508,53 @@ void VisualScriptEditorPanel::RunGraphSimulation()
             case TaskNodeType::AtomicTask:
             {
                 ADD_TRACE("  +- [EVAL] AtomicTask node");
-                ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
-                ADD_TRACE("  |  Task type: '" + nodePtr->AtomicTaskID + "'");
 
-                // Phase 24.10 — Display all parameters
-                if (!nodePtr->Parameters.empty())
+                // Special simplified display for Log Message task
+                if (nodePtr->AtomicTaskID == "log_message")
                 {
-                    ADD_TRACE("  |  Parameters:");
-                    for (const auto& param : nodePtr->Parameters)
+                    ADD_TRACE("  |  Log Message");
+                    // Extract and display only the message parameter
+                    auto msgIt = nodePtr->Parameters.find("message");
+                    if (msgIt != nodePtr->Parameters.end())
                     {
-                        const std::string& paramName = param.first;
-                        const ParameterBinding& binding = param.second;
+                        const std::string& msgValue = msgIt->second.LiteralValue.to_string();
+                        ADD_TRACE("  |  Message: " + msgValue);
+                    }
+                }
+                else
+                {
+                    // Standard display for other AtomicTasks
+                    ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
+                    ADD_TRACE("  |  Task type: '" + nodePtr->AtomicTaskID + "'");
 
-                        std::string paramValue;
-                        if (binding.Type == ParameterBindingType::Literal)
+                    // Display only relevant parameters (exclude position and internal params)
+                    if (!nodePtr->Parameters.empty())
+                    {
+                        ADD_TRACE("  |  Parameters:");
+                        for (const auto& param : nodePtr->Parameters)
                         {
-                            paramValue = binding.LiteralValue.to_string();
-                        }
-                        else if (binding.Type == ParameterBindingType::LocalVariable)
-                        {
-                            paramValue = "[Variable: " + binding.VariableName + "]";
-                        }
-                        else
-                        {
-                            paramValue = "[unknown binding]";
-                        }
+                            const std::string& paramName = param.first;
+                            // Skip internal/position parameters
+                            if (paramName.find("_pos") == 0 || paramName.find("__") == 0)
+                                continue;
 
-                        ADD_TRACE("  |    " + paramName + " = " + paramValue);
+                            const ParameterBinding& binding = param.second;
+                            std::string paramValue;
+                            if (binding.Type == ParameterBindingType::Literal)
+                            {
+                                paramValue = binding.LiteralValue.to_string();
+                            }
+                            else if (binding.Type == ParameterBindingType::LocalVariable)
+                            {
+                                paramValue = "[Variable: " + binding.VariableName + "]";
+                            }
+                            else
+                            {
+                                paramValue = "[unknown binding]";
+                            }
+
+                            ADD_TRACE("  |    " + paramName + " = " + paramValue);
+                        }
                     }
                 }
 

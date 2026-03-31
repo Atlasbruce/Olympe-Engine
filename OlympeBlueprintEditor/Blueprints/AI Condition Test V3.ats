@@ -171,6 +171,36 @@
       "fromPin": "Completed",
       "toNode": 34,
       "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Completed",
+      "toNode": 37,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 37,
+      "fromPin": "Completed",
+      "toNode": 38,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 32,
+      "fromPin": "Completed",
+      "toNode": 39,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 39,
+      "fromPin": "Loop",
+      "toNode": 40,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 39,
+      "fromPin": "Completed",
+      "toNode": 41,
+      "toPin": "In"
     }
   ],
   "globalVariableValues": {
@@ -816,6 +846,116 @@
         "y": 507
       },
       "type": "MathOp"
+    },
+    {
+      "id": 37,
+      "label": "SubGraph - Explore",
+      "params": {
+        "__posX": {
+          "LiteralValue": 815,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 668,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1015,
+        "y": -15
+      },
+      "type": "SubGraph"
+    },
+    {
+      "id": 38,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 420,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 178,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Subgraph completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1268.35,
+        "y": -12.7125
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 39,
+      "label": "While",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1525,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 506,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1500.36,
+        "y": 434.604
+      },
+      "type": "While"
+    },
+    {
+      "id": 40,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 630,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 705,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "While instruction looping",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1730,
+        "y": 378.937
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 41,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 630,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 705,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "While instruction ended",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1729.67,
+        "y": 506.718
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
     }
   ],
   "presets": [
