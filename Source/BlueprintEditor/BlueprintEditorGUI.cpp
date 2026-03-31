@@ -532,17 +532,17 @@ namespace Olympe
             centerWidth = m_MinPanelWidth;
 
         // =====================================================================
-        // LEFT COLUMN: Asset Browser (top 60%) + Inspector (bottom 40%)
+        // LEFT COLUMN: Asset Browser (top 25%) + Inspector (bottom 10%) + Verification Logs (70%)
         // =====================================================================
         ImGui::BeginChild("LeftColumn", ImVec2(m_AssetBrowserWidth, windowHeight), false);
         {
             float leftHeight = ImGui::GetContentRegionAvail().y;
 
-            // Default heights on first frame: 25% Asset Browser, 15% Inspector, 60% Logs
+            // Default heights on first frame: 25% Asset Browser, 10% Inspector, 70% Verification Logs
             if (m_LeftPanelSplitHeight <= 0.0f)
                 m_LeftPanelSplitHeight = leftHeight * 0.25f;
             if (m_InspectorPanelHeight <= 0.0f)
-                m_InspectorPanelHeight = leftHeight * 0.15f;
+                m_InspectorPanelHeight = leftHeight * 0.10f;
 
             const float kMinSectionHeight = 60.0f;
             const float kSplitterHeight = 4.0f;

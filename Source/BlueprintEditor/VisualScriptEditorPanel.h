@@ -346,6 +346,35 @@ private:
      */
     void EvaluateDataNode(int32_t nodeID, int depth, const std::string& indent);
 
+    /**
+     * @brief Recursively traces all upstream pure data nodes in the graph.
+     * Walks data connections backward to show complete data dependency chains.
+     * @param sourceNodeID         ID of the node to trace upstream from
+     * @param indent               Indentation string prefix for logs
+     * @param visitedDataNodes     Set of visited node IDs (prevents cycles)
+     */
+    void TraceUpstreamDataNodes(int32_t sourceNodeID,
+                                const std::string& indent,
+                                std::unordered_set<int>& visitedDataNodes);
+
+    /**
+     * @brief Gets a comprehensive property string for any node type.
+     * Returns all relevant properties formatted for display in traces.
+     * @param node                 The node definition to describe
+     * @return                     Formatted property string with all relevant fields
+     */
+    std::string GetNodePropertyString(const TaskNodeDefinition& node);
+
+    /**
+     * @brief Format task parameters into a readable string.
+     * Extracts parameter names and values for display in traces.
+     * @param parameters           Parameter binding map from a task node
+     * @param indent               Indentation string prefix for formatting
+     * @return                     Formatted parameter string
+     */
+    std::string FormatTaskParameters(const std::unordered_map<std::string, ParameterBinding>& parameters,
+                                     const std::string& indent);
+
 public:
 
     /**

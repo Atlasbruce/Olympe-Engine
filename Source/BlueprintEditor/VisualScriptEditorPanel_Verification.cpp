@@ -25,8 +25,9 @@ namespace Olympe {
 // Phase 24 — Helper macro to log simulation traces to both UI and system log
 #define ADD_TRACE(trace_str) \
     do { \
-        m_simulationTraces.push_back(trace_str); \
-        SYSTEM_LOG << "[SimTrace] " << trace_str << "\n"; \
+        const std::string& _trace_temp = (trace_str); \
+        m_simulationTraces.push_back(_trace_temp); \
+        SYSTEM_LOG << "[SimTrace] " << _trace_temp << "\n"; \
     } while(0)
 
 void VisualScriptEditorPanel::RunVerification()
@@ -187,6 +188,7 @@ void VisualScriptEditorPanel::RunGraphSimulation()
             case TaskNodeType::GetBBValue:
             {
                 ADD_TRACE("  +- [EVAL] GetBBValue node");
+                ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
                 ADD_TRACE("  |  Key: '" + nodePtr->BBKey + "'");
 
                 // Find and display the value
@@ -200,6 +202,39 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                 else
                 {
                     ADD_TRACE("  |  Value: [NOT FOUND]");
+                }
+
+                // Phase 24.7 — Trace outgoing data connections
+                ADD_TRACE("  |  Outgoing data connections:");
+                bool hasDataOutput = false;
+                for (size_t i = 0; i < m_template.DataConnections.size(); ++i)
+                {
+                    if (m_template.DataConnections[i].SourceNodeID == currentNodeID)
+                    {
+                        hasDataOutput = true;
+                        const DataPinConnection& dataConn = m_template.DataConnections[i];
+                        const TaskNodeDefinition* targetNodePtr = nullptr;
+
+                        // Find target node
+                        for (size_t j = 0; j < m_template.Nodes.size(); ++j)
+                        {
+                            if (m_template.Nodes[j].NodeID == dataConn.TargetNodeID)
+                            {
+                                targetNodePtr = &m_template.Nodes[j];
+                                break;
+                            }
+                        }
+
+                        ADD_TRACE("    +- Out -> Node #" + std::to_string(dataConn.TargetNodeID) + 
+                                  " pin '" + dataConn.TargetPinName + "'");
+                        if (targetNodePtr && !targetNodePtr->NodeName.empty())
+                            ADD_TRACE("       '" + targetNodePtr->NodeName + "'");
+                    }
+                }
+
+                if (!hasDataOutput)
+                {
+                    ADD_TRACE("    +- (no data outputs)");
                 }
 
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
@@ -217,7 +252,50 @@ void VisualScriptEditorPanel::RunGraphSimulation()
             case TaskNodeType::SetBBValue:
             {
                 ADD_TRACE("  +- [EVAL] SetBBValue node");
+                ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
                 ADD_TRACE("  |  Key: '" + nodePtr->BBKey + "'");
+
+                // Phase 24.7 — Trace incoming data pins (e.g., Value input from MathOp or GetBBValue)
+                // Find all data connections that target this node on a data pin
+                ADD_TRACE("  |  Incoming data pins:");
+                bool hasDataInput = false;
+
+                // Phase 24.8 — For each incoming data connection, trace its upstream chain
+                std::unordered_set<int> visitedDataNodes;
+
+                for (size_t i = 0; i < m_template.DataConnections.size(); ++i)
+                {
+                    if (m_template.DataConnections[i].TargetNodeID == currentNodeID)
+                    {
+                        hasDataInput = true;
+                        const DataPinConnection& dataConn = m_template.DataConnections[i];
+                        const TaskNodeDefinition* sourceNodePtr = nullptr;
+
+                        // Find source node
+                        for (size_t j = 0; j < m_template.Nodes.size(); ++j)
+                        {
+                            if (m_template.Nodes[j].NodeID == dataConn.SourceNodeID)
+                            {
+                                sourceNodePtr = &m_template.Nodes[j];
+                                break;
+                            }
+                        }
+
+                        ADD_TRACE("    +- Pin: '" + dataConn.TargetPinName + "' from Node #" + 
+                                  std::to_string(dataConn.SourceNodeID));
+                        if (sourceNodePtr && !sourceNodePtr->NodeName.empty())
+                            ADD_TRACE("       '" + sourceNodePtr->NodeName + "'");
+
+                        // Phase 24.8 — Recursively trace this source node's upstream data chain
+                        TraceUpstreamDataNodes(dataConn.SourceNodeID, "       ", visitedDataNodes);
+                    }
+                }
+
+                if (!hasDataInput)
+                {
+                    ADD_TRACE("    +- (no data inputs)");
+                }
+
                 ADD_TRACE("  |  Setting value in blackboard (simulated)");
 
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
@@ -235,28 +313,112 @@ void VisualScriptEditorPanel::RunGraphSimulation()
             case TaskNodeType::MathOp:
             {
                 ADD_TRACE("  +- [EVAL] MathOp node");
-                ADD_TRACE("  |  Operator: '" + nodePtr->MathOperator + "'");
+                ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
 
                 // Display operands from mathOpRef if available
                 std::ostringstream leftOp, rightOp;
+                int32_t leftSourceNode = NODE_INDEX_NONE;
+                int32_t rightSourceNode = NODE_INDEX_NONE;
+                std::string leftVariableName;
+                std::string rightVariableName;
 
                 if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Variable)
-                    leftOp << "Variable: " << nodePtr->mathOpRef.leftOperand.variableName;
+                {
+                    leftVariableName = nodePtr->mathOpRef.leftOperand.variableName;
+                    leftOp << "Variable: " << leftVariableName;
+                }
                 else if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Const)
                     leftOp << "Const: " << nodePtr->mathOpRef.leftOperand.constValue;
-                else
+                else if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Pin)
+                {
                     leftOp << "Pin: [input]";
+                    // Find data connection for left pin
+                    for (size_t i = 0; i < m_template.DataConnections.size(); ++i)
+                    {
+                        if (m_template.DataConnections[i].TargetNodeID == currentNodeID &&
+                            (m_template.DataConnections[i].TargetPinName == "A" ||
+                             m_template.DataConnections[i].TargetPinName.find("Left") != std::string::npos))
+                        {
+                            leftSourceNode = m_template.DataConnections[i].SourceNodeID;
+                            break;
+                        }
+                    }
+                }
 
                 if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Variable)
-                    rightOp << "Variable: " << nodePtr->mathOpRef.rightOperand.variableName;
+                {
+                    rightVariableName = nodePtr->mathOpRef.rightOperand.variableName;
+                    rightOp << "Variable: " << rightVariableName;
+                }
                 else if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Const)
                     rightOp << "Const: " << nodePtr->mathOpRef.rightOperand.constValue;
-                else
+                else if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Pin)
+                {
                     rightOp << "Pin: [input]";
+                    // Find data connection for right pin
+                    for (size_t i = 0; i < m_template.DataConnections.size(); ++i)
+                    {
+                        if (m_template.DataConnections[i].TargetNodeID == currentNodeID &&
+                            (m_template.DataConnections[i].TargetPinName == "B" ||
+                             m_template.DataConnections[i].TargetPinName.find("Right") != std::string::npos))
+                        {
+                            rightSourceNode = m_template.DataConnections[i].SourceNodeID;
+                            break;
+                        }
+                    }
+                }
 
-                ADD_TRACE("  |  Left operand: " + leftOp.str());
-                ADD_TRACE("  |  Right operand: " + rightOp.str());
+                ADD_TRACE("  |  Operator: " + nodePtr->MathOperator);
+                ADD_TRACE("  |  Input A: " + leftOp.str());
+                ADD_TRACE("  |  Input B: " + rightOp.str());
                 ADD_TRACE("  |  Result: [computed value]");
+
+                // Phase 24.8 — Recursively trace upstream data nodes for pin inputs
+                std::unordered_set<int> visitedDataNodes;
+
+                // Trace left input (Pin mode)
+                if (leftSourceNode != NODE_INDEX_NONE)
+                {
+                    ADD_TRACE("  |  [Upstream Pin A]:");
+                    TraceUpstreamDataNodes(leftSourceNode, "  |    ", visitedDataNodes);
+                }
+                // Phase 24.11 — Also trace variable sources (GetBBValue for Variable mode)
+                else if (!leftVariableName.empty())
+                {
+                    ADD_TRACE("  |  [Upstream Variable A '" + leftVariableName + "']:");
+                    // Find GetBBValue node that reads this variable
+                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                    {
+                        if (m_template.Nodes[i].Type == TaskNodeType::GetBBValue &&
+                            m_template.Nodes[i].BBKey == leftVariableName)
+                        {
+                            TraceUpstreamDataNodes(m_template.Nodes[i].NodeID, "  |    ", visitedDataNodes);
+                            break;
+                        }
+                    }
+                }
+
+                // Trace right input (Pin mode)
+                if (rightSourceNode != NODE_INDEX_NONE)
+                {
+                    ADD_TRACE("  |  [Upstream Pin B]:");
+                    TraceUpstreamDataNodes(rightSourceNode, "  |    ", visitedDataNodes);
+                }
+                // Phase 24.11 — Also trace variable sources (GetBBValue for Variable mode)
+                else if (!rightVariableName.empty())
+                {
+                    ADD_TRACE("  |  [Upstream Variable B '" + rightVariableName + "']:");
+                    // Find GetBBValue node that reads this variable
+                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                    {
+                        if (m_template.Nodes[i].Type == TaskNodeType::GetBBValue &&
+                            m_template.Nodes[i].BBKey == rightVariableName)
+                        {
+                            TraceUpstreamDataNodes(m_template.Nodes[i].NodeID, "  |    ", visitedDataNodes);
+                            break;
+                        }
+                    }
+                }
 
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
                 {
@@ -273,6 +435,7 @@ void VisualScriptEditorPanel::RunGraphSimulation()
             case TaskNodeType::Branch:
             {
                 ADD_TRACE("  +- [EVAL] Branch node");
+                ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
                 ADD_TRACE("  |  Evaluating condition...");
 
                 // Simplified: always assume condition is true for simulation
@@ -346,6 +509,7 @@ void VisualScriptEditorPanel::RunGraphSimulation()
             case TaskNodeType::Switch:
             {
                 ADD_TRACE("  +- [EVAL] Switch node");
+                ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
                 ADD_TRACE("  |  Variable: '" + nodePtr->switchVariable + "'");
                 ADD_TRACE("  |  Cases: " + std::to_string(nodePtr->switchCases.size()));
 
@@ -366,6 +530,7 @@ void VisualScriptEditorPanel::RunGraphSimulation()
             case TaskNodeType::Delay:
             {
                 ADD_TRACE("  +- [EVAL] Delay node");
+                ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
                 std::ostringstream delayTrace;
                 delayTrace << "  |  Duration: " << nodePtr->DelaySeconds << " seconds";
                 ADD_TRACE(delayTrace.str());
@@ -386,7 +551,36 @@ void VisualScriptEditorPanel::RunGraphSimulation()
             case TaskNodeType::AtomicTask:
             {
                 ADD_TRACE("  +- [EVAL] AtomicTask node");
+                ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
                 ADD_TRACE("  |  Task type: '" + nodePtr->AtomicTaskID + "'");
+
+                // Phase 24.10 — Display all parameters
+                if (!nodePtr->Parameters.empty())
+                {
+                    ADD_TRACE("  |  Parameters:");
+                    for (const auto& param : nodePtr->Parameters)
+                    {
+                        const std::string& paramName = param.first;
+                        const ParameterBinding& binding = param.second;
+
+                        std::string paramValue;
+                        if (binding.Type == ParameterBindingType::Literal)
+                        {
+                            paramValue = binding.LiteralValue.to_string();
+                        }
+                        else if (binding.Type == ParameterBindingType::LocalVariable)
+                        {
+                            paramValue = "[Variable: " + binding.VariableName + "]";
+                        }
+                        else
+                        {
+                            paramValue = "[unknown binding]";
+                        }
+
+                        ADD_TRACE("  |    " + paramName + " = " + paramValue);
+                    }
+                }
+
                 ADD_TRACE("  |  (Task execution simulated)");
 
                 // Find Completed connection
@@ -406,6 +600,7 @@ void VisualScriptEditorPanel::RunGraphSimulation()
             case TaskNodeType::VSSequence:
             {
                 ADD_TRACE("  +- [EVAL] Sequence node");
+                ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
 
                 // Phase 24 Enhancement: Collect ALL outgoing exec connections from this Sequence
                 std::vector<ExecPinConnection> sequenceOutputs;
@@ -457,6 +652,7 @@ void VisualScriptEditorPanel::RunGraphSimulation()
             case TaskNodeType::While:
             {
                 ADD_TRACE("  +- [EVAL] While loop node");
+                ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
                 ADD_TRACE("  |  Evaluating condition...");
                 ADD_TRACE("  |  Condition result: TRUE (Loop continues)");
 
@@ -1029,6 +1225,251 @@ void VisualScriptEditorPanel::EvaluateDataNode(int32_t nodeID, int depth, const 
             // Other data node types can be added here
             break;
     }
+}
+
+// Phase 24.10 — Format task parameters for display in traces
+// Extracts and formats all parameters from a ParameterBinding map
+std::string VisualScriptEditorPanel::FormatTaskParameters(const std::unordered_map<std::string, ParameterBinding>& parameters,
+                                                           const std::string& indent)
+{
+    if (parameters.empty())
+        return "";
+
+    std::ostringstream ss;
+    ss << "\n" << indent << "Parameters:";
+
+    for (const auto& param : parameters)
+    {
+        const std::string& paramName = param.first;
+        const ParameterBinding& binding = param.second;
+
+        ss << "\n" << indent << "  " << paramName << " = ";
+
+        if (binding.Type == ParameterBindingType::Literal)
+        {
+            ss << binding.LiteralValue.to_string();
+        }
+        else if (binding.Type == ParameterBindingType::LocalVariable)
+        {
+            ss << "[Variable: " << binding.VariableName << "]";
+        }
+    }
+
+    return ss.str();
+}
+
+// Phase 24.8 — Recursive tracing of upstream data nodes (pure data chains)
+// Traces all upstream pure data nodes (GetBBValue, MathOp, etc.) with recursive depth
+void VisualScriptEditorPanel::TraceUpstreamDataNodes(int32_t sourceNodeID,
+                                                      const std::string& indent,
+                                                      std::unordered_set<int>& visitedDataNodes)
+{
+    // Prevent infinite loops in data graphs
+    if (visitedDataNodes.count(sourceNodeID) > 0)
+    {
+        ADD_TRACE(indent + "+- [CYCLE] Already traced: Node #" + std::to_string(sourceNodeID));
+        return;
+    }
+    visitedDataNodes.insert(sourceNodeID);
+
+    // Find node definition
+    const TaskNodeDefinition* nodePtr = nullptr;
+    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+    {
+        if (m_template.Nodes[i].NodeID == sourceNodeID)
+        {
+            nodePtr = &m_template.Nodes[i];
+            break;
+        }
+    }
+
+    if (!nodePtr)
+    {
+        ADD_TRACE(indent + "+- [ERROR] Node #" + std::to_string(sourceNodeID) + " not found");
+        return;
+    }
+
+    // Determine if this is a pure data node (non-execution)
+    bool isPureDataNode = false;
+    std::string nodeTypeStr = "";
+
+    switch (nodePtr->Type)
+    {
+        case TaskNodeType::GetBBValue:
+            isPureDataNode = true;
+            nodeTypeStr = "GetBBValue";
+            break;
+        case TaskNodeType::MathOp:
+            isPureDataNode = true;
+            nodeTypeStr = "MathOp";
+            break;
+        default:
+            break;
+    }
+
+    if (!isPureDataNode)
+    {
+        // Non-data node: trace once and stop recursion
+        ADD_TRACE(indent + "+- [NON-DATA] Node #" + std::to_string(sourceNodeID) + 
+                  " (" + nodeTypeStr + ")");
+        return;
+    }
+
+    // Trace this data node with its properties
+    ADD_TRACE(indent + "+- [DATA] " + nodeTypeStr + " #" + std::to_string(sourceNodeID));
+    if (!nodePtr->NodeName.empty())
+        ADD_TRACE(indent + "|  Name: '" + nodePtr->NodeName + "'");
+
+    // Add type-specific properties
+    if (nodePtr->Type == TaskNodeType::GetBBValue)
+    {
+        ADD_TRACE(indent + "|  Key: '" + nodePtr->BBKey + "'");
+        ADD_TRACE(indent + "|  (Source: blackboard)");
+    }
+    else if (nodePtr->Type == TaskNodeType::MathOp)
+    {
+        ADD_TRACE(indent + "|  Operator: " + nodePtr->MathOperator);
+
+        // Trace left operand
+        std::string leftDesc = "";
+        int32_t leftSourceNode = NODE_INDEX_NONE;
+
+        if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Variable)
+            leftDesc = "Variable: " + nodePtr->mathOpRef.leftOperand.variableName;
+        else if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Const)
+            leftDesc = "Const: " + nodePtr->mathOpRef.leftOperand.constValue;
+        else if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Pin)
+        {
+            leftDesc = "Pin input";
+            // Find data connection for left pin
+            for (size_t i = 0; i < m_template.DataConnections.size(); ++i)
+            {
+                if (m_template.DataConnections[i].TargetNodeID == sourceNodeID &&
+                    (m_template.DataConnections[i].TargetPinName == "A" ||
+                     m_template.DataConnections[i].TargetPinName.find("Left") != std::string::npos))
+                {
+                    leftSourceNode = m_template.DataConnections[i].SourceNodeID;
+                    break;
+                }
+            }
+        }
+        ADD_TRACE(indent + "|  Left: " + leftDesc);
+
+        // Trace right operand
+        std::string rightDesc = "";
+        int32_t rightSourceNode = NODE_INDEX_NONE;
+
+        if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Variable)
+            rightDesc = "Variable: " + nodePtr->mathOpRef.rightOperand.variableName;
+        else if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Const)
+            rightDesc = "Const: " + nodePtr->mathOpRef.rightOperand.constValue;
+        else if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Pin)
+        {
+            rightDesc = "Pin input";
+            // Find data connection for right pin
+            for (size_t i = 0; i < m_template.DataConnections.size(); ++i)
+            {
+                if (m_template.DataConnections[i].TargetNodeID == sourceNodeID &&
+                    (m_template.DataConnections[i].TargetPinName == "B" ||
+                     m_template.DataConnections[i].TargetPinName.find("Right") != std::string::npos))
+                {
+                    rightSourceNode = m_template.DataConnections[i].SourceNodeID;
+                    break;
+                }
+            }
+        }
+        ADD_TRACE(indent + "|  Right: " + rightDesc);
+
+        // Recursively trace left pin input if it's a data node
+        if (leftSourceNode != NODE_INDEX_NONE)
+        {
+            ADD_TRACE(indent + "|  [Upstream Left]:");
+            TraceUpstreamDataNodes(leftSourceNode, indent + "|  ", visitedDataNodes);
+        }
+
+        // Recursively trace right pin input if it's a data node
+        if (rightSourceNode != NODE_INDEX_NONE)
+        {
+            ADD_TRACE(indent + "|  [Upstream Right]:");
+            TraceUpstreamDataNodes(rightSourceNode, indent + "|  ", visitedDataNodes);
+        }
+    }
+}
+
+// Phase 24.9 — Get comprehensive property string for any node type
+// Returns a formatted string with all relevant properties for display
+std::string VisualScriptEditorPanel::GetNodePropertyString(const TaskNodeDefinition& node)
+{
+    std::ostringstream ss;
+
+    switch (node.Type)
+    {
+        case TaskNodeType::EntryPoint:
+            ss << "EntryPoint";
+            break;
+
+        case TaskNodeType::GetBBValue:
+            ss << "GetBBValue | Key: '" << node.BBKey << "'";
+            break;
+
+        case TaskNodeType::SetBBValue:
+            ss << "SetBBValue | Key: '" << node.BBKey << "'";
+            break;
+
+        case TaskNodeType::MathOp:
+            ss << "MathOp | Op: " << node.MathOperator;
+            break;
+
+        case TaskNodeType::Branch:
+            ss << "Branch | Type: Conditional";
+            break;
+
+        case TaskNodeType::Switch:
+            ss << "Switch | Var: '" << node.switchVariable << "' | Cases: " << node.switchCases.size();
+            break;
+
+        case TaskNodeType::Delay:
+            ss << "Delay | Duration: " << node.DelaySeconds << "s";
+            break;
+
+        case TaskNodeType::AtomicTask:
+        {
+            ss << "AtomicTask | TaskID: '" << node.AtomicTaskID << "'";
+            // Add first parameter or message for display
+            if (!node.Parameters.empty())
+            {
+                auto it = node.Parameters.begin();
+                ss << " | " << it->first << ": " << it->second.LiteralValue.to_string();
+            }
+            break;
+        }
+
+        case TaskNodeType::VSSequence:
+            ss << "Sequence";
+            break;
+
+        case TaskNodeType::While:
+            ss << "While loop";
+            break;
+
+        case TaskNodeType::SubGraph:
+            ss << "SubGraph | Path: '" << node.SubGraphPath << "'";
+            break;
+
+        case TaskNodeType::ForEach:
+            ss << "ForEach";
+            break;
+
+        case TaskNodeType::DoOnce:
+            ss << "DoOnce";
+            break;
+
+        default:
+            ss << "Unknown node type";
+            break;
+    }
+
+    return ss.str();
 }
 
 } // namespace Olympe

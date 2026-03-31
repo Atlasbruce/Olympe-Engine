@@ -147,6 +147,18 @@
       "fromPin": "Completed",
       "toNode": 32,
       "toPin": "In"
+    },
+    {
+      "fromNode": 25,
+      "fromPin": "Completed",
+      "toNode": 33,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 5,
+      "fromPin": "Completed",
+      "toNode": 34,
+      "toPin": "In"
     }
   ],
   "globalVariableValues": {
@@ -569,7 +581,7 @@
     },
     {
       "id": 27,
-      "label": "MathOp",
+      "label": "MathOp mFatigue + mFoodPortion",
       "mathOp": "+",
       "mathOpRef": {
         "leftOperand": {
@@ -597,15 +609,15 @@
         }
       },
       "position": {
-        "x": 699.989,
-        "y": 520.45
+        "x": 598.989,
+        "y": 500.45
       },
       "type": "MathOp"
     },
     {
       "bbKey": "mFatigue",
       "id": 29,
-      "label": "SetBBValue",
+      "label": "SetBBValue for mFatigue",
       "params": {
         "__posX": {
           "LiteralValue": 1134,
@@ -637,15 +649,15 @@
         }
       },
       "position": {
-        "x": 556.989,
-        "y": 481.45
+        "x": 455.989,
+        "y": 461.45
       },
       "type": "GetBBValue"
     },
     {
       "bbKey": "mFoodPortion",
       "id": 31,
-      "label": "mFatigue (Copy)",
+      "label": "mFoodPortion",
       "params": {
         "__posX": {
           "LiteralValue": 490,
@@ -657,8 +669,8 @@
         }
       },
       "position": {
-        "x": 535.393,
-        "y": 574.407
+        "x": 434.393,
+        "y": 554.407
       },
       "type": "GetBBValue"
     },
@@ -684,6 +696,58 @@
         "y": 431.381
       },
       "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 33,
+      "label": "Take Cover",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1351,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 311,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "mfatigue reset",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1509.2,
+        "y": 101.27
+      },
+      "taskType": "take_cover",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 34,
+      "label": "Patrol Path",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1351,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 311,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "mfatigue reset",
+          "Type": "Literal"
+        },
+        "pathName": {
+          "LiteralValue": "MyPatrolWay",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1315.42,
+        "y": 310.666
+      },
+      "taskType": "patrol_path",
       "type": "AtomicTask"
     }
   ],
