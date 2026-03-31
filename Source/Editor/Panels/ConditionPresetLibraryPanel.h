@@ -157,7 +157,7 @@ public:
     std::vector<ConditionPreset> GetFilteredPresets() const;
 
     /**
-     * @brief Sets the reference analysis map (nodeID → list of preset IDs used).
+     * @brief Sets the reference analysis map (nodeID -> list of preset IDs used).
      *
      * This data is supplied externally by the host (e.g. Blueprint Editor)
      * and used to display "Used by: Node_A, Node_C" in the panel.
@@ -251,7 +251,7 @@ private:
     bool                     m_showDeleteConfirmation = false;
     std::string              m_presetToDelete;         ///< ID queued for deletion
 
-    /// External reference map: nodeID → list of preset IDs that node references
+    /// External reference map: nodeID -> list of preset IDs that node references
     std::map<std::string, std::vector<std::string>> m_refMap;
 };
 

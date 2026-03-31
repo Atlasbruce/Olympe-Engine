@@ -125,10 +125,10 @@ int VisualScriptEditorPanel::ExecInAttrUID(int nodeID) const
  * 
  * Execution output pins (or "Out" pins) are where the node sends execution flow
  * to downstream nodes. A node may have multiple exec-out pins for control flow:
- * - EntryPoint → {"Out"}
- * - Branch → {"Then", "Else"}
- * - While → {"Loop", "Completed"}
- * - Switch → {"Case_0", "Case_1", ...}
+ * - EntryPoint -> {"Out"}
+ * - Branch -> {"Then", "Else"}
+ * - While -> {"Loop", "Completed"}
+ * - Switch -> {"Case_0", "Case_1", ...}
  * 
  * @param nodeID The node's unique ID
  * @param pinIndex The index of the output pin (0–99)
@@ -147,9 +147,9 @@ int VisualScriptEditorPanel::ExecOutAttrUID(int nodeID, int pinIndex) const
  * Formula: nodeID * 10000 + 200 + pinIndex
  * 
  * Data input pins carry variable/parameter values from other nodes:
- * - MathOp → {"A", "B"} (input operands for mathematical expressions)
- * - SetBBValue → {"Value"} (the value to store in blackboard)
- * - Branch → Dynamic condition pins
+ * - MathOp -> {"A", "B"} (input operands for mathematical expressions)
+ * - SetBBValue -> {"Value"} (the value to store in blackboard)
+ * - Branch -> Dynamic condition pins
  * 
  * Data pins are distinct from execution pins and can coexist on the same node.
  * 
@@ -171,8 +171,8 @@ int VisualScriptEditorPanel::DataInAttrUID(int nodeID, int pinIndex) const
  * Formula: nodeID * 10000 + 300 + pinIndex
  * 
  * Data output pins carry computed or retrieved values to downstream nodes:
- * - GetBBValue → {"Value"} (the retrieved variable value)
- * - MathOp → {"Result"} (the computed result)
+ * - GetBBValue -> {"Value"} (the retrieved variable value)
+ * - MathOp -> {"Result"} (the computed result)
  * - Dynamic operand outputs (from condition presets)
  * 
  * @param nodeID The node's unique ID

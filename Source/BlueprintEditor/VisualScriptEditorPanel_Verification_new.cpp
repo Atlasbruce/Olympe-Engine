@@ -288,7 +288,7 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                     }
 
                     std::ostringstream outTrace;
-                    outTrace << "    ├─ Output [" << (oi + 1) << "] → Node #" << outConn.TargetNodeID;
+                    outTrace << "    ├─ Output [" << (oi + 1) << "] -> Node #" << outConn.TargetNodeID;
                     if (outNodePtr && !outNodePtr->NodeName.empty())
                         outTrace << " '" << outNodePtr->NodeName << "'";
                     m_simulationTraces.push_back(outTrace.str());
@@ -340,14 +340,14 @@ void VisualScriptEditorPanel::RunGraphSimulation()
         {
             for (size_t ni = 0; ni < nextNodeIDs.size(); ++ni)
             {
-                m_simulationTraces.push_back("[EXIT] → Next: Node #" + std::to_string(nextNodeIDs[ni]));
+                m_simulationTraces.push_back("[EXIT] -> Next: Node #" + std::to_string(nextNodeIDs[ni]));
                 // Push in REVERSE order (LIFO) so first is executed first
                 m_executionTokenStack.push_back(ExecutionToken(nextNodeIDs[ni], depth));
             }
         }
         else
         {
-            m_simulationTraces.push_back("[EXIT] → Branch ends (no next node)");
+            m_simulationTraces.push_back("[EXIT] -> Branch ends (no next node)");
         }
 
         m_simulationTraces.push_back("");  // Blank line for readability

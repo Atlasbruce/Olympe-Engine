@@ -301,8 +301,8 @@ void VisualScriptEditorPanel::ConnectExec(int srcNodeID,
  * 
  * **Data-Pure Nodes**: Phase 24 introduces data-pure nodes that have no execution
  * pins but only data connections:
- * - **GetBBValue**: Retrieves a blackboard variable → outputs "Value"
- * - **MathOp**: Computes arithmetic result → inputs "A", "B"; outputs "Result"
+ * - **GetBBValue**: Retrieves a blackboard variable -> outputs "Value"
+ * - **MathOp**: Computes arithmetic result -> inputs "A", "B"; outputs "Result"
  * 
  * These nodes can be chained to build data flow networks independent of control flow.
  * 

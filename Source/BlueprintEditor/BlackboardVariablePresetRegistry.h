@@ -122,7 +122,7 @@ private:
 
     mutable std::mutex                                       m_mutex;   ///< Guards m_presets during concurrent access
     std::vector<BlackboardVariablePreset>                    m_presets;
-    std::unordered_map<std::string, size_t>                  m_nameIndex;  ///< name → index in m_presets
+    std::unordered_map<std::string, size_t>                  m_nameIndex;  ///< name -> index in m_presets
 };
 
 } // namespace Olympe

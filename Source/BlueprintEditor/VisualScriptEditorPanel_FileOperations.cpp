@@ -706,7 +706,7 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
         // SubGraph input and output parameters (Phase 3)
         if (def.Type == TaskNodeType::SubGraph)
         {
-            // Input parameters: map of name → ParameterBinding
+            // Input parameters: map of name -> ParameterBinding
             if (!def.InputParams.empty())
             {
                 json inputParamsObj = json::object();
@@ -796,7 +796,7 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
                 n["InputParams"] = inputParamsObj;
             }
 
-            // Output parameters: map of name → blackboard key
+            // Output parameters: map of name -> blackboard key
             if (!def.OutputParams.empty())
             {
                 json outputParamsObj = json::object();

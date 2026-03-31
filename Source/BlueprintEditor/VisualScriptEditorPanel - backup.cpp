@@ -177,10 +177,10 @@ int VisualScriptEditorPanel::AllocLinkID()
 // Attribute UIDs are built as:
 //   nodeID * 10000 + offset
 // The offsets are:
-//   0       → exec-in  "In"
-//   100–199 → exec-out pins (index 0-99)
-//   200–299 → data-in  pins (index 0-99)
-//   300–399 → data-out pins (index 0-99)
+//   0       -> exec-in  "In"
+//   100–199 -> exec-out pins (index 0-99)
+//   200–299 -> data-in  pins (index 0-99)
+//   300–399 -> data-out pins (index 0-99)
 
 int VisualScriptEditorPanel::ExecInAttrUID(int nodeID) const
 {
@@ -840,7 +840,7 @@ void VisualScriptEditorPanel::RemoveLink(int linkID)
 
     if (link->isData)
     {
-        // Decode data-out → data-in
+        // Decode data-out -> data-in
         int srcNodeID = link->srcAttrID / 10000;
         int srcPinIdx = link->srcAttrID % 10000 - 300; // data-out range 300-399
         int dstNodeID = link->dstAttrID / 10000;
@@ -876,7 +876,7 @@ void VisualScriptEditorPanel::RemoveLink(int linkID)
     }
     else
     {
-        // Decode exec-out → exec-in
+        // Decode exec-out -> exec-in
         int srcNodeID = link->srcAttrID / 10000;
         int srcPinIdx = link->srcAttrID % 10000 - 100; // exec-out range 100-199
         int dstNodeID = link->dstAttrID / 10000;
@@ -1592,7 +1592,7 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
         // SubGraph input and output parameters (Phase 3)
         if (def.Type == TaskNodeType::SubGraph)
         {
-            // Input parameters: map of name → ParameterBinding
+            // Input parameters: map of name -> ParameterBinding
             if (!def.InputParams.empty())
             {
                 json inputParamsObj = json::object();
@@ -1682,7 +1682,7 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
                 n["InputParams"] = inputParamsObj;
             }
 
-            // Output parameters: map of name → blackboard key
+            // Output parameters: map of name -> blackboard key
             if (!def.OutputParams.empty())
             {
                 json outputParamsObj = json::object();
@@ -2936,10 +2936,10 @@ void VisualScriptEditorPanel::RenderCanvas()
         int endOffset   = endAttr   % 10000;
 
         // Classify pin directions by offset range:
-        //   0      → exec-in  (Input)
-        //   100–199 → exec-out (Output)
-        //   200–299 → data-in  (Input)
-        //   300–399 → data-out (Output)
+        //   0      -> exec-in  (Input)
+        //   100–199 -> exec-out (Output)
+        //   200–299 -> data-in  (Input)
+        //   300–399 -> data-out (Output)
         bool startIsOutput = (startOffset >= 100 && startOffset < 200) ||
                              (startOffset >= 300 && startOffset < 400);
         bool endIsInput    = (endOffset == 0) ||
@@ -3988,7 +3988,7 @@ void VisualScriptEditorPanel::RenderProperties()
         case TaskNodeType::While:
         {
             // Delegate to the dedicated Phase 24-Rendering branch properties renderer.
-            // This shows: blue header → NodeConditionsPanel → Breakpoint checkbox.
+            // This shows: blue header -> NodeConditionsPanel -> Breakpoint checkbox.
             // The return prevents any legacy condition UI from also rendering.
             RenderBranchNodeProperties(*eNode, def);
             return;
@@ -4031,7 +4031,7 @@ void VisualScriptEditorPanel::RenderProperties()
         case TaskNodeType::MathOp:
         {
             // Phase 24 Milestone 2: Delegate to the dedicated MathOp properties renderer.
-            // This shows: blue header → MathOpPropertyPanel → operand editors.
+            // This shows: blue header -> MathOpPropertyPanel -> operand editors.
             RenderMathOpNodeProperties(*eNode, def);
 
             // Render node parameters (Phase 24 — node data serialization)

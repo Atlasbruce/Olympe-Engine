@@ -118,7 +118,7 @@ void MinimapWidget::OnDrag(float deltaX,  float deltaY,
                            float graphW,  float graphH,
                            float& outGraphDeltaX, float& outGraphDeltaY)
 {
-    // Map minimap pixel delta → normalised delta → graph-space delta
+    // Map minimap pixel delta -> normalised delta -> graph-space delta
     outGraphDeltaX = (WIDTH  > 0.0f) ? (deltaX / WIDTH  * graphW) : 0.0f;
     outGraphDeltaY = (HEIGHT > 0.0f) ? (deltaY / HEIGHT * graphH) : 0.0f;
 }

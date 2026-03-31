@@ -5,7 +5,7 @@
  * @date 2026-03-09
  *
  * @details
- * LinkCache builds two hash-maps (source-node → outgoing links, target-node →
+ * LinkCache builds two hash-maps (source-node -> outgoing links, target-node ->
  * incoming links) from a flat vector of ExecPinConnections.  The cache is
  * invalidated whenever the topology changes and lazily rebuilt on next access.
  *

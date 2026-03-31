@@ -7,7 +7,7 @@
  * @details
  * Task_ChangeState writes a new state string to the "local:CurrentState" key
  * in the entity's LocalBlackboard.  It is the standard way for VS graphs to
- * transition between logical AI states (e.g. "Patrolling" → "Alert" → "Guard").
+ * transition between logical AI states (e.g. "Patrolling" -> "Alert" -> "Guard").
  *
  * Parameters (ParameterMap):
  *   "NewState" (String) — target state name (required).

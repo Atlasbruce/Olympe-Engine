@@ -1,6 +1,6 @@
 /**
  * @file TaskGraphMigrator_v3_to_v4.cpp
- * @brief Implementation of the v3→v4 task graph JSON migrator.
+ * @brief Implementation of the v3->v4 task graph JSON migrator.
  * @author Olympe Engine
  * @date 2026-03-08
  *

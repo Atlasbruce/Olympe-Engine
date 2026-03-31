@@ -84,7 +84,7 @@ void VisualScriptEditorPanel::ValidateAndCleanBlackboardEntries()
  *
  * Flush any deferred blackboard entry key-name edits to the template.
  * When the user is editing a variable key name in the UI, the change is
- * stored in m_pendingBlackboardEdits (a map of index → new key name) to
+ * stored in m_pendingBlackboardEdits (a map of index -> new key name) to
  * defer costly operations until the edit is complete or save is triggered.
  *
  * This method is called before serialization (Save/SaveAs) to ensure all

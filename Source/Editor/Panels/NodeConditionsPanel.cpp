@@ -716,7 +716,7 @@ void NodeConditionsPanel::RenderConditionList()
 
     ImGui::Spacing();
 
-    // ── [+ Add Condition] button → opens preset-selector popup ───────────────
+    // ── [+ Add Condition] button -> opens preset-selector popup ───────────────
     if (ImGui::Button("[+ Add Condition]", ImVec2(-1.f, 0.f)))
         ImGui::OpenPopup("##AddCondPopup");
 

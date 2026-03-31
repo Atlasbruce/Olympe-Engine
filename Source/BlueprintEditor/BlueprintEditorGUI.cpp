@@ -538,11 +538,11 @@ namespace Olympe
         {
             float leftHeight = ImGui::GetContentRegionAvail().y;
 
-            // Default heights on first frame: 40% Asset Browser, 40% Inspector, 20% Logs
+            // Default heights on first frame: 25% Asset Browser, 15% Inspector, 60% Logs
             if (m_LeftPanelSplitHeight <= 0.0f)
-                m_LeftPanelSplitHeight = leftHeight * 0.40f;
+                m_LeftPanelSplitHeight = leftHeight * 0.25f;
             if (m_InspectorPanelHeight <= 0.0f)
-                m_InspectorPanelHeight = leftHeight * 0.40f;
+                m_InspectorPanelHeight = leftHeight * 0.15f;
 
             const float kMinSectionHeight = 60.0f;
             const float kSplitterHeight = 4.0f;

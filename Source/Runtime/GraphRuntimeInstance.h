@@ -66,7 +66,7 @@ public:
      *
      * Processes the top of the execution stack:
      *   - AtomicTask / other : follows NextOnSuccess (success path).
-     *   - Branch             : evaluates conditions → Then or Else path.
+     *   - Branch             : evaluates conditions -> Then or Else path.
      *
      * Returns true when execution is still active after this step.
      * Returns false when the stack becomes empty (execution complete or error).

@@ -258,19 +258,19 @@ ConditionPresetEvaluator::Evaluate(
     const ConditionPreset& preset,
     RuntimeEnvironment& env,
     std::string& outErrorMsg)
-    → bool result
+    -> bool result
 
 ConditionPresetEvaluator::EvaluateConditionChain(
     const std::vector<NodeConditionRef>& conditions,
     const ConditionPresetRegistry& registry,
     RuntimeEnvironment& env,
     std::string& outErrorMsg)
-    → bool result
+    -> bool result
 
 RuntimeEnvironment::SetBlackboardVariable(key, value)
-RuntimeEnvironment::GetBlackboardVariable(key, outValue) → bool
+RuntimeEnvironment::GetBlackboardVariable(key, outValue) -> bool
 RuntimeEnvironment::SetDynamicPinValue(pinID, value)
-RuntimeEnvironment::GetDynamicPinValue(pinID, outValue) → bool
+RuntimeEnvironment::GetDynamicPinValue(pinID, outValue) -> bool
 RuntimeEnvironment::Clear()
 
 ═══════════════════════════════════════════════════════════════════════════════

@@ -73,7 +73,7 @@ std::string Operand::GetDisplayString() const
     case OperandMode::Const:
     {
         // Format without trailing zeros when the value is a whole number.
-        // e.g. 2.0 → "2", 2.5 → "2.5"
+        // e.g. 2.0 -> "2", 2.5 -> "2.5"
         if (constValue == static_cast<double>(static_cast<long long>(constValue)))
         {
             // Whole number — omit decimal point.

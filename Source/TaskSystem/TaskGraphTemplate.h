@@ -25,7 +25,7 @@
 #include "../Editor/ConditionPreset/NodeConditionRef.h"
 #include "../Editor/ConditionPreset/DynamicDataPin.h"
 #include "../Editor/ConditionPreset/ConditionPreset.h"  // Phase 24: embedded preset bank
-#include "../BlueprintEditor/ConditionRef.h"  // Phase 24: inline operand→pin mapping
+#include "../BlueprintEditor/ConditionRef.h"  // Phase 24: inline operand->pin mapping
 #include "../BlueprintEditor/MathOpOperand.h"  // Phase 24: MathOp operand system
 #include "../json_helper.h"  // For json type in global variables storage
 
@@ -136,8 +136,8 @@ struct TaskNodeDefinition {
     std::vector<NodeConditionRef> conditionRefs; ///< Multi-condition refs to global presets (Phase 24)
     std::vector<DynamicDataPin>   dynamicPins;   ///< Dynamic data-input pins for Pin-mode operands (Phase 24)
 
-    // Phase 24 Milestone 1 — Condition references with operand→pin mapping
-    /// Parallel to conditions[]: each entry stores the OperandRef→DynamicDataPin
+    // Phase 24 Milestone 1 — Condition references with operand->pin mapping
+    /// Parallel to conditions[]: each entry stores the OperandRef->DynamicDataPin
     /// UUID mapping for the corresponding condition expression.
     /// Populated by DynamicDataPinManager::RegeneratePinsFromConditions().
     std::vector<ConditionRef> conditionOperandRefs;
@@ -154,7 +154,7 @@ struct TaskNodeDefinition {
 
     // SubGraph-specific (Phase 3)
     std::unordered_map<std::string, ParameterBinding> InputParams;  ///< Input parameter bindings
-    std::unordered_map<std::string, std::string>      OutputParams; ///< Output param → BB key mapping
+    std::unordered_map<std::string, std::string>      OutputParams; ///< Output param -> BB key mapping
 
     // Editor-only metadata (not used by runtime AI execution)
     float EditorPosX    = 0.0f;   ///< Canvas X position loaded from JSON

@@ -71,7 +71,7 @@ public:
                         std::vector<std::string>& outErrors);
 
     /**
-     * @brief Performs the v3→v4 JSON transformation in memory.
+     * @brief Performs the v3->v4 JSON transformation in memory.
      *
      * @param v3data    Parsed JSON object representing the v3 graph.
      * @param outErrors Receives human-readable error descriptions on failure.

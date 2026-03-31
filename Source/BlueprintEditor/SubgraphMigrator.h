@@ -96,7 +96,7 @@ public:
     /**
      * @brief Validates that every subgraphUUID referenced by SubGraph nodes
      *        actually exists in data.subgraphs and that there are no circular
-     *        dependencies (A → B → A).
+     *        dependencies (A -> B -> A).
      *
      * @param blueprint  Full blueprint JSON in new format.
      * @param outError   Filled with a human-readable message when false is returned.

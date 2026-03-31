@@ -46,7 +46,7 @@ struct ParameterDescriptor {
 
 /**
  * @class ParameterEditorRegistry
- * @brief Singleton mapping TaskNodeType → vector of ParameterDescriptor.
+ * @brief Singleton mapping TaskNodeType -> vector of ParameterDescriptor.
  */
 class ParameterEditorRegistry {
 public:

@@ -34,7 +34,7 @@
  *   
  *   Exemple:
  *     SetBBValue.In("Value") ← MathOp.Out("Result") ← Variable.Out("mHealth") + Variable.Out("mFoodPortion")
- *   L'exécution se fera: évaluer MathOp → évaluer ses deux Variables → calculer résultat → SetBBValue
+ *   L'exécution se fera: évaluer MathOp -> évaluer ses deux Variables -> calculer résultat -> SetBBValue
  *
  * Phase 24 - Condition Preset Integration (2026-03-17):
  *   - HandleBranch evaluates node->conditionRefs with ConditionPresetEvaluator

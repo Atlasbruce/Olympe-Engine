@@ -13,9 +13,9 @@
  *   3. Applying the ComparisonOp to produce a bool result.
  *
  * Operand resolution strategy:
- *   - Variable  → query RuntimeEnvironment::GetBlackboardVariable()
- *   - Const     → use Operand::constValue directly (no environment access)
- *   - Pin       → query RuntimeEnvironment::GetDynamicPinValue()
+ *   - Variable  -> query RuntimeEnvironment::GetBlackboardVariable()
+ *   - Const     -> use Operand::constValue directly (no environment access)
+ *   - Pin       -> query RuntimeEnvironment::GetDynamicPinValue()
  *
  * All errors are reported through the outErrorMsg parameter; the return value
  * is always false when an error occurs.

@@ -170,7 +170,7 @@ public:
 
     /**
      * @brief Starts a debug session for the given graph.
-     * Transitions from NotDebugging → Running.
+     * Transitions from NotDebugging -> Running.
      */
     void StartDebugging(int graphID);
 
@@ -182,31 +182,31 @@ public:
 
     /**
      * @brief Resumes execution from Paused state.
-     * Transitions Paused → Running.
+     * Transitions Paused -> Running.
      */
     void Continue();
 
     /**
      * @brief Pauses execution.
-     * Transitions Running → Paused.
+     * Transitions Running -> Paused.
      */
     void Pause();
 
     /**
      * @brief Executes the next node then pauses.
-     * Transitions Paused → StepNext.
+     * Transitions Paused -> StepNext.
      */
     void StepNext();
 
     /**
      * @brief Steps into a SubGraph if the next node is a SubGraph node.
-     * Transitions Paused → StepInto.
+     * Transitions Paused -> StepInto.
      */
     void StepInto();
 
     /**
      * @brief Runs until the current SubGraph returns.
-     * Transitions Paused → StepOut.
+     * Transitions Paused -> StepOut.
      */
     void StepOut();
 

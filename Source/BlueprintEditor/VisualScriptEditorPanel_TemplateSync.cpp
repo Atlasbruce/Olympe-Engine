@@ -343,7 +343,7 @@ void VisualScriptEditorPanel::RebuildLinks()
  * This is more complex than SyncCanvasFromTemplate because it must:
  *   - Preserve canvas positions for nodes that still exist
  *   - Support MoveNodeCommand parameters (__posX, __posY) for undo/redo states
- *   - Fall back through multiple position sources (parameter → saved → loaded → default)
+ *   - Fall back through multiple position sources (parameter -> saved -> loaded -> default)
  *
  * Position fallback order:
  *   1. Parameters["__posX/__posY"] stored by MoveNodeCommand (undo/redo target)
@@ -542,7 +542,7 @@ void VisualScriptEditorPanel::RemoveLink(int linkID)
 
     if (link->isData)
     {
-        // Decode data-out → data-in
+        // Decode data-out -> data-in
         int srcNodeID = link->srcAttrID / 10000;
         int srcPinIdx = link->srcAttrID % 10000 - 300; // data-out range 300-399
         int dstNodeID = link->dstAttrID / 10000;
@@ -578,7 +578,7 @@ void VisualScriptEditorPanel::RemoveLink(int linkID)
     }
     else
     {
-        // Decode exec-out → exec-in
+        // Decode exec-out -> exec-in
         int srcNodeID = link->srcAttrID / 10000;
         int srcPinIdx = link->srcAttrID % 10000 - 100; // exec-out range 100-199
         int dstNodeID = link->dstAttrID / 10000;

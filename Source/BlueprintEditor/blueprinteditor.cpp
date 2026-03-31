@@ -1318,18 +1318,18 @@ namespace Olympe
                     continue;
                 }
                 
-                // Step 1: v1 → v2 if needed.
+                // Step 1: v1 -> v2 if needed.
                 if (needsV2Migration)
                 {
                     blueprint = v1Migrator.MigrateToV2(blueprint);
-                    std::cout << "[Migration] v1→v2: " << path << std::endl;
+                    std::cout << "[Migration] v1->v2: " << path << std::endl;
                 }
 
-                // Step 2: legacy v2 → Phase 8 flat-dictionary format if needed.
+                // Step 2: legacy v2 -> Phase 8 flat-dictionary format if needed.
                 if (sgMigrator.NeedsMigration(blueprint))
                 {
                     blueprint = sgMigrator.Migrate(blueprint);
-                    std::cout << "[Migration] v2→v5 (subgraph): " << path << std::endl;
+                    std::cout << "[Migration] v2->v5 (subgraph): " << path << std::endl;
                 }
 
                 // Save final result.

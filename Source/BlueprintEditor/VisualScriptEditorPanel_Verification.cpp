@@ -22,6 +22,13 @@
 
 namespace Olympe {
 
+// Phase 24 — Helper macro to log simulation traces to both UI and system log
+#define ADD_TRACE(trace_str) \
+    do { \
+        m_simulationTraces.push_back(trace_str); \
+        SYSTEM_LOG << "[SimTrace] " << trace_str << "\n"; \
+    } while(0)
+
 void VisualScriptEditorPanel::RunVerification()
 {
     SYSTEM_LOG << "[VisualScriptEditorPanel] RunVerification() called for graph '"
@@ -65,14 +72,14 @@ void VisualScriptEditorPanel::RunGraphSimulation()
     // Clear previous simulation traces
     m_simulationTraces.clear();
 
-    m_simulationTraces.push_back("[SIMULATION] Graph execution simulation started");
-    m_simulationTraces.push_back("[SIMULATION] Graph: " + m_template.Name);
-    m_simulationTraces.push_back("[SIMULATION] Total nodes: " + std::to_string(m_template.Nodes.size()));
-    m_simulationTraces.push_back("[SIMULATION] Total connections: " + std::to_string(m_template.ExecConnections.size()));
-    m_simulationTraces.push_back("[SIMULATION] Blackboard entries: " + std::to_string(m_template.Blackboard.size()));
+    ADD_TRACE("[SIMULATION] Graph execution simulation started");
+    ADD_TRACE("[SIMULATION] Graph: " + m_template.Name);
+    ADD_TRACE("[SIMULATION] Total nodes: " + std::to_string(m_template.Nodes.size()));
+    ADD_TRACE("[SIMULATION] Total connections: " + std::to_string(m_template.ExecConnections.size()));
+    ADD_TRACE("[SIMULATION] Blackboard entries: " + std::to_string(m_template.Blackboard.size()));
 
-    m_simulationTraces.push_back("");
-    m_simulationTraces.push_back("=== EXECUTION TRACE ===");
+    ADD_TRACE("");
+    ADD_TRACE("=== EXECUTION TRACE ===");
 
     // Initialize blackboard with default values
     std::map<std::string, TaskValue> blackboard;
@@ -87,13 +94,13 @@ void VisualScriptEditorPanel::RunGraphSimulation()
 
     if (currentNodeID == NODE_INDEX_NONE)
     {
-        m_simulationTraces.push_back("[ERROR] No entry point or root node found!");
+        ADD_TRACE("[ERROR] No entry point or root node found!");
         SYSTEM_LOG << "[VisualScriptEditorPanel] Simulation FAILED: No entry point\n";
         m_simulationDone = true;
         return;
     }
 
-    m_simulationTraces.push_back("[START] Entry point: Node #" + std::to_string(currentNodeID));
+    ADD_TRACE("[START] Entry point: Node #" + std::to_string(currentNodeID));
 
     // Phase 24.4 — Token-based execution for multi-branch support
     // Initialize execution token stack with entry point
@@ -104,6 +111,7 @@ void VisualScriptEditorPanel::RunGraphSimulation()
     int stepCount = 0;
     int maxSteps = 100;
     std::unordered_set<int> visitedInPath;
+    int lastTokenDepth = 0;  // Track depth to detect branch changes
 
     while (!m_executionTokenStack.empty() && stepCount < maxSteps)
     {
@@ -111,7 +119,16 @@ void VisualScriptEditorPanel::RunGraphSimulation()
         ExecutionToken currentToken = m_executionTokenStack.back();
         m_executionTokenStack.pop_back();
         int32_t currentNodeID = currentToken.nodeID;
-        int currentDepth = currentToken.depth;
+        int currentDepth = currentToken.depth; 
+
+        // Phase 24.5 — Clear visited set when entering a new branch (depth decreased)
+        // This allows the same node to be visited in different branches
+        if (currentDepth < lastTokenDepth)
+        {
+            visitedInPath.clear();
+            ADD_TRACE("[BRANCH] Entering new execution branch - resetting cycle detection");
+        }
+        lastTokenDepth = currentDepth;
 
         // Find node definition
         const TaskNodeDefinition* nodePtr = nullptr;
@@ -126,15 +143,15 @@ void VisualScriptEditorPanel::RunGraphSimulation()
 
         if (!nodePtr)
         {
-            m_simulationTraces.push_back("[ERROR] Node #" + std::to_string(currentNodeID) + " not found in template!");
+            ADD_TRACE("[ERROR] Node #" + std::to_string(currentNodeID) + " not found in template!");
             break;
         }
 
         // Detect cycles
         if (visitedInPath.count(currentNodeID) > 0)
         {
-            m_simulationTraces.push_back("[CYCLE] WARNING: Cycle detected! Node #" + std::to_string(currentNodeID) + 
-                                        " has already been visited in this path");
+            ADD_TRACE("[CYCLE] WARNING: Cycle detected! Node #" + std::to_string(currentNodeID) + 
+                      " has already been visited in this path");
             break;
         }
         visitedInPath.insert(currentNodeID);
@@ -144,7 +161,7 @@ void VisualScriptEditorPanel::RunGraphSimulation()
         nodeEntry << "[ENTER] Step " << (stepCount + 1) << ": Node #" << nodePtr->NodeID;
         if (!nodePtr->NodeName.empty())
             nodeEntry << " '" << nodePtr->NodeName << "'";
-        m_simulationTraces.push_back(nodeEntry.str());
+        ADD_TRACE(nodeEntry.str());
 
         // Handle each node type with detailed traces
         int32_t nextNodeID = NODE_INDEX_NONE;
@@ -153,7 +170,7 @@ void VisualScriptEditorPanel::RunGraphSimulation()
         {
             case TaskNodeType::EntryPoint:
             {
-                m_simulationTraces.push_back("  ├─ [EVAL] EntryPoint - start of graph");
+                ADD_TRACE("  +- [EVAL] EntryPoint - start of graph");
                 // Find next connection
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
                 {
@@ -163,26 +180,26 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                         break;
                     }
                 }
-                m_simulationTraces.push_back("  └─ [RESULT] EntryPoint completed");
+                ADD_TRACE("  +- [RESULT] EntryPoint completed");
                 break;
             }
 
             case TaskNodeType::GetBBValue:
             {
-                m_simulationTraces.push_back("  ├─ [EVAL] GetBBValue node");
-                m_simulationTraces.push_back("  │  Key: '" + nodePtr->BBKey + "'");
+                ADD_TRACE("  +- [EVAL] GetBBValue node");
+                ADD_TRACE("  |  Key: '" + nodePtr->BBKey + "'");
 
                 // Find and display the value
                 auto it = blackboard.find(nodePtr->BBKey);
                 if (it != blackboard.end())
                 {
                     std::ostringstream valTrace;
-                    valTrace << "  │  Value: " << it->second.AsString();
-                    m_simulationTraces.push_back(valTrace.str());
+                    valTrace << "  |  Value: " << it->second.AsString();
+                    ADD_TRACE(valTrace.str());
                 }
                 else
                 {
-                    m_simulationTraces.push_back("  │  Value: [NOT FOUND]");
+                    ADD_TRACE("  |  Value: [NOT FOUND]");
                 }
 
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
@@ -193,15 +210,15 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                         break;
                     }
                 }
-                m_simulationTraces.push_back("  └─ [RESULT] Read value from blackboard");
+                ADD_TRACE("  +- [RESULT] Read value from blackboard");
                 break;
             }
 
             case TaskNodeType::SetBBValue:
             {
-                m_simulationTraces.push_back("  ├─ [EVAL] SetBBValue node");
-                m_simulationTraces.push_back("  │  Key: '" + nodePtr->BBKey + "'");
-                m_simulationTraces.push_back("  │  Setting value in blackboard (simulated)");
+                ADD_TRACE("  +- [EVAL] SetBBValue node");
+                ADD_TRACE("  |  Key: '" + nodePtr->BBKey + "'");
+                ADD_TRACE("  |  Setting value in blackboard (simulated)");
 
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
                 {
@@ -211,14 +228,14 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                         break;
                     }
                 }
-                m_simulationTraces.push_back("  └─ [RESULT] Value written to blackboard");
+                ADD_TRACE("  +- [RESULT] Value written to blackboard");
                 break;
             }
 
             case TaskNodeType::MathOp:
             {
-                m_simulationTraces.push_back("  ├─ [EVAL] MathOp node");
-                m_simulationTraces.push_back("  │  Operator: '" + nodePtr->MathOperator + "'");
+                ADD_TRACE("  +- [EVAL] MathOp node");
+                ADD_TRACE("  |  Operator: '" + nodePtr->MathOperator + "'");
 
                 // Display operands from mathOpRef if available
                 std::ostringstream leftOp, rightOp;
@@ -237,9 +254,9 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                 else
                     rightOp << "Pin: [input]";
 
-                m_simulationTraces.push_back("  │  Left operand: " + leftOp.str());
-                m_simulationTraces.push_back("  │  Right operand: " + rightOp.str());
-                m_simulationTraces.push_back("  │  Result: [computed value]");
+                ADD_TRACE("  |  Left operand: " + leftOp.str());
+                ADD_TRACE("  |  Right operand: " + rightOp.str());
+                ADD_TRACE("  |  Result: [computed value]");
 
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
                 {
@@ -249,40 +266,88 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                         break;
                     }
                 }
-                m_simulationTraces.push_back("  └─ [RESULT] Math operation executed");
+                ADD_TRACE("  +- [RESULT] Math operation executed");
                 break;
             }
 
             case TaskNodeType::Branch:
             {
-                m_simulationTraces.push_back("  ├─ [EVAL] Branch node");
-                m_simulationTraces.push_back("  │  Evaluating condition...");
+                ADD_TRACE("  +- [EVAL] Branch node");
+                ADD_TRACE("  |  Evaluating condition...");
 
                 // Simplified: always assume condition is true for simulation
                 bool conditionResult = true;
-                m_simulationTraces.push_back("  │  Condition result: " + std::string(conditionResult ? "TRUE" : "FALSE"));
+                ADD_TRACE("  |  Condition result: " + std::string(conditionResult ? "TRUE" : "FALSE"));
 
-                // Find the appropriate connection
-                const std::string targetPin = conditionResult ? "Out" : "OutElse";
+                // Phase 24.6 — Push BOTH branches to stack (Then and Else paths)
+                // This way the simulation explores both possible execution paths
+                std::vector<ExecPinConnection> branchOutputs;
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
                 {
-                    const ExecPinConnection& conn = m_template.ExecConnections[i];
-                    if (conn.SourceNodeID == currentNodeID && 
-                        (conn.SourcePinName == targetPin || conn.SourcePinName.empty()))
+                    if (m_template.ExecConnections[i].SourceNodeID == currentNodeID)
                     {
-                        nextNodeID = conn.TargetNodeID;
-                        break;
+                        branchOutputs.push_back(m_template.ExecConnections[i]);
                     }
                 }
-                m_simulationTraces.push_back("  └─ [RESULT] Branch taken: " + targetPin);
+
+                ADD_TRACE("  |  Found " + std::to_string(branchOutputs.size()) + " branch connection(s)");
+
+                // Find Then and Else connections
+                int32_t thenNodeID = NODE_INDEX_NONE;
+                int32_t elseNodeID = NODE_INDEX_NONE;
+
+                for (size_t i = 0; i < branchOutputs.size(); ++i)
+                {
+                    const ExecPinConnection& conn = branchOutputs[i];
+                    std::ostringstream connTrace;
+                    connTrace << "  |  Connection: SourcePin='" << conn.SourcePinName << "' -> Node #" << conn.TargetNodeID;
+                    ADD_TRACE(connTrace.str());
+
+                    // Match pin names: "Then", "Else", "Out", "OutElse", or empty
+                    if (conn.SourcePinName == "Then" || conn.SourcePinName == "Out" || conn.SourcePinName.empty())
+                    {
+                        thenNodeID = conn.TargetNodeID;
+                        ADD_TRACE("  |    -> Assigned to THEN branch (Node #" + std::to_string(thenNodeID) + ")");
+                    }
+                    else if (conn.SourcePinName == "Else" || conn.SourcePinName == "OutElse")
+                    {
+                        elseNodeID = conn.TargetNodeID;
+                        ADD_TRACE("  |    -> Assigned to ELSE branch (Node #" + std::to_string(elseNodeID) + ")");
+                    }
+                }
+
+                // Push both branches to stack in reverse order (LIFO): Else first, then Then
+                // This ensures Then executes first (LIFO order), followed by Else
+                if (elseNodeID != NODE_INDEX_NONE)
+                {
+                    m_executionTokenStack.push_back(ExecutionToken(elseNodeID, currentDepth + 1));
+                    ADD_TRACE("  |  Pushed ELSE branch to stack: Node #" + std::to_string(elseNodeID));
+                }
+
+                if (thenNodeID != NODE_INDEX_NONE)
+                {
+                    m_executionTokenStack.push_back(ExecutionToken(thenNodeID, currentDepth + 1));
+                    ADD_TRACE("  |  Pushed THEN branch to stack: Node #" + std::to_string(thenNodeID));
+                }
+
+                if (thenNodeID == NODE_INDEX_NONE && elseNodeID == NODE_INDEX_NONE)
+                {
+                    ADD_TRACE("  |  WARNING: No Then/Else branches found!");
+                }
+
+                std::string branchPath = !conditionResult ? "Else" : "Then";
+                ADD_TRACE("  +- [RESULT] Branch explored: " + branchPath + " (both queued for exploration)");
+
+                // Don't set nextNodeID - branches are already on the stack
+                nextNodeID = NODE_INDEX_NONE;
                 break;
             }
 
             case TaskNodeType::Switch:
             {
-                m_simulationTraces.push_back("  ├─ [EVAL] Switch node");
-                m_simulationTraces.push_back("  │  Variable: '" + nodePtr->switchVariable + "'");
-                m_simulationTraces.push_back("  │  Cases: " + std::to_string(nodePtr->switchCases.size()));
+                ADD_TRACE("  +- [EVAL] Switch node");
+                ADD_TRACE("  |  Variable: '" + nodePtr->switchVariable + "'");
+                ADD_TRACE("  |  Cases: " + std::to_string(nodePtr->switchCases.size()));
 
                 // Find first case connection for simulation
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
@@ -290,21 +355,21 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                     if (m_template.ExecConnections[i].SourceNodeID == currentNodeID)
                     {
                         nextNodeID = m_template.ExecConnections[i].TargetNodeID;
-                        m_simulationTraces.push_back("  │  Case selected: (first available)");
+                        ADD_TRACE("  |  Case selected: (first available)");
                         break;
                     }
                 }
-                m_simulationTraces.push_back("  └─ [RESULT] Switch case executed");
+                ADD_TRACE("  +- [RESULT] Switch case executed");
                 break;
             }
 
             case TaskNodeType::Delay:
             {
-                m_simulationTraces.push_back("  ├─ [EVAL] Delay node");
+                ADD_TRACE("  +- [EVAL] Delay node");
                 std::ostringstream delayTrace;
-                delayTrace << "  │  Duration: " << nodePtr->DelaySeconds << " seconds";
-                m_simulationTraces.push_back(delayTrace.str());
-                m_simulationTraces.push_back("  │  (Delay simulated)");
+                delayTrace << "  |  Duration: " << nodePtr->DelaySeconds << " seconds";
+                ADD_TRACE(delayTrace.str());
+                ADD_TRACE("  |  (Delay simulated)");
 
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
                 {
@@ -314,15 +379,15 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                         break;
                     }
                 }
-                m_simulationTraces.push_back("  └─ [RESULT] Delay completed");
+                ADD_TRACE("  +- [RESULT] Delay completed");
                 break;
             }
 
             case TaskNodeType::AtomicTask:
             {
-                m_simulationTraces.push_back("  ├─ [EVAL] AtomicTask node");
-                m_simulationTraces.push_back("  │  Task type: '" + nodePtr->AtomicTaskID + "'");
-                m_simulationTraces.push_back("  │  (Task execution simulated)");
+                ADD_TRACE("  +- [EVAL] AtomicTask node");
+                ADD_TRACE("  |  Task type: '" + nodePtr->AtomicTaskID + "'");
+                ADD_TRACE("  |  (Task execution simulated)");
 
                 // Find Completed connection
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
@@ -334,13 +399,13 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                         break;
                     }
                 }
-                m_simulationTraces.push_back("  └─ [RESULT] Task completed");
+                ADD_TRACE("  +- [RESULT] Task completed");
                 break;
             }
 
             case TaskNodeType::VSSequence:
             {
-                m_simulationTraces.push_back("  ├─ [EVAL] Sequence node");
+                ADD_TRACE("  +- [EVAL] Sequence node");
 
                 // Phase 24 Enhancement: Collect ALL outgoing exec connections from this Sequence
                 std::vector<ExecPinConnection> sequenceOutputs;
@@ -352,8 +417,8 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                     }
                 }
 
-                m_simulationTraces.push_back("  │  Output pins: " + std::to_string(sequenceOutputs.size()));
-                m_simulationTraces.push_back("  │  Executing sequence outputs:");
+                ADD_TRACE("  |  Output pins: " + std::to_string(sequenceOutputs.size()));
+                ADD_TRACE("  |  Executing sequence outputs:");
 
                 // Execute each output branch in order
                 for (size_t oi = 0; oi < sequenceOutputs.size(); ++oi)
@@ -372,10 +437,10 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                     }
 
                     std::ostringstream outTrace;
-                    outTrace << "    ├─ Output [" << (oi + 1) << "] → Node #" << outConn.TargetNodeID;
+                    outTrace << "    +- Output [" << (oi + 1) << "] -> Node #" << outConn.TargetNodeID;
                     if (outNodePtr && !outNodePtr->NodeName.empty())
                         outTrace << " '" << outNodePtr->NodeName << "'";
-                    m_simulationTraces.push_back(outTrace.str());
+                    ADD_TRACE(outTrace.str());
                 }
 
                 // Phase 24.4 — Push all branch tokens to stack in reverse order (LIFO)
@@ -385,15 +450,15 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                     m_executionTokenStack.push_back(ExecutionToken(outConn.TargetNodeID, currentDepth + 1));
                 }
 
-                m_simulationTraces.push_back("  └─ [RESULT] Sequence with " + std::to_string(sequenceOutputs.size()) + " branches");
+                ADD_TRACE("  +- [RESULT] Sequence with " + std::to_string(sequenceOutputs.size()) + " branches");
                 break;
             }
 
             case TaskNodeType::While:
             {
-                m_simulationTraces.push_back("  ├─ [EVAL] While loop node");
-                m_simulationTraces.push_back("  │  Evaluating condition...");
-                m_simulationTraces.push_back("  │  Condition result: TRUE (Loop continues)");
+                ADD_TRACE("  +- [EVAL] While loop node");
+                ADD_TRACE("  |  Evaluating condition...");
+                ADD_TRACE("  |  Condition result: TRUE (Loop continues)");
 
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
                 {
@@ -404,15 +469,15 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                         break;
                     }
                 }
-                m_simulationTraces.push_back("  └─ [RESULT] Loop iteration");
+                ADD_TRACE("  +- [RESULT] Loop iteration");
                 break;
             }
 
             default:
             {
                 std::ostringstream unknownNode;
-                unknownNode << "  ├─ [EVAL] Node type: " << static_cast<int>(nodePtr->Type);
-                m_simulationTraces.push_back(unknownNode.str());
+                unknownNode << "  +- [EVAL] Node type: " << static_cast<int>(nodePtr->Type);
+                ADD_TRACE(unknownNode.str());
 
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
                 {
@@ -422,51 +487,52 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                         break;
                     }
                 }
-                m_simulationTraces.push_back("  └─ [RESULT] Node processed");
+                ADD_TRACE("  +- [RESULT] Node processed");
                 break;
             }
         }
 
         // Phase 24.4 — Token-based exit trace
         // Trace node exit and token stack status
-        if (!m_executionTokenStack.empty())
+        // Always push nextNodeID if set (for single-branch nodes like Branch, Delay, etc.)
+        if (nextNodeID != NODE_INDEX_NONE)
+        {
+            m_executionTokenStack.push_back(ExecutionToken(nextNodeID, currentDepth));
+            ADD_TRACE("[EXIT] -> Pushed: Node #" + std::to_string(nextNodeID));
+        }
+        // If stack still has tokens, show the next one that will execute
+        else if (!m_executionTokenStack.empty())
         {
             const ExecutionToken& nextToken = m_executionTokenStack.back();
-            m_simulationTraces.push_back("[EXIT] → Next token: Node #" + std::to_string(nextToken.nodeID) + 
-                                        " (stack depth: " + std::to_string(m_executionTokenStack.size()) + ")");
-        }
-        else if (nextNodeID != NODE_INDEX_NONE)
-        {
-            // If handler set nextNodeID (for non-Sequence nodes), push to stack
-            m_executionTokenStack.push_back(ExecutionToken(nextNodeID, currentDepth));
-            m_simulationTraces.push_back("[EXIT] → Pushed: Node #" + std::to_string(nextNodeID));
+            ADD_TRACE("[EXIT] -> Next token from stack: Node #" + std::to_string(nextToken.nodeID) + 
+                      " (stack depth: " + std::to_string(m_executionTokenStack.size()) + ")");
         }
         else
         {
-            m_simulationTraces.push_back("[EXIT] → Branch complete (resuming from stack)");
+            ADD_TRACE("[EXIT] -> Graph complete (all tokens consumed)");
         }
 
-        m_simulationTraces.push_back("");  // Blank line for readability
+        ADD_TRACE("");  // Blank line for readability
 
         ++stepCount;
     }
 
     // Final summary
-    m_simulationTraces.push_back("=== EXECUTION SUMMARY ===");
+    ADD_TRACE("=== EXECUTION SUMMARY ===");
     if (stepCount >= maxSteps)
     {
-        m_simulationTraces.push_back("[WARNING] Maximum steps reached (" + std::to_string(maxSteps) + ") - possible infinite loop");
+        ADD_TRACE("[WARNING] Maximum steps reached (" + std::to_string(maxSteps) + ") - possible infinite loop");
     }
     else if (m_executionTokenStack.empty())
     {
-        m_simulationTraces.push_back("[SUCCESS] Graph execution completed - all branches finished");
+        ADD_TRACE("[SUCCESS] Graph execution completed - all branches finished");
     }
     else
     {
-        m_simulationTraces.push_back("[WARNING] Execution incomplete - " + std::to_string(m_executionTokenStack.size()) + " token(s) remaining on stack");
+        ADD_TRACE("[WARNING] Execution incomplete - " + std::to_string(m_executionTokenStack.size()) + " token(s) remaining on stack");
     }
-    m_simulationTraces.push_back("Total steps executed: " + std::to_string(stepCount));
-    m_simulationTraces.push_back("Blackboard entries evaluated: " + std::to_string(blackboard.size()));
+    ADD_TRACE("Total steps executed: " + std::to_string(stepCount));
+    ADD_TRACE("Blackboard entries evaluated: " + std::to_string(blackboard.size()));
 
     m_simulationDone = true;
 
@@ -919,20 +985,20 @@ void VisualScriptEditorPanel::EvaluateDataNode(int32_t nodeID, int depth, const 
     {
         case TaskNodeType::GetBBValue:
         {
-            m_simulationTraces.push_back(indent + "├─ [DATA] GetBBValue #" + std::to_string(nodeID));
+            ADD_TRACE(indent + "+- [DATA] GetBBValue #" + std::to_string(nodeID));
             if (!nodePtr->NodeName.empty())
-                m_simulationTraces.push_back(indent + "│  Name: '" + nodePtr->NodeName + "'");
-            m_simulationTraces.push_back(indent + "│  Key: '" + nodePtr->BBKey + "'");
-            m_simulationTraces.push_back(indent + "└─ → Returns value from blackboard");
+                ADD_TRACE(indent + "|  Name: '" + nodePtr->NodeName + "'");
+            ADD_TRACE(indent + "|  Key: '" + nodePtr->BBKey + "'");
+            ADD_TRACE(indent + "+- -> Returns value from blackboard");
             break;
         }
 
         case TaskNodeType::MathOp:
         {
-            m_simulationTraces.push_back(indent + "├─ [DATA] MathOp #" + std::to_string(nodeID));
+            ADD_TRACE(indent + "+- [DATA] MathOp #" + std::to_string(nodeID));
             if (!nodePtr->NodeName.empty())
-                m_simulationTraces.push_back(indent + "│  Name: '" + nodePtr->NodeName + "'");
-            m_simulationTraces.push_back(indent + "│  Op: " + nodePtr->MathOperator);
+                ADD_TRACE(indent + "|  Name: '" + nodePtr->NodeName + "'");
+            ADD_TRACE(indent + "|  Op: " + nodePtr->MathOperator);
 
             // Trace left operand recursively if it's a data node reference
             std::string leftDesc = "[const/var]";
@@ -943,7 +1009,7 @@ void VisualScriptEditorPanel::EvaluateDataNode(int32_t nodeID, int depth, const 
             else if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Pin)
                 leftDesc = "Pin input";
 
-            m_simulationTraces.push_back(indent + "│  Left: " + leftDesc);
+            ADD_TRACE(indent + "|  Left: " + leftDesc);
 
             // Trace right operand recursively if it's a data node reference
             std::string rightDesc = "[const/var]";
@@ -954,8 +1020,8 @@ void VisualScriptEditorPanel::EvaluateDataNode(int32_t nodeID, int depth, const 
             else if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Pin)
                 rightDesc = "Pin input";
 
-            m_simulationTraces.push_back(indent + "│  Right: " + rightDesc);
-            m_simulationTraces.push_back(indent + "└─ → Result value");
+            ADD_TRACE(indent + "|  Right: " + rightDesc);
+            ADD_TRACE(indent + "+- -> Result value");
             break;
         }
 

@@ -1,6 +1,6 @@
 /**
  * @file BTtoVSMigrator.cpp
- * @brief Implementation of the BT v2 → VS v4 migrator (Phase 6).
+ * @brief Implementation of the BT v2 -> VS v4 migrator (Phase 6).
  * @author Olympe Engine
  * @date 2026-03-09
  *

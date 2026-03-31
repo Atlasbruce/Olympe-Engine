@@ -102,7 +102,7 @@ public:
      * @brief Compares two TaskValues using the given operator.
      *
      * Supported operators: "==", "!=", "<", ">", "<=", ">=".
-     * If types differ, attempts Int→Float promotion.
+     * If types differ, attempts Int->Float promotion.
      * On unresolvable mismatch logs WARNING and returns false.
      *
      * @param left     Left-hand value.
@@ -119,7 +119,7 @@ public:
 private:
     ConditionEvaluator() = delete;
 
-    /// Parses "Node#42.Out" → nodeID=42, pinName="Out".
+    /// Parses "Node#42.Out" -> nodeID=42, pinName="Out".
     /// Returns false if the format is not recognised.
     static bool ParsePinRef(const std::string& pinRef,
                             int32_t& outNodeID,

@@ -938,7 +938,7 @@ void VSGraphVerifier::CheckConditionParams(const TaskGraphTemplate& g, VSVerific
 
 void VSGraphVerifier::CheckBBKeyCompatibility(const TaskGraphTemplate& g, VSVerificationResult& r)
 {
-    // Build a map of BB key → declared type for fast lookup
+    // Build a map of BB key -> declared type for fast lookup
     std::unordered_map<std::string, VariableType> bbTypes;
     for (size_t i = 0; i < g.Blackboard.size(); ++i)
     {
@@ -1026,7 +1026,7 @@ void VSGraphVerifier::CheckConditionStructure(const TaskGraphTemplate& g, VSVeri
                     else
                     {
                         // W016: Pin mode but no DataConnection found for that pin
-                        // Parse "Node#<id>.<pinName>" → check DataConnections
+                        // Parse "Node#<id>.<pinName>" -> check DataConnections
                         // We check source side: is there a DataConnection whose
                         // source == "<id>:<pinName>"?
                         const std::string prefix = "Node#";

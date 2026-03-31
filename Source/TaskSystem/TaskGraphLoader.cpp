@@ -237,9 +237,9 @@ TaskGraphTemplate* TaskGraphLoader::ParseSchemaV4(const json& data,
     tmpl->Name = JsonHelper::GetString(data, "name", "Unnamed");
 
     // Infer the default graph type:
-    //   - Explicit "blueprintType": "BehaviorTree" → BehaviorTree legacy asset.
-    //   - Nested data.nodes format without an explicit graphType → treat as BehaviorTree.
-    //   - Otherwise → VisualScript (the primary v4 format).
+    //   - Explicit "blueprintType": "BehaviorTree" -> BehaviorTree legacy asset.
+    //   - Nested data.nodes format without an explicit graphType -> treat as BehaviorTree.
+    //   - Otherwise -> VisualScript (the primary v4 format).
     {
         const std::string blueprintType = JsonHelper::GetString(data, "blueprintType", "");
         const std::string defaultGraphType =
@@ -650,14 +650,14 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
             if (cj.contains("leftConstValue"))
                 cond.leftConstValue = ParsePrimitiveValue(cj["leftConstValue"]);
 
-            // v4 legacy: "variable" field → Variable mode
+            // v4 legacy: "variable" field -> Variable mode
             if (cond.leftMode == "Variable" && cond.leftVariable.empty())
             {
                 const std::string legacyVar = JsonHelper::GetString(cj, "variable", "");
                 if (!legacyVar.empty())
                 {
                     cond.leftVariable = legacyVar;
-                    SYSTEM_LOG << "[TaskGraphLoader] v4→v5 migration: condition "
+                    SYSTEM_LOG << "[TaskGraphLoader] v4->v5 migration: condition "
                                << "variable='" << legacyVar << "' mapped to leftVariable\n";
                 }
             }
@@ -672,13 +672,13 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
             if (cj.contains("rightConstValue"))
                 cond.rightConstValue = ParsePrimitiveValue(cj["rightConstValue"]);
 
-            // v4 legacy: "compareValue" field → Const mode (or Variable if it's a bare name)
+            // v4 legacy: "compareValue" field -> Const mode (or Variable if it's a bare name)
             if (cond.rightMode == "Const" && cond.rightConstValue.IsNone())
             {
                 if (cj.contains("compareValue"))
                 {
                     const json& cv = cj["compareValue"];
-                    // Heuristic: if it's a string with no spaces → treat as Variable reference
+                    // Heuristic: if it's a string with no spaces -> treat as Variable reference
                     if (cv.is_string())
                     {
                         const std::string cvStr = cv.get<std::string>();
@@ -691,9 +691,9 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
                         {
                             cond.rightMode     = "Variable";
                             cond.rightVariable = cvStr;
-                            SYSTEM_LOG << "[TaskGraphLoader] v4→v5 migration: "
+                            SYSTEM_LOG << "[TaskGraphLoader] v4->v5 migration: "
                                        << "compareValue='" << cvStr
-                                       << "' looks like a variable name → rightMode=Variable\n";
+                                       << "' looks like a variable name -> rightMode=Variable\n";
                         }
                         else
                         {
@@ -918,7 +918,7 @@ void TaskGraphLoader::ParseExecConnectionsV4(const json& root,
 {
     const json* arr = nullptr;
 
-    // Priority: camelCase new → PascalCase legacy → nested data section.
+    // Priority: camelCase new -> PascalCase legacy -> nested data section.
     if (JsonHelper::IsArray(root, "execConnections"))
     {
         arr = &root["execConnections"];
@@ -1129,7 +1129,7 @@ int TaskGraphLoader::ResolveRootNodeId(const json& data, const json& dataSection
 }
 
 // ============================================================================
-// String → enum helpers
+// String -> enum helpers
 // ============================================================================
 
 TaskNodeType TaskGraphLoader::StringToNodeType(const std::string& s,

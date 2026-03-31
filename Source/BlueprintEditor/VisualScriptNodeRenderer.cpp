@@ -169,10 +169,10 @@ void VisualScriptNodeRenderer::RenderNode(
 
     // Attribute UIDs use the same scheme as VisualScriptEditorPanel helpers:
     //   nodeUID * 10000 + offset
-    //   offset 0–99   → exec-in  (Input)
-    //   offset 100–199 → exec-out (Output)
-    //   offset 200–299 → data-in  (Input)
-    //   offset 300–399 → data-out (Output)
+    //   offset 0–99   -> exec-in  (Input)
+    //   offset 100–199 -> exec-out (Output)
+    //   offset 200–299 -> data-in  (Input)
+    //   offset 300–399 -> data-out (Output)
 
     // Use 2-column layout to align input pins (left) with output pins (right) on the same Y
     ImGui::Columns(2, "node_pins", false);

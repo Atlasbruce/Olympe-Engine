@@ -29,8 +29,8 @@
  * @endcode
  *
  * Interaction:
- *   - Hover over a condition row → tooltip showing preset details.
- *   - Click a condition row → fires OnConditionClicked(conditionIndex).
+ *   - Hover over a condition row -> tooltip showing preset details.
+ *   - Click a condition row -> fires OnConditionClicked(conditionIndex).
  *   - Dynamic pins support drag/connect via ImNodes.
  *   - Section 4 is only rendered when at least one dynamic pin exists.
  *

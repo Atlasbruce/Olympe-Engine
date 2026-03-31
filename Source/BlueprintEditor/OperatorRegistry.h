@@ -56,7 +56,7 @@ public:
     /**
      * @brief Returns a human-readable display name for an operator.
      *
-     * Examples: "+" → "Add (+)", "==" → "Equal (==)"
+     * Examples: "+" -> "Add (+)", "==" -> "Equal (==)"
      * Falls back to the operator symbol itself if not found.
      *
      * @param op Operator symbol.

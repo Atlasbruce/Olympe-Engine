@@ -197,7 +197,7 @@ private:
     bool     m_profiling    = false;
     uint64_t m_frameNumber  = 0;
 
-    /// Per-frame timing: node ID → start time
+    /// Per-frame timing: node ID -> start time
     std::unordered_map<int, std::chrono::steady_clock::time_point> m_nodeStartTimes;
 
     /// Accumulated per-frame node metrics (reset each BeginFrame)

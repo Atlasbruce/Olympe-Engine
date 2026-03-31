@@ -93,8 +93,8 @@ public:
 
 private:
 
-    std::map<std::string, float> m_blackboardVariables; ///< Blackboard key → value
-    std::map<std::string, float> m_dynamicPinValues;    ///< Pin UUID → value
+    std::map<std::string, float> m_blackboardVariables; ///< Blackboard key -> value
+    std::map<std::string, float> m_dynamicPinValues;    ///< Pin UUID -> value
 };
 
 } // namespace Olympe

@@ -171,7 +171,7 @@ bool GraphRuntimeInstance::EvaluateBranchConditions(const TaskNodeDefinition& no
 {
     if (node.conditionRefs.empty())
     {
-        // No preset-based conditions → fall through to success.
+        // No preset-based conditions -> fall through to success.
         return true;
     }
 

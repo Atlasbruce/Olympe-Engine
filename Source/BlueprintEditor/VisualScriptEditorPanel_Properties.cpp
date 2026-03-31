@@ -656,7 +656,7 @@ void VisualScriptEditorPanel::RenderProperties()
         case TaskNodeType::While:
         {
             // Delegate to the dedicated Phase 24-Rendering branch properties renderer.
-            // This shows: blue header → NodeConditionsPanel → Breakpoint checkbox.
+            // This shows: blue header -> NodeConditionsPanel -> Breakpoint checkbox.
             // The return prevents any legacy condition UI from also rendering.
             RenderBranchNodeProperties(*eNode, def);
             return;
@@ -699,7 +699,7 @@ void VisualScriptEditorPanel::RenderProperties()
         case TaskNodeType::MathOp:
         {
             // Phase 24 Milestone 2: Delegate to the dedicated MathOp properties renderer.
-            // This shows: blue header → MathOpPropertyPanel → operand editors.
+            // This shows: blue header -> MathOpPropertyPanel -> operand editors.
             RenderMathOpNodeProperties(*eNode, def);
 
             // Render node parameters (Phase 24 — node data serialization)

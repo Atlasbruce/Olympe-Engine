@@ -264,8 +264,8 @@
         }
       },
       "position": {
-        "x": 564,
-        "y": 239
+        "x": 521,
+        "y": 148
       },
       "type": "Branch"
     },
@@ -311,8 +311,8 @@
         }
       },
       "position": {
-        "x": 1276.53,
-        "y": 331.809
+        "x": 1029.53,
+        "y": 312.809
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -335,8 +335,8 @@
         }
       },
       "position": {
-        "x": 913,
-        "y": 472
+        "x": 733,
+        "y": 340
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -356,8 +356,8 @@
         }
       },
       "position": {
-        "x": 1458.37,
-        "y": -274.759
+        "x": 987.37,
+        "y": -291.759
       },
       "type": "SetBBValue"
     },
@@ -376,8 +376,8 @@
         }
       },
       "position": {
-        "x": 1100.37,
-        "y": -259.759
+        "x": 629.37,
+        "y": -276.759
       },
       "type": "GetBBValue"
     },
@@ -396,14 +396,15 @@
         }
       },
       "position": {
-        "x": 1058.16,
-        "y": -138.635
+        "x": 587.16,
+        "y": -155.635
       },
       "type": "GetBBValue"
     },
     {
       "id": 16,
       "label": "MathOp",
+      "mathOp": "+",
       "mathOpRef": {
         "leftOperand": {
           "constValue": "0",
@@ -430,8 +431,8 @@
         }
       },
       "position": {
-        "x": 1263.37,
-        "y": -257.759
+        "x": 792.37,
+        "y": -274.759
       },
       "type": "MathOp"
     },
@@ -453,8 +454,8 @@
         }
       },
       "position": {
-        "x": 863.937,
-        "y": 72.8335
+        "x": 728.937,
+        "y": 96.8335
       },
       "type": "Sequence"
     },
@@ -473,8 +474,8 @@
         }
       },
       "position": {
-        "x": 1389.37,
-        "y": 51.9036
+        "x": 1023.37,
+        "y": 102.904
       },
       "type": "SetBBValue"
     },
@@ -493,8 +494,8 @@
         }
       },
       "position": {
-        "x": 1198.74,
-        "y": 142.224
+        "x": 1009.74,
+        "y": 217.224
       },
       "type": "GetBBValue"
     },
@@ -516,8 +517,8 @@
         }
       },
       "position": {
-        "x": 1689.43,
-        "y": -273.37
+        "x": 1218.43,
+        "y": -290.37
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -540,8 +541,8 @@
         }
       },
       "position": {
-        "x": 1621.33,
-        "y": 44.3715
+        "x": 1231.33,
+        "y": 102.371
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -552,23 +553,24 @@
       "label": "Delay",
       "params": {
         "__posX": {
-          "LiteralValue": 913.494,
+          "LiteralValue": 913,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 627.225,
+          "LiteralValue": 627,
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 555.989,
-        "y": 545.45
+        "x": 516.989,
+        "y": 350.45
       },
       "type": "Delay"
     },
     {
       "id": 27,
       "label": "MathOp",
+      "mathOp": "+",
       "mathOpRef": {
         "leftOperand": {
           "constValue": "0",
@@ -586,17 +588,17 @@
       },
       "params": {
         "__posX": {
-          "LiteralValue": 797.494,
+          "LiteralValue": 797,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 639.225,
+          "LiteralValue": 639,
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 738.989,
-        "y": 715.45
+        "x": 699.989,
+        "y": 520.45
       },
       "type": "MathOp"
     },
@@ -606,17 +608,17 @@
       "label": "SetBBValue",
       "params": {
         "__posX": {
-          "LiteralValue": 1134.49,
+          "LiteralValue": 1134,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 735.225,
+          "LiteralValue": 735,
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 891.989,
-        "y": 625.45
+        "x": 852.989,
+        "y": 430.45
       },
       "type": "SetBBValue"
     },
@@ -626,17 +628,17 @@
       "label": "mFatigue",
       "params": {
         "__posX": {
-          "LiteralValue": 490.494,
+          "LiteralValue": 490,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 743.225,
+          "LiteralValue": 743,
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 585.989,
-        "y": 694.45
+        "x": 556.989,
+        "y": 481.45
       },
       "type": "GetBBValue"
     },
@@ -646,17 +648,17 @@
       "label": "mFatigue (Copy)",
       "params": {
         "__posX": {
-          "LiteralValue": 490.494,
+          "LiteralValue": 490,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 743.225,
+          "LiteralValue": 743,
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 544.393,
-        "y": 809.407
+        "x": 535.393,
+        "y": 574.407
       },
       "type": "GetBBValue"
     },
@@ -678,8 +680,8 @@
         }
       },
       "position": {
-        "x": 1115.55,
-        "y": 626.381
+        "x": 1076.55,
+        "y": 431.381
       },
       "taskType": "log_message",
       "type": "AtomicTask"

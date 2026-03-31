@@ -75,7 +75,7 @@ void ConditionPresetLibraryPanel::SetReferenceMap(
 std::vector<std::string>
 ConditionPresetLibraryPanel::GetReferencingNodes(const std::string& presetID) const
 {
-    // Build reverse map: presetID → list of nodeIDs that reference it
+    // Build reverse map: presetID -> list of nodeIDs that reference it
     std::vector<std::string> nodes;
     for (const auto& kv : m_refMap)
     {

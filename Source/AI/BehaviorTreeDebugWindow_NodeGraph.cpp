@@ -10,7 +10,7 @@
  *
  * These replace the legacy RenderNodeGraphPanel() / RenderBehaviorTreeGraph()
  * rendering path with the full Blueprint Editor pipeline:
- * BTGraphDocumentConverter → Olympe::NodeGraph → NodeGraphPanel::RenderGraph()
+ * BTGraphDocumentConverter -> Olympe::NodeGraph -> NodeGraphPanel::RenderGraph()
  *
  * The NodeGraph registered here is READ-ONLY (Runtime EditorContext mode).
  * No modifications are written back to the BehaviorTreeAsset.

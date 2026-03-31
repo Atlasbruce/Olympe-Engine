@@ -15,20 +15,20 @@
  * 
  * 📚 PRIMARY GUIDES:
  *    • Docs/Blueprint_Editor_User_Guide_v4.md
- *      → Step-by-step workflows, CRUD operations, debugging (20 min read)
+ *      -> Step-by-step workflows, CRUD operations, debugging (20 min read)
  * 
  *    • Docs/Blueprint_Editor_Advanced_Systems.md
- *      → SubGraphs, Profiler, Templates, Validation (45 min read)
+ *      -> SubGraphs, Profiler, Templates, Validation (45 min read)
  * 
  *    • Docs/Blueprint_Editor_Visual_Diagrams.md
- *      → Interactive Mermaid flowcharts (15 min read)
+ *      -> Interactive Mermaid flowcharts (15 min read)
  * 
  *    • Docs/README_Documentation_Index.md
- *      → Master index with learning paths and topic search
+ *      -> Master index with learning paths and topic search
  * 
  * ⚠️  DEPRECATED (DO NOT USE):
  *    • Docs/Blueprint Editor Features.md
- *      → Legacy BT v2 documentation (replaced by v4 guides above)
+ *      -> Legacy BT v2 documentation (replaced by v4 guides above)
  * 
  * ╔════════════════════════════════════════════════════════════════════════════╗
  * ║                       CURRENT SYSTEM (v4)                                  ║
@@ -54,60 +54,60 @@
  *    • Cycle detection via SubGraphCallStack
  *    • Schema v5 format (rootGraph + subgraphs dictionary)
  *    • Tab-based navigation in editor
- *    → Docs: Docs/Blueprint_Editor_Advanced_Systems.md → "SubGraph System"
+ *    -> Docs: Docs/Blueprint_Editor_Advanced_Systems.md -> "SubGraph System"
  * 
  * PERFORMANCE PROFILER (Phase 5):
  *    • Per-node execution metrics (avg/max/total time)
  *    • Frame timeline (last 60 frames)
  *    • Hotspot table sorted by average time
  *    • CSV export for external analysis
- *    → Docs: Docs/Blueprint_Editor_Advanced_Systems.md → "Performance Profiler"
+ *    -> Docs: Docs/Blueprint_Editor_Advanced_Systems.md -> "Performance Profiler"
  * 
  * DEBUG SYSTEM (Phase 5):
  *    • Breakpoints (F9 toggle, runtime check)
  *    • Step controls (F5 Continue, F10 Step Over, F11 Step Into)
  *    • Call stack inspection
  *    • Live Blackboard variable watch
- *    → Docs: Docs/Blueprint_Editor_Advanced_Systems.md → "Debug System"
+ *    -> Docs: Docs/Blueprint_Editor_Advanced_Systems.md -> "Debug System"
  * 
  * BLACKBOARD SYSTEM (Phase 2.1):
  *    • Variable types: Int, Float, Bool, String, Vector3
  *    • Scoping: local: (per-entity) / global: (world-shared)
  *    • GetBBValue / SetBBValue nodes for read/write
- *    → Docs: Docs/Blueprint_Editor_User_Guide_v4.md → Section 6
+ *    -> Docs: Docs/Blueprint_Editor_User_Guide_v4.md -> Section 6
  * 
  * TEMPLATE MANAGER (Phase 5):
  *    • Save graphs as reusable templates
  *    • Template catalog with categorization (AI, Character, Enemy)
  *    • Apply templates to current graph
- *    → Docs: Docs/Blueprint_Editor_Advanced_Systems.md → "Template Manager"
+ *    -> Docs: Docs/Blueprint_Editor_Advanced_Systems.md -> "Template Manager"
  * 
  * VALIDATION SYSTEM:
  *    • Real-time error detection (cycles, type mismatches, missing properties)
  *    • Severity levels: Critical, Error, Warning, Info
  *    • Click errors to navigate to affected nodes
- *    → Docs: Docs/Blueprint_Editor_Advanced_Systems.md → "Validation System"
+ *    -> Docs: Docs/Blueprint_Editor_Advanced_Systems.md -> "Validation System"
  * 
  * COMMAND SYSTEM (Undo/Redo):
  *    • Full undo/redo support (Ctrl+Z / Ctrl+Y)
  *    • Command pattern with CreateNode, DeleteNode, CreateLink
  *    • Composite commands for batch operations
- *    → Docs: Docs/Blueprint_Editor_Advanced_Systems.md → "Command System"
+ *    -> Docs: Docs/Blueprint_Editor_Advanced_Systems.md -> "Command System"
  * 
  * ╔════════════════════════════════════════════════════════════════════════════╗
  * ║                       QUICK START                                          ║
  * ╚════════════════════════════════════════════════════════════════════════════╝
  * 
- * 1. View → VS Graph Editor → New Graph
- * 2. Right-click → Flow Control → EntryPoint
- * 3. Right-click → Flow Control → Branch
+ * 1. View -> VS Graph Editor -> New Graph
+ * 2. Right-click -> Flow Control -> EntryPoint
+ * 3. Right-click -> Flow Control -> Branch
  * 4. Drag from "Out" pin to "In" pin
- * 5. Select Branch node → Properties → Set "ConditionKey" = "local:HasEnemy"
- * 6. View → Blackboard → Add Variable: "HasEnemy" (Bool, default: false)
- * 7. Right-click → Tasks → AtomicTask
+ * 5. Select Branch node -> Properties -> Set "ConditionKey" = "local:HasEnemy"
+ * 6. View -> Blackboard -> Add Variable: "HasEnemy" (Bool, default: false)
+ * 7. Right-click -> Tasks -> AtomicTask
  * 8. Ctrl+S to save as "my_ai.ats"
  * 
- * → Full tutorial: Docs/Blueprint_Editor_User_Guide_v4.md → Section 10
+ * -> Full tutorial: Docs/Blueprint_Editor_User_Guide_v4.md -> Section 10
  */
 
 #pragma once

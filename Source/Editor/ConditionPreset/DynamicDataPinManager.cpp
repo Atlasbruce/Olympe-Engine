@@ -50,7 +50,7 @@ void DynamicDataPinManager::SyncPins(std::vector<NodeConditionRef>& conditionRef
             continue;
 
         // Phase 24: Build preview from ACTUAL operand data if available
-        // This ensures that when users switch operand modes (e.g., Const → Pin),
+        // This ensures that when users switch operand modes (e.g., Const -> Pin),
         // the pin label reflects the CURRENT state, not the static preset.
         std::string preview;
         if (i < static_cast<int>(operandRefs.size()) && !operandRefs.empty())

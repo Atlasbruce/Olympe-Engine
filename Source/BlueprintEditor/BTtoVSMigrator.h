@@ -10,17 +10,17 @@
  * TaskGraphLoader.
  *
  * Node type mapping:
- *   BT v2 type       →  VS v4 TaskNodeType
+ *   BT v2 type       ->  VS v4 TaskNodeType
  *   ─────────────────────────────────────────
- *   "Selector"       →  TaskNodeType::Branch   (conditions as children)
- *   "Sequence"       →  TaskNodeType::VSSequence
- *   "Action"         →  TaskNodeType::AtomicTask
- *   "Condition"      →  TaskNodeType::Branch   (single condition leaf)
- *   "Decorator"      →  TaskNodeType::AtomicTask (inline, stripped)
- *   "Root" / "Start" →  TaskNodeType::EntryPoint
+ *   "Selector"       ->  TaskNodeType::Branch   (conditions as children)
+ *   "Sequence"       ->  TaskNodeType::VSSequence
+ *   "Action"         ->  TaskNodeType::AtomicTask
+ *   "Condition"      ->  TaskNodeType::Branch   (single condition leaf)
+ *   "Decorator"      ->  TaskNodeType::AtomicTask (inline, stripped)
+ *   "Root" / "Start" ->  TaskNodeType::EntryPoint
  *
  * Connection mapping:
- *   BT parent→child  →  ExecPinConnection { parent, "Out", child, "In" }
+ *   BT parent->child  ->  ExecPinConnection { parent, "Out", child, "In" }
  *
  * Blackboard mapping:
  *   BT blackboard entries are copied verbatim to the VS graph's Blackboard.

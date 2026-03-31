@@ -445,8 +445,8 @@ public:
     /**
      * @brief Renders a type-aware const value input widget.
      *
-     * Bool → Checkbox, Int → InputInt, Float → InputFloat,
-     * String → InputText, Vector → InputFloat3.
+     * Bool -> Checkbox, Int -> InputInt, Float -> InputFloat,
+     * String -> InputText, Vector -> InputFloat3.
      *
      * @param value    TaskValue to edit (modified on change).
      * @param varType  Determines which widget to display.
@@ -484,13 +484,13 @@ public:
     int  AllocNodeID();
     int  AllocLinkID();
 
-    /** Maps node ID → ImNodes attribute UID for an exec-in pin. */
+    /** Maps node ID -> ImNodes attribute UID for an exec-in pin. */
     int  ExecInAttrUID(int nodeID) const;
-    /** Maps node ID + pin index → ImNodes attribute UID for exec-out pins. */
+    /** Maps node ID + pin index -> ImNodes attribute UID for exec-out pins. */
     int  ExecOutAttrUID(int nodeID, int pinIndex) const;
-    /** Maps node ID + data pin index → ImNodes attribute UID for data-in pins. */
+    /** Maps node ID + data pin index -> ImNodes attribute UID for data-in pins. */
     int  DataInAttrUID(int nodeID, int pinIndex) const;
-    /** Maps node ID + data pin index → ImNodes attribute UID for data-out pins. */
+    /** Maps node ID + data pin index -> ImNodes attribute UID for data-out pins. */
     int  DataOutAttrUID(int nodeID, int pinIndex) const;
 
     /** Returns the exec-out pin names for a node type. */
@@ -712,7 +712,7 @@ public:
     // Blackboard edit state (BUG-002)
     // -----------------------------------------------------------------------
 
-    /// Deferred key-name edits for blackboard entries: index → pending new key.
+    /// Deferred key-name edits for blackboard entries: index -> pending new key.
     /// Committed in CommitPendingBlackboardEdits() before Save.
     std::unordered_map<int, std::string> m_pendingBlackboardEdits;
 

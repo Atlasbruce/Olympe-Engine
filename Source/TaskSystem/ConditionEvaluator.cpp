@@ -27,7 +27,7 @@ bool ConditionEvaluator::EvaluateAll(
     const std::unordered_map<std::string, TaskValue>& dataPinCache,
     int32_t nodeID)
 {
-    // Empty list → implicit true (no conditions = always pass)
+    // Empty list -> implicit true (no conditions = always pass)
     if (conditions.empty())
         return true;
 
@@ -130,7 +130,7 @@ bool ConditionEvaluator::GetConditionValue(
             return false;
         }
 
-        // Parse "Node#42.Out" → cacheKey = "42:Out"
+        // Parse "Node#42.Out" -> cacheKey = "42:Out"
         int32_t srcNodeID = -1;
         std::string pinName;
         if (!ParsePinRef(pin, srcNodeID, pinName))

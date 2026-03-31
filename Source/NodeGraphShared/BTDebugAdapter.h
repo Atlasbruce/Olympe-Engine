@@ -14,7 +14,7 @@
  * - Read-only visualization of runtime trees via NodeGraphRenderer
  * - Active node highlighting with pulse animation
  * - Consistent rendering with standalone editor
- * - Zero-copy lazy conversion (BT → GraphDocument on demand)
+ * - Zero-copy lazy conversion (BT -> GraphDocument on demand)
  */
 
 #pragma once

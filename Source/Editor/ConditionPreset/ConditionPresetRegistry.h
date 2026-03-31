@@ -209,7 +209,7 @@ private:
     /// @brief Generates a new UUID suitable for a preset ID.
     static std::string GenerateID();
 
-    std::map<std::string, ConditionPreset> m_presets; ///< UUID → ConditionPreset
+    std::map<std::string, ConditionPreset> m_presets; ///< UUID -> ConditionPreset
     std::vector<std::string>               m_order;   ///< UUIDs in insertion order
     mutable std::vector<std::string>       m_errors;  ///< Accumulated error messages
 };

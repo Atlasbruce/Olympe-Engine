@@ -247,7 +247,7 @@ void DebugPanel::RenderCallStack()
         if (frame.isCurrent)
         {
             ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.3f, 1.0f),
-                               "→ %s : Node %d \"%s\"  [CURRENT]",
+                               "-> %s : Node %d \"%s\"  [CURRENT]",
                                frame.graphName.empty() ? "(graph)" : frame.graphName.c_str(),
                                frame.nodeID,
                                frame.nodeName.empty() ? "" : frame.nodeName.c_str());

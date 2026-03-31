@@ -82,7 +82,7 @@ public:
      * The method:
      *   1. Walks every NodeConditionRef in `conditionRefs`.
      *   2. For each one, looks up the ConditionPreset in the registry.
-     *   3. If the preset's left operand is Pin-mode → ensures a Left DynamicDataPin
+     *   3. If the preset's left operand is Pin-mode -> ensures a Left DynamicDataPin
      *      exists for that condition index.
      *   4. Same for the right operand.
      *   5. Removes any existing pins that no longer correspond to a
@@ -96,7 +96,7 @@ public:
      *
      * Phase 24: When operandRefs is provided, pin labels are built from the
      * ACTUAL operand data (not the static preset preview), allowing dynamic
-     * updates when users change operand modes (e.g., Const → Pin).
+     * updates when users change operand modes (e.g., Const -> Pin).
      *
      * @param conditionRefs  Node's condition list (modified in-place to store
      *                       assigned pin IDs).
@@ -121,7 +121,7 @@ public:
      *
      * Phase 24: When operandRefs is provided, pin labels are built from the
      * ACTUAL operand data (not the static preset preview), allowing dynamic
-     * updates when users change operand modes (e.g., Const → Pin).
+     * updates when users change operand modes (e.g., Const -> Pin).
      *
      * @param conditionRefs  Node's condition list (modified in-place).
      * @param operandRefs    Optional: actual operand data for dynamic label building.
@@ -220,8 +220,8 @@ private:
 
     ConditionPresetRegistry&         m_registry;  ///< Shared global registry
     std::vector<DynamicDataPin>      m_pins;       ///< Ordered pin list
-    std::map<std::string, size_t>    m_idIndex;    ///< UUID → index in m_pins (O(1))
-    std::map<std::string, size_t>    m_keyIndex;   ///< (condIdx,side) → index in m_pins
+    std::map<std::string, size_t>    m_idIndex;    ///< UUID -> index in m_pins (O(1))
+    std::map<std::string, size_t>    m_keyIndex;   ///< (condIdx,side) -> index in m_pins
 };
 
 } // namespace Olympe
