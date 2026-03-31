@@ -133,6 +133,11 @@ std::vector<ValidationError> GraphExecutionSimulator::SimulateExecution(const Ta
             case TaskNodeType::MathOp:
             {
                 outTracer.RecordNodeEntered(currentNodeId, nodeDef->NodeName, "DataNode");
+
+                // Trace all incoming data pins recursively
+                m_tracedDataNodes.clear();
+                TraceDataPinEvaluation(currentNodeId, tmpl, outTracer);
+
                 nextNodeId = GetNextNodeId(tmpl, currentNodeId, "Then");
                 break;
             }
@@ -449,6 +454,133 @@ void GraphExecutionSimulator::BuildNodeReachabilityMap(const TaskGraphTemplate& 
     {
         MarkReachableNodes(tmpl, tmpl.EntryPointID, reachable);
     }
+}
+
+void GraphExecutionSimulator::TraceDataPinEvaluation(int32_t nodeId,
+                                                   const TaskGraphTemplate& tmpl,
+                                                   GraphExecutionTracer& tracer,
+                                                   int32_t depth)
+{
+    // Prevent infinite recursion on cyclic data dependencies
+    if (depth > 10)
+    {
+        return;
+    }
+
+    if (m_tracedDataNodes.find(nodeId) != m_tracedDataNodes.end())
+    {
+        return;
+    }
+
+    m_tracedDataNodes.insert(nodeId);
+
+    const TaskNodeDefinition* node = tmpl.GetNode(nodeId);
+    if (!node)
+    {
+        return;
+    }
+
+    // Log the data node being evaluated with depth indentation
+    std::string indent(depth * 2, ' ');
+    std::string depthMarker = (depth > 0) ? ("<- [EVAL] ") : "";
+
+    switch (node->Type)
+    {
+        case TaskNodeType::GetBBValue:
+        {
+            tracer.RecordDataPinResolved(nodeId, "Value", 
+                indent + depthMarker + "[GetBBValue] " + node->NodeName + 
+                " (Key: " + node->BBKey + ")");
+            break;
+        }
+
+        case TaskNodeType::MathOp:
+        {
+            // Log the MathOp node
+            tracer.RecordDataPinResolved(nodeId, "Result", 
+                indent + depthMarker + "[MathOp] " + node->NodeName + 
+                " (Operator: " + node->MathOperator + ")");
+
+            // Evaluate and trace both operands
+            int32_t leftSourceNodeId = NODE_INDEX_NONE;
+            int32_t rightSourceNodeId = NODE_INDEX_NONE;
+
+            for (const auto& conn : tmpl.DataConnections)
+            {
+                if (conn.TargetNodeID == nodeId)
+                {
+                    if (conn.TargetPinName == "A")
+                    {
+                        leftSourceNodeId = conn.SourceNodeID;
+                        // Trace left operand source
+                        TraceDataConnection(conn.SourceNodeID, conn.SourcePinName,
+                                          nodeId, "A", tmpl, tracer, depth + 1);
+                    }
+                    else if (conn.TargetPinName == "B")
+                    {
+                        rightSourceNodeId = conn.SourceNodeID;
+                        // Trace right operand source
+                        TraceDataConnection(conn.SourceNodeID, conn.SourcePinName,
+                                          nodeId, "B", tmpl, tracer, depth + 1);
+                    }
+                }
+            }
+            break;
+        }
+
+        case TaskNodeType::SetBBValue:
+        {
+            tracer.RecordDataPinResolved(nodeId, "Input", 
+                indent + depthMarker + "[SetBBValue] " + node->NodeName + 
+                " (Key: " + node->BBKey + ")");
+
+            // Find incoming data connection
+            for (const auto& conn : tmpl.DataConnections)
+            {
+                if (conn.TargetNodeID == nodeId && conn.TargetPinName == "Value")
+                {
+                    TraceDataConnection(conn.SourceNodeID, conn.SourcePinName,
+                                      nodeId, "Value", tmpl, tracer, depth + 1);
+                }
+            }
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    // Find all data connections targeting this node (for non-MathOp nodes)
+    if (node->Type != TaskNodeType::MathOp && node->Type != TaskNodeType::SetBBValue)
+    {
+        for (const auto& conn : tmpl.DataConnections)
+        {
+            if (conn.TargetNodeID == nodeId)
+            {
+                TraceDataConnection(conn.SourceNodeID, conn.SourcePinName,
+                                  conn.TargetNodeID, conn.TargetPinName,
+                                  tmpl, tracer, depth);
+            }
+        }
+    }
+}
+
+void GraphExecutionSimulator::TraceDataConnection(int32_t sourceNodeId,
+                                                const std::string& sourcePinName,
+                                                int32_t targetNodeId,
+                                                const std::string& targetPinName,
+                                                const TaskGraphTemplate& tmpl,
+                                                GraphExecutionTracer& tracer,
+                                                int32_t depth)
+{
+    const TaskNodeDefinition* sourceNode = tmpl.GetNode(sourceNodeId);
+    if (!sourceNode)
+    {
+        return;
+    }
+
+    // Recursively trace dependencies of this node
+    TraceDataPinEvaluation(sourceNodeId, tmpl, tracer, depth);
 }
 
 } // namespace Olympe

@@ -315,57 +315,44 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                 ADD_TRACE("  +- [EVAL] MathOp node");
                 ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
 
-                // Display operands from mathOpRef if available
+                // Search DataConnections first (independent of mathOpRef which may be out of date)
                 std::ostringstream leftOp, rightOp;
                 int32_t leftSourceNode = NODE_INDEX_NONE;
                 int32_t rightSourceNode = NODE_INDEX_NONE;
-                std::string leftVariableName;
-                std::string rightVariableName;
 
-                if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Variable)
+                // Look for actual data connections to pins A and B
+                for (size_t i = 0; i < m_template.DataConnections.size(); ++i)
                 {
-                    leftVariableName = nodePtr->mathOpRef.leftOperand.variableName;
-                    leftOp << "Variable: " << leftVariableName;
-                }
-                else if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Const)
-                    leftOp << "Const: " << nodePtr->mathOpRef.leftOperand.constValue;
-                else if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Pin)
-                {
-                    leftOp << "Pin: [input]";
-                    // Find data connection for left pin
-                    for (size_t i = 0; i < m_template.DataConnections.size(); ++i)
+                    if (m_template.DataConnections[i].TargetNodeID == currentNodeID)
                     {
-                        if (m_template.DataConnections[i].TargetNodeID == currentNodeID &&
-                            (m_template.DataConnections[i].TargetPinName == "A" ||
-                             m_template.DataConnections[i].TargetPinName.find("Left") != std::string::npos))
+                        if (m_template.DataConnections[i].TargetPinName == "A")
                         {
                             leftSourceNode = m_template.DataConnections[i].SourceNodeID;
-                            break;
+                            leftOp << "Pin A: [from Node #" << leftSourceNode << "]";
+                        }
+                        else if (m_template.DataConnections[i].TargetPinName == "B")
+                        {
+                            rightSourceNode = m_template.DataConnections[i].SourceNodeID;
+                            rightOp << "Pin B: [from Node #" << rightSourceNode << "]";
                         }
                     }
                 }
 
-                if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Variable)
+                // If no data connections found, fall back to mathOpRef
+                if (leftSourceNode == NODE_INDEX_NONE)
                 {
-                    rightVariableName = nodePtr->mathOpRef.rightOperand.variableName;
-                    rightOp << "Variable: " << rightVariableName;
+                    if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Variable)
+                        leftOp << "Variable: " << nodePtr->mathOpRef.leftOperand.variableName;
+                    else if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Const)
+                        leftOp << "Const: " << nodePtr->mathOpRef.leftOperand.constValue;
                 }
-                else if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Const)
-                    rightOp << "Const: " << nodePtr->mathOpRef.rightOperand.constValue;
-                else if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Pin)
+
+                if (rightSourceNode == NODE_INDEX_NONE)
                 {
-                    rightOp << "Pin: [input]";
-                    // Find data connection for right pin
-                    for (size_t i = 0; i < m_template.DataConnections.size(); ++i)
-                    {
-                        if (m_template.DataConnections[i].TargetNodeID == currentNodeID &&
-                            (m_template.DataConnections[i].TargetPinName == "B" ||
-                             m_template.DataConnections[i].TargetPinName.find("Right") != std::string::npos))
-                        {
-                            rightSourceNode = m_template.DataConnections[i].SourceNodeID;
-                            break;
-                        }
-                    }
+                    if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Variable)
+                        rightOp << "Variable: " << nodePtr->mathOpRef.rightOperand.variableName;
+                    else if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Const)
+                        rightOp << "Const: " << nodePtr->mathOpRef.rightOperand.constValue;
                 }
 
                 ADD_TRACE("  |  Operator: " + nodePtr->MathOperator);
@@ -382,42 +369,12 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                     ADD_TRACE("  |  [Upstream Pin A]:");
                     TraceUpstreamDataNodes(leftSourceNode, "  |    ", visitedDataNodes);
                 }
-                // Phase 24.11 — Also trace variable sources (GetBBValue for Variable mode)
-                else if (!leftVariableName.empty())
-                {
-                    ADD_TRACE("  |  [Upstream Variable A '" + leftVariableName + "']:");
-                    // Find GetBBValue node that reads this variable
-                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
-                    {
-                        if (m_template.Nodes[i].Type == TaskNodeType::GetBBValue &&
-                            m_template.Nodes[i].BBKey == leftVariableName)
-                        {
-                            TraceUpstreamDataNodes(m_template.Nodes[i].NodeID, "  |    ", visitedDataNodes);
-                            break;
-                        }
-                    }
-                }
 
                 // Trace right input (Pin mode)
                 if (rightSourceNode != NODE_INDEX_NONE)
                 {
                     ADD_TRACE("  |  [Upstream Pin B]:");
                     TraceUpstreamDataNodes(rightSourceNode, "  |    ", visitedDataNodes);
-                }
-                // Phase 24.11 — Also trace variable sources (GetBBValue for Variable mode)
-                else if (!rightVariableName.empty())
-                {
-                    ADD_TRACE("  |  [Upstream Variable B '" + rightVariableName + "']:");
-                    // Find GetBBValue node that reads this variable
-                    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
-                    {
-                        if (m_template.Nodes[i].Type == TaskNodeType::GetBBValue &&
-                            m_template.Nodes[i].BBKey == rightVariableName)
-                        {
-                            TraceUpstreamDataNodes(m_template.Nodes[i].NodeID, "  |    ", visitedDataNodes);
-                            break;
-                        }
-                    }
                 }
 
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
@@ -1326,71 +1283,66 @@ void VisualScriptEditorPanel::TraceUpstreamDataNodes(int32_t sourceNodeID,
         ADD_TRACE(indent + "|  Key: '" + nodePtr->BBKey + "'");
         ADD_TRACE(indent + "|  (Source: blackboard)");
     }
-    else if (nodePtr->Type == TaskNodeType::MathOp)
+     else if (nodePtr->Type == TaskNodeType::MathOp)
     {
         ADD_TRACE(indent + "|  Operator: " + nodePtr->MathOperator);
 
-        // Trace left operand
-        std::string leftDesc = "";
+        // Trace left and right operands by searching DataConnections directly
+        // (instead of relying on mathOpRef which may be out of date)
         int32_t leftSourceNode = NODE_INDEX_NONE;
+        int32_t rightSourceNode = NODE_INDEX_NONE;
+        std::string leftDesc = "";
+        std::string rightDesc = "";
 
-        if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Variable)
-            leftDesc = "Variable: " + nodePtr->mathOpRef.leftOperand.variableName;
-        else if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Const)
-            leftDesc = "Const: " + nodePtr->mathOpRef.leftOperand.constValue;
-        else if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Pin)
+        // Search for data connections where this node's input pins are targeted
+        for (size_t i = 0; i < m_template.DataConnections.size(); ++i)
         {
-            leftDesc = "Pin input";
-            // Find data connection for left pin
-            for (size_t i = 0; i < m_template.DataConnections.size(); ++i)
+            if (m_template.DataConnections[i].TargetNodeID == sourceNodeID)
             {
-                if (m_template.DataConnections[i].TargetNodeID == sourceNodeID &&
-                    (m_template.DataConnections[i].TargetPinName == "A" ||
-                     m_template.DataConnections[i].TargetPinName.find("Left") != std::string::npos))
+                if (m_template.DataConnections[i].TargetPinName == "A")
                 {
                     leftSourceNode = m_template.DataConnections[i].SourceNodeID;
-                    break;
+                    leftDesc = "[Pin A from Node #" + std::to_string(leftSourceNode) + "]";
                 }
-            }
-        }
-        ADD_TRACE(indent + "|  Left: " + leftDesc);
-
-        // Trace right operand
-        std::string rightDesc = "";
-        int32_t rightSourceNode = NODE_INDEX_NONE;
-
-        if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Variable)
-            rightDesc = "Variable: " + nodePtr->mathOpRef.rightOperand.variableName;
-        else if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Const)
-            rightDesc = "Const: " + nodePtr->mathOpRef.rightOperand.constValue;
-        else if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Pin)
-        {
-            rightDesc = "Pin input";
-            // Find data connection for right pin
-            for (size_t i = 0; i < m_template.DataConnections.size(); ++i)
-            {
-                if (m_template.DataConnections[i].TargetNodeID == sourceNodeID &&
-                    (m_template.DataConnections[i].TargetPinName == "B" ||
-                     m_template.DataConnections[i].TargetPinName.find("Right") != std::string::npos))
+                else if (m_template.DataConnections[i].TargetPinName == "B")
                 {
                     rightSourceNode = m_template.DataConnections[i].SourceNodeID;
-                    break;
+                    rightDesc = "[Pin B from Node #" + std::to_string(rightSourceNode) + "]";
                 }
             }
         }
+
+        // If no data connections found for pins, fall back to mathOpRef
+        if (leftSourceNode == NODE_INDEX_NONE)
+        {
+            if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Variable)
+                leftDesc = "Variable: " + nodePtr->mathOpRef.leftOperand.variableName;
+            else if (nodePtr->mathOpRef.leftOperand.mode == MathOpOperand::Mode::Const)
+                leftDesc = "Const: " + nodePtr->mathOpRef.leftOperand.constValue;
+        }
+
+        if (rightSourceNode == NODE_INDEX_NONE)
+        {
+            if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Variable)
+                rightDesc = "Variable: " + nodePtr->mathOpRef.rightOperand.variableName;
+            else if (nodePtr->mathOpRef.rightOperand.mode == MathOpOperand::Mode::Const)
+                rightDesc = "Const: " + nodePtr->mathOpRef.rightOperand.constValue;
+        }
+
+        ADD_TRACE(indent + "|  Left: " + leftDesc);
         ADD_TRACE(indent + "|  Right: " + rightDesc);
 
         // Recursively trace left pin input if it's a data node
         if (leftSourceNode != NODE_INDEX_NONE)
         {
-            ADD_TRACE(indent + "|  [Upstream Left]:");
+            ADD_TRACE(indent + "|  [Upstream Left (Pin A)]:");
             TraceUpstreamDataNodes(leftSourceNode, indent + "|  ", visitedDataNodes);
         }
 
         // Recursively trace right pin input if it's a data node
         if (rightSourceNode != NODE_INDEX_NONE)
         {
-            ADD_TRACE(indent + "|  [Upstream Right]:");
+            ADD_TRACE(indent + "|  [Upstream Right (Pin B)]:");
             TraceUpstreamDataNodes(rightSourceNode, indent + "|  ", visitedDataNodes);
         }
     }

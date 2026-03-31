@@ -272,13 +272,15 @@ inline DataPinEvaluationResult DataPinEvaluator_EvaluateRecursive(
                             const DataPinConnection& conn = tmpl.DataConnections[i];
                             if (conn.TargetNodeID == nodeID && conn.TargetPinName == "A")
                             {
+                                // Create a local copy of visitedNodes for left operand evaluation
+                                std::unordered_set<int32_t> visitedNodesLeft = visitedNodes;
                                 DataPinEvaluationResult srcResult = DataPinEvaluator_EvaluateRecursive(
                                     conn.SourceNodeID,
                                     conn.SourcePinName,
                                     tmpl,
                                     runner,
                                     localBB,
-                                    visitedNodes,
+                                    visitedNodesLeft,
                                     recursionDepth + 1);
 
                                 if (srcResult.Status != DataPinEvalStatus::Success)
@@ -324,13 +326,15 @@ inline DataPinEvaluationResult DataPinEvaluator_EvaluateRecursive(
                             const DataPinConnection& conn = tmpl.DataConnections[i];
                             if (conn.TargetNodeID == nodeID && conn.TargetPinName == "B")
                             {
+                                // Create a local copy of visitedNodes for right operand evaluation
+                                std::unordered_set<int32_t> visitedNodesRight = visitedNodes;
                                 DataPinEvaluationResult srcResult = DataPinEvaluator_EvaluateRecursive(
                                     conn.SourceNodeID,
                                     conn.SourcePinName,
                                     tmpl,
                                     runner,
                                     localBB,
-                                    visitedNodes,
+                                    visitedNodesRight,
                                     recursionDepth + 1);
 
                                 if (srcResult.Status != DataPinEvalStatus::Success)

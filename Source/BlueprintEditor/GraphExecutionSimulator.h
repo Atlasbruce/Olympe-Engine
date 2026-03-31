@@ -20,6 +20,7 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <set>
 #include <cstdint>
 
 #include "../TaskSystem/TaskGraphTemplate.h"
@@ -172,6 +173,38 @@ private:
     bool ValidateConditionExpression(int32_t nodeId,
                                      const std::string& expression);
 
+    /**
+     * @brief Recursively traces data pin evaluation for pure data nodes.
+     * @details Evaluates and traces all incoming data pins of a node,
+     *          and recursively traces their source nodes.
+     * @param nodeId        Node to trace data pins for.
+     * @param tmpl          The task graph template.
+     * @param tracer        Execution tracer to record events.
+     * @param depth         Current recursion depth.
+     */
+    void TraceDataPinEvaluation(int32_t nodeId,
+                               const TaskGraphTemplate& tmpl,
+                               GraphExecutionTracer& tracer,
+                               int32_t depth = 0);
+
+    /**
+     * @brief Traces evaluation of a single data connection.
+     * @param sourceNodeId  Node providing the data.
+     * @param sourcePinName Name of the output pin.
+     * @param targetNodeId  Node receiving the data.
+     * @param targetPinName Name of the input pin.
+     * @param tmpl          The task graph template.
+     * @param tracer        Execution tracer to record events.
+     * @param depth         Current recursion depth.
+     */
+    void TraceDataConnection(int32_t sourceNodeId,
+                            const std::string& sourcePinName,
+                            int32_t targetNodeId,
+                            const std::string& targetPinName,
+                            const TaskGraphTemplate& tmpl,
+                            GraphExecutionTracer& tracer,
+                            int32_t depth);
+
     // Graph analysis helpers
     void BuildNodeReachabilityMap(const TaskGraphTemplate& tmpl,
                                   std::map<int32_t, bool>& reachable);
@@ -183,6 +216,7 @@ private:
     // Data structures
     std::map<int32_t, int32_t> m_visitCount;  ///< Track visits per node to detect loops
     std::vector<int32_t> m_pathStack;          ///< Current execution path
+    std::set<int32_t> m_tracedDataNodes;       ///< Track data nodes already traced to prevent infinite recursion
 };
 
 } // namespace Olympe

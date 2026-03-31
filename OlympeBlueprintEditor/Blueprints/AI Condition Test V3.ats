@@ -57,15 +57,27 @@
       "toPin": "A"
     },
     {
-      "fromNode": 27,
+      "fromNode": 31,
+      "fromPin": "Value",
+      "toNode": 27,
+      "toPin": "B"
+    },
+    {
+      "fromNode": 36,
       "fromPin": "Result",
       "toNode": 29,
       "toPin": "Value"
     },
     {
-      "fromNode": 31,
+      "fromNode": 27,
+      "fromPin": "Result",
+      "toNode": 36,
+      "toPin": "A"
+    },
+    {
+      "fromNode": 35,
       "fromPin": "Value",
-      "toNode": 27,
+      "toNode": 36,
       "toPin": "B"
     }
   ],
@@ -494,7 +506,7 @@
     {
       "bbKey": "cst_zero",
       "id": 23,
-      "label": "GetBBValue (Copy)",
+      "label": "GetBBValue ZERO",
       "params": {
         "__posX": {
           "LiteralValue": 1097,
@@ -506,7 +518,7 @@
         }
       },
       "position": {
-        "x": 1009.74,
+        "x": 1008.74,
         "y": 217.224
       },
       "type": "GetBBValue"
@@ -574,8 +586,8 @@
         }
       },
       "position": {
-        "x": 516.989,
-        "y": 350.45
+        "x": 547.989,
+        "y": 342.45
       },
       "type": "Delay"
     },
@@ -609,8 +621,8 @@
         }
       },
       "position": {
-        "x": 598.989,
-        "y": 500.45
+        "x": 346.989,
+        "y": 444.45
       },
       "type": "MathOp"
     },
@@ -649,8 +661,8 @@
         }
       },
       "position": {
-        "x": 455.989,
-        "y": 461.45
+        "x": 203.989,
+        "y": 405.45
       },
       "type": "GetBBValue"
     },
@@ -669,8 +681,8 @@
         }
       },
       "position": {
-        "x": 434.393,
-        "y": 554.407
+        "x": 182.393,
+        "y": 498.407
       },
       "type": "GetBBValue"
     },
@@ -749,6 +761,61 @@
       },
       "taskType": "patrol_path",
       "type": "AtomicTask"
+    },
+    {
+      "bbKey": "cst_zero",
+      "id": 35,
+      "label": "GetBBValue ZERO",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1097,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 229,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 431,
+        "y": 575
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "id": 36,
+      "label": "MathOp new mFatigue + 0",
+      "mathOp": "+",
+      "mathOpRef": {
+        "leftOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        },
+        "mathOperator": "+",
+        "rightOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        }
+      },
+      "params": {
+        "__posX": {
+          "LiteralValue": 797,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 639,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 630,
+        "y": 507
+      },
+      "type": "MathOp"
     }
   ],
   "presets": [
