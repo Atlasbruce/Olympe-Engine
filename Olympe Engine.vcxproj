@@ -490,11 +490,21 @@
     <None Include="ClassDiagram.cd" />
     <None Include="config\ATS-VS-editor-config.json" />
     <None Include="Config\global_blackboard_register.json" />
+    <None Include="DOCUMENTATION_INDEX.md" />
+    <None Include="IMPLEMENTATION_COMPLETE_SUMMARY.md" />
     <None Include="olympe.ini" />
     <None Include="OlympeBlueprintEditor.vcxproj" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
+    <None Include="Source\BlueprintEditor\INTEGRATION_GUIDE_NodeProperties.md" />
+    <None Include="SUBGRAPH_BEFORE_AFTER_COMPARISON.md" />
+    <None Include="SUBGRAPH_EDITABLE_PATH_FINAL_SUMMARY.md" />
+    <None Include="SUBGRAPH_IMPLEMENTATION_TECHNICAL_GUIDE.md" />
+    <None Include="SUBGRAPH_PARAMETERS_IMPLEMENTATION.md" />
+    <None Include="SUBGRAPH_PARAMETERS_QUICK_START.md" />
+    <None Include="SUBGRAPH_PATH_EDITABLE_IMPLEMENTATION.md" />
+    <None Include="SUBGRAPH_VISUAL_SUMMARY.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\olympe.ico" />

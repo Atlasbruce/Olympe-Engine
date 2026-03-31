@@ -212,10 +212,10 @@
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_FileOperations.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_RenderingCore.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Canvas.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Properties.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_ConditionUI.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Blackboard.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Verification.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Properties.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -482,6 +482,16 @@
     <None Include="add_bb_panels.ps1" />
     <None Include="Config\global_blackboard_register.json" />
     <None Include="OlympeBlueprintEditor.vcxproj" />
+    <None Include="Source\BlueprintEditor\INTEGRATION_GUIDE_NodeProperties.md" />
+    <None Include="SUBGRAPH_PARAMETERS_IMPLEMENTATION.md" />
+    <None Include="SUBGRAPH_PARAMETERS_QUICK_START.md" />
+    <None Include="SUBGRAPH_PATH_EDITABLE_IMPLEMENTATION.md" />
+    <None Include="SUBGRAPH_BEFORE_AFTER_COMPARISON.md" />
+    <None Include="SUBGRAPH_EDITABLE_PATH_FINAL_SUMMARY.md" />
+    <None Include="SUBGRAPH_IMPLEMENTATION_TECHNICAL_GUIDE.md" />
+    <None Include="SUBGRAPH_VISUAL_SUMMARY.md" />
+    <None Include="IMPLEMENTATION_COMPLETE_SUMMARY.md" />
+    <None Include="DOCUMENTATION_INDEX.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

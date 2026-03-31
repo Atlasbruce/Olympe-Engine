@@ -384,6 +384,572 @@ void VisualScriptEditorPanel::RenderNodeDataParameters(TaskNodeDefinition& def)
 }
 
 // ============================================================================
+// While Node Properties
+// ============================================================================
+
+void VisualScriptEditorPanel::RenderWhileNodeProperties()
+{
+    if (m_selectedNodeID < 0)
+        return;
+
+    // Find the selected node in the template
+    TaskNodeDefinition* nodePtr = nullptr;
+    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+    {
+        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+        {
+            nodePtr = &m_template.Nodes[i];
+            break;
+        }
+    }
+
+    if (!nodePtr || nodePtr->Type != TaskNodeType::While)
+        return;
+
+    ImGui::TextDisabled("While Loop Configuration");
+    ImGui::Separator();
+
+    // Display node name
+    static char nodeName[256] = "";
+    strncpy_s(nodeName, sizeof(nodeName), nodePtr->NodeName.c_str(), 
+              sizeof(nodeName) - 1);
+
+    if (ImGui::InputText("##while_name", nodeName, sizeof(nodeName)))
+    {
+        nodePtr->NodeName = nodeName;
+        m_dirty = true;
+    }
+
+    ImGui::Separator();
+    ImGui::TextDisabled("Loop Conditions");
+    ImGui::Separator();
+
+    // Display existing conditions
+    if (!nodePtr->conditions.empty())
+    {
+        for (size_t ci = 0; ci < nodePtr->conditions.size(); ++ci)
+        {
+            ImGui::PushID(static_cast<int>(ci));
+
+            Condition& cond = nodePtr->conditions[ci];
+
+            ImGui::Text("Condition #%zu:", ci + 1);
+
+            // Left operand
+            const char* leftModes[] = { "Variable", "Const", "Pin" };
+            int leftModeIdx = 0;
+            if (cond.leftMode == "Const") leftModeIdx = 1;
+            else if (cond.leftMode == "Pin") leftModeIdx = 2;
+
+            ImGui::SetNextItemWidth(100.0f);
+            if (ImGui::Combo("##left_mode", &leftModeIdx, leftModes, 3))
+            {
+                cond.leftMode = leftModes[leftModeIdx];
+                m_dirty = true;
+            }
+            ImGui::SameLine();
+
+            // Left value input
+            if (leftModeIdx == 0)  // Variable
+            {
+                static char leftVar[256] = "";
+                strncpy_s(leftVar, sizeof(leftVar), cond.leftVariable.c_str(), sizeof(leftVar) - 1);
+                ImGui::SetNextItemWidth(120.0f);
+                if (ImGui::InputText("##left_var", leftVar, sizeof(leftVar)))
+                {
+                    cond.leftVariable = leftVar;
+                    m_dirty = true;
+                }
+            }
+            else if (leftModeIdx == 1)  // Const
+            {
+                static float leftConst = 0.0f;
+                ImGui::SetNextItemWidth(120.0f);
+                if (ImGui::InputFloat("##left_const", &leftConst))
+                {
+                    cond.leftConstValue = TaskValue(leftConst);
+                    m_dirty = true;
+                }
+            }
+
+            // Operator
+            const char* operators[] = { "==", "!=", "<", ">", "<=", ">=" };
+            int opIdx = 0;
+            for (int i = 0; i < 6; ++i)
+            {
+                if (cond.operatorStr == operators[i])
+                {
+                    opIdx = i;
+                    break;
+                }
+            }
+
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(60.0f);
+            if (ImGui::Combo("##op", &opIdx, operators, 6))
+            {
+                cond.operatorStr = operators[opIdx];
+                m_dirty = true;
+            }
+
+            // Right operand
+            const char* rightModes[] = { "Variable", "Const", "Pin" };
+            int rightModeIdx = 0;
+            if (cond.rightMode == "Const") rightModeIdx = 1;
+            else if (cond.rightMode == "Pin") rightModeIdx = 2;
+
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(100.0f);
+            if (ImGui::Combo("##right_mode", &rightModeIdx, rightModes, 3))
+            {
+                cond.rightMode = rightModes[rightModeIdx];
+                m_dirty = true;
+            }
+            ImGui::SameLine();
+
+            // Right value input
+            if (rightModeIdx == 0)  // Variable
+            {
+                static char rightVar[256] = "";
+                strncpy_s(rightVar, sizeof(rightVar), cond.rightVariable.c_str(), sizeof(rightVar) - 1);
+                ImGui::SetNextItemWidth(120.0f);
+                if (ImGui::InputText("##right_var", rightVar, sizeof(rightVar)))
+                {
+                    cond.rightVariable = rightVar;
+                    m_dirty = true;
+                }
+            }
+            else if (rightModeIdx == 1)  // Const
+            {
+                static float rightConst = 0.0f;
+                ImGui::SetNextItemWidth(120.0f);
+                if (ImGui::InputFloat("##right_const", &rightConst))
+                {
+                    cond.rightConstValue = TaskValue(rightConst);
+                    m_dirty = true;
+                }
+            }
+
+            // Delete button
+            ImGui::SameLine();
+            if (ImGui::Button("X##del_cond", ImVec2(25, 0)))
+            {
+                nodePtr->conditions.erase(
+                    nodePtr->conditions.begin() + ci);
+                m_dirty = true;
+                ImGui::PopID();
+                break;  // Exit loop to avoid iterator issues
+            }
+
+            ImGui::PopID();
+            ImGui::Spacing();
+        }
+    }
+    else
+    {
+        ImGui::TextDisabled("(no conditions defined)");
+    }
+
+    // Add condition button
+    if (ImGui::Button("+ Add Condition", ImVec2(-1.0f, 0.0f)))
+    {
+        Condition newCond;
+        newCond.leftMode = "Variable";
+        newCond.operatorStr = "==";
+        newCond.rightMode = "Variable";
+        nodePtr->conditions.push_back(newCond);
+        m_dirty = true;
+    }
+}
+
+// ============================================================================
+// ForEach Node Properties
+// ============================================================================
+
+void VisualScriptEditorPanel::RenderForEachNodeProperties()
+{
+    if (m_selectedNodeID < 0)
+        return;
+
+    // Find the selected node in the template
+    TaskNodeDefinition* nodePtr = nullptr;
+    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+    {
+        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+        {
+            nodePtr = &m_template.Nodes[i];
+            break;
+        }
+    }
+
+    if (!nodePtr || nodePtr->Type != TaskNodeType::ForEach)
+        return;
+
+    ImGui::TextDisabled("ForEach Loop Configuration");
+    ImGui::Separator();
+
+    // Display node name
+    static char nodeName[256] = "";
+    strncpy_s(nodeName, sizeof(nodeName), nodePtr->NodeName.c_str(), 
+              sizeof(nodeName) - 1);
+
+    if (ImGui::InputText("##foreach_name", nodeName, sizeof(nodeName)))
+    {
+        nodePtr->NodeName = nodeName;
+        m_dirty = true;
+    }
+
+    ImGui::Separator();
+    ImGui::TextDisabled("Loop Configuration");
+    ImGui::Separator();
+
+    // Display available blackboard variables as suggestions
+    ImGui::TextDisabled("Suggested List Variables:");
+    ImGui::BeginChild("##foreach_bb_list", ImVec2(0, 100), true);
+    for (size_t i = 0; i < m_template.Blackboard.size(); ++i)
+    {
+        const BlackboardEntry& entry = m_template.Blackboard[i];
+
+        // Only show List-type variables
+        if (entry.Type == VariableType::List)
+        {
+            ImGui::TextDisabled("%s (List)", entry.Key.c_str());
+        }
+    }
+    ImGui::EndChild();
+
+    ImGui::TextDisabled("(ForEach node specific parameters pending implementation)");
+}
+
+// ============================================================================
+// SubGraph Node Properties
+// ============================================================================
+
+void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
+{
+    if (m_selectedNodeID < 0)
+        return;
+
+    // Find the selected node in the template
+    TaskNodeDefinition* nodePtr = nullptr;
+    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+    {
+        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+        {
+            nodePtr = &m_template.Nodes[i];
+            break;
+        }
+    }
+
+    if (!nodePtr || nodePtr->Type != TaskNodeType::SubGraph)
+        return;
+
+    // ========================================================================
+    // Blue header: node name (matches canvas title bar)
+    // ========================================================================
+    ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.0f, 0.4f, 0.8f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.0f, 0.5f, 0.9f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive,  ImVec4(0.0f, 0.3f, 0.7f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text,          ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+    ImGui::Selectable(nodePtr->NodeName.c_str(), true,
+                      ImGuiSelectableFlags_None, ImVec2(0.f, 28.f));
+    ImGui::PopStyleColor(4);
+
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    // ========================================================================
+    // SubGraph File Path - stored as editable parameter (Phase 24)
+    // ========================================================================
+    ImGui::TextDisabled("SubGraph File");
+    ImGui::Separator();
+
+    // Store path as a parameter binding for true serialization
+    // This ensures the path is saved with the graph in JSON format
+    ParameterBinding* pathBinding = nullptr;
+    auto pathIt = nodePtr->Parameters.find("subgraph_path");
+    if (pathIt == nodePtr->Parameters.end())
+    {
+        // Create the binding if it doesn't exist
+        ParameterBinding newBinding;
+        newBinding.Type = ParameterBindingType::Literal;
+        newBinding.LiteralValue = TaskValue(nodePtr->SubGraphPath);
+        nodePtr->Parameters["subgraph_path"] = newBinding;
+        pathIt = nodePtr->Parameters.find("subgraph_path");
+    }
+    pathBinding = &pathIt->second;
+
+    // Display path as editable text field
+    std::string currentPath = pathBinding->LiteralValue.to_string();
+    static char pathBuffer[512] = "";
+    strncpy_s(pathBuffer, sizeof(pathBuffer), currentPath.c_str(), 
+              sizeof(pathBuffer) - 1);
+
+    ImGui::SetNextItemWidth(-50.0f);
+    if (ImGui::InputText("##subgraph_path_input", pathBuffer, sizeof(pathBuffer),
+                         ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        std::string newPath(pathBuffer);
+        pathBinding->LiteralValue = TaskValue(newPath);
+        nodePtr->SubGraphPath = newPath;  // Keep both in sync
+        m_dirty = true;
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Browse##sg_browse", ImVec2(45, 0)))
+    {
+        // TODO: Implement file browser for SubGraph files
+        ImGui::OpenPopup("##subgraph_file_browser");
+    }
+
+    ImGui::Spacing();
+    if (nodePtr->SubGraphPath.empty())
+    {
+        ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.3f, 1.0f), 
+                          "⚠ SubGraph path is empty - set a valid .ats file");
+    }
+    else
+    {
+        ImGui::TextDisabled("Path: %s", nodePtr->SubGraphPath.c_str());
+    }
+
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    // ========================================================================
+    // Input Parameters Section
+    // ========================================================================
+    ImGui::TextDisabled("Input Parameters");
+    ImGui::Separator();
+
+    // Display input parameters with full editor
+    if (!nodePtr->InputParams.empty())
+    {
+        ImGui::BeginChild("##subgraph_params", ImVec2(0, 200), true);
+
+        size_t paramIdx = 0;
+        std::vector<std::string> paramsToDelete;
+
+        for (auto it = nodePtr->InputParams.begin(); 
+             it != nodePtr->InputParams.end(); ++it, ++paramIdx)
+        {
+            ImGui::PushID(static_cast<int>(paramIdx));
+
+            const std::string& paramName = it->first;
+            ParameterBinding& binding = it->second;
+
+            // Parameter name (yellow, read-only)
+            ImGui::TextColored(ImVec4(1.0f, 0.843f, 0.0f, 1.0f), "%s", paramName.c_str());
+            ImGui::SameLine(150.0f);
+
+            // Binding type selection (Literal vs LocalVariable)
+            const char* bindingTypes[] = { "Literal", "LocalVariable" };
+            int typeIdx = static_cast<int>(binding.Type);
+
+            ImGui::SetNextItemWidth(100.0f);
+            if (ImGui::Combo("##binding_type", &typeIdx, bindingTypes, 2))
+            {
+                binding.Type = static_cast<ParameterBindingType>(typeIdx);
+                m_dirty = true;
+            }
+            ImGui::SameLine();
+
+            // Value editor based on binding type
+            if (binding.Type == ParameterBindingType::Literal)
+            {
+                // Literal value editor - display as text
+                std::string literalValue = binding.LiteralValue.to_string();
+                static char valueBuffer[256] = "";
+                strncpy_s(valueBuffer, sizeof(valueBuffer), literalValue.c_str(), 
+                         sizeof(valueBuffer) - 1);
+
+                ImGui::SetNextItemWidth(120.0f);
+                if (ImGui::InputText("##param_value", valueBuffer, sizeof(valueBuffer)))
+                {
+                    // Update the literal value from text
+                    binding.LiteralValue = TaskValue(std::string(valueBuffer));
+                    m_dirty = true;
+                }
+            }
+            else if (binding.Type == ParameterBindingType::LocalVariable)
+            {
+                // LocalVariable selector - show available BB keys
+                static char varBuffer[256] = "";
+                strncpy_s(varBuffer, sizeof(varBuffer), 
+                         binding.VariableName.c_str(), 
+                         sizeof(varBuffer) - 1);
+
+                ImGui::SetNextItemWidth(120.0f);
+                if (ImGui::InputText("##param_var", varBuffer, sizeof(varBuffer)))
+                {
+                    binding.VariableName = varBuffer;
+                    m_dirty = true;
+                }
+
+                // Show hint with available blackboard keys
+                ImGui::SetNextItemWidth(120.0f);
+                if (ImGui::BeginCombo("##var_hint", "(suggestions)"))
+                {
+                    for (size_t bbIdx = 0; bbIdx < m_template.Blackboard.size(); ++bbIdx)
+                    {
+                        const BlackboardEntry& bbEntry = m_template.Blackboard[bbIdx];
+                        if (ImGui::Selectable(bbEntry.Key.c_str()))
+                        {
+                            binding.VariableName = bbEntry.Key;
+                            m_dirty = true;
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+            }
+            ImGui::SameLine();
+
+            // Delete button for this parameter
+            if (ImGui::Button("X##del_param", ImVec2(25, 0)))
+            {
+                paramsToDelete.push_back(paramName);
+            }
+
+            ImGui::Separator();
+            ImGui::PopID();
+        }
+
+        ImGui::EndChild();
+
+        // Process deletions (can't delete while iterating)
+        for (const std::string& paramName : paramsToDelete)
+        {
+            nodePtr->InputParams.erase(paramName);
+            m_dirty = true;
+        }
+    }
+    else
+    {
+        ImGui::TextDisabled("(no input parameters - check SubGraph file)");
+    }
+
+    ImGui::Separator();
+
+    // Add new parameter button
+    if (ImGui::Button("+##add_param", ImVec2(25, 0)))
+    {
+        // Generate unique parameter name
+        int idx = 1;
+        std::string newParamName = "param_1";
+        while (nodePtr->InputParams.find(newParamName) != nodePtr->InputParams.end())
+        {
+            ++idx;
+            newParamName = "param_" + std::to_string(idx);
+        }
+
+        // Create new parameter with default Literal binding
+        ParameterBinding newBinding;
+        newBinding.Type = ParameterBindingType::Literal;
+        newBinding.LiteralValue = TaskValue(std::string(""));
+        nodePtr->InputParams[newParamName] = newBinding;
+        m_dirty = true;
+    }
+    ImGui::SameLine();
+    ImGui::TextDisabled("Add Parameter");
+
+    // ========================================================================
+    // Output Parameters Section
+    // ========================================================================
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::TextDisabled("Output Parameters (Return Values)");
+    ImGui::Separator();
+
+    // Display output parameter mappings (SubGraphOutput -> Blackboard Key)
+    if (!nodePtr->OutputParams.empty())
+    {
+        ImGui::BeginChild("##subgraph_outputs", ImVec2(0, 150), true);
+
+        size_t outIdx = 0;
+        std::vector<std::string> outputsToDelete;
+
+        for (auto it = nodePtr->OutputParams.begin(); 
+             it != nodePtr->OutputParams.end(); ++it, ++outIdx)
+        {
+            ImGui::PushID(static_cast<int>(1000 + outIdx));  // Offset to avoid ID collisions
+
+            const std::string& outputName = it->first;
+            std::string& bbKey = it->second;
+
+            // Output name (cyan, read-only)
+            ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%s", outputName.c_str());
+            ImGui::SameLine(150.0f);
+
+            // Blackboard key assignment
+            std::string bbKeyValue = bbKey;
+            static char bbKeyBuffer[256] = "";
+            strncpy_s(bbKeyBuffer, sizeof(bbKeyBuffer), bbKeyValue.c_str(), 
+                     sizeof(bbKeyBuffer) - 1);
+
+            ImGui::SetNextItemWidth(120.0f);
+            if (ImGui::InputText("##output_bb", bbKeyBuffer, sizeof(bbKeyBuffer)))
+            {
+                bbKey = bbKeyBuffer;
+                m_dirty = true;
+            }
+            ImGui::SameLine();
+
+            // Suggestions dropdown
+            ImGui::SetNextItemWidth(120.0f);
+            if (ImGui::BeginCombo("##out_hint", "(suggestions)"))
+            {
+                for (size_t bbIdx = 0; bbIdx < m_template.Blackboard.size(); ++bbIdx)
+                {
+                    const BlackboardEntry& bbEntry = m_template.Blackboard[bbIdx];
+                    if (ImGui::Selectable(bbEntry.Key.c_str()))
+                    {
+                        bbKey = bbEntry.Key;
+                        m_dirty = true;
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            ImGui::SameLine();
+
+            // Delete button for this output mapping
+            if (ImGui::Button("X##del_output", ImVec2(25, 0)))
+            {
+                outputsToDelete.push_back(outputName);
+            }
+
+            ImGui::Separator();
+            ImGui::PopID();
+        }
+
+        ImGui::EndChild();
+
+        // Process deletions
+        for (const std::string& outputName : outputsToDelete)
+        {
+            nodePtr->OutputParams.erase(outputName);
+            m_dirty = true;
+        }
+    }
+    else
+    {
+        ImGui::TextDisabled("(no output parameters - check SubGraph file)");
+    }
+
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    // Breakpoint checkbox
+    bool hasBP = DebugController::Get().HasBreakpoint(0, m_selectedNodeID);
+    if (ImGui::Checkbox("Breakpoint (F9)##subgraph_bp", &hasBP))
+    {
+        DebugController::Get().ToggleBreakpoint(0, m_selectedNodeID,
+                                                m_template.Name,
+                                                nodePtr->NodeName);
+    }
+}
+
+// ============================================================================
 // Main Properties panel dispatcher
 // ============================================================================
 
@@ -663,38 +1229,11 @@ void VisualScriptEditorPanel::RenderProperties()
         }
         case TaskNodeType::SubGraph:
         {
-            char sgPathBuf[256];
-            strncpy_s(sgPathBuf, sizeof(sgPathBuf), def.SubGraphPath.c_str(), _TRUNCATE);
-            if (ImGui::InputText("SubGraph Path##vssg", sgPathBuf, sizeof(sgPathBuf)))
-            {
-                def.SubGraphPath = sgPathBuf;
-                for (size_t i = 0; i < m_template.Nodes.size(); ++i)
-                {
-                    if (m_template.Nodes[i].NodeID == m_selectedNodeID)
-                    {
-                        m_template.Nodes[i].SubGraphPath = def.SubGraphPath;
-                        break;
-                    }
-                }
-                m_dirty = true;
-            }
-            if (ImGui::IsItemActivated())
-            {
-                m_propEditOldSubGraphPath = def.SubGraphPath;
-                m_propEditNodeIDOnFocus   = m_selectedNodeID;
-            }
-            if (ImGui::IsItemDeactivatedAfterEdit() &&
-                m_propEditNodeIDOnFocus == m_selectedNodeID &&
-                def.SubGraphPath != m_propEditOldSubGraphPath)
-            {
-                m_undoStack.PushCommand(
-                    std::unique_ptr<ICommand>(new EditNodePropertyCommand(
-                        m_selectedNodeID, "SubGraphPath",
-                        PropertyValue::FromString(m_propEditOldSubGraphPath),
-                        PropertyValue::FromString(def.SubGraphPath))),
-                    m_template);
-            }
-            break;
+            // Phase 24: Delegate to the dedicated SubGraph properties renderer.
+            // This shows: blue header -> editable path -> input/output parameter editors.
+            // The return prevents any legacy UI from also rendering.
+            RenderSubGraphNodeProperties();
+            return;
         }
         case TaskNodeType::MathOp:
         {
@@ -789,6 +1328,13 @@ void VisualScriptEditorPanel::RenderProperties()
                 }
             }
             break;
+        }
+        case TaskNodeType::ForEach:
+        {
+            // Phase 24: Delegate to the dedicated ForEach properties renderer.
+            // This shows: blue header -> list variable selector -> loop control options.
+            RenderForEachNodeProperties();
+            return;
         }
         default:
             break;

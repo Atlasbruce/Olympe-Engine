@@ -630,19 +630,154 @@ void VisualScriptEditorPanel::RunGraphSimulation()
             {
                 ADD_TRACE("  +- [EVAL] While loop node");
                 ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
-                ADD_TRACE("  |  Evaluating condition...");
-                ADD_TRACE("  |  Condition result: TRUE (Loop continues)");
+
+                // Trace condition evaluation
+                ADD_TRACE("  |  Conditions:");
+                if (!nodePtr->conditions.empty())
+                {
+                    for (size_t ci = 0; ci < nodePtr->conditions.size(); ++ci)
+                    {
+                        const Condition& cond = nodePtr->conditions[ci];
+                        ADD_TRACE("  |    Condition #" + std::to_string(ci + 1) + 
+                                  ": " + cond.leftVariable + " " + cond.operatorStr + " " + cond.rightVariable);
+                    }
+                }
+                else
+                {
+                    ADD_TRACE("  |    (no conditions defined)");
+                }
+
+                // Simplified: assume condition is true for simulation
+                ADD_TRACE("  |  Evaluating condition... TRUE (Loop continues)");
+
+                // Find Loop and Completed output pins
+                int32_t loopNodeID = NODE_INDEX_NONE;
+                int32_t completedNodeID = NODE_INDEX_NONE;
 
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
                 {
                     const ExecPinConnection& conn = m_template.ExecConnections[i];
-                    if (conn.SourceNodeID == currentNodeID && conn.SourcePinName == "Loop")
+                    if (conn.SourceNodeID == currentNodeID)
+                    {
+                        if (conn.SourcePinName == "Loop" || conn.SourcePinName == "OutLoop")
+                            loopNodeID = conn.TargetNodeID;
+                        else if (conn.SourcePinName == "Completed" || conn.SourcePinName == "OutCompleted")
+                            completedNodeID = conn.TargetNodeID;
+                    }
+                }
+
+                if (loopNodeID != NODE_INDEX_NONE)
+                {
+                    ADD_TRACE("  |  Loop output -> Node #" + std::to_string(loopNodeID));
+                    nextNodeID = loopNodeID;
+                }
+                else if (completedNodeID != NODE_INDEX_NONE)
+                {
+                    ADD_TRACE("  |  (Loop condition false - would exit)");
+                    nextNodeID = completedNodeID;
+                }
+
+                ADD_TRACE("  +- [RESULT] Loop iteration executed");
+                break;
+            }
+
+            case TaskNodeType::ForEach:
+            {
+                ADD_TRACE("  +- [EVAL] ForEach loop node");
+                ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
+                ADD_TRACE("  |  (ForEach iteration parameters pending implementation)");
+
+                // Find Loop Body and Completed output pins
+                int32_t loopBodyNodeID = NODE_INDEX_NONE;
+                int32_t completedNodeID = NODE_INDEX_NONE;
+
+                for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
+                {
+                    const ExecPinConnection& conn = m_template.ExecConnections[i];
+                    if (conn.SourceNodeID == currentNodeID)
+                    {
+                        if (conn.SourcePinName == "Loop Body" || conn.SourcePinName == "OutLoop")
+                            loopBodyNodeID = conn.TargetNodeID;
+                        else if (conn.SourcePinName == "Completed" || conn.SourcePinName == "OutCompleted")
+                            completedNodeID = conn.TargetNodeID;
+                    }
+                }
+
+                // Simulate iteration
+                ADD_TRACE("  |  Iterating list (simulated)");
+                if (loopBodyNodeID != NODE_INDEX_NONE)
+                {
+                    ADD_TRACE("  |  Loop Body -> Node #" + std::to_string(loopBodyNodeID));
+                    nextNodeID = loopBodyNodeID;
+                }
+                else if (completedNodeID != NODE_INDEX_NONE)
+                {
+                    ADD_TRACE("  |  List empty or iterations completed");
+                    nextNodeID = completedNodeID;
+                }
+
+                ADD_TRACE("  +- [RESULT] ForEach loop executed");
+                break;
+            }
+
+            case TaskNodeType::SubGraph:
+            {
+                ADD_TRACE("  +- [EVAL] SubGraph node");
+                ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
+                ADD_TRACE("  |  Path: '" + nodePtr->SubGraphPath + "'");
+
+                // Trace input parameters if available
+                if (!nodePtr->InputParams.empty())
+                {
+                    ADD_TRACE("  |  Input Parameters:");
+                    for (const auto& param : nodePtr->InputParams)
+                    {
+                        const std::string& paramName = param.first;
+                        const ParameterBinding& binding = param.second;
+
+                        std::string paramValue;
+                        if (binding.Type == ParameterBindingType::Literal)
+                        {
+                            paramValue = binding.LiteralValue.to_string();
+                        }
+                        else if (binding.Type == ParameterBindingType::LocalVariable)
+                        {
+                            paramValue = "[Variable: " + binding.VariableName + "]";
+                        }
+                        else
+                        {
+                            paramValue = "[unknown binding]";
+                        }
+
+                        ADD_TRACE("  |    " + paramName + " = " + paramValue);
+                    }
+                }
+
+                // Trace output parameter mappings if available
+                if (!nodePtr->OutputParams.empty())
+                {
+                    ADD_TRACE("  |  Output Parameters (return values):");
+                    for (const auto& output : nodePtr->OutputParams)
+                    {
+                        const std::string& outputName = output.first;
+                        const std::string& bbKey = output.second;
+                        ADD_TRACE("  |    " + outputName + " -> Blackboard['" + bbKey + "']");
+                    }
+                }
+
+                ADD_TRACE("  |  (SubGraph execution simulated)");
+
+                // Find Completed output pin
+                for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
+                {
+                    const ExecPinConnection& conn = m_template.ExecConnections[i];
+                    if (conn.SourceNodeID == currentNodeID && conn.SourcePinName == "Completed")
                     {
                         nextNodeID = conn.TargetNodeID;
                         break;
                     }
                 }
-                ADD_TRACE("  +- [RESULT] Loop iteration");
+                ADD_TRACE("  +- [RESULT] SubGraph completed");
                 break;
             }
 

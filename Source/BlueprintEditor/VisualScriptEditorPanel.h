@@ -312,6 +312,11 @@ private:
     /// Part A: Node Properties panel (top-left of right panel)
     void RenderNodePropertiesPanel();
 
+    /// Phase 24 — Property panel renderers for While, ForEach, and SubGraph nodes
+    void RenderWhileNodeProperties();
+    void RenderForEachNodeProperties();
+    void RenderSubGraphNodeProperties();
+
     /// Part B: Preset Bank panel (middle of right panel)
     void RenderPresetBankPanel();
 

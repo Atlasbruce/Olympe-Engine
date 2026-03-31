@@ -185,12 +185,6 @@
       "toPin": "In"
     },
     {
-      "fromNode": 32,
-      "fromPin": "Completed",
-      "toNode": 39,
-      "toPin": "In"
-    },
-    {
       "fromNode": 39,
       "fromPin": "Loop",
       "toNode": 40,
@@ -200,6 +194,36 @@
       "fromNode": 39,
       "fromPin": "Completed",
       "toNode": 41,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 32,
+      "fromPin": "Completed",
+      "toNode": 43,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 43,
+      "fromPin": "Out",
+      "toNode": 39,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 43,
+      "fromPin": "Out_1",
+      "toNode": 42,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 42,
+      "fromPin": "Loop Body",
+      "toNode": 44,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 42,
+      "fromPin": "Completed",
+      "toNode": 45,
       "toPin": "In"
     }
   ],
@@ -904,8 +928,8 @@
         }
       },
       "position": {
-        "x": 1500.36,
-        "y": 434.604
+        "x": 1723.36,
+        "y": 275.604
       },
       "type": "While"
     },
@@ -927,8 +951,8 @@
         }
       },
       "position": {
-        "x": 1730,
-        "y": 378.937
+        "x": 1953,
+        "y": 219.937
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -951,8 +975,97 @@
         }
       },
       "position": {
-        "x": 1729.67,
-        "y": 506.718
+        "x": 1956.67,
+        "y": 347.718
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 42,
+      "label": "ForEach",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1481,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 621,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1718,
+        "y": 561
+      },
+      "type": "ForEach"
+    },
+    {
+      "dynamicExecPins": [
+        "Out_1"
+      ],
+      "id": 43,
+      "label": "Sequence",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1429,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 578,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1486.98,
+        "y": 432.187
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 44,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 630,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 705,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "ForEach instruction looping",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1943.57,
+        "y": 496.585
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 45,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 630,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 705,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "ForEach instruction completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1940.64,
+        "y": 634.804
       },
       "taskType": "log_message",
       "type": "AtomicTask"
