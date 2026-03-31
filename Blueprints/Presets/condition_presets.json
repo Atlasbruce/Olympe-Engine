@@ -1,33 +1,7 @@
 {
     "presets": [
         {
-            "id": "preset_ed2171ef-9ad8-4f83-9115-70da9a127130",
-            "left": {
-                "mode": "Variable",
-                "value": "mHealth"
-            },
-            "name": "Condition",
-            "op": "<=",
-            "right": {
-                "mode": "Const",
-                "value": 4
-            }
-        },
-        {
-            "id": "preset_6635e4f2-2468-4333-8deb-bb00c79ec3c5",
-            "left": {
-                "mode": "Pin",
-                "value": "[Pin-in]"
-            },
-            "name": "Condition",
-            "op": ">=",
-            "right": {
-                "mode": "Const",
-                "value": 10
-            }
-        },
-        {
-            "id": "preset_53cfd155-5b07-4d9d-a77c-152f60c26fdc",
+            "id": "preset_e0220ea4-83ef-4465-9483-b5d01b5489bb",
             "left": {
                 "mode": "Variable",
                 "value": ""

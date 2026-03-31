@@ -1,6 +1,6 @@
 {
   "description": "Project-scope global variable definitions accessible to all entities",
-  "lastModified": "2026-03-27T22:05:11Z",
+  "lastModified": "2026-03-31T15:29:32Z",
   "name": "Global Blackboard Register",
   "schema_version": 1,
   "variables": [
@@ -277,6 +277,13 @@
         "y": 0,
         "z": 0
       }
+    },
+    {
+      "description": "Global Health of the Entity",
+      "isPersistent": false,
+      "key": "mGlobalHealth",
+      "type": "Float",
+      "value": 0
     }
   ]
 }

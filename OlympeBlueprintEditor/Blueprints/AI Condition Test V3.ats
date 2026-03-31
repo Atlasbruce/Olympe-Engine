@@ -244,6 +244,7 @@
     "isDebugMode": false,
     "isPaused": false,
     "lastEnemyCount": 0,
+    "mGlobalHealth": 0,
     "mPosition": {
       "x": 0,
       "y": 0,
@@ -873,7 +874,7 @@
     },
     {
       "id": 37,
-      "label": "SubGraph - Explore",
+      "label": "Subgraph Boss Combat",
       "params": {
         "__posX": {
           "LiteralValue": 815,

@@ -406,6 +406,18 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
     nd.ConditionID  = JsonHelper::GetString(nodeJson, "conditionKey",
                       JsonHelper::GetString(nodeJson, "conditionId", ""));
 
+    // Phase 24 FIX: Initialize Parameters["subgraph_path"] for SubGraph nodes
+    // This ensures the UI panel can find and edit the path without creating it dynamically
+    if (nd.Type == TaskNodeType::SubGraph && !nd.SubGraphPath.empty())
+    {
+        ParameterBinding pathBinding;
+        pathBinding.Type = ParameterBindingType::Literal;
+        pathBinding.LiteralValue = TaskValue(nd.SubGraphPath);
+        nd.Parameters["subgraph_path"] = pathBinding;
+        SYSTEM_LOG << "[TaskGraphLoader] ParseNodeV4: initialized Parameters[subgraph_path] = '"
+                   << nd.SubGraphPath << "' for SubGraph node " << nd.NodeID << "\n";
+    }
+
     // Math operation fields.
     nd.MathOperator = JsonHelper::GetString(nodeJson, "mathOp", "");
 

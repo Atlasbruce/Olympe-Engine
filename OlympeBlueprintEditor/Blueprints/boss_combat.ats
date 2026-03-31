@@ -1,110 +1,107 @@
 {
   "blueprintType": "BehaviorTree",
   "data": {
-    "rootGraph": {
-      "nodes": [
-        {
-          "children": [
-            2,
-            5,
-            8
-          ],
-          "id": 1,
-          "name": "Root",
-          "parameters": {},
-          "position": {
-            "x": -349.672,
-            "y": -180.53
-          },
-          "type": "Selector"
+    "nodes": [
+      {
+        "children": [
+          2,
+          5,
+          8
+        ],
+        "id": 1,
+        "name": "Root",
+        "parameters": {},
+        "position": {
+          "x": -266,
+          "y": -166
         },
-        {
-          "children": [
-            3,
-            4
-          ],
-          "id": 2,
-          "name": "Phase1",
-          "parameters": {},
-          "position": {
-            "x": -55,
-            "y": 12
-          },
-          "type": "Sequence"
+        "type": "Selector"
+      },
+      {
+        "children": [
+          3,
+          4
+        ],
+        "id": 2,
+        "name": "Phase1",
+        "parameters": {},
+        "position": {
+          "x": 67,
+          "y": -137
         },
-        {
-          "children": [],
-          "id": 3,
-          "name": "HealthAbove50",
-          "parameters": {},
-          "position": {
-            "x": 75,
-            "y": -24
-          },
-          "type": "Action"
+        "type": "Sequence"
+      },
+      {
+        "children": [],
+        "id": 3,
+        "name": "HealthAbove50",
+        "parameters": {},
+        "position": {
+          "x": 430,
+          "y": -40
         },
-        {
-          "children": [],
-          "id": 4,
-          "name": "BasicAttacks",
-          "parameters": {},
-          "position": {
-            "x": 122.29,
-            "y": 114.617
-          },
-          "type": "SubGraph"
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 4,
+        "name": "BasicAttacks",
+        "parameters": {},
+        "position": {
+          "x": 424,
+          "y": -191
         },
-        {
-          "children": [
-            6,
-            7
-          ],
-          "id": 5,
-          "name": "Phase2",
-          "parameters": {},
-          "position": {
-            "x": -32,
-            "y": -218
-          },
-          "type": "Sequence"
+        "type": "SubGraph"
+      },
+      {
+        "children": [
+          6,
+          7
+        ],
+        "id": 5,
+        "name": "Phase2",
+        "parameters": {},
+        "position": {
+          "x": -115,
+          "y": 22
         },
-        {
-          "children": [],
-          "id": 6,
-          "name": "HealthBelow50",
-          "parameters": {},
-          "position": {
-            "x": 233,
-            "y": -221
-          },
-          "type": "Action"
+        "type": "Sequence"
+      },
+      {
+        "children": [],
+        "id": 6,
+        "name": "HealthBelow50",
+        "parameters": {},
+        "position": {
+          "x": 42,
+          "y": 91
         },
-        {
-          "children": [],
-          "id": 7,
-          "name": "AdvancedAttacks",
-          "parameters": {},
-          "position": {
-            "x": 241.145,
-            "y": -114.989
-          },
-          "type": "SubGraph"
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 7,
+        "name": "AdvancedAttacks",
+        "parameters": {},
+        "position": {
+          "x": 36.9685,
+          "y": -81.0132
         },
-        {
-          "children": [],
-          "id": 8,
-          "name": "Idle",
-          "parameters": {},
-          "position": {
-            "x": -81,
-            "y": 130
-          },
-          "type": "Action"
-        }
-      ],
-      "rootNodeId": -1
-    },
-    "subgraphs": {}
+        "type": "SubGraph"
+      },
+      {
+        "children": [],
+        "id": 8,
+        "name": "Idle",
+        "parameters": {},
+        "position": {
+          "x": -94,
+          "y": -196
+        },
+        "type": "Action"
+      }
+    ],
+    "rootNodeId": -1
   },
   "description": "",
   "editorState": {
@@ -117,9 +114,9 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-03-12T14:51:23",
+    "lastModified": "",
     "tags": []
   },
   "name": "BossCombat",
-  "schema_version": 5
+  "schema_version": 2
 }

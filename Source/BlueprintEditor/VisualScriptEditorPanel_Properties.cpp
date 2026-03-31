@@ -28,6 +28,8 @@
 #include "MathOpOperand.h"
 #include "../system/system_utils.h"
 #include "../system/system_consts.h"
+
+#include <unordered_map>
 #include "../NodeGraphCore/GlobalTemplateBlackboard.h"
 
 #include "../third_party/imgui/imgui.h"
@@ -645,20 +647,6 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
         return;
 
     // ========================================================================
-    // Blue header: node name (matches canvas title bar)
-    // ========================================================================
-    ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.0f, 0.4f, 0.8f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.0f, 0.5f, 0.9f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive,  ImVec4(0.0f, 0.3f, 0.7f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_Text,          ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-    ImGui::Selectable(nodePtr->NodeName.c_str(), true,
-                      ImGuiSelectableFlags_None, ImVec2(0.f, 28.f));
-    ImGui::PopStyleColor(4);
-
-    ImGui::Separator();
-    ImGui::Spacing();
-
-    // ========================================================================
     // SubGraph File Path - stored as editable parameter (Phase 24)
     // ========================================================================
     ImGui::TextDisabled("SubGraph File");
@@ -680,26 +668,35 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
     pathBinding = &pathIt->second;
 
     // Display path as editable text field
+    // Use non-static buffer to ensure each node has independent state
     std::string currentPath = pathBinding->LiteralValue.to_string();
-    static char pathBuffer[512] = "";
-    strncpy_s(pathBuffer, sizeof(pathBuffer), currentPath.c_str(), 
-              sizeof(pathBuffer) - 1);
+    std::string pathBufferStr = currentPath;  // Create buffer as local string
 
-    ImGui::SetNextItemWidth(-50.0f);
-    if (ImGui::InputText("##subgraph_path_input", pathBuffer, sizeof(pathBuffer),
+    // Use ImGui InputText with manual buffer management
+    static std::unordered_map<int, std::string> pathBufferCache;  // Cache per nodeID
+    if (pathBufferCache.find(m_selectedNodeID) == pathBufferCache.end())
+    {
+        pathBufferCache[m_selectedNodeID] = currentPath;
+    }
+    std::string& cachedPath = pathBufferCache[m_selectedNodeID];
+    char pathBufferArray[512] = "";
+    strncpy_s(pathBufferArray, sizeof(pathBufferArray), cachedPath.c_str(), 
+              sizeof(pathBufferArray) - 1);
+
+    ImGui::SetNextItemWidth(-1.0f);
+    if (ImGui::InputText("##subgraph_path_input", pathBufferArray, sizeof(pathBufferArray),
                          ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        std::string newPath(pathBuffer);
+        std::string newPath(pathBufferArray);
         pathBinding->LiteralValue = TaskValue(newPath);
         nodePtr->SubGraphPath = newPath;  // Keep both in sync
+        cachedPath = newPath;  // Update cache
         m_dirty = true;
     }
-
-    ImGui::SameLine();
-    if (ImGui::Button("Browse##sg_browse", ImVec2(45, 0)))
+    else
     {
-        // TODO: Implement file browser for SubGraph files
-        ImGui::OpenPopup("##subgraph_file_browser");
+        // Sync buffer back in case it was modified via other means
+        cachedPath = std::string(pathBufferArray);
     }
 
     ImGui::Spacing();
@@ -718,6 +715,9 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
 
     // ========================================================================
     // Input Parameters Section
+    // Parameters passed from parent graph into this SubGraph.
+    // Select "LocalVariable" to map to a variable in this graph's blackboard,
+    // or "Literal" to pass a constant value.
     // ========================================================================
     ImGui::TextDisabled("Input Parameters");
     ImGui::Separator();
@@ -854,6 +854,8 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
 
     // ========================================================================
     // Output Parameters Section
+    // Values returned from this SubGraph to the parent graph.
+    // These match the "Return Values" defined in the SubGraph file.
     // ========================================================================
 
     ImGui::Spacing();
@@ -939,14 +941,6 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
     ImGui::Separator();
     ImGui::Spacing();
 
-    // Breakpoint checkbox
-    bool hasBP = DebugController::Get().HasBreakpoint(0, m_selectedNodeID);
-    if (ImGui::Checkbox("Breakpoint (F9)##subgraph_bp", &hasBP))
-    {
-        DebugController::Get().ToggleBreakpoint(0, m_selectedNodeID,
-                                                m_template.Name,
-                                                nodePtr->NodeName);
-    }
 }
 
 // ============================================================================
@@ -1769,8 +1763,22 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanel()
 
             case TaskNodeType::SubGraph:
             {
-                ImGui::TextDisabled("SubGraph");
-                ImGui::TextDisabled("Path: %s", def.SubGraphPath.c_str());
+                // Phase 24: Delegate to the dedicated SubGraph properties renderer
+                RenderSubGraphNodeProperties();
+                break;
+            }
+
+            case TaskNodeType::While:
+            {
+                // Phase 24: Delegate to the dedicated While properties renderer
+                RenderWhileNodeProperties();
+                break;
+            }
+
+            case TaskNodeType::ForEach:
+            {
+                // Phase 24: Delegate to the dedicated ForEach properties renderer
+                RenderForEachNodeProperties();
                 break;
             }
 

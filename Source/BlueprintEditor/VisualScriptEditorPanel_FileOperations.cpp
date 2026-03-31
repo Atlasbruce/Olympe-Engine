@@ -173,10 +173,27 @@ bool VisualScriptEditorPanel::Save()
         m_template.GlobalVariableValues = m_entityBlackboard->ExportGlobalsToJson();
     }
 
-    // CRITICAL FIX: Sync node positions from ImNodes BEFORE serialization.
+     // CRITICAL FIX: Sync node positions from ImNodes BEFORE serialization.
     // RenderToolbar() (which calls Save) executes before RenderCanvas() syncs
     // positions, so we must pull fresh positions here to avoid stale data.
     SyncNodePositionsFromImNodes();
+
+    // Phase 24 CRITICAL FIX: Sync SubGraph paths from Parameters to SubGraphPath
+    // The UI panel edits Parameters["subgraph_path"] but serialization uses SubGraphPath field.
+    // This ensures both stay synchronized before save.
+    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+    {
+        if (m_template.Nodes[i].Type == TaskNodeType::SubGraph)
+        {
+            auto pathIt = m_template.Nodes[i].Parameters.find("subgraph_path");
+            if (pathIt != m_template.Nodes[i].Parameters.end() &&
+                pathIt->second.Type == ParameterBindingType::Literal)
+            {
+                // Sync from Parameters to SubGraphPath
+                m_template.Nodes[i].SubGraphPath = pathIt->second.LiteralValue.to_string();
+            }
+        }
+    }
 
     bool ok = SerializeAndWrite(m_currentPath);
 
@@ -213,9 +230,23 @@ bool VisualScriptEditorPanel::SaveAs(const std::string& path)
         m_template.GlobalVariableValues = m_entityBlackboard->ExportGlobalsToJson();
     }
 
-    // CRITICAL FIX: Same position sync as Save() — ensure fresh positions
+     // CRITICAL FIX: Same position sync as Save() — ensure fresh positions
     // before serialization regardless of when in the frame SaveAs is called.
     SyncNodePositionsFromImNodes();
+
+    // Phase 24 CRITICAL FIX: Sync SubGraph paths (same as in Save())
+    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+    {
+        if (m_template.Nodes[i].Type == TaskNodeType::SubGraph)
+        {
+            auto pathIt = m_template.Nodes[i].Parameters.find("subgraph_path");
+            if (pathIt != m_template.Nodes[i].Parameters.end() &&
+                pathIt->second.Type == ParameterBindingType::Literal)
+            {
+                m_template.Nodes[i].SubGraphPath = pathIt->second.LiteralValue.to_string();
+            }
+        }
+    }
 
     bool ok = SerializeAndWrite(path);
 
