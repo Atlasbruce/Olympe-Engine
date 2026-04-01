@@ -225,6 +225,36 @@
       "fromPin": "Completed",
       "toNode": 45,
       "toPin": "In"
+    },
+    {
+      "fromNode": 24,
+      "fromPin": "Completed",
+      "toNode": 46,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 46,
+      "fromPin": "Case_0",
+      "toNode": 47,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 46,
+      "fromPin": "Case_1",
+      "toNode": 48,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 46,
+      "fromPin": "Case_2",
+      "toNode": 49,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 46,
+      "fromPin": "Case_3",
+      "toNode": 50,
+      "toPin": "In"
     }
   ],
   "globalVariableValues": {
@@ -343,8 +373,8 @@
         }
       },
       "position": {
-        "x": 521,
-        "y": 148
+        "x": 514,
+        "y": 140
       },
       "type": "Branch"
     },
@@ -366,8 +396,8 @@
         }
       },
       "position": {
-        "x": 510,
-        "y": -0.999985
+        "x": 540,
+        "y": -16
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -414,8 +444,8 @@
         }
       },
       "position": {
-        "x": 733,
-        "y": 340
+        "x": 716,
+        "y": 263
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -533,8 +563,8 @@
         }
       },
       "position": {
-        "x": 728.937,
-        "y": 96.8335
+        "x": 714.937,
+        "y": 92.8335
       },
       "type": "Sequence"
     },
@@ -1067,6 +1097,168 @@
       "position": {
         "x": 1940.64,
         "y": 634.804
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "dynamicExecPins": [
+        "Case_1",
+        "Case_2",
+        "Case_3"
+      ],
+      "id": 46,
+      "label": "Switch Routage Test",
+      "params": {
+        "__posX": {
+          "LiteralValue": 963,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 598,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1520.88,
+        "y": -293.675
+      },
+      "switchCases": [
+        {
+          "label": "0",
+          "pin": "Case_0",
+          "value": "NewCase1"
+        },
+        {
+          "label": "1",
+          "pin": "Case_1",
+          "value": "NewCase2"
+        },
+        {
+          "label": "2",
+          "pin": "Case_2",
+          "value": "NewCase3"
+        },
+        {
+          "label": "4",
+          "pin": "Case_3",
+          "value": "NewCase4"
+        },
+        {
+          "label": "7",
+          "pin": "Case_4",
+          "value": "NewCase5"
+        },
+        {
+          "label": "10",
+          "pin": "Case_5",
+          "value": "NewCase6"
+        },
+        {
+          "label": "12",
+          "pin": "Case_6",
+          "value": "NewCase7"
+        },
+        {
+          "label": "2582",
+          "pin": "Case_7",
+          "value": "NewCase8"
+        }
+      ],
+      "type": "Switch"
+    },
+    {
+      "id": 47,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 420,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 178,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Switch Case 1 Completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1751.51,
+        "y": -433.183
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 48,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 420,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 178,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Switch Case 2 Completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1752.06,
+        "y": -330.359
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 49,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 420,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 178,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Switch Case 3 Completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1754.51,
+        "y": -228.015
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 50,
+      "label": "Log Message (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": 420,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 178,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Switch Case 4 Completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1760.11,
+        "y": -118.078
       },
       "taskType": "log_message",
       "type": "AtomicTask"

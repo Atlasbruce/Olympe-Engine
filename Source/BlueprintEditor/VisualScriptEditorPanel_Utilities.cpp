@@ -236,4 +236,79 @@ std::vector<BlackboardEntry> VisualScriptEditorPanel::GetVariablesByType(
     return filtered;
 }
 
+// ============================================================================
+// Phase 2 Blackboard Validation Helpers
+// ============================================================================
+
+/**
+ * @brief ValidateBlackboardKey
+ *
+ * Validates a blackboard entry key according to the following rules:
+ * 1. Key must not be empty
+ * 2. Key must not be a duplicate (checked against all other entries)
+ * 3. Global keys should follow "scope:key" format (warning, not error)
+ *
+ * @param key The key string to validate
+ * @param isGlobal Whether this is a global variable
+ * @param excludeIndex Skip duplicate check for entry at this index (-1 = check all)
+ * @return Validation result with error/warning messages
+ */
+BlackboardValidationResult VisualScriptEditorPanel::ValidateBlackboardKey(
+    const std::string& key,
+    bool isGlobal,
+    int excludeIndex)
+{
+    BlackboardValidationResult result;
+    result.IsValid = true;
+
+    // Rule 1: Key must not be empty
+    if (key.empty())
+    {
+        result.IsValid = false;
+        result.ErrorMessage = "Key cannot be empty";
+        return result;
+    }
+
+    // Rule 2: Check for duplicates
+    for (size_t i = 0; i < m_template.Blackboard.size(); ++i)
+    {
+        if (static_cast<int>(i) == excludeIndex)
+            continue;  // Skip the entry we're editing
+
+        if (m_template.Blackboard[i].Key == key)
+        {
+            result.IsValid = false;
+            result.ErrorMessage = "Key already exists: " + key;
+            return result;
+        }
+    }
+
+    // Rule 3: Global keys should follow "scope:key" format
+    if (isGlobal && key.find(':') == std::string::npos)
+    {
+        result.IsValid = true;  // Still valid, but warn
+        result.WarningMessage = "Global key should follow 'scope:key' format";
+    }
+
+    return result;
+}
+
+/**
+ * @brief ValidateBlackboardEntry
+ *
+ * Validates a complete blackboard entry for consistency.
+ * Checks that the entry has both a key and a valid type.
+ *
+ * @param entry The entry to validate
+ * @return true if entry is valid (non-empty key, Type != None)
+ */
+bool VisualScriptEditorPanel::ValidateBlackboardEntry(const BlackboardEntry& entry)
+{
+    if (entry.Key.empty())
+        return false;
+    if (entry.Type == VariableType::None)
+        return false;
+    return true;
+}
+
 }  // namespace Olympe

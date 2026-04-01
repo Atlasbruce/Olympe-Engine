@@ -520,7 +520,7 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
     strncpy_s(pathBufferArray, sizeof(pathBufferArray), cachedPath.c_str(), 
               sizeof(pathBufferArray) - 1);
 
-    ImGui::SetNextItemWidth(-1.0f);
+    ImGui::SetNextItemWidth(-80.0f);
     bool pathChanged = ImGui::InputText("##subgraph_path_input", pathBufferArray, sizeof(pathBufferArray));
 
     if (pathChanged || ImGui::IsItemDeactivatedAfterEdit())
@@ -542,6 +542,30 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
     {
         // Keep cache in sync with buffer content
         cachedPath = std::string(pathBufferArray);
+    }
+
+    // Browse button for file picker
+    ImGui::SameLine();
+    if (ImGui::Button("Browse##subgraph_browse", ImVec2(75, 0)))
+    {
+        m_subGraphModal->Open("Blueprints");
+    }
+
+    // Handle modal result
+    m_subGraphModal->Render();
+    if (m_subGraphModal->IsConfirmed())
+    {
+        std::string selectedFile = m_subGraphModal->GetSelectedFile();
+
+        // Update path binding and definition
+        pathBinding->LiteralValue = TaskValue(selectedFile);
+        nodePtr->SubGraphPath = selectedFile;
+        pathBufferCache[m_selectedNodeID] = selectedFile;
+
+        SYSTEM_LOG << "[RenderSubGraphNodeProperties] Selected SubGraph file: " << selectedFile << "\n";
+
+        m_dirty = true;
+        m_subGraphModal->Close();
     }
 
     ImGui::Spacing();
@@ -1131,39 +1155,46 @@ void VisualScriptEditorPanel::RenderProperties()
                 }
             }
 
-            // ---- Case Labels ----
+            // ---- Case Editor Button ----
+            ImGui::Separator();
+            ImGui::Text("Cases: %zu", def.switchCases.size());
+            if (ImGui::Button("Edit Cases##vseditswitch", ImVec2(100, 0)))
+            {
+                if (!m_switchCaseModal)
+                    m_switchCaseModal = std::make_unique<SwitchCaseEditorModal>();
+                m_switchCaseModal->Open(def.switchCases);
+            }
+
+            // Render the modal
+            if (m_switchCaseModal)
+            {
+                m_switchCaseModal->Render();
+
+                // If the user confirmed changes, sync them back
+                if (m_switchCaseModal->IsConfirmed())
+                {
+                    def.switchCases = m_switchCaseModal->GetSwitchCases();
+
+                    // Sync to template
+                    if (tmplNode)
+                        tmplNode->switchCases = def.switchCases;
+
+                    m_dirty = true;
+                    m_switchCaseModal->Close();
+                }
+            }
+
+            // ---- Display Current Cases (read-only) ----
             if (!def.switchCases.empty())
             {
                 ImGui::Separator();
-                ImGui::TextDisabled("Case Labels");
-            }
-
-            // Ensure our edit buffer stays in sync
-            if (m_propEditSwitchCases.size() != def.switchCases.size())
-                m_propEditSwitchCases = def.switchCases;
-
-            for (size_t ci = 0; ci < def.switchCases.size(); ++ci)
-            {
-                // Show pin name as read-only, allow editing the custom label
-                const std::string pinLabel = def.switchCases[ci].pinName
-                    + " (val=" + def.switchCases[ci].value + ")";
-                ImGui::TextUnformatted(pinLabel.c_str());
-                ImGui::SameLine();
-
-                char labelBuf[64];
-                const std::string& curLabel = m_propEditSwitchCases[ci].customLabel;
-                strncpy_s(labelBuf, sizeof(labelBuf), curLabel.c_str(), _TRUNCATE);
-
-                // Unique widget ID per case index
-                std::string widgetID = "##vscaselabel" + std::to_string(ci);
-                if (ImGui::InputText(widgetID.c_str(), labelBuf, sizeof(labelBuf)))
+                ImGui::TextDisabled("Current Cases (read-only)");
+                for (size_t ci = 0; ci < def.switchCases.size(); ++ci)
                 {
-                    m_propEditSwitchCases[ci].customLabel = labelBuf;
-                    // Apply to the live def and template immediately
-                    def.switchCases[ci].customLabel = labelBuf;
-                    if (tmplNode && ci < tmplNode->switchCases.size())
-                        tmplNode->switchCases[ci].customLabel = labelBuf;
-                    m_dirty = true;
+                    const std::string pinLabel = def.switchCases[ci].pinName
+                        + " (val=" + def.switchCases[ci].value + ")"
+                        + (def.switchCases[ci].customLabel.empty() ? "" : " [" + def.switchCases[ci].customLabel + "]");
+                    ImGui::BulletText("%s", pinLabel.c_str());
                 }
             }
             break;
@@ -1457,11 +1488,48 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanel()
 
             case TaskNodeType::Switch:
             {
-                ImGui::TextDisabled("Switch node - edit via modal");
-                if (ImGui::Button("Edit Switch Cases"))
+                ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), "Switch Node");
+                ImGui::Separator();
+
+                // Display switch variable
+                ImGui::Text("Switch On: %s", def.switchVariable.empty() ? "(not set)" : def.switchVariable.c_str());
+                ImGui::Text("Cases: %zu", def.switchCases.size());
+
+                ImGui::Separator();
+
+                // Button to open modal editor
+                if (ImGui::Button("Edit Switch Cases", ImVec2(150, 0)))
                 {
-                    // Open switch case editor if available
+                    if (!m_switchCaseModal)
+                        m_switchCaseModal = std::make_unique<SwitchCaseEditorModal>();
+                    m_switchCaseModal->Open(def.switchCases);
                 }
+
+                // Render the modal
+                if (m_switchCaseModal)
+                {
+                    m_switchCaseModal->Render();
+
+                    // If the user confirmed changes, sync them back
+                    if (m_switchCaseModal->IsConfirmed())
+                    {
+                        def.switchCases = m_switchCaseModal->GetSwitchCases();
+
+                        // Sync to template
+                        for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                        {
+                            if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                            {
+                                m_template.Nodes[i].switchCases = def.switchCases;
+                                break;
+                            }
+                        }
+
+                        m_dirty = true;
+                        m_switchCaseModal->Close();
+                    }
+                }
+
                 break;
             }
 

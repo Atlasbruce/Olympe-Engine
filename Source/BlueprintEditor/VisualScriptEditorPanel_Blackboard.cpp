@@ -226,12 +226,41 @@ void VisualScriptEditorPanel::RenderLocalVariablesPanel()
         char keyBuf[64];
         strncpy_s(keyBuf, sizeof(keyBuf), entry.Key.c_str(), _TRUNCATE);
 
+        // ====== VALIDATION: Key input with error feedback ======
         ImGui::SetNextItemWidth(140.0f);
         if (ImGui::InputText("##bbkey", keyBuf, sizeof(keyBuf)))
         {
-            entry.Key = keyBuf;
-            m_pendingBlackboardEdits[idx] = keyBuf;
-            m_dirty = true;
+            std::string newKey(keyBuf);
+            BlackboardValidationResult validation = ValidateBlackboardKey(newKey, entry.IsGlobal, idx);
+
+            if (validation.IsValid)
+            {
+                entry.Key = newKey;
+                m_pendingBlackboardEdits[idx] = newKey;
+                m_dirty = true;
+            }
+            // If invalid, we display the error below but don't update entry.Key
+        }
+
+        // Display validation feedback
+        if (!entry.Key.empty() && entry.Type != VariableType::None)
+        {
+            BlackboardValidationResult validation = ValidateBlackboardKey(entry.Key, entry.IsGlobal, idx);
+
+            if (!validation.IsValid)
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));  // Red for error
+                ImGui::SameLine();
+                ImGui::TextDisabled("⚠️ %s", validation.ErrorMessage.c_str());
+                ImGui::PopStyleColor();
+            }
+            else if (!validation.WarningMessage.empty())
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.85f, 0.0f, 1.0f));  // Yellow for warning
+                ImGui::SameLine();
+                ImGui::TextDisabled("ℹ️ %s", validation.WarningMessage.c_str());
+                ImGui::PopStyleColor();
+            }
         }
 
         ImGui::SameLine();
@@ -307,6 +336,34 @@ void VisualScriptEditorPanel::RenderGlobalVariablesPanel()
 
         ImGui::InputText("Variable Name##new", newVarName, sizeof(newVarName));
 
+        // Validate global variable name
+        std::string globalName(newVarName);
+        BlackboardValidationResult validation = ValidateBlackboardKey(globalName, true);
+
+        if (strlen(newVarName) > 0)
+        {
+            if (!validation.IsValid)
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));  // Red
+                ImGui::TextUnformatted(validation.ErrorMessage.c_str());
+                ImGui::PopStyleColor();
+            }
+            else if (!validation.WarningMessage.empty())
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.85f, 0.0f, 1.0f));  // Yellow
+                ImGui::TextUnformatted(validation.WarningMessage.c_str());
+                ImGui::PopStyleColor();
+            }
+
+            // Also check if already exists in global blackboard
+            if (gtb.HasVariable(globalName))
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+                ImGui::TextUnformatted("⚠️ Variable already exists in global registry");
+                ImGui::PopStyleColor();
+            }
+        }
+
         const char* typeOptions[] = { "Bool", "Int", "Float", "String", "Vector", "EntityID" };
         const VariableType typeValues[] = {
             VariableType::Bool, VariableType::Int, VariableType::Float,
@@ -315,6 +372,12 @@ void VisualScriptEditorPanel::RenderGlobalVariablesPanel()
         ImGui::Combo("Type##new", &newVarTypeIdx, typeOptions, 6);
 
         ImGui::InputTextMultiline("Description##new", newVarDescription, sizeof(newVarDescription), ImVec2(0, 60));
+
+        // Disable Create button if validation fails
+        bool canCreate = strlen(newVarName) > 0 && validation.IsValid && !gtb.HasVariable(newVarName);
+
+        if (!canCreate)
+            ImGui::BeginDisabled(true);
 
         if (ImGui::Button("Create", ImVec2(120, 0)))
         {
@@ -345,6 +408,9 @@ void VisualScriptEditorPanel::RenderGlobalVariablesPanel()
         {
             ImGui::CloseCurrentPopup();
         }
+
+        if (!canCreate)
+            ImGui::EndDisabled();
 
         ImGui::EndPopup();
     }

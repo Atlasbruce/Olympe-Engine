@@ -216,6 +216,8 @@
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Blackboard.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Properties.cpp" />
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Verification.cpp" />
+    <ClCompile Include="Source\Editor\Modals\SwitchCaseEditorModal.cpp" />
+    <ClCompile Include="Source\Editor\Modals\SubGraphFilePickerModal.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -460,6 +462,8 @@
     <ClInclude Include="Source\BlueprintEditor\GraphExecutionSimulator.h" />
     <ClInclude Include="Source\BlueprintEditor\ExecutionTestPanel.h" />
     <ClInclude Include="Source\Editor\Panels\VariablePropertyPanel.h" />
+    <ClInclude Include="Source\Editor\Modals\SwitchCaseEditorModal.h" />
+    <ClInclude Include="Source\Editor\Modals\SubGraphFilePickerModal.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -497,6 +501,7 @@
     <None Include="AUDIT_SUMMARY_NODE_PANELS_VISUAL.md" />
     <None Include="ACTION_PLAN_NODE_PANELS_FIXES.md" />
     <None Include="AUDIT_CRITICAL_FIXES_COMPLETION.md" />
+    <None Include="PHASE2_STEP3_COMPLETION_REPORT.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

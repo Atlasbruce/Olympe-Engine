@@ -625,6 +625,9 @@
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Verification.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\Editor\Modals\SwitchCaseEditorModal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -1231,6 +1234,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\TaskSystem\VSGraphExecutor.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\Editor\Modals\SwitchCaseEditorModal.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

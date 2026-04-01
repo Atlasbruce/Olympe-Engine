@@ -137,6 +137,10 @@ void VisualScriptEditorPanel::Initialize()
     m_libraryPanel    = std::unique_ptr<ConditionPresetLibraryPanel>(
                               new ConditionPresetLibraryPanel(m_presetRegistry));
 
+    // Phase 26 — SubGraph File Picker Modal
+    m_subGraphModal   = std::unique_ptr<SubGraphFilePickerModal>(
+                              new SubGraphFilePickerModal());
+
     // Phase 24 Global Blackboard Integration: Create EntityBlackboard for managing
     // both local and global variables in the editor context (entity ID 0)
     m_entityBlackboard = std::unique_ptr<EntityBlackboard>(
@@ -252,6 +256,7 @@ void VisualScriptEditorPanel::Shutdown()
     m_libraryPanel.reset();
     m_branchRenderer.reset();
     m_pinManager.reset();
+    m_subGraphModal.reset();
     m_condPanelNodeID = -1;
 }
 

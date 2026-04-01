@@ -42,6 +42,12 @@
 #include "../Editor/Panels/ConditionPresetLibraryPanel.h"
 #include "../Editor/Nodes/NodeBranchRenderer.h"
 
+// Phase 26 — Switch Case Editor Modal
+#include "../Editor/Modals/SwitchCaseEditorModal.h"
+
+// Phase 26 — SubGraph File Picker Modal
+#include "../Editor/Modals/SubGraphFilePickerModal.h"
+
 // Forward-declare ImNodes context type (defined in imnodes.h) in the global
 // namespace so it can be referenced from within the Olympe namespace below.
 struct ImNodesEditorContext;
@@ -87,6 +93,17 @@ struct ExecutionToken {
 
     ExecutionToken() = default;
     ExecutionToken(int32_t id, int d) : nodeID(id), depth(d) {}
+};
+
+/**
+ * @struct BlackboardValidationResult
+ * @brief Result of blackboard key validation (Phase 26).
+ * Contains error/warning messages and validity flag.
+ */
+struct BlackboardValidationResult {
+    bool        IsValid         = true;
+    std::string ErrorMessage    = "";   ///< Set if validation failed
+    std::string WarningMessage  = "";   ///< Set if validation succeeded but has warnings
 };
 
 // ============================================================================
@@ -470,6 +487,38 @@ private:
         VariableType expectedType);
 
     // -----------------------------------------------------------------------
+    // Phase 26 — Blackboard Validation Helpers
+    // -----------------------------------------------------------------------
+
+    /**
+     * @brief Validates a blackboard key according to schema rules.
+     *
+     * Rules:
+     * 1. Key must not be empty
+     * 2. Key must not be a duplicate
+     * 3. Global keys should follow "scope:key" format (warning)
+     *
+     * @param key           The key to validate
+     * @param isGlobal      Whether this is a global variable
+     * @param excludeIndex  Skip duplicate check for entry at index (-1 = check all)
+     * @return              Validation result with IsValid flag and messages
+     */
+    BlackboardValidationResult ValidateBlackboardKey(
+        const std::string& key,
+        bool isGlobal,
+        int excludeIndex = -1);
+
+    /**
+     * @brief Validates a complete blackboard entry.
+     *
+     * Checks that the entry has a non-empty key and a valid type.
+     *
+     * @param entry The entry to validate
+     * @return      true if entry is valid, false otherwise
+     */
+    bool ValidateBlackboardEntry(const BlackboardEntry& entry);
+
+    // -----------------------------------------------------------------------
     // Phase 23-B.4 — Condition Editor UI helpers
     // -----------------------------------------------------------------------
 
@@ -840,6 +889,12 @@ private:
 
     /// Global condition preset library panel (UI for creating/editing/deleting presets).
     std::unique_ptr<ConditionPresetLibraryPanel> m_libraryPanel;
+
+    /// Phase 26 — Switch Case Editor Modal
+    std::unique_ptr<SwitchCaseEditorModal> m_switchCaseModal;
+
+    /// Phase 26 — SubGraph File Picker Modal
+    std::unique_ptr<SubGraphFilePickerModal> m_subGraphModal;
 
     /// ID of the node currently loaded into m_conditionsPanel (-1 = none).
     int m_condPanelNodeID = -1;
