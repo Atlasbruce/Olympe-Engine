@@ -904,7 +904,7 @@
           "Type": "Literal"
         },
         "message": {
-          "LiteralValue": "Subgraph completed",
+          "LiteralValue": "Subgraph completed!",
           "Type": "Literal"
         }
       },

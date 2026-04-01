@@ -306,6 +306,10 @@ namespace Olympe
         }
 
         m_AssetTreeRoot = virtualRoot;
+
+        // ===== PERFORMANCE: Invalidate cache when assets are rescanned =====
+        // Asset files may have changed, so cached metadata would be stale
+        InvalidateAssetMetadataCache();
     }
     
     std::shared_ptr<AssetNode> BlueprintEditor::ScanDirectory(const std::string& path)
@@ -639,17 +643,27 @@ namespace Olympe
     
     AssetMetadata BlueprintEditor::GetAssetMetadata(const std::string& filepath)
     {
+        // ===== PERFORMANCE OPTIMIZATION: Cache Asset Metadata =====
+        // Check if this metadata is already cached
+        auto cacheIt = m_AssetMetadataCache.find(filepath);
+        if (cacheIt != m_AssetMetadataCache.end())
+        {
+            // Return cached metadata (avoids JSON re-parsing every frame)
+            return cacheIt->second;
+        }
+
+        // ===== Not in cache, load and parse =====
         AssetMetadata metadata;
         metadata.filepath = filepath;
-        
+
         try
         {
             // Get filename
             metadata.name = fs::path(filepath).filename().string();
-            
+
             // Detect type
             metadata.type = DetectAssetType(filepath);
-            
+
             // Parse detailed metadata
             ParseAssetMetadata(filepath, metadata);
         }
@@ -659,7 +673,10 @@ namespace Olympe
             metadata.errorMessage = std::string("Error loading asset: ") + e.what();
             std::cerr << "BlueprintEditor: " << metadata.errorMessage << std::endl;
         }
-        
+
+        // ===== Cache the result =====
+        m_AssetMetadataCache[filepath] = metadata;
+
         return metadata;
     }
     
@@ -995,14 +1012,28 @@ namespace Olympe
     // ========================================================================
     // Asset Selection Implementation
     // ========================================================================
-    
+
     void BlueprintEditor::SelectAsset(const std::string& assetPath)
     {
         if (m_SelectedAssetPath != assetPath)
         {
             m_SelectedAssetPath = assetPath;
+
+            // ===== PERFORMANCE: Invalidate cache when asset selection changes =====
+            // This prevents stale metadata from being displayed if the same asset is
+            // re-selected after being modified on disk
+            InvalidateAssetMetadataCache();
+
             std::cout << "BlueprintEditor: Selected asset " << assetPath << std::endl;
         }
+    }
+
+    void BlueprintEditor::InvalidateAssetMetadataCache()
+    {
+        // ===== Performance Optimization: Clear Asset Metadata Cache =====
+        // Called when asset selection changes or when asset files are refreshed
+        // This prevents stale data while maintaining cache for non-selected assets
+        m_AssetMetadataCache.clear();
     }
 
     // ========================================================================

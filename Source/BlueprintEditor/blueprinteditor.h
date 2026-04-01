@@ -230,7 +230,10 @@ namespace Olympe
         // Asset metadata
         AssetMetadata GetAssetMetadata(const std::string& filepath);
         bool IsAssetValid(const std::string& filepath) const;
-        
+
+        // Asset metadata cache invalidation
+        void InvalidateAssetMetadataCache();  // Clear all cached metadata
+
         // Asset type detection
         std::string DetectAssetType(const std::string& filepath);
         
@@ -346,13 +349,18 @@ namespace Olympe
         
         // ===== Asset Selection =====
         std::string m_SelectedAssetPath; // Currently selected asset file path
-        
+
+        // ===== Asset Metadata Cache (Performance Optimization) =====
+        // Cache to avoid reloading and reparsing JSON for the same asset every frame
+        std::map<std::string, AssetMetadata> m_AssetMetadataCache;  // filepath -> metadata
+        std::string m_LastCachedAssetPath;  // Track previous selection for cache invalidation
+
         // ===== Phase 6: Command System =====
         Blueprint::CommandStack* m_CommandStack;  // Undo/redo command stack
-        
+
         // ===== Plugin System =====
         std::map<std::string, std::unique_ptr<class BlueprintEditorPlugin>> m_Plugins;
-        
+
         // ===== Migration System =====
         bool m_ShowMigrationDialog;
         std::vector<std::string> m_BlueprintsToMigrate;
