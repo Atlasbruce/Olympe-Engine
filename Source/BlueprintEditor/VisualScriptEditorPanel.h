@@ -323,6 +323,14 @@ private:
     /// Render a single preset item in compact horizontal format with index
     void RenderPresetItemCompact(const ConditionPreset& preset, size_t index);
 
+    /// Phase 26 — Tab system: Renders the tab bar for the 3-panel right section
+    /// Displays tabs for Presets, Local Variables, and Global Variables
+    void RenderRightPanelTabs();
+
+    /// Phase 26 — Tab system: Renders the content of the active tab
+    /// Dispatches to appropriate render function based on m_rightPanelTabSelection
+    void RenderRightPanelTabContent();
+
     /// Render a single operand with dropdown for mode and value editor
     /// Returns true if the operand was modified
     bool RenderOperandEditor(Operand& operand, const char* labelSuffix);
@@ -844,8 +852,9 @@ private:
     /// Created in Initialize() and manages scope-aware access to both local and global vars.
     std::unique_ptr<EntityBlackboard> m_entityBlackboard;
 
-    /// Current tab selection in the blackboard panel (0 = Local, 1 = Global)
-    int m_blackboardTabSelection = 0;  // 0 for Local, 1 for Global
+    /// Phase 26 — Right panel tab selection
+    /// 0 = Presets, 1 = Local Variables, 2 = Global Variables
+    int m_rightPanelTabSelection = 0;
 };
 
 } // namespace Olympe

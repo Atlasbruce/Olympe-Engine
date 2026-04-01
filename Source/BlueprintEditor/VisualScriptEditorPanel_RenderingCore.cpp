@@ -174,26 +174,27 @@ void VisualScriptEditorPanel::RenderContent()
 
     ImGui::SameLine();
 
-    // Right panel container with 3 vertical sub-panels (A: Node Props | B: Preset Bank | C: Local Vars)
+    // Right panel container with tab-based layout
+    // Part A: Node Properties (top, resizable)
+    // Part B: Tab system for Presets, Local Variables, Global Variables
     ImGui::BeginChild("VSRightPanel", ImVec2(m_propertiesPanelWidth, 0), true);
 
     float rightPanelHeight = ImGui::GetContentRegionAvail().y;
     float splitterHeight = 4.0f;
 
-    // Initialize sub-panel heights on first use (equal thirds for 3 panels)
+    // Initialize sub-panel heights on first use
     if (m_nodePropertiesPanelHeight <= 0.0f)
     {
-        m_nodePropertiesPanelHeight = (rightPanelHeight - splitterHeight * 2) / 3.0f;
-        m_presetBankPanelHeight = (rightPanelHeight - splitterHeight * 2) / 3.0f;
+        // Part A gets 35% of height, Part B (tabbed) gets remaining 65%
+        m_nodePropertiesPanelHeight = rightPanelHeight * 0.35f;
     }
 
     // Clamp heights to reasonable ranges
     float minPanelHeight = 50.0f;
     if (m_nodePropertiesPanelHeight < minPanelHeight) m_nodePropertiesPanelHeight = minPanelHeight;
-    if (m_presetBankPanelHeight < minPanelHeight) m_presetBankPanelHeight = minPanelHeight;
 
-    float localVarHeight = rightPanelHeight - m_nodePropertiesPanelHeight - m_presetBankPanelHeight - splitterHeight * 2;
-    if (localVarHeight < minPanelHeight) localVarHeight = minPanelHeight;
+    float tabbedPanelHeight = rightPanelHeight - m_nodePropertiesPanelHeight - splitterHeight;
+    if (tabbedPanelHeight < minPanelHeight) tabbedPanelHeight = minPanelHeight;
 
     // ---- Part A: Node Properties Panel ----
     ImGui::BeginChild("Part_A_NodeProps", ImVec2(0, m_nodePropertiesPanelHeight), false,
@@ -201,11 +202,11 @@ void VisualScriptEditorPanel::RenderContent()
     RenderNodePropertiesPanel();
     ImGui::EndChild();
 
-    // ---- Splitter 1 (between Part A and Part B) ----
+    // ---- Splitter (between Part A and Part B) ----
     ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.35f, 0.35f, 0.35f, 0.5f));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.55f, 0.55f, 0.55f, 0.8f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.70f, 0.70f, 0.70f, 1.0f));
-    ImGui::Button("##splitter1", ImVec2(-1.0f, splitterHeight));
+    ImGui::Button("##splitter_nodeprops_tabs", ImVec2(-1.0f, splitterHeight));
     if (ImGui::IsItemHovered())
         ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
@@ -215,43 +216,15 @@ void VisualScriptEditorPanel::RenderContent()
     }
     ImGui::PopStyleColor(3);
 
-    // ---- Part B: Preset Bank Panel ----
-    ImGui::BeginChild("Part_B_PresetBank", ImVec2(0, m_presetBankPanelHeight), false,
-                      ImGuiWindowFlags_NoScrollbar);
-    RenderPresetBankPanel();
-    ImGui::EndChild();
-
-    // ---- Splitter 2 (between Part B and Part C) ----
-    ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.35f, 0.35f, 0.35f, 0.5f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.55f, 0.55f, 0.55f, 0.8f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.70f, 0.70f, 0.70f, 1.0f));
-    ImGui::Button("##splitter2", ImVec2(-1.0f, splitterHeight));
-    if (ImGui::IsItemHovered())
-        ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
-    if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-    {
-        m_presetBankPanelHeight += ImGui::GetIO().MouseDelta.y;
-        if (m_presetBankPanelHeight < minPanelHeight) m_presetBankPanelHeight = minPanelHeight;
-    }
-    ImGui::PopStyleColor(3);
-
-    // ---- Part C: Local/Global Variables Panel (with tab selection) ----
-    ImGui::BeginChild("Part_C_Blackboard", ImVec2(0, localVarHeight), false,
+    // ---- Part B: Tab-based panel (Presets, Local Variables, Global Variables) ----
+    ImGui::BeginChild("Part_B_TabbedPanel", ImVec2(0, tabbedPanelHeight), false,
                       ImGuiWindowFlags_NoScrollbar);
 
-    // Tab selector for Local vs Global variables
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 4.0f));
-    ImGui::RadioButton("Local Variables", &m_blackboardTabSelection, 0);
-    ImGui::SameLine(150.0f);
-    ImGui::RadioButton("Global Variables", &m_blackboardTabSelection, 1);
-    ImGui::PopStyleVar();
-    ImGui::Separator();
+    // Phase 26: Render tab bar
+    RenderRightPanelTabs();
 
-    // Render appropriate panel based on tab selection
-    if (m_blackboardTabSelection == 0)
-        RenderLocalVariablesPanel();
-    else
-        RenderGlobalVariablesPanel();
+    // Phase 26: Render active tab content
+    RenderRightPanelTabContent();
 
     ImGui::EndChild();
 

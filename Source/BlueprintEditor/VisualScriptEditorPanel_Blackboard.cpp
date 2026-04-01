@@ -558,4 +558,95 @@ void VisualScriptEditorPanel::RenderGlobalVariablesPanel()
     }
 }
 
+// ============================================================================
+// Phase 26 — Tab-based panel system for right side
+// ============================================================================
+
+void VisualScriptEditorPanel::RenderRightPanelTabs()
+{
+    /// Renders the tab bar for selecting between Presets, Local Variables, and Global Variables
+    /// Uses a horizontal button group with visual feedback for the active tab
+
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(12.0f, 6.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2.0f, 0.0f));
+
+    // Tab 0: Presets
+    {
+        bool isActive = (m_rightPanelTabSelection == 0);
+        if (isActive)
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.4f, 0.8f, 1.0f));
+        else
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.25f, 0.25f, 0.25f, 0.7f));
+
+        if (ImGui::Button("Presets##tab0", ImVec2(0, 0)))
+            m_rightPanelTabSelection = 0;
+
+        ImGui::PopStyleColor();
+    }
+
+    ImGui::SameLine();
+
+    // Tab 1: Local Variables
+    {
+        bool isActive = (m_rightPanelTabSelection == 1);
+        if (isActive)
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.4f, 0.8f, 1.0f));
+        else
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.25f, 0.25f, 0.25f, 0.7f));
+
+        if (ImGui::Button("Local Variables##tab1", ImVec2(0, 0)))
+            m_rightPanelTabSelection = 1;
+
+        ImGui::PopStyleColor();
+    }
+
+    ImGui::SameLine();
+
+    // Tab 2: Global Variables
+    {
+        bool isActive = (m_rightPanelTabSelection == 2);
+        if (isActive)
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.4f, 0.8f, 1.0f));
+        else
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.25f, 0.25f, 0.25f, 0.7f));
+
+        if (ImGui::Button("Global Variables##tab2", ImVec2(0, 0)))
+            m_rightPanelTabSelection = 2;
+
+        ImGui::PopStyleColor();
+    }
+
+    ImGui::PopStyleVar(2);
+    ImGui::Separator();
+}
+
+void VisualScriptEditorPanel::RenderRightPanelTabContent()
+{
+    /// Renders the content of the currently selected tab
+    /// Dispatches to the appropriate render function based on m_rightPanelTabSelection
+
+    switch (m_rightPanelTabSelection)
+    {
+        case 0:
+            // Tab 0: Presets
+            RenderPresetBankPanel();
+            break;
+
+        case 1:
+            // Tab 1: Local Variables
+            RenderLocalVariablesPanel();
+            break;
+
+        case 2:
+            // Tab 2: Global Variables
+            RenderGlobalVariablesPanel();
+            break;
+
+        default:
+            // Fallback: show presets
+            RenderPresetBankPanel();
+            break;
+    }
+}
+
 } // namespace Olympe
