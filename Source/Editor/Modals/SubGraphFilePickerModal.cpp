@@ -69,7 +69,7 @@ void SubGraphFilePickerModal::Render()
     bool open = true;
     if (ImGui::BeginPopupModal("Select SubGraph File##modal", &open, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        ImGui::TextColored(ImVec4(0.8f, 0.95f, 1.0f, 1.0f), "Select a Blueprint file to use as SubGraph");
+        ImGui::TextColored(ImVec4(0.8f, 0.95f, 1.0f, 1.0f), "Select a Blueprint file (.ats) to use as SubGraph");
         ImGui::Separator();
 
         // ====================================================================
@@ -156,7 +156,7 @@ void SubGraphFilePickerModal::RefreshFileList()
 
 #ifdef _WIN32
     WIN32_FIND_DATAA findData;
-    std::string searchPath = m_currentPath + "\\*.json";
+    std::string searchPath = m_currentPath + "\\*.ats";
     HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
 
     if (hFind == INVALID_HANDLE_VALUE)
@@ -182,7 +182,7 @@ void SubGraphFilePickerModal::RefreshFileList()
     std::sort(m_blueprintFiles.begin(), m_blueprintFiles.end());
 
     SYSTEM_LOG << "[SubGraphFilePicker] Found " << m_blueprintFiles.size() 
-               << " blueprint files in " << m_currentPath << "\n";
+               << " blueprint files (.ats) in " << m_currentPath << "\n";
 #else
     SYSTEM_LOG << "[SubGraphFilePicker] Platform not supported (Windows only)\n";
 #endif

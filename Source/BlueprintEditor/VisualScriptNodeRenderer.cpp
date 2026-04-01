@@ -10,6 +10,7 @@
 #include "VisualScriptNodeRenderer.h"
 #include "../system/system_consts.h"
 #include "AtomicTaskUIRegistry.h"
+#include "ConditionRef.h"
 
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
@@ -118,6 +119,52 @@ const char* GetVariableTypeLabel(VariableType type)
         case VariableType::String:   return "String";
         default:                     return "None";
     }
+}
+
+// ============================================================================
+// Helper: Build condition expression display string
+// ============================================================================
+
+/**
+ * @brief Builds a display string for a ConditionRef operand.
+ * 
+ * Format examples:
+ * - Variable mode: "[health]"
+ * - Const mode: "[50]"
+ * - Pin mode: "[pin]"
+ */
+static std::string GetOperandDisplayString(const OperandRef& operand)
+{
+    std::string result = "[";
+
+    if (operand.mode == OperandRef::Mode::Variable)
+    {
+        result += operand.variableName;
+    }
+    else if (operand.mode == OperandRef::Mode::Const)
+    {
+        result += operand.constValue;
+    }
+    else if (operand.mode == OperandRef::Mode::Pin)
+    {
+        result += "pin";
+    }
+
+    result += "]";
+    return result;
+}
+
+/**
+ * @brief Builds the complete condition expression string.
+ * 
+ * Example: "[health] > [50]"
+ */
+static std::string BuildConditionExpressionString(const ConditionRef& condition)
+{
+    std::string left = GetOperandDisplayString(condition.leftOperand);
+    std::string right = GetOperandDisplayString(condition.rightOperand);
+
+    return left + " " + condition.operatorStr + " " + right;
 }
 
 // ============================================================================
@@ -485,8 +532,21 @@ void VisualScriptNodeRenderer::RenderNode(
                         opLabel = "And";
                     else
                         opLabel = "Or ";
+
                     ImGui::PushStyleColor(ImGuiCol_Text, condColor);
-                    ImGui::Text("  %s %s", opLabel, ref.presetID.c_str());
+
+                    // Display condition expression if available in conditionOperandRefs
+                    if (ci < def.conditionOperandRefs.size())
+                    {
+                        std::string exprStr = BuildConditionExpressionString(def.conditionOperandRefs[ci]);
+                        ImGui::Text("  %s %s", opLabel, exprStr.c_str());
+                    }
+                    else
+                    {
+                        // Fallback: display preset ID if no operand refs available
+                        ImGui::Text("  %s %s", opLabel, ref.presetID.c_str());
+                    }
+
                     ImGui::PopStyleColor();
                 }
             }

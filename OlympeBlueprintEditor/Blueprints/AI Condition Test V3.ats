@@ -916,7 +916,7 @@
         }
       },
       "position": {
-        "x": 1015,
+        "x": 1016,
         "y": -15
       },
       "type": "SubGraph"
@@ -948,6 +948,14 @@
     {
       "id": 39,
       "label": "While",
+      "nodeConditionRefs": [
+        {
+          "leftPinID": "",
+          "logicalOp": "Start",
+          "presetID": "preset_ed2171ef-9ad8-4f83-9115-70da9a127130",
+          "rightPinID": ""
+        }
+      ],
       "params": {
         "__posX": {
           "LiteralValue": 1525,
@@ -959,8 +967,8 @@
         }
       },
       "position": {
-        "x": 1723.36,
-        "y": 275.604
+        "x": 1650.36,
+        "y": 241.604
       },
       "type": "While"
     },
@@ -982,8 +990,8 @@
         }
       },
       "position": {
-        "x": 1953,
-        "y": 219.937
+        "x": 2025,
+        "y": 171.937
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -1006,8 +1014,8 @@
         }
       },
       "position": {
-        "x": 1956.67,
-        "y": 347.718
+        "x": 2026.67,
+        "y": 315.718
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -1026,8 +1034,8 @@
         }
       },
       "position": {
-        "x": 1718,
-        "y": 561
+        "x": 1648,
+        "y": 521
       },
       "type": "ForEach"
     },
@@ -1071,8 +1079,8 @@
         }
       },
       "position": {
-        "x": 1943.57,
-        "y": 496.585
+        "x": 1862.57,
+        "y": 461.585
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -1095,8 +1103,8 @@
         }
       },
       "position": {
-        "x": 1940.64,
-        "y": 634.804
+        "x": 1865.64,
+        "y": 577.804
       },
       "taskType": "log_message",
       "type": "AtomicTask"
