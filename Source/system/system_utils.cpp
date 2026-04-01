@@ -35,35 +35,13 @@ void LoadOlympeConfig(const char* filename)
     if (extract_json_int(content, "screen_width", w) || extract_json_int(content, "screenWidth", w) || extract_json_int(content, "width", w)) {}
     if (extract_json_int(content, "screen_height", h) || extract_json_int(content, "screenHeight", h) || extract_json_int(content, "screen_heigth", h) || extract_json_int(content, "height", h)) {}
 
-    if (w > 0) GameEngine::screenWidth = w;
-    if (h > 0) GameEngine::screenHeight = h;
+	if (w > 0) GameEngine::screenWidth = w;
+	if (h > 0) GameEngine::screenHeight = h;
 
-	// Configure SYSTEM_LOG output channels from config
-    {
-        bool logCout  = true;
-        bool logCerr  = true;
-        bool logFile  = true;
-        bool logPanel = true;
+	// Phase 26 — Simplified logging: output to stdout, file, and panel always
+	// (no configurable output channels)
 
-        extract_json_bool(content, "log_cout",  logCout);
-        extract_json_bool(content, "log_cerr",  logCerr);
-        extract_json_bool(content, "log_file",  logFile);
-        extract_json_bool(content, "log_panel", logPanel);
-
-        unsigned flags = 0;
-        if (logCout)  flags |= Logging::Out_Cout;
-        if (logCerr)  flags |= Logging::Out_Cerr;
-        if (logPanel) flags |= Logging::Out_Panel;
-        // Out_File is activated by InitLogger() when the file opens successfully.
-        // Preserve that state unless the config explicitly disables it.
-        unsigned current = Logging::Logger().GetOutputs();
-        if (logFile && (current & Logging::Out_File))
-            flags |= Logging::Out_File;
-
-        Logging::Logger().SetOutputs(flags);
-    }
-
-    SYSTEM_LOG << "Config loaded from '" << filename << "': " << GameEngine::screenWidth << "x" << GameEngine::screenHeight << "\n";
+	SYSTEM_LOG << "Config loaded from '" << filename << "': " << GameEngine::screenWidth << "x" << GameEngine::screenHeight << "\n";
 
 	// Extract Log Panel data
 	if (extract_json_int(content, "log_panel_width", PanelManager::LogPanelWidth)) {}

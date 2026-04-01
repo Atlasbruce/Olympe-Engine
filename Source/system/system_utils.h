@@ -1,7 +1,7 @@
 #pragma once
 
 // "system_utils.h" -> simplified logging implementation
-// Centralized logger that duplicates output to std::cout, std::clog, to a file (olympe.log)
+// Centralized logger that outputs to std::cout, file (olympe.log),
 // and to the UI log window. Use:
 // Logging::InitLogger();
 // SYSTEM_LOG << "Hello" << std::endl;
@@ -24,20 +24,12 @@
 
 namespace Logging
 {
-    // Output destinations flags
-    enum Outputs : unsigned
-    {
-        Out_Cout  = 1u << 0,
-        Out_Cerr  = 1u << 1,
-        Out_File  = 1u << 2,
-        Out_Panel = 1u << 3
-    };
-
     // Simple line-buffering logger with operator<< overloads
+    // Outputs to: std::cout (console), olympe.log (file), and UI panel
     class Log
     {
     public:
-        Log() : outputs_(Out_Cout | Out_Panel), file_open_(false) {}
+        Log() : file_open_(false) {}
 
         // Initialize file logging (optional). Safe to call multiple times.
         bool Init(const std::string& filename = "olympe.log")
@@ -48,7 +40,6 @@ namespace Logging
             if (file_.is_open())
             {
                 file_open_ = true;
-                outputs_ |= Out_File;
             }
             // ensure panel sink exists (log_sink handles buffering until UI attached)
             return true;
@@ -60,14 +51,6 @@ namespace Logging
             if (file_.is_open()) { file_.flush(); file_.close(); }
             file_open_ = false;
         }
-
-        void SetOutputs(unsigned flags)
-        {
-            std::lock_guard<std::mutex> lock(m_);
-            outputs_ = flags;
-        }
-
-        unsigned GetOutputs() const { return outputs_; }
 
         // Generic stream insertion
         template<typename T>
@@ -111,23 +94,18 @@ namespace Logging
     private:
         void writeToOutputs(const std::string& s)
         {
-            // write to each enabled output (no duplication)
-            if (outputs_ & Out_Cout) {
-                std::cout << s;
-                std::cout.flush();
-            }
-            if (outputs_ & Out_Cerr) {
-                std::cerr << s;
-                std::cerr.flush();
-            }
-            if ((outputs_ & Out_File) && file_open_) {
+            // Always write to console (stdout)
+            std::cout << s;
+            std::cout.flush();
+
+            // Write to file if initialized
+            if (file_open_) {
                 file_ << s;
                 file_.flush();
             }
-            if (outputs_ & Out_Panel) {
-                // send to UI log sink (thread-safe buffered)
-                SystemLogSink::AppendToLogWindow(s);
-            }
+
+            // Send to UI log sink (thread-safe buffered)
+            SystemLogSink::AppendToLogWindow(s);
         }
 
         void flushCompleteLinesIfAny()
@@ -159,7 +137,6 @@ namespace Logging
     private:
         mutable std::mutex m_;
         std::ostringstream buffer_;
-        unsigned outputs_;
         std::ofstream file_;
         bool file_open_;
     };

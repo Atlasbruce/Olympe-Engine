@@ -951,15 +951,9 @@ void VisualScriptEditorPanel::RunGraphSimulation()
     ADD_TRACE("Blackboard entries evaluated: " + std::to_string(blackboard.size()));
 
     m_simulationDone = true;
+    m_verificationDone = true;  // Phase 26 — Enable verification output panel display
 
     SYSTEM_LOG << "[VisualScriptEditorPanel] Simulation completed: " << stepCount << " steps\n";
-
-    // Append simulation traces to verification logs
-    m_verificationLogs.push_back("");  // Separator
-    m_verificationLogs.push_back("--- SIMULATION EXECUTION TRACE ---");
-    m_verificationLogs.insert(m_verificationLogs.end(),
-                              m_simulationTraces.begin(),
-                              m_simulationTraces.end());
 }
 
 void VisualScriptEditorPanel::RenderVerificationPanel()
