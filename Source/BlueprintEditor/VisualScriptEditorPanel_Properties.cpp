@@ -658,10 +658,15 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
     auto pathIt = nodePtr->Parameters.find("subgraph_path");
     if (pathIt == nodePtr->Parameters.end())
     {
-        // Create the binding if it doesn't exist
+        // Create the binding ONLY on first edit - initialize with current SubGraphPath value
+        // Don't create an empty binding upfront; let the input field manage the value
         ParameterBinding newBinding;
         newBinding.Type = ParameterBindingType::Literal;
-        newBinding.LiteralValue = TaskValue(nodePtr->SubGraphPath);
+
+        // Get the current value from SubGraphPath (may be empty)
+        std::string initialPath = nodePtr->SubGraphPath;
+        newBinding.LiteralValue = TaskValue(initialPath);
+
         nodePtr->Parameters["subgraph_path"] = newBinding;
         pathIt = nodePtr->Parameters.find("subgraph_path");
     }
@@ -670,7 +675,6 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
     // Display path as editable text field
     // Use non-static buffer to ensure each node has independent state
     std::string currentPath = pathBinding->LiteralValue.to_string();
-    std::string pathBufferStr = currentPath;  // Create buffer as local string
 
     // Use ImGui InputText with manual buffer management
     static std::unordered_map<int, std::string> pathBufferCache;  // Cache per nodeID
@@ -684,18 +688,26 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
               sizeof(pathBufferArray) - 1);
 
     ImGui::SetNextItemWidth(-1.0f);
-    if (ImGui::InputText("##subgraph_path_input", pathBufferArray, sizeof(pathBufferArray),
-                         ImGuiInputTextFlags_EnterReturnsTrue))
+    bool pathChanged = ImGui::InputText("##subgraph_path_input", pathBufferArray, sizeof(pathBufferArray));
+
+    if (pathChanged || ImGui::IsItemDeactivatedAfterEdit())
     {
         std::string newPath(pathBufferArray);
+
+        // Update BOTH storage locations immediately when user types
         pathBinding->LiteralValue = TaskValue(newPath);
-        nodePtr->SubGraphPath = newPath;  // Keep both in sync
-        cachedPath = newPath;  // Update cache
+        nodePtr->SubGraphPath = newPath;
+        cachedPath = newPath;
+
+        // Log the change for debugging
+        SYSTEM_LOG << "[RenderSubGraphNodeProperties] Updated SubGraphPath for node " 
+                   << nodePtr->NodeID << " = '" << newPath << "'\n";
+
         m_dirty = true;
     }
     else
     {
-        // Sync buffer back in case it was modified via other means
+        // Keep cache in sync with buffer content
         cachedPath = std::string(pathBufferArray);
     }
 

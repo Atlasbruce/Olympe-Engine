@@ -53,6 +53,56 @@ void VisualScriptEditorPanel::LoadTemplate(const TaskGraphTemplate* tmpl,
     // Rebuild lookup cache after copy (pointers from old template are now invalid)
     m_template.BuildLookupCache();
 
+    // Phase 24 CRITICAL FIX: Sync both SubGraphPath and Parameters["subgraph_path"]
+    // After loading, both storage locations should be synchronized:
+    // 1. If SubGraphPath has a value, ensure Parameters["subgraph_path"] exists
+    // 2. If Parameters["subgraph_path"] has a value, sync to SubGraphPath
+    // This handles both old (subGraphPath field only) and new (params field) JSON formats
+    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+    {
+        if (m_template.Nodes[i].Type == TaskNodeType::SubGraph)
+        {
+            auto pathParamIt = m_template.Nodes[i].Parameters.find("subgraph_path");
+
+            // Case 1: SubGraphPath has value, Parameters["subgraph_path"] doesn't
+            if (!m_template.Nodes[i].SubGraphPath.empty() && pathParamIt == m_template.Nodes[i].Parameters.end())
+            {
+                ParameterBinding pathBinding;
+                pathBinding.Type = ParameterBindingType::Literal;
+                pathBinding.LiteralValue = TaskValue(m_template.Nodes[i].SubGraphPath);
+                m_template.Nodes[i].Parameters["subgraph_path"] = pathBinding;
+                SYSTEM_LOG << "[VSEditor] LoadTemplate: initialized Parameters[subgraph_path] from SubGraphPath = '"
+                           << m_template.Nodes[i].SubGraphPath << "' for node " 
+                           << m_template.Nodes[i].NodeID << "\n";
+            }
+            // Case 2: Parameters["subgraph_path"] exists, sync to SubGraphPath if needed
+            else if (pathParamIt != m_template.Nodes[i].Parameters.end() &&
+                     pathParamIt->second.Type == ParameterBindingType::Literal)
+            {
+                std::string paramPath = pathParamIt->second.LiteralValue.to_string();
+                if (!paramPath.empty())
+                {
+                    // Use parameter value as canonical
+                    if (m_template.Nodes[i].SubGraphPath != paramPath)
+                    {
+                        m_template.Nodes[i].SubGraphPath = paramPath;
+                        SYSTEM_LOG << "[VSEditor] LoadTemplate: synced SubGraphPath from Parameters[subgraph_path] = '"
+                                   << paramPath << "' for node " 
+                                   << m_template.Nodes[i].NodeID << "\n";
+                    }
+                }
+                else if (!m_template.Nodes[i].SubGraphPath.empty())
+                {
+                    // Parameters is empty, sync SubGraphPath to it
+                    pathParamIt->second.LiteralValue = TaskValue(m_template.Nodes[i].SubGraphPath);
+                    SYSTEM_LOG << "[VSEditor] LoadTemplate: synced Parameters[subgraph_path] from SubGraphPath = '"
+                               << m_template.Nodes[i].SubGraphPath << "' for node " 
+                               << m_template.Nodes[i].NodeID << "\n";
+                }
+            }
+        }
+    }
+
     // Phase 24 — Load embedded presets from the graph
     // This replaces the old file-based approach with graph-embedded storage
     if (!m_template.Presets.empty())
@@ -178,19 +228,41 @@ bool VisualScriptEditorPanel::Save()
     // positions, so we must pull fresh positions here to avoid stale data.
     SyncNodePositionsFromImNodes();
 
-    // Phase 24 CRITICAL FIX: Sync SubGraph paths from Parameters to SubGraphPath
-    // The UI panel edits Parameters["subgraph_path"] but serialization uses SubGraphPath field.
-    // This ensures both stay synchronized before save.
+    // Phase 24 CRITICAL FIX: Sync SubGraph paths bidirectionally before save
+    // This ensures that whether the path is in SubGraphPath OR Parameters["subgraph_path"],
+    // both will be synchronized before serialization.
     for (size_t i = 0; i < m_template.Nodes.size(); ++i)
     {
         if (m_template.Nodes[i].Type == TaskNodeType::SubGraph)
         {
             auto pathIt = m_template.Nodes[i].Parameters.find("subgraph_path");
+
+            // Case 1: Parameters["subgraph_path"] exists with value → sync to SubGraphPath
             if (pathIt != m_template.Nodes[i].Parameters.end() &&
                 pathIt->second.Type == ParameterBindingType::Literal)
             {
-                // Sync from Parameters to SubGraphPath
-                m_template.Nodes[i].SubGraphPath = pathIt->second.LiteralValue.to_string();
+                std::string paramPath = pathIt->second.LiteralValue.to_string();
+                if (!paramPath.empty())
+                {
+                    m_template.Nodes[i].SubGraphPath = paramPath;
+                    SYSTEM_LOG << "[VisualScriptEditorPanel::Save] Synced SubGraphPath from Parameters[subgraph_path] = '"
+                               << paramPath << "' for node " << m_template.Nodes[i].NodeID << "\n";
+                }
+            }
+
+            // Case 2: SubGraphPath has value but Parameters["subgraph_path"] doesn't → create it
+            if (!m_template.Nodes[i].SubGraphPath.empty() && 
+                (pathIt == m_template.Nodes[i].Parameters.end() ||
+                 (pathIt->second.Type == ParameterBindingType::Literal && 
+                  pathIt->second.LiteralValue.to_string().empty())))
+            {
+                ParameterBinding pathBinding;
+                pathBinding.Type = ParameterBindingType::Literal;
+                pathBinding.LiteralValue = TaskValue(m_template.Nodes[i].SubGraphPath);
+                m_template.Nodes[i].Parameters["subgraph_path"] = pathBinding;
+                SYSTEM_LOG << "[VisualScriptEditorPanel::Save] Created Parameters[subgraph_path] = '"
+                           << m_template.Nodes[i].SubGraphPath << "' for node " 
+                           << m_template.Nodes[i].NodeID << "\n";
             }
         }
     }
@@ -234,16 +306,41 @@ bool VisualScriptEditorPanel::SaveAs(const std::string& path)
     // before serialization regardless of when in the frame SaveAs is called.
     SyncNodePositionsFromImNodes();
 
-    // Phase 24 CRITICAL FIX: Sync SubGraph paths (same as in Save())
+    // Phase 24 CRITICAL FIX: Sync SubGraph paths bidirectionally before save
+    // This ensures that whether the path is in SubGraphPath OR Parameters["subgraph_path"],
+    // both will be synchronized before serialization.
     for (size_t i = 0; i < m_template.Nodes.size(); ++i)
     {
         if (m_template.Nodes[i].Type == TaskNodeType::SubGraph)
         {
             auto pathIt = m_template.Nodes[i].Parameters.find("subgraph_path");
+
+            // Case 1: Parameters["subgraph_path"] exists with value → sync to SubGraphPath
             if (pathIt != m_template.Nodes[i].Parameters.end() &&
                 pathIt->second.Type == ParameterBindingType::Literal)
             {
-                m_template.Nodes[i].SubGraphPath = pathIt->second.LiteralValue.to_string();
+                std::string paramPath = pathIt->second.LiteralValue.to_string();
+                if (!paramPath.empty())
+                {
+                    m_template.Nodes[i].SubGraphPath = paramPath;
+                    SYSTEM_LOG << "[VisualScriptEditorPanel::SaveAs] Synced SubGraphPath from Parameters[subgraph_path] = '"
+                               << paramPath << "' for node " << m_template.Nodes[i].NodeID << "\n";
+                }
+            }
+
+            // Case 2: SubGraphPath has value but Parameters["subgraph_path"] doesn't → create it
+            if (!m_template.Nodes[i].SubGraphPath.empty() && 
+                (pathIt == m_template.Nodes[i].Parameters.end() ||
+                 (pathIt->second.Type == ParameterBindingType::Literal && 
+                  pathIt->second.LiteralValue.to_string().empty())))
+            {
+                ParameterBinding pathBinding;
+                pathBinding.Type = ParameterBindingType::Literal;
+                pathBinding.LiteralValue = TaskValue(m_template.Nodes[i].SubGraphPath);
+                m_template.Nodes[i].Parameters["subgraph_path"] = pathBinding;
+                SYSTEM_LOG << "[VisualScriptEditorPanel::SaveAs] Created Parameters[subgraph_path] = '"
+                           << m_template.Nodes[i].SubGraphPath << "' for node " 
+                           << m_template.Nodes[i].NodeID << "\n";
             }
         }
     }

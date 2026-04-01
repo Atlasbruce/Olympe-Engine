@@ -408,14 +408,39 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
 
     // Phase 24 FIX: Initialize Parameters["subgraph_path"] for SubGraph nodes
     // This ensures the UI panel can find and edit the path without creating it dynamically
+    // Only initialize if:
+    // 1. This is a SubGraph node
+    // 2. SubGraphPath is not empty (has a valid path from JSON or legacy fields)
+    // 3. Parameters["subgraph_path"] doesn't already exist (wasn't parsed from params field)
     if (nd.Type == TaskNodeType::SubGraph && !nd.SubGraphPath.empty())
     {
-        ParameterBinding pathBinding;
-        pathBinding.Type = ParameterBindingType::Literal;
-        pathBinding.LiteralValue = TaskValue(nd.SubGraphPath);
-        nd.Parameters["subgraph_path"] = pathBinding;
-        SYSTEM_LOG << "[TaskGraphLoader] ParseNodeV4: initialized Parameters[subgraph_path] = '"
-                   << nd.SubGraphPath << "' for SubGraph node " << nd.NodeID << "\n";
+        auto pathParamIt = nd.Parameters.find("subgraph_path");
+        if (pathParamIt == nd.Parameters.end())
+        {
+            // Parameters["subgraph_path"] doesn't exist - initialize it from SubGraphPath
+            ParameterBinding pathBinding;
+            pathBinding.Type = ParameterBindingType::Literal;
+            pathBinding.LiteralValue = TaskValue(nd.SubGraphPath);
+            nd.Parameters["subgraph_path"] = pathBinding;
+            SYSTEM_LOG << "[TaskGraphLoader] ParseNodeV4: initialized Parameters[subgraph_path] = '"
+                       << nd.SubGraphPath << "' for SubGraph node " << nd.NodeID << "\n";
+        }
+        else
+        {
+            // Parameters["subgraph_path"] already exists (parsed from JSON params field)
+            // Ensure SubGraphPath stays in sync with it
+            if (pathParamIt->second.Type == ParameterBindingType::Literal)
+            {
+                std::string paramPath = pathParamIt->second.LiteralValue.to_string();
+                if (!paramPath.empty() && nd.SubGraphPath != paramPath)
+                {
+                    // Use the value from Parameters if SubGraphPath is less specific
+                    nd.SubGraphPath = paramPath;
+                    SYSTEM_LOG << "[TaskGraphLoader] ParseNodeV4: synced SubGraphPath from Parameters[subgraph_path] = '"
+                               << paramPath << "' for SubGraph node " << nd.NodeID << "\n";
+                }
+            }
+        }
     }
 
     // Math operation fields.
@@ -821,6 +846,45 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
         SYSTEM_LOG << "[TaskGraphLoader] Phase 24: deserialized "
                    << nd.conditionRefs.size() << " nodeConditionRefs for node "
                    << nd.NodeID << "\n";
+    }
+
+    // Phase 24 FINAL FIX: Bidirectional sync SubGraphPath ↔ Parameters["subgraph_path"]
+    // This ensures both are synchronized after all parsing is complete.
+    // Handles all cases: new JSON (params field), old JSON (subGraphPath field), or missing path
+    if (nd.Type == TaskNodeType::SubGraph)
+    {
+        auto pathParamIt = nd.Parameters.find("subgraph_path");
+
+        // Case A: Parameters["subgraph_path"] exists with value → it's canonical, ensure SubGraphPath matches
+        if (pathParamIt != nd.Parameters.end() &&
+            pathParamIt->second.Type == ParameterBindingType::Literal)
+        {
+            std::string paramPath = pathParamIt->second.LiteralValue.to_string();
+            if (!paramPath.empty())
+            {
+                // Use Parameters value as source-of-truth
+                if (nd.SubGraphPath != paramPath)
+                {
+                    nd.SubGraphPath = paramPath;
+                    SYSTEM_LOG << "[TaskGraphLoader] ParseNodeV4 final sync: restored SubGraphPath from Parameters = '"
+                               << paramPath << "' for node " << nd.NodeID << "\n";
+                }
+            }
+        }
+
+        // Case B: SubGraphPath has value but Parameters doesn't → create Parameters from SubGraphPath
+        if (!nd.SubGraphPath.empty() && 
+            (pathParamIt == nd.Parameters.end() ||
+             (pathParamIt->second.Type == ParameterBindingType::Literal && 
+              pathParamIt->second.LiteralValue.to_string().empty())))
+        {
+            ParameterBinding pathBinding;
+            pathBinding.Type = ParameterBindingType::Literal;
+            pathBinding.LiteralValue = TaskValue(nd.SubGraphPath);
+            nd.Parameters["subgraph_path"] = pathBinding;
+            SYSTEM_LOG << "[TaskGraphLoader] ParseNodeV4 final sync: initialized Parameters[subgraph_path] = '"
+                       << nd.SubGraphPath << "' for node " << nd.NodeID << "\n";
+        }
     }
 
     return nd;

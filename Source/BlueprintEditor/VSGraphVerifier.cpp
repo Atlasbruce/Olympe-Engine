@@ -683,14 +683,32 @@ void VSGraphVerifier::CheckNodeParameterWarnings(const TaskGraphTemplate& g, VSV
         }
 
         // W003 — SubGraph with empty SubGraphPath
-        if (node.Type == TaskNodeType::SubGraph && node.SubGraphPath.empty())
+        if (node.Type == TaskNodeType::SubGraph)
         {
-            std::ostringstream oss;
-            oss << "Node #" << node.NodeID << " ('" << node.NodeName
-                << "') is a SubGraph node with no SubGraphPath assigned.";
-            AddIssue(r, VSVerificationSeverity::Warning, node.NodeID,
-                     "W003_EmptySubGraphPath",
-                     oss.str());
+            // Check both SubGraphPath field AND Parameters["subgraph_path"]
+            // (UI edits Parameters, but we sync to SubGraphPath only before save)
+            std::string resolvedPath = node.SubGraphPath;
+
+            // Fallback: check Parameters["subgraph_path"] if SubGraphPath is empty
+            if (resolvedPath.empty())
+            {
+                auto it = node.Parameters.find("subgraph_path");
+                if (it != node.Parameters.end() && 
+                    it->second.Type == ParameterBindingType::Literal)
+                {
+                    resolvedPath = it->second.LiteralValue.to_string();
+                }
+            }
+
+            if (resolvedPath.empty())
+            {
+                std::ostringstream oss;
+                oss << "Node #" << node.NodeID << " ('" << node.NodeName
+                    << "') is a SubGraph node with no SubGraphPath assigned.";
+                AddIssue(r, VSVerificationSeverity::Warning, node.NodeID,
+                         "W003_EmptySubGraphPath",
+                         oss.str());
+            }
         }
 
         // W004 — MathOp with empty MathOperator
@@ -877,7 +895,36 @@ void VSGraphVerifier::CheckSubGraphPaths(const TaskGraphTemplate& g, VSVerificat
         if (node.Type != TaskNodeType::SubGraph)
             continue;
 
-        if (node.SubGraphPath.empty())
+        // Check both SubGraphPath field AND Parameters["subgraph_path"] for Path
+        // (UI edits Parameters, but we sync to SubGraphPath only before save)
+        std::string resolvedPath = node.SubGraphPath;
+
+        SYSTEM_LOG << "[VSGraphVerifier::CheckSubGraphPaths] Node #" << node.NodeID 
+                   << ": SubGraphPath='" << resolvedPath << "'\n";
+
+        // Fallback: check Parameters["subgraph_path"] if SubGraphPath is empty
+        if (resolvedPath.empty())
+        {
+            auto it = node.Parameters.find("subgraph_path");
+            if (it != node.Parameters.end())
+            {
+                SYSTEM_LOG << "[VSGraphVerifier::CheckSubGraphPaths] Found Parameters[subgraph_path], Type=" 
+                           << static_cast<int>(it->second.Type) << "\n";
+
+                if (it->second.Type == ParameterBindingType::Literal)
+                {
+                    resolvedPath = it->second.LiteralValue.to_string();
+                    SYSTEM_LOG << "[VSGraphVerifier::CheckSubGraphPaths] Resolved from Literal: '" 
+                               << resolvedPath << "'\n";
+                }
+            }
+            else
+            {
+                SYSTEM_LOG << "[VSGraphVerifier::CheckSubGraphPaths] No Parameters[subgraph_path] found\n";
+            }
+        }
+
+        if (resolvedPath.empty())
         {
             std::ostringstream oss;
             oss << "Node #" << node.NodeID << " ('" << node.NodeName
