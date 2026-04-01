@@ -493,6 +493,10 @@
     <None Include="IMPLEMENTATION_COMPLETE_SUMMARY.md" />
     <None Include="DOCUMENTATION_INDEX.md" />
     <None Include="AUDIT_PERFORMANCE_PHASE26.md" />
+    <None Include="AUDIT_REPORT_NODE_PANELS_SERIALIZATION.md" />
+    <None Include="AUDIT_SUMMARY_NODE_PANELS_VISUAL.md" />
+    <None Include="ACTION_PLAN_NODE_PANELS_FIXES.md" />
+    <None Include="AUDIT_CRITICAL_FIXES_COMPLETION.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

@@ -386,183 +386,16 @@ void VisualScriptEditorPanel::RenderNodeDataParameters(TaskNodeDefinition& def)
 }
 
 // ============================================================================
-// While Node Properties
+// While Node Properties (LEGACY - NO LONGER USED)
 // ============================================================================
-
-void VisualScriptEditorPanel::RenderWhileNodeProperties()
-{
-    if (m_selectedNodeID < 0)
-        return;
-
-    // Find the selected node in the template
-    TaskNodeDefinition* nodePtr = nullptr;
-    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
-    {
-        if (m_template.Nodes[i].NodeID == m_selectedNodeID)
-        {
-            nodePtr = &m_template.Nodes[i];
-            break;
-        }
-    }
-
-    if (!nodePtr || nodePtr->Type != TaskNodeType::While)
-        return;
-
-    ImGui::TextDisabled("While Loop Configuration");
-    ImGui::Separator();
-
-    // Display node name
-    static char nodeName[256] = "";
-    strncpy_s(nodeName, sizeof(nodeName), nodePtr->NodeName.c_str(), 
-              sizeof(nodeName) - 1);
-
-    if (ImGui::InputText("##while_name", nodeName, sizeof(nodeName)))
-    {
-        nodePtr->NodeName = nodeName;
-        m_dirty = true;
-    }
-
-    ImGui::Separator();
-    ImGui::TextDisabled("Loop Conditions");
-    ImGui::Separator();
-
-    // Display existing conditions
-    if (!nodePtr->conditions.empty())
-    {
-        for (size_t ci = 0; ci < nodePtr->conditions.size(); ++ci)
-        {
-            ImGui::PushID(static_cast<int>(ci));
-
-            Condition& cond = nodePtr->conditions[ci];
-
-            ImGui::Text("Condition #%zu:", ci + 1);
-
-            // Left operand
-            const char* leftModes[] = { "Variable", "Const", "Pin" };
-            int leftModeIdx = 0;
-            if (cond.leftMode == "Const") leftModeIdx = 1;
-            else if (cond.leftMode == "Pin") leftModeIdx = 2;
-
-            ImGui::SetNextItemWidth(100.0f);
-            if (ImGui::Combo("##left_mode", &leftModeIdx, leftModes, 3))
-            {
-                cond.leftMode = leftModes[leftModeIdx];
-                m_dirty = true;
-            }
-            ImGui::SameLine();
-
-            // Left value input
-            if (leftModeIdx == 0)  // Variable
-            {
-                static char leftVar[256] = "";
-                strncpy_s(leftVar, sizeof(leftVar), cond.leftVariable.c_str(), sizeof(leftVar) - 1);
-                ImGui::SetNextItemWidth(120.0f);
-                if (ImGui::InputText("##left_var", leftVar, sizeof(leftVar)))
-                {
-                    cond.leftVariable = leftVar;
-                    m_dirty = true;
-                }
-            }
-            else if (leftModeIdx == 1)  // Const
-            {
-                static float leftConst = 0.0f;
-                ImGui::SetNextItemWidth(120.0f);
-                if (ImGui::InputFloat("##left_const", &leftConst))
-                {
-                    cond.leftConstValue = TaskValue(leftConst);
-                    m_dirty = true;
-                }
-            }
-
-            // Operator
-            const char* operators[] = { "==", "!=", "<", ">", "<=", ">=" };
-            int opIdx = 0;
-            for (int i = 0; i < 6; ++i)
-            {
-                if (cond.operatorStr == operators[i])
-                {
-                    opIdx = i;
-                    break;
-                }
-            }
-
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(60.0f);
-            if (ImGui::Combo("##op", &opIdx, operators, 6))
-            {
-                cond.operatorStr = operators[opIdx];
-                m_dirty = true;
-            }
-
-            // Right operand
-            const char* rightModes[] = { "Variable", "Const", "Pin" };
-            int rightModeIdx = 0;
-            if (cond.rightMode == "Const") rightModeIdx = 1;
-            else if (cond.rightMode == "Pin") rightModeIdx = 2;
-
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(100.0f);
-            if (ImGui::Combo("##right_mode", &rightModeIdx, rightModes, 3))
-            {
-                cond.rightMode = rightModes[rightModeIdx];
-                m_dirty = true;
-            }
-            ImGui::SameLine();
-
-            // Right value input
-            if (rightModeIdx == 0)  // Variable
-            {
-                static char rightVar[256] = "";
-                strncpy_s(rightVar, sizeof(rightVar), cond.rightVariable.c_str(), sizeof(rightVar) - 1);
-                ImGui::SetNextItemWidth(120.0f);
-                if (ImGui::InputText("##right_var", rightVar, sizeof(rightVar)))
-                {
-                    cond.rightVariable = rightVar;
-                    m_dirty = true;
-                }
-            }
-            else if (rightModeIdx == 1)  // Const
-            {
-                static float rightConst = 0.0f;
-                ImGui::SetNextItemWidth(120.0f);
-                if (ImGui::InputFloat("##right_const", &rightConst))
-                {
-                    cond.rightConstValue = TaskValue(rightConst);
-                    m_dirty = true;
-                }
-            }
-
-            // Delete button
-            ImGui::SameLine();
-            if (ImGui::Button("X##del_cond", ImVec2(25, 0)))
-            {
-                nodePtr->conditions.erase(
-                    nodePtr->conditions.begin() + ci);
-                m_dirty = true;
-                ImGui::PopID();
-                break;  // Exit loop to avoid iterator issues
-            }
-
-            ImGui::PopID();
-            ImGui::Spacing();
-        }
-    }
-    else
-    {
-        ImGui::TextDisabled("(no conditions defined)");
-    }
-
-    // Add condition button
-    if (ImGui::Button("+ Add Condition", ImVec2(-1.0f, 0.0f)))
-    {
-        Condition newCond;
-        newCond.leftMode = "Variable";
-        newCond.operatorStr = "==";
-        newCond.rightMode = "Variable";
-        nodePtr->conditions.push_back(newCond);
-        m_dirty = true;
-    }
-}
+// This function is DEPRECATED. While nodes now use RenderBranchNodeProperties()
+// with the Phase 24 NodeConditionsPanel system for consistency with Branch nodes.
+// Kept for reference only.
+//
+// void VisualScriptEditorPanel::RenderWhileNodeProperties()
+// {
+//     ... (removed legacy code - see git history for old implementation)
+// }
 
 // ============================================================================
 // ForEach Node Properties
@@ -1782,9 +1615,9 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanel()
 
             case TaskNodeType::While:
             {
-                // Phase 24: Delegate to the dedicated While properties renderer
-                RenderWhileNodeProperties();
-                break;
+                // Phase 24: Use NodeConditionsPanel like Branch (not legacy RenderWhileNodeProperties)
+                RenderBranchNodeProperties(*eNode, def);
+                return;
             }
 
             case TaskNodeType::ForEach:

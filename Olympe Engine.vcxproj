@@ -481,12 +481,16 @@
     <ClInclude Include="Source\World.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ACTION_PLAN_NODE_PANELS_FIXES.md" />
     <None Include="add_bb_panels.ps1" />
     <None Include="add_proj_entries.ps1" />
     <None Include="analyze_code.ps1" />
     <None Include="analyze_codebase.ps1" />
     <None Include="analyze_codebase_v2.ps1" />
+    <None Include="AUDIT_CRITICAL_FIXES_COMPLETION.md" />
     <None Include="AUDIT_PERFORMANCE_PHASE26.md" />
+    <None Include="AUDIT_REPORT_NODE_PANELS_SERIALIZATION.md" />
+    <None Include="AUDIT_SUMMARY_NODE_PANELS_VISUAL.md" />
     <None Include="blueprint_editor_config.json" />
     <None Include="ClassDiagram.cd" />
     <None Include="config\ATS-VS-editor-config.json" />
