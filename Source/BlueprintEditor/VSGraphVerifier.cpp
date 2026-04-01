@@ -173,7 +173,8 @@ void VSGraphVerifier::CheckDanglingNodes(const TaskGraphTemplate& g, VSVerificat
         // Phase 24.3 - CRITICAL: Skip data-pure nodes (GetBBValue, MathOp)
         // These nodes have no exec pins and are connected via data pins instead
         // They are NOT dangling — they are pure data computation nodes
-        if (node.Type == TaskNodeType::GetBBValue || node.Type == TaskNodeType::MathOp)
+        if (node.Type == TaskNodeType::GetBBValue || 
+            node.Type == TaskNodeType::MathOp)
             continue;
 
         bool hasExecIn  = false;

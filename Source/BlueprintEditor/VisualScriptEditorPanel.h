@@ -340,6 +340,26 @@ private:
     void RunGraphSimulation();
 
 private:
+    // Phase 25 — Recursive SubGraph execution helper
+    /**
+     * @brief Internal recursive simulation function with cycle detection.
+     * 
+     * @param tmpl                 The graph template to simulate
+     * @param blackboard           Current execution blackboard (isolated per SubGraph)
+     * @param visitedGraphs        Set of visited graph file paths (for cycle detection)
+     * @param recursionDepth       Current recursion depth (0 for root call)
+     * @param traceIndent          Indentation prefix for trace messages
+     * 
+     * Phase 25: Tracks visited graph files and recursion depth to prevent infinite loops.
+     * Warns at depth > 10, stops at depth >= 20.
+     */
+    void RunGraphSimulationRecursive(
+        const TaskGraphTemplate* tmpl,
+        std::map<std::string, TaskValue>& blackboard,
+        std::unordered_set<std::string>& visitedGraphs,
+        int recursionDepth,
+        const std::string& traceIndent);
+
     // Phase 24 — Simulation helper methods
 
     /**
@@ -377,10 +397,10 @@ private:
      * @param indent               Indentation string prefix for formatting
      * @return                     Formatted parameter string
      */
-    std::string FormatTaskParameters(const std::unordered_map<std::string, ParameterBinding>& parameters,
-                                     const std::string& indent);
+              std::string FormatTaskParameters(const std::unordered_map<std::string, ParameterBinding>& parameters,
+                                               const std::string& indent);
 
-public:
+         public:
 
     /**
      * @brief Removes blackboard entries with empty keys or VariableType::None.

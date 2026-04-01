@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file VisualScriptEditorPanel_Verification.cpp
  * @brief Verification, validation, and preset panel rendering (Phase 12).
  * @author Olympe Engine
@@ -16,9 +16,11 @@
 #include "VisualScriptEditorPanel.h"
 #include "../system/system_utils.h"
 #include "../third_party/imgui/imgui.h"
+#include "../TaskSystem/TaskGraphLoader.h"
 
 #include <sstream>
 #include <unordered_set>
+#include <fstream>
 
 namespace Olympe {
 
@@ -88,6 +90,9 @@ void VisualScriptEditorPanel::RunGraphSimulation()
     {
         blackboard[m_template.Blackboard[i].Key] = m_template.Blackboard[i].Default;
     }
+
+    // Phase 25 — Initialize visited graphs set for cycle detection
+    std::unordered_set<std::string> visitedGraphs;
 
     // Find entry point
     int32_t currentNodeID = m_template.EntryPointID != NODE_INDEX_NONE ? 
@@ -724,7 +729,20 @@ void VisualScriptEditorPanel::RunGraphSimulation()
             {
                 ADD_TRACE("  +- [EVAL] SubGraph node");
                 ADD_TRACE("  |  " + GetNodePropertyString(*nodePtr));
-                ADD_TRACE("  |  Path: '" + nodePtr->SubGraphPath + "'");
+
+                // Phase 25 — Get SubGraphPath from either field or Parameters
+                std::string subGraphPath = nodePtr->SubGraphPath;
+                if (subGraphPath.empty())
+                {
+                    auto it = nodePtr->Parameters.find("subgraph_path");
+                    if (it != nodePtr->Parameters.end() &&
+                        it->second.Type == ParameterBindingType::Literal)
+                    {
+                        subGraphPath = it->second.LiteralValue.to_string();
+                    }
+                }
+
+                ADD_TRACE("  |  Path: '" + subGraphPath + "'");
 
                 // Trace input parameters if available
                 if (!nodePtr->InputParams.empty())
@@ -753,6 +771,97 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                     }
                 }
 
+                // Phase 25 — Recursive SubGraph loading and execution
+                if (!subGraphPath.empty())
+                {
+                    // Try to resolve and load the SubGraph
+                    std::string resolvedPath;
+                    std::string searchDirs[] = {
+                        "./Blueprints/",
+                        "./OlympeBlueprintEditor/Blueprints/",
+                        "./Gamedata/"
+                    };
+
+                    for (size_t dirIdx = 0; dirIdx < 3; ++dirIdx)
+                    {
+                        std::string candidate = searchDirs[dirIdx] + subGraphPath;
+                        std::ifstream testFile(candidate);
+                        if (testFile.good())
+                        {
+                            resolvedPath = candidate;
+                            break;
+                        }
+                    }
+
+                    if (!resolvedPath.empty())
+                    {
+                        std::vector<std::string> loadErrors;
+                        const TaskGraphTemplate* subGraphTemplate = TaskGraphLoader::LoadFromFile(resolvedPath, loadErrors);
+
+                        if (subGraphTemplate)
+                        {
+                            ADD_TRACE("  |  === ENTERING SUBGRAPH ===");
+                            ADD_TRACE("  |  File: " + resolvedPath);
+
+                            // Phase 25 — Create isolated blackboard for this SubGraph
+                            // Start with copy of current blackboard (parent values available as inputs)
+                            std::map<std::string, TaskValue> isolatedBlackboard = blackboard;
+
+                            // Phase 25 — Call recursive simulation with cycle detection
+                            RunGraphSimulationRecursive(
+                                subGraphTemplate,
+                                isolatedBlackboard,
+                                visitedGraphs,
+                                0,  // Recursion depth: 0 for root SubGraph call
+                                "  |  ");
+
+                            // Phase 25 — Map output parameters back to parent blackboard
+                            if (!nodePtr->OutputParams.empty())
+                            {
+                                ADD_TRACE("  |  Output Parameter Mapping:");
+                                for (const auto& output : nodePtr->OutputParams)
+                                {
+                                    const std::string& outputName = output.first;
+                                    const std::string& bbKey = output.second;
+
+                                    auto it = isolatedBlackboard.find(outputName);
+                                    if (it != isolatedBlackboard.end())
+                                    {
+                                        blackboard[bbKey] = it->second;
+                                        ADD_TRACE("  |    " + outputName + " -> [" + bbKey + "]");
+                                    }
+                                    else
+                                    {
+                                        ADD_TRACE("  |    [WARNING] Output '" + outputName + "' not found in SubGraph context");
+                                    }
+                                }
+                            }
+
+                            ADD_TRACE("  |  === EXITING SUBGRAPH ===");
+
+                            // Clean up
+                            delete subGraphTemplate;
+                            subGraphTemplate = nullptr;
+                        }
+                        else
+                        {
+                            ADD_TRACE("  |  [ERROR] Failed to load SubGraph: " + resolvedPath);
+                            for (size_t errIdx = 0; errIdx < loadErrors.size(); ++errIdx)
+                            {
+                                ADD_TRACE("  |    - " + loadErrors[errIdx]);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ADD_TRACE("  |  [ERROR] SubGraph file not found in any search directory: " + subGraphPath);
+                    }
+                }
+                else
+                {
+                    ADD_TRACE("  |  [ERROR] SubGraph path is empty!");
+                }
+
                 // Trace output parameter mappings if available
                 if (!nodePtr->OutputParams.empty())
                 {
@@ -764,8 +873,6 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                         ADD_TRACE("  |    " + outputName + " -> Blackboard['" + bbKey + "']");
                     }
                 }
-
-                ADD_TRACE("  |  (SubGraph execution simulated)");
 
                 // Find Completed output pin
                 for (size_t i = 0; i < m_template.ExecConnections.size(); ++i)
@@ -1577,6 +1684,336 @@ std::string VisualScriptEditorPanel::GetNodePropertyString(const TaskNodeDefinit
     }
 
     return ss.str();
+}
+
+// Phase 25 — Recursive SubGraph execution with cycle detection
+void VisualScriptEditorPanel::RunGraphSimulationRecursive(
+    const TaskGraphTemplate* tmpl,
+    std::map<std::string, TaskValue>& blackboard,
+    std::unordered_set<std::string>& visitedGraphs,
+    int recursionDepth,
+    const std::string& traceIndent)
+{
+    // Phase 25 — Depth validation
+    if (recursionDepth >= 20)
+    {
+        ADD_TRACE(traceIndent + "[ERROR] SubGraph recursion depth limit exceeded (>= 20)");
+        ADD_TRACE(traceIndent + "[ERROR] Possible infinite loop detected - stopping execution");
+        return;
+    }
+
+    if (recursionDepth > 10)
+    {
+        ADD_TRACE(traceIndent + "[WARNING] SubGraph recursion depth > 10 - possible infinite loop");
+    }
+
+    // Phase 25 — Find entry point
+    int32_t currentNodeID = tmpl->EntryPointID != NODE_INDEX_NONE ? 
+                           tmpl->EntryPointID : tmpl->RootNodeID;
+
+    if (currentNodeID == NODE_INDEX_NONE)
+    {
+        ADD_TRACE(traceIndent + "[ERROR] No entry point in SubGraph");
+        return;
+    }
+
+    ADD_TRACE(traceIndent + "[SUBGRAPH] Starting execution at Node #" + std::to_string(currentNodeID));
+
+    // Phase 25 — Token-based execution (same as main simulation)
+    std::vector<ExecutionToken> tokenStack;
+    tokenStack.push_back(ExecutionToken(currentNodeID, 0));
+
+    int stepCount = 0;
+    int maxSteps = 100;
+    std::unordered_set<int> visitedInPath;
+
+    while (!tokenStack.empty() && stepCount < maxSteps)
+    {
+        ExecutionToken currentToken = tokenStack.back();
+        tokenStack.pop_back();
+        currentNodeID = currentToken.nodeID;
+
+        // Find node definition
+        const TaskNodeDefinition* nodePtr = nullptr;
+        for (size_t i = 0; i < tmpl->Nodes.size(); ++i)
+        {
+            if (tmpl->Nodes[i].NodeID == currentNodeID)
+            {
+                nodePtr = &tmpl->Nodes[i];
+                break;
+            }
+        }
+
+        if (!nodePtr)
+        {
+            ADD_TRACE(traceIndent + "[ERROR] Node #" + std::to_string(currentNodeID) + " not found");
+            break;
+        }
+
+        // Detect cycles in this SubGraph context
+        if (visitedInPath.count(currentNodeID) > 0)
+        {
+            ADD_TRACE(traceIndent + "[CYCLE] Node #" + std::to_string(currentNodeID) + " already visited");
+            break;
+        }
+        visitedInPath.insert(currentNodeID);
+
+        // Trace node entry
+        ADD_TRACE(traceIndent + "[NODE] #" + std::to_string(nodePtr->NodeID) + " - " + nodePtr->NodeName);
+
+        int32_t nextNodeID = NODE_INDEX_NONE;
+
+        // Phase 25 — Handle key node types (simplified for SubGraph context)
+        switch (nodePtr->Type)
+        {
+            case TaskNodeType::EntryPoint:
+            {
+                // Find next connection
+                for (size_t i = 0; i < tmpl->ExecConnections.size(); ++i)
+                {
+                    if (tmpl->ExecConnections[i].SourceNodeID == currentNodeID)
+                    {
+                        nextNodeID = tmpl->ExecConnections[i].TargetNodeID;
+                        break;
+                    }
+                }
+                break;
+            }
+
+            case TaskNodeType::GetBBValue:
+            {
+                ADD_TRACE(traceIndent + "  [EVAL] GetBBValue - Key: '" + nodePtr->BBKey + "'");
+                for (size_t i = 0; i < tmpl->ExecConnections.size(); ++i)
+                {
+                    if (tmpl->ExecConnections[i].SourceNodeID == currentNodeID)
+                    {
+                        nextNodeID = tmpl->ExecConnections[i].TargetNodeID;
+                        break;
+                    }
+                }
+                break;
+            }
+
+            case TaskNodeType::SetBBValue:
+            {
+                ADD_TRACE(traceIndent + "  [EVAL] SetBBValue - Key: '" + nodePtr->BBKey + "'");
+                for (size_t i = 0; i < tmpl->ExecConnections.size(); ++i)
+                {
+                    if (tmpl->ExecConnections[i].SourceNodeID == currentNodeID)
+                    {
+                        nextNodeID = tmpl->ExecConnections[i].TargetNodeID;
+                        break;
+                    }
+                }
+                break;
+            }
+
+            case TaskNodeType::AtomicTask:
+            {
+                ADD_TRACE(traceIndent + "  [TASK] " + nodePtr->AtomicTaskID);
+                for (size_t i = 0; i < tmpl->ExecConnections.size(); ++i)
+                {
+                    const ExecPinConnection& conn = tmpl->ExecConnections[i];
+                    if (conn.SourceNodeID == currentNodeID && conn.SourcePinName == "Completed")
+                    {
+                        nextNodeID = conn.TargetNodeID;
+                        break;
+                    }
+                }
+                break;
+            }
+
+            case TaskNodeType::VSSequence:
+            {
+                ADD_TRACE(traceIndent + "  [SEQUENCE] executing branches");
+                std::vector<ExecPinConnection> outputs;
+                for (size_t i = 0; i < tmpl->ExecConnections.size(); ++i)
+                {
+                    if (tmpl->ExecConnections[i].SourceNodeID == currentNodeID)
+                    {
+                        outputs.push_back(tmpl->ExecConnections[i]);
+                    }
+                }
+
+                // Push branches in reverse order (LIFO)
+                for (int oi = static_cast<int>(outputs.size()) - 1; oi >= 0; --oi)
+                {
+                    tokenStack.push_back(ExecutionToken(outputs[oi].TargetNodeID, currentToken.depth + 1));
+                }
+                break;
+            }
+
+            case TaskNodeType::Branch:
+            {
+                ADD_TRACE(traceIndent + "  [BRANCH] evaluating condition");
+                std::vector<ExecPinConnection> outputs;
+                for (size_t i = 0; i < tmpl->ExecConnections.size(); ++i)
+                {
+                    if (tmpl->ExecConnections[i].SourceNodeID == currentNodeID)
+                    {
+                        outputs.push_back(tmpl->ExecConnections[i]);
+                    }
+                }
+
+                // Push both branches (simplified: always explore both)
+                for (int oi = static_cast<int>(outputs.size()) - 1; oi >= 0; --oi)
+                {
+                    tokenStack.push_back(ExecutionToken(outputs[oi].TargetNodeID, currentToken.depth + 1));
+                }
+                break;
+            }
+
+            // Phase 25 — RECURSIVE SubGraph call within SubGraph
+            case TaskNodeType::SubGraph:
+            {
+                std::string subGraphPath = nodePtr->SubGraphPath;
+                if (subGraphPath.empty())
+                {
+                    auto it = nodePtr->Parameters.find("subgraph_path");
+                    if (it != nodePtr->Parameters.end() &&
+                        it->second.Type == ParameterBindingType::Literal)
+                    {
+                        subGraphPath = it->second.LiteralValue.to_string();
+                    }
+                }
+
+                ADD_TRACE(traceIndent + "  [SUBGRAPH] Path: '" + subGraphPath + "'");
+
+                if (!subGraphPath.empty())
+                {
+                    // Phase 25 — Check if already visited (cycle detection by file name)
+                    if (visitedGraphs.count(subGraphPath) > 0)
+                    {
+                        ADD_TRACE(traceIndent + "  [CYCLE] SubGraph '" + subGraphPath + "' already in execution chain");
+                        break;
+                    }
+
+                    // Resolve file path
+                    std::string resolvedPath;
+                    std::string searchDirs[] = {
+                        "./Blueprints/",
+                        "./OlympeBlueprintEditor/Blueprints/",
+                        "./Gamedata/"
+                    };
+
+                    for (size_t dirIdx = 0; dirIdx < 3; ++dirIdx)
+                    {
+                        std::string candidate = searchDirs[dirIdx] + subGraphPath;
+                        std::ifstream testFile(candidate);
+                        if (testFile.good())
+                        {
+                            resolvedPath = candidate;
+                            break;
+                        }
+                    }
+
+                    if (!resolvedPath.empty())
+                    {
+                        // Load SubGraph
+                        std::vector<std::string> loadErrors;
+                        const TaskGraphTemplate* subGraphTemplate = TaskGraphLoader::LoadFromFile(resolvedPath, loadErrors);
+
+                        if (subGraphTemplate)
+                        {
+                            // Phase 25 — Track this graph in visited set
+                            visitedGraphs.insert(subGraphPath);
+
+                            // Phase 25 — Create isolated blackboard for SubGraph (copy of current state)
+                            std::map<std::string, TaskValue> isolatedBlackboard = blackboard;
+
+                            // Phase 25 — Recursively execute SubGraph with new depth
+                            ADD_TRACE(traceIndent + "    [ENTER] Recursion depth: " + std::to_string(recursionDepth + 1));
+                            RunGraphSimulationRecursive(
+                                subGraphTemplate,
+                                isolatedBlackboard,
+                                visitedGraphs,
+                                recursionDepth + 1,
+                                traceIndent + "    ");
+                            ADD_TRACE(traceIndent + "    [EXIT] Returning from SubGraph");
+
+                            // Phase 25 — Merge output parameters from SubGraph back to parent blackboard
+                            if (!nodePtr->OutputParams.empty())
+                            {
+                                for (const auto& output : nodePtr->OutputParams)
+                                {
+                                    const std::string& outputName = output.first;
+                                    const std::string& bbKey = output.second;
+
+                                    auto it = isolatedBlackboard.find(outputName);
+                                    if (it != isolatedBlackboard.end())
+                                    {
+                                        blackboard[bbKey] = it->second;
+                                        ADD_TRACE(traceIndent + "    [OUTPUT] " + outputName + " -> [" + bbKey + "]");
+                                    }
+                                }
+                            }
+
+                            // Remove from visited set (allow revisit at different path)
+                            visitedGraphs.erase(subGraphPath);
+
+                            delete subGraphTemplate;
+                            subGraphTemplate = nullptr;
+                        }
+                        else
+                        {
+                            ADD_TRACE(traceIndent + "  [ERROR] Failed to load SubGraph: " + resolvedPath);
+                            for (size_t errIdx = 0; errIdx < loadErrors.size(); ++errIdx)
+                            {
+                                ADD_TRACE(traceIndent + "    - " + loadErrors[errIdx]);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ADD_TRACE(traceIndent + "  [ERROR] SubGraph file not found: " + subGraphPath);
+                    }
+                }
+                else
+                {
+                    ADD_TRACE(traceIndent + "  [ERROR] SubGraph path is empty");
+                }
+
+                // Find Completed pin
+                for (size_t i = 0; i < tmpl->ExecConnections.size(); ++i)
+                {
+                    const ExecPinConnection& conn = tmpl->ExecConnections[i];
+                    if (conn.SourceNodeID == currentNodeID && conn.SourcePinName == "Completed")
+                    {
+                        nextNodeID = conn.TargetNodeID;
+                        break;
+                    }
+                }
+                break;
+            }
+
+            default:
+            {
+                // Other node types: just find next execution node
+                for (size_t i = 0; i < tmpl->ExecConnections.size(); ++i)
+                {
+                    if (tmpl->ExecConnections[i].SourceNodeID == currentNodeID)
+                    {
+                        nextNodeID = tmpl->ExecConnections[i].TargetNodeID;
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+
+        // Push next node if set
+        if (nextNodeID != NODE_INDEX_NONE)
+        {
+            tokenStack.push_back(ExecutionToken(nextNodeID, currentToken.depth));
+        }
+
+        ++stepCount;
+    }
+
+    if (stepCount >= maxSteps)
+    {
+        ADD_TRACE(traceIndent + "[WARNING] SubGraph max steps reached - possible infinite loop");
+    }
 }
 
 } // namespace Olympe

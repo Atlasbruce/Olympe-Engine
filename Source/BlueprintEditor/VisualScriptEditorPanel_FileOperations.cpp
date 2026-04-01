@@ -228,45 +228,6 @@ bool VisualScriptEditorPanel::Save()
     // positions, so we must pull fresh positions here to avoid stale data.
     SyncNodePositionsFromImNodes();
 
-    // Phase 24 CRITICAL FIX: Sync SubGraph paths bidirectionally before save
-    // This ensures that whether the path is in SubGraphPath OR Parameters["subgraph_path"],
-    // both will be synchronized before serialization.
-    for (size_t i = 0; i < m_template.Nodes.size(); ++i)
-    {
-        if (m_template.Nodes[i].Type == TaskNodeType::SubGraph)
-        {
-            auto pathIt = m_template.Nodes[i].Parameters.find("subgraph_path");
-
-            // Case 1: Parameters["subgraph_path"] exists with value → sync to SubGraphPath
-            if (pathIt != m_template.Nodes[i].Parameters.end() &&
-                pathIt->second.Type == ParameterBindingType::Literal)
-            {
-                std::string paramPath = pathIt->second.LiteralValue.to_string();
-                if (!paramPath.empty())
-                {
-                    m_template.Nodes[i].SubGraphPath = paramPath;
-                    SYSTEM_LOG << "[VisualScriptEditorPanel::Save] Synced SubGraphPath from Parameters[subgraph_path] = '"
-                               << paramPath << "' for node " << m_template.Nodes[i].NodeID << "\n";
-                }
-            }
-
-            // Case 2: SubGraphPath has value but Parameters["subgraph_path"] doesn't → create it
-            if (!m_template.Nodes[i].SubGraphPath.empty() && 
-                (pathIt == m_template.Nodes[i].Parameters.end() ||
-                 (pathIt->second.Type == ParameterBindingType::Literal && 
-                  pathIt->second.LiteralValue.to_string().empty())))
-            {
-                ParameterBinding pathBinding;
-                pathBinding.Type = ParameterBindingType::Literal;
-                pathBinding.LiteralValue = TaskValue(m_template.Nodes[i].SubGraphPath);
-                m_template.Nodes[i].Parameters["subgraph_path"] = pathBinding;
-                SYSTEM_LOG << "[VisualScriptEditorPanel::Save] Created Parameters[subgraph_path] = '"
-                           << m_template.Nodes[i].SubGraphPath << "' for node " 
-                           << m_template.Nodes[i].NodeID << "\n";
-            }
-        }
-    }
-
     bool ok = SerializeAndWrite(m_currentPath);
 
     // BUG-003 Fix #5: Restore viewport so the canvas does not visually jump.
@@ -555,6 +516,14 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
                 const ParameterBinding& binding = paramPair.second;
 
                 json bindingObj = json::object();
+
+                // Phase 24 Debug: Log SubGraph path serialization
+                if (def.Type == TaskNodeType::SubGraph && paramName == "subgraph_path")
+                {
+                    SYSTEM_LOG << "[SerializeAndWrite] Node " << def.NodeID << " param '" << paramName 
+                               << "': Type=" << static_cast<int>(binding.Type)
+                               << " Value='" << binding.LiteralValue.to_string() << "'\n";
+                }
 
                 switch (binding.Type)
                 {
