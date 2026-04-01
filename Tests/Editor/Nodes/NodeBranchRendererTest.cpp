@@ -207,7 +207,7 @@ static void Test7_PinManagerIntegration()
 
     // Build a NodeBranchData with the synced refs
     NodeBranchData data;
-    data.nodeID       = "node_1";
+    data.nodeID       = 1;
     data.nodeName     = "Branch #1";
     data.conditionRefs = refs;
     data.dynamicPins  = mgr.GetAllPins();
@@ -230,7 +230,7 @@ static void Test8_EmptyConditions()
     NodeBranchRenderer renderer(reg, mgr);
 
     NodeBranchData data;
-    data.nodeID   = "node_empty";
+    data.nodeID   = 2;
     data.nodeName = "EmptyBranch";
 
     // Should not throw or crash
@@ -265,7 +265,7 @@ static void Test9_SectionRenderNoCrash_WithDynamicPins()
     NodeBranchRenderer renderer(reg, mgr);
 
     NodeBranchData data;
-    data.nodeID        = "node_dyn";
+    data.nodeID        = 3;
     data.nodeName      = "Is Health Critical?";
     data.conditionRefs = refs;
     data.dynamicPins   = mgr.GetAllPins();
@@ -295,7 +295,7 @@ static void Test10_DynamicPinsSectionSkipped_WhenEmpty()
     NodeBranchRenderer renderer(reg, mgr);
 
     NodeBranchData data;
-    data.nodeID   = "node_nodyn";
+    data.nodeID   = 4;
     data.nodeName = "NoPins";
     // No conditions, no dynamic pins
 
