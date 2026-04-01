@@ -37,7 +37,7 @@ namespace Logging
     class Log
     {
     public:
-        Log() : outputs_(Out_Cout | Out_Cerr | Out_Panel), file_open_(false) {}
+        Log() : outputs_(Out_Cout | Out_Panel), file_open_(false) {}
 
         // Initialize file logging (optional). Safe to call multiple times.
         bool Init(const std::string& filename = "olympe.log")

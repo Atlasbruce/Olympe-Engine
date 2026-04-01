@@ -28,7 +28,7 @@ namespace Olympe {
 #define ADD_TRACE(trace_str) \
     do { \
         const std::string& _trace_temp = (trace_str); \
-        m_simulationTraces.push_back(_trace_temp); \
+        m_verificationLogs.push_back(_trace_temp); \
         SYSTEM_LOG << "[SimTrace] " << _trace_temp << "\n"; \
     } while(0)
 
@@ -72,8 +72,9 @@ void VisualScriptEditorPanel::RunGraphSimulation()
     SYSTEM_LOG << "[VisualScriptEditorPanel] RunGraphSimulation() called for graph '"
         << m_template.Name << "'\n";
 
-    // Clear previous simulation traces
+    // Clear previous simulation traces and initialize verification logs for display
     m_simulationTraces.clear();
+    m_verificationLogs.clear();
 
     ADD_TRACE("[SIMULATION] Graph execution simulation started");
     ADD_TRACE("[SIMULATION] Graph: " + m_template.Name);
