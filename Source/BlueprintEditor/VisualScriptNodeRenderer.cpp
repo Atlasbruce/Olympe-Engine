@@ -168,6 +168,150 @@ static std::string BuildConditionExpressionString(const ConditionRef& condition)
 }
 
 // ============================================================================
+// Phase 26-B: Node Sizing Helpers (with invisible spacer approach)
+// ============================================================================
+
+/**
+ * @brief Calculates the width of a Switch case output pin label.
+ *
+ * Format: "Case_N [customLabel(value)]" or "Case_N (value)" or "Case_N"
+ * This includes the full decorated label that might be wider than just the pin name.
+ */
+static float CalculateSwitchCaseLabelWidth(
+    const std::string& baseName,
+    const SwitchCaseDefinition& caseData)
+{
+    std::string displayLabel = baseName;
+    if (!caseData.customLabel.empty() && !caseData.value.empty())
+    {
+        displayLabel = baseName + " [" + caseData.customLabel + "(" + caseData.value + ")]";
+    }
+    else if (!caseData.value.empty())
+    {
+        displayLabel = baseName + " (" + caseData.value + ")";
+    }
+
+    ImVec2 textSize = ImGui::CalcTextSize(displayLabel.c_str());
+    return textSize.x;
+}
+
+/**
+ * @brief Calculates the minimum width required for a node to display all content.
+ *
+ * Phase 26-B: Calculate node frame width needed to accommodate all pin labels
+ * without truncation. Uses an invisible spacer button to force ImNodes to size
+ * the node frame appropriately.
+ *
+ * @return Width in pixels needed for the node (minimum guaranteed width)
+ */
+static float CalculateNodeMinimumWidth(
+    const TaskNodeDefinition&                                def,
+    const std::vector<std::string>&                          execInputPins,
+    const std::vector<std::string>&                          execOutputPins,
+    const std::vector<std::pair<std::string, VariableType>>& dataInputPins,
+    const std::vector<std::pair<std::string, VariableType>>& dataOutputPins)
+{
+    const float PIN_ICON_WIDTH = 10.0f;
+    const float TEXT_SPACING = 4.0f;
+    const float COLUMN_SEPARATOR = 20.0f;
+    const float MIN_COLUMN_WIDTH = 60.0f;
+    const float MIN_NODE_WIDTH = 150.0f;
+
+    // Measure left column (exec input + data input + dynamic pins)
+    float leftMaxWidth = 0.0f;
+
+    for (size_t i = 0; i < execInputPins.size(); ++i)
+    {
+        ImVec2 textSize = ImGui::CalcTextSize(execInputPins[i].c_str());
+        float totalWidth = PIN_ICON_WIDTH + TEXT_SPACING + textSize.x + TEXT_SPACING;
+        if (totalWidth > leftMaxWidth) leftMaxWidth = totalWidth;
+    }
+
+    for (size_t i = 0; i < dataInputPins.size(); ++i)
+    {
+        ImVec2 textSize = ImGui::CalcTextSize(dataInputPins[i].first.c_str());
+        float totalWidth = PIN_ICON_WIDTH + TEXT_SPACING + textSize.x + TEXT_SPACING;
+        if (totalWidth > leftMaxWidth) leftMaxWidth = totalWidth;
+    }
+
+    // Dynamic pins (Branch/While conditions)
+    if (def.Type == TaskNodeType::Branch || def.Type == TaskNodeType::While)
+    {
+        for (size_t i = 0; i < def.dynamicPins.size(); ++i)
+        {
+            std::string lbl = def.dynamicPins[i].GetDisplayLabel();
+            ImVec2 textSize = ImGui::CalcTextSize(lbl.c_str());
+            float totalWidth = PIN_ICON_WIDTH + TEXT_SPACING + textSize.x + TEXT_SPACING;
+            if (totalWidth > leftMaxWidth) leftMaxWidth = totalWidth;
+        }
+    }
+
+    leftMaxWidth = (leftMaxWidth > 0.0f) ? leftMaxWidth : MIN_COLUMN_WIDTH;
+
+    // Measure right column (exec output + data output)
+    float rightMaxWidth = 0.0f;
+
+    for (size_t i = 0; i < execOutputPins.size(); ++i)
+    {
+        float labelWidth = 0.0f;
+
+        // For Switch nodes, measure the full decorated label
+        if (def.Type == TaskNodeType::Switch && i < def.switchCases.size())
+        {
+            labelWidth = CalculateSwitchCaseLabelWidth(execOutputPins[i], def.switchCases[i]);
+        }
+        else
+        {
+            ImVec2 textSize = ImGui::CalcTextSize(execOutputPins[i].c_str());
+            labelWidth = textSize.x;
+        }
+
+        // Add pin icon and spacing
+        float totalWidth = PIN_ICON_WIDTH + TEXT_SPACING + labelWidth + TEXT_SPACING;
+
+        // Add space for remove button if this is a dynamic pin
+        const bool hasDynamicPins = (def.Type == TaskNodeType::VSSequence ||
+                                     def.Type == TaskNodeType::Switch);
+        const int numStaticPins = hasDynamicPins
+            ? static_cast<int>(execOutputPins.size()) -
+              static_cast<int>(def.DynamicExecOutputPins.size())
+            : static_cast<int>(execOutputPins.size());
+
+        if (hasDynamicPins && static_cast<int>(i) >= numStaticPins)
+        {
+            totalWidth += 35.0f;  // Space for [-] button
+        }
+
+        if (totalWidth > rightMaxWidth) rightMaxWidth = totalWidth;
+    }
+
+    for (size_t i = 0; i < dataOutputPins.size(); ++i)
+    {
+        ImVec2 textSize = ImGui::CalcTextSize(dataOutputPins[i].first.c_str());
+        float totalWidth = PIN_ICON_WIDTH + TEXT_SPACING + textSize.x + TEXT_SPACING;
+        if (totalWidth > rightMaxWidth) rightMaxWidth = totalWidth;
+    }
+
+    rightMaxWidth = (rightMaxWidth > 0.0f) ? rightMaxWidth : MIN_COLUMN_WIDTH;
+
+    // Total node width: left column + separator + right column
+    float requiredContentWidth = leftMaxWidth + COLUMN_SEPARATOR + rightMaxWidth;
+
+    // Also consider title width
+    ImVec2 titleSize = ImGui::CalcTextSize(def.NodeName.c_str());
+    float titleWidth = titleSize.x + 20.0f;  // +20 for padding/icons in title bar
+
+    // Node width = max(title, content)
+    float minimumNodeWidth = (titleWidth > requiredContentWidth) ? titleWidth : requiredContentWidth;
+
+    // Enforce minimum
+    if (minimumNodeWidth < MIN_NODE_WIDTH)
+        minimumNodeWidth = MIN_NODE_WIDTH;
+
+    return minimumNodeWidth;
+}
+
+// ============================================================================
 // VisualScriptNodeRenderer
 // ============================================================================
 
@@ -213,6 +357,48 @@ void VisualScriptNodeRenderer::RenderNode(
     ImNodes::BeginNodeTitleBar();
     ImGui::TextUnformatted(nodeName.c_str());
     ImNodes::EndNodeTitleBar();
+
+    // Phase 26-B: Add invisible spacer to force node width adaptation
+    // This makes ImNodes size the node frame to accommodate all pin labels
+    float minNodeWidth = 150.0f;  // Minimum baseline
+
+    // Calculate width from title
+    ImVec2 titleSize = ImGui::CalcTextSize(nodeName.c_str());
+    float titleWidth = titleSize.x + 20.0f;
+    if (titleWidth > minNodeWidth) minNodeWidth = titleWidth;
+
+    // Calculate width from pins (simplified for basic overload)
+    const float PIN_ICON_WIDTH = 10.0f;
+    const float TEXT_SPACING = 4.0f;
+    float maxPinLabelWidth = 0.0f;
+
+    for (size_t i = 0; i < execInputPins.size(); ++i)
+    {
+        ImVec2 textSize = ImGui::CalcTextSize(execInputPins[i].c_str());
+        if (textSize.x > maxPinLabelWidth) maxPinLabelWidth = textSize.x;
+    }
+    for (size_t i = 0; i < dataInputPins.size(); ++i)
+    {
+        ImVec2 textSize = ImGui::CalcTextSize(dataInputPins[i].first.c_str());
+        if (textSize.x > maxPinLabelWidth) maxPinLabelWidth = textSize.x;
+    }
+    for (size_t i = 0; i < execOutputPins.size(); ++i)
+    {
+        ImVec2 textSize = ImGui::CalcTextSize(execOutputPins[i].c_str());
+        if (textSize.x > maxPinLabelWidth) maxPinLabelWidth = textSize.x;
+    }
+    for (size_t i = 0; i < dataOutputPins.size(); ++i)
+    {
+        ImVec2 textSize = ImGui::CalcTextSize(dataOutputPins[i].first.c_str());
+        if (textSize.x > maxPinLabelWidth) maxPinLabelWidth = textSize.x;
+    }
+
+    // Add column spacing and icon width
+    float contentWidth = (PIN_ICON_WIDTH + TEXT_SPACING) * 2 + maxPinLabelWidth * 2 + 20.0f;
+    if (contentWidth > minNodeWidth) minNodeWidth = contentWidth;
+
+    // Render invisible spacer to force node width
+    ImGui::InvisibleButton("##node_width_spacer", ImVec2(minNodeWidth - 12.0f, 1.0f));
 
     // Attribute UIDs use the same scheme as VisualScriptEditorPanel helpers:
     //   nodeUID * 10000 + offset
@@ -338,6 +524,19 @@ void VisualScriptNodeRenderer::RenderNode(
     ImNodes::BeginNodeTitleBar();
     ImGui::TextUnformatted(def.NodeName.c_str());
     ImNodes::EndNodeTitleBar();
+
+    // Phase 26-B: Add invisible spacer to force node width adaptation
+    // This makes ImNodes size the node frame to accommodate all pin labels,
+    // including Switch case decorations like "[Idle(100)]"
+    float minNodeWidth = CalculateNodeMinimumWidth(
+        def,
+        execInputPins,
+        execOutputPins,
+        dataInputPins,
+        dataOutputPins);
+
+    // Render invisible spacer to force node width
+    ImGui::InvisibleButton("##node_width_spacer", ImVec2(minNodeWidth - 12.0f, 1.0f));
 
     // Use 2-column layout to align input pins (left) with output pins (right) on the same Y
     // PINS FIRST for better UX consistency

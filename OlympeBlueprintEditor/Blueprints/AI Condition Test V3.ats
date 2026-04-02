@@ -323,8 +323,8 @@
         }
       },
       "position": {
-        "x": 136,
-        "y": 125
+        "x": 132,
+        "y": 123
       },
       "type": "EntryPoint"
     },
@@ -485,8 +485,8 @@
         }
       },
       "position": {
-        "x": 629.37,
-        "y": -276.759
+        "x": 611.37,
+        "y": -272.759
       },
       "type": "GetBBValue"
     },
@@ -671,8 +671,8 @@
         }
       },
       "position": {
-        "x": 547.989,
-        "y": 342.45
+        "x": 552.989,
+        "y": 344.45
       },
       "type": "Delay"
     },
@@ -746,8 +746,8 @@
         }
       },
       "position": {
-        "x": 203.989,
-        "y": 405.45
+        "x": 157.989,
+        "y": 399.45
       },
       "type": "GetBBValue"
     },
@@ -766,8 +766,8 @@
         }
       },
       "position": {
-        "x": 182.393,
-        "y": 498.407
+        "x": 156.393,
+        "y": 502.407
       },
       "type": "GetBBValue"
     },
@@ -862,7 +862,7 @@
         }
       },
       "position": {
-        "x": 431,
+        "x": 426,
         "y": 575
       },
       "type": "GetBBValue"
@@ -995,8 +995,8 @@
         }
       },
       "position": {
-        "x": 2025,
-        "y": 171.937
+        "x": 2046,
+        "y": 180.937
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -1019,7 +1019,7 @@
         }
       },
       "position": {
-        "x": 2026.67,
+        "x": 2044.67,
         "y": 315.718
       },
       "taskType": "log_message",
@@ -1061,8 +1061,8 @@
         }
       },
       "position": {
-        "x": 1486.98,
-        "y": 432.187
+        "x": 1464.98,
+        "y": 434.187
       },
       "type": "Sequence"
     },
@@ -1126,7 +1126,7 @@
         "Case_7"
       ],
       "id": 46,
-      "label": "Switch Routage Test",
+      "label": "Switch",
       "params": {
         "__posX": {
           "LiteralValue": 1490,

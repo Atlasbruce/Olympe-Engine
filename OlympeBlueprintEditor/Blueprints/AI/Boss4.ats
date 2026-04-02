@@ -39,6 +39,55 @@
       "toPin": "In"
     }
   ],
+  "globalVariableValues": {
+    "alarmLevel": 0,
+    "ambientLight": 1,
+    "combatActive": false,
+    "combatMultiplier": 1,
+    "companionCount": 0,
+    "debugDrawColliders": false,
+    "debugShowFPS": false,
+    "deltaTime": 0.016,
+    "difficulty": 1,
+    "effectsVolume": 0.8,
+    "gameTime": 0,
+    "gravity": 9.81,
+    "inventoryCapacity": 20,
+    "isDebugMode": false,
+    "isPaused": false,
+    "lastEnemyCount": 0,
+    "mGlobalHealth": 0,
+    "mPosition": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "musicVolume": 0.6,
+    "playerDirection": 0,
+    "playerExperience": 0,
+    "playerHealth": 100,
+    "playerLevel": 1,
+    "playerMana": 50,
+    "playerMaxHealth": 100,
+    "playerMaxMana": 100,
+    "playerPosition": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "playerVelocity": 0,
+    "questsActive": 0,
+    "questsCompleted": 0,
+    "resourceGold": 0,
+    "resourceStone": 0,
+    "resourceWood": 0,
+    "soundVolume": 0.8,
+    "timeOfDay": 12,
+    "timeScale": 1,
+    "totalScore": 0,
+    "weatherType": "clear",
+    "windStrength": 0
+  },
   "graphType": "VisualScript",
   "name": "",
   "nodes": [
@@ -132,8 +181,8 @@
         }
       },
       "position": {
-        "x": 648,
-        "y": 72
+        "x": 781,
+        "y": 45
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -156,8 +205,8 @@
         }
       },
       "position": {
-        "x": 656,
-        "y": 160
+        "x": 777,
+        "y": 134
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -180,8 +229,8 @@
         }
       },
       "position": {
-        "x": 662,
-        "y": 261
+        "x": 778,
+        "y": 235
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -204,8 +253,8 @@
         }
       },
       "position": {
-        "x": 664,
-        "y": 352
+        "x": 778,
+        "y": 327
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -228,8 +277,8 @@
         }
       },
       "position": {
-        "x": 668,
-        "y": 455
+        "x": 780,
+        "y": 430
       },
       "taskType": "log_message",
       "type": "AtomicTask"
