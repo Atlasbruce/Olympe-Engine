@@ -1136,6 +1136,7 @@
         "x": 1520.88,
         "y": -293.675
       },
+      "switchVariable": "mHealth",
       "switchCases": [
         {
           "label": "0",

@@ -1586,8 +1586,55 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanel()
                 ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), "Switch Node");
                 ImGui::Separator();
 
-                // Display switch variable
-                ImGui::Text("Switch On: %s", def.switchVariable.empty() ? "(not set)" : def.switchVariable.c_str());
+                // ---- Switch Variable Selector (Dropdown) ----
+                // Only Int-typed blackboard variables can be used for switch control
+                BBVariableRegistry bbReg;
+                bbReg.LoadFromTemplate(m_template);
+                const std::vector<VarSpec> intVars = bbReg.GetVariablesByType(VariableType::Int);
+
+                const std::string& curVar = def.switchVariable;
+                const char* previewVar = curVar.empty() ? "(select variable...)" : curVar.c_str();
+
+                ImGui::SetNextItemWidth(-1.0f);
+                if (ImGui::BeginCombo("Switch On##switch_var_combo", previewVar))
+                {
+                    for (const auto& var : intVars)
+                    {
+                        bool selected = (var.name == curVar);
+                        if (ImGui::Selectable(var.displayLabel.c_str(), selected))
+                        {
+                            const std::string oldVar = def.switchVariable;
+                            def.switchVariable = var.name;
+
+                            // Sync to template
+                            for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                            {
+                                if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                                {
+                                    m_template.Nodes[i].switchVariable = def.switchVariable;
+                                    break;
+                                }
+                            }
+
+                            // Push undo command if changed
+                            if (def.switchVariable != oldVar)
+                            {
+                                m_undoStack.PushCommand(
+                                    std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                                        m_selectedNodeID, "switchVariable",
+                                        PropertyValue::FromString(oldVar),
+                                        PropertyValue::FromString(def.switchVariable))),
+                                    m_template);
+                            }
+                            m_dirty = true;
+                        }
+                        if (selected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+
+                // Display case count
                 ImGui::Text("Cases: %zu", def.switchCases.size());
 
                 ImGui::Separator();
