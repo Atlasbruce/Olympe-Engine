@@ -314,11 +314,11 @@
       "label": "EntryPoint",
       "params": {
         "__posX": {
-          "LiteralValue": 105,
+          "LiteralValue": 136,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 250,
+          "LiteralValue": 125,
           "Type": "Literal"
         }
       },
@@ -337,11 +337,11 @@
       "label": "Sequence",
       "params": {
         "__posX": {
-          "LiteralValue": 260,
+          "LiteralValue": 316,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 250,
+          "LiteralValue": 123,
           "Type": "Literal"
         }
       },
@@ -364,11 +364,11 @@
       ],
       "params": {
         "__posX": {
-          "LiteralValue": 444,
+          "LiteralValue": 514,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 409,
+          "LiteralValue": 140,
           "Type": "Literal"
         }
       },
@@ -383,11 +383,11 @@
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 420,
+          "LiteralValue": 540,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 178,
+          "LiteralValue": -16,
           "Type": "Literal"
         },
         "message": {
@@ -407,11 +407,11 @@
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 1351,
+          "LiteralValue": 1029,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 311,
+          "LiteralValue": 312,
           "Type": "Literal"
         },
         "message": {
@@ -431,11 +431,11 @@
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 630,
+          "LiteralValue": 716,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 705,
+          "LiteralValue": 263,
           "Type": "Literal"
         },
         "message": {
@@ -456,11 +456,11 @@
       "label": "Set mHealth value",
       "params": {
         "__posX": {
-          "LiteralValue": 912,
+          "LiteralValue": 987,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 182,
+          "LiteralValue": -291,
           "Type": "Literal"
         }
       },
@@ -476,11 +476,11 @@
       "label": "mHealth",
       "params": {
         "__posX": {
-          "LiteralValue": 644,
+          "LiteralValue": 629,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 37,
+          "LiteralValue": -276,
           "Type": "Literal"
         }
       },
@@ -496,11 +496,11 @@
       "label": "mFoodPortion",
       "params": {
         "__posX": {
-          "LiteralValue": 644,
+          "LiteralValue": 587,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 37,
+          "LiteralValue": -155,
           "Type": "Literal"
         }
       },
@@ -531,11 +531,11 @@
       },
       "params": {
         "__posX": {
-          "LiteralValue": 1234,
+          "LiteralValue": 792,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 417,
+          "LiteralValue": -274,
           "Type": "Literal"
         }
       },
@@ -554,11 +554,11 @@
       "label": "Sequence mHeath & mFatigue",
       "params": {
         "__posX": {
-          "LiteralValue": 260,
+          "LiteralValue": 714,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 250,
+          "LiteralValue": 92,
           "Type": "Literal"
         }
       },
@@ -574,17 +574,17 @@
       "label": "Set mFatigue value",
       "params": {
         "__posX": {
-          "LiteralValue": 912,
+          "LiteralValue": 1023,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 182,
+          "LiteralValue": 102,
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 1023.37,
-        "y": 102.904
+        "x": 1173.37,
+        "y": 106.904
       },
       "type": "SetBBValue"
     },
@@ -594,17 +594,17 @@
       "label": "GetBBValue ZERO",
       "params": {
         "__posX": {
-          "LiteralValue": 1097,
+          "LiteralValue": 1008,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 229,
+          "LiteralValue": 217,
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 1008.74,
-        "y": 217.224
+        "x": 997.74,
+        "y": 179.224
       },
       "type": "GetBBValue"
     },
@@ -613,11 +613,11 @@
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 1351,
+          "LiteralValue": 1218,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 311,
+          "LiteralValue": -290,
           "Type": "Literal"
         },
         "message": {
@@ -637,11 +637,11 @@
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 1351,
+          "LiteralValue": 1231,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 311,
+          "LiteralValue": 102,
           "Type": "Literal"
         },
         "message": {
@@ -650,8 +650,8 @@
         }
       },
       "position": {
-        "x": 1231.33,
-        "y": 102.371
+        "x": 1381.33,
+        "y": 106.371
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -662,11 +662,11 @@
       "label": "Delay",
       "params": {
         "__posX": {
-          "LiteralValue": 913,
+          "LiteralValue": 547,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 627,
+          "LiteralValue": 342,
           "Type": "Literal"
         }
       },
@@ -697,11 +697,11 @@
       },
       "params": {
         "__posX": {
-          "LiteralValue": 797,
+          "LiteralValue": 346,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 639,
+          "LiteralValue": 444,
           "Type": "Literal"
         }
       },
@@ -717,11 +717,11 @@
       "label": "SetBBValue for mFatigue",
       "params": {
         "__posX": {
-          "LiteralValue": 1134,
+          "LiteralValue": 852,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 735,
+          "LiteralValue": 430,
           "Type": "Literal"
         }
       },
@@ -737,11 +737,11 @@
       "label": "mFatigue",
       "params": {
         "__posX": {
-          "LiteralValue": 490,
+          "LiteralValue": 203,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 743,
+          "LiteralValue": 405,
           "Type": "Literal"
         }
       },
@@ -757,11 +757,11 @@
       "label": "mFoodPortion",
       "params": {
         "__posX": {
-          "LiteralValue": 490,
+          "LiteralValue": 182,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 743,
+          "LiteralValue": 498,
           "Type": "Literal"
         }
       },
@@ -776,11 +776,11 @@
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 630,
+          "LiteralValue": 1076,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 705,
+          "LiteralValue": 431,
           "Type": "Literal"
         },
         "message": {
@@ -800,11 +800,11 @@
       "label": "Take Cover",
       "params": {
         "__posX": {
-          "LiteralValue": 1351,
+          "LiteralValue": 1509,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 311,
+          "LiteralValue": 101,
           "Type": "Literal"
         },
         "message": {
@@ -813,8 +813,8 @@
         }
       },
       "position": {
-        "x": 1509.2,
-        "y": 101.27
+        "x": 1608.2,
+        "y": 107.27
       },
       "taskType": "take_cover",
       "type": "AtomicTask"
@@ -824,11 +824,11 @@
       "label": "Patrol Path",
       "params": {
         "__posX": {
-          "LiteralValue": 1351,
+          "LiteralValue": 1315,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 311,
+          "LiteralValue": 310,
           "Type": "Literal"
         },
         "message": {
@@ -853,11 +853,11 @@
       "label": "GetBBValue ZERO",
       "params": {
         "__posX": {
-          "LiteralValue": 1097,
+          "LiteralValue": 431,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 229,
+          "LiteralValue": 575,
           "Type": "Literal"
         }
       },
@@ -888,11 +888,11 @@
       },
       "params": {
         "__posX": {
-          "LiteralValue": 797,
+          "LiteralValue": 630,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 639,
+          "LiteralValue": 507,
           "Type": "Literal"
         }
       },
@@ -907,15 +907,15 @@
       "label": "Subgraph Boss Combat",
       "params": {
         "__posX": {
-          "LiteralValue": 815,
+          "LiteralValue": 1016,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 668,
+          "LiteralValue": -15,
           "Type": "Literal"
         },
         "subgraph_path": {
-          "LiteralValue": "AI\\Boss2.ats",
+          "LiteralValue": "AI\\Boss1.ats",
           "Type": "Literal"
         }
       },
@@ -923,7 +923,7 @@
         "x": 1016,
         "y": -15
       },
-      "subGraphPath": "AI\\Boss2.ats",
+      "subGraphPath": "AI\\Boss1.ats",
       "type": "SubGraph"
     },
     {
@@ -931,11 +931,11 @@
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 420,
+          "LiteralValue": 1268,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 178,
+          "LiteralValue": -12,
           "Type": "Literal"
         },
         "message": {
@@ -963,11 +963,11 @@
       ],
       "params": {
         "__posX": {
-          "LiteralValue": 1525,
+          "LiteralValue": 1650,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 506,
+          "LiteralValue": 241,
           "Type": "Literal"
         }
       },
@@ -982,11 +982,11 @@
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 630,
+          "LiteralValue": 2025,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 705,
+          "LiteralValue": 171,
           "Type": "Literal"
         },
         "message": {
@@ -1006,11 +1006,11 @@
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 630,
+          "LiteralValue": 2026,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 705,
+          "LiteralValue": 315,
           "Type": "Literal"
         },
         "message": {
@@ -1030,11 +1030,11 @@
       "label": "ForEach",
       "params": {
         "__posX": {
-          "LiteralValue": 1481,
+          "LiteralValue": 1648,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 621,
+          "LiteralValue": 521,
           "Type": "Literal"
         }
       },
@@ -1052,11 +1052,11 @@
       "label": "Sequence",
       "params": {
         "__posX": {
-          "LiteralValue": 1429,
+          "LiteralValue": 1486,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 578,
+          "LiteralValue": 432,
           "Type": "Literal"
         }
       },
@@ -1071,11 +1071,11 @@
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 630,
+          "LiteralValue": 1862,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 705,
+          "LiteralValue": 461,
           "Type": "Literal"
         },
         "message": {
@@ -1095,11 +1095,11 @@
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 630,
+          "LiteralValue": 1865,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 705,
+          "LiteralValue": 577,
           "Type": "Literal"
         },
         "message": {
@@ -1118,6 +1118,7 @@
       "dynamicExecPins": [
         "Case_1",
         "Case_2",
+        "Case_8",
         "Case_3",
         "Case_4",
         "Case_5",
@@ -1128,58 +1129,63 @@
       "label": "Switch Routage Test",
       "params": {
         "__posX": {
-          "LiteralValue": 963,
+          "LiteralValue": 1490,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 598,
+          "LiteralValue": -297,
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 1520.88,
-        "y": -293.675
+        "x": 1490.88,
+        "y": -297.675
       },
       "switchCases": [
         {
-          "label": "0",
+          "label": "Idle",
           "pin": "Case_0",
-          "value": "Idle"
+          "value": "0"
         },
         {
-          "label": "1",
+          "label": "Probe",
           "pin": "Case_1",
-          "value": "Probe"
+          "value": "1"
         },
         {
-          "label": "2",
+          "label": "Walk",
           "pin": "Case_2",
-          "value": "Walk"
+          "value": "2"
         },
         {
-          "label": "4",
+          "label": "Run",
+          "pin": "Case_8",
+          "value": "3"
+        },
+        {
+          "label": "Flee",
           "pin": "Case_3",
-          "value": "Flee"
+          "value": "4"
         },
         {
-          "label": "7",
+          "label": "Attak",
           "pin": "Case_4",
-          "value": "Attak"
+          "value": "7"
         },
         {
-          "label": "10",
+          "label": "Search",
           "pin": "Case_5",
-          "value": "Search"
+          "value": "10"
         },
         {
-          "label": "12",
+          "label": "Exchange",
           "pin": "Case_6",
-          "value": "Exchange"
+          "value": "12"
         },
         {
-          "label": "256",
+          "label": "Strategize",
           "pin": "Case_7",
-          "value": "Strategize"
+          "value": "256"
         }
       ],
       "switchVariable": "mHealth",
@@ -1190,11 +1196,11 @@
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 420,
+          "LiteralValue": 1979,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 178,
+          "LiteralValue": -480,
           "Type": "Literal"
         },
         "message": {
@@ -1203,8 +1209,8 @@
         }
       },
       "position": {
-        "x": 1751.51,
-        "y": -433.183
+        "x": 1979.7,
+        "y": -480.243
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -1214,11 +1220,11 @@
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 420,
+          "LiteralValue": 1980,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 178,
+          "LiteralValue": -377,
           "Type": "Literal"
         },
         "message": {
@@ -1227,8 +1233,8 @@
         }
       },
       "position": {
-        "x": 1752.06,
-        "y": -330.359
+        "x": 1980.25,
+        "y": -377.419
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -1238,11 +1244,11 @@
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 420,
+          "LiteralValue": 1982,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 178,
+          "LiteralValue": -275,
           "Type": "Literal"
         },
         "message": {
@@ -1251,8 +1257,8 @@
         }
       },
       "position": {
-        "x": 1754.51,
-        "y": -228.015
+        "x": 1982.7,
+        "y": -275.075
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -1262,11 +1268,11 @@
       "label": "Log Message (Copy)",
       "params": {
         "__posX": {
-          "LiteralValue": 420,
+          "LiteralValue": 1988,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 178,
+          "LiteralValue": -165,
           "Type": "Literal"
         },
         "message": {
@@ -1275,8 +1281,8 @@
         }
       },
       "position": {
-        "x": 1760.11,
-        "y": -118.078
+        "x": 1988.3,
+        "y": -165.138
       },
       "taskType": "log_message",
       "type": "AtomicTask"

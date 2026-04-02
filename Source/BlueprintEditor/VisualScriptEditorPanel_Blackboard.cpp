@@ -251,14 +251,14 @@ void VisualScriptEditorPanel::RenderLocalVariablesPanel()
             {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));  // Red for error
                 ImGui::SameLine();
-                ImGui::TextDisabled("⚠️ %s", validation.ErrorMessage.c_str());
+                ImGui::TextDisabled("/!\\ %s", validation.ErrorMessage.c_str());
                 ImGui::PopStyleColor();
             }
             else if (!validation.WarningMessage.empty())
             {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.85f, 0.0f, 1.0f));  // Yellow for warning
                 ImGui::SameLine();
-                ImGui::TextDisabled("ℹ️ %s", validation.WarningMessage.c_str());
+                ImGui::TextDisabled("[i] %s", validation.WarningMessage.c_str());
                 ImGui::PopStyleColor();
             }
         }
@@ -359,7 +359,7 @@ void VisualScriptEditorPanel::RenderGlobalVariablesPanel()
             if (gtb.HasVariable(globalName))
             {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
-                ImGui::TextUnformatted("⚠️ Variable already exists in global registry");
+                ImGui::TextUnformatted("/!\\ Variable already exists in global registry");
                 ImGui::PopStyleColor();
             }
         }

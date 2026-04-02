@@ -10,20 +10,38 @@
     },
     {
       "fromNode": 2,
-      "fromPin": "Then",
+      "fromPin": "Out",
       "toNode": 3,
       "toPin": "In"
     },
     {
       "fromNode": 2,
-      "fromPin": "Else",
+      "fromPin": "Out_1",
       "toNode": 4,
       "toPin": "In"
     },
     {
-      "fromNode": 3,
-      "fromPin": "Completed",
+      "fromNode": 2,
+      "fromPin": "Out_2",
       "toNode": 5,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out_3",
+      "toNode": 6,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out_4",
+      "toNode": 7,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out_5",
+      "toNode": 8,
       "toPin": "In"
     }
   ],
@@ -84,67 +102,66 @@
       "label": "EntryPoint",
       "params": {
         "__posX": {
-          "LiteralValue": 96,
+          "LiteralValue": 240,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 120,
+          "LiteralValue": 238,
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 136,
-        "y": 125
+        "x": 240,
+        "y": 238
       },
       "type": "EntryPoint"
     },
     {
-      "id": 2,
-      "label": "My Health is sufficient?",
-      "nodeConditionRefs": [
-        {
-          "leftPinID": "",
-          "logicalOp": "Start",
-          "presetID": "preset_e0220ea4-83ef-4465-9483-b5d01b5489bb",
-          "rightPinID": ""
-        }
+      "dynamicExecPins": [
+        "Out_1",
+        "Out_2",
+        "Out_3",
+        "Out_4",
+        "Out_5"
       ],
+      "id": 2,
+      "label": "Sequence",
       "params": {
         "__posX": {
-          "LiteralValue": 298,
+          "LiteralValue": 469,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 121,
+          "LiteralValue": 254,
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 316,
-        "y": 123
+        "x": 444,
+        "y": 234
       },
-      "type": "Branch"
+      "type": "Sequence"
     },
     {
       "id": 3,
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 566,
+          "LiteralValue": 680,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 85,
+          "LiteralValue": 126,
           "Type": "Literal"
         },
         "message": {
-          "LiteralValue": "I am ready to fight the boss",
+          "LiteralValue": "Message 1",
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 514,
-        "y": 140
+        "x": 703,
+        "y": 56
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -154,63 +171,120 @@
       "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 571,
+          "LiteralValue": 680,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 210,
+          "LiteralValue": 126,
           "Type": "Literal"
         },
         "message": {
-          "LiteralValue": "I am too weak to fight",
+          "LiteralValue": "Message 2",
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 540,
-        "y": -16
+        "x": 703,
+        "y": 152
       },
       "taskType": "log_message",
       "type": "AtomicTask"
     },
     {
       "id": 5,
-      "label": "SubGraph",
+      "label": "Log Message",
       "params": {
         "__posX": {
-          "LiteralValue": 526,
+          "LiteralValue": 680,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 348,
+          "LiteralValue": 126,
           "Type": "Literal"
         },
-        "subgraph_path": {
-          "LiteralValue": "AI\\Boss3.ats",
+        "message": {
+          "LiteralValue": "Message 3",
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 896.53,
-        "y": 184.809
+        "x": 708,
+        "y": 247
       },
-      "subGraphPath": "AI\\Boss3.ats",
-      "type": "SubGraph"
-    }
-  ],
-  "presets": [
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
     {
-      "id": "preset_e0220ea4-83ef-4465-9483-b5d01b5489bb",
-      "left": {
-        "mode": "Variable",
-        "value": "mGlobalHealth"
+      "id": 6,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 680,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 126,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Message 4",
+          "Type": "Literal"
+        }
       },
-      "name": "Condition",
-      "op": ">=",
-      "right": {
-        "mode": "Const",
-        "value": 10
-      }
+      "position": {
+        "x": 712,
+        "y": 344
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 7,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 680,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 126,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Message 5",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 716,
+        "y": 440
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 8,
+      "label": "SubGraph",
+      "params": {
+        "__posX": {
+          "LiteralValue": 762,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 599,
+          "Type": "Literal"
+        },
+        "subgraph_path": {
+          "LiteralValue": "AI\\Boss4.ats",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 723,
+        "y": 552
+      },
+      "subGraphPath": "AI\\Boss4.ats",
+      "type": "SubGraph"
     }
   ],
   "schema_version": 4

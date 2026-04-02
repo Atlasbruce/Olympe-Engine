@@ -1,0 +1,239 @@
+{
+  "blackboard": [],
+  "dataConnections": [],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Case_0",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Case_1",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Case_2",
+      "toNode": 5,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Case_3",
+      "toNode": 6,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Case_4",
+      "toNode": 7,
+      "toPin": "In"
+    }
+  ],
+  "graphType": "VisualScript",
+  "name": "",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "EntryPoint",
+      "params": {
+        "__posX": {
+          "LiteralValue": 214,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 130,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 214,
+        "y": 130
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "dynamicExecPins": [
+        "Case_1",
+        "Case_2",
+        "Case_3",
+        "Case_4"
+      ],
+      "id": 2,
+      "label": "Switch",
+      "params": {
+        "__posX": {
+          "LiteralValue": 527,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 148,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 429,
+        "y": 131
+      },
+      "switchCases": [
+        {
+          "label": "Idle",
+          "pin": "Case_0",
+          "value": "1"
+        },
+        {
+          "label": "Walk",
+          "pin": "Case_1",
+          "value": "2"
+        },
+        {
+          "label": "Run",
+          "pin": "Case_2",
+          "value": "3"
+        },
+        {
+          "label": "Flee",
+          "pin": "Case_3",
+          "value": "4"
+        },
+        {
+          "label": "Fly",
+          "pin": "Case_4",
+          "value": "100"
+        }
+      ],
+      "switchVariable": "difficulty",
+      "type": "Switch"
+    },
+    {
+      "id": 3,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 675,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 90,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "case 0 completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 648,
+        "y": 72
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 4,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 675,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 90,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "case 1 completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 656,
+        "y": 160
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 5,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 675,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 90,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "case 2 completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 662,
+        "y": 261
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 6,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 675,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 90,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "case 3 completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 664,
+        "y": 352
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 7,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 675,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 90,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "case 4 completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 668,
+        "y": 455
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    }
+  ],
+  "schema_version": 4
+}

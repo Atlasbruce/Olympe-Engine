@@ -82,9 +82,15 @@ public:
      *
      * Resets the confirmed flag and takes a COPY of the cases to edit.
      *
-     * @param currentCases  Switch cases from the selected node.
+     * @param currentCases      Switch cases from the selected node.
+     * @param switchVarName     Name of the variable being switched (e.g. "mHealth")
+     * @param switchVarType     Type of the variable (e.g. "Int")
+     * @param currentVarValue   Current value of the variable for display (optional)
      */
-    void Open(const std::vector<SwitchCaseDefinition>& currentCases);
+    void Open(const std::vector<SwitchCaseDefinition>& currentCases,
+              const std::string& switchVarName = "",
+              const std::string& switchVarType = "",
+              const std::string& currentVarValue = "");
 
     /**
      * @brief Closes the modal without confirming changes.
@@ -151,6 +157,12 @@ private:
     /// Temporary edit buffers for value and label fields
     std::vector<std::string> m_caseValueBuffers;  ///< One per case, synced before render
     std::vector<std::string> m_caseLabelBuffers;  ///< One per case, synced before render
+
+    // Phase 26-A: Context information for better UX
+    std::string m_switchVarName;     ///< Variable being switched (e.g. "mHealth")
+    std::string m_switchVarType;     ///< Variable type (e.g. "Int", "String")
+    std::string m_currentVarValue;   ///< Current value for context display
+    bool m_hasValidationError = false; ///< Set to true if any case has errors (prevents Apply)
 };
 
 } // namespace Olympe

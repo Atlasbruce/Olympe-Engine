@@ -399,7 +399,7 @@ void VisualScriptNodeRenderer::RenderNode(
           static_cast<int>(def.DynamicExecOutputPins.size())
         : static_cast<int>(execOutputPins.size());
 
-    // Exec output pins (right side triangles) — offset 100–199
+     // Exec output pins (right side triangles) — offset 100–199
     // Dynamic pins render with an inline [-] remove button.
     for (size_t i = 0; i < execOutputPins.size(); ++i)
     {
@@ -414,10 +414,31 @@ void VisualScriptNodeRenderer::RenderNode(
 
             ImNodes::BeginOutputAttribute(attrID, connected ? ImNodesPinShape_TriangleFilled : ImNodesPinShape_Triangle);
 
+            // Phase 3 FIX: For Switch nodes, display the label with match value
+            // even for dynamic pins with remove button
+            std::string displayLabel = execOutputPins[i];
+            if (def.Type == TaskNodeType::Switch && i < def.switchCases.size())
+            {
+                const SwitchCaseDefinition& caseData = def.switchCases[i];
+                if (!caseData.customLabel.empty() && !caseData.value.empty())
+                {
+                    displayLabel = execOutputPins[i] + " [" + caseData.customLabel + "(" + caseData.value + ")]";
+                }
+                else if (!caseData.value.empty())
+                {
+                    displayLabel = execOutputPins[i] + " (" + caseData.value + ")";
+                }
+            }
+
             ImGui::PushID(nodeUID * 10000 + 5000 + static_cast<int>(i));
             ImGui::PushStyleColor(ImGuiCol_Button,        IM_COL32(140, 30, 30, 200));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(200, 50, 50, 220));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive,  IM_COL32(230, 80, 80, 240));
+
+            // Show label before button
+            ImGui::Text("%s", displayLabel.c_str());
+            ImGui::SameLine();
+
             if (ImGui::SmallButton("[-]"))
                 onRemovePin(nodeID, dynIdx, onRemovePinUserData);
             if (ImGui::IsItemHovered())
@@ -431,7 +452,24 @@ void VisualScriptNodeRenderer::RenderNode(
         {
             // Regular exec output pin
             ImNodes::BeginOutputAttribute(attrID, connected ? ImNodesPinShape_TriangleFilled : ImNodesPinShape_Triangle);
-            ImGui::Text("%s", execOutputPins[i].c_str());
+
+            // Phase 3 FIX: For Switch nodes, display the label with match value
+            // Format: "Case_1 [Probe(1)]" instead of just "Case_1"
+            std::string displayLabel = execOutputPins[i];
+            if (def.Type == TaskNodeType::Switch && i < def.switchCases.size())
+            {
+                const SwitchCaseDefinition& caseData = def.switchCases[i];
+                if (!caseData.customLabel.empty() && !caseData.value.empty())
+                {
+                    displayLabel = execOutputPins[i] + " [" + caseData.customLabel + "(" + caseData.value + ")]";
+                }
+                else if (!caseData.value.empty())
+                {
+                    displayLabel = execOutputPins[i] + " (" + caseData.value + ")";
+                }
+            }
+
+            ImGui::Text("%s", displayLabel.c_str());
             ImNodes::EndOutputAttribute();
         }
 

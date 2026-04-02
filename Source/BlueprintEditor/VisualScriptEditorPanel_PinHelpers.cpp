@@ -142,10 +142,31 @@ std::vector<std::string> VisualScriptEditorPanel::GetExecOutputPins(TaskNodeType
  * 
  * For all other node types, this returns the same as GetExecOutputPins().
  * 
+ * IMPORTANT ARCHITECTURE NOTE (Phase 1-3 Unification Fix):
+ * ─────────────────────────────────────────────────────────
+ * DynamicExecOutputPins is a DERIVED CACHE that must be kept synchronized with
+ * the semantic authority data (switchCases for Switch nodes, sequenceSteps for VSSequence).
+ * 
+ * SOURCES OF TRUTH:
+ *   - Switch: switchCases[] (semantic data with values, labels) → Authority
+ *   - VSSequence: sequenceSteps[] (if applicable) → Authority
+ * 
+ * DERIVED (Auto-Generated):
+ *   - DynamicExecOutputPins[] (pin names only, used for rendering)
+ * 
+ * REGENERATION TRIGGERS:
+ *   Phase 1 (Properties): After modal Apply, regenerated in RenderSwitchNodeProperties()
+ *   Phase 2 (Load): After loading from JSON in TaskGraphLoader::ParseNodeV4()
+ *   Phase 3 (Canvas): Modal opened for safe editing instead of direct modification
+ * 
+ * DEPRECATED DIRECT MODIFICATION:
+ *   Do NOT modify DynamicExecOutputPins directly (except for VSSequence which has
+ *   its own direct-add system). Always use the modal for Switch nodes.
+ * 
  * @param def The node definition to query
  * @return std::vector<std::string> List of exec output pin names including dynamic pins
  * @note Required for accurate pin counting during rendering and UID generation
- * @see GetExecOutputPins()
+ * @see GetExecOutputPins(), RenderSwitchNodeProperties(), TaskGraphLoader::ParseNodeV4()
  */
 std::vector<std::string> VisualScriptEditorPanel::GetExecOutputPinsForNode(
     const TaskNodeDefinition& def) const

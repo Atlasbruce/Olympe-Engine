@@ -21,7 +21,7 @@
       "toPin": "In"
     },
     {
-      "fromNode": 3,
+      "fromNode": 4,
       "fromPin": "Completed",
       "toNode": 5,
       "toPin": "In"
@@ -84,93 +84,85 @@
       "label": "EntryPoint",
       "params": {
         "__posX": {
-          "LiteralValue": 96,
+          "LiteralValue": 114,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 120,
+          "LiteralValue": 153,
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 136,
-        "y": 125
+        "x": 114,
+        "y": 153
       },
       "type": "EntryPoint"
     },
     {
       "id": 2,
-      "label": "My Health is sufficient?",
+      "label": "Branch",
       "nodeConditionRefs": [
         {
           "leftPinID": "",
           "logicalOp": "Start",
-          "presetID": "preset_e0220ea4-83ef-4465-9483-b5d01b5489bb",
+          "presetID": "preset_9e54ee5c-13e0-4260-b917-6d061b2b419c",
           "rightPinID": ""
         }
       ],
       "params": {
         "__posX": {
-          "LiteralValue": 298,
+          "LiteralValue": 530,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 121,
+          "LiteralValue": 146,
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 316,
-        "y": 123
+        "x": 294,
+        "y": 152
       },
       "type": "Branch"
     },
     {
       "id": 3,
-      "label": "Log Message",
+      "label": "Take Cover",
       "params": {
         "__posX": {
-          "LiteralValue": 566,
+          "LiteralValue": 561,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 85,
-          "Type": "Literal"
-        },
-        "message": {
-          "LiteralValue": "I am ready to fight the boss",
+          "LiteralValue": 132,
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 514,
-        "y": 140
+        "x": 537,
+        "y": 84
       },
-      "taskType": "log_message",
+      "taskType": "take_cover",
       "type": "AtomicTask"
     },
     {
       "id": 4,
-      "label": "Log Message",
+      "label": "Attack If Close",
       "params": {
         "__posX": {
-          "LiteralValue": 571,
+          "LiteralValue": 562,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 210,
-          "Type": "Literal"
-        },
-        "message": {
-          "LiteralValue": "I am too weak to fight",
+          "LiteralValue": 309,
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 540,
-        "y": -16
+        "x": 537,
+        "y": 225
       },
-      "taskType": "log_message",
+      "taskType": "attack_if_close",
       "type": "AtomicTask"
     },
     {
@@ -178,35 +170,35 @@
       "label": "SubGraph",
       "params": {
         "__posX": {
-          "LiteralValue": 526,
+          "LiteralValue": 815,
           "Type": "Literal"
         },
         "__posY": {
-          "LiteralValue": 348,
+          "LiteralValue": 276,
           "Type": "Literal"
         },
         "subgraph_path": {
-          "LiteralValue": "AI\\Boss3.ats",
+          "LiteralValue": "AI\\Boss2.ats",
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 896.53,
-        "y": 184.809
+        "x": 784,
+        "y": 226
       },
-      "subGraphPath": "AI\\Boss3.ats",
+      "subGraphPath": "AI\\Boss2.ats",
       "type": "SubGraph"
     }
   ],
   "presets": [
     {
-      "id": "preset_e0220ea4-83ef-4465-9483-b5d01b5489bb",
+      "id": "preset_9e54ee5c-13e0-4260-b917-6d061b2b419c",
       "left": {
         "mode": "Variable",
         "value": "mGlobalHealth"
       },
       "name": "Condition",
-      "op": ">=",
+      "op": "==",
       "right": {
         "mode": "Const",
         "value": 10

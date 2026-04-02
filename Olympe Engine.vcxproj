@@ -503,9 +503,14 @@
     <None Include="DIAGNOSTIC_SUMMARY.md" />
     <None Include="DOCUMENTATION_INDEX.md" />
     <None Include="IMPLEMENTATION_COMPLETE_SUMMARY.md" />
+    <None Include="IMPLEMENTATION_COMPLETE_SWITCH_UNIFICATION.md" />
+    <None Include="NODE_SIZING_AUDIT.md" />
+    <None Include="NODE_SIZING_IMPLEMENTATION_REPORT.md" />
+    <None Include="NODE_SIZING_SUMMARY.md" />
     <None Include="olympe.ini" />
     <None Include="OlympeBlueprintEditor.vcxproj" />
     <None Include="PHASE2_STEP3_COMPLETION_REPORT.md" />
+    <None Include="QUICK_SUMMARY_SWITCH_UNIFICATION.md" />
     <None Include="SCHEMA_SWITCH_NODE_INTERFACE.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
@@ -519,6 +524,8 @@
     <None Include="SUBGRAPH_PATH_EDITABLE_IMPLEMENTATION.md" />
     <None Include="SUBGRAPH_VISUAL_SUMMARY.md" />
     <None Include="SWITCH_CASE_UNIFICATION_IMPLEMENTATION_PLAN.md" />
+    <None Include="SWITCH_MODAL_UX_IMPROVEMENTS.md" />
+    <None Include="VALIDATION_COMPLETE_SWITCH_UNIFICATION.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\olympe.ico" />

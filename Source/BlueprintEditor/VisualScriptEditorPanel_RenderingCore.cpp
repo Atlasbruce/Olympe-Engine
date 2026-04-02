@@ -233,13 +233,7 @@ void VisualScriptEditorPanel::RenderContent()
 
 void VisualScriptEditorPanel::RenderToolbar()
 {
-    // Title
-    const char* title = m_currentPath.empty()
-                        ? "Untitled VS Graph"
-                        : m_currentPath.c_str();
-    ImGui::TextDisabled("%s%s", title, m_dirty ? " *" : "");
-
-    ImGui::SameLine();
+	// buttons: Save, Save As, Verify, Run Simulation
     if (ImGui::Button("Save"))
     {
         SYSTEM_LOG << "[VisualScriptEditorPanel] Save button clicked. m_currentPath='"
@@ -271,12 +265,21 @@ void VisualScriptEditorPanel::RenderToolbar()
     {
         RunGraphSimulation();
     }
+	//ImGui::SameLine(); // useless since the Panel proeprties button is now in the right panel tab bar
+    //if (ImGui::Button("Condition Presets"))
+    //{
+    //    m_libraryPanel->Open();
+    //}
     ImGui::SameLine();
-    if (ImGui::Button("Condition Presets"))
-    {
-        m_libraryPanel->Open();
-    }
+    // Title
+    const char* title = m_currentPath.empty()
+        ? "Untitled VS Graph"
+        : m_currentPath.c_str();
+    ImGui::TextDisabled("%s%s", title, m_dirty ? " *" : "");
+
     ImGui::SameLine();
+
+
     if (m_verificationDone)
     {
         if (m_verificationResult.HasErrors())

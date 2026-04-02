@@ -278,7 +278,13 @@ void VisualScriptEditorPanel::RenderSwitchNodeProperties(VSEditorNode& eNode,
     {
         if (!m_switchCaseModal)
             m_switchCaseModal = std::make_unique<SwitchCaseEditorModal>();
-        m_switchCaseModal->Open(def.switchCases);
+
+        // Phase 26-A: Pass context information for better UX
+        std::string switchVarName = def.switchVariable;
+        std::string switchVarType = "Int";  // Default, could detect from registry
+        std::string currentVarValue = "";   // Could query at runtime
+
+        m_switchCaseModal->Open(def.switchCases, switchVarName, switchVarType, currentVarValue);
     }
 
     // ── Modal Rendering + Apply Integration (PHASE 2 FIX) ──────────────────────

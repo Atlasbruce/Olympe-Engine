@@ -564,18 +564,47 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
 
                 nd.switchCases.push_back(scd);
             });
+
+        // ── PHASE 2 FIX: Regenerate DynamicExecOutputPins from switchCases ───
+        // After loading switchCases from JSON, regenerate the derived cache
+        // (DynamicExecOutputPins) so canvas pins are visible immediately.
+        // Pins are derived from switchCases[1..end] (Case_0 is base, not dynamic).
+        nd.DynamicExecOutputPins.clear();
+        for (size_t caseIdx = 1; caseIdx < nd.switchCases.size(); ++caseIdx)
+        {
+            const SwitchCaseDefinition& caseData = nd.switchCases[caseIdx];
+            nd.DynamicExecOutputPins.push_back(caseData.pinName);
+        }
+
+        SYSTEM_LOG << "[TaskGraphLoader] ParseNodeV4: Phase 2 FIX - regenerated "
+                   << nd.DynamicExecOutputPins.size() << " dynamic pins for Switch node #"
+                   << nd.NodeID << "\n";
     }
 
     // Dynamic exec-out pins (VSSequence and Switch, Phase 20-C / Phase 21-D).
+    // IMPORTANT: For Switch nodes, DO NOT load dynamicExecPins from JSON!
+    // Phase 2 FIX ensures Switch pins are REGENERATED from switchCases above.
+    // Loading from JSON would append stale/incorrect pins.
     if ((nd.Type == TaskNodeType::VSSequence || nd.Type == TaskNodeType::Switch) &&
         nodeJson.contains("dynamicExecPins") &&
         nodeJson["dynamicExecPins"].is_array())
     {
-        const json& dynPins = nodeJson["dynamicExecPins"];
-        for (size_t p = 0; p < dynPins.size(); ++p)
+        // Skip for Switch nodes: Phase 2 FIX regenerates from switchCases
+        if (nd.Type == TaskNodeType::VSSequence)
         {
-            if (dynPins[p].is_string())
-                nd.DynamicExecOutputPins.push_back(dynPins[p].get<std::string>());
+            const json& dynPins = nodeJson["dynamicExecPins"];
+            for (size_t p = 0; p < dynPins.size(); ++p)
+            {
+                if (dynPins[p].is_string())
+                    nd.DynamicExecOutputPins.push_back(dynPins[p].get<std::string>());
+            }
+        }
+        else if (nd.Type == TaskNodeType::Switch)
+        {
+            // Phase 2 FIX: DynamicExecOutputPins already regenerated from switchCases
+            // Do not load from JSON to avoid stale pins
+            SYSTEM_LOG << "[TaskGraphLoader] ParseNodeV4: Switch node #" << nd.NodeID
+                       << " - skipped loading dynamicExecPins from JSON (Phase 2 FIX)\n";
         }
     }
 

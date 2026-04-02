@@ -506,6 +506,13 @@
     <None Include="SWITCH_CASE_UNIFICATION_IMPLEMENTATION_PLAN.md" />
     <None Include="DIAGNOSTIC_SUMMARY.md" />
     <None Include="SCHEMA_SWITCH_NODE_INTERFACE.md" />
+    <None Include="IMPLEMENTATION_COMPLETE_SWITCH_UNIFICATION.md" />
+    <None Include="VALIDATION_COMPLETE_SWITCH_UNIFICATION.md" />
+    <None Include="QUICK_SUMMARY_SWITCH_UNIFICATION.md" />
+    <None Include="SWITCH_MODAL_UX_IMPROVEMENTS.md" />
+    <None Include="NODE_SIZING_AUDIT.md" />
+    <None Include="NODE_SIZING_IMPLEMENTATION_REPORT.md" />
+    <None Include="NODE_SIZING_SUMMARY.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
