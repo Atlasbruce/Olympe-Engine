@@ -913,12 +913,17 @@
         "__posY": {
           "LiteralValue": 668,
           "Type": "Literal"
+        },
+        "subgraph_path": {
+          "LiteralValue": "AI\\Boss2.ats",
+          "Type": "Literal"
         }
       },
       "position": {
         "x": 1016,
         "y": -15
       },
+      "subGraphPath": "AI\\Boss2.ats",
       "type": "SubGraph"
     },
     {

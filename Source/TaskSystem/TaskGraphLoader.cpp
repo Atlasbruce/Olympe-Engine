@@ -44,25 +44,32 @@ namespace Olympe {
 TaskGraphTemplate* TaskGraphLoader::LoadFromFile(const std::string& path,
                                                   std::vector<std::string>& outErrors)
 {
-    SYSTEM_LOG << "[TaskGraphLoader] Loading from file: " << path << std::endl;
+    // Phase 26: Normalize path - convert forward slashes to backslashes for Windows
+    std::string normalizedPath = path;
+    for (size_t i = 0; i < normalizedPath.size(); ++i)
+    {
+        if (normalizedPath[i] == '/') normalizedPath[i] = '\\';
+    }
+
+    SYSTEM_LOG << "[TaskGraphLoader] Loading from file: " << normalizedPath << std::endl;
 
     // Warn if the file does not carry the expected .ats extension.
     {
-        const size_t dotPos = path.find_last_of('.');
+        const size_t dotPos = normalizedPath.find_last_of('.');
         const bool hasAtsExt = (dotPos != std::string::npos)
-                               && (path.substr(dotPos + 1) == "ats");
+                               && (normalizedPath.substr(dotPos + 1) == "ats");
         if (!hasAtsExt)
         {
             SYSTEM_LOG << "[TaskGraphLoader] WARNING: Expected .ats extension for: "
-                       << path << std::endl;
+                       << normalizedPath << std::endl;
         }
     }
 
     json data;
-    if (!JsonHelper::LoadJsonFromFile(path, data))
+    if (!JsonHelper::LoadJsonFromFile(normalizedPath, data))
     {
-        outErrors.push_back("Failed to open or parse JSON file: " + path);
-        SYSTEM_LOG << "[TaskGraphLoader] ERROR: Failed to open or parse: " << path << std::endl;
+        outErrors.push_back("Failed to open or parse JSON file: " + normalizedPath);
+        SYSTEM_LOG << "[TaskGraphLoader] ERROR: Failed to open or parse: " << normalizedPath << std::endl;
         return nullptr;
     }
 

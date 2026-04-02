@@ -776,6 +776,13 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                 if (!subGraphPath.empty())
                 {
                     // Try to resolve and load the SubGraph
+                    // Phase 26: Normalize path - convert forward slashes to backslashes for Windows
+                    std::string normalizedPath = subGraphPath;
+                    for (size_t i = 0; i < normalizedPath.size(); ++i)
+                    {
+                        if (normalizedPath[i] == '/') normalizedPath[i] = '\\';
+                    }
+
                     std::string resolvedPath;
                     std::string searchDirs[] = {
                         "./Blueprints/",
@@ -783,14 +790,30 @@ void VisualScriptEditorPanel::RunGraphSimulation()
                         "./Gamedata/"
                     };
 
+                    // Try with normalized path first
                     for (size_t dirIdx = 0; dirIdx < 3; ++dirIdx)
                     {
-                        std::string candidate = searchDirs[dirIdx] + subGraphPath;
+                        std::string candidate = searchDirs[dirIdx] + normalizedPath;
                         std::ifstream testFile(candidate);
                         if (testFile.good())
                         {
                             resolvedPath = candidate;
                             break;
+                        }
+                    }
+
+                    // If not found, try original path as fallback
+                    if (resolvedPath.empty())
+                    {
+                        for (size_t dirIdx = 0; dirIdx < 3; ++dirIdx)
+                        {
+                            std::string candidate = searchDirs[dirIdx] + subGraphPath;
+                            std::ifstream testFile(candidate);
+                            if (testFile.good())
+                            {
+                                resolvedPath = candidate;
+                                break;
+                            }
                         }
                     }
 

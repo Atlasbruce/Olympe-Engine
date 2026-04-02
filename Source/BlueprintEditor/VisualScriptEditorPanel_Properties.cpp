@@ -523,18 +523,62 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
     ImGui::SetNextItemWidth(-80.0f);
     bool pathChanged = ImGui::InputText("##subgraph_path_input", pathBufferArray, sizeof(pathBufferArray));
 
-    if (pathChanged || ImGui::IsItemDeactivatedAfterEdit())
-    {
-        std::string newPath(pathBufferArray);
+      if (pathChanged || ImGui::IsItemDeactivatedAfterEdit())
+     {
+         std::string newPath(pathBufferArray);
 
-        // Update BOTH storage locations immediately when user types
-        pathBinding->LiteralValue = TaskValue(newPath);
-        nodePtr->SubGraphPath = newPath;
-        cachedPath = newPath;
+         // PHASE 26 FIX: Extract relative path if user enters full path
+         // If path starts with "Blueprints/", extract relative portion
+         const std::string blueprintsPrefix = "Blueprints/";
+         const std::string blueprintsPrefixWin = "Blueprints\\";
 
-        // Log the change for debugging
-        SYSTEM_LOG << "[RenderSubGraphNodeProperties] Updated SubGraphPath for node " 
-                   << nodePtr->NodeID << " = '" << newPath << "'\n";
+         if (newPath.find(blueprintsPrefix) == 0)
+         {
+             newPath = newPath.substr(blueprintsPrefix.length());
+         }
+         else if (newPath.find(blueprintsPrefixWin) == 0)
+         {
+             newPath = newPath.substr(blueprintsPrefixWin.length());
+         }
+
+         // Normalize path: forward slashes to backslashes for Windows
+         for (char& c : newPath)
+         {
+             if (c == '/')
+                 c = '\\';
+         }
+
+         // Update BOTH storage locations immediately when user types
+         pathBinding->LiteralValue = TaskValue(newPath);
+         nodePtr->SubGraphPath = newPath;
+         cachedPath = newPath;
+
+         // CRITICAL FIX: Also update the editor node to keep canvas in sync
+         for (auto& eNode : m_editorNodes)
+         {
+             if (eNode.nodeID == m_selectedNodeID)
+             {
+                 eNode.def.SubGraphPath = newPath;
+                 // Also update Parameters in the editor node
+                 auto editorPathIt = eNode.def.Parameters.find("subgraph_path");
+                 if (editorPathIt != eNode.def.Parameters.end())
+                 {
+                     editorPathIt->second.LiteralValue = TaskValue(newPath);
+                 }
+                 else
+                 {
+                     ParameterBinding editorBinding;
+                     editorBinding.Type = ParameterBindingType::Literal;
+                     editorBinding.LiteralValue = TaskValue(newPath);
+                     eNode.def.Parameters["subgraph_path"] = editorBinding;
+                 }
+                 break;
+             }
+         }
+
+         // Log the change for debugging
+         SYSTEM_LOG << "[RenderSubGraphNodeProperties] Updated SubGraphPath for node " 
+                    << nodePtr->NodeID << " = '" << newPath << "'\n";
 
         m_dirty = true;
     }
@@ -557,12 +601,63 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
     {
         std::string selectedFile = m_subGraphModal->GetSelectedFile();
 
-        // Update path binding and definition
-        pathBinding->LiteralValue = TaskValue(selectedFile);
-        nodePtr->SubGraphPath = selectedFile;
-        pathBufferCache[m_selectedNodeID] = selectedFile;
+        // PHASE 26 FIX: Extract relative path by removing "Blueprints/" prefix
+        // Modal returns full path like "Blueprints/AI/Boss2.ats"
+        // We need to store just "AI/Boss2.ats" for search directory concatenation to work
+        std::string relativePath = selectedFile;
 
-        SYSTEM_LOG << "[RenderSubGraphNodeProperties] Selected SubGraph file: " << selectedFile << "\n";
+        // Remove "Blueprints/" or "Blueprints\" prefix
+        const std::string blueprintsPrefix = "Blueprints/";
+        const std::string blueprintsPrefixWin = "Blueprints\\";
+
+        if (relativePath.find(blueprintsPrefix) == 0)
+        {
+            relativePath = relativePath.substr(blueprintsPrefix.length());
+        }
+        else if (relativePath.find(blueprintsPrefixWin) == 0)
+        {
+            relativePath = relativePath.substr(blueprintsPrefixWin.length());
+        }
+
+        // Normalize path: forward slashes to backslashes for Windows
+        for (char& c : relativePath)
+        {
+            if (c == '/')
+                c = '\\';
+        }
+
+        // Update path binding and definition in BOTH storage locations
+        pathBinding->LiteralValue = TaskValue(relativePath);
+        nodePtr->SubGraphPath = relativePath;
+        pathBufferCache[m_selectedNodeID] = relativePath;
+
+        // CRITICAL FIX: Also update the editor node to keep canvas in sync
+        // This ensures SyncTemplateFromCanvas() doesn't overwrite the path we just set
+        for (auto& eNode : m_editorNodes)
+        {
+            if (eNode.nodeID == m_selectedNodeID)
+            {
+                eNode.def.SubGraphPath = relativePath;
+                // Also update Parameters in the editor node
+                auto editorPathIt = eNode.def.Parameters.find("subgraph_path");
+                if (editorPathIt != eNode.def.Parameters.end())
+                {
+                    editorPathIt->second.LiteralValue = TaskValue(relativePath);
+                }
+                else
+                {
+                    ParameterBinding editorBinding;
+                    editorBinding.Type = ParameterBindingType::Literal;
+                    editorBinding.LiteralValue = TaskValue(relativePath);
+                    eNode.def.Parameters["subgraph_path"] = editorBinding;
+                }
+                SYSTEM_LOG << "[RenderSubGraphNodeProperties] Synchronized SubGraphPath to editor node: " 
+                           << relativePath << "\n";
+                break;
+            }
+        }
+
+        SYSTEM_LOG << "[RenderSubGraphNodeProperties] Selected SubGraph file: " << relativePath << "\n";
 
         m_dirty = true;
         m_subGraphModal->Close();

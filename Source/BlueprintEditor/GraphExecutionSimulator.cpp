@@ -156,6 +156,31 @@ std::vector<ValidationError> GraphExecutionSimulator::SimulateExecution(const Ta
                 break;
             }
 
+            case TaskNodeType::SubGraph:
+            {
+                outTracer.RecordNodeEntered(currentNodeId, nodeDef->NodeName, "SubGraph");
+
+                // Get SubGraphPath from either field or Parameters
+                std::string subGraphPath = nodeDef->SubGraphPath;
+                if (subGraphPath.empty())
+                {
+                    auto it = nodeDef->Parameters.find("subgraph_path");
+                    if (it != nodeDef->Parameters.end() &&
+                        it->second.Type == ParameterBindingType::Literal)
+                    {
+                        subGraphPath = it->second.LiteralValue.to_string();
+                    }
+                }
+
+                if (subGraphPath.empty())
+                {
+                    outTracer.RecordError(currentNodeId, nodeDef->NodeName, "SubGraph path is empty");
+                }
+
+                nextNodeId = GetNextNodeId(tmpl, currentNodeId, "Completed");
+                break;
+            }
+
             default:
                 nextNodeId = NODE_INDEX_NONE;
                 break;
