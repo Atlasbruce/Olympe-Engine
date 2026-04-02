@@ -495,15 +495,18 @@
     <None Include="AUDIT_PERFORMANCE_PHASE26.md" />
     <None Include="AUDIT_REPORT_NODE_PANELS_SERIALIZATION.md" />
     <None Include="AUDIT_SUMMARY_NODE_PANELS_VISUAL.md" />
+    <None Include="AUDIT_SWITCH_CASE_SYSTEM.md" />
     <None Include="blueprint_editor_config.json" />
     <None Include="ClassDiagram.cd" />
     <None Include="config\ATS-VS-editor-config.json" />
     <None Include="Config\global_blackboard_register.json" />
+    <None Include="DIAGNOSTIC_SUMMARY.md" />
     <None Include="DOCUMENTATION_INDEX.md" />
     <None Include="IMPLEMENTATION_COMPLETE_SUMMARY.md" />
     <None Include="olympe.ini" />
     <None Include="OlympeBlueprintEditor.vcxproj" />
     <None Include="PHASE2_STEP3_COMPLETION_REPORT.md" />
+    <None Include="SCHEMA_SWITCH_NODE_INTERFACE.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
@@ -515,6 +518,7 @@
     <None Include="SUBGRAPH_PARAMETERS_QUICK_START.md" />
     <None Include="SUBGRAPH_PATH_EDITABLE_IMPLEMENTATION.md" />
     <None Include="SUBGRAPH_VISUAL_SUMMARY.md" />
+    <None Include="SWITCH_CASE_UNIFICATION_IMPLEMENTATION_PLAN.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\olympe.ico" />

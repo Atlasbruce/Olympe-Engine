@@ -1118,7 +1118,11 @@
       "dynamicExecPins": [
         "Case_1",
         "Case_2",
-        "Case_3"
+        "Case_3",
+        "Case_4",
+        "Case_5",
+        "Case_6",
+        "Case_7"
       ],
       "id": 46,
       "label": "Switch Routage Test",
@@ -1136,49 +1140,49 @@
         "x": 1520.88,
         "y": -293.675
       },
-      "switchVariable": "mHealth",
       "switchCases": [
         {
           "label": "0",
           "pin": "Case_0",
-          "value": "NewCase1"
+          "value": "Idle"
         },
         {
           "label": "1",
           "pin": "Case_1",
-          "value": "NewCase2"
+          "value": "Probe"
         },
         {
           "label": "2",
           "pin": "Case_2",
-          "value": "NewCase3"
+          "value": "Walk"
         },
         {
           "label": "4",
           "pin": "Case_3",
-          "value": "NewCase4"
+          "value": "Flee"
         },
         {
           "label": "7",
           "pin": "Case_4",
-          "value": "NewCase5"
+          "value": "Attak"
         },
         {
           "label": "10",
           "pin": "Case_5",
-          "value": "NewCase6"
+          "value": "Search"
         },
         {
           "label": "12",
           "pin": "Case_6",
-          "value": "NewCase7"
+          "value": "Exchange"
         },
         {
-          "label": "2582",
+          "label": "256",
           "pin": "Case_7",
-          "value": "NewCase8"
+          "value": "Strategize"
         }
       ],
+      "switchVariable": "mHealth",
       "type": "Switch"
     },
     {

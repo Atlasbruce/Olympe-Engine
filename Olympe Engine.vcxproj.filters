@@ -502,6 +502,10 @@
     <None Include="ACTION_PLAN_NODE_PANELS_FIXES.md" />
     <None Include="AUDIT_CRITICAL_FIXES_COMPLETION.md" />
     <None Include="PHASE2_STEP3_COMPLETION_REPORT.md" />
+    <None Include="AUDIT_SWITCH_CASE_SYSTEM.md" />
+    <None Include="SWITCH_CASE_UNIFICATION_IMPLEMENTATION_PLAN.md" />
+    <None Include="DIAGNOSTIC_SUMMARY.md" />
+    <None Include="SCHEMA_SWITCH_NODE_INTERFACE.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

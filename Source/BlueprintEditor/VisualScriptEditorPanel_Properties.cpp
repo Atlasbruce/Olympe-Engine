@@ -201,6 +201,139 @@ void VisualScriptEditorPanel::RenderMathOpNodeProperties(VSEditorNode& eNode,
 }
 
 // ============================================================================
+// Switch node — dedicated Properties panel renderer
+// ============================================================================
+
+void VisualScriptEditorPanel::RenderSwitchNodeProperties(VSEditorNode& eNode,
+                                                         TaskNodeDefinition& def)
+{
+    // ── Blue header: node name (matches canvas Section 1 title bar) ──────────
+    ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.0f, 0.4f, 0.8f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.0f, 0.5f, 0.9f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive,  ImVec4(0.0f, 0.3f, 0.7f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text,          ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+    ImGui::Selectable(def.NodeName.c_str(), true,
+                      ImGuiSelectableFlags_None, ImVec2(0.f, 28.f));
+    ImGui::PopStyleColor(4);
+
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    // ── Switch Variable Selector (Dropdown) ──────────────────────────────────
+    // Only Int/String-typed blackboard variables can be used for switch control
+    BBVariableRegistry bbReg;
+    bbReg.LoadFromTemplate(m_template);
+    const std::vector<VarSpec> switchVars = bbReg.GetVariablesByType(VariableType::Int);
+    // Note: Could also support String in future phases
+
+    const std::string& curVar = def.switchVariable;
+    const char* previewVar = curVar.empty() ? "(select variable...)" : curVar.c_str();
+
+    ImGui::SetNextItemWidth(-1.0f);
+    if (ImGui::BeginCombo("Switch On##switch_var_combo", previewVar))
+    {
+        for (const auto& var : switchVars)
+        {
+            bool selected = (var.name == curVar);
+            if (ImGui::Selectable(var.displayLabel.c_str(), selected))
+            {
+                const std::string oldVar = def.switchVariable;
+                def.switchVariable = var.name;
+
+                // Sync to template
+                for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+                {
+                    if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                    {
+                        m_template.Nodes[i].switchVariable = def.switchVariable;
+                        break;
+                    }
+                }
+
+                // Push undo command if changed
+                if (def.switchVariable != oldVar)
+                {
+                    m_undoStack.PushCommand(
+                        std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                            m_selectedNodeID, "switchVariable",
+                            PropertyValue::FromString(oldVar),
+                            PropertyValue::FromString(def.switchVariable))),
+                        m_template);
+                }
+                m_dirty = true;
+            }
+            if (selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
+    // ── Display case count ────────────────────────────────────────────────────
+    ImGui::Text("Cases: %zu", def.switchCases.size());
+
+    ImGui::Separator();
+
+    // ── Modal Button to edit switch cases ──────────────────────────────────────
+    if (ImGui::Button("Edit Switch Cases", ImVec2(150, 0)))
+    {
+        if (!m_switchCaseModal)
+            m_switchCaseModal = std::make_unique<SwitchCaseEditorModal>();
+        m_switchCaseModal->Open(def.switchCases);
+    }
+
+    // ── Modal Rendering + Apply Integration (PHASE 2 FIX) ──────────────────────
+    if (m_switchCaseModal)
+    {
+        m_switchCaseModal->Render();
+
+        // If the user confirmed changes (clicked Apply), sync them back
+        if (m_switchCaseModal->IsConfirmed())
+        {
+            def.switchCases = m_switchCaseModal->GetSwitchCases();
+
+            // ── PHASE 1 FIX: Regenerate DynamicExecOutputPins from switchCases ──
+            // This ensures canvas pins are synchronized with semantic data
+            def.DynamicExecOutputPins.clear();
+            for (size_t caseIdx = 1; caseIdx < def.switchCases.size(); ++caseIdx)
+            {
+                const SwitchCaseDefinition& caseData = def.switchCases[caseIdx];
+                def.DynamicExecOutputPins.push_back(caseData.pinName);
+            }
+
+            // Sync to template
+            for (size_t i = 0; i < m_template.Nodes.size(); ++i)
+            {
+                if (m_template.Nodes[i].NodeID == m_selectedNodeID)
+                {
+                    m_template.Nodes[i].switchCases = def.switchCases;
+                    m_template.Nodes[i].DynamicExecOutputPins = def.DynamicExecOutputPins;
+                    break;
+                }
+            }
+
+            m_dirty = true;
+            m_switchCaseModal->Close();
+        }
+    }
+
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    // ── Breakpoint checkbox (F9) ─────────────────────────────────────────────
+    bool hasBP = DebugController::Get().HasBreakpoint(0, m_selectedNodeID);
+    if (ImGui::Checkbox("Breakpoint (F9)##vsbp_switch", &hasBP))
+    {
+        DebugController::Get().ToggleBreakpoint(0, m_selectedNodeID,
+                                                m_template.Name,
+                                                def.NodeName);
+    }
+
+    RenderVerificationPanel();
+
+    (void)eNode; // suppress unused-warning when switch nodes have no eNode-specific fields
+}
+
+// ============================================================================
 // Generic parameter editor for data nodes
 // ============================================================================
 
@@ -1583,96 +1716,9 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanel()
 
             case TaskNodeType::Switch:
             {
-                ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), "Switch Node");
-                ImGui::Separator();
-
-                // ---- Switch Variable Selector (Dropdown) ----
-                // Only Int-typed blackboard variables can be used for switch control
-                BBVariableRegistry bbReg;
-                bbReg.LoadFromTemplate(m_template);
-                const std::vector<VarSpec> intVars = bbReg.GetVariablesByType(VariableType::Int);
-
-                const std::string& curVar = def.switchVariable;
-                const char* previewVar = curVar.empty() ? "(select variable...)" : curVar.c_str();
-
-                ImGui::SetNextItemWidth(-1.0f);
-                if (ImGui::BeginCombo("Switch On##switch_var_combo", previewVar))
-                {
-                    for (const auto& var : intVars)
-                    {
-                        bool selected = (var.name == curVar);
-                        if (ImGui::Selectable(var.displayLabel.c_str(), selected))
-                        {
-                            const std::string oldVar = def.switchVariable;
-                            def.switchVariable = var.name;
-
-                            // Sync to template
-                            for (size_t i = 0; i < m_template.Nodes.size(); ++i)
-                            {
-                                if (m_template.Nodes[i].NodeID == m_selectedNodeID)
-                                {
-                                    m_template.Nodes[i].switchVariable = def.switchVariable;
-                                    break;
-                                }
-                            }
-
-                            // Push undo command if changed
-                            if (def.switchVariable != oldVar)
-                            {
-                                m_undoStack.PushCommand(
-                                    std::unique_ptr<ICommand>(new EditNodePropertyCommand(
-                                        m_selectedNodeID, "switchVariable",
-                                        PropertyValue::FromString(oldVar),
-                                        PropertyValue::FromString(def.switchVariable))),
-                                    m_template);
-                            }
-                            m_dirty = true;
-                        }
-                        if (selected)
-                            ImGui::SetItemDefaultFocus();
-                    }
-                    ImGui::EndCombo();
-                }
-
-                // Display case count
-                ImGui::Text("Cases: %zu", def.switchCases.size());
-
-                ImGui::Separator();
-
-                // Button to open modal editor
-                if (ImGui::Button("Edit Switch Cases", ImVec2(150, 0)))
-                {
-                    if (!m_switchCaseModal)
-                        m_switchCaseModal = std::make_unique<SwitchCaseEditorModal>();
-                    m_switchCaseModal->Open(def.switchCases);
-                }
-
-                // Render the modal
-                if (m_switchCaseModal)
-                {
-                    m_switchCaseModal->Render();
-
-                    // If the user confirmed changes, sync them back
-                    if (m_switchCaseModal->IsConfirmed())
-                    {
-                        def.switchCases = m_switchCaseModal->GetSwitchCases();
-
-                        // Sync to template
-                        for (size_t i = 0; i < m_template.Nodes.size(); ++i)
-                        {
-                            if (m_template.Nodes[i].NodeID == m_selectedNodeID)
-                            {
-                                m_template.Nodes[i].switchCases = def.switchCases;
-                                break;
-                            }
-                        }
-
-                        m_dirty = true;
-                        m_switchCaseModal->Close();
-                    }
-                }
-
-                break;
+                // Phase 1: Delegate to dedicated Switch properties renderer
+                RenderSwitchNodeProperties(*eNode, def);
+                return;
             }
 
             case TaskNodeType::GetBBValue:

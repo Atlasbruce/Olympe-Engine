@@ -312,6 +312,25 @@ private:
     void RenderMathOpNodeProperties(VSEditorNode& eNode, TaskNodeDefinition& def);
 
     /**
+     * @brief Renders the Properties panel content for a selected Switch node (Phase 1).
+     *
+     * @details
+     * Displays a blue header with the node name, then renders:
+     * - "Switch On:" dropdown to select the blackboard variable that controls the switch
+     * - Case count display
+     * - "Edit Switch Cases" button to open SwitchCaseEditorModal
+     * - Modal rendering with Apply integration (Phase 1 FIX: regenerates DynamicExecOutputPins)
+     * - Breakpoint checkbox
+     *
+     * Phase 1 Key Fix: After modal Apply, regenerates DynamicExecOutputPins from switchCases
+     * to ensure canvas pins are synchronized with semantic data.
+     *
+     * @param eNode  Reference to the selected editor node (modified when dirty).
+     * @param def    Reference to the node's TaskNodeDefinition (modified when dirty).
+     */
+    void RenderSwitchNodeProperties(VSEditorNode& eNode, TaskNodeDefinition& def);
+
+    /**
      * @brief Renders node parameters for data nodes (GetBBValue, SetBBValue, MathOp).
      *
      * @details
