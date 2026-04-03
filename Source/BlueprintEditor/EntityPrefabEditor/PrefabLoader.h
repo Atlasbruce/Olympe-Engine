@@ -3,91 +3,138 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <memory>
+#include "./../../third_party/nlohmann/json.hpp"
 
-namespace OlympeEngine {
+namespace Olympe
+{
+    using json = nlohmann::json;
 
-// ============================================================================
-// Data Structures for Entity Prefab System
-// ============================================================================
+    // Forward declarations
+    struct ComponentData;
+    struct ComponentSchema;
+    struct ParameterDefinition;
+    struct EntityPrefab;
 
-struct ParameterDefinition {
-    std::string name;
-    std::string type;          // int, float, bool, string, Vector3, etc.
-    std::string defaultValue;
-    bool required = false;
-    std::string description;
-    std::vector<std::string> enumValues;  // For enum types
-};
+    enum class ParameterType
+    {
+        Boolean,
+        Integer,
+        Float,
+        String,
+        Vector2,
+        Vector3,
+        Vector4,
+        Color,
+        Unknown
+    };
 
-struct ComponentSchema {
-    std::string componentType;
-    std::string category;
-    std::string description;
-    std::vector<ParameterDefinition> parameters;
-};
+    struct ParameterDefinition
+    {
+        std::string name;
+        ParameterType type;
+        std::string defaultValue;
+        std::string description;
+        bool isRequired;
+        std::vector<std::string> allowedValues;  // For enum-like parameters
 
-struct ComponentData {
-    std::string type;
-    std::string name;
-    std::map<std::string, std::string> properties;  // Property name -> value
-    bool enabled = true;
-};
+        ParameterDefinition()
+            : type(ParameterType::Unknown), isRequired(false)
+        {
+        }
 
-struct EntityPrefab {
-    int schemaVersion = 4;
-    std::string name;
-    std::string author;
-    std::string created;
-    std::string modified;
-    std::vector<ComponentData> components;
-    std::map<std::string, std::string> metadata;  // Custom metadata
-};
+        explicit ParameterDefinition(const std::string& n)
+            : name(n), type(ParameterType::Unknown), isRequired(false)
+        {
+        }
 
-// ============================================================================
-// PrefabLoader - File I/O and Schema Management
-// ============================================================================
+        json ToJson() const;
+        static ParameterDefinition FromJson(const json& data);
+    };
 
-class PrefabLoader {
-public:
-    // File I/O Operations
-    static EntityPrefab LoadFromFile(const std::string& filePath);
-    static bool SaveToFile(const EntityPrefab& prefab, const std::string& filePath);
-    static bool ValidateFileExists(const std::string& filePath);
+    struct ComponentSchema
+    {
+        std::string componentName;
+        std::string category;
+        std::string description;
+        std::vector<ParameterDefinition> parameters;
+        bool isDeprecated;
 
-    // Schema Management
-    static void LoadParameterSchemas(const std::string& schemaPath);
-    static const ComponentSchema* GetComponentSchema(const std::string& componentType);
-    static std::vector<std::string> GetAvailableComponentTypes();
-    static bool IsComponentSchemaLoaded(const std::string& componentType);
+        ComponentSchema()
+            : isDeprecated(false)
+        {
+        }
 
-    // Validation
-    static bool ValidateAgainstSchemas(const EntityPrefab& prefab);
-    static bool ValidateComponent(const ComponentData& component);
-    static std::vector<std::string> GetValidationErrors();
+        explicit ComponentSchema(const std::string& name)
+            : componentName(name), isDeprecated(false)
+        {
+        }
 
-    // Utility
-    static std::string GetPrefabFileName(const std::string& filePath);
-    static std::string GetPrefabDirectory(const std::string& filePath);
-    static bool IsValidPrefabFile(const std::string& filePath);
+        json ToJson() const;
+        static ComponentSchema FromJson(const json& data);
+    };
 
-private:
-    // Internal schema cache
-    static std::map<std::string, ComponentSchema> s_schemas;
-    static bool s_schemasLoaded;
-    static std::vector<std::string> s_validationErrors;
+    struct ComponentData
+    {
+        std::string componentType;
+        std::string componentName;
+        std::map<std::string, std::string> properties;
+        bool enabled;
 
-    // JSON Parsing helpers
-    static EntityPrefab ParseJsonPrefab(const std::string& jsonContent);
-    static ComponentSchema ParseJsonComponentSchema(const std::string& jsonContent);
-    static std::string ToJsonString(const EntityPrefab& prefab);
+        ComponentData()
+            : enabled(true)
+        {
+        }
 
-    // Validation helpers
-    static bool ValidateComponentProperty(
-        const std::string& componentType,
-        const std::string& propertyName,
-        const std::string& propertyValue
-    );
-};
+        explicit ComponentData(const std::string& type)
+            : componentType(type), enabled(true)
+        {
+        }
 
-}  // namespace OlympeEngine
+        json ToJson() const;
+        static ComponentData FromJson(const json& data);
+    };
+
+    struct EntityPrefab
+    {
+        std::string prefabName;
+        std::string prefabPath;
+        std::vector<ComponentData> components;
+        std::map<std::string, std::string> metadata;
+        int schemaVersion;
+
+        EntityPrefab()
+            : schemaVersion(4)
+        {
+        }
+
+        explicit EntityPrefab(const std::string& name)
+            : prefabName(name), schemaVersion(4)
+        {
+        }
+
+        json ToJson() const;
+        static EntityPrefab FromJson(const json& data);
+    };
+
+    class PrefabLoader
+    {
+    public:
+        static EntityPrefab LoadFromFile(const std::string& filePath);
+        static void SaveToFile(const std::string& filePath, const EntityPrefab& prefab);
+
+        static json LoadJsonFromFile(const std::string& filePath);
+        static void SaveJsonToFile(const std::string& filePath, const json& data);
+
+        static ComponentSchema ParseComponentSchema(const json& schemaJson);
+        static std::vector<ComponentSchema> LoadAllSchemas(const std::string& schemasPath);
+
+        static bool ValidatePrefab(const EntityPrefab& prefab);
+        static bool ValidateComponentData(const ComponentData& component, const ComponentSchema& schema);
+
+    private:
+        PrefabLoader() = default;
+        static std::string GetSchemaVersion(const json& data);
+        static ComponentSchema ParseSchemaV4(const json& data);
+        static json SerializeSchemaV4(const EntityPrefab& prefab);
+    };
+}

@@ -1,102 +1,89 @@
 #pragma once
 
-#include "PrefabLoader.h"
-#include "../NodeGraphCore/GraphDocument.h"
-#include <glm/glm.hpp>
+#include <string>
 #include <vector>
 #include <map>
+#include <memory>
+#include "./../../vector.h"
+#include "ComponentNodeData.h"
+#include "PrefabLoader.h"
 
-namespace OlympeEngine {
+namespace Olympe
+{
+    struct LayoutNode
+    {
+        NodeId nodeId = InvalidNodeId;
+        Vector position;
+        Vector size;
+        std::vector<NodeId> inputs;
+        std::vector<NodeId> outputs;
+    };
 
-// ============================================================================
-// ComponentNode - Visual representation of a component
-// ============================================================================
+    class EntityPrefabGraphDocument
+    {
+    public:
+        EntityPrefabGraphDocument();
+        ~EntityPrefabGraphDocument();
 
-struct ComponentNode {
-    NodeGraph::NodeId nodeId;
-    std::string componentType;
-    std::string componentName;
-    glm::vec2 position;
-    bool selected = false;
-    bool isEntityCenter = false;  // Special node for entity center
-    int inputPins;
-    int outputPins;
-};
+        // Node management
+        NodeId CreateComponentNode(const std::string& componentType);
+        NodeId CreateComponentNode(const std::string& componentType, const std::string& componentName);
+        void RemoveNode(NodeId nodeId);
+        bool HasNode(NodeId nodeId) const;
 
-// ============================================================================
-// EntityPrefabGraphDocument - Extends GraphDocument for prefab editing
-// ============================================================================
+        // Node access
+        ComponentNode* GetNode(NodeId nodeId);
+        const ComponentNode* GetNode(NodeId nodeId) const;
+        const std::vector<ComponentNode>& GetAllNodes() const;
 
-class EntityPrefabGraphDocument : public GraphDocument {
-public:
-    EntityPrefabGraphDocument();
-    ~EntityPrefabGraphDocument();
+        // Selection management
+        void SelectNode(NodeId nodeId);
+        void DeselectNode(NodeId nodeId);
+        void DeselectAll();
+        NodeId GetSelectedNode() const;
+        const std::vector<NodeId>& GetSelectedNodes() const;
 
-    // Prefab Loading & Conversion
-    bool LoadFromPrefab(const EntityPrefab& prefab);
-    bool LoadFromFile(const std::string& filePath);
-    EntityPrefab SerializeToPrefab() const;
+        // Layout
+        void AutoLayout();
+        void ArrangeNodesInGrid(int gridWidth = 4, float spacing = 200.0f);
+        void CenterViewport();
 
-    // Component Node Operations
-    NodeGraph::NodeId CreateComponentNode(
-        const std::string& componentType,
-        const std::string& componentName,
-        const glm::vec2& position
-    );
+        // Connection management
+        bool ConnectNodes(NodeId sourceId, NodeId targetId);
+        bool DisconnectNodes(NodeId sourceId, NodeId targetId);
+        const std::vector<std::pair<NodeId, NodeId>>& GetConnections() const;
 
-    bool RemoveComponentNode(NodeGraph::NodeId nodeId);
-    bool UpdateComponentProperties(NodeGraph::NodeId nodeId, const ComponentData& data);
-    ComponentData GetComponentData(NodeGraph::NodeId nodeId) const;
+        // Serialization
+        json ToJson() const;
+        static EntityPrefabGraphDocument FromJson(const json& data);
 
-    // Node Queries
-    ComponentNode* GetComponentNode(NodeGraph::NodeId nodeId);
-    const ComponentNode* GetComponentNode(NodeGraph::NodeId nodeId) const;
-    std::vector<ComponentNode*> GetAllComponentNodes();
-    std::vector<const ComponentNode*> GetAllComponentNodes() const;
+        // File I/O
+        bool LoadFromFile(const std::string& filePath);
+        bool SaveToFile(const std::string& filePath);
 
-    // Layout & Visualization
-    void AutoLayoutComponents(float radius = 300.0f);
-    void UpdateNodePosition(NodeGraph::NodeId nodeId, const glm::vec2& newPosition);
-    glm::vec2 GetNodePosition(NodeGraph::NodeId nodeId) const;
+        // Properties
+        void SetDocumentName(const std::string& name);
+        std::string GetDocumentName() const;
 
-    // Selection Management
-    void SelectNode(NodeGraph::NodeId nodeId);
-    void DeselectNode(NodeGraph::NodeId nodeId);
-    void DeselectAll();
-    std::vector<NodeGraph::NodeId> GetSelectedNodes() const;
+        Vector GetCanvasOffset() const;
+        void SetCanvasOffset(const Vector& offset);
 
-    // Validation
-    bool ValidateDocument() const;
-    std::vector<std::string> GetValidationErrors() const;
+        float GetCanvasZoom() const;
+        void SetCanvasZoom(float zoom);
 
-    // Entity Center Node
-    NodeGraph::NodeId GetEntityCenterNode() const { return m_entityCenterNodeId; }
-    void CreateEntityCenterNode();
+        void Clear();
+        size_t GetNodeCount() const;
 
-    // Undo/Redo Support
-    void BeginAction(const std::string& actionName);
-    void EndAction();
+    private:
+        std::vector<ComponentNode> m_nodes;
+        std::vector<NodeId> m_selectedNodes;
+        std::vector<std::pair<NodeId, NodeId>> m_connections;
+        std::string m_documentName;
+        Vector m_canvasOffset;
+        float m_canvasZoom = 1.0f;
+        NodeId m_nextNodeId = 1;
 
-    // Export & Statistics
-    int GetComponentCount() const;
-    int GetNodeCount() const;
-    const EntityPrefab& GetPrefab() const { return m_prefab; }
-
-private:
-    // Core data
-    EntityPrefab m_prefab;
-    std::map<NodeGraph::NodeId, ComponentNode> m_componentNodes;
-    NodeGraph::NodeId m_entityCenterNodeId;
-
-    // State tracking
-    std::vector<NodeGraph::NodeId> m_selectedNodes;
-    std::vector<std::string> m_validationErrors;
-    bool m_isInAction = false;
-
-    // Helper methods
-    void RefreshNodePinCounts(ComponentNode& node);
-    glm::vec2 CalculateLayoutPosition(int componentIndex, int totalComponents, float radius);
-    void PropagateNodeChanges(NodeGraph::NodeId nodeId);
-};
-
-}  // namespace OlympeEngine
+        NodeId GenerateNodeId();
+        std::vector<LayoutNode> CalculateLayout();
+    };
+}

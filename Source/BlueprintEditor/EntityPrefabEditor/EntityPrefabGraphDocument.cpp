@@ -1,372 +1,102 @@
-#include "EntityPrefabGraphDocument.h"
-#include <glm/geometric.hpp>
-#include <algorithm>
-#include <cmath>
+﻿#include "EntityPrefabGraphDocument.h"
 
-namespace OlympeEngine {
+namespace Olympe
+{
+    EntityPrefabGraphDocument::EntityPrefabGraphDocument() : m_canvasZoom(1.0f), m_nextNodeId(1) { }
+    EntityPrefabGraphDocument::~EntityPrefabGraphDocument() { }
 
-// ============================================================================
-// Constructor & Destructor
-// ============================================================================
+    NodeId EntityPrefabGraphDocument::CreateComponentNode(const std::string& componentType)
+    { return CreateComponentNode(componentType, ""); }
 
-EntityPrefabGraphDocument::EntityPrefabGraphDocument()
-    : GraphDocument(), m_entityCenterNodeId(NodeGraph::InvalidNodeId) {
-}
-
-EntityPrefabGraphDocument::~EntityPrefabGraphDocument() {
-    m_componentNodes.clear();
-    m_selectedNodes.clear();
-}
-
-// ============================================================================
-// Prefab Loading & Conversion
-// ============================================================================
-
-bool EntityPrefabGraphDocument::LoadFromPrefab(const EntityPrefab& prefab) {
-    // Store the prefab
-    m_prefab = prefab;
-    m_componentNodes.clear();
-    m_selectedNodes.clear();
-    m_validationErrors.clear();
-
-    // Create entity center node
-    CreateEntityCenterNode();
-
-    // Create component nodes
-    int componentIndex = 0;
-    for (const auto& component : prefab.components) {
-        glm::vec2 position = CalculateLayoutPosition(
-            componentIndex,
-            prefab.components.size(),
-            300.0f
-        );
-
-        CreateComponentNode(component.type, component.name, position);
-        componentIndex++;
+    NodeId EntityPrefabGraphDocument::CreateComponentNode(const std::string& componentType, const std::string& componentName)
+    { 
+        ComponentNode node(componentType);
+        node.nodeId = m_nextNodeId++;
+        node.componentName = componentName;
+        m_nodes.push_back(node);
+        return node.nodeId;
     }
 
-    return true;
-}
-
-bool EntityPrefabGraphDocument::LoadFromFile(const std::string& filePath) {
-    EntityPrefab prefab = PrefabLoader::LoadFromFile(filePath);
-    if (prefab.name.empty() && PrefabLoader::GetValidationErrors().size() > 0) {
-        m_validationErrors = PrefabLoader::GetValidationErrors();
-        return false;
-    }
-    return LoadFromPrefab(prefab);
-}
-
-EntityPrefab EntityPrefabGraphDocument::SerializeToPrefab() const {
-    // Update component data from nodes
-    EntityPrefab prefab = m_prefab;
-    prefab.components.clear();
-
-    for (const auto& [nodeId, node] : m_componentNodes) {
-        if (node.isEntityCenter) continue;  // Skip entity center
-
-        ComponentData data;
-        data.type = node.componentType;
-        data.name = node.componentName;
-        data.enabled = true;
-
-        // Get properties from node if they exist
-        // This is a placeholder - actual properties stored elsewhere
-
-        prefab.components.push_back(data);
+    void EntityPrefabGraphDocument::RemoveNode(NodeId nodeId)
+    { 
+        for (size_t i = 0; i < m_nodes.size(); ++i)
+        { if (m_nodes[i].nodeId == nodeId) { m_nodes.erase(m_nodes.begin() + i); break; } }
     }
 
-    return prefab;
-}
+    bool EntityPrefabGraphDocument::HasNode(NodeId nodeId) const
+    { for (size_t i = 0; i < m_nodes.size(); ++i) { if (m_nodes[i].nodeId == nodeId) { return true; } } return false; }
 
-// ============================================================================
-// Component Node Operations
-// ============================================================================
+    ComponentNode* EntityPrefabGraphDocument::GetNode(NodeId nodeId)
+    { for (size_t i = 0; i < m_nodes.size(); ++i) { if (m_nodes[i].nodeId == nodeId) { return &m_nodes[i]; } } return nullptr; }
 
-NodeGraph::NodeId EntityPrefabGraphDocument::CreateComponentNode(
-    const std::string& componentType,
-    const std::string& componentName,
-    const glm::vec2& position
-) {
-    // Create node in base GraphDocument (generates nodeId)
-    NodeGraph::NodeId nodeId = GraphDocument::CreateNode();
+    const ComponentNode* EntityPrefabGraphDocument::GetNode(NodeId nodeId) const
+    { for (size_t i = 0; i < m_nodes.size(); ++i) { if (m_nodes[i].nodeId == nodeId) { return &m_nodes[i]; } } return nullptr; }
 
-    // Create visual representation
-    ComponentNode node;
-    node.nodeId = nodeId;
-    node.componentType = componentType;
-    node.componentName = componentName;
-    node.position = position;
-    node.isEntityCenter = false;
+    const std::vector<ComponentNode>& EntityPrefabGraphDocument::GetAllNodes() const { return m_nodes; }
 
-    // Get schema and setup pins
-    auto schema = PrefabLoader::GetComponentSchema(componentType);
-    if (schema) {
-        // For now, use a simple pattern: input and output pins based on parameter count
-        node.inputPins = std::max(1, static_cast<int>(schema->parameters.size()) / 3);
-        node.outputPins = 1;
-    } else {
-        node.inputPins = 1;
-        node.outputPins = 1;
-    }
-
-    m_componentNodes[nodeId] = node;
-    return nodeId;
-}
-
-bool EntityPrefabGraphDocument::RemoveComponentNode(NodeGraph::NodeId nodeId) {
-    auto it = m_componentNodes.find(nodeId);
-    if (it == m_componentNodes.end()) {
-        return false;
-    }
-
-    m_componentNodes.erase(it);
-
-    // Remove from selection
-    auto selIt = std::find(m_selectedNodes.begin(), m_selectedNodes.end(), nodeId);
-    if (selIt != m_selectedNodes.end()) {
-        m_selectedNodes.erase(selIt);
-    }
-
-    return GraphDocument::DeleteNode(nodeId);
-}
-
-bool EntityPrefabGraphDocument::UpdateComponentProperties(
-    NodeGraph::NodeId nodeId,
-    const ComponentData& data
-) {
-    auto it = m_componentNodes.find(nodeId);
-    if (it == m_componentNodes.end()) {
-        return false;
-    }
-
-    it->second.componentType = data.type;
-    it->second.componentName = data.name;
-
-    RefreshNodePinCounts(it->second);
-    PropagateNodeChanges(nodeId);
-
-    return true;
-}
-
-ComponentData EntityPrefabGraphDocument::GetComponentData(NodeGraph::NodeId nodeId) const {
-    auto it = m_componentNodes.find(nodeId);
-    if (it == m_componentNodes.end()) {
-        return ComponentData();
-    }
-
-    ComponentData data;
-    data.type = it->second.componentType;
-    data.name = it->second.componentName;
-    data.enabled = true;
-
-    return data;
-}
-
-// ============================================================================
-// Node Queries
-// ============================================================================
-
-ComponentNode* EntityPrefabGraphDocument::GetComponentNode(NodeGraph::NodeId nodeId) {
-    auto it = m_componentNodes.find(nodeId);
-    if (it == m_componentNodes.end()) {
-        return nullptr;
-    }
-    return &it->second;
-}
-
-const ComponentNode* EntityPrefabGraphDocument::GetComponentNode(NodeGraph::NodeId nodeId) const {
-    auto it = m_componentNodes.find(nodeId);
-    if (it == m_componentNodes.end()) {
-        return nullptr;
-    }
-    return &it->second;
-}
-
-std::vector<ComponentNode*> EntityPrefabGraphDocument::GetAllComponentNodes() {
-    std::vector<ComponentNode*> nodes;
-    for (auto& [nodeId, node] : m_componentNodes) {
-        nodes.push_back(&node);
-    }
-    return nodes;
-}
-
-std::vector<const ComponentNode*> EntityPrefabGraphDocument::GetAllComponentNodes() const {
-    std::vector<const ComponentNode*> nodes;
-    for (const auto& [nodeId, node] : m_componentNodes) {
-        nodes.push_back(&node);
-    }
-    return nodes;
-}
-
-// ============================================================================
-// Layout & Visualization
-// ============================================================================
-
-void EntityPrefabGraphDocument::AutoLayoutComponents(float radius) {
-    auto nodes = GetAllComponentNodes();
-    int index = 0;
-
-    for (auto* node : nodes) {
-        if (node->isEntityCenter) {
-            node->position = glm::vec2(0.0f, 0.0f);
-        } else {
-            node->position = CalculateLayoutPosition(index, nodes.size() - 1, radius);
-            index++;
-        }
-    }
-}
-
-void EntityPrefabGraphDocument::UpdateNodePosition(NodeGraph::NodeId nodeId, const glm::vec2& newPosition) {
-    auto it = m_componentNodes.find(nodeId);
-    if (it != m_componentNodes.end()) {
-        it->second.position = newPosition;
-        PropagateNodeChanges(nodeId);
-    }
-}
-
-glm::vec2 EntityPrefabGraphDocument::GetNodePosition(NodeGraph::NodeId nodeId) const {
-    auto it = m_componentNodes.find(nodeId);
-    if (it != m_componentNodes.end()) {
-        return it->second.position;
-    }
-    return glm::vec2(0.0f, 0.0f);
-}
-
-// ============================================================================
-// Selection Management
-// ============================================================================
-
-void EntityPrefabGraphDocument::SelectNode(NodeGraph::NodeId nodeId) {
-    auto it = m_componentNodes.find(nodeId);
-    if (it != m_componentNodes.end()) {
-        it->second.selected = true;
+    void EntityPrefabGraphDocument::SelectNode(NodeId nodeId)
+    { 
+        for (auto it = m_selectedNodes.begin(); it != m_selectedNodes.end(); ++it)
+        { if (*it == nodeId) { return; } }
         m_selectedNodes.push_back(nodeId);
-    }
-}
-
-void EntityPrefabGraphDocument::DeselectNode(NodeGraph::NodeId nodeId) {
-    auto it = m_componentNodes.find(nodeId);
-    if (it != m_componentNodes.end()) {
-        it->second.selected = false;
+        ComponentNode* node = GetNode(nodeId);
+        if (node != nullptr) { node->selected = true; }
     }
 
-    auto selIt = std::find(m_selectedNodes.begin(), m_selectedNodes.end(), nodeId);
-    if (selIt != m_selectedNodes.end()) {
-        m_selectedNodes.erase(selIt);
+    void EntityPrefabGraphDocument::DeselectNode(NodeId nodeId)
+    { 
+        for (auto it = m_selectedNodes.begin(); it != m_selectedNodes.end(); ++it)
+        { if (*it == nodeId) { m_selectedNodes.erase(it); break; } }
+        ComponentNode* node = GetNode(nodeId);
+        if (node != nullptr) { node->selected = false; }
     }
-}
 
-void EntityPrefabGraphDocument::DeselectAll() {
-    for (auto nodeId : m_selectedNodes) {
-        auto it = m_componentNodes.find(nodeId);
-        if (it != m_componentNodes.end()) {
-            it->second.selected = false;
-        }
+    void EntityPrefabGraphDocument::DeselectAll()
+    { 
+        for (size_t i = 0; i < m_selectedNodes.size(); ++i)
+        { ComponentNode* node = GetNode(m_selectedNodes[i]); if (node != nullptr) { node->selected = false; } }
+        m_selectedNodes.clear();
     }
-    m_selectedNodes.clear();
-}
 
-std::vector<NodeGraph::NodeId> EntityPrefabGraphDocument::GetSelectedNodes() const {
-    return m_selectedNodes;
-}
+    NodeId EntityPrefabGraphDocument::GetSelectedNode() const
+    { if (m_selectedNodes.size() > 0) { return m_selectedNodes[0]; } return InvalidNodeId; }
 
-// ============================================================================
-// Validation
-// ============================================================================
+    const std::vector<NodeId>& EntityPrefabGraphDocument::GetSelectedNodes() const { return m_selectedNodes; }
 
-bool EntityPrefabGraphDocument::ValidateDocument() const {
-    m_validationErrors.clear();
+    void EntityPrefabGraphDocument::AutoLayout() { }
+    void EntityPrefabGraphDocument::ArrangeNodesInGrid(int gridWidth, float spacing) { (void)gridWidth; (void)spacing; }
+    void EntityPrefabGraphDocument::CenterViewport() { }
 
-    // Validate the stored prefab
-    if (!PrefabLoader::ValidateAgainstSchemas(m_prefab)) {
-        m_validationErrors = PrefabLoader::GetValidationErrors();
+    bool EntityPrefabGraphDocument::ConnectNodes(NodeId sourceId, NodeId targetId)
+    { m_connections.push_back(std::make_pair(sourceId, targetId)); return true; }
+
+    bool EntityPrefabGraphDocument::DisconnectNodes(NodeId sourceId, NodeId targetId)
+    { 
+        for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
+        { if (it->first == sourceId && it->second == targetId) { m_connections.erase(it); return true; } }
         return false;
     }
 
-    return true;
-}
+    const std::vector<std::pair<NodeId, NodeId>>& EntityPrefabGraphDocument::GetConnections() const { return m_connections; }
 
-std::vector<std::string> EntityPrefabGraphDocument::GetValidationErrors() const {
-    return m_validationErrors;
-}
+    json EntityPrefabGraphDocument::ToJson() const { return json::object(); }
+    EntityPrefabGraphDocument EntityPrefabGraphDocument::FromJson(const json& data) { (void)data; return EntityPrefabGraphDocument(); }
 
-// ============================================================================
-// Entity Center Node
-// ============================================================================
+    bool EntityPrefabGraphDocument::LoadFromFile(const std::string& filePath) { (void)filePath; return false; }
+    bool EntityPrefabGraphDocument::SaveToFile(const std::string& filePath) { (void)filePath; return false; }
 
-void EntityPrefabGraphDocument::CreateEntityCenterNode() {
-    NodeGraph::NodeId nodeId = GraphDocument::CreateNode();
+    void EntityPrefabGraphDocument::SetDocumentName(const std::string& name) { m_documentName = name; }
+    std::string EntityPrefabGraphDocument::GetDocumentName() const { return m_documentName; }
 
-    ComponentNode node;
-    node.nodeId = nodeId;
-    node.componentType = "Entity";
-    node.componentName = m_prefab.name;
-    node.position = glm::vec2(0.0f, 0.0f);
-    node.isEntityCenter = true;
-    node.inputPins = 0;
-    node.outputPins = static_cast<int>(m_prefab.components.size());
+    Vector EntityPrefabGraphDocument::GetCanvasOffset() const { return m_canvasOffset; }
+    void EntityPrefabGraphDocument::SetCanvasOffset(const Vector& offset) { m_canvasOffset = offset; }
 
-    m_entityCenterNodeId = nodeId;
-    m_componentNodes[nodeId] = node;
-}
+    float EntityPrefabGraphDocument::GetCanvasZoom() const { return m_canvasZoom; }
+    void EntityPrefabGraphDocument::SetCanvasZoom(float zoom) { m_canvasZoom = zoom; }
 
-// ============================================================================
-// Undo/Redo Support
-// ============================================================================
+    void EntityPrefabGraphDocument::Clear() { m_nodes.clear(); m_selectedNodes.clear(); m_connections.clear(); m_nextNodeId = 1; }
+    size_t EntityPrefabGraphDocument::GetNodeCount() const { return m_nodes.size(); }
 
-void EntityPrefabGraphDocument::BeginAction(const std::string& actionName) {
-    m_isInAction = true;
-    // In Phase 2+, this will create a CommandStack transaction
-}
+    std::vector<LayoutNode> EntityPrefabGraphDocument::CalculateLayout() { return std::vector<LayoutNode>(); }
 
-void EntityPrefabGraphDocument::EndAction() {
-    m_isInAction = false;
-}
-
-// ============================================================================
-// Export & Statistics
-// ============================================================================
-
-int EntityPrefabGraphDocument::GetComponentCount() const {
-    return static_cast<int>(m_componentNodes.size()) - 1;  // -1 for entity center
-}
-
-int EntityPrefabGraphDocument::GetNodeCount() const {
-    return static_cast<int>(m_componentNodes.size());
-}
-
-// ============================================================================
-// Private Helper Methods
-// ============================================================================
-
-void EntityPrefabGraphDocument::RefreshNodePinCounts(ComponentNode& node) {
-    auto schema = PrefabLoader::GetComponentSchema(node.componentType);
-    if (schema) {
-        node.inputPins = std::max(1, static_cast<int>(schema->parameters.size()) / 3);
-        node.outputPins = 1;
-    }
-}
-
-glm::vec2 EntityPrefabGraphDocument::CalculateLayoutPosition(
-    int componentIndex,
-    int totalComponents,
-    float radius
-) {
-    if (totalComponents <= 0) return glm::vec2(0.0f, 0.0f);
-
-    // Circle layout around entity center
-    float angle = (2.0f * 3.14159265359f * componentIndex) / totalComponents;
-    glm::vec2 position;
-    position.x = radius * std::cos(angle);
-    position.y = radius * std::sin(angle);
-
-    return position;
-}
-
-void EntityPrefabGraphDocument::PropagateNodeChanges(NodeGraph::NodeId nodeId) {
-    // Placeholder for change propagation
-    // In Phase 2+, this will trigger validation and UI updates
-}
-
-}  // namespace OlympeEngine
+} // namespace Olympe

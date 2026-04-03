@@ -1,145 +1,84 @@
 #pragma once
 
-#include "ComponentNodeData.h"
-#include "PrefabLoader.h"
 #include <string>
-#include <map>
-#include <functional>
 #include <memory>
+#include "./../../vector.h"
+#include "EntityPrefabGraphDocument.h"
 
-namespace OlympeEngine {
+namespace Olympe
+{
+    class PropertyInspectorPrefab
+    {
+    public:
+        PropertyInspectorPrefab();
+        ~PropertyInspectorPrefab();
 
-// ============================================================================
-// PropertyInspectorPrefab - Property editing UI panel
-// ============================================================================
+        void Initialize(EntityPrefabGraphDocument* document);
+        void Render();
+        void Update(float deltaTime);
 
-class PropertyInspectorPrefab {
-public:
-    PropertyInspectorPrefab();
-    ~PropertyInspectorPrefab();
+        // Node selection
+        void SelectNode(NodeId nodeId);
+        void DeselectNode();
+        NodeId GetSelectedNode() const;
 
-    // Rendering
-    void Render(float width, float height);
-    void RenderComponentName();
-    void RenderComponentType();
-    void RenderComponentProperties();
-    void RenderEntityCenterProperties();
+        // Panel visibility and layout
+        void SetPanelWidth(float width);
+        float GetPanelWidth() const;
 
-    // Selection Management
-    void SetSelectedNode(const ComponentNodeData& nodeData);
-    void SetSelectedNode(const std::string& componentType, const std::string& componentName);
-    void ClearSelection();
-    bool HasSelection() const { return m_hasSelection; }
+        void SetPanelHeight(float height);
+        float GetPanelHeight() const;
 
-    // Property Management
-    void SetProperty(const std::string& propertyName, const std::string& value);
-    std::string GetProperty(const std::string& propertyName) const;
-    const std::map<std::string, std::string>& GetAllProperties() const { return m_properties; }
+        void SetPanelPosition(float x, float y);
+        void GetPanelPosition(float& outX, float& outY) const;
 
-    // Callbacks
-    using OnPropertyChangedCallback = std::function<void(
-        const std::string& propertyName,
-        const std::string& oldValue,
-        const std::string& newValue
-    )>;
+        // Content rendering options
+        void SetShowComponentInfo(bool show);
+        bool GetShowComponentInfo() const;
 
-    void SetOnPropertyChangedCallback(OnPropertyChangedCallback callback);
+        void SetShowPropertyGrid(bool show);
+        bool GetShowPropertyGrid() const;
 
-    // UI State
-    bool IsExpanded() const { return m_isExpanded; }
-    void SetExpanded(bool expanded) { m_isExpanded = expanded; }
+        void SetShowAddPropertyButton(bool show);
+        bool GetShowAddPropertyButton() const;
 
-    // Component Description Display
-    void DisplayComponentDescription(const std::string& componentType);
-    void DisplayComponentDocumentation();
+        void SetReadOnly(bool readOnly);
+        bool IsReadOnly() const;
 
-    // Property Type-Specific Rendering
-    void RenderProperty(
-        const std::string& propertyName,
-        const std::string& propertyType,
-        const std::string& currentValue
-    );
+        // Property editing
+        void AddProperty(const std::string& key, const std::string& value);
+        void RemoveProperty(const std::string& key);
+        void SetProperty(const std::string& key, const std::string& value);
+        std::string GetProperty(const std::string& key) const;
 
-    void RenderPropertyInt(
-        const std::string& label,
-        const std::string& currentValue
-    );
+        // Component management
+        void AddComponent(const std::string& componentType);
+        void RemoveComponent(const std::string& componentType);
+        void EnableComponent(const std::string& componentType, bool enabled);
 
-    void RenderPropertyFloat(
-        const std::string& label,
-        const std::string& currentValue
-    );
+        // Validation
+        bool ValidatePropertyValue(const std::string& propertyName, const std::string& value) const;
+        bool ValidateAllProperties() const;
 
-    void RenderPropertyBool(
-        const std::string& label,
-        const std::string& currentValue
-    );
+    private:
+        EntityPrefabGraphDocument* m_document = nullptr;
+        NodeId m_selectedNodeId = InvalidNodeId;
+        float m_panelWidth = 400.0f;
+        float m_panelHeight = 600.0f;
+        float m_panelX = 0.0f;
+        float m_panelY = 0.0f;
+        bool m_showComponentInfo = true;
+        bool m_showPropertyGrid = true;
+        bool m_showAddPropertyButton = true;
+        bool m_readOnly = false;
 
-    void RenderPropertyString(
-        const std::string& label,
-        const std::string& currentValue
-    );
+        void RenderComponentInfo();
+        void RenderPropertyGrid();
+        void RenderAddPropertyPanel();
+        void RenderComponentList();
 
-    void RenderPropertyVector3(
-        const std::string& label,
-        const std::string& currentValue
-    );
-
-    void RenderPropertyEnum(
-        const std::string& label,
-        const std::string& currentValue,
-        const std::vector<std::string>& enumValues
-    );
-
-    // Reset & Apply
-    void ApplyChanges();
-    void DiscardChanges();
-    void ResetToDefaults();
-
-    // Read-Only Mode (for Phase 1)
-    void SetReadOnly(bool readOnly) { m_readOnly = readOnly; }
-    bool IsReadOnly() const { return m_readOnly; }
-
-private:
-    bool m_hasSelection = false;
-    bool m_isExpanded = true;
-    bool m_readOnly = false;
-
-    // Selected component info
-    std::string m_selectedComponentType;
-    std::string m_selectedComponentName;
-
-    // Property buffers (for ImGui editing)
-    std::map<std::string, std::string> m_properties;
-    std::map<std::string, std::string> m_originalProperties;  // For discard
-
-    // Callback
-    OnPropertyChangedCallback m_onPropertyChanged;
-
-    // Helper methods
-    void RenderPropertyLabel(const std::string& label, const std::string& description = "");
-    void RenderPropertyInput(
-        const std::string& propertyName,
-        const std::string& propertyType,
-        std::string& value
-    );
-
-    bool ValidatePropertyValue(
-        const std::string& propertyType,
-        const std::string& value
-    ) const;
-
-    std::string FormatPropertyValue(
-        const std::string& propertyType,
-        const std::string& value
-    ) const;
-
-    // ImGui Input Wrappers
-    bool InputIntProperty(const char* label, std::string& value);
-    bool InputFloatProperty(const char* label, std::string& value);
-    bool InputTextProperty(const char* label, std::string& value);
-    bool InputBoolProperty(const char* label, std::string& value);
-    bool InputVector3Property(const char* label, std::string& value);
-};
-
-}  // namespace OlympeEngine
+        void OnPropertyChanged(const std::string& key, const std::string& value);
+        void OnComponentAdded(const std::string& componentType);
+        void OnComponentRemoved(const std::string& componentType);
+    };
+}

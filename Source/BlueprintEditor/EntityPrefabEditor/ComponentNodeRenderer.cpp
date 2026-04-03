@@ -1,202 +1,47 @@
-#include "ComponentNodeRenderer.h"
-#include <algorithm>
-#include <cmath>
+﻿#include "ComponentNodeRenderer.h"
+#include "../../Source/third_party/imgui/imgui.h"
 
-namespace OlympeEngine {
+namespace Olympe
+{
+    ComponentNodeRenderer::ComponentNodeRenderer() : m_showLabels(true), m_showProperties(true), m_nodeScale(1.0f) { }
+    ComponentNodeRenderer::~ComponentNodeRenderer() { }
 
-// ============================================================================
-// Constructor & Destructor
-// ============================================================================
+    void ComponentNodeRenderer::Initialize() { }
+    void ComponentNodeRenderer::Shutdown() { }
 
-ComponentNodeRenderer::ComponentNodeRenderer() {
-    // Initialize default styles for common component types
-}
+    void ComponentNodeRenderer::RenderNode(const ComponentNode& node) { (void)node; }
+    void ComponentNodeRenderer::RenderNodes(const EntityPrefabGraphDocument* document) { (void)document; }
+    void ComponentNodeRenderer::RenderConnections(const EntityPrefabGraphDocument* document) { (void)document; }
 
-ComponentNodeRenderer::~ComponentNodeRenderer() {
-}
+    void ComponentNodeRenderer::SetNodeStyle(const ComponentNodeStyle& style) { m_style = style; }
+    const ComponentNodeStyle& ComponentNodeRenderer::GetNodeStyle() const { return m_style; }
 
-// ============================================================================
-// Rendering
-// ============================================================================
+    void ComponentNodeRenderer::SetNormalColor(const Vector& color) { m_style.normalColor = color; }
+    void ComponentNodeRenderer::SetSelectedColor(const Vector& color) { m_style.selectedColor = color; }
+    void ComponentNodeRenderer::SetHoverColor(const Vector& color) { m_style.hoverColor = color; }
+    void ComponentNodeRenderer::SetDisabledColor(const Vector& color) { m_style.disabledColor = color; }
+    void ComponentNodeRenderer::SetTextColor(const Vector& color) { m_style.textColor = color; }
+    void ComponentNodeRenderer::SetBorderWidth(float width) { m_style.borderWidth = width; }
+    void ComponentNodeRenderer::SetCornerRadius(float radius) { m_style.cornerRadius = radius; }
 
-void ComponentNodeRenderer::RenderNode(
-    const ComponentNodeData& nodeData,
-    const glm::vec2& canvasOffset,
-    float zoomLevel
-) {
-    // Placeholder for actual rendering implementation
-    // This will use ImGui draw API to render nodes
-}
+    bool ComponentNodeRenderer::IsPointInNode(const Vector& point, const ComponentNode& node) const
+    { Vector min = node.position; min.x -= node.size.x * 0.5f; min.y -= node.size.y * 0.5f; Vector max = node.position; max.x += node.size.x * 0.5f; max.y += node.size.y * 0.5f; return point.x >= min.x && point.x <= max.x && point.y >= min.y && point.y <= max.y; }
 
-void ComponentNodeRenderer::RenderNodeLabel(
-    const std::string& label,
-    const glm::vec2& position,
-    const glm::vec4& color
-) {
-    // Placeholder for text rendering
-}
+    bool ComponentNodeRenderer::GetNodeBounds(const ComponentNode& node, Vector& outMin, Vector& outMax) const
+    { outMin = node.position; outMin.x -= node.size.x * 0.5f; outMin.y -= node.size.y * 0.5f; outMax = node.position; outMax.x += node.size.x * 0.5f; outMax.y += node.size.y * 0.5f; return true; }
 
-void ComponentNodeRenderer::RenderNodePins(
-    const ComponentNodeData& nodeData,
-    const glm::vec2& nodePosition,
-    bool hovered
-) {
-    // Placeholder for pin rendering
-}
+    void ComponentNodeRenderer::SetShowLabels(bool show) { m_showLabels = show; }
+    bool ComponentNodeRenderer::GetShowLabels() const { return m_showLabels; }
 
-void ComponentNodeRenderer::RenderNodeImGui(
-    const ComponentNodeData& nodeData,
-    bool selected,
-    bool hovered
-) {
-    // Placeholder for ImGui-based node rendering
-}
+    void ComponentNodeRenderer::SetShowProperties(bool show) { m_showProperties = show; }
+    bool ComponentNodeRenderer::GetShowProperties() const { return m_showProperties; }
 
-// ============================================================================
-// Style Management
-// ============================================================================
+    void ComponentNodeRenderer::SetNodeScale(float scale) { m_nodeScale = scale; }
+    float ComponentNodeRenderer::GetNodeScale() const { return m_nodeScale; }
 
-void ComponentNodeRenderer::SetNodeStyle(
-    const std::string& componentType,
-    const ComponentNodeStyle& style
-) {
-    m_nodeStyles[componentType] = style;
-}
+    void ComponentNodeRenderer::RenderNodeBox(const ComponentNode& node) { (void)node; }
+    void ComponentNodeRenderer::RenderNodeLabel(const ComponentNode& node) { (void)node; }
+    void ComponentNodeRenderer::RenderConnectionLine(const Vector& from, const Vector& to) { (void)from; (void)to; }
+    Vector ComponentNodeRenderer::GetNodeColor(const ComponentNode& node) const { return node.GetCurrentColor(); }
 
-ComponentNodeStyle ComponentNodeRenderer::GetNodeStyle(const std::string& componentType) const {
-    auto it = m_nodeStyles.find(componentType);
-    if (it != m_nodeStyles.end()) {
-        return it->second;
-    }
-
-    // Return default style
-    ComponentNodeStyle defaultStyle;
-    defaultStyle.normalColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
-    return defaultStyle;
-}
-
-void ComponentNodeRenderer::ResetNodeStyleToDefaults() {
-    m_nodeStyles.clear();
-}
-
-// ============================================================================
-// Color & Visual State
-// ============================================================================
-
-glm::vec4 ComponentNodeRenderer::GetColorForState(ComponentNodeState state) const {
-    switch (state) {
-        case ComponentNodeState::Normal:
-            return m_colors.normal;
-        case ComponentNodeState::Hover:
-            return m_colors.hover;
-        case ComponentNodeState::Selected:
-            return m_colors.selected;
-        case ComponentNodeState::Error:
-            return m_colors.error;
-        case ComponentNodeState::Warning:
-            return m_colors.warning;
-        case ComponentNodeState::Disabled:
-            return m_colors.disabled;
-        default:
-            return m_colors.normal;
-    }
-}
-
-glm::vec4 ComponentNodeRenderer::GetColorForComponentType(const std::string& componentType) const {
-    // Map component types to colors
-    // This is a simple example - could be expanded
-
-    if (componentType == "Transform") {
-        return glm::vec4(0.2f, 0.8f, 0.2f, 1.0f);  // Green
-    } else if (componentType == "Physics") {
-        return glm::vec4(0.8f, 0.2f, 0.2f, 1.0f);  // Red
-    } else if (componentType == "Mesh") {
-        return glm::vec4(0.2f, 0.2f, 0.8f, 1.0f);  // Blue
-    } else if (componentType == "Entity") {
-        return glm::vec4(0.8f, 0.8f, 0.2f, 1.0f);  // Yellow
-    }
-
-    // Default color
-    return glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
-}
-
-// ============================================================================
-// Bounds & Geometry
-// ============================================================================
-
-glm::vec4 ComponentNodeRenderer::GetNodeBounds(const glm::vec2& position, const glm::vec2& size) const {
-    return glm::vec4(position.x, position.y, position.x + size.x, position.y + size.y);
-}
-
-glm::vec2 ComponentNodeRenderer::GetInputPinPosition(
-    const glm::vec2& nodePosition,
-    int pinIndex,
-    int totalInputPins
-) const {
-    if (totalInputPins == 0) return nodePosition;
-
-    float spacing = 60.0f / static_cast<float>(totalInputPins + 1);
-    float yOffset = spacing * (pinIndex + 1);
-
-    return glm::vec2(nodePosition.x, nodePosition.y + yOffset);
-}
-
-glm::vec2 ComponentNodeRenderer::GetOutputPinPosition(
-    const glm::vec2& nodePosition,
-    const glm::vec2& nodeSize,
-    int pinIndex,
-    int totalOutputPins
-) const {
-    if (totalOutputPins == 0) return nodePosition + nodeSize;
-
-    float spacing = 60.0f / static_cast<float>(totalOutputPins + 1);
-    float yOffset = spacing * (pinIndex + 1);
-
-    return glm::vec2(nodePosition.x + nodeSize.x, nodePosition.y + yOffset);
-}
-
-// ============================================================================
-// Icon & Asset Management
-// ============================================================================
-
-void ComponentNodeRenderer::SetComponentIcon(
-    const std::string& componentType,
-    const std::string& iconPath
-) {
-    m_componentIcons[componentType] = iconPath;
-}
-
-std::string ComponentNodeRenderer::GetComponentIcon(const std::string& componentType) const {
-    auto it = m_componentIcons.find(componentType);
-    if (it != m_componentIcons.end()) {
-        return it->second;
-    }
-    return "";
-}
-
-// ============================================================================
-// Private Helper Methods
-// ============================================================================
-
-void ComponentNodeRenderer::DrawRoundedRectangle(
-    const glm::vec2& position,
-    const glm::vec2& size,
-    float radius,
-    const glm::vec4& color,
-    float borderWidth
-) {
-    // Placeholder for rounded rectangle drawing
-    // Will use ImGui drawing API
-}
-
-void ComponentNodeRenderer::DrawText(
-    const std::string& text,
-    const glm::vec2& position,
-    const glm::vec4& color,
-    float fontSize
-) {
-    // Placeholder for text drawing
-    // Will use ImGui text rendering
-}
-
-}  // namespace OlympeEngine
+} // namespace Olympe

@@ -1,161 +1,84 @@
 #pragma once
 
-#include "PrefabLoader.h"
-#include <map>
 #include <string>
 #include <vector>
+#include <map>
 #include <memory>
+#include "./../third_party/nlohmann/json.hpp"
+#include "PrefabLoader.h"
 
-namespace OlympeEngine {
+namespace Olympe
+{
+    using json = nlohmann::json;
 
-// ============================================================================
-// ParameterSchemaRegistry - Caches and manages component schemas
-// ============================================================================
+    class ParameterSchemaRegistry
+    {
+    public:
+        static ParameterSchemaRegistry& Get();
 
-class ParameterSchemaRegistry {
-public:
-    // Singleton Pattern
-    static ParameterSchemaRegistry& Get();
+        // Schema registration and retrieval
+        void RegisterSchema(const ComponentSchema& schema);
+        void UnregisterSchema(const std::string& componentName);
+        bool HasSchema(const std::string& componentName) const;
 
-    // Schema Loading
-    void LoadSchemasFromDirectory(const std::string& schemaDirectory);
-    void LoadSchemasFromFile(const std::string& jsonFilePath);
-    void RegisterSchema(const ComponentSchema& schema);
+        const ComponentSchema* GetSchema(const std::string& componentName) const;
+        const std::vector<ComponentSchema>& GetAllSchemas() const;
 
-    // Schema Queries
-    const ComponentSchema* GetSchema(const std::string& componentType) const;
-    bool HasSchema(const std::string& componentType) const;
-    std::vector<std::string> GetAllComponentTypes() const;
-    std::vector<ComponentSchema> GetAllSchemas() const;
+        // Bulk operations
+        void LoadSchemasFromFile(const std::string& filePath);
+        void LoadSchemasFromDirectory(const std::string& directoryPath);
+        void ClearAllSchemas();
 
-    // Parameter Queries
-    const ParameterDefinition* GetParameterDefinition(
-        const std::string& componentType,
-        const std::string& parameterName
-    ) const;
+        // Filtering and search
+        std::vector<std::string> GetSchemaNames() const;
+        std::vector<ComponentSchema> GetSchemasByCategory(const std::string& category) const;
+        std::vector<ComponentSchema> SearchSchemas(const std::string& query) const;
 
-    std::vector<ParameterDefinition> GetComponentParameters(
-        const std::string& componentType
-    ) const;
+        // Categories
+        std::vector<std::string> GetCategories() const;
+        std::vector<ComponentSchema> GetSchemasInCategory(const std::string& category) const;
 
-    bool ValidateParameterValue(
-        const std::string& componentType,
-        const std::string& parameterName,
-        const std::string& value
-    ) const;
+        // Parameter definitions
+        const ParameterDefinition* GetParameterDefinition(
+            const std::string& componentName,
+            const std::string& parameterName) const;
 
-    // Category-based Queries
-    std::vector<std::string> GetComponentsByCategory(const std::string& category) const;
-    std::vector<std::string> GetAllCategories() const;
+        std::vector<ParameterDefinition> GetParametersForComponent(
+            const std::string& componentName) const;
 
-    // Filtering & Search
-    std::vector<std::string> SearchComponents(const std::string& query) const;
-    std::vector<ComponentSchema> FilterByCategory(const std::string& category) const;
+        // Validation
+        bool ValidateComponent(const ComponentData& component) const;
+        bool ValidateParameter(
+            const std::string& componentName,
+            const std::string& parameterName,
+            const std::string& value) const;
 
-    // Schema Update
-    void UpdateSchema(const ComponentSchema& schema);
-    void RemoveSchema(const std::string& componentType);
-    void ClearAllSchemas();
+        // Caching and performance
+        void RebuildCategoryIndex();
+        void ClearCache();
 
-    // Statistics
-    int GetSchemaCount() const;
-    int GetTotalParameterCount() const;
-    int GetParameterCount(const std::string& componentType) const;
+        // Statistics
+        size_t GetSchemaCount() const;
+        size_t GetCategoryCount() const;
+        size_t GetTotalParameterCount() const;
 
-    // Validation
-    bool ValidateSchema(const ComponentSchema& schema) const;
-    std::vector<std::string> GetSchemaValidationErrors() const;
+        // Deprecated schemas
+        bool IsSchemaDeprecated(const std::string& componentName) const;
+        std::vector<ComponentSchema> GetDeprecatedSchemas() const;
 
-    // Default Values
-    std::string GetDefaultValue(
-        const std::string& componentType,
-        const std::string& parameterName
-    ) const;
+    private:
+        ParameterSchemaRegistry();
+        ~ParameterSchemaRegistry();
 
-    // Export/Import
-    std::string ExportSchemasAsJson() const;
-    bool ImportSchemasFromJson(const std::string& jsonContent);
+        // Prevent copying
+        ParameterSchemaRegistry(const ParameterSchemaRegistry&) = delete;
+        ParameterSchemaRegistry& operator=(const ParameterSchemaRegistry&) = delete;
 
-private:
-    ParameterSchemaRegistry() = default;
-    ~ParameterSchemaRegistry() = default;
+        std::vector<ComponentSchema> m_schemas;
+        std::map<std::string, size_t> m_schemaIndex;
+        std::map<std::string, std::vector<size_t>> m_categoryIndex;
 
-    // Disable copy and assignment
-    ParameterSchemaRegistry(const ParameterSchemaRegistry&) = delete;
-    ParameterSchemaRegistry& operator=(const ParameterSchemaRegistry&) = delete;
-
-    // Schema cache
-    std::map<std::string, ComponentSchema> m_schemas;
-    std::map<std::string, std::vector<std::string>> m_categoryIndex;
-
-    // Helper methods
-    void RebuildCategoryIndex();
-    bool ValidateComponentSchema(const ComponentSchema& schema) const;
-    bool ValidateParameterDefinition(const ParameterDefinition& param) const;
-};
-
-// ============================================================================
-// ComponentLibrary - High-level component management
-// ============================================================================
-
-class ComponentLibrary {
-public:
-    static ComponentLibrary& Get();
-
-    // Component Queries
-    std::vector<std::string> GetAvailableComponents() const;
-    std::vector<std::string> GetComponentsByCategory(const std::string& category) const;
-    const ComponentSchema* GetComponentSchema(const std::string& componentType) const;
-
-    // Component Creation
-    ComponentData CreateComponent(
-        const std::string& componentType,
-        const std::string& instanceName
-    ) const;
-
-    ComponentData CreateComponentWithDefaults(const std::string& componentType) const;
-
-    // Component Validation
-    bool ValidateComponent(const ComponentData& component) const;
-    std::vector<std::string> ValidateComponentAndGetErrors(const ComponentData& component) const;
-
-    // Component Properties
-    std::vector<std::string> GetComponentProperties(const std::string& componentType) const;
-    std::string GetPropertyType(
-        const std::string& componentType,
-        const std::string& propertyName
-    ) const;
-
-    bool IsPropertyRequired(
-        const std::string& componentType,
-        const std::string& propertyName
-    ) const;
-
-    std::string GetPropertyDefaultValue(
-        const std::string& componentType,
-        const std::string& propertyName
-    ) const;
-
-    // Component Information
-    std::string GetComponentDescription(const std::string& componentType) const;
-    std::string GetComponentCategory(const std::string& componentType) const;
-
-    // Search & Filter
-    std::vector<std::string> SearchComponents(const std::string& query) const;
-    std::vector<std::string> GetAllCategories() const;
-
-    // Initialization
-    void Initialize(const std::string& schemaDirectory);
-
-private:
-    ComponentLibrary() = default;
-    ~ComponentLibrary() = default;
-
-    // Disable copy and assignment
-    ComponentLibrary(const ComponentLibrary&) = delete;
-    ComponentLibrary& operator=(const ComponentLibrary&) = delete;
-
-    bool m_initialized = false;
-};
-
-}  // namespace OlympeEngine
+        void UpdateIndices();
+        static ParameterSchemaRegistry* s_instance;
+    };
+}

@@ -1,316 +1,100 @@
-#include "PrefabCanvas.h"
-#include <algorithm>
-#include <cmath>
+﻿#include "PrefabCanvas.h"
+#include "ComponentNodeRenderer.h"
+#include "../../Source/third_party/imgui/imgui.h"
 
-namespace OlympeEngine {
+namespace Olympe
+{
+    PrefabCanvas::PrefabCanvas() : m_canvasZoom(1.0f), m_isPanning(false), m_gridSpacing(50.0f), m_showGrid(true), m_showDebugInfo(false)
+    { m_renderer = std::make_unique<ComponentNodeRenderer>(); }
 
-// ============================================================================
-// Constructor & Destructor
-// ============================================================================
+    PrefabCanvas::~PrefabCanvas() { }
 
-PrefabCanvas::PrefabCanvas(std::shared_ptr<EntityPrefabGraphDocument> document)
-    : m_document(document) {
-    // Initialize ImNodes context (placeholder - actual initialization in Render)
-    m_canvasState.panOffset = glm::vec2(0.0f, 0.0f);
-    m_canvasState.zoomLevel = 1.0f;
-}
+    void PrefabCanvas::Initialize(EntityPrefabGraphDocument* document) { m_document = document; if (m_renderer) { m_renderer->Initialize(); } }
 
-PrefabCanvas::~PrefabCanvas() {
-    // Cleanup ImNodes context if needed
-}
-
-// ============================================================================
-// Rendering
-// ============================================================================
-
-void PrefabCanvas::Render(float width, float height) {
-    if (!m_document) return;
-
-    // Update viewport size
-    SetViewportSize(width, height);
-
-    // Render background grid
-    RenderGrid(32.0f);
-
-    // Render connections between nodes
-    RenderConnections();
-
-    // Render all component nodes
-    RenderNodes();
-
-    // Handle input
-    HandleMouseInput();
-    HandleKeyboardInput();
-}
-
-void PrefabCanvas::RenderNodes() {
-    if (!m_document) return;
-
-    auto nodes = m_document->GetAllComponentNodes();
-    for (const auto* node : nodes) {
-        if (node) {
-            RenderNodeInternal(*node);
-        }
-    }
-}
-
-void PrefabCanvas::RenderConnections() {
-    // Placeholder for connection rendering
-    // In Phase 4+, will draw connection lines between nodes
-}
-
-void PrefabCanvas::RenderGrid(float gridSize) {
-    // Placeholder for grid rendering
-    // Will draw grid background using ImGui drawing API
-}
-
-// ============================================================================
-// Input Handling
-// ============================================================================
-
-void PrefabCanvas::HandleMouseInput() {
-    // Placeholder for mouse input handling
-    // Will handle pan, zoom, selection, dragging
-}
-
-void PrefabCanvas::HandleKeyboardInput() {
-    // Placeholder for keyboard input handling
-    // Will handle delete, copy, paste, etc.
-}
-
-// ============================================================================
-// View Control
-// ============================================================================
-
-void PrefabCanvas::Pan(const glm::vec2& offset) {
-    m_canvasState.panOffset += offset;
-
-    // Clamp pan offset
-    m_canvasState.panOffset.x = std::max(m_canvasState.minPan.x, 
-                                        std::min(m_canvasState.panOffset.x, m_canvasState.maxPan.x));
-    m_canvasState.panOffset.y = std::max(m_canvasState.minPan.y, 
-                                        std::min(m_canvasState.panOffset.y, m_canvasState.maxPan.y));
-}
-
-void PrefabCanvas::Zoom(float delta, const glm::vec2& centerPoint) {
-    const float minZoom = 0.1f;
-    const float maxZoom = 5.0f;
-
-    float oldZoom = m_canvasState.zoomLevel;
-    m_canvasState.zoomLevel += delta * 0.1f;
-    m_canvasState.zoomLevel = std::max(minZoom, std::min(maxZoom, m_canvasState.zoomLevel));
-
-    // Adjust pan to zoom around center point
-    float zoomRatio = m_canvasState.zoomLevel / oldZoom;
-    m_canvasState.panOffset = centerPoint + (m_canvasState.panOffset - centerPoint) * zoomRatio;
-}
-
-void PrefabCanvas::FitToView(float padding) {
-    if (!m_document) return;
-
-    auto nodes = m_document->GetAllComponentNodes();
-    if (nodes.empty()) return;
-
-    // Calculate bounding box
-    float minX = std::numeric_limits<float>::max();
-    float maxX = std::numeric_limits<float>::lowest();
-    float minY = std::numeric_limits<float>::max();
-    float maxY = std::numeric_limits<float>::lowest();
-
-    for (const auto* node : nodes) {
-        if (node) {
-            minX = std::min(minX, node->position.x - 100.0f);
-            maxX = std::max(maxX, node->position.x + 100.0f);
-            minY = std::min(minY, node->position.y - 50.0f);
-            maxY = std::max(maxY, node->position.y + 50.0f);
-        }
+    void PrefabCanvas::Render()
+    { 
+        if (!m_document || !m_renderer) { return; }
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+        ImGui::BeginChild("##PrefabCanvas", ImVec2(0, 0), true);
+        if (m_showGrid) { RenderGrid(); }
+        RenderConnections();
+        RenderNodes();
+        if (m_showDebugInfo) { RenderDebugInfo(); }
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
     }
 
-    // Calculate zoom and pan to fit
-    float width = maxX - minX + 2.0f * padding;
-    float height = maxY - minY + 2.0f * padding;
+    void PrefabCanvas::Update(float deltaTime) { (void)deltaTime; }
 
-    float zoomX = m_canvasState.viewportSize.x / width;
-    float zoomY = m_canvasState.viewportSize.y / height;
-    m_canvasState.zoomLevel = std::min(zoomX, zoomY);
+    void PrefabCanvas::OnMouseMove(float x, float y) { m_lastMousePos = Vector(x, y, 0.0f); }
+    void PrefabCanvas::OnMouseDown(int button, float x, float y) { (void)button; m_lastMousePos = Vector(x, y, 0.0f); m_isPanning = true; }
+    void PrefabCanvas::OnMouseUp(int button, float x, float y) { (void)button; (void)x; (void)y; m_isPanning = false; }
+    void PrefabCanvas::OnMouseScroll(float delta) { ZoomCanvas(delta * 0.1f, m_lastMousePos.x, m_lastMousePos.y); }
+    void PrefabCanvas::OnKeyDown(int keyCode) { (void)keyCode; }
+    void PrefabCanvas::OnKeyUp(int keyCode) { (void)keyCode; }
 
-    glm::vec2 center = glm::vec2((minX + maxX) / 2.0f, (minY + maxY) / 2.0f);
-    m_canvasState.panOffset = glm::vec2(m_canvasState.viewportSize.x, m_canvasState.viewportSize.y) / 2.0f - center * m_canvasState.zoomLevel;
-}
+    void PrefabCanvas::PanCanvas(float deltaX, float deltaY) { m_canvasOffset.x += deltaX; m_canvasOffset.y += deltaY; }
 
-void PrefabCanvas::ResetView() {
-    m_canvasState.panOffset = glm::vec2(0.0f, 0.0f);
-    m_canvasState.zoomLevel = 1.0f;
-}
-
-// ============================================================================
-// Coordinate Conversion
-// ============================================================================
-
-glm::vec2 PrefabCanvas::ScreenToWorld(const glm::vec2& screenPos) const {
-    return (screenPos - m_canvasState.panOffset) / m_canvasState.zoomLevel;
-}
-
-glm::vec2 PrefabCanvas::WorldToScreen(const glm::vec2& worldPos) const {
-    return worldPos * m_canvasState.zoomLevel + m_canvasState.panOffset;
-}
-
-// ============================================================================
-// Selection
-// ============================================================================
-
-NodeGraph::NodeId PrefabCanvas::GetNodeAtPosition(const glm::vec2& screenPos) {
-    if (!m_document) return NodeGraph::InvalidNodeId;
-
-    glm::vec2 worldPos = ScreenToWorld(screenPos);
-    auto nodes = m_document->GetAllComponentNodes();
-
-    for (const auto* node : nodes) {
-        if (node) {
-            glm::vec2 nodeScreenPos = WorldToScreen(node->position);
-            float distance = glm::distance(nodeScreenPos, screenPos);
-
-            if (distance < 50.0f) {  // Simplified hit test
-                return node->nodeId;
-            }
-        }
+    void PrefabCanvas::ZoomCanvas(float zoomDelta, float centerX, float centerY)
+    { 
+        float oldZoom = m_canvasZoom;
+        m_canvasZoom += zoomDelta;
+        if (m_canvasZoom < 0.1f) { m_canvasZoom = 0.1f; }
+        if (m_canvasZoom > 3.0f) { m_canvasZoom = 3.0f; }
+        float zoomRatio = m_canvasZoom / oldZoom;
+        m_canvasOffset.x = centerX + (m_canvasOffset.x - centerX) * zoomRatio;
+        m_canvasOffset.y = centerY + (m_canvasOffset.y - centerY) * zoomRatio;
     }
 
-    return NodeGraph::InvalidNodeId;
-}
+    void PrefabCanvas::ResetView() { m_canvasOffset = Vector(0.0f, 0.0f, 0.0f); m_canvasZoom = 1.0f; }
+    void PrefabCanvas::FitToContent() { ResetView(); }
 
-void PrefabCanvas::SelectNode(NodeGraph::NodeId nodeId) {
-    if (m_document) {
-        m_document->SelectNode(nodeId);
+    NodeId PrefabCanvas::GetNodeAtPosition(float x, float y)
+    { 
+        if (!m_document || !m_renderer) { return InvalidNodeId; }
+        Vector pos(x, y, 0.0f);
+        const std::vector<ComponentNode>& nodes = m_document->GetAllNodes();
+        for (size_t i = 0; i < nodes.size(); ++i)
+        { if (m_renderer->IsPointInNode(pos, nodes[i])) { return nodes[i].nodeId; } }
+        return InvalidNodeId;
     }
-}
 
-void PrefabCanvas::DeselectNode(NodeGraph::NodeId nodeId) {
-    if (m_document) {
-        m_document->DeselectNode(nodeId);
+    void PrefabCanvas::SelectNodeAt(float x, float y, bool addToSelection) { (void)addToSelection; if (!m_document) { return; } NodeId nodeId = GetNodeAtPosition(x, y); if (nodeId != InvalidNodeId) { m_document->SelectNode(nodeId); } }
+    void PrefabCanvas::ClearSelection() { if (m_document) { m_document->DeselectAll(); } }
+
+    void PrefabCanvas::SetGridEnabled(bool enabled) { m_showGrid = enabled; }
+    bool PrefabCanvas::IsGridEnabled() const { return m_showGrid; }
+    void PrefabCanvas::SetGridSpacing(float spacing) { m_gridSpacing = spacing; }
+    float PrefabCanvas::GetGridSpacing() const { return m_gridSpacing; }
+    void PrefabCanvas::SetShowDebugInfo(bool show) { m_showDebugInfo = show; }
+    bool PrefabCanvas::GetShowDebugInfo() const { return m_showDebugInfo; }
+
+    Vector PrefabCanvas::GetCanvasOffset() const { return m_canvasOffset; }
+    void PrefabCanvas::SetCanvasOffset(const Vector& offset) { m_canvasOffset = offset; }
+    float PrefabCanvas::GetCanvasZoom() const { return m_canvasZoom; }
+    void PrefabCanvas::SetCanvasZoom(float zoom) { m_canvasZoom = zoom; }
+
+    Vector PrefabCanvas::ScreenToCanvas(float screenX, float screenY) const
+    { Vector screen(screenX, screenY, 0.0f); screen.x = (screen.x - m_canvasOffset.x) / m_canvasZoom; screen.y = (screen.y - m_canvasOffset.y) / m_canvasZoom; return screen; }
+
+    Vector PrefabCanvas::CanvasToScreen(float canvasX, float canvasY) const
+    { Vector canvas(canvasX, canvasY, 0.0f); canvas.x = canvas.x * m_canvasZoom + m_canvasOffset.x; canvas.y = canvas.y * m_canvasZoom + m_canvasOffset.y; return canvas; }
+
+    void PrefabCanvas::RenderGrid()
+    { 
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        ImVec2 canvasPos = ImGui::GetCursorScreenPos();
+        ImVec2 canvasSize = ImGui::GetContentRegionAvail();
+        ImU32 gridColor = ImGui::GetColorU32(ImVec4(0.4f, 0.4f, 0.4f, 0.3f));
+        for (float x = 0; x < canvasSize.x; x += m_gridSpacing)
+        { drawList->AddLine(ImVec2(canvasPos.x + x, canvasPos.y), ImVec2(canvasPos.x + x, canvasPos.y + canvasSize.y), gridColor); }
+        for (float y = 0; y < canvasSize.y; y += m_gridSpacing)
+        { drawList->AddLine(ImVec2(canvasPos.x, canvasPos.y + y), ImVec2(canvasPos.x + canvasSize.x, canvasPos.y + y), gridColor); }
     }
-}
 
-void PrefabCanvas::DeselectAll() {
-    if (m_document) {
-        m_document->DeselectAll();
-    }
-}
+    void PrefabCanvas::RenderNodes() { if (!m_document || !m_renderer) { return; } m_renderer->RenderNodes(m_document); }
+    void PrefabCanvas::RenderConnections() { if (!m_document || !m_renderer) { return; } m_renderer->RenderConnections(m_document); }
+    void PrefabCanvas::RenderDebugInfo() { ImGui::Text("Zoom: %.2f", m_canvasZoom); ImGui::Text("Offset: %.0f, %.0f", m_canvasOffset.x, m_canvasOffset.y); }
+    void PrefabCanvas::RenderSelectionBox() { }
 
-void PrefabCanvas::SelectMultiple(const std::vector<NodeGraph::NodeId>& nodeIds) {
-    if (!m_document) return;
-
-    m_document->DeselectAll();
-    for (NodeGraph::NodeId nodeId : nodeIds) {
-        m_document->SelectNode(nodeId);
-    }
-}
-
-// ============================================================================
-// Node Creation & Removal
-// ============================================================================
-
-void PrefabCanvas::CreateComponentNode(const std::string& componentType, const glm::vec2& screenPos) {
-    if (!m_document) return;
-
-    glm::vec2 worldPos = ScreenToWorld(screenPos);
-    m_document->CreateComponentNode(componentType, componentType + "_node", worldPos);
-}
-
-void PrefabCanvas::RemoveSelectedNodes() {
-    if (!m_document) return;
-
-    auto selected = m_document->GetSelectedNodes();
-    for (NodeGraph::NodeId nodeId : selected) {
-        m_document->RemoveComponentNode(nodeId);
-    }
-}
-
-void PrefabCanvas::DuplicateSelectedNodes() {
-    // Placeholder for Phase 3+
-}
-
-// ============================================================================
-// Properties Panel Integration
-// ============================================================================
-
-void PrefabCanvas::SetSelectedNodeProperties(const std::map<std::string, std::string>& properties) {
-    // Placeholder for Phase 3+
-}
-
-std::map<std::string, std::string> PrefabCanvas::GetSelectedNodeProperties() const {
-    return {};  // Placeholder
-}
-
-// ============================================================================
-// Connection Management
-// ============================================================================
-
-bool PrefabCanvas::CanConnect(NodeGraph::NodeId fromNode, NodeGraph::NodeId toNode) const {
-    if (!m_document) return false;
-
-    auto from = m_document->GetComponentNode(fromNode);
-    auto to = m_document->GetComponentNode(toNode);
-
-    if (!from || !to) return false;
-    if (from->isEntityCenter && to->isEntityCenter) return false;
-
-    return true;
-}
-
-void PrefabCanvas::CreateConnection(NodeGraph::NodeId fromNode, NodeGraph::NodeId toNode) {
-    if (CanConnect(fromNode, toNode)) {
-        // Placeholder for Phase 4+
-    }
-}
-
-void PrefabCanvas::RemoveConnection(NodeGraph::NodeId fromNode, NodeGraph::NodeId toNode) {
-    // Placeholder for Phase 4+
-}
-
-// ============================================================================
-// Viewport Management
-// ============================================================================
-
-void PrefabCanvas::SetViewportSize(float width, float height) {
-    m_canvasState.viewportSize = glm::vec2(width, height);
-}
-
-// ============================================================================
-// History & Notifications
-// ============================================================================
-
-void PrefabCanvas::NotifyNodeMoved(NodeGraph::NodeId nodeId, const glm::vec2& oldPos, const glm::vec2& newPos) {
-    // Placeholder for Phase 5+ undo/redo
-}
-
-void PrefabCanvas::NotifyNodeDeleted(NodeGraph::NodeId nodeId) {
-    // Placeholder for Phase 5+ undo/redo
-}
-
-void PrefabCanvas::NotifyNodeCreated(NodeGraph::NodeId nodeId, const std::string& componentType) {
-    // Placeholder for Phase 5+ undo/redo
-}
-
-// ============================================================================
-// Private Helpers
-// ============================================================================
-
-void PrefabCanvas::UpdateCanvasInteraction() {
-    // Placeholder for interaction updates
-}
-
-void PrefabCanvas::RenderNodeInternal(const ComponentNode& node) {
-    // Placeholder for actual node rendering
-    // Will use ImGui drawing or ImNodes API
-}
-
-void PrefabCanvas::RenderConnectionLine(const glm::vec2& from, const glm::vec2& to) {
-    // Placeholder for connection line rendering
-}
-
-ComponentNode* PrefabCanvas::GetNodeFromImNodesContext(NodeGraph::NodeId nodeId) {
-    return m_document ? m_document->GetComponentNode(nodeId) : nullptr;
-}
-
-}  // namespace OlympeEngine
+} // namespace Olympe

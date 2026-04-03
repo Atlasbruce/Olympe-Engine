@@ -218,14 +218,8 @@
     <ClCompile Include="Source\BlueprintEditor\VisualScriptEditorPanel_Verification.cpp" />
     <ClCompile Include="Source\Editor\Modals\SwitchCaseEditorModal.cpp" />
     <ClCompile Include="Source\Editor\Modals\SubGraphFilePickerModal.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabEditorPlugin.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -479,7 +473,6 @@
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.h" />
-    <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabEditorPlugin.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -529,14 +522,7 @@
     <None Include="NODE_SIZING_AUDIT.md" />
     <None Include="NODE_SIZING_IMPLEMENTATION_REPORT.md" />
     <None Include="NODE_SIZING_SUMMARY.md" />
-    <None Include="Documentation\ENTITY_PREFAB_EDITOR_INTEGRATION_PLAN.md" />
-    <None Include="Documentation\ENTITY_PREFAB_EDITOR_CODE_STRUCTURE.md" />
-    <None Include="Documentation\ENTITY_PREFAB_EDITOR_PHASE1_IMPLEMENTATION.md" />
-    <None Include="Documentation\ENTITY_PREFAB_EDITOR_EXECUTIVE_SUMMARY.md" />
-    <None Include="Documentation\ENTITY_PREFAB_EDITOR_READING_GUIDE.md" />
-    <None Include="Documentation\00_ENTITY_PREFAB_EDITOR_INDEX.md" />
-    <None Include="Documentation\00_COMPLETION_SUMMARY.md" />
-    <None Include="Source\BlueprintEditor\EntityPrefabEditor\README.md" />
+    <None Include="Source\BlueprintEditor\EntityPrefabEditor\IMPLEMENTATION.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

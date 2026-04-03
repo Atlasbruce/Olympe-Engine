@@ -41,6 +41,13 @@
     <ClCompile Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BTtoVSMigrator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\ConditionRegistry.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\MiniMapPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\MinimapWidget.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\NodePresets.cpp" />
@@ -580,5 +587,3 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
-
-

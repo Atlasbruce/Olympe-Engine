@@ -1,112 +1,80 @@
 #pragma once
 
-#include "EntityPrefabGraphDocument.h"
-#include "ComponentNodeData.h"
-#include <glm/glm.hpp>
+#include <string>
 #include <memory>
-#include <vector>
+#include "./../../vector.h"
+#include "EntityPrefabGraphDocument.h"
 
-namespace OlympeEngine {
+namespace Olympe
+{
+    // Forward declarations
+    class ComponentNodeRenderer;
 
-// ============================================================================
-// PrefabCanvas - ImNodes wrapper for prefab visualization
-// ============================================================================
+    class PrefabCanvas
+    {
+    public:
+        PrefabCanvas();
+        ~PrefabCanvas();
 
-struct CanvasState {
-    glm::vec2 panOffset = glm::vec2(0.0f);
-    float zoomLevel = 1.0f;
-    bool isDragging = false;
-    NodeGraph::NodeId draggedNodeId = NodeGraph::InvalidNodeId;
-    glm::vec2 dragStartPosition = glm::vec2(0.0f);
-    bool canvasHovered = false;
+        void Initialize(EntityPrefabGraphDocument* document);
+        void Render();
+        void Update(float deltaTime);
 
-    // View bounds
-    glm::vec2 viewportSize = glm::vec2(800.0f, 600.0f);
-    glm::vec2 minPan = glm::vec2(-10000.0f);
-    glm::vec2 maxPan = glm::vec2(10000.0f);
-};
+        // Input handling
+        void OnMouseMove(float x, float y);
+        void OnMouseDown(int button, float x, float y);
+        void OnMouseUp(int button, float x, float y);
+        void OnMouseScroll(float delta);
+        void OnKeyDown(int keyCode);
+        void OnKeyUp(int keyCode);
 
-class PrefabCanvas {
-public:
-    PrefabCanvas(std::shared_ptr<EntityPrefabGraphDocument> document);
-    ~PrefabCanvas();
+        // Canvas manipulation
+        void PanCanvas(float deltaX, float deltaY);
+        void ZoomCanvas(float zoomDelta, float centerX, float centerY);
+        void ResetView();
+        void FitToContent();
 
-    // Rendering
-    void Render(float width, float height);
-    void RenderNodes();
-    void RenderConnections();
-    void RenderGrid(float gridSize = 32.0f);
+        // Node interaction
+        NodeId GetNodeAtPosition(float x, float y);
+        void SelectNodeAt(float x, float y, bool addToSelection = false);
+        void ClearSelection();
 
-    // Input Handling
-    void HandleMouseInput();
-    void HandleKeyboardInput();
-    bool IsCanvasHovered() const { return m_canvasState.canvasHovered; }
+        // Display properties
+        void SetGridEnabled(bool enabled);
+        bool IsGridEnabled() const;
 
-    // View Control
-    void Pan(const glm::vec2& offset);
-    void Zoom(float delta, const glm::vec2& centerPoint);
-    void FitToView(float padding = 50.0f);
-    void ResetView();
+        void SetGridSpacing(float spacing);
+        float GetGridSpacing() const;
 
-    // Coordinate Conversion
-    glm::vec2 ScreenToWorld(const glm::vec2& screenPos) const;
-    glm::vec2 WorldToScreen(const glm::vec2& worldPos) const;
+        void SetShowDebugInfo(bool show);
+        bool GetShowDebugInfo() const;
 
-    // Selection
-    NodeGraph::NodeId GetNodeAtPosition(const glm::vec2& screenPos);
-    void SelectNode(NodeGraph::NodeId nodeId);
-    void DeselectNode(NodeGraph::NodeId nodeId);
-    void DeselectAll();
-    void SelectMultiple(const std::vector<NodeGraph::NodeId>& nodeIds);
+        // Canvas state
+        Vector GetCanvasOffset() const;
+        void SetCanvasOffset(const Vector& offset);
 
-    // Node Creation & Removal
-    void CreateComponentNode(const std::string& componentType, const glm::vec2& screenPos);
-    void RemoveSelectedNodes();
-    void DuplicateSelectedNodes();
+        float GetCanvasZoom() const;
+        void SetCanvasZoom(float zoom);
 
-    // Properties Panel Integration
-    void SetSelectedNodeProperties(const std::map<std::string, std::string>& properties);
-    std::map<std::string, std::string> GetSelectedNodeProperties() const;
+        Vector ScreenToCanvas(float screenX, float screenY) const;
+        Vector CanvasToScreen(float canvasX, float canvasY) const;
 
-    // State Access
-    const CanvasState& GetState() const { return m_canvasState; }
-    CanvasState& GetState() { return m_canvasState; }
+    private:
+        EntityPrefabGraphDocument* m_document = nullptr;
+        std::unique_ptr<ComponentNodeRenderer> m_renderer;
 
-    // Connection Management
-    bool CanConnect(NodeGraph::NodeId fromNode, NodeGraph::NodeId toNode) const;
-    void CreateConnection(NodeGraph::NodeId fromNode, NodeGraph::NodeId toNode);
-    void RemoveConnection(NodeGraph::NodeId fromNode, NodeGraph::NodeId toNode);
+        Vector m_canvasOffset;
+        float m_canvasZoom = 1.0f;
+        Vector m_lastMousePos;
+        bool m_isPanning = false;
+        float m_gridSpacing = 50.0f;
+        bool m_showGrid = true;
+        bool m_showDebugInfo = false;
 
-    // Viewport Management
-    void SetViewportSize(float width, float height);
-    glm::vec2 GetViewportSize() const { return m_canvasState.viewportSize; }
-
-    // History & Undo/Redo (placeholder for Phase 2)
-    void NotifyNodeMoved(NodeGraph::NodeId nodeId, const glm::vec2& oldPos, const glm::vec2& newPos);
-    void NotifyNodeDeleted(NodeGraph::NodeId nodeId);
-    void NotifyNodeCreated(NodeGraph::NodeId nodeId, const std::string& componentType);
-
-private:
-    std::shared_ptr<EntityPrefabGraphDocument> m_document;
-    CanvasState m_canvasState;
-
-    // ImNodes context (not directly exposed, managed internally)
-    void* m_imNodesContext = nullptr;
-
-    // Helper methods
-    void UpdateCanvasInteraction();
-    void RenderNodeInternal(const ComponentNode& node);
-    void RenderConnectionLine(const glm::vec2& from, const glm::vec2& to);
-    ComponentNode* GetNodeFromImNodesContext(NodeGraph::NodeId nodeId);
-
-    // Input state tracking
-    struct InputState {
-        bool mouseLeftPressed = false;
-        bool mouseRightPressed = false;
-        bool mouseMidPressed = false;
-        glm::vec2 mousePosition = glm::vec2(0.0f);
-        glm::vec2 mouseLastPosition = glm::vec2(0.0f);
-    } m_inputState;
-};
-
-}  // namespace OlympeEngine
+        void RenderGrid();
+        void RenderNodes();
+        void RenderConnections();
+        void RenderDebugInfo();
+        void RenderSelectionBox();
+    };
+}
