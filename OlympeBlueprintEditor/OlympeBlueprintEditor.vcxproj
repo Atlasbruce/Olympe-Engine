@@ -46,6 +46,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\NodePropertiesPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp" />
@@ -262,6 +263,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\NodePropertiesPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.h" />

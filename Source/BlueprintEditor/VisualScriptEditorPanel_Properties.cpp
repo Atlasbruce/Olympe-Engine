@@ -1462,6 +1462,29 @@ void VisualScriptEditorPanel::RenderProperties()
 
 void VisualScriptEditorPanel::RenderNodePropertiesPanel()
 {
+    // Phase 31 — Top panel with tabs: Properties | Nodes
+    if (ImGui::BeginTabBar("TopPanelTabs", ImGuiTabBarFlags_None))
+    {
+        // Tab 0: Properties (node metadata and type-specific properties)
+        if (ImGui::BeginTabItem("Properties"))
+        {
+            RenderNodePropertiesPanelContent();
+            ImGui::EndTabItem();
+        }
+
+        // Tab 1: Nodes (available node types for dragging onto canvas)
+        if (ImGui::BeginTabItem("Nodes"))
+        {
+            RenderAvailableNodesList();
+            ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
+    }
+}
+
+void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
+{
     ImGui::TextDisabled("Node Properties");
 
     if (m_selectedNodeID < 0)
@@ -1952,6 +1975,174 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanel()
                                                 m_template.Name,
                                                 def.NodeName);
     }
+}
+
+void VisualScriptEditorPanel::RenderAvailableNodesList()
+{
+    ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "Drag nodes to the graph to add them");
+    ImGui::Separator();
+
+    // Search filter
+    static char searchFilter[256] = "";
+    ImGui::SetNextItemWidth(-1.0f);
+    ImGui::InputTextWithHint("##search_nodes", "Search nodes...", searchFilter, sizeof(searchFilter));
+    ImGui::Separator();
+
+    // Define node types by category
+    struct NodeTypeInfo {
+        TaskNodeType type;
+        const char* name;
+        const char* description;
+        int category; // category index
+    };
+
+    // Helper array for node type info
+    const NodeTypeInfo nodeTypesArray[] = {
+        // Flow Control (category 1)
+        { TaskNodeType::EntryPoint, "EntryPoint", "Start of the graph", 1 },
+        { TaskNodeType::VSSequence, "Sequence", "Execute nodes in order", 1 },
+        { TaskNodeType::Branch, "Branch", "Conditional branching (if-else)", 1 },
+        { TaskNodeType::Switch, "Switch", "Multi-branch selection", 1 },
+        { TaskNodeType::While, "While Loop", "Repeat until condition false", 1 },
+        { TaskNodeType::ForEach, "ForEach", "Iterate over collection", 1 },
+        { TaskNodeType::DoOnce, "DoOnce", "Execute once (with reset)", 1 },
+        { TaskNodeType::SubGraph, "SubGraph", "Reference another graph", 1 },
+
+        // Tasks (category 2)
+        { TaskNodeType::AtomicTask, "AtomicTask", "Execute a game task", 2 },
+
+        // Blackboard (category 3)
+        { TaskNodeType::GetBBValue, "GetBBValue", "Read blackboard variable", 3 },
+        { TaskNodeType::SetBBValue, "SetBBValue", "Write blackboard variable", 3 },
+
+        // Math & Logic (category 4)
+        { TaskNodeType::MathOp, "MathOp", "Perform arithmetic", 4 },
+
+        // Advanced (category 5)
+        { TaskNodeType::Delay, "Delay", "Wait for specified time", 5 },
+    };
+
+    const int numNodeTypes = sizeof(nodeTypesArray) / sizeof(nodeTypesArray[0]);
+
+    // Category info: name and index
+    struct CategoryInfo {
+        const char* name;
+        int categoryIndex;
+    };
+
+    const CategoryInfo categories[] = {
+        { "Flow Control", 1 },
+        { "Tasks", 2 },
+        { "Blackboard", 3 },
+        { "Math & Logic", 4 },
+        { "Advanced", 5 }
+    };
+    const int numCategories = sizeof(categories) / sizeof(categories[0]);
+
+    // Helper function for case-insensitive search
+    auto caseInsensitiveContains = [](const char* text, const char* searchStr) -> bool {
+        if (searchStr[0] == '\0')
+            return true;
+
+        // Simple case-insensitive substring search
+        std::string textLower(text);
+        std::string searchLower(searchStr);
+        for (size_t i = 0; i < textLower.length(); ++i) {
+            if (textLower[i] >= 'A' && textLower[i] <= 'Z') {
+                textLower[i] = textLower[i] + ('a' - 'A');
+            }
+        }
+        for (size_t i = 0; i < searchLower.length(); ++i) {
+            if (searchLower[i] >= 'A' && searchLower[i] <= 'Z') {
+                searchLower[i] = searchLower[i] + ('a' - 'A');
+            }
+        }
+        return textLower.find(searchLower) != std::string::npos;
+    };
+
+    // Render node list with hierarchical categories
+    ImGui::BeginChild("NodeList", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+
+    // Push smaller font size for compact display
+    ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]);
+
+    // Iterate through categories
+    for (int catIdx = 0; catIdx < numCategories; ++catIdx)
+    {
+        const CategoryInfo& category = categories[catIdx];
+
+        // Count nodes in this category that match search
+        int matchingCount = 0;
+        for (int i = 0; i < numNodeTypes; ++i)
+        {
+            if (nodeTypesArray[i].category == category.categoryIndex &&
+                caseInsensitiveContains(nodeTypesArray[i].name, searchFilter))
+            {
+                matchingCount++;
+            }
+        }
+
+        // Skip category if no matching nodes
+        if (matchingCount == 0)
+            continue;
+
+        // Render collapsible category header (compact style)
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 2.0f));
+        bool categoryOpen = ImGui::CollapsingHeader(category.name, ImGuiTreeNodeFlags_DefaultOpen);
+        ImGui::PopStyleVar();
+
+        if (categoryOpen)
+        {
+            // Render nodes in this category
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 0.0f));
+            for (int i = 0; i < numNodeTypes; ++i)
+            {
+                const NodeTypeInfo& nodeInfo = nodeTypesArray[i];
+
+                // Check category match
+                if (nodeInfo.category != category.categoryIndex)
+                    continue;
+
+                // Check search filter
+                if (!caseInsensitiveContains(nodeInfo.name, searchFilter))
+                    continue;
+
+                // Render node as selectable item with drag-drop support
+                ImGui::Indent(10.0f);
+                bool selected = false;
+                ImGui::Selectable(nodeInfo.name, &selected, 0, ImVec2(0, 16));
+
+                // Drag-drop source for node type
+                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+                {
+                    // Store the node type as payload (ENUM format)
+                    uint8_t nodeTypeInt = static_cast<uint8_t>(nodeInfo.type);
+                    ImGui::SetDragDropPayload("VS_NODE_TYPE_ENUM", &nodeTypeInt, sizeof(uint8_t));
+
+                    // Preview
+                    ImGui::Text("Node: %s", nodeInfo.name);
+                    ImGui::EndDragDropSource();
+                }
+
+                // Tooltip on hover
+                if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+                {
+                    ImGui::SetTooltip("%s", nodeInfo.description);
+                }
+
+                ImGui::Unindent(10.0f);
+            }
+            ImGui::PopStyleVar();
+        }
+    }
+
+    ImGui::PopFont();
+    ImGui::EndChild();
+
+    // Tip text at bottom
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 0.7f));
+    ImGui::TextWrapped("Tip: Drag & drop nodes onto the graph canvas");
+    ImGui::PopStyleColor();
 }
 
 } // namespace Olympe

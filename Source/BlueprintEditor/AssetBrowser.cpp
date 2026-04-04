@@ -210,51 +210,34 @@ namespace Olympe
 
     void AssetBrowser::RenderContent()
     {
-        // ===== USE TABS TO SEPARATE FILES AND RUNTIME ENTITIES =====
-        if (ImGui::BeginTabBar("AssetBrowserTabs"))
+        // ===== Blueprint Files (Node Palette now integrated into right panel) =====
+        // Render the tree with filter UI
+        RenderFilterUI();
+
+        ImGui::Separator();
+
+        // Get asset tree from backend
+        auto rootNode = BlueprintEditor::Get().GetAssetTree();
+
+        if (rootNode)
         {
-            // ===== TAB 1: Blueprint Files =====
-            if (ImGui::BeginTabItem("Blueprint Files"))
+            // Render the tree starting from children (skip root "Blueprints" node)
+            for (const auto& child : rootNode->children)
+                RenderTreeNode(child);
+        }
+        else
+        {
+            // Check if backend has an error
+            if (BlueprintEditor::Get().HasError())
             {
-                RenderFilterUI();
-
-                ImGui::Separator();
-
-                // Get asset tree from backend
-                auto rootNode = BlueprintEditor::Get().GetAssetTree();
-
-                if (rootNode)
-                {
-                    // Render the tree starting from children (skip root "Blueprints" node)
-                    for (const auto& child : rootNode->children)
-                        RenderTreeNode(child);
-                }
-                else
-                {
-                    // Check if backend has an error
-                    if (BlueprintEditor::Get().HasError())
-                    {
-                        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), 
-                            "Error: %s", BlueprintEditor::Get().GetLastError().c_str());
-                    }
-                    else
-                    {
-                        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
-                            "No blueprint files found.");
-                    }
-                }
-
-                ImGui::EndTabItem();
+                ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), 
+                    "Error: %s", BlueprintEditor::Get().GetLastError().c_str());
             }
-
-            // ===== TAB 2: Node Palette =====
-            if (ImGui::BeginTabItem("Nodes"))
+            else
             {
-                RenderNodePalette();
-                ImGui::EndTabItem();
+                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), 
+                    "No blueprint files found.");
             }
-
-            ImGui::EndTabBar();
         }
     }
     

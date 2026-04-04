@@ -37,6 +37,18 @@
       "fromPin": "Case_4",
       "toNode": 7,
       "toPin": "In"
+    },
+    {
+      "fromNode": 7,
+      "fromPin": "Completed",
+      "toNode": 8,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "Completed",
+      "toNode": 8,
+      "toPin": "In"
     }
   ],
   "globalVariableValues": {
@@ -282,6 +294,30 @@
       },
       "taskType": "log_message",
       "type": "AtomicTask"
+    },
+    {
+      "id": 8,
+      "label": "SubGraph",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1146,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 470,
+          "Type": "Literal"
+        },
+        "subgraph_path": {
+          "LiteralValue": "AI\\Boss1.ats",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1096,
+        "y": 203
+      },
+      "subGraphPath": "AI\\Boss1.ats",
+      "type": "SubGraph"
     }
   ],
   "schema_version": 4

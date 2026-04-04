@@ -6,6 +6,9 @@
 #include "./../../vector.h"
 #include "EntityPrefabGraphDocument.h"
 
+// Forward declaration for NodePropertiesPanel stub (moved to PropertyEditorPanel)
+class NodePropertiesPanel;
+
 namespace Olympe
 {
     class PropertyEditorPanel

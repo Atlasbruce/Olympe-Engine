@@ -20,12 +20,10 @@ namespace Olympe
         if (!document) { return; }
         m_document = document;
 
-        ImGui::BeginChild("##PropertyPanel", ImVec2(0, 0), true);
-
         if (m_selectedNodeId == InvalidNodeId)
         {
             ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No node selected");
-            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Select a node to edit properties");
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Select a node to edit component properties");
         }
         else
         {
@@ -42,8 +40,6 @@ namespace Olympe
                 m_selectedNodeId = InvalidNodeId;
             }
         }
-
-        ImGui::EndChild();
     }
 
     void PropertyEditorPanel::SetSelectedNode(NodeId nodeId)
@@ -77,18 +73,14 @@ namespace Olympe
 
     void PropertyEditorPanel::RenderNodeInfo()
     {
+        // This method is kept for backward compatibility but now only shows
+        // component name since node metadata is now in NodePropertiesPanel
         const ComponentNode* node = m_document->GetNode(m_selectedNodeId);
         if (!node) { return; }
 
-        ImGui::TextUnformatted("Node Info");
-        ImGui::Spacing();
-
-        ImGui::BulletText("Node ID: %d", node->nodeId);
-        ImGui::BulletText("Component Type: %s", node->componentType.c_str());
-        ImGui::BulletText("Component Name: %s", node->componentName.c_str());
-        ImGui::BulletText("Position: (%.1f, %.1f, %.1f)", node->position.x, node->position.y, node->position.z);
-        ImGui::BulletText("Size: (%.1f, %.1f, %.1f)", node->size.x, node->size.y, node->size.z);
-        ImGui::BulletText("Enabled: %s", node->enabled ? "Yes" : "No");
+        ImGui::TextColored(ImVec4(0.5f, 0.7f, 1.0f, 1.0f), "Component:");
+        ImGui::SameLine();
+        ImGui::TextUnformatted(node->componentType.c_str());
     }
 
     void PropertyEditorPanel::RenderNodeProperties()

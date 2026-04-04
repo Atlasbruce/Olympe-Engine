@@ -348,6 +348,12 @@ private:
     /// Part A: Node Properties panel (top-left of right panel)
     void RenderNodePropertiesPanel();
 
+    /// Phase 31 — Content of Properties tab in Part A
+    void RenderNodePropertiesPanelContent();
+
+    /// Phase 31 — Nodes list tab in Part A (available nodes for dragging to canvas)
+    void RenderAvailableNodesList();
+
     /// Phase 24 — Property panel renderers for While, ForEach, and SubGraph nodes
     void RenderWhileNodeProperties();
     void RenderForEachNodeProperties();
@@ -929,6 +935,10 @@ private:
     /// Phase 26 — Right panel tab selection
     /// 0 = Presets, 1 = Local Variables, 2 = Global Variables
     int m_rightPanelTabSelection = 0;
+
+    /// Top panel tab selection (Part A of right panel)
+    /// 0 = Properties, 1 = Nodes
+    int m_topPanelTabSelection = 0;
 };
 
 } // namespace Olympe
