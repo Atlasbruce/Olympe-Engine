@@ -16,13 +16,14 @@ namespace Olympe
         node.nodeId = m_nextNodeId++;
         node.componentName = componentName;
         m_nodes.push_back(node);
+        m_isDirty = true;
         return node.nodeId;
     }
 
     void EntityPrefabGraphDocument::RemoveNode(NodeId nodeId)
     { 
         for (size_t i = 0; i < m_nodes.size(); ++i)
-        { if (m_nodes[i].nodeId == nodeId) { m_nodes.erase(m_nodes.begin() + i); break; } }
+        { if (m_nodes[i].nodeId == nodeId) { m_nodes.erase(m_nodes.begin() + i); m_isDirty = true; break; } }
     }
 
     bool EntityPrefabGraphDocument::HasNode(NodeId nodeId) const
@@ -83,12 +84,12 @@ namespace Olympe
     void EntityPrefabGraphDocument::CenterViewport() { }
 
     bool EntityPrefabGraphDocument::ConnectNodes(NodeId sourceId, NodeId targetId)
-    { m_connections.push_back(std::make_pair(sourceId, targetId)); return true; }
+    { m_connections.push_back(std::make_pair(sourceId, targetId)); m_isDirty = true; return true; }
 
     bool EntityPrefabGraphDocument::DisconnectNodes(NodeId sourceId, NodeId targetId)
     { 
         for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
-        { if (it->first == sourceId && it->second == targetId) { m_connections.erase(it); return true; } }
+        { if (it->first == sourceId && it->second == targetId) { m_connections.erase(it); m_isDirty = true; return true; } }
         return false;
     }
 
@@ -282,6 +283,7 @@ namespace Olympe
                 ArrangeNodesInGrid(3, 200.0f);  // 3 columns, 200 pixel spacing
             }
 
+            m_isDirty = false;
             return true;
         }
         catch (const std::exception& e)
@@ -291,7 +293,93 @@ namespace Olympe
         }
     }
 
-    bool EntityPrefabGraphDocument::SaveToFile(const std::string& filePath) { (void)filePath; return false; }
+    bool EntityPrefabGraphDocument::SaveToFile(const std::string& filePath)
+    {
+        try
+        {
+            SYSTEM_LOG << "[EntityPrefabGraphDocument::SaveToFile] Starting save to: " << filePath << "\n";
+
+            // Create JSON structure matching the load format
+            json data = json::object();
+            data["blueprintType"] = "EntityPrefab";
+            data["schemaVersion"] = 4;
+
+            json dataObj = json::object();
+
+            // Serialize nodes
+            json nodesArray = json::array();
+            for (size_t i = 0; i < m_nodes.size(); ++i)
+            {
+                const ComponentNode& node = m_nodes[i];
+                json nodeJson = json::object();
+
+                nodeJson["nodeId"] = (int)node.nodeId;
+                nodeJson["componentType"] = node.componentType;
+                nodeJson["componentName"] = node.componentName;
+                nodeJson["enabled"] = node.enabled;
+                nodeJson["selected"] = node.selected;
+
+                // Serialize position
+                json posJson = json::object();
+                posJson["x"] = node.position.x;
+                posJson["y"] = node.position.y;
+                posJson["z"] = node.position.z;
+                nodeJson["position"] = posJson;
+
+                // Serialize size
+                json sizeJson = json::object();
+                sizeJson["x"] = node.size.x;
+                sizeJson["y"] = node.size.y;
+                sizeJson["z"] = node.size.z;
+                nodeJson["size"] = sizeJson;
+
+                // Serialize properties
+                json propsJson = json::object();
+                for (auto it = node.properties.begin(); it != node.properties.end(); ++it)
+                {
+                    propsJson[it->first] = it->second;
+                }
+                nodeJson["properties"] = propsJson;
+
+                nodesArray.push_back(nodeJson);
+            }
+            dataObj["nodes"] = nodesArray;
+
+            // Serialize connections
+            json connectionsArray = json::array();
+            for (size_t i = 0; i < m_connections.size(); ++i)
+            {
+                json connJson = json::object();
+                connJson["sourceNodeId"] = (int)m_connections[i].first;
+                connJson["targetNodeId"] = (int)m_connections[i].second;
+                connectionsArray.push_back(connJson);
+            }
+            dataObj["connections"] = connectionsArray;
+
+            // Serialize canvas state
+            json canvasStateJson = json::object();
+            canvasStateJson["zoom"] = m_canvasZoom;
+            canvasStateJson["offsetX"] = m_canvasOffset.x;
+            canvasStateJson["offsetY"] = m_canvasOffset.y;
+            dataObj["canvasState"] = canvasStateJson;
+
+            data["data"] = dataObj;
+
+            // Save JSON to file
+            PrefabLoader::SaveJsonToFile(filePath, data);
+
+            SYSTEM_LOG << "[EntityPrefabGraphDocument::SaveToFile] SUCCESS: Saved " << m_nodes.size() 
+                      << " nodes and " << m_connections.size() << " connections\n";
+
+            m_isDirty = false;
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            SYSTEM_LOG << "[EntityPrefabGraphDocument::SaveToFile] EXCEPTION: " << e.what() << "\n";
+            return false;
+        }
+    }
 
     void EntityPrefabGraphDocument::SetDocumentName(const std::string& name) { m_documentName = name; }
     std::string EntityPrefabGraphDocument::GetDocumentName() const { return m_documentName; }
@@ -302,8 +390,11 @@ namespace Olympe
     float EntityPrefabGraphDocument::GetCanvasZoom() const { return m_canvasZoom; }
     void EntityPrefabGraphDocument::SetCanvasZoom(float zoom) { m_canvasZoom = zoom; }
 
-    void EntityPrefabGraphDocument::Clear() { m_nodes.clear(); m_selectedNodes.clear(); m_connections.clear(); m_nextNodeId = 1; }
+    void EntityPrefabGraphDocument::Clear() { m_nodes.clear(); m_selectedNodes.clear(); m_connections.clear(); m_nextNodeId = 1; m_isDirty = false; }
     size_t EntityPrefabGraphDocument::GetNodeCount() const { return m_nodes.size(); }
+
+    bool EntityPrefabGraphDocument::IsDirty() const { return m_isDirty; }
+    void EntityPrefabGraphDocument::SetDirty(bool dirty) { m_isDirty = dirty; }
 
     std::vector<LayoutNode> EntityPrefabGraphDocument::CalculateLayout() { return std::vector<LayoutNode>(); }
 

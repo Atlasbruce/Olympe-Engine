@@ -105,6 +105,12 @@ bool EntityPrefabRenderer::Save(const std::string& path)
 
 bool EntityPrefabRenderer::IsDirty() const
 {
+    // Check both the document's dirty flag and track modifications
+    EntityPrefabGraphDocument* document = m_canvas.GetDocument();
+    if (document != nullptr)
+    {
+        return document->IsDirty();
+    }
     return m_isDirty;
 }
 

@@ -74,6 +74,10 @@ namespace Olympe
         void Clear();
         size_t GetNodeCount() const;
 
+        // Dirty flag tracking
+        bool IsDirty() const;
+        void SetDirty(bool dirty);
+
     private:
         std::vector<ComponentNode> m_nodes;
         std::vector<NodeId> m_selectedNodes;
@@ -82,6 +86,7 @@ namespace Olympe
         Vector m_canvasOffset;
         float m_canvasZoom = 1.0f;
         NodeId m_nextNodeId = 1;
+        bool m_isDirty = false;
 
         NodeId GenerateNodeId();
         std::vector<LayoutNode> CalculateLayout();

@@ -1,101 +1,11 @@
 {
-  "schema_version": 4,
-  "type": "Guard",
   "blueprintType": "EntityPrefab",
-  "name": "Guard",
-  "description": "Guard NPC with full AI combat capabilities",
-  "metadata": {
-    "author": "Atlasbruce",
-    "created": "2026-01-08T10:00:00Z",
-    "lastModified": "2026-01-08T10:00:00Z",
-    "tags": ["Guard", "NPC", "Combat", "AI"]
-  },
   "data": {
-    "prefabName": "Guard",
-    "nodes": [
-      {
-        "nodeId": 1,
-        "componentType": "Identity_data",
-        "componentName": "Identity",
-        "position": { "x": 0.0, "y": 0.0, "z": 0.0 },
-        "size": { "x": 120.0, "y": 60.0, "z": 0.0 },
-        "enabled": true,
-        "selected": false,
-        "properties": {
-          "name": "Guard_{id}",
-          "tag": "Guard",
-          "entityType": "Guard"
-        }
-      },
-      {
-        "nodeId": 2,
-        "componentType": "Movement_data",
-        "componentName": "Movement",
-        "position": { "x": 140.0, "y": 0.0, "z": 0.0 },
-        "size": { "x": 120.0, "y": 60.0, "z": 0.0 },
-        "enabled": true,
-        "selected": false,
-        "properties": {
-          "speed": 90.0,
-          "acceleration": 450.0
-        }
-      },
-      {
-        "nodeId": 3,
-        "componentType": "VisualSprite_data",
-        "componentName": "Sprite",
-        "position": { "x": 280.0, "y": 0.0, "z": 0.0 },
-        "size": { "x": 120.0, "y": 60.0, "z": 0.0 },
-        "enabled": true,
-        "selected": false,
-        "properties": {
-          "spritePath": "./Resources/Sprites/guard.png",
-          "width": 32,
-          "height": 32,
-          "layer": 1
-        }
-      },
-      {
-        "nodeId": 4,
-        "componentType": "Health_data",
-        "componentName": "Health",
-        "position": { "x": 420.0, "y": 0.0, "z": 0.0 },
-        "size": { "x": 120.0, "y": 60.0, "z": 0.0 },
-        "enabled": true,
-        "selected": false,
-        "properties": {
-          "maxHealth": 80,
-          "currentHealth": 80,
-          "invulnerable": false
-        }
-      },
-      {
-        "nodeId": 5,
-        "componentType": "AIBlackboard_data",
-        "componentName": "AIBlackboard",
-        "position": { "x": 560.0, "y": 0.0, "z": 0.0 },
-        "size": { "x": 120.0, "y": 60.0, "z": 0.0 },
-        "enabled": true,
-        "selected": false,
-        "properties": {
-          "initialized": true,
-          "patrolRoute": "GuardRoute_A"
-        }
-      },
-      {
-        "nodeId": 6,
-        "componentType": "BehaviorTreeRuntime_data",
-        "componentName": "BehaviorTree",
-        "position": { "x": 700.0, "y": 0.0, "z": 0.0 },
-        "size": { "x": 120.0, "y": 60.0, "z": 0.0 },
-        "enabled": true,
-        "selected": false,
-        "properties": {
-          "AITreePath": "Blueprints/AI/guardV2_ai.json",
-          "active": true
-        }
-      }
-    ],
+    "canvasState": {
+      "offsetX": 0,
+      "offsetY": 0,
+      "zoom": 1
+    },
     "connections": [
       {
         "sourceNodeId": 1,
@@ -118,10 +28,138 @@
         "targetNodeId": 6
       }
     ],
-    "canvasState": {
-      "zoom": 1.0,
-      "offsetX": 0.0,
-      "offsetY": 0.0
-    }
-  }
+    "nodes": [
+      {
+        "componentName": "Identity",
+        "componentType": "Identity_data",
+        "enabled": true,
+        "nodeId": 1,
+        "position": {
+          "x": 100,
+          "y": 50,
+          "z": 0
+        },
+        "properties": {
+          "entityType": "Guard",
+          "name": "Guard_{id}",
+          "tag": "Guard"
+        },
+        "selected": true,
+        "size": {
+          "x": 120,
+          "y": 60,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "Movement",
+        "componentType": "Movement_data",
+        "enabled": true,
+        "nodeId": 2,
+        "position": {
+          "x": 300,
+          "y": -50,
+          "z": 0
+        },
+        "properties": {
+          "acceleration": "450.000000",
+          "speed": "90.000000"
+        },
+        "selected": false,
+        "size": {
+          "x": 120,
+          "y": 60,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "Sprite",
+        "componentType": "VisualSprite_data",
+        "enabled": true,
+        "nodeId": 3,
+        "position": {
+          "x": 550,
+          "y": -50,
+          "z": 0
+        },
+        "properties": {
+          "height": "32.000000",
+          "layer": "1.000000",
+          "spritePath": "./Resources/Sprites/guard.png",
+          "width": "32.000000"
+        },
+        "selected": false,
+        "size": {
+          "x": 120,
+          "y": 60,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "Health",
+        "componentType": "Health_data",
+        "enabled": true,
+        "nodeId": 4,
+        "position": {
+          "x": 400,
+          "y": 50,
+          "z": 0
+        },
+        "properties": {
+          "currentHealth": "80.000000",
+          "invulnerable": "false",
+          "maxHealth": "80.000000"
+        },
+        "selected": false,
+        "size": {
+          "x": 120,
+          "y": 60,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "AIBlackboard",
+        "componentType": "AIBlackboard_data",
+        "enabled": true,
+        "nodeId": 5,
+        "position": {
+          "x": 300,
+          "y": 200,
+          "z": 0
+        },
+        "properties": {
+          "initialized": "true",
+          "patrolRoute": "GuardRoute_A"
+        },
+        "selected": false,
+        "size": {
+          "x": 120,
+          "y": 60,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "BehaviorTree",
+        "componentType": "BehaviorTreeRuntime_data",
+        "enabled": true,
+        "nodeId": 6,
+        "position": {
+          "x": 550,
+          "y": 200,
+          "z": 0
+        },
+        "properties": {
+          "AITreePath": "Blueprints/AI/guardV2_ai.json",
+          "active": "true"
+        },
+        "selected": false,
+        "size": {
+          "x": 120,
+          "y": 60,
+          "z": 0
+        }
+      }
+    ]
+  },
+  "schemaVersion": 4
 }

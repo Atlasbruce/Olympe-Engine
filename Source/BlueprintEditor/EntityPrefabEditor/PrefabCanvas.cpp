@@ -1,6 +1,7 @@
 ﻿#include "PrefabCanvas.h"
 #include "ComponentNodeRenderer.h"
 #include "../../Source/third_party/imgui/imgui.h"
+#include <cmath>
 
 namespace Olympe
 {
@@ -19,11 +20,52 @@ namespace Olympe
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
         ImGui::BeginChild("##PrefabCanvas", ImVec2(0, 0), true);
 
+        // Handle ImGui input events
+        ImVec2 canvasPos = ImGui::GetCursorScreenPos();
+        ImVec2 canvasSize = ImGui::GetContentRegionAvail();
+        ImVec2 canvasEnd(canvasPos.x + canvasSize.x, canvasPos.y + canvasSize.y);
+
+        ImVec2 mousePos = ImGui::GetMousePos();
+        bool isMouseInCanvas = (mousePos.x >= canvasPos.x && mousePos.x <= canvasEnd.x &&
+                                mousePos.y >= canvasPos.y && mousePos.y <= canvasEnd.y &&
+                                ImGui::IsWindowHovered());
+
+        // Poll and process ImGui input
+        if (isMouseInCanvas)
+        {
+            // Mouse movement
+            OnMouseMove(mousePos.x, mousePos.y);
+
+            // Mouse button events
+            if (ImGui::IsMouseClicked(0)) { OnMouseDown(0, mousePos.x, mousePos.y); }
+            if (ImGui::IsMouseReleased(0)) { OnMouseUp(0, mousePos.x, mousePos.y); }
+            if (ImGui::IsMouseClicked(2)) { OnMouseDown(2, mousePos.x, mousePos.y); }
+            if (ImGui::IsMouseReleased(2)) { OnMouseUp(2, mousePos.x, mousePos.y); }
+
+            // Mouse scroll
+            if (ImGui::GetIO().MouseWheel != 0.0f) { OnMouseScroll(ImGui::GetIO().MouseWheel); }
+        }
+
+        // Keyboard events
+        ImGuiIO& io = ImGui::GetIO();
+        if (ImGui::IsKeyPressed(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) { m_ctrlPressed = true; OnKeyDown(17); }
+        else { m_ctrlPressed = false; }
+
+        if (ImGui::IsKeyPressed(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_LeftShift)) { m_shiftPressed = true; OnKeyDown(16); }
+        else { m_shiftPressed = false; }
+
+        if (ImGui::IsKeyPressed(ImGuiKey_A) && m_ctrlPressed) { OnKeyDown(65); }
+        if (ImGui::IsKeyPressed(ImGuiKey_Delete)) { OnKeyDown(46); }
+
+        // Render canvas content
         if (m_showGrid) { RenderGrid(); }
         RenderConnections();
         RenderNodes();
         if (m_isCreatingConnection) { RenderConnectionPreview(); }
         if (m_showDebugInfo) { RenderDebugInfo(); }
+
+        // Context menu handling (right-click)
+        RenderContextMenu();
 
         ImGui::EndChild();
         ImGui::PopStyleColor();
@@ -265,46 +307,39 @@ namespace Olympe
         ImU32 majorGridColor = ImGui::GetColorU32(ImVec4(0.5f, 0.5f, 0.5f, 0.4f));
         ImU32 minorGridColor = ImGui::GetColorU32(ImVec4(0.3f, 0.3f, 0.3f, 0.2f));
 
-        float offsetX = (int)(m_canvasOffset.x / m_gridSpacing) * m_gridSpacing;
-        float offsetY = (int)(m_canvasOffset.y / m_gridSpacing) * m_gridSpacing;
+        // Scale grid spacing by zoom level to maintain consistent grid density
+        float scaledGridSpacing = m_gridSpacing * m_canvasZoom;
+        float scaledMinorSpacing = scaledGridSpacing / 5.0f;
 
-        float minorSpacing = m_gridSpacing / 5.0f;
-        for (float x = offsetX - m_gridSpacing; x < canvasPos.x + canvasSize.x; x += minorSpacing)
+        // Calculate grid offset in screen space to account for canvas pan
+        // The offset represents where the grid origin appears on screen
+        float gridOffsetX = fmod(m_canvasOffset.x * m_canvasZoom, scaledGridSpacing);
+        float gridOffsetY = fmod(m_canvasOffset.y * m_canvasZoom, scaledGridSpacing);
+
+        // Handle negative offsets correctly
+        if (gridOffsetX < 0) gridOffsetX += scaledGridSpacing;
+        if (gridOffsetY < 0) gridOffsetY += scaledGridSpacing;
+
+        // Draw minor grid lines
+        for (float x = canvasPos.x + gridOffsetX; x < canvasEnd.x + scaledMinorSpacing; x += scaledMinorSpacing)
         { 
-            drawList->AddLine(
-                ImVec2(x, canvasPos.y),
-                ImVec2(x, canvasEnd.y),
-                minorGridColor
-            );
+            drawList->AddLine(ImVec2(x, canvasPos.y), ImVec2(x, canvasEnd.y), minorGridColor);
         }
 
-        for (float y = offsetY - m_gridSpacing; y < canvasPos.y + canvasSize.y; y += minorSpacing)
+        for (float y = canvasPos.y + gridOffsetY; y < canvasEnd.y + scaledMinorSpacing; y += scaledMinorSpacing)
         { 
-            drawList->AddLine(
-                ImVec2(canvasPos.x, y),
-                ImVec2(canvasEnd.x, y),
-                minorGridColor
-            );
+            drawList->AddLine(ImVec2(canvasPos.x, y), ImVec2(canvasEnd.x, y), minorGridColor);
         }
 
-        for (float x = offsetX - m_gridSpacing; x < canvasPos.x + canvasSize.x; x += m_gridSpacing)
+        // Draw major grid lines
+        for (float x = canvasPos.x + gridOffsetX; x < canvasEnd.x + scaledGridSpacing; x += scaledGridSpacing)
         { 
-            drawList->AddLine(
-                ImVec2(x, canvasPos.y),
-                ImVec2(x, canvasEnd.y),
-                majorGridColor,
-                1.5f
-            );
+            drawList->AddLine(ImVec2(x, canvasPos.y), ImVec2(x, canvasEnd.y), majorGridColor, 1.5f);
         }
 
-        for (float y = offsetY - m_gridSpacing; y < canvasPos.y + canvasSize.y; y += m_gridSpacing)
+        for (float y = canvasPos.y + gridOffsetY; y < canvasEnd.y + scaledGridSpacing; y += scaledGridSpacing)
         { 
-            drawList->AddLine(
-                ImVec2(canvasPos.x, y),
-                ImVec2(canvasEnd.x, y),
-                majorGridColor,
-                1.5f
-            );
+            drawList->AddLine(ImVec2(canvasPos.x, y), ImVec2(canvasEnd.x, y), majorGridColor, 1.5f);
         }
     }
 
@@ -496,6 +531,92 @@ namespace Olympe
         float gridSize = m_gridSpacing;
         position.x = (float)((int)((position.x + gridSize * 0.5f) / gridSize) * gridSize);
         position.y = (float)((int)((position.y + gridSize * 0.5f) / gridSize) * gridSize);
+    }
+
+    void PrefabCanvas::RenderContextMenu()
+    {
+        if (!m_document || !m_renderer) { return; }
+
+        // Detect right-click on canvas
+        if (ImGui::IsMouseClicked(1) && ImGui::IsWindowHovered())
+        {
+            // Store mouse position for context menu
+            ImGui::OpenPopup("CanvasContextMenu");
+        }
+
+        // Render context menu
+        if (ImGui::BeginPopup("CanvasContextMenu"))
+        {
+            ImVec2 mousePos = ImGui::GetMousePos();
+            NodeId nodeAtClick = GetNodeAtPosition(mousePos.x, mousePos.y);
+
+            if (nodeAtClick != InvalidNodeId)
+            {
+                // Context menu on a node
+                if (ImGui::MenuItem("Delete Node"))
+                {
+                    m_document->RemoveNode(nodeAtClick);
+                    m_document->DeselectAll();
+                    ImGui::CloseCurrentPopup();
+                }
+
+                if (ImGui::MenuItem("Select Node"))
+                {
+                    if (!m_ctrlPressed)
+                    {
+                        m_document->DeselectAll();
+                    }
+                    m_document->SelectNode(nodeAtClick);
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            else
+            {
+                // Context menu on empty canvas
+                if (ImGui::MenuItem("Clear Selection"))
+                {
+                    m_document->DeselectAll();
+                    ImGui::CloseCurrentPopup();
+                }
+
+                if (m_document->GetNodeCount() > 0)
+                {
+                    if (ImGui::MenuItem("Select All"))
+                    {
+                        SelectAll();
+                        ImGui::CloseCurrentPopup();
+                    }
+
+                    ImGui::Separator();
+
+                    if (ImGui::MenuItem("Delete All Nodes"))
+                    {
+                        const std::vector<ComponentNode>& nodes = m_document->GetAllNodes();
+                        std::vector<NodeId> nodeIds;
+                        for (size_t i = 0; i < nodes.size(); ++i)
+                        {
+                            nodeIds.push_back(nodes[i].nodeId);
+                        }
+                        for (size_t i = 0; i < nodeIds.size(); ++i)
+                        {
+                            m_document->RemoveNode(nodeIds[i]);
+                        }
+                        m_document->DeselectAll();
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("Reset View"))
+                {
+                    ResetView();
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+
+            ImGui::EndPopup();
+        }
     }
 
 } // namespace Olympe

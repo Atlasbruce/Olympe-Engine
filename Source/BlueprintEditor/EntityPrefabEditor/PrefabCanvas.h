@@ -136,6 +136,7 @@ namespace Olympe
         void RenderConnectionPreview();
         void RenderDebugInfo();
         void RenderSelectionBox();
+        void RenderContextMenu();
     };
 }
 

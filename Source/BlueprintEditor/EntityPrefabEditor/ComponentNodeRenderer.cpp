@@ -249,25 +249,31 @@ namespace Olympe
         Vector screenFrom = CanvasToScreen(from);
         Vector screenTo = CanvasToScreen(to);
 
-        ImVec2 p1 = screenFrom.ToImVec2();
-        ImVec2 p2 = screenTo.ToImVec2();
+        ImVec2 p1(screenFrom.x, screenFrom.y);
+        ImVec2 p2(screenTo.x, screenTo.y);
 
-        float distance = (screenTo.x - screenFrom.x) * (screenTo.x - screenFrom.x) + (screenTo.y - screenFrom.y) * (screenTo.y - screenFrom.y);
-        distance = (distance > 1.0f) ? distance : 1.0f;
-        float offsetX = distance * 0.3f;
+        // Calculate bezier control point offset based on horizontal distance
+        // This creates smooth curves that scale with the connection distance
+        float dx = p2.x - p1.x;
+        float horizontalDistance = (dx > 0.0f) ? dx : -dx;
+
+        // Use a proportional offset: 40% of horizontal distance, minimum 50 pixels
+        float controlOffset = (horizontalDistance * 0.4f > 50.0f) ? horizontalDistance * 0.4f : 50.0f;
 
         ImU32 lineColor = ImGui::GetColorU32(ImVec4(0.7f, 0.7f, 0.7f, 0.8f));
 
+        // Draw bezier curve with symmetric control points
         drawList->AddBezierCubic(
             p1,
-            ImVec2(p1.x + offsetX, p1.y),
-            ImVec2(p2.x - offsetX, p2.y),
+            ImVec2(p1.x + controlOffset, p1.y),
+            ImVec2(p2.x - controlOffset, p2.y),
             p2,
             lineColor,
             2.0f,
             20
         );
 
+        // Draw connection endpoints
         drawList->AddCircleFilled(p1, 4.0f, lineColor);
         drawList->AddCircleFilled(p2, 4.0f, lineColor);
     }
