@@ -51,6 +51,7 @@ namespace Olympe
         void ClearSelection();
         void SelectAll();
         void DeleteSelectedNodes();
+        void AddComponentNode(const std::string& componentType, const std::string& componentName, float x, float y);
 
         // Connection interaction
         void StartConnectionCreation(NodeId sourceNodeId);
@@ -117,6 +118,10 @@ namespace Olympe
         // Camera panning state
         bool m_isPanning = false;
         Vector m_panStartOffset;
+
+        // Context menu state
+        NodeId m_contextMenuNodeId = InvalidNodeId;
+        Vector m_contextMenuMousePos;
 
         // Utility methods
         void UpdateNodePositions();

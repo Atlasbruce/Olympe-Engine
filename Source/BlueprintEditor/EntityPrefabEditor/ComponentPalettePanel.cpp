@@ -131,6 +131,18 @@ namespace Olympe
                 AddComponentToGraph(document, component);
             }
 
+            // Drag-and-drop source: drag component from palette to canvas
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+            {
+                // Store the component name as payload
+                ImGui::SetDragDropPayload("COMPONENT_TYPE", component.name.c_str(), component.name.size() + 1);
+
+                // Display preview during drag
+                ImGui::Text("Adding: %s", component.name.c_str());
+
+                ImGui::EndDragDropSource();
+            }
+
             // Tooltip
             if (ImGui::IsItemHovered() && !component.description.empty())
             {

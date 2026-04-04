@@ -67,6 +67,19 @@ namespace Olympe
         // Context menu handling (right-click)
         RenderContextMenu();
 
+        // Drag-and-drop target: accept components from palette
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("COMPONENT_TYPE"))
+            {
+                // Get component name from payload
+                const char* componentName = (const char*)payload->Data;
+                ImVec2 mousePos = ImGui::GetMousePos();
+                AddComponentNode(componentName, componentName, mousePos.x, mousePos.y);
+            }
+            ImGui::EndDragDropTarget();
+        }
+
         ImGui::EndChild();
         ImGui::PopStyleColor();
     }
@@ -229,6 +242,24 @@ namespace Olympe
         m_document->DeselectAll();
     }
 
+    void PrefabCanvas::AddComponentNode(const std::string& componentType, const std::string& componentName, float screenX, float screenY)
+    {
+        if (!m_document) { return; }
+
+        // Convert screen position to canvas position
+        Vector canvasPos = ScreenToCanvas(screenX, screenY);
+
+        // Create new node
+        NodeId newNodeId = m_document->CreateComponentNode(componentType, componentName);
+        ComponentNode* newNode = m_document->GetNode(newNodeId);
+        if (newNode)
+        {
+            newNode->position = canvasPos;
+            newNode->size = Vector(150.0f, 80.0f, 0.0f);
+            newNode->enabled = true;
+        }
+    }
+
     void PrefabCanvas::StartConnectionCreation(NodeId sourceNodeId)
     {
         if (sourceNodeId == InvalidNodeId || !m_document) { return; }
@@ -314,33 +345,38 @@ namespace Olympe
         float scaledGridSpacing = m_gridSpacing * m_canvasZoom;
         float scaledMinorSpacing = scaledGridSpacing / 5.0f;
 
-        // Calculate grid offset in screen space to account for canvas pan
-        // The offset represents where the grid origin appears on screen
-        float gridOffsetX = fmod(m_canvasOffset.x * m_canvasZoom, scaledGridSpacing);
-        float gridOffsetY = fmod(m_canvasOffset.y * m_canvasZoom, scaledGridSpacing);
+        // Calculate grid offset in screen space
+        // Grid origin = canvasPos + offset * zoom
+        // We need to find where the grid should start on screen
+        float gridStartX = canvasPos.x + m_canvasOffset.x * m_canvasZoom;
+        float gridStartY = canvasPos.y + m_canvasOffset.y * m_canvasZoom;
 
-        // Handle negative offsets correctly
+        // Calculate which grid lines should be visible and their screen positions
+        float gridOffsetX = fmod(gridStartX, scaledGridSpacing);
+        float gridOffsetY = fmod(gridStartY, scaledGridSpacing);
+
+        // Handle negative modulos
         if (gridOffsetX < 0) gridOffsetX += scaledGridSpacing;
         if (gridOffsetY < 0) gridOffsetY += scaledGridSpacing;
 
         // Draw minor grid lines
-        for (float x = canvasPos.x + gridOffsetX; x < canvasEnd.x + scaledMinorSpacing; x += scaledMinorSpacing)
+        for (float x = canvasPos.x + gridOffsetX - scaledGridSpacing; x < canvasEnd.x + scaledMinorSpacing; x += scaledMinorSpacing)
         { 
             drawList->AddLine(ImVec2(x, canvasPos.y), ImVec2(x, canvasEnd.y), minorGridColor);
         }
 
-        for (float y = canvasPos.y + gridOffsetY; y < canvasEnd.y + scaledMinorSpacing; y += scaledMinorSpacing)
+        for (float y = canvasPos.y + gridOffsetY - scaledGridSpacing; y < canvasEnd.y + scaledMinorSpacing; y += scaledMinorSpacing)
         { 
             drawList->AddLine(ImVec2(canvasPos.x, y), ImVec2(canvasEnd.x, y), minorGridColor);
         }
 
         // Draw major grid lines
-        for (float x = canvasPos.x + gridOffsetX; x < canvasEnd.x + scaledGridSpacing; x += scaledGridSpacing)
+        for (float x = canvasPos.x + gridOffsetX - scaledGridSpacing; x < canvasEnd.x + scaledGridSpacing; x += scaledGridSpacing)
         { 
             drawList->AddLine(ImVec2(x, canvasPos.y), ImVec2(x, canvasEnd.y), majorGridColor, 1.5f);
         }
 
-        for (float y = canvasPos.y + gridOffsetY; y < canvasEnd.y + scaledGridSpacing; y += scaledGridSpacing)
+        for (float y = canvasPos.y + gridOffsetY - scaledGridSpacing; y < canvasEnd.y + scaledGridSpacing; y += scaledGridSpacing)
         { 
             drawList->AddLine(ImVec2(canvasPos.x, y), ImVec2(canvasEnd.x, y), majorGridColor, 1.5f);
         }
@@ -531,25 +567,26 @@ namespace Olympe
     {
         if (!m_document || !m_renderer) { return; }
 
+        ImVec2 mousePos = ImGui::GetMousePos();
+
         // Detect right-click on canvas
         if (ImGui::IsMouseClicked(1) && ImGui::IsWindowHovered())
         {
-            // Store mouse position for context menu
+            // Store the node at click position for context menu
+            m_contextMenuMousePos = Vector(mousePos.x, mousePos.y, 0.0f);
+            m_contextMenuNodeId = GetNodeAtPosition(mousePos.x, mousePos.y);
             ImGui::OpenPopup("CanvasContextMenu");
         }
 
         // Render context menu
         if (ImGui::BeginPopup("CanvasContextMenu"))
         {
-            ImVec2 mousePos = ImGui::GetMousePos();
-            NodeId nodeAtClick = GetNodeAtPosition(mousePos.x, mousePos.y);
-
-            if (nodeAtClick != InvalidNodeId)
+            if (m_contextMenuNodeId != InvalidNodeId)
             {
                 // Context menu on a node
                 if (ImGui::MenuItem("Delete Node"))
                 {
-                    m_document->RemoveNode(nodeAtClick);
+                    m_document->RemoveNode(m_contextMenuNodeId);
                     m_document->DeselectAll();
                     ImGui::CloseCurrentPopup();
                 }
@@ -562,7 +599,7 @@ namespace Olympe
                     {
                         m_document->DeselectAll();
                     }
-                    m_document->SelectNode(nodeAtClick);
+                    m_document->SelectNode(m_contextMenuNodeId);
                     ImGui::CloseCurrentPopup();
                 }
             }
