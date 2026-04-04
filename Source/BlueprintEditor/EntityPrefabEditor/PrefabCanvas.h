@@ -49,6 +49,7 @@ namespace Olympe
         // Node interaction
         NodeId GetNodeAtPosition(float x, float y);
         void SelectNodeAt(float x, float y, bool addToSelection = false);
+        void SelectNodesInRectangle(const Vector& rectStart, const Vector& rectEnd, bool addToSelection = false);
         void ClearSelection();
         void SelectAll();
         void DeleteSelectedNodes();
@@ -138,6 +139,11 @@ namespace Olympe
         Vector m_contextMenuConnectionMousePos;
         bool m_showConnectionContextMenu = false;
 
+        // Rectangle selection state
+        bool m_isSelectingRectangle = false;
+        Vector m_selectionRectStart;
+        Vector m_selectionRectEnd;
+
         // Utility methods
         void UpdateNodePositions();
         void HandleNodeDragStart(NodeId nodeId, float x, float y);
@@ -157,6 +163,7 @@ namespace Olympe
         void RenderConnectionContextMenu();
         void RenderDebugInfo();
         void RenderSelectionBox();
+        void RenderSelectionRectangle();
         void RenderContextMenu();
     };
 }

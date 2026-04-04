@@ -49,6 +49,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\MiniMapPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\MinimapWidget.cpp" />
@@ -264,6 +265,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.h" />
     <ClInclude Include="..\Source\BlueprintEditor\IGraphRenderer.h" />
     <ClInclude Include="..\Source\BlueprintEditor\MiniMapPanel.h" />

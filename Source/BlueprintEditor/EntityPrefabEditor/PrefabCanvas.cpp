@@ -64,6 +64,7 @@ namespace Olympe
         RenderConnections();
         RenderNodes();
         if (m_isCreatingConnection) { RenderConnectionPreview(); }
+        if (m_isSelectingRectangle) { RenderSelectionRectangle(); }
         if (m_showDebugInfo) { RenderDebugInfo(); }
 
         // Context menu handling (right-click)
@@ -93,8 +94,14 @@ namespace Olympe
             m_connectionPreviewEnd = ScreenToCanvas(x, y);
         }
 
+        // Update rectangle selection during drag
+        if (m_isSelectingRectangle)
+        {
+            m_selectionRectEnd = ScreenToCanvas(x, y);
+        }
+
         // Update hovered connection for visual feedback
-        if (!m_isCreatingConnection && m_interactionMode == CanvasInteractionMode::Normal)
+        if (!m_isCreatingConnection && m_interactionMode == CanvasInteractionMode::Normal && !m_isSelectingRectangle)
         {
             m_hoveredConnectionIndex = -1;
 
@@ -166,7 +173,18 @@ namespace Olympe
             }
             else if (!m_ctrlPressed)
             {
+                // Empty space clicked - start rectangle selection
                 m_document->DeselectAll();
+                m_isSelectingRectangle = true;
+                m_selectionRectStart = canvasPos;
+                m_selectionRectEnd = canvasPos;
+            }
+            else
+            {
+                // Ctrl+click on empty space - start rectangle selection with additive mode
+                m_isSelectingRectangle = true;
+                m_selectionRectStart = canvasPos;
+                m_selectionRectEnd = canvasPos;
             }
         }
         else if (button == 2) // Middle mouse button
@@ -184,7 +202,15 @@ namespace Olympe
 
         if (button == 0)
         {
-            if (m_interactionMode == CanvasInteractionMode::DraggingNode)
+            if (m_isSelectingRectangle)
+            {
+                // Complete rectangle selection
+                Vector canvasPos = ScreenToCanvas(x, y);
+                m_selectionRectEnd = canvasPos;
+                SelectNodesInRectangle(m_selectionRectStart, m_selectionRectEnd, m_ctrlPressed);
+                m_isSelectingRectangle = false;
+            }
+            else if (m_interactionMode == CanvasInteractionMode::DraggingNode)
             {
                 HandleNodeDragEnd();
             }
@@ -285,6 +311,40 @@ namespace Olympe
                 m_document->DeselectAll();
             }
             m_document->SelectNode(nodeId);
+        }
+    }
+
+    void PrefabCanvas::SelectNodesInRectangle(const Vector& rectStart, const Vector& rectEnd, bool addToSelection)
+    {
+        if (!m_document) { return; }
+
+        // Normalize rectangle (handle both drag directions)
+        float minX = (rectStart.x < rectEnd.x) ? rectStart.x : rectEnd.x;
+        float maxX = (rectStart.x > rectEnd.x) ? rectStart.x : rectEnd.x;
+        float minY = (rectStart.y < rectEnd.y) ? rectStart.y : rectEnd.y;
+        float maxY = (rectStart.y > rectEnd.y) ? rectStart.y : rectEnd.y;
+
+        if (!addToSelection)
+        {
+            m_document->DeselectAll();
+        }
+
+        // Check all nodes for intersection with rectangle
+        const std::vector<ComponentNode>& nodes = m_document->GetAllNodes();
+        for (size_t i = 0; i < nodes.size(); ++i)
+        {
+            const ComponentNode& node = nodes[i];
+            // Check if node bounding box intersects with selection rectangle
+            float nodeMinX = node.position.x;
+            float nodeMaxX = node.position.x + node.size.x;
+            float nodeMinY = node.position.y;
+            float nodeMaxY = node.position.y + node.size.y;
+
+            if (!(maxX < nodeMinX || minX > nodeMaxX || maxY < nodeMinY || minY > nodeMaxY))
+            {
+                // Rectangle intersects node bounds
+                m_document->SelectNode(node.nodeId);
+            }
         }
     }
 
@@ -633,6 +693,36 @@ namespace Olympe
     void PrefabCanvas::RenderSelectionBox()
     { 
         // TODO: Implement selection box rendering for drag-to-select
+    }
+
+    void PrefabCanvas::RenderSelectionRectangle()
+    {
+        if (!m_isSelectingRectangle) { return; }
+
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+        // Convert canvas positions to screen positions
+        Vector screenStart = CanvasToScreen(m_selectionRectStart.x, m_selectionRectStart.y);
+        Vector screenEnd = CanvasToScreen(m_selectionRectEnd.x, m_selectionRectEnd.y);
+
+        // Draw rectangle outline
+        ImU32 rectOutlineColor = ImGui::GetColorU32(ImVec4(0.5f, 0.7f, 1.0f, 1.0f));  // Blue
+        ImU32 rectFillColor = ImGui::GetColorU32(ImVec4(0.5f, 0.7f, 1.0f, 0.15f));     // Semi-transparent blue
+
+        drawList->AddRect(
+            ImVec2(screenStart.x, screenStart.y),
+            ImVec2(screenEnd.x, screenEnd.y),
+            rectOutlineColor,
+            0.0f,
+            0,
+            2.0f
+        );
+
+        drawList->AddRectFilled(
+            ImVec2(screenStart.x, screenStart.y),
+            ImVec2(screenEnd.x, screenEnd.y),
+            rectFillColor
+        );
     }
 
     void PrefabCanvas::UpdateNodePositions()

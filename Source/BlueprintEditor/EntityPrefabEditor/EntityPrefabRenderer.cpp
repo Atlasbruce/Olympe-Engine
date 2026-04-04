@@ -20,11 +20,16 @@ EntityPrefabRenderer::~EntityPrefabRenderer()
 
 void EntityPrefabRenderer::Render()
 {
-    // Layout: Canvas (left, ~75%) | Resize Handle | Component Palette (right, ~25%)
+    RenderLayoutWithTabs();
+}
+
+void EntityPrefabRenderer::RenderLayoutWithTabs()
+{
+    // Layout: Canvas (left, ~75%) | Resize Handle | Tabbed Right Panel (right, ~25%)
     float totalWidth = ImGui::GetContentRegionAvail().x;
     float handleWidth = 4.0f;
     float canvasWidth = totalWidth * m_canvasPanelWidth;
-    float paletteWidth = totalWidth - canvasWidth - handleWidth;
+    float rightPanelWidth = totalWidth - canvasWidth - handleWidth;
 
     ImVec2 regionMin = ImGui::GetCursorScreenPos();
 
@@ -54,9 +59,9 @@ void EntityPrefabRenderer::Render()
 
     ImGui::SameLine();
 
-    // Render component palette on the right
-    ImGui::BeginChild("ComponentPalette", ImVec2(paletteWidth, 0), false, ImGuiWindowFlags_NoScrollbar);
-    m_componentPalette.Render(m_canvas.GetDocument());
+    // Render right panel with tabs
+    ImGui::BeginChild("RightPanel", ImVec2(rightPanelWidth, 0), true);
+    RenderRightPanelTabs();
     ImGui::EndChild();
 
     // After both panels rendered, create an invisible overlay for drag-drop target
@@ -80,6 +85,40 @@ void EntityPrefabRenderer::Render()
         ImGui::EndDragDropTarget();
     }
     ImGui::PopClipRect();
+}
+
+void EntityPrefabRenderer::RenderRightPanelTabs()
+{
+    // Tab bar for Component Palette and Property Editor
+    ImGui::TextUnformatted("Right Panel");
+    ImGui::Separator();
+
+    if (ImGui::BeginTabBar("RightPanelTabs", ImGuiTabBarFlags_None))
+    {
+        // Tab 0: Component Palette
+        if (ImGui::BeginTabItem("Components"))
+        {
+            m_componentPalette.Render(m_canvas.GetDocument());
+            ImGui::EndTabItem();
+        }
+
+        // Tab 1: Property Editor
+        if (ImGui::BeginTabItem("Properties"))
+        {
+            // Connect property panel to selected nodes from canvas
+            const std::vector<NodeId>& selectedNodes = m_canvas.GetDocument()->GetSelectedNodes();
+            if (selectedNodes.size() > 0)
+            {
+                // Select first selected node for property editing
+                m_propertyEditor.SetSelectedNode(selectedNodes[0]);
+            }
+
+            m_propertyEditor.Render(m_canvas.GetDocument());
+            ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
+    }
 }
 
 bool EntityPrefabRenderer::Load(const std::string& path)

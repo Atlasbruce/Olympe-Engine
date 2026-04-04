@@ -1,0 +1,378 @@
+{
+  "schemas": [
+    {
+      "componentType": "Identity_data",
+      "parameters": [
+        { "name": "name", "type": "String", "defaultValue": "Entity" },
+        { "name": "tag", "type": "String", "defaultValue": "Untagged" },
+        { "name": "type", "type": "String", "defaultValue": "UnknownType" },
+        { "name": "entityType", "type": "String", "defaultValue": "None" },
+        { "name": "isPersistent", "type": "Bool", "defaultValue": false }
+      ]
+    },
+    {
+      "componentType": "Position_data",
+      "parameters": [
+        {
+          "name": "position",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        }
+      ]
+    },
+    {
+      "componentType": "BoundingBox_data",
+      "parameters": [
+        { "name": "x", "type": "Float", "defaultValue": 0.0 },
+        { "name": "y", "type": "Float", "defaultValue": 0.0 },
+        { "name": "width", "type": "Float", "defaultValue": 25.0 },
+        { "name": "height", "type": "Float", "defaultValue": 25.0 }
+      ]
+    },
+    {
+      "componentType": "TriggerZone_data",
+      "parameters": [
+        { "name": "radius", "type": "Float", "defaultValue": 15.0 },
+        { "name": "triggered", "type": "Bool", "defaultValue": false }
+      ]
+    },
+    {
+      "componentType": "Movement_data",
+      "parameters": [
+        {
+          "name": "direction",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        },
+        {
+          "name": "velocity",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        }
+      ]
+    },
+    {
+      "componentType": "PhysicsBody_data",
+      "parameters": [
+        { "name": "mass", "type": "Float", "defaultValue": 1.0 },
+        { "name": "speed", "type": "Float", "defaultValue": 150.0 },
+        { "name": "friction", "type": "Float", "defaultValue": 0.1 },
+        { "name": "useGravity", "type": "Bool", "defaultValue": true },
+        { "name": "rotation", "type": "Bool", "defaultValue": false }
+      ]
+    },
+    {
+      "componentType": "Health_data",
+      "parameters": [
+        { "name": "currentHealth", "type": "Int", "defaultValue": 100 },
+        { "name": "maxHealth", "type": "Int", "defaultValue": 100 }
+      ]
+    },
+    {
+      "componentType": "AIBehavior_data",
+      "parameters": [
+        { "name": "behaviorType", "type": "String", "defaultValue": "idle" }
+      ]
+    },
+    {
+      "componentType": "Inventory_data",
+      "parameters": [
+        { "name": "items", "type": "Array", "defaultValue": [] }
+      ]
+    },
+    {
+      "componentType": "VisualSprite_data",
+      "parameters": [
+        { "name": "srcRectX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "srcRectY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "srcRectWidth", "type": "Float", "defaultValue": 25.0 },
+        { "name": "srcRectHeight", "type": "Float", "defaultValue": 25.0 },
+        { "name": "spritePath", "type": "String", "defaultValue": "" },
+        {
+          "name": "hotSpot",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        },
+        { "name": "color", "type": "Color", "defaultValue": "#FFFFFF" },
+        { "name": "visible", "type": "Bool", "defaultValue": true }
+      ]
+    },
+    {
+      "componentType": "VisualEditor_data",
+      "parameters": [
+        { "name": "srcRectX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "srcRectY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "srcRectWidth", "type": "Float", "defaultValue": 25.0 },
+        { "name": "srcRectHeight", "type": "Float", "defaultValue": 25.0 },
+        { "name": "spritePath", "type": "String", "defaultValue": "" },
+        {
+          "name": "hotSpot",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        },
+        { "name": "color", "type": "Color", "defaultValue": "#FFFFFF" },
+        { "name": "isSelected", "type": "Bool", "defaultValue": false },
+        { "name": "isVisible", "type": "Bool", "defaultValue": true }
+      ]
+    },
+    {
+      "componentType": "Animation_data",
+      "parameters": [
+        { "name": "animationID", "type": "String", "defaultValue": "" },
+        { "name": "currentFrame", "type": "Int", "defaultValue": 0 },
+        { "name": "frameDuration", "type": "Float", "defaultValue": 0.1 },
+        { "name": "elapsedTime", "type": "Float", "defaultValue": 0.0 }
+      ]
+    },
+    {
+      "componentType": "VisualAnimation_data",
+      "parameters": [
+        { "name": "bankId", "type": "String", "defaultValue": "" },
+        { "name": "currentAnimName", "type": "String", "defaultValue": "" },
+        { "name": "animGraphPath", "type": "String", "defaultValue": "" },
+        { "name": "currentFrame", "type": "Int", "defaultValue": 0 },
+        { "name": "frameTimer", "type": "Float", "defaultValue": 0.0 },
+        { "name": "playbackSpeed", "type": "Float", "defaultValue": 1.0 },
+        { "name": "isPlaying", "type": "Bool", "defaultValue": true },
+        { "name": "isPaused", "type": "Bool", "defaultValue": false },
+        { "name": "loop", "type": "Bool", "defaultValue": true },
+        { "name": "flipX", "type": "Bool", "defaultValue": false },
+        { "name": "flipY", "type": "Bool", "defaultValue": false },
+        { "name": "animationJustFinished", "type": "Bool", "defaultValue": false },
+        { "name": "loopCount", "type": "Int", "defaultValue": 0 }
+      ]
+    },
+    {
+      "componentType": "FX_data",
+      "parameters": [
+        { "name": "effectType", "type": "String", "defaultValue": "" },
+        { "name": "duration", "type": "Float", "defaultValue": 1.0 },
+        { "name": "elapsedTime", "type": "Float", "defaultValue": 0.0 }
+      ]
+    },
+    {
+      "componentType": "AudioSource_data",
+      "parameters": [
+        { "name": "soundEffectID", "type": "String", "defaultValue": "" },
+        { "name": "volume", "type": "Float", "defaultValue": 1.0 }
+      ]
+    },
+    {
+      "componentType": "Controller_data",
+      "parameters": [
+        { "name": "controllerID", "type": "Int", "defaultValue": -1 },
+        { "name": "isConnected", "type": "Bool", "defaultValue": false },
+        {
+          "name": "leftStick",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        },
+        {
+          "name": "rightStick",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        },
+        { "name": "leftTrigger", "type": "Float", "defaultValue": 0.0 },
+        { "name": "rightTrigger", "type": "Float", "defaultValue": 0.0 },
+        { "name": "isVibrating", "type": "Bool", "defaultValue": false },
+        { "name": "vibrateStrength", "type": "Float", "defaultValue": 0.0 }
+      ]
+    },
+    {
+      "componentType": "PlayerController_data",
+      "parameters": [
+        {
+          "name": "joystickDirection",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        },
+        { "name": "isJumping", "type": "Bool", "defaultValue": false },
+        { "name": "isShooting", "type": "Bool", "defaultValue": false },
+        { "name": "isWalking", "type": "Bool", "defaultValue": false },
+        { "name": "isRunning", "type": "Bool", "defaultValue": false },
+        { "name": "isInteracting", "type": "Bool", "defaultValue": false },
+        { "name": "isUsingItem", "type": "Bool", "defaultValue": false },
+        { "name": "isMenuOpen", "type": "Bool", "defaultValue": false }
+      ]
+    },
+    {
+      "componentType": "PlayerBinding_data",
+      "parameters": [
+        { "name": "playerIndex", "type": "Int", "defaultValue": 0 },
+        { "name": "controllerID", "type": "Int", "defaultValue": -1 }
+      ]
+    },
+    {
+      "componentType": "NPC_data",
+      "parameters": [
+        { "name": "npcType", "type": "String", "defaultValue": "" }
+      ]
+    },
+    {
+      "componentType": "InputMapping_data",
+      "parameters": [
+        { "name": "deadzone", "type": "Float", "defaultValue": 0.15 },
+        { "name": "sensitivity", "type": "Float", "defaultValue": 1.0 }
+      ]
+    },
+    {
+      "componentType": "GridSettings_data",
+      "parameters": [
+        { "name": "enabled", "type": "Bool", "defaultValue": false },
+        { "name": "projection", "type": "String", "defaultValue": "Ortho" },
+        {
+          "name": "cellSize",
+          "type": "Vector3",
+          "defaultValue": [32.0, 32.0, 0.0]
+        },
+        { "name": "hexRadius", "type": "Float", "defaultValue": 16.0 },
+        { "name": "colorR", "type": "Int", "defaultValue": 180 },
+        { "name": "colorG", "type": "Int", "defaultValue": 180 },
+        { "name": "colorB", "type": "Int", "defaultValue": 180 },
+        { "name": "colorA", "type": "Int", "defaultValue": 255 },
+        { "name": "maxLines", "type": "Int", "defaultValue": 1200 },
+        { "name": "lodZoomThreshold", "type": "Float", "defaultValue": 0.5 },
+        { "name": "lodSkipFactor", "type": "Int", "defaultValue": 10 },
+        { "name": "showCollisionOverlay", "type": "Bool", "defaultValue": false },
+        { "name": "showNavigationOverlay", "type": "Bool", "defaultValue": false },
+        { "name": "activeCollisionLayer", "type": "Int", "defaultValue": 0 },
+        { "name": "activeNavigationLayer", "type": "Int", "defaultValue": 0 }
+      ]
+    },
+    {
+      "componentType": "Camera_data",
+      "parameters": [
+        { "name": "playerId", "type": "Int", "defaultValue": -1 },
+        { "name": "cameraType", "type": "String", "defaultValue": "2D" },
+        {
+          "name": "position",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        },
+        {
+          "name": "baseOffset",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        },
+        {
+          "name": "controlOffset",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        },
+        { "name": "zoom", "type": "Float", "defaultValue": 1.0 },
+        { "name": "targetZoom", "type": "Float", "defaultValue": 1.0 },
+        { "name": "zoomSpeed", "type": "Float", "defaultValue": 5.0 },
+        { "name": "minZoom", "type": "Float", "defaultValue": 0.1 },
+        { "name": "maxZoom", "type": "Float", "defaultValue": 5.0 },
+        { "name": "currentZoomLevelIndex", "type": "Int", "defaultValue": 3 },
+        { "name": "rotation", "type": "Float", "defaultValue": 0.0 },
+        { "name": "targetRotation", "type": "Float", "defaultValue": 0.0 },
+        { "name": "rotationSpeed", "type": "Float", "defaultValue": 5.0 },
+        { "name": "currentRotationLevel", "type": "Int", "defaultValue": 0 },
+        { "name": "controlMode", "type": "String", "defaultValue": "Free" },
+        { "name": "viewportX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "viewportY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "viewportWidth", "type": "Float", "defaultValue": 800.0 },
+        { "name": "viewportHeight", "type": "Float", "defaultValue": 600.0 },
+        { "name": "manualMoveSpeed", "type": "Float", "defaultValue": 200.0 },
+        { "name": "zoomStep", "type": "Float", "defaultValue": 0.1 },
+        { "name": "rotationStep", "type": "Float", "defaultValue": 15.0 },
+        { "name": "isActive", "type": "Bool", "defaultValue": true }
+      ]
+    },
+    {
+      "componentType": "CameraTarget_data",
+      "parameters": [
+        { "name": "targetEntityID", "type": "Int", "defaultValue": -1 },
+        { "name": "followTarget", "type": "Bool", "defaultValue": false },
+        { "name": "smoothFactor", "type": "Float", "defaultValue": 5.0 },
+        {
+          "name": "followOffset",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        },
+        { "name": "allowManualControl", "type": "Bool", "defaultValue": true },
+        { "name": "manualControlDecay", "type": "Float", "defaultValue": 2.0 }
+      ]
+    },
+    {
+      "componentType": "CameraEffects_data",
+      "parameters": [
+        { "name": "isShaking", "type": "Bool", "defaultValue": false },
+        { "name": "shakeIntensity", "type": "Float", "defaultValue": 0.0 },
+        { "name": "shakeDuration", "type": "Float", "defaultValue": 0.0 },
+        { "name": "shakeTimeRemaining", "type": "Float", "defaultValue": 0.0 },
+        {
+          "name": "shakeOffset",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        }
+      ]
+    },
+    {
+      "componentType": "CameraBounds_data",
+      "parameters": [
+        { "name": "useBounds", "type": "Bool", "defaultValue": false },
+        { "name": "boundsX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "boundsY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "boundsWidth", "type": "Float", "defaultValue": 0.0 },
+        { "name": "boundsHeight", "type": "Float", "defaultValue": 0.0 },
+        { "name": "clampToViewport", "type": "Bool", "defaultValue": true }
+      ]
+    },
+    {
+      "componentType": "CameraInputBinding_data",
+      "parameters": [
+        { "name": "playerId", "type": "Int", "defaultValue": -1 },
+        { "name": "joystickId", "type": "Int", "defaultValue": 0 },
+        { "name": "useKeyboard", "type": "Bool", "defaultValue": false },
+        { "name": "deadzone", "type": "Float", "defaultValue": 0.15 },
+        { "name": "triggerThreshold", "type": "Float", "defaultValue": 0.3 },
+        {
+          "name": "inputDirection",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        },
+        { "name": "rotationInput", "type": "Float", "defaultValue": 0.0 },
+        { "name": "zoomInput", "type": "Float", "defaultValue": 0.0 },
+        { "name": "resetRequested", "type": "Bool", "defaultValue": false }
+      ]
+    },
+    {
+      "componentType": "CollisionZone_data",
+      "parameters": [
+        { "name": "x", "type": "Float", "defaultValue": 0.0 },
+        { "name": "y", "type": "Float", "defaultValue": 0.0 },
+        { "name": "width", "type": "Float", "defaultValue": 100.0 },
+        { "name": "height", "type": "Float", "defaultValue": 100.0 },
+        { "name": "isStatic", "type": "Bool", "defaultValue": true }
+      ]
+    },
+    {
+      "componentType": "NavigationAgent_data",
+      "parameters": [
+        { "name": "agentRadius", "type": "Float", "defaultValue": 16.0 },
+        { "name": "maxSpeed", "type": "Float", "defaultValue": 100.0 },
+        { "name": "arrivalThreshold", "type": "Float", "defaultValue": 5.0 },
+        { "name": "layerMask", "type": "Int", "defaultValue": 1 },
+        { "name": "currentWaypointIndex", "type": "Int", "defaultValue": 0 },
+        {
+          "name": "targetPosition",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        },
+        { "name": "hasPath", "type": "Bool", "defaultValue": false },
+        { "name": "needsRepath", "type": "Bool", "defaultValue": false },
+        { "name": "steeringWeight", "type": "Float", "defaultValue": 1.0 },
+        { "name": "avoidObstacles", "type": "Bool", "defaultValue": true }
+      ]
+    },
+    {
+      "componentType": "EditorContext_st",
+      "parameters": [
+        { "name": "isDirty", "type": "Bool", "defaultValue": false },
+        { "name": "deltaTime", "type": "Float", "defaultValue": 0.0 }
+      ]
+    }
+  ]
+}

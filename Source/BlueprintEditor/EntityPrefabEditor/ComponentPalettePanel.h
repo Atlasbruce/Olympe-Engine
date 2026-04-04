@@ -53,5 +53,8 @@ namespace Olympe
         void RenderComponentList(EntityPrefabGraphDocument* document);
         void RenderCategoryTabs();
         void AddComponentToGraph(EntityPrefabGraphDocument* document, const ComponentType& componentType);
+
+        // Category extraction from component type name
+        std::string ExtractCategoryFromComponentType(const std::string& componentType);
     };
 }

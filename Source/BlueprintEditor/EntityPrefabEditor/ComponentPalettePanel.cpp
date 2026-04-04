@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <cstring>
 #include <fstream>
+#include <io.h>
+#include <direct.h>
 
 namespace Olympe
 {
@@ -20,8 +22,41 @@ namespace Olympe
     {
         SYSTEM_LOG << "[ComponentPalettePanel] Initializing...\n";
 
-        // Try to load from JSON file first
-        bool jsonLoaded = LoadComponentsFromJSON("./Gamedata/PrefabEntities/ComponentsParameters.json");
+        // Log current working directory for debugging (Windows only)
+        char cwd[_MAX_PATH];
+        if (_getcwd(cwd, sizeof(cwd)) != nullptr)
+        {
+            SYSTEM_LOG << "[ComponentPalettePanel] Current working directory: " << cwd << "\n";
+        }
+
+        // Try to load from JSON file first (new format: Gamedata/EntityPrefab/ComponentsParameters.json)
+        bool jsonLoaded = LoadComponentsFromJSON("Gamedata\\EntityPrefab\\ComponentsParameters.json");
+
+        // If JSON load failed, try forward slash variant
+        if (!jsonLoaded)
+        {
+            SYSTEM_LOG << "[ComponentPalettePanel] Attempting with forward slashes...\n";
+            jsonLoaded = LoadComponentsFromJSON("Gamedata/EntityPrefab/ComponentsParameters.json");
+        }
+
+        // If JSON load failed, try absolute path as fallback
+        if (!jsonLoaded)
+        {
+            char cwdBuffer[_MAX_PATH];
+            if (_getcwd(cwdBuffer, sizeof(cwdBuffer)) != nullptr)
+            {
+                std::string absolutePath = std::string(cwdBuffer) + "\\Gamedata\\EntityPrefab\\ComponentsParameters.json";
+                SYSTEM_LOG << "[ComponentPalettePanel] Attempting absolute path: " << absolutePath << "\n";
+                jsonLoaded = LoadComponentsFromJSON(absolutePath);
+            }
+        }
+
+        // If JSON load failed, try legacy location for backward compatibility
+        if (!jsonLoaded)
+        {
+            SYSTEM_LOG << "[ComponentPalettePanel] Attempting to load from legacy location...\n";
+            jsonLoaded = LoadComponentsFromJSON("Gamedata/PrefabEntities/ComponentsParameters.json");
+        }
 
         // If JSON load failed, use hardcoded components as fallback
         if (!jsonLoaded)
@@ -227,10 +262,17 @@ namespace Olympe
 
         try
         {
+            // Check if file exists using Windows _access() (0 = exists)
+            if (_access(filepath.c_str(), 0) == -1)
+            {
+                SYSTEM_LOG << "[ComponentPalettePanel] WARNING: File does not exist: " << filepath << "\n";
+                return false;
+            }
+
             std::ifstream file(filepath);
             if (!file.is_open())
             {
-                SYSTEM_LOG << "[ComponentPalettePanel] WARNING: Could not open file: " << filepath << ", using hardcoded components\n";
+                SYSTEM_LOG << "[ComponentPalettePanel] WARNING: Could not open file: " << filepath << " (permissions or other I/O issue)\n";
                 return false;
             }
 
@@ -242,33 +284,64 @@ namespace Olympe
             m_componentTypes.clear();
             m_categories.clear();
 
-            // Validate structure
-            if (!jsonData.contains("components") || !jsonData["components"].is_array())
+            // Try new format first (schemas array with componentType)
+            if (jsonData.contains("schemas") && jsonData["schemas"].is_array())
             {
-                SYSTEM_LOG << "[ComponentPalettePanel] ERROR: JSON missing 'components' array\n";
-                return false;
-            }
+                SYSTEM_LOG << "[ComponentPalettePanel] Detected new JSON format (schemas array)\n";
 
-            const json& componentsArray = jsonData["components"];
-            SYSTEM_LOG << "[ComponentPalettePanel] Found " << componentsArray.size() << " component types\n";
+                const json& schemasArray = jsonData["schemas"];
+                SYSTEM_LOG << "[ComponentPalettePanel] Found " << schemasArray.size() << " component types\n";
 
-            // Parse each component
-            for (const auto& compJson : componentsArray)
-            {
-                if (!compJson.contains("name") || !compJson.contains("category"))
+                // Parse each component schema
+                for (const auto& schemaJson : schemasArray)
                 {
-                    SYSTEM_LOG << "[ComponentPalettePanel] WARNING: Skipping component missing name or category\n";
-                    continue;
+                    if (!schemaJson.contains("componentType"))
+                    {
+                        SYSTEM_LOG << "[ComponentPalettePanel] WARNING: Skipping schema missing componentType\n";
+                        continue;
+                    }
+
+                    std::string componentType = schemaJson["componentType"].get<std::string>();
+                    std::string category = ExtractCategoryFromComponentType(componentType);
+                    std::string description = schemaJson.contains("description") 
+                        ? schemaJson["description"].get<std::string>() 
+                        : componentType;  // Use componentType as description if none provided
+
+                    RegisterComponentType(componentType, category, description);
+                    SYSTEM_LOG << "[ComponentPalettePanel] Loaded: " << componentType << " (" << category << ")\n";
                 }
+            }
+            // Fallback to old format (components array with name)
+            else if (jsonData.contains("components") && jsonData["components"].is_array())
+            {
+                SYSTEM_LOG << "[ComponentPalettePanel] Detected old JSON format (components array)\n";
 
-                std::string name = compJson["name"].get<std::string>();
-                std::string category = compJson["category"].get<std::string>();
-                std::string description = compJson.contains("description") 
-                    ? compJson["description"].get<std::string>() 
-                    : "";
+                const json& componentsArray = jsonData["components"];
+                SYSTEM_LOG << "[ComponentPalettePanel] Found " << componentsArray.size() << " component types\n";
 
-                RegisterComponentType(name, category, description);
-                SYSTEM_LOG << "[ComponentPalettePanel] Loaded: " << name << " (" << category << ")\n";
+                // Parse each component
+                for (const auto& compJson : componentsArray)
+                {
+                    if (!compJson.contains("name") || !compJson.contains("category"))
+                    {
+                        SYSTEM_LOG << "[ComponentPalettePanel] WARNING: Skipping component missing name or category\n";
+                        continue;
+                    }
+
+                    std::string name = compJson["name"].get<std::string>();
+                    std::string category = compJson["category"].get<std::string>();
+                    std::string description = compJson.contains("description") 
+                        ? compJson["description"].get<std::string>() 
+                        : "";
+
+                    RegisterComponentType(name, category, description);
+                    SYSTEM_LOG << "[ComponentPalettePanel] Loaded: " << name << " (" << category << ")\n";
+                }
+            }
+            else
+            {
+                SYSTEM_LOG << "[ComponentPalettePanel] ERROR: JSON missing 'schemas' or 'components' array\n";
+                return false;
             }
 
             // Rebuild categories list
@@ -294,6 +367,48 @@ namespace Olympe
             SYSTEM_LOG << "[ComponentPalettePanel] ERROR parsing JSON: " << e.what() << "\n";
             return false;
         }
+    }
+
+    std::string ComponentPalettePanel::ExtractCategoryFromComponentType(const std::string& componentType)
+    {
+        // Extract category from component type name
+        // Examples: "Identity_data" → "Core", "Camera_data" → "Camera", "PhysicsBody_data" → "Physics"
+
+        if (componentType.find("Identity") != std::string::npos) return "Core";
+        if (componentType.find("Position") != std::string::npos) return "Core";
+        if (componentType.find("GridSettings") != std::string::npos) return "Core";
+        if (componentType.find("EditorContext") != std::string::npos) return "Core";
+
+        if (componentType.find("Physics") != std::string::npos) return "Physics";
+        if (componentType.find("Movement") != std::string::npos) return "Physics";
+        if (componentType.find("Collision") != std::string::npos) return "Physics";
+        if (componentType.find("BoundingBox") != std::string::npos) return "Physics";
+        if (componentType.find("TriggerZone") != std::string::npos) return "Physics";
+        if (componentType.find("NavigationAgent") != std::string::npos) return "Physics";
+
+        if (componentType.find("Visual") != std::string::npos) return "Graphics";
+        if (componentType.find("Animation") != std::string::npos) return "Graphics";
+        if (componentType.find("Sprite") != std::string::npos) return "Graphics";
+        if (componentType.find("FX") != std::string::npos) return "Graphics";
+
+        if (componentType.find("Camera") != std::string::npos) return "Camera";
+
+        if (componentType.find("AI") != std::string::npos) return "AI";
+        if (componentType.find("Behavior") != std::string::npos) return "AI";
+        if (componentType.find("Controller") != std::string::npos) return "AI";
+        if (componentType.find("NPC") != std::string::npos) return "AI";
+        if (componentType.find("InputMapping") != std::string::npos) return "AI";
+
+        if (componentType.find("Audio") != std::string::npos) return "Audio";
+        if (componentType.find("Sound") != std::string::npos) return "Audio";
+
+        if (componentType.find("Health") != std::string::npos) return "Gameplay";
+        if (componentType.find("Inventory") != std::string::npos) return "Gameplay";
+
+        if (componentType.find("Player") != std::string::npos) return "Player";
+
+        // Default category
+        return "Other";
     }
 
 } // namespace Olympe

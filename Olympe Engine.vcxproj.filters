@@ -227,6 +227,7 @@
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -482,6 +483,7 @@
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.h" />
+    <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />

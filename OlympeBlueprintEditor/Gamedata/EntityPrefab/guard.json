@@ -32,7 +32,7 @@
         "targetNodeId": 7
       },
       {
-        "sourceNodeId": 7,
+        "sourceNodeId": 1,
         "targetNodeId": 8
       }
     ],
@@ -114,11 +114,11 @@
           "z": 0
         },
         "properties": {
-          "currentHealth": "80.000000",
+          "currentHealth": "99",
           "invulnerable": "false",
           "maxHealth": "80.000000"
         },
-        "selected": false,
+        "selected": true,
         "size": {
           "x": 120,
           "y": 60,
@@ -168,17 +168,17 @@
         }
       },
       {
-        "componentName": "AIBlackboard",
-        "componentType": "AIBlackboard",
+        "componentName": "Position_data",
+        "componentType": "Position_data",
         "enabled": true,
         "nodeId": 7,
         "position": {
-          "x": 480,
-          "y": -194,
+          "x": 461.222,
+          "y": -171.667,
           "z": 0
         },
         "properties": {},
-        "selected": true,
+        "selected": false,
         "size": {
           "x": 150,
           "y": 80,
@@ -186,13 +186,13 @@
         }
       },
       {
-        "componentName": "AIBlackboard",
-        "componentType": "AIBlackboard",
+        "componentName": "AudioSource_data",
+        "componentType": "AudioSource_data",
         "enabled": true,
         "nodeId": 8,
         "position": {
-          "x": 724.205,
-          "y": -183.449,
+          "x": 298,
+          "y": 349,
           "z": 0
         },
         "properties": {},

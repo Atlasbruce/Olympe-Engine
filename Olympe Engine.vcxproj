@@ -68,6 +68,7 @@
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Graph.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EnumCatalogManager.cpp" />
@@ -302,6 +303,7 @@
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.h" />
+    <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.h" />
     <ClInclude Include="Source\BlueprintEditor\Graph.h" />
     <ClInclude Include="Source\BlueprintEditor\EnumCatalogManager.h" />
