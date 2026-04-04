@@ -13,11 +13,9 @@
     {
       "componentType": "Position_data",
       "parameters": [
-        {
-          "name": "position",
-          "type": "Vector3",
-          "defaultValue": [0.0, 0.0, 0.0]
-        }
+        { "name": "x", "type": "Float", "defaultValue": 0.0 },
+        { "name": "y", "type": "Float", "defaultValue": 0.0 },
+        { "name": "z", "type": "Float", "defaultValue": 0.0 }
       ]
     },
     {
@@ -39,16 +37,12 @@
     {
       "componentType": "Movement_data",
       "parameters": [
-        {
-          "name": "direction",
-          "type": "Vector3",
-          "defaultValue": [0.0, 0.0, 0.0]
-        },
-        {
-          "name": "velocity",
-          "type": "Vector3",
-          "defaultValue": [0.0, 0.0, 0.0]
-        }
+        { "name": "directionX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "directionY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "directionZ", "type": "Float", "defaultValue": 0.0 },
+        { "name": "velocityX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "velocityY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "velocityZ", "type": "Float", "defaultValue": 0.0 }
       ]
     },
     {
@@ -85,14 +79,11 @@
       "parameters": [
         { "name": "srcRectX", "type": "Float", "defaultValue": 0.0 },
         { "name": "srcRectY", "type": "Float", "defaultValue": 0.0 },
-        { "name": "srcRectWidth", "type": "Float", "defaultValue": 25.0 },
-        { "name": "srcRectHeight", "type": "Float", "defaultValue": 25.0 },
+        { "name": "srcRectW", "type": "Float", "defaultValue": 25.0 },
+        { "name": "srcRectH", "type": "Float", "defaultValue": 25.0 },
         { "name": "spritePath", "type": "String", "defaultValue": "" },
-        {
-          "name": "hotSpot",
-          "type": "Vector3",
-          "defaultValue": [0.0, 0.0, 0.0]
-        },
+        { "name": "hotSpotX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "hotSpotY", "type": "Float", "defaultValue": 0.0 },
         { "name": "color", "type": "Color", "defaultValue": "#FFFFFF" },
         { "name": "visible", "type": "Bool", "defaultValue": true }
       ]
@@ -102,14 +93,11 @@
       "parameters": [
         { "name": "srcRectX", "type": "Float", "defaultValue": 0.0 },
         { "name": "srcRectY", "type": "Float", "defaultValue": 0.0 },
-        { "name": "srcRectWidth", "type": "Float", "defaultValue": 25.0 },
-        { "name": "srcRectHeight", "type": "Float", "defaultValue": 25.0 },
+        { "name": "srcRectW", "type": "Float", "defaultValue": 25.0 },
+        { "name": "srcRectH", "type": "Float", "defaultValue": 25.0 },
         { "name": "spritePath", "type": "String", "defaultValue": "" },
-        {
-          "name": "hotSpot",
-          "type": "Vector3",
-          "defaultValue": [0.0, 0.0, 0.0]
-        },
+        { "name": "hotSpotX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "hotSpotY", "type": "Float", "defaultValue": 0.0 },
         { "name": "color", "type": "Color", "defaultValue": "#FFFFFF" },
         { "name": "isSelected", "type": "Bool", "defaultValue": false },
         { "name": "isVisible", "type": "Bool", "defaultValue": true }
@@ -162,16 +150,10 @@
       "parameters": [
         { "name": "controllerID", "type": "Int", "defaultValue": -1 },
         { "name": "isConnected", "type": "Bool", "defaultValue": false },
-        {
-          "name": "leftStick",
-          "type": "Vector3",
-          "defaultValue": [0.0, 0.0, 0.0]
-        },
-        {
-          "name": "rightStick",
-          "type": "Vector3",
-          "defaultValue": [0.0, 0.0, 0.0]
-        },
+        { "name": "leftStickX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "leftStickY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "rightStickX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "rightStickY", "type": "Float", "defaultValue": 0.0 },
         { "name": "leftTrigger", "type": "Float", "defaultValue": 0.0 },
         { "name": "rightTrigger", "type": "Float", "defaultValue": 0.0 },
         { "name": "isVibrating", "type": "Bool", "defaultValue": false },
@@ -181,11 +163,8 @@
     {
       "componentType": "PlayerController_data",
       "parameters": [
-        {
-          "name": "joystickDirection",
-          "type": "Vector3",
-          "defaultValue": [0.0, 0.0, 0.0]
-        },
+        { "name": "joystickDirectionX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "joystickDirectionY", "type": "Float", "defaultValue": 0.0 },
         { "name": "isJumping", "type": "Bool", "defaultValue": false },
         { "name": "isShooting", "type": "Bool", "defaultValue": false },
         { "name": "isWalking", "type": "Bool", "defaultValue": false },
@@ -220,11 +199,8 @@
       "parameters": [
         { "name": "enabled", "type": "Bool", "defaultValue": false },
         { "name": "projection", "type": "String", "defaultValue": "Ortho" },
-        {
-          "name": "cellSize",
-          "type": "Vector3",
-          "defaultValue": [32.0, 32.0, 0.0]
-        },
+        { "name": "cellSizeX", "type": "Float", "defaultValue": 32.0 },
+        { "name": "cellSizeY", "type": "Float", "defaultValue": 32.0 },
         { "name": "hexRadius", "type": "Float", "defaultValue": 16.0 },
         { "name": "colorR", "type": "Int", "defaultValue": 180 },
         { "name": "colorG", "type": "Int", "defaultValue": 180 },
@@ -244,21 +220,15 @@
       "parameters": [
         { "name": "playerId", "type": "Int", "defaultValue": -1 },
         { "name": "cameraType", "type": "String", "defaultValue": "2D" },
-        {
-          "name": "position",
-          "type": "Vector3",
-          "defaultValue": [0.0, 0.0, 0.0]
-        },
-        {
-          "name": "baseOffset",
-          "type": "Vector3",
-          "defaultValue": [0.0, 0.0, 0.0]
-        },
-        {
-          "name": "controlOffset",
-          "type": "Vector3",
-          "defaultValue": [0.0, 0.0, 0.0]
-        },
+        { "name": "positionX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "positionY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "positionZ", "type": "Float", "defaultValue": 0.0 },
+        { "name": "baseOffsetX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "baseOffsetY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "baseOffsetZ", "type": "Float", "defaultValue": 0.0 },
+        { "name": "controlOffsetX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "controlOffsetY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "controlOffsetZ", "type": "Float", "defaultValue": 0.0 },
         { "name": "zoom", "type": "Float", "defaultValue": 1.0 },
         { "name": "targetZoom", "type": "Float", "defaultValue": 1.0 },
         { "name": "zoomSpeed", "type": "Float", "defaultValue": 5.0 },
@@ -286,11 +256,9 @@
         { "name": "targetEntityID", "type": "Int", "defaultValue": -1 },
         { "name": "followTarget", "type": "Bool", "defaultValue": false },
         { "name": "smoothFactor", "type": "Float", "defaultValue": 5.0 },
-        {
-          "name": "followOffset",
-          "type": "Vector3",
-          "defaultValue": [0.0, 0.0, 0.0]
-        },
+        { "name": "followOffsetX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "followOffsetY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "followOffsetZ", "type": "Float", "defaultValue": 0.0 },
         { "name": "allowManualControl", "type": "Bool", "defaultValue": true },
         { "name": "manualControlDecay", "type": "Float", "defaultValue": 2.0 }
       ]
@@ -302,21 +270,19 @@
         { "name": "shakeIntensity", "type": "Float", "defaultValue": 0.0 },
         { "name": "shakeDuration", "type": "Float", "defaultValue": 0.0 },
         { "name": "shakeTimeRemaining", "type": "Float", "defaultValue": 0.0 },
-        {
-          "name": "shakeOffset",
-          "type": "Vector3",
-          "defaultValue": [0.0, 0.0, 0.0]
-        }
+        { "name": "shakeOffsetX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "shakeOffsetY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "shakeOffsetZ", "type": "Float", "defaultValue": 0.0 }
       ]
     },
     {
       "componentType": "CameraBounds_data",
       "parameters": [
         { "name": "useBounds", "type": "Bool", "defaultValue": false },
-        { "name": "boundsX", "type": "Float", "defaultValue": 0.0 },
-        { "name": "boundsY", "type": "Float", "defaultValue": 0.0 },
-        { "name": "boundsWidth", "type": "Float", "defaultValue": 0.0 },
-        { "name": "boundsHeight", "type": "Float", "defaultValue": 0.0 },
+        { "name": "boundingBoxX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "boundingBoxY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "boundingBoxWidth", "type": "Float", "defaultValue": 0.0 },
+        { "name": "boundingBoxHeight", "type": "Float", "defaultValue": 0.0 },
         { "name": "clampToViewport", "type": "Bool", "defaultValue": true }
       ]
     },
@@ -328,11 +294,8 @@
         { "name": "useKeyboard", "type": "Bool", "defaultValue": false },
         { "name": "deadzone", "type": "Float", "defaultValue": 0.15 },
         { "name": "triggerThreshold", "type": "Float", "defaultValue": 0.3 },
-        {
-          "name": "inputDirection",
-          "type": "Vector3",
-          "defaultValue": [0.0, 0.0, 0.0]
-        },
+        { "name": "inputDirectionX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "inputDirectionY", "type": "Float", "defaultValue": 0.0 },
         { "name": "rotationInput", "type": "Float", "defaultValue": 0.0 },
         { "name": "zoomInput", "type": "Float", "defaultValue": 0.0 },
         { "name": "resetRequested", "type": "Bool", "defaultValue": false }
@@ -341,10 +304,10 @@
     {
       "componentType": "CollisionZone_data",
       "parameters": [
-        { "name": "x", "type": "Float", "defaultValue": 0.0 },
-        { "name": "y", "type": "Float", "defaultValue": 0.0 },
-        { "name": "width", "type": "Float", "defaultValue": 100.0 },
-        { "name": "height", "type": "Float", "defaultValue": 100.0 },
+        { "name": "boundsX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "boundsY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "boundsWidth", "type": "Float", "defaultValue": 100.0 },
+        { "name": "boundsHeight", "type": "Float", "defaultValue": 100.0 },
         { "name": "isStatic", "type": "Bool", "defaultValue": true }
       ]
     },
@@ -356,11 +319,9 @@
         { "name": "arrivalThreshold", "type": "Float", "defaultValue": 5.0 },
         { "name": "layerMask", "type": "Int", "defaultValue": 1 },
         { "name": "currentWaypointIndex", "type": "Int", "defaultValue": 0 },
-        {
-          "name": "targetPosition",
-          "type": "Vector3",
-          "defaultValue": [0.0, 0.0, 0.0]
-        },
+        { "name": "targetPositionX", "type": "Float", "defaultValue": 0.0 },
+        { "name": "targetPositionY", "type": "Float", "defaultValue": 0.0 },
+        { "name": "targetPositionZ", "type": "Float", "defaultValue": 0.0 },
         { "name": "hasPath", "type": "Bool", "defaultValue": false },
         { "name": "needsRepath", "type": "Bool", "defaultValue": false },
         { "name": "steeringWeight", "type": "Float", "defaultValue": 1.0 },
