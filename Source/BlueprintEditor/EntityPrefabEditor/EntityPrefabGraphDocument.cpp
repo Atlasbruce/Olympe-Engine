@@ -1,4 +1,6 @@
 ﻿#include "EntityPrefabGraphDocument.h"
+#include "PrefabLoader.h"
+#include "../../system/system_utils.h"
 
 namespace Olympe
 {
@@ -64,7 +66,20 @@ namespace Olympe
     const std::vector<NodeId>& EntityPrefabGraphDocument::GetSelectedNodes() const { return m_selectedNodes; }
 
     void EntityPrefabGraphDocument::AutoLayout() { }
-    void EntityPrefabGraphDocument::ArrangeNodesInGrid(int gridWidth, float spacing) { (void)gridWidth; (void)spacing; }
+
+    void EntityPrefabGraphDocument::ArrangeNodesInGrid(int gridWidth, float spacing)
+    { 
+        if (gridWidth < 1) gridWidth = 3;
+        if (spacing < 50.0f) spacing = 200.0f;
+
+        for (size_t i = 0; i < m_nodes.size(); ++i)
+        {
+            int row = i / gridWidth;
+            int col = i % gridWidth;
+            m_nodes[i].position.x = col * spacing;
+            m_nodes[i].position.y = row * spacing;
+        }
+    }
     void EntityPrefabGraphDocument::CenterViewport() { }
 
     bool EntityPrefabGraphDocument::ConnectNodes(NodeId sourceId, NodeId targetId)
@@ -82,7 +97,200 @@ namespace Olympe
     json EntityPrefabGraphDocument::ToJson() const { return json::object(); }
     EntityPrefabGraphDocument EntityPrefabGraphDocument::FromJson(const json& data) { (void)data; return EntityPrefabGraphDocument(); }
 
-    bool EntityPrefabGraphDocument::LoadFromFile(const std::string& filePath) { (void)filePath; return false; }
+    bool EntityPrefabGraphDocument::LoadFromFile(const std::string& filePath)
+    {
+        try
+        {
+            SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] Starting load from: " << filePath << "\n";
+
+            // Load JSON from file
+            json data = PrefabLoader::LoadJsonFromFile(filePath);
+            SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] JSON loaded successfully\n";
+
+            // Verify structure
+            if (!data.contains("data"))
+            {
+                SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] ERROR: Missing 'data' section\n";
+                return false;
+            }
+
+            // Clear existing data
+            Clear();
+
+            int nodesLoaded = 0;
+            int connectionsLoaded = 0;
+
+            // Parse nodes from JSON
+            if (data["data"].contains("nodes") && data["data"]["nodes"].is_array())
+            {
+                SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] Parsing nodes...\n";
+
+                for (const auto& nodeJson : data["data"]["nodes"])
+                {
+                    try
+                    {
+                        // Extract node data
+                        std::string componentType = nodeJson.value("componentType", "");
+                        std::string componentName = nodeJson.value("componentName", "");
+
+                        if (componentType.empty())
+                        {
+                            SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] WARNING: Node missing componentType\n";
+                            continue;
+                        }
+
+                        // Create node
+                        NodeId id = CreateComponentNode(componentType, componentName);
+                        ComponentNode* node = GetNode(id);
+
+                        if (node)
+                        {
+                            // Set position
+                            if (nodeJson.contains("position") && nodeJson["position"].is_object())
+                            {
+                                float x = nodeJson["position"].value("x", 0.0f);
+                                float y = nodeJson["position"].value("y", 0.0f);
+                                float z = nodeJson["position"].value("z", 0.0f);
+                                node->position = Vector(x, y, z);
+                            }
+
+                            // Set size
+                            if (nodeJson.contains("size") && nodeJson["size"].is_object())
+                            {
+                                float x = nodeJson["size"].value("x", 150.0f);
+                                float y = nodeJson["size"].value("y", 80.0f);
+                                float z = nodeJson["size"].value("z", 0.0f);
+                                node->size = Vector(x, y, z);
+                            }
+
+                            // Set enabled flag
+                            node->enabled = nodeJson.value("enabled", true);
+
+                            // Set selected flag
+                            node->selected = nodeJson.value("selected", false);
+
+                            // Set properties
+                            if (nodeJson.contains("properties") && nodeJson["properties"].is_object())
+                            {
+                                for (auto it = nodeJson["properties"].begin(); it != nodeJson["properties"].end(); ++it)
+                                {
+                                    std::string key = it.key();
+                                    const json& value = it.value();
+
+                                    if (value.is_string())
+                                    {
+                                        node->properties[key] = value.get<std::string>();
+                                    }
+                                    else if (value.is_number())
+                                    {
+                                        node->properties[key] = std::to_string(value.get<double>());
+                                    }
+                                    else if (value.is_boolean())
+                                    {
+                                        node->properties[key] = value.get<bool>() ? "true" : "false";
+                                    }
+                                }
+                            }
+
+                            nodesLoaded++;
+                            SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] Loaded node: " << componentName 
+                                      << " (type=" << componentType << ", id=" << id << ")\n";
+                        }
+                    }
+                    catch (const std::exception& e)
+                    {
+                        SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] ERROR parsing node: " << e.what() << "\n";
+                    }
+                }
+            }
+            else
+            {
+                SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] WARNING: 'nodes' array not found or invalid\n";
+            }
+
+            // Parse connections from JSON
+            if (data["data"].contains("connections") && data["data"]["connections"].is_array())
+            {
+                SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] Parsing connections...\n";
+
+                for (const auto& connJson : data["data"]["connections"])
+                {
+                    try
+                    {
+                        NodeId sourceId = connJson.value("sourceNodeId", InvalidNodeId);
+                        NodeId targetId = connJson.value("targetNodeId", InvalidNodeId);
+
+                        if (sourceId != InvalidNodeId && targetId != InvalidNodeId)
+                        {
+                            if (ConnectNodes(sourceId, targetId))
+                            {
+                                connectionsLoaded++;
+                                SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] Loaded connection: " 
+                                          << sourceId << " -> " << targetId << "\n";
+                            }
+                        }
+                    }
+                    catch (const std::exception& e)
+                    {
+                        SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] ERROR parsing connection: " << e.what() << "\n";
+                    }
+                }
+            }
+            else
+            {
+                SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] WARNING: 'connections' array not found or invalid\n";
+            }
+
+            // Restore canvas state
+            if (data["data"].contains("canvasState") && data["data"]["canvasState"].is_object())
+            {
+                try
+                {
+                    float zoom = data["data"]["canvasState"].value("zoom", 1.0f);
+                    float offsetX = data["data"]["canvasState"].value("offsetX", 0.0f);
+                    float offsetY = data["data"]["canvasState"].value("offsetY", 0.0f);
+
+                    SetCanvasZoom(zoom);
+                    SetCanvasOffset(Vector(offsetX, offsetY, 0.0f));
+
+                    SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] Canvas state restored: zoom=" 
+                              << zoom << ", offset=(" << offsetX << ", " << offsetY << ")\n";
+                }
+                catch (const std::exception& e)
+                {
+                    SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] ERROR restoring canvas state: " << e.what() << "\n";
+                }
+            }
+
+            SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] SUCCESS: Loaded " << nodesLoaded 
+                      << " nodes and " << connectionsLoaded << " connections\n";
+
+            // Auto-layout nodes if they're all at Y=0 (not properly positioned)
+            bool needsLayout = true;
+            for (size_t i = 0; i < m_nodes.size(); ++i)
+            {
+                if (m_nodes[i].position.y != 0.0f)
+                {
+                    needsLayout = false;
+                    break;
+                }
+            }
+
+            if (needsLayout && m_nodes.size() > 1)
+            {
+                SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] Auto-arranging nodes in grid layout\n";
+                ArrangeNodesInGrid(3, 200.0f);  // 3 columns, 200 pixel spacing
+            }
+
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] EXCEPTION: " << e.what() << "\n";
+            return false;
+        }
+    }
+
     bool EntityPrefabGraphDocument::SaveToFile(const std::string& filePath) { (void)filePath; return false; }
 
     void EntityPrefabGraphDocument::SetDocumentName(const std::string& name) { m_documentName = name; }

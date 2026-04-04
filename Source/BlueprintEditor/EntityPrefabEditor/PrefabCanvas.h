@@ -27,6 +27,7 @@ namespace Olympe
         ~PrefabCanvas();
 
         void Initialize(EntityPrefabGraphDocument* document);
+        EntityPrefabGraphDocument* GetDocument() const;
         void Render();
         void Update(float deltaTime);
 

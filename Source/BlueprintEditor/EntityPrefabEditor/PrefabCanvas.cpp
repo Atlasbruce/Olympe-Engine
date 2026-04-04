@@ -11,6 +11,8 @@ namespace Olympe
 
     void PrefabCanvas::Initialize(EntityPrefabGraphDocument* document) { m_document = document; if (m_renderer) { m_renderer->Initialize(); } }
 
+    EntityPrefabGraphDocument* PrefabCanvas::GetDocument() const { return m_document; }
+
     void PrefabCanvas::Render()
     { 
         if (!m_document || !m_renderer) { return; }
@@ -310,6 +312,10 @@ namespace Olympe
     { 
         if (!m_document || !m_renderer) { return; }
 
+        // Pass canvas transformation context to renderer
+        m_renderer->SetCanvasTransform(m_canvasOffset, m_canvasZoom);
+        m_renderer->SetCanvasScreenPos(ImGui::GetCursorScreenPos());
+
         ImGui::PushClipRect(
             ImGui::GetCursorScreenPos(),
             ImVec2(ImGui::GetCursorScreenPos().x + ImGui::GetContentRegionAvail().x,
@@ -325,6 +331,10 @@ namespace Olympe
     void PrefabCanvas::RenderConnections()
     { 
         if (!m_document || !m_renderer) { return; }
+
+        // Pass canvas transformation context to renderer
+        m_renderer->SetCanvasTransform(m_canvasOffset, m_canvasZoom);
+        m_renderer->SetCanvasScreenPos(ImGui::GetCursorScreenPos());
 
         ImGui::PushClipRect(
             ImGui::GetCursorScreenPos(),

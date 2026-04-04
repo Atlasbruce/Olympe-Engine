@@ -63,6 +63,7 @@
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.cpp" />
@@ -295,6 +296,7 @@
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.h" />
+    <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.h" />
@@ -512,8 +514,11 @@
     <None Include="AUDIT_SWITCH_CASE_SYSTEM.md" />
     <None Include="blueprint_editor_config.json" />
     <None Include="ClassDiagram.cd" />
+    <None Include="COMPREHENSIVE_PROJECT_STATUS.md" />
     <None Include="config\ATS-VS-editor-config.json" />
     <None Include="Config\global_blackboard_register.json" />
+    <None Include="DEBUG_INSTRUCTIONS.md" />
+    <None Include="DIAGNOSTIC_PROJECT_INTEGRATION.md" />
     <None Include="DIAGNOSTIC_SUMMARY.md" />
     <None Include="DOCUMENTATION_INDEX.md" />
     <None Include="IMPLEMENTATION_COMPLETE_SUMMARY.md" />
@@ -523,12 +528,18 @@
     <None Include="NODE_SIZING_SUMMARY.md" />
     <None Include="olympe.ini" />
     <None Include="OlympeBlueprintEditor.vcxproj" />
+    <None Include="OLYMPEBLUEPRINTEDITOR_FIX_INSTRUCTIONS.md" />
     <None Include="PHASE2_STEP3_COMPLETION_REPORT.md" />
+    <None Include="PHASE4_TESTING_PLAN.md" />
+    <None Include="PROBLEMS_AND_SOLUTIONS.md" />
+    <None Include="PROJECT_CONFIG_AUDIT.md" />
+    <None Include="QUICK_START_TESTING.md" />
     <None Include="QUICK_SUMMARY_SWITCH_UNIFICATION.md" />
     <None Include="SCHEMA_SWITCH_NODE_INTERFACE.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
+    <None Include="SESSION_SUMMARY.md" />
     <None Include="Source\BlueprintEditor\EntityPrefabEditor\IMPLEMENTATION.md" />
     <None Include="Source\BlueprintEditor\INTEGRATION_GUIDE_NodeProperties.md" />
     <None Include="SUBGRAPH_BEFORE_AFTER_COMPARISON.md" />
@@ -540,6 +551,7 @@
     <None Include="SUBGRAPH_VISUAL_SUMMARY.md" />
     <None Include="SWITCH_CASE_UNIFICATION_IMPLEMENTATION_PLAN.md" />
     <None Include="SWITCH_MODAL_UX_IMPROVEMENTS.md" />
+    <None Include="TECHNICAL_SUMMARY.md" />
     <None Include="VALIDATION_COMPLETE_SWITCH_UNIFICATION.md" />
   </ItemGroup>
   <ItemGroup>

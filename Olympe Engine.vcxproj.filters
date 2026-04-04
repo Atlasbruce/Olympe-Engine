@@ -225,6 +225,7 @@
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -478,6 +479,7 @@
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.h" />
+    <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -528,6 +530,16 @@
     <None Include="NODE_SIZING_IMPLEMENTATION_REPORT.md" />
     <None Include="NODE_SIZING_SUMMARY.md" />
     <None Include="Source\BlueprintEditor\EntityPrefabEditor\IMPLEMENTATION.md" />
+    <None Include="PROJECT_CONFIG_AUDIT.md" />
+    <None Include="OLYMPEBLUEPRINTEDITOR_FIX_INSTRUCTIONS.md" />
+    <None Include="TECHNICAL_SUMMARY.md" />
+    <None Include="DIAGNOSTIC_PROJECT_INTEGRATION.md" />
+    <None Include="PHASE4_TESTING_PLAN.md" />
+    <None Include="SESSION_SUMMARY.md" />
+    <None Include="PROBLEMS_AND_SOLUTIONS.md" />
+    <None Include="COMPREHENSIVE_PROJECT_STATUS.md" />
+    <None Include="QUICK_START_TESTING.md" />
+    <None Include="DEBUG_INSTRUCTIONS.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

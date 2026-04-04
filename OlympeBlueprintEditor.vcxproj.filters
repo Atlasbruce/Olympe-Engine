@@ -649,11 +649,11 @@
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp">
       <Filter>Source Files\BlueprintEditor</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\PrefabScanner.cpp">
+    <ClCompile Include="..\Source\\BlueprintEditor\\EntityPrefabEditor\\EntityPrefabRenderer.cpp">
       <Filter>Source Files\BlueprintEditor</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\Source\PrefabScanner.cpp">
+      <Filter>Source Files\BlueprintEditor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1288,7 +1288,6 @@
     <ClInclude Include="..\Source\PrefabScanner.h">
       <Filter>Source Files\BlueprintEditor</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico">

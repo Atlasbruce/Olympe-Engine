@@ -1,3 +1,37 @@
+📋 STRUCTURE JSON CORRECTE - EntityPrefab v4
+
+🔑 CHAMPS OBLIGATOIRES PAR NŒUD
+
+Champ	Type	Obligatoire	Description
+nodeId	uint	✅ Oui	Identifiant unique du nœud (>0)
+componentType	string	✅ Oui	Type de composant (ex: "Identity_data")
+componentName	string	✅ Oui	Nom lisible du composant (ex: "Identity")
+position	{x, y, z}	✅ Oui	Position dans le canvas (en pixels)
+size	{x, y, z}	✅ Oui	Taille du nœud visuel (120x60 standard)
+enabled	bool	✅ Oui	Nœud actif/inactif
+selected	bool	✅ Oui	État de sélection (false au chargement)
+properties	object	✅ Oui	Propriétés du composant (map clé-valeur)
+
+---
+📊 STRUCTURE GLOBALE
+
+
+{
+  "schema_version": 4,           ← IMPORTANT : v4 pour Phase 3+
+  "type": "<NomType>",           ← Doit correspondre à blueprintType
+  "blueprintType": "EntityPrefab", ← CRITIQUE : détection de type
+  "name": "<Nom>",
+  "description": "<Description>",
+  "metadata": { ... },
+  "data": {
+    "prefabName": "<Nom>",
+    "nodes": [ ... ],            ← Array de nœuds
+    "connections": [ ... ],      ← Array de connexions
+    "canvasState": { ... }       ← État du canvas
+  }
+}
+
+Exemple guard.json
 {
   "schema_version": 4,
   "type": "Guard",
@@ -125,3 +159,13 @@
     }
   }
 }
+
+🎯 VALIDATION CHECKLIST
+•	✅ schema_version: 4
+•	✅ blueprintType: "EntityPrefab" (pas "EntityPrefab")
+•	✅ Chaque nœud a nodeId unique et > 0
+•	✅ Chaque nœud a componentType (type composant)
+•	✅ Chaque nœud a position et size (pour rendu canvas)
+•	✅ Chaque nœud a properties objet (peut être vide {})
+•	✅ connections est un array de pairs source→target
+•	✅ Pas de "components" plat (ancien format BT)

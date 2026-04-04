@@ -2,6 +2,7 @@
 
 #include "./../../vector.h"
 #include "ComponentNodeData.h"
+#include "./../../third_party/imgui/imgui.h"
 
 namespace Olympe
 {
@@ -16,6 +17,13 @@ namespace Olympe
 
         void Initialize();
         void Shutdown();
+
+        // Canvas transformation context
+        void SetCanvasTransform(const Vector& offset, float zoom);
+        Vector GetCanvasOffset() const;
+        float GetCanvasZoom() const;
+        void SetCanvasScreenPos(const ImVec2& screenPos);
+        ImVec2 GetCanvasScreenPos() const;
 
         // Rendering
         void RenderNode(const ComponentNode& node);
@@ -54,10 +62,14 @@ namespace Olympe
         bool m_showLabels = true;
         bool m_showProperties = true;
         float m_nodeScale = 1.0f;
+        Vector m_canvasOffset;
+        float m_canvasZoom = 1.0f;
+        ImVec2 m_canvasScreenPos = ImVec2(0, 0);
 
         void RenderNodeBox(const ComponentNode& node);
         void RenderNodeLabel(const ComponentNode& node);
         void RenderConnectionLine(const Vector& from, const Vector& to);
         Vector GetNodeColor(const ComponentNode& node) const;
+        Vector CanvasToScreen(const Vector& canvasPos) const;
     };
 }

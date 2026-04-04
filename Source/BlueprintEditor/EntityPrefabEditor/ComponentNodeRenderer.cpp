@@ -1,6 +1,7 @@
 ﻿#include "ComponentNodeRenderer.h"
 #include "EntityPrefabGraphDocument.h"
 #include "./../../third_party/imgui/imgui.h"
+#include "../../system/system_utils.h"
 
 namespace Olympe
 {
@@ -19,6 +20,26 @@ namespace Olympe
     void ComponentNodeRenderer::Initialize() { }
     void ComponentNodeRenderer::Shutdown() { }
 
+    void ComponentNodeRenderer::SetCanvasTransform(const Vector& offset, float zoom)
+    {
+        m_canvasOffset = offset;
+        m_canvasZoom = (zoom > 0.1f) ? zoom : 0.1f;
+    }
+
+    Vector ComponentNodeRenderer::GetCanvasOffset() const { return m_canvasOffset; }
+    float ComponentNodeRenderer::GetCanvasZoom() const { return m_canvasZoom; }
+
+    void ComponentNodeRenderer::SetCanvasScreenPos(const ImVec2& screenPos) { m_canvasScreenPos = screenPos; }
+    ImVec2 ComponentNodeRenderer::GetCanvasScreenPos() const { return m_canvasScreenPos; }
+
+    Vector ComponentNodeRenderer::CanvasToScreen(const Vector& canvasPos) const
+    {
+        Vector screenPos = canvasPos;
+        screenPos.x = screenPos.x * m_canvasZoom + m_canvasOffset.x + m_canvasScreenPos.x;
+        screenPos.y = screenPos.y * m_canvasZoom + m_canvasOffset.y + m_canvasScreenPos.y;
+        return screenPos;
+    }
+
     void ComponentNodeRenderer::RenderNode(const ComponentNode& node)
     {
         RenderNodeBox(node);
@@ -31,6 +52,10 @@ namespace Olympe
     void ComponentNodeRenderer::RenderNodes(const EntityPrefabGraphDocument* document)
     {
         if (document == nullptr) { return; }
+
+        // Get the ImGui child window's screen position (top-left corner)
+        ImVec2 canvasScreenPos = ImGui::GetCursorScreenPos();
+
         const std::vector<ComponentNode>& nodes = document->GetAllNodes();
         for (size_t i = 0; i < nodes.size(); ++i)
         {
@@ -104,13 +129,20 @@ namespace Olympe
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         if (drawList == nullptr) { return; }
 
-        Vector min = node.position;
-        min.x -= node.size.x * 0.5f * m_nodeScale;
-        min.y -= node.size.y * 0.5f * m_nodeScale;
+        // Transform node position from canvas space to screen space
+        Vector screenCenter = CanvasToScreen(node.position);
 
-        Vector max = node.position;
-        max.x += node.size.x * 0.5f * m_nodeScale;
-        max.y += node.size.y * 0.5f * m_nodeScale;
+        // Apply scaled node size
+        float scaledWidth = node.size.x * 0.5f * m_nodeScale * m_canvasZoom;
+        float scaledHeight = node.size.y * 0.5f * m_nodeScale * m_canvasZoom;
+
+        Vector min = screenCenter;
+        min.x -= scaledWidth;
+        min.y -= scaledHeight;
+
+        Vector max = screenCenter;
+        max.x += scaledWidth;
+        max.y += scaledHeight;
 
         Vector color = GetNodeColor(node);
         ImU32 bgColor = ImGui::GetColorU32(ImVec4(color.x, color.y, color.z, 1.0f));
@@ -125,7 +157,7 @@ namespace Olympe
         if (node.selected)
         {
             ImU32 glowColor = ImGui::GetColorU32(ImVec4(0.0f, 0.8f, 1.0f, 0.3f));
-            float glowSize = 4.0f * m_nodeScale;
+            float glowSize = 4.0f * m_nodeScale * m_canvasZoom;
             drawList->AddRectFilled(
                 ImVec2(min.x - glowSize, min.y - glowSize),
                 ImVec2(max.x + glowSize, max.y + glowSize),
@@ -157,7 +189,7 @@ namespace Olympe
             (color.z * 0.8f > 1.0f) ? 1.0f : color.z * 0.8f,
             1.0f
         ));
-        float titleHeight = 25.0f * m_nodeScale;
+        float titleHeight = 25.0f * m_nodeScale * m_canvasZoom;
         drawList->AddRectFilled(
             ImVec2(min.x, min.y),
             ImVec2(max.x, min.y + titleHeight),
@@ -171,31 +203,38 @@ namespace Olympe
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         if (drawList == nullptr) { return; }
 
-        Vector min = node.position;
-        min.x -= node.size.x * 0.5f * m_nodeScale;
-        min.y -= node.size.y * 0.5f * m_nodeScale;
+        // Transform node position from canvas space to screen space
+        Vector screenCenter = CanvasToScreen(node.position);
+
+        // Calculate node bounds in screen space
+        float scaledWidth = node.size.x * 0.5f * m_nodeScale * m_canvasZoom;
+        float scaledHeight = node.size.y * 0.5f * m_nodeScale * m_canvasZoom;
+
+        Vector min = screenCenter;
+        min.x -= scaledWidth;
+        min.y -= scaledHeight;
 
         Vector textColor = m_style.textColor;
         ImU32 textColorU32 = ImGui::GetColorU32(ImVec4(textColor.x, textColor.y, textColor.z, 1.0f));
 
-        ImVec2 textPos(min.x + 8.0f * m_nodeScale, min.y + 4.0f * m_nodeScale);
+        ImVec2 textPos(min.x + 8.0f * m_nodeScale * m_canvasZoom, min.y + 4.0f * m_nodeScale * m_canvasZoom);
 
         const char* label = node.componentType.c_str();
         drawList->AddText(textPos, textColorU32, label);
 
         if (m_showProperties && node.properties.size() > 0)
         {
-            ImVec2 propPos(min.x + 8.0f * m_nodeScale, min.y + 28.0f * m_nodeScale);
+            ImVec2 propPos(min.x + 8.0f * m_nodeScale * m_canvasZoom, min.y + 28.0f * m_nodeScale * m_canvasZoom);
             size_t propCount = 0;
             for (auto it = node.properties.begin(); it != node.properties.end() && propCount < 3; ++it, ++propCount)
             {
                 std::string propText = "  " + it->first + ": " + it->second;
                 drawList->AddText(propPos, textColorU32, propText.c_str());
-                propPos.y += 16.0f * m_nodeScale;
+                propPos.y += 16.0f * m_nodeScale * m_canvasZoom;
             }
             if (node.properties.size() > 3)
             {
-                ImVec2 morePos(min.x + 8.0f * m_nodeScale, propPos.y);
+                ImVec2 morePos(min.x + 8.0f * m_nodeScale * m_canvasZoom, propPos.y);
                 drawList->AddText(morePos, textColorU32, "  ...");
             }
         }
@@ -206,10 +245,14 @@ namespace Olympe
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         if (drawList == nullptr) { return; }
 
-        ImVec2 p1 = from.ToImVec2();
-        ImVec2 p2 = to.ToImVec2();
+        // Transform canvas coordinates to screen coordinates
+        Vector screenFrom = CanvasToScreen(from);
+        Vector screenTo = CanvasToScreen(to);
 
-        float distance = (to.x - from.x) * (to.x - from.x) + (to.y - from.y) * (to.y - from.y);
+        ImVec2 p1 = screenFrom.ToImVec2();
+        ImVec2 p2 = screenTo.ToImVec2();
+
+        float distance = (screenTo.x - screenFrom.x) * (screenTo.x - screenFrom.x) + (screenTo.y - screenFrom.y) * (screenTo.y - screenFrom.y);
         distance = (distance > 1.0f) ? distance : 1.0f;
         float offsetX = distance * 0.3f;
 

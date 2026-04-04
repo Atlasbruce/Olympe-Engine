@@ -11,6 +11,9 @@
 #include "VisualScriptRenderer.h"
 #include "BehaviorTreeRenderer.h"
 #include "NodeGraphPanel.h"
+#include "EntityPrefabEditor/EntityPrefabRenderer.h"
+#include "EntityPrefabEditor/PrefabCanvas.h"
+#include "EntityPrefabEditor/EntityPrefabGraphDocument.h"
 
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/nlohmann/json.hpp"
@@ -109,6 +112,8 @@ std::string TabManager::DetectGraphType(const std::string& filePath)
         std::string bt = root["blueprintType"].get<std::string>();
         if (bt == "BehaviorTree")
             return "BehaviorTree";
+        if (bt == "EntityPrefab")
+            return "EntityPrefab";
     }
 
     // Structural heuristics
@@ -155,6 +160,20 @@ std::string TabManager::CreateNewTab(const std::string& graphType)
     if (graphType == "VisualScript")
     {
         VisualScriptRenderer* r = new VisualScriptRenderer();
+        tab.renderer = r;
+    }
+    else if (graphType == "EntityPrefab")
+    {
+        static EntityPrefabGraphDocument s_epDocument;
+        static PrefabCanvas s_epCanvas;
+        static bool s_epCanvasInit = false;
+        if (!s_epCanvasInit)
+        {
+            s_epCanvas.Initialize(&s_epDocument);
+            s_epCanvasInit = true;
+        }
+
+        EntityPrefabRenderer* r = new EntityPrefabRenderer(s_epCanvas);
         tab.renderer = r;
     }
     else
@@ -226,6 +245,28 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
         {
             delete r;
             SYSTEM_LOG << "[TabManager] Failed to load BT file: " << filePath << "\n";
+            return "";
+        }
+        tab.renderer = r;
+    }
+    else if (graphType == "EntityPrefab")
+    {
+        // EntityPrefabRenderer needs a PrefabCanvas reference.
+        // Similar to BehaviorTree, all EP tabs share the same canvas.
+        static EntityPrefabGraphDocument s_epDocument;
+        static PrefabCanvas s_epCanvas;
+        static bool s_epCanvasInit = false;
+        if (!s_epCanvasInit)
+        {
+            s_epCanvas.Initialize(&s_epDocument);
+            s_epCanvasInit = true;
+        }
+
+        EntityPrefabRenderer* r = new EntityPrefabRenderer(s_epCanvas);
+        if (!r->Load(filePath))
+        {
+            delete r;
+            SYSTEM_LOG << "[TabManager] Failed to load EntityPrefab file: " << filePath << "\n";
             return "";
         }
         tab.renderer = r;
