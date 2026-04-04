@@ -9,6 +9,7 @@ namespace Olympe
     ComponentPalettePanel::ComponentPalettePanel()
     {
         memset(m_searchBuffer, 0, sizeof(m_searchBuffer));
+        memset(m_draggedComponentBuffer, 0, sizeof(m_draggedComponentBuffer));
     }
 
     ComponentPalettePanel::~ComponentPalettePanel() { }
@@ -124,18 +125,39 @@ namespace Olympe
                 }
             }
 
-            // Render component item
+            // Render component item as button with drag-drop support
             std::string label = component.name + "##" + component.name + std::to_string(i);
-            if (ImGui::Button(label.c_str(), ImVec2(-1.0f, 30.0f)))
+
+            // Use Invisible button so drag-drop works
+            ImGui::InvisibleButton(label.c_str(), ImVec2(-1.0f, 30.0f));
+
+            // Draw background to show it's hoverable
+            ImVec2 itemMin = ImGui::GetItemRectMin();
+            ImVec2 itemMax = ImGui::GetItemRectMax();
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+            if (ImGui::IsItemHovered())
             {
-                AddComponentToGraph(document, component);
+                drawList->AddRectFilled(itemMin, itemMax, ImGui::GetColorU32(ImVec4(0.4f, 0.4f, 0.5f, 1.0f)));
+            }
+            else
+            {
+                drawList->AddRectFilled(itemMin, itemMax, ImGui::GetColorU32(ImVec4(0.3f, 0.3f, 0.35f, 1.0f)));
             }
 
-            // Drag-and-drop source: drag component from palette to canvas
-            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+            drawList->AddText(ImVec2(itemMin.x + 5.0f, itemMin.y + 6.0f), ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 1.0f, 1.0f)), component.name.c_str());
+
+            // Drag-and-drop source
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
             {
-                // Store the component name as payload
-                ImGui::SetDragDropPayload("COMPONENT_TYPE", component.name.c_str(), component.name.size() + 1);
+                // Copy component name to stable buffer for drag-drop payload
+                strncpy_s(m_draggedComponentBuffer, sizeof(m_draggedComponentBuffer), 
+                          component.name.c_str(), _TRUNCATE);
+
+                // Set payload with stable buffer
+                ImGui::SetDragDropPayload("COMPONENT_TYPE", 
+                                        m_draggedComponentBuffer, 
+                                        strlen(m_draggedComponentBuffer) + 1);
 
                 // Display preview during drag
                 ImGui::Text("Adding: %s", component.name.c_str());

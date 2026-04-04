@@ -43,6 +43,7 @@ namespace Olympe
         std::string m_searchFilter;
         int m_selectedCategoryIndex = 0;
         char m_searchBuffer[256];
+        char m_draggedComponentBuffer[256];  // Buffer for drag-drop payload (must be stable)
 
         // Utility methods
         void RenderSearchBar();

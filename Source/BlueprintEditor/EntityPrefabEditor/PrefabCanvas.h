@@ -5,6 +5,7 @@
 #include <map>
 #include "./../../vector.h"
 #include "EntityPrefabGraphDocument.h"
+#include "../../Source/third_party/imgui/imgui.h"
 
 namespace Olympe
 {
@@ -52,6 +53,8 @@ namespace Olympe
         void SelectAll();
         void DeleteSelectedNodes();
         void AddComponentNode(const std::string& componentType, const std::string& componentName, float x, float y);
+        void AcceptComponentDropAtScreenPos(const std::string& componentType, const std::string& componentName, float screenX, float screenY);
+
 
         // Connection interaction
         void StartConnectionCreation(NodeId sourceNodeId);
@@ -83,6 +86,9 @@ namespace Olympe
         Vector ScreenToCanvas(float screenX, float screenY) const;
         Vector CanvasToScreen(float canvasX, float canvasY) const;
 
+        // Get canvas screen position for coordinate transformations
+        ImVec2 GetCanvasScreenPos() const;
+
         // Interaction state
         CanvasInteractionMode GetInteractionMode() const;
         bool IsNodeDragging() const;
@@ -99,6 +105,9 @@ namespace Olympe
         bool m_showGrid = true;
         bool m_showDebugInfo = false;
         bool m_snapToGrid = true;
+
+        // Canvas screen position (stored for drag-drop context)
+        ImVec2 m_canvasScreenPos = ImVec2(0, 0);
 
         // Interaction state
         Vector m_lastMousePos;

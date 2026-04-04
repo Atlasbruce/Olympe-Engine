@@ -26,10 +26,14 @@ void EntityPrefabRenderer::Render()
     float canvasWidth = totalWidth * m_canvasPanelWidth;
     float paletteWidth = totalWidth - canvasWidth - handleWidth;
 
+    ImVec2 regionMin = ImGui::GetCursorScreenPos();
+
     // Render canvas on the left
     ImGui::BeginChild("EntityPrefabCanvas", ImVec2(canvasWidth, 0), false, ImGuiWindowFlags_NoScrollbar);
     m_canvas.Render();
     ImGui::EndChild();
+
+    ImVec2 canvasEnd = ImGui::GetCursorScreenPos();
 
     ImGui::SameLine();
 
@@ -54,6 +58,28 @@ void EntityPrefabRenderer::Render()
     ImGui::BeginChild("ComponentPalette", ImVec2(paletteWidth, 0), false, ImGuiWindowFlags_NoScrollbar);
     m_componentPalette.Render(m_canvas.GetDocument());
     ImGui::EndChild();
+
+    // After both panels rendered, create an invisible overlay for drag-drop target
+    // This covers the canvas area and accepts drops
+    ImVec2 canvasMin = regionMin;
+    ImVec2 canvasMax(regionMin.x + canvasWidth, canvasEnd.y);
+
+    ImGui::SetCursorScreenPos(canvasMin);
+    ImGui::PushClipRect(canvasMin, canvasMax, false);
+    ImGui::Dummy(ImVec2(canvasWidth, canvasEnd.y - canvasMin.y));
+
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("COMPONENT_TYPE"))
+        {
+            const char* componentName = (const char*)payload->Data;
+
+            // Use the canvas's coordinate transformation with stored canvas position
+            m_canvas.AcceptComponentDropAtScreenPos(componentName, componentName, ImGui::GetMousePos().x, ImGui::GetMousePos().y);
+        }
+        ImGui::EndDragDropTarget();
+    }
+    ImGui::PopClipRect();
 }
 
 bool EntityPrefabRenderer::Load(const std::string& path)

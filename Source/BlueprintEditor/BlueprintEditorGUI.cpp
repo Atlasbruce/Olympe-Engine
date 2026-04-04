@@ -246,6 +246,9 @@ namespace Olympe
                 if (ImGui::MenuItem(ICON_FA_BRAIN " New Behavior Tree", "Ctrl+Shift+N"))
                     TabManager::Get().CreateNewTab("BehaviorTree");
 
+                if (ImGui::MenuItem(ICON_FA_CUBES " New Entity Prefab", "Ctrl+Alt+N"))
+                    TabManager::Get().CreateNewTab("EntityPrefab");
+
                 if (ImGui::MenuItem(ICON_FA_FOLDER_OPEN " Open Blueprint...", "Ctrl+O"))
                 {
                     // Legacy fallback when no file dialog exists
@@ -1249,12 +1252,16 @@ namespace Olympe
         }
 
         // Ctrl+N : New Visual Script tab
-        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_N) && !io.KeyShift)
+        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_N) && !io.KeyShift && !io.KeyAlt)
             TabManager::Get().CreateNewTab("VisualScript");
 
         // Ctrl+Shift+N : New Behavior Tree tab
         if (io.KeyCtrl && io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_N))
             TabManager::Get().CreateNewTab("BehaviorTree");
+
+        // Ctrl+Alt+N : New Entity Prefab tab
+        if (io.KeyCtrl && io.KeyAlt && ImGui::IsKeyPressed(ImGuiKey_N) && !io.KeyShift)
+            TabManager::Get().CreateNewTab("EntityPrefab");
 
         // Ctrl+W : Close active tab
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_W) && !io.KeyShift)

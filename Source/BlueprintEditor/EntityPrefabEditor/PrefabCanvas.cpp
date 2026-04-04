@@ -1,6 +1,7 @@
 ﻿#include "PrefabCanvas.h"
 #include "ComponentNodeRenderer.h"
 #include "../../Source/third_party/imgui/imgui.h"
+#include "../../system/system_utils.h"
 #include <cmath>
 
 namespace Olympe
@@ -22,6 +23,7 @@ namespace Olympe
 
         // Handle ImGui input events
         ImVec2 canvasPos = ImGui::GetCursorScreenPos();
+        m_canvasScreenPos = canvasPos;  // Store for use in drag-drop context
         ImVec2 canvasSize = ImGui::GetContentRegionAvail();
         ImVec2 canvasEnd(canvasPos.x + canvasSize.x, canvasPos.y + canvasSize.y);
 
@@ -66,19 +68,6 @@ namespace Olympe
 
         // Context menu handling (right-click)
         RenderContextMenu();
-
-        // Drag-and-drop target: accept components from palette
-        if (ImGui::BeginDragDropTarget())
-        {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("COMPONENT_TYPE"))
-            {
-                // Get component name from payload
-                const char* componentName = (const char*)payload->Data;
-                ImVec2 mousePos = ImGui::GetMousePos();
-                AddComponentNode(componentName, componentName, mousePos.x, mousePos.y);
-            }
-            ImGui::EndDragDropTarget();
-        }
 
         ImGui::EndChild();
         ImGui::PopStyleColor();
@@ -257,6 +246,35 @@ namespace Olympe
             newNode->position = canvasPos;
             newNode->size = Vector(150.0f, 80.0f, 0.0f);
             newNode->enabled = true;
+
+            SYSTEM_LOG << "[PrefabCanvas::AddComponentNode] Created node: " << componentName 
+                       << " at canvas pos (" << canvasPos.x << ", " << canvasPos.y << ")\n";
+        }
+    }
+
+    void PrefabCanvas::AcceptComponentDropAtScreenPos(const std::string& componentType, const std::string& componentName, float screenX, float screenY)
+    {
+        if (!m_document) { return; }
+
+        // Transform from absolute screen position to logical canvas position
+        // Using stored canvas screen position for correct context
+        // Matches formula: screen = canvas * zoom + offset + screenBase
+        // Therefore: canvas = (screen - screenBase - offset) / zoom
+        ImVec2 storedCanvasPos = m_canvasScreenPos;
+
+        Vector canvas;
+        canvas.x = (screenX - storedCanvasPos.x - m_canvasOffset.x) / m_canvasZoom;
+        canvas.y = (screenY - storedCanvasPos.y - m_canvasOffset.y) / m_canvasZoom;
+        canvas.z = 0.0f;
+
+        // Create new node at the computed canvas position
+        NodeId newNodeId = m_document->CreateComponentNode(componentType, componentName);
+        ComponentNode* newNode = m_document->GetNode(newNodeId);
+        if (newNode)
+        {
+            newNode->position = canvas;
+            newNode->size = Vector(150.0f, 80.0f, 0.0f);
+            newNode->enabled = true;
         }
     }
 
@@ -308,11 +326,11 @@ namespace Olympe
     { 
         Vector screen(screenX, screenY, 0.0f);
         ImVec2 canvasPos = ImGui::GetCursorScreenPos();
-        // Correct transformation: undo screen position, undo zoom, undo pan offset
+        // Correct transformation: undo screen position, undo offset, undo zoom
         // screen = canvas * zoom + offset + canvasPos
         // canvas = (screen - canvasPos - offset) / zoom
-        screen.x = (screen.x - canvasPos.x - m_canvasOffset.x * m_canvasZoom) / m_canvasZoom;
-        screen.y = (screen.y - canvasPos.y - m_canvasOffset.y * m_canvasZoom) / m_canvasZoom;
+        screen.x = (screen.x - canvasPos.x - m_canvasOffset.x) / m_canvasZoom;
+        screen.y = (screen.y - canvasPos.y - m_canvasOffset.y) / m_canvasZoom;
         return screen;
     }
 
@@ -323,6 +341,11 @@ namespace Olympe
         canvas.x = canvas.x * m_canvasZoom + canvasPos.x + m_canvasOffset.x;
         canvas.y = canvas.y * m_canvasZoom + canvasPos.y + m_canvasOffset.y;
         return canvas;
+    }
+
+    ImVec2 PrefabCanvas::GetCanvasScreenPos() const
+    {
+        return m_canvasScreenPos;
     }
 
     CanvasInteractionMode PrefabCanvas::GetInteractionMode() const { return m_interactionMode; }
