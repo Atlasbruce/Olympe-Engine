@@ -1,0 +1,128 @@
+{
+  "schema_version": 2,
+  "type": "Player",
+  "blueprintType": "EntityPrefab",
+  "name": "Player",
+  "description": "Playable character entity with full components",
+  "metadata": {
+    "author": "Atlasbruce",
+    "created": "2026-01-08T10:00:00Z",
+    "lastModified": "2026-01-08T10:00:00Z",
+    "tags": ["Player", "Character", "Controllable"]
+  },
+  "data": {
+    "prefabName": "Player",
+    "components": [
+      {
+        "type": "Identity_data",
+        "properties": {
+          "name": "Player_{id}",
+          "tag": "Player",
+          "entityType": "Player"
+        }
+      },
+      {
+        "type": "Position_data",
+        "properties": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        }
+      },
+      {
+        "type": "VisualSprite_data",
+        "properties": {
+          "spritePath": "./Resources/Sprites/player.png",
+          "width": 32,
+          "height": 32,
+          "layer": 0
+        }
+      },
+      {
+        "type": "VisualAnimation_data",
+        "properties": {
+          "bankId": "player",
+          "currentAnimName": "idle",
+          "animGraphPath": "./Gamedata/Animations/AnimationGraphs/player_animgraph.json",
+          "playbackSpeed": 1.0,
+          "loop": true,
+          "isPlaying": true
+        }
+      },
+      {
+        "type": "BoundingBox_data",
+        "properties": {
+          "width": 32,
+          "height": 32,
+          "offsetX": 16,
+          "offsetY": 16
+        }
+      },
+      {
+        "type": "Movement_data",
+        "properties": {
+          "speed": 100.0,
+          "acceleration": 500.0
+        }
+      },
+      {
+        "type": "PhysicsBody_data",
+        "properties": {
+          "mass": 1.0,
+          "friction": 0.8,
+          "useGravity": false
+        }
+      },
+      {
+        "type": "Health_data",
+        "properties": {
+          "maxHealth": 100,
+          "currentHealth": 100,
+          "invulnerable": false
+        }
+      },
+      {
+        "type": "PlayerBinding_data",
+        "properties": {
+          "playerIndex": 0,
+          "controlScheme": "WASD"
+        }
+      },
+      {
+        "type": "Controller_data",
+        "properties": {
+          "isJumping": false,
+          "isWalking": false,
+		  "isShooting": false
+        }
+      },
+	  {
+        "type": "PlayerController_data",
+        "properties": {
+          "enabled": true,
+          "inputEnabled": true
+        }
+      },
+      {
+        "type": "NavigationAgent_data",
+        "properties": {
+          "agentRadius": 16.0,
+          "maxSpeed": 100.0,
+          "layerMask": 1
+        }
+      },
+      {
+        "type": "VisualAnimation_data",
+        "properties": {
+          "animGraphPath": "./Gamedata/Animations/AnimationGraphs/player_animgraph.json",
+          "currentState": "Idle",
+          "playbackSpeed": 1.0,
+          "flipX": false,
+          "flipY": false
+        }
+      }
+    ]
+  }
+}

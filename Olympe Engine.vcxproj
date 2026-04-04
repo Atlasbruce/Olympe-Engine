@@ -62,6 +62,11 @@
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Graph.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EnumCatalogManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\HistoryPanel.cpp" />
@@ -673,3 +678,4 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+

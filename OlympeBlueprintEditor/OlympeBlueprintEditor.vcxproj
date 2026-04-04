@@ -254,6 +254,13 @@
     <ClInclude Include="..\Source\BlueprintEditor\BTtoVSMigrator.h" />
     <ClInclude Include="..\Source\BlueprintEditor\ConditionRef.h" />
     <ClInclude Include="..\Source\BlueprintEditor\ConditionRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.h" />
     <ClInclude Include="..\Source\BlueprintEditor\IGraphRenderer.h" />
     <ClInclude Include="..\Source\BlueprintEditor\MiniMapPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\MinimapWidget.h" />

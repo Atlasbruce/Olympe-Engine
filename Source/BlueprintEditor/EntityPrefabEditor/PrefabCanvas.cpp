@@ -83,18 +83,109 @@ namespace Olympe
     void PrefabCanvas::RenderGrid()
     { 
         ImDrawList* drawList = ImGui::GetWindowDrawList();
+        if (drawList == nullptr) { return; }
+
         ImVec2 canvasPos = ImGui::GetCursorScreenPos();
         ImVec2 canvasSize = ImGui::GetContentRegionAvail();
-        ImU32 gridColor = ImGui::GetColorU32(ImVec4(0.4f, 0.4f, 0.4f, 0.3f));
-        for (float x = 0; x < canvasSize.x; x += m_gridSpacing)
-        { drawList->AddLine(ImVec2(canvasPos.x + x, canvasPos.y), ImVec2(canvasPos.x + x, canvasPos.y + canvasSize.y), gridColor); }
-        for (float y = 0; y < canvasSize.y; y += m_gridSpacing)
-        { drawList->AddLine(ImVec2(canvasPos.x, canvasPos.y + y), ImVec2(canvasPos.x + canvasSize.x, canvasPos.y + y), gridColor); }
+        ImVec2 canvasEnd(canvasPos.x + canvasSize.x, canvasPos.y + canvasSize.y);
+
+        ImU32 majorGridColor = ImGui::GetColorU32(ImVec4(0.5f, 0.5f, 0.5f, 0.4f));
+        ImU32 minorGridColor = ImGui::GetColorU32(ImVec4(0.3f, 0.3f, 0.3f, 0.2f));
+
+        float offsetX = (int)(m_canvasOffset.x / m_gridSpacing) * m_gridSpacing;
+        float offsetY = (int)(m_canvasOffset.y / m_gridSpacing) * m_gridSpacing;
+
+        float minorSpacing = m_gridSpacing / 5.0f;
+        for (float x = offsetX - m_gridSpacing; x < canvasPos.x + canvasSize.x; x += minorSpacing)
+        { 
+            drawList->AddLine(
+                ImVec2(x, canvasPos.y),
+                ImVec2(x, canvasEnd.y),
+                minorGridColor
+            );
+        }
+
+        for (float y = offsetY - m_gridSpacing; y < canvasPos.y + canvasSize.y; y += minorSpacing)
+        { 
+            drawList->AddLine(
+                ImVec2(canvasPos.x, y),
+                ImVec2(canvasEnd.x, y),
+                minorGridColor
+            );
+        }
+
+        for (float x = offsetX - m_gridSpacing; x < canvasPos.x + canvasSize.x; x += m_gridSpacing)
+        { 
+            drawList->AddLine(
+                ImVec2(x, canvasPos.y),
+                ImVec2(x, canvasEnd.y),
+                majorGridColor,
+                1.5f
+            );
+        }
+
+        for (float y = offsetY - m_gridSpacing; y < canvasPos.y + canvasSize.y; y += m_gridSpacing)
+        { 
+            drawList->AddLine(
+                ImVec2(canvasPos.x, y),
+                ImVec2(canvasEnd.x, y),
+                majorGridColor,
+                1.5f
+            );
+        }
     }
 
-    void PrefabCanvas::RenderNodes() { if (!m_document || !m_renderer) { return; } m_renderer->RenderNodes(m_document); }
-    void PrefabCanvas::RenderConnections() { if (!m_document || !m_renderer) { return; } m_renderer->RenderConnections(m_document); }
-    void PrefabCanvas::RenderDebugInfo() { ImGui::Text("Zoom: %.2f", m_canvasZoom); ImGui::Text("Offset: %.0f, %.0f", m_canvasOffset.x, m_canvasOffset.y); }
-    void PrefabCanvas::RenderSelectionBox() { }
+    void PrefabCanvas::RenderNodes()
+    { 
+        if (!m_document || !m_renderer) { return; }
+
+        ImGui::PushClipRect(
+            ImGui::GetCursorScreenPos(),
+            ImVec2(ImGui::GetCursorScreenPos().x + ImGui::GetContentRegionAvail().x,
+                   ImGui::GetCursorScreenPos().y + ImGui::GetContentRegionAvail().y),
+            true
+        );
+
+        m_renderer->RenderNodes(m_document);
+
+        ImGui::PopClipRect();
+    }
+
+    void PrefabCanvas::RenderConnections()
+    { 
+        if (!m_document || !m_renderer) { return; }
+
+        ImGui::PushClipRect(
+            ImGui::GetCursorScreenPos(),
+            ImVec2(ImGui::GetCursorScreenPos().x + ImGui::GetContentRegionAvail().x,
+                   ImGui::GetCursorScreenPos().y + ImGui::GetContentRegionAvail().y),
+            true
+        );
+
+        m_renderer->RenderConnections(m_document);
+
+        ImGui::PopClipRect();
+    }
+
+    void PrefabCanvas::RenderDebugInfo()
+    { 
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        if (drawList == nullptr) { return; }
+
+        ImVec2 debugPos(ImGui::GetCursorScreenPos().x + 10.0f, ImGui::GetCursorScreenPos().y + 10.0f);
+        ImU32 debugTextColor = ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+        char debugBuffer[256];
+        snprintf(debugBuffer, sizeof(debugBuffer), "Zoom: %.2f | Offset: %.0f, %.0f | Nodes: %zu",
+                 m_canvasZoom, m_canvasOffset.x, m_canvasOffset.y,
+                 m_document ? m_document->GetNodeCount() : 0);
+
+        drawList->AddText(debugPos, debugTextColor, debugBuffer);
+    }
+
+    void PrefabCanvas::RenderSelectionBox()
+    { 
+        // TODO: Implement selection box rendering for drag-to-select
+    }
 
 } // namespace Olympe

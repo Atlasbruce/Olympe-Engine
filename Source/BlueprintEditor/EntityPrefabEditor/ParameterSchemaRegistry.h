@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include "./../third_party/nlohmann/json.hpp"
+#include "./../../third_party/nlohmann/json.hpp"
 #include "PrefabLoader.h"
 
 namespace Olympe

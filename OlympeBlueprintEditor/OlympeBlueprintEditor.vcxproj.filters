@@ -274,9 +274,6 @@
     <ClCompile Include="..\Source\CollisionMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\PrefabFactory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\Source\AI\BehaviorTreeDependencyScanner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -293,9 +290,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\OlympeTilemapEditor\src\TilemapEditorApp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\PrefabScanner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\InputDevice.cpp">
@@ -631,26 +625,32 @@
     <ClCompile Include="..\Source\Editor\Modals\SubGraphFilePickerModal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.cpp">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.cpp">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClCompile>
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\PrefabFactory.cpp">
+      <Filter>Source Files\BlueprintEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\PrefabScanner.cpp">
+      <Filter>Source Files\BlueprintEditor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -951,9 +951,6 @@
     <ClInclude Include="..\Source\ParameterSchema.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\prefabfactory.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\Source\OlympeTilemapEditor\include\EditorState.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -961,9 +958,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\OlympeTilemapEditor\include\TilemapEditorApp.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\PrefabScanner.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\InputDevice.h">
@@ -1264,6 +1258,33 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\Editor\Modals\SubGraphFilePickerModal.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.h">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.h">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.h">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.h">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.h">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.h">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.h">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\prefabfactory.h">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\PrefabScanner.h">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico">

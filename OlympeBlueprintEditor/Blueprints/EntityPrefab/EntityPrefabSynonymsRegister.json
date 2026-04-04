@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "description": "Entity type synonyms registry for Olympe Engine",
+  "categories": {
+    "RequiresRegistration": ["Player"],
+    "HasAI": ["Guard", "Enemy"],
+    "IsStatic": ["Collision", "Sector", "Trigger"],
+    "IsCollectible": ["Key", "Item"],
+    "HasPatrolPath": ["Guard"]
+  },
+  "canonicalTypes": {
+    "Player": {
+      "description": "Playable character entity",
+      "prefabFile": "player.json",
+      "synonyms": ["player", "PLAYER", "PlayerEntity", "playerentity", "player_entity"]
+    },
+    "Guard": {
+      "description": "Guard NPC with patrol behavior",
+      "prefabFile": "guard.json",
+      "synonyms": ["guard", "GUARD", "Guard_NPC", "patrol_guard"]
+    },
+    "Zombie": {
+      "description": "Hostile enemy entity",
+      "prefabFile": "zombie.json",
+      "synonyms": ["Ennemy", "ennemy","ENNEMY", "enemy", "ENEMY", "hostile", "monster", "mob", "zombie", "ZOMBIE"]
+    },
+    "Item": {
+      "description": "Collectible item entity",
+      "prefabFile": "item.json",
+      "synonyms": ["item", "ITEM", "collectible", "pickup", "loot", "treasure"]
+    },
+    "Key": {
+      "description": "Key item for unlocking doors",
+      "prefabFile": "key.json",
+      "synonyms": ["key", "KEY", "keyitem", "unlock_item"]
+    },
+    "Door": {
+      "description": "Door or portal entity",
+      "prefabFile": "door.json",
+      "synonyms": ["door", "DOOR", "portal", "gate", "entrance", "exit"]
+    },
+    "Trigger": {
+      "description": "Trigger zone for events",
+      "prefabFile": "trigger.json",
+      "synonyms": ["trigger", "TRIGGER", "trigger_zone", "event_trigger"]
+    },
+    "Waypoint": {
+      "description": "Waypoint for patrol paths",
+      "prefabFile": "waypoint.json",
+      "synonyms": ["waypoint", "WAYPOINT", "way", "WAY", "patrol_point", "path_node"]
+    },
+    "Ambient": {
+      "description": "Ambient sound source",
+      "prefabFile": "sound.json",
+      "synonyms": ["ambient", "AMBIENT", "ambiant", "sound", "audio_source"]
+    },
+    "Sector": {
+      "description": "Sector or zone entity",
+      "prefabFile": "sector.json",
+      "synonyms": ["sector", "SECTOR", "zone", "area", "region"]
+    },
+    "NPC": {
+      "description": "Non-playable character",
+      "prefabFile": "npc_entity.json",
+      "synonyms": ["npc", "Npc", "non_playable", "character", "civilian", "npc_entity", "entity_npc", "NPCENTITY", "npcentity", "NPCEntity"]
+    },
+    "Collision": {
+      "description": "Collision zone for physics boundaries",
+      "prefabFile": "collision.json",
+      "synonyms": ["collision", "COLLISION", "collider", "physics_zone", "boundary", "wall"]
+    },
+	"Beacon": {
+      "description": "Beacon position information",
+      "prefabFile": "beacon.json",
+      "synonyms": ["beacon", "BEACON", "poi", "location", "Beacon"]
+    }
+  },
+  "fallbackBehavior": {
+    "caseSensitive": false,
+    "enableFuzzyMatching": true,
+    "fuzzyThreshold": 0.8,
+    "logUnmatchedTypes": true
+  }
+}
