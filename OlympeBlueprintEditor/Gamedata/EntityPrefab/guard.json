@@ -49,8 +49,10 @@
         },
         "properties": {
           "entityType": "Guard",
+          "isPersistent": "false",
           "name": "Guard_{id}",
-          "tag": "Guard"
+          "tag": "Guard",
+          "type": "UnknownType"
         },
         "selected": false,
         "size": {
@@ -71,7 +73,9 @@
         },
         "properties": {
           "acceleration": "450.000000",
-          "speed": "90.000000"
+          "direction": "[0,0,0]",
+          "speed": "90.000000",
+          "velocity": "[0,0,0]"
         },
         "selected": false,
         "size": {
@@ -91,9 +95,16 @@
           "z": 0
         },
         "properties": {
+          "color": "#FFFFFF",
           "height": "32.000000",
+          "hotSpot": "[0,0,0]",
           "layer": "1.000000",
           "spritePath": "./Resources/Sprites/guard.png",
+          "srcRectHeight": "25",
+          "srcRectWidth": "25",
+          "srcRectX": "0",
+          "srcRectY": "0",
+          "visible": "true",
           "width": "32.000000"
         },
         "selected": false,
@@ -177,7 +188,9 @@
           "y": -171.667,
           "z": 0
         },
-        "properties": {},
+        "properties": {
+          "position": "[990,-120,0]"
+        },
         "selected": false,
         "size": {
           "x": 150,
@@ -195,7 +208,10 @@
           "y": 349,
           "z": 0
         },
-        "properties": {},
+        "properties": {
+          "soundEffectID": "",
+          "volume": "1"
+        },
         "selected": false,
         "size": {
           "x": 150,

@@ -1,6 +1,7 @@
 ﻿#include "EntityPrefabGraphDocument.h"
 #include "PrefabLoader.h"
 #include "../../system/system_utils.h"
+#include <fstream>
 
 namespace Olympe
 {
@@ -16,6 +17,10 @@ namespace Olympe
         node.nodeId = m_nextNodeId++;
         node.componentName = componentName;
         node.InitializePorts(1, 1);
+
+        // Initialize node properties from parameter schema
+        InitializeNodeProperties(node);
+
         m_nodes.push_back(node);
         m_isDirty = true;
         return node.nodeId;
@@ -162,6 +167,13 @@ namespace Olympe
 
             // Clear existing data
             Clear();
+
+            // Load parameter schemas for component properties
+            LoadParameterSchemas("Gamedata\\EntityPrefab\\ComponentsParameters.json");
+            if (m_parameterSchemas.empty())
+            {
+                LoadParameterSchemas("Gamedata/EntityPrefab/ComponentsParameters.json");
+            }
 
             int nodesLoaded = 0;
             int connectionsLoaded = 0;
@@ -440,6 +452,102 @@ namespace Olympe
 
     bool EntityPrefabGraphDocument::IsDirty() const { return m_isDirty; }
     void EntityPrefabGraphDocument::SetDirty(bool dirty) { m_isDirty = dirty; }
+
+    void EntityPrefabGraphDocument::LoadParameterSchemas(const std::string& schemasFilePath)
+    {
+        using nlohmann::json;
+
+        SYSTEM_LOG << "[EntityPrefabGraphDocument] Loading parameter schemas from: " << schemasFilePath << "\n";
+
+        try
+        {
+            std::ifstream file(schemasFilePath);
+            if (!file.is_open())
+            {
+                SYSTEM_LOG << "[EntityPrefabGraphDocument] WARNING: Could not open schemas file\n";
+                return;
+            }
+
+            json jsonData;
+            file >> jsonData;
+            file.close();
+
+            if (!jsonData.contains("schemas") || !jsonData["schemas"].is_array())
+            {
+                SYSTEM_LOG << "[EntityPrefabGraphDocument] WARNING: Schemas file missing 'schemas' array\n";
+                return;
+            }
+
+            const json& schemasArray = jsonData["schemas"];
+            for (const auto& schemaJson : schemasArray)
+            {
+                if (!schemaJson.contains("componentType"))
+                    continue;
+
+                std::string componentType = schemaJson["componentType"].get<std::string>();
+                std::map<std::string, std::string> params;
+
+                if (schemaJson.contains("parameters") && schemaJson["parameters"].is_array())
+                {
+                    for (const auto& paramJson : schemaJson["parameters"])
+                    {
+                        if (!paramJson.contains("name") || !paramJson.contains("defaultValue"))
+                            continue;
+
+                        std::string paramName = paramJson["name"].get<std::string>();
+
+                        // Convert default value to string
+                        std::string defaultValue;
+                        if (paramJson["defaultValue"].is_string())
+                        {
+                            defaultValue = paramJson["defaultValue"].get<std::string>();
+                        }
+                        else if (paramJson["defaultValue"].is_boolean())
+                        {
+                            defaultValue = paramJson["defaultValue"].get<bool>() ? "true" : "false";
+                        }
+                        else if (paramJson["defaultValue"].is_number_integer())
+                        {
+                            defaultValue = std::to_string(paramJson["defaultValue"].get<int>());
+                        }
+                        else if (paramJson["defaultValue"].is_number_float())
+                        {
+                            defaultValue = std::to_string(paramJson["defaultValue"].get<float>());
+                        }
+                        else if (paramJson["defaultValue"].is_array())
+                        {
+                            // For arrays, store as JSON string
+                            defaultValue = paramJson["defaultValue"].dump();
+                        }
+
+                        params[paramName] = defaultValue;
+                    }
+                }
+
+                m_parameterSchemas[componentType] = params;
+                SYSTEM_LOG << "[EntityPrefabGraphDocument] Loaded " << params.size() << " parameters for " << componentType << "\n";
+            }
+
+            SYSTEM_LOG << "[EntityPrefabGraphDocument] Successfully loaded " << m_parameterSchemas.size() << " component schemas\n";
+        }
+        catch (const std::exception& e)
+        {
+            SYSTEM_LOG << "[EntityPrefabGraphDocument] ERROR loading schemas: " << e.what() << "\n";
+        }
+    }
+
+    void EntityPrefabGraphDocument::InitializeNodeProperties(ComponentNode& node)
+    {
+        // Look up component schema and populate node properties with defaults
+        auto it = m_parameterSchemas.find(node.componentType);
+        if (it != m_parameterSchemas.end())
+        {
+            for (const auto& paramPair : it->second)
+            {
+                node.SetProperty(paramPair.first, paramPair.second);
+            }
+        }
+    }
 
     std::vector<LayoutNode> EntityPrefabGraphDocument::CalculateLayout() { return std::vector<LayoutNode>(); }
 

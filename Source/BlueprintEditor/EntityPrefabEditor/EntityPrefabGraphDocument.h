@@ -82,6 +82,10 @@ namespace Olympe
         bool IsDirty() const;
         void SetDirty(bool dirty);
 
+        // Parameter schema management
+        void LoadParameterSchemas(const std::string& schemasFilePath);
+        void InitializeNodeProperties(ComponentNode& node);
+
     private:
         std::vector<ComponentNode> m_nodes;
         std::vector<NodeId> m_selectedNodes;
@@ -91,6 +95,9 @@ namespace Olympe
         float m_canvasZoom = 1.0f;
         NodeId m_nextNodeId = 1;
         bool m_isDirty = false;
+
+        // Parameter schemas: componentType -> { paramName -> defaultValue }
+        std::map<std::string, std::map<std::string, std::string>> m_parameterSchemas;
 
         NodeId GenerateNodeId();
         std::vector<LayoutNode> CalculateLayout();
