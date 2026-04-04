@@ -30,6 +30,10 @@ namespace Olympe
         void RenderNodes(const EntityPrefabGraphDocument* document);
         void RenderConnections(const EntityPrefabGraphDocument* document);
 
+        // Port rendering
+        void RenderNodePorts(const ComponentNode& node);
+        bool IsPointInPort(const Vector& point, const ComponentNode& node, PortId& outPortId) const;
+
         // Node styling
         void SetNodeStyle(const ComponentNodeStyle& style);
         const ComponentNodeStyle& GetNodeStyle() const;
@@ -69,7 +73,9 @@ namespace Olympe
         void RenderNodeBox(const ComponentNode& node);
         void RenderNodeLabel(const ComponentNode& node);
         void RenderConnectionLine(const Vector& from, const Vector& to);
+        void RenderPort(const ComponentNode& node, const NodePort& port);
         Vector GetNodeColor(const ComponentNode& node) const;
         Vector CanvasToScreen(const Vector& canvasPos) const;
+        void UpdatePortPositions(ComponentNode& node) const;
     };
 }

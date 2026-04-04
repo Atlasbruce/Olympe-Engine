@@ -1,8 +1,10 @@
 #include "ComponentPalettePanel.h"
 #include "../../Source/third_party/imgui/imgui.h"
 #include "../../system/system_utils.h"
+#include "../../third_party/nlohmann/json.hpp"
 #include <algorithm>
 #include <cstring>
+#include <fstream>
 
 namespace Olympe
 {
@@ -16,31 +18,42 @@ namespace Olympe
 
     void ComponentPalettePanel::Initialize()
     {
-        // Register common entity components
-        RegisterComponentType("Transform", "Core", "Position, rotation, scale");
-        RegisterComponentType("Identity", "Core", "Entity identity and naming");
-        RegisterComponentType("Movement", "Physics", "Movement and velocity");
-        RegisterComponentType("Sprite", "Graphics", "Sprite rendering");
-        RegisterComponentType("Collision", "Physics", "Collision bounds");
-        RegisterComponentType("Health", "Gameplay", "Health points system");
-        RegisterComponentType("AIBlackboard", "AI", "AI data storage");
-        RegisterComponentType("BehaviorTree", "AI", "Behavior tree execution");
-        RegisterComponentType("VisualSprite", "Graphics", "Visual sprite data");
-        RegisterComponentType("AnimationController", "Graphics", "Animation state machine");
+        SYSTEM_LOG << "[ComponentPalettePanel] Initializing...\n";
 
-        // Build categories list
-        std::map<std::string, bool> categoryMap;
-        for (size_t i = 0; i < m_componentTypes.size(); ++i)
+        // Try to load from JSON file first
+        bool jsonLoaded = LoadComponentsFromJSON("./Gamedata/PrefabEntities/ComponentsParameters.json");
+
+        // If JSON load failed, use hardcoded components as fallback
+        if (!jsonLoaded)
         {
-            categoryMap[m_componentTypes[i].category] = true;
-        }
-        for (auto it = categoryMap.begin(); it != categoryMap.end(); ++it)
-        {
-            m_categories.push_back(it->first);
+            SYSTEM_LOG << "[ComponentPalettePanel] Using hardcoded component types as fallback\n";
+            RegisterComponentType("Transform", "Core", "Position, rotation, scale");
+            RegisterComponentType("Identity", "Core", "Entity identity and naming");
+            RegisterComponentType("Movement", "Physics", "Movement and velocity");
+            RegisterComponentType("Sprite", "Graphics", "Sprite rendering");
+            RegisterComponentType("Collision", "Physics", "Collision bounds");
+            RegisterComponentType("Health", "Gameplay", "Health points system");
+            RegisterComponentType("AIBlackboard", "AI", "AI data storage");
+            RegisterComponentType("BehaviorTree", "AI", "Behavior tree execution");
+            RegisterComponentType("VisualSprite", "Graphics", "Visual sprite data");
+            RegisterComponentType("AnimationController", "Graphics", "Animation state machine");
+
+            // Build categories list
+            std::map<std::string, bool> categoryMap;
+            for (size_t i = 0; i < m_componentTypes.size(); ++i)
+            {
+                categoryMap[m_componentTypes[i].category] = true;
+            }
+            for (auto it = categoryMap.begin(); it != categoryMap.end(); ++it)
+            {
+                m_categories.push_back(it->first);
+            }
+
+            // Sort categories alphabetically
+            std::sort(m_categories.begin(), m_categories.end());
         }
 
-        // Sort categories alphabetically
-        std::sort(m_categories.begin(), m_categories.end());
+        SYSTEM_LOG << "[ComponentPalettePanel] Initialization complete with " << m_componentTypes.size() << " component types\n";
     }
 
     void ComponentPalettePanel::Render(EntityPrefabGraphDocument* document)
@@ -204,6 +217,83 @@ namespace Olympe
     void ComponentPalettePanel::RegisterComponentType(const std::string& name, const std::string& category, const std::string& description)
     {
         m_componentTypes.push_back(ComponentType(name, category, description));
+    }
+
+    bool ComponentPalettePanel::LoadComponentsFromJSON(const std::string& filepath)
+    {
+        using nlohmann::json;
+
+        SYSTEM_LOG << "[ComponentPalettePanel] Loading components from: " << filepath << "\n";
+
+        try
+        {
+            std::ifstream file(filepath);
+            if (!file.is_open())
+            {
+                SYSTEM_LOG << "[ComponentPalettePanel] WARNING: Could not open file: " << filepath << ", using hardcoded components\n";
+                return false;
+            }
+
+            json jsonData;
+            file >> jsonData;
+            file.close();
+
+            // Clear existing components (loaded from JSON replaces hardcoded)
+            m_componentTypes.clear();
+            m_categories.clear();
+
+            // Validate structure
+            if (!jsonData.contains("components") || !jsonData["components"].is_array())
+            {
+                SYSTEM_LOG << "[ComponentPalettePanel] ERROR: JSON missing 'components' array\n";
+                return false;
+            }
+
+            const json& componentsArray = jsonData["components"];
+            SYSTEM_LOG << "[ComponentPalettePanel] Found " << componentsArray.size() << " component types\n";
+
+            // Parse each component
+            for (const auto& compJson : componentsArray)
+            {
+                if (!compJson.contains("name") || !compJson.contains("category"))
+                {
+                    SYSTEM_LOG << "[ComponentPalettePanel] WARNING: Skipping component missing name or category\n";
+                    continue;
+                }
+
+                std::string name = compJson["name"].get<std::string>();
+                std::string category = compJson["category"].get<std::string>();
+                std::string description = compJson.contains("description") 
+                    ? compJson["description"].get<std::string>() 
+                    : "";
+
+                RegisterComponentType(name, category, description);
+                SYSTEM_LOG << "[ComponentPalettePanel] Loaded: " << name << " (" << category << ")\n";
+            }
+
+            // Rebuild categories list
+            std::map<std::string, bool> categoryMap;
+            for (size_t i = 0; i < m_componentTypes.size(); ++i)
+            {
+                categoryMap[m_componentTypes[i].category] = true;
+            }
+            for (auto it = categoryMap.begin(); it != categoryMap.end(); ++it)
+            {
+                m_categories.push_back(it->first);
+            }
+
+            // Sort categories alphabetically
+            std::sort(m_categories.begin(), m_categories.end());
+
+            SYSTEM_LOG << "[ComponentPalettePanel] Successfully loaded " << m_componentTypes.size() 
+                      << " components from JSON (" << m_categories.size() << " categories)\n";
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            SYSTEM_LOG << "[ComponentPalettePanel] ERROR parsing JSON: " << e.what() << "\n";
+            return false;
+        }
     }
 
 } // namespace Olympe

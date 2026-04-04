@@ -47,6 +47,7 @@ namespace Olympe
         {
             RenderNodeLabel(node);
         }
+        RenderNodePorts(node);
     }
 
     void ComponentNodeRenderer::RenderNodes(const EntityPrefabGraphDocument* document)
@@ -281,6 +282,174 @@ namespace Olympe
     Vector ComponentNodeRenderer::GetNodeColor(const ComponentNode& node) const
     { 
         return node.GetCurrentColor();
+    }
+
+    void ComponentNodeRenderer::RenderNodePorts(const ComponentNode& node)
+    {
+        const std::vector<NodePort>& ports = node.GetPorts();
+        for (const auto& port : ports)
+        {
+            RenderPort(node, port);
+        }
+    }
+
+    void ComponentNodeRenderer::RenderPort(const ComponentNode& node, const NodePort& port)
+    {
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        if (drawList == nullptr) { return; }
+
+        // Calculate port position on node edge
+        Vector screenCenter = CanvasToScreen(node.position);
+        float scaledWidth = node.size.x * 0.5f * m_nodeScale * m_canvasZoom;
+        float scaledHeight = node.size.y * 0.5f * m_nodeScale * m_canvasZoom;
+
+        Vector portPos = node.position;
+
+        std::vector<NodePort> inputPorts;
+        std::vector<NodePort> outputPorts;
+        for (const auto& p : node.GetPorts())
+        {
+            if (p.isOutput)
+                outputPorts.push_back(p);
+            else
+                inputPorts.push_back(p);
+        }
+
+        uint32_t portCountInType = port.isOutput ? outputPorts.size() : inputPorts.size();
+        uint32_t portIndexInType = 0;
+        if (port.isOutput)
+        {
+            for (size_t i = 0; i < outputPorts.size(); ++i)
+            {
+                if (outputPorts[i].portId == port.portId)
+                {
+                    portIndexInType = i;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            for (size_t i = 0; i < inputPorts.size(); ++i)
+            {
+                if (inputPorts[i].portId == port.portId)
+                {
+                    portIndexInType = i;
+                    break;
+                }
+            }
+        }
+
+        // Distribute ports vertically on the edge
+        if (portCountInType > 0)
+        {
+            float spacing = (2.0f * scaledHeight) / (portCountInType + 1);
+            float yOffset = -scaledHeight + spacing * (portIndexInType + 1);
+
+            if (port.isOutput)
+            {
+                portPos.x += scaledWidth / m_canvasZoom;
+            }
+            else
+            {
+                portPos.x -= scaledWidth / m_canvasZoom;
+            }
+            portPos.y += yOffset / m_canvasZoom;
+        }
+
+        Vector screenPort = CanvasToScreen(portPos);
+        float portRadius = port.radius * m_canvasZoom;
+
+        ImU32 portColor = ImGui::GetColorU32(ImVec4(0.8f, 0.8f, 0.0f, 1.0f));
+        ImU32 portBorderColor = ImGui::GetColorU32(ImVec4(0.6f, 0.6f, 0.0f, 1.0f));
+
+        drawList->AddCircleFilled(ImVec2(screenPort.x, screenPort.y), portRadius, portColor);
+        drawList->AddCircle(ImVec2(screenPort.x, screenPort.y), portRadius, portBorderColor, 0, 1.5f);
+    }
+
+    bool ComponentNodeRenderer::IsPointInPort(const Vector& point, const ComponentNode& node, PortId& outPortId) const
+    {
+        const std::vector<NodePort>& ports = node.GetPorts();
+
+        for (const auto& port : ports)
+        {
+            // Calculate port position on node edge
+            Vector screenCenter = CanvasToScreen(node.position);
+            float scaledWidth = node.size.x * 0.5f * m_nodeScale * m_canvasZoom;
+            float scaledHeight = node.size.y * 0.5f * m_nodeScale * m_canvasZoom;
+
+            std::vector<NodePort> inputPorts;
+            std::vector<NodePort> outputPorts;
+            for (const auto& p : node.GetPorts())
+            {
+                if (p.isOutput)
+                    outputPorts.push_back(p);
+                else
+                    inputPorts.push_back(p);
+            }
+
+            uint32_t portCountInType = port.isOutput ? outputPorts.size() : inputPorts.size();
+            uint32_t portIndexInType = 0;
+            if (port.isOutput)
+            {
+                for (size_t i = 0; i < outputPorts.size(); ++i)
+                {
+                    if (outputPorts[i].portId == port.portId)
+                    {
+                        portIndexInType = i;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                for (size_t i = 0; i < inputPorts.size(); ++i)
+                {
+                    if (inputPorts[i].portId == port.portId)
+                    {
+                        portIndexInType = i;
+                        break;
+                    }
+                }
+            }
+
+            Vector portPos = node.position;
+            if (portCountInType > 0)
+            {
+                float spacing = (2.0f * scaledHeight) / (portCountInType + 1);
+                float yOffset = -scaledHeight + spacing * (portIndexInType + 1);
+
+                if (port.isOutput)
+                {
+                    portPos.x += scaledWidth / m_canvasZoom;
+                }
+                else
+                {
+                    portPos.x -= scaledWidth / m_canvasZoom;
+                }
+                portPos.y += yOffset / m_canvasZoom;
+            }
+
+            float dx = point.x - portPos.x;
+            float dy = point.y - portPos.y;
+            float distance = sqrtf(dx * dx + dy * dy);
+            float portRadius = port.radius;
+
+            if (distance <= portRadius)
+            {
+                outPortId = port.portId;
+                return true;
+            }
+        }
+
+        outPortId = InvalidPortId;
+        return false;
+    }
+
+    void ComponentNodeRenderer::UpdatePortPositions(ComponentNode& node) const
+    {
+        // This can be used to update port positions if needed
+        // Ports positions are calculated on-the-fly during rendering
     }
 
 } // namespace Olympe

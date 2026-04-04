@@ -104,6 +104,20 @@ namespace Olympe
 
         if (button == 0) // Left mouse button
         {
+            // First check if clicking on a port
+            const std::vector<ComponentNode>& nodes = m_document->GetAllNodes();
+            for (size_t i = 0; i < nodes.size(); ++i)
+            {
+                PortId portId = InvalidPortId;
+                if (m_renderer->IsPointInPort(canvasPos, nodes[i], portId))
+                {
+                    // Starting connection from this port
+                    StartConnectionCreation(nodes[i].nodeId);
+                    return;
+                }
+            }
+
+            // If not on a port, check if on a node
             NodeId nodeAtPos = GetNodeAtPosition(x, y);
             if (nodeAtPos != InvalidNodeId)
             {
@@ -130,9 +144,39 @@ namespace Olympe
     { 
         m_currentMousePos = Vector(x, y, 0.0f);
 
-        if (button == 0 && m_interactionMode == CanvasInteractionMode::DraggingNode)
+        if (button == 0)
         {
-            HandleNodeDragEnd();
+            if (m_interactionMode == CanvasInteractionMode::DraggingNode)
+            {
+                HandleNodeDragEnd();
+            }
+            else if (m_isCreatingConnection)
+            {
+                // Check if releasing on a port
+                Vector canvasPos = ScreenToCanvas(x, y);
+                const std::vector<ComponentNode>& nodes = m_document->GetAllNodes();
+                bool connectionCompleted = false;
+
+                for (size_t i = 0; i < nodes.size(); ++i)
+                {
+                    PortId portId = InvalidPortId;
+                    if (m_renderer->IsPointInPort(canvasPos, nodes[i], portId))
+                    {
+                        // Check if different node
+                        if (nodes[i].nodeId != m_connectionSourceNodeId)
+                        {
+                            CompleteConnection(nodes[i].nodeId);
+                            connectionCompleted = true;
+                        }
+                        break;
+                    }
+                }
+
+                if (!connectionCompleted)
+                {
+                    CancelConnectionCreation();
+                }
+            }
         }
         else if (button == 2 && m_interactionMode == CanvasInteractionMode::PanningCamera)
         {
@@ -472,16 +516,80 @@ namespace Olympe
         const ComponentNode* sourceNode = m_document->GetNode(m_connectionSourceNodeId);
         if (sourceNode == nullptr) { return; }
 
-        Vector screenSourcePos = CanvasToScreen(sourceNode->position.x, sourceNode->position.y);
-        Vector screenEndPos = CanvasToScreen(m_connectionPreviewEnd.x, m_connectionPreviewEnd.y);
+        // Find output port of source node (use first output port)
+        const NodePort* outputPort = nullptr;
+        for (const auto& port : sourceNode->GetPorts())
+        {
+            if (port.isOutput)
+            {
+                outputPort = &port;
+                break;
+            }
+        }
 
-        ImU32 previewLineColor = ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 0.0f, 0.8f));
-        drawList->AddLine(
-            ImVec2(screenSourcePos.x, screenSourcePos.y),
-            ImVec2(screenEndPos.x, screenEndPos.y),
-            previewLineColor,
-            2.5f
-        );
+        if (!outputPort)
+        {
+            // Fallback to node center if no output port
+            Vector screenSourcePos = CanvasToScreen(sourceNode->position.x, sourceNode->position.y);
+            Vector screenEndPos = CanvasToScreen(m_connectionPreviewEnd.x, m_connectionPreviewEnd.y);
+
+            ImU32 previewLineColor = ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 0.0f, 0.8f));
+            drawList->AddLine(
+                ImVec2(screenSourcePos.x, screenSourcePos.y),
+                ImVec2(screenEndPos.x, screenEndPos.y),
+                previewLineColor,
+                2.5f
+            );
+        }
+        else
+        {
+            // Calculate port position on node edge (same logic as RenderPort)
+            Vector screenCenter = CanvasToScreen(sourceNode->position.x, sourceNode->position.y);
+            float scaledWidth = sourceNode->size.x * 0.5f * m_renderer->GetNodeScale() * m_canvasZoom;
+            float scaledHeight = sourceNode->size.y * 0.5f * m_renderer->GetNodeScale() * m_canvasZoom;
+
+            std::vector<const NodePort*> outputPorts;
+            for (const auto& port : sourceNode->GetPorts())
+            {
+                if (port.isOutput)
+                {
+                    outputPorts.push_back(&port);
+                }
+            }
+
+            uint32_t portIndexInType = 0;
+            for (size_t i = 0; i < outputPorts.size(); ++i)
+            {
+                if (outputPorts[i]->portId == outputPort->portId)
+                {
+                    portIndexInType = i;
+                    break;
+                }
+            }
+
+            Vector portPos = sourceNode->position;
+            if (outputPorts.size() > 0)
+            {
+                float spacing = (2.0f * scaledHeight) / (outputPorts.size() + 1);
+                float yOffset = -scaledHeight + spacing * (portIndexInType + 1);
+                portPos.x += scaledWidth / m_canvasZoom;
+                portPos.y += yOffset / m_canvasZoom;
+            }
+
+            Vector screenSourcePos = CanvasToScreen(portPos.x, portPos.y);
+            Vector screenEndPos = CanvasToScreen(m_connectionPreviewEnd.x, m_connectionPreviewEnd.y);
+
+            ImU32 previewLineColor = ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 0.0f, 0.8f));
+            drawList->AddLine(
+                ImVec2(screenSourcePos.x, screenSourcePos.y),
+                ImVec2(screenEndPos.x, screenEndPos.y),
+                previewLineColor,
+                2.5f
+            );
+
+            // Draw circle at source to indicate starting port
+            drawList->AddCircle(ImVec2(screenSourcePos.x, screenSourcePos.y), 6.0f, previewLineColor, 0, 1.5f);
+        }
     }
 
     void PrefabCanvas::RenderSelectionBox()

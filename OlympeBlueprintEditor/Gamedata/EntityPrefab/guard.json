@@ -26,6 +26,14 @@
       {
         "sourceNodeId": 5,
         "targetNodeId": 6
+      },
+      {
+        "sourceNodeId": 1,
+        "targetNodeId": 7
+      },
+      {
+        "sourceNodeId": 2,
+        "targetNodeId": 7
       }
     ],
     "nodes": [
@@ -35,8 +43,8 @@
         "enabled": true,
         "nodeId": 1,
         "position": {
-          "x": 100,
-          "y": 50,
+          "x": 84,
+          "y": 45,
           "z": 0
         },
         "properties": {
@@ -44,7 +52,7 @@
           "name": "Guard_{id}",
           "tag": "Guard"
         },
-        "selected": true,
+        "selected": false,
         "size": {
           "x": 120,
           "y": 60,
@@ -57,8 +65,8 @@
         "enabled": true,
         "nodeId": 2,
         "position": {
-          "x": 300,
-          "y": -50,
+          "x": 284,
+          "y": -33,
           "z": 0
         },
         "properties": {
@@ -156,6 +164,24 @@
         "size": {
           "x": 120,
           "y": 60,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "AIBlackboard",
+        "componentType": "AIBlackboard",
+        "enabled": true,
+        "nodeId": 7,
+        "position": {
+          "x": 480,
+          "y": -194,
+          "z": 0
+        },
+        "properties": {},
+        "selected": true,
+        "size": {
+          "x": 150,
+          "y": 80,
           "z": 0
         }
       }

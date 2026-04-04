@@ -53,6 +53,10 @@ namespace Olympe
         bool DisconnectNodes(NodeId sourceId, NodeId targetId);
         const std::vector<std::pair<NodeId, NodeId>>& GetConnections() const;
 
+        // Connection validation
+        bool ValidateConnection(NodeId sourceId, NodeId targetId) const;
+        bool HasConnection(NodeId sourceId, NodeId targetId) const;
+
         // Serialization
         json ToJson() const;
         static EntityPrefabGraphDocument FromJson(const json& data);

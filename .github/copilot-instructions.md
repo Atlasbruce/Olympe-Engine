@@ -78,21 +78,176 @@
   - **Current Status**: ✅ All features working, bugs fixed, build successful (0 errors)
   - **Integration**: Works seamlessly with ImGui event loop; resizable split panel layout
 
-- Phase 29 (FUTURE - Entity Prefab Editor Phase 3):
-  - Property editing panel (select node → edit properties in sidebar)
-  - Connection creation UI (drag from node port to create connections)
+- Phase 29 (COMPLETED - Entity Prefab Editor Phase 3 - Drag-Drop + Menu):
+  - **Completed Features**:
+    * ✅ **Drag-Drop Component Instantiation**: Components from palette drag onto canvas to create new nodes at correct position
+    * ✅ **Coordinate Transformation Fix**: Fixed critical bug in `ScreenToCanvas()` formula - removed incorrect `* m_canvasZoom` multiplication on offset term
+      - Correct formula: `canvas = (screen - canvasPos - offset) / zoom` (NOT `offset * zoom`)
+      - Applies to both `PrefabCanvas::ScreenToCanvas()` and new `AcceptComponentDropAtScreenPos()`
+    * ✅ **Zoom/Pan Coordinate Handling**: Drag-drop works correctly with any zoom level (0.1x to 3.0x) and any pan offset
+    * ✅ **Canvas Screen Position Tracking**: Added `m_canvasScreenPos` member to PrefabCanvas to store canvas position during Render() call, used by drag-drop handler
+    * ✅ **New Entity Prefab Menu**: Added "New Entity Prefab" to File menu (Ctrl+Alt+N keyboard shortcut)
+    * ✅ **Removed Spam Logs**: Cleaned up excessive logging from drag-drop operations
+  - **Architecture Notes**:
+    * Drag-drop uses ImGui's invisible overlay technique (SetCursorScreenPos + Dummy + BeginDragDropTarget)
+    * Overlay positioned outside main canvas BeginChild to work across palette↔canvas windows
+    * Coordinate flow: Screen (absolute) → Canvas-relative (subtract canvasPos) → Canvas logical (apply zoom/pan transformation via ScreenToCanvas)
+  - **Bug Fixes**:
+    * ✅ Coordinate Transformation: `ScreenToCanvas()` was multiplying offset by zoom incorrectly
+      - Before: `canvas = (screen - canvasPos - offset*zoom) / zoom` ❌
+      - After: `canvas = (screen - canvasPos - offset) / zoom` ✅
+    * ✅ Added `GetCanvasScreenPos()` getter and `AcceptComponentDropAtScreenPos()` method to bypass ImGui context issues during drag-drop
+  - **Files Modified**:
+    * PrefabCanvas.cpp/h - Fixed coordinate transformation, added canvas screen position tracking
+    * EntityPrefabRenderer.cpp - Implemented drag-drop target with overlay technique
+    * ComponentPalettePanel.cpp - Drag source setup (removed spam logs)
+    * BlueprintEditorGUI.cpp - Added "New Entity Prefab" menu entry and Ctrl+Alt+N shortcut
+  - **Current Status**: ✅ Phase 29 complete - Full drag-drop working with correct coordinates at all zoom/pan levels
+  - **Build**: ✅ 0 errors, 0 warnings
+
+- Phase 29b (COMPLETED - Entity Prefab Editor - Component Panel Dynamic Loading):
+  - **Architecture Understanding**:
+    * **ComponentPalettePanel** ≠ **ParameterSchemaRegistry**
+      - ComponentPalettePanel: UI list of available component types (Transform, Identity, Movement, etc.)
+      - ParameterSchemaRegistry: Type definitions for component parameters (Position_data has "position" Vector3, etc.)
+    * **Previous State**: Component types hardcoded in ComponentPalettePanel::Initialize() (10 types registered in C++)
+    * **New State**: Component types loaded from `./Gamedata/PrefabEntities/ComponentsParameters.json` with hardcoded fallback
+  - **Implemented Features**:
+    * ✅ **LoadComponentsFromJSON() Method**: Reads component definitions from JSON file
+    * ✅ **Fallback System**: If JSON file not found, uses hardcoded components (backward compatible)
+    * ✅ **Error Handling**: Graceful handling of missing/invalid JSON with detailed logging
+    * ✅ **Category Auto-Generation**: Dynamically rebuilds category list from loaded components
+    * ✅ **JSON File Created**: `./Gamedata/PrefabEntities/ComponentsParameters.json` with all 10 standard components
+  - **Parameter Type Support**:
+    * Supported types in ComponentParameter enum: Bool, Int, Float, String, Vector2, Vector3, Color, Array, EntityRef
+    * Vector types fully supported with dual JSON format:
+      - Object format: `{"x": 1.0, "y": 2.0, "z": 3.0}` (human-readable)
+      - Array format: `[1.0, 2.0, 3.0]` (compact, preferred)
+    * ParseParameterWithSchema() automatically handles both formats
+  - **Implementation Details**:
+    * Method: `ComponentPalettePanel::LoadComponentsFromJSON(const std::string& filepath)` (new)
+    * Modified: `ComponentPalettePanel::Initialize()` - now attempts JSON load first with fallback
+    * Updated: ComponentPalettePanel.h - Added LoadComponentsFromJSON() declaration
+    * Updated: ComponentPalettePanel.cpp - Added #include nlohmann/json.hpp and <fstream>
+  - **JSON Structure** (./Gamedata/PrefabEntities/ComponentsParameters.json):
+    ```json
+    {
+      "components": [
+        {
+          "name": "Transform",
+          "category": "Core",
+          "description": "Position, rotation, scale",
+          "parameters": [
+            { "name": "position", "type": "Vector3", "defaultValue": [0.0, 0.0, 0.0] },
+            { "name": "rotation", "type": "Vector3", "defaultValue": [0.0, 0.0, 0.0] },
+            { "name": "scale", "type": "Vector3", "defaultValue": [1.0, 1.0, 1.0] }
+          ]
+        },
+        { "name": "Identity", "category": "Core", ... },
+        { "name": "Movement", "category": "Physics", ... },
+        ... (10 components total)
+      ]
+    }
+    ```
+  - **Logging Output**:
+    * "[ComponentPalettePanel] Loading components from: ./Gamedata/PrefabEntities/ComponentsParameters.json"
+    * "[ComponentPalettePanel] Found X component types"
+    * "[ComponentPalettePanel] Loaded: ComponentName (Category)"
+    * "[ComponentPalettePanel] Successfully loaded N components from JSON (M categories)"
+  - **Files Modified**:
+    * ComponentPalettePanel.h - Added LoadComponentsFromJSON() declaration
+    * ComponentPalettePanel.cpp - Implemented JSON loading with error handling and fallback
+    * NEW: Gamedata/PrefabEntities/ComponentsParameters.json - Component definitions
+  - **Backward Compatibility**: ✅ If JSON file missing, automatically falls back to hardcoded components (10 types)
+  - **Current Status**: ✅ Phase 29b complete - Components now loaded from JSON with fallback
+  - **Build**: ✅ 0 errors, 0 warnings
+
+- Phase 30 (FUTURE - Entity Prefab Editor Phase 3 - Connection UI + Selection):
+  - Connection creation UI (drag from node port to create edges)
+  - Rectangle selection (click-drag in empty space to multi-select nodes)
+  - Property editing panel (select node → edit properties in inspector)
   - Undo/Redo system for edit history
+
+- Phase 31 (FUTURE - Entity Prefab Editor Optimization):
+  - Performance profiling and optimization
+  - Large graph support (1000+ nodes)
   - Minimap/viewport controls for large graphs
   - Export to runtime format
   - Copy/Paste nodes and subgraphs
 
-- Phase 30 (FUTURE - Entity Prefab Editor Optimization):
-  - Performance profiling and optimization
-  - Large graph support (1000+ nodes)
-  - Hierarchical/grouped nodes
-  - Custom component type registration system
-  - Graph template system for reusable prefab patterns
-  - Node categories and subcategories
+## Architecture Reference - Entity Prefab Editor Data & Parameter System
+
+### Component Registry Architecture
+**Two independent but complementary systems:**
+
+1. **ComponentPalettePanel** (UI Layer)
+   - Location: `Source/BlueprintEditor/EntityPrefabEditor/ComponentPalettePanel.cpp`
+   - Purpose: UI list of draggable component types available for instantiation
+   - Data Source: Currently HARDCODED in C++ (10 types: Transform, Identity, Movement, Sprite, Collision, Health, AIBlackboard, BehaviorTree, VisualSprite, AnimationController)
+   - Future: Will load from `./Gamedata/PrefabEntities/ComponentsParameters.json`
+   - Responsibilities: Rendering, search filtering, category tabs, drag-drop source
+
+2. **ParameterSchemaRegistry** (Schema Layer)
+   - Location: `Source/ParameterSchema.cpp` / `Source/ParameterSchema.h`
+   - Purpose: Schema definitions for component parameters (what fields/parameters each component type has)
+   - Data Source: Registered dynamically via ParameterSchemaRegistry::InitializeBuiltInSchemas()
+   - Contains schemas for: Position_data, PhysicsBody_data, AIBlackboard_data, VisualSprite_data, Identity_data, etc.
+   - Responsibilities: Type validation, parameter parsing, default value management
+
+### Component Parameter System
+**Supported Types in ComponentParameter enum:**
+- Bool, Int, Float, String
+- Vector2, Vector3 (with dual JSON format support)
+- Color (supports hex and rgba formats)
+- Array (nlohmann::json-based for C++14 compatibility)
+- EntityRef (entity ID reference)
+
+**Vector Parameter JSON Formats** (both supported by ParseParameterWithSchema):
+- Object format: `{"x": 1.5, "y": 2.3, "z": 0.0}` (human-readable)
+- Array format: `[1.5, 2.3, 0.0]` (compact, preferred)
+
+**Example Component Schema Definition:**
+```cpp
+// Position_data component in ParameterSchemaRegistry
+RegisterParameterSchema(ParameterSchemaEntry(
+    "position",              // Parameter name in UI/JSON
+    "Position_data",         // Component type
+    "position",              // Target field name
+    ComponentParameter::Type::Vector3,  // Type
+    true,                    // Required
+    ComponentParameter::FromVector3(0.0f, 0.0f, 0.0f)  // Default
+));
+```
+
+**Example Entity Prefab Node with Vector3 Parameters:**
+```json
+{
+  "nodes": [
+    {
+      "nodeId": 1,
+      "componentType": "Transform",
+      "componentName": "MainTransform",
+      "position": [10.5, 20.3, 0.0],
+      "size": [150.0, 80.0, 0.0],
+      "enabled": true,
+      "properties": {
+        "position": [100.0, 150.0, 0.0],
+        "rotation": [0.0, 0.0, 0.0],
+        "scale": [1.0, 1.0, 1.0]
+      }
+    }
+  ]
+}
+```
+
+### Data Flow for Node Creation
+1. User drags component from ComponentPalettePanel
+2. Component name passed via ImGui drag-drop payload
+3. PrefabCanvas::AcceptComponentDropAtScreenPos() receives screen coordinates
+4. ScreenToCanvas() transforms to canvas logical coordinates
+5. EntityPrefabGraphDocument::CreateComponentNode(componentType, componentName)
+6. New ComponentNode created with position, size, enabled flag
+7. Node properties can be populated from ParameterSchemaRegistry defaults
 
 ## File Management Protocol
 - To add new files to the OlympeBlueprintEditor project:

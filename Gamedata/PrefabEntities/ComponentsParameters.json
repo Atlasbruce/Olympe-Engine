@@ -1,0 +1,194 @@
+{
+  "components": [
+    {
+      "name": "Transform",
+      "category": "Core",
+      "description": "Position, rotation, scale",
+      "parameters": [
+        {
+          "name": "position",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        },
+        {
+          "name": "rotation",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        },
+        {
+          "name": "scale",
+          "type": "Vector3",
+          "defaultValue": [1.0, 1.0, 1.0]
+        }
+      ]
+    },
+    {
+      "name": "Identity",
+      "category": "Core",
+      "description": "Entity identity and naming",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "String",
+          "defaultValue": "Entity"
+        },
+        {
+          "name": "type",
+          "type": "String",
+          "defaultValue": "Generic"
+        }
+      ]
+    },
+    {
+      "name": "Movement",
+      "category": "Physics",
+      "description": "Movement and velocity",
+      "parameters": [
+        {
+          "name": "velocity",
+          "type": "Vector3",
+          "defaultValue": [0.0, 0.0, 0.0]
+        },
+        {
+          "name": "speed",
+          "type": "Float",
+          "defaultValue": 150.0
+        }
+      ]
+    },
+    {
+      "name": "Sprite",
+      "category": "Graphics",
+      "description": "Sprite rendering",
+      "parameters": [
+        {
+          "name": "spritePath",
+          "type": "String",
+          "defaultValue": ""
+        },
+        {
+          "name": "width",
+          "type": "Int",
+          "defaultValue": 32
+        },
+        {
+          "name": "height",
+          "type": "Int",
+          "defaultValue": 32
+        }
+      ]
+    },
+    {
+      "name": "Collision",
+      "category": "Physics",
+      "description": "Collision bounds",
+      "parameters": [
+        {
+          "name": "boundingBox",
+          "type": "Vector3",
+          "defaultValue": [1.0, 1.0, 1.0]
+        },
+        {
+          "name": "isStatic",
+          "type": "Bool",
+          "defaultValue": false
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "category": "Gameplay",
+      "description": "Health points system",
+      "parameters": [
+        {
+          "name": "health",
+          "type": "Int",
+          "defaultValue": 100
+        },
+        {
+          "name": "maxHealth",
+          "type": "Int",
+          "defaultValue": 100
+        }
+      ]
+    },
+    {
+      "name": "AIBlackboard",
+      "category": "AI",
+      "description": "AI data storage",
+      "parameters": [
+        {
+          "name": "alertRadius",
+          "type": "Float",
+          "defaultValue": 100.0
+        },
+        {
+          "name": "patrolPoints",
+          "type": "String",
+          "defaultValue": ""
+        },
+        {
+          "name": "initialized",
+          "type": "Bool",
+          "defaultValue": false
+        }
+      ]
+    },
+    {
+      "name": "BehaviorTree",
+      "category": "AI",
+      "description": "Behavior tree execution",
+      "parameters": [
+        {
+          "name": "treePath",
+          "type": "String",
+          "defaultValue": ""
+        },
+        {
+          "name": "enabled",
+          "type": "Bool",
+          "defaultValue": true
+        }
+      ]
+    },
+    {
+      "name": "VisualSprite",
+      "category": "Graphics",
+      "description": "Visual sprite data",
+      "parameters": [
+        {
+          "name": "spritePath",
+          "type": "String",
+          "defaultValue": ""
+        },
+        {
+          "name": "color",
+          "type": "Color",
+          "defaultValue": "#FFFFFF"
+        },
+        {
+          "name": "layer",
+          "type": "Int",
+          "defaultValue": 0
+        }
+      ]
+    },
+    {
+      "name": "AnimationController",
+      "category": "Graphics",
+      "description": "Animation state machine",
+      "parameters": [
+        {
+          "name": "animationState",
+          "type": "String",
+          "defaultValue": "idle"
+        },
+        {
+          "name": "animationSpeed",
+          "type": "Float",
+          "defaultValue": 1.0
+        }
+      ]
+    }
+  ]
+}

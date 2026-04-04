@@ -15,6 +15,7 @@ namespace Olympe
         ComponentNode node(componentType);
         node.nodeId = m_nextNodeId++;
         node.componentName = componentName;
+        node.InitializePorts(1, 1);
         m_nodes.push_back(node);
         m_isDirty = true;
         return node.nodeId;
@@ -84,7 +85,16 @@ namespace Olympe
     void EntityPrefabGraphDocument::CenterViewport() { }
 
     bool EntityPrefabGraphDocument::ConnectNodes(NodeId sourceId, NodeId targetId)
-    { m_connections.push_back(std::make_pair(sourceId, targetId)); m_isDirty = true; return true; }
+    { 
+        // Validate the connection first
+        if (!ValidateConnection(sourceId, targetId))
+        {
+            return false;
+        }
+        m_connections.push_back(std::make_pair(sourceId, targetId));
+        m_isDirty = true;
+        return true;
+    }
 
     bool EntityPrefabGraphDocument::DisconnectNodes(NodeId sourceId, NodeId targetId)
     { 
@@ -94,6 +104,41 @@ namespace Olympe
     }
 
     const std::vector<std::pair<NodeId, NodeId>>& EntityPrefabGraphDocument::GetConnections() const { return m_connections; }
+
+    bool EntityPrefabGraphDocument::ValidateConnection(NodeId sourceId, NodeId targetId) const
+    {
+        // Prevent self-connections
+        if (sourceId == targetId)
+        {
+            return false;
+        }
+
+        // Check if both nodes exist
+        if (!HasNode(sourceId) || !HasNode(targetId))
+        {
+            return false;
+        }
+
+        // Prevent duplicate connections
+        if (HasConnection(sourceId, targetId))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool EntityPrefabGraphDocument::HasConnection(NodeId sourceId, NodeId targetId) const
+    {
+        for (const auto& connection : m_connections)
+        {
+            if (connection.first == sourceId && connection.second == targetId)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
     json EntityPrefabGraphDocument::ToJson() const { return json::object(); }
     EntityPrefabGraphDocument EntityPrefabGraphDocument::FromJson(const json& data) { (void)data; return EntityPrefabGraphDocument(); }

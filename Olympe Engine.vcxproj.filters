@@ -542,6 +542,7 @@
     <None Include="COMPREHENSIVE_PROJECT_STATUS.md" />
     <None Include="QUICK_START_TESTING.md" />
     <None Include="DEBUG_INSTRUCTIONS.md" />
+    <None Include="Gamedata\PrefabEntities\ComponentsParameters.json" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

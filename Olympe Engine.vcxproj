@@ -523,6 +523,7 @@
     <None Include="DIAGNOSTIC_PROJECT_INTEGRATION.md" />
     <None Include="DIAGNOSTIC_SUMMARY.md" />
     <None Include="DOCUMENTATION_INDEX.md" />
+    <None Include="Gamedata\PrefabEntities\ComponentsParameters.json" />
     <None Include="IMPLEMENTATION_COMPLETE_SUMMARY.md" />
     <None Include="IMPLEMENTATION_COMPLETE_SWITCH_UNIFICATION.md" />
     <None Include="NODE_SIZING_AUDIT.md" />

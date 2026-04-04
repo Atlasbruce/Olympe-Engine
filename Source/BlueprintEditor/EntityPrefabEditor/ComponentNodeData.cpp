@@ -64,6 +64,12 @@ namespace Olympe
             j["properties"][it->first] = it->second;
         }
 
+        j["ports"] = json::array();
+        for (const auto& port : ports)
+        {
+            j["ports"].push_back(port.ToJson());
+        }
+
         return j;
     }
 
@@ -100,6 +106,20 @@ namespace Olympe
             {
                 node.properties[it.key()] = it.value().dump();
             }
+        }
+
+        if (data.contains("ports"))
+        {
+            node.ports.clear();
+            for (const auto& portJson : data["ports"])
+            {
+                NodePort port = NodePort::FromJson(portJson, node.nodeId);
+                node.ports.push_back(port);
+            }
+        }
+        else
+        {
+            node.InitializePorts(1, 1);
         }
 
         return node;
@@ -140,5 +160,56 @@ namespace Olympe
             return style.hoverColor;
         }
         return style.normalColor;
+    }
+
+    void ComponentNode::InitializePorts(uint32_t numInputPorts, uint32_t numOutputPorts)
+    {
+        ports.clear();
+
+        for (uint32_t i = 0; i < numInputPorts; ++i)
+        {
+            NodePort port(nodeId, i, false);
+            ports.push_back(port);
+        }
+
+        for (uint32_t i = 0; i < numOutputPorts; ++i)
+        {
+            NodePort port(nodeId, numInputPorts + i, true);
+            ports.push_back(port);
+        }
+    }
+
+    const std::vector<NodePort>& ComponentNode::GetPorts() const
+    {
+        return ports;
+    }
+
+    std::vector<NodePort>& ComponentNode::GetPorts()
+    {
+        return ports;
+    }
+
+    NodePort* ComponentNode::FindPort(PortId portId)
+    {
+        for (auto& port : ports)
+        {
+            if (port.portId == portId)
+            {
+                return &port;
+            }
+        }
+        return nullptr;
+    }
+
+    const NodePort* ComponentNode::FindPort(PortId portId) const
+    {
+        for (const auto& port : ports)
+        {
+            if (port.portId == portId)
+            {
+                return &port;
+            }
+        }
+        return nullptr;
     }
 }

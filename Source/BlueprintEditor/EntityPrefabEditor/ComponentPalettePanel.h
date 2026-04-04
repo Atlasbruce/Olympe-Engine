@@ -37,6 +37,9 @@ namespace Olympe
         // Add a component type to the palette
         void RegisterComponentType(const std::string& name, const std::string& category, const std::string& description = "");
 
+        // Load components from JSON file (./Gamedata/PrefabEntities/ComponentsParameters.json)
+        bool LoadComponentsFromJSON(const std::string& filepath);
+
     private:
         std::vector<ComponentType> m_componentTypes;
         std::vector<std::string> m_categories;
