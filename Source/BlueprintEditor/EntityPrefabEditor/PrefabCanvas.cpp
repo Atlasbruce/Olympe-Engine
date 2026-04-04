@@ -68,6 +68,7 @@ namespace Olympe
 
         // Context menu handling (right-click)
         RenderContextMenu();
+        RenderConnectionContextMenu();
 
         ImGui::EndChild();
         ImGui::PopStyleColor();
@@ -90,6 +91,42 @@ namespace Olympe
         else if (m_interactionMode == CanvasInteractionMode::CreatingConnection)
         {
             m_connectionPreviewEnd = ScreenToCanvas(x, y);
+        }
+
+        // Update hovered connection for visual feedback
+        if (!m_isCreatingConnection && m_interactionMode == CanvasInteractionMode::Normal)
+        {
+            m_hoveredConnectionIndex = -1;
+
+            const std::vector<std::pair<NodeId, NodeId>>& connections = m_document->GetConnections();
+            const float hoverTolerance = 10.0f;  // Tolerance for hover detection (in screen pixels)
+
+            for (size_t connIdx = 0; connIdx < connections.size(); ++connIdx)
+            {
+                const ComponentNode* sourceNode = m_document->GetNode(connections[connIdx].first);
+                const ComponentNode* targetNode = m_document->GetNode(connections[connIdx].second);
+
+                if (sourceNode != nullptr && targetNode != nullptr)
+                {
+                    // Get connection endpoints in canvas space
+                    Vector from = sourceNode->position;
+                    from.x += sourceNode->size.x * 0.5f;
+                    Vector to = targetNode->position;
+                    to.x -= targetNode->size.x * 0.5f;
+
+                    // Get distance from mouse position to connection curve
+                    float distance = m_renderer->GetDistanceToConnection(
+                        Vector(x, y, 0.0f),  // Screen space position
+                        from, to
+                    );
+
+                    if (distance <= hoverTolerance)
+                    {
+                        m_hoveredConnectionIndex = static_cast<int>(connIdx);
+                        break;  // Only highlight one connection
+                    }
+                }
+            }
         }
 
         m_lastMousePos = m_currentMousePos;
@@ -136,6 +173,7 @@ namespace Olympe
         {
             HandlePanStart(x, y);
         }
+        // Right mouse button (button==1) is handled by RenderContextMenu() for priority
 
         m_lastMousePos = m_currentMousePos;
     }
@@ -484,7 +522,7 @@ namespace Olympe
             true
         );
 
-        m_renderer->RenderConnections(m_document);
+        m_renderer->RenderConnections(m_document, m_hoveredConnectionIndex);
 
         ImGui::PopClipRect();
     }
@@ -602,6 +640,31 @@ namespace Olympe
         // Apply pending node position updates
     }
 
+    void PrefabCanvas::RenderConnectionContextMenu()
+    {
+        // Render context menu for connection deletion
+        if (ImGui::BeginPopup("ConnectionContextMenu"))
+        {
+            if (ImGui::MenuItem("Delete Connection"))
+            {
+                if (m_contextMenuConnectionIndex >= 0 && m_document)
+                {
+                    const std::vector<std::pair<NodeId, NodeId>>& connections = m_document->GetConnections();
+                    if (m_contextMenuConnectionIndex < static_cast<int>(connections.size()))
+                    {
+                        const auto& conn = connections[m_contextMenuConnectionIndex];
+                        m_document->DisconnectNodes(conn.first, conn.second);
+                        m_document->SetDirty(true);
+                    }
+                }
+                ImGui::CloseCurrentPopup();
+                m_showConnectionContextMenu = false;
+            }
+
+            ImGui::EndPopup();
+        }
+    }
+
     void PrefabCanvas::HandleNodeDragStart(NodeId nodeId, float x, float y)
     {
         if (nodeId == InvalidNodeId || !m_document) { return; }
@@ -703,6 +766,46 @@ namespace Olympe
         // Detect right-click on canvas
         if (ImGui::IsMouseClicked(1) && ImGui::IsWindowHovered())
         {
+            // First check if right-clicking on a connection
+            Vector canvasPos = ScreenToCanvas(mousePos.x, mousePos.y);
+            const std::vector<std::pair<NodeId, NodeId>>& connections = m_document->GetConnections();
+            const std::vector<ComponentNode>& nodes = m_document->GetAllNodes();
+
+            const float hitTolerance = 10.0f;
+            bool connectionFound = false;
+
+            for (size_t connIdx = 0; connIdx < connections.size(); ++connIdx)
+            {
+                const ComponentNode* sourceNode = m_document->GetNode(connections[connIdx].first);
+                const ComponentNode* targetNode = m_document->GetNode(connections[connIdx].second);
+
+                if (sourceNode != nullptr && targetNode != nullptr)
+                {
+                    // Get connection endpoints in canvas space
+                    Vector from = sourceNode->position;
+                    from.x += sourceNode->size.x * 0.5f;
+                    Vector to = targetNode->position;
+                    to.x -= targetNode->size.x * 0.5f;
+
+                    // Get distance from click point to connection curve
+                    float distance = m_renderer->GetDistanceToConnection(
+                        Vector(mousePos.x, mousePos.y, 0.0f),
+                        from, to
+                    );
+
+                    if (distance <= hitTolerance)
+                    {
+                        m_contextMenuConnectionIndex = static_cast<int>(connIdx);
+                        m_contextMenuConnectionMousePos = Vector(mousePos.x, mousePos.y, 0.0f);
+                        m_showConnectionContextMenu = true;
+                        ImGui::OpenPopup("ConnectionContextMenu");
+                        connectionFound = true;
+                        return;  // Don't open canvas context menu
+                    }
+                }
+            }
+
+            // If no connection found, check for node or canvas context menu
             // Store the node at click position for context menu
             m_contextMenuMousePos = Vector(mousePos.x, mousePos.y, 0.0f);
             m_contextMenuNodeId = GetNodeAtPosition(mousePos.x, mousePos.y);

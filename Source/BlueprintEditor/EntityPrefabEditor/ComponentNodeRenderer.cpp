@@ -64,7 +64,7 @@ namespace Olympe
         }
     }
 
-    void ComponentNodeRenderer::RenderConnections(const EntityPrefabGraphDocument* document)
+    void ComponentNodeRenderer::RenderConnections(const EntityPrefabGraphDocument* document, int hoveredConnectionIndex /*= -1*/)
     {
         if (document == nullptr) { return; }
         const std::vector<std::pair<NodeId, NodeId>>& connections = document->GetConnections();
@@ -78,7 +78,9 @@ namespace Olympe
                 from.x += sourceNode->size.x * 0.5f;
                 Vector to = targetNode->position;
                 to.x -= targetNode->size.x * 0.5f;
-                RenderConnectionLine(from, to);
+
+                bool isHovered = (hoveredConnectionIndex == static_cast<int>(i));
+                RenderConnectionLine(from, to, isHovered);
             }
         }
     }
@@ -241,7 +243,7 @@ namespace Olympe
         }
     }
 
-    void ComponentNodeRenderer::RenderConnectionLine(const Vector& from, const Vector& to)
+    void ComponentNodeRenderer::RenderConnectionLine(const Vector& from, const Vector& to, bool isHovered /*= false*/)
     {
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         if (drawList == nullptr) { return; }
@@ -261,7 +263,19 @@ namespace Olympe
         // Use a proportional offset: 40% of horizontal distance, minimum 50 pixels
         float controlOffset = (horizontalDistance * 0.4f > 50.0f) ? horizontalDistance * 0.4f : 50.0f;
 
-        ImU32 lineColor = ImGui::GetColorU32(ImVec4(0.7f, 0.7f, 0.7f, 0.8f));
+        // Color depends on hover state
+        ImU32 lineColor;
+        float lineWidth = 2.0f;
+
+        if (isHovered)
+        {
+            lineColor = ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 0.0f, 1.0f));  // Bright yellow
+            lineWidth = 3.0f;  // Thicker when hovered
+        }
+        else
+        {
+            lineColor = ImGui::GetColorU32(ImVec4(0.7f, 0.7f, 0.7f, 0.8f));  // Normal gray
+        }
 
         // Draw bezier curve with symmetric control points
         drawList->AddBezierCubic(
@@ -270,13 +284,14 @@ namespace Olympe
             ImVec2(p2.x - controlOffset, p2.y),
             p2,
             lineColor,
-            2.0f,
+            lineWidth,
             20
         );
 
         // Draw connection endpoints
-        drawList->AddCircleFilled(p1, 4.0f, lineColor);
-        drawList->AddCircleFilled(p2, 4.0f, lineColor);
+        float endpointRadius = isHovered ? 5.0f : 4.0f;
+        drawList->AddCircleFilled(p1, endpointRadius, lineColor);
+        drawList->AddCircleFilled(p2, endpointRadius, lineColor);
     }
 
     Vector ComponentNodeRenderer::GetNodeColor(const ComponentNode& node) const
@@ -450,6 +465,67 @@ namespace Olympe
     {
         // This can be used to update port positions if needed
         // Ports positions are calculated on-the-fly during rendering
+    }
+
+    float ComponentNodeRenderer::GetDistanceToConnection(
+        const Vector& testPoint,
+        const Vector& connectionStart,
+        const Vector& connectionEnd,
+        Vector* outClosestPoint /*= nullptr*/
+    ) const
+    {
+        // Transform connection endpoints from canvas space to screen space
+        Vector screenStart = CanvasToScreen(connectionStart);
+        Vector screenEnd = CanvasToScreen(connectionEnd);
+
+        // Calculate bezier control points (same formula as RenderConnectionLine)
+        ImVec2 p1(screenStart.x, screenStart.y);
+        ImVec2 p2(screenEnd.x, screenEnd.y);
+        float dx = p2.x - p1.x;
+        float horizontalDistance = (dx > 0.0f) ? dx : -dx;
+        float controlOffset = (horizontalDistance * 0.4f > 50.0f) ? horizontalDistance * 0.4f : 50.0f;
+
+        ImVec2 cp1(p1.x + controlOffset, p1.y);      // Control point 1
+        ImVec2 cp2(p2.x - controlOffset, p2.y);      // Control point 2
+
+        // Sample the bezier curve at multiple points to find closest distance
+        // Using parametric cubic bezier: B(t) = (1-t)^3*P0 + 3(1-t)^2*t*P1 + 3(1-t)*t^2*P2 + t^3*P3
+        float minDistance = FLT_MAX;
+        Vector closestPoint = Vector(p1.x, p1.y);
+
+        const int numSamples = 32;  // Sample the curve at 32 points
+        for (int i = 0; i <= numSamples; ++i)
+        {
+            float t = static_cast<float>(i) / static_cast<float>(numSamples);
+            float mt = 1.0f - t;
+
+            // Cubic bezier formula
+            float coeffA = mt * mt * mt;                    // (1-t)^3
+            float coeffB = 3.0f * mt * mt * t;              // 3(1-t)^2*t
+            float coeffC = 3.0f * mt * t * t;               // 3(1-t)*t^2
+            float coeffD = t * t * t;                       // t^3
+
+            float curveX = coeffA * p1.x + coeffB * cp1.x + coeffC * cp2.x + coeffD * p2.x;
+            float curveY = coeffA * p1.y + coeffB * cp1.y + coeffC * cp2.y + coeffD * p2.y;
+
+            // Calculate distance from test point to this sample point
+            float dx = testPoint.x - curveX;
+            float dy = testPoint.y - curveY;
+            float distance = sqrtf(dx * dx + dy * dy);
+
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                closestPoint = Vector(curveX, curveY);
+            }
+        }
+
+        if (outClosestPoint != nullptr)
+        {
+            *outClosestPoint = closestPoint;
+        }
+
+        return minDistance;
     }
 
 } // namespace Olympe

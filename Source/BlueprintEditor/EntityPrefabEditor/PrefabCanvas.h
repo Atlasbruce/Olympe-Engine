@@ -132,6 +132,12 @@ namespace Olympe
         NodeId m_contextMenuNodeId = InvalidNodeId;
         Vector m_contextMenuMousePos;
 
+        // Connection context menu state
+        int m_hoveredConnectionIndex = -1;  // Index in connections array, -1 if none
+        int m_contextMenuConnectionIndex = -1;  // Index for connection context menu
+        Vector m_contextMenuConnectionMousePos;
+        bool m_showConnectionContextMenu = false;
+
         // Utility methods
         void UpdateNodePositions();
         void HandleNodeDragStart(NodeId nodeId, float x, float y);
@@ -148,6 +154,7 @@ namespace Olympe
         void RenderNodes();
         void RenderConnections();
         void RenderConnectionPreview();
+        void RenderConnectionContextMenu();
         void RenderDebugInfo();
         void RenderSelectionBox();
         void RenderContextMenu();

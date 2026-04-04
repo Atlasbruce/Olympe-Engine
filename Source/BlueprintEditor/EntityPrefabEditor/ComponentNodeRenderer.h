@@ -28,7 +28,7 @@ namespace Olympe
         // Rendering
         void RenderNode(const ComponentNode& node);
         void RenderNodes(const EntityPrefabGraphDocument* document);
-        void RenderConnections(const EntityPrefabGraphDocument* document);
+        void RenderConnections(const EntityPrefabGraphDocument* document, int hoveredConnectionIndex = -1);
 
         // Port rendering
         void RenderNodePorts(const ComponentNode& node);
@@ -51,6 +51,14 @@ namespace Olympe
         bool IsPointInNode(const Vector& point, const ComponentNode& node) const;
         bool GetNodeBounds(const ComponentNode& node, Vector& outMin, Vector& outMax) const;
 
+        // Connection hit detection
+        float GetDistanceToConnection(
+            const Vector& testPoint, 
+            const Vector& connectionStart, 
+            const Vector& connectionEnd,
+            Vector* outClosestPoint = nullptr
+        ) const;
+
         // Display options
         void SetShowLabels(bool show);
         bool GetShowLabels() const;
@@ -72,7 +80,7 @@ namespace Olympe
 
         void RenderNodeBox(const ComponentNode& node);
         void RenderNodeLabel(const ComponentNode& node);
-        void RenderConnectionLine(const Vector& from, const Vector& to);
+        void RenderConnectionLine(const Vector& from, const Vector& to, bool isHovered = false);
         void RenderPort(const ComponentNode& node, const NodePort& port);
         Vector GetNodeColor(const ComponentNode& node) const;
         Vector CanvasToScreen(const Vector& canvasPos) const;

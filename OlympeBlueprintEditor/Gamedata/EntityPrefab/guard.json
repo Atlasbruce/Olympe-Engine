@@ -28,12 +28,12 @@
         "targetNodeId": 6
       },
       {
-        "sourceNodeId": 1,
+        "sourceNodeId": 2,
         "targetNodeId": 7
       },
       {
-        "sourceNodeId": 2,
-        "targetNodeId": 7
+        "sourceNodeId": 7,
+        "targetNodeId": 8
       }
     ],
     "nodes": [
@@ -65,8 +65,8 @@
         "enabled": true,
         "nodeId": 2,
         "position": {
-          "x": 284,
-          "y": -33,
+          "x": 274,
+          "y": -61,
           "z": 0
         },
         "properties": {
@@ -86,8 +86,8 @@
         "enabled": true,
         "nodeId": 3,
         "position": {
-          "x": 550,
-          "y": -50,
+          "x": 531,
+          "y": -63,
           "z": 0
         },
         "properties": {
@@ -179,6 +179,24 @@
         },
         "properties": {},
         "selected": true,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "AIBlackboard",
+        "componentType": "AIBlackboard",
+        "enabled": true,
+        "nodeId": 8,
+        "position": {
+          "x": 724.205,
+          "y": -183.449,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
         "size": {
           "x": 150,
           "y": 80,
