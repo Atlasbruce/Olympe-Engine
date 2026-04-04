@@ -121,6 +121,19 @@ namespace Olympe
             1.0f
         ));
 
+        // Draw selection glow if node is selected
+        if (node.selected)
+        {
+            ImU32 glowColor = ImGui::GetColorU32(ImVec4(0.0f, 0.8f, 1.0f, 0.3f));
+            float glowSize = 4.0f * m_nodeScale;
+            drawList->AddRectFilled(
+                ImVec2(min.x - glowSize, min.y - glowSize),
+                ImVec2(max.x + glowSize, max.y + glowSize),
+                glowColor,
+                m_style.cornerRadius + glowSize
+            );
+        }
+
         drawList->AddRectFilled(
             ImVec2(min.x, min.y),
             ImVec2(max.x, max.y),
@@ -128,13 +141,14 @@ namespace Olympe
             m_style.cornerRadius
         );
 
+        float borderWidth = node.selected ? m_style.borderWidth * 2.0f : m_style.borderWidth;
         drawList->AddRect(
             ImVec2(min.x, min.y),
             ImVec2(max.x, max.y),
             borderColor,
             m_style.cornerRadius,
             ImDrawFlags_RoundCornersAll,
-            m_style.borderWidth
+            borderWidth
         );
 
         ImU32 titleBgColor = ImGui::GetColorU32(ImVec4(

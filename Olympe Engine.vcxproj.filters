@@ -220,6 +220,11 @@
     <ClCompile Include="Source\Editor\Modals\SubGraphFilePickerModal.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
