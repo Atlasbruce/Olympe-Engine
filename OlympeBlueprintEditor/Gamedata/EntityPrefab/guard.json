@@ -158,6 +158,60 @@
           "y": 60,
           "z": 0
         }
+      },
+      {
+        "componentName": "BehaviorTree",
+        "componentType": "BehaviorTree",
+        "enabled": true,
+        "nodeId": 7,
+        "position": {
+          "x": 394,
+          "y": 319,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "Health",
+        "componentType": "Health",
+        "enabled": true,
+        "nodeId": 8,
+        "position": {
+          "x": 636,
+          "y": 318,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "Movement",
+        "componentType": "Movement",
+        "enabled": true,
+        "nodeId": 9,
+        "position": {
+          "x": 843,
+          "y": 313,
+          "z": 0
+        },
+        "properties": {},
+        "selected": true,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
       }
     ]
   },

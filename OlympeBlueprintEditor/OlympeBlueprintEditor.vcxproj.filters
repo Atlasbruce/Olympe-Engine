@@ -655,6 +655,9 @@
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -1289,6 +1292,7 @@
       <Filter>Source Files\BlueprintEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico">

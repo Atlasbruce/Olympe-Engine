@@ -62,6 +62,7 @@
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp" />
@@ -295,6 +296,7 @@
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditorPlugin.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.h" />
+    <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.h" />

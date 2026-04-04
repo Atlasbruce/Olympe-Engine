@@ -277,8 +277,11 @@ namespace Olympe
     { 
         Vector screen(screenX, screenY, 0.0f);
         ImVec2 canvasPos = ImGui::GetCursorScreenPos();
-        screen.x = (screen.x - canvasPos.x - m_canvasOffset.x) / m_canvasZoom;
-        screen.y = (screen.y - canvasPos.y - m_canvasOffset.y) / m_canvasZoom;
+        // Correct transformation: undo screen position, undo zoom, undo pan offset
+        // screen = canvas * zoom + offset + canvasPos
+        // canvas = (screen - canvasPos - offset) / zoom
+        screen.x = (screen.x - canvasPos.x - m_canvasOffset.x * m_canvasZoom) / m_canvasZoom;
+        screen.y = (screen.y - canvasPos.y - m_canvasOffset.y * m_canvasZoom) / m_canvasZoom;
         return screen;
     }
 
@@ -461,11 +464,6 @@ namespace Olympe
             0.0f
         );
 
-        if (m_snapToGrid)
-        {
-            SnapNodePositionToGrid(newNodePos);
-        }
-
         node->position = newNodePos;
 
         // Also update all other selected nodes with the same delta
@@ -480,10 +478,6 @@ namespace Olympe
                 if (selectedNode != nullptr)
                 {
                     Vector updatedPos = selectedNode->position + delta;
-                    if (m_snapToGrid)
-                    {
-                        SnapNodePositionToGrid(updatedPos);
-                    }
                     selectedNode->position = updatedPos;
                 }
             }
@@ -560,6 +554,8 @@ namespace Olympe
                     ImGui::CloseCurrentPopup();
                 }
 
+                ImGui::Separator();
+
                 if (ImGui::MenuItem("Select Node"))
                 {
                     if (!m_ctrlPressed)
@@ -584,24 +580,6 @@ namespace Olympe
                     if (ImGui::MenuItem("Select All"))
                     {
                         SelectAll();
-                        ImGui::CloseCurrentPopup();
-                    }
-
-                    ImGui::Separator();
-
-                    if (ImGui::MenuItem("Delete All Nodes"))
-                    {
-                        const std::vector<ComponentNode>& nodes = m_document->GetAllNodes();
-                        std::vector<NodeId> nodeIds;
-                        for (size_t i = 0; i < nodes.size(); ++i)
-                        {
-                            nodeIds.push_back(nodes[i].nodeId);
-                        }
-                        for (size_t i = 0; i < nodeIds.size(); ++i)
-                        {
-                            m_document->RemoveNode(nodeIds[i]);
-                        }
-                        m_document->DeselectAll();
                         ImGui::CloseCurrentPopup();
                     }
                 }

@@ -36,15 +36,29 @@
   - **Features Implemented**:
     * ✅ Panning: Middle-mouse drag to pan canvas, offset stored in m_canvasOffset
     * ✅ Zoom: Mouse scroll wheel to zoom (clamped 0.1x - 3.0x), zoom-centered on mouse position
-    * ✅ Node Dragging: Left-click and drag nodes to reposition, with snap-to-grid option
-    * ✅ Multi-node Selection: Ctrl+Click to multi-select, Shift compatibility planned
+    * ✅ Node Dragging: Left-click and drag nodes to reposition (snap-to-grid removed for better UX)
+    * ✅ Multi-node Selection: Ctrl+Click to multi-select
     * ✅ Node Deletion: Delete key removes selected nodes
     * ✅ Node Selection: Left-click to select, visual feedback with blue glow
     * ✅ Hit Detection: IsPointInNode() for accurate click testing
     * ✅ SaveToFile(): Full JSON serialization of nodes, connections, canvas state with dirty flag tracking
-    * ✅ Context Menu: Right-click menu for delete/select/clear operations (Phase 2 Refinement)
+    * ✅ Context Menu: Right-click on node for Delete/Select; right-click empty for Clear/Select All/Reset
     * ✅ Proper Connection Rendering: Bezier curves with proportional offset (40% of horizontal distance)
-    * ✅ Grid Scaling: Grid properly scales and pans with canvas (fixed zoom/pan issues)
+    * ✅ Grid Scaling: Grid properly scales and pans with canvas
+    * ✅ Component Palette Panel: Searchable list of available components to add to graph
+  - **Bug Fixes (Phase 2 Refinement v2)**:
+    * ✅ Node Selection Offset: Fixed ScreenToCanvas() coordinate transformation to properly account for zoom scaling of offset. Formula corrected: `canvas = (screen - canvasPos - offset*zoom) / zoom`
+    * ✅ Panning Offset Compensation: Automatic correction through ScreenToCanvas() fix
+    * ✅ Snap-to-Grid Removed: Eliminated grid snapping for free-form node positioning
+    * ✅ Context Menu Safety: Removed "Delete All Nodes" (too risky), improved menu structure with separators
+    * ✅ Component Palette Integration: Added resizable split panel (Canvas 75% | Palette 25%)
+  - **Component Palette Features**:
+    * Text search with case-insensitive substring matching
+    * Category tabs: All, Core, Physics, Graphics, AI, Gameplay
+    * 10 registered component types (Transform, Identity, Movement, Sprite, Collision, Health, AIBlackboard, BehaviorTree, VisualSprite, AnimationController)
+    * Double-click to instantiate new nodes at default position
+    * Tooltips with component descriptions
+    * Drag-to-resize split panel between canvas and palette
   - **Dirty Flag System**:
     * `EntityPrefabGraphDocument::m_isDirty` tracks modifications (CreateNode, RemoveNode, ConnectNodes, DisconnectNodes)
     * Cleared on LoadFromFile() and SaveToFile()
@@ -54,41 +68,31 @@
     * Polls mouse clicks/movement/scroll, keyboard modifiers (Ctrl, Shift)
     * Dispatches to OnMouseMove, OnMouseDown, OnMouseUp, OnMouseScroll, OnKeyDown handlers
     * Window hover checking ensures input only when canvas is focused
-  - **Grid & Connection Rendering (Phase 2 Refinement)**:
-    * Grid scales with zoom: `scaledGridSpacing = m_gridSpacing * m_canvasZoom`
-    * Grid offset calculated in screen space using fmod for proper pan synchronization
-    * Connection bezier curves use proportional offset: 40% of horizontal distance minimum 50px
-    * Both grid and connections now move together seamlessly during panning
-  - **Context Menu (Phase 2 Refinement)**:
-    * Right-click on node: Delete Node, Select Node
-    * Right-click on empty canvas: Clear Selection, Select All, Delete All, Reset View
-    * Menu detects click context and shows appropriate options
-  - **Key Methods in PrefabCanvas**:
-    * `PanCanvas()`: Updates m_canvasOffset directly
-    * `ZoomCanvas()`: Adjusts zoom with center-point calculation to prevent view jumping
-    * `GetNodeAtPosition()`: Hit detection via ScreenToCanvas + IsPointInNode
-    * `HandleNodeDrag*()`: Multi-node drag with offset calculation
-    * `SnapNodePositionToGrid()`: Optional grid snapping (enabled by default)
-    * `RenderContextMenu()`: ImGui context menu for node/canvas operations
+  - **Key Classes**:
+    * `ComponentPalettePanel`: Searchable component registry with category filtering
+    * `PrefabCanvas`: Canvas rendering and input handling (fixed ScreenToCanvas coordinate transform)
+    * `EntityPrefabRenderer`: Orchestrates layout (canvas + palette side-by-side)
+    * `EntityPrefabGraphDocument`: Data model with dirty flag tracking
+    * `ComponentNodeRenderer`: Node/connection visual rendering
   - **JSON Schema**: Mirrors LoadFromFile structure with nodes[], connections[], canvasState
-  - **Current Status**: ✅ All interactive features working, grid and connections refined, build successful (0 errors)
-  - **Integration**: Works seamlessly with PrefabCanvas::Render() ImGui event loop
+  - **Current Status**: ✅ All features working, bugs fixed, build successful (0 errors)
+  - **Integration**: Works seamlessly with ImGui event loop; resizable split panel layout
 
 - Phase 29 (FUTURE - Entity Prefab Editor Phase 3):
-  - Add component palette panel (right-side searchable list of available components)
-  - Drag-drop or double-click to add new component nodes to graph
   - Property editing panel (select node → edit properties in sidebar)
-  - Minimap/viewport controls for large graphs
   - Connection creation UI (drag from node port to create connections)
   - Undo/Redo system for edit history
+  - Minimap/viewport controls for large graphs
   - Export to runtime format
+  - Copy/Paste nodes and subgraphs
 
 - Phase 30 (FUTURE - Entity Prefab Editor Optimization):
   - Performance profiling and optimization
   - Large graph support (1000+ nodes)
   - Hierarchical/grouped nodes
-  - Custom component type registration
+  - Custom component type registration system
   - Graph template system for reusable prefab patterns
+  - Node categories and subcategories
 
 ## File Management Protocol
 - To add new files to the OlympeBlueprintEditor project:

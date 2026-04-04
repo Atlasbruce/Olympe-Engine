@@ -2,13 +2,16 @@
 #include "EntityPrefabGraphDocument.h"
 #include "PrefabLoader.h"
 #include "../../system/system_utils.h"
+#include "../../Source/third_party/imgui/imgui.h"
 #include <memory>
 
 namespace Olympe {
 
 EntityPrefabRenderer::EntityPrefabRenderer(PrefabCanvas& canvas)
-    : m_canvas(canvas), m_filePath(""), m_isDirty(false)
+    : m_canvas(canvas), m_filePath(""), m_isDirty(false), m_canvasPanelWidth(0.75f)
 {
+    // Initialize component palette with available types
+    m_componentPalette.Initialize();
 }
 
 EntityPrefabRenderer::~EntityPrefabRenderer()
@@ -17,7 +20,40 @@ EntityPrefabRenderer::~EntityPrefabRenderer()
 
 void EntityPrefabRenderer::Render()
 {
+    // Layout: Canvas (left, ~75%) | Resize Handle | Component Palette (right, ~25%)
+    float totalWidth = ImGui::GetContentRegionAvail().x;
+    float handleWidth = 4.0f;
+    float canvasWidth = totalWidth * m_canvasPanelWidth;
+    float paletteWidth = totalWidth - canvasWidth - handleWidth;
+
+    // Render canvas on the left
+    ImGui::BeginChild("EntityPrefabCanvas", ImVec2(canvasWidth, 0), false, ImGuiWindowFlags_NoScrollbar);
     m_canvas.Render();
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+
+    // Resize handle
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.35f, 0.35f, 0.35f, 0.5f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.55f, 0.55f, 0.55f, 0.8f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.70f, 0.70f, 0.70f, 1.0f));
+    ImGui::Button("##resizeHandle", ImVec2(handleWidth, -1.0f));
+    if (ImGui::IsItemHovered())
+        ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+    if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+    {
+        m_canvasPanelWidth += ImGui::GetIO().MouseDelta.x / totalWidth;
+        if (m_canvasPanelWidth < 0.5f) m_canvasPanelWidth = 0.5f;
+        if (m_canvasPanelWidth > 0.9f) m_canvasPanelWidth = 0.9f;
+    }
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
+
+    // Render component palette on the right
+    ImGui::BeginChild("ComponentPalette", ImVec2(paletteWidth, 0), false, ImGuiWindowFlags_NoScrollbar);
+    m_componentPalette.Render(m_canvas.GetDocument());
+    ImGui::EndChild();
 }
 
 bool EntityPrefabRenderer::Load(const std::string& path)

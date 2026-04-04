@@ -2,6 +2,7 @@
 
 #include "../IGraphRenderer.h"
 #include "PrefabCanvas.h"
+#include "ComponentPalettePanel.h"
 #include <memory>
 #include <string>
 
@@ -12,7 +13,7 @@ namespace Olympe {
  * @brief Renderer adapter for Entity Prefab graphs.
  * 
  * Implements IGraphRenderer interface for the TabManager,
- * delegating rendering to PrefabCanvas.
+ * delegating rendering to PrefabCanvas with integrated component palette.
  */
 class EntityPrefabRenderer : public IGraphRenderer
 {
@@ -29,8 +30,10 @@ public:
 
 private:
     PrefabCanvas& m_canvas;
+    ComponentPalettePanel m_componentPalette;
     std::string m_filePath;
     bool m_isDirty = false;
+    float m_canvasPanelWidth = 0.75f; // 75% for canvas, 25% for palette
 };
 
 } // namespace Olympe
