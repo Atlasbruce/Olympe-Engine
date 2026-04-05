@@ -2,6 +2,7 @@
 #include "ComponentNodeRenderer.h"
 #include "../../Source/third_party/imgui/imgui.h"
 #include "../../system/system_utils.h"
+#include "../Utilities/CanvasGridRenderer.h"
 #include <cmath>
 
 namespace Olympe
@@ -496,55 +497,23 @@ namespace Olympe
 
     void PrefabCanvas::RenderGrid()
     { 
-        ImDrawList* drawList = ImGui::GetWindowDrawList();
-        if (drawList == nullptr) { return; }
-
         ImVec2 canvasPos = ImGui::GetCursorScreenPos();
         ImVec2 canvasSize = ImGui::GetContentRegionAvail();
-        ImVec2 canvasEnd(canvasPos.x + canvasSize.x, canvasPos.y + canvasSize.y);
 
-        ImU32 majorGridColor = ImGui::GetColorU32(ImVec4(0.5f, 0.5f, 0.5f, 0.4f));
-        ImU32 minorGridColor = ImGui::GetColorU32(ImVec4(0.3f, 0.3f, 0.3f, 0.2f));
+        // Get VisualScript-style grid configuration (matching imnodes professional appearance)
+        CanvasGridRenderer::GridConfig gridConfig = CanvasGridRenderer::GetStylePreset(
+            CanvasGridRenderer::Style_VisualScript
+        );
 
-        // Scale grid spacing by zoom level to maintain consistent grid density
-        float scaledGridSpacing = m_gridSpacing * m_canvasZoom;
-        float scaledMinorSpacing = scaledGridSpacing / 5.0f;
+        // Apply canvas transformation
+        gridConfig.canvasPos = canvasPos;
+        gridConfig.canvasSize = canvasSize;
+        gridConfig.zoom = m_canvasZoom;
+        gridConfig.offsetX = m_canvasOffset.x;
+        gridConfig.offsetY = m_canvasOffset.y;
 
-        // Calculate grid offset in screen space
-        // Grid origin = canvasPos + offset * zoom
-        // We need to find where the grid should start on screen
-        float gridStartX = canvasPos.x + m_canvasOffset.x * m_canvasZoom;
-        float gridStartY = canvasPos.y + m_canvasOffset.y * m_canvasZoom;
-
-        // Calculate which grid lines should be visible and their screen positions
-        float gridOffsetX = fmod(gridStartX, scaledGridSpacing);
-        float gridOffsetY = fmod(gridStartY, scaledGridSpacing);
-
-        // Handle negative modulos
-        if (gridOffsetX < 0) gridOffsetX += scaledGridSpacing;
-        if (gridOffsetY < 0) gridOffsetY += scaledGridSpacing;
-
-        // Draw minor grid lines
-        for (float x = canvasPos.x + gridOffsetX - scaledGridSpacing; x < canvasEnd.x + scaledMinorSpacing; x += scaledMinorSpacing)
-        { 
-            drawList->AddLine(ImVec2(x, canvasPos.y), ImVec2(x, canvasEnd.y), minorGridColor);
-        }
-
-        for (float y = canvasPos.y + gridOffsetY - scaledGridSpacing; y < canvasEnd.y + scaledMinorSpacing; y += scaledMinorSpacing)
-        { 
-            drawList->AddLine(ImVec2(canvasPos.x, y), ImVec2(canvasEnd.x, y), minorGridColor);
-        }
-
-        // Draw major grid lines
-        for (float x = canvasPos.x + gridOffsetX - scaledGridSpacing; x < canvasEnd.x + scaledGridSpacing; x += scaledGridSpacing)
-        { 
-            drawList->AddLine(ImVec2(x, canvasPos.y), ImVec2(x, canvasEnd.y), majorGridColor, 1.5f);
-        }
-
-        for (float y = canvasPos.y + gridOffsetY - scaledGridSpacing; y < canvasEnd.y + scaledGridSpacing; y += scaledGridSpacing)
-        { 
-            drawList->AddLine(ImVec2(canvasPos.x, y), ImVec2(canvasEnd.x, y), majorGridColor, 1.5f);
-        }
+        // Render the grid using shared utility with VisualScript styling
+        CanvasGridRenderer::RenderGrid(gridConfig);
     }
 
     void PrefabCanvas::RenderNodes()

@@ -228,6 +228,9 @@
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Utilities\CanvasGridRenderer.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Utilities\CustomCanvasEditor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -484,6 +487,10 @@
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasGridRenderer.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\ICanvasEditor.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\CustomCanvasEditor.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -545,6 +552,12 @@
     <None Include="QUICK_START_TESTING.md" />
     <None Include="DEBUG_INSTRUCTIONS.md" />
     <None Include="Gamedata\PrefabEntities\ComponentsParameters.json" />
+    <None Include="Source\BlueprintEditor\GRID_RENDERING_ANALYSIS.md" />
+    <None Include="Source\BlueprintEditor\IMNODES_GRID_FLOW.md" />
+    <None Include="Source\BlueprintEditor\CANVAS_ARCHITECTURE_ANALYSIS.md" />
+    <None Include="Source\BlueprintEditor\CANVAS_STANDARDIZATION_PROGRESS.md" />
+    <None Include="Source\BlueprintEditor\STANDARDIZATION_EXECUTIVE_SUMMARY.md" />
+    <None Include="Source\BlueprintEditor\STANDARDIZATION_VISUAL_GUIDE.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

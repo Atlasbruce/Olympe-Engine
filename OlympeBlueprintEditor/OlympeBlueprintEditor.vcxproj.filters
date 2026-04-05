@@ -664,6 +664,15 @@
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\NodePropertiesPanel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\Utilities\CanvasGridRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\Utilities\CustomCanvasEditor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -1301,6 +1310,10 @@
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\NodePropertiesPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Utilities\CanvasGridRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Utilities\CustomCanvasEditor.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Utilities\ICanvasEditor.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico">

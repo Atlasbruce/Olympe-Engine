@@ -86,6 +86,9 @@
     <ClCompile Include="Source\BlueprintEditor\TemplateBrowserPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\TemplateManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\UndoRedoStack.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Utilities\CanvasGridRenderer.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Utilities\CustomCanvasEditor.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ValidationPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\GraphExecutionTracer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\GraphExecutionSimulator.cpp" />
@@ -327,6 +330,10 @@
     <ClInclude Include="Source\BlueprintEditor\TemplateBrowserPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\TemplateManager.h" />
     <ClInclude Include="Source\BlueprintEditor\UndoRedoStack.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasGridRenderer.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\CustomCanvasEditor.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\ICanvasEditor.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.h" />
     <ClInclude Include="Source\BlueprintEditor\ValidationPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\GraphExecutionTracer.h" />
     <ClInclude Include="Source\BlueprintEditor\GraphExecutionSimulator.h" />
@@ -545,8 +552,14 @@
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
     <None Include="SESSION_SUMMARY.md" />
+    <None Include="Source\BlueprintEditor\CANVAS_ARCHITECTURE_ANALYSIS.md" />
+    <None Include="Source\BlueprintEditor\CANVAS_STANDARDIZATION_PROGRESS.md" />
     <None Include="Source\BlueprintEditor\EntityPrefabEditor\IMPLEMENTATION.md" />
+    <None Include="Source\BlueprintEditor\GRID_RENDERING_ANALYSIS.md" />
+    <None Include="Source\BlueprintEditor\IMNODES_GRID_FLOW.md" />
     <None Include="Source\BlueprintEditor\INTEGRATION_GUIDE_NodeProperties.md" />
+    <None Include="Source\BlueprintEditor\STANDARDIZATION_EXECUTIVE_SUMMARY.md" />
+    <None Include="Source\BlueprintEditor\STANDARDIZATION_VISUAL_GUIDE.md" />
     <None Include="SUBGRAPH_BEFORE_AFTER_COMPARISON.md" />
     <None Include="SUBGRAPH_EDITABLE_PATH_FINAL_SUMMARY.md" />
     <None Include="SUBGRAPH_IMPLEMENTATION_TECHNICAL_GUIDE.md" />
