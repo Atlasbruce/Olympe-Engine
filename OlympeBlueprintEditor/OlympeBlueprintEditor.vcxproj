@@ -58,6 +58,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\NodeSearchPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\OperatorRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\ParameterEditorRegistry.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\SelectionEffectRenderer.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\TabManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\UndoRedoStack.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\Utilities\CanvasGridRenderer.cpp" />
@@ -279,6 +280,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\NodeSearchPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\OperatorRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\ParameterEditorRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\SelectionEffectRenderer.h" />
     <ClInclude Include="..\Source\BlueprintEditor\TabManager.h" />
     <ClInclude Include="..\Source\BlueprintEditor\UndoRedoStack.h" />
     <ClInclude Include="..\Source\BlueprintEditor\Utilities\CanvasGridRenderer.h" />

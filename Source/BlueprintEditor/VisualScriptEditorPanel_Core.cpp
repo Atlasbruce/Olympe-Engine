@@ -202,6 +202,11 @@ void VisualScriptEditorPanel::Initialize()
         SYSTEM_LOG << "[VSEditor] Initialize: graph '" << m_template.Name
                    << "' has no embedded presets\n";
     }
+
+    // Phase 33 — Initialize Selection Effect Renderer with default Olympe Blue style
+    // Provides unified selection UX across all canvas types
+    m_selectionRenderer.ApplyStyle_OlympeBlue();
+    SYSTEM_LOG << "[VSEditor] Selection effect renderer initialized (Olympe Blue style)\n";
 }
 
 // ============================================================================

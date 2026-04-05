@@ -27,6 +27,7 @@
 #include "../TaskSystem/EntityBlackboard.h"
 #include "../NodeGraphCore/GlobalTemplateBlackboard.h"
 #include "VisualScriptNodeRenderer.h"
+#include "SelectionEffectRenderer.h"
 #include "UndoRedoStack.h"
 #include "VSConnectionValidator.h"
 #include "VSGraphVerifier.h"
@@ -939,6 +940,15 @@ private:
     /// Top panel tab selection (Part A of right panel)
     /// 0 = Properties, 1 = Nodes
     int m_topPanelTabSelection = 0;
+
+    // -----------------------------------------------------------------------
+    // Phase 33 — Selection Effect Renderer (In-Loop Glow System)
+    // -----------------------------------------------------------------------
+
+    /// Renders glow effect for selected nodes (cyan halo + thickened border).
+    /// Integrated into node rendering loop for correct scope and z-ordering.
+    /// Provides unified selection UX across all canvas types.
+    SelectionEffectRenderer m_selectionRenderer;
 };
 
 } // namespace Olympe

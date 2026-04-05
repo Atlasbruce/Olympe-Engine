@@ -231,6 +231,7 @@
     <ClCompile Include="Source\BlueprintEditor\Utilities\CanvasGridRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Utilities\CustomCanvasEditor.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\SelectionEffectRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -491,6 +492,8 @@
     <ClInclude Include="Source\BlueprintEditor\Utilities\ICanvasEditor.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CustomCanvasEditor.h" />
+    <ClInclude Include="Source\BlueprintEditor\SelectionEffectRenderer.h" />
+    <ClInclude Include="Tests\BlueprintEditor\SelectionEffectRendererTests.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -569,6 +572,21 @@
     <None Include="PHASE_4_RUNTIME_BUG_FIXED.md" />
     <None Include="PHASE_4_THREE_BUGS_FIXED.md" />
     <None Include="PHASE_4_FINAL_BUG_FIX_SUMMARY.md" />
+    <None Include="Documentation\SELECTION_EFFECT_ANALYSIS.md" />
+    <None Include="Documentation\SELECTION_EFFECT_INTEGRATION_GUIDE.md" />
+    <None Include="Documentation\CONCRETE_IMPLEMENTATION_EXAMPLE.md" />
+    <None Include="Documentation\VISUAL_ANALYSIS_DIAGRAM.md" />
+    <None Include="Documentation\EXECUTIVE_SUMMARY.md" />
+    <None Include="Documentation\QUICK_REFERENCE.md" />
+    <None Include="Documentation\README.md" />
+    <None Include="Documentation\VISUAL_SCRIPT_FEASIBILITY.md" />
+    <None Include="Documentation\PHASE_33_INTEGRATION_COMPLETE.md" />
+    <None Include="Documentation\COMPLETION_REPORT.md" />
+    <None Include="Documentation\NEXT_STEPS.md" />
+    <None Include="Documentation\SESSION_SUMMARY.md" />
+    <None Include="Documentation\VISUAL_SUMMARY.md" />
+    <None Include="Documentation\INDEX.md" />
+    <None Include="Documentation\PHASE_34_GLOW_REFINEMENTS.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

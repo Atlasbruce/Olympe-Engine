@@ -673,6 +673,9 @@
     <ClCompile Include="..\Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\SelectionEffectRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -1314,6 +1317,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\Utilities\CustomCanvasEditor.h" />
     <ClInclude Include="..\Source\BlueprintEditor\Utilities\ICanvasEditor.h" />
     <ClInclude Include="..\Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\SelectionEffectRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico">

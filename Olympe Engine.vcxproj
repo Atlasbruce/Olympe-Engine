@@ -81,6 +81,7 @@
     <ClCompile Include="Source\BlueprintEditor\ParameterEditorRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\PerformanceProfiler.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ProfilerPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\SelectionEffectRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\SubgraphMigrator.cpp" />
     <ClCompile Include="Source\BlueprintEditor\TabManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\TemplateBrowserPanel.cpp" />
@@ -323,6 +324,7 @@
     <ClInclude Include="Source\BlueprintEditor\NodeStyleRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\OperatorRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\ParameterEditorRegistry.h" />
+    <ClInclude Include="Source\BlueprintEditor\SelectionEffectRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\SubgraphMigrator.h" />
     <ClInclude Include="Source\BlueprintEditor\ProfilerPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\PerformanceProfiler.h" />
@@ -510,6 +512,7 @@
     <ClInclude Include="Source\vector.h" />
     <ClInclude Include="Source\VideoGame.h" />
     <ClInclude Include="Source\World.h" />
+    <ClInclude Include="Tests\BlueprintEditor\SelectionEffectRendererTests.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ACTION_PLAN_NODE_PANELS_FIXES.md" />
@@ -531,6 +534,21 @@
     <None Include="DEBUG_INSTRUCTIONS.md" />
     <None Include="DIAGNOSTIC_PROJECT_INTEGRATION.md" />
     <None Include="DIAGNOSTIC_SUMMARY.md" />
+    <None Include="Documentation\COMPLETION_REPORT.md" />
+    <None Include="Documentation\CONCRETE_IMPLEMENTATION_EXAMPLE.md" />
+    <None Include="Documentation\EXECUTIVE_SUMMARY.md" />
+    <None Include="Documentation\INDEX.md" />
+    <None Include="Documentation\NEXT_STEPS.md" />
+    <None Include="Documentation\PHASE_33_INTEGRATION_COMPLETE.md" />
+    <None Include="Documentation\PHASE_34_GLOW_REFINEMENTS.md" />
+    <None Include="Documentation\QUICK_REFERENCE.md" />
+    <None Include="Documentation\README.md" />
+    <None Include="Documentation\SELECTION_EFFECT_ANALYSIS.md" />
+    <None Include="Documentation\SELECTION_EFFECT_INTEGRATION_GUIDE.md" />
+    <None Include="Documentation\SESSION_SUMMARY.md" />
+    <None Include="Documentation\VISUAL_ANALYSIS_DIAGRAM.md" />
+    <None Include="Documentation\VISUAL_SCRIPT_FEASIBILITY.md" />
+    <None Include="Documentation\VISUAL_SUMMARY.md" />
     <None Include="DOCUMENTATION_INDEX.md" />
     <None Include="Gamedata\PrefabEntities\ComponentsParameters.json" />
     <None Include="IMPLEMENTATION_COMPLETE_SUMMARY.md" />

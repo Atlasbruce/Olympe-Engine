@@ -340,7 +340,8 @@ void VisualScriptNodeRenderer::RenderNode(
     unsigned int titleHoveredCol = hasBreakpoint
                                    ? IM_COL32(240, 50, 50, 255)
                                    : GetNodeTitleHoveredColor(style);
-    unsigned int titleSelectedCol = IM_COL32(255, 220, 50, 255);
+    // Keep title color consistent when selected (don't change to yellow)
+    unsigned int titleSelectedCol = titleCol;
 
     ImNodes::PushColorStyle(ImNodesCol_TitleBar,         titleCol);
     ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered,  titleHoveredCol);
@@ -509,7 +510,8 @@ void VisualScriptNodeRenderer::RenderNode(
     unsigned int titleHoveredCol = hasBreakpoint
                                    ? IM_COL32(240, 50, 50, 255)
                                    : GetNodeTitleHoveredColor(style);
-    unsigned int titleSelectedCol = IM_COL32(255, 220, 50, 255);
+    // Keep title color consistent when selected (don't change to yellow)
+    unsigned int titleSelectedCol = titleCol;
 
     ImNodes::PushColorStyle(ImNodesCol_TitleBar,         titleCol);
     ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered,  titleHoveredCol);
