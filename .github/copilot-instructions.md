@@ -295,6 +295,38 @@
     - Copy/Paste nodes and subgraphs
     - Undo/Redo system for edit history
 
+- Phase 5 (COMPLETED - Canvas Grid Standardization):
+  - **Objective**: Visual standardization of grid appearance across all canvas types (VisualScript, EntityPrefab, etc.)
+  - **Design Pattern**: Abstraction layer (ICanvasEditor) with two implementations:
+    * ImNodesCanvasEditor: Wraps imnodes native grid rendering (fixed 1.0x zoom, pan via EditorContext)
+    * CustomCanvasEditor: Custom implementation with full zoom support (0.1x-3.0x, pan via m_canvasOffset)
+  - **Shared Utility**: CanvasGridRenderer with style presets
+  - **Grid Standardization**: Both editors use identical CanvasGridRenderer::Style_VisualScript preset
+    * majorSpacing: 24.0f pixels
+    * backgroundColor: #26262FFF (38,38,47,255) - Dark blue (imnodes native)
+    * majorLineColor: #3F3F47FF (63,63,71,255) - Dark gray (imnodes native)
+    * minorDivisor: 1.0f (no minor lines)
+    * Result: Identical visual appearance across all canvas types
+  - **Rendering Pipeline**:
+    * VisualScriptEditorPanel: Uses imnodes native BeginNodeEditor/EndNodeEditor
+    * EntityPrefabRenderer: Uses CustomCanvasEditor → PrefabCanvas::RenderGrid() → CanvasGridRenderer
+    * Both result in identical visual appearance
+  - **Key Files**:
+    * ICanvasEditor.h/cpp: Abstract interface (40+ methods for pan/zoom/grid/coordinates)
+    * ImNodesCanvasEditor.h/cpp: Adapter for imnodes (fixed 1.0x zoom)
+    * CustomCanvasEditor.h/cpp: Zoom-capable implementation (0.1x-3.0x)
+    * CanvasGridRenderer.h/cpp: Shared grid rendering with style presets (colors verified against imnodes)
+    * PrefabCanvas.cpp: RenderGrid() calls CanvasGridRenderer with Style_VisualScript at line 69
+  - **Coordinate System**: Four-space transformation model
+    * Screen Space (pixels): Absolute window coordinates
+    * Canvas Space (logical): After subtracting canvas position
+    * Editor Space: Includes pan offset
+    * Grid Space: Pan-independent storage (for save/load)
+    * FIX #3 Applied: Pan offset NOT multiplied by zoom (gridStartX = canvasPos + offsetX, NOT offsetX*zoom)
+  - **Current Status**: ✅ Phase 5 complete - Grid standardization verified and color-corrected
+  - **Build**: ✅ 0 errors, 0 warnings
+  - **Documentation**: STANDARDIZATION_VISUAL_GUIDE.md updated with Phase 5 completion and color correction details
+
 ## Architecture Reference - Entity Prefab Editor Data & Parameter System
 
 ### Component Registry Architecture

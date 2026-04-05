@@ -11,11 +11,12 @@ namespace Olympe
         {
             case Style_VisualScript:
                 // Professional dark blue background with subtle gray grid (imnodes StyleColorsDark defaults)
+                // Verified against native imnodes grid appearance (Phase 5)
                 config.majorSpacing = 24.0f;
                 config.minorDivisor = 1.0f;  // No minor lines
-                config.backgroundColor = ImVec4(40.0f/255.0f, 40.0f/255.0f, 50.0f/255.0f, 200.0f/255.0f);  // (40,40,50,200)
-                config.majorLineColor = ImVec4(240.0f/255.0f, 240.0f/255.0f, 240.0f/255.0f, 60.0f/255.0f); // (240,240,240,60) - Primary
-                config.minorLineColor = ImVec4(200.0f/255.0f, 200.0f/255.0f, 200.0f/255.0f, 40.0f/255.0f); // (200,200,200,40) - Secondary
+                config.backgroundColor = ImVec4(38.0f/255.0f, 38.0f/255.0f, 47.0f/255.0f, 1.0f);  // #26262FFF (imnodes native)
+                config.majorLineColor = ImVec4(63.0f/255.0f, 63.0f/255.0f, 71.0f/255.0f, 1.0f);  // #3F3F47FF (imnodes native grid line)
+                config.minorLineColor = ImVec4(63.0f/255.0f, 63.0f/255.0f, 71.0f/255.0f, 0.5f); // Same as major with reduced alpha
                 config.majorLineThickness = 1.0f;
                 config.minorLineThickness = 0.5f;
                 break;

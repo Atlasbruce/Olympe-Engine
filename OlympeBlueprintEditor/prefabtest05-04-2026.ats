@@ -1,0 +1,104 @@
+{
+  "blueprintType": "EntityPrefab",
+  "data": {
+    "canvasState": {
+      "offsetX": 0,
+      "offsetY": 0,
+      "zoom": 1
+    },
+    "connections": [],
+    "nodes": [
+      {
+        "componentName": "NPC_data",
+        "componentType": "NPC_data",
+        "enabled": true,
+        "nodeId": 1,
+        "position": {
+          "x": 626,
+          "y": 150,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "CameraTarget_data",
+        "componentType": "CameraTarget_data",
+        "enabled": true,
+        "nodeId": 2,
+        "position": {
+          "x": 581,
+          "y": 301,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "GridSettings_data",
+        "componentType": "GridSettings_data",
+        "enabled": true,
+        "nodeId": 3,
+        "position": {
+          "x": 603,
+          "y": 583,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "Health_data",
+        "componentType": "Health_data",
+        "enabled": true,
+        "nodeId": 4,
+        "position": {
+          "x": 711,
+          "y": 428,
+          "z": 0
+        },
+        "properties": {},
+        "selected": true,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "EditorContext_st",
+        "componentType": "EditorContext_st",
+        "enabled": true,
+        "nodeId": 5,
+        "position": {
+          "x": 351,
+          "y": 341,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      }
+    ]
+  },
+  "schemaVersion": 4
+}
