@@ -3,16 +3,19 @@
 #include "../../Source/third_party/imgui/imgui.h"
 #include "../../system/system_utils.h"
 #include "../Utilities/CanvasGridRenderer.h"
+#include "../Utilities/ICanvasEditor.h"
 #include <cmath>
 
 namespace Olympe
 {
-    PrefabCanvas::PrefabCanvas() : m_canvasZoom(1.0f), m_isPanning(false), m_gridSpacing(50.0f), m_showGrid(true), m_showDebugInfo(false), m_snapToGrid(true)
+    PrefabCanvas::PrefabCanvas() : m_canvasEditor(nullptr), m_isPanning(false), m_gridSpacing(50.0f), m_showGrid(true), m_showDebugInfo(false), m_snapToGrid(true)
     { m_renderer = std::make_unique<ComponentNodeRenderer>(); }
 
     PrefabCanvas::~PrefabCanvas() { }
 
     void PrefabCanvas::Initialize(EntityPrefabGraphDocument* document) { m_document = document; if (m_renderer) { m_renderer->Initialize(); } }
+
+    void PrefabCanvas::SetCanvasEditor(ICanvasEditor* canvasEditor) { m_canvasEditor = canvasEditor; }
 
     EntityPrefabGraphDocument* PrefabCanvas::GetDocument() const { return m_document; }
 
@@ -96,7 +99,8 @@ namespace Olympe
         }
 
         // Update rectangle selection during drag
-        if (m_isSelectingRectangle)
+        // FIX #2: Don't update rectangle selection if we're creating a connection
+        if (m_isSelectingRectangle && !m_isCreatingConnection)
         {
             m_selectionRectEnd = ScreenToCanvas(x, y);
         }
@@ -166,10 +170,35 @@ namespace Olympe
             NodeId nodeAtPos = GetNodeAtPosition(x, y);
             if (nodeAtPos != InvalidNodeId)
             {
-                if (!m_ctrlPressed)
+                // FIX #1: Preserve multi-selection when dragging already-selected node
+                // Only deselect all if the clicked node is NOT already selected
+                const std::vector<NodeId>& selectedNodes = m_document->GetSelectedNodes();
+                bool isNodeAlreadySelected = false;
+                for (size_t i = 0; i < selectedNodes.size(); ++i)
                 {
+                    if (selectedNodes[i] == nodeAtPos)
+                    {
+                        isNodeAlreadySelected = true;
+                        break;
+                    }
+                }
+
+                if (!m_ctrlPressed && !isNodeAlreadySelected)
+                {
+                    // Node not in selection: deselect all and select only this one
                     m_document->DeselectAll();
                 }
+                else if (m_ctrlPressed && isNodeAlreadySelected)
+                {
+                    // Ctrl+click on already selected: deselect it
+                    m_document->DeselectNode(nodeAtPos);
+                    return;  // Don't start drag if deselecting
+                }
+                else if (m_ctrlPressed && !isNodeAlreadySelected)
+                {
+                    // Ctrl+click on unselected: add to selection (don't call DeselectAll)
+                }
+
                 HandleNodeDragStart(nodeAtPos, x, y);
             }
             else if (!m_ctrlPressed)
@@ -203,19 +232,9 @@ namespace Olympe
 
         if (button == 0)
         {
-            if (m_isSelectingRectangle)
-            {
-                // Complete rectangle selection
-                Vector canvasPos = ScreenToCanvas(x, y);
-                m_selectionRectEnd = canvasPos;
-                SelectNodesInRectangle(m_selectionRectStart, m_selectionRectEnd, m_ctrlPressed);
-                m_isSelectingRectangle = false;
-            }
-            else if (m_interactionMode == CanvasInteractionMode::DraggingNode)
-            {
-                HandleNodeDragEnd();
-            }
-            else if (m_isCreatingConnection)
+            // FIX #2: Check for connection completion FIRST (highest priority)
+            // before checking rectangle selection
+            if (m_isCreatingConnection)
             {
                 // Check if releasing on a port
                 Vector canvasPos = ScreenToCanvas(x, y);
@@ -241,6 +260,21 @@ namespace Olympe
                 {
                     CancelConnectionCreation();
                 }
+
+                // Clear rectangle selection flag if it was set during connection creation
+                m_isSelectingRectangle = false;
+            }
+            else if (m_isSelectingRectangle)
+            {
+                // Complete rectangle selection
+                Vector canvasPos = ScreenToCanvas(x, y);
+                m_selectionRectEnd = canvasPos;
+                SelectNodesInRectangle(m_selectionRectStart, m_selectionRectEnd, m_ctrlPressed);
+                m_isSelectingRectangle = false;
+            }
+            else if (m_interactionMode == CanvasInteractionMode::DraggingNode)
+            {
+                HandleNodeDragEnd();
             }
         }
         else if (button == 2 && m_interactionMode == CanvasInteractionMode::PanningCamera)
@@ -270,20 +304,33 @@ namespace Olympe
         if (keyCode == 16) { m_shiftPressed = false; } // Shift key
     }
 
-    void PrefabCanvas::PanCanvas(float deltaX, float deltaY) { m_canvasOffset.x += deltaX; m_canvasOffset.y += deltaY; }
+    void PrefabCanvas::PanCanvas(float deltaX, float deltaY) 
+    { 
+        if (m_canvasEditor)
+        {
+            m_canvasEditor->PanBy(ImVec2(deltaX, deltaY));
+        }
+    }
 
     void PrefabCanvas::ZoomCanvas(float zoomDelta, float centerX, float centerY)
     { 
-        float oldZoom = m_canvasZoom;
-        m_canvasZoom += zoomDelta;
-        if (m_canvasZoom < 0.1f) { m_canvasZoom = 0.1f; }
-        if (m_canvasZoom > 3.0f) { m_canvasZoom = 3.0f; }
-        float zoomRatio = m_canvasZoom / oldZoom;
-        m_canvasOffset.x = centerX + (m_canvasOffset.x - centerX) * zoomRatio;
-        m_canvasOffset.y = centerY + (m_canvasOffset.y - centerY) * zoomRatio;
+        if (!m_canvasEditor) return;
+
+        float oldZoom = m_canvasEditor->GetZoom();
+        float newZoom = oldZoom + zoomDelta;
+
+        ImVec2 zoomCenter(centerX, centerY);
+        m_canvasEditor->SetZoom(newZoom, &zoomCenter);
     }
 
-    void PrefabCanvas::ResetView() { m_canvasOffset = Vector(0.0f, 0.0f, 0.0f); m_canvasZoom = 1.0f; }
+    void PrefabCanvas::ResetView() 
+    { 
+        if (m_canvasEditor)
+        {
+            m_canvasEditor->ResetView();
+        }
+    }
+
     void PrefabCanvas::FitToContent() { ResetView(); }
 
     NodeId PrefabCanvas::GetNodeAtPosition(float x, float y)
@@ -405,9 +452,12 @@ namespace Olympe
         // Therefore: canvas = (screen - screenBase - offset) / zoom
         ImVec2 storedCanvasPos = m_canvasScreenPos;
 
+        float zoom = m_canvasEditor ? m_canvasEditor->GetZoom() : 1.0f;
+        ImVec2 pan = m_canvasEditor ? m_canvasEditor->GetPan() : ImVec2(0.0f, 0.0f);
+
         Vector canvas;
-        canvas.x = (screenX - storedCanvasPos.x - m_canvasOffset.x) / m_canvasZoom;
-        canvas.y = (screenY - storedCanvasPos.y - m_canvasOffset.y) / m_canvasZoom;
+        canvas.x = (screenX - storedCanvasPos.x - pan.x) / zoom;
+        canvas.y = (screenY - storedCanvasPos.y - pan.y) / zoom;
         canvas.z = 0.0f;
 
         // Create new node at the computed canvas position
@@ -460,29 +510,77 @@ namespace Olympe
     void PrefabCanvas::SetSnapToGrid(bool snap) { m_snapToGrid = snap; }
     bool PrefabCanvas::IsSnapToGridEnabled() const { return m_snapToGrid; }
 
-    Vector PrefabCanvas::GetCanvasOffset() const { return m_canvasOffset; }
-    void PrefabCanvas::SetCanvasOffset(const Vector& offset) { m_canvasOffset = offset; }
-    float PrefabCanvas::GetCanvasZoom() const { return m_canvasZoom; }
-    void PrefabCanvas::SetCanvasZoom(float zoom) { m_canvasZoom = (zoom > 0.1f && zoom < 3.0f) ? zoom : m_canvasZoom; }
+    Vector PrefabCanvas::GetCanvasOffset() const 
+    { 
+        // DEFENSIVE: Ensure m_canvasEditor is valid before dereferencing
+        // This protects against use-after-free if adapter is recreated in EntityPrefabRenderer
+        if (m_canvasEditor)
+        {
+            ImVec2 pan = m_canvasEditor->GetPan();
+            return Vector(pan.x, pan.y, 0.0f);
+        }
+        return Vector(0.0f, 0.0f, 0.0f);
+    }
+
+    void PrefabCanvas::SetCanvasOffset(const Vector& offset) 
+    { 
+        if (m_canvasEditor)
+        {
+            m_canvasEditor->SetPan(ImVec2(offset.x, offset.y));
+        }
+    }
+
+    float PrefabCanvas::GetCanvasZoom() const 
+    { 
+        if (m_canvasEditor)
+        {
+            return m_canvasEditor->GetZoom();
+        }
+        return 1.0f;
+    }
+
+    void PrefabCanvas::SetCanvasZoom(float zoom) 
+    { 
+        if (m_canvasEditor)
+        {
+            ImVec2 limits = m_canvasEditor->GetZoomLimits();
+            float clamped = (zoom > limits.x && zoom < limits.y) ? zoom : m_canvasEditor->GetZoom();
+            m_canvasEditor->SetZoom(clamped);
+        }
+    }
 
     Vector PrefabCanvas::ScreenToCanvas(float screenX, float screenY) const
     { 
+        // NEW: Use ICanvasEditor for coordinate transformation
+        // This now handles zoom/pan through the standardized interface
+        if (m_canvasEditor)
+        {
+            ImVec2 result = m_canvasEditor->ScreenToCanvas(ImVec2(screenX, screenY));
+            return Vector(result.x, result.y, 0.0f);
+        }
+
+        // Fallback if editor not yet initialized (should not happen in normal flow)
         Vector screen(screenX, screenY, 0.0f);
         ImVec2 canvasPos = ImGui::GetCursorScreenPos();
-        // Correct transformation: undo screen position, undo offset, undo zoom
-        // screen = canvas * zoom + offset + canvasPos
-        // canvas = (screen - canvasPos - offset) / zoom
-        screen.x = (screen.x - canvasPos.x - m_canvasOffset.x) / m_canvasZoom;
-        screen.y = (screen.y - canvasPos.y - m_canvasOffset.y) / m_canvasZoom;
+        screen.x = (screen.x - canvasPos.x) / 1.0f;
+        screen.y = (screen.y - canvasPos.y) / 1.0f;
         return screen;
     }
 
     Vector PrefabCanvas::CanvasToScreen(float canvasX, float canvasY) const
     { 
+        // NEW: Use ICanvasEditor for coordinate transformation
+        if (m_canvasEditor)
+        {
+            ImVec2 result = m_canvasEditor->CanvasToScreen(ImVec2(canvasX, canvasY));
+            return Vector(result.x, result.y, 0.0f);
+        }
+
+        // Fallback if editor not yet initialized
         Vector canvas(canvasX, canvasY, 0.0f);
         ImVec2 canvasPos = ImGui::GetCursorScreenPos();
-        canvas.x = canvas.x * m_canvasZoom + canvasPos.x + m_canvasOffset.x;
-        canvas.y = canvas.y * m_canvasZoom + canvasPos.y + m_canvasOffset.y;
+        canvas.x = canvas.x * 1.0f + canvasPos.x;
+        canvas.y = canvas.y * 1.0f + canvasPos.y;
         return canvas;
     }
 
@@ -505,12 +603,23 @@ namespace Olympe
             CanvasGridRenderer::Style_VisualScript
         );
 
-        // Apply canvas transformation
+        // Apply canvas transformation (via adapter)
         gridConfig.canvasPos = canvasPos;
         gridConfig.canvasSize = canvasSize;
-        gridConfig.zoom = m_canvasZoom;
-        gridConfig.offsetX = m_canvasOffset.x;
-        gridConfig.offsetY = m_canvasOffset.y;
+
+        if (m_canvasEditor)
+        {
+            gridConfig.zoom = m_canvasEditor->GetZoom();
+            ImVec2 pan = m_canvasEditor->GetPan();
+            gridConfig.offsetX = pan.x;
+            gridConfig.offsetY = pan.y;
+        }
+        else
+        {
+            gridConfig.zoom = 1.0f;
+            gridConfig.offsetX = 0.0f;
+            gridConfig.offsetY = 0.0f;
+        }
 
         // Render the grid using shared utility with VisualScript styling
         CanvasGridRenderer::RenderGrid(gridConfig);
@@ -520,8 +629,16 @@ namespace Olympe
     { 
         if (!m_document || !m_renderer) { return; }
 
-        // Pass canvas transformation context to renderer
-        m_renderer->SetCanvasTransform(m_canvasOffset, m_canvasZoom);
+        // Pass canvas transformation context to renderer (via adapter)
+        if (m_canvasEditor)
+        {
+            ImVec2 pan = m_canvasEditor->GetPan();
+            m_renderer->SetCanvasTransform(Vector(pan.x, pan.y, 0.0f), m_canvasEditor->GetZoom());
+        }
+        else
+        {
+            m_renderer->SetCanvasTransform(Vector(0.0f, 0.0f, 0.0f), 1.0f);
+        }
         m_renderer->SetCanvasScreenPos(ImGui::GetCursorScreenPos());
 
         ImGui::PushClipRect(
@@ -540,8 +657,16 @@ namespace Olympe
     { 
         if (!m_document || !m_renderer) { return; }
 
-        // Pass canvas transformation context to renderer
-        m_renderer->SetCanvasTransform(m_canvasOffset, m_canvasZoom);
+        // Pass canvas transformation context to renderer (via adapter)
+        if (m_canvasEditor)
+        {
+            ImVec2 pan = m_canvasEditor->GetPan();
+            m_renderer->SetCanvasTransform(Vector(pan.x, pan.y, 0.0f), m_canvasEditor->GetZoom());
+        }
+        else
+        {
+            m_renderer->SetCanvasTransform(Vector(0.0f, 0.0f, 0.0f), 1.0f);
+        }
         m_renderer->SetCanvasScreenPos(ImGui::GetCursorScreenPos());
 
         ImGui::PushClipRect(
@@ -564,10 +689,13 @@ namespace Olympe
         ImVec2 debugPos(ImGui::GetCursorScreenPos().x + 10.0f, ImGui::GetCursorScreenPos().y + 10.0f);
         ImU32 debugTextColor = ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
 
+        float displayZoom = m_canvasEditor ? m_canvasEditor->GetZoom() : 1.0f;
+        ImVec2 displayPan = m_canvasEditor ? m_canvasEditor->GetPan() : ImVec2(0.0f, 0.0f);
+
         char debugBuffer[512];
         snprintf(debugBuffer, sizeof(debugBuffer), 
                  "Zoom: %.2f | Offset: %.0f, %.0f | Nodes: %zu | Mode: %d | Dragging: %s",
-                 m_canvasZoom, m_canvasOffset.x, m_canvasOffset.y,
+                 displayZoom, displayPan.x, displayPan.y,
                  m_document ? m_document->GetNodeCount() : 0,
                  (int)m_interactionMode,
                  IsNodeDragging() ? "YES" : "NO");
@@ -612,8 +740,9 @@ namespace Olympe
         {
             // Calculate port position on node edge (same logic as RenderPort)
             Vector screenCenter = CanvasToScreen(sourceNode->position.x, sourceNode->position.y);
-            float scaledWidth = sourceNode->size.x * 0.5f * m_renderer->GetNodeScale() * m_canvasZoom;
-            float scaledHeight = sourceNode->size.y * 0.5f * m_renderer->GetNodeScale() * m_canvasZoom;
+            float zoom = m_canvasEditor ? m_canvasEditor->GetZoom() : 1.0f;
+            float scaledWidth = sourceNode->size.x * 0.5f * m_renderer->GetNodeScale() * zoom;
+            float scaledHeight = sourceNode->size.y * 0.5f * m_renderer->GetNodeScale() * zoom;
 
             std::vector<const NodePort*> outputPorts;
             for (const auto& port : sourceNode->GetPorts())
@@ -639,14 +768,15 @@ namespace Olympe
             {
                 float spacing = (2.0f * scaledHeight) / (outputPorts.size() + 1);
                 float yOffset = -scaledHeight + spacing * (portIndexInType + 1);
-                portPos.x += scaledWidth / m_canvasZoom;
-                portPos.y += yOffset / m_canvasZoom;
+                portPos.x += scaledWidth / zoom;
+                portPos.y += yOffset / zoom;
             }
 
             Vector screenSourcePos = CanvasToScreen(portPos.x, portPos.y);
             Vector screenEndPos = CanvasToScreen(m_connectionPreviewEnd.x, m_connectionPreviewEnd.y);
 
             ImU32 previewLineColor = ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 0.0f, 0.8f));
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
             drawList->AddLine(
                 ImVec2(screenSourcePos.x, screenSourcePos.y),
                 ImVec2(screenEndPos.x, screenEndPos.y),
@@ -736,6 +866,9 @@ namespace Olympe
         m_dragStartPos = ScreenToCanvas(x, y);
         m_nodeDragOffset = Vector(node->position.x - m_dragStartPos.x, node->position.y - m_dragStartPos.y, 0.0f);
 
+        // FIX #1: Always select the node being dragged (unless already selected via multi-selection)
+        // The selection logic is now handled in OnMouseDown()
+        // This ensures the dragged node is part of the selection to be moved
         m_document->SelectNode(nodeId);
     }
 
@@ -747,18 +880,16 @@ namespace Olympe
         if (node == nullptr) { return; }
 
         Vector currentCanvasPos = ScreenToCanvas(x, y);
-        Vector newNodePos = Vector(
-            currentCanvasPos.x + m_nodeDragOffset.x,
-            currentCanvasPos.y + m_nodeDragOffset.y,
-            0.0f
-        );
 
-        node->position = newNodePos;
+        // Calculate delta from pure mouse movement, not from offset
+        // This ensures all selected nodes move by the same amount
+        Vector delta = currentCanvasPos - m_dragStartPos;
 
-        // Also update all other selected nodes with the same delta
+        // Move the primary dragged node
+        node->position = Vector(node->position.x + delta.x, node->position.y + delta.y, 0.0f);
+
+        // Move all other selected nodes by the same delta
         const std::vector<NodeId>& selectedNodes = m_document->GetSelectedNodes();
-        Vector delta = newNodePos - m_dragStartPos;
-
         for (size_t i = 0; i < selectedNodes.size(); ++i)
         {
             if (selectedNodes[i] != m_draggedNodeId)
@@ -766,11 +897,18 @@ namespace Olympe
                 ComponentNode* selectedNode = m_document->GetNode(selectedNodes[i]);
                 if (selectedNode != nullptr)
                 {
-                    Vector updatedPos = selectedNode->position + delta;
+                    Vector updatedPos = Vector(
+                        selectedNode->position.x + delta.x,
+                        selectedNode->position.y + delta.y,
+                        0.0f
+                    );
                     selectedNode->position = updatedPos;
                 }
             }
         }
+
+        // Update drag start position for next frame
+        m_dragStartPos = currentCanvasPos;
     }
 
     void PrefabCanvas::HandleNodeDragEnd()
@@ -795,18 +933,31 @@ namespace Olympe
 
         m_interactionMode = CanvasInteractionMode::PanningCamera;
         m_isPanning = true;
-        m_panStartOffset = m_canvasOffset;
+
+        // Store current pan state via adapter
+        if (m_canvasEditor)
+        {
+            ImVec2 currentPan = m_canvasEditor->GetPan();
+            m_panStartOffset = Vector(currentPan.x, currentPan.y, 0.0f);
+        }
+        else
+        {
+            m_panStartOffset = Vector(0.0f, 0.0f, 0.0f);
+        }
+
         m_dragStartPos = Vector(x, y, 0.0f);
     }
 
     void PrefabCanvas::HandlePan(float x, float y)
     {
-        if (!m_isPanning) { return; }
+        if (!m_isPanning || !m_canvasEditor) { return; }
 
         Vector currentPos(x, y, 0.0f);
         Vector delta = currentPos - m_dragStartPos;
 
-        m_canvasOffset = m_panStartOffset + Vector(delta.x, delta.y, 0.0f);
+        // Update pan via adapter
+        Vector newPan = m_panStartOffset + Vector(delta.x, delta.y, 0.0f);
+        m_canvasEditor->SetPan(ImVec2(newPan.x, newPan.y));
     }
 
     void PrefabCanvas::SnapNodePositionToGrid(Vector& position)

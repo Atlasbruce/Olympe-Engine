@@ -4,6 +4,7 @@
 #include "PrefabCanvas.h"
 #include "ComponentPalettePanel.h"
 #include "PropertyEditorPanel.h"
+#include "../Utilities/ICanvasEditor.h"
 #include <memory>
 #include <string>
 
@@ -33,6 +34,7 @@ private:
     PrefabCanvas& m_canvas;
     ComponentPalettePanel m_componentPalette;
     PropertyEditorPanel m_propertyEditor;
+    std::unique_ptr<ICanvasEditor> m_canvasEditor;  // NEW: Standardized canvas interface
     std::string m_filePath;
     bool m_isDirty = false;
     float m_canvasPanelWidth = 0.75f; // 75% for canvas, 25% for side panel

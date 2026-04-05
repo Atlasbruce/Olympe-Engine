@@ -11,6 +11,7 @@ namespace Olympe
 {
     // Forward declarations
     class ComponentNodeRenderer;
+    class ICanvasEditor;  // NEW: Standardized canvas interface
 
     // Enum for canvas interaction modes
     enum class CanvasInteractionMode
@@ -28,6 +29,7 @@ namespace Olympe
         ~PrefabCanvas();
 
         void Initialize(EntityPrefabGraphDocument* document);
+        void SetCanvasEditor(ICanvasEditor* canvasEditor);  // NEW: Set the standardized interface
         EntityPrefabGraphDocument* GetDocument() const;
         void Render();
         void Update(float deltaTime);
@@ -98,10 +100,10 @@ namespace Olympe
     private:
         EntityPrefabGraphDocument* m_document = nullptr;
         std::unique_ptr<ComponentNodeRenderer> m_renderer;
+        ICanvasEditor* m_canvasEditor = nullptr;  // NEW: Reference to standardized canvas interface
 
-        // Canvas state
-        Vector m_canvasOffset;
-        float m_canvasZoom = 1.0f;
+        // Canvas state - REMOVED: m_canvasZoom, m_canvasOffset (now managed by ICanvasEditor)
+        // Access via m_canvasEditor->GetZoom(), GetPan() instead
         float m_gridSpacing = 50.0f;
         bool m_showGrid = true;
         bool m_showDebugInfo = false;

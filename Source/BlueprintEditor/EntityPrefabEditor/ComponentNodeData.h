@@ -20,6 +20,7 @@ namespace Olympe
         NodeId nodeId = InvalidNodeId;
         uint32_t portIndex = 0;
         Vector position;
+        // Visual radius for rendering (kept small at 4.0 for clean appearance)
         float radius = 4.0f;
         bool isOutput = false;
 

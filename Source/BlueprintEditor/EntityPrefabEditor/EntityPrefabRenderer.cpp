@@ -3,6 +3,7 @@
 #include "PrefabLoader.h"
 #include "../../system/system_utils.h"
 #include "../../Source/third_party/imgui/imgui.h"
+#include "../Utilities/CustomCanvasEditor.h"
 #include <memory>
 
 namespace Olympe {
@@ -12,6 +13,10 @@ EntityPrefabRenderer::EntityPrefabRenderer(PrefabCanvas& canvas)
 {
     // Initialize component palette with available types
     m_componentPalette.Initialize();
+
+    // NEW: Initialize canvas editor adapter with CustomCanvasEditor for zoom support
+    // Will be created once we have canvas dimensions in first Render() call
+    m_canvasEditor = nullptr;  // Deferred initialization
 }
 
 EntityPrefabRenderer::~EntityPrefabRenderer()
@@ -35,7 +40,67 @@ void EntityPrefabRenderer::RenderLayoutWithTabs()
 
     // Render canvas on the left
     ImGui::BeginChild("EntityPrefabCanvas", ImVec2(canvasWidth, 0), false, ImGuiWindowFlags_NoScrollbar);
+
+    // NEW: Initialize canvas editor on first frame (when we have canvas dimensions)
+    ImVec2 canvasScreenPos = ImGui::GetCursorScreenPos();
+    ImVec2 canvasSize = ImGui::GetContentRegionAvail();
+
+    if (!m_canvasEditor)
+    {
+        // First frame: create CustomCanvasEditor adapter with zoom support
+        m_canvasEditor = std::make_unique<Olympe::CustomCanvasEditor>(
+            "PrefabCanvas",
+            canvasScreenPos,
+            canvasSize,
+            1.0f,  // initial zoom
+            0.1f,  // min zoom
+            3.0f   // max zoom
+        );
+        SYSTEM_LOG << "[EntityPrefabRenderer] CustomCanvasEditor initialized\n";
+
+        // CRITICAL: Pass adapter reference to PrefabCanvas so it can use it!
+        m_canvas.SetCanvasEditor(m_canvasEditor.get());
+    }
+    else
+    {
+        // Update canvas position/size (may change on window resize)
+        // We can't directly update these, but CustomCanvasEditor stores them as const members
+        // For now, we'll reinitialize if size changes significantly
+        ImVec2 currentSize = ImGui::GetContentRegionAvail();
+        if (currentSize.x != m_canvasEditor->GetCanvasSize().x || 
+            currentSize.y != m_canvasEditor->GetCanvasSize().y)
+        {
+            // CRITICAL FIX: Save state BEFORE destroying old adapter!
+            // If we call GetCanvasOffset() after std::make_unique, m_canvasEditor in PrefabCanvas
+            // still points to the destroyed old adapter, causing a use-after-free crash.
+            float oldZoom = m_canvasEditor->GetZoom();
+            ImVec2 oldPan = m_canvasEditor->GetPan();
+
+            // Size changed, reinitialize - old adapter is destroyed here
+            m_canvasEditor = std::make_unique<Olympe::CustomCanvasEditor>(
+                "PrefabCanvas",
+                canvasScreenPos,
+                currentSize,
+                oldZoom,  // preserve zoom (already extracted)
+                0.1f, 3.0f
+            );
+
+            // Restore pan to NEW adapter
+            m_canvasEditor->SetPan(oldPan);
+
+            // CRITICAL: Update reference immediately after creation!
+            m_canvas.SetCanvasEditor(m_canvasEditor.get());
+        }
+    }
+
+    // NEW: Use canvas editor BeginRender to handle input
+    m_canvasEditor->BeginRender();
+
     m_canvas.Render();
+
+    // NEW: Use canvas editor EndRender to finalize
+    m_canvasEditor->EndRender();
+
     ImGui::EndChild();
 
     ImVec2 canvasEnd = ImGui::GetCursorScreenPos();

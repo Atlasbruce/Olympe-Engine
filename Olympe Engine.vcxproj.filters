@@ -558,6 +558,17 @@
     <None Include="Source\BlueprintEditor\CANVAS_STANDARDIZATION_PROGRESS.md" />
     <None Include="Source\BlueprintEditor\STANDARDIZATION_EXECUTIVE_SUMMARY.md" />
     <None Include="Source\BlueprintEditor\STANDARDIZATION_VISUAL_GUIDE.md" />
+    <None Include="Source\BlueprintEditor\PHASE_4_ISSUES_AND_FIXES.md" />
+    <None Include="Source\BlueprintEditor\PHASE_4_DIAGNOSTIC_REPORT.md" />
+    <None Include="Source\BlueprintEditor\PHASE_4_SUMMARY_AND_NEXT_STEPS.md" />
+    <None Include="Source\BlueprintEditor\IMMEDIATE_ACTION_PLAN.md" />
+    <None Include="Source\BlueprintEditor\PHASE_4_EXECUTIVE_SUMMARY.md" />
+    <None Include="Source\BlueprintEditor\CRITICAL_BUGS_FIXED.md" />
+    <None Include="Source\BlueprintEditor\PHASE_4_COMPLETE_FINAL_SUMMARY.md" />
+    <None Include="Source\BlueprintEditor\PHASE_4_FINAL_STATUS.md" />
+    <None Include="PHASE_4_RUNTIME_BUG_FIXED.md" />
+    <None Include="PHASE_4_THREE_BUGS_FIXED.md" />
+    <None Include="PHASE_4_FINAL_BUG_FIX_SUMMARY.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

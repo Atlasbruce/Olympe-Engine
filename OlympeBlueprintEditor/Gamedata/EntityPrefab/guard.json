@@ -34,6 +34,18 @@
       {
         "sourceNodeId": 1,
         "targetNodeId": 8
+      },
+      {
+        "sourceNodeId": 8,
+        "targetNodeId": 10
+      },
+      {
+        "sourceNodeId": 8,
+        "targetNodeId": 9
+      },
+      {
+        "sourceNodeId": 9,
+        "targetNodeId": 10
       }
     ],
     "nodes": [
@@ -142,8 +154,8 @@
         "enabled": true,
         "nodeId": 5,
         "position": {
-          "x": 300,
-          "y": 200,
+          "x": 329,
+          "y": 216,
           "z": 0
         },
         "properties": {
@@ -163,8 +175,8 @@
         "enabled": true,
         "nodeId": 6,
         "position": {
-          "x": 550,
-          "y": 200,
+          "x": 579,
+          "y": 216,
           "z": 0
         },
         "properties": {
@@ -204,13 +216,80 @@
         "enabled": true,
         "nodeId": 8,
         "position": {
-          "x": 298,
-          "y": 349,
+          "x": 353,
+          "y": 481,
           "z": 0
         },
         "properties": {
           "soundEffectID": "",
           "volume": "1"
+        },
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "CameraEffects_data",
+        "componentType": "CameraEffects_data",
+        "enabled": true,
+        "nodeId": 9,
+        "position": {
+          "x": 657,
+          "y": 386,
+          "z": 0
+        },
+        "properties": {
+          "isShaking": "false",
+          "shakeDuration": "0",
+          "shakeIntensity": "0",
+          "shakeOffset": "[0,0,0]",
+          "shakeTimeRemaining": "0"
+        },
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "Camera_data",
+        "componentType": "Camera_data",
+        "enabled": true,
+        "nodeId": 10,
+        "position": {
+          "x": 958,
+          "y": 479,
+          "z": 0
+        },
+        "properties": {
+          "baseOffset": "[0,0,0]",
+          "cameraType": "2D",
+          "controlMode": "Free",
+          "controlOffset": "[0,0,0]",
+          "currentRotationLevel": "0",
+          "currentZoomLevelIndex": "3",
+          "isActive": "true",
+          "manualMoveSpeed": "200",
+          "maxZoom": "5",
+          "minZoom": "0",
+          "playerId": "-1",
+          "position": "[0,0,0]",
+          "rotation": "0",
+          "rotationSpeed": "5",
+          "rotationStep": "15",
+          "targetRotation": "0",
+          "targetZoom": "1",
+          "viewportHeight": "600",
+          "viewportWidth": "800",
+          "viewportX": "0",
+          "viewportY": "0",
+          "zoom": "1",
+          "zoomSpeed": "5",
+          "zoomStep": "0"
         },
         "selected": false,
         "size": {

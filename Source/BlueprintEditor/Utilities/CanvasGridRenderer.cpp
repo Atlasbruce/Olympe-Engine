@@ -68,9 +68,11 @@ namespace Olympe
         float scaledMinorSpacing = config.minorDivisor > 0.0f ? scaledGridSpacing / config.minorDivisor : scaledGridSpacing;
 
         // Calculate grid offset in screen space
-        // Grid origin = canvasPos + offset * zoom
-        float gridStartX = config.canvasPos.x + config.offsetX * config.zoom;
-        float gridStartY = config.canvasPos.y + config.offsetY * config.zoom;
+        // FIX #3: Pan offset is already in screen space, don't multiply by zoom
+        // Grid origin = canvasPos + offset (NOT offset * zoom)
+        // The zoom scaling is applied to the grid spacing, not the offset
+        float gridStartX = config.canvasPos.x + config.offsetX;
+        float gridStartY = config.canvasPos.y + config.offsetY;
 
         // Calculate which grid lines should be visible and their screen positions
         float gridOffsetX = fmod(gridStartX, scaledGridSpacing);

@@ -373,7 +373,10 @@ namespace Olympe
         }
 
         Vector screenPort = CanvasToScreen(portPos);
+        // FIX #4: Ensure port visual size is always visible even when zoomed out
+        // Minimum visual size is 4.0 pixels, maximum is scaled with zoom
         float portRadius = port.radius * m_canvasZoom;
+        if (portRadius < 4.0f) { portRadius = 4.0f; }  // Minimum visual size
 
         ImU32 portColor = ImGui::GetColorU32(ImVec4(0.8f, 0.8f, 0.0f, 1.0f));
         ImU32 portBorderColor = ImGui::GetColorU32(ImVec4(0.6f, 0.6f, 0.0f, 1.0f));
@@ -448,9 +451,14 @@ namespace Olympe
             float dx = point.x - portPos.x;
             float dy = point.y - portPos.y;
             float distance = sqrtf(dx * dx + dy * dy);
-            float portRadius = port.radius;
 
-            if (distance <= portRadius)
+            // FIX #4: Use larger detection radius for hitbox while visual stays small
+            // Visual port radius: 4.0 pixels (kept small via RenderPort)
+            // Detection radius: 4.0 * 3.0 = 12.0 canvas units (generous for usability)
+            // This decouples visual appearance from interaction size
+            float detectionRadius = port.radius * 3.0f;
+
+            if (distance <= detectionRadius)
             {
                 outPortId = port.portId;
                 return true;

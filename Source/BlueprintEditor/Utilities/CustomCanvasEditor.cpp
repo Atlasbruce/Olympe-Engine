@@ -217,8 +217,15 @@ namespace Olympe
     {
         ImGuiIO& io = ImGui::GetIO();
 
-        // Only handle input if canvas is hovered
-        if (!IsCanvasHovered())
+        // Check if canvas area should receive input
+        // For child windows, IsPointInCanvas is more reliable than IsWindowHovered
+        bool isPointInCanvasArea = IsPointInCanvas(io.MousePos);
+        bool hasWindowFocus = ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows | ImGuiHoveredFlags_AllowWhenBlockedByPopup);
+
+        // Canvas should receive input if mouse is in canvas area
+        bool shouldHandleInput = isPointInCanvasArea && hasWindowFocus;
+
+        if (!shouldHandleInput)
         {
             m_lastMousePos = io.MousePos;
             m_isPanning = false;
@@ -278,6 +285,9 @@ namespace Olympe
 
             // Apply zoom
             ZoomBy(factor, &zoomCenter);
+
+            // Debug: Log zoom event
+            // std::cout << "[CustomCanvasEditor] Zoom triggered: wheel=" << io.MouseWheel << " factor=" << factor << " newZoom=" << m_canvasZoom << "\n";
         }
     }
 
