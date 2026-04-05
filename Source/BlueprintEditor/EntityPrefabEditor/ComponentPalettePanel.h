@@ -41,8 +41,15 @@ namespace Olympe
         bool LoadComponentsFromJSON(const std::string& filepath);
 
     private:
+        // ========== UI Styling Constants (Dense Layout) ==========
+        static constexpr float CATEGORY_HEADER_HEIGHT = 22.0f;
+        static constexpr float COMPONENT_ITEM_HEIGHT = 18.0f;
+        static constexpr float COMPONENT_ITEM_PADDING_X = 5.0f;
+        static constexpr float COMPONENT_ITEM_PADDING_Y = 2.0f;
+
         std::vector<ComponentType> m_componentTypes;
         std::vector<std::string> m_categories;
+        std::vector<bool> m_categoryExpanded;  // Track expanded/collapsed state for each category
         std::string m_searchFilter;
         int m_selectedCategoryIndex = 0;
         char m_searchBuffer[256];
