@@ -528,6 +528,7 @@
     <None Include="AUDIT_SWITCH_CASE_SYSTEM.md" />
     <None Include="blueprint_editor_config.json" />
     <None Include="ClassDiagram.cd" />
+    <None Include="COMPLETE_ROADMAP_SUMMARY.md" />
     <None Include="COMPREHENSIVE_PROJECT_STATUS.md" />
     <None Include="config\ATS-VS-editor-config.json" />
     <None Include="Config\global_blackboard_register.json" />
@@ -550,6 +551,7 @@
     <None Include="Documentation\VISUAL_SCRIPT_FEASIBILITY.md" />
     <None Include="Documentation\VISUAL_SUMMARY.md" />
     <None Include="DOCUMENTATION_INDEX.md" />
+    <None Include="FINAL_TOPO_COMPLET.md" />
     <None Include="Gamedata\PrefabEntities\ComponentsParameters.json" />
     <None Include="IMPLEMENTATION_COMPLETE_SUMMARY.md" />
     <None Include="IMPLEMENTATION_COMPLETE_SWITCH_UNIFICATION.md" />
@@ -561,13 +563,18 @@
     <None Include="OLYMPEBLUEPRINTEDITOR_FIX_INSTRUCTIONS.md" />
     <None Include="PHASE2_STEP3_COMPLETION_REPORT.md" />
     <None Include="PHASE4_TESTING_PLAN.md" />
+    <None Include="PHASE_32_DETAILED_ARCHITECTURE.md" />
     <None Include="PHASE_4_FINAL_BUG_FIX_SUMMARY.md" />
     <None Include="PHASE_4_RUNTIME_BUG_FIXED.md" />
     <None Include="PHASE_4_THREE_BUGS_FIXED.md" />
     <None Include="PROBLEMS_AND_SOLUTIONS.md" />
     <None Include="PROJECT_CONFIG_AUDIT.md" />
+    <None Include="QUICK_ROADMAP.md" />
     <None Include="QUICK_START_TESTING.md" />
     <None Include="QUICK_SUMMARY_SWITCH_UNIFICATION.md" />
+    <None Include="REMAINING_PHASES_ROADMAP.md" />
+    <None Include="ROADMAP_EXPRESS.md" />
+    <None Include="ROADMAP_INDEX.md" />
     <None Include="SCHEMA_SWITCH_NODE_INTERFACE.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />

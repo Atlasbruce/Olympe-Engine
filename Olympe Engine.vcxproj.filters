@@ -587,6 +587,13 @@
     <None Include="Documentation\VISUAL_SUMMARY.md" />
     <None Include="Documentation\INDEX.md" />
     <None Include="Documentation\PHASE_34_GLOW_REFINEMENTS.md" />
+    <None Include="REMAINING_PHASES_ROADMAP.md" />
+    <None Include="QUICK_ROADMAP.md" />
+    <None Include="PHASE_32_DETAILED_ARCHITECTURE.md" />
+    <None Include="COMPLETE_ROADMAP_SUMMARY.md" />
+    <None Include="ROADMAP_EXPRESS.md" />
+    <None Include="ROADMAP_INDEX.md" />
+    <None Include="FINAL_TOPO_COMPLET.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
