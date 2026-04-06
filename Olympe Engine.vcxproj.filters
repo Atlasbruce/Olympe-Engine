@@ -594,6 +594,14 @@
     <None Include="ROADMAP_EXPRESS.md" />
     <None Include="ROADMAP_INDEX.md" />
     <None Include="FINAL_TOPO_COMPLET.md" />
+    <None Include="Project Management\Fit-Gap Analysis\01-FIT-GAP-ANALYSIS-COMPREHENSIVE.md" />
+    <None Include="Project Management\Fit-Gap Analysis\02-UPDATED-ROADMAP-PHASES-32-40.md" />
+    <None Include="Project Management\Fit-Gap Analysis\03-PHASE-32-IMPLEMENTATION-GUIDE.md" />
+    <None Include="Project Management\Fit-Gap Analysis\04-CRITICAL-GAPS-AND-DEPENDENCIES.md" />
+    <None Include="Project Management\Fit-Gap Analysis\05-COMPLETION-PLAN-EXECUTION.md" />
+    <None Include="Project Management\Fit-Gap Analysis\06-PERFORMANCE-VALIDATION-FRAMEWORK.md" />
+    <None Include="Project Management\Fit-Gap Analysis\00-EXECUTIVE-SUMMARY.md" />
+    <None Include="Project Management\Fit-Gap Analysis\INDEX.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
