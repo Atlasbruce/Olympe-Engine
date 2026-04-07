@@ -115,7 +115,8 @@ namespace Olympe
         }
         else
         {
-            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No properties in this node");
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No properties defined for this component");
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 0.8f), "(Check ComponentsParameters.json)");
         }
     }
 

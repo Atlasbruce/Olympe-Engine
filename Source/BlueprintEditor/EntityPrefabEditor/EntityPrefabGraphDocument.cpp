@@ -250,6 +250,21 @@ namespace Olympe
                                 }
                             }
 
+                            // Fill missing properties with schema defaults
+                            // This handles cases where JSON properties are empty but schema provides defaults
+                            auto schemaIt = m_parameterSchemas.find(componentType);
+                            if (schemaIt != m_parameterSchemas.end())
+                            {
+                                for (const auto& paramPair : schemaIt->second)
+                                {
+                                    // Only add if not already loaded from JSON
+                                    if (node->properties.find(paramPair.first) == node->properties.end())
+                                    {
+                                        node->properties[paramPair.first] = paramPair.second;
+                                    }
+                                }
+                            }
+
                             nodesLoaded++;
                             SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] Loaded node: " << componentName 
                                       << " (type=" << componentType << ", id=" << id << ")\n";

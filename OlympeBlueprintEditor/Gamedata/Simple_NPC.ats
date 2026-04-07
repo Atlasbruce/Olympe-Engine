@@ -1,0 +1,145 @@
+{
+  "blueprintType": "EntityPrefab",
+  "data": {
+    "canvasState": {
+      "offsetX": 0,
+      "offsetY": 0,
+      "zoom": 1
+    },
+    "connections": [
+      {
+        "sourceNodeId": 2,
+        "targetNodeId": 1
+      },
+      {
+        "sourceNodeId": 2,
+        "targetNodeId": 4
+      },
+      {
+        "sourceNodeId": 2,
+        "targetNodeId": 3
+      },
+      {
+        "sourceNodeId": 2,
+        "targetNodeId": 5
+      }
+    ],
+    "nodes": [
+      {
+        "componentName": "Position_data",
+        "componentType": "Position_data",
+        "enabled": true,
+        "nodeId": 1,
+        "position": {
+          "x": 422,
+          "y": 205,
+          "z": 0
+        },
+        "properties": {
+          "position": "[-100,100,0]"
+        },
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "Identity_data",
+        "componentType": "Identity_data",
+        "enabled": true,
+        "nodeId": 2,
+        "position": {
+          "x": 75,
+          "y": 281,
+          "z": 0
+        },
+        "properties": {
+          "entityType": "None",
+          "isPersistent": "false",
+          "name": "Simple_NPC_Entity",
+          "tag": "Untagged",
+          "type": "UnknownType"
+        },
+        "selected": true,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "VisualSprite_data",
+        "componentType": "VisualSprite_data",
+        "enabled": true,
+        "nodeId": 3,
+        "position": {
+          "x": 424,
+          "y": 459,
+          "z": 0
+        },
+        "properties": {
+          "color": "#FFFFFF",
+          "hotSpot": "[0,0,0]",
+          "spritePath": "",
+          "srcRectHeight": "25",
+          "srcRectWidth": "25",
+          "srcRectX": "0",
+          "srcRectY": "0",
+          "visible": "true"
+        },
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "BoundingBox_data",
+        "componentType": "BoundingBox_data",
+        "enabled": true,
+        "nodeId": 4,
+        "position": {
+          "x": 428,
+          "y": 326,
+          "z": 0
+        },
+        "properties": {
+          "height": "25",
+          "width": "25",
+          "x": "0",
+          "y": "0"
+        },
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "NPC_data",
+        "componentType": "NPC_data",
+        "enabled": true,
+        "nodeId": 5,
+        "position": {
+          "x": 427,
+          "y": 599,
+          "z": 0
+        },
+        "properties": {
+          "npcType": ""
+        },
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      }
+    ]
+  },
+  "schemaVersion": 4
+}

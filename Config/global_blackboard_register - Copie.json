@@ -1,0 +1,289 @@
+{
+  "description": "Project-scope global variable definitions accessible to all entities",
+  "lastModified": "2026-03-31T15:29:32Z",
+  "name": "Global Blackboard Register",
+  "schema_version": 1,
+  "variables": [
+    {
+      "description": "Current game elapsed time (seconds) since session start",
+      "isPersistent": true,
+      "key": "gameTime",
+      "type": "Float",
+      "value": 0
+    },
+    {
+      "description": "Frame delta time in seconds (approximately 1/60th for 60 FPS)",
+      "isPersistent": false,
+      "key": "deltaTime",
+      "type": "Float",
+      "value": 0.016
+    },
+    {
+      "description": "Global game pause state affecting all entities",
+      "isPersistent": true,
+      "key": "isPaused",
+      "type": "Bool",
+      "value": false
+    },
+    {
+      "description": "Global time scale multiplier (0.5 = half speed, 2.0 = double speed)",
+      "isPersistent": false,
+      "key": "timeScale",
+      "type": "Float",
+      "value": 1
+    },
+    {
+      "description": "Game difficulty level (0=Easy, 1=Normal, 2=Hard, 3=Nightmare)",
+      "isPersistent": true,
+      "key": "difficulty",
+      "type": "Int",
+      "value": 1
+    },
+    {
+      "description": "Main player/protagonist current level or progression stage",
+      "isPersistent": true,
+      "key": "playerLevel",
+      "type": "Int",
+      "value": 1
+    },
+    {
+      "description": "Main player current health points",
+      "isPersistent": true,
+      "key": "playerHealth",
+      "type": "Int",
+      "value": 100
+    },
+    {
+      "description": "Main player maximum health capacity",
+      "isPersistent": true,
+      "key": "playerMaxHealth",
+      "type": "Int",
+      "value": 100
+    },
+    {
+      "description": "Main player accumulated experience points",
+      "isPersistent": true,
+      "key": "playerExperience",
+      "type": "Int",
+      "value": 0
+    },
+    {
+      "description": "Main player current mana/magic points",
+      "isPersistent": true,
+      "key": "playerMana",
+      "type": "Int",
+      "value": 50
+    },
+    {
+      "description": "Main player maximum mana capacity",
+      "isPersistent": true,
+      "key": "playerMaxMana",
+      "type": "Int",
+      "value": 100
+    },
+    {
+      "description": "Main player current world position",
+      "isPersistent": true,
+      "key": "playerPosition",
+      "type": "Vector",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "description": "Main player current movement speed (units per second)",
+      "isPersistent": false,
+      "key": "playerVelocity",
+      "type": "Float",
+      "value": 0
+    },
+    {
+      "description": "Main player facing direction angle in degrees (0-360)",
+      "isPersistent": false,
+      "key": "playerDirection",
+      "type": "Float",
+      "value": 0
+    },
+    {
+      "description": "Is any entity currently in combat mode",
+      "isPersistent": false,
+      "key": "combatActive",
+      "type": "Bool",
+      "value": false
+    },
+    {
+      "description": "Global damage multiplier during active combat situations",
+      "isPersistent": false,
+      "key": "combatMultiplier",
+      "type": "Float",
+      "value": 1
+    },
+    {
+      "description": "Number of enemies currently active in the world",
+      "isPersistent": false,
+      "key": "lastEnemyCount",
+      "type": "Int",
+      "value": 0
+    },
+    {
+      "description": "Global alert/alarm state (0=Safe, 1=Caution, 2=Alert, 3=Red Alert)",
+      "isPersistent": false,
+      "key": "alarmLevel",
+      "type": "Int",
+      "value": 0
+    },
+    {
+      "description": "Current weather condition (clear, rain, snow, fog, storm)",
+      "isPersistent": true,
+      "key": "weatherType",
+      "type": "String",
+      "value": "clear"
+    },
+    {
+      "description": "Current time in 24-hour format (0.0-24.0, 12.0=noon, 0.0=midnight)",
+      "isPersistent": true,
+      "key": "timeOfDay",
+      "type": "Float",
+      "value": 12
+    },
+    {
+      "description": "Global ambient lighting multiplier (0.0-2.0)",
+      "isPersistent": false,
+      "key": "ambientLight",
+      "type": "Float",
+      "value": 1
+    },
+    {
+      "description": "Global gravity acceleration (units/second²)",
+      "isPersistent": true,
+      "key": "gravity",
+      "type": "Float",
+      "value": 9.81
+    },
+    {
+      "description": "Global wind force intensity (0.0-1.0+)",
+      "isPersistent": false,
+      "key": "windStrength",
+      "type": "Float",
+      "value": 0
+    },
+    {
+      "description": "Cumulative player score across entire game session",
+      "isPersistent": true,
+      "key": "totalScore",
+      "type": "Int",
+      "value": 0
+    },
+    {
+      "description": "Number of active companion/NPC allies following the player",
+      "isPersistent": false,
+      "key": "companionCount",
+      "type": "Int",
+      "value": 0
+    },
+    {
+      "description": "Number of currently active quests in player's log",
+      "isPersistent": true,
+      "key": "questsActive",
+      "type": "Int",
+      "value": 0
+    },
+    {
+      "description": "Total number of quests completed by player",
+      "isPersistent": true,
+      "key": "questsCompleted",
+      "type": "Int",
+      "value": 0
+    },
+    {
+      "description": "Player inventory: Wood resource count",
+      "isPersistent": true,
+      "key": "resourceWood",
+      "type": "Int",
+      "value": 0
+    },
+    {
+      "description": "Player inventory: Stone resource count",
+      "isPersistent": true,
+      "key": "resourceStone",
+      "type": "Int",
+      "value": 0
+    },
+    {
+      "description": "Player inventory: Gold/Currency count",
+      "isPersistent": true,
+      "key": "resourceGold",
+      "type": "Int",
+      "value": 0
+    },
+    {
+      "description": "Maximum number of items player can carry",
+      "isPersistent": true,
+      "key": "inventoryCapacity",
+      "type": "Int",
+      "value": 20
+    },
+    {
+      "description": "Master audio volume level (0.0-1.0)",
+      "isPersistent": true,
+      "key": "soundVolume",
+      "type": "Float",
+      "value": 0.8
+    },
+    {
+      "description": "Background music volume level (0.0-1.0)",
+      "isPersistent": true,
+      "key": "musicVolume",
+      "type": "Float",
+      "value": 0.6
+    },
+    {
+      "description": "Sound effects volume level (0.0-1.0)",
+      "isPersistent": true,
+      "key": "effectsVolume",
+      "type": "Float",
+      "value": 0.8
+    },
+    {
+      "description": "Toggle debug mode on/off across entire game",
+      "isPersistent": false,
+      "key": "isDebugMode",
+      "type": "Bool",
+      "value": false
+    },
+    {
+      "description": "Render collision shapes for debugging purposes",
+      "isPersistent": false,
+      "key": "debugDrawColliders",
+      "type": "Bool",
+      "value": false
+    },
+    {
+      "description": "Display FPS counter on screen",
+      "isPersistent": false,
+      "key": "debugShowFPS",
+      "type": "Bool",
+      "value": false
+    },
+    {
+      "description": "Entity world position",
+      "isPersistent": false,
+      "key": "mPosition",
+      "type": "Vector",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "description": "Global Health of the Entity",
+      "isPersistent": false,
+      "key": "mGlobalHealth",
+      "type": "Float",
+      "value": 0
+    }
+  ]
+}

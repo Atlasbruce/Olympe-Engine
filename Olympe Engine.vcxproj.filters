@@ -232,6 +232,7 @@
     <ClCompile Include="Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Utilities\CustomCanvasEditor.cpp" />
     <ClCompile Include="Source\BlueprintEditor\SelectionEffectRenderer.cpp" />
+    <ClCompile Include="Tests\BlueprintEditor\EntityPrefab_PropertyLoadingTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -602,6 +603,7 @@
     <None Include="Project Management\Fit-Gap Analysis\06-PERFORMANCE-VALIDATION-FRAMEWORK.md" />
     <None Include="Project Management\Fit-Gap Analysis\00-EXECUTIVE-SUMMARY.md" />
     <None Include="Project Management\Fit-Gap Analysis\INDEX.md" />
+    <None Include="verify_property_loading.py" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

@@ -80,8 +80,9 @@ namespace Olympe
         ImGui::SameLine();
         ImGui::Text("Search");
 
+        ImGui::Separator();
         // Type filter combo
-        ImGui::SameLine(0.0f, 20.0f);
+        //ImGui::SameLine(0.0f, 20.0f);
         ImGui::SetNextItemWidth(150.0f);
         if (ImGui::BeginCombo("##typefilter", m_AvailableTypes[m_TypeFilterSelection].c_str()))
         {
@@ -93,7 +94,6 @@ namespace Olympe
             }
             ImGui::EndCombo();
         }
-
         ImGui::SameLine();
         ImGui::Text("Type Filter");
 
