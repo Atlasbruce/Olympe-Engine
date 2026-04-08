@@ -21,22 +21,9 @@ namespace Olympe {
 
 // ============================================================================
 // VariableType conversion helpers (local to this component)
+// StringToVariableType is defined here; VariableTypeToString and
+// GetDefaultValueForType are provided by TaskGraphTypes.h / TaskGraphTypes.cpp.
 // ============================================================================
-
-static inline std::string VariableTypeToString(VariableType type)
-{
-    switch (type)
-    {
-        case VariableType::Bool:     return "Bool";
-        case VariableType::Int:      return "Int";
-        case VariableType::Float:    return "Float";
-        case VariableType::String:   return "String";
-        case VariableType::Vector:   return "Vector";
-        case VariableType::EntityID: return "EntityID";
-        case VariableType::None:
-        default:                     return "None";
-    }
-}
 
 static inline VariableType StringToVariableType(const std::string& str)
 {
@@ -47,28 +34,6 @@ static inline VariableType StringToVariableType(const std::string& str)
     if (str == "Vector")   return VariableType::Vector;
     if (str == "EntityID") return VariableType::EntityID;
     return VariableType::None;
-}
-
-static inline TaskValue GetDefaultValueForType(VariableType type)
-{
-    switch (type)
-    {
-        case VariableType::Bool:
-            return TaskValue(false);
-        case VariableType::Int:
-            return TaskValue(0);
-        case VariableType::Float:
-            return TaskValue(0.0f);
-        case VariableType::String:
-            return TaskValue(std::string(""));
-        case VariableType::Vector:
-            return TaskValue(::Vector{0.0f, 0.0f, 0.0f});
-        case VariableType::EntityID:
-            return TaskValue(0);
-        case VariableType::None:
-        default:
-            return TaskValue();
-    }
 }
 
 struct GlobalEntryDefinition {
