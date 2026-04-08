@@ -12,8 +12,8 @@
         "name": "Root",
         "parameters": {},
         "position": {
-          "x": -266,
-          "y": -166
+          "x": 0,
+          "y": 0
         },
         "type": "Selector"
       },
@@ -26,8 +26,8 @@
         "name": "Phase1",
         "parameters": {},
         "position": {
-          "x": 67,
-          "y": -137
+          "x": 0,
+          "y": 0
         },
         "type": "Sequence"
       },
@@ -37,8 +37,8 @@
         "name": "HealthAbove50",
         "parameters": {},
         "position": {
-          "x": 430,
-          "y": -40
+          "x": 0,
+          "y": 0
         },
         "type": "Action"
       },
@@ -48,8 +48,8 @@
         "name": "BasicAttacks",
         "parameters": {},
         "position": {
-          "x": 424,
-          "y": -191
+          "x": 0,
+          "y": 0
         },
         "type": "SubGraph"
       },
@@ -62,8 +62,8 @@
         "name": "Phase2",
         "parameters": {},
         "position": {
-          "x": -115,
-          "y": 22
+          "x": 0,
+          "y": 0
         },
         "type": "Sequence"
       },
@@ -73,8 +73,8 @@
         "name": "HealthBelow50",
         "parameters": {},
         "position": {
-          "x": 42,
-          "y": 91
+          "x": 0,
+          "y": 0
         },
         "type": "Action"
       },
@@ -84,8 +84,8 @@
         "name": "AdvancedAttacks",
         "parameters": {},
         "position": {
-          "x": 36.9685,
-          "y": -81.0132
+          "x": 0,
+          "y": 0
         },
         "type": "SubGraph"
       },
@@ -95,8 +95,8 @@
         "name": "Idle",
         "parameters": {},
         "position": {
-          "x": -94,
-          "y": -196
+          "x": 0,
+          "y": 0
         },
         "type": "Action"
       }

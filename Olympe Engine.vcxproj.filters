@@ -604,6 +604,12 @@
     <None Include="Project Management\Fit-Gap Analysis\00-EXECUTIVE-SUMMARY.md" />
     <None Include="Project Management\Fit-Gap Analysis\INDEX.md" />
     <None Include="verify_property_loading.py" />
+    <None Include="Documentation\PHASE_35_BT_EDITOR_REINTEGRATION_PLAN.md" />
+    <None Include="Documentation\PHASE_35_EXECUTIVE_SUMMARY.md" />
+    <None Include="Documentation\PHASE_35_ARCHITECTURE_DECISIONS.md" />
+    <None Include="Documentation\PHASE_35_QUICK_START_GUIDE.md" />
+    <None Include="Documentation\PHASE_35_IMPLEMENTATION_CHECKLIST.md" />
+    <None Include="Documentation\PHASE_35_SYNTHESIS.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

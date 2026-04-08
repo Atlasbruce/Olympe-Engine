@@ -401,6 +401,36 @@ RegisterParameterSchema(ParameterSchemaEntry(
 6. New ComponentNode created with position, size, enabled flag
 7. Node properties can be populated from ParameterSchemaRegistry defaults
 
+- Phase 35 (IN PLANNING - BehaviorTree Editor Reintegration):
+    - **Objective**: Full UI integration of BehaviorTree system into Blueprint Editor with canvas, property panel, and serialization
+    - **Current State**: 
+      * ✅ Runtime BT system: 100% complete (execution, conditions, actions, debugger)
+      * ❌ Editor UI: BehaviorTreeRenderer adapter exists but NOT instantiated in TabManager::CreateNewTab()
+      * ❌ Property Panel: Missing (PropertyPanel_BT.h/cpp to be created)
+      * ⚠️ Serialization: Parsing complete, SaveToFile() incomplete
+    - **Root Cause**: TabManager detects BehaviorTree type but only instantiates VisualScript and EntityPrefab renderers
+    - **Critical Gap**: Line 179-183 in TabManager::CreateNewTab() lacks BehaviorTree case
+    - **Architecture Fix**:
+      ```cpp
+      else if (graphType == "BehaviorTree")
+      {
+          static NodeGraphPanel s_btPanel;
+          BehaviorTreeRenderer* r = new BehaviorTreeRenderer(s_btPanel);
+          tab.renderer = r;
+      }
+      ```
+    - **Files to Modify** (Priority order):
+      1. `Source\BlueprintEditor\TabManager.cpp` - Add BehaviorTree instantiation (Step 1)
+      2. `Source\BlueprintEditor\BlueprintEditorGUI.cpp` - Add menu/shortcuts (Step 2)
+      3. `Source\BlueprintEditor\PropertyPanel_BT.h/cpp` (NEW) - Property editor (Step 3)
+      4. `Source\AI\BehaviorTree.cpp` - Complete SaveToFile() (Step 4)
+      5. `Source\BlueprintEditor\BehaviorTreeRenderer.cpp` - BTNodePalette integration (Step 5)
+    - **Estimated Effort**: 12-19 developer-days (7-9 MVP + 5-10 polish)
+    - **Documentation**: 
+      * Full plan: `Documentation/PHASE_35_BT_EDITOR_REINTEGRATION_PLAN.md` (420 lines)
+      * Executive summary: `Documentation/PHASE_35_EXECUTIVE_SUMMARY.md` (150 lines)
+    - **Success Criteria**: BT files can be created, opened, edited (properties + nodes), saved, and loaded with full undo/redo support
+
 ## File Management Protocol
 - To add new files to the OlympeBlueprintEditor project:
   1. Create new C++ files using the `create_file` tool with complete implementation.

@@ -543,6 +543,12 @@
     <None Include="Documentation\NEXT_STEPS.md" />
     <None Include="Documentation\PHASE_33_INTEGRATION_COMPLETE.md" />
     <None Include="Documentation\PHASE_34_GLOW_REFINEMENTS.md" />
+    <None Include="Documentation\PHASE_35_ARCHITECTURE_DECISIONS.md" />
+    <None Include="Documentation\PHASE_35_BT_EDITOR_REINTEGRATION_PLAN.md" />
+    <None Include="Documentation\PHASE_35_EXECUTIVE_SUMMARY.md" />
+    <None Include="Documentation\PHASE_35_IMPLEMENTATION_CHECKLIST.md" />
+    <None Include="Documentation\PHASE_35_QUICK_START_GUIDE.md" />
+    <None Include="Documentation\PHASE_35_SYNTHESIS.md" />
     <None Include="Documentation\QUICK_REFERENCE.md" />
     <None Include="Documentation\README.md" />
     <None Include="Documentation\SELECTION_EFFECT_ANALYSIS.md" />
