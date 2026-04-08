@@ -320,16 +320,9 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         }
         else
         {
-            ImGui::Text("No graph open. Create or load a graph to begin.");
-            if (ImGui::Button("Create New Behavior Tree"))
-            {
-                NodeGraphManager::Get().CreateGraph("New Behavior Tree", "BehaviorTree");
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Create New HFSM"))
-            {
-                NodeGraphManager::Get().CreateGraph("New HFSM", "HFSM");
-            }
+            // Legacy UI disabled - BehaviorTreeRenderer and other editors should ensure
+            // a graph is set active before rendering begins.
+            ImGui::TextDisabled("No graph active. Create a new graph from the menu or load an existing one.");
         }
 
         // Render node edit modal
@@ -681,23 +674,12 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             }
         }
 
-        // Check for double-click on node to open edit modal
+        // Check for node hover (for property panel selection)
         int hoveredNodeUID = -1;
         if (ImNodes::IsNodeHovered(&hoveredNodeUID))
         {
-            if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-            {
-                // Convert global UID to local node ID
-                int localNodeId = GlobalUIDToLocalNodeID(hoveredNodeUID, graphID);
-                m_EditingNodeId = localNodeId;
-                GraphNode* node = graph->GetNode(localNodeId);
-                if (node)
-                {
-                    strncpy_s(m_NodeNameBuffer, node->name.c_str(), sizeof(m_NodeNameBuffer) - 1);
-                    m_NodeNameBuffer[sizeof(m_NodeNameBuffer) - 1] = '\0';
-                    m_ShowNodeEditModal = true;
-                }
-            }
+            // Node hover detection - used for selection
+            // (Legacy double-click modal removed - now use property panel instead)
         }
 
         // Right-click context menu on node
@@ -734,19 +716,8 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             }
             ImGui::Separator();
 
-            // Edit is always available for viewing
-            if (ImGui::MenuItem("Edit Properties", "Double-click"))
-            {
-                m_EditingNodeId = m_SelectedNodeId;
-                GraphNode* node = graph->GetNode(m_SelectedNodeId);
-                if (node)
-                {
-                    strncpy_s(m_NodeNameBuffer, node->name.c_str(), sizeof(m_NodeNameBuffer) - 1);
-                    m_NodeNameBuffer[sizeof(m_NodeNameBuffer) - 1] = '\0';
-                    m_ShowNodeEditModal = true;
-                }
-                ImGui::CloseCurrentPopup();
-            }
+            // Edit menu item removed - now use right-panel property editor instead
+            // if (ImGui::MenuItem("Edit Properties", "Double-click"))
 
             // Duplicate only shown if allowed
             if (EditorContext::Get().CanEdit() && EditorContext::Get().CanCreate())

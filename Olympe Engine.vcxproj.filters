@@ -233,6 +233,7 @@
     <ClCompile Include="Source\BlueprintEditor\Utilities\CustomCanvasEditor.cpp" />
     <ClCompile Include="Source\BlueprintEditor\SelectionEffectRenderer.cpp" />
     <ClCompile Include="Tests\BlueprintEditor\EntityPrefab_PropertyLoadingTest.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\BTNodePropertyPanel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -495,6 +496,7 @@
     <ClInclude Include="Source\BlueprintEditor\Utilities\CustomCanvasEditor.h" />
     <ClInclude Include="Source\BlueprintEditor\SelectionEffectRenderer.h" />
     <ClInclude Include="Tests\BlueprintEditor\SelectionEffectRendererTests.h" />
+    <ClInclude Include="Source\BlueprintEditor\BTNodePropertyPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />

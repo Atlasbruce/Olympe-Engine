@@ -176,6 +176,21 @@ std::string TabManager::CreateNewTab(const std::string& graphType)
         EntityPrefabRenderer* r = new EntityPrefabRenderer(s_epCanvas);
         tab.renderer = r;
     }
+    else if (graphType == "BehaviorTree")
+    {
+        static NodeGraphPanel s_btPanel;
+        static bool s_btPanelInit = false;
+        if (!s_btPanelInit)
+        {
+            s_btPanel.Initialize();
+            s_btPanelInit = true;
+        }
+
+        BehaviorTreeRenderer* r = new BehaviorTreeRenderer(s_btPanel);
+        // Create new empty graph immediately so canvas appears on tab creation
+        r->CreateNew(nameSS.str());
+        tab.renderer = r;
+    }
     else
     {
         SYSTEM_LOG << "[TabManager] CreateNewTab: unsupported type '" << graphType << "'\n";

@@ -52,6 +52,7 @@
     <ClCompile Include="Source\BlueprintEditor\BlueprintValidator.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BPCommandSystem.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BTNodeGraphManager.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\BTNodePropertyPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BTtoVSMigrator.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ConditionRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\DebugController.cpp" />
@@ -293,6 +294,7 @@
     <ClInclude Include="Source\BlueprintEditor\BlueprintValidator.h" />
     <ClInclude Include="Source\BlueprintEditor\BPCommandSystem.h" />
     <ClInclude Include="Source\BlueprintEditor\BTNodeGraphManager.h" />
+    <ClInclude Include="Source\BlueprintEditor\BTNodePropertyPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\BTtoVSMigrator.h" />
     <ClInclude Include="Source\BlueprintEditor\ConditionRef.h" />
     <ClInclude Include="Source\BlueprintEditor\ConditionRegistry.h" />

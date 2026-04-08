@@ -1,0 +1,61 @@
+{
+  "blueprintType": "BehaviorTree",
+  "data": {
+    "nodes": [
+      {
+        "children": [
+          2
+        ],
+        "id": 1,
+        "name": "BT_Selector",
+        "parameters": {},
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "type": "Selector"
+      },
+      {
+        "children": [
+          3
+        ],
+        "id": 2,
+        "name": "BT_Sequence",
+        "parameters": {},
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "type": "Sequence"
+      },
+      {
+        "children": [],
+        "id": 3,
+        "name": "BT_CanSeeTarget",
+        "parameters": {},
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "type": "Action"
+      }
+    ],
+    "rootNodeId": -1
+  },
+  "description": "",
+  "editorState": {
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
+  "metadata": {
+    "author": "User",
+    "created": "",
+    "lastModified": "2026-04-09T01:32:50",
+    "tags": []
+  },
+  "name": "Untitled-1",
+  "schema_version": 2
+}

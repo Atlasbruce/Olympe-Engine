@@ -5,20 +5,35 @@
  * @date 2026-03-11
  *
  * @details C++14 compliant.
+ * Phase 2 (2026-04-08): Added BTNodePalette and BTNodePropertyPanel for modern UI.
  */
 
 #pragma once
 
 #include "IGraphRenderer.h"
 #include "NodeGraphPanel.h"
+#include "BTNodePropertyPanel.h"
+#include "../third_party/imgui/imgui.h"
 
 #include <string>
+#include <memory>
 
 namespace Olympe {
+
+// Forward declarations
+namespace AI {
+    class BTNodePalette;
+}
 
 /**
  * @class BehaviorTreeRenderer
  * @brief Adapts the BTNodeGraphManager + NodeGraphPanel to IGraphRenderer.
+ *
+ * Phase 2 Enhancement: Now includes split-panel layout with:
+ * - 75% NodeGraphPanel (canvas rendering)
+ * - 25% Right panel with tabs:
+ *   * Tab 0: BTNodePalette (node selection + drag-drop)
+ *   * Tab 1: BTNodePropertyPanel (node property editing)
  *
  * Each instance manages a single BT graph ID in BTNodeGraphManager.
  * When Render() is called, this renderer sets that graph as the active one and
@@ -41,10 +56,34 @@ public:
     std::string GetGraphType()         const     override;
     std::string GetCurrentPath()       const     override;
 
+    /**
+     * @brief Create a new empty BehaviorTree graph and set it active
+     * @param name Name for the new graph
+     * @return true if successful
+     */
+    bool CreateNew(const std::string& name = "Untitled BehaviorTree");
+
 private:
-    NodeGraphPanel& m_panel;     ///< Shared panel reference (not owned)
-    int             m_graphId;   ///< ID in BTNodeGraphManager; -1 if not loaded
-    std::string     m_filePath;  ///< Path that was loaded
+     NodeGraphPanel& m_panel;                      ///< Shared panel reference (not owned)
+     std::unique_ptr<AI::BTNodePalette> m_palette; ///< BTNodePalette for drag-drop
+     BTNodePropertyPanel m_propertyPanel;          ///< Property editor for node properties
+     int m_graphId;                                ///< ID in BTNodeGraphManager; -1 if not loaded
+     std::string m_filePath;                       ///< Path that was loaded
+     float m_canvasPanelWidth = 0.75f;            ///< Split ratio: 75% canvas, 25% right panel
+     int m_rightPanelTabSelection = 0;             ///< 0 = Palette, 1 = Properties
+     ImVec2 m_canvasScreenPos = ImVec2(0, 0);     ///< Screen position of canvas for drag-drop coordinate transformation
+
+    // Layout rendering helpers
+    void RenderLayoutWithTabs();
+    void RenderRightPanelTabs();
+
+    /**
+     * @brief Handle drop of node type at screen position
+     * @param nodeType BT node type name
+     * @param screenX Absolute screen X coordinate
+     * @param screenY Absolute screen Y coordinate
+     */
+    void AcceptNodeDrop(const std::string& nodeType, float screenX, float screenY);
 };
 
 } // namespace Olympe
