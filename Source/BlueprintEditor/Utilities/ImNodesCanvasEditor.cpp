@@ -179,4 +179,34 @@ namespace Olympe
         return ImNodes::IsEditorHovered();
     }
 
+    // ========================================================================
+    // Minimap Management
+    // ========================================================================
+
+    void ImNodesCanvasEditor::RenderMinimap()
+    {
+        if (!m_minimapVisible)
+            return;
+
+        // Render minimap overlay using ImNodes API
+        // Note: ImNodes::MiniMap must be called before ImNodes::EndNodeEditor()
+        ImNodes::MiniMap(m_minimapSize, static_cast<ImNodesMiniMapLocation>(m_minimapPosition));
+    }
+
+    void ImNodesCanvasEditor::SetMinimapVisible(bool enabled)
+    {
+        m_minimapVisible = enabled;
+    }
+
+    void ImNodesCanvasEditor::SetMinimapSize(float scale)
+    {
+        // Clamp to reasonable range
+        m_minimapSize = scale < 0.05f ? 0.05f : (scale > 0.5f ? 0.5f : scale);
+    }
+
+    void ImNodesCanvasEditor::SetMinimapPosition(int position)
+    {
+        m_minimapPosition = position;
+    }
+
 } // namespace Olympe

@@ -31,6 +31,8 @@
 #include "ICanvasEditor.h"
 #include "../../third_party/imnodes/imnodes.h"
 #include <string>
+#include <vector>
+#include <tuple>
 
 namespace Olympe
 {
@@ -226,6 +228,20 @@ namespace Olympe
         virtual ImVec2 GetCanvasSize() const override { return m_canvasSize; }
 
         /**
+         * @brief Set canvas screen position (call each frame to update)
+         * @param screenPos Top-left corner position in screen space
+         * @details Required for minimap coordinate calculations each frame
+         */
+        virtual void SetCanvasScreenPos(const ImVec2& screenPos) override { m_canvasScreenPos = screenPos; }
+
+        /**
+         * @brief Set canvas size (call each frame to update)
+         * @param size Width and height in screen space
+         * @details Required for minimap rendering calculations each frame
+         */
+        virtual void SetCanvasSize(const ImVec2& size) override { m_canvasSize = size; }
+
+        /**
          * @brief Get canvas visible bounds in canvas space
          * @param outMin Top-left corner of visible area
          * @param outMax Bottom-right corner of visible area
@@ -255,12 +271,88 @@ namespace Olympe
          */
         virtual const char* GetCanvasName() const override { return m_name.c_str(); }
 
-    private:
+        // ====================================================================
+        // Minimap Management
+        // ====================================================================
+
+        /**
+         * @brief Render minimap overlay
+         * @details Calls ImNodes::MiniMap() with configured size and position
+         */
+        virtual void RenderMinimap() override;
+
+        /**
+         * @brief Enable/disable minimap rendering
+         * @param enabled True to show minimap
+         */
+        virtual void SetMinimapVisible(bool enabled) override;
+
+        /**
+         * @brief Check if minimap is visible
+         * @return True if minimap will be rendered
+         */
+        virtual bool IsMinimapVisible() const override { return m_minimapVisible; }
+
+        /**
+         * @brief Set minimap size scale
+         * @param scale Size multiplier (0.1f to 0.3f typical)
+         */
+        virtual void SetMinimapSize(float scale) override;
+
+        /**
+         * @brief Get minimap size scale
+         * @return Current size multiplier
+         */
+        virtual float GetMinimapSize() const override { return m_minimapSize; }
+
+        /**
+         * @brief Set minimap position
+         * @param position ImNodesMiniMapLocation enum value
+         */
+        virtual void SetMinimapPosition(int position) override;
+
+             /**
+              * @brief Get minimap position
+              * @return Current ImNodesMiniMapLocation value
+              */
+             virtual int GetMinimapPosition() const override { return m_minimapPosition; }
+
+             /**
+              * @brief Update minimap nodes (no-op for imnodes)
+              * @details ImNodes manages minimap data internally, so this is unused
+              */
+             virtual void UpdateMinimapNodes(
+                 const std::vector<std::tuple<int, float, float, float, float>>& nodes,
+                 float graphMinX, float graphMaxX, float graphMinY, float graphMaxY) override
+             {
+                 // No-op: ImNodes::MiniMap() handles this internally
+                 (void)nodes; (void)graphMinX; (void)graphMaxX; (void)graphMinY; (void)graphMaxY;
+             }
+
+             /**
+              * @brief Update minimap viewport (no-op for imnodes)
+              * @details ImNodes manages minimap viewport internally, so this is unused
+              */
+             virtual void UpdateMinimapViewport(
+                 float viewMinX, float viewMaxX, float viewMinY, float viewMaxY,
+                 float graphMinX, float graphMaxX, float graphMinY, float graphMaxY) override
+             {
+                 // No-op: ImNodes::MiniMap() handles this internally
+                 (void)viewMinX; (void)viewMaxX; (void)viewMinY; (void)viewMaxY;
+                 (void)graphMinX; (void)graphMaxX; (void)graphMinY; (void)graphMaxY;
+             }
+
+        private:
         std::string m_name;
         ImVec2 m_canvasScreenPos;
         ImVec2 m_canvasSize;
         ImNodesEditorContext* m_imnodesContext;
         bool m_gridVisible;
+
+        // Minimap configuration
+        bool m_minimapVisible = true;
+        float m_minimapSize = 0.15f;
+        int m_minimapPosition = ImNodesMiniMapLocation_BottomRight;
     };
 
 } // namespace Olympe

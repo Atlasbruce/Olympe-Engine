@@ -236,6 +236,7 @@
     <ClCompile Include="Source\BlueprintEditor\BTNodePropertyPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Commands\CommandHistory.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Commands\BTGraphCommands.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -502,6 +503,7 @@
     <ClInclude Include="Source\BlueprintEditor\Commands\GraphCommand.h" />
     <ClInclude Include="Source\BlueprintEditor\Commands\CommandHistory.h" />
     <ClInclude Include="Source\BlueprintEditor\Commands\BTGraphCommands.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />

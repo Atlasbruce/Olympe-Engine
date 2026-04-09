@@ -25,6 +25,8 @@
 
 #include "../../third_party/imgui/imgui.h"
 #include "CanvasGridRenderer.h"
+#include <vector>
+#include <tuple>
 
 namespace Olympe
 {
@@ -259,6 +261,20 @@ namespace Olympe
         virtual ImVec2 GetCanvasSize() const = 0;
 
         /**
+         * @brief Set canvas screen position (call each frame to update)
+         * @param screenPos Top-left corner position in screen space
+         * @details Required for minimap coordinate calculations each frame
+         */
+        virtual void SetCanvasScreenPos(const ImVec2& screenPos) = 0;
+
+        /**
+         * @brief Set canvas size (call each frame to update)
+         * @param size Width and height in screen space
+         * @details Required for minimap rendering calculations each frame
+         */
+        virtual void SetCanvasSize(const ImVec2& size) = 0;
+
+        /**
          * @brief Get canvas visible area as AABB in canvas space
          * @return {minCorner, maxCorner} in canvas logical coordinates
          * @details Useful for culling: which nodes are visible on screen?
@@ -287,6 +303,89 @@ namespace Olympe
          * @return String identifier for debugging and logging
          */
         virtual const char* GetCanvasName() const = 0;
+
+        // ====================================================================
+        // Minimap Management
+        // ====================================================================
+
+        /**
+         * @brief Render minimap overlay
+         * @details Renders minimap showing current viewport relative to full graph
+         *
+         * Implementations:
+         * - ImNodesCanvasEditor: Calls ImNodes::MiniMap()
+         * - CustomCanvasEditor: No-op (minimap not yet supported for custom canvas)
+         *
+         * Note: Must be called BEFORE EndRender() for imnodes
+         */
+        virtual void RenderMinimap() = 0;
+
+        /**
+         * @brief Enable/disable minimap rendering
+         * @param enabled True to show minimap, false to hide
+         */
+        virtual void SetMinimapVisible(bool enabled) = 0;
+
+        /**
+         * @brief Check if minimap is visible
+         * @return True if minimap will be rendered
+         */
+        virtual bool IsMinimapVisible() const = 0;
+
+        /**
+         * @brief Set minimap size scale
+         * @param scale Size multiplier (0.1f = 10%, 0.3f = 30% of canvas)
+         */
+        virtual void SetMinimapSize(float scale) = 0;
+
+        /**
+         * @brief Get minimap size scale
+         * @return Current size multiplier
+         */
+        virtual float GetMinimapSize() const = 0;
+
+        /**
+         * @brief Set minimap position
+         * @param position Position enum value (TopLeft, TopRight, BottomLeft, BottomRight)
+         */
+        virtual void SetMinimapPosition(int position) = 0;
+
+        /**
+          * @brief Get minimap position
+          * @return Current position enum value
+          */
+         virtual int GetMinimapPosition() const = 0;
+
+         /**
+          * @brief Update minimap with current graph node data
+          * @param nodes Vector of (nodeId, posX, posY, width, height) tuples representing graph nodes
+          * @param graphMinX Graph bounds left edge
+          * @param graphMaxX Graph bounds right edge
+          * @param graphMinY Graph bounds top edge
+          * @param graphMaxY Graph bounds bottom edge
+          * @details Required for custom minimap rendering (CustomCanvasEditor)
+          *          ImNodes minimap ignores this (uses internal ImNodes node positions)
+          */
+         virtual void UpdateMinimapNodes(
+             const std::vector<std::tuple<int, float, float, float, float>>& nodes,
+             float graphMinX, float graphMaxX, float graphMinY, float graphMaxY) = 0;
+
+         /**
+          * @brief Update minimap with current viewport bounds
+          * @param viewMinX Visible area left edge
+          * @param viewMaxX Visible area right edge
+          * @param viewMinY Visible area top edge
+          * @param viewMaxY Visible area bottom edge
+          * @param graphMinX Graph bounds left edge
+          * @param graphMaxX Graph bounds right edge
+          * @param graphMinY Graph bounds top edge
+          * @param graphMaxY Graph bounds bottom edge
+          * @details Required for custom minimap rendering (CustomCanvasEditor)
+          *          Normalizes viewport bounds relative to graph bounds for minimap display
+          */
+         virtual void UpdateMinimapViewport(
+             float viewMinX, float viewMaxX, float viewMinY, float viewMaxY,
+             float graphMinX, float graphMaxX, float graphMinY, float graphMaxY) = 0;
     };
 
 } // namespace Olympe

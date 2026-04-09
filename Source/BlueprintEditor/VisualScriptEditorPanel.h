@@ -49,6 +49,9 @@
 // Phase 26 — SubGraph File Picker Modal
 #include "../Editor/Modals/SubGraphFilePickerModal.h"
 
+// Phase 37 — Minimap integration
+#include "Utilities/ImNodesCanvasEditor.h"
+
 // Forward-declare ImNodes context type (defined in imnodes.h) in the global
 // namespace so it can be referenced from within the Olympe namespace below.
 struct ImNodesEditorContext;
@@ -945,10 +948,31 @@ private:
     // Phase 33 — Selection Effect Renderer (In-Loop Glow System)
     // -----------------------------------------------------------------------
 
+    // -----------------------------------------------------------------------
+    // Phase 33 — Selection Effect Renderer (In-Loop Glow System)
+    // -----------------------------------------------------------------------
+
     /// Renders glow effect for selected nodes (cyan halo + thickened border).
     /// Integrated into node rendering loop for correct scope and z-ordering.
     /// Provides unified selection UX across all canvas types.
     SelectionEffectRenderer m_selectionRenderer;
+
+    // -----------------------------------------------------------------------
+    // Phase 37 — Canvas Editor Minimap Support
+    // -----------------------------------------------------------------------
+
+    /// Canvas editor adapter for minimap support (Phase 37)
+    /// Abstracts imnodes minimap rendering through ICanvasEditor interface
+    std::unique_ptr<ImNodesCanvasEditor> m_canvasEditor;
+
+    /// Minimap visibility flag for VisualScript canvas
+    bool m_minimapVisible = true;
+
+    /// Minimap size ratio (0.05-0.5 of canvas)
+    float m_minimapSize = 0.15f;
+
+    /// Minimap position (0=TopLeft, 1=TopRight, 2=BottomLeft, 3=BottomRight)
+    int m_minimapPosition = 1;  // TopRight by default
 };
 
 } // namespace Olympe

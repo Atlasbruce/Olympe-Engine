@@ -119,6 +119,22 @@ void VisualScriptEditorPanel::Initialize()
     // independently for each open tab (switching tabs preserves layout).
     m_imnodesContext = ImNodes::EditorContextCreate();
 
+    // Phase 37 — Minimap support: Create ImNodes canvas editor adapter
+    // Abstracts minimap rendering for VisualScript canvas
+    m_canvasEditor = std::unique_ptr<ImNodesCanvasEditor>(
+                         new ImNodesCanvasEditor(
+                             "VisualScript",                    // name
+                             ImVec2(0.0f, 0.0f),              // canvasScreenPos (will be updated in RenderCanvas)
+                             ImVec2(0.0f, 0.0f),              // canvasSize (will be updated in RenderCanvas)
+                             m_imnodesContext                  // imnodes context
+                         ));
+    if (m_canvasEditor)
+    {
+        m_canvasEditor->SetMinimapVisible(m_minimapVisible);
+        m_canvasEditor->SetMinimapSize(m_minimapSize);
+        m_canvasEditor->SetMinimapPosition(m_minimapPosition);
+    }
+
     // Phase 24 — Condition Preset UI: create helpers bound to m_presetRegistry.
     m_pinManager      = std::unique_ptr<DynamicDataPinManager>(
                             new DynamicDataPinManager(m_presetRegistry));
@@ -248,6 +264,10 @@ void VisualScriptEditorPanel::Shutdown()
         ImNodes::EditorContextFree(m_imnodesContext);
         m_imnodesContext = nullptr;
     }
+
+    // Phase 37 — Release minimap canvas editor
+    m_canvasEditor.reset();
+
     m_editorNodes.clear();
     m_editorLinks.clear();
     m_positionedNodes.clear();

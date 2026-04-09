@@ -54,7 +54,13 @@ private:
         float zoom;
     } m_savedCanvasState;
 
-    // Rendering helpers
+    // Phase 37 — Minimap toolbar controls
+    bool m_minimapVisible = true;
+    float m_minimapSize = 0.15f;
+    int m_minimapPosition = 1;  // 0=TopLeft, 1=TopRight, 2=BottomLeft, 3=BottomRight
+
+    // Rendering methods
+    void RenderToolbar();
     void RenderLayoutWithTabs();
     void RenderRightPanelTabs();
 };

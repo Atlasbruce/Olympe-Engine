@@ -261,21 +261,49 @@ void VisualScriptEditorPanel::RenderToolbar()
         RunVerification();
     }
     ImGui::SameLine();
-    if (ImGui::Button("Run Graph##sim"))
-    {
-        RunGraphSimulation();
-    }
+	if (ImGui::Button("Run Graph##sim"))
+	{
+		RunGraphSimulation();
+	}
 	//ImGui::SameLine(); // useless since the Panel proeprties button is now in the right panel tab bar
-    //if (ImGui::Button("Condition Presets"))
-    //{
-    //    m_libraryPanel->Open();
-    //}
-    ImGui::SameLine();
-    // Title
-    const char* title = m_currentPath.empty()
-        ? "Untitled VS Graph"
-        : m_currentPath.c_str();
-    ImGui::TextDisabled("%s%s", title, m_dirty ? " *" : "");
+	//if (ImGui::Button("Condition Presets"))
+	//{
+	//    m_libraryPanel->Open();
+	//}
+	ImGui::SameLine();
+
+	// Phase 37 — Minimap controls for VisualScript canvas
+	if (m_canvasEditor)
+	{
+		// Checkbox to toggle minimap visibility
+		if (ImGui::Checkbox("Minimap##vs", &m_minimapVisible))
+		{
+			m_canvasEditor->SetMinimapVisible(m_minimapVisible);
+		}
+		ImGui::SameLine();
+
+		// DragFloat to control minimap size (0.05 to 0.5 of canvas)
+		if (ImGui::DragFloat("Size##minimap_vs", &m_minimapSize, 0.01f, 0.05f, 0.5f, "%.2f"))
+		{
+			m_minimapSize = std::max(0.05f, std::min(0.5f, m_minimapSize));
+			m_canvasEditor->SetMinimapSize(m_minimapSize);
+		}
+		ImGui::SameLine();
+
+		// Combo for minimap position
+		const char* positionLabels[] = { "Top-Left", "Top-Right", "Bottom-Left", "Bottom-Right" };
+		if (ImGui::Combo("Position##minimap_vs", &m_minimapPosition, positionLabels, 4))
+		{
+			m_canvasEditor->SetMinimapPosition(m_minimapPosition);
+		}
+		ImGui::SameLine();
+	}
+
+	// Title
+	const char* title = m_currentPath.empty()
+		? "Untitled VS Graph"
+		: m_currentPath.c_str();
+	ImGui::TextDisabled("%s%s", title, m_dirty ? " *" : "");
 
     ImGui::SameLine();
 

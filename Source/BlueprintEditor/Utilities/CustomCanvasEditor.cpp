@@ -29,6 +29,7 @@ namespace Olympe
         , m_middleMousePanEnabled(true)
         , m_scrollZoomEnabled(true)
         , m_scrollZoomSpeed(1.1f)
+        , m_minimapRenderer(std::make_unique<CanvasMinimapRenderer>())
     {
         m_canvasZoom = ClampZoom(m_canvasZoom);
     }
@@ -207,6 +208,73 @@ namespace Olympe
         bool hasWindowFocus = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
 
         return inBounds && hasWindowFocus;
+    }
+
+    // ========================================================================
+    // Minimap Management
+    // ========================================================================
+
+    void CustomCanvasEditor::RenderMinimap()
+    {
+        if (!m_minimapRenderer || !m_minimapRenderer->IsVisible())
+            return;
+
+        // Render custom minimap overlay for this canvas
+        m_minimapRenderer->RenderCustom(m_canvasScreenPos, m_canvasSize);
+    }
+
+    void CustomCanvasEditor::SetMinimapVisible(bool enabled)
+    {
+        if (m_minimapRenderer)
+            m_minimapRenderer->SetVisible(enabled);
+    }
+
+    bool CustomCanvasEditor::IsMinimapVisible() const
+    {
+        return m_minimapRenderer ? m_minimapRenderer->IsVisible() : false;
+    }
+
+    void CustomCanvasEditor::SetMinimapSize(float scale)
+    {
+        if (m_minimapRenderer)
+            m_minimapRenderer->SetSize(scale);
+    }
+
+    float CustomCanvasEditor::GetMinimapSize() const
+    {
+        return m_minimapRenderer ? m_minimapRenderer->GetSize() : 0.15f;
+    }
+
+    void CustomCanvasEditor::SetMinimapPosition(int position)
+    {
+        if (m_minimapRenderer)
+        {
+            // Clamp position to valid range [0, 3]
+            int pos = (position < 0) ? 0 : ((position > 3) ? 3 : position);
+            m_minimapRenderer->SetPosition(static_cast<MinimapPosition>(pos));
+        }
+    }
+
+    int CustomCanvasEditor::GetMinimapPosition() const
+    {
+        return m_minimapRenderer ? static_cast<int>(m_minimapRenderer->GetPosition()) : 0;
+    }
+
+    void CustomCanvasEditor::UpdateMinimapNodes(
+        const std::vector<std::tuple<int, float, float, float, float>>& nodes,
+        float graphMinX, float graphMaxX, float graphMinY, float graphMaxY)
+    {
+        if (m_minimapRenderer)
+            m_minimapRenderer->UpdateNodes(nodes, graphMinX, graphMaxX, graphMinY, graphMaxY);
+    }
+
+    void CustomCanvasEditor::UpdateMinimapViewport(
+        float viewMinX, float viewMaxX, float viewMinY, float viewMaxY,
+        float graphMinX, float graphMaxX, float graphMinY, float graphMaxY)
+    {
+        if (m_minimapRenderer)
+            m_minimapRenderer->UpdateViewport(viewMinX, viewMaxX, viewMinY, viewMaxY,
+                                             graphMinX, graphMaxX, graphMinY, graphMaxY);
     }
 
     // ========================================================================

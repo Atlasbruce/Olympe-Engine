@@ -23,6 +23,7 @@
 #include <cmath>
 #include <algorithm>
 #include <cctype>
+#include <memory>
 #include "../NodeGraphShared/BlueprintAdapter.h"
 
 // Use Blueprint namespace for command classes
@@ -93,6 +94,8 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
          // Phase 35.0: Create dedicated imnodes context for this panel instance
          m_imnodesContext = ImNodes::EditorContextCreate();
 
+         // Phase 36: Canvas editor created lazily in RenderGraph() when canvas size is known
+
          // Set up autosave timing only.  The per-save lambda overload of
          // ScheduleSave() is used at each change site so that serialization
          // happens on the UI thread and the background task only does I/O.
@@ -137,9 +140,43 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Grid cell size");
         ImGui::SameLine();
-        ImGui::Checkbox("Map", &m_ShowMinimap);
+
+        // Phase 36: Minimap toggle through canvas editor
+        bool minimapVisible = m_canvasEditor ? m_canvasEditor->IsMinimapVisible() : false;
+        if (ImGui::Checkbox("Map", &minimapVisible))
+        {
+            if (m_canvasEditor)
+                m_canvasEditor->SetMinimapVisible(minimapVisible);
+        }
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Minimap (Ctrl+M)");
+        ImGui::SameLine();
+
+        // Phase 36: Minimap size control (Step 8)
+        if (m_canvasEditor && minimapVisible)
+        {
+            ImGui::SetNextItemWidth(50.0f);
+            float minimapSize = m_canvasEditor->GetMinimapSize();
+            if (ImGui::DragFloat("##mmsize", &minimapSize, 0.01f, 0.05f, 0.5f, "%.2f"))
+            {
+                m_canvasEditor->SetMinimapSize(minimapSize);
+            }
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Minimap scale (0.05-0.5)");
+            ImGui::SameLine();
+
+            // Phase 36: Minimap position control (Step 9)
+            ImGui::SetNextItemWidth(80.0f);
+            int minimapPosition = m_canvasEditor->GetMinimapPosition();
+            const char* positionNames[] = {"TopLeft", "TopRight", "BottomLeft", "BottomRight"};
+            if (ImGui::Combo("##mmpos", &minimapPosition, positionNames, IM_ARRAYSIZE(positionNames)))
+            {
+                m_canvasEditor->SetMinimapPosition(minimapPosition);
+            }
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Minimap position");
+            ImGui::SameLine();
+        }
         ImGui::SameLine();
 
         // Debug info when runtime overlay is active
@@ -533,6 +570,18 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             return;
         }
 
+        // Phase 36: Initialize or update canvas editor for minimap support
+        if (!m_canvasEditor)
+        {
+            ImVec2 canvasScreenPos = ImGui::GetCursorScreenPos();
+            m_canvasEditor = std::make_unique<ImNodesCanvasEditor>(
+                "BehaviorTreeEditor",
+                canvasScreenPos,
+                canvasSize,
+                m_imnodesContext
+            );
+        }
+
         // Phase 35.0: Set this panel's imnodes context active before rendering
         // Prevents viewport state collision with other graph renderers (e.g., VisualScriptEditorPanel)
         if (m_imnodesContext)
@@ -637,16 +686,16 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             if (isActive)
                 continue;
 
-            ImNodes::Link(globalLinkUID, fromAttrUID, toAttrUID);
-        }
+                ImNodes::Link(globalLinkUID, fromAttrUID, toAttrUID);
+            }
 
-        // Minimap (rendered before EndNodeEditor as required by ImNodes API).
-        if (m_ShowMinimap)
-        {
-            ImNodes::MiniMap(0.15f, ImNodesMiniMapLocation_BottomRight);
-        }
+            // Phase 36: Render minimap through canvas editor interface
+            if (m_canvasEditor)
+            {
+                m_canvasEditor->RenderMinimap();
+            }
 
-        ImNodes::EndNodeEditor();
+            ImNodes::EndNodeEditor();
 
         // Overlay Bezier glow for links connected to the active debug node.
         // Must be called after EndNodeEditor() so screen-space positions are valid.

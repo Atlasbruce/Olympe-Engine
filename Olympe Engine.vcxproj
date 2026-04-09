@@ -91,6 +91,7 @@
     <ClCompile Include="Source\BlueprintEditor\TemplateManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\UndoRedoStack.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Utilities\CanvasGridRenderer.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Utilities\CustomCanvasEditor.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ValidationPanel.cpp" />
@@ -341,6 +342,7 @@
     <ClInclude Include="Source\BlueprintEditor\TemplateManager.h" />
     <ClInclude Include="Source\BlueprintEditor\UndoRedoStack.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasGridRenderer.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CustomCanvasEditor.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\ICanvasEditor.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.h" />

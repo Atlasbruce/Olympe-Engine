@@ -14,9 +14,11 @@
 #include <string>
 #include <vector>
 #include <unordered_set>
+#include <memory>
 #include "BTNodeGraphManager.h"
 #include "../EditorCommon/EditorAutosaveManager.h"
 #include "../third_party/imnodes/imnodes.h"
+#include "Utilities/ImNodesCanvasEditor.h"
 
 namespace Olympe
 {
@@ -245,13 +247,21 @@ namespace Olympe
                 /// Buffer used by the "New SubGraph" name input popup.
                 char m_NewSubgraphNameBuffer[128];
 
-                // -----------------------------------------------------------------------
-                // Phase 35.0: imnodes context management
-                // -----------------------------------------------------------------------
+                        // -----------------------------------------------------------------------
+                        // Phase 35.0: imnodes context management
+                        // -----------------------------------------------------------------------
 
-                /// Dedicated imnodes rendering context for this panel instance.
-                /// Prevents viewport state collision with other graph renderers.
-                ImNodesEditorContext* m_imnodesContext = nullptr;
-            };
+                        /// Dedicated imnodes rendering context for this panel instance.
+                        /// Prevents viewport state collision with other graph renderers.
+                        ImNodesEditorContext* m_imnodesContext = nullptr;
 
-        } // namespace Olympe
+                        // -----------------------------------------------------------------------
+                        // Phase 36: Canvas editor minimap framework
+                        // -----------------------------------------------------------------------
+
+                        /// Canvas editor adapter for minimap support (Phase 36)
+                        /// Abstracts imnodes minimap rendering through ICanvasEditor interface
+                        std::unique_ptr<class ImNodesCanvasEditor> m_canvasEditor;
+                    };
+
+                } // namespace Olympe

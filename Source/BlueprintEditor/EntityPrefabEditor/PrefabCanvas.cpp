@@ -5,6 +5,8 @@
 #include "../Utilities/CanvasGridRenderer.h"
 #include "../Utilities/ICanvasEditor.h"
 #include <cmath>
+#include <vector>
+#include <tuple>
 
 namespace Olympe
 {
@@ -30,6 +32,13 @@ namespace Olympe
         m_canvasScreenPos = canvasPos;  // Store for use in drag-drop context
         ImVec2 canvasSize = ImGui::GetContentRegionAvail();
         ImVec2 canvasEnd(canvasPos.x + canvasSize.x, canvasPos.y + canvasSize.y);
+
+        // CRITICAL: Update canvasEditor with current frame's position and size for minimap
+        if (m_canvasEditor)
+        {
+            m_canvasEditor->SetCanvasScreenPos(canvasPos);
+            m_canvasEditor->SetCanvasSize(canvasSize);
+        }
 
         ImVec2 mousePos = ImGui::GetMousePos();
         bool isMouseInCanvas = (mousePos.x >= canvasPos.x && mousePos.x <= canvasEnd.x &&
@@ -74,6 +83,92 @@ namespace Olympe
         // Context menu handling (right-click)
         RenderContextMenu();
         RenderConnectionContextMenu();
+
+        // Phase 37 — Update minimap data before rendering
+        // CRITICAL: CustomCanvasEditor minimap requires data updates before RenderMinimap()
+        if (m_canvasEditor && m_document)
+        {
+            const auto& allNodes = m_document->GetAllNodes();
+
+            // Build node data for minimap: tuple<nodeId, posX, posY, width, height>
+            std::vector<std::tuple<int, float, float, float, float>> nodeData;
+            nodeData.reserve(allNodes.size());
+
+            // Calculate graph bounds (min/max X/Y)
+            float graphMinX = 0.0f, graphMaxX = 0.0f;
+            float graphMinY = 0.0f, graphMaxY = 0.0f;
+            bool hasNodes = false;
+
+            for (const auto& node : allNodes)
+            {
+                float nodeMinX = node.position.x;
+                float nodeMaxX = node.position.x + node.size.x;
+                float nodeMinY = node.position.y;
+                float nodeMaxY = node.position.y + node.size.y;
+
+                if (!hasNodes)
+                {
+                    graphMinX = nodeMinX;
+                    graphMaxX = nodeMaxX;
+                    graphMinY = nodeMinY;
+                    graphMaxY = nodeMaxY;
+                    hasNodes = true;
+                }
+                else
+                {
+                    if (nodeMinX < graphMinX) graphMinX = nodeMinX;
+                    if (nodeMaxX > graphMaxX) graphMaxX = nodeMaxX;
+                    if (nodeMinY < graphMinY) graphMinY = nodeMinY;
+                    if (nodeMaxY > graphMaxY) graphMaxY = nodeMaxY;
+                }
+
+                // Add to node data
+                nodeData.emplace_back(
+                    static_cast<int>(node.nodeId),
+                    node.position.x,
+                    node.position.y,
+                    node.size.x,
+                    node.size.y
+                );
+            }
+
+            // If no nodes, set default bounds
+            if (!hasNodes)
+            {
+                graphMinX = -500.0f;
+                graphMaxX = 500.0f;
+                graphMinY = -500.0f;
+                graphMaxY = 500.0f;
+            }
+            else
+            {
+                // Add padding to bounds for better minimap appearance
+                float padX = (graphMaxX - graphMinX) * 0.1f;
+                float padY = (graphMaxY - graphMinY) * 0.1f;
+                graphMinX -= padX;
+                graphMaxX += padX;
+                graphMinY -= padY;
+                graphMaxY += padY;
+            }
+
+            // Calculate viewport bounds (current visible area with zoom/pan)
+            ImVec2 canvasMinVis = m_canvasEditor->ScreenToCanvas(canvasPos);
+            ImVec2 canvasMaxVis = m_canvasEditor->ScreenToCanvas(canvasEnd);
+
+            float viewMinX = canvasMinVis.x;
+            float viewMaxX = canvasMaxVis.x;
+            float viewMinY = canvasMinVis.y;
+            float viewMaxY = canvasMaxVis.y;
+
+            // Update minimap with node and viewport data
+            m_canvasEditor->UpdateMinimapNodes(nodeData, graphMinX, graphMaxX, graphMinY, graphMaxY);
+            m_canvasEditor->UpdateMinimapViewport(viewMinX, viewMaxX, viewMinY, viewMaxY,
+                                                  graphMinX, graphMaxX, graphMinY, graphMaxY);
+        }
+
+        // Phase 37 — Render minimap overlay on canvas
+        if (m_canvasEditor)
+            m_canvasEditor->RenderMinimap();
 
         ImGui::EndChild();
         ImGui::PopStyleColor();

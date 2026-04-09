@@ -27,7 +27,9 @@
 #pragma once
 
 #include "ICanvasEditor.h"
+#include "CanvasMinimapRenderer.h"
 #include <string>
+#include <memory>
 
 namespace Olympe
 {
@@ -222,6 +224,18 @@ namespace Olympe
         virtual ImVec2 GetCanvasSize() const override { return m_canvasSize; }
 
         /**
+         * @brief Set canvas screen position (updates each frame)
+         * @param screenPos New screen position
+         */
+        virtual void SetCanvasScreenPos(const ImVec2& screenPos) override { m_canvasScreenPos = screenPos; }
+
+        /**
+         * @brief Set canvas size (updates each frame)
+         * @param size New canvas size
+         */
+        virtual void SetCanvasSize(const ImVec2& size) override { m_canvasSize = size; }
+
+        /**
          * @brief Get canvas visible bounds in canvas space
          * @param outMin Top-left corner
          * @param outMax Bottom-right corner
@@ -250,6 +264,71 @@ namespace Olympe
          * @return Stored canvas name
          */
         virtual const char* GetCanvasName() const override { return m_name.c_str(); }
+
+        // ====================================================================
+        // Minimap Management
+        // ====================================================================
+
+        /**
+         * @brief Render minimap overlay for custom canvas
+         * @details Uses CanvasMinimapRenderer for unified appearance
+         */
+        virtual void RenderMinimap() override;
+
+        /**
+         * @brief Enable/disable minimap
+         * @param enabled True to show minimap
+         */
+        virtual void SetMinimapVisible(bool enabled) override;
+
+        /**
+         * @brief Check if minimap is visible
+         * @return True if minimap will be rendered
+         */
+        virtual bool IsMinimapVisible() const override;
+
+        /**
+         * @brief Set minimap size ratio
+         * @param scale Size ratio (0.05 - 0.5)
+         */
+         virtual void SetMinimapSize(float scale) override;
+
+        /**
+         * @brief Get minimap size ratio
+         * @return Current size ratio
+         */
+        virtual float GetMinimapSize() const override;
+
+        /**
+         * @brief Set minimap position (corner)
+         * @param position Position enum (0=TopLeft, 1=TopRight, 2=BottomLeft, 3=BottomRight)
+         */
+        virtual void SetMinimapPosition(int position) override;
+
+        /**
+         * @brief Get minimap position
+         * @return Position enum value
+         */
+        virtual int GetMinimapPosition() const override;
+
+        /**
+         * @brief Update minimap with current graph data
+         * @param nodes Vector of (nodeId, posX, posY, width, height) tuples
+         * @param graphMinX Graph bounds left
+         * @param graphMaxX Graph bounds right
+         * @param graphMinY Graph bounds top
+         * @param graphMaxY Graph bounds bottom
+         */
+        void UpdateMinimapNodes(
+            const std::vector<std::tuple<int, float, float, float, float>>& nodes,
+            float graphMinX, float graphMaxX, float graphMinY, float graphMaxY);
+
+        /**
+         * @brief Update minimap viewport from visible canvas area
+         */
+        void UpdateMinimapViewport(
+            float viewMinX, float viewMaxX, float viewMinY, float viewMaxY,
+            float graphMinX, float graphMaxX, float graphMinY, float graphMaxY);
 
         // ====================================================================
         // Input Configuration
@@ -290,6 +369,9 @@ namespace Olympe
 
         // Grid state
         bool m_gridVisible;
+
+        // Minimap state
+        std::unique_ptr<CanvasMinimapRenderer> m_minimapRenderer;
 
         // Input state
         ImVec2 m_lastMousePos;           // Previous frame mouse position
