@@ -54,6 +54,8 @@
     <ClCompile Include="Source\BlueprintEditor\BTNodeGraphManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BTNodePropertyPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BTtoVSMigrator.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Commands\BTGraphCommands.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Commands\CommandHistory.cpp" />
     <ClCompile Include="Source\BlueprintEditor\ConditionRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\DebugController.cpp" />
     <ClCompile Include="Source\BlueprintEditor\DebugPanel.cpp" />
@@ -296,6 +298,9 @@
     <ClInclude Include="Source\BlueprintEditor\BTNodeGraphManager.h" />
     <ClInclude Include="Source\BlueprintEditor\BTNodePropertyPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\BTtoVSMigrator.h" />
+    <ClInclude Include="Source\BlueprintEditor\Commands\BTGraphCommands.h" />
+    <ClInclude Include="Source\BlueprintEditor\Commands\CommandHistory.h" />
+    <ClInclude Include="Source\BlueprintEditor\Commands\GraphCommand.h" />
     <ClInclude Include="Source\BlueprintEditor\ConditionRef.h" />
     <ClInclude Include="Source\BlueprintEditor\ConditionRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\EditorConfigManager.h" />
@@ -538,6 +543,7 @@
     <None Include="DEBUG_INSTRUCTIONS.md" />
     <None Include="DIAGNOSTIC_PROJECT_INTEGRATION.md" />
     <None Include="DIAGNOSTIC_SUMMARY.md" />
+    <None Include="Documentation\BUG_ANALYSIS_MULTI_TAB_NODE_POSITION_RESET.md" />
     <None Include="Documentation\COMPLETION_REPORT.md" />
     <None Include="Documentation\CONCRETE_IMPLEMENTATION_EXAMPLE.md" />
     <None Include="Documentation\EXECUTIVE_SUMMARY.md" />

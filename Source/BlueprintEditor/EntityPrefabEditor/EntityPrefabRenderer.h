@@ -30,6 +30,12 @@ public:
     std::string GetGraphType() const override;
     std::string GetCurrentPath() const override;
 
+    // Phase 35.0: Canvas state management
+    void SaveCanvasState() override;
+    void RestoreCanvasState() override;
+    std::string GetCanvasStateJSON() const override;
+    void SetCanvasStateJSON(const std::string& json) override;
+
 private:
     PrefabCanvas& m_canvas;
     ComponentPalettePanel m_componentPalette;
@@ -39,6 +45,14 @@ private:
     bool m_isDirty = false;
     float m_canvasPanelWidth = 0.75f; // 75% for canvas, 25% for side panel
     int m_rightPanelTabSelection = 0; // 0 = ComponentPalette, 1 = PropertyPanel
+
+    // Canvas state snapshot (Phase 35.0)
+    struct CanvasState
+    {
+        float panX;
+        float panY;
+        float zoom;
+    } m_savedCanvasState;
 
     // Rendering helpers
     void RenderLayoutWithTabs();

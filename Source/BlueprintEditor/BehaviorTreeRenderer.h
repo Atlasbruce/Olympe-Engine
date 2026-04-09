@@ -84,6 +84,28 @@ private:
      * @param screenY Absolute screen Y coordinate
      */
     void AcceptNodeDrop(const std::string& nodeType, float screenX, float screenY);
+
+    /**
+     * @brief Handle keyboard shortcuts for copy/paste/duplicate operations
+     * Ctrl+C: Copy selected node
+     * Ctrl+V: Paste nodes from clipboard
+     * Ctrl+D: Duplicate selected node
+     */
+    void HandleKeyboardShortcuts();
+
+    // Phase 35.0: Canvas state management
+    void SaveCanvasState() override;
+    void RestoreCanvasState() override;
+    std::string GetCanvasStateJSON() const override;
+    void SetCanvasStateJSON(const std::string& json) override;
+
+private:
+    // Canvas state snapshot (Phase 35.0)
+    struct CanvasState
+    {
+        ImVec2 canvasOffset;
+        // Note: BehaviorTree via imnodes doesn't have explicit zoom
+    } m_savedCanvasState;
 };
 
 } // namespace Olympe

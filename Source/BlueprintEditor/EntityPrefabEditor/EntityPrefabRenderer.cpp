@@ -290,4 +290,40 @@ std::string EntityPrefabRenderer::GetCurrentPath() const
     return m_filePath;
 }
 
+// Phase 35.0: Canvas state management
+void EntityPrefabRenderer::SaveCanvasState()
+{
+    // Capture current canvas pan/zoom from CustomCanvasEditor
+    if (m_canvasEditor)
+    {
+        ImVec2 pan = m_canvasEditor->GetPan();
+        m_savedCanvasState.panX = pan.x;
+        m_savedCanvasState.panY = pan.y;
+        m_savedCanvasState.zoom = m_canvasEditor->GetZoom();
+    }
+}
+
+void EntityPrefabRenderer::RestoreCanvasState()
+{
+    // Restore previously saved canvas pan/zoom
+    if (m_canvasEditor)
+    {
+        ImVec2 savedPan(m_savedCanvasState.panX, m_savedCanvasState.panY);
+        m_canvasEditor->SetPan(savedPan);
+        m_canvasEditor->SetZoom(m_savedCanvasState.zoom);
+    }
+}
+
+std::string EntityPrefabRenderer::GetCanvasStateJSON() const
+{
+    // Return empty for now - can be extended to persist canvas state in JSON files
+    return "";
+}
+
+void EntityPrefabRenderer::SetCanvasStateJSON(const std::string& json)
+{
+    // Parse and restore from JSON - can be extended for persistence
+    (void)json;
+}
+
 } // namespace Olympe

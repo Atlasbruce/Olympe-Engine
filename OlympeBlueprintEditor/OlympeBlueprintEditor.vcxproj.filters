@@ -679,6 +679,12 @@
     <ClCompile Include="..\Source\BlueprintEditor\BTNodePropertyPanel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\Commands\CommandHistory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\Commands\BTGraphCommands.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -1324,6 +1330,9 @@
     <ClInclude Include="..\Source\BlueprintEditor\BTNodePropertyPanel.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\Source\BlueprintEditor\Commands\CommandHistory.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Commands\GraphCommand.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Commands\BTGraphCommands.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico">

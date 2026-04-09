@@ -193,13 +193,13 @@ std::string TabManager::CreateNewTab(const std::string& graphType)
     }
     else
     {
-        SYSTEM_LOG << "[TabManager] CreateNewTab: unsupported type '" << graphType << "'\n";
+        //SYSTEM_LOG << "[TabManager] CreateNewTab: unsupported type '" << graphType << "'\n";
         return "";
     }
 
     m_tabs.push_back(tab);
     SetActiveTab(tab.tabID);
-    SYSTEM_LOG << "[TabManager] Created new tab: " << tab.displayName << " (" << graphType << ")\n";
+    //SYSTEM_LOG << "[TabManager] Created new tab: " << tab.displayName << " (" << graphType << ")\n";
     return tab.tabID;
 }
 
@@ -214,13 +214,13 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
         if (m_tabs[i].filePath == filePath)
         {
             SetActiveTab(m_tabs[i].tabID);
-            SYSTEM_LOG << "[TabManager] File already open, activating: " << filePath << "\n";
+            //SYSTEM_LOG << "[TabManager] File already open, activating: " << filePath << "\n";
             return m_tabs[i].tabID;
         }
     }
 
     std::string graphType = DetectGraphType(filePath);
-    SYSTEM_LOG << "[TabManager] Opening file: " << filePath << " (type=" << graphType << ")\n";
+    //SYSTEM_LOG << "[TabManager] Opening file: " << filePath << " (type=" << graphType << ")\n";
 
     EditorTab tab;
     tab.tabID       = NextTabID();
@@ -236,7 +236,7 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
         if (!r->Load(filePath))
         {
             delete r;
-            SYSTEM_LOG << "[TabManager] Failed to load VS file: " << filePath << "\n";
+            //SYSTEM_LOG << "[TabManager] Failed to load VS file: " << filePath << "\n";
             return "";
         }
         tab.renderer = r;
@@ -259,7 +259,7 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
         if (!r->Load(filePath))
         {
             delete r;
-            SYSTEM_LOG << "[TabManager] Failed to load BT file: " << filePath << "\n";
+            //SYSTEM_LOG << "[TabManager] Failed to load BT file: " << filePath << "\n";
             return "";
         }
         tab.renderer = r;
@@ -281,7 +281,7 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
         if (!r->Load(filePath))
         {
             delete r;
-            SYSTEM_LOG << "[TabManager] Failed to load EntityPrefab file: " << filePath << "\n";
+            //SYSTEM_LOG << "[TabManager] Failed to load EntityPrefab file: " << filePath << "\n";
             return "";
         }
         tab.renderer = r;
@@ -293,7 +293,7 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
         if (!r->Load(filePath))
         {
             delete r;
-            SYSTEM_LOG << "[TabManager] Unsupported/unknown graph type for: " << filePath << "\n";
+            //SYSTEM_LOG << "[TabManager] Unsupported/unknown graph type for: " << filePath << "\n";
             return "";
         }
         tab.graphType = "VisualScript";
@@ -311,13 +311,29 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
 
 void TabManager::SetActiveTab(const std::string& tabID)
 {
+    // Phase 35.0: Save previous tab's canvas state before switching
+    EditorTab* previousTab = GetActiveTab();
+    if (previousTab && previousTab->renderer)
+    {
+        previousTab->renderer->SaveCanvasState();
+    }
+
+    // Update active tab
     for (size_t i = 0; i < m_tabs.size(); ++i)
         m_tabs[i].isActive = (m_tabs[i].tabID == tabID);
-    m_activeTabID         = tabID;
+    m_activeTabID = tabID;
+
     // Request a one-shot programmatic selection for this tab.
     // The flag is consumed (cleared) during the very next RenderTabBar() call
     // so that subsequent user-initiated tab clicks are not overridden.
-    m_pendingSelectTabID  = tabID;
+    m_pendingSelectTabID = tabID;
+
+    // Phase 35.0: Restore new tab's canvas state after switching
+    EditorTab* newTab = GetActiveTab();
+    if (newTab && newTab->renderer)
+    {
+        newTab->renderer->RestoreCanvasState();
+    }
 }
 
 std::string TabManager::GetActiveTabID() const
@@ -449,18 +465,18 @@ bool TabManager::SaveActiveTab()
         return false; // Will complete when dialog is confirmed
     }
 
-    SYSTEM_LOG << "[TabManager] SaveActiveTab: saving tab '" << tab->displayName
-               << "' to '" << tab->filePath << "'\n";
+    //SYSTEM_LOG << "[TabManager] SaveActiveTab: saving tab '" << tab->displayName
+    //           << "' to '" << tab->filePath << "'\n";
     bool ok = tab->renderer->Save(tab->filePath);
     if (ok)
     {
         tab->isDirty     = false;
         tab->displayName = DisplayNameFromPath(tab->filePath);
-        SYSTEM_LOG << "[TabManager] SaveActiveTab: succeeded for '" << tab->filePath << "'\n";
+        //SYSTEM_LOG << "[TabManager] SaveActiveTab: succeeded for '" << tab->filePath << "'\n";
     }
     else
     {
-        SYSTEM_LOG << "[TabManager] SaveActiveTab: FAILED for '" << tab->filePath << "'\n";
+        //SYSTEM_LOG << "[TabManager] SaveActiveTab: FAILED for '" << tab->filePath << "'\n";
     }
     return ok;
 }

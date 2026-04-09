@@ -126,4 +126,30 @@ std::string VisualScriptRenderer::GetCurrentPath() const
     return m_panel.GetCurrentPath();
 }
 
+// Phase 35.0: Canvas state management
+void VisualScriptRenderer::SaveCanvasState()
+{
+    // Phase 35.0: VisualScript uses imnodes native pan/zoom which is context-global
+    // For now, viewport state is preserved via ImNodes::EditorContext
+    // This stub ensures compatibility with the IGraphRenderer interface
+}
+
+void VisualScriptRenderer::RestoreCanvasState()
+{
+    // Phase 35.0: VisualScript pan/zoom restoration (handled by ImNodes context)
+    // This stub ensures compatibility with the IGraphRenderer interface
+}
+
+std::string VisualScriptRenderer::GetCanvasStateJSON() const
+{
+    // Return empty for now - can be extended to persist canvas state in JSON files
+    return "";
+}
+
+void VisualScriptRenderer::SetCanvasStateJSON(const std::string& json)
+{
+    // Parse and restore from JSON - can be extended for persistence
+    (void)json;
+}
+
 } // namespace Olympe

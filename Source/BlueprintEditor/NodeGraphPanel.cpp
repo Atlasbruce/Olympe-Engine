@@ -87,20 +87,30 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
     }
 
     void NodeGraphPanel::Initialize()
-    {
-        std::cout << "[NodeGraphPanel] Initialized\n";
+     {
+         std::cout << "[NodeGraphPanel] Initialized\n";
 
-        // Set up autosave timing only.  The per-save lambda overload of
-        // ScheduleSave() is used at each change site so that serialization
-        // happens on the UI thread and the background task only does I/O.
-        m_autosave.Init(nullptr, 1.5f, 60.0f);
-    }
+         // Phase 35.0: Create dedicated imnodes context for this panel instance
+         m_imnodesContext = ImNodes::EditorContextCreate();
+
+         // Set up autosave timing only.  The per-save lambda overload of
+         // ScheduleSave() is used at each change site so that serialization
+         // happens on the UI thread and the background task only does I/O.
+         m_autosave.Init(nullptr, 1.5f, 60.0f);
+     }
 
     void NodeGraphPanel::Shutdown()
-    {
-        m_autosave.Flush();
-        std::cout << "[NodeGraphPanel] Shutdown\n";
-    }
+     {
+         // Phase 35.0: Free imnodes context
+         if (m_imnodesContext)
+         {
+             ImNodes::EditorContextFree(m_imnodesContext);
+             m_imnodesContext = nullptr;
+         }
+
+         m_autosave.Flush();
+         std::cout << "[NodeGraphPanel] Shutdown\n";
+     }
 
     void NodeGraphPanel::Render()
     {
@@ -116,21 +126,6 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
 
         // Handle keyboard shortcuts
         HandleKeyboardShortcuts();
-
-        // Show currently selected entity at the top (informational only, doesn't block rendering)
-        uint64_t selectedEntity = BlueprintEditor::Get().GetSelectedEntity();
-        if (selectedEntity != 0)
-        {
-            EntityInfo info = EntityInspectorManager::Get().GetEntityInfo(selectedEntity);
-            ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f), 
-                "Editing for Entity: %s (ID: %llu)", info.name.c_str(), selectedEntity);
-        }
-        else
-        {
-            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.9f, 1.0f), 
-                "Editing BehaviorTree Asset (no entity context)");
-        }
-        ImGui::Separator();
 
         // View toggles: Snap-to-grid and Minimap
         ImGui::Checkbox("Snap", &m_SnapToGrid);
@@ -153,7 +148,8 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             ImGui::TextColored(ImVec4(1.0f, 0.9f, 0.2f, 1.0f), "  [DBG node %d]", s_ActiveDebugNodeId);
         }
 
-        ImGui::Separator();
+        //ImGui::Separator();
+        ImGui::SameLine();
         
         // Toolbar with Save/Save As buttons
         NodeGraph* activeGraph = NodeGraphManager::Get().GetActiveGraph();
@@ -219,6 +215,21 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
                 }
             }
             
+            // Show currently selected entity at the top (informational only, doesn't block rendering)
+            uint64_t selectedEntity = BlueprintEditor::Get().GetSelectedEntity();
+            if (selectedEntity != 0)
+            {
+                EntityInfo info = EntityInspectorManager::Get().GetEntityInfo(selectedEntity);
+                ImGui::TextColored(ImVec4(0.5f, 1.0f, 0.5f, 1.0f),
+                    "Editing for Entity: %s (ID: %llu)", info.name.c_str(), selectedEntity);
+            }
+            else
+            {
+                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.9f, 1.0f),
+                    "Editing BehaviorTree Asset (no entity context)");
+            }
+
+
             // Save As popup (simple text input for now)
             static bool saveAsPopupOpen = false;
             static char filepathBuffer[512] = "";
@@ -307,10 +318,12 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             ImGui::Separator();
         }
 
-        // Render graph tabs
-        RenderGraphTabs();
-
-        ImGui::Separator();
+        // Render graph tabs (unless suppressed by external renderer like BehaviorTreeRenderer)
+        if (!m_SuppressGraphTabs)
+        {
+            RenderGraphTabs();
+            ImGui::Separator();
+        }
 
         // Render the active graph
         activeGraph = NodeGraphManager::Get().GetActiveGraph();
@@ -518,6 +531,13 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         {
             ImGui::Text("Canvas too small to render graph");
             return;
+        }
+
+        // Phase 35.0: Set this panel's imnodes context active before rendering
+        // Prevents viewport state collision with other graph renderers (e.g., VisualScriptEditorPanel)
+        if (m_imnodesContext)
+        {
+            ImNodes::EditorContextSet(m_imnodesContext);
         }
 
         ImNodes::BeginNodeEditor();
@@ -1218,9 +1238,16 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         int inputAttrUID  = globalNodeUID * ATTR_ID_MULTIPLIER + 1;
         int outputAttrUID = globalNodeUID * ATTR_ID_MULTIPLIER + 2;
 
+        // Use 2-column layout to align input pins (left) with output pins (right) on the same Y
+        ImGui::Columns(3, "node_pins", false);
+        ImGui::SetColumnWidth(0, 60.0f);   // Left column: input pin
+        ImGui::SetColumnWidth(1, 100.0f);  // Center column: node content
+
+        // ---- LEFT COLUMN: Input Pin ----
         RenderTypedPin(inputAttrUID,  "In",  true,  isExec, connectedAttrIDs);
 
-        // ----- Node content ------------------------------------------------
+        // ---- CENTER COLUMN: Node content ----
+        ImGui::NextColumn();
         if (node->type == NodeType::BT_Action && !node->actionType.empty())
             ImGui::Text("%s", node->actionType.c_str());
         else if (node->type == NodeType::BT_Condition && !node->conditionType.empty())
@@ -1230,7 +1257,11 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         else
             ImGui::Text("%s", NodeTypeToString(node->type));
 
+        // ---- RIGHT COLUMN: Output Pin ----
+        ImGui::NextColumn();
         RenderTypedPin(outputAttrUID, "Out", false, isExec, connectedAttrIDs);
+
+        ImGui::Columns(1);  // End columns
     }
 
     // =========================================================================

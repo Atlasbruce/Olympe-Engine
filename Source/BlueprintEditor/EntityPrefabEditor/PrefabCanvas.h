@@ -168,5 +168,6 @@ namespace Olympe
         void RenderSelectionRectangle();
         void RenderContextMenu();
     };
-}
+
+} // namespace Olympe
 

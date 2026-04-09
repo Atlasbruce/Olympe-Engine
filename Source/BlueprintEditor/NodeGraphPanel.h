@@ -16,6 +16,7 @@
 #include <unordered_set>
 #include "BTNodeGraphManager.h"
 #include "../EditorCommon/EditorAutosaveManager.h"
+#include "../third_party/imnodes/imnodes.h"
 
 namespace Olympe
 {
@@ -178,6 +179,9 @@ namespace Olympe
         float m_ContextMenuPosX = 0.0f;
         float m_ContextMenuPosY = 0.0f;
 
+        // Control rendering behavior when embedded in other renderers
+        bool m_SuppressGraphTabs = false;  ///< When true, RenderGraphTabs() is skipped (used by BehaviorTreeRenderer)
+
         // Node editing modal
         bool m_ShowNodeEditModal = false;
         GraphNode* m_EditingNode = nullptr;
@@ -235,10 +239,19 @@ namespace Olympe
         /// Ordered list of open subgraph tabs.  Index 0 is always the root graph.
         std::vector<GraphTab> m_SubgraphTabs;
 
-        /// Index into m_SubgraphTabs of the currently visible tab.
-        int m_ActiveSubgraphTabIndex = 0;
+                /// Index into m_SubgraphTabs of the currently visible tab.
+                int m_ActiveSubgraphTabIndex = 0;
 
-        /// Buffer used by the "New SubGraph" name input popup.
-        char m_NewSubgraphNameBuffer[128];
-    };
-}
+                /// Buffer used by the "New SubGraph" name input popup.
+                char m_NewSubgraphNameBuffer[128];
+
+                // -----------------------------------------------------------------------
+                // Phase 35.0: imnodes context management
+                // -----------------------------------------------------------------------
+
+                /// Dedicated imnodes rendering context for this panel instance.
+                /// Prevents viewport state collision with other graph renderers.
+                ImNodesEditorContext* m_imnodesContext = nullptr;
+            };
+
+        } // namespace Olympe

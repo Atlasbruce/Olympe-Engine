@@ -41,6 +41,8 @@
     <ClCompile Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BTNodePropertyPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BTtoVSMigrator.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Commands\BTGraphCommands.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Commands\CommandHistory.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\ConditionRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.cpp" />
@@ -262,6 +264,9 @@
     <ClInclude Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BTNodePropertyPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BTtoVSMigrator.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Commands\BTGraphCommands.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Commands\CommandHistory.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Commands\GraphCommand.h" />
     <ClInclude Include="..\Source\BlueprintEditor\ConditionRef.h" />
     <ClInclude Include="..\Source\BlueprintEditor\ConditionRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.h" />

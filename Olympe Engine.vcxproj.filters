@@ -234,6 +234,8 @@
     <ClCompile Include="Source\BlueprintEditor\SelectionEffectRenderer.cpp" />
     <ClCompile Include="Tests\BlueprintEditor\EntityPrefab_PropertyLoadingTest.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BTNodePropertyPanel.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Commands\CommandHistory.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Commands\BTGraphCommands.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -497,6 +499,9 @@
     <ClInclude Include="Source\BlueprintEditor\SelectionEffectRenderer.h" />
     <ClInclude Include="Tests\BlueprintEditor\SelectionEffectRendererTests.h" />
     <ClInclude Include="Source\BlueprintEditor\BTNodePropertyPanel.h" />
+    <ClInclude Include="Source\BlueprintEditor\Commands\GraphCommand.h" />
+    <ClInclude Include="Source\BlueprintEditor\Commands\CommandHistory.h" />
+    <ClInclude Include="Source\BlueprintEditor\Commands\BTGraphCommands.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -612,6 +617,7 @@
     <None Include="Documentation\PHASE_35_QUICK_START_GUIDE.md" />
     <None Include="Documentation\PHASE_35_IMPLEMENTATION_CHECKLIST.md" />
     <None Include="Documentation\PHASE_35_SYNTHESIS.md" />
+    <None Include="Documentation\BUG_ANALYSIS_MULTI_TAB_NODE_POSITION_RESET.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

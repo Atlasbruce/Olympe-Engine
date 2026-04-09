@@ -76,6 +76,9 @@ void BehaviorTreeRenderer::Render()
 
 void BehaviorTreeRenderer::RenderLayoutWithTabs()
 {
+    // Suppress NodeGraphPanel's GraphTabs since we manage tabs in BehaviorTreeRenderer
+    m_panel.m_SuppressGraphTabs = true;
+
     // Layout: Canvas (left, ~75%) | Resize Handle | Tabbed Right Panel (right, ~25%)
     float totalWidth = ImGui::GetContentRegionAvail().x;
     float handleWidth = 4.0f;
@@ -135,6 +138,9 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
         }
         ImGui::EndDragDropTarget();
     }
+
+    // Handle keyboard shortcuts for copy/paste/duplicate
+    HandleKeyboardShortcuts();
 }
 
 void BehaviorTreeRenderer::RenderRightPanelTabs()
@@ -286,6 +292,90 @@ void BehaviorTreeRenderer::AcceptNodeDrop(const std::string& nodeType, float scr
     {
         SYSTEM_LOG << "[BehaviorTreeRenderer] Failed to create node from drop: type=" << nodeType << "\n";
     }
+}
+
+void BehaviorTreeRenderer::HandleKeyboardShortcuts()
+{
+    // Check that we have an active graph
+    if (m_graphId < 0)
+        return;
+
+    NodeGraph* graph = NodeGraphManager::Get().GetGraph(m_graphId);
+    if (!graph)
+        return;
+
+    // Get keyboard state
+    bool ctrlPressed = ImGui::GetIO().KeyCtrl;
+
+    // Ctrl+C: Copy selected node
+    if (ctrlPressed && ImGui::IsKeyPressed(ImGuiKey_C))
+    {
+        int selectedNodeId = m_panel.m_SelectedNodeId;
+        if (selectedNodeId >= 0)
+        {
+            std::vector<int> nodeIds = { selectedNodeId };
+            graph->CopyNodesToClipboard(nodeIds);
+            SYSTEM_LOG << "[BehaviorTreeRenderer] Copied node " << selectedNodeId << "\n";
+        }
+    }
+
+    // Ctrl+V: Paste nodes from clipboard
+    if (ctrlPressed && ImGui::IsKeyPressed(ImGuiKey_V))
+    {
+        if (!graph->m_clipboardData.empty())
+        {
+            std::vector<int> pastedNodeIds = graph->PasteNodesFromClipboard(30.0f, 30.0f);
+            if (!pastedNodeIds.empty())
+            {
+                SYSTEM_LOG << "[BehaviorTreeRenderer] Pasted " << pastedNodeIds.size() << " node(s)\n";
+                // Select first pasted node for convenience
+                m_panel.m_SelectedNodeId = pastedNodeIds[0];
+            }
+        }
+    }
+
+    // Ctrl+D: Duplicate selected node
+    if (ctrlPressed && ImGui::IsKeyPressed(ImGuiKey_D))
+    {
+        int selectedNodeId = m_panel.m_SelectedNodeId;
+        if (selectedNodeId >= 0)
+        {
+            std::vector<int> nodeIds = { selectedNodeId };
+            std::vector<int> duplicatedNodeIds = graph->DuplicateNodes(nodeIds, 30.0f, 30.0f);
+            if (!duplicatedNodeIds.empty())
+            {
+                SYSTEM_LOG << "[BehaviorTreeRenderer] Duplicated node " << selectedNodeId << "\n";
+                // Select first duplicated node
+                m_panel.m_SelectedNodeId = duplicatedNodeIds[0];
+            }
+        }
+    }
+}
+
+// Phase 35.0: Canvas state management
+void BehaviorTreeRenderer::SaveCanvasState()
+{
+    // For BehaviorTree, save the canvas screen position
+    // This helps preserve viewport context
+    m_savedCanvasState.canvasOffset = m_canvasScreenPos;
+}
+
+void BehaviorTreeRenderer::RestoreCanvasState()
+{
+    // Restore previously saved canvas offset
+    m_canvasScreenPos = m_savedCanvasState.canvasOffset;
+}
+
+std::string BehaviorTreeRenderer::GetCanvasStateJSON() const
+{
+    // Return empty for now - can be extended to persist canvas state in JSON files
+    return "";
+}
+
+void BehaviorTreeRenderer::SetCanvasStateJSON(const std::string& json)
+{
+    // Parse and restore from JSON - can be extended for persistence
+    (void)json;
 }
 
 } // namespace Olympe

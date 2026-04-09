@@ -36,8 +36,22 @@ public:
     /** @brief Direct access to the wrapped panel (for advanced operations). */
     VisualScriptEditorPanel& GetPanel() { return m_panel; }
 
+    // Phase 35.0: Canvas state management
+    void SaveCanvasState() override;
+    void RestoreCanvasState() override;
+    std::string GetCanvasStateJSON() const override;
+    void SetCanvasStateJSON(const std::string& json) override;
+
 private:
     VisualScriptEditorPanel m_panel;
+
+    // Canvas state snapshot (Phase 35.0)
+    struct CanvasState
+    {
+        float panX;
+        float panY;
+        float zoom;
+    } m_savedCanvasState;
 };
 
 } // namespace Olympe

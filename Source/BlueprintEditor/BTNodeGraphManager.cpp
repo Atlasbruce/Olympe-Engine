@@ -3,6 +3,8 @@
  */
 
 #include "BTNodeGraphManager.h"
+#include "Commands/CommandHistory.h"
+#include "Commands/BTGraphCommands.h"
 #include "SubgraphMigrator.h"
 #include "../json_helper.h"
 #include <fstream>
@@ -27,7 +29,69 @@ namespace Olympe
         , type("BehaviorTree")
         , rootNodeId(-1)
         , m_NextNodeId(1)
+        , m_commandHistory(new CommandHistory())
     {
+    }
+
+    NodeGraph::NodeGraph(const NodeGraph& other)
+        : name(other.name)
+        , type(other.type)
+        , rootNodeId(other.rootNodeId)
+        , editorMetadata(other.editorMetadata)
+        , m_Nodes(other.m_Nodes)
+        , m_NextNodeId(other.m_NextNodeId)
+        , m_IsDirty(other.m_IsDirty)
+        , m_Filepath(other.m_Filepath)
+        , m_commandHistory(new CommandHistory())  // New empty history
+    {
+    }
+
+    NodeGraph& NodeGraph::operator=(const NodeGraph& other)
+    {
+        if (this != &other)
+        {
+            name = other.name;
+            type = other.type;
+            rootNodeId = other.rootNodeId;
+            editorMetadata = other.editorMetadata;
+            m_Nodes = other.m_Nodes;
+            m_NextNodeId = other.m_NextNodeId;
+            m_IsDirty = other.m_IsDirty;
+            m_Filepath = other.m_Filepath;
+            // Reset command history
+            m_commandHistory = std::unique_ptr<CommandHistory>(new CommandHistory());
+        }
+        return *this;
+    }
+
+    NodeGraph::NodeGraph(NodeGraph&& other) noexcept
+        : name(std::move(other.name))
+        , type(std::move(other.type))
+        , rootNodeId(other.rootNodeId)
+        , editorMetadata(std::move(other.editorMetadata))
+        , m_Nodes(std::move(other.m_Nodes))
+        , m_NextNodeId(other.m_NextNodeId)
+        , m_IsDirty(other.m_IsDirty)
+        , m_Filepath(std::move(other.m_Filepath))
+        , m_commandHistory(std::move(other.m_commandHistory))
+    {
+    }
+
+    NodeGraph& NodeGraph::operator=(NodeGraph&& other) noexcept
+    {
+        if (this != &other)
+        {
+            name = std::move(other.name);
+            type = std::move(other.type);
+            rootNodeId = other.rootNodeId;
+            editorMetadata = std::move(other.editorMetadata);
+            m_Nodes = std::move(other.m_Nodes);
+            m_NextNodeId = other.m_NextNodeId;
+            m_IsDirty = other.m_IsDirty;
+            m_Filepath = std::move(other.m_Filepath);
+            m_commandHistory = std::move(other.m_commandHistory);
+        }
+        return *this;
     }
 
     int NodeGraph::CreateNode(NodeType nodeType, float x, float y, const std::string& nodeName)
@@ -479,6 +543,48 @@ namespace Olympe
         m_Nodes.clear();
         m_NextNodeId = 1;
         rootNodeId = -1;
+        if (m_commandHistory)
+            m_commandHistory->Clear();
+    }
+
+    CommandHistory* NodeGraph::GetCommandHistory()
+    {
+        return m_commandHistory.get();
+    }
+
+    const CommandHistory* NodeGraph::GetCommandHistory() const
+    {
+        return m_commandHistory.get();
+    }
+
+    bool NodeGraph::CanUndo() const
+    {
+        return m_commandHistory && m_commandHistory->CanUndo();
+    }
+
+    bool NodeGraph::CanRedo() const
+    {
+        return m_commandHistory && m_commandHistory->CanRedo();
+    }
+
+    std::string NodeGraph::GetUndoDescription() const
+    {
+        return m_commandHistory ? m_commandHistory->GetUndoDescription() : "";
+    }
+
+    std::string NodeGraph::GetRedoDescription() const
+    {
+        return m_commandHistory ? m_commandHistory->GetRedoDescription() : "";
+    }
+
+    bool NodeGraph::Undo()
+    {
+        return m_commandHistory && m_commandHistory->Undo();
+    }
+
+    bool NodeGraph::Redo()
+    {
+        return m_commandHistory && m_commandHistory->Redo();
     }
 
     int NodeGraph::FindNodeIndex(int nodeId) const
@@ -979,7 +1085,7 @@ namespace Olympe
         const NodeGraph* graph = GetGraph(graphId);
         return graph ? graph->IsDirty() : false;
     }
-    
+
     bool NodeGraphManager::HasUnsavedChanges() const
     {
         for (const auto& pair : m_Graphs)
@@ -988,5 +1094,107 @@ namespace Olympe
                 return true;
         }
         return false;
+    }
+
+    // ========== Copy/Paste Methods in NodeGraph ==========
+    void NodeGraph::CopyNodesToClipboard(const std::vector<int>& nodeIds)
+    {
+        m_clipboardData.clear();
+
+        for (int nodeId : nodeIds)
+        {
+            auto nodeIt = std::find_if(m_Nodes.begin(), m_Nodes.end(),
+                [nodeId](const GraphNode& n) { return n.id == nodeId; });
+
+            if (nodeIt != m_Nodes.end())
+            {
+                ClipboardNode clipNode;
+                clipNode.nodeId = nodeIt->id;
+                clipNode.nodeType = static_cast<int>(nodeIt->type);
+                clipNode.name = nodeIt->name;
+                clipNode.posX = nodeIt->posX;
+                clipNode.posY = nodeIt->posY;
+                clipNode.actionType = nodeIt->actionType;
+                clipNode.conditionType = nodeIt->conditionType;
+                clipNode.decoratorType = nodeIt->decoratorType;
+                clipNode.subgraphUUID = nodeIt->subgraphUUID;
+                clipNode.parameters = nodeIt->parameters;
+                clipNode.childIds = nodeIt->childIds;
+                clipNode.decoratorChildId = nodeIt->decoratorChildId;
+
+                m_clipboardData.push_back(clipNode);
+            }
+        }
+
+        m_IsDirty = true;
+    }
+
+    std::vector<int> NodeGraph::PasteNodesFromClipboard(float offsetX, float offsetY)
+    {
+        std::vector<int> pastedIds;
+
+        if (m_clipboardData.empty())
+            return pastedIds;
+
+        std::map<int, int> idMapping;  // Old ID -> New ID
+        int maxId = m_NextNodeId;
+
+        // Create new nodes from clipboard
+        for (const ClipboardNode& clipNode : m_clipboardData)
+        {
+            GraphNode newNode;
+            newNode.id = maxId;
+            newNode.type = static_cast<NodeType>(clipNode.nodeType);
+            newNode.name = clipNode.name;
+            newNode.posX = clipNode.posX + offsetX;
+            newNode.posY = clipNode.posY + offsetY;
+            newNode.actionType = clipNode.actionType;
+            newNode.conditionType = clipNode.conditionType;
+            newNode.decoratorType = clipNode.decoratorType;
+            newNode.subgraphUUID = clipNode.subgraphUUID;
+            newNode.parameters = clipNode.parameters;
+            // Don't copy connections initially
+            newNode.childIds.clear();
+            newNode.decoratorChildId = -1;
+
+            idMapping[clipNode.nodeId] = maxId;
+            pastedIds.push_back(maxId);
+            m_Nodes.push_back(newNode);
+            maxId++;
+        }
+
+        m_NextNodeId = maxId;
+        m_IsDirty = true;
+
+        return pastedIds;
+    }
+
+    std::vector<int> NodeGraph::DuplicateNodes(const std::vector<int>& nodeIds, float offsetX, float offsetY)
+    {
+        std::vector<int> duplicatedIds;
+
+        for (int origId : nodeIds)
+        {
+            auto nodeIt = std::find_if(m_Nodes.begin(), m_Nodes.end(),
+                [origId](const GraphNode& n) { return n.id == origId; });
+
+            if (nodeIt != m_Nodes.end())
+            {
+                GraphNode newNode = *nodeIt;
+                newNode.id = m_NextNodeId++;
+                newNode.posX += offsetX;
+                newNode.posY += offsetY;
+                newNode.name = nodeIt->name + " (copy)";
+                newNode.childIds.clear();
+                newNode.decoratorChildId = -1;
+
+                duplicatedIds.push_back(newNode.id);
+                m_Nodes.push_back(newNode);
+            }
+        }
+
+        m_IsDirty = true;
+
+        return duplicatedIds;
     }
 }

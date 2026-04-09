@@ -12,9 +12,30 @@
 #include <map>
 #include <memory>
 #include "../../Source/third_party/nlohmann/json.hpp"
+#include "Commands/CommandHistory.h"
 
 namespace Olympe
 {
+    /**
+     * @struct ClipboardNode
+     * @brief Serializable node data for copy/paste operations
+     */
+    struct ClipboardNode
+    {
+        int nodeId;
+        int nodeType;  // Stored as int for serialization
+        std::string name;
+        float posX, posY;
+        std::string actionType;
+        std::string conditionType;
+        std::string decoratorType;
+        std::string subgraphUUID;
+        std::map<std::string, std::string> parameters;
+        std::vector<int> childIds;
+        int decoratorChildId;
+
+        ClipboardNode() : nodeId(0), nodeType(0), posX(0.0f), posY(0.0f), decoratorChildId(-1) {}
+    };
     // Node type enumeration
     enum class NodeType
     {
@@ -136,6 +157,14 @@ namespace Olympe
         NodeGraph();
         ~NodeGraph() = default;
 
+        // Copy constructor and assignment - explicitly defaulted
+        NodeGraph(const NodeGraph& other);
+        NodeGraph& operator=(const NodeGraph& other);
+
+        // Move constructor and assignment
+        NodeGraph(NodeGraph&& other) noexcept;
+        NodeGraph& operator=(NodeGraph&& other) noexcept;
+
         // Graph metadata
         std::string name;
         std::string type;  // "BehaviorTree" or "HFSM"
@@ -169,25 +198,42 @@ namespace Olympe
         // Utility
         void Clear();
         int GetNextNodeId() const { return m_NextNodeId; }
-        
+
         // Calculate node positions for v1 blueprints (hierarchical layout)
         void CalculateNodePositionsHierarchical();
-        
+
         // Dirty flag tracking for unsaved changes
         bool IsDirty() const { return m_IsDirty; }
         void MarkDirty() { m_IsDirty = true; }
         void ClearDirty() { m_IsDirty = false; }
-        
+
         // Filepath tracking
         const std::string& GetFilepath() const { return m_Filepath; }
         void SetFilepath(const std::string& filepath) { m_Filepath = filepath; }
         bool HasFilepath() const { return !m_Filepath.empty(); }
+
+        // Undo/Redo support
+        CommandHistory* GetCommandHistory();
+        const CommandHistory* GetCommandHistory() const;
+        bool CanUndo() const;
+        bool CanRedo() const;
+        std::string GetUndoDescription() const;
+        std::string GetRedoDescription() const;
+        bool Undo();
+        bool Redo();
+
+        // Copy/Paste support
+        std::vector<ClipboardNode> m_clipboardData;
+        void CopyNodesToClipboard(const std::vector<int>& nodeIds);
+        std::vector<int> PasteNodesFromClipboard(float offsetX = 30.0f, float offsetY = 30.0f);
+        std::vector<int> DuplicateNodes(const std::vector<int>& nodeIds, float offsetX = 30.0f, float offsetY = 30.0f);
 
     private:
         std::vector<GraphNode> m_Nodes;
         int m_NextNodeId = 1;
         bool m_IsDirty = false;
         std::string m_Filepath;
+        std::unique_ptr<CommandHistory> m_commandHistory;
 
         // Helper to find node index
         int FindNodeIndex(int nodeId) const;

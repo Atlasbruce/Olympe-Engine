@@ -70,6 +70,43 @@ public:
      * @brief Returns the last path successfully loaded/saved, or empty string.
      */
     virtual std::string GetCurrentPath() const = 0;
+
+    // ------------------------------------------------------------------
+    // Canvas State Management (Phase 35.0 - Multi-Tab Fix)
+    // ------------------------------------------------------------------
+
+    /**
+     * @brief Save the current canvas viewport state (pan, zoom, etc.)
+     * Called when tab is deactivated.
+     * Used to preserve viewport when switching between multiple tabs.
+     */
+    virtual void SaveCanvasState() {}
+
+    /**
+     * @brief Restore previously saved canvas viewport state
+     * Called when tab is reactivated.
+     * Ensures smooth tab switching without losing layout.
+     */
+    virtual void RestoreCanvasState() {}
+
+    /**
+     * @brief Get canvas state as JSON string for persistence
+     * @return JSON representation of current canvas state
+     */
+    virtual std::string GetCanvasStateJSON() const
+    {
+        return "";  // Default: no persistent state
+    }
+
+    /**
+     * @brief Restore canvas state from JSON string
+     * @param json JSON representation of saved canvas state
+     */
+    virtual void SetCanvasStateJSON(const std::string& json)
+    {
+        (void)json;  // Default: no-op
+    }
 };
 
 } // namespace Olympe
+

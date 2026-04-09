@@ -102,4 +102,5 @@ namespace Olympe
         NodeId GenerateNodeId();
         std::vector<LayoutNode> CalculateLayout();
     };
-}
+
+} // namespace Olympe
