@@ -568,6 +568,7 @@
     <None Include="Documentation\PHASE_35_IMPLEMENTATION_CHECKLIST.md" />
     <None Include="Documentation\PHASE_35_QUICK_START_GUIDE.md" />
     <None Include="Documentation\PHASE_35_SYNTHESIS.md" />
+    <None Include="Documentation\PHASE_38_BT_DYNAMIC_EXECUTION_PINS_ANALYSIS.md" />
     <None Include="Documentation\QUICK_REFERENCE.md" />
     <None Include="Documentation\README.md" />
     <None Include="Documentation\SELECTION_EFFECT_ANALYSIS.md" />

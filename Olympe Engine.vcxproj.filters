@@ -629,6 +629,7 @@
     <None Include="Documentation\MINIMAP_DOCUMENTATION_INDEX.md" />
     <None Include="Documentation\MINIMAP_BUG_FIX_ONE_PAGE.md" />
     <None Include="Documentation\MINIMAP_BUG_FIX_FINAL_REPORT.md" />
+    <None Include="Documentation\PHASE_38_BT_DYNAMIC_EXECUTION_PINS_ANALYSIS.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

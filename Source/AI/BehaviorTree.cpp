@@ -105,7 +105,19 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
             BTNode node;
             node.id = JsonHelper::GetInt(nodeJson, "id", 0);
             node.name = JsonHelper::GetString(nodeJson, "name", "");
-            
+
+            // Phase 38: Load editor positions for execution order sorting
+            if (nodeJson.contains("position") && nodeJson["position"].is_object())
+            {
+                node.editorPosX = JsonHelper::GetFloat(nodeJson["position"], "x", 0.0f);
+                node.editorPosY = JsonHelper::GetFloat(nodeJson["position"], "y", 0.0f);
+            }
+            else
+            {
+                node.editorPosX = 0.0f;
+                node.editorPosY = 0.0f;
+            }
+
             std::string typeStr = JsonHelper::GetString(nodeJson, "type", "Action");
             if (typeStr == "Selector") node.type = BTNodeType::Selector;
             else if (typeStr == "Sequence") node.type = BTNodeType::Sequence;
@@ -1132,7 +1144,9 @@ uint32_t BehaviorTreeAsset::AddNode(BTNodeType type, const std::string& name, co
     newNode.type = type;
     newNode.id = GenerateNextNodeId();
     newNode.name = name;
-    
+    newNode.editorPosX = position.x;
+    newNode.editorPosY = position.y;
+
     // Set default parameters based on type
     if (type == BTNodeType::Action)
     {
@@ -1154,12 +1168,13 @@ uint32_t BehaviorTreeAsset::AddNode(BTNodeType type, const std::string& name, co
     {
         newNode.decoratorChildId = 0;
     }
-    
+
     nodes.push_back(newNode);
-    
+
     std::cout << "[BehaviorTreeAsset] Added node ID=" << newNode.id
-              << " type=" << static_cast<int>(type) << " name='" << name << "'" << std::endl;
-    
+              << " type=" << static_cast<int>(type) << " name='" << name << "'"
+              << " pos=(" << position.x << "," << position.y << ")" << std::endl;
+
     return newNode.id;
 }
 

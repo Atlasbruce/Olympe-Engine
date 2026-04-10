@@ -38,6 +38,7 @@
 #include <string>
 #include <cstdint>
 #include <map>
+#include <algorithm>
 
 // Forward declarations
 struct AIBlackboard_data;
@@ -154,7 +155,11 @@ struct BTNode
     
     // Debug info
     std::string name;
-    
+
+    // Editor positioning (for visual layout in BehaviorTree editor)
+    float editorPosX = 0.0f;                ///< Horizontal position in editor canvas (pixels)
+    float editorPosY = 0.0f;                ///< Vertical position in editor canvas (pixels) - used for execution order sorting
+
     // Flexible parameters (for new condition/action types that need structured data)
     std::map<std::string, std::string> stringParams;  ///< String parameters
     std::map<std::string, int> intParams;             ///< Integer parameters
@@ -226,7 +231,56 @@ struct BehaviorTreeAsset
         }
         return nullptr;
     }
-    
+
+    // Get children of a node sorted by Y-position (execution order)
+    // Returns vector of child IDs sorted by editorPosY (lowest Y = executes first = index 1)
+    std::vector<uint32_t> GetChildrenSortedByY(uint32_t parentId) const
+    {
+        const BTNode* parent = GetNode(parentId);
+        if (!parent) return {};
+
+        // Create pairs of (editorPosY, childId)
+        std::vector<std::pair<float, uint32_t>> childrenWithY;
+        for (uint32_t childId : parent->childIds)
+        {
+            const BTNode* child = GetNode(childId);
+            if (child)
+            {
+                childrenWithY.push_back({child->editorPosY, childId});
+            }
+        }
+
+        // Sort by Y-position (ascending: top node = first to execute)
+        std::sort(childrenWithY.begin(), childrenWithY.end(),
+                  [](const std::pair<float, uint32_t>& a, const std::pair<float, uint32_t>& b)
+                  {
+                      return a.first < b.first;
+                  });
+
+        // Extract sorted child IDs
+        std::vector<uint32_t> sortedIds;
+        for (const auto& pair : childrenWithY)
+        {
+            sortedIds.push_back(pair.second);
+        }
+        return sortedIds;
+    }
+
+    // Get execution index of a child within its parent (1-based)
+    // Returns 0 if not found or parent is not composite
+    uint32_t GetChildExecutionIndex(uint32_t parentId, uint32_t childId) const
+    {
+        std::vector<uint32_t> sortedChildren = GetChildrenSortedByY(parentId);
+        for (size_t i = 0; i < sortedChildren.size(); ++i)
+        {
+            if (sortedChildren[i] == childId)
+            {
+                return static_cast<uint32_t>(i + 1);  // 1-based indexing
+            }
+        }
+        return 0;  // Not found
+    }
+
     // Validation methods
     std::vector<BTValidationMessage> ValidateTreeFull() const;
     bool DetectCycle(uint32_t startNodeId) const;

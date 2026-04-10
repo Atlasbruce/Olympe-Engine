@@ -701,6 +701,9 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         // Must be called after EndNodeEditor() so screen-space positions are valid.
         RenderActiveLinks(graph, graphID);
 
+        // Phase 38: Render execution indices on connections for Sequence/Selector children
+        RenderConnectionIndices(graph, graphID);
+
         // Handle node interactions with UID mapping
         HandleNodeInteractions(graphID);
 
@@ -1369,6 +1372,116 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             // Wide transparent halo + narrow bright core.
             drawList->AddBezierCubic(p1, p2, p3, p4, glowWide, 6.0f);
             drawList->AddBezierCubic(p1, p2, p3, p4, glowCore, 2.0f);
+        }
+    }
+
+    // =========================================================================
+    // RenderConnectionIndices - Phase 38: Y-Axis Positional Execution Order
+    // =========================================================================
+
+    void NodeGraphPanel::RenderConnectionIndices(NodeGraph* graph, int graphID)
+    {
+        if (graph == nullptr)
+            return;
+
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        if (drawList == nullptr)
+            return;
+
+        // Get all nodes (returns vector of const GraphNode*)
+        auto graphNodes = graph->GetAllNodes();
+
+        // Iterate through all nodes, find Sequence/Selector nodes
+        for (size_t i = 0; i < graphNodes.size(); ++i)
+        {
+            const GraphNode* parentNode = graphNodes[i];
+            if (parentNode == nullptr)
+                continue;
+
+            // Check if this node is a Sequence or Selector (NodeType enum comparison)
+            if (parentNode->type != NodeType::BT_Sequence && parentNode->type != NodeType::BT_Selector)
+                continue;
+
+            // Get the parent node's screen position
+            int parentUID = graphID * GRAPH_ID_MULTIPLIER + parentNode->id;
+            ImVec2 parentPos = ImNodes::GetNodeScreenSpacePos(parentUID);
+            ImVec2 parentDim = ImNodes::GetNodeDimensions(parentUID);
+
+            // Phase 38: Sort children by Y-position to determine execution order
+            std::vector<std::pair<float, int>> childrenWithY;
+            for (size_t j = 0; j < parentNode->childIds.size(); ++j)
+            {
+                int childId = parentNode->childIds[j];
+
+                // Find child node to get its Y position
+                const GraphNode* childNode = graph->GetNode(childId);
+                if (childNode != nullptr)
+                {
+                    childrenWithY.push_back(std::make_pair(childNode->posY, childId));
+                }
+            }
+
+            // Sort by Y-coordinate (ascending: top node = first to execute)
+            std::sort(childrenWithY.begin(), childrenWithY.end());
+
+            // Render index for each child connection
+            for (size_t i = 0; i < childrenWithY.size(); ++i)
+            {
+                int childId = childrenWithY[i].second;
+                uint32_t executionIndex = static_cast<uint32_t>(i + 1);  // 1-based indexing
+
+                // Find the child node in the graph
+                const GraphNode* childNode = graph->GetNode(childId);
+                if (childNode == nullptr)
+                    continue;
+
+                // Get child node's screen position
+                int childUID = graphID * GRAPH_ID_MULTIPLIER + childNode->id;
+                ImVec2 childPos = ImNodes::GetNodeScreenSpacePos(childUID);
+                ImVec2 childDim = ImNodes::GetNodeDimensions(childUID);
+
+                // Calculate connection curve (same as RenderActiveLinks)
+                const float po = ImNodes::GetStyle().PinOffset;
+                ImVec2 p1 = ImVec2(parentPos.x + parentDim.x + po, parentPos.y + parentDim.y * 0.5f);
+                ImVec2 p4 = ImVec2(childPos.x - po, childPos.y + childDim.y * 0.5f);
+
+                // Horizontal tangents for S-curve
+                float curve = (p4.x - p1.x) * 0.4f;
+                if (curve < 50.0f) curve = 50.0f;
+                ImVec2 p2 = ImVec2(p1.x + curve, p1.y);
+                ImVec2 p3 = ImVec2(p4.x - curve, p4.y);
+
+                // Calculate midpoint of the Bezier curve for label placement
+                // Use t=0.5 for cubic Bezier: B(0.5) = 0.125*p1 + 0.375*p2 + 0.375*p3 + 0.125*p4
+                ImVec2 midpoint = ImVec2(
+                    0.125f * p1.x + 0.375f * p2.x + 0.375f * p3.x + 0.125f * p4.x,
+                    0.125f * p1.y + 0.375f * p2.y + 0.375f * p3.y + 0.125f * p4.y
+                );
+
+                // Format index text
+                char indexText[16];
+                snprintf(indexText, sizeof(indexText), "%u", executionIndex);
+
+                // Render index label with background
+                ImVec2 textSize = ImGui::CalcTextSize(indexText);
+                ImVec2 padding = ImVec2(4.0f, 2.0f);
+                ImVec2 bgMin = ImVec2(midpoint.x - textSize.x * 0.5f - padding.x, 
+                                      midpoint.y - textSize.y * 0.5f - padding.y);
+                ImVec2 bgMax = ImVec2(midpoint.x + textSize.x * 0.5f + padding.x,
+                                      midpoint.y + textSize.y * 0.5f + padding.y);
+
+                // Background: Dark with border
+                ImU32 bgColor = IM_COL32(40, 40, 50, 220);
+                ImU32 borderColor = IM_COL32(100, 150, 200, 255);
+                ImU32 textColor = IM_COL32(200, 220, 255, 255);
+
+                drawList->AddRectFilled(bgMin, bgMax, bgColor, 3.0f);
+                drawList->AddRect(bgMin, bgMax, borderColor, 3.0f, 0, 1.0f);
+
+                // Text: White/light blue
+                drawList->AddText(ImVec2(midpoint.x - textSize.x * 0.5f, midpoint.y - textSize.y * 0.5f),
+                                 textColor, indexText);
+            }
         }
     }
 

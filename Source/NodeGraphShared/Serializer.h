@@ -76,7 +76,15 @@ namespace Olympe
                 nodeJson["type"] = typeStr;
 
                 json pos = json::object();
-                if (layoutEngine)
+
+                // Phase 38: Use stored editorPosX/Y if available, otherwise try layoutEngine, else auto-layout
+                if (node.editorPosX != 0.0f || node.editorPosY != 0.0f)
+                {
+                    // Use stored positions (from editor canvas)
+                    pos["x"] = node.editorPosX;
+                    pos["y"] = node.editorPosY;
+                }
+                else if (layoutEngine)
                 {
                     const BTNodeLayout* nodeLayout = layoutEngine->GetNodeLayout(node.id);
                     if (nodeLayout)

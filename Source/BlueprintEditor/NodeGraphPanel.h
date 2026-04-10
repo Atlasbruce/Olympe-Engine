@@ -150,6 +150,21 @@ namespace Olympe
          */
         void RenderActiveLinks(NodeGraph* graph, int graphID);
 
+        /**
+         * @brief Render execution indices (1, 2, 3, ...n) on connection lines
+         *        for Sequence and Selector nodes based on child Y-position ordering.
+         *
+         * Phase 38: Y-Axis positional execution ordering - indices auto-calculated
+         * from GetChildrenSortedByY() which sorts children by editorPosY.
+         *
+         * Must be called AFTER ImNodes::EndNodeEditor() so that node screen-space
+         * positions are valid.
+         *
+         * @param graph    Active NodeGraph.
+         * @param graphID  Active graph ID.
+         */
+        void RenderConnectionIndices(NodeGraph* graph, int graphID);
+
         // Node creation helpers
         void CreateNewNode(const char* nodeType, float x, float y);
 

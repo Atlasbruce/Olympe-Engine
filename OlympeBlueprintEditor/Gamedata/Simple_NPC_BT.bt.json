@@ -1,136 +1,133 @@
 {
   "blueprintType": "BehaviorTree",
   "data": {
-    "rootGraph": {
-      "nodes": [
-        {
-          "children": [
-            2
-          ],
-          "id": 1,
-          "name": "BT_Selector",
-          "parameters": {},
-          "position": {
-            "x": -409.71,
-            "y": -235.451
-          },
-          "type": "Selector"
+    "nodes": [
+      {
+        "children": [
+          2
+        ],
+        "id": 1,
+        "name": "BT_Selector",
+        "parameters": {},
+        "position": {
+          "x": -462.71,
+          "y": -226.451
         },
-        {
-          "children": [
-            3,
-            6,
-            9
-          ],
-          "id": 2,
-          "name": "BT_Sequence",
-          "parameters": {},
-          "position": {
-            "x": -166,
-            "y": -229
-          },
-          "type": "Sequence"
+        "type": "Selector"
+      },
+      {
+        "children": [
+          3,
+          6,
+          9
+        ],
+        "id": 2,
+        "name": "BT_Sequence",
+        "parameters": {},
+        "position": {
+          "x": -166,
+          "y": -229
         },
-        {
-          "children": [
-            5
-          ],
-          "id": 3,
-          "name": "BT_CanSeeTarget",
-          "parameters": {},
-          "position": {
-            "x": 109,
-            "y": -219
-          },
-          "type": "Action"
+        "type": "Sequence"
+      },
+      {
+        "children": [
+          5
+        ],
+        "id": 3,
+        "name": "BT_CanSeeTarget",
+        "parameters": {},
+        "position": {
+          "x": 115,
+          "y": -229
         },
-        {
-          "children": [],
-          "id": 4,
-          "name": "BT_AttackTarget",
-          "parameters": {},
-          "position": {
-            "x": 344,
-            "y": -136
-          },
-          "type": "Action"
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 4,
+        "name": "BT_AttackTarget",
+        "parameters": {},
+        "position": {
+          "x": 344,
+          "y": -136
         },
-        {
-          "children": [],
-          "id": 5,
-          "name": "BT_MoveToTarget",
-          "parameters": {},
-          "position": {
-            "x": 343,
-            "y": -219
-          },
-          "type": "Action"
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 5,
+        "name": "BT_MoveToTarget",
+        "parameters": {},
+        "position": {
+          "x": 353,
+          "y": -225
         },
-        {
-          "children": [
-            4
-          ],
-          "id": 6,
-          "name": "BT_IsTargetInRange",
-          "parameters": {},
-          "position": {
-            "x": 110,
-            "y": -136
-          },
-          "type": "Action"
+        "type": "Action"
+      },
+      {
+        "children": [
+          4
+        ],
+        "id": 6,
+        "name": "BT_IsTargetInRange",
+        "parameters": {},
+        "position": {
+          "x": 110,
+          "y": -136
         },
-        {
-          "children": [
-            8
-          ],
-          "id": 7,
-          "name": "BT_Inverter",
-          "parameters": {},
-          "position": {
-            "x": 342,
-            "y": -301
-          },
-          "type": "Action"
+        "type": "Action"
+      },
+      {
+        "children": [
+          8
+        ],
+        "id": 7,
+        "name": "BT_Inverter",
+        "parameters": {},
+        "position": {
+          "x": 342,
+          "y": -301
         },
-        {
-          "children": [],
-          "id": 8,
-          "name": "BT_MoveToPosition",
-          "parameters": {},
-          "position": {
-            "x": 574.451,
-            "y": -301.299
-          },
-          "type": "Action"
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 8,
+        "name": "BT_MoveToPosition",
+        "parameters": {},
+        "position": {
+          "x": 574.451,
+          "y": -301.299
         },
-        {
-          "children": [
-            7
-          ],
-          "id": 9,
-          "name": "BT_HasTarget",
-          "parameters": {},
-          "position": {
-            "x": 107,
-            "y": -301
-          },
-          "type": "Action"
+        "type": "Action"
+      },
+      {
+        "children": [
+          7
+        ],
+        "id": 9,
+        "name": "BT_HasTarget",
+        "parameters": {},
+        "position": {
+          "x": 115,
+          "y": -302
         },
-        {
-          "children": [],
-          "id": 10,
-          "name": "BT_Repeater lgdvdkdkkdvdkbndjkbnsjknbsbnsbnsbnbnsbnsbn",
-          "parameters": {},
-          "position": {
-            "x": -27,
-            "y": 59
-          },
-          "type": "Action"
-        }
-      ],
-      "rootNodeId": -1
-    },
-    "subgraphs": {}
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 10,
+        "name": "BT_Repeater lgdvdkdkkdvdkbndjkbnsjknbsbnsbnsbnbnsbnsbn",
+        "parameters": {},
+        "position": {
+          "x": -27,
+          "y": 59
+        },
+        "type": "Action"
+      }
+    ],
+    "rootNodeId": -1
   },
   "description": "",
   "editorState": {
@@ -143,9 +140,9 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-04-09T17:11:15",
+    "lastModified": "",
     "tags": []
   },
   "name": "Untitled-1",
-  "schema_version": 5
+  "schema_version": 2
 }
