@@ -4,6 +4,9 @@
 - First general instruction
 - Second general instruction
 
+## ImGui Guidelines
+- When using `BeginChild(name, ImVec2(width, height), ...)`, specify an explicit size. Use `height = -1.0f` for auto-fill of available space, NOT `0`. A size of `0` means "0 pixels tall", which creates collapsed containers. This applies to all `BeginChild` calls defining container boundaries.
+
 ## Project Directives
 - Phase 24 Implementation: Condition Presets migrated from external file storage to graph-embedded serialization. Presets are now stored IN each blueprint's JSON (v4 schema), making graphs self-contained. New field added to TaskGraphTemplate: `std::vector<ConditionPreset> Presets`. Serialization handled by VisualScriptEditorPanel::SerializeAndWrite() and deserialization by TaskGraphLoader::ParseSchemaV4().
 
@@ -387,7 +390,7 @@
     - **Build Status**: ✅ 0 errors, 0 warnings (all targets compile)
     - **Testing**: Ready for runtime verification (visual minimap appearance and toolbar control responsiveness)
 
-  ## Architecture Reference - Entity Prefab Editor Data & Parameter System
+## Architecture Reference - Entity Prefab Editor Data & Parameter System
 
 ### Component Registry Architecture
 **Two independent but complementary systems:**
@@ -451,7 +454,6 @@ RegisterParameterSchema(ParameterSchemaEntry(
   ]
 }
 ```
-
 ### Data Flow for Node Creation
 1. User drags component from ComponentPalettePanel
 2. Component name passed via ImGui drag-drop payload

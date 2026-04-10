@@ -143,7 +143,7 @@ void CanvasMinimapRenderer::RenderCustom(const ImVec2& canvasScreenPos, const Im
         return;
 
     ImGuiIO& io = ImGui::GetIO();
-    ImDrawList* drawList = ImGui::GetBackgroundDrawList();
+    ImDrawList* drawList = ImGui::GetForegroundDrawList();
     if (!drawList)
         return;
 

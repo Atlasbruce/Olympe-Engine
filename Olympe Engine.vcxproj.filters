@@ -620,6 +620,15 @@
     <None Include="Documentation\PHASE_35_IMPLEMENTATION_CHECKLIST.md" />
     <None Include="Documentation\PHASE_35_SYNTHESIS.md" />
     <None Include="Documentation\BUG_ANALYSIS_MULTI_TAB_NODE_POSITION_RESET.md" />
+    <None Include="Documentation\MINIMAP_LIFECYCLE_ANALYSIS_COMPLETE.md" />
+    <None Include="Documentation\MINIMAP_STATE_MACHINE_DIAGRAMS.md" />
+    <None Include="Documentation\ENTITYPREFABRENDERER_CODE_CHANGES.md" />
+    <None Include="Documentation\MINIMAP_BUG_FIX_SUMMARY_FR.md" />
+    <None Include="Documentation\MINIMAP_FIX_VERIFICATION_CHECKLIST.md" />
+    <None Include="Documentation\MINIMAP_BUG_FIX_VISUAL_SUMMARY.md" />
+    <None Include="Documentation\MINIMAP_DOCUMENTATION_INDEX.md" />
+    <None Include="Documentation\MINIMAP_BUG_FIX_ONE_PAGE.md" />
+    <None Include="Documentation\MINIMAP_BUG_FIX_FINAL_REPORT.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

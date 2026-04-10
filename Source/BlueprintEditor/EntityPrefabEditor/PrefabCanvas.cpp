@@ -25,7 +25,7 @@ namespace Olympe
     { 
         if (!m_document || !m_renderer) { return; }
         ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
-        ImGui::BeginChild("##PrefabCanvas", ImVec2(0, 0), true);
+        ImGui::BeginChild("##PrefabCanvas", ImVec2(-1.0f, -1.0f), true);
 
         // Handle ImGui input events
         ImVec2 canvasPos = ImGui::GetCursorScreenPos();
@@ -163,12 +163,13 @@ namespace Olympe
             // Update minimap with node and viewport data
             m_canvasEditor->UpdateMinimapNodes(nodeData, graphMinX, graphMaxX, graphMinY, graphMaxY);
             m_canvasEditor->UpdateMinimapViewport(viewMinX, viewMaxX, viewMinY, viewMaxY,
-                                                  graphMinX, graphMaxX, graphMinY, graphMaxY);
-        }
-
+                graphMinX, graphMaxX, graphMinY, graphMaxY);
+        }/**/
         // Phase 37 — Render minimap overlay on canvas
-        if (m_canvasEditor)
+		if (m_canvasEditor) // useless already checked above, but keeping for clarity
             m_canvasEditor->RenderMinimap();
+
+        
 
         ImGui::EndChild();
         ImGui::PopStyleColor();

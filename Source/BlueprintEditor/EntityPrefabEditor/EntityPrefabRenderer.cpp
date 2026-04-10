@@ -42,7 +42,7 @@ void EntityPrefabRenderer::RenderLayoutWithTabs()
     ImVec2 regionMin = ImGui::GetCursorScreenPos();
 
     // Render canvas on the left
-    ImGui::BeginChild("EntityPrefabCanvas", ImVec2(canvasWidth, 0), false, ImGuiWindowFlags_NoScrollbar);
+    ImGui::BeginChild("EntityPrefabCanvas", ImVec2(canvasWidth, -1.0f), false, ImGuiWindowFlags_NoScrollbar);
 
     // NEW: Initialize canvas editor on first frame (when we have canvas dimensions)
     ImVec2 canvasScreenPos = ImGui::GetCursorScreenPos();
@@ -85,6 +85,11 @@ void EntityPrefabRenderer::RenderLayoutWithTabs()
             float oldZoom = m_canvasEditor->GetZoom();
             ImVec2 oldPan = m_canvasEditor->GetPan();
 
+            // PHASE 37 FIX: Save minimap state before recreating adapter
+            bool oldMinimapVisible = m_canvasEditor->IsMinimapVisible();
+            float oldMinimapSize = m_canvasEditor->GetMinimapSize();
+            int oldMinimapPosition = m_canvasEditor->GetMinimapPosition();
+
             // Size changed, reinitialize - old adapter is destroyed here
             m_canvasEditor = std::make_unique<Olympe::CustomCanvasEditor>(
                 "PrefabCanvas",
@@ -96,6 +101,11 @@ void EntityPrefabRenderer::RenderLayoutWithTabs()
 
             // Restore pan to NEW adapter
             m_canvasEditor->SetPan(oldPan);
+
+            // PHASE 37 FIX: Restore minimap state to NEW adapter
+            m_canvasEditor->SetMinimapVisible(oldMinimapVisible);
+            m_canvasEditor->SetMinimapSize(oldMinimapSize);
+            m_canvasEditor->SetMinimapPosition(oldMinimapPosition);
 
             // CRITICAL: Update reference immediately after creation!
             m_canvas.SetCanvasEditor(m_canvasEditor.get());
@@ -134,7 +144,7 @@ void EntityPrefabRenderer::RenderLayoutWithTabs()
     ImGui::SameLine();
 
     // Render right panel with tabs
-    ImGui::BeginChild("RightPanel", ImVec2(rightPanelWidth, 0), true);
+    ImGui::BeginChild("RightPanel", ImVec2(rightPanelWidth, -1.0f), true);
     RenderRightPanelTabs();
     ImGui::EndChild();
 
