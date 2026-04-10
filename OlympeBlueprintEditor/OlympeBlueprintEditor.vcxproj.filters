@@ -688,6 +688,9 @@
     <ClCompile Include="..\Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTEventTypeRegistry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -1337,6 +1340,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\Commands\GraphCommand.h" />
     <ClInclude Include="..\Source\BlueprintEditor\Commands\BTGraphCommands.h" />
     <ClInclude Include="..\Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.h" />
+    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTEventTypeRegistry.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico">

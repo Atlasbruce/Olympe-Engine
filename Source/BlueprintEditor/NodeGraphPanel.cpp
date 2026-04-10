@@ -13,6 +13,7 @@
 #include "EnumCatalogManager.h"
 #include "BPCommandSystem.h"
 #include "NodeStyleRegistry.h"
+#include "../system/system_consts.h"
 #include "../TaskSystem/AtomicTaskRegistry.h"
 #include "../TaskSystem/TaskGraphTypes.h"
 #include "../third_party/imgui/imgui.h"
@@ -638,6 +639,27 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             ImU32 headerColor         = style.headerColor;
             ImU32 headerHoveredColor  = style.headerHoveredColor;
             ImU32 headerSelectedColor = style.headerSelectedColor;
+
+            // Phase 38b: Visual distinction for OnEvent and Root nodes
+            // Check if this is a Root node or OnEvent node based on eventType field
+            bool isRootNode = (node->id == graph->GetRootNodeId());
+            bool isOnEventNode = !node->eventType.empty();
+
+            if (isOnEventNode && !isRootNode)
+            {
+                // OnEvent nodes: orange color (from BT_ONEVENT_NODE_COLOR)
+                headerColor         = Olympe::SystemColors::ToImU32_ABGR(Olympe::SystemColors::BT_ONEVENT_NODE_COLOR);
+                headerHoveredColor  = IM_COL32(255, 160, 80, 255);   // Lighter orange
+                headerSelectedColor = IM_COL32(255, 180, 100, 255);  // Even lighter orange
+            }
+            else if (isRootNode)
+            {
+                // Root node: green color (from BT_ROOT_NODE_COLOR)
+                headerColor         = Olympe::SystemColors::ToImU32_ABGR(Olympe::SystemColors::BT_ROOT_NODE_COLOR);
+                headerHoveredColor  = IM_COL32(100, 255, 100, 255);  // Lighter green
+                headerSelectedColor = IM_COL32(150, 255, 150, 255);  // Even lighter green
+            }
+
             if (s_ActiveDebugNodeId == node->id)
             {
                 headerColor         = IM_COL32(200, 180, 20, 255);
@@ -806,10 +828,23 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
 
             ImGui::Separator();
 
-            // Delete only shown if allowed
+            // Phase 38b: Delete only shown if allowed AND node is not the Root
             if (EditorContext::Get().CanDelete())
             {
-                if (ImGui::MenuItem("Delete", "Del"))
+                bool isRootNode = (m_SelectedNodeId == graph->rootNodeId);
+
+                if (isRootNode)
+                {
+                    // Root node cannot be deleted - show disabled item with tooltip
+                    ImGui::BeginDisabled(true);
+                    ImGui::MenuItem("Delete", "Del");
+                    ImGui::EndDisabled();
+                    if (ImGui::IsItemHovered())
+                    {
+                        ImGui::SetTooltip("Root node cannot be deleted");
+                    }
+                }
+                else if (ImGui::MenuItem("Delete", "Del"))
                 {
                     std::string graphId = std::to_string(NodeGraphManager::Get().GetActiveGraphId());
                     auto cmd = std::make_unique<DeleteNodeCommand>(graphId, m_SelectedNodeId);

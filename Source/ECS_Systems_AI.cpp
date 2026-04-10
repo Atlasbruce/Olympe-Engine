@@ -507,7 +507,11 @@ void BehaviorTreeSystem::Process()
                 // Tree not found, skip this entity
                 continue;
             }
-            
+
+            // Phase 38b: Tick OnEvent root nodes (before main Root node execution)
+            // This allows event-driven OnEvent roots to execute in parallel with main tree
+            TickEventRoots(EventQueue::Get(), *tree, entity, blackboard);
+
             // Restart tree if needed
             if (btRuntime.needsRestart)
             {

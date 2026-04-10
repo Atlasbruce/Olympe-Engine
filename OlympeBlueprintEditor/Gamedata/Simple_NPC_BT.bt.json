@@ -1,133 +1,195 @@
 {
   "blueprintType": "BehaviorTree",
   "data": {
-    "nodes": [
-      {
-        "children": [
-          2
-        ],
-        "id": 1,
-        "name": "BT_Selector",
-        "parameters": {},
-        "position": {
-          "x": -462.71,
-          "y": -226.451
+    "rootGraph": {
+      "nodes": [
+        {
+          "children": [
+            2
+          ],
+          "id": 1,
+          "name": "BT_Selector",
+          "parameters": {},
+          "position": {
+            "x": -447.71,
+            "y": -239.451
+          },
+          "type": "Selector"
         },
-        "type": "Selector"
-      },
-      {
-        "children": [
-          3,
-          6,
-          9
-        ],
-        "id": 2,
-        "name": "BT_Sequence",
-        "parameters": {},
-        "position": {
-          "x": -166,
-          "y": -229
+        {
+          "children": [
+            3,
+            6,
+            9
+          ],
+          "id": 2,
+          "name": "BT_Sequence",
+          "parameters": {},
+          "position": {
+            "x": -166,
+            "y": -229
+          },
+          "type": "Sequence"
         },
-        "type": "Sequence"
-      },
-      {
-        "children": [
-          5
-        ],
-        "id": 3,
-        "name": "BT_CanSeeTarget",
-        "parameters": {},
-        "position": {
-          "x": 115,
-          "y": -229
+        {
+          "children": [
+            5
+          ],
+          "id": 3,
+          "name": "BT_CanSeeTarget",
+          "parameters": {},
+          "position": {
+            "x": 115,
+            "y": -229
+          },
+          "type": "Action"
         },
-        "type": "Action"
-      },
-      {
-        "children": [],
-        "id": 4,
-        "name": "BT_AttackTarget",
-        "parameters": {},
-        "position": {
-          "x": 344,
-          "y": -136
+        {
+          "children": [],
+          "id": 4,
+          "name": "BT_AttackTarget",
+          "parameters": {},
+          "position": {
+            "x": 344,
+            "y": -136
+          },
+          "type": "Action"
         },
-        "type": "Action"
-      },
-      {
-        "children": [],
-        "id": 5,
-        "name": "BT_MoveToTarget",
-        "parameters": {},
-        "position": {
-          "x": 353,
-          "y": -225
+        {
+          "children": [],
+          "id": 5,
+          "name": "BT_MoveToTarget",
+          "parameters": {},
+          "position": {
+            "x": 353,
+            "y": -225
+          },
+          "type": "Action"
         },
-        "type": "Action"
-      },
-      {
-        "children": [
-          4
-        ],
-        "id": 6,
-        "name": "BT_IsTargetInRange",
-        "parameters": {},
-        "position": {
-          "x": 110,
-          "y": -136
+        {
+          "children": [
+            4
+          ],
+          "id": 6,
+          "name": "BT_IsTargetInRange",
+          "parameters": {},
+          "position": {
+            "x": 110,
+            "y": -136
+          },
+          "type": "Action"
         },
-        "type": "Action"
-      },
-      {
-        "children": [
-          8
-        ],
-        "id": 7,
-        "name": "BT_Inverter",
-        "parameters": {},
-        "position": {
-          "x": 342,
-          "y": -301
+        {
+          "children": [
+            8
+          ],
+          "id": 7,
+          "name": "BT_Inverter",
+          "parameters": {},
+          "position": {
+            "x": 342,
+            "y": -301
+          },
+          "type": "Action"
         },
-        "type": "Action"
-      },
-      {
-        "children": [],
-        "id": 8,
-        "name": "BT_MoveToPosition",
-        "parameters": {},
-        "position": {
-          "x": 574.451,
-          "y": -301.299
+        {
+          "children": [],
+          "id": 8,
+          "name": "BT_MoveToPosition",
+          "parameters": {},
+          "position": {
+            "x": 574.451,
+            "y": -301.299
+          },
+          "type": "Action"
         },
-        "type": "Action"
-      },
-      {
-        "children": [
-          7
-        ],
-        "id": 9,
-        "name": "BT_HasTarget",
-        "parameters": {},
-        "position": {
-          "x": 115,
-          "y": -302
+        {
+          "children": [
+            7
+          ],
+          "id": 9,
+          "name": "BT_HasTarget",
+          "parameters": {},
+          "position": {
+            "x": 115,
+            "y": -302
+          },
+          "type": "Action"
         },
-        "type": "Action"
-      },
-      {
-        "children": [],
-        "id": 10,
-        "name": "BT_Repeater lgdvdkdkkdvdkbndjkbnsjknbsbnsbnsbnbnsbnsbn",
-        "parameters": {},
-        "position": {
-          "x": -27,
-          "y": 59
+        {
+          "children": [],
+          "id": 10,
+          "name": "BT_Repeater lgdvdkdkkdvdkbndjkbnsjknbsbnsbnsbnbnsbnsbn",
+          "parameters": {},
+          "position": {
+            "x": -452,
+            "y": -70
+          },
+          "type": "Action"
         },
-        "type": "Action"
-      }
-    ],
-    "rootNodeId": -1
+        {
+          "children": [
+            1
+          ],
+          "id": 11,
+          "name": "BT_Root",
+          "parameters": {},
+          "position": {
+            "x": -707,
+            "y": -267
+          },
+          "type": "Action"
+        },
+        {
+          "children": [
+            10
+          ],
+          "id": 12,
+          "name": "BT_OnEvent",
+          "parameters": {},
+          "position": {
+            "x": -700.595,
+            "y": -68.2411
+          },
+          "type": "Action"
+        },
+        {
+          "children": [],
+          "id": 13,
+          "name": "BT_RandomSelector",
+          "parameters": {},
+          "position": {
+            "x": -616,
+            "y": 75
+          },
+          "type": "Action"
+        },
+        {
+          "children": [],
+          "id": 14,
+          "name": "BT_Monitor",
+          "parameters": {},
+          "position": {
+            "x": -267,
+            "y": 84
+          },
+          "type": "Action"
+        },
+        {
+          "children": [],
+          "id": 15,
+          "name": "BT_SendMessage",
+          "parameters": {},
+          "position": {
+            "x": -626,
+            "y": 203
+          },
+          "type": "Action"
+        }
+      ],
+      "rootNodeId": -1
+    },
+    "subgraphs": {}
   },
   "description": "",
   "editorState": {
@@ -140,9 +202,9 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "",
+    "lastModified": "2026-04-10T23:38:42",
     "tags": []
   },
   "name": "Untitled-1",
-  "schema_version": 2
+  "schema_version": 5
 }

@@ -15,6 +15,7 @@ Behavior Tree implementation: JSON loading and built-in node execution.
 #include "../ECS_Components.h"
 #include "../World.h"
 #include "../system/system_utils.h"
+#include "../system/EventQueue.h"
 #include "../json_helper.h"
 #include "../CollisionMap.h"
 #include "../GameEngine.h"
@@ -265,9 +266,13 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
         {
             std::cout << "[BehaviorTreeManager] Tree validation: OK" << std::endl;
         }
-        
-        // 6. Store the tree
-        std::cout << "[BehaviorTreeManager] Step 6: Registering tree..." << std::endl;
+
+        // Phase 38b: Step 6: Ensure Root node exists (auto-create if missing)
+        std::cout << "[BehaviorTreeManager] Step 6: Ensuring Root node exists..." << std::endl;
+        tree.EnsureRootNodeExists();
+
+        // 7. Store the tree
+        std::cout << "[BehaviorTreeManager] Step 7: Registering tree..." << std::endl;
         m_trees.push_back(tree);
         
         // Register the path -> ID mapping
@@ -1067,6 +1072,47 @@ std::vector<BTValidationMessage> BehaviorTreeAsset::ValidateTreeFull() const
     return messages;
 }
 
+// =============================================================================
+// BehaviorTreeAsset - Phase 38b: Root Node Auto-Creation
+// =============================================================================
+
+void BehaviorTreeAsset::EnsureRootNodeExists()
+{
+    // Check if Root node already exists
+    if (rootNodeId != 0)
+    {
+        const BTNode* rootNode = GetNode(rootNodeId);
+        if (rootNode != nullptr)
+        {
+            return; // Root node exists and is valid
+        }
+
+        // Root ID is set but node doesn't exist - invalid, will recreate
+        std::cerr << "[BehaviorTreeAsset::EnsureRootNodeExists] "
+                  << "Root node ID " << rootNodeId << " not found in nodes list, creating new Root" << std::endl;
+    }
+
+    // Create default Root node if missing
+    std::cout << "[BehaviorTreeAsset::EnsureRootNodeExists] Creating default Root node" << std::endl;
+
+    BTNode rootNode;
+    rootNode.id = GenerateNextNodeId();
+    rootNode.type = BTNodeType::Selector;  // Default to Selector as root composite
+    rootNode.name = "Root";
+    rootNode.editorPosX = 0.0f;
+    rootNode.editorPosY = 0.0f;
+
+    nodes.push_back(rootNode);
+    rootNodeId = rootNode.id;
+
+    std::cout << "[BehaviorTreeAsset::EnsureRootNodeExists] "
+              << "Created Root node with ID=" << rootNode.id << ", total nodes=" << nodes.size() << std::endl;
+}
+
+// =============================================================================
+// BehaviorTreeAsset - Validation Methods (continued)
+// =============================================================================
+
 bool BehaviorTreeAsset::DetectCycle(uint32_t startNodeId) const
 {
     std::set<uint32_t> visited;
@@ -1296,6 +1342,79 @@ bool BehaviorTreeAsset::DisconnectNodes(uint32_t parentId, uint32_t childId)
         std::cout << "[BehaviorTreeAsset] Disconnected decorator " << parentId << " -X-> " << childId << std::endl;
         return true;
     }
-    
+
     return false;
+}
+
+// ============================================================================
+// Phase 38b: OnEvent Root Node Activation via EventQueue
+// ============================================================================
+
+void TickEventRoots(EventQueue& eventQueue, const BehaviorTreeAsset& tree, EntityID entity, AIBlackboard_data& blackboard)
+{
+    // Guard: If tree has no event roots, skip
+    if (tree.m_eventRootIds.empty())
+        return;
+
+    // Get all events from EventQueue (these are frame N-1 events, now readable in frame N)
+    const std::vector<Message>& events = eventQueue.GetEvents();
+
+    // Iterate through all events
+    for (const Message& msg : events)
+    {
+        // Phase 38b: Match event type to OnEvent nodes
+        // Find OnEvent root nodes that are listening for this event type
+        for (uint32_t eventRootId : tree.m_eventRootIds)
+        {
+            // Get the OnEvent root node
+            const BTNode* onEventRoot = tree.GetNode(eventRootId);
+            if (!onEventRoot)
+                continue;
+
+            // Check if this OnEvent node is listening for this event type
+            // eventType field contains the EventType enum value as string (e.g., "Olympe_EventType_AI_Explosion")
+            if (onEventRoot->eventType.empty())
+                continue;
+
+            // Convert message type to string for comparison
+            // For now, simple enum-to-string mapping
+            std::string msgTypeStr;
+            switch (msg.msg_type)
+            {
+                case EventType::Olympe_EventType_AI_Explosion:
+                    msgTypeStr = "Olympe_EventType_AI_Explosion";
+                    break;
+                case EventType::Olympe_EventType_AI_Noise:
+                    msgTypeStr = "Olympe_EventType_AI_Noise";
+                    break;
+                case EventType::Olympe_EventType_AI_DamageDealt:
+                    msgTypeStr = "Olympe_EventType_AI_DamageDealt";
+                    break;
+                case EventType::Olympe_EventType_Object_Create:
+                    msgTypeStr = "Olympe_EventType_Object_Create";
+                    break;
+                case EventType::Olympe_EventType_Object_Destroy:
+                    msgTypeStr = "Olympe_EventType_Object_Destroy";
+                    break;
+                default:
+                    msgTypeStr = "";
+                    break;
+            }
+
+            // Phase 38b: Optional event message filtering (future enhancement)
+            // If eventMessage is set, only activate if message content matches
+            // For now, simple event type matching
+
+            // Check if this OnEvent node matches the event type
+            if (onEventRoot->eventType == msgTypeStr)
+            {
+                // Execute this OnEvent root node
+                std::cout << "[TickEventRoots] Entity " << entity << ": Executing OnEvent root " << eventRootId
+                          << " for event '" << msgTypeStr << "'" << std::endl;
+
+                // Execute the OnEvent root (will traverse its child tree)
+                ExecuteBTNode(*onEventRoot, entity, blackboard, tree);
+            }
+        }
+    }
 }

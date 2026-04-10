@@ -122,6 +122,29 @@ namespace Olympe
         // Decorator child (single child for decorators)
         int decoratorChildId = -1;
 
+        // ====================================================================
+        // Event-Driven Execution Fields (for OnEvent nodes)
+        // ====================================================================
+
+        /**
+         * @brief Event type that triggers this OnEvent node
+         * Only used for BT_OnEvent nodes. Value is event type ID string
+         * (e.g., "Olympe_EventType_AI_Explosion")
+         */
+        std::string eventType;
+
+        /**
+         * @brief Optional event message filter for OnEvent nodes
+         * If set, only events with matching message field trigger this node
+         */
+        std::string eventMessage;
+
+        /**
+         * @brief Index of this node in its graph's event roots array (m_eventRootIds)
+         * Only valid if this is an OnEvent node. Used for fast lookup.
+         */
+        uint32_t onEventRootIndex = ~0u;  // Invalid index by default
+
         GraphNode() = default;
         GraphNode(int nodeId, NodeType nodeType, const std::string& nodeName = "")
             : id(nodeId), type(nodeType), name(nodeName) {}
@@ -198,6 +221,7 @@ namespace Olympe
         // Utility
         void Clear();
         int GetNextNodeId() const { return m_NextNodeId; }
+        int GetRootNodeId() const { return rootNodeId; }
 
         // Calculate node positions for v1 blueprints (hierarchical layout)
         void CalculateNodePositionsHierarchical();
@@ -234,6 +258,43 @@ namespace Olympe
         bool m_IsDirty = false;
         std::string m_Filepath;
         std::unique_ptr<CommandHistory> m_commandHistory;
+
+        // ====================================================================
+        // Event Root Tracking (for OnEvent nodes)
+        // ====================================================================
+        /**
+         * @brief Separate array of node IDs that are OnEvent root nodes
+         * These nodes represent independent execution trees triggered by EventQueue messages
+         * Not connected to the main Root node tree
+         */
+        std::vector<uint32_t> m_eventRootIds;
+
+        // ====================================================================
+        // Helper methods
+        // ====================================================================
+
+        /**
+         * @brief Check if a node ID is a valid root (main Root or OnEvent root)
+         * Root nodes cannot be deleted or moved under other nodes
+         */
+        bool IsValidRoot(uint32_t nodeId) const;
+
+        /**
+         * @brief Add node ID to event roots array
+         * Called when creating an OnEvent node
+         */
+        void AddEventRoot(uint32_t nodeId);
+
+        /**
+         * @brief Remove node ID from event roots array
+         * Called when deleting an OnEvent node
+         */
+        void RemoveEventRoot(uint32_t nodeId);
+
+        /**
+         * @brief Get all OnEvent root node IDs
+         */
+        const std::vector<uint32_t>& GetEventRootIds() const;
 
         // Helper to find node index
         int FindNodeIndex(int nodeId) const;

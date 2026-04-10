@@ -1,0 +1,200 @@
+{
+  "eventTypes": [
+    {
+      "id": "Olympe_EventType_Object_Activate",
+      "displayName": "Object Activate",
+      "domain": "Gameplay",
+      "description": "Trigger object activation",
+      "category": "Objects"
+    },
+    {
+      "id": "Olympe_EventType_Object_Deactivate",
+      "displayName": "Object Deactivate",
+      "domain": "Gameplay",
+      "description": "Trigger object deactivation",
+      "category": "Objects"
+    },
+    {
+      "id": "Olympe_EventType_Object_CollideEvent",
+      "displayName": "Object Collide",
+      "domain": "Collision",
+      "description": "Object collision event",
+      "category": "Collision"
+    },
+    {
+      "id": "Olympe_EventType_Object_UncollideEvent",
+      "displayName": "Object Uncollide",
+      "domain": "Collision",
+      "description": "Object uncollision event",
+      "category": "Collision"
+    },
+    {
+      "id": "Olympe_EventType_Object_Create",
+      "displayName": "Object Create",
+      "domain": "Gameplay",
+      "description": "Object created",
+      "category": "Objects"
+    },
+    {
+      "id": "Olympe_EventType_Object_Destroy",
+      "displayName": "Object Destroy",
+      "domain": "Gameplay",
+      "description": "Object destroyed",
+      "category": "Objects"
+    },
+    {
+      "id": "Olympe_EventType_Level_Load",
+      "displayName": "Level Load",
+      "domain": "System",
+      "description": "Level loaded",
+      "category": "Level"
+    },
+    {
+      "id": "Olympe_EventType_Level_Unload",
+      "displayName": "Level Unload",
+      "domain": "System",
+      "description": "Level unloaded",
+      "category": "Level"
+    },
+    {
+      "id": "Olympe_EventType_Menu_Enter",
+      "displayName": "Menu Enter",
+      "domain": "UI",
+      "description": "Menu entered",
+      "category": "Menu"
+    },
+    {
+      "id": "Olympe_EventType_Menu_Exit",
+      "displayName": "Menu Exit",
+      "domain": "UI",
+      "description": "Menu exited",
+      "category": "Menu"
+    },
+    {
+      "id": "Olympe_EventType_Menu_Validate",
+      "displayName": "Menu Validate",
+      "domain": "UI",
+      "description": "Menu action validated",
+      "category": "Menu"
+    },
+    {
+      "id": "Olympe_EventType_Game_Pause",
+      "displayName": "Game Pause",
+      "domain": "System",
+      "description": "Game paused",
+      "category": "Game"
+    },
+    {
+      "id": "Olympe_EventType_Game_Resume",
+      "displayName": "Game Resume",
+      "domain": "System",
+      "description": "Game resumed",
+      "category": "Game"
+    },
+    {
+      "id": "Olympe_EventType_Game_Quit",
+      "displayName": "Game Quit",
+      "domain": "System",
+      "description": "Game quit",
+      "category": "Game"
+    },
+    {
+      "id": "Olympe_EventType_Game_Restart",
+      "displayName": "Game Restart",
+      "domain": "System",
+      "description": "Level restarted",
+      "category": "Game"
+    },
+    {
+      "id": "Olympe_EventType_Camera_Shake",
+      "displayName": "Camera Shake",
+      "domain": "Camera",
+      "description": "Start camera shake effect",
+      "category": "Camera"
+    },
+    {
+      "id": "Olympe_EventType_Camera_Teleport",
+      "displayName": "Camera Teleport",
+      "domain": "Camera",
+      "description": "Instantly move camera",
+      "category": "Camera"
+    },
+    {
+      "id": "Olympe_EventType_Camera_MoveToPosition",
+      "displayName": "Camera Move",
+      "domain": "Camera",
+      "description": "Smoothly move camera to position",
+      "category": "Camera"
+    },
+    {
+      "id": "Olympe_EventType_Camera_ZoomTo",
+      "displayName": "Camera Zoom",
+      "domain": "Camera",
+      "description": "Zoom camera",
+      "category": "Camera"
+    },
+    {
+      "id": "Olympe_EventType_Camera_Reset",
+      "displayName": "Camera Reset",
+      "domain": "Camera",
+      "description": "Reset camera to default",
+      "category": "Camera"
+    },
+    {
+      "id": "Olympe_EventType_AI_Explosion",
+      "displayName": "AI Explosion",
+      "domain": "Gameplay",
+      "description": "Explosion detected at position",
+      "category": "AI Stimulus"
+    },
+    {
+      "id": "Olympe_EventType_AI_Noise",
+      "displayName": "AI Noise",
+      "domain": "Gameplay",
+      "description": "Noise/sound detected at position",
+      "category": "AI Stimulus"
+    },
+    {
+      "id": "Olympe_EventType_AI_DamageDealt",
+      "displayName": "AI Damage",
+      "domain": "Gameplay",
+      "description": "Damage dealt to entity",
+      "category": "AI Stimulus"
+    },
+    {
+      "id": "Olympe_EventType_Keyboard_KeyDown",
+      "displayName": "Key Down",
+      "domain": "Input",
+      "description": "Keyboard key pressed",
+      "category": "Input"
+    },
+    {
+      "id": "Olympe_EventType_Keyboard_KeyUp",
+      "displayName": "Key Up",
+      "domain": "Input",
+      "description": "Keyboard key released",
+      "category": "Input"
+    },
+    {
+      "id": "Olympe_EventType_Mouse_ButtonDown",
+      "displayName": "Mouse Button Down",
+      "domain": "Input",
+      "description": "Mouse button pressed",
+      "category": "Input"
+    },
+    {
+      "id": "Olympe_EventType_Mouse_ButtonUp",
+      "displayName": "Mouse Button Up",
+      "domain": "Input",
+      "description": "Mouse button released",
+      "category": "Input"
+    },
+    {
+      "id": "Olympe_EventType_Mouse_Motion",
+      "displayName": "Mouse Motion",
+      "domain": "Input",
+      "description": "Mouse moved",
+      "category": "Input"
+    }
+  ]
+}

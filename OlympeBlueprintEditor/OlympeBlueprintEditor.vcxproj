@@ -26,6 +26,7 @@
     <ClCompile Include="..\Source\AI\AIEditor\AIEditorNodeRenderer.cpp" />
     <ClCompile Include="..\Source\AI\AIEditor\AIEditorPanels.cpp" />
     <ClCompile Include="..\Source\AI\AIEditor\BlackboardPanel.cpp" />
+    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTEventTypeRegistry.cpp" />
     <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTGraphCompiler.cpp" />
     <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTGraphValidator.cpp" />
     <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTNodePalette.cpp" />
@@ -250,6 +251,7 @@
     <ClInclude Include="..\Source\AI\AIEditor\AIEditorPanels.h" />
     <ClInclude Include="..\Source\AI\AIEditor\BlackboardPanel.h" />
     <ClInclude Include="..\Source\AI\AIEvents.h" />
+    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTEventTypeRegistry.h" />
     <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTGraphCompiler.h" />
     <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTGraphValidator.h" />
     <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTNodePalette.h" />

@@ -237,6 +237,7 @@
     <ClCompile Include="Source\BlueprintEditor\Commands\CommandHistory.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Commands\BTGraphCommands.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.cpp" />
+    <ClCompile Include="Source\AI\AIGraphPlugin_BT\BTEventTypeRegistry.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -504,6 +505,7 @@
     <ClInclude Include="Source\BlueprintEditor\Commands\CommandHistory.h" />
     <ClInclude Include="Source\BlueprintEditor\Commands\BTGraphCommands.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.h" />
+    <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTEventTypeRegistry.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -630,6 +632,7 @@
     <None Include="Documentation\MINIMAP_BUG_FIX_ONE_PAGE.md" />
     <None Include="Documentation\MINIMAP_BUG_FIX_FINAL_REPORT.md" />
     <None Include="Documentation\PHASE_38_BT_DYNAMIC_EXECUTION_PINS_ANALYSIS.md" />
+    <None Include="Gamedata\BehaviorTree\EventTypes.json" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

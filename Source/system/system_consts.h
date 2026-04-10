@@ -35,6 +35,46 @@ namespace SystemColors {
 	 */
 	constexpr uint32_t DATA_CONNECTION_COLOR = 0xB464C8FF;  // Violet
 
+	// ============================================================================
+	// BEHAVIOR TREE NODE COLORS
+	// ============================================================================
+
+	/**
+	 * @brief Green color for Root node (entry point of behavior tree).
+	 * Indicates the primary execution tree entry point.
+	 */
+	constexpr uint32_t BT_ROOT_NODE_COLOR = 0x00FF00FF;  // RGBA: Green
+
+	/**
+	 * @brief Orange color for OnEvent nodes (event-driven execution).
+	 * Indicates nodes that execute in response to EventQueue messages.
+	 */
+	constexpr uint32_t BT_ONEVENT_NODE_COLOR = 0xFF8844FF;  // RGBA: RGB(255, 136, 68)
+
+	/**
+	 * @brief Yellow color for RandomSelector composite nodes.
+	 * Indicates non-deterministic execution (random child selection).
+	 */
+	constexpr uint32_t BT_RANDOM_NODE_COLOR = 0xFFFF00FF;  // RGBA: Yellow
+
+	/**
+	 * @brief Magenta color for ParallelThreshold composite nodes.
+	 * Indicates parallel execution with success/failure thresholds.
+	 */
+	constexpr uint32_t BT_THRESHOLD_NODE_COLOR = 0xFF00FFFF;  // RGBA: Magenta
+
+	/**
+	 * @brief Cyan color for Monitor decorator nodes.
+	 * Indicates continuous condition monitoring during child execution.
+	 */
+	constexpr uint32_t BT_MONITOR_NODE_COLOR = 0x00FFFFFF;  // RGBA: Cyan
+
+	/**
+	 * @brief Orange-red color for SendMessage action nodes.
+	 * Indicates nodes that emit events to the EventQueue system.
+	 */
+	constexpr uint32_t BT_SENDMESSAGE_ACTION_COLOR = 0xFF4422FF;  // RGBA: RGB(255, 68, 34)
+
 	/**
 	 * @brief Helper function to extract ImU32 color (ImGui format).
 	 * ImGui uses ABGR format, so we need to swizzle RGBA to ABGR.

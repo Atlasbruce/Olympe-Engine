@@ -296,7 +296,105 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         true,        // Allows decorator
         {"soundId"}
     });
-    
+
+    // ========================================================================
+    // ROOT NODE (Entry Point)
+    // ========================================================================
+
+    RegisterNodeType({
+        "BT_Root",
+        "Root",
+        "Entry point for behavior tree execution (auto-created, undeletable)",
+        BTNodeCategory::Composite,
+        0x00FF00FF,  // Green (BT_ROOT_NODE_COLOR)
+        "▶",         // Play symbol
+        1,           // Exactly 1 child
+        1,           // Exactly 1 child
+        false,       // No decorator on root
+        {}           // No parameters
+    });
+
+    // ========================================================================
+    // EVENT NODES (Event-Driven Execution)
+    // ========================================================================
+
+    RegisterNodeType({
+        "BT_OnEvent",
+        "On Event",
+        "Entry point triggered by EventQueue message (parameterized by event type)",
+        BTNodeCategory::Composite,
+        0xFF8844FF,  // Orange (BT_ONEVENT_NODE_COLOR)
+        "📨",        // Envelope symbol
+        1,           // Exactly 1 child
+        1,           // Exactly 1 child
+        false,       // No decorator on event root
+        {"eventType", "eventMessage"}  // Filter by event type and optional message
+    });
+
+    // ========================================================================
+    // NEW COMPOSITE NODES
+    // ========================================================================
+
+    RegisterNodeType({
+        "BT_RandomSelector",
+        "Random Selector",
+        "Selects a random child to execute (non-deterministic)",
+        BTNodeCategory::Composite,
+        0xFFFF00FF,  // Yellow (BT_RANDOM_NODE_COLOR)
+        "?",         // Question mark
+        1,           // Min 1 child
+        -1,          // Unlimited children
+        true,        // Allows decorator
+        {}           // No parameters
+    });
+
+    RegisterNodeType({
+        "BT_ParallelThreshold",
+        "Parallel Threshold",
+        "Executes children in parallel with success/failure thresholds",
+        BTNodeCategory::Composite,
+        0xFF00FFFF,  // Magenta (BT_THRESHOLD_NODE_COLOR)
+        "≈",         // Threshold symbol
+        2,           // Min 2 children
+        -1,          // Unlimited children
+        true,        // Allows decorator
+        {"successThreshold", "failureThreshold"}  // Number of children that must succeed/fail
+    });
+
+    // ========================================================================
+    // NEW DECORATOR NODES
+    // ========================================================================
+
+    RegisterNodeType({
+        "BT_Monitor",
+        "Monitor",
+        "Continuously re-evaluates condition during child execution",
+        BTNodeCategory::Decorator,
+        0x00FFFFFF,  // Cyan (BT_MONITOR_NODE_COLOR)
+        "◉",         // Circle symbol (monitoring)
+        1,           // Exactly 1 child
+        1,           // Exactly 1 child
+        false,       // No decorator on decorator
+        {"checkInterval"}  // Re-evaluation interval in milliseconds
+    });
+
+    // ========================================================================
+    // MESSAGE SENDING ACTION
+    // ========================================================================
+
+    RegisterNodeType({
+        "BT_SendMessage",
+        "Send Message",
+        "Emit event to EventQueue for other systems to receive",
+        BTNodeCategory::Action,
+        0xFF4422FF,  // Orange-red (BT_SENDMESSAGE_ACTION_COLOR)
+        "→",         // Arrow (message send)
+        0,           // No children
+        0,           // No children
+        true,        // Allows decorator
+        {"eventType", "domain", "param1", "param2", "state"}  // Message parameters
+    });
+
     SYSTEM_LOG << "[BTNodeRegistry] Initialized " << m_nodeTypes.size() << " built-in node types" << std::endl;
 }
 

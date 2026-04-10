@@ -42,6 +42,7 @@ namespace Olympe
         , m_NextNodeId(other.m_NextNodeId)
         , m_IsDirty(other.m_IsDirty)
         , m_Filepath(other.m_Filepath)
+        , m_eventRootIds(other.m_eventRootIds)
         , m_commandHistory(new CommandHistory())  // New empty history
     {
     }
@@ -58,6 +59,7 @@ namespace Olympe
             m_NextNodeId = other.m_NextNodeId;
             m_IsDirty = other.m_IsDirty;
             m_Filepath = other.m_Filepath;
+            m_eventRootIds = other.m_eventRootIds;
             // Reset command history
             m_commandHistory = std::unique_ptr<CommandHistory>(new CommandHistory());
         }
@@ -73,6 +75,7 @@ namespace Olympe
         , m_NextNodeId(other.m_NextNodeId)
         , m_IsDirty(other.m_IsDirty)
         , m_Filepath(std::move(other.m_Filepath))
+        , m_eventRootIds(std::move(other.m_eventRootIds))
         , m_commandHistory(std::move(other.m_commandHistory))
     {
     }
@@ -298,6 +301,7 @@ namespace Olympe
         // Data section containing the actual tree
         j["data"]["rootNodeId"] = rootNodeId;
         j["data"]["nodes"] = json::array();
+        j["data"]["eventRoots"] = json::array();  // NEW: Array of OnEvent root node IDs
 
         for (const auto& node : m_Nodes)
         {
@@ -305,7 +309,7 @@ namespace Olympe
             nj["id"] = node.id;
             nj["type"] = NodeTypeToString(node.type);
             nj["name"] = node.name;
-            
+
             // Save position in a structured format
             nj["position"]["x"] = node.posX;
             nj["position"]["y"] = node.posY;
@@ -318,6 +322,12 @@ namespace Olympe
                 nj["decoratorType"] = node.decoratorType;
             if (!node.subgraphUUID.empty())
                 nj["subgraphUUID"] = node.subgraphUUID;
+
+            // NEW: Event-driven execution fields (for OnEvent nodes)
+            if (!node.eventType.empty())
+                nj["eventType"] = node.eventType;
+            if (!node.eventMessage.empty())
+                nj["eventMessage"] = node.eventMessage;
 
             // Parameters as nested object (v2 format)
             nj["parameters"] = json::object();
@@ -336,6 +346,12 @@ namespace Olympe
                 nj["decoratorChild"] = node.decoratorChildId;
 
             j["data"]["nodes"].push_back(nj);
+        }
+
+        // NEW: Save event root IDs separately
+        for (uint32_t eventRootId : m_eventRootIds)
+        {
+            j["data"]["eventRoots"].push_back((int)eventRootId);
         }
 
         return j;
@@ -429,6 +445,10 @@ namespace Olympe
                 // Phase 8: load subgraph UUID reference for BT_SubGraph / HFSM_SubGraph nodes.
                 node.subgraphUUID = JsonHelper::GetString(nj, "subgraphUUID", "");
 
+                // NEW: Load event-driven execution fields (for OnEvent nodes)
+                node.eventType = JsonHelper::GetString(nj, "eventType", "");
+                node.eventMessage = JsonHelper::GetString(nj, "eventMessage", "");
+
                 // Load parameters - v2 has nested "parameters" object, v1 has flat structure
                 if (nj.contains("parameters") && nj["parameters"].is_object())
                 {
@@ -474,7 +494,22 @@ namespace Olympe
             });
 
             graph.m_NextNodeId = maxId + 1;
-            
+
+            // NEW: Load event root IDs (OnEvent nodes)
+            if (JsonHelper::IsArray(*dataSection, "eventRoots"))
+            {
+                std::cout << "[NodeGraph::FromJson] Loading event roots..." << std::endl;
+                JsonHelper::ForEachInArray(*dataSection, "eventRoots", [&](const json& eventRootJson, size_t idx)
+                {
+                    if (eventRootJson.is_number())
+                    {
+                        uint32_t eventRootId = eventRootJson.get<uint32_t>();
+                        graph.m_eventRootIds.push_back(eventRootId);
+                        std::cout << "[NodeGraph::FromJson]   Event root: " << eventRootId << std::endl;
+                    }
+                });
+            }
+
             // Calculate positions if v1 (no positions)
             if (!hasPositions)
             {
@@ -585,6 +620,45 @@ namespace Olympe
     bool NodeGraph::Redo()
     {
         return m_commandHistory && m_commandHistory->Redo();
+    }
+
+    // ========== Event Root Methods ==========
+
+    bool NodeGraph::IsValidRoot(uint32_t nodeId) const
+    {
+        // Main Root node
+        if (static_cast<int>(nodeId) == rootNodeId)
+            return true;
+
+        // OnEvent roots
+        return std::find(m_eventRootIds.begin(), m_eventRootIds.end(), nodeId) != m_eventRootIds.end();
+    }
+
+    void NodeGraph::AddEventRoot(uint32_t nodeId)
+    {
+        // Check if already in list
+        if (std::find(m_eventRootIds.begin(), m_eventRootIds.end(), nodeId) == m_eventRootIds.end())
+        {
+            m_eventRootIds.push_back(nodeId);
+            MarkDirty();
+            std::cout << "[NodeGraph] Added event root: " << nodeId << std::endl;
+        }
+    }
+
+    void NodeGraph::RemoveEventRoot(uint32_t nodeId)
+    {
+        auto it = std::find(m_eventRootIds.begin(), m_eventRootIds.end(), nodeId);
+        if (it != m_eventRootIds.end())
+        {
+            m_eventRootIds.erase(it);
+            MarkDirty();
+            std::cout << "[NodeGraph] Removed event root: " << nodeId << std::endl;
+        }
+    }
+
+    const std::vector<uint32_t>& NodeGraph::GetEventRootIds() const
+    {
+        return m_eventRootIds;
     }
 
     int NodeGraph::FindNodeIndex(int nodeId) const

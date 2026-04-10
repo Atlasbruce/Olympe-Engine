@@ -164,7 +164,12 @@ struct BTNode
     std::map<std::string, std::string> stringParams;  ///< String parameters
     std::map<std::string, int> intParams;             ///< Integer parameters
     std::map<std::string, float> floatParams;         ///< Float parameters
-    
+
+    // Phase 38b: Event-driven execution fields
+    std::string eventType;                  ///< Event type listener (e.g., "Olympe_EventType_AI_Explosion")
+    std::string eventMessage;               ///< Optional event message filter (for future event filtering)
+    uint32_t onEventRootIndex = 0;          ///< Index into BehaviorTreeAsset::m_eventRootIds for backreference
+
     // Helper methods for parameter access
     std::string GetParameterString(const std::string& key, const std::string& defaultValue = "") const
     {
@@ -210,7 +215,10 @@ struct BehaviorTreeAsset
     std::string name;
     std::vector<BTNode> nodes;
     uint32_t rootNodeId = 0;
-    
+
+    // Phase 38b: Event-driven execution roots (separate from main Root)
+    std::vector<uint32_t> m_eventRootIds;   // IDs of OnEvent root nodes
+
     // Helper: get node by ID
     BTNode* GetNode(uint32_t nodeId)
     {
@@ -284,7 +292,10 @@ struct BehaviorTreeAsset
     // Validation methods
     std::vector<BTValidationMessage> ValidateTreeFull() const;
     bool DetectCycle(uint32_t startNodeId) const;
-    
+
+    // Phase 38b: Ensure a Root node exists (auto-create if missing)
+    void EnsureRootNodeExists();
+
     // Editor CRUD operations
     uint32_t AddNode(BTNodeType type, const std::string& name, const Vector& position);
     bool RemoveNode(uint32_t nodeId);
@@ -354,3 +365,9 @@ BTStatus ExecuteBTCondition(BTConditionType condType, float param, EntityID enti
 
 // Execute built-in action nodes
 BTStatus ExecuteBTAction(BTActionType actionType, float param1, float param2, EntityID entity, AIBlackboard_data& blackboard);
+
+// Phase 38b: Process EventQueue events and activate matching OnEvent root nodes
+// Called once per frame for each entity with active behavior tree
+// Scans EventQueue for events matching OnEvent nodes' eventType field
+// Executes matching OnEvent roots in parallel with main Root node
+void TickEventRoots(class EventQueue& eventQueue, const BehaviorTreeAsset& tree, EntityID entity, AIBlackboard_data& blackboard);
