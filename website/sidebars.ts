@@ -95,6 +95,8 @@ const sidebars: SidebarsConfig = {
             'technical-reference/architecture/ecs-systems',
             'technical-reference/architecture/component-lifecycle',
             'technical-reference/architecture/modules',
+            'technical-reference/architecture/conceptual-schema',
+            'technical-reference/architecture/dependency-schema',
             'technical-reference/architecture/implementation-summary',
           ],
         },
