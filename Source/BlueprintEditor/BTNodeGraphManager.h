@@ -39,12 +39,34 @@ namespace Olympe
     // Node type enumeration
     enum class NodeType
     {
-        // Behavior Tree nodes
+        // Behavior Tree - Flow Control (Composite)
         BT_Sequence,
         BT_Selector,
-        BT_Action,
+        BT_Parallel,
+        BT_RandomSelector,
+        BT_ParallelThreshold,
+
+        // Behavior Tree - Conditions
         BT_Condition,
+
+        // Behavior Tree - Actions
+        BT_Action,
+
+        // Behavior Tree - Decorators
         BT_Decorator,
+        BT_Inverter,
+        BT_Monitor,
+        BT_Repeater,
+        BT_UntilSuccess,
+        BT_UntilFailure,
+        BT_Cooldown,
+
+        // Behavior Tree - Entry Points
+        BT_Root,            ///< Phase 38b: Root entry point (green, fixed position)
+        BT_OnEvent,         ///< Phase 38b: Event-driven root (green, event-triggered)
+
+        // Behavior Tree - Utilities
+        BT_SendMessage,
         BT_SubGraph,        ///< Phase 8: references a subgraph by UUID (BehaviorTree)
 
         // HFSM nodes
@@ -61,34 +83,114 @@ namespace Olympe
     {
         switch (type)
         {
+            // Composites
             case NodeType::BT_Sequence: return "Sequence";
             case NodeType::BT_Selector: return "Selector";
-            case NodeType::BT_Action: return "Action";
+            case NodeType::BT_Parallel: return "Parallel";
+            case NodeType::BT_RandomSelector: return "RandomSelector";
+            case NodeType::BT_ParallelThreshold: return "ParallelThreshold";
+
+            // Conditions & Actions
             case NodeType::BT_Condition: return "Condition";
+            case NodeType::BT_Action: return "Action";
+
+            // Decorators
             case NodeType::BT_Decorator: return "Decorator";
+            case NodeType::BT_Inverter: return "Inverter";
+            case NodeType::BT_Monitor: return "Monitor";
+            case NodeType::BT_Repeater: return "Repeater";
+            case NodeType::BT_UntilSuccess: return "UntilSuccess";
+            case NodeType::BT_UntilFailure: return "UntilFailure";
+            case NodeType::BT_Cooldown: return "Cooldown";
+
+            // Entry Points
+            case NodeType::BT_Root: return "Root";
+            case NodeType::BT_OnEvent: return "OnEvent";
+
+            // Utilities
+            case NodeType::BT_SendMessage: return "SendMessage";
             case NodeType::BT_SubGraph: return "SubGraph";
+
+            // HFSM
             case NodeType::HFSM_State: return "State";
             case NodeType::HFSM_Transition: return "Transition";
             case NodeType::HFSM_SubGraph: return "HFSMSubGraph";
+
+            // Generic
             case NodeType::Comment: return "Comment";
             default: return "Unknown";
         }
     }
 
     // Convert string to NodeType
+    // Maps ALL BehaviorTree type names (generic and specific implementations) to generic NodeType enum
+    // This ensures consistent styling: all Conditions → BT_Condition, all Actions → BT_Action, etc.
     inline NodeType StringToNodeType(const std::string& str)
     {
-        if (str == "Sequence") return NodeType::BT_Sequence;
-        if (str == "Selector") return NodeType::BT_Selector;
-        if (str == "Action") return NodeType::BT_Action;
-        if (str == "Condition") return NodeType::BT_Condition;
-        if (str == "Decorator") return NodeType::BT_Decorator;
-        if (str == "SubGraph") return NodeType::BT_SubGraph;
-        if (str == "State") return NodeType::HFSM_State;
-        if (str == "Transition") return NodeType::HFSM_Transition;
-        if (str == "HFSMSubGraph") return NodeType::HFSM_SubGraph;
+        // ====== ENTRY POINTS (GREEN) ======
+        if (str == "Root" || str == "BT_Root") return NodeType::BT_Root;
+        if (str == "OnEvent" || str == "BT_OnEvent") return NodeType::BT_OnEvent;
+
+        // ====== COMPOSITES (DARK BLUE) ======
+        if (str == "Sequence" || str == "BT_Sequence") return NodeType::BT_Sequence;
+        if (str == "Selector" || str == "BT_Selector") return NodeType::BT_Selector;
+        if (str == "Parallel" || str == "BT_Parallel") return NodeType::BT_Parallel;
+        if (str == "RandomSelector" || str == "BT_RandomSelector") return NodeType::BT_RandomSelector;
+        if (str == "ParallelThreshold" || str == "BT_ParallelThreshold") return NodeType::BT_ParallelThreshold;
+
+        // ====== CONDITIONS (PURPLE) ======
+        // Generic condition types
+        if (str == "Condition" || str == "BT_Condition") return NodeType::BT_Condition;
+
+        // Specific condition implementations - all map to BT_Condition for consistent PURPLE color
+        if (str == "CheckBlackboardValue" || str == "BT_CheckBlackboardValue") return NodeType::BT_Condition;
+        if (str == "HasTarget" || str == "BT_HasTarget") return NodeType::BT_Condition;
+        if (str == "IsTargetInRange" || str == "BT_IsTargetInRange") return NodeType::BT_Condition;
+        if (str == "CanSeeTarget" || str == "BT_CanSeeTarget") return NodeType::BT_Condition;
+        if (str == "CanSetTarget" || str == "BT_CanSetTarget") return NodeType::BT_Condition;
+        if (str == "Monitor" || str == "BT_Monitor") return NodeType::BT_Condition;  // Monitor is a condition variant
+
+        // ====== DECORATORS (PLUM) ======
+        // Generic decorator
+        if (str == "Decorator" || str == "BT_Decorator") return NodeType::BT_Decorator;
+
+        // Specific decorator implementations
+        if (str == "Inverter" || str == "BT_Inverter") return NodeType::BT_Decorator;
+        if (str == "Cooldown" || str == "BT_Cooldown") return NodeType::BT_Decorator;
+
+        // ====== REPEATERS (YELLOW) ======
+        if (str == "Repeater" || str == "BT_Repeater") return NodeType::BT_Repeater;
+        if (str == "UntilSuccess" || str == "BT_UntilSuccess") return NodeType::BT_Repeater;
+        if (str == "UntilFailure" || str == "BT_UntilFailure") return NodeType::BT_Repeater;
+
+        // ====== ACTIONS (ORANGE) ======
+        // Generic action type
+        if (str == "Action" || str == "BT_Action") return NodeType::BT_Action;
+
+        // Specific action implementations - all map to BT_Action for consistent ORANGE color
+        if (str == "Wait" || str == "BT_Wait") return NodeType::BT_Action;
+        if (str == "WaitRandomTime" || str == "BT_WaitRandomTime") return NodeType::BT_Action;
+        if (str == "SetBlackboardValue" || str == "BT_SetBlackboardValue") return NodeType::BT_Action;
+        if (str == "MoveToTarget" || str == "BT_MoveToTarget") return NodeType::BT_Action;
+        if (str == "MoveToPosition" || str == "BT_MoveToPosition") return NodeType::BT_Action;
+        if (str == "AttackTarget" || str == "BT_AttackTarget") return NodeType::BT_Action;
+        if (str == "PlayAnimation" || str == "BT_PlayAnimation") return NodeType::BT_Action;
+        if (str == "EmitSound" || str == "BT_EmitSound") return NodeType::BT_Action;
+
+        // ====== UTILITIES ======
+        if (str == "SendMessage" || str == "BT_SendMessage") return NodeType::BT_SendMessage;
+        if (str == "SubGraph" || str == "BT_SubGraph") return NodeType::BT_SubGraph;
+
+        // ====== HFSM (Hierarchical Finite State Machine) ======
+        if (str == "State" || str == "HFSM_State") return NodeType::HFSM_State;
+        if (str == "Transition" || str == "HFSM_Transition") return NodeType::HFSM_Transition;
+        if (str == "HFSMSubGraph" || str == "HFSM_SubGraph") return NodeType::HFSM_SubGraph;
+
+        // ====== MISC ======
         if (str == "Comment") return NodeType::Comment;
-        return NodeType::BT_Action; // Default
+
+        // Default fallback: treat as Action (orange)
+        return NodeType::BT_Action;
     }
 
     // Graph node structure

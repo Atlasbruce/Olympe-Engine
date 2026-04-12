@@ -783,51 +783,71 @@ BTStatus ExecuteBTAction(BTActionType actionType, float param1, float param2, En
             return BTStatus::Failure;
         }
         
-        case BTActionType::FollowPath:
-        {
-            if (!blackboard.hasWanderDestination) return BTStatus::Failure;
-            
-            // Check if we have an active MoveIntent
-            if (World::Get().HasComponent<MoveIntent_data>(entity))
-            {
-                MoveIntent_data& intent = World::Get().GetComponent<MoveIntent_data>(entity);
-                
-                // Maintain the active intent
-                if (!intent.hasIntent)
+                case BTActionType::FollowPath:
                 {
-                    intent.targetPosition = blackboard.wanderDestination;
-                    intent.desiredSpeed = 1.0f;
-                    intent.hasIntent = true;
-                    intent.usePathfinding = true;
-                }
-                
-                // Check if we have arrived
-                if (World::Get().HasComponent<Position_data>(entity))
-                {
-                    const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-                    Vector vDest = pos.position;
-                    vDest -= blackboard.wanderDestination;
-                    float dist = vDest.Magnitude();
-                    
-                    if (dist < intent.arrivalThreshold)
+                    if (!blackboard.hasWanderDestination) return BTStatus::Failure;
+
+                    // Check if we have an active MoveIntent
+                    if (World::Get().HasComponent<MoveIntent_data>(entity))
                     {
-                        // Arrived at destination
-                        blackboard.hasWanderDestination = false;
-                        blackboard.hasMoveGoal = false;
-                        intent.hasIntent = false;
-                        return BTStatus::Success;
+                        MoveIntent_data& intent = World::Get().GetComponent<MoveIntent_data>(entity);
+
+                        // Maintain the active intent
+                        if (!intent.hasIntent)
+                        {
+                            intent.targetPosition = blackboard.wanderDestination;
+                            intent.desiredSpeed = 1.0f;
+                            intent.hasIntent = true;
+                            intent.usePathfinding = true;
+                        }
+
+                        // Check if we have arrived
+                        if (World::Get().HasComponent<Position_data>(entity))
+                        {
+                            const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
+                            Vector vDest = pos.position;
+                            vDest -= blackboard.wanderDestination;
+                            float dist = vDest.Magnitude();
+
+                            if (dist < intent.arrivalThreshold)
+                            {
+                                // Arrived at destination
+                                blackboard.hasWanderDestination = false;
+                                blackboard.hasMoveGoal = false;
+                                intent.hasIntent = false;
+                                return BTStatus::Success;
+                            }
+                        }
+
+                        return BTStatus::Running;
                     }
+
+                    return BTStatus::Failure;
                 }
-                
-                return BTStatus::Running;
-            }
-            
-            return BTStatus::Failure;
-        }
-    }
-    
-    return BTStatus::Failure;
-}
+
+                        case BTActionType::SendMessage:
+                        {
+                            // Phase 38b: Emit event to EventQueue for OnEvent node processing
+                            // param1 encoded as EventType enum value
+
+                            EventType eventType = static_cast<EventType>(static_cast<int>(param1));
+
+                            Message msg;
+                            msg.msg_type = eventType;
+                            msg.domain = EventDomain::Gameplay;
+                            msg.targetUid = entity;
+                            msg.param1 = 0;
+                            msg.param2 = 0;
+                            msg.state = 0;
+
+                            EventQueue::Get().Push(msg);
+
+                            return BTStatus::Success;
+                        }
+                    }
+
+                    return BTStatus::Failure;
+                }
 
 // --- Path-to-ID Registry Methods ---
 

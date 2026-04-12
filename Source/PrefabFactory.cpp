@@ -238,7 +238,49 @@ EntityID PrefabFactory::CreateEntityFromBlueprint(const PrefabBlueprint& bluepri
         world.SetEntityLayer(entity, defaultLayer);
 
     }
-       
+
+    // --- Attacher le BehaviorTree si référencé via AIBehavior_data ---
+    std::string btPath = "";
+    if (world.HasComponent<AIBehavior_data>(entity))
+    {
+        btPath = world.GetComponent<AIBehavior_data>(entity).behaviorTreePath;
+    }
+
+    // Charger et enregistrer l'arbre si un chemin valide est trouvé
+    if (!btPath.empty())
+    {
+        // Load tree via BehaviorTreeManager
+        uint32_t treeId = BehaviorTreeManager::Get().GetTreeIdFromPath(btPath);
+
+        if (treeId == 0)  // Not already loaded, try to load
+        {
+            // Generate temporary ID for this tree
+            static uint32_t nextTempTreeId = 1000;
+            treeId = nextTempTreeId++;
+
+            if (BehaviorTreeManager::Get().LoadTreeFromFile(btPath, treeId))
+            {
+                SYSTEM_LOG << "[PrefabFactory::CreateEntityFromBlueprint] Loaded BehaviorTree: " << btPath << " (ID=" << treeId << ")\n";
+            }
+            else
+            {
+                SYSTEM_LOG << "[PrefabFactory::CreateEntityFromBlueprint] WARNING: BT not found or invalid: " << btPath << "\n";
+                treeId = 0;
+            }
+        }
+
+        // Create BehaviorTreeRuntime_data if tree loaded successfully
+        if (treeId > 0)
+        {
+            BehaviorTreeRuntime_data btRuntime(treeId, true);
+            btRuntime.AITreePath = btPath;
+            world.AddComponent<BehaviorTreeRuntime_data>(entity, btRuntime);
+
+            if (world.HasComponent<AIBehavior_data>(entity))
+                world.GetComponent<AIBehavior_data>(entity).isActive = true;
+        }
+    }
+
     return entity;
 }
 
@@ -316,7 +358,49 @@ EntityID PrefabFactory::CreateEntityWithOverrides(
         RenderLayer defaultLayer = world.GetDefaultLayerForType(identity.entityType);
         world.SetEntityLayer(entity, defaultLayer);
     }
-    
+
+    // --- Attacher le BehaviorTree si référencé via AIBehavior_data ---
+    std::string btPath = "";
+    if (world.HasComponent<AIBehavior_data>(entity))
+    {
+        btPath = world.GetComponent<AIBehavior_data>(entity).behaviorTreePath;
+    }
+
+    // Charger et enregistrer l'arbre si un chemin valide est trouvé
+    if (!btPath.empty())
+    {
+        // Load tree via BehaviorTreeManager
+        uint32_t treeId = BehaviorTreeManager::Get().GetTreeIdFromPath(btPath);
+
+        if (treeId == 0)  // Not already loaded, try to load
+        {
+            // Generate temporary ID for this tree
+            static uint32_t nextTempTreeId = 1000;
+            treeId = nextTempTreeId++;
+
+            if (BehaviorTreeManager::Get().LoadTreeFromFile(btPath, treeId))
+            {
+                SYSTEM_LOG << "[PrefabFactory::CreateEntityWithOverrides] Loaded BehaviorTree: " << btPath << " (ID=" << treeId << ")\n";
+            }
+            else
+            {
+                SYSTEM_LOG << "[PrefabFactory::CreateEntityWithOverrides] WARNING: BT not found or invalid: " << btPath << "\n";
+                treeId = 0;
+            }
+        }
+
+        // Create BehaviorTreeRuntime_data if tree loaded successfully
+        if (treeId > 0)
+        {
+            BehaviorTreeRuntime_data btRuntime(treeId, true);
+            btRuntime.AITreePath = btPath;
+            world.AddComponent<BehaviorTreeRuntime_data>(entity, btRuntime);
+
+            if (world.HasComponent<AIBehavior_data>(entity))
+                world.GetComponent<AIBehavior_data>(entity).isActive = true;
+        }
+    }
+
     SYSTEM_LOG << "    -> Created with " << successCount << " components";
     if (failCount > 0)
     {

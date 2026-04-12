@@ -56,7 +56,9 @@ enum class BTNodeType : uint8_t
     Condition,          ///< Leaf node - checks a condition
     Action,             ///< Leaf node - performs an action
     Inverter,           ///< Decorator - inverts child result
-    Repeater            ///< Decorator - repeats child N times
+    Repeater,           ///< Decorator - repeats child N times
+    Root,               ///< Phase 38b: Root node - entry point of behavior tree (green, fixed position)
+    OnEvent             ///< Phase 38b: OnEvent root - event-driven entry point (orange, event-triggered)
 };
 
 /**
@@ -115,14 +117,15 @@ enum class BTActionType : uint8_t
     ClearTarget,                          ///< Clear current target
     Idle,                                 ///< Do nothing
     // NEW: Wander behavior actions
-    WaitRandomTime,                       ///< Initialize random timer (param1=min, param2=max)
-    ChooseRandomNavigablePoint,           ///< Choose navigable point (param1=searchRadius, param2=maxAttempts)
-    RequestPathfinding,                   ///< Request pathfinding to moveGoal via MoveIntent
-    FollowPath,                           ///< Follow the path (check progression)
-    // Catalog aliases for better readability
-    MoveTo = MoveToGoal,                  ///< Alias for MoveTo action
-    AttackMelee = AttackIfClose           ///< Alias for melee attack
-};
+        WaitRandomTime,                       ///< Initialize random timer (param1=min, param2=max)
+        ChooseRandomNavigablePoint,           ///< Choose navigable point (param1=searchRadius, param2=maxAttempts)
+        RequestPathfinding,                   ///< Request pathfinding to moveGoal via MoveIntent
+        FollowPath,                           ///< Follow the path (check progression)
+        SendMessage,                          ///< Emit event to EventQueue (param1=EventType enum)
+        // Catalog aliases for better readability
+        MoveTo = MoveToGoal,                  ///< Alias for MoveTo action
+        AttackMelee = AttackIfClose           ///< Alias for melee attack
+    };
 
 /**
  * @struct BTNode

@@ -101,6 +101,16 @@ std::vector<ValidationError> ExecutionTestPanel::RunExecutionTest(const TaskGrap
     return m_lastTestErrors;
 }
 
+void ExecutionTestPanel::DisplayTrace(const GraphExecutionTracer& tracer)
+{
+    // Copy the provided tracer for display
+    m_lastTracer = tracer;
+    m_lastTestRun = true;
+    m_lastTestErrors.clear();  // No validation errors for native execution
+
+    SYSTEM_LOG << "[ExecutionTestPanel] Displaying trace with " << m_lastTracer.GetEvents().size() << " events\n";
+}
+
 std::string ExecutionTestPanel::GetExecutionLog() const
 {
     return m_lastTracer.GetTraceLog();

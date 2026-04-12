@@ -7,9 +7,19 @@
 
 #include "BTNodeRegistry.h"
 #include "../../system/system_utils.h"
+#include "../../BlueprintEditor/ColorScheme.h"
 
 namespace Olympe {
 namespace AI {
+
+// Helper to convert IM_COL32 (RRGGBBAA) to registry color format (AABBGGRR)
+inline uint32_t ConvertColorFormat(ImU32 imguiColor) {
+    uint32_t r = (imguiColor >> 0) & 0xFF;
+    uint32_t g = (imguiColor >> 8) & 0xFF;
+    uint32_t b = (imguiColor >> 16) & 0xFF;
+    uint32_t a = (imguiColor >> 24) & 0xFF;
+    return (a << 24) | (b << 16) | (g << 8) | r;
+}
 
 BTNodeRegistry& BTNodeRegistry::Get() {
     static BTNodeRegistry instance;
@@ -30,7 +40,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Selector",
         "Executes children until one succeeds (OR logic)",
         BTNodeCategory::Composite,
-        0xFF4488FF,  // Orange
+        ConvertColorFormat(ColorScheme::FlowControl_Primary),
         "+",         // Plus symbol
         1,           // Min 1 child
         -1,          // Unlimited children
@@ -43,7 +53,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Sequence",
         "Executes children until one fails (AND logic)",
         BTNodeCategory::Composite,
-        0xFF88FF44,  // Green
+        ConvertColorFormat(ColorScheme::FlowControl_Primary),
         "->",        // Arrow
         1,           // Min 1 child
         -1,          // Unlimited children
@@ -56,7 +66,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Parallel",
         "Executes all children simultaneously",
         BTNodeCategory::Composite,
-        0xFFFF8844,  // Cyan
+        ConvertColorFormat(ColorScheme::Composite_Primary),
         "||",        // Parallel bars
         2,           // Min 2 children
         -1,          // Unlimited children
@@ -73,7 +83,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Inverter",
         "Inverts child result (SUCCESS <-> FAILURE)",
         BTNodeCategory::Decorator,
-        0xFFFF44FF,  // Magenta
+        ConvertColorFormat(ColorScheme::Inverter_Primary),
         "!",         // Not symbol
         1,           // Exactly 1 child
         1,           // Exactly 1 child
@@ -86,7 +96,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Repeater",
         "Repeats child N times",
         BTNodeCategory::Decorator,
-        0xFFFF44FF,  // Magenta
+        ConvertColorFormat(ColorScheme::Repeater_Primary),
         "@",         // At symbol
         1,           // Exactly 1 child
         1,           // Exactly 1 child
@@ -99,7 +109,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Until Success",
         "Repeats child until it succeeds",
         BTNodeCategory::Decorator,
-        0xFFFF44FF,  // Magenta
+        ConvertColorFormat(ColorScheme::Repeater_Primary),
         "^",         // Up arrow
         1,           // Exactly 1 child
         1,           // Exactly 1 child
@@ -112,7 +122,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Until Failure",
         "Repeats child until it fails",
         BTNodeCategory::Decorator,
-        0xFFFF44FF,  // Magenta
+        ConvertColorFormat(ColorScheme::Repeater_Primary),
         "v",         // Down arrow
         1,           // Exactly 1 child
         1,           // Exactly 1 child
@@ -125,7 +135,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Cooldown",
         "Limits execution frequency",
         BTNodeCategory::Decorator,
-        0xFFFF44FF,  // Magenta
+        ConvertColorFormat(ColorScheme::Inverter_Primary),
         "#",         // Hash symbol
         1,           // Exactly 1 child
         1,           // Exactly 1 child
@@ -142,7 +152,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Check Blackboard Value",
         "Compares blackboard value against expected value",
         BTNodeCategory::Condition,
-        0xFF4444FF,  // Blue
+        ConvertColorFormat(ColorScheme::FlowControl_Primary),
         "?",         // Question mark
         0,           // No children
         0,           // No children
@@ -155,7 +165,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Has Target",
         "Checks if entity has a target",
         BTNodeCategory::Condition,
-        0xFF4444FF,  // Blue
+        ConvertColorFormat(ColorScheme::FlowControl_Primary),
         "T",         // Target symbol
         0,           // No children
         0,           // No children
@@ -168,7 +178,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Is Target In Range",
         "Checks if target is within specified distance",
         BTNodeCategory::Condition,
-        0xFF4444FF,  // Blue
+        ConvertColorFormat(ColorScheme::FlowControl_Primary),
         "R",         // Range symbol
         0,           // No children
         0,           // No children
@@ -181,7 +191,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Can See Target",
         "Checks line of sight to target",
         BTNodeCategory::Condition,
-        0xFF4444FF,  // Blue
+        ConvertColorFormat(ColorScheme::FlowControl_Primary),
         "E",         // Eye symbol
         0,           // No children
         0,           // No children
@@ -198,7 +208,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Wait",
         "Waits for N seconds",
         BTNodeCategory::Action,
-        0xFF44FF44,  // Yellow
+        ConvertColorFormat(ColorScheme::Action_Primary),
         "W",         // Wait symbol
         0,           // No children
         0,           // No children
@@ -211,7 +221,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Wait Random Time",
         "Waits for random duration",
         BTNodeCategory::Action,
-        0xFF44FF44,  // Yellow
+        ConvertColorFormat(ColorScheme::Action_Primary),
         "w",         // Small wait
         0,           // No children
         0,           // No children
@@ -224,7 +234,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Set Blackboard Value",
         "Modifies blackboard value",
         BTNodeCategory::Action,
-        0xFF44FF44,  // Yellow
+        ConvertColorFormat(ColorScheme::Action_Primary),
         "=",         // Equals symbol
         0,           // No children
         0,           // No children
@@ -237,7 +247,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Move To Target",
         "Moves entity towards target",
         BTNodeCategory::Action,
-        0xFF44FF44,  // Yellow
+        ConvertColorFormat(ColorScheme::Action_Primary),
         "M",         // Move symbol
         0,           // No children
         0,           // No children
@@ -250,7 +260,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Move To Position",
         "Moves entity to specific position",
         BTNodeCategory::Action,
-        0xFF44FF44,  // Yellow
+        ConvertColorFormat(ColorScheme::Action_Primary),
         "P",         // Position symbol
         0,           // No children
         0,           // No children
@@ -263,7 +273,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Attack Target",
         "Attacks current target",
         BTNodeCategory::Action,
-        0xFF44FF44,  // Yellow
+        ConvertColorFormat(ColorScheme::Action_Primary),
         "A",         // Attack symbol
         0,           // No children
         0,           // No children
@@ -276,7 +286,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Play Animation",
         "Plays specified animation",
         BTNodeCategory::Action,
-        0xFF44FF44,  // Yellow
+        ConvertColorFormat(ColorScheme::Action_Primary),
         "*",         // Star symbol
         0,           // No children
         0,           // No children
@@ -289,7 +299,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Emit Sound",
         "Plays sound effect",
         BTNodeCategory::Action,
-        0xFF44FF44,  // Yellow
+        ConvertColorFormat(ColorScheme::Action_Primary),
         "S",         // Sound symbol
         0,           // No children
         0,           // No children
@@ -306,7 +316,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Root",
         "Entry point for behavior tree execution (auto-created, undeletable)",
         BTNodeCategory::Composite,
-        0x00FF00FF,  // Green (BT_ROOT_NODE_COLOR)
+        ConvertColorFormat(ColorScheme::EntryPoint_Primary),
         "▶",         // Play symbol
         1,           // Exactly 1 child
         1,           // Exactly 1 child
@@ -323,7 +333,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "On Event",
         "Entry point triggered by EventQueue message (parameterized by event type)",
         BTNodeCategory::Composite,
-        0xFF8844FF,  // Orange (BT_ONEVENT_NODE_COLOR)
+        ConvertColorFormat(ColorScheme::EntryPoint_Primary),
         "📨",        // Envelope symbol
         1,           // Exactly 1 child
         1,           // Exactly 1 child
@@ -340,7 +350,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Random Selector",
         "Selects a random child to execute (non-deterministic)",
         BTNodeCategory::Composite,
-        0xFFFF00FF,  // Yellow (BT_RANDOM_NODE_COLOR)
+        ConvertColorFormat(ColorScheme::Composite_Primary),
         "?",         // Question mark
         1,           // Min 1 child
         -1,          // Unlimited children
@@ -353,7 +363,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Parallel Threshold",
         "Executes children in parallel with success/failure thresholds",
         BTNodeCategory::Composite,
-        0xFF00FFFF,  // Magenta (BT_THRESHOLD_NODE_COLOR)
+        ConvertColorFormat(ColorScheme::Composite_Primary),
         "≈",         // Threshold symbol
         2,           // Min 2 children
         -1,          // Unlimited children
@@ -370,7 +380,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Monitor",
         "Continuously re-evaluates condition during child execution",
         BTNodeCategory::Decorator,
-        0x00FFFFFF,  // Cyan (BT_MONITOR_NODE_COLOR)
+        ConvertColorFormat(ColorScheme::Inverter_Primary),
         "◉",         // Circle symbol (monitoring)
         1,           // Exactly 1 child
         1,           // Exactly 1 child
@@ -387,7 +397,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Send Message",
         "Emit event to EventQueue for other systems to receive",
         BTNodeCategory::Action,
-        0xFF4422FF,  // Orange-red (BT_SENDMESSAGE_ACTION_COLOR)
+        ConvertColorFormat(ColorScheme::Action_Primary),
         "→",         // Arrow (message send)
         0,           // No children
         0,           // No children

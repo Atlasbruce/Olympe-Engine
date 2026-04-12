@@ -1,195 +1,277 @@
 {
   "blueprintType": "BehaviorTree",
   "data": {
-    "rootGraph": {
-      "nodes": [
-        {
-          "children": [
-            2
-          ],
-          "id": 1,
-          "name": "BT_Selector",
-          "parameters": {},
-          "position": {
-            "x": -447.71,
-            "y": -239.451
-          },
-          "type": "Selector"
+    "eventRoots": [],
+    "nodes": [
+      {
+        "children": [
+          86,
+          89,
+          90
+        ],
+        "id": 2,
+        "name": "BT_Sequence",
+        "parameters": {},
+        "position": {
+          "x": -166,
+          "y": -229
         },
-        {
-          "children": [
-            3,
-            6,
-            9
-          ],
-          "id": 2,
-          "name": "BT_Sequence",
-          "parameters": {},
-          "position": {
-            "x": -166,
-            "y": -229
-          },
-          "type": "Sequence"
+        "type": "Sequence"
+      },
+      {
+        "children": [],
+        "id": 4,
+        "name": "BT_AttackTarget",
+        "parameters": {},
+        "position": {
+          "x": 362,
+          "y": -137
         },
-        {
-          "children": [
-            5
-          ],
-          "id": 3,
-          "name": "BT_CanSeeTarget",
-          "parameters": {},
-          "position": {
-            "x": 115,
-            "y": -229
-          },
-          "type": "Action"
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 5,
+        "name": "BT_MoveToTarget",
+        "parameters": {},
+        "position": {
+          "x": 362,
+          "y": -225
         },
-        {
-          "children": [],
-          "id": 4,
-          "name": "BT_AttackTarget",
-          "parameters": {},
-          "position": {
-            "x": 344,
-            "y": -136
-          },
-          "type": "Action"
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 8,
+        "name": "BT_MoveToPosition",
+        "parameters": {},
+        "position": {
+          "x": 581.451,
+          "y": -322.299
         },
-        {
-          "children": [],
-          "id": 5,
-          "name": "BT_MoveToTarget",
-          "parameters": {},
-          "position": {
-            "x": 353,
-            "y": -225
-          },
-          "type": "Action"
+        "type": "Action"
+      },
+      {
+        "children": [
+          100
+        ],
+        "id": 21,
+        "name": "BT_Root",
+        "parameters": {},
+        "position": {
+          "x": -698.456,
+          "y": -249.088
         },
-        {
-          "children": [
-            4
-          ],
-          "id": 6,
-          "name": "BT_IsTargetInRange",
-          "parameters": {},
-          "position": {
-            "x": 110,
-            "y": -136
-          },
-          "type": "Action"
+        "type": "Root"
+      },
+      {
+        "children": [],
+        "id": 77,
+        "name": "BT_SetBlackboardValue",
+        "parameters": {},
+        "position": {
+          "x": 1324,
+          "y": 310
         },
-        {
-          "children": [
-            8
-          ],
-          "id": 7,
-          "name": "BT_Inverter",
-          "parameters": {},
-          "position": {
-            "x": 342,
-            "y": -301
-          },
-          "type": "Action"
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 78,
+        "name": "BT_Wait",
+        "parameters": {},
+        "position": {
+          "x": 1320,
+          "y": 383
         },
-        {
-          "children": [],
-          "id": 8,
-          "name": "BT_MoveToPosition",
-          "parameters": {},
-          "position": {
-            "x": 574.451,
-            "y": -301.299
-          },
-          "type": "Action"
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 79,
+        "name": "BT_WaitRandomTime",
+        "parameters": {},
+        "position": {
+          "x": 1331,
+          "y": 454
         },
-        {
-          "children": [
-            7
-          ],
-          "id": 9,
-          "name": "BT_HasTarget",
-          "parameters": {},
-          "position": {
-            "x": 115,
-            "y": -302
-          },
-          "type": "Action"
+        "type": "Action"
+      },
+      {
+        "children": [
+          91
+        ],
+        "id": 81,
+        "name": "BT_Repeater",
+        "parameters": {},
+        "position": {
+          "x": -112.518,
+          "y": 94.491
         },
-        {
-          "children": [],
-          "id": 10,
-          "name": "BT_Repeater lgdvdkdkkdvdkbndjkbnsjknbsbnsbnsbnbnsbnsbn",
-          "parameters": {},
-          "position": {
-            "x": -452,
-            "y": -70
-          },
-          "type": "Action"
+        "type": "Repeater"
+      },
+      {
+        "children": [
+          92,
+          96
+        ],
+        "id": 84,
+        "name": "BT_RandomSelector",
+        "parameters": {},
+        "position": {
+          "x": -152,
+          "y": 244
         },
-        {
-          "children": [
-            1
-          ],
-          "id": 11,
-          "name": "BT_Root",
-          "parameters": {},
-          "position": {
-            "x": -707,
-            "y": -267
-          },
-          "type": "Action"
+        "type": "RandomSelector"
+      },
+      {
+        "children": [
+          87
+        ],
+        "id": 86,
+        "name": "BT_CanSeeTarget",
+        "parameters": {},
+        "position": {
+          "x": 115.679,
+          "y": -338.495
         },
-        {
-          "children": [
-            10
-          ],
-          "id": 12,
-          "name": "BT_OnEvent",
-          "parameters": {},
-          "position": {
-            "x": -700.595,
-            "y": -68.2411
-          },
-          "type": "Action"
+        "type": "Condition"
+      },
+      {
+        "children": [],
+        "decoratorChild": 8,
+        "id": 87,
+        "name": "BT_Inverter",
+        "parameters": {},
+        "position": {
+          "x": 346,
+          "y": -323
         },
-        {
-          "children": [],
-          "id": 13,
-          "name": "BT_RandomSelector",
-          "parameters": {},
-          "position": {
-            "x": -616,
-            "y": 75
-          },
-          "type": "Action"
+        "type": "Decorator"
+      },
+      {
+        "children": [
+          5
+        ],
+        "id": 89,
+        "name": "BT_CanSeeTarget",
+        "parameters": {},
+        "position": {
+          "x": 117,
+          "y": -228
         },
-        {
-          "children": [],
-          "id": 14,
-          "name": "BT_Monitor",
-          "parameters": {},
-          "position": {
-            "x": -267,
-            "y": 84
-          },
-          "type": "Action"
+        "type": "Condition"
+      },
+      {
+        "children": [
+          4
+        ],
+        "id": 90,
+        "name": "BT_IsTargetInRange",
+        "parameters": {},
+        "position": {
+          "x": 104,
+          "y": -140
         },
-        {
-          "children": [],
-          "id": 15,
-          "name": "BT_SendMessage",
-          "parameters": {},
-          "position": {
-            "x": -626,
-            "y": 203
-          },
-          "type": "Action"
-        }
-      ],
-      "rootNodeId": -1
-    },
-    "subgraphs": {}
+        "type": "Condition"
+      },
+      {
+        "children": [],
+        "id": 91,
+        "name": "BT_Monitor",
+        "parameters": {},
+        "position": {
+          "x": 122,
+          "y": 99
+        },
+        "type": "Condition"
+      },
+      {
+        "children": [],
+        "id": 92,
+        "name": "BT_SendMessage",
+        "parameters": {},
+        "position": {
+          "x": 148,
+          "y": 196
+        },
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 94,
+        "name": "BT_AttackTarget",
+        "parameters": {},
+        "position": {
+          "x": 1334,
+          "y": -140
+        },
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 96,
+        "name": "BT_EmitSound",
+        "parameters": {},
+        "position": {
+          "x": 155,
+          "y": 298
+        },
+        "type": "Action"
+      },
+      {
+        "children": [
+          98
+        ],
+        "id": 97,
+        "name": "BT_WaitRandomTime",
+        "parameters": {},
+        "position": {
+          "x": -91.544,
+          "y": -52.6273
+        },
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 98,
+        "name": "BT_EmitSound",
+        "parameters": {},
+        "position": {
+          "x": 160,
+          "y": -50
+        },
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 99,
+        "name": "BT_SendMessage",
+        "parameters": {},
+        "position": {
+          "x": -493,
+          "y": -75
+        },
+        "type": "SendMessage"
+      },
+      {
+        "children": [
+          2,
+          97,
+          81,
+          84
+        ],
+        "id": 100,
+        "name": "BT_Sequence",
+        "parameters": {},
+        "position": {
+          "x": -439,
+          "y": -222
+        },
+        "type": "Sequence"
+      }
+    ],
+    "rootNodeId": -1
   },
   "description": "",
   "editorState": {
@@ -202,9 +284,9 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-04-10T23:38:42",
+    "lastModified": "2026-04-12T09:41:06",
     "tags": []
   },
   "name": "Untitled-1",
-  "schema_version": 5
+  "schema_version": 2
 }

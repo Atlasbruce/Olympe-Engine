@@ -10,7 +10,12 @@
 
 #include "BehaviorTreeRenderer.h"
 #include "BTNodeGraphManager.h"
+#include "GraphExecutionTracer.h"
+#include "ExecutionTestPanel.h"
+#include "BehaviorTreeExecutor.h"
+#include "../NodeGraphShared/BehaviorTreeGraphAdapter.h"
 #include "../AI/AIGraphPlugin_BT/BTNodePalette.h"
+#include "../AI/BehaviorTree.h"
 #include "../third_party/imgui/imgui.h"
 #include "../system/system_utils.h"
 
@@ -30,6 +35,13 @@ BehaviorTreeRenderer::BehaviorTreeRenderer(NodeGraphPanel& panel)
 
     // Initialize property panel
     m_propertyPanel.Initialize();
+
+    // Initialize execution test panel (Phase 35)
+    m_executionTestPanel = std::make_unique<ExecutionTestPanel>();
+    m_executionTestPanel->Initialize();
+
+    // Initialize tracer
+    m_lastTracer = std::make_unique<GraphExecutionTracer>();
 }
 
 BehaviorTreeRenderer::~BehaviorTreeRenderer()
@@ -72,12 +84,32 @@ void BehaviorTreeRenderer::Render()
         NodeGraphManager::Get().SetActiveGraph(m_graphId);
     }
     RenderLayoutWithTabs();
+
+    // Render execution test panel as overlay (displays simulation results)
+    if (m_executionTestPanel)
+    {
+        m_executionTestPanel->Render();
+    }
 }
 
 void BehaviorTreeRenderer::RenderLayoutWithTabs()
 {
     // Suppress NodeGraphPanel's GraphTabs since we manage tabs in BehaviorTreeRenderer
     m_panel.m_SuppressGraphTabs = true;
+
+    // Render toolbar with Run Graph button
+    ImGui::SetCursorPosX(10.0f);
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5.0f);
+
+    if (ImGui::Button("Run Graph", ImVec2(100, 0)))
+    {
+        OnRunGraphClicked();
+    }
+
+    ImGui::SameLine();
+    ImGui::Text("(Ctrl+Shift+R to run)");
+
+    ImGui::Separator();
 
     // Layout: Canvas (left, ~75%) | Resize Handle | Tabbed Right Panel (right, ~25%)
     float totalWidth = ImGui::GetContentRegionAvail().x;
@@ -349,6 +381,148 @@ void BehaviorTreeRenderer::HandleKeyboardShortcuts()
                 m_panel.m_SelectedNodeId = duplicatedNodeIds[0];
             }
         }
+    }
+}
+
+void BehaviorTreeRenderer::OnRunGraphClicked()
+{
+    // Step 1: Validate graph is loaded
+    if (m_graphId < 0)
+    {
+        SYSTEM_LOG << "[BehaviorTreeRenderer] Cannot run simulation: no active graph\n";
+        return;
+    }
+
+    NodeGraph* graph = NodeGraphManager::Get().GetGraph(m_graphId);
+    if (!graph)
+    {
+        SYSTEM_LOG << "[BehaviorTreeRenderer] Cannot run simulation: graph not found (id=" << m_graphId << ")\n";
+        return;
+    }
+
+    SYSTEM_LOG << "[BehaviorTreeRenderer] Starting BehaviorTree simulation for: " << graph->name << "\n";
+
+    // Step 2: Convert NodeGraph to BehaviorTreeAsset
+    BehaviorTreeAsset btAsset;
+    btAsset.id = m_graphId;
+    btAsset.name = graph->name;
+
+    // CRITICAL FIX: Don't use graph->rootNodeId (often -1). Instead, scan for actual Root node.
+    // Find the first node of type BT_Root
+    btAsset.rootNodeId = 0;  // Default to 0 if no root found
+    std::vector<GraphNode*> allNodes = graph->GetAllNodes();
+
+    for (GraphNode* candidateNode : allNodes)
+    {
+        if (candidateNode && candidateNode->type == NodeType::BT_Root)
+        {
+            btAsset.rootNodeId = static_cast<uint32_t>(candidateNode->id);
+            SYSTEM_LOG << "[BehaviorTreeRenderer] Found Root node at ID: " << candidateNode->id << "\n";
+            break;  // Use the first Root node found
+        }
+    }
+
+    if (btAsset.rootNodeId == 0)
+    {
+        SYSTEM_LOG << "[BehaviorTreeRenderer] WARNING: No Root node found in graph. Using ID 0 as fallback.\n";
+    }
+
+    // Convert all GraphNode entries to BTNode entries
+    for (GraphNode* gNode : allNodes)
+    {
+        if (!gNode)
+            continue;
+
+        BTNode btNode;
+        btNode.id = static_cast<uint32_t>(gNode->id);
+        btNode.name = gNode->name;
+        btNode.editorPosX = gNode->posX;
+        btNode.editorPosY = gNode->posY;
+
+        // Convert childIds from int to uint32_t
+        for (int childId : gNode->childIds)
+        {
+            btNode.childIds.push_back(static_cast<uint32_t>(childId));
+        }
+
+        btNode.decoratorChildId = static_cast<uint32_t>(gNode->decoratorChildId >= 0 ? gNode->decoratorChildId : 0);
+
+        // Map NodeType to BTNodeType
+        switch (gNode->type)
+        {
+            case NodeType::BT_Selector:
+                btNode.type = BTNodeType::Selector;
+                break;
+            case NodeType::BT_Sequence:
+                btNode.type = BTNodeType::Sequence;
+                break;
+            case NodeType::BT_Condition:
+                btNode.type = BTNodeType::Condition;
+                btNode.conditionTypeString = gNode->conditionType;
+                break;
+            case NodeType::BT_Action:
+                btNode.type = BTNodeType::Action;
+                btNode.stringParams["actionType"] = gNode->actionType;
+                break;
+            case NodeType::BT_Inverter:
+            case NodeType::BT_Decorator:
+                btNode.type = BTNodeType::Inverter;
+                break;
+            case NodeType::BT_Repeater:
+            case NodeType::BT_UntilSuccess:
+            case NodeType::BT_UntilFailure:
+                btNode.type = BTNodeType::Repeater;
+                break;
+            case NodeType::BT_Root:
+                btNode.type = BTNodeType::Root;
+                break;
+            case NodeType::BT_OnEvent:
+                btNode.type = BTNodeType::OnEvent;
+                btNode.eventType = gNode->eventType;
+                btNode.eventMessage = gNode->eventMessage;
+                break;
+            default:
+                btNode.type = BTNodeType::Action;
+                break;
+        }
+
+        // Copy parameters
+        for (const auto& param : gNode->parameters)
+        {
+            btNode.stringParams[param.first] = param.second;
+        }
+
+        btAsset.nodes.push_back(btNode);
+    }
+
+    SYSTEM_LOG << "[BehaviorTreeRenderer] Converted NodeGraph to BehaviorTreeAsset: " 
+               << btAsset.nodes.size() << " nodes\n";
+
+    // Step 3: Use native BehaviorTree executor (not VisualScript simulator)
+    // Create a tracer for the ExecutionTestPanel to use
+    GraphExecutionTracer btTracer;
+
+    // Execute the BehaviorTree using its native execution model
+    BehaviorTreeExecutor executor;
+    BTStatus result = executor.ExecuteTree(btAsset, btTracer);
+
+    SYSTEM_LOG << "[BehaviorTreeRenderer] BehaviorTree execution completed with status: " 
+               << (result == BTStatus::Success ? "SUCCESS" : "FAILURE") << "\n";
+
+    // Step 4: Display results in ExecutionTestPanel
+    if (m_executionTestPanel)
+    {
+        // Make panel visible
+        m_executionTestPanel->SetVisible(true);
+
+        // Pass the trace to the panel for display
+        m_executionTestPanel->DisplayTrace(btTracer);
+
+        // Get the execution log for reference
+        std::string executionLog = btTracer.GetTraceLog();
+        SYSTEM_LOG << "[BehaviorTreeRenderer] Execution Trace:\n" << executionLog << "\n";
+
+        SYSTEM_LOG << "[BehaviorTreeRenderer] BehaviorTree simulation completed successfully\n";
     }
 }
 

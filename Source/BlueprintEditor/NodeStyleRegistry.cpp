@@ -8,6 +8,7 @@
  */
 
 #include "NodeStyleRegistry.h"
+#include "ColorScheme.h"
 
 namespace Olympe
 {
@@ -28,82 +29,212 @@ NodeStyleRegistry& NodeStyleRegistry::Get()
 
 NodeStyleRegistry::NodeStyleRegistry()
 {
-    // ---- BT_Sequence: blue ------------------------------------------------
+    // ---- BT_Sequence: composite (dark blue) -------------------------------------------------------
     {
         NodeStyle s;
-        s.headerColor         = IM_COL32(41,  74, 122, 255);
-        s.headerHoveredColor  = IM_COL32(66,  99, 149, 255);
-        s.headerSelectedColor = IM_COL32(91, 124, 176, 255);
+        s.headerColor         = ColorScheme::Composite_Primary;
+        s.headerHoveredColor  = ColorScheme::Composite_Hovered;
+        s.headerSelectedColor = ColorScheme::Composite_Selected;
         s.icon = "->";
         m_styles[static_cast<int>(NodeType::BT_Sequence)] = s;
     }
 
-    // ---- BT_Selector: green -----------------------------------------------
+    // ---- BT_Selector: composite (dark blue) -----------------------------------------------
     {
         NodeStyle s;
-        s.headerColor         = IM_COL32(41, 122,  74, 255);
-        s.headerHoveredColor  = IM_COL32(66, 149,  99, 255);
-        s.headerSelectedColor = IM_COL32(91, 176, 124, 255);
+        s.headerColor         = ColorScheme::Composite_Primary;
+        s.headerHoveredColor  = ColorScheme::Composite_Hovered;
+        s.headerSelectedColor = ColorScheme::Composite_Selected;
         s.icon = "?";
         m_styles[static_cast<int>(NodeType::BT_Selector)] = s;
     }
 
-    // ---- BT_Action: orange ------------------------------------------------
+    // ---- BT_Action: action (orange) ------------------------------------------------
     {
         NodeStyle s;
-        s.headerColor         = IM_COL32(150, 80,  20, 255);
-        s.headerHoveredColor  = IM_COL32(180, 105, 45, 255);
-        s.headerSelectedColor = IM_COL32(210, 130, 70, 255);
+        s.headerColor         = ColorScheme::Action_Primary;
+        s.headerHoveredColor  = ColorScheme::Action_Hovered;
+        s.headerSelectedColor = ColorScheme::Action_Selected;
         s.icon = "A";
         m_styles[static_cast<int>(NodeType::BT_Action)] = s;
     }
 
-    // ---- BT_Condition: yellow ---------------------------------------------
+    // ---- BT_Condition: flow control (purple) ---------------------------
     {
         NodeStyle s;
-        s.headerColor         = IM_COL32(140, 120, 20, 255);
-        s.headerHoveredColor  = IM_COL32(168, 148, 45, 255);
-        s.headerSelectedColor = IM_COL32(196, 176, 70, 255);
+        s.headerColor         = ColorScheme::FlowControl_Primary;
+        s.headerHoveredColor  = ColorScheme::FlowControl_Hovered;
+        s.headerSelectedColor = ColorScheme::FlowControl_Selected;
         s.icon = "C";
         m_styles[static_cast<int>(NodeType::BT_Condition)] = s;
     }
 
-    // ---- BT_Decorator: purple ---------------------------------------------
+    // ---- BT_Decorator: inverter (purple-plum) ----------------------------
     {
         NodeStyle s;
-        s.headerColor         = IM_COL32(100, 40, 140, 255);
-        s.headerHoveredColor  = IM_COL32(125, 65, 165, 255);
-        s.headerSelectedColor = IM_COL32(150, 90, 190, 255);
+        s.headerColor         = ColorScheme::Inverter_Primary;
+        s.headerHoveredColor  = ColorScheme::Inverter_Hovered;
+        s.headerSelectedColor = ColorScheme::Inverter_Selected;
         s.icon = "D";
         m_styles[static_cast<int>(NodeType::BT_Decorator)] = s;
     }
 
-    // ---- HFSM_State: teal -------------------------------------------------
+    // ---- BT_Root: entry point (green) ----------------------------------------
     {
         NodeStyle s;
-        s.headerColor         = IM_COL32(30, 110, 120, 255);
-        s.headerHoveredColor  = IM_COL32(55, 135, 145, 255);
-        s.headerSelectedColor = IM_COL32(80, 160, 170, 255);
+        s.headerColor         = ColorScheme::EntryPoint_Primary;
+        s.headerHoveredColor  = ColorScheme::EntryPoint_Hovered;
+        s.headerSelectedColor = ColorScheme::EntryPoint_Selected;
+        s.icon = "R";
+        m_styles[static_cast<int>(NodeType::BT_Root)] = s;
+    }
+
+    // ---- BT_OnEvent: entry point (green) ------------------------------------
+    {
+        NodeStyle s;
+        s.headerColor         = ColorScheme::EntryPoint_Primary;
+        s.headerHoveredColor  = ColorScheme::EntryPoint_Hovered;
+        s.headerSelectedColor = ColorScheme::EntryPoint_Selected;
+        s.icon = "E";
+        m_styles[static_cast<int>(NodeType::BT_OnEvent)] = s;
+    }
+
+    // ---- BT_Parallel: composite (dark blue) --------------------------------
+    {
+        NodeStyle s;
+        s.headerColor         = ColorScheme::Composite_Primary;
+        s.headerHoveredColor  = ColorScheme::Composite_Hovered;
+        s.headerSelectedColor = ColorScheme::Composite_Selected;
+        s.icon = "||";
+        m_styles[static_cast<int>(NodeType::BT_Parallel)] = s;
+    }
+
+    // ---- BT_RandomSelector: composite (dark blue) --------------------------
+    {
+        NodeStyle s;
+        s.headerColor         = ColorScheme::Composite_Primary;
+        s.headerHoveredColor  = ColorScheme::Composite_Hovered;
+        s.headerSelectedColor = ColorScheme::Composite_Selected;
+        s.icon = "R?";
+        m_styles[static_cast<int>(NodeType::BT_RandomSelector)] = s;
+    }
+
+    // ---- BT_ParallelThreshold: composite (dark blue) -----------------------
+    {
+        NodeStyle s;
+        s.headerColor         = ColorScheme::Composite_Primary;
+        s.headerHoveredColor  = ColorScheme::Composite_Hovered;
+        s.headerSelectedColor = ColorScheme::Composite_Selected;
+        s.icon = "≈";
+        m_styles[static_cast<int>(NodeType::BT_ParallelThreshold)] = s;
+    }
+
+    // ---- BT_Inverter: inverter (purple-plum) --------------------------------
+    {
+        NodeStyle s;
+        s.headerColor         = ColorScheme::Inverter_Primary;
+        s.headerHoveredColor  = ColorScheme::Inverter_Hovered;
+        s.headerSelectedColor = ColorScheme::Inverter_Selected;
+        s.icon = "!";
+        m_styles[static_cast<int>(NodeType::BT_Inverter)] = s;
+    }
+
+    // ---- BT_Monitor: inverter (purple-plum) --------------------------------
+    {
+        NodeStyle s;
+        s.headerColor         = ColorScheme::Inverter_Primary;
+        s.headerHoveredColor  = ColorScheme::Inverter_Hovered;
+        s.headerSelectedColor = ColorScheme::Inverter_Selected;
+        s.icon = "◉";
+        m_styles[static_cast<int>(NodeType::BT_Monitor)] = s;
+    }
+
+    // ---- BT_Repeater: repeater (yellow) ------------------------------------
+    {
+        NodeStyle s;
+        s.headerColor         = ColorScheme::Repeater_Primary;
+        s.headerHoveredColor  = ColorScheme::Repeater_Hovered;
+        s.headerSelectedColor = ColorScheme::Repeater_Selected;
+        s.icon = "∞";
+        m_styles[static_cast<int>(NodeType::BT_Repeater)] = s;
+    }
+
+    // ---- BT_UntilSuccess: repeater (yellow) --------------------------------
+    {
+        NodeStyle s;
+        s.headerColor         = ColorScheme::Repeater_Primary;
+        s.headerHoveredColor  = ColorScheme::Repeater_Hovered;
+        s.headerSelectedColor = ColorScheme::Repeater_Selected;
+        s.icon = "▲";
+        m_styles[static_cast<int>(NodeType::BT_UntilSuccess)] = s;
+    }
+
+    // ---- BT_UntilFailure: repeater (yellow) --------------------------------
+    {
+        NodeStyle s;
+        s.headerColor         = ColorScheme::Repeater_Primary;
+        s.headerHoveredColor  = ColorScheme::Repeater_Hovered;
+        s.headerSelectedColor = ColorScheme::Repeater_Selected;
+        s.icon = "▼";
+        m_styles[static_cast<int>(NodeType::BT_UntilFailure)] = s;
+    }
+
+    // ---- BT_Cooldown: inverter (purple-plum) --------------------------------
+    {
+        NodeStyle s;
+        s.headerColor         = ColorScheme::Inverter_Primary;
+        s.headerHoveredColor  = ColorScheme::Inverter_Hovered;
+        s.headerSelectedColor = ColorScheme::Inverter_Selected;
+        s.icon = "⏱";
+        m_styles[static_cast<int>(NodeType::BT_Cooldown)] = s;
+    }
+
+    // ---- BT_SendMessage: action (orange) -----------------------------------
+    {
+        NodeStyle s;
+        s.headerColor         = ColorScheme::Action_Primary;
+        s.headerHoveredColor  = ColorScheme::Action_Hovered;
+        s.headerSelectedColor = ColorScheme::Action_Selected;
+        s.icon = "→";
+        m_styles[static_cast<int>(NodeType::BT_SendMessage)] = s;
+    }
+
+    // ---- BT_SubGraph: subgraph (teal) --------------------------------------
+    {
+        NodeStyle s;
+        s.headerColor         = ColorScheme::SubGraph_Primary;
+        s.headerHoveredColor  = ColorScheme::SubGraph_Hovered;
+        s.headerSelectedColor = ColorScheme::SubGraph_Selected;
+        s.icon = "⊕";
+        m_styles[static_cast<int>(NodeType::BT_SubGraph)] = s;
+    }
+
+    // ---- HFSM_State: subgraph (teal) -----------------------------------------------
+    {
+        NodeStyle s;
+        s.headerColor         = ColorScheme::SubGraph_Primary;
+        s.headerHoveredColor  = ColorScheme::SubGraph_Hovered;
+        s.headerSelectedColor = ColorScheme::SubGraph_Selected;
         s.icon = "S";
         m_styles[static_cast<int>(NodeType::HFSM_State)] = s;
     }
 
-    // ---- HFSM_Transition: red ---------------------------------------------
+    // ---- HFSM_Transition: action (orange) ------------------------------------
     {
         NodeStyle s;
-        s.headerColor         = IM_COL32(140, 40,  40, 255);
-        s.headerHoveredColor  = IM_COL32(165, 65,  65, 255);
-        s.headerSelectedColor = IM_COL32(190, 90,  90, 255);
+        s.headerColor         = ColorScheme::Action_Primary;
+        s.headerHoveredColor  = ColorScheme::Action_Hovered;
+        s.headerSelectedColor = ColorScheme::Action_Selected;
         s.icon = "T";
         m_styles[static_cast<int>(NodeType::HFSM_Transition)] = s;
     }
 
-    // ---- Comment: dark grey -----------------------------------------------
+    // ---- Comment: comment (gray) ------------------------------------------
     {
         NodeStyle s;
-        s.headerColor         = IM_COL32(60, 60, 60, 255);
-        s.headerHoveredColor  = IM_COL32(80, 80, 80, 255);
-        s.headerSelectedColor = IM_COL32(100, 100, 100, 255);
+        s.headerColor         = ColorScheme::Comment_Primary;
+        s.headerHoveredColor  = ColorScheme::Comment_Hovered;
+        s.headerSelectedColor = ColorScheme::Comment_Selected;
         s.icon = "//";
         m_styles[static_cast<int>(NodeType::Comment)] = s;
     }

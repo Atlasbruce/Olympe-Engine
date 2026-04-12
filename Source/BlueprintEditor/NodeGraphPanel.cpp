@@ -643,16 +643,9 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
             // Phase 38b: Visual distinction for OnEvent and Root nodes
             // Check if this is a Root node or OnEvent node based on eventType field
             bool isRootNode = (node->id == graph->GetRootNodeId());
-            bool isOnEventNode = !node->eventType.empty();
+            bool isOnEventNode = (node->type == NodeType::BT_OnEvent);
 
-            if (isOnEventNode && !isRootNode)
-            {
-                // OnEvent nodes: orange color (from BT_ONEVENT_NODE_COLOR)
-                headerColor         = Olympe::SystemColors::ToImU32_ABGR(Olympe::SystemColors::BT_ONEVENT_NODE_COLOR);
-                headerHoveredColor  = IM_COL32(255, 160, 80, 255);   // Lighter orange
-                headerSelectedColor = IM_COL32(255, 180, 100, 255);  // Even lighter orange
-            }
-            else if (isRootNode)
+            if (isRootNode)
             {
                 // Root node: green color (from BT_ROOT_NODE_COLOR)
                 headerColor         = Olympe::SystemColors::ToImU32_ABGR(Olympe::SystemColors::BT_ROOT_NODE_COLOR);
@@ -1325,13 +1318,18 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         int inputAttrUID  = globalNodeUID * ATTR_ID_MULTIPLIER + 1;
         int outputAttrUID = globalNodeUID * ATTR_ID_MULTIPLIER + 2;
 
+        // Root and OnEvent are entry points - they should NOT have input pins
+        bool hasInputPin = (node->type != NodeType::BT_Root &&
+                           node->type != NodeType::BT_OnEvent);
+
         // Use 2-column layout to align input pins (left) with output pins (right) on the same Y
         ImGui::Columns(3, "node_pins", false);
         ImGui::SetColumnWidth(0, 60.0f);   // Left column: input pin
         ImGui::SetColumnWidth(1, 100.0f);  // Center column: node content
 
         // ---- LEFT COLUMN: Input Pin ----
-        RenderTypedPin(inputAttrUID,  "In",  true,  isExec, connectedAttrIDs);
+        if (hasInputPin)
+            RenderTypedPin(inputAttrUID,  "In",  true,  isExec, connectedAttrIDs);
 
         // ---- CENTER COLUMN: Node content ----
         ImGui::NextColumn();

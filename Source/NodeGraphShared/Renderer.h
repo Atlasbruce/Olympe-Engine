@@ -20,10 +20,50 @@ namespace Olympe
             case BTNodeType::Sequence: return NodeType::BT_Sequence;
             case BTNodeType::Condition: return NodeType::BT_Condition;
             case BTNodeType::Action: return NodeType::BT_Action;
-            case BTNodeType::Inverter: return NodeType::BT_Decorator;
-            case BTNodeType::Repeater: return NodeType::BT_Decorator;
+            case BTNodeType::Inverter: return NodeType::BT_Inverter;
+            case BTNodeType::Repeater: return NodeType::BT_Repeater;
+            case BTNodeType::Root: return NodeType::BT_Root;
+            case BTNodeType::OnEvent: return NodeType::BT_OnEvent;
             default: return NodeType::BT_Action;
             }
+        }
+
+        // Map from BT Registry node type name to NodeType (for new node types)
+        inline NodeType MapBTRegistryNameToEditor(const std::string& registryName)
+        {
+            // Composites
+            if (registryName == "BT_Selector") return NodeType::BT_Selector;
+            if (registryName == "BT_Sequence") return NodeType::BT_Sequence;
+            if (registryName == "BT_Parallel") return NodeType::BT_Parallel;
+            if (registryName == "BT_RandomSelector") return NodeType::BT_RandomSelector;
+            if (registryName == "BT_ParallelThreshold") return NodeType::BT_ParallelThreshold;
+
+            // Conditions
+            if (registryName.find("Condition") != std::string::npos || 
+                registryName.find("Check") != std::string::npos ||
+                registryName.find("Has") != std::string::npos ||
+                registryName.find("Is") != std::string::npos ||
+                registryName.find("Can") != std::string::npos) 
+                return NodeType::BT_Condition;
+
+            // Decorators
+            if (registryName == "BT_Inverter") return NodeType::BT_Inverter;
+            if (registryName == "BT_Monitor") return NodeType::BT_Monitor;
+            if (registryName == "BT_Repeater") return NodeType::BT_Repeater;
+            if (registryName == "BT_UntilSuccess") return NodeType::BT_UntilSuccess;
+            if (registryName == "BT_UntilFailure") return NodeType::BT_UntilFailure;
+            if (registryName == "BT_Cooldown") return NodeType::BT_Cooldown;
+
+            // Entry Points
+            if (registryName == "BT_Root") return NodeType::BT_Root;
+            if (registryName == "BT_OnEvent") return NodeType::BT_OnEvent;
+
+            // Utilities
+            if (registryName == "BT_SendMessage") return NodeType::BT_SendMessage;
+            if (registryName == "BT_SubGraph") return NodeType::BT_SubGraph;
+
+            // Default to Action
+            return NodeType::BT_Action;
         }
 
         inline void RenderNodeVisual(int nodeId, const std::string& title, NodeType editorType,

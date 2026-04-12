@@ -38,9 +38,11 @@
     <ClCompile Include="..\Source\AI\BTGraphLayoutEngine.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\AtomicTaskUIRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BBVariableRegistry.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeExecutor.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BTNodePropertyPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BTNodeStyleRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BTtoVSMigrator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\Commands\BTGraphCommands.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\Commands\CommandHistory.cpp" />
@@ -87,6 +89,7 @@
     <ClCompile Include="..\Source\Editor\ConditionPreset\NodeConditionRef.cpp" />
     <ClCompile Include="..\Source\Editor\ConditionPreset\Operand.cpp" />
     <ClCompile Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.cpp" />
+    <ClCompile Include="..\Source\Editor\Modals\BehaviorTreeFilePickerModal.cpp" />
     <ClCompile Include="..\Source\Editor\Modals\SwitchCaseEditorModal.cpp" />
     <ClCompile Include="..\Source\Editor\Nodes\NodeBranchRenderer.cpp" />
     <ClCompile Include="..\Source\Editor\Modals\NodeConditionsEditModal.cpp" />
@@ -97,6 +100,10 @@
     <ClCompile Include="..\Source\NodeGraphCore\LinkCache.cpp" />
     <ClCompile Include="..\Source\NodeGraphCore\NodeGroup.cpp" />
     <ClCompile Include="..\Source\NodeGraphCore\NodeValidator.cpp" />
+    <ClCompile Include="..\Source\NodeGraphShared\BehaviorTreeGraphAdapter.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\ExecutionTestPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\GraphExecutionTracer.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\GraphExecutionSimulator.cpp" />
     <ClCompile Include="..\Source\NodeGraphShared\BTGraphDocumentConverter.cpp" />
     <ClCompile Include="..\Source\NodeGraphShared\RenderHelpers.cpp" />
     <ClCompile Include="..\Source\Animation\AnimationBank.cpp" />
@@ -263,9 +270,11 @@
     <ClInclude Include="..\Source\AI\BTGraphLayoutEngine.h" />
     <ClInclude Include="..\Source\BlueprintEditor\AtomicTaskUIRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BBVariableRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeExecutor.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BTNodePropertyPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BTNodeStyleRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BTtoVSMigrator.h" />
     <ClInclude Include="..\Source\BlueprintEditor\Commands\BTGraphCommands.h" />
     <ClInclude Include="..\Source\BlueprintEditor\Commands\CommandHistory.h" />
@@ -310,6 +319,7 @@
     <ClInclude Include="..\Source\Editor\ConditionPreset\NodeConditionRef.h" />
     <ClInclude Include="..\Source\Editor\ConditionPreset\Operand.h" />
     <ClInclude Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.h" />
+    <ClInclude Include="..\Source\Editor\Modals\BehaviorTreeFilePickerModal.h" />
     <ClInclude Include="..\Source\Editor\Modals\SwitchCaseEditorModal.h" />
     <ClInclude Include="..\Source\Editor\Nodes\NodeBranchRenderer.h" />
     <ClInclude Include="..\Source\Editor\Modals\NodeConditionsEditModal.h" />
@@ -320,6 +330,10 @@
     <ClInclude Include="..\Source\NodeGraphCore\LinkCache.h" />
     <ClInclude Include="..\Source\NodeGraphCore\NodeGroup.h" />
     <ClInclude Include="..\Source\NodeGraphCore\NodeValidator.h" />
+    <ClInclude Include="..\Source\NodeGraphShared\BehaviorTreeGraphAdapter.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\ExecutionTestPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\GraphExecutionTracer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\GraphExecutionSimulator.h" />
     <ClInclude Include="..\Source\NodeGraphShared\RenderHelpers.h" />
     <ClInclude Include="..\Source\Animation\AnimationBank.h" />
     <ClInclude Include="..\Source\Animation\AnimationErrorHandler.h" />

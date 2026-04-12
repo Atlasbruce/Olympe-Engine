@@ -152,6 +152,24 @@
       ]
     },
     {
+      "name": "AIBehavior_data",
+      "category": "AI",
+      "description": "AI behavior configuration",
+      "parameters": [
+        {
+          "name": "behaviorType",
+          "type": "String",
+          "defaultValue": "idle"
+        },
+        {
+          "name": "behaviorTreePath",
+          "type": "String",
+          "defaultValue": "",
+          "editorHint": "BehaviorTree asset path (*.bt.json)"
+        }
+      ]
+    },
+    {
       "name": "VisualSprite",
       "category": "Graphics",
       "description": "Visual sprite data",

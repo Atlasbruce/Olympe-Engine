@@ -52,6 +52,13 @@ public:
     std::vector<ValidationError> RunExecutionTest(const TaskGraphTemplate& tmpl);
 
     /**
+     * @brief Display a pre-computed trace (for BehaviorTree or native executors).
+     * @param tracer  The execution trace to display
+     * @details Used by BehaviorTreeRenderer to pass trace from BehaviorTreeExecutor
+     */
+    void DisplayTrace(const GraphExecutionTracer& tracer);
+
+    /**
      * @brief Returns true if there are test results to display.
      */
     bool HasResults() const { return !m_lastTestErrors.empty() || m_lastTestRun; }

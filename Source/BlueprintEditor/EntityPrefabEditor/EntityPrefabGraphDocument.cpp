@@ -338,6 +338,25 @@ namespace Olympe
             SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] SUCCESS: Loaded " << nodesLoaded 
                       << " nodes and " << connectionsLoaded << " connections\n";
 
+            // Fallback : si AIBehavior_data existe mais sans behaviorTreePath, lire depuis la racine
+            if (data.contains("data") && data["data"].contains("behaviorTreeRef"))
+            {
+                std::string btRef = data["data"]["behaviorTreeRef"].get<std::string>();
+                for (auto& node : m_nodes)
+                {
+                    if (node.componentType == "AIBehavior_data")
+                    {
+                        if (node.properties.find("behaviorTreePath") == node.properties.end()
+                            || node.properties["behaviorTreePath"].empty())
+                        {
+                            node.properties["behaviorTreePath"] = btRef;
+                            SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] Fallback: Set behaviorTreePath from root behaviorTreeRef\n";
+                        }
+                        break;
+                    }
+                }
+            }
+
             // Auto-layout nodes if they're all at Y=0 (not properly positioned)
             bool needsLayout = true;
             for (size_t i = 0; i < m_nodes.size(); ++i)
@@ -434,6 +453,18 @@ namespace Olympe
             canvasStateJson["offsetX"] = m_canvasOffset.x;
             canvasStateJson["offsetY"] = m_canvasOffset.y;
             dataObj["canvasState"] = canvasStateJson;
+
+            // Expose behaviorTreePath au niveau racine pour faciliter la lecture runtime
+            for (const auto& node : m_nodes)
+            {
+                if (node.componentType == "AIBehavior_data")
+                {
+                    auto it = node.properties.find("behaviorTreePath");
+                    if (it != node.properties.end() && !it->second.empty())
+                        dataObj["behaviorTreeRef"] = it->second;
+                    break;
+                }
+            }
 
             data["data"] = dataObj;
 

@@ -71,7 +71,8 @@
     {
       "componentType": "AIBehavior_data",
       "parameters": [
-        { "name": "behaviorType", "type": "String", "defaultValue": "idle" }
+        { "name": "behaviorType", "type": "String", "defaultValue": "idle" },
+        { "name": "behaviorTreePath", "type": "String", "defaultValue": "" }
       ]
     },
     {

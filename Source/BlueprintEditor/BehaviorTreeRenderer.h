@@ -21,6 +21,8 @@
 namespace Olympe {
 
 // Forward declarations
+class GraphExecutionTracer;
+class ExecutionTestPanel;
 namespace AI {
     class BTNodePalette;
 }
@@ -63,6 +65,13 @@ public:
      */
     bool CreateNew(const std::string& name = "Untitled BehaviorTree");
 
+    /**
+     * @brief Run graph simulation via BehaviorTreeGraphAdapter + GraphExecutionSimulator
+     * Converts BT to graph format, executes, formats trace, and displays in ExecutionTestPanel.
+     * Called by "Run Graph" toolbar button.
+     */
+    void OnRunGraphClicked();
+
 private:
      NodeGraphPanel& m_panel;                      ///< Shared panel reference (not owned)
      std::unique_ptr<AI::BTNodePalette> m_palette; ///< BTNodePalette for drag-drop
@@ -72,6 +81,8 @@ private:
      float m_canvasPanelWidth = 0.75f;            ///< Split ratio: 75% canvas, 25% right panel
      int m_rightPanelTabSelection = 0;             ///< 0 = Palette, 1 = Properties
      ImVec2 m_canvasScreenPos = ImVec2(0, 0);     ///< Screen position of canvas for drag-drop coordinate transformation
+     std::unique_ptr<ExecutionTestPanel> m_executionTestPanel;  ///< REUSED: Simulation results panel
+     std::unique_ptr<GraphExecutionTracer> m_lastTracer;        ///< Last simulation trace for results display
 
     // Layout rendering helpers
     void RenderLayoutWithTabs();

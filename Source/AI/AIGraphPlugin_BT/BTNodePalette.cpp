@@ -3,10 +3,18 @@
  * @brief Implementation of BTNodePalette
  * @author Olympe Engine
  * @date 2026-02-18
+ *
+ * @details
+ * Unified Color Architecture: Uses centralized NodeStyleRegistry as single source of truth
+ * for all node colors across canvas and palette. All specific BT types (BT_CanSetTarget,
+ * BT_CheckBlackboardValue, etc.) map to generic NodeType categories (BT_Condition, BT_Action)
+ * via StringToNodeType(), ensuring 100% color consistency.
  */
 
 #include "BTNodePalette.h"
 #include "BTNodeRegistry.h"
+#include "../../BlueprintEditor/NodeStyleRegistry.h"
+#include "../../BlueprintEditor/BTNodeGraphManager.h"
 #include "../../third_party/imgui/imgui.h"
 #include <cstring>
 
@@ -74,50 +82,57 @@ void BTNodePalette::RenderCategory(const std::string& categoryName, BTNodeCatego
 }
 
 void BTNodePalette::RenderNodeButton(const std::string& typeName) {
-     auto& registry = BTNodeRegistry::Get();
-     const BTNodeTypeInfo* typeInfo = registry.GetNodeTypeInfo(typeName);
+      auto& registry = BTNodeRegistry::Get();
+      const BTNodeTypeInfo* typeInfo = registry.GetNodeTypeInfo(typeName);
 
-     if (typeInfo == nullptr) {
-         return;
-     }
+      if (typeInfo == nullptr) {
+          return;
+      }
 
-     ImGui::PushID(typeName.c_str());
+      ImGui::PushID(typeName.c_str());
 
-     // Convert color from RGBA to ImVec4
-     uint32_t color = typeInfo->color;
-     float r = static_cast<float>((color >> 0) & 0xFF) / 255.0f;
-     float g = static_cast<float>((color >> 8) & 0xFF) / 255.0f;
-     float b = static_cast<float>((color >> 16) & 0xFF) / 255.0f;
-     float a = static_cast<float>((color >> 24) & 0xFF) / 255.0f;
+      // ====== UNIFIED COLOR SYSTEM (SINGLE SOURCE OF TRUTH) ======
+      // Convert specific BT registry type name to generic NodeType category
+      // This ensures all Conditions display PURPLE, all Actions ORANGE, etc.
+      NodeType nodeType = StringToNodeType(typeName);
 
-     ImVec4 buttonColor(r, g, b, a);
-     ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
+      // Get style from CENTRALIZED NodeStyleRegistry (used by BOTH canvas and palette)
+      const Olympe::NodeStyle& style = Olympe::NodeStyleRegistry::Get().GetStyle(nodeType);
 
-     // Create button label with icon and display name
-     std::string label = typeInfo->icon + " " + typeInfo->displayName;
+      // Convert style color from ImU32 to ImVec4
+      float r = static_cast<float>((style.headerColor >> 0) & 0xFF) / 255.0f;
+      float g = static_cast<float>((style.headerColor >> 8) & 0xFF) / 255.0f;
+      float b = static_cast<float>((style.headerColor >> 16) & 0xFF) / 255.0f;
+      float a = static_cast<float>((style.headerColor >> 24) & 0xFF) / 255.0f;
 
-     if (ImGui::Button(label.c_str(), ImVec2(-1.0f, 0.0f))) {
-         // Button clicked but not necessarily dragging yet
-         m_draggedNodeType = typeName;
-         m_isDragging = true;
-     }
+      ImVec4 buttonColor(r, g, b, a);
+      ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
 
-     // Drag-drop source setup (modified from EntityPrefab pattern)
-     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-     {
-         // Store node type name in payload
-         m_draggedNodeType = typeName;
-         ImGui::SetDragDropPayload("BT_NODE_TYPE", typeName.c_str(), typeName.length() + 1);
+      // Create button label with icon and display name
+      std::string label = typeInfo->icon + " " + typeInfo->displayName;
 
-         // Show preview during drag
-         ImGui::Text("Creating: %s", typeInfo->displayName.c_str());
+      if (ImGui::Button(label.c_str(), ImVec2(-1.0f, 0.0f))) {
+          // Button clicked but not necessarily dragging yet
+          m_draggedNodeType = typeName;
+          m_isDragging = true;
+      }
 
-         ImGui::EndDragDropSource();
-     }
+      // Drag-drop source setup (modified from EntityPrefab pattern)
+      if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+      {
+          // Store node type name in payload
+          m_draggedNodeType = typeName;
+          ImGui::SetDragDropPayload("BT_NODE_TYPE", typeName.c_str(), typeName.length() + 1);
 
-     // Tooltip on hover
-     if (ImGui::IsItemHovered()) {
-         ImGui::BeginTooltip();
+          // Show preview during drag
+          ImGui::Text("Creating: %s", typeInfo->displayName.c_str());
+
+          ImGui::EndDragDropSource();
+      }
+
+      // Tooltip on hover
+      if (ImGui::IsItemHovered()) {
+          ImGui::BeginTooltip();
          ImGui::Text("%s", typeInfo->description.c_str());
 
          // Show parameters if any

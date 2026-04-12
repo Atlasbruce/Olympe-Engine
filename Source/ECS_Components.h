@@ -242,7 +242,10 @@ struct Health_data
 struct AIBehavior_data
 {
 	std::string behaviorType = "idle"; // Type of AI behavior (e.g., "patrol", "chase")
-	
+	std::string behaviorTreePath = "";  // Path to behavior tree JSON file (*.bt.json)
+	bool        isActive = false;       // Runtime state: is the behavior tree active
+	int         currentNodeId = -1;     // Runtime state: current executing node ID
+
 	// Constructors
 	AIBehavior_data() = default;
 	AIBehavior_data(const AIBehavior_data&) = default;
