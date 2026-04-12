@@ -23,6 +23,12 @@
       "key": "cst_zero",
       "type": "Int",
       "value": 0
+    },
+    {
+      "isGlobal": false,
+      "key": "cst_Hundred",
+      "type": "Int",
+      "value": 100
     }
   ],
   "dataConnections": [
@@ -57,12 +63,6 @@
       "toPin": "A"
     },
     {
-      "fromNode": 31,
-      "fromPin": "Value",
-      "toNode": 27,
-      "toPin": "B"
-    },
-    {
       "fromNode": 36,
       "fromPin": "Result",
       "toNode": 29,
@@ -78,6 +78,36 @@
       "fromNode": 35,
       "fromPin": "Value",
       "toNode": 36,
+      "toPin": "B"
+    },
+    {
+      "fromNode": 51,
+      "fromPin": "Result",
+      "toNode": 27,
+      "toPin": "B"
+    },
+    {
+      "fromNode": 52,
+      "fromPin": "Result",
+      "toNode": 51,
+      "toPin": "A"
+    },
+    {
+      "fromNode": 31,
+      "fromPin": "Value",
+      "toNode": 51,
+      "toPin": "B"
+    },
+    {
+      "fromNode": 53,
+      "fromPin": "Value",
+      "toNode": 52,
+      "toPin": "A"
+    },
+    {
+      "fromNode": 54,
+      "fromPin": "Value",
+      "toNode": 52,
       "toPin": "B"
     }
   ],
@@ -875,7 +905,7 @@
     },
     {
       "id": 27,
-      "label": "MathOp mFatigue + mFoodPortion",
+      "label": "MathOp mFatigue + outputResult B",
       "mathOp": "+",
       "mathOpRef": {
         "leftOperand": {
@@ -949,9 +979,9 @@
       "type": "GetBBValue"
     },
     {
-      "bbKey": "mFoodPortion",
+      "bbKey": "cst_Hundred",
       "id": 31,
-      "label": "mFoodPortion",
+      "label": "cst_Hundred",
       "params": {
         "__posX": {
           "LiteralValue": 182,
@@ -963,8 +993,8 @@
         }
       },
       "position": {
-        "x": 156.393,
-        "y": 502.407
+        "x": -292.607,
+        "y": 546.407
       },
       "type": "GetBBValue"
     },
@@ -1483,6 +1513,116 @@
       },
       "taskType": "log_message",
       "type": "AtomicTask"
+    },
+    {
+      "id": 51,
+      "label": "MathOp outputResult A + cst_Hundred",
+      "mathOp": "+",
+      "mathOpRef": {
+        "leftOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        },
+        "mathOperator": "+",
+        "rightOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        }
+      },
+      "params": {
+        "__posX": {
+          "LiteralValue": 346,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 444,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -50.5254,
+        "y": 507.514
+      },
+      "type": "MathOp"
+    },
+    {
+      "id": 52,
+      "label": "MathOp PlayerIndex + entityMaxHealth",
+      "mathOp": "+",
+      "mathOpRef": {
+        "leftOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        },
+        "mathOperator": "+",
+        "rightOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        }
+      },
+      "params": {
+        "__posX": {
+          "LiteralValue": 346,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 444,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -464,
+        "y": 353
+      },
+      "type": "MathOp"
+    },
+    {
+      "bbKey": "playerIndex",
+      "id": 53,
+      "label": "PlayerIndex",
+      "params": {
+        "__posX": {
+          "LiteralValue": 182,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 498,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -717.406,
+        "y": 259.894
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "bbKey": "entityMaxHealth",
+      "id": 54,
+      "label": "entityMaxHealth",
+      "params": {
+        "__posX": {
+          "LiteralValue": 182,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 498,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -724.211,
+        "y": 415.576
+      },
+      "type": "GetBBValue"
     }
   ],
   "presets": [

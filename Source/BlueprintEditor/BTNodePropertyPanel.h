@@ -73,6 +73,7 @@ private:
     // Rendering helpers
     void RenderNodeBasicInfo(const GraphNode* node);
     void RenderNodeParameters(const GraphNode* node);
+    void RenderSubGraphControls(GraphNode* node);  ///< Phase 39c: SubGraph node editor
     void ApplyNodeChanges(GraphNode* node);
 };
 

@@ -83,6 +83,13 @@ void BTNodePropertyPanel::Render()
     RenderNodeBasicInfo(node);
     ImGui::Separator();
 
+    // Phase 39c: Check if this is a SubGraph node
+    if (node->type == NodeType::BT_SubGraph)
+    {
+        RenderSubGraphControls(node);
+        ImGui::Separator();
+    }
+
     RenderNodeParameters(node);
 }
 
@@ -142,6 +149,114 @@ void BTNodePropertyPanel::ApplyNodeChanges(GraphNode* node)
 
     node->name = m_nodeNameBuffer;
     SYSTEM_LOG << "[BTNodePropertyPanel] Applied changes to node: " << node->id << "\n";
+}
+
+void BTNodePropertyPanel::RenderSubGraphControls(GraphNode* node)
+{
+    if (!node)
+        return;
+
+    ImGui::TextUnformatted("SubGraph Configuration:");
+    ImGui::Indent();
+
+    // Display SubGraph path
+    auto pathIt = node->parameters.find("subgraphPath");
+    if (pathIt != node->parameters.end() && !pathIt->second.empty())
+    {
+        ImGui::TextWrapped("Path: %s", pathIt->second.c_str());
+
+        // Simple validation: show status icon
+        bool pathExists = !pathIt->second.empty();
+        ImGui::SameLine();
+        ImGui::TextColored(pathExists ? ImVec4(0, 1, 0, 1) : ImVec4(1, 0, 0, 1), 
+                          pathExists ? "✓" : "✗");
+    }
+    else
+    {
+        ImGui::TextDisabled("(No SubGraph path specified)");
+    }
+
+    ImGui::Separator();
+
+    // Display input parameters
+    auto inputCountIt = node->parameters.find("inputParamCount");
+    int inputCount = 0;
+    if (inputCountIt != node->parameters.end())
+    {
+        try
+        {
+            inputCount = std::stoi(inputCountIt->second);
+        }
+        catch (const std::exception&)
+        {
+            inputCount = 0;
+        }
+    }
+
+    if (inputCount > 0)
+    {
+        ImGui::TextUnformatted("Input Parameters:");
+        ImGui::Indent();
+        for (int i = 0; i < inputCount; ++i)
+        {
+            char keyBuf[64];
+            snprintf(keyBuf, sizeof(keyBuf), "inputParam_%d", i);
+            auto it = node->parameters.find(keyBuf);
+            if (it != node->parameters.end())
+            {
+                ImGui::BulletText("%s", it->second.c_str());
+            }
+        }
+        ImGui::Unindent();
+    }
+    else
+    {
+        ImGui::TextDisabled("(No input parameters)");
+    }
+
+    ImGui::Separator();
+
+    // Display output parameters
+    auto outputCountIt = node->parameters.find("outputParamCount");
+    int outputCount = 0;
+    if (outputCountIt != node->parameters.end())
+    {
+        try
+        {
+            outputCount = std::stoi(outputCountIt->second);
+        }
+        catch (const std::exception&)
+        {
+            outputCount = 0;
+        }
+    }
+
+    if (outputCount > 0)
+    {
+        ImGui::TextUnformatted("Output Parameters:");
+        ImGui::Indent();
+        for (int i = 0; i < outputCount; ++i)
+        {
+            char keyBuf[64];
+            snprintf(keyBuf, sizeof(keyBuf), "outputParam_%d", i);
+            auto it = node->parameters.find(keyBuf);
+            if (it != node->parameters.end())
+            {
+                ImGui::BulletText("%s", it->second.c_str());
+            }
+        }
+        ImGui::Unindent();
+    }
+    else
+    {
+        ImGui::TextDisabled("(No output parameters)");
+    }
+
+    ImGui::Unindent();
+    ImGui::Separator();
+
+    // Placeholder for Phase 39c Step 4+: Parameter binding UI
+    ImGui::TextDisabled("Parameter binding editor coming in Phase 39c...");
 }
 
 } // namespace Olympe

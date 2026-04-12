@@ -300,6 +300,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\OperatorRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\ParameterEditorRegistry.h" />
     <ClInclude Include="..\Source\BlueprintEditor\SelectionEffectRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\SubGraphParameterHelper.h" />
     <ClInclude Include="..\Source\BlueprintEditor\TabManager.h" />
     <ClInclude Include="..\Source\BlueprintEditor\UndoRedoStack.h" />
     <ClInclude Include="..\Source\BlueprintEditor\Utilities\CanvasGridRenderer.h" />
