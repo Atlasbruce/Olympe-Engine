@@ -218,6 +218,27 @@ public:
     // Returns empty string if not found
     std::string ResolveFilePath(const std::string& relativePath) const;
 
+    // ========================================================================
+    // PHASE 39c Step 5: File Browser Service (Reusable Framework)
+    // ========================================================================
+
+    /**
+     * @brief Lists all .bt.json behavior tree files in a directory
+     * @param directory Directory to search (e.g., "Gamedata/BehaviorTree")
+     * @return Vector of .bt.json filenames found in directory
+     */
+    std::vector<std::string> GetBehaviorTreeFiles(const std::string& directory = "Gamedata/BehaviorTree") const;
+
+    /**
+     * @brief Opens a file browser dialog for selecting a behavior tree file
+     * @param currentPath Optional current path to display initially
+     * @return Selected file path (absolute or relative), empty string if cancelled
+     * 
+     * This is a framework-level service providing reusable file browsing
+     * for SubGraph node path selection and other file operations.
+     */
+    std::string SelectBehaviorTreeFile(const std::string& currentPath = "") const;
+
 private:
     std::string name;
     mutable std::mutex m_mutex_;

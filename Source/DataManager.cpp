@@ -855,3 +855,103 @@ std::string DataManager::ResolveFilePath(const std::string& relativePath) const
     SYSTEM_LOG << "[DataManager] Could not resolve path: " << relativePath << "\n";
     return "";  // Return empty on failure
 }
+
+// ============================================================================
+// PHASE 39c Step 5: File Browser Service Implementation
+// ============================================================================
+
+std::vector<std::string> DataManager::GetBehaviorTreeFiles(const std::string& directory) const
+{
+    std::vector<std::string> result;
+
+    #ifdef _WIN32
+    {
+        WIN32_FIND_DATAA findData;
+        HANDLE findHandle = FindFirstFileA((directory + "\\*.bt.json").c_str(), &findData);
+        if (findHandle == INVALID_HANDLE_VALUE)
+        {
+            SYSTEM_LOG << "[DataManager] No .bt.json files found in: " << directory << "\n";
+            return result;  // Return empty vector
+        }
+
+        do
+        {
+            if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+            {
+                result.push_back(findData.cFileName);
+            }
+        } while (FindNextFileA(findHandle, &findData));
+
+        FindClose(findHandle);
+    }
+    #else
+    {
+        DIR* dir = opendir(directory.c_str());
+        if (!dir)
+        {
+            SYSTEM_LOG << "[DataManager] Failed to open directory: " << directory << "\n";
+            return result;  // Return empty vector
+        }
+
+        struct dirent* entry;
+        while ((entry = readdir(dir)) != nullptr)
+        {
+            std::string filename = entry->d_name;
+            if (filename.length() > 7 && filename.substr(filename.length() - 7) == ".bt.json")
+            {
+                result.push_back(filename);
+            }
+        }
+
+        closedir(dir);
+    }
+    #endif
+
+    if (!result.empty())
+    {
+        SYSTEM_LOG << "[DataManager] Found " << result.size() << " .bt.json files in: " << directory << "\n";
+    }
+
+    return result;
+}
+
+//-------------------------------------------------------------
+
+std::string DataManager::SelectBehaviorTreeFile(const std::string& currentPath) const
+{
+    // This method provides a file browser dialog for selecting behavior tree files
+    // For now, we return empty string. In a full GUI implementation, this would open
+    // a file dialog (OS-native or ImGui-based) to let user select a .bt.json file.
+
+    std::string browseDir = currentPath.empty() ? "Gamedata/BehaviorTree" : currentPath;
+
+    // Normalize path separators
+    std::replace(browseDir.begin(), browseDir.end(), '/', '\\');
+
+    // Ensure directory exists
+    if (!browseDir.empty())
+    {
+        std::ifstream test(browseDir);
+        if (!test.good())
+        {
+            SYSTEM_LOG << "[DataManager] Browse directory not found: " << browseDir << "\n";
+            browseDir = "Gamedata/BehaviorTree";  // Fall back to default
+        }
+    }
+
+    // Get available behavior tree files
+    std::vector<std::string> btFiles = GetBehaviorTreeFiles(browseDir);
+
+    if (btFiles.empty())
+    {
+        SYSTEM_LOG << "[DataManager] No behavior tree files available in: " << browseDir << "\n";
+        return "";  // No files to select
+    }
+
+    // For framework implementation: return first file as default
+    // In full implementation, this would open a modal/dialog for user selection
+    std::string selectedFile = browseDir + "\\" + btFiles[0];
+
+    SYSTEM_LOG << "[DataManager] Selected behavior tree file: " << selectedFile << "\n";
+    return selectedFile;
+}
