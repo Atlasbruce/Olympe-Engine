@@ -39,6 +39,7 @@
 #include <cstdint>
 #include <map>
 #include <algorithm>
+#include <set>
 
 // Forward declarations
 struct AIBlackboard_data;
@@ -413,7 +414,20 @@ public:
     
     // NEW: Debug method to list all loaded trees
     void DebugPrintLoadedTrees() const;
-    
+
+    // Phase 39c Step 6: SubGraph Validation
+    // Validates that a SubGraph path points to a valid, loadable .bt.json file
+    bool ValidateSubGraphPath(const std::string& path) const;
+
+    // Phase 39c Step 6: Detects circular references by checking if SubGraph creates a cycle
+    // Returns true if circular dependency detected, false otherwise
+    // graphId: ID of the parent graph, nodeId: ID of the SubGraph node
+    bool DetectCircularDependencies(uint32_t graphId, uint32_t nodeId, const BehaviorTreeAsset* parentTree, std::set<std::string>& visited);
+
+    // Phase 39c Step 6: Collect all validation errors for a specific graph
+    // Returns vector of error strings describing all validation issues
+    std::vector<std::string> GetValidationErrors(uint32_t graphId);
+
 private:
     BehaviorTreeManager() = default;
     std::vector<BehaviorTreeAsset> m_trees;

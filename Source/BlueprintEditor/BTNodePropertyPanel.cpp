@@ -9,6 +9,7 @@
 #include "BTNodeGraphManager.h"
 #include "../third_party/imgui/imgui.h"
 #include "../DataManager.h"
+#include "../AI/BehaviorTree.h"
 #include "../system/system_utils.h"
 #include <cstring>
 
@@ -167,12 +168,8 @@ void BTNodePropertyPanel::RenderSubGraphControls(GraphNode* node)
     if (!currentPath.empty())
     {
         ImGui::TextWrapped("Path: %s", currentPath.c_str());
-
-        // Simple validation: show status icon
-        bool pathExists = !currentPath.empty();
         ImGui::SameLine();
-        ImGui::TextColored(pathExists ? ImVec4(0, 1, 0, 1) : ImVec4(1, 0, 0, 1), 
-                          pathExists ? "✓" : "✗");
+        ImGui::TextColored(ImVec4(0, 1, 0, 1), "✓");
     }
     else
     {
@@ -188,6 +185,39 @@ void BTNodePropertyPanel::RenderSubGraphControls(GraphNode* node)
             node->parameters["subgraphPath"] = selectedPath;
             SYSTEM_LOG << "[BTNodePropertyPanel] Updated SubGraph path to: " << selectedPath << "\n";
         }
+    }
+
+    // Phase 39c Step 6: Validation error display
+    ImGui::Spacing();
+    std::vector<std::string> validationErrors = BehaviorTreeManager::Get().GetValidationErrors(m_activeGraphId);
+
+    if (!validationErrors.empty())
+    {
+        // Display error section with red highlighting
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f)); // Red
+        ImGui::TextWrapped("❌ Validation Errors:");
+        ImGui::PopStyleColor();
+
+        ImGui::Indent();
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f)); // Lighter red
+        for (const auto& error : validationErrors)
+        {
+            ImGui::BulletText("%s", error.c_str());
+        }
+        ImGui::PopStyleColor();
+        ImGui::Unindent();
+
+        // Add visual separator
+        ImGui::Spacing();
+        ImGui::Separator();
+    }
+    else if (!currentPath.empty())
+    {
+        // Show success message only if path is specified
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.2f, 1.0f, 0.2f, 1.0f)); // Green
+        ImGui::TextWrapped("✓ No validation errors");
+        ImGui::PopStyleColor();
+        ImGui::Spacing();
     }
 
     ImGui::Separator();

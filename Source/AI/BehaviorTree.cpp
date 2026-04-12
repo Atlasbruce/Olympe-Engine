@@ -22,6 +22,7 @@ Behavior Tree implementation: JSON loading and built-in node execution.
 #include <cmath>
 #include <functional>
 #include <set>
+#include <fstream>
 
 using json = nlohmann::json;
 
@@ -1398,6 +1399,173 @@ bool BehaviorTreeAsset::DisconnectNodes(uint32_t parentId, uint32_t childId)
     }
 
     return false;
+}
+
+// ============================================================================
+// Phase 39c Step 6: SubGraph Validation Methods
+// ============================================================================
+
+bool BehaviorTreeManager::ValidateSubGraphPath(const std::string& path) const
+{
+    // 1. Check if path is empty
+    if (path.empty())
+    {
+        SYSTEM_LOG << "[BehaviorTreeManager] ValidateSubGraphPath: Path is empty\n";
+        return false;
+    }
+
+    // 2. Check if file exists and is readable
+    std::ifstream fileTest(path.c_str());
+    if (!fileTest.good())
+    {
+        SYSTEM_LOG << "[BehaviorTreeManager] ValidateSubGraphPath: File not found or not readable: " << path << "\n";
+        return false;
+    }
+    fileTest.close();
+
+    // 3. Check if it's a .bt.json file
+    std::string filename = path;
+    size_t lastSlash = filename.find_last_of("/\\");
+    if (lastSlash != std::string::npos)
+    {
+        filename = filename.substr(lastSlash + 1);
+    }
+
+    if (filename.length() < 8 || filename.substr(filename.length() - 7) != ".bt.json")
+    {
+        SYSTEM_LOG << "[BehaviorTreeManager] ValidateSubGraphPath: Not a .bt.json file: " << path << "\n";
+        return false;
+    }
+
+    // 4. Try to parse JSON to verify it's valid
+    try
+    {
+        json j;
+        if (!JsonHelper::LoadJsonFromFile(path, j))
+        {
+            SYSTEM_LOG << "[BehaviorTreeManager] ValidateSubGraphPath: Failed to load JSON: " << path << "\n";
+            return false;
+        }
+    }
+    catch (const std::exception& e)
+    {
+        SYSTEM_LOG << "[BehaviorTreeManager] ValidateSubGraphPath: JSON parse error: " << e.what() << "\n";
+        return false;
+    }
+
+    SYSTEM_LOG << "[BehaviorTreeManager] ValidateSubGraphPath: Valid - " << path << "\n";
+    return true;
+}
+
+bool BehaviorTreeManager::DetectCircularDependencies(uint32_t graphId, uint32_t nodeId, const BehaviorTreeAsset* parentTree, std::set<std::string>& visited)
+{
+    if (!parentTree)
+    {
+        return false;
+    }
+
+    const BTNode* node = parentTree->GetNode(nodeId);
+    if (!node || node->type != BTNodeType::SubGraph)
+    {
+        return false;
+    }
+
+    // 1. Check if we've already visited this path (cycle detected)
+    if (visited.find(node->subgraphPath) != visited.end())
+    {
+        SYSTEM_LOG << "[BehaviorTreeManager] Circular dependency detected: " << node->subgraphPath << "\n";
+        return true;
+    }
+
+    // 2. Check if path is valid first
+    if (!ValidateSubGraphPath(node->subgraphPath))
+    {
+        SYSTEM_LOG << "[BehaviorTreeManager] SubGraph path invalid for circular check: " << node->subgraphPath << "\n";
+        return false;  // Invalid path is not a circular dependency, just a broken reference
+    }
+
+    // 3. Add this path to visited set
+    visited.insert(node->subgraphPath);
+
+    // 4. Try to load the SubGraph
+    uint32_t subgraphId = std::hash<std::string>{}(node->subgraphPath) & 0x7FFFFFFF;
+
+    // Load if not already loaded
+    if (!IsTreeLoadedByPath(node->subgraphPath))
+    {
+        if (!const_cast<BehaviorTreeManager*>(this)->LoadTreeFromFile(node->subgraphPath, subgraphId))
+        {
+            SYSTEM_LOG << "[BehaviorTreeManager] Failed to load SubGraph for circular check: " << node->subgraphPath << "\n";
+            return false;
+        }
+    }
+
+    const BehaviorTreeAsset* subgraph = GetTreeByAnyId(subgraphId);
+    if (!subgraph)
+    {
+        return false;
+    }
+
+    // 5. Recursively check all SubGraph nodes in the loaded tree
+    for (const BTNode& subNode : subgraph->nodes)
+    {
+        if (subNode.type == BTNodeType::SubGraph)
+        {
+            if (DetectCircularDependencies(subgraphId, subNode.id, subgraph, visited))
+            {
+                return true;  // Cycle found deeper in the graph
+            }
+        }
+    }
+
+    // 6. Backtrack: remove from visited set for other branches
+    visited.erase(node->subgraphPath);
+
+    return false;  // No cycle in this path
+}
+
+std::vector<std::string> BehaviorTreeManager::GetValidationErrors(uint32_t graphId)
+{
+    std::vector<std::string> errors;
+
+    const BehaviorTreeAsset* tree = GetTree(graphId);
+    if (!tree)
+    {
+        errors.push_back("Graph not found with ID: " + std::to_string(graphId));
+        return errors;
+    }
+
+    // 1. Check each SubGraph node
+    std::set<std::string> visited;
+
+    for (const BTNode& node : tree->nodes)
+    {
+        if (node.type == BTNodeType::SubGraph)
+        {
+            // Check 1: Empty path
+            if (node.subgraphPath.empty())
+            {
+                errors.push_back("SubGraph node '" + node.name + "' (ID:" + std::to_string(node.id) + ") has no path specified");
+                continue;
+            }
+
+            // Check 2: Path validity
+            if (!ValidateSubGraphPath(node.subgraphPath))
+            {
+                errors.push_back("SubGraph node '" + node.name + "' (ID:" + std::to_string(node.id) + ") path invalid: " + node.subgraphPath);
+                continue;
+            }
+
+            // Check 3: Circular dependency
+            std::set<std::string> circularVisited;
+            if (DetectCircularDependencies(graphId, node.id, tree, circularVisited))
+            {
+                errors.push_back("SubGraph node '" + node.name + "' (ID:" + std::to_string(node.id) + ") creates circular reference: " + node.subgraphPath);
+            }
+        }
+    }
+
+    return errors;
 }
 
 // ============================================================================
