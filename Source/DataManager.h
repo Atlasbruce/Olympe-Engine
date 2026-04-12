@@ -211,6 +211,13 @@ public:
     std::string FindResourceRecursive(const std::string& filename, 
                                      const std::string& rootDir = "GameData") const;
 
+    // Phase 38: Enhanced path resolution for blueprint graphs
+    // Resolves relative or absolute paths by searching Blueprints and Gamedata directories
+    // Input: "AI\Boss1.ats" or "AI/Boss1.ats" (relative)
+    // Output: "Blueprints\AI\Boss1.ats" (absolute, first found)
+    // Returns empty string if not found
+    std::string ResolveFilePath(const std::string& relativePath) const;
+
 private:
     std::string name;
     mutable std::mutex m_mutex_;

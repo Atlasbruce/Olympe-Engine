@@ -13,6 +13,7 @@
 #include "BTtoVSMigrator.h"
 #include "../third_party/nlohmann/json.hpp"
 #include "../system/system_utils.h"
+#include "../DataManager.h"
 
 #include <fstream>
 #include <iostream>
@@ -41,12 +42,15 @@ bool VisualScriptRenderer::Load(const std::string& path)
     if (path.empty())
         return false;
 
+    // Phase 38: Resolve relative paths using DataManager
+    std::string resolvedPath = ResolvePath(path);
+
     nlohmann::json fileJson;
     {
-        std::ifstream ifs(path.c_str());
+        std::ifstream ifs(resolvedPath.c_str());
         if (!ifs.good())
         {
-            SYSTEM_LOG << "[VisualScriptRenderer] Cannot open file: " << path << "\n";
+            SYSTEM_LOG << "[VisualScriptRenderer] Cannot open file: " << resolvedPath << "\n";
             return false;
         }
         try
@@ -55,7 +59,7 @@ bool VisualScriptRenderer::Load(const std::string& path)
         }
         catch (...)
         {
-            SYSTEM_LOG << "[VisualScriptRenderer] JSON parse error: " << path << "\n";
+            SYSTEM_LOG << "[VisualScriptRenderer] JSON parse error: " << resolvedPath << "\n";
             return false;
         }
     }
@@ -81,12 +85,12 @@ bool VisualScriptRenderer::Load(const std::string& path)
         TaskGraphTemplate* tmpl = TaskGraphLoader::LoadFromJson(fileJson, errors);
         if (!tmpl)
         {
-            SYSTEM_LOG << "[VisualScriptRenderer] Failed to parse VS v4 graph: " << path << "\n";
+            SYSTEM_LOG << "[VisualScriptRenderer] Failed to parse VS v4 graph: " << resolvedPath << "\n";
             return false;
         }
-        m_panel.LoadTemplate(tmpl, path);
+        m_panel.LoadTemplate(tmpl, resolvedPath);
         delete tmpl;
-        SYSTEM_LOG << "[VisualScriptRenderer] Loaded VS v4 graph: " << path << "\n";
+        SYSTEM_LOG << "[VisualScriptRenderer] Loaded VS v4 graph: " << resolvedPath << "\n";
         return true;
     }
 
@@ -95,12 +99,12 @@ bool VisualScriptRenderer::Load(const std::string& path)
     {
         std::vector<std::string> errors;
         TaskGraphTemplate converted = BTtoVSMigrator::Convert(fileJson, errors);
-        m_panel.LoadTemplate(&converted, path);
-        SYSTEM_LOG << "[VisualScriptRenderer] Auto-migrated BT v2 -> VS v4: " << path << "\n";
+        m_panel.LoadTemplate(&converted, resolvedPath);
+        SYSTEM_LOG << "[VisualScriptRenderer] Auto-migrated BT v2 -> VS v4: " << resolvedPath << "\n";
         return true;
     }
 
-    SYSTEM_LOG << "[VisualScriptRenderer] Unknown graph format in: " << path << "\n";
+    SYSTEM_LOG << "[VisualScriptRenderer] Unknown graph format in: " << resolvedPath << "\n";
     return false;
 }
 
@@ -124,6 +128,21 @@ std::string VisualScriptRenderer::GetGraphType() const
 std::string VisualScriptRenderer::GetCurrentPath() const
 {
     return m_panel.GetCurrentPath();
+}
+
+// Phase 38: Path resolution using DataManager enhanced resolver
+std::string VisualScriptRenderer::ResolvePath(const std::string& path) const
+{
+    // Use DataManager's robust path resolution
+    std::string resolved = DataManager::Get().ResolveFilePath(path);
+
+    if (resolved.empty())
+    {
+        SYSTEM_LOG << "[VisualScriptRenderer] Warning: Could not resolve path: " << path << "\n";
+        return path;  // Return original, will fail gracefully in Load()
+    }
+
+    return resolved;
 }
 
 // Phase 35.0: Canvas state management

@@ -79,6 +79,7 @@ BTStatus BehaviorTreeExecutor::ExecuteNode(uint32_t nodeId, const BehaviorTreeAs
         case BTNodeType::Repeater:    nodeTypeName = "Repeater"; break;
         case BTNodeType::Root:        nodeTypeName = "Root"; break;
         case BTNodeType::OnEvent:     nodeTypeName = "OnEvent"; break;
+        case BTNodeType::SubGraph:    nodeTypeName = "SubGraph"; break;  ///< Phase 39
         default:                      nodeTypeName = "Unknown"; break;
     }
 
@@ -125,6 +126,11 @@ BTStatus BehaviorTreeExecutor::ExecuteNode(uint32_t nodeId, const BehaviorTreeAs
             // OnEvent nodes only execute when triggered by events
             // For simulation, treat as success (no event triggered in offline sim)
             status = BTStatus::Success;
+            break;
+
+        case BTNodeType::SubGraph:
+            // Phase 39: SubGraph - execute external graph (BT or ATS)
+            status = ExecuteSubGraph(*node, btAsset, outTracer);
             break;
 
         default:
@@ -281,6 +287,59 @@ BTStatus BehaviorTreeExecutor::ExecuteDecorator(const BTNode& node, const Behavi
     }
 
     return childStatus;
+}
+
+// Phase 39: Execute SubGraph node
+BTStatus BehaviorTreeExecutor::ExecuteSubGraph(const BTNode& node, const BehaviorTreeAsset& btAsset, GraphExecutionTracer& outTracer)
+{
+    // Validate SubGraph has a path
+    if (node.subgraphPath.empty())
+    {
+        std::string error = "SubGraph node '" + node.name + "' has no path specified";
+        SYSTEM_LOG << "[BehaviorTreeExecutor] " << error << "\n";
+        outTracer.RecordError(static_cast<int32_t>(node.id), node.name, error, "Error");
+        return BTStatus::Failure;
+    }
+
+    // Cycle detection: check if this path is already on the call stack
+    if (m_callStack.Contains(node.subgraphPath))
+    {
+        std::string error = "Circular reference detected: " + node.subgraphPath;
+        SYSTEM_LOG << "[BehaviorTreeExecutor] " << error << "\n";
+        outTracer.RecordError(static_cast<int32_t>(node.id), node.name, error, "Error");
+        return BTStatus::Failure;
+    }
+
+    // Depth limit check
+    if (m_callStack.IsFull())
+    {
+        std::string error = "SubGraph recursion depth limit (" + std::to_string(SubGraphCallStack::MAX_DEPTH) + ") exceeded";
+        SYSTEM_LOG << "[BehaviorTreeExecutor] " << error << "\n";
+        outTracer.RecordError(static_cast<int32_t>(node.id), node.name, error, "Error");
+        return BTStatus::Failure;
+    }
+
+    // Push onto call stack
+    m_callStack.Push(node.subgraphPath);
+
+    // Attempt to load external graph (BT or ATS)
+    // For now, in simulation mode, we just succeed if path is valid
+    // In full implementation, would load file and execute
+    BTStatus result = BTStatus::Success;
+
+    // TODO (Phase 39b): Load and execute external graph here
+    // 1. Use DataManager::ResolveFilePath to resolve path
+    // 2. Load BehaviorTreeAsset if .bt.json, or TaskGraphTemplate if .ats
+    // 3. Execute loaded graph recursively
+    // 4. Apply parameter bindings (inputs/outputs)
+
+    SYSTEM_LOG << "[BehaviorTreeExecutor] Executing SubGraph: " << node.subgraphPath 
+               << " (depth=" << m_callStack.GetDepth() << ")\n";
+
+    // Pop from call stack
+    m_callStack.Pop();
+
+    return result;
 }
 
 const char* BehaviorTreeExecutor::StatusToString(BTStatus status)

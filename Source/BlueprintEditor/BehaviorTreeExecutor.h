@@ -83,13 +83,22 @@ private:
      */
     BTStatus ExecuteDecorator(const BTNode& node, const BehaviorTreeAsset& btAsset, GraphExecutionTracer& outTracer);
 
-    /**
-     * @brief Convert BTStatus to string for logging.
-     */
+     /**
+      * @brief Convert BTStatus to string for logging.
+      */
     static const char* StatusToString(BTStatus status);
+
+    /**
+     * @brief Phase 39: Execute a SubGraph reference node.
+     * @details Loads external BT or ATS file and executes it recursively.
+     */
+    BTStatus ExecuteSubGraph(const BTNode& node, const BehaviorTreeAsset& btAsset, GraphExecutionTracer& outTracer);
 
     int m_maxDepth = 0;        ///< Track recursion depth to detect cycles
     int m_executedNodes = 0;   ///< Count of executed nodes
+
+    /// Phase 39: Call stack for SubGraph recursion tracking
+    SubGraphCallStack m_callStack;
 };
 
 } // namespace Olympe

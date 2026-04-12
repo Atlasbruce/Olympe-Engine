@@ -787,3 +787,71 @@ std::string DataManager::FindResourceRecursive_Unix(const std::string& filename,
     return "";
 }
 #endif
+
+// Phase 38: Enhanced path resolution for blueprint graphs
+std::string DataManager::ResolveFilePath(const std::string& relativePath) const
+{
+    // If path already exists as absolute, return it
+    std::ifstream test(relativePath.c_str());
+    if (test.good())
+    {
+        return relativePath;
+    }
+
+    // Normalize path separators to forward slashes for consistency
+    std::string normalizedPath = relativePath;
+    std::replace(normalizedPath.begin(), normalizedPath.end(), '\\', '/');
+
+    // Try Blueprints directory first
+    std::string blueprintPath = "Blueprints/" + normalizedPath;
+    std::replace(blueprintPath.begin(), blueprintPath.end(), '/', '\\');  // Convert back to backslashes for Windows
+
+    std::ifstream blueprintTest(blueprintPath.c_str());
+    if (blueprintTest.good())
+    {
+        SYSTEM_LOG << "[DataManager] Resolved path '" << relativePath 
+                   << "' -> '" << blueprintPath << "' (Blueprints)\n";
+        return blueprintPath;
+    }
+
+    // Try Gamedata directory
+    std::string gamedataPath = "Gamedata/" + normalizedPath;
+    std::replace(gamedataPath.begin(), gamedataPath.end(), '/', '\\');  // Convert back to backslashes for Windows
+
+    std::ifstream gamedataTest(gamedataPath.c_str());
+    if (gamedataTest.good())
+    {
+        SYSTEM_LOG << "[DataManager] Resolved path '" << relativePath 
+                   << "' -> '" << gamedataPath << "' (Gamedata)\n";
+        return gamedataPath;
+    }
+
+    // If still not found, try just the filename (in case path contains subdirectories)
+    // Extract just the filename from the path
+    size_t lastSlash = normalizedPath.find_last_of('/');
+    if (lastSlash != std::string::npos)
+    {
+        std::string filename = normalizedPath.substr(lastSlash + 1);
+
+        // Search for just the filename in Blueprints recursively
+        std::string found = FindResourceRecursive(filename, "Blueprints");
+        if (!found.empty())
+        {
+            SYSTEM_LOG << "[DataManager] Resolved filename '" << filename 
+                       << "' -> '" << found << "' (recursive search in Blueprints)\n";
+            return found;
+        }
+
+        // Search for just the filename in Gamedata recursively
+        found = FindResourceRecursive(filename, "Gamedata");
+        if (!found.empty())
+        {
+            SYSTEM_LOG << "[DataManager] Resolved filename '" << filename 
+                       << "' -> '" << found << "' (recursive search in Gamedata)\n";
+            return found;
+        }
+    }
+
+    SYSTEM_LOG << "[DataManager] Could not resolve path: " << relativePath << "\n";
+    return "";  // Return empty on failure
+}

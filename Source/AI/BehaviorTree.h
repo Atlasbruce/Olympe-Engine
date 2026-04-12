@@ -58,7 +58,8 @@ enum class BTNodeType : uint8_t
     Inverter,           ///< Decorator - inverts child result
     Repeater,           ///< Decorator - repeats child N times
     Root,               ///< Phase 38b: Root node - entry point of behavior tree (green, fixed position)
-    OnEvent             ///< Phase 38b: OnEvent root - event-driven entry point (orange, event-triggered)
+    OnEvent,            ///< Phase 38b: OnEvent root - event-driven entry point (orange, event-triggered)
+    SubGraph = 8        ///< Phase 39: SubGraph - external graph reference (recursive BT or ATS)
 };
 
 /**
@@ -172,6 +173,11 @@ struct BTNode
     std::string eventType;                  ///< Event type listener (e.g., "Olympe_EventType_AI_Explosion")
     std::string eventMessage;               ///< Optional event message filter (for future event filtering)
     uint32_t onEventRootIndex = 0;          ///< Index into BehaviorTreeAsset::m_eventRootIds for backreference
+
+    // Phase 39: SubGraph support
+    std::string subgraphPath;               ///< Path to external .bt.json or .ats file
+    std::map<std::string, std::string> subgraphInputs;   ///< Input bindings: "childVar" → "parentVar"
+    std::map<std::string, std::string> subgraphOutputs;  ///< Output bindings: "childVar" → "parentVar"
 
     // Helper methods for parameter access
     std::string GetParameterString(const std::string& key, const std::string& defaultValue = "") const
@@ -305,6 +311,63 @@ struct BehaviorTreeAsset
     bool ConnectNodes(uint32_t parentId, uint32_t childId);
     bool DisconnectNodes(uint32_t parentId, uint32_t childId);
     uint32_t GenerateNextNodeId() const;
+};
+
+// --- Phase 39: SubGraph Call Stack ---
+// Tracks active SubGraph paths to prevent infinite recursion and cycles
+struct SubGraphCallStack
+{
+    std::vector<std::string> pathStack;     ///< Stack of active subgraph paths
+    int depth = 0;                          ///< Current recursion depth
+
+    static const int MAX_DEPTH = 32;        ///< Maximum recursion depth limit
+
+    /// Push a subgraph path onto the stack
+    void Push(const std::string& path)
+    {
+        pathStack.push_back(path);
+        depth++;
+    }
+
+    /// Pop a subgraph path from the stack
+    void Pop()
+    {
+        if (!pathStack.empty())
+        {
+            pathStack.pop_back();
+            depth--;
+        }
+    }
+
+    /// Check if a path is already on the stack (cycle detection)
+    bool Contains(const std::string& path) const
+    {
+        for (const auto& p : pathStack)
+        {
+            if (p == path)
+                return true;
+        }
+        return false;
+    }
+
+    /// Check if maximum depth has been reached
+    bool IsFull() const
+    {
+        return depth >= MAX_DEPTH;
+    }
+
+    /// Clear the stack
+    void Clear()
+    {
+        pathStack.clear();
+        depth = 0;
+    }
+
+    /// Get current depth
+    int GetDepth() const
+    {
+        return depth;
+    }
 };
 
 // --- Behavior Tree Manager ---

@@ -27,6 +27,7 @@
 
 #include "VisualScriptEditorPanel.h"
 #include "DebugController.h"
+#include "TabManager.h"
 #include "AtomicTaskUIRegistry.h"
 #include "ConditionRegistry.h"
 #include "OperatorRegistry.h"
@@ -184,6 +185,62 @@ int VisualScriptEditorPanel::DataInAttrUID(int nodeID, int pinIndex) const
 int VisualScriptEditorPanel::DataOutAttrUID(int nodeID, int pinIndex) const
 {
     return nodeID * 10000 + 300 + pinIndex;
+}
+
+/**
+ * @brief Extracts SubGraph file path from a node definition.
+ * 
+ * @details Returns the SubGraphPath if the node is a SubGraph type and has a valid path set.
+ * Otherwise returns an empty string.
+ * 
+ * @param def  The node definition to check
+ * @return     The SubGraphPath if applicable, else empty string
+ */
+std::string VisualScriptEditorPanel::GetNodeSubGraphPath(const TaskNodeDefinition& def) const
+{
+    if (def.Type == TaskNodeType::SubGraph && !def.SubGraphPath.empty())
+    {
+        return def.SubGraphPath;
+    }
+    return "";
+}
+
+/**
+ * @brief Handles double-click on a node (opens SubGraph, etc).
+ * 
+ * @details If the node is a SubGraph type with a file path set, opens that file
+ * in a new tab via TabManager::OpenFileInTab().
+ * 
+ * @param nodeID  ID of the node that was double-clicked
+ */
+void VisualScriptEditorPanel::OnNodeDoubleClicked(int nodeID)
+{
+    // Find the node in m_editorNodes
+    for (size_t i = 0; i < m_editorNodes.size(); ++i)
+    {
+        if (m_editorNodes[i].nodeID == nodeID)
+        {
+            const TaskNodeDefinition& def = m_editorNodes[i].def;
+            std::string subGraphPath = GetNodeSubGraphPath(def);
+
+            if (!subGraphPath.empty())
+            {
+                SYSTEM_LOG << "[VSEditor] Double-clicked SubGraph node #" << nodeID
+                           << ", opening: " << subGraphPath << "\n";
+
+                // Open the SubGraph file in a new tab
+                TabManager::Get().OpenFileInTab(subGraphPath);
+            }
+            else
+            {
+                SYSTEM_LOG << "[VSEditor] Double-clicked SubGraph node #" << nodeID
+                           << " but no file path is set.\n";
+            }
+            return;
+        }
+    }
+
+    SYSTEM_LOG << "[VSEditor] Double-click: node #" << nodeID << " not found.\n";
 }
 
 }  // namespace Olympe

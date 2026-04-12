@@ -544,6 +544,12 @@
     <None Include="add_project_reference.ps1" />
     <None Include="Documentation\PHASE_BT_SIMULATION_ANALYSIS.md" />
     <None Include="Documentation\PHASE_BT_SIMULATION_ANALYSIS_v2_REVISED.md" />
+    <None Include="Documentation\PHASE_39_BT_SUBGRAPH_ANALYSIS.md" />
+    <None Include="Documentation\PHASE_39_EXECUTIVE_SUMMARY.md" />
+    <None Include="Documentation\PHASE_39_TECHNICAL_DESIGN.md" />
+    <None Include="Documentation\PHASE_39_QUICK_REFERENCE.md" />
+    <None Include="Documentation\PHASE_39_VISUALSCRIPT_REFERENCE.md" />
+    <None Include="Documentation\PHASE_39_SUMMARY.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

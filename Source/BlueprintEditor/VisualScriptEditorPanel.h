@@ -973,6 +973,32 @@ private:
 
     /// Minimap position (0=TopLeft, 1=TopRight, 2=BottomLeft, 3=BottomRight)
     int m_minimapPosition = 1;  // TopRight by default
+
+    // -----------------------------------------------------------------------
+    // Double-Click Detection (SubGraph / Node Navigation)
+    // -----------------------------------------------------------------------
+
+    /// Node ID of the last left-click (for double-click detection)
+    int m_lastClickNodeID = -1;
+
+    /// Frame time of the last left-click (seconds, from ImGui::GetTime())
+    float m_lastClickTime = 0.0f;
+
+    /// Threshold for detecting double-click (300ms)
+    static constexpr float DOUBLE_CLICK_THRESHOLD = 0.3f;
+
+    /**
+     * @brief Handles double-click on a node (opens SubGraph, etc).
+     * @param nodeID  ID of the node that was double-clicked.
+     */
+    void OnNodeDoubleClicked(int nodeID);
+
+    /**
+     * @brief Extracts SubGraph file path from a node definition.
+     * @param def  The node definition to check.
+     * @return     The SubGraphPath if node is SubGraph type and path is set, else empty string.
+     */
+    std::string GetNodeSubGraphPath(const TaskNodeDefinition& def) const;
 };
 
 } // namespace Olympe

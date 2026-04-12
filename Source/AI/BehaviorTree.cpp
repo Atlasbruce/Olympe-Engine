@@ -126,6 +126,9 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
             else if (typeStr == "Action") node.type = BTNodeType::Action;
             else if (typeStr == "Inverter") node.type = BTNodeType::Inverter;
             else if (typeStr == "Repeater") node.type = BTNodeType::Repeater;
+            else if (typeStr == "Root") node.type = BTNodeType::Root;
+            else if (typeStr == "OnEvent") node.type = BTNodeType::OnEvent;
+            else if (typeStr == "SubGraph") node.type = BTNodeType::SubGraph;
             
             // Parse child IDs for composite nodes
             if (JsonHelper::IsArray(nodeJson, "children"))
@@ -233,7 +236,38 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     node.actionParam2 = JsonHelper::GetFloat(nodeJson, "param2", 0.0f);
                 }
             }
-            
+
+            // Phase 39: Parse SubGraph node
+            if (node.type == BTNodeType::SubGraph || typeStr == "SubGraph")
+            {
+                node.type = BTNodeType::SubGraph;
+                node.subgraphPath = JsonHelper::GetString(nodeJson, "subgraphPath", "");
+
+                // Parse input bindings (childVar -> parentVar)
+                if (nodeJson.contains("subgraphInputs") && nodeJson["subgraphInputs"].is_object())
+                {
+                    const json& inputs = nodeJson["subgraphInputs"];
+                    for (auto it = inputs.begin(); it != inputs.end(); ++it)
+                    {
+                        node.subgraphInputs[it.key()] = it.value().get<std::string>();
+                    }
+                }
+
+                // Parse output bindings (childVar -> parentVar)
+                if (nodeJson.contains("subgraphOutputs") && nodeJson["subgraphOutputs"].is_object())
+                {
+                    const json& outputs = nodeJson["subgraphOutputs"];
+                    for (auto it = outputs.begin(); it != outputs.end(); ++it)
+                    {
+                        node.subgraphOutputs[it.key()] = it.value().get<std::string>();
+                    }
+                }
+
+                std::cout << "[BehaviorTreeManager]   SubGraph loaded: " << node.subgraphPath 
+                          << " with " << node.subgraphInputs.size() << " inputs, "
+                          << node.subgraphOutputs.size() << " outputs" << std::endl;
+            }
+
             // Parse decorator child
             if (node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater)
             {

@@ -52,6 +52,9 @@ private:
         float panY;
         float zoom;
     } m_savedCanvasState;
+
+    // Phase 38: Path resolution helper
+    std::string ResolvePath(const std::string& path) const;
 };
 
 } // namespace Olympe
