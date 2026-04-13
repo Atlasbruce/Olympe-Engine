@@ -331,3 +331,10 @@ option(BUILD_BLUEPRINT_EDITOR_STANDALONE "Build Blueprint Editor Standalone exec
 - Learn about [Behavior Trees](../behavior-trees/behavior-trees-overview.md) for AI
 - Explore [Input System Configuration](../../user-guide/input-system/input-configuration.md)
 - Read [Creating Blueprints](../../user-guide/blueprints/blueprints-overview.md)
+
+## Architecture Schemas
+
+To visualize module relationships as diagrams:
+
+- [**Schéma Conceptuel**](./conceptual-schema.md) — Vue des 4 couches, flux de jeu, flux éditeur, et schémas par sous-système (Condition Preset, Entity Prefab, Behavior Tree, Canvas)
+- [**Schéma de Dépendances**](./dependency-schema.md) — Graphes de dépendances C++ entre modules, règles d'inclusion, et la règle de dépendance descendante stricte par couche
