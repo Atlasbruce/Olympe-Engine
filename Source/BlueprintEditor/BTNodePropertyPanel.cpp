@@ -11,6 +11,7 @@
 #include "../DataManager.h"
 #include "../AI/BehaviorTree.h"
 #include "../system/system_utils.h"
+#include "../Editor/Modals/FilePickerModal.h"
 #include <cstring>
 
 namespace Olympe {
@@ -176,16 +177,29 @@ void BTNodePropertyPanel::RenderSubGraphControls(GraphNode* node)
         ImGui::TextDisabled("(No SubGraph path specified)");
     }
 
-    // File browser button - Phase 39c Step 5: Integrated with DataManager
+    // File browser button - Phase 40: Using centralized file picker modal
     if (ImGui::Button("Browse...##subgraphPath", ImVec2(-1, 0)))
     {
-        std::string selectedPath = DataManager::Get().SelectBehaviorTreeFile(currentPath);
-        if (!selectedPath.empty())
+        DataManager::Get().OpenFilePickerModal(Olympe::FilePickerType::BehaviorTree, currentPath);
+    }
+
+    // Phase 40: Check if modal has closed with a selection
+    // This pattern detects when modal was open last frame but is now closed
+    static bool wasFilePickerOpen = false;
+    bool isFilePickerOpen = DataManager::Get().IsFilePickerModalOpen();
+
+    if (wasFilePickerOpen && !isFilePickerOpen)
+    {
+        // Modal just closed - check if user selected a file
+        std::string selectedFile = DataManager::Get().GetSelectedFileFromModal();
+        if (!selectedFile.empty())
         {
-            node->parameters["subgraphPath"] = selectedPath;
-            SYSTEM_LOG << "[BTNodePropertyPanel] Updated SubGraph path to: " << selectedPath << "\n";
+            // Update the node's subgraphPath parameter with the selected file
+            node->parameters["subgraphPath"] = selectedFile;
+            SYSTEM_LOG << "[BTNodePropertyPanel] Updated SubGraph path: " << selectedFile << "\n";
         }
     }
+    wasFilePickerOpen = isFilePickerOpen;
 
     // Phase 39c Step 6: Validation error display
     ImGui::Spacing();

@@ -16,6 +16,7 @@
 #include "../NodeGraphShared/BehaviorTreeGraphAdapter.h"
 #include "../AI/AIGraphPlugin_BT/BTNodePalette.h"
 #include "../AI/BehaviorTree.h"
+#include "../DataManager.h"
 #include "../third_party/imgui/imgui.h"
 #include "../system/system_utils.h"
 
@@ -90,6 +91,9 @@ void BehaviorTreeRenderer::Render()
     {
         m_executionTestPanel->Render();
     }
+
+    // Phase 40: Render centralized file picker modal
+    DataManager::Get().RenderFilePickerModal();
 }
 
 void BehaviorTreeRenderer::RenderLayoutWithTabs()

@@ -1,0 +1,60 @@
+{
+  "blueprintType": "BehaviorTree",
+  "data": {
+    "nodes": [
+      {
+        "children": [
+          2,
+          3
+        ],
+        "id": 1,
+        "name": "Root",
+        "parameters": {},
+        "position": {
+          "x": -25,
+          "y": -101
+        },
+        "type": "Sequence"
+      },
+      {
+        "children": [],
+        "id": 2,
+        "name": "MoveToWaypoint",
+        "parameters": {},
+        "position": {
+          "x": 115,
+          "y": -17
+        },
+        "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 3,
+        "name": "NextWaypoint",
+        "parameters": {},
+        "position": {
+          "x": 115,
+          "y": -158
+        },
+        "type": "Action"
+      }
+    ],
+    "rootNodeId": -1
+  },
+  "description": "",
+  "editorState": {
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
+  "metadata": {
+    "author": "User",
+    "created": "",
+    "lastModified": "2026-03-26T13:54:26",
+    "tags": []
+  },
+  "name": "SimplePatrol",
+  "schema_version": 2
+}

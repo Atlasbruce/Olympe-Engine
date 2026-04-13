@@ -1,0 +1,291 @@
+{
+  "blackboard": [],
+  "dataConnections": [],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out_1",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out_2",
+      "toNode": 5,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out_3",
+      "toNode": 6,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out_4",
+      "toNode": 7,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out_5",
+      "toNode": 8,
+      "toPin": "In"
+    }
+  ],
+  "globalVariableValues": {
+    "alarmLevel": 0,
+    "ambientLight": 1,
+    "combatActive": false,
+    "combatMultiplier": 1,
+    "companionCount": 0,
+    "debugDrawColliders": false,
+    "debugShowFPS": false,
+    "deltaTime": 0.016,
+    "difficulty": 1,
+    "effectsVolume": 0.8,
+    "gameTime": 0,
+    "gravity": 9.81,
+    "inventoryCapacity": 20,
+    "isDebugMode": false,
+    "isPaused": false,
+    "lastEnemyCount": 0,
+    "mGlobalHealth": 0,
+    "mPosition": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "musicVolume": 0.6,
+    "playerDirection": 0,
+    "playerExperience": 0,
+    "playerHealth": 100,
+    "playerLevel": 1,
+    "playerMana": 50,
+    "playerMaxHealth": 100,
+    "playerMaxMana": 100,
+    "playerPosition": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "playerVelocity": 0,
+    "questsActive": 0,
+    "questsCompleted": 0,
+    "resourceGold": 0,
+    "resourceStone": 0,
+    "resourceWood": 0,
+    "soundVolume": 0.8,
+    "timeOfDay": 12,
+    "timeScale": 1,
+    "totalScore": 0,
+    "weatherType": "clear",
+    "windStrength": 0
+  },
+  "graphType": "VisualScript",
+  "name": "",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "EntryPoint",
+      "params": {
+        "__posX": {
+          "LiteralValue": 240,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 238,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 240,
+        "y": 238
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "dynamicExecPins": [
+        "Out_1",
+        "Out_2",
+        "Out_3",
+        "Out_4",
+        "Out_5"
+      ],
+      "id": 2,
+      "label": "Sequence",
+      "params": {
+        "__posX": {
+          "LiteralValue": 469,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 254,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 444,
+        "y": 234
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 3,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 680,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 126,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Message 1",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 703,
+        "y": 56
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 4,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 680,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 126,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Message 2",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 703,
+        "y": 152
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 5,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 680,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 126,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Message 3",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 708,
+        "y": 247
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 6,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 680,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 126,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Message 4",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 712,
+        "y": 344
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 7,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 680,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 126,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Message 5",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 716,
+        "y": 440
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 8,
+      "label": "SubGraph",
+      "params": {
+        "__posX": {
+          "LiteralValue": 762,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 599,
+          "Type": "Literal"
+        },
+        "subgraph_path": {
+          "LiteralValue": "AI\\Boss4.ats",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 723,
+        "y": 552
+      },
+      "subGraphPath": "AI\\Boss4.ats",
+      "type": "SubGraph"
+    }
+  ],
+  "schema_version": 4
+}

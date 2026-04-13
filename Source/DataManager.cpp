@@ -19,6 +19,7 @@ Notes:
   using the appropriate libraries when available.
 */
 
+#include "Editor/Modals/FilePickerModal.h"
 #include "DataManager.h"
 #include "GameEngine.h"
 #include "system/system_utils.h"
@@ -923,7 +924,7 @@ std::string DataManager::SelectBehaviorTreeFile(const std::string& currentPath) 
     // For now, we return empty string. In a full GUI implementation, this would open
     // a file dialog (OS-native or ImGui-based) to let user select a .bt.json file.
 
-    std::string browseDir = currentPath.empty() ? "Gamedata/BehaviorTree" : currentPath;
+    std::string browseDir = currentPath.empty() ? "./Gamedata" : currentPath;
 
     // Normalize path separators
     std::replace(browseDir.begin(), browseDir.end(), '/', '\\');
@@ -935,7 +936,7 @@ std::string DataManager::SelectBehaviorTreeFile(const std::string& currentPath) 
         if (!test.good())
         {
             SYSTEM_LOG << "[DataManager] Browse directory not found: " << browseDir << "\n";
-            browseDir = "Gamedata/BehaviorTree";  // Fall back to default
+            browseDir = "Gamedata";  // Fall back to default
         }
     }
 
@@ -954,4 +955,110 @@ std::string DataManager::SelectBehaviorTreeFile(const std::string& currentPath) 
 
     SYSTEM_LOG << "[DataManager] Selected behavior tree file: " << selectedFile << "\n";
     return selectedFile;
+}
+
+//-------------------------------------------------------------
+// Phase 40: Centralized File Picker Modal
+//-------------------------------------------------------------
+
+std::string DataManager::OpenFilePickerModal(Olympe::FilePickerType fileType, const std::string& currentPath)
+{
+    // Create or reuse modal instance
+    if (!m_filePickerModal)
+    {
+        m_filePickerModal = std::make_unique<Olympe::FilePickerModal>(fileType);
+    }
+
+    // Open the modal with the specified path
+    m_filePickerModal->Open(currentPath);
+
+    SYSTEM_LOG << "[DataManager] Opened file picker modal for file type: " 
+               << static_cast<int>(fileType) << "\n";
+
+    // Return empty for now - caller should check IsFilePickerModalOpen() 
+    // and wait for user interaction. The selected file is retrieved after Render().
+    return "";
+}
+
+void DataManager::RenderFilePickerModal()
+{
+    if (m_filePickerModal)
+    {
+        m_filePickerModal->Render();
+    }
+}
+
+bool DataManager::IsFilePickerModalOpen() const
+{
+    if (!m_filePickerModal)
+        return false;
+
+    return m_filePickerModal->IsOpen();
+}
+
+void DataManager::CloseFilePickerModal()
+{
+    if (m_filePickerModal)
+    {
+        m_filePickerModal->Close();
+    }
+}
+
+std::string DataManager::GetSelectedFileFromModal() const
+{
+    if (m_filePickerModal && m_filePickerModal->IsConfirmed())
+    {
+        return m_filePickerModal->GetSelectedFile();
+    }
+    return "";
+}
+
+// ============================================================================
+// Phase 40 Enhancement: Save As Modal Management
+// ============================================================================
+
+void DataManager::OpenSaveFilePickerModal(Olympe::SaveFileType fileType,
+                                          const std::string& directory,
+                                          const std::string& suggestedFilename)
+{
+    if (!m_saveFilePickerModal)
+    {
+        m_saveFilePickerModal = std::make_unique<Olympe::SaveFilePickerModal>(fileType);
+    }
+    m_saveFilePickerModal->Open(directory, suggestedFilename);
+    SYSTEM_LOG << "[DataManager] Opened Save As modal for file type: " << static_cast<int>(fileType) << "\n";
+}
+
+void DataManager::RenderSaveFilePickerModal()
+{
+    if (m_saveFilePickerModal)
+    {
+        m_saveFilePickerModal->Render();
+    }
+}
+
+bool DataManager::IsSaveFilePickerModalOpen() const
+{
+    if (m_saveFilePickerModal)
+    {
+        return m_saveFilePickerModal->IsOpen();
+    }
+    return false;
+}
+
+void DataManager::CloseSaveFilePickerModal()
+{
+    if (m_saveFilePickerModal)
+    {
+        m_saveFilePickerModal->Close();
+    }
+}
+
+std::string DataManager::GetSelectedSaveFile() const
+{
+    if (m_saveFilePickerModal && m_saveFilePickerModal->IsConfirmed())
+    {
+        return m_saveFilePickerModal->GetSelectedFile();
+    }
+    return "";
 }

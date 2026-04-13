@@ -712,6 +712,12 @@
     <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeExecutor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\Editor\Modals\FilePickerModal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\Editor\Modals\SaveFilePickerModal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -1370,6 +1376,8 @@
     <ClInclude Include="..\Source\BlueprintEditor\GraphExecutionSimulator.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeExecutor.h" />
     <ClInclude Include="..\Source\BlueprintEditor\SubGraphParameterHelper.h" />
+    <ClInclude Include="..\Source\Editor\Modals\FilePickerModal.h" />
+    <ClInclude Include="..\Source\Editor\Modals\SaveFilePickerModal.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico">

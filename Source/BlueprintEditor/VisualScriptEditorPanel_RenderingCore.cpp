@@ -19,6 +19,7 @@
 #include "../system/system_utils.h"
 #include "../system/system_consts.h"
 #include "../NodeGraphCore/GlobalTemplateBlackboard.h"
+#include "../DataManager.h"
 
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imnodes/imnodes.h"
@@ -376,117 +377,38 @@ void VisualScriptEditorPanel::RenderSaveAsDialog()
 {
     if (m_showSaveAsDialog)
     {
-        ImGui::OpenPopup("SaveAsDialog");
+        // Use centralized SaveFilePickerModal via DataManager (Phase 40)
+        DataManager& dm = DataManager::Get();
+        std::string suggestedName = m_currentPath.empty() 
+                                    ? "graph" 
+                                    : m_currentPath.substr(m_currentPath.find_last_of("/\\") + 1);
+
+        // Remove extension from suggested name
+        size_t dotPos = suggestedName.rfind('.');
+        if (dotPos != std::string::npos)
+            suggestedName = suggestedName.substr(0, dotPos);
+
+        dm.OpenSaveFilePickerModal(Olympe::SaveFileType::Blueprint, "Gamedata/TaskGraph", suggestedName);
         m_showSaveAsDialog = false;
-
-        // Derive the save extension from the currently loaded file so we
-        // preserve .json files as .json (instead of silently renaming to .ats).
-        // Fall back to .ats for new/untitled graphs.
-        m_saveAsExtension = ".ats";
-        if (!m_currentPath.empty())
-        {
-            size_t dotPos = m_currentPath.rfind('.');
-            if (dotPos != std::string::npos)
-                m_saveAsExtension = m_currentPath.substr(dotPos);
-        }
-
-        // Pre-fill the filename from the current path so the user doesn't have
-        // to retype a name they already gave the graph.
-        if (!m_currentPath.empty())
-        {
-            size_t lastSlash = m_currentPath.find_last_of("/\\");
-            std::string fname = (lastSlash != std::string::npos)
-                                ? m_currentPath.substr(lastSlash + 1)
-                                : m_currentPath;
-            // Strip extension
-            size_t dotPos = fname.rfind('.');
-            if (dotPos != std::string::npos)
-                fname = fname.substr(0, dotPos);
-
-            strncpy_s(m_saveAsFilename, sizeof(m_saveAsFilename), fname.c_str(), _TRUNCATE);
-        }
-        // else: keep whatever is already in the buffer (set in constructor or
-        //       carried over from a previous dialog invocation).
     }
 
-    if (ImGui::BeginPopupModal("SaveAsDialog", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        ImGui::Text("Save Visual Script As");
-        ImGui::Separator();
+    // Render centralized save modal
+    DataManager& dm = DataManager::Get();
+    dm.RenderSaveFilePickerModal();
 
-        // Directory dropdown
-        ImGui::Text("Directory:");
-        ImGui::SameLine();
-        if (ImGui::BeginCombo("##SaveDir", m_saveAsDirectory.c_str()))
-        {
-            static const char* dirs[] = {
-                "Blueprints/AI",
-                "Blueprints/AI/Tests",
-                "Gamedata/TaskGraph/Examples",
-                "Gamedata/TaskGraph/Templates"
-            };
-            for (int i = 0; i < static_cast<int>(sizeof(dirs) / sizeof(dirs[0])); ++i)
-            {
-                bool selected = (m_saveAsDirectory == dirs[i]);
-                if (ImGui::Selectable(dirs[i], selected))
-                    m_saveAsDirectory = dirs[i];
-                if (selected)
-                    ImGui::SetItemDefaultFocus();
-            }
-            ImGui::EndCombo();
-        }
-
-        // Filename input
-        ImGui::Text("Filename:");
-        ImGui::SameLine();
-        ImGui::InputText("##FileName", m_saveAsFilename, sizeof(m_saveAsFilename));
-
-        // Full path preview
-        ImGui::TextDisabled("Full path: %s/%s%s",
-                            m_saveAsDirectory.c_str(),
-                            m_saveAsFilename,
-                            m_saveAsExtension.c_str());
-
-        ImGui::Separator();
-
-        // Save / Cancel buttons
-        bool filenameEmpty = (std::strlen(m_saveAsFilename) == 0);
-        if (filenameEmpty)
-            ImGui::BeginDisabled();
-        if (ImGui::Button("Save", ImVec2(120, 0)))
-        {
-            std::string fullPath = m_saveAsDirectory + "/" +
-                                   std::string(m_saveAsFilename) + m_saveAsExtension;
+    // Handle modal result
+    if (dm.IsSaveFilePickerModalOpen() == false) {
+        std::string selectedFile = dm.GetSelectedSaveFile();
+        if (!selectedFile.empty()) {
             SYSTEM_LOG << "[VisualScriptEditorPanel] SaveAs dialog confirmed. fullPath='"
-                       << fullPath << "'\n";
-            if (SaveAs(fullPath))
-            {
-                std::cout << "[VisualScriptEditorPanel] Saved to: " << fullPath << std::endl;
-                ImGui::CloseCurrentPopup();
-            }
-            else
-            {
-                ImGui::OpenPopup("SaveAsError");
+                       << selectedFile << "'\n";
+            if (SaveAs(selectedFile)) {
+                std::cout << "[VisualScriptEditorPanel] Saved to: " << selectedFile << std::endl;
+                m_currentPath = selectedFile;
+            } else {
+                SYSTEM_LOG << "[VisualScriptEditorPanel] Save failed - check directory and permissions\n";
             }
         }
-        if (filenameEmpty)
-            ImGui::EndDisabled();
-
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0)))
-        {
-            ImGui::CloseCurrentPopup();
-        }
-
-        // Nested error popup
-        if (ImGui::BeginPopupModal("SaveAsError", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-        {
-            ImGui::TextColored(ImVec4(1, 0, 0, 1), "Save failed — check directory and permissions.");
-            if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
-            ImGui::EndPopup();
-        }
-
-        ImGui::EndPopup();
     }
 }
 

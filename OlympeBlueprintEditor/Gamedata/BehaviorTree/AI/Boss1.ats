@@ -1,0 +1,209 @@
+{
+  "blackboard": [],
+  "dataConnections": [],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Then",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Else",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Completed",
+      "toNode": 5,
+      "toPin": "In"
+    }
+  ],
+  "globalVariableValues": {
+    "alarmLevel": 0,
+    "ambientLight": 1,
+    "combatActive": false,
+    "combatMultiplier": 1,
+    "companionCount": 0,
+    "debugDrawColliders": false,
+    "debugShowFPS": false,
+    "deltaTime": 0.016,
+    "difficulty": 1,
+    "effectsVolume": 0.8,
+    "gameTime": 0,
+    "gravity": 9.81,
+    "inventoryCapacity": 20,
+    "isDebugMode": false,
+    "isPaused": false,
+    "lastEnemyCount": 0,
+    "mGlobalHealth": 0,
+    "mPosition": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "musicVolume": 0.6,
+    "playerDirection": 0,
+    "playerExperience": 0,
+    "playerHealth": 100,
+    "playerLevel": 1,
+    "playerMana": 50,
+    "playerMaxHealth": 100,
+    "playerMaxMana": 100,
+    "playerPosition": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "playerVelocity": 0,
+    "questsActive": 0,
+    "questsCompleted": 0,
+    "resourceGold": 0,
+    "resourceStone": 0,
+    "resourceWood": 0,
+    "soundVolume": 0.8,
+    "timeOfDay": 12,
+    "timeScale": 1,
+    "totalScore": 0,
+    "weatherType": "clear",
+    "windStrength": 0
+  },
+  "graphType": "VisualScript",
+  "name": "",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "EntryPoint",
+      "params": {
+        "__posX": {
+          "LiteralValue": 114,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 153,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 114,
+        "y": 153
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 2,
+      "label": "Branch",
+      "nodeConditionRefs": [
+        {
+          "leftPinID": "",
+          "logicalOp": "Start",
+          "presetID": "preset_9e54ee5c-13e0-4260-b917-6d061b2b419c",
+          "rightPinID": ""
+        }
+      ],
+      "params": {
+        "__posX": {
+          "LiteralValue": 530,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 146,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 294,
+        "y": 152
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 3,
+      "label": "Take Cover",
+      "params": {
+        "__posX": {
+          "LiteralValue": 561,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 132,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 537,
+        "y": 84
+      },
+      "taskType": "take_cover",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 4,
+      "label": "Attack If Close",
+      "params": {
+        "__posX": {
+          "LiteralValue": 562,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 309,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 537,
+        "y": 225
+      },
+      "taskType": "attack_if_close",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 5,
+      "label": "SubGraph",
+      "params": {
+        "__posX": {
+          "LiteralValue": 815,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 276,
+          "Type": "Literal"
+        },
+        "subgraph_path": {
+          "LiteralValue": "AI\\Boss2.ats",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 784,
+        "y": 226
+      },
+      "subGraphPath": "AI\\Boss2.ats",
+      "type": "SubGraph"
+    }
+  ],
+  "presets": [
+    {
+      "id": "preset_9e54ee5c-13e0-4260-b917-6d061b2b419c",
+      "left": {
+        "mode": "Variable",
+        "value": "mGlobalHealth"
+      },
+      "name": "Condition",
+      "op": "==",
+      "right": {
+        "mode": "Const",
+        "value": 10
+      }
+    }
+  ],
+  "schema_version": 4
+}

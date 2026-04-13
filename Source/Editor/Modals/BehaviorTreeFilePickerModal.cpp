@@ -22,7 +22,7 @@ namespace Olympe {
 BehaviorTreeFilePickerModal::BehaviorTreeFilePickerModal()
 {
     // Initialize path to behavior tree directory
-    m_currentPath = "Gamedata/BehaviorTree";
+    m_currentPath = "./Gamedata";// / BehaviorTree";
     strncpy_s(m_pathBuffer, sizeof(m_pathBuffer), m_currentPath.c_str(), _TRUNCATE);
     RefreshFileList();
 }

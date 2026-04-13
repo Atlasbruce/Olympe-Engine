@@ -1,0 +1,1670 @@
+{
+  "blackboard": [
+    {
+      "isGlobal": false,
+      "key": "mHealth",
+      "type": "Int",
+      "value": 10
+    },
+    {
+      "isGlobal": false,
+      "key": "mFatigue",
+      "type": "Int",
+      "value": 1
+    },
+    {
+      "isGlobal": false,
+      "key": "mFoodPortion",
+      "type": "Int",
+      "value": 4
+    },
+    {
+      "isGlobal": false,
+      "key": "cst_zero",
+      "type": "Int",
+      "value": 0
+    },
+    {
+      "isGlobal": false,
+      "key": "cst_Hundred",
+      "type": "Int",
+      "value": 100
+    }
+  ],
+  "dataConnections": [
+    {
+      "fromNode": 14,
+      "fromPin": "Value",
+      "toNode": 16,
+      "toPin": "A"
+    },
+    {
+      "fromNode": 15,
+      "fromPin": "Value",
+      "toNode": 16,
+      "toPin": "B"
+    },
+    {
+      "fromNode": 16,
+      "fromPin": "Result",
+      "toNode": 13,
+      "toPin": "Value"
+    },
+    {
+      "fromNode": 23,
+      "fromPin": "Value",
+      "toNode": 20,
+      "toPin": "Value"
+    },
+    {
+      "fromNode": 30,
+      "fromPin": "Value",
+      "toNode": 27,
+      "toPin": "A"
+    },
+    {
+      "fromNode": 36,
+      "fromPin": "Result",
+      "toNode": 29,
+      "toPin": "Value"
+    },
+    {
+      "fromNode": 27,
+      "fromPin": "Result",
+      "toNode": 36,
+      "toPin": "A"
+    },
+    {
+      "fromNode": 35,
+      "fromPin": "Value",
+      "toNode": 36,
+      "toPin": "B"
+    },
+    {
+      "fromNode": 51,
+      "fromPin": "Result",
+      "toNode": 27,
+      "toPin": "B"
+    },
+    {
+      "fromNode": 52,
+      "fromPin": "Result",
+      "toNode": 51,
+      "toPin": "A"
+    },
+    {
+      "fromNode": 31,
+      "fromPin": "Value",
+      "toNode": 51,
+      "toPin": "B"
+    },
+    {
+      "fromNode": 53,
+      "fromPin": "Value",
+      "toNode": 52,
+      "toPin": "A"
+    },
+    {
+      "fromNode": 54,
+      "fromPin": "Value",
+      "toNode": 52,
+      "toPin": "B"
+    }
+  ],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out_1",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "Else",
+      "toNode": 6,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 3,
+      "fromPin": "Then",
+      "toNode": 19,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 19,
+      "fromPin": "Out",
+      "toNode": 13,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 19,
+      "fromPin": "Out_1",
+      "toNode": 20,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 19,
+      "fromPin": "Out_2",
+      "toNode": 5,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 13,
+      "fromPin": "Completed",
+      "toNode": 24,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 20,
+      "fromPin": "Completed",
+      "toNode": 25,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out_2",
+      "toNode": 26,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 26,
+      "fromPin": "Completed",
+      "toNode": 29,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 29,
+      "fromPin": "Completed",
+      "toNode": 32,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 25,
+      "fromPin": "Completed",
+      "toNode": 33,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 5,
+      "fromPin": "Completed",
+      "toNode": 34,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Completed",
+      "toNode": 37,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 37,
+      "fromPin": "Completed",
+      "toNode": 38,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 39,
+      "fromPin": "Loop",
+      "toNode": 40,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 39,
+      "fromPin": "Completed",
+      "toNode": 41,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 32,
+      "fromPin": "Completed",
+      "toNode": 43,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 43,
+      "fromPin": "Out",
+      "toNode": 39,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 43,
+      "fromPin": "Out_1",
+      "toNode": 42,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 42,
+      "fromPin": "Loop Body",
+      "toNode": 44,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 42,
+      "fromPin": "Completed",
+      "toNode": 45,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 24,
+      "fromPin": "Completed",
+      "toNode": 46,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 46,
+      "fromPin": "Case_0",
+      "toNode": 47,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 46,
+      "fromPin": "Case_1",
+      "toNode": 48,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 46,
+      "fromPin": "Case_2",
+      "toNode": 49,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 46,
+      "fromPin": "Case_3",
+      "toNode": 50,
+      "toPin": "In"
+    }
+  ],
+  "globalVariableValues": {
+    "ambientLight": 1,
+    "animationElapsedTime": 0,
+    "animationFrame": 0,
+    "animationFrameDuration": 0.1,
+    "animationID": "",
+    "bbHeight": 25,
+    "bbWidth": 25,
+    "bbX": 0,
+    "bbY": 0,
+    "behaviorType": "idle",
+    "bodyFriction": 0.1,
+    "bodyMass": 1,
+    "bodyRotation": false,
+    "bodySpeed": 150,
+    "bodyUseGravity": true,
+    "cameraAllowManualControl": true,
+    "cameraBaseOffset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "cameraBoundsHeight": 0,
+    "cameraBoundsWidth": 0,
+    "cameraBoundsX": 0,
+    "cameraBoundsY": 0,
+    "cameraClampToViewport": true,
+    "cameraControlMode": "Free",
+    "cameraControlOffset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "cameraCurrentRotationLevel": 0,
+    "cameraCurrentZoomLevelIndex": 3,
+    "cameraFollowOffset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "cameraFollowTarget": false,
+    "cameraInputDeadzone": 0.15,
+    "cameraInputDirection": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "cameraInputJoystickId": 0,
+    "cameraInputPlayerId": -1,
+    "cameraInputResetRequested": false,
+    "cameraInputRotation": 0,
+    "cameraInputTriggerThreshold": 0.3,
+    "cameraInputUseKeyboard": false,
+    "cameraInputZoom": 0,
+    "cameraIsActive": true,
+    "cameraIsShaking": false,
+    "cameraManualControlDecay": 2,
+    "cameraManualMoveSpeed": 200,
+    "cameraMaxZoom": 5,
+    "cameraMinZoom": 0.1,
+    "cameraPlayerId": -1,
+    "cameraPosition": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "cameraRotation": 0,
+    "cameraRotationSpeed": 5,
+    "cameraRotationStep": 15,
+    "cameraShakeDuration": 0,
+    "cameraShakeIntensity": 0,
+    "cameraShakeOffset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "cameraShakeTimeRemaining": 0,
+    "cameraSmoothFactor": 5,
+    "cameraTargetEntityID": -1,
+    "cameraTargetRotation": 0,
+    "cameraTargetZoom": 1,
+    "cameraType": "2D",
+    "cameraUseBounds": false,
+    "cameraViewportHeight": 600,
+    "cameraViewportWidth": 800,
+    "cameraViewportX": 0,
+    "cameraViewportY": 0,
+    "cameraZoom": 1,
+    "cameraZoomSpeed": 5,
+    "cameraZoomStep": 0.1,
+    "collisionZoneHeight": 100,
+    "collisionZoneIsStatic": true,
+    "collisionZoneWidth": 100,
+    "collisionZoneX": 0,
+    "collisionZoneY": 0,
+    "controllerConnected": false,
+    "controllerID": -1,
+    "controllerIsVibrating": false,
+    "controllerLeftStick": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "controllerLeftTrigger": 0,
+    "controllerRightStick": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "controllerRightTrigger": 0,
+    "controllerVibrateStrength": 0,
+    "debugDrawColliders": false,
+    "debugShowFPS": false,
+    "deltaTime": 0.016,
+    "difficulty": 1,
+    "editorDeltaTime": 0,
+    "editorIsDirty": false,
+    "editorSpriteColor": "#FFFFFF",
+    "editorSpriteHotspot": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "editorSpritePath": "",
+    "editorSpriteRectHeight": 25,
+    "editorSpriteRectWidth": 25,
+    "editorSpriteRectX": 0,
+    "editorSpriteRectY": 0,
+    "editorSpriteSelected": false,
+    "editorSpriteVisible": true,
+    "effectDuration": 1,
+    "effectElapsedTime": 0,
+    "effectType": "",
+    "effectsVolume": 0.8,
+    "entityCurrentHealth": 100,
+    "entityMaxHealth": 100,
+    "entityName": "Entity",
+    "entityTag": "Untagged",
+    "entityType": "UnknownType",
+    "entityTypeEnum": "None",
+    "gameTime": 0,
+    "gravity": 9.81,
+    "gridActiveCollisionLayer": 0,
+    "gridActiveNavigationLayer": 0,
+    "gridCellSize": {
+      "x": 32,
+      "y": 32,
+      "z": 0
+    },
+    "gridColorA": 255,
+    "gridColorB": 180,
+    "gridColorG": 180,
+    "gridColorR": 180,
+    "gridEnabled": false,
+    "gridHexRadius": 16,
+    "gridLODSkipFactor": 10,
+    "gridLODZoomThreshold": 0.5,
+    "gridMaxLines": 1200,
+    "gridProjection": "Ortho",
+    "gridShowCollisionOverlay": false,
+    "gridShowNavigationOverlay": false,
+    "inputDeadzone": 0.15,
+    "inputSensitivity": 1,
+    "inventoryItems": "[]",
+    "isDebugMode": false,
+    "isPaused": false,
+    "movementDirection": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "movementVelocity": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "musicVolume": 0.6,
+    "navAgentArrivalThreshold": 5,
+    "navAgentAvoidObstacles": true,
+    "navAgentCurrentWaypointIndex": 0,
+    "navAgentHasPath": false,
+    "navAgentLayerMask": 1,
+    "navAgentMaxSpeed": 100,
+    "navAgentNeedsRepath": false,
+    "navAgentRadius": 16,
+    "navAgentSteeringWeight": 1,
+    "navAgentTargetPosition": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "npcType": "",
+    "playerBoundControllerID": -1,
+    "playerIndex": 0,
+    "playerIsInteracting": false,
+    "playerIsJumping": false,
+    "playerIsMenuOpen": false,
+    "playerIsRunning": false,
+    "playerIsShooting": false,
+    "playerIsUsingItem": false,
+    "playerIsWalking": false,
+    "playerJoystickDirection": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "soundEffectID": "",
+    "soundPlayVolume": 1,
+    "soundVolume": 0.8,
+    "spriteColor": "#FFFFFF",
+    "spriteHotspot": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "spritePath": "",
+    "spriteRectHeight": 25,
+    "spriteRectWidth": 25,
+    "spriteRectX": 0,
+    "spriteRectY": 0,
+    "spriteVisible": true,
+    "timeOfDay": 12,
+    "timeScale": 1,
+    "triggerActivated": false,
+    "triggerRadius": 15,
+    "visualAnimBankId": "",
+    "visualAnimFlipX": false,
+    "visualAnimFlipY": false,
+    "visualAnimFrame": 0,
+    "visualAnimFrameTimer": 0,
+    "visualAnimGraphPath": "",
+    "visualAnimIsPaused": false,
+    "visualAnimIsPlaying": true,
+    "visualAnimJustFinished": false,
+    "visualAnimLoop": true,
+    "visualAnimLoopCount": 0,
+    "visualAnimName": "",
+    "visualAnimPlaybackSpeed": 1,
+    "weatherType": "clear",
+    "windStrength": 0
+  },
+  "graphType": "VisualScript",
+  "name": "",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "EntryPoint",
+      "params": {
+        "__posX": {
+          "LiteralValue": 136,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 125,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 132,
+        "y": 123
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "dynamicExecPins": [
+        "Out_1",
+        "Out_2"
+      ],
+      "id": 2,
+      "label": "Sequence",
+      "params": {
+        "__posX": {
+          "LiteralValue": 316,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 123,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 316,
+        "y": 123
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 3,
+      "label": "Need to eat?",
+      "nodeConditionRefs": [
+        {
+          "leftPinID": "",
+          "logicalOp": "Start",
+          "presetID": "preset_53cfd155-5b07-4d9d-a77c-152f60c26fdc",
+          "rightPinID": ""
+        }
+      ],
+      "params": {
+        "__posX": {
+          "LiteralValue": 514,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 140,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 514,
+        "y": 140
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 4,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 540,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": -16,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Exec Sequence 1 completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 540,
+        "y": -16
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 5,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1029,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 312,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "I've Eaten Food",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1029.53,
+        "y": 312.809
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 6,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 716,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 263,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "I am good to go patrol",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 716,
+        "y": 263
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "bbKey": "mHealth",
+      "id": 13,
+      "label": "Set mHealth value",
+      "params": {
+        "__posX": {
+          "LiteralValue": 987,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": -291,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 982.37,
+        "y": -186.759
+      },
+      "type": "SetBBValue"
+    },
+    {
+      "bbKey": "mHealth",
+      "id": 14,
+      "label": "mHealth",
+      "params": {
+        "__posX": {
+          "LiteralValue": 629,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": -276,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 593.37,
+        "y": -258.759
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "bbKey": "mFoodPortion",
+      "id": 15,
+      "label": "mFoodPortion",
+      "params": {
+        "__posX": {
+          "LiteralValue": 587,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": -155,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 590.16,
+        "y": -151.635
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "id": 16,
+      "label": "MathOp",
+      "mathOp": "+",
+      "mathOpRef": {
+        "leftOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        },
+        "mathOperator": "+",
+        "rightOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        }
+      },
+      "params": {
+        "__posX": {
+          "LiteralValue": 792,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": -274,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 787.37,
+        "y": -169.759
+      },
+      "type": "MathOp"
+    },
+    {
+      "dynamicExecPins": [
+        "Out_1",
+        "Out_2"
+      ],
+      "id": 19,
+      "label": "Sequence mHeath & mFatigue",
+      "params": {
+        "__posX": {
+          "LiteralValue": 714,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 92,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 714.937,
+        "y": 92.8335
+      },
+      "type": "Sequence"
+    },
+    {
+      "bbKey": "mFatigue",
+      "id": 20,
+      "label": "Set mFatigue value",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1023,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 102,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1173.37,
+        "y": 106.904
+      },
+      "type": "SetBBValue"
+    },
+    {
+      "bbKey": "cst_zero",
+      "id": 23,
+      "label": "GetBBValue ZERO",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1008,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 217,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 997.74,
+        "y": 179.224
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "id": 24,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1218,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": -290,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "mHealth Restored",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1213.43,
+        "y": -185.37
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 25,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1231,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 102,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "mfatigue reset",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1381.33,
+        "y": 106.371
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "delaySeconds": 1,
+      "id": 26,
+      "label": "Delay",
+      "params": {
+        "__posX": {
+          "LiteralValue": 547,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 342,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 552.989,
+        "y": 344.45
+      },
+      "type": "Delay"
+    },
+    {
+      "id": 27,
+      "label": "MathOp mFatigue + outputResult B",
+      "mathOp": "+",
+      "mathOpRef": {
+        "leftOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        },
+        "mathOperator": "+",
+        "rightOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        }
+      },
+      "params": {
+        "__posX": {
+          "LiteralValue": 346,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 444,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 346.989,
+        "y": 444.45
+      },
+      "type": "MathOp"
+    },
+    {
+      "bbKey": "mFatigue",
+      "id": 29,
+      "label": "SetBBValue for mFatigue",
+      "params": {
+        "__posX": {
+          "LiteralValue": 852,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 430,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 852.989,
+        "y": 430.45
+      },
+      "type": "SetBBValue"
+    },
+    {
+      "bbKey": "mFatigue",
+      "id": 30,
+      "label": "mFatigue",
+      "params": {
+        "__posX": {
+          "LiteralValue": 203,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 405,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 157.989,
+        "y": 399.45
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "bbKey": "cst_Hundred",
+      "id": 31,
+      "label": "cst_Hundred",
+      "params": {
+        "__posX": {
+          "LiteralValue": 182,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 498,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -292.607,
+        "y": 546.407
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "id": 32,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1076,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 431,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "I am getting a litte bit more tired",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1076.55,
+        "y": 431.381
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 33,
+      "label": "Take Cover",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1509,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 101,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "mfatigue reset",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1608.2,
+        "y": 107.27
+      },
+      "taskType": "take_cover",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 34,
+      "label": "Patrol Path",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1315,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 310,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "mfatigue reset",
+          "Type": "Literal"
+        },
+        "pathName": {
+          "LiteralValue": "MyPatrolWay",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1315.42,
+        "y": 310.666
+      },
+      "taskType": "patrol_path",
+      "type": "AtomicTask"
+    },
+    {
+      "bbKey": "cst_zero",
+      "id": 35,
+      "label": "GetBBValue ZERO",
+      "params": {
+        "__posX": {
+          "LiteralValue": 431,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 575,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 426,
+        "y": 575
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "id": 36,
+      "label": "MathOp new mFatigue + 0",
+      "mathOp": "+",
+      "mathOpRef": {
+        "leftOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        },
+        "mathOperator": "+",
+        "rightOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        }
+      },
+      "params": {
+        "__posX": {
+          "LiteralValue": 630,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 507,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 630,
+        "y": 507
+      },
+      "type": "MathOp"
+    },
+    {
+      "id": 37,
+      "label": "Subgraph Boss Combat",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1016,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": -15,
+          "Type": "Literal"
+        },
+        "subgraph_path": {
+          "LiteralValue": "AI\\Boss1.ats",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1016,
+        "y": -15
+      },
+      "subGraphPath": "AI\\Boss1.ats",
+      "type": "SubGraph"
+    },
+    {
+      "id": 38,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1268,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": -12,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Subgraph completed!",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1268.35,
+        "y": -12.7125
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 39,
+      "label": "While",
+      "nodeConditionRefs": [
+        {
+          "leftPinID": "",
+          "logicalOp": "Start",
+          "presetID": "preset_ed2171ef-9ad8-4f83-9115-70da9a127130",
+          "rightPinID": ""
+        }
+      ],
+      "params": {
+        "__posX": {
+          "LiteralValue": 1650,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 241,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1650.36,
+        "y": 241.604
+      },
+      "type": "While"
+    },
+    {
+      "id": 40,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 2025,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 171,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "While instruction looping",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 2046,
+        "y": 180.937
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 41,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 2026,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 315,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "While instruction ended",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 2044.67,
+        "y": 315.718
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 42,
+      "label": "ForEach",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1648,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 521,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1648,
+        "y": 521
+      },
+      "type": "ForEach"
+    },
+    {
+      "dynamicExecPins": [
+        "Out_1"
+      ],
+      "id": 43,
+      "label": "Sequence",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1486,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 432,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1464.98,
+        "y": 434.187
+      },
+      "type": "Sequence"
+    },
+    {
+      "id": 44,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1862,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 461,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "ForEach instruction looping",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1862.57,
+        "y": 461.585
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 45,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1865,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 577,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "ForEach instruction completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1865.64,
+        "y": 577.804
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "dynamicExecPins": [
+        "Case_1",
+        "Case_2",
+        "Case_8",
+        "Case_3",
+        "Case_4",
+        "Case_5",
+        "Case_6",
+        "Case_7"
+      ],
+      "id": 46,
+      "label": "Switch",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1490,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": -297,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1480.88,
+        "y": -324.675
+      },
+      "switchCases": [
+        {
+          "label": "Idle",
+          "pin": "Case_0",
+          "value": "0"
+        },
+        {
+          "label": "Probe",
+          "pin": "Case_1",
+          "value": "1"
+        },
+        {
+          "label": "Walk",
+          "pin": "Case_2",
+          "value": "2"
+        },
+        {
+          "label": "Run",
+          "pin": "Case_8",
+          "value": "3"
+        },
+        {
+          "label": "Flee",
+          "pin": "Case_3",
+          "value": "4"
+        },
+        {
+          "label": "Attak",
+          "pin": "Case_4",
+          "value": "7"
+        },
+        {
+          "label": "Search",
+          "pin": "Case_5",
+          "value": "10"
+        },
+        {
+          "label": "Exchange",
+          "pin": "Case_6",
+          "value": "12"
+        },
+        {
+          "label": "Strategize",
+          "pin": "Case_7",
+          "value": "256"
+        }
+      ],
+      "switchVariable": "mHealth",
+      "type": "Switch"
+    },
+    {
+      "id": 47,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1979,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": -480,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Switch Case 1 Completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1979.7,
+        "y": -480.243
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 48,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1980,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": -377,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Switch Case 2 Completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1980.25,
+        "y": -377.419
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 49,
+      "label": "Log Message",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1982,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": -275,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Switch Case 3 Completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1982.7,
+        "y": -275.075
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 50,
+      "label": "Log Message (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1988,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": -165,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Switch Case 4 Completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1988.3,
+        "y": -165.138
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 51,
+      "label": "MathOp outputResult A + cst_Hundred",
+      "mathOp": "+",
+      "mathOpRef": {
+        "leftOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        },
+        "mathOperator": "+",
+        "rightOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        }
+      },
+      "params": {
+        "__posX": {
+          "LiteralValue": 346,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 444,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -50.5254,
+        "y": 507.514
+      },
+      "type": "MathOp"
+    },
+    {
+      "id": 52,
+      "label": "MathOp PlayerIndex + entityMaxHealth",
+      "mathOp": "+",
+      "mathOpRef": {
+        "leftOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        },
+        "mathOperator": "+",
+        "rightOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        }
+      },
+      "params": {
+        "__posX": {
+          "LiteralValue": 346,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 444,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -464,
+        "y": 353
+      },
+      "type": "MathOp"
+    },
+    {
+      "bbKey": "playerIndex",
+      "id": 53,
+      "label": "PlayerIndex",
+      "params": {
+        "__posX": {
+          "LiteralValue": 182,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 498,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -717.406,
+        "y": 259.894
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "bbKey": "entityMaxHealth",
+      "id": 54,
+      "label": "entityMaxHealth",
+      "params": {
+        "__posX": {
+          "LiteralValue": 182,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 498,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -724.211,
+        "y": 415.576
+      },
+      "type": "GetBBValue"
+    }
+  ],
+  "presets": [
+    {
+      "id": "preset_ed2171ef-9ad8-4f83-9115-70da9a127130",
+      "left": {
+        "mode": "Variable",
+        "value": "mHealth"
+      },
+      "name": "Condition",
+      "op": "<=",
+      "right": {
+        "mode": "Const",
+        "value": 4
+      }
+    },
+    {
+      "id": "preset_6635e4f2-2468-4333-8deb-bb00c79ec3c5",
+      "left": {
+        "mode": "Pin",
+        "value": "[Pin-in]"
+      },
+      "name": "Condition",
+      "op": ">=",
+      "right": {
+        "mode": "Const",
+        "value": 10
+      }
+    },
+    {
+      "id": "preset_53cfd155-5b07-4d9d-a77c-152f60c26fdc",
+      "left": {
+        "mode": "Variable",
+        "value": "mFatigue"
+      },
+      "name": "Condition",
+      "op": ">=",
+      "right": {
+        "mode": "Const",
+        "value": 10
+      }
+    }
+  ],
+  "schema_version": 4
+}

@@ -31,6 +31,10 @@ Notes:
 #include <vector>
 #include <map>
 
+// File picker modal includes
+#include "Editor/Modals/FilePickerModal.h"
+#include "Editor/Modals/SaveFilePickerModal.h"
+
 using Sprite = SDL_Texture;
 
 struct VisualSprite_data;
@@ -218,16 +222,16 @@ public:
     // Returns empty string if not found
     std::string ResolveFilePath(const std::string& relativePath) const;
 
-    // ========================================================================
-    // PHASE 39c Step 5: File Browser Service (Reusable Framework)
-    // ========================================================================
+     // ========================================================================
+     // PHASE 39c Step 5: File Browser Service (Reusable Framework)
+     // ========================================================================
 
     /**
      * @brief Lists all .bt.json behavior tree files in a directory
      * @param directory Directory to search (e.g., "Gamedata/BehaviorTree")
      * @return Vector of .bt.json filenames found in directory
      */
-    std::vector<std::string> GetBehaviorTreeFiles(const std::string& directory = "Gamedata/BehaviorTree") const;
+    std::vector<std::string> GetBehaviorTreeFiles(const std::string& directory = "./Gamedata") const;
 
     /**
      * @brief Opens a file browser dialog for selecting a behavior tree file
@@ -239,12 +243,119 @@ public:
      */
     std::string SelectBehaviorTreeFile(const std::string& currentPath = "") const;
 
+    // ========================================================================
+    // PHASE 40: Centralized File Picker Modal
+    // ========================================================================
+
+    /**
+     * @brief Opens a centralized file picker modal for the specified file type.
+     * @param fileType Type of files to browse (BehaviorTree, SubGraph, Audio, etc.)
+     * @param currentPath Optional current path to display initially
+     * @return Selected file path if user confirmed, empty string if cancelled
+     * 
+     * This method manages a centralized modal dialog that supports multiple
+     * file types. Call this from UI elements that need file selection, then
+     * check the return value to see if user made a selection.
+     * 
+     * Example usage:
+     *   std::string selected = DataManager::Get().OpenFilePickerModal(
+     *       Olympe::FilePickerType::BehaviorTree, "./Gamedata"
+     *   );
+     *   if (!selected.empty()) {
+     *       // User selected a file
+     *       nodeProperties["subgraphPath"] = selected;
+     *   }
+     */
+    std::string OpenFilePickerModal(Olympe::FilePickerType fileType, const std::string& currentPath = "");
+
+    /**
+     * @brief Renders the file picker modal if one is open.
+     * 
+     * Call this every frame within the main ImGui rendering loop to display
+     * the modal UI. This is automatically called by the editor UI systems
+     * that integrate with DataManager.
+     */
+    void RenderFilePickerModal();
+
+    /**
+     * @brief Checks if the file picker modal is currently visible.
+     * @return True if modal is open and waiting for user interaction
+     */
+    bool IsFilePickerModalOpen() const;
+
+    /**
+     * @brief Closes the file picker modal without user selection.
+     */
+    void CloseFilePickerModal();
+
+    /**
+     * @brief Retrieves the selected file from the file picker modal.
+     * @return Selected file path if user confirmed and modal has a selection, empty string otherwise
+     * 
+     * Call this after IsFilePickerModalOpen() returns false to check if user selected a file.
+     * 
+     * Example usage:
+     *   if (DataManager::Get().IsFilePickerModalOpen() == false && wasOpen) {
+     *       std::string file = DataManager::Get().GetSelectedFileFromModal();
+     *       if (!file.empty()) {
+     *           // Process selected file
+     *       }
+     *   }
+     */
+    std::string GetSelectedFileFromModal() const;
+
+    // ====================================================================
+    // Phase 40 Enhancement: Centralized Save As Modal
+    // ====================================================================
+
+    /**
+     * @brief Opens the Save As file picker modal.
+     * @param fileType Type of file to save (BehaviorTree, Blueprint, etc.)
+     * @param directory Starting directory path
+     * @param suggestedFilename Suggested filename without extension
+     * 
+     * Extension will be auto-appended based on file type.
+     * Call RenderSaveFilePickerModal() every frame.
+     * After modal closes, check IsSaveFilePickerModalOpen() and GetSelectedSaveFile().
+     */
+    void OpenSaveFilePickerModal(Olympe::SaveFileType fileType, 
+                                 const std::string& directory, 
+                                 const std::string& suggestedFilename = "");
+
+    /**
+     * @brief Renders the Save As file picker modal UI.
+     * Must be called every frame during the main ImGui rendering loop.
+     */
+    void RenderSaveFilePickerModal();
+
+    /**
+     * @brief Checks if the Save As file picker modal is currently visible.
+     */
+    bool IsSaveFilePickerModalOpen() const;
+
+    /**
+     * @brief Closes the Save As file picker modal.
+     */
+    void CloseSaveFilePickerModal();
+
+    /**
+     * @brief Retrieves the selected file from the Save As modal.
+     * @return Full file path with extension if user confirmed, empty string otherwise
+     * 
+     * Only valid after IsSaveFilePickerModalOpen() returns false and user confirmed.
+     */
+    std::string GetSelectedSaveFile() const;
+
 private:
     std::string name;
     mutable std::mutex m_mutex_;
     std::unordered_map<std::string, std::shared_ptr<Resource>> m_resources_;
     bool m_enableFallbackScan = true;
-    
+
+    // Phase 40: Centralized file picker modals
+    std::unique_ptr<Olympe::FilePickerModal> m_filePickerModal;
+    std::unique_ptr<Olympe::SaveFilePickerModal> m_saveFilePickerModal;
+
     // Platform-specific recursive search helpers
 #ifdef _WIN32
     std::string FindResourceRecursive_Windows(const std::string& filename, 

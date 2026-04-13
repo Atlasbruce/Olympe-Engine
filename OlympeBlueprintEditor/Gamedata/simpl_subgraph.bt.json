@@ -1,0 +1,76 @@
+{
+  "blueprintType": "BehaviorTree",
+  "data": {
+    "rootGraph": {
+      "nodes": [
+        {
+          "children": [
+            2
+          ],
+          "id": 1,
+          "name": "BT_Root",
+          "parameters": {},
+          "position": {
+            "x": 205,
+            "y": 188
+          },
+          "type": "Root"
+        },
+        {
+          "children": [
+            4,
+            3
+          ],
+          "id": 2,
+          "name": "BT_Sequence",
+          "parameters": {},
+          "position": {
+            "x": 486,
+            "y": 198
+          },
+          "type": "Sequence"
+        },
+        {
+          "children": [],
+          "id": 3,
+          "name": "BT_SendMessage",
+          "parameters": {},
+          "position": {
+            "x": 739,
+            "y": 118
+          },
+          "type": "SendMessage"
+        },
+        {
+          "children": [],
+          "id": 4,
+          "name": "BT_EmitSound",
+          "parameters": {},
+          "position": {
+            "x": 743,
+            "y": 257
+          },
+          "type": "Action"
+        }
+      ],
+      "rootNodeId": -1
+    },
+    "subgraphs": {}
+  },
+  "description": "",
+  "editorState": {
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "zoom": 1
+  },
+  "metadata": {
+    "author": "User",
+    "created": "",
+    "lastModified": "2026-04-12T23:51:54",
+    "tags": []
+  },
+  "name": "Untitled-1",
+  "schema_version": 5
+}

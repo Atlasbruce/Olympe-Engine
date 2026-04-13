@@ -130,7 +130,7 @@ namespace Olympe
                     ImGui::SameLine();
                     if (ImGui::Button("Browse##bt_browse", ImVec2(75, 0)))
                     {
-                        m_behaviorTreeModal->Open("Gamedata/BehaviorTree");
+                        m_behaviorTreeModal->Open("./Gamedata");
                     }
 
                     // Render modal every frame
@@ -145,8 +145,8 @@ namespace Olympe
 
                             // Extract relative path by removing "Gamedata/BehaviorTree/" prefix
                             std::string relativePath = selectedFile;
-                            const std::string btPrefix = "Gamedata/BehaviorTree/";
-                            const std::string btPrefixWin = "Gamedata\\BehaviorTree\\";
+                            const std::string btPrefix = "Gamedata/";
+                            const std::string btPrefixWin = "Gamedata\\";
 
                             if (relativePath.find(btPrefix) == 0)
                             {

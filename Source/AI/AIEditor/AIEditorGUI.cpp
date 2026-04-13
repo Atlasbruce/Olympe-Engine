@@ -243,11 +243,11 @@ void AIEditorGUI::Render()
     if (m_showBlackboardPanel) {
         RenderBlackboardPanel();
     }
-    
+
     if (m_showSensesPanel) {
         RenderSensesPanel();
     }
-    
+
     if (m_showRuntimeDebugPanel) {
         RenderRuntimeDebugPanel();
     }
@@ -618,29 +618,19 @@ void AIEditorGUI::MenuAction_NewHFSM()
 void AIEditorGUI::MenuAction_Open()
 {
     SYSTEM_LOG << "[AIEditorGUI] Open file dialog" << std::endl;
-    
-    // Open native file dialog
-    std::string filepath = AIEditorFileDialog::OpenFile(DEFAULT_AI_GRAPH_FILTER, m_lastOpenPath);
-    
+
+    std::string filepath = AIEditorFileDialog::OpenFile(m_lastOpenPath);
     if (!filepath.empty()) {
-        // Load the graph
+        m_lastOpenPath = filepath.substr(0, filepath.find_last_of("\\/"));
+
+        // Load graph via NodeGraphManager
         NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
         NodeGraph::GraphId id = mgr.LoadGraph(filepath);
-        
         if (id.value != 0) {
             mgr.SetActiveGraph(id);
-            m_lastOpenPath = ExtractDirectory(filepath);
-            SYSTEM_LOG << "[AIEditorGUI] Loaded graph: " << filepath << std::endl;
-        }
-        else {
-            SYSTEM_LOG << "[AIEditorGUI] ERROR: Failed to load graph from " << filepath << std::endl;
-        }
-    }
-    else {
-        // Check if there was an error (not just cancel)
-        std::string error = AIEditorFileDialog::GetLastError();
-        if (!error.empty()) {
-            SYSTEM_LOG << "[AIEditorGUI] ERROR: " << error << std::endl;
+            SYSTEM_LOG << "[AIEditorGUI] Loaded: " << filepath << std::endl;
+        } else {
+            SYSTEM_LOG << "[AIEditorGUI] ERROR: Failed to load: " << filepath << std::endl;
         }
     }
 }
@@ -673,43 +663,22 @@ void AIEditorGUI::MenuAction_Save()
 
 void AIEditorGUI::MenuAction_SaveAs()
 {
-    SYSTEM_LOG << "[AIEditorGUI] Save As dialog" << std::endl;
-    
+    SYSTEM_LOG << "[AIEditorGUI] Save As file dialog" << std::endl;
+
     NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
     NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
-    
+
     if (doc == nullptr) {
         SYSTEM_LOG << "[AIEditorGUI] No active graph to save" << std::endl;
         return;
     }
-    
-    // Open native save dialog
-    std::string filepath = AIEditorFileDialog::SaveFile(DEFAULT_AI_GRAPH_FILTER, m_lastSavePath, DEFAULT_AI_GRAPH_NAME);
-    
+
+    std::string filepath = AIEditorFileDialog::SaveFile(m_lastSavePath, "*.bt.json");
     if (!filepath.empty()) {
-        // Ensure file has proper extension
-        if (!EndsWith(filepath, ".json") && !EndsWith(filepath, ".btree")) {
-            filepath += DEFAULT_AI_GRAPH_EXT;
-        }
-        
-        // Save the graph
+        m_lastSavePath = filepath.substr(0, filepath.find_last_of("\\/"));
         NodeGraph::GraphId activeId = mgr.GetActiveGraphId();
-        bool success = mgr.SaveGraph(activeId, filepath);
-        
-        if (success) {
-            m_lastSavePath = ExtractDirectory(filepath);
-            SYSTEM_LOG << "[AIEditorGUI] Saved graph: " << filepath << std::endl;
-        }
-        else {
-            SYSTEM_LOG << "[AIEditorGUI] ERROR: Save failed" << std::endl;
-        }
-    }
-    else {
-        // Check if there was an error (not just cancel)
-        std::string error = AIEditorFileDialog::GetLastError();
-        if (!error.empty()) {
-            SYSTEM_LOG << "[AIEditorGUI] ERROR: " << error << std::endl;
-        }
+        mgr.SaveGraph(activeId, filepath);
+        SYSTEM_LOG << "[AIEditorGUI] Saved to: " << filepath << std::endl;
     }
 }
 

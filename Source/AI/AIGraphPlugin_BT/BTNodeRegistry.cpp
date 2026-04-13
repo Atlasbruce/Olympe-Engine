@@ -405,6 +405,23 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         {"eventType", "domain", "param1", "param2", "state"}  // Message parameters
     });
 
+    // ========================================================================
+    // SUBGRAPH NODES (Behavior Composition & Reusability)
+    // ========================================================================
+
+    RegisterNodeType({
+        "BT_SubGraph",
+        "SubGraph",
+        "Encapsulates and executes another behavior tree (enables reusability and modularity)",
+        BTNodeCategory::Composite,
+        ConvertColorFormat(ColorScheme::SubGraph_Primary),
+        "◈",         // Diamond symbol (encapsulation)
+        0,           // No children (children come from loaded SubGraph)
+        0,           // No children
+        true,        // Allows decorator
+        {"subgraphPath", "inputParamCount", "outputParamCount", "inputBindingCount", "outputBindingCount"}
+    });
+
     SYSTEM_LOG << "[BTNodeRegistry] Initialized " << m_nodeTypes.size() << " built-in node types" << std::endl;
 }
 

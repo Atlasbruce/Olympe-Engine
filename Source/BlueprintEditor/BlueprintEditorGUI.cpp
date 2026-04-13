@@ -997,11 +997,13 @@ namespace Olympe
     void BlueprintEditorGUI::SaveBlueprintAs()
     {
         auto& backend = BlueprintEditor::Get();
-        
-        // For now, use a default pattern (in real implementation, would show file dialog)
-        const std::string& name = backend.GetCurrentBlueprint().name;
-        std::string filepath = "../Blueprints/" + name + "_copy.json";
-        backend.SaveBlueprintAs(filepath);
+        std::string savePath = backend.GetCurrentFilepath();
+        if (savePath.empty()) {
+            savePath = "Blueprints/";
+        }
+
+        // TODO: Implement save as dialog
+        SYSTEM_LOG << "[BlueprintEditorGUI] SaveBlueprintAs not yet implemented" << std::endl;
     }
 
     void BlueprintEditorGUI::AddComponent(const std::string& type)

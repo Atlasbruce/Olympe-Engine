@@ -241,6 +241,8 @@
     <ClCompile Include="Source\Editor\Modals\BehaviorTreeFilePickerModal.cpp" />
     <ClCompile Include="Source\NodeGraphShared\BehaviorTreeGraphAdapter.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BehaviorTreeExecutor.cpp" />
+    <ClCompile Include="Source\Editor\Modals\FilePickerModal.cpp" />
+    <ClCompile Include="Source\Editor\Modals\SaveFilePickerModal.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -514,6 +516,8 @@
     <ClInclude Include="Source\Editor\Modals\BehaviorTreeFilePickerModal.h" />
     <ClInclude Include="Source\NodeGraphShared\BehaviorTreeGraphAdapter.h" />
     <ClInclude Include="Source\BlueprintEditor\BehaviorTreeExecutor.h" />
+    <ClInclude Include="Source\Editor\Modals\FilePickerModal.h" />
+    <ClInclude Include="Source\Editor\Modals\SaveFilePickerModal.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -550,6 +554,9 @@
     <None Include="Documentation\PHASE_39_QUICK_REFERENCE.md" />
     <None Include="Documentation\PHASE_39_VISUALSCRIPT_REFERENCE.md" />
     <None Include="Documentation\PHASE_39_SUMMARY.md" />
+    <None Include="PHASE_40_CENTRALIZATION_REPORT.md" />
+    <None Include="PHASE_40_IMPLEMENTATION_SUMMARY.md" />
+    <None Include="PHASE_40_FINAL_REPORT.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

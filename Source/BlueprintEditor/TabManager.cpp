@@ -14,6 +14,7 @@
 #include "EntityPrefabEditor/EntityPrefabRenderer.h"
 #include "EntityPrefabEditor/PrefabCanvas.h"
 #include "EntityPrefabEditor/EntityPrefabGraphDocument.h"
+#include "../DataManager.h"
 
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/nlohmann/json.hpp"
@@ -529,46 +530,6 @@ bool TabManager::HasDirtyTabs() const
 
 void TabManager::RenderTabBar()
 {
-    // --- Save As dialog (deferred from SaveActiveTab) ---
-    if (m_showSaveAsDialog)
-    {
-        ImGui::OpenPopup("TabManager_SaveAs");
-        m_showSaveAsDialog = false;
-    }
-
-    if (ImGui::BeginPopupModal("TabManager_SaveAs", nullptr,
-                               ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        ImGui::Text("Save graph as:");
-        ImGui::SetNextItemWidth(400.0f);
-        ImGui::InputText("##save_as_path", m_saveAsBuffer, sizeof(m_saveAsBuffer));
-        ImGui::Separator();
-
-        if (ImGui::Button("Save", ImVec2(120, 0)))
-        {
-            EditorTab* tab = GetTab(m_saveAsTabID);
-            if (tab && tab->renderer && std::strlen(m_saveAsBuffer) > 0)
-            {
-                std::string path = std::string(m_saveAsBuffer);
-                // Append .ats if no extension
-                if (path.find('.') == std::string::npos)
-                    path += ".ats";
-                if (tab->renderer->Save(path))
-                {
-                    tab->filePath    = path;
-                    tab->isDirty     = false;
-                    tab->displayName = DisplayNameFromPath(path);
-                }
-            }
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0)))
-            ImGui::CloseCurrentPopup();
-
-        ImGui::EndPopup();
-    }
-
     // --- Unsaved dialog (deferred) ---
     if (!m_pendingCloseTabID.empty())
     {

@@ -147,6 +147,8 @@
     <ClCompile Include="Source\Editor\ConditionPreset\NodeConditionRef.cpp" />
     <ClCompile Include="Source\Editor\ConditionPreset\Operand.cpp" />
     <ClCompile Include="Source\Editor\Modals\BehaviorTreeFilePickerModal.cpp" />
+    <ClCompile Include="Source\Editor\Modals\FilePickerModal.cpp" />
+    <ClCompile Include="Source\Editor\Modals\SaveFilePickerModal.cpp" />
     <ClCompile Include="Source\Editor\Modals\SubGraphFilePickerModal.cpp" />
     <ClCompile Include="Source\Editor\Modals\SwitchCaseEditorModal.cpp" />
     <ClCompile Include="Source\Editor\Nodes\NodeBranchRenderer.cpp" />
@@ -389,6 +391,8 @@
     <ClInclude Include="Source\Editor\ConditionPreset\Operand.h" />
     <ClInclude Include="Source\Editor\Dialogs\ConditionPresetEditDialog.h" />
     <ClInclude Include="Source\Editor\Modals\BehaviorTreeFilePickerModal.h" />
+    <ClInclude Include="Source\Editor\Modals\FilePickerModal.h" />
+    <ClInclude Include="Source\Editor\Modals\SaveFilePickerModal.h" />
     <ClInclude Include="Source\Editor\Modals\SubGraphFilePickerModal.h" />
     <ClInclude Include="Source\Editor\Modals\SwitchCaseEditorModal.h" />
     <ClInclude Include="Source\Editor\Nodes\NodeBranchRenderer.h" />
@@ -558,6 +562,9 @@
     <None Include="Gamedata\PrefabEntities\ComponentsParameters.json" />
     <None Include="olympe.ini" />
     <None Include="OlympeBlueprintEditor.vcxproj" />
+    <None Include="PHASE_40_CENTRALIZATION_REPORT.md" />
+    <None Include="PHASE_40_FINAL_REPORT.md" />
+    <None Include="PHASE_40_IMPLEMENTATION_SUMMARY.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />

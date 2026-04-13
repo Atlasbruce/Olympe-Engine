@@ -90,6 +90,8 @@
     <ClCompile Include="..\Source\Editor\ConditionPreset\Operand.cpp" />
     <ClCompile Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.cpp" />
     <ClCompile Include="..\Source\Editor\Modals\BehaviorTreeFilePickerModal.cpp" />
+    <ClCompile Include="..\Source\Editor\Modals\FilePickerModal.cpp" />
+    <ClCompile Include="..\Source\Editor\Modals\SaveFilePickerModal.cpp" />
     <ClCompile Include="..\Source\Editor\Modals\SwitchCaseEditorModal.cpp" />
     <ClCompile Include="..\Source\Editor\Nodes\NodeBranchRenderer.cpp" />
     <ClCompile Include="..\Source\Editor\Modals\NodeConditionsEditModal.cpp" />
@@ -321,6 +323,8 @@
     <ClInclude Include="..\Source\Editor\ConditionPreset\Operand.h" />
     <ClInclude Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.h" />
     <ClInclude Include="..\Source\Editor\Modals\BehaviorTreeFilePickerModal.h" />
+    <ClInclude Include="..\Source\Editor\Modals\FilePickerModal.h" />
+    <ClInclude Include="..\Source\Editor\Modals\SaveFilePickerModal.h" />
     <ClInclude Include="..\Source\Editor\Modals\SwitchCaseEditorModal.h" />
     <ClInclude Include="..\Source\Editor\Nodes\NodeBranchRenderer.h" />
     <ClInclude Include="..\Source\Editor\Modals\NodeConditionsEditModal.h" />
