@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - 'website/**'
+      - 'Documentation/**'
       - 'Doxyfile'
       - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
