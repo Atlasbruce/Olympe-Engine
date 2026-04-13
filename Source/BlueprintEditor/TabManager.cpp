@@ -14,6 +14,9 @@
 #include "EntityPrefabEditor/EntityPrefabRenderer.h"
 #include "EntityPrefabEditor/PrefabCanvas.h"
 #include "EntityPrefabEditor/EntityPrefabGraphDocument.h"
+#include "Framework/VisualScriptGraphDocument.h"
+#include "Framework/BehaviorTreeGraphDocument.h"
+#include "Framework/CanvasModalRenderer.h"
 #include "../DataManager.h"
 
 #include "../third_party/imgui/imgui.h"
@@ -47,11 +50,8 @@ TabManager::TabManager()
 
 TabManager::~TabManager()
 {
-    for (size_t i = 0; i < m_tabs.size(); ++i)
-    {
-        delete m_tabs[i].renderer;
-        m_tabs[i].renderer = nullptr;
-    }
+    // EditorTab destructors now properly handle renderer/document cleanup
+    // via explicit move semantics that transfer ownership
     m_tabs.clear();
 }
 
@@ -162,6 +162,12 @@ std::string TabManager::CreateNewTab(const std::string& graphType)
     {
         VisualScriptRenderer* r = new VisualScriptRenderer();
         tab.renderer = r;
+
+        // Create document adapter for VisualScript (pass the wrapped panel)
+        VisualScriptGraphDocument* doc = new VisualScriptGraphDocument(&r->GetPanel());
+        tab.document = doc;
+
+        SYSTEM_LOG << "[TabManager::CreateNewTab] Created new VisualScript tab with document adapter\n";
     }
     else if (graphType == "EntityPrefab")
     {
@@ -176,6 +182,12 @@ std::string TabManager::CreateNewTab(const std::string& graphType)
 
         EntityPrefabRenderer* r = new EntityPrefabRenderer(s_epCanvas);
         tab.renderer = r;
+
+        // Create document adapter for EntityPrefab
+        EntityPrefabGraphDocument* doc = new EntityPrefabGraphDocument();
+        tab.document = doc;
+
+        SYSTEM_LOG << "[TabManager::CreateNewTab] Created new EntityPrefab tab with document adapter\n";
     }
     else if (graphType == "BehaviorTree")
     {
@@ -191,6 +203,12 @@ std::string TabManager::CreateNewTab(const std::string& graphType)
         // Create new empty graph immediately so canvas appears on tab creation
         r->CreateNew(nameSS.str());
         tab.renderer = r;
+
+        // Create document adapter for BehaviorTree
+        BehaviorTreeGraphDocument* doc = new BehaviorTreeGraphDocument(r);
+        tab.document = doc;
+
+        SYSTEM_LOG << "[TabManager::CreateNewTab] Created new BehaviorTree tab with document adapter\n";
     }
     else
     {
@@ -198,7 +216,7 @@ std::string TabManager::CreateNewTab(const std::string& graphType)
         return "";
     }
 
-    m_tabs.push_back(tab);
+    m_tabs.emplace_back(std::move(tab)); //m_tabs.push_back(tab);
     SetActiveTab(tab.tabID);
     //SYSTEM_LOG << "[TabManager] Created new tab: " << tab.displayName << " (" << graphType << ")\n";
     return tab.tabID;
@@ -241,6 +259,10 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
             return "";
         }
         tab.renderer = r;
+
+        // Create document adapter for VisualScript (pass the wrapped panel)
+        VisualScriptGraphDocument* doc = new VisualScriptGraphDocument(&r->GetPanel());
+        tab.document = doc;
     }
     else if (graphType == "BehaviorTree")
     {
@@ -264,6 +286,10 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
             return "";
         }
         tab.renderer = r;
+
+        // Create document adapter for BehaviorTree
+        BehaviorTreeGraphDocument* doc = new BehaviorTreeGraphDocument(r);
+        tab.document = doc;
     }
     else if (graphType == "EntityPrefab")
     {
@@ -286,6 +312,10 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
             return "";
         }
         tab.renderer = r;
+
+        // Create document adapter for EntityPrefab
+        EntityPrefabGraphDocument* doc = new EntityPrefabGraphDocument();
+        tab.document = doc;
     }
     else
     {
@@ -299,9 +329,13 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
         }
         tab.graphType = "VisualScript";
         tab.renderer  = r;
+
+        // Create document adapter for fallback VisualScript
+        VisualScriptGraphDocument* doc = new VisualScriptGraphDocument(&r->GetPanel());
+        tab.document = doc;
     }
 
-    m_tabs.push_back(tab);
+    m_tabs.emplace_back(std::move(tab)); //m_tabs.push_back(tab);
     SetActiveTab(tab.tabID);
     return tab.tabID;
 }
@@ -651,6 +685,11 @@ void TabManager::RenderTabBar()
         }
     }
 
+    // Phase 42: Render unified SubGraph file picker modal (centralized rendering point)
+    // This ensures all three editors (VisualScript, BehaviorTree, EntityPrefab) use
+    // the same modal rendering, preventing duplicate zones and inconsistent behavior
+    CanvasModalRenderer::Get().RenderSubGraphFilePickerModal();
+
     ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_Reorderable |
                                    ImGuiTabBarFlags_AutoSelectNewTabs;
 
@@ -728,6 +767,14 @@ void TabManager::RenderTabBar()
         }
 
         ImGui::EndTabBar();
+    }
+
+    // Phase 43: Render framework modals for all graph types
+    // Centralized rendering point for Save/SaveAs/Browse toolbar buttons
+    EditorTab* activeTab = GetActiveTab();
+    if (activeTab && activeTab->renderer)
+    {
+        activeTab->renderer->RenderFrameworkModals();
     }
 }
 

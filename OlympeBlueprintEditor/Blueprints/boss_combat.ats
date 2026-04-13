@@ -1,6 +1,7 @@
 {
   "blueprintType": "BehaviorTree",
   "data": {
+    "eventRoots": [],
     "nodes": [
       {
         "children": [
@@ -12,8 +13,8 @@
         "name": "Root",
         "parameters": {},
         "position": {
-          "x": 0,
-          "y": 0
+          "x": -262,
+          "y": 80
         },
         "type": "Selector"
       },
@@ -26,8 +27,8 @@
         "name": "Phase1",
         "parameters": {},
         "position": {
-          "x": 0,
-          "y": 0
+          "x": 63,
+          "y": 100
         },
         "type": "Sequence"
       },
@@ -37,8 +38,8 @@
         "name": "HealthAbove50",
         "parameters": {},
         "position": {
-          "x": 0,
-          "y": 0
+          "x": 402,
+          "y": 51
         },
         "type": "Action"
       },
@@ -48,8 +49,8 @@
         "name": "BasicAttacks",
         "parameters": {},
         "position": {
-          "x": 0,
-          "y": 0
+          "x": 399,
+          "y": 131
         },
         "type": "SubGraph"
       },
@@ -62,8 +63,8 @@
         "name": "Phase2",
         "parameters": {},
         "position": {
-          "x": 0,
-          "y": 0
+          "x": 99,
+          "y": 229
         },
         "type": "Sequence"
       },
@@ -73,8 +74,8 @@
         "name": "HealthBelow50",
         "parameters": {},
         "position": {
-          "x": 0,
-          "y": 0
+          "x": 411,
+          "y": 357
         },
         "type": "Action"
       },
@@ -84,8 +85,8 @@
         "name": "AdvancedAttacks",
         "parameters": {},
         "position": {
-          "x": 0,
-          "y": 0
+          "x": 416,
+          "y": 259
         },
         "type": "SubGraph"
       },
@@ -95,10 +96,23 @@
         "name": "Idle",
         "parameters": {},
         "position": {
-          "x": 0,
-          "y": 0
+          "x": 36,
+          "y": -4
         },
         "type": "Action"
+      },
+      {
+        "children": [
+          1
+        ],
+        "id": 9,
+        "name": "BT_Root",
+        "parameters": {},
+        "position": {
+          "x": -538.03,
+          "y": 93.8283
+        },
+        "type": "Root"
       }
     ],
     "rootNodeId": -1
@@ -114,7 +128,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "",
+    "lastModified": "2026-04-13T23:51:31",
     "tags": []
   },
   "name": "BossCombat",

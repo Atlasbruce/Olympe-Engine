@@ -441,4 +441,19 @@ namespace Olympe {
 // Purpose: Render global variables panel with Phase 24 registry integration.
 // ============================================================================
 
+// ============================================================================
+// Phase 43 — Framework Modal Rendering
+// ============================================================================
+
+void VisualScriptEditorPanel::RenderFrameworkModals()
+{
+    // Phase 43: Render framework modals (Save/SaveAs/Browse)
+    // The CanvasFramework instance coordinates with CanvasToolbarRenderer
+    // to render all framework-based modals.
+    if (m_framework)
+    {
+        m_framework->RenderModals();
+    }
+}
+
 } // namespace Olympe

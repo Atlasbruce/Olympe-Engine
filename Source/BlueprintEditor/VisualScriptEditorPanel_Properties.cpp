@@ -37,6 +37,9 @@
 #include "../json_helper.h"
 #include "../TaskSystem/TaskGraphLoader.h"
 
+// Phase 42 — Unified modal framework integration
+#include "Framework/CanvasModalRenderer.h"
+
 #include <fstream>
 #include <iostream>
 #include <algorithm>
@@ -731,14 +734,13 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
     ImGui::SameLine();
     if (ImGui::Button("Browse##subgraph_browse", ImVec2(75, 0)))
     {
-        m_subGraphModal->Open("Blueprints");
+        CanvasModalRenderer::Get().OpenSubGraphFilePickerModal("Blueprints/");
     }
 
-    // Handle modal result
-    m_subGraphModal->Render();
-    if (m_subGraphModal->IsConfirmed())
+    // Handle modal result (rendering handled by CanvasModalRenderer in TabManager)
+    if (CanvasModalRenderer::Get().IsSubGraphModalConfirmed())
     {
-        std::string selectedFile = m_subGraphModal->GetSelectedFile();
+        std::string selectedFile = CanvasModalRenderer::Get().GetSelectedSubGraphFile();
 
         // PHASE 26 FIX: Extract relative path by removing "Blueprints/" prefix
         // Modal returns full path like "Blueprints/AI/Boss2.ats"

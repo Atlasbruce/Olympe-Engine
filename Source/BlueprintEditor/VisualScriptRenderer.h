@@ -42,6 +42,9 @@ public:
     std::string GetCanvasStateJSON() const override;
     void SetCanvasStateJSON(const std::string& json) override;
 
+    // Phase 43: Framework modal rendering (centralized from TabManager)
+    void RenderFrameworkModals() override;
+
 private:
     VisualScriptEditorPanel m_panel;
 

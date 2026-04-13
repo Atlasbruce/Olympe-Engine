@@ -37,6 +37,9 @@ public:
     std::string GetCanvasStateJSON() const override;
     void SetCanvasStateJSON(const std::string& json) override;
 
+    // Phase 43: Framework modal rendering (centralized toolbar Save/SaveAs/Browse)
+    void RenderFrameworkModals() override;
+
 private:
     PrefabCanvas& m_canvas;
     ComponentPalettePanel m_componentPalette;

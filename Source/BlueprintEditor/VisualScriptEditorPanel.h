@@ -246,6 +246,13 @@ public:
      */
     void RenderVerificationLogsPanel();
 
+    /**
+     * @brief Phase 43: Render all framework modals for this panel.
+     * Called from TabManager::RenderTabBar() via VisualScriptRenderer::RenderFrameworkModals().
+     * Ensures single rendering point per frame for toolbar modals (Save/SaveAs/Browse).
+     */
+    void RenderFrameworkModals();
+
 private:
 
     // -----------------------------------------------------------------------

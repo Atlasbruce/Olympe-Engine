@@ -21,11 +21,17 @@
 #pragma once
 
 #include "IGraphRenderer.h"
+#include "Framework/IGraphDocument.h"
+#include "Framework/VisualScriptGraphDocument.h"
+#include "Framework/BehaviorTreeGraphDocument.h"
 
 #include <string>
 #include <vector>
 
 namespace Olympe {
+
+// Forward declarations
+class EntityPrefabGraphDocument;
 
 // ============================================================================
 // EditorTab
@@ -45,12 +51,72 @@ struct EditorTab
     bool           isActive;    ///< True when this is the currently selected tab
 
     IGraphRenderer* renderer;   ///< Owned pointer — deleted when tab is closed
+    IGraphDocument* document;   ///< Owned pointer — handles Load/Save/lifecycle
 
     EditorTab()
         : isDirty(false)
         , isActive(false)
         , renderer(nullptr)
+        , document(nullptr)
     {}
+
+    ~EditorTab()
+    {
+        if (document)
+        {
+            delete document;
+            document = nullptr;
+        }
+        if (renderer)
+        {
+            delete renderer;
+            renderer = nullptr;
+        }
+    }
+
+    // Disable copy to prevent accidental shallow copies of owned pointers
+    EditorTab(const EditorTab&) = delete;
+    EditorTab& operator=(const EditorTab&) = delete;
+
+    // Explicit move semantics: transfer ownership, nullify source
+    EditorTab(EditorTab&& other) noexcept
+        : tabID(std::move(other.tabID))
+        , displayName(std::move(other.displayName))
+        , filePath(std::move(other.filePath))
+        , graphType(std::move(other.graphType))
+        , isDirty(other.isDirty)
+        , isActive(other.isActive)
+        , renderer(other.renderer)
+        , document(other.document)
+    {
+        other.renderer = nullptr;
+        other.document = nullptr;
+    }
+
+    EditorTab& operator=(EditorTab&& other) noexcept
+    {
+        if (this != &other)
+        {
+            // Clean up existing resources
+            if (renderer) { delete renderer; renderer = nullptr; }
+            if (document) { delete document; document = nullptr; }
+
+            // Transfer ownership
+            tabID = std::move(other.tabID);
+            displayName = std::move(other.displayName);
+            filePath = std::move(other.filePath);
+            graphType = std::move(other.graphType);
+            isDirty = other.isDirty;
+            isActive = other.isActive;
+            renderer = other.renderer;
+            document = other.document;
+
+            // Nullify source
+            other.renderer = nullptr;
+            other.document = nullptr;
+        }
+        return *this;
+    }
 };
 
 // ============================================================================

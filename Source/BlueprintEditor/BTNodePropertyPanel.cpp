@@ -12,6 +12,7 @@
 #include "../AI/BehaviorTree.h"
 #include "../system/system_utils.h"
 #include "../Editor/Modals/FilePickerModal.h"
+#include "Framework/CanvasModalRenderer.h"
 #include <cstring>
 
 namespace Olympe {
@@ -177,7 +178,7 @@ void BTNodePropertyPanel::RenderSubGraphControls(GraphNode* node)
         ImGui::TextDisabled("(No SubGraph path specified)");
     }
 
-    // File browser button - Phase 40: Using centralized file picker modal
+    // File browser button - Phase 42: Using unified CanvasModalRenderer
     if (ImGui::Button("Browse...##subgraphPath", ImVec2(-1, 0)))
     {
         // Extract directory only from the full path (if it's a file path)
@@ -195,18 +196,18 @@ void BTNodePropertyPanel::RenderSubGraphControls(GraphNode* node)
                 directory = currentPath;
             }
         }
-        DataManager::Get().OpenFilePickerModal(Olympe::FilePickerType::SubGraph, directory);
+        CanvasModalRenderer::Get().OpenSubGraphFilePickerModal(directory);
     }
 
-    // Phase 40: Check if modal has closed with a selection
+    // Phase 42: Check if modal has closed with a selection
     // This pattern detects when modal was open last frame but is now closed
     static bool wasFilePickerOpen = false;
-    bool isFilePickerOpen = DataManager::Get().IsFilePickerModalOpen();
+    bool isFilePickerOpen = CanvasModalRenderer::Get().IsSubGraphModalOpen();
 
     if (wasFilePickerOpen && !isFilePickerOpen)
     {
         // Modal just closed - check if user selected a file
-        std::string selectedFile = DataManager::Get().GetSelectedFileFromModal();
+        std::string selectedFile = CanvasModalRenderer::Get().GetSelectedSubGraphFile();
         if (!selectedFile.empty())
         {
             // Update the node's subgraphPath parameter with the selected file

@@ -2141,4 +2141,14 @@ void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
         return "";
     }
 
+    // Phase 43: Framework modal rendering
+    void NodeGraphPanel::RenderFrameworkModals()
+    {
+        // Phase 43: NodeGraphPanel does not directly own a CanvasFramework.
+        // Modal rendering for BehaviorTree is handled by BehaviorTreeRenderer instead.
+        // This method is kept for interface compatibility.
+        // Note: If NodeGraphPanel needs direct framework access in the future,
+        //       add m_framework member and implement like VisualScriptEditorPanel.
+    }
+
 }

@@ -171,4 +171,12 @@ void VisualScriptRenderer::SetCanvasStateJSON(const std::string& json)
     (void)json;
 }
 
+void VisualScriptRenderer::RenderFrameworkModals()
+{
+    // Phase 43: Render toolbar modals through the panel's framework
+    // The panel coordinates with CanvasFramework which has the toolbar
+    // that needs Save/SaveAs/Browse modal rendering
+    m_panel.RenderFrameworkModals();
+}
+
 } // namespace Olympe

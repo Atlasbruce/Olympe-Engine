@@ -574,4 +574,17 @@ void BehaviorTreeRenderer::SetCanvasStateJSON(const std::string& json)
     (void)json;
 }
 
+// Phase 43: Framework modal rendering
+void BehaviorTreeRenderer::RenderFrameworkModals()
+{
+    // Phase 43: Render framework modals (Save/SaveAs/Browse)
+    // The CanvasFramework instance coordinates with CanvasToolbarRenderer
+    // to render all framework-based modals.
+    if (m_framework)
+    {
+        m_framework->RenderModals();
+    }
+}
+
 } // namespace Olympe
+

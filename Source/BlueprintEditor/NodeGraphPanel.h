@@ -177,6 +177,9 @@ namespace Olympe
             return globalUID - (graphID * 10000);  // 10000 is GRAPH_ID_MULTIPLIER
         }
 
+        // Phase 43: Framework modal rendering
+        void RenderFrameworkModals();
+
         // -----------------------------------------------------------------------
         // Runtime debug overlay
         // -----------------------------------------------------------------------

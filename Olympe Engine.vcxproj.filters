@@ -247,6 +247,7 @@
     <ClCompile Include="Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Framework\CanvasToolbarRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Framework\CanvasFramework.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Framework\CanvasModalRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -527,6 +528,8 @@
     <ClInclude Include="Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.h" />
     <ClInclude Include="Source\BlueprintEditor\Framework\CanvasToolbarRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\Framework\CanvasFramework.h" />
+    <ClInclude Include="Source\BlueprintEditor\Framework\IGraphRenderer.h" />
+    <ClInclude Include="Source\BlueprintEditor\Framework\CanvasModalRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -578,6 +581,22 @@
     <None Include="FRAMEWORK_INTEGRATION_GUIDE.md" />
     <None Include="FRAMEWORK_COMPLETE_DELIVERABLE_SUMMARY.md" />
     <None Include="PHASE_41_SESSION_3_FINAL_SUMMARY.md" />
+    <None Include="PHASE_41_COMPLETE_FINAL_DELIVERABLE.md" />
+    <None Include="FRAMEWORK_INTEGRATION_GUIDE_UPDATED.md" />
+    <None Include="RELEASE_NOTES_PHASE_41_v1.5.0.md" />
+    <None Include="PHASE_41_SESSION_4_FINAL_SUMMARY.md" />
+    <None Include="PHASE_41_FINAL_DELIVERY_SUMMARY.md" />
+    <None Include="PHASE_43_COMPLETION_REPORT.md" />
+    <None Include="PHASE_43_TECHNICAL_GUIDE.md" />
+    <None Include="PHASE_43_TESTING_GUIDE.md" />
+    <None Include="PHASE_43_FINAL_SUMMARY.md" />
+    <None Include="PHASE_43_VISUAL_SUMMARY.md" />
+    <None Include="PHASE_44_PLANNING.md" />
+    <None Include="DOCUMENTATION_INDEX.md" />
+    <None Include="START_HERE.md" />
+    <None Include="DELIVERY_PACKAGE.md" />
+    <None Include="FILE_MANIFEST.md" />
+    <None Include="MISSION_ACCOMPLISHED.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

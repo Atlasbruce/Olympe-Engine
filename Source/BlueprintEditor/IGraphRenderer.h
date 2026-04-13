@@ -27,7 +27,7 @@ namespace Olympe {
 class IGraphRenderer
 {
 public:
-    virtual ~IGraphRenderer() {}
+    virtual ~IGraphRenderer() = default;
 
     // ------------------------------------------------------------------
     // Lifecycle
@@ -105,6 +105,23 @@ public:
     virtual void SetCanvasStateJSON(const std::string& json)
     {
         (void)json;  // Default: no-op
+    }
+
+    // ------------------------------------------------------------------
+    // Phase 43 - Framework Modal Rendering
+    // ------------------------------------------------------------------
+
+    /**
+     * @brief Render all framework modals for this renderer
+     * Called centrally from TabManager::RenderTabBar() to ensure single
+     * rendering point per frame for all modals (Save/SaveAs/Browse).
+     * This prevents duplicate UI zones and ensures consistent behavior.
+     *
+     * Default: no-op (renderers without modals do nothing)
+     */
+    virtual void RenderFrameworkModals()
+    {
+        // Default: no framework modals
     }
 };
 

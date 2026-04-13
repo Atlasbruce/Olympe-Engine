@@ -730,6 +730,9 @@
     <ClCompile Include="..\Source\BlueprintEditor\Framework\VisualScriptGraphDocument.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasModalRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -1395,6 +1398,7 @@
     <ClInclude Include="..\Source\BlueprintEditor\Framework\CanvasFramework.h" />
     <ClInclude Include="..\Source\BlueprintEditor\Framework\VisualScriptGraphDocument.h" />
     <ClInclude Include="..\Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Framework\CanvasModalRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico">

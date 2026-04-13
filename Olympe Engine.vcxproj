@@ -77,6 +77,7 @@
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Framework\CanvasFramework.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Framework\CanvasModalRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Framework\CanvasToolbarRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Framework\VisualScriptGraphDocument.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Graph.cpp" />
@@ -333,8 +334,10 @@
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.h" />
     <ClInclude Include="Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.h" />
     <ClInclude Include="Source\BlueprintEditor\Framework\CanvasFramework.h" />
+    <ClInclude Include="Source\BlueprintEditor\Framework\CanvasModalRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\Framework\CanvasToolbarRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\Framework\IGraphDocument.h" />
+    <ClInclude Include="Source\BlueprintEditor\Framework\IGraphRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\Framework\VisualScriptGraphDocument.h" />
     <ClInclude Include="Source\BlueprintEditor\Graph.h" />
     <ClInclude Include="Source\BlueprintEditor\EnumCatalogManager.h" />
@@ -559,6 +562,7 @@
     <None Include="ClassDiagram.cd" />
     <None Include="config\ATS-VS-editor-config.json" />
     <None Include="Config\global_blackboard_register.json" />
+    <None Include="DELIVERY_PACKAGE.md" />
     <None Include="Documentation\PHASE_39_BT_SUBGRAPH_ANALYSIS.md" />
     <None Include="Documentation\PHASE_39_EXECUTIVE_SUMMARY.md" />
     <None Include="Documentation\PHASE_39_QUICK_REFERENCE.md" />
@@ -567,10 +571,14 @@
     <None Include="Documentation\PHASE_39_VISUALSCRIPT_REFERENCE.md" />
     <None Include="Documentation\PHASE_BT_SIMULATION_ANALYSIS.md" />
     <None Include="Documentation\PHASE_BT_SIMULATION_ANALYSIS_v2_REVISED.md" />
+    <None Include="DOCUMENTATION_INDEX.md" />
+    <None Include="FILE_MANIFEST.md" />
     <None Include="FRAMEWORK_COMPLETE_DELIVERABLE_SUMMARY.md" />
     <None Include="FRAMEWORK_INTEGRATION_GUIDE.md" />
+    <None Include="FRAMEWORK_INTEGRATION_GUIDE_UPDATED.md" />
     <None Include="Gamedata\BehaviorTree\EventTypes.json" />
     <None Include="Gamedata\PrefabEntities\ComponentsParameters.json" />
+    <None Include="MISSION_ACCOMPLISHED.md" />
     <None Include="MODAL_AUDIT_COMPREHENSIVE.md" />
     <None Include="olympe.ini" />
     <None Include="OlympeBlueprintEditor.vcxproj" />
@@ -582,13 +590,24 @@
     <None Include="PHASE_40_PART_4_CODE_REFERENCE.md" />
     <None Include="PHASE_40_PART_4_COMPLETION_REPORT.md" />
     <None Include="PHASE_40_PART_5_COMPLETION_REPORT.md" />
+    <None Include="PHASE_41_COMPLETE_FINAL_DELIVERABLE.md" />
+    <None Include="PHASE_41_FINAL_DELIVERY_SUMMARY.md" />
     <None Include="PHASE_41_SESSION_2_SUMMARY.md" />
     <None Include="PHASE_41_SESSION_3_FINAL_SUMMARY.md" />
     <None Include="PHASE_41_SESSION_3_PROGRESS.md" />
+    <None Include="PHASE_41_SESSION_4_FINAL_SUMMARY.md" />
     <None Include="PHASE_41_UNIFIED_FRAMEWORK_LOG.md" />
+    <None Include="PHASE_43_COMPLETION_REPORT.md" />
+    <None Include="PHASE_43_FINAL_SUMMARY.md" />
+    <None Include="PHASE_43_TECHNICAL_GUIDE.md" />
+    <None Include="PHASE_43_TESTING_GUIDE.md" />
+    <None Include="PHASE_43_VISUAL_SUMMARY.md" />
+    <None Include="PHASE_44_PLANNING.md" />
+    <None Include="RELEASE_NOTES_PHASE_41_v1.5.0.md" />
     <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
     <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
+    <None Include="START_HERE.md" />
     <None Include="update_project.py" />
     <None Include="verify_property_loading.py" />
   </ItemGroup>

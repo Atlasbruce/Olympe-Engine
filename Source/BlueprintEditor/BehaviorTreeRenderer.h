@@ -122,6 +122,9 @@ private:
     std::string GetCanvasStateJSON() const override;
     void SetCanvasStateJSON(const std::string& json) override;
 
+    // Phase 43: Framework modal rendering (centralized toolbar Save/SaveAs/Browse)
+    void RenderFrameworkModals() override;
+
 private:
     // Canvas state snapshot (Phase 35.0)
     struct CanvasState

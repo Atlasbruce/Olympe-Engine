@@ -432,4 +432,16 @@ void EntityPrefabRenderer::RenderToolbar()
     ImGui::PopStyleColor();
 }
 
+// Phase 43: Framework modal rendering
+void EntityPrefabRenderer::RenderFrameworkModals()
+{
+    // Phase 43: Render framework modals (Save/SaveAs/Browse)
+    // The CanvasFramework instance coordinates with CanvasToolbarRenderer
+    // to render all framework-based modals.
+    if (m_framework)
+    {
+        m_framework->RenderModals();
+    }
+}
+
 } // namespace Olympe
