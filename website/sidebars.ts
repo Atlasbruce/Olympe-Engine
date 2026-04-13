@@ -1,17 +1,5 @@
 import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
-// This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
-
-/**
- * Creating a sidebar enables you to:
- - create an ordered group of docs
- - render a sidebar for each doc of that group
- - provide next/previous navigation
-
- The sidebars can be generated from the filesystem, or explicitly defined here.
-
- Create as many sidebars as you want.
- */
 const sidebars: SidebarsConfig = {
   gettingStartedSidebar: [
     'index',
@@ -72,11 +60,55 @@ const sidebars: SidebarsConfig = {
         },
         {
           type: 'category',
+          label: 'Entity Prefab Editor',
+          items: [
+            'user-guide/entity-prefab-editor/entity-prefab-overview',
+            'user-guide/entity-prefab-editor/component-library',
+            'user-guide/entity-prefab-editor/editor-guide',
+            'user-guide/entity-prefab-editor/runtime-instantiation',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Visual Scripting',
+          items: [
+            'user-guide/visual-scripting/visual-scripting-overview',
+            'user-guide/visual-scripting/node-catalog',
+            'user-guide/visual-scripting/task-execution',
+            'user-guide/visual-scripting/best-practices',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'AI & Behavior Trees',
+          items: [
+            'user-guide/ai/bt-editor-overview',
+            'user-guide/ai/bt-first-tree-tutorial',
+            'user-guide/ai/bt-node-types',
+            'user-guide/ai/bt-connection-rules',
+            'user-guide/ai/bt-keyboard-shortcuts',
+            'user-guide/ai/bt-debugger',
+          ],
+        },
+        {
+          type: 'category',
           label: 'Input System',
           items: [
             'user-guide/input-system/input-configuration',
             'user-guide/input-system/input-architecture',
             'user-guide/input-system/input-user-guide',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Animation System',
+          items: [
+            'user-guide/animation-system/animation-system-overview',
+            'user-guide/animation-system/animation-system-quick-start',
+            'user-guide/animation-system/animation-banks',
+            'user-guide/animation-system/animation-graphs',
+            'user-guide/animation-system/examples',
+            'user-guide/animation-system/troubleshooting',
           ],
         },
       ],
@@ -94,10 +126,20 @@ const sidebars: SidebarsConfig = {
             'technical-reference/architecture/ecs-components',
             'technical-reference/architecture/ecs-systems',
             'technical-reference/architecture/component-lifecycle',
+            'technical-reference/architecture/blackboard-architecture',
             'technical-reference/architecture/modules',
             'technical-reference/architecture/conceptual-schema',
             'technical-reference/architecture/dependency-schema',
             'technical-reference/architecture/implementation-summary',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Canvas System',
+          items: [
+            'technical-reference/canvas-system/canvas-overview',
+            'technical-reference/canvas-system/minimap-system',
+            'technical-reference/canvas-system/coordinate-systems',
           ],
         },
         {
@@ -151,7 +193,7 @@ const sidebars: SidebarsConfig = {
       ],
     },
   ],
-  
+
   apiSidebar: [
     {
       type: 'category',
