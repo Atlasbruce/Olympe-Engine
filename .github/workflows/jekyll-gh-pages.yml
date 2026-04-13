@@ -2,11 +2,9 @@
 name: Deploy Jekyll with GitHub Pages dependencies preinstalled
 
 on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["master"]
-
-  # Allows you to run this workflow manually from the Actions tab
+  # Disabled: deploy-docs.yml handles GitHub Pages deployment via Docusaurus.
+  # Running both workflows would conflict over the shared concurrency group "pages".
+  # This workflow can still be triggered manually if needed.
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
