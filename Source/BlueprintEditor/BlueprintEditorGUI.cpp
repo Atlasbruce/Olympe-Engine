@@ -13,6 +13,7 @@
 #include "ProfilerPanel.h"
 #include "BTtoVSMigrator.h"
 #include "TabManager.h"
+#include "../DataManager.h"
 #include "../TaskSystem/TaskGraphLoader.h"
 #include "../Core/FontManager.h"
 #include "../third_party/imgui/imgui.h"
@@ -251,8 +252,8 @@ namespace Olympe
 
                 if (ImGui::MenuItem(ICON_FA_FOLDER_OPEN " Open Blueprint...", "Ctrl+O"))
                 {
-                    // Legacy fallback when no file dialog exists
-                    LoadBlueprint("Blueprints/AI/guard_patrol.json");
+                    // Open centralized file picker modal
+                    DataManager::Get().OpenFilePickerModal(Olympe::FilePickerType::SubGraph, "Blueprints/");
                 }
 
                 ImGui::Separator();
@@ -497,10 +498,23 @@ namespace Olympe
             }
         }
 
-        // Demo window for testing
-        if (m_ShowDemoWindow)
-            ImGui::ShowDemoWindow(&m_ShowDemoWindow);
-    }
+            // Demo window for testing
+            if (m_ShowDemoWindow)
+                ImGui::ShowDemoWindow(&m_ShowDemoWindow);
+
+            // Render centralized file picker modal (Phase 40 Part 5 - Browse Centralization)
+            DataManager& dm = DataManager::Get();
+            dm.RenderFilePickerModal();
+
+            // Handle file picker result (Open)
+            if (!dm.IsFilePickerModalOpen()) {
+                std::string selectedFile = dm.GetSelectedFileFromModal();
+                if (!selectedFile.empty()) {
+                    LoadBlueprint(selectedFile);
+                    SYSTEM_LOG << "[BlueprintEditorGUI] Loaded: " << selectedFile << std::endl;
+                }
+            }
+        }
 
     void BlueprintEditorGUI::RenderFixedLayout()
     {
@@ -673,6 +687,28 @@ namespace Olympe
 
         if (m_ShowProfiler && m_ProfilerPanel)
             m_ProfilerPanel->Render();
+
+        // Phase 40: Render centralized file picker modals
+        DataManager::Get().RenderFilePickerModal();
+
+        // Handle file picker modal result (File > Open)
+        if (!DataManager::Get().IsFilePickerModalOpen()) {
+            std::string selectedFile = DataManager::Get().GetSelectedFileFromModal();
+            if (!selectedFile.empty()) {
+                LoadBlueprint(selectedFile);
+            }
+        }
+
+        // Render save file picker modal (File > Save As)
+        DataManager::Get().RenderSaveFilePickerModal();
+
+        // Handle save modal result
+        if (!DataManager::Get().IsSaveFilePickerModalOpen()) {
+            std::string selectedFile = DataManager::Get().GetSelectedSaveFile();
+            if (!selectedFile.empty()) {
+                SYSTEM_LOG << "[BlueprintEditorGUI] SaveAs selected: " << selectedFile << "\n";
+            }
+        }
     }
 
     // Menu bar is now integrated in the main Render() function
@@ -938,197 +974,197 @@ namespace Olympe
         }
     }
 
-    void BlueprintEditorGUI::NewBlueprint()
-    {
-        // Delegate to backend
-        BlueprintEditor::Get().NewBlueprint("NewBlueprint", "A new entity blueprint");
+void BlueprintEditorGUI::NewBlueprint()
+{
+    // Delegate to backend
+    BlueprintEditor::Get().NewBlueprint("NewBlueprint", "A new entity blueprint");
 
-        // Reset UI state
+    // Reset UI state
+    m_SelectedComponentIndex = -1;
+    m_NodePositions.clear();
+}
+
+void BlueprintEditorGUI::NewVisualScriptGraph()
+{
+    // Create a new tab via TabManager (replaces direct panel creation)
+    TabManager::Get().CreateNewTab("VisualScript");
+    SYSTEM_LOG << "[BlueprintEditorGUI] Created new Visual Script graph via TabManager\n";
+}
+
+void BlueprintEditorGUI::LoadBlueprint(const std::string& filepath)
+{
+    // ------------------------------------------------------------------
+    // Route graph files through TabManager; fall back to legacy backend
+    // for entity blueprints and other non-graph files.
+    // ------------------------------------------------------------------
+    std::string tabID = TabManager::Get().OpenFileInTab(filepath);
+    if (!tabID.empty())
+    {
+        // Successfully opened in TabManager
+        return;
+    }
+
+    // Fallback: delegate to legacy backend (entity blueprints, etc.)
+    if (BlueprintEditor::Get().LoadBlueprint(filepath))
+    {
+        // Reset UI state on successful load
         m_SelectedComponentIndex = -1;
         m_NodePositions.clear();
     }
+}
 
-    void BlueprintEditorGUI::NewVisualScriptGraph()
+void BlueprintEditorGUI::SaveBlueprint()
+{
+    auto& backend = BlueprintEditor::Get();
+
+    if (backend.GetCurrentFilepath().empty())
     {
-        // Create a new tab via TabManager (replaces direct panel creation)
-        TabManager::Get().CreateNewTab("VisualScript");
-        SYSTEM_LOG << "[BlueprintEditorGUI] Created new Visual Script graph via TabManager\n";
+        // Default save location if no filepath set
+        const std::string& name = backend.GetCurrentBlueprint().name;
+        std::string filepath = "../Blueprints/" + name + ".json";
+        backend.SaveBlueprintAs(filepath);
+    }
+    else
+    {
+        backend.SaveBlueprint();
+    }
+}
+
+void BlueprintEditorGUI::SaveBlueprintAs()
+{
+    auto& backend = BlueprintEditor::Get();
+    std::string savePath = backend.GetCurrentFilepath();
+    if (savePath.empty()) {
+        savePath = "Blueprints/";
     }
 
-    void BlueprintEditorGUI::LoadBlueprint(const std::string& filepath)
-    {
-        // ------------------------------------------------------------------
-        // Route graph files through TabManager; fall back to legacy backend
-        // for entity blueprints and other non-graph files.
-        // ------------------------------------------------------------------
-        std::string tabID = TabManager::Get().OpenFileInTab(filepath);
-        if (!tabID.empty())
-        {
-            // Successfully opened in TabManager
-            return;
-        }
+    // TODO: Implement save as dialog
+    SYSTEM_LOG << "[BlueprintEditorGUI] SaveBlueprintAs not yet implemented" << std::endl;
+}
 
-        // Fallback: delegate to legacy backend (entity blueprints, etc.)
-        if (BlueprintEditor::Get().LoadBlueprint(filepath))
-        {
-            // Reset UI state on successful load
-            m_SelectedComponentIndex = -1;
-            m_NodePositions.clear();
-        }
+void BlueprintEditorGUI::AddComponent(const std::string& type)
+{
+    // Get mutable blueprint from backend
+    auto& blueprint = BlueprintEditor::Get().GetCurrentBlueprintMutable();
+
+    ComponentData newComp;
+    newComp.type = type;
+
+    // Create default properties based on type
+    if (type == "Position")
+    {
+        newComp = CreatePositionComponent(0, 0);
     }
-
-    void BlueprintEditorGUI::SaveBlueprint()
+    else if (type == "BoundingBox")
     {
-        auto& backend = BlueprintEditor::Get();
-        
-        if (backend.GetCurrentFilepath().empty())
-        {
-            // Default save location if no filepath set
-            const std::string& name = backend.GetCurrentBlueprint().name;
-            std::string filepath = "../Blueprints/" + name + ".json";
-            backend.SaveBlueprintAs(filepath);
-        }
-        else
-        {
-            backend.SaveBlueprint();
-        }
+        newComp = CreateBoundingBoxComponent(0, 0, 32, 32);
     }
-
-    void BlueprintEditorGUI::SaveBlueprintAs()
+    else if (type == "VisualSprite")
     {
-        auto& backend = BlueprintEditor::Get();
-        std::string savePath = backend.GetCurrentFilepath();
-        if (savePath.empty()) {
-            savePath = "Blueprints/";
-        }
-
-        // TODO: Implement save as dialog
-        SYSTEM_LOG << "[BlueprintEditorGUI] SaveBlueprintAs not yet implemented" << std::endl;
+        newComp = CreateVisualSpriteComponent("Resources/sprite.png", 0, 0, 32, 32);
     }
-
-    void BlueprintEditorGUI::AddComponent(const std::string& type)
+    else if (type == "Movement")
     {
-        // Get mutable blueprint from backend
-        auto& blueprint = BlueprintEditor::Get().GetCurrentBlueprintMutable();
-        
-        ComponentData newComp;
+        newComp = CreateMovementComponent(1, 0, 0, 0);
+    }
+    else if (type == "PhysicsBody")
+    {
+        newComp = CreatePhysicsBodyComponent(1.0f, 100.0f);
+    }
+    else if (type == "Health")
+    {
+        newComp = CreateHealthComponent(100, 100);
+    }
+    else if (type == "AIBehavior")
+    {
+        newComp = CreateAIBehaviorComponent("idle");
+    }
+    else
+    {
+        // Generic component
         newComp.type = type;
-        
-        // Create default properties based on type
-        if (type == "Position")
-        {
-            newComp = CreatePositionComponent(0, 0);
-        }
-        else if (type == "BoundingBox")
-        {
-            newComp = CreateBoundingBoxComponent(0, 0, 32, 32);
-        }
-        else if (type == "VisualSprite")
-        {
-            newComp = CreateVisualSpriteComponent("Resources/sprite.png", 0, 0, 32, 32);
-        }
-        else if (type == "Movement")
-        {
-            newComp = CreateMovementComponent(1, 0, 0, 0);
-        }
-        else if (type == "PhysicsBody")
-        {
-            newComp = CreatePhysicsBodyComponent(1.0f, 100.0f);
-        }
-        else if (type == "Health")
-        {
-            newComp = CreateHealthComponent(100, 100);
-        }
-        else if (type == "AIBehavior")
-        {
-            newComp = CreateAIBehaviorComponent("idle");
-        }
-        else
-        {
-            // Generic component
-            newComp.type = type;
-            newComp.properties = json::object();
-        }
-        
-        // Add to backend blueprint
-        blueprint.AddComponent(newComp.type, newComp.properties);
-        
+        newComp.properties = json::object();
+    }
+
+    // Add to backend blueprint
+    blueprint.AddComponent(newComp.type, newComp.properties);
+
+    // Mark as modified in backend
+    BlueprintEditor::Get().MarkAsModified();
+}
+
+void BlueprintEditorGUI::RemoveComponent(int index)
+{
+    // Get mutable blueprint from backend
+    auto& blueprint = BlueprintEditor::Get().GetCurrentBlueprintMutable();
+
+    if (index >= 0 && index < (int)blueprint.components.size())
+    {
+        blueprint.components.erase(
+            blueprint.components.begin() + index
+        );
+        m_SelectedComponentIndex = -1;
+
         // Mark as modified in backend
         BlueprintEditor::Get().MarkAsModified();
     }
+}
 
-    void BlueprintEditorGUI::RemoveComponent(int index)
-    {
-        // Get mutable blueprint from backend
-        auto& blueprint = BlueprintEditor::Get().GetCurrentBlueprintMutable();
-        
-        if (index >= 0 && index < (int)blueprint.components.size())
-        {
-            blueprint.components.erase(
-                blueprint.components.begin() + index
-            );
-            m_SelectedComponentIndex = -1;
-            
-            // Mark as modified in backend
-            BlueprintEditor::Get().MarkAsModified();
-        }
-    }
-    
-    // D) Additional dialog implementations
-    void BlueprintEditorGUI::RenderPreferencesDialog()
+// D) Additional dialog implementations
+void BlueprintEditorGUI::RenderPreferencesDialog()
     {
         ImGui::OpenPopup("Preferences");
-        
+
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowSize(ImVec2(400, 300), ImGuiCond_Appearing);
-        
+
         if (ImGui::BeginPopupModal("Preferences", &m_ShowPreferences))
         {
             ImGui::Text("Editor Preferences");
             ImGui::Separator();
-            
+
             ImGui::TextWrapped("Preferences coming soon...");
             ImGui::Spacing();
-            
+
             ImGui::Text("Planned settings:");
             ImGui::BulletText("Auto-save interval");
             ImGui::BulletText("Theme selection");
             ImGui::BulletText("Grid snap settings");
             ImGui::BulletText("Default component properties");
-            
+
             ImGui::Separator();
-            
+
             if (ImGui::Button("Close", ImVec2(120, 0)))
             {
                 m_ShowPreferences = false;
             }
-            
+
             ImGui::EndPopup();
         }
     }
-    
+
     void BlueprintEditorGUI::RenderShortcutsDialog()
     {
         ImGui::OpenPopup("Keyboard Shortcuts");
-        
+
         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
         ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowSize(ImVec2(450, 400), ImGuiCond_Appearing);
-        
+
         if (ImGui::BeginPopupModal("Keyboard Shortcuts", &m_ShowShortcuts))
         {
             ImGui::Text("Keyboard Shortcuts");
             ImGui::Separator();
-            
+
             ImGui::Columns(2, "shortcuts");
             ImGui::SetColumnWidth(0, 200);
-            
+
             ImGui::Text("Editor Control:");
             ImGui::Separator();
             ImGui::Text("F2"); ImGui::NextColumn(); ImGui::Text("Toggle Blueprint Editor"); ImGui::NextColumn();
             ImGui::Text("Escape"); ImGui::NextColumn(); ImGui::Text("Exit Application"); ImGui::NextColumn();
-            
+
             ImGui::Spacing();
             ImGui::Text("File Operations:");
             ImGui::Separator();
@@ -1136,7 +1172,7 @@ namespace Olympe
             ImGui::Text("Ctrl+O"); ImGui::NextColumn(); ImGui::Text("Open Blueprint"); ImGui::NextColumn();
             ImGui::Text("Ctrl+S"); ImGui::NextColumn(); ImGui::Text("Save"); ImGui::NextColumn();
             ImGui::Text("Ctrl+Shift+S"); ImGui::NextColumn(); ImGui::Text("Save As"); ImGui::NextColumn();
-            
+
             ImGui::Spacing();
             ImGui::Text("Edit Operations:");
             ImGui::Separator();
@@ -1144,15 +1180,15 @@ namespace Olympe
             ImGui::Text("Ctrl+Y"); ImGui::NextColumn(); ImGui::Text("Redo"); ImGui::NextColumn();
             ImGui::Text("Insert"); ImGui::NextColumn(); ImGui::Text("Add Component"); ImGui::NextColumn();
             ImGui::Text("Delete"); ImGui::NextColumn(); ImGui::Text("Remove Component"); ImGui::NextColumn();
-            
+
             ImGui::Columns(1);
             ImGui::Separator();
-            
+
             if (ImGui::Button("Close", ImVec2(120, 0)))
             {
                 m_ShowShortcuts = false;
             }
-            
+
             ImGui::EndPopup();
         }
     }

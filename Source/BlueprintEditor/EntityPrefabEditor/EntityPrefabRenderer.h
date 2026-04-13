@@ -5,6 +5,7 @@
 #include "ComponentPalettePanel.h"
 #include "PropertyEditorPanel.h"
 #include "../Utilities/ICanvasEditor.h"
+#include "../Framework/CanvasFramework.h"
 #include <memory>
 #include <string>
 
@@ -41,6 +42,7 @@ private:
     ComponentPalettePanel m_componentPalette;
     PropertyEditorPanel m_propertyEditor;
     std::unique_ptr<ICanvasEditor> m_canvasEditor;  // NEW: Standardized canvas interface
+    std::unique_ptr<CanvasFramework> m_framework;   // NEW: Unified framework (Phase 41)
     std::string m_filePath;
     bool m_isDirty = false;
     float m_canvasPanelWidth = 0.75f; // 75% for canvas, 25% for side panel

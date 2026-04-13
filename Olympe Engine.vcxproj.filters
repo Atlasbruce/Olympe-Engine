@@ -243,6 +243,10 @@
     <ClCompile Include="Source\BlueprintEditor\BehaviorTreeExecutor.cpp" />
     <ClCompile Include="Source\Editor\Modals\FilePickerModal.cpp" />
     <ClCompile Include="Source\Editor\Modals\SaveFilePickerModal.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Framework\VisualScriptGraphDocument.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Framework\CanvasToolbarRenderer.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Framework\CanvasFramework.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -518,6 +522,11 @@
     <ClInclude Include="Source\BlueprintEditor\BehaviorTreeExecutor.h" />
     <ClInclude Include="Source\Editor\Modals\FilePickerModal.h" />
     <ClInclude Include="Source\Editor\Modals\SaveFilePickerModal.h" />
+    <ClInclude Include="Source\BlueprintEditor\Framework\IGraphDocument.h" />
+    <ClInclude Include="Source\BlueprintEditor\Framework\VisualScriptGraphDocument.h" />
+    <ClInclude Include="Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.h" />
+    <ClInclude Include="Source\BlueprintEditor\Framework\CanvasToolbarRenderer.h" />
+    <ClInclude Include="Source\BlueprintEditor\Framework\CanvasFramework.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -560,6 +569,15 @@
     <None Include="PHASE_40_PART_4_COMPLETION_REPORT.md" />
     <None Include="PHASE_40_COMPLETE_SUMMARY.md" />
     <None Include="PHASE_40_PART_4_CODE_REFERENCE.md" />
+    <None Include="PHASE_40_PART_5_COMPLETION_REPORT.md" />
+    <None Include="PHASE_40_COMPLETE_FINAL_SUMMARY.md" />
+    <None Include="MODAL_AUDIT_COMPREHENSIVE.md" />
+    <None Include="PHASE_41_UNIFIED_FRAMEWORK_LOG.md" />
+    <None Include="PHASE_41_SESSION_2_SUMMARY.md" />
+    <None Include="PHASE_41_SESSION_3_PROGRESS.md" />
+    <None Include="FRAMEWORK_INTEGRATION_GUIDE.md" />
+    <None Include="FRAMEWORK_COMPLETE_DELIVERABLE_SUMMARY.md" />
+    <None Include="PHASE_41_SESSION_3_FINAL_SUMMARY.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

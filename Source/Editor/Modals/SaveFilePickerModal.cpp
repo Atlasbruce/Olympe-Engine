@@ -384,7 +384,12 @@ void SaveFilePickerModal::RenderFolderList()
     {
         if (ImGui::Selectable(folder.c_str(), false, ImGuiSelectableFlags_DontClosePopups))
         {
-            m_currentPath += "/" + folder;
+            // Build path safely - avoid double slashes
+            if (!m_currentPath.empty() && m_currentPath.back() != '/' && m_currentPath.back() != '\\')
+            {
+                m_currentPath += "/";
+            }
+            m_currentPath += folder;
             strncpy_s(m_pathBuffer, sizeof(m_pathBuffer), m_currentPath.c_str(), _TRUNCATE);
             RefreshFileList();
         }

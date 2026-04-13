@@ -453,3 +453,87 @@ RegisterParameterSchema(ParameterSchemaEntry(
     }
   ]
 }
+````````
+
+This is the description of what the code block changes:
+Add memory: CONTEXT COPILOT - CURRENT WORK SESSION (Phase 41 Initialization):
+
+IMMEDIATE GOALS (This session):
+1. Design unified framework architecture (NO CODE YET - planning phase)
+2. Document all requirements and design patterns
+3. Prepare concrete implementation steps
+
+BLOCKING ISSUES BEING FIXED:
+1. Visual Script: Save/SaveAs buttons don't open modals (Browse works)
+2. Entity Prefab: Missing Save/SaveAs buttons in toolbar (Browse works)
+3. BehaviorTree: Browse button broken, Save/SaveAs missing (MOST BROKEN)
+4. SaveAs modal: MISSING left folder selection panel (user requirement 2x)
+
+ROOT CAUSE:
+- No unified framework → each editor manages modals/toolbars differently
+- Inconsistent tab/canvas integration across three graph types
+- SaveAs modal incomplete (no folder panel)
+
+REQUIRED DELIVERABLES THIS PHASE:
+1. IGraphDocument interface specification (supports polymorphic graphs)
+2. CanvasFramework orchestrator class design
+3. CanvasToolbarRenderer (unified Save/SaveAs/Browse buttons)
+4. SaveFilePickerModal enhancement (add folder panel LEFT SIDE)
+5. BehaviorTree integration (currently most broken)
+6. Complete integration tests (all three graph types)
+
+CRITICAL REQUIREMENTS (DO NOT FORGET):
+- SaveAs modal MUST have folder selection panel on LEFT (mentioned 2x by user)
+- All three editors must have identical toolbar (Save, SaveAs, Browse)
+- Browse modal must work for ALL graph types (currently broken in BT)
+- Framework must handle document lifecycle: Load → Edit → Save → new tabs
+
+FRAMEWORK DESIGN PRINCIPLES:
+- Single Responsibility: Each component handles one concern
+- Polymorphism: IGraphDocument interface handles all graph type differences
+- Centralization: Modal operations in DataManager, toolbar in CanvasToolbarRenderer
+- Consistency: Users see same UI/behavior regardless of graph type
+
+FILES TO CREATE:
+- Source/BlueprintEditor/Framework/IGraphDocument.h
+- Source/BlueprintEditor/Framework/CanvasFramework.h/cpp
+- Source/BlueprintEditor/Framework/CanvasToolbarRenderer.h/cpp
+- Update DataManager.h (SaveFilePickerModal folder panel)
+
+FILES TO REFACTOR:
+- EntityPrefabGraphDocument.h (implement IGraphDocument)
+- EntityPrefabRenderer.cpp (use framework)
+- VisualScriptEditorPanel.cpp (use framework)
+- BehaviorTreeRenderer.cpp (use framework)
+- TabManager.cpp (delegate to framework)
+
+TESTING CHECKLIST:
+- [ ] VisualScript: Save → modal appears with folder panel
+- [ ] VisualScript: SaveAs → modal appears with folder panel
+- [ ] VisualScript: Browse → file picker opens
+- [ ] EntityPrefab: Save → modal appears with folder panel
+- [ ] EntityPrefab: SaveAs → modal appears with folder panel
+- [ ] EntityPrefab: Browse → file picker opens
+- [ ] BehaviorTree: Save → modal appears with folder panel
+- [ ] BehaviorTree: SaveAs → modal appears with folder panel
+- [ ] BehaviorTree: Browse → file picker opens (currently BROKEN)
+- [ ] All modals show folder panel on left, file list on right
+
+KNOWN IMPLEMENTATION DETAILS:
+- EntityPrefabGraphDocument already has Load/Save methods (partial interface match)
+- TabManager has modal open/render code scattered (needs centralization)
+- DataManager has FilePickerModal but SaveFilePickerModal missing folder panel
+- BehaviorTree uses imnodes (different from custom EntityPrefab canvas)
+- VisualScript uses imnodes (same as BehaviorTree)
+
+POTENTIAL CHALLENGES:
+1. imnodes (VisualScript, BT) vs custom canvas (EntityPrefab) → different rendering
+2. Existing tab system already partially integrated → breaking changes possible
+3. Modal folder panel requires ImGui child windows + file system interaction
+4. Document adapter pattern needs careful design for polymorphism
+
+SUCCESS CRITERIA:
+- All three editors show identical toolbar with functional buttons
+- SaveAs modal displays folder selection panel (left) + file list (right)
+- Browse works consistently across all three graph types
+- Users can Load → Edit → SaveAs → Close → Open new file seamlessly

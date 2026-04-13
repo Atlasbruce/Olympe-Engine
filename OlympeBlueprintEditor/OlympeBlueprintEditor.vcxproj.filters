@@ -718,6 +718,18 @@
     <ClCompile Include="..\Source\Editor\Modals\SaveFilePickerModal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasToolbarRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasFramework.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\VisualScriptGraphDocument.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEvents.h">
@@ -1378,6 +1390,11 @@
     <ClInclude Include="..\Source\BlueprintEditor\SubGraphParameterHelper.h" />
     <ClInclude Include="..\Source\Editor\Modals\FilePickerModal.h" />
     <ClInclude Include="..\Source\Editor\Modals\SaveFilePickerModal.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Framework\IGraphDocument.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Framework\CanvasToolbarRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Framework\CanvasFramework.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Framework\VisualScriptGraphDocument.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico">

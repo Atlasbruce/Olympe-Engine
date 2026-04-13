@@ -10,6 +10,7 @@
  */
 
 #include "VisualScriptEditorPanel.h"
+#include "Framework/CanvasToolbarRenderer.h"
 #include "DebugController.h"
 #include "AtomicTaskUIRegistry.h"
 #include "ConditionRegistry.h"
@@ -234,34 +235,19 @@ void VisualScriptEditorPanel::RenderContent()
 
 void VisualScriptEditorPanel::RenderToolbar()
 {
-	// buttons: Save, Save As, Verify, Run Simulation
-    if (ImGui::Button("Save"))
-    {
-        SYSTEM_LOG << "[VisualScriptEditorPanel] Save button clicked. m_currentPath='"
-                   << m_currentPath << "'\n";
-        if (m_currentPath.empty())
-        {
-            m_showSaveAsDialog = true;
-        }
-        else if (!Save())
-        {
-            ImGui::OpenPopup("SaveError");
-        }
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Save As"))
-    {
-        m_showSaveAsDialog = true;
-    }
-    ImGui::SameLine();
-    // Phase 24.3 — Removed "New Graph" button as requested
-    // Users must create new graphs through the file browser instead
+	// Phase 41 — Framework integration: Use unified toolbar if available
+	if (m_framework && m_framework->GetToolbar())
+	{
+		m_framework->GetToolbar()->Render();
+		ImGui::SameLine();
+	}
 
-    if (ImGui::Button("Verify##gvs"))
-    {
-        RunVerification();
-    }
-    ImGui::SameLine();
+	// buttons: Verify, Run Simulation (framework handles Save/SaveAs/Browse)
+	if (ImGui::Button("Verify##gvs"))
+	{
+		RunVerification();
+	}
+	ImGui::SameLine();
 	if (ImGui::Button("Run Graph##sim"))
 	{
 		RunGraphSimulation();
@@ -375,38 +361,47 @@ void VisualScriptEditorPanel::RenderToolbar()
 
 void VisualScriptEditorPanel::RenderSaveAsDialog()
 {
-    if (m_showSaveAsDialog)
+    // Phase 41 — Framework integration: Delegate to centralized framework
+    if (m_framework)
     {
-        // Use centralized SaveFilePickerModal via DataManager (Phase 40)
-        DataManager& dm = DataManager::Get();
-        std::string suggestedName = m_currentPath.empty() 
-                                    ? "graph" 
-                                    : m_currentPath.substr(m_currentPath.find_last_of("/\\") + 1);
-
-        // Remove extension from suggested name
-        size_t dotPos = suggestedName.rfind('.');
-        if (dotPos != std::string::npos)
-            suggestedName = suggestedName.substr(0, dotPos);
-
-        dm.OpenSaveFilePickerModal(Olympe::SaveFileType::Blueprint, "Gamedata/TaskGraph", suggestedName);
-        m_showSaveAsDialog = false;
+        m_framework->RenderModals();
     }
+    else
+    {
+        // Fallback to legacy modal handling
+        if (m_showSaveAsDialog)
+        {
+            // Use centralized SaveFilePickerModal via DataManager (Phase 40)
+            DataManager& dm = DataManager::Get();
+            std::string suggestedName = m_currentPath.empty() 
+                                        ? "graph" 
+                                        : m_currentPath.substr(m_currentPath.find_last_of("/\\") + 1);
 
-    // Render centralized save modal
-    DataManager& dm = DataManager::Get();
-    dm.RenderSaveFilePickerModal();
+            // Remove extension from suggested name
+            size_t dotPos = suggestedName.rfind('.');
+            if (dotPos != std::string::npos)
+                suggestedName = suggestedName.substr(0, dotPos);
 
-    // Handle modal result
-    if (dm.IsSaveFilePickerModalOpen() == false) {
-        std::string selectedFile = dm.GetSelectedSaveFile();
-        if (!selectedFile.empty()) {
-            SYSTEM_LOG << "[VisualScriptEditorPanel] SaveAs dialog confirmed. fullPath='"
-                       << selectedFile << "'\n";
-            if (SaveAs(selectedFile)) {
-                std::cout << "[VisualScriptEditorPanel] Saved to: " << selectedFile << std::endl;
-                m_currentPath = selectedFile;
-            } else {
-                SYSTEM_LOG << "[VisualScriptEditorPanel] Save failed - check directory and permissions\n";
+            dm.OpenSaveFilePickerModal(Olympe::SaveFileType::Blueprint, "Gamedata/TaskGraph", suggestedName);
+            m_showSaveAsDialog = false;
+        }
+
+        // Render centralized save modal
+        DataManager& dm = DataManager::Get();
+        dm.RenderSaveFilePickerModal();
+
+        // Handle modal result
+        if (dm.IsSaveFilePickerModalOpen() == false) {
+            std::string selectedFile = dm.GetSelectedSaveFile();
+            if (!selectedFile.empty()) {
+                SYSTEM_LOG << "[VisualScriptEditorPanel] SaveAs dialog confirmed. fullPath='"
+                           << selectedFile << "'\n";
+                if (SaveAs(selectedFile)) {
+                    std::cout << "[VisualScriptEditorPanel] Saved to: " << selectedFile << std::endl;
+                    m_currentPath = selectedFile;
+                } else {
+                    SYSTEM_LOG << "[VisualScriptEditorPanel] Save failed - check directory and permissions\n";
+                }
             }
         }
     }

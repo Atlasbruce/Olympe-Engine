@@ -4,6 +4,8 @@
 #include "../../system/system_utils.h"
 #include "../../Source/third_party/imgui/imgui.h"
 #include "../Utilities/CustomCanvasEditor.h"
+#include "../Framework/CanvasToolbarRenderer.h"
+#include "../../DataManager.h"
 #include <memory>
 
 namespace Olympe {
@@ -17,7 +19,18 @@ EntityPrefabRenderer::EntityPrefabRenderer(PrefabCanvas& canvas)
     // NEW: Initialize canvas editor adapter with CustomCanvasEditor for zoom support
     // Will be created once we have canvas dimensions in first Render() call
     m_canvasEditor = nullptr;  // Deferred initialization
+
+    // Phase 41: Initialize unified framework with document
+    // NOTE: Framework is initialized with EntityPrefabGraphDocument* (non-owning reference)
+    // Document is owned by PrefabCanvas and managed separately
+    EntityPrefabGraphDocument* document = m_canvas.GetDocument();
+    if (document)
+    {
+        m_framework = std::make_unique<CanvasFramework>(document);
+        SYSTEM_LOG << "[EntityPrefabRenderer] CanvasFramework initialized for EntityPrefab\n";
+    }
 }
+
 
 EntityPrefabRenderer::~EntityPrefabRenderer()
 {
@@ -26,12 +39,47 @@ EntityPrefabRenderer::~EntityPrefabRenderer()
 void EntityPrefabRenderer::Render()
 {
     RenderLayoutWithTabs();
+
+    // Phase 41: Render unified framework toolbar + modals
+    // This handles Save/SaveAs/Browse buttons with consistent UI
+    if (m_framework)
+    {
+        m_framework->RenderModals();
+    }
+    else
+    {
+        // Fallback to legacy modal handling if framework not initialized
+        DataManager::Get().RenderFilePickerModal();
+        if (!DataManager::Get().IsFilePickerModalOpen()) {
+            std::string selectedFile = DataManager::Get().GetSelectedFileFromModal();
+            if (!selectedFile.empty()) {
+                Load(selectedFile);
+            }
+        }
+
+        DataManager::Get().RenderSaveFilePickerModal();
+        if (!DataManager::Get().IsSaveFilePickerModalOpen()) {
+            std::string selectedFile = DataManager::Get().GetSelectedSaveFile();
+            if (!selectedFile.empty()) {
+                Save(selectedFile);
+            }
+        }
+    }
 }
 
 void EntityPrefabRenderer::RenderLayoutWithTabs()
 {
-    // Phase 37 — Render minimap controls toolbar
-    RenderToolbar();
+    // Phase 41: Render unified framework toolbar (Save/SaveAs/Browse buttons)
+    // This toolbar is consistent across all graph editors (VisualScript, BehaviorTree, EntityPrefab)
+    if (m_framework)
+    {
+        m_framework->GetToolbar()->Render();
+    }
+    else
+    {
+        // Fallback: Render legacy minimap toolbar
+        RenderToolbar();
+    }
 
     // Layout: Canvas (left, ~75%) | Resize Handle | Tabbed Right Panel (right, ~25%)
     float totalWidth = ImGui::GetContentRegionAvail().x;

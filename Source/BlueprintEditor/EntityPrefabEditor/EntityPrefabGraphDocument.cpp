@@ -146,7 +146,12 @@ namespace Olympe
     }
 
     json EntityPrefabGraphDocument::ToJson() const { return json::object(); }
-    EntityPrefabGraphDocument EntityPrefabGraphDocument::FromJson(const json& data) { (void)data; return EntityPrefabGraphDocument(); }
+
+    GraphDocumentPtr EntityPrefabGraphDocument::FromJson(const json& data)
+    {
+        (void)data;
+        return std::make_shared<EntityPrefabGraphDocument>();
+    }
 
     bool EntityPrefabGraphDocument::LoadFromFile(const std::string& filePath)
     {
@@ -596,5 +601,73 @@ namespace Olympe
     }
 
     std::vector<LayoutNode> EntityPrefabGraphDocument::CalculateLayout() { return std::vector<LayoutNode>(); }
+
+    // ========== IGraphDocument Interface Implementation ==========
+
+    bool EntityPrefabGraphDocument::Load(const std::string& filePath)
+    {
+        if (LoadFromFile(filePath))
+        {
+            m_filePath = filePath;
+            return true;
+        }
+        return false;
+    }
+
+    bool EntityPrefabGraphDocument::Save(const std::string& filePath)
+    {
+        if (SaveToFile(filePath))
+        {
+            m_filePath = filePath;
+            return true;
+        }
+        return false;
+    }
+
+    std::string EntityPrefabGraphDocument::GetName() const
+    {
+        if (!m_filePath.empty())
+        {
+            size_t lastSlash = m_filePath.find_last_of("/\\");
+            if (lastSlash != std::string::npos)
+            {
+                return m_filePath.substr(lastSlash + 1);
+            }
+            return m_filePath;
+        }
+        return m_documentName.empty() ? "Untitled-EntityPrefab" : m_documentName;
+    }
+
+    DocumentType EntityPrefabGraphDocument::GetType() const
+    {
+        return DocumentType::ENTITY_PREFAB;
+    }
+
+    std::string EntityPrefabGraphDocument::GetFilePath() const
+    {
+        return m_filePath;
+    }
+
+    void EntityPrefabGraphDocument::SetFilePath(const std::string& path)
+    {
+        m_filePath = path;
+    }
+
+    IGraphRenderer* EntityPrefabGraphDocument::GetRenderer()
+    {
+        // TODO: Return EntityPrefabRenderer instance when framework is integrated
+        return nullptr;
+    }
+
+    const IGraphRenderer* EntityPrefabGraphDocument::GetRenderer() const
+    {
+        // TODO: Return EntityPrefabRenderer instance when framework is integrated
+        return nullptr;
+    }
+
+    void EntityPrefabGraphDocument::OnDocumentModified()
+    {
+        m_isDirty = true;
+    }
 
 } // namespace Olympe

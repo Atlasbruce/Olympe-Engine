@@ -52,6 +52,10 @@
 // Phase 37 — Minimap integration
 #include "Utilities/ImNodesCanvasEditor.h"
 
+// Phase 41 — Framework integration
+#include "Framework/CanvasFramework.h"
+#include "Framework/VisualScriptGraphDocument.h"
+
 // Forward-declare ImNodes context type (defined in imnodes.h) in the global
 // namespace so it can be referenced from within the Olympe namespace below.
 struct ImNodesEditorContext;
@@ -994,11 +998,24 @@ private:
     void OnNodeDoubleClicked(int nodeID);
 
     /**
-     * @brief Extracts SubGraph file path from a node definition.
-     * @param def  The node definition to check.
-     * @return     The SubGraphPath if node is SubGraph type and path is set, else empty string.
+     * @brief Gets SubGraphPath from a node definition if applicable.
+     * 
+     * @param def  The node definition to check
+     * @return     The SubGraphPath if applicable, else empty string
      */
     std::string GetNodeSubGraphPath(const TaskNodeDefinition& def) const;
+
+    // -----------------------------------------------------------------------
+    // Phase 41 — Framework Integration
+    // -----------------------------------------------------------------------
+
+    /// Adapter document implementing IGraphDocument for VisualScript graphs
+    /// Wraps this VisualScriptEditorPanel with the unified document interface
+    std::unique_ptr<VisualScriptGraphDocument> m_document;
+
+    /// Unified framework for toolbar and modal management (Phase 41)
+    /// Handles Save/SaveAs/Browse buttons and centralized modals
+    std::unique_ptr<CanvasFramework> m_framework;
 };
 
 } // namespace Olympe

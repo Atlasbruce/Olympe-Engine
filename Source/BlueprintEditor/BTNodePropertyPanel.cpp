@@ -180,7 +180,22 @@ void BTNodePropertyPanel::RenderSubGraphControls(GraphNode* node)
     // File browser button - Phase 40: Using centralized file picker modal
     if (ImGui::Button("Browse...##subgraphPath", ImVec2(-1, 0)))
     {
-        DataManager::Get().OpenFilePickerModal(Olympe::FilePickerType::BehaviorTree, currentPath);
+        // Extract directory only from the full path (if it's a file path)
+        std::string directory = "Blueprints/";
+        if (!currentPath.empty())
+        {
+            size_t lastSlash = currentPath.find_last_of("/\\");
+            if (lastSlash != std::string::npos)
+            {
+                directory = currentPath.substr(0, lastSlash + 1);
+            }
+            else
+            {
+                // No slash found - treat as directory
+                directory = currentPath;
+            }
+        }
+        DataManager::Get().OpenFilePickerModal(Olympe::FilePickerType::SubGraph, directory);
     }
 
     // Phase 40: Check if modal has closed with a selection

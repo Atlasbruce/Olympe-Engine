@@ -600,6 +600,57 @@ void TabManager::RenderTabBar()
         return;
     }
 
+    // Handle centralized SaveAs modal (Phase 40 Part 5 - Browse Centralization)
+    if (m_showSaveAsDialog)
+    {
+        DataManager& dm = DataManager::Get();
+        EditorTab* tab = GetActiveTab();
+        if (tab)
+        {
+            std::string suggestedName = tab->displayName;
+            // Remove asterisk if present
+            size_t asterisk = suggestedName.find('*');
+            if (asterisk != std::string::npos)
+                suggestedName = suggestedName.substr(0, asterisk);
+
+            // Determine file type for SaveFilePickerModal
+            std::string graphType = DetectGraphType(tab->filePath.empty() ? "" : tab->filePath);
+            Olympe::SaveFileType fileType = Olympe::SaveFileType::Blueprint; // Default
+            if (graphType == "BehaviorTree")
+                fileType = Olympe::SaveFileType::BehaviorTree;
+            else if (graphType == "VisualScript")
+                fileType = Olympe::SaveFileType::Blueprint;
+            else if (graphType == "EntityPrefab")
+                fileType = Olympe::SaveFileType::EntityPrefab;
+
+            // Open centralized modal
+            dm.OpenSaveFilePickerModal(fileType, "Gamedata/", suggestedName);
+            m_showSaveAsDialog = false;
+        }
+    }
+
+    // Render centralized save modal
+    DataManager& dm = DataManager::Get();
+    dm.RenderSaveFilePickerModal();
+
+    // Handle SaveAs result
+    if (!dm.IsSaveFilePickerModalOpen()) {
+        std::string selectedFile = dm.GetSelectedSaveFile();
+        if (!selectedFile.empty()) {
+            EditorTab* tab = GetActiveTab();
+            if (tab && tab->renderer) {
+                if (tab->renderer->Save(selectedFile)) {
+                    tab->filePath = selectedFile;
+                    tab->isDirty = false;
+                    tab->displayName = DisplayNameFromPath(selectedFile);
+                    SYSTEM_LOG << "[TabManager] SaveAs: saved to '" << selectedFile << "'\n";
+                } else {
+                    SYSTEM_LOG << "[TabManager] SaveAs: FAILED to save to '" << selectedFile << "'\n";
+                }
+            }
+        }
+    }
+
     ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_Reorderable |
                                    ImGuiTabBarFlags_AutoSelectNewTabs;
 

@@ -58,6 +58,10 @@
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasFramework.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasToolbarRenderer.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\VisualScriptGraphDocument.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\MiniMapPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\MinimapWidget.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\NodePresets.cpp" />
@@ -294,6 +298,11 @@
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Framework\CanvasFramework.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Framework\CanvasToolbarRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Framework\IGraphDocument.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Framework\VisualScriptGraphDocument.h" />
     <ClInclude Include="..\Source\BlueprintEditor\IGraphRenderer.h" />
     <ClInclude Include="..\Source\BlueprintEditor\MiniMapPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\MinimapWidget.h" />

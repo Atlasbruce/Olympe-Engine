@@ -223,6 +223,13 @@ void VisualScriptEditorPanel::Initialize()
     // Provides unified selection UX across all canvas types
     m_selectionRenderer.ApplyStyle_OlympeBlue();
     SYSTEM_LOG << "[VSEditor] Selection effect renderer initialized (Olympe Blue style)\n";
+
+    // Phase 41 — Framework integration: Create VisualScriptGraphDocument adapter
+    // This wraps this VisualScriptEditorPanel with IGraphDocument interface for
+    // unified toolbar/modal handling in the framework
+    m_document = std::make_unique<VisualScriptGraphDocument>(this);
+    m_framework = std::make_unique<CanvasFramework>(m_document.get());
+    SYSTEM_LOG << "[VisualScriptEditorPanel] CanvasFramework initialized for VisualScript\n";
 }
 
 // ============================================================================

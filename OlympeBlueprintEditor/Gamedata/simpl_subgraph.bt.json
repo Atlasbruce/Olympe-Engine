@@ -12,14 +12,15 @@
           "parameters": {},
           "position": {
             "x": 205,
-            "y": 188
+            "y": 181
           },
           "type": "Root"
         },
         {
           "children": [
             4,
-            3
+            3,
+            5
           ],
           "id": 2,
           "name": "BT_Sequence",
@@ -51,6 +52,17 @@
             "y": 257
           },
           "type": "Action"
+        },
+        {
+          "children": [],
+          "id": 5,
+          "name": "BT_SubGraph",
+          "parameters": {},
+          "position": {
+            "x": 745,
+            "y": 372
+          },
+          "type": "SubGraph"
         }
       ],
       "rootNodeId": -1
@@ -68,7 +80,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-04-12T23:51:54",
+    "lastModified": "2026-04-13T14:53:19",
     "tags": []
   },
   "name": "Untitled-1",

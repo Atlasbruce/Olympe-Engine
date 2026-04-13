@@ -7,6 +7,7 @@
 #include "./../../vector.h"
 #include "ComponentNodeData.h"
 #include "PrefabLoader.h"
+#include "../Framework/IGraphDocument.h"
 
 namespace Olympe
 {
@@ -19,7 +20,10 @@ namespace Olympe
         std::vector<NodeId> outputs;
     };
 
-    class EntityPrefabGraphDocument
+    // Forward declaration
+    class EntityPrefabRenderer;
+
+    class EntityPrefabGraphDocument : public IGraphDocument
     {
     public:
         EntityPrefabGraphDocument();
@@ -59,11 +63,23 @@ namespace Olympe
 
         // Serialization
         json ToJson() const;
-        static EntityPrefabGraphDocument FromJson(const json& data);
+        // NOTE: Returns by value but uses move semantics for unique_ptr member
+        static GraphDocumentPtr FromJson(const json& data);
 
         // File I/O
         bool LoadFromFile(const std::string& filePath);
         bool SaveToFile(const std::string& filePath);
+
+        // IGraphDocument interface implementation
+        bool Load(const std::string& filePath) override;
+        bool Save(const std::string& filePath) override;
+        std::string GetName() const override;
+        DocumentType GetType() const override;
+        std::string GetFilePath() const override;
+        void SetFilePath(const std::string& path) override;
+        IGraphRenderer* GetRenderer() override;
+        const IGraphRenderer* GetRenderer() const override;
+        void OnDocumentModified() override;
 
         // Properties
         void SetDocumentName(const std::string& name);
@@ -91,6 +107,7 @@ namespace Olympe
         std::vector<NodeId> m_selectedNodes;
         std::vector<std::pair<NodeId, NodeId>> m_connections;
         std::string m_documentName;
+        std::string m_filePath;  // NEW: Track current file path for IGraphDocument
         Vector m_canvasOffset;
         float m_canvasZoom = 1.0f;
         NodeId m_nextNodeId = 1;
