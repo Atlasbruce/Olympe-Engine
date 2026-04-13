@@ -74,4 +74,4 @@ Presets are stored directly in graph JSON (v4 schema) – graphs are self-contai
 ## Related
 
 - [ECS System](ECS-System.md)
-- [Visual Scripting](../03-Visual-Scripting/Graph-System.md)
+- [Visual Scripting](../../website/docs/user-guide/visual-scripting/visual-scripting-overview.md)

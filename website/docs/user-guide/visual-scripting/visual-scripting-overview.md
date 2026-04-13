@@ -7,7 +7,7 @@ sidebar_position: 1
 
 # Visual Scripting Overview
 
-The **Visual Script System** (`.ats` files) provides a node-based programming environment for defining entity behaviour without writing C++ code.
+The **Visual Script System** (`.ats` files) provides a node-based programming environment for defining entity behavior without writing C++ code.
 
 ## Architecture
 
