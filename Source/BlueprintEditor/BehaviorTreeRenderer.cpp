@@ -9,6 +9,7 @@
  */
 
 #include "BehaviorTreeRenderer.h"
+#include "Framework/CanvasToolbarRenderer.h"
 #include "BTNodeGraphManager.h"
 #include "GraphExecutionTracer.h"
 #include "ExecutionTestPanel.h"
@@ -43,6 +44,11 @@ BehaviorTreeRenderer::BehaviorTreeRenderer(NodeGraphPanel& panel)
 
     // Initialize tracer
     m_lastTracer = std::make_unique<GraphExecutionTracer>();
+
+    // Phase 41 — Framework integration
+    m_document = std::make_unique<BehaviorTreeGraphDocument>(this);
+    m_framework = std::make_unique<CanvasFramework>(m_document.get());
+    SYSTEM_LOG << "[BehaviorTreeRenderer] CanvasFramework initialized\n";
 }
 
 BehaviorTreeRenderer::~BehaviorTreeRenderer()
@@ -92,8 +98,16 @@ void BehaviorTreeRenderer::Render()
         m_executionTestPanel->Render();
     }
 
-    // Phase 40: Render centralized file picker modal
-    DataManager::Get().RenderFilePickerModal();
+    // Phase 41 — Framework integration: Delegate modals to framework if available
+    if (m_framework)
+    {
+        m_framework->RenderModals();
+    }
+    else
+    {
+        // Fallback to legacy file picker modal
+        DataManager::Get().RenderFilePickerModal();
+    }
 }
 
 void BehaviorTreeRenderer::RenderLayoutWithTabs()
@@ -101,10 +115,14 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
     // Suppress NodeGraphPanel's GraphTabs since we manage tabs in BehaviorTreeRenderer
     m_panel.m_SuppressGraphTabs = true;
 
-    // Render toolbar with Run Graph button
-    ImGui::SetCursorPosX(10.0f);
-    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5.0f);
+    // Phase 41 — Framework integration: Use unified toolbar if available
+    if (m_framework && m_framework->GetToolbar())
+    {
+        m_framework->GetToolbar()->Render();
+        ImGui::SameLine();
+    }
 
+    // BehaviorTree-specific controls (framework handles Save/SaveAs/Browse)
     if (ImGui::Button("Run Graph", ImVec2(100, 0)))
     {
         OnRunGraphClicked();

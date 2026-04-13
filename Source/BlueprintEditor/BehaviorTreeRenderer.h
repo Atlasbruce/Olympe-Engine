@@ -15,6 +15,10 @@
 #include "BTNodePropertyPanel.h"
 #include "../third_party/imgui/imgui.h"
 
+// Phase 41 — Framework integration
+#include "Framework/CanvasFramework.h"
+#include "Framework/BehaviorTreeGraphDocument.h"
+
 #include <string>
 #include <memory>
 
@@ -83,6 +87,14 @@ private:
      ImVec2 m_canvasScreenPos = ImVec2(0, 0);     ///< Screen position of canvas for drag-drop coordinate transformation
      std::unique_ptr<ExecutionTestPanel> m_executionTestPanel;  ///< REUSED: Simulation results panel
      std::unique_ptr<GraphExecutionTracer> m_lastTracer;        ///< Last simulation trace for results display
+
+     // Phase 41 — Framework Integration
+     /// Adapter document implementing IGraphDocument for BehaviorTree graphs
+     std::unique_ptr<BehaviorTreeGraphDocument> m_document;
+
+     /// Unified framework for toolbar and modal management (Phase 41)
+     /// Handles Save/SaveAs/Browse buttons and centralized modals
+     std::unique_ptr<CanvasFramework> m_framework;
 
     // Layout rendering helpers
     void RenderLayoutWithTabs();
