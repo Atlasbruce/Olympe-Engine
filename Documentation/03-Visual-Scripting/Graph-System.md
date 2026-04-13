@@ -53,6 +53,6 @@ See `Documentation/Docs/` for detailed phase notes:
 
 ## Related
 
-- [Node Catalog](../../website/docs/user-guide/visual-scripting/node-catalog.md)
-- [Task Execution](../../website/docs/user-guide/visual-scripting/task-execution.md)
+- [Node Catalog](../Documentation-Hub.md) – see website docs for full node reference
+- [Task Execution](../Documentation-Hub.md) – see website docs for execution pipeline details
 - [Blackboard Architecture](../01-Core-Concepts/Blackboard-Architecture.md)
