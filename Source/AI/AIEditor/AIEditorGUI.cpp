@@ -16,6 +16,7 @@
 #include "../../NodeGraphCore/Commands/CreateNodeCommand.h"
 #include "../../NodeGraphCore/Commands/ConnectPinsCommand.h"
 #include "../../NodeGraphCore/Commands/ToggleNodeBreakpointCommand.h"
+#include "../../DataManager.h"
 #include <cstring>
 
 using Olympe::AI::DEFAULT_AI_GRAPH_FILTER;
@@ -231,14 +232,53 @@ void AIEditorGUI::Render()
     ImGui::BeginChild("Inspector", ImVec2(0, 0), true);
     RenderInspector();
     ImGui::EndChild();
-    
+
     ImGui::End();
-    
+
+    // Render centralized file/save modals (Phase 40 Part 4 - Centralization)
+    DataManager& dm = DataManager::Get();
+    dm.RenderFilePickerModal();
+    dm.RenderSaveFilePickerModal();
+
+    // Handle file picker result (Open)
+    if (!dm.IsFilePickerModalOpen()) {
+        std::string selectedFile = dm.GetSelectedFileFromModal();
+        if (!selectedFile.empty()) {
+            // Load graph via NodeGraphManager
+            NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
+            NodeGraph::GraphId id = mgr.LoadGraph(selectedFile);
+            if (id.value != 0) {
+                mgr.SetActiveGraph(id);
+                m_lastOpenPath = selectedFile.substr(0, selectedFile.find_last_of("\\/"));
+                SYSTEM_LOG << "[AIEditorGUI] Loaded: " << selectedFile << std::endl;
+            } else {
+                SYSTEM_LOG << "[AIEditorGUI] ERROR: Failed to load: " << selectedFile << std::endl;
+            }
+        }
+    }
+
+    // Handle save file picker result (SaveAs)
+    if (!dm.IsSaveFilePickerModalOpen()) {
+        std::string selectedFile = dm.GetSelectedSaveFile();
+        if (!selectedFile.empty()) {
+            NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
+            NodeGraph::GraphId activeId = mgr.GetActiveGraphId();
+            bool success = mgr.SaveGraph(activeId, selectedFile);
+
+            if (success) {
+                m_lastSavePath = selectedFile.substr(0, selectedFile.find_last_of("\\/"));
+                SYSTEM_LOG << "[AIEditorGUI] Saved to: " << selectedFile << std::endl;
+            } else {
+                SYSTEM_LOG << "[AIEditorGUI] ERROR: Failed to save to: " << selectedFile << std::endl;
+            }
+        }
+    }
+
     // Render node palette
     if (m_showNodePalette && m_nodePalette) {
         m_nodePalette->Render(&m_showNodePalette);
     }
-    
+
     // Render specialized panels
     if (m_showBlackboardPanel) {
         RenderBlackboardPanel();
@@ -619,20 +659,11 @@ void AIEditorGUI::MenuAction_Open()
 {
     SYSTEM_LOG << "[AIEditorGUI] Open file dialog" << std::endl;
 
-    std::string filepath = AIEditorFileDialog::OpenFile(m_lastOpenPath);
-    if (!filepath.empty()) {
-        m_lastOpenPath = filepath.substr(0, filepath.find_last_of("\\/"));
+    // Open centralized file picker modal
+    DataManager& dm = DataManager::Get();
+    dm.OpenFilePickerModal(Olympe::FilePickerType::BehaviorTree, "Blueprints/AI/");
 
-        // Load graph via NodeGraphManager
-        NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-        NodeGraph::GraphId id = mgr.LoadGraph(filepath);
-        if (id.value != 0) {
-            mgr.SetActiveGraph(id);
-            SYSTEM_LOG << "[AIEditorGUI] Loaded: " << filepath << std::endl;
-        } else {
-            SYSTEM_LOG << "[AIEditorGUI] ERROR: Failed to load: " << filepath << std::endl;
-        }
-    }
+    // Modal will be handled each frame in Render()
 }
 
 void AIEditorGUI::MenuAction_Save()
@@ -673,13 +704,21 @@ void AIEditorGUI::MenuAction_SaveAs()
         return;
     }
 
-    std::string filepath = AIEditorFileDialog::SaveFile(m_lastSavePath, "*.bt.json");
-    if (!filepath.empty()) {
-        m_lastSavePath = filepath.substr(0, filepath.find_last_of("\\/"));
-        NodeGraph::GraphId activeId = mgr.GetActiveGraphId();
-        mgr.SaveGraph(activeId, filepath);
-        SYSTEM_LOG << "[AIEditorGUI] Saved to: " << filepath << std::endl;
-    }
+    // Generate suggested filename from current path
+    std::string suggestedName = m_lastSavePath.empty() 
+                                ? "behavior_tree" 
+                                : m_lastSavePath.substr(m_lastSavePath.find_last_of("/\\") + 1);
+
+    // Remove extension if present
+    size_t dotPos = suggestedName.rfind('.');
+    if (dotPos != std::string::npos)
+        suggestedName = suggestedName.substr(0, dotPos);
+
+    // Open centralized save file picker modal
+    DataManager& dm = DataManager::Get();
+    dm.OpenSaveFilePickerModal(Olympe::SaveFileType::BehaviorTree, "Blueprints/AI/", suggestedName);
+
+    // Modal will be handled each frame in Render()
 }
 
 void AIEditorGUI::MenuAction_AutoLayout()

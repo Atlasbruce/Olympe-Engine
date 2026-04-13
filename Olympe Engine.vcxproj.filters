@@ -557,6 +557,9 @@
     <None Include="PHASE_40_CENTRALIZATION_REPORT.md" />
     <None Include="PHASE_40_IMPLEMENTATION_SUMMARY.md" />
     <None Include="PHASE_40_FINAL_REPORT.md" />
+    <None Include="PHASE_40_PART_4_COMPLETION_REPORT.md" />
+    <None Include="PHASE_40_COMPLETE_SUMMARY.md" />
+    <None Include="PHASE_40_PART_4_CODE_REFERENCE.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
