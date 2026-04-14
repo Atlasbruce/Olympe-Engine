@@ -8,8 +8,8 @@ namespace Olympe {
 
 // Forward declarations
 class IGraphDocument;
-class SaveFilePickerModal;
 class FilePickerModal;
+// Phase 44.1: SaveFilePickerModal no longer used directly; managed by CanvasModalRenderer dispatcher
 
 /**
  * @class CanvasToolbarRenderer
@@ -132,10 +132,11 @@ private:
     BrowseCallback m_onBrowseComplete;             ///< User callback on browse
     
     // ========== MODAL STATE ==========
+    // Phase 44.1: SaveFile modal migrated to CanvasModalRenderer dispatcher
+    // Browse modal remains local for backward compatibility
     bool m_showSaveAsModal = false;                ///< SaveFilePickerModal open?
     bool m_showBrowseModal = false;                ///< FilePickerModal open?
-    SaveFilePickerModal* m_saveModal = nullptr;    ///< Owned modal instance
-    FilePickerModal* m_browseModal = nullptr;      ///< Owned modal instance
+    FilePickerModal* m_browseModal = nullptr;      ///< Browse modal (local, not managed by dispatcher)
 
     // ========== UI STATE ==========
     bool m_isDirty = false;                        ///< Last known dirty state

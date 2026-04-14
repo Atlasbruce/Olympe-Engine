@@ -597,6 +597,23 @@
     <None Include="DELIVERY_PACKAGE.md" />
     <None Include="FILE_MANIFEST.md" />
     <None Include="MISSION_ACCOMPLISHED.md" />
+    <None Include="MODAL_CONSOLIDATION_ANALYSIS.md" />
+    <None Include="PHASE_44_CONSOLIDATION_REPORT.md" />
+    <None Include="PHASE_44_VISUAL_SUMMARY.md" />
+    <None Include="ARCHITECTURE_SUBGRAPH_MODALS.md" />
+    <None Include="ARCHITECTURE_SUBGRAPH_MODALS_USER_GUIDE.md" />
+    <None Include="PHASE_44_1_VERIFICATION_REPORT.md" />
+    <None Include="PHASE_44_1_COMPLETION_SUMMARY.md" />
+    <None Include="PHASE_44_1_TESTING_QUICK_GUIDE.md" />
+    <None Include="PHASE_44_1_DOCUMENTATION_INDEX.md" />
+    <None Include="PHASE_44_1_ARCHIVE_SUMMARY.md" />
+    <None Include="PHASE_44_1_DEPLOYMENT_CHECKLIST.md" />
+    <None Include="PHASE_44_1_FINAL_VERIFICATION.md" />
+    <None Include="PHASE_44_1_QUICK_START.md" />
+    <None Include="PHASE_44_1_WORK_COMPLETE.md" />
+    <None Include="PHASE_44_1_DELIVERY_MANIFEST.md" />
+    <None Include="PHASE_44_1_MASTER_INDEX.md" />
+    <None Include="MISSION_ACCOMPLISHED_PHASE_44_1.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

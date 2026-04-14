@@ -20,7 +20,8 @@
 
 #pragma once
 
-#include "../../Editor/Modals/SubGraphFilePickerModal.h"
+#include "../../Editor/Modals/FilePickerModal.h"
+#include "../../Editor/Modals/SaveFilePickerModal.h"
 #include <string>
 
 namespace Olympe {
@@ -36,6 +37,10 @@ namespace Olympe {
  *
  * Fixes BehaviorTree modal duplicate UI zones by ensuring single rendering
  * path per frame (was: DataManager rendering multiple times).
+ *
+ * Phase 44 Consolidation: Uses FilePickerModal for SubGraph selection (with folder panel)
+ * instead of dedicated SubGraphFilePickerModal (which lacked folder navigation).
+ * This ensures consistent UI across all graph editors with full folder browsing.
  *
  * Singleton pattern - use Get() for global access.
  */
@@ -97,6 +102,82 @@ public:
      */
     void CloseSubGraphModal();
 
+    // ========================================================================
+    // BehaviorTree File Picker Modal
+    // ========================================================================
+
+    /**
+     * @brief Open BehaviorTree file picker modal.
+     * @param initialPath Directory to start browsing from (e.g., "./Gamedata").
+     *
+     * Used by EntityPrefabRenderer property panels for BehaviorTree selection.
+     */
+    void OpenBehaviorTreeFilePickerModal(const std::string& initialPath);
+
+    /**
+     * @brief Render BehaviorTree file picker modal this frame.
+     */
+    void RenderBehaviorTreeFilePickerModal();
+
+    /**
+     * @brief Check if BehaviorTree modal was confirmed by user.
+     */
+    bool IsBehaviorTreeModalConfirmed() const;
+
+    /**
+     * @brief Get selected BehaviorTree file path.
+     */
+    std::string GetSelectedBehaviorTreeFile() const;
+
+    /**
+     * @brief Check if BehaviorTree modal is currently open.
+     */
+    bool IsBehaviorTreeModalOpen() const;
+
+    /**
+     * @brief Close BehaviorTree modal without selection.
+     */
+    void CloseBehaviorTreeModal();
+
+    // ========================================================================
+    // SaveAs File Picker Modal
+    // ========================================================================
+
+    /**
+     * @brief Open Save File picker modal.
+     * @param initialPath Directory to start from.
+     * @param suggestedName Default filename.
+     * @param fileType Type of file being saved (BehaviorTree, Blueprint, EntityPrefab, Audio).
+     */
+    void OpenSaveFilePickerModal(const std::string& initialPath, 
+                                  const std::string& suggestedName,
+                                  SaveFileType fileType);
+
+    /**
+     * @brief Render Save File picker modal this frame.
+     */
+    void RenderSaveFilePickerModal();
+
+    /**
+     * @brief Check if Save modal was confirmed by user.
+     */
+    bool IsSaveFileModalConfirmed() const;
+
+    /**
+     * @brief Get selected save file path.
+     */
+    std::string GetSelectedSaveFilePath() const;
+
+    /**
+     * @brief Check if Save modal is currently open.
+     */
+    bool IsSaveFileModalOpen() const;
+
+    /**
+     * @brief Close Save modal without selection.
+     */
+    void CloseSaveFileModal();
+
 private:
     // Private constructor - singleton pattern
     CanvasModalRenderer();
@@ -114,21 +195,56 @@ private:
 
     /**
      * @brief Instance of SubGraph file picker modal.
-     * Wrapped by public interface for centralized rendering.
+     * Phase 44: Changed from SubGraphFilePickerModal to FilePickerModal (with folder tree UI).
+     * This ensures consistent UI across all property panels with folder navigation enabled.
      */
-    SubGraphFilePickerModal m_subGraphModal;
+    FilePickerModal m_subGraphModal{FilePickerType::SubGraph};
+
+    /**
+     * @brief Instance of BehaviorTree file picker modal.
+     * Phase 44.1: Unified from PropertyEditorPanel::m_behaviorTreeModal.
+     */
+    FilePickerModal m_behaviorTreeModal{FilePickerType::BehaviorTree};
+
+    /**
+     * @brief Instance of Save file picker modal.
+     * Phase 44.1: Unified from CanvasToolbarRenderer::m_saveModal.
+     */
+    SaveFilePickerModal m_saveFileModal{SaveFileType::Blueprint};
+
+    // ========================================================================
+    // State Cache
+    // ========================================================================
 
     /**
      * @brief Last confirmed selection from SubGraph modal.
-     * Cached to avoid repeated queries from SubGraphFilePickerModal.
      */
-    std::string m_cachedSelection;
+    std::string m_cachedSubGraphSelection;
 
     /**
      * @brief Whether SubGraph modal was confirmed last frame.
-     * Clears after one read by caller to prevent multiple processing.
      */
-    bool m_subGraphConfirmed;
+    bool m_subGraphConfirmed = false;
+
+    /**
+     * @brief Last confirmed selection from BehaviorTree modal.
+     */
+    std::string m_cachedBehaviorTreeSelection;
+
+    /**
+     * @brief Whether BehaviorTree modal was confirmed last frame.
+     */
+    bool m_behaviorTreeConfirmed = false;
+
+    /**
+     * @brief Last confirmed selection from Save modal.
+     */
+    std::string m_cachedSaveSelection;
+
+    /**
+     * @brief Whether Save modal was confirmed last frame.
+     */
+    bool m_saveConfirmed = false;
 };
 
 } // namespace Olympe

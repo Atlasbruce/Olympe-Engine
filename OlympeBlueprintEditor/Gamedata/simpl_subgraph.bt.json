@@ -11,8 +11,8 @@
         "name": "BT_Root",
         "parameters": {},
         "position": {
-          "x": 188,
-          "y": 149
+          "x": 225,
+          "y": 148
         },
         "type": "Root"
       },
@@ -26,8 +26,8 @@
         "name": "BT_Sequence",
         "parameters": {},
         "position": {
-          "x": 471,
-          "y": 164
+          "x": 470,
+          "y": 150
         },
         "type": "Sequence"
       },
@@ -78,7 +78,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "",
+    "lastModified": "2026-04-14T11:01:32",
     "tags": []
   },
   "name": "Untitled-1",

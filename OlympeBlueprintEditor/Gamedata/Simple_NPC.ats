@@ -55,8 +55,8 @@
         "enabled": true,
         "nodeId": 2,
         "position": {
-          "x": 75,
-          "y": 281,
+          "x": 111,
+          "y": 273,
           "z": 0
         },
         "properties": {
@@ -66,7 +66,7 @@
           "tag": "Untagged",
           "type": "UnknownType"
         },
-        "selected": true,
+        "selected": false,
         "size": {
           "x": 150,
           "y": 80,
@@ -149,14 +149,34 @@
         "enabled": true,
         "nodeId": 6,
         "position": {
-          "x": 428,
-          "y": 93,
+          "x": 418,
+          "y": 82,
           "z": 0
         },
         "properties": {
           "behaviorType": "Gamedata\\Simple_NPC_BT.bt.json"
         },
         "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "NPC_data",
+        "componentType": "NPC_data",
+        "enabled": true,
+        "nodeId": 7,
+        "position": {
+          "x": 727,
+          "y": 264,
+          "z": 0
+        },
+        "properties": {
+          "npcType": ""
+        },
+        "selected": true,
         "size": {
           "x": 150,
           "y": 80,

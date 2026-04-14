@@ -10,7 +10,10 @@
  * Provides single rendering path for all graph editor modals to fix
  * BehaviorTree modal duplicate UI zones (was: DataManager rendering twice per frame).
  *
- * Delegates to SubGraphFilePickerModal for actual modal logic.
+ * Phase 44: Consolidated SubGraphFilePickerModal → FilePickerModal (with folder tree)
+ * This ensures all property panels show consistent UI with folder navigation.
+ *
+ * Delegates to FilePickerModal for actual modal logic.
  * This class provides unified interface and prevents duplicate rendering.
  *
  * C++14 compliant.
@@ -31,9 +34,11 @@ CanvasModalRenderer& CanvasModalRenderer::Get()
 }
 
 CanvasModalRenderer::CanvasModalRenderer()
-    : m_subGraphConfirmed(false)
+    : m_subGraphConfirmed(false),
+      m_behaviorTreeConfirmed(false),
+      m_saveConfirmed(false)
 {
-    // m_subGraphModal initialized via default constructor of SubGraphFilePickerModal
+    // All modals initialized via member initializers
 }
 
 // ============================================================================
@@ -46,7 +51,7 @@ void CanvasModalRenderer::OpenSubGraphFilePickerModal(const std::string& initial
     // This opens the modal for display in next Render() call
     m_subGraphModal.Open(initialPath);
     m_subGraphConfirmed = false;
-    m_cachedSelection = "";
+    m_cachedSubGraphSelection = "";
 }
 
 void CanvasModalRenderer::RenderSubGraphFilePickerModal()
@@ -60,7 +65,7 @@ void CanvasModalRenderer::RenderSubGraphFilePickerModal()
     if (!m_subGraphConfirmed && m_subGraphModal.IsConfirmed())
     {
         m_subGraphConfirmed = true;
-        m_cachedSelection = m_subGraphModal.GetSelectedFile();
+        m_cachedSubGraphSelection = m_subGraphModal.GetSelectedFile();
     }
 }
 
@@ -75,7 +80,7 @@ std::string CanvasModalRenderer::GetSelectedSubGraphFile() const
 {
     // Return cached selection from wrapped modal
     // Valid only after IsSubGraphModalConfirmed() returned true
-    return m_cachedSelection;
+    return m_cachedSubGraphSelection;
 }
 
 bool CanvasModalRenderer::IsSubGraphModalOpen() const
@@ -89,7 +94,105 @@ void CanvasModalRenderer::CloseSubGraphModal()
     // Close wrapped modal without selection
     m_subGraphModal.Close();
     m_subGraphConfirmed = false;
-    m_cachedSelection = "";
+    m_cachedSubGraphSelection = "";
+}
+
+// ============================================================================
+// BehaviorTree File Picker Modal - Public Interface
+// ============================================================================
+
+void CanvasModalRenderer::OpenBehaviorTreeFilePickerModal(const std::string& initialPath)
+{
+    // Phase 44.1: Unified from PropertyEditorPanel::m_behaviorTreeModal
+    m_behaviorTreeModal.Open(initialPath);
+    m_behaviorTreeConfirmed = false;
+    m_cachedBehaviorTreeSelection = "";
+}
+
+void CanvasModalRenderer::RenderBehaviorTreeFilePickerModal()
+{
+    // Single rendering point per frame
+    m_behaviorTreeModal.Render();
+
+    // Cache confirmation state
+    if (!m_behaviorTreeConfirmed && m_behaviorTreeModal.IsConfirmed())
+    {
+        m_behaviorTreeConfirmed = true;
+        m_cachedBehaviorTreeSelection = m_behaviorTreeModal.GetSelectedFile();
+    }
+}
+
+bool CanvasModalRenderer::IsBehaviorTreeModalConfirmed() const
+{
+    return m_behaviorTreeConfirmed;
+}
+
+std::string CanvasModalRenderer::GetSelectedBehaviorTreeFile() const
+{
+    return m_cachedBehaviorTreeSelection;
+}
+
+bool CanvasModalRenderer::IsBehaviorTreeModalOpen() const
+{
+    return m_behaviorTreeModal.IsOpen();
+}
+
+void CanvasModalRenderer::CloseBehaviorTreeModal()
+{
+    m_behaviorTreeModal.Close();
+    m_behaviorTreeConfirmed = false;
+    m_cachedBehaviorTreeSelection = "";
+}
+
+// ============================================================================
+// Save File Picker Modal - Public Interface
+// ============================================================================
+
+void CanvasModalRenderer::OpenSaveFilePickerModal(const std::string& initialPath,
+                                                   const std::string& suggestedName,
+                                                   SaveFileType fileType)
+{
+    // Phase 44.1: Unified from CanvasToolbarRenderer::m_saveModal
+    // Note: fileType parameter provided for future use or caller context
+    // The modal instance (m_saveFileModal) is initialized with SaveFileType::Blueprint
+    m_saveFileModal.Open(initialPath, suggestedName);
+    m_saveConfirmed = false;
+    m_cachedSaveSelection = "";
+}
+
+void CanvasModalRenderer::RenderSaveFilePickerModal()
+{
+    // Single rendering point per frame
+    m_saveFileModal.Render();
+
+    // Cache confirmation state
+    if (!m_saveConfirmed && m_saveFileModal.IsConfirmed())
+    {
+        m_saveConfirmed = true;
+        m_cachedSaveSelection = m_saveFileModal.GetSelectedFile();
+    }
+}
+
+bool CanvasModalRenderer::IsSaveFileModalConfirmed() const
+{
+    return m_saveConfirmed;
+}
+
+std::string CanvasModalRenderer::GetSelectedSaveFilePath() const
+{
+    return m_cachedSaveSelection;
+}
+
+bool CanvasModalRenderer::IsSaveFileModalOpen() const
+{
+    return m_saveFileModal.IsOpen();
+}
+
+void CanvasModalRenderer::CloseSaveFileModal()
+{
+    m_saveFileModal.Close();
+    m_saveConfirmed = false;
+    m_cachedSaveSelection = "";
 }
 
 } // namespace Olympe

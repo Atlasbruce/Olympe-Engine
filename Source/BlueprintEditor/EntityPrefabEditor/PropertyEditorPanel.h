@@ -5,7 +5,7 @@
 #include <memory>
 #include "./../../vector.h"
 #include "EntityPrefabGraphDocument.h"
-#include "../../Editor/Modals/BehaviorTreeFilePickerModal.h"
+#include "../Framework/CanvasModalRenderer.h"
 
 // Forward declaration for NodePropertiesPanel stub (moved to PropertyEditorPanel)
 class NodePropertiesPanel;
@@ -33,7 +33,6 @@ namespace Olympe
     private:
         NodeId m_selectedNodeId = InvalidNodeId;
         EntityPrefabGraphDocument* m_document = nullptr;
-        std::unique_ptr<Olympe::BehaviorTreeFilePickerModal> m_behaviorTreeModal;
 
         // Rendering helpers
         void RenderNodeInfo();

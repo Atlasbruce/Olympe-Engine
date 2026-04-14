@@ -7,7 +7,7 @@ namespace Olympe
 {
     PropertyEditorPanel::PropertyEditorPanel()
     {
-        m_behaviorTreeModal = std::make_unique<BehaviorTreeFilePickerModal>();
+        // Modal now delegated to CanvasModalRenderer (Phase 44.1 consolidation)
     }
 
     PropertyEditorPanel::~PropertyEditorPanel() { }
@@ -130,47 +130,42 @@ namespace Olympe
                     ImGui::SameLine();
                     if (ImGui::Button("Browse##bt_browse", ImVec2(75, 0)))
                     {
-                        m_behaviorTreeModal->Open("./Gamedata");
+                        // Phase 44.1: Use unified dispatcher instead of direct modal
+                        CanvasModalRenderer::Get().OpenBehaviorTreeFilePickerModal("./Gamedata");
                     }
 
-                    // Render modal every frame
-                    if (m_behaviorTreeModal)
+                    // Handle file selection from modal dispatcher (renders in TabManager)
+                    if (CanvasModalRenderer::Get().IsBehaviorTreeModalConfirmed())
                     {
-                        m_behaviorTreeModal->Render();
+                        std::string selectedFile = CanvasModalRenderer::Get().GetSelectedBehaviorTreeFile();
 
-                        // Handle file selection from modal
-                        if (m_behaviorTreeModal->IsConfirmed())
+                        // Extract relative path by removing "Gamedata/BehaviorTree/" prefix
+                        std::string relativePath = selectedFile;
+                        const std::string btPrefix = "Gamedata/";
+                        const std::string btPrefixWin = "Gamedata\\";
+
+                        if (relativePath.find(btPrefix) == 0)
                         {
-                            std::string selectedFile = m_behaviorTreeModal->GetSelectedFile();
-
-                            // Extract relative path by removing "Gamedata/BehaviorTree/" prefix
-                            std::string relativePath = selectedFile;
-                            const std::string btPrefix = "Gamedata/";
-                            const std::string btPrefixWin = "Gamedata\\";
-
-                            if (relativePath.find(btPrefix) == 0)
-                            {
-                                relativePath = relativePath.substr(btPrefix.length());
-                            }
-                            else if (relativePath.find(btPrefixWin) == 0)
-                            {
-                                relativePath = relativePath.substr(btPrefixWin.length());
-                            }
-
-                            // Normalize path: forward slashes to backslashes for consistency
-                            for (char& c : relativePath)
-                            {
-                                if (c == '/')
-                                    c = '\\';
-                            }
-
-                            // Update node property and cache
-                            node->SetProperty(it->first, relativePath);
-                            cachedPath = relativePath;
-                            ApplyChanges();
-
-                            SYSTEM_LOG << "[PropertyEditorPanel] Selected BehaviorTree: " << relativePath << "\n";
+                            relativePath = relativePath.substr(btPrefix.length());
                         }
+                        if (relativePath.find(btPrefixWin) == 0)
+                        {
+                            relativePath = relativePath.substr(btPrefixWin.length());
+                        }
+
+                        // Normalize path: forward slashes to backslashes for consistency
+                        for (char& c : relativePath)
+                        {
+                            if (c == '/')
+                                c = '\\';
+                        }
+
+                        // Update node property and cache
+                        node->SetProperty(it->first, relativePath);
+                        cachedPath = relativePath;
+                        ApplyChanges();
+
+                        SYSTEM_LOG << "[PropertyEditorPanel] Selected BehaviorTree: " << relativePath << "\n";
                     }
                 }
                 else

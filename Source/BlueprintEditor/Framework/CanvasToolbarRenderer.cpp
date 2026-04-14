@@ -7,8 +7,8 @@
 
 #include "CanvasToolbarRenderer.h"
 #include "IGraphDocument.h"
+#include "CanvasModalRenderer.h"
 #include "../../third_party/imgui/imgui.h"
-#include "../../Editor/Modals/SaveFilePickerModal.h"
 #include "../../Editor/Modals/FilePickerModal.h"
 #include "../../system/system_utils.h"
 #include "../../system/system_consts.h"
@@ -23,7 +23,6 @@ namespace Olympe {
 
 CanvasToolbarRenderer::CanvasToolbarRenderer(IGraphDocument* document)
     : m_document(document)
-    , m_saveModal(nullptr)
     , m_browseModal(nullptr)
     , m_isDirty(false)
 {
@@ -40,11 +39,7 @@ CanvasToolbarRenderer::CanvasToolbarRenderer(IGraphDocument* document)
 
 CanvasToolbarRenderer::~CanvasToolbarRenderer()
 {
-    if (m_saveModal)
-    {
-        delete m_saveModal;
-        m_saveModal = nullptr;
-    }
+    // Phase 44.1: SaveFile modal managed by dispatcher, Browse modal local
     if (m_browseModal)
     {
         delete m_browseModal;
@@ -89,51 +84,49 @@ void CanvasToolbarRenderer::RenderModals()
     // Render SaveAs modal if open
     if (m_showSaveAsModal)
     {
-        if (!m_saveModal)
+        // Determine file type based on document type
+        SaveFileType saveType = SaveFileType::Blueprint;
+        if (m_document)
         {
-            // Determine file type based on document type
-            SaveFileType saveType = SaveFileType::Blueprint;
-            if (m_document)
+            switch (m_document->GetType())
             {
-                switch (m_document->GetType())
-                {
-                    case DocumentType::BEHAVIOR_TREE:
-                        saveType = SaveFileType::BehaviorTree;
-                        break;
-                    case DocumentType::ENTITY_PREFAB:
-                        saveType = SaveFileType::EntityPrefab;
-                        break;
-                    case DocumentType::VISUAL_SCRIPT:
-                        saveType = SaveFileType::Blueprint;
-                        break;
-                    default:
-                        saveType = SaveFileType::Blueprint;
-                        break;
-                }
+                case DocumentType::BEHAVIOR_TREE:
+                    saveType = SaveFileType::BehaviorTree;
+                    break;
+                case DocumentType::ENTITY_PREFAB:
+                    saveType = SaveFileType::EntityPrefab;
+                    break;
+                case DocumentType::VISUAL_SCRIPT:
+                    saveType = SaveFileType::Blueprint;
+                    break;
+                default:
+                    saveType = SaveFileType::Blueprint;
+                    break;
             }
-
-            m_saveModal = new SaveFilePickerModal(saveType);
-            std::string initDir = GetInitialDirectory();
-            std::string suggestedName = GetSuggestedFilename();
-            m_saveModal->Open(initDir, suggestedName);
         }
 
-        m_saveModal->Render();
+        std::string initDir = GetInitialDirectory();
+        std::string suggestedName = GetSuggestedFilename();
 
-        if (m_saveModal->IsConfirmed())
+        // Check if modal is not already open, then open it
+        if (!CanvasModalRenderer::Get().IsSaveFileModalOpen())
         {
-            std::string selectedPath = m_saveModal->GetSelectedFile();
+            CanvasModalRenderer::Get().OpenSaveFilePickerModal(initDir, suggestedName, saveType);
+        }
+
+        // Render handled by TabManager calling CanvasModalRenderer::RenderSaveFilePickerModal()
+
+        if (CanvasModalRenderer::Get().IsSaveFileModalConfirmed())
+        {
+            std::string selectedPath = CanvasModalRenderer::Get().GetSelectedSaveFilePath();
             OnSaveAsComplete(selectedPath);
-            m_saveModal->Close();
             m_showSaveAsModal = false;
-            delete m_saveModal;
-            m_saveModal = nullptr;
+            CanvasModalRenderer::Get().CloseSaveFileModal();
         }
-        else if (!m_saveModal->IsOpen())
+        else if (!CanvasModalRenderer::Get().IsSaveFileModalOpen())
         {
             m_showSaveAsModal = false;
-            delete m_saveModal;
-            m_saveModal = nullptr;
+            CanvasModalRenderer::Get().CloseSaveFileModal();
         }
     }
 
@@ -163,8 +156,8 @@ void CanvasToolbarRenderer::RenderModals()
                 }
             }
 
-            m_browseModal = new FilePickerModal(browseType);
             std::string initDir = GetInitialDirectory();
+            m_browseModal = new FilePickerModal(browseType);
             m_browseModal->Open(initDir);
         }
 
@@ -174,7 +167,6 @@ void CanvasToolbarRenderer::RenderModals()
         {
             std::string selectedPath = m_browseModal->GetSelectedFile();
             OnBrowseComplete(selectedPath);
-            m_browseModal->Close();
             m_showBrowseModal = false;
             delete m_browseModal;
             m_browseModal = nullptr;
