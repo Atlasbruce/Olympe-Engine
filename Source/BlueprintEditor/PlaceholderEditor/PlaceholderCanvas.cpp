@@ -6,6 +6,7 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>  // For std::find
+#include <limits>     // For std::numeric_limits
 
 namespace Olympe {
 
@@ -22,7 +23,11 @@ PlaceholderCanvas::PlaceholderCanvas()
       m_isSelectingRectangle(false),
       m_selectionRectStart(ImVec2(0.0f, 0.0f)),
       m_selectionRectEnd(ImVec2(0.0f, 0.0f)),
-      m_minimapRenderer(std::make_unique<CanvasMinimapRenderer>())
+      m_minimapRenderer(std::make_unique<CanvasMinimapRenderer>()),
+      m_hoveredNodeId(-1),            // Phase 76: No hovered node initially
+      m_hoveredConnectionId(-1),      // Phase 76: No hovered connection initially
+      m_contextNodeId(-1),            // Phase 76: No context menu initially
+      m_contextConnectionId(-1)       // Phase 76: No connection context menu initially
 {
 }
 
@@ -140,8 +145,11 @@ void PlaceholderCanvas::RenderNodeBox(const PlaceholderNode& node, bool isSelect
 
     // Node color based on type
     ImU32 nodeColor = GetNodeColorForType(node.type);
-    ImU32 borderColor = isSelected ? IM_COL32(0, 255, 255, 255) : IM_COL32(200, 200, 200, 255);
-    float borderWidth = isSelected ? 3.0f : 1.5f;
+
+    // Phase 76: Hover detection affects border
+    bool isHovered = (m_hoveredNodeId == node.nodeId);
+    ImU32 borderColor = isSelected ? IM_COL32(0, 255, 255, 255) : (isHovered ? IM_COL32(255, 200, 0, 255) : IM_COL32(200, 200, 200, 255));
+    float borderWidth = isSelected ? 3.0f : (isHovered ? 2.5f : 1.5f);
 
     // Phase 63.1: Draw blue glow on selection (subtle shadow effect)
     if (isSelected) {
@@ -149,6 +157,18 @@ void PlaceholderCanvas::RenderNodeBox(const PlaceholderNode& node, bool isSelect
             ImVec2(nodeScreenPos.x - 3.0f, nodeScreenPos.y - 3.0f),
             ImVec2(nodeScreenEnd.x + 3.0f, nodeScreenEnd.y + 3.0f),
             IM_COL32(0, 200, 255, 100),  // Light cyan glow
+            4.0f,
+            ImDrawFlags_RoundCornersAll,
+            1.0f
+        );
+    }
+
+    // Phase 76: Draw yellow glow on hover
+    if (isHovered && !isSelected) {
+        drawList->AddRect(
+            ImVec2(nodeScreenPos.x - 2.0f, nodeScreenPos.y - 2.0f),
+            ImVec2(nodeScreenEnd.x + 2.0f, nodeScreenEnd.y + 2.0f),
+            IM_COL32(255, 200, 0, 150),  // Yellow hover glow
             4.0f,
             ImDrawFlags_RoundCornersAll,
             1.0f
@@ -207,10 +227,15 @@ void PlaceholderCanvas::RenderConnectionLine(const PlaceholderConnection& conn)
     ImVec2 cp1(fromPos.x + controlPointOffset, fromPos.y);
     ImVec2 cp2(toPos.x - controlPointOffset, toPos.y);
 
+    // Phase 76: Check if this connection is hovered (using index in connections array)
+    bool isHovered = (m_hoveredConnectionId == 0);  // Updated when GetConnectionAtScreenPos() determines index
+    ImU32 lineColor = isHovered ? IM_COL32(255, 255, 0, 255) : IM_COL32(255, 255, 0, 255);  // Yellow always
+    float lineWidth = isHovered ? 3.0f : 2.0f;
+
     // Draw Bezier curve using path rendering
     drawList->PathLineTo(fromPos);
     drawList->PathBezierCubicCurveTo(cp1, cp2, toPos, 32);
-    drawList->PathStroke(IM_COL32(255, 255, 0, 255), false, 2.0f);
+    drawList->PathStroke(lineColor, false, lineWidth);
 }
 
 ImU32 PlaceholderCanvas::GetNodeColorForType(PlaceholderNodeType type)
@@ -271,7 +296,34 @@ void PlaceholderCanvas::HandleNodeInteraction()
     bool isMouseOverCanvas = (mousePos.x >= canvasPos.x && mousePos.x < canvasPos.x + canvasSize.x &&
                               mousePos.y >= canvasPos.y && mousePos.y < canvasPos.y + canvasSize.y);
 
-    if (!isMouseOverCanvas) return;
+    if (!isMouseOverCanvas) {
+        // Reset hover state when mouse leaves canvas
+        m_hoveredNodeId = -1;
+        m_hoveredConnectionId = -1;
+        return;
+    }
+
+    // Phase 76: Update hover state (detect which node/connection is under mouse)
+    m_hoveredNodeId = GetNodeAtScreenPos(mousePos);
+    m_hoveredConnectionId = GetConnectionAtScreenPos(mousePos);
+
+    // Phase 76: Handle right-click (context menu dispatch in input phase)
+    if (ImGui::IsMouseClicked(1)) {  // Right mouse button
+        if (m_hoveredNodeId >= 0) {
+            // Right-click on node
+            m_contextNodeId = m_hoveredNodeId;
+            ImGui::OpenPopup("##node_context_menu");
+            std::cout << "[PlaceholderCanvas] Right-click on node " << m_hoveredNodeId << " - opening context menu\n";
+        } else if (m_hoveredConnectionId >= 0) {
+            // Right-click on connection
+            m_contextConnectionId = m_hoveredConnectionId;
+            ImGui::OpenPopup("##connection_context_menu");
+            std::cout << "[PlaceholderCanvas] Right-click on connection " << m_hoveredConnectionId << " - opening context menu\n";
+        } else {
+            // Right-click on empty canvas
+            ImGui::OpenPopup("##canvas_context_menu");
+        }
+    }
 
     // Phase 63.1 FIX: Get keyboard modifiers for multi-select
     bool ctrlPressed = io.KeyCtrl;
@@ -462,45 +514,39 @@ void PlaceholderCanvas::HandleNodeInteraction()
 
 void PlaceholderCanvas::RenderContextMenu()
 {
-    ImGuiIO& io = ImGui::GetIO();
-    ImVec2 canvasPos = ImGui::GetCursorScreenPos();
-    ImVec2 canvasSize = ImGui::GetContentRegionAvail();
-    ImVec2 mousePos = io.MousePos;
-
-    // Check if mouse is over canvas
-    bool isMouseOverCanvas = (mousePos.x >= canvasPos.x && mousePos.x < canvasPos.x + canvasSize.x &&
-                              mousePos.y >= canvasPos.y && mousePos.y < canvasSize.y);
-
-    if (!isMouseOverCanvas) return;
-
-    // Check for right mouse button click
-    if (ImGui::IsMouseClicked(1)) {  // Right mouse button
-        // Determine if click is on a node or empty canvas
-        int nodeAtClick = GetNodeAtScreenPos(mousePos);
-
-        if (nodeAtClick >= 0) {
-            // Right-click on node
-            m_selectedNodeId = nodeAtClick;
-            ImGui::OpenPopup("##node_context_menu");
-        } else {
-            // Right-click on empty canvas
-            ImGui::OpenPopup("##canvas_context_menu");
-        }
-    }
+    // Phase 76 FIX: Right-click detection moved to HandleNodeInteraction (input phase)
+    // This method now only renders context menus that were opened in the input phase
+    // via m_contextNodeId, m_contextConnectionId, etc.
 
     // Render node context menu
     if (ImGui::BeginPopup("##node_context_menu")) {
-        if (ImGui::MenuItem("Delete")) {
-            if (m_document && m_selectedNodeId >= 0) {
-                m_document->DeleteNode(m_selectedNodeId);
+        if (m_contextNodeId >= 0 && m_document) {
+            if (ImGui::MenuItem("Delete Node")) {
+                m_document->DeleteNode(m_contextNodeId);
                 m_selectedNodeId = -1;
-                std::cout << "[PlaceholderCanvas] Node deleted via context menu\n";
+                m_contextNodeId = -1;
+                std::cout << "[PlaceholderCanvas] Node " << m_contextNodeId << " deleted via context menu\n";
+                m_document->OnDocumentModified();
+            }
+            if (ImGui::MenuItem("Properties")) {
+                std::cout << "[PlaceholderCanvas] Properties selected for node " << m_contextNodeId << "\n";
             }
         }
-        if (ImGui::MenuItem("Properties")) {
-            // Select the node for property panel to display
-            if (m_selectedNodeId >= 0) {
-                std::cout << "[PlaceholderCanvas] Properties selected for node " << m_selectedNodeId << "\n";
+        ImGui::EndPopup();
+    }
+
+    // Phase 76: Render connection context menu
+    if (ImGui::BeginPopup("##connection_context_menu")) {
+        if (m_contextConnectionId >= 0 && m_document) {
+            if (ImGui::MenuItem("Delete Connection")) {
+                const auto& connections = m_document->GetAllConnections();
+                if (m_contextConnectionId < static_cast<int>(connections.size())) {
+                    const PlaceholderConnection& conn = connections[m_contextConnectionId];
+                    m_document->DeleteConnection(conn.fromNodeId, conn.toNodeId);
+                    m_contextConnectionId = -1;
+                    std::cout << "[PlaceholderCanvas] Connection deleted via context menu\n";
+                    m_document->OnDocumentModified();
+                }
             }
         }
         ImGui::EndPopup();
@@ -546,6 +592,68 @@ bool PlaceholderCanvas::IsPointInNodeBounds(int nodeId, const ImVec2& screen)
 
     return (screen.x >= nodeScreenPos.x && screen.x <= nodeScreenEnd.x &&
             screen.y >= nodeScreenPos.y && screen.y <= nodeScreenEnd.y);
+}
+
+// Phase 76: Connection hit detection
+int PlaceholderCanvas::GetConnectionAtScreenPos(const ImVec2& screen)
+{
+    if (!m_document) return -1;
+
+    const auto& connections = m_document->GetAllConnections();
+    const float tolerance = 10.0f;  // 10 pixel tolerance for click detection
+
+    for (size_t i = 0; i < connections.size(); ++i) {
+        float distance = GetDistanceToConnection(connections[i], screen);
+        if (distance <= tolerance) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+float PlaceholderCanvas::GetDistanceToConnection(const PlaceholderConnection& conn, const ImVec2& screenPos)
+{
+    PlaceholderNode* fromNode = m_document->GetNode(conn.fromNodeId);
+    PlaceholderNode* toNode = m_document->GetNode(conn.toNodeId);
+
+    if (!fromNode || !toNode) return std::numeric_limits<float>::max();
+
+    // Calculate connection Bezier curve start and end
+    ImVec2 fromPos = CanvasToScreen(ImVec2(fromNode->posX + fromNode->width, fromNode->posY + fromNode->height / 2.0f));
+    ImVec2 toPos = CanvasToScreen(ImVec2(toNode->posX, toNode->posY + toNode->height / 2.0f));
+
+    // Bezier control points
+    float controlPointOffset = (toPos.x - fromPos.x) * 0.4f;
+    ImVec2 cp1(fromPos.x + controlPointOffset, fromPos.y);
+    ImVec2 cp2(toPos.x - controlPointOffset, toPos.y);
+
+    // Sample Bezier curve at multiple points to find closest distance
+    float minDistance = std::numeric_limits<float>::max();
+    const int samples = 32;  // Match render curve samples
+
+    for (int i = 0; i <= samples; ++i) {
+        float t = static_cast<float>(i) / samples;
+
+        // Cubic Bezier formula: B(t) = (1-t)³P0 + 3(1-t)²tP1 + 3(1-t)t²P2 + t³P3
+        float mt = 1.0f - t;
+        float mt2 = mt * mt;
+        float mt3 = mt2 * mt;
+        float t2 = t * t;
+        float t3 = t2 * t;
+
+        ImVec2 curvePoint(
+            mt3 * fromPos.x + 3.0f * mt2 * t * cp1.x + 3.0f * mt * t2 * cp2.x + t3 * toPos.x,
+            mt3 * fromPos.y + 3.0f * mt2 * t * cp1.y + 3.0f * mt * t2 * cp2.y + t3 * toPos.y
+        );
+
+        float dx = screenPos.x - curvePoint.x;
+        float dy = screenPos.y - curvePoint.y;
+        float distance = sqrt(dx * dx + dy * dy);
+
+        minDistance = std::min(minDistance, distance);
+    }
+
+    return minDistance;
 }
 
 ImVec2 PlaceholderCanvas::ScreenToCanvas(const ImVec2& screen)

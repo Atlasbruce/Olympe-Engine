@@ -121,6 +121,12 @@ public:
     // Phase 52+: Minimap rendering support
     std::unique_ptr<CanvasMinimapRenderer> m_minimapRenderer;
 
+    // Phase 76: Hover and context menu state tracking
+    int m_hoveredNodeId;            // Currently hovered node (-1 for none)
+    int m_hoveredConnectionId;      // Currently hovered connection index (-1 for none)
+    int m_contextNodeId;            // Node ID for context menu (-1 for none)
+    int m_contextConnectionId;      // Connection ID for context menu (-1 for none)
+
     // Rendering methods
     void RenderGrid();
     void RenderNodes();
@@ -143,6 +149,10 @@ public:
     // Hit detection
     int GetNodeAtScreenPos(const ImVec2& screen);
     bool IsPointInNodeBounds(int nodeId, const ImVec2& screen);
+
+    // Phase 76: Connection hover detection
+    int GetConnectionAtScreenPos(const ImVec2& screen);
+    float GetDistanceToConnection(const PlaceholderConnection& conn, const ImVec2& screenPos);
 
     // Drag-drop handling (Phase 64)
     void HandleNodeCreatedFromPalette(PlaceholderNodeType type, const ImVec2& dropPos);

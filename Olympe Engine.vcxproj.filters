@@ -691,6 +691,10 @@
     <None Include="Project Management\ARCHITECTURE_DOCUMENT_VERSIONS_GUIDE.md" />
     <None Include="Project Management\MASTER_DOCUMENTATION_INDEX.md" />
     <None Include="Source\BlueprintEditor\PHASE_64_5_COMPLETE_DRAG_ANALYSIS.md" />
+    <None Include="Source\BlueprintEditor\Documentation\FRAMEWORK_INTEGRATION_GUIDE.md" />
+    <None Include="Source\BlueprintEditor\Documentation\FRAMEWORK_BEST_PRACTICES.md" />
+    <None Include="Source\BlueprintEditor\Documentation\PHASE_74_75_COMPLETION_REPORT.md" />
+    <None Include="Source\BlueprintEditor\PlaceholderEditor\PHASE_76_RUNTIME_VERIFICATION_GUIDE.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

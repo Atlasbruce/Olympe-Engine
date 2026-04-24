@@ -668,6 +668,9 @@
     <None Include="Source\BlueprintEditor\ARCHITECTURE_AUDIT_CANVAS_FRAMEWORK.md" />
     <None Include="Source\BlueprintEditor\AUDIT_COMPLETION_SUMMARY.md" />
     <None Include="Source\BlueprintEditor\DELIVERABLES_SUMMARY.md" />
+    <None Include="Source\BlueprintEditor\Documentation\FRAMEWORK_BEST_PRACTICES.md" />
+    <None Include="Source\BlueprintEditor\Documentation\FRAMEWORK_INTEGRATION_GUIDE.md" />
+    <None Include="Source\BlueprintEditor\Documentation\PHASE_74_75_COMPLETION_REPORT.md" />
     <None Include="Source\BlueprintEditor\EXECUTIVE_DECISION_SUMMARY.md" />
     <None Include="Source\BlueprintEditor\PHASE_64_5_COMPLETE_DRAG_ANALYSIS.md" />
     <None Include="Source\BlueprintEditor\PlaceholderEditor\ARCHITECTURE_EXPLANATION_TOOLBAR_BUTTONS.md" />
@@ -685,6 +688,7 @@
     <None Include="Source\BlueprintEditor\PlaceholderEditor\PHASE_4_STEP_5_VERIFICATION_CHECKLIST.md" />
     <None Include="Source\BlueprintEditor\PlaceholderEditor\PHASE_53_COMPLETE_TOOLBAR_ARCHITECTURE_FIX.md" />
     <None Include="Source\BlueprintEditor\PlaceholderEditor\PHASE_53_FRAMEWORK_INTEGRATION_FIX.md" />
+    <None Include="Source\BlueprintEditor\PlaceholderEditor\PHASE_76_RUNTIME_VERIFICATION_GUIDE.md" />
     <None Include="Source\BlueprintEditor\PlaceholderEditor\PLACEHOLDER_EDITOR_COMPREHENSIVE_DESIGN.md" />
     <None Include="Source\BlueprintEditor\PlaceholderEditor\PLACEHOLDER_EDITOR_DOCUMENTATION_INDEX.md" />
     <None Include="Source\BlueprintEditor\PlaceholderEditor\PLACEHOLDER_EDITOR_UI_MOCKUP.md" />
