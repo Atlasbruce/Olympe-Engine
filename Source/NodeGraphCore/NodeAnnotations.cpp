@@ -9,7 +9,6 @@
 #include "../system/system_utils.h"
 
 namespace Olympe {
-namespace NodeGraph {
 
 // ============================================================================
 // Query
@@ -167,5 +166,4 @@ NodeAnnotation& NodeAnnotationsManager::GetOrCreate(int nodeId)
     return m_annotations[nodeId];
 }
 
-} // namespace NodeGraph
 } // namespace Olympe

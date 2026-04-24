@@ -36,6 +36,12 @@ public:
     /** @brief Direct access to the wrapped panel (for advanced operations). */
     VisualScriptEditorPanel& GetPanel() { return m_panel; }
 
+    /** @brief Phase 44.2: Get the document adapter for framework integration.
+     *  Returns the underlying IGraphDocument* for reuse in TabManager,
+     *  avoiding duplicate document object creation.
+     */
+    IGraphDocument* GetDocument() const;
+
     // Phase 35.0: Canvas state management
     void SaveCanvasState() override;
     void RestoreCanvasState() override;

@@ -1,71 +1,73 @@
 {
   "blueprintType": "BehaviorTree",
   "data": {
-    "eventRoots": [],
-    "nodes": [
-      {
-        "children": [
-          2
-        ],
-        "id": 1,
-        "name": "BT_Root",
-        "parameters": {},
-        "position": {
-          "x": 225,
-          "y": 148
+    "rootGraph": {
+      "nodes": [
+        {
+          "children": [
+            2
+          ],
+          "id": 1,
+          "name": "BT_Root",
+          "parameters": {},
+          "position": {
+            "x": 195,
+            "y": 156
+          },
+          "type": "Root"
         },
-        "type": "Root"
-      },
-      {
-        "children": [
-          4,
-          3,
-          5
-        ],
-        "id": 2,
-        "name": "BT_Sequence",
-        "parameters": {},
-        "position": {
-          "x": 470,
-          "y": 150
+        {
+          "children": [
+            4,
+            3,
+            5
+          ],
+          "id": 2,
+          "name": "BT_Sequence",
+          "parameters": {},
+          "position": {
+            "x": 470,
+            "y": 150
+          },
+          "type": "Sequence"
         },
-        "type": "Sequence"
-      },
-      {
-        "children": [],
-        "id": 3,
-        "name": "BT_SendMessage",
-        "parameters": {},
-        "position": {
-          "x": 739,
-          "y": 118
+        {
+          "children": [],
+          "id": 3,
+          "name": "BT_SendMessage",
+          "parameters": {},
+          "position": {
+            "x": 739,
+            "y": 118
+          },
+          "type": "SendMessage"
         },
-        "type": "SendMessage"
-      },
-      {
-        "children": [],
-        "id": 4,
-        "name": "BT_EmitSound",
-        "parameters": {},
-        "position": {
-          "x": 743,
-          "y": 257
+        {
+          "children": [],
+          "id": 4,
+          "name": "BT_EmitSound",
+          "parameters": {},
+          "position": {
+            "x": 743,
+            "y": 257
+          },
+          "type": "Action"
         },
-        "type": "Action"
-      },
-      {
-        "children": [],
-        "id": 5,
-        "name": "BT_SubGraph",
-        "parameters": {},
-        "position": {
-          "x": 744,
-          "y": 371
-        },
-        "type": "SubGraph"
-      }
-    ],
-    "rootNodeId": -1
+        {
+          "children": [],
+          "id": 5,
+          "name": "BT_SubGraph",
+          "parameters": {},
+          "position": {
+            "x": 744,
+            "y": 371
+          },
+          "type": "SubGraph"
+        }
+      ],
+      "rootNodeId": -1
+    },
+    "subgraphs": {}
   },
   "description": "",
   "editorState": {
@@ -78,9 +80,9 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-04-14T11:01:32",
+    "lastModified": "2026-04-15T10:49:18",
     "tags": []
   },
   "name": "Untitled-1",
-  "schema_version": 2
+  "schema_version": 5
 }

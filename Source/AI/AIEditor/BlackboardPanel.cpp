@@ -32,7 +32,7 @@ BlackboardPanel::BlackboardPanel()
 // Render
 // ============================================================================
 
-void BlackboardPanel::Render(NodeGraph::BlackboardSystem* blackboard, bool* pOpen)
+void BlackboardPanel::Render(Olympe::BlackboardSystem* blackboard, bool* pOpen)
 {
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse;
     if (!ImGui::Begin("Blackboard", pOpen, flags))
@@ -56,7 +56,7 @@ void BlackboardPanel::Render(NodeGraph::BlackboardSystem* blackboard, bool* pOpe
         m_showAddDialog = true;
         std::memset(m_newEntryName, 0, sizeof(m_newEntryName));
         m_newEntryTypeIndex = 0;
-        m_editBuffer = NodeGraph::BlackboardValue();
+        m_editBuffer = Olympe::BlackboardValue();
         std::memset(m_editStringBuf, 0, sizeof(m_editStringBuf));
     }
 
@@ -83,7 +83,7 @@ void BlackboardPanel::Render(NodeGraph::BlackboardSystem* blackboard, bool* pOpe
 static const char* s_typeNames[] = { "Int", "Float", "Bool", "String", "Vector3" };
 static const int   s_typeCount   = 5;
 
-void BlackboardPanel::RenderEntryList(NodeGraph::BlackboardSystem* blackboard)
+void BlackboardPanel::RenderEntryList(Olympe::BlackboardSystem* blackboard)
 {
     const auto& entries = blackboard->GetAll();
 
@@ -108,7 +108,7 @@ void BlackboardPanel::RenderEntryList(NodeGraph::BlackboardSystem* blackboard)
     for (auto it = entries.begin(); it != entries.end(); ++it)
     {
         const std::string& name = it->first;
-        const NodeGraph::BlackboardValue& val = it->second;
+        const Olympe::BlackboardValue& val = it->second;
 
         ImGui::PushID(name.c_str());
 
@@ -130,19 +130,19 @@ void BlackboardPanel::RenderEntryList(NodeGraph::BlackboardSystem* blackboard)
 
         switch (val.type)
         {
-        case NodeGraph::BlackboardType::Int:
+        case Olympe::BlackboardType::Int:
             std::snprintf(valueBuf, sizeof(valueBuf), "%d", val.intValue);
             break;
-        case NodeGraph::BlackboardType::Float:
+        case Olympe::BlackboardType::Float:
             std::snprintf(valueBuf, sizeof(valueBuf), "%.3f", val.floatValue);
             break;
-        case NodeGraph::BlackboardType::Bool:
+        case Olympe::BlackboardType::Bool:
             std::snprintf(valueBuf, sizeof(valueBuf), "%s", val.boolValue ? "true" : "false");
             break;
-        case NodeGraph::BlackboardType::String:
+        case Olympe::BlackboardType::String:
             std::snprintf(valueBuf, sizeof(valueBuf), "%s", val.stringValue.c_str());
             break;
-        case NodeGraph::BlackboardType::Vector3:
+        case Olympe::BlackboardType::Vector3:
             std::snprintf(valueBuf, sizeof(valueBuf), "(%.2f, %.2f, %.2f)",
                           val.vec3X, val.vec3Y, val.vec3Z);
             break;
@@ -183,14 +183,14 @@ void BlackboardPanel::RenderEntryList(NodeGraph::BlackboardSystem* blackboard)
     if (!toEdit.empty())
     {
         m_editTargetName = toEdit;
-        const NodeGraph::BlackboardValue* ev = blackboard->GetEntry(toEdit);
+        const Olympe::BlackboardValue* ev = blackboard->GetEntry(toEdit);
         if (ev != nullptr)
         {
             m_editBuffer = *ev;
             std::memset(m_editStringBuf, 0, sizeof(m_editStringBuf));
             std::memset(m_renameBuffer, 0, sizeof(m_renameBuffer));
             std::snprintf(m_renameBuffer, sizeof(m_renameBuffer), "%s", toEdit.c_str());
-            if (ev->type == NodeGraph::BlackboardType::String)
+            if (ev->type == Olympe::BlackboardType::String)
             {
                 std::snprintf(m_editStringBuf, sizeof(m_editStringBuf),
                               "%s", ev->stringValue.c_str());
@@ -204,7 +204,7 @@ void BlackboardPanel::RenderEntryList(NodeGraph::BlackboardSystem* blackboard)
 // Add dialog
 // ============================================================================
 
-void BlackboardPanel::RenderAddDialog(NodeGraph::BlackboardSystem* blackboard)
+void BlackboardPanel::RenderAddDialog(Olympe::BlackboardSystem* blackboard)
 {
     ImGui::OpenPopup("Add Variable");
 
@@ -214,27 +214,27 @@ void BlackboardPanel::RenderAddDialog(NodeGraph::BlackboardSystem* blackboard)
         ImGui::InputText("Name", m_newEntryName, sizeof(m_newEntryName));
         ImGui::Combo("Type", &m_newEntryTypeIndex, s_typeNames, s_typeCount);
 
-        NodeGraph::BlackboardType selectedType =
-            static_cast<NodeGraph::BlackboardType>(m_newEntryTypeIndex);
+        Olympe::BlackboardType selectedType =
+            static_cast<Olympe::BlackboardType>(m_newEntryTypeIndex);
 
         ImGui::Separator();
         ImGui::Text("Initial value:");
 
         switch (selectedType)
         {
-        case NodeGraph::BlackboardType::Int:
+        case Olympe::BlackboardType::Int:
             ImGui::InputInt("##int", &m_editBuffer.intValue);
             break;
-        case NodeGraph::BlackboardType::Float:
+        case Olympe::BlackboardType::Float:
             ImGui::InputFloat("##float", &m_editBuffer.floatValue);
             break;
-        case NodeGraph::BlackboardType::Bool:
+        case Olympe::BlackboardType::Bool:
             ImGui::Checkbox("##bool", &m_editBuffer.boolValue);
             break;
-        case NodeGraph::BlackboardType::String:
+        case Olympe::BlackboardType::String:
             ImGui::InputText("##string", m_editStringBuf, sizeof(m_editStringBuf));
             break;
-        case NodeGraph::BlackboardType::Vector3:
+        case Olympe::BlackboardType::Vector3:
         {
             float v[3] = { m_editBuffer.vec3X, m_editBuffer.vec3Y, m_editBuffer.vec3Z };
             if (ImGui::InputFloat3("##vec3", v))
@@ -255,9 +255,9 @@ void BlackboardPanel::RenderAddDialog(NodeGraph::BlackboardSystem* blackboard)
         {
             if (m_newEntryName[0] != '\0')
             {
-                NodeGraph::BlackboardValue initVal = m_editBuffer;
+                Olympe::BlackboardValue initVal = m_editBuffer;
                 initVal.type = selectedType;
-                if (selectedType == NodeGraph::BlackboardType::String)
+                if (selectedType == Olympe::BlackboardType::String)
                 {
                     initVal.stringValue = std::string(m_editStringBuf);
                 }
@@ -280,7 +280,7 @@ void BlackboardPanel::RenderAddDialog(NodeGraph::BlackboardSystem* blackboard)
 // Edit popup
 // ============================================================================
 
-void BlackboardPanel::RenderEditPopup(NodeGraph::BlackboardSystem* blackboard)
+void BlackboardPanel::RenderEditPopup(Olympe::BlackboardSystem* blackboard)
 {
     ImGui::OpenPopup("Edit Variable");
 
@@ -294,19 +294,19 @@ void BlackboardPanel::RenderEditPopup(NodeGraph::BlackboardSystem* blackboard)
 
         switch (m_editBuffer.type)
         {
-        case NodeGraph::BlackboardType::Int:
+        case Olympe::BlackboardType::Int:
             ImGui::InputInt("##int", &m_editBuffer.intValue);
             break;
-        case NodeGraph::BlackboardType::Float:
+        case Olympe::BlackboardType::Float:
             ImGui::InputFloat("##float", &m_editBuffer.floatValue);
             break;
-        case NodeGraph::BlackboardType::Bool:
+        case Olympe::BlackboardType::Bool:
             ImGui::Checkbox("##bool", &m_editBuffer.boolValue);
             break;
-        case NodeGraph::BlackboardType::String:
+        case Olympe::BlackboardType::String:
             ImGui::InputText("##string", m_editStringBuf, sizeof(m_editStringBuf));
             break;
-        case NodeGraph::BlackboardType::Vector3:
+        case Olympe::BlackboardType::Vector3:
         {
             float v[3] = { m_editBuffer.vec3X, m_editBuffer.vec3Y, m_editBuffer.vec3Z };
             if (ImGui::InputFloat3("##vec3", v))
@@ -326,7 +326,7 @@ void BlackboardPanel::RenderEditPopup(NodeGraph::BlackboardSystem* blackboard)
         if (ImGui::Button("Apply"))
         {
             // Apply value change
-            if (m_editBuffer.type == NodeGraph::BlackboardType::String)
+            if (m_editBuffer.type == Olympe::BlackboardType::String)
             {
                 m_editBuffer.stringValue = std::string(m_editStringBuf);
             }

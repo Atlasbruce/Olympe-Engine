@@ -22,8 +22,8 @@ namespace Olympe
         void Render(EntityPrefabGraphDocument* document);
 
         // Selection management
-        void SetSelectedNode(NodeId nodeId);
-        NodeId GetSelectedNode() const;
+        void SetSelectedNode(PrefabNodeId nodeId);
+        PrefabNodeId GetSelectedNode() const;
         void ClearSelection();
 
         // Property editing
@@ -31,7 +31,7 @@ namespace Olympe
         void ApplyChanges();
 
     private:
-        NodeId m_selectedNodeId = InvalidNodeId;
+        PrefabNodeId m_selectedNodeId = InvalidNodeId;
         EntityPrefabGraphDocument* m_document = nullptr;
 
         // Rendering helpers

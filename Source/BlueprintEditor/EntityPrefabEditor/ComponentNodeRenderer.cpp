@@ -67,7 +67,7 @@ namespace Olympe
     void ComponentNodeRenderer::RenderConnections(const EntityPrefabGraphDocument* document, int hoveredConnectionIndex /*= -1*/)
     {
         if (document == nullptr) { return; }
-        const std::vector<std::pair<NodeId, NodeId>>& connections = document->GetConnections();
+        const std::vector<std::pair<PrefabNodeId, PrefabNodeId>>& connections = document->GetConnections();
         for (size_t i = 0; i < connections.size(); ++i)
         {
             const ComponentNode* sourceNode = document->GetNode(connections[i].first);

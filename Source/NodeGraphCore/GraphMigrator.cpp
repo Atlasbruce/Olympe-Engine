@@ -11,7 +11,6 @@
 using json = nlohmann::json;
 
 namespace Olympe {
-namespace NodeGraph {
 
 // ============================================================================
 // Public API
@@ -304,5 +303,4 @@ json GraphMigrator::MigrateV1BlueprintToV2(const json& v1)
     return v2;
 }
 
-} // namespace NodeGraph
 } // namespace Olympe

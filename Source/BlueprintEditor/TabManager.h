@@ -27,6 +27,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 namespace Olympe {
 
@@ -62,11 +63,18 @@ struct EditorTab
 
     ~EditorTab()
     {
-        if (document)
+        // PHASE 56 FIX: Conditional document deletion prevents double-delete
+        // For VisualScript/BehaviorTree/Placeholder: document is owned by renderer's unique_ptr
+        //   - Deleting here causes corruption when renderer destructor tries to delete its unique_ptr
+        // For EntityPrefab: document is allocated independently on heap, tab owns it
+        //   - Must delete here to avoid leak
+        // Solution: Only delete if graphType is EntityPrefab (other types handle cleanup via renderer)
+        if (document && graphType == "EntityPrefab")
         {
             delete document;
             document = nullptr;
         }
+
         if (renderer)
         {
             delete renderer;
@@ -99,7 +107,11 @@ struct EditorTab
         {
             // Clean up existing resources
             if (renderer) { delete renderer; renderer = nullptr; }
-            if (document) { delete document; document = nullptr; }
+            // PHASE 57 FIX: Apply same conditional deletion as destructor
+            // Only delete document if we own it (EntityPrefab case).
+            // For VisualScript/BehaviorTree/Placeholder: document is owned by renderer's unique_ptr
+            // Unconditional deletion here was causing double-delete during vector reallocation
+            if (document && graphType == "EntityPrefab") { delete document; document = nullptr; }
 
             // Transfer ownership
             tabID = std::move(other.tabID);
@@ -195,6 +207,14 @@ public:
      */
     bool SaveActiveTabAs(const std::string& path);
 
+    /**
+     * @brief Notifies TabManager that a document has been saved.
+     * Updates tab display name and clears dirty flag.
+     * @param document The document that was saved
+     * @param filePath The path it was saved to
+     */
+    void OnGraphDocumentSaved(IGraphDocument* document, const std::string& filePath);
+
     // ------------------------------------------------------------------
     // Rendering
     // ------------------------------------------------------------------
@@ -264,10 +284,14 @@ private:
     // Pending close state (for deferred close when dialog is shown)
     std::string m_pendingCloseTabID;
 
-    // Save As dialog state
-    bool m_showSaveAsDialog;
-    char m_saveAsBuffer[512];
-    std::string m_saveAsTabID;
-};
+        // Save As dialog state
+        bool m_showSaveAsDialog;
+        char m_saveAsBuffer[512];
+        std::string m_saveAsTabID;
+
+        // PHASE 51: Load caching to prevent duplicate file loads
+        // Maps file path → normalized absolute path, for deduplication
+        std::map<std::string, std::string> m_loadedFilePaths;
+    };
 
 } // namespace Olympe

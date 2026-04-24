@@ -79,7 +79,7 @@ namespace Olympe
 
         if (data.contains("nodeId"))
         {
-            node.nodeId = data["nodeId"].get<NodeId>();
+            node.nodeId = static_cast<PrefabNodeId>(data["nodeId"].get<uint32_t>());
         }
 
         node.componentType = data.value("componentType", "");

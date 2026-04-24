@@ -44,13 +44,13 @@ namespace Olympe
         }
     }
 
-    void PropertyEditorPanel::SetSelectedNode(NodeId nodeId)
+    void PropertyEditorPanel::SetSelectedNode(PrefabNodeId nodeId)
     {
         m_selectedNodeId = nodeId;
         // SYSTEM_LOG line removed to eliminate spam - logs occur every frame during rendering
     }
 
-    NodeId PropertyEditorPanel::GetSelectedNode() const
+    PrefabNodeId PropertyEditorPanel::GetSelectedNode() const
     {
         return m_selectedNodeId;
     }

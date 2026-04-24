@@ -48,38 +48,74 @@ namespace Olympe
     class BlueprintValidator
     {
     public:
-        BlueprintValidator();
-        ~BlueprintValidator();
+        BlueprintValidator()
+        {
+        }
 
-        // Node graph validation (existing)
-        std::vector<ValidationError> ValidateGraph(const NodeGraph* graph);
-        std::vector<ValidationError> ValidateNode(const NodeGraph* graph, int nodeId);
-        bool IsGraphValid(const NodeGraph* graph);
-        int GetErrorCount(const std::vector<ValidationError>& errors, ErrorSeverity severity) const;
-        
+        ~BlueprintValidator()
+        {
+        }
+
+        // Node graph validation (deprecated - Phase 50.3)
+        // TODO: Reimplement with NodeGraphTypes::GraphDocument
+        std::vector<ValidationError> ValidateGraph(const Olympe::NodeGraphTypes::GraphDocument* graph);
+        std::vector<ValidationError> ValidateNode(const Olympe::NodeGraphTypes::GraphDocument* graph, Olympe::NodeGraphTypes::NodeId nodeId);
+        bool IsGraphValid(const Olympe::NodeGraphTypes::GraphDocument* graph);
+        int GetErrorCount(const std::vector<ValidationError>& errors, ErrorSeverity severity) const
+        {
+            int count = 0;
+            for (const auto& error : errors)
+            {
+                if (error.severity == severity)
+                    count++;
+            }
+            return count;
+        }
+
         // JSON schema validation and normalization (new)
         // Detect blueprint type from JSON structure using heuristics
         std::string DetectType(const nlohmann::json& blueprint);
-        
+
         // Normalize JSON to ensure required fields exist
         // Returns true if changes were made
         bool Normalize(nlohmann::json& blueprint);
-        
+
         // Validate JSON against per-type required fields
         // Returns true if valid, fills errors string if not
         bool ValidateJSON(const nlohmann::json& blueprint, std::string& errors);
-        
+
         // Severity to string conversion
-        static const char* SeverityToString(ErrorSeverity severity);
-        static ImVec4 SeverityToColor(ErrorSeverity severity);
+        static const char* SeverityToString(ErrorSeverity severity)
+        {
+            switch (severity)
+            {
+                case ErrorSeverity::Info:     return "Info";
+                case ErrorSeverity::Warning:  return "Warning";
+                case ErrorSeverity::Error:    return "Error";
+                case ErrorSeverity::Critical: return "Critical";
+                default:                      return "Unknown";
+            }
+        }
+
+        static ImVec4 SeverityToColor(ErrorSeverity severity)
+        {
+            switch (severity)
+            {
+                case ErrorSeverity::Info:     return ImVec4(0.2f, 0.8f, 1.0f, 1.0f);
+                case ErrorSeverity::Warning:  return ImVec4(1.0f, 1.0f, 0.2f, 1.0f);
+                case ErrorSeverity::Error:    return ImVec4(1.0f, 0.4f, 0.2f, 1.0f);
+                case ErrorSeverity::Critical: return ImVec4(1.0f, 0.2f, 0.2f, 1.0f);
+                default:                      return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+            }
+        }
 
     private:
         // Validation helpers (existing)
-        void ValidateNodeType(const NodeGraph* graph, const GraphNode* node, 
+        void ValidateNodeType(const Olympe::NodeGraphTypes::GraphDocument* graph, const Olympe::NodeGraphTypes::NodeData* node, 
                              std::vector<ValidationError>& errors);
-        void ValidateNodeParameters(const NodeGraph* graph, const GraphNode* node, 
+        void ValidateNodeParameters(const Olympe::NodeGraphTypes::GraphDocument* graph, const Olympe::NodeGraphTypes::NodeData* node, 
                                    std::vector<ValidationError>& errors);
-        void ValidateNodeLinks(const NodeGraph* graph, const GraphNode* node, 
+        void ValidateNodeLinks(const Olympe::NodeGraphTypes::GraphDocument* graph, const Olympe::NodeGraphTypes::NodeData* node, 
                               std::vector<ValidationError>& errors);
         
         // JSON validation helpers (new)

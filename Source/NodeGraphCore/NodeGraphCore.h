@@ -19,7 +19,7 @@
 #include "../vector.h"
 
 namespace Olympe {
-namespace NodeGraph {
+namespace NodeGraphTypes {
 
 // ============================================================================
 // ID Types
@@ -27,7 +27,7 @@ namespace NodeGraph {
 
 struct GraphId {
     uint32_t value = 0;
-    
+
     bool operator==(const GraphId& other) const { return value == other.value; }
     bool operator!=(const GraphId& other) const { return value != other.value; }
     bool operator<(const GraphId& other) const { return value < other.value; }
@@ -35,7 +35,7 @@ struct GraphId {
 
 struct NodeId {
     uint32_t value = 0;
-    
+
     bool operator==(const NodeId& other) const { return value == other.value; }
     bool operator!=(const NodeId& other) const { return value != other.value; }
     bool operator<(const NodeId& other) const { return value < other.value; }
@@ -43,7 +43,7 @@ struct NodeId {
 
 struct PinId {
     uint32_t value = 0;
-    
+
     bool operator==(const PinId& other) const { return value == other.value; }
     bool operator!=(const PinId& other) const { return value != other.value; }
     bool operator<(const PinId& other) const { return value < other.value; }
@@ -51,7 +51,7 @@ struct PinId {
 
 struct LinkId {
     uint32_t value = 0;
-    
+
     bool operator==(const LinkId& other) const { return value == other.value; }
     bool operator!=(const LinkId& other) const { return value != other.value; }
     bool operator<(const LinkId& other) const { return value < other.value; }
@@ -141,5 +141,5 @@ struct AutoLayoutConfig {
     float paddingY = 50.0f;            // Top/bottom padding
 };
 
-} // namespace NodeGraph
+} // namespace NodeGraphTypes
 } // namespace Olympe

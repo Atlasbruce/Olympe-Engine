@@ -13,9 +13,18 @@
 #include <memory>
 #include "../../Source/third_party/nlohmann/json.hpp"
 #include "Commands/CommandHistory.h"
+#include "../NodeGraphCore/NodeGraphCore.h"
+#include "../NodeGraphCore/GraphDocument.h"
 
 namespace Olympe
 {
+    // Type aliases for NodeGraphTypes to maintain NodeGraph:: namespace compatibility
+    using GraphDocument = Olympe::NodeGraphTypes::GraphDocument;
+    using GraphId = Olympe::NodeGraphTypes::GraphId;
+    using NodeId = Olympe::NodeGraphTypes::NodeId;
+    using PinId = Olympe::NodeGraphTypes::PinId;
+    using NodeData = Olympe::NodeGraphTypes::NodeData;
+    using LinkData = Olympe::NodeGraphTypes::LinkData;
     /**
      * @struct ClipboardNode
      * @brief Serializable node data for copy/paste operations
@@ -275,132 +284,13 @@ namespace Olympe
         EditorMetadata() = default;
     };
 
-    // Node graph (Behavior Tree or HFSM)
-    class NodeGraph
-    {
-    public:
-        NodeGraph();
-        ~NodeGraph() = default;
-
-        // Copy constructor and assignment - explicitly defaulted
-        NodeGraph(const NodeGraph& other);
-        NodeGraph& operator=(const NodeGraph& other);
-
-        // Move constructor and assignment
-        NodeGraph(NodeGraph&& other) noexcept;
-        NodeGraph& operator=(NodeGraph&& other) noexcept;
-
-        // Graph metadata
-        std::string name;
-        std::string type;  // "BehaviorTree" or "HFSM"
-        int rootNodeId = -1;
-        EditorMetadata editorMetadata;
-
-        // Node CRUD
-        int CreateNode(NodeType type, float x, float y, const std::string& name = "");
-        bool DeleteNode(int nodeId);
-        GraphNode* GetNode(int nodeId);
-        const GraphNode* GetNode(int nodeId) const;
-        std::vector<GraphNode*> GetAllNodes();
-        std::vector<const GraphNode*> GetAllNodes() const;
-
-        // Link operations
-        bool LinkNodes(int parentId, int childId);
-        bool UnlinkNodes(int parentId, int childId);
-        std::vector<GraphLink> GetAllLinks() const;
-
-        // Parameter operations
-        bool SetNodeParameter(int nodeId, const std::string& paramName, const std::string& value);
-        std::string GetNodeParameter(int nodeId, const std::string& paramName) const;
-
-        // Serialization
-        nlohmann::json ToJson() const;
-        static NodeGraph FromJson(const nlohmann::json& j);
-
-        // Validation
-        bool ValidateGraph(std::string& errorMsg) const;
-
-        // Utility
-        void Clear();
-        int GetNextNodeId() const { return m_NextNodeId; }
-        int GetRootNodeId() const { return rootNodeId; }
-
-        // Calculate node positions for v1 blueprints (hierarchical layout)
-        void CalculateNodePositionsHierarchical();
-
-        // Dirty flag tracking for unsaved changes
-        bool IsDirty() const { return m_IsDirty; }
-        void MarkDirty() { m_IsDirty = true; }
-        void ClearDirty() { m_IsDirty = false; }
-
-        // Filepath tracking
-        const std::string& GetFilepath() const { return m_Filepath; }
-        void SetFilepath(const std::string& filepath) { m_Filepath = filepath; }
-        bool HasFilepath() const { return !m_Filepath.empty(); }
-
-        // Undo/Redo support
-        CommandHistory* GetCommandHistory();
-        const CommandHistory* GetCommandHistory() const;
-        bool CanUndo() const;
-        bool CanRedo() const;
-        std::string GetUndoDescription() const;
-        std::string GetRedoDescription() const;
-        bool Undo();
-        bool Redo();
-
-        // Copy/Paste support
-        std::vector<ClipboardNode> m_clipboardData;
-        void CopyNodesToClipboard(const std::vector<int>& nodeIds);
-        std::vector<int> PasteNodesFromClipboard(float offsetX = 30.0f, float offsetY = 30.0f);
-        std::vector<int> DuplicateNodes(const std::vector<int>& nodeIds, float offsetX = 30.0f, float offsetY = 30.0f);
-
-    private:
-        std::vector<GraphNode> m_Nodes;
-        int m_NextNodeId = 1;
-        bool m_IsDirty = false;
-        std::string m_Filepath;
-        std::unique_ptr<CommandHistory> m_commandHistory;
-
-        // ====================================================================
-        // Event Root Tracking (for OnEvent nodes)
-        // ====================================================================
-        /**
-         * @brief Separate array of node IDs that are OnEvent root nodes
-         * These nodes represent independent execution trees triggered by EventQueue messages
-         * Not connected to the main Root node tree
-         */
-        std::vector<uint32_t> m_eventRootIds;
-
-        // ====================================================================
-        // Helper methods
-        // ====================================================================
-
-        /**
-         * @brief Check if a node ID is a valid root (main Root or OnEvent root)
-         * Root nodes cannot be deleted or moved under other nodes
-         */
-        bool IsValidRoot(uint32_t nodeId) const;
-
-        /**
-         * @brief Add node ID to event roots array
-         * Called when creating an OnEvent node
-         */
-        void AddEventRoot(uint32_t nodeId);
-
-        /**
-         * @brief Remove node ID from event roots array
-         * Called when deleting an OnEvent node
-         */
-        void RemoveEventRoot(uint32_t nodeId);
-
-        /**
-         * @brief Get all OnEvent root node IDs
-         */
-        const std::vector<uint32_t>& GetEventRootIds() const;
-
-        // Helper to find node index
-        int FindNodeIndex(int nodeId) const;
-    };
+    // ========================================
+    // DEPRECATED: NodeGraph class (Phase 50.3)
+    // ========================================
+    // Removed: Namespace collision with NodeGraphCore::namespace NodeGraph
+    // Replacement: Use modern GraphDocument from NodeGraphTypes
+    // This legacy class was unused by rendering pipeline
+    // ========================================
 
     /**
      * NodeGraphManager - Manages multiple node graphs
@@ -419,14 +309,14 @@ namespace Olympe
         // Graph management
         int CreateGraph(const std::string& name, const std::string& type);
         bool CloseGraph(int graphId);
-        NodeGraph* GetGraph(int graphId);
-        const NodeGraph* GetGraph(int graphId) const;
+        GraphDocument* GetGraph(int graphId);
+        const GraphDocument* GetGraph(int graphId) const;
 
         // Active graph
         void SetActiveGraph(int graphId);
         int GetActiveGraphId() const { return m_ActiveGraphId; }
-        NodeGraph* GetActiveGraph();
-        const NodeGraph* GetActiveGraph() const;
+        GraphDocument* GetActiveGraph();
+        const GraphDocument* GetActiveGraph() const;
 
         // Graph list
         std::vector<int> GetAllGraphIds() const;
@@ -456,7 +346,7 @@ namespace Olympe
         int m_ActiveGraphId = -1;
         int m_LastActiveGraphId = -1;  // Track last active for persistence
         int m_NextGraphId = 1;
-        std::map<int, std::unique_ptr<NodeGraph>> m_Graphs;
+        std::map<int, std::unique_ptr<GraphDocument>> m_Graphs;
         std::vector<int> m_GraphOrder;  // Track insertion order for consistent tab rendering
     };
 }

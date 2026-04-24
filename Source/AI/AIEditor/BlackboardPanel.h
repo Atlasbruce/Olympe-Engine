@@ -32,12 +32,12 @@ public:
      * @param blackboard Blackboard system to display/edit
      * @param pOpen Pointer to visibility flag (nullptr = always visible)
      */
-    void Render(NodeGraph::BlackboardSystem* blackboard, bool* pOpen = nullptr);
+    void Render(Olympe::BlackboardSystem* blackboard, bool* pOpen = nullptr);
 
 private:
-    void RenderEntryList(NodeGraph::BlackboardSystem* blackboard);
-    void RenderAddDialog(NodeGraph::BlackboardSystem* blackboard);
-    void RenderEditPopup(NodeGraph::BlackboardSystem* blackboard);
+    void RenderEntryList(Olympe::BlackboardSystem* blackboard);
+    void RenderAddDialog(Olympe::BlackboardSystem* blackboard);
+    void RenderEditPopup(Olympe::BlackboardSystem* blackboard);
 
     bool m_showAddDialog;
     bool m_showEditPopup;
@@ -46,7 +46,7 @@ private:
     std::string m_editTargetName;
 
     // Temporary edit buffer for add/edit
-    NodeGraph::BlackboardValue m_editBuffer;
+    Olympe::BlackboardValue m_editBuffer;
     char m_editStringBuf[1024];
     char m_renameBuffer[256];
 };

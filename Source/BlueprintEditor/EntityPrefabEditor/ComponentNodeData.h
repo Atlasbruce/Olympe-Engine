@@ -9,15 +9,17 @@
 namespace Olympe
 {
     using json = nlohmann::json;
-    typedef uint32_t NodeId;
+
+    // Local type aliases for Entity Prefab Editor (avoid conflict with global NodeGraphTypes)
+    typedef uint32_t PrefabNodeId;
     typedef uint32_t PortId;
-    const NodeId InvalidNodeId = 0;
+    const PrefabNodeId InvalidNodeId = 0;
     const PortId InvalidPortId = 0;
 
     struct NodePort
     {
         PortId portId = InvalidPortId;
-        NodeId nodeId = InvalidNodeId;
+        PrefabNodeId nodeId = InvalidNodeId;
         uint32_t portIndex = 0;
         Vector position;
         // Visual radius for rendering (kept small at 4.0 for clean appearance)
@@ -25,7 +27,7 @@ namespace Olympe
         bool isOutput = false;
 
         NodePort() = default;
-        NodePort(NodeId nodeId, uint32_t index, bool isOutput = false)
+        NodePort(PrefabNodeId nodeId, uint32_t index, bool isOutput = false)
             : portId(index + 1), nodeId(nodeId), portIndex(index), isOutput(isOutput)
         {
         }
@@ -41,7 +43,7 @@ namespace Olympe
             return j;
         }
 
-        static NodePort FromJson(const json& data, NodeId nodeId)
+        static NodePort FromJson(const json& data, PrefabNodeId nodeId)
         {
             NodePort port;
             port.nodeId = nodeId;
@@ -83,7 +85,7 @@ namespace Olympe
 
     struct ComponentNode
     {
-        NodeId nodeId = InvalidNodeId;
+        PrefabNodeId nodeId = InvalidNodeId;
         std::string componentType;
         std::string componentName;
         Vector position;

@@ -9,6 +9,7 @@
 
 namespace Olympe {
 namespace NodeGraph {
+using namespace NodeGraphTypes;
 
 CreateNodeCommand::CreateNodeCommand(GraphDocument* graph, const std::string& nodeType, Vector2 position)
     : m_graph(graph)

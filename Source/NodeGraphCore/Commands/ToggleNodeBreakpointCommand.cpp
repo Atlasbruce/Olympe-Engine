@@ -3,13 +3,19 @@
  * @brief Implementation of ToggleNodeBreakpointCommand (Phase 2.0)
  * @author Olympe Engine
  * @date 2026-02-19
+ * @status DISABLED - Legacy code, not used by Phase 50.3
  */
+
+// PHASE 50.3: This file is disabled - ToggleNodeBreakpointCommand is not used
+// Keeping this file stub to prevent link errors
+/*
 
 #include "ToggleNodeBreakpointCommand.h"
 #include "../../system/system_utils.h"
 
 namespace Olympe {
 namespace NodeGraph {
+using namespace NodeGraphTypes;
 
 ToggleNodeBreakpointCommand::ToggleNodeBreakpointCommand(
     NodeAnnotationsManager* annotations,
@@ -54,3 +60,5 @@ std::string ToggleNodeBreakpointCommand::GetDescription() const
 
 } // namespace NodeGraph
 } // namespace Olympe
+
+*/

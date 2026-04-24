@@ -12,7 +12,7 @@
 using json = nlohmann::json;
 
 namespace Olympe {
-namespace NodeGraph {
+namespace NodeGraphTypes {
 
 // ============================================================================
 // Constructor / Destructor
@@ -464,29 +464,72 @@ GraphDocument GraphDocument::FromJson(const json& j)
     if (j.contains("data") && j["data"].is_object())
     {
         const json& data = j["data"];
-        
-        doc.rootNodeId.value = JsonHelper::GetUInt(data, "rootNodeId", 0);
-        
-        // Nodes
-        if (data.contains("nodes") && data["nodes"].is_array())
+
+        // Determine which format: legacy BehaviorTree (rootGraph) or standard format
+        const json* nodesSource = nullptr;
+        const json* linksSource = nullptr;
+
+        // Try legacy BehaviorTree format first: data.rootGraph.nodes[]
+        if (data.contains("rootGraph") && data["rootGraph"].is_object())
         {
-            const json& nodesArray = data["nodes"];
+            const json& rootGraph = data["rootGraph"];
+            if (rootGraph.contains("nodes") && rootGraph["nodes"].is_array())
+            {
+                nodesSource = &rootGraph["nodes"];
+            }
+            if (rootGraph.contains("links") && rootGraph["links"].is_array())
+            {
+                linksSource = &rootGraph["links"];
+            }
+
+            // Legacy format: rootNodeId may be inside rootGraph
+            if (rootGraph.contains("rootNodeId"))
+            {
+                doc.rootNodeId.value = JsonHelper::GetUInt(rootGraph, "rootNodeId", 0);
+            }
+            else
+            {
+                doc.rootNodeId.value = JsonHelper::GetUInt(data, "rootNodeId", 0);
+            }
+        }
+        // Fallback to standard format: data.nodes[]
+        else if (data.contains("nodes") && data["nodes"].is_array())
+        {
+            nodesSource = &data["nodes"];
+            doc.rootNodeId.value = JsonHelper::GetUInt(data, "rootNodeId", 0);
+        }
+        // No nodes source found - try for links anyway
+        else
+        {
+            doc.rootNodeId.value = JsonHelper::GetUInt(data, "rootNodeId", 0);
+        }
+
+        // If no links source from rootGraph, try standard format
+        if (linksSource == nullptr && data.contains("links") && data["links"].is_array())
+        {
+            linksSource = &data["links"];
+        }
+
+        // Parse nodes
+        if (nodesSource != nullptr && nodesSource->is_array())
+        {
+            const json& nodesArray = *nodesSource;
             for (size_t i = 0; i < nodesArray.size(); ++i)
             {
                 const json& nodeJson = nodesArray[i];
-                
+
                 NodeData node;
                 node.id.value = JsonHelper::GetUInt(nodeJson, "id", 0);
                 node.type = JsonHelper::GetString(nodeJson, "type", "");
                 node.name = JsonHelper::GetString(nodeJson, "name", "");
-                
+
                 if (nodeJson.contains("position") && nodeJson["position"].is_object())
                 {
                     const json& pos = nodeJson["position"];
                     node.position.x = JsonHelper::GetFloat(pos, "x", 0.0f);
                     node.position.y = JsonHelper::GetFloat(pos, "y", 0.0f);
                 }
-                
+
                 // Children
                 if (nodeJson.contains("children") && nodeJson["children"].is_array())
                 {
@@ -501,7 +544,7 @@ GraphDocument GraphDocument::FromJson(const json& j)
                         }
                     }
                 }
-                
+
                 // Parameters
                 if (nodeJson.contains("parameters") && nodeJson["parameters"].is_object())
                 {
@@ -516,16 +559,16 @@ GraphDocument GraphDocument::FromJson(const json& j)
                             value = std::to_string(it.value().get<double>());
                         else if (it.value().is_boolean())
                             value = it.value().get<bool>() ? "true" : "false";
-                        
+
                         node.parameters[key] = value;
                     }
                 }
-                
+
                 // Decorator child
                 node.decoratorChild.value = JsonHelper::GetUInt(nodeJson, "decoratorChildId", 0);
-                
+
                 doc.m_nodes.push_back(node);
-                
+
                 // Update next node ID
                 if (node.id.value >= doc.m_nextNodeId)
                 {
@@ -533,32 +576,32 @@ GraphDocument GraphDocument::FromJson(const json& j)
                 }
             }
         }
-        
-        // Links
-        if (data.contains("links") && data["links"].is_array())
+
+        // Parse links
+        if (linksSource != nullptr && linksSource->is_array())
         {
-            const json& linksArray = data["links"];
+            const json& linksArray = *linksSource;
             for (size_t i = 0; i < linksArray.size(); ++i)
             {
                 const json& linkJson = linksArray[i];
-                
+
                 LinkData link;
                 link.id.value = JsonHelper::GetUInt(linkJson, "id", 0);
-                
+
                 if (linkJson.contains("fromPin") && linkJson["fromPin"].is_object())
                 {
                     const json& fromPin = linkJson["fromPin"];
                     link.fromPin.value = JsonHelper::GetUInt(fromPin, "nodeId", 0);
                 }
-                
+
                 if (linkJson.contains("toPin") && linkJson["toPin"].is_object())
                 {
                     const json& toPin = linkJson["toPin"];
                     link.toPin.value = JsonHelper::GetUInt(toPin, "nodeId", 0);
                 }
-                
+
                 doc.m_links.push_back(link);
-                
+
                 // Update next link ID
                 if (link.id.value >= doc.m_nextLinkId)
                 {
@@ -566,8 +609,15 @@ GraphDocument GraphDocument::FromJson(const json& j)
                 }
             }
         }
+
+        // Phase 51: Diagnostic logging - confirm nodes and links loaded
+        if (doc.m_nodes.size() > 0 || doc.m_links.size() > 0)
+        {
+            SYSTEM_LOG << "[GraphDocument::FromJson] Loaded: " << doc.m_nodes.size() 
+                       << " nodes, " << doc.m_links.size() << " links\n";
+        }
     }
-    
+
     // Phase 2.0 - Annotations (backward compatible: missing key = no annotations)
     if (j.contains("annotations") && j["annotations"].is_array())
     {
@@ -736,5 +786,5 @@ float GraphDocument::AutoLayoutNode(
     }
 }
 
-} // namespace NodeGraph
+} // namespace NodeGraphTypes
 } // namespace Olympe

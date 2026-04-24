@@ -19,6 +19,9 @@
 namespace Olympe {
 namespace AI {
 
+// Type aliases for backward compatibility
+using GraphDocument = Olympe::NodeGraphTypes::GraphDocument;
+
 /**
  * @class BlackboardInspectorPanel
  * @brief Panel for editing blackboard variables
@@ -27,18 +30,18 @@ class BlackboardInspectorPanel {
 public:
     BlackboardInspectorPanel();
     ~BlackboardInspectorPanel() = default;
-    
+
     /**
      * @brief Render the panel
      * @param activeGraph Active graph document
      */
-    void Render(NodeGraph::GraphDocument* activeGraph);
-    
+    void Render(GraphDocument* activeGraph);
+
 private:
-    void RenderVariableList(NodeGraph::GraphDocument* doc);
+    void RenderVariableList(GraphDocument* doc);
     void RenderAddVariableDialog();
     void RenderVariableEditor(const std::string& varName);
-    
+
     bool m_showAddDialog;
     char m_newVarName[256];
 };

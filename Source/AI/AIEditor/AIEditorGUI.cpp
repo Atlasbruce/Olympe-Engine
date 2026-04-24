@@ -26,6 +26,14 @@ using Olympe::AI::DEFAULT_AI_GRAPH_EXT;
 namespace Olympe {
 namespace AI {
 
+// Type aliases for NodeGraphTypes for backward compatibility
+using NodeId = Olympe::NodeGraphTypes::NodeId;
+using GraphDocument = Olympe::NodeGraphTypes::GraphDocument;
+using GraphId = Olympe::NodeGraphTypes::GraphId;
+using NodeData = Olympe::NodeGraphTypes::NodeData;
+using LinkData = Olympe::NodeGraphTypes::LinkData;
+using PinId = Olympe::NodeGraphTypes::PinId;
+
 // ============================================================================
 // Constructor / Destructor
 // ============================================================================
@@ -88,13 +96,13 @@ void AIEditorGUI::Shutdown()
         ImNodes::DestroyContext(static_cast<ImNodesContext*>(m_imnodesContext));
         m_imnodesContext = nullptr;
     }
-    
-    // Clear command stack
-    m_commandStack.Clear();
-    
+
+    // TODO: Clear command stack - member removed, reimplement command system
+    // m_commandStack.Clear();
+
     // Clear node palette
     m_nodePalette.reset();
-    
+
     m_isActive = false;
 }
 
@@ -177,21 +185,24 @@ void AIEditorGUI::Update(float deltaTime)
     if (ctrlPressed && !shiftPressed && ImGui::IsKeyPressed(ImGuiKey_W)) {
         MenuAction_Close();
     }
-    
-    // F9 - Toggle breakpoint on selected node (Phase 2.0)
+
+    // F9 - Toggle breakpoint (DEPRECATED - TODO: Reimplement with modern schema)
+    // ICommand and NodeAnnotations don't exist in modern NodeGraphTypes
+    /*
     if (ImGui::IsKeyPressed(ImGuiKey_F9) && !m_selectedNodeIds.empty())
     {
-        NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-        NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
+        NodeGraphManager& mgr = NodeGraphManager::Get();
+        GraphDocument* doc = mgr.GetActiveGraph();
         if (doc != nullptr)
         {
             int nodeId = m_selectedNodeIds[0];
-            auto cmd = std::unique_ptr<NodeGraph::ICommand>(
-                new NodeGraph::ToggleNodeBreakpointCommand(
+            auto cmd = std::unique_ptr<Olympe::NodeGraphTypes::ICommand>(
+                new Olympe::ToggleNodeBreakpointCommand(
                     &doc->GetNodeAnnotations(), nodeId));
             m_commandStack.ExecuteCommand(std::move(cmd));
         }
     }
+    */
 }
 
 void AIEditorGUI::Render()
@@ -245,9 +256,9 @@ void AIEditorGUI::Render()
         std::string selectedFile = dm.GetSelectedFileFromModal();
         if (!selectedFile.empty()) {
             // Load graph via NodeGraphManager
-            NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-            NodeGraph::GraphId id = mgr.LoadGraph(selectedFile);
-            if (id.value != 0) {
+            NodeGraphManager& mgr = NodeGraphManager::Get();
+            int id = mgr.LoadGraph(selectedFile);
+            if (id != 0) {
                 mgr.SetActiveGraph(id);
                 m_lastOpenPath = selectedFile.substr(0, selectedFile.find_last_of("\\/"));
                 SYSTEM_LOG << "[AIEditorGUI] Loaded: " << selectedFile << std::endl;
@@ -260,9 +271,9 @@ void AIEditorGUI::Render()
     // Handle save file picker result (SaveAs)
     if (!dm.IsSaveFilePickerModalOpen()) {
         std::string selectedFile = dm.GetSelectedSaveFile();
-        if (!selectedFile.empty()) {
-            NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-            NodeGraph::GraphId activeId = mgr.GetActiveGraphId();
+        {
+            NodeGraphManager& mgr = NodeGraphManager::Get();
+            int activeId = mgr.GetActiveGraphId();
             bool success = mgr.SaveGraph(activeId, selectedFile);
 
             if (success) {
@@ -327,9 +338,10 @@ void AIEditorGUI::RenderMenuBar()
         
         // Edit Menu
         if (ImGui::BeginMenu("Edit")) {
-            bool canUndo = m_commandStack.CanUndo();
-            bool canRedo = m_commandStack.CanRedo();
-            
+            // TODO: Command stack removed - reimplement undo/redo system
+            bool canUndo = false; // m_commandStack.CanUndo();
+            bool canRedo = false; // m_commandStack.CanRedo();
+
             if (ImGui::MenuItem("Undo", "Ctrl+Z", false, canUndo)) {
                 MenuAction_Undo();
             }
@@ -437,16 +449,16 @@ void AIEditorGUI::RenderNodeGraph()
 {
     ImGui::Text("Node Graph");
     ImGui::Separator();
-    
+
     // Get active graph
-    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
-    
+    NodeGraphManager& mgr = NodeGraphManager::Get();
+    GraphDocument* doc = mgr.GetActiveGraph();
+
     if (doc == nullptr) {
         ImGui::Text("No active graph. Create a new one from File menu.");
         return;
     }
-    
+
     // Render canvas
     RenderNodeGraphCanvas();
 }
@@ -455,14 +467,14 @@ void AIEditorGUI::RenderNodeGraphCanvas()
 {
     ImNodes::SetCurrentContext(static_cast<ImNodesContext*>(m_imnodesContext));
     ImNodes::BeginNodeEditor();
-    
+
     // Get active graph
-    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
-    
+    NodeGraphManager& mgr = NodeGraphManager::Get();
+    GraphDocument* doc = mgr.GetActiveGraph();
+
     if (doc != nullptr) {
         // Render nodes
-        const std::vector<NodeGraph::NodeData>& nodes = doc->GetNodes();
+        const std::vector<NodeData>& nodes = doc->GetNodes();
         for (size_t i = 0; i < nodes.size(); ++i) {
             RenderNode(nodes[i].id);
         }
@@ -479,24 +491,23 @@ void AIEditorGUI::RenderNodeGraphCanvas()
     HandleLinkCreation();
 }
 
-void AIEditorGUI::RenderNode(NodeGraph::NodeId nodeId)
+void AIEditorGUI::RenderNode(NodeId nodeId)
 {
     // Get node data
-    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
+    NodeGraphManager& mgr = NodeGraphManager::Get();
+    GraphDocument* doc = mgr.GetActiveGraph();
     if (doc == nullptr) {
         return;
     }
-    
-    const NodeGraph::NodeData* nodeData = doc->GetNode(nodeId);
+
+    const NodeData* nodeData = doc->GetNode(nodeId);
     if (nodeData == nullptr) {
         return;
     }
-    
-    // Get annotation for this node (Phase 2.0)
-    const NodeGraph::NodeAnnotation* annotation =
-        doc->GetNodeAnnotations().GetAnnotation(static_cast<int>(nodeId.value));
-    
+
+    // TODO: Annotation system reimplement (GetNodeAnnotations doesn't exist in modern schema)
+    // const NodeGraph::NodeAnnotation* annotation = ...
+    // 
     // Render using dedicated renderer
     bool isSelected = false;
     for (size_t i = 0; i < m_selectedNodeIds.size(); ++i) {
@@ -505,27 +516,15 @@ void AIEditorGUI::RenderNode(NodeGraph::NodeId nodeId)
             break;
         }
     }
-    
-    AIEditorNodeRenderer::RenderNode(*nodeData, isSelected, false, annotation);
+
+    // AIEditorNodeRenderer::RenderNode(*nodeData, isSelected, false, nullptr);
 }
 
 void AIEditorGUI::RenderConnections()
 {
-    // Get active graph
-    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
-    if (doc == nullptr) {
-        return;
-    }
-    
-    const std::vector<NodeGraph::LinkData>& links = doc->GetLinks();
-    for (size_t i = 0; i < links.size(); ++i) {
-        int linkId = static_cast<int>(links[i].id.value);
-        int fromPin = static_cast<int>(links[i].fromPin.value);
-        int toPin = static_cast<int>(links[i].toPin.value);
-        
-        ImNodes::Link(linkId, fromPin, toPin);
-    }
+    // DEPRECATED: Old NodeGraph:: implementation
+    // TODO: Reimplement with modern NodeGraphTypes schema
+    // When ready, iterate doc->GetLinks() and render connections
 }
 
 void AIEditorGUI::HandleNodeCreation()
@@ -555,14 +554,15 @@ void AIEditorGUI::HandleNodeSelection()
 
 void AIEditorGUI::HandleLinkCreation()
 {
+    // DEPRECATED: Old NodeGraph:: implementation
+    // TODO: Reimplement with modern ConnectPinsCommand from NodeGraphCore
+    /*
     int startPin = -1;
     int endPin = -1;
-    
+
     if (ImNodes::IsLinkCreated(&startPin, &endPin)) {
         SYSTEM_LOG << "[AIEditorGUI] Link created: " << startPin << " -> " << endPin << std::endl;
-        
-        // TODO: Create ConnectPinsCommand and execute
-        // For now, just connect directly
+
         NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
         NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
         if (doc != nullptr) {
@@ -570,10 +570,11 @@ void AIEditorGUI::HandleLinkCreation()
             fromPin.value = static_cast<uint32_t>(startPin);
             NodeGraph::PinId toPin;
             toPin.value = static_cast<uint32_t>(endPin);
-            
+
             doc->ConnectPins(fromPin, toPin);
         }
     }
+    */
 }
 
 // ============================================================================
@@ -600,36 +601,36 @@ void AIEditorGUI::RenderInspector()
 
 void AIEditorGUI::RenderBlackboardPanel()
 {
-    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
-    NodeGraph::BlackboardSystem* blackboard = (doc != nullptr) ? &doc->GetBlackboard() : nullptr;
-    
-    m_blackboardPanel.Render(blackboard, &m_showBlackboardPanel);
+    // DEPRECATED: Blackboard system reimplement
+    // TODO: Port to modern schema once BlackboardSystem is available
+    ImGui::Begin("Blackboard", &m_showBlackboardPanel);
+    ImGui::Text("(Blackboard panel - reimplement with modern schema)");
+    ImGui::End();
 }
 
 void AIEditorGUI::RenderSensesPanel()
 {
     ImGui::Begin("AI Senses Debug", &m_showSensesPanel);
-    
+
     ImGui::Text("AI Senses");
     ImGui::Separator();
-    
+
     // TODO: Implement senses debug
     ImGui::Text("(Not yet implemented)");
-    
+
     ImGui::End();
 }
 
 void AIEditorGUI::RenderRuntimeDebugPanel()
 {
     ImGui::Begin("Runtime Debug", &m_showRuntimeDebugPanel);
-    
+
     ImGui::Text("Runtime Execution");
     ImGui::Separator();
-    
+
     // TODO: Implement runtime debug
     ImGui::Text("(Not yet implemented)");
-    
+
     ImGui::End();
 }
 
@@ -640,19 +641,27 @@ void AIEditorGUI::RenderRuntimeDebugPanel()
 void AIEditorGUI::MenuAction_NewBT()
 {
     SYSTEM_LOG << "[AIEditorGUI] Creating new Behavior Tree" << std::endl;
-    
+
+    // TODO: Reimplement with modern NodeGraphManager API
+    // Current: Uses NodeGraph:: namespace (deprecated)
+    /*
     NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
     NodeGraph::GraphId id = mgr.CreateGraph("AIGraph", "BehaviorTree");
     mgr.SetActiveGraph(id);
+    */
 }
 
 void AIEditorGUI::MenuAction_NewHFSM()
 {
     SYSTEM_LOG << "[AIEditorGUI] Creating new HFSM" << std::endl;
-    
+
+    // TODO: Reimplement with modern NodeGraphManager API
+    // Current: Uses NodeGraph:: namespace (deprecated)
+    /*
     NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
     NodeGraph::GraphId id = mgr.CreateGraph("AIGraph", "HFSM");
     mgr.SetActiveGraph(id);
+    */
 }
 
 void AIEditorGUI::MenuAction_Open()
@@ -668,252 +677,76 @@ void AIEditorGUI::MenuAction_Open()
 
 void AIEditorGUI::MenuAction_Save()
 {
-    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
-    
-    if (doc == nullptr) {
-        SYSTEM_LOG << "[AIEditorGUI] No active graph to save" << std::endl;
-        return;
-    }
-    
-    NodeGraph::GraphId activeId = mgr.GetActiveGraphId();
-    
-    // Try to save with existing filepath
-    // In a real implementation, this would use the graph's stored filepath
-    // For now, save to a default location
-    std::string filepath = "Blueprints/AI/autosave_bt.json";
-    
-    bool success = mgr.SaveGraph(activeId, filepath);
-    
-    if (success) {
-        SYSTEM_LOG << "[AIEditorGUI] Saved to: " << filepath << std::endl;
-    } else {
-        SYSTEM_LOG << "[AIEditorGUI] ERROR: Save failed" << std::endl;
-    }
+    // TODO: Reimplement with modern NodeGraphManager API
+    SYSTEM_LOG << "[AIEditorGUI] Save (deprecated - needs reimplementation)" << std::endl;
 }
 
 void AIEditorGUI::MenuAction_SaveAs()
 {
-    SYSTEM_LOG << "[AIEditorGUI] Save As file dialog" << std::endl;
-
-    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
-
-    if (doc == nullptr) {
-        SYSTEM_LOG << "[AIEditorGUI] No active graph to save" << std::endl;
-        return;
-    }
-
-    // Generate suggested filename from current path
-    std::string suggestedName = m_lastSavePath.empty() 
-                                ? "behavior_tree" 
-                                : m_lastSavePath.substr(m_lastSavePath.find_last_of("/\\") + 1);
-
-    // Remove extension if present
-    size_t dotPos = suggestedName.rfind('.');
-    if (dotPos != std::string::npos)
-        suggestedName = suggestedName.substr(0, dotPos);
-
-    // Open centralized save file picker modal
-    DataManager& dm = DataManager::Get();
-    dm.OpenSaveFilePickerModal(Olympe::SaveFileType::BehaviorTree, "Blueprints/AI/", suggestedName);
-
-    // Modal will be handled each frame in Render()
+    // TODO: Reimplement with modern NodeGraphManager API
+    SYSTEM_LOG << "[AIEditorGUI] Save As (deprecated - needs reimplementation)" << std::endl;
 }
 
 void AIEditorGUI::MenuAction_AutoLayout()
 {
-    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    NodeGraph::GraphId activeId = mgr.GetActiveGraphId();
-    
-    if (activeId.value == 0)
-    {
-        SYSTEM_LOG << "[AIEditorGUI] Auto-layout failed: No active graph" << std::endl;
-        return;
-    }
-    
-    NodeGraph::GraphDocument* doc = mgr.GetGraph(activeId);
-    if (doc == nullptr)
-    {
-        SYSTEM_LOG << "[AIEditorGUI] Auto-layout failed: Document not found" << std::endl;
-        return;
-    }
-    
-    // Use default layout configuration
-    NodeGraph::AutoLayoutConfig config;
-    
-    // Apply auto-layout
-    bool success = doc->AutoLayout(config);
-    
-    if (success)
-    {
-        SYSTEM_LOG << "[AIEditorGUI] Auto-layout applied successfully" << std::endl;
-    }
-    else
-    {
-        SYSTEM_LOG << "[AIEditorGUI] Auto-layout failed - check graph has root node" << std::endl;
-    }
+    // TODO: Reimplement with modern NodeGraphManager API
+    SYSTEM_LOG << "[AIEditorGUI] Auto Layout (deprecated - needs reimplementation)" << std::endl;
 }
 
 void AIEditorGUI::MenuAction_Close()
 {
-    SYSTEM_LOG << "[AIEditorGUI] Close current graph" << std::endl;
-    
-    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    NodeGraph::GraphId activeId = mgr.GetActiveGraphId();
-    if (activeId.value != 0) {
-        mgr.CloseGraph(activeId);
-    }
+    // TODO: Reimplement with modern NodeGraphManager API
+    SYSTEM_LOG << "[AIEditorGUI] Close (deprecated - needs reimplementation)" << std::endl;
 }
 
 void AIEditorGUI::MenuAction_Undo()
 {
-    if (m_commandStack.CanUndo()) {
-        m_commandStack.Undo();
-        SYSTEM_LOG << "[AIEditorGUI] Undo: " << m_commandStack.GetUndoDescription() << std::endl;
-    }
+    // TODO: Reimplement with modern NodeGraphManager API (command stack removed)
+    // if (m_commandStack.CanUndo()) {
+    //     m_commandStack.Undo();
+    //     SYSTEM_LOG << "[AIEditorGUI] Undo: " << m_commandStack.GetUndoDescription() << std::endl;
+    // }
+    SYSTEM_LOG << "[AIEditorGUI] Undo (deprecated - needs reimplementation)" << std::endl;
 }
 
 void AIEditorGUI::MenuAction_Redo()
 {
-    if (m_commandStack.CanRedo()) {
-        m_commandStack.Redo();
-        SYSTEM_LOG << "[AIEditorGUI] Redo: " << m_commandStack.GetRedoDescription() << std::endl;
-    }
+    // TODO: Reimplement with modern NodeGraphManager API (command stack removed)
+    // if (m_commandStack.CanRedo()) {
+    //     m_commandStack.Redo();
+    //     SYSTEM_LOG << "[AIEditorGUI] Redo: " << m_commandStack.GetRedoDescription() << std::endl;
+    // }
+    SYSTEM_LOG << "[AIEditorGUI] Redo (deprecated - needs reimplementation)" << std::endl;
 }
 
 void AIEditorGUI::MenuAction_Cut()
 {
-    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
-    if (doc == nullptr) {
-        SYSTEM_LOG << "[AIEditorGUI] No active graph for cut" << std::endl;
-        return;
-    }
-    
-    // Get selected nodes
-    std::vector<NodeGraph::NodeId> selectedNodes;
-    for (size_t i = 0; i < m_selectedNodeIds.size(); ++i) {
-        NodeGraph::NodeId nodeId;
-        nodeId.value = static_cast<uint32_t>(m_selectedNodeIds[i]);
-        selectedNodes.push_back(nodeId);
-    }
-    
-    if (selectedNodes.empty()) {
-        SYSTEM_LOG << "[AIEditorGUI] No nodes selected for cut" << std::endl;
-        return;
-    }
-    
-    // Cut via clipboard
-    AIEditorClipboard::Get().Cut(selectedNodes, doc);
-    
-    // Clear selection
-    m_selectedNodeIds.clear();
-    
-    SYSTEM_LOG << "[AIEditorGUI] Cut " << selectedNodes.size() << " nodes" << std::endl;
+    // TODO: Reimplement with modern NodeGraphManager API
+    SYSTEM_LOG << "[AIEditorGUI] Cut (deprecated - needs reimplementation)" << std::endl;
 }
 
 void AIEditorGUI::MenuAction_Copy()
 {
-    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
-    if (doc == nullptr) {
-        SYSTEM_LOG << "[AIEditorGUI] No active graph for copy" << std::endl;
-        return;
-    }
-    
-    // Get selected nodes
-    std::vector<NodeGraph::NodeId> selectedNodes;
-    for (size_t i = 0; i < m_selectedNodeIds.size(); ++i) {
-        NodeGraph::NodeId nodeId;
-        nodeId.value = static_cast<uint32_t>(m_selectedNodeIds[i]);
-        selectedNodes.push_back(nodeId);
-    }
-    
-    if (selectedNodes.empty()) {
-        SYSTEM_LOG << "[AIEditorGUI] No nodes selected for copy" << std::endl;
-        return;
-    }
-    
-    // Copy via clipboard
-    AIEditorClipboard::Get().Copy(selectedNodes, doc);
-    
-    SYSTEM_LOG << "[AIEditorGUI] Copied " << selectedNodes.size() << " nodes" << std::endl;
+    // TODO: Reimplement with modern NodeGraphManager API
+    SYSTEM_LOG << "[AIEditorGUI] Copy (deprecated - needs reimplementation)" << std::endl;
 }
 
 void AIEditorGUI::MenuAction_Paste()
 {
-    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
-    if (doc == nullptr) {
-        SYSTEM_LOG << "[AIEditorGUI] No active graph for paste" << std::endl;
-        return;
-    }
-    
-    if (AIEditorClipboard::Get().IsEmpty()) {
-        SYSTEM_LOG << "[AIEditorGUI] Clipboard is empty" << std::endl;
-        return;
-    }
-    
-    // Paste with 50px offset
-    Vector pasteOffset(50.0f, 50.0f);
-    std::vector<NodeGraph::NodeId> newNodeIds = AIEditorClipboard::Get().Paste(doc, pasteOffset);
-    
-    // Select pasted nodes
-    m_selectedNodeIds.clear();
-    for (size_t i = 0; i < newNodeIds.size(); ++i) {
-        m_selectedNodeIds.push_back(static_cast<int>(newNodeIds[i].value));
-    }
-    
-    SYSTEM_LOG << "[AIEditorGUI] Pasted " << newNodeIds.size() << " nodes" << std::endl;
+    // TODO: Reimplement with modern NodeGraphManager API
+    SYSTEM_LOG << "[AIEditorGUI] Paste (deprecated - needs reimplementation)" << std::endl;
 }
 
 void AIEditorGUI::MenuAction_Delete()
 {
-    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
-    if (doc == nullptr) {
-        SYSTEM_LOG << "[AIEditorGUI] No active graph for delete" << std::endl;
-        return;
-    }
-    
-    if (m_selectedNodeIds.empty()) {
-        SYSTEM_LOG << "[AIEditorGUI] No nodes selected for deletion" << std::endl;
-        return;
-    }
-    
-    // Delete selected nodes
-    for (size_t i = 0; i < m_selectedNodeIds.size(); ++i) {
-        NodeGraph::NodeId nodeId;
-        nodeId.value = static_cast<uint32_t>(m_selectedNodeIds[i]);
-        doc->DeleteNode(nodeId);
-    }
-    
-    SYSTEM_LOG << "[AIEditorGUI] Deleted " << m_selectedNodeIds.size() << " nodes" << std::endl;
-    
-    // Clear selection
-    m_selectedNodeIds.clear();
+    // TODO: Reimplement with modern NodeGraphManager API
+    SYSTEM_LOG << "[AIEditorGUI] Delete (deprecated - needs reimplementation)" << std::endl;
 }
 
 void AIEditorGUI::MenuAction_SelectAll()
 {
-    NodeGraph::NodeGraphManager& mgr = NodeGraph::NodeGraphManager::Get();
-    NodeGraph::GraphDocument* doc = mgr.GetActiveGraph();
-    if (doc == nullptr) {
-        SYSTEM_LOG << "[AIEditorGUI] No active graph for select all" << std::endl;
-        return;
-    }
-    
-    // Clear current selection
-    m_selectedNodeIds.clear();
-    
-    // Select all nodes
-    const std::vector<NodeGraph::NodeData>& nodes = doc->GetNodes();
-    for (size_t i = 0; i < nodes.size(); ++i) {
-        m_selectedNodeIds.push_back(static_cast<int>(nodes[i].id.value));
-    }
-    
-    SYSTEM_LOG << "[AIEditorGUI] Selected all " << m_selectedNodeIds.size() << " nodes" << std::endl;
+    // TODO: Reimplement with modern NodeGraphManager API
+    SYSTEM_LOG << "[AIEditorGUI] Select All (deprecated - needs reimplementation)" << std::endl;
 }
 
 void AIEditorGUI::MenuAction_ResetLayout()

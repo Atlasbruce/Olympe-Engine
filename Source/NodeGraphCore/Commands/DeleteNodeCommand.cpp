@@ -9,6 +9,7 @@
 
 namespace Olympe {
 namespace NodeGraph {
+using namespace NodeGraphTypes;
 
 DeleteNodeCommand::DeleteNodeCommand(GraphDocument* graph, NodeId nodeId)
     : m_graph(graph)

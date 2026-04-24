@@ -159,9 +159,9 @@ public:
     void RenderSaveFilePickerModal();
 
     /**
-     * @brief Check if Save modal was confirmed by user.
+     * @brief Check if Save modal was confirmed by user. Resets flag after reading.
      */
-    bool IsSaveFileModalConfirmed() const;
+    bool IsSaveFileModalConfirmed();
 
     /**
      * @brief Get selected save file path.

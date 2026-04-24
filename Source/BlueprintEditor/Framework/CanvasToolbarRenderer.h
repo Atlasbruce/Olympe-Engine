@@ -132,11 +132,16 @@ private:
     BrowseCallback m_onBrowseComplete;             ///< User callback on browse
     
     // ========== MODAL STATE ==========
-    // Phase 44.1: SaveFile modal migrated to CanvasModalRenderer dispatcher
-    // Browse modal remains local for backward compatibility
-    bool m_showSaveAsModal = false;                ///< SaveFilePickerModal open?
+    // Phase 50: SaveAs uses simple text input popup (like legacy NodeGraphPanel)
+    // This replaces complex SaveFilePickerModal to eliminate frame-rate spam
+    bool m_showSaveAsModal = false;                ///< Simple SaveAs popup open?
     bool m_showBrowseModal = false;                ///< FilePickerModal open?
     FilePickerModal* m_browseModal = nullptr;      ///< Browse modal (local, not managed by dispatcher)
+
+    // Phase 50: Simple SaveAs popup state
+    static constexpr int FILEPATH_BUFFER_SIZE = 512;
+    char m_saveAsFileBuffer[FILEPATH_BUFFER_SIZE] = {};  ///< Text input buffer for SaveAs filepath
+    bool m_saveAsPopupOpen = false;                ///< Tracks if SaveAs popup was just opened (for clearing buffer)
 
     // ========== UI STATE ==========
     bool m_isDirty = false;                        ///< Last known dirty state

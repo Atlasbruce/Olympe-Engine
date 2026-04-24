@@ -13,11 +13,11 @@ namespace Olympe
 {
     struct LayoutNode
     {
-        NodeId nodeId = InvalidNodeId;
+        PrefabNodeId nodeId = InvalidNodeId;
         Vector position;
         Vector size;
-        std::vector<NodeId> inputs;
-        std::vector<NodeId> outputs;
+        std::vector<PrefabNodeId> inputs;
+        std::vector<PrefabNodeId> outputs;
     };
 
     // Forward declaration
@@ -30,22 +30,22 @@ namespace Olympe
         ~EntityPrefabGraphDocument();
 
         // Node management
-        NodeId CreateComponentNode(const std::string& componentType);
-        NodeId CreateComponentNode(const std::string& componentType, const std::string& componentName);
-        void RemoveNode(NodeId nodeId);
-        bool HasNode(NodeId nodeId) const;
+        PrefabNodeId CreateComponentNode(const std::string& componentType);
+        PrefabNodeId CreateComponentNode(const std::string& componentType, const std::string& componentName);
+        void RemoveNode(PrefabNodeId nodeId);
+        bool HasNode(PrefabNodeId nodeId) const;
 
         // Node access
-        ComponentNode* GetNode(NodeId nodeId);
-        const ComponentNode* GetNode(NodeId nodeId) const;
+        ComponentNode* GetNode(PrefabNodeId nodeId);
+        const ComponentNode* GetNode(PrefabNodeId nodeId) const;
         const std::vector<ComponentNode>& GetAllNodes() const;
 
         // Selection management
-        void SelectNode(NodeId nodeId);
-        void DeselectNode(NodeId nodeId);
+        void SelectNode(PrefabNodeId nodeId);
+        void DeselectNode(PrefabNodeId nodeId);
         void DeselectAll();
-        NodeId GetSelectedNode() const;
-        const std::vector<NodeId>& GetSelectedNodes() const;
+        PrefabNodeId GetSelectedNode() const;
+        const std::vector<PrefabNodeId>& GetSelectedNodes() const;
 
         // Layout
         void AutoLayout();
@@ -53,13 +53,13 @@ namespace Olympe
         void CenterViewport();
 
         // Connection management
-        bool ConnectNodes(NodeId sourceId, NodeId targetId);
-        bool DisconnectNodes(NodeId sourceId, NodeId targetId);
-        const std::vector<std::pair<NodeId, NodeId>>& GetConnections() const;
+        bool ConnectNodes(PrefabNodeId sourceId, PrefabNodeId targetId);
+        bool DisconnectNodes(PrefabNodeId sourceId, PrefabNodeId targetId);
+        const std::vector<std::pair<PrefabNodeId, PrefabNodeId>>& GetConnections() const;
 
         // Connection validation
-        bool ValidateConnection(NodeId sourceId, NodeId targetId) const;
-        bool HasConnection(NodeId sourceId, NodeId targetId) const;
+        bool ValidateConnection(PrefabNodeId sourceId, PrefabNodeId targetId) const;
+        bool HasConnection(PrefabNodeId sourceId, PrefabNodeId targetId) const;
 
         // Serialization
         json ToJson() const;
@@ -104,19 +104,19 @@ namespace Olympe
 
     private:
         std::vector<ComponentNode> m_nodes;
-        std::vector<NodeId> m_selectedNodes;
-        std::vector<std::pair<NodeId, NodeId>> m_connections;
+        std::vector<PrefabNodeId> m_selectedNodes;
+        std::vector<std::pair<PrefabNodeId, PrefabNodeId>> m_connections;
         std::string m_documentName;
         std::string m_filePath;  // NEW: Track current file path for IGraphDocument
         Vector m_canvasOffset;
         float m_canvasZoom = 1.0f;
-        NodeId m_nextNodeId = 1;
+        PrefabNodeId m_nextNodeId = 1;
         bool m_isDirty = false;
 
         // Parameter schemas: componentType -> { paramName -> defaultValue }
         std::map<std::string, std::map<std::string, std::string>> m_parameterSchemas;
 
-        NodeId GenerateNodeId();
+        PrefabNodeId GenerateNodeId();
         std::vector<LayoutNode> CalculateLayout();
     };
 

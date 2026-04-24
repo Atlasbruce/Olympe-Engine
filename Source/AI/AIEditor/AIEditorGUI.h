@@ -16,10 +16,11 @@
 
 #include "../../NodeGraphCore/NodeGraphCore.h"
 #include "../../NodeGraphCore/GraphDocument.h"
-#include "../../NodeGraphCore/NodeGraphManager.h"
-#include "../../NodeGraphCore/CommandSystem.h"
-#include "../../NodeGraphCore/Commands/ToggleNodeBreakpointCommand.h"
-#include "../../NodeGraphCore/BlackboardSystem.h"
+#include "../../BlueprintEditor/BTNodeGraphManager.h"
+// TODO: CommandSystem removed - reimplement after rendering works
+// #include "../../NodeGraphCore/CommandSystem.h"
+// #include "../../NodeGraphCore/Commands/ToggleNodeBreakpointCommand.h"
+// #include "../../NodeGraphCore/BlackboardSystem.h"
 #include "../AIGraphPlugin_BT/BTNodeRegistry.h"
 #include "../AIGraphPlugin_BT/BTNodePalette.h"
 #include "BlackboardPanel.h"
@@ -29,6 +30,18 @@
 
 namespace Olympe {
 namespace AI {
+
+// Type aliases for NodeGraphTypes for backward compatibility
+using NodeId = Olympe::NodeGraphTypes::NodeId;
+using GraphDocument = Olympe::NodeGraphTypes::GraphDocument;
+using GraphId = Olympe::NodeGraphTypes::GraphId;
+using NodeData = Olympe::NodeGraphTypes::NodeData;
+using LinkData = Olympe::NodeGraphTypes::LinkData;
+using PinId = Olympe::NodeGraphTypes::PinId;
+
+// TODO: Reimplement command/annotation system
+// using CommandStack = Olympe::NodeGraphTypes::CommandStack; // Doesn't exist in modern schema
+// using ToggleNodeBreakpointCommand = Olympe::ToggleNodeBreakpointCommand;
 
 /**
  * @class AIEditorGUI
@@ -77,12 +90,10 @@ public:
      * @brief Set editor active state
      */
     void SetActive(bool active) { m_isActive = active; }
-    
-    /**
-     * @brief Get command stack for undo/redo
-     */
-    NodeGraph::CommandStack& GetCommandStack() { return m_commandStack; }
-    
+
+    // TODO: CommandStack system needs reimplementation
+    // GetCommandStack() removed - CommandStack type doesn't exist in modern schema
+
 private:
     // ========================================================================
     // Core Rendering
@@ -141,13 +152,13 @@ private:
      * @brief Render node graph with ImNodes
      */
     void RenderNodeGraphCanvas();
-    
+
     /**
      * @brief Render a single node
      * @param nodeId Node to render
      */
-    void RenderNode(NodeGraph::NodeId nodeId);
-    
+    void RenderNode(NodeId nodeId);  // TODO: RenderNode needs reimplementation with modern schema
+
     /**
      * @brief Render connections between nodes
      */
@@ -252,10 +263,10 @@ private:
     
     // Blackboard panel (Phase 2.1)
     BlackboardPanel m_blackboardPanel;
-    
-    // Command system for undo/redo
-    NodeGraph::CommandStack m_commandStack;
-    
+
+    // TODO: Command system for undo/redo - needs reimplementation
+    // NodeGraph::CommandStack m_commandStack; // Removed - type doesn't exist
+
     // ImNodes context
     void* m_imnodesContext;
     

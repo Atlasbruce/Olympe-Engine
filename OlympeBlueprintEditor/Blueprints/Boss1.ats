@@ -1,0 +1,406 @@
+{
+  "blackboard": [],
+  "dataConnections": [],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Then",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Else",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Completed",
+      "toNode": 5,
+      "toPin": "In"
+    }
+  ],
+  "globalVariableValues": {
+    "ambientLight": 1,
+    "animationElapsedTime": 0,
+    "animationFrame": 0,
+    "animationFrameDuration": 0.1,
+    "animationID": "",
+    "bbHeight": 25,
+    "bbWidth": 25,
+    "bbX": 0,
+    "bbY": 0,
+    "behaviorType": "idle",
+    "bodyFriction": 0.1,
+    "bodyMass": 1,
+    "bodyRotation": false,
+    "bodySpeed": 150,
+    "bodyUseGravity": true,
+    "cameraAllowManualControl": true,
+    "cameraBaseOffset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "cameraBoundsHeight": 0,
+    "cameraBoundsWidth": 0,
+    "cameraBoundsX": 0,
+    "cameraBoundsY": 0,
+    "cameraClampToViewport": true,
+    "cameraControlMode": "Free",
+    "cameraControlOffset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "cameraCurrentRotationLevel": 0,
+    "cameraCurrentZoomLevelIndex": 3,
+    "cameraFollowOffset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "cameraFollowTarget": false,
+    "cameraInputDeadzone": 0.15,
+    "cameraInputDirection": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "cameraInputJoystickId": 0,
+    "cameraInputPlayerId": -1,
+    "cameraInputResetRequested": false,
+    "cameraInputRotation": 0,
+    "cameraInputTriggerThreshold": 0.3,
+    "cameraInputUseKeyboard": false,
+    "cameraInputZoom": 0,
+    "cameraIsActive": true,
+    "cameraIsShaking": false,
+    "cameraManualControlDecay": 2,
+    "cameraManualMoveSpeed": 200,
+    "cameraMaxZoom": 5,
+    "cameraMinZoom": 0.1,
+    "cameraPlayerId": -1,
+    "cameraPosition": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "cameraRotation": 0,
+    "cameraRotationSpeed": 5,
+    "cameraRotationStep": 15,
+    "cameraShakeDuration": 0,
+    "cameraShakeIntensity": 0,
+    "cameraShakeOffset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "cameraShakeTimeRemaining": 0,
+    "cameraSmoothFactor": 5,
+    "cameraTargetEntityID": -1,
+    "cameraTargetRotation": 0,
+    "cameraTargetZoom": 1,
+    "cameraType": "2D",
+    "cameraUseBounds": false,
+    "cameraViewportHeight": 600,
+    "cameraViewportWidth": 800,
+    "cameraViewportX": 0,
+    "cameraViewportY": 0,
+    "cameraZoom": 1,
+    "cameraZoomSpeed": 5,
+    "cameraZoomStep": 0.1,
+    "collisionZoneHeight": 100,
+    "collisionZoneIsStatic": true,
+    "collisionZoneWidth": 100,
+    "collisionZoneX": 0,
+    "collisionZoneY": 0,
+    "controllerConnected": false,
+    "controllerID": -1,
+    "controllerIsVibrating": false,
+    "controllerLeftStick": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "controllerLeftTrigger": 0,
+    "controllerRightStick": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "controllerRightTrigger": 0,
+    "controllerVibrateStrength": 0,
+    "debugDrawColliders": false,
+    "debugShowFPS": false,
+    "deltaTime": 0.016,
+    "difficulty": 1,
+    "editorDeltaTime": 0,
+    "editorIsDirty": false,
+    "editorSpriteColor": "#FFFFFF",
+    "editorSpriteHotspot": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "editorSpritePath": "",
+    "editorSpriteRectHeight": 25,
+    "editorSpriteRectWidth": 25,
+    "editorSpriteRectX": 0,
+    "editorSpriteRectY": 0,
+    "editorSpriteSelected": false,
+    "editorSpriteVisible": true,
+    "effectDuration": 1,
+    "effectElapsedTime": 0,
+    "effectType": "",
+    "effectsVolume": 0.8,
+    "entityCurrentHealth": 100,
+    "entityMaxHealth": 100,
+    "entityName": "Entity",
+    "entityTag": "Untagged",
+    "entityType": "UnknownType",
+    "entityTypeEnum": "None",
+    "gameTime": 0,
+    "gravity": 9.81,
+    "gridActiveCollisionLayer": 0,
+    "gridActiveNavigationLayer": 0,
+    "gridCellSize": {
+      "x": 32,
+      "y": 32,
+      "z": 0
+    },
+    "gridColorA": 255,
+    "gridColorB": 180,
+    "gridColorG": 180,
+    "gridColorR": 180,
+    "gridEnabled": false,
+    "gridHexRadius": 16,
+    "gridLODSkipFactor": 10,
+    "gridLODZoomThreshold": 0.5,
+    "gridMaxLines": 1200,
+    "gridProjection": "Ortho",
+    "gridShowCollisionOverlay": false,
+    "gridShowNavigationOverlay": false,
+    "inputDeadzone": 0.15,
+    "inputSensitivity": 1,
+    "inventoryItems": "[]",
+    "isDebugMode": false,
+    "isPaused": false,
+    "movementDirection": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "movementVelocity": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "musicVolume": 0.6,
+    "navAgentArrivalThreshold": 5,
+    "navAgentAvoidObstacles": true,
+    "navAgentCurrentWaypointIndex": 0,
+    "navAgentHasPath": false,
+    "navAgentLayerMask": 1,
+    "navAgentMaxSpeed": 100,
+    "navAgentNeedsRepath": false,
+    "navAgentRadius": 16,
+    "navAgentSteeringWeight": 1,
+    "navAgentTargetPosition": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "npcType": "",
+    "playerBoundControllerID": -1,
+    "playerIndex": 0,
+    "playerIsInteracting": false,
+    "playerIsJumping": false,
+    "playerIsMenuOpen": false,
+    "playerIsRunning": false,
+    "playerIsShooting": false,
+    "playerIsUsingItem": false,
+    "playerIsWalking": false,
+    "playerJoystickDirection": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "soundEffectID": "",
+    "soundPlayVolume": 1,
+    "soundVolume": 0.8,
+    "spriteColor": "#FFFFFF",
+    "spriteHotspot": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "spritePath": "",
+    "spriteRectHeight": 25,
+    "spriteRectWidth": 25,
+    "spriteRectX": 0,
+    "spriteRectY": 0,
+    "spriteVisible": true,
+    "timeOfDay": 12,
+    "timeScale": 1,
+    "triggerActivated": false,
+    "triggerRadius": 15,
+    "visualAnimBankId": "",
+    "visualAnimFlipX": false,
+    "visualAnimFlipY": false,
+    "visualAnimFrame": 0,
+    "visualAnimFrameTimer": 0,
+    "visualAnimGraphPath": "",
+    "visualAnimIsPaused": false,
+    "visualAnimIsPlaying": true,
+    "visualAnimJustFinished": false,
+    "visualAnimLoop": true,
+    "visualAnimLoopCount": 0,
+    "visualAnimName": "",
+    "visualAnimPlaybackSpeed": 1,
+    "weatherType": "clear",
+    "windStrength": 0
+  },
+  "graphType": "VisualScript",
+  "name": "",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "EntryPoint",
+      "params": {
+        "__posX": {
+          "LiteralValue": 114,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 153,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 136,
+        "y": 125
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 2,
+      "label": "Branch",
+      "nodeConditionRefs": [
+        {
+          "leftPinID": "",
+          "logicalOp": "Start",
+          "presetID": "preset_9e54ee5c-13e0-4260-b917-6d061b2b419c",
+          "rightPinID": ""
+        }
+      ],
+      "params": {
+        "__posX": {
+          "LiteralValue": 530,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 146,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 316,
+        "y": 123
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 3,
+      "label": "Take Cover",
+      "params": {
+        "__posX": {
+          "LiteralValue": 561,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 132,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 521,
+        "y": 148
+      },
+      "taskType": "take_cover",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 4,
+      "label": "Attack If Close",
+      "params": {
+        "__posX": {
+          "LiteralValue": 562,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 309,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 510,
+        "y": -0.999985
+      },
+      "taskType": "attack_if_close",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 5,
+      "label": "SubGraph",
+      "params": {
+        "__posX": {
+          "LiteralValue": 815,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 276,
+          "Type": "Literal"
+        },
+        "subgraph_path": {
+          "LiteralValue": "\\Boss1.ats",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1029.53,
+        "y": 312.809
+      },
+      "subGraphPath": "\\Boss1.ats",
+      "type": "SubGraph"
+    }
+  ],
+  "presets": [
+    {
+      "id": "preset_9e54ee5c-13e0-4260-b917-6d061b2b419c",
+      "left": {
+        "mode": "Variable",
+        "value": "mGlobalHealth"
+      },
+      "name": "Condition",
+      "op": "==",
+      "right": {
+        "mode": "Const",
+        "value": 10
+      }
+    }
+  ],
+  "schema_version": 4
+}

@@ -9,6 +9,7 @@
 
 namespace Olympe {
 namespace NodeGraph {
+using namespace NodeGraphTypes;
 
 MoveNodeCommand::MoveNodeCommand(GraphDocument* graph, NodeId nodeId, Vector2 oldPos, Vector2 newPos)
     : m_graph(graph)

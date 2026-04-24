@@ -273,7 +273,7 @@ namespace Olympe
 
         // Create new node at center of visible area
         // For now, add at origin (0, 0) - can be improved to position near mouse
-        NodeId newNodeId = document->CreateComponentNode(componentType.name, componentType.name);
+        PrefabNodeId newNodeId = document->CreateComponentNode(componentType.name, componentType.name);
 
         // Position new node in a reasonable location
         ComponentNode* newNode = document->GetNode(newNodeId);

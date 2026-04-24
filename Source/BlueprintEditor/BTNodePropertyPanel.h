@@ -14,6 +14,8 @@
 
 #include <string>
 #include <vector>
+#include <cstring>
+#include "../../Source/third_party/imgui/imgui.h"
 
 namespace Olympe {
 
@@ -31,30 +33,60 @@ class BTNodeGraphManager;
 class BTNodePropertyPanel
 {
 public:
-    BTNodePropertyPanel();
+    BTNodePropertyPanel()
+        : m_activeGraphId(-1)
+        , m_selectedNodeId(-1)
+    {
+        std::memset(m_nodeNameBuffer, 0, sizeof(m_nodeNameBuffer));
+        std::memset(m_paramBuffer, 0, sizeof(m_paramBuffer));
+    }
+
     ~BTNodePropertyPanel() = default;
 
     /**
      * @brief Initialize the panel
      */
-    void Initialize();
+    void Initialize()
+    {
+        // Initialize property panel
+    }
 
     /**
      * @brief Render the property panel
      */
-    void Render();
+    void Render()
+    {
+        if (m_activeGraphId < 0 || m_selectedNodeId < 0)
+        {
+            ImGui::TextDisabled("No node selected");
+            return;
+        }
+
+        ImGui::TextDisabled("BTNodePropertyPanel - Phase 50.3");
+        ImGui::TextDisabled("Graph ID: %d, Node ID: %d", m_activeGraphId, m_selectedNodeId);
+    }
 
     /**
      * @brief Set the currently selected node ID
      * @param graphId Active graph ID in BTNodeGraphManager
      * @param nodeId Local node ID within the graph
      */
-    void SetSelectedNode(int graphId, int nodeId);
+    void SetSelectedNode(int graphId, int nodeId)
+    {
+        m_activeGraphId = graphId;
+        m_selectedNodeId = nodeId;
+    }
 
     /**
      * @brief Clear the current selection
      */
-    void ClearSelection();
+    void ClearSelection()
+    {
+        m_activeGraphId = -1;
+        m_selectedNodeId = -1;
+        std::memset(m_nodeNameBuffer, 0, sizeof(m_nodeNameBuffer));
+        std::memset(m_paramBuffer, 0, sizeof(m_paramBuffer));
+    }
 
     /**
      * @brief Check if a node is currently selected

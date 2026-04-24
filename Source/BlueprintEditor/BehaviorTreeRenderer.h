@@ -11,7 +11,7 @@
 #pragma once
 
 #include "IGraphRenderer.h"
-#include "NodeGraphPanel.h"
+#include "BehaviorTreeImNodesAdapter.h"
 #include "BTNodePropertyPanel.h"
 #include "../third_party/imgui/imgui.h"
 
@@ -25,6 +25,7 @@
 namespace Olympe {
 
 // Forward declarations
+class NodeGraphPanel;
 class GraphExecutionTracer;
 class ExecutionTestPanel;
 namespace AI {
@@ -49,8 +50,8 @@ class BehaviorTreeRenderer : public IGraphRenderer
 {
 public:
     /**
-     * @param panel  Reference to the shared NodeGraphPanel owned by the editor GUI.
-     *               The renderer does NOT take ownership.
+     * @brief Constructor for BehaviorTreeRenderer
+     * @param panel Shared NodeGraphPanel reference for rendering canvas
      */
     explicit BehaviorTreeRenderer(NodeGraphPanel& panel);
     ~BehaviorTreeRenderer();
@@ -76,25 +77,50 @@ public:
      */
     void OnRunGraphClicked();
 
+    /**
+      * @brief Phase 44.2: Get the document adapter for framework integration.
+      *  Returns the underlying IGraphDocument* for reuse in TabManager,
+      *  avoiding duplicate document object creation.
+      */
+    IGraphDocument* GetDocument() const;
+
+    /**
+     * @brief Phase 47B: Set the file path for this renderer's graph.
+     * Called after legacy load succeeds to synchronize filepath between legacy
+     * loader and framework renderer, enabling Save to work with correct path.
+     * @param path The file path to set
+     */
+    void SetFilePath(const std::string& path);
+
+    /**
+     * @brief Get the NodeGraphPanel reference for direct access.
+     * Used by BehaviorTreeGraphDocument for position sync.
+     * @return Reference to the shared NodeGraphPanel
+     */
+    NodeGraphPanel* GetNodeGraphPanel() { return &m_panel; }
+
 private:
-     NodeGraphPanel& m_panel;                      ///< Shared panel reference (not owned)
-     std::unique_ptr<AI::BTNodePalette> m_palette; ///< BTNodePalette for drag-drop
-     BTNodePropertyPanel m_propertyPanel;          ///< Property editor for node properties
-     int m_graphId;                                ///< ID in BTNodeGraphManager; -1 if not loaded
-     std::string m_filePath;                       ///< Path that was loaded
-     float m_canvasPanelWidth = 0.75f;            ///< Split ratio: 75% canvas, 25% right panel
-     int m_rightPanelTabSelection = 0;             ///< 0 = Palette, 1 = Properties
-     ImVec2 m_canvasScreenPos = ImVec2(0, 0);     ///< Screen position of canvas for drag-drop coordinate transformation
-     std::unique_ptr<ExecutionTestPanel> m_executionTestPanel;  ///< REUSED: Simulation results panel
-     std::unique_ptr<GraphExecutionTracer> m_lastTracer;        ///< Last simulation trace for results display
+      NodeGraphPanel& m_panel;                       ///< Shared NodeGraphPanel for canvas rendering
+      std::unique_ptr<AI::BTNodePalette> m_palette; ///< BTNodePalette for drag-drop
+      BTNodePropertyPanel m_propertyPanel;          ///< Property editor for node properties
+      int m_graphId;                                ///< ID in BTNodeGraphManager; -1 if not loaded
+      std::string m_filePath;                       ///< Path that was loaded
+      float m_canvasPanelWidth = 0.75f;            ///< Split ratio: 75% canvas, 25% right panel
+      int m_rightPanelTabSelection = 0;             ///< 0 = Palette, 1 = Properties
+      ImVec2 m_canvasScreenPos = ImVec2(0, 0);     ///< Screen position of canvas for drag-drop coordinate transformation
+      std::unique_ptr<ExecutionTestPanel> m_executionTestPanel;  ///< REUSED: Simulation results panel
+      std::unique_ptr<GraphExecutionTracer> m_lastTracer;        ///< Last simulation trace for results display
 
-     // Phase 41 — Framework Integration
-     /// Adapter document implementing IGraphDocument for BehaviorTree graphs
-     std::unique_ptr<BehaviorTreeGraphDocument> m_document;
+      // Phase 41 — Framework Integration
+      /// Adapter document implementing IGraphDocument for BehaviorTree graphs
+      std::unique_ptr<BehaviorTreeGraphDocument> m_document;
 
-     /// Unified framework for toolbar and modal management (Phase 41)
-     /// Handles Save/SaveAs/Browse buttons and centralized modals
-     std::unique_ptr<CanvasFramework> m_framework;
+      /// Unified framework for toolbar and modal management (Phase 41)
+      /// Handles Save/SaveAs/Browse buttons and centralized modals
+      std::unique_ptr<CanvasFramework> m_framework;
+
+      /// ImNodes rendering adapter for BehaviorTree (Phase 50.3)
+      std::unique_ptr<BehaviorTreeImNodesAdapter> m_imNodesAdapter;
 
     // Layout rendering helpers
     void RenderLayoutWithTabs();

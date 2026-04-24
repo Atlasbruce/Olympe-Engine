@@ -14,7 +14,8 @@
 #include "../json_helper.h"
 
 namespace Olympe {
-namespace NodeGraph {
+
+using Olympe::NodeGraphTypes::GraphDocument;
 
 /**
  * @class GraphMigrator
@@ -52,5 +53,4 @@ private:
     static json MigrateV1BlueprintToV2(const json& v1);
 };
 
-} // namespace NodeGraph
 } // namespace Olympe

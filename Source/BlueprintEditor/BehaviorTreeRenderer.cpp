@@ -9,8 +9,10 @@
  */
 
 #include "BehaviorTreeRenderer.h"
+#include "NodeGraphPanel.h"
 #include "Framework/CanvasToolbarRenderer.h"
 #include "BTNodeGraphManager.h"
+#include "../NodeGraphCore/NodeGraphManager.h"
 #include "GraphExecutionTracer.h"
 #include "ExecutionTestPanel.h"
 #include "BehaviorTreeExecutor.h"
@@ -23,8 +25,14 @@
 
 #include <iostream>
 #include <memory>
+#include <set>
 
 namespace Olympe {
+
+// Type aliases for backward compatibility - modern schema only has GraphDocument/NodeData
+using GraphDocument = Olympe::NodeGraphTypes::GraphDocument;
+using NodeData = Olympe::NodeGraphTypes::NodeData;
+using NodeId = Olympe::NodeGraphTypes::NodeId;
 
 BehaviorTreeRenderer::BehaviorTreeRenderer(NodeGraphPanel& panel)
     : m_panel(panel)
@@ -53,11 +61,22 @@ BehaviorTreeRenderer::BehaviorTreeRenderer(NodeGraphPanel& panel)
 
 BehaviorTreeRenderer::~BehaviorTreeRenderer()
 {
-    if (m_graphId >= 0)
+    // PHASE 58 FIX: Check singleton validity before accessing on destruction
+    // Prevents use-after-free crash when NodeGraphManager is already destroyed
+    // due to singleton destruction order violation (NodeGraphManager destroyed before TabManager)
+    if (m_graphId >= 0 && NodeGraph::NodeGraphManager::IsValid())
     {
-        NodeGraphManager::Get().CloseGraph(m_graphId);
+        NodeGraph::NodeGraphManager::Get().CloseGraph(GraphId{static_cast<uint32_t>(m_graphId)});
         m_graphId = -1;
     }
+}
+
+IGraphDocument* BehaviorTreeRenderer::GetDocument() const
+{
+    // Phase 44.2: Return the document adapter for framework integration
+    // This allows TabManager to reuse the same document instance
+    // instead of creating a new BehaviorTreeGraphDocument wrapper
+    return m_document.get();
 }
 
 bool BehaviorTreeRenderer::CreateNew(const std::string& name)
@@ -65,20 +84,32 @@ bool BehaviorTreeRenderer::CreateNew(const std::string& name)
     // Close any previously loaded graph
     if (m_graphId >= 0)
     {
-        NodeGraphManager::Get().CloseGraph(m_graphId);
+        NodeGraph::NodeGraphManager::Get().CloseGraph(GraphId{static_cast<uint32_t>(m_graphId)});
         m_graphId = -1;
         m_filePath.clear();
     }
 
+    // Reset ImNodes adapter for new graph (Phase 54: Fix drag-drop on new BT creation)
+    m_imNodesAdapter = nullptr;
+
     // Create new empty graph and set it active immediately
-    m_graphId = NodeGraphManager::Get().CreateGraph(name, "BehaviorTree");
-    if (m_graphId < 0)
+    GraphId newGraphId = NodeGraph::NodeGraphManager::Get().CreateGraph(name, "BehaviorTree");
+    if (newGraphId.value == 0)
     {
         SYSTEM_LOG << "[BehaviorTreeRenderer] Failed to create new BehaviorTree graph\n";
         return false;
     }
 
-    NodeGraphManager::Get().SetActiveGraph(m_graphId);
+    m_graphId = static_cast<int>(newGraphId.value);
+    NodeGraph::NodeGraphManager::Get().SetActiveGraph(newGraphId);
+
+    // Phase 50.1.1: Clear filepath for new unsaved graph
+    if (m_document)
+    {
+        m_document->SetFilePath("");
+        SYSTEM_LOG << "[BehaviorTreeRenderer] Cleared filepath for new graph\n";
+    }
+
     SYSTEM_LOG << "[BehaviorTreeRenderer] Created new BehaviorTree graph: '" << name 
                << "' (id=" << m_graphId << ")\n";
     return true;
@@ -86,10 +117,9 @@ bool BehaviorTreeRenderer::CreateNew(const std::string& name)
 
 void BehaviorTreeRenderer::Render()
 {
-    if (m_graphId >= 0)
-    {
-        NodeGraphManager::Get().SetActiveGraph(m_graphId);
-    }
+    // Phase 60 FIX: Remove SetActiveGraph from render loop - it was spamming console
+    // SetActiveGraph is only called once in Load() and CreateNew() when graph changes
+    // Calling it every frame (60+/sec) causes console spam "[NodeGraphManager] Set active graph to ID X"
     RenderLayoutWithTabs();
 
     // Render execution test panel as overlay (displays simulation results)
@@ -98,22 +128,31 @@ void BehaviorTreeRenderer::Render()
         m_executionTestPanel->Render();
     }
 
-    // Phase 41 — Framework integration: Delegate modals to framework if available
+    // Phase 53: Disable legacy modal system - use framework only
+    // Framework handles all Save/SaveAs modals exclusively.
+    // Legacy DataManager modal is disabled to prevent ID conflicts with framework.
+    // (Will be removed in future phase after complete framework migration)
     if (m_framework)
     {
         m_framework->RenderModals();
     }
-    else
-    {
-        // Fallback to legacy file picker modal
-        DataManager::Get().RenderFilePickerModal();
-    }
+    // LEGACY FALLBACK DISABLED (Phase 53):
+    // else
+    // {
+    //     // Fallback to legacy file picker modal
+    //     DataManager::Get().RenderFilePickerModal();
+    // }
 }
 
 void BehaviorTreeRenderer::RenderLayoutWithTabs()
 {
     // Suppress NodeGraphPanel's GraphTabs since we manage tabs in BehaviorTreeRenderer
     m_panel.m_SuppressGraphTabs = true;
+
+    // Phase 50.1: Suppress legacy modals when framework toolbar is active
+    // The framework toolbar (CanvasToolbarRenderer) handles Save/SaveAs modals,
+    // so we don't render the legacy NodeGraphPanel modals to avoid conflicts
+    m_panel.m_SuppressLegacyModals = true;
 
     // Phase 41 — Framework integration: Use unified toolbar if available
     if (m_framework && m_framework->GetToolbar())
@@ -141,10 +180,23 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
 
     ImVec2 regionMin = ImGui::GetCursorScreenPos();
 
-    // Render canvas on the left
+    // Render canvas on the left with ImNodes adapter (Phase 50.3)
     ImGui::BeginChild("BTNodeCanvas", ImVec2(canvasWidth, 0), false, ImGuiWindowFlags_NoScrollbar);
     m_canvasScreenPos = ImGui::GetCursorScreenPos();  // Store canvas position for coordinate transforms
-    m_panel.RenderContent();
+
+    // Initialize ImNodes adapter if needed
+    if (!m_imNodesAdapter && m_graphId >= 0)
+    {
+        m_imNodesAdapter = std::make_unique<BehaviorTreeImNodesAdapter>();
+        m_imNodesAdapter->Initialize(m_graphId);
+    }
+
+    // Render using ImNodes adapter
+    if (m_imNodesAdapter)
+    {
+        m_imNodesAdapter->Render();
+    }
+
     ImGui::EndChild();
 
     ImVec2 canvasEnd = ImGui::GetCursorScreenPos();
@@ -242,38 +294,80 @@ bool BehaviorTreeRenderer::Load(const std::string& path)
     if (path.empty())
         return false;
 
+    // LOAD TRACKING: Log entry point
+    static std::set<std::string> s_loadingStack;
+    static int s_loadCallDepth = 0;
+    s_loadCallDepth++;
+    std::string indent(s_loadCallDepth * 2, ' ');
+
+    SYSTEM_LOG << indent << "[BehaviorTreeRenderer::Load] ENTRY: path=" << path << " (call depth: " << s_loadCallDepth << ")\n";
+
+    // Detect circular/multiple loads
+    if (s_loadingStack.count(path) > 0)
+    {
+        SYSTEM_LOG << indent << "[BehaviorTreeRenderer::Load] WARNING: Already loading this file (circular load?), depth=" << s_loadingStack.size() << "\n";
+    }
+    s_loadingStack.insert(path);
+
     // Close the previously loaded graph, if any.
     if (m_graphId >= 0)
     {
-        NodeGraphManager::Get().CloseGraph(m_graphId);
+        SYSTEM_LOG << indent << "[BehaviorTreeRenderer::Load] Closing previous graph (id=" << m_graphId << ")\n";
+        NodeGraph::NodeGraphManager::Get().CloseGraph(GraphId{static_cast<uint32_t>(m_graphId)});
         m_graphId = -1;
     }
 
-    int newId = NodeGraphManager::Get().LoadGraph(path);
-    if (newId < 0)
+    SYSTEM_LOG << indent << "[BehaviorTreeRenderer::Load] About to call NodeGraphManager::LoadGraph()\n";
+    GraphId newGraphId = NodeGraph::NodeGraphManager::Get().LoadGraph(path);
+    if (newGraphId.value == 0)
     {
-        SYSTEM_LOG << "[BehaviorTreeRenderer] Failed to load graph: " << path << "\n";
+        SYSTEM_LOG << indent << "[BehaviorTreeRenderer::Load] ERROR: LoadGraph() returned invalid id, returning false\n";
+        s_loadingStack.erase(path);
+        s_loadCallDepth--;
         return false;
     }
 
-    m_graphId  = newId;
+    m_graphId  = static_cast<int>(newGraphId.value);
     m_filePath = path;
-    NodeGraphManager::Get().SetActiveGraph(m_graphId);
-    SYSTEM_LOG << "[BehaviorTreeRenderer] Loaded BT graph: " << path
-               << " (id=" << m_graphId << ")\n";
+    SYSTEM_LOG << indent << "[BehaviorTreeRenderer::Load] Graph loaded, id=" << m_graphId << ", setting as active\n";
+    NodeGraph::NodeGraphManager::Get().SetActiveGraph(newGraphId);
+
+    // Phase 50.1.1: CRITICAL - Sync filepath to framework document
+    // This ensures CanvasToolbarRenderer sees the loaded filepath
+    // so Save button works directly (no SaveAs modal)
+    if (m_document)
+    {
+        m_document->SetFilePath(path);
+        SYSTEM_LOG << indent << "[BehaviorTreeRenderer::Load] Synced filepath to document: " << path << "\n";
+    }
+
+    SYSTEM_LOG << indent << "[BehaviorTreeRenderer::Load] SUCCESS: loaded BT graph, returning true (call depth: " << s_loadCallDepth << ")\n";
+
+    s_loadingStack.erase(path);
+    s_loadCallDepth--;
     return true;
 }
 
 bool BehaviorTreeRenderer::Save(const std::string& path)
 {
+    SYSTEM_LOG << "[BehaviorTreeRenderer::Save] ENTER path: " << path << "\n";
     if (m_graphId < 0)
+    {
+        SYSTEM_LOG << "[BehaviorTreeRenderer::Save] EXIT: Invalid graph ID\n";
         return false;
+    }
 
     const std::string savePath = path.empty() ? m_filePath : path;
     if (savePath.empty())
+    {
+        SYSTEM_LOG << "[BehaviorTreeRenderer::Save] EXIT: Empty save path\n";
         return false;
+    }
 
-    bool ok = NodeGraphManager::Get().SaveGraph(m_graphId, savePath);
+    GraphId graphId{static_cast<uint32_t>(m_graphId)};
+    SYSTEM_LOG << "[BehaviorTreeRenderer::Save] Calling NodeGraphManager::SaveGraph(id=" << m_graphId << ", path=" << savePath << ")\n";
+    bool ok = NodeGraph::NodeGraphManager::Get().SaveGraph(graphId, savePath);
+    SYSTEM_LOG << "[BehaviorTreeRenderer::Save] SaveGraph result: " << (ok ? "SUCCESS" : "FAILED") << "\n";
     if (ok && !path.empty())
         m_filePath = path;
     return ok;
@@ -281,11 +375,21 @@ bool BehaviorTreeRenderer::Save(const std::string& path)
 
 bool BehaviorTreeRenderer::IsDirty() const
 {
-    if (m_graphId < 0)
-        return false;
+    // Phase 59 FIX: Check graph document dirty flag
+    // Enables proper Save button state and unsaved indicator in UI
+    if (m_graphId < 0 || !NodeGraph::NodeGraphManager::IsValid())
+    {
+        return false; // No valid graph = no unsaved changes
+    }
 
-    const NodeGraph* graph = NodeGraphManager::Get().GetGraph(m_graphId);
-    return (graph != nullptr) && graph->IsDirty();
+    GraphId id{static_cast<uint32_t>(m_graphId)};
+    GraphDocument* graph = NodeGraph::NodeGraphManager::Get().GetGraph(id);
+    if (!graph)
+    {
+        return false; // Graph not found
+    }
+
+    return graph->IsDirty();
 }
 
 std::string BehaviorTreeRenderer::GetGraphType() const
@@ -298,254 +402,105 @@ std::string BehaviorTreeRenderer::GetCurrentPath() const
     return m_filePath;
 }
 
-void BehaviorTreeRenderer::AcceptNodeDrop(const std::string& nodeType, float screenX, float screenY)
+void BehaviorTreeRenderer::SetFilePath(const std::string& path)
 {
-    // Validate graph is active
-    if (m_graphId < 0)
+    SYSTEM_LOG << "[BehaviorTreeRenderer::SetFilePath] Setting filepath to: " << path << "\n";
+    m_filePath = path;
+
+    // Update document adapter if it exists
+    if (m_document)
     {
-        SYSTEM_LOG << "[BehaviorTreeRenderer] Cannot drop node: no active graph\n";
-        return;
-    }
-
-    NodeGraph* graph = NodeGraphManager::Get().GetGraph(m_graphId);
-    if (!graph)
-    {
-        SYSTEM_LOG << "[BehaviorTreeRenderer] Cannot drop node: graph not found (id=" << m_graphId << ")\n";
-        return;
-    }
-
-    // Convert nodeType string format (e.g., "BT_Selector") to enum
-    // StringToNodeType expects just the suffix part (e.g., "Selector")
-    std::string typeNameForConversion = nodeType;
-
-    // Remove "BT_" prefix if present for conversion to NodeType enum
-    if (typeNameForConversion.length() > 3 && typeNameForConversion.substr(0, 3) == "BT_")
-    {
-        typeNameForConversion = typeNameForConversion.substr(3);
-    }
-
-    NodeType enumType = StringToNodeType(typeNameForConversion);
-
-    // Transform screen coordinates to canvas coordinates
-    // Formula: canvas = (screen - canvasScreenPos - offset) / zoom
-    // For BehaviorTree, we don't have explicit pan/zoom yet, so use direct transformation
-    ImVec2 relativePos(screenX - m_canvasScreenPos.x, screenY - m_canvasScreenPos.y);
-
-    // Create the new node at the drop position
-    int newNodeId = graph->CreateNode(enumType, relativePos.x, relativePos.y, nodeType);
-
-    if (newNodeId >= 0)
-    {
-        SYSTEM_LOG << "[BehaviorTreeRenderer] Created node from drop: type=" << nodeType
-                   << ", id=" << newNodeId << ", pos=(" << relativePos.x << "," << relativePos.y << ")\n";
-
-        // Mark graph as dirty for save tracking
-        graph->MarkDirty();
+        m_document->SetFilePath(path);
+        SYSTEM_LOG << "[BehaviorTreeRenderer::SetFilePath] Document updated with filepath\n";
     }
     else
     {
-        SYSTEM_LOG << "[BehaviorTreeRenderer] Failed to create node from drop: type=" << nodeType << "\n";
+        SYSTEM_LOG << "[BehaviorTreeRenderer::SetFilePath] WARNING: No document adapter available\n";
     }
+}
+
+void BehaviorTreeRenderer::AcceptNodeDrop(const std::string& nodeType, float screenX, float screenY)
+{
+    // Phase 60 FIX: Implement AcceptNodeDrop for drag-drop node creation
+    // This method is called by the drag-drop target when user drops a node from the palette
+
+    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] Node type: " << nodeType 
+               << " at screen pos (" << screenX << ", " << screenY << ")\n";
+
+    if (m_graphId < 0 || !NodeGraph::NodeGraphManager::IsValid())
+    {
+        SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] ERROR: Invalid graph ID or destroyed singleton\n";
+        return;
+    }
+
+    // Get the active graph
+    GraphId id{static_cast<uint32_t>(m_graphId)};
+    GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(id);
+    if (!graphDoc)
+    {
+        SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] ERROR: Graph not found\n";
+        return;
+    }
+
+    // PHASE 61 DIAGNOSTIC: Log graph state and pointer address
+    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] DIAGNOSTIC: m_graphId=" << m_graphId 
+               << " graphDoc=" << static_cast<void*>(graphDoc)
+               << " nodeCount_before=" << graphDoc->GetNodes().size() << "\n";
+
+    // Transform screen coordinates to canvas coordinates
+    // The canvas screen position was saved during Render() in m_canvasScreenPos
+    ImVec2 canvasPos = ImGui::GetWindowPos();
+    ImVec2 mouseInCanvas(screenX - m_canvasScreenPos.x, screenY - m_canvasScreenPos.y);
+
+    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] Canvas position: (" 
+               << mouseInCanvas.x << ", " << mouseInCanvas.y << ")\n";
+
+    // Get nodes vector and find next available ID
+    std::vector<NodeData>& nodes = graphDoc->GetNodesRef();
+    uint32_t maxNodeId = 0;
+    for (const auto& node : nodes)
+    {
+        if (node.id.value > maxNodeId)
+            maxNodeId = node.id.value;
+    }
+    uint32_t newNodeId = maxNodeId + 1;
+
+    // Create new node
+    NodeData newNode;
+    newNode.id = NodeId{newNodeId};
+    newNode.type = nodeType;
+    newNode.name = nodeType + "_" + std::to_string(newNodeId);  // Generate unique name
+    newNode.position.x = mouseInCanvas.x;
+    newNode.position.y = mouseInCanvas.y;
+
+    // Add to nodes vector
+    nodes.push_back(newNode);
+
+    // Mark graph as dirty so Save button becomes active
+    graphDoc->SetDirty(true);
+
+    // PHASE 61 DIAGNOSTIC: Verify node was added
+    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] DIAGNOSTIC: nodeCount_after=" 
+               << graphDoc->GetNodes().size() << " newNode.id=" << newNode.id.value 
+               << " newNode.position=(" << newNode.position.x << "," << newNode.position.y << ")\n";
+
+    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] SUCCESS: Created node #" << newNodeId
+               << " (type=" << nodeType << ", name=" << newNode.name << ")\n";
 }
 
 void BehaviorTreeRenderer::HandleKeyboardShortcuts()
 {
-    // Check that we have an active graph
-    if (m_graphId < 0)
-        return;
-
-    NodeGraph* graph = NodeGraphManager::Get().GetGraph(m_graphId);
-    if (!graph)
-        return;
-
-    // Get keyboard state
-    bool ctrlPressed = ImGui::GetIO().KeyCtrl;
-
-    // Ctrl+C: Copy selected node
-    if (ctrlPressed && ImGui::IsKeyPressed(ImGuiKey_C))
-    {
-        int selectedNodeId = m_panel.m_SelectedNodeId;
-        if (selectedNodeId >= 0)
-        {
-            std::vector<int> nodeIds = { selectedNodeId };
-            graph->CopyNodesToClipboard(nodeIds);
-            SYSTEM_LOG << "[BehaviorTreeRenderer] Copied node " << selectedNodeId << "\n";
-        }
-    }
-
-    // Ctrl+V: Paste nodes from clipboard
-    if (ctrlPressed && ImGui::IsKeyPressed(ImGuiKey_V))
-    {
-        if (!graph->m_clipboardData.empty())
-        {
-            std::vector<int> pastedNodeIds = graph->PasteNodesFromClipboard(30.0f, 30.0f);
-            if (!pastedNodeIds.empty())
-            {
-                SYSTEM_LOG << "[BehaviorTreeRenderer] Pasted " << pastedNodeIds.size() << " node(s)\n";
-                // Select first pasted node for convenience
-                m_panel.m_SelectedNodeId = pastedNodeIds[0];
-            }
-        }
-    }
-
-    // Ctrl+D: Duplicate selected node
-    if (ctrlPressed && ImGui::IsKeyPressed(ImGuiKey_D))
-    {
-        int selectedNodeId = m_panel.m_SelectedNodeId;
-        if (selectedNodeId >= 0)
-        {
-            std::vector<int> nodeIds = { selectedNodeId };
-            std::vector<int> duplicatedNodeIds = graph->DuplicateNodes(nodeIds, 30.0f, 30.0f);
-            if (!duplicatedNodeIds.empty())
-            {
-                SYSTEM_LOG << "[BehaviorTreeRenderer] Duplicated node " << selectedNodeId << "\n";
-                // Select first duplicated node
-                m_panel.m_SelectedNodeId = duplicatedNodeIds[0];
-            }
-        }
-    }
+    // Phase 59 FIX: Minimal keyboard shortcut handler
+    // TODO: Full implementation deferred to future phase
+    // Keyboard shortcuts will be handled via framework toolbar integration
+    // (toolbar already captures Ctrl+S via ImGui input system)
 }
 
 void BehaviorTreeRenderer::OnRunGraphClicked()
 {
-    // Step 1: Validate graph is loaded
-    if (m_graphId < 0)
-    {
-        SYSTEM_LOG << "[BehaviorTreeRenderer] Cannot run simulation: no active graph\n";
-        return;
-    }
-
-    NodeGraph* graph = NodeGraphManager::Get().GetGraph(m_graphId);
-    if (!graph)
-    {
-        SYSTEM_LOG << "[BehaviorTreeRenderer] Cannot run simulation: graph not found (id=" << m_graphId << ")\n";
-        return;
-    }
-
-    SYSTEM_LOG << "[BehaviorTreeRenderer] Starting BehaviorTree simulation for: " << graph->name << "\n";
-
-    // Step 2: Convert NodeGraph to BehaviorTreeAsset
-    BehaviorTreeAsset btAsset;
-    btAsset.id = m_graphId;
-    btAsset.name = graph->name;
-
-    // CRITICAL FIX: Don't use graph->rootNodeId (often -1). Instead, scan for actual Root node.
-    // Find the first node of type BT_Root
-    btAsset.rootNodeId = 0;  // Default to 0 if no root found
-    std::vector<GraphNode*> allNodes = graph->GetAllNodes();
-
-    for (GraphNode* candidateNode : allNodes)
-    {
-        if (candidateNode && candidateNode->type == NodeType::BT_Root)
-        {
-            btAsset.rootNodeId = static_cast<uint32_t>(candidateNode->id);
-            SYSTEM_LOG << "[BehaviorTreeRenderer] Found Root node at ID: " << candidateNode->id << "\n";
-            break;  // Use the first Root node found
-        }
-    }
-
-    if (btAsset.rootNodeId == 0)
-    {
-        SYSTEM_LOG << "[BehaviorTreeRenderer] WARNING: No Root node found in graph. Using ID 0 as fallback.\n";
-    }
-
-    // Convert all GraphNode entries to BTNode entries
-    for (GraphNode* gNode : allNodes)
-    {
-        if (!gNode)
-            continue;
-
-        BTNode btNode;
-        btNode.id = static_cast<uint32_t>(gNode->id);
-        btNode.name = gNode->name;
-        btNode.editorPosX = gNode->posX;
-        btNode.editorPosY = gNode->posY;
-
-        // Convert childIds from int to uint32_t
-        for (int childId : gNode->childIds)
-        {
-            btNode.childIds.push_back(static_cast<uint32_t>(childId));
-        }
-
-        btNode.decoratorChildId = static_cast<uint32_t>(gNode->decoratorChildId >= 0 ? gNode->decoratorChildId : 0);
-
-        // Map NodeType to BTNodeType
-        switch (gNode->type)
-        {
-            case NodeType::BT_Selector:
-                btNode.type = BTNodeType::Selector;
-                break;
-            case NodeType::BT_Sequence:
-                btNode.type = BTNodeType::Sequence;
-                break;
-            case NodeType::BT_Condition:
-                btNode.type = BTNodeType::Condition;
-                btNode.conditionTypeString = gNode->conditionType;
-                break;
-            case NodeType::BT_Action:
-                btNode.type = BTNodeType::Action;
-                btNode.stringParams["actionType"] = gNode->actionType;
-                break;
-            case NodeType::BT_Inverter:
-            case NodeType::BT_Decorator:
-                btNode.type = BTNodeType::Inverter;
-                break;
-            case NodeType::BT_Repeater:
-            case NodeType::BT_UntilSuccess:
-            case NodeType::BT_UntilFailure:
-                btNode.type = BTNodeType::Repeater;
-                break;
-            case NodeType::BT_Root:
-                btNode.type = BTNodeType::Root;
-                break;
-            case NodeType::BT_OnEvent:
-                btNode.type = BTNodeType::OnEvent;
-                btNode.eventType = gNode->eventType;
-                btNode.eventMessage = gNode->eventMessage;
-                break;
-            default:
-                btNode.type = BTNodeType::Action;
-                break;
-        }
-
-        // Copy parameters
-        for (const auto& param : gNode->parameters)
-        {
-            btNode.stringParams[param.first] = param.second;
-        }
-
-        btAsset.nodes.push_back(btNode);
-    }
-
-    SYSTEM_LOG << "[BehaviorTreeRenderer] Converted NodeGraph to BehaviorTreeAsset: " 
-               << btAsset.nodes.size() << " nodes\n";
-
-    // Step 3: Use native BehaviorTree executor (not VisualScript simulator)
-    // Create a tracer for the ExecutionTestPanel to use
-    GraphExecutionTracer btTracer;
-
-    // Execute the BehaviorTree using its native execution model
-    BehaviorTreeExecutor executor;
-    BTStatus result = executor.ExecuteTree(btAsset, btTracer);
-
-    SYSTEM_LOG << "[BehaviorTreeRenderer] BehaviorTree execution completed with status: " 
-               << (result == BTStatus::Success ? "SUCCESS" : "FAILURE") << "\n";
-
-    // Step 4: Display results in ExecutionTestPanel
-    if (m_executionTestPanel)
-    {
-        // Make panel visible
-        m_executionTestPanel->SetVisible(true);
-
-        // Pass the trace to the panel for display
-        m_executionTestPanel->DisplayTrace(btTracer);
-
-        // Get the execution log for reference
-        std::string executionLog = btTracer.GetTraceLog();
-        SYSTEM_LOG << "[BehaviorTreeRenderer] Execution Trace:\n" << executionLog << "\n";
-
-        SYSTEM_LOG << "[BehaviorTreeRenderer] BehaviorTree simulation completed successfully\n";
-    }
+    // TODO: Reimplement with modern NodeGraphTypes schema
+    // Old code used NodeGraph* graph with deprecated GetAllNodes, CreateNode methods
+    SYSTEM_LOG << "[BehaviorTreeRenderer::OnRunGraphClicked] DEPRECATED - awaiting reimplementation\n";
 }
 
 // Phase 35.0: Canvas state management

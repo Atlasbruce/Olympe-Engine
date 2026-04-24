@@ -19,6 +19,9 @@ namespace NodeGraph {
 // Singleton
 // ============================================================================
 
+// PHASE 58 FIX: Static sentinel to track singleton destruction state
+bool NodeGraphManager::s_isDestroyed = false;
+
 NodeGraphManager& NodeGraphManager::Get()
 {
     static NodeGraphManager instance;
@@ -28,10 +31,21 @@ NodeGraphManager& NodeGraphManager::Get()
 NodeGraphManager::NodeGraphManager()
     : m_nextGraphId(1)
 {
+    // PHASE 58 FIX: Initialize destruction sentinel on construction
+    s_isDestroyed = false;
 }
 
 NodeGraphManager::~NodeGraphManager()
 {
+    // PHASE 58 FIX: Mark singleton as destroyed before cleanup
+    // This prevents other destructors from accessing this singleton after it's gone
+    s_isDestroyed = true;
+}
+
+bool NodeGraphManager::IsValid()
+{
+    // PHASE 58 FIX: Check if singleton is still valid and safe to access
+    return !s_isDestroyed;
 }
 
 // ============================================================================
@@ -92,7 +106,7 @@ GraphId NodeGraphManager::LoadGraph(const std::string& filepath)
     return newId;
 }
 
-bool NodeGraphManager::SaveGraph(GraphId id, const std::string& filepath)
+bool NodeGraphManager::SaveGraph(const GraphId& id, const std::string& filepath)
 {
     auto it = m_graphs.find(id);
     if (it == m_graphs.end())
@@ -100,40 +114,40 @@ bool NodeGraphManager::SaveGraph(GraphId id, const std::string& filepath)
         SYSTEM_LOG << "[NodeGraphManager] Cannot save: graph " << id.value << " not found" << std::endl;
         return false;
     }
-    
+
     json j = it->second->ToJson();
-    
+
     if (!JsonHelper::SaveJsonToFile(filepath, j, 2))
     {
         SYSTEM_LOG << "[NodeGraphManager] Failed to save graph to " << filepath << std::endl;
         return false;
     }
-    
+
     it->second->SetDirty(false);
-    
+
     SYSTEM_LOG << "[NodeGraphManager] Saved graph " << id.value << " to " << filepath << std::endl;
-    
+
     return true;
 }
 
-bool NodeGraphManager::CloseGraph(GraphId id)
+bool NodeGraphManager::CloseGraph(const GraphId& id)
 {
     auto it = m_graphs.find(id);
     if (it == m_graphs.end())
     {
         return false;
     }
-    
+
     m_graphs.erase(it);
     m_graphNames.erase(id);
-    
+
     // Remove from order
     auto orderIt = std::find(m_graphOrder.begin(), m_graphOrder.end(), id);
     if (orderIt != m_graphOrder.end())
     {
         m_graphOrder.erase(orderIt);
     }
-    
+
     // Update active graph if closed
     if (m_activeGraphId == id)
     {
@@ -146,9 +160,9 @@ bool NodeGraphManager::CloseGraph(GraphId id)
             m_activeGraphId = GraphId{0};
         }
     }
-    
+
     SYSTEM_LOG << "[NodeGraphManager] Closed graph " << id.value << std::endl;
-    
+
     return true;
 }
 
@@ -156,12 +170,17 @@ bool NodeGraphManager::CloseGraph(GraphId id)
 // Active Graph Management
 // ========================================================================
 
-void NodeGraphManager::SetActiveGraph(GraphId id)
+void NodeGraphManager::SetActiveGraph(const GraphId& id)
 {
     auto it = m_graphs.find(id);
     if (it != m_graphs.end())
     {
         m_activeGraphId = id;
+        SYSTEM_LOG << "[NodeGraphManager] Set active graph to ID " << id.value << std::endl;
+    }
+    else
+    {
+        SYSTEM_LOG << "[NodeGraphManager] WARNING: SetActiveGraph called with non-existent graph ID " << id.value << std::endl;
     }
 }
 

@@ -14,6 +14,9 @@
 #include "EntityPrefabEditor/EntityPrefabRenderer.h"
 #include "EntityPrefabEditor/PrefabCanvas.h"
 #include "EntityPrefabEditor/EntityPrefabGraphDocument.h"
+#include "PlaceholderEditor/PlaceholderGraphRenderer.h"
+#include "PlaceholderEditor/PlaceholderGraphDocument.h"
+#include "PlaceholderEditor/PlaceholderCanvas.h"
 #include "Framework/VisualScriptGraphDocument.h"
 #include "Framework/BehaviorTreeGraphDocument.h"
 #include "Framework/CanvasModalRenderer.h"
@@ -105,7 +108,7 @@ std::string TabManager::DetectGraphType(const std::string& filePath)
     if (root.contains("graphType") && root["graphType"].is_string())
     {
         std::string gt = root["graphType"].get<std::string>();
-        if (gt == "VisualScript" || gt == "BehaviorTree" || gt == "AnimGraph")
+        if (gt == "VisualScript" || gt == "BehaviorTree" || gt == "AnimGraph" || gt == "Placeholder")
             return gt;
     }
     if (root.contains("blueprintType") && root["blueprintType"].is_string())
@@ -163,31 +166,28 @@ std::string TabManager::CreateNewTab(const std::string& graphType)
         VisualScriptRenderer* r = new VisualScriptRenderer();
         tab.renderer = r;
 
-        // Create document adapter for VisualScript (pass the wrapped panel)
-        VisualScriptGraphDocument* doc = new VisualScriptGraphDocument(&r->GetPanel());
-        tab.document = doc;
+        // Phase 44.2: FIX - Use the renderer's internal document adapter
+        // instead of creating a new VisualScriptGraphDocument.
+        // This ensures framework and tab system use the same document object.
+        tab.document = r->GetDocument();
 
         SYSTEM_LOG << "[TabManager::CreateNewTab] Created new VisualScript tab with document adapter\n";
     }
     else if (graphType == "EntityPrefab")
     {
-        static EntityPrefabGraphDocument s_epDocument;
-        static PrefabCanvas s_epCanvas;
-        static bool s_epCanvasInit = false;
-        if (!s_epCanvasInit)
-        {
-            s_epCanvas.Initialize(&s_epDocument);
-            s_epCanvasInit = true;
-        }
+        // PHASE 54 FIX: Allocate document and canvas on heap per tab
+        // Prevents corruption from deleting static objects in ~EditorTab()
+        EntityPrefabGraphDocument* epDoc = new EntityPrefabGraphDocument();
+        PrefabCanvas* epCanvas = new PrefabCanvas();
+        epCanvas->Initialize(epDoc);
 
-        EntityPrefabRenderer* r = new EntityPrefabRenderer(s_epCanvas);
+        EntityPrefabRenderer* r = new EntityPrefabRenderer(*epCanvas);
         tab.renderer = r;
 
-        // Create document adapter for EntityPrefab
-        EntityPrefabGraphDocument* doc = new EntityPrefabGraphDocument();
-        tab.document = doc;
+        // Tab owns the document pointer - will be deleted in ~EditorTab
+        tab.document = epDoc;
 
-        SYSTEM_LOG << "[TabManager::CreateNewTab] Created new EntityPrefab tab with document adapter\n";
+        SYSTEM_LOG << "[TabManager::CreateNewTab] Created new EntityPrefab tab with heap-allocated document\n";
     }
     else if (graphType == "BehaviorTree")
     {
@@ -204,15 +204,28 @@ std::string TabManager::CreateNewTab(const std::string& graphType)
         r->CreateNew(nameSS.str());
         tab.renderer = r;
 
-        // Create document adapter for BehaviorTree
-        BehaviorTreeGraphDocument* doc = new BehaviorTreeGraphDocument(r);
-        tab.document = doc;
+        // Phase 44.2: FIX - Use the renderer's internal document adapter
+        // instead of creating a new BehaviorTreeGraphDocument.
+        // This ensures framework and tab system use the same document object.
+        tab.document = r->GetDocument();
 
         SYSTEM_LOG << "[TabManager::CreateNewTab] Created new BehaviorTree tab with document adapter\n";
     }
+    else if (graphType == "Placeholder")
+    {
+        // Phase 2: Placeholder test type for framework validation
+        // NOTE: Don't create document/canvas here - let PlaceholderGraphRenderer handle it in CreateNewGraph()
+        PlaceholderGraphRenderer* r = new PlaceholderGraphRenderer();
+        r->CreateNewGraph();  // Initialize with sample data (creates document + canvas internally)
+
+        tab.renderer = r;
+        tab.document = r->GetDocument();  // Get the document created by renderer
+
+        SYSTEM_LOG << "[TabManager::CreateNewTab] Created new Placeholder tab with sample graph\n";
+    }
     else
     {
-        //SYSTEM_LOG << "[TabManager] CreateNewTab: unsupported type '" << graphType << "'\n";
+        // Unsupported graph type
         return "";
     }
 
@@ -227,19 +240,21 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
     if (filePath.empty())
         return "";
 
-    // Check if already open
+    // PHASE 51: LOAD CACHING - Check if already open
+    SYSTEM_LOG << "[TabManager::OpenFileInTab] ENTRY: filePath=" << filePath << "\n";
+
     for (size_t i = 0; i < m_tabs.size(); ++i)
     {
         if (m_tabs[i].filePath == filePath)
         {
+            SYSTEM_LOG << "[TabManager::OpenFileInTab] File already open in tab: " << m_tabs[i].tabID << ", activating\n";
             SetActiveTab(m_tabs[i].tabID);
-            //SYSTEM_LOG << "[TabManager] File already open, activating: " << filePath << "\n";
             return m_tabs[i].tabID;
         }
     }
 
     std::string graphType = DetectGraphType(filePath);
-    //SYSTEM_LOG << "[TabManager] Opening file: " << filePath << " (type=" << graphType << ")\n";
+    SYSTEM_LOG << "[TabManager::OpenFileInTab] File not open, detected type: " << graphType << "\n";
 
     EditorTab tab;
     tab.tabID       = NextTabID();
@@ -252,17 +267,21 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
     if (graphType == "VisualScript")
     {
         VisualScriptRenderer* r = new VisualScriptRenderer();
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] VisualScriptRenderer created for tab: " << tab.tabID << "\n";
+
         if (!r->Load(filePath))
         {
+            SYSTEM_LOG << "[TabManager::OpenFileInTab] ERROR: VisualScriptRenderer::Load() failed for " << filePath << "\n";
             delete r;
-            //SYSTEM_LOG << "[TabManager] Failed to load VS file: " << filePath << "\n";
             return "";
         }
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] VisualScriptRenderer::Load() SUCCESS\n";
         tab.renderer = r;
 
-        // Create document adapter for VisualScript (pass the wrapped panel)
-        VisualScriptGraphDocument* doc = new VisualScriptGraphDocument(&r->GetPanel());
-        tab.document = doc;
+        // Phase 44.2: FIX - Use the renderer's internal document adapter
+        // instead of creating a new VisualScriptGraphDocument.
+        // This ensures framework and tab system use the same document object.
+        tab.document = r->GetDocument();
     }
     else if (graphType == "BehaviorTree")
     {
@@ -279,65 +298,104 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
         }
 
         BehaviorTreeRenderer* r = new BehaviorTreeRenderer(s_btPanel);
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] BehaviorTreeRenderer created for tab: " << tab.tabID << "\n";
+
         if (!r->Load(filePath))
         {
+            SYSTEM_LOG << "[TabManager::OpenFileInTab] ERROR: BehaviorTreeRenderer::Load() failed for " << filePath << "\n";
             delete r;
-            //SYSTEM_LOG << "[TabManager] Failed to load BT file: " << filePath << "\n";
             return "";
         }
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] BehaviorTreeRenderer::Load() SUCCESS\n";
+
         tab.renderer = r;
 
-        // Create document adapter for BehaviorTree
-        BehaviorTreeGraphDocument* doc = new BehaviorTreeGraphDocument(r);
-        tab.document = doc;
+        // Phase 44.2: FIX - Use the renderer's internal document adapter
+        // instead of creating a new BehaviorTreeGraphDocument.
+        // This ensures framework and tab system use the same document object.
+        tab.document = r->GetDocument();
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] BehaviorTree document assigned to tab\n";
     }
     else if (graphType == "EntityPrefab")
     {
-        // EntityPrefabRenderer needs a PrefabCanvas reference.
-        // Similar to BehaviorTree, all EP tabs share the same canvas.
-        static EntityPrefabGraphDocument s_epDocument;
-        static PrefabCanvas s_epCanvas;
-        static bool s_epCanvasInit = false;
-        if (!s_epCanvasInit)
-        {
-            s_epCanvas.Initialize(&s_epDocument);
-            s_epCanvasInit = true;
-        }
+        // PHASE 54 FIX: Allocate document and canvas on heap per tab
+        // Static objects in OpenFileInTab caused double-delete crash:
+        // - delete in EditorTab::~EditorTab() corrupted heap
+        // - Subsequent static destruction crashed on corrupted iterator proxies
+        EntityPrefabGraphDocument* epDoc = new EntityPrefabGraphDocument();
+        PrefabCanvas* epCanvas = new PrefabCanvas();
+        epCanvas->Initialize(epDoc);
 
-        EntityPrefabRenderer* r = new EntityPrefabRenderer(s_epCanvas);
+        EntityPrefabRenderer* r = new EntityPrefabRenderer(*epCanvas);
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] EntityPrefabRenderer created for tab: " << tab.tabID << "\n";
+
         if (!r->Load(filePath))
         {
+            SYSTEM_LOG << "[TabManager::OpenFileInTab] ERROR: EntityPrefabRenderer::Load() failed for " << filePath << "\n";
             delete r;
-            //SYSTEM_LOG << "[TabManager] Failed to load EntityPrefab file: " << filePath << "\n";
+            delete epCanvas;
+            delete epDoc;
             return "";
         }
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] EntityPrefabRenderer::Load() SUCCESS\n";
+
         tab.renderer = r;
 
-        // Create document adapter for EntityPrefab
-        EntityPrefabGraphDocument* doc = new EntityPrefabGraphDocument();
-        tab.document = doc;
+        // Tab owns the document and canvas pointers - will be deleted in ~EditorTab
+        tab.document = epDoc;
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] EntityPrefab document assigned to tab\n";
+    }
+    else if (graphType == "Placeholder")
+    {
+        // Phase 2: Placeholder test type - parallel development
+        // NOTE: Don't create document/canvas here. Let Load() handle it.
+        // This pattern mirrors VisualScriptRenderer which manages its own document.
+        PlaceholderGraphRenderer* r = new PlaceholderGraphRenderer();
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] PlaceholderGraphRenderer created for tab: " << tab.tabID << "\n";
+
+        if (!r->Load(filePath))
+        {
+            SYSTEM_LOG << "[TabManager::OpenFileInTab] ERROR: PlaceholderGraphRenderer::Load() failed for " << filePath << "\n";
+            delete r;
+            return "";
+        }
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] PlaceholderGraphRenderer::Load() SUCCESS\n";
+
+        tab.renderer = r;
+        tab.document = r->GetDocument();  // Use renderer's document like VisualScriptRenderer does
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] Placeholder document assigned to tab\n";
     }
     else
     {
         // Fallback: try as VisualScript
         VisualScriptRenderer* r = new VisualScriptRenderer();
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] Fallback: VisualScriptRenderer created for tab: " << tab.tabID << "\n";
+
         if (!r->Load(filePath))
         {
+            SYSTEM_LOG << "[TabManager::OpenFileInTab] ERROR: Fallback VisualScriptRenderer::Load() failed for " << filePath << "\n";
             delete r;
-            //SYSTEM_LOG << "[TabManager] Unsupported/unknown graph type for: " << filePath << "\n";
             return "";
         }
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] Fallback: VisualScriptRenderer::Load() SUCCESS\n";
+
         tab.graphType = "VisualScript";
         tab.renderer  = r;
 
-        // Create document adapter for fallback VisualScript
-        VisualScriptGraphDocument* doc = new VisualScriptGraphDocument(&r->GetPanel());
-        tab.document = doc;
+        // Use the renderer's internal document adapter for consistency
+        tab.document = r->GetDocument();
     }
 
+    // CRITICAL FIX: Save tabID BEFORE move, as accessing tab.tabID after std::move() is undefined behavior
+    std::string tabIDToReturn = tab.tabID;
+    SYSTEM_LOG << "[TabManager::OpenFileInTab] DEBUG: About to add tab to m_tabs, tabID=" << tabIDToReturn << ", filePath=" << filePath << ", graphType=" << graphType << "\n";
+
     m_tabs.emplace_back(std::move(tab)); //m_tabs.push_back(tab);
-    SetActiveTab(tab.tabID);
-    return tab.tabID;
+    SYSTEM_LOG << "[TabManager::OpenFileInTab] DEBUG: Tab successfully added to m_tabs, total tabs now: " << m_tabs.size() << "\n";
+
+    SetActiveTab(tabIDToReturn);
+    SYSTEM_LOG << "[TabManager::OpenFileInTab] SUCCESS: Returning tabID=" << tabIDToReturn << "\n";
+    return tabIDToReturn;
 }
 
 // ============================================================================
@@ -406,8 +464,10 @@ void TabManager::DestroyTab(size_t index)
         return;
 
     const std::string closedID = m_tabs[index].tabID;
-    delete m_tabs[index].renderer;
-    m_tabs[index].renderer = nullptr;
+    // PHASE 55 FIX: Removed explicit 'delete renderer' - EditorTab destructor handles all cleanup
+    // when m_tabs.erase() is called. Explicit deletion was causing double-delete of renderer
+    // and potentially corrupting the document pointer before destructor tried to delete it.
+    // The EditorTab move semantics and destructor properly manage ownership transfer.
     m_tabs.erase(m_tabs.begin() + static_cast<std::vector<EditorTab>::difference_type>(index));
 
     // Update active tab
@@ -486,9 +546,15 @@ bool TabManager::CloseAllTabs()
 
 bool TabManager::SaveActiveTab()
 {
+    SYSTEM_LOG << "[TabManager::SaveActiveTab] ENTER\n";
     EditorTab* tab = GetActiveTab();
     if (!tab || !tab->renderer)
+    {
+        SYSTEM_LOG << "[TabManager::SaveActiveTab] EXIT: No active tab or renderer\n";
         return false;
+    }
+
+    SYSTEM_LOG << "[TabManager::SaveActiveTab] Active tab: " << tab->displayName << " (type: " << tab->graphType << ")\n";
 
     if (tab->filePath.empty())
     {
@@ -502,7 +568,9 @@ bool TabManager::SaveActiveTab()
 
     //SYSTEM_LOG << "[TabManager] SaveActiveTab: saving tab '" << tab->displayName
     //           << "' to '" << tab->filePath << "'\n";
+    SYSTEM_LOG << "[TabManager::SaveActiveTab] Calling tab->renderer->Save() for: " << tab->filePath << "\n";
     bool ok = tab->renderer->Save(tab->filePath);
+    SYSTEM_LOG << "[TabManager::SaveActiveTab] Save result: " << (ok ? "SUCCESS" : "FAILED") << "\n";
     if (ok)
     {
         tab->isDirty     = false;
@@ -533,18 +601,40 @@ bool TabManager::SaveActiveTabAs(const std::string& path)
     }
 
     bool ok = tab->renderer->Save(path);
-    if (ok)
-    {
-        tab->filePath    = path;
-        tab->isDirty     = false;
-        tab->displayName = DisplayNameFromPath(path);
-    }
-    return ok;
-}
+         if (ok)
+         {
+             tab->filePath    = path;
+             tab->isDirty     = false;
+             tab->displayName = DisplayNameFromPath(path);
+         }
+         return ok;
+     }
 
-// ============================================================================
-// Query
-// ============================================================================
+    // Phase 44.2.1: Unified save notification for framework
+    void TabManager::OnGraphDocumentSaved(IGraphDocument* document, const std::string& filePath)
+    {
+        if (!document || filePath.empty())
+        {
+            return;
+        }
+
+        // Find the tab containing this document and update it
+        for (size_t i = 0; i < m_tabs.size(); ++i)
+        {
+            if (m_tabs[i].document == document)
+            {
+                m_tabs[i].filePath = filePath;
+                m_tabs[i].isDirty = false;
+                m_tabs[i].displayName = DisplayNameFromPath(filePath);
+                SYSTEM_LOG << "[TabManager] Updated tab display name to: " << m_tabs[i].displayName << "\n";
+                break;
+            }
+        }
+    }
+
+     // ============================================================================
+     // Query
+     // ============================================================================
 
 bool TabManager::HasDirtyTabs() const
 {
@@ -663,13 +753,14 @@ void TabManager::RenderTabBar()
         }
     }
 
-    // Render centralized save modal
-    DataManager& dm = DataManager::Get();
-    dm.RenderSaveFilePickerModal();
+    // Phase 44.2 FIX: Render centralized save modal via CanvasModalRenderer (unified dispatcher)
+    // Previously used DataManager::RenderSaveFilePickerModal() which caused desynchronization
+    // because CanvasToolbarRenderer opens modal via CanvasModalRenderer dispatcher (Phase 44.1)
+    CanvasModalRenderer::Get().RenderSaveFilePickerModal();
 
-    // Handle SaveAs result
-    if (!dm.IsSaveFilePickerModalOpen()) {
-        std::string selectedFile = dm.GetSelectedSaveFile();
+    // Handle SaveAs result from unified dispatcher
+    if (!CanvasModalRenderer::Get().IsSaveFileModalOpen()) {
+        std::string selectedFile = CanvasModalRenderer::Get().GetSelectedSaveFilePath();
         if (!selectedFile.empty()) {
             EditorTab* tab = GetActiveTab();
             if (tab && tab->renderer) {
@@ -678,6 +769,7 @@ void TabManager::RenderTabBar()
                     tab->isDirty = false;
                     tab->displayName = DisplayNameFromPath(selectedFile);
                     SYSTEM_LOG << "[TabManager] SaveAs: saved to '" << selectedFile << "'\n";
+                    CanvasModalRenderer::Get().CloseSaveFileModal();
                 } else {
                     SYSTEM_LOG << "[TabManager] SaveAs: FAILED to save to '" << selectedFile << "'\n";
                 }
@@ -767,14 +859,6 @@ void TabManager::RenderTabBar()
         }
 
         ImGui::EndTabBar();
-    }
-
-    // Phase 43: Render framework modals for all graph types
-    // Centralized rendering point for Save/SaveAs/Browse toolbar buttons
-    EditorTab* activeTab = GetActiveTab();
-    if (activeTab && activeTab->renderer)
-    {
-        activeTab->renderer->RenderFrameworkModals();
     }
 }
 

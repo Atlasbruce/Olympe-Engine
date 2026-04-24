@@ -149,8 +149,12 @@ void CanvasFramework::RenderCanvas()
 void CanvasFramework::RenderModals()
 {
     if (!m_toolbar)
+    {
+        SYSTEM_LOG << "[CanvasFramework::RenderModals] ERROR: m_toolbar is null!\n";
         return;
+    }
 
+    //SYSTEM_LOG << "[CanvasFramework::RenderModals] Delegating to toolbar->RenderModals()\n";
     m_toolbar->RenderModals();
 }
 

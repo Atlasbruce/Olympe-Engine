@@ -44,7 +44,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     }
     
     g_BlueprintEditorWindow = SDL_CreateWindow(
-        "Olympe Blueprint Editor Standalone - WYSIWYG Editor",
+        "Olympe Blueprint Editor",
         1920, 1080,
         SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED
     );

@@ -12,6 +12,7 @@
 
 namespace Olympe {
 namespace NodeGraph {
+using namespace NodeGraphTypes;
 
 /**
  * @class MoveNodeCommand

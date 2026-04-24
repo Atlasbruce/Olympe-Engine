@@ -173,9 +173,14 @@ void CanvasModalRenderer::RenderSaveFilePickerModal()
     }
 }
 
-bool CanvasModalRenderer::IsSaveFileModalConfirmed() const
+bool CanvasModalRenderer::IsSaveFileModalConfirmed()
 {
-    return m_saveConfirmed;
+    bool result = m_saveConfirmed;
+    if (m_saveConfirmed)
+    {
+        m_saveConfirmed = false;  // Reset flag to prevent repeated processing
+    }
+    return result;
 }
 
 std::string CanvasModalRenderer::GetSelectedSaveFilePath() const

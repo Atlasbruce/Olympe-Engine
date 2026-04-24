@@ -825,4 +825,24 @@ namespace Olympe
         }
     }
 
+    // =========================================================================
+    // Phase 50.1.4: Temporary stub methods (BehaviorTreeDebugWindow_NodeGraph.cpp pending fix)
+    // These are empty stubs to keep the project compiling until NodeGraphPanel is restored.
+    // =========================================================================
+
+    void BehaviorTreeDebugWindow::InitNodeGraphDebugMode()
+    {
+        // Stub: Real implementation should be in BehaviorTreeDebugWindow_NodeGraph.cpp
+    }
+
+    void BehaviorTreeDebugWindow::ShutdownNodeGraphDebugMode()
+    {
+        // Stub: Real implementation should be in BehaviorTreeDebugWindow_NodeGraph.cpp
+    }
+
+    void BehaviorTreeDebugWindow::RenderNodeGraphDebugPanel()
+    {
+        // Stub: Real implementation should be in BehaviorTreeDebugWindow_NodeGraph.cpp
+    }
+
 }

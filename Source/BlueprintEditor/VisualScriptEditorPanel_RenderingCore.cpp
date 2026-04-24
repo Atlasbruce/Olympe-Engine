@@ -361,50 +361,15 @@ void VisualScriptEditorPanel::RenderToolbar()
 
 void VisualScriptEditorPanel::RenderSaveAsDialog()
 {
-    // Phase 41 — Framework integration: Delegate to centralized framework
-    if (m_framework)
-    {
-        m_framework->RenderModals();
-    }
-    else
-    {
-        // Fallback to legacy modal handling
-        if (m_showSaveAsDialog)
-        {
-            // Use centralized SaveFilePickerModal via DataManager (Phase 40)
-            DataManager& dm = DataManager::Get();
-            std::string suggestedName = m_currentPath.empty() 
-                                        ? "graph" 
-                                        : m_currentPath.substr(m_currentPath.find_last_of("/\\") + 1);
-
-            // Remove extension from suggested name
-            size_t dotPos = suggestedName.rfind('.');
-            if (dotPos != std::string::npos)
-                suggestedName = suggestedName.substr(0, dotPos);
-
-            dm.OpenSaveFilePickerModal(Olympe::SaveFileType::Blueprint, "Gamedata/TaskGraph", suggestedName);
-            m_showSaveAsDialog = false;
-        }
-
-        // Render centralized save modal
-        DataManager& dm = DataManager::Get();
-        dm.RenderSaveFilePickerModal();
-
-        // Handle modal result
-        if (dm.IsSaveFilePickerModalOpen() == false) {
-            std::string selectedFile = dm.GetSelectedSaveFile();
-            if (!selectedFile.empty()) {
-                SYSTEM_LOG << "[VisualScriptEditorPanel] SaveAs dialog confirmed. fullPath='"
-                           << selectedFile << "'\n";
-                if (SaveAs(selectedFile)) {
-                    std::cout << "[VisualScriptEditorPanel] Saved to: " << selectedFile << std::endl;
-                    m_currentPath = selectedFile;
-                } else {
-                    SYSTEM_LOG << "[VisualScriptEditorPanel] Save failed - check directory and permissions\n";
-                }
-            }
-        }
-    }
+    // Phase 53.1 FIX (BUG ROOT CAUSE): DO NOT call m_framework->RenderModals() here!
+    // Modals are rendered centrally by BlueprintEditorGUI AFTER RenderActiveCanvas().
+    // Calling here causes duplicate modals (2 BeginPopupModal with same ID).
+    // NOTE: Modal rendering moved to BlueprintEditorGUI.cpp line 682 for centralized control.
+    // LEGACY FALLBACK DISABLED (Phase 53):
+    // The following legacy code is preserved but disabled for gradual migration:
+    // - DataManager::RenderSaveFilePickerModal()
+    // - Logic to handle modal result and save file
+    // Once framework modal is verified to work reliably, this code will be deleted.
 }
 
 } // namespace Olympe

@@ -9,6 +9,8 @@
 #include "HistoryPanel.h"
 #include "VisualScriptEditorPanel.h"
 #include "VisualScriptRenderer.h"
+#include "BehaviorTreeRenderer.h"
+#include "PlaceholderEditor/PlaceholderGraphRenderer.h"  // Phase 72: For verification output panel
 #include "DebugPanel.h"
 #include "ProfilerPanel.h"
 #include "BTtoVSMigrator.h"
@@ -110,9 +112,9 @@ namespace Olympe
         ImNodesStyle& style = ImNodes::GetStyle();
         style.Flags |= ImNodesStyleFlags_GridLines;
 
-        // Initialize Font Manager and load Font Awesome
-        FontManager::Get().Initialize();
-        FontManager::Get().LoadFontAwesome("Assets/Fonts/fa-solid-900.otf", 16.0f);
+        //// Initialize Font Manager and load Font Awesome
+        //FontManager::Get().Initialize();
+        //FontManager::Get().LoadFontAwesome("Assets/Fonts/fa-solid-900.otf", 16.0f);
 
         // Initialize Asset Browser with Blueprints directory
         m_AssetBrowser.Initialize("Blueprints");
@@ -124,26 +126,26 @@ namespace Olympe
         
         // Initialize new panels
         m_NodeGraphPanel.Initialize();
-        m_EntitiesPanel.Initialize();
-        m_InspectorPanel.Initialize();
+        //m_EntitiesPanel.Initialize();
+        //m_InspectorPanel.Initialize();
         
-        // Initialize template browser panel
-        m_TemplateBrowserPanel = new TemplateBrowserPanel();
-        m_TemplateBrowserPanel->Initialize();
+        //// Initialize template browser panel
+        //m_TemplateBrowserPanel = new TemplateBrowserPanel();
+        //m_TemplateBrowserPanel->Initialize();
         
         // Initialize history panel
         m_HistoryPanel = new HistoryPanel();
         m_HistoryPanel->Initialize();
 
         // Phase 5: Initialize VS editor, debugger, and profiler panels
-        m_VSEditorPanel = new VisualScriptEditorPanel();
-        m_VSEditorPanel->Initialize();
+        //m_VSEditorPanel = new VisualScriptEditorPanel();
+        //m_VSEditorPanel->Initialize();
 
-        m_DebugPanel = new DebugPanel();
-        m_DebugPanel->Initialize();
+        //m_DebugPanel = new DebugPanel();
+        //m_DebugPanel->Initialize();
 
-        m_ProfilerPanel = new ProfilerPanel();
-        m_ProfilerPanel->Initialize();
+        //m_ProfilerPanel = new ProfilerPanel();
+        //m_ProfilerPanel->Initialize();
 
         // Load layout configuration from backend
         auto& backend = BlueprintEditor::Get();
@@ -249,6 +251,9 @@ namespace Olympe
 
                 if (ImGui::MenuItem(ICON_FA_CUBES " New Entity Prefab", "Ctrl+Alt+N"))
                     TabManager::Get().CreateNewTab("EntityPrefab");
+
+                if (ImGui::MenuItem(ICON_FA_CODE_BRANCH " New Placeholder Graph", "Ctrl+Alt+P"))
+                    TabManager::Get().CreateNewTab("Placeholder");
 
                 if (ImGui::MenuItem(ICON_FA_FOLDER_OPEN " Open Blueprint...", "Ctrl+O"))
                 {
@@ -478,7 +483,7 @@ namespace Olympe
             {
                 ImGui::Text("Olympe Blueprint Editor");
                 ImGui::Separator();
-                ImGui::Text("Visual node-based editor for entity blueprints");
+                ImGui::Text("Visual Graph editor");
                 ImGui::Text("Version: 2.0");
                 ImGui::Text("Status: Interactive panels, entity synchronization, full menus");
                 ImGui::Separator();
@@ -561,7 +566,7 @@ namespace Olympe
             if (m_InspectorPanelHeight <= 0.0f)
                 m_InspectorPanelHeight = leftHeight * 0.10f;
 
-            const float kMinSectionHeight = 60.0f;
+            const float kMinSectionHeight = 70.0f;
             const float kSplitterHeight = 4.0f;
 
             // Clamp asset-browser height
@@ -594,6 +599,7 @@ namespace Olympe
             if (ImGui::IsItemHovered())
                 ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
 
+			/* INSPECTOR NOT NEEDED ANYMORE - MERGED INTO ASSET BROWSER TABS
             // ---- Part 2: Inspector (middle) ----
             ImGui::BeginChild("InspectorSection", ImVec2(0, m_InspectorPanelHeight), true);
             if (m_ShowInspector)
@@ -605,7 +611,7 @@ namespace Olympe
             if (ImGui::IsItemActive())
                 m_InspectorPanelHeight += ImGui::GetIO().MouseDelta.y;
             if (ImGui::IsItemHovered())
-                ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+                ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);/**/
 
             // ---- Part 3: Verification Logs (bottom) ----
             ImGui::BeginChild("VerificationLogsSection", ImVec2(0, logsHeight), true);
@@ -613,29 +619,46 @@ namespace Olympe
                 ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Verification Output");
                 ImGui::Separator();
 
-                // Get the active tab renderer and cast to VisualScriptRenderer
+                // Get the active tab renderer and cast to appropriate type
                 TabManager& tabMgr = TabManager::Get();
                 EditorTab* activeTab = tabMgr.GetActiveTab();
 
-                if (activeTab && activeTab->graphType == "VisualScript" && activeTab->renderer)
-                {
-                    // Safe cast to VisualScriptRenderer (which wraps VisualScriptEditorPanel)
-                    VisualScriptRenderer* vsRenderer = 
-                        dynamic_cast<VisualScriptRenderer*>(activeTab->renderer);
+                bool logsRendered = false;
 
-                    if (vsRenderer)
-                    {
-                        // Access the wrapped panel via GetPanel() and render the verification logs
-                        vsRenderer->GetPanel().RenderVerificationLogsPanel();
-                    }
-                    else
-                    {
-                        ImGui::TextDisabled("(Unable to retrieve verification logs - renderer mismatch)");
-                    }
-                }
-                else
+                if (activeTab && activeTab->renderer)
                 {
-                    ImGui::TextDisabled("(Open a VisualScript graph to see verification logs)");
+                    // Phase 72: Support multiple graph types with verification output
+                    if (activeTab->graphType == "VisualScript")
+                    {
+                        // Safe cast to VisualScriptRenderer (which wraps VisualScriptEditorPanel)
+                        VisualScriptRenderer* vsRenderer = 
+                            dynamic_cast<VisualScriptRenderer*>(activeTab->renderer);
+
+                        if (vsRenderer)
+                        {
+                            // Access the wrapped panel via GetPanel() and render the verification logs
+                            vsRenderer->GetPanel().RenderVerificationLogsPanel();
+                            logsRendered = true;
+                        }
+                    }
+                    else if (activeTab->graphType == "Placeholder")
+                    {
+                        // Phase 72: Support PlaceholderGraphRenderer verification output
+                        PlaceholderGraphRenderer* pgRenderer = 
+                            dynamic_cast<PlaceholderGraphRenderer*>(activeTab->renderer);
+
+                        if (pgRenderer)
+                        {
+                            pgRenderer->RenderVerificationLogsPanel();
+                            logsRendered = true;
+                        }
+                    }
+                    // Add more graph types as needed (BehaviorTree, EntityPrefab, etc.)
+                }
+
+                if (!logsRendered)
+                {
+                    ImGui::TextDisabled("(Open a graph to see verification logs)");
                 }
             }
             ImGui::EndChild();
@@ -670,6 +693,16 @@ namespace Olympe
 
             // Active graph canvas
             TabManager::Get().RenderActiveCanvas();
+
+            // Phase 45: Framework modal rendering at proper ImGui timing
+            // Must be after all content rendering for correct ImGui frame ordering
+            {
+                EditorTab* modalTab = TabManager::Get().GetActiveTab();
+                if (modalTab && modalTab->renderer)
+                {
+                    modalTab->renderer->RenderFrameworkModals();
+                }
+            }
         }
         ImGui::EndChild();
 
@@ -688,27 +721,27 @@ namespace Olympe
         if (m_ShowProfiler && m_ProfilerPanel)
             m_ProfilerPanel->Render();
 
-        // Phase 40: Render centralized file picker modals
-        DataManager::Get().RenderFilePickerModal();
+        // Phase 53 Final: Disable legacy DataManager modals - framework handles all modals
+        // DataManager::Get().RenderFilePickerModal();  // DISABLED: Framework modal replaces this
 
-        // Handle file picker modal result (File > Open)
-        if (!DataManager::Get().IsFilePickerModalOpen()) {
-            std::string selectedFile = DataManager::Get().GetSelectedFileFromModal();
-            if (!selectedFile.empty()) {
-                LoadBlueprint(selectedFile);
-            }
-        }
+        // Handle file picker modal result (File > Open) - DISABLED with legacy modal
+        // if (!DataManager::Get().IsFilePickerModalOpen()) {
+        //     std::string selectedFile = DataManager::Get().GetSelectedFileFromModal();
+        //     if (!selectedFile.empty()) {
+        //         LoadBlueprint(selectedFile);
+        //     }
+        // }
 
-        // Render save file picker modal (File > Save As)
-        DataManager::Get().RenderSaveFilePickerModal();
+        // Render save file picker modal (File > Save As) - DISABLED: Framework handles this
+        // DataManager::Get().RenderSaveFilePickerModal();  // DISABLED: Framework modal replaces this
 
-        // Handle save modal result
-        if (!DataManager::Get().IsSaveFilePickerModalOpen()) {
-            std::string selectedFile = DataManager::Get().GetSelectedSaveFile();
-            if (!selectedFile.empty()) {
-                SYSTEM_LOG << "[BlueprintEditorGUI] SaveAs selected: " << selectedFile << "\n";
-            }
-        }
+        // Phase 53 Final: Legacy modal handling removed - framework handles results
+        // if (!DataManager::Get().IsSaveFilePickerModalOpen()) {
+        //     std::string selectedFile = DataManager::Get().GetSelectedSaveFile();
+        //     if (!selectedFile.empty()) {
+        //         SYSTEM_LOG << "[BlueprintEditorGUI] SaveAs selected: " << selectedFile << "\n";
+        //     }
+        // }
     }
 
     // Menu bar is now integrated in the main Render() function
@@ -1007,6 +1040,21 @@ void BlueprintEditorGUI::LoadBlueprint(const std::string& filepath)
     // Fallback: delegate to legacy backend (entity blueprints, etc.)
     if (BlueprintEditor::Get().LoadBlueprint(filepath))
     {
+        // Phase 47B: Synchronize filepath to framework renderer after legacy load
+        // When TabManager::OpenFileInTab() fails but legacy backend loads successfully,
+        // we need to propagate the filepath to the framework renderer so Save button works.
+        EditorTab* activeTab = TabManager::Get().GetActiveTab();
+        if (activeTab && activeTab->renderer)
+        {
+            // For BehaviorTree graphs, cast to BehaviorTreeRenderer and set filepath
+            BehaviorTreeRenderer* btRenderer = dynamic_cast<BehaviorTreeRenderer*>(activeTab->renderer);
+            if (btRenderer)
+            {
+                btRenderer->SetFilePath(filepath);
+                SYSTEM_LOG << "[BlueprintEditorGUI::LoadBlueprint] Phase 47B: Set filepath on BehaviorTreeRenderer\n";
+            }
+        }
+
         // Reset UI state on successful load
         m_SelectedComponentIndex = -1;
         m_NodePositions.clear();
@@ -1300,6 +1348,10 @@ void BlueprintEditorGUI::RenderPreferencesDialog()
         // Ctrl+Alt+N : New Entity Prefab tab
         if (io.KeyCtrl && io.KeyAlt && ImGui::IsKeyPressed(ImGuiKey_N) && !io.KeyShift)
             TabManager::Get().CreateNewTab("EntityPrefab");
+
+        // Ctrl+Alt+P : New Placeholder tab
+        if (io.KeyCtrl && io.KeyAlt && ImGui::IsKeyPressed(ImGuiKey_P) && !io.KeyShift)
+            TabManager::Get().CreateNewTab("Placeholder");
 
         // Ctrl+W : Close active tab
         if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_W) && !io.KeyShift)

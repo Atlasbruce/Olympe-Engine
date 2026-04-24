@@ -9,6 +9,7 @@
 
 namespace Olympe {
 namespace NodeGraph {
+using namespace NodeGraphTypes;
 
 ConnectPinsCommand::ConnectPinsCommand(GraphDocument* graph, PinId fromPin, PinId toPin)
     : m_graph(graph)

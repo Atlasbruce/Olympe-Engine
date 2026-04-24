@@ -1,0 +1,29 @@
+{
+  "blackboard": [],
+  "dataConnections": [],
+  "execConnections": [],
+  "graphType": "VisualScript",
+  "name": "",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "EntryPoint",
+      "params": {
+        "__posX": {
+          "LiteralValue": 206,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 297,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 206,
+        "y": 297
+      },
+      "type": "EntryPoint"
+    }
+  ],
+  "schema_version": 4
+}

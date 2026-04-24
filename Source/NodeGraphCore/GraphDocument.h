@@ -18,10 +18,7 @@
 #include <memory>
 
 namespace Olympe {
-namespace NodeGraph {
-
-// Forward declaration
-class GraphDocument;
+namespace NodeGraphTypes {
 
 /**
  * @class GraphDocument
@@ -31,11 +28,11 @@ class GraphDocument {
 public:
     GraphDocument();
     ~GraphDocument();
-    
+
     // ========================================================================
     // Document Properties
     // ========================================================================
-    
+
     std::string type;
     std::string graphKind;
     NodeId rootNodeId;
@@ -164,15 +161,31 @@ public:
     // ========================================================================
     // Data Access
     // ========================================================================
-    
+
     const std::vector<NodeData>& GetNodes() const { return m_nodes; }
     const std::vector<LinkData>& GetLinks() const { return m_links; }
-    
+
     std::vector<NodeData>& GetNodesRef() { return m_nodes; }
     std::vector<LinkData>& GetLinksRef() { return m_links; }
-    
+
     bool IsDirty() const { return m_isDirty; }
     void SetDirty(bool dirty) { m_isDirty = dirty; }
+
+    // ========================================================================
+    // Backward Compatibility Adapters (for NodeGraphPanel)
+    // ========================================================================
+
+    /**
+     * @brief Get root node ID (first node or rootNodeId field)
+     * @return Root node ID value
+     */
+    int GetRootNodeId() const { return rootNodeId.value; }
+
+    /**
+     * @brief Check if graph has nodes
+     * @return true if empty
+     */
+    bool IsEmpty() const { return m_nodes.empty(); }
 
     // ========================================================================
     // Annotations (Phase 2.0)
@@ -181,12 +194,12 @@ public:
     /**
      * @brief Get node annotations manager (non-const)
      */
-    NodeAnnotationsManager& GetNodeAnnotations() { return m_nodeAnnotations; }
+    Olympe::NodeAnnotationsManager& GetNodeAnnotations() { return m_nodeAnnotations; }
 
     /**
      * @brief Get node annotations manager (const)
      */
-    const NodeAnnotationsManager& GetNodeAnnotations() const { return m_nodeAnnotations; }
+    const Olympe::NodeAnnotationsManager& GetNodeAnnotations() const { return m_nodeAnnotations; }
 
     // ========================================================================
     // Blackboard (Phase 2.1)
@@ -195,12 +208,12 @@ public:
     /**
      * @brief Get blackboard system (non-const)
      */
-    BlackboardSystem& GetBlackboard() { return m_blackboard; }
+    Olympe::BlackboardSystem& GetBlackboard() { return m_blackboard; }
 
     /**
      * @brief Get blackboard system (const)
      */
-    const BlackboardSystem& GetBlackboard() const { return m_blackboard; }
+    const Olympe::BlackboardSystem& GetBlackboard() const { return m_blackboard; }
     
 private:
     // Data members
@@ -212,10 +225,10 @@ private:
     bool m_isDirty = false;
 
     // Phase 2.0 - Node annotations
-    NodeAnnotationsManager m_nodeAnnotations;
+    Olympe::NodeAnnotationsManager m_nodeAnnotations;
 
     // Phase 2.1 - Blackboard system
-    BlackboardSystem m_blackboard;
+    Olympe::BlackboardSystem m_blackboard;
     
     // Helper methods
     bool HasCyclesHelper(NodeId nodeId, std::vector<NodeId>& visited, std::vector<NodeId>& recursionStack) const;
@@ -240,5 +253,5 @@ private:
     );
 };
 
-} // namespace NodeGraph
+} // namespace NodeGraphTypes
 } // namespace Olympe

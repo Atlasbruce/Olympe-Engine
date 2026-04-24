@@ -18,9 +18,9 @@ namespace Olympe
         void Update(float deltaTime);
 
         // Node selection
-        void SelectNode(NodeId nodeId);
+        void SelectNode(PrefabNodeId nodeId);
         void DeselectNode();
-        NodeId GetSelectedNode() const;
+        PrefabNodeId GetSelectedNode() const;
 
         // Panel visibility and layout
         void SetPanelWidth(float width);
@@ -62,7 +62,7 @@ namespace Olympe
 
     private:
         EntityPrefabGraphDocument* m_document = nullptr;
-        NodeId m_selectedNodeId = InvalidNodeId;
+        PrefabNodeId m_selectedNodeId = InvalidNodeId;
         float m_panelWidth = 400.0f;
         float m_panelHeight = 600.0f;
         float m_panelX = 0.0f;

@@ -1784,7 +1784,12 @@ void Initialize(ImNodesContext* context)
     StyleColorsDark(&context->Style);
 }
 
-void Shutdown(ImNodesContext* ctx) { EditorContextFree(ctx->DefaultEditorCtx); }
+void Shutdown(ImNodesContext* ctx)
+{
+    if (ctx == NULL)
+        return;
+    EditorContextFree(ctx->DefaultEditorCtx);
+}
 
 // [SECTION] minimap
 

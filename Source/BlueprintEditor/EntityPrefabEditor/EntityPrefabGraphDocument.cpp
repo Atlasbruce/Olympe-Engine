@@ -6,12 +6,20 @@
 namespace Olympe
 {
     EntityPrefabGraphDocument::EntityPrefabGraphDocument() : m_canvasZoom(1.0f), m_nextNodeId(1) { }
-    EntityPrefabGraphDocument::~EntityPrefabGraphDocument() { }
+    EntityPrefabGraphDocument::~EntityPrefabGraphDocument() 
+    { 
+        // PHASE 53: Explicitly clear all containers to ensure iterator metadata is cleaned up
+        // before nested map destructors run. Prevents corruption of iterator proxy chains.
+        m_parameterSchemas.clear();
+        m_nodes.clear();
+        m_selectedNodes.clear();
+        m_connections.clear();
+    }
 
-    NodeId EntityPrefabGraphDocument::CreateComponentNode(const std::string& componentType)
+    PrefabNodeId EntityPrefabGraphDocument::CreateComponentNode(const std::string& componentType)
     { return CreateComponentNode(componentType, ""); }
 
-    NodeId EntityPrefabGraphDocument::CreateComponentNode(const std::string& componentType, const std::string& componentName)
+    PrefabNodeId EntityPrefabGraphDocument::CreateComponentNode(const std::string& componentType, const std::string& componentName)
     { 
         ComponentNode node(componentType);
         node.nodeId = m_nextNodeId++;
@@ -26,24 +34,24 @@ namespace Olympe
         return node.nodeId;
     }
 
-    void EntityPrefabGraphDocument::RemoveNode(NodeId nodeId)
+    void EntityPrefabGraphDocument::RemoveNode(PrefabNodeId nodeId)
     { 
         for (size_t i = 0; i < m_nodes.size(); ++i)
         { if (m_nodes[i].nodeId == nodeId) { m_nodes.erase(m_nodes.begin() + i); m_isDirty = true; break; } }
     }
 
-    bool EntityPrefabGraphDocument::HasNode(NodeId nodeId) const
+    bool EntityPrefabGraphDocument::HasNode(PrefabNodeId nodeId) const
     { for (size_t i = 0; i < m_nodes.size(); ++i) { if (m_nodes[i].nodeId == nodeId) { return true; } } return false; }
 
-    ComponentNode* EntityPrefabGraphDocument::GetNode(NodeId nodeId)
+    ComponentNode* EntityPrefabGraphDocument::GetNode(PrefabNodeId nodeId)
     { for (size_t i = 0; i < m_nodes.size(); ++i) { if (m_nodes[i].nodeId == nodeId) { return &m_nodes[i]; } } return nullptr; }
 
-    const ComponentNode* EntityPrefabGraphDocument::GetNode(NodeId nodeId) const
+    const ComponentNode* EntityPrefabGraphDocument::GetNode(PrefabNodeId nodeId) const
     { for (size_t i = 0; i < m_nodes.size(); ++i) { if (m_nodes[i].nodeId == nodeId) { return &m_nodes[i]; } } return nullptr; }
 
     const std::vector<ComponentNode>& EntityPrefabGraphDocument::GetAllNodes() const { return m_nodes; }
 
-    void EntityPrefabGraphDocument::SelectNode(NodeId nodeId)
+    void EntityPrefabGraphDocument::SelectNode(PrefabNodeId nodeId)
     { 
         for (auto it = m_selectedNodes.begin(); it != m_selectedNodes.end(); ++it)
         { if (*it == nodeId) { return; } }
@@ -52,7 +60,7 @@ namespace Olympe
         if (node != nullptr) { node->selected = true; }
     }
 
-    void EntityPrefabGraphDocument::DeselectNode(NodeId nodeId)
+    void EntityPrefabGraphDocument::DeselectNode(PrefabNodeId nodeId)
     { 
         for (auto it = m_selectedNodes.begin(); it != m_selectedNodes.end(); ++it)
         { if (*it == nodeId) { m_selectedNodes.erase(it); break; } }
@@ -67,10 +75,10 @@ namespace Olympe
         m_selectedNodes.clear();
     }
 
-    NodeId EntityPrefabGraphDocument::GetSelectedNode() const
+    PrefabNodeId EntityPrefabGraphDocument::GetSelectedNode() const
     { if (m_selectedNodes.size() > 0) { return m_selectedNodes[0]; } return InvalidNodeId; }
 
-    const std::vector<NodeId>& EntityPrefabGraphDocument::GetSelectedNodes() const { return m_selectedNodes; }
+    const std::vector<PrefabNodeId>& EntityPrefabGraphDocument::GetSelectedNodes() const { return m_selectedNodes; }
 
     void EntityPrefabGraphDocument::AutoLayout() { }
 
@@ -89,7 +97,7 @@ namespace Olympe
     }
     void EntityPrefabGraphDocument::CenterViewport() { }
 
-    bool EntityPrefabGraphDocument::ConnectNodes(NodeId sourceId, NodeId targetId)
+    bool EntityPrefabGraphDocument::ConnectNodes(PrefabNodeId sourceId, PrefabNodeId targetId)
     { 
         // Validate the connection first
         if (!ValidateConnection(sourceId, targetId))
@@ -101,16 +109,16 @@ namespace Olympe
         return true;
     }
 
-    bool EntityPrefabGraphDocument::DisconnectNodes(NodeId sourceId, NodeId targetId)
+    bool EntityPrefabGraphDocument::DisconnectNodes(PrefabNodeId sourceId, PrefabNodeId targetId)
     { 
         for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
         { if (it->first == sourceId && it->second == targetId) { m_connections.erase(it); m_isDirty = true; return true; } }
         return false;
     }
 
-    const std::vector<std::pair<NodeId, NodeId>>& EntityPrefabGraphDocument::GetConnections() const { return m_connections; }
+    const std::vector<std::pair<PrefabNodeId, PrefabNodeId>>& EntityPrefabGraphDocument::GetConnections() const { return m_connections; }
 
-    bool EntityPrefabGraphDocument::ValidateConnection(NodeId sourceId, NodeId targetId) const
+    bool EntityPrefabGraphDocument::ValidateConnection(PrefabNodeId sourceId, PrefabNodeId targetId) const
     {
         // Prevent self-connections
         if (sourceId == targetId)
@@ -133,7 +141,7 @@ namespace Olympe
         return true;
     }
 
-    bool EntityPrefabGraphDocument::HasConnection(NodeId sourceId, NodeId targetId) const
+    bool EntityPrefabGraphDocument::HasConnection(PrefabNodeId sourceId, PrefabNodeId targetId) const
     {
         for (const auto& connection : m_connections)
         {
@@ -203,7 +211,7 @@ namespace Olympe
                         }
 
                         // Create node
-                        NodeId id = CreateComponentNode(componentType, componentName);
+                        PrefabNodeId id = CreateComponentNode(componentType, componentName);
                         ComponentNode* node = GetNode(id);
 
                         if (node)
@@ -295,8 +303,8 @@ namespace Olympe
                 {
                     try
                     {
-                        NodeId sourceId = connJson.value("sourceNodeId", InvalidNodeId);
-                        NodeId targetId = connJson.value("targetNodeId", InvalidNodeId);
+                        PrefabNodeId sourceId = connJson.value("sourceNodeId", InvalidNodeId);
+                        PrefabNodeId targetId = connJson.value("targetNodeId", InvalidNodeId);
 
                         if (sourceId != InvalidNodeId && targetId != InvalidNodeId)
                         {
@@ -529,6 +537,10 @@ namespace Olympe
                 return;
             }
 
+            // PHASE 53: Create temporary map to ensure atomicity
+            // If any exception occurs during parsing, existing schemas are not corrupted
+            std::map<std::string, std::map<std::string, std::string>> tempSchemas;
+
             const json& schemasArray = jsonData["schemas"];
             for (const auto& schemaJson : schemasArray)
             {
@@ -575,10 +587,12 @@ namespace Olympe
                     }
                 }
 
-                m_parameterSchemas[componentType] = params;
+                tempSchemas[componentType] = params;
                 SYSTEM_LOG << "[EntityPrefabGraphDocument] Loaded " << params.size() << " parameters for " << componentType << "\n";
             }
 
+            // PHASE 53: Atomic swap to new schemas only after all parsing succeeded
+            m_parameterSchemas = tempSchemas;
             SYSTEM_LOG << "[EntityPrefabGraphDocument] Successfully loaded " << m_parameterSchemas.size() << " component schemas\n";
         }
         catch (const std::exception& e)

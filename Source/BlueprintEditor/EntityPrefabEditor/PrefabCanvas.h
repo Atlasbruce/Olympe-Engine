@@ -5,13 +5,14 @@
 #include <map>
 #include "./../../vector.h"
 #include "EntityPrefabGraphDocument.h"
+#include "ComponentNodeRenderer.h"
 #include "../../Source/third_party/imgui/imgui.h"
+#include "../Utilities/CanvasGridRenderer.h"
+#include "../Utilities/ICanvasEditor.h"
 
 namespace Olympe
 {
-    // Forward declarations
-    class ComponentNodeRenderer;
-    class ICanvasEditor;  // NEW: Standardized canvas interface
+    // Forward declarations already included via ICanvasEditor.h
 
     // Enum for canvas interaction modes
     enum class CanvasInteractionMode
@@ -25,13 +26,88 @@ namespace Olympe
     class PrefabCanvas
     {
     public:
-        PrefabCanvas();
-        ~PrefabCanvas();
+        PrefabCanvas()
+            : m_document(nullptr), m_canvasEditor(nullptr)
+        {
+        }
 
-        void Initialize(EntityPrefabGraphDocument* document);
-        void SetCanvasEditor(ICanvasEditor* canvasEditor);  // NEW: Set the standardized interface
-        EntityPrefabGraphDocument* GetDocument() const;
-        void Render();
+        ~PrefabCanvas()
+        {
+        }
+
+        void Initialize(EntityPrefabGraphDocument* document)
+        {
+            m_document = document;
+            // PHASE 52 FIX: Initialize ComponentNodeRenderer for rendering nodes
+            if (!m_renderer)
+            {
+                m_renderer = std::make_unique<ComponentNodeRenderer>();
+            }
+        }
+
+        void SetCanvasEditor(ICanvasEditor* canvasEditor)  // NEW: Set the standardized interface
+        {
+            m_canvasEditor = canvasEditor;
+        }
+
+        EntityPrefabGraphDocument* GetDocument() const
+        {
+            return m_document;
+        }
+
+        void Render()
+        {
+            if (!m_document)
+            {
+                ImGui::TextDisabled("No document loaded");
+                return;
+            }
+
+            // Store canvas screen position for coordinate transformations
+            m_canvasScreenPos = ImGui::GetCursorScreenPos();
+
+            // Render grid background if enabled
+            if (m_showGrid && m_canvasEditor)
+            {
+                // Get grid renderer
+                CanvasGridRenderer::GridConfig gridConfig;
+                gridConfig.canvasPos = m_canvasScreenPos;
+                gridConfig.canvasSize = ImGui::GetContentRegionAvail();
+                gridConfig.zoom = m_canvasEditor->GetZoom();
+
+                ImVec2 pan = m_canvasEditor->GetPan();
+                gridConfig.offsetX = pan.x;
+                gridConfig.offsetY = pan.y;
+                gridConfig.majorSpacing = m_gridSpacing;
+
+                // Use VisualScript preset style
+                CanvasGridRenderer::RenderGrid(gridConfig);
+            }
+
+            // Render nodes
+            if (m_renderer && m_canvasEditor)
+            {
+                // PHASE 52.1 FIX: Sync canvas transform (pan/zoom) to renderer each frame
+                ImVec2 pan = m_canvasEditor->GetPan();
+                float zoom = m_canvasEditor->GetZoom();
+                Vector panOffset(pan.x, pan.y);
+                m_renderer->SetCanvasTransform(panOffset, zoom);
+
+                m_renderer->RenderNodes(m_document);
+            }
+
+            // TODO: Render connections when graph connections are ready
+            // RenderConnections();
+
+            // Draw debug info if enabled
+            if (m_showDebugInfo)
+            {
+                ImGui::TextDisabled("Debug: %zu nodes, %zu connections", 
+                    m_document->GetAllNodes().size(),
+                    m_document->GetConnections().size());
+            }
+        }
+
         void Update(float deltaTime);
 
         // Input handling
@@ -49,22 +125,30 @@ namespace Olympe
         void FitToContent();
 
         // Node interaction
-        NodeId GetNodeAtPosition(float x, float y);
+        PrefabNodeId GetNodeAtPosition(float x, float y);
         void SelectNodeAt(float x, float y, bool addToSelection = false);
         void SelectNodesInRectangle(const Vector& rectStart, const Vector& rectEnd, bool addToSelection = false);
         void ClearSelection();
         void SelectAll();
         void DeleteSelectedNodes();
         void AddComponentNode(const std::string& componentType, const std::string& componentName, float x, float y);
-        void AcceptComponentDropAtScreenPos(const std::string& componentType, const std::string& componentName, float screenX, float screenY);
+        void AcceptComponentDropAtScreenPos(const std::string& componentType, const std::string& componentName, float screenX, float screenY)
+        {
+            // Handle component drop at screen position
+            if (m_document)
+            {
+                // Create new node at dropped position
+                // Implementation deferred to Phase 50.4
+            }
+        }
 
 
         // Connection interaction
-        void StartConnectionCreation(NodeId sourceNodeId);
-        void CompleteConnection(NodeId targetNodeId);
+        void StartConnectionCreation(PrefabNodeId sourceNodeId);
+        void CompleteConnection(PrefabNodeId targetNodeId);
         void CancelConnectionCreation();
         bool IsCreatingConnection() const;
-        NodeId GetConnectionSourceNode() const;
+        PrefabNodeId GetConnectionSourceNode() const;
 
         // Display properties
         void SetGridEnabled(bool enabled);
@@ -115,7 +199,7 @@ namespace Olympe
         // Interaction state
         Vector m_lastMousePos;
         Vector m_currentMousePos;
-        NodeId m_draggedNodeId = InvalidNodeId;
+        PrefabNodeId m_draggedNodeId = InvalidNodeId;
         Vector m_dragStartPos;
         Vector m_nodeDragOffset;
         bool m_ctrlPressed = false;
@@ -123,7 +207,7 @@ namespace Olympe
         CanvasInteractionMode m_interactionMode = CanvasInteractionMode::Normal;
 
         // Connection creation state
-        NodeId m_connectionSourceNodeId = InvalidNodeId;
+        PrefabNodeId m_connectionSourceNodeId = InvalidNodeId;
         Vector m_connectionPreviewEnd;
         bool m_isCreatingConnection = false;
 
@@ -132,7 +216,7 @@ namespace Olympe
         Vector m_panStartOffset;
 
         // Context menu state
-        NodeId m_contextMenuNodeId = InvalidNodeId;
+        PrefabNodeId m_contextMenuNodeId = InvalidNodeId;
         Vector m_contextMenuMousePos;
 
         // Connection context menu state
@@ -148,7 +232,7 @@ namespace Olympe
 
         // Utility methods
         void UpdateNodePositions();
-        void HandleNodeDragStart(NodeId nodeId, float x, float y);
+        void HandleNodeDragStart(PrefabNodeId nodeId, float x, float y);
         void HandleNodeDrag(float x, float y);
         void HandleNodeDragEnd();
         void HandleConnectionCreation(float x, float y);

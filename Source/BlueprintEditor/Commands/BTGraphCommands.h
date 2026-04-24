@@ -27,7 +27,8 @@ namespace Olympe
     class CopyNodesCommand : public GraphCommand
     {
     public:
-        CopyNodesCommand(NodeGraph* graph, const std::vector<int>& nodeIds);
+        // TODO: Phase 50.4 - Reimplement with modern GraphDocument
+        CopyNodesCommand(void* graph = nullptr, const std::vector<int>& nodeIds = std::vector<int>());
         virtual ~CopyNodesCommand() = default;
 
         bool Execute() override;
@@ -35,9 +36,8 @@ namespace Olympe
         std::string GetDescription() const override;
 
     private:
-        NodeGraph* m_graph;
+        void* m_graph;
         std::vector<int> m_nodeIds;
-        std::vector<ClipboardNode> m_clipboardData;
     };
 
     /**
@@ -47,7 +47,8 @@ namespace Olympe
     class PasteNodesCommand : public GraphCommand
     {
     public:
-        PasteNodesCommand(NodeGraph* graph, float offsetX = 30.0f, float offsetY = 30.0f);
+        // TODO: Phase 50.4 - Reimplement with modern GraphDocument
+        PasteNodesCommand(void* graph = nullptr, float offsetX = 30.0f, float offsetY = 30.0f);
         virtual ~PasteNodesCommand() = default;
 
         bool Execute() override;
@@ -55,10 +56,10 @@ namespace Olympe
         std::string GetDescription() const override;
 
     private:
-        NodeGraph* m_graph;
+        void* m_graph;
         float m_offsetX, m_offsetY;
-        std::vector<int> m_pastedNodeIds;  // IDs of newly created nodes
-        std::map<int, int> m_idMapping;   // Original ID -> New ID mapping
+        std::vector<int> m_pastedNodeIds;
+        std::map<int, int> m_idMapping;
     };
 
     /**
@@ -68,7 +69,8 @@ namespace Olympe
     class DuplicateNodeCommand : public GraphCommand
     {
     public:
-        DuplicateNodeCommand(NodeGraph* graph, const std::vector<int>& nodeIds, float offsetX = 30.0f, float offsetY = 30.0f);
+        // TODO: Phase 50.4 - Reimplement with modern GraphDocument
+        DuplicateNodeCommand(void* graph = nullptr, const std::vector<int>& nodeIds = std::vector<int>(), float offsetX = 30.0f, float offsetY = 30.0f);
         virtual ~DuplicateNodeCommand() = default;
 
         bool Execute() override;
@@ -76,9 +78,9 @@ namespace Olympe
         std::string GetDescription() const override;
 
     private:
-        NodeGraph* m_graph;
+        void* m_graph;
         std::vector<int> m_originalNodeIds;
-        std::vector<int> m_duplicatedNodeIds;  // IDs of newly created nodes
+        std::vector<int> m_duplicatedNodeIds;
         float m_offsetX, m_offsetY;
     };
 }

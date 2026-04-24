@@ -23,6 +23,10 @@
 namespace Olympe {
 namespace AI {
 
+// Type aliases for backward compatibility with modern NodeGraphTypes
+using GraphDocument = Olympe::NodeGraphTypes::GraphDocument;
+using NodeId = Olympe::NodeGraphTypes::NodeId;
+
 /**
  * @enum BTValidationSeverity
  * @brief Severity level of validation message
@@ -60,43 +64,31 @@ public:
      * @param graph Graph document to validate
      * @return Vector of validation messages (empty if valid)
      */
-    static std::vector<BTValidationMessage> ValidateGraph(const NodeGraph::GraphDocument* graph);
-    
+    static std::vector<BTValidationMessage> ValidateGraph(const GraphDocument* graph);
+
 private:
     /**
      * @brief Rule 1: Check for exactly one root node
      * @param graph Graph to validate
      * @param messages Output messages
      */
-    static void ValidateRootNode(const NodeGraph::GraphDocument* graph, std::vector<BTValidationMessage>& messages);
-    
+    static void ValidateRootNode(const GraphDocument* graph, std::vector<BTValidationMessage>& messages);
+
     /**
      * @brief Rule 2: Detect cycles in graph
      * @param graph Graph to validate
      * @param messages Output messages
      */
-    static void ValidateCycles(const NodeGraph::GraphDocument* graph, std::vector<BTValidationMessage>& messages);
-    
-    /**
-     * @brief Rule 3: Validate child counts per node type
-     * @param graph Graph to validate
-     * @param messages Output messages
-     */
-    static void ValidateChildrenCount(const NodeGraph::GraphDocument* graph, std::vector<BTValidationMessage>& messages);
-    
-    /**
-     * @brief Rule 4: Check for orphan nodes (disconnected from root)
-     * @param graph Graph to validate
-     * @param messages Output messages
-     */
-    static void ValidateOrphans(const NodeGraph::GraphDocument* graph, std::vector<BTValidationMessage>& messages);
-    
-    /**
-     * @brief Rule 5: Validate node types are registered
-     * @param graph Graph to validate
-     * @param messages Output messages
-     */
-    static void ValidateNodeTypes(const NodeGraph::GraphDocument* graph, std::vector<BTValidationMessage>& messages);
+    static void ValidateCycles(const GraphDocument* graph, std::vector<BTValidationMessage>& messages);
+
+    // TODO: Deprecated rules - schema changed
+    // ValidateChildrenCount, ValidateOrphans, ValidateNodeTypes need reimplementation
+    // Commented out to unblock build (Phase 50.4 cleanup)
+    /*
+    static void ValidateChildrenCount(const GraphDocument* graph, std::vector<BTValidationMessage>& messages);
+    static void ValidateOrphans(const GraphDocument* graph, std::vector<BTValidationMessage>& messages);
+    static void ValidateNodeTypes(const GraphDocument* graph, std::vector<BTValidationMessage>& messages);
+    */
 };
 
 } // namespace AI

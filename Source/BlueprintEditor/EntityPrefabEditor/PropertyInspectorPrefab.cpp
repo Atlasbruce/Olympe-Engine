@@ -10,9 +10,9 @@ namespace Olympe
     void PropertyInspectorPrefab::Render() { if (!m_document) { return; } ImGui::Begin("Property Inspector"); ImGui::End(); }
     void PropertyInspectorPrefab::Update(float deltaTime) { (void)deltaTime; }
 
-    void PropertyInspectorPrefab::SelectNode(NodeId nodeId) { m_selectedNodeId = nodeId; }
+    void PropertyInspectorPrefab::SelectNode(PrefabNodeId nodeId) { m_selectedNodeId = nodeId; }
     void PropertyInspectorPrefab::DeselectNode() { m_selectedNodeId = InvalidNodeId; }
-    NodeId PropertyInspectorPrefab::GetSelectedNode() const { return m_selectedNodeId; }
+    PrefabNodeId PropertyInspectorPrefab::GetSelectedNode() const { return m_selectedNodeId; }
 
     void PropertyInspectorPrefab::SetPanelWidth(float width) { m_panelWidth = width; }
     float PropertyInspectorPrefab::GetPanelWidth() const { return m_panelWidth; }

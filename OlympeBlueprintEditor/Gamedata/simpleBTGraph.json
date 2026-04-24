@@ -1,36 +1,34 @@
 {
   "blueprintType": "BehaviorTree",
   "data": {
-    "rootGraph": {
-      "nodes": [
-        {
-          "children": [
-            2
-          ],
-          "id": 1,
-          "name": "BT_OnEvent",
-          "parameters": {},
-          "position": {
-            "x": 457,
-            "y": 181
-          },
-          "type": "OnEvent"
+    "eventRoots": [],
+    "nodes": [
+      {
+        "children": [
+          2
+        ],
+        "id": 1,
+        "name": "BT_OnEvent",
+        "parameters": {},
+        "position": {
+          "x": 523,
+          "y": 272
         },
-        {
-          "children": [],
-          "id": 2,
-          "name": "BT_AttackTarget",
-          "parameters": {},
-          "position": {
-            "x": 847,
-            "y": 278
-          },
-          "type": "Action"
-        }
-      ],
-      "rootNodeId": -1
-    },
-    "subgraphs": {}
+        "type": "OnEvent"
+      },
+      {
+        "children": [],
+        "id": 2,
+        "name": "BT_AttackTarget",
+        "parameters": {},
+        "position": {
+          "x": 847,
+          "y": 278
+        },
+        "type": "Action"
+      }
+    ],
+    "rootNodeId": -1
   },
   "description": "",
   "editorState": {
@@ -43,9 +41,9 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-04-13T14:54:25",
+    "lastModified": "2026-04-14T11:15:31",
     "tags": []
   },
   "name": "Untitled-1",
-  "schema_version": 5
+  "schema_version": 2
 }

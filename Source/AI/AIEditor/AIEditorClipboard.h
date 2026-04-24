@@ -21,6 +21,12 @@
 
 namespace Olympe {
 namespace AI {
+    // Type aliases for NodeGraphTypes for backward compatibility
+    using NodeId = Olympe::NodeGraphTypes::NodeId;
+    using GraphDocument = Olympe::NodeGraphTypes::GraphDocument;
+    using NodeData = Olympe::NodeGraphTypes::NodeData;
+    using LinkData = Olympe::NodeGraphTypes::LinkData;
+    using PinId = Olympe::NodeGraphTypes::PinId;
 
 // Pin ID Convention Constants
 // These match the convention used in AIEditorNodeRenderer.cpp
@@ -70,14 +76,14 @@ public:
      * @param nodeIds List of selected node IDs
      * @param doc Source graph document
      */
-    void Copy(const std::vector<NodeGraph::NodeId>& nodeIds, NodeGraph::GraphDocument* doc);
+    void Copy(const std::vector<NodeId>& nodeIds, GraphDocument* doc);
     
     /**
      * @brief Cut selected nodes (copy + delete)
      * @param nodeIds List of selected node IDs
      * @param doc Source graph document
      */
-    void Cut(const std::vector<NodeGraph::NodeId>& nodeIds, NodeGraph::GraphDocument* doc);
+    void Cut(const std::vector<NodeId>& nodeIds, GraphDocument* doc);
     
     /**
      * @brief Paste clipboard nodes into active graph
@@ -85,7 +91,7 @@ public:
      * @param pasteOffset Offset from original position
      * @return List of new node IDs
      */
-    std::vector<NodeGraph::NodeId> Paste(NodeGraph::GraphDocument* doc, Vector pasteOffset);
+    std::vector<NodeId> Paste(GraphDocument* doc, Vector pasteOffset);
     
     /**
      * @brief Check if clipboard has data

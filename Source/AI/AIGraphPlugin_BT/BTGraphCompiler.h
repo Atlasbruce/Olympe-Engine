@@ -18,6 +18,11 @@
 namespace Olympe {
 namespace AI {
 
+// Type aliases for backward compatibility with modern NodeGraphTypes
+using NodeId = Olympe::NodeGraphTypes::NodeId;
+using GraphDocument = Olympe::NodeGraphTypes::GraphDocument;
+using NodeData = Olympe::NodeGraphTypes::NodeData;
+
 /**
  * @class BTGraphCompiler
  * @brief Static compiler for BT graphs
@@ -36,11 +41,11 @@ public:
      * @return true if successful, false otherwise
      */
     static bool Compile(
-        const NodeGraph::GraphDocument* graph,
+        const GraphDocument* graph,
         BehaviorTreeAsset& outAsset,
         std::string& errorMsg
     );
-    
+
 private:
     /**
      * @brief Compile a single node from graph to asset
@@ -49,7 +54,7 @@ private:
      * @return true if successful
      */
     static bool CompileNode(
-        const NodeGraph::NodeData& graphNode,
+        const NodeData& graphNode,
         BTNode& outNode
     );
     

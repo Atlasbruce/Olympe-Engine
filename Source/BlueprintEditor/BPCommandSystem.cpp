@@ -8,10 +8,16 @@
 
 namespace Olympe
 {
+    // Type aliases for backward compatibility with modern NodeGraphTypes
+    using GraphDocument = Olympe::NodeGraphTypes::GraphDocument;
+    using NodeData = Olympe::NodeGraphTypes::NodeData;
+    using NodeId = Olympe::NodeGraphTypes::NodeId;
+
     namespace Blueprint
     {
         // ========================================================================
-        // CommandStack Implementation
+        // CommandStack Implementation (DEPRECATED - Phase 50.3)
+        // TODO: Reimplement with modern NodeGraphTypes schema in Phase 50.4
         // ========================================================================
 
         CommandStack::CommandStack()
@@ -164,36 +170,15 @@ namespace Olympe
 
         void CreateNodeCommand::Execute()
         {
-            // Get the graph
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (!graph)
-            {
-                std::cerr << "CreateNodeCommand: Graph not found: " << m_GraphId << std::endl;
-                return;
-            }
-
-            // Create the node
-            NodeType type = StringToNodeType(m_NodeType);
-            m_CreatedNodeId = graph->CreateNode(type, m_PosX, m_PosY, m_NodeName);
-            if (m_OutCreatedId)
-                *m_OutCreatedId = m_CreatedNodeId;
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes schema
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
+            // This command is deprecated and unused by rendering pipeline
         }
 
         void CreateNodeCommand::Undo()
         {
-            // Get the graph
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (!graph)
-            {
-                std::cerr << "CreateNodeCommand::Undo: Graph not found: " << m_GraphId << std::endl;
-                return;
-            }
-
-            // Delete the created node
-            if (m_CreatedNodeId != -1)
-            {
-                graph->DeleteNode(m_CreatedNodeId);
-            }
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
         }
 
         std::string CreateNodeCommand::GetDescription() const
@@ -213,54 +198,14 @@ namespace Olympe
 
         void DeleteNodeCommand::Execute()
         {
-            // Get the graph
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (!graph)
-            {
-                std::cerr << "DeleteNodeCommand: Graph not found: " << m_GraphId << std::endl;
-                return;
-            }
-
-            // Save node data for undo
-            const GraphNode* node = graph->GetNode(m_NodeId);
-            if (node)
-            {
-                m_NodeData = json::object();
-                m_NodeData["id"] = node->id;
-                m_NodeData["type"] = NodeTypeToString(node->type);
-                m_NodeData["name"] = node->name;
-                m_NodeData["posX"] = node->posX;
-                m_NodeData["posY"] = node->posY;
-                // TODO: Save additional node data as needed
-            }
-
-            // Delete the node
-            graph->DeleteNode(m_NodeId);
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
         }
 
         void DeleteNodeCommand::Undo()
         {
-            // Get the graph
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (!graph)
-            {
-                std::cerr << "DeleteNodeCommand::Undo: Graph not found: " << m_GraphId << std::endl;
-                return;
-            }
-
-            // Recreate the node from saved data
-            if (m_NodeData.contains("type") && m_NodeData.contains("posX") && m_NodeData.contains("posY"))
-            {
-                NodeType type = StringToNodeType(m_NodeData["type"].get<std::string>());
-                std::string name = m_NodeData.contains("name") ? m_NodeData["name"].get<std::string>() : "";
-
-                int nodeId = graph->CreateNode(type,
-                    m_NodeData["posX"].get<float>(),
-                    m_NodeData["posY"].get<float>(),
-                    name);
-
-                // TODO: Restore additional node properties
-            }
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
         }
 
         std::string DeleteNodeCommand::GetDescription() const
@@ -285,38 +230,14 @@ namespace Olympe
 
         void MoveNodeCommand::Execute()
         {
-            // Get the graph
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (!graph)
-            {
-                return;
-            }
-
-            // Move the node
-            GraphNode* node = graph->GetNode(m_NodeId);
-            if (node)
-            {
-                node->posX = m_NewX;
-                node->posY = m_NewY;
-            }
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
         }
 
         void MoveNodeCommand::Undo()
         {
-            // Get the graph
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (!graph)
-            {
-                return;
-            }
-
-            // Restore old position
-            GraphNode* node = graph->GetNode(m_NodeId);
-            if (node)
-            {
-                node->posX = m_OldX;
-                node->posY = m_OldY;
-            }
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
         }
 
         std::string MoveNodeCommand::GetDescription() const
@@ -337,20 +258,14 @@ namespace Olympe
 
         void LinkNodesCommand::Execute()
         {
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (graph)
-            {
-                graph->LinkNodes(m_ParentId, m_ChildId);
-            }
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
         }
 
         void LinkNodesCommand::Undo()
         {
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (graph)
-            {
-                graph->UnlinkNodes(m_ParentId, m_ChildId);
-            }
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
         }
 
         std::string LinkNodesCommand::GetDescription() const
@@ -371,20 +286,14 @@ namespace Olympe
 
         void UnlinkNodesCommand::Execute()
         {
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (graph)
-            {
-                graph->UnlinkNodes(m_ParentId, m_ChildId);
-            }
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
         }
 
         void UnlinkNodesCommand::Undo()
         {
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (graph)
-            {
-                graph->LinkNodes(m_ParentId, m_ChildId);
-            }
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
         }
 
         std::string UnlinkNodesCommand::GetDescription() const
@@ -410,20 +319,14 @@ namespace Olympe
 
         void SetParameterCommand::Execute()
         {
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (graph)
-            {
-                graph->SetNodeParameter(m_NodeId, m_ParamName, m_NewValue);
-            }
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
         }
 
         void SetParameterCommand::Undo()
         {
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (graph)
-            {
-                graph->SetNodeParameter(m_NodeId, m_ParamName, m_OldValue);
-            }
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
         }
 
         std::string SetParameterCommand::GetDescription() const
@@ -444,59 +347,14 @@ namespace Olympe
 
         void DuplicateNodeCommand::Execute()
         {
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (!graph)
-            {
-                std::cerr << "DuplicateNodeCommand: Graph not found: " << m_GraphId << std::endl;
-                return;
-            }
-
-            // Get source node
-            const GraphNode* sourceNode = graph->GetNode(m_SourceNodeId);
-            if (!sourceNode)
-            {
-                std::cerr << "DuplicateNodeCommand: Source node not found: " << m_SourceNodeId << std::endl;
-                return;
-            }
-
-            // Create a duplicate node at an offset position
-            m_CreatedNodeId = graph->CreateNode(sourceNode->type,
-                sourceNode->posX + 50.0f,
-                sourceNode->posY + 50.0f,
-                sourceNode->name + " Copy");
-
-            GraphNode* newNode = graph->GetNode(m_CreatedNodeId);
-            if (newNode)
-            {
-                // Copy all properties
-                newNode->actionType = sourceNode->actionType;
-                newNode->conditionType = sourceNode->conditionType;
-                newNode->decoratorType = sourceNode->decoratorType;
-                newNode->parameters = sourceNode->parameters;
-
-                // Save node data for undo
-                m_NodeData = json::object();
-                m_NodeData["id"] = newNode->id;
-                m_NodeData["type"] = NodeTypeToString(newNode->type);
-                m_NodeData["name"] = newNode->name;
-            }
-
-            std::cout << "Duplicated node " << m_SourceNodeId << " to " << m_CreatedNodeId << std::endl;
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
         }
 
         void DuplicateNodeCommand::Undo()
         {
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (!graph)
-            {
-                return;
-            }
-
-            // Delete the created node
-            if (m_CreatedNodeId >= 0)
-            {
-                graph->DeleteNode(m_CreatedNodeId);
-            }
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
         }
 
         std::string DuplicateNodeCommand::GetDescription() const
@@ -522,60 +380,14 @@ namespace Olympe
 
         void EditNodeCommand::Execute()
         {
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (!graph)
-            {
-                return;
-            }
-
-            GraphNode* node = graph->GetNode(m_NodeId);
-            if (node)
-            {
-                node->name = m_NewName;
-
-                // Update subtype based on node type
-                if (node->type == NodeType::BT_Action)
-                {
-                    node->actionType = m_NewSubtype;
-                }
-                else if (node->type == NodeType::BT_Condition)
-                {
-                    node->conditionType = m_NewSubtype;
-                }
-                else if (node->type == NodeType::BT_Decorator)
-                {
-                    node->decoratorType = m_NewSubtype;
-                }
-            }
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
         }
 
         void EditNodeCommand::Undo()
         {
-            NodeGraph* graph = NodeGraphManager::Get().GetGraph(std::stoi(m_GraphId));
-            if (!graph)
-            {
-                return;
-            }
-
-            GraphNode* node = graph->GetNode(m_NodeId);
-            if (node)
-            {
-                node->name = m_OldName;
-
-                // Restore old subtype
-                if (node->type == NodeType::BT_Action)
-                {
-                    node->actionType = m_OldSubtype;
-                }
-                else if (node->type == NodeType::BT_Condition)
-                {
-                    node->conditionType = m_OldSubtype;
-                }
-                else if (node->type == NodeType::BT_Decorator)
-                {
-                    node->decoratorType = m_OldSubtype;
-                }
-            }
+            // TODO: Phase 50.4 - Reimplement with modern NodeGraphTypes
+            // NodeGraph class removed (Phase 50.3 namespace collision fix)
         }
 
         std::string EditNodeCommand::GetDescription() const

@@ -128,6 +128,7 @@ private:
     char m_pathBuffer[512] = "";            ///< Path input text buffer
     char m_filenameBuffer[256] = "";        ///< Filename input (without extension)
     bool m_showOverwriteConfirm = false;    ///< Show overwrite confirmation dialog
+    std::string m_previousPath = "";        ///< Previous frame's path for change detection (PHASE 49 FIX)
 
     // ====================================================================
     // Helper Methods
@@ -155,8 +156,18 @@ private:
 
     /**
      * @brief Refreshes the file and folder lists for the current directory.
+     * PHASE 46 FIX: Logs only on initialization/state changes, not per-frame.
      */
     void RefreshFileList();
+
+    /**
+     * @brief Internal implementation of RefreshFileList with logging control.
+     * @param bLog If true, log the directory scan results. If false, scan silently.
+     * 
+     * PHASE 46 FIX: This separates the actual file scanning (which is fast) 
+     * from logging (which should only happen on state changes, not every frame).
+     */
+    void RefreshFileListInternal(bool bLog);
 
     /**
      * @brief Renders the file list in the modal.

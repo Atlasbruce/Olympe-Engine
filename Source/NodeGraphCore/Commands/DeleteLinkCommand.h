@@ -14,6 +14,8 @@ namespace Olympe
 {
 namespace NodeGraph
 {
+using namespace NodeGraphTypes;
+{
 namespace Commands
 {
 

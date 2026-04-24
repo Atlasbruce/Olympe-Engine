@@ -9,7 +9,6 @@
 #include "../system/system_utils.h"
 
 namespace Olympe {
-namespace NodeGraph {
 
 // ============================================================================
 // Query
@@ -259,5 +258,4 @@ BlackboardType BlackboardSystem::StringToType(const std::string& s)
     return BlackboardType::Int;
 }
 
-} // namespace NodeGraph
 } // namespace Olympe

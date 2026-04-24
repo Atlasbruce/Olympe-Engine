@@ -11,12 +11,18 @@
 
 #pragma once
 
+#include "NodeGraphCore.h"
 #include "GraphDocument.h"
 #include <map>
 #include <memory>
+#include <vector>
 
 namespace Olympe {
 namespace NodeGraph {
+
+// Simplify types from NodeGraphTypes namespace
+using GraphId = NodeGraphTypes::GraphId;
+using GraphDocument = NodeGraphTypes::GraphDocument;
 
 /**
  * @class NodeGraphManager
@@ -28,7 +34,13 @@ public:
      * @brief Get singleton instance
      */
     static NodeGraphManager& Get();
-    
+
+    /**
+     * @brief Check if singleton is still valid (not destroyed)
+     * @return true if singleton is valid and safe to access
+     */
+    static bool IsValid();
+
     // Prevent copying
     NodeGraphManager(const NodeGraphManager&) = delete;
     NodeGraphManager& operator=(const NodeGraphManager&) = delete;
@@ -53,19 +65,19 @@ public:
     GraphId LoadGraph(const std::string& filepath);
     
     /**
-     * @brief Save a graph to file
-     * @param id Graph ID
-     * @param filepath Path to save file
-     * @return true if saved successfully
-     */
-    bool SaveGraph(GraphId id, const std::string& filepath);
-    
+      * @brief Save a graph to file
+      * @param id Graph ID
+      * @param filepath Path to save file
+      * @return true if saved successfully
+      */
+    bool SaveGraph(const GraphId& id, const std::string& filepath);
+
     /**
-     * @brief Close a graph
-     * @param id Graph ID
-     * @return true if closed successfully
-     */
-    bool CloseGraph(GraphId id);
+      * @brief Close a graph
+      * @param id Graph ID
+      * @return true if closed successfully
+      */
+    bool CloseGraph(const GraphId& id);
     
     // ========================================================================
     // Active Graph Management
@@ -75,7 +87,7 @@ public:
      * @brief Set active graph
      * @param id Graph ID
      */
-    void SetActiveGraph(GraphId id);
+    void SetActiveGraph(const GraphId& id);
     
     /**
      * @brief Get active graph
@@ -122,7 +134,11 @@ public:
 private:
     NodeGraphManager();
     ~NodeGraphManager();
-    
+
+    // PHASE 58 FIX: Static sentinel to track singleton destruction state
+    // Used by IsValid() to prevent use-after-free on destroyed singleton
+    static bool s_isDestroyed;
+
     std::map<GraphId, std::unique_ptr<GraphDocument>> m_graphs;
     std::map<GraphId, std::string> m_graphNames;
     std::vector<GraphId> m_graphOrder;

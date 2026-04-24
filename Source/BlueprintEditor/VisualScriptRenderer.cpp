@@ -32,6 +32,14 @@ VisualScriptRenderer::~VisualScriptRenderer()
     m_panel.Shutdown();
 }
 
+IGraphDocument* VisualScriptRenderer::GetDocument() const
+{
+    // Phase 44.2: Return the document adapter from the wrapped panel
+    // This allows TabManager to reuse the same document instance
+    // instead of creating a new VisualScriptGraphDocument wrapper
+    return m_panel.m_document.get();
+}
+
 void VisualScriptRenderer::Render()
 {
     m_panel.RenderContent();
@@ -90,6 +98,16 @@ bool VisualScriptRenderer::Load(const std::string& path)
         }
         m_panel.LoadTemplate(tmpl, resolvedPath);
         delete tmpl;
+
+        // Phase 50.1.5: CRITICAL - Sync filepath to framework document
+        // This ensures CanvasToolbarRenderer sees the loaded filepath
+        // so Save button works directly (no SaveAs modal)
+        if (m_panel.m_document)
+        {
+            m_panel.m_document->SetFilePath(resolvedPath);
+            SYSTEM_LOG << "[VisualScriptRenderer] Synced filepath to document: " << resolvedPath << "\n";
+        }
+
         SYSTEM_LOG << "[VisualScriptRenderer] Loaded VS v4 graph: " << resolvedPath << "\n";
         return true;
     }
@@ -100,6 +118,14 @@ bool VisualScriptRenderer::Load(const std::string& path)
         std::vector<std::string> errors;
         TaskGraphTemplate converted = BTtoVSMigrator::Convert(fileJson, errors);
         m_panel.LoadTemplate(&converted, resolvedPath);
+
+        // Phase 50.1.5: Sync filepath to document for legacy BT v2 migration path
+        if (m_panel.m_document)
+        {
+            m_panel.m_document->SetFilePath(resolvedPath);
+            SYSTEM_LOG << "[VisualScriptRenderer] Synced filepath to document (BT v2 migration): " << resolvedPath << "\n";
+        }
+
         SYSTEM_LOG << "[VisualScriptRenderer] Auto-migrated BT v2 -> VS v4: " << resolvedPath << "\n";
         return true;
     }

@@ -20,6 +20,12 @@
 #include "../third_party/imnodes/imnodes.h"
 #include "Utilities/ImNodesCanvasEditor.h"
 
+// Forward declarations for NodeGraphCore types
+class NodeGraph;
+class GraphNode;
+struct GraphLink;
+class NodeStyle;
+
 namespace Olympe
 {
     // -------------------------------------------------------------------------
@@ -145,10 +151,10 @@ namespace Olympe
          * Must be called AFTER ImNodes::EndNodeEditor() so that node screen-space
          * positions are valid.
          *
-         * @param graph    Active NodeGraph.
+         * @param graphDoc Graph document containing link data.
          * @param graphID  Active graph ID.
          */
-        void RenderActiveLinks(NodeGraph* graph, int graphID);
+         void RenderActiveLinks(GraphDocument* graphDoc, int graphID);
 
         /**
          * @brief Render execution indices (1, 2, 3, ...n) on connection lines
@@ -160,10 +166,10 @@ namespace Olympe
          * Must be called AFTER ImNodes::EndNodeEditor() so that node screen-space
          * positions are valid.
          *
-         * @param graph    Active NodeGraph.
+         * @param graphDoc Graph document containing node and link data.
          * @param graphID  Active graph ID.
          */
-        void RenderConnectionIndices(NodeGraph* graph, int graphID);
+         void RenderConnectionIndices(GraphDocument* graphDoc, int graphID);
 
         // Node creation helpers
         void CreateNewNode(const char* nodeType, float x, float y);
@@ -179,6 +185,22 @@ namespace Olympe
 
         // Phase 43: Framework modal rendering
         void RenderFrameworkModals();
+
+        // -----------------------------------------------------------------------
+        // Legacy Save/SaveAs Methods (Phase 44.4 Restoration)
+        // -----------------------------------------------------------------------
+
+        /**
+         * @brief Save the active graph to its current filepath.
+         * @return True if save was successful, false otherwise.
+         */
+        bool SaveActiveGraph();
+
+        /**
+         * @brief Save the active graph to a new filepath (SaveAs dialog).
+         * @return True if save was successful, false otherwise.
+         */
+        bool SaveActiveGraphAs();
 
         // -----------------------------------------------------------------------
         // Runtime debug overlay
@@ -201,6 +223,7 @@ namespace Olympe
 
         // Control rendering behavior when embedded in other renderers
         bool m_SuppressGraphTabs = false;  ///< When true, RenderGraphTabs() is skipped (used by BehaviorTreeRenderer)
+        bool m_SuppressLegacyModals = false;  ///< When true, legacy SaveAs modal is skipped (framework toolbar handles modals)
 
         // Node editing modal
         bool m_ShowNodeEditModal = false;

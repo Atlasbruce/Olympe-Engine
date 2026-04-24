@@ -53,7 +53,8 @@ public:
      *
      * If no nodes are selected the clipboard is left unchanged.
      */
-    void CopySelectedNodes(NodeGraph* graph, int graphID);
+    // TODO: Phase 50.4 - Reimplement with modern GraphDocument
+    void CopySelectedNodes();
 
     /**
      * @brief Read the system clipboard, deserialise nodes and create them in
@@ -70,7 +71,8 @@ public:
      *
      * If the clipboard does not contain a valid Olympe payload this is a no-op.
      */
-    void PasteNodes(NodeGraph* graph, int graphID, float mousePosX, float mousePosY,
+    // TODO: Phase 50.4 - Reimplement with modern GraphDocument
+    void PasteNodes(void* graph, int graphID, float mousePosX, float mousePosY,
                     bool snapToGrid = false, float snapGridSize = 16.0f);
 
 private:

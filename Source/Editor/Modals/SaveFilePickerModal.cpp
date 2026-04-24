@@ -32,6 +32,7 @@ SaveFilePickerModal::SaveFilePickerModal(SaveFileType fileType)
 {
     m_currentPath = GetDefaultDirectory();
     strncpy_s(m_pathBuffer, sizeof(m_pathBuffer), m_currentPath.c_str(), _TRUNCATE);
+    m_previousPath = m_currentPath;  // PHASE 49 FIX: Sync previous path
     RefreshFileList();
 }
 
@@ -56,6 +57,9 @@ void SaveFilePickerModal::Open(const std::string& directory, const std::string& 
         m_currentPath = GetDefaultDirectory();
         strncpy_s(m_pathBuffer, sizeof(m_pathBuffer), m_currentPath.c_str(), _TRUNCATE);
     }
+
+    // PHASE 49 FIX: Sync previous path so change detection works
+    m_previousPath = m_currentPath;
 
     if (!suggestedFilename.empty())
     {
@@ -106,20 +110,27 @@ void SaveFilePickerModal::Render()
         // ====================================================================
         // Path Navigation
         // ====================================================================
+        // PHASE 49 FIX: InputText returns true every frame while focused.
+        // Only refresh on actual change detection, not every frame.
 
         ImGui::TextDisabled("Path:");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(-100.0f);
-        if (ImGui::InputText("##path", m_pathBuffer, sizeof(m_pathBuffer)))
+        ImGui::InputText("##path", m_pathBuffer, sizeof(m_pathBuffer));
+
+        // CRITICAL: Detect actual path change from previous frame
+        std::string newPath = m_pathBuffer;
+        if (newPath != m_previousPath && !newPath.empty())
         {
-            m_currentPath = m_pathBuffer;
-            RefreshFileList();
+            m_previousPath = newPath;
+            m_currentPath = newPath;
+            RefreshFileListInternal(true);  // true = log the state change
         }
 
         ImGui::SameLine();
         if (ImGui::Button("Refresh##refresh", ImVec2(90, 0)))
         {
-            RefreshFileList();
+            RefreshFileListInternal(true);  // true = user initiated refresh, log
         }
 
         ImGui::Separator();
@@ -143,7 +154,7 @@ void SaveFilePickerModal::Render()
                 {
                     m_currentPath = m_currentPath.substr(0, lastSlash);
                     strncpy_s(m_pathBuffer, sizeof(m_pathBuffer), m_currentPath.c_str(), _TRUNCATE);
-                    RefreshFileList();
+                    RefreshFileListInternal(true);  // true = user initiated navigation, log
                 }
             }
 
@@ -262,6 +273,18 @@ std::string SaveFilePickerModal::GetDescriptionText() const
 
 void SaveFilePickerModal::RefreshFileList()
 {
+    // Internal initialization call - log on first load
+    RefreshFileListInternal(true);
+}
+
+/**
+ * PHASE 46 FIX: Separated logging from file scanning to prevent frame-rate spam.
+ * Only logs on user-initiated state changes (path navigation, refresh button),
+ * not on every frame. This follows the Logging Discipline rule:
+ * NO logs in render loops or methods called 60+ times/sec.
+ */
+void SaveFilePickerModal::RefreshFileListInternal(bool bLog)
+{
     m_fileList.clear();
     m_folderList.clear();
 
@@ -274,7 +297,10 @@ void SaveFilePickerModal::RefreshFileList()
 
     if (hFind == INVALID_HANDLE_VALUE)
     {
-        SYSTEM_LOG << "[SaveFilePickerModal] Directory not found or inaccessible: " << m_currentPath << "\n";
+        if (bLog)
+        {
+            SYSTEM_LOG << "[SaveFilePickerModal] Directory not found or inaccessible: " << m_currentPath << "\n";
+        }
         return;
     }
 
@@ -307,14 +333,22 @@ void SaveFilePickerModal::RefreshFileList()
     std::sort(m_fileList.begin(), m_fileList.end());
     std::sort(m_folderList.begin(), m_folderList.end());
 
-    SYSTEM_LOG << "[SaveFilePickerModal] Found " << m_fileList.size() 
-               << " files and " << m_folderList.size()
-               << " folders in " << m_currentPath << "\n";
+    // PHASE 46: Only log on user-initiated state changes (Open, path navigation, refresh button)
+    // NOT on every frame (prevents spam)
+    if (bLog)
+    {
+        SYSTEM_LOG << "[SaveFilePickerModal] Found " << m_fileList.size() 
+                   << " files and " << m_folderList.size()
+                   << " folders in " << m_currentPath << "\n";
+    }
 #else
     DIR* dir = opendir(m_currentPath.c_str());
     if (!dir)
     {
-        SYSTEM_LOG << "[SaveFilePickerModal] Directory not found or inaccessible: " << m_currentPath << "\n";
+        if (bLog)
+        {
+            SYSTEM_LOG << "[SaveFilePickerModal] Directory not found or inaccessible: " << m_currentPath << "\n";
+        }
         return;
     }
 
@@ -322,7 +356,7 @@ void SaveFilePickerModal::RefreshFileList()
     while ((entry = readdir(dir)) != nullptr)
     {
         std::string filename = entry->d_name;
-        
+
         if (filename == "." || filename == "..")
             continue;
 
@@ -348,11 +382,17 @@ void SaveFilePickerModal::RefreshFileList()
     std::sort(m_fileList.begin(), m_fileList.end());
     std::sort(m_folderList.begin(), m_folderList.end());
 
-    SYSTEM_LOG << "[SaveFilePickerModal] Found " << m_fileList.size() 
-               << " files and " << m_folderList.size()
-               << " folders in " << m_currentPath << "\n";
+    // PHASE 46: Only log on user-initiated state changes (Open, path navigation, refresh button)
+    // NOT on every frame (prevents spam)
+    if (bLog)
+    {
+        SYSTEM_LOG << "[SaveFilePickerModal] Found " << m_fileList.size() 
+                   << " files and " << m_folderList.size()
+                   << " folders in " << m_currentPath << "\n";
+    }
 #endif
 }
+
 
 void SaveFilePickerModal::RenderFileList()
 {
@@ -391,7 +431,7 @@ void SaveFilePickerModal::RenderFolderList()
             }
             m_currentPath += folder;
             strncpy_s(m_pathBuffer, sizeof(m_pathBuffer), m_currentPath.c_str(), _TRUNCATE);
-            RefreshFileList();
+            RefreshFileListInternal(true);  // true = user initiated navigation, log
         }
     }
 }

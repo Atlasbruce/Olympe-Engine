@@ -196,8 +196,8 @@
           "name": "BT_EmitSound",
           "parameters": {},
           "position": {
-            "x": 238,
-            "y": 166
+            "x": 231,
+            "y": 150
           },
           "type": "Action"
         },
@@ -232,7 +232,8 @@
             84,
             104,
             115,
-            116
+            116,
+            117
           ],
           "id": 100,
           "name": "BT_Sequence",
@@ -428,6 +429,17 @@
             "y": 880
           },
           "type": "SendMessage"
+        },
+        {
+          "children": [],
+          "id": 117,
+          "name": "BT_SubGraph",
+          "parameters": {},
+          "position": {
+            "x": -264.487,
+            "y": -340.807
+          },
+          "type": "SubGraph"
         }
       ],
       "rootNodeId": -1
@@ -445,7 +457,7 @@
   "metadata": {
     "author": "User",
     "created": "",
-    "lastModified": "2026-04-13T14:38:40",
+    "lastModified": "",
     "tags": []
   },
   "name": "Untitled-1",

@@ -31,7 +31,7 @@
 #endif
 
 namespace Olympe {
-namespace NodeGraph {
+namespace NodeGraphTypes {
 
 // ============================================================================
 // Config factories
@@ -207,12 +207,12 @@ void SharedGraphRenderer::RenderToolbar(GraphDocument*       doc,
         (void)doc;
     }
     ImGui::SameLine();
-    ImGui::TextDisabled(ctx.GetMode() == Olympe::NodeGraph::EditorMode::Debug ? "[Debug]" : "[Editor]");
+    ImGui::TextDisabled(ctx.GetMode() == Olympe::NodeGraphTypes::EditorMode::Debug ? "[Debug]" : "[Editor]");
 #else
     (void)doc;
     (void)ctx;
 #endif
 }
 
-} // namespace NodeGraph
+} // namespace NodeGraphTypes
 } // namespace Olympe

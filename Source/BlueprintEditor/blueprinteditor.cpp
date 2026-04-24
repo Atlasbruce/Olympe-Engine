@@ -82,28 +82,28 @@ namespace Olympe
         m_LastError.clear();
         
         // Initialize catalog manager
-        EnumCatalogManager::Get().Initialize();
+      // UNUSEFULL FOR STANDALONE  EnumCatalogManager::Get().Initialize();
         
         // Initialize node graph manager
         NodeGraphManager::Get().Initialize();
         
         // Initialize entity inspector manager
-        EntityInspectorManager::Get().Initialize();
+        // DEPRECATED STANDALONE CRUD NO RUNTIME EntityInspectorManager::Get().Initialize();
         
         // Initialize template manager
-        TemplateManager::Get().Initialize();
+        // UNUSED FOR STANDALLONE TemplateManager::Get().Initialize();
         
         // Initialize command stack
         m_CommandStack = new Olympe::Blueprint::CommandStack();
         
         // Initialize plugin system
-        InitializePlugins();
+        // UNUSED FOR STANDALLONE InitializePlugins();
 
         // Load configuration
         LoadConfig("blueprint_editor_config.json");
 
         // Scan assets on initialization
-        RefreshAssets();
+        //RefreshAssets();
     }
     
     void BlueprintEditor::InitializeRuntimeEditor()
@@ -121,7 +121,7 @@ namespace Olympe
 
         // Pre-load all ATS graphs found in Blueprints/ and Gamedata/ so that
         // they are validated and ready for the asset browser and graph panels.
-        PreloadATSGraphs();
+        // DEPRECATED PreloadATSGraphs();
     }
 
     void BlueprintEditor::Shutdown()

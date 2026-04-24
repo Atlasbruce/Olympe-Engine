@@ -1,0 +1,732 @@
+/*
+ * Olympe Blueprint Editor - Node Graph Panel Implementation
+ */
+
+#include "NodeGraphPanel.h"
+#include "BlueprintEditor.h"
+#include "InspectorPanel.h"
+#include "AtomicTaskUIRegistry.h"
+#include "Clipboard.h"
+#include "EditorContext.h"
+#include "EntityInspectorManager.h"
+#include "BTNodeGraphManager.h"
+#include "../NodeGraphCore/NodeGraphManager.h"
+#include "../NodeGraphCore/GraphDocument.h"
+#include "EnumCatalogManager.h"
+#include "BPCommandSystem.h"
+#include "NodeStyleRegistry.h"
+#include "../system/system_consts.h"
+#include "../TaskSystem/AtomicTaskRegistry.h"
+#include "../TaskSystem/TaskGraphTypes.h"
+#include "../third_party/imgui/imgui.h"
+#include "../third_party/imnodes/imnodes.h"
+#include <iostream>
+#include <vector>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <cctype>
+#include <memory>
+#include "../NodeGraphShared/BlueprintAdapter.h"
+
+// Use Blueprint namespace for command classes
+using namespace Olympe::Blueprint;
+
+namespace
+{
+    // UID generation constants for ImNodes
+    // These ensure unique IDs across multiple open graphs
+    constexpr int GRAPH_ID_MULTIPLIER = 10000;     // Multiplier for graph ID in node UID calculation
+    constexpr int ATTR_ID_MULTIPLIER = 100;        // Multiplier for node UID in attribute UID calculation
+    constexpr int LINK_ID_MULTIPLIER = 100000;     // Multiplier for graph ID in link UID calculation
+
+    // Helper function to convert screen space coordinates to grid space coordinates
+    // Screen space: origin at upper-left corner of the window
+    // Grid space: origin at upper-left corner of the node editor, adjusted by panning
+    ImVec2 ScreenSpaceToGridSpace(const ImVec2& screenPos)
+    {
+        // Get the editor's screen space position
+        ImVec2 editorPos = ImGui::GetCursorScreenPos();
+        
+        // Get the current panning offset
+        ImVec2 panning = ImNodes::EditorContextGetPanning();
+        
+        // Convert: subtract editor position to get editor space, then subtract panning to get grid space
+        return ImVec2(screenPos.x - editorPos.x - panning.x, 
+                      screenPos.y - editorPos.y - panning.y);
+    }
+}
+
+namespace Olympe
+{
+
+// ============================================================================
+// Static member definitions
+// ============================================================================
+
+int NodeGraphPanel::s_ActiveDebugNodeId = -1;
+
+// ============================================================================
+// SetActiveDebugNode
+// ============================================================================
+
+void NodeGraphPanel::SetActiveDebugNode(int localNodeId)
+{
+    s_ActiveDebugNodeId = localNodeId;
+}
+
+NodeGraphPanel::NodeGraphPanel()
+{
+    m_NodeNameBuffer[0] = '\0';
+    m_ContextMenuSearch[0] = '\0';
+    m_NewSubgraphNameBuffer[0] = '\0';
+
+    // Phase 8: seed the tab list with the root graph tab.
+    m_SubgraphTabs.emplace_back("root", "Root", "root");
+    m_ActiveSubgraphTabIndex = 0;
+}
+
+NodeGraphPanel::~NodeGraphPanel()
+{
+}
+
+void NodeGraphPanel::Initialize()
+{
+    std::cout << "[NodeGraphPanel] Initialized\n";
+
+    // Phase 35.0: Create dedicated imnodes context for this panel instance
+    m_imnodesContext = ImNodes::EditorContextCreate();
+
+    // Phase 36: Canvas editor created lazily in RenderGraph() when canvas size is known
+
+         // Set up autosave timing only.  The per-save lambda overload of
+         // ScheduleSave() is used at each change site so that serialization
+         // happens on the UI thread and the background task only does I/O.
+         m_autosave.Init(nullptr, 1.5f, 60.0f);
+     }
+
+    void NodeGraphPanel::Shutdown()
+     {
+         // Phase 35.0: Free imnodes context
+         if (m_imnodesContext)
+         {
+             ImNodes::EditorContextFree(m_imnodesContext);
+             m_imnodesContext = nullptr;
+         }
+
+         m_autosave.Flush();
+         std::cout << "[NodeGraphPanel] Shutdown\n";
+     }
+
+    void NodeGraphPanel::Render()
+    {
+        ImGui::Begin("Node Graph Editor");
+        RenderContent();
+        ImGui::End();
+    }
+
+    void NodeGraphPanel::RenderContent()
+    {
+        // Advance autosave timers each frame.
+        m_autosave.Tick(static_cast<double>(ImGui::GetTime()));
+
+        // Handle keyboard shortcuts
+        HandleKeyboardShortcuts();
+
+        // View toggles: Snap-to-grid and Minimap
+        ImGui::Checkbox("Snap", &m_SnapToGrid);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Snap-to-grid (Ctrl+G)");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(60.0f);
+        ImGui::DragFloat("Grid", &m_SnapGridSize, 1.0f, 4.0f, 128.0f, "%.0f");
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Grid cell size");
+        ImGui::SameLine();
+
+        // Phase 36: Minimap toggle through canvas editor
+        bool minimapVisible = m_canvasEditor ? m_canvasEditor->IsMinimapVisible() : false;
+        if (ImGui::Checkbox("Map", &minimapVisible))
+        {
+            if (m_canvasEditor)
+                m_canvasEditor->SetMinimapVisible(minimapVisible);
+        }
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Minimap (Ctrl+M)");
+        ImGui::SameLine();
+
+        // Phase 36: Minimap size control (Step 8)
+        if (m_canvasEditor && minimapVisible)
+        {
+            ImGui::SetNextItemWidth(50.0f);
+            float minimapSize = m_canvasEditor->GetMinimapSize();
+            if (ImGui::DragFloat("##mmsize", &minimapSize, 0.01f, 0.05f, 0.5f, "%.2f"))
+            {
+                m_canvasEditor->SetMinimapSize(minimapSize);
+            }
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Minimap scale (0.05-0.5)");
+            ImGui::SameLine();
+
+            // Phase 36: Minimap position control (Step 9)
+            ImGui::SetNextItemWidth(80.0f);
+            int minimapPosition = m_canvasEditor->GetMinimapPosition();
+            const char* positionNames[] = {"TopLeft", "TopRight", "BottomLeft", "BottomRight"};
+            if (ImGui::Combo("##mmpos", &minimapPosition, positionNames, IM_ARRAYSIZE(positionNames)))
+            {
+                m_canvasEditor->SetMinimapPosition(minimapPosition);
+            }
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Minimap position");
+            ImGui::SameLine();
+        }
+        ImGui::SameLine();
+
+        // Debug info - DISABLED pending legacy code removal
+        // PHASE 52: All toolbar and save/save-as functionality disabled
+        // Modern editors handle this via TabManager framework
+        /*
+        if (s_ActiveDebugNodeId >= 0)
+        {
+            ImGui::TextColored(ImVec4(1.0f, 0.9f, 0.2f, 1.0f), "  [DBG node %d]", s_ActiveDebugNodeId);
+        }
+        */
+
+        ImGui::SameLine();
+            
+            ImGui::Separator();
+        }
+
+        // PHASE 52: Legacy RenderContent code disabled
+         // This section uses undefined NodeGraphManager::Get() and NodeGraph types
+         // Modern editors (BehaviorTreeRenderer, etc.) set up their own rendering pipelines
+         // and don't rely on this shared NodeGraphPanel for the main graph visualization
+         /*
+         // OLD CODE (disabled):
+         if (!m_SuppressGraphTabs)
+         {
+             RenderGraphTabs();
+             ImGui::Separator();
+         }
+         {
+             ::NodeGraph* activeGraph = NodeGraphManager::Get().GetActiveGraph();
+             if (activeGraph) {
+                 RenderGraph();
+             }
+         }
+         RenderNodeEditModal();
+         */
+    }
+
+    void NodeGraphPanel::RenderGraphTabs()
+    {
+        // PHASE 52: RenderGraphTabs disabled - legacy NodeGraph API incompatible with current system
+        // This function uses undefined NodeGraphManager::Get() and NodeGraph types
+        // The current codebase uses TabManager and GraphDocument instead
+        // Reference implementation left for future migration if needed
+        /*
+        LEGACY CODE DISABLED:
+        auto graphIds = NodeGraphManager::Get().GetAllGraphIds();
+        int currentActiveId = NodeGraphManager::Get().GetActiveGraphId();
+        ... (rest of legacy code omitted)
+        */
+    }
+
+    void NodeGraphPanel::RenderGraph()
+    {
+        // PHASE 52: RenderGraph() disabled - legacy Phase 7 code using undefined APIs
+        // Uses: NodeGraphManager::Get(), GraphDocument type (incompatible with current GraphDocument)
+        // StringToNodeType(), NodeStyleRegistry, GraphNode properties
+        // Modern editors (BehaviorTreeRenderer, EntityPrefabRenderer, etc.) implement their own rendering
+        /*
+        LEGACY IMPLEMENTATION DISABLED - DO NOT RESTORE
+        Full ~150 line function removed for compilation
+        */
+    }
+
+    void NodeGraphPanel::SyncNodePositionsFromImNodes(int graphID)
+    {
+        // PHASE 52: SyncNodePositionsFromImNodes() disabled - legacy Phase 7 code
+        /*
+        LEGACY IMPLEMENTATION DISABLED
+        */
+    }
+
+    void NodeGraphPanel::RenderNodePipsAndContent(GraphNode* node, const NodeStyle& style)
+    {
+        // PHASE 52: RenderNodePipsAndContent() disabled - legacy Phase 7 code
+        /*
+        LEGACY IMPLEMENTATION DISABLED
+        */
+    }
+
+    void NodeGraphPanel::RenderNodeEditModal()
+    {
+        // PHASE 52: RenderNodeEditModal() completely disabled - legacy Phase 7 code
+        // This function was ~680 lines of legacy BT graph rendering
+        // Modern editors (BehaviorTreeRenderer) handle all their own rendering
+    }
+
+    void NodeGraphPanel::RenderNodePipsAndContent_Orphaned()
+    {
+        // PHASE 52: Orphaned code from incomplete RenderNodePipsAndContent replacement (lines 270-302)
+        // This code is unreachable and disabled. Modern rendering handled by IGraphRenderer adapters.
+    }
+
+        // Root and OnEvent are entry points - they should NOT have input pins
+        bool hasInputPin = (node->type != NodeType::BT_Root &&
+                           node->type != NodeType::BT_OnEvent);
+
+        // Use 2-column layout to align input pins (left) with output pins (right) on the same Y
+        ImGui::Columns(3, "node_pins", false);
+        ImGui::SetColumnWidth(0, 60.0f);   // Left column: input pin
+        ImGui::SetColumnWidth(1, 100.0f);  // Center column: node content
+
+        // ---- LEFT COLUMN: Input Pin ----
+        if (hasInputPin)
+            RenderTypedPin(inputAttrUID,  "In",  true,  isExec, connectedAttrIDs);
+
+        // ---- CENTER COLUMN: Node content ----
+        ImGui::NextColumn();
+        if (node->type == NodeType::BT_Action && !node->actionType.empty())
+            ImGui::Text("%s", node->actionType.c_str());
+        else if (node->type == NodeType::BT_Condition && !node->conditionType.empty())
+            ImGui::Text("%s", node->conditionType.c_str());
+        else if (node->type == NodeType::BT_Decorator && !node->decoratorType.empty())
+            ImGui::Text("%s", node->decoratorType.c_str());
+        else
+            ImGui::Text("%s", NodeTypeToString(node->type));
+
+        // ---- RIGHT COLUMN: Output Pin ----
+        ImGui::NextColumn();
+        RenderTypedPin(outputAttrUID, "Out", false, isExec, connectedAttrIDs);
+
+        ImGui::Columns(1);  // End columns
+    }
+
+    // =========================================================================
+    // RenderActiveLinks
+    // =========================================================================
+
+    void NodeGraphPanel::RenderActiveLinks(GraphDocument* graphDoc, int graphID)
+    {
+        if (s_ActiveDebugNodeId < 0 || graphDoc == nullptr)
+            return;
+
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        if (drawList == nullptr)
+            return;
+
+        // Pulsing amber/yellow: oscillate alpha and colour over time.
+        float t = 0.5f + 0.5f * std::sin(static_cast<float>(ImGui::GetTime()) * 4.0f);
+        float alpha = 0.6f + 0.4f * t;
+
+        ImU32 glowWide = IM_COL32(255, 200, 50, static_cast<int>(alpha * 80.0f));
+        ImU32 glowCore = IM_COL32(
+            static_cast<int>(180.0f + t * 75.0f),
+            static_cast<int>(140.0f + t * 115.0f),
+            10,
+            static_cast<int>(alpha * 255.0f));
+
+        const auto& linksList = graphDoc->GetLinks();
+        for (size_t i = 0; i < linksList.size(); ++i)
+        {
+            const auto& linkData = linksList[i];
+
+            // Extract node IDs from pin IDs (assuming pin ID encodes node ID in higher bits)
+            int fromNode = linkData.fromPin.value / 1000;  // Extract node ID from pin ID
+            int toNode = linkData.toPin.value / 1000;      // Extract node ID from pin ID
+
+            bool isActive = (fromNode == s_ActiveDebugNodeId ||
+                             toNode   == s_ActiveDebugNodeId);
+            if (!isActive)
+                continue;
+
+            int fromUID = graphID * GRAPH_ID_MULTIPLIER + fromNode;
+            int toUID   = graphID * GRAPH_ID_MULTIPLIER + toNode;
+
+            ImVec2 fromPos = ImNodes::GetNodeScreenSpacePos(fromUID);
+            ImVec2 fromDim = ImNodes::GetNodeDimensions(fromUID);
+            ImVec2 toPos   = ImNodes::GetNodeScreenSpacePos(toUID);
+            ImVec2 toDim   = ImNodes::GetNodeDimensions(toUID);
+
+            // Pin-center anchors: output pin is at the right edge + PinOffset,
+            // input pin is at the left edge - PinOffset.  Both at centre height.
+            const float po = ImNodes::GetStyle().PinOffset;
+            ImVec2 p1 = ImVec2(fromPos.x + fromDim.x + po, fromPos.y + fromDim.y * 0.5f);
+            ImVec2 p4 = ImVec2(toPos.x             - po, toPos.y   + toDim.y   * 0.5f);
+
+            // Horizontal tangents give the classic node-graph S-curve shape.
+            float curve = (p4.x - p1.x) * 0.4f;
+            if (curve < 50.0f) curve = 50.0f;
+            ImVec2 p2 = ImVec2(p1.x + curve, p1.y);
+            ImVec2 p3 = ImVec2(p4.x - curve, p4.y);
+
+            // Wide transparent halo + narrow bright core.
+            drawList->AddBezierCubic(p1, p2, p3, p4, glowWide, 6.0f);
+            drawList->AddBezierCubic(p1, p2, p3, p4, glowCore, 2.0f);
+        }
+    }
+
+    // =========================================================================
+    // RenderConnectionIndices - Phase 38: Y-Axis Positional Execution Order
+    // =========================================================================
+
+    void NodeGraphPanel::RenderConnectionIndices(GraphDocument* graphDoc, int graphID)
+    {
+        if (graphDoc == nullptr)
+            return;
+
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        if (drawList == nullptr)
+            return;
+
+        // Get all nodes from document
+        const auto& nodes = graphDoc->GetNodes();
+
+        // Convert to temporary GraphNode structures (similar to RenderGraph)
+        std::vector<std::shared_ptr<GraphNode>> graphNodes;
+        for (const auto& nodeData : nodes)
+        {
+            auto graphNode = std::make_shared<GraphNode>();
+            graphNode->id = nodeData.id.value;
+            graphNode->name = nodeData.name;
+            graphNode->posX = nodeData.position.x;
+            graphNode->posY = nodeData.position.y;
+            graphNode->type = StringToNodeType(nodeData.type);
+            graphNode->childIds.clear();
+            for (const auto& childId : nodeData.children)
+                graphNode->childIds.push_back(childId.value);
+
+            graphNodes.push_back(graphNode);
+        }
+
+        // Iterate through all nodes, find Sequence/Selector nodes
+        for (size_t i = 0; i < graphNodes.size(); ++i)
+        {
+            const auto& parentNode = graphNodes[i];
+            if (parentNode == nullptr)
+                continue;
+
+            // Check if this node is a Sequence or Selector (NodeType enum comparison)
+            if (parentNode->type != NodeType::BT_Sequence && parentNode->type != NodeType::BT_Selector)
+                continue;
+
+            // Get the parent node's screen position
+            int parentUID = graphID * GRAPH_ID_MULTIPLIER + parentNode->id;
+            ImVec2 parentPos = ImNodes::GetNodeScreenSpacePos(parentUID);
+            ImVec2 parentDim = ImNodes::GetNodeDimensions(parentUID);
+
+            // Phase 38: Sort children by Y-position to determine execution order
+            std::vector<std::pair<float, int>> childrenWithY;
+            for (size_t j = 0; j < parentNode->childIds.size(); ++j)
+            {
+                int childId = parentNode->childIds[j];
+
+                // Find child node to get its Y position
+                const auto& childData = graphDoc->GetNode(NodeId{static_cast<uint32_t>(childId)});
+                if (childData != nullptr)
+                {
+                    childrenWithY.push_back(std::make_pair(childData->position.y, childId));
+                }
+            }
+
+            // Sort by Y-coordinate (ascending: top node = first to execute)
+            std::sort(childrenWithY.begin(), childrenWithY.end());
+
+            // Render index for each child connection
+            for (size_t i = 0; i < childrenWithY.size(); ++i)
+            {
+                int childId = childrenWithY[i].second;
+                uint32_t executionIndex = static_cast<uint32_t>(i + 1);  // 1-based indexing
+
+                // Find the child node in the graph
+                const auto& childData = graphDoc->GetNode(NodeId{static_cast<uint32_t>(childId)});
+                if (childData == nullptr)
+                    continue;
+
+                // Get child node's screen position
+                int childUID = graphID * GRAPH_ID_MULTIPLIER + childData->id.value;
+                ImVec2 childPos = ImNodes::GetNodeScreenSpacePos(childUID);
+                ImVec2 childDim = ImNodes::GetNodeDimensions(childUID);
+
+                // Calculate connection curve (same as RenderActiveLinks)
+                const float po = ImNodes::GetStyle().PinOffset;
+                ImVec2 p1 = ImVec2(parentPos.x + parentDim.x + po, parentPos.y + parentDim.y * 0.5f);
+                ImVec2 p4 = ImVec2(childPos.x - po, childPos.y + childDim.y * 0.5f);
+
+                // Horizontal tangents for S-curve
+                float curve = (p4.x - p1.x) * 0.4f;
+                if (curve < 50.0f) curve = 50.0f;
+                ImVec2 p2 = ImVec2(p1.x + curve, p1.y);
+                ImVec2 p3 = ImVec2(p4.x - curve, p4.y);
+
+                // Calculate midpoint of the Bezier curve for label placement
+                // Use t=0.5 for cubic Bezier: B(0.5) = 0.125*p1 + 0.375*p2 + 0.375*p3 + 0.125*p4
+                ImVec2 midpoint = ImVec2(
+                    0.125f * p1.x + 0.375f * p2.x + 0.375f * p3.x + 0.125f * p4.x,
+                    0.125f * p1.y + 0.375f * p2.y + 0.375f * p3.y + 0.125f * p4.y
+                );
+
+                // Format index text
+                char indexText[16];
+                snprintf(indexText, sizeof(indexText), "%u", executionIndex);
+
+                // Render index label with background
+                ImVec2 textSize = ImGui::CalcTextSize(indexText);
+                ImVec2 padding = ImVec2(4.0f, 2.0f);
+                ImVec2 bgMin = ImVec2(midpoint.x - textSize.x * 0.5f - padding.x, 
+                                      midpoint.y - textSize.y * 0.5f - padding.y);
+                ImVec2 bgMax = ImVec2(midpoint.x + textSize.x * 0.5f + padding.x,
+                                      midpoint.y + textSize.y * 0.5f + padding.y);
+
+                // Background: Dark with border
+                ImU32 bgColor = IM_COL32(40, 40, 50, 220);
+                ImU32 borderColor = IM_COL32(100, 150, 200, 255);
+                ImU32 textColor = IM_COL32(200, 220, 255, 255);
+
+                drawList->AddRectFilled(bgMin, bgMax, bgColor, 3.0f);
+                drawList->AddRect(bgMin, bgMax, borderColor, 3.0f, 0, 1.0f);
+
+                // Text: White/light blue
+                drawList->AddText(ImVec2(midpoint.x - textSize.x * 0.5f, midpoint.y - textSize.y * 0.5f),
+                                 textColor, indexText);
+            }
+        }
+    }
+
+    void NodeGraphPanel::RenderContextMenu()
+    {
+        if (ImGui::BeginPopup("NodeCreationMenu"))
+        {
+            // Reset search buffer when popup first opens
+            ImGui::Text("Create Node");
+            ImGui::Separator();
+
+            // Fuzzy search filter
+            ImGui::SetNextItemWidth(-1.0f);
+            ImGui::InputText("##search", m_ContextMenuSearch, sizeof(m_ContextMenuSearch));
+            ImGui::SameLine(0.0f, 0.0f);
+            ImGui::TextDisabled(" (search)");
+            ImGui::Separator();
+
+            // Build lowercase search string for case-insensitive matching
+            std::string searchLower(m_ContextMenuSearch);
+            for (size_t i = 0; i < searchLower.size(); ++i)
+                searchLower[i] = static_cast<char>(std::tolower(static_cast<unsigned char>(searchLower[i])));
+
+            // Helper: returns true when item matches the search filter (empty = show all)
+            auto matchesFilter = [&](const std::string& name) -> bool
+            {
+                if (searchLower.empty())
+                    return true;
+                std::string nameLower = name;
+                for (size_t i = 0; i < nameLower.size(); ++i)
+                    nameLower[i] = static_cast<char>(std::tolower(static_cast<unsigned char>(nameLower[i])));
+                return nameLower.find(searchLower) != std::string::npos;
+            };
+
+            // ----- Built-in BT composite nodes ----------------------------
+            if (searchLower.empty())
+            {
+                if (ImGui::BeginMenu("Composite"))
+                {
+                    if (ImGui::MenuItem("Sequence"))
+                        CreateNewNode("Sequence", m_ContextMenuPosX, m_ContextMenuPosY);
+                    if (ImGui::MenuItem("Selector"))
+                        CreateNewNode("Selector", m_ContextMenuPosX, m_ContextMenuPosY);
+                    ImGui::EndMenu();
+                }
+
+                if (ImGui::BeginMenu("Action"))
+                {
+                    auto actionTypes = EnumCatalogManager::Get().GetActionTypes();
+                    for (const auto& actionType : actionTypes)
+                    {
+                        if (ImGui::MenuItem(actionType.c_str()))
+                        {
+                            CreateNewNode("Action", m_ContextMenuPosX, m_ContextMenuPosY);
+                            NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
+                            if (graph)
+                            {
+                                auto allNodes = graph->GetAllNodes();
+                                if (!allNodes.empty())
+                                    allNodes.back()->actionType = actionType;
+                            }
+                        }
+                    }
+                    ImGui::EndMenu();
+                }
+
+                if (ImGui::BeginMenu("Condition"))
+                {
+                    auto conditionTypes = EnumCatalogManager::Get().GetConditionTypes();
+                    for (const auto& conditionType : conditionTypes)
+                    {
+                        if (ImGui::MenuItem(conditionType.c_str()))
+                        {
+                            CreateNewNode("Condition", m_ContextMenuPosX, m_ContextMenuPosY);
+                            NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
+                            if (graph)
+                            {
+                                auto allNodes = graph->GetAllNodes();
+                                if (!allNodes.empty())
+                                    allNodes.back()->conditionType = conditionType;
+                            }
+                        }
+                    }
+                    ImGui::EndMenu();
+                }
+
+                if (ImGui::BeginMenu("Decorator"))
+                {
+                    auto decoratorTypes = EnumCatalogManager::Get().GetDecoratorTypes();
+                    for (const auto& decoratorType : decoratorTypes)
+                    {
+                        if (ImGui::MenuItem(decoratorType.c_str()))
+                        {
+                            CreateNewNode("Decorator", m_ContextMenuPosX, m_ContextMenuPosY);
+                            NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
+                            if (graph)
+                            {
+                                auto allNodes = graph->GetAllNodes();
+                                if (!allNodes.empty())
+                                    allNodes.back()->decoratorType = decoratorType;
+                            }
+                        }
+                    }
+                    ImGui::EndMenu();
+                }
+
+                ImGui::Separator();
+                ImGui::TextDisabled("-- Atomic Tasks --");
+
+                if (ImGui::MenuItem("Comment Box"))
+                {
+                    NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
+                    if (graph)
+                    {
+                        ImVec2 canvasPos = ScreenSpaceToGridSpace(ImVec2(m_ContextMenuPosX, m_ContextMenuPosY));
+                        int nodeId = graph->CreateNode(NodeType::Comment, canvasPos.x, canvasPos.y, "Comment");
+                        GraphNode* cnode = graph->GetNode(nodeId);
+                        if (cnode)
+                            cnode->parameters["text"] = "// Enter comment here";
+                    }
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+
+            // ----- AtomicTaskRegistry nodes (with fuzzy filter) -----------
+            {
+                std::vector<std::string> taskIds = AtomicTaskRegistry::Get().GetAllTaskIDs();
+                // Sort for deterministic order
+                std::sort(taskIds.begin(), taskIds.end());
+
+                bool anyShown = false;
+                for (const auto& taskId : taskIds)
+                {
+                    if (!matchesFilter(taskId))
+                        continue;
+                    anyShown = true;
+                    if (ImGui::MenuItem(taskId.c_str()))
+                    {
+                        CreateNewNode("Action", m_ContextMenuPosX, m_ContextMenuPosY);
+                        NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
+                        if (graph)
+                        {
+                            auto allNodes = graph->GetAllNodes();
+                            if (!allNodes.empty())
+                                allNodes.back()->actionType = taskId;
+                        }
+                    }
+                }
+                if (!anyShown && !searchLower.empty())
+                    ImGui::TextDisabled("No results for \"%s\"", m_ContextMenuSearch);
+            }
+
+            // Clear search when popup closes
+            if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
+                m_ContextMenuSearch[0] = '\0';
+
+            ImGui::EndPopup();
+        }
+    }
+
+    void NodeGraphPanel::CreateNewNode(const char* nodeType, float screenX, float screenY)
+    {
+        // PHASE 52: Disabled - legacy Phase 7 code using undefined NodeGraphManager API
+    }
+
+    void NodeGraphPanel::RenderNodeProperties()
+    {
+        // PHASE 52: Disabled - legacy Phase 7 code
+    }
+
+    void NodeGraphPanel::HandleKeyboardShortcuts()
+    {
+        // PHASE 52: Disabled - legacy Phase 7 code using undefined NodeGraphManager API
+    }
+
+
+    void NodeGraphPanel::RenderNodeEditModal()
+    {
+        // PHASE 52: Duplicate RenderNodeEditModal() - completely disabled
+        // Modern editors handle node editing through their own UI systems
+    }
+
+
+// ============================================================================
+// Phase 8: Subgraph tab system - DISABLED Phase 52
+// ============================================================================
+
+     void NodeGraphPanel::RenderSubgraphTabBar()
+     {
+         // PHASE 52: Disabled - legacy Phase 7 subgraph tab system
+     }
+
+     void NodeGraphPanel::OpenSubgraphTab(const std::string& subgraphUUID,
+                                           const std::string& displayName)
+     {
+         // PHASE 52: Disabled - legacy Phase 7 subgraph tab system
+     }
+
+     void NodeGraphPanel::CloseSubgraphTab(int index)
+     {
+         // PHASE 52: Disabled - legacy Phase 7 subgraph tab system
+     }
+
+     void NodeGraphPanel::CreateEmptySubgraph(const std::string& name)
+     {
+         // PHASE 52: Disabled - legacy Phase 7 subgraph tab system
+     }
+
+    const GraphTab* NodeGraphPanel::GetActiveTab() const
+    {
+        if (m_ActiveSubgraphTabIndex >= 0 &&
+            m_ActiveSubgraphTabIndex < (int)m_SubgraphTabs.size())
+        {
+            return &m_SubgraphTabs[m_ActiveSubgraphTabIndex];
+        }
+        return nullptr;
+    }
+
+    std::string NodeGraphPanel::GetActiveSubgraphUUID() const
+    {
+        const GraphTab* tab = GetActiveTab();
+        if (tab && tab->tabID != "root")
+            return tab->tabID;
+        return "";
+    }
+
+    // Phase 43: Framework modal rendering
+    void NodeGraphPanel::RenderFrameworkModals()
+    {
+        // Phase 43: NodeGraphPanel does not directly own a CanvasFramework.
+        // Modal rendering for BehaviorTree is handled by BehaviorTreeRenderer instead.
+        // This method is kept for interface compatibility.
+        // Note: If NodeGraphPanel needs direct framework access in the future,
+        //       add m_framework member and implement like VisualScriptEditorPanel.
+    }
+
+}
+

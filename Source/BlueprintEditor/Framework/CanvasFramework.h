@@ -237,15 +237,15 @@ public:
      */
     IGraphRenderer* GetCanvasRenderer();
 
-    /**
-     * Get canvas renderer (const version)
-     */
-    const IGraphRenderer* GetCanvasRenderer() const;
+        /**
+         * Get canvas renderer (const version)
+         */
+        const IGraphRenderer* GetCanvasRenderer() const;
 
-private:
-    // ========== STATE ==========
-    IGraphDocument* m_document;                    ///< Non-owning reference to document
-    CanvasToolbarRenderer* m_toolbar;              ///< Owned toolbar instance
+        private:
+            // ========== STATE ==========
+            IGraphDocument* m_document;                    ///< Non-owning reference to document
+            CanvasToolbarRenderer* m_toolbar;              ///< Owned toolbar instance
     
     // ========== LAYOUT ==========
     float m_canvasX = 0.0f;                        ///< Canvas layout X

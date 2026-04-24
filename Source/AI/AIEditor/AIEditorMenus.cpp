@@ -48,8 +48,9 @@ void AIEditorMenus::RenderFileMenu(AIEditorGUI* editor)
 void AIEditorMenus::RenderEditMenu(AIEditorGUI* editor)
 {
     if (ImGui::BeginMenu(ICON_FA_PEN_TO_SQUARE " Edit")) {
-        bool canUndo = editor->GetCommandStack().CanUndo();
-        bool canRedo = editor->GetCommandStack().CanRedo();
+        // TODO: Command stack removed - reimplement undo/redo system
+        bool canUndo = false; // editor->GetCommandStack().CanUndo();
+        bool canRedo = false; // editor->GetCommandStack().CanRedo();
 
         if (ImGui::MenuItem(ICON_FA_ROTATE_LEFT " Undo", "Ctrl+Z", false, canUndo)) {
             editor->MenuAction_Undo();

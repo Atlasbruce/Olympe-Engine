@@ -11,17 +11,20 @@
 namespace Olympe
 {
     // ============ CopyNodesCommand ============
-    CopyNodesCommand::CopyNodesCommand(NodeGraph* graph, const std::vector<int>& nodeIds)
-        : m_graph(graph), m_nodeIds(nodeIds)
+    // TODO: Phase 50.4 - Reimplement with modern GraphDocument
+    CopyNodesCommand::CopyNodesCommand(void* graph, const std::vector<int>& nodeIds)
     {
+        // Deprecated - NodeGraph class removed in Phase 50.3 namespace collision fix
     }
 
     bool CopyNodesCommand::Execute()
     {
+        // TODO: Phase 50.4 - Reimplement with modern GraphDocument
+        // Legacy NodeGraph class removed - functionality disabled until reimplemented
         if (!m_graph)
             return false;
 
-        m_graph->CopyNodesToClipboard(m_nodeIds);
+        // m_graph->CopyNodesToClipboard(m_nodeIds);  // ← Legacy code, disabled
         return true;
     }
 
@@ -37,29 +40,34 @@ namespace Olympe
     }
 
     // ============ PasteNodesCommand ============
-    PasteNodesCommand::PasteNodesCommand(NodeGraph* graph, float offsetX, float offsetY)
-        : m_graph(graph), m_offsetX(offsetX), m_offsetY(offsetY)
+    // TODO: Phase 50.4 - Reimplement with modern GraphDocument
+    PasteNodesCommand::PasteNodesCommand(void* graph, float offsetX, float offsetY)
     {
+        // Deprecated - NodeGraph class removed in Phase 50.3 namespace collision fix
     }
 
     bool PasteNodesCommand::Execute()
     {
+        // TODO: Phase 50.4 - Reimplement with modern GraphDocument
+        // Legacy NodeGraph class removed - functionality disabled until reimplemented
         if (!m_graph)
             return false;
 
-        m_pastedNodeIds = m_graph->PasteNodesFromClipboard(m_offsetX, m_offsetY);
+        // m_pastedNodeIds = m_graph->PasteNodesFromClipboard(m_offsetX, m_offsetY);  // ← Legacy code, disabled
         return !m_pastedNodeIds.empty();
     }
 
     bool PasteNodesCommand::Undo()
     {
+        // TODO: Phase 50.4 - Reimplement with modern GraphDocument
+        // Legacy NodeGraph class removed - functionality disabled until reimplemented
         if (!m_graph || m_pastedNodeIds.empty())
             return false;
 
         // Delete all pasted nodes
         for (int nodeId : m_pastedNodeIds)
         {
-            m_graph->DeleteNode(nodeId);
+            // m_graph->DeleteNode(nodeId);  // ← Legacy code, disabled
         }
 
         return true;
@@ -71,29 +79,32 @@ namespace Olympe
     }
 
     // ============ DuplicateNodeCommand ============
-    DuplicateNodeCommand::DuplicateNodeCommand(NodeGraph* graph, const std::vector<int>& nodeIds, float offsetX, float offsetY)
-        : m_graph(graph), m_originalNodeIds(nodeIds), m_offsetX(offsetX), m_offsetY(offsetY)
+    DuplicateNodeCommand::DuplicateNodeCommand(void* graph, const std::vector<int>& nodeIds, float offsetX, float offsetY)
     {
     }
 
     bool DuplicateNodeCommand::Execute()
     {
+        // TODO: Phase 50.4 - Reimplement with modern GraphDocument
+        // Legacy NodeGraph class removed - functionality disabled until reimplemented
         if (!m_graph || m_originalNodeIds.empty())
             return false;
 
-        m_duplicatedNodeIds = m_graph->DuplicateNodes(m_originalNodeIds, m_offsetX, m_offsetY);
+        // m_duplicatedNodeIds = m_graph->DuplicateNodes(m_originalNodeIds, m_offsetX, m_offsetY);  // ← Legacy code, disabled
         return !m_duplicatedNodeIds.empty();
     }
 
     bool DuplicateNodeCommand::Undo()
     {
+        // TODO: Phase 50.4 - Reimplement with modern GraphDocument
+        // Legacy NodeGraph class removed - functionality disabled until reimplemented
         if (!m_graph || m_duplicatedNodeIds.empty())
             return false;
 
         // Delete all duplicated nodes
         for (int nodeId : m_duplicatedNodeIds)
         {
-            m_graph->DeleteNode(nodeId);
+            // m_graph->DeleteNode(nodeId);  // ← Legacy code, disabled
         }
 
         return true;

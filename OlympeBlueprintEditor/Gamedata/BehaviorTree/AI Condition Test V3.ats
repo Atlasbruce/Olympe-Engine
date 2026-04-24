@@ -1585,7 +1585,7 @@
       "type": "MathOp"
     },
     {
-      "bbKey": "playerIndex",
+      "bbKey": "cst_Hundred",
       "id": 53,
       "label": "PlayerIndex",
       "params": {
@@ -1605,7 +1605,7 @@
       "type": "GetBBValue"
     },
     {
-      "bbKey": "entityMaxHealth",
+      "bbKey": "cst_Hundred",
       "id": 54,
       "label": "entityMaxHealth",
       "params": {

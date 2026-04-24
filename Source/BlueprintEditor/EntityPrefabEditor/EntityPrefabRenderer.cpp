@@ -7,6 +7,7 @@
 #include "../Framework/CanvasToolbarRenderer.h"
 #include "../../DataManager.h"
 #include <memory>
+#include <set>
 
 namespace Olympe {
 
@@ -40,31 +41,30 @@ void EntityPrefabRenderer::Render()
 {
     RenderLayoutWithTabs();
 
-    // Phase 41: Render unified framework toolbar + modals
-    // This handles Save/SaveAs/Browse buttons with consistent UI
-    if (m_framework)
-    {
-        m_framework->RenderModals();
-    }
-    else
-    {
-        // Fallback to legacy modal handling if framework not initialized
-        DataManager::Get().RenderFilePickerModal();
-        if (!DataManager::Get().IsFilePickerModalOpen()) {
-            std::string selectedFile = DataManager::Get().GetSelectedFileFromModal();
-            if (!selectedFile.empty()) {
-                Load(selectedFile);
-            }
-        }
-
-        DataManager::Get().RenderSaveFilePickerModal();
-        if (!DataManager::Get().IsSaveFilePickerModalOpen()) {
-            std::string selectedFile = DataManager::Get().GetSelectedSaveFile();
-            if (!selectedFile.empty()) {
-                Save(selectedFile);
-            }
-        }
-    }
+    // Phase 53.1 FIX (BUG ROOT CAUSE): DO NOT call m_framework->RenderModals() here!
+    // Modals are rendered centrally by BlueprintEditorGUI AFTER RenderActiveCanvas().
+    // Calling here causes duplicate modals (2 BeginPopupModal with same ID).
+    // NOTE: Modal rendering moved to BlueprintEditorGUI.cpp line 682 for centralized control.
+    // LEGACY FALLBACK DISABLED (Phase 53):
+    // else
+    // {
+    //     // Fallback to legacy modal handling - DISABLED FOR FRAMEWORK MIGRATION
+    //     DataManager::Get().RenderFilePickerModal();
+    //     if (!DataManager::Get().IsFilePickerModalOpen()) {
+    //         std::string selectedFile = DataManager::Get().GetSelectedFileFromModal();
+    //         if (!selectedFile.empty()) {
+    //             Load(selectedFile);
+    //         }
+    //     }
+    // 
+    //     DataManager::Get().RenderSaveFilePickerModal();
+    //     if (!DataManager::Get().IsSaveFilePickerModalOpen()) {
+    //         std::string selectedFile = DataManager::Get().GetSelectedSaveFile();
+    //         if (!selectedFile.empty()) {
+    //             Save(selectedFile);
+    //         }
+    //     }
+    // }
 }
 
 void EntityPrefabRenderer::RenderLayoutWithTabs()
@@ -165,6 +165,12 @@ void EntityPrefabRenderer::RenderLayoutWithTabs()
 
     m_canvas.Render();
 
+    // Render minimap overlay on canvas
+    if (m_canvasEditor)
+    {
+        m_canvasEditor->RenderMinimap();
+    }
+
     // NEW: Use canvas editor EndRender to finalize
     m_canvasEditor->EndRender();
 
@@ -238,7 +244,7 @@ void EntityPrefabRenderer::RenderRightPanelTabs()
         if (ImGui::BeginTabItem("Properties"))
         {
             // Connect property panel to selected nodes from canvas
-            const std::vector<NodeId>& selectedNodes = m_canvas.GetDocument()->GetSelectedNodes();
+            const std::vector<PrefabNodeId>& selectedNodes = m_canvas.GetDocument()->GetSelectedNodes();
             if (selectedNodes.size() > 0)
             {
                 // Select first selected node for property editing
@@ -259,18 +265,36 @@ bool EntityPrefabRenderer::Load(const std::string& path)
 
     try
     {
+        // LOAD TRACKING: Log entry point and stack depth
+        static std::set<std::string> s_loadingStack;
+        static int s_loadCallDepth = 0;
+        s_loadCallDepth++;
+        std::string indent(s_loadCallDepth * 2, ' ');
+
+        SYSTEM_LOG << indent << "[EntityPrefabRenderer::Load] ENTRY: path=" << path << " (call depth: " << s_loadCallDepth << ")\n";
+
+        // Detect circular/multiple loads
+        if (s_loadingStack.count(path) > 0)
+        {
+            SYSTEM_LOG << indent << "[EntityPrefabRenderer::Load] WARNING: Already loading this file (circular load?), depth=" << s_loadingStack.size() << "\n";
+        }
+        s_loadingStack.insert(path);
+
         // Load JSON file
+        SYSTEM_LOG << indent << "[EntityPrefabRenderer::Load] About to call PrefabLoader::LoadJsonFromFile()\n";
         nlohmann::json jsonData = PrefabLoader::LoadJsonFromFile(path);
-        SYSTEM_LOG << "[EntityPrefabRenderer] Loaded JSON from: " << path << "\n";
+        SYSTEM_LOG << indent << "[EntityPrefabRenderer::Load] JSON loaded, size=" << jsonData.dump().size() << " bytes\n";
 
         // Verify it's an EntityPrefab
         if (jsonData.contains("blueprintType"))
         {
             std::string blueprintType = jsonData["blueprintType"].get<std::string>();
-            SYSTEM_LOG << "[EntityPrefabRenderer] blueprintType: " << blueprintType << "\n";
+            SYSTEM_LOG << indent << "[EntityPrefabRenderer::Load] blueprintType: " << blueprintType << "\n";
             if (blueprintType != "EntityPrefab")
             {
-                SYSTEM_LOG << "[EntityPrefabRenderer] ERROR: Not an EntityPrefab type\n";
+                SYSTEM_LOG << indent << "[EntityPrefabRenderer::Load] ERROR: Not an EntityPrefab type, returning false\n";
+                s_loadingStack.erase(path);
+                s_loadCallDepth--;
                 return false;
             }
         }
@@ -279,21 +303,34 @@ bool EntityPrefabRenderer::Load(const std::string& path)
         EntityPrefabGraphDocument* document = m_canvas.GetDocument();
         if (document == nullptr)
         {
-            SYSTEM_LOG << "[EntityPrefabRenderer] ERROR: GetDocument() returned nullptr\n";
+            SYSTEM_LOG << indent << "[EntityPrefabRenderer::Load] ERROR: GetDocument() returned nullptr\n";
+            s_loadingStack.erase(path);
+            s_loadCallDepth--;
             return false;
         }
 
-        SYSTEM_LOG << "[EntityPrefabRenderer] Document obtained, loading from file...\n";
+        SYSTEM_LOG << indent << "[EntityPrefabRenderer::Load] Document obtained, about to call document->LoadFromFile()\n";
 
         // Load from JSON into document
         if (!document->LoadFromFile(path))
         {
-            SYSTEM_LOG << "[EntityPrefabRenderer] ERROR: document->LoadFromFile() failed\n";
+            SYSTEM_LOG << indent << "[EntityPrefabRenderer::Load] ERROR: document->LoadFromFile() failed, returning false\n";
+            s_loadingStack.erase(path);
+            s_loadCallDepth--;
             return false;
         }
 
-        SYSTEM_LOG << "[EntityPrefabRenderer] Successfully loaded prefab\n";
+        // Phase 50.1.5: CRITICAL - Sync filepath to framework document
+        // This ensures CanvasToolbarRenderer sees the loaded filepath
+        // so Save button works directly (no SaveAs modal)
+        document->SetFilePath(path);
+        SYSTEM_LOG << indent << "[EntityPrefabRenderer::Load] Synced filepath to document: " << path << "\n";
+
+        SYSTEM_LOG << indent << "[EntityPrefabRenderer::Load] SUCCESS: loaded prefab, returning true (call depth: " << s_loadCallDepth << ")\n";
         m_isDirty = false;
+
+        s_loadingStack.erase(path);
+        s_loadCallDepth--;
         return true;
     }
     catch (const std::exception& e)

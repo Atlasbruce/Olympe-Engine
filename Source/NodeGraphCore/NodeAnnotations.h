@@ -18,7 +18,6 @@
 #include <map>
 
 namespace Olympe {
-namespace NodeGraph {
 
 // ============================================================================
 // NodeAnnotation struct
@@ -131,5 +130,4 @@ private:
     NodeAnnotation& GetOrCreate(int nodeId);
 };
 
-} // namespace NodeGraph
 } // namespace Olympe

@@ -16,7 +16,6 @@
 #include <map>
 
 namespace Olympe {
-namespace NodeGraph {
 
 // ============================================================================
 // Blackboard types
@@ -142,5 +141,4 @@ private:
     static BlackboardType StringToType(const std::string& s);
 };
 
-} // namespace NodeGraph
 } // namespace Olympe

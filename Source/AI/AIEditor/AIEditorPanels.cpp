@@ -13,6 +13,9 @@
 namespace Olympe {
 namespace AI {
 
+// Type aliases for backward compatibility
+using GraphDocument = Olympe::NodeGraphTypes::GraphDocument;
+
 // ============================================================================
 // BlackboardInspectorPanel
 // ============================================================================
@@ -23,30 +26,30 @@ BlackboardInspectorPanel::BlackboardInspectorPanel()
     std::memset(m_newVarName, 0, sizeof(m_newVarName));
 }
 
-void BlackboardInspectorPanel::Render(NodeGraph::GraphDocument* activeGraph)
+void BlackboardInspectorPanel::Render(GraphDocument* activeGraph)
 {
     if (activeGraph == nullptr) {
         ImGui::Text("No active graph");
         return;
     }
-    
+
     ImGui::Text("Blackboard Variables");
     ImGui::Separator();
-    
+
     if (ImGui::Button("Add Variable")) {
         m_showAddDialog = true;
     }
-    
+
     ImGui::Separator();
-    
+
     RenderVariableList(activeGraph);
-    
+
     if (m_showAddDialog) {
         RenderAddVariableDialog();
     }
 }
 
-void BlackboardInspectorPanel::RenderVariableList(NodeGraph::GraphDocument* doc)
+void BlackboardInspectorPanel::RenderVariableList(GraphDocument* doc)
 {
     // TODO: Implement blackboard variable list from graph metadata
     ImGui::Text("(Variable list not yet implemented)");

@@ -72,18 +72,11 @@ namespace Olympe
     {
         m_Errors.clear();
 
-        NodeGraph* graph = NodeGraphManager::Get().GetActiveGraph();
-        if (!graph)
-        {
-            return;
-        }
-
-        m_Errors = m_Validator.ValidateGraph(graph);
-        
-        if (!m_Errors.empty())
-        {
-            std::cout << "[ValidationPanel] Found " << m_Errors.size() << " validation errors\n";
-        }
+        // TODO: Phase 50.4 - Reimplement with modern GraphDocument
+        // NodeGraph class removed in Phase 50.3 namespace collision fix
+        // GraphDocument* graph = NodeGraphManager::Get().GetActiveGraph();
+        // For now, skip validation
+        return;
     }
 
     bool ValidationPanel::HasErrors() const
