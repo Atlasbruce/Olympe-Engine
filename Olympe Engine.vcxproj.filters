@@ -695,6 +695,10 @@
     <None Include="Source\BlueprintEditor\Documentation\FRAMEWORK_BEST_PRACTICES.md" />
     <None Include="Source\BlueprintEditor\Documentation\PHASE_74_75_COMPLETION_REPORT.md" />
     <None Include="Source\BlueprintEditor\PlaceholderEditor\PHASE_76_RUNTIME_VERIFICATION_GUIDE.md" />
+    <None Include="Source\BlueprintEditor\Documentation\COMPREHENSIVE_FRAMEWORK_DEVELOPER_GUIDE.md" />
+    <None Include="Source\BlueprintEditor\Documentation\MIGRATION_ANALYSIS_PHASE_1_PREPARATION.md" />
+    <None Include="Source\BlueprintEditor\Documentation\MIGRATION_READINESS_CHECKLIST.md" />
+    <None Include="Source\BlueprintEditor\Documentation\MIGRATION_PHASE_2_KICKOFF.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />
