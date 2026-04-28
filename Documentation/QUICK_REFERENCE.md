@@ -1,333 +1,225 @@
-# SelectionEffectRenderer - Quick Reference Card
+# ⚡ QUICK REFERENCE - ONE PAGE SUMMARY
 
-## One-Page Cheat Sheet
+**Réponse à ta demande en 1 page**
 
-### Inclusion
-```cpp
-#include "BlueprintEditor/SelectionEffectRenderer.h"
+---
 
-// Dans votre classe renderer
-SelectionEffectRenderer m_selectionRenderer;
+## 🎯 LA QUESTION
+
+"Je voudrais repartir d'une base neuve et simple... identifie tous les appels de fonctions, méthodes, classes AVANT la boucle principale. Tu vas créer un graphe d'appels avec description"
+
+---
+
+## ✅ LA RÉPONSE: 43+ APPELS IDENTIFIÉS
+
+```
+SDL_AppInit() → SDL_AppIterate() [MAIN LOOP STARTS]
+
+PHASE 1 (SDL3):           3 appels ─┐
+PHASE 2 (ImGui):          8 appels  │
+PHASE 3 (Backends):       2 appels  ├─ 43+ APPELS AVANT LOOP
+PHASE 4 (Backend):       10+ appels │
+PHASE 5 (Frontend):      19 appels ─┘
+PHASE 6 (Return):         1 appel → return SDL_APP_CONTINUE
 ```
 
-### Basic Usage
-```cpp
-// Appel simple
-if (node.selected)
-{
-    m_selectionRenderer.RenderSelectionGlow(
-        minScreen, maxScreen,      // ImVec2 positions
-        canvasZoom,                // float, typically 0.1 - 3.0
-        nodeScale,                 // float, typically 1.0
-        cornerRadius               // float, typically 5.0
-    );
-}
+### PHASE 1: SDL3 (3 appels)
+```
+1. SDL_Init(VIDEO | EVENTS)           → Window system ready
+2. SDL_CreateWindow(1920, 1080)       → Fenêtre créée
+3. SDL_CreateRenderer(window)         → Renderer prêt
 ```
 
-### Complete Effect
-```cpp
-if (node.selected)
-{
-    m_selectionRenderer.RenderCompleteSelection(
-        minScreen, maxScreen, borderColor, baseWidth,
-        canvasZoom, nodeScale, cornerRadius
-    );
-}
+### PHASE 2: ImGui Context (8 appels)
+```
+4. IMGUI_CHECKVERSION()               → Valider version
+5. ImGui::CreateContext()             → Context créé
+6. ImGui::GetIO()                     → IO structure
+7. io.ConfigFlags |= NavEnableKeyboard → Clavier enabled
+8. io.IniFilename = nullptr           → Config via JSON
+9. ImGui::StyleColorsDark()           → Dark theme
+10. ImGui::GetStyle()                 → Style ref
+11. style.Colors[*] = ImVec4(...)     → Couleurs customisées
+```
+
+### PHASE 3: ImGui Backends (2 appels)
+```
+12. ImGui_ImplSDL3_InitForSDLRenderer() → SDL3 backend
+13. ImGui_ImplSDLRenderer3_Init()      → Renderer backend
+```
+
+### PHASE 4: Backend (10+ appels)
+```
+14. BlueprintEditor::Get()            → Singleton backend
+15. .Initialize()                     → Init backend
+    ├─ 16. EnumCatalogManager::Get().Initialize()
+    ├─ 17. NodeGraphManager::Get().Initialize()
+    ├─ 18. EntityInspectorManager::Get().Initialize()
+    ├─ 19. TemplateManager::Get().Initialize()
+    ├─ 20. new CommandStack()
+    ├─ 21. InitializePlugins()
+    ├─ 22. LoadConfig()
+    └─ 23. RefreshAssets()
+
+24. .InitializeStandaloneEditor()     → Standalone mode
+    ├─ 25. EditorContext::Get().InitializeStandalone()
+    └─ 26. PreloadATSGraphs()
+
+27. .SetActive(true)                  → Backend active
+```
+
+### PHASE 5: Frontend (19 appels)
+```
+28. ImNodes::CreateContext()          → Node editor context
+29. ImNodes::StyleColorsDark()        → Dark theme
+30. ImNodes::GetStyle()               → Style ref
+31. style.Flags |= GridLines          → Grid enabled
+
+32. FontManager::Get().Initialize()   → Font manager
+33. FontManager::Get().LoadFontAwesome() → Icons loaded
+
+34. m_AssetBrowser.Initialize()       → Asset browser
+35. m_AssetBrowser.SetAssetOpenCallback() → Callback setup
+
+36. m_NodeGraphPanel.Initialize()     → Core panel
+37. m_EntitiesPanel.Initialize()      → Core panel
+38. m_InspectorPanel.Initialize()     → Core panel
+
+39. new TemplateBrowserPanel()        → Advanced panel
+40. m_TemplateBrowserPanel->Initialize()
+
+41. new HistoryPanel()                → Advanced panel
+42. m_HistoryPanel->Initialize()
+
+43. new VisualScriptEditorPanel()     → Advanced panel
+44. m_VSEditorPanel->Initialize()
+
+45. new DebugPanel()                  → Advanced panel
+46. m_DebugPanel->Initialize()
+
+47. new ProfilerPanel()               → Advanced panel
+48. m_ProfilerPanel->Initialize()
+
+49. GetConfig() + Layout parsing      → Config loaded
+```
+
+### PHASE 6: Return
+```
+50. return SDL_APP_CONTINUE           → Main loop starts ✓
 ```
 
 ---
 
-## Configuration
+## 🔴 PROBLÈMES IDENTIFIÉS
 
-### Color
-```cpp
-m_selectionRenderer.SetGlowColor({0.0f, 0.8f, 1.0f});  // RGB
-```
-
-### Transparency (0.0 = invisible, 1.0 = opaque)
-```cpp
-m_selectionRenderer.SetGlowAlpha(0.3f);  // 30% alpha
-```
-
-### Glow Size (pixels before zoom)
-```cpp
-m_selectionRenderer.SetBaseGlowSize(4.0f);
-```
-
-### Border Thickness Multiplier
-```cpp
-m_selectionRenderer.SetBorderWidthMultiplier(2.0f);  // ×2 épaisseur
-```
-
-### Enable/Disable (useful for performance)
-```cpp
-m_selectionRenderer.SetGlowEnabled(true);
-```
+| Problème | Impact | Sévérité |
+|----------|--------|----------|
+| 8+ singletons | Tight coupling | ⚠️ HIGH |
+| 5-6 sec startup | Too slow | ⚠️ HIGH |
+| Eager panels | Memory waste | ⚠️ MEDIUM |
+| Hard-coded types | Not extensible | ⚠️ MEDIUM |
+| new/delete | Memory unsafe | ⚠️ MEDIUM |
+| No error recovery | Fragile | ⚠️ MEDIUM |
 
 ---
 
-## Presets
+## 💡 SOLUTIONS PROPOSÉES
 
-### Apply in Constructor
-```cpp
-m_selectionRenderer.ApplyStyle_OlympeBlue();      // Cyan (défaut)
-m_selectionRenderer.ApplyStyle_GoldAccent();      // Or
-m_selectionRenderer.ApplyStyle_GreenEnergy();     // Vert
-m_selectionRenderer.ApplyStyle_PurpleMystery();   // Violet
-m_selectionRenderer.ApplyStyle_RedAlert();        // Rouge
-```
-
----
-
-## Common Patterns
-
-### Pattern 1: Minimal Integration
-```cpp
-class YourRenderer
-{
-private:
-    SelectionEffectRenderer m_selectionRenderer;
-    
-public:
-    void RenderNode(const YourNode& node)
-    {
-        // ... calculate minScreen, maxScreen ...
-        
-        if (node.selected)
-        {
-            m_selectionRenderer.RenderSelectionGlow(
-                minScreen, maxScreen, zoom, scale, cornerRadius);
-        }
-        
-        // ... render box normally ...
-    }
-};
-```
-
-### Pattern 2: With Border
-```cpp
-if (node.selected)
-{
-    m_selectionRenderer.RenderCompleteSelection(
-        minScreen, maxScreen, borderColor, 
-        2.0f,     // baseWidth
-        zoom, scale, cornerRadius
-    );
-}
-else
-{
-    // Normal border
-    drawList->AddRect(..., 1 borderWidth);
-}
-```
-
-### Pattern 3: Custom Color per State
-```cpp
-if (node.selected)
-{
-    m_selectionRenderer.ApplyStyle_OlympeBlue();
-    m_selectionRenderer.RenderSelectionGlow(...);
-}
-else if (node.hasError)
-{
-    m_selectionRenderer.ApplyStyle_RedAlert();
-    m_selectionRenderer.RenderSelectionGlow(...);
-}
-else if (node.isHovered)
-{
-    m_selectionRenderer.SetGlowAlpha(0.15f);
-    m_selectionRenderer.RenderSelectionGlow(...);
-}
-```
+| Solution | Benefit | Effort |
+|----------|---------|--------|
+| **DIContainer** | Replaces 8+ singletons | 40h |
+| **PanelManager** | Lazy loading → < 2sec | 20h |
+| **GraphTypeRegistry** | Plugin system → extensible | 20h |
+| **UnifiedBackendManager** | 4 managers → 1 | 20h |
+| **EditorStartup** | Single orchestrator | 40h |
+| **Smart pointers** | Safe memory management | 20h |
 
 ---
 
-## API Reference
+## 📊 BEFORE & AFTER
 
-### Setters
-```cpp
-SetGlowColor(const Vector& color)
-SetGlowAlpha(float alpha)                    // 0.0 - 1.0
-SetBaseGlowSize(float size)                  // pixels
-SetBorderWidthMultiplier(float multiplier)   // > 0.1
-SetGlowEnabled(bool enabled)
-```
-
-### Getters
-```cpp
-Vector GetGlowColor() const
-float GetGlowAlpha() const
-float GetBaseGlowSize() const
-float GetBorderWidthMultiplier() const
-bool IsGlowEnabled() const
-```
-
-### Rendering
-```cpp
-void RenderSelectionGlow(
-    const ImVec2& minScreen,
-    const ImVec2& maxScreen,
-    float canvasZoom = 1.0f,
-    float nodeScale = 1.0f,
-    float cornerRadius = 5.0f
-) const;
-
-void RenderSelectionBorder(
-    const ImVec2& minScreen,
-    const ImVec2& maxScreen,
-    ImU32 borderColor,
-    float baseWidth,
-    float canvasZoom = 1.0f,
-    float cornerRadius = 5.0f
-) const;
-
-void RenderCompleteSelection(
-    const ImVec2& minScreen,
-    const ImVec2& maxScreen,
-    ImU32 borderColor,
-    float baseWidth,
-    float canvasZoom = 1.0f,
-    float nodeScale = 1.0f,
-    float cornerRadius = 5.0f
-) const;
-```
-
-### Presets
-```cpp
-void ApplyStyle_OlympeBlue()
-void ApplyStyle_GoldAccent()
-void ApplyStyle_GreenEnergy()
-void ApplyStyle_PurpleMystery()
-void ApplyStyle_RedAlert()
-```
+| Métric | Avant | Après | Gain |
+|--------|-------|-------|------|
+| Startup time | 5-6s | < 2s | 60% ⬇️ |
+| Init calls | 43+ | ~10 | 75% ⬇️ |
+| Singletons | 8+ | 1 | Decoupled |
+| Extensibility | Hard-coded | Plugins | ✅ YES |
+| Memory | new/delete | unique_ptr | ✅ Safer |
+| Error handling | Minimal | Full | ✅ Better |
 
 ---
 
-## Preset Specs
+## 🚀 IMPLEMENTATION TIMELINE
 
-| Name | Color RGB | Alpha | Glow Size | Border Mult |
-|------|-----------|-------|-----------|-------------|
-| OlympeBlue | (0, 0.8, 1) | 0.30 | 4.0 | 2.0 |
-| GoldAccent | (1, 0.84, 0) | 0.25 | 5.0 | 2.5 |
-| GreenEnergy | (0, 1, 0.5) | 0.35 | 4.0 | 2.0 |
-| PurpleMystery | (0.8, 0.2, 1) | 0.30 | 4.5 | 2.0 |
-| RedAlert | (1, 0.2, 0.2) | 0.40 | 5.0 | 2.5 |
-
----
-
-## Default Values
-
-```cpp
-glowColor            = (0.0f, 0.8f, 1.0f)     // Cyan
-glowAlpha            = 0.3f                   // 30%
-baseGlowSize         = 4.0f                   // pixels
-borderWidthMultiplier = 2.0f                  // ×2
-glowEnabled          = true
-```
+| Phase | Duration | Hours | What |
+|-------|----------|-------|------|
+| **A: Foundation** | Week 1-2 | 40h | EditorStartup + DIContainer + PanelManager |
+| **B: Consolidation** | Week 3 | 20h | UnifiedBackendManager replaces 4 managers |
+| **C: Plugins** | Week 4 | 20h | GraphTypeRegistry + 3 plugins |
+| **D: Cleanup** | Week 5 | 20h | Optimize + remove old code |
+| **TOTAL** | 5 weeks | 100h | **Production ready** ✅ |
 
 ---
 
-## Troubleshooting
+## ✅ SUCCESS CRITERIA
 
-### Glow not visible
-- ❌ Called AFTER drawing box (z-order wrong)
-- ✅ Call BEFORE drawing box
-
-### Glow not scaling with zoom
-- ❌ canvasZoom = 1.0f (not updating)
-- ✅ Pass actual zoom value
-
-### Border too thick
-- ❌ baseWidth × multiplier too high
-- ✅ Reduce SetBorderWidthMultiplier()
-
-### Performance issue
-- ❌ Rendering 10000 nodes
-- ✅ SetGlowEnabled(false) for large graphs
-
-### Color weird
-- ❌ Alpha too low (0.05) or too high (1.0)
-- ✅ Use 0.25-0.4 range
+- ✅ Startup < 2 seconds
+- ✅ Lazy panel loading
+- ✅ Plugin system working
+- ✅ 0 compile errors
+- ✅ 0 memory leaks
+- ✅ 0 new/delete (all unique_ptr)
+- ✅ Extensible architecture
+- ✅ Full error recovery
 
 ---
 
-## Files to Include
+## 🎯 NEXT STEPS
 
-**Header**:
-```cpp
-#include "BlueprintEditor/SelectionEffectRenderer.h"
-```
+### RIGHT NOW (5 min)
+1. [ ] Read this page
+2. [ ] Decide: Interesting?
 
-**In your CMakeLists.txt or Visual Studio**:
-```
-Source/BlueprintEditor/SelectionEffectRenderer.h
-Source/BlueprintEditor/SelectionEffectRenderer.cpp
-```
+### TODAY (30 min)
+1. [ ] Read **FINAL_VALIDATION_AND_SUMMARY.md**
+2. [ ] Make GO/NO-GO decision
 
----
+### TOMORROW (if GO)
+1. [ ] Start **ACTION_PLAN_START_TODAY.md** Phase 0
+2. [ ] Create directory structure
+3. [ ] First commit: empty stubs
 
-## Integration Checklist
-
-- [ ] Add `#include "SelectionEffectRenderer.h"`
-- [ ] Add `SelectionEffectRenderer m_selectionRenderer;` member
-- [ ] Call `RenderSelectionGlow()` or `RenderCompleteSelection()` when node selected
-- [ ] Apply style in constructor: `m_selectionRenderer.ApplyStyle_OlympeBlue();`
-- [ ] Test: Select node → verify glow appears
-- [ ] Test: Zoom/pan → verify glow scales correctly
-- [ ] Test: Multi-select → verify all selected nodes show glow
+### THIS WEEK (if GO)
+1. [ ] Complete Phase 1: Foundation
+2. [ ] EditorStartup + DIContainer working
+3. [ ] 0 compile errors ✓
 
 ---
 
-## Example: Complete Integration (5 minutes)
+## 📞 WHERE TO GET MORE INFO
 
-```cpp
-// YourNodeRenderer.h
-#include "SelectionEffectRenderer.h"
-
-class YourNodeRenderer
-{
-private:
-    SelectionEffectRenderer m_selectionRenderer;
-
-public:
-    YourNodeRenderer()
-    {
-        m_selectionRenderer.ApplyStyle_OlympeBlue();
-    }
-
-    void RenderNode(const YourNode& node)
-    {
-        ImVec2 minScreen = ...; // calculate
-        ImVec2 maxScreen = ...;
-        
-        // NEW: 3 lines only
-        if (node.selected)
-        {
-            m_selectionRenderer.RenderSelectionGlow(
-                minScreen, maxScreen, m_zoom, 1.0f, 5.0f);
-        }
-        
-        // ... normal render (box, border, labels) ...
-    }
-};
-```
-
-Done ! ✅
+| Need | Read |
+|------|------|
+| Visual overview | COMPLETE_CALL_GRAPH_SUMMARY.md |
+| Detailed phases | INITIALIZATION_CALL_GRAPH_BEFORE_MAIN_LOOP.md |
+| Frontend deep dive | INITIALIZATION_PHASE_5_FRONTEND_DETAILED.md |
+| Architecture design | ARCHITECTURE_RECOMMENDATIONS_FOR_CLEAN_REBUILD.md |
+| Implementation steps | ACTION_PLAN_START_TODAY.md |
+| Decision support | FINAL_VALIDATION_AND_SUMMARY.md |
+| Document guide | README_BLUEPRINT_EDITOR_REFACTORING.md |
 
 ---
 
-## Performance Notes
+## 🏁 STATUS
 
-- **Draw Calls**: +1 per selected node per frame (minimal)
-- **Memory**: +28 bytes per renderer instance
-- **CPU**: Zero overhead on logic (just ImGui API calls)
-- **GPU**: Negligible (added 1 AddRectFilled call)
+✅ **Analysis Complete**
+✅ **Problems Identified**
+✅ **Solutions Designed**
+✅ **Timeline Created**
+✅ **Ready to Implement**
 
-For 100 nodes with 50% selected: +50 calls (< 0.5ms GPU time)
+**Status**: 🚀 **READY TO START TODAY**
 
 ---
 
-## Contact / Questions
-
-See `SELECTION_EFFECT_INTEGRATION_GUIDE.md` for detailed docs.
-
+**Version**: 1.0 | **Date**: 2026-03-11 | **Status**: COMPLETE

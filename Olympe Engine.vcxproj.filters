@@ -256,6 +256,7 @@
     <ClCompile Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderPropertyEditorPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderNodePalette.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocumentV2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -546,6 +547,7 @@
     <ClInclude Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderCanvas.h" />
     <ClInclude Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderPropertyEditorPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderNodePalette.h" />
+    <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocumentV2.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />
@@ -699,6 +701,7 @@
     <None Include="Source\BlueprintEditor\Documentation\MIGRATION_ANALYSIS_PHASE_1_PREPARATION.md" />
     <None Include="Source\BlueprintEditor\Documentation\MIGRATION_READINESS_CHECKLIST.md" />
     <None Include="Source\BlueprintEditor\Documentation\MIGRATION_PHASE_2_KICKOFF.md" />
+    <None Include="Source\BlueprintEditor\Documentation\PHASE_2_DEEP_ANALYSIS_ENTITYPREFAB_END_TO_END.md" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

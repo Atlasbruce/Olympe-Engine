@@ -69,6 +69,7 @@
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocumentV2.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.cpp" />
@@ -334,6 +335,7 @@
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.h" />
+    <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocumentV2.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.h" />
@@ -674,6 +676,7 @@
     <None Include="Source\BlueprintEditor\Documentation\MIGRATION_ANALYSIS_PHASE_1_PREPARATION.md" />
     <None Include="Source\BlueprintEditor\Documentation\MIGRATION_PHASE_2_KICKOFF.md" />
     <None Include="Source\BlueprintEditor\Documentation\MIGRATION_READINESS_CHECKLIST.md" />
+    <None Include="Source\BlueprintEditor\Documentation\PHASE_2_DEEP_ANALYSIS_ENTITYPREFAB_END_TO_END.md" />
     <None Include="Source\BlueprintEditor\Documentation\PHASE_74_75_COMPLETION_REPORT.md" />
     <None Include="Source\BlueprintEditor\EXECUTIVE_DECISION_SUMMARY.md" />
     <None Include="Source\BlueprintEditor\PHASE_64_5_COMPLETE_DRAG_ANALYSIS.md" />
