@@ -1,5 +1,6 @@
 ﻿#include "ComponentNodeRenderer.h"
 #include "EntityPrefabGraphDocument.h"
+#include "EntityPrefabGraphDocumentV2.h"
 #include "./../../third_party/imgui/imgui.h"
 #include "../../system/system_utils.h"
 
@@ -40,6 +41,17 @@ namespace Olympe
         return screenPos;
     }
 
+    Vector ComponentNodeRenderer::ScreenToCanvas(const Vector& screenPos) const
+    {
+        Vector canvasPos = screenPos;
+        if (m_canvasZoom != 0.0f)
+        {
+            canvasPos.x = (screenPos.x - m_canvasScreenPos.x - m_canvasOffset.x) / m_canvasZoom;
+            canvasPos.y = (screenPos.y - m_canvasScreenPos.y - m_canvasOffset.y) / m_canvasZoom;
+        }
+        return canvasPos;
+    }
+
     void ComponentNodeRenderer::RenderNode(const ComponentNode& node)
     {
         RenderNodeBox(node);
@@ -64,6 +76,21 @@ namespace Olympe
         }
     }
 
+    // V2 SURCHARGE: Render nodes from V2 document
+    void ComponentNodeRenderer::RenderNodes(const EntityPrefabGraphDocumentV2* documentV2)
+    {
+        if (documentV2 == nullptr) { return; }
+
+        // Get the ImGui child window's screen position (top-left corner)
+        ImVec2 canvasScreenPos = ImGui::GetCursorScreenPos();
+
+        const std::vector<ComponentNode>& nodes = documentV2->GetAllNodes();
+        for (size_t i = 0; i < nodes.size(); ++i)
+        {
+            RenderNode(nodes[i]);
+        }
+    }
+
     void ComponentNodeRenderer::RenderConnections(const EntityPrefabGraphDocument* document, int hoveredConnectionIndex /*= -1*/)
     {
         if (document == nullptr) { return; }
@@ -72,6 +99,28 @@ namespace Olympe
         {
             const ComponentNode* sourceNode = document->GetNode(connections[i].first);
             const ComponentNode* targetNode = document->GetNode(connections[i].second);
+            if (sourceNode != nullptr && targetNode != nullptr)
+            {
+                Vector from = sourceNode->position;
+                from.x += sourceNode->size.x * 0.5f;
+                Vector to = targetNode->position;
+                to.x -= targetNode->size.x * 0.5f;
+
+                bool isHovered = (hoveredConnectionIndex == static_cast<int>(i));
+                RenderConnectionLine(from, to, isHovered);
+            }
+        }
+    }
+
+    // V2 SURCHARGE: Render connections from V2 document
+    void ComponentNodeRenderer::RenderConnections(const EntityPrefabGraphDocumentV2* documentV2, int hoveredConnectionIndex /*= -1*/)
+    {
+        if (documentV2 == nullptr) { return; }
+        const std::vector<std::pair<PrefabNodeId, PrefabNodeId>>& connections = documentV2->GetConnections();
+        for (size_t i = 0; i < connections.size(); ++i)
+        {
+            const ComponentNode* sourceNode = documentV2->GetNode(connections[i].first);
+            const ComponentNode* targetNode = documentV2->GetNode(connections[i].second);
             if (sourceNode != nullptr && targetNode != nullptr)
             {
                 Vector from = sourceNode->position;
@@ -168,6 +217,18 @@ namespace Olympe
                 m_style.cornerRadius + glowSize
             );
         }
+        else if (m_hoveredNodeId == node.nodeId)
+        {
+            // PHASE 75.1: Draw hover glow
+            ImU32 hoverGlowColor = ImGui::GetColorU32(ImVec4(1.0f, 0.8f, 0.0f, 0.2f));
+            float glowSize = 3.0f * m_nodeScale * m_canvasZoom;
+            drawList->AddRectFilled(
+                ImVec2(min.x - glowSize, min.y - glowSize),
+                ImVec2(max.x + glowSize, max.y + glowSize),
+                hoverGlowColor,
+                m_style.cornerRadius + glowSize
+            );
+        }
 
         drawList->AddRectFilled(
             ImVec2(min.x, min.y),
@@ -176,7 +237,14 @@ namespace Olympe
             m_style.cornerRadius
         );
 
+        // PHASE 75.1: Highlight border on hover
         float borderWidth = node.selected ? m_style.borderWidth * 2.0f : m_style.borderWidth;
+        if (m_hoveredNodeId == node.nodeId && !node.selected)
+        {
+            borderWidth *= 1.5f;
+            borderColor = ImGui::GetColorU32(ImVec4(1.0f, 0.9f, 0.4f, 1.0f));
+        }
+
         drawList->AddRect(
             ImVec2(min.x, min.y),
             ImVec2(max.x, max.y),
@@ -448,15 +516,19 @@ namespace Olympe
                 portPos.y += yOffset / m_canvasZoom;
             }
 
-            float dx = point.x - portPos.x;
-            float dy = point.y - portPos.y;
+            // PHASE 75 FIX: 'point' passed is screen coordinates. 
+            // We MUST transform it to canvas space to compare with portPos which is in canvas space.
+            Vector canvasClickPoint = ScreenToCanvas(point);
+
+            float dx = canvasClickPoint.x - portPos.x;
+            float dy = canvasClickPoint.y - portPos.y;
             float distance = sqrtf(dx * dx + dy * dy);
 
             // FIX #4: Use larger detection radius for hitbox while visual stays small
             // Visual port radius: 4.0 pixels (kept small via RenderPort)
-            // Detection radius: 4.0 * 3.0 = 12.0 canvas units (generous for usability)
+            // Detection radius: 4.0 * 5.0 = 20.0 canvas units (generous for usability)
             // This decouples visual appearance from interaction size
-            float detectionRadius = port.radius * 3.0f;
+            float detectionRadius = port.radius * 5.0f; 
 
             if (distance <= detectionRadius)
             {

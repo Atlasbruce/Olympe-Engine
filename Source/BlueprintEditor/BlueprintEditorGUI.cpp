@@ -15,6 +15,10 @@
 #include "ProfilerPanel.h"
 #include "BTtoVSMigrator.h"
 #include "TabManager.h"
+#include "EntityPrefabEditor/EntityPrefabStrategyRegistration.h"  // Phase 2.1 Chunk 2
+#include "EntityPrefabEditor/EntityPrefabGraphDocumentV2.h"  // Phase 2.1 Chunk 2
+#include "EntityPrefabEditor/EntityPrefabEditorV2.h"  // Phase 2.1 Chunk 2
+#include "Framework/DocumentVersionManager.h"  // Phase 2.1 Chunk 2
 #include "../DataManager.h"
 #include "../TaskSystem/TaskGraphLoader.h"
 #include "../Core/FontManager.h"
@@ -104,7 +108,66 @@ namespace Olympe
 
     void BlueprintEditorGUI::Initialize()
     {
+        // =====================================================================
+        // Phase 2.1 Chunk 2: Register DocumentVersionManager strategies
+        // =====================================================================
+        SYSTEM_LOG << "[BlueprintEditorGUI] Initializing DocumentVersionManager strategies..." << std::endl;
+
+        DocumentVersionManager& docManager = DocumentVersionManager::Get();
+
+        // EntityPrefab Framework V2 strategy
+        {
+            DocumentCreationStrategy strategy;
+
+            // Factory: Create new document
+            strategy.createNewDocument = []() -> IGraphDocument*
+            {
+                SYSTEM_LOG << "[EntityPrefabStrategyFactory] Creating new EntityPrefabGraphDocumentV2" << std::endl;
+                auto doc = new EntityPrefabGraphDocumentV2();
+                return doc;
+            };
+
+            // Factory: Load document from file
+            strategy.loadDocumentFromFile = [](const std::string& filePath) -> IGraphDocument*
+            {
+                SYSTEM_LOG << "[EntityPrefabStrategyFactory] Loading from: " << filePath << std::endl;
+                auto doc = new EntityPrefabGraphDocumentV2();
+                if (!doc->Load(filePath))
+                {
+                    SYSTEM_LOG << "[EntityPrefabStrategyFactory] ERROR: Load failed" << std::endl;
+                    delete doc;
+                    return nullptr;
+                }
+                return doc;
+            };
+
+            // Factory: Create renderer
+            strategy.createRenderer = [](IGraphDocument* document) -> IGraphRenderer*
+            {
+                if (!document)
+                {
+                    SYSTEM_LOG << "[EntityPrefabStrategyFactory] ERROR: createRenderer received nullptr" << std::endl;
+                    return nullptr;
+                }
+                SYSTEM_LOG << "[EntityPrefabStrategyFactory] Creating EntityPrefabEditorV2 renderer" << std::endl;
+                auto v2Doc = static_cast<EntityPrefabGraphDocumentV2*>(document);
+                return new EntityPrefabEditorV2(v2Doc);
+            };
+
+            strategy.strategyName = "Framework EntityPrefab V2";
+            strategy.version = GraphTypeVersion::Framework;
+
+            docManager.RegisterStrategy("EntityPrefab", GraphTypeVersion::Framework, strategy);
+            docManager.SetActiveVersion("EntityPrefab", GraphTypeVersion::Framework);
+
+            SYSTEM_LOG << "[BlueprintEditorGUI] EntityPrefab Framework V2 strategy registered" << std::endl;
+        }
+
+        SYSTEM_LOG << "[BlueprintEditorGUI] DocumentVersionManager initialized" << std::endl;
+
+        // =====================================================================
         // Initialize ImNodes
+        // =====================================================================
         ImNodes::CreateContext();
         ImNodes::StyleColorsDark();
 
@@ -358,7 +421,8 @@ namespace Olympe
                 if (ImGui::MenuItem(ICON_FA_TRASH_CAN " Remove Component", "Delete", false, 
                     m_SelectedComponentIndex >= 0))
                 {
-                    RemoveComponent(m_SelectedComponentIndex);
+                    // DISABLED: RemoveComponent method commented out (ComponentData schema mismatch)
+                    // RemoveComponent(m_SelectedComponentIndex);
                 }
 
                 ImGui::Separator();
@@ -801,7 +865,8 @@ namespace Olympe
             {
                 if (ImGui::MenuItem("Remove"))
                 {
-                    RemoveComponent(m_SelectedComponentIndex);
+                    // DISABLED: RemoveComponent method commented out (ComponentData schema mismatch)
+                    // RemoveComponent(m_SelectedComponentIndex);
                 }
                 ImGui::EndPopup();
             }
@@ -992,7 +1057,8 @@ namespace Olympe
             
             if (ImGui::Button("Add", ImVec2(120, 0)))
             {
-                AddComponent(component_types[m_SelectedComponentType]);
+                // DISABLED: AddComponent method commented out (ComponentData schema mismatch)
+                // AddComponent(component_types[m_SelectedComponentType]);
                 m_ShowAddComponentDialog = false;
             }
             
@@ -1090,6 +1156,11 @@ void BlueprintEditorGUI::SaveBlueprintAs()
     SYSTEM_LOG << "[BlueprintEditorGUI] SaveBlueprintAs not yet implemented" << std::endl;
 }
 
+// TODO: Phase XX - Refactor AddComponent to match current ComponentData schema
+// DISABLED: This method references outdated ComponentData.type member
+// Current ComponentData schema has changed; this needs refactoring or removal
+// See: MIGRATION_PHASE_2_1_COMPONENT_SCHEMA_UPDATE.md
+/*
 void BlueprintEditorGUI::AddComponent(const std::string& type)
 {
     // Get mutable blueprint from backend
@@ -1140,7 +1211,11 @@ void BlueprintEditorGUI::AddComponent(const std::string& type)
     // Mark as modified in backend
     BlueprintEditor::Get().MarkAsModified();
 }
+*/
 
+// TODO: Phase XX - Refactor RemoveComponent to match current ComponentData schema
+// DISABLED: See AddComponent() comments above
+/*
 void BlueprintEditorGUI::RemoveComponent(int index)
 {
     // Get mutable blueprint from backend
@@ -1157,6 +1232,7 @@ void BlueprintEditorGUI::RemoveComponent(int index)
         BlueprintEditor::Get().MarkAsModified();
     }
 }
+*/
 
 // D) Additional dialog implementations
 void BlueprintEditorGUI::RenderPreferencesDialog()

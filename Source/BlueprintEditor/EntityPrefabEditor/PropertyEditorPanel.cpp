@@ -1,4 +1,5 @@
 #include "PropertyEditorPanel.h"
+#include "EntityPrefabGraphDocumentV2.h"
 #include "../../Source/third_party/imgui/imgui.h"
 #include "../../system/system_utils.h"
 #include <unordered_map>
@@ -180,6 +181,86 @@ namespace Olympe
                         ApplyChanges();
                     }
                 }
+
+                ImGui::PopID();
+            }
+        }
+        else
+        {
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No properties defined for this component");
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 0.8f), "(Check ComponentsParameters.json)");
+        }
+    }
+
+    // ========================================================================
+    // Phase C: V2 Document Adapter Surcharges
+    // ========================================================================
+
+    void PropertyEditorPanel::Render(EntityPrefabGraphDocumentV2* document)
+    {
+        if (!document) { return; }
+        m_documentV2 = document;
+
+        if (m_selectedNodeId == InvalidNodeId)
+        {
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "No node selected");
+            ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Select a node to edit component properties");
+        }
+        else
+        {
+            const ComponentNode* node = document->GetNode(m_selectedNodeId);
+            if (node)
+            {
+                RenderNodeInfoV2();
+                ImGui::Separator();
+                RenderNodePropertiesV2();
+            }
+            else
+            {
+                ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Selected node not found!");
+                m_selectedNodeId = InvalidNodeId;
+            }
+        }
+    }
+
+    void PropertyEditorPanel::RenderNodeInfoV2()
+    {
+        const ComponentNode* node = m_documentV2->GetNode(m_selectedNodeId);
+        if (!node) { return; }
+
+        ImGui::TextColored(ImVec4(0.5f, 0.7f, 1.0f, 1.0f), "Component:");
+        ImGui::SameLine();
+        ImGui::TextUnformatted(node->componentType.c_str());
+    }
+
+    void PropertyEditorPanel::RenderNodePropertiesV2()
+    {
+        ComponentNode* node = m_documentV2->GetNode(m_selectedNodeId);
+        if (!node) { return; }
+
+        ImGui::TextUnformatted("Properties");
+        ImGui::Spacing();
+
+        if (node->properties.size() > 0)
+        {
+            for (auto it = node->properties.begin(); it != node->properties.end(); ++it)
+            {
+                ImGui::PushID(it->first.c_str());
+
+                // Render property edit UI
+                ImGui::TextColored(ImVec4(0.6f, 0.8f, 1.0f, 1.0f), "%s:", it->first.c_str());
+                ImGui::SameLine();
+
+                static char buffer[512];
+                strcpy_s(buffer, sizeof(buffer), it->second.c_str());
+
+                ImGui::PushItemWidth(200);
+                if (ImGui::InputText("##PropertyValue", buffer, sizeof(buffer)))
+                {
+                    node->SetProperty(it->first, buffer);
+                    m_documentV2->OnDocumentModified();  // Mark as dirty
+                }
+                ImGui::PopItemWidth();
 
                 ImGui::PopID();
             }

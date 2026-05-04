@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -26,7 +26,6 @@
     <ClCompile Include="..\Source\AI\AIEditor\AIEditorNodeRenderer.cpp" />
     <ClCompile Include="..\Source\AI\AIEditor\AIEditorPanels.cpp" />
     <ClCompile Include="..\Source\AI\AIEditor\BlackboardPanel.cpp" />
-    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTEventTypeRegistry.cpp" />
     <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTGraphCompiler.cpp" />
     <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTGraphValidator.cpp" />
     <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTNodePalette.cpp" />
@@ -36,83 +35,6 @@
     <ClCompile Include="..\Source\AI\BehaviorTreeDependencyScanner.cpp" />
     <ClCompile Include="..\Source\AI\BTEditorCommand.cpp" />
     <ClCompile Include="..\Source\AI\BTGraphLayoutEngine.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\AtomicTaskUIRegistry.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\BBVariableRegistry.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeExecutor.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\BTNodePropertyPanel.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\BTNodeStyleRegistry.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\BTtoVSMigrator.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\Commands\BTGraphCommands.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\Commands\CommandHistory.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\ConditionRegistry.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\NodePropertiesPanel.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasFramework.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasModalRenderer.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasToolbarRenderer.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\Framework\GraphEditorBase.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\Framework\IEditorToolManager.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\Framework\VisualScriptGraphDocument.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\MiniMapPanel.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\MinimapWidget.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\NodePresets.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\NodeSearchPanel.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\OperatorRegistry.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\ParameterEditorRegistry.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\SelectionEffectRenderer.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\TabManager.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\UndoRedoStack.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\Utilities\CanvasGridRenderer.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\Utilities\CustomCanvasEditor.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Blackboard.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Canvas.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_ConditionUI.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_FileOperations.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Properties.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_RenderingCore.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Verification.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptRenderer.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VSConnectionValidator.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VSGraphVerifier.cpp" />
-    <ClCompile Include="..\Source\Core\FontManager.cpp" />
-    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPreset.cpp" />
-    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPresetRegistry.cpp" />
-    <ClCompile Include="..\Source\Editor\ConditionPreset\DynamicDataPin.cpp" />
-    <ClCompile Include="..\Source\Editor\ConditionPreset\DynamicDataPinManager.cpp" />
-    <ClCompile Include="..\Source\Editor\ConditionPreset\NodeConditionRef.cpp" />
-    <ClCompile Include="..\Source\Editor\ConditionPreset\Operand.cpp" />
-    <ClCompile Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.cpp" />
-    <ClCompile Include="..\Source\Editor\Modals\BehaviorTreeFilePickerModal.cpp" />
-    <ClCompile Include="..\Source\Editor\Modals\FilePickerModal.cpp" />
-    <ClCompile Include="..\Source\Editor\Modals\SaveFilePickerModal.cpp" />
-    <ClCompile Include="..\Source\Editor\Modals\SwitchCaseEditorModal.cpp" />
-    <ClCompile Include="..\Source\Editor\Nodes\NodeBranchRenderer.cpp" />
-    <ClCompile Include="..\Source\Editor\Modals\NodeConditionsEditModal.cpp" />
-    <ClCompile Include="..\Source\Editor\Modals\SubGraphFilePickerModal.cpp" />
-    <ClCompile Include="..\Source\Editor\Panels\ConditionPresetLibraryPanel.cpp" />
-    <ClCompile Include="..\Source\Editor\Panels\NodeConditionsPanel.cpp" />
-    <ClCompile Include="..\Source\NodeGraphCore\GraphComment.cpp" />
-    <ClCompile Include="..\Source\NodeGraphCore\LinkCache.cpp" />
-    <ClCompile Include="..\Source\NodeGraphCore\NodeGroup.cpp" />
-    <ClCompile Include="..\Source\NodeGraphCore\NodeValidator.cpp" />
-    <ClCompile Include="..\Source\NodeGraphShared\BehaviorTreeGraphAdapter.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\ExecutionTestPanel.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\GraphExecutionTracer.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\GraphExecutionSimulator.cpp" />
     <ClCompile Include="..\Source\NodeGraphShared\BTGraphDocumentConverter.cpp" />
     <ClCompile Include="..\Source\NodeGraphShared\RenderHelpers.cpp" />
     <ClCompile Include="..\Source\Animation\AnimationBank.cpp" />
@@ -135,30 +57,12 @@
     <ClCompile Include="..\Source\BlueprintEditor\EditorConfigManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityBlueprint.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphDocument.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderCanvas.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphRenderer.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderPropertyEditorPanel.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderNodePalette.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\Graph.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EnumCatalogManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\HistoryPanel.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\DebugController.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\DebugPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EntityInspectorManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\NodeStyleRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\TemplateBrowserPanel.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\PerformanceProfiler.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\ProfilerPanel.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\SubgraphMigrator.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptNodeRenderer.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Core.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Helpers.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_PinHelpers.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_NodeManagement.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Utilities.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_TemplateSync.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\TemplateManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\ValidationPanel.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\WorldBridge.cpp" />
@@ -198,9 +102,6 @@
     <ClCompile Include="..\Source\ParameterSchema.cpp" />
     <ClCompile Include="..\Source\PrefabFactory.cpp" />
     <ClCompile Include="..\Source\PrefabScanner.cpp" />
-    <ClCompile Include="..\Source\Runtime\ConditionPresetEvaluator.cpp" />
-    <ClCompile Include="..\Source\Runtime\GraphRuntimeInstance.cpp" />
-    <ClCompile Include="..\Source\Runtime\RuntimeEnvironment.cpp" />
     <ClCompile Include="..\Source\TaskSystem\AtomicTaskRegistry.cpp" />
     <ClCompile Include="..\Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.cpp" />
     <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.cpp" />
@@ -208,7 +109,6 @@
     <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.cpp" />
     <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Task_LogMessage.cpp" />
     <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Utility\Task_Wait.cpp" />
-    <ClCompile Include="..\Source\TaskSystem\ConditionEvaluator.cpp" />
     <ClCompile Include="..\Source\TaskSystem\LocalBlackboard.cpp" />
     <ClCompile Include="..\Source\TaskSystem\Pathfinding\PathfindingManager.cpp" />
     <ClCompile Include="..\Source\TaskSystem\TaskExecutionBridge.cpp" />
@@ -254,14 +154,90 @@
     <ClCompile Include="..\Source\TiledLevelLoader\src\TiledDecoder.cpp" />
     <ClCompile Include="..\Source\TiledLevelLoader\third_party\tinyxml2\tinyxml2.cpp" />
     <ClCompile Include="..\Source\TiledLevelLoader\third_party\miniz\miniz.c" />
-    <ClCompile Include="..\Source\BlueprintEditor\MathOpOperand.cpp" />
-    <ClCompile Include="..\Source\Editor\Panels\MathOpPropertyPanel.cpp" />
-    <ClCompile Include="..\Source\Editor\Panels\GetBBValuePropertyPanel.cpp" />
-    <ClCompile Include="..\Source\Editor\Panels\SetBBValuePropertyPanel.cpp" />
-    <ClCompile Include="..\Source\Editor\Panels\VariablePropertyPanel.cpp" />
-    <ClCompile Include="..\Source\Editor\Panels\ActionParametersPanel.cpp" />
-    <ClCompile Include="..\Source\TaskSystem\EntityBlackboard.cpp" />
-    <ClCompile Include="..\Source\NodeGraphCore\GlobalTemplateBlackboard.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\GraphEditorBase.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasToolbarRenderer.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderNodePalette.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderPropertyEditorPanel.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\ExecutionTestPanel.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\GraphExecutionTracer.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\DebugController.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\PerformanceProfiler.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasModalRenderer.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPreset.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\ConditionPreset\NodeConditionRef.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\MathOpOperand.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderCanvas.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPresetRegistry.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphDocument.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\VisualScriptGraphDocument.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\SubgraphMigrator.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptRenderer.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphRenderer.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Runtime\ConditionPresetEvaluator.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\ConditionPreset\Operand.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\TabManager.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\GraphExecutionSimulator.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Runtime\RuntimeEnvironment.cpp" xmlns="" />
+    <ClCompile Include="..\Source\TaskSystem\ConditionEvaluator.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\Panels\VariablePropertyPanel.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\Panels\MathOpPropertyPanel.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\Panels\NodeConditionsPanel.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\Panels\SetBBValuePropertyPanel.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\Panels\GetBBValuePropertyPanel.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\Panels\ConditionPresetLibraryPanel.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\UndoRedoStack.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\SelectionEffectRenderer.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\Modals\SubGraphFilePickerModal.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\Modals\SwitchCaseEditorModal.cpp" xmlns="" />
+    <ClCompile Include="..\Source\TaskSystem\EntityBlackboard.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\ConditionPreset\DynamicDataPinManager.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\Modals\FilePickerModal.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\Modals\SaveFilePickerModal.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasFramework.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\DebugPanel.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\ProfilerPanel.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\Panels\ActionParametersPanel.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\BTtoVSMigrator.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\DocumentVersionManager.cpp" xmlns="" />
+    <ClCompile Include="..\Source\NodeGraphCore\GlobalTemplateBlackboard.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\ConditionPreset\DynamicDataPin.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\BBVariableRegistry.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\Utilities\CanvasGridRenderer.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabEditorV2.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocumentV2.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\Modals\NodeConditionsEditModal.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Blackboard.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Canvas.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_ConditionUI.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Core.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_FileOperations.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Helpers.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_NodeManagement.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_PinHelpers.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Properties.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_RenderingCore.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_TemplateSync.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Utilities.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Verification.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VSGraphVerifier.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptNodeRenderer.cpp" xmlns="" />
+    <ClCompile Include="..\Source\Editor\Nodes\NodeBranchRenderer.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\AtomicTaskUIRegistry.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\Utilities\CustomCanvasEditor.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\VSConnectionValidator.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\ConditionRegistry.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\OperatorRegistry.cpp" xmlns="" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEditor\AIEditorClipboard.h" />
@@ -272,7 +248,6 @@
     <ClInclude Include="..\Source\AI\AIEditor\AIEditorPanels.h" />
     <ClInclude Include="..\Source\AI\AIEditor\BlackboardPanel.h" />
     <ClInclude Include="..\Source\AI\AIEvents.h" />
-    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTEventTypeRegistry.h" />
     <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTGraphCompiler.h" />
     <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTGraphValidator.h" />
     <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTNodePalette.h" />
@@ -282,85 +257,6 @@
     <ClInclude Include="..\Source\AI\BehaviorTreeDependencyScanner.h" />
     <ClInclude Include="..\Source\AI\BTEditorCommand.h" />
     <ClInclude Include="..\Source\AI\BTGraphLayoutEngine.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\AtomicTaskUIRegistry.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\BBVariableRegistry.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeExecutor.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\BTNodePropertyPanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\BTNodeStyleRegistry.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\BTtoVSMigrator.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Commands\BTGraphCommands.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Commands\CommandHistory.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Commands\GraphCommand.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\ConditionRef.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\ConditionRegistry.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\NodePropertiesPanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphDocument.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderCanvas.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderPropertyEditorPanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Framework\CanvasFramework.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Framework\CanvasModalRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Framework\CanvasToolbarRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Framework\IGraphDocument.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Framework\VisualScriptGraphDocument.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\IGraphRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\MiniMapPanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\MinimapWidget.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\NodePresets.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\NodeSearchPanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\OperatorRegistry.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\ParameterEditorRegistry.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\SelectionEffectRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\SubGraphParameterHelper.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\TabManager.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\UndoRedoStack.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Utilities\CanvasGridRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Utilities\CustomCanvasEditor.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Utilities\ICanvasEditor.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\VisualScriptRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\VSConnectionValidator.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\VSGraphVerifier.h" />
-    <ClInclude Include="..\Source\Core\FontManager.h" />
-    <ClInclude Include="..\Source\Core\IconsFontAwesome6.h" />
-    <ClInclude Include="..\Source\Editor\ConditionPreset\ConditionPreset.h" />
-    <ClInclude Include="..\Source\Editor\ConditionPreset\ConditionPresetRegistry.h" />
-    <ClInclude Include="..\Source\Editor\ConditionPreset\DynamicDataPin.h" />
-    <ClInclude Include="..\Source\Editor\ConditionPreset\DynamicDataPinManager.h" />
-    <ClInclude Include="..\Source\Editor\ConditionPreset\NodeConditionRef.h" />
-    <ClInclude Include="..\Source\Editor\ConditionPreset\Operand.h" />
-    <ClInclude Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.h" />
-    <ClInclude Include="..\Source\Editor\Modals\BehaviorTreeFilePickerModal.h" />
-    <ClInclude Include="..\Source\Editor\Modals\FilePickerModal.h" />
-    <ClInclude Include="..\Source\Editor\Modals\SaveFilePickerModal.h" />
-    <ClInclude Include="..\Source\Editor\Modals\SwitchCaseEditorModal.h" />
-    <ClInclude Include="..\Source\Editor\Nodes\NodeBranchRenderer.h" />
-    <ClInclude Include="..\Source\Editor\Modals\NodeConditionsEditModal.h" />
-    <ClInclude Include="..\Source\Editor\Modals\SubGraphFilePickerModal.h" />
-    <ClInclude Include="..\Source\Editor\Panels\ConditionPresetLibraryPanel.h" />
-    <ClInclude Include="..\Source\Editor\Panels\NodeConditionsPanel.h" />
-    <ClInclude Include="..\Source\NodeGraphCore\GraphComment.h" />
-    <ClInclude Include="..\Source\NodeGraphCore\LinkCache.h" />
-    <ClInclude Include="..\Source\NodeGraphCore\NodeGroup.h" />
-    <ClInclude Include="..\Source\NodeGraphCore\NodeValidator.h" />
-    <ClInclude Include="..\Source\NodeGraphShared\BehaviorTreeGraphAdapter.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\ExecutionTestPanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\GraphExecutionTracer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\GraphExecutionSimulator.h" />
     <ClInclude Include="..\Source\NodeGraphShared\RenderHelpers.h" />
     <ClInclude Include="..\Source\Animation\AnimationBank.h" />
     <ClInclude Include="..\Source\Animation\AnimationErrorHandler.h" />
@@ -387,19 +283,12 @@
     <ClInclude Include="..\Source\BlueprintEditor\Graph.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EnumCatalogManager.h" />
     <ClInclude Include="..\Source\BlueprintEditor\HistoryPanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\DebugController.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\DebugPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntityInspectorManager.h" />
     <ClInclude Include="..\Source\BlueprintEditor\NodeGraphPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\EntitiesPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\InspectorPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\NodeStyleRegistry.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\SubgraphMigrator.h" />
     <ClInclude Include="..\Source\BlueprintEditor\TemplateBrowserPanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\PerformanceProfiler.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\ProfilerPanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\VisualScriptNodeRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\VisualScriptEditorPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\TemplateManager.h" />
     <ClInclude Include="..\Source\BlueprintEditor\ValidationPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\WorldBridge.h" />
@@ -438,9 +327,6 @@
     <ClInclude Include="..\Source\prefabfactory.h" />
     <ClInclude Include="..\Source\PrefabScanner.h" />
     <ClInclude Include="..\Source\resource.h" />
-    <ClInclude Include="..\Source\Runtime\ConditionPresetEvaluator.h" />
-    <ClInclude Include="..\Source\Runtime\GraphRuntimeInstance.h" />
-    <ClInclude Include="..\Source\Runtime\RuntimeEnvironment.h" />
     <ClInclude Include="..\Source\TaskSystem\AtomicTaskContext.h" />
     <ClInclude Include="..\Source\TaskSystem\AtomicTaskRegistry.h" />
     <ClInclude Include="..\Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.h" />
@@ -448,8 +334,6 @@
     <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Blackboard\Task_SetVariable.h" />
     <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.h" />
     <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Utility\Task_Wait.h" />
-    <ClInclude Include="..\Source\TaskSystem\ConditionEvaluator.h" />
-    <ClInclude Include="..\Source\TaskSystem\EntityBlackboard.h" />
     <ClInclude Include="..\Source\TaskSystem\IAtomicTask.h" />
     <ClInclude Include="..\Source\TaskSystem\LocalBlackboard.h" />
     <ClInclude Include="..\Source\TaskSystem\Pathfinding\PathfindingManager.h" />
@@ -504,12 +388,6 @@
     <ClInclude Include="..\Source\TiledLevelLoader\include\TilesetCache.h" />
     <ClInclude Include="..\Source\TiledLevelLoader\include\TilesetParser.h" />
     <ClInclude Include="..\Source\TiledLevelLoader\include\TiledDecoder.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\MathOpOperand.h" />
-    <ClInclude Include="..\Source\Editor\Panels\MathOpPropertyPanel.h" />
-    <ClInclude Include="..\Source\Editor\Panels\GetBBValuePropertyPanel.h" />
-    <ClInclude Include="..\Source\Editor\Panels\SetBBValuePropertyPanel.h" />
-    <ClInclude Include="..\Source\Editor\Panels\VariablePropertyPanel.h" />
-    <ClInclude Include="..\Source\Editor\Panels\ActionParametersPanel.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico" />
@@ -517,6 +395,17 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="add_batch4_files.ps1" />
+    <None Include="add_batch5_files.ps1" />
+    <None Include="add_batch6_files.ps1" />
+    <None Include="add_batch7_files.ps1" />
+    <None Include="add_linker_fixes.ps1" />
+    <None Include="add_missing_files.ps1" />
+    <None Include="add_remaining_files.ps1" />
+    <None Include="phase64b_add_remaining_files.ps1" />
+    <None Include="phase64_add_critical_missing_files.ps1" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

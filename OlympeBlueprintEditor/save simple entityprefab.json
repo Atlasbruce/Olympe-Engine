@@ -1,0 +1,99 @@
+{
+  "blueprintType": "EntityPrefab",
+  "data": {
+    "canvasState": {
+      "offsetX": 0,
+      "offsetY": 0,
+      "zoom": 1
+    },
+    "connections": [
+      {
+        "sourceNodeId": 2,
+        "targetNodeId": 4
+      },
+      {
+        "sourceNodeId": 1,
+        "targetNodeId": 2
+      },
+      {
+        "sourceNodeId": 2,
+        "targetNodeId": 3
+      }
+    ],
+    "nodes": [
+      {
+        "componentName": "PlayerController_data",
+        "componentType": "PlayerController_data",
+        "enabled": true,
+        "nodeId": 1,
+        "position": {
+          "x": 286,
+          "y": 155,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "AudioSource_data",
+        "componentType": "AudioSource_data",
+        "enabled": true,
+        "nodeId": 2,
+        "position": {
+          "x": 571,
+          "y": 314,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "CameraEffects_data",
+        "componentType": "CameraEffects_data",
+        "enabled": true,
+        "nodeId": 3,
+        "position": {
+          "x": 852.931,
+          "y": 159.243,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "FX_data",
+        "componentType": "FX_data",
+        "enabled": true,
+        "nodeId": 4,
+        "position": {
+          "x": 867.204,
+          "y": 383.334,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      }
+    ]
+  },
+  "schemaVersion": 4
+}

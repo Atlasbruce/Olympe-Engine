@@ -1,2843 +1,333 @@
-﻿
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <ClInclude Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderNodePalette.h" />
-
-
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Source Files\BlueprintEditor">
-      <UniqueIdentifier>{8AC4F678-1234-5678-9ABC-DEF012345678}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\ImGui">
-      <UniqueIdentifier>{ACD6F89A-3456-789A-BCDE-F01234567890}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Animation">
-      <UniqueIdentifier>{bb1b4add-e46f-4ec3-b9bc-9a791a7c9f3b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Tasks">
-      <UniqueIdentifier>{391f6fac-9115-4715-b475-9ee9bffe79cc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\AI">
-      <UniqueIdentifier>{43aebf66-151d-42c1-b8dc-7abf411f99bb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Third_parties">
-      <UniqueIdentifier>{f6fcf2b7-a611-47b8-bc49-dd09508a9d0e}</UniqueIdentifier>
-    </Filter>
+    <ClCompile Include="..\Source\AI\AIEditor\AIEditorClipboard.cpp" />
+    <ClCompile Include="..\Source\AI\AIEditor\AIEditorFileDialog.cpp" />
+    <ClCompile Include="..\Source\AI\AIEditor\AIEditorGUI.cpp" />
+    <ClCompile Include="..\Source\AI\AIEditor\AIEditorMenus.cpp" />
+    <ClCompile Include="..\Source\AI\AIEditor\AIEditorNodeRenderer.cpp" />
+    <ClCompile Include="..\Source\AI\AIEditor\AIEditorPanels.cpp" />
+    <ClCompile Include="..\Source\AI\AIEditor\BlackboardPanel.cpp" />
+    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTGraphCompiler.cpp" />
+    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTGraphValidator.cpp" />
+    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTNodePalette.cpp" />
+    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTNodeRegistry.cpp" />
+    <ClCompile Include="..\Source\AI\BehaviorTreeDebugWindow.cpp" />
+    <ClCompile Include="..\Source\AI\BehaviorTreeDebugWindow_NodeGraph.cpp" />
+    <ClCompile Include="..\Source\AI\BehaviorTreeDependencyScanner.cpp" />
+    <ClCompile Include="..\Source\AI\BTEditorCommand.cpp" />
+    <ClCompile Include="..\Source\AI\BTGraphLayoutEngine.cpp" />
+    <ClCompile Include="..\Source\NodeGraphShared\BTGraphDocumentConverter.cpp" />
+    <ClCompile Include="..\Source\NodeGraphShared\RenderHelpers.cpp" />
+    <ClCompile Include="..\Source\Animation\AnimationBank.cpp" />
+    <ClCompile Include="..\Source\Animation\AnimationErrorHandler.cpp" />
+    <ClCompile Include="..\Source\Animation\AnimationGraph.cpp" />
+    <ClCompile Include="..\Source\Animation\AnimationManager.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditorStandalone\BlueprintEditorStandaloneMain.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\AdditionalEditorPlugins.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\AssetBrowser.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\AssetInfoPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeEditorPlugin.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\blueprinteditor.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BlueprintEditorGUI.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BlueprintMigrator.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BlueprintValidator.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BPCommandSystem.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BTNodeGraphManager.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Clipboard.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EditorContext.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EditorConfigManager.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityBlueprint.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Graph.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EnumCatalogManager.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\HistoryPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityInspectorManager.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\NodeStyleRegistry.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\TemplateBrowserPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\TemplateManager.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\ValidationPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\WorldBridge.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\NodeGraphPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntitiesPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\InspectorPanel.cpp" />
+    <ClCompile Include="..\Source\CollisionMap.cpp" />
+    <ClCompile Include="..\Source\ComponentDefinition.cpp" />
+    <ClCompile Include="..\Source\Core\AssetManager.cpp" />
+    <ClCompile Include="..\Source\drawing.cpp" />
+    <ClCompile Include="..\Source\AI\BehaviorTree.cpp" />
+    <ClCompile Include="..\Source\DataManager.cpp" />
+    <ClCompile Include="..\Source\ECS\Components\MovementComponent.cpp" />
+    <ClCompile Include="..\Source\ECS\Components\PositionComponent.cpp" />
+    <ClCompile Include="..\Source\ECS\Components\TaskRunnerComponent.cpp" />
+    <ClCompile Include="..\Source\ECS_Systems_Animation.cpp" />
+    <ClCompile Include="..\Source\EditorCommon\EditorAutosaveManager.cpp" />
+    <ClCompile Include="..\Source\GameEngine.cpp" />
+    <ClCompile Include="..\Source\GameState.cpp" />
+    <ClCompile Include="..\Source\InputConfigLoader.cpp" />
+    <ClCompile Include="..\Source\InputDevice.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\BlackboardSystem.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\CommandSystem.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\Commands\ConnectPinsCommand.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\Commands\CreateNodeCommand.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\Commands\DeleteNodeCommand.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\Commands\MoveNodeCommand.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\GraphDocument.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\GraphMigrator.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\NodeAnnotations.cpp" />
+    <ClCompile Include="..\Source\NodeGraphCore\NodeGraphManager.cpp" />
+    <ClCompile Include="..\Source\OlympeTilemapEditor\src\EditorState.cpp" />
+    <ClCompile Include="..\Source\OlympeTilemapEditor\src\LevelManager.cpp" />
+    <ClCompile Include="..\Source\OlympeTilemapEditor\src\TilemapEditorApp.cpp" />
+    <ClCompile Include="..\Source\ParameterResolver.cpp" />
+    <ClCompile Include="..\Source\ParameterSchema.cpp" />
+    <ClCompile Include="..\Source\PrefabFactory.cpp" />
+    <ClCompile Include="..\Source\PrefabScanner.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\AtomicTaskRegistry.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Blackboard\Task_SetVariable.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Task_LogMessage.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Utility\Task_Wait.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\LocalBlackboard.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\Pathfinding\PathfindingManager.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\TaskExecutionBridge.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\TaskGraphLoader.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\TaskGraphMigrator_v3_to_v4.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\TaskGraphTemplate.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\TaskGraphTypes.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\TaskSystem.cpp" />
+    <ClCompile Include="..\Source\TaskSystem\VSGraphExecutor.cpp" />
+    <ClCompile Include="..\Source\third_party\nfd\nfd_win.cpp" />
+    <ClCompile Include="..\Source\VideoGame.cpp" />
+    <ClCompile Include="..\Source\engine_utils.cpp" />
+    <ClCompile Include="..\Source\vector.cpp" />
+    <ClCompile Include="..\Source\World.cpp" />
+    <ClCompile Include="..\Source\ECS_Systems.cpp" />
+    <ClCompile Include="..\Source\ECS_Systems_AI.cpp" />
+    <ClCompile Include="..\Source\ECS_Systems_Camera.cpp" />
+    <ClCompile Include="..\Source\ECS_Systems_Rendering_Camera.cpp" />
+    <ClCompile Include="..\Source\InputsManager.cpp" />
+    <ClCompile Include="..\Source\PanelManager.cpp" />
+    <ClCompile Include="..\Source\system\ViewportManager.cpp" />
+    <ClCompile Include="..\Source\system\system_utils.cpp" />
+    <ClCompile Include="..\Source\system\KeyboardManager.cpp" />
+    <ClCompile Include="..\Source\system\JoystickManager.cpp" />
+    <ClCompile Include="..\Source\system\MouseManager.cpp" />
+    <ClCompile Include="..\Source\system\GameMenu.cpp" />
+    <ClCompile Include="..\Source\system\SystemMenu.cpp" />
+    <ClCompile Include="..\Source\system\CameraEventHandler.cpp" />
+    <ClCompile Include="..\Source\third_party\imgui\backends\imgui_impl_sdl3.cpp" />
+    <ClCompile Include="..\Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.cpp" />
+    <ClCompile Include="..\Source\third_party\imgui\imgui.cpp" />
+    <ClCompile Include="..\Source\third_party\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\Source\third_party\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\Source\third_party\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\Source\third_party\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\Source\third_party\imnodes\imnodes.cpp" />
+    <ClCompile Include="..\Source\TiledLevelLoader\src\TiledLevelLoader.cpp" />
+    <ClCompile Include="..\Source\TiledLevelLoader\src\TiledToOlympe.cpp" />
+    <ClCompile Include="..\Source\TiledLevelLoader\src\ParallaxLayerManager.cpp" />
+    <ClCompile Include="..\Source\TiledLevelLoader\src\IsometricProjection.cpp" />
+    <ClCompile Include="..\Source\TiledLevelLoader\src\TilesetCache.cpp" />
+    <ClCompile Include="..\Source\TiledLevelLoader\src\TilesetParser.cpp" />
+    <ClCompile Include="..\Source\TiledLevelLoader\src\TiledDecoder.cpp" />
+    <ClCompile Include="..\Source\TiledLevelLoader\third_party\tinyxml2\tinyxml2.cpp" />
+    <ClCompile Include="..\Source\TiledLevelLoader\third_party\miniz\miniz.c" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\GraphEditorBase.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasToolbarRenderer.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderNodePalette.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderPropertyEditorPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\ExecutionTestPanel.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\GraphExecutionTracer.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\DebugController.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\PerformanceProfiler.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasModalRenderer.cpp" />
+    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPreset.cpp" />
+    <ClCompile Include="..\Source\Editor\ConditionPreset\NodeConditionRef.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\MathOpOperand.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderCanvas.cpp" />
+    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPresetRegistry.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphDocument.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\VisualScriptGraphDocument.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\SubgraphMigrator.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptRenderer.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphRenderer.cpp" />
+    <ClCompile Include="..\Source\Runtime\ConditionPresetEvaluator.cpp" />
+    <ClCompile Include="..\Source\Editor\ConditionPreset\Operand.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Source\BlueprintEditor\AdditionalEditorPlugins.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\AssetBrowser.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\AssetInfoPanel.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeEditorPlugin.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\blueprinteditor.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\BlueprintEditorGUI.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\BlueprintMigrator.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\BlueprintValidator.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EditorContext.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityBlueprint.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditorPlugin.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\Graph.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EnumCatalogManager.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\HistoryPanel.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityInspectorManager.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\TemplateBrowserPanel.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\TemplateManager.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\ValidationPanel.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\WorldBridge.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\NodeGraphPanel.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntitiesPanel.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\InspectorPanel.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\drawing.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\BehaviorTree.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\DataManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\vector.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\World.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\ECS_Systems.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\ECS_Systems_AI.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\third_party\imgui\backends\imgui_impl_sdl3.cpp">
-      <Filter>Source Files\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.cpp">
-      <Filter>Source Files\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\third_party\imgui\imgui.cpp">
-      <Filter>Source Files\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\third_party\imgui\imgui_demo.cpp">
-      <Filter>Source Files\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\third_party\imgui\imgui_draw.cpp">
-      <Filter>Source Files\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\third_party\imgui\imgui_tables.cpp">
-      <Filter>Source Files\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\third_party\imgui\imgui_widgets.cpp">
-      <Filter>Source Files\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\third_party\imnodes\imnodes.cpp">
-      <Filter>Source Files\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\GameEngine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\GameState.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\VideoGame.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\engine_utils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\ECS_Systems_Camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\ECS_Systems_Rendering_Camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\InputsManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\PanelManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\system\ViewportManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\system\system_utils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\system\KeyboardManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\system\JoystickManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\system\MouseManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\system\GameMenu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\system\SystemMenu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\system\CameraEventHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TiledLevelLoader\src\TiledLevelLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TiledLevelLoader\src\TiledToOlympe.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TiledLevelLoader\src\ParallaxLayerManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TiledLevelLoader\src\IsometricProjection.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TiledLevelLoader\src\TilesetCache.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TiledLevelLoader\src\TilesetParser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TiledLevelLoader\src\TiledDecoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TiledLevelLoader\third_party\tinyxml2\tinyxml2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TiledLevelLoader\third_party\miniz\miniz.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\LocalBlackboard.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\Pathfinding\PathfindingManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\BlackboardSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\Commands\ConnectPinsCommand.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\Commands\CreateNodeCommand.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\Commands\DeleteNodeCommand.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\Commands\MoveNodeCommand.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\GraphDocument.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\GraphMigrator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\NodeAnnotations.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\BPCommandSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\BTNodeGraphManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditorStandalone\BlueprintEditorStandaloneMain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\NodeStyleRegistry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Animation\AnimationBank.cpp">
-      <Filter>Source Files\Animation</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Animation\AnimationErrorHandler.cpp">
-      <Filter>Source Files\Animation</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Animation\AnimationGraph.cpp">
-      <Filter>Source Files\Animation</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Animation\AnimationManager.cpp">
-      <Filter>Source Files\Animation</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\BTEditorCommand.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\CollisionMap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\BehaviorTreeDependencyScanner.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\ComponentDefinition.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\ParameterSchema.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\OlympeTilemapEditor\src\EditorState.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\OlympeTilemapEditor\src\LevelManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\OlympeTilemapEditor\src\TilemapEditorApp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\InputDevice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\BehaviorTreeDebugWindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTNodePalette.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTGraphCompiler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTGraphValidator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\BTGraphLayoutEngine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTNodeRegistry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\InputConfigLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\Clipboard.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\ParameterResolver.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\AtomicTaskRegistry.cpp">
-      <Filter>Source Files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.cpp">
-      <Filter>Source Files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Task_LogMessage.cpp">
-      <Filter>Source Files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.cpp">
-      <Filter>Source Files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.cpp">
-      <Filter>Source Files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Blackboard\Task_SetVariable.cpp">
-      <Filter>Source Files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\AtomicTasks\Utility\Task_Wait.cpp">
-      <Filter>Source Files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\TaskExecutionBridge.cpp">
-      <Filter>Source Files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\TaskGraphLoader.cpp">
-      <Filter>Source Files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\TaskGraphTemplate.cpp">
-      <Filter>Source Files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\TaskGraphTypes.cpp">
-      <Filter>Source Files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\TaskSystem.cpp">
-      <Filter>Source Files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\ECS\Components\TaskRunnerComponent.cpp">
-      <Filter>Source Files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\ECS\Components\MovementComponent.cpp">
-      <Filter>Source Files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\ECS\Components\PositionComponent.cpp">
-      <Filter>Source Files\Tasks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Core\AssetManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\AIEditor\AIEditorClipboard.cpp">
-      <Filter>Source Files\AI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\AIEditor\AIEditorFileDialog.cpp">
-      <Filter>Source Files\AI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\AIEditor\AIEditorGUI.cpp">
-      <Filter>Source Files\AI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\AIEditor\AIEditorMenus.cpp">
-      <Filter>Source Files\AI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\AIEditor\AIEditorNodeRenderer.cpp">
-      <Filter>Source Files\AI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\AIEditor\AIEditorPanels.cpp">
-      <Filter>Source Files\AI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\AIEditor\BlackboardPanel.cpp">
-      <Filter>Source Files\AI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\third_party\nfd\nfd_win.cpp">
-      <Filter>Source Files\Third_parties</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\ECS_Systems_Animation.cpp">
-      <Filter>Source Files\Animation</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\CommandSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\NodeGraphManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\EditorCommon\EditorAutosaveManager.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\BehaviorTreeDebugWindow_NodeGraph.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphShared\BTGraphDocumentConverter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphShared\RenderHelpers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\VSGraphExecutor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\TaskGraphMigrator_v3_to_v4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EditorConfigManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\DebugController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\DebugPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\PerformanceProfiler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\ProfilerPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptNodeRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\BTtoVSMigrator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\SubgraphMigrator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\NodePresets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\NodeSearchPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\MiniMapPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\MinimapWidget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\GraphComment.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\LinkCache.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\NodeGroup.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\NodeValidator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\TabManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\UndoRedoStack.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Core\FontManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VSConnectionValidator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VSGraphVerifier.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\AtomicTaskUIRegistry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\BBVariableRegistry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\ConditionRegistry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\OperatorRegistry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\ParameterEditorRegistry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\ConditionEvaluator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\ConditionPreset\DynamicDataPin.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\ConditionPreset\NodeConditionRef.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\ConditionPreset\Operand.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Panels\ConditionPresetLibraryPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPreset.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPresetRegistry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\ConditionPreset\DynamicDataPinManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Nodes\NodeBranchRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Panels\NodeConditionsPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Runtime\GraphRuntimeInstance.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Runtime\RuntimeEnvironment.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Modals\NodeConditionsEditModal.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Runtime\ConditionPresetEvaluator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\MathOpOperand.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Panels\MathOpPropertyPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Panels\GetBBValuePropertyPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Panels\SetBBValuePropertyPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Panels\VariablePropertyPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Panels\ActionParametersPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\TaskSystem\EntityBlackboard.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphCore\GlobalTemplateBlackboard.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Core.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_FileOperations.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Utilities.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Helpers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_NodeManagement.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_PinHelpers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_TemplateSync.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_RenderingCore.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Canvas.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Properties.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_ConditionUI.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Blackboard.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\VisualScriptEditorPanel_Verification.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Modals\SwitchCaseEditorModal.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Modals\SubGraphFilePickerModal.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\PrefabFactory.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\PrefabScanner.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\EntityPrefabEditor\NodePropertiesPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\Utilities\CanvasGridRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\Utilities\CustomCanvasEditor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\SelectionEffectRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\BTNodePropertyPanel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\Commands\CommandHistory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\Commands\BTGraphCommands.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\AI\AIGraphPlugin_BT\BTEventTypeRegistry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\BTNodeStyleRegistry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Modals\BehaviorTreeFilePickerModal.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\NodeGraphShared\BehaviorTreeGraphAdapter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\ExecutionTestPanel.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\GraphExecutionTracer.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\GraphExecutionSimulator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeExecutor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Modals\FilePickerModal.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\Editor\Modals\SaveFilePickerModal.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasToolbarRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasFramework.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\Framework\VisualScriptGraphDocument.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\Framework\CanvasModalRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderNodePalette.cpp">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClCompile>
+    <ClInclude Include="..\Source\AI\AIEditor\AIEditorClipboard.h" />
+    <ClInclude Include="..\Source\AI\AIEditor\AIEditorFileDialog.h" />
+    <ClInclude Include="..\Source\AI\AIEditor\AIEditorGUI.h" />
+    <ClInclude Include="..\Source\AI\AIEditor\AIEditorMenus.h" />
+    <ClInclude Include="..\Source\AI\AIEditor\AIEditorNodeRenderer.h" />
+    <ClInclude Include="..\Source\AI\AIEditor\AIEditorPanels.h" />
+    <ClInclude Include="..\Source\AI\AIEditor\BlackboardPanel.h" />
+    <ClInclude Include="..\Source\AI\AIEvents.h" />
+    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTGraphCompiler.h" />
+    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTGraphValidator.h" />
+    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTNodePalette.h" />
+    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTNodeRegistry.h" />
+    <ClInclude Include="..\Source\AI\BehaviorTree.h" />
+    <ClInclude Include="..\Source\AI\BehaviorTreeDebugWindow.h" />
+    <ClInclude Include="..\Source\AI\BehaviorTreeDependencyScanner.h" />
+    <ClInclude Include="..\Source\AI\BTEditorCommand.h" />
+    <ClInclude Include="..\Source\AI\BTGraphLayoutEngine.h" />
+    <ClInclude Include="..\Source\NodeGraphShared\RenderHelpers.h" />
+    <ClInclude Include="..\Source\Animation\AnimationBank.h" />
+    <ClInclude Include="..\Source\Animation\AnimationErrorHandler.h" />
+    <ClInclude Include="..\Source\Animation\AnimationGraph.h" />
+    <ClInclude Include="..\Source\Animation\AnimationHelpers.h" />
+    <ClInclude Include="..\Source\Animation\AnimationManager.h" />
+    <ClInclude Include="..\Source\Animation\AnimationTypes.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\AdditionalEditorPlugins.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\AssetBrowser.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\AssetInfoPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeEditorPlugin.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\blueprinteditor.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BlueprintEditorGUI.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BlueprintEditorPlugin.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BlueprintMigrator.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BlueprintValidator.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BPCommandSystem.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\BTNodeGraphManager.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Clipboard.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EditorContext.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EditorConfigManager.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityBlueprint.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditorPlugin.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Graph.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EnumCatalogManager.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\HistoryPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntityInspectorManager.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\NodeGraphPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\EntitiesPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\InspectorPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\NodeStyleRegistry.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\TemplateBrowserPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\TemplateManager.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\ValidationPanel.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\WorldBridge.h" />
+    <ClInclude Include="..\Source\CollisionMap.h" />
+    <ClInclude Include="..\Source\ComponentDefinition.h" />
+    <ClInclude Include="..\Source\ComponentRegistry.h" />
+    <ClInclude Include="..\Source\Core\AssetManager.h" />
+    <ClInclude Include="..\Source\drawing.h" />
+    <ClInclude Include="..\Source\DataManager.h" />
+    <ClInclude Include="..\Source\ECS\Components\MovementComponent.h" />
+    <ClInclude Include="..\Source\ECS\Components\PositionComponent.h" />
+    <ClInclude Include="..\Source\ECS\Components\TaskRunnerComponent.h" />
+    <ClInclude Include="..\Source\ECS_Systems_Animation.h" />
+    <ClInclude Include="..\Source\EditorCommon\EditorAutosaveManager.h" />
+    <ClInclude Include="..\Source\InputConfigLoader.h" />
+    <ClInclude Include="..\Source\InputDevice.h" />
+    <ClInclude Include="..\Source\json_helper.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\BlackboardSystem.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\CommandSystem.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\Commands\ConnectPinsCommand.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\Commands\CreateNodeCommand.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\Commands\DeleteNodeCommand.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\Commands\MoveNodeCommand.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\GraphDocument.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\GraphMigrator.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\ILayoutEngine.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\NodeAnnotations.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\NodeGraphManager.h" />
+    <ClInclude Include="..\Source\NodeGraphCore\NodeGraphCore.h" />
+    <ClInclude Include="..\Source\OlympeTilemapEditor\include\EditorState.h" />
+    <ClInclude Include="..\Source\OlympeTilemapEditor\include\LevelManager.h" />
+    <ClInclude Include="..\Source\OlympeTilemapEditor\include\TilemapEditorApp.h" />
+    <ClInclude Include="..\Source\ParameterResolver.h" />
+    <ClInclude Include="..\Source\ParameterSchema.h" />
+    <ClInclude Include="..\Source\prefabfactory.h" />
+    <ClInclude Include="..\Source\PrefabScanner.h" />
+    <ClInclude Include="..\Source\resource.h" />
+    <ClInclude Include="..\Source\TaskSystem\AtomicTaskContext.h" />
+    <ClInclude Include="..\Source\TaskSystem\AtomicTaskRegistry.h" />
+    <ClInclude Include="..\Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.h" />
+    <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.h" />
+    <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Blackboard\Task_SetVariable.h" />
+    <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.h" />
+    <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Utility\Task_Wait.h" />
+    <ClInclude Include="..\Source\TaskSystem\IAtomicTask.h" />
+    <ClInclude Include="..\Source\TaskSystem\LocalBlackboard.h" />
+    <ClInclude Include="..\Source\TaskSystem\Pathfinding\PathfindingManager.h" />
+    <ClInclude Include="..\Source\TaskSystem\TaskExecutionBridge.h" />
+    <ClInclude Include="..\Source\TaskSystem\TaskGraphLoader.h" />
+    <ClInclude Include="..\Source\TaskSystem\TaskGraphMigrator_v3_to_v4.h" />
+    <ClInclude Include="..\Source\TaskSystem\TaskGraphTemplate.h" />
+    <ClInclude Include="..\Source\TaskSystem\TaskGraphTypes.h" />
+    <ClInclude Include="..\Source\TaskSystem\TaskSystem.h" />
+    <ClInclude Include="..\Source\TaskSystem\TaskWorldFacade.h" />
+    <ClInclude Include="..\Source\TaskSystem\VSGraphExecutor.h" />
+    <ClInclude Include="..\Source\third_party\nfd\nfd.h" />
+    <ClInclude Include="..\Source\third_party\nfd\nfd.hpp" />
+    <ClInclude Include="..\Source\vector.h" />
+    <ClInclude Include="..\Source\World.h" />
+    <ClInclude Include="..\Source\ECS_Entity.h" />
+    <ClInclude Include="..\Source\ECS_Components.h" />
+    <ClInclude Include="..\Source\ECS_Components_AI.h" />
+    <ClInclude Include="..\Source\ECS_Systems.h" />
+    <ClInclude Include="..\Source\ECS_Systems_AI.h" />
+    <ClInclude Include="..\Source\ECS_Systems_Camera.h" />
+    <ClInclude Include="..\Source\ECS_Systems_Rendering_Camera.h" />
+    <ClInclude Include="..\Source\GameEngine.h" />
+    <ClInclude Include="..\Source\GameState.h" />
+    <ClInclude Include="..\Source\VideoGame.h" />
+    <ClInclude Include="..\Source\engine_utils.h" />
+    <ClInclude Include="..\Source\InputsManager.h" />
+    <ClInclude Include="..\Source\PanelManager.h" />
+    <ClInclude Include="..\Source\system\ViewportManager.h" />
+    <ClInclude Include="..\Source\system\system_utils.h" />
+    <ClInclude Include="..\Source\system\KeyboardManager.h" />
+    <ClInclude Include="..\Source\system\JoystickManager.h" />
+    <ClInclude Include="..\Source\system\MouseManager.h" />
+    <ClInclude Include="..\Source\system\EventQueue.h" />
+    <ClInclude Include="..\Source\system\EventManager.h" />
+    <ClInclude Include="..\Source\system\GameMenu.h" />
+    <ClInclude Include="..\Source\system\SystemMenu.h" />
+    <ClInclude Include="..\Source\system\CameraEventHandler.h" />
+    <ClInclude Include="..\Source\third_party\imgui\backends\imgui_impl_sdl3.h" />
+    <ClInclude Include="..\Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.h" />
+    <ClInclude Include="..\Source\third_party\imgui\imconfig.h" />
+    <ClInclude Include="..\Source\third_party\imgui\imgui.h" />
+    <ClInclude Include="..\Source\third_party\imgui\imgui_internal.h" />
+    <ClInclude Include="..\Source\third_party\imnodes\imnodes.h" />
+    <ClInclude Include="..\Source\third_party\imnodes\imnodes_internal.h" />
+    <ClInclude Include="..\Source\third_party\nlohmann\json.hpp" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="..\Source\TiledLevelLoader\include\TiledLevelLoader.h" />
+    <ClInclude Include="..\Source\TiledLevelLoader\include\TiledToOlympe.h" />
+    <ClInclude Include="..\Source\TiledLevelLoader\include\ParallaxLayerManager.h" />
+    <ClInclude Include="..\Source\TiledLevelLoader\include\IsometricProjection.h" />
+    <ClInclude Include="..\Source\TiledLevelLoader\include\TilesetCache.h" />
+    <ClInclude Include="..\Source\TiledLevelLoader\include\TilesetParser.h" />
+    <ClInclude Include="..\Source\TiledLevelLoader\include\TiledDecoder.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Source\AI\AIEvents.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\BehaviorTree.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\BlackboardSystem.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BPCommandSystem.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BTNodeGraphManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\system\CameraEventHandler.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\Commands\ConnectPinsCommand.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\Commands\CreateNodeCommand.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\DataManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\Commands\DeleteNodeCommand.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\drawing.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ECS_Components.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ECS_Components_AI.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ECS_Entity.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ECS_Systems.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ECS_Systems_AI.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ECS_Systems_Camera.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ECS_Systems_Rendering_Camera.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\engine_utils.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\system\EventManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\system\EventQueue.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\GameEngine.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\system\GameMenu.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\GameState.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\GraphDocument.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\GraphMigrator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\IAtomicTask.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\ILayoutEngine.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\InputsManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TiledLevelLoader\include\IsometricProjection.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\system\JoystickManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\third_party\nlohmann\json.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\json_helper.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\system\KeyboardManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\LocalBlackboard.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\system\MouseManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\Commands\MoveNodeCommand.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\NodeAnnotations.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\NodeGraphCore.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\PanelManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TiledLevelLoader\include\ParallaxLayerManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\Pathfinding\PathfindingManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\resource.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\system\system_utils.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\system\SystemMenu.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TiledLevelLoader\include\TiledDecoder.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TiledLevelLoader\include\TiledLevelLoader.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TiledLevelLoader\include\TiledToOlympe.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TiledLevelLoader\include\TilesetCache.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TiledLevelLoader\include\TilesetParser.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\Commands\ToggleNodeBreakpointCommand.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\vector.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\VideoGame.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\system\ViewportManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\World.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\third_party\imgui\imconfig.h">
-      <Filter>Source Files\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\third_party\imgui\imgui.h">
-      <Filter>Source Files\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\third_party\imgui\backends\imgui_impl_sdl3.h">
-      <Filter>Source Files\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\third_party\imgui\backends\imgui_impl_sdlrenderer3.h">
-      <Filter>Source Files\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\third_party\imgui\imgui_internal.h">
-      <Filter>Source Files\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\third_party\imnodes\imnodes.h">
-      <Filter>Source Files\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\third_party\imnodes\imnodes_internal.h">
-      <Filter>Source Files\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\AdditionalEditorPlugins.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\AssetBrowser.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\AssetInfoPanel.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeEditorPlugin.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\blueprinteditor.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BlueprintEditorGUI.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BlueprintEditorPlugin.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BlueprintMigrator.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BlueprintValidator.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EditorContext.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EntitiesPanel.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EntityBlueprint.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EntityInspectorManager.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditorPlugin.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EnumCatalogManager.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\Graph.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\HistoryPanel.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\InspectorPanel.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\NodeGraphPanel.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\TemplateBrowserPanel.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\TemplateManager.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\ValidationPanel.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\WorldBridge.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ComponentRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Animation\AnimationBank.h">
-      <Filter>Source Files\Animation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Animation\AnimationErrorHandler.h">
-      <Filter>Source Files\Animation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Animation\AnimationGraph.h">
-      <Filter>Source Files\Animation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Animation\AnimationHelpers.h">
-      <Filter>Source Files\Animation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Animation\AnimationManager.h">
-      <Filter>Source Files\Animation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Animation\AnimationTypes.h">
-      <Filter>Source Files\Animation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\BehaviorTreeDependencyScanner.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\BTEditorCommand.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\CollisionMap.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ComponentDefinition.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\NodeStyleRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ParameterSchema.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\OlympeTilemapEditor\include\EditorState.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\OlympeTilemapEditor\include\LevelManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\OlympeTilemapEditor\include\TilemapEditorApp.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\InputDevice.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTNodePalette.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTGraphCompiler.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTGraphValidator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\BTGraphLayoutEngine.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTNodeRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\BehaviorTreeDebugWindow.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\InputConfigLoader.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\Clipboard.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ParameterResolver.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\AtomicTaskContext.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\AtomicTaskRegistry.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Blackboard\Task_Compare.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Movement\Task_MoveToLocation.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\AtomicTasks\AI\Task_RequestPathfinding.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Blackboard\Task_SetVariable.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\AtomicTasks\Utility\Task_Wait.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\TaskExecutionBridge.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\TaskGraphLoader.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\TaskGraphTemplate.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\TaskGraphTypes.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\TaskSystem.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\TaskWorldFacade.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ECS\Components\TaskRunnerComponent.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ECS\Components\MovementComponent.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ECS\Components\PositionComponent.h">
-      <Filter>Source Files\Tasks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Core\AssetManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\AIEditor\AIEditorClipboard.h">
-      <Filter>Source Files\AI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\AIEditor\AIEditorFileDialog.h">
-      <Filter>Source Files\AI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\AIEditor\AIEditorGUI.h">
-      <Filter>Source Files\AI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\AIEditor\AIEditorMenus.h">
-      <Filter>Source Files\AI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\AIEditor\AIEditorNodeRenderer.h">
-      <Filter>Source Files\AI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\AIEditor\AIEditorPanels.h">
-      <Filter>Source Files\AI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\AI\AIEditor\BlackboardPanel.h">
-      <Filter>Source Files\AI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\third_party\nfd\nfd.h">
-      <Filter>Source Files\Third_parties</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\third_party\nfd\nfd.hpp">
-      <Filter>Source Files\Third_parties</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\ECS_Systems_Animation.h">
-      <Filter>Source Files\Animation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\EditorCommon\EditorAutosaveManager.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\VSGraphVerifier.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Panels\ActionParametersPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\AtomicTaskUIRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BBVariableRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BlackboardVariablePresetRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\BTtoVSMigrator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\CommandSystem.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\ConditionEvaluator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\ConditionPreset\ConditionPreset.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Dialogs\ConditionPresetEditDialog.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Runtime\ConditionPresetEvaluator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Panels\ConditionPresetLibraryPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\ConditionPreset\ConditionPresetRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\ConditionRef.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\ConditionRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\DebugController.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\DebugPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\ConditionPreset\DynamicDataPin.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\ConditionPreset\DynamicDataPinManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EditorConfigManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\EntityBlackboard.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Core\FontManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Panels\GetBBValuePropertyPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\GraphComment.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Runtime\GraphRuntimeInstance.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Core\IconsFontAwesome6.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\IGraphRenderer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\LinkCache.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\MathOpOperand.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Panels\MathOpPropertyPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\MiniMapPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\MinimapWidget.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Nodes\NodeBranchRenderer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\ConditionPreset\NodeConditionRef.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Modals\NodeConditionsEditModal.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Panels\NodeConditionsPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\NodeGraphManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\NodeGroup.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\NodePresets.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\NodeSearchPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphCore\NodeValidator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\ConditionPreset\Operand.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\OperatorRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\ParameterEditorRegistry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\PerformanceProfiler.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\ProfilerPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\NodeGraphShared\RenderHelpers.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Runtime\RuntimeEnvironment.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Panels\SetBBValuePropertyPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\SubgraphMigrator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\TabManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\TaskGraphMigrator_v3_to_v4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\UndoRedoStack.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Panels\VariablePropertyPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\VisualScriptEditorPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\VisualScriptNodeRenderer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\VisualScriptRenderer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\VSConnectionValidator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\TaskSystem\VSGraphExecutor.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Modals\SwitchCaseEditorModal.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\Editor\Modals\SubGraphFilePickerModal.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyInspectorPrefab.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeData.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentNodeRenderer.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabGraphDocument.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ParameterSchemaRegistry.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabCanvas.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PrefabLoader.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\prefabfactory.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\PrefabScanner.h">
-      <Filter>Source Files\BlueprintEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\EntityPrefabEditor\NodePropertiesPanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Utilities\CanvasGridRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Utilities\CustomCanvasEditor.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Utilities\ICanvasEditor.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\SelectionEffectRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\BTNodePropertyPanel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Source\BlueprintEditor\Commands\CommandHistory.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Commands\GraphCommand.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Commands\BTGraphCommands.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.h" />
-    <ClInclude Include="..\Source\AI\AIGraphPlugin_BT\BTEventTypeRegistry.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\BTNodeStyleRegistry.h" />
-    <ClInclude Include="..\Source\Editor\Modals\BehaviorTreeFilePickerModal.h" />
-    <ClInclude Include="..\Source\NodeGraphShared\BehaviorTreeGraphAdapter.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\ExecutionTestPanel.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\GraphExecutionTracer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\GraphExecutionSimulator.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeExecutor.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\SubGraphParameterHelper.h" />
-    <ClInclude Include="..\Source\Editor\Modals\FilePickerModal.h" />
-    <ClInclude Include="..\Source\Editor\Modals\SaveFilePickerModal.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Framework\IGraphDocument.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Framework\CanvasToolbarRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Framework\CanvasFramework.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Framework\VisualScriptGraphDocument.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\Framework\CanvasModalRenderer.h" />
+    <ResourceCompile Include="OlympeBlueprintEditor.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="icon1.ico">
-      <Filter>Source Files</Filter>
-    </Image>
-    <Image Include="Resources\olympe.ico">
-      <Filter>Source Files</Filter>
-    </Image>
+    <Image Include="icon1.ico" />
+    <Image Include="Resources\olympe.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="OlympeBlueprintEditor.rc">
-      <Filter>Source Files</Filter>
-    </ResourceCompile>
+    <None Include="add_missing_files.ps1" />
+    <None Include="add_remaining_files.ps1" />
+    <None Include="add_batch4_files.ps1" />
+    <None Include="add_batch5_files.ps1" />
+    <None Include="add_batch6_files.ps1" />
+    <None Include="add_batch7_files.ps1" />
+    <None Include="add_linker_fixes.ps1" />
+    <None Include="phase64_add_critical_missing_files.ps1" />
+    <None Include="phase64b_add_remaining_files.ps1" />
   </ItemGroup>
 </Project>
-

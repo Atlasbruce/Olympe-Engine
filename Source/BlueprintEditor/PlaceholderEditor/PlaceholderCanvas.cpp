@@ -5,6 +5,14 @@
 #include "../../system/system_utils.h"  // For SYSTEM_LOG
 #include <iostream>
 #include <cmath>
+
+// Fix Windows min/max macro conflicts
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#undef min
+#undef max
+
 #include <algorithm>  // For std::find
 #include <limits>     // For std::numeric_limits
 

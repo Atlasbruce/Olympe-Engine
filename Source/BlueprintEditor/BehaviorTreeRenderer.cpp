@@ -18,6 +18,7 @@
 #include "BehaviorTreeExecutor.h"
 #include "../NodeGraphShared/BehaviorTreeGraphAdapter.h"
 #include "../AI/AIGraphPlugin_BT/BTNodePalette.h"
+#include "../PanelManager.h"  // Access to framework panel dimensions
 #include "../AI/BehaviorTree.h"
 #include "../DataManager.h"
 #include "../third_party/imgui/imgui.h"
@@ -172,11 +173,14 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
 
     ImGui::Separator();
 
-    // Layout: Canvas (left, ~75%) | Resize Handle | Tabbed Right Panel (right, ~25%)
+    // Layout: Canvas (left) | Resize Handle | Tabbed Right Panel (right)
+    // Use framework panel dimensions from PanelManager
     float totalWidth = ImGui::GetContentRegionAvail().x;
     float handleWidth = 4.0f;
-    float canvasWidth = totalWidth * m_canvasPanelWidth;
-    float rightPanelWidth = totalWidth - canvasWidth - handleWidth;
+    float rightPanelWidth = static_cast<float>(PanelManager::InspectorPanelWidth);  // Framework default: 300px
+    if (rightPanelWidth < 200.0f) rightPanelWidth = 200.0f;  // Minimum width
+    if (rightPanelWidth > totalWidth * 0.6f) rightPanelWidth = totalWidth * 0.6f;  // Max 60% of total
+    float canvasWidth = totalWidth - rightPanelWidth - handleWidth;
 
     ImVec2 regionMin = ImGui::GetCursorScreenPos();
 
@@ -212,9 +216,11 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
         ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     {
-        m_canvasPanelWidth += ImGui::GetIO().MouseDelta.x / totalWidth;
-        if (m_canvasPanelWidth < 0.5f) m_canvasPanelWidth = 0.5f;
-        if (m_canvasPanelWidth > 0.9f) m_canvasPanelWidth = 0.9f;
+        // Update framework panel width directly
+        PanelManager::InspectorPanelWidth -= static_cast<int>(ImGui::GetIO().MouseDelta.x);
+        if (PanelManager::InspectorPanelWidth < 200) PanelManager::InspectorPanelWidth = 200;
+        if (PanelManager::InspectorPanelWidth > static_cast<int>(totalWidth * 0.6f))
+            PanelManager::InspectorPanelWidth = static_cast<int>(totalWidth * 0.6f);
     }
     ImGui::PopStyleColor(3);
 

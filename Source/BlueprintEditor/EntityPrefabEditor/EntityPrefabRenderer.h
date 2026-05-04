@@ -6,6 +6,7 @@
 #include "PropertyEditorPanel.h"
 #include "../Utilities/ICanvasEditor.h"
 #include "../Framework/CanvasFramework.h"
+#include "../../PanelManager.h"  // Access to framework panel dimensions
 #include <memory>
 #include <string>
 
@@ -48,7 +49,7 @@ private:
     std::unique_ptr<CanvasFramework> m_framework;   // NEW: Unified framework (Phase 41)
     std::string m_filePath;
     bool m_isDirty = false;
-    float m_canvasPanelWidth = 0.75f; // 75% for canvas, 25% for side panel
+    // Layout: Right panel width uses PanelManager::InspectorPanelWidth (framework default: 300px)
     int m_rightPanelTabSelection = 0; // 0 = ComponentPalette, 1 = PropertyPanel
 
     // Canvas state snapshot (Phase 35.0)

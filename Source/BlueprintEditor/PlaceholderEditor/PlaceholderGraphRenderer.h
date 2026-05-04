@@ -6,6 +6,7 @@
 #include "PlaceholderGraphDocument.h"
 #include "PlaceholderPropertyEditorPanel.h"
 #include "PlaceholderNodePalette.h"  // Phase 64.1: Node palette for drag-drop creation
+#include "../../PanelManager.h"  // Access to framework panel dimensions
 #include <memory>
 #include <string>
 
@@ -81,7 +82,7 @@ public:
     // ========== PlaceholderGraphRenderer specific ==========
     
     /// Get underlying document
-    PlaceholderGraphDocument* GetDocument() { return m_document.get(); }
+    PlaceholderGraphDocument* GetDocument() { return GetDoc(); }
 
     /// Create new placeholder graph
     void CreateNewGraph();
@@ -132,19 +133,24 @@ public:
     virtual void RenderFrameworkModals() override;
 
 private:
-    std::unique_ptr<PlaceholderGraphDocument> m_document;
-    std::unique_ptr<CanvasFramework> m_framework;  // Phase 4 Step 5 FIX: Complete framework integration
-    std::unique_ptr<PlaceholderCanvas> m_canvas;
+    // ====================================================================
+    // Member Variables - Core (Using parent members with casts to avoid shadowing)
+    // ====================================================================
+
+    // Helper accessors for type safety
+    PlaceholderGraphDocument* GetDoc() const { return static_cast<PlaceholderGraphDocument*>(m_document); }
+    PlaceholderCanvas* GetCanvasPtr() const { return static_cast<PlaceholderCanvas*>(m_canvas); }
+
+    // Owned objects (Unique to this subclass)
+    std::unique_ptr<PlaceholderGraphDocument> m_ownedDocument; // Actual owner of document
+    std::unique_ptr<PlaceholderCanvas> m_ownedCanvas;         // Actual owner of canvas
+
     std::unique_ptr<PlaceholderPropertyEditorPanel> m_propertyEditor;
     std::unique_ptr<CanvasToolbarRenderer> m_toolbar;  // Phase 4 Step 5 Feature #1: Unified toolbar (Save/SaveAs/Browse)
     std::unique_ptr<PlaceholderNodePalette> m_palette;  // Phase 64.1: Node palette for drag-drop creation
 
     // Phase 4 Step 5: Layout management - resizable panels
-    float m_propertiesPanelWidth;          // Width of right properties panel (~250px)
-    float m_nodePropertiesPanelHeight;     // Height of top node properties (35% of right panel)
-
-    // Phase 4 Step 4: Tab system - tracks active tab (0=Components, 1=Properties)
-    int m_rightPanelTabSelection;
+    // Right panel width uses PanelManager::InspectorPanelWidth (framework default: 300px)
 
     // Load tracking for Phase 51 pattern
     bool m_isLoading;

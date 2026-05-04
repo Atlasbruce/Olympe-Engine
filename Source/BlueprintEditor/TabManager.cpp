@@ -11,15 +11,13 @@
 #include "VisualScriptRenderer.h"
 #include "BehaviorTreeRenderer.h"
 #include "NodeGraphPanel.h"
-#include "EntityPrefabEditor/EntityPrefabRenderer.h"
-#include "EntityPrefabEditor/PrefabCanvas.h"
-#include "EntityPrefabEditor/EntityPrefabGraphDocument.h"
 #include "PlaceholderEditor/PlaceholderGraphRenderer.h"
 #include "PlaceholderEditor/PlaceholderGraphDocument.h"
 #include "PlaceholderEditor/PlaceholderCanvas.h"
 #include "Framework/VisualScriptGraphDocument.h"
 #include "Framework/BehaviorTreeGraphDocument.h"
 #include "Framework/CanvasModalRenderer.h"
+#include "Framework/DocumentVersionManager.h"
 #include "../DataManager.h"
 
 #include "../third_party/imgui/imgui.h"
@@ -175,19 +173,35 @@ std::string TabManager::CreateNewTab(const std::string& graphType)
     }
     else if (graphType == "EntityPrefab")
     {
-        // PHASE 54 FIX: Allocate document and canvas on heap per tab
-        // Prevents corruption from deleting static objects in ~EditorTab()
-        EntityPrefabGraphDocument* epDoc = new EntityPrefabGraphDocument();
-        PrefabCanvas* epCanvas = new PrefabCanvas();
-        epCanvas->Initialize(epDoc);
+        // PHASE 60: Use DocumentVersionManager + EntityPrefabEditorV2 Framework for consistency
+        // This matches OpenFileInTab pattern, ensuring unified architecture for "New" and "Open" paths
 
-        EntityPrefabRenderer* r = new EntityPrefabRenderer(*epCanvas);
-        tab.renderer = r;
+        DocumentVersionManager& docManager = DocumentVersionManager::Get();
 
-        // Tab owns the document pointer - will be deleted in ~EditorTab
-        tab.document = epDoc;
+        SYSTEM_LOG << "[TabManager::CreateNewTab] Creating EntityPrefab via DocumentVersionManager\n";
 
-        SYSTEM_LOG << "[TabManager::CreateNewTab] Created new EntityPrefab tab with heap-allocated document\n";
+        // Create document through framework factory
+        IGraphDocument* doc = docManager.CreateNewDocument("EntityPrefab");
+        if (!doc)
+        {
+            SYSTEM_LOG << "[TabManager::CreateNewTab] ERROR: DocumentVersionManager::CreateNewDocument() failed\n";
+            return "";
+        }
+        SYSTEM_LOG << "[TabManager::CreateNewTab] Document created successfully\n";
+
+        // Create renderer through framework factory
+        IGraphRenderer* renderer = docManager.CreateRenderer("EntityPrefab", doc);
+        if (!renderer)
+        {
+            SYSTEM_LOG << "[TabManager::CreateNewTab] ERROR: DocumentVersionManager::CreateRenderer() failed\n";
+            delete doc;
+            return "";
+        }
+        SYSTEM_LOG << "[TabManager::CreateNewTab] Renderer created successfully\n";
+
+        tab.renderer = renderer;
+        tab.document = doc;
+        SYSTEM_LOG << "[TabManager::CreateNewTab] EntityPrefab tab fully initialized via framework\n";
     }
     else if (graphType == "BehaviorTree")
     {
@@ -318,32 +332,36 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
     }
     else if (graphType == "EntityPrefab")
     {
-        // PHASE 54 FIX: Allocate document and canvas on heap per tab
-        // Static objects in OpenFileInTab caused double-delete crash:
-        // - delete in EditorTab::~EditorTab() corrupted heap
-        // - Subsequent static destruction crashed on corrupted iterator proxies
-        EntityPrefabGraphDocument* epDoc = new EntityPrefabGraphDocument();
-        PrefabCanvas* epCanvas = new PrefabCanvas();
-        epCanvas->Initialize(epDoc);
+        // PHASE 2.1 CHUNK 3: Use DocumentVersionManager + EntityPrefabEditorV2 Framework
+        // Load through centralized routing system instead of creating renderer directly
+        // This enables fallback, version control, and consistent architecture
 
-        EntityPrefabRenderer* r = new EntityPrefabRenderer(*epCanvas);
-        SYSTEM_LOG << "[TabManager::OpenFileInTab] EntityPrefabRenderer created for tab: " << tab.tabID << "\n";
+        DocumentVersionManager& docManager = DocumentVersionManager::Get();
 
-        if (!r->Load(filePath))
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] Loading EntityPrefab via DocumentVersionManager\n";
+
+        // Load document through framework
+        IGraphDocument* doc = docManager.LoadDocument("EntityPrefab", filePath);
+        if (!doc)
         {
-            SYSTEM_LOG << "[TabManager::OpenFileInTab] ERROR: EntityPrefabRenderer::Load() failed for " << filePath << "\n";
-            delete r;
-            delete epCanvas;
-            delete epDoc;
+            SYSTEM_LOG << "[TabManager::OpenFileInTab] ERROR: DocumentVersionManager::LoadDocument() failed\n";
             return "";
         }
-        SYSTEM_LOG << "[TabManager::OpenFileInTab] EntityPrefabRenderer::Load() SUCCESS\n";
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] Document loaded successfully\n";
 
-        tab.renderer = r;
+        // Create renderer through framework factory
+        IGraphRenderer* renderer = docManager.CreateRenderer("EntityPrefab", doc);
+        if (!renderer)
+        {
+            SYSTEM_LOG << "[TabManager::OpenFileInTab] ERROR: DocumentVersionManager::CreateRenderer() failed\n";
+            delete doc;
+            return "";
+        }
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] Renderer created successfully\n";
 
-        // Tab owns the document and canvas pointers - will be deleted in ~EditorTab
-        tab.document = epDoc;
-        SYSTEM_LOG << "[TabManager::OpenFileInTab] EntityPrefab document assigned to tab\n";
+        tab.renderer = renderer;
+        tab.document = doc;
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] EntityPrefab tab fully initialized via framework\n";
     }
     else if (graphType == "Placeholder")
     {

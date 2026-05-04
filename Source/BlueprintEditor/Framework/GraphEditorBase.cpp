@@ -259,9 +259,6 @@ void GraphEditorBase::Render()
     // Render context menu
     RenderContextMenu();
 
-    // Render modals LAST (Phase 45 timing pattern)
-    RenderModals();
-
     RenderEnd();
 }
 

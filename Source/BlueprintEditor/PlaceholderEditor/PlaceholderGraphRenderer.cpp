@@ -20,14 +20,25 @@ bool TraverseNode(
     int depth = 0);
 
 PlaceholderGraphRenderer::PlaceholderGraphRenderer()
-    : GraphEditorBase(), m_document(nullptr), m_canvas(nullptr), m_isLoading(false), m_rightPanelTabSelection(0),
-      m_propertiesPanelWidth(280.0f), m_nodePropertiesPanelHeight(-1.0f)
+    : GraphEditorBase("PlaceholderEditor"), m_isLoading(false)
 {
+    // Initialize base members to nullptr
+    m_document = nullptr;
+    m_canvas = nullptr;
     std::cout << "[PlaceholderGraphRenderer] Created" << std::endl;
 }
 
 PlaceholderGraphRenderer::~PlaceholderGraphRenderer()
 {
+    // PHASE 72 FIX: Avoid calling LogAction in destructor
+    // Clean up canvas (owned by this subclass)
+    m_ownedCanvas.reset();
+    m_canvas = nullptr; // Clear base member
+
+    // Document is also owned as unique_ptr, will auto-delete
+    m_ownedDocument.reset();
+    m_document = nullptr; // Clear base member
+
     std::cout << "[PlaceholderGraphRenderer] Destroyed" << std::endl;
 }
 
@@ -43,13 +54,14 @@ bool PlaceholderGraphRenderer::Load(const std::string& filePath)
     m_isLoading = true;
 
     // Create document if needed
-    if (!m_document)
+    if (!m_ownedDocument)
     {
-        m_document = std::make_unique<PlaceholderGraphDocument>();
+        m_ownedDocument = std::make_unique<PlaceholderGraphDocument>();
+        m_document = (void*)m_ownedDocument.get(); // Set base member
     }
 
     // Load from file
-    bool success = m_document->Load(filePath);
+    bool success = m_ownedDocument->Load(filePath);
     if (!success)
     {
         m_isLoading = false;
@@ -57,22 +69,23 @@ bool PlaceholderGraphRenderer::Load(const std::string& filePath)
     }
 
     // Initialize canvas (Phase 52 pattern: Initialize() must create all dependencies)
-    if (!m_canvas)
+    if (!m_ownedCanvas)
     {
-        m_canvas = std::make_unique<PlaceholderCanvas>();
+        m_ownedCanvas = std::make_unique<PlaceholderCanvas>();
+        m_canvas = (void*)m_ownedCanvas.get(); // Set base member
     }
-    m_canvas->Initialize(m_document.get());
-    m_canvas->SetRenderer(this);  // Phase 63.2: Set renderer reference for selection sync
+    m_ownedCanvas->Initialize(m_ownedDocument.get());
+    m_ownedCanvas->SetRenderer(this);  // Phase 63.2: Set renderer reference for selection sync
 
     // Phase 4 Step 5 FIX: Create CanvasFramework for unified toolbar support
     // This is the CRITICAL pattern that VisualScriptEditorPanel uses!
     if (!m_framework)
     {
-        m_framework = std::make_unique<CanvasFramework>(m_document.get());
+        m_framework = std::make_unique<CanvasFramework>(m_ownedDocument.get());
     }
 
     // Set document in framework (base class compatibility)
-    SetDocument((void*)m_document.get());
+    SetDocument((void*)m_ownedDocument.get());
 
     m_isLoading = false;
     std::cout << "[PlaceholderGraphRenderer] Loaded successfully" << std::endl;
@@ -83,42 +96,45 @@ bool PlaceholderGraphRenderer::Save(const std::string& filePath)
 {
     std::cout << "[PlaceholderGraphRenderer] Saving: " << filePath << std::endl;
 
-    if (!m_document)
+    PlaceholderGraphDocument* doc = GetDoc();
+    if (!doc)
     {
         std::cout << "[PlaceholderGraphRenderer] ERROR: No document to save" << std::endl;
         return false;
     }
 
-    return m_document->Save(filePath);
+    return doc->Save(filePath);
 }
 
 void PlaceholderGraphRenderer::InitializeCanvasEditor()
 {
     std::cout << "[PlaceholderGraphRenderer] InitializeCanvasEditor" << std::endl;
 
-    if (!m_document)
+    if (!m_ownedDocument)
     {
-        m_document = std::make_unique<PlaceholderGraphDocument>();
+        m_ownedDocument = std::make_unique<PlaceholderGraphDocument>();
+        m_document = (void*)m_ownedDocument.get();
     }
 
-    if (!m_canvas)
+    if (!m_ownedCanvas)
     {
-        m_canvas = std::make_unique<PlaceholderCanvas>();
-        m_canvas->Initialize(m_document.get());
-        m_canvas->SetRenderer(this);  // Phase 63.2: Set renderer reference for selection sync
+        m_ownedCanvas = std::make_unique<PlaceholderCanvas>();
+        m_canvas = (void*)m_ownedCanvas.get();
+        m_ownedCanvas->Initialize(m_ownedDocument.get());
+        m_ownedCanvas->SetRenderer(this);  // Phase 63.2: Set renderer reference for selection sync
     }
 
     // Phase 4 Step 5 FIX: Create CanvasFramework for unified toolbar support
     if (!m_framework)
     {
-        m_framework = std::make_unique<CanvasFramework>(m_document.get());
+        m_framework = std::make_unique<CanvasFramework>(m_ownedDocument.get());
     }
 
     // Phase 4: Initialize PropertyEditorPanel for rendering properties
     if (!m_propertyEditor)
     {
         m_propertyEditor = std::make_unique<PlaceholderPropertyEditorPanel>();
-        m_propertyEditor->Initialize(m_document.get());
+        m_propertyEditor->Initialize(m_ownedDocument.get());
     }
 }
 
@@ -140,18 +156,21 @@ void PlaceholderGraphRenderer::RenderCommonToolbar()
     // Phase 64: Connect toolbar state to canvas
     if (ImGui::Checkbox("Grid##toolbar", &m_gridVisible))
     {
-        if (m_canvas) m_canvas->SetGridVisible(m_gridVisible);
+        PlaceholderCanvas* canvas = GetCanvasPtr();
+        if (canvas) canvas->SetGridVisible(m_gridVisible);
     }
     ImGui::SameLine(0.0f, 10.0f);
 
     if (ImGui::Button("Reset View##btn", ImVec2(80, 0))) {
-        if (m_canvas) m_canvas->ResetPanZoom();
+        PlaceholderCanvas* canvas = GetCanvasPtr();
+        if (canvas) canvas->ResetPanZoom();
     }
     ImGui::SameLine(0.0f, 10.0f);
 
     if (ImGui::Checkbox("Minimap##toolbar", &m_minimapVisible))
     {
-        if (m_canvas) m_canvas->SetMinimapVisible(m_minimapVisible);
+        PlaceholderCanvas* canvas = GetCanvasPtr();
+        if (canvas) canvas->SetMinimapVisible(m_minimapVisible);
     }
 }
 
@@ -161,7 +180,8 @@ void PlaceholderGraphRenderer::RenderGraphContent()
     // NOTE: Framework toolbar is now rendered by RenderCommonToolbar()
     // which delegates to CanvasFramework. We removed manual toolbar rendering here.
 
-    if (!m_canvas)
+    PlaceholderCanvas* canvas = GetCanvasPtr();
+    if (!canvas)
         return;
 
     // Phase 64: Sync canvas selection with base class
@@ -180,17 +200,18 @@ void PlaceholderGraphRenderer::RenderGraphContent()
     float totalWidth = ImGui::GetContentRegionAvail().x;
     float totalHeight = ImGui::GetContentRegionAvail().y;
 
-    // Clamp properties panel width
-    if (m_propertiesPanelWidth < 200.0f) m_propertiesPanelWidth = 200.0f;
-    if (m_propertiesPanelWidth > totalWidth * 0.60f) m_propertiesPanelWidth = totalWidth * 0.60f;
+    // Use framework panel width from PanelManager
+    float propertiesPanelWidth = static_cast<float>(PanelManager::InspectorPanelWidth);
+    if (propertiesPanelWidth < 200.0f) propertiesPanelWidth = 200.0f;  // Minimum width
+    if (propertiesPanelWidth > totalWidth * 0.60f) propertiesPanelWidth = totalWidth * 0.60f;  // Max 60%
 
     float handleWidth = 6.0f;
-    float canvasAreaWidth = totalWidth - m_propertiesPanelWidth - handleWidth;
+    float canvasAreaWidth = totalWidth - propertiesPanelWidth - handleWidth;
 
     // ---- LEFT: Canvas ----
     ImGui::BeginChild("PlaceholderCanvas", ImVec2(canvasAreaWidth, 0), false,
                       ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-    m_canvas->Render();
+    canvas->Render();
     ImGui::EndChild();
 
     // ---- DRAG-DROP OVERLAY FOR PALETTE INSTANTIATION ----
@@ -212,7 +233,7 @@ void PlaceholderGraphRenderer::RenderGraphContent()
             PlaceholderNodeType nodeType = static_cast<PlaceholderNodeType>(nodeTypeValue);
             ImVec2 mousePos = ImGui::GetMousePos();
             // Phase 68 FIX: Pass canvas region info directly to avoid context issues
-            m_canvas->AcceptNodeDropAtCanvasPosition(nodeType, mousePos, canvasRegionMin, m_canvas->GetCanvasZoom());
+            canvas->AcceptNodeDropAtCanvasPosition(nodeType, mousePos, canvasRegionMin, canvas->GetCanvasZoom());
         }
         ImGui::EndDragDropTarget();
     }
@@ -229,9 +250,11 @@ void PlaceholderGraphRenderer::RenderGraphContent()
         ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     {
-        m_propertiesPanelWidth -= ImGui::GetIO().MouseDelta.x;
-        if (m_propertiesPanelWidth < 200.0f) m_propertiesPanelWidth = 200.0f;
-        if (m_propertiesPanelWidth > totalWidth * 0.60f) m_propertiesPanelWidth = totalWidth * 0.60f;
+        // Update framework panel width directly
+        PanelManager::InspectorPanelWidth -= static_cast<int>(ImGui::GetIO().MouseDelta.x);
+        if (PanelManager::InspectorPanelWidth < 200) PanelManager::InspectorPanelWidth = 200;
+        if (PanelManager::InspectorPanelWidth > static_cast<int>(totalWidth * 0.60f))
+            PanelManager::InspectorPanelWidth = static_cast<int>(totalWidth * 0.60f);
     }
     ImGui::PopStyleColor(3);
 
@@ -240,7 +263,7 @@ void PlaceholderGraphRenderer::RenderGraphContent()
     // ---- RIGHT: Properties Panel (Unified Tab-Based Layout) ----
     // PHASE 4 PRIORITY 1 FIX: Simplified to unified tab-based layout
     // Tabs now render at TOP of right panel, content BELOW
-    ImGui::BeginChild("PlaceholderRightPanel", ImVec2(m_propertiesPanelWidth, 0), true);
+    ImGui::BeginChild("PlaceholderRightPanel", ImVec2(propertiesPanelWidth, 0), true);
 
     // Render tabs and content directly (single unified panel)
     RenderRightPanelTabs();
@@ -448,7 +471,8 @@ void PlaceholderGraphRenderer::RenderTypeSpecificToolbar()
     // Phase 70: Verify button
     if (ImGui::Button("Verify##placeholder"))
     {
-        if (m_document)
+        PlaceholderGraphDocument* doc = GetDoc();
+        if (doc)
         {
             SYSTEM_LOG << "[PlaceholderGraphRenderer] Verify button clicked\n";
             std::cout << "[PlaceholderGraphRenderer] === GRAPH VERIFICATION ===\n";
@@ -457,14 +481,14 @@ void PlaceholderGraphRenderer::RenderTypeSpecificToolbar()
             m_verificationLogs.clear();
 
             // Phase 70: Get verification info
-            auto orphanedNodeIds = GetOrphanedNodes(m_document.get());
+            auto orphanedNodeIds = GetOrphanedNodes(doc);
             bool isValid = orphanedNodeIds.empty();
 
             // Phase 72: Add formatted logs for panel display
             std::string statusStr = isValid ? "VALID" : "INVALID";
             m_verificationLogs.push_back("[VERIFICATION] Graph Status: " + statusStr);
-            m_verificationLogs.push_back("[VERIFICATION] Total Nodes: " + std::to_string(m_document->GetNodeCount()));
-            m_verificationLogs.push_back("[VERIFICATION] Total Connections: " + std::to_string(m_document->GetAllConnections().size()));
+            m_verificationLogs.push_back("[VERIFICATION] Total Nodes: " + std::to_string(doc->GetNodeCount()));
+            m_verificationLogs.push_back("[VERIFICATION] Total Connections: " + std::to_string(doc->GetAllConnections().size()));
             m_verificationLogs.push_back("[VERIFICATION] Orphaned Nodes: " + std::to_string(orphanedNodeIds.size()));
 
             if (!orphanedNodeIds.empty())
@@ -493,7 +517,8 @@ void PlaceholderGraphRenderer::RenderTypeSpecificToolbar()
     // Phase 71: Run Graph button
     if (ImGui::Button("Run Graph##placeholder"))
     {
-        if (m_document)
+        PlaceholderGraphDocument* doc = GetDoc();
+        if (doc)
         {
             SYSTEM_LOG << "[PlaceholderGraphRenderer] Run Graph button clicked\n";
             std::cout << "[PlaceholderGraphRenderer] === GRAPH EXECUTION ===\n";
@@ -502,8 +527,8 @@ void PlaceholderGraphRenderer::RenderTypeSpecificToolbar()
             m_verificationLogs.clear();
 
             // Phase 71: Get root nodes
-            auto rootNodeIds = GetRootNodes(m_document.get());
-            auto leafNodeIds = GetLeafNodes(m_document.get());
+            auto rootNodeIds = GetRootNodes(doc);
+            auto leafNodeIds = GetLeafNodes(doc);
 
             // Phase 72: Add formatted logs for panel display
             m_verificationLogs.push_back("[EXECUTION] Graph Traversal Started");
@@ -536,7 +561,7 @@ void PlaceholderGraphRenderer::RenderTypeSpecificToolbar()
                 std::vector<int> visited;
                 std::vector<int> currentPath;
 
-                if (TraverseNode(m_document.get(), rootId, visited, currentPath))
+                if (TraverseNode(doc, rootId, visited, currentPath))
                 {
                     std::string pathStr = "[EXECUTION] Path from " + std::to_string(rootId) + ": ";
                     for (size_t i = 0; i < currentPath.size(); ++i)
@@ -593,13 +618,14 @@ void PlaceholderGraphRenderer::HandleTypeSpecificShortcuts()
 void PlaceholderGraphRenderer::SelectNodesInRectangle(const ImVec2& rectStart, const ImVec2& rectEnd)
 {
     // Phase 3: AABB hit detection for nodes in rectangle
-    if (!m_document) return;
+    PlaceholderGraphDocument* doc = GetDoc();
+    if (!doc) return;
 
     m_selectedNodeIds.clear();  // Clear previous selection
 
     // Get all nodes from document
-    for (int nodeId = 1; nodeId <= m_document->GetNodeCount(); nodeId++) {
-        PlaceholderNode* node = m_document->GetNode(nodeId);
+    for (int nodeId = 1; nodeId <= doc->GetNodeCount(); nodeId++) {
+        PlaceholderNode* node = doc->GetNode(nodeId);
         if (!node) continue;
 
         // AABB intersection test
@@ -618,15 +644,16 @@ void PlaceholderGraphRenderer::SyncCanvasSelectionWithBase()
 {
     // Phase 64: Synchronize canvas single selection with base class vector selection
     // Get selected node from canvas
-    if (m_canvas) {
-        int canvasSelectedNodeId = m_canvas->GetSelectedNodeId();
+    PlaceholderCanvas* canvas = GetCanvasPtr();
+    if (canvas) {
+        int canvasSelectedNodeId = canvas->GetSelectedNodeId();
         if (canvasSelectedNodeId >= 0) {
             // Update base class selected nodes
             m_selectedNodeIds.clear();
             m_selectedNodeIds.push_back(canvasSelectedNodeId);
         } else if (!m_selectedNodeIds.empty() && m_selectedNodeIds.size() == 1) {
             // If base class has single selection but canvas doesn't, update canvas
-            m_canvas->SetSelectedNodeId(m_selectedNodeIds[0]);
+            canvas->SetSelectedNodeId(m_selectedNodeIds[0]);
         }
     }
 }
@@ -634,63 +661,66 @@ void PlaceholderGraphRenderer::SyncCanvasSelectionWithBase()
 void PlaceholderGraphRenderer::DeleteSelectedNodes()
 {
     // Phase 3: Delete all selected nodes from document
-    if (!m_document || m_selectedNodeIds.empty()) return;
+    PlaceholderGraphDocument* doc = GetDoc();
+    if (!doc || m_selectedNodeIds.empty()) return;
 
     std::cout << "[PlaceholderGraphRenderer] DeleteSelectedNodes: " << m_selectedNodeIds.size() << " node(s)\n";
 
     // Delete in reverse order to maintain IDs
     for (auto it = m_selectedNodeIds.rbegin(); it != m_selectedNodeIds.rend(); ++it) {
-        m_document->DeleteNode(*it);
+        doc->DeleteNode(*it);
     }
 
     m_selectedNodeIds.clear();
-    m_document->SetDirty(true);
+    doc->SetDirty(true);
 }
 
 void PlaceholderGraphRenderer::MoveSelectedNodes(float deltaX, float deltaY)
 {
     // Phase 3: Move all selected nodes by delta
-    if (!m_document || m_selectedNodeIds.empty()) return;
+    PlaceholderGraphDocument* doc = GetDoc();
+    if (!doc || m_selectedNodeIds.empty()) return;
 
     std::cout << "[PlaceholderGraphRenderer] MoveSelectedNodes: delta=(" << deltaX << ", " << deltaY << ")\n";
 
     for (int nodeId : m_selectedNodeIds) {
-        PlaceholderNode* node = m_document->GetNode(nodeId);
+        PlaceholderNode* node = doc->GetNode(nodeId);
         if (node) {
-            m_document->SetNodePosition(nodeId, node->posX + deltaX, node->posY + deltaY);
+            doc->SetNodePosition(nodeId, node->posX + deltaX, node->posY + deltaY);
         }
     }
 
-    m_document->SetDirty(true);
+    doc->SetDirty(true);
 }
 
 void PlaceholderGraphRenderer::UpdateSelectedNodesProperty(const std::string& propName, const std::string& propValue)
 {
     // Phase 4 Step 3: Batch property editing - apply property change to all selected nodes
-    if (!m_document || m_selectedNodeIds.empty()) return;
+    PlaceholderGraphDocument* doc = GetDoc();
+    if (!doc || m_selectedNodeIds.empty()) return;
 
     std::cout << "[PlaceholderGraphRenderer] UpdateSelectedNodesProperty: " << propName << " = " << propValue << " for " << m_selectedNodeIds.size() << " node(s)\n";
 
     // Apply property to each selected node
     for (int nodeId : m_selectedNodeIds)
     {
-        PlaceholderNode* node = m_document->GetNode(nodeId);
+        PlaceholderNode* node = doc->GetNode(nodeId);
         if (!node) continue;
 
         // Map property name to setter
         if (propName == "title")
         {
-            m_document->SetNodeTitle(nodeId, propValue);
+            doc->SetNodeTitle(nodeId, propValue);
         }
         else if (propName == "filepath")
         {
-            m_document->SetNodeFilepath(nodeId, propValue);
+            doc->SetNodeFilepath(nodeId, propValue);
         }
         else if (propName == "posX")
         {
             try {
                 float x = std::stof(propValue);
-                m_document->SetNodePosition(nodeId, x, node->posY);
+                doc->SetNodePosition(nodeId, x, node->posY);
             } catch (...) {
                 std::cerr << "[PlaceholderGraphRenderer] Invalid posX value: " << propValue << "\n";
             }
@@ -699,7 +729,7 @@ void PlaceholderGraphRenderer::UpdateSelectedNodesProperty(const std::string& pr
         {
             try {
                 float y = std::stof(propValue);
-                m_document->SetNodePosition(nodeId, node->posX, y);
+                doc->SetNodePosition(nodeId, node->posX, y);
             } catch (...) {
                 std::cerr << "[PlaceholderGraphRenderer] Invalid posY value: " << propValue << "\n";
             }
@@ -725,40 +755,42 @@ void PlaceholderGraphRenderer::UpdateSelectedNodesProperty(const std::string& pr
         else if (propName == "enabled")
         {
             bool enabled = (propValue == "true" || propValue == "1");
-            m_document->SetNodeEnabled(nodeId, enabled);
+            doc->SetNodeEnabled(nodeId, enabled);
         }
     }
 
-    m_document->SetDirty(true);
+    doc->SetDirty(true);
 }
 
 void PlaceholderGraphRenderer::CreateNewGraph()
 {
     std::cout << "[PlaceholderGraphRenderer] Creating new graph" << std::endl;
 
-    if (!m_document)
+    if (!m_ownedDocument)
     {
-        m_document = std::make_unique<PlaceholderGraphDocument>();
+        m_ownedDocument = std::make_unique<PlaceholderGraphDocument>();
+        m_document = (void*)m_ownedDocument.get();
     }
     else
     {
-        m_document->Clear();
+        m_ownedDocument->Clear();
     }
 
     // Create sample nodes for demonstration
-    m_document->CreateNode(PlaceholderNodeType::Blue, "Blue Node", 100.0f, 100.0f);
-    m_document->CreateNode(PlaceholderNodeType::Green, "Green Node", 300.0f, 100.0f);
-    m_document->CreateNode(PlaceholderNodeType::Magenta, "Magenta Node", 200.0f, 250.0f);
+    m_ownedDocument->CreateNode(PlaceholderNodeType::Blue, "Blue Node", 100.0f, 100.0f);
+    m_ownedDocument->CreateNode(PlaceholderNodeType::Green, "Green Node", 300.0f, 100.0f);
+    m_ownedDocument->CreateNode(PlaceholderNodeType::Magenta, "Magenta Node", 200.0f, 250.0f);
 
     // Create sample connections
-    m_document->CreateConnection(1, 3);
-    m_document->CreateConnection(2, 3);
+    m_ownedDocument->CreateConnection(1, 3);
+    m_ownedDocument->CreateConnection(2, 3);
 
-    if (!m_canvas)
+    if (!m_ownedCanvas)
     {
-        m_canvas = std::make_unique<PlaceholderCanvas>();
-        m_canvas->Initialize(m_document.get());
-        m_canvas->SetRenderer(this);  // Phase 63.2: Set renderer reference for selection sync
+        m_ownedCanvas = std::make_unique<PlaceholderCanvas>();
+        m_canvas = (void*)m_ownedCanvas.get();
+        m_ownedCanvas->Initialize(m_ownedDocument.get());
+        m_ownedCanvas->SetRenderer(this);  // Phase 63.2: Set renderer reference for selection sync
     }
 
     // Phase 53 Final Fix: Initialize framework for unified toolbar
@@ -766,59 +798,61 @@ void PlaceholderGraphRenderer::CreateNewGraph()
     // so that RenderCommonToolbar() can render [Save][SaveAs][Browse] buttons
     if (!m_framework)
     {
-        m_framework = std::make_unique<CanvasFramework>(m_document.get());
+        m_framework = std::make_unique<CanvasFramework>(m_ownedDocument.get());
     }
 
-         // Phase 64: Initialize PropertyEditorPanel if needed
-        if (!m_propertyEditor)
-        {
-            m_propertyEditor = std::make_unique<PlaceholderPropertyEditorPanel>();
-            m_propertyEditor->Initialize(m_document.get());
-        }
-
-        SetDocument((void*)m_document.get());
-    }
-
-    // ============================================================================
-    // Phase 69: Save/SaveAs Integration
-    // ============================================================================
-
-    bool PlaceholderGraphRenderer::ExecuteSave(const std::string& filePath)
+    // Phase 64: Initialize PropertyEditorPanel if needed
+    if (!m_propertyEditor)
     {
-        if (!m_document)
-        {
-            std::cerr << "[PlaceholderGraphRenderer::ExecuteSave] ERROR: No document to save\n";
-            SYSTEM_LOG << "[PlaceholderGraphRenderer::ExecuteSave] ERROR: No document to save\n";
-            return false;
-        }
-
-        SYSTEM_LOG << "[PlaceholderGraphRenderer::ExecuteSave] Saving to: " << filePath << "\n";
-        std::cout << "[PlaceholderGraphRenderer::ExecuteSave] Saving to: " << filePath << "\n";
-
-        // Set filepath before saving (framework pattern)
-        m_document->SetFilePath(filePath);
-
-        // Call document's Save method (handles JSON serialization)
-        bool success = m_document->Save(filePath);
-
-        if (success)
-        {
-            SYSTEM_LOG << "[PlaceholderGraphRenderer::ExecuteSave] ✓ Successfully saved " << filePath << "\n";
-            std::cout << "[PlaceholderGraphRenderer::ExecuteSave] ✓ Successfully saved\n";
-            m_document->SetDirty(false);
-        }
-        else
-        {
-            SYSTEM_LOG << "[PlaceholderGraphRenderer::ExecuteSave] ✗ Save failed!\n";
-            std::cerr << "[PlaceholderGraphRenderer::ExecuteSave] ✗ Save failed!\n";
-        }
-
-        return success;
+        m_propertyEditor = std::make_unique<PlaceholderPropertyEditorPanel>();
+        m_propertyEditor->Initialize(m_ownedDocument.get());
     }
+
+    SetDocument((void*)m_ownedDocument.get());
+}
+
+// ============================================================================
+// Phase 69: Save/SaveAs Integration
+// ============================================================================
+
+bool PlaceholderGraphRenderer::ExecuteSave(const std::string& filePath)
+{
+    PlaceholderGraphDocument* doc = GetDoc();
+    if (!doc)
+    {
+        std::cerr << "[PlaceholderGraphRenderer::ExecuteSave] ERROR: No document to save\n";
+        SYSTEM_LOG << "[PlaceholderGraphRenderer::ExecuteSave] ERROR: No document to save\n";
+        return false;
+    }
+
+    SYSTEM_LOG << "[PlaceholderGraphRenderer::ExecuteSave] Saving to: " << filePath << "\n";
+    std::cout << "[PlaceholderGraphRenderer::ExecuteSave] Saving to: " << filePath << "\n";
+
+    // Set filepath before saving (framework pattern)
+    doc->SetFilePath(filePath);
+
+    // Call document's Save method (handles JSON serialization)
+    bool success = doc->Save(filePath);
+
+    if (success)
+    {
+        SYSTEM_LOG << "[PlaceholderGraphRenderer::ExecuteSave] ✓ Successfully saved " << filePath << "\n";
+        std::cout << "[PlaceholderGraphRenderer::ExecuteSave] ✓ Successfully saved\n";
+        doc->SetDirty(false);
+    }
+    else
+    {
+        SYSTEM_LOG << "[PlaceholderGraphRenderer::ExecuteSave] ✗ Save failed!\n";
+        std::cerr << "[PlaceholderGraphRenderer::ExecuteSave] ✗ Save failed!\n";
+    }
+
+    return success;
+}
 
     bool PlaceholderGraphRenderer::ExecuteSaveAs(const std::string& filePath)
     {
-        if (!m_document)
+        PlaceholderGraphDocument* doc = GetDoc();
+        if (!doc)
         {
             std::cerr << "[PlaceholderGraphRenderer::ExecuteSaveAs] ERROR: No document to save\n";
             SYSTEM_LOG << "[PlaceholderGraphRenderer::ExecuteSaveAs] ERROR: No document to save\n";

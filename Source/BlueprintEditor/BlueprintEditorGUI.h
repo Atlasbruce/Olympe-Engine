@@ -84,8 +84,9 @@ namespace Olympe
         void SaveBlueprintAs();
 
         // Component operations (delegate to backend)
-        void AddComponent(const std::string& type);
-        void RemoveComponent(int index);
+        // DISABLED: ComponentData schema mismatch - needs refactoring
+        // void AddComponent(const std::string& type);
+        // void RemoveComponent(int index);
 
         // UI state (not business logic)
         int m_SelectedComponentIndex;

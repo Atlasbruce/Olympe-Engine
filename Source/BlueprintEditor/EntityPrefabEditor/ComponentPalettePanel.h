@@ -7,6 +7,8 @@
 
 namespace Olympe
 {
+    // Forward declaration
+    class EntityPrefabGraphDocumentV2;
     // Available component types that can be added to entity prefabs
     struct ComponentType
     {
@@ -28,8 +30,11 @@ namespace Olympe
         // Initialize with available components
         void Initialize();
 
-        // Render the palette panel
+        // Render the palette panel (V1 document)
         void Render(EntityPrefabGraphDocument* document);
+
+        // Render the palette panel (V2 document - Phase C Adapter)
+        void Render(EntityPrefabGraphDocumentV2* document);
 
         // Get list of registered component types
         const std::vector<ComponentType>& GetComponentTypes() const;
@@ -60,6 +65,7 @@ namespace Olympe
         void RenderComponentList(EntityPrefabGraphDocument* document);
         void RenderCategoryTabs();
         void AddComponentToGraph(EntityPrefabGraphDocument* document, const ComponentType& componentType);
+        void AddComponentToGraph(EntityPrefabGraphDocumentV2* document, const ComponentType& componentType);
 
         // Category extraction from component type name
         std::string ExtractCategoryFromComponentType(const std::string& componentType);

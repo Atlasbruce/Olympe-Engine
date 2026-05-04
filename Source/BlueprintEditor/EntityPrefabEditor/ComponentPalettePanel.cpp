@@ -1,4 +1,5 @@
 #include "ComponentPalettePanel.h"
+#include "EntityPrefabGraphDocumentV2.h"
 #include "../../Source/third_party/imgui/imgui.h"
 #include "../../system/system_utils.h"
 #include "../../third_party/nlohmann/json.hpp"
@@ -229,19 +230,22 @@ namespace Olympe
                                       ImGui::GetColorU32(ImVec4(0.9f, 0.9f, 0.9f, 1.0f)), 
                                       component.name.c_str());
 
-                    // Drag-and-drop source
-                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+                    // Drag-and-drop source - only start if item is being dragged
+                    if (ImGui::IsItemActive() && !ImGui::IsItemHovered())
                     {
-                        strncpy_s(m_draggedComponentBuffer, sizeof(m_draggedComponentBuffer), 
-                                  component.name.c_str(), _TRUNCATE);
+                        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+                        {
+                            strncpy_s(m_draggedComponentBuffer, sizeof(m_draggedComponentBuffer), 
+                                      component.name.c_str(), _TRUNCATE);
 
-                        ImGui::SetDragDropPayload("COMPONENT_TYPE", 
-                                                m_draggedComponentBuffer, 
-                                                strlen(m_draggedComponentBuffer) + 1);
+                            ImGui::SetDragDropPayload("COMPONENT_TYPE", 
+                                                    m_draggedComponentBuffer, 
+                                                    strlen(m_draggedComponentBuffer) + 1);
 
-                        ImGui::Text("%s", component.name.c_str());
+                            ImGui::Text("%s", component.name.c_str());
 
-                        ImGui::EndDragDropSource();
+                            ImGui::EndDragDropSource();
+                        }
                     }
 
                     // Tooltip
@@ -453,6 +457,158 @@ namespace Olympe
 
         // Default category
         return "Other";
+    }
+
+    // ========================================================================
+    // Phase C: V2 Document Adapter Surcharges
+    // ========================================================================
+
+    void ComponentPalettePanel::Render(EntityPrefabGraphDocumentV2* document)
+    {
+        // V2 adapter: Same rendering as V1, but works with V2 documents
+        // The UI is document-agnostic; only AddComponentToGraph differs
+        if (!document) { return; }
+
+        ImGui::BeginChild("##ComponentPalette", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar);
+
+        // ========== Dense UI Header (Blue background like VisualScriptEditor) ==========
+        ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.0f, 0.4f, 0.8f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.0f, 0.5f, 0.9f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive,  ImVec4(0.0f, 0.3f, 0.7f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_Text,          ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+        ImGui::Selectable("Components", true, ImGuiSelectableFlags_None, ImVec2(0.f, 20.f));
+        ImGui::PopStyleColor(4);
+
+        // ========== Search bar (compact) ==========
+        ImGui::PushItemWidth(-1.0f);
+        ImGui::InputText("##ComponentSearch", m_searchBuffer, sizeof(m_searchBuffer), ImGuiInputTextFlags_CharsNoBlank);
+        m_searchFilter = m_searchBuffer;
+        ImGui::PopItemWidth();
+
+        // ========== Category tabs (collapsible tree) ==========
+        ImGui::Spacing();
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 2.0f));
+
+        // "All" category (non-collapsible, shows all components)
+        ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.2f, 0.35f, 0.6f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.25f, 0.4f, 0.7f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive,  ImVec4(0.15f, 0.3f, 0.55f, 1.0f));
+
+        bool allSelected = (m_selectedCategoryIndex == -1);
+        if (ImGui::Selectable("All", allSelected, ImGuiSelectableFlags_None, ImVec2(0.f, CATEGORY_HEADER_HEIGHT)))
+        {
+            m_selectedCategoryIndex = -1;
+        }
+        ImGui::PopStyleColor(3);
+
+        // Ensure m_categoryExpanded is initialized
+        if (m_categoryExpanded.size() != m_categories.size())
+        {
+            m_categoryExpanded.resize(m_categories.size(), true);
+        }
+
+        // Individual categories as collapsible trees
+        for (size_t i = 0; i < m_categories.size(); ++i)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.2f, 0.35f, 0.6f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.25f, 0.4f, 0.7f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_HeaderActive,  ImVec4(0.15f, 0.3f, 0.55f, 1.0f));
+
+            bool categoryExpanded = ImGui::TreeNodeEx(
+                m_categories[i].c_str(),
+                ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding,
+                m_categories[i].c_str()
+            );
+
+            ImGui::PopStyleColor(3);
+
+            if (categoryExpanded)
+            {
+                m_categoryExpanded[i] = true;
+
+                // Render components in this category
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 1.0f));
+
+                for (size_t j = 0; j < m_componentTypes.size(); ++j)
+                {
+                    const ComponentType& component = m_componentTypes[j];
+
+                    // Filter by category
+                    if (component.category != m_categories[i])
+                    {
+                        continue;
+                    }
+
+                    // Filter by search
+                    if (!m_searchFilter.empty())
+                    {
+                        bool matches = false;
+                        std::string nameLower = component.name;
+                        std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
+                        std::string searchLower = m_searchFilter;
+                        std::transform(searchLower.begin(), searchLower.end(), searchLower.begin(), ::tolower);
+                        if (nameLower.find(searchLower) != std::string::npos)
+                        {
+                            matches = true;
+                        }
+                        if (!matches)
+                        {
+                            continue;
+                        }
+                    }
+
+                    // Render component item with drag-drop source
+                    ImGui::Text("%s", component.name.c_str());
+
+                    // Setup drag-drop source (SourceAllowNullID required because Text() doesn't assign an ID)
+                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+                    {
+                        strcpy_s(m_draggedComponentBuffer, sizeof(m_draggedComponentBuffer), component.name.c_str());
+                        ImGui::SetDragDropPayload("COMPONENT_TYPE", m_draggedComponentBuffer, strlen(m_draggedComponentBuffer) + 1);
+                        ImGui::TextUnformatted(component.name.c_str());
+                        ImGui::EndDragDropSource();
+                    }
+
+                    // Tooltip
+                    if (ImGui::IsItemHovered())
+                    {
+                        ImGui::SetTooltip("%s", component.description.c_str());
+                    }
+                }
+
+                ImGui::PopStyleVar();
+                ImGui::TreePop();
+            }
+        }
+
+        ImGui::PopStyleVar();
+
+        // ========== Help text at bottom ==========
+        ImGui::Spacing();
+        ImGui::TextDisabled("Tip: Drag & drop components onto the graph to add them");
+
+        ImGui::EndChild();
+    }
+
+    void ComponentPalettePanel::AddComponentToGraph(EntityPrefabGraphDocumentV2* document, const ComponentType& componentType)
+    {
+        if (!document) { return; }
+
+        // V2 adapter: Same as V1 but uses V2 API
+        // Create new node at center of visible area
+        PrefabNodeId newNodeId = document->CreateComponentNode(componentType.name, componentType.name);
+
+        // Position new node in a reasonable location
+        ComponentNode* newNode = document->GetNode(newNodeId);
+        if (newNode)
+        {
+            // Place new node at offset from center, or at reasonable default
+            newNode->position = Vector(100.0f, 100.0f, 0.0f);
+            newNode->size = Vector(150.0f, 80.0f, 0.0f);
+            newNode->enabled = true;
+        }
+
+        SYSTEM_LOG << "[ComponentPalettePanel] V2 Added component: " << componentType.name << " (id=" << newNodeId << ")\n";
     }
 
 } // namespace Olympe

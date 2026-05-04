@@ -185,7 +185,7 @@ protected:
 private:
     void RenderBegin();
     void RenderEnd();
-    void RenderModals();
+    virtual void RenderModals();
     void HandleContextMenuSelection();
 };
 

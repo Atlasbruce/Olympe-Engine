@@ -8,6 +8,7 @@ namespace Olympe
 {
     // Forward declarations
     class EntityPrefabGraphDocument;
+    class EntityPrefabGraphDocumentV2;
 
     class ComponentNodeRenderer
     {
@@ -28,7 +29,9 @@ namespace Olympe
         // Rendering
         void RenderNode(const ComponentNode& node);
         void RenderNodes(const EntityPrefabGraphDocument* document);
+        void RenderNodes(const EntityPrefabGraphDocumentV2* documentV2);  // V2 SURCHARGE
         void RenderConnections(const EntityPrefabGraphDocument* document, int hoveredConnectionIndex = -1);
+        void RenderConnections(const EntityPrefabGraphDocumentV2* documentV2, int hoveredConnectionIndex = -1);  // V2 SURCHARGE
 
         // Port rendering
         void RenderNodePorts(const ComponentNode& node);
@@ -69,6 +72,10 @@ namespace Olympe
         void SetNodeScale(float scale);
         float GetNodeScale() const;
 
+        // Hover state support (Phase 75.1)
+        void SetHoveredNode(PrefabNodeId nodeId) { m_hoveredNodeId = nodeId; }
+        void SetHoveredConnection(int connectionIndex) { m_hoveredConnectionIndex = connectionIndex; }
+
     private:
         ComponentNodeStyle m_style;
         bool m_showLabels = true;
@@ -78,12 +85,17 @@ namespace Olympe
         float m_canvasZoom = 1.0f;
         ImVec2 m_canvasScreenPos = ImVec2(0, 0);
 
+        // Hover tracking
+        PrefabNodeId m_hoveredNodeId = InvalidNodeId;
+        int m_hoveredConnectionIndex = -1;
+
         void RenderNodeBox(const ComponentNode& node);
         void RenderNodeLabel(const ComponentNode& node);
         void RenderConnectionLine(const Vector& from, const Vector& to, bool isHovered = false);
         void RenderPort(const ComponentNode& node, const NodePort& port);
         Vector GetNodeColor(const ComponentNode& node) const;
         Vector CanvasToScreen(const Vector& canvasPos) const;
+        Vector ScreenToCanvas(const Vector& screenPos) const; // PHASE 75 FIX
         void UpdatePortPositions(ComponentNode& node) const;
     };
 }
