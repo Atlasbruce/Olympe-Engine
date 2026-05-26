@@ -121,9 +121,11 @@ void CanvasToolbarRenderer::RenderModals()
             std::string filepath(m_saveAsFileBuffer);
             if (!filepath.empty())
             {
-                // Ensure .json extension (like legacy code)
-                if (filepath.size() < 5 || filepath.substr(filepath.size() - 5) != ".json")
-                    filepath += ".json";
+                // Ensure correct extension based on document type
+                std::string extension = GetSaveFileFilter();
+                if (extension.find("*") == 0) extension = extension.substr(1); // Remove *
+                if (filepath.size() < extension.size() || filepath.substr(filepath.size() - extension.size()) != extension)
+                    filepath += extension;
 
                 // Proceed with save
                 OnSaveAsComplete(filepath);
@@ -253,13 +255,31 @@ std::string CanvasToolbarRenderer::GetSaveFileFilter() const
     switch (m_document->GetType())
     {
         case DocumentType::VISUAL_SCRIPT:
-            return "*.vs.json";
+            return "*.ats.json";
         case DocumentType::BEHAVIOR_TREE:
             return "*.bt.json";
         case DocumentType::ENTITY_PREFAB:
             return "*.prefab.json";
         default:
             return "*.json";
+    }
+}
+
+std::string CanvasToolbarRenderer::GetDefaultSaveDirectory() const
+{
+    if (!m_document)
+        return "./Gamedata/";
+
+    switch (m_document->GetType())
+    {
+        case DocumentType::VISUAL_SCRIPT:
+            return "./Gamedata/VisualScript/";
+        case DocumentType::BEHAVIOR_TREE:
+            return "./Gamedata/BehaviorTree/";
+        case DocumentType::ENTITY_PREFAB:
+            return "./Gamedata/EntityPrefab/";
+        default:
+            return "./Gamedata/";
     }
 }
 
@@ -414,9 +434,29 @@ void CanvasToolbarRenderer::OnSaveAsClicked()
         return;
     }
 
+    // Pre-fill the save buffer with default directory + extension
+    std::string defaultDir = GetDefaultSaveDirectory();
+    std::string extension = GetSaveFileFilter();
+    
+    // Remove the * from filter to get extension (e.g., "*.bt.json" -> ".bt.json")
+    if (extension.find("*") == 0) extension = extension.substr(1);
+    
+    // Phase 63: Use suggested filename and ensure it's combined with default directory
+    std::string suggestedName = GetSuggestedFilename();
+    if (suggestedName.empty() || suggestedName == "Untitled") {
+        suggestedName = "untitled";
+    }
+
+    // Combine default folder + filename + extension
+    // Ensure defaultDir ends with a slash (it usually does from GetDefaultSaveDirectory)
+    std::string prefill = defaultDir + suggestedName + extension;
+    
+    strncpy_s(m_saveAsFileBuffer, sizeof(m_saveAsFileBuffer), prefill.c_str(), _TRUNCATE);
+
     // Open SaveAs dialog via framework (modal will be rendered separately)
-    SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsClicked] Setting m_showSaveAsModal = true\n";
+    SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsClicked] Setting m_showSaveAsModal = true, prefilled with: " << prefill << "\n";
     m_showSaveAsModal = true;
+    m_saveAsPopupOpen = true; // Ensure buffer isn't cleared by RenderModals on first frame
     SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsClicked] EXIT - Modal flag set\n";
 }
 
@@ -439,21 +479,45 @@ void CanvasToolbarRenderer::OnSaveAsComplete(const std::string& filePath)
         return;
     }
 
-    SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsComplete] SaveAs path validated, about to call ExecuteSave()\n";
-
-    if (ExecuteSave(filePath))
+    // Phase 64: Path normalization and directory enforcement
+    // If user provided a path without a directory, prepend the default directory
+    std::string finalPath = filePath;
+    bool hasDirectory = (finalPath.find('/') != std::string::npos || finalPath.find('\\') != std::string::npos);
+    
+    if (!hasDirectory)
     {
-        m_selectedFilePath = filePath;
+        std::string defaultDir = GetDefaultSaveDirectory();
+        finalPath = defaultDir + finalPath;
+        SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsComplete] No directory found in user input, prepending default: " << defaultDir << "\n";
+    }
+
+    // Ensure extension is correct even if user manually changed it or forgot it
+    std::string extension = GetSaveFileFilter();
+    if (extension.find("*") == 0) extension = extension.substr(1);
+    
+    if (finalPath.size() < extension.size() || finalPath.substr(finalPath.size() - extension.size()) != extension)
+    {
+        // If it already has .json but not .bt.json (example), we append or replace
+        // For simplicity, just append if it doesn't end with the specific extension
+        finalPath += extension;
+        SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsComplete] Appending required extension: " << extension << "\n";
+    }
+
+    SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsComplete] Final normalized path: '" << finalPath << "'\n";
+
+    if (ExecuteSave(finalPath))
+    {
+        m_selectedFilePath = finalPath;
         SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsComplete] ✓ ExecuteSave succeeded\n";
         SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsComplete] Calling TabManager::OnGraphDocumentSaved()\n";
 
         // Phase 44.2.1: Notify TabManager to update UI (tab name, dirty flag)
-        TabManager::Get().OnGraphDocumentSaved(m_document, filePath);
+        TabManager::Get().OnGraphDocumentSaved(m_document, finalPath);
 
         SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsComplete] Calling m_onSaveComplete callback\n";
         if (m_onSaveComplete)
         {
-            m_onSaveComplete(filePath);
+            m_onSaveComplete(finalPath);
             SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsComplete] Callback executed\n";
         }
         SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsComplete] EXIT - SaveAs complete\n";

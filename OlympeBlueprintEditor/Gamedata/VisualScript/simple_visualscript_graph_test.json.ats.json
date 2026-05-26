@@ -1,0 +1,56 @@
+{
+  "blackboard": [],
+  "dataConnections": [],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 2,
+      "toPin": "In"
+    }
+  ],
+  "graphType": "VisualScript",
+  "name": "",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "EntryPoint",
+      "params": {
+        "__posX": {
+          "LiteralValue": 288,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 235,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 288,
+        "y": 235
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 2,
+      "label": "AtomicTask",
+      "params": {
+        "__posX": {
+          "LiteralValue": 614,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 267,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 614,
+        "y": 267
+      },
+      "taskType": "",
+      "type": "AtomicTask"
+    }
+  ],
+  "schema_version": 4
+}

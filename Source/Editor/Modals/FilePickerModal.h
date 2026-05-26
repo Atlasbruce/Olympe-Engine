@@ -24,8 +24,9 @@ namespace Olympe {
  */
 enum class FilePickerType
 {
-    BehaviorTree,  ///< .bt.json files in ./Gamedata
-    SubGraph,      ///< .ats files in Blueprints
+    BehaviorTree,  ///< .bt.json files in ./Gamedata/BehaviorTree
+    SubGraph,      ///< .ats files in ./Gamedata/VisualScript and ./Blueprint
+    EntityPrefab,  ///< .prefab.json files in ./Gamedata/EntityPrefab
     Audio,         ///< Future: .ogg, .wav files
     Tileset        ///< Future: .tsj tileset files
 };
@@ -174,6 +175,21 @@ private:
      * Logs results to SYSTEM_LOG.
      */
     void RefreshFileList();
+
+    /**
+     * @brief Recursively scans directories for files matching the pattern.
+     * @param rootPath Root directory to scan
+     * @param pattern File pattern to match
+     */
+    void ScanDirectoriesRecursively(const std::string& rootPath, const std::string& pattern);
+
+    /**
+     * @brief Helper function for recursive scanning
+     * @param rootPath Original root path
+     * @param pattern File pattern
+     * @param currentPath Current directory being scanned
+     */
+    void ScanDirectoriesRecursivelyHelper(const std::string& rootPath, const std::string& pattern, const std::string& currentPath);
 
     /**
      * @brief Renders the file list UI component with scrolling and selection.

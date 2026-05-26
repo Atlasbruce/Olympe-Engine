@@ -1,0 +1,81 @@
+{
+  "blackboard": [],
+  "dataConnections": [],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Out",
+      "toNode": 3,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Out",
+      "toNode": 3,
+      "toPin": "In"
+    }
+  ],
+  "graphType": "VisualScript",
+  "name": "",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "EntryPoint",
+      "params": {
+        "__posX": {
+          "LiteralValue": 171,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 150,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 171,
+        "y": 150
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 2,
+      "label": "EntryPoint",
+      "params": {
+        "__posX": {
+          "LiteralValue": 175.197,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 352.047,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 175.197,
+        "y": 352.047
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 3,
+      "label": "Play Sound",
+      "params": {
+        "__posX": {
+          "LiteralValue": 445.394,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 216.093,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 445.394,
+        "y": 216.093
+      },
+      "taskType": "play_sound",
+      "type": "AtomicTask"
+    }
+  ],
+  "schema_version": 4
+}

@@ -18,6 +18,8 @@
 // Phase 41 — Framework integration
 #include "Framework/CanvasFramework.h"
 #include "Framework/BehaviorTreeGraphDocument.h"
+#include "Utilities/ImNodesCanvasEditor.h"
+#include "Utilities/CanvasMinimapRenderer.h"
 
 #include <string>
 #include <memory>
@@ -122,9 +124,26 @@ private:
       /// ImNodes rendering adapter for BehaviorTree (Phase 50.3)
       std::unique_ptr<BehaviorTreeImNodesAdapter> m_imNodesAdapter;
 
+      // Phase 70: Modern Framework Canvas Integration
+      std::unique_ptr<ImNodesCanvasEditor> m_canvasEditor;
+      std::unique_ptr<CanvasMinimapRenderer> m_minimap;
+      bool m_minimapVisible = true;
+      float m_minimapSize = 0.15f;
+      MinimapPosition m_minimapPosition = MinimapPosition::TopRight;
+
     // Layout rendering helpers
     void RenderLayoutWithTabs();
     void RenderRightPanelTabs();
+
+    /**
+     * @brief Handle BT-specific "Verify Graph" action
+     */
+    void OnVerifyGraphClicked();
+
+    /**
+     * @brief Render BT-specific toolbar buttons (Verify, Run)
+     */
+    void RenderToolbarExtensions();
 
     /**
      * @brief Handle drop of node type at screen position
@@ -133,6 +152,11 @@ private:
      * @param screenY Absolute screen Y coordinate
      */
     void AcceptNodeDrop(const std::string& nodeType, float screenX, float screenY);
+
+    /**
+     * @brief Render context menu for canvas and nodes
+     */
+    void RenderContextMenu();
 
     /**
      * @brief Handle keyboard shortcuts for copy/paste/duplicate operations

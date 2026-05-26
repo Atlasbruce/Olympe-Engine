@@ -340,8 +340,8 @@
         }
       },
       "position": {
-        "x": 521,
-        "y": 148
+        "x": 554,
+        "y": 47
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -364,8 +364,8 @@
         }
       },
       "position": {
-        "x": 510,
-        "y": -0.999985
+        "x": 566,
+        "y": 199
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -388,8 +388,8 @@
         }
       },
       "position": {
-        "x": 771.53,
-        "y": 16.809
+        "x": 881.53,
+        "y": 47.809
       },
       "subGraphPath": "\\Boss1.ats",
       "type": "SubGraph"

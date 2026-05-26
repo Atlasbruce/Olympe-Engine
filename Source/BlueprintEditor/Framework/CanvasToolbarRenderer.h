@@ -124,6 +124,12 @@ public:
      */
     std::string GetBrowseFileFilter() const;
 
+    /**
+     * Get default save directory for this document type
+     * @return Default directory path
+     */
+    std::string GetDefaultSaveDirectory() const;
+
 private:
     // ========== STATE ==========
     IGraphDocument* m_document;                    ///< Non-owning reference to document

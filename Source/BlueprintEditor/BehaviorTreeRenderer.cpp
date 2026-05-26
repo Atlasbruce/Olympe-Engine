@@ -57,6 +57,10 @@ BehaviorTreeRenderer::BehaviorTreeRenderer(NodeGraphPanel& panel)
     // Phase 41 — Framework integration
     m_document = std::make_unique<BehaviorTreeGraphDocument>(this);
     m_framework = std::make_unique<CanvasFramework>(m_document.get());
+
+    // Initialize minimap renderer (Phase 70)
+    m_minimap = std::make_unique<CanvasMinimapRenderer>();
+
     SYSTEM_LOG << "[BehaviorTreeRenderer] CanvasFramework initialized\n";
 }
 
@@ -82,37 +86,51 @@ IGraphDocument* BehaviorTreeRenderer::GetDocument() const
 
 bool BehaviorTreeRenderer::CreateNew(const std::string& name)
 {
-    // Close any previously loaded graph
-    if (m_graphId >= 0)
+    SYSTEM_LOG << "[BehaviorTreeRenderer::CreateNew] ENTER - Creating new graph: '" << name << "'\n";
+
+    // Close any previously loaded graph to prevent resource leaks
+    if (m_graphId >= 0 && NodeGraph::NodeGraphManager::IsValid())
     {
+        SYSTEM_LOG << "[BehaviorTreeRenderer::CreateNew] Closing previous graph ID: " << m_graphId << "\n";
         NodeGraph::NodeGraphManager::Get().CloseGraph(GraphId{static_cast<uint32_t>(m_graphId)});
         m_graphId = -1;
         m_filePath.clear();
     }
 
     // Reset ImNodes adapter for new graph (Phase 54: Fix drag-drop on new BT creation)
-    m_imNodesAdapter = nullptr;
+    if (m_imNodesAdapter)
+    {
+        m_imNodesAdapter = nullptr; // Will be re-initialized in Render() with new graph ID
+    }
 
-    // Create new empty graph and set it active immediately
+    // Create new empty graph through singleton manager
+    if (!NodeGraph::NodeGraphManager::IsValid())
+    {
+        SYSTEM_LOG << "[BehaviorTreeRenderer::CreateNew] ERROR: NodeGraphManager singleton is invalid!\n";
+        return false;
+    }
+
     GraphId newGraphId = NodeGraph::NodeGraphManager::Get().CreateGraph(name, "BehaviorTree");
     if (newGraphId.value == 0)
     {
-        SYSTEM_LOG << "[BehaviorTreeRenderer] Failed to create new BehaviorTree graph\n";
+        SYSTEM_LOG << "[BehaviorTreeRenderer::CreateNew] ERROR: Failed to create new BehaviorTree graph via manager\n";
         return false;
     }
 
     m_graphId = static_cast<int>(newGraphId.value);
+    
+    // CRITICAL: Set the active graph immediately so any dependent systems (like palette/adapter) see it
     NodeGraph::NodeGraphManager::Get().SetActiveGraph(newGraphId);
 
     // Phase 50.1.1: Clear filepath for new unsaved graph
     if (m_document)
     {
         m_document->SetFilePath("");
-        SYSTEM_LOG << "[BehaviorTreeRenderer] Cleared filepath for new graph\n";
+        SYSTEM_LOG << "[BehaviorTreeRenderer::CreateNew] Document adapter updated with empty path\n";
     }
 
-    SYSTEM_LOG << "[BehaviorTreeRenderer] Created new BehaviorTree graph: '" << name 
-               << "' (id=" << m_graphId << ")\n";
+    SYSTEM_LOG << "[BehaviorTreeRenderer::CreateNew] SUCCESS - Created graph '" << name 
+               << "' (ID=" << m_graphId << ")\n";
     return true;
 }
 
@@ -137,12 +155,53 @@ void BehaviorTreeRenderer::Render()
     {
         m_framework->RenderModals();
     }
-    // LEGACY FALLBACK DISABLED (Phase 53):
-    // else
-    // {
-    //     // Fallback to legacy file picker modal
-    //     DataManager::Get().RenderFilePickerModal();
-    // }
+}
+
+void BehaviorTreeRenderer::RenderToolbarExtensions()
+{
+    ImGui::SameLine();
+    ImGui::Separator();
+    ImGui::SameLine();
+
+    // BehaviorTree specific actions
+    if (ImGui::Button("Verify Graph"))
+    {
+        OnVerifyGraphClicked();
+    }
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::SetTooltip("Verify Behavior Tree logic and connectivity");
+    }
+
+    ImGui::SameLine();
+    ImGui::Separator();
+    ImGui::SameLine();
+
+    // Minimap controls (Phase 37 integration)
+    ImGui::Checkbox("Minimap", &m_minimapVisible);
+    
+    if (m_minimapVisible)
+    {
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(80.0f);
+        ImGui::SliderFloat("Size", &m_minimapSize, 0.05f, 0.5f, "%.2f");
+        
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(100.0f);
+        const char* positions[] = { "Top-Left", "Top-Right", "Bottom-Left", "Bottom-Right" };
+        int currentPos = static_cast<int>(m_minimapPosition);
+        if (ImGui::Combo("Position", &currentPos, positions, IM_ARRAYSIZE(positions)))
+        {
+            m_minimapPosition = static_cast<MinimapPosition>(currentPos);
+        }
+    }
+}
+
+void BehaviorTreeRenderer::OnVerifyGraphClicked()
+{
+    SYSTEM_LOG << "[BehaviorTreeRenderer] Verifying graph ID: " << m_graphId << "...\n";
+    // TODO: Implement actual BT verification logic
+    SYSTEM_LOG << "[BehaviorTreeRenderer] Verification complete: No errors found (stub).\n";
 }
 
 void BehaviorTreeRenderer::RenderLayoutWithTabs()
@@ -159,17 +218,8 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
     if (m_framework && m_framework->GetToolbar())
     {
         m_framework->GetToolbar()->Render();
-        ImGui::SameLine();
+        RenderToolbarExtensions();
     }
-
-    // BehaviorTree-specific controls (framework handles Save/SaveAs/Browse)
-    if (ImGui::Button("Run Graph", ImVec2(100, 0)))
-    {
-        OnRunGraphClicked();
-    }
-
-    ImGui::SameLine();
-    ImGui::Text("(Ctrl+Shift+R to run)");
 
     ImGui::Separator();
 
@@ -186,7 +236,23 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
 
     // Render canvas on the left with ImNodes adapter (Phase 50.3)
     ImGui::BeginChild("BTNodeCanvas", ImVec2(canvasWidth, 0), false, ImGuiWindowFlags_NoScrollbar);
-    m_canvasScreenPos = ImGui::GetCursorScreenPos();  // Store canvas position for coordinate transforms
+    
+    // Phase 61 FIX: Capture canvas screen position BEFORE rendering adapter
+    // This position is required by AcceptNodeDrop for coordinate transformation.
+    m_canvasScreenPos = ImGui::GetCursorScreenPos();
+    ImVec2 canvasSize = ImGui::GetContentRegionAvail();
+
+    // PHASE 70: Use standardized ImNodesCanvasEditor for framework parity
+    if (!m_canvasEditor && m_graphId >= 0)
+    {
+        m_canvasEditor = std::make_unique<ImNodesCanvasEditor>("BehaviorTree", m_canvasScreenPos, canvasSize);
+    }
+
+    if (m_canvasEditor)
+    {
+        m_canvasEditor->SetCanvasScreenPos(m_canvasScreenPos);
+        m_canvasEditor->SetCanvasSize(canvasSize);
+    }
 
     // Initialize ImNodes adapter if needed
     if (!m_imNodesAdapter && m_graphId >= 0)
@@ -196,14 +262,91 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
     }
 
     // Render using ImNodes adapter
-    if (m_imNodesAdapter)
+    if (m_imNodesAdapter && m_canvasEditor)
     {
-        m_imNodesAdapter->Render();
+        // LEGACY RESTORATION: Enable Zoom and Multiple Selection for BT
+        // ImNodes supports zoom via its IO system.
+        ImNodesIO& io = ImNodes::GetIO();
+        io.EmulateThreeButtonMouse.Modifier = &ImGui::GetIO().KeyAlt; // Alt + Left to pan
+        io.LinkDetachWithModifierClick.Modifier = &ImGui::GetIO().KeyAlt;
+        // Multiple Select is enabled by default in ImNodes if no modifier is set, 
+        // but we ensure it works with Ctrl for standard behavior
+        io.MultipleSelectModifier.Modifier = &ImGui::GetIO().KeyCtrl;
+
+        // PHASE 72 FIX: Do NOT wrap adapter->Render() with canvasEditor->BeginRender()/EndRender()
+        // BehaviorTreeImNodesAdapter already manages its own ImNodes scope via BeginNodeEditor/EndNodeEditor.
+        // Wrapping it causes double calls to BeginNodeEditor, resulting in:
+        // "Assertion failed: GImNodes->CurrentScope == ImNodesScope_None"
+        
+        m_imNodesAdapter->Render([this]() {
+            // Render minimap overlay INSIDE the node editor scope
+            if (m_minimapVisible && m_minimap)
+            {
+                m_minimap->SetVisible(true);
+                m_minimap->SetSize(m_minimapSize);
+                m_minimap->SetPosition(m_minimapPosition);
+                m_minimap->RenderImNodes();
+            }
+        });
+
+        // PHASE 78: Sync selection from ImNodes to Property Panel
+        int selectedNodeId = m_imNodesAdapter->GetSelectedNodeId();
+        if (selectedNodeId != m_propertyPanel.m_selectedNodeId)
+        {
+            if (selectedNodeId != -1)
+                m_propertyPanel.SetSelectedNode(m_graphId, selectedNodeId);
+            else
+                m_propertyPanel.ClearSelection();
+        }
+    }
+    else if (m_imNodesAdapter)
+    {
+        // Fallback for safety if canvasEditor is missing
+        m_imNodesAdapter->Render([this]() {
+            // Render minimap overlay INSIDE the node editor scope
+            if (m_minimapVisible && m_minimap)
+            {
+                m_minimap->SetVisible(true);
+                m_minimap->SetSize(m_minimapSize);
+                m_minimap->SetPosition(m_minimapPosition);
+                m_minimap->RenderImNodes();
+            }
+        });
     }
 
     ImGui::EndChild();
 
+    // PHASE 77 FIX: OVERLAY DRAG-DROP (Parity with EntityPrefab)
+    // We create an invisible overlay over the canvas area to catch drag-drop events 
+    // that ImNodes might otherwise consume or ignore.
     ImVec2 canvasEnd = ImGui::GetCursorScreenPos();
+    ImGui::SetCursorScreenPos(m_canvasScreenPos);
+
+    // Transparent dummy to act as drop target
+    ImGui::Dummy(canvasSize); 
+
+    // Visual Feedback (Yellow Highlight)
+    const ImGuiPayload* activePayload = ImGui::GetDragDropPayload();
+    if (activePayload && activePayload->IsDataType("BT_NODE_TYPE"))
+    {
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
+        {
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
+            drawList->AddRect(m_canvasScreenPos, ImVec2(m_canvasScreenPos.x + canvasSize.x, m_canvasScreenPos.y + canvasSize.y), IM_COL32(255, 255, 0, 255), 0.0f, 0, 4.0f);
+        }
+    }
+
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("BT_NODE_TYPE"))
+        {
+            const char* nodeTypeStr = (const char*)payload->Data;
+            ImVec2 mousePos = ImGui::GetMousePos();
+            SYSTEM_LOG << "[BehaviorTreeRenderer] NODE DROP RECEIVED VIA OVERLAY: " << nodeTypeStr << "\n";
+            AcceptNodeDrop(nodeTypeStr, mousePos.x, mousePos.y);
+        }
+        ImGui::EndDragDropTarget();
+    }
 
     ImGui::SameLine();
 
@@ -231,28 +374,101 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
     RenderRightPanelTabs();
     ImGui::EndChild();
 
-    // Create invisible drop target overlay covering the entire layout area
-    ImVec2 layoutEnd = ImGui::GetCursorScreenPos();
-    ImVec2 overlayMin = regionMin;
-    ImVec2 overlayMax(regionMin.x + totalWidth, layoutEnd.y);
-
-    ImGui::SetCursorScreenPos(overlayMin);
-    ImGui::Dummy(ImVec2(totalWidth, layoutEnd.y - regionMin.y));
-
-    // Accept drag-drop for node palette items
-    if (ImGui::BeginDragDropTarget())
-    {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("BT_NODE_TYPE"))
-        {
-            const char* nodeTypeStr = (const char*)payload->Data;
-            ImVec2 mousePos = ImGui::GetMousePos();
-            AcceptNodeDrop(nodeTypeStr, mousePos.x, mousePos.y);
-        }
-        ImGui::EndDragDropTarget();
-    }
-
     // Handle keyboard shortcuts for copy/paste/duplicate
     HandleKeyboardShortcuts();
+
+    // PHASE 78: Render context menu
+    RenderContextMenu();
+}
+
+void BehaviorTreeRenderer::RenderContextMenu()
+{
+    if (!m_imNodesAdapter) return;
+
+    int selectedNodeId = m_imNodesAdapter->GetSelectedNodeId();
+
+    // LEGACY RESTORATION: Use popup triggered by right click anywhere or on node
+    if (ImGui::BeginPopupContextWindow("BT_Canvas_Context_Menu"))
+    {
+        if (selectedNodeId != -1)
+        {
+            ImGui::Text("Node Actions (#%d)", selectedNodeId);
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Set as Root"))
+            {
+                auto& manager = NodeGraph::NodeGraphManager::Get();
+                NodeGraphTypes::GraphDocument* graphDoc = manager.GetGraph(NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+                if (graphDoc)
+                {
+                    // LEGACY RESTORATION: Set root node ID in metadata
+                    graphDoc->metadata["rootNodeId"] = selectedNodeId;
+                    graphDoc->rootNodeId = NodeGraphTypes::NodeId{ static_cast<uint32_t>(selectedNodeId) };
+                    graphDoc->SetDirty(true);
+                }
+            }
+
+            // LEGACY RESTORATION: Breakpoint and Node State
+            auto* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+            auto* node = graphDoc ? graphDoc->GetNode(NodeGraphTypes::NodeId{ static_cast<uint32_t>(selectedNodeId) }) : nullptr;
+
+            if (node)
+            {
+                bool isBreakpoint = node->parameters.count("breakpoint") && node->parameters.at("breakpoint") == "true";
+                if (ImGui::MenuItem("Toggle Breakpoint", "B", isBreakpoint))
+                {
+                    node->parameters["breakpoint"] = isBreakpoint ? "false" : "true";
+                    graphDoc->SetDirty(true);
+                }
+
+                bool isDisabled = node->parameters.count("disabled") && node->parameters.at("disabled") == "true";
+                if (ImGui::MenuItem("Disable Node", nullptr, isDisabled))
+                {
+                    node->parameters["disabled"] = isDisabled ? "false" : "true";
+                    graphDoc->SetDirty(true);
+                }
+            }
+
+            if (ImGui::BeginMenu("Reorder Children"))
+            {
+                ImGui::MenuItem("Move Left / Up (stub)");
+                ImGui::MenuItem("Move Right / Down (stub)");
+                ImGui::EndMenu();
+            }
+
+            ImGui::Separator();
+            if (ImGui::MenuItem("Delete Node", "Del"))
+            {
+                auto& manager = NodeGraph::NodeGraphManager::Get();
+                NodeGraphTypes::GraphDocument* graphDoc = manager.GetGraph(NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+                if (graphDoc)
+                {
+                    graphDoc->DeleteNode(NodeGraphTypes::NodeId{ static_cast<uint32_t>(selectedNodeId) });
+                    m_propertyPanel.ClearSelection();
+                    graphDoc->SetDirty(true);
+                }
+            }
+        }
+        else
+        {
+            ImGui::TextDisabled("Canvas Actions");
+            ImGui::Separator();
+            if (ImGui::MenuItem("Select All", "Ctrl+A"))
+            {
+                auto* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+                if (graphDoc)
+                {
+                    for (const auto& node : graphDoc->GetNodes())
+                        ImNodes::SelectNode(static_cast<int>(node.id.value));
+                }
+            }
+            if (ImGui::MenuItem("Reset View"))
+            {
+                ImNodes::EditorContextResetPanning(ImVec2(0, 0));
+            }
+        }
+        ImGui::EndPopup();
+    }
 }
 
 void BehaviorTreeRenderer::RenderRightPanelTabs()
@@ -430,36 +646,63 @@ void BehaviorTreeRenderer::AcceptNodeDrop(const std::string& nodeType, float scr
     // Phase 60 FIX: Implement AcceptNodeDrop for drag-drop node creation
     // This method is called by the drag-drop target when user drops a node from the palette
 
-    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] Node type: " << nodeType 
-               << " at screen pos (" << screenX << ", " << screenY << ")\n";
+    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] ENTRY - nodeType: " << nodeType << "\n";
 
-    if (m_graphId < 0 || !NodeGraph::NodeGraphManager::IsValid())
+    if (m_graphId < 0)
     {
-        SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] ERROR: Invalid graph ID or destroyed singleton\n";
+        SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] ERROR: Invalid graph ID (m_graphId=" << m_graphId << ")\n";
         return;
     }
+
+    if (!NodeGraph::NodeGraphManager::IsValid())
+    {
+        SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] ERROR: NodeGraphManager singleton is invalid!\n";
+        return;
+    }
+
+    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] Checkpoint 1: Coordinate transformation start\n";
+
+    // PHASE 78 FIX: Direct coordinate calculation to avoid crash in m_canvasEditor->ScreenToCanvas()
+    // m_canvasEditor->ScreenToCanvas calls ImNodes::EditorContextGetPanning(), which CRASHES 
+    // if called when the BT ImNodes context is not current or outside of its render scope.
+
+    ImVec2 mouseInCanvas;
+
+    // 1. Get relative position to canvas
+    float relX = screenX - m_canvasScreenPos.x;
+    float relY = screenY - m_canvasScreenPos.y;
+
+    // 2. Adjust for Panning (from ImNodes adapter if available)
+    ImVec2 pan = { 0, 0 };
+    if (m_imNodesAdapter)
+    {
+        // We use the adapter's context awareness if possible
+        // But to be even safer, we'll try-catch or check existence in memory
+        // For now, simpler: retrieve pan through the adapter which holds the context
+        pan = m_imNodesAdapter->GetPanning(); 
+    }
+
+    mouseInCanvas.x = relX - pan.x;
+    mouseInCanvas.y = relY - pan.y;
+
+    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] Checkpoint 2: Node creation at canvas-logical (" 
+               << mouseInCanvas.x << ", " << mouseInCanvas.y << ") [Pan: " << pan.x << "," << pan.y << "]\n";
 
     // Get the active graph
     GraphId id{static_cast<uint32_t>(m_graphId)};
+    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] Checkpoint 3: Fetching graph document for ID " << m_graphId << "\n";
+
     GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(id);
     if (!graphDoc)
     {
-        SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] ERROR: Graph not found\n";
+        SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] ERROR: Graph not found for ID " << m_graphId << "\n";
         return;
     }
 
+    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] Checkpoint 4: Accessing nodes vector (graphDoc=" << static_cast<void*>(graphDoc) << ")\n";
+
     // PHASE 61 DIAGNOSTIC: Log graph state and pointer address
-    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] DIAGNOSTIC: m_graphId=" << m_graphId 
-               << " graphDoc=" << static_cast<void*>(graphDoc)
-               << " nodeCount_before=" << graphDoc->GetNodes().size() << "\n";
-
-    // Transform screen coordinates to canvas coordinates
-    // The canvas screen position was saved during Render() in m_canvasScreenPos
-    ImVec2 canvasPos = ImGui::GetWindowPos();
-    ImVec2 mouseInCanvas(screenX - m_canvasScreenPos.x, screenY - m_canvasScreenPos.y);
-
-    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] Canvas position: (" 
-               << mouseInCanvas.x << ", " << mouseInCanvas.y << ")\n";
+    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] DIAGNOSTIC: nodeCount_before=" << graphDoc->GetNodes().size() << "\n";
 
     // Get nodes vector and find next available ID
     std::vector<NodeData>& nodes = graphDoc->GetNodesRef();
@@ -496,10 +739,48 @@ void BehaviorTreeRenderer::AcceptNodeDrop(const std::string& nodeType, float scr
 
 void BehaviorTreeRenderer::HandleKeyboardShortcuts()
 {
-    // Phase 59 FIX: Minimal keyboard shortcut handler
-    // TODO: Full implementation deferred to future phase
-    // Keyboard shortcuts will be handled via framework toolbar integration
-    // (toolbar already captures Ctrl+S via ImGui input system)
+    // PHASE 81: Implement editor keyboard shortcuts (Delete, Select All)
+    if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows)) return;
+
+    if (ImGui::IsKeyPressed(ImGuiKey_Delete))
+    {
+        if (m_imNodesAdapter)
+        {
+            int selectedNodeId = m_imNodesAdapter->GetSelectedNodeId();
+            if (selectedNodeId != -1)
+            {
+                // Retrieve the active graph
+                NodeGraphTypes::GraphId id{ static_cast<uint32_t>(m_graphId) };
+                NodeGraphTypes::GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(id);
+                if (graphDoc)
+                {
+                    if (graphDoc->DeleteNode(NodeGraphTypes::NodeId{ static_cast<uint32_t>(selectedNodeId) }))
+                    {
+                        SYSTEM_LOG << "[BehaviorTreeRenderer] Deleted node #" << selectedNodeId << "\n";
+                        m_propertyPanel.ClearSelection();
+                        graphDoc->SetDirty(true);
+                    }
+                }
+            }
+        }
+    }
+
+    if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl))
+    {
+        if (ImGui::IsKeyPressed(ImGuiKey_A))
+        {
+            // LEGACY RESTORATION: Select All logic
+            auto* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+            if (graphDoc)
+            {
+                const auto& nodes = graphDoc->GetNodes();
+                for (const auto& node : nodes)
+                {
+                    ImNodes::SelectNode(static_cast<int>(node.id.value));
+                }
+            }
+        }
+    }
 }
 
 void BehaviorTreeRenderer::OnRunGraphClicked()

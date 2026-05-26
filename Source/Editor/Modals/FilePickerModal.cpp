@@ -18,6 +18,7 @@
 #endif
 
 #include <algorithm>
+#include <functional>
 #include <cstring>
 
 namespace Olympe {
@@ -262,9 +263,11 @@ std::string FilePickerModal::GetDefaultDirectory() const
     switch (m_fileType)
     {
         case FilePickerType::BehaviorTree:
-            return "./Gamedata";
+            return "./Gamedata/BehaviorTree";
         case FilePickerType::SubGraph:
-            return "Blueprints";
+            return "./Gamedata/VisualScript";  // Changed from "Blueprints" to match new structure
+        case FilePickerType::EntityPrefab:
+            return "./Gamedata/EntityPrefab";
         case FilePickerType::Audio:
             return "./Gamedata/Audio";
         case FilePickerType::Tileset:
@@ -281,7 +284,9 @@ std::string FilePickerModal::GetFilePattern() const
         case FilePickerType::BehaviorTree:
             return ".bt.json";
         case FilePickerType::SubGraph:
-            return ".ats";
+            return ".ats.json";  // Changed to include .json extension
+        case FilePickerType::EntityPrefab:
+            return ".prefab.json";
         case FilePickerType::Audio:
             return ".ogg";
         case FilePickerType::Tileset:
@@ -298,7 +303,9 @@ std::string FilePickerModal::GetModalTitle() const
         case FilePickerType::BehaviorTree:
             return "Select BehaviorTree File##filepicker_bt";
         case FilePickerType::SubGraph:
-            return "Select SubGraph File##filepicker_ats";
+            return "Select VisualScript File##filepicker_ats";
+        case FilePickerType::EntityPrefab:
+            return "Select EntityPrefab File##filepicker_prefab";
         case FilePickerType::Audio:
             return "Select Audio File##filepicker_audio";
         case FilePickerType::Tileset:
@@ -315,7 +322,9 @@ std::string FilePickerModal::GetDescriptionText() const
         case FilePickerType::BehaviorTree:
             return "Select a BehaviorTree file (.bt.json) to link with this component";
         case FilePickerType::SubGraph:
-            return "Select a Blueprint file (.ats) to use as SubGraph";
+            return "Select a VisualScript file (.ats.json) to use as SubGraph";
+        case FilePickerType::EntityPrefab:
+            return "Select an EntityPrefab file (.prefab.json) to load";
         case FilePickerType::Audio:
             return "Select an Audio file (.ogg)";
         case FilePickerType::Tileset:
@@ -333,16 +342,41 @@ void FilePickerModal::RefreshFileList()
 
     std::string pattern = m_currentFilter.empty() ? GetFilePattern() : m_currentFilter;
 
+    // For SubGraph type, scan multiple root directories recursively
+    if (m_fileType == FilePickerType::SubGraph)
+    {
+        ScanDirectoriesRecursively("./GameData", pattern);
+        ScanDirectoriesRecursively("./Blueprint", pattern);
+    }
+    else
+    {
+        // For other types, scan the current path recursively
+        ScanDirectoriesRecursively(m_currentPath, pattern);
+    }
+
+    // Sort alphabetically
+    std::sort(m_fileList.begin(), m_fileList.end());
+    std::sort(m_folderList.begin(), m_folderList.end());
+
+    SYSTEM_LOG << "[FilePickerModal] Found " << m_fileList.size() 
+               << " files matching " << pattern << " and " << m_folderList.size()
+               << " folders in " << (m_fileType == FilePickerType::SubGraph ? "GameData+Blueprint" : m_currentPath) << "\n";
+}
+
+void FilePickerModal::ScanDirectoriesRecursively(const std::string& rootPath, const std::string& pattern)
+{
+    ScanDirectoriesRecursivelyHelper(rootPath, pattern, rootPath);
+}
+
+void FilePickerModal::ScanDirectoriesRecursivelyHelper(const std::string& rootPath, const std::string& pattern, const std::string& currentPath)
+{
 #ifdef _WIN32
     WIN32_FIND_DATAA findData;
-    std::string searchPath = m_currentPath + "\\*";
+    std::string searchPath = currentPath + "\\*";
     HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
 
     if (hFind == INVALID_HANDLE_VALUE)
-    {
-        SYSTEM_LOG << "[FilePickerModal] Directory not found or inaccessible: " << m_currentPath << "\n";
         return;
-    }
 
     do
     {
@@ -352,37 +386,49 @@ void FilePickerModal::RefreshFileList()
         if (filename == "." || filename == "..")
             continue;
 
-        // Separate folders and files
         if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
-            m_folderList.push_back(filename);
+            // For SubGraph, collect relative paths for navigation
+            if (m_fileType == FilePickerType::SubGraph)
+            {
+                std::string relativePath = currentPath.substr(rootPath.length());
+                if (!relativePath.empty() && relativePath[0] == '\\') relativePath = relativePath.substr(1);
+                relativePath += "\\" + filename;
+                m_folderList.push_back(relativePath);
+            }
+            else
+            {
+                m_folderList.push_back(filename);
+            }
+            // Recurse into subdirectory
+            ScanDirectoriesRecursivelyHelper(rootPath, pattern, currentPath + "\\" + filename);
         }
         else
         {
             // Check if file matches pattern
             if (pattern == "*" || filename.find(pattern) != std::string::npos)
             {
-                m_fileList.push_back(filename);
+                if (m_fileType == FilePickerType::SubGraph)
+                {
+                    // Store full relative path for SubGraph
+                    std::string relativePath = currentPath.substr(rootPath.length());
+                    if (!relativePath.empty() && relativePath[0] == '\\') relativePath = relativePath.substr(1);
+                    if (!relativePath.empty()) relativePath += "\\";
+                    relativePath += filename;
+                    m_fileList.push_back(relativePath);
+                }
+                else
+                {
+                    m_fileList.push_back(filename);
+                }
             }
         }
     } while (FindNextFileA(hFind, &findData) != 0);
 
     FindClose(hFind);
-
-    // Sort alphabetically
-    std::sort(m_fileList.begin(), m_fileList.end());
-    std::sort(m_folderList.begin(), m_folderList.end());
-
-    SYSTEM_LOG << "[FilePickerModal] Found " << m_fileList.size() 
-               << " files matching " << pattern << " and " << m_folderList.size()
-               << " folders in " << m_currentPath << "\n";
 #else
-    DIR* dir = opendir(m_currentPath.c_str());
-    if (!dir)
-    {
-        SYSTEM_LOG << "[FilePickerModal] Directory not found or inaccessible: " << m_currentPath << "\n";
-        return;
-    }
+    DIR* dir = opendir(currentPath.c_str());
+    if (!dir) return;
 
     struct dirent* entry;
     while ((entry = readdir(dir)) != nullptr)
@@ -393,34 +439,51 @@ void FilePickerModal::RefreshFileList()
         if (filename == "." || filename == "..")
             continue;
 
-        // Check if it's a directory
-        std::string fullPath = m_currentPath + "/" + filename;
-        struct stat st;
-        if (stat(fullPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode))
+        std::string fullPath = currentPath + "/" + filename;
+
+        struct stat statbuf;
+        if (stat(fullPath.c_str(), &statbuf) == 0)
         {
-            m_folderList.push_back(filename);
-        }
-        else
-        {
-            // Check if filename matches pattern
-            if (pattern == "*" || 
-                (filename.length() > pattern.length() &&
-                 filename.substr(filename.length() - pattern.length()) == pattern))
+            if (S_ISDIR(statbuf.st_mode))
             {
-                m_fileList.push_back(filename);
+                // For SubGraph, collect relative paths
+                if (m_fileType == FilePickerType::SubGraph)
+                {
+                    std::string relativePath = currentPath.substr(rootPath.length());
+                    if (!relativePath.empty() && relativePath[0] == '/') relativePath = relativePath.substr(1);
+                    relativePath += "/" + filename;
+                    m_folderList.push_back(relativePath);
+                }
+                else
+                {
+                    m_folderList.push_back(filename);
+                }
+                // Recurse
+                ScanDirectoriesRecursivelyHelper(rootPath, pattern, fullPath);
+            }
+            else
+            {
+                // Check pattern
+                if (pattern == "*" || filename.find(pattern) != std::string::npos)
+                {
+                    if (m_fileType == FilePickerType::SubGraph)
+                    {
+                        std::string relativePath = currentPath.substr(rootPath.length());
+                        if (!relativePath.empty() && relativePath[0] == '/') relativePath = relativePath.substr(1);
+                        if (!relativePath.empty()) relativePath += "/";
+                        relativePath += filename;
+                        m_fileList.push_back(relativePath);
+                    }
+                    else
+                    {
+                        m_fileList.push_back(filename);
+                    }
+                }
             }
         }
     }
 
     closedir(dir);
-
-    // Sort alphabetically
-    std::sort(m_fileList.begin(), m_fileList.end());
-    std::sort(m_folderList.begin(), m_folderList.end());
-
-    SYSTEM_LOG << "[FilePickerModal] Found " << m_fileList.size() 
-               << " files matching " << pattern << " and " << m_folderList.size()
-               << " folders in " << m_currentPath << "\n";
 #endif
 }
 

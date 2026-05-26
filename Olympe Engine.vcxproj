@@ -278,7 +278,6 @@
     <ClCompile Include="Source\vector.cpp" />
     <ClCompile Include="source\VideoGame.cpp" />
     <ClCompile Include="Source\World.cpp" />
-    <ClCompile Include="Tests\BlueprintEditor\EntityPrefab_PropertyLoadingTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -575,28 +574,9 @@
     <ClInclude Include="Tests\BlueprintEditor\SelectionEffectRendererTests.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="add_bb_panels.ps1" />
-    <None Include="add_framework_files.ps1" />
-    <None Include="add_placeholder_files.ps1" />
-    <None Include="add_project_files.bat" />
-    <None Include="add_project_reference.ps1" />
-    <None Include="add_proj_entries.ps1" />
-    <None Include="analyze_code.ps1" />
-    <None Include="analyze_codebase.ps1" />
-    <None Include="analyze_codebase_v2.ps1" />
-    <None Include="blueprint_editor_config.json" />
     <None Include="ClassDiagram.cd" />
-    <None Include="config\ATS-VS-editor-config.json" />
-    <None Include="Config\global_blackboard_register.json" />
-    <None Include="ENTITYPREFAB_V2_CODE_ANALYSIS.md" />
-    <None Include="ENTITYPREFAB_V2_DIAGNOSTIC_COMPLETE.md" />
-    <None Include="ENTITYPREFAB_V2_FITGAP_ANALYSIS.md" />
-    <None Include="ENTITYPREFAB_V2_IMPLEMENTATION_ROADMAP.md" />
-    <None Include="Gamedata\BehaviorTree\EventTypes.json" />
-    <None Include="Gamedata\PrefabEntities\ComponentsParameters.json" />
     <None Include="olympe.ini" />
     <None Include="OlympeBlueprintEditor.vcxproj" />
-    <None Include="OlympeBlueprintEditor\add_files_to_vcxproj.ps1" />
     <None Include="phase_70b_fix_paths.ps1" />
     <None Include="phase_70c_clean_and_add.ps1" />
     <None Include="phase_70d_deep_clean.ps1" />
@@ -606,28 +586,7 @@
     <None Include="phase_73_add_fragments.ps1" />
     <None Include="phase_74_add_helpers.ps1" />
     <None Include="phase_75_final.ps1" />
-    <None Include="Scripts\AddNodeGraphCoreFiles.ps1" />
-    <None Include="Scripts\Audit-CodebaseCleanup.ps1" />
     <None Include="Scripts\Interactive-Cleanup.ps1" />
-    <None Include="Source\BlueprintEditor\Documentation\BUILD_ERROR_ANALYSIS_AND_TIMELINE.md" />
-    <None Include="Source\BlueprintEditor\Documentation\PHASE_58_BRIEFING.md" />
-    <None Include="Source\BlueprintEditor\Documentation\PHASE_58_EXECUTIVE_SUMMARY.md" />
-    <None Include="Source\BlueprintEditor\Documentation\PHASE_58_IMPLEMENTATION_GUIDE.md" />
-    <None Include="Source\BlueprintEditor\Documentation\PHASE_58_LEGACY_ANALYSIS_AND_STRATEGY.md" />
-    <None Include="Source\BlueprintEditor\Documentation\PHASE_58_PATTERNS_REFERENCE.md" />
-    <None Include="Source\BlueprintEditor\Documentation\PHASE_59_V2_INTEGRATION_VALIDATION_COMPLETE.md" />
-    <None Include="Source\BlueprintEditor\Documentation\PHASE_60_CREATENEW_ENTITYPREFAB_V2_MIGRATION.md" />
-    <None Include="Source\BlueprintEditor\Documentation\PHASE_61_TEST_FILE_CLEANUP_COMPLETE.md" />
-    <None Include="Source\BlueprintEditor\FRAMEWORK_INTEGRATION_GUIDE.md" />
-    <None Include="Source\BlueprintEditor\PHASE_54_COMPLETE_INTERACTIVE_EDITING.md" />
-    <None Include="Source\BlueprintEditor\PHASE_E_DELIVERY_COMPLETE.md" />
-    <None Include="Source\BlueprintEditor\PHASE_E_DOCUMENTATION_INDEX.md" />
-    <None Include="Source\BlueprintEditor\PHASE_E_EXACT_CODE_CHANGES.md" />
-    <None Include="Source\BlueprintEditor\PHASE_E_FINAL_CONCLUSION.md" />
-    <None Include="Source\BlueprintEditor\PHASE_E_FRAMEWORK_INTEGRATION_COMPLETION.md" />
-    <None Include="Source\BlueprintEditor\PHASE_E_ROOT_CAUSE_ANALYSIS.md" />
-    <None Include="Source\BlueprintEditor\PHASE_E_SUMMARY_FOR_USER.md" />
-    <None Include="Source\BlueprintEditor\REPONSES_EN_FRANCAIS.md" />
     <None Include="update_project.py" />
     <None Include="verify_property_loading.py" />
   </ItemGroup>

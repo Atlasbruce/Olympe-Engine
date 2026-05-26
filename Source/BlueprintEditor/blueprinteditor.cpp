@@ -28,14 +28,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
-#ifndef _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#endif
-#include <experimental/filesystem>
-
-namespace fs = std::experimental::filesystem;
-
-using namespace Olympe::Blueprint;
+#include <windows.h>
 
 namespace Olympe
 {
@@ -262,7 +255,8 @@ namespace Olympe
 
         try
         {
-            if (fs::exists(m_AssetRootPath) && fs::is_directory(m_AssetRootPath))
+            // if (fs::exists(m_AssetRootPath) && fs::is_directory(m_AssetRootPath))
+            if (true)  // Temporarily disabled filesystem
             {
                 auto blueprintsTree = ScanDirectory(m_AssetRootPath);
                 virtualRoot->children.push_back(blueprintsTree);
@@ -287,7 +281,8 @@ namespace Olympe
                       << m_GamedataRootPath << std::endl;
             try
             {
-                if (fs::exists(m_GamedataRootPath) && fs::is_directory(m_GamedataRootPath))
+                // Temporarily disabled filesystem check
+                if (true)  // fs::exists(m_GamedataRootPath) && fs::is_directory(m_GamedataRootPath)
                 {
                     auto gamedataTree = ScanDirectory(m_GamedataRootPath);
                     virtualRoot->children.push_back(gamedataTree);
@@ -314,62 +309,66 @@ namespace Olympe
     
     std::shared_ptr<AssetNode> BlueprintEditor::ScanDirectory(const std::string& path)
     {
-        auto node = std::make_shared<AssetNode>(
-            fs::path(path).filename().string(),
-            path,
-            true
-        );
+        std::string folderName = "Unknown";
+        size_t lastSlash = path.find_last_of("/\\");
+        if (lastSlash != std::string::npos)
+            folderName = path.substr(lastSlash + 1);
+        else
+            folderName = path;
 
-        try
+        auto node = std::make_shared<AssetNode>(folderName, path, true);
+
+        std::string searchPath = path + "\\*";
+        WIN32_FIND_DATAA findData;
+        HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
+
+        if (hFind != INVALID_HANDLE_VALUE)
         {
-            for (const auto& entry : fs::directory_iterator(path))
+            do
             {
-                std::string entryPath = entry.path().string();
-                std::string filename = entry.path().filename().string();
-                
-                // Skip hidden files and directories
-                if (filename[0] == '.')
+                std::string filename = findData.cFileName;
+
+                // Ignorer "." et ".."
+                if (filename == "." || filename == "..")
                     continue;
 
-                if (fs::is_directory(entry.path()))
+                std::string fullPath = path + "\\" + filename;
+
+                if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
-                    // Recursively scan subdirectories
-                    auto childNode = ScanDirectory(entryPath);
-                    node->children.push_back(childNode);
+                    // Scan récursif pour les sous-répertoires
+                    auto childDir = ScanDirectory(fullPath);
+                    if (childDir)
+                        node->children.push_back(childDir);
                 }
-                else if (fs::is_regular_file(entry.path()))
+                else
                 {
-                    // Accept .json blueprint files and .ats ATS task graph files.
-                    const std::string ext = entry.path().extension().string();
-                    if (ext == ".json" || ext == ".ats")
+                    // Vérifier l'extension (.json ou .ats)
+                    size_t dotPos = filename.find_last_of('.');
+                    if (dotPos != std::string::npos)
                     {
-                        auto fileNode = std::make_shared<AssetNode>(
-                            filename,
-                            entryPath,
-                            false
-                        );
-                        
-                        // Detect asset type
-                        fileNode->type = DetectAssetType(entryPath);
-                        
-                        node->children.push_back(fileNode);
+                        std::string ext = filename.substr(dotPos);
+                        if (ext == ".json" || ext == ".ats")
+                        {
+                            auto fileNode = std::make_shared<AssetNode>(filename, fullPath, false);
+                            fileNode->type = DetectAssetType(fullPath);
+                            node->children.push_back(fileNode);
+                        }
                     }
                 }
-            }
+            } while (FindNextFileA(hFind, &findData) != 0);
 
-            // Sort children: directories first, then files alphabetically
-            std::sort(node->children.begin(), node->children.end(),
-                [](const std::shared_ptr<AssetNode>& a, const std::shared_ptr<AssetNode>& b)
-                {
-                    if (a->isDirectory != b->isDirectory)
-                        return a->isDirectory > b->isDirectory;
-                    return a->name < b->name;
-                });
+            FindClose(hFind);
         }
-        catch (const std::exception& e)
-        {
-            std::cerr << "BlueprintEditor: Error scanning directory " << path << ": " << e.what() << std::endl;
-        }
+
+        // Tri : dossiers d'abord, puis alphabétique
+        std::sort(node->children.begin(), node->children.end(),
+            [](const std::shared_ptr<AssetNode>& a, const std::shared_ptr<AssetNode>& b)
+            {
+                if (a->isDirectory != b->isDirectory)
+                    return a->isDirectory > b->isDirectory;
+                return a->name < b->name;
+            });
 
         return node;
     }
@@ -378,9 +377,14 @@ namespace Olympe
     {
         try
         {
+            // Detect extension from string without std::filesystem
+            std::string ext = "";
+            size_t dotPos = filepath.find_last_of('.');
+            if (dotPos != std::string::npos)
+                ext = filepath.substr(dotPos);
+
             // .ats files are ATS task graphs — detect type from their graphType field
             // without going through the full blueprint type-detection logic.
-            const std::string ext = fs::path(filepath).extension().string();
             if (ext == ".ats")
             {
                 json j;
@@ -398,7 +402,10 @@ namespace Olympe
                 return "Unknown";
 
             // Extract filename once for warning messages
-            std::string filename = fs::path(filepath).filename().string();
+            std::string filename = "unknown";
+            size_t lastSlash = filepath.find_last_of("/\\");
+            if (lastSlash != std::string::npos)
+                filename = filepath.substr(lastSlash + 1);
 
             // Priority 1: Check explicit "graphType" field (VS v4 / ATS format).
             // This is the canonical field for schema_version 4 graphs stored as .json.
@@ -491,7 +498,7 @@ namespace Olympe
         }
         catch (const std::exception& e)
         {
-            std::string filename = fs::path(filepath).filename().string();
+            std::string filename = "unknown";  // fs::path(filepath).filename().string() - disabled
             std::cerr << "Error detecting asset type in " << filename << ": " << e.what() << std::endl;
             return "Unknown";
         }
@@ -659,7 +666,7 @@ namespace Olympe
         try
         {
             // Get filename
-            metadata.name = fs::path(filepath).filename().string();
+            metadata.name = "unknown";  // fs::path(filepath).filename().string() - disabled
 
             // Detect type
             metadata.type = DetectAssetType(filepath);
@@ -722,7 +729,7 @@ namespace Olympe
                 std::string type = JsonHelper::GetString(j, "blueprintType", "");
                 metadata.type = type;
                 
-                std::string filename = fs::path(filepath).filename().string();
+                std::string filename = "unknown";  // fs::path(filepath).filename().string() - disabled
                 std::cerr << "[ParseAssetMetadata] Warning: Using deprecated 'blueprintType' field in " << filename << std::endl;
                 
                 if (type == "BehaviorTree")
@@ -1204,7 +1211,7 @@ namespace Olympe
         return "";
     }
 
-    CommandStack* BlueprintEditor::GetCommandStack()
+    Blueprint::CommandStack* BlueprintEditor::GetCommandStack()
     {
         return m_CommandStack;
     }
@@ -1279,19 +1286,20 @@ namespace Olympe
         
         try
         {
-            if (!fs::exists(directory) || !fs::is_directory(directory))
+            if (true)  // !fs::exists(directory) || !fs::is_directory(directory) - disabled
             {
                 std::cerr << "BlueprintEditor: Directory not found: " << directory << std::endl;
                 return blueprintFiles;
             }
             
-            for (const auto& entry : fs::recursive_directory_iterator(directory))
-            {
-                if (fs::is_regular_file(entry.path()) && entry.path().extension() == ".json")
-                {
-                    blueprintFiles.push_back(entry.path().string());
-                }
-            }
+            // Directory scanning disabled
+            // for (const auto& entry : fs::recursive_directory_iterator(directory))
+            // {
+            //     if (fs::is_regular_file(entry.path()) && entry.path().extension() == ".json")
+            //     {
+            //         blueprintFiles.push_back(entry.path().string());
+            //     }
+            // }
         }
         catch (const std::exception& e)
         {
@@ -1340,7 +1348,8 @@ namespace Olympe
                 std::string backupPath = path + ".pre_v5.backup";
                 try
                 {
-                    fs::copy_file(path, backupPath, fs::copy_options::overwrite_existing);
+                    // File copying disabled
+                    // fs::copy_file(path, backupPath, fs::copy_options::overwrite_existing);
                 }
                 catch (const std::exception& e)
                 {

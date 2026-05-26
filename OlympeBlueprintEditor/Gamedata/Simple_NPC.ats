@@ -26,6 +26,10 @@
       {
         "sourceNodeId": 2,
         "targetNodeId": 6
+      },
+      {
+        "sourceNodeId": 4,
+        "targetNodeId": 7
       }
     ],
     "nodes": [
@@ -35,8 +39,8 @@
         "enabled": true,
         "nodeId": 1,
         "position": {
-          "x": 421,
-          "y": 205,
+          "x": 379.2,
+          "y": 102.7,
           "z": 0
         },
         "properties": {
@@ -55,8 +59,8 @@
         "enabled": true,
         "nodeId": 2,
         "position": {
-          "x": 111,
-          "y": 273,
+          "x": 69.2,
+          "y": 170.7,
           "z": 0
         },
         "properties": {
@@ -79,8 +83,8 @@
         "enabled": true,
         "nodeId": 3,
         "position": {
-          "x": 424,
-          "y": 459,
+          "x": 382.2,
+          "y": 356.7,
           "z": 0
         },
         "properties": {
@@ -106,8 +110,8 @@
         "enabled": true,
         "nodeId": 4,
         "position": {
-          "x": 428,
-          "y": 326,
+          "x": 379.6,
+          "y": 229.2,
           "z": 0
         },
         "properties": {
@@ -129,8 +133,8 @@
         "enabled": true,
         "nodeId": 5,
         "position": {
-          "x": 427,
-          "y": 599,
+          "x": 385.2,
+          "y": 496.701,
           "z": 0
         },
         "properties": {
@@ -149,8 +153,8 @@
         "enabled": true,
         "nodeId": 6,
         "position": {
-          "x": 418,
-          "y": 82,
+          "x": 376.2,
+          "y": -20.3,
           "z": 0
         },
         "properties": {
@@ -169,14 +173,14 @@
         "enabled": true,
         "nodeId": 7,
         "position": {
-          "x": 727,
-          "y": 264,
+          "x": 609.3,
+          "y": 229.9,
           "z": 0
         },
         "properties": {
           "npcType": ""
         },
-        "selected": true,
+        "selected": false,
         "size": {
           "x": 150,
           "y": 80,

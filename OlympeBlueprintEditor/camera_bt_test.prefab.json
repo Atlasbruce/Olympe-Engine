@@ -1,0 +1,50 @@
+{
+  "blueprintType": "EntityPrefab",
+  "data": {
+    "canvasState": {
+      "offsetX": 0,
+      "offsetY": 0,
+      "zoom": 1
+    },
+    "connections": [],
+    "nodes": [
+      {
+        "componentName": "Camera_data",
+        "componentType": "Camera_data",
+        "enabled": true,
+        "nodeId": 1,
+        "position": {
+          "x": 476,
+          "y": 228,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "AIBehavior_data",
+        "componentType": "AIBehavior_data",
+        "enabled": true,
+        "nodeId": 2,
+        "position": {
+          "x": 468,
+          "y": 395,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      }
+    ]
+  },
+  "schemaVersion": 4
+}

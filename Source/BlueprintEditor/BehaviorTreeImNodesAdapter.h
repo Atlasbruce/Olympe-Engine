@@ -14,10 +14,13 @@
 #include "../third_party/imgui/imgui.h"
 #include "../system/system_utils.h"
 #include "BTNodeGraphManager.h"
+#include "NodeStyleRegistry.h"
 #include "../NodeGraphCore/NodeGraphManager.h"
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
+#include <functional>
 
 namespace Olympe
 {
@@ -83,14 +86,18 @@ namespace Olympe
 
         /**
          * @brief Main render call - draws entire BehaviorTree with ImNodes
+         * @param minimapRenderCallback Optional callback to render minimap between RenderConnections and EndNodeEditor
          */
-        void Render()
+        void Render(std::function<void()> minimapRenderCallback = nullptr)
         {
             if (m_graphId < 0 || !m_context)
             {
                 ImGui::TextDisabled("BehaviorTree graph not loaded");
                 return;
             }
+
+            // Capture screen position for coordinate transformations
+            m_canvasScreenPos = ImGui::GetCursorScreenPos();
 
             // Set current context for ImNodes
             ImNodes::SetCurrentContext(m_context);
@@ -104,111 +111,225 @@ namespace Olympe
             // Render connections
             RenderConnections();
 
+            // Render minimap if callback provided (MUST be before EndNodeEditor)
+            if (minimapRenderCallback)
+            {
+                minimapRenderCallback();
+            }
+
             // Handle canvas interaction (pan/zoom)
             UpdateCanvasInteraction();
 
-                 // End node editor
-                ImNodes::EndNodeEditor();
+            // End node editor
+            ImNodes::EndNodeEditor();
 
-                // IMPORTANT: Add a dummy item to satisfy ImGui's layout contract.
-                // ImNodes::EndNodeEditor() may call SetCursorScreenPos() internally for minimap positioning.
-                // Without a subsequent layout item, ImGui will assert in ErrorCheckUsingSetCursorPosToExtendParentBoundaries().
-                // This dummy ensures the boundary extension is properly validated.
-                // See: ImGui v1.92.6 breaking change in imgui.cpp lines 10790-10801
-                ImGui::Dummy(ImVec2(0, 0));
+            // PHASE 82: Handle link creation via UI
+            // MOVED outside BeginNodeEditor/EndNodeEditor scope to fix assertion 
+            // "GImNodes->CurrentScope == ImNodesScope_None" in ImNodes::IsLinkCreated
+            int startPinId, endPinId;
+            if (ImNodes::IsLinkCreated(&startPinId, &endPinId))
+            {
+                GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetActiveGraph();
+                if (graphDoc)
+                {
+                    // Convert back from internal mapping:
+                    // inputPinId = nodeUid * 2
+                    // outputPinId = nodeUid * 2 + 1
+                    // ImNodes.Link(linkUid, fromPinValue, toPinValue) expects output -> input
+                    
+                    // Standard BT flow: Parent Output -> Child Input
+                    // Ensure startPin is output (odd) and endPin is input (even)
+                    if (startPinId % 2 == 0 && endPinId % 2 != 0)
+                    {
+                        // Swap to ensure output -> input
+                        std::swap(startPinId, endPinId);
+                    }
 
-                // Restore ImGui default context
-                ImNodes::SetCurrentContext(nullptr);
+                    if (startPinId % 2 != 0 && endPinId % 2 == 0)
+                    {
+                        graphDoc->ConnectPins(NodeGraphTypes::PinId{static_cast<uint32_t>(startPinId)}, 
+                                             NodeGraphTypes::PinId{static_cast<uint32_t>(endPinId)});
+                        graphDoc->SetDirty(true);
+                        SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Link created: " << startPinId << " -> " << endPinId << "\n";
+                    }
+                }
             }
+
+            // IMPORTANT: Add a dummy item to satisfy ImGui's layout contract.
+            // ImNodes::EndNodeEditor() may call SetCursorScreenPos() internally for minimap positioning.
+            // Without a subsequent layout item, ImGui will assert in ErrorCheckUsingSetCursorPosToExtendParentBoundaries().
+            // This dummy ensures the boundary extension is properly validated.
+            // See: ImGui v1.92.6 breaking change in imgui.cpp lines 10790-10801
+            ImGui::Dummy(ImVec2(0, 0));
+
+            // Restore ImGui default context
+            ImNodes::SetCurrentContext(nullptr);
+        }
 
         /**
          * @brief Get ImNodes context
          */
         ImNodesContext* GetContext() const { return m_context; }
 
+        /**
+         * @brief Returns the ID of the currently selected node, or -1 if none.
+         */
+        int GetSelectedNodeId() const
+        {
+            if (!m_context) return -1;
+            
+            ImNodesContext* oldContext = ImNodes::GetCurrentContext();
+            ImNodes::SetCurrentContext(m_context);
+            
+            int selectedNodeId = -1;
+            if (ImNodes::NumSelectedNodes() > 0)
+            {
+                std::vector<int> selectedNodes(ImNodes::NumSelectedNodes());
+                ImNodes::GetSelectedNodes(selectedNodes.data());
+                selectedNodeId = selectedNodes[0];
+            }
+            
+            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            return selectedNodeId;
+        }
+
+        /**
+         * @brief Returns current panning offset, safe to call outside Render()
+         */
+        ImVec2 GetPanning() const
+        {
+            if (!m_context) return ImVec2(0, 0);
+            ImNodesContext* oldContext = ImNodes::GetCurrentContext();
+            ImNodes::SetCurrentContext(m_context);
+            ImVec2 pan = ImNodes::EditorContextGetPanning();
+            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            return pan;
+        }
+
     private:
         int m_graphId = -1;
         ImNodesContext* m_context = nullptr;
 
         // Canvas state
+        ImVec2 m_canvasScreenPos = ImVec2(0, 0);
         ImVec2 m_canvasOffset;
         float m_canvasZoom = 1.0f;
         int m_nextLinkId = 0;
 
         // Selection state
         int m_selectedNode = -1;
+        std::set<int> m_initializedNodes;
 
         // Rendering helpers
         void RenderNodes()
         {
-            // Phase 61 FIX: Query CORRECT NodeGraphManager (NodeGraph namespace)
-            // BehaviorTreeRenderer uses: NodeGraph::NodeGraphManager::Get().GetActiveGraph()
-            // RenderNodes must use the same manager to access stored graphs
             GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetActiveGraph();
             if (!graphDoc)
             {
-                // PHASE 61 DIAGNOSTIC: If we get here, active graph was not set or cleared
-                // This should not happen if Initialize() called SetActiveGraph properly
-                SYSTEM_LOG << "[BehaviorTreeImNodesAdapter::RenderNodes] ERROR: GetActiveGraph returned nullptr "
-                           << "(m_graphId=" << m_graphId << ") - querying CORRECT NodeGraph manager\n";
                 return;
             }
 
-            // PHASE 61 DIAGNOSTIC: Log graph pointer and node count (ONE TIME after drop)
-            // Only log when count changes to avoid spam
-            static size_t s_lastNodeCount = 0;
             const auto& nodes = graphDoc->GetNodes();
-            if (nodes.size() != s_lastNodeCount)
-            {
-                SYSTEM_LOG << "[BehaviorTreeImNodesAdapter::RenderNodes] DIAGNOSTIC: graphDoc=" 
-                           << static_cast<void*>(graphDoc) << " nodeCount=" << nodes.size() 
-                           << " m_graphId=" << m_graphId << " (NodeGraph manager)\n";
-                s_lastNodeCount = nodes.size();
-            }
-
+            
             for (size_t i = 0; i < nodes.size(); ++i)
             {
                 const auto& node = nodes[i];
                 int nodeUid = static_cast<int>(node.id.value);
 
+                // Phase 62 FIX: Only set position once for new nodes
+                if (m_initializedNodes.find(nodeUid) == m_initializedNodes.end())
+                {
+                    ImNodes::SetNodeGridSpacePos(nodeUid, ImVec2(node.position.x, node.position.y));
+                    m_initializedNodes.insert(nodeUid);
+                }
+
+                // LEGACY RESTORATION: Use NodeStyleRegistry for colors and icons
+                NodeType type = StringToNodeType(node.type);
+                const NodeStyle& style = NodeStyleRegistry::Get().GetStyle(type);
+
+                ImNodes::PushColorStyle(ImNodesCol_TitleBar, style.headerColor);
+                ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, style.headerHoveredColor);
+                ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, style.headerSelectedColor);
+
                 ImNodes::BeginNode(nodeUid);
 
-                // Input pin (every node can accept input)
+                // LEGACY RESTORATION: Breakpoint Indicator (visual-only in editor)
+                if (node.parameters.count("breakpoint") && node.parameters.at("breakpoint") == "true")
                 {
-                    int inputPinId = nodeUid * 1000;
+                    ImVec2 nodePos = ImNodes::GetNodeScreenSpacePos(nodeUid);
+                    ImGui::GetWindowDrawList()->AddCircleFilled(
+                        ImVec2(nodePos.x - 10, nodePos.y - 10), 6.0f, IM_COL32(255, 50, 50, 255));
+                    ImGui::GetWindowDrawList()->AddCircle(
+                        ImVec2(nodePos.x - 10, nodePos.y - 10), 7.0f, IM_COL32(255, 255, 255, 200));
+                }
+
+                // Node Header with Icon
+                ImNodes::BeginNodeTitleBar();
+                if (style.icon && style.icon[0] != '\0')
+                {
+                    ImGui::Text("[%s] %s", style.icon, node.name.c_str());
+                }
+                else
+                {
+                    ImGui::TextUnformatted(node.name.c_str());
+                }
+                ImNodes::EndNodeTitleBar();
+
+                // LEGACY RESTORATION: Execution status indicator (from simulation)
+                if (node.parameters.count("lastStatus"))
+                {
+                    std::string status = node.parameters.at("lastStatus");
+                    ImVec4 statusColor = ImVec4(1, 1, 1, 1);
+                    const char* statusIcon = "?";
+
+                    if (status == "SUCCESS") { statusColor = ImVec4(0.2f, 1.0f, 0.2f, 1.0f); statusIcon = "v"; }
+                    else if (status == "FAILURE") { statusColor = ImVec4(1.0f, 0.2f, 0.2f, 1.0f); statusIcon = "x"; }
+                    else if (status == "RUNNING") { statusColor = ImVec4(0.2f, 0.6f, 1.0f, 1.0f); statusIcon = "O"; }
+
+                    ImGui::SameLine(ImGui::GetContentRegionAvail().x - 20);
+                    ImGui::TextColored(statusColor, "[%s]", statusIcon);
+                }
+
+                // Input pin
+                {
+                    int inputPinId = nodeUid * 2;
                     ImNodes::BeginInputAttribute(inputPinId);
                     ImGui::TextUnformatted("In");
                     ImNodes::EndInputAttribute();
                 }
 
-                ImGui::Separator();
+                ImGui::Spacing();
+                ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.9f, 1.0f), "%s", node.type.c_str());
 
-                // Node title
-                ImGui::TextUnformatted(node.name.c_str());
-                ImGui::Separator();
-                ImGui::TextUnformatted(node.type.c_str());
+                // Show specific subtype if available (Legacy feature)
+                if (type == NodeType::BT_Action && node.parameters.count("actionType"))
+                    ImGui::TextDisabled("Action: %s", node.parameters.at("actionType").c_str());
+                else if (type == NodeType::BT_Condition && node.parameters.count("conditionType"))
+                    ImGui::TextDisabled("Cond: %s", node.parameters.at("conditionType").c_str());
 
-                ImGui::Separator();
+                ImGui::Spacing();
 
-                // Output pin (every node can have output)
+                // Output pin
                 {
-                    int outputPinId = nodeUid * 1000 + 1;
+                    int outputPinId = nodeUid * 2 + 1;
                     ImNodes::BeginOutputAttribute(outputPinId);
+                    ImGui::Indent(60.0f); 
                     ImGui::TextUnformatted("Out");
                     ImNodes::EndOutputAttribute();
                 }
 
-                // Set node position
-                ImNodes::SetNodeGridSpacePos(nodeUid, ImVec2(node.position.x, node.position.y));
-
                 ImNodes::EndNode();
+                
+                ImNodes::PopColorStyle();
+                ImNodes::PopColorStyle();
+                ImNodes::PopColorStyle();
             }
         }
 
         void RenderConnections()
         {
-            // Get active graph from NodeGraphManager
-            GraphDocument* graphDoc = NodeGraphManager::Get().GetActiveGraph();
+            // Get active graph from NodeGraphManager (NodeGraph namespace)
+            GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetActiveGraph();
             if (!graphDoc)
             {
                 // Phase 59 FIX: Removed frame-by-frame logging (violates COPILOT_INSTRUCTIONS)
@@ -217,30 +338,109 @@ namespace Olympe
             }
 
             const auto& links = graphDoc->GetLinks();
+            
+            // Build a map of output pin -> list of links to find indices for child nodes
+            // In BT, the order of children (links from an output pin) is vital
+            std::map<uint32_t, std::vector<size_t>> outputToLinks;
+            for (size_t i = 0; i < links.size(); ++i)
+            {
+                outputToLinks[links[i].fromPin.value].push_back(i);
+            }
 
             for (size_t i = 0; i < links.size(); ++i)
             {
                 const auto& link = links[i];
-                int linkUid = static_cast<int>(i);  // Use index as link ID
+                int linkUid = static_cast<int>(i);
 
-                // Convert pin IDs to attribute IDs in our mapping
-                // Pin ID formula: nodeId * 1000 + pinOffset (0 for input, 1 for output)
                 int fromPinValue = static_cast<int>(link.fromPin.value);
                 int toPinValue = static_cast<int>(link.toPin.value);
 
                 ImNodes::Link(linkUid, fromPinValue, toPinValue);
+
+                // LEGACY RESTORATION: Draw child index on links if source is a Composite
+                // We identify composite nodes (Selector, Sequence, etc.) and number their links
+                uint32_t parentNodeId = link.fromPin.value / 2;
+                const auto& nodes = graphDoc->GetNodes();
+                const NodeData* parentNode = nullptr;
+                for (const auto& n : nodes) { if (n.id.value == parentNodeId) { parentNode = &n; break; } }
+
+                if (parentNode)
+                {
+                    NodeType pType = StringToNodeType(parentNode->type);
+                    bool isComposite = (pType == NodeType::BT_Selector || pType == NodeType::BT_Sequence || 
+                                      pType == NodeType::BT_Parallel || pType == NodeType::BT_RandomSelector);
+
+                    if (isComposite)
+                    {
+                        // Find index of this link among all links from this output pin
+                        const auto& siblingLinks = outputToLinks[link.fromPin.value];
+                        int childIndex = -1;
+                        for (int idx = 0; idx < (int)siblingLinks.size(); ++idx)
+                        {
+                            if (siblingLinks[idx] == i) { childIndex = idx; break; }
+                        }
+
+                        if (childIndex != -1)
+                        {
+                            // LEGACY RESTORATION: Draw child index label above the connection
+                            // We use a simplified mid-point calculation between input and output pins
+                            // For a more precise Bezier mid-point, we'd need internal ImNodes geometry.
+                            int childNodeId = static_cast<int>(link.toPin.value / 2);
+
+                            ImVec2 parentPos = ImNodes::GetNodeEditorSpacePos(static_cast<int>(parentNodeId));
+                            ImVec2 childPos = ImNodes::GetNodeEditorSpacePos(childNodeId);
+
+                            // Estimate pin positions (assuming standard node size and pin offsets)
+                            // In a real ImNodes session, we could use GetPinScreenPos if we were inside BeginNode/EndNode
+                            // Since we are in RenderConnections, we approximate.
+                            ImVec2 midPoint = ImVec2(
+                                (parentPos.x + childPos.x) * 0.5f + 50.0f, 
+                                (parentPos.y + childPos.y) * 0.5f
+                            );
+
+                            char idxBuf[16];
+#ifdef _MSC_VER
+                            sprintf_s(idxBuf, sizeof(idxBuf), "%d", childIndex);
+#else
+                            sprintf(idxBuf, "%d", childIndex);
+#endif
+
+                            // Draw background circle for readability
+                            // Convert Editor Space to Screen Space manually: EditorPos + Pan + CanvasPos
+                            ImVec2 pan = ImNodes::EditorContextGetPanning();
+                            ImVec2 screenMidPoint = ImVec2(
+                                midPoint.x + pan.x + m_canvasScreenPos.x,
+                                midPoint.y + pan.y + m_canvasScreenPos.y
+                            );
+
+                            ImGui::GetWindowDrawList()->AddCircleFilled(screenMidPoint, 10.0f, IM_COL32(40, 40, 40, 220));
+                            ImGui::GetWindowDrawList()->AddText(
+                                ImVec2(screenMidPoint.x - 4, screenMidPoint.y - 7), 
+                                IM_COL32(255, 255, 100, 255), idxBuf);
+                        }
+                    }
+                }
             }
         }
 
         void UpdateCanvasInteraction()
         {
-            // ImNodes handles pan/zoom/selection internally via EditorContext
-            // When called within BeginNodeEditor/EndNodeEditor scope,
-            // ImNodes automatically manages canvas interaction.
-            // No explicit implementation required for basic functionality.
-
-            // Note: For custom interactions (pan limits, zoom constraints),
-            // retrieve state via ImNodes::EditorContextGet() / ImNodes::EditorContextSet()
+            // Sync ImNodes positions back to document
+            GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetActiveGraph();
+            if (graphDoc)
+            {
+                auto& nodes = graphDoc->GetNodesRef();
+                for (auto& node : nodes)
+                {
+                    ImVec2 pos = ImNodes::GetNodeGridSpacePos(static_cast<int>(node.id.value));
+                    if (pos.x != node.position.x || pos.y != node.position.y)
+                    {
+                        node.position.x = pos.x;
+                        node.position.y = pos.y;
+                        graphDoc->SetDirty(true);
+                    }
+                }
+            }
         }
     };
 }
