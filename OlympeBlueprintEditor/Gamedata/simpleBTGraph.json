@@ -1,7 +1,20 @@
 {
-  "blueprintType": "BehaviorTree",
+  "annotations": [],
+  "blackboard": [],
   "data": {
-    "eventRoots": [],
+    "links": [
+      {
+        "fromPin": {
+          "nodeId": 3,
+          "pinId": "output"
+        },
+        "id": 1,
+        "toPin": {
+          "nodeId": 4,
+          "pinId": "input"
+        }
+      }
+    ],
     "nodes": [
       {
         "children": [
@@ -28,22 +41,24 @@
         "type": "Action"
       }
     ],
-    "rootNodeId": -1
+    "rootNodeId": 0
   },
-  "description": "",
   "editorState": {
+    "layoutDirection": "TopToBottom",
     "scrollOffset": {
       "x": 0,
       "y": 0
     },
+    "selectedNodes": [],
     "zoom": 1
   },
+  "graphKind": "BehaviorTree",
   "metadata": {
     "author": "User",
     "created": "",
     "lastModified": "2026-04-14T11:15:31",
     "tags": []
   },
-  "name": "Untitled-1",
-  "schema_version": 2
+  "schemaVersion": 2,
+  "type": "AIGraph"
 }

@@ -1,6 +1,53 @@
 {
-  "blueprintType": "BehaviorTree",
+  "annotations": [],
+  "blackboard": [],
   "data": {
+    "links": [
+      {
+        "fromPin": {
+          "nodeId": 3,
+          "pinId": "output"
+        },
+        "id": 1,
+        "toPin": {
+          "nodeId": 4,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 3,
+          "pinId": "output"
+        },
+        "id": 2,
+        "toPin": {
+          "nodeId": 6,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 9,
+          "pinId": "output"
+        },
+        "id": 3,
+        "toPin": {
+          "nodeId": 2,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 3,
+          "pinId": "output"
+        },
+        "id": 4,
+        "toPin": {
+          "nodeId": 10,
+          "pinId": "input"
+        }
+      }
+    ],
     "nodes": [
       {
         "children": [
@@ -11,8 +58,8 @@
         "name": "Root",
         "parameters": {},
         "position": {
-          "x": -25,
-          "y": -101
+          "x": 298,
+          "y": -10
         },
         "type": "Sequence"
       },
@@ -22,8 +69,8 @@
         "name": "MoveToWaypoint",
         "parameters": {},
         "position": {
-          "x": 115,
-          "y": -17
+          "x": 590,
+          "y": 69
         },
         "type": "Action"
       },
@@ -33,28 +80,52 @@
         "name": "NextWaypoint",
         "parameters": {},
         "position": {
-          "x": 115,
-          "y": -158
+          "x": 583,
+          "y": -88
         },
         "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 4,
+        "name": "BT_Root_4",
+        "parameters": {},
+        "position": {
+          "x": 91,
+          "y": -15
+        },
+        "type": "BT_Root"
+      },
+      {
+        "children": [],
+        "id": 5,
+        "name": "BT_Sequence_5",
+        "parameters": {},
+        "position": {
+          "x": 590,
+          "y": 219
+        },
+        "type": "BT_Sequence"
       }
     ],
-    "rootNodeId": -1
+    "rootNodeId": 0
   },
-  "description": "",
   "editorState": {
+    "layoutDirection": "TopToBottom",
     "scrollOffset": {
       "x": 0,
       "y": 0
     },
+    "selectedNodes": [],
     "zoom": 1
   },
+  "graphKind": "BehaviorTree",
   "metadata": {
     "author": "User",
     "created": "",
     "lastModified": "2026-03-26T13:54:26",
     "tags": []
   },
-  "name": "SimplePatrol",
-  "schema_version": 2
+  "schemaVersion": 2,
+  "type": "AIGraph"
 }

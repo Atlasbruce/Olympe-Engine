@@ -758,9 +758,12 @@ namespace Olympe
             // Active graph canvas
             TabManager::Get().RenderActiveCanvas();
 
-            // Phase 45: Framework modal rendering at proper ImGui timing
+            // Phase 45 & 89: Framework modal rendering at proper ImGui timing
             // Must be after all content rendering for correct ImGui frame ordering
             {
+                // PHASE 89: Render centralized Save As modal to ensure visibility
+                CanvasModalRenderer::Get().RenderSaveFilePickerModal();
+
                 EditorTab* modalTab = TabManager::Get().GetActiveTab();
                 if (modalTab && modalTab->renderer)
                 {

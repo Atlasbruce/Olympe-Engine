@@ -25,6 +25,12 @@ namespace Olympe {
 VisualScriptRenderer::VisualScriptRenderer()
 {
     m_panel.Initialize();
+    // Phase 55: Bind this renderer wrapper to the document adapter
+    // so that the CanvasToolbarRenderer can query our minimap / verify / simulation capabilities
+    if (m_panel.m_document)
+    {
+        m_panel.m_document->SetRenderer(this);
+    }
 }
 
 VisualScriptRenderer::~VisualScriptRenderer()
@@ -195,6 +201,27 @@ void VisualScriptRenderer::SetCanvasStateJSON(const std::string& json)
 {
     // Parse and restore from JSON - can be extended for persistence
     (void)json;
+}
+
+void VisualScriptRenderer::SetMinimapVisible(bool visible)
+{
+    m_panel.m_minimapVisible = visible;
+    if (m_panel.m_canvasEditor)
+        m_panel.m_canvasEditor->SetMinimapVisible(visible);
+}
+
+void VisualScriptRenderer::SetMinimapSize(float size)
+{
+    m_panel.m_minimapSize = size;
+    if (m_panel.m_canvasEditor)
+        m_panel.m_canvasEditor->SetMinimapSize(size);
+}
+
+void VisualScriptRenderer::SetMinimapPosition(int pos)
+{
+    m_panel.m_minimapPosition = pos;
+    if (m_panel.m_canvasEditor)
+        m_panel.m_canvasEditor->SetMinimapPosition(pos);
 }
 
 void VisualScriptRenderer::RenderFrameworkModals()

@@ -148,16 +148,12 @@ namespace Olympe
 
     IGraphRenderer* VisualScriptGraphDocument::GetRenderer()
     {
-        // VisualScript uses ImNodes rendering directly in the panel
-        // It doesn't use the separate IGraphRenderer interface like EntityPrefab
-        // This method returns nullptr as rendering is handled by VisualScriptEditorPanel
-        return nullptr;
+        return m_renderer;
     }
 
     const IGraphRenderer* VisualScriptGraphDocument::GetRenderer() const
     {
-        // Const version - also returns nullptr
-        return nullptr;
+        return m_renderer;
     }
 
     void VisualScriptGraphDocument::OnDocumentModified()

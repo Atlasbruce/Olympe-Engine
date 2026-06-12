@@ -1,465 +1,152 @@
 {
-  "blueprintType": "BehaviorTree",
+  "annotations": [],
+  "blackboard": [],
   "data": {
-    "rootGraph": {
-      "nodes": [
-        {
-          "children": [
-            86,
-            89,
-            90
-          ],
-          "id": 2,
-          "name": "BT_Sequence",
-          "parameters": {},
-          "position": {
-            "x": -166,
-            "y": -229
-          },
-          "type": "Sequence"
+    "links": [
+      {
+        "fromPin": {
+          "nodeId": 3,
+          "pinId": "output"
         },
-        {
-          "children": [],
-          "id": 4,
-          "name": "BT_AttackTarget",
-          "parameters": {},
-          "position": {
-            "x": 362,
-            "y": -137
-          },
-          "type": "Action"
-        },
-        {
-          "children": [],
-          "id": 5,
-          "name": "BT_MoveToTarget",
-          "parameters": {},
-          "position": {
-            "x": 364,
-            "y": -235
-          },
-          "type": "Action"
-        },
-        {
-          "children": [],
-          "id": 8,
-          "name": "BT_MoveToPosition",
-          "parameters": {},
-          "position": {
-            "x": 581.451,
-            "y": -322.299
-          },
-          "type": "Action"
-        },
-        {
-          "children": [
-            100
-          ],
-          "id": 21,
-          "name": "BT_Root",
-          "parameters": {},
-          "position": {
-            "x": -770.456,
-            "y": -234.088
-          },
-          "type": "Root"
-        },
-        {
-          "children": [],
-          "id": 77,
-          "name": "BT_SetBlackboardValue",
-          "parameters": {},
-          "position": {
-            "x": -207.984,
-            "y": -610.454
-          },
-          "type": "Action"
-        },
-        {
-          "children": [
-            113
-          ],
-          "id": 78,
-          "name": "BT_Wait",
-          "parameters": {},
-          "position": {
-            "x": 609.403,
-            "y": -621.292
-          },
-          "type": "Action"
-        },
-        {
-          "children": [
-            103
-          ],
-          "id": 79,
-          "name": "BT_WaitRandomTime",
-          "parameters": {},
-          "position": {
-            "x": 72.0156,
-            "y": -532.454
-          },
-          "type": "Action"
-        },
-        {
-          "children": [
-            92,
-            96
-          ],
-          "id": 84,
-          "name": "BT_RandomSelector",
-          "parameters": {},
-          "position": {
-            "x": -69,
-            "y": 112
-          },
-          "type": "RandomSelector"
-        },
-        {
-          "children": [
-            87
-          ],
-          "id": 86,
-          "name": "BT_CanSeeTarget",
-          "parameters": {},
-          "position": {
-            "x": 115.679,
-            "y": -338.495
-          },
-          "type": "Condition"
-        },
-        {
-          "children": [],
-          "decoratorChild": 8,
-          "id": 87,
-          "name": "BT_Inverter",
-          "parameters": {},
-          "position": {
-            "x": 346,
-            "y": -323
-          },
-          "type": "Decorator"
-        },
-        {
-          "children": [
-            5
-          ],
-          "id": 89,
-          "name": "BT_CanSeeTarget",
-          "parameters": {},
-          "position": {
-            "x": 117,
-            "y": -228
-          },
-          "type": "Condition"
-        },
-        {
-          "children": [
-            4
-          ],
-          "id": 90,
-          "name": "BT_IsTargetInRange",
-          "parameters": {},
-          "position": {
-            "x": 104,
-            "y": -140
-          },
-          "type": "Condition"
-        },
-        {
-          "children": [
-            101
-          ],
-          "id": 91,
-          "name": "BT_Monitor",
-          "parameters": {},
-          "position": {
-            "x": 125,
-            "y": 291
-          },
-          "type": "Condition"
-        },
-        {
-          "children": [],
-          "id": 92,
-          "name": "BT_SendMessage",
-          "parameters": {},
-          "position": {
-            "x": 223,
-            "y": 48
-          },
-          "type": "Action"
-        },
-        {
-          "children": [],
-          "id": 96,
-          "name": "BT_EmitSound",
-          "parameters": {},
-          "position": {
-            "x": 231,
-            "y": 150
-          },
-          "type": "Action"
-        },
-        {
-          "children": [
-            98
-          ],
-          "id": 97,
-          "name": "BT_WaitRandomTime",
-          "parameters": {},
-          "position": {
-            "x": -91.544,
-            "y": -52.6273
-          },
-          "type": "Action"
-        },
-        {
-          "children": [],
-          "id": 98,
-          "name": "BT_EmitSound",
-          "parameters": {},
-          "position": {
-            "x": 160,
-            "y": -50
-          },
-          "type": "Action"
-        },
-        {
-          "children": [
-            2,
-            97,
-            84,
-            104,
-            115,
-            116,
-            117
-          ],
-          "id": 100,
-          "name": "BT_Sequence",
-          "parameters": {},
-          "position": {
-            "x": -520,
-            "y": -228
-          },
-          "type": "Sequence"
-        },
-        {
-          "children": [],
-          "id": 101,
-          "name": "BT_SendMessage",
-          "parameters": {},
-          "position": {
-            "x": 385,
-            "y": 272
-          },
-          "type": "SendMessage"
-        },
-        {
-          "children": [
-            79,
-            114
-          ],
-          "id": 102,
-          "name": "BT_Sequence",
-          "parameters": {},
-          "position": {
-            "x": -215.984,
-            "y": -511.454
-          },
-          "type": "Sequence"
-        },
-        {
-          "children": [
-            78,
-            112
-          ],
-          "id": 103,
-          "name": "BT_Sequence",
-          "parameters": {},
-          "position": {
-            "x": 328.016,
-            "y": -537.454
-          },
-          "type": "Sequence"
-        },
-        {
-          "children": [
-            91,
-            106,
-            107
-          ],
-          "id": 104,
-          "name": "BT_Sequence",
-          "parameters": {},
-          "position": {
-            "x": -124,
-            "y": 295
-          },
-          "type": "Sequence"
-        },
-        {
-          "children": [],
-          "id": 106,
-          "name": "BT_SendMessage Copy",
-          "parameters": {},
-          "position": {
-            "x": 131,
-            "y": 396
-          },
-          "type": "SendMessage"
-        },
-        {
-          "children": [],
-          "id": 107,
-          "name": "BT_SendMessage Copy Copy",
-          "parameters": {},
-          "position": {
-            "x": 136,
-            "y": 474
-          },
-          "type": "SendMessage"
-        },
-        {
-          "children": [
-            109
-          ],
-          "id": 108,
-          "name": "BT_OnEvent",
-          "parameters": {},
-          "position": {
-            "x": -778.871,
-            "y": -544.799
-          },
-          "type": "OnEvent"
-        },
-        {
-          "children": [
-            110,
-            111,
-            77,
-            102
-          ],
-          "id": 109,
-          "name": "BT_Sequence",
-          "parameters": {},
-          "position": {
-            "x": -520.536,
-            "y": -542.887
-          },
-          "type": "Sequence"
-        },
-        {
-          "children": [],
-          "id": 110,
-          "name": "BT_SendMessage",
-          "parameters": {},
-          "position": {
-            "x": -205.948,
-            "y": -786.936
-          },
-          "type": "SendMessage"
-        },
-        {
-          "children": [],
-          "id": 111,
-          "name": "BT_EmitSound",
-          "parameters": {},
-          "position": {
-            "x": -210.086,
-            "y": -692.438
-          },
-          "type": "Action"
-        },
-        {
-          "children": [
-            113
-          ],
-          "id": 112,
-          "name": "BT_EmitSound",
-          "parameters": {},
-          "position": {
-            "x": 608.311,
-            "y": -495.313
-          },
-          "type": "Action"
-        },
-        {
-          "children": [],
-          "id": 113,
-          "name": "BT_PlayAnimation",
-          "parameters": {},
-          "position": {
-            "x": 855.319,
-            "y": -559.241
-          },
-          "type": "Action"
-        },
-        {
-          "children": [],
-          "id": 114,
-          "name": "BT_EmitSound",
-          "parameters": {},
-          "position": {
-            "x": 79.9385,
-            "y": -429.725
-          },
-          "type": "Action"
-        },
-        {
-          "children": [],
-          "id": 115,
-          "name": "BT_SubGraph",
-          "parameters": {
-            "subgraphPath": "Gamedata//simpl_subgraph.bt.json"
-          },
-          "position": {
-            "x": -151.51,
-            "y": 464.413
-          },
-          "type": "SubGraph"
-        },
-        {
-          "children": [],
-          "id": 116,
-          "name": "BT_SendMessage Copy Copy Copy",
-          "parameters": {},
-          "position": {
-            "x": -202,
-            "y": 880
-          },
-          "type": "SendMessage"
-        },
-        {
-          "children": [],
-          "id": 117,
-          "name": "BT_SubGraph",
-          "parameters": {},
-          "position": {
-            "x": -264.487,
-            "y": -340.807
-          },
-          "type": "SubGraph"
+        "id": 1,
+        "toPin": {
+          "nodeId": 4,
+          "pinId": "input"
         }
-      ],
-      "rootNodeId": -1
-    },
-    "subgraphs": {}
+      },
+      {
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
+        },
+        "id": 2,
+        "toPin": {
+          "nodeId": 6,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
+        },
+        "id": 3,
+        "toPin": {
+          "nodeId": 8,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
+        },
+        "id": 4,
+        "toPin": {
+          "nodeId": 10,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
+        },
+        "id": 5,
+        "toPin": {
+          "nodeId": 12,
+          "pinId": "input"
+        }
+      }
+    ],
+    "nodes": [
+      {
+        "children": [],
+        "id": 1,
+        "name": "BT_Root_1",
+        "parameters": {},
+        "position": {
+          "x": 229,
+          "y": 245
+        },
+        "type": "BT_Root"
+      },
+      {
+        "children": [],
+        "id": 2,
+        "name": "BT_Parallel_2",
+        "parameters": {},
+        "position": {
+          "x": 451,
+          "y": 545
+        },
+        "type": "BT_Parallel"
+      },
+      {
+        "children": [],
+        "id": 3,
+        "name": "BT_Cooldown_3",
+        "parameters": {},
+        "position": {
+          "x": 835,
+          "y": 127
+        },
+        "type": "BT_Cooldown"
+      },
+      {
+        "children": [],
+        "id": 4,
+        "name": "BT_Inverter_4",
+        "parameters": {},
+        "position": {
+          "x": 844,
+          "y": 252
+        },
+        "type": "BT_Inverter"
+      },
+      {
+        "children": [],
+        "id": 5,
+        "name": "BT_Monitor_5",
+        "parameters": {},
+        "position": {
+          "x": 875,
+          "y": 377
+        },
+        "type": "BT_Monitor"
+      },
+      {
+        "children": [],
+        "id": 6,
+        "name": "BT_UntilFailure_6",
+        "parameters": {},
+        "position": {
+          "x": 862,
+          "y": 496
+        },
+        "type": "BT_UntilFailure"
+      }
+    ],
+    "rootNodeId": 0
   },
-  "description": "",
   "editorState": {
+    "layoutDirection": "TopToBottom",
     "scrollOffset": {
       "x": 0,
       "y": 0
     },
+    "selectedNodes": [],
     "zoom": 1
   },
+  "graphKind": "BehaviorTree",
   "metadata": {
-    "author": "User",
+    "author": "Unknown",
     "created": "",
-    "lastModified": "",
-    "tags": []
+    "tags": [
+      "AI",
+      "BehaviorTree"
+    ]
   },
-  "name": "Untitled-1",
-  "schema_version": 5
+  "schemaVersion": 2,
+  "type": "AIGraph"
 }

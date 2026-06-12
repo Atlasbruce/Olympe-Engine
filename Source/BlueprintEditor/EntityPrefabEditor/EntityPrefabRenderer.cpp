@@ -84,11 +84,6 @@ void EntityPrefabRenderer::RenderLayoutWithTabs()
     {
         m_framework->GetToolbar()->Render();
     }
-    else
-    {
-        // Fallback: Render legacy minimap toolbar
-        RenderToolbar();
-    }
 
     // Layout: Canvas (left) | Resize Handle | Tabbed Right Panel (right)
     // Use framework panel dimensions from PanelManager
@@ -444,45 +439,6 @@ void EntityPrefabRenderer::SetCanvasStateJSON(const std::string& json)
     (void)json;
 }
 
-void EntityPrefabRenderer::RenderToolbar()
-{
-    // Phase 37 — Minimap toolbar controls
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.15f, 0.15f, 0.15f, 1.0f));
-    ImGui::BeginChild("##ToolbarEntityPrefab", ImVec2(0, 40.0f), true);
-
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("Minimap:");
-    ImGui::SameLine();
-
-    // Visibility checkbox
-    if (ImGui::Checkbox("##minimap_visible_ep", &m_minimapVisible))
-    {
-        if (m_canvasEditor)
-            m_canvasEditor->SetMinimapVisible(m_minimapVisible);
-    }
-    ImGui::SameLine();
-
-    // Size slider
-    if (ImGui::DragFloat("Size##minimap_ep", &m_minimapSize, 0.01f, 0.05f, 0.5f))
-    {
-        m_minimapSize = std::max(0.05f, std::min(0.5f, m_minimapSize));
-        if (m_canvasEditor)
-            m_canvasEditor->SetMinimapSize(m_minimapSize);
-    }
-    ImGui::SameLine();
-
-    // Position combo
-    const char* positionLabels[] = { "Top-Left", "Top-Right", "Bottom-Left", "Bottom-Right" };
-    if (ImGui::Combo("Position##minimap_ep", &m_minimapPosition, positionLabels, 4, -1))
-    {
-        if (m_canvasEditor)
-            m_canvasEditor->SetMinimapPosition(m_minimapPosition);
-    }
-
-    ImGui::EndChild();
-    ImGui::PopStyleColor();
-}
-
 // Phase 43: Framework modal rendering
 void EntityPrefabRenderer::RenderFrameworkModals()
 {
@@ -493,6 +449,28 @@ void EntityPrefabRenderer::RenderFrameworkModals()
     {
         m_framework->RenderModals();
     }
+}
+
+// Phase 37 — Minimap toolbar controls implementation
+void EntityPrefabRenderer::SetMinimapVisible(bool visible)
+{
+    m_minimapVisible = visible;
+    if (m_canvasEditor)
+        m_canvasEditor->SetMinimapVisible(visible);
+}
+
+void EntityPrefabRenderer::SetMinimapSize(float size)
+{
+    m_minimapSize = size;
+    if (m_canvasEditor)
+        m_canvasEditor->SetMinimapSize(size);
+}
+
+void EntityPrefabRenderer::SetMinimapPosition(int pos)
+{
+    m_minimapPosition = pos;
+    if (m_canvasEditor)
+        m_canvasEditor->SetMinimapPosition(pos);
 }
 
 } // namespace Olympe

@@ -108,6 +108,47 @@ public:
     }
 
     // ------------------------------------------------------------------
+    // Phase 55 - Unified Verification and Execution
+    // ------------------------------------------------------------------
+
+    /**
+     * @brief Run graph verification to check for logic errors
+     * Default: no-op
+     */
+    virtual void VerifyGraph() {}
+
+    /**
+     * @brief Execute the graph logic (Simulation/Runtime)
+     * Default: no-op
+     */
+    virtual void RunGraph() {}
+
+    /** @brief Returns true if this graph type supports verification. */
+    virtual bool SupportsVerification() const { return false; }
+
+    /** @brief Returns true if this graph type supports execution. */
+    virtual bool SupportsExecution() const { return false; }
+
+    // ------------------------------------------------------------------
+    // Minimap Virtual Access (Unified Controls)
+    // ------------------------------------------------------------------
+    
+    /** @brief Returns true if this graph renderer supports showing a minimap overlay. */
+    virtual bool SupportsMinimap() const { return false; }
+
+    /** @brief Get/Set current minimap visibility. */
+    virtual bool IsMinimapVisible() const { return false; }
+    virtual void SetMinimapVisible(bool visible) { (void)visible; }
+
+    /** @brief Get/Set current minimap size ratio of the canvas [0.05..0.5]. */
+    virtual float GetMinimapSize() const { return 0.15f; }
+    virtual void SetMinimapSize(float size) { (void)size; }
+
+    /** @brief Get/Set current minimap positions: 0=TopLeft, 1=TopRight, 2=BottomLeft, 3=BottomRight. */
+    virtual int GetMinimapPosition() const { return 1; /* TopRight */ }
+    virtual void SetMinimapPosition(int pos) { (void)pos; }
+
+    // ------------------------------------------------------------------
     // Phase 43 - Framework Modal Rendering
     // ------------------------------------------------------------------
 

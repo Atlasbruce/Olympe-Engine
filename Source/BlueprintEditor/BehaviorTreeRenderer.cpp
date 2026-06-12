@@ -56,6 +56,7 @@ BehaviorTreeRenderer::BehaviorTreeRenderer(NodeGraphPanel& panel)
 
     // Phase 41 — Framework integration
     m_document = std::make_unique<BehaviorTreeGraphDocument>(this);
+    m_document->SetRenderer(this); // Phase 55: Bind this renderer wrapper to allow custom toolbar controls
     m_framework = std::make_unique<CanvasFramework>(m_document.get());
 
     // Initialize minimap renderer (Phase 70)
@@ -157,51 +158,25 @@ void BehaviorTreeRenderer::Render()
     }
 }
 
-void BehaviorTreeRenderer::RenderToolbarExtensions()
+void BehaviorTreeRenderer::SetMinimapVisible(bool visible)
 {
-    ImGui::SameLine();
-    ImGui::Separator();
-    ImGui::SameLine();
-
-    // BehaviorTree specific actions
-    if (ImGui::Button("Verify Graph"))
-    {
-        OnVerifyGraphClicked();
-    }
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::SetTooltip("Verify Behavior Tree logic and connectivity");
-    }
-
-    ImGui::SameLine();
-    ImGui::Separator();
-    ImGui::SameLine();
-
-    // Minimap controls (Phase 37 integration)
-    ImGui::Checkbox("Minimap", &m_minimapVisible);
-    
-    if (m_minimapVisible)
-    {
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(80.0f);
-        ImGui::SliderFloat("Size", &m_minimapSize, 0.05f, 0.5f, "%.2f");
-        
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(100.0f);
-        const char* positions[] = { "Top-Left", "Top-Right", "Bottom-Left", "Bottom-Right" };
-        int currentPos = static_cast<int>(m_minimapPosition);
-        if (ImGui::Combo("Position", &currentPos, positions, IM_ARRAYSIZE(positions)))
-        {
-            m_minimapPosition = static_cast<MinimapPosition>(currentPos);
-        }
-    }
+    m_minimapVisible = visible;
+    if (m_canvasEditor)
+        m_canvasEditor->SetMinimapVisible(visible);
 }
 
-void BehaviorTreeRenderer::OnVerifyGraphClicked()
+void BehaviorTreeRenderer::SetMinimapSize(float size)
 {
-    SYSTEM_LOG << "[BehaviorTreeRenderer] Verifying graph ID: " << m_graphId << "...\n";
-    // TODO: Implement actual BT verification logic
-    SYSTEM_LOG << "[BehaviorTreeRenderer] Verification complete: No errors found (stub).\n";
+    m_minimapSize = size;
+    if (m_canvasEditor)
+        m_canvasEditor->SetMinimapSize(size);
+}
+
+void BehaviorTreeRenderer::SetMinimapPosition(int pos)
+{
+    m_minimapPosition = static_cast<MinimapPosition>(pos);
+    if (m_canvasEditor)
+        m_canvasEditor->SetMinimapPosition(pos);
 }
 
 void BehaviorTreeRenderer::RenderLayoutWithTabs()
@@ -218,7 +193,6 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
     if (m_framework && m_framework->GetToolbar())
     {
         m_framework->GetToolbar()->Render();
-        RenderToolbarExtensions();
     }
 
     ImGui::Separator();
@@ -781,6 +755,12 @@ void BehaviorTreeRenderer::HandleKeyboardShortcuts()
             }
         }
     }
+}
+
+void BehaviorTreeRenderer::OnVerifyGraphClicked()
+{
+    SYSTEM_LOG << "[BehaviorTreeRenderer::OnVerifyGraphClicked] Running verification...\n";
+    // Si la vérification est supportée à l'avenir pour BT, l'intégrer ici.
 }
 
 void BehaviorTreeRenderer::OnRunGraphClicked()

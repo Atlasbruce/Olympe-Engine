@@ -32,6 +32,15 @@ public:
     std::string GetGraphType() const override;
     std::string GetCurrentPath() const override;
 
+    // Minimap overrides for unified toolbar access
+    bool SupportsMinimap() const override { return true; }
+    bool IsMinimapVisible() const override { return m_minimapVisible; }
+    void SetMinimapVisible(bool visible) override;
+    float GetMinimapSize() const override { return m_minimapSize; }
+    void SetMinimapSize(float size) override;
+    int GetMinimapPosition() const override { return m_minimapPosition; }
+    void SetMinimapPosition(int pos) override;
+
     // Phase 35.0: Canvas state management
     void SaveCanvasState() override;
     void RestoreCanvasState() override;
@@ -65,8 +74,6 @@ private:
     float m_minimapSize = 0.15f;
     int m_minimapPosition = 1;  // 0=TopLeft, 1=TopRight, 2=BottomLeft, 3=BottomRight
 
-    // Rendering methods
-    void RenderToolbar();
     void RenderLayoutWithTabs();
     void RenderRightPanelTabs();
 };

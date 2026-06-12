@@ -51,6 +51,73 @@ CanvasToolbarRenderer::~CanvasToolbarRenderer()
 // Public Interface
 // ============================================================================
 
+bool CanvasToolbarRenderer::IsModalOpen() const
+{
+    return m_showSaveAsModal || m_browseModal != nullptr;
+}
+
+std::string CanvasToolbarRenderer::GetStatusText() const
+{
+    if (!m_document)
+        return "No Document";
+
+    std::string path = m_document->GetFilePath();
+    if (path.empty())
+        return "Untitled (Modified)";
+
+    std::string status = path;
+    if (m_document->IsDirty())
+        status += " *";
+
+    return status;
+}
+
+void CanvasToolbarRenderer::SetOnSaveComplete(SaveCallback callback)
+{
+    m_onSaveComplete = callback;
+}
+
+void CanvasToolbarRenderer::SetOnBrowseComplete(BrowseCallback callback)
+{
+    m_onBrowseComplete = callback;
+}
+
+std::string CanvasToolbarRenderer::GetSaveFileFilter() const
+{
+    if (!m_document)
+        return "*.json";
+
+    switch (m_document->GetType())
+    {
+    case DocumentType::VISUAL_SCRIPT:
+        return "*.ats.json";
+    case DocumentType::BEHAVIOR_TREE:
+        return "*.bt.json";
+    case DocumentType::ENTITY_PREFAB:
+        return "*.pref.json";
+    default:
+        return "*.json";
+    }
+}
+
+std::string CanvasToolbarRenderer::GetDefaultSaveDirectory() const
+{
+    if (!m_document)
+        return "./Gamedata/";
+
+    switch (m_document->GetType())
+    {
+    case DocumentType::VISUAL_SCRIPT:
+        return "./Gamedata/VisualScript/";
+    case DocumentType::BEHAVIOR_TREE:
+        return "./Gamedata/BehaviorTree/";
+    case DocumentType::ENTITY_PREFAB:
+        return "./Gamedata/EntityPrefab/";
+    default:
+        return "./Gamedata/";
+    }
+}
+
 void CanvasToolbarRenderer::Render()
 {
     if (!m_document)
@@ -73,224 +140,51 @@ void CanvasToolbarRenderer::Render()
         ImGui::Separator();
         ImGui::SameLine(0.0f, 20.0f);
         RenderPathDisplay();
+
+        // Phase 71: Render unified Minimap controls if supported
+        IGraphRenderer* renderer = m_document->GetRenderer();
+        if (renderer && renderer->SupportsMinimap())
+        {
+            ImGui::SameLine(0.0f, 20.0f);
+            ImGui::Separator();
+            ImGui::SameLine(0.0f, 20.0f);
+
+            bool minimapVisible = renderer->IsMinimapVisible();
+            if (ImGui::Checkbox("Minimap##unified_tb", &minimapVisible))
+            {
+                renderer->SetMinimapVisible(minimapVisible);
+            }
+
+            if (minimapVisible)
+            {
+                ImGui::SameLine();
+                float minimapSize = renderer->GetMinimapSize();
+                ImGui::SetNextItemWidth(80.0f);
+                if (ImGui::SliderFloat("Size##unified_tb", &minimapSize, 0.05f, 0.5f, "%.2f"))
+                {
+                    renderer->SetMinimapSize(minimapSize);
+                }
+
+                ImGui::SameLine();
+                int currentPos = renderer->GetMinimapPosition();
+                ImGui::SetNextItemWidth(100.0f);
+                const char* positions[] = { "Top-Left", "Top-Right", "Bottom-Left", "Bottom-Right" };
+                if (ImGui::Combo("Position##unified_tb", &currentPos, positions, 4))
+                {
+                    renderer->SetMinimapPosition(currentPos);
+                }
+            }
+        }
     }
     ImGui::EndGroup();
 }
 
 void CanvasToolbarRenderer::RenderModals()
 {
-    if (!m_document)
-        return;
-
-    // Generate unique modal ID based on document pointer to avoid conflicts
-    // when multiple renderers are active
-    std::string modalIdStr = "SaveAsPopup_" + std::to_string(reinterpret_cast<uintptr_t>(m_document));
-    const char* modalId = modalIdStr.c_str();
-
-    // ========== PHASE 50: Simple SaveAs Modal (replaces complex SaveFilePickerModal) ==========
-    // Opens a simple text input popup for filepath entry (like legacy NodeGraphPanel)
-    if (m_showSaveAsModal)
-    {
-        // Clear buffer when popup first opens (like legacy code)
-        if (!m_saveAsPopupOpen)
-        {
-            m_saveAsFileBuffer[0] = '\0';
-            m_saveAsPopupOpen = true;
-        }
-
-        ImGui::OpenPopup(modalId);
-    }
-
-    // Render the simple SaveAs popup modal
-    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-    if (ImGui::BeginPopupModal(modalId, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        ImGui::Text("Save document as:");
-        ImGui::Separator();
-
-        ImGui::SetNextItemWidth(300.0f);
-        ImGui::InputText("##filepath_input", m_saveAsFileBuffer, FILEPATH_BUFFER_SIZE);
-
-        ImGui::Separator();
-
-        // Save button
-        if (ImGui::Button("Save", ImVec2(100, 0)))
-        {
-            std::string filepath(m_saveAsFileBuffer);
-            if (!filepath.empty())
-            {
-                // Ensure correct extension based on document type
-                std::string extension = GetSaveFileFilter();
-                if (extension.find("*") == 0) extension = extension.substr(1); // Remove *
-                if (filepath.size() < extension.size() || filepath.substr(filepath.size() - extension.size()) != extension)
-                    filepath += extension;
-
-                // Proceed with save
-                OnSaveAsComplete(filepath);
-                m_showSaveAsModal = false;
-                m_saveAsPopupOpen = false;
-                ImGui::CloseCurrentPopup();
-            }
-        }
-
-        ImGui::SameLine();
-
-        // Cancel button
-        if (ImGui::Button("Cancel", ImVec2(100, 0)))
-        {
-            m_showSaveAsModal = false;
-            m_saveAsPopupOpen = false;
-            ImGui::CloseCurrentPopup();
-        }
-
-        ImGui::EndPopup();
-    }
-    else
-    {
-        // Popup closed - reset state
-        if (m_saveAsPopupOpen)
-        {
-            m_saveAsPopupOpen = false;
-            m_showSaveAsModal = false;
-        }
-    }
-
-    // ========== Browse Modal (unchanged) ==========
-    if (m_showBrowseModal)
-    {
-        if (!m_browseModal)
-        {
-            // Determine file type based on document type
-            FilePickerType browseType = FilePickerType::SubGraph;
-            if (m_document)
-            {
-                switch (m_document->GetType())
-                {
-                    case DocumentType::BEHAVIOR_TREE:
-                        browseType = FilePickerType::BehaviorTree;
-                        break;
-                    case DocumentType::VISUAL_SCRIPT:
-                        browseType = FilePickerType::SubGraph;
-                        break;
-                    case DocumentType::ENTITY_PREFAB:
-                        browseType = FilePickerType::SubGraph;
-                        break;
-                    default:
-                        browseType = FilePickerType::SubGraph;
-                        break;
-                }
-            }
-
-            std::string initDir = GetInitialDirectory();
-            m_browseModal = new FilePickerModal(browseType);
-            m_browseModal->Open(initDir);
-        }
-
-        m_browseModal->Render();
-
-        if (m_browseModal->IsConfirmed())
-        {
-            std::string selectedPath = m_browseModal->GetSelectedFile();
-            OnBrowseComplete(selectedPath);
-            m_showBrowseModal = false;
-            delete m_browseModal;
-            m_browseModal = nullptr;
-        }
-        else if (!m_browseModal->IsOpen())
-        {
-            m_showBrowseModal = false;
-            delete m_browseModal;
-            m_browseModal = nullptr;
-        }
-    }
+    // Phase 83: Unified Save/SaveAs modals are now handled centrally 
+    // by TabManager/CanvasModalRenderer to prevent duplicate ID conflicts.
+    // The Toolbar only triggers the actions via TabManager.
 }
-
-bool CanvasToolbarRenderer::IsModalOpen() const
-{
-    return m_showSaveAsModal || m_showBrowseModal;
-}
-
-std::string CanvasToolbarRenderer::GetSelectedFilePath() const
-{
-    return m_selectedFilePath;
-}
-
-std::string CanvasToolbarRenderer::GetStatusText() const
-{
-    if (!m_document)
-        return "No document";
-
-    std::string path = m_document->GetFilePath();
-    if (path.empty())
-        return "Untitled (unsaved)";
-
-    if (m_document->IsDirty())
-        return path + " *";
-    else
-        return path;
-}
-
-void CanvasToolbarRenderer::Invalidate()
-{
-    m_isDirty = m_document ? m_document->IsDirty() : false;
-}
-
-void CanvasToolbarRenderer::SetOnSaveComplete(SaveCallback callback)
-{
-    m_onSaveComplete = callback;
-}
-
-void CanvasToolbarRenderer::SetOnBrowseComplete(BrowseCallback callback)
-{
-    m_onBrowseComplete = callback;
-}
-
-std::string CanvasToolbarRenderer::GetSaveFileFilter() const
-{
-    if (!m_document)
-        return "*.json";
-
-    switch (m_document->GetType())
-    {
-        case DocumentType::VISUAL_SCRIPT:
-            return "*.ats.json";
-        case DocumentType::BEHAVIOR_TREE:
-            return "*.bt.json";
-        case DocumentType::ENTITY_PREFAB:
-            return "*.prefab.json";
-        default:
-            return "*.json";
-    }
-}
-
-std::string CanvasToolbarRenderer::GetDefaultSaveDirectory() const
-{
-    if (!m_document)
-        return "./Gamedata/";
-
-    switch (m_document->GetType())
-    {
-        case DocumentType::VISUAL_SCRIPT:
-            return "./Gamedata/VisualScript/";
-        case DocumentType::BEHAVIOR_TREE:
-            return "./Gamedata/BehaviorTree/";
-        case DocumentType::ENTITY_PREFAB:
-            return "./Gamedata/EntityPrefab/";
-        default:
-            return "./Gamedata/";
-    }
-}
-
-std::string CanvasToolbarRenderer::GetBrowseFileFilter() const
-{
-    return GetSaveFileFilter();
-}
-
-// ============================================================================
-// Private Methods - UI Rendering
-// ============================================================================
 
 void CanvasToolbarRenderer::RenderButtons()
 {
@@ -333,6 +227,31 @@ void CanvasToolbarRenderer::RenderButtons()
         OnBrowseClicked();
     }
     ImGui::SetItemTooltip("Open existing document");
+
+    // Phase 55: Unified Verify/Run buttons
+    IGraphRenderer* renderer = m_document->GetRenderer();
+    if (renderer)
+    {
+        if (renderer->SupportsVerification())
+        {
+            ImGui::SameLine(0.0f, 20.0f);
+            if (ImGui::Button("Verify", ImVec2(80.0f, 0.0f)))
+            {
+                renderer->VerifyGraph();
+            }
+            ImGui::SetItemTooltip("Verify graph logic and connectivity");
+        }
+
+        if (renderer->SupportsExecution())
+        {
+            ImGui::SameLine();
+            if (ImGui::Button("Run", ImVec2(80.0f, 0.0f)))
+            {
+                renderer->RunGraph();
+            }
+            ImGui::SetItemTooltip("Execute/Simulate graph logic");
+        }
+    }
 }
 
 void CanvasToolbarRenderer::RenderPathDisplay()
@@ -366,98 +285,14 @@ void CanvasToolbarRenderer::RenderPathDisplay()
 
 void CanvasToolbarRenderer::OnSaveClicked()
 {
-    // Phase 44.4: Direct call to legacy Behavior Tree save without framework
-    // NodeGraphPanel's SaveActiveGraph handles all the I/O logic
-    // This ensures file persistence works while framework is incomplete
-
-    SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveClicked] ENTER - User clicked Save button\n";
-
-    if (!m_document)
-    {
-        SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveClicked] ERROR: No document loaded!\n";
-        return;
-    }
-
-    // Phase 50.1.3: Generalized save for all graph types (BehaviorTree, VisualScript, EntityPrefab)
-    SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveClicked] Document type: " << (int)m_document->GetType() << "\n";
-
-    // Get the filepath from the document
-    std::string currentPath = m_document->GetFilePath();
-    SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveClicked] Current filepath: '" << currentPath << "'\n";
-
-    if (currentPath.empty())
-    {
-        // No path yet - need SaveAs
-        SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveClicked] No path yet - redirecting to SaveAs\n";
-        OnSaveAsClicked();
-        return;
-    }
-
-    // Call the proven save logic (works for all types)
-    SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveClicked] About to call ExecuteSave()\n";
-    try
-    {
-        if (ExecuteSave(currentPath))
-        {
-            SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveClicked] ✓ ExecuteSave returned true\n";
-            SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveClicked] Calling TabManager::OnGraphDocumentSaved()\n";
-            TabManager::Get().OnGraphDocumentSaved(m_document, currentPath);
-            SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveClicked] Calling m_onSaveComplete callback\n";
-            if (m_onSaveComplete)
-            {
-                m_onSaveComplete(currentPath);
-                SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveClicked] Callback executed\n";
-            }
-            SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveClicked] EXIT - Save complete\n";
-        }
-        else
-        {
-            SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveClicked] ✗ ExecuteSave returned false!\n";
-        }
-    }
-    catch (const std::exception& e)
-    {
-        SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveClicked] EXCEPTION: " << e.what() << "\n";
-    }
+    SYSTEM_LOG << "[CanvasToolbarRenderer] OnSaveClicked - Delegating to TabManager for unified path\n";
+    TabManager::Get().SaveActiveTab();
 }
 
 void CanvasToolbarRenderer::OnSaveAsClicked()
 {
-    // Phase 50.1.3: Generalized SaveAs for all graph types (BehaviorTree, VisualScript, EntityPrefab)
-    // Shows modal and saves when confirmed
-
-    SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsClicked] ENTER - User clicked SaveAs button\n";
-
-    if (!m_document)
-    {
-        SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsClicked] ERROR: No document loaded!\n";
-        return;
-    }
-
-    // Pre-fill the save buffer with default directory + extension
-    std::string defaultDir = GetDefaultSaveDirectory();
-    std::string extension = GetSaveFileFilter();
-    
-    // Remove the * from filter to get extension (e.g., "*.bt.json" -> ".bt.json")
-    if (extension.find("*") == 0) extension = extension.substr(1);
-    
-    // Phase 63: Use suggested filename and ensure it's combined with default directory
-    std::string suggestedName = GetSuggestedFilename();
-    if (suggestedName.empty() || suggestedName == "Untitled") {
-        suggestedName = "untitled";
-    }
-
-    // Combine default folder + filename + extension
-    // Ensure defaultDir ends with a slash (it usually does from GetDefaultSaveDirectory)
-    std::string prefill = defaultDir + suggestedName + extension;
-    
-    strncpy_s(m_saveAsFileBuffer, sizeof(m_saveAsFileBuffer), prefill.c_str(), _TRUNCATE);
-
-    // Open SaveAs dialog via framework (modal will be rendered separately)
-    SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsClicked] Setting m_showSaveAsModal = true, prefilled with: " << prefill << "\n";
-    m_showSaveAsModal = true;
-    m_saveAsPopupOpen = true; // Ensure buffer isn't cleared by RenderModals on first frame
-    SYSTEM_LOG << "[CanvasToolbarRenderer::OnSaveAsClicked] EXIT - Modal flag set\n";
+    SYSTEM_LOG << "[CanvasToolbarRenderer] OnSaveAsClicked - Delegating to TabManager for unified path\n";
+    TabManager::Get().SaveActiveTabAs("");
 }
 
 void CanvasToolbarRenderer::OnBrowseClicked()

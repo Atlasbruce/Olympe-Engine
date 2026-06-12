@@ -24,8 +24,8 @@ namespace Olympe {
 namespace AI {
 
 // Type aliases for backward compatibility with modern NodeGraphTypes
-using GraphDocument = Olympe::NodeGraphTypes::GraphDocument;
-using NodeId = Olympe::NodeGraphTypes::NodeId;
+using GraphDocument = NodeGraphTypes::GraphDocument;
+using NodeId = NodeGraphTypes::NodeId;
 
 /**
  * @enum BTValidationSeverity

@@ -16,6 +16,7 @@
 #include "BTNodeGraphManager.h"
 #include "NodeStyleRegistry.h"
 #include "../NodeGraphCore/NodeGraphManager.h"
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <map>
@@ -123,6 +124,14 @@ namespace Olympe
             // End node editor
             ImNodes::EndNodeEditor();
 
+            // Phase 86: Cache hover state AFTER closing scope to satisfy assertions
+            // IsNodeHovered, IsLinkHovered, etc. assert (GImNodes->CurrentScope == ImNodesScope_None)
+            m_isEditorHoveredCache = ImNodes::IsEditorHovered();
+            m_hoveredNodeCache = -1;
+            m_hoveredLinkCache = -1;
+            ImNodes::IsNodeHovered(&m_hoveredNodeCache);
+            ImNodes::IsLinkHovered(&m_hoveredLinkCache);
+
             // PHASE 82: Handle link creation via UI
             // MOVED outside BeginNodeEditor/EndNodeEditor scope to fix assertion 
             // "GImNodes->CurrentScope == ImNodesScope_None" in ImNodes::IsLinkCreated
@@ -177,10 +186,10 @@ namespace Olympe
         int GetSelectedNodeId() const
         {
             if (!m_context) return -1;
-            
+
             ImNodesContext* oldContext = ImNodes::GetCurrentContext();
             ImNodes::SetCurrentContext(m_context);
-            
+
             int selectedNodeId = -1;
             if (ImNodes::NumSelectedNodes() > 0)
             {
@@ -188,13 +197,144 @@ namespace Olympe
                 ImNodes::GetSelectedNodes(selectedNodes.data());
                 selectedNodeId = selectedNodes[0];
             }
-            
+
             if (oldContext) ImNodes::SetCurrentContext(oldContext);
             return selectedNodeId;
         }
 
         /**
-         * @brief Returns current panning offset, safe to call outside Render()
+         * @brief Returns all currently selected nodes.
+         */
+        std::vector<int> GetSelectedNodes() const
+        {
+            if (!m_context) return {};
+            ImNodesContext* oldContext = ImNodes::GetCurrentContext();
+            ImNodes::SetCurrentContext(m_context);
+
+            std::vector<int> selectedNodes;
+            int numSelected = ImNodes::NumSelectedNodes();
+            if (numSelected > 0)
+            {
+                selectedNodes.resize(numSelected);
+                ImNodes::GetSelectedNodes(selectedNodes.data());
+            }
+
+            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            return selectedNodes;
+        }
+
+        /**
+         * @brief Returns the ID of the currently hovered link, or -1 if none.
+         */
+        int GetHoveredLink() const
+        {
+            if (!m_context) return -1;
+            ImNodesContext* oldContext = ImNodes::GetCurrentContext();
+            ImNodes::SetCurrentContext(m_context);
+            int hoveredLink = -1;
+            bool result = ImNodes::IsLinkHovered(&hoveredLink);
+            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            return result ? hoveredLink : -1;
+        }
+
+        /**
+         * @brief Returns true if a node is currently hovered, and outputs its ID.
+         */
+        bool IsNodeHovered(int* nodeId) const
+        {
+            if (!m_context) return false;
+            ImNodesContext* oldContext = ImNodes::GetCurrentContext();
+            ImNodes::SetCurrentContext(m_context);
+            bool result = ImNodes::IsNodeHovered(nodeId);
+            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            return result;
+        }
+
+        /**
+         * @brief Returns true if the editor canvas is currently hovered.
+         */
+        bool IsEditorHovered() const
+        {
+            if (!m_context) return false;
+            ImNodesContext* oldContext = ImNodes::GetCurrentContext();
+            ImNodes::SetCurrentContext(m_context);
+            bool result = ImNodes::IsEditorHovered();
+            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            return result;
+        }
+
+        /**
+         * @brief Returns IDs of all currently selected links.
+         */
+        std::vector<int> GetSelectedLinks() const
+        {
+            if (!m_context) return {};
+            ImNodesContext* oldContext = ImNodes::GetCurrentContext();
+            ImNodes::SetCurrentContext(m_context);
+
+            std::vector<int> selectedLinks;
+            int numSelected = ImNodes::NumSelectedLinks();
+            if (numSelected > 0)
+            {
+                selectedLinks.resize(numSelected);
+                ImNodes::GetSelectedLinks(selectedLinks.data());
+            }
+
+            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            return selectedLinks;
+        }
+
+        /**
+         * @brief Centralized handler for context menu triggering.
+         * Switches to the correct ImNodes context, detects what is hovered,
+         * updates selection if necessary, and returns true if a popup should open.
+         */
+        bool HandleContextMenuTrigger(int* outHoveredNode, int* outHoveredLink)
+        {
+            if (!m_context) return false;
+
+            ImNodesContext* oldContext = ImNodes::GetCurrentContext();
+            ImNodes::SetCurrentContext(m_context);
+
+            bool shouldOpen = false;
+
+            // Phase 86: Use cached values from last Render() call
+            if (m_hoveredNodeCache != -1)
+            {
+                int node = m_hoveredNodeCache;
+                if (outHoveredNode) *outHoveredNode = node;
+                // Auto-select node if not already selected
+                if (!ImNodes::IsNodeSelected(node))
+                {
+                    ImNodes::ClearNodeSelection();
+                    ImNodes::ClearLinkSelection();
+                    ImNodes::SelectNode(node);
+                }
+                shouldOpen = true;
+            }
+            else if (m_hoveredLinkCache != -1)
+            {
+                int link = m_hoveredLinkCache;
+                if (outHoveredLink) *outHoveredLink = link;
+                ImNodes::ClearNodeSelection();
+                ImNodes::ClearLinkSelection();
+                ImNodes::SelectLink(link);
+                shouldOpen = true;
+            }
+            else if (m_isEditorHoveredCache)
+            {
+                // PHASE 87: Allow context menu on empty editor space
+                if (outHoveredNode) *outHoveredNode = -1;
+                if (outHoveredLink) *outHoveredLink = -1;
+                shouldOpen = true;
+            }
+
+            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            return shouldOpen;
+        }
+
+        /**
+         * @brief Returns the current panning offset of the canvas, safe to call outside Render()
          */
         ImVec2 GetPanning() const
         {
@@ -219,6 +359,11 @@ namespace Olympe
         // Selection state
         int m_selectedNode = -1;
         std::set<int> m_initializedNodes;
+
+        // Phase 86: Hover state cache to avoid ImNodes scope assertions
+        int m_hoveredNodeCache = -1;
+        int m_hoveredLinkCache = -1;
+        bool m_isEditorHoveredCache = false;
 
         // Rendering helpers
         void RenderNodes()
@@ -253,14 +398,20 @@ namespace Olympe
 
                 ImNodes::BeginNode(nodeUid);
 
+                // PHASE 84: Node Width Spacer (Parity with VisualScript)
+                // Ensures nodes have enough width for horizontal pin layout
+                float minNodeWidth = 140.0f;
+                ImVec2 titleSize = ImGui::CalcTextSize(node.name.c_str());
+                if (titleSize.x + 30.0f > minNodeWidth) minNodeWidth = titleSize.x + 30.0f;
+                ImGui::InvisibleButton("##node_width_spacer", ImVec2(minNodeWidth, 1.0f));
+
                 // LEGACY RESTORATION: Breakpoint Indicator (visual-only in editor)
                 if (node.parameters.count("breakpoint") && node.parameters.at("breakpoint") == "true")
                 {
+                    // Draw red dot for breakpoint
                     ImVec2 nodePos = ImNodes::GetNodeScreenSpacePos(nodeUid);
                     ImGui::GetWindowDrawList()->AddCircleFilled(
                         ImVec2(nodePos.x - 10, nodePos.y - 10), 6.0f, IM_COL32(255, 50, 50, 255));
-                    ImGui::GetWindowDrawList()->AddCircle(
-                        ImVec2(nodePos.x - 10, nodePos.y - 10), 7.0f, IM_COL32(255, 255, 255, 200));
                 }
 
                 // Node Header with Icon
@@ -275,7 +426,44 @@ namespace Olympe
                 }
                 ImNodes::EndNodeTitleBar();
 
-                // LEGACY RESTORATION: Execution status indicator (from simulation)
+                // PHASE 84: Horizontal Pin Layout (VisualScript Style)
+                // Col 0: Input pins (left) | Col 1: Output pins (right)
+                ImGui::Columns(2, "bt_node_pins", false);
+                ImGui::SetColumnWidth(0, minNodeWidth * 0.5f);
+
+                // LEFT COLUMN: Input pin
+                {
+                    int inputPinId = nodeUid * 2;
+                    ImNodes::BeginInputAttribute(inputPinId);
+                    ImGui::TextUnformatted("In");
+                    ImNodes::EndInputAttribute();
+                }
+
+                // RIGHT COLUMN: Output pin
+                ImGui::NextColumn();
+                {
+                    int outputPinId = nodeUid * 2 + 1;
+                    ImNodes::BeginOutputAttribute(outputPinId);
+                    // Match VisualScript right-alignment for outputs
+                    float textWidth = ImGui::CalcTextSize("Out").x;
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (minNodeWidth * 0.5f) - textWidth - 25.0f);
+                    ImGui::TextUnformatted("Out");
+                    ImNodes::EndOutputAttribute();
+                }
+                ImGui::Columns(1); // End columns
+
+                // Node Content (below pins)
+                ImGui::Spacing();
+                ImGui::Indent(5.0f);
+                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "%s", node.type.c_str());
+
+                // Show specific subtype if available (Legacy feature)
+                if (type == NodeType::BT_Action && node.parameters.count("actionType"))
+                    ImGui::TextDisabled("Action: %s", node.parameters.at("actionType").c_str());
+                else if (type == NodeType::BT_Condition && node.parameters.count("conditionType"))
+                    ImGui::TextDisabled("Cond: %s", node.parameters.at("conditionType").c_str());
+
+                // LEGACY RESTORATION: Execution status indicator 
                 if (node.parameters.count("lastStatus"))
                 {
                     std::string status = node.parameters.at("lastStatus");
@@ -286,37 +474,9 @@ namespace Olympe
                     else if (status == "FAILURE") { statusColor = ImVec4(1.0f, 0.2f, 0.2f, 1.0f); statusIcon = "x"; }
                     else if (status == "RUNNING") { statusColor = ImVec4(0.2f, 0.6f, 1.0f, 1.0f); statusIcon = "O"; }
 
-                    ImGui::SameLine(ImGui::GetContentRegionAvail().x - 20);
-                    ImGui::TextColored(statusColor, "[%s]", statusIcon);
+                    ImGui::TextColored(statusColor, "Status: %s [%s]", status.c_str(), statusIcon);
                 }
-
-                // Input pin
-                {
-                    int inputPinId = nodeUid * 2;
-                    ImNodes::BeginInputAttribute(inputPinId);
-                    ImGui::TextUnformatted("In");
-                    ImNodes::EndInputAttribute();
-                }
-
-                ImGui::Spacing();
-                ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.9f, 1.0f), "%s", node.type.c_str());
-
-                // Show specific subtype if available (Legacy feature)
-                if (type == NodeType::BT_Action && node.parameters.count("actionType"))
-                    ImGui::TextDisabled("Action: %s", node.parameters.at("actionType").c_str());
-                else if (type == NodeType::BT_Condition && node.parameters.count("conditionType"))
-                    ImGui::TextDisabled("Cond: %s", node.parameters.at("conditionType").c_str());
-
-                ImGui::Spacing();
-
-                // Output pin
-                {
-                    int outputPinId = nodeUid * 2 + 1;
-                    ImNodes::BeginOutputAttribute(outputPinId);
-                    ImGui::Indent(60.0f); 
-                    ImGui::TextUnformatted("Out");
-                    ImNodes::EndOutputAttribute();
-                }
+                ImGui::Unindent(5.0f);
 
                 ImNodes::EndNode();
                 
@@ -345,6 +505,20 @@ namespace Olympe
             for (size_t i = 0; i < links.size(); ++i)
             {
                 outputToLinks[links[i].fromPin.value].push_back(i);
+            }
+
+            // Phase 85: Sort links for each output pin based on target node Y position (Legacy Parity)
+            for (auto& pair : outputToLinks)
+            {
+                std::sort(pair.second.begin(), pair.second.end(), [&](size_t a, size_t b) {
+                    uint32_t nodeAId = links[a].toPin.value / 2;
+                    uint32_t nodeBId = links[b].toPin.value / 2;
+                    // Use Grid Space for stable sorting independent of panning
+                    ImVec2 posA = ImNodes::GetNodeGridSpacePos(static_cast<int>(nodeAId));
+                    ImVec2 posB = ImNodes::GetNodeGridSpacePos(static_cast<int>(nodeBId));
+                    if (posA.y != posB.y) return posA.y < posB.y;
+                    return posA.x < posB.x;
+                });
             }
 
             for (size_t i = 0; i < links.size(); ++i)
@@ -380,44 +554,53 @@ namespace Olympe
                             if (siblingLinks[idx] == i) { childIndex = idx; break; }
                         }
 
-                        if (childIndex != -1)
-                        {
-                            // LEGACY RESTORATION: Draw child index label above the connection
-                            // We use a simplified mid-point calculation between input and output pins
-                            // For a more precise Bezier mid-point, we'd need internal ImNodes geometry.
-                            int childNodeId = static_cast<int>(link.toPin.value / 2);
+                                                                                 // PHASE 85: Draw child index label EXACTLY on the connection line
+                                                                                 // Calculate precise pin positions in grid space for the midpoint
+                                                                                 int childNodeId = static_cast<int>(link.toPin.value / 2);
 
-                            ImVec2 parentPos = ImNodes::GetNodeEditorSpacePos(static_cast<int>(parentNodeId));
-                            ImVec2 childPos = ImNodes::GetNodeEditorSpacePos(childNodeId);
+                                                                                 ImVec2 parentGridPos = ImNodes::GetNodeGridSpacePos(static_cast<int>(parentNodeId));
+                                                                                 ImVec2 childGridPos = ImNodes::GetNodeGridSpacePos(childNodeId);
 
-                            // Estimate pin positions (assuming standard node size and pin offsets)
-                            // In a real ImNodes session, we could use GetPinScreenPos if we were inside BeginNode/EndNode
-                            // Since we are in RenderConnections, we approximate.
-                            ImVec2 midPoint = ImVec2(
-                                (parentPos.x + childPos.x) * 0.5f + 50.0f, 
-                                (parentPos.y + childPos.y) * 0.5f
-                            );
+                                                                                 // Retrieve node width to find output pin X (Mirroring RenderNodes)
+                                                                                 float nodeWidth = 140.0f;
+                                                                                 ImVec2 titleSize = ImGui::CalcTextSize(parentNode->name.c_str());
+                                                                                 if (titleSize.x + 30.0f > nodeWidth) nodeWidth = titleSize.x + 30.0f;
 
-                            char idxBuf[16];
-#ifdef _MSC_VER
-                            sprintf_s(idxBuf, sizeof(idxBuf), "%d", childIndex);
-#else
-                            sprintf(idxBuf, "%d", childIndex);
-#endif
+                                                                                 // Pin vertical offset: TitleBar + half-row
+                                                                                 float pinYOffset = 35.0f; 
 
-                            // Draw background circle for readability
-                            // Convert Editor Space to Screen Space manually: EditorPos + Pan + CanvasPos
-                            ImVec2 pan = ImNodes::EditorContextGetPanning();
-                            ImVec2 screenMidPoint = ImVec2(
-                                midPoint.x + pan.x + m_canvasScreenPos.x,
-                                midPoint.y + pan.y + m_canvasScreenPos.y
-                            );
+                                                                                 // Pin positions in grid space
+                                                                                 ImVec2 pOut = ImVec2(parentGridPos.x + nodeWidth, parentGridPos.y + pinYOffset);
+                                                                                 ImVec2 pIn = ImVec2(childGridPos.x, childGridPos.y + pinYOffset);
 
-                            ImGui::GetWindowDrawList()->AddCircleFilled(screenMidPoint, 10.0f, IM_COL32(40, 40, 40, 220));
-                            ImGui::GetWindowDrawList()->AddText(
-                                ImVec2(screenMidPoint.x - 4, screenMidPoint.y - 7), 
-                                IM_COL32(255, 255, 100, 255), idxBuf);
-                        }
+                                                                                 // Midpoint calculation on the link
+                                                                                 ImVec2 midPointGrid = ImVec2((pOut.x + pIn.x) * 0.5f, (pOut.y + pIn.y) * 0.5f);
+
+                                                                                 char idxBuf[16];
+                                                     #ifdef _MSC_VER
+                                                                                 sprintf_s(idxBuf, sizeof(idxBuf), "%d", childIndex);
+                                                     #else
+                                                                                 sprintf(idxBuf, "%d", childIndex);
+                                                     #endif
+
+                                                                                 // Convert Grid Space to Screen Space
+                                                                                 ImVec2 pan = ImNodes::EditorContextGetPanning();
+                                                                                 ImVec2 screenMidPoint = ImVec2(
+                                                                                     midPointGrid.x + pan.x + m_canvasScreenPos.x,
+                                                                                     midPointGrid.y + pan.y + m_canvasScreenPos.y
+                                                                                 );
+
+                                                                                 // Draw background circle for readability
+                                                                                 ImDrawList* drawList = ImGui::GetWindowDrawList();
+                                                                                 drawList->AddCircleFilled(screenMidPoint, 10.0f, IM_COL32(20, 20, 20, 240));
+                                                                                 drawList->AddCircle(screenMidPoint, 10.0f, IM_COL32(230, 230, 230, 180), 0, 1.5f);
+
+                                                                                 // Draw text BOLD (triple-strike for visibility) - White color
+                                                                                 ImVec2 textPos = ImVec2(screenMidPoint.x - 4, screenMidPoint.y - 7);
+                                                                                 ImU32 textColor = IM_COL32(255, 255, 255, 255);
+                                                                                 drawList->AddText(textPos, textColor, idxBuf);
+                                                                                 drawList->AddText(ImVec2(textPos.x + 1, textPos.y), textColor, idxBuf);
+                                                                                 drawList->AddText(ImVec2(textPos.x, textPos.y + 1), textColor, idxBuf);
                     }
                 }
             }

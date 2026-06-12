@@ -30,6 +30,18 @@
       {
         "sourceNodeId": 4,
         "targetNodeId": 7
+      },
+      {
+        "sourceNodeId": 6,
+        "targetNodeId": 8
+      },
+      {
+        "sourceNodeId": 9,
+        "targetNodeId": 8
+      },
+      {
+        "sourceNodeId": 2,
+        "targetNodeId": 9
       }
     ],
     "nodes": [
@@ -153,8 +165,8 @@
         "enabled": true,
         "nodeId": 6,
         "position": {
-          "x": 376.2,
-          "y": -20.3,
+          "x": 377.2,
+          "y": -49.3,
           "z": 0
         },
         "properties": {
@@ -181,6 +193,42 @@
           "npcType": ""
         },
         "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "AudioSource_data",
+        "componentType": "AudioSource_data",
+        "enabled": true,
+        "nodeId": 8,
+        "position": {
+          "x": 672,
+          "y": -158,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "Camera_data",
+        "componentType": "Camera_data",
+        "enabled": true,
+        "nodeId": 9,
+        "position": {
+          "x": 375,
+          "y": -236,
+          "z": 0
+        },
+        "properties": {},
+        "selected": true,
         "size": {
           "x": 150,
           "y": 80,

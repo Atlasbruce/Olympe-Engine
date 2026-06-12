@@ -65,6 +65,21 @@ public:
     std::string GetGraphType()         const     override;
     std::string GetCurrentPath()       const     override;
 
+    // Phase 55: Unified Verify/Run
+    void VerifyGraph() override { OnVerifyGraphClicked(); }
+    void RunGraph()    override { OnRunGraphClicked(); }
+    bool SupportsVerification() const override { return true; }
+    bool SupportsExecution()    const override { return true; }
+
+    // Minimap overrides for unified toolbar access
+    bool SupportsMinimap() const override { return true; }
+    bool IsMinimapVisible() const override { return m_minimapVisible; }
+    void SetMinimapVisible(bool visible) override;
+    float GetMinimapSize() const override { return m_minimapSize; }
+    void SetMinimapSize(float size) override;
+    int GetMinimapPosition() const override { return static_cast<int>(m_minimapPosition); }
+    void SetMinimapPosition(int pos) override;
+
     /**
      * @brief Create a new empty BehaviorTree graph and set it active
      * @param name Name for the new graph
@@ -139,11 +154,6 @@ private:
      * @brief Handle BT-specific "Verify Graph" action
      */
     void OnVerifyGraphClicked();
-
-    /**
-     * @brief Render BT-specific toolbar buttons (Verify, Run)
-     */
-    void RenderToolbarExtensions();
 
     /**
      * @brief Handle drop of node type at screen position

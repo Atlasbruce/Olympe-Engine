@@ -745,18 +745,25 @@ void TabManager::RenderTabBar()
     // Handle centralized SaveAs modal (Phase 40 Part 5 - Browse Centralization)
     if (m_showSaveAsDialog)
     {
-        DataManager& dm = DataManager::Get();
         EditorTab* tab = GetActiveTab();
         if (tab)
         {
+            // PHASE 85 FIX: Clear flag IMMEDIATELY before opening modal to prevent per-frame re-triggering
+            m_showSaveAsDialog = false;
+
             std::string suggestedName = tab->displayName;
             // Remove asterisk if present
             size_t asterisk = suggestedName.find('*');
             if (asterisk != std::string::npos)
                 suggestedName = suggestedName.substr(0, asterisk);
 
-            // Determine file type for SaveFilePickerModal
-            std::string graphType = DetectGraphType(tab->filePath.empty() ? "" : tab->filePath);
+            // Phase 86 FIX: Use explicit graphType from tab instead of unreliable DetectGraphType on empty paths
+            std::string graphType = tab->graphType; 
+            if (graphType.empty() || graphType == "Unknown")
+            {
+                graphType = DetectGraphType(tab->filePath.empty() ? "" : tab->filePath);
+            }
+
             Olympe::SaveFileType fileType = Olympe::SaveFileType::Blueprint; // Default
             if (graphType == "BehaviorTree")
                 fileType = Olympe::SaveFileType::BehaviorTree;
@@ -765,19 +772,15 @@ void TabManager::RenderTabBar()
             else if (graphType == "EntityPrefab")
                 fileType = Olympe::SaveFileType::EntityPrefab;
 
-            // Open centralized modal
-            dm.OpenSaveFilePickerModal(fileType, "Gamedata/", suggestedName);
-            m_showSaveAsDialog = false;
+            // PHASE 88: Use CanvasModalRenderer instead of DataManager for unified save modal dispatch
+            // This ensures results are handled by CanvasModalRenderer::Get().IsSaveFileModalConfirmed()
+            CanvasModalRenderer::Get().OpenSaveFilePickerModal("Gamedata/", suggestedName, fileType);
+            SYSTEM_LOG << "[TabManager] Opening unified SaveAs modal via CanvasModalRenderer (Type: " << graphType << ")\n";
         }
     }
 
-    // Phase 44.2 FIX: Render centralized save modal via CanvasModalRenderer (unified dispatcher)
-    // Previously used DataManager::RenderSaveFilePickerModal() which caused desynchronization
-    // because CanvasToolbarRenderer opens modal via CanvasModalRenderer dispatcher (Phase 44.1)
-    CanvasModalRenderer::Get().RenderSaveFilePickerModal();
-
     // Handle SaveAs result from unified dispatcher
-    if (!CanvasModalRenderer::Get().IsSaveFileModalOpen()) {
+    if (CanvasModalRenderer::Get().IsSaveFileModalConfirmed()) {
         std::string selectedFile = CanvasModalRenderer::Get().GetSelectedSaveFilePath();
         if (!selectedFile.empty()) {
             EditorTab* tab = GetActiveTab();

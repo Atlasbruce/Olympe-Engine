@@ -120,16 +120,12 @@ namespace Olympe
 
     IGraphRenderer* BehaviorTreeGraphDocument::GetRenderer()
     {
-        // BehaviorTree uses imnodes rendering directly in the renderer
-        // It doesn't use the separate IGraphRenderer interface like EntityPrefab
-        // This method returns nullptr as rendering is handled by BehaviorTreeRenderer
-        return nullptr;
+        return m_renderer;
     }
 
     const IGraphRenderer* BehaviorTreeGraphDocument::GetRenderer() const
     {
-        // Const version - also returns nullptr
-        return nullptr;
+        return m_renderer;
     }
 
     void BehaviorTreeGraphDocument::OnDocumentModified()

@@ -42,6 +42,21 @@ public:
      */
     IGraphDocument* GetDocument() const;
 
+    // Phase 55: Unified Verify/Run
+    void VerifyGraph() override { m_panel.RunVerification(); }
+    void RunGraph()    override { m_panel.RunGraphSimulation(); }
+    bool SupportsVerification() const override { return true; }
+    bool SupportsExecution()    const override { return true; }
+
+    // Minimap overrides for unified toolbar access
+    bool SupportsMinimap() const override { return true; }
+    bool IsMinimapVisible() const override { return m_panel.m_minimapVisible; }
+    void SetMinimapVisible(bool visible) override;
+    float GetMinimapSize() const override { return m_panel.m_minimapSize; }
+    void SetMinimapSize(float size) override;
+    int GetMinimapPosition() const override { return m_panel.m_minimapPosition; }
+    void SetMinimapPosition(int pos) override;
+
     // Phase 35.0: Canvas state management
     void SaveCanvasState() override;
     void RestoreCanvasState() override;

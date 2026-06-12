@@ -357,8 +357,8 @@
         }
       },
       "position": {
-        "x": 575,
-        "y": -8
+        "x": 537,
+        "y": 84
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -381,8 +381,8 @@
         }
       },
       "position": {
-        "x": 574,
-        "y": 103
+        "x": 537,
+        "y": 225
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -405,7 +405,7 @@
         }
       },
       "position": {
-        "x": 584,
+        "x": 784,
         "y": 226
       },
       "taskType": "log_message",
@@ -429,8 +429,8 @@
         }
       },
       "position": {
-        "x": 594,
-        "y": 335
+        "x": 0,
+        "y": 0
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -453,8 +453,8 @@
         }
       },
       "position": {
-        "x": 592,
-        "y": 444
+        "x": 0,
+        "y": 0
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -472,15 +472,15 @@
           "Type": "Literal"
         },
         "subgraph_path": {
-          "LiteralValue": "GameData\\BehaviorTree\\AI\\Boss4.ats",
+          "LiteralValue": "\\Boss1.ats",
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 594,
-        "y": 563
+        "x": 0,
+        "y": 0
       },
-      "subGraphPath": "GameData\\BehaviorTree\\AI\\Boss4.ats",
+      "subGraphPath": "\\Boss1.ats",
       "type": "SubGraph"
     }
   ],

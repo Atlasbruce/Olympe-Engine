@@ -336,8 +336,8 @@
         }
       },
       "position": {
-        "x": 521,
-        "y": 148
+        "x": 540,
+        "y": 51
       },
       "taskType": "take_cover",
       "type": "AtomicTask"
@@ -356,8 +356,8 @@
         }
       },
       "position": {
-        "x": 510,
-        "y": -0.999985
+        "x": 548,
+        "y": 274
       },
       "taskType": "attack_if_close",
       "type": "AtomicTask"
@@ -375,15 +375,15 @@
           "Type": "Literal"
         },
         "subgraph_path": {
-          "LiteralValue": "\\Boss1.ats",
+          "LiteralValue": "\\Boss2.ats",
           "Type": "Literal"
         }
       },
       "position": {
-        "x": 1029.53,
-        "y": 312.809
+        "x": 805.53,
+        "y": 286.809
       },
-      "subGraphPath": "\\Boss1.ats",
+      "subGraphPath": "\\Boss2.ats",
       "type": "SubGraph"
     }
   ],

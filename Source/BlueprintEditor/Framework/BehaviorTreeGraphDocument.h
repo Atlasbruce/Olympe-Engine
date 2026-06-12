@@ -131,19 +131,24 @@ namespace Olympe
         virtual bool IsDirty() const override;
 
         /**
+         * @brief Bind the renderer wrapper (BehaviorTreeRenderer) to this document.
+         */
+        void SetRenderer(IGraphRenderer* renderer) { m_renderer = renderer; }
+
+        /**
          * @brief Get the graph renderer.
          * 
          * Note: For BehaviorTree, rendering is handled by BehaviorTreeRenderer
-         * itself through imnodes. This method returns nullptr as BehaviorTree
-         * doesn't use the separate IGraphRenderer interface.
+         * itself through imnodes. We return the bound renderer wrapper to support
+         * unified toolbar controls.
          *
-         * @return nullptr (rendering handled directly by renderer)
+         * @return The bound IGraphRenderer* (BehaviorTreeRenderer)
          */
         virtual IGraphRenderer* GetRenderer() override;
 
         /**
          * @brief Get the graph renderer (const version).
-         * @return nullptr (const version)
+         * @return The bound const IGraphRenderer* (BehaviorTreeRenderer)
          */
         virtual const IGraphRenderer* GetRenderer() const override;
 
@@ -180,6 +185,11 @@ namespace Olympe
          * the lifetime of the renderer; the renderer is owned by the tab system.
          */
         BehaviorTreeRenderer* m_btRenderer = nullptr;
+
+        /**
+         * @brief Non-owning pointer to the unified IGraphRenderer wrapper (BehaviorTreeRenderer).
+         */
+        IGraphRenderer* m_renderer = nullptr;
 
         /**
          * @brief Cached file path for the current graph.

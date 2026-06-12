@@ -208,15 +208,15 @@ std::string SaveFilePickerModal::GetDefaultDirectory() const
     switch (m_fileType)
     {
         case SaveFileType::BehaviorTree:
-            return "./Gamedata";
+            return "./Gamedata/BehaviorTree/";
         case SaveFileType::Blueprint:
-            return "Blueprints";
+            return "./Gamedata/VisualScript/";
         case SaveFileType::EntityPrefab:
-            return "./Gamedata/Prefabs";
+            return "./Gamedata/EntityPrefab/";
         case SaveFileType::Audio:
-            return "./Gamedata/Audio";
+            return "./Gamedata/Audio/";
         default:
-            return "./Gamedata";
+            return "./Gamedata/";
     }
 }
 
@@ -227,13 +227,13 @@ std::string SaveFilePickerModal::GetFileExtension() const
         case SaveFileType::BehaviorTree:
             return ".bt.json";
         case SaveFileType::Blueprint:
-            return ".ats";
+            return ".ats.json";
         case SaveFileType::EntityPrefab:
             return ".pref.json";
         case SaveFileType::Audio:
             return ".ogg";
         default:
-            return "";
+            return ".json";
     }
 }
 

@@ -1,88 +1,130 @@
 {
-  "blueprintType": "BehaviorTree",
+  "annotations": [],
+  "blackboard": [],
   "data": {
-    "rootGraph": {
-      "nodes": [
-        {
-          "children": [
-            2
-          ],
-          "id": 1,
-          "name": "BT_Root",
-          "parameters": {},
-          "position": {
-            "x": 195,
-            "y": 156
-          },
-          "type": "Root"
+    "links": [
+      {
+        "fromPin": {
+          "nodeId": 3,
+          "pinId": "output"
         },
-        {
-          "children": [
-            4,
-            3,
-            5
-          ],
-          "id": 2,
-          "name": "BT_Sequence",
-          "parameters": {},
-          "position": {
-            "x": 470,
-            "y": 150
-          },
-          "type": "Sequence"
-        },
-        {
-          "children": [],
-          "id": 3,
-          "name": "BT_SendMessage",
-          "parameters": {},
-          "position": {
-            "x": 739,
-            "y": 118
-          },
-          "type": "SendMessage"
-        },
-        {
-          "children": [],
-          "id": 4,
-          "name": "BT_EmitSound",
-          "parameters": {},
-          "position": {
-            "x": 743,
-            "y": 257
-          },
-          "type": "Action"
-        },
-        {
-          "children": [],
-          "id": 5,
-          "name": "BT_SubGraph",
-          "parameters": {},
-          "position": {
-            "x": 744,
-            "y": 371
-          },
-          "type": "SubGraph"
+        "id": 1,
+        "toPin": {
+          "nodeId": 4,
+          "pinId": "input"
         }
-      ],
-      "rootNodeId": -1
-    },
-    "subgraphs": {}
+      },
+      {
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
+        },
+        "id": 2,
+        "toPin": {
+          "nodeId": 6,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
+        },
+        "id": 3,
+        "toPin": {
+          "nodeId": 8,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
+        },
+        "id": 4,
+        "toPin": {
+          "nodeId": 10,
+          "pinId": "input"
+        }
+      }
+    ],
+    "nodes": [
+      {
+        "children": [],
+        "id": 1,
+        "name": "BT_Root_1",
+        "parameters": {},
+        "position": {
+          "x": 125,
+          "y": 134
+        },
+        "type": "BT_Root"
+      },
+      {
+        "children": [],
+        "id": 2,
+        "name": "BT_Sequence_2",
+        "parameters": {},
+        "position": {
+          "x": 359,
+          "y": 163
+        },
+        "type": "BT_Sequence"
+      },
+      {
+        "children": [],
+        "id": 3,
+        "name": "BT_AttackTarget_3",
+        "parameters": {},
+        "position": {
+          "x": 716,
+          "y": 117
+        },
+        "type": "BT_AttackTarget"
+      },
+      {
+        "children": [],
+        "id": 4,
+        "name": "BT_EmitSound_4",
+        "parameters": {},
+        "position": {
+          "x": 869,
+          "y": 309
+        },
+        "type": "BT_EmitSound"
+      },
+      {
+        "children": [],
+        "id": 5,
+        "name": "BT_EmitSound_5",
+        "parameters": {},
+        "position": {
+          "x": 754,
+          "y": 617
+        },
+        "type": "BT_EmitSound"
+      }
+    ],
+    "rootNodeId": 0
   },
-  "description": "",
   "editorState": {
+    "layoutDirection": "TopToBottom",
     "scrollOffset": {
       "x": 0,
       "y": 0
     },
+    "selectedNodes": [],
     "zoom": 1
   },
+  "graphKind": "BehaviorTree",
   "metadata": {
-    "author": "User",
+    "author": "Unknown",
     "created": "",
-    "lastModified": "2026-04-15T10:49:18",
-    "tags": []
+    "tags": [
+      "AI",
+      "BehaviorTree"
+    ]
   },
-  "name": "Untitled-1",
-  "schema_version": 5
+  "schemaVersion": 2,
+  "type": "AIGraph"
 }

@@ -31,6 +31,7 @@ namespace Olympe
     // Forward declarations
     class VisualScriptEditorPanel;
     class TaskGraphTemplate;
+    class IGraphRenderer;
 
     /**
      * @class VisualScriptGraphDocument
@@ -69,6 +70,11 @@ namespace Olympe
          * @brief Destructor.
          */
         virtual ~VisualScriptGraphDocument() = default;
+
+        /**
+         * @brief Bind the renderer wrapper (VisualScriptRenderer) to this document.
+         */
+        void SetRenderer(IGraphRenderer* renderer) { m_renderer = renderer; }
 
         // ===================================================================
         // IGraphDocument Interface Implementation
@@ -181,6 +187,11 @@ namespace Olympe
          * the lifetime of the panel; the panel is owned by the tab system.
          */
         VisualScriptEditorPanel* m_vsPanel = nullptr;
+
+        /**
+         * @brief Non-owning pointer to the unified IGraphRenderer wrapper (VisualScriptRenderer).
+         */
+        IGraphRenderer* m_renderer = nullptr;
 
         /**
          * @brief Cached file path for the current graph.

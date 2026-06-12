@@ -314,8 +314,8 @@
         }
       },
       "position": {
-        "x": 214,
-        "y": 130
+        "x": 114,
+        "y": 153
       },
       "type": "EntryPoint"
     },
@@ -339,8 +339,8 @@
         }
       },
       "position": {
-        "x": 429,
-        "y": 131
+        "x": 294,
+        "y": 152
       },
       "switchCases": [
         {
@@ -390,8 +390,8 @@
         }
       },
       "position": {
-        "x": 781,
-        "y": 45
+        "x": 575,
+        "y": -8
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -414,8 +414,8 @@
         }
       },
       "position": {
-        "x": 777,
-        "y": 134
+        "x": 574,
+        "y": 103
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -438,8 +438,8 @@
         }
       },
       "position": {
-        "x": 778,
-        "y": 235
+        "x": 584,
+        "y": 226
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -462,8 +462,8 @@
         }
       },
       "position": {
-        "x": 778,
-        "y": 327
+        "x": 594,
+        "y": 335
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -486,8 +486,8 @@
         }
       },
       "position": {
-        "x": 780,
-        "y": 430
+        "x": 592,
+        "y": 444
       },
       "taskType": "log_message",
       "type": "AtomicTask"
@@ -510,8 +510,8 @@
         }
       },
       "position": {
-        "x": 1096,
-        "y": 203
+        "x": 594,
+        "y": 563
       },
       "subGraphPath": "GameData\\BehaviorTree\\AI\\Boss1.ats",
       "type": "SubGraph"

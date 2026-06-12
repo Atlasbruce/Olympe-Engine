@@ -398,6 +398,7 @@ private:
     /** @brief Renders the verification results panel (Phase 21-B). */
     void RenderVerificationPanel();
 
+public:
     /** @brief Runs VSGraphVerifier on the current graph and stores the result. */
     void RunVerification();
 
