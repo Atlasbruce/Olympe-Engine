@@ -103,6 +103,18 @@ public:
      */
     SaveFileType GetFileType() const { return m_fileType; }
 
+    /**
+     * @brief Set the file type dynamically (with corresponding directory refresh).
+     */
+    void SetFileType(SaveFileType fileType)
+    {
+        m_fileType = fileType;
+        m_currentPath = GetDefaultDirectory();
+        strncpy_s(m_pathBuffer, sizeof(m_pathBuffer), m_currentPath.c_str(), _TRUNCATE);
+        m_previousPath = m_currentPath;
+        RefreshFileList();
+    }
+
 private:
     // ====================================================================
     // Configuration & State

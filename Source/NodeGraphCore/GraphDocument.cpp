@@ -320,6 +320,10 @@ json GraphDocument::ToJson() const
     j["schemaVersion"] = 2;
     j["type"] = type;
     j["graphKind"] = graphKind;
+    if (graphKind == "BehaviorTree")
+    {
+        j["blueprintType"] = "BehaviorTree";
+    }
     j["metadata"] = metadata;
     
     // Editor state

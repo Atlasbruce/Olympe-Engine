@@ -66,9 +66,24 @@ namespace Olympe
         {
             SYSTEM_LOG << "[BehaviorTreeGraphDocument::Save] ============ SAVE START ============\n";
             SYSTEM_LOG << "[BehaviorTreeGraphDocument::Save] Target filepath: '" << filePath << "'\n";
-            SYSTEM_LOG << "[BehaviorTreeGraphDocument::Save] TODO: Phase 50.4 - Reimplement with modern GraphDocument\n";
-            SYSTEM_LOG << "[BehaviorTreeGraphDocument::Save] NodeGraph class removed in Phase 50.3 namespace collision fix\n";
-            return false;
+            if (!m_btRenderer)
+            {
+                SYSTEM_LOG << "[BehaviorTreeGraphDocument::Save] ERROR: No m_btRenderer bound, cannot save.\n";
+                return false;
+            }
+
+            // Save using our bound BehaviorTreeRenderer 
+            bool success = m_btRenderer->Save(filePath);
+            if (success)
+            {
+                m_filePath = filePath;
+                SYSTEM_LOG << "[BehaviorTreeGraphDocument::Save] SUCCESS: Saved graph to " << filePath << "\n";
+            }
+            else
+            {
+                SYSTEM_LOG << "[BehaviorTreeGraphDocument::Save] ERROR: m_btRenderer->Save() returned false!\n";
+            }
+            return success;
         }
         catch (const std::exception& e)
         {

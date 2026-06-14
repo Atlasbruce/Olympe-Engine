@@ -8,12 +8,18 @@
 #include <iomanip>
 #include <iostream>
 #include <random>
-#ifndef _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#endif
-#include <experimental/filesystem>
+#include <algorithm>
 
-namespace fs = std::experimental::filesystem;
+#ifdef _WIN32
+#include <direct.h>
+#include <windows.h>
+#include <io.h>
+#else
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
+#endif
 
 namespace Olympe
 {
@@ -161,7 +167,16 @@ namespace Olympe
         m_Templates.clear();
         m_LastError.clear();
 
-        if (!fs::exists(templatesPath))
+        bool exists = false;
+#ifdef _WIN32
+        DWORD attribs = GetFileAttributesA(templatesPath.c_str());
+        exists = (attribs != INVALID_FILE_ATTRIBUTES);
+#else
+        struct stat st;
+        exists = (stat(templatesPath.c_str(), &st) == 0);
+#endif
+
+        if (!exists)
         {
             m_LastError = "Templates directory does not exist: " + templatesPath;
             std::cerr << m_LastError << std::endl;
@@ -239,9 +254,17 @@ namespace Olympe
 
         try
         {
-            if (fs::exists(filepath))
+            bool fileExists = false;
+#ifdef _WIN32
+            DWORD attribs = GetFileAttributesA(filepath.c_str());
+            fileExists = (attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY));
+#else
+            struct stat st;
+            fileExists = (stat(filepath.c_str(), &st) == 0 && S_ISREG(st.st_mode));
+#endif
+            if (fileExists)
             {
-                fs::remove(filepath);
+                std::remove(filepath.c_str());
             }
         }
         catch (const std::exception& e)
@@ -368,27 +391,76 @@ namespace Olympe
 
     void TemplateManager::ScanTemplateDirectory()
     {
-        if (!fs::exists(m_TemplatesPath) || !fs::is_directory(m_TemplatesPath))
+        bool dirExists = false;
+        bool isDir = false;
+#ifdef _WIN32
+        DWORD attribs = GetFileAttributesA(m_TemplatesPath.c_str());
+        if (attribs != INVALID_FILE_ATTRIBUTES)
+        {
+            dirExists = true;
+            isDir = (attribs & FILE_ATTRIBUTE_DIRECTORY);
+        }
+#else
+        struct stat st;
+        if (stat(m_TemplatesPath.c_str(), &st) == 0)
+        {
+            dirExists = true;
+            isDir = S_ISDIR(st.st_mode);
+        }
+#endif
+
+        if (!dirExists || !isDir)
         {
             return;
         }
 
         try
         {
-            for (const auto& entry : fs::directory_iterator(m_TemplatesPath))
+#ifdef _WIN32
+            WIN32_FIND_DATAA findData;
+            std::string searchPath = m_TemplatesPath + "\\*.json";
+            HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
+            if (hFind != INVALID_HANDLE_VALUE)
             {
-                // Correction : utiliser fs::is_regular_file(entry.path()) au lieu de entry.is_regular_file()
-                if (fs::is_regular_file(entry.path()) && entry.path().extension() == ".json")
+                do
                 {
-                    BlueprintTemplate tpl = BlueprintTemplate::LoadFromFile(entry.path().string());
-                    
-                    // Only add if successfully loaded (has ID)
-                    if (!tpl.id.empty())
+                    std::string filename = findData.cFileName;
+                    if (filename != "." && filename != "..")
                     {
-                        m_Templates.push_back(tpl);
+                        std::string fullPath = m_TemplatesPath + "/" + filename;
+                        BlueprintTemplate tpl = BlueprintTemplate::LoadFromFile(fullPath);
+                        if (!tpl.id.empty())
+                        {
+                            m_Templates.push_back(tpl);
+                        }
+                    }
+                } while (FindNextFileA(hFind, &findData) != 0);
+                FindClose(hFind);
+            }
+#else
+            DIR* dir = opendir(m_TemplatesPath.c_str());
+            if (dir)
+            {
+                struct dirent* entry;
+                while ((entry = readdir(dir)) != nullptr)
+                {
+                    std::string filename = entry->d_name;
+                    if (filename != "." && filename != "..")
+                    {
+                        if (filename.length() > 5 && filename.substr(filename.length() - 5) == ".json")
+                        {
+                            std::string fullPath = m_TemplatesPath + "/" + filename;
+                            BlueprintTemplate tpl = BlueprintTemplate::LoadFromFile(fullPath);
+                            if (!tpl.id.empty())
+                            {
+                                m_Templates.push_back(tpl);
+                            }
+                        }
                     }
                 }
+                closedir(dir);
             }
+#endif
         }
         catch (const std::exception& e)
         {
@@ -399,18 +471,53 @@ namespace Olympe
 
     bool TemplateManager::EnsureDirectoryExists(const std::string& path)
     {
-        try
+        if (path.empty()) return false;
+
+        std::string normalizedPath = path;
+        std::replace(normalizedPath.begin(), normalizedPath.end(), '\\', '/');
+        if (!normalizedPath.empty() && normalizedPath.back() == '/') normalizedPath.pop_back();
+        if (normalizedPath.empty()) return true;
+
+        std::string accum;
+        size_t pos = 0;
+        if (!normalizedPath.empty() && normalizedPath[0] == '/') { accum = "/"; pos = 1; }
+
+        while (true)
         {
-            if (!fs::exists(path))
+            size_t next = normalizedPath.find('/', pos);
+            std::string part = (next == std::string::npos) ? normalizedPath.substr(pos) : normalizedPath.substr(pos, next - pos);
+            if (!accum.empty() && accum.back() != '/') accum += '/';
+            accum += part;
+
+#ifdef _WIN32
+            int r = _mkdir(accum.c_str());
+#else
+            int r = mkdir(accum.c_str(), 0755);
+#endif
+            if (r != 0)
             {
-                fs::create_directories(path);
+                if (errno != EEXIST)
+                {
+                    bool exists = false;
+#ifdef _WIN32
+                    DWORD attribs = GetFileAttributesA(accum.c_str());
+                    exists = (attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY));
+#else
+                    struct stat st;
+                    exists = (stat(accum.c_str(), &st) == 0 && S_ISDIR(st.st_mode));
+#endif
+                    if (!exists)
+                    {
+                        std::cerr << "Failed to create directory part: " << accum << std::endl;
+                        return false;
+                    }
+                }
             }
-            return true;
+
+            if (next == std::string::npos) break;
+            pos = next + 1;
         }
-        catch (const std::exception& e)
-        {
-            std::cerr << "Failed to create directory: " << path << " - " << e.what() << std::endl;
-            return false;
-        }
+
+        return true;
     }
 }

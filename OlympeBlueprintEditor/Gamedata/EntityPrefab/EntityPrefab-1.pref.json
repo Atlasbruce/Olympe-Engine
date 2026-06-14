@@ -1,0 +1,68 @@
+{
+  "blueprintType": "EntityPrefab",
+  "data": {
+    "canvasState": {
+      "offsetX": 0,
+      "offsetY": 0,
+      "zoom": 1
+    },
+    "connections": [],
+    "nodes": [
+      {
+        "componentName": "Identity_data",
+        "componentType": "Identity_data",
+        "enabled": true,
+        "nodeId": 1,
+        "position": {
+          "x": 326,
+          "y": 188,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "Position_data",
+        "componentType": "Position_data",
+        "enabled": true,
+        "nodeId": 2,
+        "position": {
+          "x": 333,
+          "y": 340,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "GridSettings_data",
+        "componentType": "GridSettings_data",
+        "enabled": true,
+        "nodeId": 3,
+        "position": {
+          "x": 321,
+          "y": 489,
+          "z": 0
+        },
+        "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      }
+    ]
+  },
+  "schemaVersion": 4
+}

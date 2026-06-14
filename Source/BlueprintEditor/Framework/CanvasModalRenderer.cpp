@@ -153,9 +153,13 @@ void CanvasModalRenderer::OpenSaveFilePickerModal(const std::string& initialPath
                                                    SaveFileType fileType)
 {
     // Phase 44.1: Unified from CanvasToolbarRenderer::m_saveModal
-    // Note: fileType parameter provided for future use or caller context
-    // The modal instance (m_saveFileModal) is initialized with SaveFileType::Blueprint
+    // Apply dynamic file type config before opening (this resets the m_currentPath)
+    m_saveFileModal.SetFileType(fileType);
+
+    // Open using the requested path or the default directory inferred by the modal.
+    // The modal itself handles the initial directory and filename buffers.
     m_saveFileModal.Open(initialPath, suggestedName);
+
     m_saveConfirmed = false;
     m_cachedSaveSelection = "";
 }

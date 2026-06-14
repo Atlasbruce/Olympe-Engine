@@ -7,6 +7,7 @@
 
 #include "CanvasToolbarRenderer.h"
 #include "IGraphDocument.h"
+#include "CanvasModalRenderer.h"
 #include "../../third_party/imgui/imgui.h"
 #include "../../Editor/Modals/FilePickerModal.h"
 #include "../../system/system_utils.h"
@@ -53,7 +54,7 @@ CanvasToolbarRenderer::~CanvasToolbarRenderer()
 
 bool CanvasToolbarRenderer::IsModalOpen() const
 {
-    return m_showSaveAsModal || m_browseModal != nullptr;
+    return m_showSaveAsModal || CanvasModalRenderer::Get().IsSaveFileModalOpen() || m_browseModal != nullptr;
 }
 
 std::string CanvasToolbarRenderer::GetStatusText() const
@@ -181,9 +182,46 @@ void CanvasToolbarRenderer::Render()
 
 void CanvasToolbarRenderer::RenderModals()
 {
-    // Phase 83: Unified Save/SaveAs modals are now handled centrally 
-    // by TabManager/CanvasModalRenderer to prevent duplicate ID conflicts.
-    // The Toolbar only triggers the actions via TabManager.
+    if (m_showSaveAsModal)
+    {
+        m_showSaveAsModal = false;
+
+        Olympe::SaveFileType fileType = Olympe::SaveFileType::Blueprint;
+        if (m_document)
+        {
+            switch (m_document->GetType())
+            {
+            case DocumentType::BEHAVIOR_TREE:
+                fileType = Olympe::SaveFileType::BehaviorTree;
+                break;
+            case DocumentType::ENTITY_PREFAB:
+                fileType = Olympe::SaveFileType::EntityPrefab;
+                break;
+            case DocumentType::VISUAL_SCRIPT:
+            default:
+                fileType = Olympe::SaveFileType::Blueprint;
+                break;
+            }
+        }
+
+        CanvasModalRenderer::Get().OpenSaveFilePickerModal(
+            GetDefaultSaveDirectory(),
+            GetSuggestedFilename(),
+            fileType);
+    }
+
+    CanvasModalRenderer::Get().RenderSaveFilePickerModal();
+
+    if (CanvasModalRenderer::Get().IsSaveFileModalConfirmed())
+    {
+        const std::string selectedFile = CanvasModalRenderer::Get().GetSelectedSaveFilePath();
+        if (!selectedFile.empty())
+        {
+            OnSaveAsComplete(selectedFile);
+        }
+
+        CanvasModalRenderer::Get().CloseSaveFileModal();
+    }
 }
 
 void CanvasToolbarRenderer::RenderButtons()
@@ -195,7 +233,8 @@ void CanvasToolbarRenderer::RenderButtons()
     }
 
     // [Save] button
-    bool canSave = m_document->IsDirty();
+    // A document can always be saved if it's dirty, or if it has never been saved yet (empty path)
+    bool canSave = m_document->IsDirty() || m_document->GetFilePath().empty();
 
     if (!canSave)
         ImGui::BeginDisabled();
@@ -291,8 +330,8 @@ void CanvasToolbarRenderer::OnSaveClicked()
 
 void CanvasToolbarRenderer::OnSaveAsClicked()
 {
-    SYSTEM_LOG << "[CanvasToolbarRenderer] OnSaveAsClicked - Delegating to TabManager for unified path\n";
-    TabManager::Get().SaveActiveTabAs("");
+    SYSTEM_LOG << "[CanvasToolbarRenderer] OnSaveAsClicked - opening centralized Save As modal\n";
+    m_showSaveAsModal = true;
 }
 
 void CanvasToolbarRenderer::OnBrowseClicked()

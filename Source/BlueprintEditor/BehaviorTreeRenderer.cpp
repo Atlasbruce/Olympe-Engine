@@ -152,10 +152,6 @@ void BehaviorTreeRenderer::Render()
     // Framework handles all Save/SaveAs modals exclusively.
     // Legacy DataManager modal is disabled to prevent ID conflicts with framework.
     // (Will be removed in future phase after complete framework migration)
-    if (m_framework)
-    {
-        m_framework->RenderModals();
-    }
 }
 
 void BehaviorTreeRenderer::SetMinimapVisible(bool visible)
@@ -527,6 +523,15 @@ bool BehaviorTreeRenderer::Load(const std::string& path)
     m_filePath = path;
     SYSTEM_LOG << indent << "[BehaviorTreeRenderer::Load] Graph loaded, id=" << m_graphId << ", setting as active\n";
     NodeGraph::NodeGraphManager::Get().SetActiveGraph(newGraphId);
+
+    // Phase 92 FIX: Ensure the ImNodes adapter re-applies persisted node positions
+    // for this newly loaded graph. Without reinitializing the adapter cache, a tab
+    // switch can reuse stale "initialized" state and leave nodes collapsed at the
+    // origin or with the previous tab's layout.
+    if (m_imNodesAdapter)
+    {
+        m_imNodesAdapter->Initialize(m_graphId);
+    }
 
     // Phase 50.1.1: CRITICAL - Sync filepath to framework document
     // This ensures CanvasToolbarRenderer sees the loaded filepath

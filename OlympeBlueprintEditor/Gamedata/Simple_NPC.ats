@@ -185,8 +185,8 @@
         "enabled": true,
         "nodeId": 7,
         "position": {
-          "x": 609.3,
-          "y": 229.9,
+          "x": 627.3,
+          "y": 253.9,
           "z": 0
         },
         "properties": {
@@ -228,7 +228,7 @@
           "z": 0
         },
         "properties": {},
-        "selected": true,
+        "selected": false,
         "size": {
           "x": 150,
           "y": 80,

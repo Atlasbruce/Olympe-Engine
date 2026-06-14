@@ -173,12 +173,6 @@ bool VisualScriptEditorPanel::Save()
         return false;
     }
 
-    // BUG-003 Fix: Reset viewport panning BEFORE syncing positions so that
-    // any residual editor-space offset from navigation is neutralised.
-    // Positions are stored in grid space (GetNodeGridSpacePos), so this is
-    // belt-and-suspenders safety; panning is restored by AfterSave().
-    ResetViewportBeforeSave();
-
     // Fix #1: Commit any deferred key-name edits before save
     CommitPendingBlackboardEdits();
 
@@ -230,9 +224,6 @@ bool VisualScriptEditorPanel::Save()
 
     bool ok = SerializeAndWrite(m_currentPath);
 
-    // BUG-003 Fix #5: Restore viewport so the canvas does not visually jump.
-    AfterSave();
-
     SYSTEM_LOG << "[VisualScriptEditorPanel] Save() "
                << (ok ? "succeeded" : "FAILED") << ": '" << m_currentPath << "'\n";
     return ok;
@@ -244,9 +235,6 @@ bool VisualScriptEditorPanel::SaveAs(const std::string& path)
 
     if (path.empty())
         return false;
-
-    // BUG-003 Fix: Reset viewport before position sync (same as Save()).
-    ResetViewportBeforeSave();
 
     // Fix #1: Commit and validate before save
     CommitPendingBlackboardEdits();
@@ -307,9 +295,6 @@ bool VisualScriptEditorPanel::SaveAs(const std::string& path)
     }
 
     bool ok = SerializeAndWrite(path);
-
-    // BUG-003 Fix #5: Restore viewport.
-    AfterSave();
 
     if (ok)
     {

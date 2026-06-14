@@ -1,0 +1,168 @@
+{
+  "blueprintType": "BehaviorTree",
+  "annotations": [],
+  "blackboard": [],
+  "data": {
+    "links": [
+      {
+        "fromPin": {
+          "nodeId": 3,
+          "pinId": "output"
+        },
+        "id": 1,
+        "toPin": {
+          "nodeId": 4,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
+        },
+        "id": 2,
+        "toPin": {
+          "nodeId": 6,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 7,
+          "pinId": "output"
+        },
+        "id": 3,
+        "toPin": {
+          "nodeId": 8,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
+        },
+        "id": 4,
+        "toPin": {
+          "nodeId": 10,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
+        },
+        "id": 5,
+        "toPin": {
+          "nodeId": 12,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
+        },
+        "id": 6,
+        "toPin": {
+          "nodeId": 14,
+          "pinId": "input"
+        }
+      }
+    ],
+    "nodes": [
+      {
+        "children": [],
+        "id": 1,
+        "name": "BT_Root_1",
+        "parameters": {},
+        "position": {
+          "x": 193,
+          "y": 138
+        },
+        "type": "BT_Root"
+      },
+      {
+        "children": [],
+        "id": 2,
+        "name": "BT_Selector_2",
+        "parameters": {},
+        "position": {
+          "x": 429,
+          "y": 142
+        },
+        "type": "BT_Selector"
+      },
+      {
+        "children": [],
+        "id": 3,
+        "name": "BT_CanSeeTarget_3",
+        "parameters": {},
+        "position": {
+          "x": 698,
+          "y": 77
+        },
+        "type": "BT_CanSeeTarget"
+      },
+      {
+        "children": [],
+        "id": 4,
+        "name": "BT_AttackTarget_4",
+        "parameters": {},
+        "position": {
+          "x": 936,
+          "y": 78
+        },
+        "type": "BT_AttackTarget"
+      },
+      {
+        "children": [],
+        "id": 5,
+        "name": "BT_AttackTarget_5",
+        "parameters": {},
+        "position": {
+          "x": 704,
+          "y": 189
+        },
+        "type": "BT_AttackTarget"
+      },
+      {
+        "children": [],
+        "id": 6,
+        "name": "BT_MoveToPosition_6",
+        "parameters": {},
+        "position": {
+          "x": 711,
+          "y": 306
+        },
+        "type": "BT_MoveToPosition"
+      },
+      {
+        "children": [],
+        "id": 7,
+        "name": "BT_WaitRandomTime_7",
+        "parameters": {},
+        "position": {
+          "x": 716,
+          "y": 442
+        },
+        "type": "BT_WaitRandomTime"
+      }
+    ],
+    "rootNodeId": 0
+  },
+  "editorState": {
+    "layoutDirection": "TopToBottom",
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "selectedNodes": [],
+    "zoom": 1
+  },
+  "graphKind": "BehaviorTree",
+  "metadata": {},
+  "schemaVersion": 2,
+  "type": "Untitled-BehaviorTree-2"
+}

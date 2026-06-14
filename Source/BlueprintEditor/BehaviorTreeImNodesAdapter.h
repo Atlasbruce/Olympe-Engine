@@ -62,7 +62,18 @@ namespace Olympe
          */
         void Initialize(int graphId)
         {
+            // Re-initialize only for a true graph switch/load.
+            // The adapter caches which nodes have already had their positions
+            // injected into ImNodes. Clearing the cache ensures a newly loaded
+            // graph re-applies its stored positions, but ordinary tab activation
+            // should not recreate the adapter.
             m_graphId = graphId;
+            m_initializedNodes.clear();
+            m_selectedNode = -1;
+            m_hoveredNodeCache = -1;
+            m_hoveredLinkCache = -1;
+            m_isEditorHoveredCache = false;
+
             if (m_context)
             {
                 ImNodes::SetCurrentContext(m_context);

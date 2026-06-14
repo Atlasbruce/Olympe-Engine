@@ -47,6 +47,11 @@ void SaveFilePickerModal::Open(const std::string& directory, const std::string& 
     m_selectedFile = "";
     m_showOverwriteConfirm = false;
 
+    // Phase 93 FIX (reaffirmed): SaveAs uses BeginPopupModal(), so it must be
+    // explicitly opened in ImGui's popup stack when switching to open state.
+    // This guarantees visibility in the centralized framework modal flow.
+    ImGui::OpenPopup(GetModalTitle().c_str());
+
     if (!directory.empty())
     {
         m_currentPath = directory;
@@ -99,8 +104,14 @@ void SaveFilePickerModal::Render()
     ImGui::SetNextWindowSize(ImVec2(900.0f, 600.0f), ImGuiCond_Appearing);
     ImGui::SetNextWindowSizeConstraints(ImVec2(600.0f, 400.0f), ImVec2(1400.0f, 900.0f));
 
-    bool open = true;
     std::string title = GetModalTitle();
+    // Safety net for framework-driven modal routing: ensure popup is explicitly
+    // present in ImGui stack before BeginPopupModal().
+    if (!ImGui::IsPopupOpen(title.c_str()))
+    {
+        ImGui::OpenPopup(title.c_str());
+    }
+    bool open = m_isOpen;
     if (ImGui::BeginPopupModal(title.c_str(), &open, ImGuiWindowFlags_AlwaysAutoResize))
     {
         // Description
@@ -420,19 +431,27 @@ void SaveFilePickerModal::RenderFileList()
 
 void SaveFilePickerModal::RenderFolderList()
 {
-    for (const auto& folder : m_folderList)
+    std::string selectedFolder;
+    const std::vector<std::string> folders = m_folderList;
+
+    for (const auto& folder : folders)
     {
         if (ImGui::Selectable(folder.c_str(), false, ImGuiSelectableFlags_DontClosePopups))
         {
-            // Build path safely - avoid double slashes
-            if (!m_currentPath.empty() && m_currentPath.back() != '/' && m_currentPath.back() != '\\')
-            {
-                m_currentPath += "/";
-            }
-            m_currentPath += folder;
-            strncpy_s(m_pathBuffer, sizeof(m_pathBuffer), m_currentPath.c_str(), _TRUNCATE);
-            RefreshFileListInternal(true);  // true = user initiated navigation, log
+            selectedFolder = folder;
         }
+    }
+
+    if (!selectedFolder.empty())
+    {
+        // Build path safely - avoid double slashes
+        if (!m_currentPath.empty() && m_currentPath.back() != '/' && m_currentPath.back() != '\\')
+        {
+            m_currentPath += "/";
+        }
+        m_currentPath += selectedFolder;
+        strncpy_s(m_pathBuffer, sizeof(m_pathBuffer), m_currentPath.c_str(), _TRUNCATE);
+        RefreshFileListInternal(true);  // true = user initiated navigation, log
     }
 }
 

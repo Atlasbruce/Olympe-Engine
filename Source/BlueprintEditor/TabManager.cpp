@@ -149,7 +149,7 @@ std::string TabManager::DetectGraphType(const std::string& filePath)
 std::string TabManager::CreateNewTab(const std::string& graphType)
 {
     std::ostringstream nameSS;
-    nameSS << "Untitled-" << m_nextTabNum++;
+    nameSS << "Untitled-" << graphType << "-" << m_nextTabNum++;
 
     EditorTab tab;
     tab.tabID       = NextTabID();
@@ -240,6 +240,7 @@ std::string TabManager::CreateNewTab(const std::string& graphType)
     else
     {
         // Unsupported graph type
+		SYSTEM_LOG << "[TabManager::CreateNewTab] ERROR: Unsupported graph type '" << graphType << "'\n";
         return "";
     }
 
@@ -422,13 +423,6 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
 
 void TabManager::SetActiveTab(const std::string& tabID)
 {
-    // Phase 35.0: Save previous tab's canvas state before switching
-    EditorTab* previousTab = GetActiveTab();
-    if (previousTab && previousTab->renderer)
-    {
-        previousTab->renderer->SaveCanvasState();
-    }
-
     // Update active tab
     for (size_t i = 0; i < m_tabs.size(); ++i)
         m_tabs[i].isActive = (m_tabs[i].tabID == tabID);
@@ -439,12 +433,6 @@ void TabManager::SetActiveTab(const std::string& tabID)
     // so that subsequent user-initiated tab clicks are not overridden.
     m_pendingSelectTabID = tabID;
 
-    // Phase 35.0: Restore new tab's canvas state after switching
-    EditorTab* newTab = GetActiveTab();
-    if (newTab && newTab->renderer)
-    {
-        newTab->renderer->RestoreCanvasState();
-    }
 }
 
 std::string TabManager::GetActiveTabID() const
