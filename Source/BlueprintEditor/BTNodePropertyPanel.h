@@ -288,8 +288,13 @@ public:
      */
     void SetSelectedNode(int graphId, int nodeId)
     {
+        // Avoid noisy logs when selection hasn't changed
+        if (m_activeGraphId == graphId && m_selectedNodeId == nodeId)
+            return;
+
         m_activeGraphId = graphId;
         m_selectedNodeId = nodeId;
+        SYSTEM_LOG << "[BTNodePropertyPanel] Selected node set: graph=" << graphId << " node=" << nodeId << "\n";
     }
 
     /**

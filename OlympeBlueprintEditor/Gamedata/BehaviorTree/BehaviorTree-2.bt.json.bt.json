@@ -102,6 +102,50 @@
           "nodeId": 24,
           "pinId": "input"
         }
+      },
+      {
+        "fromPin": {
+          "nodeId": 25,
+          "pinId": "output"
+        },
+        "id": 24,
+        "toPin": {
+          "nodeId": 28,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 31,
+          "pinId": "output"
+        },
+        "id": 25,
+        "toPin": {
+          "nodeId": 32,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 33,
+          "pinId": "output"
+        },
+        "id": 26,
+        "toPin": {
+          "nodeId": 34,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 33,
+          "pinId": "output"
+        },
+        "id": 27,
+        "toPin": {
+          "nodeId": 36,
+          "pinId": "input"
+        }
       }
     ],
     "nodes": [
@@ -111,8 +155,8 @@
         "name": "BT_Root_1",
         "parameters": {},
         "position": {
-          "x": -9,
-          "y": 84
+          "x": -20,
+          "y": 87
         },
         "type": "BT_Root"
       },
@@ -124,8 +168,8 @@
           "Param_name_test": "jiojoijojo"
         },
         "position": {
-          "x": 767,
-          "y": 285
+          "x": 794,
+          "y": 215
         },
         "type": "BT_AttackTarget"
       },
@@ -135,8 +179,8 @@
         "name": "BT_MoveToPosition_6",
         "parameters": {},
         "position": {
-          "x": 768,
-          "y": 403
+          "x": 776,
+          "y": 315
         },
         "type": "BT_MoveToPosition"
       },
@@ -146,8 +190,8 @@
         "name": "BT_WaitRandomTime_7",
         "parameters": {},
         "position": {
-          "x": 772,
-          "y": 519
+          "x": 778,
+          "y": 414
         },
         "type": "BT_WaitRandomTime"
       },
@@ -157,8 +201,8 @@
         "name": "BT_CanSeeTarget_8",
         "parameters": {},
         "position": {
-          "x": 758,
-          "y": 82
+          "x": 785,
+          "y": 12
         },
         "type": "BT_CanSeeTarget"
       },
@@ -168,8 +212,8 @@
         "name": "BT_MoveToTarget_9",
         "parameters": {},
         "position": {
-          "x": 762,
-          "y": 192
+          "x": 789,
+          "y": 122
         },
         "type": "BT_MoveToTarget"
       },
@@ -179,8 +223,8 @@
         "name": "BT_HasTarget_10",
         "parameters": {},
         "position": {
-          "x": 760,
-          "y": -45
+          "x": 787,
+          "y": -115
         },
         "type": "BT_HasTarget"
       },
@@ -212,10 +256,65 @@
         "name": "BT_Sequence_13",
         "parameters": {},
         "position": {
-          "x": 498.526,
-          "y": 413.414
+          "x": 504.526,
+          "y": 274.414
         },
         "type": "BT_Sequence"
+      },
+      {
+        "children": [],
+        "id": 14,
+        "name": "BT_SubGraph_14",
+        "parameters": {},
+        "position": {
+          "x": 497.526,
+          "y": 401.414
+        },
+        "type": "BT_SubGraph"
+      },
+      {
+        "children": [],
+        "id": 15,
+        "name": "BT_OnEvent_15",
+        "parameters": {},
+        "position": {
+          "x": 34,
+          "y": 618
+        },
+        "type": "BT_OnEvent"
+      },
+      {
+        "children": [],
+        "id": 16,
+        "name": "BT_RandomSelector_16",
+        "parameters": {},
+        "position": {
+          "x": 252,
+          "y": 618
+        },
+        "type": "BT_RandomSelector"
+      },
+      {
+        "children": [],
+        "id": 17,
+        "name": "BT_SubGraph_17",
+        "parameters": {},
+        "position": {
+          "x": 523,
+          "y": 680
+        },
+        "type": "BT_SubGraph"
+      },
+      {
+        "children": [],
+        "id": 18,
+        "name": "BT_MoveToPosition_18",
+        "parameters": {},
+        "position": {
+          "x": 521,
+          "y": 576
+        },
+        "type": "BT_MoveToPosition"
       }
     ],
     "rootNodeId": 0

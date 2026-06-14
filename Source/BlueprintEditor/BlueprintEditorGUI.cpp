@@ -717,7 +717,17 @@ namespace Olympe
                             logsRendered = true;
                         }
                     }
-                    // Add more graph types as needed (BehaviorTree, EntityPrefab, etc.)
+                    // Support BehaviorTree verification output
+                    else if (activeTab->graphType == "BehaviorTree")
+                    {
+                        BehaviorTreeRenderer* btRenderer = dynamic_cast<BehaviorTreeRenderer*>(activeTab->renderer);
+                        if (btRenderer)
+                        {
+                            btRenderer->RenderVerificationLogsPanel();
+                            logsRendered = true;
+                        }
+                    }
+                    // Add more graph types as needed (EntityPrefab, etc.)
                 }
 
                 if (!logsRendered)

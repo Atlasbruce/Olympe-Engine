@@ -16,7 +16,7 @@
 #include "GraphExecutionTracer.h"
 #include "ExecutionTestPanel.h"
 #include "BehaviorTreeExecutor.h"
-#include "../NodeGraphShared/BehaviorTreeGraphAdapter.h"
+// BehaviorTreeExecutor is provided by the editor runtime; do NOT include its .cpp here
 #include "../AI/AIGraphPlugin_BT/BTNodePalette.h"
 #include "../PanelManager.h"  // Access to framework panel dimensions
 #include "../AI/BehaviorTree.h"
@@ -63,6 +63,287 @@ BehaviorTreeRenderer::BehaviorTreeRenderer(NodeGraphPanel& panel)
     m_minimap = std::make_unique<CanvasMinimapRenderer>();
 
     SYSTEM_LOG << "[BehaviorTreeRenderer] CanvasFramework initialized\n";
+}
+
+BehaviorTreeAsset BehaviorTreeRenderer::ExportBehaviorTreeAsset() const
+{
+    BehaviorTreeAsset asset;
+    if (m_graphId < 0)
+        return asset;
+
+    // Build BehaviorTreeAsset from NodeGraph::GraphDocument
+    GraphId id{static_cast<uint32_t>(m_graphId)};
+    GraphDocument* doc = NodeGraph::NodeGraphManager::Get().GetGraph(id);
+    if (!doc)
+        return asset;
+
+    // Convert GraphDocument nodes to BehaviorTree nodes
+    asset.name = doc->type + "_converted";
+    // Grab nodes once and determine root node id: prefer explicit document root, otherwise infer from a BT_Root node
+    const auto& nodes = doc->GetNodes();
+    const auto& links = doc->GetLinks();
+    int docRoot = doc->GetRootNodeId();
+    if (docRoot == 0)
+    {
+        // Try to infer root: look for a node whose type contains 'Root' (e.g. 'BT_Root')
+        for (const auto& n : nodes)
+        {
+            if (n.type.find("Root") != std::string::npos)
+            {
+                docRoot = static_cast<int>(n.id.value);
+                SYSTEM_LOG << "[BehaviorTreeRenderer::ExportBehaviorTreeAsset] Inferred root node ID=" << docRoot << " from node type='" << n.type << "'\n";
+                break;
+            }
+        }
+    }
+
+    asset.rootNodeId = static_cast<uint32_t>(docRoot);
+    for (const auto& n : nodes)
+    {
+        BTNode bn;
+        bn.id = static_cast<uint32_t>(n.id.value);
+        bn.name = n.name;
+        // Map type string heuristics
+        if (n.type.find("Selector") != std::string::npos) bn.type = BTNodeType::Selector;
+        else if (n.type.find("Sequence") != std::string::npos) bn.type = BTNodeType::Sequence;
+        else if (n.type.find("Condition") != std::string::npos) bn.type = BTNodeType::Condition;
+        else if (n.type.find("Action") != std::string::npos) bn.type = BTNodeType::Action;
+        else if (n.type.find("Root") != std::string::npos) bn.type = BTNodeType::Root;
+        else bn.type = BTNodeType::Action;
+
+        bn.editorPosX = n.position.x;
+        bn.editorPosY = n.position.y;
+
+        // children: convert NodeId vector to uint32_t ids
+        // We'll populate children from graph links below; keep any explicit children as fallback
+        for (const auto& c : n.children)
+        {
+            bn.childIds.push_back(static_cast<uint32_t>(c.value));
+        }
+
+        // If node is an OnEvent root, record it
+        if (n.type.find("OnEvent") != std::string::npos || n.type.find("On_Event") != std::string::npos)
+        {
+            asset.m_eventRootIds.push_back(bn.id);
+        }
+
+        asset.nodes.push_back(bn);
+    }
+
+    // Build child relationships from links (fromPin -> toPin) but be resilient to link orientation
+    if (!links.empty())
+    {
+        // Map node id -> index in asset.nodes
+        std::unordered_map<uint32_t, size_t> idIndex;
+        for (size_t i = 0; i < asset.nodes.size(); ++i) idIndex[asset.nodes[i].id] = i;
+
+        // Forward adjacency (from -> to)
+        std::unordered_map<uint32_t, std::vector<uint32_t>> forwardAdj;
+        std::unordered_map<uint32_t, std::vector<uint32_t>> reverseAdj;
+        for (const auto& l : links)
+        {
+            // Convert pin ids to node ids (pin = nodeId*2 scheme used in ImNodes adapter)
+            uint32_t fromNode = static_cast<uint32_t>(l.fromPin.value) / 2u;
+            uint32_t toNode = static_cast<uint32_t>(l.toPin.value) / 2u;
+            forwardAdj[fromNode].push_back(toNode);
+            reverseAdj[toNode].push_back(fromNode);
+        }
+
+        auto applyAdj = [&](const std::unordered_map<uint32_t, std::vector<uint32_t>>& adj)
+        {
+            // Clear existing children then populate
+            for (auto& bn : asset.nodes) bn.childIds.clear();
+            for (const auto& kv : adj)
+            {
+                auto it = idIndex.find(kv.first);
+                if (it == idIndex.end()) continue;
+                auto& childVec = asset.nodes[it->second].childIds;
+                for (uint32_t cid : kv.second)
+                {
+                    if (std::find(childVec.begin(), childVec.end(), cid) == childVec.end())
+                        childVec.push_back(cid);
+                }
+            }
+
+            // Sort children by editor Y position
+            for (auto& bn : asset.nodes)
+            {
+                if (bn.childIds.size() <= 1) continue;
+                std::sort(bn.childIds.begin(), bn.childIds.end(), [&](uint32_t a, uint32_t b)
+                {
+                    const BTNode* na = asset.GetNode(a);
+                    const BTNode* nb = asset.GetNode(b);
+                    if (!na || !nb) return a < b;
+                    return na->editorPosY < nb->editorPosY;
+                });
+            }
+        };
+
+        // Apply forward adjacency first
+        applyAdj(forwardAdj);
+
+        // If forward produced almost no connectivity (root has no children), try reverse orientation
+        bool rootHasChildren = false;
+        if (asset.rootNodeId != 0)
+        {
+            const BTNode* r = asset.GetNode(asset.rootNodeId);
+            if (r && !r->childIds.empty()) rootHasChildren = true;
+        }
+        if (!rootHasChildren)
+        {
+            // Compute reachable count from root using current child lists
+            auto reachableCount = [&]() -> size_t
+            {
+                if (asset.rootNodeId == 0) return 0;
+                std::set<uint32_t> visited;
+                std::vector<uint32_t> stack;
+                stack.push_back(asset.rootNodeId);
+                while (!stack.empty())
+                {
+                    uint32_t cur = stack.back(); stack.pop_back();
+                    if (visited.count(cur)) continue;
+                    visited.insert(cur);
+                    const BTNode* curNode = asset.GetNode(cur);
+                    if (!curNode) continue;
+                    for (uint32_t c : curNode->childIds) stack.push_back(c);
+                }
+                return visited.size();
+            }();
+
+            if (reachableCount <= 1)
+            {
+                // Try reverse orientation
+                SYSTEM_LOG << "[BehaviorTreeRenderer::ExportBehaviorTreeAsset] Forward links produced no children for root, attempting reversed orientation\n";
+                applyAdj(reverseAdj);
+            }
+        }
+    }
+
+    // Spatial heuristic fallback: if root still has no children, pick nearest node to the right as child
+    if (asset.rootNodeId != 0)
+    {
+        BTNode* rootBn = asset.GetNode(asset.rootNodeId);
+        if (rootBn && rootBn->childIds.empty())
+        {
+            float bestDist = std::numeric_limits<float>::infinity();
+            uint32_t bestId = 0;
+            for (const auto& cand : asset.nodes)
+            {
+                if (cand.id == rootBn->id) continue;
+                // Candidate should be to the right (higher X) and roughly same Y band
+                if (cand.editorPosX <= rootBn->editorPosX) continue;
+                float dx = cand.editorPosX - rootBn->editorPosX;
+                float dy = cand.editorPosY - rootBn->editorPosY;
+                float dist = sqrt(dx*dx + dy*dy);
+                if (dist < bestDist)
+                {
+                    bestDist = dist;
+                    bestId = cand.id;
+                }
+            }
+            if (bestId != 0)
+            {
+                SYSTEM_LOG << "[BehaviorTreeRenderer::ExportBehaviorTreeAsset] Spatial fallback: linking root " << rootBn->id << " -> " << bestId << "\n";
+                rootBn->childIds.push_back(bestId);
+            }
+        }
+    }
+
+    // If root has no children after the forward link pass, try reversed link orientation
+    if (asset.rootNodeId != 0)
+    {
+        const BTNode* rootNode = asset.GetNode(asset.rootNodeId);
+        if (rootNode && rootNode->childIds.empty())
+        {
+            // Check if any link points TO the root (indicating reversed orientation)
+            // Note: l.toPin is a pin id; convert to node id using pin/node scheme (pin = nodeId*2)
+            bool foundIncomingToRoot = false;
+            for (const auto& l : links)
+            {
+                uint32_t toNode = static_cast<uint32_t>(l.toPin.value) / 2u;
+                if (toNode == asset.rootNodeId) { foundIncomingToRoot = true; break; }
+            }
+
+            if (foundIncomingToRoot)
+            {
+                SYSTEM_LOG << "[BehaviorTreeRenderer::ExportBehaviorTreeAsset] Detected reversed link orientation; rebuilding child lists (to -> from)\n";
+                // Clear existing children
+                for (auto& bn : asset.nodes) bn.childIds.clear();
+
+                // Rebuild: parent = toPin, child = fromPin
+                std::unordered_map<uint32_t, size_t> idIndex2;
+                for (size_t i = 0; i < asset.nodes.size(); ++i) idIndex2[asset.nodes[i].id] = i;
+                for (const auto& l : links)
+                {
+                    uint32_t parentId = static_cast<uint32_t>(l.toPin.value) / 2u;
+                    uint32_t childId = static_cast<uint32_t>(l.fromPin.value) / 2u;
+                    auto itP = idIndex2.find(parentId);
+                    if (itP != idIndex2.end())
+                    {
+                        auto& childVec = asset.nodes[itP->second].childIds;
+                        if (std::find(childVec.begin(), childVec.end(), childId) == childVec.end())
+                            childVec.push_back(childId);
+                    }
+                }
+
+                // Resort children by Y
+                for (auto& bn : asset.nodes)
+                {
+                    if (bn.childIds.size() <= 1) continue;
+                    std::sort(bn.childIds.begin(), bn.childIds.end(), [&](uint32_t a, uint32_t b)
+                    {
+                        const BTNode* na = asset.GetNode(a);
+                        const BTNode* nb = asset.GetNode(b);
+                        if (!na || !nb) return a < b;
+                        return na->editorPosY < nb->editorPosY;
+                    });
+                }
+            }
+        }
+    }
+
+    return asset;
+}
+
+void BehaviorTreeRenderer::RenderVerificationLogsPanel()
+{
+    // Mirror VisualScriptEditorPanel::RenderVerificationLogsPanel behaviour but using m_verificationLogs
+    if (!m_verificationDone)
+    {
+        ImGui::TextDisabled("(Click 'Verify' or 'Run' button to generate output)");
+        return;
+    }
+
+    // Status line
+    bool hasErrors = false;
+    for (const auto& l : m_verificationLogs) if (l.find("[ERROR]") != std::string::npos) { hasErrors = true; break; }
+
+    if (hasErrors)
+        ImGui::TextColored(ImVec4(1.0f,0.3f,0.3f,1.0f), "[ERROR] Graph has errors");
+    else if (!m_verificationLogs.empty())
+        ImGui::TextColored(ImVec4(0.3f,1.0f,0.3f,1.0f), "[OK] Graph validated (warnings/info may exist)");
+    else
+        ImGui::TextColored(ImVec4(0.7f,0.7f,0.7f,1.0f), "[OK] No validation logs");
+
+    ImGui::Separator();
+
+    ImGui::BeginChild("BehaviorTreeVerificationLogsChild", ImVec2(0,0), true);
+    if (m_verificationLogs.empty())
+    {
+        ImGui::TextDisabled("(No logs to display)");
+    }
+    else
+    {
+        for (const auto& line : m_verificationLogs)
+        {
+            ImVec4 col = ImVec4(0.9f,0.9f,0.9f,1.0f);
+            if (line.find("[ERROR]") != std::string::npos) col = ImVec4(1.0f,0.3f,0.3f,1.0f);
+            else if (line.find("[WARN]") != std::string::npos) col = ImVec4(1.0f,0.85f,0.0f,1.0f);
+            else if (line.find("[SIMULATION]") != std::string::npos) col = ImVec4(0.4f,1.0f,0.4f,1.0f);
+            ImGui::TextColored(col, "%s", line.c_str());
+        }
+    }
+    ImGui::EndChild();
 }
 
 BehaviorTreeRenderer::~BehaviorTreeRenderer()
@@ -191,7 +472,33 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
         m_framework->GetToolbar()->Render();
     }
 
+    // If verify modal requested, render a simple modal using ImGui
+    // Migrate BT validation/simulation messages into the unified Verification Output
+    if (m_verificationDone && !m_verificationLogs.empty())
+    {
+        // nothing here - logs rendered via RenderVerificationLogsPanel()
+    }
+
+    if (m_showRunModal)
+    {
+        m_showRunModal = false;
+        ImGui::OpenPopup("BT Run");
+    }
+
+    if (ImGui::BeginPopupModal("BT Run", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("BehaviorTree Run not available: could not resolve asset or adapter failed.");
+        if (ImGui::Button("Close"))
+            ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+
     ImGui::Separator();
+
+    // Render verification logs panel area in the left column when active
+    // The main GUI container (BlueprintEditorGUI) expects RenderVerificationLogsPanel on the renderer
+    // Provide the implementation here for BehaviorTreeRenderer so logs appear in the left panel
+    // Note: The container will call the renderer's RenderVerificationLogsPanel() via dynamic dispatch
 
     // Layout: Canvas (left) | Resize Handle | Tabbed Right Panel (right)
     // Use framework panel dimensions from PanelManager
@@ -264,9 +571,33 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
         if (selectedNodeId != m_propertyPanel.m_selectedNodeId)
         {
             if (selectedNodeId != -1)
+            {
                 m_propertyPanel.SetSelectedNode(m_graphId, selectedNodeId);
+                // Auto-switch right panel to Properties when a node is selected
+                m_rightPanelTabSelection = 1;
+            }
             else
+            {
                 m_propertyPanel.ClearSelection();
+            }
+        }
+
+        // PHASE 86: Handle ImNodes context menu trigger (right-click on node/link/editor)
+        // Only open popup when the user actually right-clicked to avoid spurious opens
+        int hoveredNode = -1, hoveredLink = -1;
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+        {
+            if (m_imNodesAdapter->HandleContextMenuTrigger(&hoveredNode, &hoveredLink))
+            {
+                // Cache hovered ids into renderer transient members so RenderContextMenu
+                // can act on the hovered link even though ImNodes selection may change.
+                m_contextHoveredNode = hoveredNode;
+                m_contextHoveredLink = hoveredLink;
+
+                // Open the canvas popup used by this renderer
+                ImGui::OpenPopup("BT_Canvas_Context_Menu");
+                SYSTEM_LOG << "[BehaviorTreeRenderer] Opened BT_Canvas_Context_Menu (hoveredNode=" << hoveredNode << ", hoveredLink=" << hoveredLink << ")\n";
+            }
         }
     }
     else if (m_imNodesAdapter)
@@ -283,6 +614,10 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
             }
         });
     }
+
+        // Render context menu immediately inside the same child/window scope
+        // so BeginPopup can resolve the OpenPopup() call made above.
+        RenderContextMenu();
 
     ImGui::EndChild();
 
@@ -357,12 +692,18 @@ void BehaviorTreeRenderer::RenderContextMenu()
 
     int selectedNodeId = m_imNodesAdapter->GetSelectedNodeId();
 
-    // LEGACY RESTORATION: Use popup triggered by right click anywhere or on node
-    if (ImGui::BeginPopupContextWindow("BT_Canvas_Context_Menu"))
+    // LEGACY RESTORATION: Popup opened explicitly via ImGui::OpenPopup("BT_Canvas_Context_Menu")
+    // Use BeginPopup to match the explicit OpenPopup call performed on right-click.
+    if (ImGui::BeginPopup("BT_Canvas_Context_Menu"))
     {
-        if (selectedNodeId != -1)
+        // Use cached hovered ids (set at popup open) so we can act on a hovered link
+        // even if ImNodes selection changes after HandleContextMenuTrigger returned.
+        int popupNodeId = m_contextHoveredNode != -1 ? m_contextHoveredNode : selectedNodeId;
+        int popupLinkId = m_contextHoveredLink;
+
+        if (popupNodeId != -1)
         {
-            ImGui::Text("Node Actions (#%d)", selectedNodeId);
+            ImGui::Text("Node Actions (#%d)", popupNodeId);
             ImGui::Separator();
 
             if (ImGui::MenuItem("Set as Root"))
@@ -413,9 +754,31 @@ void BehaviorTreeRenderer::RenderContextMenu()
                 NodeGraphTypes::GraphDocument* graphDoc = manager.GetGraph(NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
                 if (graphDoc)
                 {
-                    graphDoc->DeleteNode(NodeGraphTypes::NodeId{ static_cast<uint32_t>(selectedNodeId) });
+                    graphDoc->DeleteNode(NodeGraphTypes::NodeId{ static_cast<uint32_t>(popupNodeId) });
                     m_propertyPanel.ClearSelection();
                     graphDoc->SetDirty(true);
+                }
+            }
+        }
+        else if (popupLinkId != -1)
+        {
+            ImGui::Text("Link Actions (#%d)", popupLinkId);
+            ImGui::Separator();
+            if (ImGui::MenuItem("Delete Link", "Del"))
+            {
+                auto& manager = NodeGraph::NodeGraphManager::Get();
+                NodeGraphTypes::GraphDocument* graphDoc = manager.GetGraph(NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+                if (graphDoc)
+                {
+                    // ImNodes link UIDs map to index in graphDoc->GetLinks() (we used linkUid = i when drawing)
+                    // To be safe, check bounds and then call DisconnectLink using the LinkId stored in the document.
+                    const auto& links = graphDoc->GetLinks();
+                    if (popupLinkId >= 0 && static_cast<size_t>(popupLinkId) < links.size())
+                    {
+                        NodeGraphTypes::LinkId lid{ static_cast<uint32_t>(links[popupLinkId].id.value) };
+                        graphDoc->DisconnectLink(lid);
+                        graphDoc->SetDirty(true);
+                    }
                 }
             }
         }
@@ -457,24 +820,39 @@ void BehaviorTreeRenderer::RenderRightPanelTabs()
         }
 
         // Tab 1: Node Properties
-        if (ImGui::BeginTabItem("Properties"))
         {
-            // Wire selected node from canvas to property panel
-            int selectedNodeId = m_panel.m_SelectedNodeId;
-            if (selectedNodeId >= 0 && m_graphId >= 0)
+            ImGuiTabItemFlags propsFlags = ImGuiTabItemFlags_None;
+            // If a node is selected in the property panel, prefer to open the Properties tab
+            if (m_propertyPanel.HasSelectedNode()) propsFlags |= ImGuiTabItemFlags_SetSelected;
+
+            if (ImGui::BeginTabItem("Properties", nullptr, propsFlags))
             {
-                if (!m_propertyPanel.HasSelectedNode() || m_propertyPanel.m_selectedNodeId != selectedNodeId)
+                // Ensure property panel selection is synced with adapter if needed
+                if (!m_propertyPanel.HasSelectedNode())
                 {
-                    m_propertyPanel.SetSelectedNode(m_graphId, selectedNodeId);
+                    // Try to source selection from ImNodes adapter as fallback
+                    if (m_imNodesAdapter && m_graphId >= 0)
+                    {
+                        int sel = m_imNodesAdapter->GetSelectedNodeId();
+                        if (sel >= 0)
+                        {
+                            m_propertyPanel.SetSelectedNode(m_graphId, sel);
+                        }
+                    }
+                }
+
+                // Render property panel (will display "No node selected" when appropriate)
+                m_propertyPanel.Render();
+                ImGui::EndTabItem();
+            }
+            else
+            {
+                // If tab is not opened and there is no selection, ensure panel is cleared
+                if (!m_propertyPanel.HasSelectedNode())
+                {
+                    m_propertyPanel.ClearSelection();
                 }
             }
-            else if (selectedNodeId < 0)
-            {
-                m_propertyPanel.ClearSelection();
-            }
-
-            m_propertyPanel.Render();
-            ImGui::EndTabItem();
         }
 
         ImGui::EndTabBar();
@@ -764,15 +1142,131 @@ void BehaviorTreeRenderer::HandleKeyboardShortcuts()
 
 void BehaviorTreeRenderer::OnVerifyGraphClicked()
 {
-    SYSTEM_LOG << "[BehaviorTreeRenderer::OnVerifyGraphClicked] Running verification...\n";
-    // Si la vérification est supportée à l'avenir pour BT, l'intégrer ici.
+    SYSTEM_LOG << "[BehaviorTreeRenderer::OnVerifyGraphClicked] Running verification for BehaviorTree...\n";
+
+    if (m_graphId < 0)
+    {
+        SYSTEM_LOG << "[BehaviorTreeRenderer::OnVerifyGraphClicked] No graph loaded - aborting verification\n";
+        return;
+    }
+
+    auto* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+    if (!graphDoc)
+    {
+        SYSTEM_LOG << "[BehaviorTreeRenderer::OnVerifyGraphClicked] ERROR: GraphDocument not found\n";
+        return;
+    }
+
+    // Run BT validator and copy messages into verification logs for the left panel
+    auto messages = AI::BTGraphValidator::ValidateGraph(graphDoc);
+    m_verificationLogs.clear();
+    for (const auto& m : messages)
+    {
+        std::string prefix = (m.severity == AI::BTValidationSeverity::Error) ? "[ERROR] " :
+                             (m.severity == AI::BTValidationSeverity::Warning) ? "[WARN] " : "[INFO] ";
+        std::string line = prefix + m.message;
+        if (m.nodeId != 0) line += " (Node: " + std::to_string(m.nodeId) + ")";
+        m_verificationLogs.push_back(line);
+    }
+    m_verificationDone = true;
+    SYSTEM_LOG << "[BehaviorTreeRenderer::OnVerifyGraphClicked] Validation produced " << m_verificationLogs.size() << " log lines\n";
 }
 
 void BehaviorTreeRenderer::OnRunGraphClicked()
 {
-    // TODO: Reimplement with modern NodeGraphTypes schema
-    // Old code used NodeGraph* graph with deprecated GetAllNodes, CreateNode methods
-    SYSTEM_LOG << "[BehaviorTreeRenderer::OnRunGraphClicked] DEPRECATED - awaiting reimplementation\n";
+    SYSTEM_LOG << "[BehaviorTreeRenderer::OnRunGraphClicked] Run requested - starting adapter+simulator pipeline\n";
+
+    if (m_graphId < 0)
+    {
+        SYSTEM_LOG << "[BehaviorTreeRenderer::OnRunGraphClicked] No graph loaded - aborting run\n";
+        return;
+    }
+
+    // Get the BehaviorTree asset from the NodeGraphManager / document
+    auto* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+    if (!graphDoc)
+    {
+        SYSTEM_LOG << "[BehaviorTreeRenderer::OnRunGraphClicked] ERROR: GraphDocument not found\n";
+        return;
+    }
+
+    // Extract BehaviorTreeAsset via the document adapter if available
+    BehaviorTreeAsset btAsset;
+    bool haveAsset = false;
+    // Export BehaviorTreeAsset from this renderer (build from GraphDocument)
+    btAsset = ExportBehaviorTreeAsset();
+    if (btAsset.nodes.empty() && btAsset.rootNodeId == 0)
+    {
+        SYSTEM_LOG << "[BehaviorTreeRenderer::OnRunGraphClicked] ERROR: Unable to obtain BehaviorTree asset for simulation\n";
+        m_verificationLogs.clear();
+        m_verificationLogs.push_back("[ERROR] Unable to obtain BehaviorTree asset for simulation");
+        m_verificationDone = true;
+        return;
+    }
+
+    // Execute BehaviorTree natively using BehaviorTreeExecutor (no adapter required)
+    m_lastTracer->Reset();
+    m_executionTestPanel->SetVisible(true);
+
+    BehaviorTreeExecutor executor;
+    BTStatus execStatus = executor.ExecuteTree(btAsset, *m_lastTracer);
+
+    // Simple BT-specific formatting of tracer (indent by depth, add status symbols)
+    m_verificationLogs.clear();
+    const auto& events = m_lastTracer->GetEvents();
+    if (events.empty())
+    {
+        m_verificationLogs.push_back("[SIMULATION] [No execution events recorded]");
+    }
+    else
+    {
+        for (const auto& ev : events)
+        {
+            const BTNode* node = btAsset.GetNode(static_cast<uint32_t>(ev.nodeId));
+            if (!node) continue;
+            int32_t depth = 0;
+            // compute depth via parent walk (simple, safe approach)
+            uint32_t current = static_cast<uint32_t>(ev.nodeId);
+            while (true)
+            {
+                uint32_t parent = 0;
+                for (const auto& n : btAsset.nodes)
+                {
+                    for (auto cid : n.childIds)
+                    {
+                        if (cid == current) { parent = n.id; break; }
+                    }
+                    if (parent != 0) break;
+                }
+                if (parent == 0) break;
+                depth++;
+                current = parent;
+            }
+
+            std::string indent(depth * 2, ' ');
+            std::string statusSymbol = "  ";
+            if (ev.message.find("SUCCESS") != std::string::npos) statusSymbol = "✓ ";
+            else if (ev.message.find("FAILURE") != std::string::npos) statusSymbol = "✗ ";
+            else if (ev.message.find("RUNNING") != std::string::npos) statusSymbol = "⊙ ";
+
+            std::ostringstream line;
+            line << "[SIMULATION] " << indent << statusSymbol << node->name;
+            if (!ev.message.empty()) line << " → " << ev.message;
+            m_verificationLogs.push_back(line.str());
+        }
+    }
+
+    // Push simple summary
+    {
+        std::ostringstream os;
+        os << "[SIMULATION SUMMARY] Executed nodes=" << m_lastTracer->GetEvents().size() << " Status=" << static_cast<int>(execStatus);
+        m_verificationLogs.push_back(os.str());
+    }
+
+    m_verificationDone = true;
+
+    // Populate ExecutionTestPanel display with the tracer for detailed table view
+    m_executionTestPanel->DisplayTrace(*m_lastTracer);
 }
 
 // Phase 35.0: Canvas state management

@@ -21,8 +21,13 @@
 #include "Utilities/ImNodesCanvasEditor.h"
 #include "Utilities/CanvasMinimapRenderer.h"
 
+#include "../AI/AIGraphPlugin_BT/BTGraphValidator.h"
+
 #include <string>
 #include <memory>
+#include <vector>
+// BehaviorTree types
+#include "../AI/BehaviorTree.h"
 
 namespace Olympe {
 
@@ -30,9 +35,7 @@ namespace Olympe {
 class NodeGraphPanel;
 class GraphExecutionTracer;
 class ExecutionTestPanel;
-namespace AI {
-    class BTNodePalette;
-}
+namespace AI { class BTNodePalette; }
 
 /**
  * @class BehaviorTreeRenderer
@@ -65,6 +68,9 @@ public:
     std::string GetGraphType()         const     override;
     std::string GetCurrentPath()       const     override;
 
+    // Render verification / simulation logs into the editor's Verification Output panel
+    void RenderVerificationLogsPanel();
+
     // Phase 55: Unified Verify/Run
     void VerifyGraph() override { OnVerifyGraphClicked(); }
     void RunGraph()    override { OnRunGraphClicked(); }
@@ -93,6 +99,12 @@ public:
      * Called by "Run Graph" toolbar button.
      */
     void OnRunGraphClicked();
+
+    /**
+     * @brief Export the currently loaded graph to a BehaviorTreeAsset structure
+     * @return BehaviorTreeAsset filled from the active GraphDocument
+     */
+    BehaviorTreeAsset ExportBehaviorTreeAsset() const;
 
     /**
       * @brief Phase 44.2: Get the document adapter for framework integration.
@@ -127,6 +139,13 @@ private:
       ImVec2 m_canvasScreenPos = ImVec2(0, 0);     ///< Screen position of canvas for drag-drop coordinate transformation
       std::unique_ptr<ExecutionTestPanel> m_executionTestPanel;  ///< REUSED: Simulation results panel
       std::unique_ptr<GraphExecutionTracer> m_lastTracer;        ///< Last simulation trace for results display
+    std::vector<AI::BTValidationMessage> m_btValidationMessages; ///< Last verification messages for BT
+    bool m_showVerifyModal = false;                             ///< (legacy) modal flag - no longer used
+    bool m_showRunModal = false;                                ///< (legacy) modal flag - no longer used
+
+    // Verification / simulation output (for Verification Output panel)
+    std::vector<std::string> m_verificationLogs;                ///< Lines to display in Verification Output
+    bool m_verificationDone = false;
 
       // Phase 41 — Framework Integration
       /// Adapter document implementing IGraphDocument for BehaviorTree graphs
@@ -142,6 +161,9 @@ private:
       // Phase 70: Modern Framework Canvas Integration
       std::unique_ptr<ImNodesCanvasEditor> m_canvasEditor;
       std::unique_ptr<CanvasMinimapRenderer> m_minimap;
+      // Context menu transient hover ids (set when opening the popup)
+      int m_contextHoveredNode = -1; ///< ImNodes node uid cached at context-open
+      int m_contextHoveredLink = -1; ///< ImNodes link uid cached at context-open
       bool m_minimapVisible = true;
       float m_minimapSize = 0.15f;
       MinimapPosition m_minimapPosition = MinimapPosition::TopRight;

@@ -57,20 +57,43 @@ bool GraphDocument::DeleteNode(NodeId id)
     
     if (it != m_nodes.end())
     {
+        // Erase the node
         m_nodes.erase(it);
         m_isDirty = true;
-        
-        // Remove links connected to this node
+
+        // Remove links that reference this node. ImNodes uses a simple
+        // pin id scheme where pinId = nodeId * 2 (+0 input, +1 output).
+        // To be robust, remove any link whose fromPin or toPin maps to
+        // the deleted node id.
         m_links.erase(
             std::remove_if(m_links.begin(), m_links.end(),
                 [id](const LinkData& link) {
-                    // We would need to check pin ownership here
-                    // For now, just keep links
-                    return false;
+                    uint32_t fromNode = static_cast<uint32_t>(link.fromPin.value) / 2u;
+                    uint32_t toNode = static_cast<uint32_t>(link.toPin.value) / 2u;
+                    return (fromNode == id.value) || (toNode == id.value);
                 }),
             m_links.end()
         );
-        
+
+        // Also remove any lingering references to this node in other nodes
+        // (children lists and decoratorChild). This keeps NodeData consistent
+        // after a deletion.
+        for (auto& n : m_nodes)
+        {
+            // Remove from children vector
+            n.children.erase(
+                std::remove_if(n.children.begin(), n.children.end(),
+                    [id](const NodeId& cid) { return cid == id; }),
+                n.children.end()
+            );
+
+            // Clear decorator child if it referenced the deleted node
+            if (n.decoratorChild == id)
+            {
+                n.decoratorChild = NodeId{0};
+            }
+        }
+
         return true;
     }
     

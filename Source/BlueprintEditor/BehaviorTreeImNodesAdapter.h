@@ -34,25 +34,56 @@ namespace Olympe
     {
     public:
         BehaviorTreeImNodesAdapter()
-            : m_context(nullptr), m_canvasOffset(0, 0)
+            : m_imnodesContext(nullptr)
+            , m_editorContext(nullptr)
+            , m_canvasOffset(0, 0)
+            , m_ownsImNodesContext(false)
         {
-            // Create ImNodes context
-            m_context = ImNodes::CreateContext();
-            if (m_context)
+            // Robust context strategy:
+            // - Prefer an existing global ImNodes context when available.
+            // - If none exists, create one and mark ownership so we can destroy it.
+            // - Always create a dedicated ImNodesEditorContext for this adapter
+            //   and use EditorContextSet() before rendering. This matches the
+            //   pattern used by VisualScript and the imnodes multi-editor example
+            //   and avoids conflicts when multiple graph types are open.
+            ImNodesContext* current = ImNodes::GetCurrentContext();
+            if (current == nullptr)
             {
-                ImNodes::SetCurrentContext(m_context);
-                SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] ImNodes context created\n";
+                m_imnodesContext = ImNodes::CreateContext();
+                m_ownsImNodesContext = (m_imnodesContext != nullptr);
+                SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Created global ImNodesContext\n";
+            }
+            else
+            {
+                m_imnodesContext = current;
+                SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Reusing existing ImNodesContext\n";
+            }
+
+            // Create a per-adapter editor context (holds pan/selection state)
+            m_editorContext = ImNodes::EditorContextCreate();
+            if (m_editorContext)
+            {
+                // Do not call EditorContextSet here; will be set at render time
+                SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Editor context created\n";
             }
         }
 
         ~BehaviorTreeImNodesAdapter()
         {
-            if (m_context)
+            // Free the editor context for this adapter
+            if (m_editorContext)
             {
-                ImNodes::SetCurrentContext(m_context);
-                ImNodes::DestroyContext(m_context);
-                m_context = nullptr;
-                SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] ImNodes context destroyed\n";
+                ImNodes::EditorContextFree(m_editorContext);
+                m_editorContext = nullptr;
+                SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Editor context freed\n";
+            }
+
+            // Destroy global ImNodesContext only if we created it
+            if (m_ownsImNodesContext && m_imnodesContext)
+            {
+                ImNodes::DestroyContext(m_imnodesContext);
+                m_imnodesContext = nullptr;
+                SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Owned ImNodesContext destroyed\n";
             }
         }
 
@@ -74,9 +105,9 @@ namespace Olympe
             m_hoveredLinkCache = -1;
             m_isEditorHoveredCache = false;
 
-            if (m_context)
+            if (m_imnodesContext)
             {
-                ImNodes::SetCurrentContext(m_context);
+                ImNodes::SetCurrentContext(m_imnodesContext);
             }
 
             // Phase 61 FIX: Route to CORRECT NodeGraphManager (NodeGraph namespace)
@@ -102,7 +133,7 @@ namespace Olympe
          */
         void Render(std::function<void()> minimapRenderCallback = nullptr)
         {
-            if (m_graphId < 0 || !m_context)
+            if (m_graphId < 0 || !m_imnodesContext)
             {
                 ImGui::TextDisabled("BehaviorTree graph not loaded");
                 return;
@@ -111,8 +142,14 @@ namespace Olympe
             // Capture screen position for coordinate transformations
             m_canvasScreenPos = ImGui::GetCursorScreenPos();
 
-            // Set current context for ImNodes
-            ImNodes::SetCurrentContext(m_context);
+            // Ensure the global ImNodes context is active and set this adapter's
+            // editor context so pan/selection state is isolated per adapter.
+            ImNodesContext* prevCtx = ImNodes::GetCurrentContext();
+
+            if (m_imnodesContext)
+                ImNodes::SetCurrentContext(m_imnodesContext);
+            if (m_editorContext)
+                ImNodes::EditorContextSet(m_editorContext);
 
             // Begin node editor
             ImNodes::BeginNodeEditor();
@@ -182,24 +219,32 @@ namespace Olympe
             // See: ImGui v1.92.6 breaking change in imgui.cpp lines 10790-10801
             ImGui::Dummy(ImVec2(0, 0));
 
-            // Restore ImGui default context
-            ImNodes::SetCurrentContext(nullptr);
+            // Restore previous ImNodes context (previous editor context is part of that ImNodesContext)
+            if (prevCtx)
+            {
+                ImNodes::SetCurrentContext(prevCtx);
+            }
+            else
+            {
+                ImNodes::SetCurrentContext(nullptr);
+            }
         }
 
         /**
          * @brief Get ImNodes context
          */
-        ImNodesContext* GetContext() const { return m_context; }
+        ImNodesContext* GetContext() const { return m_imnodesContext; }
 
         /**
          * @brief Returns the ID of the currently selected node, or -1 if none.
          */
         int GetSelectedNodeId() const
         {
-            if (!m_context) return -1;
+            if (!m_imnodesContext) return -1;
 
             ImNodesContext* oldContext = ImNodes::GetCurrentContext();
-            ImNodes::SetCurrentContext(m_context);
+            ImNodes::SetCurrentContext(m_imnodesContext);
+            ImNodes::EditorContextSet(m_editorContext);
 
             int selectedNodeId = -1;
             if (ImNodes::NumSelectedNodes() > 0)
@@ -209,7 +254,10 @@ namespace Olympe
                 selectedNodeId = selectedNodes[0];
             }
 
-            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            if (oldContext)
+            {
+                ImNodes::SetCurrentContext(oldContext);
+            }
             return selectedNodeId;
         }
 
@@ -218,9 +266,10 @@ namespace Olympe
          */
         std::vector<int> GetSelectedNodes() const
         {
-            if (!m_context) return {};
+            if (!m_imnodesContext) return {};
             ImNodesContext* oldContext = ImNodes::GetCurrentContext();
-            ImNodes::SetCurrentContext(m_context);
+            ImNodes::SetCurrentContext(m_imnodesContext);
+            ImNodes::EditorContextSet(m_editorContext);
 
             std::vector<int> selectedNodes;
             int numSelected = ImNodes::NumSelectedNodes();
@@ -230,7 +279,10 @@ namespace Olympe
                 ImNodes::GetSelectedNodes(selectedNodes.data());
             }
 
-            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            if (oldContext)
+            {
+                ImNodes::SetCurrentContext(oldContext);
+            }
             return selectedNodes;
         }
 
@@ -239,12 +291,16 @@ namespace Olympe
          */
         int GetHoveredLink() const
         {
-            if (!m_context) return -1;
+            if (!m_imnodesContext) return -1;
             ImNodesContext* oldContext = ImNodes::GetCurrentContext();
-            ImNodes::SetCurrentContext(m_context);
+            ImNodes::SetCurrentContext(m_imnodesContext);
+            ImNodes::EditorContextSet(m_editorContext);
             int hoveredLink = -1;
             bool result = ImNodes::IsLinkHovered(&hoveredLink);
-            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            if (oldContext)
+            {
+                ImNodes::SetCurrentContext(oldContext);
+            }
             return result ? hoveredLink : -1;
         }
 
@@ -253,11 +309,15 @@ namespace Olympe
          */
         bool IsNodeHovered(int* nodeId) const
         {
-            if (!m_context) return false;
+            if (!m_imnodesContext) return false;
             ImNodesContext* oldContext = ImNodes::GetCurrentContext();
-            ImNodes::SetCurrentContext(m_context);
+            ImNodes::SetCurrentContext(m_imnodesContext);
+            ImNodes::EditorContextSet(m_editorContext);
             bool result = ImNodes::IsNodeHovered(nodeId);
-            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            if (oldContext)
+            {
+                ImNodes::SetCurrentContext(oldContext);
+            }
             return result;
         }
 
@@ -266,11 +326,15 @@ namespace Olympe
          */
         bool IsEditorHovered() const
         {
-            if (!m_context) return false;
+            if (!m_imnodesContext) return false;
             ImNodesContext* oldContext = ImNodes::GetCurrentContext();
-            ImNodes::SetCurrentContext(m_context);
+            ImNodes::SetCurrentContext(m_imnodesContext);
+            ImNodes::EditorContextSet(m_editorContext);
             bool result = ImNodes::IsEditorHovered();
-            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            if (oldContext)
+            {
+                ImNodes::SetCurrentContext(oldContext);
+            }
             return result;
         }
 
@@ -279,9 +343,10 @@ namespace Olympe
          */
         std::vector<int> GetSelectedLinks() const
         {
-            if (!m_context) return {};
+            if (!m_imnodesContext) return {};
             ImNodesContext* oldContext = ImNodes::GetCurrentContext();
-            ImNodes::SetCurrentContext(m_context);
+            ImNodes::SetCurrentContext(m_imnodesContext);
+            ImNodes::EditorContextSet(m_editorContext);
 
             std::vector<int> selectedLinks;
             int numSelected = ImNodes::NumSelectedLinks();
@@ -291,7 +356,10 @@ namespace Olympe
                 ImNodes::GetSelectedLinks(selectedLinks.data());
             }
 
-            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            if (oldContext)
+            {
+                ImNodes::SetCurrentContext(oldContext);
+            }
             return selectedLinks;
         }
 
@@ -302,10 +370,11 @@ namespace Olympe
          */
         bool HandleContextMenuTrigger(int* outHoveredNode, int* outHoveredLink)
         {
-            if (!m_context) return false;
+            if (!m_imnodesContext) return false;
 
             ImNodesContext* oldContext = ImNodes::GetCurrentContext();
-            ImNodes::SetCurrentContext(m_context);
+            ImNodes::SetCurrentContext(m_imnodesContext);
+            ImNodes::EditorContextSet(m_editorContext);
 
             bool shouldOpen = false;
 
@@ -340,7 +409,10 @@ namespace Olympe
                 shouldOpen = true;
             }
 
-            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            if (oldContext)
+            {
+                ImNodes::SetCurrentContext(oldContext);
+            }
             return shouldOpen;
         }
 
@@ -349,17 +421,21 @@ namespace Olympe
          */
         ImVec2 GetPanning() const
         {
-            if (!m_context) return ImVec2(0, 0);
+            if (!m_imnodesContext) return ImVec2(0, 0);
             ImNodesContext* oldContext = ImNodes::GetCurrentContext();
-            ImNodes::SetCurrentContext(m_context);
+            ImNodes::SetCurrentContext(m_imnodesContext);
+            ImNodes::EditorContextSet(m_editorContext);
             ImVec2 pan = ImNodes::EditorContextGetPanning();
-            if (oldContext) ImNodes::SetCurrentContext(oldContext);
+            if (oldContext)
+            {
+                ImNodes::SetCurrentContext(oldContext);
+            }
             return pan;
         }
 
     private:
         int m_graphId = -1;
-        ImNodesContext* m_context = nullptr;
+        ImNodesContext* m_imnodesContext = nullptr;
 
         // Canvas state
         ImVec2 m_canvasScreenPos = ImVec2(0, 0);
@@ -370,6 +446,10 @@ namespace Olympe
         // Selection state
         int m_selectedNode = -1;
         std::set<int> m_initializedNodes;
+
+        // Editor/Context management
+        ImNodesEditorContext* m_editorContext = nullptr;
+        bool m_ownsImNodesContext = false;
 
         // Phase 86: Hover state cache to avoid ImNodes scope assertions
         int m_hoveredNodeCache = -1;
@@ -442,24 +522,44 @@ namespace Olympe
                 ImGui::Columns(2, "bt_node_pins", false);
                 ImGui::SetColumnWidth(0, minNodeWidth * 0.5f);
 
-                // LEFT COLUMN: Input pin
+                // Determine pin visibility based on node semantic
+                NodeType ntype = StringToNodeType(node.type);
+                bool hasInputPin = !(ntype == NodeType::BT_Root || ntype == NodeType::BT_OnEvent);
+                bool hasOutputPin = !(ntype == NodeType::BT_Action || ntype == NodeType::BT_Condition);
+
+                // LEFT COLUMN: Input pin (omit for Root / OnEvent entry nodes)
                 {
-                    int inputPinId = nodeUid * 2;
-                    ImNodes::BeginInputAttribute(inputPinId);
-                    ImGui::TextUnformatted("In");
-                    ImNodes::EndInputAttribute();
+                    if (hasInputPin)
+                    {
+                        int inputPinId = nodeUid * 2;
+                        ImNodes::BeginInputAttribute(inputPinId);
+                        ImGui::TextUnformatted("In");
+                        ImNodes::EndInputAttribute();
+                    }
+                    else
+                    {
+                        // Keep column spacing consistent when no pin is present
+                        ImGui::Dummy(ImVec2(minNodeWidth * 0.5f - 8.0f, 1.0f));
+                    }
                 }
 
-                // RIGHT COLUMN: Output pin
+                // RIGHT COLUMN: Output pin (omit for leaf Action/Condition nodes)
                 ImGui::NextColumn();
                 {
-                    int outputPinId = nodeUid * 2 + 1;
-                    ImNodes::BeginOutputAttribute(outputPinId);
-                    // Match VisualScript right-alignment for outputs
-                    float textWidth = ImGui::CalcTextSize("Out").x;
-                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (minNodeWidth * 0.5f) - textWidth - 25.0f);
-                    ImGui::TextUnformatted("Out");
-                    ImNodes::EndOutputAttribute();
+                    if (hasOutputPin)
+                    {
+                        int outputPinId = nodeUid * 2 + 1;
+                        ImNodes::BeginOutputAttribute(outputPinId);
+                        // Match VisualScript right-alignment for outputs
+                        float textWidth = ImGui::CalcTextSize("Out").x;
+                        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (minNodeWidth * 0.5f) - textWidth - 25.0f);
+                        ImGui::TextUnformatted("Out");
+                        ImNodes::EndOutputAttribute();
+                    }
+                    else
+                    {
+                        ImGui::Dummy(ImVec2(minNodeWidth * 0.5f - 8.0f, 1.0f));
+                    }
                 }
                 ImGui::Columns(1); // End columns
 
