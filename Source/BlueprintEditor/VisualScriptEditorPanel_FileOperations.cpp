@@ -385,6 +385,8 @@ bool VisualScriptEditorPanel::SerializeAndWrite(const std::string& path)
     root["schema_version"] = 4;
     root["name"]           = m_template.Name;
     root["graphType"]      = "VisualScript";
+    // Always include blueprintType for compatibility with legacy loaders and tools
+    root["blueprintType"]  = "VisualScript";
 
     // Blackboard
     // BUG-001 Hotfix: skip invalid entries (empty key or VariableType::None)

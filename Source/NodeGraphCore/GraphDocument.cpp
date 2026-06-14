@@ -320,9 +320,15 @@ json GraphDocument::ToJson() const
     j["schemaVersion"] = 2;
     j["type"] = type;
     j["graphKind"] = graphKind;
-    if (graphKind == "BehaviorTree")
+    // Ensure blueprintType is always present for downstream tools that rely on it
+    if (!graphKind.empty())
     {
-        j["blueprintType"] = "BehaviorTree";
+        j["blueprintType"] = graphKind;
+    }
+    else
+    {
+        // Fallback to the generic type field if graphKind is not set
+        j["blueprintType"] = type;
     }
     j["metadata"] = metadata;
     
@@ -427,7 +433,13 @@ GraphDocument GraphDocument::FromJson(const json& j)
     
     // Basic properties
     doc.type = JsonHelper::GetString(j, "type", "AIGraph");
-    doc.graphKind = JsonHelper::GetString(j, "graphKind", "BehaviorTree");
+    // Prefer explicit graphKind, but fall back to legacy 'blueprintType' when present
+    std::string gk = JsonHelper::GetString(j, "graphKind", "");
+    if (gk.empty())
+    {
+        gk = JsonHelper::GetString(j, "blueprintType", "");
+    }
+    doc.graphKind = gk.empty() ? std::string("BehaviorTree") : gk;
     
     // Metadata
     if (j.contains("metadata") && j["metadata"].is_object())
