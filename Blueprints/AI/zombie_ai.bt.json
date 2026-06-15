@@ -1,0 +1,180 @@
+{
+  "blackboard": [
+    {
+      "isGlobal": false,
+      "key": "AIMode",
+      "type": "Int",
+      "value": 0
+    }
+  ],
+  "dataConnections": [],
+  "execConnections": [
+    {
+      "fromNode": 16,
+      "fromPin": "Out",
+      "toNode": 1,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 1,
+      "fromPin": "Then",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 1,
+      "fromPin": "Else",
+      "toNode": 10,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 10,
+      "fromPin": "Out",
+      "toNode": 4,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Then",
+      "toNode": 5,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 5,
+      "fromPin": "Completed",
+      "toNode": 6,
+      "toPin": "In"
+    }
+  ],
+  "graphType": "Behaviortree",
+  "name": "ZombieAITree",
+  "nodes": [
+    {
+      "id": 16,
+      "label": "Start",
+      "position": {
+        "x": -54.8759,
+        "y": 1028.95
+      },
+      "type": "EntryPoint"
+    },
+    {
+      "id": 1,
+      "label": "Root Selector",
+      "position": {
+        "x": 145.124,
+        "y": 1028.95
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 2,
+      "label": "Combat Branch",
+      "position": {
+        "x": 310.124,
+        "y": 975.947
+      },
+      "type": "Sequence"
+    },
+    {
+      "conditionKey": "CheckBlackboardValue",
+      "id": 3,
+      "label": "Check AIMode == Combat",
+      "position": {
+        "x": 491.124,
+        "y": 905.947
+      },
+      "type": "Branch"
+    },
+    {
+      "conditionKey": "HasTarget",
+      "id": 4,
+      "label": "Has Target?",
+      "position": {
+        "x": 478.124,
+        "y": 1134.95
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 5,
+      "label": "Move to Target",
+      "position": {
+        "x": 673.124,
+        "y": 1085.95
+      },
+      "taskType": "Task_SetMoveGoal",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 6,
+      "label": "Attack",
+      "position": {
+        "x": 855.124,
+        "y": 1093.95
+      },
+      "taskType": "Task_Attack",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 10,
+      "label": "Wander Branch",
+      "position": {
+        "x": 308.124,
+        "y": 1139.95
+      },
+      "type": "Sequence"
+    },
+    {
+      "conditionKey": "CheckBlackboardValue",
+      "id": 11,
+      "label": "Check AIMode == Idle",
+      "position": {
+        "x": 520.776,
+        "y": 595.673
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 12,
+      "label": "Wait",
+      "position": {
+        "x": 695.776,
+        "y": 564.672
+      },
+      "taskType": "Task_Wait",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 13,
+      "label": "Choose Random Point",
+      "position": {
+        "x": 707.776,
+        "y": 685.673
+      },
+      "taskType": "Task_ChooseRandomPoint",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 14,
+      "label": "Request Pathfinding",
+      "position": {
+        "x": 815.776,
+        "y": 828.672
+      },
+      "taskType": "Task_RequestPathfinding",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 15,
+      "label": "Follow Path",
+      "position": {
+        "x": 850.776,
+        "y": 941.672
+      },
+      "taskType": "Task_FollowPath",
+      "type": "AtomicTask"
+    }
+  ],
+  "schema_version": 4
+}

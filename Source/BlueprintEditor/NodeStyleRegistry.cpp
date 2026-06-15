@@ -72,9 +72,9 @@ NodeStyleRegistry::NodeStyleRegistry()
     // ---- BT_Decorator: inverter (purple-plum) ----------------------------
     {
         NodeStyle s;
-        s.headerColor         = ColorScheme::Inverter_Primary;
-        s.headerHoveredColor  = ColorScheme::Inverter_Hovered;
-        s.headerSelectedColor = ColorScheme::Inverter_Selected;
+        s.headerColor         = ColorScheme::Decorator_Primary;
+        s.headerHoveredColor  = ColorScheme::Decorator_Hovered;
+        s.headerSelectedColor = ColorScheme::Decorator_Selected;
         s.icon = "D";
         m_styles[static_cast<int>(NodeType::BT_Decorator)] = s;
     }
@@ -132,9 +132,9 @@ NodeStyleRegistry::NodeStyleRegistry()
     // ---- BT_Inverter: inverter (purple-plum) --------------------------------
     {
         NodeStyle s;
-        s.headerColor         = ColorScheme::Inverter_Primary;
-        s.headerHoveredColor  = ColorScheme::Inverter_Hovered;
-        s.headerSelectedColor = ColorScheme::Inverter_Selected;
+        s.headerColor         = ColorScheme::Decorator_Primary;
+        s.headerHoveredColor  = ColorScheme::Decorator_Hovered;
+        s.headerSelectedColor = ColorScheme::Decorator_Selected;
         s.icon = "!";
         m_styles[static_cast<int>(NodeType::BT_Inverter)] = s;
     }
@@ -142,9 +142,9 @@ NodeStyleRegistry::NodeStyleRegistry()
     // ---- BT_Monitor: inverter (purple-plum) --------------------------------
     {
         NodeStyle s;
-        s.headerColor         = ColorScheme::Inverter_Primary;
-        s.headerHoveredColor  = ColorScheme::Inverter_Hovered;
-        s.headerSelectedColor = ColorScheme::Inverter_Selected;
+        s.headerColor         = ColorScheme::Decorator_Primary;
+        s.headerHoveredColor  = ColorScheme::Decorator_Hovered;
+        s.headerSelectedColor = ColorScheme::Decorator_Selected;
         s.icon = "◉";
         m_styles[static_cast<int>(NodeType::BT_Monitor)] = s;
     }
@@ -152,9 +152,9 @@ NodeStyleRegistry::NodeStyleRegistry()
     // ---- BT_Repeater: repeater (yellow) ------------------------------------
     {
         NodeStyle s;
-        s.headerColor         = ColorScheme::Repeater_Primary;
-        s.headerHoveredColor  = ColorScheme::Repeater_Hovered;
-        s.headerSelectedColor = ColorScheme::Repeater_Selected;
+        s.headerColor         = ColorScheme::Decorator_Primary;
+        s.headerHoveredColor  = ColorScheme::Decorator_Hovered;
+        s.headerSelectedColor = ColorScheme::Decorator_Selected;
         s.icon = "∞";
         m_styles[static_cast<int>(NodeType::BT_Repeater)] = s;
     }
@@ -162,9 +162,9 @@ NodeStyleRegistry::NodeStyleRegistry()
     // ---- BT_UntilSuccess: repeater (yellow) --------------------------------
     {
         NodeStyle s;
-        s.headerColor         = ColorScheme::Repeater_Primary;
-        s.headerHoveredColor  = ColorScheme::Repeater_Hovered;
-        s.headerSelectedColor = ColorScheme::Repeater_Selected;
+        s.headerColor         = ColorScheme::Decorator_Primary;
+        s.headerHoveredColor  = ColorScheme::Decorator_Hovered;
+        s.headerSelectedColor = ColorScheme::Decorator_Selected;
         s.icon = "▲";
         m_styles[static_cast<int>(NodeType::BT_UntilSuccess)] = s;
     }
@@ -172,9 +172,9 @@ NodeStyleRegistry::NodeStyleRegistry()
     // ---- BT_UntilFailure: repeater (yellow) --------------------------------
     {
         NodeStyle s;
-        s.headerColor         = ColorScheme::Repeater_Primary;
-        s.headerHoveredColor  = ColorScheme::Repeater_Hovered;
-        s.headerSelectedColor = ColorScheme::Repeater_Selected;
+        s.headerColor         = ColorScheme::Decorator_Primary;
+        s.headerHoveredColor  = ColorScheme::Decorator_Hovered;
+        s.headerSelectedColor = ColorScheme::Decorator_Selected;
         s.icon = "▼";
         m_styles[static_cast<int>(NodeType::BT_UntilFailure)] = s;
     }
@@ -182,9 +182,9 @@ NodeStyleRegistry::NodeStyleRegistry()
     // ---- BT_Cooldown: inverter (purple-plum) --------------------------------
     {
         NodeStyle s;
-        s.headerColor         = ColorScheme::Inverter_Primary;
-        s.headerHoveredColor  = ColorScheme::Inverter_Hovered;
-        s.headerSelectedColor = ColorScheme::Inverter_Selected;
+        s.headerColor         = ColorScheme::Decorator_Primary;
+        s.headerHoveredColor  = ColorScheme::Decorator_Hovered;
+        s.headerSelectedColor = ColorScheme::Decorator_Selected;
         s.icon = "⏱";
         m_styles[static_cast<int>(NodeType::BT_Cooldown)] = s;
     }

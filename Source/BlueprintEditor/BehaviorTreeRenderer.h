@@ -136,6 +136,7 @@ private:
       std::string m_filePath;                       ///< Path that was loaded
       float m_canvasPanelWidth = 0.75f;            ///< Split ratio: 75% canvas, 25% right panel
       int m_rightPanelTabSelection = 0;             ///< 0 = Palette, 1 = Properties
+      bool m_forceOpenPropertiesOnce = false;       ///< transient: open Properties tab once when selection occurs
       ImVec2 m_canvasScreenPos = ImVec2(0, 0);     ///< Screen position of canvas for drag-drop coordinate transformation
       std::unique_ptr<ExecutionTestPanel> m_executionTestPanel;  ///< REUSED: Simulation results panel
       std::unique_ptr<GraphExecutionTracer> m_lastTracer;        ///< Last simulation trace for results display

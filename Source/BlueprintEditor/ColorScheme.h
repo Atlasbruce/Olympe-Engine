@@ -44,6 +44,12 @@ namespace ColorScheme
     constexpr ImU32 Repeater_Hovered           = IM_COL32(210, 180, 60, 255);    // Lighter yellow/ochre (hovered)
     constexpr ImU32 Repeater_Selected          = IM_COL32(240, 210, 80, 255);    // Very light yellow/ochre (selected)
 
+    // ========== Decorator Nodes (Unified Tone) ==========
+    // Use a single decorator color to harmonize all decorator types in the editor
+    constexpr ImU32 Decorator_Primary          = Inverter_Primary;
+    constexpr ImU32 Decorator_Hovered          = Inverter_Hovered;
+    constexpr ImU32 Decorator_Selected         = Inverter_Selected;
+
     // ========== Special Nodes (Legacy Support) ==========
     // SubGraph nodes
     constexpr ImU32 SubGraph_Primary           = IM_COL32(80, 100, 140, 255);    // Steel blue

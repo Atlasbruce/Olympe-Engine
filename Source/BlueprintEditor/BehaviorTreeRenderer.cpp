@@ -567,14 +567,28 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
         });
 
         // PHASE 78: Sync selection from ImNodes to Property Panel
-        int selectedNodeId = m_imNodesAdapter->GetSelectedNodeId();
+        // Use GetSelectedNodes to be robust when multiple selection is enabled
+        std::vector<int> selNodes = m_imNodesAdapter->GetSelectedNodes();
+        int selectedNodeId = selNodes.empty() ? -1 : selNodes[0];
         if (selectedNodeId != m_propertyPanel.m_selectedNodeId)
         {
             if (selectedNodeId != -1)
             {
-                m_propertyPanel.SetSelectedNode(m_graphId, selectedNodeId);
-                // Auto-switch right panel to Properties when a node is selected
-                m_rightPanelTabSelection = 1;
+                // Only set selection if node id is valid and exists in graph (guard against stale/invalid ids)
+                NodeGraphTypes::GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(NodeGraphTypes::GraphId{static_cast<uint32_t>(m_graphId)});
+                if (graphDoc && graphDoc->GetNode(NodeGraphTypes::NodeId{static_cast<uint32_t>(selectedNodeId)}))
+                {
+                    m_propertyPanel.SetSelectedNode(m_graphId, selectedNodeId);
+                    // Auto-switch right panel to Properties when a node is selected
+                    // but mark transient flag so user can explicitly switch back to Palette
+                    m_rightPanelTabSelection = 1;
+                    m_forceOpenPropertiesOnce = true;
+                }
+                else
+                {
+                    // Invalid id detected; clear selection to avoid log spam
+                    m_propertyPanel.ClearSelection();
+                }
             }
             else
             {
@@ -816,14 +830,16 @@ void BehaviorTreeRenderer::RenderRightPanelTabs()
                 bool paletteOpen = true;
                 m_palette->Render(&paletteOpen);
             }
+            // If user explicitly opened Palette, clear transient auto-open flag so they keep control
+            m_forceOpenPropertiesOnce = false;
             ImGui::EndTabItem();
         }
 
         // Tab 1: Node Properties
         {
             ImGuiTabItemFlags propsFlags = ImGuiTabItemFlags_None;
-            // If a node is selected in the property panel, prefer to open the Properties tab
-            if (m_propertyPanel.HasSelectedNode()) propsFlags |= ImGuiTabItemFlags_SetSelected;
+            // If we just auto-switched due to selection, hint ImGui to open Properties once
+            if (m_forceOpenPropertiesOnce) propsFlags |= ImGuiTabItemFlags_SetSelected;
 
             if (ImGui::BeginTabItem("Properties", nullptr, propsFlags))
             {
@@ -852,6 +868,12 @@ void BehaviorTreeRenderer::RenderRightPanelTabs()
                 {
                     m_propertyPanel.ClearSelection();
                 }
+            }
+            // If we had auto-opened properties due to selection, allow user to return to Palette
+            if (m_forceOpenPropertiesOnce && !m_propertyPanel.HasSelectedNode())
+            {
+                // selection cleared, reset transient flag
+                m_forceOpenPropertiesOnce = false;
             }
         }
 

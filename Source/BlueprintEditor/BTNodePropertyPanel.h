@@ -294,7 +294,9 @@ public:
 
         m_activeGraphId = graphId;
         m_selectedNodeId = nodeId;
-        SYSTEM_LOG << "[BTNodePropertyPanel] Selected node set: graph=" << graphId << " node=" << nodeId << "\n";
+        // Log selection once for diagnostics; avoid log spam when nodeId is invalid
+        if (nodeId >= 0)
+            SYSTEM_LOG << "[BTNodePropertyPanel] Selected node set: graph=" << graphId << " node=" << nodeId << "\n";
     }
 
     /**

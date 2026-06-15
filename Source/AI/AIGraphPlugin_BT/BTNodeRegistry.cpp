@@ -40,7 +40,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Selector",
         "Executes children until one succeeds (OR logic)",
         BTNodeCategory::Composite,
-        ConvertColorFormat(ColorScheme::FlowControl_Primary),
+        ConvertColorFormat(ColorScheme::Composite_Primary),
         "+",         // Plus symbol
         1,           // Min 1 child
         -1,          // Unlimited children
@@ -53,7 +53,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Sequence",
         "Executes children until one fails (AND logic)",
         BTNodeCategory::Composite,
-        ConvertColorFormat(ColorScheme::FlowControl_Primary),
+        ConvertColorFormat(ColorScheme::Composite_Primary),
         "->",        // Arrow
         1,           // Min 1 child
         -1,          // Unlimited children
@@ -63,8 +63,8 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
     
     RegisterNodeType({
         "BT_Parallel",
-        "Parallel",
-        "Executes all children simultaneously",
+        "[n/a] Parallel",
+        "Executes all children simultaneously (Not available at runtime)",
         BTNodeCategory::Composite,
         ConvertColorFormat(ColorScheme::Composite_Primary),
         "||",        // Parallel bars
@@ -83,7 +83,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Inverter",
         "Inverts child result (SUCCESS <-> FAILURE)",
         BTNodeCategory::Decorator,
-        ConvertColorFormat(ColorScheme::Inverter_Primary),
+        ConvertColorFormat(ColorScheme::Decorator_Primary),
         "!",         // Not symbol
         1,           // Exactly 1 child
         1,           // Exactly 1 child
@@ -96,7 +96,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Repeater",
         "Repeats child N times",
         BTNodeCategory::Decorator,
-        ConvertColorFormat(ColorScheme::Repeater_Primary),
+        ConvertColorFormat(ColorScheme::Decorator_Primary),
         "@",         // At symbol
         1,           // Exactly 1 child
         1,           // Exactly 1 child
@@ -105,9 +105,10 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
     });
     
     RegisterNodeType({
+
         "BT_UntilSuccess",
-        "Until Success",
-        "Repeats child until it succeeds",
+        "[n/a] Until Success",
+        "Repeats child until it succeeds (Not available at runtime)",
         BTNodeCategory::Decorator,
         ConvertColorFormat(ColorScheme::Repeater_Primary),
         "^",         // Up arrow
@@ -118,9 +119,10 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
     });
     
     RegisterNodeType({
+
         "BT_UntilFailure",
-        "Until Failure",
-        "Repeats child until it fails",
+        "[n/a] Until Failure",
+        "Repeats child until it fails (Not available at runtime)",
         BTNodeCategory::Decorator,
         ConvertColorFormat(ColorScheme::Repeater_Primary),
         "v",         // Down arrow
@@ -132,8 +134,8 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
     
     RegisterNodeType({
         "BT_Cooldown",
-        "Cooldown",
-        "Limits execution frequency",
+        "[n/a] Cooldown",
+        "Limits execution frequency (Not available at runtime)",
         BTNodeCategory::Decorator,
         ConvertColorFormat(ColorScheme::Inverter_Primary),
         "#",         // Hash symbol
@@ -192,10 +194,115 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         "Checks line of sight to target",
         BTNodeCategory::Condition,
         ConvertColorFormat(ColorScheme::FlowControl_Primary),
-        "E",         // Eye symbol
+        "E",         // Sight symbol
         0,           // No children
         0,           // No children
         true,        // Allows decorator
+        {}
+    });
+
+    // Additional runtime conditions exposed in palette
+    RegisterNodeType({
+        "BT_HealthBelow",
+        "Health Below",
+        "Checks if entity health is below a percentage (0.0 - 1.0)",
+        BTNodeCategory::Condition,
+        ConvertColorFormat(ColorScheme::FlowControl_Primary),
+        "❤",        // Heart symbol
+        0,
+        0,
+        true,
+        {"threshold"}
+    });
+
+    RegisterNodeType({
+        "BT_HasMoveGoal",
+        "Has Move Goal",
+        "Checks if a move goal is currently set on the blackboard",
+        BTNodeCategory::Condition,
+        ConvertColorFormat(ColorScheme::FlowControl_Primary),
+        "G",        // Goal symbol
+        0,
+        0,
+        true,
+        {}
+    });
+
+    RegisterNodeType({
+        "BT_CanAttack",
+        "Can Attack",
+        "Checks if the entity can perform an attack",
+        BTNodeCategory::Condition,
+        ConvertColorFormat(ColorScheme::FlowControl_Primary),
+        "⚔",        // Sword symbol
+        0,
+        0,
+        true,
+        {}
+    });
+
+    RegisterNodeType({
+        "BT_HeardNoise",
+        "Heard Noise",
+        "Checks if a recent noise was detected by the AI",
+        BTNodeCategory::Condition,
+        ConvertColorFormat(ColorScheme::FlowControl_Primary),
+        "🔊",        // Sound symbol
+        0,
+        0,
+        true,
+        {}
+    });
+
+    RegisterNodeType({
+        "BT_IsWaitTimerExpired",
+        "Wait Timer Expired",
+        "Checks wander wait timer expiration",
+        BTNodeCategory::Condition,
+        ConvertColorFormat(ColorScheme::FlowControl_Primary),
+        "⌛",        // Hourglass
+        0,
+        0,
+        true,
+        {}
+    });
+
+    RegisterNodeType({
+        "BT_HasNavigableDestination",
+        "Has Navigable Destination",
+        "Checks if a navigable destination was chosen",
+        BTNodeCategory::Condition,
+        ConvertColorFormat(ColorScheme::FlowControl_Primary),
+        "📍",        // Pin symbol
+        0,
+        0,
+        true,
+        {}
+    });
+
+    RegisterNodeType({
+        "BT_HasValidPath",
+        "Has Valid Path",
+        "Checks if NavigationAgent has a valid path",
+        BTNodeCategory::Condition,
+        ConvertColorFormat(ColorScheme::FlowControl_Primary),
+        "🛣",        // Road symbol
+        0,
+        0,
+        true,
+        {}
+    });
+
+    RegisterNodeType({
+        "BT_HasReachedDestination",
+        "Has Reached Destination",
+        "Checks if the entity reached the wander destination",
+        BTNodeCategory::Condition,
+        ConvertColorFormat(ColorScheme::FlowControl_Primary),
+        "✓",        // Check
+        0,
+        0,
+        true,
         {}
     });
     
@@ -205,8 +312,8 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
     
     RegisterNodeType({
         "BT_Wait",
-        "Wait",
-        "Waits for N seconds",
+        "[n/a] Wait",
+        "Waits for N seconds (use WaitRandomTime or runtime Wait action) (Not available at runtime)",
         BTNodeCategory::Action,
         ConvertColorFormat(ColorScheme::Action_Primary),
         "W",         // Wait symbol
@@ -227,6 +334,191 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
         0,           // No children
         true,        // Allows decorator
         {"minDuration", "maxDuration"}
+    });
+
+    // Runtime actions exposed in palette
+    RegisterNodeType({
+        "BT_SetMoveGoalToLastKnownTargetPos",
+        "Set MoveGoal: LastKnownTarget",
+        "Set move goal to last known target position",
+        BTNodeCategory::Action,
+        ConvertColorFormat(ColorScheme::Action_Primary),
+        "L",         // Last known
+        0,
+        0,
+        true,
+        {}
+    });
+
+    RegisterNodeType({
+        "BT_SetMoveGoalToTarget",
+        "Set MoveGoal: Target",
+        "Set move goal to current target position",
+        BTNodeCategory::Action,
+        ConvertColorFormat(ColorScheme::Action_Primary),
+        "T",         // Target
+        0,
+        0,
+        true,
+        {}
+    });
+
+    RegisterNodeType({
+        "BT_SetMoveGoalToPatrolPoint",
+        "Set MoveGoal: PatrolPoint",
+        "Set move goal to a patrol point index",
+        BTNodeCategory::Action,
+        ConvertColorFormat(ColorScheme::Action_Primary),
+        "P",         // Patrol
+        0,
+        0,
+        true,
+        {"index"}
+    });
+
+    RegisterNodeType({
+        "BT_MoveToGoal",
+        "Move To Goal",
+        "Executes movement to the current move goal (uses MoveIntent)",
+        BTNodeCategory::Action,
+        ConvertColorFormat(ColorScheme::Action_Primary),
+        "M",         // Move
+        0,
+        0,
+        true,
+        {"speed"}
+    });
+
+    // Alias for MoveToGoal (runtime alias MoveTo)
+    RegisterNodeType({
+        "BT_MoveTo",
+        "Move To (alias)",
+        "Alias of Move To Goal (runtime: MoveTo)",
+        BTNodeCategory::Action,
+        ConvertColorFormat(ColorScheme::Action_Primary),
+        "M",         // Move
+        0,
+        0,
+        true,
+        {"speed"}
+    });
+
+    RegisterNodeType({
+        "BT_PatrolPickNextPoint",
+        "Patrol: Pick Next Point",
+        "Advance to next patrol point and set move goal",
+        BTNodeCategory::Action,
+        ConvertColorFormat(ColorScheme::Action_Primary),
+        "→P",         // Next patrol
+        0,
+        0,
+        true,
+        {}
+    });
+
+    RegisterNodeType({
+        "BT_ClearTarget",
+        "Clear Target",
+        "Clears the current target from blackboard",
+        BTNodeCategory::Action,
+        ConvertColorFormat(ColorScheme::Action_Primary),
+        "C",         // Clear
+        0,
+        0,
+        true,
+        {}
+    });
+
+    RegisterNodeType({
+        "BT_Idle",
+        "Idle",
+        "No operation - immediately succeeds",
+        BTNodeCategory::Action,
+        ConvertColorFormat(ColorScheme::Action_Primary),
+        "i",         // idle
+        0,
+        0,
+        true,
+        {}
+    });
+
+    RegisterNodeType({
+        "BT_ChooseRandomNavigablePoint",
+        "Choose Random Navigable Point",
+        "Selects a random navigable point within radius and sets as move goal",
+        BTNodeCategory::Action,
+        ConvertColorFormat(ColorScheme::Action_Primary),
+        "?P",         // random point
+        0,
+        0,
+        true,
+        {"searchRadius", "maxAttempts"}
+    });
+
+    RegisterNodeType({
+        "BT_RequestPathfinding",
+        "Request Pathfinding",
+        "Requests pathfinding for current move goal (MoveIntent.usePathfinding)",
+        BTNodeCategory::Action,
+        ConvertColorFormat(ColorScheme::Action_Primary),
+        "PF",         // pathfinding
+        0,
+        0,
+        true,
+        {}
+    });
+
+    RegisterNodeType({
+        "BT_FollowPath",
+        "Follow Path",
+        "Follow the current path until destination is reached",
+        BTNodeCategory::Action,
+        ConvertColorFormat(ColorScheme::Action_Primary),
+        "FP",         // follow path
+        0,
+        0,
+        true,
+        {}
+    });
+
+    RegisterNodeType({
+        "BT_SendMessage",
+        "Send Message",
+        "Send an event message to the EventQueue (runtime)",
+        BTNodeCategory::Action,
+        ConvertColorFormat(ColorScheme::Action_Primary),
+        "📨",
+        0,
+        0,
+        true,
+        {"eventType", "param1", "param2"}
+    });
+
+    // Attack action (runtime implemented). Also expose melee alias.
+    RegisterNodeType({
+        "BT_AttackIfClose",
+        "Attack If Close",
+        "Perform an attack if the target is in melee range",
+        BTNodeCategory::Action,
+        ConvertColorFormat(ColorScheme::Action_Primary),
+        "⚔",
+        0,
+        0,
+        true,
+        {}
+    });
+
+    RegisterNodeType({
+        "BT_AttackMelee",
+        "Attack Melee (alias)",
+        "Alias for Attack If Close (AttackMelee)",
+        BTNodeCategory::Action,
+        ConvertColorFormat(ColorScheme::Action_Primary),
+        "⚔",
+        0,
+        0,
+        true,
+        {}
     });
     
     RegisterNodeType({
