@@ -92,6 +92,8 @@ namespace Olympe
         void SetCanvasZoom(float zoom);
 
         void Clear();
+        // Initialize a new empty document with default nodes (Entity start node)
+        void NewDocument();
         size_t GetNodeCount() const;
 
         // Dirty flag tracking

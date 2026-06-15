@@ -101,10 +101,93 @@ namespace Olympe
             const ComponentNode* targetNode = document->GetNode(connections[i].second);
             if (sourceNode != nullptr && targetNode != nullptr)
             {
+                // Determine endpoints using nearest ports when possible
                 Vector from = sourceNode->position;
-                from.x += sourceNode->size.x * 0.5f;
                 Vector to = targetNode->position;
-                to.x -= targetNode->size.x * 0.5f;
+
+                // Helper to compute port canvas position similar to RenderPort logic
+                auto computePortPos = [&](const ComponentNode* node, const NodePort& port) -> Vector
+                {
+                    Vector portPos = node->position;
+                    float scaledWidth = node->size.x * 0.5f * m_nodeScale * m_canvasZoom;
+                    float scaledHeight = node->size.y * 0.5f * m_nodeScale * m_canvasZoom;
+
+                    std::vector<NodePort> inputPorts;
+                    std::vector<NodePort> outputPorts;
+                    for (const auto& p : node->GetPorts())
+                    {
+                        if (p.isOutput) outputPorts.push_back(p);
+                        else inputPorts.push_back(p);
+                    }
+
+                    uint32_t portCountInType = port.isOutput ? outputPorts.size() : inputPorts.size();
+                    uint32_t portIndexInType = 0;
+                    if (port.isOutput)
+                    {
+                        for (size_t ii = 0; ii < outputPorts.size(); ++ii)
+                        {
+                            if (outputPorts[ii].portId == port.portId) { portIndexInType = (uint32_t)ii; break; }
+                        }
+                    }
+                    else
+                    {
+                        for (size_t ii = 0; ii < inputPorts.size(); ++ii)
+                        {
+                            if (inputPorts[ii].portId == port.portId) { portIndexInType = (uint32_t)ii; break; }
+                        }
+                    }
+
+                    if (portCountInType > 0)
+                    {
+                        float spacing = (2.0f * scaledHeight) / (portCountInType + 1);
+                        float yOffset = -scaledHeight + spacing * (portIndexInType + 1);
+
+                        if (port.isOutput)
+                        {
+                            portPos.x += scaledWidth / m_canvasZoom;
+                        }
+                        else
+                        {
+                            portPos.x -= scaledWidth / m_canvasZoom;
+                        }
+                        portPos.y += yOffset / m_canvasZoom;
+                    }
+                    return portPos;
+                };
+
+                // Choose best output port on source (closest to target)
+                float bestDist = FLT_MAX;
+                bool found = false;
+                for (const auto& p : sourceNode->GetPorts())
+                {
+                    if (!p.isOutput) continue;
+                    Vector ppos = computePortPos(sourceNode, p);
+                    float dx = ppos.x - targetNode->position.x;
+                    float dy = ppos.y - targetNode->position.y;
+                    float d = dx*dx + dy*dy;
+                    if (d < bestDist) { bestDist = d; from = ppos; found = true; }
+                }
+                if (!found)
+                {
+                    from.x += sourceNode->size.x * 0.5f;
+                }
+
+                // Choose best input port on target (closest to source)
+                bestDist = FLT_MAX;
+                found = false;
+                for (const auto& p : targetNode->GetPorts())
+                {
+                    if (p.isOutput) continue;
+                    Vector ppos = computePortPos(targetNode, p);
+                    float dx = ppos.x - sourceNode->position.x;
+                    float dy = ppos.y - sourceNode->position.y;
+                    float d = dx*dx + dy*dy;
+                    if (d < bestDist) { bestDist = d; to = ppos; found = true; }
+                }
+                if (!found)
+                {
+                    to.x -= targetNode->size.x * 0.5f;
+                }
 
                 bool isHovered = (hoveredConnectionIndex == static_cast<int>(i));
                 RenderConnectionLine(from, to, isHovered);
@@ -123,10 +206,83 @@ namespace Olympe
             const ComponentNode* targetNode = documentV2->GetNode(connections[i].second);
             if (sourceNode != nullptr && targetNode != nullptr)
             {
+                // Determine endpoints using nearest ports when possible (same logic as V1)
                 Vector from = sourceNode->position;
-                from.x += sourceNode->size.x * 0.5f;
                 Vector to = targetNode->position;
-                to.x -= targetNode->size.x * 0.5f;
+
+                auto computePortPos = [&](const ComponentNode* node, const NodePort& port) -> Vector
+                {
+                    Vector portPos = node->position;
+                    float scaledWidth = node->size.x * 0.5f * m_nodeScale * m_canvasZoom;
+                    float scaledHeight = node->size.y * 0.5f * m_nodeScale * m_canvasZoom;
+
+                    std::vector<NodePort> inputPorts;
+                    std::vector<NodePort> outputPorts;
+                    for (const auto& p : node->GetPorts())
+                    {
+                        if (p.isOutput) outputPorts.push_back(p);
+                        else inputPorts.push_back(p);
+                    }
+
+                    uint32_t portCountInType = port.isOutput ? outputPorts.size() : inputPorts.size();
+                    uint32_t portIndexInType = 0;
+                    if (port.isOutput)
+                    {
+                        for (size_t ii = 0; ii < outputPorts.size(); ++ii)
+                        {
+                            if (outputPorts[ii].portId == port.portId) { portIndexInType = (uint32_t)ii; break; }
+                        }
+                    }
+                    else
+                    {
+                        for (size_t ii = 0; ii < inputPorts.size(); ++ii)
+                        {
+                            if (inputPorts[ii].portId == port.portId) { portIndexInType = (uint32_t)ii; break; }
+                        }
+                    }
+
+                    if (portCountInType > 0)
+                    {
+                        float spacing = (2.0f * scaledHeight) / (portCountInType + 1);
+                        float yOffset = -scaledHeight + spacing * (portIndexInType + 1);
+
+                        if (port.isOutput)
+                        {
+                            portPos.x += scaledWidth / m_canvasZoom;
+                        }
+                        else
+                        {
+                            portPos.x -= scaledWidth / m_canvasZoom;
+                        }
+                        portPos.y += yOffset / m_canvasZoom;
+                    }
+                    return portPos;
+                };
+
+                float bestDist = FLT_MAX;
+                bool found = false;
+                for (const auto& p : sourceNode->GetPorts())
+                {
+                    if (!p.isOutput) continue;
+                    Vector ppos = computePortPos(sourceNode, p);
+                    float dx = ppos.x - targetNode->position.x;
+                    float dy = ppos.y - targetNode->position.y;
+                    float d = dx*dx + dy*dy;
+                    if (d < bestDist) { bestDist = d; from = ppos; found = true; }
+                }
+                if (!found) from.x += sourceNode->size.x * 0.5f;
+
+                bestDist = FLT_MAX; found = false;
+                for (const auto& p : targetNode->GetPorts())
+                {
+                    if (p.isOutput) continue;
+                    Vector ppos = computePortPos(targetNode, p);
+                    float dx = ppos.x - sourceNode->position.x;
+                    float dy = ppos.y - sourceNode->position.y;
+                    float d = dx*dx + dy*dy;
+                    if (d < bestDist) { bestDist = d; to = ppos; found = true; }
+                }
+                if (!found) to.x -= targetNode->size.x * 0.5f;
 
                 bool isHovered = (hoveredConnectionIndex == static_cast<int>(i));
                 RenderConnectionLine(from, to, isHovered);
@@ -441,16 +597,20 @@ namespace Olympe
         }
 
         Vector screenPort = CanvasToScreen(portPos);
-        // FIX #4: Ensure port visual size is always visible even when zoomed out
-        // Minimum visual size is 4.0 pixels, maximum is scaled with zoom
-        float portRadius = port.radius * m_canvasZoom;
-        if (portRadius < 4.0f) { portRadius = 4.0f; }  // Minimum visual size
 
-        ImU32 portColor = ImGui::GetColorU32(ImVec4(0.8f, 0.8f, 0.0f, 1.0f));
-        ImU32 portBorderColor = ImGui::GetColorU32(ImVec4(0.6f, 0.6f, 0.0f, 1.0f));
+        // Increase visual and hit size for better usability, align with BT/VS style large hit targets
+        float visualRadius = port.radius * m_canvasZoom;
+        if (visualRadius < 6.0f) visualRadius = 6.0f;
 
-        drawList->AddCircleFilled(ImVec2(screenPort.x, screenPort.y), portRadius, portColor);
-        drawList->AddCircle(ImVec2(screenPort.x, screenPort.y), portRadius, portBorderColor, 0, 1.5f);
+        ImU32 portColor = ImGui::GetColorU32(ImVec4(0.9f, 0.85f, 0.2f, 1.0f));
+        ImU32 portBorderColor = ImGui::GetColorU32(ImVec4(0.6f, 0.55f, 0.0f, 1.0f));
+
+        // Draw filled circle and a larger translucent halo to emulate ImNodes hit feel
+        drawList->AddCircleFilled(ImVec2(screenPort.x, screenPort.y), visualRadius, portColor);
+        drawList->AddCircle(ImVec2(screenPort.x, screenPort.y), visualRadius, portBorderColor, 0, 2.0f);
+        // Halo
+        ImU32 haloColor = ImGui::GetColorU32(ImVec4(0.9f, 0.85f, 0.2f, 0.12f));
+        drawList->AddCircleFilled(ImVec2(screenPort.x, screenPort.y), visualRadius * 1.8f, haloColor);
     }
 
     bool ComponentNodeRenderer::IsPointInPort(const Vector& point, const ComponentNode& node, PortId& outPortId) const
@@ -516,19 +676,16 @@ namespace Olympe
                 portPos.y += yOffset / m_canvasZoom;
             }
 
-            // PHASE 75 FIX: 'point' passed is screen coordinates. 
-            // We MUST transform it to canvas space to compare with portPos which is in canvas space.
+            // Transform click point to canvas space (node.portPos is in canvas coords)
             Vector canvasClickPoint = ScreenToCanvas(point);
 
             float dx = canvasClickPoint.x - portPos.x;
             float dy = canvasClickPoint.y - portPos.y;
             float distance = sqrtf(dx * dx + dy * dy);
 
-            // FIX #4: Use larger detection radius for hitbox while visual stays small
-            // Visual port radius: 4.0 pixels (kept small via RenderPort)
-            // Detection radius: 4.0 * 5.0 = 20.0 canvas units (generous for usability)
-            // This decouples visual appearance from interaction size
-            float detectionRadius = port.radius * 5.0f; 
+            // Use a generous detection radius that scales with zoom to emulate ImNodes hit areas
+            float detectionRadius = port.radius * 12.0f; // even larger for comfortable targeting
+            if (detectionRadius < 14.0f) detectionRadius = 14.0f;
 
             if (distance <= detectionRadius)
             {

@@ -294,6 +294,8 @@ namespace Olympe
          * Clear all data
          */
         void Clear();
+        // Initialize a new empty document with default nodes (Entity start node)
+        void NewDocument();
 
         // ========== PARAMETER SCHEMA MANAGEMENT ==========
 

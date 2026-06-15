@@ -115,7 +115,8 @@ namespace Olympe
         Vector GetCurrentColor() const;
 
         // Port management
-        void InitializePorts(uint32_t numInputPorts = 1, uint32_t numOutputPorts = 1);
+        // By default, prefab nodes are leaves: one input, zero outputs.
+        void InitializePorts(uint32_t numInputPorts = 1, uint32_t numOutputPorts = 0);
         const std::vector<NodePort>& GetPorts() const;
         std::vector<NodePort>& GetPorts();
         NodePort* FindPort(PortId portId);

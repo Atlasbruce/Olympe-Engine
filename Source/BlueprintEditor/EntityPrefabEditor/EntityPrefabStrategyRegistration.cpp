@@ -29,6 +29,9 @@ namespace Olympe
 
             auto doc = new EntityPrefabGraphDocumentV2();
 
+            // Initialize document with default nodes (Entity start node)
+            doc->NewDocument();
+
             SYSTEM_LOG << "[EntityPrefabStrategyRegistration] Factory: New EntityPrefabGraphDocumentV2 created" << std::endl;
 
             return doc;
@@ -49,6 +52,9 @@ namespace Olympe
                 delete doc;
                 return nullptr;
             }
+
+            // Ensure compatibility: if loaded document lacks an Entity start node, create one
+            doc->CreateComponentNode("Entity");
 
             SYSTEM_LOG << "[EntityPrefabStrategyRegistration] Factory: Loaded successfully: " << filePath << std::endl;
 

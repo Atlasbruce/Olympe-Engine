@@ -15,6 +15,18 @@ namespace Olympe
         // Renderer is created externally by framework adapter and set later
     }
 
+    void EntityPrefabGraphDocumentV2::NewDocument()
+    {
+        Clear();
+        ComponentNode entityNode("Entity");
+        entityNode.nodeId = m_nextNodeId++;
+        entityNode.componentName = "Entity";
+        entityNode.position = Vector(0.0f, 0.0f, 0.0f);
+        entityNode.InitializePorts(0, 1);
+        m_nodes.push_back(entityNode);
+        m_isDirty = true;
+    }
+
     EntityPrefabGraphDocumentV2::~EntityPrefabGraphDocumentV2()
     {
         // Explicitly clear containers before destruction to prevent iterator corruption
@@ -33,10 +45,28 @@ namespace Olympe
 
     PrefabNodeId EntityPrefabGraphDocumentV2::CreateComponentNode(const std::string& componentType, const std::string& componentName)
     {
+        // Enforce unique Entity node: if already exists, return its id
+        if (componentType == "Entity")
+        {
+            for (const auto& n : m_nodes)
+            {
+                if (n.componentType == "Entity")
+                    return n.nodeId;
+            }
+        }
         ComponentNode node(componentType);
         node.nodeId = m_nextNodeId++;
         node.componentName = componentName;
-        node.InitializePorts(1, 1);
+        // Prefab nodes are leaves by default: have an input port but no output port.
+        // The special 'Entity' node is the document entry point: it has an output port and no input.
+        uint32_t numInput = 1;
+        uint32_t numOutput = 0;
+        if (componentType == "Entity")
+        {
+            numInput = 0;
+            numOutput = 1;
+        }
+        node.InitializePorts(numInput, numOutput);
 
         // Initialize node properties from parameter schema
         InitializeNodeProperties(node);
@@ -48,12 +78,29 @@ namespace Olympe
 
     void EntityPrefabGraphDocumentV2::RemoveNode(PrefabNodeId nodeId)
     {
+        // Prevent removal of the special Entity start node
         for (size_t i = 0; i < m_nodes.size(); ++i)
         {
             if (m_nodes[i].nodeId == nodeId)
             {
+                if (m_nodes[i].componentType == "Entity")
+                {
+                    SYSTEM_LOG << "[EntityPrefabGraphDocumentV2::RemoveNode] Attempt to remove Entity node ignored\n";
+                    return;
+                }
+
                 m_nodes.erase(m_nodes.begin() + i);
                 m_isDirty = true;
+
+                // Remove connections referencing this node
+                for (auto it = m_connections.begin(); it != m_connections.end(); )
+                {
+                    if (it->first == nodeId || it->second == nodeId)
+                        it = m_connections.erase(it);
+                    else
+                        ++it;
+                }
+
                 break;
             }
         }
@@ -191,6 +238,12 @@ namespace Olympe
         return false;
     }
 
+    void RemoveConnectionsForNode(EntityPrefabGraphDocumentV2* doc, PrefabNodeId nodeId)
+    {
+        // Helper removed - not used
+        (void)doc; (void)nodeId;
+    }
+
     const std::vector<std::pair<PrefabNodeId, PrefabNodeId>>& EntityPrefabGraphDocumentV2::GetConnections() const
     {
         return m_connections;
@@ -278,6 +331,14 @@ namespace Olympe
         // Framework contract: Load() success means dirty cleared + path updated
         m_filePath = filePath;
         m_isDirty = false;
+        // Ensure Entity start node exists after loading (migration for old prefabs)
+        bool hasEntity = false;
+        for (const auto& n : m_nodes) { if (n.componentType == "Entity") { hasEntity = true; break; } }
+        if (!hasEntity)
+        {
+            CreateComponentNode("Entity");
+            SYSTEM_LOG << "[EntityPrefabGraphDocumentV2::Load] INFO: Entity start node injected for compatibility\n";
+        }
         SYSTEM_LOG << "[EntityPrefabGraphDocumentV2::Load] SUCCESS: Document loaded\n";
         return true;
     }
@@ -641,6 +702,17 @@ namespace Olympe
                 ArrangeNodesInGrid(3, 200.0f);
             }
 
+            // Ensure Entity exists and request centering will be handled by the canvas/renderer
+            for (const auto& n : m_nodes)
+            {
+                if (n.componentType == "Entity")
+                {
+                    // Mark for center on entity via canvas (renderer will query node position)
+                    // The UI code will check doc->GetNodeCount()/position and center accordingly
+                    break;
+                }
+            }
+
             m_isDirty = false;
             return true;
         }
@@ -730,9 +802,89 @@ namespace Olympe
 
     void EntityPrefabGraphDocumentV2::LoadParameterSchemas(const std::string& schemasFilePath)
     {
-        // Implementation would load from ParameterSchemaRegistry or JSON file
-        // For now, this is a placeholder that can be implemented later
+        using nlohmann::json;
         SYSTEM_LOG << "[EntityPrefabGraphDocumentV2::LoadParameterSchemas] Loading schemas from: " << schemasFilePath << "\n";
+
+        try
+        {
+            // Check file existence
+            std::ifstream f(schemasFilePath);
+            if (!f.is_open())
+            {
+                SYSTEM_LOG << "[EntityPrefabGraphDocumentV2::LoadParameterSchemas] WARNING: Could not open schema file: " << schemasFilePath << "\n";
+                return;
+            }
+
+            json j;
+            f >> j;
+            f.close();
+
+            // New format: schemas array with componentType and parameters
+            if (j.contains("schemas") && j["schemas"].is_array())
+            {
+                for (const auto& schema : j["schemas"])
+                {
+                    if (!schema.contains("componentType")) continue;
+                    std::string comp = schema["componentType"].get<std::string>();
+                    std::map<std::string, std::string> paramMap;
+                    if (schema.contains("parameters") && schema["parameters"].is_array())
+                    {
+                        for (const auto& p : schema["parameters"]) 
+                        {
+                            std::string pname = p.value("name", "");
+                            std::string ptype = p.value("type", "");
+                            // default value handling: string or array/object
+                            if (p.contains("defaultValue"))
+                            {
+                                if (p["defaultValue"].is_string())
+                                    paramMap[pname] = p["defaultValue"].get<std::string>();
+                                else
+                                    paramMap[pname] = p["defaultValue"].dump();
+                            }
+                            else
+                            {
+                                // fallback default by type
+                                if (ptype == "bool") paramMap[pname] = "false";
+                                else if (ptype == "int" || ptype == "float") paramMap[pname] = "0";
+                                else paramMap[pname] = "";
+                            }
+                        }
+                    }
+                    m_parameterSchemas[comp] = paramMap;
+                }
+            }
+            // Old format: components array with parameters
+            else if (j.contains("components") && j["components"].is_array())
+            {
+                for (const auto& comp : j["components"]) 
+                {
+                    std::string name = comp.value("name", "");
+                    std::map<std::string, std::string> paramMap;
+                    if (comp.contains("parameters") && comp["parameters"].is_array())
+                    {
+                        for (const auto& p : comp["parameters"]) 
+                        {
+                            std::string pname = p.value("name", "");
+                            if (p.contains("defaultValue"))
+                            {
+                                if (p["defaultValue"].is_string()) paramMap[pname] = p["defaultValue"].get<std::string>();
+                                else paramMap[pname] = p["defaultValue"].dump();
+                            }
+                            else paramMap[pname] = "";
+                        }
+                    }
+                    m_parameterSchemas[name] = paramMap;
+                }
+            }
+            else
+            {
+                SYSTEM_LOG << "[EntityPrefabGraphDocumentV2::LoadParameterSchemas] WARNING: Unknown schema format in " << schemasFilePath << "\n";
+            }
+        }
+        catch (const std::exception& e)
+        {
+            SYSTEM_LOG << "[EntityPrefabGraphDocumentV2::LoadParameterSchemas] EXCEPTION: " << e.what() << "\n";
+        }
     }
 
     void EntityPrefabGraphDocumentV2::InitializeNodeProperties(ComponentNode& node)

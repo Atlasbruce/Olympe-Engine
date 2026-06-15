@@ -119,7 +119,8 @@ namespace Olympe
         }
         else
         {
-            node.InitializePorts(1, 1);
+        // Default to prefab leaf semantics: input only, no output
+        node.InitializePorts(1, 0);
         }
 
         return node;

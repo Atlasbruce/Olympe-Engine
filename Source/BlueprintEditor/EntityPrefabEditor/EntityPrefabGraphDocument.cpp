@@ -5,7 +5,11 @@
 
 namespace Olympe
 {
-    EntityPrefabGraphDocument::EntityPrefabGraphDocument() : m_canvasZoom(1.0f), m_nextNodeId(1) { }
+    EntityPrefabGraphDocument::EntityPrefabGraphDocument()
+        : m_canvasZoom(1.0f), m_nextNodeId(1)
+    {
+        // Constructor no longer auto-creates default nodes. Use NewDocument() to initialize a new graph.
+    }
     EntityPrefabGraphDocument::~EntityPrefabGraphDocument() 
     { 
         // PHASE 53: Explicitly clear all containers to ensure iterator metadata is cleaned up
@@ -24,7 +28,20 @@ namespace Olympe
         ComponentNode node(componentType);
         node.nodeId = m_nextNodeId++;
         node.componentName = componentName;
-        node.InitializePorts(1, 1);
+        // Enforce unique Entity node: if creating 'Entity' and one exists, return existing id
+        if (componentType == "Entity")
+        {
+            for (const auto& n : m_nodes)
+            {
+                if (n.componentType == "Entity")
+                    return n.nodeId;
+            }
+            node.InitializePorts(0, 1);
+        }
+        else
+        {
+            node.InitializePorts(1, 0);
+        }
 
         // Initialize node properties from parameter schema
         InitializeNodeProperties(node);
@@ -37,7 +54,28 @@ namespace Olympe
     void EntityPrefabGraphDocument::RemoveNode(PrefabNodeId nodeId)
     { 
         for (size_t i = 0; i < m_nodes.size(); ++i)
-        { if (m_nodes[i].nodeId == nodeId) { m_nodes.erase(m_nodes.begin() + i); m_isDirty = true; break; } }
+        {
+            if (m_nodes[i].nodeId == nodeId)
+            {
+                m_nodes.erase(m_nodes.begin() + i);
+                m_isDirty = true;
+
+                // Remove any connections referencing this node
+                for (auto it = m_connections.begin(); it != m_connections.end(); )
+                {
+                    if (it->first == nodeId || it->second == nodeId)
+                    {
+                        it = m_connections.erase(it);
+                    }
+                    else
+                    {
+                        ++it;
+                    }
+                }
+
+                break;
+            }
+        }
     }
 
     bool EntityPrefabGraphDocument::HasNode(PrefabNodeId nodeId) const
@@ -292,6 +330,15 @@ namespace Olympe
             else
             {
                 SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] WARNING: 'nodes' array not found or invalid\n";
+            }
+
+            // Migration: ensure Entity node exists for compatibility with newer editor UX
+            bool hasEntity = false;
+            for (const auto& n : m_nodes) { if (n.componentType == "Entity") { hasEntity = true; break; } }
+            if (!hasEntity)
+            {
+                CreateComponentNode("Entity");
+                SYSTEM_LOG << "[EntityPrefabGraphDocument::LoadFromFile] INFO: Injected Entity start node for compatibility\n";
             }
 
             // Parse connections from JSON

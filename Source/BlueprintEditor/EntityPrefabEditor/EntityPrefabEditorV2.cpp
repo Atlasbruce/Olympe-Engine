@@ -123,6 +123,28 @@ namespace Olympe
             newCanvas->SetRenderer(this);  // PHASE E: Link canvas to renderer for selection sync
             m_canvas = (void*)newCanvas;    // Set base class member
             SYSTEM_LOG << "[EntityPrefabEditorV2] Canvas created and initialized" << std::endl;
+
+            // Ensure Entity node exists and is visible when editor opens
+            EntityPrefabGraphDocumentV2* docv2 = GetDoc();
+            if (docv2 && docv2->GetNodeCount() == 0)
+            {
+                docv2->NewDocument();
+                SYSTEM_LOG << "[EntityPrefabEditorV2] NewDocument() called to initialize default Entity node" << std::endl;
+                // Request canvas to center on the created Entity node after initialization
+                PrefabCanvas* canvas = GetCanvasPtr();
+                if (canvas)
+                {
+                    // Find entity node id
+                    for (const auto& n : docv2->GetAllNodes())
+                    {
+                        if (n.componentType == "Entity")
+                        {
+                            canvas->RequestCenterOnNode(n.nodeId);
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         PrefabCanvas* canvas = GetCanvasPtr();
@@ -215,23 +237,7 @@ namespace Olympe
         // Sync Grid visibility from toolbar (Phase 75.1 FIX: Use SetGridVisible)
         canvas->SetGridVisible(m_gridVisible);
 
-        // ====================================================================
-        // SELECTION SYNC: Document -> Property Editor
-        // ====================================================================
-        const auto& selectedNodes = doc->GetSelectedNodes();
-        if (!selectedNodes.empty())
-        {
-            m_propertyEditor.SetSelectedNode(selectedNodes[0]);
-
-            // Sync base class selection vector for framework features (e.g. status bar)
-            m_selectedNodeIds.clear();
-            for (auto id : selectedNodes) m_selectedNodeIds.push_back((int)id);
-        }
-        else
-        {
-            m_propertyEditor.ClearSelection();
-            m_selectedNodeIds.clear();
-        }
+        // NOTE: Selection sync moved to after canvas render so canvas clicks are reflected
 
         // ====================================================================
         // LAYOUT CALCULATION: THREE-COLUMN (Canvas | Handle | Right Panel)
@@ -331,6 +337,20 @@ namespace Olympe
             // SYNC BACK: Canvas -> Framework state (pan/zoom)
             m_canvasOffset = m_canvasEditor->GetPan();
             m_canvasZoom = m_canvasEditor->GetZoom();
+
+            // SELECTION SYNC: Document -> Property Editor (moved here so canvas input is applied first)
+            const auto& selectedNodesAfter = doc->GetSelectedNodes();
+            if (!selectedNodesAfter.empty())
+            {
+                m_propertyEditor.SetSelectedNode(selectedNodesAfter[0]);
+                m_selectedNodeIds.clear();
+                for (auto id : selectedNodesAfter) m_selectedNodeIds.push_back((int)id);
+            }
+            else
+            {
+                m_propertyEditor.ClearSelection();
+                m_selectedNodeIds.clear();
+            }
         }
 
         ImGui::EndChild();
@@ -491,6 +511,9 @@ namespace Olympe
 
         if (success)
         {
+            // Ensure parameter schemas are loaded so property panel shows node properties
+            doc->LoadParameterSchemas("Gamedata\\EntityPrefab\\ComponentsParameters.json");
+
             // Initialize canvas editor if not already done
             if (!m_canvas)
             {
@@ -498,6 +521,19 @@ namespace Olympe
             }
 
             SYSTEM_LOG << "[EntityPrefabEditorV2] Load successful: " << path << std::endl;
+            // Request centering on Entity node
+            PrefabCanvas* canvas = GetCanvasPtr();
+            if (canvas)
+            {
+                for (const auto& n : doc->GetAllNodes())
+                {
+                    if (n.componentType == "Entity")
+                    {
+                        canvas->RequestCenterOnNode(n.nodeId);
+                        break;
+                    }
+                }
+            }
             LogAction("Load completed");
         }
         else

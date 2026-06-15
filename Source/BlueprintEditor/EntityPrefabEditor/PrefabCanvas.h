@@ -209,6 +209,31 @@ namespace Olympe
             RenderSelectionRectangle(); // Blue selection rectangle
             RenderContextMenu();        // Right-click context menus
 
+            // Handle deferred center-on-node request
+            if (m_pendingCenterOnEntity && m_centerTargetNodeId != InvalidNodeId && m_documentV2 && m_canvasEditor)
+            {
+                const ComponentNode* targetNode = m_documentV2->GetNode(m_centerTargetNodeId);
+                if (targetNode)
+                {
+                    float zoom = m_canvasEditor->GetZoom();
+                    if (zoom <= 0.0f)
+                    {
+                        zoom = 1.0f;
+                        m_canvasEditor->SetZoom(zoom);
+                    }
+
+                    ImVec2 avail = ImGui::GetContentRegionAvail();
+                    ImVec2 desiredCenter(m_canvasScreenPos.x + avail.x * 0.5f, m_canvasScreenPos.y + avail.y * 0.5f);
+                    ImVec2 nodeScreen = m_canvasEditor->CanvasToScreen(ImVec2(targetNode->position.x, targetNode->position.y));
+                    ImVec2 pan = m_canvasEditor->GetPan();
+                    ImVec2 delta(desiredCenter.x - nodeScreen.x, desiredCenter.y - nodeScreen.y);
+                    m_canvasEditor->SetPan(ImVec2(pan.x + delta.x, pan.y + delta.y));
+                }
+
+                m_pendingCenterOnEntity = false;
+                m_centerTargetNodeId = InvalidNodeId;
+            }
+
             // Draw debug info if enabled
             if (m_showDebugInfo)
             {
@@ -277,6 +302,9 @@ namespace Olympe
                 // Implementation deferred to Phase 50.4
             }
         }
+
+        // Request the canvas to center view on a given node on next render
+        void RequestCenterOnNode(PrefabNodeId nodeId);
 
 
         // Connection interaction
@@ -394,8 +422,12 @@ namespace Olympe
 
         // Connection creation state
         PrefabNodeId m_connectionSourceNodeId = InvalidNodeId;
+        PortId m_connectionSourcePortId = InvalidPortId; // Track specific source port
+        bool m_connectionSourceIsOutput = true; // Track port direction
         Vector m_connectionPreviewEnd;
         bool m_isCreatingConnection = false;
+        bool m_pendingCenterOnEntity = false; // request centering on next render
+        PrefabNodeId m_centerTargetNodeId = InvalidNodeId;
 
         // Camera panning state
         bool m_isPanning = false;
@@ -443,6 +475,80 @@ namespace Olympe
         bool IsPointInNodeBounds(PrefabNodeId nodeId, const ImVec2& screenPos) const;
         int GetConnectionAtScreenPos(const ImVec2& screenPos) const;
         float GetDistanceToConnectionLine(int connectionIndex, const ImVec2& screenPos) const;
+
+        // Compute port canvas position for a given node+port (recreates logic used by renderer)
+        Vector ComputePortCanvasPosition(const ComponentNode* node, PortId portId) const
+        {
+            Vector portPos = node->position;
+
+            // Gather input/output ports
+            std::vector<NodePort> inputPorts;
+            std::vector<NodePort> outputPorts;
+            for (const auto& p : node->GetPorts())
+            {
+                if (p.isOutput) outputPorts.push_back(p);
+                else inputPorts.push_back(p);
+            }
+
+            // Find the target port and determine index within its type
+            bool isOutput = false;
+            uint32_t portIndexInType = 0;
+            uint32_t portCountInType = 0;
+
+            for (size_t i = 0; i < outputPorts.size(); ++i)
+            {
+                if (outputPorts[i].portId == portId)
+                {
+                    isOutput = true;
+                    portIndexInType = static_cast<uint32_t>(i);
+                    break;
+                }
+            }
+            if (!isOutput)
+            {
+                for (size_t i = 0; i < inputPorts.size(); ++i)
+                {
+                    if (inputPorts[i].portId == portId)
+                    {
+                        isOutput = false;
+                        portIndexInType = static_cast<uint32_t>(i);
+                        break;
+                    }
+                }
+            }
+
+            portCountInType = isOutput ? static_cast<uint32_t>(outputPorts.size()) : static_cast<uint32_t>(inputPorts.size());
+
+            // Compute scaled extents using renderer zoom/scale if available
+            float zoom = 1.0f;
+            float nodeScale = 1.0f;
+            if (m_renderer && m_renderer->GetCanvasZoom() > 0.0f)
+            {
+                zoom = m_renderer->GetCanvasZoom();
+                nodeScale = m_renderer->GetNodeScale();
+            }
+
+            float scaledWidth = node->size.x * 0.5f * nodeScale * zoom;
+            float scaledHeight = node->size.y * 0.5f * nodeScale * zoom;
+
+            if (portCountInType > 0)
+            {
+                float spacing = (2.0f * scaledHeight) / (portCountInType + 1);
+                float yOffset = -scaledHeight + spacing * (portIndexInType + 1);
+
+                if (isOutput)
+                {
+                    portPos.x += scaledWidth / zoom;
+                }
+                else
+                {
+                    portPos.x -= scaledWidth / zoom;
+                }
+                portPos.y += yOffset / zoom;
+            }
+
+            return portPos;
+        }
     };
 
     // ========================================================================
@@ -506,9 +612,14 @@ namespace Olympe
 
                         if (m_renderer->IsPointInPort(clickPoint, *node, portId))
                         {
-                            // Start connection from this port
+                            // Start connection from this specific port - track numeric port id and query direction from node
                             m_isCreatingConnection = true;
                             m_connectionSourceNodeId = nodeAtPos;
+                            m_connectionSourcePortId = portId;
+                            // Query port direction from node
+                            NodePort* p = node->FindPort(portId);
+                            if (p) m_connectionSourceIsOutput = p->isOutput;
+                            else m_connectionSourceIsOutput = true; // default to output
                             m_connectionPreviewEnd = Vector(x, y, 0.0f);
                             return;
                         }
@@ -623,12 +734,25 @@ namespace Olympe
                 {
                     if (docV2)
                     {
-                        docV2->ConnectNodes(m_connectionSourceNodeId, targetNodeId);
+                        // Respect port direction: if source port is an input (not output), swap source/target
+                        PrefabNodeId actualSource = m_connectionSourceNodeId;
+                        PrefabNodeId actualTarget = targetNodeId;
+
+                        if (!m_connectionSourceIsOutput)
+                        {
+                            // Dragged from an input port: origin should be the input, so connection direction is target->source
+                            actualSource = targetNodeId;
+                            actualTarget = m_connectionSourceNodeId;
+                        }
+
+                        docV2->ConnectNodes(actualSource, actualTarget);
                     }
                 }
 
                 m_isCreatingConnection = false;
                 m_connectionSourceNodeId = InvalidNodeId;
+                m_connectionSourcePortId = InvalidPortId;
+                m_connectionSourceIsOutput = true;
             }
         }
         // Middle mouse button - stop panning
@@ -642,6 +766,13 @@ namespace Olympe
     {
         // Zoom handled by ICanvasEditor (already working via CustomCanvasEditor)
         // No additional implementation needed here
+    }
+
+    // Out-of-class inline implementation
+    inline void PrefabCanvas::RequestCenterOnNode(PrefabNodeId nodeId)
+    {
+        m_pendingCenterOnEntity = true;
+        m_centerTargetNodeId = nodeId;
     }
 
     inline void PrefabCanvas::OnKeyDown(int keyCode)
@@ -768,11 +899,19 @@ namespace Olympe
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         if (!drawList) return;
 
-        // Calculate source position (right side of node)
-        // PHASE 75 FIX: node->position is center. Right edge is position.x + (size.x * 0.5)
-        ImVec2 sourceCanvasPos(sourceNode->position.x + sourceNode->size.x * 0.5f, 
-                              sourceNode->position.y);
-        ImVec2 sourceScreenPos = m_canvasEditor->CanvasToScreen(sourceCanvasPos);
+        // Calculate source position from tracked source port when available, otherwise default to right edge
+        ImVec2 sourceScreenPos;
+        if (m_connectionSourcePortId != InvalidPortId)
+        {
+            // Use computed port canvas position (renderer does not store live port positions)
+            Vector portCanvas = ComputePortCanvasPosition(sourceNode, m_connectionSourcePortId);
+            sourceScreenPos = m_canvasEditor->CanvasToScreen(ImVec2(portCanvas.x, portCanvas.y));
+        }
+        else
+        {
+            ImVec2 sourceCanvasPos(sourceNode->position.x + sourceNode->size.x * 0.5f, sourceNode->position.y);
+            sourceScreenPos = m_canvasEditor->CanvasToScreen(sourceCanvasPos);
+        }
 
         // End position (current mouse position)
         ImVec2 endScreenPos(m_connectionPreviewEnd.x, m_connectionPreviewEnd.y);
@@ -785,7 +924,34 @@ namespace Olympe
         // Draw yellow preview line
         drawList->PathLineTo(sourceScreenPos);
         drawList->PathBezierCubicCurveTo(cp1, cp2, endScreenPos, 32);
-        drawList->PathStroke(IM_COL32(255, 255, 0, 255), false, 2.0f);
+        drawList->PathStroke(IM_COL32(255, 200, 0, 255), false, 3.0f);
+
+        // If we hover a target port, draw a pulsing highlight on it
+        ImVec2 mousePos = ImGui::GetIO().MousePos;
+        ImVec2 mouseCanvas = mousePos; // already screen
+        PrefabNodeId hovered = GetNodeAtScreenPos(mousePos);
+        if (hovered != InvalidNodeId && m_documentV2)
+        {
+            ComponentNode* targetNode = m_documentV2->GetNode(hovered);
+            if (targetNode)
+            {
+                PortId targetPortId = InvalidPortId;
+                Vector clickPoint(mousePos.x, mousePos.y, 0.0f);
+                if (m_renderer->IsPointInPort(clickPoint, *targetNode, targetPortId))
+                {
+                    // Compute port screen pos
+                    Vector portCanvasPos = ComputePortCanvasPosition(targetNode, targetPortId);
+                    ImVec2 portScreen = m_canvasEditor->CanvasToScreen(ImVec2(portCanvasPos.x, portCanvasPos.y));
+
+                    // Pulse animation based on time
+                    float t = ImGui::GetTime();
+                    float pulse = 0.5f + 0.5f * sinf(t * 6.0f);
+                    float radius = 8.0f + pulse * 4.0f;
+                    ImU32 col = ImGui::GetColorU32(ImVec4(1.0f, 0.85f, 0.2f, 0.5f + 0.5f * pulse));
+                    drawList->AddCircleFilled(ImVec2(portScreen.x, portScreen.y), radius, col);
+                }
+            }
+        }
     }
 
     inline void PrefabCanvas::RenderContextMenu()
@@ -1083,7 +1249,7 @@ namespace Olympe
     inline void PrefabCanvas::SelectNodeAt(float x, float y, bool addToSelection) { (void)x; (void)y; (void)addToSelection; }
     inline void PrefabCanvas::ClearSelection() { EntityPrefabGraphDocumentV2* docV2 = GetDocumentV2(); if (docV2) docV2->DeselectAll(); }
     inline void PrefabCanvas::SelectAll() { EntityPrefabGraphDocumentV2* docV2 = GetDocumentV2(); if (docV2) { const auto& nodes = docV2->GetAllNodes(); for (const auto& n : nodes) docV2->SelectNode(n.nodeId); } }
-    inline void PrefabCanvas::DeleteSelectedNodes() { EntityPrefabGraphDocumentV2* docV2 = GetDocumentV2(); if (docV2) { const auto& sel = docV2->GetSelectedNodes(); for (auto id : sel) docV2->RemoveNode(id); docV2->DeselectAll(); } }
+    inline void PrefabCanvas::DeleteSelectedNodes() { EntityPrefabGraphDocumentV2* docV2 = GetDocumentV2(); if (docV2) { const auto& sel = docV2->GetSelectedNodes(); for (auto id : sel) { const ComponentNode* n = docV2->GetNode(id); if (n && n->componentType == "Entity") { continue; } docV2->RemoveNode(id); } docV2->DeselectAll(); } }
     inline void PrefabCanvas::AddComponentNode(const std::string& componentType, const std::string& componentName, float x, float y) { (void)componentType; (void)componentName; (void)x; (void)y; }
     inline void PrefabCanvas::StartConnectionCreation(PrefabNodeId sourceNodeId) { m_isCreatingConnection = true; m_connectionSourceNodeId = sourceNodeId; }
     inline void PrefabCanvas::CompleteConnection(PrefabNodeId targetNodeId) { (void)targetNodeId; m_isCreatingConnection = false; }

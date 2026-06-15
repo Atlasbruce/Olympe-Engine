@@ -6,7 +6,24 @@
       "offsetY": 0,
       "zoom": 1
     },
-    "connections": [],
+    "connections": [
+      {
+        "sourceNodeId": 4,
+        "targetNodeId": 1
+      },
+      {
+        "sourceNodeId": 4,
+        "targetNodeId": 2
+      },
+      {
+        "sourceNodeId": 4,
+        "targetNodeId": 5
+      },
+      {
+        "sourceNodeId": 4,
+        "targetNodeId": 3
+      }
+    ],
     "nodes": [
       {
         "componentName": "Identity_data",
@@ -14,11 +31,17 @@
         "enabled": true,
         "nodeId": 1,
         "position": {
-          "x": 326,
-          "y": 188,
+          "x": 333.751,
+          "y": 159.349,
           "z": 0
         },
-        "properties": {},
+        "properties": {
+          "entityType": "None",
+          "isPersistent": "false",
+          "name": "Entity",
+          "tag": "Untagged",
+          "type": "UnknownType"
+        },
         "selected": false,
         "size": {
           "x": 150,
@@ -32,11 +55,13 @@
         "enabled": true,
         "nodeId": 2,
         "position": {
-          "x": 333,
-          "y": 340,
+          "x": 326.751,
+          "y": 295.349,
           "z": 0
         },
-        "properties": {},
+        "properties": {
+          "position": "[0,0,0]"
+        },
         "selected": false,
         "size": {
           "x": 150,
@@ -50,11 +75,66 @@
         "enabled": true,
         "nodeId": 3,
         "position": {
-          "x": 321,
-          "y": 489,
+          "x": 327.576,
+          "y": 446.468,
+          "z": 0
+        },
+        "properties": {
+          "activeCollisionLayer": "0",
+          "activeNavigationLayer": "0",
+          "cellSize": "[32,32,0]",
+          "colorA": "255",
+          "colorB": "180",
+          "colorG": "180",
+          "colorR": "180",
+          "enabled": "false",
+          "hexRadius": "16",
+          "lodSkipFactor": "10",
+          "lodZoomThreshold": "0.5",
+          "maxLines": "1200",
+          "projection": "Ortho",
+          "showCollisionOverlay": "false",
+          "showNavigationOverlay": "false"
+        },
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "",
+        "componentType": "Entity",
+        "enabled": true,
+        "nodeId": 4,
+        "position": {
+          "x": -48,
+          "y": 472,
           "z": 0
         },
         "properties": {},
+        "selected": false,
+        "size": {
+          "x": 150,
+          "y": 80,
+          "z": 0
+        }
+      },
+      {
+        "componentName": "AudioSource_data",
+        "componentType": "AudioSource_data",
+        "enabled": true,
+        "nodeId": 5,
+        "position": {
+          "x": 316.751,
+          "y": 619.349,
+          "z": 0
+        },
+        "properties": {
+          "soundEffectID": "",
+          "volume": "1"
+        },
         "selected": false,
         "size": {
           "x": 150,
