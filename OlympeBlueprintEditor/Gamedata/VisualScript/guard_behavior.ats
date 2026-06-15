@@ -1,21 +1,66 @@
 {
+  "annotations": [],
+  "blackboard": [],
   "blueprintType": "BehaviorTree",
   "data": {
-    "nodes": [
+    "links": [
       {
-        "children": [
-          2,
-          7
-        ],
-        "id": 1,
-        "name": "Root",
-        "parameters": {},
-        "position": {
-          "x": 0,
-          "y": 0
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
         },
-        "type": "Selector"
+        "id": 3,
+        "toPin": {
+          "nodeId": 8,
+          "pinId": "input"
+        }
       },
+      {
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
+        },
+        "id": 4,
+        "toPin": {
+          "nodeId": 6,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 17,
+          "pinId": "output"
+        },
+        "id": 8,
+        "toPin": {
+          "nodeId": 18,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 19,
+          "pinId": "output"
+        },
+        "id": 9,
+        "toPin": {
+          "nodeId": 4,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 19,
+          "pinId": "output"
+        },
+        "id": 10,
+        "toPin": {
+          "nodeId": 14,
+          "pinId": "input"
+        }
+      }
+    ],
+    "nodes": [
       {
         "children": [
           3,
@@ -25,8 +70,8 @@
         "name": "Chase",
         "parameters": {},
         "position": {
-          "x": 0,
-          "y": 0
+          "x": 243,
+          "y": 212
         },
         "type": "Sequence"
       },
@@ -36,8 +81,8 @@
         "name": "EnemyVisible",
         "parameters": {},
         "position": {
-          "x": 0,
-          "y": 0
+          "x": 506,
+          "y": 142
         },
         "type": "Action"
       },
@@ -47,8 +92,8 @@
         "name": "ChaseEnemy",
         "parameters": {},
         "position": {
-          "x": 0,
-          "y": 0
+          "x": 504,
+          "y": 279
         },
         "type": "Action"
       },
@@ -58,28 +103,52 @@
         "name": "Patrol",
         "parameters": {},
         "position": {
-          "x": 0,
-          "y": 0
+          "x": 259,
+          "y": 40
         },
         "type": "Action"
+      },
+      {
+        "children": [],
+        "id": 8,
+        "name": "BT_Root_8",
+        "parameters": {},
+        "position": {
+          "x": -216,
+          "y": 87
+        },
+        "type": "BT_Root"
+      },
+      {
+        "children": [],
+        "id": 9,
+        "name": "BT_Selector_9",
+        "parameters": {},
+        "position": {
+          "x": -16,
+          "y": 87
+        },
+        "type": "BT_Selector"
       }
     ],
-    "rootNodeId": -1
+    "rootNodeId": 0
   },
-  "description": "",
   "editorState": {
+    "layoutDirection": "TopToBottom",
     "scrollOffset": {
       "x": 0,
       "y": 0
     },
+    "selectedNodes": [],
     "zoom": 1
   },
+  "graphKind": "BehaviorTree",
   "metadata": {
     "author": "User",
     "created": "",
     "lastModified": "",
     "tags": []
   },
-  "name": "GuardBehavior",
-  "schema_version": 2
+  "schemaVersion": 2,
+  "type": "AIGraph"
 }
